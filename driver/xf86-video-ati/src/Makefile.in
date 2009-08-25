@@ -63,7 +63,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@XMODES_TRUE@am__append_1 = \
+@DRI_TRUE@am__append_1 = $(DRI_LIBS)
+@XSERVER_LIBPCIACCESS_TRUE@am__append_2 = $(PCIACCESS_LIBS)
+@XMODES_TRUE@am__append_3 = \
 @XMODES_TRUE@	$(XMODE_SRCS)
 
 subdir = src
@@ -95,25 +97,31 @@ LTLIBRARIES = $(ati_drv_la_LTLIBRARIES) $(radeon_drv_la_LTLIBRARIES) \
 	$(theatre200_drv_la_LTLIBRARIES) \
 	$(theatre_detect_drv_la_LTLIBRARIES) \
 	$(theatre_drv_la_LTLIBRARIES)
-ati_drv_la_LIBADD =
+am__DEPENDENCIES_1 =
+@XSERVER_LIBPCIACCESS_TRUE@ati_drv_la_DEPENDENCIES =  \
+@XSERVER_LIBPCIACCESS_TRUE@	$(am__DEPENDENCIES_1)
 am_ati_drv_la_OBJECTS = ati.lo atimodule.lo
 ati_drv_la_OBJECTS = $(am_ati_drv_la_OBJECTS)
-radeon_drv_la_LIBADD =
+@DRI_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+@XSERVER_LIBPCIACCESS_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1)
+radeon_drv_la_DEPENDENCIES = $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3)
 am__radeon_drv_la_SOURCES_DIST = radeon_accel.c radeon_cursor.c \
-	radeon_dga.c radeon_driver.c radeon_video.c radeon_bios.c \
-	radeon_mm_i2c.c radeon_vip.c radeon_misc.c radeon_probe.c \
-	legacy_crtc.c legacy_output.c radeon_textured_video.c \
-	radeon_crtc.c radeon_output.c radeon_modes.c radeon_tv.c \
-	AtomBios/CD_Operations.c AtomBios/Decoder.c \
-	AtomBios/hwserv_drv.c AtomBios/includes/atombios.h \
-	AtomBios/includes/CD_binding.h \
+	radeon_dga.c radeon_legacy_memory.c radeon_driver.c \
+	radeon_video.c radeon_bios.c radeon_mm_i2c.c radeon_vip.c \
+	radeon_misc.c radeon_probe.c legacy_crtc.c legacy_output.c \
+	radeon_textured_video.c radeon_crtc.c radeon_output.c \
+	radeon_modes.c radeon_tv.c AtomBios/CD_Operations.c \
+	AtomBios/Decoder.c AtomBios/hwserv_drv.c \
+	AtomBios/includes/atombios.h AtomBios/includes/CD_binding.h \
 	AtomBios/includes/CD_Common_Types.h \
 	AtomBios/includes/CD_Definitions.h \
 	AtomBios/includes/CD_hw_services.h \
 	AtomBios/includes/CD_Opcodes.h AtomBios/includes/CD_Structs.h \
 	AtomBios/includes/Decoder.h AtomBios/includes/ObjectID.h \
 	AtomBios/includes/regsdef.h radeon_atombios.c \
-	radeon_atomwrapper.c radeon_dri.c radeon_exa.c \
+	radeon_atomwrapper.c radeon_dri.c radeon_exa.c r600_exa.c \
+	r6xx_accel.c r600_textured_videofuncs.c r600_shader.c \
 	atombios_output.c atombios_crtc.c local_xf86Rename.h \
 	parser/xf86Parser.h parser/xf86Optrec.h modes/xf86Modes.h \
 	modes/xf86Modes.c modes/xf86cvt.c modes/xf86Crtc.h \
@@ -122,18 +130,20 @@ am__radeon_drv_la_SOURCES_DIST = radeon_accel.c radeon_cursor.c \
 	modes/xf86Rotate.c modes/xf86DiDGA.c
 am__objects_1 = CD_Operations.lo Decoder.lo hwserv_drv.lo
 @DRI_TRUE@am__objects_2 = radeon_dri.lo
-@USE_EXA_TRUE@am__objects_3 = radeon_exa.lo
+@USE_EXA_TRUE@am__objects_3 = radeon_exa.lo r600_exa.lo r6xx_accel.lo \
+@USE_EXA_TRUE@	r600_textured_videofuncs.lo r600_shader.lo
 am__objects_4 = xf86Modes.lo xf86cvt.lo xf86Crtc.lo xf86Cursors.lo \
 	xf86EdidModes.lo xf86RandR12.lo xf86Rotate.lo xf86DiDGA.lo
 @XMODES_TRUE@am__objects_5 = $(am__objects_4)
 am_radeon_drv_la_OBJECTS = radeon_accel.lo radeon_cursor.lo \
-	radeon_dga.lo radeon_driver.lo radeon_video.lo radeon_bios.lo \
-	radeon_mm_i2c.lo radeon_vip.lo radeon_misc.lo radeon_probe.lo \
-	legacy_crtc.lo legacy_output.lo radeon_textured_video.lo \
-	radeon_crtc.lo radeon_output.lo radeon_modes.lo radeon_tv.lo \
-	$(am__objects_1) radeon_atombios.lo radeon_atomwrapper.lo \
-	$(am__objects_2) $(am__objects_3) atombios_output.lo \
-	atombios_crtc.lo $(am__objects_5)
+	radeon_dga.lo radeon_legacy_memory.lo radeon_driver.lo \
+	radeon_video.lo radeon_bios.lo radeon_mm_i2c.lo radeon_vip.lo \
+	radeon_misc.lo radeon_probe.lo legacy_crtc.lo legacy_output.lo \
+	radeon_textured_video.lo radeon_crtc.lo radeon_output.lo \
+	radeon_modes.lo radeon_tv.lo $(am__objects_1) \
+	radeon_atombios.lo radeon_atomwrapper.lo $(am__objects_2) \
+	$(am__objects_3) atombios_output.lo atombios_crtc.lo \
+	$(am__objects_5)
 radeon_drv_la_OBJECTS = $(am_radeon_drv_la_OBJECTS)
 theatre200_drv_la_LIBADD =
 am_theatre200_drv_la_OBJECTS = theatre200_drv_la-theatre200.lo \
@@ -213,6 +223,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -264,15 +275,9 @@ XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
 XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -289,28 +294,36 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+radeon_drv_la_LIBADD = $(am__append_1) $(am__append_2)
 @DRI_TRUE@RADEON_DRI_SRCS = radeon_dri.c
 RADEON_ATOMBIOS_SOURCES = \
 	AtomBios/CD_Operations.c \
@@ -344,9 +357,10 @@ XMODE_SRCS = \
         modes/xf86Rotate.c \
         modes/xf86DiDGA.c
 
-@USE_EXA_TRUE@RADEON_EXA_SOURCES = radeon_exa.c
+@USE_EXA_TRUE@RADEON_EXA_SOURCES = radeon_exa.c r600_exa.c r6xx_accel.c r600_textured_videofuncs.c r600_shader.c
 AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ @XMODES_CFLAGS@ -DDISABLE_EASF -DENABLE_ALL_SERVICE_FUNCTIONS -DATOM_BIOS -DATOM_BIOS_PARSER -DDRIVER_PARSER
 INCLUDES = -I$(srcdir)/AtomBios/includes
+@XSERVER_LIBPCIACCESS_TRUE@ati_drv_la_LIBADD = $(PCIACCESS_LIBS)
 ati_drv_la_LTLIBRARIES = ati_drv.la
 ati_drv_la_LDFLAGS = -module -avoid-version
 ati_drv_ladir = @moduledir@/drivers
@@ -357,13 +371,14 @@ radeon_drv_la_LTLIBRARIES = radeon_drv.la
 radeon_drv_la_LDFLAGS = -module -avoid-version
 radeon_drv_ladir = @moduledir@/drivers
 radeon_drv_la_SOURCES = radeon_accel.c radeon_cursor.c radeon_dga.c \
-	radeon_driver.c radeon_video.c radeon_bios.c radeon_mm_i2c.c \
-	radeon_vip.c radeon_misc.c radeon_probe.c legacy_crtc.c \
-	legacy_output.c radeon_textured_video.c radeon_crtc.c \
-	radeon_output.c radeon_modes.c radeon_tv.c \
-	$(RADEON_ATOMBIOS_SOURCES) radeon_atombios.c \
-	radeon_atomwrapper.c $(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES) \
-	atombios_output.c atombios_crtc.c $(am__append_1)
+	radeon_legacy_memory.c radeon_driver.c radeon_video.c \
+	radeon_bios.c radeon_mm_i2c.c radeon_vip.c radeon_misc.c \
+	radeon_probe.c legacy_crtc.c legacy_output.c \
+	radeon_textured_video.c radeon_crtc.c radeon_output.c \
+	radeon_modes.c radeon_tv.c $(RADEON_ATOMBIOS_SOURCES) \
+	radeon_atombios.c radeon_atomwrapper.c $(RADEON_DRI_SRCS) \
+	$(RADEON_EXA_SOURCES) atombios_output.c atombios_crtc.c \
+	$(am__append_3)
 theatre_detect_drv_la_LTLIBRARIES = theatre_detect_drv.la
 theatre_detect_drv_la_LDFLAGS = -module -avoid-version
 theatre_detect_drv_ladir = @moduledir@/multimedia
@@ -390,21 +405,25 @@ EXTRA_DIST = \
 	radeon_render.c \
 	radeon_accelfuncs.c \
 	radeon_textured_videofuncs.c \
-	\
+	r600_reg.h \
+	r600_reg_auto_r6xx.h \
+	r600_reg_r6xx.h \
+	r600_reg_r7xx.h \
+	r600_shader.h \
+	r600_state.h \
 	ati.h \
 	ativersion.h \
+	bicubic_table.h \
 	generic_bus.h \
-	radeon_common.h \
 	radeon_commonfuncs.c \
 	radeon_dri.h \
-	radeon_dripriv.h \
+	radeon_drm.h \
 	radeon_exa_render.c \
 	radeon_exa_funcs.c \
 	radeon.h \
 	radeon_macros.h \
 	radeon_probe.h \
 	radeon_reg.h \
-	radeon_sarea.h \
 	radeon_version.h \
 	radeon_video.h \
 	radeon_tv.h \
@@ -618,6 +637,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hwserv_drv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/legacy_crtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/legacy_output.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r600_exa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r600_shader.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r600_textured_videofuncs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r6xx_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_accel.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_atombios.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_atomwrapper.Plo@am__quote@
@@ -628,6 +651,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_dri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_exa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_legacy_memory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_misc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_mm_i2c.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radeon_modes.Plo@am__quote@

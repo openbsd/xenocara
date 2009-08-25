@@ -45,11 +45,11 @@
 #include "radeon_macros.h"
 #include "radeon_probe.h"
 #include "radeon_version.h"
+#include "radeon_atombios.h"
 
 #ifdef XF86DRI
 #define _XF86DRI_SERVER_
-#include "radeon_dri.h"
-#include "radeon_sarea.h"
+#include "radeon_drm.h"
 #include "sarea.h"
 #ifdef DRM_IOCTL_MODESET_CTL
 #include <sys/ioctl.h>
@@ -104,6 +104,31 @@ RADEONRestoreCommonRegisters(ScrnInfoPtr pScrn,
     }
 }
 
+void
+RADEONRestoreCrtcBase(ScrnInfoPtr pScrn,
+		      RADEONSavePtr restore)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+
+    if (IS_R300_VARIANT)
+	OUTREG(R300_CRTC_TILE_X0_Y0,    restore->crtc_tile_x0_y0);
+    OUTREG(RADEON_CRTC_OFFSET_CNTL,     restore->crtc_offset_cntl);
+    OUTREG(RADEON_CRTC_OFFSET,          restore->crtc_offset);
+}
+
+void
+RADEONRestoreCrtc2Base(ScrnInfoPtr pScrn,
+		       RADEONSavePtr restore)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+
+    if (IS_R300_VARIANT)
+	OUTREG(R300_CRTC2_TILE_X0_Y0,    restore->crtc2_tile_x0_y0);
+    OUTREG(RADEON_CRTC2_OFFSET_CNTL,     restore->crtc2_offset_cntl);
+    OUTREG(RADEON_CRTC2_OFFSET,          restore->crtc2_offset);
+}
 
 /* Write CRTC registers */
 void
@@ -134,10 +159,7 @@ RADEONRestoreCrtcRegisters(ScrnInfoPtr pScrn,
     OUTREG(RADEON_CRTC_V_TOTAL_DISP,    restore->crtc_v_total_disp);
     OUTREG(RADEON_CRTC_V_SYNC_STRT_WID, restore->crtc_v_sync_strt_wid);
 
-    if (IS_R300_VARIANT)
-	OUTREG(R300_CRTC_TILE_X0_Y0, restore->crtc_tile_x0_y0);
-    OUTREG(RADEON_CRTC_OFFSET_CNTL,     restore->crtc_offset_cntl);
-    OUTREG(RADEON_CRTC_OFFSET,          restore->crtc_offset);
+    RADEONRestoreCrtcBase(pScrn, restore);
 
     OUTREG(RADEON_CRTC_PITCH,           restore->crtc_pitch);
     OUTREG(RADEON_DISP_MERGE_CNTL,      restore->disp_merge_cntl);
@@ -181,10 +203,7 @@ RADEONRestoreCrtc2Registers(ScrnInfoPtr pScrn,
     OUTREG(RADEON_FP_H2_SYNC_STRT_WID,   restore->fp_h2_sync_strt_wid);
     OUTREG(RADEON_FP_V2_SYNC_STRT_WID,   restore->fp_v2_sync_strt_wid);
 
-    if (IS_R300_VARIANT)
-	OUTREG(R300_CRTC2_TILE_X0_Y0, restore->crtc2_tile_x0_y0);
-    OUTREG(RADEON_CRTC2_OFFSET_CNTL,     restore->crtc2_offset_cntl);
-    OUTREG(RADEON_CRTC2_OFFSET,          restore->crtc2_offset);
+    RADEONRestoreCrtc2Base(pScrn, restore);
 
     OUTREG(RADEON_CRTC2_PITCH,           restore->crtc2_pitch);
     OUTREG(RADEON_DISP2_MERGE_CNTL,      restore->disp2_merge_cntl);
@@ -554,6 +573,7 @@ RADEONSaveCrtc2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save)
     save->crtc2_h_sync_strt_wid = INREG(RADEON_CRTC2_H_SYNC_STRT_WID);
     save->crtc2_v_total_disp    = INREG(RADEON_CRTC2_V_TOTAL_DISP);
     save->crtc2_v_sync_strt_wid = INREG(RADEON_CRTC2_V_SYNC_STRT_WID);
+
     save->crtc2_offset          = INREG(RADEON_CRTC2_OFFSET);
     save->crtc2_offset_cntl     = INREG(RADEON_CRTC2_OFFSET_CNTL);
     save->crtc2_pitch           = INREG(RADEON_CRTC2_PITCH);
@@ -624,6 +644,7 @@ radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post)
     RADEONInfoPtr info = RADEONPTR(crtc->scrn);
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     struct drm_modeset_ctl modeset;
+    unsigned char *RADEONMMIO = info->MMIO;
 
     if (!info->directRenderingEnabled)
 	return;
@@ -631,7 +652,9 @@ radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post)
     modeset.crtc = radeon_crtc->crtc_id;
     modeset.cmd = post ? _DRM_POST_MODESET : _DRM_PRE_MODESET;
 
-    ioctl(info->drmFD, DRM_IOCTL_MODESET_CTL, &modeset);
+    ioctl(info->dri->drmFD, DRM_IOCTL_MODESET_CTL, &modeset);
+
+    info->ModeReg->gen_int_cntl = INREG( RADEON_GEN_INT_CNTL );
 #endif
 }
 
@@ -691,7 +714,7 @@ legacy_crtc_dpms(xf86CrtcPtr crtc, int mode)
 
 
 /* Define common registers for requested video mode */
-static void
+void
 RADEONInitCommonRegisters(RADEONSavePtr save, RADEONInfoPtr info)
 {
     save->ovr_clr            = 0;
@@ -722,7 +745,7 @@ RADEONInitCommonRegisters(RADEONSavePtr save, RADEONInfoPtr info)
 	save->bus_cntl |= RADEON_BUS_RD_DISCARD_EN;
 }
 
-static void
+void
 RADEONInitSurfaceCntl(xf86CrtcPtr crtc, RADEONSavePtr save)
 {
     save->surface_cntl = 0;
@@ -746,8 +769,7 @@ RADEONInitSurfaceCntl(xf86CrtcPtr crtc, RADEONSavePtr save)
 
 }
 
-
-static Bool
+void
 RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
 		   int x, int y)
 {
@@ -755,13 +777,13 @@ RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     int    Base;
 #ifdef XF86DRI
-    RADEONSAREAPrivPtr pSAREAPriv;
+    drm_radeon_sarea_t *pSAREAPriv;
     XF86DRISAREAPtr pSAREA;
 #endif
 
     save->crtc_offset      = pScrn->fbOffset;
 #ifdef XF86DRI
-    if (info->allowPageFlip)
+    if (info->dri && info->dri->allowPageFlip)
 	save->crtc_offset_cntl = RADEON_CRTC_OFFSET_FLIP_CNTL;
     else
 #endif
@@ -854,13 +876,11 @@ RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
 	pSAREA->frame.height = pScrn->frameY1 - y + 1;
 
 	if (pSAREAPriv->pfCurrentPage == 1) {
-	    Base += info->backOffset - info->frontOffset;
+	    Base += info->dri->backOffset - info->dri->frontOffset;
 	}
     }
 #endif
     save->crtc_offset = Base;
-
-    return TRUE;
 
 }
 
@@ -965,7 +985,7 @@ RADEONInitCrtcRegisters(xf86CrtcPtr crtc, RADEONSavePtr save,
 }
 
 
-static Bool
+void
 RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
 		    int x, int y)
 {
@@ -973,7 +993,7 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     int    Base;
 #ifdef XF86DRI
-    RADEONSAREAPrivPtr pSAREAPriv;
+    drm_radeon_sarea_t *pSAREAPriv;
     XF86DRISAREAPtr pSAREA;
 #endif
 
@@ -981,7 +1001,7 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
      */
     save->crtc2_offset      = pScrn->fbOffset;
 #ifdef XF86DRI
-    if (info->allowPageFlip)
+    if (info->dri && info->dri->allowPageFlip)
 	save->crtc2_offset_cntl = RADEON_CRTC_OFFSET_FLIP_CNTL;
     else
 #endif
@@ -1068,13 +1088,12 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
 	pSAREAPriv->crtc2_base = Base;
 
 	if (pSAREAPriv->pfCurrentPage == 1) {
-	    Base += info->backOffset - info->frontOffset;
+	    Base += info->dri->backOffset - info->dri->frontOffset;
 	}
     }
 #endif
     save->crtc2_offset = Base;
 
-    return TRUE;
 }
 
 
@@ -1330,9 +1349,12 @@ radeon_update_tv_routing(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 }
 
 /* Calculate display buffer watermark to prevent buffer underflow */
-static void
-RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2, DisplayModePtr mode1, DisplayModePtr mode2)
+void
+RADEONInitDispBandwidthLegacy(ScrnInfoPtr pScrn,
+			      DisplayModePtr mode1, int pixel_bytes1,
+			      DisplayModePtr mode2, int pixel_bytes2)
 {
+    RADEONInfoPtr info = RADEONPTR(pScrn);
     RADEONEntPtr pRADEONEnt   = RADEONEntPriv(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
@@ -1355,10 +1377,10 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
     float min_mem_eff = 0.8;
     float sclk_eff, sclk_delay;
     float mc_latency_mclk, mc_latency_sclk, cur_latency_mclk, cur_latency_sclk;
-    float disp_latency, disp_latency_overhead, disp_drain_rate, disp_drain_rate2;
+    float disp_latency, disp_latency_overhead, disp_drain_rate = 0, disp_drain_rate2;
     float pix_clk, pix_clk2; /* in MHz */
     int cur_size = 16;       /* in octawords */
-    int critical_point, critical_point2;
+    int critical_point = 0, critical_point2;
     int stop_req, max_stop_req;
     float read_return_rate, time_disp1_drop_priority;
 
@@ -1369,14 +1391,14 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
      */
     if ((info->DispPriority == 2) && IS_R300_VARIANT) {
 	uint32_t mc_init_misc_lat_timer = INREG(R300_MC_INIT_MISC_LAT_TIMER);
-	if (pRADEONEnt->pCrtc[1]->enabled) {
-	    mc_init_misc_lat_timer |= 0x1100; /* display 0 and 1 */
-	} else {
-	    mc_init_misc_lat_timer |= 0x0100; /* display 0 only */
-	}
+	mc_init_misc_lat_timer &= ~(R300_MC_DISP1R_INIT_LAT_MASK << R300_MC_DISP1R_INIT_LAT_SHIFT);
+	mc_init_misc_lat_timer &= ~(R300_MC_DISP0R_INIT_LAT_MASK << R300_MC_DISP0R_INIT_LAT_SHIFT);
+	if (pRADEONEnt->pCrtc[1]->enabled)
+	    mc_init_misc_lat_timer |= (1 << R300_MC_DISP1R_INIT_LAT_SHIFT); /* display 1 */
+	if (pRADEONEnt->pCrtc[0]->enabled)
+	    mc_init_misc_lat_timer |= (1 << R300_MC_DISP0R_INIT_LAT_SHIFT); /* display 0 */
 	OUTREG(R300_MC_INIT_MISC_LAT_TIMER, mc_init_misc_lat_timer);
     }
-
 
     /* R420 and RV410 family not supported yet */
     if (info->ChipFamily == CHIP_FAMILY_R420 || info->ChipFamily == CHIP_FAMILY_RV410) return; 
@@ -1386,35 +1408,23 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
      */
     mem_bw = info->mclk * (info->RamWidth / 8) * (info->IsDDR ? 2 : 1);
 
-    pix_clk = mode1->Clock/1000.0;
-    if (mode2)
+    pix_clk = 0;
+    pix_clk2 = 0;
+    peak_disp_bw = 0;
+    if (mode1) {
+	pix_clk = mode1->Clock/1000.0;
+	peak_disp_bw += (pix_clk * pixel_bytes1);
+    }
+    if (mode2) {
 	pix_clk2 = mode2->Clock/1000.0;
-    else
-	pix_clk2 = 0;
-
-    peak_disp_bw = (pix_clk * info->CurrentLayout.pixel_bytes);
-    if (pixel_bytes2)
-      peak_disp_bw += (pix_clk2 * pixel_bytes2);
+	peak_disp_bw += (pix_clk2 * pixel_bytes2);
+    }
 
     if (peak_disp_bw >= mem_bw * min_mem_eff) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "You may not have enough display bandwidth for current mode\n"
 		   "If you have flickering problem, try to lower resolution, refresh rate, or color depth\n");
     }
-
-    /*  CRTC1
-        Set GRPH_BUFFER_CNTL register using h/w defined optimal values.
-	GRPH_STOP_REQ <= MIN[ 0x7C, (CRTC_H_DISP + 1) * (bit depth) / 0x10 ]
-    */
-    stop_req = mode1->HDisplay * info->CurrentLayout.pixel_bytes / 16;
-
-    /* setup Max GRPH_STOP_REQ default value */
-    if (IS_RV100_VARIANT)
-	max_stop_req = 0x5c;
-    else
-	max_stop_req  = 0x7c;
-    if (stop_req > max_stop_req)
-	stop_req = max_stop_req;
 
     /*  Get values from the EXT_MEM_CNTL register...converting its contents. */
     temp = INREG(RADEON_MEM_TIMING_CNTL);
@@ -1438,9 +1448,8 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
     }
 
     if (IS_R300_VARIANT) {
-
 	/* on the R300, Tcas is included in Trbs.
-	*/
+	 */
 	temp = INREG(RADEON_MEM_CNTL);
 	data = (R300_MEM_NUM_CHANNELS_MASK & temp);
 	if (data == 1) {
@@ -1470,13 +1479,14 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
     } else {
 #ifdef XF86DRI
 	if (info->directRenderingEnabled)
-	    sclk_eff = info->sclk - (info->agpMode * 50.0 / 3.0);
+	    sclk_eff = info->sclk - (info->dri->agpMode * 50.0 / 3.0);
 	else
 #endif
 	    sclk_eff = info->sclk;
     }
 
-    /* Find the memory controller latency for the display client.
+    /*
+      Find the memory controller latency for the display client.
     */
     if (IS_R300_VARIANT) {
 	/*not enough for R350 ???*/
@@ -1530,88 +1540,106 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
     mc_latency_sclk = mc_latency_sclk + disp_latency_overhead + cur_latency_sclk;
     disp_latency = MAX(mc_latency_mclk, mc_latency_sclk);
 
-    /*
-      Find the drain rate of the display buffer.
-    */
-    disp_drain_rate = pix_clk / (16.0/info->CurrentLayout.pixel_bytes);
-    if (pixel_bytes2)
-	disp_drain_rate2 = pix_clk2 / (16.0/pixel_bytes2);
+    /* setup Max GRPH_STOP_REQ default value */
+    if (IS_RV100_VARIANT)
+	max_stop_req = 0x5c;
     else
-	disp_drain_rate2 = 0;
+	max_stop_req  = 0x7c;
 
-    /*
-      Find the critical point of the display buffer.
-    */
-    critical_point= (uint32_t)(disp_drain_rate * disp_latency + 0.5);
+    if (mode1) {
+	/*  CRTC1
+	    Set GRPH_BUFFER_CNTL register using h/w defined optimal values.
+	    GRPH_STOP_REQ <= MIN[ 0x7C, (CRTC_H_DISP + 1) * (bit depth) / 0x10 ]
+	*/
+	stop_req = mode1->HDisplay * pixel_bytes1 / 16;
 
-    /* ???? */
-    /*
-    temp = (info->SavedReg.grph_buffer_cntl & RADEON_GRPH_CRITICAL_POINT_MASK) >> RADEON_GRPH_CRITICAL_POINT_SHIFT;
-    if (critical_point < temp) critical_point = temp;
-    */
-    if (info->DispPriority == 2) {
-	critical_point = 0;
-    }
+	if (stop_req > max_stop_req)
+	    stop_req = max_stop_req;
 
-    /*
-      The critical point should never be above max_stop_req-4.  Setting
-      GRPH_CRITICAL_CNTL = 0 will thus force high priority all the time.
-    */
-    if (max_stop_req - critical_point < 4) critical_point = 0;
+	/*
+	  Find the drain rate of the display buffer.
+	*/
+	disp_drain_rate = pix_clk / (16.0/pixel_bytes1);
 
-    if (critical_point == 0 && mode2 && info->ChipFamily == CHIP_FAMILY_R300) {
-	/* some R300 cards have problem with this set to 0, when CRTC2 is enabled.*/
-	critical_point = 0x10;
-    }
+	/*
+	  Find the critical point of the display buffer.
+	*/
+	critical_point= (uint32_t)(disp_drain_rate * disp_latency + 0.5);
 
-    temp = info->SavedReg->grph_buffer_cntl;
-    temp &= ~(RADEON_GRPH_STOP_REQ_MASK);
-    temp |= (stop_req << RADEON_GRPH_STOP_REQ_SHIFT);
-    temp &= ~(RADEON_GRPH_START_REQ_MASK);
-    if ((info->ChipFamily == CHIP_FAMILY_R350) &&
-	(stop_req > 0x15)) {
-	stop_req -= 0x10;
-    }
-    temp |= (stop_req << RADEON_GRPH_START_REQ_SHIFT);
+	/* ???? */
+	/*
+	  temp = (info->SavedReg.grph_buffer_cntl & RADEON_GRPH_CRITICAL_POINT_MASK) >> RADEON_GRPH_CRITICAL_POINT_SHIFT;
+	  if (critical_point < temp) critical_point = temp;
+	*/
+	if (info->DispPriority == 2) {
+	    critical_point = 0;
+	}
 
-    temp |= RADEON_GRPH_BUFFER_SIZE;
-    temp &= ~(RADEON_GRPH_CRITICAL_CNTL   |
-	      RADEON_GRPH_CRITICAL_AT_SOF |
-	      RADEON_GRPH_STOP_CNTL);
-    /*
-      Write the result into the register.
-    */
-    OUTREG(RADEON_GRPH_BUFFER_CNTL, ((temp & ~RADEON_GRPH_CRITICAL_POINT_MASK) |
-				     (critical_point << RADEON_GRPH_CRITICAL_POINT_SHIFT)));
+	/*
+	  The critical point should never be above max_stop_req-4.  Setting
+	  GRPH_CRITICAL_CNTL = 0 will thus force high priority all the time.
+	*/
+	if (max_stop_req - critical_point < 4) critical_point = 0;
+
+	if (critical_point == 0 && mode2 && info->ChipFamily == CHIP_FAMILY_R300) {
+	    /* some R300 cards have problem with this set to 0, when CRTC2 is enabled.*/
+	    critical_point = 0x10;
+	}
+
+	temp = info->SavedReg->grph_buffer_cntl;
+	temp &= ~(RADEON_GRPH_STOP_REQ_MASK);
+	temp |= (stop_req << RADEON_GRPH_STOP_REQ_SHIFT);
+	temp &= ~(RADEON_GRPH_START_REQ_MASK);
+	if ((info->ChipFamily == CHIP_FAMILY_R350) &&
+	    (stop_req > 0x15)) {
+	    stop_req -= 0x10;
+	}
+	temp |= (stop_req << RADEON_GRPH_START_REQ_SHIFT);
+
+	temp |= RADEON_GRPH_BUFFER_SIZE;
+	temp &= ~(RADEON_GRPH_CRITICAL_CNTL   |
+		  RADEON_GRPH_CRITICAL_AT_SOF |
+		  RADEON_GRPH_STOP_CNTL);
+	/*
+	  Write the result into the register.
+	*/
+	OUTREG(RADEON_GRPH_BUFFER_CNTL, ((temp & ~RADEON_GRPH_CRITICAL_POINT_MASK) |
+					 (critical_point << RADEON_GRPH_CRITICAL_POINT_SHIFT)));
 
 #if 0
-    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
-	(info->ChipFamily == CHIP_FAMILY_RS480)) {
-	/* attempt to program RS400 disp regs correctly ??? */
-	temp = info->SavedReg->disp1_req_cntl1;
-	temp &= ~(RS400_DISP1_START_REQ_LEVEL_MASK |
-		  RS400_DISP1_STOP_REQ_LEVEL_MASK);
-	OUTREG(RS400_DISP1_REQ_CNTL1, (temp |
-				       (critical_point << RS400_DISP1_START_REQ_LEVEL_SHIFT) |
-				       (critical_point << RS400_DISP1_STOP_REQ_LEVEL_SHIFT)));
-	temp = info->SavedReg->dmif_mem_cntl1;
-	temp &= ~(RS400_DISP1_CRITICAL_POINT_START_MASK |
-		  RS400_DISP1_CRITICAL_POINT_STOP_MASK);
-	OUTREG(RS400_DMIF_MEM_CNTL1, (temp |
-				      (critical_point << RS400_DISP1_CRITICAL_POINT_START_SHIFT) |
-				      (critical_point << RS400_DISP1_CRITICAL_POINT_STOP_SHIFT)));
-    }
+	if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	    (info->ChipFamily == CHIP_FAMILY_RS480)) {
+	    /* attempt to program RS400 disp regs correctly ??? */
+	    temp = info->SavedReg->disp1_req_cntl1;
+	    temp &= ~(RS400_DISP1_START_REQ_LEVEL_MASK |
+		      RS400_DISP1_STOP_REQ_LEVEL_MASK);
+	    OUTREG(RS400_DISP1_REQ_CNTL1, (temp |
+					   (critical_point << RS400_DISP1_START_REQ_LEVEL_SHIFT) |
+					   (critical_point << RS400_DISP1_STOP_REQ_LEVEL_SHIFT)));
+	    temp = info->SavedReg->dmif_mem_cntl1;
+	    temp &= ~(RS400_DISP1_CRITICAL_POINT_START_MASK |
+		      RS400_DISP1_CRITICAL_POINT_STOP_MASK);
+	    OUTREG(RS400_DMIF_MEM_CNTL1, (temp |
+					  (critical_point << RS400_DISP1_CRITICAL_POINT_START_SHIFT) |
+					  (critical_point << RS400_DISP1_CRITICAL_POINT_STOP_SHIFT)));
+	}
 #endif
 
-    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		   "GRPH_BUFFER_CNTL from %x to %x\n",
-		   (unsigned int)info->SavedReg->grph_buffer_cntl,
-		   (unsigned int)INREG(RADEON_GRPH_BUFFER_CNTL));
+	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
+		       "GRPH_BUFFER_CNTL from %x to %x\n",
+		       (unsigned int)info->SavedReg->grph_buffer_cntl,
+		       (unsigned int)INREG(RADEON_GRPH_BUFFER_CNTL));
+    }
 
     if (mode2) {
 	stop_req = mode2->HDisplay * pixel_bytes2 / 16;
 
 	if (stop_req > max_stop_req) stop_req = max_stop_req;
+
+	/*
+	  Find the drain rate of the display buffer.
+	*/
+	disp_drain_rate2 = pix_clk2 / (16.0/pixel_bytes2);
 
 	temp = info->SavedReg->grph2_buffer_cntl;
 	temp &= ~(RADEON_GRPH_STOP_REQ_MASK);
@@ -1632,7 +1660,10 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
 	    critical_point2 = 0;
 	else {
 	    read_return_rate = MIN(info->sclk, info->mclk*(info->RamWidth*(info->IsDDR+1)/128));
-	    time_disp1_drop_priority = critical_point / (read_return_rate - disp_drain_rate);
+	    if (mode1)
+		time_disp1_drop_priority = critical_point / (read_return_rate - disp_drain_rate);
+	    else
+		time_disp1_drop_priority = 0;
 
 	    critical_point2 = (uint32_t)((disp_latency + time_disp1_drop_priority + 
 					disp_latency) * disp_drain_rate2 + 0.5);
@@ -1684,45 +1715,6 @@ RADEONInitDispBandwidth2(ScrnInfoPtr pScrn, RADEONInfoPtr info, int pixel_bytes2
 }
 
 void
-RADEONInitDispBandwidth(ScrnInfoPtr pScrn)
-{
-    RADEONInfoPtr info = RADEONPTR(pScrn);
-    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-    DisplayModePtr mode1, mode2;
-    int pixel_bytes2 = 0;
-
-    if (info->IsPrimary || info->IsSecondary)
-	mode1 = &xf86_config->crtc[0]->mode;
-    else
-	mode1 = info->CurrentLayout.mode;
-    mode2 = NULL;
-    pixel_bytes2 = info->CurrentLayout.pixel_bytes;
-
-    if (xf86_config->num_crtc == 2) {
-      pixel_bytes2 = 0;
-      mode2 = NULL;
-
-      if (xf86_config->crtc[1]->enabled && xf86_config->crtc[0]->enabled) {
-	pixel_bytes2 = info->CurrentLayout.pixel_bytes;
-	mode1 = &xf86_config->crtc[0]->mode;
-	mode2 = &xf86_config->crtc[1]->mode;
-      } else if (xf86_config->crtc[0]->enabled) {
-	mode1 = &xf86_config->crtc[0]->mode;
-      } else if (xf86_config->crtc[1]->enabled) {
-	mode1 = &xf86_config->crtc[1]->mode;
-      } else
-	return;
-    } else {
-	if (xf86_config->crtc[0]->enabled)
-	    mode1 = &xf86_config->crtc[0]->mode;
-	else
-	    return;
-    }
-
-    RADEONInitDispBandwidth2(pScrn, info, pixel_bytes2, mode1, mode2);
-}
-
-void
 legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 		     DisplayModePtr adjusted_mode, int x, int y)
 {
@@ -1732,9 +1724,14 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     RADEONInfoPtr info = RADEONPTR(pScrn);
     int i = 0;
     double dot_clock = 0;
-    int pll_flags = RADEON_PLL_LEGACY | RADEON_PLL_PREFER_LOW_REF_DIV;
+    int pll_flags = RADEON_PLL_LEGACY;
     Bool update_tv_routing = FALSE;
     Bool tilingChanged = FALSE;
+
+    if (adjusted_mode->Clock > 200000) /* range limits??? */
+	pll_flags |= RADEON_PLL_PREFER_HIGH_FB_DIV;
+    else
+	pll_flags |= RADEON_PLL_PREFER_LOW_REF_DIV;
 
     if (info->allowColorTiling) {
 	radeon_crtc->can_tile = (adjusted_mode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;
@@ -1746,9 +1743,10 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
 	if (output->crtc == crtc) {
-	    if (radeon_output->MonType != MT_CRT)
+	    if (radeon_output->active_device & (ATOM_DEVICE_LCD_SUPPORT |
+						ATOM_DEVICE_DFP_SUPPORT))
 		pll_flags |= RADEON_PLL_NO_ODD_POST_DIV;
-	    if (radeon_output->MonType == MT_LCD)
+	    if (radeon_output->active_device & (ATOM_DEVICE_LCD_SUPPORT))
 		pll_flags |= (RADEON_PLL_USE_BIOS_DIVS | RADEON_PLL_USE_REF_DIV);
 	}
     }
@@ -1793,7 +1791,7 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	RADEONOutputPrivatePtr radeon_output = output->driver_private;
 
 	if (output->crtc == crtc) {
-	    if (radeon_output->MonType == MT_STV || radeon_output->MonType == MT_CTV) {
+	    if (radeon_output->active_device & (ATOM_DEVICE_TV_SUPPORT)) {
 		switch (radeon_crtc->crtc_id) {
 		case 0:
 		    RADEONAdjustCrtcRegistersForTV(pScrn, info->ModeReg, adjusted_mode, output);
@@ -1834,7 +1832,9 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	radeon_update_tv_routing(pScrn, info->ModeReg);
 
     if (info->DispPriority)
-        RADEONInitDispBandwidth(pScrn);
+	RADEONInitDispBandwidth(pScrn);
+
+    radeon_crtc->initialized = TRUE;
 
     if (tilingChanged) {
 	/* need to redraw front buffer, I guess this can be considered a hack ? */

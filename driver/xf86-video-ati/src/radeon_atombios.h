@@ -126,10 +126,13 @@ extern Bool
 RADEONGetATOMTVInfo(xf86OutputPtr output);
 
 extern int
-atombios_external_tmds_setup(xf86OutputPtr output, DisplayModePtr mode);
+atombios_external_tmds_setup(xf86OutputPtr output, int action);
 
 extern void
 atombios_get_command_table_version(atomBiosHandlePtr atomBIOS, int index, int *major, int *minor);
+
+extern xf86MonPtr
+radeon_atom_get_edid(xf86OutputPtr output);
 
 Bool
 rhdAtomASICInit(atomBiosHandlePtr handle);
@@ -193,7 +196,11 @@ typedef struct _atomDataTables
         ATOM_LVDS_INFO_V12              *LVDS_Info_v12;
     } LVDS_Info;
     ATOM_TMDS_INFO                      *TMDS_Info;
-    ATOM_ANALOG_TV_INFO                 *AnalogTV_Info;
+    union {
+	void                            *base;
+	ATOM_ANALOG_TV_INFO             *AnalogTV_Info;
+	ATOM_ANALOG_TV_INFO_V1_2        *AnalogTV_Info_v1_2;
+    } AnalogTV_Info;
     union {
         void                            *base;
         ATOM_SUPPORTED_DEVICES_INFO     *SupportedDevicesInfo;
@@ -258,5 +265,14 @@ typedef struct _atomBiosHandle {
 
 extern Bool
 RADEONATOMGetTVTimings(ScrnInfoPtr pScrn, int index, SET_CRTC_TIMING_PARAMETERS_PS_ALLOCATION *crtc_timing, int32_t *pixel_clock);
+
+extern uint32_t
+radeon_get_device_index(uint32_t device_support);
+extern radeon_encoder_ptr
+radeon_get_encoder(xf86OutputPtr output);
+extern Bool
+radeon_add_encoder(ScrnInfoPtr pScrn, uint32_t encoder_id, uint32_t device_support);
+extern uint32_t
+radeon_get_encoder_id_from_supported_device(ScrnInfoPtr pScrn, uint32_t supported_device, int dac);
 
 #endif /*  RHD_ATOMBIOS_H_ */

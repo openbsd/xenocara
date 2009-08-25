@@ -47,6 +47,9 @@
 				/* Driver data structures */
 #include "radeon.h"
 #include "radeon_probe.h"
+#ifdef XF86DRI
+#include "radeon_drm.h"
+#endif
 
 				/* X and server generic header files */
 #include "xf86.h"
@@ -126,12 +129,12 @@ SECOND_PASS:
 	    }
 #endif /* USE_EXA */
 #ifdef USE_XAA
-	    if (!info->useEXA && info->accel) {
-	      if (info->accel->SetupForSolidFill &&
-		  info->accel->SubsequentSolidFillRect)
+	    if (!info->useEXA && info->accel_state->accel) {
+	      if (info->accel_state->accel->SetupForSolidFill &&
+		  info->accel_state->accel->SubsequentSolidFillRect)
 		 currentMode->flags    |= DGA_FILL_RECT;
-	      if (info->accel->SetupForScreenToScreenCopy &&
-		  info->accel->SubsequentScreenToScreenCopy)
+	      if (info->accel_state->accel->SetupForScreenToScreenCopy &&
+		  info->accel_state->accel->SubsequentScreenToScreenCopy)
 		 currentMode->flags    |= DGA_BLIT_RECT | DGA_BLIT_RECT_TRANS;
 	      if (currentMode->flags &
 		  (DGA_PIXMAP_AVAILABLE | DGA_FILL_RECT |
@@ -265,13 +268,13 @@ Bool RADEONDGAInit(ScreenPtr pScreen)
     }
 #endif /* USE_EXA */
 #ifdef USE_XAA
-    if (!info->useEXA && info->accel) {
-	info->DGAFuncs.Sync              = info->accel->Sync;
-	if (info->accel->SetupForSolidFill &&
-	    info->accel->SubsequentSolidFillRect)
+    if (!info->useEXA && info->accel_state->accel) {
+	info->DGAFuncs.Sync              = info->accel_state->accel->Sync;
+	if (info->accel_state->accel->SetupForSolidFill &&
+	    info->accel_state->accel->SubsequentSolidFillRect)
 	    info->DGAFuncs.FillRect      = RADEON_FillRect;
-	if (info->accel->SetupForScreenToScreenCopy &&
-	    info->accel->SubsequentScreenToScreenCopy) {
+	if (info->accel_state->accel->SetupForScreenToScreenCopy &&
+	    info->accel_state->accel->SubsequentScreenToScreenCopy) {
 	    info->DGAFuncs.BlitRect      = RADEON_BlitRect;
 	    info->DGAFuncs.BlitTransRect = RADEON_BlitTransRect;
 	}
@@ -383,8 +386,8 @@ static void RADEON_FillRect(ScrnInfoPtr pScrn,
 #endif /* USE_EXA */
 #ifdef USE_XAA
     if (!info->useEXA) {
-	(*info->accel->SetupForSolidFill)(pScrn, color, GXcopy, (uint32_t)(~0));
-	(*info->accel->SubsequentSolidFillRect)(pScrn, x, y, w, h);
+	(*info->accel_state->accel->SetupForSolidFill)(pScrn, color, GXcopy, (uint32_t)(~0));
+	(*info->accel_state->accel->SubsequentSolidFillRect)(pScrn, x, y, w, h);
         if (pScrn->bitsPerPixel == info->CurrentLayout.bitsPerPixel)
 	    RADEON_MARK_SYNC(info, pScrn);
     }
@@ -413,10 +416,10 @@ static void RADEON_BlitRect(ScrnInfoPtr pScrn,
 #endif /* USE_EXA */
 #ifdef USE_XAA
     if (!info->useEXA) {
-	(*info->accel->SetupForScreenToScreenCopy)(pScrn, xdir, ydir,
-						   GXcopy, (uint32_t)(~0), -1);
-	(*info->accel->SubsequentScreenToScreenCopy)(pScrn, srcx, srcy,
-						     dstx, dsty, w, h);
+	(*info->accel_state->accel->SetupForScreenToScreenCopy)(pScrn, xdir, ydir,
+								GXcopy, (uint32_t)(~0), -1);
+	(*info->accel_state->accel->SubsequentScreenToScreenCopy)(pScrn, srcx, srcy,
+								  dstx, dsty, w, h);
         if (pScrn->bitsPerPixel == info->CurrentLayout.bitsPerPixel)
 	    RADEON_MARK_SYNC(info, pScrn);
     }
@@ -431,14 +434,14 @@ static void RADEON_BlitTransRect(ScrnInfoPtr pScrn,
     int            xdir = ((srcx < dstx) && (srcy == dsty)) ? -1 : 1;
     int            ydir = (srcy < dsty) ? -1 : 1;
 
-    info->XAAForceTransBlit = TRUE;
-    (*info->accel->SetupForScreenToScreenCopy)(pScrn, xdir, ydir,
-					       GXcopy, (uint32_t)(~0), color);
+    info->accel_state->XAAForceTransBlit = TRUE;
+    (*info->accel_state->accel->SetupForScreenToScreenCopy)(pScrn, xdir, ydir,
+							    GXcopy, (uint32_t)(~0), color);
 
-    info->XAAForceTransBlit = FALSE;
+    info->accel_state->XAAForceTransBlit = FALSE;
 
-    (*info->accel->SubsequentScreenToScreenCopy)(pScrn, srcx, srcy,
-						 dstx, dsty, w, h);
+    (*info->accel_state->accel->SubsequentScreenToScreenCopy)(pScrn, srcx, srcy,
+							      dstx, dsty, w, h);
 
     if (pScrn->bitsPerPixel == info->CurrentLayout.bitsPerPixel)
         RADEON_MARK_SYNC(info, pScrn);

@@ -48,10 +48,200 @@
 #include "radeon_tv.h"
 #include "radeon_atombios.h"
 
+#include "ati_pciids_gen.h"
+
 static RADEONMonitorType radeon_detect_tv(ScrnInfoPtr pScrn);
 static RADEONMonitorType radeon_detect_primary_dac(ScrnInfoPtr pScrn, Bool color);
 static RADEONMonitorType radeon_detect_tv_dac(ScrnInfoPtr pScrn, Bool color);
 static RADEONMonitorType radeon_detect_ext_dac(ScrnInfoPtr pScrn);
+
+extern Bool
+RADEONI2CInit(ScrnInfoPtr pScrn, I2CBusPtr *bus_ptr, char *name, RADEONI2CBusPtr pRADEONI2CBus);
+
+static const RADEONTMDSPll default_tmds_pll[CHIP_FAMILY_LAST][4] =
+{
+    {{0, 0}, {0, 0}, {0, 0}, {0, 0}},				/*CHIP_FAMILY_UNKNOW*/
+    {{0, 0}, {0, 0}, {0, 0}, {0, 0}},				/*CHIP_FAMILY_LEGACY*/
+    {{12000, 0xa1b}, {0xffffffff, 0xa3f}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RADEON*/
+    {{12000, 0xa1b}, {0xffffffff, 0xa3f}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RV100*/
+    {{0, 0}, {0, 0}, {0, 0}, {0, 0}},				/*CHIP_FAMILY_RS100*/
+    {{15000, 0xa1b}, {0xffffffff, 0xa3f}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RV200*/
+    {{12000, 0xa1b}, {0xffffffff, 0xa3f}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RS200*/
+    {{15000, 0xa1b}, {0xffffffff, 0xa3f}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_R200*/
+    {{15500, 0x81b}, {0xffffffff, 0x83f}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RV250*/
+    {{0, 0}, {0, 0}, {0, 0}, {0, 0}},				/*CHIP_FAMILY_RS300*/
+    {{13000, 0x400f4}, {15000, 0x400f7}, {0xffffffff, 0x40111}, {0, 0}}, /*CHIP_FAMILY_RV280*/
+    {{0xffffffff, 0xb01cb}, {0, 0}, {0, 0}, {0, 0}},		/*CHIP_FAMILY_R300*/
+    {{0xffffffff, 0xb01cb}, {0, 0}, {0, 0}, {0, 0}},		/*CHIP_FAMILY_R350*/
+    {{15000, 0xb0155}, {0xffffffff, 0xb01cb}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RV350*/
+    {{15000, 0xb0155}, {0xffffffff, 0xb01cb}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RV380*/
+    {{0xffffffff, 0xb01cb}, {0, 0}, {0, 0}, {0, 0}},		/*CHIP_FAMILY_R420*/
+    {{0xffffffff, 0xb01cb}, {0, 0}, {0, 0}, {0, 0}},		/*CHIP_FAMILY_RV410*/ /* FIXME: just values from r420 used... */
+    {{15000, 0xb0155}, {0xffffffff, 0xb01cb}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RS400*/ /* FIXME: just values from rv380 used... */
+    {{15000, 0xb0155}, {0xffffffff, 0xb01cb}, {0, 0}, {0, 0}},	/*CHIP_FAMILY_RS480*/ /* FIXME: just values from rv380 used... */
+};
+
+static const uint32_t default_tvdac_adj [CHIP_FAMILY_LAST] =
+{
+    0x00000000,   /* unknown */
+    0x00000000,   /* legacy */
+    0x00000000,   /* r100 */
+    0x00280000,   /* rv100 */
+    0x00000000,   /* rs100 */
+    0x00880000,   /* rv200 */
+    0x00000000,   /* rs200 */
+    0x00000000,   /* r200 */
+    0x00770000,   /* rv250 */
+    0x00290000,   /* rs300 */
+    0x00560000,   /* rv280 */
+    0x00780000,   /* r300 */
+    0x00770000,   /* r350 */
+    0x00780000,   /* rv350 */
+    0x00780000,   /* rv380 */
+    0x01080000,   /* r420 */
+    0x01080000,   /* rv410 */ /* FIXME: just values from r420 used... */
+    0x00780000,   /* rs400 */ /* FIXME: just values from rv380 used... */
+    0x00780000,   /* rs480 */ /* FIXME: just values from rv380 used... */
+};
+
+void
+RADEONGetTVDacAdjInfo(ScrnInfoPtr pScrn, radeon_tvdac_ptr tvdac)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+
+    if (!RADEONGetDAC2InfoFromBIOS(pScrn, tvdac)) {
+	tvdac->ps2_tvdac_adj = default_tvdac_adj[info->ChipFamily];
+	if (info->IsMobility) { /* some mobility chips may different */
+	    if (info->ChipFamily == CHIP_FAMILY_RV250)
+		tvdac->ps2_tvdac_adj = 0x00880000;
+	}
+	tvdac->pal_tvdac_adj = tvdac->ps2_tvdac_adj;
+	tvdac->ntsc_tvdac_adj = tvdac->ps2_tvdac_adj;
+    }
+}
+
+void
+RADEONGetTMDSInfoFromTable(ScrnInfoPtr pScrn, radeon_tmds_ptr tmds)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    int i;
+
+    for (i = 0; i < 4; i++) {
+        tmds->tmds_pll[i].value = default_tmds_pll[info->ChipFamily][i].value;
+        tmds->tmds_pll[i].freq = default_tmds_pll[info->ChipFamily][i].freq;
+    }
+}
+
+void
+RADEONGetTMDSInfo(ScrnInfoPtr pScrn, radeon_tmds_ptr tmds)
+{
+    int i;
+
+    for (i = 0; i < 4; i++) {
+	tmds->tmds_pll[i].value = 0;
+	tmds->tmds_pll[i].freq = 0;
+    }
+
+    if (!RADEONGetTMDSInfoFromBIOS(pScrn, tmds))
+	RADEONGetTMDSInfoFromTable(pScrn, tmds);
+}
+
+void
+RADEONGetExtTMDSInfo(ScrnInfoPtr pScrn, radeon_dvo_ptr dvo)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    I2CBusPtr pDVOBus;
+
+    if (!info->IsAtomBios) {
+#if defined(__powerpc__)
+	dvo->dvo_i2c = legacy_setup_i2c_bus(RADEON_GPIO_MONID);
+	dvo->dvo_i2c_slave_addr = 0x70;
+#else
+	if (!RADEONGetExtTMDSInfoFromBIOS(pScrn, dvo)) {
+	    dvo->dvo_i2c = legacy_setup_i2c_bus(RADEON_GPIO_CRT2_DDC);
+	    dvo->dvo_i2c_slave_addr = 0x70;
+	}
+#endif
+	if (RADEONI2CInit(pScrn, &pDVOBus, "DVO", &dvo->dvo_i2c)) {
+	    dvo->DVOChip =
+		RADEONDVODeviceInit(pDVOBus, dvo->dvo_i2c_slave_addr);
+	    if (!dvo->DVOChip)
+		xfree(pDVOBus);
+	}
+    }
+}
+
+static void
+RADEONGetPanelInfoFromReg (ScrnInfoPtr pScrn, radeon_lvds_ptr lvds)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    radeon_native_mode_ptr native_mode = &lvds->native_mode;
+    uint32_t fp_vert_stretch = INREG(RADEON_FP_VERT_STRETCH);
+    uint32_t fp_horz_stretch = INREG(RADEON_FP_HORZ_STRETCH);
+
+    lvds->PanelPwrDly = 200;
+    if (fp_vert_stretch & RADEON_VERT_STRETCH_ENABLE) {
+	native_mode->PanelYRes = ((fp_vert_stretch & RADEON_VERT_PANEL_SIZE) >>
+				  RADEON_VERT_PANEL_SHIFT) + 1;
+    } else {
+	native_mode->PanelYRes = (INREG(RADEON_CRTC_V_TOTAL_DISP)>>16) + 1;
+    }
+    if (fp_horz_stretch & RADEON_HORZ_STRETCH_ENABLE) {
+	native_mode->PanelXRes = (((fp_horz_stretch & RADEON_HORZ_PANEL_SIZE) >>
+				   RADEON_HORZ_PANEL_SHIFT) + 1) * 8;
+    } else {
+	native_mode->PanelXRes = ((INREG(RADEON_CRTC_H_TOTAL_DISP)>>16) + 1) * 8;
+    }
+
+    if ((native_mode->PanelXRes < 640) || (native_mode->PanelYRes < 480)) {
+	native_mode->PanelXRes = 640;
+	native_mode->PanelYRes = 480;
+    }
+
+    // move this to crtc function
+    if (xf86ReturnOptValBool(info->Options, OPTION_LVDS_PROBE_PLL, TRUE)) {
+           uint32_t ppll_div_sel, ppll_val;
+
+           ppll_div_sel = INREG8(RADEON_CLOCK_CNTL_INDEX + 1) & 0x3;
+	   RADEONPllErrataAfterIndex(info);
+	   ppll_val = INPLL(pScrn, RADEON_PPLL_DIV_0 + ppll_div_sel);
+           if ((ppll_val & 0x000707ff) == 0x1bb)
+		   goto noprobe;
+	   info->FeedbackDivider = ppll_val & 0x7ff;
+	   info->PostDivider = (ppll_val >> 16) & 0x7;
+	   info->RefDivider = info->pll.reference_div;
+	   info->UseBiosDividers = TRUE;
+
+           xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                      "Existing panel PLL dividers will be used.\n");
+    }
+ noprobe:
+
+    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+	       "Panel size %dx%d is derived, this may not be correct.\n"
+		   "If not, use PanelSize option to overwrite this setting\n",
+	       native_mode->PanelXRes, native_mode->PanelYRes);
+}
+
+void
+RADEONGetLVDSInfo (ScrnInfoPtr pScrn, radeon_lvds_ptr lvds)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    radeon_native_mode_ptr native_mode = &lvds->native_mode;
+    char* s;
+
+    if (!RADEONGetLVDSInfoFromBIOS(pScrn, lvds))
+	RADEONGetPanelInfoFromReg(pScrn, lvds);
+
+    if ((s = xf86GetOptValString(info->Options, OPTION_PANEL_SIZE))) {
+	lvds->PanelPwrDly = 200;
+	if (sscanf (s, "%dx%d", &native_mode->PanelXRes, &native_mode->PanelYRes) != 2) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Invalid PanelSize option: %s\n", s);
+	    RADEONGetPanelInfoFromReg(pScrn, lvds);
+	}
+    }
+}
 
 void
 RADEONRestoreDACRegisters(ScrnInfoPtr pScrn,
@@ -277,38 +467,43 @@ static void
 RADEONRestoreDVOChip(ScrnInfoPtr pScrn, xf86OutputPtr output)
 {
     RADEONInfoPtr info = RADEONPTR(pScrn);
-    unsigned char *RADEONMMIO = info->MMIO;
-    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    radeon_encoder_ptr radeon_encoder = radeon_get_encoder(output);
+    radeon_dvo_ptr dvo = NULL;
 
-    if (!radeon_output->DVOChip)
+    if (radeon_encoder == NULL)
 	return;
 
-    OUTREG(radeon_output->dvo_i2c.mask_clk_reg,
-	   INREG(radeon_output->dvo_i2c.mask_clk_reg) &
-	   (uint32_t)~(RADEON_GPIO_A_0 | RADEON_GPIO_A_1));
+    dvo = (radeon_dvo_ptr)radeon_encoder->dev_priv;
 
+    if (dvo == NULL)
+	return;
+
+    if (!dvo->DVOChip)
+	return;
+
+    RADEONI2CDoLock(output, TRUE);
     if (!RADEONInitExtTMDSInfoFromBIOS(output)) {
-	if (radeon_output->DVOChip) {
+	if (dvo->DVOChip) {
 	    switch(info->ext_tmds_chip) {
 	    case RADEON_SIL_164:
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x08, 0x30);
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x09, 0x00);
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x0a, 0x90);
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x0c, 0x89);
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x08, 0x3b);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x08, 0x30);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x09, 0x00);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x0a, 0x90);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x0c, 0x89);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x08, 0x3b);
 		break;
 #if 0
 		/* needs work see bug 10418 */
 	    case RADEON_SIL_1178:
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x0f, 0x44);
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x0f, 0x4c);
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x0e, 0x01);
-		RADEONDVOWriteByte(radeon_output->DVOChip, 0x0a, 0x80);
-                RADEONDVOWriteByte(radeon_output->DVOChip, 0x09, 0x30);
-                RADEONDVOWriteByte(radeon_output->DVOChip, 0x0c, 0xc9);
-                RADEONDVOWriteByte(radeon_output->DVOChip, 0x0d, 0x70);
-                RADEONDVOWriteByte(radeon_output->DVOChip, 0x08, 0x32);
-                RADEONDVOWriteByte(radeon_output->DVOChip, 0x08, 0x33);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x0f, 0x44);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x0f, 0x4c);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x0e, 0x01);
+		RADEONDVOWriteByte(dvo->DVOChip, 0x0a, 0x80);
+                RADEONDVOWriteByte(dvo->DVOChip, 0x09, 0x30);
+                RADEONDVOWriteByte(dvo->DVOChip, 0x0c, 0xc9);
+                RADEONDVOWriteByte(dvo->DVOChip, 0x0d, 0x70);
+                RADEONDVOWriteByte(dvo->DVOChip, 0x08, 0x32);
+                RADEONDVOWriteByte(dvo->DVOChip, 0x08, 0x33);
 		break;
 #endif
 	    default:
@@ -316,6 +511,7 @@ RADEONRestoreDVOChip(ScrnInfoPtr pScrn, xf86OutputPtr output)
 	    }
 	}
     }
+    RADEONI2CDoLock(output, FALSE);
 }
 
 #if 0
@@ -566,38 +762,48 @@ RADEONCrtIsPhysicallyConnected(ScrnInfoPtr pScrn, int IsCrtDac)
 #endif
 
 RADEONMonitorType
-legacy_dac_detect(ScrnInfoPtr pScrn, xf86OutputPtr output)
+legacy_dac_detect(xf86OutputPtr output)
 {
+    ScrnInfoPtr pScrn = output->scrn;
     RADEONInfoPtr info      = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
     RADEONMonitorType found = MT_NONE;
 
-    if (OUTPUT_IS_TV) {
+    if (radeon_output->devices & (ATOM_DEVICE_TV_SUPPORT)) {
 	if (xf86ReturnOptValBool(info->Options, OPTION_FORCE_TVOUT, FALSE)) {
-	    if (radeon_output->type == OUTPUT_STV)
+	    if (radeon_output->ConnectorType == CONNECTOR_STV)
 		found = MT_STV;
 	    else
 		found = MT_CTV;
 	} else {
-	    if (info->InternalTVOut) {
-		if (radeon_output->load_detection)
-		    found = radeon_detect_tv(pScrn);
-		else
-		    found = MT_NONE;
-	    }
+	    if (radeon_output->load_detection)
+		found = radeon_detect_tv(pScrn);
 	}
-    } else {
-	if (radeon_output->DACType == DAC_PRIMARY) {
+    } else if (radeon_output->devices & (ATOM_DEVICE_CRT2_SUPPORT)) {
+	if (info->encoders[ATOM_DEVICE_CRT2_INDEX] &&
+	    (info->encoders[ATOM_DEVICE_CRT2_INDEX]->encoder_id == ENCODER_OBJECT_ID_INTERNAL_DAC1)) {
 	    if (radeon_output->load_detection)
 		found = radeon_detect_primary_dac(pScrn, TRUE);
-	} else if (radeon_output->DACType == DAC_TVDAC) {
+	} else {
 	    if (radeon_output->load_detection) {
 		if (info->ChipFamily == CHIP_FAMILY_R200)
 		    found = radeon_detect_ext_dac(pScrn);
 		else
 		    found = radeon_detect_tv_dac(pScrn, TRUE);
-	    } else
-		found = MT_NONE;
+	    }
+	}
+    } else if (radeon_output->devices & (ATOM_DEVICE_CRT1_SUPPORT)) {
+	if (info->encoders[ATOM_DEVICE_CRT1_INDEX] &&
+	    (info->encoders[ATOM_DEVICE_CRT1_INDEX]->encoder_id == ENCODER_OBJECT_ID_INTERNAL_DAC1)) {
+	    if (radeon_output->load_detection)
+		found = radeon_detect_primary_dac(pScrn, TRUE);
+	} else {
+	    if (radeon_output->load_detection) {
+		if (info->ChipFamily == CHIP_FAMILY_R200)
+		    found = radeon_detect_ext_dac(pScrn);
+		else
+		    found = radeon_detect_tv_dac(pScrn, TRUE);
+	    }
 	}
     }
 
@@ -636,8 +842,7 @@ RADEONDacPowerSet(ScrnInfoPtr pScrn, Bool IsOn, Bool IsPrimaryDAC)
 	uint32_t tv_dac_cntl;
 	uint32_t fp2_gen_cntl;
 
-	switch(info->ChipFamily)
-	{
+	switch(info->ChipFamily) {
 	case CHIP_FAMILY_R420:
 	case CHIP_FAMILY_RV410:
 	    tv_dac_cntl = INREG(RADEON_TV_DAC_CNTL);
@@ -663,7 +868,6 @@ RADEONDacPowerSet(ScrnInfoPtr pScrn, Bool IsOn, Bool IsPrimaryDAC)
 	    }
 	    OUTREG(RADEON_FP2_GEN_CNTL, fp2_gen_cntl);
 	    break;
-
 	default:
 	    tv_dac_cntl = INREG(RADEON_TV_DAC_CNTL);
 	    if (IsOn) {
@@ -683,38 +887,89 @@ RADEONDacPowerSet(ScrnInfoPtr pScrn, Bool IsOn, Bool IsPrimaryDAC)
     }
 }
 
-/* This is to be used enable/disable displays dynamically */
-static void
-RADEONEnableDisplay(xf86OutputPtr output, BOOL bEnable)
+void
+legacy_output_dpms(xf86OutputPtr output, int mode)
 {
     ScrnInfoPtr pScrn = output->scrn;
     RADEONInfoPtr info = RADEONPTR(pScrn);
     RADEONSavePtr save = info->ModeReg;
     unsigned char * RADEONMMIO = info->MMIO;
     unsigned long tmp;
-    RADEONOutputPrivatePtr radeon_output;
-    int tv_dac_change = 0, o;
-    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    radeon_encoder_ptr radeon_encoder = radeon_get_encoder(output);
 
-    radeon_output = output->driver_private;
-    for (o = 0; o < xf86_config->num_output; o++) {
-	if (output == xf86_config->output[o]) {
-	    break;
+    if (radeon_encoder == NULL)
+	return;
+
+    switch(mode) {
+    case DPMSModeOn:
+	radeon_encoder->devices |= radeon_output->active_device;
+	switch (radeon_encoder->encoder_id) {
+	case ENCODER_OBJECT_ID_INTERNAL_LVDS:
+	{
+	    radeon_lvds_ptr lvds = (radeon_lvds_ptr)radeon_encoder->dev_priv;
+	    if (lvds == NULL)
+		return;
+	    ErrorF("enable LVDS\n");
+	    tmp = INREG(RADEON_LVDS_GEN_CNTL);
+	    tmp |= (RADEON_LVDS_ON | RADEON_LVDS_BLON | RADEON_LVDS_EN);
+	    tmp &= ~(RADEON_LVDS_DISPLAY_DIS);
+	    usleep (lvds->PanelPwrDly * 1000);
+	    OUTREG(RADEON_LVDS_GEN_CNTL, tmp);
+	    save->lvds_gen_cntl |= (RADEON_LVDS_ON | RADEON_LVDS_BLON | RADEON_LVDS_EN);
+	    save->lvds_gen_cntl &= ~(RADEON_LVDS_DISPLAY_DIS);
 	}
-    }
-
-    if (bEnable) {
-	/*ErrorF("enable montype: %d\n", radeon_output->MonType);*/
-	if (radeon_output->MonType == MT_CRT) {
-	    if (radeon_output->DACType == DAC_PRIMARY) {
-		info->output_crt1 |= (1 << o);
-		tmp = INREG(RADEON_CRTC_EXT_CNTL);
-		tmp |= RADEON_CRTC_CRT_ON;
-		OUTREG(RADEON_CRTC_EXT_CNTL, tmp);
-		save->crtc_ext_cntl |= RADEON_CRTC_CRT_ON;
-		RADEONDacPowerSet(pScrn, bEnable, (radeon_output->DACType == DAC_PRIMARY));
-	    } else if (radeon_output->DACType == DAC_TVDAC) {
-		info->output_crt2 |= (1 << o);
+	break;
+	case ENCODER_OBJECT_ID_INTERNAL_TMDS1:
+	    ErrorF("enable FP1\n");
+	    tmp = INREG(RADEON_FP_GEN_CNTL);
+	    tmp |= (RADEON_FP_FPON | RADEON_FP_TMDS_EN);
+	    OUTREG(RADEON_FP_GEN_CNTL, tmp);
+	    save->fp_gen_cntl |= (RADEON_FP_FPON | RADEON_FP_TMDS_EN);
+	    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+		(info->ChipFamily == CHIP_FAMILY_RS480)) {
+		tmp = INREG(RS400_FP_2ND_GEN_CNTL);
+		tmp |= (RS400_FP_2ND_ON | RS400_TMDS_2ND_EN);
+		OUTREG(RS400_FP_2ND_GEN_CNTL, tmp);
+		save->fp_2nd_gen_cntl |= (RS400_FP_2ND_ON |
+					  RS400_TMDS_2ND_EN);
+	    }
+	    break;
+	case ENCODER_OBJECT_ID_INTERNAL_DVO1:
+	    ErrorF("enable FP2\n");
+	    tmp = INREG(RADEON_FP2_GEN_CNTL);
+	    tmp &= ~RADEON_FP2_BLANK_EN;
+	    tmp |= (RADEON_FP2_ON | RADEON_FP2_DVO_EN);
+	    OUTREG(RADEON_FP2_GEN_CNTL, tmp);
+	    save->fp2_gen_cntl |= (RADEON_FP2_ON | RADEON_FP2_DVO_EN);
+	    save->fp2_gen_cntl &= ~RADEON_FP2_BLANK_EN;
+	    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+		(info->ChipFamily == CHIP_FAMILY_RS480)) {
+		tmp = INREG(RS400_FP2_2_GEN_CNTL);
+		tmp &= ~RS400_FP2_2_BLANK_EN;
+		tmp |= (RS400_FP2_2_ON | RS400_FP2_2_DVO2_EN);
+		OUTREG(RS400_FP2_2_GEN_CNTL, tmp);
+		save->fp2_2_gen_cntl |= (RS400_FP2_2_ON | RS400_FP2_2_DVO2_EN);
+		save->fp2_2_gen_cntl &= ~RS400_FP2_2_BLANK_EN;
+	    }
+	    break;
+	case ENCODER_OBJECT_ID_INTERNAL_DAC1:
+	    ErrorF("enable primary dac\n");
+	    tmp = INREG(RADEON_CRTC_EXT_CNTL);
+	    tmp |= RADEON_CRTC_CRT_ON;
+	    OUTREG(RADEON_CRTC_EXT_CNTL, tmp);
+	    save->crtc_ext_cntl |= RADEON_CRTC_CRT_ON;
+	    RADEONDacPowerSet(pScrn, TRUE, TRUE);
+	    break;
+	case ENCODER_OBJECT_ID_INTERNAL_DAC2:
+	    if (radeon_output->active_device & (ATOM_DEVICE_TV_SUPPORT)) {
+		ErrorF("enable TV\n");
+		tmp = INREG(RADEON_TV_MASTER_CNTL);
+		tmp |= RADEON_TV_ON;
+		OUTREG(RADEON_TV_MASTER_CNTL, tmp);
+		radeon_output->tvout.tv_on = TRUE;
+	    } else {
+		ErrorF("enable TVDAC\n");
 		if (info->ChipFamily == CHIP_FAMILY_R200) {
 		    tmp = INREG(RADEON_FP2_GEN_CNTL);
 		    tmp |= (RADEON_FP2_ON | RADEON_FP2_DVO_EN);
@@ -726,83 +981,88 @@ RADEONEnableDisplay(xf86OutputPtr output, BOOL bEnable)
 		    OUTREG(RADEON_CRTC2_GEN_CNTL, tmp);
 		    save->crtc2_gen_cntl |= RADEON_CRTC2_CRT2_ON;
 		}
-		tv_dac_change = 1;
-		/* IGP chips seem to use a mix of Primary and TVDAC controls */
-		if (info->IsIGP) {
-		    tmp = INREG(RADEON_CRTC_EXT_CNTL);
-		    tmp |= RADEON_CRTC_CRT_ON;
-		    OUTREG(RADEON_CRTC_EXT_CNTL, tmp);
-		    save->crtc_ext_cntl |= RADEON_CRTC_CRT_ON;
-		    RADEONDacPowerSet(pScrn, bEnable, TRUE);
-		}
 	    }
-	} else if (radeon_output->MonType == MT_DFP) {
-	    if (radeon_output->TMDSType == TMDS_INT) {
-		info->output_dfp1 |= (1 << o);
+	    RADEONDacPowerSet(pScrn, TRUE, FALSE);
+	    break;
+	}
+	break;
+    case DPMSModeOff:
+    case DPMSModeSuspend:
+    case DPMSModeStandby:
+	radeon_encoder->devices &= ~(radeon_output->active_device);
+	if (!radeon_encoder->devices) {
+	    switch (radeon_encoder->encoder_id) {
+	    case ENCODER_OBJECT_ID_INTERNAL_LVDS:
+		{
+		    unsigned long tmpPixclksCntl = INPLL(pScrn, RADEON_PIXCLKS_CNTL);
+		    ErrorF("disable LVDS\n");
+		    if (info->IsMobility || info->IsIGP) {
+			/* Asic bug, when turning off LVDS_ON, we have to make sure
+			   RADEON_PIXCLK_LVDS_ALWAYS_ON bit is off
+			*/
+			OUTPLLP(pScrn, RADEON_PIXCLKS_CNTL, 0, ~RADEON_PIXCLK_LVDS_ALWAYS_ONb);
+		    }
+		    tmp = INREG(RADEON_LVDS_GEN_CNTL);
+		    tmp |= RADEON_LVDS_DISPLAY_DIS;
+		    tmp &= ~(RADEON_LVDS_ON | RADEON_LVDS_BLON | RADEON_LVDS_EN);
+		    OUTREG(RADEON_LVDS_GEN_CNTL, tmp);
+		    save->lvds_gen_cntl |= RADEON_LVDS_DISPLAY_DIS;
+		    save->lvds_gen_cntl &= ~(RADEON_LVDS_ON | RADEON_LVDS_BLON | RADEON_LVDS_EN);
+		    if (info->IsMobility || info->IsIGP) {
+			OUTPLL(pScrn, RADEON_PIXCLKS_CNTL, tmpPixclksCntl);
+		    }
+		}
+		break;
+	    case ENCODER_OBJECT_ID_INTERNAL_TMDS1:
+		ErrorF("disable FP1\n");
 		tmp = INREG(RADEON_FP_GEN_CNTL);
-		tmp |= (RADEON_FP_FPON | RADEON_FP_TMDS_EN);
+		tmp &= ~(RADEON_FP_FPON | RADEON_FP_TMDS_EN);
 		OUTREG(RADEON_FP_GEN_CNTL, tmp);
-		save->fp_gen_cntl |= (RADEON_FP_FPON | RADEON_FP_TMDS_EN);
+		save->fp_gen_cntl &= ~(RADEON_FP_FPON | RADEON_FP_TMDS_EN);
 		if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
 		    (info->ChipFamily == CHIP_FAMILY_RS480)) {
 		    tmp = INREG(RS400_FP_2ND_GEN_CNTL);
-		    tmp |= (RS400_FP_2ND_ON | RS400_TMDS_2ND_EN);
+		    tmp &= ~(RS400_FP_2ND_ON | RS400_TMDS_2ND_EN);
 		    OUTREG(RS400_FP_2ND_GEN_CNTL, tmp);
-		    save->fp_2nd_gen_cntl |= (RS400_FP_2ND_ON |
-					      RS400_TMDS_2ND_EN);
+		    save->fp_2nd_gen_cntl &= ~(RS400_FP_2ND_ON |
+					       RS400_TMDS_2ND_EN);
 		}
-	    } else if (radeon_output->TMDSType == TMDS_EXT) {
-		info->output_dfp2 |= (1 << o);
+	    break;
+	    case ENCODER_OBJECT_ID_INTERNAL_DVO1:
+		ErrorF("disable FP2\n");
 		tmp = INREG(RADEON_FP2_GEN_CNTL);
-		tmp &= ~RADEON_FP2_BLANK_EN;
-		tmp |= (RADEON_FP2_ON | RADEON_FP2_DVO_EN);
+		tmp |= RADEON_FP2_BLANK_EN;
+		tmp &= ~(RADEON_FP2_ON | RADEON_FP2_DVO_EN);
 		OUTREG(RADEON_FP2_GEN_CNTL, tmp);
-		save->fp2_gen_cntl |= (RADEON_FP2_ON | RADEON_FP2_DVO_EN);
-		save->fp2_gen_cntl &= ~RADEON_FP2_BLANK_EN;
+		save->fp2_gen_cntl &= ~(RADEON_FP2_ON | RADEON_FP2_DVO_EN);
+		save->fp2_gen_cntl |= RADEON_FP2_BLANK_EN;
 		if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
 		    (info->ChipFamily == CHIP_FAMILY_RS480)) {
 		    tmp = INREG(RS400_FP2_2_GEN_CNTL);
-		    tmp &= ~RS400_FP2_2_BLANK_EN;
-		    tmp |= (RS400_FP2_2_ON | RS400_FP2_2_DVO2_EN);
+		    tmp |= RS400_FP2_2_BLANK_EN;
+		    tmp &= ~(RS400_FP2_2_ON | RS400_FP2_2_DVO2_EN);
 		    OUTREG(RS400_FP2_2_GEN_CNTL, tmp);
-		    save->fp2_2_gen_cntl |= (RS400_FP2_2_ON | RS400_FP2_2_DVO2_EN);
-		    save->fp2_2_gen_cntl &= ~RS400_FP2_2_BLANK_EN;
+		    save->fp2_2_gen_cntl &= ~(RS400_FP2_2_ON | RS400_FP2_2_DVO2_EN);
+		    save->fp2_2_gen_cntl |= RS400_FP2_2_BLANK_EN;
 		}
-	    }
-	} else if (radeon_output->MonType == MT_LCD) {
-	    info->output_lcd1 |= (1 << o);
-	    tmp = INREG(RADEON_LVDS_GEN_CNTL);
-	    tmp |= (RADEON_LVDS_ON | RADEON_LVDS_BLON | RADEON_LVDS_EN);
-	    tmp &= ~(RADEON_LVDS_DISPLAY_DIS);
-	    usleep (radeon_output->PanelPwrDly * 1000);
-	    OUTREG(RADEON_LVDS_GEN_CNTL, tmp);
-	    save->lvds_gen_cntl |= (RADEON_LVDS_ON | RADEON_LVDS_BLON | RADEON_LVDS_EN);
-	    save->lvds_gen_cntl &= ~(RADEON_LVDS_DISPLAY_DIS);
-	} else if (radeon_output->MonType == MT_STV ||
-		   radeon_output->MonType == MT_CTV) {
-	    info->output_tv1 |= (1 << o);
-	    tmp = INREG(RADEON_TV_MASTER_CNTL);
-	    tmp |= RADEON_TV_ON;
-	    OUTREG(RADEON_TV_MASTER_CNTL, tmp);
-	    tv_dac_change = 2;
-	    radeon_output->tv_on = TRUE;
-	}
-    } else {
-	/*ErrorF("disable montype: %d\n", radeon_output->MonType);*/
-	if (radeon_output->MonType == MT_CRT) {
-	    if (radeon_output->DACType == DAC_PRIMARY) {
-		info->output_crt1 &= ~(1 << o);
-		if (!info->output_crt1) {
-		    tmp = INREG(RADEON_CRTC_EXT_CNTL);
-		    tmp &= ~RADEON_CRTC_CRT_ON;
-		    OUTREG(RADEON_CRTC_EXT_CNTL, tmp);
-		    save->crtc_ext_cntl &= ~RADEON_CRTC_CRT_ON;
-		    RADEONDacPowerSet(pScrn, bEnable, (radeon_output->DACType == DAC_PRIMARY));
-		}
-	    } else if (radeon_output->DACType == DAC_TVDAC) {
-		info->output_crt2 &= ~(1 << o);
-		tv_dac_change = 1;
-		if (!info->output_crt2) {
+		break;
+	    case ENCODER_OBJECT_ID_INTERNAL_DAC1:
+		ErrorF("disable primary dac\n");
+		tmp = INREG(RADEON_CRTC_EXT_CNTL);
+		tmp &= ~RADEON_CRTC_CRT_ON;
+		OUTREG(RADEON_CRTC_EXT_CNTL, tmp);
+		save->crtc_ext_cntl &= ~RADEON_CRTC_CRT_ON;
+		RADEONDacPowerSet(pScrn, FALSE, TRUE);
+		break;
+	    case ENCODER_OBJECT_ID_INTERNAL_DAC2:
+		if (radeon_output->active_device & (ATOM_DEVICE_TV_SUPPORT)) {
+		    ErrorF("disable TV\n");
+		    tmp = INREG(RADEON_TV_MASTER_CNTL);
+		    tmp &= ~RADEON_TV_ON;
+		    OUTREG(RADEON_TV_MASTER_CNTL, tmp);
+		    radeon_output->tvout.tv_on = FALSE;
+		} else {
+		    ErrorF("disable TVDAC\n");
 		    if (info->ChipFamily == CHIP_FAMILY_R200) {
 			tmp = INREG(RADEON_FP2_GEN_CNTL);
 			tmp &= ~(RADEON_FP2_ON | RADEON_FP2_DVO_EN);
@@ -815,109 +1075,10 @@ RADEONEnableDisplay(xf86OutputPtr output, BOOL bEnable)
 			save->crtc2_gen_cntl &= ~RADEON_CRTC2_CRT2_ON;
 		    }
 		}
-		/* IGP chips seem to use a mix of Primary and TVDAC controls */
-		if (info->IsIGP) {
-		    tmp = INREG(RADEON_CRTC_EXT_CNTL);
-		    tmp &= ~RADEON_CRTC_CRT_ON;
-		    OUTREG(RADEON_CRTC_EXT_CNTL, tmp);
-		    save->crtc_ext_cntl &= ~RADEON_CRTC_CRT_ON;
-		    RADEONDacPowerSet(pScrn, bEnable, TRUE);
-		}
-	    }
-	} else if (radeon_output->MonType == MT_DFP) {
-	    if (radeon_output->TMDSType == TMDS_INT) {
-		info->output_dfp1 &= ~(1 << o);
-		if (!info->output_dfp1) {
-		    tmp = INREG(RADEON_FP_GEN_CNTL);
-		    tmp &= ~(RADEON_FP_FPON | RADEON_FP_TMDS_EN);
-		    OUTREG(RADEON_FP_GEN_CNTL, tmp);
-		    save->fp_gen_cntl &= ~(RADEON_FP_FPON | RADEON_FP_TMDS_EN);
-		    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
-			(info->ChipFamily == CHIP_FAMILY_RS480)) {
-			tmp = INREG(RS400_FP_2ND_GEN_CNTL);
-			tmp &= ~(RS400_FP_2ND_ON | RS400_TMDS_2ND_EN);
-			OUTREG(RS400_FP_2ND_GEN_CNTL, tmp);
-			save->fp_2nd_gen_cntl &= ~(RS400_FP_2ND_ON |
-						   RS400_TMDS_2ND_EN);
-		    }
-		}
-	    } else if (radeon_output->TMDSType == TMDS_EXT) {
-		info->output_dfp2 &= ~(1 << o);
-		if (!info->output_dfp2) {
-		    tmp = INREG(RADEON_FP2_GEN_CNTL);
-		    tmp |= RADEON_FP2_BLANK_EN;
-		    tmp &= ~(RADEON_FP2_ON | RADEON_FP2_DVO_EN);
-		    OUTREG(RADEON_FP2_GEN_CNTL, tmp);
-		    save->fp2_gen_cntl &= ~(RADEON_FP2_ON | RADEON_FP2_DVO_EN);
-		    save->fp2_gen_cntl |= RADEON_FP2_BLANK_EN;
-		    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
-			(info->ChipFamily == CHIP_FAMILY_RS480)) {
-			tmp = INREG(RS400_FP2_2_GEN_CNTL);
-			tmp |= RS400_FP2_2_BLANK_EN;
-			tmp &= ~(RS400_FP2_2_ON | RS400_FP2_2_DVO2_EN);
-			OUTREG(RS400_FP2_2_GEN_CNTL, tmp);
-			save->fp2_2_gen_cntl &= ~(RS400_FP2_2_ON | RS400_FP2_2_DVO2_EN);
-			save->fp2_2_gen_cntl |= RS400_FP2_2_BLANK_EN;
-		    }
-		}
-	    }
-	} else if (radeon_output->MonType == MT_LCD) {
-	    info->output_lcd1 &= ~(1 << o);
-	    if (!info->output_lcd1) {
-		unsigned long tmpPixclksCntl = INPLL(pScrn, RADEON_PIXCLKS_CNTL);
-		if (info->IsMobility || info->IsIGP) {
-		    /* Asic bug, when turning off LVDS_ON, we have to make sure
-		       RADEON_PIXCLK_LVDS_ALWAYS_ON bit is off
-		    */
-		    OUTPLLP(pScrn, RADEON_PIXCLKS_CNTL, 0, ~RADEON_PIXCLK_LVDS_ALWAYS_ONb);
-		}
-		tmp = INREG(RADEON_LVDS_GEN_CNTL);
-		tmp |= RADEON_LVDS_DISPLAY_DIS;
-		tmp &= ~(RADEON_LVDS_ON | RADEON_LVDS_BLON | RADEON_LVDS_EN);
-		OUTREG(RADEON_LVDS_GEN_CNTL, tmp);
-		save->lvds_gen_cntl |= RADEON_LVDS_DISPLAY_DIS;
-		save->lvds_gen_cntl &= ~(RADEON_LVDS_ON | RADEON_LVDS_BLON | RADEON_LVDS_EN);
-		if (info->IsMobility || info->IsIGP) {
-		    OUTPLL(pScrn, RADEON_PIXCLKS_CNTL, tmpPixclksCntl);
-		}
-	    }
-	} else if (radeon_output->MonType == MT_STV || radeon_output->MonType == MT_CTV) {
-	    info->output_tv1 &= ~(1 << o);
-	    tv_dac_change = 2;
-	    if (!info->output_tv1) {
-		tmp = INREG(RADEON_TV_MASTER_CNTL);
-		tmp &= ~RADEON_TV_ON;
-		OUTREG(RADEON_TV_MASTER_CNTL, tmp);
-		radeon_output->tv_on = FALSE;
+		RADEONDacPowerSet(pScrn, FALSE, FALSE);
+		break;
 	    }
 	}
-    }
-
-    if (tv_dac_change) {
-	if (bEnable)
-	    info->tv_dac_enable_mask |= tv_dac_change;
-	else
-	    info->tv_dac_enable_mask &= ~tv_dac_change;
-
-	if (bEnable && info->tv_dac_enable_mask)
-	    RADEONDacPowerSet(pScrn, bEnable, (radeon_output->DACType == DAC_PRIMARY));
-	else if (!bEnable && info->tv_dac_enable_mask == 0)
-	    RADEONDacPowerSet(pScrn, bEnable, (radeon_output->DACType == DAC_PRIMARY));
-
-    }
-}
-
-void
-legacy_output_dpms(xf86OutputPtr output, int mode)
-{
-    switch(mode) {
-    case DPMSModeOn:
-	RADEONEnableDisplay(output, TRUE);
-	break;
-    case DPMSModeOff:
-    case DPMSModeSuspend:
-    case DPMSModeStandby:
-	RADEONEnableDisplay(output, FALSE);
 	break;
     }
 }
@@ -930,13 +1091,24 @@ RADEONInitFPRegisters(xf86OutputPtr output, RADEONSavePtr save,
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONEntPtr  pRADEONEnt = RADEONEntPriv(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    radeon_encoder_ptr radeon_encoder = radeon_get_encoder(output);
+    radeon_tmds_ptr tmds = NULL;
     int i;
     uint32_t tmp = info->SavedReg->tmds_pll_cntl & 0xfffff;
 
-    for (i=0; i<4; i++) {
-	if (radeon_output->tmds_pll[i].freq == 0) break;
-	if ((uint32_t)(mode->Clock/10) < radeon_output->tmds_pll[i].freq) {
-	    tmp = radeon_output->tmds_pll[i].value ;
+    if (radeon_encoder == NULL)
+	return;
+
+    tmds = (radeon_tmds_ptr)radeon_encoder->dev_priv;
+
+    if (tmds == NULL)
+	return;
+
+    for (i = 0; i < 4; i++) {
+	if (tmds->tmds_pll[i].freq == 0)
+	    break;
+	if ((uint32_t)(mode->Clock / 10) < tmds->tmds_pll[i].freq) {
+	    tmp = tmds->tmds_pll[i].value ;
 	    break;
 	}
     }
@@ -964,11 +1136,18 @@ RADEONInitFPRegisters(xf86OutputPtr output, RADEONSavePtr save,
 
     save->fp_gen_cntl &= ~(RADEON_FP_FPON | RADEON_FP_TMDS_EN);
 
+    save->fp_gen_cntl &= ~(RADEON_FP_RMX_HVSYNC_CONTROL_EN |
+			   RADEON_FP_DFP_SYNC_SEL |
+			   RADEON_FP_CRT_SYNC_SEL |
+			   RADEON_FP_CRTC_LOCK_8DOT |
+			   RADEON_FP_USE_SHADOW_EN |
+			   RADEON_FP_CRTC_USE_SHADOW_VEND |
+			   RADEON_FP_CRT_SYNC_ALT);
+
     if (pScrn->rgbBits == 8)
 	save->fp_gen_cntl |= RADEON_FP_PANEL_FORMAT;  /* 24 bit format */
     else
 	save->fp_gen_cntl &= ~RADEON_FP_PANEL_FORMAT;/* 18 bit format */
-
 
     if (IsPrimary) {
 	if ((IS_R300_VARIANT) || (info->ChipFamily == CHIP_FAMILY_R200)) {
@@ -978,7 +1157,7 @@ RADEONInitFPRegisters(xf86OutputPtr output, RADEONSavePtr save,
 	    else
 		save->fp_gen_cntl |= R200_FP_SOURCE_SEL_CRTC1;
 	} else
-	    save->fp_gen_cntl |= RADEON_FP_SEL_CRTC1;
+	    save->fp_gen_cntl &= ~RADEON_FP_SEL_CRTC2;
     } else {
 	if ((IS_R300_VARIANT) || (info->ChipFamily == CHIP_FAMILY_R200)) {
 	    save->fp_gen_cntl &= ~R200_FP_SOURCE_SEL_MASK;
@@ -1033,9 +1212,14 @@ RADEONInitFP2Registers(xf86OutputPtr output, RADEONSavePtr save,
 			    RADEON_FP2_DVO_RATE_SEL_SDR);
 
 
-    /* XXX: these may be oem specific */
+    /* XXX: these are oem specific */
     if (IS_R300_VARIANT) {
-	save->fp2_gen_cntl |= RADEON_FP2_PAD_FLOP_EN | R300_FP2_DVO_CLOCK_MODE_SINGLE;
+	if ((info->Chipset == PCI_CHIP_RV350_NP) &&
+	    (PCI_SUB_VENDOR_ID(info->PciInfo) == 0x1028) &&
+	    (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x2001))
+	    save->fp2_gen_cntl |= R300_FP2_DVO_CLOCK_MODE_SINGLE; /* Dell Inspiron 8600 */
+	else
+	    save->fp2_gen_cntl |= RADEON_FP2_PAD_FLOP_EN | R300_FP2_DVO_CLOCK_MODE_SINGLE;
 #if 0
 	if (mode->Clock > 165000)
 	    save->fp2_gen_cntl |= R300_FP2_DVO_DUAL_CHANNEL_EN;
@@ -1049,16 +1233,14 @@ RADEONInitFP2Registers(xf86OutputPtr output, RADEONSavePtr save,
 		save->fp2_gen_cntl |= R200_FP2_SOURCE_SEL_RMX;
 	    else
 		save->fp2_gen_cntl |= R200_FP2_SOURCE_SEL_CRTC1;
-	} else {
+	} else
 	    save->fp2_gen_cntl &= ~RADEON_FP2_SRC_SEL_CRTC2;
-	}
     } else {
 	if ((info->ChipFamily == CHIP_FAMILY_R200) || IS_R300_VARIANT) {
 	    save->fp2_gen_cntl &= ~R200_FP2_SOURCE_SEL_MASK;
 	    save->fp2_gen_cntl |= R200_FP2_SOURCE_SEL_CRTC2;
-	} else {
+	} else
 	    save->fp2_gen_cntl |= RADEON_FP2_SRC_SEL_CRTC2;
-	}
     }
 
     if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
@@ -1130,6 +1312,7 @@ RADEONInitRMXRegisters(xf86OutputPtr output, RADEONSavePtr save,
     ScrnInfoPtr pScrn = output->scrn;
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    radeon_native_mode_ptr native_mode = &radeon_output->native_mode;
     int    xres = mode->HDisplay;
     int    yres = mode->VDisplay;
     Bool   Hscale = TRUE, Vscale = TRUE;
@@ -1183,88 +1366,94 @@ RADEONInitRMXRegisters(xf86OutputPtr output, RADEONSavePtr save,
 
     save->fp_horz_vert_active = 0;
 
-    if (radeon_output->MonType != MT_LCD && radeon_output->MonType != MT_DFP)
-	return;
+    if ((radeon_output->active_device & (ATOM_DEVICE_LCD_SUPPORT)) ||
+	(radeon_output->active_device & (ATOM_DEVICE_DFP_SUPPORT))) {
 
-    if (radeon_output->PanelXRes == 0 || radeon_output->PanelYRes == 0) {
-	Hscale = FALSE;
-	Vscale = FALSE;
-    } else {
-	if (xres > radeon_output->PanelXRes) xres = radeon_output->PanelXRes;
-	if (yres > radeon_output->PanelYRes) yres = radeon_output->PanelYRes;
-
-	if (xres == radeon_output->PanelXRes)
+	if (native_mode->PanelXRes == 0 || native_mode->PanelYRes == 0) {
 	    Hscale = FALSE;
-	if (yres == radeon_output->PanelYRes)
 	    Vscale = FALSE;
-    }
+	} else {
+	    if (xres > native_mode->PanelXRes)
+		xres = native_mode->PanelXRes;
+	    if (yres > native_mode->PanelYRes)
+		yres = native_mode->PanelYRes;
 
-    if ((!Hscale) || (!(radeon_output->Flags & RADEON_USE_RMX)) ||
-	(radeon_output->rmx_type == RMX_CENTER)) {
-	save->fp_horz_stretch |= ((xres/8-1)<<16);
-    } else {
-	CARD32 scale, inc;
-	inc = (save->fp_horz_stretch & RADEON_HORZ_AUTO_RATIO_INC) ? 1 : 0;
-	scale = ((xres + inc) * RADEON_HORZ_STRETCH_RATIO_MAX)
-	    / radeon_output->PanelXRes + 1;
-	save->fp_horz_stretch |= (((scale) & RADEON_HORZ_STRETCH_RATIO_MASK) |
-				  RADEON_HORZ_STRETCH_BLEND |
-				  RADEON_HORZ_STRETCH_ENABLE |
-				  ((radeon_output->PanelXRes/8-1)<<16));
-    }
+	    if (xres == native_mode->PanelXRes)
+		Hscale = FALSE;
+	    if (yres == native_mode->PanelYRes)
+		Vscale = FALSE;
+	}
 
-    if ((!Vscale) || (!(radeon_output->Flags & RADEON_USE_RMX)) ||
-	(radeon_output->rmx_type == RMX_CENTER)) {
-	save->fp_vert_stretch |= ((yres-1)<<12);
-    } else {
-	CARD32 scale, inc;
-	inc = (save->fp_vert_stretch & RADEON_VERT_AUTO_RATIO_INC) ? 1 : 0;
-	scale = ((yres + inc) * RADEON_VERT_STRETCH_RATIO_MAX)
-	    / radeon_output->PanelYRes + 1;
-	save->fp_vert_stretch |= (((scale) & RADEON_VERT_STRETCH_RATIO_MASK) |
-				  RADEON_VERT_STRETCH_ENABLE |
-				  RADEON_VERT_STRETCH_BLEND |
-				  ((radeon_output->PanelYRes-1)<<12));
-    }
+	if ((!Hscale) || (!(radeon_output->Flags & RADEON_USE_RMX)) ||
+	    (radeon_output->rmx_type == RMX_CENTER)) {
+	    save->fp_horz_stretch |= ((xres/8-1)<<16);
+	} else {
+	    uint32_t scale, inc;
+	    inc = (save->fp_horz_stretch & RADEON_HORZ_AUTO_RATIO_INC) ? 1 : 0;
+	    scale = ((xres + inc) * RADEON_HORZ_STRETCH_RATIO_MAX)
+		/ native_mode->PanelXRes + 1;
+	    save->fp_horz_stretch |= (((scale) & RADEON_HORZ_STRETCH_RATIO_MASK) |
+				      RADEON_HORZ_STRETCH_BLEND |
+				      RADEON_HORZ_STRETCH_ENABLE |
+				      ((native_mode->PanelXRes/8-1)<<16));
+	}
 
-    if ((radeon_output->rmx_type == RMX_CENTER) &&
-	(radeon_output->Flags & RADEON_USE_RMX)) {
-	int    blank_width;
+	if ((!Vscale) || (!(radeon_output->Flags & RADEON_USE_RMX)) ||
+	    (radeon_output->rmx_type == RMX_CENTER)) {
+	    save->fp_vert_stretch |= ((yres-1)<<12);
+	} else {
+	    uint32_t scale, inc;
+	    inc = (save->fp_vert_stretch & RADEON_VERT_AUTO_RATIO_INC) ? 1 : 0;
+	    scale = ((yres + inc) * RADEON_VERT_STRETCH_RATIO_MAX)
+		/ native_mode->PanelYRes + 1;
+	    save->fp_vert_stretch |= (((scale) & RADEON_VERT_STRETCH_RATIO_MASK) |
+				      RADEON_VERT_STRETCH_ENABLE |
+				      RADEON_VERT_STRETCH_BLEND |
+				      ((native_mode->PanelYRes-1)<<12));
+	}
 
-	save->crtc_more_cntl |= (RADEON_CRTC_AUTO_HORZ_CENTER_EN |
-				 RADEON_CRTC_AUTO_VERT_CENTER_EN);
+	if ((radeon_output->rmx_type == RMX_CENTER) &&
+	    (radeon_output->Flags & RADEON_USE_RMX)) {
+	    int    blank_width;
 
-	blank_width = (mode->CrtcHBlankEnd - mode->CrtcHBlankStart) / 8;
-	if (blank_width > 110) blank_width = 110;
+	    save->crtc_more_cntl |= (RADEON_CRTC_AUTO_HORZ_CENTER_EN |
+				     RADEON_CRTC_AUTO_VERT_CENTER_EN);
 
-	save->fp_crtc_h_total_disp = (((blank_width) & 0x3ff)
-				      | ((((mode->CrtcHDisplay / 8) - 1) & 0x1ff)
-					 << 16));
+	    blank_width = (mode->CrtcHBlankEnd - mode->CrtcHBlankStart) / 8;
+	    if (blank_width > 110)
+		blank_width = 110;
 
-	hsync_wid = (mode->CrtcHSyncEnd - mode->CrtcHSyncStart) / 8;
-	if (!hsync_wid)       hsync_wid = 1;
+	    save->fp_crtc_h_total_disp = (((blank_width) & 0x3ff)
+					  | ((((mode->CrtcHDisplay / 8) - 1) & 0x1ff)
+					     << 16));
 
-	save->fp_h_sync_strt_wid = ((((mode->CrtcHSyncStart - mode->CrtcHBlankStart) / 8) & 0x1fff)
-				    | ((hsync_wid & 0x3f) << 16)
-				    | ((mode->Flags & V_NHSYNC)
-				       ? RADEON_CRTC_H_SYNC_POL
-				       : 0));
+	    hsync_wid = (mode->CrtcHSyncEnd - mode->CrtcHSyncStart) / 8;
+	    if (!hsync_wid)
+		hsync_wid = 1;
 
-	save->fp_crtc_v_total_disp = (((mode->CrtcVBlankEnd - mode->CrtcVBlankStart) & 0xffff)
-				      | ((mode->CrtcVDisplay - 1) << 16));
+	    save->fp_h_sync_strt_wid = ((((mode->CrtcHSyncStart - mode->CrtcHBlankStart) / 8) & 0x1fff)
+					| ((hsync_wid & 0x3f) << 16)
+					| ((mode->Flags & V_NHSYNC)
+					   ? RADEON_CRTC_H_SYNC_POL
+					   : 0));
 
-	vsync_wid = mode->CrtcVSyncEnd - mode->CrtcVSyncStart;
-	if (!vsync_wid)       vsync_wid = 1;
+	    save->fp_crtc_v_total_disp = (((mode->CrtcVBlankEnd - mode->CrtcVBlankStart) & 0xffff)
+					  | ((mode->CrtcVDisplay - 1) << 16));
 
-	save->fp_v_sync_strt_wid = ((((mode->CrtcVSyncStart - mode->CrtcVBlankStart) & 0xfff)
-				    | ((vsync_wid & 0x1f) << 16)
-				    | ((mode->Flags & V_NVSYNC)
-				       ? RADEON_CRTC_V_SYNC_POL
-				       : 0)));
+	    vsync_wid = mode->CrtcVSyncEnd - mode->CrtcVSyncStart;
+	    if (!vsync_wid)
+		vsync_wid = 1;
 
-	save->fp_horz_vert_active = (((radeon_output->PanelYRes) & 0xfff) |
-				     (((radeon_output->PanelXRes / 8) & 0x1ff) << 16));
+	    save->fp_v_sync_strt_wid = ((((mode->CrtcVSyncStart - mode->CrtcVBlankStart) & 0xfff)
+					 | ((vsync_wid & 0x1f) << 16)
+					 | ((mode->Flags & V_NVSYNC)
+					    ? RADEON_CRTC_V_SYNC_POL
+					    : 0)));
 
+	    save->fp_horz_vert_active = (((native_mode->PanelYRes) & 0xfff) |
+					 (((native_mode->PanelXRes / 8) & 0x1ff) << 16));
+
+	}
     }
 }
 
@@ -1303,7 +1492,16 @@ RADEONInitTvDacCntl(xf86OutputPtr output, RADEONSavePtr save)
 {
     ScrnInfoPtr pScrn = output->scrn;
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
-    RADEONOutputPrivatePtr radeon_output = output->driver_private;
+    radeon_encoder_ptr radeon_encoder = radeon_get_encoder(output);
+    radeon_tvdac_ptr tvdac = NULL;
+
+    if (radeon_encoder == NULL)
+	return;
+
+    tvdac = (radeon_tvdac_ptr)radeon_encoder->dev_priv;
+
+    if (tvdac == NULL)
+	return;
 
     if (info->ChipFamily == CHIP_FAMILY_R420 ||
 	info->ChipFamily == CHIP_FAMILY_RV410) {
@@ -1328,7 +1526,7 @@ RADEONInitTvDacCntl(xf86OutputPtr output, RADEONSavePtr save)
     save->tv_dac_cntl |= (RADEON_TV_DAC_NBLANK |
 			  RADEON_TV_DAC_NHOLD |
 			  RADEON_TV_DAC_STD_PS2 |
-			  radeon_output->ps2_tvdac_adj);
+			  tvdac->ps2_tvdac_adj);
 
 }
 
@@ -1376,100 +1574,80 @@ RADEONInitDAC2Registers(xf86OutputPtr output, RADEONSavePtr save,
     }
 }
 
-static void
-RADEONInitOutputRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save,
-			  DisplayModePtr mode, xf86OutputPtr output,
-			  int crtc_num)
-{
-    Bool IsPrimary = crtc_num == 0 ? TRUE : FALSE;
-    RADEONOutputPrivatePtr radeon_output = output->driver_private;
-    RADEONInfoPtr info = RADEONPTR(pScrn);
-
-    if (crtc_num == 0)
-	RADEONInitRMXRegisters(output, save, mode);
-
-    if (radeon_output->MonType == MT_CRT) {
-	if (radeon_output->DACType == DAC_PRIMARY) {
-	    RADEONInitDACRegisters(output, save, mode, IsPrimary);
-	} else {
-	    RADEONInitDAC2Registers(output, save, mode, IsPrimary);
-	    /* IGP chips seem to use a mix of primary and TVDAC controls */
-	    if (info->IsIGP)
-		RADEONInitDACRegisters(output, save, mode, IsPrimary);
-	}
-    } else if (radeon_output->MonType == MT_LCD) {
-	RADEONInitLVDSRegisters(output, save, mode, IsPrimary);
-    } else if (radeon_output->MonType == MT_DFP) {
-	if (radeon_output->TMDSType == TMDS_INT) {
-	    RADEONInitFPRegisters(output, save, mode, IsPrimary);
-	} else {
-	    RADEONInitFP2Registers(output, save, mode, IsPrimary);
-	}
-    } else if (radeon_output->MonType == MT_STV ||
-	       radeon_output->MonType == MT_CTV) {
-	RADEONInitTVRegisters(output, save, mode, IsPrimary);
-    }
-}
-
 void
 legacy_output_mode_set(xf86OutputPtr output, DisplayModePtr mode,
-		  DisplayModePtr adjusted_mode)
+		       DisplayModePtr adjusted_mode)
 {
     ScrnInfoPtr	    pScrn = output->scrn;
     RADEONInfoPtr info = RADEONPTR(pScrn);
     RADEONOutputPrivatePtr radeon_output = output->driver_private;
     xf86CrtcPtr	crtc = output->crtc;
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+    radeon_encoder_ptr radeon_encoder = radeon_get_encoder(output);
+    Bool is_primary = FALSE;
 
-    RADEONInitOutputRegisters(pScrn, info->ModeReg, adjusted_mode, output, radeon_crtc->crtc_id);
+    if (radeon_encoder == NULL)
+	return;
 
-    if (radeon_crtc->crtc_id == 0)
+    radeon_output->pixel_clock = adjusted_mode->Clock;
+    if (radeon_crtc->crtc_id == 0) {
+	ErrorF("set RMX\n");
+	is_primary = TRUE;
+	RADEONInitRMXRegisters(output, info->ModeReg, adjusted_mode);
 	RADEONRestoreRMXRegisters(pScrn, info->ModeReg);
+    }
 
-    switch(radeon_output->MonType) {
-    case MT_LCD:
-	ErrorF("restore LVDS\n");
+    switch (radeon_encoder->encoder_id) {
+    case ENCODER_OBJECT_ID_INTERNAL_LVDS:
+	ErrorF("set LVDS\n");
+	RADEONInitLVDSRegisters(output, info->ModeReg, adjusted_mode, is_primary);
 	RADEONRestoreLVDSRegisters(pScrn, info->ModeReg);
 	break;
-    case MT_DFP:
-	if (radeon_output->TMDSType == TMDS_INT) {
-	    ErrorF("restore FP\n");
-	    RADEONRestoreFPRegisters(pScrn, info->ModeReg);
-	} else {
-	    ErrorF("restore FP2\n");
-	    if (info->IsAtomBios) {
-		unsigned char *RADEONMMIO = info->MMIO;
-		uint32_t fp2_gen_cntl;
+    case ENCODER_OBJECT_ID_INTERNAL_TMDS1:
+	ErrorF("set FP1\n");
+	RADEONInitFPRegisters(output, info->ModeReg, adjusted_mode, is_primary);
+	RADEONRestoreFPRegisters(pScrn, info->ModeReg);
+	break;
+    case ENCODER_OBJECT_ID_INTERNAL_DVO1:
+	ErrorF("set FP2\n");
+	RADEONInitFP2Registers(output, info->ModeReg, adjusted_mode, is_primary);
+	if (info->IsAtomBios) {
+	    unsigned char *RADEONMMIO = info->MMIO;
+	    uint32_t fp2_gen_cntl;
 
-		atombios_external_tmds_setup(output, mode);
-		/* r4xx atom has hard coded crtc mappings in the atom code
-		 * Fix it up here.
-		 */
-		fp2_gen_cntl = INREG(RADEON_FP2_GEN_CNTL) & ~R200_FP2_SOURCE_SEL_MASK;
-		if (radeon_crtc->crtc_id == 1)
-		    fp2_gen_cntl |= R200_FP2_SOURCE_SEL_CRTC2;
-		else {
-		    if (radeon_output->Flags & RADEON_USE_RMX)
-			fp2_gen_cntl |= R200_FP2_SOURCE_SEL_RMX;
-		    else
-			fp2_gen_cntl |= R200_FP2_SOURCE_SEL_CRTC1;
-		}
-		OUTREG(RADEON_FP2_GEN_CNTL, fp2_gen_cntl);
-	    } else {
-		RADEONRestoreDVOChip(pScrn, output);
-		RADEONRestoreFP2Registers(pScrn, info->ModeReg);
+	    atombios_external_tmds_setup(output, ATOM_ENABLE);
+	    fp2_gen_cntl = INREG(RADEON_FP2_GEN_CNTL) & ~R200_FP2_SOURCE_SEL_MASK;
+	    if (radeon_crtc->crtc_id == 1)
+		fp2_gen_cntl |= R200_FP2_SOURCE_SEL_CRTC2;
+	    else {
+		if (radeon_output->Flags & RADEON_USE_RMX)
+		    fp2_gen_cntl |= R200_FP2_SOURCE_SEL_RMX;
+		else
+		    fp2_gen_cntl |= R200_FP2_SOURCE_SEL_CRTC1;
 	    }
+	    OUTREG(RADEON_FP2_GEN_CNTL, fp2_gen_cntl);
+	} else {
+	    RADEONRestoreFP2Registers(pScrn, info->ModeReg);
+	    RADEONRestoreDVOChip(pScrn, output);
 	}
 	break;
-    case MT_STV:
-    case MT_CTV:
-	ErrorF("restore tv\n");
+    case ENCODER_OBJECT_ID_INTERNAL_DAC1:
+	ErrorF("set primary dac\n");
+	RADEONInitDACRegisters(output, info->ModeReg, adjusted_mode, is_primary);
 	RADEONRestoreDACRegisters(pScrn, info->ModeReg);
-	RADEONRestoreTVRegisters(pScrn, info->ModeReg);
 	break;
-    default:
-	ErrorF("restore dac\n");
-	RADEONRestoreDACRegisters(pScrn, info->ModeReg);
+    case ENCODER_OBJECT_ID_INTERNAL_DAC2:
+	if (radeon_output->active_device & (ATOM_DEVICE_TV_SUPPORT)) {
+	    ErrorF("set TV\n");
+	    RADEONInitTVRegisters(output, info->ModeReg, adjusted_mode, is_primary);
+	    RADEONRestoreDACRegisters(pScrn, info->ModeReg);
+	    RADEONRestoreTVRegisters(pScrn, info->ModeReg);
+	} else {
+	    ErrorF("set TVDAC\n");
+	    RADEONInitDAC2Registers(output, info->ModeReg, adjusted_mode, is_primary);
+	    RADEONRestoreDACRegisters(pScrn, info->ModeReg);
+	}
+	break;
     }
 
 }

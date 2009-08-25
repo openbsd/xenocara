@@ -40,12 +40,9 @@ Revision History:
 #endif
 
 #include <X11/Xos.h>
-
+#include "xorg-server.h"
 
 #include "Decoder.h"
-#include "atombios.h"
-#include "CD_binding.h"
-#include "CD_Common_Types.h"
 
 #ifndef DISABLE_EASF
 	#include "easf.h"
@@ -77,13 +74,13 @@ UINT16* GetCommandMasterTablePointer(DEVICE_DATA STACK_BASED*  pDeviceData)
     /*
     make MasterTableOffset point to EASF_ASIC_SETUP_TABLE structure, including usSize.
     */
-		MasterTableOffset = (UINT16 *) (pDeviceData->pBIOS_Image+((EASF_ASIC_DESCRIPTOR*)pDeviceData->pBIOS_Image)->usAsicSetupTable_Offset);
+		MasterTableOffset = (UINT16 *) (pDeviceData->pBIOS_Image+(UINT16LE_TO_CPU(((EASF_ASIC_DESCRIPTOR*)pDeviceData->pBIOS_Image)->usAsicSetupTable_Offset));
 	} else
 #endif
 	{
 #ifndef		UEFI_BUILD
-		MasterTableOffset = (UINT16 *)(*(UINT16 *)(pDeviceData->pBIOS_Image+OFFSET_TO_POINTER_TO_ATOM_ROM_HEADER) + pDeviceData->pBIOS_Image);
-		MasterTableOffset = (UINT16 *)((ULONG)((ATOM_ROM_HEADER *)MasterTableOffset)->usMasterCommandTableOffset + pDeviceData->pBIOS_Image );
+		MasterTableOffset = (UINT16 *)(UINT16LE_TO_CPU(*(UINT16 *)(pDeviceData->pBIOS_Image+OFFSET_TO_POINTER_TO_ATOM_ROM_HEADER)) + pDeviceData->pBIOS_Image);
+		MasterTableOffset = (UINT16 *)((ULONG)UINT16LE_TO_CPU(((ATOM_ROM_HEADER *)MasterTableOffset)->usMasterCommandTableOffset) + pDeviceData->pBIOS_Image );
 		MasterTableOffset =(UINT16 *) &(((ATOM_MASTER_COMMAND_TABLE *)MasterTableOffset)->ListOfCommandTables);
 #else
 	MasterTableOffset = (UINT16 *)(&(GetCommandMasterTable( )->ListOfCommandTables));
@@ -97,8 +94,8 @@ UINT16* GetDataMasterTablePointer(DEVICE_DATA STACK_BASED*  pDeviceData)
 	UINT16		*MasterTableOffset;
 	
 #ifndef		UEFI_BUILD
-	MasterTableOffset = (UINT16 *)(*(UINT16 *)(pDeviceData->pBIOS_Image+OFFSET_TO_POINTER_TO_ATOM_ROM_HEADER) + pDeviceData->pBIOS_Image);
-	MasterTableOffset = (UINT16 *)((ULONG)((ATOM_ROM_HEADER *)MasterTableOffset)->usMasterDataTableOffset + pDeviceData->pBIOS_Image );
+	MasterTableOffset = (UINT16 *)(UINT16LE_TO_CPU(*(UINT16 *)(pDeviceData->pBIOS_Image+OFFSET_TO_POINTER_TO_ATOM_ROM_HEADER)) + pDeviceData->pBIOS_Image);
+	MasterTableOffset = (UINT16 *)((ULONG)(UINT16LE_TO_CPU(((ATOM_ROM_HEADER *)MasterTableOffset)->usMasterDataTableOffset)) + pDeviceData->pBIOS_Image );
 	MasterTableOffset =(UINT16 *) &(((ATOM_MASTER_DATA_TABLE *)MasterTableOffset)->ListOfDataTables);
 #else
 	MasterTableOffset = (UINT16 *)(&(GetDataMasterTable( )->ListOfDataTables));
@@ -129,11 +126,29 @@ UINT8 GetTrueIndexInMasterTable(PARSER_TEMP_DATA STACK_BASED * pParserTempData, 
 	}
 }
 
+ATOM_TABLE_ATTRIBUTE GetCommandTableAttribute(UINT8 *pTableHeader)
+{
+  ATOM_TABLE_ATTRIBUTE_ACCESS lTableAccess;
+
+  /* It's unclear whether this union trick breaks C aliasing rules,
+   * however, it's explicitely permitted by gcc, and we have other
+   * case where the code relies on a union being accessed by either
+   * of the "ways" and stay consistent so if a compiler breaks this
+   * assumption, it will probably need us to compile without strict
+   * aliasing enforcement
+	 */
+	lTableAccess.sbfAccess = ((ATOM_COMMON_ROM_COMMAND_TABLE_HEADER *)pTableHeader)->TableAttribute;
+	lTableAccess.susAccess = UINT16LE_TO_CPU(lTableAccess.susAccess);
+
+	return lTableAccess.sbfAccess;
+}
+
 CD_STATUS ParseTable(DEVICE_DATA STACK_BASED* pDeviceData, UINT8 IndexInMasterTable)
 {
 	PARSER_TEMP_DATA	ParserTempData;
   WORKING_TABLE_DATA STACK_BASED* prevWorkingTableData;
 
+  memset(&ParserTempData, 0, sizeof(PARSER_TEMP_DATA));
   ParserTempData.pDeviceData=(DEVICE_DATA*)pDeviceData;
 #ifndef DISABLE_EASF
   if (pDeviceData->format == TABLE_FORMAT_EASF)
@@ -143,7 +158,7 @@ CD_STATUS ParseTable(DEVICE_DATA STACK_BASED* pDeviceData, UINT8 IndexInMasterTa
 #endif
   {
     ParserTempData.pCmd=(GENERIC_ATTRIBUTE_COMMAND*)GetDataMasterTablePointer(pDeviceData);
-    ParserTempData.IndirectIOTablePointer=(UINT8*)((ULONG)(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[INDIRECT_IO_TABLE]) + pDeviceData->pBIOS_Image);
+    ParserTempData.IndirectIOTablePointer=(UINT8*)((ULONG)(UINT16LE_TO_CPU(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[INDIRECT_IO_TABLE])) + pDeviceData->pBIOS_Image);
     ParserTempData.IndirectIOTablePointer+=sizeof(ATOM_COMMON_TABLE_HEADER);
   }
 
@@ -160,65 +175,66 @@ CD_STATUS ParseTable(DEVICE_DATA STACK_BASED* pDeviceData, UINT8 IndexInMasterTa
 		ParserTempData.Status=CD_CALL_TABLE;
 
 		do{
-
+			
 			if (ParserTempData.Status==CD_CALL_TABLE)
-      {
+			{
 				IndexInMasterTable=ParserTempData.CommandSpecific.IndexInMasterTable;
 				if(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[IndexInMasterTable]!=0)  // if the offset is not ZERO
+				{
+				  ATOM_TABLE_ATTRIBUTE lTableAttr;
+				  lTableAttr = GetCommandTableAttribute(UINT16LE_TO_CPU(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[IndexInMasterTable])+pDeviceData->pBIOS_Image);
+#ifndef		UEFI_BUILD
+  					ParserTempData.pWorkingTableData =(WORKING_TABLE_DATA STACK_BASED*) AllocateWorkSpace(pDeviceData,
+															      lTableAttr.WS_SizeInBytes+sizeof(WORKING_TABLE_DATA));
+#else
+				  ParserTempData.pWorkingTableData =(WORKING_TABLE_DATA STACK_BASED*) AllocateWorkSpace(pDeviceData,
+															lTableAttr.WS_SizeInBytes+sizeof(WORKING_TABLE_DATA));
+#endif
+					if (ParserTempData.pWorkingTableData!=NULL)
 					{
+						ParserTempData.pWorkingTableData->pWorkSpace=(WORKSPACE_POINTER STACK_BASED*)((UINT8*)ParserTempData.pWorkingTableData+sizeof(WORKING_TABLE_DATA));
 #ifndef		UEFI_BUILD
-  					ParserTempData.pWorkingTableData =(WORKING_TABLE_DATA STACK_BASED*) AllocateWorkSpace(pDeviceData,
-								((ATOM_COMMON_ROM_COMMAND_TABLE_HEADER*)(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[IndexInMasterTable]+pDeviceData->pBIOS_Image))->TableAttribute.WS_SizeInBytes+sizeof(WORKING_TABLE_DATA));
+				      ParserTempData.pWorkingTableData->pTableHead  = (UINT8 *)(UINT16LE_TO_CPU(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[IndexInMasterTable])+pDeviceData->pBIOS_Image);
 #else
-  					ParserTempData.pWorkingTableData =(WORKING_TABLE_DATA STACK_BASED*) AllocateWorkSpace(pDeviceData,
-								((ATOM_COMMON_ROM_COMMAND_TABLE_HEADER*)(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[IndexInMasterTable]))->TableAttribute.WS_SizeInBytes+sizeof(WORKING_TABLE_DATA));
+				      ParserTempData.pWorkingTableData->pTableHead  = (UINT8 *)(UINT16LE_TO_CPU(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[IndexInMasterTable]));
 #endif
-            if (ParserTempData.pWorkingTableData!=NULL)
-            {
-						  ParserTempData.pWorkingTableData->pWorkSpace=(WORKSPACE_POINTER STACK_BASED*)((UINT8*)ParserTempData.pWorkingTableData+sizeof(WORKING_TABLE_DATA));
-#ifndef		UEFI_BUILD
-						  ParserTempData.pWorkingTableData->pTableHead  = (UINT8 *)(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[IndexInMasterTable]+pDeviceData->pBIOS_Image);
-#else
-						  ParserTempData.pWorkingTableData->pTableHead  = (UINT8 *)(((PTABLE_UNIT_TYPE)ParserTempData.pCmd)[IndexInMasterTable]);
-#endif
-	 					  ParserTempData.pWorkingTableData->IP=((UINT8*)ParserTempData.pWorkingTableData->pTableHead)+sizeof(ATOM_COMMON_ROM_COMMAND_TABLE_HEADER);
-              ParserTempData.pWorkingTableData->prevWorkingTableData=prevWorkingTableData;
-              prevWorkingTableData=ParserTempData.pWorkingTableData;
-              ParserTempData.Status = CD_SUCCESS;
-            } else ParserTempData.Status = CD_UNEXPECTED_BEHAVIOR;
-					} else ParserTempData.Status = CD_EXEC_TABLE_NOT_FOUND;
+						ParserTempData.pWorkingTableData->IP=((UINT8*)ParserTempData.pWorkingTableData->pTableHead)+sizeof(ATOM_COMMON_ROM_COMMAND_TABLE_HEADER);
+						ParserTempData.pWorkingTableData->prevWorkingTableData=prevWorkingTableData;
+						prevWorkingTableData=ParserTempData.pWorkingTableData;
+						ParserTempData.Status = CD_SUCCESS;
+					} else ParserTempData.Status = CD_UNEXPECTED_BEHAVIOR;
+				} else ParserTempData.Status = CD_EXEC_TABLE_NOT_FOUND;
 			}
 			if (!CD_ERROR(ParserTempData.Status))
 			{
-        ParserTempData.Status = CD_SUCCESS;
+				ParserTempData.Status = CD_SUCCESS;
 				while (!CD_ERROR_OR_COMPLETED(ParserTempData.Status))  
-        {
-
+				{
 					if (IS_COMMAND_VALID(((COMMAND_HEADER*)ParserTempData.pWorkingTableData->IP)->Opcode))
-          {
+					{
 						ParserTempData.pCmd = (GENERIC_ATTRIBUTE_COMMAND*)ParserTempData.pWorkingTableData->IP;
-
+						
 						if (IS_END_OF_TABLE(((COMMAND_HEADER*)ParserTempData.pWorkingTableData->IP)->Opcode))
 						{
 							ParserTempData.Status=CD_COMPLETED;
-              prevWorkingTableData=ParserTempData.pWorkingTableData->prevWorkingTableData;
-
+							prevWorkingTableData=ParserTempData.pWorkingTableData->prevWorkingTableData;
+							
 							FreeWorkSpace(pDeviceData, ParserTempData.pWorkingTableData);
-              ParserTempData.pWorkingTableData=prevWorkingTableData;
-              if (prevWorkingTableData!=NULL)
-              {
-							  ParserTempData.pDeviceData->pParameterSpace-=
-								  		(((ATOM_COMMON_ROM_COMMAND_TABLE_HEADER*)ParserTempData.pWorkingTableData->
-									  		pTableHead)->TableAttribute.PS_SizeInBytes>>2);
-              } 
-						// if there is a parent table where to return, then restore PS_pointer to the original state
+							ParserTempData.pWorkingTableData=prevWorkingTableData;
+							if (prevWorkingTableData!=NULL)
+							{
+								ATOM_TABLE_ATTRIBUTE lTableAttr;
+								lTableAttr = GetCommandTableAttribute(ParserTempData.pWorkingTableData->pTableHead);
+								ParserTempData.pDeviceData->pParameterSpace-=(lTableAttr.PS_SizeInBytes>>2);
+							} 
+							// if there is a parent table where to return, then restore PS_pointer to the original state
 						}
 						else
 						{
-              IndexInMasterTable=ProcessCommandProperties((PARSER_TEMP_DATA STACK_BASED *)&ParserTempData);
+							IndexInMasterTable=ProcessCommandProperties((PARSER_TEMP_DATA STACK_BASED *)&ParserTempData);
 							(*CallTable[IndexInMasterTable].function)((PARSER_TEMP_DATA STACK_BASED *)&ParserTempData);
 #if (PARSER_TYPE!=DRIVER_TYPE_PARSER)
-              BIOS_STACK_MODIFIER();
+							BIOS_STACK_MODIFIER();
 #endif
 						}
 					}
@@ -227,13 +243,13 @@ CD_STATUS ParseTable(DEVICE_DATA STACK_BASED* pDeviceData, UINT8 IndexInMasterTa
 						ParserTempData.Status=CD_INVALID_OPCODE;
 						break;
 					}
-
+					
 				}	// while
 			}	// if
 			else
 				break;
 		} while (prevWorkingTableData!=NULL);
-    if (ParserTempData.Status == CD_COMPLETED) return CD_SUCCESS;
+		if (ParserTempData.Status == CD_COMPLETED) return CD_SUCCESS;
 		return ParserTempData.Status;
 	} else return CD_SUCCESS;
 }

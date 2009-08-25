@@ -34,9 +34,13 @@
 #define _ATIPCIIDS_H
 
 /* PCI Vendor */
+#define PCI_VENDOR_ASUS			0x1043
 #define PCI_VENDOR_ATI			0x1002
+#define PCI_VENDOR_IBM			0x1014
 #define PCI_VENDOR_AMD			0x1022
 #define PCI_VENDOR_DELL			0x1028
+#define PCI_VENDOR_VIA			0x1106
+#define PCI_VENDOR_INTEL		0x8086
 
 #include "ati_pciids_gen.h"
 

@@ -44,8 +44,6 @@
 #include "atipcirename.h"
 
 #include "xf86.h"
-#define _XF86MISC_SERVER_
-#include <X11/extensions/xf86misc.h>
 #include "xf86Resources.h"
 
 #include "radeon_chipset_gen.h"

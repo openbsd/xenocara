@@ -31,6 +31,7 @@
 
 #define INT32 INT32
 #include "CD_Common_Types.h"
+#include "atombios.h"
 #include "CD_Definitions.h"
 
 

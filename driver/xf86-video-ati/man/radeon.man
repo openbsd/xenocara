@@ -13,14 +13,48 @@ radeon \- ATI RADEON video driver
 .fi
 .SH DESCRIPTION
 .B radeon
-is an __xservername__ driver for ATI RADEON based video cards.  It contains
-full support for 8, 15, 16 and 24 bit pixel depths, dual-head setup,
-flat panel, hardware 2D acceleration, hardware 3D acceleration, hardware cursor, 
-XV extension, and the Xinerama extension.
+is an __xservername__ driver for ATI RADEON based video cards with the
+following features:
+.PP
+.PD 0
+.TP 2
+\(bu
+Full support for 8, 15, 16 and 24 bit pixel depths;
+.TP
+\(bu
+RandR 1.2 and RandR 1.3 support;
+.TP
+\(bu
+TV-out support (only on R/RV/RS1xx, R/RV/RS2xx, R/RV/RS3xx. Experimental
+support on R/RV5xx, R/RV6xx, and R/RV7xx through the
+.B ATOMTvOut
+option);
+.TP
+\(bu
+Full EXA 2D acceleration;
+.TP
+\(bu
+Full XAA 2D acceleration (only on R/RV/RS1xx, R/RV/RS2xx, R/RV/RS3xx,
+R/RV/RS4xx, R/RV5xx, RS6xx. XAA Render acceleration supported only on R/RV100,
+R/RV/RS2xx and RS3xx);
+.TP
+\(bu
+Textured XVideo acceleration including anti-tearing support (Bicubic filtering
+only available on R/RV3xx, R/RV/RS4xx, R/RV5xx, and RS6xx);
+.TP
+\(bu
+Overlay XVideo acceleration (only on R/RV/RS1xx, R/RV/RS2xx,
+R/RV/RS3xx, R/RV/RS4xx);
+.TP
+\(bu
+3D acceleration (not supported on R/RV6xx and R/RV/RS7xx);
+.PD
 .SH SUPPORTED HARDWARE
 The
 .B radeon
-driver supports PCI and AGP video cards based on the following ATI chips
+driver supports PCI, AGP, and PCIE video cards based on the following ATI chips:
+.PP
+.PD 0
 .TP 12
 .B R100
 Radeon 7200
@@ -46,6 +80,9 @@ Radeon 8500, 9100, FireGL 8800/8700
 .B RV250
 Radeon 9000PRO/9000, M9
 .TP 12
+.B RV280
+Radeon 9200PRO/9200/9200SE/9250, M9+
+.TP 12
 .B RS300
 Radeon 9100 IGP
 .TP 12
@@ -54,9 +91,6 @@ Radeon 9200 IGP
 .TP 12
 .B RS400/RS480
 Radeon XPRESS 200(M)/1100 IGP
-.TP 12
-.B RV280
-Radeon 9200PRO/9200/9200SE/9250, M9+
 .TP 12
 .B R300
 Radeon 9700PRO/9700/9500PRO/9500/9600TX, FireGL X1/Z1
@@ -103,8 +137,8 @@ Radeon X1600/X1650/X1700
 .B RV570/R580
 Radeon X1900/X1950
 .TP 12
-.B RS600/RS690
-Radeon X1200
+.B RS600/RS690/RS740
+Radeon X1200/X1250/X2100
 .TP 12
 .B R600
 Radeon HD 2900
@@ -112,15 +146,24 @@ Radeon HD 2900
 .B RV610/RV630
 Radeon HD 2400/2600
 .TP 12
-.B RV670
-Radeon HD 3850/3870
-.TP 12
 .B RV620/RV635
 Radeon HD 3450/3470
 .TP 12
+.B RV670
+Radeon HD 3850/3870
+.TP 12
 .B RS780
-Radeon HD 3200
-
+Radeon HD 3100/3200/3300
+.TP 12
+.B RV710
+Radeon HD 4350/4550
+.TP 12
+.B RV730
+Radeon HD 4650/4670
+.TP 12
+.B RV770
+Radeon HD 4850/4870
+.PD
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
@@ -215,18 +258,12 @@ PCI    \-\- PCI bus
 .br
 AGP    \-\- AGP bus
 .br
-PCIE   \-\- PCI Express (falls back to PCI at present)
+PCIE   \-\- PCI Express bus
 .br
 (used only when DRI is enabled)
 .br
 The default is
 .B auto detect.
-.TP 
-.BI "Option \*qDDCMode\*q \*q" boolean \*q
-Force to use the modes queried from the connected monitor.
-.br
-The default is
-.B off.
 .TP
 .BI "Option \*qDisplayPriority\*q \*q" string \*q
 .br
@@ -249,9 +286,7 @@ The default value is
 Frame buffer can be addressed either in linear or tiled mode. Tiled mode can provide
 significant performance benefits with 3D applications, for 2D it shouldn't matter
 much. Tiling will be disabled if the virtual x resolution exceeds 2048 (3968 for R300 
-and above), if option
-.B UseFBDev
-is used, or (if DRI is enabled) the drm module is too old.
+and above), or if DRI is enabled the drm module is too old.
 .br
 If this option is enabled, a new dri driver is required for direct rendering too.
 .br
@@ -271,7 +306,7 @@ The default value is
 Should only be used when driver cannot detect the correct panel size.
 Apply to both desktop (TMDS) and laptop (LVDS) digital panels.
 When a valid panel size is specified, the timings collected from
-DDC and BIOS will not be used. If you have a panel with timings 
+DDC and BIOS will not be used. If you have a panel with timings
 different from that of a standard VESA mode, you have to provide
 this information through the Modeline.
 .br
@@ -284,6 +319,7 @@ The default value is
 Enable page flipping for 3D acceleration. This will increase performance
 but not work correctly in some rare cases, hence the default is
 .B off.
+It is currently only supported on R/RV/RS4xx and older hardware.
 .TP
 .BI "Option \*qForceMinDotClock\*q \*q" frequency \*q
 Override minimum dot clock. Some Radeon BIOSes report a minimum dot
@@ -297,10 +333,9 @@ parameter may be specified as a float value with standard suffixes like
 "k", "kHz", "M", "MHz".
 .TP
 .BI "Option \*qRenderAccel\*q \*q" boolean \*q
-Enables or disables hardware Render acceleration.  This driver does not
-support component alpha (subpixel) rendering.  It is only supported on
-Radeon series up to and including 9200 (9500/9700 and newer
-unsupported).  The default is to
+Enables or disables hardware Render acceleration.  It is supported on all
+Radeon cards when using EXA acceleration and on Radeon R/RV/RS1xx,
+R/RV/RS2xx and RS3xx when usig XAA.  The default is to
 .B enable
 Render acceleration.
 .TP
@@ -369,7 +404,7 @@ This option is intended to be used in following cases:
 .br
 3. Adjust to one display type in dual-head clone mode setup.
 .br
-4. Get better performance with Render acceleration on 
+4. Get better performance with Render acceleration on
 digital panels (use NONE setting).
 .br
 The default is 
@@ -379,8 +414,8 @@ for CRT,
 for digital panels
 .TP
 .BI "Option \*qDynamicClocks\*q \*q" boolean \*q
-Enable dynamic clock scaling.  The on-chip clocks will scale dynamically 
-based on usage. This can help reduce heat and increase battery 
+Enable dynamic clock scaling.  The on-chip clocks will scale dynamically
+based on usage. This can help reduce heat and increase battery
 life by reducing power usage.  Some users report reduced 3D performance
 with this enabled.  The default is
 .B off.
@@ -398,7 +433,7 @@ on other architectures.
 .TP
 .BI "Option \*qReverseDDC\*q \*q" boolean \*q
 When BIOS connector informations aren't available, use this option to
-reverse the mapping of the 2 main DDC ports. Use this if the X serve
+reverse the mapping of the 2 main DDC ports. Use this if the X server
 obviously detects the wrong display for each connector. This is
 typically needed on the Radeon 9600 cards bundled with Apple G5s. The
 default is
@@ -414,30 +449,30 @@ The default is
 .B on.
 .TP
 .BI "Option \*qTVDACLoadDetect\*q \*q" boolean \*q
-Enable load detection on the TV DAC.  The TV DAC is used to drive both 
-TV-OUT and analog monitors. Load detection is often unreliable in the 
+Enable load detection on the TV DAC.  The TV DAC is used to drive both
+TV-out and analog monitors. Load detection is often unreliable in the
 TV DAC so it is disabled by default.
 The default is
 .B off.
 .TP
 .BI "Option \*qDefaultTMDSPLL\*q \*q" boolean \*q
 Use the default driver provided TMDS PLL values rather than the ones
-provided by the bios. This option has no effect on Mac cards.  Enable 
-this option if you are having problems with a DVI monitor using the 
+provided by the bios. This option has no effect on Mac cards.  Enable
+this option if you are having problems with a DVI monitor using the
 internal TMDS controller.
 The default is
 .B off.
 .TP
 .BI "Option \*qDefaultTVDACAdj\*q \*q" boolean \*q
 Use the default driver provided TVDAC Adj values rather than the ones
-provided by the bios. This option has no effect on Mac cards.  Enable 
-this option if you are having problems with a washed out display on 
+provided by the bios. This option has no effect on Mac cards.  Enable
+this option if you are having problems with a washed out display on
 the secondary DAC.
 The default is
 .B off.
 .TP
 .BI "Option \*qDRI\*q \*q" boolean \*q
-Enable DRI support.  This option allows you to enable to disable the DRI.  
+Enable DRI support.  This option allows you to enable to disable the DRI.
 The default is
 .B off 
 for RN50/ES1000 and
@@ -446,7 +481,7 @@ for others.
 .TP
 .BI "Option \*qDefaultConnectorTable\*q \*q" boolean \*q
 Enable this option to skip the BIOS connector table parsing and use the
-driver defaults for each chip.  
+driver defaults for each chip.
 The default is
 .B off 
 .TP
@@ -454,8 +489,9 @@ The default is
 .br
 Used to specify Mac models for connector tables and quirks.  If you have
 a powerbook or mini with DVI that does not work properly, try the alternate
- options as Apple does not seem to provide a good way of knowing whether
- they use internal or external TMDS for DVI.  Only valid on PowerPC.
+options as Apple does not seem to provide a good way of knowing whether
+they use internal or external TMDS for DVI.  Only valid on PowerPC.
+On Linux, the driver will attempt to detect the MacModel automatically.
 .br
 ibook                \-\- ibooks
 .br
@@ -465,17 +501,13 @@ powerbook-internal   \-\- Powerbooks with integrated DVI
 .br
 powerbook-vga        \-\- Powerbooks with VGA rather than DVI
 .br
-powerbook-duallink   \-\- powerbook-external alias
-.br
-powerbook            \-\- powerbook-internal alias
-.br
 mini-external        \-\- Mac Mini with external DVI
 .br
 mini-internal        \-\- Mac Mini with integrated DVI
 .br
-mini                 \-\- mini-external alias
-.br
 imac-g5-isight       \-\- iMac G5 iSight
+.br
+emac                 \-\- eMac G4
 .br
 The default value is
 .B undefined.
@@ -501,7 +533,7 @@ The default value is
 .B undefined.
 .TP
 .BI "Option \*qForceTVOut\*q \*q" boolean \*q
-Enable this option to force TV Out to always be detected as attached.
+Enable this option to force TV-out to always be detected as attached.
 The default is
 .B off 
 .TP
@@ -512,14 +544,84 @@ The default is
 .B on. 
 .TP
 .BI "Option \*qInt10\*q \*q" boolean \*q
-This option allows you to disable int10 initialization.  Set this to 
+This option allows you to disable int10 initialization.  Set this to
 False if you are experiencing a hang when initializing a secondary card.
 The default is
-.B on. 
+.B on.
+.TP 
+.BI "Option \*qEXAVSync\*q \*q" boolean \*q
+This option attempts to avoid tearing by stalling the engine until the display
+controller has passed the destination region.  It reduces tearing at the cost
+of performance and has been know to cause instability on some chips.
+The default is
+.B off.
+.TP 
+.BI "Option \*qATOMTvOut\*q \*q" boolean \*q
+This option enables experimental TV-out support for R/RV5xx, R/RV6xx, and R/RV7xx
+atombios chips. TV-out is experimental and may not function on these chips as
+well as hoped for.
+The default is
+.B off.
+.TP 
+.BI "Option \*qR4xxATOM\*q \*q" boolean \*q
+This option enables modesetting on R/RV4xx chips using atombios.
+The default is
+.B off.
+
+.SH TEXTURED VIDEO ATTRIBUTES
+The driver supports the following X11 Xv attributes for Textured Video.
+You can use the "xvattr" tool to query/set those attributes at runtime.
+
 .TP
+.BI "XV_VSYNC"
+XV_VSYNC is used to control whether textured adapter synchronizes
+the screen update to the monitor vertical refresh to eliminate tearing.
+It has two values: 'off'(0) and 'on'(1). The default is
+.B 'on'(1).
+
+.TP
+.BI "XV_BICUBIC"
+XV_BICUBIC is used to control whether textured adapter should apply
+a bicubic filter to smooth the output. It has three values: 'off'(0), 'on'(1)
+and 'auto'(2). 'off' means never apply the filter, 'on' means always apply
+the filter and 'auto' means apply the filter only if the X and Y
+sizes are scaled to more than double, this to avoid blurred output.
+The default is
+.B 'auto'(2).
 
 .SH SEE ALSO
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+.IP " 1." 4
+Wiki page:
+.RS 4
+http://www.x.org/wiki/radeon
+.RE
+.IP " 2." 4
+Overview about radeon development code:
+.RS 4
+http://cgit.freedesktop.org/xorg/driver/xf86-video-ati/
+.RE
+.IP " 3." 4
+Mailing list:
+.RS 4
+http://lists.x.org/mailman/listinfo/xorg-driver-ati
+.RE
+.IP " 4." 4
+IRC channel:
+.RS 4
+#radeon on irc.freenode.net
+.RE
+.IP " 5." 4
+Query the bugtracker for radeon bugs:
+.RS 4
+https://bugs.freedesktop.org/query.cgi?product=xorg&component=Driver/Radeon
+.RE
+.IP " 6." 4
+Submit bugs & patches:
+.RS 4
+https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/Radeon
+.RE
+
 .SH AUTHORS
 .nf
 Authors include:

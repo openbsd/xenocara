@@ -35,9 +35,17 @@ Revision History:
 NEG:26.08.2002	Initiated.
 --*/
 
-#include "CD_binding.h"
 #ifndef _CD_STRUCTS_H_
 #define _CD_STRUCTS_H_
+
+#include "CD_binding.h"
+
+/* Endaianness should be specified before inclusion,
+ * default to little endian
+ */
+#ifndef ATOM_BIG_ENDIAN
+#error Endian not specified
+#endif
 
 #ifdef		UEFI_BUILD
 typedef	UINT16**	PTABLE_UNIT_TYPE;
@@ -304,9 +312,15 @@ typedef union _PARAMETER_ACCESS {
 }PARAMETER_ACCESS;
 
 typedef	struct _COMMAND_ATTRIBUTE {
+#if ATOM_BIG_ENDIAN
+    UINT8		DestinationAlignment:2;
+    UINT8		SourceAlignment:3;
+    UINT8		Source:3;
+#else
     UINT8		Source:3;
     UINT8		SourceAlignment:3;
     UINT8		DestinationAlignment:2;
+#endif
 }COMMAND_ATTRIBUTE;
 
 typedef struct _SOURCE_DESTINATION_ALIGNMENT{
@@ -363,11 +377,19 @@ typedef union  _COMMAND_SPECIFIC_UNION{
 
 
 typedef struct _CD_GENERIC_BYTE{
+#if ATOM_BIG_ENDIAN
+    UINT16					PS_SizeInDwordsUsedByCallingTable:5;
+    UINT16					CurrentPort:2;
+    UINT16					CommandAccessType:3;
+    UINT16					CurrentParameterSize:3;
+    UINT16					CommandType:3;
+#else
     UINT16					CommandType:3;
     UINT16					CurrentParameterSize:3;
     UINT16					CommandAccessType:3;
     UINT16					CurrentPort:2;
     UINT16					PS_SizeInDwordsUsedByCallingTable:5;
+#endif
 }CD_GENERIC_BYTE;
 
 typedef UINT8	COMMAND_TYPE_OPCODE_ONLY;

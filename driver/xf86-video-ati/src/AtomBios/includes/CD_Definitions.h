@@ -39,11 +39,12 @@ NEG:27.08.2002	Initiated.
 #ifndef _CD_DEFINITIONS_H
 #define _CD_DEFINITIONS_H_
 #ifdef DRIVER_PARSER
-VOID *AllocateMemory(VOID *, UINT16);
+VOID *AllocateMemory(DEVICE_DATA *, UINT16);
 VOID ReleaseMemory(DEVICE_DATA * , WORKING_TABLE_DATA* );
 #endif
 CD_STATUS ParseTable(DEVICE_DATA* pDeviceData, UINT8 IndexInMasterTable);
 //CD_STATUS CD_MainLoop(PARSER_TEMP_DATA_POINTER pParserTempData);
 CD_STATUS Main_Loop(DEVICE_DATA* pDeviceData,UINT16 *MasterTableOffset,UINT8 IndexInMasterTable);
 UINT16* GetCommandMasterTablePointer(DEVICE_DATA*  pDeviceData);
+ATOM_TABLE_ATTRIBUTE GetCommandTableAttribute(UINT8 *pTableHeader);
 #endif //CD_DEFINITIONS

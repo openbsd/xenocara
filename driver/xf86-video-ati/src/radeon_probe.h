@@ -41,9 +41,6 @@
 #include "xf86DDC.h"
 #include "randrstr.h"
 
-#define _XF86MISC_SERVER_
-#include <X11/extensions/xf86misc.h>
-
 #include "xf86Crtc.h"
 
 #ifdef USE_EXA
@@ -54,6 +51,9 @@
 #endif
 
 extern DriverRec RADEON;
+
+#define RADEON_MAX_CRTC 2
+#define RADEON_MAX_BIOS_CONNECTOR 16
 
 typedef enum
 {
@@ -92,24 +92,6 @@ typedef enum
 
 typedef enum
 {
-    DAC_NONE    = 0,
-    DAC_PRIMARY = 1,
-    DAC_TVDAC   = 2,
-    DAC_EXT     = 3
-} RADEONDacType;
-
-typedef enum
-{
-    TMDS_NONE    = 0,
-    TMDS_INT     = 1,
-    TMDS_EXT     = 2,
-    TMDS_LVTMA   = 3,
-    TMDS_DDIA    = 4,
-    TMDS_UNIPHY  = 5
-} RADEONTmdsType;
-
-typedef enum
-{
     DVI_AUTO,
     DVI_DIGITAL,
     DVI_ANALOG
@@ -119,34 +101,14 @@ typedef enum
 {
     RMX_OFF,
     RMX_FULL,
-    RMX_CENTER
+    RMX_CENTER,
+    RMX_ASPECT
 } RADEONRMXType;
 
 typedef struct {
     uint32_t freq;
     uint32_t value;
 }RADEONTMDSPll;
-
-typedef enum
-{
-    OUTPUT_NONE,
-    OUTPUT_VGA,
-    OUTPUT_DVI_I,
-    OUTPUT_DVI_D,
-    OUTPUT_DVI_A,
-    OUTPUT_LVDS,
-    OUTPUT_STV,
-    OUTPUT_CTV,
-    OUTPUT_CV,
-    OUTPUT_HDMI,
-    OUTPUT_DP
-} RADEONOutputType;
-
-#define OUTPUT_IS_DVI ((radeon_output->type == OUTPUT_DVI_D || \
-                        radeon_output->type == OUTPUT_DVI_I || \
-                        radeon_output->type == OUTPUT_DVI_A))
-#define OUTPUT_IS_TV ((radeon_output->type == OUTPUT_STV || \
-                       radeon_output->type == OUTPUT_CTV))
 
 /* standards */
 typedef enum
@@ -166,6 +128,8 @@ typedef struct
     Bool   valid;
     uint32_t mask_clk_reg;
     uint32_t mask_data_reg;
+    uint32_t a_clk_reg;
+    uint32_t a_data_reg;
     uint32_t put_clk_reg;
     uint32_t put_data_reg;
     uint32_t get_clk_reg;
@@ -176,74 +140,34 @@ typedef struct
     uint32_t put_data_mask;
     uint32_t get_clk_mask;
     uint32_t get_data_mask;
+    uint32_t a_clk_mask;
+    uint32_t a_data_mask;
+    int hw_line;
+    Bool hw_capable;
 } RADEONI2CBusRec, *RADEONI2CBusPtr;
 
 typedef struct _RADEONCrtcPrivateRec {
-#ifdef USE_XAA
-    FBLinearPtr rotate_mem_xaa;
-#endif
-#ifdef USE_EXA
-    ExaOffscreenArea *rotate_mem_exa;
-#endif
+    void *crtc_rotate_mem;
+    void *cursor_mem;
     int crtc_id;
     int binding;
     uint32_t cursor_offset;
     /* Lookup table values to be set when the CRTC is enabled */
-    uint8_t lut_r[256], lut_g[256], lut_b[256];
+    uint16_t lut_r[256], lut_g[256], lut_b[256];
 
     uint32_t crtc_offset;
     int can_tile;
     Bool enabled;
+    Bool initialized;
 } RADEONCrtcPrivateRec, *RADEONCrtcPrivatePtr;
 
-typedef struct {
-    RADEONDacType DACType;
-    RADEONTmdsType TMDSType;
-    RADEONConnectorType ConnectorType;
-    Bool valid;
-    int output_id;
+typedef struct _radeon_encoder {
+    uint16_t encoder_id;
     int devices;
-    int hpd_mask;
-    RADEONI2CBusRec ddc_i2c;
-    int igp_lane_info;
-} RADEONBIOSConnector;
-
-typedef struct _RADEONOutputPrivateRec {
-    int num;
-    RADEONOutputType type;
     void *dev_priv;
-    uint32_t ddc_line;
-    RADEONDacType DACType;
-    RADEONDviType DVIType;
-    RADEONTmdsType TMDSType;
-    RADEONConnectorType ConnectorType;
-    RADEONMonitorType MonType;
-    int crtc_num;
-    int DDCReg;
-    I2CBusPtr         pI2CBus;
-    RADEONI2CBusRec   ddc_i2c;
-    uint32_t          ps2_tvdac_adj;
-    uint32_t          pal_tvdac_adj;
-    uint32_t          ntsc_tvdac_adj;
-    /* panel stuff */
-    int               PanelXRes;
-    int               PanelYRes;
-    int               HOverPlus;
-    int               HSyncWidth;
-    int               HBlank;
-    int               VOverPlus;
-    int               VSyncWidth;
-    int               VBlank;
-    int               Flags;            /* Saved copy of mode flags          */
-    int               PanelPwrDly;
-    int               DotClock;
-    RADEONTMDSPll     tmds_pll[4];
-    RADEONRMXType     rmx_type;
-    /* dvo */
-    I2CDevPtr         DVOChip;
-    RADEONI2CBusRec   dvo_i2c;
-    int               dvo_i2c_slave_addr;
-    Bool              dvo_duallink;
+} radeon_encoder_rec, *radeon_encoder_ptr;
+
+typedef struct _radeon_tvout {
     /* TV out */
     TVStd             default_tvStd;
     TVStd             tvStd;
@@ -253,16 +177,104 @@ typedef struct _RADEONOutputPrivateRec {
     float             TVRefClk;
     int               SupportedTVStds;
     Bool              tv_on;
-    int               load_detection;
-    /* dig block */
-    int transmitter_config;
-    Bool coherent_mode;
-    int igp_lane_info;
+} radeon_tvout_rec, *radeon_tvout_ptr;
 
-    char              *name;
-    int               output_id;
-    int               devices;
+typedef struct _radeon_native_mode {
+    /* panel stuff */
+    int               PanelXRes;
+    int               PanelYRes;
+    int               HOverPlus;
+    int               HSyncWidth;
+    int               HBlank;
+    int               VOverPlus;
+    int               VSyncWidth;
+    int               VBlank;
+    int               Flags;
+    int               DotClock;
+} radeon_native_mode_rec, *radeon_native_mode_ptr;
+
+typedef struct _radeon_tvdac {
+    // tv dac
+    uint32_t          ps2_tvdac_adj;
+    uint32_t          pal_tvdac_adj;
+    uint32_t          ntsc_tvdac_adj;
+} radeon_tvdac_rec, *radeon_tvdac_ptr;
+
+typedef struct _radeon_tmds {
+    // tmds
+    RADEONTMDSPll     tmds_pll[4];
+} radeon_tmds_rec, *radeon_tmds_ptr;
+
+typedef struct _radeon_lvds {
+    // panel mode
+    radeon_native_mode_rec native_mode;
+    // lvds
+    int               PanelPwrDly;
+    int               lvds_misc;
+    int               lvds_ss_id;
+} radeon_lvds_rec, *radeon_lvds_ptr;
+
+typedef struct _radeon_dvo {
+    /* dvo */
+    I2CDevPtr         DVOChip;
+    RADEONI2CBusRec   dvo_i2c;
+    int               dvo_i2c_slave_addr;
+    Bool              dvo_duallink;
+} radeon_dvo_rec, *radeon_dvo_ptr;
+
+typedef struct {
+    RADEONConnectorType ConnectorType;
+    Bool valid;
+    int output_id;
+    int devices;
+    int hpd_mask;
+    RADEONI2CBusRec ddc_i2c;
+    int igp_lane_info;
+    Bool shared_ddc;
+    int i2c_line_mux;
+    Bool load_detection;
+    Bool linkb;
+    uint16_t connector_object;
+} RADEONBIOSConnector;
+
+typedef struct _RADEONOutputPrivateRec {
+    uint16_t connector_id;
+    uint32_t devices;
+    uint32_t active_device;
     Bool enabled;
+
+    int  load_detection;
+
+    // DVI/HDMI
+    Bool coherent_mode;
+    Bool linkb;
+
+    RADEONConnectorType ConnectorType;
+    RADEONDviType DVIType;
+    RADEONMonitorType MonType;
+
+    // DDC info
+    I2CBusPtr         pI2CBus;
+    RADEONI2CBusRec   ddc_i2c;
+    Bool shared_ddc;
+    // router info
+    // HDP info
+
+    // panel mode
+    radeon_native_mode_rec native_mode;
+
+    // RMX
+    RADEONRMXType     rmx_type;
+    int               Flags;
+
+    //tvout - move to encoder
+    radeon_tvout_rec tvout;
+
+    /* dce 3.x dig block */
+    int igp_lane_info;
+    int dig_block;
+
+    int pixel_clock;
 } RADEONOutputPrivateRec, *RADEONOutputPrivatePtr;
 
 struct avivo_pll_state {
@@ -310,8 +322,10 @@ struct avivo_grph_state {
     uint32_t x_end;
     uint32_t y_end;
 
+    uint32_t desktop_height;
     uint32_t viewport_start;
     uint32_t viewport_size;
+    uint32_t mode_data_format;
 };
 
 struct avivo_state
@@ -326,9 +340,14 @@ struct avivo_state
 
     uint32_t crtc_master_en;
     uint32_t crtc_tv_control;
+    uint32_t dc_lb_memory_split;
 
     struct avivo_pll_state pll1;
     struct avivo_pll_state pll2;
+
+    struct avivo_pll_state vga25_ppll;
+    struct avivo_pll_state vga28_ppll;
+    struct avivo_pll_state vga41_ppll;
 
     struct avivo_crtc_state crtc1;
     struct avivo_crtc_state crtc2;
@@ -357,7 +376,7 @@ struct avivo_state
     /* dvoa */
     uint32_t dvoa[16];
 
-    /* DCE3 chips */
+    /* DCE3+ chips */
     uint32_t fmt1[18];
     uint32_t fmt2[18];
     uint32_t dig1[19];
@@ -368,9 +387,15 @@ struct avivo_state
     uint32_t aux_cntl2[14];
     uint32_t aux_cntl3[14];
     uint32_t aux_cntl4[14];
+    uint32_t aux_cntl5[14];
+    uint32_t aux_cntl6[14];
     uint32_t phy[10];
     uint32_t uniphy1[8];
     uint32_t uniphy2[8];
+    uint32_t uniphy3[8];
+    uint32_t uniphy4[8];
+    uint32_t uniphy5[8];
+    uint32_t uniphy6[8];
 
 };
 
@@ -562,9 +587,6 @@ typedef struct {
     uint16_t          v_code_timing[MAX_V_CODE_TIMING_LEN];
 
 } RADEONSaveRec, *RADEONSavePtr;
-
-#define RADEON_MAX_CRTC 2
-#define RADEON_MAX_BIOS_CONNECTOR 16
 
 typedef struct
 {

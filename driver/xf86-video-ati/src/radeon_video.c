@@ -89,10 +89,6 @@ static void RADEON_MSP_SetEncoding(RADEONPortPrivPtr pPriv);
 static void RADEON_TDA9885_SetEncoding(RADEONPortPrivPtr pPriv);
 static void RADEON_FI1236_SetEncoding(RADEONPortPrivPtr pPriv);
 
-
-
-#define ClipValue(v,min,max) ((v) < (min) ? (min) : (v) > (max) ? (max) : (v))
-
 static Atom xvBrightness, xvColorKey, xvSaturation, xvDoubleBuffer;
 static Atom xvRedIntensity, xvGreenIntensity, xvBlueIntensity;
 static Atom xvContrast, xvHue, xvColor, xvAutopaintColorkey, xvSetDefaults;
@@ -106,11 +102,9 @@ static Atom xvEncoding, xvFrequency, xvVolume, xvMute,
 	     
 static Atom xvOvAlpha, xvGrAlpha, xvAlphaMode;
 
-
 #define GET_PORT_PRIVATE(pScrn) \
    (RADEONPortPrivPtr)((RADEONPTR(pScrn))->adaptor->pPortPrivates[0].ptr)
 
-#ifndef HAVE_XF86CRTCCLIPVIDEOHELPER
 static void
 radeon_box_intersect(BoxPtr dest, BoxPtr a, BoxPtr b)
 {
@@ -141,6 +135,34 @@ radeon_box_area(BoxPtr box)
     return (int) (box->x2 - box->x1) * (int) (box->y2 - box->y1);
 }
 
+xf86CrtcPtr
+radeon_xv_pick_best_crtc(ScrnInfoPtr pScrn,
+			 int x1, int x2, int y1, int y2)
+{
+    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int			coverage, best_coverage, c;
+    BoxRec		box, crtc_box, cover_box;
+    xf86CrtcPtr         best_crtc = NULL;
+
+    box.x1 = x1;
+    box.x2 = x2;
+    box.y1 = y1;
+    box.y2 = y2;
+    best_coverage = 0;
+    for (c = 0; c < xf86_config->num_crtc; c++) {
+	xf86CrtcPtr crtc = xf86_config->crtc[c];
+	radeon_crtc_box(crtc, &crtc_box);
+	radeon_box_intersect(&cover_box, &crtc_box, &box);
+	coverage = radeon_box_area(&cover_box);
+	if (coverage > best_coverage) {
+	    best_crtc = crtc;
+	    best_coverage = coverage;
+	}
+    }
+    return best_crtc;
+}
+
+#ifndef HAVE_XF86CRTCCLIPVIDEOHELPER
 static xf86CrtcPtr
 radeon_covering_crtc(ScrnInfoPtr pScrn,
 		     BoxPtr	box,
@@ -245,19 +267,6 @@ radeon_crtc_clip_video(ScrnInfoPtr pScrn,
 #endif
 }
 
-#ifdef USE_EXA
-static void
-ATIVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
-{
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    RADEONInfoPtr info = RADEONPTR(pScrn);
-    RADEONPortPrivPtr pPriv = info->adaptor->pPortPrivates[0].ptr;
-
-    if (pPriv->video_memory == area)
-        pPriv->video_memory = NULL;
-}
-#endif /* USE_EXA */
-
 void RADEONInitVideo(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
@@ -285,22 +294,19 @@ void RADEONInitVideo(ScreenPtr pScreen)
 	RADEONInitOffscreenImages(pScreen);
     }
 
-    if (info->ChipFamily != CHIP_FAMILY_RV250) {
-	if ((info->ChipFamily < CHIP_FAMILY_RS400)
+    if ((info->ChipFamily < CHIP_FAMILY_RS400)
 #ifdef XF86DRI
-	    || (info->directRenderingEnabled)
+	|| (info->directRenderingEnabled)
 #endif
-	    ) {
-	    texturedAdaptor = RADEONSetupImageTexturedVideo(pScreen);
-	    if (texturedAdaptor != NULL) {
-		adaptors[num_adaptors++] = texturedAdaptor;
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Set up textured video\n");
-	    } else
-		xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to set up textured video\n");
+	) {
+	texturedAdaptor = RADEONSetupImageTexturedVideo(pScreen);
+	if (texturedAdaptor != NULL) {
+	    adaptors[num_adaptors++] = texturedAdaptor;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Set up textured video\n");
 	} else
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Textured video requires CP on R5xx/IGP\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to set up textured video\n");
     } else
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Textured video disabled on RV250 due to HW bug\n");
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Textured video requires CP on R5xx/R6xx/R7xx/IGP\n");
 
     if(num_adaptors)
 	xf86XVScreenInit(pScreen, adaptors, num_adaptors);
@@ -1058,11 +1064,11 @@ static void RADEONSetTransform (ScrnInfoPtr pScrn,
     OvGCr = CAdjGCr * gamma_curve_r100[gamma].OvGammaCont;
     OvBCb = CAdjBCb * gamma_curve_r100[gamma].OvGammaCont;
     OvBCr = CAdjBCr * gamma_curve_r100[gamma].OvGammaCont;
-    OvROff = CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
+    OvROff = RedAdj + CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
 	OvLuma * Loff - (OvRCb + OvRCr) * Coff;
-    OvGOff = CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
+    OvGOff = GreenAdj + CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
 	OvLuma * Loff - (OvGCb + OvGCr) * Coff;
-    OvBOff = CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
+    OvBOff = BlueAdj + CAdjOff * gamma_curve_r100[gamma].OvGammaCont - 
 	OvLuma * Loff - (OvBCb + OvBCr) * Coff;
 #if 0 /* default constants */
     OvROff = -888.5;
@@ -1632,13 +1638,12 @@ RADEONSetupImageVideo(ScreenPtr pScreen)
 
     pPriv->textured = FALSE;
 
-    if(pPriv->theatre != NULL) 
-    {
+    if(pPriv->theatre != NULL) {
 	/* video decoder is present, extend capabilities */
        adapt->nEncodings = 13;
        adapt->pEncodings = InputVideoEncodings;
        adapt->type |= XvVideoMask;
-       adapt->nAttributes = NUM_DEC_ATTRIBUTES;    
+       adapt->nAttributes = NUM_DEC_ATTRIBUTES;
        adapt->PutVideo = RADEONPutVideo;
     }
 
@@ -1654,8 +1659,19 @@ RADEONStopVideo(ScrnInfoPtr pScrn, pointer data, Bool cleanup)
   unsigned char *RADEONMMIO = info->MMIO;
   RADEONPortPrivPtr pPriv = (RADEONPortPrivPtr)data;
 
-    if (pPriv->textured)
-	return;
+  if (pPriv->textured) {
+      if (cleanup) {
+	  if (pPriv->bicubic_memory != NULL) {
+	      radeon_legacy_free_memory(pScrn, pPriv->bicubic_memory);
+	      pPriv->bicubic_memory = NULL;
+	  }
+	  if (pPriv->video_memory != NULL) {
+	      radeon_legacy_free_memory(pScrn, pPriv->video_memory);
+	      pPriv->video_memory = NULL;
+	  }
+      }
+      return;
+  }
 
   REGION_EMPTY(pScrn->pScreen, &pPriv->clip);
 
@@ -1675,7 +1691,7 @@ RADEONStopVideo(ScrnInfoPtr pScrn, pointer data, Bool cleanup)
         if(pPriv->i2c != NULL) RADEON_board_setmisc(pPriv);
      }
      if (pPriv->video_memory != NULL) {
-	 RADEONFreeMemory(pScrn, pPriv->video_memory);
+	 radeon_legacy_free_memory(pScrn, pPriv->video_memory);
 	 pPriv->video_memory = NULL;
      }
      pPriv->videoStatus = 0;
@@ -1698,9 +1714,6 @@ RADEONSetPortAttribute(ScrnInfoPtr  pScrn,
     Bool		setTransform = FALSE;
     Bool		setAlpha = FALSE;
     unsigned char *RADEONMMIO = info->MMIO;
-
-    if (pPriv->textured)
-	return BadMatch;
 
     RADEON_SYNC(info, pScrn);
 
@@ -1928,7 +1941,7 @@ RADEONSetPortAttribute(ScrnInfoPtr  pScrn,
 	if(pPriv->fi1236!=NULL){
 		xf86_fi1236_dump_status(pPriv->fi1236);
 		}
-   } 
+   }
    else if(attribute == xvAdjustment) 
    {
   	pPriv->adjustment=value;
@@ -1972,9 +1985,6 @@ RADEONGetPortAttribute(ScrnInfoPtr  pScrn,
 {
     RADEONInfoPtr	info = RADEONPTR(pScrn);
     RADEONPortPrivPtr	pPriv = (RADEONPortPrivPtr)data;
-
-    if (pPriv->textured)
-	return BadMatch;
 
     if (info->accelOn) RADEON_SYNC(info, pScrn);
 
@@ -2433,120 +2443,13 @@ RADEONCopyMungedData(
     }
 }
 
-
-/* Allocates memory, either by resizing the allocation pointed to by mem_struct,
- * or by freeing mem_struct (if non-NULL) and allocating a new space.  The size
- * is measured in bytes, and the offset from the beginning of card space is
- * returned.
- */
-uint32_t
-RADEONAllocateMemory(
-   ScrnInfoPtr pScrn,
-   void **mem_struct,
-   int size
-){
-    ScreenPtr pScreen;
-    RADEONInfoPtr info = RADEONPTR(pScrn);
-    int offset = 0;
-
-    pScreen = screenInfo.screens[pScrn->scrnIndex];
-#ifdef USE_EXA
-    if (info->useEXA) {
-	ExaOffscreenArea *area = *mem_struct;
-
-	if (area != NULL) {
-	    if (area->size >= size)
-		return area->offset;
-
-	    exaOffscreenFree(pScrn->pScreen, area);
-	}
-
-	area = exaOffscreenAlloc(pScrn->pScreen, size, 64, TRUE, ATIVideoSave,
-				 NULL);
-	*mem_struct = area;
-	if (area == NULL)
-	    return 0;
-	offset = area->offset;
-    }
-#endif /* USE_EXA */
-#ifdef USE_XAA
-    if (!info->useEXA) {
-	FBLinearPtr linear = *mem_struct;
-	int cpp = info->CurrentLayout.bitsPerPixel / 8;
-
-	/* XAA allocates in units of pixels at the screen bpp, so adjust size
-	 * appropriately.
-	 */
-	size = (size + cpp - 1) / cpp;
-
-	if (linear) {
-	    if(linear->size >= size)
-		return linear->offset * cpp;
-
-	    if(xf86ResizeOffscreenLinear(linear, size))
-		return linear->offset * cpp;
-
-	    xf86FreeOffscreenLinear(linear);
-	}
-
-	linear = xf86AllocateOffscreenLinear(pScreen, size, 16,
-						NULL, NULL, NULL);
-	*mem_struct = linear;
-
-	if (!linear) {
-	    int max_size;
-
-	    xf86QueryLargestOffscreenLinear(pScreen, &max_size, 16,
-					    PRIORITY_EXTREME);
-
-	    if(max_size < size)
-		return 0;
-
-	    xf86PurgeUnlockedOffscreenAreas(pScreen);
-	    linear = xf86AllocateOffscreenLinear(pScreen, size, 16,
-						     NULL, NULL, NULL);
-	    *mem_struct = linear;
-	    if (!linear)
-		return 0;
-	}
-	offset = linear->offset * cpp;
-    }
-#endif /* USE_XAA */
-
-    return offset;
-}
-
-void
-RADEONFreeMemory(
-   ScrnInfoPtr pScrn,
-   void *mem_struct
-){
-    RADEONInfoPtr info = RADEONPTR(pScrn);
-
-#ifdef USE_EXA
-    if (info->useEXA) {
-	ExaOffscreenArea *area = mem_struct;
-
-	if (area != NULL)
-	    exaOffscreenFree(pScrn->pScreen, area);
-    }
-#endif /* USE_EXA */
-#ifdef USE_XAA
-    if (!info->useEXA) {
-	FBLinearPtr linear = mem_struct;
-
-	if (linear != NULL)
-	    xf86FreeOffscreenLinear(linear);
-    }
-#endif /* USE_XAA */
-}
-
 static void
 RADEONDisplayVideo(
     ScrnInfoPtr pScrn,
     xf86CrtcPtr crtc,
     RADEONPortPrivPtr pPriv,
     int id,
+    int base_offset,
     int offset1, int offset2,
     int offset3, int offset4,
     int offset5, int offset6,
@@ -2650,7 +2553,7 @@ RADEONDisplayVideo(
 	    radeon_output = output->driver_private;
 	    if (radeon_output->Flags & RADEON_USE_RMX)
 		v_inc = ((src_h * mode->CrtcVDisplay /
-			  radeon_output->PanelYRes) << v_inc_shift) / drw_h;
+			  radeon_output->native_mode.PanelYRes) << v_inc_shift) / drw_h;
 	    break;
 	}
     }
@@ -2714,6 +2617,20 @@ RADEONDisplayVideo(
         h_inc_uv = h_inc;
         }
 #endif
+
+    /* Make the overlay base address as close to the buffers as possible to
+     * prevent the buffer offsets from exceeding the hardware limit of 128 MB.
+     * The base address must be aligned to a multiple of 4 MB.
+     */
+    base_offset = ((info->fbLocation + base_offset) & (~0 << 22)) -
+	info->fbLocation;
+
+    offset1 -= base_offset;
+    offset2 -= base_offset;
+    offset3 -= base_offset;
+    offset4 -= base_offset;
+    offset5 -= base_offset;
+    offset6 -= base_offset;
 
     /* keep everything in 16.16 */
 
@@ -2846,6 +2763,12 @@ RADEONDisplayVideo(
 	src_w >>= 1;
     OUTREG(RADEON_OV0_P2_X_START_END, (src_w + leftuv - 1) | (leftuv << 16));
     OUTREG(RADEON_OV0_P3_X_START_END, (src_w + leftuv - 1) | (leftuv << 16));
+    if (info->ModeReg->ov0_base_addr != (info->fbLocation + base_offset)) {
+	ErrorF("Changing OV0_BASE_ADDR from 0x%08x to 0x%08x\n",
+	       info->ModeReg->ov0_base_addr, info->fbLocation + base_offset);
+	info->ModeReg->ov0_base_addr = info->fbLocation + base_offset;
+	OUTREG(RADEON_OV0_BASE_ADDR, info->ModeReg->ov0_base_addr);
+    }
     OUTREG(RADEON_OV0_VID_BUF0_BASE_ADRS, offset1);
     OUTREG(RADEON_OV0_VID_BUF1_BASE_ADRS, offset2);
     OUTREG(RADEON_OV0_VID_BUF2_BASE_ADRS, offset3);
@@ -3038,9 +2961,9 @@ RADEONPutImage(
    if (idconv == FOURCC_YV12 || id == FOURCC_I420) {
       new_size += (dstPitch >> 1) * ((height + 1) & ~1);
    }
-   pPriv->video_offset = RADEONAllocateMemory(pScrn, &pPriv->video_memory,
-					      (pPriv->doubleBuffer ?
-					       (new_size * 2) : new_size));
+   pPriv->video_offset = radeon_legacy_allocate_memory(pScrn, &pPriv->video_memory,
+						       (pPriv->doubleBuffer ?
+						       (new_size * 2) : new_size), 64);
    if (pPriv->video_offset == 0)
       return BadAlloc;
 
@@ -3150,9 +3073,10 @@ RADEONPutImage(
 
     /* FIXME: someone should look at these offsets, I don't think it makes sense how
               they are handled throughout the source. */
-    RADEONDisplayVideo(pScrn, crtc, pPriv, idconv, offset, offset + d2line, offset + d3line,
-		     offset, offset + d2line, offset + d3line, width, height, dstPitch,
-		     xa, xb, ya, &dstBox, src_w, src_h, drw_w, drw_h, METHOD_BOB);
+    RADEONDisplayVideo(pScrn, crtc, pPriv, idconv, pPriv->video_offset, offset,
+		       offset + d2line, offset + d3line, offset, offset + d2line,
+		       offset + d3line, width, height, dstPitch, xa, xb, ya,
+		       &dstBox, src_w, src_h, drw_w, drw_h, METHOD_BOB);
 
     pPriv->videoStatus = CLIENT_VIDEO_ON;
 
@@ -3233,7 +3157,7 @@ RADEONVideoTimerCallback(ScrnInfoPtr pScrn, Time now)
 	} else {  /* FREE_TIMER */
 	    if(pPriv->freeTime < now) {
 		if (pPriv->video_memory != NULL) {
-		    RADEONFreeMemory(pScrn, pPriv->video_memory);
+		    radeon_legacy_free_memory(pScrn, pPriv->video_memory);
 		    pPriv->video_memory = NULL;
 		}
 		pPriv->videoStatus = 0;
@@ -3268,7 +3192,7 @@ RADEONAllocateSurface(
     pitch = ((w << 1) + 15) & ~15;
     size = pitch * h;
 
-    offset = RADEONAllocateMemory(pScrn, &surface_memory, size);
+    offset = radeon_legacy_allocate_memory(pScrn, &surface_memory, size, 64);
     if (offset == 0)
 	return BadAlloc;
 
@@ -3276,18 +3200,18 @@ RADEONAllocateSurface(
     surface->height = h;
 
     if(!(surface->pitches = xalloc(sizeof(int)))) {
-	RADEONFreeMemory(pScrn, surface_memory);
+	radeon_legacy_free_memory(pScrn, surface_memory);
 	return BadAlloc;
     }
     if(!(surface->offsets = xalloc(sizeof(int)))) {
 	xfree(surface->pitches);
-	RADEONFreeMemory(pScrn, surface_memory);
+	radeon_legacy_free_memory(pScrn, surface_memory);
 	return BadAlloc;
     }
     if(!(pPriv = xalloc(sizeof(OffscreenPrivRec)))) {
 	xfree(surface->pitches);
 	xfree(surface->offsets);
-	RADEONFreeMemory(pScrn, surface_memory);
+	radeon_legacy_free_memory(pScrn, surface_memory);
 	return BadAlloc;
     }
 
@@ -3328,7 +3252,8 @@ RADEONFreeSurface(
 
     if(pPriv->isOn)
 	RADEONStopSurface(surface);
-    RADEONFreeMemory(pScrn, pPriv->surface_memory);
+    radeon_legacy_free_memory(pScrn, pPriv->surface_memory);
+    pPriv->surface_memory = NULL;
     xfree(surface->pitches);
     xfree(surface->offsets);
     xfree(surface->devPrivate.ptr);
@@ -3417,8 +3342,9 @@ RADEONDisplaySurface(
 		       surface->offsets[0], surface->offsets[0],
 		       surface->offsets[0], surface->offsets[0],
 		       surface->offsets[0], surface->offsets[0],
-		       surface->width, surface->height, surface->pitches[0],
-		       xa, xb, ya, &dstBox, src_w, src_h, drw_w, drw_h, METHOD_BOB);
+		       surface->offsets[0], surface->width, surface->height,
+		       surface->pitches[0], xa, xb, ya, &dstBox, src_w, src_h,
+		       drw_w, drw_h, METHOD_BOB);
 
     if (portPriv->autopaint_colorkey)
 	xf86XVFillKeyHelper(pScrn->pScreen, portPriv->colorKey, clipBoxes);
@@ -3602,9 +3528,9 @@ RADEONPutVideo(
    if (pPriv->capture_vbi_data)
       alloc_size += 2 * 2 * vbi_line_width * 21;
 
-   pPriv->video_offset = RADEONAllocateMemory(pScrn, &pPriv->video_memory,
-					      (pPriv->doubleBuffer ?
-					       (new_size * 2) : new_size));
+   pPriv->video_offset = radeon_legacy_allocate_memory(pScrn, &pPriv->video_memory,
+						      (pPriv->doubleBuffer ?
+						      (new_size * 2) : new_size), 64);
    if (pPriv->video_offset == 0)
       return BadAlloc;
 
@@ -3705,10 +3631,12 @@ RADEONPutVideo(
 	    RADEONFillKeyHelper(pDraw, pPriv->colorKey, clipBoxes);
    }
 
-   RADEONDisplayVideo(pScrn, crtc, pPriv, id, offset1+top*srcPitch, offset2+top*srcPitch,
-		offset3+top*srcPitch, offset4+top*srcPitch, offset1+top*srcPitch,
-		offset2+top*srcPitch, width, height, dstPitch*mult/2,
-                     xa, xb, ya, &dstBox, src_w, src_h*mult/2, drw_w, drw_h, pPriv->overlay_deinterlacing_method);
+   RADEONDisplayVideo(pScrn, crtc, pPriv, id, pPriv->video_offset,
+		      offset1+top*srcPitch, offset2+top*srcPitch,
+		      offset3+top*srcPitch, offset4+top*srcPitch,
+		      offset1+top*srcPitch, offset2+top*srcPitch, width, height,
+		      dstPitch*mult/2, xa, xb, ya, &dstBox, src_w, src_h*mult/2,
+		      drw_w, drw_h, pPriv->overlay_deinterlacing_method);
 
    RADEONWaitForFifo(pScrn, 1);
    OUTREG(RADEON_OV0_REG_LOAD_CNTL,  RADEON_REG_LD_CTL_LOCK);

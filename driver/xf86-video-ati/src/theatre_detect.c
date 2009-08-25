@@ -22,15 +22,10 @@
  * authorization from the author.
  *
  * $Log: theatre_detect.c,v $
- * Revision 1.2  2008/07/12 15:18:34  oga
- * Long awaited update of xf86-video-ati to 6.9.0.
+ * Revision 1.3  2009/08/25 18:51:45  matthieu
+ * update do xf86-video-ati 6.12.2
  *
- * the rage128 and mach64 drivers were split out of this driver just after
- * the 6.8.0 release, these drivers will be commited separately.
- *
- * MergedFb mode is gone, so please use xrandr if you used to use it.
- *
- * ok matthieu@.
+ * This has been in snapshots for weeks. ok oga@, todd@.
  *
  * Revision 1.4  2005/08/28 18:00:23  bogdand
  * Modified the licens type from GPL to a X/MIT one

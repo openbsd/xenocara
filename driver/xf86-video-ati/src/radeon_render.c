@@ -268,7 +268,7 @@ RemoveLinear (FBLinearPtr linear)
 {
    RADEONInfoPtr info = (RADEONInfoPtr)(linear->devPrivate.ptr);
 
-   info->RenderTex = NULL; 
+   info->accel_state->RenderTex = NULL; 
 }
 
 static void
@@ -276,13 +276,14 @@ RenderCallback (ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
 
-    if ((currentTime.milliseconds > info->RenderTimeout) && info->RenderTex) {
-	xf86FreeOffscreenLinear(info->RenderTex);
-	info->RenderTex = NULL;
+    if ((currentTime.milliseconds > info->accel_state->RenderTimeout) &&
+	info->accel_state->RenderTex) {
+	xf86FreeOffscreenLinear(info->accel_state->RenderTex);
+	info->accel_state->RenderTex = NULL;
     }
 
-    if (!info->RenderTex)
-	info->RenderCallback = NULL;
+    if (!info->accel_state->RenderTex)
+	info->accel_state->RenderCallback = NULL;
 }
 
 static Bool
@@ -293,30 +294,30 @@ AllocateLinear (
    RADEONInfoPtr  info       = RADEONPTR(pScrn);
    int cpp = info->CurrentLayout.bitsPerPixel / 8;
 
-   info->RenderTimeout = currentTime.milliseconds + 30000;
-   info->RenderCallback = RenderCallback;
+   info->accel_state->RenderTimeout = currentTime.milliseconds + 30000;
+   info->accel_state->RenderCallback = RenderCallback;
 
    /* XAA allocates in units of pixels at the screen bpp, so adjust size
     * appropriately.
     */
    sizeNeeded = (sizeNeeded + cpp - 1) / cpp;
 
-   if (info->RenderTex) {
-	if (info->RenderTex->size >= sizeNeeded)
+   if (info->accel_state->RenderTex) {
+	if (info->accel_state->RenderTex->size >= sizeNeeded)
 	   return TRUE;
 	else {
-	   if (xf86ResizeOffscreenLinear(info->RenderTex, sizeNeeded))
+	   if (xf86ResizeOffscreenLinear(info->accel_state->RenderTex, sizeNeeded))
 		return TRUE;
 
-	   xf86FreeOffscreenLinear(info->RenderTex);
-	   info->RenderTex = NULL;
+	   xf86FreeOffscreenLinear(info->accel_state->RenderTex);
+	   info->accel_state->RenderTex = NULL;
 	}
    }
 
-   info->RenderTex = xf86AllocateOffscreenLinear(pScrn->pScreen, sizeNeeded, 32,
-						 NULL, RemoveLinear, info);
+   info->accel_state->RenderTex = xf86AllocateOffscreenLinear(pScrn->pScreen, sizeNeeded, 32,
+							      NULL, RemoveLinear, info);
 
-   return (info->RenderTex != NULL);
+   return (info->accel_state->RenderTex != NULL);
 }
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
@@ -435,7 +436,7 @@ static Bool FUNC_NAME(R100SetupTexture)(
 	txformat |= RADEON_TXFORMAT_NON_POWER2;
     }
 
-    offset = info->RenderTex->offset * pScrn->bitsPerPixel / 8;
+    offset = info->accel_state->RenderTex->offset * pScrn->bitsPerPixel / 8;
     dst = (uint8_t*)(info->FB + offset);
 
     /* Upload texture to card. */
@@ -459,8 +460,8 @@ static Bool FUNC_NAME(R100SetupTexture)(
 
 #else
 
-    if (info->accel->NeedToSync)
-	info->accel->Sync(pScrn);
+    if (info->accel_state->accel->NeedToSync)
+	info->accel_state->accel->Sync(pScrn);
 
     while (height--) {
 	memcpy(dst, src, width * tex_bytepp);
@@ -514,7 +515,7 @@ FUNC_NAME(R100SetupForCPUToScreenAlphaTexture) (
     if (blend_cntl == 0)
 	return FALSE;
 
-    if (!info->XInited3D)
+    if (!info->accel_state->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
     if (!FUNC_NAME(R100SetupTexture)(pScrn, maskFormat, alphaPtr, alphaPitch,
@@ -565,7 +566,7 @@ FUNC_NAME(R100SetupForCPUToScreenTexture) (
     if (blend_cntl == 0)
 	return FALSE;
     
-    if (!info->XInited3D)
+    if (!info->accel_state->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
     if (!FUNC_NAME(R100SetupTexture)(pScrn, srcFormat, texPtr, texPitch, width,
@@ -772,10 +773,10 @@ static Bool FUNC_NAME(R200SetupTexture)(
 	txformat |= RADEON_TXFORMAT_NON_POWER2;
     }
 
-    info->texW[0] = width;
-    info->texH[0] = height;
+    info->accel_state->texW[0] = width;
+    info->accel_state->texH[0] = height;
 
-    offset = info->RenderTex->offset * pScrn->bitsPerPixel / 8;
+    offset = info->accel_state->RenderTex->offset * pScrn->bitsPerPixel / 8;
     dst = (uint8_t*)(info->FB + offset);
 
     /* Upload texture to card. */
@@ -799,8 +800,8 @@ static Bool FUNC_NAME(R200SetupTexture)(
 
 #else
 
-    if (info->accel->NeedToSync)
-	info->accel->Sync(pScrn);
+    if (info->accel_state->accel->NeedToSync)
+	info->accel_state->accel->Sync(pScrn);
 
     while (height--) {
 	memcpy(dst, src, width * tex_bytepp);
@@ -855,7 +856,7 @@ FUNC_NAME(R200SetupForCPUToScreenAlphaTexture) (
     if (blend_cntl == 0)
 	return FALSE;
 
-    if (!info->XInited3D)
+    if (!info->accel_state->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
     if (!FUNC_NAME(R200SetupTexture)(pScrn, maskFormat, alphaPtr, alphaPitch,
@@ -907,7 +908,7 @@ FUNC_NAME(R200SetupForCPUToScreenTexture) (
     if (blend_cntl == 0)
 	return FALSE;
 
-    if (!info->XInited3D)
+    if (!info->accel_state->XInited3D)
 	RADEONInit3DEngine(pScrn);
 
     if (!FUNC_NAME(R200SetupTexture)(pScrn, srcFormat, texPtr, texPitch, width,
@@ -974,10 +975,10 @@ FUNC_NAME(R200SubsequentCPUToScreenTexture) (
     
     r = width + l;
     b = height + t;
-    fl = (float)srcx / info->texW[0];
-    fr = (float)(srcx + width) / info->texW[0];
-    ft = (float)srcy / info->texH[0];
-    fb = (float)(srcy + height) / info->texH[0];
+    fl = (float)srcx / info->accel_state->texW[0];
+    fr = (float)(srcx + width) / info->accel_state->texW[0];
+    ft = (float)srcy / info->accel_state->texH[0];
+    fb = (float)(srcy + height) / info->accel_state->texH[0];
 
 #ifdef ACCEL_CP
     BEGIN_RING(24);

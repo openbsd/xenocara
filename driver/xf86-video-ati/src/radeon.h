@@ -72,9 +72,10 @@
 				/* DRI support */
 #ifdef XF86DRI
 #define _XF86DRI_SERVER_
-#include "radeon_dripriv.h"
 #include "dri.h"
 #include "GL/glxint.h"
+#include "xf86drm.h"
+
 #ifdef DAMAGE
 #include "damage.h"
 #include "globals.h"
@@ -96,6 +97,36 @@
 #endif
 #ifndef MIN
 #define MIN(a,b) ((a)>(b)?(b):(a))
+#endif
+
+#if HAVE_BYTESWAP_H
+#include <byteswap.h>
+#elif defined(USE_SYS_ENDIAN_H)
+#include <sys/endian.h>
+#else
+#define bswap_16(value)  \
+        ((((value) & 0xff) << 8) | ((value) >> 8))
+
+#define bswap_32(value) \
+        (((uint32_t)bswap_16((uint16_t)((value) & 0xffff)) << 16) | \
+        (uint32_t)bswap_16((uint16_t)((value) >> 16)))
+ 
+#define bswap_64(value) \
+        (((uint64_t)bswap_32((uint32_t)((value) & 0xffffffff)) \
+            << 32) | \
+        (uint64_t)bswap_32((uint32_t)((value) >> 32)))
+#endif
+
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+#define le32_to_cpu(x) bswap_32(x)
+#define le16_to_cpu(x) bswap_16(x)
+#define cpu_to_le32(x) bswap_32(x)
+#define cpu_to_le16(x) bswap_16(x)
+#else
+#define le32_to_cpu(x) (x)
+#define le16_to_cpu(x) (x)
+#define cpu_to_le32(x) (x)
+#define cpu_to_le16(x) (x)
 #endif
 
 /* Provide substitutes for gcc's __FUNCTION__ on other compilers */
@@ -134,7 +165,6 @@ typedef enum {
     OPTION_ACCEL_DFS,
 #endif
 #endif
-    OPTION_DDC_MODE,
     OPTION_IGNORE_EDID,
     OPTION_DISP_PRIORITY,
     OPTION_PANEL_SIZE,
@@ -174,7 +204,10 @@ typedef enum {
     OPTION_TVSTD,
     OPTION_IGNORE_LID_STATUS,
     OPTION_DEFAULT_TVDAC_ADJ,
-    OPTION_INT10
+    OPTION_INT10,
+    OPTION_EXA_VSYNC,
+    OPTION_ATOM_TVOUT,
+    OPTION_R4XX_ATOM
 } RADEONOpts;
 
 
@@ -220,7 +253,12 @@ typedef struct {
 #define RADEON_PLL_NO_ODD_POST_DIV (1 << 1)
 #define RADEON_PLL_USE_REF_DIV     (1 << 2)
 #define RADEON_PLL_LEGACY          (1 << 3)
-#define RADEON_PLL_PREFER_LOW_REF_DIV (1 << 4)
+#define RADEON_PLL_PREFER_LOW_REF_DIV   (1 << 4)
+#define RADEON_PLL_PREFER_HIGH_REF_DIV  (1 << 5)
+#define RADEON_PLL_PREFER_LOW_FB_DIV    (1 << 6)
+#define RADEON_PLL_PREFER_HIGH_FB_DIV   (1 << 7)
+#define RADEON_PLL_PREFER_LOW_POST_DIV  (1 << 8)
+#define RADEON_PLL_PREFER_HIGH_POST_DIV (1 << 9)
 
 typedef struct {
     uint16_t          reference_freq;
@@ -287,6 +325,10 @@ typedef enum {
     CHIP_FAMILY_RV620,
     CHIP_FAMILY_RV635,
     CHIP_FAMILY_RS780,
+    CHIP_FAMILY_RS880,
+    CHIP_FAMILY_RV770,
+    CHIP_FAMILY_RV730,
+    CHIP_FAMILY_RV710,
     CHIP_FAMILY_LAST
 } RADEONChipFamily;
 
@@ -311,6 +353,10 @@ typedef enum {
 #define IS_AVIVO_VARIANT ((info->ChipFamily >= CHIP_FAMILY_RV515))
 
 #define IS_DCE3_VARIANT ((info->ChipFamily >= CHIP_FAMILY_RV620))
+
+#define IS_DCE32_VARIANT ((info->ChipFamily >= CHIP_FAMILY_RV730))
+
+#define IS_R600_3D (info->ChipFamily >= CHIP_FAMILY_R600)
 
 #define IS_R500_3D ((info->ChipFamily == CHIP_FAMILY_RV515)  ||  \
 	(info->ChipFamily == CHIP_FAMILY_R520)   ||  \
@@ -355,7 +401,8 @@ typedef enum {
     RADEON_MAC_POWERBOOK_VGA,
     RADEON_MAC_MINI_EXTERNAL,
     RADEON_MAC_MINI_INTERNAL,
-    RADEON_MAC_IMAC_G5_ISIGHT
+    RADEON_MAC_IMAC_G5_ISIGHT,
+    RADEON_MAC_EMAC
 } RADEONMacModel;
 #endif
 
@@ -377,6 +424,278 @@ typedef struct {
     int singledac;
 } RADEONCardInfo;
 
+#ifdef XF86DRI
+struct radeon_cp {
+    Bool              CPRuns;           /* CP is running */
+    Bool              CPInUse;          /* CP has been used by X server */
+    Bool              CPStarted;        /* CP has started */
+    int               CPMode;           /* CP mode that server/clients use */
+    int               CPFifoSize;       /* Size of the CP command FIFO */
+    int               CPusecTimeout;    /* CP timeout in usecs */
+    Bool              needCacheFlush;
+
+    /* CP accleration */
+    drmBufPtr         indirectBuffer;
+    int               indirectStart;
+
+    /* Debugging info for BEGIN_RING/ADVANCE_RING pairs. */
+    int               dma_begin_count;
+    char              *dma_debug_func;
+    int               dma_debug_lineno;
+
+    };
+
+typedef struct {
+    /* Nothing here yet */
+    int dummy;
+} RADEONConfigPrivRec, *RADEONConfigPrivPtr;
+
+typedef struct {
+#ifdef PER_CONTEXT_SAREA
+    drm_context_t ctx_id;
+    drm_handle_t sarea_handle;
+#else
+    /* Nothing here yet */
+    int dummy;
+#endif
+} RADEONDRIContextRec, *RADEONDRIContextPtr;
+
+struct radeon_dri {
+    Bool              noBackBuffer;
+
+    Bool              newMemoryMap;
+    drmVersionPtr     pLibDRMVersion;
+    drmVersionPtr     pKernelDRMVersion;
+    DRIInfoPtr        pDRIInfo;
+    int               drmFD;
+    int               numVisualConfigs;
+    __GLXvisualConfig *pVisualConfigs;
+    RADEONConfigPrivPtr pVisualConfigsPriv;
+    Bool             (*DRICloseScreen)(int, ScreenPtr);
+
+    drm_handle_t      fbHandle;
+
+    drmSize           pciSize;
+    drm_handle_t      pciMemHandle;
+    unsigned char     *PCI;             /* Map */
+
+    Bool              depthMoves;       /* Enable depth moves -- slow! */
+    Bool              allowPageFlip;    /* Enable 3d page flipping */
+#ifdef DAMAGE
+    DamagePtr         pDamage;
+    RegionRec         driRegion;
+#endif
+    Bool              have3DWindows;    /* Are there any 3d clients? */
+
+    int               pciAperSize;
+    drmSize           gartSize;
+    drm_handle_t      agpMemHandle;     /* Handle from drmAgpAlloc */
+    unsigned long     gartOffset;
+    unsigned char     *AGP;             /* Map */
+    int               agpMode;
+
+    uint32_t          pciCommand;
+
+    /* CP ring buffer data */
+    unsigned long     ringStart;        /* Offset into GART space */
+    drm_handle_t      ringHandle;       /* Handle from drmAddMap */
+    drmSize           ringMapSize;      /* Size of map */
+    int               ringSize;         /* Size of ring (in MB) */
+    drmAddress        ring;             /* Map */
+    int               ringSizeLog2QW;
+
+    unsigned long     ringReadOffset;   /* Offset into GART space */
+    drm_handle_t      ringReadPtrHandle; /* Handle from drmAddMap */
+    drmSize           ringReadMapSize;  /* Size of map */
+    drmAddress        ringReadPtr;      /* Map */
+
+    /* CP vertex/indirect buffer data */
+    unsigned long     bufStart;         /* Offset into GART space */
+    drm_handle_t      bufHandle;        /* Handle from drmAddMap */
+    drmSize           bufMapSize;       /* Size of map */
+    int               bufSize;          /* Size of buffers (in MB) */
+    drmAddress        buf;              /* Map */
+    int               bufNumBufs;       /* Number of buffers */
+    drmBufMapPtr      buffers;          /* Buffer map */
+
+    /* CP GART Texture data */
+    unsigned long     gartTexStart;      /* Offset into GART space */
+    drm_handle_t      gartTexHandle;     /* Handle from drmAddMap */
+    drmSize           gartTexMapSize;    /* Size of map */
+    int               gartTexSize;       /* Size of GART tex space (in MB) */
+    drmAddress        gartTex;           /* Map */
+    int               log2GARTTexGran;
+
+    /* DRI screen private data */
+    int               fbX;
+    int               fbY;
+    int               backX;
+    int               backY;
+    int               depthX;
+    int               depthY;
+
+    int               frontOffset;
+    int               frontPitch;
+    int               backOffset;
+    int               backPitch;
+    int               depthOffset;
+    int               depthPitch;
+    int               depthBits;
+    int               textureOffset;
+    int               textureSize;
+    int               log2TexGran;
+
+    int               pciGartSize;
+    uint32_t          pciGartOffset;
+    void              *pciGartBackup;
+
+    int               irq;
+
+#ifdef PER_CONTEXT_SAREA
+    int               perctx_sarea_size;
+#endif
+
+#ifdef USE_XAA
+    uint32_t          frontPitchOffset;
+    uint32_t          backPitchOffset;
+    uint32_t          depthPitchOffset;
+
+    /* offscreen memory management */
+    int               backLines;
+    FBAreaPtr         backArea;
+    int               depthTexLines;
+    FBAreaPtr         depthTexArea;
+#endif
+
+};
+#endif
+
+struct radeon_accel_state {
+    /* common accel data */
+    int               fifo_slots;       /* Free slots in the FIFO (64 max)   */
+				/* Computed values for Radeon */
+    uint32_t          dp_gui_master_cntl;
+    uint32_t          dp_gui_master_cntl_clip;
+    uint32_t          trans_color;
+				/* Saved values for ScreenToScreenCopy */
+    int               xdir;
+    int               ydir;
+    uint32_t          dst_pitch_offset;
+
+    /* render accel */
+    unsigned short    texW[2];
+    unsigned short    texH[2];
+    Bool              XInited3D; /* X itself has the 3D context */
+    int               num_gb_pipes;
+    Bool              has_tcl;
+
+#ifdef USE_EXA
+    /* EXA */
+    ExaDriverPtr      exa;
+    int               exaSyncMarker;
+    int               exaMarkerSynced;
+    int               engineMode;
+#define EXA_ENGINEMODE_UNKNOWN 0
+#define EXA_ENGINEMODE_2D      1
+#define EXA_ENGINEMODE_3D      2
+
+    Bool              is_transform[2];
+    PictTransform     *transform[2];
+    Bool              has_mask;
+    /* Whether we are tiling horizontally and vertically */
+    Bool              need_src_tile_x;
+    Bool              need_src_tile_y;
+    /* Size of tiles ... set to 65536x65536 if not tiling in that direction */
+    Bool              src_tile_width;
+    Bool              src_tile_height;
+
+    Bool              vsync;
+
+    drmBufPtr         ib;
+    int               vb_index;
+
+    // shader storage
+    ExaOffscreenArea  *shaders;
+    uint32_t          solid_vs_offset;
+    uint32_t          solid_ps_offset;
+    uint32_t          copy_vs_offset;
+    uint32_t          copy_ps_offset;
+    uint32_t          comp_vs_offset;
+    uint32_t          comp_ps_offset;
+    uint32_t          comp_mask_ps_offset;
+    uint32_t          xv_vs_offset;
+    uint32_t          xv_ps_offset;
+
+    //size/addr stuff
+    uint32_t          src_size[2];
+    uint64_t          src_mc_addr[2];
+    uint32_t          src_pitch[2];
+    uint32_t          src_width[2];
+    uint32_t          src_height[2];
+    uint32_t          src_bpp[2];
+    uint32_t          dst_size;
+    uint64_t          dst_mc_addr;
+    uint32_t          dst_pitch;
+    uint32_t          dst_height;
+    uint32_t          dst_bpp;
+    uint32_t          vs_size;
+    uint64_t          vs_mc_addr;
+    uint32_t          ps_size;
+    uint64_t          ps_mc_addr;
+    uint32_t          vb_size;
+    uint64_t          vb_mc_addr;
+
+    // UTS/DFS
+    drmBufPtr         scratch;
+
+    // copy
+    ExaOffscreenArea  *copy_area;
+    Bool              same_surface;
+    int               rop;
+    uint32_t          planemask;
+
+    // composite
+    Bool              component_alpha;
+    Bool              src_alpha;
+#endif
+
+#ifdef USE_XAA
+    /* XAA */
+    XAAInfoRecPtr     accel;
+				/* ScanlineScreenToScreenColorExpand support */
+    unsigned char     *scratch_buffer[1];
+    unsigned char     *scratch_save;
+    int               scanline_x;
+    int               scanline_y;
+    int               scanline_w;
+    int               scanline_h;
+    int               scanline_h_w;
+    int               scanline_words;
+    int               scanline_direct;
+    int               scanline_bpp;     /* Only used for ImageWrite */
+    int               scanline_fg;
+    int               scanline_bg;
+    int               scanline_hpass;
+    int               scanline_x1clip;
+    int               scanline_x2clip;
+				/* Saved values for DashedTwoPointLine */
+    int               dashLen;
+    uint32_t          dashPattern;
+    int               dash_fg;
+    int               dash_bg;
+
+    FBLinearPtr       RenderTex;
+    void              (*RenderCallback)(ScrnInfoPtr);
+    Time              RenderTimeout;
+    /*
+     * XAAForceTransBlit is used to change the behavior of the XAA
+     * SetupForScreenToScreenCopy function, to make it DGA-friendly.
+     */
+    Bool              XAAForceTransBlit;
+#endif
+
+};
+
 typedef struct {
     EntityInfoPtr     pEnt;
     pciVideoPtr       PciInfo;
@@ -385,9 +704,9 @@ typedef struct {
     RADEONChipFamily  ChipFamily;
     RADEONErrata      ChipErrata;
 
-    unsigned long     LinearAddr;       /* Frame buffer physical address     */
-    unsigned long     MMIOAddr;         /* MMIO region physical address      */
-    unsigned long     BIOSAddr;         /* BIOS physical address             */
+    unsigned long long     LinearAddr;       /* Frame buffer physical address     */
+    unsigned long long     MMIOAddr;         /* MMIO region physical address      */
+    unsigned long long     BIOSAddr;         /* BIOS physical address             */
     uint32_t          fbLocation;
     uint32_t          gartLocation;
     uint32_t          mc_fb_location;
@@ -443,77 +762,15 @@ typedef struct {
 
     Bool              PaletteSavedOnVT; /* Palette saved on last VT switch   */
 
-#ifdef USE_EXA
-    ExaDriverPtr      exa;
-    int               exaSyncMarker;
-    int               exaMarkerSynced;
-    int               engineMode;
-#define EXA_ENGINEMODE_UNKNOWN 0
-#define EXA_ENGINEMODE_2D      1
-#define EXA_ENGINEMODE_3D      2
-#ifdef XF86DRI
-    Bool              accelDFS;
-#endif
-#endif
-#ifdef USE_XAA
-    XAAInfoRecPtr     accel;
-#endif
-    Bool              accelOn;
     xf86CursorInfoPtr cursor;
-    Bool              allowColorTiling;
-    Bool              tilingEnabled; /* mirror of sarea->tiling_enabled */
 #ifdef ARGB_CURSOR
     Bool	      cursor_argb;
 #endif
     int               cursor_fg;
     int               cursor_bg;
 
-#ifdef USE_XAA
-    /*
-     * XAAForceTransBlit is used to change the behavior of the XAA
-     * SetupForScreenToScreenCopy function, to make it DGA-friendly.
-     */
-    Bool              XAAForceTransBlit;
-#endif
-
-    int               fifo_slots;       /* Free slots in the FIFO (64 max)   */
     int               pix24bpp;         /* Depth of pixmap for 24bpp fb      */
     Bool              dac6bits;         /* Use 6 bit DAC?                    */
-
-				/* Computed values for Radeon */
-    int               pitch;
-    int               datatype;
-    uint32_t          dp_gui_master_cntl;
-    uint32_t          dp_gui_master_cntl_clip;
-    uint32_t          trans_color;
-
-				/* Saved values for ScreenToScreenCopy */
-    int               xdir;
-    int               ydir;
-
-#ifdef USE_XAA
-				/* ScanlineScreenToScreenColorExpand support */
-    unsigned char     *scratch_buffer[1];
-    unsigned char     *scratch_save;
-    int               scanline_x;
-    int               scanline_y;
-    int               scanline_w;
-    int               scanline_h;
-    int               scanline_h_w;
-    int               scanline_words;
-    int               scanline_direct;
-    int               scanline_bpp;     /* Only used for ImageWrite */
-    int               scanline_fg;
-    int               scanline_bg;
-    int               scanline_hpass;
-    int               scanline_x1clip;
-    int               scanline_x2clip;
-#endif
-				/* Saved values for DashedTwoPointLine */
-    int               dashLen;
-    uint32_t          dashPattern;
-    int               dash_fg;
-    int               dash_bg;
 
     DGAModePtr        DGAModes;
     int               numDGAModes;
@@ -522,145 +779,32 @@ typedef struct {
     DGAFunctionRec    DGAFuncs;
 
     RADEONFBLayout    CurrentLayout;
-    uint32_t          dst_pitch_offset;
+
 #ifdef XF86DRI
-    Bool              noBackBuffer;	
     Bool              directRenderingEnabled;
     Bool              directRenderingInited;
-    Bool              newMemoryMap;
-    drmVersionPtr     pLibDRMVersion;
-    drmVersionPtr     pKernelDRMVersion;
-    DRIInfoPtr        pDRIInfo;
-    int               drmFD;
-    int               numVisualConfigs;
-    __GLXvisualConfig *pVisualConfigs;
-    RADEONConfigPrivPtr pVisualConfigsPriv;
-    Bool             (*DRICloseScreen)(int, ScreenPtr);
-
-    drm_handle_t      fbHandle;
-
     RADEONCardType    cardType;            /* Current card is a PCI card */
-    drmSize           pciSize;
-    drm_handle_t      pciMemHandle;
-    unsigned char     *PCI;             /* Map */
-
-    Bool              depthMoves;       /* Enable depth moves -- slow! */
-    Bool              allowPageFlip;    /* Enable 3d page flipping */
-#ifdef DAMAGE
-    DamagePtr         pDamage;
-    RegionRec         driRegion;
+    struct radeon_cp  *cp;
+    struct radeon_dri  *dri;
+#ifdef USE_EXA
+    Bool              accelDFS;
 #endif
-    Bool              have3DWindows;    /* Are there any 3d clients? */
-
-    int               pciAperSize;
-    drmSize           gartSize;
-    drm_handle_t      agpMemHandle;     /* Handle from drmAgpAlloc */
-    unsigned long     gartOffset;
-    unsigned char     *AGP;             /* Map */
-    int               agpMode;
-
-    uint32_t          pciCommand;
-
-    Bool              CPRuns;           /* CP is running */
-    Bool              CPInUse;          /* CP has been used by X server */
-    Bool              CPStarted;        /* CP has started */
-    int               CPMode;           /* CP mode that server/clients use */
-    int               CPFifoSize;       /* Size of the CP command FIFO */
-    int               CPusecTimeout;    /* CP timeout in usecs */
-    Bool              needCacheFlush;
-
-				/* CP ring buffer data */
-    unsigned long     ringStart;        /* Offset into GART space */
-    drm_handle_t      ringHandle;       /* Handle from drmAddMap */
-    drmSize           ringMapSize;      /* Size of map */
-    int               ringSize;         /* Size of ring (in MB) */
-    drmAddress        ring;             /* Map */
-    int               ringSizeLog2QW;
-
-    unsigned long     ringReadOffset;   /* Offset into GART space */
-    drm_handle_t      ringReadPtrHandle; /* Handle from drmAddMap */
-    drmSize           ringReadMapSize;  /* Size of map */
-    drmAddress        ringReadPtr;      /* Map */
-
-				/* CP vertex/indirect buffer data */
-    unsigned long     bufStart;         /* Offset into GART space */
-    drm_handle_t      bufHandle;        /* Handle from drmAddMap */
-    drmSize           bufMapSize;       /* Size of map */
-    int               bufSize;          /* Size of buffers (in MB) */
-    drmAddress        buf;              /* Map */
-    int               bufNumBufs;       /* Number of buffers */
-    drmBufMapPtr      buffers;          /* Buffer map */
-
-				/* CP GART Texture data */
-    unsigned long     gartTexStart;      /* Offset into GART space */
-    drm_handle_t      gartTexHandle;     /* Handle from drmAddMap */
-    drmSize           gartTexMapSize;    /* Size of map */
-    int               gartTexSize;       /* Size of GART tex space (in MB) */
-    drmAddress        gartTex;           /* Map */
-    int               log2GARTTexGran;
-
-				/* CP accleration */
-    drmBufPtr         indirectBuffer;
-    int               indirectStart;
-
-				/* DRI screen private data */
-    int               fbX;
-    int               fbY;
-    int               backX;
-    int               backY;
-    int               depthX;
-    int               depthY;
-
-    int               frontOffset;
-    int               frontPitch;
-    int               backOffset;
-    int               backPitch;
-    int               depthOffset;
-    int               depthPitch;
-    int               depthBits;
-    int               textureOffset;
-    int               textureSize;
-    int               log2TexGran;
-
-    int               pciGartSize;
-    uint32_t          pciGartOffset;
-    void              *pciGartBackup;
-#ifdef USE_XAA
-    uint32_t          frontPitchOffset;
-    uint32_t          backPitchOffset;
-    uint32_t          depthPitchOffset;
-
-				/* offscreen memory management */
-    int               backLines;
-    FBAreaPtr         backArea;
-    int               depthTexLines;
-    FBAreaPtr         depthTexArea;
-#endif
-
-				/* Saved scissor values */
-    uint32_t          sc_left;
-    uint32_t          sc_right;
-    uint32_t          sc_top;
-    uint32_t          sc_bottom;
-
-    uint32_t          re_top_left;
-    uint32_t          re_width_height;
-
-    uint32_t          aux_sc_cntl;
-
-    int               irq;
-
     Bool              DMAForXv;
-
-#ifdef PER_CONTEXT_SAREA
-    int               perctx_sarea_size;
-#endif
-
-    /* Debugging info for BEGIN_RING/ADVANCE_RING pairs. */
-    int               dma_begin_count;
-    char              *dma_debug_func;
-    int               dma_debug_lineno;
 #endif /* XF86DRI */
+
+    /* accel */
+    Bool              RenderAccel; /* Render */
+    Bool              allowColorTiling;
+    Bool              tilingEnabled; /* mirror of sarea->tiling_enabled */
+    struct radeon_accel_state *accel_state;
+    Bool              accelOn;
+    Bool              useEXA;
+#ifdef USE_EXA
+    XF86ModReqInfo    exaReq;
+#endif
+#ifdef USE_XAA
+    XF86ModReqInfo    xaaReq;
+#endif
 
 				/* XVideo */
     XF86VideoAdaptorPtr adaptor;
@@ -690,46 +834,23 @@ typedef struct {
     int overlay_scaler_buffer_width;
     int ecp_div;
 
-    /* Render */
-    Bool              RenderAccel;
-    unsigned short    texW[2];
-    unsigned short    texH[2];
-#ifdef USE_XAA
-    FBLinearPtr       RenderTex;
-    void              (*RenderCallback)(ScrnInfoPtr);
-    Time              RenderTimeout;
-#endif
-
     /* general */
     Bool              showCache;
     OptionInfoPtr     Options;
 
-    Bool              useEXA;
-#ifdef USE_EXA
-    XF86ModReqInfo    exaReq;
-#endif
-#ifdef USE_XAA
-    XF86ModReqInfo    xaaReq;
-#endif
-
-    /* X itself has the 3D context */
-    Bool              XInited3D;
-
     DisplayModePtr currentMode, savedCurrentMode;
 
     /* special handlings for DELL triple-head server */
-    Bool              IsDellServer; 
+    Bool              IsDellServer;
 
     Bool              VGAAccess;
 
     int               MaxSurfaceWidth;
     int               MaxLines;
 
-    uint32_t          tv_dac_adj;
-    uint32_t          tv_dac_enable_mask;
-
     Bool want_vblank_interrupts;
     RADEONBIOSConnector BiosConnector[RADEON_MAX_BIOS_CONNECTOR];
+    radeon_encoder_ptr encoders[RADEON_MAX_BIOS_CONNECTOR];
     RADEONBIOSInitTable BiosTable;
 
     /* save crtc state for console restore */
@@ -737,7 +858,6 @@ typedef struct {
     Bool              crtc2_on;
 
     Bool              InternalTVOut;
-    int               tvdac_use_count;
 
 #if defined(__powerpc__)
     RADEONMacModel    MacModel;
@@ -747,14 +867,6 @@ typedef struct {
     atomBiosHandlePtr atomBIOS;
     unsigned long FbFreeStart, FbFreeSize;
     unsigned char*      BIOSCopy;
-
-    /* output enable masks for outputs shared across connectors */
-    int output_crt1;
-    int output_crt2;
-    int output_dfp1;
-    int output_dfp2;
-    int output_lcd1;
-    int output_tv1;
 
     Rotation rotation;
     void (*PointerMoved)(int, int, int);
@@ -769,22 +881,27 @@ typedef struct {
     Bool              r600_shadow_fb;
     void *fb_shadow;
 
-    int num_gb_pipes;
-    Bool has_tcl;
+    /* some server chips have a hardcoded edid in the bios so that they work with KVMs */
+    Bool get_hardcoded_edid_from_bios;
+
+    int               virtualX;
+    int               virtualY;
+
+    Bool              r4xx_atom;
+
 } RADEONInfoRec, *RADEONInfoPtr;
 
 #define RADEONWaitForFifo(pScrn, entries)				\
 do {									\
-    if (info->fifo_slots < entries)					\
+    if (info->accel_state->fifo_slots < entries)			\
 	RADEONWaitForFifoFunction(pScrn, entries);			\
-    info->fifo_slots -= entries;					\
+    info->accel_state->fifo_slots -= entries;				\
 } while (0)
 
 /* legacy_crtc.c */
 extern void legacy_crtc_dpms(xf86CrtcPtr crtc, int mode);
 extern void legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 				 DisplayModePtr adjusted_mode, int x, int y);
-extern void RADEONInitDispBandwidth(ScrnInfoPtr pScrn);
 extern void RADEONRestoreCommonRegisters(ScrnInfoPtr pScrn,
 					 RADEONSavePtr restore);
 extern void RADEONRestoreCrtcRegisters(ScrnInfoPtr pScrn,
@@ -802,8 +919,7 @@ extern void RADEONSavePLLRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save);
 extern void RADEONSavePLL2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save);
 
 /* legacy_output.c */
-extern RADEONMonitorType legacy_dac_detect(ScrnInfoPtr pScrn,
-					   xf86OutputPtr output);
+extern RADEONMonitorType legacy_dac_detect(xf86OutputPtr output);
 extern void legacy_output_dpms(xf86OutputPtr output, int mode);
 extern void legacy_output_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 				   DisplayModePtr adjusted_mode);
@@ -817,6 +933,12 @@ extern void RADEONRestoreLVDSRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 extern void RADEONRestoreRMXRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore);
 extern void RADEONSaveDACRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save);
 extern void RADEONSaveFPRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save);
+
+extern void RADEONGetTVDacAdjInfo(ScrnInfoPtr pScrn, radeon_tvdac_ptr tvdac);
+extern void RADEONGetTMDSInfoFromTable(ScrnInfoPtr pScrn, radeon_tmds_ptr tmds);
+extern void RADEONGetTMDSInfo(ScrnInfoPtr pScrn, radeon_tmds_ptr tmds);
+extern void RADEONGetExtTMDSInfo(ScrnInfoPtr pScrn, radeon_dvo_ptr dvo);
+extern void RADEONGetLVDSInfo(ScrnInfoPtr pScrn, radeon_lvds_ptr lvds);
 
 /* radeon_accel.c */
 extern Bool RADEONAccelInit(ScreenPtr pScreen);
@@ -860,21 +982,26 @@ extern Bool RADEONSetupMemXAA(int scrnIndex, ScreenPtr pScreen);
 extern Bool RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr pInt10);
 extern Bool RADEONGetClockInfoFromBIOS(ScrnInfoPtr pScrn);
 extern Bool RADEONGetConnectorInfoFromBIOS(ScrnInfoPtr pScrn);
-extern Bool RADEONGetDAC2InfoFromBIOS(xf86OutputPtr output);
-extern Bool RADEONGetExtTMDSInfoFromBIOS(xf86OutputPtr output);
-extern Bool RADEONGetHardCodedEDIDFromBIOS(xf86OutputPtr output);
+extern Bool RADEONGetDAC2InfoFromBIOS(ScrnInfoPtr pScrn, radeon_tvdac_ptr tvdac);
+extern Bool RADEONGetExtTMDSInfoFromBIOS (ScrnInfoPtr pScrn, radeon_dvo_ptr dvo);
+extern xf86MonPtr RADEONGetHardCodedEDIDFromBIOS(xf86OutputPtr output);
 extern Bool RADEONGetBIOSInitTableOffsets(ScrnInfoPtr pScrn);
-extern Bool RADEONGetLVDSInfoFromBIOS(xf86OutputPtr output);
-extern Bool RADEONGetTMDSInfoFromBIOS(xf86OutputPtr output);
+extern Bool RADEONGetLVDSInfoFromBIOS(ScrnInfoPtr pScrn, radeon_lvds_ptr lvds);
+extern Bool RADEONGetTMDSInfoFromBIOS(ScrnInfoPtr pScrn, radeon_tmds_ptr tmds);
 extern Bool RADEONGetTVInfoFromBIOS(xf86OutputPtr output);
 extern Bool RADEONInitExtTMDSInfoFromBIOS (xf86OutputPtr output);
 extern Bool RADEONPostCardFromBIOSTables(ScrnInfoPtr pScrn);
+extern Bool radeon_card_posted(ScrnInfoPtr pScrn);
 
 /* radeon_commonfuncs.c */
 #ifdef XF86DRI
 extern void RADEONWaitForIdleCP(ScrnInfoPtr pScrn);
+extern void RADEONWaitForVLineCP(ScrnInfoPtr pScrn, PixmapPtr pPix,
+	int crtc, int start, int stop);
 #endif
 extern void RADEONWaitForIdleMMIO(ScrnInfoPtr pScrn);
+extern void RADEONWaitForVLineMMIO(ScrnInfoPtr pScrn, PixmapPtr pPix,
+	int crtc, int start, int stop);
 
 /* radeon_crtc.c */
 extern void radeon_crtc_dpms(xf86CrtcPtr crtc, int mode);
@@ -891,6 +1018,7 @@ extern DisplayModePtr RADEONCrtcFindClosestMode(xf86CrtcPtr crtc,
 						DisplayModePtr pMode);
 extern void RADEONUnblank(ScrnInfoPtr pScrn);
 extern Bool RADEONSetTiling(ScrnInfoPtr pScrn);
+extern void RADEONInitDispBandwidth(ScrnInfoPtr pScrn);
 
 /* radeon_cursor.c */
 extern Bool RADEONCursorInit(ScreenPtr pScreen);
@@ -925,8 +1053,10 @@ extern RADEONEntPtr RADEONEntPriv(ScrnInfoPtr pScrn);
 extern int RADEONMinBits(int val);
 extern unsigned RADEONINMC(ScrnInfoPtr pScrn, int addr);
 extern unsigned RADEONINPLL(ScrnInfoPtr pScrn, int addr);
+extern unsigned RADEONINPCIE(ScrnInfoPtr pScrn, int addr);
 extern void RADEONOUTMC(ScrnInfoPtr pScrn, int addr, uint32_t data);
 extern void RADEONOUTPLL(ScrnInfoPtr pScrn, int addr, uint32_t data);
+extern void RADEONOUTPCIE(ScrnInfoPtr pScrn, int addr, uint32_t data);
 extern void RADEONPllErrataAfterData(RADEONInfoPtr info);
 extern void RADEONPllErrataAfterIndex(RADEONInfoPtr info);
 extern void RADEONWaitForVerticalSync(ScrnInfoPtr pScrn);
@@ -957,6 +1087,8 @@ extern void RADEONDoPrepareCopyMMIO(ScrnInfoPtr pScrn,
 				    uint32_t dst_pitch_offset,
 				    uint32_t datatype, int rop,
 				    Pixel planemask);
+extern Bool R600DrawInit(ScreenPtr pScreen);
+extern Bool R600LoadShaders(ScrnInfoPtr pScrn);
 #endif
 
 #if defined(XF86DRI) && defined(USE_EXA)
@@ -980,6 +1112,8 @@ extern void RADEONPrintPortMap(ScrnInfoPtr pScrn);
 extern void RADEONSetOutputType(ScrnInfoPtr pScrn,
 				RADEONOutputPrivatePtr radeon_output);
 extern Bool RADEONSetupConnectors(ScrnInfoPtr pScrn);
+extern Bool RADEONI2CDoLock(xf86OutputPtr output, Bool lock_state);
+
 
 /* radeon_tv.c */
 extern void RADEONSaveTVRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save);
@@ -1000,6 +1134,16 @@ extern void RADEONUpdateHVPosition(xf86OutputPtr output, DisplayModePtr mode);
 extern void RADEONInitVideo(ScreenPtr pScreen);
 extern void RADEONResetVideo(ScrnInfoPtr pScrn);
 
+/* radeon_legacy_memory.c */
+extern uint32_t
+radeon_legacy_allocate_memory(ScrnInfoPtr pScrn,
+			      void **mem_struct,
+			      int size,
+			      int align);
+extern void
+radeon_legacy_free_memory(ScrnInfoPtr pScrn,
+		          void *mem_struct);
+
 #ifdef XF86DRI
 #  ifdef USE_XAA
 /* radeon_accelfuncs.c */
@@ -1008,72 +1152,59 @@ extern void RADEONAccelInitCP(ScreenPtr pScreen, XAAInfoRecPtr a);
 
 #define RADEONCP_START(pScrn, info)					\
 do {									\
-    int _ret = drmCommandNone(info->drmFD, DRM_RADEON_CP_START);	\
+    int _ret = drmCommandNone(info->dri->drmFD, DRM_RADEON_CP_START);	\
     if (_ret) {								\
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,				\
 		   "%s: CP start %d\n", __FUNCTION__, _ret);		\
     }									\
-    info->CPStarted = TRUE;                                             \
+    info->cp->CPStarted = TRUE;                                         \
 } while (0)
 
 #define RADEONCP_RELEASE(pScrn, info)					\
 do {									\
-    if (info->CPInUse) {						\
+    if (info->cp->CPInUse) {						\
 	RADEON_PURGE_CACHE();						\
 	RADEON_WAIT_UNTIL_IDLE();					\
 	RADEONCPReleaseIndirect(pScrn);					\
-	info->CPInUse = FALSE;						\
+	info->cp->CPInUse = FALSE;				        \
     }									\
 } while (0)
 
 #define RADEONCP_STOP(pScrn, info)					\
 do {									\
     int _ret;								\
-     if (info->CPStarted) {						\
+    if (info->cp->CPStarted) {						\
         _ret = RADEONCPStop(pScrn, info);				\
         if (_ret) {							\
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,			\
 		   "%s: CP stop %d\n", __FUNCTION__, _ret);		\
         }								\
-        info->CPStarted = FALSE;                                        \
-   }									\
-    RADEONEngineRestore(pScrn);						\
-    info->CPRuns = FALSE;						\
+        info->cp->CPStarted = FALSE;                                    \
+    }									\
+    if (info->ChipFamily < CHIP_FAMILY_R600)                            \
+        RADEONEngineRestore(pScrn);					\
+    info->cp->CPRuns = FALSE;						\
 } while (0)
 
 #define RADEONCP_RESET(pScrn, info)					\
 do {									\
-    if (RADEONCP_USE_RING_BUFFER(info->CPMode)) {			\
-	int _ret = drmCommandNone(info->drmFD, DRM_RADEON_CP_RESET);	\
+	int _ret = drmCommandNone(info->dri->drmFD, DRM_RADEON_CP_RESET);	\
 	if (_ret) {							\
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,			\
 		       "%s: CP reset %d\n", __FUNCTION__, _ret);	\
 	}								\
-    }									\
 } while (0)
 
 #define RADEONCP_REFRESH(pScrn, info)					\
 do {									\
-    if (!info->CPInUse) {						\
-	if (info->needCacheFlush) {					\
+    if (!info->cp->CPInUse) {						\
+	if (info->cp->needCacheFlush) {					\
 	    RADEON_PURGE_CACHE();					\
 	    RADEON_PURGE_ZCACHE();					\
-	    info->needCacheFlush = FALSE;				\
+	    info->cp->needCacheFlush = FALSE;				\
 	}								\
 	RADEON_WAIT_UNTIL_IDLE();					\
-        if (info->ChipFamily <= CHIP_FAMILY_RV280) {                    \
-	    BEGIN_RING(6);						\
-	    OUT_RING_REG(RADEON_RE_TOP_LEFT,     info->re_top_left);	\
-	    OUT_RING_REG(RADEON_RE_WIDTH_HEIGHT, info->re_width_height); \
-	    OUT_RING_REG(RADEON_AUX_SC_CNTL,     info->aux_sc_cntl);	\
-	    ADVANCE_RING();						\
-        } else {                                                        \
-            BEGIN_RING(4);                                              \
-            OUT_RING_REG(R300_SC_SCISSOR0, info->re_top_left);          \
-	    OUT_RING_REG(R300_SC_SCISSOR1, info->re_width_height);      \
-            ADVANCE_RING();                                             \
-	}                                                               \
-	info->CPInUse = TRUE;						\
+	info->cp->CPInUse = TRUE;					\
     }									\
 } while (0)
 
@@ -1097,33 +1228,33 @@ do {									\
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,				\
 		   "BEGIN_RING(%d) in %s\n", (unsigned int)n, __FUNCTION__);\
     }									\
-    if (++info->dma_begin_count != 1) {					\
+    if (++info->cp->dma_begin_count != 1) {				\
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,				\
 		   "BEGIN_RING without end at %s:%d\n",			\
-		   info->dma_debug_func, info->dma_debug_lineno);	\
-	info->dma_begin_count = 1;					\
+		   info->cp->dma_debug_func, info->cp->dma_debug_lineno);	\
+	info->cp->dma_begin_count = 1;					\
     }									\
-    info->dma_debug_func = __FILE__;					\
-    info->dma_debug_lineno = __LINE__;					\
-    if (!info->indirectBuffer) {					\
-	info->indirectBuffer = RADEONCPGetBuffer(pScrn);		\
-	info->indirectStart = 0;					\
-    } else if (info->indirectBuffer->used + (n) * (int)sizeof(uint32_t) >	\
-	       info->indirectBuffer->total) {				\
+    info->cp->dma_debug_func = __FILE__;				\
+    info->cp->dma_debug_lineno = __LINE__;				\
+    if (!info->cp->indirectBuffer) {					\
+	info->cp->indirectBuffer = RADEONCPGetBuffer(pScrn);		\
+	info->cp->indirectStart = 0;					\
+    } else if (info->cp->indirectBuffer->used + (n) * (int)sizeof(uint32_t) >	\
+	       info->cp->indirectBuffer->total) {		        \
 	RADEONCPFlushIndirect(pScrn, 1);				\
     }									\
     __expected = n;							\
-    __head = (pointer)((char *)info->indirectBuffer->address +		\
-		       info->indirectBuffer->used);			\
+    __head = (pointer)((char *)info->cp->indirectBuffer->address +	\
+		       info->cp->indirectBuffer->used);			\
     __count = 0;							\
 } while (0)
 
 #define ADVANCE_RING() do {						\
-    if (info->dma_begin_count-- != 1) {					\
+    if (info->cp->dma_begin_count-- != 1) {				\
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,				\
 		   "ADVANCE_RING without begin at %s:%d\n",		\
 		   __FILE__, __LINE__);					\
-	info->dma_begin_count = 0;					\
+	info->cp->dma_begin_count = 0;					\
     }									\
     if (__count != __expected) {					\
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,				\
@@ -1133,11 +1264,11 @@ do {									\
     if (RADEON_VERBOSE) {						\
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,				\
 		   "ADVANCE_RING() start: %d used: %d count: %d\n",	\
-		   info->indirectStart,					\
-		   info->indirectBuffer->used,				\
+		   info->cp->indirectStart,				\
+		   info->cp->indirectBuffer->used,			\
 		   __count * (int)sizeof(uint32_t));			\
     }									\
-    info->indirectBuffer->used += __count * (int)sizeof(uint32_t);	\
+    info->cp->indirectBuffer->used += __count * (int)sizeof(uint32_t);	\
 } while (0)
 
 #define OUT_RING(x) do {						\
@@ -1159,28 +1290,31 @@ do {									\
     if (RADEON_VERBOSE)							\
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,				\
 		   "FLUSH_RING in %s\n", __FUNCTION__);			\
-    if (info->indirectBuffer) {						\
+    if (info->cp->indirectBuffer)					\
 	RADEONCPFlushIndirect(pScrn, 0);				\
-    }									\
 } while (0)
 
 
 #define RADEON_WAIT_UNTIL_2D_IDLE()					\
 do {									\
-    BEGIN_RING(2);							\
-    OUT_RING(CP_PACKET0(RADEON_WAIT_UNTIL, 0));				\
-    OUT_RING((RADEON_WAIT_2D_IDLECLEAN |				\
-	      RADEON_WAIT_HOST_IDLECLEAN));				\
-    ADVANCE_RING();							\
+    if (info->ChipFamily < CHIP_FAMILY_R600) {                          \
+	BEGIN_RING(2);                                                  \
+	OUT_RING(CP_PACKET0(RADEON_WAIT_UNTIL, 0));                     \
+	OUT_RING((RADEON_WAIT_2D_IDLECLEAN |                            \
+		  RADEON_WAIT_HOST_IDLECLEAN));                         \
+	ADVANCE_RING();                                                 \
+    }                                                                   \
 } while (0)
 
 #define RADEON_WAIT_UNTIL_3D_IDLE()					\
 do {									\
-    BEGIN_RING(2);							\
-    OUT_RING(CP_PACKET0(RADEON_WAIT_UNTIL, 0));				\
-    OUT_RING((RADEON_WAIT_3D_IDLECLEAN |				\
-	      RADEON_WAIT_HOST_IDLECLEAN));				\
-    ADVANCE_RING();							\
+    if (info->ChipFamily < CHIP_FAMILY_R600) {				\
+	BEGIN_RING(2);							\
+	OUT_RING(CP_PACKET0(RADEON_WAIT_UNTIL, 0));                     \
+	OUT_RING((RADEON_WAIT_3D_IDLECLEAN |                            \
+		  RADEON_WAIT_HOST_IDLECLEAN));                         \
+	ADVANCE_RING();							\
+    }                                                                   \
 } while (0)
 
 #define RADEON_WAIT_UNTIL_IDLE()					\
@@ -1189,41 +1323,85 @@ do {									\
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,				\
 		   "WAIT_UNTIL_IDLE() in %s\n", __FUNCTION__);		\
     }									\
-    BEGIN_RING(2);							\
-    OUT_RING(CP_PACKET0(RADEON_WAIT_UNTIL, 0));				\
-    OUT_RING((RADEON_WAIT_2D_IDLECLEAN |				\
-	      RADEON_WAIT_3D_IDLECLEAN |				\
-	      RADEON_WAIT_HOST_IDLECLEAN));				\
-    ADVANCE_RING();							\
+    if (info->ChipFamily < CHIP_FAMILY_R600) {                          \
+	BEGIN_RING(2);							\
+	OUT_RING(CP_PACKET0(RADEON_WAIT_UNTIL, 0));                     \
+	OUT_RING((RADEON_WAIT_2D_IDLECLEAN |                            \
+                  RADEON_WAIT_3D_IDLECLEAN |                            \
+		  RADEON_WAIT_HOST_IDLECLEAN));                         \
+	ADVANCE_RING();							\
+    }                                                                   \
 } while (0)
 
 #define RADEON_PURGE_CACHE()						\
 do {									\
-    BEGIN_RING(2);							\
-    if (info->ChipFamily <= CHIP_FAMILY_RV280) {                        \
-        OUT_RING(CP_PACKET0(RADEON_RB3D_DSTCACHE_CTLSTAT, 0));		\
-        OUT_RING(RADEON_RB3D_DC_FLUSH_ALL);				\
-    } else {                                                            \
-        OUT_RING(CP_PACKET0(R300_RB3D_DSTCACHE_CTLSTAT, 0));		\
-        OUT_RING(R300_RB3D_DC_FLUSH_ALL);				\
-    }                                                                   \
-    ADVANCE_RING();							\
+    if (info->ChipFamily < CHIP_FAMILY_R600) {				\
+	BEGIN_RING(2);							\
+	if (info->ChipFamily <= CHIP_FAMILY_RV280) {			\
+	    OUT_RING(CP_PACKET0(RADEON_RB3D_DSTCACHE_CTLSTAT, 0));	\
+	    OUT_RING(RADEON_RB3D_DC_FLUSH_ALL);				\
+	} else {							\
+	    OUT_RING(CP_PACKET0(R300_RB3D_DSTCACHE_CTLSTAT, 0));	\
+	    OUT_RING(R300_RB3D_DC_FLUSH_ALL);				\
+	}								\
+	ADVANCE_RING();							\
+    }									\
 } while (0)
 
 #define RADEON_PURGE_ZCACHE()						\
 do {									\
-    BEGIN_RING(2);							\
-    if (info->ChipFamily <= CHIP_FAMILY_RV280) {                        \
-        OUT_RING(CP_PACKET0(RADEON_RB3D_ZCACHE_CTLSTAT, 0));		\
-        OUT_RING(RADEON_RB3D_ZC_FLUSH_ALL);				\
-    } else {                                                            \
-        OUT_RING(CP_PACKET0(R300_RB3D_ZCACHE_CTLSTAT, 0));		\
-        OUT_RING(R300_ZC_FLUSH_ALL);					\
+    if (info->ChipFamily < CHIP_FAMILY_R600) {                          \
+	BEGIN_RING(2);                                                  \
+	if (info->ChipFamily <= CHIP_FAMILY_RV280) {                    \
+	    OUT_RING(CP_PACKET0(RADEON_RB3D_ZCACHE_CTLSTAT, 0));        \
+	    OUT_RING(RADEON_RB3D_ZC_FLUSH_ALL);                         \
+	} else {                                                        \
+	    OUT_RING(CP_PACKET0(R300_RB3D_ZCACHE_CTLSTAT, 0));          \
+	    OUT_RING(R300_ZC_FLUSH_ALL);                                \
+	}                                                               \
+	ADVANCE_RING();                                                 \
     }                                                                   \
-    ADVANCE_RING();							\
 } while (0)
 
 #endif /* XF86DRI */
+
+#if defined(XF86DRI) && defined(USE_EXA)
+#define RADEON_SWITCH_TO_2D()						\
+do {									\
+	uint32_t flush = 0;                                             \
+	switch (info->accel_state->engineMode) {			\
+	case EXA_ENGINEMODE_UNKNOWN:					\
+	case EXA_ENGINEMODE_3D:						\
+	    flush = 1;                                                  \
+	case EXA_ENGINEMODE_2D:						\
+	    break;							\
+	}								\
+	if (flush && info->directRenderingEnabled)                      \
+	    RADEONCPFlushIndirect(pScrn, 1);                            \
+        info->accel_state->engineMode = EXA_ENGINEMODE_2D;              \
+} while (0);
+
+#define RADEON_SWITCH_TO_3D()						\
+do {									\
+	uint32_t flush = 0;						\
+	switch (info->accel_state->engineMode) {			\
+	case EXA_ENGINEMODE_UNKNOWN:					\
+	case EXA_ENGINEMODE_2D:						\
+	    flush = 1;                                                  \
+	case EXA_ENGINEMODE_3D:						\
+	    break;							\
+	}								\
+	if (flush) {							\
+	    if (info->directRenderingEnabled)				\
+	        RADEONCPFlushIndirect(pScrn, 1);                        \
+	    RADEONInit3DEngine(pScrn);                                  \
+	}                                                               \
+        info->accel_state->engineMode = EXA_ENGINEMODE_3D;              \
+} while (0);
+#else
+#define RADEON_SWITCH_TO_2D()
+#define RADEON_SWITCH_TO_3D()
+#endif
 
 static __inline__ void RADEON_MARK_SYNC(RADEONInfoPtr info, ScrnInfoPtr pScrn)
 {
@@ -1233,19 +1411,19 @@ static __inline__ void RADEON_MARK_SYNC(RADEONInfoPtr info, ScrnInfoPtr pScrn)
 #endif
 #ifdef USE_XAA
     if (!info->useEXA)
-	SET_SYNC_FLAG(info->accel);
+	SET_SYNC_FLAG(info->accel_state->accel);
 #endif
 }
 
 static __inline__ void RADEON_SYNC(RADEONInfoPtr info, ScrnInfoPtr pScrn)
 {
 #ifdef USE_EXA
-    if (info->useEXA)
+    if (info->useEXA && pScrn->pScreen)
 	exaWaitSync(pScrn->pScreen);
 #endif
 #ifdef USE_XAA
-    if (!info->useEXA && info->accel)
-	info->accel->Sync(pScrn);
+    if (!info->useEXA && info->accel_state->accel)
+	info->accel_state->accel->Sync(pScrn);
 #endif
 }
 

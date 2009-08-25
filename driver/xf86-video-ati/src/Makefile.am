@@ -26,8 +26,11 @@
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
 
+radeon_drv_la_LIBADD =
+
 if DRI
 RADEON_DRI_SRCS = radeon_dri.c
+radeon_drv_la_LIBADD += $(DRI_LIBS)
 endif
 
 RADEON_ATOMBIOS_SOURCES = \
@@ -63,12 +66,17 @@ XMODE_SRCS=\
         modes/xf86DiDGA.c
 
 if USE_EXA
-RADEON_EXA_SOURCES = radeon_exa.c
+RADEON_EXA_SOURCES = radeon_exa.c r600_exa.c r6xx_accel.c r600_textured_videofuncs.c r600_shader.c
 endif
 
 AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ @XMODES_CFLAGS@ -DDISABLE_EASF -DENABLE_ALL_SERVICE_FUNCTIONS -DATOM_BIOS -DATOM_BIOS_PARSER -DDRIVER_PARSER
 
 INCLUDES = -I$(srcdir)/AtomBios/includes
+
+if XSERVER_LIBPCIACCESS
+ati_drv_la_LIBADD = $(PCIACCESS_LIBS)
+radeon_drv_la_LIBADD += $(PCIACCESS_LIBS)
+endif
 
 ati_drv_la_LTLIBRARIES = ati_drv.la
 ati_drv_la_LDFLAGS = -module -avoid-version
@@ -80,7 +88,7 @@ radeon_drv_la_LTLIBRARIES = radeon_drv.la
 radeon_drv_la_LDFLAGS = -module -avoid-version
 radeon_drv_ladir = @moduledir@/drivers
 radeon_drv_la_SOURCES = \
-	radeon_accel.c radeon_cursor.c radeon_dga.c \
+	radeon_accel.c radeon_cursor.c radeon_dga.c radeon_legacy_memory.c \
 	radeon_driver.c radeon_video.c radeon_bios.c radeon_mm_i2c.c \
 	radeon_vip.c radeon_misc.c radeon_probe.c \
 	legacy_crtc.c legacy_output.c \
@@ -120,21 +128,25 @@ EXTRA_DIST = \
 	radeon_render.c \
 	radeon_accelfuncs.c \
 	radeon_textured_videofuncs.c \
-	\
+	r600_reg.h \
+	r600_reg_auto_r6xx.h \
+	r600_reg_r6xx.h \
+	r600_reg_r7xx.h \
+	r600_shader.h \
+	r600_state.h \
 	ati.h \
 	ativersion.h \
+	bicubic_table.h \
 	generic_bus.h \
-	radeon_common.h \
 	radeon_commonfuncs.c \
 	radeon_dri.h \
-	radeon_dripriv.h \
+	radeon_drm.h \
 	radeon_exa_render.c \
 	radeon_exa_funcs.c \
 	radeon.h \
 	radeon_macros.h \
 	radeon_probe.h \
 	radeon_reg.h \
-	radeon_sarea.h \
 	radeon_version.h \
 	radeon_video.h \
 	radeon_tv.h \

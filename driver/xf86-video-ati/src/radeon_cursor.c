@@ -209,21 +209,21 @@ radeon_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y)
     if (xorigin >= CURSOR_WIDTH)  xorigin = CURSOR_WIDTH - 1;
     if (yorigin >= CURSOR_HEIGHT) yorigin = CURSOR_HEIGHT - 1;
 
-    if (mode->Flags & V_INTERLACE)
-	y /= 2;
-    else if (mode->Flags & V_DBLSCAN)
-	y *= 2;
-
     if (IS_AVIVO_VARIANT) {
 	/* avivo cursor spans the full fb width */
-	x += crtc->x;
-	y += crtc->y;
+	if (crtc->rotatedData == NULL) {
+	    x += crtc->x;
+	    y += crtc->y;
+	}
 	avivo_lock_cursor(crtc, TRUE);
 	OUTREG(AVIVO_D1CUR_POSITION + radeon_crtc->crtc_offset, ((xorigin ? 0 : x) << 16)
 	       | (yorigin ? 0 : y));
 	OUTREG(AVIVO_D1CUR_HOT_SPOT + radeon_crtc->crtc_offset, (xorigin << 16) | yorigin);
 	avivo_lock_cursor(crtc, FALSE);
     } else {
+	if (mode->Flags & V_DBLSCAN)
+	    y *= 2;
+
 	if (crtc_id == 0) {
 	    OUTREG(RADEON_CUR_HORZ_VERT_OFF,  (RADEON_CUR_LOCK
 					       | (xorigin << 16)
@@ -325,49 +325,32 @@ Bool RADEONCursorInit(ScreenPtr pScreen)
     int		       width_bytes;
     int                height;
     int                size_bytes;
-    uint32_t           cursor_offset = 0;
     int                c;
 
     size_bytes  = CURSOR_WIDTH * 4 * CURSOR_HEIGHT;
     width       = pScrn->displayWidth;
     width_bytes = width * (pScrn->bitsPerPixel / 8);
     height      = ((size_bytes * xf86_config->num_crtc) + width_bytes - 1) / width_bytes;
+    int align = IS_AVIVO_VARIANT ? 4096 : 256;
 
-#ifdef USE_XAA
     if (!info->useEXA) {
-	int align = IS_AVIVO_VARIANT ? 4096 : 256;
-	FBAreaPtr          fbarea;
+	for (c = 0; c < xf86_config->num_crtc; c++) {
+	    xf86CrtcPtr crtc = xf86_config->crtc[c];
+	    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
 
-	fbarea = xf86AllocateOffscreenArea(pScreen, width, height,
-					   align, NULL, NULL, NULL);
+	    radeon_crtc->cursor_offset =
+		radeon_legacy_allocate_memory(pScrn, &radeon_crtc->cursor_mem, size_bytes, align);
 
-	if (!fbarea) {
-	    cursor_offset    = 0;
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		   "Hardware cursor disabled"
-		   " due to insufficient offscreen memory\n");
-	    return FALSE;
-	} else {
-	    cursor_offset  = RADEON_ALIGN((fbarea->box.x1 +
-					   fbarea->box.y1 * width) *
-					  info->CurrentLayout.pixel_bytes,
-					  align);
+	    if (radeon_crtc->cursor_offset == 0)
+		return FALSE;
 
-	    for (c = 0; c < xf86_config->num_crtc; c++) {
-		xf86CrtcPtr crtc = xf86_config->crtc[c];
-		RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
-
-		radeon_crtc->cursor_offset = cursor_offset + (c * size_bytes);
-
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-			   "Using hardware cursor %d (scanline %u)\n", c,
-			   (unsigned)(radeon_crtc->cursor_offset / pScrn->displayWidth
-				      / info->CurrentLayout.pixel_bytes));
-	    }
-
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Will use %d kb for hardware cursor %d at offset 0x%08x\n",
+		       (size_bytes * xf86_config->num_crtc) / 1024,
+		       c,
+		       (unsigned int)radeon_crtc->cursor_offset);
 	}
     }
-#endif
 
     return xf86_cursors_init (pScreen, CURSOR_WIDTH, CURSOR_HEIGHT,
 			      (HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |

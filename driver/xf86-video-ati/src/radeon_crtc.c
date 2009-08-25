@@ -48,8 +48,7 @@
 
 #ifdef XF86DRI
 #define _XF86DRI_SERVER_
-#include "radeon_dri.h"
-#include "radeon_sarea.h"
+#include "radeon_drm.h"
 #include "sarea.h"
 #endif
 
@@ -58,6 +57,14 @@ extern void atombios_crtc_mode_set(xf86CrtcPtr crtc,
 				   DisplayModePtr adjusted_mode,
 				   int x, int y);
 extern void atombios_crtc_dpms(xf86CrtcPtr crtc, int mode);
+extern void
+RADEONInitDispBandwidthLegacy(ScrnInfoPtr pScrn,
+			      DisplayModePtr mode1, int pixel_bytes1,
+			      DisplayModePtr mode2, int pixel_bytes2);
+extern void
+RADEONInitDispBandwidthAVIVO(ScrnInfoPtr pScrn,
+			     DisplayModePtr mode1, int pixel_bytes1,
+			     DisplayModePtr mode2, int pixel_bytes2);
 
 void
 radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
@@ -70,7 +77,7 @@ radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
     if ((mode == DPMSModeOn) && radeon_crtc->enabled)
 	return;
 
-    if (IS_AVIVO_VARIANT) {
+    if (IS_AVIVO_VARIANT || info->r4xx_atom) {
 	atombios_crtc_dpms(crtc, mode);
     } else {
 
@@ -107,6 +114,9 @@ static void
 radeon_crtc_mode_prepare(xf86CrtcPtr crtc)
 {
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+
+    if (radeon_crtc->initialized)
+	radeon_crtc_dpms(crtc, DPMSModeOff);
 
     if (radeon_crtc->enabled)
 	crtc->funcs->hide_cursor(crtc);
@@ -220,7 +230,12 @@ RADEONComputePLL(RADEONPLLPtr pll,
 			best_freq = current_freq;
 			best_error = error;
 			best_vco_diff = vco_diff;
-		    } else if ((flags & RADEON_PLL_PREFER_LOW_REF_DIV) && (ref_div < best_ref_div)) {
+		    } else if (((flags & RADEON_PLL_PREFER_LOW_REF_DIV) && (ref_div < best_ref_div)) ||
+			       ((flags & RADEON_PLL_PREFER_HIGH_REF_DIV) && (ref_div > best_ref_div)) ||
+			       ((flags & RADEON_PLL_PREFER_LOW_FB_DIV) && (feedback_div < best_feedback_div)) ||
+			       ((flags & RADEON_PLL_PREFER_HIGH_FB_DIV) && (feedback_div > best_feedback_div)) ||
+			       ((flags & RADEON_PLL_PREFER_LOW_POST_DIV) && (post_div < best_post_div)) ||
+			       ((flags & RADEON_PLL_PREFER_HIGH_POST_DIV) && (post_div > best_post_div))) {
 			best_post_div = post_div;
 			best_ref_div = ref_div;
 			best_feedback_div = feedback_div;
@@ -259,7 +274,8 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     ScrnInfoPtr pScrn = crtc->scrn;
     RADEONInfoPtr info = RADEONPTR(pScrn);
 
-    if (IS_AVIVO_VARIANT) {
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "mode_set: x %d y %d\n", x, y);
+    if (IS_AVIVO_VARIANT || info->r4xx_atom) {
 	atombios_crtc_mode_set(crtc, mode, adjusted_mode, x, y);
     } else {
 	legacy_crtc_mode_set(crtc, mode, adjusted_mode, x, y);
@@ -271,6 +287,8 @@ radeon_crtc_mode_commit(xf86CrtcPtr crtc)
 {
     if (crtc->scrn->pScreen != NULL)
 	xf86_reload_cursors(crtc->scrn->pScreen);
+
+    radeon_crtc_dpms(crtc, DPMSModeOn);
 }
 
 void
@@ -327,20 +345,20 @@ radeon_crtc_gamma_set(xf86CrtcPtr crtc, uint16_t *red, uint16_t *green,
 	for (i = 0; i < 64; i++) {
 	    if (i <= 31) {
 		for (j = 0; j < 8; j++) {
-		    radeon_crtc->lut_r[i * 8 + j] = red[i] >> 8;
-		    radeon_crtc->lut_b[i * 8 + j] = blue[i] >> 8;
+		    radeon_crtc->lut_r[i * 8 + j] = red[i] >> 6;
+		    radeon_crtc->lut_b[i * 8 + j] = blue[i] >> 6;
 		}
 	    }
 
 	    for (j = 0; j < 4; j++) {
-		radeon_crtc->lut_g[i * 4 + j] = green[i] >> 8;
+		radeon_crtc->lut_g[i * 4 + j] = green[i] >> 6;
 	    }
 	}
     } else {
 	for (i = 0; i < 256; i++) {
-	    radeon_crtc->lut_r[i] = red[i] >> 8;
-	    radeon_crtc->lut_g[i] = green[i] >> 8;
-	    radeon_crtc->lut_b[i] = blue[i] >> 8;
+	    radeon_crtc->lut_r[i] = red[i] >> 6;
+	    radeon_crtc->lut_g[i] = green[i] >> 6;
+	    radeon_crtc->lut_b[i] = blue[i] >> 6;
 	}
     }
 
@@ -354,7 +372,7 @@ radeon_crtc_lock(xf86CrtcPtr crtc)
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
 #ifdef XF86DRI
-    if (info->CPStarted && pScrn->pScreen) {
+    if (info->cp->CPStarted && pScrn->pScreen) {
 	DRILock(pScrn->pScreen, 0);
 	if (info->accelOn)
 	    RADEON_SYNC(info, pScrn);
@@ -375,50 +393,12 @@ radeon_crtc_unlock(xf86CrtcPtr crtc)
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
 #ifdef XF86DRI
-	if (info->CPStarted && pScrn->pScreen) DRIUnlock(pScrn->pScreen);
+	if (info->cp->CPStarted && pScrn->pScreen) DRIUnlock(pScrn->pScreen);
 #endif
 
     if (info->accelOn)
         RADEON_SYNC(info, pScrn);
 }
-
-#ifdef USE_XAA
-/**
- * Allocates memory from the XF86 linear allocator, but also purges
- * memory if possible to cause the allocation to succeed.
- */
-static FBLinearPtr
-radeon_xf86AllocateOffscreenLinear(ScreenPtr pScreen, int length,
-				 int granularity,
-				 MoveLinearCallbackProcPtr moveCB,
-				 RemoveLinearCallbackProcPtr removeCB,
-				 pointer privData)
-{
-    FBLinearPtr linear;
-    int max_size;
-
-    linear = xf86AllocateOffscreenLinear(pScreen, length, granularity, moveCB,
-					 removeCB, privData);
-    if (linear != NULL)
-	return linear;
-
-    /* The above allocation didn't succeed, so purge unlocked stuff and try
-     * again.
-     */
-    xf86QueryLargestOffscreenLinear(pScreen, &max_size, granularity,
-				    PRIORITY_EXTREME);
-
-    if (max_size < length)
-	return NULL;
-
-    xf86PurgeUnlockedOffscreenAreas(pScreen);
-
-    linear = xf86AllocateOffscreenLinear(pScreen, length, granularity, moveCB,
-					 removeCB, privData);
-
-    return linear;
-}
-#endif
 
 /**
  * Allocates memory for a locked-in-framebuffer shadow of the given
@@ -429,8 +409,6 @@ static void *
 radeon_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
-    /* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
-    ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
     RADEONInfoPtr  info = RADEONPTR(pScrn);
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     unsigned long rotate_pitch;
@@ -438,56 +416,29 @@ radeon_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
     int align = 4096, size;
     int cpp = pScrn->bitsPerPixel / 8;
 
+    /* No rotation without accel */
+    if (((info->ChipFamily >= CHIP_FAMILY_R600) && !info->directRenderingEnabled) ||
+	xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Acceleration required for rotation\n");
+	return NULL;
+    }
+
     rotate_pitch = pScrn->displayWidth * cpp;
     size = rotate_pitch * height;
 
-#ifdef USE_EXA
     /* We could get close to what we want here by just creating a pixmap like
      * normal, but we have to lock it down in framebuffer, and there is no
      * setter for offscreen area locking in EXA currently.  So, we just
      * allocate offscreen memory and fake up a pixmap header for it.
      */
-    if (info->useEXA) {
-	assert(radeon_crtc->rotate_mem_exa == NULL);
-
-	radeon_crtc->rotate_mem_exa = exaOffscreenAlloc(pScreen, size, align,
-						       TRUE, NULL, NULL);
-	if (radeon_crtc->rotate_mem_exa == NULL) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Couldn't allocate shadow memory for rotated CRTC\n");
-	    return NULL;
-	}
-	rotate_offset = radeon_crtc->rotate_mem_exa->offset;
-    }
-#endif /* USE_EXA */
-#ifdef USE_XAA
-    if (!info->useEXA) {
-	/* The XFree86 linear allocator operates in units of screen pixels,
-	 * sadly.
-	 */
-	size = (size + cpp - 1) / cpp;
-	align = (align + cpp - 1) / cpp;
-
-	assert(radeon_crtc->rotate_mem_xaa == NULL);
-
-	radeon_crtc->rotate_mem_xaa =
-	    radeon_xf86AllocateOffscreenLinear(pScreen, size, align,
-					       NULL, NULL, NULL);
-	if (radeon_crtc->rotate_mem_xaa == NULL) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Couldn't allocate shadow memory for rotated CRTC\n");
-	    return NULL;
-	}
-#ifdef XF86DRI
-	rotate_offset = info->frontOffset +
-	    radeon_crtc->rotate_mem_xaa->offset * cpp;
-#endif
-    }
-#endif /* USE_XAA */
+    rotate_offset = radeon_legacy_allocate_memory(pScrn, &radeon_crtc->crtc_rotate_mem, size, align);
+    if (rotate_offset == 0)
+	return NULL;
 
     return info->FB + rotate_offset;
 }
-    
+
 /**
  * Creates a pixmap for this CRTC's rotated shadow framebuffer.
  */
@@ -523,29 +474,69 @@ static void
 radeon_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rotate_pixmap, void *data)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
-    RADEONInfoPtr  info = RADEONPTR(pScrn);
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
 
     if (rotate_pixmap)
 	FreeScratchPixmapHeader(rotate_pixmap);
-    
+
     if (data) {
-#ifdef USE_EXA
-	if (info->useEXA && radeon_crtc->rotate_mem_exa != NULL) {
-	    exaOffscreenFree(pScrn->pScreen, radeon_crtc->rotate_mem_exa);
-	    radeon_crtc->rotate_mem_exa = NULL;
-	}
-#endif /* USE_EXA */
-#ifdef USE_XAA
-	if (!info->useEXA) {
-	    xf86FreeOffscreenLinear(radeon_crtc->rotate_mem_xaa);
-	    radeon_crtc->rotate_mem_xaa = NULL;
-	}
-#endif /* USE_XAA */
+	radeon_legacy_free_memory(pScrn, radeon_crtc->crtc_rotate_mem);
+	radeon_crtc->crtc_rotate_mem = NULL;
     }
+
 }
 
-static const xf86CrtcFuncsRec radeon_crtc_funcs = {
+#if XF86_CRTC_VERSION >= 2
+#include "radeon_atombios.h"
+
+extern AtomBiosResult
+atombios_lock_crtc(atomBiosHandlePtr atomBIOS, int crtc, int lock);
+extern void
+RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
+		   int x, int y);
+extern void
+RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
+		    int x, int y);
+extern void
+RADEONRestoreCrtcBase(ScrnInfoPtr pScrn,
+		      RADEONSavePtr restore);
+extern void
+RADEONRestoreCrtc2Base(ScrnInfoPtr pScrn,
+		       RADEONSavePtr restore);
+
+static void
+radeon_crtc_set_origin(xf86CrtcPtr crtc, int x, int y)
+{
+    ScrnInfoPtr pScrn = crtc->scrn;
+    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+
+    if (IS_AVIVO_VARIANT) {
+	x &= ~3;
+	y &= ~1;
+	atombios_lock_crtc(info->atomBIOS, radeon_crtc->crtc_id, 1);
+	OUTREG(AVIVO_D1MODE_VIEWPORT_START + radeon_crtc->crtc_offset, (x << 16) | y);
+	atombios_lock_crtc(info->atomBIOS, radeon_crtc->crtc_id, 0);
+    } else {
+	switch (radeon_crtc->crtc_id) {
+	case 0:
+	    RADEONInitCrtcBase(crtc, info->ModeReg, x, y);
+	    RADEONRestoreCrtcBase(pScrn, info->ModeReg);
+	    break;
+	case 1:
+	    RADEONInitCrtc2Base(crtc, info->ModeReg, x, y);
+	    RADEONRestoreCrtc2Base(pScrn, info->ModeReg);
+	    break;
+	default:
+	    break;
+	}
+    }
+}
+#endif
+
+
+static xf86CrtcFuncsRec radeon_crtc_funcs = {
     .dpms = radeon_crtc_dpms,
     .save = NULL, /* XXX */
     .restore = NULL, /* XXX */
@@ -565,12 +556,58 @@ static const xf86CrtcFuncsRec radeon_crtc_funcs = {
     .hide_cursor = radeon_crtc_hide_cursor,
     .load_cursor_argb = radeon_crtc_load_cursor_argb,
     .destroy = NULL, /* XXX */
+#if XF86_CRTC_VERSION >= 2
+    .set_origin = radeon_crtc_set_origin,
+#endif
 };
+
+void
+RADEONInitDispBandwidth(ScrnInfoPtr pScrn)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    DisplayModePtr mode1 = NULL, mode2 = NULL;
+    int pixel_bytes1 = info->CurrentLayout.pixel_bytes;
+    int pixel_bytes2 = info->CurrentLayout.pixel_bytes;
+
+    if (xf86_config->num_crtc == 2) {
+	if (xf86_config->crtc[1]->enabled &&
+	    xf86_config->crtc[0]->enabled) {
+	    mode1 = &xf86_config->crtc[0]->mode;
+	    mode2 = &xf86_config->crtc[1]->mode;
+	} else if (xf86_config->crtc[0]->enabled) {
+	    mode1 = &xf86_config->crtc[0]->mode;
+	} else if (xf86_config->crtc[1]->enabled) {
+	    mode2 = &xf86_config->crtc[1]->mode;
+	} else
+	    return;
+    } else {
+	if (info->IsPrimary)
+	    mode1 = &xf86_config->crtc[0]->mode;
+	else if (info->IsSecondary)
+	    mode2 = &xf86_config->crtc[0]->mode;
+	else if (xf86_config->crtc[0]->enabled)
+	    mode1 = &xf86_config->crtc[0]->mode;
+	else
+	    return;
+    }
+
+    if (IS_AVIVO_VARIANT)
+	RADEONInitDispBandwidthAVIVO(pScrn, mode1, pixel_bytes1, mode2, pixel_bytes2);
+    else
+	RADEONInitDispBandwidthLegacy(pScrn, mode1, pixel_bytes1, mode2, pixel_bytes2);
+}
 
 Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask)
 {
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+
+    if (!xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
+	radeon_crtc_funcs.shadow_create = radeon_crtc_shadow_create;
+	radeon_crtc_funcs.shadow_allocate = radeon_crtc_shadow_allocate;
+	radeon_crtc_funcs.shadow_destroy = radeon_crtc_shadow_destroy;
+    }
 
     if (mask & 1) {
 	if (pRADEONEnt->Controller[0])
@@ -587,6 +624,7 @@ Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask)
 	pRADEONEnt->pCrtc[0]->driver_private = pRADEONEnt->Controller[0];
 	pRADEONEnt->Controller[0]->crtc_id = 0;
 	pRADEONEnt->Controller[0]->crtc_offset = 0;
+	pRADEONEnt->Controller[0]->initialized = FALSE;
 	if (info->allowColorTiling)
 	    pRADEONEnt->Controller[0]->can_tile = 1;
 	else
@@ -611,6 +649,7 @@ Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask)
 	pRADEONEnt->pCrtc[1]->driver_private = pRADEONEnt->Controller[1];
 	pRADEONEnt->Controller[1]->crtc_id = 1;
 	pRADEONEnt->Controller[1]->crtc_offset = AVIVO_D2CRTC_H_TOTAL - AVIVO_D1CRTC_H_TOTAL;
+	pRADEONEnt->Controller[1]->initialized = FALSE;
 	if (info->allowColorTiling)
 	    pRADEONEnt->Controller[1]->can_tile = 1;
 	else
@@ -791,7 +830,7 @@ RADEONSetTiling(ScrnInfoPtr pScrn)
 
 #ifdef XF86DRI
     if (info->directRenderingEnabled && (info->tilingEnabled != can_tile)) {
-	RADEONSAREAPrivPtr pSAREAPriv;
+	drm_radeon_sarea_t *pSAREAPriv;
 	if (RADEONDRISetParam(pScrn, RADEON_SETPARAM_SWITCH_TILING, (can_tile ? 1 : 0)) < 0)
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "[drm] failed changing tiling status\n");

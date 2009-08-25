@@ -51,32 +51,6 @@
 
 #include "compiler.h"
 
-#if HAVE_BYTESWAP_H
-#include <byteswap.h>
-#elif defined(USE_SYS_ENDIAN_H)
-#include <sys/endian.h>
-#else
-#define	bswap_16(value)  \
- 	((((value) & 0xff) << 8) | ((value) >> 8))
-
-#define	bswap_32(value)	\
- 	(((uint32_t)bswap_16((uint16_t)((value) & 0xffff)) << 16) | \
- 	(uint32_t)bswap_16((uint16_t)((value) >> 16)))
- 
-#define	bswap_64(value)	\
- 	(((uint64_t)bswap_32((uint32_t)((value) & 0xffffffff)) \
- 	    << 32) | \
- 	(uint64_t)bswap_32((uint32_t)((value) >> 32)))
-#endif
-
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-#define le32_to_cpu(x) bswap_32(x)
-#define le16_to_cpu(x) bswap_16(x)
-#else
-#define le32_to_cpu(x) (x)
-#define le16_to_cpu(x) (x)
-#endif
-
 #define RADEON_BIOS8(v)  (info->VBIOS[v])
 #define RADEON_BIOS16(v) (info->VBIOS[v] | \
                           (info->VBIOS[(v) + 1] << 8))
@@ -128,15 +102,10 @@ do {									\
 #define OUTPAL_NEXT(r, g, b)						\
 do {									\
     if (IS_AVIVO_VARIANT) {                                             \
-        OUTREG(AVIVO_DC_LUT_30_COLOR, ((r) << 22) | ((g) << 12) | ((b) << 2));	\
-    } else {                                                               \
-        OUTREG(RADEON_PALETTE_DATA, ((r) << 16) | ((g) << 8) | (b));	\
+        OUTREG(AVIVO_DC_LUT_30_COLOR, ((r) << 20) | ((g) << 10) | (b));	\
+    } else {                                                            \
+        OUTREG(RADEON_PALETTE_30_DATA, ((r) << 20) | ((g) << 10) | (b)); \
     }								        \
-} while (0)
-
-#define OUTPAL_NEXT_uint32_t(v)						\
-do {									\
-    OUTREG(RADEON_PALETTE_DATA, (v & 0x00ffffff));			\
 } while (0)
 
 #define OUTPAL(idx, r, g, b)						\
@@ -159,7 +128,7 @@ do {									\
     if (IS_AVIVO_VARIANT) {                                             \
         INREG(AVIVO_DC_LUT_30_COLOR);                                   \
     } else {                                                            \
-        INREG(RADEON_PALETTE_DATA);                                     \
+        INREG(RADEON_PALETTE_30_DATA);                                  \
     }								        \
 } while (0)
 
@@ -183,7 +152,9 @@ do {									\
 } while (0)
 
 #define INMC(pScrn, addr) RADEONINMC(pScrn, addr)
-
 #define OUTMC(pScrn, addr, val) RADEONOUTMC(pScrn, addr, val)
+
+#define INPCIE(pScrn, addr) RADEONINPCIE(pScrn, addr)
+#define OUTPCIE(pScrn, addr, val) RADEONOUTPCIE(pScrn, addr, val)
 
 #endif

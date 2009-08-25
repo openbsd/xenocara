@@ -155,6 +155,18 @@ typedef unsigned long ULONG_PTR;
 #ifndef FGL_LINUX
 #pragma warning ( default : 4142 )
 #endif
+
+#ifndef ATOM_BIG_ENDIAN
+#ifdef X_BYTE_ORDER
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+#define ATOM_BIG_ENDIAN		1
+#endif
+#endif
+#endif
+#ifndef ATOM_BIG_ENDIAN
+#define ATOM_BIG_ENDIAN		0
+#endif
+
 #endif // _COMMON_TYPES_H_
 
 // EOF

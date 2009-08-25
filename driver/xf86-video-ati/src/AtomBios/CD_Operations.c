@@ -44,7 +44,6 @@ Revision History:
 #include "xorg-server.h"
 
 #include "Decoder.h"
-#include	"atombios.h"
 
 VOID PutDataRegister(PARSER_TEMP_DATA STACK_BASED * pParserTempData);
 VOID PutDataPS(PARSER_TEMP_DATA STACK_BASED * pParserTempData);
@@ -231,7 +230,7 @@ UINT32 IndirectInputOutput(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 		IndirectIOParserCommands[*pParserTempData->IndirectIOTablePointer].func(pParserTempData);
 		pParserTempData->IndirectIOTablePointer+=IndirectIOParserCommands[*pParserTempData->IndirectIOTablePointer].csize;
 	    }
-	    pParserTempData->IndirectIOTablePointer-=*(UINT16*)(pParserTempData->IndirectIOTablePointer+1);
+	    pParserTempData->IndirectIOTablePointer-=UINT16LE_TO_CPU(*(UINT16*)(pParserTempData->IndirectIOTablePointer+1));
 	    pParserTempData->IndirectIOTablePointer++;
 	    return pParserTempData->IndirectData;
 	} else pParserTempData->IndirectIOTablePointer+=IndirectIOParserCommands[*pParserTempData->IndirectIOTablePointer].csize;
@@ -243,7 +242,7 @@ UINT32 IndirectInputOutput(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 
 VOID PutDataRegister(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 {
-    pParserTempData->Index=(UINT32)pParserTempData->pCmd->Parameters.WordXX.PA_Destination;
+    pParserTempData->Index=(UINT32)UINT16LE_TO_CPU(pParserTempData->pCmd->Parameters.WordXX.PA_Destination);
     pParserTempData->Index+=pParserTempData->CurrentRegBlock;
     switch(pParserTempData->Multipurpose.CurrentPort){
 	case ATI_RegsPort:
@@ -269,16 +268,16 @@ VOID PutDataRegister(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 VOID PutDataPS(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 {
     *(pParserTempData->pDeviceData->pParameterSpace+pParserTempData->pCmd->Parameters.ByteXX.PA_Destination)=
-	pParserTempData->DestData32;
+	    CPU_TO_UINT32LE(pParserTempData->DestData32);
 }
 
 VOID PutDataWS(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 {
     if (pParserTempData->pCmd->Parameters.ByteXX.PA_Destination < WS_QUOTIENT_C)
-	*(pParserTempData->pWorkingTableData->pWorkSpace+pParserTempData->pCmd->Parameters.ByteXX.PA_Destination) = pParserTempData->DestData32;
+      *(pParserTempData->pWorkingTableData->pWorkSpace+pParserTempData->pCmd->Parameters.ByteXX.PA_Destination) = pParserTempData->DestData32;
     else
-	switch (pParserTempData->pCmd->Parameters.ByteXX.PA_Destination)
-	{
+	  switch (pParserTempData->pCmd->Parameters.ByteXX.PA_Destination)
+	  {
 	    case WS_REMINDER_C:
 		pParserTempData->MultiplicationOrDivision.Division.Reminder32=pParserTempData->DestData32;
 		break;
@@ -339,7 +338,7 @@ VOID SkipParameters16(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 
 UINT32 GetParametersRegister(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 {
-    pParserTempData->Index=*(UINT16*)pParserTempData->pWorkingTableData->IP;
+    pParserTempData->Index=UINT16LE_TO_CPU(*(UINT16*)pParserTempData->pWorkingTableData->IP);
     pParserTempData->pWorkingTableData->IP+=sizeof(UINT16);
     pParserTempData->Index+=pParserTempData->CurrentRegBlock;
     switch(pParserTempData->Multipurpose.CurrentPort)
@@ -361,9 +360,11 @@ UINT32 GetParametersRegister(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 
 UINT32 GetParametersPS(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 {
+    UINT32 data;
     pParserTempData->Index=*pParserTempData->pWorkingTableData->IP;
     pParserTempData->pWorkingTableData->IP+=sizeof(UINT8);
-    return *(pParserTempData->pDeviceData->pParameterSpace+pParserTempData->Index);
+    data = UINT32LE_TO_CPU(*(pParserTempData->pDeviceData->pParameterSpace+pParserTempData->Index));
+    return data;
 }
 
 UINT32 GetParametersWS(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
@@ -419,9 +420,12 @@ UINT32 GetParametersMC(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 
 UINT32 GetParametersIndirect(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 {
-    pParserTempData->Index=*(UINT16*)pParserTempData->pWorkingTableData->IP;
+	  UINT32 ret;
+
+    pParserTempData->Index=UINT16LE_TO_CPU(*(UINT16*)pParserTempData->pWorkingTableData->IP);
     pParserTempData->pWorkingTableData->IP+=sizeof(UINT16);
-    return *(UINT32*)(RELATIVE_TO_BIOS_IMAGE(pParserTempData->Index)+pParserTempData->CurrentDataBlock);
+    ret = UINT32LE_TO_CPU(*(UINT32*)(RELATIVE_TO_BIOS_IMAGE(pParserTempData->Index)+pParserTempData->CurrentDataBlock));
+    return ret;
 }
 
 UINT32 GetParametersDirect8(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
@@ -435,7 +439,7 @@ UINT32 GetParametersDirect8(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 UINT32 GetParametersDirect16(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 {
     pParserTempData->CD_Mask.SrcAlignment=alignmentLowerWord;
-    pParserTempData->Index=*(UINT16*)pParserTempData->pWorkingTableData->IP;
+    pParserTempData->Index=UINT16LE_TO_CPU(*(UINT16*)pParserTempData->pWorkingTableData->IP);
     pParserTempData->pWorkingTableData->IP+=sizeof(UINT16);
     return pParserTempData->Index;
 }
@@ -443,7 +447,7 @@ UINT32 GetParametersDirect16(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 UINT32 GetParametersDirect32(PARSER_TEMP_DATA STACK_BASED *	pParserTempData)
 {
     pParserTempData->CD_Mask.SrcAlignment=alignmentDword;
-    pParserTempData->Index=*(UINT32*)pParserTempData->pWorkingTableData->IP;
+    pParserTempData->Index=UINT32LE_TO_CPU(*(UINT32*)pParserTempData->pWorkingTableData->IP);
     pParserTempData->pWorkingTableData->IP+=sizeof(UINT32);
     return pParserTempData->Index;
 }
@@ -474,7 +478,7 @@ VOID ProcessMove(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 {
     if (pParserTempData->CD_Mask.SrcAlignment!=alignmentDword)
     {
-	pParserTempData->DestData32=GetDestination[pParserTempData->ParametersType.Destination](pParserTempData);
+				pParserTempData->DestData32=GetDestination[pParserTempData->ParametersType.Destination](pParserTempData);
     } else
     {
 	SkipDestination[pParserTempData->ParametersType.Destination](pParserTempData);
@@ -614,7 +618,13 @@ VOID ProcessCompare(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 VOID ProcessClear(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 {
     pParserTempData->DestData32=GetDestination[pParserTempData->ParametersType.Destination](pParserTempData);
-    pParserTempData->DestData32 &= ~(AlignmentMask[pParserTempData->CD_Mask.SrcAlignment] << SourceAlignmentShift[pParserTempData->CD_Mask.SrcAlignment]);
+
+    if (pParserTempData->ParametersType.Destination == 0 &&
+	pParserTempData->Multipurpose.CurrentPort == ATI_RegsPort &&
+	pParserTempData->Index == 0) {
+        pParserTempData->DestData32 = 0;
+    } else
+        pParserTempData->DestData32 &= ~(AlignmentMask[pParserTempData->CD_Mask.SrcAlignment] << SourceAlignmentShift[pParserTempData->CD_Mask.SrcAlignment]);
     PutDataFunctions[pParserTempData->ParametersType.Destination](pParserTempData);
 
 }
@@ -664,7 +674,8 @@ VOID ProcessSwitch(PARSER_TEMP_DATA STACK_BASED * pParserTempData){
     pParserTempData->SourceData32=GetSource[pParserTempData->ParametersType.Source](pParserTempData);
     pParserTempData->SourceData32 >>= SourceAlignmentShift[pParserTempData->CD_Mask.SrcAlignment];
     pParserTempData->SourceData32 &= AlignmentMask[pParserTempData->CD_Mask.SrcAlignment];
-    while ( *(UINT16*)pParserTempData->pWorkingTableData->IP != (((UINT16)NOP_OPCODE << 8)+NOP_OPCODE))
+
+    while ( UINT16LE_TO_CPU(*(UINT16*)pParserTempData->pWorkingTableData->IP) != (((UINT16)NOP_OPCODE << 8)+NOP_OPCODE))
     {
 	if (*pParserTempData->pWorkingTableData->IP == 'c')
 	{
@@ -673,7 +684,7 @@ VOID ProcessSwitch(PARSER_TEMP_DATA STACK_BASED * pParserTempData){
 	    pParserTempData->Index=GetParametersDirect16(pParserTempData);
 	    if (pParserTempData->SourceData32 == pParserTempData->DestData32)
 	    {
-		pParserTempData->pWorkingTableData->IP= RELATIVE_TO_TABLE(pParserTempData->Index);
+ 	        pParserTempData->pWorkingTableData->IP= RELATIVE_TO_TABLE(pParserTempData->Index);
 		return;
 	    }
 	}
@@ -695,7 +706,7 @@ VOID	cmdSetDataBlock(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
         } else
 	{
 	    pMasterDataTable = GetDataMasterTablePointer(pParserTempData->pDeviceData);
-	    pParserTempData->CurrentDataBlock= (TABLE_UNIT_TYPE)((PTABLE_UNIT_TYPE)pMasterDataTable)[value];
+	    pParserTempData->CurrentDataBlock= UINT16LE_TO_CPU((TABLE_UNIT_TYPE)((PTABLE_UNIT_TYPE)pMasterDataTable)[value]);
 	}
     }
     pParserTempData->pWorkingTableData->IP+=sizeof(COMMAND_TYPE_OPCODE_VALUE_BYTE);
@@ -704,13 +715,13 @@ VOID	cmdSetDataBlock(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 VOID	cmdSet_ATI_Port(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 {
     pParserTempData->Multipurpose.CurrentPort=ATI_RegsPort;
-    pParserTempData->CurrentPortID = (UINT8)((COMMAND_TYPE_1*)pParserTempData->pWorkingTableData->IP)->Parameters.WordXX.PA_Destination;
+    pParserTempData->CurrentPortID = (UINT8)UINT16LE_TO_CPU(((COMMAND_TYPE_1*)pParserTempData->pWorkingTableData->IP)->Parameters.WordXX.PA_Destination);
     pParserTempData->pWorkingTableData->IP+=sizeof(COMMAND_TYPE_OPCODE_OFFSET16);
 }
 
 VOID	cmdSet_Reg_Block(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 {
-    pParserTempData->CurrentRegBlock = ((COMMAND_TYPE_1*)pParserTempData->pWorkingTableData->IP)->Parameters.WordXX.PA_Destination;
+    pParserTempData->CurrentRegBlock = UINT16LE_TO_CPU(((COMMAND_TYPE_1*)pParserTempData->pWorkingTableData->IP)->Parameters.WordXX.PA_Destination);
     pParserTempData->pWorkingTableData->IP+=sizeof(COMMAND_TYPE_OPCODE_OFFSET16);
 }
 
@@ -754,19 +765,23 @@ VOID ProcessDebug(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 
 VOID ProcessDS(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 {
-    pParserTempData->pWorkingTableData->IP+=((COMMAND_TYPE_1*)pParserTempData->pWorkingTableData->IP)->Parameters.WordXX.PA_Destination+sizeof(COMMAND_TYPE_OPCODE_OFFSET16);
+    pParserTempData->pWorkingTableData->IP+=UINT16LE_TO_CPU(((COMMAND_TYPE_1*)pParserTempData->pWorkingTableData->IP)->Parameters.WordXX.PA_Destination)+sizeof(COMMAND_TYPE_OPCODE_OFFSET16);
 }
 
 
-VOID	cmdCall_Table(PARSER_TEMP_DATA STACK_BASED * pParserTempData){
+VOID	cmdCall_Table(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
+{
     UINT16*	MasterTableOffset;
     pParserTempData->pWorkingTableData->IP+=sizeof(COMMAND_TYPE_OPCODE_VALUE_BYTE);
     MasterTableOffset = GetCommandMasterTablePointer(pParserTempData->pDeviceData);
     if(((PTABLE_UNIT_TYPE)MasterTableOffset)[((COMMAND_TYPE_OPCODE_VALUE_BYTE*)pParserTempData->pCmd)->Value]!=0 )  // if the offset is not ZERO
     {
+	ATOM_TABLE_ATTRIBUTE lTableAttr;
+
 	pParserTempData->CommandSpecific.IndexInMasterTable=GetTrueIndexInMasterTable(pParserTempData,((COMMAND_TYPE_OPCODE_VALUE_BYTE*)pParserTempData->pCmd)->Value);
-	pParserTempData->Multipurpose.PS_SizeInDwordsUsedByCallingTable =
-	    (((ATOM_COMMON_ROM_COMMAND_TABLE_HEADER *)pParserTempData->pWorkingTableData->pTableHead)->TableAttribute.PS_SizeInBytes>>2);
+
+	lTableAttr = GetCommandTableAttribute(pParserTempData->pWorkingTableData->pTableHead);
+	pParserTempData->Multipurpose.PS_SizeInDwordsUsedByCallingTable = (lTableAttr.PS_SizeInBytes >>2);
 	pParserTempData->pDeviceData->pParameterSpace+=
 	    pParserTempData->Multipurpose.PS_SizeInDwordsUsedByCallingTable;
 	pParserTempData->Status=CD_CALL_TABLE;
@@ -792,7 +807,7 @@ VOID ProcessJump(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 	(pParserTempData->ParametersType.Destination == pParserTempData->CompareFlags ))
     {
 
-	pParserTempData->pWorkingTableData->IP= RELATIVE_TO_TABLE(((COMMAND_TYPE_OPCODE_OFFSET16*)pParserTempData->pWorkingTableData->IP)->CD_Offset16);
+      pParserTempData->pWorkingTableData->IP= RELATIVE_TO_TABLE(UINT16LE_TO_CPU(((COMMAND_TYPE_OPCODE_OFFSET16*)pParserTempData->pWorkingTableData->IP)->CD_Offset16));
     } else
     {
 	pParserTempData->pWorkingTableData->IP+=sizeof(COMMAND_TYPE_OPCODE_OFFSET16);
@@ -805,7 +820,7 @@ VOID ProcessJumpE(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
 	(pParserTempData->CompareFlags == pParserTempData->ParametersType.Destination))
     {
 
-	pParserTempData->pWorkingTableData->IP= RELATIVE_TO_TABLE(((COMMAND_TYPE_OPCODE_OFFSET16*)pParserTempData->pWorkingTableData->IP)->CD_Offset16);
+      pParserTempData->pWorkingTableData->IP= RELATIVE_TO_TABLE(UINT16LE_TO_CPU(((COMMAND_TYPE_OPCODE_OFFSET16*)pParserTempData->pWorkingTableData->IP)->CD_Offset16));
     } else
     {
 	pParserTempData->pWorkingTableData->IP+=sizeof(COMMAND_TYPE_OPCODE_OFFSET16);
@@ -817,7 +832,7 @@ VOID ProcessJumpNE(PARSER_TEMP_DATA STACK_BASED * pParserTempData)
     if (pParserTempData->CompareFlags != Equal)
     {
 
-	pParserTempData->pWorkingTableData->IP= RELATIVE_TO_TABLE(((COMMAND_TYPE_OPCODE_OFFSET16*)pParserTempData->pWorkingTableData->IP)->CD_Offset16);
+      pParserTempData->pWorkingTableData->IP= RELATIVE_TO_TABLE(UINT16LE_TO_CPU(((COMMAND_TYPE_OPCODE_OFFSET16*)pParserTempData->pWorkingTableData->IP)->CD_Offset16));
     } else
     {
 	pParserTempData->pWorkingTableData->IP+=sizeof(COMMAND_TYPE_OPCODE_OFFSET16);

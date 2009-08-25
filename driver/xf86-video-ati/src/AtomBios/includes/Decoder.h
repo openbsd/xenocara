@@ -47,12 +47,32 @@ NEG:27.08.2002	Initiated.
 #define PARSER_VERSION_MAJOR                   0x00000000
 #define PARSER_VERSION_MINOR                   0x0000000E
 #define PARSER_VERSION                         (PARSER_VERSION_MAJOR | PARSER_VERSION_MINOR)
-#include "CD_binding.h"
+
 #include "CD_Common_Types.h"
+
+#include "atombios.h"
+
+/* these depends on some struct defined in atombios.h */
+#include "CD_binding.h"
 #include "CD_hw_services.h"
 #include "CD_Structs.h"
-#include "CD_Definitions.h"
 #include "CD_Opcodes.h"
+#include "CD_Definitions.h"
+
+#if ATOM_BIG_ENDIAN
+extern UINT16 ATOM_BSWAP16(UINT16 x);
+extern UINT32 ATOM_BSWAP32(UINT32 x);
+
+#define CPU_TO_UINT16LE(x)	ATOM_BSWAP16(x)
+#define CPU_TO_UINT32LE(x)	ATOM_BSWAP32(x)
+#define UINT16LE_TO_CPU(x)	ATOM_BSWAP16(x)
+#define UINT32LE_TO_CPU(x)	ATOM_BSWAP32(x)
+#else
+#define CPU_TO_UINT16LE(x)	(x)
+#define CPU_TO_UINT32LE(x)	(x)
+#define UINT16LE_TO_CPU(x)	(x)
+#define UINT32LE_TO_CPU(x)	(x)
+#endif
 
 #define	SOURCE_ONLY_CMD_TYPE		0//0xFE
 #define SOURCE_DESTINATION_CMD_TYPE	1//0xFD

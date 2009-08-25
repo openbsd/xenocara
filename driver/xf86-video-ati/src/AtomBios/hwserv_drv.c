@@ -34,8 +34,14 @@ Revision History:
 
 	NEG:27.09.2002	Initiated.
 --*/
-#include "CD_binding.h"
-#include "CD_hw_services.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <X11/Xos.h>
+#include "xorg-server.h"
+
+#include "Decoder.h"
 
 //trace settings
 #if DEBUG_OUTPUT_DEVICE & 1
@@ -249,12 +255,12 @@ VOID	WriteReg32(PARSER_TEMP_DATA STACK_BASED * pWorkingTableData)
 
 VOID	ReadIndReg32 (PARSER_TEMP_DATA STACK_BASED * pWorkingTableData)
 {
-    pWorkingTableData->IndirectData = CailReadATIRegister(pWorkingTableData->pDeviceData->CAIL,*(UINT16*)(pWorkingTableData->IndirectIOTablePointer+1));
+    pWorkingTableData->IndirectData = CailReadATIRegister(pWorkingTableData->pDeviceData->CAIL,UINT16LE_TO_CPU(*(UINT16*)(pWorkingTableData->IndirectIOTablePointer+1)));
 }
 
 VOID	WriteIndReg32(PARSER_TEMP_DATA STACK_BASED * pWorkingTableData)
 {
-    CailWriteATIRegister(pWorkingTableData->pDeviceData->CAIL,*(UINT16*)(pWorkingTableData->IndirectIOTablePointer+1),pWorkingTableData->IndirectData );
+    CailWriteATIRegister(pWorkingTableData->pDeviceData->CAIL,UINT16LE_TO_CPU(*(UINT16*)(pWorkingTableData->IndirectIOTablePointer+1)),pWorkingTableData->IndirectData);
 }
 
 #endif
