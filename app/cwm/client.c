@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.61 2009/08/24 23:54:41 oga Exp $
+ * $Id: client.c,v 1.62 2009/08/25 01:26:09 okan Exp $
  */
 
 #include "headers.h"
@@ -233,7 +233,7 @@ client_maximize(struct client_ctx *cc)
 			 * that's probably more fair than if just the origin of
 			 * a window is poking over a boundary
 			 */
-			xine = screen_find_xinerama(CCTOSC(cc),
+			xine = screen_find_xinerama(sc,
 			    cc->geom.x + cc->geom.width / 2,
 			    cc->geom.y + cc->geom.height / 2);
 			if (xine == NULL)
@@ -267,7 +267,7 @@ client_vertmaximize(struct client_ctx *cc)
 			cc->savegeom = cc->geom;
 		if (HasXinerama) {
 			XineramaScreenInfo *xine;
-			xine = screen_find_xinerama(CCTOSC(cc),
+			xine = screen_find_xinerama(sc,
 			    cc->geom.x + cc->geom.width / 2,
 			    cc->geom.y + cc->geom.height / 2);
 			if (xine == NULL)
@@ -298,7 +298,7 @@ client_horizmaximize(struct client_ctx *cc)
 			cc->savegeom = cc->geom;
 		if (HasXinerama) {
 			XineramaScreenInfo *xine;
-			xine = screen_find_xinerama(CCTOSC(cc),
+			xine = screen_find_xinerama(sc,
 			    cc->geom.x + cc->geom.width / 2,
 			    cc->geom.y + cc->geom.height / 2);
 			if (xine == NULL)
