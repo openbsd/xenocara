@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.14 2009/08/25 01:32:40 oga Exp $
+ * $Id: mousefunc.c,v 1.15 2009/08/27 01:38:08 okan Exp $
  */
 
 #include "headers.h"
@@ -44,7 +44,7 @@ mousefunc_sweep_calc(struct client_ctx *cc, int x, int y, int mx, int my)
 static void
 mousefunc_sweep_draw(struct client_ctx *cc)
 {
-	struct screen_ctx	*sc = CCTOSC(cc);
+	struct screen_ctx	*sc = cc->sc;
 	char			 asize[10]; /* fits "nnnnxnnnn\0" */
 	int			 width, height, width_size, width_name;
 
@@ -72,7 +72,7 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 {
 	XEvent			 ev;
 	Time			 time = 0;
-	struct screen_ctx	*sc = CCTOSC(cc);
+	struct screen_ctx	*sc = cc->sc;
 	int			 x = cc->geom.x, y = cc->geom.y;
 
 	client_raise(cc);

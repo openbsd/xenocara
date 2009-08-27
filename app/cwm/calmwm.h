@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.97 2009/08/24 23:54:41 oga Exp $
+ * $Id: calmwm.h,v 1.98 2009/08/27 01:38:08 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -490,8 +490,6 @@ XftFont			*font_make(struct screen_ctx *, const char *);
 #define font_ascent()	Conf.DefaultFont->ascent
 #define font_descent()	Conf.DefaultFont->descent
 #define	font_height()	Conf.FontHeight
-
-#define CCTOSC(cc) (cc->sc)
 
 /* Externs */
 

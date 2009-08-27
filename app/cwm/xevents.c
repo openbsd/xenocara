@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.42 2009/08/24 23:49:04 okan Exp $
+ * $Id: xevents.c,v 1.43 2009/08/27 01:38:08 okan Exp $
  */
 
 /*
@@ -125,7 +125,7 @@ xev_handle_configurerequest(XEvent *ee)
 	XWindowChanges		 wc;
 
 	if ((cc = client_find(e->window)) != NULL) {
-		sc = CCTOSC(cc);
+		sc = cc->sc;
 
 		if (e->value_mask & CWWidth)
 			cc->geom.width = e->width;
