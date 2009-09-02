@@ -151,7 +151,7 @@
 ./usr/X11R6/lib/libxcb-event_pic.a
 ./usr/X11R6/lib/libxcb-glx.so.0.0
 ./usr/X11R6/lib/libxcb-glx_pic.a
-./usr/X11R6/lib/libxcb-icccm.so.1.0
+./usr/X11R6/lib/libxcb-icccm.so.1.1
 ./usr/X11R6/lib/libxcb-icccm_pic.a
 ./usr/X11R6/lib/libxcb-image.so.0.0
 ./usr/X11R6/lib/libxcb-image_pic.a
