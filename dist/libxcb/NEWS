@@ -1,3 +1,9 @@
+Release 1.4 (2009-07-15)
+========================
+* Add majorCode, minorCode and resourceID fields to X generic error
+* Fix precedence bug: wrong length for big-requests preceded by sync
+* Fix libxcb-randr version info
+
 Release 1.3 (2009-05-29)
 ========================
 * Copy full IPv4 mapping (Bug #20665)

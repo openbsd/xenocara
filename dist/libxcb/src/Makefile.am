@@ -75,7 +75,7 @@ EXTSOURCES += randr.c
 EXTENSION_XML += randr.xml
 if BUILD_RANDR
 lib_LTLIBRARIES += libxcb-randr.la
-libxcb_randr_la_LDFLAGS = -version-info 1:0:0
+libxcb_randr_la_LDFLAGS = -version-info 1:0:1
 libxcb_randr_la_LIBADD = $(XCB_LIBS)
 nodist_libxcb_randr_la_SOURCES = randr.c randr.h
 endif
