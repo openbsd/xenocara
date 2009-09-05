@@ -70,7 +70,8 @@ xcb_get_text_property_reply(xcb_connection_t *c,
   return 1;
 }
 
-void xcb_get_text_property_reply_wipe(xcb_get_text_property_reply_t *prop)
+void
+xcb_get_text_property_reply_wipe(xcb_get_text_property_reply_t *prop)
 {
   free(prop->_reply);
 }
@@ -270,7 +271,8 @@ xcb_get_wm_class_reply(xcb_connection_t *c, xcb_get_property_cookie_t cookie,
   return ret;
 }
 
-void xcb_get_wm_class_reply_wipe(xcb_get_wm_class_reply_t *prop)
+void
+xcb_get_wm_class_reply_wipe(xcb_get_wm_class_reply_t *prop)
 {
   free(prop->_reply);
 }
@@ -390,7 +392,7 @@ xcb_size_hints_set_base_size(xcb_size_hints_t *hints, int32_t base_width,
 }
 
 void
-xcb_size_hints_set_win_gravity(xcb_size_hints_t *hints, uint32_t win_gravity)
+xcb_size_hints_set_win_gravity(xcb_size_hints_t *hints, xcb_gravity_t win_gravity)
 {
   hints->flags |= XCB_SIZE_HINT_P_WIN_GRAVITY;
   hints->win_gravity = win_gravity;
@@ -473,7 +475,7 @@ uint8_t
 xcb_get_wm_size_hints_reply(xcb_connection_t *c, xcb_get_property_cookie_t cookie,
                             xcb_size_hints_t *hints, xcb_generic_error_t **e)
 {
-  xcb_get_property_reply_t *reply = reply = xcb_get_property_reply(c, cookie, e);
+  xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, e);
   uint8_t ret = xcb_get_wm_size_hints_from_reply(hints, reply);
   free(reply);
   return ret;
@@ -608,15 +610,17 @@ xcb_set_wm_hints(xcb_connection_t *c, xcb_window_t window,
                       sizeof(*hints) >> 2, hints);
 }
 
-xcb_get_property_cookie_t xcb_get_wm_hints(xcb_connection_t *c,
-                                           xcb_window_t window)
+xcb_get_property_cookie_t
+xcb_get_wm_hints(xcb_connection_t *c,
+                 xcb_window_t window)
 {
   return xcb_get_property(c, 0, window, WM_HINTS, WM_HINTS, 0L,
                           XCB_NUM_WM_HINTS_ELEMENTS);
 }
 
-xcb_get_property_cookie_t xcb_get_wm_hints_unchecked(xcb_connection_t *c,
-                                                     xcb_window_t window)
+xcb_get_property_cookie_t
+xcb_get_wm_hints_unchecked(xcb_connection_t *c,
+                           xcb_window_t window)
 {
   return xcb_get_property_unchecked(c, 0, window, WM_HINTS, WM_HINTS, 0L,
                                     XCB_NUM_WM_HINTS_ELEMENTS);
@@ -695,24 +699,29 @@ xcb_get_wm_protocols_unchecked(xcb_connection_t *c,
 }
 
 uint8_t
+xcb_get_wm_protocols_from_reply(xcb_get_property_reply_t *reply, xcb_get_wm_protocols_reply_t *protocols)
+{
+  if(!reply || reply->type != ATOM || reply->format != 32)
+    return 0;
+
+  protocols->_reply = reply;
+  protocols->atoms_len = xcb_get_property_value_length(protocols->_reply) /  (reply->format / 8);
+  protocols->atoms = (xcb_atom_t *) xcb_get_property_value(protocols->_reply);
+
+  return 1;
+}
+
+uint8_t
 xcb_get_wm_protocols_reply(xcb_connection_t *c,
                            xcb_get_property_cookie_t cookie,
                            xcb_get_wm_protocols_reply_t *protocols,
                            xcb_generic_error_t **e)
 {
   xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, e);
-
-  if(!reply || reply->type != ATOM || reply->format != 32)
-  {
-    free(reply);
-    return 0;
-  }
-
-  protocols->_reply = reply;
-  protocols->atoms_len = xcb_get_property_value_length(protocols->_reply);
-  protocols->atoms = (xcb_atom_t *) xcb_get_property_value(protocols->_reply);
-
-  return 1;
+  uint8_t ret = xcb_get_wm_protocols_from_reply(reply, protocols);
+  if(!ret)
+      free(reply);
+  return ret;
 }
 
 void

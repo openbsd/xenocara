@@ -28,6 +28,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "xcb_event.h"
 #include "../xcb-util-common.h"

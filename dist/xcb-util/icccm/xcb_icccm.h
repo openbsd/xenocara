@@ -871,6 +871,17 @@ xcb_get_property_cookie_t xcb_get_wm_protocols_unchecked(xcb_connection_t *c,
 
 /**
  * @brief Fill the given structure with the WM_PROTOCOLS property of a window.
+ * @param reply The reply of the GetProperty request.
+ * @param protocols WM_PROTOCOLS property value.
+ * @return Return 1 on success, 0 otherwise.
+ *
+ * protocols structure members should be freed by
+ * xcb_get_wm_protocols_reply_wipe().
+ */
+uint8_t xcb_get_wm_protocols_from_reply(xcb_get_property_reply_t *reply,
+                                        xcb_get_wm_protocols_reply_t *protocols);
+/**
+ * @brief Fill the given structure with the WM_PROTOCOLS property of a window.
  * @param c The connection to the X server.
  * @param cookie Request cookie.
  * @param protocols WM_PROTOCOLS property value.

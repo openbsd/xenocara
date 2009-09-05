@@ -68,7 +68,7 @@ struct xcb_property_handlers {
 /**
  * @brief Get any property from a window, from any format.
  * @param c The connection to the X server.
- * @param del The XCB_PROP_MODE value.
+ * @param del Boolean value that determines whether the property is deleted.
  * @param window The window to get property from.
  * @param name The property atom name.
  * @param long_len The maximum length of the property.

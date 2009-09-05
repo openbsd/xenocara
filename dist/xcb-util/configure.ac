@@ -1,5 +1,6 @@
-AC_PREREQ(2.57)
-AC_INIT([xcb-util],0.3.5,[xcb@lists.freedesktop.org])
+dnl AC_TYPE_SSIZE_T is defined from 2.59c
+AC_PREREQ(2.59c)
+AC_INIT([xcb-util],0.3.6,[xcb@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
@@ -41,13 +42,16 @@ fi
 AC_SUBST(CWARNFLAGS)
 AC_CHECK_FUNCS_ONCE(vasprintf)
 
+dnl Checking whether ssize_t is defined (xcb-util-common.h)
+AC_TYPE_SSIZE_T
+
 xcbincludedir='${includedir}/xcb'
 AC_SUBST(xcbincludedir)
 
 pkgconfigdir='${libdir}/pkgconfig'
 AC_SUBST(pkgconfigdir)
 
-PKG_CHECK_MODULES(XCB, xcb >= 1.2)
+PKG_CHECK_MODULES(XCB, xcb >= 1.4)
 
 ######
 # Check version of xcb-proto that xcb was compiled against
@@ -63,7 +67,7 @@ AX_COMPARE_VERSION([$xcbproto_version],[ge],[$xcbproto_required], xcbproto_ok="y
 AC_MSG_RESULT([$xcbproto_ok])
 
 if test $xcbproto_ok = no; then
-	AC_MSG_ERROR([libxcb was compiled against xcb-proto $xcbproto_version; it needs needs to be compiled against version $xcbproto_required or higher])
+	AC_MSG_ERROR([libxcb was compiled against xcb-proto $xcbproto_version; it needs to be compiled against version $xcbproto_required or higher])
 fi
 
 
