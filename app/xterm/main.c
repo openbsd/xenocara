@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.593 2009/08/07 23:14:47 tom Exp $ */
+/* $XTermId: main.c,v 1.594 2009/08/30 21:40:45 Alex.Hornung Exp $ */
 
 /*
  *				 W A R N I N G
@@ -380,7 +380,7 @@ extern struct utmp *getutid __((struct utmp * _Id));
 #include <util.h>		/* openpty() */
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__DragonFly__)
 #include <libutil.h>		/* openpty() */
 #endif
 
@@ -2420,7 +2420,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 }
 
-#if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+#if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS)) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #define USE_OPENPTY 1
 static int opened_tty = -1;
 #endif

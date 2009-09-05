@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.394 2009/08/16 18:16:45 tom Exp $ */
+/* $XTermId: screen.c,v 1.396 2009/08/30 00:06:07 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -281,7 +281,7 @@ allocScrnHead(TScreen * screen, unsigned nrow)
 static unsigned
 sizeofScrnRow(TScreen * screen, unsigned ncol)
 {
-    unsigned result = 1;
+    unsigned result;
     unsigned sizeAttribs;
 #if OPT_ISO_COLORS
     unsigned sizeColors;
@@ -289,13 +289,14 @@ sizeofScrnRow(TScreen * screen, unsigned ncol)
 
     (void) screen;
 
+    result = (ncol * sizeof(CharData));
+    AlignValue(result);
+
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
-	result += (unsigned) screen->max_combining;
+	result *= (unsigned) (1 + screen->max_combining);
     }
 #endif
-    result = (ncol * result * sizeof(CharData));
-    AlignValue(result);
 
     sizeAttribs = (ncol * SizeofScrnPtr(attribs));
     AlignValue(sizeAttribs);

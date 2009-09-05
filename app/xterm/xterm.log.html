@@ -20,7 +20,7 @@ t<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.781 2009/08/16 22:51:21 tom Exp $
+  $XTermId: xterm.log.html,v 1.785 2009/08/30 23:59:11 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_247">Patch #247 - 2009/8/30</A>
 <LI><A HREF="#xterm_246">Patch #246 - 2009/8/16</A>
 <LI><A HREF="#xterm_245">Patch #245 - 2009/8/12</A>
 <LI><A HREF="#xterm_244">Patch #244 - 2009/8/9</A>
@@ -293,6 +294,20 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_247">Patch #247 - 2009/8/30</A></H1>
+<ul>
+	<li>add ifdef's and check for openpty() on DragonFly (patch by
+	    Alex Hornung).
+
+	<li>correct calculation for size of line's data block, which was
+	    sometimes off-by-one when configured
+	    using <code>--enable-16bit-chars</code>
+	    (report by H Merijn Brand).
+
+	<li>fix indexing error in print-everything feature from
+	    <a href="#xterm_246">patch #246</a> (patch by Ovidiu Gheorghioiu).
+</ul>
 
 <H1><A NAME="xterm_246">Patch #246 - 2009/8/16</A></H1>
 <ul>

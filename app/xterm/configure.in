@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.252 2009/08/13 19:41:01 tom Exp $
+dnl $XTermId: configure.in,v 1.253 2009/08/30 21:46:21 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -285,7 +285,7 @@ LIBS="$LIBS $X_EXTRA_LIBS"
 # Check for openpty() in -lutil if the UNIX98-style pty functions are not
 # available. E.g. for GNU libc 2.0.
 case $host_os in #(vi
-freebsd*|netbsd*)	# 2004/8/15 - revisit this if/when grantpt is known to work.
+freebsd*|netbsd*|dragonfly*) # 2004/8/15 - revisit this if/when grantpt is known to work.
 	AC_CHECK_LIB(util,openpty)
 	;;
 *)
