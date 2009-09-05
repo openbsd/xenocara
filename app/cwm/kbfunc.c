@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.42 2009/08/25 02:02:59 okan Exp $
+ * $Id: kbfunc.c,v 1.43 2009/09/05 16:06:15 okan Exp $
  */
 
 #include <paths.h>
@@ -285,6 +285,8 @@ kbfunc_exec(struct client_ctx *scratch, union arg *arg)
 
 	if ((mi = menu_filter(&menuq, label, NULL, 1,
 	    search_match_exec, NULL)) != NULL) {
+		if (mi->text[0] == '\0')
+			goto out;
 		switch (cmd) {
 			case CWM_EXEC_PROGRAM:
 				u_spawn(mi->text);
@@ -298,7 +300,7 @@ kbfunc_exec(struct client_ctx *scratch, union arg *arg)
 				break;
 		}
 	}
-
+out:
 	if (mi != NULL && mi->dummy)
 		xfree(mi);
 	while ((mi = TAILQ_FIRST(&menuq)) != NULL) {
@@ -360,12 +362,14 @@ kbfunc_ssh(struct client_ctx *scratch, union arg *arg)
 
 	if ((mi = menu_filter(&menuq, "ssh", NULL, 1,
 	    search_match_exec, NULL)) != NULL) {
+		if (mi->text[0] == '\0')
+			goto out;
 		l = snprintf(cmd, sizeof(cmd), "%s -e ssh %s", Conf.termpath,
 		    mi->text);
 		if (l != -1 && l < sizeof(cmd))
 			u_spawn(cmd);
 	}
-
+out:
 	if (mi != NULL && mi->dummy)
 		xfree(mi);
 	while ((mi = TAILQ_FIRST(&menuq)) != NULL) {
