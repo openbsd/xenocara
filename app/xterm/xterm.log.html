@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+t<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
  * Copyright 1996-2008,2009 by Thomas E. Dickey                              *
@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.744 2009/03/29 00:29:55 tom Exp $
+  $XTermId: xterm.log.html,v 1.781 2009/08/16 22:51:21 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,9 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_246">Patch #246 - 2009/8/16</A>
+<LI><A HREF="#xterm_245">Patch #245 - 2009/8/12</A>
+<LI><A HREF="#xterm_244">Patch #244 - 2009/8/9</A>
 <LI><A HREF="#xterm_243">Patch #243 - 2009/3/28</A>
 <LI><A HREF="#xterm_242">Patch #242 - 2009/2/15</A>
 <LI><A HREF="#xterm_241">Patch #241 - 2009/1/26</A>
@@ -290,6 +293,138 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_246">Patch #246 - 2009/8/16</A></H1>
+<ul>
+	<li>remove obsolete logic for saving/restoring wrapping flags, which
+	    did not work on 64-bit platform.  Wrapping flags (stored in the
+	    line-index) are now copied with line-data (Debian #541160).
+
+	<li>modify comments in app-defaults files to avoid problem with
+	    C preprocessor used by <code>xrdb</code> (Debian #541603).
+
+	<li>restore special case in <code>makeColorPair</code>,
+	    needed for <code>colorBDMode</code> resource (Debian #541089).
+
+	<li>correct <code>SetLineFlags()</code> macro, broken in
+	    <a href="#xterm_244">patch #244</a>
+	    when recoding to avoid gcc-specific bitfields (Debian #541236).
+
+	<li>modify initialization of screen buffers to ensure that pointers
+	    align to int-boundaries.
+	    This fixes a problem introduced in
+	    <a href="#xterm_244">patch #244</a>
+	    where the color- and character-arrays
+	    (stored after the video-attributes in each row)
+	    might be misaligned (report by Rajeev V Pillai).
+
+	<li>add limit-check in <code>ScrnRefresh</code> for handling
+	    saved-lines from the circular buffer which are repainted on a
+	    screen whose width has increased.  To improve performance, circular
+	    buffer entries are not resized (report by Rajeev V Pillai).
+
+	<li>correct type for <code>CellColor</code> (a late change in
+	    <a href="#xterm_244">patch #244</a>
+	    to avoid gcc-specifc enums made that unsigned
+	    rather than unsigned short, for the 256-color option).
+
+	<li>fix typo in configure option --enable-16bit-chars (report by
+	    Rajeev V. Pillai).
+</ul>
+
+<H1><A NAME="xterm_245">Patch #245 - 2009/8/12</A></H1>
+<ul>
+	<li>correct a special case in saving FIFO-lines from
+	    <a href="#xterm_244">patch #244</a>.
+	    If the screen was shrunk, xterm used the wrong amount for copying
+	    to FIFO-lines, and then used this amount to adjust the current
+	    row on the screen.  That was both a visible defect (Debian #541109)
+	    as well as a potential addressing error (Debian #541132, #541160,
+	    and #541236).
+
+	<li>add clarification in xterm manual about the
+	    various <code>allow<em>XXX</em>Ops</code> resources, which
+	    are disabled when the 
+	    <code>allowSendEvents</code> resource is active (patch by
+	    Julien Cristau, Debian #531597).
+</ul>
+
+<H1><A NAME="xterm_244">Patch #244 - 2009/8/9</A></H1>
+<ul>
+	<li>refactored storage of saved-lines, providing a configure option
+	    to manage them as a FIFO (actually a circular buffer), improving
+	    performance.
+	    Added configure option <code>--enable-fifo-lines</code> to
+	    enable/disable the new feature (it is enabled by default).
+
+	<li>added <code>fastScroll</code> resource, to amuse
+	    people who measure terminal emulator performance by
+	    <code>cat</code>'ing large files to the screen.
+
+	<li>modify check in <code>readPtyData</code> from return values
+	    to provide exit on zero-bytes read from pty for FreeBSD, or
+	    eliminate high-CPU in "xterm-hold" processing
+	    (discussion with Ulrich Spoerlein, FreeBSD ports/136686).
+	    The check was originally modified to combine negative/zero
+	    values in XFree86-3.1.2E, 1996/05/06.
+
+	<li>add configure option <code>--enable-16bit-chars</code> to
+	    provide wide-characters with 16-bits (rather than the default
+	    32-bits).
+
+	<li>add <code>retryInputMethod</code> resource to allow configuring
+	    out the retries xterm uses to connect to non-responsive XIM
+	    server, to work around defective X configurations as noted in
+	    <a href="http://mail-index.netbsd.org/tech-x11/2009/06/07/msg000511.html">NetBSD mailing list</a>.
+
+	<li>make regular-expression selection work for VT100 double-sized
+	    characters.
+
+	<li>improve layout when drawing missing characters in a proportional
+	    font, e.g., as boxes, to take into account whether they are
+	    double-width (report by Guilbert Stabilo on comp.unix.shell).
+
+	<li>add capability for keypad-center (kb2/KA2) to termcap entry for
+	    xterm-new, as well as xterm-8bit, xterm-sun and xterm-vt220
+	    (FreeBSD conf/136336).
+
+	<li>change default for <code>keepSelection</code> resource to true
+	    (prompted by discussion with David Muir Sharnoff).
+
+	<li>remove a limit-check in ptydata.c, allowing Unicode values past
+	    64k to be displayed using TrueType fonts (Debian #458432).
+
+	<li>remove a vt52-specific ifdef to allow mapping F1-F4 to PF1-PF4
+	    when vt52 support is not compiled (report by Olaf 'Rhialto'
+	    Seibert).
+
+	<li>save/restore line-wrapping flags when converting from ISO-8859-1
+	    encoding to UTF-8 encoding, as well as when resizing screen.
+
+	<li>remove extra adjustment of position in fix for Debian #418324.
+
+	<li>modify default check for <code>mkWidth</code> resource to check
+	    for line-drawing characters, which are categorized as double-width
+	    in Solaris 10 (report by Sebastian Kayser).
+
+	<li>add "print-everything" action (patch by Ovidiu Gheorghioiu).
+
+	<li>start refactoring scrollback data using new getLineData() function.
+
+	<li>demote recent change to Debian #252873 fix to experimental,
+	    ifdef'd out as <code>EXP_BOGUS_FG</code> (Debian #522141).
+
+	<li>work around groff mapping of ASCII quotes using macros (requested
+	    by Reuben Thomas based on Colin Watson advice, fixes Debian #378700).
+
+	<li>correct symbol used for default of <code>allowWindowOps</code>
+	    which was <code>DEF_ALLOW_FONT</code>
+	    rather than <code>DEF_ALLOW_WINDOW</code>
+	    (report by Matthieu Herrb).
+
+	<li>amend fix for tek4014 from <a href="#xterm_243">patch #243</a>
+	    to make it only apply to the Tek Options menu.
+</ul>
 
 <H1><A NAME="xterm_243">Patch #243 - 2009/3/28</A></H1>
 <ul>

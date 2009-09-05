@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.248 2009/03/28 17:27:57 tom Exp $ */
+/* $XTermId: menu.c,v 1.252 2009/07/03 15:01:14 tom Exp $ */
 
 /*
 
@@ -136,6 +136,7 @@ static void do_kill            PROTO_XT_CALLBACK_ARGS;
 static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
+static void do_print_everything PROTO_XT_CALLBACK_ARGS;
 static void do_print_redir     PROTO_XT_CALLBACK_ARGS;
 static void do_quit            PROTO_XT_CALLBACK_ARGS;
 static void do_redraw          PROTO_XT_CALLBACK_ARGS;
@@ -625,7 +626,7 @@ domenu(Widget w,
 				   False);
 	    }
 #endif
-	    if (!xtermHasPrinter()) {
+	    if (!xtermHasPrinter(term)) {
 		SetItemSensitivity(mainMenuEntries[mainMenu_print].widget,
 				   False);
 		SetItemSensitivity(mainMenuEntries[mainMenu_print_redir].widget,
@@ -935,7 +936,15 @@ do_print(Widget gw GCC_UNUSED,
 	 XtPointer closure GCC_UNUSED,
 	 XtPointer data GCC_UNUSED)
 {
-    xtermPrintScreen(True);
+    xtermPrintScreen(term, True);
+}
+
+static void
+do_print_everything(Widget gw GCC_UNUSED,
+		    XtPointer closure GCC_UNUSED,
+		    XtPointer data GCC_UNUSED)
+{
+    xtermPrintEverything(term);
 }
 
 static void
@@ -943,7 +952,7 @@ do_print_redir(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    setPrinterControlMode(term->screen.printer_controlmode ? 0 : 2);
+    setPrinterControlMode(term, term->screen.printer_controlmode ? 0 : 2);
 }
 
 static void
@@ -1570,7 +1579,7 @@ do_tektextlarge(Widget gw,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(getTekWidget(gw), tekMenu_tektextlarge);
+    TekSetFontSize(getTekWidget(gw), True, tekMenu_tektextlarge);
 }
 
 static void
@@ -1578,7 +1587,7 @@ do_tektext2(Widget gw,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(getTekWidget(gw), tekMenu_tektext2);
+    TekSetFontSize(getTekWidget(gw), True, tekMenu_tektext2);
 }
 
 static void
@@ -1586,7 +1595,7 @@ do_tektext3(Widget gw,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(getTekWidget(gw), tekMenu_tektext3);
+    TekSetFontSize(getTekWidget(gw), True, tekMenu_tektext3);
 }
 
 static void
@@ -1594,7 +1603,7 @@ do_tektextsmall(Widget gw,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(getTekWidget(gw), tekMenu_tektextsmall);
+    TekSetFontSize(getTekWidget(gw), True, tekMenu_tektextsmall);
 }
 
 static void
@@ -1783,6 +1792,16 @@ HandlePrintScreen(Widget w,
 		  Cardinal *param_count GCC_UNUSED)
 {
     do_print(w, (XtPointer) 0, (XtPointer) 0);
+}
+
+/* ARGSUSED */
+void
+HandlePrintEverything(Widget w,
+		      XEvent * event GCC_UNUSED,
+		      String * params GCC_UNUSED,
+		      Cardinal *param_count GCC_UNUSED)
+{
+    do_print_everything(w, (XtPointer) 0, (XtPointer) 0);
 }
 
 /* ARGSUSED */
@@ -2164,7 +2183,7 @@ HandleAltScreen(Widget w,
 		Cardinal *param_count)
 {
     /* eventually want to see if sensitive or not */
-    handle_vt_toggle(do_altscreen, term->screen.alternate,
+    handle_vt_toggle(do_altscreen, term->screen.whichBuf,
 		     params, *param_count, w);
 }
 
@@ -3114,7 +3133,7 @@ update_altscreen(void)
     UpdateCheckbox("update_altscreen",
 		   vtMenuEntries,
 		   vtMenu_altscreen,
-		   term->screen.alternate);
+		   term->screen.whichBuf);
 }
 
 void

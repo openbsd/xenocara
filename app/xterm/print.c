@@ -1,8 +1,4 @@
-/* $XTermId: print.c,v 1.81 2009/01/09 01:43:01 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
- */
+/* $XTermId: print.c,v 1.105 2009/08/07 00:25:10 tom Exp $ */
 
 /************************************************************
 
@@ -61,22 +57,30 @@ authorization.
 #define VMS_TEMP_PRINT_FILE "sys$scratch:xterm_print.txt"
 #endif
 
-static void charToPrinter(unsigned chr);
-static void printLine(int row, unsigned chr);
-static void send_CharSet(int row);
-static void send_SGR(unsigned attr, unsigned fg, unsigned bg);
-static void stringToPrinter(char *str);
+static void charToPrinter(XtermWidget /* xw */ ,
+			  unsigned /* chr */ );
+static void printLine(XtermWidget /* xw */ ,
+		      int /* row */ ,
+		      unsigned /* chr */ );
+static void send_CharSet(XtermWidget /* xw */ ,
+			 LineData * /* ld */ );
+static void send_SGR(XtermWidget /* xw */ ,
+		     unsigned /* attr */ ,
+		     unsigned /* fg */ ,
+		     unsigned /* bg */ );
+static void stringToPrinter(XtermWidget /* xw */ ,
+			    char * /*str */ );
 
 static FILE *Printer;
 static pid_t Printer_pid;
 static int initialized;
 
 static void
-closePrinter(void)
+closePrinter(XtermWidget xw GCC_UNUSED)
 {
-    if (xtermHasPrinter() != 0) {
+    if (xtermHasPrinter(xw) != 0) {
 #ifdef VMS
-	TScreen *screen = TScreenOf(term);
+	TScreen *screen = TScreenOf(xw);
 
 	char pcommand[256];
 	(void) sprintf(pcommand, "%s %s;",
@@ -103,12 +107,12 @@ closePrinter(void)
 }
 
 static void
-printCursorLine(void)
+printCursorLine(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("printCursorLine\n"));
-    printLine(screen->cur_row, '\n');
+    printLine(xw, screen->cur_row, '\n');
 }
 
 #define NO_COLOR	((unsigned)-1)
@@ -119,85 +123,71 @@ printCursorLine(void)
  * characters that xterm would allow as a selection (which may include blanks).
  */
 static void
-printLine(int row, unsigned chr)
+printLine(XtermWidget xw, int row, unsigned chr)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
     int inx = ROW2INX(screen, row);
-    Char *c = SCRN_BUF_CHARS(screen, inx);
-    Char *a = SCRN_BUF_ATTRS(screen, inx);
+    LineData *ld;
     Char attr = 0;
     unsigned ch;
     int last = MaxCols(screen);
     int col;
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
-#if OPT_EXT_COLORS
-    Char *fbf = 0;
-    Char *fbb = 0;
-#define ColorOf(col) (unsigned)((fbf[col] << 8) | fbb[col])
-#else
-    Char *fb = 0;
-#define ColorOf(col) (fb[col])
-#endif
+    CellColor *fb = 0;
+#define ColorOf(ld,col) (ld->color[col])
 #endif
     unsigned fg = NO_COLOR, last_fg = NO_COLOR;
     unsigned bg = NO_COLOR, last_bg = NO_COLOR;
     int cs = CSET_IN;
     int last_cs = CSET_IN;
 
+    ld = getLineData(screen, inx);
     TRACE(("printLine(row=%d/%d, top=%d:%d, chr=%d):%s\n",
 	   row, ROW2INX(screen, row), screen->topline, screen->max_row, chr,
-	   visibleChars(PAIRED_CHARS(c,
-				     (screen->utf8_mode
-				      ? SCRN_BUF_WIDEC(screen, inx)
-				      : 0)),
-			(unsigned) last)));
+	   visibleIChars(ld->charData, (unsigned) last)));
 
-    if_OPT_EXT_COLORS(screen, {
-	fbf = SCRN_BUF_FGRND(screen, inx);
-	fbb = SCRN_BUF_BGRND(screen, inx);
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	fb = SCRN_BUF_COLOR(screen, inx);
+    if_OPT_ISO_COLORS(screen, {
+	fb = ld->color;
     });
     while (last > 0) {
-	if ((a[last - 1] & CHARDRAWN) == 0)
+	if ((ld->attribs[last - 1] & CHARDRAWN) == 0)
 	    last--;
 	else
 	    break;
     }
     if (last) {
 	if (screen->print_attributes) {
-	    send_CharSet(row);
-	    send_SGR(0, NO_COLOR, NO_COLOR);
+	    send_CharSet(xw, ld);
+	    send_SGR(xw, 0, NO_COLOR, NO_COLOR);
 	}
 	for (col = 0; col < last; col++) {
-	    ch = c[col];
+	    ch = ld->charData[col];
 	    if_OPT_WIDE_CHARS(screen, {
 		ch = XTERM_CELL(row, col);
 	    });
 #if OPT_PRINT_COLORS
 	    if (screen->colorMode) {
 		if (screen->print_attributes > 1) {
-		    fg = (a[col] & FG_COLOR)
-			? extract_fg(term, ColorOf(col), a[col])
+		    fg = (ld->attribs[col] & FG_COLOR)
+			? extract_fg(xw, ColorOf(ld, col), ld->attribs[col])
 			: NO_COLOR;
-		    bg = (a[col] & BG_COLOR)
-			? extract_bg(term, ColorOf(col), a[col])
+		    bg = (ld->attribs[col] & BG_COLOR)
+			? extract_bg(xw, ColorOf(ld, col), ld->attribs[col])
 			: NO_COLOR;
 		}
 	    }
 #endif
-	    if ((((a[col] & SGR_MASK) != attr)
+	    if ((((ld->attribs[col] & SGR_MASK) != attr)
 #if OPT_PRINT_COLORS
 		 || (last_fg != fg) || (last_bg != bg)
 #endif
 		)
 		&& ch) {
-		attr = CharOf(a[col] & SGR_MASK);
+		attr = CharOf(ld->attribs[col] & SGR_MASK);
 		last_fg = fg;
 		last_bg = bg;
 		if (screen->print_attributes)
-		    send_SGR(attr, fg, bg);
+		    send_SGR(xw, attr, fg, bg);
 	    }
 
 	    if (ch == 0)
@@ -211,7 +201,8 @@ printLine(int row, unsigned chr)
 		cs = (ch >= ' ' && ch != ANSI_DEL) ? CSET_IN : CSET_OUT;
 	    if (last_cs != cs) {
 		if (screen->print_attributes) {
-		    charToPrinter((unsigned) ((cs == CSET_OUT)
+		    charToPrinter(xw,
+				  (unsigned) ((cs == CSET_OUT)
 					      ? SHIFT_OUT
 					      : SHIFT_IN));
 		}
@@ -223,34 +214,38 @@ printLine(int row, unsigned chr)
 	     * corresponding charset information is not encoded
 	     * into the CSETS array.
 	     */
-	    charToPrinter(((cs == CSET_OUT)
+	    charToPrinter(xw,
+			  ((cs == CSET_OUT)
 			   ? (ch == ANSI_DEL ? 0x5f : (ch + 0x5f))
 			   : ch));
 	    if_OPT_WIDE_CHARS(screen, {
-		int off;
-		for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-		    if ((ch = XTERM_CELLC(row, col, off)) == 0)
+		size_t off;
+		for_each_combData(off, ld) {
+		    ch = XTERM_CELLC(row, col, off);
+		    if (ch == 0)
 			break;
-		    charToPrinter(ch);
+		    charToPrinter(xw, ch);
 		}
 	    });
 	}
 	if (screen->print_attributes) {
-	    send_SGR(0, NO_COLOR, NO_COLOR);
+	    send_SGR(xw, 0, NO_COLOR, NO_COLOR);
 	    if (cs != CSET_IN)
-		charToPrinter(SHIFT_IN);
+		charToPrinter(xw, SHIFT_IN);
 	}
     }
     if (screen->print_attributes)
-	charToPrinter('\r');
-    charToPrinter(chr);
+	charToPrinter(xw, '\r');
+    charToPrinter(xw, chr);
+
+    return;
 }
 
 void
-xtermPrintScreen(Bool use_DECPEX)
+xtermPrintScreen(XtermWidget xw, Bool use_DECPEX)
 {
-    if (XtIsRealized((Widget) term)) {
-	TScreen *screen = TScreenOf(term);
+    if (XtIsRealized((Widget) xw)) {
+	TScreen *screen = TScreenOf(xw);
 	Bool extent = (use_DECPEX && screen->printer_extent);
 	int top = extent ? 0 : screen->top_marg;
 	int bot = extent ? screen->max_row : screen->bot_marg;
@@ -259,12 +254,12 @@ xtermPrintScreen(Bool use_DECPEX)
 	TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot));
 
 	while (top <= bot)
-	    printLine(top++, '\n');
+	    printLine(xw, top++, '\n');
 	if (screen->printer_formfeed)
-	    charToPrinter('\f');
+	    charToPrinter(xw, '\f');
 
 	if (!was_open || screen->printer_autoclose) {
-	    closePrinter();
+	    closePrinter(xw);
 	}
     } else {
 	Bell(XkbBI_MinorError, 0);
@@ -276,36 +271,35 @@ xtermPrintScreen(Bool use_DECPEX)
  * the normal screen plus all scrolled-back lines.  The distinction is made
  * because the normal screen's buffer is part of the overall scrollback buffer.
  */
-static void
-xtermPrintEverything(void)
+void
+xtermPrintEverything(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
     int top = 0;
     int bot = screen->max_row;
     int was_open = initialized;
 
-    if (!screen->altbuf)
+    if (!screen->whichBuf)
 	top = -screen->savedlines;
 
     TRACE(("xtermPrintEverything, rows %d..%d\n", top, bot));
     while (top <= bot)
-	printLine(top++, '\n');
+	printLine(xw, top++, '\n');
     if (screen->printer_formfeed)
-	charToPrinter('\f');
+	charToPrinter(xw, '\f');
 
     if (!was_open || screen->printer_autoclose) {
-	closePrinter();
+	closePrinter(xw);
     }
 }
 
 static void
-send_CharSet(int row)
+send_CharSet(XtermWidget xw, LineData * ld)
 {
 #if OPT_DEC_CHRSET
-    TScreen *screen = TScreenOf(term);
     char *msg = 0;
 
-    switch (SCRN_BUF_CSETS(screen, row)[0]) {
+    switch (GetLineDblCS(ld)) {
     case CSET_SWL:
 	msg = "\033#5";
 	break;
@@ -320,14 +314,15 @@ send_CharSet(int row)
 	break;
     }
     if (msg != 0)
-	stringToPrinter(msg);
+	stringToPrinter(xw, msg);
 #else
-    (void) row;
+    (void) xw;
+    (void) ld;
 #endif /* OPT_DEC_CHRSET */
 }
 
 static void
-send_SGR(unsigned attr, unsigned fg, unsigned bg)
+send_SGR(XtermWidget xw, unsigned attr, unsigned fg, unsigned bg)
 {
     char msg[80];
     strcpy(msg, "\033[0");
@@ -345,7 +340,7 @@ send_SGR(unsigned attr, unsigned fg, unsigned bg)
     }
     if (fg != NO_COLOR) {
 #if OPT_PC_COLORS
-	if (term->screen.boldColors
+	if (xw->screen.boldColors
 	    && fg > 8
 	    && (attr & BOLD) != 0)
 	    fg -= 8;
@@ -357,18 +352,18 @@ send_SGR(unsigned attr, unsigned fg, unsigned bg)
     (void) fg;
 #endif
     strcat(msg, "m");
-    stringToPrinter(msg);
+    stringToPrinter(xw, msg);
 }
 
 /*
  * This implementation only knows how to write to a pipe.
  */
 static void
-charToPrinter(unsigned chr)
+charToPrinter(XtermWidget xw, unsigned chr)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
 
-    if (!initialized && xtermHasPrinter()) {
+    if (!initialized && xtermHasPrinter(xw)) {
 #if defined(VMS)
 	/*
 	 * This implementation only knows how to write to a file.  When the
@@ -440,10 +435,10 @@ charToPrinter(unsigned chr)
 }
 
 static void
-stringToPrinter(char *str)
+stringToPrinter(XtermWidget xw, char *str)
 {
     while (*str)
-	charToPrinter(CharOf(*str++));
+	charToPrinter(xw, CharOf(*str++));
 }
 
 /*
@@ -453,39 +448,39 @@ stringToPrinter(char *str)
  * Corp., March 1987).
  */
 void
-xtermMediaControl(int param, int private_seq)
+xtermMediaControl(XtermWidget xw, int param, int private_seq)
 {
     TRACE(("MediaCopy param=%d, private=%d\n", param, private_seq));
 
     if (private_seq) {
 	switch (param) {
 	case 1:
-	    printCursorLine();
+	    printCursorLine(xw);
 	    break;
 	case 4:
-	    setPrinterControlMode(0);
+	    setPrinterControlMode(xw, 0);
 	    break;
 	case 5:
-	    setPrinterControlMode(1);
+	    setPrinterControlMode(xw, 1);
 	    break;
 	case 10:		/* VT320 */
-	    xtermPrintScreen(False);
+	    xtermPrintScreen(xw, False);
 	    break;
 	case 11:		/* VT320 */
-	    xtermPrintEverything();
+	    xtermPrintEverything(xw);
 	    break;
 	}
     } else {
 	switch (param) {
 	case -1:
 	case 0:
-	    xtermPrintScreen(True);
+	    xtermPrintScreen(xw, True);
 	    break;
 	case 4:
-	    setPrinterControlMode(0);
+	    setPrinterControlMode(xw, 0);
 	    break;
 	case 5:
-	    setPrinterControlMode(2);
+	    setPrinterControlMode(xw, 2);
 	    break;
 	}
     }
@@ -498,13 +493,13 @@ xtermMediaControl(int param, int private_seq)
  * or VT) that moved the cursor off the previous line.
  */
 void
-xtermAutoPrint(unsigned chr)
+xtermAutoPrint(XtermWidget xw, unsigned chr)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->printer_controlmode == 1) {
 	TRACE(("AutoPrint %d\n", chr));
-	printLine(screen->cursorp.row, chr);
+	printLine(xw, screen->cursorp.row, chr);
 	if (Printer != 0)
 	    fflush(Printer);
     }
@@ -523,9 +518,9 @@ xtermAutoPrint(unsigned chr)
 #define LB '['
 
 int
-xtermPrinterControl(int chr)
+xtermPrinterControl(XtermWidget xw, int chr)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
     /* *INDENT-OFF* */
     static struct {
 	Char seq[5];
@@ -562,10 +557,10 @@ xtermPrinterControl(int chr)
 
 	    if (length == len
 		&& Strcmp(bfr, tbl[n].seq) == 0) {
-		setPrinterControlMode(tbl[n].active);
+		setPrinterControlMode(xw, tbl[n].active);
 		if (screen->printer_autoclose
 		    && screen->printer_controlmode == 0)
-		    closePrinter();
+		    closePrinter(xw);
 		length = 0;
 		return 0;
 	    } else if (len > length
@@ -579,7 +574,7 @@ xtermPrinterControl(int chr)
 
     default:
 	for (n = 0; n < length; n++)
-	    charToPrinter(bfr[n]);
+	    charToPrinter(xw, bfr[n]);
 	bfr[0] = CharOf(chr);
 	length = 1;
 	return 0;
@@ -590,9 +585,9 @@ xtermPrinterControl(int chr)
  * If there is no printer command, we will ignore printer controls.
  */
 Bool
-xtermHasPrinter(void)
+xtermHasPrinter(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
 
     return (strlen(screen->printer_command) != 0);
 }
@@ -605,18 +600,18 @@ xtermHasPrinter(void)
 		    : "printer controller"))
 
 void
-setPrinterControlMode(int mode)
+setPrinterControlMode(XtermWidget xw, int mode)
 {
-    if (xtermHasPrinter()
-	&& term->screen.printer_controlmode != mode) {
+    if (xtermHasPrinter(xw)
+	&& xw->screen.printer_controlmode != mode) {
 	TRACE(("%s %s mode\n",
 	       (mode
 		? "set"
 		: "reset"),
 	       (mode
 		? showPrinterControlMode(mode)
-		: showPrinterControlMode(term->screen.printer_controlmode))));
-	term->screen.printer_controlmode = mode;
+		: showPrinterControlMode(xw->screen.printer_controlmode))));
+	xw->screen.printer_controlmode = mode;
 	update_print_redir();
     }
 }

@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.45 2009/03/19 23:47:59 tom Exp $ */
+/* $XTermId: trace.h,v 1.47 2009/06/17 09:24:31 tom Exp $ */
 
 /************************************************************
 
@@ -47,12 +47,13 @@ extern	void	Trace ( const char *, ... )
 #define TRACE2(p) Trace p
 #endif
 
-extern  const char * visibleChrsetName(int /* chrset */);
-extern	char *	visibleChars (PAIRED_CHARS(Char * /* buf */, Char * /* buf2 */), unsigned /* len */);
+extern	char *	visibleChars (Char * /* buf */, unsigned /* len */);
 extern	char *	visibleIChar (IChar *, unsigned);
+extern	char *	visibleIChars (IChar * /* buf */, unsigned /* len */);
 extern	const char * visibleEventType (int);
 extern	const char * visibleSelectionTarget(Display * /* d */, Atom /* a */);
 extern	const char * visibleXError (int /* code */);
+extern  const char * visibleChrsetName(unsigned /* chrset */);
 
 extern	void	TraceArgv(const char * /* tag */, char ** /* argv */);
 #undef  TRACE_ARGV

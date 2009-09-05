@@ -1,5 +1,4 @@
-! $XTermId: XTerm-col.ad,v 1.20 2006/06/24 14:57:29 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.7 2005/09/18 23:48:12 dickey Exp $
+! $XTermId: XTerm-col.ad,v 1.21 2009/08/15 15:56:29 tom Exp $
 
 #include "XTerm"
 
@@ -20,7 +19,7 @@
 ! leave the foreground/background colors alone (at the mercy of your desktop
 ! designer).
 
-! Color the popup/pulldown menu border to match the text widget's foreground.
+! Color the popup/pulldown menu border to match the text widget foreground.
 !*SimpleMenu*borderColor: gray15
 
 ! Uncomment this to use color for underline attribute

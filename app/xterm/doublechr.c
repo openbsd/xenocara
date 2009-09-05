@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.64 2009/02/12 01:23:54 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.72 2009/08/07 00:25:02 tom Exp $ */
 
 /************************************************************
 
@@ -45,58 +45,58 @@ authorization.
  * controls apply to a whole line).  However, it's easier to maintain the
  * information for special fonts by writing to all cells.
  */
-#define curChrSet SCRN_BUF_CSETS(screen, screen->cur_row)[0]
-
 #if OPT_DEC_CHRSET
 
 static void
 repaint_line(XtermWidget xw, unsigned newChrSet)
 {
-    register TScreen *screen = &xw->screen;
+    TScreen *screen = &xw->screen;
+    LineData *ld;
     int curcol = screen->cur_col;
     int currow = screen->cur_row;
     int width = MaxCols(screen);
     unsigned len = (unsigned) width;
-    unsigned oldChrSet = SCRN_BUF_CSETS(screen, currow)[0];
 
     assert(width > 0);
 
     /*
      * Ignore repetition.
      */
-    if (oldChrSet == newChrSet)
-	return;
+    if ((ld = getLineData(screen, currow)) != 0) {
+	unsigned oldChrSet = GetLineDblCS(ld);
 
-    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
-	   visibleChrsetName(oldChrSet),
-	   visibleChrsetName(newChrSet)));
-    HideCursor();
+	if (oldChrSet != newChrSet) {
+	    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
+		   visibleChrsetName(oldChrSet),
+		   visibleChrsetName(newChrSet)));
+	    HideCursor();
 
-    /* If switching from single-width, keep the cursor in the visible part
-     * of the line.
-     */
-    if (CSET_DOUBLE(newChrSet)) {
-	width /= 2;
-	if (curcol > width)
-	    curcol = width;
+	    /* If switching from single-width, keep the cursor in the visible part
+	     * of the line.
+	     */
+	    if (CSET_DOUBLE(newChrSet)) {
+		width /= 2;
+		if (curcol > width)
+		    curcol = width;
+	    }
+
+	    /*
+	     * ScrnRefresh won't paint blanks for us if we're switching between a
+	     * single-size and double-size font.  So we paint our own.
+	     */
+	    ClearCurBackground(xw,
+			       CursorY(screen, currow),
+			       LineCursorX(screen, ld, 0),
+			       (unsigned) FontHeight(screen),
+			       len * (unsigned) LineFontWidth(screen, ld));
+
+	    SetLineDblCS(ld, newChrSet);
+
+	    set_cur_col(screen, 0);
+	    ScrnUpdate(xw, currow, 0, 1, (int) len, True);
+	    set_cur_col(screen, curcol);
+	}
     }
-
-    /*
-     * ScrnRefresh won't paint blanks for us if we're switching between a
-     * single-size and double-size font.  So we paint our own.
-     */
-    ClearCurBackground(xw,
-		       CursorY(screen, currow),
-		       CurCursorX(screen, currow, 0),
-		       (unsigned) FontHeight(screen),
-		       len * (unsigned) CurFontWidth(screen, currow));
-
-    /* FIXME: do VT220 softchars allow double-sizes? */
-    memset(SCRN_BUF_CSETS(screen, currow), (Char) newChrSet, len);
-
-    set_cur_col(screen, 0);
-    ScrnUpdate(xw, currow, 0, 1, (int) len, True);
-    set_cur_col(screen, curcol);
 }
 #endif
 

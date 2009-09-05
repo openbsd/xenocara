@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.410 2009/03/28 17:33:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.425 2009/08/07 23:18:31 tom Exp $ */
 
 /*
  *
@@ -572,7 +572,7 @@ HandleStringEvent(Widget w GCC_UNUSED,
 	    Char hexval[2];
 	    hexval[0] = (Char) value;
 	    hexval[1] = 0;
-	    StringInput(term, hexval, 1);
+	    StringInput(term, hexval, (size_t) 1);
 	}
     } else {
 	StringInput(term, (Char *) * params, strlen(*params));
@@ -979,48 +979,62 @@ WMFrameWindow(XtermWidget termw)
 #define MAXWLEN 1024		/* maximum word length as in tcsh */
 
 static int
-dabbrev_prev_char(int *xp, int *yp, TScreen * screen)
+dabbrev_prev_char(TScreen * screen, CELL * cell, LineData ** ld)
 {
-    Char *linep;
+    int result = -1;
+    int firstLine = -(screen->savedlines);
 
-    while (*yp >= 0) {
-	linep = BUF_CHARS(screen->allbuf, *yp);
-	if (--*xp >= 0)
-	    return linep[*xp];
-	if (--*yp < 0)		/* go to previous line */
+    *ld = getLineData(screen, cell->row);
+    while (cell->row >= firstLine) {
+	if (--(cell->col) >= 0) {
+	    result = (int) (*ld)->charData[cell->col];
 	    break;
-	*xp = MaxCols(screen);
-	if (!((long) BUF_FLAGS(screen->allbuf, *yp) & LINEWRAPPED))
-	    return ' ';		/* treat lines as separate */
+	}
+	if (--(cell->row) < firstLine)
+	    break;		/* ...there is no previous line */
+	*ld = getLineData(screen, cell->row);
+	cell->col = MaxCols(screen);
+	if (!LineTstWrapped(*ld)) {
+	    result = ' ';	/* treat lines as separate */
+	    break;
+	}
     }
-    return -1;
+    return result;
 }
 
 static char *
-dabbrev_prev_word(int *xp, int *yp, TScreen * screen)
+dabbrev_prev_word(TScreen * screen, CELL * cell, LineData ** ld)
 {
     static char ab[MAXWLEN];
+
     char *abword;
     int c;
+    char *ab_end = (ab + MAXWLEN - 1);
+    char *result = 0;
 
-    abword = ab + MAXWLEN - 1;
+    abword = ab_end;
     *abword = '\0';		/* end of string marker */
 
-    while ((c = dabbrev_prev_char(xp, yp, screen)) >= 0 &&
-	   IS_WORD_CONSTITUENT(c))
+    while ((c = dabbrev_prev_char(screen, cell, ld)) >= 0 &&
+	   IS_WORD_CONSTITUENT(c)) {
 	if (abword > ab)	/* store only |MAXWLEN| last chars */
 	    *(--abword) = (char) c;
-    if (c < 0) {
-	if (abword < ab + MAXWLEN - 1)
-	    return abword;
-	else
-	    return 0;
     }
 
-    while ((c = dabbrev_prev_char(xp, yp, screen)) >= 0 &&
-	   !IS_WORD_CONSTITUENT(c)) ;	/* skip preceding spaces */
-    (*xp)++;			/* can be | > screen->max_col| */
-    return abword;
+    if (c >= 0) {
+	result = abword;
+    } else if (abword != ab_end) {
+	result = abword;
+    }
+
+    if (result != 0) {
+	while ((c = dabbrev_prev_char(screen, cell, ld)) >= 0 &&
+	       !IS_WORD_CONSTITUENT(c)) {
+	    ;			/* skip preceding spaces */
+	}
+	(cell->col)++;		/* can be | > screen->max_col| */
+    }
+    return result;
 }
 
 static int
@@ -1028,7 +1042,7 @@ dabbrev_expand(TScreen * screen)
 {
     int pty = screen->respond;	/* file descriptor of pty */
 
-    static int x, y;
+    static CELL cell;
     static char *dabbrev_hint = 0, *lastexpansion = 0;
     static unsigned int expansions;
 
@@ -1037,33 +1051,48 @@ dabbrev_expand(TScreen * screen)
     size_t hint_len;
     unsigned del_cnt;
     unsigned buf_cnt;
+    int result = 0;
+    LineData *ld;
 
     if (!screen->dabbrev_working) {	/* initialize */
 	expansions = 0;
-	x = screen->cur_col;
-	y = screen->cur_row + screen->savelines;
+	cell.col = screen->cur_col;
+	cell.row = screen->cur_row;
 
-	free(dabbrev_hint);	/* free(NULL) is OK */
-	dabbrev_hint = dabbrev_prev_word(&x, &y, screen);
-	if (!dabbrev_hint)
-	    return 0;		/* no preceding word? */
-	free(lastexpansion);
-	if (!(lastexpansion = strdup(dabbrev_hint)))	/* make own copy */
-	    return 0;
-	if (!(dabbrev_hint = strdup(dabbrev_hint))) {
-	    free(lastexpansion);
-	    return 0;
+	if (dabbrev_hint != 0)
+	    free(dabbrev_hint);
+
+	if ((dabbrev_hint = dabbrev_prev_word(screen, &cell, &ld)) != 0) {
+
+	    if (lastexpansion != 0)
+		free(lastexpansion);
+
+	    if ((lastexpansion = strdup(dabbrev_hint)) != 0) {
+
+		/* make own copy */
+		if ((dabbrev_hint = strdup(dabbrev_hint)) != 0) {
+		    screen->dabbrev_working = True;
+		    /* we are in the middle of dabbrev process */
+		}
+	    }
 	}
-	screen->dabbrev_working = 1;	/* we are in the middle of dabbrev process */
+	if (!screen->dabbrev_working) {
+	    if (lastexpansion != 0) {
+		free(lastexpansion);
+		lastexpansion = 0;
+	    }
+	    return result;
+	}
+    } else {
     }
 
     hint_len = strlen(dabbrev_hint);
     for (;;) {
-	if (!(expansion = dabbrev_prev_word(&x, &y, screen))) {
+	if ((expansion = dabbrev_prev_word(screen, &cell, &ld)) == 0) {
 	    if (expansions >= 2) {
 		expansions = 0;
-		x = screen->cur_col;
-		y = screen->cur_row + screen->savelines;
+		cell.col = screen->cur_col;
+		cell.row = screen->cur_row;
 		continue;
 	    }
 	    break;
@@ -1073,27 +1102,32 @@ dabbrev_expand(TScreen * screen)
 	    strcmp(expansion, lastexpansion))	/* different from previous */
 	    break;
     }
-    if (!expansion)		/* no expansion found */
-	return 0;
 
-    del_cnt = strlen(lastexpansion) - hint_len;
-    buf_cnt = del_cnt + strlen(expansion) - hint_len;
-    if (!(copybuffer = TypeMallocN(Char, buf_cnt)))
-	return 0;
-    memset(copybuffer, screen->dabbrev_erase_char, del_cnt);	/* delete previous expansion */
-    memmove(copybuffer + del_cnt,
-	    expansion + hint_len,
-	    strlen(expansion) - hint_len);
-    v_write(pty, copybuffer, buf_cnt);
-    screen->dabbrev_working = 1;	/* v_write() just set it to 1 */
-    free(copybuffer);
+    if (expansion != 0) {
+	del_cnt = strlen(lastexpansion) - hint_len;
+	buf_cnt = del_cnt + strlen(expansion) - hint_len;
 
-    free(lastexpansion);
-    lastexpansion = strdup(expansion);
-    if (!lastexpansion)
-	return 0;
-    expansions++;
-    return 1;
+	if ((copybuffer = TypeMallocN(Char, buf_cnt)) != 0) {
+	    /* delete previous expansion */
+	    memset(copybuffer, screen->dabbrev_erase_char, del_cnt);
+	    memmove(copybuffer + del_cnt,
+		    expansion + hint_len,
+		    strlen(expansion) - hint_len);
+	    v_write(pty, copybuffer, buf_cnt);
+	    /* v_write() just reset our flag */
+	    screen->dabbrev_working = True;
+	    free(copybuffer);
+
+	    free(lastexpansion);
+
+	    if ((lastexpansion = strdup(expansion)) != 0) {
+		result = 1;
+		expansions++;
+	    }
+	}
+    }
+
+    return result;
 }
 
 /*ARGSUSED*/
@@ -1780,10 +1814,10 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
     cmap_size = getColormapSize(dpy);
     if (cmap_size != 0) {
 
-	colortable = TypeMallocN(XColor, cmap_size);
+	colortable = TypeMallocN(XColor, (size_t) cmap_size);
 	if (colortable != 0) {
 
-	    tried = TypeCallocN(char, cmap_size);
+	    tried = TypeCallocN(char, (size_t) cmap_size);
 	    if (tried != 0) {
 
 		for (i = 0; i < cmap_size; i++) {
@@ -2693,9 +2727,9 @@ parse_decdld(ANSI * params, char *string)
 	ch = CharOf(*string++);
 	if (ch >= ANSI_SPA && ch <= 0x2f) {
 	    if (len < 2)
-		DscsName[len++] = ch;
+		DscsName[len++] = (char) ch;
 	} else if (ch >= 0x30 && ch <= 0x7e) {
-	    DscsName[len++] = ch;
+	    DscsName[len++] = (char) ch;
 	    break;
 	}
     }
@@ -2724,9 +2758,9 @@ parse_decdld(ANSI * params, char *string)
 	if (ch >= 0x3f && ch <= 0x7e) {
 	    int n;
 
-	    ch -= 0x3f;
+	    ch = CharOf(ch - 0x3f);
 	    for (n = 0; n < 6; ++n) {
-		bits[row + n][col] = (ch & (1 << n)) ? '*' : '.';
+		bits[row + n][col] = CharOf((ch & (1 << n)) ? '*' : '.');
 	    }
 	    col += 1;
 	    prior = True;
@@ -2759,8 +2793,9 @@ parse_ansi_params(ANSI * params, char **string)
 
 	if (isdigit(ch)) {
 	    if (nparam < NPARAM) {
-		params->a_param[nparam] *= 10;
-		params->a_param[nparam] += (ch - '0');
+		params->a_param[nparam] =
+		    (ParmType) ((params->a_param[nparam] * 10)
+				+ (ch - '0'));
 	    }
 	} else if (ch == ';') {
 	    if (++nparam < NPARAM)
@@ -2827,7 +2862,8 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		    strcat(reply, ";7");
 		if (xw->flags & INVISIBLE)
 		    strcat(reply, ";8");
-		if_OPT_EXT_COLORS(screen, {
+#if OPT_256_COLORS || OPT_88_COLORS
+		if_OPT_ISO_COLORS(screen, {
 		    if (xw->flags & FG_COLOR) {
 			if (xw->cur_foreground >= 16)
 			    sprintf(reply + strlen(reply),
@@ -2853,7 +2889,8 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 				    xw->cur_background);
 		    }
 		});
-		if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+#elif OPT_ISO_COLORS
+		if_OPT_ISO_COLORS(screen, {
 		    if (xw->flags & FG_COLOR)
 			sprintf(reply + strlen(reply),
 				";%d%d",
@@ -2869,6 +2906,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 				xw->cur_background - 8 :
 				xw->cur_background);
 		});
+#endif
 		strcat(reply, "m");
 	    } else
 		okay = False;
@@ -3007,7 +3045,7 @@ ChangeGroup(XtermWidget xw, String attribute, char *value)
     for (cp = c1; *cp != 0; ++cp) {
 	Char *c2 = cp;
 	if (!xtermIsPrintable(screen, &cp, c1 + limit)) {
-	    memset(c2, '?', (unsigned) (cp + 1 - c2));
+	    memset(c2, '?', (size_t) (cp + 1 - c2));
 	}
     }
 
@@ -3275,11 +3313,7 @@ SysReasonMsg(int code)
 	{ ERROR_XIOERROR,	"xioerror: X I/O error" },
 	{ ERROR_SCALLOC,	"Alloc: calloc() failed on base" },
 	{ ERROR_SCALLOC2,	"Alloc: calloc() failed on rows" },
-	{ ERROR_SREALLOC,	"ScreenResize: realloc() failed on alt base" },
-	{ ERROR_RESIZE,		"ScreenResize: malloc() or realloc() failed" },
 	{ ERROR_SAVE_PTR,	"ScrnPointers: malloc/realloc() failed" },
-	{ ERROR_SBRALLOC,	"ScrollBarOn: realloc() failed on base" },
-	{ ERROR_SBRALLOC2,	"ScrollBarOn: realloc() failed on rows" },
 	{ ERROR_MMALLOC,	"my_memmove: malloc/realloc failed" },
     };
     /* *INDENT-ON* */
@@ -3554,7 +3588,7 @@ set_vt_visibility(Bool on)
     TRACE(("set_vt_visibility(%d)\n", on));
     if (on) {
 	if (!screen->Vshow && term) {
-	    VTInit();
+	    VTInit(term);
 	    XtMapWidget(XtParent(term));
 #if OPT_TOOLBAR
 	    /* we need both of these during initialization */

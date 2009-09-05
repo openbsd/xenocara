@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.88 2009/02/13 00:14:13 tom Exp $
+! $XTermId: XTerm.ad,v 1.89 2009/08/15 15:58:44 tom Exp $
 
 *scrollBar: true
 *saveLines: 1024
@@ -149,7 +149,7 @@
 !			vt100/VT100
 !			tektronix/TopLevelShell
 !				shellext/VendorShellExt
-!					tek4014/Tek4014 
+!					tek4014/Tek4014
 !
 ! If built without a toolbar, the widget hierarchy is simpler, because there
 ! is no form, and the popup menu widgets are created only when they are first
@@ -164,7 +164,7 @@
 !		vt100/VT100
 !		tektronix/TopLevelShell
 !			shellext/VendorShellExt
-!				tek4014/Tek4014 
+!				tek4014/Tek4014
 !
 ! A more complete list of the widget/class names can be obtained using editres
 ! to dump a file.  Some widget names are not available until the corresponding
@@ -194,7 +194,7 @@
 ! Alternatively,
 !*on2Clicks: regex [[:alpha:]]+://([[:alnum:]!#+,./=?@_~-]|(%[[:xdigit:]][[:xdigit:]]))+
 
-! vt100's and similar terminals recognize escape sequences and control
+! VT100s and similar terminals recognize escape sequences and control
 ! characters to which they reply to the host with other escape sequences,
 ! to provide information.  The "resize" program uses this feature.
 !

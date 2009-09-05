@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.107 2008/12/30 17:07:56 tom Exp $ */
+/* $XTermId: resize.c,v 1.108 2009/05/31 14:00:16 tom Exp $ */
 
 /*
- * Copyright 2003-2007,2008 by Thomas E. Dickey
+ * Copyright 2003-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -91,10 +91,6 @@
 extern struct passwd *getpwuid();	/* does ANYBODY need this? */
 #endif /* SYSV && i386 */
 #endif /* X_NOT_POSIX */
-
-#ifndef bzero
-#define	bzero(s, n)	memset(s, 0, n)
-#endif
 
 #ifdef __MVS__
 #define ESCAPE(string) "\047" string
@@ -523,7 +519,7 @@ readstring(FILE *fp, char *buf, char *str)
 #if defined(USG) || defined(__UNIXOS2__)
     alarm(TIMEOUT);
 #else
-    bzero((char *) &it, sizeof(struct itimerval));
+    memset((char *) &it, 0, sizeof(struct itimerval));
     it.it_value.tv_sec = TIMEOUT;
     setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
 #endif
@@ -545,7 +541,7 @@ readstring(FILE *fp, char *buf, char *str)
 #if defined(USG) || defined(__UNIXOS2__)
     alarm(0);
 #else
-    bzero((char *) &it, sizeof(struct itimerval));
+    memset((char *) &it, 0, sizeof(struct itimerval));
     setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
 #endif
     *buf = 0;

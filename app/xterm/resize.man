@@ -1,8 +1,15 @@
-.\" $XTermId: resize.man,v 1.16 2007/05/24 21:44:06 tom Exp $
+.\" $XTermId: resize.man,v 1.17 2009/04/11 17:43:39 tom Exp $
 .\"
-.\" updated by Thomas E. Dickey for XFree86, 1998-2002.
+.\" updated by Thomas E. Dickey for XFree86, 1998-2006.
 .\"
 .\" $XFree86: xc/programs/xterm/resize.man,v 1.12 2006/02/13 01:14:59 dickey Exp $
+.\" Escape single quotes in literal strings from groff's Unicode transform.
+.ie \n(.g .ds AQ \(aq
+.el       .ds AQ '
+.ie \n(.g .ds `` \(lq
+.el       .ds `` ``
+.ie \n(.g .ds '' \(rq
+.el       .ds '' ''
 .TH RESIZE 1 __vendorversion__
 .SH NAME
 resize \- set TERMCAP and terminal settings to current xterm window size
@@ -20,7 +27,7 @@ known as \fI/bin/csh\fP), the following alias could be defined in the
 user's \fI.cshrc\fP:
 .sp
 .nf
-        %  alias rs 'set noglob; eval \fC`\fPresize\fC`\fP'
+        %  alias rs \*(AQset noglob; eval \fC\`\fPresize\fC\`\fP\*(AQ
 .fi
 .sp
 After resizing the window, the user would type:
@@ -31,8 +38,8 @@ After resizing the window, the user would type:
 .sp
 Users of versions of the Bourne shell (usually known as \fI/bin/sh\fP) that 
 don't have command
-functions will need to send the output to a temporary file and the read it back
-in with the ``.'' command:
+functions will need to send the output to a temporary file and then read it back
+in with the \*(``.\*('' command:
 .sp
 .nf
         $  resize > /tmp/out

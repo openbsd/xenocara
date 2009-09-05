@@ -1,8 +1,4 @@
-/* $XTermId: testxmc.c,v 1.35 2009/01/09 01:40:17 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/testxmc.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
- */
+/* $XTermId: testxmc.c,v 1.44 2009/06/21 15:37:04 tom Exp $ */
 
 /************************************************************
 
@@ -165,7 +161,8 @@ Jump_XMC(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
     if (!screen->move_sgr_ok
-	&& screen->cur_col <= CurMaxCol(screen, screen->cur_row)) {
+	&& screen->cur_col <= LineMaxCol(screen,
+					 getLineData(screen, screen->cur_row))) {
 	Mark_XMC(xw, -1);
     }
 }
@@ -178,6 +175,7 @@ void
 Resolve_XMC(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
+    LineData *ld;
     Bool changed = False;
     Char start;
     Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
@@ -186,32 +184,33 @@ Resolve_XMC(XtermWidget xw)
 
     /* Find the preceding cell.
      */
+    ld = getLineData(screen, row);
     if (XTERM_CELL(row, col) != XMC_GLITCH) {
 	if (col != 0) {
 	    col--;
 	} else if (!screen->xmc_inline && row != 0) {
-	    row--;
-	    col = CurMaxCol(screen, row);
+	    ld = getLineData(screen, --row);
+	    col = LineMaxCol(screen, ld);
 	}
     }
-    start = (SCRN_BUF_ATTRS(screen, row)[col] & my_attrs);
+    start = (ld->attribs[col] & my_attrs);
 
     /* Now propagate the starting state until we reach a cell which holds
      * a glitch.
      */
     for (;;) {
-	if (col < CurMaxCol(screen, row)) {
+	if (col < LineMaxCol(screen, ld)) {
 	    col++;
 	} else if (!screen->xmc_inline && row < screen->max_row) {
-	    row++;
 	    col = 0;
+	    ld = getLineData(screen, ++row);
 	} else
 	    break;
 	if (XTERM_CELL(row, col) == XMC_GLITCH)
 	    break;
-	if ((SCRN_BUF_ATTRS(screen, row)[col] & my_attrs) != start) {
-	    SCRN_BUF_ATTRS(screen, row)[col] =
-		CharOf(start | (SCRN_BUF_ATTRS(screen, row)[col] & ~my_attrs));
+	if ((ld->attribs[col] & my_attrs) != start) {
+	    ld->attribs[col] =
+		CharOf(start | (ld->attribs[col] & ~my_attrs));
 	    changed = True;
 	}
     }

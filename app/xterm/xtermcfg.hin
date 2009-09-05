@@ -1,12 +1,8 @@
-/* $XTermId: xtermcfg.hin,v 1.171 2008/07/27 15:17:07 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
- */
+/* $XTermId: xtermcfg.hin,v 1.178 2009/08/09 17:23:19 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2007,2008 by Thomas E. Dickey
+Copyright 1997-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -108,6 +104,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_DEC_LOCATOR		/* CF_ARG_ENABLE(dec-locator) */
 #undef OPT_DEC_RECTOPS		/* CF_ARG_ENABLE(rectangles) */
 #undef OPT_EXEC_XTERM		/* CF_ARG_ENABLE(exec-xterm) */
+#undef OPT_FIFO_LINES		/* CF_ARG_ENABLE(fifo-lines) */
 #undef OPT_HIGHLIGHT_COLOR	/* CF_ARG_DISABLE(highlighting) */
 #undef OPT_HP_FUNC_KEYS		/* CF_ARG_ENABLE(hp-fkeys) */
 #undef OPT_I18N_SUPPORT		/* CF_ARG_DISABLE(i18n) */
@@ -133,6 +130,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_TEK4014		/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TOOLBAR		/* CF_ARG_ENABLE(toolbar) */
 #undef OPT_VT52_MODE		/* CF_ARG_DISABLE(vt52) */
+#undef OPT_WIDER_ICHAR		/* CF_ARG_ENABLE(16bit-chars) */
 #undef OPT_WIDE_CHARS		/* CF_ARG_OPTION(wide-chars) */
 #undef OPT_XMC_GLITCH		/* CF_ARG_ENABLE(xmc-glitch) */
 #undef OPT_ZICONBEEP		/* CF_ARG_DISABLE(ziconbeep) */
@@ -192,7 +190,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifdef USE_MY_MEMMOVE
 #define memmove(d,s,n) my_memmove(d,s,n)
-extern char * my_memmove(char * s1, char * s2, size_t n);
+extern void * my_memmove(void * s1, void * s2, size_t n);
 #endif
 
 #ifndef HAVE_STRERROR

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.246 2008/12/30 11:30:48 tom Exp $
+dnl $XTermId: configure.in,v 1.252 2009/08/13 19:41:01 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -565,6 +565,16 @@ if test "$enable_sun_fkeys" = no ; then
 	AC_DEFINE(OPT_SUN_FUNC_KEYS,0)
 fi
 
+AC_MSG_CHECKING(if you want saved-lines stored as a FIFO)
+CF_ARG_DISABLE(fifo-lines,
+	[  --enable-fifo-lines     disable FIFO-storage for saved-lines],
+	[enable_fifo_lines=no],
+	[enable_fifo_lines=yes])
+AC_MSG_RESULT($enable_fifo_lines)
+if test "$enable_fifo_lines" = yes ; then
+	AC_DEFINE(OPT_FIFO_LINES,1)
+fi
+
 AC_MSG_CHECKING(if you want support for internationalization)
 CF_ARG_DISABLE(i18n,
 	[  --disable-i18n          disable internationalization],
@@ -797,6 +807,19 @@ CF_ARG_OPTION(wide-chars,
 	[enable_wchar=$enable_luit],
 	[$enable_luit])
 AC_MSG_RESULT($enable_wchar)
+
+AC_MSG_CHECKING(if you want only 16-bit character support)
+CF_ARG_ENABLE(16bit-chars,
+	[  --enable-16bit-chars    enable 16-bit character support],
+	[enable_16bit_chars=yes],
+	[enable_16bit_chars=no])
+AC_MSG_RESULT($enable_16bit_chars)
+
+if test "$enable_16bit_chars" = yes ; then
+	AC_DEFINE(OPT_WIDER_ICHAR,0)
+	enable_wchar=yes
+fi
+
 if test "$enable_wchar" = yes ; then
 	AC_DEFINE(OPT_WIDE_CHARS,1)
 	EXTRAHDRS="$EXTRAHDRS charclass.h precompose.h wcwidth.h"

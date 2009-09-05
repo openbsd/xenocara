@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.118 2008/12/30 11:43:45 tom Exp $
+-- $XTermId: INSTALL,v 1.121 2009/08/06 00:39:09 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2007,2008 by Thomas E. Dickey
 --
@@ -145,6 +145,12 @@ The options (in alphabetic order):
   	Modify the generated Makefile so that most compiler options are
 	not shown.  This makes it simpler to read a build log and see the
 	actual warning messages.
+
+  --disable-fifo-lines    enable FIFO-storage for saved-lines
+
+	With patch #244, xterm by default stores saved-lines in a FIFO
+	(circular buffer), which improves performance when the number of saved
+	lines is large.  Disable this option to revert to the pre-244 layout.
 
   --disable-freetype      disable freetype library-support
 
@@ -310,6 +316,13 @@ The options (in alphabetic order):
 
 	Do not compile-in code that modifies the icon's title and sounds a
 	beep when they receive output.
+
+  --enable-16bit-chars    enable 16-bit characters support
+
+	Enable wide-character support, but store only 16-bits for each wide
+	character.  Unicode values can be larger than 16-bits, up to 21-bits.
+	This uses less memory, but is less complete.  However, most languages
+	are covered by the 16-bit encoding.
 
   --enable-256-color      enable 256-color support
 

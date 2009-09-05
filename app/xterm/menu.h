@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.113 2009/02/13 19:55:26 tom Exp $ */
+/* $XTermId: menu.h,v 1.114 2009/05/02 14:35:39 Ovidiu.Gheorghioiu Exp $ */
 
 /*
 
@@ -102,6 +102,7 @@ extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintControlMode PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintEverything  PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleRenderFont       PROTO_XT_ACTIONS_ARGS;

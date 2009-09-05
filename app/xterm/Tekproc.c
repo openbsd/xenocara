@@ -1,9 +1,8 @@
-/* $XTermId: Tekproc.c,v 1.167 2009/03/28 17:03:35 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.172 2009/08/09 17:22:34 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.57 2006/02/13 01:14:57 dickey Exp $ */
 
 /*
 
@@ -596,7 +595,7 @@ Tekparse(TekWidget tw)
 
 	case CASE_CHAR_SIZE:
 	    TRACE(("case: character size selector\n"));
-	    TekSetFontSize(tw, (int) (c & 03));
+	    TekSetFontSize(tw, False, (int) (c & 03));
 	    Tparsestate = curstate;
 	    break;
 
@@ -795,7 +794,7 @@ Tinput(TekWidget tw)
 	    tekRefreshList = tek;
 	    rptr = tek->data;
 	    rcnt = tek->count - 1;
-	    TekSetFontSize(tw, tek->fontsize);
+	    TekSetFontSize(tw, False, tek->fontsize);
 	    return (IChar) (*rptr++);
 	}
 	tekRefreshList = (TekLink *) 0;
@@ -940,7 +939,7 @@ TekExpose(Widget w,
 	tekscr->cur_X = 0;
 	tekscr->cur_Y = TEKHOME;
 	tekscr->cur = tekscr->page;
-	TekSetFontSize(tw, tekscr->cur.fontsize);
+	TekSetFontSize(tw, False, tekscr->cur.fontsize);
 	tekscr->margin = MARGIN1;
 	if (tekscr->TekGIN) {
 	    tekscr->TekGIN = NULL;
@@ -1394,9 +1393,10 @@ TekRealize(Widget gw,
     int border = 2 * screen->border;
     int pr;
     XGCValues gcv;
-    int winX, winY, width, height;
+    int winX, winY;
+    unsigned width, height;
     char Tdefault[32];
-    unsigned TEKgcFontMask;
+    unsigned long TEKgcFontMask;
 
     TRACE(("TekRealize\n"));
     memset(tekscr, 0, sizeof(tekscr));
@@ -1442,22 +1442,22 @@ TekRealize(Widget gw,
 
     winX = 1;
     winY = 1;
-    width = TEKDEFWIDTH + border;
-    height = TEKDEFHEIGHT + border;
+    width = (unsigned) (TEKDEFWIDTH + border);
+    height = (unsigned) (TEKDEFHEIGHT + border);
 
     TRACE(("parsing T_geometry %s\n", NonNull(term->misc.T_geometry)));
     pr = XParseGeometry(term->misc.T_geometry,
 			&winX,
 			&winY,
-			(unsigned int *) &width,
-			(unsigned int *) &height);
+			&width,
+			&height);
     TRACE(("... position %d,%d size %dx%d\n", winY, winX, height, width));
     if ((pr & XValue) && (pr & XNegative))
 	winX += DisplayWidth(XtDisplay(tw), DefaultScreen(XtDisplay(tw)))
-	    - width - (BorderWidth(SHELL_OF(term)) * 2);
+	    - (int) width - (BorderWidth(SHELL_OF(term)) * 2);
     if ((pr & YValue) && (pr & YNegative))
 	winY += DisplayHeight(XtDisplay(tw), DefaultScreen(XtDisplay(tw)))
-	    - height - (BorderWidth(SHELL_OF(term)) * 2);
+	    - (int) height - (BorderWidth(SHELL_OF(term)) * 2);
 
     /* set up size hints */
     tw->hints.min_width = TEKMINWIDTH + border;
@@ -1488,15 +1488,15 @@ TekRealize(Widget gw,
 	/* set a default size, but do *not* set position */
 	tw->hints.flags |= PSize;
     }
-    tw->hints.width = width;
-    tw->hints.height = height;
+    tw->hints.width = (int) width;
+    tw->hints.height = (int) height;
     if ((WidthValue & pr) || (HeightValue & pr))
 	tw->hints.flags |= USSize;
     else
 	tw->hints.flags |= PSize;
 
     (void) REQ_RESIZE((Widget) tw,
-		      width, height,
+		      (Dimension) width, (Dimension) height,
 		      &tw->core.width, &tw->core.height);
 
     /* XXX This is bogus.  We are parsing geometries too late.  This
@@ -1525,8 +1525,8 @@ TekRealize(Widget gw,
 
     TFullWidth(tekscr) = (Dimension) width;
     TFullHeight(tekscr) = (Dimension) height;
-    TWidth(tekscr) = width - border;
-    THeight(tekscr) = height - border;
+    TWidth(tekscr) = (int) width - border;
+    THeight(tekscr) = (int) height - border;
     TekScale(tekscr) = (double) TWidth(tekscr) / TEKWIDTH;
     if ((d = (double) THeight(tekscr) / (TEKHEIGHT + TEKTOPPAD +
 					 TEKBOTTOMPAD)) < TekScale(tekscr))
@@ -1558,7 +1558,7 @@ TekRealize(Widget gw,
     /* if font wasn't successfully opened, then gcv.font will contain
        the Default GC's ID, meaning that we must use the server default font.
      */
-    TEKgcFontMask = (gcv.font == DefaultGCID) ? 0 : GCFont;
+    TEKgcFontMask = (unsigned long) ((gcv.font == DefaultGCID) ? 0 : GCFont);
     tekscr->TnormalGC = XCreateGC(XtDisplay(tw), TWindow(tekscr),
 				  (TEKgcFontMask | GCGraphicsExposures |
 				   GCForeground | GCBackground),
@@ -1651,7 +1651,7 @@ TekGetFontSize(const char *param)
 }
 
 void
-TekSetFontSize(TekWidget tw, int newitem)
+TekSetFontSize(TekWidget tw, Bool fromMenu, int newitem)
 {
     if (tw != 0) {
 	TekScreen *tekscr = TekScreenOf(tw);
@@ -1668,7 +1668,8 @@ TekSetFontSize(TekWidget tw, int newitem)
 	    set_tekfont_menu_item(oldsize, False);
 
 	    tekscr->cur.fontsize = newsize;
-	    tekscr->page.fontsize = newsize;
+	    if (fromMenu)
+		tekscr->page.fontsize = newsize;
 
 	    fid = tw->tek.Tfont[newsize]->fid;
 	    if (fid == DefaultGCID) {
@@ -1685,11 +1686,13 @@ TekSetFontSize(TekWidget tw, int newitem)
 	    if (!Ttoggled)
 		TCursorToggle(tw, TOGGLE);
 
-	    /* we'll get an exposure event after changing fontsize, so we
-	     * have to clear the screen to avoid painting over the previous
-	     * text.
-	     */
-	    TekClear(tw);
+	    if (fromMenu) {
+		/* we'll get an exposure event after changing fontsize, so we
+		 * have to clear the screen to avoid painting over the previous
+		 * text.
+		 */
+		TekClear(tw);
+	    }
 	}
     }
 }
@@ -1845,7 +1848,7 @@ TekSimulatePageButton(TekWidget tw, Bool reset)
 	TekScreen *tekscr = TekScreenOf(tw);
 
 	if (reset) {
-	    bzero((char *) &tekscr->cur, sizeof tekscr->cur);
+	    memset(&tekscr->cur, 0, sizeof tekscr->cur);
 	}
 	tekRefreshList = (TekLink *) 0;
 	TekPage(tw);
@@ -1886,10 +1889,10 @@ TekCopy(TekWidget tw)
 	    sprintf(initbuf, "%c%c%c%c",
 		    ANSI_ESC, (char) (tekscr->page.fontsize + '8'),
 		    ANSI_ESC, (char) (tekscr->page.linetype + '`'));
-	    write(tekcopyfd, initbuf, 4);
+	    write(tekcopyfd, initbuf, (size_t) 4);
 	    Tp = &Tek0;
 	    do {
-		write(tekcopyfd, Tp->data, Tp->count);
+		write(tekcopyfd, Tp->data, (size_t) Tp->count);
 		Tp = Tp->next;
 	    } while (Tp);
 	    close(tekcopyfd);

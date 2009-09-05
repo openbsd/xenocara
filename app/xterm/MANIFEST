@@ -1,4 +1,4 @@
-MANIFEST for xterm-243, version xterm-243
+MANIFEST for xterm-246, version xterm-246
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -52,6 +52,7 @@ keysym2ucs.c                    lookup-table for UTF-8 to keysyms
 keysym2ucs.h                    interface of keysym2ucs.c
 koi8rxterm                      KOI-8 wrapper from Debian (originally me)
 koi8rxterm.man                  manpage for koi8rxterm
+linedata.c                      manage all line-data for VT100 widget
 link_axp.com                    build-script for VMS port of xterm
 main.c                          main program of 'xterm'
 main.h                          default definitions for 'xterm'
@@ -73,6 +74,7 @@ resize.c                        program to compute/modify xterm's window size
 resize.man                      manual page for 'resize'
 run-tic.sh                      run tic, filtering out harmless messages
 screen.c                        VT100 screen update functions
+scrollback.c                    manage scrollback (a big FIFO)
 scrollbar.c                     VT100 scrollbar support functions
 sinstall.sh                     install setuid if existing program was
 tabs.c                          VT100 tabstop support-functions

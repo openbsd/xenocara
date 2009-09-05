@@ -1,6 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.139 2009/02/12 00:07:53 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.48 2006/02/13 01:14:59 dickey Exp $ */
+/* $XTermId: scrollbar.c,v 1.143 2009/08/09 17:23:47 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -399,15 +397,14 @@ updateRightScrollbar(XtermWidget xw)
 #endif
 
 void
-ScrollBarOn(XtermWidget xw, int init, int doalloc)
+ScrollBarOn(XtermWidget xw, Bool init)
 {
     TScreen *screen = TScreenOf(xw);
-    int i, j, k;
 
     if (screen->fullVwin.sb_info.width || IsIcon(screen))
 	return;
 
-    TRACE(("ScrollBarOn\n"));
+    TRACE(("ScrollBarOn(init %s)\n", BtoS(init)));
     if (init) {			/* then create it only */
 	if (screen->scrollWidget == 0) {
 	    /* make it a dummy size and resize later */
@@ -423,31 +420,6 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 	Bell(XkbBI_MinorError, 0);
 	Bell(XkbBI_MinorError, 0);
     } else {
-
-	if (doalloc && screen->allbuf) {
-	    /* FIXME: this is not integrated well with Allocate */
-	    if ((screen->allbuf =
-		 TypeRealloc(ScrnPtr,
-			     (unsigned) (MAX_PTRS
-					 * (screen->max_row + 2
-					    + screen->savelines)),
-			     screen->visbuf)) == NULL) {
-		SysError(ERROR_SBRALLOC);
-	    }
-	    screen->visbuf = &screen->allbuf[MAX_PTRS * screen->savelines];
-	    memmove((char *) screen->visbuf, (char *) screen->allbuf,
-		    (unsigned) (MAX_PTRS * (screen->max_row + 2))
-		    * sizeof(char *));
-	    for (i = k = 0; i < screen->savelines; i++) {
-		k += BUF_HEAD;
-		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
-		    if ((screen->allbuf[k++] =
-			 TypeCallocN(Char, (unsigned) MaxCols(screen))
-			) == NULL)
-			SysError(ERROR_SBRALLOC2);
-		}
-	    }
-	}
 
 	ResizeScrollBar(xw);
 	xtermAddInput(screen->scrollWidget);
@@ -518,7 +490,7 @@ ToggleScrollBar(XtermWidget xw)
 	if (screen->fullVwin.sb_info.width) {
 	    ScrollBarOff(xw);
 	} else {
-	    ScrollBarOn(xw, False, False);
+	    ScrollBarOn(xw, False);
 	}
 	update_scrollbar();
 	TRACE(("...ToggleScrollBar}}\n"));

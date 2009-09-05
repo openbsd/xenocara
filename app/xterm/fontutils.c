@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.300 2009/02/13 01:45:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.307 2009/08/07 23:22:32 tom Exp $ */
 
 /************************************************************
 
@@ -324,11 +324,11 @@ get_font_name_props(Display * dpy, XFontStruct * fs, char *result)
 #define ALLOCHUNK(n) ((n | 127) + 1)
 
 static void
-alloca_fontname(char **result, unsigned next)
+alloca_fontname(char **result, size_t next)
 {
-    unsigned last = (*result != 0) ? strlen(*result) : 0;
-    unsigned have = (*result != 0) ? ALLOCHUNK(last) : 0;
-    unsigned want = last + next + 2;
+    size_t last = (*result != 0) ? strlen(*result) : 0;
+    size_t have = (*result != 0) ? ALLOCHUNK(last) : 0;
+    size_t want = last + next + 2;
 
     if (want >= have) {
 	want = ALLOCHUNK(want);
@@ -1120,12 +1120,12 @@ xtermLoadFont(XtermWidget xw,
 		    continue;
 	    }
 #endif
-	    if (xtermMissingChar(xw, n, fnts[fNorm].fs)) {
+	    if (IsXtermMissingChar(screen, n, &fnts[fNorm])) {
 		TRACE(("missing normal char #%d\n", n));
 		screen->fnt_boxes = False;
 		break;
 	    }
-	    if (xtermMissingChar(xw, n, fnts[fBold].fs)) {
+	    if (IsXtermMissingChar(screen, n, &fnts[fBold])) {
 		TRACE(("missing bold char #%d\n", n));
 		screen->fnt_boxes = False;
 		break;
@@ -1424,17 +1424,43 @@ xtermSetCursorBox(TScreen * screen)
 }
 
 #define CACHE_XFT(dst,src) if (src != 0) {\
-	    dst[fontnum] = src;\
-	    TRACE(("%s[%d] = %d (%d,%d) by %d\n",\
+	    checkXft(xw, &(dst[fontnum]), src);\
+	    TRACE(("Xft metrics %s[%d] = %d (%d,%d) advance %d, actual %d%s\n",\
 		#dst,\
 	    	fontnum,\
 		src->height,\
 		src->ascent,\
 		src->descent,\
-		src->max_advance_width));\
+		src->max_advance_width,\
+		dst[fontnum].map.min_width,\
+		dst[fontnum].map.mixed ? " mixed" : ""));\
 	}
 
 #if OPT_RENDERFONT
+
+static void
+checkXft(XtermWidget xw, XTermXftFonts * data, XftFont * xft)
+{
+    FcChar32 c;
+    Dimension width = 0;
+
+    data->font = xft;
+    data->map.min_width = 0;
+    data->map.max_width = (Dimension) xft->max_advance_width;
+
+    for (c = 32; c < 256; ++c) {
+	if (FcCharSetHasChar(xft->charset, c)) {
+	    XGlyphInfo extents;
+
+	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
+	    if (width < extents.width)
+		width = extents.width;
+	}
+    }
+    data->map.min_width = width;
+    data->map.mixed = (data->map.max_width >= (data->map.min_width + 1));
+}
+
 static XftFont *
 xtermOpenXft(XtermWidget xw, const char *name, XftPattern * pat, const char *tag)
 {
@@ -1573,13 +1599,13 @@ xtermComputeFontInfo(XtermWidget xw,
      */
     if (xw->misc.render_font && !IsIconWin(screen, win)) {
 	int fontnum = screen->menu_font_number;
-	XftFont *norm = screen->renderFontNorm[fontnum];
-	XftFont *bold = screen->renderFontBold[fontnum];
-	XftFont *ital = screen->renderFontItal[fontnum];
+	XftFont *norm = screen->renderFontNorm[fontnum].font;
+	XftFont *bold = screen->renderFontBold[fontnum].font;
+	XftFont *ital = screen->renderFontItal[fontnum].font;
 #if OPT_RENDERWIDE
-	XftFont *wnorm = screen->renderWideNorm[fontnum];
-	XftFont *wbold = screen->renderWideBold[fontnum];
-	XftFont *wital = screen->renderWideItal[fontnum];
+	XftFont *wnorm = screen->renderWideNorm[fontnum].font;
+	XftFont *wbold = screen->renderWideBold[fontnum].font;
+	XftFont *wital = screen->renderWideItal[fontnum].font;
 #endif
 
 	if (norm == 0 && xw->misc.face_name) {
@@ -1715,6 +1741,12 @@ xtermComputeFontInfo(XtermWidget xw,
 				   ? xw->misc.face_wide_name
 				   : xw->misc.face_name);
 		int char_width = norm->max_advance_width * 2;
+#ifdef FC_ASPECT
+		double aspect = ((xw->misc.face_wide_name
+				  || screen->renderFontNorm[fontnum].map.mixed)
+				 ? 1.0
+				 : 2.0);
+#endif
 
 		TRACE(("xtermComputeFontInfo wide(face %s, char_width %d)\n",
 		       face_name,
@@ -1730,6 +1762,9 @@ xtermComputeFontInfo(XtermWidget xw,
 		    XftPatternBuild(pat,
 				    WideXftPattern,
 				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
+#ifdef FC_ASPECT
+				    FC_ASPECT, XftTypeDouble, aspect,
+#endif
 				    (void *) 0);
 		    wnorm = OPEN_XFT("wide");
 
@@ -1856,45 +1891,39 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
  * Returns true if the given character is missing from the specified font.
  */
 Bool
-xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct * font)
+xtermMissingChar(unsigned ch, XTermFonts * font)
 {
-    TScreen *screen = TScreenOf(xw);
+    Bool result = False;
+    XFontStruct *fs = font->fs;
+    static XCharStruct dft, *tmp = &dft, *pc = 0;
 
-    if (font != 0
-	&& font->per_char != 0
-	&& !font->all_chars_exist) {
-	static XCharStruct dft, *tmp = &dft, *pc = 0;
-
-	if (font->max_byte1 == 0) {
+    if (fs->max_byte1 == 0) {
 #if OPT_WIDE_CHARS
-	    if (ch > 255) {
-		TRACE(("xtermMissingChar %#04x (row)\n", ch));
-		return True;
-	    }
-#endif
-	    CI_GET_CHAR_INFO_1D(font, E2A(ch), tmp, pc);
-	}
-#if OPT_WIDE_CHARS
-	else {
-	    CI_GET_CHAR_INFO_2D(font, HI_BYTE(ch), LO_BYTE(ch), tmp, pc);
-	}
-#else
-
-	if (!pc)
-	    return False;	/* Urgh! */
-#endif
-
-	if (CI_NONEXISTCHAR(pc)) {
-	    TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
+	if (ch > 255) {
+	    TRACE(("xtermMissingChar %#04x (row)\n", ch));
 	    return True;
 	}
+#endif
+	CI_GET_CHAR_INFO_1D(fs, E2A(ch), tmp, pc);
     }
-    if (xtermIsDecGraphic(ch)
-	&& screen->force_box_chars) {
-	TRACE(("xtermMissingChar %#04x (forced off)\n", ch));
-	return True;
+#if OPT_WIDE_CHARS
+    else {
+	CI_GET_CHAR_INFO_2D(fs, HI_BYTE(ch), LO_BYTE(ch), tmp, pc);
     }
-    return False;
+#else
+
+    if (!pc)
+	return False;		/* Urgh! */
+#endif
+
+    if (CI_NONEXISTCHAR(pc)) {
+	TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
+	result = True;
+    }
+    if (ch < 256) {
+	font->known_missing[ch] = (Char) (result ? 2 : 1);
+    }
+    return result;
 }
 
 /*
@@ -2130,10 +2159,10 @@ xtermDrawBoxChar(XtermWidget xw,
 	unsigned n;
 	for (n = 1; n < 32; n++) {
 	    if (dec2ucs(n) == ch
-		&& !xtermMissingChar(xw, n,
-				     ((flags & BOLD)
-				      ? screen->fnts[fBold].fs
-				      : screen->fnts[fNorm].fs))) {
+		&& !IsXtermMissingChar(screen, n,
+				       ((flags & BOLD)
+					? &screen->fnts[fBold]
+					: &screen->fnts[fNorm]))) {
 		TRACE(("...use xterm-style linedrawing\n"));
 		ch = n;
 		break;

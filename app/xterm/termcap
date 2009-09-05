@@ -1,11 +1,11 @@
-# $XTermId: termcap,v 1.74 2007/12/04 21:31:06 tom Exp $
+# $XTermId: termcap,v 1.76 2009/07/19 15:54:13 tom Exp $
 #
 # These are termcap entries that correspond to xterm's terminfo file.
 # The file is formatted using ncurses' "tic -CNx", but is not mechanically
 # derived from the terminfo.
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2005,2006 by Thomas E. Dickey
+# Copyright 1996-2007,2009 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -50,10 +50,10 @@
 #	the resolved length of each entry in a comment at the end - T.Dickey
 #
 xf|xterm-new|modern xterm:\
-	:*6=\EOF:@7=\EOF:F1=\E[23~:F2=\E[24~:Km=\E[M:k1=\EOP:\
-	:k2=\EOQ:k3=\EOR:k4=\EOS:k5=\E[15~:k6=\E[17~:k7=\E[18~:\
-	:k8=\E[19~:k9=\E[20~:k;=\E[21~:kH=\EOF:kI=\E[2~:kN=\E[6~:\
-	:kP=\E[5~:kd=\EOB:kh=\EOH:kl=\EOD:kr=\EOC:ku=\EOA:\
+	:*6=\EOF:@7=\EOF:F1=\E[23~:F2=\E[24~:K2=\EOE:Km=\E[M:\
+	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:k5=\E[15~:k6=\E[17~:\
+	:k7=\E[18~:k8=\E[19~:k9=\E[20~:k;=\E[21~:kH=\EOF:kI=\E[2~:\
+	:kN=\E[6~:kP=\E[5~:kd=\EOB:kh=\EOH:kl=\EOD:kr=\EOC:ku=\EOA:\
 	:tc=xterm-basic:
 #
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
@@ -81,7 +81,7 @@ xb|xterm-basic|modern xterm common:\
 #	+ uses DEC-style control sequences for the application keypad.
 #
 vt|xterm-vt220|xterm emulating vt220:\
-	:*6=\E[4~:@7=\E[4~:Km=\E[M:kH=\E[4~:kh=\E[1~:\
+	:*6=\E[4~:@7=\E[4~:K2=\EOu:Km=\E[M:kH=\E[4~:kh=\E[1~:\
 	:tc=xterm-basic:
 
 v1|xterm-24|xterms|vs100|24x80 xterm:\
@@ -138,8 +138,8 @@ x8|xterm-8bit|xterm terminal emulator 8-bit controls (X Window System):\
 	:am:km:mi:ms:xn:\
 	:co#80:it#8:li#24:\
 	:AL=\233%dL:DC=\233%dP:DL=\233%dM:DO=\233%dB:IC=\233%d@:\
-	:Km=\233M:LE=\233%dD:RI=\233%dC:UP=\233%dA:ae=\E(B:\
-	:al=\233L:as=\E(0:bl=^G:bt=\233Z:cd=\233J:ce=\233K:\
+	:K2=\217y:Km=\233M:LE=\233%dD:RI=\233%dC:UP=\233%dA:\
+	:ae=\E(B:al=\233L:as=\E(0:bl=^G:bt=\233Z:cd=\233J:ce=\233K:\
 	:cl=\233H\2332J:cm=\233%i%d;%dH:cr=^M:cs=\233%i%d;%dr:\
 	:ct=\2333g:dc=\233P:dl=\233M:do=^J:ei=\2334l:ho=\233H:\
 	:im=\2334h:\
@@ -176,10 +176,11 @@ v5|xterm-vt52|xterm emulating vt52:\
 #
 xs|xterm-sun|xterm with Sun functionkeys:\
 	:%1=\E[196z:&8=\E[195z:@0=\E[200z:@5=\E[197z:@7=\E[220z:\
-	:F1=\E[192z:F2=\E[193z:Km=\E[M:k1=\E[224z:k2=\E[225z:\
-	:k3=\E[226z:k4=\E[227z:k5=\E[228z:k6=\E[229z:k7=\E[230z:\
-	:k8=\E[231z:k9=\E[232z:k;=\E[233z:kD=\E[3z:kI=\E[2z:\
-	:kN=\E[222z:kP=\E[216z:kh=\E[214z:tc=xterm-basic:
+	:F1=\E[192z:F2=\E[193z:K2=\E[218z:Km=\E[M:k1=\E[224z:\
+	:k2=\E[225z:k3=\E[226z:k4=\E[227z:k5=\E[228z:k6=\E[229z:\
+	:k7=\E[230z:k8=\E[231z:k9=\E[232z:k;=\E[233z:kD=\E[3z:\
+	:kI=\E[2z:kN=\E[222z:kP=\E[216z:kh=\E[214z:\
+	:tc=xterm-basic:
 #
 # vi may work better with this entry, because vi doesn't use insert mode much.
 # |xterm-ic|xterm-vi|xterm with insert character instead of insert mode:\

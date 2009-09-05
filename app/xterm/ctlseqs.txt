@@ -636,7 +636,7 @@ CSI Pt; Pl; Pb; Pr; Ps$ t
           Reverse Attributes in Rectangular Area (DECRARA).
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the attributes to reverse. 1, 4, 5, 7
-CSI u     Save cursor (ANSI.SYS)
+CSI u     Restore cursor (ANSI.SYS)
 CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
           Copy Rectangular Area (DECCRA)
             Pt; Pl; Pb; Pr denotes the rectangle.

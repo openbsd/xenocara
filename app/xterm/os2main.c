@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.257 2009/01/24 16:24:36 tom Exp $ */
+/* $XTermId: os2main.c,v 1.258 2009/05/31 17:53:05 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -1389,7 +1389,7 @@ main(int argc, char **argv ENVP_ARG)
 	    TekRun();
 	else
 #endif
-	    VTRun();
+	    VTRun(term);
     }
     return 0;
 }
@@ -1659,7 +1659,7 @@ spawnXTerm(XtermWidget xw)
 				   False);
 
     if (!TEK4014_ACTIVE(xw))
-	VTInit();		/* realize now so know window size for tty driver */
+	VTInit(xw);		/* realize now so know window size for tty driver */
 
     if (Console) {
 	/*

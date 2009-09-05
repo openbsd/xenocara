@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.320 2009/03/27 00:00:56 tom Exp $ */
+/* $XTermId: button.c,v 1.349 2009/08/07 23:24:10 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -94,12 +94,22 @@ button.c	Handles button events in the terminal emulator.
 	charClass[value & ((sizeof(charClass)/sizeof(charClass[0]))-1)]
 #endif
 
-      /*
-       * We reserve shift modifier for cut/paste operations.  In principle we
-       * can pass through control and meta modifiers, but in practice, the
-       * popup menu uses control, and the window manager is likely to use meta,
-       * so those events are not delivered to SendMousePosition.
-       */
+    /*
+     * We'll generally map rows to indices when doing selection.
+     * Simplify that with a macro.
+     *
+     * Note that ROW2INX() is safe to use with auto increment/decrement for
+     * the row expression since that is evaluated once.
+     */
+#define GET_LINEDATA(screen, row) \
+	getLineData(screen, ROW2INX(screen, row))
+
+    /*
+     * We reserve shift modifier for cut/paste operations.  In principle we
+     * can pass through control and meta modifiers, but in practice, the
+     * popup menu uses control, and the window manager is likely to use meta,
+     * so those events are not delivered to SendMousePosition.
+     */
 #define OurModifiers (ShiftMask | ControlMask | Mod1Mask)
 #define AllModifiers (ShiftMask | LockMask | ControlMask | Mod1Mask | \
 		      Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask)
@@ -732,23 +742,29 @@ rowOnCurrentLine(TScreen * screen,
 		 int line,
 		 int *deltap)	/* must be XButtonEvent */
 {
+    int result = 1;
     int l1, l2;
 
     *deltap = 0;
-    if (line == screen->cur_row)
-	return 1;
-
-    if (line < screen->cur_row)
-	l1 = line, l2 = screen->cur_row;
-    else
-	l2 = line, l1 = screen->cur_row;
-    l1--;
-    while (++l1 < l2)
-	if (!ScrnTstWrapped(screen, l1))
-	    return 0;
-    /* Everything is on one "wrapped line" now */
-    *deltap = line - screen->cur_row;
-    return 1;
+    if (line != screen->cur_row) {
+	if (line < screen->cur_row)
+	    l1 = line, l2 = screen->cur_row;
+	else
+	    l2 = line, l1 = screen->cur_row;
+	l1--;
+	while (++l1 < l2) {
+	    LineData *ld = GET_LINEDATA(screen, l1);
+	    if (!LineTstWrapped(ld)) {
+		result = 0;
+		break;
+	    }
+	}
+	if (result) {
+	    /* Everything is on one "wrapped line" now */
+	    *deltap = line - screen->cur_row;
+	}
+    }
+    return result;
 }
 
 static int
@@ -867,20 +883,8 @@ ReadLineButton(Widget w,
 		goto finish;	/* All this work for this... */
 	}
 	line = (event->xbutton.y - screen->border) / FontHeight(screen);
-	if (line != screen->cur_row) {
-	    int l1, l2;
-
-	    if (line < screen->cur_row)
-		l1 = line, l2 = screen->cur_row;
-	    else
-		l2 = line, l1 = screen->cur_row;
-	    l1--;
-	    while (++l1 < l2)
-		if (!ScrnTstWrapped(screen, l1))
-		    goto finish;
-	    /* Everything is on one "wrapped line" now */
-	    ldelta = line - screen->cur_row;
-	}
+	if (!rowOnCurrentLine(screen, line, &ldelta))
+	    goto finish;
 	/* Correct by half a width - we are acting on a boundary, not on a cell. */
 	col = (event->xbutton.x - OriginX(screen) + (FontWidth(screen) - 1)
 	       / 2)
@@ -1264,7 +1268,7 @@ allocUtf8Targets(Widget w, TScreen * screen)
 	Atom *result;
 
 	if (!overrideTargets(w, screen->utf8_select_types, &result)) {
-	    result = (Atom *) XtMalloc(5 * sizeof(Atom));
+	    result = (Atom *) XtMalloc((Cardinal) (5 * sizeof(Atom)));
 	    if (result == NULL) {
 		TRACE(("Couldn't allocate utf-8 selection targets\n"));
 	    } else {
@@ -1298,7 +1302,7 @@ alloc8bitTargets(Widget w, TScreen * screen)
 	Atom *result = 0;
 
 	if (!overrideTargets(w, screen->eightbit_select_types, &result)) {
-	    result = (Atom *) XtMalloc(5 * sizeof(Atom));
+	    result = (Atom *) XtMalloc((Cardinal) (5 * sizeof(Atom)));
 	    if (result == NULL) {
 		TRACE(("Couldn't allocate 8bit selection targets\n"));
 	    } else {
@@ -1571,7 +1575,7 @@ GettingSelection(Display * dpy, Atom type, Char * line, unsigned long len)
 
     TRACE(("Getting %s (%ld)\n", name, (long int) type));
     for (cp = line; cp < line + len; cp++) {
-	TRACE(("[%d:%lu]", cp + 1 - line, len));
+	TRACE(("[%d:%lu]", (int) (cp + 1 - line), len));
 	if (isprint(*cp)) {
 	    TRACE(("%c\n", *cp));
 	} else {
@@ -2467,19 +2471,20 @@ PointToCELL(TScreen * screen,
  * Find the last column at which text was drawn on the given row.
  */
 static int
-LastTextCol(TScreen * screen, int row)
+LastTextCol(TScreen * screen, LineData * ld, int row)
 {
-    int inx = ROW2INX(screen, row);
     int i;
     Char *ch;
 
-    if (inx + screen->savedlines >= 0) {
+    if (okScrnRow(screen, row)) {
 	for (i = screen->max_col,
-	     ch = SCRN_BUF_ATTRS(screen, inx) + i;
+	     ch = ld->attribs + i;
 	     i >= 0 && !(*ch & CHARDRAWN);
-	     ch--, i--) ;
+	     ch--, i--) {
+	    ;
+	}
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, inx)[0])) {
+	if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	    i *= 2;
 	}
 #endif
@@ -2587,31 +2592,30 @@ SetCharacterClassRange(int low,	/* in range of [0..255] */
 
 #if OPT_WIDE_CHARS
 static int
-class_of(TScreen * screen, CELL * cell)
+class_of(TScreen * screen, LineData * ld, CELL * cell)
 {
     CELL temp = *cell;
     int value;
 
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, ROW2INX(screen, temp.row))[0])) {
+    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	temp.col /= 2;
     }
 #endif
 
     value = (int) XTERM_CELL(temp.row, temp.col);
-    if_OPT_WIDE_CHARS(screen, {
-	return CharacterClass(value);
-    });
     return CharacterClass(value);
 }
-#define ClassSelects(screen, cell, cclass) \
-	 (class_of(screen, cell) == cclass \
-	 || XTERM_CELL((cell)->row, (cell)->col) == HIDDEN_CHAR)
+#define CClassSelects(name, cclass) \
+	 (CClassOf(name) == cclass \
+	 || XTERM_CELL(screen->name.row, screen->name.col) == HIDDEN_CHAR)
 #else
-#define class_of(screen, cell) charClass[XTERM_CELL((cell)->row, (cell)->col)]
-#define ClassSelects(screen, cell, cclass) \
-	 (class_of(screen, (cell)) == cclass)
+#define class_of(screen, ld, cell) charClass[XTERM_CELL((cell)->row, (cell)->col)]
+#define CClassSelects(name, cclass) \
+	 (class_of(screen, ld.name, &((screen->name))) == cclass)
 #endif
+
+#define CClassOf(name) class_of(screen, ld.name, &((screen->name)))
 
 /*
  * If the given column is past the end of text on the given row, bump to the
@@ -2619,24 +2623,27 @@ class_of(TScreen * screen, CELL * cell)
  */
 static Boolean
 okPosition(TScreen * screen,
+	   LineData ** ld,
 	   CELL * cell)
 {
-    if (cell->col > (LastTextCol(screen, cell->row) + 1)) {
+    if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
 	cell->col = 0;
-	cell->row += 1;
+	*ld = GET_LINEDATA(screen, ++cell->row);
 	return False;
     }
     return True;
 }
 
 static void
-trimLastLine(TScreen * screen, CELL * last)
+trimLastLine(TScreen * screen,
+	     LineData ** ld,
+	     CELL * last)
 {
     if (screen->cutNewline) {
 	last->col = 0;
-	++last->row;
+	*ld = GET_LINEDATA(screen, ++last->row);
     } else {
-	last->col = LastTextCol(screen, last->row) + 1;
+	last->col = LastTextCol(screen, *ld, last->row) + 1;
     }
 }
 
@@ -2647,11 +2654,14 @@ trimLastLine(TScreen * screen, CELL * last)
 static int
 firstRowOfLine(TScreen * screen, int row, Bool visible)
 {
+    LineData *ld = 0;
     int limit = visible ? 0 : -screen->savedlines;
 
     while (row > limit &&
-	   ScrnTstWrapped(screen, row - 1))
+	   (ld = GET_LINEDATA(screen, row - 1)) != 0 &&
+	   LineTstWrapped(ld)) {
 	--row;
+    }
     return row;
 }
 
@@ -2661,9 +2671,13 @@ firstRowOfLine(TScreen * screen, int row, Bool visible)
 static int
 lastRowOfLine(TScreen * screen, int row)
 {
+    LineData *ld;
+
     while (row < screen->max_row &&
-	   ScrnTstWrapped(screen, row))
+	   (ld = GET_LINEDATA(screen, row)) != 0 &&
+	   LineTstWrapped(ld)) {
 	++row;
+    }
     return row;
 }
 
@@ -2677,7 +2691,8 @@ lengthOfLines(TScreen * screen, int firstRow, int lastRow)
     int n;
 
     for (n = firstRow; n <= lastRow; ++n) {
-	int value = LastTextCol(screen, n);
+	LineData *ld = GET_LINEDATA(screen, n);
+	int value = LastTextCol(screen, ld, n);
 	if (value >= 0)
 	    length += (unsigned) (value + 1);
     }
@@ -2700,16 +2715,17 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
      * string were UTF-8.
      */
     if_OPT_WIDE_CHARS(screen, {
-	need *= (unsigned) (MAX_PTRS * 6);
+	need *= ((screen->lineExtra + 1) * 6);
     });
 
     if ((result = TypeCallocN(Char, need + 1)) != 0) {
+	LineData *ld = GET_LINEDATA(screen, row);
 	unsigned used = 0;
 	Char *last = result;
 
 	do {
 	    int col = 0;
-	    int limit = LastTextCol(screen, row);
+	    int limit = LastTextCol(screen, ld, row);
 
 	    while (col <= limit) {
 		Char *next = last;
@@ -2727,9 +2743,10 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		});
 
 		if_OPT_WIDE_CHARS(screen, {
-		    int off;
-		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-			if ((data = XTERM_CELLC(row, col, off)) == 0)
+		    size_t off;
+		    for_each_combData(off, ld) {
+			data = XTERM_CELLC(row, col, off);
+			if (data == 0)
 			    break;
 			next = convertToUTF8(next, data);
 		    }
@@ -2744,8 +2761,9 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		indexed[used] = next - result;
 	    }
 	} while (used < length &&
-		 ScrnTstWrapped(screen, row) &&
-		 ++row < screen->max_row);
+		 LineTstWrapped(ld) &&
+		 (ld = GET_LINEDATA(screen, ++row)) != 0 &&
+		 row < screen->max_row);
     }
     /* TRACE(("result:%s\n", result)); */
     return (char *) result;
@@ -2775,7 +2793,8 @@ static void
 columnToCell(TScreen * screen, int row, int col, CELL * cell)
 {
     while (row < screen->max_row) {
-	int last = LastTextCol(screen, row);
+	LineData *ld = GET_LINEDATA(screen, row);
+	int last = LastTextCol(screen, ld, row);
 
 	/* TRACE(("last(%d) = %d, have %d\n", row, last, col)); */
 	if (col <= last) {
@@ -2785,7 +2804,7 @@ columnToCell(TScreen * screen, int row, int col, CELL * cell)
 	 * Stop if the current row does not wrap (does not continue the current
 	 * line).
 	 */
-	if (!ScrnTstWrapped(screen, row)) {
+	if (!LineTstWrapped(ld)) {
 	    col = last + 1;
 	    break;
 	}
@@ -2804,17 +2823,26 @@ columnToCell(TScreen * screen, int row, int col, CELL * cell)
 static int
 cellToColumn(TScreen * screen, CELL * cell)
 {
+    LineData *ld = 0;
     int col = cell->col;
     int row = firstRowOfLine(screen, cell->row, False);
     while (row < cell->row) {
-	col += LastTextCol(screen, row++);
+	ld = GET_LINEDATA(screen, row);
+	col += LastTextCol(screen, ld, row++);
     }
+#if OPT_DEC_CHRSET
+    if (ld == 0)
+	ld = GET_LINEDATA(screen, row);
+    if (CSET_DOUBLE(GetLineDblCS(ld)))
+	col /= 2;
+#endif
     return col;
 }
 
 static void
 do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 {
+    LineData *ld = GET_LINEDATA(screen, startc->row);
     int inx = ((screen->numberOfClicks - 1) % screen->maxClicks);
     char *expr = screen->selectExpr[inx];
     regex_t preg;
@@ -2823,7 +2851,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
     int *indexed;
 
     TRACE(("Select_REGEX:%s\n", NonNull(expr)));
-    if (okPosition(screen, startc) && expr != 0) {
+    if (okPosition(screen, &ld, startc) && expr != 0) {
 	if (regcomp(&preg, expr, REG_EXTENDED) == 0) {
 	    int firstRow = firstRowOfLine(screen, startc->row, True);
 	    int lastRow = lastRowOfLine(screen, firstRow);
@@ -2877,9 +2905,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 			TRACE(("matched:%d:%s\n",
 			       indexed[best_nxt] + 1 -
 			       indexed[best_col],
-			       visibleChars(PAIRED_CHARS((Char *) (search +
-								   indexed[best_col]),
-							 0),
+			       visibleChars((Char *) (search + indexed[best_col]),
 					    (unsigned) (indexed[best_nxt] +
 							1 -
 							indexed[best_col]))));
@@ -2887,12 +2913,36 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 		    free(search);
 		}
 		free(indexed);
+#if OPT_DEC_CHRSET
+		if ((ld = GET_LINEDATA(screen, startc->row)) != 0) {
+		    if (CSET_DOUBLE(GetLineDblCS(ld)))
+			startc->col *= 2;
+		}
+		if ((ld = GET_LINEDATA(screen, endc->row)) != 0) {
+		    if (CSET_DOUBLE(GetLineDblCS(ld)))
+			endc->col *= 2;
+		}
+#endif
 	    }
 	    regfree(&preg);
 	}
     }
 }
 #endif /* OPT_SELECT_REGEX */
+
+#define InitRow(name) \
+	ld.name = GET_LINEDATA(screen, screen->name.row)
+
+#define NextRow(name) \
+	ld.name = GET_LINEDATA(screen, ++screen->name.row)
+
+#define PrevRow(name) \
+	ld.name = GET_LINEDATA(screen, --screen->name.row)
+
+#define isPrevWrapped(name) \
+	(screen->name.row > 0 \
+	   && (ltmp = GET_LINEDATA(screen, screen->name.row - 1)) != 0 \
+	   && LineTstWrapped(ltmp))
 
 /*
  * sets startSel endSel
@@ -2905,10 +2955,18 @@ ComputeSelect(XtermWidget xw,
 	      Bool extend)
 {
     TScreen *screen = TScreenOf(xw);
+
     int length;
     int cclass;
     CELL first = *startc;
     CELL last = *endc;
+    Boolean ignored = False;
+
+    struct {
+	LineData *startSel;
+	LineData *endSel;
+    } ld;
+    LineData *ltmp;
 
     TRACE(("ComputeSelect(startRow=%d, startCol=%d, endRow=%d, endCol=%d, %sextend)\n",
 	   first.row, first.col,
@@ -2940,26 +2998,28 @@ ComputeSelect(XtermWidget xw,
 	screen->endSel = screen->endRaw = first;
     }
 
+    InitRow(startSel);
+    InitRow(endSel);
+
     switch (screen->selectUnit) {
     case Select_CHAR:
-	(void) okPosition(screen, &(screen->startSel));
-	(void) okPosition(screen, &(screen->endSel));
+	(void) okPosition(screen, &(ld.startSel), &(screen->startSel));
+	(void) okPosition(screen, &(ld.endSel), &(screen->endSel));
 	break;
 
     case Select_WORD:
 	TRACE(("Select_WORD\n"));
-	if (okPosition(screen, &(screen->startSel))) {
-	    cclass = class_of(screen, &(screen->startSel));
+	if (okPosition(screen, &(ld.startSel), &(screen->startSel))) {
+	    cclass = CClassOf(startSel);
 	    do {
 		--screen->startSel.col;
-		if (screen->startSel.row > 0
-		    && screen->startSel.col < 0
-		    && ScrnTstWrapped(screen, screen->startSel.row - 1)) {
-		    --screen->startSel.row;
-		    screen->startSel.col = LastTextCol(screen, screen->startSel.row);
+		if (screen->startSel.col < 0
+		    && isPrevWrapped(startSel)) {
+		    PrevRow(startSel);
+		    screen->startSel.col = LastTextCol(screen, ld.startSel, screen->startSel.row);
 		}
 	    } while (screen->startSel.col >= 0
-		     && ClassSelects(screen, &(screen->startSel), cclass));
+		     && CClassSelects(startSel, cclass));
 	    ++screen->startSel.col;
 	}
 #if OPT_WIDE_CHARS
@@ -2969,26 +3029,26 @@ ComputeSelect(XtermWidget xw,
 	    screen->startSel.col++;
 #endif
 
-	if (okPosition(screen, &(screen->endSel))) {
-	    length = LastTextCol(screen, screen->endSel.row);
-	    cclass = class_of(screen, &(screen->endSel));
+	if (okPosition(screen, &(ld.endSel), &(screen->endSel))) {
+	    length = LastTextCol(screen, ld.endSel, screen->endSel.row);
+	    cclass = CClassOf(endSel);
 	    do {
 		++screen->endSel.col;
 		if (screen->endSel.col > length
-		    && ScrnTstWrapped(screen, screen->endSel.row)) {
+		    && LineTstWrapped(ld.endSel)) {
 		    screen->endSel.col = 0;
-		    ++screen->endSel.row;
-		    length = LastTextCol(screen, screen->endSel.row);
+		    NextRow(endSel);
+		    length = LastTextCol(screen, ld.endSel, screen->endSel.row);
 		}
 	    } while (screen->endSel.col <= length
-		     && ClassSelects(screen, &(screen->endSel), cclass));
+		     && CClassSelects(endSel, cclass));
 	    /* Word-select selects if pointing to any char in "word",
 	     * especially note that it includes the last character in a word.
 	     * So we do no --endSel.col and do special eol handling.
 	     */
 	    if (screen->endSel.col > length + 1) {
 		screen->endSel.col = 0;
-		++screen->endSel.row;
+		NextRow(endSel);
 	    }
 	}
 #if OPT_WIDE_CHARS
@@ -3003,49 +3063,49 @@ ComputeSelect(XtermWidget xw,
 
     case Select_LINE:
 	TRACE(("Select_LINE\n"));
-	while (ScrnTstWrapped(screen, screen->endSel.row)) {
-	    ++screen->endSel.row;
+	while (LineTstWrapped(ld.endSel)) {
+	    NextRow(endSel);
 	}
 	if (screen->cutToBeginningOfLine
 	    || screen->startSel.row < screen->saveStartW.row) {
 	    screen->startSel.col = 0;
-	    while (screen->startSel.row > 0
-		   && ScrnTstWrapped(screen, screen->startSel.row - 1)) {
-		--screen->startSel.row;
+	    while (isPrevWrapped(startSel)) {
+		PrevRow(startSel);
 	    }
 	} else if (!extend) {
 	    if ((first.row < screen->saveStartW.row)
 		|| (isSameRow(&first, &(screen->saveStartW))
 		    && first.col < screen->saveStartW.col)) {
 		screen->startSel.col = 0;
-		while (screen->startSel.row > 0
-		       && ScrnTstWrapped(screen, screen->startSel.row - 1)) {
-		    --screen->startSel.row;
+		while (isPrevWrapped(startSel)) {
+		    PrevRow(startSel);
 		}
 	    } else {
 		screen->startSel = screen->saveStartW;
 	    }
 	}
-	trimLastLine(screen, &(screen->endSel));
+	trimLastLine(screen, &(ld.endSel), &(screen->endSel));
 	break;
 
     case Select_GROUP:		/* paragraph */
 	TRACE(("Select_GROUP\n"));
-	if (okPosition(screen, &(screen->startSel))) {
+	if (okPosition(screen, &(ld.startSel), &(screen->startSel))) {
 	    /* scan backward for beginning of group */
 	    while (screen->startSel.row > 0 &&
-		   (LastTextCol(screen, screen->startSel.row - 1) > 0 ||
-		    ScrnTstWrapped(screen, screen->startSel.row - 1))) {
-		--screen->startSel.row;
+		   (LastTextCol(screen, ld.startSel, screen->startSel.row -
+				1) > 0 ||
+		    isPrevWrapped(startSel))) {
+		PrevRow(startSel);
 	    }
 	    screen->startSel.col = 0;
 	    /* scan forward for end of group */
 	    while (screen->endSel.row < screen->max_row &&
-		   (LastTextCol(screen, screen->endSel.row + 1) > 0 ||
-		    ScrnTstWrapped(screen, screen->endSel.row))) {
-		++screen->endSel.row;
+		   (LastTextCol(screen, ld.endSel, screen->endSel.row + 1) >
+		    0 ||
+		    LineTstWrapped(ld.endSel))) {
+		NextRow(endSel);
 	    }
-	    trimLastLine(screen, &(screen->endSel));
+	    trimLastLine(screen, &(ld.endSel), &(screen->endSel));
 	}
 	break;
 
@@ -3072,13 +3132,16 @@ ComputeSelect(XtermWidget xw,
 #endif
 
     case NSELECTUNITS:		/* always ignore */
-	return;
+	ignored = True;
+	break;
     }
 
-    /* check boundaries */
-    ScrollSelection(screen, 0, False);
+    if (!ignored) {
+	/* check boundaries */
+	ScrollSelection(screen, 0, False);
+	TrackText(xw, &(screen->startSel), &(screen->endSel));
+    }
 
-    TrackText(xw, &(screen->startSel), &(screen->endSel));
     return;
 }
 
@@ -3249,8 +3312,8 @@ SaltTextAway(XtermWidget xw,
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%d:%s\n", lp - line,
-	   visibleChars(PAIRED_CHARS(line, 0), (unsigned) (lp - line))));
+    TRACE(("Salted TEXT:%d:%s\n", (int) (lp - line),
+	   visibleChars(line, (unsigned) (lp - line))));
 
     screen->selection_length = (unsigned long) (lp - line);
     _OwnSelection(xw, params, num_params);
@@ -3452,7 +3515,7 @@ ConvertSelection(Widget w,
 	    std_targets = (Atom *) (std_return);
 	    *length = std_length + 6;
 
-	    targetP = (Atom *) XtMalloc(sizeof(Atom) * (*length));
+	    targetP = (Atom *) XtMalloc((Cardinal) (sizeof(Atom) * (*length)));
 	    allocP = targetP;
 
 	    *value = (XtPointer) targetP;
@@ -3635,7 +3698,7 @@ _OwnSelection(XtermWidget xw,
 
     if (count > screen->sel_atoms_size) {
 	XtFree((char *) atoms);
-	atoms = (Atom *) XtMalloc(count * sizeof(Atom));
+	atoms = (Atom *) XtMalloc((Cardinal) (count * sizeof(Atom)));
 	screen->selection_atoms = atoms;
 	screen->sel_atoms_size = count;
     }
@@ -3743,12 +3806,13 @@ UnhiliteSelection(XtermWidget xw)
 /* returns number of chars in line from scol to ecol out */
 /* ARGSUSED */
 static int
-Length(TScreen * screen GCC_UNUSED,
+Length(TScreen * screen,
        int row,
        int scol,
        int ecol)
 {
-    int lastcol = LastTextCol(screen, row);
+    LineData *ld = GET_LINEDATA(screen, row);
+    int lastcol = LastTextCol(screen, ld, row);
 
     if (ecol > lastcol)
 	ecol = lastcol;
@@ -3764,6 +3828,7 @@ SaveText(TScreen * screen,
 	 Char * lp,		/* pointer to where to put the text */
 	 int *eol)
 {
+    LineData *ld;
     int i = 0;
     unsigned c;
     Char *result = lp;
@@ -3771,15 +3836,16 @@ SaveText(TScreen * screen,
     unsigned previous = 0;
 #endif
 
+    ld = GET_LINEDATA(screen, row);
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, ROW2INX(screen, row))[0])) {
+    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	scol = (scol + 0) / 2;
 	ecol = (ecol + 1) / 2;
     }
 #endif
-    *eol = !ScrnTstWrapped(screen, row);
+    *eol = !LineTstWrapped(ld);
     for (i = scol; i < ecol; i++) {
 	c = E2A(XTERM_CELL(row, i));
 #if OPT_WIDE_CHARS
@@ -3793,9 +3859,10 @@ SaveText(TScreen * screen,
 	    if_OPT_WIDE_CHARS(screen, {
 		if (screen->utf8_mode != uFalse) {
 		    unsigned ch;
-		    int off;
-		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-			if ((ch = XTERM_CELLC(row, i, off)) == 0)
+		    size_t off;
+		    for_each_combData(off, ld) {
+			ch = XTERM_CELLC(row, i, off);
+			if (ch == 0)
 			    break;
 			lp = convertToUTF8(lp, ch);
 		    }
@@ -3808,9 +3875,10 @@ SaveText(TScreen * screen,
 	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
 	    if_OPT_WIDE_CHARS(screen, {
 		unsigned ch;
-		int off;
-		for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-		    if ((ch = XTERM_CELLC(row, i, off)) == 0)
+		size_t off;
+		for_each_combData(off, ld) {
+		    ch = XTERM_CELLC(row, i, off);
+		    if (ch == 0)
 			break;
 		    lp = convertToUTF8(lp, ch);
 		}

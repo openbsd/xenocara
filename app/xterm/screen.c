@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.246 2009/02/09 21:37:57 tom Exp $ */
+/* $XTermId: screen.c,v 1.394 2009/08/16 18:16:45 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -69,10 +69,260 @@
 #include <assert.h>
 #include <signal.h>
 
+#define inSaveBuf(screen, buf, inx) \
+	((buf) == (screen)->saveBuf_index && \
+	 ((inx) < (screen)->savelines || (screen)->savelines == 0))
+
 #define getMinRow(screen) ((xw->flags & ORIGIN) ? (screen)->top_marg : 0)
 #define getMaxRow(screen) ((xw->flags & ORIGIN) ? (screen)->bot_marg : (screen)->max_row)
 #define getMinCol(screen) 0
 #define getMaxCol(screen) ((screen)->max_col)
+
+#define MoveLineData(base, dst, src, len) \
+	memmove(scrnHeadAddr(screen, base, dst), \
+		scrnHeadAddr(screen, base, src), \
+		scrnHeadSize(screen, len))
+
+#define SaveLineData(base, src, len) \
+	(void) ScrnPointers(screen, len); \
+	memcpy (screen->save_ptr, \
+		scrnHeadAddr(screen, base, src), \
+		scrnHeadSize(screen, len))
+
+#define RestoreLineData(base, dst, len) \
+	memcpy (scrnHeadAddr(screen, base, dst), \
+		screen->save_ptr, \
+		scrnHeadSize(screen, len))
+
+#if OPT_SAVE_LINES
+#define VisBuf(screen) screen->editBuf_index[screen->whichBuf]
+#else
+#define VisBuf(screen) scrnHeadAddr(screen, screen->saveBuf_index, (unsigned) savelines)
+#endif
+
+/*
+ * ScrnPtr's can point to different types of data.
+ */
+#define SizeofScrnPtr(name) \
+	sizeof(*((LineData *)0)->name)
+
+/*
+ * The pointers in LineData point into a block of text allocated as a single
+ * chunk for the given number of rows.  Ensure that these pointers are aligned
+ * at least to int-boundaries.
+ */
+#define AlignMask()      (sizeof(int) - 1)
+#define IsAligned(value) (((unsigned long) (value) & AlignMask()) == 0)
+
+#define AlignValue(value) \
+		if (!IsAligned(value)) \
+		    value = (value | AlignMask()) + 1
+
+#define SetupScrnPtr(dst,src,type) \
+		dst = (type *) src; \
+		assert(IsAligned(dst)); \
+		src += skipNcol##type
+
+#define ScrnBufAddr(ptrs, offset)  (ScrnBuf)    ((char *) (ptrs) + (offset))
+#define LineDataAddr(ptrs, offset) (LineData *) ((char *) (ptrs) + (offset))
+
+#if OPT_TRACE > 1
+static void
+traceScrnBuf(const char *tag, TScreen * screen, ScrnBuf sb, unsigned len)
+{
+    unsigned j;
+
+    TRACE(("traceScrnBuf %s\n", tag));
+    for (j = 0; j < len; ++j) {
+	LineData *src = (LineData *) scrnHeadAddr(screen, sb, j);
+	TRACE(("%p %s%3d:%s\n",
+	       src, ((int) j >= screen->savelines) ? "*" : " ",
+	       j, visibleIChars(src->charData, src->lineSize)));
+    }
+    TRACE(("...traceScrnBuf %s\n", tag));
+}
+
+#define TRACE_SCRNBUF(tag, screen, sb, len) traceScrnBuf(tag, screen, sb, len)
+#else
+#define TRACE_SCRNBUF(tag, screen, sb, len)	/*nothing */
+#endif
+
+static unsigned
+scrnHeadSize(TScreen * screen, unsigned count)
+{
+    unsigned result = SizeOfLineData;
+
+    (void) screen;
+
+#if OPT_WIDE_CHARS
+    if (screen->wide_chars) {
+	result += screen->lineExtra;
+    }
+#endif
+    result *= count;
+
+    return result;
+}
+
+ScrnBuf
+scrnHeadAddr(TScreen * screen, ScrnBuf base, unsigned offset)
+{
+    unsigned size = scrnHeadSize(screen, offset);
+    ScrnBuf result = ScrnBufAddr(base, size);
+
+    assert((int) offset >= 0);
+
+    return result;
+}
+
+/*
+ * Given a block of data, build index to it in the 'base' parameter.
+ */
+void
+setupLineData(TScreen * screen, ScrnBuf base, Char * data, unsigned nrow, unsigned ncol)
+{
+    unsigned i;
+    unsigned offset = 0;
+    unsigned jump = scrnHeadSize(screen, 1);
+    LineData *ptr;
+#if OPT_WIDE_CHARS
+    unsigned j;
+#endif
+    /* these names are based on types */
+    unsigned skipNcolChar = (ncol * SizeofScrnPtr(attribs));
+    unsigned skipNcolCharData = (ncol * SizeofScrnPtr(charData));
+#if OPT_ISO_COLORS
+    unsigned skipNcolCellColor = (ncol * SizeofScrnPtr(color));
+#endif
+
+    AlignValue(skipNcolChar);
+#if OPT_ISO_COLORS
+    AlignValue(skipNcolCellColor);
+#endif
+    AlignValue(skipNcolCharData);
+
+    for (i = 0; i < nrow; i++, offset += jump) {
+	ptr = LineDataAddr(base, offset);
+
+	ptr->lineSize = (Dimension) ncol;
+	ptr->bufHead = 0;
+#if OPT_DEC_CHRSET
+	SetLineDblCS(ptr, 0);
+#endif
+	SetupScrnPtr(ptr->attribs, data, Char);
+#if OPT_ISO_COLORS
+	SetupScrnPtr(ptr->color, data, CellColor);
+#endif
+	SetupScrnPtr(ptr->charData, data, CharData);
+#if OPT_WIDE_CHARS
+	if (screen->wide_chars) {
+	    unsigned extra = (unsigned) screen->max_combining;
+
+	    ptr->combSize = (Char) extra;
+	    for (j = 0; j < extra; ++j) {
+		SetupScrnPtr(ptr->combData[j], data, CharData);
+	    }
+	}
+#endif
+    }
+}
+
+#define ExtractScrnData(name) \
+		memcpy(dstPtrs->name, \
+		       ((LineData *) srcPtrs)->name,\
+		       dstCols * sizeof(dstPtrs->name[0])); \
+		nextPtr += (srcCols * sizeof(dstPtrs->name[0]))
+
+/*
+ * As part of reallocating the screen buffer when resizing, extract from
+ * the old copy of the screen buffer the data which will be used in the
+ * new copy of the screen buffer.
+ */
+static void
+extractScrnData(TScreen * screen,
+		ScrnBuf dstPtrs,
+		ScrnBuf srcPtrs,
+		unsigned nrows,
+		unsigned move_down)
+{
+    unsigned j;
+
+    TRACE(("extractScrnData(nrows %d)\n", nrows));
+
+    TRACE_SCRNBUF("extract from", screen, srcPtrs, nrows);
+    for (j = 0; j < nrows; j++) {
+	LineData *dst = (LineData *) scrnHeadAddr(screen,
+						  dstPtrs, j + move_down);
+	LineData *src = (LineData *) scrnHeadAddr(screen,
+						  srcPtrs, j);
+	copyLineData(dst, src);
+    }
+}
+
+static ScrnPtr *
+allocScrnHead(TScreen * screen, unsigned nrow)
+{
+    ScrnPtr *result;
+    unsigned size = scrnHeadSize(screen, 1);
+
+    result = (ScrnPtr *) calloc(nrow, size);
+    if (result == 0)
+	SysError(ERROR_SCALLOC);
+
+    TRACE(("allocScrnHead %d -> %d -> %p..%p\n", nrow, nrow * size,
+	   result,
+	   (char *) result + (nrow * size) - 1));
+    return result;
+}
+
+/*
+ * Return the size of a line's data.
+ */
+static unsigned
+sizeofScrnRow(TScreen * screen, unsigned ncol)
+{
+    unsigned result = 1;
+    unsigned sizeAttribs;
+#if OPT_ISO_COLORS
+    unsigned sizeColors;
+#endif
+
+    (void) screen;
+
+#if OPT_WIDE_CHARS
+    if (screen->wide_chars) {
+	result += (unsigned) screen->max_combining;
+    }
+#endif
+    result = (ncol * result * sizeof(CharData));
+    AlignValue(result);
+
+    sizeAttribs = (ncol * SizeofScrnPtr(attribs));
+    AlignValue(sizeAttribs);
+    result += sizeAttribs;
+
+#if OPT_ISO_COLORS
+    sizeColors = (ncol * SizeofScrnPtr(color));
+    AlignValue(sizeColors);
+    result += sizeColors;
+#endif
+
+    return result;
+}
+
+Char *
+allocScrnData(TScreen * screen, unsigned nrow, unsigned ncol)
+{
+    Char *result;
+    size_t length = (nrow * sizeofScrnRow(screen, ncol));
+
+    if ((result = (Char *) calloc(length, sizeof(Char))) == 0)
+	SysError(ERROR_SCALLOC2);
+
+    TRACE(("allocScrnData %dx%d -> %d -> %p..%p\n",
+	   nrow, ncol, length, result, result + length - 1));
+    return result;
+}
 
 /*
  * Allocates memory for a 2-dimensional array of chars and returns a pointer
@@ -85,37 +335,79 @@
  * the third is the foreground and background colors, and the fourth denotes
  * the character set.
  *
- * We store it all as pointers, because of alignment considerations, together
- * with the intention of being able to change the total number of pointers per
- * row according to whether the user wants color or not.
+ * We store it all as pointers, because of alignment considerations.
  */
 ScrnBuf
-Allocate(int nrow, int ncol, Char ** addr)
+allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char ** addr)
 {
-    ScrnBuf base;
-    Char *tmp;
-    int i, j, k;
-    size_t entries = (size_t) (MAX_PTRS * nrow);
-    size_t length = (size_t) (BUF_PTRS * nrow * ncol);
+    TScreen *screen = TScreenOf(xw);
+    ScrnBuf base = 0;
 
-    if ((base = TypeCallocN(ScrnPtr, entries)) == 0)
-	SysError(ERROR_SCALLOC);
+    if (nrow != 0) {
+	base = allocScrnHead(screen, nrow);
+	*addr = allocScrnData(screen, nrow, ncol);
 
-    if ((tmp = TypeCallocN(Char, length)) == 0)
-	SysError(ERROR_SCALLOC2);
-
-    *addr = tmp;
-    for (i = k = 0; i < nrow; i++) {
-	base[k] = 0;		/* per-line flags */
-	k += BUF_HEAD;
-	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
-	    base[k++] = tmp;
-	    tmp += ncol;
-	}
+	setupLineData(screen, base, *addr, nrow, ncol);
     }
 
+    TRACE(("allocScrnBuf %dx%d ->%p\n", nrow, ncol, base));
     return (base);
 }
+
+#if OPT_SAVE_LINES
+/*
+ * Copy line-data from the visible (edit) buffer to the save-lines buffer.
+ */
+static void
+saveEditBufLines(TScreen * screen, ScrnBuf sb, unsigned n)
+{
+    unsigned j;
+
+    TRACE(("...copying %d lines from editBuf to saveBuf\n", n));
+#if OPT_FIFO_LINES
+    (void) sb;
+#endif
+    for (j = 0; j < n; ++j) {
+#if OPT_FIFO_LINES
+	LineData *dst = addScrollback(screen);
+#else
+	unsigned k = (screen->savelines + j - n);
+	LineData *dst = (LineData *) scrnHeadAddr(screen, sb, k);
+#endif
+	LineData *src = getLineData(screen, (int) j);
+	copyLineData(dst, src);
+    }
+}
+
+/*
+ * Copy line-data from the save-lines buffer to the visible (edit) buffer.
+ */
+static void
+unsaveEditBufLines(TScreen * screen, ScrnBuf sb, unsigned n)
+{
+    unsigned j;
+
+    TRACE(("...copying %d lines from saveBuf to editBuf\n", n));
+    for (j = 0; j < n; ++j) {
+	int extra = (int) (n - j);
+	LineData *dst = (LineData *) scrnHeadAddr(screen, sb, j);
+#if OPT_FIFO_LINES
+	LineData *src;
+
+	if ((screen->saved_fifo - extra) <= 0) {
+	    TRACE(("...FIXME: must clear text!\n"));
+	    continue;
+	}
+	src = getScrollback(screen, -extra);
+#else
+	unsigned k = (screen->savelines - extra);
+	LineData *src = (LineData *) scrnHeadAddr(screen,
+						  screen->saveBuf_index, k);
+#endif
+	copyLineData(dst, src);
+    }
+}
+#endif
 
 /*
  *  This is called when the screen is resized.
@@ -126,131 +418,95 @@ static int
 Reallocate(XtermWidget xw,
 	   ScrnBuf * sbuf,
 	   Char ** sbufaddr,
-	   int nrow,
-	   int ncol,
-	   int oldrow,
-	   int oldcol)
+	   unsigned nrow,
+	   unsigned ncol,
+	   unsigned oldrow,
+	   unsigned oldcol)
 {
-    ScrnBuf base;
-    Char *tmp;
-    int i, j, k, minrows;
-    size_t mincols;
-    Char *oldbuf;
+    TScreen *screen = TScreenOf(xw);
+    ScrnBuf oldBufHead;
+    ScrnBuf newBufHead;
+    Char *newBufData;
+    unsigned minrows;
+    unsigned mincols;
+    Char *oldBufData;
     int move_down = 0, move_up = 0;
-    size_t entries = (size_t) (MAX_PTRS * nrow);
-    size_t length = (size_t) (BUF_PTRS * nrow * ncol);
 
     if (sbuf == NULL || *sbuf == NULL) {
 	return 0;
     }
 
-    oldbuf = *sbufaddr;
+    oldBufData = *sbufaddr;
 
-    /*
-     * Special case if oldcol == ncol - straight forward realloc and
-     * update of the additional lines in sbuf
-     *
-     * FIXME: this is a good idea, but doesn't seem to be implemented.
-     * -gildea
-     */
+    TRACE(("Reallocate %dx%d -> %dx%d\n", oldrow, oldcol, nrow, ncol));
 
     /*
      * realloc sbuf, the pointers to all the lines.
      * If the screen shrinks, remove lines off the top of the buffer
      * if resizeGravity resource says to do so.
      */
-    if (nrow < oldrow
-	&& xw->misc.resizeGravity == SouthWestGravity) {
-	/* Remove lines off the top of the buffer if necessary. */
-	move_up = (oldrow - nrow)
-	    - (xw->screen.max_row - xw->screen.cur_row);
-	if (move_up < 0)
-	    move_up = 0;
-	/* Overlapping memmove here! */
-	memmove(*sbuf, *sbuf + (move_up * MAX_PTRS),
-		(unsigned) (MAX_PTRS * (oldrow - move_up)) * sizeof((*sbuf)[0]));
+    TRACE(("Check move_up, nrow %d vs oldrow %d (resizeGravity %s)\n",
+	   nrow, oldrow,
+	   BtoS(GravityIsSouthWest(xw))));
+    if (GravityIsSouthWest(xw)) {
+	if (nrow < oldrow) {
+	    /* Remove lines off the top of the buffer if necessary. */
+	    move_up = (int) (oldrow - nrow)
+		- (xw->screen.max_row - xw->screen.cur_row);
+	    if (move_up < 0)
+		move_up = 0;
+	    /* Overlapping move here! */
+	    TRACE(("move_up %d\n", move_up));
+	    if (move_up) {
+		ScrnBuf dst = *sbuf;
+		unsigned len = (unsigned) ((int) oldrow - move_up);
+
+		TRACE_SCRNBUF("before move_up", screen, dst, oldrow);
+		SaveLineData(dst, 0, (size_t) move_up);
+		MoveLineData(dst, 0, (size_t) move_up, len);
+		RestoreLineData(dst, len, (size_t) move_up);
+		TRACE_SCRNBUF("after move_up", screen, dst, oldrow);
+	    }
+	}
     }
-    *sbuf = TypeRealloc(ScrnPtr, entries, *sbuf);
-    if (*sbuf == 0)
-	SysError(ERROR_RESIZE);
-    base = *sbuf;
+    oldBufHead = *sbuf;
+    *sbuf = allocScrnHead(screen, (unsigned) nrow);
+    newBufHead = *sbuf;
 
     /*
-     *  create the new buffer space and copy old buffer contents there
-     *  line by line.
+     * Create the new buffer space and copy old buffer contents there, line by
+     * line.
      */
-    if ((tmp = TypeCallocN(Char, length)) == 0)
-	SysError(ERROR_SREALLOC);
-    *sbufaddr = tmp;
+    newBufData = allocScrnData(screen, nrow, ncol);
+    *sbufaddr = newBufData;
+
     minrows = (oldrow < nrow) ? oldrow : nrow;
-    mincols = (size_t) ((oldcol < ncol) ? oldcol : ncol);
-    if (nrow > oldrow
-	&& xw->misc.resizeGravity == SouthWestGravity) {
-	/* move data down to bottom of expanded screen */
-	move_down = Min(nrow - oldrow, xw->screen.savedlines);
-	tmp += (ncol * move_down * BUF_PTRS);
-    }
-
-    for (i = k = 0; i < minrows; i++) {
-	k += BUF_HEAD;
-	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
-	    memcpy(tmp, base[k++], mincols);
-	    tmp += ncol;
+    mincols = (oldcol < ncol) ? oldcol : ncol;
+    if (GravityIsSouthWest(xw)) {
+	if (nrow > oldrow) {
+	    /* move data down to bottom of expanded screen */
+	    move_down = Min((int) (nrow - oldrow), xw->screen.savedlines);
 	}
     }
 
-    /*
-     * update the pointers in sbuf
-     */
-    for (i = k = 0, tmp = *sbufaddr; i < nrow; i++) {
-	for (j = 0; j < BUF_HEAD; j++)
-	    base[k++] = 0;
-	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
-	    base[k++] = tmp;
-	    tmp += ncol;
-	}
-    }
+    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol);
+    extractScrnData(screen, newBufHead, oldBufHead, minrows,
+#if OPT_SAVE_LINES
+		    0
+#else
+		    (unsigned) move_down
+#endif
+	);
+    free(oldBufHead);
 
-    /* Now free the old buffer */
-    free(oldbuf);
+    /* Now free the old data */
+    free(oldBufData);
 
+    TRACE(("...Reallocate %dx%d ->%p\n", nrow, ncol, newBufHead));
     return move_down ? move_down : -move_up;	/* convert to rows */
 }
 
 #if OPT_WIDE_CHARS
-#if 0
-static void
-dump_screen(const char *tag,
-	    XtermWidget xw,
-	    ScrnBuf sbuf,
-	    Char * sbufaddr,
-	    unsigned nrow,
-	    unsigned ncol)
-{
-    unsigned y, x;
-
-    TRACE(("DUMP %s, ptrs %d\n", tag, xw->num_ptrs));
-    TRACE(("  sbuf      %p\n", sbuf));
-    TRACE(("  sbufaddr  %p\n", sbufaddr));
-    TRACE(("  nrow      %d\n", nrow));
-    TRACE(("  ncol      %d\n", ncol));
-
-    for (y = 0; y < nrow; ++y) {
-	ScrnPtr ptr = BUF_CHARS(sbuf, y);
-	TRACE(("%3d:%p:", y, ptr));
-	for (x = 0; x < ncol; ++x) {
-	    Char c = ptr[x];
-	    if (c == 0)
-		c = '~';
-	    TRACE(("%c", c));
-	}
-	TRACE(("\n"));
-    }
-}
-#else
-#define dump_screen(tag, xw, sbuf, sbufaddr, nrow, ncol)	/* nothing */
-#endif
-
 /*
  * This function reallocates memory if changing the number of Buf offsets.
  * The code is based on Reallocate().
@@ -260,68 +516,70 @@ ReallocateBufOffsets(XtermWidget xw,
 		     ScrnBuf * sbuf,
 		     Char ** sbufaddr,
 		     unsigned nrow,
-		     unsigned ncol,
-		     size_t new_max_offsets)
+		     unsigned ncol)
 {
+    TScreen *screen = TScreenOf(xw);
     unsigned i;
-    int j, k;
-    ScrnBuf base;
-    Char *oldbuf, *tmp;
-    size_t entries, length;
-    /*
-     * As there are 2 buffers (allbuf, altbuf), we cannot change num_ptrs in
-     * this function.  However MAX_PTRS and BUF_PTRS depend on num_ptrs so
-     * change it now and restore the value when done.
-     */
-    int old_max_ptrs = MAX_PTRS;
+    ScrnBuf newBufHead;
+    Char *oldBufData;
+    ScrnBuf oldBufHead;
+
+    unsigned old_jump = scrnHeadSize(screen, 1);
+    unsigned new_jump;
+    unsigned new_ptrs = 1 + (unsigned) (screen->max_combining);
+    unsigned dstCols = ncol;
+    unsigned srcCols = ncol;
+    LineData *dstPtrs;
+    LineData *srcPtrs;
+    Char *nextPtr;
 
     assert(nrow != 0);
     assert(ncol != 0);
-    assert(new_max_offsets != 0);
 
-    dump_screen("before", xw, *sbuf, *sbufaddr, nrow, ncol);
-
-    xw->num_ptrs = (int) new_max_offsets;
-
-    entries = ((unsigned) MAX_PTRS * nrow);
-    length = ((unsigned) BUF_PTRS * nrow * ncol);
-    oldbuf = *sbufaddr;
-
-    *sbuf = TypeRealloc(ScrnPtr, entries, *sbuf);
-    if (*sbuf == 0)
-	SysError(ERROR_RESIZE);
-    base = *sbuf;
-
-    if ((tmp = TypeCallocN(Char, length)) == 0)
-	SysError(ERROR_SREALLOC);
-    *sbufaddr = tmp;
-
-    for (i = 0, k = 0; i < nrow; i++) {
-	k += BUF_HEAD;
-	for (j = BUF_HEAD; j < old_max_ptrs; j++) {
-	    memcpy(tmp, base[k++], ncol);
-	    tmp += ncol;
-	}
-	tmp += ncol * (new_max_offsets - (unsigned) old_max_ptrs);
-    }
+    oldBufData = *sbufaddr;
+    oldBufHead = *sbuf;
 
     /*
-     * update the pointers in sbuf
+     * Allocate a new LineData array, retain the old one until we've copied
+     * the data that it points to, as well as non-pointer data, e.g., bufHead.
+     *
+     * Turn on wide-chars temporarily when constructing pointers, since that is
+     * used to decide whether to address the combData[] array, which affects
+     * the length of the LineData structure.
      */
-    for (i = 0, k = 0, tmp = *sbufaddr; i < nrow; i++) {
-	for (j = 0; j < BUF_HEAD; j++)
-	    base[k++] = 0;
-	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
-	    base[k++] = tmp;
-	    tmp += ncol;
-	}
+    screen->wide_chars = True;
+
+    new_jump = scrnHeadSize(screen, 1);
+    newBufHead = allocScrnHead(screen, nrow);
+    *sbufaddr = allocScrnData(screen, nrow, ncol);
+    setupLineData(screen, newBufHead, *sbufaddr, nrow, ncol);
+
+    screen->wide_chars = False;
+
+    nextPtr = *sbufaddr;
+
+    srcPtrs = (LineData *) oldBufHead;
+    dstPtrs = (LineData *) newBufHead;
+    for (i = 0; i < nrow; i++) {
+	dstPtrs->bufHead = srcPtrs->bufHead;
+	ExtractScrnData(attribs);
+#if OPT_ISO_COLORS
+	ExtractScrnData(color);
+#endif
+	ExtractScrnData(charData);
+
+	nextPtr += ncol * new_ptrs;
+	srcPtrs = LineDataAddr(srcPtrs, old_jump);
+	dstPtrs = LineDataAddr(dstPtrs, new_jump);
     }
 
-    /* Now free the old buffer and restore num_ptrs */
-    free(oldbuf);
-    dump_screen("after", xw, *sbuf, *sbufaddr, nrow, ncol);
+    /* Now free the old data */
+    free(oldBufData);
+    free(oldBufHead);
 
-    xw->num_ptrs = old_max_ptrs;
+    *sbuf = newBufHead;
+
+    TRACE(("ReallocateBufOffsets %dx%d ->%p\n", nrow, ncol, *sbufaddr));
 }
 
 /*
@@ -331,8 +589,6 @@ void
 ChangeToWide(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
-    unsigned new_bufoffset = (unsigned) (OFF_FINAL
-					 + (screen->max_combining * 2));
     int savelines = screen->scrollWidget ? screen->savelines : 0;
 
     if (screen->wide_chars)
@@ -346,32 +602,48 @@ ChangeToWide(XtermWidget xw)
 	/*
 	 * If we're displaying the alternate screen, switch the pointers back
 	 * temporarily so ReallocateBufOffsets() will operate on the proper
-	 * data in altbuf.
+	 * data in the alternate buffer.
 	 */
-	if (screen->alternate)
+	if (screen->whichBuf)
 	    SwitchBufPtrs(screen);
 
+#if OPT_SAVE_LINES
+#if !OPT_FIFO_LINES
 	ReallocateBufOffsets(xw,
-			     &screen->allbuf, &screen->sbuf_address,
-			     (unsigned) (MaxRows(screen) + savelines),
-			     (unsigned) MaxCols(screen),
-			     new_bufoffset);
-	if (screen->altbuf) {
+			     &screen->saveBuf_index,
+			     &screen->saveBuf_data,
+			     (unsigned) savelines,
+			     (unsigned) MaxCols(screen));
+#endif
+	if (screen->editBuf_index[0]) {
 	    ReallocateBufOffsets(xw,
-				 &screen->altbuf, &screen->abuf_address,
+				 &screen->editBuf_index[0],
+				 &screen->editBuf_data[0],
 				 (unsigned) MaxRows(screen),
-				 (unsigned) MaxCols(screen),
-				 new_bufoffset);
+				 (unsigned) MaxCols(screen));
+	}
+#else
+	ReallocateBufOffsets(xw,
+			     &screen->saveBuf_index,
+			     &screen->saveBuf_data,
+			     (unsigned) (MaxRows(screen) + savelines),
+			     (unsigned) MaxCols(screen));
+#endif
+	if (screen->editBuf_index[1]) {
+	    ReallocateBufOffsets(xw,
+				 &screen->editBuf_index[1],
+				 &screen->editBuf_data[1],
+				 (unsigned) MaxRows(screen),
+				 (unsigned) MaxCols(screen));
 	}
 
 	screen->wide_chars = True;
-	xw->num_ptrs = (int) new_bufoffset;
-	screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
+	screen->visbuf = VisBuf(screen);
 
 	/*
 	 * Switch the pointers back before we start painting on the screen.
 	 */
-	if (screen->alternate)
+	if (screen->whichBuf)
 	    SwitchBufPtrs(screen);
 
 	update_font_utf8_mode();
@@ -389,29 +661,28 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 {
     if (len != 0) {
 	TScreen *screen = &(xw->screen);
+	LineData *ld;
+	unsigned n;
+
+	ld = getLineData(screen, row);
+
 	flags |= TERM_COLOR_FLAGS(xw);
 
-	memset(SCRN_BUF_CHARS(screen, row) + col, ' ', len);
-	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
+	for (n = 0; n < len; ++n)
+	    ld->charData[(unsigned) col + n] = (CharData) ' ';
 
-	if_OPT_EXT_COLORS(screen, {
-	    memset(SCRN_BUF_FGRND(screen, row) + col,
-		   xw->sgr_foreground, len);
-	    memset(SCRN_BUF_BGRND(screen, row) + col,
-		   xw->cur_background, len);
-	});
-	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	    memset(SCRN_BUF_COLOR(screen, row) + col,
-		   (int) xtermColorPair(xw), len);
-	});
-	if_OPT_DEC_CHRSET({
-	    memset(SCRN_BUF_CSETS(screen, row) + col,
-		   curXtermChrSet(xw, row), len);
+	memset(ld->attribs + col, flags, len);
+
+	if_OPT_ISO_COLORS(screen, {
+	    CellColor p = xtermColorPair(xw);
+	    for (n = 0; n < len; ++n) {
+		ld->color[(unsigned) col + n] = p;
+	    }
 	});
 	if_OPT_WIDE_CHARS(screen, {
-	    int off;
-	    for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-		memset(SCREEN_PTR(screen, row, off) + col, 0, len);
+	    size_t off;
+	    for_each_combData(off, ld) {
+		memset(ld->combData[off] + col, 0, len * sizeof(IChar));
 	    }
 	});
     }
@@ -464,26 +735,19 @@ void
 ScrnWriteText(XtermWidget xw,
 	      IChar * str,
 	      unsigned flags,
-	      unsigned cur_fg_bg,
+	      CellColor cur_fg_bg,
 	      unsigned length)
 {
     TScreen *screen = &(xw->screen);
+    LineData *ld;
 #if OPT_ISO_COLORS
-#if OPT_EXT_COLORS
-    Char *fbf = 0;
-    Char *fbb = 0;
-#else
-    Char *fb = 0;
-#endif
-#endif
-#if OPT_DEC_CHRSET
-    Char *cb = 0;
+    CellColor *fb = 0;
 #endif
     Char *attrs;
     int avail = MaxCols(screen) - screen->cur_col;
-    Char *chars;
+    IChar *chars;
 #if OPT_WIDE_CHARS
-    Char starcol1, starcol2;
+    IChar starcol1;
 #endif
     unsigned n;
     unsigned real_width = visual_width(str, length);
@@ -497,23 +761,17 @@ ScrnWriteText(XtermWidget xw,
     if (length == 0 || real_width == 0)
 	return;
 
-    chars = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
-    attrs = SCRN_BUF_ATTRS(screen, screen->cur_row) + screen->cur_col;
+    ld = getLineData(screen, screen->cur_row);
 
-    if_OPT_EXT_COLORS(screen, {
-	fbf = SCRN_BUF_FGRND(screen, screen->cur_row) + screen->cur_col;
-	fbb = SCRN_BUF_BGRND(screen, screen->cur_row) + screen->cur_col;
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	fb = SCRN_BUF_COLOR(screen, screen->cur_row) + screen->cur_col;
-    });
-    if_OPT_DEC_CHRSET({
-	cb = SCRN_BUF_CSETS(screen, screen->cur_row) + screen->cur_col;
+    chars = ld->charData + screen->cur_col;
+    attrs = ld->attribs + screen->cur_col;
+
+    if_OPT_ISO_COLORS(screen, {
+	fb = ld->color + screen->cur_col;
     });
 
 #if OPT_WIDE_CHARS
     starcol1 = *chars;
-    starcol2 = chars[length - 1];
 #endif
 
     /* write blanks if we're writing invisible text */
@@ -521,80 +779,54 @@ ScrnWriteText(XtermWidget xw,
 	if ((flags & INVISIBLE))
 	    chars[n] = ' ';
 	else
-	    chars[n] = LO_BYTE(str[n]);
+	    chars[n] = str[n];
     }
 
 #if OPT_BLINK_TEXT
     if ((flags & BLINK) && !(screen->blink_as_bold)) {
-	ScrnSetBlinked(screen, screen->cur_row);
+	LineSetBlinked(ld);
     }
 #endif
 
-#define ERROR_1 0x20
-#define ERROR_2 0x00
     if_OPT_WIDE_CHARS(screen, {
 
-	Char *char2;
-
 	if (real_width != length) {
-	    Char *char1 = chars;
-	    char2 = SCRN_BUF_WIDEC(screen, screen->cur_row);
-	    char2 += screen->cur_col;
-	    if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
-		&& isWide(PACK_PAIR(char1, char2, -1))) {
-		char1[-1] = ERROR_1;
-		char2[-1] = ERROR_2;
+	    IChar *char1 = chars;
+	    if (screen->cur_col
+		&& starcol1 == HIDDEN_CHAR
+		&& isWide((int) char1[-1])) {
+		char1[-1] = (CharData) ' ';
 	    }
 	    /* if we are overwriting the right hand half of a
 	       wide character, make the other half vanish */
 	    while (length) {
 		int ch = (int) str[0];
 
-		*char1++ = LO_BYTE(*str);
-		*char2++ = HI_BYTE(*str);
-		str++;
+		*char1++ = *str++;
 		length--;
 
 		if (isWide(ch)) {
-		    *char1 = HIDDEN_LO;
-		    *char2 = HIDDEN_HI;
-		    char1++;
-		    char2++;
+		    *char1++ = (CharData) HIDDEN_CHAR;
 		}
 	    }
 
-	    if (*char1 == HIDDEN_LO
-		&& *char2 == HIDDEN_HI
-		&& char1[-1] == HIDDEN_LO
-		&& char2[-1] == HIDDEN_HI) {
-		*char1 = ERROR_1;
-		*char2 = ERROR_2;
+	    if (*char1 == HIDDEN_CHAR
+		&& char1[-1] == HIDDEN_CHAR) {
+		*char1 = (CharData) ' ';
 	    }
 	    /* if we are overwriting the left hand half of a
 	       wide character, make the other half vanish */
 	} else {
-	    if ((char2 = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
-		char2 += screen->cur_col;
-		if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
-		    && isWide(PACK_PAIR(chars, char2, -1))) {
-		    chars[-1] = ERROR_1;
-		    char2[-1] = ERROR_2;
-		}
-		/* if we are overwriting the right hand half of a
-		   wide character, make the other half vanish */
-		if (chars[length] == HIDDEN_LO && char2[length] == HIDDEN_HI &&
-		    isWide(PACK_PAIR(chars, char2, length - 1))) {
-		    chars[length] = ERROR_1;
-		    char2[length] = ERROR_2;
-		}
-		/* if we are overwriting the left hand half of a
-		   wide character, make the other half vanish */
-		for (n = 0; n < length; ++n) {
-		    if ((flags & INVISIBLE))
-			char2[n] = 0;
-		    else
-			char2[n] = HI_BYTE(str[n]);
-		}
+	    if (screen->cur_col
+		&& starcol1 == HIDDEN_CHAR
+		&& isWide((int) chars[-1])) {
+		chars[-1] = (CharData) ' ';
+	    }
+	    /* if we are overwriting the right hand half of a
+	       wide character, make the other half vanish */
+	    if (chars[length] == HIDDEN_CHAR
+		&& isWide((int) chars[length - 1])) {
+		chars[length] = (CharData) ' ';
 	    }
 	}
     });
@@ -604,23 +836,17 @@ ScrnWriteText(XtermWidget xw,
     memset(attrs, (Char) flags, real_width);
 
     if_OPT_WIDE_CHARS(screen, {
-	int off;
-	for (off = OFF_FINAL; off < MAX_PTRS; ++off) {
-	    memset(SCREEN_PTR(screen,
-			      screen->cur_row,
-			      off) + screen->cur_col,
-		   0, real_width);
+	size_t off;
+	for_each_combData(off, ld) {
+	    memset(ld->combData[off] + screen->cur_col,
+		   0,
+		   real_width * sizeof(IChar));
 	}
     });
-    if_OPT_EXT_COLORS(screen, {
-	memset(fbf, (int) ExtractForeground(cur_fg_bg), real_width);
-	memset(fbb, (int) ExtractBackground(cur_fg_bg), real_width);
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	memset(fb, (int) cur_fg_bg, real_width);
-    });
-    if_OPT_DEC_CHRSET({
-	memset(cb, curXtermChrSet(xw, screen->cur_row), real_width);
+    if_OPT_ISO_COLORS(screen, {
+	unsigned j;
+	for (j = 0; j < real_width; ++j)
+	    fb[j] = cur_fg_bg;
     });
 
     if_OPT_WIDE_CHARS(screen, {
@@ -631,6 +857,8 @@ ScrnWriteText(XtermWidget xw,
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
     });
+
+    return;
 }
 
 /*
@@ -640,82 +868,147 @@ static void
 ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 {
     TScreen *screen = &(xw->screen);
-    int i, j;
-    size_t len = ScrnPointers(screen, n);
-    int last = ((int) n * MAX_PTRS);
+    ScrnPtr *base;
+    unsigned jump = scrnHeadSize(screen, 1);
+    unsigned i;
+    LineData *work;
+    unsigned flags = TERM_COLOR_FLAGS(xw);
+#if OPT_ISO_COLORS
+    unsigned j;
+#endif
 
-    TRACE(("ScrnClearLines(where %d, n %d, size %d)\n", where, n, size));
+    TRACE(("ScrnClearLines(%s:where %d, n %d, size %d)\n",
+	   (sb == screen->saveBuf_index) ? "save" : "edit",
+	   where, n, size));
 
     assert(n != 0);
     assert(size != 0);
 
     /* save n lines at where */
-    memcpy((char *) screen->save_ptr,
-	   (char *) &sb[MAX_PTRS * where],
-	   len);
+    SaveLineData(sb, (unsigned) where, (size_t) n);
 
     /* clear contents of old rows */
-    if (TERM_COLOR_FLAGS(xw)) {
-	unsigned flags = TERM_COLOR_FLAGS(xw);
-	for (i = 0; i < last; i += MAX_PTRS) {
-	    for (j = 0; j < MAX_PTRS; j++) {
-		if (j < BUF_HEAD)
-		    screen->save_ptr[i + j] = 0;
-		else if (j == OFF_ATTRS)
-		    memset(screen->save_ptr[i + j], (int) flags, size);
+    base = screen->save_ptr;
+    for (i = 0; i < n; ++i) {
+	work = (LineData *) base;
+	work->bufHead = 0;
+#if OPT_DEC_CHRSET
+	SetLineDblCS(work, 0);
+#endif
+
+	memset(work->charData, 0, size * sizeof(IChar));
+	if (TERM_COLOR_FLAGS(xw)) {
+	    memset(work->attribs, (int) flags, size);
 #if OPT_ISO_COLORS
-#if OPT_EXT_COLORS
-		else if (j == OFF_FGRND)
-		    memset(screen->save_ptr[i + j], xw->sgr_foreground, size);
-		else if (j == OFF_BGRND)
-		    memset(screen->save_ptr[i + j], xw->cur_background, size);
-#else
-		else if (j == OFF_COLOR)
-		    memset(screen->save_ptr[i + j], (int)
-			   xtermColorPair(xw), size);
+	    {
+		CellColor p = xtermColorPair(xw);
+		for (j = 0; j < size; ++j) {
+		    work->color[j] = p;
+		}
+	    }
 #endif
+	} else {
+	    memset(work->attribs, 0, size);
+#if OPT_ISO_COLORS
+	    memset(work->color, 0, size * sizeof(work->color[0]));
 #endif
-		else
-		    bzero(screen->save_ptr[i + j], size);
+	}
+#if OPT_WIDE_CHARS
+	if (screen->wide_chars) {
+	    size_t off;
+
+	    for (off = 0; off < work->combSize; ++off) {
+		memset(work->combData[off], 0, size * sizeof(IChar));
 	    }
 	}
-    } else {
-	for (i = 0; i < last; i += MAX_PTRS) {
-	    for (j = 0; j < BUF_HEAD; j++)
-		screen->save_ptr[i + j] = 0;
-	    for (j = BUF_HEAD; j < MAX_PTRS; j++)
-		bzero(screen->save_ptr[i + j], size);
-	}
+#endif
+	base = ScrnBufAddr(base, jump);
     }
+}
+
+/*
+ * We're always ensured of having a visible buffer, but may not have saved
+ * lines.  Check the pointer that's sure to work.
+ */
+#if OPT_SAVE_LINES
+#define OkAllocBuf(screen) (screen->editBuf_index[0] != 0)
+#else
+#define OkAllocBuf(screen) (screen->saveBuf_index != 0)
+#endif
+
+void
+ScrnAllocBuf(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (!OkAllocBuf(screen)) {
+	int nrows = MaxRows(screen);
+#if !OPT_SAVE_LINES
+	int savelines = screen->scrollWidget ? screen->savelines : 0;
+#endif
+
+	TRACE(("ScrnAllocBuf %dx%d (%d)\n",
+	       nrows, MaxCols(screen), screen->savelines));
+
+#if OPT_SAVE_LINES
+	if (screen->savelines != 0) {
+#if OPT_FIFO_LINES
+	    /* for FIFO, we only need space for the index - addScrollback inits */
+	    screen->saveBuf_index = allocScrnHead(screen,
+						  (unsigned) (screen->savelines));
+#else
+	    screen->saveBuf_index = allocScrnBuf(xw,
+						 (unsigned) screen->savelines,
+						 (unsigned) MaxCols(screen),
+						 &screen->saveBuf_data);
+#endif
+	} else {
+	    screen->saveBuf_index = 0;
+	}
+	screen->editBuf_index[0] = allocScrnBuf(xw,
+						(unsigned) nrows,
+						(unsigned) MaxCols(screen),
+						&screen->editBuf_data[0]);
+#else /* !OPT_SAVE_LINES */
+	screen->saveBuf_index = allocScrnBuf(xw,
+					     (unsigned) (nrows + screen->savelines),
+					     (unsigned) (MaxCols(screen)),
+					     &screen->saveBuf_data);
+#endif /* OPT_SAVE_LINES */
+	screen->visbuf = VisBuf(screen);
+    }
+    return;
 }
 
 size_t
 ScrnPointers(TScreen * screen, size_t len)
 {
-    len *= (unsigned) MAX_PTRS;
+    size_t result = scrnHeadSize(screen, len);
 
-    if (len > screen->save_len) {
+    if (result > screen->save_len) {
 	if (screen->save_len)
-	    screen->save_ptr = TypeRealloc(ScrnPtr, len, screen->save_ptr);
+	    screen->save_ptr = (ScrnPtr *) realloc(screen->save_ptr, result);
 	else
-	    screen->save_ptr = TypeMallocN(ScrnPtr, len);
+	    screen->save_ptr = (ScrnPtr *) malloc(result);
 	screen->save_len = len;
 	if (screen->save_ptr == 0)
 	    SysError(ERROR_SAVE_PTR);
     }
-    return len * sizeof(ScrnPtr);
+    TRACE2(("ScrnPointers %ld ->%p\n", (long) len, screen->save_ptr));
+    return result;
 }
 
 /*
  * Inserts n blank lines at sb + where, treating last as a bottom margin.
- * size is the size of each entry in sb.
  */
 void
-ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where,
-	       unsigned n, unsigned size)
+ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
 {
     TScreen *screen = &(xw->screen);
-    size_t len = ScrnPointers(screen, n);
+    unsigned size = (unsigned) MaxCols(screen);
+
+    TRACE(("ScrnInsertLine(last %d, where %d, n %d, size %d)\n",
+	   last, where, n, size));
 
     assert(where >= 0);
     assert(last >= (int) n);
@@ -723,7 +1016,6 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where,
 
     assert(n != 0);
     assert(size != 0);
-    assert(MAX_PTRS > 0);
 
     /* save n lines at bottom */
     ScrnClearLines(xw, sb, (last -= (int) n - 1), n, size);
@@ -738,45 +1030,98 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where,
      *   +--------|---------|----+
      */
     assert(last >= where);
-    memmove((char *) &sb[MAX_PTRS * (where + (int) n)],
-	    (char *) &sb[MAX_PTRS * where],
-	    sizeof(char *) * (unsigned) (MAX_PTRS * (last - where)));
+    /*
+     * This will never shift from the saveBuf to editBuf, so there is no need
+     * to handle that case.
+     */
+    MoveLineData(sb,
+		 (unsigned) (where + (int) n),
+		 (unsigned) where,
+		 (unsigned) (last - where));
 
     /* reuse storage for new lines at where */
-    memcpy((char *) &sb[MAX_PTRS * where],
-	   (char *) screen->save_ptr,
-	   len);
+    RestoreLineData(sb, (unsigned) where, n);
 }
 
 /*
  * Deletes n lines at sb + where, treating last as a bottom margin.
- * size is the size of each entry in sb.
  */
 void
-ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where,
-	       unsigned n, unsigned size)
+ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
 {
     TScreen *screen = &(xw->screen);
+    unsigned size = (unsigned) MaxCols(screen);
+
+    TRACE(("ScrnDeleteLine(%s:last %d, where %d, n %d, size %d)\n",
+	   (sb == screen->saveBuf_index) ? "save" : "edit",
+	   last, where, n, size));
 
     assert(where >= 0);
     assert(last >= where + (int) n - 1);
 
     assert(n != 0);
     assert(size != 0);
-    assert(MAX_PTRS > 0);
-
-    ScrnClearLines(xw, sb, where, n, size);
 
     /* move up lines */
-    memmove((char *) &sb[MAX_PTRS * where],
-	    (char *) &sb[MAX_PTRS * (where + (int) n)],
-	    sizeof(char *) * (unsigned) (MAX_PTRS
-					 * ((last -= ((int) n - 1)) - where)));
+    last -= ((int) n - 1);
+#if OPT_SAVE_LINES
+    if (inSaveBuf(screen, sb, where)) {
+#if !OPT_FIFO_LINES
+	int from = where + n;
+#endif
+
+	/* we shouldn't be editing the saveBuf, only scroll into it */
+	assert(last >= screen->savelines);
+
+	if (sb != 0) {
+#if OPT_FIFO_LINES
+	    /* copy lines from editBuf to saveBuf (allocating as we go...) */
+	    saveEditBufLines(screen, sb, n);
+#else
+	    ScrnClearLines(xw, sb, where, n, size);
+
+	    /* move the pointers within saveBuf */
+	    TRACE(("...%smoving pointers in saveBuf (compare %d %d)\n",
+		   ((screen->savelines > from)
+		    ? ""
+		    : "SKIP "),
+		   screen->savelines,
+		   from));
+	    if (screen->savelines > from) {
+		MoveLineData(sb,
+			     (unsigned) where,
+			     (unsigned) from,
+			     (unsigned) (screen->savelines - from));
+	    }
+
+	    /* reuse storage in saveBuf */
+	    TRACE(("...reuse %d lines storage in saveBuf\n", n));
+	    RestoreLineData(sb, (unsigned) screen->savelines - n, n);
+
+	    /* copy lines from editBuf to saveBuf (into the reused storage) */
+	    saveEditBufLines(screen, sb, n);
+#endif
+	}
+
+	/* adjust variables to fall-thru into changes only to editBuf */
+	TRACE(("...adjusting variables, to work on editBuf alone\n"));
+	last -= screen->savelines;
+	where = 0;
+	sb = screen->visbuf;
+    }
+#endif
+    /*
+     * Scroll the visible buffer (editBuf).
+     */
+    ScrnClearLines(xw, sb, where, n, size);
+
+    MoveLineData(sb,
+		 (unsigned) where,
+		 (unsigned) (where + (int) n),
+		 (size_t) (last - where));
 
     /* reuse storage for new bottom lines */
-    memcpy((char *) &sb[MAX_PTRS * last],
-	   (char *) screen->save_ptr,
-	   (unsigned) MAX_PTRS * sizeof(char *) * n);
+    RestoreLineData(sb, (unsigned) last, n);
 }
 
 /*
@@ -786,23 +1131,23 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where,
 void
 ScrnInsertChar(XtermWidget xw, unsigned n)
 {
-#define Target (data + col + n)
-#define Source (data + col)
+#define MemMove(data) \
+    	for (j = last - 1; j >= (col + (int) n); --j) \
+	    data[j] = data[j - (int) n]
 
     TScreen *screen = &(xw->screen);
-    ScrnBuf sb = screen->visbuf;
     int last = MaxCols(screen);
     int row = screen->cur_row;
     int col = screen->cur_col;
-    Char *data;
-    size_t nbytes;
+    int j, nbytes;
+    LineData *ld;
 
     if (last <= (col + (int) n)) {
 	if (last <= col)
 	    return;
 	n = (unsigned) (last - col);
     }
-    nbytes = (size_t) (last - (col + (int) n));
+    nbytes = (last - (col + (int) n));
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
@@ -822,37 +1167,23 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	}
     });
 
-    data = BUF_CHARS(sb, row);
-    memmove(Target, Source, nbytes);
+    if ((ld = getLineData(screen, row)) != 0) {
+	MemMove(ld->charData);
+	MemMove(ld->attribs);
 
-    data = BUF_ATTRS(sb, row);
-    memmove(Target, Source, nbytes);
-
-    if_OPT_EXT_COLORS(screen, {
-	data = BUF_FGRND(sb, row);
-	memmove(Target, Source, nbytes);
-	data = BUF_BGRND(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	data = BUF_COLOR(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_DEC_CHRSET({
-	data = BUF_CSETS(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_WIDE_CHARS(screen, {
-	int off;
-	for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-	    data = BUFFER_PTR(sb, row, off);
-	    memmove(Target, Source, nbytes);
-	}
-    });
+	if_OPT_ISO_COLORS(screen, {
+	    MemMove(ld->color);
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    for_each_combData(off, ld) {
+		MemMove(ld->combData[off]);
+	    }
+	});
+    }
     ClearCells(xw, CHARDRAWN, n, row, col);
 
-#undef Source
-#undef Target
+#undef MemMove
 }
 
 /*
@@ -861,23 +1192,23 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
-#define Target (data + col)
-#define Source (data + col + n)
+#define MemMove(data) \
+    	for (j = col; j < last - (int) n; ++j) \
+	    data[j] = data[j + (int) n]
 
     TScreen *screen = &(xw->screen);
-    ScrnBuf sb = screen->visbuf;
     int last = MaxCols(screen);
     int row = screen->cur_row;
     int col = screen->cur_col;
-    Char *data;
-    size_t nbytes;
+    int j, nbytes;
+    LineData *ld;
 
     if (last <= (col + (int) n)) {
 	if (last <= col)
 	    return;
 	n = (unsigned) (last - col);
     }
-    nbytes = (size_t) (last - (col + (int) n));
+    nbytes = (last - (col + (int) n));
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
@@ -893,38 +1224,24 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
     });
 
-    data = BUF_CHARS(sb, row);
-    memmove(Target, Source, nbytes);
+    if ((ld = getLineData(screen, row)) != 0) {
+	MemMove(ld->charData);
+	MemMove(ld->attribs);
 
-    data = BUF_ATTRS(sb, row);
-    memmove(Target, Source, nbytes);
-
-    if_OPT_EXT_COLORS(screen, {
-	data = BUF_FGRND(sb, row);
-	memmove(Target, Source, nbytes);
-	data = BUF_BGRND(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	data = BUF_COLOR(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_DEC_CHRSET({
-	data = BUF_CSETS(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_WIDE_CHARS(screen, {
-	int off;
-	for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-	    data = BUFFER_PTR(sb, row, off);
-	    memmove(Target, Source, nbytes);
-	}
-    });
+	if_OPT_ISO_COLORS(screen, {
+	    MemMove(ld->color);
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    for_each_combData(off, ld) {
+		MemMove(ld->combData[off]);
+	    }
+	});
+	LineClrWrapped(ld);
+    }
     ClearCells(xw, 0, n, row, (last - (int) n));
-    ScrnClrWrapped(screen, row);
 
-#undef Source
-#undef Target
+#undef MemMove
 }
 
 /*
@@ -943,6 +1260,7 @@ ScrnRefresh(XtermWidget xw,
 	    Bool force)		/* ... leading/trailing spaces */
 {
     TScreen *screen = &(xw->screen);
+    LineData *ld;
     int y = toprow * FontHeight(screen) + screen->border;
     int row;
     int maxrow = toprow + nrows - 1;
@@ -954,7 +1272,7 @@ ScrnRefresh(XtermWidget xw,
 #endif
     static int recurse = 0;
 
-    TRACE(("ScrnRefresh (%d,%d) - (%d,%d)%s\n",
+    TRACE(("ScrnRefresh (%d,%d) - (%d,%d)%s {{\n",
 	   toprow, leftcol,
 	   nrows, ncols,
 	   force ? " force" : ""));
@@ -967,28 +1285,14 @@ ScrnRefresh(XtermWidget xw,
 
     for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
-#if OPT_EXT_COLORS
-	Char *fbf = 0;
-	Char *fbb = 0;
-#define ColorOf(col) (unsigned) ((fbf[col] << 8) | fbb[col])
-#else
-	Char *fb = 0;
-#define ColorOf(col) (unsigned) (fb[col])
-#endif
-#endif
-#if OPT_DEC_CHRSET
-	Char *cb = 0;
+	CellColor *fb = 0;
+#define ColorOf(col) fb[col]
 #endif
 #if OPT_WIDE_CHARS
 	int wideness = 0;
-	Char *widec = 0;
-#define WIDEC_PTR(cell) widec ? &widec[cell] : 0
-#define BLANK_CEL(cell) ((chars[cell] == ' ') && (widec == 0 || widec[cell] == 0))
-#else
-#define BLANK_CEL(cell) (chars[cell] == ' ')
 #endif
-	Char cs = 0;
-	Char *chars;
+#define BLANK_CEL(cell) (chars[cell] == ' ')
+	IChar *chars;
 	Char *attrs;
 	int col = leftcol;
 	int maxcol = leftcol + ncols - 1;
@@ -996,33 +1300,36 @@ ScrnRefresh(XtermWidget xw,
 	int lastind;
 	unsigned flags;
 	unsigned test;
-	unsigned fg_bg = 0, fg = 0, bg = 0;
+	CellColor fg_bg = 0;
+	unsigned fg = 0, bg = 0;
 	int x;
 	GC gc;
 	Bool hilite;
 
 	(void) fg;
 	(void) bg;
+#if !OPT_ISO_COLORS
+	fg_bg = 0;
+#endif
 
 	if (row < screen->top_marg || row > screen->bot_marg)
 	    lastind = row;
 	else
 	    lastind = row - scrollamt;
 
-	TRACE(("ScrnRefresh row=%d lastind=%d/%d\n", row, lastind, max));
+	TRACE2(("ScrnRefresh row=%d lastind=%d/%d\n", row, lastind, max));
 	if (lastind < 0 || lastind > max)
 	    continue;
 
-	chars = SCRN_BUF_CHARS(screen, ROW2INX(screen, lastind));
-	attrs = SCRN_BUF_ATTRS(screen, ROW2INX(screen, lastind));
+	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0)
+	    break;
+	if (maxcol >= ld->lineSize) {
+	    maxcol = ld->lineSize - 1;
+	    hi_col = maxcol;
+	}
 
-	if_OPT_DEC_CHRSET({
-	    cb = SCRN_BUF_CSETS(screen, ROW2INX(screen, lastind));
-	});
-
-	if_OPT_WIDE_CHARS(screen, {
-	    widec = SCRN_BUF_WIDEC(screen, ROW2INX(screen, lastind));
-	});
+	chars = ld->charData;
+	attrs = ld->attribs;
 
 	if_OPT_WIDE_CHARS(screen, {
 	    /* This fixes an infinite recursion bug, that leads
@@ -1032,8 +1339,8 @@ ScrnRefresh(XtermWidget xw,
 		/* adjust to redraw all of a widechar if we just wanted
 		   to draw the right hand half */
 		if (leftcol > 0 &&
-		    (PACK_PAIR(chars, widec, leftcol)) == HIDDEN_CHAR &&
-		    isWide(PACK_PAIR(chars, widec, leftcol - 1))) {
+		    chars[leftcol] == HIDDEN_CHAR &&
+		    isWide((int) chars[leftcol - 1])) {
 		    leftcol--;
 		    ncols++;
 		    col = leftcol;
@@ -1051,7 +1358,7 @@ ScrnRefresh(XtermWidget xw,
 	     * Temporarily change dimensions to double-sized characters so
 	     * we can reuse the recursion on this function.
 	     */
-	    if (CSET_DOUBLE(*cb)) {
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 		col /= 2;
 		maxcol /= 2;
 	    }
@@ -1069,7 +1376,7 @@ ScrnRefresh(XtermWidget xw,
 		    maxcol--;
 	    }
 #if OPT_DEC_CHRSET
-	    if (CSET_DOUBLE(*cb)) {
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 		col *= 2;
 		maxcol *= 2;
 	    }
@@ -1125,31 +1432,20 @@ ScrnRefresh(XtermWidget xw,
 	 * right units.
 	 */
 	if_OPT_DEC_CHRSET({
-	    if (CSET_DOUBLE(*cb)) {
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 		col /= 2;
 		maxcol /= 2;
 	    }
-	    cs = cb[col];
 	});
 
 	flags = attrs[col];
-#if OPT_WIDE_CHARS
-	if (widec)
-	    wideness = isWide(PACK_PAIR(chars, widec, col));
-	else
-	    wideness = 0;
-#endif
-	if_OPT_EXT_COLORS(screen, {
-	    fbf = SCRN_BUF_FGRND(screen, ROW2INX(screen, lastind));
-	    fbb = SCRN_BUF_BGRND(screen, ROW2INX(screen, lastind));
-	    fg_bg = ColorOf(col);
-	    /* this combines them, then splits them again.  but
-	       extract_fg does more, so seems reasonable */
-	    fg = extract_fg(xw, fg_bg, flags);
-	    bg = extract_bg(xw, fg_bg, flags);
+
+	if_OPT_WIDE_CHARS(screen, {
+	    wideness = isWide((int) chars[col]);
 	});
-	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	    fb = SCRN_BUF_COLOR(screen, ROW2INX(screen, lastind));
+
+	if_OPT_ISO_COLORS(screen, {
+	    fb = ld->color;
 	    fg_bg = ColorOf(col);
 	    fg = extract_fg(xw, fg_bg, flags);
 	    bg = extract_bg(xw, fg_bg, flags);
@@ -1158,7 +1454,7 @@ ScrnRefresh(XtermWidget xw,
 	gc = updatedXtermGC(xw, flags, fg_bg, hilite);
 	gc_changes |= (flags & (FG_COLOR | BG_COLOR));
 
-	x = CurCursorX(screen, ROW2INX(screen, row), col);
+	x = LineCursorX(screen, ld, col);
 	lastind = col;
 
 	for (; col <= maxcol; col++) {
@@ -1171,59 +1467,46 @@ ScrnRefresh(XtermWidget xw,
 		    && (extract_bg(xw, ColorOf(col), attrs[col]) != bg))
 #endif
 #if OPT_WIDE_CHARS
-		|| (widec
-		    && ((isWide(PACK_PAIR(chars, widec, col))) != wideness)
-		    && !((PACK_PAIR(chars, widec, col)) == HIDDEN_CHAR))
-#endif
-#if OPT_DEC_CHRSET
-		|| (cb[col] != cs)
+		|| (isWide((int) chars[col]) != wideness
+		    && chars[col] != HIDDEN_CHAR)
 #endif
 		) {
 		assert(col >= lastind);
 		TRACE(("ScrnRefresh looping drawXtermText %d..%d:%s\n",
 		       lastind, col,
-		       visibleChars(PAIRED_CHARS(&chars[lastind],
-						 WIDEC_PTR(lastind)),
-				    (unsigned) (col - lastind))));
+		       visibleIChars((&chars[lastind]),
+				     (unsigned) (col - lastind))));
 
 		test = flags;
 		checkVeryBoldColors(test, fg);
 
 		x = drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
-				  cs,
-				  PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
+				  GetLineDblCS(ld),
+				  &chars[lastind],
 				  (unsigned) (col - lastind), 0);
 
 		if_OPT_WIDE_CHARS(screen, {
 		    int i;
-		    int off;
-		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-			Char *com_lo = BUFFER_PTR(screen->visbuf,
-						  ROW2INX(screen, row),
-						  off + 0);
-			Char *com_hi = BUFFER_PTR(screen->visbuf,
-						  ROW2INX(screen, row),
-						  off + 1);
+		    size_t off;
+
+		    for_each_combData(off, ld) {
+			IChar *com_off = ld->combData[off];
+
 			for (i = lastind; i < col; i++) {
-			    int my_x = CurCursorX(screen,
-						  ROW2INX(screen, row),
-						  i);
-			    int base = PACK_PAIR(chars, widec, i);
-			    int combo = PACK_PAIR(com_lo, com_hi, i);
+			    int my_x = LineCursorX(screen, ld, i);
+			    IChar base = chars[i];
 
-			    if (isWide(base))
-				my_x = CurCursorX(screen,
-						  ROW2INX(screen, row),
-						  i - 1);
+			    if (isWide((int) base))
+				my_x = LineCursorX(screen, ld, i - 1);
 
-			    if (combo != 0)
+			    if (com_off[i] != 0)
 				drawXtermText(xw,
 					      (test & DRAWX_MASK)
 					      | NOBACKGROUND,
-					      gc, my_x, y, cs,
-					      PAIRED_CHARS(com_lo + i,
-							   com_hi + i),
-					      1, isWide(base));
+					      gc, my_x, y,
+					      GetLineDblCS(ld),
+					      com_off + i,
+					      1, isWide((int) base));
 			}
 		    }
 		});
@@ -1236,79 +1519,58 @@ ScrnRefresh(XtermWidget xw,
 		    hilite = False;
 
 		flags = attrs[col];
-		if_OPT_EXT_COLORS(screen, {
+		if_OPT_ISO_COLORS(screen, {
 		    fg_bg = ColorOf(col);
 		    fg = extract_fg(xw, fg_bg, flags);
 		    bg = extract_bg(xw, fg_bg, flags);
 		});
-		if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-		    fg_bg = ColorOf(col);
-		    fg = extract_fg(xw, fg_bg, flags);
-		    bg = extract_bg(xw, fg_bg, flags);
+		if_OPT_WIDE_CHARS(screen, {
+		    wideness = isWide((int) chars[col]);
 		});
-		if_OPT_DEC_CHRSET({
-		    cs = cb[col];
-		});
-#if OPT_WIDE_CHARS
-		if (widec)
-		    wideness = isWide(PACK_PAIR(chars, widec, col));
-#endif
 
 		gc = updatedXtermGC(xw, flags, fg_bg, hilite);
 		gc_changes |= (flags & (FG_COLOR | BG_COLOR));
 	    }
 
 	    if (chars[col] == 0) {
-#if OPT_WIDE_CHARS
-		if (widec == 0 || widec[col] == 0)
-#endif
-		    chars[col] = ' ';
+		chars[col] = ' ';
 	    }
 	}
 
 	assert(col >= lastind);
 	TRACE(("ScrnRefresh calling drawXtermText %d..%d:%s\n",
 	       lastind, col,
-	       visibleChars(PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
-			    (unsigned) (col - lastind))));
+	       visibleIChars(&chars[lastind], (unsigned) (col - lastind))));
 
 	test = flags;
 	checkVeryBoldColors(test, fg);
 
 	drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
-		      cs,
-		      PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
+		      GetLineDblCS(ld),
+		      &chars[lastind],
 		      (unsigned) (col - lastind), 0);
 
 	if_OPT_WIDE_CHARS(screen, {
 	    int i;
-	    int off;
-	    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-		Char *com_lo = BUFFER_PTR(screen->visbuf,
-					  ROW2INX(screen, row),
-					  off + 0);
-		Char *com_hi = BUFFER_PTR(screen->visbuf,
-					  ROW2INX(screen, row),
-					  off + 1);
+	    size_t off;
+
+	    for_each_combData(off, ld) {
+		IChar *com_off = ld->combData[off];
+
 		for (i = lastind; i < col; i++) {
-		    int my_x = CurCursorX(screen,
-					  ROW2INX(screen, row),
-					  i);
-		    int base = PACK_PAIR(chars, widec, i);
-		    int combo = PACK_PAIR(com_lo, com_hi, i);
+		    int my_x = LineCursorX(screen, ld, i);
+		    int base = (int) chars[i];
 
 		    if (isWide(base))
-			my_x = CurCursorX(screen,
-					  ROW2INX(screen, row),
-					  i - 1);
+			my_x = LineCursorX(screen, ld, i - 1);
 
-		    if (combo != 0)
+		    if (com_off[i] != 0)
 			drawXtermText(xw,
 				      (test & DRAWX_MASK)
 				      | NOBACKGROUND,
-				      gc, my_x, y, cs,
-				      PAIRED_CHARS(com_lo + i,
-						   com_hi + i),
+				      gc, my_x, y,
+				      GetLineDblCS(ld),
+				      com_off + i,
 				      1, isWide(base));
 		}
 	    }
@@ -1342,6 +1604,9 @@ ScrnRefresh(XtermWidget xw,
     }
 #endif
     recurse--;
+
+    TRACE(("...}} ScrnRefresh\n"));
+    return;
 }
 
 /*
@@ -1381,11 +1646,12 @@ ClearBufRows(XtermWidget xw,
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
+	LineData *ld = getLineData(screen, ROW2INX(screen, row));
 	if_OPT_DEC_CHRSET({
 	    /* clearing the whole row resets the doublesize characters */
-	    SCRN_ROW_CSET(screen, row) = CSET_SWL;
+	    SetLineDblCS(ld, CSET_SWL);
 	});
-	ScrnClrWrapped(screen, row);
+	LineClrWrapped(ld);
 	ClearCells(xw, 0, len, row, 0);
     }
 }
@@ -1458,35 +1724,252 @@ ScreenResize(XtermWidget xw,
 
     /* update buffers if the screen has changed size */
     if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
-	int savelines = (screen->scrollWidget
-			 ? screen->savelines
-			 : 0);
 	int delta_rows = rows - MaxRows(screen);
+#if OPT_TRACE
+	int delta_cols = cols - MaxCols(screen);
+#endif
 
-	TRACE(("...ScreenResize chars %dx%d\n", rows, cols));
+	TRACE(("...ScreenResize chars %dx%d delta %dx%d\n",
+	       rows, cols, delta_rows, delta_cols));
 
 	if (screen->is_running) {
+#if !OPT_FIFO_LINES
+	    int savelines = (screen->scrollWidget
+			     ? screen->savelines
+			     : 0);
+#endif
 	    if (screen->cursor_state)
 		HideCursor();
-	    if (screen->alternate
-		&& xw->misc.resizeGravity == SouthWestGravity)
+#if OPT_SAVE_LINES
+	    /*
+	     * The non-visible buffer is simple, since we will not copy data
+	     * to/from the saved-lines.  Do that first.
+	     */
+	    if (screen->editBuf_index[!screen->whichBuf]) {
+		(void) Reallocate(xw,
+				  &screen->editBuf_index[!screen->whichBuf],
+				  &screen->editBuf_data[!screen->whichBuf],
+				  (unsigned) rows,
+				  (unsigned) cols,
+				  (unsigned) MaxRows(screen),
+				  (unsigned) MaxCols(screen));
+	    }
+
+	    /*
+	     * The save-lines buffer may change width, but will not change its
+	     * height.  Deal with the cases where we copy data to/from the
+	     * saved-lines buffer.
+	     */
+	    if (GravityIsSouthWest(xw)
+		&& delta_rows
+		&& screen->saveBuf_index != 0) {
+
+		move_down_by = delta_rows;
+
+		if (delta_rows < 0) {
+		    unsigned move_up = (unsigned) (-delta_rows);
+		    ScrnBuf dst = screen->saveBuf_index;
+
+#if OPT_FIFO_LINES
+		    int amount = ((MaxRows(screen) - (int) move_up - 1)
+				  - screen->cur_row);
+
+		    if (amount < 0) {
+			/* move line-data from visible-buffer to save-buffer */
+			saveEditBufLines(screen, dst, -amount);
+			move_up = -amount;
+			move_down_by = amount;
+		    } else {
+			move_down_by = 0;
+		    }
+#else /* !OPT_FIFO_LINES */
+		    int amount = screen->savelines - (int) move_up;
+
+		    TRACE_SCRNBUF("before save", screen, dst, screen->savelines);
+
+		    /* shift lines in save-buffer to make room */
+		    TRACE(("...%smoving pointers in saveBuf (compare %d %d)\n",
+			   (amount > 0
+			    ? ""
+			    : "SKIP "),
+			   screen->savelines,
+			   move_up));
+		    if (amount > 0) {
+			SaveLineData(dst, 0, move_up);
+
+			MoveLineData(dst,
+				     0,
+				     move_up,
+				     (unsigned) amount);
+
+			TRACE(("...reuse %d lines storage in saveBuf\n", move_up));
+			RestoreLineData(dst,
+					(unsigned) amount,
+					move_up);
+			TRACE_SCRNBUF("restoresave", screen, dst, screen->savelines);
+		    }
+
+		    /* copy line-data from visible-buffer to save-buffer */
+		    saveEditBufLines(screen, dst, move_up);
+
+		    /* after data is copied, reallocate saved-lines */
+		    (void) Reallocate(xw,
+				      &screen->saveBuf_index,
+				      &screen->saveBuf_data,
+				      (unsigned) savelines,
+				      (unsigned) cols,
+				      (unsigned) savelines,
+				      (unsigned) MaxCols(screen));
+		    TRACE_SCRNBUF("reallocSAVE",
+				  screen,
+				  screen->saveBuf_index,
+				  savelines);
+#endif /* OPT_FIFO_LINES */
+
+		    /* decrease size of visible-buffer */
+		    (void) Reallocate(xw,
+				      &screen->editBuf_index[screen->whichBuf],
+				      &screen->editBuf_data[screen->whichBuf],
+				      (unsigned) rows,
+				      (unsigned) cols,
+				      (unsigned) MaxRows(screen),
+				      (unsigned) MaxCols(screen));
+		    TRACE_SCRNBUF("reallocEDIT",
+				  screen,
+				  screen->editBuf_index[screen->whichBuf],
+				  rows);
+		} else {
+		    unsigned move_down = (unsigned) delta_rows;
+#if OPT_FIFO_LINES
+		    long unsave_fifo;
+#else
+		    ScrnBuf src = screen->saveBuf_index;
+#endif
+		    ScrnBuf dst;
+		    int amount;
+
+		    if ((int) move_down > screen->savedlines) {
+			move_down = (unsigned) screen->savedlines;
+		    }
+		    move_down_by = (int) move_down;
+		    amount = rows - (int) move_down;
+
+		    /* increase size of visible-buffer */
+		    (void) Reallocate(xw,
+				      &screen->editBuf_index[screen->whichBuf],
+				      &screen->editBuf_data[screen->whichBuf],
+				      (unsigned) rows,
+				      (unsigned) cols,
+				      (unsigned) MaxRows(screen),
+				      (unsigned) MaxCols(screen));
+
+		    dst = screen->editBuf_index[screen->whichBuf];
+		    TRACE_SCRNBUF("reallocEDIT", screen, dst, rows);
+
+		    TRACE(("...%smoving pointers in editBuf (compare %d %d)\n",
+			   (amount > 0
+			    ? ""
+			    : "SKIP "),
+			   rows,
+			   move_down));
+		    if (amount > 0) {
+			/* shift lines in visible-buffer to make room */
+			SaveLineData(dst, (unsigned) amount, (size_t) move_down);
+
+			MoveLineData(dst,
+				     move_down,
+				     0,
+				     (unsigned) amount);
+
+			TRACE(("...reuse %d lines storage in editBuf\n", move_down));
+			RestoreLineData(dst,
+					0,
+					move_down);
+
+			TRACE_SCRNBUF("shifted", screen, dst, rows);
+		    }
+
+		    /* copy line-data from save-buffer to visible-buffer */
+		    unsaveEditBufLines(screen, dst, move_down);
+		    TRACE_SCRNBUF("copied", screen, dst, rows);
+
+#if OPT_FIFO_LINES
+		    unsave_fifo = (long) move_down;
+		    if (screen->saved_fifo < (int) unsave_fifo)
+			unsave_fifo = screen->saved_fifo;
+
+		    /* free up storage in fifo from the copied lines */
+		    while (unsave_fifo-- > 0) {
+			deleteScrollback(screen, -1);
+			screen->saved_fifo--;
+		    }
+#else
+		    amount = (screen->savelines - (int) move_down);
+		    TRACE(("...%smoving pointers in saveBuf (compare %d %d)\n",
+			   (amount > 0
+			    ? ""
+			    : "SKIP "),
+			   rows,
+			   move_down));
+		    if (amount > 0) {
+			/* shift lines in save-buffer to account for copy */
+			src = screen->saveBuf_index;
+			SaveLineData(src, amount, move_down);
+
+			MoveLineData(src,
+				     move_down,
+				     0,
+				     (unsigned) amount);
+
+			TRACE(("...reuse %d lines storage in saveBuf\n", move_down));
+			RestoreLineData(src,
+					0,
+					move_down);
+		    }
+#endif
+
+		    /* recover storage in save-buffer */
+		}
+	    } else {
+#if !OPT_FIFO_LINES
+		(void) Reallocate(xw,
+				  &screen->saveBuf_index,
+				  &screen->saveBuf_data,
+				  (unsigned) savelines,
+				  (unsigned) cols,
+				  (unsigned) savelines,
+				  (unsigned) MaxCols(screen));
+#endif
+		(void) Reallocate(xw,
+				  &screen->editBuf_index[screen->whichBuf],
+				  &screen->editBuf_data[screen->whichBuf],
+				  (unsigned) rows,
+				  (unsigned) cols,
+				  (unsigned) MaxRows(screen),
+				  (unsigned) MaxCols(screen));
+	    }
+#else /* !OPT_SAVE_LINES */
+	    if (screen->whichBuf
+		&& GravityIsSouthWest(xw))
 		/* swap buffer pointers back to make this work */
 		SwitchBufPtrs(screen);
-	    if (screen->altbuf)
+	    if (screen->editBuf_index[1])
 		(void) Reallocate(xw,
-				  &screen->altbuf,
-				  &screen->abuf_address,
-				  rows,
-				  cols,
-				  MaxRows(screen),
-				  MaxCols(screen));
+				  &screen->editBuf_index[1],
+				  &screen->editBuf_data[1],
+				  (unsigned) rows,
+				  (unsigned) cols,
+				  (unsigned) MaxRows(screen),
+				  (unsigned) MaxCols(screen));
 	    move_down_by = Reallocate(xw,
-				      &screen->allbuf,
-				      &screen->sbuf_address,
-				      rows + savelines, cols,
-				      MaxRows(screen) + savelines,
-				      MaxCols(screen));
-	    screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
+				      &screen->saveBuf_index,
+				      &screen->saveBuf_data,
+				      (unsigned) (rows + savelines),
+				      (unsigned) cols,
+				      (unsigned) (MaxRows(screen) + savelines),
+				      (unsigned) MaxCols(screen));
+#endif /* OPT_SAVE_LINES */
+	    screen->visbuf = VisBuf(screen);
 	}
 
 	AdjustSavedCursor(xw, move_down_by);
@@ -1494,7 +1977,7 @@ ScreenResize(XtermWidget xw,
 	set_max_col(screen, cols - 1);
 
 	if (screen->is_running) {
-	    if (xw->misc.resizeGravity == SouthWestGravity) {
+	    if (GravityIsSouthWest(xw)) {
 		screen->savedlines -= move_down_by;
 		if (screen->savedlines < 0)
 		    screen->savedlines = 0;
@@ -1506,7 +1989,7 @@ ScreenResize(XtermWidget xw,
 		screen->cursorp.row += move_down_by;
 		ScrollSelection(screen, move_down_by, True);
 
-		if (screen->alternate)
+		if (screen->whichBuf)
 		    SwitchBufPtrs(screen);	/* put the pointers back */
 	    }
 	}
@@ -1593,25 +2076,19 @@ non_blank_line(TScreen * screen,
 	       int col,
 	       int len)
 {
-    ScrnBuf sb = screen->visbuf;
     int i;
-    Char *ptr = BUF_CHARS(sb, row);
+    Bool found = False;
+    LineData *ld = getLineData(screen, row);
 
-    for (i = col; i < len; i++) {
-	if (ptr[i])
-	    return True;
-    }
-
-    if_OPT_WIDE_CHARS(screen, {
-	if ((ptr = BUF_WIDEC(sb, row)) != 0) {
-	    for (i = col; i < len; i++) {
-		if (ptr[i])
-		    return True;
+    if (ld != 0) {
+	for (i = col; i < len; i++) {
+	    if (ld->charData[i]) {
+		found = True;
+		break;
 	    }
 	}
-    });
-
-    return False;
+    }
+    return found;
 }
 
 /*
@@ -1705,14 +2182,19 @@ ScrnFillRectangle(XtermWidget xw,
 
     TRACE(("filling rectangle with '%c' flags %#x\n", value, flags));
     if (validRect(xw, target)) {
+	LineData *ld;
 	unsigned left = (unsigned) (target->left - 1);
 	unsigned size = (unsigned) (target->right - (int) left);
 	unsigned attrs = flags;
 	int row, col;
 
+	(void) size;
+
 	attrs &= ATTRIBUTES;
 	attrs |= CHARDRAWN;
 	for (row = target->bottom - 1; row >= (target->top - 1); row--) {
+	    ld = getLineData(screen, row);
+
 	    TRACE(("filling %d [%d..%d]\n", row, left, left + size));
 
 	    /*
@@ -1720,31 +2202,30 @@ ScrnFillRectangle(XtermWidget xw,
 	     * colors if asked.
 	     */
 	    for (col = (int) left; col < target->right; ++col) {
-		unsigned temp = SCRN_BUF_ATTRS(screen, row)[col];
+		unsigned temp = ld->attribs[col];
+
 		if (!keepColors) {
 		    temp &= ~(FG_COLOR | BG_COLOR);
 		}
 		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
 		temp |= CHARDRAWN;
-		SCRN_BUF_ATTRS(screen, row)[col] = (Char) temp;
+		ld->attribs[col] = (Char) temp;
 #if OPT_ISO_COLORS
 		if (attrs & (FG_COLOR | BG_COLOR)) {
-		    if_OPT_EXT_COLORS(screen, {
-			SCRN_BUF_FGRND(screen, row)[col] = (Char) xw->sgr_foreground;
-			SCRN_BUF_BGRND(screen, row)[col] = (Char) xw->cur_background;
-		    });
-		    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-			SCRN_BUF_COLOR(screen, row)[col] = xtermColorPair(xw);
+		    if_OPT_ISO_COLORS(screen, {
+			ld->color[col] = xtermColorPair(xw);
 		    });
 		}
 #endif
 	    }
 
-	    memset(SCRN_BUF_CHARS(screen, row) + left, (Char) value, size);
+	    for (col = (int) left; col < target->right; ++col)
+		ld->charData[col] = (CharData) value;
+
 	    if_OPT_WIDE_CHARS(screen, {
-		int off;
-		for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-		    memset(SCREEN_PTR(screen, row, off) + left, 0, size);
+		size_t off;
+		for_each_combData(off, ld) {
+		    memset(ld->combData[off] + left, 0, size * sizeof(IChar));
 		}
 	    })
 	}
@@ -1782,50 +2263,60 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 		       params,
 		       &target);
 	if (validRect(xw, &target)) {
-	    int high = (source->bottom - source->top) + 1;
-	    int wide = (source->right - source->left) + 1;
-	    unsigned size = (unsigned) (high * wide * MAX_PTRS);
-	    int row, col, n, j;
+	    Cardinal high = (Cardinal) (source->bottom - source->top) + 1;
+	    Cardinal wide = (Cardinal) (source->right - source->left) + 1;
+	    Cardinal size = (high * wide);
+	    int row, col;
+	    Cardinal j, k;
+	    LineData *ld;
 
-	    Char *cells = TypeMallocN(Char, size);
+	    CellData *cells = newCellData(xw, size);
 
-	    if (cells == 0)
-		return;
+	    if (cells != 0) {
 
-	    TRACE(("OK - make copy %dx%d\n", high, wide));
-	    target.bottom = target.top + (high - 1);
-	    target.right = target.left + (wide - 1);
+		TRACE(("OK - make copy %dx%d\n", high, wide));
+		target.bottom = target.top + (int) (high - 1);
+		target.right = target.left + (int) (wide - 1);
 
-	    for (row = source->top - 1; row < source->bottom; ++row) {
-		for (col = source->left - 1; col < source->right; ++col) {
-		    n = (((1 + row - source->top) * wide)
-			 + (1 + col - source->left)) * MAX_PTRS;
-		    for (j = OFF_ATTRS; j < MAX_PTRS; ++j)
-			cells[n + j] = SCREEN_PTR(screen, row, j)[col];
-		}
-	    }
-	    for (row = target.top - 1; row < target.bottom; ++row) {
-		for (col = target.left - 1; col < target.right; ++col) {
-		    if (row >= getMinRow(screen)
-			&& row <= getMaxRow(screen)
-			&& col >= getMinCol(screen)
-			&& col <= getMaxCol(screen)) {
-			n = (((1 + row - target.top) * wide)
-			     + (1 + col - target.left)) * MAX_PTRS;
-			for (j = OFF_ATTRS; j < MAX_PTRS; ++j)
-			    SCREEN_PTR(screen, row, j)[col] = cells[n + j];
-			SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
+		for (row = source->top - 1; row < source->bottom; ++row) {
+		    ld = getLineData(screen, row);
+		    j = (Cardinal) (row - (source->top - 1));
+		    for (col = source->left - 1; col < source->right; ++col) {
+			k = (Cardinal) (col - (source->left - 1));
+			saveCellData(screen, cells,
+				     (j * wide) + k,
+				     ld, col);
 		    }
 		}
-	    }
-	    free(cells);
+		for (row = target.top - 1; row < target.bottom; ++row) {
+		    ld = getLineData(screen, row);
+		    j = (Cardinal) (row - (target.top - 1));
+		    for (col = target.left - 1; col < target.right; ++col) {
+			k = (Cardinal) (col - (target.left - 1));
+			if (row >= getMinRow(screen)
+			    && row <= getMaxRow(screen)
+			    && col >= getMinCol(screen)
+			    && col <= getMaxCol(screen)) {
+			    if (j < high && k < wide) {
+				restoreCellData(screen, cells,
+						(j * wide) + k,
+						ld, col);
+			    } else {
+				/* FIXME - clear the target cell? */
+			    }
+			    ld->attribs[col] |= CHARDRAWN;
+			}
+		    }
+		}
+		free(cells);
 
-	    ScrnUpdate(xw,
-		       (target.top - 1),
-		       (target.left - 1),
-		       (target.bottom - target.top) + 1,
-		       ((target.right - target.left) + 1),
-		       False);
+		ScrnUpdate(xw,
+			   (target.top - 1),
+			   (target.left - 1),
+			   (target.bottom - target.top) + 1,
+			   ((target.right - target.left) + 1),
+			   False);
+	    }
 	}
     }
 }
@@ -1856,6 +2347,7 @@ ScrnMarkRectangle(XtermWidget xw,
 	    : "region")));
 
     if (validRect(xw, target)) {
+	LineData *ld;
 	int top = target->top - 1;
 	int bottom = target->bottom - 1;
 	int row, col;
@@ -1869,9 +2361,11 @@ ScrnMarkRectangle(XtermWidget xw,
 			 ? (target->right - 1)
 			 : getMaxCol(screen));
 
+	    ld = getLineData(screen, row);
+
 	    TRACE(("marking %d [%d..%d]\n", row, left, right));
 	    for (col = left; col <= right; ++col) {
-		unsigned flags = SCRN_BUF_ATTRS(screen, row)[col];
+		unsigned flags = ld->attribs[col];
 
 		for (n = 0; n < nparam; ++n) {
 #if OPT_TRACE
@@ -1937,9 +2431,9 @@ ScrnMarkRectangle(XtermWidget xw,
 #if OPT_TRACE
 		if (row == top && col == left)
 		    TRACE(("first mask-change is %#x\n",
-			   SCRN_BUF_ATTRS(screen, row)[col] ^ flags));
+			   ld->attribs[col] ^ flags));
 #endif
-		SCRN_BUF_ATTRS(screen, row)[col] = (Char) flags;
+		ld->attribs[col] = (Char) flags;
 	    }
 	}
 	ScrnRefresh(xw,
@@ -1966,6 +2460,7 @@ ScrnWipeRectangle(XtermWidget xw,
     TRACE(("wiping rectangle\n"));
 
     if (validRect(xw, target)) {
+	LineData *ld;
 	int top = target->top - 1;
 	int bottom = target->bottom - 1;
 	int row, col;
@@ -1975,15 +2470,17 @@ ScrnWipeRectangle(XtermWidget xw,
 	    int right = (target->right - 1);
 
 	    TRACE(("wiping %d [%d..%d]\n", row, left, right));
+
+	    ld = getLineData(screen, row);
 	    for (col = left; col <= right; ++col) {
 		if (!((screen->protected_mode == DEC_PROTECT)
-		      && (SCRN_BUF_ATTRS(screen, row)[col] & PROTECTED))) {
-		    SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
-		    SCRN_BUF_CHARS(screen, row)[col] = ' ';
+		      && (ld->attribs[col] & PROTECTED))) {
+		    ld->attribs[col] |= CHARDRAWN;
+		    ld->charData[col] = ' ';
 		    if_OPT_WIDE_CHARS(screen, {
-			int off;
-			for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-			    memset(SCREEN_PTR(screen, row, off) + col, 0, 1);
+			size_t off;
+			for_each_combData(off, ld) {
+			    ld->combData[off][col] = '\0';
 			}
 		    })
 		}

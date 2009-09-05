@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.190 2008/05/26 22:24:56 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.191 2009/08/03 21:16:54 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2007,2008 by Thomas E. Dickey
@@ -1124,7 +1124,7 @@ Reverse Attributes in Rectangular Area (DECRARA).
   \*(Ps denotes the attributes to reverse. 1, 4, 5, 7
 .
 .IP \\*(Cs\\*u
-Save cursor (ANSI.SYS)
+Restore cursor (ANSI.SYS)
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Pp\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pp\\*$\\*v
 Copy Rectangular Area (DECCRA)

@@ -1,11 +1,7 @@
-/* $XTermId: tabs.c,v 1.33 2008/12/30 10:18:14 tom Exp $ */
+/* $XTermId: tabs.c,v 1.36 2009/06/21 14:34:17 tom Exp $ */
 
 /*
- *	$XFree86: xc/programs/xterm/tabs.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
- */
-
-/*
- * Copyright 2000-2006,2008 by Thomas E. Dickey
+ * Copyright 2000-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -150,7 +146,7 @@ TabToNextStop(XtermWidget xw)
     TScreen *screen = &(xw->screen);
     int saved_column = screen->cur_col;
     int next = TabNext(xw, xw->tabs, screen->cur_col);
-    int max = CurMaxCol(screen, screen->cur_row);
+    int max = LineMaxCol(screen, getLineData(screen, screen->cur_row));
 
     if (next > max)
 	next = max;

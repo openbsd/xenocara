@@ -1,7 +1,5 @@
-/* $XTermId: error.h,v 1.18 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: error.h,v 1.22 2009/08/09 17:23:31 tom Exp $ */
 
-
-/* $XFree86: xc/programs/xterm/error.h,v 1.10 2006/02/13 01:14:58 dickey Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
@@ -76,13 +74,7 @@
 /* screen.c */
 #define	ERROR_SCALLOC	90	/* Alloc: calloc() failed on base */
 #define	ERROR_SCALLOC2	91	/* Alloc: calloc() failed on rows */
-#define	ERROR_SREALLOC	92	/* ScreenResize: realloc() failed on alt base */
-#define	ERROR_RESIZE	96	/* ScreenResize: malloc() or realloc() failed */
 #define	ERROR_SAVE_PTR	102	/* ScrnPointers: malloc/realloc() failed */
-
-/* scrollbar.c */
-#define	ERROR_SBRALLOC	110	/* ScrollBarOn: realloc() failed on base */
-#define	ERROR_SBRALLOC2	111	/* ScrollBarOn: realloc() failed on rows */
 
 /* util.c */
 #define	ERROR_MMALLOC   121     /* my_memmove: malloc/realloc failed */

@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.307 2009/03/15 18:53:57 tom Exp $ */
+/* $XTermId: input.c,v 1.309 2009/06/18 00:08:40 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -874,7 +874,7 @@ Input(XtermWidget xw,
 	   ", %d:'%s'%s" FMT_MODIFIER_NAMES "%s%s%s%s%s%s\n",
 	   kd.keysym,
 	   kd.nbytes,
-	   visibleChars(PAIRED_CHARS((Char *) kd.strbuf, 0),
+	   visibleChars((Char *) kd.strbuf,
 			((kd.nbytes > 0)
 			 ? (unsigned) kd.nbytes
 			 : 0)),
@@ -1107,7 +1107,6 @@ Input(XtermWidget xw,
 	    while (kd.nbytes-- > 0)
 		unparseputc(xw, CharOf(*string++));
 	}
-#if OPT_VT52_MODE
 	/*
 	 * Interpret F1-F4 as PF1-PF4 for VT52, VT100
 	 */
@@ -1121,9 +1120,7 @@ Input(XtermWidget xw,
 			    &modify_parm);
 	    MODIFIER_PARM;
 	    unparseseq(xw, &reply);
-	}
-#endif
-	else {
+	} else {
 	    reply.a_type = ANSI_CSI;
 	    reply.a_final = 0;
 
@@ -1342,7 +1339,7 @@ void
 StringInput(XtermWidget xw, Char * string, size_t nbytes)
 {
     TRACE(("InputString (%s,%d)\n",
-	   visibleChars(PAIRED_CHARS(string, 0), nbytes),
+	   visibleChars(string, nbytes),
 	   nbytes));
 #if OPT_TEK4014
     if (nbytes && TEK4014_GIN(tekWidget)) {
