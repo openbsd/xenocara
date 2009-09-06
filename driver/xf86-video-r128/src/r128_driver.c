@@ -2025,7 +2025,7 @@ Bool R128PreInit(ScrnInfoPtr pScrn, int flags)
         xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ShowCache enabled\n");
     }
 
-#ifdef __powerpc__
+#if defined(__powerpc__) && defined(__linux__)
     if (xf86ReturnOptValBool(info->Options, OPTION_FBDEV, TRUE))
 #else
     if (xf86ReturnOptValBool(info->Options, OPTION_FBDEV, FALSE))
