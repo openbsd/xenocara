@@ -248,7 +248,7 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
     }
 
 /* FIXME: we don't have a new video ABI yet */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 3
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
     miPointerGetPosition(inputInfo.pointer, &px, &py);
 #else
     miPointerPosition(&px, &py);
@@ -292,7 +292,7 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
     }
 
 /* FIXME: we don't have a new video ABI yet */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 3
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
     if (pScreen == miPointerGetScreen(inputInfo.pointer))
 #else
     if (pScreen == miPointerCurrentScreen())
@@ -305,7 +305,7 @@ GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 
 /* FIXME: we don't have a new video ABI yet */
 	(*pScreen->SetCursorPosition) (
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 3
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
                                         inputInfo.pointer,
 #endif
                                         pScreen,

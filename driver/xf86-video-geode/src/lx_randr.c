@@ -247,7 +247,7 @@ LXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
     }
 
 /* FIXME: we don't have a new video ABI yet */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 3
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
     miPointerGetPosition(inputInfo.pointer, &px, &py);
 #else
     miPointerPosition(&px, &py);
@@ -291,7 +291,7 @@ LXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
     }
 
 /* FIXME: we don't have a new video ABI yet */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 3
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
     if (pScreen == miPointerGetScreen(inputInfo.pointer))
 #else
     if (pScreen == miPointerCurrentScreen())
@@ -304,7 +304,7 @@ LXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
 
 	(*pScreen->SetCursorPosition) (
 /* FIXME: we don't have a new video ABI yet */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 3
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
                                         inputInfo.pointer,
 #endif
                                         pScreen,
