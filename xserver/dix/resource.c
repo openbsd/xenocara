@@ -339,7 +339,7 @@ AvailableID(
     return 0;
 }
 
-_X_EXPORT void
+void
 GetXIDRange(int client, Bool server, XID *minp, XID *maxp)
 {
     XID id, maxid;
@@ -390,7 +390,7 @@ GetXIDRange(int client, Bool server, XID *minp, XID *maxp)
  *  invented, but this will be used so rarely that this should suffice.
  */
 
-_X_EXPORT unsigned int
+unsigned int
 GetXIDList(ClientPtr pClient, unsigned count, XID *pids)
 {
     unsigned int found = 0;
@@ -452,7 +452,7 @@ AddResource(XID id, RESTYPE type, pointer value)
     rrec = &clientTable[client];
     if (!rrec->buckets)
     {
-	ErrorF("AddResource(%lx, %lx, %lx), client=%d \n",
+	ErrorF("[dix] AddResource(%lx, %lx, %lx), client=%d \n",
 		(unsigned long)id, type, (unsigned long)value, client);
         FatalError("client not in use\n");
     }
@@ -846,11 +846,10 @@ LegalNewID(XID id, ClientPtr client)
 }
 
 _X_EXPORT int
-dixLookupResource(pointer *result, XID id, RESTYPE rtype,
-		  ClientPtr client, Mask mode)
+dixLookupResourceByType(pointer *result, XID id, RESTYPE rtype,
+			ClientPtr client, Mask mode)
 {
     int cid = CLIENT_ID(id);
-    int istype = (rtype & TypeMask) && (rtype != RC_ANY);
     ResourcePtr res = NULL;
 
     *result = NULL;
@@ -859,8 +858,38 @@ dixLookupResource(pointer *result, XID id, RESTYPE rtype,
 	res = clientTable[cid].resources[Hash(cid, id)];
 
 	for (; res; res = res->next)
-	    if ((res->id == id) && ((istype && res->type == rtype) ||
-				    (!istype && res->type & rtype)))
+	    if (res->id == id && res->type == rtype)
+		break;
+    }
+    if (!res)
+	return BadValue;
+
+    if (client) {
+	client->errorValue = id;
+	cid = XaceHook(XACE_RESOURCE_ACCESS, client, id, res->type,
+		       res->value, RT_NONE, NULL, mode);
+	if (cid != Success)
+	    return cid;
+    }
+
+    *result = res->value;
+    return Success;
+}
+
+_X_EXPORT int
+dixLookupResourceByClass(pointer *result, XID id, RESTYPE rclass,
+			 ClientPtr client, Mask mode)
+{
+    int cid = CLIENT_ID(id);
+    ResourcePtr res = NULL;
+
+    *result = NULL;
+
+    if ((cid < MAXCLIENTS) && clientTable[cid].buckets) {
+	res = clientTable[cid].resources[Hash(cid, id)];
+
+	for (; res; res = res->next)
+	    if (res->id == id && (res->type & rclass))
 		break;
     }
     if (!res)

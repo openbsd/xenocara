@@ -120,7 +120,7 @@ get_prop_string(LibHalContext *hal_ctx, const char *udi, const char *name)
     char *prop, *ret;
 
     prop = libhal_device_get_property_string(hal_ctx, udi, name, NULL);
-    LogMessageVerb(X_INFO, 10, "config/hal: getting %s on %s returned %s\n", name, udi, prop);
+    LogMessageVerb(X_INFO, 10, "config/hal: getting %s on %s returned %s\n", name, udi, prop ? prop : "(null)");
     if (prop) {
         ret = xstrdup(prop);
         libhal_free_string(prop);
@@ -191,9 +191,10 @@ device_added(LibHalContext *hal_ctx, const char *udi)
 {
     char *path = NULL, *driver = NULL, *name = NULL, *config_info = NULL;
     InputOption *options = NULL, *tmpo = NULL;
-    DeviceIntPtr dev;
+    DeviceIntPtr dev = NULL;
     DBusError error;
     struct xkb_options xkb_opts = {0};
+    int rc;
 
     LibHalPropertySet *set = NULL;
 	LibHalPropertySetIterator set_iter;
@@ -399,8 +400,8 @@ device_added(LibHalContext *hal_ctx, const char *udi)
 
     /* this isn't an error, but how else do you output something that the user can see? */
     LogMessage(X_INFO, "config/hal: Adding input device %s\n", name);
-    if (NewInputDeviceRequest(options, &dev) != Success) {
-        LogMessage(X_ERROR, "config/hal: NewInputDeviceRequest failed\n");
+    if ((rc = NewInputDeviceRequest(options, &dev)) != Success) {
+        LogMessage(X_ERROR, "config/hal: NewInputDeviceRequest failed (%d)\n", rc);
         dev = NULL;
         goto unwind;
     }
@@ -466,20 +467,21 @@ disconnect_hook(void *data)
     info->system_bus = NULL;
 }
 
-static void
-connect_hook(DBusConnection *connection, void *data)
+static BOOL
+connect_and_register(DBusConnection *connection, struct config_hal_info *info)
 {
     DBusError error;
-    struct config_hal_info *info = data;
     char **devices;
     int num_devices, i;
+
+    if (info->hal_ctx)
+        return TRUE; /* already registered, pretend we did something */
 
     info->system_bus = connection;
 
     dbus_error_init(&error);
 
-    if (!info->hal_ctx)
-        info->hal_ctx = libhal_ctx_new();
+    info->hal_ctx = libhal_ctx_new();
     if (!info->hal_ctx) {
         LogMessage(X_ERROR, "config/hal: couldn't create HAL context\n");
         goto out_err;
@@ -487,17 +489,19 @@ connect_hook(DBusConnection *connection, void *data)
 
     if (!libhal_ctx_set_dbus_connection(info->hal_ctx, info->system_bus)) {
         LogMessage(X_ERROR, "config/hal: couldn't associate HAL context with bus\n");
-        goto out_ctx;
+        goto out_err;
     }
     if (!libhal_ctx_init(info->hal_ctx, &error)) {
         LogMessage(X_ERROR, "config/hal: couldn't initialise context: %s (%s)\n",
-               error.name, error.message);
-        goto out_ctx;
+		   error.name ? error.name : "unknown error",
+		   error.message ? error.message : "null");
+        goto out_err;
     }
     if (!libhal_device_property_watch_all(info->hal_ctx, &error)) {
         LogMessage(X_ERROR, "config/hal: couldn't watch all properties: %s (%s)\n",
-               error.name, error.message);
-        goto out_ctx2;
+		   error.name ? error.name : "unknown error",
+		   error.message ? error.message : "null");
+        goto out_ctx;
     }
     libhal_ctx_set_device_added(info->hal_ctx, device_added);
     libhal_ctx_set_device_removed(info->hal_ctx, device_removed);
@@ -505,25 +509,137 @@ connect_hook(DBusConnection *connection, void *data)
     devices = libhal_find_device_by_capability(info->hal_ctx, "input",
                                                &num_devices, &error);
     /* FIXME: Get default devices if error is set. */
+    if (dbus_error_is_set(&error)) {
+        LogMessage(X_ERROR, "config/hal: couldn't find input device: %s (%s)\n",
+		   error.name ? error.name : "unknown error",
+		   error.message ? error.message : "null");
+        goto out_ctx;
+    }
     for (i = 0; i < num_devices; i++)
         device_added(info->hal_ctx, devices[i]);
     libhal_free_string_array(devices);
 
     dbus_error_free(&error);
 
-    return;
+    return TRUE;
 
-out_ctx2:
-    if (!libhal_ctx_shutdown(info->hal_ctx, &error))
-        LogMessage(X_WARNING, "config/hal: couldn't shut down context: %s (%s)\n",
-               error.name, error.message);
 out_ctx:
-    libhal_ctx_free(info->hal_ctx);
+    dbus_error_free(&error);
+
+    if (!libhal_ctx_shutdown(info->hal_ctx, &error)) {
+        LogMessage(X_WARNING, "config/hal: couldn't shut down context: %s (%s)\n",
+                error.name ? error.name : "unknown error",
+                error.message ? error.message : "null");
+        dbus_error_free(&error);
+    }
+
 out_err:
     dbus_error_free(&error);
 
+    if (info->hal_ctx) {
+        libhal_ctx_free(info->hal_ctx);
+    }
+
     info->hal_ctx = NULL;
     info->system_bus = NULL;
+
+    return FALSE;
+}
+
+
+/**
+ * Handle NewOwnerChanged signals to deal with HAL startup at X server runtime.
+ *
+ * NewOwnerChanged is send once when HAL shuts down, and once again when it
+ * comes back up. Message has three arguments, first is the name
+ * (org.freedesktop.Hal), the second one is the old owner, third one is new
+ * owner.
+ */
+static DBusHandlerResult
+ownerchanged_handler(DBusConnection *connection, DBusMessage *message, void *data)
+{
+    int ret = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+    if (dbus_message_is_signal(message,
+                               "org.freedesktop.DBus",
+                               "NameOwnerChanged")) {
+        DBusError error;
+        char *name, *old_owner, *new_owner;
+
+        dbus_error_init(&error);
+        dbus_message_get_args(message, &error,
+                              DBUS_TYPE_STRING, &name,
+                              DBUS_TYPE_STRING, &old_owner,
+                              DBUS_TYPE_STRING, &new_owner,
+                              DBUS_TYPE_INVALID);
+
+        if (dbus_error_is_set(&error)) {
+            ErrorF("[config/hal] failed to get NameOwnerChanged args: %s (%s)\n",
+                   error.name, error.message);
+        } else if (name && strcmp(name, "org.freedesktop.Hal") == 0) {
+
+            if (!old_owner || !strlen(old_owner)) {
+                DebugF("[config/hal] HAL startup detected.\n");
+                if (connect_and_register(connection, (struct config_hal_info*)data))
+                    dbus_connection_unregister_object_path(connection,
+                                                     "/org/freedesktop/DBus");
+                else
+                    ErrorF("[config/hal] Failed to connect to HAL bus.\n");
+            }
+
+            ret = DBUS_HANDLER_RESULT_HANDLED;
+        }
+        dbus_error_free(&error);
+    }
+
+    return ret;
+}
+
+/**
+ * Register a handler for the NameOwnerChanged signal.
+ */
+static BOOL
+listen_for_startup(DBusConnection *connection, void *data)
+{
+    DBusObjectPathVTable vtable = { .message_function = ownerchanged_handler, };
+    DBusError error;
+    const char MATCH_RULE[] = "sender='org.freedesktop.DBus',"
+                              "interface='org.freedesktop.DBus',"
+                              "type='signal',"
+                              "path='/org/freedesktop/DBus',"
+                              "member='NameOwnerChanged'";
+    int rc = FALSE;
+
+    dbus_error_init(&error);
+    dbus_bus_add_match(connection, MATCH_RULE, &error);
+    if (!dbus_error_is_set(&error)) {
+        if (dbus_connection_register_object_path(connection,
+                                                  "/org/freedesktop/DBus",
+                                                  &vtable,
+                                                  data))
+            rc = TRUE;
+        else
+            ErrorF("[config/hal] cannot register object path.\n");
+    } else {
+        ErrorF("[config/hal] couldn't add match rule: %s (%s)\n", error.name,
+                error.message);
+        ErrorF("[config/hal] cannot detect a HAL startup.\n");
+    }
+
+    dbus_error_free(&error);
+
+    return rc;
+}
+
+static void
+connect_hook(DBusConnection *connection, void *data)
+{
+    struct config_hal_info *info = data;
+
+    if (listen_for_startup(connection, data) &&
+        connect_and_register(connection, info))
+        dbus_connection_unregister_object_path(connection,
+                                               "/org/freedesktop/DBus");
 
     return;
 }

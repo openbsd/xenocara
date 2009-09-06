@@ -210,11 +210,9 @@ int	(*SProcRenderVector[RenderNumberRequests])(ClientPtr) = {
     SProcRenderCreateConicalGradient
 };
 
-static void
-RenderResetProc (ExtensionEntry *extEntry);
-    
 int	RenderErrBase;
-DevPrivateKey RenderClientPrivateKey;
+static int RenderClientPrivateKeyIndex;
+DevPrivateKey RenderClientPrivateKey = &RenderClientPrivateKeyIndex;
 
 typedef struct _RenderClient {
     int	    major_version;
@@ -252,15 +250,10 @@ RenderExtensionInit (void)
 
     extEntry = AddExtension (RENDER_NAME, 0, RenderNumberErrors,
 			     ProcRenderDispatch, SProcRenderDispatch,
-			     RenderResetProc, StandardMinorOpcode);
+			     NULL, StandardMinorOpcode);
     if (!extEntry)
 	return;
     RenderErrBase = extEntry->errorBase;
-}
-
-static void
-RenderResetProc (ExtensionEntry *extEntry)
-{
 }
 
 static int
@@ -304,8 +297,6 @@ findVisual (ScreenPtr pScreen, VisualID vid)
     }
     return 0;
 }
-
-extern char *ConnectionInfo;
 
 static int
 ProcRenderQueryPictFormats (ClientPtr client)
@@ -1018,7 +1009,7 @@ ProcRenderReferenceGlyphSet (ClientPtr client)
 
     LEGAL_NEW_RESOURCE(stuff->gsid, client);
 
-    rc = dixLookupResource((pointer *)&glyphSet, stuff->existing, GlyphSetType,
+    rc = dixLookupResourceByType((pointer *)&glyphSet, stuff->existing, GlyphSetType,
 			   client, DixGetAttrAccess);
     if (rc != Success)
     {
@@ -1042,7 +1033,7 @@ ProcRenderFreeGlyphSet (ClientPtr client)
     REQUEST(xRenderFreeGlyphSetReq);
 
     REQUEST_SIZE_MATCH(xRenderFreeGlyphSetReq);
-    rc = dixLookupResource((pointer *)&glyphSet, stuff->glyphset, GlyphSetType,
+    rc = dixLookupResourceByType((pointer *)&glyphSet, stuff->glyphset, GlyphSetType,
 			   client, DixDestroyAccess);
     if (rc != Success)
     {
@@ -1081,7 +1072,7 @@ ProcRenderAddGlyphs (ClientPtr client)
     CARD32	    component_alpha;
 
     REQUEST_AT_LEAST_SIZE(xRenderAddGlyphsReq);
-    err = dixLookupResource((pointer *)&glyphSet, stuff->glyphset, GlyphSetType,
+    err = dixLookupResourceByType((pointer *)&glyphSet, stuff->glyphset, GlyphSetType,
 			    client, DixAddAccess);
     if (err != Success)
     {
@@ -1271,7 +1262,7 @@ ProcRenderFreeGlyphs (ClientPtr client)
     CARD32	    glyph;
 
     REQUEST_AT_LEAST_SIZE(xRenderFreeGlyphsReq);
-    rc = dixLookupResource((pointer *)&glyphSet, stuff->glyphset, GlyphSetType,
+    rc = dixLookupResourceByType((pointer *)&glyphSet, stuff->glyphset, GlyphSetType,
 			   client, DixRemoveAccess);
     if (rc != Success)
     {
@@ -1580,21 +1571,19 @@ ProcRenderCreateCursor (ClientPtr client)
     
     stride = BitmapBytePad(width);
     nbytes_mono = stride*height;
-    srcbits = (unsigned char *)xalloc(nbytes_mono);
+    srcbits = xcalloc(1, nbytes_mono);
     if (!srcbits)
     {
 	xfree (argbbits);
 	return (BadAlloc);
     }
-    mskbits = (unsigned char *)xalloc(nbytes_mono);
+    mskbits = xcalloc(1, nbytes_mono);
     if (!mskbits)
     {
 	xfree(argbbits);
 	xfree(srcbits);
 	return (BadAlloc);
     }
-    bzero ((char *) mskbits, nbytes_mono);
-    bzero ((char *) srcbits, nbytes_mono);
 
     if (pSrc->format == PICT_a8r8g8b8)
     {

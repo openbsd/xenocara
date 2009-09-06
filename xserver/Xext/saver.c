@@ -110,10 +110,6 @@ static void SScreenSaverNotifyEvent (
 	xScreenSaverNotifyEvent * /* to */
 	);
 
-static void ScreenSaverResetProc (
-	ExtensionEntry * /* extEntry */
-	);
-
 static RESTYPE SuspendType;  /* resource type for suspension records */
 
 typedef struct _ScreenSaverSuspension *ScreenSaverSuspensionPtr;
@@ -232,7 +228,8 @@ MakeScreenPrivate (
 	ScreenPtr /* pScreen */
 	);
 
-static DevPrivateKey ScreenPrivateKey = &ScreenPrivateKey;
+static int ScreenPrivateKeyIndex;
+static DevPrivateKey ScreenPrivateKey = &ScreenPrivateKeyIndex;
 
 #define GetScreenPrivate(s) ((ScreenSaverScreenPrivatePtr) \
     dixLookupPrivate(&(s)->devPrivates, ScreenPrivateKey))
@@ -269,18 +266,11 @@ ScreenSaverExtensionInit(INITARGS)
     if (AttrType && EventType && SuspendType &&
 	(extEntry = AddExtension(ScreenSaverName, ScreenSaverNumberEvents, 0,
 				 ProcScreenSaverDispatch, SProcScreenSaverDispatch,
-				 ScreenSaverResetProc, StandardMinorOpcode)))
+				 NULL, StandardMinorOpcode)))
     {
 	ScreenSaverEventBase = extEntry->eventBase;
 	EventSwapVector[ScreenSaverEventBase] = (EventSwapPtr) SScreenSaverNotifyEvent;
     }
-}
-
-/*ARGSUSED*/
-static void
-ScreenSaverResetProc (extEntry)
-ExtensionEntry	*extEntry;
-{
 }
 
 static void
@@ -751,10 +741,10 @@ ScreenSaverHandle (pScreen, xstate, force)
 
 static int
 ProcScreenSaverQueryVersion (client)
-    register ClientPtr	client;
+    ClientPtr	client;
 {
     xScreenSaverQueryVersionReply	rep;
-    register int		n;
+    int		n;
 
     REQUEST_SIZE_MATCH (xScreenSaverQueryVersionReq);
     rep.type = X_Reply;
@@ -772,11 +762,11 @@ ProcScreenSaverQueryVersion (client)
 
 static int
 ProcScreenSaverQueryInfo (client)
-    register ClientPtr	client;
+    ClientPtr	client;
 {
     REQUEST(xScreenSaverQueryInfoReq);
     xScreenSaverQueryInfoReply	rep;
-    register int		n, rc;
+    int		n, rc;
     ScreenSaverStuffPtr		pSaver;
     DrawablePtr			pDraw;
     CARD32			lastInput;
@@ -849,7 +839,7 @@ ProcScreenSaverQueryInfo (client)
 
 static int
 ProcScreenSaverSelectInput (client)
-    register ClientPtr	client;
+    ClientPtr	client;
 {
     REQUEST(xScreenSaverSelectInputReq);
     DrawablePtr			pDraw;
@@ -1064,7 +1054,7 @@ ScreenSaverSetAttributes (ClientPtr client)
 	    }
             else
 	    {	
-		ret = dixLookupResource((pointer *)&pPixmap, pixID, RT_PIXMAP,
+		ret = dixLookupResourceByType((pointer *)&pPixmap, pixID, RT_PIXMAP,
 					client, DixReadAccess);
 		if (ret == Success)
 		{
@@ -1102,7 +1092,7 @@ ScreenSaverSetAttributes (ClientPtr client)
 	    }
 	    else
 	    {	
-		ret = dixLookupResource((pointer *)&pPixmap, pixID, RT_PIXMAP,
+		ret = dixLookupResourceByType((pointer *)&pPixmap, pixID, RT_PIXMAP,
 					client, DixReadAccess);
 		if (ret == Success)
 		{
@@ -1196,7 +1186,7 @@ ScreenSaverSetAttributes (ClientPtr client)
 	    break;
 	case CWColormap:
 	    cmap = (Colormap) *pVlist;
-	    ret = dixLookupResource((pointer *)&pCmap, cmap, RT_COLORMAP,
+	    ret = dixLookupResourceByType((pointer *)&pCmap, cmap, RT_COLORMAP,
 				    client, DixUseAccess);
 	    if (ret != Success)
 	    {
@@ -1220,7 +1210,7 @@ ScreenSaverSetAttributes (ClientPtr client)
 	    }
 	    else
 	    {
-		ret = dixLookupResource((pointer *)&pCursor, cursorID,
+		ret = dixLookupResourceByType((pointer *)&pCursor, cursorID,
 					RT_CURSOR, client, DixUseAccess);
 	    	if (ret != Success)
 	    	{

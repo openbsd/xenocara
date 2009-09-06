@@ -63,8 +63,6 @@ SOFTWARE.
 #include "registry.h"
 #include "xace.h"
 
-#define EXTENSION_BASE  128
-#define EXTENSION_EVENT_BASE  64
 #define LAST_EVENT  128
 #define LAST_ERROR 255
 
@@ -85,7 +83,7 @@ AddExtension(char *name, int NumEvents, int NumErrors,
     ExtensionEntry *ext, **newexts;
     size_t buflen;
 
-    if (!MainProc || !SwappedMainProc || !CloseDownProc || !MinorOpcodeProc)
+    if (!MainProc || !SwappedMainProc || !MinorOpcodeProc)
         return((ExtensionEntry *) NULL);
     if ((lastEvent + NumEvents > LAST_EVENT) || 
 	        (unsigned)(lastError + NumErrors > LAST_ERROR))
@@ -94,11 +92,11 @@ AddExtension(char *name, int NumEvents, int NumErrors,
     ext = (ExtensionEntry *) xalloc(sizeof(ExtensionEntry));
     if (!ext)
 	return((ExtensionEntry *) NULL);
+    buflen = strlen(name) + 1;
+    ext->name = (char *)xalloc(buflen);
     ext->num_aliases = 0;
     ext->aliases = (char **)NULL;
     ext->devPrivates = NULL;
-    buflen = strlen(name) + 1;
-    ext->name = (char *)xalloc(buflen);
     if (!ext->name)
     {
 	xfree(ext);
@@ -251,7 +249,8 @@ CloseDownExtensions(void)
 
     for (i = NumExtensions - 1; i >= 0; i--)
     {
-	(* extensions[i]->CloseDown)(extensions[i]);
+	if (extensions[i]->CloseDown)
+	    extensions[i]->CloseDown(extensions[i]);
 	NumExtensions = i;
 	xfree(extensions[i]->name);
 	for (j = extensions[i]->num_aliases; --j >= 0;)

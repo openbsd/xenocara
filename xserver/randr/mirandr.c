@@ -74,6 +74,14 @@ miRROutputSetProperty (ScreenPtr	    pScreen,
 }
 
 Bool
+miRROutputGetProperty (ScreenPtr	    pScreen,
+		       RROutputPtr	    output,
+		       Atom		    property)
+{
+	return TRUE;
+}
+
+Bool
 miRROutputValidateMode (ScreenPtr	    pScreen,
 			RROutputPtr	    output,
 			RRModePtr	    mode)
@@ -116,6 +124,9 @@ miRandRInit (ScreenPtr pScreen)
     pScrPriv->rrCrtcSet = miRRCrtcSet;
     pScrPriv->rrCrtcSetGamma = miRRCrtcSetGamma;
     pScrPriv->rrOutputSetProperty = miRROutputSetProperty;
+#if RANDR_13_INTERFACE
+    pScrPriv->rrOutputGetProperty = miRROutputGetProperty;
+#endif
     pScrPriv->rrOutputValidateMode = miRROutputValidateMode;
     pScrPriv->rrModeDestroy = miRRModeDestroy;
     
@@ -123,7 +134,7 @@ miRandRInit (ScreenPtr pScreen)
 			  pScreen->width, pScreen->height,
 			  pScreen->width, pScreen->height);
 
-    sprintf (name, "%dx%d", pScreen->width, pScreen->height);
+    snprintf (name, sizeof(name), "%dx%d", pScreen->width, pScreen->height);
     memset (&modeInfo, '\0', sizeof (modeInfo));
     modeInfo.width = pScreen->width;
     modeInfo.height = pScreen->height;
@@ -148,7 +159,7 @@ miRandRInit (ScreenPtr pScreen)
 	return FALSE;
     if (!RROutputSetConnection (output, RR_Connected))
 	return FALSE;
-    RRCrtcNotify (crtc, mode, 0, 0, RR_Rotate_0, 1, &output);
+    RRCrtcNotify (crtc, mode, 0, 0, RR_Rotate_0, NULL, 1, &output);
 #endif
     return TRUE;
 }

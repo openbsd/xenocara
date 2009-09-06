@@ -314,6 +314,7 @@ _X_EXPORT void
 LogVMessageVerb(MessageType type, int verb, const char *format, va_list args)
 {
     const char *s  = X_UNKNOWN_STRING;
+    char tmpBuf[1024];
 
     /* Ignore verbosity for X_ERROR */
     if (logVerbosity >= verb || logFileVerbosity >= verb || type == X_ERROR) {
@@ -355,35 +356,11 @@ LogVMessageVerb(MessageType type, int verb, const char *format, va_list args)
 	    break;
 	}
 
-	/*
-	 * Prefix the format string with the message type.  We do it this way
-	 * so that LogVWrite() is only called once per message.
-	 */
-	if (s != NULL) {
-	    char stackBuf[BUFSIZ];
-	    char *tmpBuf = NULL;
-	    size_t len;
-
-	    len = strlen(format) + strlen(s) + 1 + 1;
-	    if (len <= sizeof(stackBuf)) {
-		/*
-		 * avoid malloc() for short strings, since this may be called
-		 * from a signal handler 
-		 */
-		tmpBuf = stackBuf;
-	    } else {
-		tmpBuf = malloc(len);
-		/* Silently return if malloc fails here. */
-		if (tmpBuf == NULL) 
-		    return;
-	    }
-	    /* snprintf() is safe in signal handlers on OpenBSD */
-	    snprintf(tmpBuf, len, "%s %s", s, format);
-	    LogVWrite(verb, tmpBuf, args);
-	    if (tmpBuf != stackBuf)
-		    free(tmpBuf);
-	} else
-	    LogVWrite(verb, format, args);
+        /* if s is not NULL we need a space before format */
+        snprintf(tmpBuf, sizeof(tmpBuf), "%s%s%s", s ? s : "",
+                                                   s ? " " : "",
+                                                   format);
+        LogVWrite(verb, tmpBuf, args);
     }
 }
 
@@ -426,9 +403,7 @@ AbortServer(void)
     exit (1);
 }
 
-#ifndef AUDIT_PREFIX
-#define AUDIT_PREFIX "AUDIT: %s: %ld %s: "
-#endif
+#define AUDIT_PREFIX "AUDIT: %s: %ld: "
 #ifndef AUDIT_TIMEOUT
 #define AUDIT_TIMEOUT ((CARD32)(120 * 1000)) /* 2 mn */
 #endif
@@ -460,15 +435,11 @@ AuditPrefix(void)
     autime = ctime(&tm);
     if ((s = strchr(autime, '\n')))
 	*s = '\0';
-    if ((s = strrchr(argvGlobal[0], '/')))
-	s++;
-    else
-	s = argvGlobal[0];
-    len = strlen(AUDIT_PREFIX) + strlen(autime) + 10 + strlen(s) + 1;
+    len = strlen(AUDIT_PREFIX) + strlen(autime) + 10 + 1;
     tmpBuf = malloc(len);
     if (!tmpBuf)
 	return NULL;
-    snprintf(tmpBuf, len, AUDIT_PREFIX, autime, (unsigned long)getpid(), s);
+    snprintf(tmpBuf, len, AUDIT_PREFIX, autime, (unsigned long)getpid());
     return tmpBuf;
 }
 
@@ -514,15 +485,6 @@ VAuditF(const char *f, va_list args)
     prefix = AuditPrefix();
     len = vsnprintf(buf, sizeof(buf), f, args);
 
-#if 1
-    /* XXX Compressing duplicated messages is temporarily disabled to
-     * work around bugzilla 964:
-     *     https://freedesktop.org/bugzilla/show_bug.cgi?id=964
-     */
-    ErrorF("%s%s", prefix != NULL ? prefix : "", buf);
-    oldlen = -1;
-    nrepeat = 0;
-#else
     if (len == oldlen && strcmp(buf, oldbuf) == 0) {
 	/* Message already seen */
 	nrepeat++;
@@ -536,7 +498,6 @@ VAuditF(const char *f, va_list args)
 	nrepeat = 0;
 	auditTimer = TimerSet(auditTimer, 0, AUDIT_TIMEOUT, AuditFlush, NULL);
     }
-#endif
     if (prefix != NULL)
 	free(prefix);
 }
@@ -556,13 +517,8 @@ FatalError(const char *f, ...)
     VErrorF(f, args);
     va_end(args);
     ErrorF("\n");
-#ifdef DDXOSFATALERROR
     if (!beenhere)
 	OsVendorFatalError();
-#endif
-#ifdef ABORTONFATALERROR
-    abort();
-#endif
     if (!beenhere) {
 	beenhere = TRUE;
 	AbortServer();
@@ -596,21 +552,6 @@ ErrorF(const char * f, ...)
 
 /* A perror() workalike. */
 
-#ifndef NEED_STRERROR
-#ifdef SYSV
-#if !defined(ISC) || defined(ISC202) || defined(ISC22)
-#define NEED_STRERROR
-#endif
-#endif
-#endif
-
-#if defined(NEED_STRERROR) && !defined(strerror)
-extern char *sys_errlist[];
-extern int sys_nerr;
-#define strerror(n) \
-	((n) >= 0 && (n) < sys_nerr) ? sys_errlist[(n)] : "unknown error"
-#endif
-
 _X_EXPORT void
 Error(char *str)
 {
@@ -625,9 +566,10 @@ Error(char *str)
 	    return;
 	snprintf(err, len, "%s: ", str);
 	strlcat(err, strerror(saveErrno), len);
-	LogWrite(-1, err);
+	LogWrite(-1, "%s", err);
+	free(err);
     } else
-	LogWrite(-1, strerror(saveErrno));
+	LogWrite(-1, "%s", strerror(saveErrno));
 }
 
 void

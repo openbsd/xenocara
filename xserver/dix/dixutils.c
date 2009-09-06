@@ -216,7 +216,7 @@ dixLookupDrawable(DrawablePtr *pDraw, XID id, ClientPtr client,
     if (id == INVALID)
 	return BadDrawable;
 
-    rc = dixLookupResource((pointer *)&pTmp, id, RC_DRAWABLE, client, access);
+    rc = dixLookupResourceByClass((pointer *)&pTmp, id, RC_DRAWABLE, client, access);
 
     if (rc == BadValue)
 	return BadDrawable;
@@ -259,7 +259,7 @@ dixLookupClient(ClientPtr *pClient, XID rid, ClientPtr client, Mask access)
     if (!clientIndex || !clients[clientIndex] || (rid & SERVER_BIT))
 	goto bad;
 
-    rc = dixLookupResource(&pRes, rid, RC_ANY, client, DixGetAttrAccess);
+    rc = dixLookupResourceByClass(&pRes, rid, RC_ANY, client, DixGetAttrAccess);
     if (rc != Success)
 	goto bad;
 
@@ -270,14 +270,15 @@ dixLookupClient(ClientPtr *pClient, XID rid, ClientPtr client, Mask access)
     *pClient = clients[clientIndex];
     return Success;
 bad:
-    client->errorValue = rid;
+    if(client)
+        client->errorValue = rid;
     *pClient = NULL;
     return rc;
 }
 
 int
 AlterSaveSetForClient(ClientPtr client, WindowPtr pWin, unsigned mode,
-                      Bool toRoot, Bool remap)
+                      Bool toRoot, Bool map)
 {
     int numnow;
     SaveSetElt *pTmp = NULL;
@@ -303,7 +304,7 @@ AlterSaveSetForClient(ClientPtr client, WindowPtr pWin, unsigned mode,
        	client->numSaved = numnow;
 	SaveSetAssignWindow(client->saveSet[numnow - 1], pWin);
 	SaveSetAssignToRoot(client->saveSet[numnow - 1], toRoot);
-	SaveSetAssignRemap(client->saveSet[numnow - 1], remap);
+	SaveSetAssignMap(client->saveSet[numnow - 1], map);
 	return(Success);
     }
     else if ((mode == SetModeDelete) && (j < numnow))

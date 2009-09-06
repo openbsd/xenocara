@@ -76,12 +76,6 @@ static char *DFLT_MOUSE_PROTO = "OSMouse";
 #elif defined(__UNIXWARE__)
 static char *DFLT_MOUSE_PROTO = "OSMouse";
 static char *DFLT_MOUSE_DEV = "/dev/mouse";
-#elif defined(QNX4)
-static char *DFLT_MOUSE_PROTO = "OSMouse";
-static char *DFLT_MOUSE_DEV = "/dev/mouse";
-#elif defined(__QNXNTO__)
-static char *DFLT_MOUSE_PROTO = "OSMouse";
-static char *DFLT_MOUSE_DEV = "/dev/devi/mouse0";
 #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
 static char *DFLT_MOUSE_DEV = "/dev/sysmouse";
 static char *DFLT_MOUSE_PROTO = "auto";
@@ -102,6 +96,7 @@ GDevPtr
 xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int chipset)
 {
     int i, j;
+    size_t len;
     struct pci_device * pVideo = NULL;
     Bool isPrimary = FALSE;
 
@@ -120,18 +115,6 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
 		(DevToConfig[i].pVideo->func == pVideo->func))
 		return NULL;
 	isPrimary = xf86IsPrimaryPci(pVideo);
-	break;
-    case BUS_ISA:
-	/*
-	 * This needs to be revisited as it doesn't allow for non-PCI
-	 * multihead.
-	 */
-	if (!xf86IsPrimaryIsa())
-	    return NULL;
-	isPrimary = TRUE;
-	for (i = 0;  i < nDevToConfig;  i++)
-	    if (!DevToConfig[i].pVideo)
-		return NULL;
 	break;
 #if (defined(__sparc__) || defined(__sparc))
     case BUS_SBUS:
@@ -181,24 +164,25 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
 
 	if (!VendorName) {
 	    VendorName = xnfalloc(15);
-	    sprintf((char*)VendorName, "Unknown Vendor");
+	    snprintf((char*)VendorName, 15, "Unknown Vendor");
 	}
 
 	if (!CardName) {
 	    CardName = xnfalloc(14);
-	    sprintf((char*)CardName, "Unknown Board");
+	    snprintf((char*)CardName, 14, "Unknown Board");
 	}
 
-	NewDevice.GDev.identifier =
-	    xnfalloc(strlen(VendorName) + strlen(CardName) + 2);
-	sprintf(NewDevice.GDev.identifier, "%s %s", VendorName, CardName);
+	len = strlen(VendorName) + strlen(CardName) + 2;
+	NewDevice.GDev.identifier = xnfalloc(len);
+	snprintf(NewDevice.GDev.identifier, len, "%s %s", 
+	    VendorName, CardName);
 
 	NewDevice.GDev.vendor = (char *)VendorName;
 	NewDevice.GDev.board = (char *)CardName;
 
 	NewDevice.GDev.busID = xnfalloc(16);
 	xf86FormatPciBusNumber(pVideo->bus, busnum);
-	sprintf(NewDevice.GDev.busID, "PCI:%s:%d:%d",
+	snprintf(NewDevice.GDev.busID, 16, "PCI:%s:%d:%d",
 	    busnum, pVideo->dev, pVideo->func);
 
 	NewDevice.GDev.chipID = pVideo->device_id;
@@ -208,11 +192,7 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
 	    chipset = (pVideo->vendor_id << 16) | pVideo->device_id;
 	}
 	break;
-    case BUS_ISA:
-	NewDevice.GDev.identifier = "ISA Adapter";
-	NewDevice.GDev.busID = "ISA";
-	break;
-#if (defined(__sparc__) || defined(__sparc))
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
     case BUS_SBUS: {
 	char *promPath = NULL;
 	NewDevice.sVideo = (sbusDevicePtr) busData;
@@ -222,12 +202,13 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
 	    sparcPromClose();
 	}
 	if (promPath) {
-	    NewDevice.GDev.busID = xnfalloc(strlen(promPath) + 6);
-	    sprintf(NewDevice.GDev.busID, "SBUS:%s", promPath);
+	    len = strlen(promPath) + 6;
+	    NewDevice.GDev.busID = xnfalloc(len);
+	    snprintf(NewDevice.GDev.busID, len, "SBUS:%s", promPath);
 	    xfree(promPath);
 	} else {
 	    NewDevice.GDev.busID = xnfalloc(12);
-	    sprintf(NewDevice.GDev.busID, "SBUS:fb%d", NewDevice.sVideo->fbNum);
+	    snprintf(NewDevice.GDev.busID, 12, "SBUS:fb%d", NewDevice.sVideo->fbNum);
 	}
 	}
 	break;
@@ -245,17 +226,6 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
     return &NewDevice.GDev;
 
 #   undef NewDevice
-}
-
-/*
- * Backwards compatibility
- */
-_X_EXPORT GDevPtr
-xf86AddDeviceToConfigure(const char *driver, struct pci_device * pVideo, 
-			 int chipset)
-{
-    return xf86AddBusDeviceToConfigure(driver, pVideo ? BUS_PCI : BUS_ISA,
-				       pVideo, chipset);
 }
 
 static XF86ConfInputPtr
@@ -293,8 +263,7 @@ configureInputSection (void)
 #endif
     }
 
-    mouse = xf86confmalloc(sizeof(XF86ConfInputRec));
-    memset((XF86ConfInputPtr)mouse,0,sizeof(XF86ConfInputRec));
+    mouse = xf86confcalloc(1, sizeof(XF86ConfInputRec));
     mouse->inp_identifier = "Mouse0";
     mouse->inp_driver = "mouse";
     mouse->inp_option_lst = 
@@ -320,18 +289,17 @@ configureScreenSection (int screennum)
     parsePrologue (XF86ConfScreenPtr, XF86ConfScreenRec)
 
     ptr->scrn_identifier = xf86confmalloc(18);
-    sprintf(ptr->scrn_identifier, "Screen%d", screennum);
+    snprintf(ptr->scrn_identifier, 18, "Screen%d", screennum);
     ptr->scrn_monitor_str = xf86confmalloc(19);
-    sprintf(ptr->scrn_monitor_str, "Monitor%d", screennum);
+    snprintf(ptr->scrn_monitor_str, 19, "Monitor%d", screennum);
     ptr->scrn_device_str = xf86confmalloc(16);
-    sprintf(ptr->scrn_device_str, "Card%d", screennum);
+    snprintf(ptr->scrn_device_str, 16, "Card%d", screennum);
 
     for (i=0; i<sizeof(depths)/sizeof(depths[0]); i++)
     {
 	XF86ConfDisplayPtr display;
 
-	display = xf86confmalloc(sizeof(XF86ConfDisplayRec));
-    	memset((XF86ConfDisplayPtr)display,0,sizeof(XF86ConfDisplayRec));
+	display = xf86confcalloc(1, sizeof(XF86ConfDisplayRec));
 	display->disp_depth = depths[i];
 	display->disp_black.red = display->disp_white.red = -1;
 	display->disp_black.green = display->disp_white.green = -1;
@@ -375,7 +343,7 @@ configureDeviceSection (int screennum)
     parsePrologue (XF86ConfDevicePtr, XF86ConfDeviceRec)
 
     /* Move device info to parser structure */
-    sprintf(identifier, "Card%d", screennum);
+    snprintf(identifier, sizeof(identifier), "Card%d", screennum);
     ptr->dev_identifier = strdup(identifier);
 /*    ptr->dev_identifier = DevToConfig[screennum].GDev.identifier;*/
     ptr->dev_vendor = DevToConfig[screennum].GDev.vendor;
@@ -420,11 +388,12 @@ configureDeviceSection (int screennum)
 		char *optname;
 		int len = strlen(ptr->dev_comment) + strlen(prefix) +
 			  strlen(middle) + strlen(suffix) + 1;
-		
-		optname = xalloc(strlen(p->name) + 2 + 1);
+		int optlen = strlen(p->name) + 2 + 1;
+
+		optname = xalloc(optlen);
 		if (!optname)
 		    break;
-		sprintf(optname, "\"%s\"", p->name);
+		snprintf(optname, optlen, "\"%s\"", p->name);
 
 		len += max(20, strlen(optname));
 		len += strlen(opttype);
@@ -433,8 +402,9 @@ configureDeviceSection (int screennum)
 		if (!ptr->dev_comment)
 		    break;
 		p_e = ptr->dev_comment + strlen(ptr->dev_comment);
-		sprintf(p_e, "%s%-20s%s%s%s", prefix, optname, middle,
-			opttype, suffix);
+		snprintf(p_e, len - (ptr->dev_comment - p_e), 
+			 "%s%-20s%s%s%s", prefix, optname, middle,
+			 opttype, suffix);
 		xfree(optname);
 	    }
     	}
@@ -486,7 +456,7 @@ configureLayoutSection (void)
 	aptr->adj_y = 0;
 	aptr->adj_scrnum = scrnum;
 	aptr->adj_screen_str = xnfalloc(18);
-	sprintf(aptr->adj_screen_str, "Screen%d", scrnum);
+	snprintf(aptr->adj_screen_str, 18, "Screen%d", scrnum);
 	if (scrnum == 0) {
 	    aptr->adj_where = CONF_ADJ_ABSOLUTE;
 	    aptr->adj_refscreen = NULL;
@@ -494,7 +464,7 @@ configureLayoutSection (void)
 	else {
 	    aptr->adj_where = CONF_ADJ_RIGHTOF;
 	    aptr->adj_refscreen = xnfalloc(18);
-	    sprintf(aptr->adj_refscreen, "Screen%d", scrnum - 1);
+	    snprintf(aptr->adj_refscreen, 18, "Screen%d", scrnum - 1);
 	}
     	ptr->lay_adjacency_lst =
 	    (XF86ConfAdjacencyPtr)xf86addListItem((glp)ptr->lay_adjacency_lst,
@@ -532,8 +502,7 @@ configureModuleSection (void)
 	for (el = elist; *el; el++) {
 	    XF86LoadPtr module;
 
-    	    module = xf86confmalloc(sizeof(XF86LoadRec));
-    	    memset((XF86LoadPtr)module,0,sizeof(XF86LoadRec));
+    	    module = xf86confcalloc(1, sizeof(XF86LoadRec));
     	    module->load_name = *el;
             ptr->mod_load_lst = (XF86LoadPtr)xf86addListItem(
                                 (glp)ptr->mod_load_lst, (glp)module);
@@ -547,8 +516,7 @@ configureModuleSection (void)
 	for (el = elist; *el; el++) {
 	    XF86LoadPtr module;
 
-    	    module = xf86confmalloc(sizeof(XF86LoadRec));
-    	    memset((XF86LoadPtr)module,0,sizeof(XF86LoadRec));
+    	    module = xf86confcalloc(1, sizeof(XF86LoadRec));
     	    module->load_name = *el;
 
             /* Add only those font backends which are referenced by fontpath */
@@ -586,7 +554,7 @@ configureMonitorSection (int screennum)
     parsePrologue (XF86ConfMonitorPtr, XF86ConfMonitorRec)
 
     ptr->mon_identifier = xf86confmalloc(19);
-    sprintf(ptr->mon_identifier, "Monitor%d", screennum);
+    snprintf(ptr->mon_identifier, 19, "Monitor%d", screennum);
     ptr->mon_vendor = strdup("Monitor Vendor");
     ptr->mon_modelname = strdup("Monitor Model");
 
@@ -605,10 +573,10 @@ configureDDCMonitorSection (int screennum)
     parsePrologue (XF86ConfMonitorPtr, XF86ConfMonitorRec)
 
     ptr->mon_identifier = xf86confmalloc(19);
-    sprintf(ptr->mon_identifier, "Monitor%d", screennum);
+    snprintf(ptr->mon_identifier, 19, "Monitor%d", screennum);
     ptr->mon_vendor = strdup(ConfiguredMonitor->vendor.name);
     ptr->mon_modelname = xf86confmalloc(12);
-    sprintf(ptr->mon_modelname, "%x", ConfiguredMonitor->vendor.prod_id);
+    snprintf(ptr->mon_modelname, 12, "%x", ConfiguredMonitor->vendor.prod_id);
 
     /* features in centimetres, we want millimetres */
     mon_width  = 10 * ConfiguredMonitor->features.hsize ;
@@ -672,12 +640,18 @@ configureDDCMonitorSection (int screennum)
     return ptr;
 }
 
+#if !defined(PATH_MAX)
+# define PATH_MAX 1024
+#endif
+
 void
-DoConfigure()
+DoConfigure(void)
 {
     int i,j, screennum = -1;
+    size_t len;
     char *home = NULL;
-    char *filename = NULL;
+    char filename[PATH_MAX];
+    char *addslash = "";
     XF86ConfigPtr xf86config = NULL;
     char **vlist, **vl;
     int *dev2screen;
@@ -722,11 +696,7 @@ DoConfigure()
     xf86FindPrimaryDevice();
  
     /* Create XF86Config file structure */
-    xf86config = malloc(sizeof(XF86ConfigRec));
-    memset ((XF86ConfigPtr)xf86config, 0, sizeof(XF86ConfigRec));
-    xf86config->conf_device_lst = NULL;
-    xf86config->conf_screen_lst = NULL;
-    xf86config->conf_monitor_lst = NULL;
+    xf86config = calloc(1, sizeof(XF86ConfigRec));
 
     /* Call all of the probe functions, reporting the results. */
     for (CurrentDriver = 0;  CurrentDriver < xf86NumDrivers;  CurrentDriver++) {
@@ -779,34 +749,26 @@ DoConfigure()
     xf86config->conf_input_lst = configureInputSection();
     xf86config->conf_layout_lst = configureLayoutSection();
 
-    if (!(home = getenv("HOME")))
+    home = getenv("HOME");
+    if ((home == NULL) || (home[0] == '\0')) {
     	home = "/";
-    {
-#if !defined(PATH_MAX)
-#define PATH_MAX 1024
-#endif
-        const char* configfile = XF86CONFIGFILE".new";
-    	char homebuf[PATH_MAX];
-    	/* getenv might return R/O memory, as with OS/2 */
-    	strncpy(homebuf,home,PATH_MAX-1);
-    	homebuf[PATH_MAX-1] = '\0';
-    	home = homebuf;
-    	if (!(filename =
-	     (char *)xalloc(strlen(home) + 
-	  			 strlen(configfile) + 3)))
-		goto bail;
+    } else {
+	/* Determine if trailing slash is present or needed */
+	int l = strlen(home);
 
-      	if (home[0] == '/' && home[1] == '\0')
-            home[0] = '\0';
-#ifndef QNX4
-	sprintf(filename, "%s/%s", home,configfile);
-#else
-	sprintf(filename, "//%d%s/%s", getnid(),home,configfile);
-#endif
-	
+	if (home[l-1] != '/') {
+	    addslash = "/";
+	}
     }
 
-    xf86writeConfigFile(filename, xf86config);
+    snprintf(filename, sizeof(filename), "%s%s" XF86CONFIGFILE ".new",
+	     home, addslash);
+
+    if (xf86writeConfigFile(filename, xf86config) == 0) {
+	xf86Msg(X_ERROR, "Unable to write config file: \"%s\": %s\n",
+		filename, strerror(errno));
+	goto bail;
+    }
 
     xf86DoConfigurePass1 = FALSE;
     /* Try to get DDC information filled in */
@@ -902,7 +864,11 @@ DoConfigure()
 		(glp)xf86config->conf_screen_lst, (glp)ScreenPtr);
     }
 
-    xf86writeConfigFile(filename, xf86config);
+    if (xf86writeConfigFile(filename, xf86config) == 0) {
+	xf86Msg(X_ERROR, "Unable to write config file: \"%s\": %s\n",
+		filename, strerror(errno));
+	goto bail;
+    }
 
     ErrorF("\n");
 

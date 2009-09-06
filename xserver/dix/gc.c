@@ -273,7 +273,7 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		else
 		{
 		    NEXTVAL(XID, newpix);
-		    rc = dixLookupResource((pointer *)&pPixmap, newpix,
+		    rc = dixLookupResourceByType((pointer *)&pPixmap, newpix,
 					   RT_PIXMAP, client, DixReadAccess);
 		}
 		if (rc == Success)
@@ -310,7 +310,7 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		else
 		{
 		    NEXTVAL(XID, newstipple)
-		    rc = dixLookupResource((pointer *)&pPixmap, newstipple,
+		    rc = dixLookupResourceByType((pointer *)&pPixmap, newstipple,
 					   RT_PIXMAP, client, DixReadAccess);
 		}
 		if (rc == Success)
@@ -353,7 +353,7 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		else
 		{
 		    NEXTVAL(XID, newfont)
-		    rc = dixLookupResource((pointer *)&pFont, newfont,
+		    rc = dixLookupResourceByType((pointer *)&pFont, newfont,
 					   RT_FONT, client, DixUseAccess);
 		}
 		if (rc == Success)
@@ -420,7 +420,7 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 			pPixmap = NullPixmap;
 		    }
 		    else {
-			rc = dixLookupResource((pointer *)&pPixmap, pid,
+			rc = dixLookupResourceByType((pointer *)&pPixmap, pid,
 					       RT_PIXMAP, client,
 					       DixReadAccess);
 			if (rc != Success) {
@@ -1049,7 +1049,7 @@ FreeDefaultStipple(int screenNum)
     (*pScreen->DestroyPixmap)(pScreen->PixmapPerDepth[0]);
 }
 
-_X_EXPORT int
+int
 SetDashes(GCPtr pGC, unsigned offset, unsigned ndash, unsigned char *pdash)
 {
     long i;
@@ -1155,7 +1155,7 @@ VerifyRectOrder(int nrects, xRectangle *prects, int ordering)
     return -1;
 }
 
-_X_EXPORT int
+int
 SetClipRects(GCPtr pGC, int xOrigin, int yOrigin, int nrects, 
              xRectangle *prects, int ordering)
 {

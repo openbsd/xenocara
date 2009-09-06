@@ -69,6 +69,7 @@ struct __GLXDRIscreen {
     xf86LeaveVTProc	*leaveVT;
 
     const __DRIcoreExtension *core;
+    const __DRIdri2Extension *dri2;
     const __DRIcopySubBufferExtension *copySubBuffer;
     const __DRIswapControlExtension *swapControl;
     const __DRItexBufferExtension *texBuffer;
@@ -81,10 +82,18 @@ struct __GLXDRIcontext {
     __DRIcontext	*driContext;
 };
 
+#define MAX_DRAWABLE_BUFFERS 5
+
 struct __GLXDRIdrawable {
     __GLXdrawable	 base;
     __DRIdrawable	*driDrawable;
     __GLXDRIscreen	*screen;
+
+    /* Dimensions as last reported by DRI2GetBuffers. */
+    int width;
+    int height;
+    __DRIbuffer buffers[MAX_DRAWABLE_BUFFERS];
+    int count;
 };
 
 static void
@@ -100,53 +109,78 @@ __glXDRIdrawableDestroy(__GLXdrawable *drawable)
     if (drawable->pDraw != NULL)
 	DRI2DestroyDrawable(drawable->pDraw);
 
+    __glXDrawableRelease(drawable);
+
     xfree(private);
 }
 
-static GLboolean
-__glXDRIdrawableResize(__GLXdrawable *glxPriv)
+static void
+__glXDRIdrawableCopySubBuffer(__GLXdrawable *drawable,
+			       int x, int y, int w, int h)
 {
-    /* Nothing to do here, the DRI driver asks the server for drawable
-     * geometry when it sess the SAREA timestamps change.*/
+    __GLXDRIdrawable *private = (__GLXDRIdrawable *) drawable;
+    BoxRec box;
+    RegionRec region;
 
-    return GL_TRUE;
+    box.x1 = x;
+    box.y1 = private->height - y - h;
+    box.x2 = x + w;
+    box.y2 = private->height - y;
+    REGION_INIT(drawable->pDraw->pScreen, &region, &box, 0);
+
+    DRI2CopyRegion(drawable->pDraw, &region,
+		   DRI2BufferFrontLeft, DRI2BufferBackLeft);
 }
 
 static GLboolean
 __glXDRIdrawableSwapBuffers(__GLXdrawable *drawable)
 {
     __GLXDRIdrawable *private = (__GLXDRIdrawable *) drawable;
-    const __DRIcoreExtension *core = private->screen->core;
 
-    (*core->swapBuffers)(private->driDrawable);
+    __glXDRIdrawableCopySubBuffer(drawable, 0, 0,
+				  private->width, private->height);
 
     return TRUE;
 }
 
+static void
+__glXDRIdrawableWaitX(__GLXdrawable *drawable)
+{
+    __GLXDRIdrawable *private = (__GLXDRIdrawable *) drawable;
+    BoxRec box;
+    RegionRec region;
+
+    box.x1 = 0;
+    box.y1 = 0;
+    box.x2 = private->width;
+    box.y2 = private->height;
+    REGION_INIT(drawable->pDraw->pScreen, &region, &box, 0);
+
+    DRI2CopyRegion(drawable->pDraw, &region,
+		   DRI2BufferFakeFrontLeft, DRI2BufferFrontLeft);
+}
+
+static void
+__glXDRIdrawableWaitGL(__GLXdrawable *drawable)
+{
+    __GLXDRIdrawable *private = (__GLXDRIdrawable *) drawable;
+    BoxRec box;
+    RegionRec region;
+
+    box.x1 = 0;
+    box.y1 = 0;
+    box.x2 = private->width;
+    box.y2 = private->height;
+    REGION_INIT(drawable->pDraw->pScreen, &region, &box, 0);
+
+    DRI2CopyRegion(drawable->pDraw, &region,
+		   DRI2BufferFrontLeft, DRI2BufferFakeFrontLeft);
+}
 
 static int
 __glXDRIdrawableSwapInterval(__GLXdrawable *drawable, int interval)
 {
-    __GLXDRIdrawable *private = (__GLXDRIdrawable *) drawable;
-    const __DRIswapControlExtension *swapControl = private->screen->swapControl;
-
-    if (swapControl)
-	swapControl->setSwapInterval(private->driDrawable, interval);
-
     return 0;
-}
-
-
-static void
-__glXDRIdrawableCopySubBuffer(__GLXdrawable *basePrivate,
-			       int x, int y, int w, int h)
-{
-    __GLXDRIdrawable *private = (__GLXDRIdrawable *) basePrivate;
-    const __DRIcopySubBufferExtension *copySubBuffer =
-	    private->screen->copySubBuffer;
-
-    if (copySubBuffer)
-	(*copySubBuffer->copySubBuffer)(private->driDrawable, x, y, w, h);
 }
 
 static void
@@ -221,9 +255,19 @@ __glXDRIbindTexImage(__GLXcontext *baseContext,
     if (texBuffer == NULL)
         return Success;
 
-    texBuffer->setTexBuffer(context->driContext,
-			    glxPixmap->target,
-			    drawable->driDrawable);
+#if __DRI_TEX_BUFFER_VERSION >= 2
+    if (texBuffer->base.version >= 2 && texBuffer->setTexBuffer2 != NULL) {
+	(*texBuffer->setTexBuffer2)(context->driContext,
+				    glxPixmap->target,
+				    glxPixmap->format,
+				    drawable->driDrawable);
+    } else
+#endif
+    {
+	texBuffer->setTexBuffer(context->driContext,
+				glxPixmap->target,
+				drawable->driDrawable);
+    }
 
     return Success;
 }
@@ -284,7 +328,6 @@ __glXDRIscreenCreateContext(__GLXscreen *baseScreen,
     __GLXDRIscreen *screen = (__GLXDRIscreen *) baseScreen;
     __GLXDRIcontext *context, *shareContext;
     __GLXDRIconfig *config = (__GLXDRIconfig *) glxConfig;
-    const __DRIcoreExtension *core = screen->core;
     __DRIcontext *driShare;
 
     shareContext = (__GLXDRIcontext *) baseShareContext;
@@ -293,11 +336,10 @@ __glXDRIscreenCreateContext(__GLXscreen *baseScreen,
     else
 	driShare = NULL;
 
-    context = xalloc(sizeof *context);
+    context = xcalloc(1, sizeof *context);
     if (context == NULL)
 	return NULL;
 
-    memset(context, 0, sizeof *context);
     context->base.destroy           = __glXDRIcontextDestroy;
     context->base.makeCurrent       = __glXDRIcontextMakeCurrent;
     context->base.loseCurrent       = __glXDRIcontextLoseCurrent;
@@ -306,8 +348,13 @@ __glXDRIscreenCreateContext(__GLXscreen *baseScreen,
     context->base.textureFromPixmap = &__glXDRItextureFromPixmap;
 
     context->driContext =
-	(*core->createNewContext)(screen->driScreen,
-				  config->driConfig, driShare, context);
+	(*screen->dri2->createNewContext)(screen->driScreen,
+					  config->driConfig,
+					  driShare, context);
+    if (context->driContext == NULL) {
+	    xfree(context);
+        return NULL;
+    }
 
     return &context->base;
 }
@@ -322,14 +369,10 @@ __glXDRIscreenCreateDrawable(__GLXscreen *screen,
     __GLXDRIscreen *driScreen = (__GLXDRIscreen *) screen;
     __GLXDRIconfig *config = (__GLXDRIconfig *) glxConfig;
     __GLXDRIdrawable *private;
-    GLboolean retval;
-    unsigned int handle, head;
 
-    private = xalloc(sizeof *private);
+    private = xcalloc(1, sizeof *private);
     if (private == NULL)
 	return NULL;
-
-    memset(private, 0, sizeof *private);
 
     private->screen = driScreen;
     if (!__glXDrawableInit(&private->base, screen,
@@ -339,46 +382,123 @@ __glXDRIscreenCreateDrawable(__GLXscreen *screen,
     }
 
     private->base.destroy       = __glXDRIdrawableDestroy;
-    private->base.resize        = __glXDRIdrawableResize;
     private->base.swapBuffers   = __glXDRIdrawableSwapBuffers;
     private->base.copySubBuffer = __glXDRIdrawableCopySubBuffer;
+    private->base.waitGL	= __glXDRIdrawableWaitGL;
+    private->base.waitX		= __glXDRIdrawableWaitX;
 
-    retval = DRI2CreateDrawable(pDraw, &handle, &head);
+    if (DRI2CreateDrawable(pDraw)) {
+	    xfree(private);
+	    return NULL;
+    }
 
     private->driDrawable =
-	(*driScreen->core->createNewDrawable)(driScreen->driScreen, 
-					      config->driConfig,
-					      handle, head, private);
+	(*driScreen->dri2->createNewDrawable)(driScreen->driScreen,
+					      config->driConfig, private);
 
     return &private->base;
 }
 
-static void dri2ReemitDrawableInfo(__DRIdrawable *draw, unsigned int *tail,
-				   void *loaderPrivate)
+static __DRIbuffer *
+dri2GetBuffers(__DRIdrawable *driDrawable,
+	       int *width, int *height,
+	       unsigned int *attachments, int count,
+	       int *out_count, void *loaderPrivate)
 {
-    __GLXDRIdrawable *pdraw = loaderPrivate;
+    __GLXDRIdrawable *private = loaderPrivate;
+    DRI2BufferPtr *buffers;
+    int i;
+    int j;
 
-    DRI2ReemitDrawableInfo(pdraw->base.pDraw, tail);
+    buffers = DRI2GetBuffers(private->base.pDraw,
+			     width, height, attachments, count, out_count);
+    if (*out_count > MAX_DRAWABLE_BUFFERS) {
+	*out_count = 0;
+	return NULL;
+    }
+	
+    private->width = *width;
+    private->height = *height;
+
+    /* This assumes the DRI2 buffer attachment tokens matches the
+     * __DRIbuffer tokens. */
+    j = 0;
+    for (i = 0; i < *out_count; i++) {
+	/* Do not send the real front buffer of a window to the client.
+	 */
+	if ((private->base.pDraw->type == DRAWABLE_WINDOW)
+	    && (buffers[i]->attachment == DRI2BufferFrontLeft)) {
+	    continue;
+	}
+
+	private->buffers[j].attachment = buffers[i]->attachment;
+	private->buffers[j].name = buffers[i]->name;
+	private->buffers[j].pitch = buffers[i]->pitch;
+	private->buffers[j].cpp = buffers[i]->cpp;
+	private->buffers[j].flags = buffers[i]->flags;
+	j++;
+    }
+
+    *out_count = j;
+    return private->buffers;
 }
 
-static void dri2PostDamage(__DRIdrawable *draw,
-			   struct drm_clip_rect *rects,
-			   int numRects, void *loaderPrivate)
-{ 
-    __GLXDRIdrawable *drawable = loaderPrivate;
-    DrawablePtr pDraw = drawable->base.pDraw;
-    RegionRec region;
+static __DRIbuffer *
+dri2GetBuffersWithFormat(__DRIdrawable *driDrawable,
+			 int *width, int *height,
+			 unsigned int *attachments, int count,
+			 int *out_count, void *loaderPrivate)
+{
+    __GLXDRIdrawable *private = loaderPrivate;
+    DRI2BufferPtr *buffers;
+    int i;
+    int j = 0;
 
-    REGION_INIT(pDraw->pScreen, &region, (BoxPtr) rects, numRects);
-    REGION_TRANSLATE(pScreen, &region, pDraw->x, pDraw->y);
-    DamageDamageRegion(pDraw, &region);
-    REGION_UNINIT(pDraw->pScreen, &region);
+    buffers = DRI2GetBuffersWithFormat(private->base.pDraw,
+				       width, height, attachments, count,
+				       out_count);
+    if (*out_count > MAX_DRAWABLE_BUFFERS) {
+	*out_count = 0;
+	return NULL;
+    }
+
+    private->width = *width;
+    private->height = *height;
+
+    /* This assumes the DRI2 buffer attachment tokens matches the
+     * __DRIbuffer tokens. */
+    for (i = 0; i < *out_count; i++) {
+	/* Do not send the real front buffer of a window to the client.
+	 */
+	if ((private->base.pDraw->type == DRAWABLE_WINDOW)
+	    && (buffers[i]->attachment == DRI2BufferFrontLeft)) {
+	    continue;
+	}
+
+	private->buffers[j].attachment = buffers[i]->attachment;
+	private->buffers[j].name = buffers[i]->name;
+	private->buffers[j].pitch = buffers[i]->pitch;
+	private->buffers[j].cpp = buffers[i]->cpp;
+	private->buffers[j].flags = buffers[i]->flags;
+	j++;
+    }
+
+    *out_count = j;
+    return private->buffers;
 }
 
-static const __DRIloaderExtension loaderExtension = {
-    { __DRI_LOADER, __DRI_LOADER_VERSION },
-    dri2ReemitDrawableInfo,
-    dri2PostDamage
+static void 
+dri2FlushFrontBuffer(__DRIdrawable *driDrawable, void *loaderPrivate)
+{
+    (void) driDrawable;
+    __glXDRIdrawableWaitGL((__GLXdrawable *) loaderPrivate);
+}
+
+static const __DRIdri2LoaderExtension loaderExtension = {
+    { __DRI_DRI2_LOADER, __DRI_DRI2_LOADER_VERSION },
+    dri2GetBuffers,
+    dri2FlushFrontBuffer,
+    dri2GetBuffersWithFormat,
 };
 
 static const __DRIextension *loader_extensions[] = {
@@ -426,18 +546,11 @@ initializeExtensions(__GLXDRIscreen *screen)
 
     extensions = screen->core->getExtensions(screen->driScreen);
 
-    for (i = 0; extensions[i]; i++) {
-#ifdef __DRI_COPY_SUB_BUFFER
-	if (strcmp(extensions[i]->name, __DRI_COPY_SUB_BUFFER) == 0) {
-	    screen->copySubBuffer =
-		(const __DRIcopySubBufferExtension *) extensions[i];
-	    __glXEnableExtension(screen->glx_enable_bits,
-				 "GLX_MESA_copy_sub_buffer");
-	    
-	    LogMessage(X_INFO, "AIGLX: enabled GLX_MESA_copy_sub_buffer\n");
-	}
-#endif
+    __glXEnableExtension(screen->glx_enable_bits,
+			 "GLX_MESA_copy_sub_buffer");
+    LogMessage(X_INFO, "AIGLX: enabled GLX_MESA_copy_sub_buffer\n");
 
+    for (i = 0; extensions[i]; i++) {
 #ifdef __DRI_SWAP_CONTROL
 	if (strcmp(extensions[i]->name, __DRI_SWAP_CONTROL) == 0) {
 	    screen->swapControl =
@@ -466,23 +579,22 @@ initializeExtensions(__GLXDRIscreen *screen)
 static __GLXscreen *
 __glXDRIscreenProbe(ScreenPtr pScreen)
 {
-    const char *driverName;
+    const char *driverName, *deviceName;
     __GLXDRIscreen *screen;
     char filename[128];
     size_t buffer_size;
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    unsigned int sareaHandle;
     const __DRIextension **extensions;
     const __DRIconfig **driConfigs;
     int i;
 
-    screen = xalloc(sizeof *screen);
+    screen = xcalloc(1, sizeof *screen);
     if (screen == NULL)
 	return NULL;
-    memset(screen, 0, sizeof *screen);
 
     if (!xf86LoaderCheckSymbol("DRI2Connect") ||
-	!DRI2Connect(pScreen, &screen->fd, &driverName, &sareaHandle)) {
+	!DRI2Connect(pScreen, DRI2DriverDRI,
+		     &screen->fd, &driverName, &deviceName)) {
 	LogMessage(X_INFO,
 		   "AIGLX: Screen %d is not DRI2 capable\n", pScreen->myNum);
 	return NULL;
@@ -518,24 +630,28 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
 	    extensions[i]->version >= __DRI_CORE_VERSION) {
 		screen->core = (const __DRIcoreExtension *) extensions[i];
 	}
+        if (strcmp(extensions[i]->name, __DRI_DRI2) == 0 &&
+	    extensions[i]->version >= __DRI_DRI2_VERSION) {
+		screen->dri2 = (const __DRIdri2Extension *) extensions[i];
+	}
     }
 
-    if (screen->core == NULL) {
+    if (screen->core == NULL || screen->dri2 == NULL) {
 	LogMessage(X_ERROR, "AIGLX error: %s exports no DRI extension\n",
 		   driverName);
 	goto handle_error;
     }
 
     screen->driScreen =
-	(*screen->core->createNewScreen)(pScreen->myNum,
+	(*screen->dri2->createNewScreen)(pScreen->myNum,
 					 screen->fd,
-					 sareaHandle,
 					 loader_extensions,
 					 &driConfigs,
 					 screen);
 
     if (screen->driScreen == NULL) {
-	LogMessage(X_ERROR, "AIGLX error: Calling driver entry point failed");
+	LogMessage(X_ERROR,
+		   "AIGLX error: Calling driver entry point failed\n");
 	goto handle_error;
     }
 

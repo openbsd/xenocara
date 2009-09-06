@@ -295,10 +295,6 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
             sparse_size = xf86AXPParams[axpSystem].size;
 #endif /* __NetBSD__ */
 	}
-#if HAVE_PCI_SYSTEM_INIT_DEV_MEM
-	if (useDevMem)
-		pci_system_init_dev_mem(devMemFd);
-#endif
 	pVidMem->initialised = TRUE;
 }
 
@@ -436,24 +432,6 @@ xf86DisableIO()
 }
 
 #endif /* USE_ALPHA_PIO */
-
-/***************************************************************************/
-/* Interrupt Handling section                                              */
-/***************************************************************************/
-
-_X_EXPORT Bool
-xf86DisableInterrupts()
-{
-
-	return(TRUE);
-}
-
-_X_EXPORT void
-xf86EnableInterrupts()
-{
-	return;
-}
-
 
 #define vuip    volatile unsigned int *
 

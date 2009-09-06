@@ -245,14 +245,15 @@ xf86ExtendedInitInt10(int entityIndex, int Flags)
      * 64K bytes at a time.
      */
     if (!videoBiosMapped) {
-	(void)memset((pointer)V_BIOS, 0, SYS_BIOS - V_BIOS);
+	memset((pointer)V_BIOS, 0, SYS_BIOS - V_BIOS);
 #ifdef DEBUG
 	ErrorF("Reading BIOS\n");
 #endif
 	for (cs = V_BIOS;  cs < SYS_BIOS;  cs += V_BIOS_SIZE)
 	    if (xf86ReadBIOS(cs, 0, (pointer)cs, V_BIOS_SIZE) < V_BIOS_SIZE)
 		xf86DrvMsg(screen, X_WARNING,
-			   "Unable to retrieve all of segment 0x%06lX.\n", cs);
+			   "Unable to retrieve all of segment 0x%06lX.\n",
+			   (long)cs);
 #ifdef DEBUG
 	ErrorF("done\n");
 #endif
@@ -292,10 +293,6 @@ xf86ExtendedInitInt10(int entityIndex, int Flags)
 	    pInt->BIOSseg = V_BIOS >> 4;
 	    break;
 	}
-	case BUS_ISA:
-	    if (!xf86int10GetBiosSegment(pInt, NULL))
-		goto error3;
-	    break;
 	default:
 	    goto error3;
 	}

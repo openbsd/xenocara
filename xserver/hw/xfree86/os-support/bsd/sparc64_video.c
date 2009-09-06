@@ -34,8 +34,6 @@
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
 
-#include <pciaccess.h>
-
 #ifndef MAP_FAILED
 #define MAP_FAILED ((caddr_t)-1)
 #endif
@@ -93,24 +91,6 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
 {
 
 	return (0);
-}
-
-/***************************************************************************/
-/* Interrupt Handling section                                              */
-/***************************************************************************/
-
-_X_EXPORT Bool
-xf86DisableInterrupts()
-{
-
-	return(TRUE);
-}
-
-_X_EXPORT void
-xf86EnableInterrupts()
-{
-
-	return;
 }
 
 #ifdef X_PRIVSEP

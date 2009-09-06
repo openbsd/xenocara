@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.c,v 1.5 2007/12/23 14:28:10 matthieu Exp $ */
+/* $OpenBSD: wsfb.c,v 1.6 2009/09/06 19:44:25 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -566,8 +566,6 @@ wsfbRandRSetConfig(ScreenPtr		pScreen,
 	 */
 	
 	scrpriv->randr = KdAddRotation (screen->randr, randr);
-	
-	KdOffscreenSwapOut (screen->pScreen);
 	
 	wsfbUnmapFramebuffer (screen);
 	

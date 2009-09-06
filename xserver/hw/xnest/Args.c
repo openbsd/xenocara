@@ -49,25 +49,6 @@ int xnestNumScreens = 0;
 Bool xnestDoDirectColormaps = False;
 Window xnestParentWindow = 0;
 
-#ifdef COMPOSITE
-    /* XXX terrible hack */
-    extern Bool noCompositeExtension;
-#endif
-#ifdef XKB
-    extern Bool noXkbExtension;
-#endif
-
-/* ddxInitGlobals - called by |InitGlobals| from os/util.c */
-void ddxInitGlobals(void)
-{
-#ifdef COMPOSITE
-    noCompositeExtension = TRUE;
-#endif
-#ifdef XKB
-    noXkbExtension = TRUE;
-#endif
-}
-
 int
 ddxProcessArgument (int argc, char *argv[], int i)
 {

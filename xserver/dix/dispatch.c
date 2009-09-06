@@ -136,9 +136,6 @@ int ProcInitialConnection();
 #endif
 #include "privates.h"
 #include "xace.h"
-#ifdef XAPPGROUP
-#include "appgroup.h"
-#endif
 #ifdef XKB
 #ifndef XKB_IN_SERVER
 #define XKB_IN_SERVER
@@ -163,7 +160,6 @@ typedef const char *string;
 #define GETBIT(buf, i) (MASKWORD(buf, i) & BITMASK(i))
 
 extern xConnSetupPrefix connSetupPrefix;
-extern char *ConnectionInfo;
 
 static ClientPtr grabClient;
 #define GrabNone 0
@@ -201,7 +197,7 @@ XID clientErrorValue;   /* XXX this is a kludge */
 #define SAME_SCREENS(a, b) (\
     (a.pScreen == b.pScreen))
 
-_X_EXPORT void
+void
 SetInputCheck(HWEventQueuePtr c0, HWEventQueuePtr c1)
 {
     checkForInput[0] = c0;
@@ -240,7 +236,6 @@ UpdateCurrentTimeIf(void)
 	currentTime = systime;
 }
 
-#ifdef SMART_SCHEDULE
 
 #undef SMART_DEBUG
 
@@ -252,6 +247,7 @@ long	    SmartScheduleSlice = SMART_SCHEDULE_DEFAULT_INTERVAL;
 long	    SmartScheduleInterval = SMART_SCHEDULE_DEFAULT_INTERVAL;
 long	    SmartScheduleMaxSlice = SMART_SCHEDULE_MAX_SLICE;
 long	    SmartScheduleTime;
+int	    SmartScheduleLatencyLimited = 0;
 static ClientPtr   SmartLastClient;
 static int	   SmartLastIndex[SMART_MAX_PRIORITY-SMART_MIN_PRIORITY+1];
 
@@ -322,7 +318,7 @@ SmartScheduleClient (int *clientReady, int nready)
     /*
      * Adjust slice
      */
-    if (nready == 1)
+    if (nready == 1 && SmartScheduleLatencyLimited == 0)
     {
 	/*
 	 * If it's been a long time since another client
@@ -341,7 +337,23 @@ SmartScheduleClient (int *clientReady, int nready)
     }
     return best;
 }
-#endif
+
+void
+EnableLimitedSchedulingLatency(void)
+{
+    ++SmartScheduleLatencyLimited;
+    SmartScheduleSlice = SmartScheduleInterval;
+}
+
+void
+DisableLimitedSchedulingLatency(void)
+{
+    --SmartScheduleLatencyLimited;
+
+    /* protect against bugs */
+    if (SmartScheduleLatencyLimited < 0)
+	SmartScheduleLatencyLimited = 0;
+}
 
 #define MAJOROP ((xReq *)client->requestBuffer)->reqType
 
@@ -353,9 +365,7 @@ Dispatch(void)
     ClientPtr	client;
     int	nready;
     HWEventQueuePtr* icheck = checkForInput;
-#ifdef SMART_SCHEDULE
     long			start_tick;
-#endif
 
     nextFreeClientID = 1;
     nClients = 0;
@@ -364,6 +374,7 @@ Dispatch(void)
     if (!clientReady)
 	return;
 
+    SmartScheduleSlice = SmartScheduleInterval;
     while (!dispatchException)
     {
         if (*icheck[0] != *icheck[1])
@@ -374,13 +385,11 @@ Dispatch(void)
 
 	nready = WaitForSomething(clientReady);
 
-#ifdef SMART_SCHEDULE
 	if (nready && !SmartScheduleDisable)
 	{
 	    clientReady[0] = SmartScheduleClient (clientReady, nready);
 	    nready = 1;
 	}
-#endif
        /***************** 
 	*  Handle events in round robin fashion, doing input between 
 	*  each round 
@@ -402,19 +411,13 @@ Dispatch(void)
 	    }
 	    isItTimeToYield = FALSE;
  
-#ifdef XPRINT
-            requestingClient = client;
-#endif
-#ifdef SMART_SCHEDULE
 	    start_tick = SmartScheduleTime;
-#endif
 	    while (!isItTimeToYield)
 	    {
 	        if (*icheck[0] != *icheck[1])
 		    ProcessInputEvents();
 		
 		FlushIfCriticalOutputPending();
-#ifdef SMART_SCHEDULE
 		if (!SmartScheduleDisable && 
 		    (SmartScheduleTime - start_tick) >= SmartScheduleSlice)
 		{
@@ -423,7 +426,6 @@ Dispatch(void)
 			client->smart_priority--;
 		    break;
 		}
-#endif
 		/* now, finally, deal with client requests */
 
 	        result = ReadRequestFromClient(client);
@@ -471,14 +473,9 @@ Dispatch(void)
 	        }
 	    }
 	    FlushAllOutput();
-#ifdef SMART_SCHEDULE
 	    client = clients[clientReady[nready]];
 	    if (client)
 		client->smart_stop_tick = SmartScheduleTime;
-#endif
-#ifdef XPRINT
-	    requestingClient = NULL;
-#endif
 	}
 	dispatchException &= ~DE_PRIORITYCHANGE;
     }
@@ -488,6 +485,7 @@ Dispatch(void)
     KillAllClients();
     xfree(clientReady);
     dispatchException &= ~DE_RESET;
+    SmartScheduleLatencyLimited = 0;
 }
 
 #undef MAJOROP
@@ -1053,9 +1051,7 @@ ProcTranslateCoords(ClientPtr client)
 	pWin = pDst->firstChild;
 	while (pWin)
 	{
-#ifdef SHAPE
 	    BoxRec  box;
-#endif
 	    if ((pWin->mapped) &&
 		(x >= pWin->drawable.x - wBorderWidth (pWin)) &&
 		(x < pWin->drawable.x + (int)pWin->drawable.width +
@@ -1063,7 +1059,6 @@ ProcTranslateCoords(ClientPtr client)
 		(y >= pWin->drawable.y - wBorderWidth (pWin)) &&
 		(y < pWin->drawable.y + (int)pWin->drawable.height +
 		 wBorderWidth (pWin))
-#ifdef SHAPE
 		/* When a window is shaped, a further check
 		 * is made to see if the point is inside
 		 * borderSize
@@ -1077,7 +1072,6 @@ ProcTranslateCoords(ClientPtr client)
 				    wInputShape(pWin),
 				    x - pWin->drawable.x,
 				    y - pWin->drawable.y, &box))
-#endif
 		)
             {
 		rep.child = pWin->drawable.id;
@@ -1145,11 +1139,11 @@ ProcQueryFont(ClientPtr client)
     REQUEST_SIZE_MATCH(xResourceReq);
 
     client->errorValue = stuff->id;		/* EITHER font or gc */
-    rc = dixLookupResource((pointer *)&pFont, stuff->id, RT_FONT, client,
-			   DixGetAttrAccess);
+    rc = dixLookupResourceByType((pointer *)&pFont, stuff->id, RT_FONT, client,
+				 DixGetAttrAccess);
     if (rc == BadValue) {
-	rc = dixLookupResource((pointer *)&pGC, stuff->id, RT_GC, client,
-			       DixGetAttrAccess);
+	rc = dixLookupResourceByType((pointer *)&pGC, stuff->id, RT_GC, client,
+				     DixGetAttrAccess);
 	if (rc == Success)
 	    pFont = pGC->font;
     }
@@ -1203,10 +1197,10 @@ ProcQueryTextExtents(ClientPtr client)
     REQUEST_AT_LEAST_SIZE(xQueryTextExtentsReq);
         
     client->errorValue = stuff->fid;		/* EITHER font or gc */
-    rc = dixLookupResource((pointer *)&pFont, stuff->fid, RT_FONT, client,
-			   DixGetAttrAccess);
+    rc = dixLookupResourceByType((pointer *)&pFont, stuff->fid, RT_FONT, client,
+				 DixGetAttrAccess);
     if (rc == BadValue) {
-	rc = dixLookupResource((pointer *)&pGC, stuff->fid, RT_GC, client,
+	rc = dixLookupResourceByType((pointer *)&pGC, stuff->fid, RT_GC, client,
 			       DixGetAttrAccess);
 	if (rc == Success)
 	    pFont = pGC->font;
@@ -1351,7 +1345,7 @@ ProcFreePixmap(ClientPtr client)
     REQUEST(xResourceReq);
     REQUEST_SIZE_MATCH(xResourceReq);
 
-    rc = dixLookupResource((pointer *)&pMap, stuff->id, RT_PIXMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pMap, stuff->id, RT_PIXMAP, client,
 			   DixDestroyAccess);
     if (rc == Success)
     {
@@ -2297,7 +2291,7 @@ ProcFreeColormap(ClientPtr client)
     REQUEST(xResourceReq);
 
     REQUEST_SIZE_MATCH(xResourceReq);
-    rc = dixLookupResource((pointer *)&pmap, stuff->id, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pmap, stuff->id, RT_COLORMAP, client,
 			   DixDestroyAccess);
     if (rc == Success)
     {
@@ -2325,7 +2319,7 @@ ProcCopyColormapAndFree(ClientPtr client)
     REQUEST_SIZE_MATCH(xCopyColormapAndFreeReq);
     mid = stuff->mid;
     LEGAL_NEW_RESOURCE(mid, client);
-    rc = dixLookupResource((pointer *)&pSrcMap, stuff->srcCmap, RT_COLORMAP,
+    rc = dixLookupResourceByType((pointer *)&pSrcMap, stuff->srcCmap, RT_COLORMAP,
 			   client, DixReadAccess|DixRemoveAccess);
     if (rc == Success)
     {
@@ -2350,7 +2344,7 @@ ProcInstallColormap(ClientPtr client)
     REQUEST(xResourceReq);
     REQUEST_SIZE_MATCH(xResourceReq);
 
-    rc = dixLookupResource((pointer *)&pcmp, stuff->id, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->id, RT_COLORMAP, client,
 			   DixInstallAccess);
     if (rc != Success)
 	goto out;
@@ -2375,7 +2369,7 @@ ProcUninstallColormap(ClientPtr client)
     REQUEST(xResourceReq);
     REQUEST_SIZE_MATCH(xResourceReq);
 
-    rc = dixLookupResource((pointer *)&pcmp, stuff->id, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->id, RT_COLORMAP, client,
 			   DixUninstallAccess);
     if (rc != Success)
 	goto out;
@@ -2442,7 +2436,7 @@ ProcAllocColor (ClientPtr client)
     REQUEST(xAllocColorReq);
 
     REQUEST_SIZE_MATCH(xAllocColorReq);
-    rc = dixLookupResource((pointer *)&pmap, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pmap, stuff->cmap, RT_COLORMAP, client,
 			   DixAddAccess);
     if (rc == Success)
     {
@@ -2483,7 +2477,7 @@ ProcAllocNamedColor (ClientPtr client)
     REQUEST(xAllocNamedColorReq);
 
     REQUEST_FIXED_SIZE(xAllocNamedColorReq, stuff->nbytes);
-    rc = dixLookupResource((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
 			   DixAddAccess);
     if (rc == Success)
     {
@@ -2534,7 +2528,7 @@ ProcAllocColorCells (ClientPtr client)
     REQUEST(xAllocColorCellsReq);
 
     REQUEST_SIZE_MATCH(xAllocColorCellsReq);
-    rc = dixLookupResource((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
 			   DixAddAccess);
     if (rc == Success)
     {
@@ -2601,7 +2595,7 @@ ProcAllocColorPlanes(ClientPtr client)
     REQUEST(xAllocColorPlanesReq);
 
     REQUEST_SIZE_MATCH(xAllocColorPlanesReq);
-    rc = dixLookupResource((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
 			   DixAddAccess);
     if (rc == Success)
     {
@@ -2666,7 +2660,7 @@ ProcFreeColors(ClientPtr client)
     REQUEST(xFreeColorsReq);
 
     REQUEST_AT_LEAST_SIZE(xFreeColorsReq);
-    rc = dixLookupResource((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
 			   DixRemoveAccess);
     if (rc == Success)
     {
@@ -2701,7 +2695,7 @@ ProcStoreColors (ClientPtr client)
     REQUEST(xStoreColorsReq);
 
     REQUEST_AT_LEAST_SIZE(xStoreColorsReq);
-    rc = dixLookupResource((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
 			   DixWriteAccess);
     if (rc == Success)
     {
@@ -2735,7 +2729,7 @@ ProcStoreNamedColor (ClientPtr client)
     REQUEST(xStoreNamedColorReq);
 
     REQUEST_FIXED_SIZE(xStoreNamedColorReq, stuff->nbytes);
-    rc = dixLookupResource((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
 			   DixWriteAccess);
     if (rc == Success)
     {
@@ -2769,7 +2763,7 @@ ProcQueryColors(ClientPtr client)
     REQUEST(xQueryColorsReq);
 
     REQUEST_AT_LEAST_SIZE(xQueryColorsReq);
-    rc = dixLookupResource((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
 			   DixReadAccess);
     if (rc == Success)
     {
@@ -2821,7 +2815,7 @@ ProcLookupColor(ClientPtr client)
     REQUEST(xLookupColorReq);
 
     REQUEST_FIXED_SIZE(xLookupColorReq, stuff->nbytes);
-    rc = dixLookupResource((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
+    rc = dixLookupResourceByType((pointer *)&pcmp, stuff->cmap, RT_COLORMAP, client,
 			   DixReadAccess);
     if (rc == Success)
     {
@@ -2870,14 +2864,14 @@ ProcCreateCursor (ClientPtr client)
     REQUEST_SIZE_MATCH(xCreateCursorReq);
     LEGAL_NEW_RESOURCE(stuff->cid, client);
 
-    rc = dixLookupResource((pointer *)&src, stuff->source, RT_PIXMAP, client,
+    rc = dixLookupResourceByType((pointer *)&src, stuff->source, RT_PIXMAP, client,
 			   DixReadAccess);
     if (rc != Success) {
 	client->errorValue = stuff->source;
 	return (rc == BadValue) ? BadPixmap : rc;
     }
 
-    rc = dixLookupResource((pointer *)&msk, stuff->mask, RT_PIXMAP, client,
+    rc = dixLookupResourceByType((pointer *)&msk, stuff->mask, RT_PIXMAP, client,
 			   DixReadAccess);
     if (rc != Success)
     {
@@ -2901,18 +2895,16 @@ ProcCreateCursor (ClientPtr client)
 	return (BadMatch);
 
     n = BitmapBytePad(width)*height;
-    srcbits = (unsigned char *)xalloc(n);
+    srcbits = xcalloc(1, n);
     if (!srcbits)
 	return (BadAlloc);
-    mskbits = (unsigned char *)xalloc(n);
+    mskbits = xalloc(n);
     if (!mskbits)
     {
 	xfree(srcbits);
 	return (BadAlloc);
     }
 
-    /* zeroing the (pad) bits helps some ddx cursor handling */
-    bzero((char *)srcbits, n);
     (* src->drawable.pScreen->GetImage)( (DrawablePtr)src, 0, 0, width, height,
 					 XYPixmap, 1, (pointer)srcbits);
     if ( msk == (PixmapPtr)NULL)
@@ -2977,7 +2969,7 @@ ProcFreeCursor (ClientPtr client)
     REQUEST(xResourceReq);
 
     REQUEST_SIZE_MATCH(xResourceReq);
-    rc = dixLookupResource((pointer *)&pCursor, stuff->id, RT_CURSOR, client,
+    rc = dixLookupResourceByType((pointer *)&pCursor, stuff->id, RT_CURSOR, client,
 			   DixDestroyAccess);
     if (rc == Success) 
     {
@@ -3465,9 +3457,7 @@ CloseDownClient(ClientPtr client)
 	if (client->index < nextFreeClientID)
 	    nextFreeClientID = client->index;
 	clients[client->index] = NullClient;
-#ifdef SMART_SCHEDULE
 	SmartLastClient = NullClient;
-#endif
 	dixFreePrivates(client->devPrivates);
 	xfree(client);
 
@@ -3512,20 +3502,19 @@ void InitClient(ClientPtr client, int i, pointer ospriv)
     if (!noXkbExtension) {
 	client->xkbClientFlags = 0;
 	client->mapNotifyMask = 0;
+	client->newKeyboardNotifyMask = 0;
+	client->vMinor = client->vMajor = 0;
 	QueryMinMaxKeyCodes(&client->minKC,&client->maxKC);
     }
 #endif
     client->replyBytesRemaining = 0;
-#ifdef XAPPGROUP
-    client->appgroup = NULL;
-#endif
     client->fontResFunc = NULL;
-#ifdef SMART_SCHEDULE
     client->smart_priority = 0;
     client->smart_start_tick = SmartScheduleTime;
     client->smart_stop_tick = SmartScheduleTime;
     client->smart_check_tick = SmartScheduleTime;
-#endif
+
+    client->clientPtr = NULL;
 }
 
 /************************
@@ -3643,9 +3632,6 @@ SendConnSetup(ClientPtr client, char *reason)
 
     client->requestVector = client->swapped ? SwappedProcVector : ProcVector;
     client->sequence = 0;
-#ifdef XAPPGROUP
-    XagConnectionInfo (client, &lconnSetupPrefix, &lConnectionInfo, &numScreens);
-#endif
     ((xConnSetup *)lConnectionInfo)->ridBase = client->clientAsMask;
     ((xConnSetup *)lConnectionInfo)->ridMask = RESOURCE_ID_MASK;
 #ifdef MATCH_CLIENT_ENDIAN
