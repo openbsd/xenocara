@@ -36,6 +36,14 @@
 ./usr/X11R6/include/xcb/xtest.h
 ./usr/X11R6/include/xcb/xv.h
 ./usr/X11R6/include/xcb/xvmc.h
+./usr/X11R6/include/xorg/dri2.h
+./usr/X11R6/include/xorg/geext.h
+./usr/X11R6/include/xorg/geint.h
+./usr/X11R6/include/xorg/ptrveloc.h
+./usr/X11R6/include/xorg/rrtransform.h
+./usr/X11R6/include/xorg/shmint.h
+./usr/X11R6/include/xorg/xkbrules.h
+./usr/X11R6/include/xorg/xserver-properties.h
 ./usr/X11R6/lib/libX11-xcb.so.1.0
 ./usr/X11R6/lib/libpthread-stubs.so.0.0
 ./usr/X11R6/lib/libpthread-stubs_pic.a
