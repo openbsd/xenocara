@@ -198,8 +198,11 @@ sparcPromClose(void)
 char *
 sparcDriverName(void)
 {
-	if (sbusInfo.devId == SBUS_DEVICE_FFB) 
+
+	switch (sbusInfo.devId) {
+	case SBUS_DEVICE_FFB:
 		return "sunffb";
-	else
-		return "wsfb";
+	default:
+		return NULL;
+	}
 }
