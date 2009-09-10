@@ -3156,9 +3156,6 @@ I830ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
    if (pI830->directRenderingType != DRI_XF86DRI &&
        pI830->back_buffer != NULL)
        i830_free_3d_memory(pScrn);
-
-   if (!pI830->use_drm_mode)
-       I830SwapPipes(pScrn);
 #endif
 
    pScrn->fbOffset = pI830->front_buffer->offset;
@@ -3512,6 +3509,9 @@ I830EnterVT(int scrnIndex, int flags)
    /* Get the hardware into a known state if needed */
    if (!pI830->use_drm_mode) {
        /* Disable outputs */
+
+       I830SwapPipes(pScrn);
+
        for (i = 0; i < xf86_config->num_output; i++) {
 	   xf86OutputPtr   output = xf86_config->output[i];
 	   output->funcs->dpms(output, DPMSModeOff);

@@ -1280,6 +1280,7 @@ i830_crtc_dpms(xf86CrtcPtr crtc, int mode)
 	if ((pipe == 0) && (pI830->quirk_flag & QUIRK_PIPEA_FORCE))
 	    disable_pipe = FALSE;
 	i830_crtc_disable(crtc, disable_pipe);
+	intel_crtc->enabled = FALSE;
 	break;
     }
 
