@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.15 2009/06/01 20:57:20 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.16 2009/09/13 19:33:49 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -1077,9 +1077,14 @@ static Bool
 WsfbCloseScreen(int scrnIndex, ScreenPtr pScreen)
 {
 	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	PixmapPtr pPixmap;
 	WsfbPtr fPtr = WSFBPTR(pScrn);
 
+
 	TRACE_ENTER("WsfbCloseScreen");
+
+	pPixmap = pScreen->GetScreenPixmap(pScreen);
+	shadowRemove(pScreen, pPixmap);
 
 	if (pScrn->vtSema) {
 		WsfbRestore(pScrn);
