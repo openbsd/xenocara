@@ -251,7 +251,7 @@ extern RESTYPE TypeMask;
  * Please use the noted replacements instead.
  */
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
 #define X_DEPRECATED __attribute__((deprecated))
 #else
 #define X_DEPRECATED
