@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.1.1.1 2009/01/01 19:29:22 miod Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.2 2009/09/13 19:46:47 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -753,8 +753,11 @@ WildcatFBCloseScreen(int scrnIndex, ScreenPtr pScreen)
 {
 	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
 	WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
+	PixmapPtr pPixmap = pScreen->GetScreenPixmap(pScreen);
 
 	TRACE_ENTER("WildcatFBCloseScreen");
+
+	shadowRemove(pScreen, pPixmap);
 
 	if (pScrn->vtSema) {
 		WildcatFBRestore(pScrn);
