@@ -19,7 +19,7 @@ The 'ati' driver is currently known to work on the machines with ATI
 Rage 128 or Radeon cards. The 'nv' driver works for machines with
 nVidia cards, although some modes may experience problems.
 
-Use xorgconfig to build a /etc/X11/xorg.conf file before starting 
+Use Xorg -configure to build a /etc/X11/xorg.conf file before starting 
 the server for the first time. Or you can use the sample configuration
 file appended below as a starting point. 
 
@@ -168,4 +168,4 @@ button 2 and mouse button 3 respectively.
 
 problem_blurb
 
-$OpenBSD: README.macppc,v 1.5 2009/01/03 08:18:10 matthieu Exp $
+$OpenBSD: README.macppc,v 1.6 2009/09/15 19:04:12 matthieu Exp $
