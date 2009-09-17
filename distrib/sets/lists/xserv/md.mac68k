@@ -1,4 +1,5 @@
 ./usr/X11R6/bin/X
+./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/include/xorg
@@ -185,6 +186,7 @@
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.la
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
+./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xorg.1
 ./usr/X11R6/man/man1/Xserver.1
 ./usr/X11R6/man/man1/Xvfb.1

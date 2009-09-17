@@ -1,5 +1,6 @@
 ./usr/X11R6/bin/X
 ./usr/X11R6/bin/Xephyr
+./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
@@ -309,6 +310,7 @@
 ./usr/X11R6/lib/modules/v20002d.uc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/man/man1/Xephyr.1
+./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xorg.1
 ./usr/X11R6/man/man1/Xserver.1
 ./usr/X11R6/man/man1/Xvfb.1
