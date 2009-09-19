@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.581 2009/08/08 14:04:16 tom Exp $ */
+/* $XTermId: xterm.h,v 1.582 2009/09/10 09:01:22 tom Exp $ */
 
 /************************************************************
 
@@ -1249,7 +1249,6 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #endif	/* OPT_ISO_COLORS */
 
 #define XTERM_CELL(row,col)    getXtermCell(screen,     ROW2INX(screen, row), col)
-#define XTERM_CELLC(row,col,n) getXtermCellComb(screen, ROW2INX(screen, row), col, n)
 
 extern unsigned getXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */);
 extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */, int  /* ch */);
@@ -1272,7 +1271,6 @@ extern Boolean isWideControl(unsigned /* ch */);
 extern int DamagedCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
 extern int DamagedCurCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */);
 extern unsigned AsciiEquivs(unsigned /* ch */);
-extern unsigned getXtermCellComb (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned /* off */);
 extern void addXtermCombining (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned  /* ch */);
 extern void allocXtermChars(ScrnPtr * /* buffer */, Cardinal /* length */);
 #endif

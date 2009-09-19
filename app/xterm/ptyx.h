@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.626 2009/08/30 21:40:45 Alex.Hornung Exp $ */
+/* $XTermId: ptyx.h,v 1.627 2009/09/10 08:50:02 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1212,7 +1212,7 @@ typedef struct {
 #define INX2ABS(screen, inx)	ROW2ABS(screen, INX2ROW(screen, inx))
 
 #define okScrnRow(screen, row) \
-	((row) <= (screen)->max_row \
+	((row) <= ((screen)->max_row - (screen)->topline) \
       && (row) >= -((screen)->savedlines))
 
 	/*

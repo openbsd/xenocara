@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.971 2009/08/09 13:59:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.972 2009/09/10 09:03:49 tom Exp $ */
 
 /*
 
@@ -850,7 +850,8 @@ CheckBogusForeground(TScreen * screen, const char *tag)
     for (pass = 0; pass < 2; ++pass) {
 	row = screen->cur_row;
 	for (; isClear && (row <= screen->max_row); ++row) {
-	    Char *attribs = getLineData(screen, row)->attribs;
+	    LineData *ld = getLineData(screen, row)->;
+	    Char *attribs = ld->attribs;
 
 	    col = (row == screen->cur_row) ? screen->cur_col : 0;
 	    for (; isClear && (col <= screen->max_col); ++col) {
@@ -861,7 +862,7 @@ CheckBogusForeground(TScreen * screen, const char *tag)
 		} else if ((flags & BG_COLOR)) {
 		    isClear = False;
 		} else if ((flags & FG_COLOR)) {
-		    unsigned ch = getXtermCell(screen, row, col);
+		    unsigned ch = ld->charData[col];
 		    isClear = ((ch == ' ') || (ch == 0));
 		} else {
 		    isClear = False;

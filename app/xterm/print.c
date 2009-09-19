@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.107 2009/08/31 00:37:04 tom Exp $ */
+/* $XTermId: print.c,v 1.109 2009/09/10 09:06:30 tom Exp $ */
 
 /************************************************************
 
@@ -162,9 +162,6 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	}
 	for (col = 0; col < last; col++) {
 	    ch = ld->charData[col];
-	    if_OPT_WIDE_CHARS(screen, {
-		ch = XTERM_CELL(row, col);
-	    });
 #if OPT_PRINT_COLORS
 	    if (screen->colorMode) {
 		if (screen->print_attributes > 1) {
@@ -221,7 +218,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;
 		for_each_combData(off, ld) {
-		    ch = XTERM_CELLC(row, col, off);
+		    ch = ld->combData[off][col];
 		    if (ch == 0)
 			break;
 		    charToPrinter(xw, ch);

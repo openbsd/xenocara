@@ -1,4 +1,4 @@
-/* $XTermId: testxmc.c,v 1.44 2009/06/21 15:37:04 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.45 2009/09/10 09:05:20 tom Exp $ */
 
 /************************************************************
 
@@ -185,7 +185,7 @@ Resolve_XMC(XtermWidget xw)
     /* Find the preceding cell.
      */
     ld = getLineData(screen, row);
-    if (XTERM_CELL(row, col) != XMC_GLITCH) {
+    if (ld->charData[col] != XMC_GLITCH) {
 	if (col != 0) {
 	    col--;
 	} else if (!screen->xmc_inline && row != 0) {
@@ -206,7 +206,7 @@ Resolve_XMC(XtermWidget xw)
 	    ld = getLineData(screen, ++row);
 	} else
 	    break;
-	if (XTERM_CELL(row, col) == XMC_GLITCH)
+	if (ld->charData[col] == XMC_GLITCH)
 	    break;
 	if ((ld->attribs[col] & my_attrs) != start) {
 	    ld->attribs[col] =

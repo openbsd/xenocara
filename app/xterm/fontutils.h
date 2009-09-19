@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.75 2009/08/07 22:46:12 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.76 2009/09/09 23:31:55 tom Exp $ */
 
 /************************************************************
 
@@ -71,10 +71,10 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsig
 
 #if OPT_WIDE_CHARS
 #define CharKnownMissing(font, ch) \
-	 ((ch) < 256 && (font)->known_missing[(Char)(ch)])
+	 (((ch) < 256) && ((font)->known_missing[(Char)(ch)] > 1))
 #else
 #define CharKnownMissing(font, ch) \
-	 ((font)->known_missing[(Char)(ch)])
+	 ((font)->known_missing[(Char)(ch)] > 1)
 #endif
 
 #define IsXtermMissingChar(screen, ch, font) \

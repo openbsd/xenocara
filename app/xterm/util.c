@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.486 2009/08/15 00:40:38 tom Exp $ */
+/* $XTermId: util.c,v 1.489 2009/09/10 09:22:43 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -103,21 +103,22 @@ int (*my_wcwidth) (wchar_t);
 int
 DamagedCells(TScreen * screen, unsigned n, int *klp, int *krp, int row, int col)
 {
+    LineData *ld = getLineData(screen, row);
     int kl = col;
     int kr = col + (int) n;
 
-    if (XTERM_CELL(row, kl) == HIDDEN_CHAR) {
+    if (ld->charData[kl] == HIDDEN_CHAR) {
 	while (kl > 0) {
-	    if (XTERM_CELL(row, --kl) != HIDDEN_CHAR) {
+	    if (ld->charData[--kl] != HIDDEN_CHAR) {
 		break;
 	    }
 	}
     } else {
 	kl = col + 1;
     }
-    if (XTERM_CELL(row, kr) == HIDDEN_CHAR) {
+    if (ld->charData[kr] == HIDDEN_CHAR) {
 	while (kr < screen->max_col) {
-	    if (XTERM_CELL(row, ++kr) != HIDDEN_CHAR) {
+	    if (ld->charData[++kr] != HIDDEN_CHAR) {
 		--kr;
 		break;
 	    }
@@ -3010,11 +3011,20 @@ drawXtermText(XtermWidget xw,
 				      (unsigned) (last - first), on_wide);
 		}
 #if OPT_WIDE_CHARS
-		if (!ucs_workaround(xw, ch, flags, gc,
-				    x, y,
-				    chrset, on_wide))
+		if (ucs_workaround(xw, ch, flags, gc,
+				   x, y,
+				   chrset, on_wide)) {
+		    /*
+		     * if true, we drew at least one cell whether or not it is
+		     * printable
+		     */
+		    if (ch_width <= 0)
+			ch_width = 1;
+		} else
 #endif
 		{
+		    if (ch_width <= 0)
+			ch_width = 1;
 		    xtermDrawBoxChar(xw, ch, flags, gc,
 				     x, y,
 				     ch_width);
@@ -3544,14 +3554,6 @@ putXtermCell(TScreen * screen, int row, int col, int ch)
 }
 
 #if OPT_WIDE_CHARS
-unsigned
-getXtermCellComb(TScreen * screen, int row, int col, unsigned off)
-{
-    LineData *ld = getLineData(screen, row);
-
-    return (unsigned) ld->combData[off][col];
-}
-
 /*
  * Add a combining character for the given cell
  */
