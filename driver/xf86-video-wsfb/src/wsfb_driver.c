@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.16 2009/09/13 19:33:49 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.17 2009/09/22 22:00:54 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -313,7 +313,7 @@ wsfb_open(char *dev)
 {
 	int fd = -1;
 
-	/* Try argument from XF86Config first. */
+	/* Try argument from xorg.conf first. */
 	if (dev == NULL || ((fd = priv_open_device(dev)) == -1)) {
 		/* Second: environment variable. */
 		dev = getenv("XDEVICE");

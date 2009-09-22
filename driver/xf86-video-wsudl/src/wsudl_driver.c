@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.1.1.1 2009/09/22 14:12:24 mglocker Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.2 2009/09/22 22:00:54 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -856,7 +856,7 @@ wsudl_open(char *dev)
 {
 	int fd = -1;
 
-	/* try argument from XF86Config first */
+	/* try argument from xorg.conf first */
 	if (dev == NULL || ((fd = priv_open_device(dev)) == -1)) {
 		/* second: environment variable */
 		dev = getenv("XDEVICE");
