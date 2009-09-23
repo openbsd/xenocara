@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.2 2009/09/22 22:00:54 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.3 2009/09/23 20:09:03 mglocker Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -61,6 +61,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <dev/wscons/wsconsio.h>
 #include <dev/usb/udlio.h>
 
@@ -835,6 +836,8 @@ WsudlBlockHandler(pointer data, struct timeval **waitTime,
 			ioctl(fPtr->fd, UDLIO_DAMAGE, &d);
 			if (d.status == UDLIO_STATUS_OK)
 				break;
+			/* device driver busy, have a break */
+			usleep(10000);
 		}
 		if (i == ULDIO_DAMAGE_RETRY) {
 			ErrorF("damage command failed, giving up!\n");
