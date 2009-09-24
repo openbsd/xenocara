@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.3 2009/09/23 20:09:03 mglocker Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.4 2009/09/24 07:34:40 mglocker Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -133,7 +133,11 @@ extern int priv_open_device(const char *);
 /*
  * Default device node for wsdisplay.
  */
+#if defined(__NetBSD__)
+#define WSUDL_DEFAULT_DEV	"/dev/ttyE0"
+#else
 #define WSUDL_DEFAULT_DEV	"/dev/ttyC0"
+#endif
 
 /*
  * X driver glue.
@@ -226,9 +230,10 @@ WsudlSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 
 	DEBUGP("WsudlSetup");
 
-	/* we need to run on OpenBSD */
+	/* Check that we're being loaded on a OpenBSD or NetBSD system. */
 	LoaderGetOS(&osname, NULL, NULL, NULL);
-	if (osname == NULL || strcmp(osname, "openbsd") != 0) {
+	if (osname == NULL || (strcmp(osname, "openbsd") != 0 &&
+	                       strcmp(osname, "netbsd") != 0)) {
 		if (errmaj)
 			*errmaj = LDR_BADOS;
 		if (errmin)
