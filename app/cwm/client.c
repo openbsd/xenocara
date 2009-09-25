@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.64 2009/08/27 01:38:08 okan Exp $
+ * $Id: client.c,v 1.65 2009/09/25 15:57:49 oga Exp $
  */
 
 #include "headers.h"
@@ -244,8 +244,8 @@ client_maximize(struct client_ctx *cc)
 			ymax = xine->height;
 		}
 calc:
-		cc->geom.x = x_org - cc->bwidth + Conf.gap_left;
-		cc->geom.y = y_org - cc->bwidth + Conf.gap_top;
+		cc->geom.x = x_org + Conf.gap_left;
+		cc->geom.y = y_org + Conf.gap_top;
 		cc->geom.height = ymax - (Conf.gap_top + Conf.gap_bottom);
 		cc->geom.width = xmax - (Conf.gap_left + Conf.gap_right);
 		cc->flags |= CLIENT_DOMAXIMIZE;
@@ -323,6 +323,7 @@ client_resize(struct client_ctx *cc)
 	    CLIENT_HMAXIMIZED);
 
 	if (cc->flags & CLIENT_DOMAXIMIZE) {
+		cc->bwidth = 0;
 		cc->flags &= ~CLIENT_DOMAXIMIZE;
 		cc->flags |= CLIENT_MAXIMIZED;
 	} else if (cc->flags & CLIENT_DOVMAXIMIZE) {
@@ -331,7 +332,11 @@ client_resize(struct client_ctx *cc)
 	} else if (cc->flags & CLIENT_DOHMAXIMIZE) {
 		cc->flags &= ~CLIENT_DOHMAXIMIZE;
 		cc->flags |= CLIENT_HMAXIMIZED;
+	} else {
+		cc->bwidth = Conf.bwidth;
 	}
+
+	client_draw_border(cc);
 
 	XMoveResizeWindow(X_Dpy, cc->win, cc->geom.x,
 	    cc->geom.y, cc->geom.width, cc->geom.height);
