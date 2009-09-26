@@ -32,13 +32,13 @@ Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -104,7 +104,7 @@ SOFTWARE.
 		/* Boolean: only hour/minute if TRUE */
 #define XtNbrief  "brief"
 
-                /* String: will be used as format arg to 
+                /* String: will be used as format arg to
                    "strftime" if not empty string */
 #define XtNstrftime "strftime"
 
@@ -140,8 +140,8 @@ SOFTWARE.
 #define XtNsharp "sharp"
 #define XtCSharp "Sharp"
 
-typedef struct _ClockRec *ClockWidget;  /* completely defined in ClockPrivate.h */
-typedef struct _ClockClassRec *ClockWidgetClass;    /* completely defined in ClockPrivate.h */
+typedef struct _ClockRec *ClockWidget;  /* completely defined in ClockP.h */
+typedef struct _ClockClassRec *ClockWidgetClass;  /* completely defined in ClockP.h */
 
 extern WidgetClass clockWidgetClass;
 

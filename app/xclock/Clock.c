@@ -30,13 +30,13 @@ Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -123,7 +123,7 @@ SOFTWARE.
 extern Boolean no_locale; /* if True, use old (unlocalized) behaviour */
 #endif
 
-	
+
 /* Private Definitions */
 
 #define VERTICES_IN_HANDS	6	/* to draw triangle */
@@ -155,7 +155,7 @@ static XtResource resources[] = {
 	goffset(width), XtRImmediate, (XtPointer) 0},
     {XtNheight, XtCHeight, XtRDimension, sizeof(Dimension),
 	goffset(height), XtRImmediate, (XtPointer) 0},
-    {XtNupdate, XtCInterval, XtRInt, sizeof(int), 
+    {XtNupdate, XtCInterval, XtRInt, sizeof(int),
         offset(update), XtRImmediate, (XtPointer) 60 },
 #ifndef XRENDER
     {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
@@ -183,7 +183,7 @@ static XtResource resources[] = {
         offset(font), XtRString, XtDefaultFont},
 #ifndef NO_I18N
      {XtNfontSet, XtCFontSet, XtRFontSet, sizeof(XFontSet),
-        offset(fontSet), XtRString, XtDefaultFontSet,},   
+        offset(fontSet), XtRString, XtDefaultFontSet},
 #endif
     {XtNbackingStore, XtCBackingStore, XtRBackingStore, sizeof (int),
     	offset (backing_store), XtRString, "default"},
@@ -215,9 +215,9 @@ static XtResource resources[] = {
 #undef goffset
 
 static void ClassInitialize ( void );
-static void Initialize ( Widget request, Widget new, ArgList args, 
+static void Initialize ( Widget request, Widget new, ArgList args,
 			 Cardinal *num_args );
-static void Realize ( Widget gw, XtValueMask *valueMask, 
+static void Realize ( Widget gw, XtValueMask *valueMask,
 		      XSetWindowAttributes *attrs );
 static void Destroy ( Widget gw );
 static void Resize ( Widget gw );
@@ -225,19 +225,19 @@ static void Redisplay ( Widget gw, XEvent *event, Region region );
 static void clock_tic ( XtPointer client_data, XtIntervalId *id );
 static void erase_hands ( ClockWidget w, struct tm *tm );
 static void ClockAngle ( int tick_units, double *sinp, double *cosp );
-static void DrawLine ( ClockWidget w, Dimension blank_length, 
+static void DrawLine ( ClockWidget w, Dimension blank_length,
 		       Dimension length, int tick_units );
-static void DrawHand ( ClockWidget w, Dimension length, Dimension width, 
+static void DrawHand ( ClockWidget w, Dimension length, Dimension width,
 		       int tick_units );
-static void DrawSecond ( ClockWidget w, Dimension length, Dimension width, 
+static void DrawSecond ( ClockWidget w, Dimension length, Dimension width,
 			 Dimension offset, int tick_units );
 static void SetSeg ( ClockWidget w, int x1, int y1, int x2, int y2 );
 static void DrawClockFace ( ClockWidget w );
 static int clock_round ( double x );
-static Boolean SetValues ( Widget gcurrent, Widget grequest, Widget gnew, 
+static Boolean SetValues ( Widget gcurrent, Widget grequest, Widget gnew,
 			   ArgList args, Cardinal *num_args );
 #if !defined(NO_I18N) && defined(HAVE_ICONV)
-static char *clock_to_utf8(const char *);
+static char *clock_to_utf8(const char *str, int in_len);
 #endif
 
 ClockClassRec clockClassRec = {
@@ -311,7 +311,7 @@ static void CvtStringToPixmap(
 
     if (strcmp(name, "None") == 0) {
         pmap = None;
-    } else { 
+    } else {
 	screen = *((Screen **) args[0].addr);
 	dpy = DisplayOfScreen(screen);
 
@@ -319,13 +319,13 @@ static void CvtStringToPixmap(
 	  &shapemask, NULL);
     }
 
-    (*toVal).size = sizeof(Pixmap); 
+    (*toVal).size = sizeof(Pixmap);
     (*toVal).addr = (XPointer) &pmap ;
 }
 #endif
 
 #ifdef XRENDER
-XtConvertArgRec xftColorConvertArgs[] = {
+static XtConvertArgRec xftColorConvertArgs[] = {
     {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.screen),
      sizeof(Screen *)},
     {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.colormap),
@@ -359,7 +359,7 @@ XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
     Screen	*screen;
     Colormap	colormap;
     XftColor	*color;
-    
+
     if (*num_args != 2)
     {
 	XtAppErrorMsg (app,
@@ -378,7 +378,7 @@ XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
 				 XScreenNumberOfScreen (screen)),
 		  colormap, color);
 }
-    
+
 static Boolean
 XmuCvtStringToXftColor(Display *dpy,
 		       XrmValue *args, Cardinal *num_args,
@@ -390,7 +390,7 @@ XmuCvtStringToXftColor(Display *dpy,
     XftColor	    xftColor;
     Screen	    *screen;
     Colormap	    colormap;
-    
+
     if (*num_args != 2)
     {
 	XtAppErrorMsg (XtDisplayToApplicationContext (dpy),
@@ -421,14 +421,14 @@ XmuCvtStringToXftColor(Display *dpy,
     }
     else if (!XRenderParseColor (dpy, spec, &renderColor))
 	return False;
-    if (!XftColorAllocValue (dpy, 
+    if (!XftColorAllocValue (dpy,
 			     DefaultVisual (dpy,
 					    XScreenNumberOfScreen (screen)),
 			     colormap,
 			     &renderColor,
 			     &xftColor))
 	return False;
-    
+
     donestr (XftColor, xftColor, XtRXftColor);
 }
 
@@ -438,7 +438,7 @@ XmuFreeXftFont (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
 {
     Screen  *screen;
     XftFont *font;
-    
+
     if (*num_args != 1)
     {
 	XtAppErrorMsg (app,
@@ -464,7 +464,7 @@ XmuCvtStringToXftFont(Display *dpy,
     char    *name;
     XftFont *font;
     Screen  *screen;
-    
+
     if (*num_args != 1)
     {
 	XtAppErrorMsg (XtDisplayToApplicationContext (dpy),
@@ -477,7 +477,7 @@ XmuCvtStringToXftFont(Display *dpy,
 
     screen = *((Screen **) args[0].addr);
     name = (char *) fromVal->addr;
-    
+
     font = XftFontOpenName (dpy,
 			    XScreenNumberOfScreen (screen),
 			    name);
@@ -489,31 +489,31 @@ XmuCvtStringToXftFont(Display *dpy,
     return False;
 }
 
-XtConvertArgRec xftFontConvertArgs[] = {
+static XtConvertArgRec xftFontConvertArgs[] = {
     {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.screen),
      sizeof(Screen *)},
 };
 
 #endif
 
-static void 
+static void
 ClassInitialize(void)
 {
 #ifdef USE_XAW_PIXMAP_CVT
     XawInitializeWidgetSet();
-#else 
+#else
     static XtConvertArgRec scrnConvertArg[] = {
-	{XtBaseOffset, (XtPointer) XtOffset(Widget, core.screen), 
+	{XtBaseOffset, (XtPointer) XtOffset(Widget, core.screen),
 	 sizeof(Screen *)}
     };
-    XtAddConverter( XtRString, XtRPixmap, CvtStringToPixmap, 
+    XtAddConverter( XtRString, XtRPixmap, CvtStringToPixmap,
 	      	    scrnConvertArg, XtNumber(scrnConvertArg));
 #endif
     XtAddConverter( XtRString, XtRBackingStore, XmuCvtStringToBackingStore,
 		    NULL, 0 );
 #ifdef XRENDER
-    XtSetTypeConverter (XtRString, XtRXftColor, 
-			XmuCvtStringToXftColor, 
+    XtSetTypeConverter (XtRString, XtRXftColor,
+			XmuCvtStringToXftColor,
 			xftColorConvertArgs, XtNumber(xftColorConvertArgs),
 			XtCacheByDisplay, XmuFreeXftColor);
     XtSetTypeConverter (XtRString, XtRXftFont,
@@ -552,9 +552,9 @@ TimeString (ClockWidget w, struct tm *tm)
       sprintf (utime, "%10lu seconds since Epoch", (unsigned long)tsec);
       return utime;
    } else if (*w->clock.strftime) {
-     /*Note: this code is probably excessively paranoid 
+     /*Note: this code is probably excessively paranoid
        about buffer overflow.  The extra size 10 padding
-       is also meant as a further guard against programmer 
+       is also meant as a further guard against programmer
        error, although it is a little controversial*/
      static char ctime[STRFTIME_BUFF_SIZE+10];
      ctime[0] = ctime[STRFTIME_BUFF_SIZE] = '\0';
@@ -576,7 +576,7 @@ TimeString (ClockWidget w, struct tm *tm)
 }
 
 /* ARGSUSED */
-static void 
+static void
 Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
 {
     ClockWidget w = (ClockWidget)new;
@@ -597,7 +597,7 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
        Time_t time_value;
        int len;
 
-#ifndef NO_I18N 
+#ifndef NO_I18N
        w->clock.utf8 = False;
 
        if (!no_locale) {
@@ -626,8 +626,7 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
        tm = *localtime(&time_value);
        str = TimeString (w, &tm);
        len = strlen(str);
-       if (str[len - 1] == '\n') 
-	   str[--len] = '\0';
+       if (len && str[len - 1] == '\n') str[--len] = '\0';
 
 #ifdef XRENDER
        if (w->clock.render)
@@ -636,17 +635,17 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
 #ifndef NO_I18N
 # ifdef HAVE_ICONV
 	char *utf8_str;
-# endif	
-	if (w->clock.utf8) 
+# endif
+	if (w->clock.utf8)
 	    XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
 				(FcChar8 *) str, len, &extents);
 # ifdef HAVE_ICONV
-	else if ((utf8_str = clock_to_utf8(str)) != NULL) {
+	else if ((utf8_str = clock_to_utf8(str, len)) != NULL) {
 	        XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
 			(FcChar8 *)utf8_str, strlen(utf8_str), &extents);
 		free(utf8_str);
 	}
-# endif	
+# endif
 	else
 #endif
 	    XftTextExtents8 (XtDisplay (w), w->clock.face,
@@ -654,11 +653,13 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
 	min_width = extents.xOff + 2 * w->clock.padding;
 	min_height = w->clock.face->ascent + w->clock.face->descent +
 		     2 * w->clock.padding;
+        /*fprintf(stderr, "render min_width %i\n", min_width);*/
        }
        else
 #endif
-#ifndef NO_I18N 
-       if (!no_locale) {
+       { /* not XRENDER block */
+#ifndef NO_I18N
+	 if (!no_locale) {
 	   XFontSetExtents *fse;
 
 	   if(w->clock.fontSet == NULL) {
@@ -696,7 +697,9 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
 	       2 * w->clock.padding;
 	   min_height = w->clock.font->ascent +
 	       w->clock.font->descent + 2 * w->clock.padding;
-       }
+	   /*fprintf(stderr, "font min_width %i\n", min_width);*/
+	 }
+       } /* not XRENDER block */
     }
     if (w->core.width == 0)
 	w->core.width = min_width;
@@ -730,16 +733,16 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
     myXGCV.foreground = w->clock.Hdpixel;
     w->clock.HandGC = XtGetGC((Widget)w, valuemask, &myXGCV);
 
-    if (w->clock.update <= 0)
-	w->clock.update = 60;	/* make invalid update's use a default */
-    w->clock.show_second_hand = (w->clock.update <= SECOND_HAND_TIME);
+    /* make invalid update's use a default */
+    /*if (w->clock.update <= 0) w->clock.update = 60;*/
+    w->clock.show_second_hand = (abs(w->clock.update) <= SECOND_HAND_TIME);
     w->clock.numseg = 0;
     w->clock.interval_id = 0;
     memset (&w->clock.otm, '\0', sizeof (w->clock.otm));
 #ifdef XRENDER
     {
 	int major, minor;
-	
+
 	if (XRenderQueryVersion (XtDisplay (w), &major, &minor) &&
 	    (major > 0 ||
 	     (major == 0 && minor >= 4)))
@@ -750,7 +753,7 @@ Initialize (Widget request, Widget new, ArgList args, Cardinal *num_args)
 	    w->clock.can_polygon = False;
     }
     w->clock.pixmap = 0;
-    w->clock.draw = 0;
+    w->clock.draw = NULL;
     w->clock.damage.x = 0;
     w->clock.damage.y = 0;
     w->clock.damage.height = 0;
@@ -780,7 +783,7 @@ RenderPrepare (ClockWidget  w, XftColor *color)
 	    }
 	    d = w->clock.pixmap;
 	}
-	    
+
 	w->clock.draw = XftDrawCreate (XtDisplay (w), d,
 				       DefaultVisual (XtDisplay (w),
 						      DefaultScreen(XtDisplay (w))),
@@ -796,8 +799,8 @@ RenderClip (ClockWidget w)
 {
     Region	r;
     Drawable	d;
-    
-    RenderPrepare (w, 0);
+
+    RenderPrepare (w, NULL);
     if (w->clock.buffer)
 	d = w->clock.pixmap;
     else
@@ -815,7 +818,7 @@ RenderClip (ClockWidget w)
 }
 
 static void
-RenderTextBounds (ClockWidget w, char *str, int off, int len, 
+RenderTextBounds (ClockWidget w, char *str, int off, int len,
 		  XRectangle *bounds, int *xp, int *yp)
 {
     XGlyphInfo  head, tail;
@@ -827,27 +830,32 @@ RenderTextBounds (ClockWidget w, char *str, int off, int len,
 # endif
     if (w->clock.utf8)
     {
-	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face, 
+	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
 			    (FcChar8 *) str, off, &head);
-	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face, 
+	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
 			    (FcChar8 *) str + off, len - off, &tail);
     }
 # ifdef HAVE_ICONV
-    else if ((utf8_str = clock_to_utf8(str)) != NULL)
+    else if ((utf8_str = clock_to_utf8(str, off)) != NULL)
     {
-	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face, 
-			    (FcChar8 *)utf8_str, off, &head);
-	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face, 
-		   (FcChar8 *)utf8_str + off, strlen(utf8_str) - off, &tail);
+	XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
+			    (FcChar8 *)utf8_str, strlen(utf8_str), &head);
 	free(utf8_str);
+	if ((utf8_str = clock_to_utf8(str+off, len-off)) != NULL) {
+	  XftTextExtentsUtf8 (XtDisplay (w), w->clock.face,
+			      (FcChar8 *)utf8_str, strlen(utf8_str), &tail);
+	  free(utf8_str);
+	} else
+	  goto fallback;
     }
-# endif    
+# endif
     else
 #endif
     {
-	XftTextExtents8 (XtDisplay (w), w->clock.face, (FcChar8 *) str, 
+    fallback:
+	XftTextExtents8 (XtDisplay (w), w->clock.face, (FcChar8 *) str,
 			 off, &head);
-	XftTextExtents8 (XtDisplay (w), w->clock.face, (FcChar8 *) str + off, 
+	XftTextExtents8 (XtDisplay (w), w->clock.face, (FcChar8 *) str + off,
 			 len - off, &tail);
     }
 
@@ -872,17 +880,17 @@ RenderUpdateRectBounds (XRectangle *damage, XRectangle *bounds)
 {
     int	    x1 = bounds->x;
     int	    y1 = bounds->y;
-    int	    x2 = bounds->x + bounds->width; 
-    int	    y2 = bounds->y + bounds->height; 
+    int	    x2 = bounds->x + bounds->width;
+    int	    y2 = bounds->y + bounds->height;
     int	    d_x1 = damage->x;
     int	    d_y1 = damage->y;
-    int	    d_x2 = damage->x + damage->width; 
-    int	    d_y2 = damage->y + damage->height; 
+    int	    d_x2 = damage->x + damage->width;
+    int	    d_y2 = damage->y + damage->height;
 
-    if (x1 == x2) 
-    { 
-	x1 = d_x1; 
-	x2 = d_x2; 
+    if (x1 == x2)
+    {
+	x1 = d_x1;
+	x2 = d_x2;
     }
     else
     {
@@ -911,13 +919,13 @@ RenderRectIn (XRectangle *rect, XRectangle *bounds)
 {
     int	    x1 = bounds->x;
     int	    y1 = bounds->y;
-    int	    x2 = bounds->x + bounds->width; 
-    int	    y2 = bounds->y + bounds->height; 
+    int	    x2 = bounds->x + bounds->width;
+    int	    y2 = bounds->y + bounds->height;
     int	    r_x1 = rect->x;
     int	    r_y1 = rect->y;
-    int	    r_x2 = rect->x + rect->width; 
-    int	    r_y2 = rect->y + rect->height; 
-    
+    int	    r_x2 = rect->x + rect->width;
+    int	    r_y2 = rect->y + rect->height;
+
     return r_x1 < x2 && x1 < r_x2 && r_y1 < y2 && y1 < r_y2;
 }
 
@@ -932,9 +940,9 @@ RenderUpdateBounds (XPointDouble *points, int npoints, XRectangle *bounds)
 {
     int	    x1 = bounds->x;
     int	    y1 = bounds->y;
-    int	    x2 = bounds->x + bounds->width; 
-    int	    y2 = bounds->y + bounds->height; 
-    
+    int	    x2 = bounds->x + bounds->width;
+    int	    y2 = bounds->y + bounds->height;
+
     while (npoints--)
     {
 	int	    r_x1 = points[0].x;
@@ -963,9 +971,9 @@ RenderCheckBounds (XPointDouble *points, int npoints, XRectangle *bounds)
 {
     int	    x1 = bounds->x;
     int	    y1 = bounds->y;
-    int	    x2 = bounds->x + bounds->width; 
-    int	    y2 = bounds->y + bounds->height; 
-    
+    int	    x2 = bounds->x + bounds->width;
+    int	    y2 = bounds->y + bounds->height;
+
     while (npoints--)
     {
 	if (x1 <= points->x && points->x <= x2 &&
@@ -1012,13 +1020,13 @@ RenderLine (ClockWidget w, XDouble x1, XDouble y1, XDouble x2, XDouble y2,
 
     poly[0].x = XCoord (x1 + ldx, w);
     poly[0].y = YCoord (y1 - ldy, w);
-    
+
     poly[1].x = XCoord (x2 + ldx, w);
     poly[1].y = YCoord (y2 - ldy, w);
-    
+
     poly[2].x = XCoord (x2 - ldx, w);
     poly[2].y = YCoord (y2 + ldy, w);
-    
+
     poly[3].x = XCoord (x1 - ldx, w);
     poly[3].y = YCoord (y1 + ldy, w);
 
@@ -1067,7 +1075,7 @@ RenderHand (ClockWidget w, int tick_units, int size, XftColor *color,
     RenderRotate (w, &poly[0], outer_x, 0.0, s, c);
     RenderRotate (w, &poly[1], -inner_y, inner_y, s, c);
     RenderRotate (w, &poly[2], -inner_y, -inner_y, s, c);
-    
+
     if (draw)
     {
 	if (RenderCheckBounds (poly, 3, &w->clock.damage))
@@ -1101,9 +1109,9 @@ RenderSec (ClockWidget w, struct tm *tm, Boolean draw)
     double	    line_y;
 
     ClockAngle (tm->tm_sec * 60, &c, &s);
-    
+
     s = -s;
-    
+
     /*
      * Compute raw positions
      */
@@ -1113,7 +1121,7 @@ RenderSec (ClockWidget w, struct tm *tm, Boolean draw)
     outer_x = (SECOND_HAND_FRACT / 100.0);
     far_x = (MINOR_TICK_FRACT / 100.0);
     middle_y = (SECOND_WIDTH_FRACT / 100.0);
-    
+
     /*
      * Rotate them into position
      */
@@ -1149,7 +1157,7 @@ RenderSec (ClockWidget w, struct tm *tm, Boolean draw)
 
 #endif
 
-static void 
+static void
 Realize(Widget gw, XtValueMask *valueMask, XSetWindowAttributes *attrs)
 {
      ClockWidget	w = (ClockWidget) gw;
@@ -1170,7 +1178,7 @@ Realize(Widget gw, XtValueMask *valueMask, XSetWindowAttributes *attrs)
      Resize(gw);
 }
 
-static void 
+static void
 Destroy(Widget gw)
 {
      ClockWidget w = (ClockWidget) gw;
@@ -1187,8 +1195,8 @@ Destroy(Widget gw)
      XtReleaseGC (gw, w->clock.EraseGC);
 }
 
-static void 
-Resize(Widget gw) 
+static void
+Resize(Widget gw)
 {
     ClockWidget w = (ClockWidget) gw;
     /* don't do this computation if window hasn't been realized yet. */
@@ -1218,7 +1226,7 @@ Resize(Widget gw)
 	if (w->clock.draw)
 	{
 	    XftDrawDestroy (w->clock.draw);
-	    w->clock.draw = 0;
+	    w->clock.draw = NULL;
 	}
 	w->clock.picture = 0;
     }
@@ -1226,7 +1234,7 @@ Resize(Widget gw)
 }
 
 /* ARGSUSED */
-static void 
+static void
 Redisplay(Widget gw, XEvent *event, Region region)
 {
     ClockWidget w = (ClockWidget) gw;
@@ -1251,12 +1259,124 @@ Redisplay(Widget gw, XEvent *event, Region region)
     clock_tic((XtPointer)w, (XtIntervalId *)NULL);
 }
 
+/* Choose the update times for well-defined clock states.
+ *
+ * For example, in HH:MM:SS notation the last number rolls over
+ * every 60 seconds and has at most 60 display states.  The sequence
+ * depends on its initial value t0 and the update period u, e.g.
+ *
+ *   u (s)  d (s)  ti (s)                    m (states)  l (s)
+ *    2      2     {0,2, .. 58}              30            60
+ *    7      1     {0,7, .. 56,3, .. 53}     60           420
+ *   15     15     {0,15,30,45}               4            60
+ *   45     15     {0,45,30,15}               4           180
+ *   53      1     {0,53,46, .. 4,57, .. 7}  60          3180
+ *   58      2     {0,58,56, .. 2}           30          1740
+ *   60     60     {0}                        1            60
+ *
+ * u=  update period in seconds,
+ * ti= time at update i from the reference, HH:MM:00 or HH:00:00,
+ * n=  the roll over time, the modulus, 60 s or 3600 s,
+ * m=  the sequence length, the order of u in the modulo n group Z/nZ,
+ * l=  the total sequence duration =m*u.
+ * d=  gcd(n,u) the greatest common divisor
+ *
+ * The time t(i) determines the clock state.  It follows from
+ *
+ *   t(i)=t(i-1)+u mod n  <=>  t(i)=t(0)+i*u mod n
+ *
+ * which defines a { t(0) .. t(m-1) } sequence of m unique elements.
+ * Hence, u generates a subgroup U={k*u mod n : k in Z} of Z/nZ so
+ * its order m divides n.  This m satisfies
+ *
+ *   t(m)=t(0)  <=>  m*u mod n = 0  <=>  m*u = r*n  <=>  m=n/d, r=u/d
+ *
+ * where d divides n and u.  Choosing
+ *
+ *   d=gcd(n,u)  <=>  n/d and u/d are coprime  =>  m=n/d is minimum
+ *
+ * thus gives the order.  Furthermore, the greatest common divisor d is
+ * also the minimum value generator of the set U.  Assume a generator e
+ * where
+ *
+ *   e|{n,u}  <=>  Ai,Ej: i*u mod n = j*e  <=>  j=f(i)=(i*u mod n)/e
+ *
+ * such that f maps i to m=ord(u) unique values of j.  Its properties are
+ *
+ *   j=i*u/e mod n/e   ==>  0<=j<n/e
+ *
+ *   ord(u/e, mod n/e)=n/e/gcd(n/e,u/e)=n/d=m  ==>  J={j=f(i)}, |J|=m
+ *
+ *   ord(e)=n/gcd(n,e)=n/e
+ *
+ * from wich follows
+ *
+ *   e=d  ==>  f: I={0,..,m-1} -> J={0,..,m-1}: j=i*r mod m is bijective
+ *        ==>  D={k*d mod n : k in Z} = U.
+ *
+ * Any value e below d is no generator since it yields a non contiguous
+ * J such that an l=0..n/e-1 exists not in J with l*e not in U.
+ *
+ * The update sequence t(i) could be followed using the algorithm:
+ *
+ *   1. restore the expected value into t(i),
+ *   2. calculate the next timeout t(i+1)=t(i)+u mod n,
+ *   3. verify that the current tc(i) is between t(i)..t(i+1),
+ *   4. calculate the time to wait w=t(i+1)-tc(i) mod n,
+ *   5. store t(i+1),
+ *
+ * which implements state tracking.  This approach doesn't work well
+ * since the set timeout w does not guarantee a next call at time
+ * t(i+1), e.g. due to progam sleeps, time adjustments, and leap
+ * seconds.  A robust method should only rely on the current time
+ * tc(i) to identify t(i).  The derivation above shows 2 options:
+ *
+ *   1.  n={60,3600} and round to a multiple of d,
+ *       but if d<u then the sequence is not guaranteed.
+ *   2.  choose n large and round to a multiple of u,
+ *       but then the sequence resets at roll-over.
+ *
+ * The code below implements (2) with n this year's duration in seconds
+ * and using local time year's start as epoch.
+ */
+static unsigned long
+waittime(int update, struct timeval *tv, struct tm *tm)
+{
+  int twait;
+  long twaitms;
+  unsigned long retval;
+
+  if(update>0) {
+    long tcur;
+    int trem;
+
+    tcur=tm->tm_sec+60*(tm->tm_min+60*(tm->tm_hour+24*tm->tm_yday));
+    /* ti=floor(tcur/u)*u, w=u-(tcur-ti), and tcur-ti==tcur % u */
+    trem=tcur % update;
+    twait=update-trem;
+  } else {
+    twait=-update;
+  }
+
+  if(tv->tv_usec>0) {
+    long usec;
+    twait--;
+    usec=1000000-tv->tv_usec;
+    twaitms=(usec+999)/1000;  /* must round up to avoid zero retval */
+  } else {
+    twaitms=0;
+  }
+
+  retval=(unsigned long)labs(twaitms+1000*twait);
+  return retval;
+}
+
 /* ARGSUSED */
-static void 
+static void
 clock_tic(XtPointer client_data, XtIntervalId *id)
 {
-        ClockWidget w = (ClockWidget)client_data;    
-	struct tm tm; 
+        ClockWidget w = (ClockWidget)client_data;
+	struct tm tm;
 	Time_t	time_value;
 	struct timeval	tv;
 	char	*time_ptr;
@@ -1264,12 +1384,13 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
         register Window win = XtWindow(w);
 
 	X_GETTIMEOFDAY (&tv);
-	if (id || !w->clock.interval_id)
-	    w->clock.interval_id =
-		XtAppAddTimeOut( XtWidgetToApplicationContext( (Widget) w),
-				(w->clock.update - 1) * 1000 + (1000000 - tv.tv_usec)/1000, clock_tic, (XtPointer)w );
 	time_value = tv.tv_sec;
 	tm = *localtime(&time_value);
+	if (w->clock.update && (id || !w->clock.interval_id))
+	    w->clock.interval_id =
+		XtAppAddTimeOut( XtWidgetToApplicationContext( (Widget) w),
+				 waittime(w->clock.update, &tv, &tm),
+				 clock_tic, (XtPointer)w );
 	/*
 	 * Beep on the half hour; double-beep on the hour.
 	 */
@@ -1277,7 +1398,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 	    if (w->clock.beeped && (tm.tm_min != 30) &&
 		(tm.tm_min != 0))
 	      w->clock.beeped = FALSE;
-	    if (((tm.tm_min == 30) || (tm.tm_min == 0)) 
+	    if (((tm.tm_min == 30) || (tm.tm_min == 0))
 		&& (!w->clock.beeped)) {
 		w->clock.beeped = TRUE;
 #ifdef XKB
@@ -1289,7 +1410,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 		    XkbStdBell(dpy,win,50,XkbBI_ClockChimeHalf);
 		}
 #else
-		XBell(dpy, 50);	
+		XBell(dpy, 50);
 		if (tm.tm_min == 0)
 		  XBell(dpy, 50);
 #endif
@@ -1301,9 +1422,9 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 
 	    time_ptr = TimeString (w, &tm);
 	    len = strlen (time_ptr);
-	    if (time_ptr[len - 1] == '\n') time_ptr[--len] = '\0';
+	    if (len && time_ptr[len - 1] == '\n') time_ptr[--len] = '\0';
 	    prev_len = strlen (w->clock.prev_time_string);
-	    for (i = 0; ((i < len) && (i < prev_len) && 
+	    for (i = 0; ((i < len) && (i < prev_len) &&
 	    		 (w->clock.prev_time_string[i] == time_ptr[i])); i++);
 
 #ifdef XRENDER
@@ -1313,25 +1434,25 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 		int	    x, y;
 #if !defined(NO_I18N) && defined(HAVE_ICONV)
 		char *utf8_str;
-#endif		
+#endif
 
 		RenderTextBounds (w, w->clock.prev_time_string, i, prev_len,
-				  &old_tail, 0, 0);
+				  &old_tail, NULL, NULL);
 		RenderUpdateRectBounds (&old_tail, &w->clock.damage);
 		RenderTextBounds (w, time_ptr, i, len,
-				  &new_tail, 0, 0);
+				  &new_tail, NULL, NULL);
 		RenderUpdateRectBounds (&new_tail, &w->clock.damage);
-		
+
 		while (i)
 		{
-		    RenderTextBounds (w, time_ptr, 0, i, &head, 0, 0);
+		    RenderTextBounds (w, time_ptr, 0, i, &head, NULL, NULL);
 		    if (!RenderRectIn (&head, &w->clock.damage))
 			break;
 		    i--;
 		}
 		RenderTextBounds (w, time_ptr, i, len, &new_tail, &x, &y);
 		RenderClip (w);
-		RenderPrepare (w, 0);
+		RenderPrepare (w, NULL);
 #ifndef NO_I18N
 		if (w->clock.utf8) {
 		    XftDrawStringUtf8 (w->clock.draw,
@@ -1341,19 +1462,19 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 				    (FcChar8 *) time_ptr + i, len - i);
 
 		}
-# ifdef HAVE_ICONV		
+# ifdef HAVE_ICONV
 		else if ((utf8_str =
-		    clock_to_utf8(time_ptr + i)) != NULL) {
+		    clock_to_utf8(time_ptr + i, len - i)) != NULL) {
 		    	XftDrawStringUtf8 (w->clock.draw,
 				    &w->clock.fg_color,
 				    w->clock.face,
 				    x, y,
-				    (FcChar8 *)utf8_str, strlen(utf8_str) - i);
+				    (FcChar8 *)utf8_str, strlen(utf8_str) );
 		    free(utf8_str);
 		}
-# endif		
+# endif
 		else
-#endif 
+#endif
 		{
 		    XftDrawString8 (w->clock.draw,
 				    &w->clock.fg_color,
@@ -1371,7 +1492,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 		if(0 < len) {
 		    XFontSetExtents *fse
 		      = XExtentsOfFontSet(w->clock.fontSet);
-		    
+
 		    XmbDrawImageString(dpy,win,w->clock.fontSet,w->clock.myGC,
 				       (2+w->clock.padding +
 					(i?XmbTextEscapement(w->clock.fontSet,
@@ -1379,7 +1500,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 				       2+w->clock.padding+fse->max_logical_extent.height,
 				       time_ptr+i,len-i
 			);
-		    /*		
+		    /*
 		     * Clear any left over bits
 		     */
 		    clear_from = XmbTextEscapement (w->clock.fontSet,time_ptr,
@@ -1413,7 +1534,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 #endif
 	} else {
 			/*
-			 * The second (or minute) hand is sec (or min) 
+			 * The second (or minute) hand is sec (or min)
 			 * sixtieths around the clock face. The hour hand is
 			 * (hour + min/60) twelfths of the way around the
 			 * clock-face.  The derivation is left as an excercise
@@ -1449,7 +1570,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 				RenderSec (w, &w->clock.otm, False);
 				RenderSec (w, &tm, False);
 			    }
-			    if (w->clock.damage.width && 
+			    if (w->clock.damage.width &&
 				w->clock.damage.height)
 			    {
 				RenderClip (w);
@@ -1493,7 +1614,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 				w->clock.segbuff, VERTICES_IN_HANDS,
 				       CoordModeOrigin);
 			    w->clock.hour = w->clock.segbuffptr;
-			    DrawHand(w, 
+			    DrawHand(w,
 				w->clock.hour_hand_length, w->clock.hand_width,
 				tm.tm_hour * 300 + tm.tm_min * 5
 			    );
@@ -1515,7 +1636,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 		    if (w->clock.show_second_hand == TRUE) {
 			    w->clock.segbuffptr = w->clock.sec;
 			    DrawSecond(w,
-				w->clock.second_hand_length - 2, 
+				w->clock.second_hand_length - 2,
 				w->clock.second_hand_width,
 				w->clock.minute_hand_length + 2,
 				tm.tm_sec * 60
@@ -1538,7 +1659,7 @@ clock_tic(XtPointer client_data, XtIntervalId *id)
 			w->clock.otm = tm;
 		}
 }
-	
+
 static void
 erase_hands(ClockWidget w, struct tm *tm)
 {
@@ -1651,7 +1772,7 @@ static float const Sines[] = {
 0.674302, 0.675590, 0.676875, 0.678159, 0.679441, 0.680720, 0.681998, 0.683273,
 0.684547, 0.685818, 0.687087, 0.688354, 0.689619, 0.690882, 0.692143, 0.693401,
 0.694658, 0.695912, 0.697165, 0.698415, 0.699663, 0.700909, 0.702153, 0.703394,
-0.704634, 0.705871, 0.707106, 
+0.704634, 0.705871, 0.707106,
 };
 static float const Cosines[] = {
 1.000000, 0.999998, 0.999993, 0.999986, 0.999975, 0.999961, 0.999945, 0.999925,
@@ -1710,10 +1831,10 @@ static float const Cosines[] = {
 0.738455, 0.737277, 0.736097, 0.734914, 0.733729, 0.732542, 0.731353, 0.730162,
 0.728968, 0.727772, 0.726574, 0.725374, 0.724171, 0.722967, 0.721760, 0.720551,
 0.719339, 0.718126, 0.716910, 0.715692, 0.714472, 0.713250, 0.712026, 0.710799,
-0.709570, 0.708339, 0.707106, 
+0.709570, 0.708339, 0.707106,
 };
 
-static void 
+static void
 ClockAngle(int tick_units, double *sinp, double *cosp)
 {
     int reduced, upper;
@@ -1748,8 +1869,8 @@ ClockAngle(int tick_units, double *sinp, double *cosp)
  * to the perimeter, then erasing all but the outside most pixels doesn't
  * work because of round-off error (sigh).
  */
-static void 
-DrawLine(ClockWidget w, Dimension blank_length, Dimension length, 
+static void
+DrawLine(ClockWidget w, Dimension blank_length, Dimension length,
 	 int tick_units)
 {
 	double dblank_length = (double)blank_length, dlength = (double)length;
@@ -1783,7 +1904,7 @@ DrawLine(ClockWidget w, Dimension blank_length, Dimension length,
  * how far around the circle (clockwise) from high noon.
  *
  */
-static void 
+static void
 DrawHand(ClockWidget w, Dimension length, Dimension width, int tick_units)
 {
 
@@ -1814,11 +1935,11 @@ DrawHand(ClockWidget w, Dimension length, Dimension width, int tick_units)
 	SetSeg(w,
 	       x = w->clock.centerX + clock_round(length * sinangle),
 	       y = w->clock.centerY - clock_round(length * cosangle),
-	       x1 = w->clock.centerX - clock_round(ws + wc), 
+	       x1 = w->clock.centerX - clock_round(ws + wc),
 	       y1 = w->clock.centerY + clock_round(wc - ws));  /* 1 ---- 2 */
 	/* 2 */
-	SetSeg(w, x1, y1, 
-	       x2 = w->clock.centerX - clock_round(ws - wc), 
+	SetSeg(w, x1, y1,
+	       x2 = w->clock.centerX - clock_round(ws - wc),
 	       y2 = w->clock.centerY + clock_round(wc + ws));  /* 2 ----- 3 */
 
 	SetSeg(w, x2, y2, x, y);	/* 3 ----- 1(4) */
@@ -1834,8 +1955,8 @@ DrawHand(ClockWidget w, Dimension length, Dimension width, int tick_units)
  * how far around the circle (clockwise) from high noon.
  *
  */
-static void 
-DrawSecond(ClockWidget w, Dimension length, Dimension width, 
+static void
+DrawSecond(ClockWidget w, Dimension length, Dimension width,
 	   Dimension offset, int tick_units)
 {
 
@@ -1886,14 +2007,14 @@ DrawSecond(ClockWidget w, Dimension length, Dimension width,
 	       w->clock.centerY - clock_round(mc + ws) );
 	SetSeg(w, w->clock.centerX + clock_round(offset *sinangle),
 	       w->clock.centerY - clock_round(offset * cosangle), /* 2-----3 */
-	       w->clock.centerX + clock_round(ms + wc), 
+	       w->clock.centerX + clock_round(ms + wc),
 	       w->clock.centerY - clock_round(mc - ws));
 	w->clock.segbuffptr->x = x;
 	w->clock.segbuffptr++->y = y;
 	w->clock.numseg ++;
 }
 
-static void 
+static void
 SetSeg(ClockWidget w, int x1, int y1, int x2, int y2)
 {
 	w->clock.segbuffptr->x = x1;
@@ -1907,12 +2028,12 @@ SetSeg(ClockWidget w, int x1, int y1, int x2, int y2)
  *  Draw the clock face (every fifth tick-mark is longer
  *  than the others).
  */
-static void 
+static void
 DrawClockFace(ClockWidget w)
 {
 	register int i;
 	register int delta = (int)(w->clock.radius - w->clock.second_hand_length) / 3;
-	
+
 	w->clock.segbuffptr = w->clock.segbuff;
 	w->clock.numseg = 0;
 	for (i = 0; i < 60; i++)
@@ -1943,7 +2064,7 @@ DrawClockFace(ClockWidget w)
 	    else
 #endif
 	    {
-		DrawLine(w, ( (i % 5) == 0 ? 
+		DrawLine(w, ( (i % 5) == 0 ?
 			     w->clock.second_hand_length :
 			     (w->clock.radius - delta) ),
 			 w->clock.radius, i * 60);
@@ -1959,12 +2080,12 @@ DrawClockFace(ClockWidget w)
 	XDrawSegments(XtDisplay(w), XtWindow(w),
 		      w->clock.myGC, (XSegment *) &(w->clock.segbuff[0]),
 		      w->clock.numseg/2);
-	
+
 	w->clock.segbuffptr = w->clock.segbuff;
 	w->clock.numseg = 0;
 }
 
-static int 
+static int
 clock_round(double x)
 {
 	return(x >= 0.0 ? (int)(x + .5) : (int)(x - .5));
@@ -1983,8 +2104,8 @@ sameColor (XftColor *old, XftColor *new)
 #endif
 
 /* ARGSUSED */
-static Boolean 
-SetValues(Widget gcurrent, Widget grequest, Widget gnew, 
+static Boolean
+SetValues(Widget gcurrent, Widget grequest, Widget gnew,
 	  ArgList args, Cardinal *num_args)
 {
       ClockWidget current = (ClockWidget) gcurrent;
@@ -1999,13 +2120,13 @@ SetValues(Widget gcurrent, Widget grequest, Widget gnew,
       if (new->clock.update != current->clock.update) {
 	  if (current->clock.interval_id)
 	      XtRemoveTimeOut (current->clock.interval_id);
-	  if (XtIsRealized( (Widget) new))
-	      new->clock.interval_id = XtAppAddTimeOut( 
+	  if (new->clock.update && XtIsRealized( (Widget) new))
+	      new->clock.interval_id = XtAppAddTimeOut(
                                          XtWidgetToApplicationContext(gnew),
-					 new->clock.update*1000,
+					 abs(new->clock.update)*1000,
 				         clock_tic, (XtPointer)gnew);
 
-	  new->clock.show_second_hand =(new->clock.update <= SECOND_HAND_TIME);
+	  new->clock.show_second_hand =(abs(new->clock.update) <= SECOND_HAND_TIME);
 	  if (new->clock.show_second_hand != current->clock.show_second_hand)
 	    redisplay = TRUE;
       }
@@ -2087,7 +2208,7 @@ SetValues(Widget gcurrent, Widget grequest, Widget gnew,
 	if (new->clock.draw)
 	{
 	    XftDrawDestroy (new->clock.draw);
-	    new->clock.draw = 0;
+	    new->clock.draw = NULL;
 	}
 	new->clock.picture = 0;
     }
@@ -2098,11 +2219,10 @@ SetValues(Widget gcurrent, Widget grequest, Widget gnew,
 
 #if !defined(NO_I18N) && defined(HAVE_ICONV)
 static char *
-clock_to_utf8(const char *str)
+clock_to_utf8(const char *str, int in_len)
 {
     iconv_t cd;
     char *buf;
-    size_t in_len;
     size_t buf_size;
     size_t ileft, oleft;
     const char *inptr;
@@ -2120,7 +2240,6 @@ clock_to_utf8(const char *str)
     if (cd == (iconv_t)-1)
     	return NULL;
 
-    in_len = strlen(str);
     buf_size = MB_LEN_MAX * (in_len + 1);
     if ((buf = malloc(buf_size)) == NULL) {
     	(void) iconv_close(cd);

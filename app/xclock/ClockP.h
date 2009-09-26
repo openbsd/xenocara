@@ -32,13 +32,13 @@ Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -85,7 +85,7 @@ typedef struct {
 	 GC	HandGC;		/* Hand GC */
 	 GC	HighGC;		/* Highlighting GC */
 /* start of graph stuff */
-	 int	update;		/* update frequence */
+	 int	update;		/* update period in second */
 	 Dimension radius;		/* radius factor */
 	 int	backing_store;	/* backing store type */
 	 Boolean chime;
@@ -124,7 +124,7 @@ typedef struct {
 	 XftColor	minor_color;
 	 XftFont	*face;
 	 XRenderPictFormat  *mask_format;
-    
+
 	 Boolean    render;
 	 Boolean    sharp;
 	 Boolean    can_polygon;

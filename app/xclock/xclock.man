@@ -1,15 +1,15 @@
 .\" $Xorg: xclock.man,v 1.4 2001/02/09 02:05:39 xorgcvs Exp $
 .\" Copyright 1988, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,7 +17,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -42,19 +42,19 @@ xclock \- analog / digital clock for X
 [ \fB\-face\fP \fIpattern\fP ]
 .SH DESCRIPTION
 The
-.I xclock 
+.I xclock
 program displays the time in analog or digital form.  The time is continuously
 updated at a frequency which may be specified by the user.
 .SH OPTIONS
 .I Xclock
-accepts all of the standard X Toolkit command line options along with the 
+accepts all of the standard X Toolkit command line options along with the
 additional options listed below:
 .TP 8
 .B \-help
 This option indicates that a brief summary of the allowed options should be
 printed on the standard error.
 .TP 8
-.B \-analog 
+.B \-analog
 This option indicates that a conventional 12 hour clock face with tick marks
 and hands should be used.  This is the default.
 .TP 8
@@ -83,7 +83,7 @@ This option indicates that a digital clock should display the time in
 twenty-four hour format.  This is the default when a digital clock is used.
 .TP 8
 .B \-chime
-This option indicates that the clock should chime 
+This option indicates that the clock should chime
 once on the half hour and twice on the hour.
 .TP 8
 \fB\-hands\fP \fIcolor\fP (or \fB\-hd\fP \fIcolor\fP)
@@ -103,7 +103,7 @@ it will be updated immediately.  A value of 30 seconds or less will enable a
 second hand on an analog clock.  The default is 60 seconds.
 .TP 8
 .B \-padding \fInumber\fP
-This option specifies the width in pixels of the padding 
+This option specifies the width in pixels of the padding
 between the window border and clock text or picture.  The default is 10
 on a digital clock and 8 on an analog clock.
 .TP 8
@@ -116,27 +116,27 @@ in effect differ from the standard options.
 .TP 8
 .B \-norender
 This option turns off the use of Xrender to draw the clock.
-.TP 8 
+.TP 8
 .B \-sharp
 This option tells \fIxclock\fP to use sharper edges when drawn using
-the Xrender extension. 
+the Xrender extension.
 .TP 8
 .B \-face \fIpattern\fP
 This option specifies the font to use in digital mode when the
 Xrender extension is used.  Patterns are specified using the
-fontconfig face format described in the 
+fontconfig face format described in the
 .I Font Names
 section of
 .IR fonts.conf (__filemansuffix__).
 .SH X DEFAULTS
-This program uses the 
+This program uses the
 .I Clock
 widget.  It understands all of the core resource names and classes as well as:
 .PP
 .TP 8
 .B width (\fPclass\fB Width)
 Specifies the width of the clock.  The default for analog clocks is 164
-pixels; the default for digital clocks is whatever is needed to hold the 
+pixels; the default for digital clocks is whatever is needed to hold the
 clock when displayed in the chosen font.
 .TP 8
 .B height (\fPclass\fB Height)
@@ -150,11 +150,11 @@ Specifies the frequency in seconds at which the time should be redisplayed.
 .B foreground (\fPclass\fB Foreground)
 Specifies the color for the tick marks. The default depends on whether
 \fIreverseVideo\fP is specified.  If \fIreverseVideo\fP is specified
-the default is \fIlwhite\fP, otherwise the default is \fIblack\fP. 
+the default is \fIlwhite\fP, otherwise the default is \fIblack\fP.
 
 .TP 8
 .B hands (\fPclass\fB Foreground)
-Specifies the color of the insides of the clock's hands. The default 
+Specifies the color of the insides of the clock's hands. The default
 depends on whether
 \fIreverseVideo\fP is specified.  If \fIreverseVideo\fP is specified
 the default is \fIlwhite\fP, otherwise the default is \fIblack\fP.
@@ -188,7 +188,7 @@ fonts currently will not always display correctly.
 This font is only used when Xrender is not in effect.
 .TP 8
 .B render (\fPclass\fB Boolean)
-Specifies whether or not the Xrender extension should be used for the 
+Specifies whether or not the Xrender extension should be used for the
 display. The default is True if \fIxclock\fP has been compiled with
 Xrender support.
 .PP
@@ -199,14 +199,14 @@ understood:
 .B face (\fPclass\fB FaceName)
 Specify the pattern for the font to be used for the digital clock when
 Xrender is used.   Patterns are specified using the fontconfig face format
-described in the 
+described in the
 .I Font Names
 section of
 .IR fonts.conf (__filemansuffix__).
 .TP 8
 .B sharp (\fPclass\fB Boolean)
-Specifies if sharp edges should be used when rendering the clock. 
-The default is False. 
+Specifies if sharp edges should be used when rendering the clock.
+The default is False.
 .TP 8
 .B buffer (\fPclass\fB Boolean)
 Specifies that the updates of the image are drawn to a pixmap before copied
@@ -238,8 +238,8 @@ indentation indicates hierarchical structure.  The widget class name
 is given first, followed by the widget instance name.
 .sp
 .nf
-.\".TA .5i 
-.ta .5i 
+.\".TA .5i
+.ta .5i
 XClock  xclock
 	Clock  clock
 .fi

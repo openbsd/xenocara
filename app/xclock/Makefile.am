@@ -10,7 +10,7 @@
 #  specific, written prior permission.  Red Hat makes no
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
-# 
+#
 #  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 #  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xclock
 
-AM_CFLAGS = $(XCLOCK_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XCLOCK_CFLAGS)
 xclock_LDADD = $(XCLOCK_LIBS)
 
 xclock_SOURCES =	\
@@ -35,23 +35,16 @@ appman_PRE = \
 
 # App default files  (*.ad)
 
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+
 appdefaultdir = @appdefaultdir@
 
-
-APPDEFAULTFILES = \
-        XClock-color \
-        XClock
-
-SUFFIXES = .ad
-
-.ad:
-	cp $< $@
-
-appdefault_DATA = $(APPDEFAULTFILES)
+dist_appdefault_DATA = \
+        app-defaults/XClock-color \
+        app-defaults/XClock
 
 EXTRA_DIST = \
 	ChangeLog \
-	$(APPDEFAULTFILES:%=%.ad) \
 	clmask.bit \
 	clock.bit
 
@@ -69,7 +62,7 @@ MAINTAINERCLEANFILES=ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
@@ -92,7 +85,7 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
