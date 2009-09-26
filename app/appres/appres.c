@@ -35,9 +35,9 @@ in this Software without prior written authorization from The Open Group.
 
 #define NONAME "-AppResTest-"
 
-char *ProgramName;
+static char *ProgramName;
 
-XrmQuark XrmQString;
+static XrmQuark XrmQString;
 
 static void 
 usage (void)

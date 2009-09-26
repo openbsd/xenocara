@@ -1,3 +1,44 @@
+commit a42a18d12a23c763acabea045b22a9efbac3e569
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Sep 21 18:10:39 2009 -0700
+
+    appres 1.0.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 25b170accac2cdd405a9c98be6ffe2122da18083
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Sep 21 18:07:57 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit fea57c0200b1dce5b5ea45682f11760911e7a4f1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Sep 21 17:35:44 2009 -0700
+
+    Add pointers to mailing list, bugzilla, wiki & git repo to README
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a296f50efe75ae03f5cd0fd2b96645c3d856537a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 15 18:15:44 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and all gcc 4.3 and sparse warnings.
+
+commit b52a34ccc971f20b09f60b9b8a117652588e7096
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 10 15:42:09 2007 -0700
+
+    Change appres_CFLAGS to AM_CFLAGS to make automake-1.10 happier
+    
+    Makefile.am:27: compiling `appres.c' with per-target flags requires `AM_PROG_CC_C_O' in `configure.ac'
+
 commit 85be6045ff92bb02d6516f1348fe01c9fa596826
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Jan 22 18:05:40 2007 -0800
