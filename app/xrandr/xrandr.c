@@ -37,6 +37,8 @@
 #include <stdarg.h>
 #include <math.h>
 
+#include "config.h"
+
 #if RANDR_MAJOR > 1 || (RANDR_MAJOR == 1 && RANDR_MINOR >= 2)
 #define HAS_RANDR_1_2 1
 #endif
@@ -309,7 +311,7 @@ struct _output {
     crtc_t	    *current_crtc_info;
     
     name_t	    mode;
-    float	    refresh;
+    double	    refresh;
     XRRModeInfo	    *mode_info;
     
     name_t	    addmode;
@@ -332,6 +334,8 @@ struct _output {
     } gamma;
 
     Bool	    primary;
+
+    Bool	    found;
 };
 
 typedef enum _umode_action {
@@ -374,7 +378,7 @@ static int	num_crtcs;
 static XRRScreenResources  *res;
 static int	fb_width = 0, fb_height = 0;
 static int	fb_width_mm = 0, fb_height_mm = 0;
-static float	dpi = 0;
+static double	dpi = 0;
 static char	*dpi_output = NULL;
 static Bool	dryrun = False;
 static int	minWidth, maxWidth, minHeight, maxHeight;
@@ -487,27 +491,27 @@ mode_geometry (XRRModeInfo *mode_info, Rotation rotation,
 }
 
 /* v refresh frequency in Hz */
-static float
+static double
 mode_refresh (XRRModeInfo *mode_info)
 {
-    float rate;
+    double rate;
     
     if (mode_info->hTotal && mode_info->vTotal)
-	rate = ((float) mode_info->dotClock / 
-		((float) mode_info->hTotal * (float) mode_info->vTotal));
+	rate = ((double) mode_info->dotClock /
+		((double) mode_info->hTotal * (double) mode_info->vTotal));
     else
     	rate = 0;
     return rate;
 }
 
 /* h sync frequency in Hz */
-static float
+static double
 mode_hsync (XRRModeInfo *mode_info)
 {
-    float rate;
+    double rate;
     
     if (mode_info->hTotal)
-	rate = (float) mode_info->dotClock / (float) mode_info->hTotal;
+	rate = (double) mode_info->dotClock / (double) mode_info->hTotal;
     else
     	rate = 0;
     return rate;
@@ -630,6 +634,7 @@ add_output (void)
     if (!output)
 	fatal ("out of memory\n");
     output->next = NULL;
+    output->found = False;
     *outputs_tail = output;
     outputs_tail = &output->next;
     return output;
@@ -709,11 +714,11 @@ find_crtc_by_xid (RRCrtc crtc)
 }
 
 static XRRModeInfo *
-find_mode (name_t *name, float refresh)
+find_mode (name_t *name, double refresh)
 {
     int		m;
     XRRModeInfo	*best = NULL;
-    float	bestDist = 0;
+    double	bestDist = 0;
 
     for (m = 0; m < res->nmode; m++)
     {
@@ -725,7 +730,7 @@ find_mode (name_t *name, float refresh)
 	}
 	if ((name->kind & name_string) && !strcmp (name->string, mode->name))
 	{
-	    float   dist;
+	    double   dist;
 	    
 	    if (refresh)
 		dist = fabs (mode_refresh (mode) - refresh);
@@ -770,7 +775,7 @@ find_mode_for_output (output_t *output, name_t *name)
     XRROutputInfo   *output_info = output->output_info;
     int		    m;
     XRRModeInfo	    *best = NULL;
-    float	    bestDist = 0;
+    double	    bestDist = 0;
 
     for (m = 0; m < output_info->nmode; m++)
     {
@@ -785,7 +790,7 @@ find_mode_for_output (output_t *output, name_t *name)
 	}
 	if ((name->kind & name_string) && !strcmp (name->string, mode->name))
 	{
-	    float   dist;
+	    double   dist;
 
 	    /* Stay away from doublescan modes unless refresh rate is specified. */
 	    if (!output->refresh && (mode->modeFlags & RR_DoubleScan))
@@ -1436,6 +1441,15 @@ apply (void)
     int	    c;
     
     /*
+     * Hold the server grabbed while messing with
+     * the screen so that apps which notice the resize
+     * event and ask for xinerama information from the server
+     * receive up-to-date information
+     */
+    if (grab_server)
+	XGrabServer (dpy);
+    
+    /*
      * Turn off any crtcs which are to be disabled or which are
      * larger than the target size
      */
@@ -1482,15 +1496,6 @@ apply (void)
     }
 
     /*
-     * Hold the server grabbed while messing with
-     * the screen so that apps which notice the resize
-     * event and ask for xinerama information from the server
-     * receive up-to-date information
-     */
-    if (grab_server)
-	XGrabServer (dpy);
-    
-    /*
      * Set the screen size
      */
     screen_apply ();
@@ -1525,6 +1530,7 @@ static void
 get_outputs (void)
 {
     int		o;
+    output_t    *q;
     
     for (o = 0; o < res->noutput; o++)
     {
@@ -1563,6 +1569,7 @@ get_outputs (void)
 		}
 	    }
 	}
+	output->found = True;
 
 	/*
 	 * Automatic mode -- track connection state and enable/disable outputs
@@ -1592,6 +1599,14 @@ get_outputs (void)
 	}
 
 	set_output_info (output, res->outputs[o], output_info);
+    }
+    for (q = outputs; q; q = q->next)
+    {
+	if (!q->found)
+	{
+	    fprintf(stderr, "warning: output %s not found; ignoring\n",
+		    q->output.string);
+	}
     }
 }
 
@@ -1628,7 +1643,7 @@ mark_changing_crtcs (void)
 /*
  * Test whether 'crtc' can be used for 'output'
  */
-Bool
+static Bool
 check_crtc_for_output (crtc_t *crtc, output_t *output)
 {
     int		c;
@@ -1997,6 +2012,26 @@ pick_crtcs (void)
     }
 }
 
+static int
+check_strtol(char *s)
+{
+    char *endptr;
+    int result = strtol(s, &endptr, 10);
+    if (s == endptr)
+	usage();
+    return result;
+}
+
+static int
+check_strtod(char *s)
+{
+    char *endptr;
+    double result = strtod(s, &endptr);
+    if (s == endptr)
+	usage();
+    return result;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -2015,7 +2050,7 @@ main (int argc, char **argv)
     int 		i, j;
     SizeID	current_size;
     short	current_rate;
-    float    	rate = -1;
+    double    	rate = -1;
     int		size = -1;
     int		dirind = 0;
     Bool	setit = False;
@@ -2071,12 +2106,12 @@ main (int argc, char **argv)
 
 	if (!strcmp ("-s", argv[i]) || !strcmp ("--size", argv[i])) {
 	    if (++i>=argc) usage ();
-	    if (sscanf (argv[i], "%dx%d", &width, &height) == 2)
+	    if (sscanf (argv[i], "%dx%d", &width, &height) == 2) {
 		have_pixel_size = True;
-	    else {
-		size = atoi (argv[i]);
-		if (size < 0) usage();
-	    }
+	    } else {
+		size = check_strtol(argv[i]);
+                if (size < 0) usage();
+            }
 	    setit = True;
 	    continue;
 	}
@@ -2086,8 +2121,7 @@ main (int argc, char **argv)
 	    !strcmp ("--refresh", argv[i]))
 	{
 	    if (++i>=argc) usage ();
-	    if (sscanf (argv[i], "%f", &rate) != 1)
-		usage ();
+	    rate = check_strtod(argv[i]);
 	    setit = True;
 #if HAS_RANDR_1_2
 	    if (output)
@@ -2117,7 +2151,7 @@ main (int argc, char **argv)
 	}
 	if (!strcmp ("--screen", argv[i])) {
 	    if (++i>=argc) usage ();
-	    screen = atoi (argv[i]);
+	    screen = check_strtol(argv[i]);
 	    if (screen < 0) usage();
 	    continue;
 	}
@@ -2128,8 +2162,8 @@ main (int argc, char **argv)
 	if (!strcmp ("-o", argv[i]) || !strcmp ("--orientation", argv[i])) {
 	    char *endptr;
 	    if (++i>=argc) usage ();
-	    dirind = strtol(argv[i], &endptr, 0);
-	    if (*endptr != '\0') {
+	    dirind = strtol(argv[i], &endptr, 10);
+	    if (argv[i] == endptr) {
 		for (dirind = 0; dirind < 4; dirind++) {
 		    if (strcmp (direction[dirind], argv[i]) == 0) break;
 		}
@@ -2391,8 +2425,10 @@ main (int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp ("--dpi", argv[i])) {
+	    char *strtod_error;
 	    if (++i>=argc) usage ();
-	    if (sscanf (argv[i], "%f", &dpi) != 1)
+	    dpi = strtod(argv[i], &strtod_error);
+	    if (argv[i] == strtod_error)
 	    {
 		dpi = 0.0;
 		dpi_output = argv[i];
@@ -2434,25 +2470,24 @@ main (int argc, char **argv)
 	if (!strcmp ("--newmode", argv[i]))
 	{
 	    umode_t  *m = malloc (sizeof (umode_t));
-	    float   clock;
+	    double    clock;
 	    
 	    ++i;
 	    if (i + 9 >= argc) usage ();
 	    m->mode.name = argv[i];
 	    m->mode.nameLength = strlen (argv[i]);
 	    i++;
-	    if (sscanf (argv[i++], "%f", &clock) != 1)
-		usage ();
+	    clock = check_strtod(argv[i++]);
 	    m->mode.dotClock = clock * 1e6;
 
-	    if (sscanf (argv[i++], "%d", &m->mode.width) != 1) usage();
-	    if (sscanf (argv[i++], "%d", &m->mode.hSyncStart) != 1) usage();
-	    if (sscanf (argv[i++], "%d", &m->mode.hSyncEnd) != 1) usage();
-	    if (sscanf (argv[i++], "%d", &m->mode.hTotal) != 1) usage();
-	    if (sscanf (argv[i++], "%d", &m->mode.height) != 1) usage();
-	    if (sscanf (argv[i++], "%d", &m->mode.vSyncStart) != 1) usage();
-	    if (sscanf (argv[i++], "%d", &m->mode.vSyncEnd) != 1) usage();
-	    if (sscanf (argv[i++], "%d", &m->mode.vTotal) != 1) usage();
+	    m->mode.width = check_strtol(argv[i++]);
+	    m->mode.hSyncStart = check_strtol(argv[i++]);
+	    m->mode.hSyncEnd = check_strtol(argv[i++]);
+	    m->mode.hTotal = check_strtol(argv[i++]);
+	    m->mode.height = check_strtol(argv[i++]);
+	    m->mode.vSyncStart = check_strtol(argv[i++]);
+	    m->mode.vSyncEnd = check_strtol(argv[i++]);
+	    m->mode.vTotal = check_strtol(argv[i++]);
 	    m->mode.modeFlags = 0;
 	    while (i < argc) {
 		int f;
@@ -2521,6 +2556,8 @@ main (int argc, char **argv)
 	if (setit && !setit_1_2)
 	    query_1 = True;
     }
+    if (version)
+	printf("xrandr program version       " VERSION "\n");
 
     dpy = XOpenDisplay (display_name);
 
@@ -3018,7 +3055,7 @@ main (int argc, char **argv)
 		    
 		    printf ("  %s (0x%x) %6.1fMHz",
 			    mode->name, (int)mode->id,
-			    (float)mode->dotClock / 1000000.0);
+			    (double)mode->dotClock / 1000000.0);
 		    for (f = 0; mode_flags[f].flag; f++)
 			if (mode->modeFlags & mode_flags[f].flag)
 			    printf (" %s", mode_flags[f].string);
@@ -3079,7 +3116,7 @@ main (int argc, char **argv)
 	    {
 		printf ("  %s (0x%x) %6.1fMHz\n",
 			mode->name, (int)mode->id,
-			(float)mode->dotClock / 1000000.0);
+			(double)mode->dotClock / 1000000.0);
 		printf ("        h: width  %4d start %4d end %4d total %4d skew %4d clock %6.1fKHz\n",
 			mode->width, mode->hSyncStart, mode->hSyncEnd,
 			mode->hTotal, mode->hSkew, mode_hsync (mode) / 1000);

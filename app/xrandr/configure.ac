@@ -21,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xrandr,[1.3.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xrandr)
+AC_INIT(xrandr,[1.3.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xrandr)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -37,7 +37,7 @@ XORG_CWARNFLAGS
 
 AC_CHECK_LIB(m,floor)
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XRANDR, xrandr >= 1.2.99.3 xrender x11)
+PKG_CHECK_MODULES(XRANDR, xrandr >= 1.3 xrender x11)
 XRANDR_CFLAGS="$CWARNFLAGS $XRANDR_CFLAGS"
 AC_SUBST(XRANDR_CFLAGS)
 AC_SUBST(XRANDR_LIBS)

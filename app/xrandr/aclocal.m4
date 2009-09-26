@@ -995,7 +995,7 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
-dnl xorg-macros.m4.  Generated from xorg-macros.m4.in:xorgversion.m4 by configure.
+dnl xorg-macros.m4.  Generated from xorg-macros.m4.in xorgversion.m4 by configure.
 dnl
 dnl Copyright 2005-2006 Sun Microsystems, Inc.  All rights reserved.
 dnl 
@@ -1032,27 +1032,24 @@ dnl of the copyright holder.
 # your configure.ac with the minimum required version, such as:
 # XORG_MACROS_VERSION(1.1)
 #
-# To force at least a version with this macro defined, also add:
-# m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later before running autoconf/autogen])])
+# To ensure that this macro is defined, also add:
+# m4_ifndef([XORG_MACROS_VERSION],
+#     [m4_fatal([must install xorg-macros 1.1 or later before running autoconf/autogen])])
 #
 #
 # See the "minimum version" comment for each macro you use to see what 
 # version you require.
-AC_DEFUN([XORG_MACROS_VERSION],[
-	[XORG_MACROS_needed_version=$1
-	XORG_MACROS_needed_major=`echo $XORG_MACROS_needed_version | sed 's/\..*$//'`
-	XORG_MACROS_needed_minor=`echo $XORG_MACROS_needed_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
-	AC_MSG_CHECKING([if xorg-macros used to generate configure is at least ${XORG_MACROS_needed_major}.${XORG_MACROS_needed_minor}])
-	[XORG_MACROS_version=1.2.1
-	XORG_MACROS_major=`echo $XORG_MACROS_version | sed 's/\..*$//'`
-	XORG_MACROS_minor=`echo $XORG_MACROS_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
-	if test $XORG_MACROS_major -ne $XORG_MACROS_needed_major ; then
-		AC_MSG_ERROR([configure built with incompatible version of xorg-macros.m4 - requires version ${XORG_MACROS_major}.x])
-	fi
-	if test $XORG_MACROS_minor -lt $XORG_MACROS_needed_minor ; then
-		AC_MSG_ERROR([configure built with too old of a version of xorg-macros.m4 - requires version ${XORG_MACROS_major}.${XORG_MACROS_minor}.0 or newer])
-	fi
-	AC_MSG_RESULT([yes, $XORG_MACROS_version])
+m4_defun([XORG_MACROS_VERSION],[
+m4_define([vers_have], [1.3.0])
+m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
+m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
+m4_if(m4_cmp(maj_have, maj_needed), 0,,
+    [m4_fatal([xorg-macros major version ]maj_needed[ is required but ]vers_have[ found])])
+m4_if(m4_version_compare(vers_have, [$1]), -1,
+    [m4_fatal([xorg-macros version $1 or higher is required but ]vers_have[ found])])
+m4_undefine([vers_have])
+m4_undefine([maj_have])
+m4_undefine([maj_needed])
 ]) # XORG_MACROS_VERSION
 
 # XORG_PROG_RAWCPP()
@@ -1319,7 +1316,7 @@ AC_SUBST(MAKE_HTML)
 # their AM_CFLAGS (or other appropriate *_CFLAGS) to use them.
 AC_DEFUN([XORG_CHECK_MALLOC_ZERO],[
 AC_ARG_ENABLE(malloc0returnsnull,
-	AC_HELP_STRING([--enable-malloc0returnsnull],
+	AS_HELP_STRING([--enable-malloc0returnsnull],
 		       [malloc(0) returns NULL (default: auto)]),
 	[MALLOC_ZERO_RETURNS_NULL=$enableval],
 	[MALLOC_ZERO_RETURNS_NULL=auto])
@@ -1371,7 +1368,7 @@ AC_SUBST([XTMALLOC_ZERO_CFLAGS])
 AC_DEFUN([XORG_WITH_LINT],[
 
 # Allow checking code with lint, sparse, etc.
-AC_ARG_WITH(lint, [AC_HELP_STRING([--with-lint],
+AC_ARG_WITH(lint, [AS_HELP_STRING([--with-lint],
 		[Use a lint-style source code checker (default: disabled)])],
 		[use_lint=$withval], [use_lint=no])
 if test "x$use_lint" = "xyes" ; then
@@ -1412,7 +1409,7 @@ AM_CONDITIONAL(LINT, [test x$LINT != xno])
 AC_DEFUN([XORG_LINT_LIBRARY],[
 AC_REQUIRE([XORG_WITH_LINT])
 # Build lint "library" for more indepth checks of programs calling this library
-AC_ARG_ENABLE(lint-library, [AC_HELP_STRING([--enable-lint-library],
+AC_ARG_ENABLE(lint-library, [AS_HELP_STRING([--enable-lint-library],
 	[Create lint library (default: disabled)])],
 	[make_lint_lib=$enableval], [make_lint_lib=no])
 if test "x$make_lint_lib" != "xno" ; then
@@ -1442,9 +1439,9 @@ if  test "x$GCC" = xyes ; then
     CWARNFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes \
 -Wmissing-declarations -Wnested-externs -fno-strict-aliasing \
 -Wbad-function-cast"
-    case `gcc -dumpversion` in
+    case `$CC -dumpversion` in
     3.4.* | 4.*)
-	CWARNFLAGS+=" -Wold-style-definition -Wdeclaration-after-statement"
+	CWARNFLAGS="$CWARNFLAGS -Wold-style-definition -Wdeclaration-after-statement"
 	;;
     esac
 else
@@ -1454,7 +1451,51 @@ else
     fi
 fi
 AC_SUBST(CWARNFLAGS)
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 ]) # XORG_CWARNFLAGS
+
+# XORG_STRICT_OPTION
+# -----------------------
+# Minimum version: 1.3.0
+#
+# Add configure option to enable strict compilation
+AC_DEFUN([XORG_STRICT_OPTION], [
+AC_REQUIRE([AC_PROG_CC])
+AC_REQUIRE([AC_PROG_CC_C99])
+AC_REQUIRE([XORG_CWARNFLAGS])
+
+AC_ARG_ENABLE(strict-compilation,
+			  AS_HELP_STRING([--enable-strict-compilation],
+			  [Enable all warnings from compiler and make them errors (default: disabled)]),
+			  [STRICT_COMPILE=$enableval], [STRICT_COMPILE=no])
+if test "x$STRICT_COMPILE" = "xyes"; then
+	AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
+	AC_CHECK_DECL([__INTEL_COMPILER], [INTELCC="yes"], [INTELCC="no"])
+	if test "x$GCC" = xyes ; then
+		STRICT_CFLAGS="-pedantic -Werror"
+	elif test "x$SUNCC" = "xyes"; then
+		STRICT_CFLAGS="-errwarn"
+    elif test "x$INTELCC" = "xyes"; then
+		STRICT_CFLAGS="-Werror"
+	fi
+fi
+CWARNFLAGS="$CWARNFLAGS $STRICT_CFLAGS"
+AC_SUBST([CWARNFLAGS])
+]) # XORG_STRICT_OPTION
+
+# XORG_DEFAULT_OPTIONS
+# --------------------
+# Minimum version: 1.3.0
+#
+# Defines default options for X.Org modules.
+#
+AC_DEFUN([XORG_DEFAULT_OPTIONS], [
+XORG_CWARNFLAGS
+XORG_STRICT_OPTION
+XORG_RELEASE_VERSION
+XORG_CHANGELOG
+XORG_MANPAGE_SECTIONS
+]) # XORG_DEFAULT_OPTIONS
 dnl Copyright 2005 Red Hat, Inc
 dnl
 dnl Permission to use, copy, modify, distribute, and sell this software and its
@@ -1489,7 +1530,7 @@ dnl
  
 AC_DEFUN([XORG_RELEASE_VERSION],[
 	AC_ARG_WITH(release-version,
-			AC_HELP_STRING([--with-release-version=STRING],
+			AS_HELP_STRING([--with-release-version=STRING],
 				[Use release version string in package name]),
 			[RELEASE_VERSION="$withval"],
 			[RELEASE_VERSION=""])

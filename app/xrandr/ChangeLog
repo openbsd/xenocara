@@ -1,3 +1,98 @@
+commit 5da0cb3533aa829588b2e6d715d511691fa1e45f
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Sep 10 13:18:35 2009 +0200
+
+    Bump to 1.3.2
+
+commit e5861530a6c3bb6219217e5f3ddc71f13b9509c4
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Sep 10 13:17:56 2009 +0200
+
+    Add missing 'static's to get rid of warnings.
+
+commit ab875be43651befa654a24719f1ea365dde09073
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Thu Feb 7 14:03:24 2008 -0800
+
+    changed a bunch of string to number conversions for reliability
+
+commit 25325aae2e80cb33af17682a6cd1bcd292a5f445
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Sep 4 15:36:51 2009 +0200
+
+    Warn if one of the outputs given did not exist
+
+commit 713a8ea5646f7c893b52afeb3c2443b21b837e46
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Aug 11 16:11:39 2009 +0200
+
+    Bump to 1.3.1
+    
+    Also finally bump xrandr requirement to 1.3
+
+commit b9166441bdb08ef76b9c6712da5902b0dcbf03f3
+Author: Federico Mena Quintero <federico@novell.com>
+Date:   Mon Jul 20 16:44:52 2009 -0500
+
+    bfo#22864 - grab the server around all modifications to CRTCs
+    
+    We were not grabbed while disabling the CRTCs that should be off, so other clients could think
+    that there was an intermediate stage with no enabled outputs.
+    
+    Signed-off-by: Federico Mena Quintero <federico@novell.com>
+
+commit 68d5134142e3c616f3996c7ea8d08c887ce56118
+Author: Éric Piel <E.A.B.Piel@tudelft.nl>
+Date:   Tue Jul 14 21:36:32 2009 +0200
+
+    xrandr: Document --nograb option
+    
+    Op 08-07-09 15:19, Matthias Hopf schreef:
+    > On Jul 07, 09 22:02:51 +0200, Éric Piel wrote:
+    >> Op 21-05-09 13:23, Éric Piel schreef:
+    >>> This documents the --nograb option with whichever I could understand of
+    >>> the advantages and drawbacks of grabbing the screen.
+    >>>
+    >>> Also fixes the formatting in the xrandr 1.3 options.
+    >> Please review and apply.
+    >
+    > Please resend as attachment.
+    >
+    Please find attached the git patch.
+    
+    Thanks,
+    Eric
+    
+    >From 34e7c1036ba0e0d7827563deaffea9371031fa0b Mon Sep 17 00:00:00 2001
+    From: Eric Piel <eric.piel@tremplin-utc.net>
+    Date: Thu, 21 May 2009 13:01:52 +0200
+    Subject: [PATCH] xrandr: Document --nograb option
+    
+    This documents the --nograb option with whichever I could understand of
+    the advantages and drawback of grabbing the screen.
+    
+    Also fixes the formatting in the xrandr 1.3 options
+
+commit 73e38a31e5b7c68f8f3227a47d98ec55097999c7
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jul 6 18:30:05 2009 +0200
+
+    Fix missing prototype warning.
+
+commit 3408ca77af6a45b15b89bdd1ce9d5aac9646f6b8
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jul 6 18:28:23 2009 +0200
+
+    Report program version as well with --version.
+    
+    This has bitten us too often already (the infamous uncloning bug).
+
+commit 47502f66f7c51ad575d63f28de49f285c4de7062
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Apr 1 11:03:10 2009 -0400
+
+    xrandr 1.3.0
+
 commit beb228842c77fab4a446e028dd501a01f0fb3fd3
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Tue Feb 17 13:45:32 2009 -0500
