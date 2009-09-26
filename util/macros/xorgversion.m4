@@ -32,7 +32,7 @@ dnl
  
 AC_DEFUN([XORG_RELEASE_VERSION],[
 	AC_ARG_WITH(release-version,
-			AC_HELP_STRING([--with-release-version=STRING],
+			AS_HELP_STRING([--with-release-version=STRING],
 				[Use release version string in package name]),
 			[RELEASE_VERSION="$withval"],
 			[RELEASE_VERSION=""])
