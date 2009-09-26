@@ -1,3 +1,97 @@
+commit 7c4c903a1612528e09858554c6fdaab05d2ba095
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 19:49:57 2009 -0700
+
+    bitmap 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 4abbf05633f16cae587f9f24881d18c22e43800d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 19:39:08 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit fb4778c1a6a114df03f3cefc87e747fab983355f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 19:30:35 2009 -0700
+
+    Strip RCS/CVS ids
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 948a119b19bf2e1822c63c2e6e86482e36df0cc0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 19:25:04 2009 -0700
+
+    Fill in COPYING, README, & AUTHORS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 8337c277db59b5fb8e13428ab65a43725546bcdb
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 13 14:29:53 2009 -0200
+
+    Rename app-defaults files to match "pattern" used on other applications.
+
+commit e23fbaa033e064efc7fcfa6ec49901c241736340
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 12 16:11:00 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, and corrects
+    make distcheck.
+
+commit 7527b67979d61609bff5bc8c54d2b11874a7bbfa
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Aug 20 10:32:48 2008 -0400
+
+    xaw8 is gone, use xaw7
+
+commit 3dc6744ae0332efc9c4a621401c1257e4d4c3c6d
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 16 14:22:16 2008 +0200
+
+    $(builddir) is the current directory
+    
+    Apparently automake doesn't always export the builddir variable.
+    This fixes my previous commit.
+
+commit 3154399310460759466d66cb17e723548e205776
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 20 19:25:40 2008 +0200
+
+    Fix build with builddir != srcdir
+
+commit 5d6bff83b62c3c9626503b36d2e5190a602bf43b
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 20 19:22:40 2008 +0200
+
+    Fix typo in bitmap.man
+
+commit 8003d22d2c12fe47d1fc06216c60dc813ed39f98
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 19:22:22 2008 -0700
+
+    Build fix for case-insensitive file systems
+
+commit 088006f9bb62db2523117dac568d028bd96db488
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:03 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit d79bd0857961669aff4c155f4c3205af4c89b18e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 10 15:47:13 2007 -0700
+
+    Add AM_PROG_CC_C_O to configure.ac to make automake-1.10 happier
+    
+    Makefile.am:53: compiling `atobm.c' with per-target flags requires `AM_PROG_CC_C_O' in `configure.ac'
+
 commit 0fa2f5aa4b0e62ceb4685123182bf018c27e293a
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Jan 23 13:42:25 2007 -0800

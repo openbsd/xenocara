@@ -1,4 +1,3 @@
-/* $Xorg: Graphics.c,v 1.4 2001/02/09 02:05:28 xorgcvs Exp $ */
 /*
 
 Copyright 1989, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/bitmap/Graphics.c,v 1.5 2001/01/17 23:44:51 dawes Exp $ */
 
 /*
  * Author:  Davor Matic, MIT X Consortium

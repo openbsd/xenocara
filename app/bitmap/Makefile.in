@@ -59,11 +59,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = bitmap$(EXEEXT) bmtoa$(EXEEXT) atobm$(EXEEXT)
-DIST_COMMON = README $(am__configure_deps) $(dist_bitmap_DATA) \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
-	install-sh missing
+DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+	$(dist_bitmap_DATA) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
+	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
+	compile config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -74,8 +74,8 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
-	"$(DESTDIR)$(appmandir)" "$(DESTDIR)$(bitmapdir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
+	"$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(bitmapdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_atobm_OBJECTS = atobm-atobm.$(OBJEXT)
@@ -106,10 +106,10 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-appdefaultDATA_INSTALL = $(INSTALL_DATA)
 appmanDATA_INSTALL = $(INSTALL_DATA)
+dist_appdefaultDATA_INSTALL = $(INSTALL_DATA)
 dist_bitmapDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appdefault_DATA) $(appman_DATA) $(dist_bitmap_DATA)
+DATA = $(appman_DATA) $(dist_appdefault_DATA) $(dist_bitmap_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -122,7 +122,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -146,7 +145,10 @@ BMTOA_LIBS = @BMTOA_LIBS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -155,9 +157,11 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -186,16 +190,10 @@ PKG_CONFIG = @PKG_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
-TMP_XAW_LIBS = @TMP_XAW_LIBS@
 VERSION = @VERSION@
-XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
-XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
 XBITMAPS_CFLAGS = @XBITMAPS_CFLAGS@
 XBITMAPS_LIBS = @XBITMAPS_LIBS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -203,10 +201,6 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
-
-# app default files
-
-# App default files  (*.ad)
 appdefaultdir = @appdefaultdir@
 bindir = @bindir@
 build = @build@
@@ -215,30 +209,38 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 # bitmap
-bitmap_CFLAGS = $(BITMAP_CFLAGS)
+bitmap_CFLAGS = $(CWARNFLAGS) $(BITMAP_CFLAGS)
 bitmap_LDADD = $(BITMAP_LIBS) -lm
 bitmap_SOURCES = \
          BitEdit.c \
@@ -255,14 +257,14 @@ bitmap_SOURCES = \
 
 
 # bmtoa
-bmtoa_CFLAGS = $(BMTOA_CFLAGS)
+bmtoa_CFLAGS = $(CWARNFLAGS) $(BMTOA_CFLAGS)
 bmtoa_LDADD = $(BMTOA_LIBS)
 bmtoa_SOURCES = \
          bmtoa.c
 
 
 # atobm
-atobm_CFLAGS = $(ATOBM_CFLAGS)
+atobm_CFLAGS = $(CWARNFLAGS) $(ATOBM_CFLAGS)
 atobm_LDADD = $(ATOBM_LDADD)
 atobm_SOURCES = \
          atobm.c
@@ -272,16 +274,15 @@ atobm_SOURCES = \
 appman_PRE = \
              bitmap.man
 
-APPDEFAULTFILES = \
-	Bitmap-color \
-	Bitmap-nocase \
-	Bitmap
 
-SUFFIXES = .ad .$(APP_MAN_SUFFIX) .man
-appdefault_DATA = $(APPDEFAULTFILES)
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) bitmap.icon ChangeLog \
-	autogen.sh $(appman_PRE)
-CLEANFILES = $(APPDEFAULTFILES) $(appman_DATA) $(BUILT_SOURCES)
+# App default files  (*.ad)
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+dist_appdefault_DATA = \
+	app-defaults/Bitmap-color \
+	app-defaults/Bitmap-nocase \
+	app-defaults/Bitmap
+
+EXTRA_DIST = bitmap.icon ChangeLog autogen.sh $(appman_PRE)
 MAINTAINERCLEANFILES = ChangeLog
 
 # bitmaps
@@ -307,6 +308,7 @@ appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@) \
 	      $(man_shadows:=.@APP_MAN_SUFFIX@)
 
 BUILT_SOURCES = shadows.DONE
+CLEANFILES = $(appman_DATA) $(BUILT_SOURCES)
 SED = sed
 
 # Strings to replace in man pages
@@ -325,12 +327,13 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 man_shadows = atobm bmtoa
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .ad .$(APP_MAN_SUFFIX) .man .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -570,23 +573,6 @@ bmtoa-bmtoa.obj: bmtoa.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bmtoa_CFLAGS) $(CFLAGS) -c -o bmtoa-bmtoa.obj `if test -f 'bmtoa.c'; then $(CYGPATH_W) 'bmtoa.c'; else $(CYGPATH_W) '$(srcdir)/bmtoa.c'; fi`
 uninstall-info-am:
-install-appdefaultDATA: $(appdefault_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  $(appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
-
-uninstall-appdefaultDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
@@ -603,6 +589,23 @@ uninstall-appmanDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+install-dist_appdefaultDATA: $(dist_appdefault_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  $(dist_appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
+	done
+
+uninstall-dist_appdefaultDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
 	done
 install-dist_bitmapDATA: $(dist_bitmap_DATA)
 	@$(NORMAL_INSTALL)
@@ -673,6 +676,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkdir_p) $(distdir)/app-defaults
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -804,7 +808,7 @@ check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(bitmapdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(bitmapdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -856,7 +860,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appdefaultDATA install-appmanDATA \
+install-data-am: install-appmanDATA install-dist_appdefaultDATA \
 	install-dist_bitmapDATA
 
 install-exec-am: install-binPROGRAMS
@@ -886,8 +890,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-dist_bitmapDATA \
+uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-dist_appdefaultDATA uninstall-dist_bitmapDATA \
 	uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
@@ -896,22 +900,22 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-appdefaultDATA install-appmanDATA install-binPROGRAMS \
-	install-data install-data-am install-dist_bitmapDATA \
-	install-exec install-exec-am install-info install-info-am \
-	install-man install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags uninstall uninstall-am uninstall-appdefaultDATA \
-	uninstall-appmanDATA uninstall-binPROGRAMS \
-	uninstall-dist_bitmapDATA uninstall-info-am
+	install-appmanDATA install-binPROGRAMS install-data \
+	install-data-am install-dist_appdefaultDATA \
+	install-dist_bitmapDATA install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-dist_appdefaultDATA uninstall-dist_bitmapDATA \
+	uninstall-info-am
 
 
-.ad:
-	cp $< $@
+.PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 

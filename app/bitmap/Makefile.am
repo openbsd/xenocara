@@ -23,7 +23,7 @@ bin_PROGRAMS = bitmap bmtoa atobm
 
 # bitmap
 
-bitmap_CFLAGS = $(BITMAP_CFLAGS)
+bitmap_CFLAGS = $(CWARNFLAGS) $(BITMAP_CFLAGS)
 bitmap_LDADD = $(BITMAP_LIBS) -lm
 
 bitmap_SOURCES = \
@@ -41,14 +41,14 @@ bitmap_SOURCES = \
 
 # bmtoa
 
-bmtoa_CFLAGS = $(BMTOA_CFLAGS)
+bmtoa_CFLAGS = $(CWARNFLAGS) $(BMTOA_CFLAGS)
 bmtoa_LDADD = $(BMTOA_LIBS)
 bmtoa_SOURCES = \
          bmtoa.c
 
 # atobm
 
-atobm_CFLAGS = $(ATOBM_CFLAGS)
+atobm_CFLAGS = $(CWARNFLAGS) $(ATOBM_CFLAGS)
 atobm_LDADD = $(ATOBM_LDADD)
 atobm_SOURCES = \
          atobm.c
@@ -59,31 +59,25 @@ appman_PRE = \
              bitmap.man
 
 
-# app default files
-
 # App default files  (*.ad)
+
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
 appdefaultdir = @appdefaultdir@
 
-APPDEFAULTFILES = \
-	Bitmap-color \
-	Bitmap-nocase \
-	Bitmap
-
-SUFFIXES = .ad
-
-.ad:
-	cp $< $@
-
-appdefault_DATA = $(APPDEFAULTFILES)
+dist_appdefault_DATA = \
+	app-defaults/Bitmap-color \
+	app-defaults/Bitmap-nocase \
+	app-defaults/Bitmap
 
 
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) bitmap.icon ChangeLog autogen.sh
-CLEANFILES = $(APPDEFAULTFILES)
+EXTRA_DIST = bitmap.icon ChangeLog autogen.sh
 MAINTAINERCLEANFILES=ChangeLog
 
+.PHONY: ChangeLog
+
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
@@ -116,7 +110,7 @@ appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@) \
 BUILT_SOURCES = shadows.DONE
 
 EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA) $(BUILT_SOURCES)
+CLEANFILES = $(appman_DATA) $(BUILT_SOURCES)
 
 SED = sed
 
@@ -137,7 +131,7 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@

@@ -1,4 +1,3 @@
-/* $Xorg: ReqMach.c,v 1.4 2001/02/09 02:05:28 xorgcvs Exp $ */
 /*
 
 Copyright 1989, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: ReqMach.c,v 1.4 2001/12/14 20:00:41 dawes Exp $ */
 
 /*
  * Author:  Davor Matic, MIT X Consortium
@@ -41,7 +39,6 @@ from The Open Group.
 #include <stdio.h>
 #include <math.h>
 
-extern Boolean DEBUG;
 
 /*****************************************************************************\
  * Request Machine: stacks up and handles requests from application calls.   * 

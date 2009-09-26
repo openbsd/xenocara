@@ -1,4 +1,3 @@
-! $Xorg: Bitmap-co.ad,v 1.3 2000/08/17 19:53:49 cpqbld Exp $
 ! The App-defaults file for Bitmap on a color screen.
 
 #include "Bitmap"

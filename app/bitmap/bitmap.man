@@ -1,4 +1,3 @@
-.\" $Xorg: bitmap.man,v 1.4 2001/02/09 02:05:28 xorgcvs Exp $
 .\" Copyright 1993, 1998  The Open Group
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,7 +22,6 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/bitmap/bitmap.man,v 1.7 2001/12/14 20:00:41 dawes Exp $
 .\"
 .TH BITMAP 1 __xorgversion__
 .SH NAME
@@ -157,7 +155,7 @@ are allowed.  By default, no hotspot information is included.
 .SH USAGE 
 \fIBitmap\fP displays grid in which each square represents a single
 bit in the picture being edited.  Actual size of the bitmap image, as
-it would appear normaly and inverted, can be obtained by pressing\fB
+it would appear normally and inverted, can be obtained by pressing\fB
 Meta-I\fP key.  You are free to move the image popup out of the way to
 continue editing.  Pressing the left mouse button in the popup window
 or\fB Meta-I\fP again will remove the real size bitmap image.

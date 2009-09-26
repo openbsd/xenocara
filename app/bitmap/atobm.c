@@ -1,4 +1,3 @@
-/* $Xorg: atobm.c,v 1.4 2001/02/09 02:05:28 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1993, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/bitmap/atobm.c,v 3.4 2001/07/25 15:05:12 dawes Exp $ */
 
 /*
  * atobm - ascii to bitmap filter
@@ -38,7 +36,7 @@ from The Open Group.
 #include <X11/Xos.h>
 #include <stdlib.h>
 
-char *ProgramName;
+static char *ProgramName;
 
 static void doit(FILE *fp, char *filename, char *chars, 
 		 int xhot, int yhot, char *name);

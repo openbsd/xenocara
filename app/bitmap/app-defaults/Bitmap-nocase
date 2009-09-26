@@ -1,5 +1,7 @@
-! $Xorg: Bitmap.ad,v 1.3 2000/08/17 19:53:49 cpqbld Exp $
-! The App-defaults file for Bitmap.
+!
+!
+! The App-defaults file for Bitmap for use on file systems
+! that are not case sensitive.
 
 *TransientShell.allowShellResize:	True
 *shapeStyle:				oval
@@ -63,7 +65,7 @@
 
 *bitmap.cursor:           		tcross
 *bitmap.dashes:				Dashes
-*bitmap.stipple:			Stipple
+*bitmap.stipple:			Stippler
 *bitmap.stippled:			on
 
 *TransientShell.width:			300

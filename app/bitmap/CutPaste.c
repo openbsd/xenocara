@@ -1,4 +1,3 @@
-/* $Xorg: CutPaste.c,v 1.4 2001/02/09 02:05:28 xorgcvs Exp $ */
 /*
 
 Copyright 1989, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: CutPaste.c,v 1.4 2001/12/14 20:00:40 dawes Exp $ */
 
 /*
  * Author:  Davor Matic, MIT X Consortium
@@ -44,7 +42,6 @@ from The Open Group.
 #define max(x, y)                     (((x) > (y)) ? (x) : (y))
 
 
-extern Boolean DEBUG;
 
 /*****************************************************************************
  *                               Cut and Paste                               *
