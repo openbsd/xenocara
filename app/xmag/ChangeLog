@@ -1,3 +1,49 @@
+commit f1f2af7a65d6531814a06b292a28bdc46580e590
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Aug 3 11:19:07 2009 -0700
+
+    Version bump: 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 90ccae7efc5fca9c0f4e45b84806df01332dd869
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 12 20:41:14 2009 -0200
+
+    Correct problems in make distcheck.
+
+commit ae94046d8654b9f65df871502de0f08a36aa5d38
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Aug 19 01:04:40 2008 +0200
+
+    xaw8 is gone, use xaw7
+
+commit 7ac72ce2e262bf78cb2e8ff50ef932d29e4b65f7
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Aug 19 01:04:27 2008 +0200
+
+    allow build outside of source tree
+
+commit a3e1a9b4cb732b86b84375013e3fa531395b45cf
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jul 29 14:18:10 2008 -0300
+
+    Properly handle multiple depth windows.
+    
+    This patch will not cause X Errors when magnifying windows with portions
+    offscreen, or windows with a dimension smaller than the default 64x64.
+    
+    A common case where this patch is required is when Composite is enabled,
+    the default depth has a value other than 24, and some application is
+    using the Composite argb visual; example is WindowMaker, that will choose
+    the "best" available visual, unless the visual-id option is used.
+
+commit cb21acd94353c82c4b49a7ddef99309b31b07500
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 20:08:04 2008 -0700
+
+    Build fix for file systems that are not case sensitive
+
 commit a6b0036a082a947b89bdbb27128e20079799857c
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Aug 15 18:04:12 2007 -0700

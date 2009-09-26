@@ -52,6 +52,10 @@ from The Open Group.
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 
 
 /* highlight interval (in milliseconds) */
@@ -335,8 +339,8 @@ PopupPixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
     XtSetArg(wargs[n], XtNx, label_x); n++;
     XtSetArg(wargs[n], XtNy, label_y); n++;
     XtSetValues(data->pixShell, wargs, n);
-    
-    UpdatePixelAP(w, event, 0, 0);
+
+    UpdatePixelAP(w, event, NULL, NULL);
 }
 
 
@@ -763,41 +767,73 @@ static void
 GetImageAndAttributes(Window w, int x, int y, int width, int height, 
 		      hlPtr data)
 {
-  /* get parameters of window being magnified */
-  XGetWindowAttributes(dpy, w, &data->win_info);
+    /* get parameters of window being magnified */
+    XGetWindowAttributes(dpy, w, &data->win_info);
 
-  if (data->win_info.depth == DefaultDepth(dpy, scr)) {
-    /* avoid off screen pixels */
-    if (x < 0) x = 0; if (y < 0) y = 0;
-    if (x + width > DisplayWidth(dpy,scr)) x = DisplayWidth(dpy,scr) - width;
-    if (y + height > DisplayHeight(dpy,scr)) 
-      y = DisplayHeight(dpy,scr) - height;
-    data->x = x; data->y = y;
-    /* get image pixels */
-    data->image = XGetImage (dpy,
-			     RootWindow(dpy, scr),
-			     x, y,
-			     width, height,
-			     AllPlanes, ZPixmap);
-  }
-  else {
-    int xInWin, yInWin; Window childWin;
-    XTranslateCoordinates(dpy, DefaultRootWindow(dpy), w, x, y, 
-			  &xInWin, &yInWin, &childWin);
-    /* avoid off screen pixels */
-    if (x + data->win_info.x < 0) x = abs(data->win_info.x);
-    if (y + data->win_info.y < 0) y = abs(data->win_info.y);
-    if (x + width > DisplayWidth(dpy,scr)) x = DisplayWidth(dpy,scr) - width;
-    if (y + height > DisplayHeight(dpy,scr))
-      y = DisplayHeight(dpy,scr) - height;
-    data->x = x; data->y = y;
-    data->image = XGetImage (dpy,
-			     w,
-			     xInWin, yInWin,
-			     width, height,
-			     AllPlanes, ZPixmap);
-    
-  }
+    if (data->win_info.depth == DefaultDepth(dpy, scr)) {
+	/* avoid off screen pixels */
+	if (x < 0)
+	    x = 0;
+	if (y < 0)
+	    y = 0;
+	if (x + width > DisplayWidth(dpy,scr))
+	    x = DisplayWidth(dpy,scr) - width;
+	if (y + height > DisplayHeight(dpy,scr))
+	    y = DisplayHeight(dpy,scr) - height;
+	data->x = x; data->y = y;
+	/* get image pixels */
+	data->image = XGetImage (dpy,
+				 RootWindow(dpy, scr),
+				 x, y,
+				 width, height,
+				 AllPlanes, ZPixmap);
+    }
+    else {
+	int	t0, t1;
+	int	x0, x1, y0, y1;
+	int	xInWin, yInWin;
+	Window	childWin;
+
+	XTranslateCoordinates(dpy, DefaultRootWindow(dpy), w, x, y,
+			      &xInWin, &yInWin, &childWin);
+
+	/* Avoid off screen pixels. Assume this routine is not
+	 * called for totally offscreen windows. */
+	x0 = max(x, 0);
+	y0 = max(y, 0);
+	x1 = min(DisplayWidth(dpy, scr),
+		 min(x0 + width, x0 + (data->win_info.width - xInWin)));
+	y1 = min(DisplayHeight(dpy, scr),
+		 min(y0 + height, y0 + (data->win_info.height - yInWin)));
+
+	/* Try to use up to width x height pixels */
+	if (x1 - x0 < width) {
+	    t0 = x0;
+	    t1 = max(0, x - xInWin + data->win_info.width -
+		     DisplayWidth(dpy, scr));
+	    x0 = max(0, x1 - min(width, data->win_info.width - t1));
+	    xInWin -= t0 - x0;
+	}
+	if (y1 - y0 < height) {
+	    t0 = y0;
+	    t1 = max(0, y - yInWin + data->win_info.height -
+		     DisplayHeight(dpy, scr));
+	    y0 = max(0, y1 - min(height, data->win_info.height - t1));
+	    yInWin -= t0 - y0;
+	}
+
+	data->x = x0;
+	data->y = y0;
+	data->width = x1 - x0;
+	data->height = y1 - y0;
+
+	data->image = XGetImage (dpy,
+				 w,
+				 xInWin, yInWin,
+				 data->width, data->height,
+				 AllPlanes, ZPixmap);
+
+    }
 }
 
 
