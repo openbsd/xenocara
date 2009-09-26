@@ -1,15 +1,14 @@
-.\" $Xorg: xauth.man,v 1.4 2001/02/09 02:05:38 xorgcvs Exp $
 .\" Copyright 1993, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,13 +16,12 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xauth/xauth.man,v 1.8tsi Exp $
 .\"
 .TH XAUTH 1 __xorgversion__
 .SH NAME
@@ -33,17 +31,18 @@ xauth \- X authority file utility
 [ \fB\-f\fP \fIauthfile\fP ] [ \fB\-vqibn\fP ] [ \fIcommand arg ...\fP ]
 .SH DESCRIPTION
 .PP
-The \fIxauth\fP program is used to edit and display the authorization 
+The \fIxauth\fP program is used to edit and display the authorization
 information used in connecting to the X server.  This program is usually
-used to extract authorization records from one machine and merge them in on 
+used to extract authorization records from one machine and merge them in on
 another (as is the case when using remote logins or granting access to
 other users).  Commands (described below) may be entered interactively,
 on the \fIxauth\fP command line, or in scripts.  Note that this program
 does \fBnot\fP contact the X server except when the generate command is used.
 Normally \fIxauth\fP is not used to create the authority file entry in
-the first place; \fIxdm\fP does that.
+the first place; the program that starts the X server (often \fIxdm\fP
+or \fIstartx\fP) does that.
 .SH OPTIONS
-The following options may be used with \fIxauth\fP.  They may be given 
+The following options may be used with \fIxauth\fP.  They may be given
 individually (e.g., \fI\-q \-i\|\fP) or may combined (e.g., \fI\-qi\|\fP).
 .TP 8
 .B "\-f \fIauthfile\fP"
@@ -67,7 +66,7 @@ directed to a terminal.
 .B \-i
 This option indicates that \fIxauth\fP should ignore any authority file
 locks.  Normally, \fIxauth\fP will refuse to read or edit any authority files
-that have been locked by other programs (usually \fIxdm\fP or another 
+that have been locked by other programs (usually \fIxdm\fP or another
 \fIxauth\fP).
 .TP 8
 .B \-b
@@ -84,11 +83,11 @@ The following commands may be used to manipulate authority files:
 .B "add \fIdisplayname protocolname hexkey"
 An authorization entry for the indicated display using the given protocol
 and key data is added to the authorization file.  The data is specified as
-an even-lengthed string of hexadecimal digits, each pair representing 
+an even-lengthed string of hexadecimal digits, each pair representing
 one octet.  The first digit of each pair gives the most significant 4 bits
 of the octet, and the second digit of the pair gives the least significant 4
 bits.  For example, a 32 character hexkey would represent a 128-bit value.
-A protocol name consisting of just a 
+A protocol name consisting of just a
 single period is treated as an abbreviation for \fIMIT-MAGIC-COOKIE-1\fP.
 
 .TP 8
@@ -135,24 +134,24 @@ The default is to send no data.
 
 .TP 8
 .B "[n]extract \fIfilename displayname..."
-Authorization entries for each of the specified displays are written to the 
+Authorization entries for each of the specified displays are written to the
 indicated file.  If the \fInextract\fP command is used, the entries are written
 in a numeric format suitable for non-binary transmission (such as secure
-electronic mail).  The extracted entries can be read back in using the 
-\fImerge\fP and \fInmerge\fP commands.  If the filename consists of 
+electronic mail).  The extracted entries can be read back in using the
+\fImerge\fP and \fInmerge\fP commands.  If the filename consists of
 just a single dash, the entries will be written to the standard output.
 .TP 8
 .B "[n]list \fR[\fIdisplayname\fP...]"
 Authorization entries for each of the specified displays (or all if no
 displays are named) are printed on the standard output.  If the \fInlist\fP
-command is used, entries will be shown in the numeric format used by 
+command is used, entries will be shown in the numeric format used by
 the \fInextract\fP command; otherwise, they are shown in a textual format.
 Key data is always displayed in the hexadecimal format given in the
 description of the \fIadd\fP command.
 .TP 8
 .B "[n]merge \fR[\fIfilename\fP...]"
 Authorization entries are read from the specified files and are merged into
-the authorization database, superceding any matching existing entries. If
+the authorization database, superseding any matching existing entries. If
 the \fInmerge\fP command is used, the numeric format given in the description
 of the \fIextract\fP command is used.  If a filename consists of just a single
 dash, the standard input will be read if it hasn't been read before.
@@ -163,14 +162,14 @@ authority file.
 .TP 8
 .B "source \fIfilename"
 The specified file is treated as a script containing \fIxauth\fP commands
-to execute.  Blank lines and lines beginning with a sharp sign (#) are 
+to execute.  Blank lines and lines beginning with a sharp sign (#) are
 ignored.  A single dash may be used to indicate the standard input, if it
 hasn't already been read.
 .TP 8
 .B "info"
 Information describing the authorization file, whether or not any changes
 have been made, and from where \fIxauth\fP commands are being read
-is printed on the standard output. 
+is printed on the standard output.
 .TP 8
 .B "exit"
 If any modifications have been made, the authority file is written out (if
@@ -194,13 +193,13 @@ DISPLAY environment variable and the common \fI\-display\fP command line
 argument.  Display-specific information (such as the screen number)
 is unnecessary and will be ignored.
 Same-machine connections (such as local-host sockets,
-shared memory, and the Internet Protocol hostname \fIlocalhost\fP) are 
+shared memory, and the Internet Protocol hostname \fIlocalhost\fP) are
 referred to as \fIhostname\fP/unix:\fIdisplaynumber\fP so that
 local entries for different machines may be stored in one authority file.
 .SH EXAMPLE
 .PP
-The most common use for \fIxauth\fP is to extract the entry for the 
-current display, copy it to another machine, and merge it into the 
+The most common use for \fIxauth\fP is to extract the entry for the
+current display, copy it to another machine, and merge it into the
 user's authority file on the remote machine:
 .sp
 .nf
@@ -227,10 +226,14 @@ to get the user's home directory if XAUTHORITY isn't defined.
 .TP 8
 .I $HOME/.Xauthority
 default authority file if XAUTHORITY isn't defined.
+.SH "SEE ALSO"
+X(__miscmansuffix__), Xsecurity(__miscmansuffix__), xhost(__appmansuffix__),
+Xserver(__appmansuffix__), xdm(__appmansuffix__), startx(__appmansuffix__),
+Xau(__libmansuffix__).
 .SH BUGS
 .PP
-Users that have unsecure networks should take care to use encrypted 
-file transfer mechanisms to copy authorization entries between machines.  
+Users that have unsecure networks should take care to use encrypted
+file transfer mechanisms to copy authorization entries between machines.
 Similarly, the \fIMIT-MAGIC-COOKIE-1\fP protocol is not very useful in
 unsecure environments.  Sites that are interested in additional security
 may need to use encrypted authorization mechanisms such as Kerberos.

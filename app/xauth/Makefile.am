@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xauth
 
-xauth_CFLAGS = $(XAUTH_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XAUTH_CFLAGS)
 xauth_LDADD = $(XAUTH_LIBS)
 
 xauth_SOURCES =	\
@@ -43,7 +43,7 @@ CLEANFILES = $(appman_DATA)
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-                $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(xauth_CFLAGS)
+                $(AM_CPPFLAGS) $(CPPFLAGS) $(XAUTH_CFLAGS)
 
 lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(xauth_SOURCES) $(xauth_LDADD)
@@ -79,6 +79,6 @@ MAINTAINERCLEANFILES=ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog

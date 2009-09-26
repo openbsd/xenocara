@@ -76,8 +76,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xauth_OBJECTS = xauth-gethost.$(OBJEXT) xauth-parsedpy.$(OBJEXT) \
-	xauth-process.$(OBJEXT) xauth-xauth.$(OBJEXT)
+am_xauth_OBJECTS = gethost.$(OBJEXT) parsedpy.$(OBJEXT) \
+	process.$(OBJEXT) xauth.$(OBJEXT)
 xauth_OBJECTS = $(am_xauth_OBJECTS)
 am__DEPENDENCIES_1 =
 xauth_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -110,7 +110,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -126,8 +125,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -140,6 +141,7 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -176,8 +178,6 @@ VERSION = @VERSION@
 XAUTH_CFLAGS = @XAUTH_CFLAGS@
 XAUTH_LIBS = @XAUTH_LIBS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -192,28 +192,36 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xauth_CFLAGS = $(XAUTH_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XAUTH_CFLAGS)
 xauth_LDADD = $(XAUTH_LIBS)
 xauth_SOURCES = \
         gethost.c \
@@ -230,7 +238,7 @@ appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-@LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(xauth_CFLAGS)
+@LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS) $(XAUTH_CFLAGS)
 
 SED = sed
 
@@ -340,10 +348,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xauth-gethost.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xauth-parsedpy.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xauth-process.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xauth-xauth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gethost.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parsedpy.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/process.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xauth.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -358,62 +366,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xauth-gethost.o: gethost.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -MT xauth-gethost.o -MD -MP -MF "$(DEPDIR)/xauth-gethost.Tpo" -c -o xauth-gethost.o `test -f 'gethost.c' || echo '$(srcdir)/'`gethost.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xauth-gethost.Tpo" "$(DEPDIR)/xauth-gethost.Po"; else rm -f "$(DEPDIR)/xauth-gethost.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gethost.c' object='xauth-gethost.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -c -o xauth-gethost.o `test -f 'gethost.c' || echo '$(srcdir)/'`gethost.c
-
-xauth-gethost.obj: gethost.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -MT xauth-gethost.obj -MD -MP -MF "$(DEPDIR)/xauth-gethost.Tpo" -c -o xauth-gethost.obj `if test -f 'gethost.c'; then $(CYGPATH_W) 'gethost.c'; else $(CYGPATH_W) '$(srcdir)/gethost.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xauth-gethost.Tpo" "$(DEPDIR)/xauth-gethost.Po"; else rm -f "$(DEPDIR)/xauth-gethost.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gethost.c' object='xauth-gethost.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -c -o xauth-gethost.obj `if test -f 'gethost.c'; then $(CYGPATH_W) 'gethost.c'; else $(CYGPATH_W) '$(srcdir)/gethost.c'; fi`
-
-xauth-parsedpy.o: parsedpy.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -MT xauth-parsedpy.o -MD -MP -MF "$(DEPDIR)/xauth-parsedpy.Tpo" -c -o xauth-parsedpy.o `test -f 'parsedpy.c' || echo '$(srcdir)/'`parsedpy.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xauth-parsedpy.Tpo" "$(DEPDIR)/xauth-parsedpy.Po"; else rm -f "$(DEPDIR)/xauth-parsedpy.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='parsedpy.c' object='xauth-parsedpy.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -c -o xauth-parsedpy.o `test -f 'parsedpy.c' || echo '$(srcdir)/'`parsedpy.c
-
-xauth-parsedpy.obj: parsedpy.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -MT xauth-parsedpy.obj -MD -MP -MF "$(DEPDIR)/xauth-parsedpy.Tpo" -c -o xauth-parsedpy.obj `if test -f 'parsedpy.c'; then $(CYGPATH_W) 'parsedpy.c'; else $(CYGPATH_W) '$(srcdir)/parsedpy.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xauth-parsedpy.Tpo" "$(DEPDIR)/xauth-parsedpy.Po"; else rm -f "$(DEPDIR)/xauth-parsedpy.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='parsedpy.c' object='xauth-parsedpy.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -c -o xauth-parsedpy.obj `if test -f 'parsedpy.c'; then $(CYGPATH_W) 'parsedpy.c'; else $(CYGPATH_W) '$(srcdir)/parsedpy.c'; fi`
-
-xauth-process.o: process.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -MT xauth-process.o -MD -MP -MF "$(DEPDIR)/xauth-process.Tpo" -c -o xauth-process.o `test -f 'process.c' || echo '$(srcdir)/'`process.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xauth-process.Tpo" "$(DEPDIR)/xauth-process.Po"; else rm -f "$(DEPDIR)/xauth-process.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='process.c' object='xauth-process.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -c -o xauth-process.o `test -f 'process.c' || echo '$(srcdir)/'`process.c
-
-xauth-process.obj: process.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -MT xauth-process.obj -MD -MP -MF "$(DEPDIR)/xauth-process.Tpo" -c -o xauth-process.obj `if test -f 'process.c'; then $(CYGPATH_W) 'process.c'; else $(CYGPATH_W) '$(srcdir)/process.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xauth-process.Tpo" "$(DEPDIR)/xauth-process.Po"; else rm -f "$(DEPDIR)/xauth-process.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='process.c' object='xauth-process.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -c -o xauth-process.obj `if test -f 'process.c'; then $(CYGPATH_W) 'process.c'; else $(CYGPATH_W) '$(srcdir)/process.c'; fi`
-
-xauth-xauth.o: xauth.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -MT xauth-xauth.o -MD -MP -MF "$(DEPDIR)/xauth-xauth.Tpo" -c -o xauth-xauth.o `test -f 'xauth.c' || echo '$(srcdir)/'`xauth.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xauth-xauth.Tpo" "$(DEPDIR)/xauth-xauth.Po"; else rm -f "$(DEPDIR)/xauth-xauth.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xauth.c' object='xauth-xauth.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -c -o xauth-xauth.o `test -f 'xauth.c' || echo '$(srcdir)/'`xauth.c
-
-xauth-xauth.obj: xauth.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -MT xauth-xauth.obj -MD -MP -MF "$(DEPDIR)/xauth-xauth.Tpo" -c -o xauth-xauth.obj `if test -f 'xauth.c'; then $(CYGPATH_W) 'xauth.c'; else $(CYGPATH_W) '$(srcdir)/xauth.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xauth-xauth.Tpo" "$(DEPDIR)/xauth-xauth.Po"; else rm -f "$(DEPDIR)/xauth-xauth.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xauth.c' object='xauth-xauth.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xauth_CFLAGS) $(CFLAGS) -c -o xauth-xauth.obj `if test -f 'xauth.c'; then $(CYGPATH_W) 'xauth.c'; else $(CYGPATH_W) '$(srcdir)/xauth.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -721,7 +673,7 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
