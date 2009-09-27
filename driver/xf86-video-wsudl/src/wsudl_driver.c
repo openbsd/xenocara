@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.4 2009/09/24 07:34:40 mglocker Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.5 2009/09/27 18:19:28 mglocker Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -794,8 +794,6 @@ WsudlDamageInit(ScreenPtr pScreen)
 	return (TRUE);
 }
 
-#define ULDIO_DAMAGE_RETRY 100
-
 static void
 WsudlBlockHandler(pointer data, struct timeval **waitTime,
     pointer LastSelectMask)
@@ -837,16 +835,9 @@ WsudlBlockHandler(pointer data, struct timeval **waitTime,
 		}
 
 		/* send damaged area to the device driver */
-		for (i = 0; i < ULDIO_DAMAGE_RETRY; i++) {
-			ioctl(fPtr->fd, UDLIO_DAMAGE, &d);
-			if (d.status == UDLIO_STATUS_OK)
-				break;
-			/* device driver busy, have a break */
-			usleep(10000);
-		}
-		if (i == ULDIO_DAMAGE_RETRY) {
+		(void)ioctl(fPtr->fd, UDLIO_DAMAGE, &d);
+		if (d.status != UDLIO_STATUS_OK)
 			ErrorF("damage command failed, giving up!\n");
-		}
 
 		/* done */
 		DamageEmpty(fPtr->pDamage);
