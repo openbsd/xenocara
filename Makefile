@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.30 2009/09/10 19:28:23 matthieu Exp $
+# $OpenBSD: Makefile,v 1.31 2009/10/01 19:48:31 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -116,9 +116,9 @@ dist:
 
 distrib-dirs:
 .if defined(DESTDIR) && ${DESTDIR} != ""
-	mtree -qdef ${.CURDIR}/etc/mtree/BSD.x11.dist -p ${DESTDIR} -U
+	mtree -qdef /etc/mtree/BSD.x11.dist -p ${DESTDIR} -U
 .else
-	mtree -qdef ${.CURDIR}/etc/mtree/BSD.x11.dist -p / -U
+	mtree -qdef /etc/mtree/BSD.x11.dist -p / -U
 .endif
 
 
