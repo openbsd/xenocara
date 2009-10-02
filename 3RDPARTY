@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.61 2009/09/26 12:03:20 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.62 2009/10/02 17:32:33 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -15,7 +15,7 @@ Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		7.4.2
-Current Vers:	7.5.1
+Current Vers:	7.6
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
@@ -45,7 +45,7 @@ Archive Site:	http://www.tux.org/~bagleyd/latest/
 
 Package:	xkeyboard-config
 Version:	
-Current Vers:	1.6
+Current Vers:	1.7
 Maintainer:	xkb@listserv.bat.ru
 Archive Site:	http://www.freedesktop.org/wiki/Software/XKeyboardConfig
 
