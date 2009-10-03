@@ -609,7 +609,10 @@ xf86GunzeProc(DeviceIntPtr ptr, int what)
 			return !Success;
 		}
 		if (InitValuatorClassDeviceStruct(ptr, nbaxes,
-		    xf86GetMotionEvents, local->history_size, Absolute)
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+		    xf86GetMotionEvents, 
+#endif
+		    local->history_size, Absolute)
 		    == FALSE) {
 			ErrorF("unable to allocate Valuator class device\n");
 			return !Success;
