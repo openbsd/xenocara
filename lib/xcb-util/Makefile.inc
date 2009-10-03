@@ -1,10 +1,12 @@
-#	$OpenBSD: Makefile.inc,v 1.4 2009/07/20 20:57:57 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.5 2009/10/03 13:57:56 matthieu Exp $
 
 XCBUTIL=	${.CURDIR}/../../../dist/xcb-util
 
 CPPFLAGS+=	-I${XCBUTIL}/${SUBLIB} -I${X11BASE}/include
 
 .SUFFIXES:	.in
+
+NOPROFILE=
 
 obj:		_xenocara_obj
 
