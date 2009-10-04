@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.22 2009/09/26 14:45:03 matthieu Exp $
+# $OpenBSD: Makefile,v 1.23 2009/10/04 15:01:49 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= bdftopcf mkfontscale mkfontdir \
@@ -13,8 +13,11 @@ SUBDIR= bdftopcf mkfontscale mkfontdir \
 	xlsatoms xlsclients xlsfonts xmag xman xmessage \
 	xmodmap xmore xpr \
 	xprop xrandr xrdb xrefresh xset \
-	xsetroot xsm xstdcmap xtrap xvidtune xvinfo xwd xwininfo \
+	xsetroot xsm xstdcmap xvidtune xvinfo xwd xwininfo \
 	xwud
+
+# Deprecated
+# xtrap
 
 # Font server doesn't link on architectures with static only libraries
 .if ${XENOCARA_HAVE_SHARED_LIBS:L} == "yes"
