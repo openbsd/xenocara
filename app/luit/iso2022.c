@@ -37,8 +37,8 @@ THE SOFTWARE.
 #include "iso2022.h"
 
 #define BUFFERED_INPUT_SIZE 4
-unsigned char buffered_input[BUFFERED_INPUT_SIZE];
-int buffered_input_count = 0;
+static unsigned char buffered_input[BUFFERED_INPUT_SIZE];
+static int buffered_input_count = 0;
 
 static void
 FatalError(char *f, ...)

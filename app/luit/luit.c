@@ -34,8 +34,12 @@ THE SOFTWARE.
 #include <sys/ioctl.h>
 #include <signal.h>
 
-#ifdef SVR4
-#include <stropts.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#ifdef HAVE_STROPTS_H
+# include <stropts.h>
 #endif
 
 #include <X11/fonts/fontenc.h>
@@ -52,11 +56,11 @@ static char *locale_name = NULL;
 int ilog = -1;
 int olog = -1;
 int verbose = 0;
-int converter = 0;
-int exitOnChild = 0;
+static int converter = 0;
+static int exitOnChild = 0;
 
-volatile int sigwinch_queued = 0;
-volatile int sigchld_queued = 0;
+static volatile int sigwinch_queued = 0;
+static volatile int sigchld_queued = 0;
 
 static int convert(int, int);
 static int condom(int, char**);
@@ -452,6 +456,8 @@ condom(int argc, char **argv)
     int rc;
     int val;
 
+    path = NULL;
+    child_argv = NULL;
     rc = parseArgs(argc, argv, child_argv0,
                    &path, &child_argv);
     if(rc < 0)
