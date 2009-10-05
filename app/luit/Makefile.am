@@ -23,8 +23,7 @@ bin_PROGRAMS = luit
 
 LOCALEALIASFILE = @LOCALEALIASFILE@
 
-AM_CFLAGS = $(CWARNFLAGS) $(LUIT_CFLAGS) \
-	-DLOCALE_ALIAS_FILE=\"$(LOCALEALIASFILE)\"
+AM_CFLAGS = $(LUIT_CFLAGS) -DLOCALE_ALIAS_FILE=\"$(LOCALEALIASFILE)\"
 luit_LDADD = $(LUIT_LIBS)
 
 luit_SOURCES =	\
@@ -60,7 +59,7 @@ MAINTAINERCLEANFILES = ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	$(CHANGELOG_CMD)
+	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
 
 dist-hook: ChangeLog
 
@@ -85,4 +84,4 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)sed $(MAN_SUBSTS) < $< > $@
+	sed $(MAN_SUBSTS) < $< > $@

@@ -34,8 +34,14 @@ THE SOFTWARE.
 #include <signal.h>
 #include <errno.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
+#ifdef SVR4
+#define HAVE_POLL
+#endif
+
+#ifndef HAVE_POLL
+#ifndef _MINIX
+#define HAVE_SELECT
+#endif
 #endif
 
 #ifdef HAVE_POLL
@@ -43,20 +49,27 @@ THE SOFTWARE.
 #undef HAVE_SELECT
 #endif
 
-#ifdef HAVE_SYS_SELECT_H
-# include <sys/select.h>
+#ifdef __QNX__
+#include <sys/select.h>
 #endif
 
-#ifdef HAVE_PTY_H
-# include <pty.h>
+
+#if (defined(__GLIBC__) && \
+     (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1))) || \
+    defined(SVR4)
+#define HAVE_GRANTPT
 #endif
 
-#ifdef HAVE_STROPTS_H
-# include <stropts.h>
+#ifdef __GLIBC__
+#include <pty.h>
 #endif
 
-#ifdef HAVE_SYS_PARAM_H
-# include <sys/param.h>
+#ifdef SVR4
+#include <stropts.h>
+#endif
+
+#if (defined(__unix__) || defined(unix)) && !defined(USG)
+#include <sys/param.h>
 #endif
 
 #include "sys.h"
@@ -327,12 +340,7 @@ allocatePty(int *pty_return, char **line_return)
     char *temp_line;
     int rc;
 
-#ifdef __APPLE__
-    pty = posix_openpt(O_RDWR);
-#else
     pty = open("/dev/ptmx", O_RDWR);
-#endif
-
     if(pty < 0)
         goto bsd;
 
@@ -420,7 +428,7 @@ openTty(char *line)
     }
 #endif
 
-#if defined(SVR4) || defined(__SVR4)
+#ifdef SVR4
     rc = ioctl(tty, I_PUSH, "ptem");
     if(rc < 0)
         goto bail;

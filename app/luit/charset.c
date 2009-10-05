@@ -75,13 +75,13 @@ NullReverse(unsigned int n, CharsetPtr self)
     return -1;
 }
 
-static CharsetRec Unknown94Charset = 
+CharsetRec Unknown94Charset = 
 { "Unknown (94)", T_94, 0, IdentityRecode, NullReverse, NULL, NULL};
-static CharsetRec Unknown96Charset = 
+CharsetRec Unknown96Charset = 
 { "Unknown (96)", T_96, 0, IdentityRecode, NullReverse, NULL, NULL};
-static CharsetRec Unknown9494Charset = 
+CharsetRec Unknown9494Charset = 
 { "Unknown (94x94)", T_9494, 0, IdentityRecode, NullReverse, NULL, NULL};
-static CharsetRec Unknown9696Charset = 
+CharsetRec Unknown9696Charset = 
 { "Unknown (96x96)", T_9696, 0, IdentityRecode, NullReverse, NULL, NULL};
 
 typedef struct _FontencCharset {
@@ -94,7 +94,7 @@ typedef struct _FontencCharset {
     FontMapReversePtr reverse;
 } FontencCharsetRec, *FontencCharsetPtr;
 
-static FontencCharsetRec fontencCharsets[] = {
+FontencCharsetRec fontencCharsets[] = {
     {"ISO 646 (1973)", T_94, '@', "iso646.1973-0", 0x00, NULL, NULL},
     {"ASCII", T_94, 'B', "iso8859-1", 0x00, NULL, NULL},
     {"JIS X 0201:GL", T_94, 'J', "jisx0201.1976-0", 0x00, NULL, NULL},
@@ -154,7 +154,7 @@ typedef struct _OtherCharset {
     int (*stack)(unsigned char, OtherStatePtr);
 } OtherCharsetRec, *OtherCharsetPtr;
 
-static OtherCharsetRec otherCharsets[] = {
+OtherCharsetRec otherCharsets[] = {
     {"GBK", init_gbk, mapping_gbk, reverse_gbk, stack_gbk},
     {"UTF-8", init_utf8, mapping_utf8, reverse_utf8, stack_utf8},
     {"SJIS", init_sjis, mapping_sjis, reverse_sjis, stack_sjis},
@@ -393,7 +393,7 @@ getCharsetByName(const char *name)
     return getUnknownCharset(T_94);
 }
 
-static const LocaleCharsetRec localeCharsets[] = {
+const LocaleCharsetRec localeCharsets[] = {
     { "C", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
     { "POSIX", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
     { "ISO8859-1", 0, 2, "ASCII", NULL, "ISO 8859-1", NULL, NULL},
@@ -481,7 +481,7 @@ getLocaleState(const char *locale, char *charset,
     }
 
     if(p->name == NULL) {
-	if (resolved != NULL)
+	if (resolved != 0)
 	    free(resolved);
         return -1;
     }
