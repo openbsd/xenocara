@@ -171,9 +171,10 @@ videoPtrToDriverList(struct pci_device *dev,
 	case 0x8086:
 	    if ((dev->device_id == 0x00d1) || (dev->device_id == 0x7800)) {
 		driverList[0] = "i740";
+            } else if (dev->device_id == 0x8108) { 
+                break; /* "hooray" for poulsbo */ 
 	    } else {
 		driverList[0] = "intel";
-		driverList[1] = "i810";
 	    }
 	    break;
 	case 0x102b:		    driverList[0] = "mga";	break;
