@@ -141,7 +141,7 @@ The \fIKEYSYMNAME\fP on the left hand side is translated into matching keycodes
 used to perform the corresponding set of \fBkeycode\fP expressions.
 The list of keysym names may be
 found in the header file \fI<X11/keysymdef.h>\fP (without the \fIXK_\fP prefix)
-or the keysym database \fI __projectroot__/lib/X11/XKeysymDB\fP.  Note that
+or the keysym database \fI __X11datadir__/XKeysymDB\fP.  Note that
 if the same keysym is bound to multiple keys, the expression is executed
 for each matching keycode.
 .TP 8

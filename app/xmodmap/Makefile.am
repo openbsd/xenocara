@@ -21,8 +21,8 @@
 
 bin_PROGRAMS = xmodmap
 
-AM_CFLAGS = $(DEP_CFLAGS)
-xmodmap_LDADD = $(DEP_LIBS)
+AM_CFLAGS = $(CWARNFLAGS) $(XMODMAP_CFLAGS)
+xmodmap_LDADD = $(XMODMAP_LIBS)
 
 xmodmap_SOURCES =	\
         exec.c \
@@ -53,6 +53,8 @@ SED = sed
 XORGRELSTRING = @PACKAGE_STRING@
   XORGMANNAME = X Version 11
 
+X11_DATADIR=$(datadir)/X11	# Where libX11 installs XKeysymDB
+
 MAN_SUBSTS = \
 	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
 	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
@@ -60,6 +62,7 @@ MAN_SUBSTS = \
 	-e 's|__xconfigfile__|xorg.conf|g' \
 	-e 's|__projectroot__|$(prefix)|g' \
 	-e 's|__apploaddir__|$(appdefaultdir)|' \
+	-e 's|__X11datadir__|$(X11_DATADIR)|' \
 	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
 	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
 	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
@@ -69,14 +72,14 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 MAINTAINERCLEANFILES = ChangeLog
 
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 

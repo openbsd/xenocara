@@ -274,6 +274,8 @@ parse_number(const char *str, unsigned long *val)
 
     if (*str == '0') {
 	str++;
+	while (isspace(*str))
+	    str++;
 	fmt = "%lo";
 	if (*str == '\0') {
 	    *val = 0;
