@@ -23,7 +23,7 @@ AUTOMAKE_OPTIONS = foreign
 
 bin_PROGRAMS = xbacklight
 
-AM_CFLAGS = $(XRANDR_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XRANDR_CFLAGS)
 xbacklight_LDADD = $(XRANDR_LIBS)
 
 xbacklight_SOURCES =	\
@@ -62,3 +62,13 @@ SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES=ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

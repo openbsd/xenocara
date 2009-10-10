@@ -50,7 +50,7 @@ Print out a summary of the usage and exit.
 Length of time to spend fading the backlight between old and new value.
 Default is 200.
 .IP "-steps \fInumber\fP"
-Number of steps to take while faiding. Default is 20.
+Number of steps to take while fading. Default is 20.
 .SH "SEE ALSO"
 Xrandr(3)
 .SH AUTHORS

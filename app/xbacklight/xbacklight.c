@@ -25,11 +25,15 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
 
+#include <ctype.h>
+#include <string.h>
+#include <unistd.h>
+
 typedef enum { Get, Set, Inc, Dec } op_t;
 
 static char *program_name;
 
-static Atom backlight;
+static Atom backlight, backlight_new, backlight_legacy;
 
 static void
 usage (void)
@@ -58,11 +62,21 @@ backlight_get (Display *dpy, RROutput output)
     int		    actual_format;
     long	    value;
     
-    if (XRRGetOutputProperty (dpy, output, backlight,
+    backlight = backlight_new;
+    if (!backlight ||
+	XRRGetOutputProperty (dpy, output, backlight,
 			      0, 4, False, False, None,
 			      &actual_type, &actual_format,
-			      &nitems, &bytes_after, &prop) != Success)
-	return -1;
+			      &nitems, &bytes_after, &prop) != Success) {
+	backlight = backlight_legacy;
+	if (!backlight ||
+	    XRRGetOutputProperty (dpy, output, backlight,
+				  0, 4, False, False, None,
+				  &actual_type, &actual_format,
+				  &nitems, &bytes_after, &prop) != Success)
+	    return -1;
+    }
+
     if (actual_type != XA_INTEGER || nitems != 1 || actual_format != 32)
 	value = -1;
     else
@@ -180,8 +194,10 @@ main (int argc, char **argv)
 	fprintf (stderr, "RandR version %d.%d too old\n", major, minor);
 	exit (1);
     }
-    backlight = XInternAtom (dpy, "BACKLIGHT", True);
-    if (backlight == None)
+
+    backlight_new    = XInternAtom (dpy, "Backlight", True);
+    backlight_legacy = XInternAtom (dpy, "BACKLIGHT", True);
+    if (backlight_new == None && backlight_legacy == None)
     {
 	fprintf (stderr, "No outputs have backlight property\n");
 	exit (1);
@@ -225,6 +241,9 @@ main (int argc, char **argv)
 			    case Dec:
 				new = cur - set;
 				break;
+			    default:
+				XSync (dpy, False);
+				return 1;
 			    }
 			    if (new > max) new = max;
 			    if (new < min) new = min;
@@ -249,4 +268,6 @@ main (int argc, char **argv)
 	XRRFreeScreenResources (resources);
     }
     XSync (dpy, False);
+
+    return 0;
 }
