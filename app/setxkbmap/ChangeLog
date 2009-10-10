@@ -1,3 +1,55 @@
+commit 0f16d3da90c101e653b552dd3810b7c3092cb145
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 9 09:10:41 2009 +1000
+
+    Bump to 1.1.0
+
+commit 5dca07cec68fbfc75ef2002422215647ca5b8c03
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 19 15:54:41 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and all gcc 4.3 and sparse warnings.
+
+commit 4c3f466f67a7819a912a736f4f2a97262bdaf589
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Dec 1 11:10:52 2008 +1000
+
+    Check return value of calloc and realloc. #18759 and #18760
+    
+    X.Org Bug <http://bugs.freedesktop.org/show_bug.cgi?id=18759>
+    X.Org Bug <http://bugs.freedesktop.org/show_bug.cgi?id=18760>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
+
+commit 3ba7cfd701d99b4b1fe1dd7eecd02d01c1dee74c
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Aug 12 14:44:03 2008 +0930
+
+    Adding some explanatory comments.
+
+commit f8c511568040d84b7ddc0bca5ba20757719bd808
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Aug 12 13:44:06 2008 +0930
+
+    Indent consistently.
+    
+    indent -cbi 0 -nprs -nut -npcs -i4 -bli 0 *.c *.h
+
+commit cb6160d289c7123f3bf0f708afed28f64c040daa
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Aug 12 13:42:47 2008 +0930
+
+    Remove RCS tags.
+
+commit 5ced600eb9c1d4014bfc1e761190b869d59a4c4e
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:05 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
 commit 35d3e114ef3b0e6f56b38ddd9cac79e4c953ca85
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Jul 23 17:18:26 2007 -0700

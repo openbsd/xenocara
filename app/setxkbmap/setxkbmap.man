@@ -1,6 +1,4 @@
 .\"
-.\" $XFree86: xc/programs/setxkbmap/setxkbmap.man,v 3.6 2003/01/20 04:15:08 dawes Exp $
-.\"
 .TH SETXKBMAP __appmansuffix__ __xorgversion__
 .SH NAME
 setxkbmap
