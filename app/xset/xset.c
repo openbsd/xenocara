@@ -141,9 +141,9 @@ static void query_cache_status(Display *dpy);
 	if (i >= argc) \
 		break; \
 
-char *progName;
+static char *progName;
 
-int error_status = 0;
+static int error_status = 0;
 
 static int is_number(char *arg, int maximum);
 static void set_click(Display *dpy, int percent);
@@ -153,6 +153,7 @@ static void set_bell_dur(Display *dpy, int duration);
 static void set_font_path(Display *dpy, char *path, int special,
 			  int before, int after);
 static void set_led(Display *dpy, int led, int led_mode);
+static void xkbset_led(Display *dpy, const char *led, int led_mode);
 static void set_mouse(Display *dpy, int acc_num, int acc_denom, int threshold);
 static void set_saver(Display *dpy, int mask, int value);
 static void set_repeat(Display *dpy, int key, int auto_repeat_mode);
@@ -195,18 +196,13 @@ main(int argc, char *argv[])
     Display *dpy;
     Bool hasargs = False;
 
-#ifdef XF86MISC
-    int miscpresent = 1;
-    int major, minor;
-#else
     int miscpresent = 0;
-#endif
+    int xkbpresent = 0;
+
 #ifdef XKB
-    int xkbpresent = 1;
     int xkbmajor = XkbMajorVersion, xkbminor = XkbMinorVersion;
     int xkbopcode, xkbevent, xkberror;
 #else
-    int xkbpresent = 0;
 #endif
 #ifdef FONTCACHE
     long himark, lowmark, balance;
@@ -444,6 +440,15 @@ main(int argc, char *argv[])
 		break;
 	    }
 	    arg = nextarg(i, argv);
+	    if (strcmp(arg, "named") == 0) {
+		if (++i >= argc) {
+		    usage("missing argument to led named", NULL);
+		} else {
+		    arg = nextarg(i, argv);
+		    xkbset_led(dpy, arg, values.led_mode);
+		}
+		break;
+	    }
 	    if (is_number(arg, 32) && atoi(arg) > 0) {
 		values.led = atoi(arg);
 		i++;
@@ -458,6 +463,15 @@ main(int argc, char *argv[])
 		break;
 	    }
 	    arg = nextarg(i, argv);
+	    if (strcmp(arg, "named") == 0) {
+		if (++i >= argc) {
+		    usage("missing argument to -led named", NULL);
+		} else {
+		    arg = nextarg(i, argv);
+		    xkbset_led(dpy, arg, values.led_mode);
+		}
+		break;
+	    }
 	    if (strcmp(arg, "on") == 0) {
 		i++;
 	    } else if (strcmp(arg, "off") == 0) { /* ...except in this case. */
@@ -731,22 +745,28 @@ main(int argc, char *argv[])
 
 #ifdef XF86MISC
 		    int rate_set = 0;
-
-		    if (XF86MiscQueryVersion(dpy, &major, &minor)) {
-			delay = KBDDELAY_DEFAULT, rate = KBDRATE_DEFAULT;
-		    } else {
-			miscpresent = 0;
-		    }
 #endif
+
 #ifdef XKB
 		    if (XkbQueryExtension(dpy, &xkbopcode, &xkbevent,
 					  &xkberror, &xkbmajor, &xkbminor)) {
-			delay = XKBDDELAY_DEFAULT, rate = XKBDRATE_DEFAULT;
-		    } else {
-			xkbpresent = 0;
+			delay = XKBDDELAY_DEFAULT;
+			rate = XKBDRATE_DEFAULT;
+			xkbpresent = 1;
 		    }
 #endif
-		    if (!miscpresent && !xkbpresent)
+#ifdef XF86MISC
+		    if (!xkbpresent) {
+			int dummy;
+
+			if (XF86MiscQueryExtension(dpy, &dummy, &dummy)) {
+			    delay = KBDDELAY_DEFAULT;
+			    rate = KBDRATE_DEFAULT;
+			    miscpresent = 1;
+			}
+		    }
+#endif
+		    if (!xkbpresent && !miscpresent)
 			fprintf(stderr,
 				"server does not have extension for \"r rate\" option\n");
 		    i++;
@@ -1060,6 +1080,36 @@ set_led(Display *dpy, int led, int led_mode)
 }
 
 static void
+xkbset_led(Display *dpy, const char *led, int led_mode)
+{
+#ifndef XKB
+    error("  xset was not built with XKB Extension support\n");
+#else
+    int xkbmajor = XkbMajorVersion, xkbminor = XkbMinorVersion;
+    int xkbopcode, xkbevent, xkberror;
+    Atom ledatom;
+
+    if (XkbQueryExtension(dpy, &xkbopcode, &xkbevent, &xkberror,
+			  &xkbmajor, &xkbminor)) {
+	ledatom = XInternAtom(dpy, led, True);
+	if ((ledatom != None) &&
+	    XkbGetNamedIndicator(dpy, ledatom, NULL, NULL, NULL, NULL)) {
+	    if (XkbSetNamedIndicator(dpy, ledatom, True,
+				     led_mode, False, NULL) == False) {
+		printf("Failed to set led named %s %s\n",
+		       led, led_mode ? "on" : "off");
+	    }
+	} else {
+	    fprintf(stderr,"%s: Invalid led name: %s\n", progName, led);
+	}
+    } else {
+	printf("  Server does not have the XKB Extension\n");
+    }
+#endif
+    return;
+}
+
+static void
 set_mouse(Display *dpy, int acc_num, int acc_denom, int threshold)
 {
     int do_accel = True, do_threshold = True;
@@ -1313,10 +1363,86 @@ query(Display *dpy)
 #ifdef XKB
     if (XkbQueryExtension(dpy, &xkbopcode, &xkbevent, &xkberror, &xkbmajor,
 			  &xkbminor)
-	&& (xkb = XkbAllocKeyboard()) != NULL
-	&& XkbGetControls(dpy, XkbRepeatKeysMask, xkb) == Success)
-	printf("  auto repeat delay:  %d    repeat rate:  %d\n",
-	       xkb->ctrls->repeat_delay, 1000 / xkb->ctrls->repeat_interval);
+	&& (xkb = XkbAllocKeyboard()) != NULL) {
+	if (XkbGetNames(dpy, XkbIndicatorNamesMask, xkb) == Success) {
+	    Atom iatoms[XkbNumIndicators];
+	    char *iatomnames[XkbNumIndicators];
+	    Bool istates[XkbNumIndicators];
+	    int inds[XkbNumIndicators];
+	    int activecount = 0;
+	    int maxnamelen = 0;
+	    int columnwidth;
+	    int linewidth;
+
+	    printf("  XKB indicators:\n");
+
+	    for (i = 0, j = 0; i < XkbNumIndicators; i++) {
+		if (xkb->names->indicators[i] != None) {
+		    iatoms[j++] =  xkb->names->indicators[i];
+		}
+	    }
+
+	    if (XGetAtomNames(dpy, iatoms, j, iatomnames)) {
+		for (i = 0; i < j; i++) {
+		    Bool state;
+		    int ind;
+
+		    if (XkbGetNamedIndicator(dpy, iatoms[i], &inds[i],
+					     &istates[i], NULL, NULL)) {
+			int namelen = strlen(iatomnames[i]);
+			if (namelen > maxnamelen) {
+			    maxnamelen = namelen;
+			}
+			activecount++;
+		    } else {
+			inds[i] = -1;
+		    }
+		}
+	    }
+
+	    if (activecount == 0) {
+		printf("    None\n");
+	    } else {
+
+#define XKB_IND_FORMAT_CHARS 13 /* size of other chars in '    DD: X: off' */
+#define MAX_LINE_WIDTH	     76
+
+		columnwidth = maxnamelen + XKB_IND_FORMAT_CHARS;
+		if (columnwidth > MAX_LINE_WIDTH) {
+		    columnwidth = MAX_LINE_WIDTH;
+		}
+
+		for (i = 0, linewidth = 0; i < activecount ; i++) {
+		    if (inds[i] != -1) {
+			int spaces = columnwidth - XKB_IND_FORMAT_CHARS
+			    - strlen(iatomnames[i]);
+
+			if (spaces < 0)
+			    spaces = 0;
+
+			linewidth += printf("    %02d: %s: %*s",
+					    inds[i], iatomnames[i],
+					    spaces + 3,
+					    on_or_off(istates[i],
+						      True,  "on ",
+						      False, "off", buf));
+		    }
+		    if (linewidth > (MAX_LINE_WIDTH - columnwidth)) {
+			printf("\n");
+			linewidth = 0;
+		    }
+		}
+		if (linewidth > 0) {
+		    printf("\n");
+		}
+	    }
+	}
+	if (XkbGetControls(dpy, XkbRepeatKeysMask, xkb) == Success) {
+	    printf("  auto repeat delay:  %d    repeat rate:  %d\n",
+		   xkb->ctrls->repeat_delay,
+		   1000 / xkb->ctrls->repeat_interval);
+	}
+    }
 #ifdef XF86MISC
     else
 #endif
@@ -1577,6 +1703,10 @@ usage(char *fmt, ...)
     fprintf(stderr, "    To set LED states off or on:\n");
     fprintf(stderr, "\t-led [1-32]         led off\n");
     fprintf(stderr, "\t led [1-32]         led on\n");
+#ifdef XKB
+    fprintf(stderr, "\t-led named 'name'   led off\n");
+    fprintf(stderr, "\t led named 'name'   led on\n");
+#endif
     fprintf(stderr, "    To set mouse acceleration and threshold:\n");
     fprintf(stderr, "\t m [acc_mult[/acc_div] [thr]]    m default\n");
     fprintf(stderr, "    To set pixel colors:\n");

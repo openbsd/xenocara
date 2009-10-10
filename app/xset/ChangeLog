@@ -1,3 +1,87 @@
+commit 434c62e22aeed94b7b84ec613ba066ac6aa7c14b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Sep 21 15:48:57 2009 -0700
+
+    xset 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit dbd3a05ab990f5d2827b84ab81e7b1a19cd0b786
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Sep 21 15:42:08 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3341f135515f6f2e5b0c40f5ec0a8fb59d4cb1ed
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jun 16 16:34:15 2009 -0700
+
+    Fill in README & COPYING files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9ee8b074cb8f8de84aafebcc22c6c266371693ec
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jun 16 13:14:47 2009 -0700
+
+    XKB named indicator support for led state query/set
+    
+    xset q now lists XKB named indicator states in addition to led bitmask
+    Sample output:
+     Keyboard Control:
+      auto repeat:  on    key click percent:  0    LED mask:  0000000a
+      XKB indicators:
+        00: Caps Lock:   off    01: Num Lock:    on     02: Scroll Lock: off
+        03: Compose:     on     04: Shift Lock:  off    05: Group 2:     off
+        06: Mouse Keys:  off
+     [...]
+    
+    New options "xset led named <name>" and "xset -led named <name>" allow
+    turning named leds/virtual indicators on & off.
+    
+    ('named' keyword is necessary to avoid ambiguity if an XKB indicator
+     is given a numeric name or a name that matches an existing xkb option
+     due to xset's horrible historic command line syntax model.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 8ce473c45da07eb82537509a4d14ccb50262bfa7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 29 13:57:47 2009 -0700
+
+    Avoid warning from "xset r rate" when XF86Misc extension is not present
+    
+    - Since XF86Misc is only used if XKB is not present, don't check for
+      XF86Misc unless XKB is not present
+    - If we do check for XF86Misc, use QueryExtension instead of QueryVersion
+      to avoid Xlib printing missing extension warning message when it's not
+      found (such as in Xorg 1.6 and later).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 30833b82734fb2d77657b4672eaf622c30990471
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Apr 28 16:11:56 2009 +0200
+
+    Fix typos in xset manpage
+    
+    Debian bug#525255 <http://bugs.debian.org/525255>
+    Reported-by: "A. Costa" <agcosta@gis.net>
+
+commit 3d1146293d84cecaff18aa44b95539910e24ef11
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 26 18:03:23 2009 -0200
+
+    Correct make distcheck and most sparse warnings.
+
+commit 9f79fc8957d595cc9f7131ee5230b5bb3aae0679
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 17:29:45 2008 -0500
+
+    xset 1.0.4
+
 commit b6343fa846eeadb6736f383577b91dbb46d46971
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Jan 15 18:11:25 2008 -0800

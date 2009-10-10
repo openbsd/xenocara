@@ -21,14 +21,19 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xset,[1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xset)
+AC_INIT(xset,[1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xset)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
 AC_PROG_INSTALL
+
+XORG_DEFAULT_OPTIONS
 
 # Checks for system functions
 AC_CHECK_FUNCS([usleep])
@@ -71,13 +76,10 @@ PKG_CHECK_MODULES(SET_XPRINT, xp,
 	AC_CHECK_HEADERS([X11/extensions/Print.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
-XSET_CFLAGS="$XSET_CFLAGS $SET_XEXT_CFLAGS $SET_XKB_CFLAGS $SET_XF86MISC_CFLAGS $SET_FONTCACHE_CFLAGS $SET_XPRINT_CFLAGS"
+XSET_CFLAGS="$CWARNFLAGS $XSET_CFLAGS $SET_XEXT_CFLAGS $SET_XKB_CFLAGS $SET_XF86MISC_CFLAGS $SET_FONTCACHE_CFLAGS $SET_XPRINT_CFLAGS"
 XSET_LIBS="$XSET_LIBS $SET_XEXT_LIBS $SET_XKB_LIBS $SET_XF86MISC_LIBS $SET_FONTCACHE_LIBS $SET_XPRINT_LIBS"
 
 AC_SUBST(XSET_CFLAGS)
 AC_SUBST(XSET_LIBS)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])
