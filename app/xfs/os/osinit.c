@@ -1,4 +1,3 @@
-/* $Xorg: osinit.c,v 1.4 2001/02/09 02:05:45 xorgcvs Exp $ */
 /*
  * os init code
  */
@@ -47,14 +46,12 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)osinit.c	4.3	5/7/91
- *
  */
-/* $XFree86: xc/programs/xfs/os/osinit.c,v 1.4 2001/01/17 23:45:33 dawes Exp $ */
+
+#include	"xfs-config.h"
 
 #include	"os.h"
-
-extern long LastReapTime;
+#include	"globals.h"
 
 void
 OsInit(void)

@@ -1,4 +1,3 @@
-/* $Xorg: configstr.h,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /* 
 Copyright 1987, 1998  The Open Group
 
@@ -44,10 +43,7 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)configstr.h	4.1	91/05/02
- *
  */
-/* $XFree86: xc/programs/xfs/os/configstr.h,v 1.4 2001/01/17 23:45:32 dawes Exp $ */
 #ifndef _CONFIGSTR_H_
 #define _CONFIGSTR_H_
 #include	"config.h"

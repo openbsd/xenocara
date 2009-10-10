@@ -1,4 +1,3 @@
-.\" $XFree86: xc/programs/xfs/xfs.man,v 3.15 2001/04/18 16:13:22 dawes Exp $
 .\"
 .\" Copyright 1991, 1998  The Open Group
 .\" 
@@ -36,7 +35,6 @@
 .\" no representations about the
 .\" suitability of this software for any purpose.  It is provided "as is"
 .\" without express or implied warranty.
-.\" $Xorg: xfs.man,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $
 .TH xfs __appmansuffix__ __xorgversion__
 .SH NAME
 xfs \- X font server
@@ -50,6 +48,9 @@ xfs \- X font server
 ]
 [
 .B \-droppriv
+]
+[
+.B \-inetd
 ]
 [
 .BI "\-ls " listen_socket
@@ -68,7 +69,9 @@ xfs \- X font server
 is the X Window System font server.
 It supplies fonts to X Window System display servers.
 The server is usually run by a system administrator, and started via
-.BR init (__adminmansuffix__).
+.BR init (__adminmansuffix__)
+or
+.BR inetd (__adminmansuffix__).
 Users may also wish to start private font servers for specific sets of
 fonts.
 .PP
@@ -83,7 +86,8 @@ specifies the configuration file
 .B xfs
 will use.
 If this parameter is not specified, xfs will read its configuration from
-__configfiledesc__ \fI__configfilepath__\fR.
+__configfiledesc__
+.IR __configfilepath__ .
 .TP
 .B \-daemon
 instructs
@@ -117,6 +121,16 @@ will not to use a TCP port at all.
 By default,
 .B xfs
 runs with the user and group IDs of the user who invoked it.
+.TP
+.B \-inetd
+informs
+.B xfs
+that it is being started by inetd, and that a listening socket on the
+appropriate port is being passed as standard input.   Assumes that inetd
+is configured to "wait" mode, and will thus allow xfs to handle
+listening for and accepting further connections on this port.   This allows
+xfs to be started on demand when the first font client connects.
+When using this option, the -daemon and -port flags are ignored.
 .TP
 .BI "\-ls " listen_socket
 specifies a file descriptor which is already set up to be used as the
@@ -297,9 +311,9 @@ XCOMM Look for fonts in the following directories.  The first is a set of
 XCOMM TrueType outlines, the second is a set of misc bitmaps (such as terminal
 XCOMM and cursor fonts), and the last is a set of 100dpi bitmaps.
 XCOMM
-catalogue = /usr/X11R6/lib/X11/fonts/TTF,
-            /usr/X11R6/lib/X11/fonts/misc,
-            /usr/X11R6/lib/X11/fonts/100dpi/
+catalogue = /usr/share/X11/fonts/TTF,
+            /usr/share/X11/fonts/misc,
+            /usr/share/X11/fonts/100dpi/
 
 XCOMM in 12 points, decipoints
 default\-point\-size = 120
@@ -316,9 +330,10 @@ use\-syslog = off
 .SH "OUTPUT FILES"
 When operating in daemon mode,
 .B xfs
-sends diagnostic messages (errors and warnings) to the system log via the
-.B syslog
-C library function by default.
+sends diagnostic messages (errors and warnings) to the log file
+specified by the
+.B error-file
+configuration variable by default.
 However, these messages can be sent to an alternate location via the
 .B error\-file
 and
@@ -368,6 +383,7 @@ Keith Packard, Massachusetts Institute of Technology
 .BR xfsinfo (__appmansuffix__),
 .BR fslsfonts (__appmansuffix__),
 .BR init (__adminmansuffix__),
+.BR inetd (__adminmansuffix__),
 .BR syslog (__libmansuffix__),
 .IR "The X Font Service Protocol" ,
 .I Font Server Implementation Overview

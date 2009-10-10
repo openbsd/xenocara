@@ -1,4 +1,3 @@
-/* $Xorg: dispatch.c,v 1.6 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
  * protocol dispatcher
  */
@@ -46,7 +45,8 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/difs/dispatch.c,v 3.12 2001/12/14 20:01:33 dawes Exp $ */
+
+#include	"xfs-config.h"
 
 #include	<stdlib.h>
 #include	"dispatch.h"
@@ -68,6 +68,7 @@ in this Software without prior written authorization from The Open Group.
 #include	"cache.h"
 #include	"globals.h"
 #include	"difs.h"
+#include	"access.h"
 
 static void kill_all_clients(void);
 
@@ -78,13 +79,6 @@ ClientPtr   currentClient;
 
 static int  nClients = 0;
 static int  nextFreeClientID;
-
-extern char *ConnectionInfo;
-extern int  ConnInfoLen;
-
-extern char *configfilename;
-
-extern Bool drone_server;
 
 #define	MAJOROP	((fsReq *)client->requestBuffer)->reqType
 
@@ -204,7 +198,6 @@ ProcInitialConnection(ClientPtr client)
     fsConnClientPrefix *prefix;
     int         whichbyte = 1;
 
-    nClients++;
     prefix = (fsConnClientPrefix *) stuff+1;
     if ((prefix->byteOrder != 'l') && (prefix->byteOrder != 'B'))
 	return (client->noClientException = -2);
@@ -304,8 +297,6 @@ ProcEstablishConnection(ClientPtr client)
 	    SendErrToClient(client, FSBadAlloc, (pointer) 0);
 	    return FSBadAlloc;
 	}
-	authp->authname = 0;
-	authp->authdata = 0;
 	authp->authname =
 	    (char *) fsalloc(client_auth[auth_index - 1].namelen + 1);
 	authp->authdata =
@@ -590,12 +581,12 @@ ProcCreateAC(ClientPtr client)
 	SendErrToClient(client, FSBadIDChoice, (pointer) &aligned_acid);
 	return FSBadIDChoice;
     }
-    acp = 0;
+    acp = NULL;
     if (stuff->num_auths)
     {
     	acp = (AuthPtr) ALLOCATE_LOCAL(stuff->num_auths * sizeof(AuthRec));
     	if (!acp) {
-	    SendErrToClient(client, FSBadAlloc, (pointer) 0);
+	    SendErrToClient(client, FSBadAlloc, (pointer) NULL);
 	    return FSBadAlloc;
     	}
     }
@@ -621,8 +612,6 @@ ProcCreateAC(ClientPtr client)
 	acp[i].data = (char *) ad;
 	ad += acp[i].datalen;
     }
-    if (!(int)stuff->num_auths)
-	ad += 4;
     if (ad - (char *)stuff > (stuff->length << 2)) {
 	int lengthword = stuff->length;
 
@@ -645,8 +634,8 @@ ProcCreateAC(ClientPtr client)
     if (!authp) {
 	goto alloc_failure;
     }
-    authp->authname = 0;
-    authp->authdata = 0;
+    authp->authname = NULL;
+    authp->authdata = NULL;
     if (index > 0)
     {
 	authp->authname = (char *) fsalloc(acp[index - 1].namelen + 1);
@@ -1087,6 +1076,9 @@ InitClient(
     int         i,
     pointer     ospriv)
 {
+    if (i != SERVER_CLIENT) {
+	nClients++;
+    }
     client->index = i;
     client->sequence = 0;
     client->last_request_time = GetTimeInMillis();

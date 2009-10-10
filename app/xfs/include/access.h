@@ -1,4 +1,3 @@
-/* $Xorg: access.h,v 1.4 2001/02/09 02:05:43 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -44,21 +43,13 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)access.h	4.1	91/05/02
- *
  */
-/* $XFree86: xc/programs/xfs/include/access.h,v 1.4 2001/01/17 23:45:30 dawes Exp $ */
 
 #ifndef _ACCESS_H_
 #define _ACCESS_H_
 
-typedef struct _hostaddress *HostList;
-
 #include <os.h>
 #include <client.h>
-
-#define	HOST_AF_INET	1
-#define	HOST_AF_DECnet	2
 
 extern int  CheckClientAuthorization(
 		ClientPtr   client,

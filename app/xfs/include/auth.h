@@ -1,4 +1,3 @@
-/* $Xorg: auth.h,v 1.4 2001/02/09 02:05:43 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -44,10 +43,7 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)auth.h	4.1	91/05/02
- *
  */
-/* $XFree86: xc/programs/xfs/include/auth.h,v 1.5 2001/01/17 23:45:31 dawes Exp $ */
 
 #ifndef _AUTH_H_
 #define _AUTH_H_

@@ -1,4 +1,3 @@
-/* $Xorg: difsutils.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
  * misc utility routines
  */
@@ -46,7 +45,8 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/difs/difsutils.c,v 1.6 2001/01/17 23:45:28 dawes Exp $ */
+
+#include	"xfs-config.h"
 
 #define	XK_LATIN1
 
@@ -57,15 +57,14 @@ in this Software without prior written authorization from The Open Group.
 #include	"misc.h"
 #include	"globals.h"
 #include	"clientstr.h"
-#include	"accstr.h"
 #include	<X11/fonts/fontstruct.h>
 #include	<X11/keysymdef.h>
 
 #include	"authstr.h"
 #include	"auth.h"
 #include	"client.h"
+#include	"dispatch.h"
 
-extern ClientPtr currentClient;
 static FontResolutionPtr default_resolutions;
 static int  num_resolutions;
 static int  default_point_size = 120;
@@ -191,9 +190,10 @@ XpClientIsPrintClient(ClientPtr client, FontPathElementPtr fpe)
 }
 
 void
-CopyISOLatin1Lowered(unsigned char *dest, unsigned char *source, int length)
+CopyISOLatin1Lowered(char *d, char *s, int length)
 {
     register int i;
+    unsigned char *dest = d, *source = s;
 
     for (i = 0; i < length; i++, source++, dest++) {
 	if ((*source >= XK_A) && (*source <= XK_Z))
@@ -253,80 +253,6 @@ strncmpnocase(
 void
 NoopDDA(void)
 {
-}
-
-/* host list manipulation */
-int
-AddHost(
-    HostList   *list,
-    HostAddress *addr)
-{
-    HostAddress *new;
-
-    new = (HostAddress *) fsalloc(sizeof(HostAddress));
-    if (!new)
-	return FSBadAlloc;
-    new->address = (pointer) fsalloc(addr->addr_len);
-    if (!new->address) {
-	fsfree((char *) addr);
-	return FSBadAlloc;
-    }
-    new->type = addr->type;
-    new->addr_len = addr->addr_len;
-    memmove( (char *) new->address, (char *) addr->address, new->addr_len);
-
-    new->next = *list;
-    *list = new;
-    return FSSuccess;
-}
-
-int
-RemoveHost(
-    HostList   *list,
-    HostAddress *addr)
-{
-    HostAddress *t,
-               *last;
-
-    last = (HostAddress *) 0;
-    t = *list;
-    while (t) {
-	if (t->type == addr->type &&
-		t->addr_len == addr->addr_len &&
-		memcmp((char *) t->address, (char *) addr->address,
-		     min(t->addr_len, addr->addr_len)) == 0) {
-	    if (last) {
-		last->next = t->next;
-	    } else {
-		*list = t->next;
-	    }
-	    fsfree((char *) t->address);
-	    fsfree((char *) t);
-	    return FSSuccess;
-	}
-	last = t;
-	t = t->next;
-    }
-    return FSBadName;		/* bad host name */
-}
-
-Bool
-ValidHost(
-    HostList    list,
-    HostAddress *addr)
-{
-    HostAddress *t;
-
-    t = list;
-    while (t) {
-	if (t->type == addr->type &&
-		t->addr_len == addr->addr_len &&
-		memcmp((char *) t->address, (char *) addr->address,
-		     min(t->addr_len, addr->addr_len)) == 0) {
-	    return TRUE;
-	}
-    }
-    return FALSE;
 }
 
 /* block & wakeup handlers */

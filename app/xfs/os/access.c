@@ -1,4 +1,3 @@
-/* $Xorg: access.c,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
  
 Copyright 1990, 1991, 1998  The Open Group
@@ -43,68 +42,40 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/os/access.c,v 3.7tsi Exp $ */
+
+#include	"xfs-config.h"
 
 #include	<X11/Xos.h>
-#ifndef Lynx
 #include        <sys/param.h>
 #include	<sys/socket.h>
-#else
-#include	<socket.h>
-#endif
 #include	<netdb.h>
 #include	<netinet/in.h>
 #include	"clientstr.h"
 #include	"misc.h"
 #include	"site.h"
-#include	"accstr.h"
 #include	"osdep.h"
 #include	"osstruct.h"
-#include	"accstr.h"
+#include	"globals.h"
+#include	"access.h"
 
 long        MaxClients = DEFAULT_CLIENT_LIMIT;
 
 void
 AccessSetConnectionLimit(int num)
 {
-    num++;	/* take serverClient into account */
-    if (num > MAXSOCKS) {
+    int newlim = num + 8; /* allow room for serverClient, logs, etc. */
+    int maxfd = sysconf(_SC_OPEN_MAX) - 1;
+
+    if ((maxfd < 0) || (maxfd > MAXSOCKS)) {
+	maxfd = MAXSOCKS;
+    }
+    if (newlim > maxfd) {
 	ErrorF("Client limit of %d too high; using default of %d\n",
 	       num, DEFAULT_CLIENT_LIMIT);
 	return;
     }
-    MaxClients = num;
+    MaxClients = newlim;
 }
-
-#ifdef NOTDEF
-/*
- * XXX
- *
- * needs massive amounts of OS-dependent work (big surprise)
- * needs IPv6 support as well
- */
-int
-GetHostAddress(HostAddress *addr)
-{
-    char        hname[64];
-    struct hostent *hp;
-
-    addr->addr_len = sizeof(struct in_addr);
-    addr->address = (pointer) fsalloc(addr->addr_len);
-    if (!addr->address)
-	return FSBadAlloc;
-    addr->type = HOST_AF_INET;
-    gethostname(hname, sizeof(hname));
-    hp = gethostbyname(hname);
-    if (hp) {
-	memmove( (char *) addr->address, (char *) hp->h_addr, addr->addr_len);
-    } else {
-	fsfree((char *) addr->address);
-	return FSBadName;
-    }
-    return FSSuccess;
-}
-#endif
 
 /* ARGSUSED */
 int

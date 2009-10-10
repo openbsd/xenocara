@@ -1,4 +1,3 @@
-/* $Xorg: waitfor.c,v 1.4 2001/02/09 02:05:45 xorgcvs Exp $ */
 /*
  * waits for input
  */
@@ -47,18 +46,15 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $NCDXorg: @(#)waitfor.c,v 4.5 1991/06/24 11:59:20 lemke Exp $
- *
  */
-/* $XFree86: xc/programs/xfs/os/waitfor.c,v 3.15 2001/12/14 20:01:41 dawes Exp $ */
+
+#include	"xfs-config.h"
 
 #include	<X11/Xos.h>	/* strings, time, etc */
 
 #include	<stdio.h>
 #include	<errno.h>
-#if !defined(Lynx)
 #include	<sys/param.h>
-#endif
 
 #include	"clientstr.h"
 #include	"globals.h"
@@ -70,24 +66,24 @@ in this Software without prior written authorization from The Open Group.
 #define select(n,r,w,x,t) os2PseudoSelect(n,r,w,x,t)
 #endif
 
-extern WorkQueuePtr workQueue;
-
-
-extern fd_set WellKnownConnections;
-extern fd_set LastSelectMask;
-extern fd_set WriteMask;
-extern fd_set ClientsWithInput;
-extern fd_set ClientsWriteBlocked;
-extern fd_set AllSockets;
-extern fd_set AllClients;
-extern fd_set OutputPending;
-
-extern Bool AnyClientsWriteBlocked;
-extern Bool NewOutputPending;
-
-extern int  ConnectionTranslation[];
-
 long        LastReapTime;
+
+/* like ffs, but uses fd_mask instead of int as argument, so it works
+   when fd_mask is longer than an int, such as common 64-bit platforms */
+static inline int
+xfd_ffs(fd_mask mask)
+{
+    int i;
+
+    if (!mask) return 0;
+
+    for (i = 1; !(mask & 1); i++)
+    {
+        mask >>= 1;
+    }
+    return i;
+}
+
 
 /*
  * wait_for_something
@@ -198,7 +194,7 @@ WaitForSomething(int *pClientsReady)
 	    current_time = GetTimeInMillis();
 	for (i = 0; i < howmany(XFD_SETSIZE, NFDBITS); i++) {
 	    while (clientsReadable.fds_bits[i]) {
-		curclient = ffs(clientsReadable.fds_bits[i]) - 1;
+		curclient = xfd_ffs(clientsReadable.fds_bits[i]) - 1;
 		conn = ConnectionTranslation[curclient + (i << 5)];
 		clientsReadable.fds_bits[i] &= ~(((fd_mask)1L) << curclient);
 		client = clients[conn];
@@ -207,25 +203,14 @@ WaitForSomething(int *pClientsReady)
 		pClientsReady[nready++] = conn;
 		client->last_request_time = current_time;
 		client->clientGone = CLIENT_ALIVE;
+
+		if (nready >= MaxClients) {
+		    /* pClientsReady buffer has no more room, get the
+		       rest on the next time through select() loop */
+		    return nready;
+		}
 	    }
 	}
     }
     return nready;
 }
-
-#if 0
-/*
- * This is not always a macro
-  */
-int
-ANYSET(long *src)
-{
-    int         i;
-
-    for (i = 0; i < howmany(XFD_SETSIZE, NFDBITS); i++)
-	if (src[i])
-	    return (1);
-    return (0);
-}
-
-#endif

@@ -1,4 +1,3 @@
-/* $Xorg: tables.c,v 1.4 2001/02/09 02:05:43 xorgcvs Exp $ */
 /*
  * all the dispatch, error, event and reply vectors
  */
@@ -46,7 +45,8 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/difs/tables.c,v 1.5 2001/01/17 23:45:29 dawes Exp $ */
+
+#include "xfs-config.h"
 
 #include <dispatch.h>
 #include <swaprep.h>
@@ -60,7 +60,7 @@ in this Software without prior written authorization from The Open Group.
 
 InitialFunc InitialVector[3] =
 {
-    0,
+    NULL,
     ProcInitialConnection,
     ProcEstablishConnection
 };
@@ -89,9 +89,9 @@ ProcFunc ProcVector[NUM_PROC_VECTORS] =
     ProcQueryXBitmaps,
     ProcQueryXBitmaps,		/* 20 */
     ProcCloseFont,
-    0,
-    0,
-    0
+    NULL,
+    NULL,
+    NULL
 };
 
 SwappedProcFunc SwappedProcVector[NUM_PROC_VECTORS] =
@@ -118,21 +118,21 @@ SwappedProcFunc SwappedProcVector[NUM_PROC_VECTORS] =
     SProcQueryXBitmaps,
     SProcQueryXBitmaps,		/* 20 */
     SProcResourceRequest,
-    0,
-    0,
-    0
+    NULL,
+    NULL,
+    NULL
 };
 
 EventSwapFunc EventSwapVector[NUM_EVENT_VECTORS] =
 {
     SErrorEvent,
     (EventSwapFunc)NotImplemented,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 ReplySwapFunc ReplySwapVector[NUM_PROC_VECTORS] =

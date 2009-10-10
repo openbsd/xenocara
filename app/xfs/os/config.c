@@ -1,4 +1,3 @@
-/* $Xorg: config.c,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -44,12 +43,9 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $NCDXorg: @(#)config.c,v 4.6 1991/07/09 14:08:09 lemke Exp $
- *
  */
-/* $XFree86: xc/programs/xfs/os/config.c,v 3.15 2002/05/31 18:46:12 dawes Exp $ */
 
-#include	<xfs-config.h>
+#include	"xfs-config.h"
 
 #include	<stdio.h>
 #include	<stdlib.h>
@@ -68,6 +64,9 @@ in this Software without prior written authorization from The Open Group.
 #include	<X11/fonts/fontutil.h>
 #include	"difs.h"
 
+/* libXfont/src/bitmap/snfstr.h */
+extern void SnfSetFormat(int bit, int byte, int glyph, int scan);
+
 static const char * const default_config_files[] = {
 #ifdef DEFAULT_CONFIG_FILE
     DEFAULT_CONFIG_FILE,
@@ -76,8 +75,6 @@ static const char * const default_config_files[] = {
 #endif
     NULL
 };
-
-extern int portFromCmdline;
 
 static char *font_catalogue = NULL;
 
@@ -114,7 +111,7 @@ static ConfigOptionRec config_options[] = {
     {"snf-format", config_set_snf_format},
     {"trusted-clients", config_set_list},
     {"use-syslog", config_set_bool},
-    {(char *) 0, 0},
+    {NULL, NULL},
 };
 
 char       *ConfigErrors[] = {
@@ -195,7 +192,7 @@ match_param_name(char *name)
 	}
 	pos = ((high + low) >> 1);
     }
-    return 0;
+    return NULL;
 }
 
 static int
@@ -334,7 +331,7 @@ char *__XFSRedirRoot(char *fname)
 int
 ReadConfigFile(const char *filename)
 {
-    FILE       *fp;
+    FILE       *fp = NULL;
     int         ret;
     int         len;
     int         i;
@@ -359,8 +356,12 @@ ReadConfigFile(const char *filename)
 #ifdef __UNIXOS2__
 	    filename = __XFSRedirRoot(filename);
 #endif	    
-	    if ((fp = fopen(filename, "r")) != NULL)
+	    if ((fp = fopen(filename, "r")) != NULL) {
+		if (configfilename == NULL) {
+		    configfilename = strdup(filename); /* save for clones */
+		}
 		break;
+	    }
 	}
 	if (fp == NULL) {
 	    for (i = 0; default_config_files[i] != NULL; i++) {

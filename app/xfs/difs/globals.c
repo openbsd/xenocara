@@ -1,4 +1,3 @@
-/* $Xorg: globals.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
  * various font server globals
  */
@@ -47,18 +46,19 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)globals.c	4.3	5/3/91
- *
  */
+
+#include	"xfs-config.h"
+
 #include	<X11/fonts/FSproto.h>
 #include	"clientstr.h"
 #include	"misc.h"
 #include	"site.h"
+#include	"globals.h"
 
 ClientPtr  *clients;
 ClientPtr   serverClient;
 int         currentMaxClients;
-char       *server;
 int         serverGeneration = 0;
 int         argcGlobal;
 char      **argvGlobal;

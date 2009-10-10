@@ -59,13 +59,14 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xfs$(EXEEXT)
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@am__append_1 = $(noinst_DATA)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/xfs-config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
 	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -108,7 +109,7 @@ am__vpath_adj = case $$p in \
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 appmanDATA_INSTALL = $(INSTALL_DATA)
 configDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appman_DATA) $(config_DATA)
+DATA = $(appman_DATA) $(config_DATA) $(noinst_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -121,7 +122,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -137,10 +137,12 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CONFIG_FILE_DESC = @CONFIG_FILE_DESC@
 CONFIG_FILE_PATH = @CONFIG_FILE_PATH@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFAULT_CONFIG_FILE = @DEFAULT_CONFIG_FILE@
 DEFS = @DEFS@
@@ -154,6 +156,10 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+FONTPATH = @FONTPATH@
+GREP = @GREP@
+HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -172,6 +178,8 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAKE_DEVEL_DOCS_FALSE = @MAKE_DEVEL_DOCS_FALSE@
+MAKE_DEVEL_DOCS_TRUE = @MAKE_DEVEL_DOCS_TRUE@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 OBJEXT = @OBJEXT@
@@ -183,15 +191,16 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+RAWCPP = @RAWCPP@
+RAWCPPFLAGS = @RAWCPPFLAGS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XFS_CFLAGS = @XFS_CFLAGS@
 XFS_LIBS = @XFS_LIBS@
+XMLTO = @XMLTO@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -206,23 +215,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -233,6 +250,7 @@ FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO -DFONTCACHE
 AM_CPPFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
 	$(FONT_FLAGS) -D_BSD_SOURCE -DFONT_t -DTRANS_SERVER -DTRANS_REOPEN
 
+AM_CFLAGS = $(CWARNFLAGS)
 LDADD = $(XFS_LIBS)
 xfs_SOURCES = \
 	difs/atom.c \
@@ -266,7 +284,6 @@ xfs_SOURCES = \
 	os/waitfor.c \
 	os/xfstrans.c \
 	include/access.h \
-	include/accstr.h \
 	include/assert.h \
 	include/auth.h \
 	include/authstr.h \
@@ -298,44 +315,60 @@ appman_PRE = \
 
 FSERRORS = /var/log/xfs.log
 FONTDIR = $(libdir)/X11/fonts
-FONTPATH = $(FONTDIR)/misc/,$(FONTDIR)/TTF/,$(FONTDIR)/Type1/,$(FONTDIR)/CID/,$(FONTDIR)/100dpi/,$(FONTDIR)/75dpi/
+
+# Strings to replace in config.cpp
+CPP_FILES_FLAGS = $(MANDEFS) \
+	-DDEFAULTFONTPATH="$(FONTPATH)" -DFSERRORS="$(FSERRORS)"
+
 config_DATA = config
-EXTRA_DIST = xfs.def config.cpp $(appman_PRE) ChangeLog
-CLEANFILES = config $(appman_DATA)
+
+# Developer documentation - not installed on system
+EXTRA_DIST = xfs.def config.cpp $(appman_PRE) ChangeLog \
+	doc/xfs-design.xml doc/xfs-design.css doc/xfs-design.xsl
+CLEANFILES = config $(appman_DATA) $(am__append_1)
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 SED = sed
 
+# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
+# to cpp, because that trick does not work on all ANSI C preprocessors.
+# Delete line numbers from the cpp output (-P is not portable, I guess).
+# Allow XCOMM to be preceded by whitespace and provide a means of generating
+# output lines with trailing backslashes.
+# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
+CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
+                       -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
+                       -e '/^[ 	]*XCOMM$$/s/XCOMM/\#/' \
+                       -e '/^[ 	]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
+                       -e '/^[ 	]*XHASH/s/XHASH/\#/' \
+                       -e '/XSLASHGLOB/s/XSLASHGLOB/\/\*/' \
+                       -e '/\@\@$$/s/\@\@$$/\\/'
+
+
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
 XORGMANNAME = X Version 11
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__configdir__|$(configdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' \
-	-e 's|__configfiledesc__|$(CONFIG_FILE_DESC)|g' \
-	-e 's|__configfilepath__|$(CONFIG_FILE_PATH)|g' \
-	-e 's|XCOMM|\#|g'
+MANDEFS = \
+	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
+	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
+	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
+	-D__adminmansuffix__=$(ADMIN_MAN_SUFFIX) \
+	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
+	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
+	-D__configfiledesc__="$(CONFIG_FILE_DESC)" \
+	-D__configfilepath__="$(CONFIG_FILE_PATH)"
 
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
 MAINTAINERCLEANFILES = ChangeLog
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 @LINT_TRUE@	       $(AM_CPPFLAGS) $(CPPFLAGS)
 
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@noinst_DATA = doc/xfs-design/index.html doc/xfs-design.pdf doc/xfs-design.txt
 all: xfs-config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .cpp .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -925,7 +958,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/m4
+	$(mkdir_p) $(distdir)/doc
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -1085,9 +1118,11 @@ maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
+@HAVE_XMLTO_FALSE@clean-local:
+@MAKE_DEVEL_DOCS_FALSE@clean-local:
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -1139,36 +1174,54 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-configDATA uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
-	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
-	distclean distclean-compile distclean-generic distclean-hdr \
-	distclean-tags distcleancheck distdir distuninstallcheck dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-appmanDATA install-binPROGRAMS install-configDATA \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	clean-binPROGRAMS clean-generic clean-local ctags dist \
+	dist-all dist-bzip2 dist-gzip dist-hook dist-shar dist-tarZ \
+	dist-zip distcheck distclean distclean-compile \
+	distclean-generic distclean-hdr distclean-tags distcleancheck \
+	distdir distuninstallcheck dvi dvi-am html html-am info \
+	info-am install install-am install-appmanDATA \
+	install-binPROGRAMS install-configDATA install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
 	uninstall-am uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-configDATA uninstall-info-am
 
 
-config: config.cpp
-	sed -e s/XCOMM/\#/ -e s@DEFAULTFONTPATH@$(FONTPATH)@ -e s@FSERRORS@$(FSERRORS)@ < $(top_srcdir)/config.cpp > config
+.cpp:
+	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
 
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
 @LINT_TRUE@lint:
 @LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(xfs_SOURCES)
+
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@doc/xfs-design/index.html: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl doc/xfs-design/xfs-design.css
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc/xfs-design xhtml $(srcdir)/doc/xfs-design.xml
+
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@doc/xfs-design/xfs-design.css: $(srcdir)/doc/xfs-design.css
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@	-rm -f doc/xfs-design/xfs-design.css
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@	$(MKDIR_P) doc/xfs-design
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@	cp -pf $(srcdir)/doc/xfs-design.css doc/xfs-design/xfs-design.css
+
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@clean-local:
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@	-rm -rf doc/xfs-design
+
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@doc/xfs-design.pdf: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc pdf $(srcdir)/doc/xfs-design.xml
+
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@doc/xfs-design.txt: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl
+@HAVE_XMLTO_TRUE@@MAKE_DEVEL_DOCS_TRUE@	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc txt $(srcdir)/doc/xfs-design.xml
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

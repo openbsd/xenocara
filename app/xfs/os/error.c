@@ -1,4 +1,3 @@
-/* $Xorg: error.c,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
  * error message handling
  */
@@ -44,32 +43,13 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: error.c,v 1.11 2002/10/15 01:45:03 dawes Exp $ */
+
+#include	"xfs-config.h"
 
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<stdarg.h>
 #include	<X11/Xos.h>
-
-#ifndef X_NOT_POSIX
-#ifdef _POSIX_SOURCE
-#include <limits.h>
-#else
-#define _POSIX_SOURCE
-#include <limits.h>
-#undef _POSIX_SOURCE
-#endif
-#endif
-#ifndef PATH_MAX
-#include <sys/param.h>
-#ifndef PATH_MAX
-#ifdef MAXPATHLEN
-#define PATH_MAX MAXPATHLEN
-#else
-#define PATH_MAX 1024
-#endif
-#endif
-#endif
 
 #ifdef USE_SYSLOG
 #include	<syslog.h>
@@ -78,13 +58,11 @@ in this Software without prior written authorization from The Open Group.
 #include	<errno.h>
 
 #include	"misc.h"
-
-extern char *progname;
+#include	"globals.h"
+#include	"osdep.h"
 
 Bool        UseSyslog;
-#ifdef USE_SYSLOG
 Bool        log_open = FALSE;
-#endif
 char        ErrorFile[PATH_MAX];
 static char	CurrentErrorFile[PATH_MAX];
 
@@ -113,11 +91,13 @@ InitErrors(void)
     }
 #endif
 
-    if (ErrorFile[0] && strcmp(CurrentErrorFile, ErrorFile) != 0) {
-	i = creat(ErrorFile, 0666);
+    if (ErrorFile[0] &&
+	(!log_open || (strcmp(CurrentErrorFile, ErrorFile) != 0)) ) {
+	i = open(ErrorFile, O_WRONLY | O_APPEND | O_CREAT, 0666);
 	if (i != -1) {
 	    dup2(i, 2);
 	    close(i);
+	    log_open = TRUE;
 	} else {
 	    ErrorF("can't open error file \"%s\"\n", ErrorFile);
 	}
@@ -128,13 +108,26 @@ InitErrors(void)
 void
 CloseErrors(void)
 {
+    int nullfd;
+
+    if (!log_open)
+	return;
+
+    log_open = FALSE;
+
 #ifdef USE_SYSLOG
     if (UseSyslog) {
 	closelog();
-	log_open = FALSE;
 	return;
     }
 #endif
+
+    close (2);
+    nullfd = open ("/dev/null", O_RDWR);
+    if (nullfd != 2) {
+	dup2 (nullfd, 2);
+	close(nullfd);
+    }
 }
 
 void

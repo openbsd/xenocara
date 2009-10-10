@@ -1,4 +1,3 @@
-/* $Xorg: os.h,v 1.5 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -44,10 +43,7 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $NCDXorg: @(#)os.h,v 4.2 1991/05/10 07:59:16 lemke Exp $
- *
  */
-/* $XFree86: xc/programs/xfs/include/os.h,v 3.14 2002/10/15 01:45:03 dawes Exp $ */
 
 #ifndef	_OS_H_
 #define	_OS_H_
@@ -68,12 +64,6 @@ typedef pointer FID;
 #include "X11/Xalloca.h"
 
 #define	MAX_REQUEST_SIZE	8192
-
-#ifdef SIGNALRETURNSINT
-#define SIGVAL int
-#else
-#define SIGVAL void
-#endif
 
 #define	fsalloc(size)		FSalloc((unsigned long)size)
 #define	fsrealloc(ptr, size)	FSrealloc((pointer)ptr, (unsigned long)size)
@@ -106,6 +96,7 @@ extern	void	StopListening(void);
 
 /* os/daemon.c */
 extern	void	BecomeDaemon(void);
+extern	void	DetachStdio(void);
 
 /* os/error.c */
 extern void	Error(char *str);
@@ -137,11 +128,11 @@ extern int 	CloneMyself(void);
 extern	void	OsInit(void);
 
 /* os/utils.c */
-extern	SIGVAL	AutoResetServer (int n);
-extern	SIGVAL	CleanupChild (int n);
-extern	SIGVAL	GiveUp (int n);
-extern	SIGVAL	ServerCacheFlush (int n);
-extern	SIGVAL	ServerReconfig (int n);
+extern	void	AutoResetServer (int n);
+extern	void	CleanupChild (int n);
+extern	void	GiveUp (int n);
+extern	void	ServerCacheFlush (int n);
+extern	void	ServerReconfig (int n);
 extern	long	GetTimeInMillis (void);
 extern	pointer	FSalloc(unsigned long);
 extern	pointer	FScalloc (unsigned long amount);

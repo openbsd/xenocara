@@ -1,4 +1,3 @@
-/* $Xorg: misc.h,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
  
 Copyright 1990, 1991, 1998  The Open Group
@@ -43,7 +42,6 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/include/misc.h,v 3.8 2001/07/25 15:05:21 dawes Exp $ */
 
 #ifndef _MISC_H_
 #define _MISC_H_
@@ -178,5 +176,8 @@ typedef struct {		/* when cloning, need old transport info */
 
 /* os/connection.c */
 extern	void	CreateSockets(int old_listen_count, OldListenRec *old_listen);
+
+/* os/xfstrans.c */
+extern OldListenRec *_FontTransGetInetdListenInfo (int fd);
 
 #endif				/* _MISC_H_ */

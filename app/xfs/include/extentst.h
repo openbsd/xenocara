@@ -1,4 +1,3 @@
-/* $Xorg: extentst.h,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -44,10 +43,7 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)extentst.h	4.1	91/05/02
- *
  */
-/* $XFree86: xc/programs/xfs/include/extentst.h,v 1.6 2001/12/14 20:01:38 dawes Exp $ */
 
 #ifndef _EXTENTST_H_
 #define _EXTENTST_H_

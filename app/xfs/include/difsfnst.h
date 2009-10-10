@@ -1,4 +1,3 @@
-/* $Xorg: difsfnst.h,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -44,7 +43,6 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/include/difsfnst.h,v 1.4 2001/01/17 23:45:31 dawes Exp $ */
 
 #ifndef _DIFSFONTST_H_
 #define _DIFSFONTST_H_

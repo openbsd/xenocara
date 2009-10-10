@@ -1,7 +1,3 @@
-/*
- * $XFree86: xc/programs/xfs/include/dispatch.h,v 1.2 1999/03/07 11:41:00 dawes Exp $
- */
-
 /************************************************************
 
 Copyright 1998 by Thomas E. Dickey <dickey@clark.net>
@@ -62,9 +58,6 @@ extern int ProcQueryXInfo (ClientPtr client);
 extern int ProcQueryXExtents (ClientPtr client);
 extern int ProcQueryXBitmaps (ClientPtr client);
 extern int ProcCloseFont (ClientPtr client);
-#if 0
-extern void CloseDownClient (ClientPtr client);
-#endif
 extern void InitProcVectors (void);
 extern void InitClient (ClientPtr client, int i, pointer ospriv);
 extern ClientPtr NextAvailableClient (pointer ospriv);

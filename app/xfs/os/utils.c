@@ -1,4 +1,3 @@
-/* $Xorg: utils.c,v 1.4 2001/02/09 02:05:45 xorgcvs Exp $ */
 /*
  * misc os utilities
  */
@@ -46,7 +45,8 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/os/utils.c,v 3.20 2002/10/15 01:45:03 dawes Exp $ */
+
+#include	"xfs-config.h"
 
 #include	<stdio.h>
 #include	<X11/Xos.h>
@@ -54,9 +54,6 @@ in this Software without prior written authorization from The Open Group.
 #include	"misc.h"
 #include	"globals.h"
 #include	<signal.h>
-#ifdef MEMBUG
-#include	<util/memleak/memleak.h>
-#endif
 #include	<sys/wait.h>
 #include	<unistd.h>
 #include	<pwd.h>
@@ -65,39 +62,18 @@ in this Software without prior written authorization from The Open Group.
 #include	<sys/types.h>
 #include	<errno.h>
 #include	<string.h>
-
-#ifndef X_NOT_POSIX
-#ifdef _POSIX_SOURCE
-#include <limits.h>
-#else
-#define _POSIX_SOURCE
-#include <limits.h>
-#undef _POSIX_SOURCE
-#endif
-#endif /* X_NOT_POSIX */
-#ifndef PATH_MAX
-#include <sys/param.h>
-#ifndef PATH_MAX
-#ifdef MAXPATHLEN
-#define PATH_MAX MAXPATHLEN
-#else
-#define PATH_MAX 1024
-#endif
-#endif
-#endif /* PATH_MAX */
-
-#if defined(X_NOT_POSIX) && (defined(SYSV) || defined(SVR4))
-#define SIGNALS_RESET_WHEN_CAUGHT
-#endif
+#include	"osdep.h"
 
 #include <stdlib.h>
 
-extern char *configfilename;
 static Bool dropPriv = FALSE; /* whether or not to drop root privileges */
 #ifdef DEFAULT_DAEMON
 static Bool becomeDaemon = TRUE; /* whether to become a daemon or not */
 #else
 static Bool becomeDaemon = FALSE; /* whether to become a daemon or not */
+#endif
+#ifdef XFS_INETD
+static Bool runFromInetd = FALSE; /* whether we were run from inetd or not */
 #endif
 static const char *userId = NULL;
 char       *progname;
@@ -107,11 +83,10 @@ Bool        portFromCmdline = FALSE;
 OldListenRec *OldListen = NULL;
 int 	     OldListenCount = 0;
 
-#ifdef STDERR_FILENO
-# define WRITES write(STDERR_FILENO, s, strlen(s))
-#else
-# define WRITES write(fileno(stderr), s, strlen(s))
+#ifndef STDERR_FILENO
+# define STDERR_FILENO fileno(stderr)
 #endif
+#define WRITES(s) write(STDERR_FILENO, s, strlen(s))
 
 static char *pidFile = XFSPIDDIR "/xfs.pid";
 static int  pidFd;
@@ -119,7 +94,7 @@ static FILE *pidFilePtr;
 static int  StorePid (void);
 
 /* ARGSUSED */
-SIGVAL
+void
 AutoResetServer(int n)
 {
     int olderrno = errno;
@@ -131,14 +106,11 @@ AutoResetServer(int n)
     dispatchException |= DE_RESET;
     isItTimeToYield = TRUE;
 
-#ifdef SIGNALS_RESET_WHEN_CAUGHT
-    signal(SIGHUP, AutoResetServer);
-#endif
     errno = olderrno;
 }
 
 /* ARGSUSED */
-SIGVAL
+void
 GiveUp(int n)
 {
     int olderrno = errno;
@@ -152,7 +124,7 @@ GiveUp(int n)
 }
 
 /* ARGSUSED */
-SIGVAL
+void
 ServerReconfig(int n)
 {
     int olderrno = errno;
@@ -164,14 +136,11 @@ ServerReconfig(int n)
     dispatchException |= DE_RECONFIG;
     isItTimeToYield = TRUE;
 
-#ifdef SIGNALS_RESET_WHEN_CAUGHT
-    signal(SIGUSR1, ServerReconfig);
-#endif
     errno = olderrno;
 }
 
 /* ARGSUSED */
-SIGVAL
+void
 ServerCacheFlush(int n)
 {
     int olderrno = errno;
@@ -183,27 +152,29 @@ ServerCacheFlush(int n)
     dispatchException |= DE_FLUSH;
     isItTimeToYield = TRUE;
 
-#ifdef SIGNALS_RESET_WHEN_CAUGHT
-    signal(SIGUSR2, ServerCacheFlush);
-#endif
     errno = olderrno;
 }
 
 /* ARGSUSED */
-SIGVAL
+void
 CleanupChild(int n)
 {
     int olderrno = errno;
+    pid_t child;
 
 #ifdef DEBUG
     WRITES("got a child signal\n");
 #endif
 
-    wait(NULL);
+    while ( (child = waitpid((pid_t)-1, NULL, WNOHANG)) > 0 ) {
+#ifdef DEBUG
+	char msgbuf[64];
 
-#ifdef SIGNALS_RESET_WHEN_CAUGHT
-    signal(SIGCHLD, CleanupChild);
+	snprintf(msgbuf, sizeof(msgbuf), " child %d exited\n", child);
+	WRITES(msgbuf);
 #endif
+    }
+
     errno = olderrno;
 }
 
@@ -227,9 +198,7 @@ usage(void)
 void
 OsInitAllocator (void)
 {
-#ifdef MEMBUG
-    CheckMemory ();
-#endif
+    return;
 }
 
 
@@ -339,6 +308,13 @@ ProcessCmdLine(int argc, char **argv)
 	        becomeDaemon = TRUE;
 	} else if (!strcmp(argv[i], "-nodaemon")) {
 	        becomeDaemon = FALSE;
+	} else if (!strcmp(argv[i], "-inetd")) {
+#ifdef XFS_INETD
+		runFromInetd = TRUE;
+#else
+		FatalError("-inetd specified, but xfs was not built"
+			   " with inetd support\n");
+#endif
 	} else if (!strcmp(argv[i], "-user")) {
 	    if (argv[i + 1])
 		userId = argv[++i];
@@ -350,16 +326,6 @@ ProcessCmdLine(int argc, char **argv)
 	    else
 		usage();
 	}
-#ifdef MEMBUG
-	else if ( strcmp( argv[i], "-alloc") == 0)
-	{
-	    extern unsigned long    MemoryFail;
-	    if(++i < argc)
-	        MemoryFail = atoi(argv[i]);
-	    else
-		usage ();
-	}
-#endif
 	else
 	    usage();
     }
@@ -370,11 +336,6 @@ ProcessCmdLine(int argc, char **argv)
 
 unsigned long	Must_have_memory;
 
-#ifdef MEMBUG
-#define MEM_FAIL_SCALE	100000
-unsigned long	MemoryFail;
-
-#endif
 
 /* FSalloc -- FS's internal memory allocator.  Why does it return unsigned
  * int * instead of the more common char *?  Well, if you read K&R you'll
@@ -399,16 +360,8 @@ FSalloc (unsigned long amount)
 	amount++;
     /* aligned extra on long word boundary */
     amount = (amount + 3) & ~3;
-#ifdef MEMBUG
-    if (!Must_have_memory && MemoryFail &&
-	((random() % MEM_FAIL_SCALE) < MemoryFail))
-	return 0;
-    if (ptr = (pointer)fmalloc(amount))
-	return ptr;
-#else
     if ((ptr = (pointer)malloc(amount)) != 0)
 	return ptr;
-#endif
     if (Must_have_memory)
 	FatalError("out of memory\n");
     return 0;
@@ -436,14 +389,6 @@ FScalloc (unsigned long amount)
 pointer
 FSrealloc (pointer ptr, unsigned long amount)
 {
-#ifdef MEMBUG
-    if (!Must_have_memory && MemoryFail &&
-	((random() % MEM_FAIL_SCALE) < MemoryFail))
-	return 0;
-    ptr = (pointer)frealloc((char *) ptr, amount);
-    if (ptr)
-	return ptr;
-#else
     if ((long)amount <= 0)
     {
 	if (ptr && !amount)
@@ -457,7 +402,6 @@ FSrealloc (pointer ptr, unsigned long amount)
 	ptr = (pointer)malloc(amount);
     if (ptr)
         return ptr;
-#endif
     if (Must_have_memory)
 	FatalError("out of memory\n");
     return 0;
@@ -471,13 +415,8 @@ FSrealloc (pointer ptr, unsigned long amount)
 void
 FSfree(pointer ptr)
 {
-#ifdef MEMBUG
-    if (ptr)
-	ffree((char *)ptr); 
-#else
     if (ptr)
 	free((char *)ptr); 
-#endif
 }
 
 #endif /* SPECIAL_MALLOC */
@@ -524,6 +463,36 @@ void
 SetDaemonState(void)
 {
     int	    oldpid;
+
+#ifdef XFS_INETD
+    if (runFromInetd) {
+	int inetdListener;
+
+	/* fd's 0, 1, & 2 are the initial listen socket provided by inetd,
+	 * so dup it and then clear them so stdin/out/err aren't in use.
+	 */
+	inetdListener = dup(0);
+	if (inetdListener == -1) {
+	    FatalError("failed to dup inetd socket: %s\n",
+		       strerror(errno));
+	}
+	DetachStdio();
+
+	/* Setup & pass the inetd socket back through the connection setup
+	 * code the same way as a cloned listening port
+	 */
+	OldListenCount = 1;
+	OldListen = _FontTransGetInetdListenInfo (inetdListener);
+	if (OldListen == NULL) {
+	    FatalError("failed to initialize OldListen to inetd socket: %s\n",
+		       strerror(errno));
+	}
+	ListenPort = OldListen[0].portnum;
+	NoticeF("accepting listener from inetd on fd %d, port %d\n",
+		inetdListener, ListenPort);
+	return;
+    }
+#endif /* XFS_INETD */
 
     if (becomeDaemon) {
 	BecomeDaemon();

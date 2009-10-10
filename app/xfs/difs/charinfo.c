@@ -1,4 +1,3 @@
-/* $Xorg: charinfo.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
  
 Copyright 1990, 1991, 1998  The Open Group
@@ -49,19 +48,22 @@ in this Software without prior written authorization from The Open Group.
  * This file was once on the other side of
  * the font library interface as util/fsfuncs.c.
  */
-/* $XFree86: xc/programs/xfs/difs/charinfo.c,v 1.11 2001/10/28 03:34:34 tsi Exp $ */
+
+#include "xfs-config.h"
 
 #include <X11/Xos.h>
 #include "misc.h"
 #include <X11/fonts/fontstruct.h>
 #include <X11/fonts/fontutil.h>
+
+/* Don't conflict with macros/prototypes in difsutils.h */
+#define _HAVE_XALLOC_DECLS
+#include <X11/fonts/fontmisc.h>
+
 #include "clientstr.h"
 #define FSMD_H
 #include <X11/fonts/FSproto.h>
 #include "difs.h"
-
-extern void TwoByteSwap(unsigned char *, int);
-extern void FourByteSwap(unsigned char *, int);
 
 #define GLWIDTHBYTESPADDED(bits,nbytes) \
 	((nbytes) == 1 ? (((bits)+7)>>3)        /* pad to 1 byte */ \
@@ -157,7 +159,7 @@ getCharInfos (
     (*metrics_func) (pfont, 1, ch, encoding,
 			  &glyphCount, &defaultPtr);
     if (glyphCount != 1)
-	defaultPtr = 0;
+	defaultPtr = NULL;
     
     /* for each range, get each character individually, undoing the
      default character substitution so we get zero metrics for
@@ -287,7 +289,7 @@ packGlyphs (
     int		    dst_extra;
     int		    r, w;
     CharInfoPtr	*bitChars, *bitCharsFree, bitc;
-    CharInfoPtr	*inkChars, *inkCharsFree = 0, inkc;
+    CharInfoPtr	*inkChars, *inkCharsFree = NULL, inkc;
     FontInfoPtr	pinfo = &pfont->info;
     xCharInfo	*bitm, *inkm;
     
@@ -356,7 +358,7 @@ packGlyphs (
     if (mappad == BitmapFormatImageRectMax)
 	charsize = dstbpr * height;
     size = 0;
-    gdata = 0;
+    gdata = NULL;
     contiguous = TRUE;
     l = lengths;
     inkChars = inkCharsFree;

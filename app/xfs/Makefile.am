@@ -30,6 +30,8 @@ FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO -DFONTCACHE
 AM_CPPFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
 	$(FONT_FLAGS) -D_BSD_SOURCE -DFONT_t -DTRANS_SERVER -DTRANS_REOPEN
 
+AM_CFLAGS = $(CWARNFLAGS)
+
 LDADD = $(XFS_LIBS)
 
 xfs_SOURCES = \
@@ -64,7 +66,6 @@ xfs_SOURCES = \
 	os/waitfor.c \
 	os/xfstrans.c \
 	include/access.h \
-	include/accstr.h \
 	include/assert.h \
 	include/auth.h \
 	include/authstr.h \
@@ -98,10 +99,9 @@ FSERRORS = /var/log/xfs.log
 
 FONTDIR = $(libdir)/X11/fonts
 
-FONTPATH = $(FONTDIR)/misc/,$(FONTDIR)/TTF/,$(FONTDIR)/Type1/,$(FONTDIR)/CID/,$(FONTDIR)/100dpi/,$(FONTDIR)/75dpi/
-
-config: config.cpp
-	sed -e s/XCOMM/\#/ -e s@DEFAULTFONTPATH@$(FONTPATH)@ -e s@FSERRORS@$(FSERRORS)@ < $(top_srcdir)/config.cpp > config
+# Strings to replace in config.cpp
+CPP_FILES_FLAGS = $(MANDEFS) \
+	-DDEFAULTFONTPATH="$(FONTPATH)" -DFSERRORS="$(FSERRORS)"
 
 config_DATA = config
 
@@ -117,31 +117,42 @@ CLEANFILES += $(appman_DATA)
 
 SED = sed
 
+# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
+# to cpp, because that trick does not work on all ANSI C preprocessors.
+# Delete line numbers from the cpp output (-P is not portable, I guess).
+# Allow XCOMM to be preceded by whitespace and provide a means of generating
+# output lines with trailing backslashes.
+# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
+
+CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
+                       -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
+                       -e '/^[ 	]*XCOMM$$/s/XCOMM/\#/' \
+                       -e '/^[ 	]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
+                       -e '/^[ 	]*XHASH/s/XHASH/\#/' \
+                       -e '/XSLASHGLOB/s/XSLASHGLOB/\/\*/' \
+                       -e '/\@\@$$/s/\@\@$$/\\/'
+
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
   XORGMANNAME = X Version 11
 
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__configdir__|$(configdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' \
-	-e 's|__configfiledesc__|$(CONFIG_FILE_DESC)|g' \
-	-e 's|__configfilepath__|$(CONFIG_FILE_PATH)|g' \
-	-e 's|XCOMM|\#|g'
+MANDEFS =  \
+	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
+	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
+	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
+	-D__adminmansuffix__=$(ADMIN_MAN_SUFFIX) \
+	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
+	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
+	-D__configfiledesc__="$(CONFIG_FILE_DESC)" \
+	-D__configfilepath__="$(CONFIG_FILE_PATH)"
 
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
+
+.cpp:
+	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
 
 EXTRA_DIST += ChangeLog
 MAINTAINERCLEANFILES = ChangeLog
@@ -149,7 +160,7 @@ MAINTAINERCLEANFILES = ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
@@ -160,3 +171,31 @@ ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(xfs_SOURCES)
 endif LINT
+
+# Developer documentation - not installed on system
+EXTRA_DIST += doc/xfs-design.xml doc/xfs-design.css doc/xfs-design.xsl
+
+if MAKE_DEVEL_DOCS
+if HAVE_XMLTO
+noinst_DATA = doc/xfs-design/index.html doc/xfs-design.pdf doc/xfs-design.txt
+CLEANFILES += $(noinst_DATA)
+
+doc/xfs-design/index.html: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl doc/xfs-design/xfs-design.css
+	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc/xfs-design xhtml $(srcdir)/doc/xfs-design.xml
+
+doc/xfs-design/xfs-design.css: $(srcdir)/doc/xfs-design.css
+	-rm -f doc/xfs-design/xfs-design.css
+	$(MKDIR_P) doc/xfs-design
+	cp -pf $(srcdir)/doc/xfs-design.css doc/xfs-design/xfs-design.css
+
+clean-local:
+	-rm -rf doc/xfs-design
+
+doc/xfs-design.pdf: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl
+	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc pdf $(srcdir)/doc/xfs-design.xml
+
+doc/xfs-design.txt: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl
+	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc txt $(srcdir)/doc/xfs-design.xml
+
+endif HAVE_XMLTO
+endif MAKE_DEVEL_DOCS

@@ -1,12 +1,41 @@
-/* $Xorg: README,v 1.3 2000/08/17 19:54:19 cpqbld Exp $ */
+All questions regarding this software should be directed at the
+Xorg mailing list:
+
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+Please submit bug reports to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/app/xfs
+
+        http://cgit.freedesktop.org/xorg/app/xfs
+
+For patch submission instructions, see:
+
+	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage
+
+------------------------------------------------------------------------------
+
+[The rest of these notes come from the original X11R5 implementation
+ in 1991, and have been updated slightly for the xfs 1.1.0 modular release,
+ but are otherwise a bit stale.]
+
 Installation instructions for fontserver
 
-1 - set DefaultFSConfigFile to point to the correct place, if the default
-    is not what you want.
+1 - If you don't want to use the default config file location,
+    run configure with the --with-default-config-file=path option to 
+    point to the correct place.
 
-    an example config file is in ./config
+    An example config file is in ./config
 
-2 - modify the file named by DefaultFsConfigFile so the 'catalogue'
+2 - modify the config file so the 'catalogue'
 	parameter points to a set of valid font directories.
 
 At this point the test programs should work.  Start the font server
@@ -15,17 +44,12 @@ At this point the test programs should work.  Start the font server
 	FSlib understands the environment variable FONTSERVER.
 	The format is the same as Xlib, (ie, hostname:server_number).
 
-See mit/doc/fontserver:
+The doc directory contains various pieces of documentation on the font
+server and associated software:
 
-./doc
-	various pieces of documentation on the font server and associated
-	software:
+	xfs-design.xml	- DocBook source of fontserver design overview
 
-	FSlib.doc	- short summary of the FSlib functions and their args
-	test_progs	- description of the clients & test programs
-	design.ms	- troff source of fontserver design overview
-
-Tested font formats.
+Tested font formats:
 
 The fontserver has been tested with PCF, Speedo, SNF and BDF formats.
 
@@ -34,3 +58,6 @@ Tested environments:
 the fontserver and clients have been built & tested on SPARC running
 4.x and a DECstation 3100 running V4.0.  it should work ok on any 32
 bit UNIX w/ BSD sockets.
+
+------------------------------------------------------------------------------
+

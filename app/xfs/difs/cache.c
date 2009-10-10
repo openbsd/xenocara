@@ -1,5 +1,3 @@
-/* $XdotOrg: $ */
-/* $Xorg: cache.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -45,10 +43,9 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)cache.c	4.2	91/05/02
- *
  */
-/* $XFree86: xc/programs/xfs/difs/cache.c,v 1.6 2001/12/14 20:01:33 dawes Exp $ */
+
+#include	"xfs-config.h"
 
 #include	"cachestr.h"
 #include	"misc.h"
@@ -242,7 +239,7 @@ flush_cache(CachePtr cache, unsigned long needed)
 	/* fixup list */
 	oldprev = &cache->entries[oldbucket];
 	cp = *oldprev;
-	for (; (cp = *oldprev) != 0; oldprev = &cp->next) {
+	for (; (cp = *oldprev) != NULL; oldprev = &cp->next) {
 	    if (cp == oldest) {
 		*oldprev = oldest->next;
 		break;

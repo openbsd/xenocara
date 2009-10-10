@@ -1,4 +1,3 @@
-/* $Xorg: resource.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -47,7 +46,6 @@ in this Software without prior written authorization from The Open Group.
  * %W%	%G%
  *
  */
-/* $XFree86: xc/programs/xfs/difs/resource.c,v 3.8tsi Exp $ */
 /*
  *      a resource is a 32 bit quantity.  the upper 12 bits are client id.
  *      client provides a 19 bit resource id. this is "hashed" by me by
@@ -65,6 +63,8 @@ in this Software without prior written authorization from The Open Group.
  *      1 - allocated color to be freed when the client dies
  */
 
+#include "xfs-config.h"
+
 #include <X11/fonts/FS.h>
 #include "misc.h"
 #include "os.h"
@@ -72,6 +72,7 @@ in this Software without prior written authorization from The Open Group.
 #include "clientstr.h"
 #include "dispatch.h"
 #include "globals.h"
+#include "difs.h"
 
 static void rebuild_table(int client);
 
@@ -105,8 +106,6 @@ static RESTYPE lastResourceClass;
 static RESTYPE TypeMask;
 
 typedef int (*DeleteType) (void *, FSID);
-
-extern int  CloseClientFont(ClientPtr, FSID);
 
 static DeleteType *DeleteFuncs = (DeleteType *) NULL;
 
@@ -143,7 +142,7 @@ CreateNewResourceClass(void)
 
 #endif				/* NOTYET */
 
-ClientResourceRec clientTable[MAXCLIENTS];
+static ClientResourceRec clientTable[MAXCLIENTS];
 
 /*****************
  * InitClientResources

@@ -1,4 +1,3 @@
-/* $Xorg: initfonts.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -47,10 +46,12 @@ in this Software without prior written authorization from The Open Group.
  * %W%	%E%
  *
  */
-/* $XFree86: xc/programs/xfs/difs/initfonts.c,v 1.6 2001/08/01 00:45:04 tsi Exp $ */
+
+#include	"xfs-config.h"
 
 #include        <X11/fonts/font.h>
 #include	"difs.h"
+#include	"globals.h"
 #ifdef FONTCACHE
 #include        "misc.h"
 #include        <X11/extensions/fontcacheP.h>

@@ -1,4 +1,3 @@
-/* $XConsortium: resource.h,v 1.4 94/04/17 19:56:00 dpw Exp $ */
 /* 
 Copyright (c) 1987  X Consortium
 
@@ -45,10 +44,7 @@ in this Software without prior written authorization from the X Consortium.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)resource.h	4.1	91/05/02
- *
  */
-/* $XFree86: xc/programs/xfs/include/fsresource.h,v 1.3 1998/10/25 12:48:04 dawes Exp $ */
 
 #ifndef _RESOURCE_H_
 #define _RESOURCE_H_

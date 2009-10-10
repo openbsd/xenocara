@@ -1,7 +1,3 @@
-/*
- * $XFree86: xc/programs/xfs/include/swapreq.h,v 1.1 1998/10/25 07:12:32 dawes Exp $
- */
-
 /************************************************************
 
 Copyright 1998 by Thomas E. Dickey <dickey@clark.net>

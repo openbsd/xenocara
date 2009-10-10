@@ -1,4 +1,3 @@
-/* $Xorg: connection.c,v 1.5 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
  * handles connections
  */
@@ -67,7 +66,8 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/os/connection.c,v 3.25tsi Exp $ */
+
+#include	"xfs-config.h"
 
 #include	<stdlib.h>
 #include	<X11/Xtrans/Xtrans.h>
@@ -76,15 +76,10 @@ in this Software without prior written authorization from The Open Group.
 #include	<stdio.h>
 #include	<errno.h>
 #include	<X11/Xos.h>
-#ifndef Lynx
 #include	<sys/param.h>
 #include	<sys/socket.h>
 #ifndef __UNIXOS2__
 #include	<sys/uio.h>
-#endif
-#else
-#include	<socket.h>
-#include	<uio.h>
 #endif
 #include	<signal.h>
 
@@ -161,6 +156,7 @@ StopListening(void)
 
     ListenTransFds = NULL;
     ListenTransConns = NULL;
+    ListenTransCount = 0;
 }
 
 /*
@@ -172,6 +168,7 @@ void
 CreateSockets(int old_listen_count, OldListenRec *old_listen)
 {
     int	i;
+    struct sigaction act;
 
     FD_ZERO(&AllSockets);
     FD_ZERO(&AllClients);
@@ -182,20 +179,9 @@ CreateSockets(int old_listen_count, OldListenRec *old_listen)
     for (i = 0; i < MAXSOCKS; i++)
 	ConnectionTranslation[i] = 0;
 
-#ifdef XNO_SYSCONF	/* should only be on FreeBSD 1.x and NetBSD 0.x */
-#undef _SC_OPEN_MAX
-#endif
-#ifdef _SC_OPEN_MAX
     lastfdesc = sysconf(_SC_OPEN_MAX) - 1;
-#else
-#if defined(hpux) || defined(__UNIXOS2__)
-    lastfdesc = _NFILE - 1;
-#else
-    lastfdesc = getdtablesize() - 1;
-#endif				/* hpux */
-#endif
 
-    if (lastfdesc > MAXSOCKS) {
+    if ((lastfdesc < 0) || (lastfdesc > MAXSOCKS)) {
 	lastfdesc = MAXSOCKS;
     }
 
@@ -261,13 +247,17 @@ CreateSockets(int old_listen_count, OldListenRec *old_listen)
 	FatalError("cannot establish any listening sockets\n");
 
     /* set up all the signal handlers */
-    signal(SIGPIPE, SIG_IGN);
-    signal(SIGHUP, AutoResetServer);
-    signal(SIGINT, GiveUp);
-    signal(SIGTERM, GiveUp);
-    signal(SIGUSR1, ServerReconfig);
-    signal(SIGUSR2, ServerCacheFlush);
-    signal(SIGCHLD, CleanupChild);
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_RESTART;
+#define HANDLE_SIGNAL(s, h)	act.sa_handler = h; sigaction(s, &act, NULL)
+
+    HANDLE_SIGNAL(SIGPIPE, SIG_IGN);
+    HANDLE_SIGNAL(SIGHUP, AutoResetServer);
+    HANDLE_SIGNAL(SIGINT, GiveUp);
+    HANDLE_SIGNAL(SIGTERM, GiveUp);
+    HANDLE_SIGNAL(SIGUSR1, ServerReconfig);
+    HANDLE_SIGNAL(SIGUSR2, ServerCacheFlush);
+    HANDLE_SIGNAL(SIGCHLD, CleanupChild);
 
     XFD_COPYSET (&WellKnownConnections, &AllSockets);
 }
@@ -479,6 +469,9 @@ void
 CloseDownConnection(ClientPtr client)
 {
     OsCommPtr   oc = (OsCommPtr) client->osPrivate;
+
+    if (oc == NULL)
+	return;
 
     if (oc->output && oc->output->count)
 	FlushClient(client, oc, (char *) NULL, 0, 0);

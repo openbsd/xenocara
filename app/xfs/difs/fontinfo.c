@@ -1,4 +1,3 @@
-/* $Xorg: fontinfo.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
  * font data query
  */
@@ -46,9 +45,8 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/difs/fontinfo.c,v 1.10 2001/12/14 20:01:34 dawes Exp $ */
 
-#include	<xfs-config.h>
+#include	"xfs-config.h"
 
 #include        <X11/fonts/FS.h>
 #include        <X11/fonts/FSproto.h>
@@ -290,7 +288,7 @@ do_query_extents(ClientPtr client, pointer data)
 		     pPtr->flags, pPtr->nranges, pPtr->range, &num_extents, &extents);
     if (err == Suspended) {
 	if (!pPtr->slept) {
-	    pPtr->pfont->unload_glyphs = 0;  /* Not a safe call for this font */
+	    pPtr->pfont->unload_glyphs = NULL;  /* Not a safe call for this font */
 	    pPtr->slept = TRUE;
 	    ClientSleep(client, do_query_extents, (pointer) pPtr);
 	}
@@ -340,7 +338,7 @@ QueryExtents(
 			      &nranges, &all_glyphs, &cfp->font->info);
 
     if (!fixed_range && !all_glyphs) {
-	SendErrToClient(client, FSBadRange, 0);
+	SendErrToClient(client, FSBadRange, NULL);
 	return FSBadRange;
     }
     c = (QEclosurePtr) fsalloc(sizeof(QEclosureRec));
@@ -378,7 +376,7 @@ do_query_bitmaps(ClientPtr client, pointer data)
 
     if (err == Suspended) {
 	if (!pPtr->slept) {
-	    pPtr->pfont->unload_glyphs = 0;  /* Not a safe call for this font */
+	    pPtr->pfont->unload_glyphs = NULL;  /* Not a safe call for this font */
 	    pPtr->slept = TRUE;
 	    ClientSleep(client, do_query_bitmaps, (pointer) pPtr);
 	}
@@ -436,7 +434,7 @@ QueryBitmaps(
 			      &nranges, &all_glyphs, &cfp->font->info);
 
     if (!fixed_range && !all_glyphs) {
-	SendErrToClient(client, FSBadRange, 0);
+	SendErrToClient(client, FSBadRange, NULL);
 	return FSBadRange;
     }
     c = (QBclosurePtr) fsalloc(sizeof(QBclosureRec));

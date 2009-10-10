@@ -1,4 +1,3 @@
-/* $Xorg: osglue.c,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -44,16 +43,15 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $NCDXorg: @(#)osglue.c,v 4.6 1991/07/09 14:07:30 lemke Exp $
- *
  */
-/* $XFree86: xc/programs/xfs/os/osglue.c,v 3.18 2002/10/15 01:45:03 dawes Exp $ */
 
 /*
  * this is miscellaneous OS specific stuff.
  *
  * Catalogue support, alternate servers, and cloneing
  */
+
+#include "xfs-config.h"
 
 #include <X11/Xtrans/Xtrans.h>
 #include "osstruct.h"
@@ -64,17 +62,13 @@ in this Software without prior written authorization from The Open Group.
 #ifdef __UNIXOS2__
 #define _NFILE 256
 #endif
+#include "globals.h"
+#include "osdep.h"
 
 Bool        drone_server = FALSE;
-extern char *progname;
-extern char *configfilename;
 
 static int  num_alts;
 static AlternateServerPtr alt_servers = (AlternateServerPtr) 0;
-
-extern XtransConnInfo 	*ListenTransConns;
-extern int	       	*ListenTransFds;
-extern int		ListenTransCount;
 
 /*
  * XXX
@@ -301,18 +295,10 @@ CloneMyself(void)
 
     old_listen_arg[0] = '\0';
 
-#ifdef XNO_SYSCONF	/* should only be on FreeBSD 1.x and NetBSD 0.x */
-#undef _SC_OPEN_MAX
-#endif
-#ifdef _SC_OPEN_MAX
     lastfdesc = sysconf(_SC_OPEN_MAX) - 1;
-#else
-#if defined(hpux) || defined(__UNIXOS2__)
-    lastfdesc = _NFILE - 1;
-#else
-    lastfdesc = getdtablesize() - 1;
-#endif				/* hpux */
-#endif
+    if ( (lastfdesc < 0) || (lastfdesc > MAXSOCKS)) {
+	lastfdesc = MAXSOCKS;
+    }
 
     NoticeF("attempting clone...\n");
     chdir("/");

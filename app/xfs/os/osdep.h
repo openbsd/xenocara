@@ -1,4 +1,3 @@
-/* $Xorg: osdep.h,v 1.4 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
 Copyright 1987, 1998  The Open Group
 
@@ -44,10 +43,7 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)osdep.h	4.1	5/2/91
- *
  */
-/* $XFree86: xc/programs/xfs/os/osdep.h,v 3.11 2001/12/14 20:01:41 dawes Exp $ */
 
 #ifndef _OSDEP_H_
 #define	_OSDEP_H_
@@ -57,53 +53,26 @@ in this Software without prior written authorization from The Open Group.
 #define	BUFWATERMARK	8192
 #define	MAXBUFSIZE	(1 << 15)
 
-#ifndef sgi	    /* SGI defines OPEN_MAX in a useless way */
-#ifndef X_NOT_POSIX
 #ifdef _POSIX_SOURCE
-#include <limits.h>
+# include <limits.h>
 #else
-#define _POSIX_SOURCE
-#include <limits.h>
-#undef _POSIX_SOURCE
+# define _POSIX_SOURCE
+# include <limits.h>
+# undef _POSIX_SOURCE
 #endif
-#endif
-#endif
-
-#ifndef OPEN_MAX
-#if defined(__UNIXOS2__) || defined(__QNX__)
-#define OPEN_MAX 256
-#else
-#ifdef SVR4
-#define OPEN_MAX 128
-#else
 #include <sys/param.h>
-#ifdef __GNU__
-#define OPEN_MAX (sysconf(_SC_OPEN_MAX))
-#endif /*__GNU__*/
-#ifndef OPEN_MAX
-#ifdef SCO325
-#define OPEN_MAX (sysconf(_SC_OPEN_MAX))
-#else
-#if defined(NOFILE) && !defined(NOFILES_MAX)
-#define OPEN_MAX NOFILE
-#else
-#define OPEN_MAX NOFILES_MAX
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
 
-#if defined(__GNU__) || defined(SCO325)
-#define MAXSOCKS 128
-#else /*__GNU__*/
-#if OPEN_MAX <= 128		/* 128 is value of MAXCLIENTS */
-#define MAXSOCKS (OPEN_MAX - 1)
-#else
-#define MAXSOCKS 128
-#endif
-#endif /*__GNU__*/
+#ifndef PATH_MAX
+# ifndef PATH_MAX
+#  ifdef MAXPATHLEN
+#   define PATH_MAX MAXPATHLEN
+#  else
+#   define PATH_MAX 1024
+#  endif
+# endif
+#endif /* PATH_MAX */
+
+#define MAXSOCKS	MAXCLIENTS
 
 #include <stddef.h>
 

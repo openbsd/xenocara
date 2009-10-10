@@ -1,4 +1,3 @@
-/* $Xorg: atom.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $ */
 /*
  * font server atom manipulations
  */
@@ -47,10 +46,9 @@ in this Software without prior written authorization from The Open Group.
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * @(#)atom.c	4.1	5/2/91
- *
  */
-/* $XFree86: xc/programs/xfs/difs/atom.c,v 3.4tsi Exp $ */
+
+#include "xfs-config.h"
 
 #include "misc.h"
 #include "fsresource.h"
@@ -156,9 +154,9 @@ NameForAtom(Atom atom)
     NodePtr     node;
 
     if (atom > lastAtom)
-	return 0;
+	return NULL;
     if ((node = nodeTable[atom]) == (NodePtr) NULL)
-	return 0;
+	return NULL;
     return node->string;
 }
 

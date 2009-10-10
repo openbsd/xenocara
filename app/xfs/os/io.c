@@ -1,4 +1,3 @@
-/* $Xorg: io.c,v 1.5 2001/02/09 02:05:44 xorgcvs Exp $ */
 /*
  * i/o functions
  */
@@ -46,19 +45,16 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/xfs/os/io.c,v 3.18 2001/12/14 20:01:41 dawes Exp $ */
+
+#include	"xfs-config.h"
 
 #include	<X11/Xtrans/Xtrans.h>
 #include	<stdio.h>
 #include	<errno.h>
 #include	<sys/types.h>
-#ifndef Lynx
 #include	<sys/param.h>
 #ifndef __UNIXOS2__
 #include	<sys/uio.h>
-#endif
-#else
-#include	<uio.h>
 #endif
 
 #include	<X11/fonts/FSproto.h>
@@ -84,18 +80,6 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 #endif
-
-
-extern fd_set ClientsWithInput;
-extern fd_set ClientsWriteBlocked;
-extern fd_set OutputPending;
-
-extern long OutputBufferSize;
-
-extern int  ConnectionTranslation[];
-
-extern Bool AnyClientsWriteBlocked;
-extern Bool NewOutputPending;
 
 static int  timesThisConnection = 0;
 static ConnectionInputPtr FreeInputs = (ConnectionInputPtr) NULL;
@@ -628,7 +612,7 @@ AllocateInputBuffer(void)
 	fsfree(oci);
 	return (ConnectionInputPtr) NULL;
     }
-    oci->next = 0;
+    oci->next = NULL;
     oci->size = BUFSIZE;
     oci->bufptr = oci->buffer;
     oci->bufcnt = 0;
