@@ -6,7 +6,11 @@
 /* All drivers should typically include these */
 #include "xf86.h"
 #include "xf86_OSproc.h"
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#include "xf86RAC.h"
+#endif
 #include "compiler.h"
 
 /* Drivers for PCI hardware need this */
@@ -27,7 +31,6 @@
 
 #include "vbe.h"
 
-#include "xf86RAC.h"
 
 #include "riva_const.h"
 

@@ -56,8 +56,8 @@ typedef struct {
 #else
     pciVideoPtr         PciInfo;
     PCITAG              PciTag;
-#endif
     xf86AccessRec       Access;
+#endif
     int                 ChipRev;
     Bool                Primary;
     CARD32              IOAddress;

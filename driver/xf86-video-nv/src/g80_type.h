@@ -7,7 +7,7 @@
 #include <xf86Crtc.h>
 #include <xf86int10.h>
 
-#define G80_NUM_I2C_PORTS 6
+#define G80_NUM_I2C_PORTS 10
 
 typedef enum Head {
     HEAD0 = 0,

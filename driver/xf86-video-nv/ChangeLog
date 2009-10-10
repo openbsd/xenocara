@@ -1,3 +1,113 @@
+commit 0250f0d7ebe30368c5a63809ed1f58673493627c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 11 12:24:18 2009 +1000
+
+    nv 2.1.15
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5486e55c9feb5734b967c2618e0c96cd4a2322ce
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 18:37:42 2009 +1000
+
+    abi: fixup so the define is picked up
+
+commit 85b5ff3fdf3141ef01604bd7eb8e71e30d24717f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:40 2009 +1000
+
+    nv: change to using ABI version check
+
+commit 445498d2cc977b8c4f22fca881c75637dc7b058a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:32 2009 +1000
+
+    nv: update for resources/RAC API removal
+
+commit 957b8c1a240884b26ee5b91856c251622cc0b2a7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 11:49:24 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e8d4dd85de02c689d3e0cc86a99aae6e61a7d17e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jul 9 14:07:09 2009 -0400
+
+    xf86-video-nv: use XORG_CHANGELOG macro to create ChangeLog. #22611
+    
+    Adding the macro in configure.ac and use it in Makefile.am
+    Refer to: https://bugs.freedesktop.org/show_bug.cgi?id=22611
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c56b92149c6291e7ef96b30a4fc7bee30073b90c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Jul 2 12:03:13 2009 -0700
+
+    Bump to 2.1.14
+
+commit 05d2b851b96c2f1b3223f8d5f40b8ee074e5f23f
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jun 26 17:53:53 2009 -0700
+
+    More new chips
+
+commit 68c2914f1775541784e6cf88019960342d8433bc
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jun 12 17:34:43 2009 -0700
+
+    Fix modesets on certain GPUs that were broken by the previous commit.
+
+commit 36eb96854b34bee6b65a2b2d4df25f53b47194e4
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jun 10 18:49:32 2009 -0700
+
+    New chip support.
+    
+    Part of the G80DispPreInit change suggested by <shenyn321@hotmail.com>.
+
+commit 23ca1b0d4324ae65a0c2a39cc877d318063988b1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:11:20 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit c8d6f7aa7c99a1b71289f8e8e07becc10f61f379
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri May 15 16:24:57 2009 -0700
+
+    More chip names.
+    
+    Add support for the following previously unsupported chips:
+      * 0x0658 - Quadro FX 380
+      * 0x0659 - Quadro FX 580
+      * 0x065C - Quadro FX 770M
+
+commit 29acf7c970d12c1dfd7bf6c7a42fe2448aa7f3d7
+Author: Yinan Shen <shenyn321@gmail.com>
+Date:   Wed May 6 19:14:33 2009 -0700
+
+    G80: Fix incorrect I2C port access for ports above 3.
+
+commit bf18cd4842c33df61b03c3d4e0f00e34485fb957
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue May 5 01:29:08 2009 -0700
+
+    Fix a dumb typo in the chip name entry for the GeForce 9800 GTX+
+
+commit df87eaf191209b0f1619ea74dc9fb0314b6fd288
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Apr 7 13:40:36 2009 -0400
+
+    nv 2.1.13
+
 commit c0cc7d1247798867c695aeddcffe88edacbb6c7c
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Tue Apr 7 13:34:26 2009 -0400

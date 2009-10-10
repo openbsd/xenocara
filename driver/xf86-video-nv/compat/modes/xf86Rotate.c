@@ -40,8 +40,7 @@
 #include "xf86Modes.h"
 #include "xf86RandR12.h"
 #include "X11/extensions/render.h"
-#define DPMS_SERVER
-#include "X11/extensions/dpms.h"
+#include "X11/extensions/dpmsconst.h"
 #include "X11/Xatom.h"
 
 /* borrowed from composite extension, move to Render and publish? */
@@ -198,6 +197,7 @@ xf86RotatePrepare (ScreenPtr pScreen)
 		DamageRegister (&(*pScreen->GetScreenPixmap)(pScreen)->drawable,
 				xf86_config->rotation_damage);
 		xf86_config->rotation_damage_registered = TRUE;
+		EnableLimitedSchedulingLatency();
 	    }
 	    
 	    xf86CrtcDamageShadow (crtc);
@@ -263,11 +263,12 @@ xf86RotateBlockHandler(int screenNum, pointer blockData,
     ScreenPtr		pScreen = screenInfo.screens[screenNum];
     ScrnInfoPtr		pScrn = xf86Screens[screenNum];
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    Bool		rotation_active;
 
+    rotation_active = xf86RotateRedisplay(pScreen);
     pScreen->BlockHandler = xf86_config->BlockHandler;
     (*pScreen->BlockHandler) (screenNum, blockData, pTimeout, pReadmask);
-    if (xf86RotateRedisplay(pScreen))
-    {
+    if (rotation_active) {
 	/* Re-wrap if rotation is still happening */
 	xf86_config->BlockHandler = pScreen->BlockHandler;
 	pScreen->BlockHandler = xf86RotateBlockHandler;
@@ -307,13 +308,14 @@ xf86RotateDestroy (xf86CrtcPtr crtc)
 	    DamageUnregister (&(*pScreen->GetScreenPixmap)(pScreen)->drawable,
 			      xf86_config->rotation_damage);
 	    xf86_config->rotation_damage_registered = FALSE;
+	    DisableLimitedSchedulingLatency();
 	}
 	DamageDestroy (xf86_config->rotation_damage);
 	xf86_config->rotation_damage = NULL;
     }
 }
 
-_X_EXPORT void
+void
 xf86RotateFreeShadow(ScrnInfoPtr pScrn)
 {
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
@@ -331,7 +333,7 @@ xf86RotateFreeShadow(ScrnInfoPtr pScrn)
    }
 }
 
-_X_EXPORT void
+void
 xf86RotateCloseScreen (ScreenPtr screen)
 {
     ScrnInfoPtr		scrn = xf86Screens[screen->myNum];
@@ -371,7 +373,7 @@ xf86CrtcFitsScreen (xf86CrtcPtr crtc, struct pict_f_transform *crtc_to_fb)
 	    0 <= b.y1 && b.y2 <= pScrn->virtualY);
 }
 
-_X_EXPORT Bool
+Bool
 xf86CrtcRotate (xf86CrtcPtr crtc)
 {
     ScrnInfoPtr		pScrn = crtc->scrn;

@@ -146,26 +146,97 @@ G80CalcPLL(float pclk, int *pNA, int *pMA, int *pNB, int *pMB, int *pP)
 }
 
 static void
+G80CalcPLL2(float pclk, int *pN, int *pM, int *pPL)
+{
+    const float refclk = 27000.0f;
+    const int minN = 8, maxN = 255;
+    const int minM = 1, maxM = 255;
+    const int minPL = 1, maxPL = 63;
+    const int minU = 25000, maxU = 50000;
+    const int minVco = 500000;
+    int maxVco = 1000000;
+    int lowPL, highPL, pl;
+    float vco, bestError = FLT_MAX;
+
+    vco = pclk + pclk / 50;
+
+    if(maxVco < vco) maxVco = vco;
+
+    highPL = (maxVco + vco - 1) / pclk;
+    if(highPL > maxPL) highPL = maxPL;
+    if(highPL < minPL) highPL = minPL;
+
+    lowPL = minVco / vco;
+    if(lowPL > maxPL) lowPL = maxPL;
+    if(lowPL < minPL) lowPL = minPL;
+
+    for(pl = highPL; pl >= lowPL; pl--) {
+        int m;
+
+        for(m = minM; m <= maxM; m++) {
+            int n;
+            float freq, error;
+
+            if(refclk / m < minU) break;
+            if(refclk / m > maxU) continue;
+
+            n = rint(pclk * pl * m / refclk);
+            if(n > maxN) break;
+            if(n < minN) continue;
+
+            freq = refclk * (n / (float)m) / pl;
+            error = fabsf(pclk - freq);
+            if(error < bestError) {
+                *pN = n;
+                *pM = m;
+                *pPL = pl;
+                bestError = error;
+            }
+        }
+    }
+}
+
+static void
 G80CrtcSetPClk(xf86CrtcPtr crtc)
 {
     G80Ptr pNv = G80PTR(crtc->scrn);
     G80CrtcPrivPtr pPriv = crtc->driver_private;
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
     const int headOff = 0x800 * pPriv->head;
-    int lo_n, lo_m, hi_n, hi_m, p, i;
-    CARD32 lo = pNv->reg[(0x00614104+headOff)/4];
-    CARD32 hi = pNv->reg[(0x00614108+headOff)/4];
+    int i;
 
-    pNv->reg[(0x00614100+headOff)/4] = 0x10000610;
-    lo &= 0xff00ff00;
-    hi &= 0x8000ff00;
+    if(pPriv->pclk == 0)
+        return;
 
-    G80CalcPLL(pPriv->pclk, &lo_n, &lo_m, &hi_n, &hi_m, &p);
+    if(pNv->architecture <= 0xa0 ||
+       pNv->architecture == 0xaa ||
+       pNv->architecture == 0xac) {
+        int lo_n, lo_m, hi_n, hi_m, p, i;
+        CARD32 lo = pNv->reg[(0x00614104+headOff)/4];
+        CARD32 hi = pNv->reg[(0x00614108+headOff)/4];
 
-    lo |= (lo_m << 16) | lo_n;
-    hi |= (p << 28) | (hi_m << 16) | hi_n;
-    pNv->reg[(0x00614104+headOff)/4] = lo;
-    pNv->reg[(0x00614108+headOff)/4] = hi;
+        pNv->reg[(0x00614100+headOff)/4] = 0x10000610;
+        lo &= 0xff00ff00;
+        hi &= 0x8000ff00;
+
+        G80CalcPLL(pPriv->pclk, &lo_n, &lo_m, &hi_n, &hi_m, &p);
+
+        lo |= (lo_m << 16) | lo_n;
+        hi |= (p << 28) | (hi_m << 16) | hi_n;
+        pNv->reg[(0x00614104+headOff)/4] = lo;
+        pNv->reg[(0x00614108+headOff)/4] = hi;
+    } else {
+        int n, m, pl;
+        CARD32 r = pNv->reg[(0x00614104+headOff)/4];
+
+        pNv->reg[(0x00614100+headOff)/4] = 0x50000610;
+        r &= 0xffc00000;
+
+        G80CalcPLL2(pPriv->pclk, &n, &m, &pl);
+        r |= pl << 16 | m << 8 | n;
+
+        pNv->reg[(0x00614104+headOff)/4] = r;
+    }
     pNv->reg[(0x00614200+headOff)/4] = 0;
 
     for(i = 0; i < xf86_config->num_output; i++) {
@@ -235,6 +306,8 @@ G80DispPreInit(ScrnInfoPtr pScrn)
     pNv->reg[0x006101D8/4] = pNv->reg[0x0061B000/4];
     pNv->reg[0x006101E0/4] = pNv->reg[0x0061C000/4];
     pNv->reg[0x006101E4/4] = pNv->reg[0x0061C800/4];
+    pNv->reg[0x006101E8/4] = pNv->reg[0x0061D000/4];
+    pNv->reg[0x006101EC/4] = pNv->reg[0x0061D800/4];
     pNv->reg[0x0061A004/4] = 0x80550000;
     pNv->reg[0x0061A010/4] = 0x00000001;
     pNv->reg[0x0061A804/4] = 0x80550000;

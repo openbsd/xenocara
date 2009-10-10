@@ -127,6 +127,11 @@ static Bool G80ReadPortMapping(int scrnIndex, G80Ptr pNv)
                                "VGA%d: invalid port type %d\n", or, portType);
                     break;
                 }
+                if(port >= G80_NUM_I2C_PORTS) {
+                    xf86DrvMsg(scrnIndex, X_WARNING,
+                               "VGA%d: unrecognized port %d\n", or, port);
+                    break;
+                }
                 if(pNv->i2cMap[port].dac != -1) {
                     xf86DrvMsg(scrnIndex, X_WARNING,
                                "DDC routing table corrupt!  DAC %i -> %i for "
@@ -150,6 +155,11 @@ static Bool G80ReadPortMapping(int scrnIndex, G80Ptr pNv)
                 if(portType != 5) {
                     xf86DrvMsg(scrnIndex, X_WARNING,
                                "DVI%d: invalid port type %d\n", or, portType);
+                    break;
+                }
+                if(port >= G80_NUM_I2C_PORTS) {
+                    xf86DrvMsg(scrnIndex, X_WARNING,
+                               "DVI%d: unrecognized port %d\n", or, port);
                     break;
                 }
                 if(pNv->i2cMap[port].sor != -1)
@@ -179,6 +189,11 @@ static Bool G80ReadPortMapping(int scrnIndex, G80Ptr pNv)
                 if(portType != 5) {
                     xf86DrvMsg(scrnIndex, X_WARNING,
                                "LVDS: invalid port type %d\n", portType);
+                    break;
+                }
+                if(port >= G80_NUM_I2C_PORTS) {
+                    xf86DrvMsg(scrnIndex, X_WARNING,
+                               "LVDS: unrecognized port %d\n", port);
                     break;
                 }
                 pNv->lvds.i2cPort = port;
@@ -217,8 +232,11 @@ fail:
 
 static CARD32 i2cAddr(const int port)
 {
-    const CARD32 base = (port > 3) ? 0x0000E1E0 : 0x0000E138;
-    return base + port * 0x18;
+    const CARD32 addrs[G80_NUM_I2C_PORTS] = {
+        0xE138, 0xE150, 0xE168, 0xE180, 0xE254, 0xE274, 0xE764, 0xE780, 0xE79C,
+        0xE7B8
+    };
+    return addrs[port];
 }
 
 static void G80_I2CPutBits(I2CBusPtr b, int clock, int data)

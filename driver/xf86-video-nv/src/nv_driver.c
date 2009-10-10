@@ -124,7 +124,7 @@ _X_EXPORT DriverRec NV = {
 #endif
 };
 
-/* Known cards as of 2008/08/26 */
+/* Known cards as of 2009/05/15 */
 
 static SymTabRec NVKnownChipsets[] =
 {
@@ -288,6 +288,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0147, "GeForce 6700 XL" },
   { 0x10DE0148, "GeForce Go 6600" },
   { 0x10DE0149, "GeForce Go 6600 GT" },
+  { 0x10DE014A, "Quadro NVS 440" },
   { 0x10DE014C, "Quadro FX 550" },
   { 0x10DE014D, "Quadro FX 550" },
   { 0x10DE014E, "Quadro FX 540" },
@@ -322,6 +323,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0099, "GeForce Go 7800 GTX" },
   { 0x10DE009D, "Quadro FX 4500" },
 
+  { 0x10DE01D0, "GeForce 7350 LE" },
   { 0x10DE01D1, "GeForce 7300 LE" },
   { 0x10DE01D3, "GeForce 7300 SE" },
   { 0x10DE01D6, "GeForce Go 7200" },
@@ -335,6 +337,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE01DE, "Quadro FX 350" },
   { 0x10DE01DF, "GeForce 7300 GS" },
 
+  { 0x10DE0390, "GeForce 7650 GS" },
   { 0x10DE0391, "GeForce 7600 GT" },
   { 0x10DE0392, "GeForce 7600 GS" },
   { 0x10DE0393, "GeForce 7300 GT" },
@@ -351,6 +354,10 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0290, "GeForce 7900 GTX" },
   { 0x10DE0291, "GeForce 7900 GT" },
   { 0x10DE0292, "GeForce 7900 GS" },
+  { 0x10DE0293, "GeForce 7950 GX2" },
+  { 0x10DE0294, "GeForce 7950 GX2" },
+  { 0x10DE0295, "GeForce 7950 GT"},
+  { 0x10DE0297, "GeForce Go 7950 GTX" },
   { 0x10DE0298, "GeForce Go 7900 GS" },
   { 0x10DE0299, "GeForce Go 7900 GTX" },
   { 0x10DE029A, "Quadro FX 2500M" },
@@ -364,7 +371,13 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0241, "GeForce 6150 LE" },
   { 0x10DE0242, "GeForce 6100" },
   { 0x10DE0244, "GeForce Go 6150" },
+  { 0x10DE0245, "Quadro NVS 210S / NVIDIA GeForce 6150LE" },
   { 0x10DE0247, "GeForce Go 6100" },
+
+  { 0x10DE03D0, "GeForce 6150SE" },
+  { 0x10DE03D1, "GeForce 6100 nForce 405" },
+  { 0x10DE03D2, "GeForce 6100 nForce 400" },
+  { 0x10DE03D5, "GeForce 6100 nForce 420" },
 
 /*************** G8x ***************/
   { 0x10DE0191, "GeForce 8800 GTX" },
@@ -669,20 +682,6 @@ nvSetup(pointer module, pointer opts, int *errmaj, int *errmin)
         );
 
         /*
-         * Modules that this driver always requires may be loaded here
-         * by calling LoadSubModule().
-         */
-
-        /*
-         * Tell the loader about symbols from other modules that this module
-         * might refer to.
-         */
-        LoaderRefSymLists(vgahwSymbols, xaaSymbols, fbSymbols,
-                          ramdacSymbols, shadowSymbols,
-                          i2cSymbols, ddcSymbols, vbeSymbols,
-                          fbdevHWSymbols, int10Symbols, NULL);
-
-        /*
          * The return value must be non-NULL on success even though there
          * is no TearDownProc.
          */
@@ -810,8 +809,12 @@ NVIsG80(int chipType)
         case 0x0620:
         case 0x0630:
         case 0x0640:
+        case 0x0650:
         case 0x06e0:
         case 0x06f0:
+        case 0x0a60:
+        case 0x0a70:
+        case 0x0ca0:
             return TRUE;
     }
 
@@ -1239,11 +1242,9 @@ Bool NVI2CInit(ScrnInfoPtr pScrn)
     char *mod = "i2c";
 
     if (xf86LoadSubModule(pScrn, mod)) {
-        xf86LoaderReqSymLists(i2cSymbols,NULL);
 
         mod = "ddc";
         if(xf86LoadSubModule(pScrn, mod)) {
-            xf86LoaderReqSymLists(ddcSymbols, NULL);
             return NVDACi2cInit(pScrn);
         } 
     }
@@ -1342,15 +1343,16 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 
     /* Initialize the card through int10 interface if needed */
     if (xf86LoadSubModule(pScrn, "int10")) {
- 	xf86LoaderReqSymLists(int10Symbols, NULL);
 #if !defined(__alpha__) && !defined(__powerpc__)
         xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Initializing int10\n");
         pNv->pInt = xf86InitInt10(pNv->pEnt->index);
 #endif
     }
    
+#ifndef XSERVER_LIBPCIACCESS
     xf86SetOperatingState(resVgaIo, pNv->pEnt->index, ResUnusedOpr);
     xf86SetOperatingState(resVgaMem, pNv->pEnt->index, ResDisableOpr);
+#endif
 
     /* Set pScrn->monitor */
     pScrn->monitor = pScrn->confScreen->monitor;
@@ -1478,8 +1480,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	return FALSE;
     }
     
-    xf86LoaderReqSymLists(vgahwSymbols, NULL);
-
     /*
      * Allocate a vgaHWRec
      */
@@ -1548,7 +1548,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	    return FALSE;
 	}
 	
-	xf86LoaderReqSymLists(fbdevHWSymbols, NULL);
 	if (!fbdevHWInit(pScrn, pNv->PciInfo, NULL)) {
 	    xf86FreeInt10(pNv->pInt);
 	    return FALSE;
@@ -1656,7 +1655,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
                        "enabled.\n");
             return FALSE;
         }
-        xf86LoaderReqSymLists(vbeModeSymbols, NULL);
         pNv->pVbe = VBEExtendedInit(NULL, pNv->pEnt->index,
                                     SET_BIOS_SCRATCH | RESTORE_BIOS_SCRATCH);
         if (!pNv->pVbe) return FALSE;
@@ -1731,6 +1729,7 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsg(pScrn->scrnIndex, from, "MMIO registers at 0x%lX\n",
 	       (unsigned long)pNv->IOAddress);
      
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(pNv->pEnt->index, NULL, ResExclusive)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		"xf86RegisterResources() found resource conflicts\n");
@@ -1738,6 +1737,7 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	NVFreeRec(pScrn);
 	return FALSE;
     }
+#endif
 
     switch (pNv->Chipset & 0x0ff0) {
     case 0x0100:   /* GeForce 256 */
@@ -1988,8 +1988,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	return FALSE;
     }
 
-    xf86LoaderReqSymLists(fbSymbols, NULL);
-    
     /* Load XAA if needed */
     if (!pNv->NoAccel) {
 	if (!xf86LoadSubModule(pScrn, "xaa")) {
@@ -1997,7 +1995,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	    NVFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(xaaSymbols, NULL);
     }
 
     /* Load ramdac if needed */
@@ -2007,7 +2004,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	    NVFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(ramdacSymbols, NULL);
     }
 
     /* Load shadowfb if needed */
@@ -2017,7 +2013,6 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	    NVFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(shadowSymbols, NULL);
     }
 
     pNv->CurrentLayout.bitsPerPixel = pScrn->bitsPerPixel;
