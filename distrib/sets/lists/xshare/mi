@@ -1022,14 +1022,6 @@
 ./usr/X11R6/man/man1/xsetroot.1
 ./usr/X11R6/man/man1/xsm.1
 ./usr/X11R6/man/man1/xstdcmap.1
-./usr/X11R6/man/man1/xtrap.1
-./usr/X11R6/man/man1/xtrapchar.1
-./usr/X11R6/man/man1/xtrapin.1
-./usr/X11R6/man/man1/xtrapinfo.1
-./usr/X11R6/man/man1/xtrapout.1
-./usr/X11R6/man/man1/xtrapproto.1
-./usr/X11R6/man/man1/xtrapreset.1
-./usr/X11R6/man/man1/xtrapstats.1
 ./usr/X11R6/man/man1/xvidtune.1
 ./usr/X11R6/man/man1/xvinfo.1
 ./usr/X11R6/man/man1/xwd.1

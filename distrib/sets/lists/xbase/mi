@@ -515,13 +515,6 @@
 ./usr/X11R6/bin/xstdcmap
 ./usr/X11R6/bin/xsystrace
 ./usr/X11R6/bin/xterm
-./usr/X11R6/bin/xtrapchar
-./usr/X11R6/bin/xtrapin
-./usr/X11R6/bin/xtrapinfo
-./usr/X11R6/bin/xtrapout
-./usr/X11R6/bin/xtrapproto
-./usr/X11R6/bin/xtrapreset
-./usr/X11R6/bin/xtrapstats
 ./usr/X11R6/bin/xtsscale
 ./usr/X11R6/bin/xvctl
 ./usr/X11R6/bin/xvidtune
