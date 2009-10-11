@@ -43,7 +43,6 @@
 #include "xf86.h"
 #include <X11/extensions/Xv.h>
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
 #include "compiler.h"
 #include "xf86xv.h"
 #include "fourcc.h"
@@ -1723,7 +1722,7 @@ static MODULESETUPPROTO(z4lSetup);
 static XF86ModuleVersionInfo z4lVersionRec = {
     "ztv",
     MODULEVENDORSTRING, MODINFOSTRING1, MODINFOSTRING2,
-    XF86_VERSION_CURRENT, 0, 0, 1,
+    XORG_VERSION_CURRENT, 0, 0, 1,
     ABI_CLASS_VIDEODRV, ABI_VIDEODRV_VERSION, MOD_CLASS_NONE,
     {0, 0, 0, 0}
 };

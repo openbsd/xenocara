@@ -1,13 +1,101 @@
-AMD Geode GX and LX Xorg graphics Driver
-May 9, 2007
-========================================
+xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
+=================================================================
+README last updated: 2009-09-09
+
+GIT repository:
+        git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
+
+Gitweb browser:
+        http://cgit.freedesktop.org/xorg/driver/xf86-video-geode
+
+Project homepage:
+	http://www.x.org/wiki/GeodeDriver
 
 = Introduction =
 
 This is the X graphics driver for the AMD Geode GX and LX processors.
 The GX driver features XAA and EXA support for graphics acceleration,
 and the LX driver supports EXA (including compositing).  Both drivers
-suppport dynamic rotation with XRandR, and Xv overlay support.
+support dynamic rotation with XRandR, and Xv overlay support.
+
+= Roadmap =
+
+Support for X servers older than 1.4 is expected to be dropped in the
+near future.  If your distribution still hasn't upgraded, please urge 
+them to get around it soon.
+
+Support for old GX1 Geodes by Cyrix and NSC will be reintroduced soon,
+at which point xf86-video-cyrix and xf86-video-nsc will be retired.
+
+Until then, the current situation for Geode coverage is as follow:
+ 
+xf86-video-geode
+ * Geode LX      (a.k.a. GX3) PCI ID 0x1022:0x2081
+ * Geode GX      (a.k.a. GX2) PCI ID 0x100B:0x0030 (rebranded GX2)
+
+xf86-video-nsc
+ * Geode GX2     (a.k.a. GX2) PCI ID 0x100B:0x0030 (a.k.a. "Red Cloud")
+ * Geode SCx200  (a.k.a. GX1) PCI ID 0x100B:0x0504 
+ * Geode SC1400  (a.k.a. GX1) PCI ID 0x100B:0x0104 
+
+xf86-video-cyrix
+ * Geode MediaGX (a.k.a. GX1) PCI ID 0x1078:0x0104 
+
+Please note that both NSC and GEODE support GX2. This is indeed correct.
+However, only GEODE has up-to-date code, while NSC is deprecated. 
+
+= Dependencies =
+
+As of version 2.11.4, this driver depends upon X server 1.5 or newer,
+because the GX Randr code utilizes dixSetPrivate whose API was modified 
+in a non backward-compatible way.
+
+  #ifdef'ing the changes from f1268f3ba8404129d358db3bb1e66f3841f7018a 
+  and b28abde0276ddd7f687242f3886f98b0e49a7fc2 might make it possible
+  to build this driver against older X servers. Patches are welcome.
+
+As of version 2.9.0, this driver depends on X server 1.3 or newer,
+because it utilizes the new common DDC probing libraries from X.Org.
+
+  If necessary, it might be possible to create autoconf macros to make 
+  this driver compile against older X servers, following this example:
+
+  http://lists.freedesktop.org/archives/xorg-commit/2007-February/010341.html
+
+  Patches accomplishing the same trick for the Geode driver are welcome.
+
+= FAQ =
+
+Q: Why doesn't this GEODE driver work at WXGA (wide screen) resolutions?
+
+A: Make sure that TFT Panel support is disabled in the BIOS settings, 
+   otherwise resolutions will be restricted to traditional VGA modes. 
+   The GEODE offers a choice between CRT-only, CRT+TFT, TFT-only for
+   output device and selecting CRT-only removes the VGA restriction.
+
+Q: How do I produce useful information whenever submiting a bug report?
+
+A: See http://www.x.org/wiki/Development/Documentation/ServerDebugging
+   and follow the instructions.
+
+Q: How do I test development snapshots from the upstream GIT repository?
+
+A: Run the following commands from a command line interpreter shell...
+   1. git clone git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode 
+   2. Debian/Ubuntu:  apt-get install autoconf automake libtool xutils-dev
+                      apt-get install build-dep xserver-xorg-video-geode
+     Fedora/Red Hat:  yum install autoconf automake libtool xorg-x11-util-macros
+                      yum-builddep xorg-x11-drv-geode
+   3. cd xf86-video-geode
+   4. ./autogen.sh
+   5. make distcheck
+   ...then install the driver manually.
+
+Q: What is the preferred method for submitting patches to this driver?
+
+A: See http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+   and submit the patches as attachments to the Geode X.org mailing list
+   or to the X.org Bugzilla against component "Driver/geode".
 
 = Configuration options =
 
@@ -27,7 +115,7 @@ The following options may be added to the section:
 SWCursor: Enable software cursors (essentially disabling HW cursor support)
 NoCompression: Disable video bandwidth compression
 NoAccel: Disable hardware assisted acceleration
-AccelMethod: "EXA" (default) or "XAA"
+AccelMethod: "XAA" (default) or "EXA"
 Rotate: Select a orientation to start with - LEFT, INVERT, CCW
 NoPanel: Disable panel support
 OSMImageBuffers: Set the number of image buffers (XAA only)
@@ -46,6 +134,4 @@ ExaScratch: Specify the amount of extra EXA scratch buffer (in bytes)
 FBSize: Specify the size of the video space (in bytes)
 PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
 
-
-
-
+= EOF =

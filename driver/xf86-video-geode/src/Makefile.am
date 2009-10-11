@@ -59,10 +59,11 @@ geode_drv_la_SOURCES = \
         panel.c \
         lx_driver.c \
         lx_cursor.c \
+	lx_memory.c \
+	lx_panel.c \
+	lx_output.c \
+	lx_display.c \
         lx_video.c \
-        lx_regacc.c \
-	lx_rotate.c \
-	lx_randr.c \
 	lx_exa.c \
         cimarron.c \
 	geode_pcirename.h

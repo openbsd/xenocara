@@ -35,7 +35,9 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#endif
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mipointer.h"
@@ -68,15 +70,10 @@
 #define GX_GP_REG_SIZE  0x4000
 #define GX_VID_REG_SIZE 0x4000
 
-extern OptionInfoRec GX_GeodeOptions[];
+#define DEFAULT_IMG_LINE_BUFS 20
+#define DEFAULT_CLR_LINE_BUFS 20
 
-extern const char *amdVgahwSymbols[];
-extern const char *amdVbeSymbols[];
-extern const char *amdInt10Symbols[];
-extern const char *amdFbSymbols[];
-extern const char *amdXaaSymbols[];
-extern const char *amdExaSymbols[];
-extern const char *amdRamdacSymbols[];
+extern OptionInfoRec GX_GeodeOptions[];
 
 unsigned char *XpressROMPtr;
 
@@ -200,12 +197,11 @@ GXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
     }
 
     if (pGeode->tryHWCursor) {
-	pGeode->CursorSize = 1024;
 
-	if (pGeode->CursorSize <= fbavail) {
+	if (fbavail >= 1024) {
 	    pGeode->CursorStartOffset = fboffset;
-	    fboffset += pGeode->CursorSize;
-	    fbavail -= pGeode->CursorSize;
+	    fboffset += 1024;
+	    fbavail -= 1024;
 	    pGeode->HWCursor = TRUE;
 	} else {
 	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
@@ -425,8 +421,10 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	return FALSE;
 
     pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
+#ifndef XSERVER_LIBPCIACCESS
     if (pEnt->resources)
 	return FALSE;
+#endif
 
     pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
 
@@ -513,7 +511,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     pGeode->tryCompression = TRUE;
 
     pGeode->NoAccel = FALSE;
-    pGeode->useEXA = TRUE;
+    pGeode->useEXA = FALSE;
 
     pGeode->Panel = (pGeode->Output & OUTPUT_PANEL) ? TRUE : FALSE;
 
@@ -584,7 +582,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	    pGeode->useEXA = FALSE;
 	else if (xf86NameCmp(s, "EXA"))
 	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"Unknown accleration method %s.  Defaulting to EXA.\n", s);
+		"Unknown accleration method %s.  Defaulting to XAA.\n", s);
     }
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO,
@@ -620,7 +618,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 
 	if (!xf86LoadSubModule(pScrni, "int10"))
 	    return FALSE;
-	xf86LoaderReqSymLists(amdInt10Symbols, NULL);
 
 	pVesa = pGeode->vesa;
 
@@ -651,9 +648,6 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	pScrni->videoRam = pGeode->FBAvail / 1024;
     else
 	pScrni->videoRam = pGeode->pEnt->device->videoRam;
-
-    pGeode->maxWidth = GX_MAX_WIDTH;
-    pGeode->maxHeight = GX_MAX_HEIGHT;
 
     GeodeClockRange = (ClockRangePtr) xnfcalloc(sizeof(ClockRange), 1);
     GeodeClockRange->next = NULL;
@@ -700,34 +694,27 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	return FALSE;
     }
 
-    xf86LoaderReqSymLists(amdFbSymbols, NULL);
-
     if (pGeode->NoAccel == FALSE) {
 	const char *module = (pGeode->useEXA) ? "exa" : "xaa";
-	const char **symbols = (pGeode->useEXA) ?
-	    &amdExaSymbols[0] : &amdXaaSymbols[0];
 
 	if (!xf86LoadSubModule(pScrni, module)) {
 	    return FALSE;
 	}
-
-	xf86LoaderReqSymLists(symbols, NULL);
     }
 
     if (pGeode->tryHWCursor == TRUE) {
 	if (!xf86LoadSubModule(pScrni, "ramdac")) {
 	    return FALSE;
 	}
-
-	xf86LoaderReqSymLists(amdRamdacSymbols, NULL);
     }
 
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(pGeode->pEnt->index, NULL, ResExclusive)) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 	    "Couldn't register the resources.\n");
 	return FALSE;
     }
-
+#endif
     return TRUE;
 }
 
@@ -789,9 +776,7 @@ GXAdjustFrame(int scrnIndex, int x, int y, int flags)
     GeodeRec *pGeode = GEODEPTR(pScrni);
     unsigned long offset;
 
-    offset =
-	pGeode->FBOffset + y * pGeode->Pitch +
-	x * (pScrni->bitsPerPixel >> 3);
+    offset = y * pGeode->Pitch + x * (pScrni->bitsPerPixel >> 3);
 
     gfx_set_display_offset(offset);
 }
@@ -1253,7 +1238,7 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
 	if (pGeode->useEXA) {
 
-	    if (!(pGeode->pExa = xnfcalloc(sizeof(ExaDriverRec), 1))) {
+	    if (!(pGeode->pExa = exaDriverAlloc())) {
 		xf86DrvMsg(scrnIndex, X_ERROR,
 		    "Couldn't allocate the EXA structure.\n");
 		pGeode->NoAccel = TRUE;
@@ -1269,8 +1254,8 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 		pExa->pixmapOffsetAlign = 32;
 		pExa->pixmapPitchAlign = 32;
 		pExa->flags = EXA_OFFSCREEN_PIXMAPS;
-		pExa->maxX = pGeode->maxWidth - 1;
-		pExa->maxY = pGeode->maxHeight - 1;
+		pExa->maxX = GX_MAX_WIDTH - 1;
+		pExa->maxY = GX_MAX_HEIGHT - 1;
 	    }
 	} else {
 	    pGeode->AccelImageWriteBuffers =

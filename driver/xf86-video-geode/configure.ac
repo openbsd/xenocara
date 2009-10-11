@@ -22,13 +22,17 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-geode],
-        2.10.0,
+        2.11.6,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode],
         xf86-video-geode)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(.)
+
+# Require xorg-macros: XORG_CHANGELOG
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.2)
 
 AM_INIT_AUTOMAKE([dist-bzip2])
 
@@ -83,6 +87,10 @@ XORG_DRIVER_CHECK_EXT(XFreeXDGA, xf86dgaproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
+                  HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
+                  HAVE_XEXTPROTO_71="no")
+AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
@@ -125,6 +133,7 @@ AC_SUBST([DRIVER_NAME])
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+XORG_CHANGELOG
 
 AC_OUTPUT([
 	Makefile

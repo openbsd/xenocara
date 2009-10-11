@@ -1,4 +1,4 @@
-/* Copyright (c) 2003-2007 Advanced Micro Devices, Inc.
+/* Copyright (c) 2003-2008 Advanced Micro Devices, Inc.
  *
  * Portioned modeled from xf86-video-intel/src/i830_driver.c
  * Copyright 2001 VA Linux Systems Inc., Fremont, California.
@@ -27,21 +27,6 @@
  * software without specific prior written permission.
  */
 
-/* TODO:
-   TV out support
-   Detect panels better
-   Better VGA support
-   GX:  cursor position needs to be correctly set
-   use CB data wrapper to save a variable
-   consolidate the saved timings
-   implement panning
-*/
-
-/* The effort to make things common:
-   define CmdBfrSize in the GX
-   add the output flag to GX
-*/
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -51,18 +36,19 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#endif
+#include "xf86i2c.h"
+#include "xf86Crtc.h"
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mipointer.h"
-#include <shadow.h>		       /* setupShadow() */
-#include <X11/extensions/randr.h>
 #include "fb.h"
 #include "miscstruct.h"
 #include "micmap.h"
 #include "vbe.h"
 #include "fb.h"
-#include "randrstr.h"
 #include "cim_defs.h"
 #include "cim_regs.h"
 #include "geode.h"
@@ -70,268 +56,22 @@
 /* Bring in VGA functions */
 #include "lx_vga.c"
 
-/* Chipset types */
-
-#define LX_MIN_PITCH 1024
-#define LX_MAX_PITCH 8192
 #define LX_MAX_WIDTH  1940
-#define LX_MIN_HEIGHT 400
 #define LX_MAX_HEIGHT 1600
-#define LX_CB_PITCH   544
-#define LX_CB_SIZE    544
+
+/* Size of the register blocks */
 
 #define LX_GP_REG_SIZE  0x4000
 #define LX_VG_REG_SIZE  0x4000
 #define LX_VID_REG_SIZE 0x4000
 #define LX_VIP_REG_SIZE 0x4000
 
+/* Size of the Cimarron command buffer */
+#define CIM_CMD_BFR_SZ 0x200000
+
 extern OptionInfoRec LX_GeodeOptions[];
 
-extern const char *amdVgahwSymbols[];
-extern const char *amdVbeSymbols[];
-extern const char *amdInt10Symbols[];
-extern const char *amdFbSymbols[];
-extern const char *amdExaSymbols[];
-extern const char *amdRamdacSymbols[];
-
 unsigned char *XpressROMPtr;
-
-/* Reference: Video Graphics Suite Specification:
- * VG Config Register (0x00) page 16
- * VG FP Register (0x02) page 18
- */
-
-#define LX_READ_VG(reg) \
-                (outw(0xAC1C,0xFC53), outw(0xAC1C,0x0200|(reg)), inw(0xAC1E))
-
-static inline void
-lx_enable_dac_power(ScrnInfoPtr pScrni, int option)
-{
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
-    df_set_crt_enable(DF_CRT_ENABLE);
-
-    /* Turn off the DAC if we don't need the CRT */
-
-    if (option && (!(pGeode->Output & OUTPUT_CRT))) {
-	unsigned int misc = READ_VID32(DF_VID_MISC);
-
-	misc |= DF_DAC_POWER_DOWN;
-	WRITE_VID32(DF_VID_MISC, misc);
-    }
-
-    if (pGeode->Output & OUTPUT_PANEL)
-	df_set_panel_enable(1);
-}
-
-static inline void
-lx_disable_dac_power(ScrnInfoPtr pScrni, int option)
-{
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
-    if (pGeode->Output & OUTPUT_PANEL)
-	df_set_panel_enable(0);
-
-    if (pGeode->Output & OUTPUT_CRT) {
-
-	/* Wait for the panel to finish its procedure */
-
-	if (pGeode->Output & OUTPUT_PANEL)
-	    while ((READ_VID32(DF_POWER_MANAGEMENT) & 2) == 0) ;
-	df_set_crt_enable(option);
-    }
-}
-
-static int
-lx_get_panel(int *xres, int *yres)
-{
-    static struct
-    {
-	int xres, yres;
-    } fpres[] = {
-	{
-	320, 240}, {
-	640, 480}, {
-	800, 600}, {
-	1024, 768}, {
-	1152, 864}, {
-	1280, 1024}, {
-    1600, 1200}};
-
-    unsigned short reg = LX_READ_VG(0x00);
-    unsigned char ret = (reg >> 8) & 0x07;
-
-    if ((ret == 1 || ret == 5)) {
-
-	reg = LX_READ_VG(0x02);
-	ret = (reg >> 3) & 0x07;
-
-	/* 7 is a "reserved" value - if we get it, we can only assume that
-	 * a panel doesn't exist (or it hasn't been configured in the BIOS)
-	 */
-
-	if (ret < 7) {
-	    *xres = fpres[ret].xres;
-	    *yres = fpres[ret].yres;
-
-	    return TRUE;
-	}
-    }
-
-    return FALSE;
-}
-
-static int
-lx_set_custom_mode(GeodeRec * pGeode, DisplayModePtr pMode, int bpp)
-{
-    VG_DISPLAY_MODE mode;
-    int hsync, vsync;
-
-    memset(&mode, 0, sizeof(mode));
-
-    /* Cimarron purposely swaps the sync when panels are enabled -this is
-     * presumably to allow for "default" panels which are normally active
-     * low, so we need to swizzle the flags
-     */
-
-    hsync = (pMode->Flags & V_NHSYNC) ? 1 : 0;
-    vsync = (pMode->Flags & V_NVSYNC) ? 1 : 0;
-
-    if (pGeode->Output & OUTPUT_PANEL) {
-	hsync = !vsync;
-	vsync = !vsync;
-    }
-
-    mode.flags |= (hsync) ? VG_MODEFLAG_NEG_HSYNC : 0;
-    mode.flags |= (vsync) ? VG_MODEFLAG_NEG_VSYNC : 0;
-
-    mode.flags |= pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
-
-    if (pGeode->Output & OUTPUT_PANEL) {
-	mode.panel_width = mode.mode_width = pGeode->PanelX;
-	mode.panel_height = mode.mode_height = pGeode->PanelY;
-
-	mode.flags |= VG_MODEFLAG_PANELOUT;
-	mode.flags |=
-	    pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
-    } else {
-	mode.mode_width = pMode->CrtcHDisplay;
-	mode.mode_height = pMode->CrtcVDisplay;
-    }
-
-    mode.src_width = pMode->CrtcHDisplay;
-    mode.src_height = pMode->CrtcVDisplay;
-
-    mode.hactive = pMode->CrtcHDisplay;
-    mode.hblankstart = pMode->CrtcHBlankStart;
-    mode.hsyncstart = pMode->CrtcHSyncStart;
-    mode.hsyncend = pMode->CrtcHSyncEnd;
-    mode.hblankend = pMode->CrtcHBlankEnd;
-    mode.htotal = pMode->CrtcHTotal;
-
-    mode.vactive = pMode->CrtcVDisplay;
-    mode.vblankstart = pMode->CrtcVBlankStart;
-    mode.vsyncstart = pMode->CrtcVSyncStart;
-    mode.vsyncend = pMode->CrtcVSyncEnd;
-    mode.vblankend = pMode->CrtcVBlankEnd;
-    mode.vtotal = pMode->CrtcVTotal;
-
-    mode.vactive_even = pMode->CrtcVDisplay;
-    mode.vblankstart_even = pMode->CrtcVBlankStart;
-    mode.vsyncstart_even = pMode->CrtcVSyncStart;
-    mode.vsyncend_even = pMode->CrtcVSyncEnd;
-    mode.vblankend_even = pMode->CrtcVBlankEnd;
-    mode.vtotal_even = pMode->CrtcVTotal;
-
-    mode.frequency = (int)((pMode->SynthClock / 1000.0) * 0x10000);
-
-    return vg_set_custom_mode(&mode, bpp);
-}
-
-static Bool
-LXAllocateMemory(ScreenPtr pScrn, ScrnInfoPtr pScrni, int rotate)
-{
-    GeodePtr pGeode = GEODEPTR(pScrni);
-
-    unsigned int fboffset, fbavail;
-    unsigned int size;
-    unsigned int bytpp = (pScrni->bitsPerPixel + 7) / 8;
-    Bool ret = TRUE;
-
-    if (pGeode->tryCompression)
-	pGeode->displayPitch =
-	    GeodeCalculatePitchBytes(pScrni->virtualX, pScrni->bitsPerPixel);
-    else
-	pGeode->displayPitch =
-	    ((pScrni->virtualX + 3) & ~3) * (pScrni->bitsPerPixel >> 3);
-
-    pGeode->displayWidth = pGeode->displayPitch / bytpp;
-
-    /* Sets pGeode->Pitch and pScrni->displayWidth based on the rotate settings */
-    LXSetRotatePitch(pScrni);
-
-    fbavail = pGeode->FBAvail - GP3_SCRATCH_BUFFER_SIZE;
-
-    pGeode->displayOffset = fboffset = 0;
-    pGeode->displaySize = pScrni->virtualY * pGeode->displayPitch;
-
-    fbavail -= pGeode->displaySize;
-    fboffset += pGeode->displaySize;
-
-    if (pGeode->tryCompression) {
-	size = pScrni->virtualY * LX_CB_PITCH;
-
-	if (size <= fbavail) {
-	    pGeode->CBData.compression_offset = fboffset;
-	    pGeode->CBData.size = LX_CB_PITCH;
-	    pGeode->CBData.pitch = LX_CB_PITCH;
-	    fboffset += size;
-	    fbavail -= size;
-
-	    pGeode->Compression = TRUE;
-	} else {
-	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"Not enough memory for compression\n");
-	    pGeode->Compression = FALSE;
-	}
-    }
-
-    if (pGeode->tryHWCursor) {
-	pGeode->CursorSize = 1024;
-
-	if (pGeode->CursorSize <= fbavail) {
-	    pGeode->CursorStartOffset = fboffset;
-	    fboffset += pGeode->CursorSize;
-	    fbavail -= pGeode->CursorSize;
-	    pGeode->HWCursor = TRUE;
-	} else {
-	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"Not enough memory for the hardware cursor\n");
-	    pGeode->HWCursor = FALSE;
-	}
-    }
-
-    /* Try to set up some EXA scratch memory for blending */
-
-    pGeode->exaBfrOffset = 0;
-
-    if (!pGeode->NoAccel) {
-	if (pGeode->exaBfrSz > 0 && pGeode->exaBfrSz <= fbavail) {
-	    pGeode->exaBfrOffset = fboffset;
-	    fboffset += pGeode->exaBfrSz;
-	    fbavail -= pGeode->exaBfrSz;
-	}
-    }
-
-    /* Adjust the available EXA offscreen space to account for the buffer */
-
-    if (!pGeode->NoAccel && pGeode->pExa) {
-	pGeode->pExa->offScreenBase = fboffset;
-	pGeode->pExa->memorySize = fboffset + fbavail;
-    }
-
-    return ret;
-}
 
 static Bool
 LXSaveScreen(ScreenPtr pScrn, int mode)
@@ -398,6 +138,18 @@ LXWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
 	LX_MSR_WRITE(addr, lo, hi);
 }
 
+static unsigned int
+LXCalcPitch(ScrnInfoPtr pScrni)
+{
+    GeodeRec *pGeode = GEODEPTR(pScrni);
+
+    if (pGeode->tryCompression)
+	return
+	    GeodeCalculatePitchBytes(pScrni->virtualX, pScrni->bitsPerPixel);
+    else
+	return ((pScrni->virtualX + 3) & ~3) * (pScrni->bitsPerPixel >> 3);
+}
+
 #ifdef XSERVER_LIBPCIACCESS
 static inline void *
 map_pci_mem(ScrnInfoPtr pScrni, int vram,
@@ -422,7 +174,7 @@ map_pci_mem(ScrnInfoPtr pScrni, int vram,
 static inline int
 unmap_pci_mem(ScrnInfoPtr pScrni, struct pci_device *dev, void *ptr, int size)
 {
-       return pci_device_unmap_range(dev, ptr, size);
+    return pci_device_unmap_range(dev, ptr, size);
 }
 
 #endif
@@ -517,24 +269,32 @@ LXCheckVGA(ScrnInfoPtr pScrni)
 }
 
 static Bool
+LXCrtcResize(ScrnInfoPtr pScrni, int width, int height)
+{
+    return TRUE;
+}
+
+static const xf86CrtcConfigFuncsRec lx_xf86crtc_config_funcs = {
+    LXCrtcResize,
+};
+
+static Bool
 LXPreInit(ScrnInfoPtr pScrni, int flags)
 {
     GeodePtr pGeode;
-    ClockRangePtr GeodeClockRange;
     EntityInfoPtr pEnt;
     OptionInfoRec *GeodeOptions = &LX_GeodeOptions[0];
     rgb defaultWeight = { 0, 0, 0 };
-    int modecnt;
     char *s;
 
     if (pScrni->numEntities != 1)
 	return FALSE;
 
     pEnt = xf86GetEntityInfo(pScrni->entityList[0]);
-
+#ifndef XSERVER_LIBPCIACCESS
     if (pEnt->resources)
 	return FALSE;
-
+#endif
     if (flags & PROBE_DETECT) {
 	GeodeProbeDDC(pScrni, pEnt->index);
 	return TRUE;
@@ -679,23 +439,29 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     /* Panel detection code -
      * 1.  See if an OLPC DCON is attached - we can make some assumptions
      * about the panel if so.
-     * 2.  Use override options specified in the config
+     * 2.  Use panel mode specified in the config
      * 3.  "Autodetect" the panel through VSA
      */
 
     if (dcon_init(pScrni)) {
 	pGeode->Output = OUTPUT_PANEL | OUTPUT_DCON;
     } else if (pGeode->Output & OUTPUT_PANEL) {
-	char *panelgeo =
-	    xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_GEOMETRY);
+	char *pmode = xf86GetOptValString(GeodeOptions, LX_OPTION_PANEL_MODE);
 
-	if (panelgeo != NULL)
-	    GeodeGetFPGeometry(panelgeo, &pGeode->PanelX, &pGeode->PanelY);
-	else {
-	    if (!lx_get_panel(&pGeode->PanelX, &pGeode->PanelY))
-		pGeode->Output &= ~OUTPUT_PANEL;
-	}
+	if (pmode != NULL)
+	    pGeode->panelMode = LXGetManualPanelMode(pmode);
+
+	if (pGeode->panelMode == NULL)
+	    pGeode->panelMode = LXGetLegacyPanelMode();
+
+	if (pGeode->panelMode == NULL)
+	    pGeode->Output &= ~OUTPUT_PANEL;
     }
+
+    /* Default to turn scaling on for panels */
+
+    if (pGeode->Output & OUTPUT_PANEL)
+	pGeode->Scale = TRUE;
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO, "LX output options:\n");
     xf86DrvMsg(pScrni->scrnIndex, X_INFO, " CRT: %s\n",
@@ -711,15 +477,12 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	pGeode->useVGA ? "YES" : "NO");
 
     /* Set up VGA */
-    if (pGeode->useVGA) {
-	xf86LoaderReqSymLists(amdVgahwSymbols, NULL);
 
+    if (pGeode->useVGA) {
 	VESARec *pVesa;
 
 	if (!xf86LoadSubModule(pScrni, "int10"))
 	    return FALSE;
-
-	xf86LoaderReqSymLists(amdInt10Symbols, NULL);
 
 	pVesa = pGeode->vesa;
 
@@ -756,6 +519,18 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	pGeode->FBAvail = pScrni->videoRam << 10;
     }
 
+    /* If we have <= 16Mb of memory then compression is going
+       to hurt - so warn and disable */
+
+    if (pGeode->tryCompression &&
+	pGeode->FBAvail <= 0x1000000) {
+    	xf86DrvMsg(pScrni->scrnIndex, X_INFO,
+	"%x bytes of video memory is less then optimal\n", pGeode->FBAvail);
+    	xf86DrvMsg(pScrni->scrnIndex, X_INFO,
+	"when compression is on. Disabling compression.\n");
+	pGeode->tryCompression = FALSE;
+    }
+
     /* Carve out some memory for the command buffer */
 
     pGeode->CmdBfrSize = CIM_CMD_BFR_SZ;
@@ -763,49 +538,28 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 
     pGeode->CmdBfrOffset = pGeode->FBAvail;
 
-    pGeode->maxWidth = LX_MAX_WIDTH;
-    pGeode->maxHeight = LX_MAX_HEIGHT;
+    /* Allocate a a CRTC config structure */
+    xf86CrtcConfigInit(pScrni, &lx_xf86crtc_config_funcs);
 
-    GeodeClockRange = (ClockRangePtr) xnfcalloc(sizeof(ClockRange), 1);
-    GeodeClockRange->next = NULL;
-    GeodeClockRange->minClock = 25175;
-    GeodeClockRange->maxClock = 229500;
-    GeodeClockRange->clockIndex = -1;
-    GeodeClockRange->interlaceAllowed = TRUE;
-    GeodeClockRange->doubleScanAllowed = FALSE;
+    /* Set up the GPU CRTC */
+    LXSetupCrtc(pScrni);
 
-    if (pGeode->Output & OUTPUT_CRT)
-	pScrni->monitor->DDC = GeodeDoDDC(pScrni, pGeode->pEnt->index);
-    else
-	pScrni->monitor->DDC = NULL;
+    xf86CrtcSetSizeRange(pScrni, 320, 200, LX_MAX_WIDTH, LX_MAX_HEIGHT);
 
-    /* I'm still not 100% sure this uses the right values */
+    /* Setup the output */
+    LXSetupOutput(pScrni);
 
-    modecnt = xf86ValidateModes(pScrni,
-	pScrni->monitor->Modes,
-	pScrni->display->modes,
-	GeodeClockRange,
-	NULL, LX_MIN_PITCH, LX_MAX_PITCH,
-	32, LX_MIN_HEIGHT, LX_MAX_HEIGHT,
-	pScrni->display->virtualX,
-	pScrni->display->virtualY, pGeode->FBAvail, LOOKUP_BEST_REFRESH);
-
-    if (modecnt <= 0) {
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
+    if (!xf86InitialConfiguration(pScrni, FALSE)) {
+	xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes.\n");
 	return FALSE;
     }
-
-    xf86PruneDriverModes(pScrni);
-
-    if (pScrni->modes == NULL) {
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR, "No valid modes were found\n");
-	return FALSE;
-    }
-
-    xf86SetCrtcForModes(pScrni, 0);
-    pScrni->currentMode = pScrni->modes;
 
     xf86PrintModes(pScrni);
+
+    pScrni->currentMode = pScrni->modes;
+
+    pGeode->Pitch = LXCalcPitch(pScrni);
+
     xf86SetDpi(pScrni, 0, 0);
 
     /* Load the modules we'll need */
@@ -814,29 +568,17 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	return FALSE;
     }
 
-    xf86LoaderReqSymLists(amdFbSymbols, NULL);
-
     if (!pGeode->NoAccel) {
 	if (!xf86LoadSubModule(pScrni, "exa"))
 	    return FALSE;
-
-	xf86LoaderReqSymLists(&amdExaSymbols[0], NULL);
     }
-
-    if (pGeode->tryHWCursor == TRUE) {
-	if (!xf86LoadSubModule(pScrni, "ramdac")) {
-	    return FALSE;
-	}
-
-	xf86LoaderReqSymLists(amdRamdacSymbols, NULL);
-    }
-
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(pGeode->pEnt->index, NULL, ResExclusive)) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 	    "Couldn't register the resources.\n");
 	return FALSE;
     }
-
+#endif
     return TRUE;
 }
 
@@ -857,9 +599,6 @@ LXRestore(ScrnInfoPtr pScrni)
 static Bool
 LXUnmapMem(ScrnInfoPtr pScrni)
 {
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-    pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
-
 #ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_gp_ptr, LX_GP_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vg_ptr, LX_VG_REG_SIZE);
@@ -868,6 +607,9 @@ LXUnmapMem(ScrnInfoPtr pScrni)
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vip_ptr,
 	LX_VIP_REG_SIZE);
 #else
+    GeodeRec *pGeode = GEODEPTR(pScrni);
+    pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
+
     unmap_pci_mem(pScrni, pci, cim_gp_ptr, LX_GP_REG_SIZE);
     unmap_pci_mem(pScrni, pci, cim_vg_ptr, LX_VG_REG_SIZE);
     unmap_pci_mem(pScrni, pci, cim_vid_ptr, LX_VID_REG_SIZE);
@@ -882,7 +624,7 @@ LXUnmapMem(ScrnInfoPtr pScrni)
 
 /* These should be correctly accounted for rotation */
 
-static void
+void
 LXAdjustFrame(int scrnIndex, int x, int y, int flags)
 {
     ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
@@ -890,110 +632,10 @@ LXAdjustFrame(int scrnIndex, int x, int y, int flags)
 
     unsigned long offset;
 
-    /* XXX:  Is pitch correct here? */
-
-    offset = pGeode->FBOffset + (y * pGeode->Pitch);
+    offset = (y * pGeode->Pitch);
     offset += x * (pScrni->bitsPerPixel >> 3);
 
     vg_set_display_offset(offset);
-}
-
-static Bool
-LXSetVideoMode(ScrnInfoPtr pScrni, DisplayModePtr pMode)
-{
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-    DF_VIDEO_SOURCE_PARAMS vs_odd, vs_even;
-    int flags = 0;
-    int video_enable;
-    unsigned long video_flags;
-
-    df_get_video_enable(&video_enable, &video_flags);
-
-    if (video_enable != 0)
-	df_set_video_enable(0, 0);
-
-    df_get_video_source_configuration(&vs_odd, &vs_even);
-    lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
-    vg_set_compression_enable(0);
-
-    /* If the mode is a default one, then set the mode with the Cimarron
-     * tables */
-
-    if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)) {
-	if (pMode->Flags & V_NHSYNC)
-	    flags |= VG_MODEFLAG_NEG_HSYNC;
-	if (pMode->Flags & V_NVSYNC)
-	    flags |= VG_MODEFLAG_NEG_VSYNC;
-
-	if (pGeode->Output & OUTPUT_PANEL) {
-	    int activex = pGeode->PanelX;
-	    int activey = pGeode->PanelY;
-
-	    flags = pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
-
-	    if (pMode->CrtcHDisplay > 1024 &&
-		pMode->CrtcHDisplay != pGeode->PanelX) {
-		ErrorF
-		    ("The source is greater then 1024 - scaling is disabled.\n");
-		activex = pMode->CrtcHDisplay;
-		activey = pMode->CrtcVDisplay;
-
-		vg_set_border_color(0);
-	    }
-
-	    vg_set_panel_mode(pMode->CrtcHDisplay, pMode->CrtcVDisplay,
-		activex, activey, activex, activey,
-		pScrni->bitsPerPixel, flags);
-	} else {
-	    vg_set_display_mode(pMode->CrtcHDisplay, pMode->CrtcVDisplay,
-		pMode->CrtcHDisplay, pMode->CrtcVDisplay,
-		pScrni->bitsPerPixel, GeodeGetRefreshRate(pMode), 0);
-	}
-    } else {
-	/* For anything other then a default mode - use the passed in
-	 * timings */
-
-	lx_set_custom_mode(pGeode, pMode, pScrni->bitsPerPixel);
-    }
-
-    if (pGeode->Output & OUTPUT_PANEL)
-	df_set_output_path((pGeode->
-		Output & OUTPUT_CRT) ? DF_DISPLAY_CRT_FP : DF_DISPLAY_FP);
-    else
-	df_set_output_path(DF_DISPLAY_CRT);
-
-    vg_set_display_pitch(pGeode->Pitch);
-    gp_set_bpp(pScrni->bitsPerPixel);
-
-    vg_set_display_offset(0);
-    vg_wait_vertical_blank();
-
-    if (pGeode->Compression) {
-	vg_configure_compression(&(pGeode->CBData));
-	vg_set_compression_enable(1);
-    }
-
-    if (pGeode->HWCursor && !(pMode->Flags & V_DBLSCAN)) {
-	VG_PANNING_COORDINATES panning;
-
-	LXLoadCursorImage(pScrni, NULL);
-	vg_set_cursor_position(0, 0, &panning);
-	LXShowCursor(pScrni);
-    } else {
-	vg_set_cursor_enable(0);
-	pGeode->HWCursor = FALSE;
-    }
-
-    LXAdjustFrame(pScrni->scrnIndex, pScrni->frameX0, pScrni->frameY0, 0);
-
-    df_configure_video_source(&vs_odd, &vs_even);
-
-    if (video_enable != 0)
-	df_set_video_enable(video_enable, video_flags);
-
-    lx_enable_dac_power(pScrni, 1);
-
-    return TRUE;
 }
 
 static Bool
@@ -1001,34 +643,9 @@ LXSwitchMode(int index, DisplayModePtr pMode, int flags)
 {
     ScrnInfoPtr pScrni = xf86Screens[index];
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    int ret = TRUE;
-    int rotate;
 
-    /* Syn the engine and shutdown the DAC momentarily */
-    gp_wait_until_idle();
-
-    /* Set up the memory for the new mode */
-    rotate = LXGetRotation(pScrni->pScreen);
-    ret = LXAllocateMemory(pScrni->pScreen, pScrni, rotate);
-
-    if (ret) {
-	if (pGeode->curMode != pMode)
-	    ret = LXSetVideoMode(pScrni, pMode);
-    }
-
-    if (ret)
-	ret = LXRotate(pScrni, pMode);
-
-    /* Go back the way it was */
-
-    if (ret == FALSE) {
-	if (!LXSetVideoMode(pScrni, pGeode->curMode))
-	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"Could not restore the previous mode\n");
-    } else
-	pGeode->curMode = pMode;
-
-    return ret;
+    /* Set the new mode */
+    return xf86SetSingleMode(pScrni, pMode, pGeode->rotation);
 }
 
 static void
@@ -1038,8 +655,6 @@ LXLeaveGraphics(ScrnInfoPtr pScrni)
     VG_PANNING_COORDINATES panning;
 
     gp_wait_until_idle();
-
-    lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
 
     vg_set_custom_mode(&(pGeode->FBcimdisplaytiming.vgDisplayMode),
 	pGeode->FBcimdisplaytiming.wBpp);
@@ -1069,7 +684,6 @@ LXLeaveGraphics(ScrnInfoPtr pScrni)
 	vg_delay_milliseconds(3);
     }
 
-    lx_enable_dac_power(pScrni, 1);
     pScrni->vtSema = FALSE;
 }
 
@@ -1087,6 +701,9 @@ LXCloseScreen(int scrnIndex, ScreenPtr pScrn)
 	xfree(pGeode->pExa);
 	pGeode->pExa = NULL;
     }
+
+    /* Unmap the offscreen allocations */
+    GeodeCloseOffscreen(pScrni);
 
     LXUnmapMem(pScrni);
 
@@ -1108,18 +725,12 @@ LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
     int bpp;
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
-    pGeode->curMode = NULL;
-
     pGeode->VGAActive = gu3_get_vga_active();
 
     gp_wait_until_idle();
 
-    //lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
-
     vg_get_current_display_mode(&pGeode->FBcimdisplaytiming.vgDisplayMode,
 	&bpp);
-
-    //dump_previous(&pGeode->FBcimdisplaytiming.vgDisplayMode);
 
     pGeode->FBcimdisplaytiming.wBpp = bpp;
     pGeode->FBcimdisplaytiming.wPitch = vg_get_display_pitch();
@@ -1170,17 +781,13 @@ LXEnterGraphics(ScreenPtr pScrn, ScrnInfoPtr pScrni)
 	vg_delay_milliseconds(1);
     }
 
-    /* Set up the memory */
-    /* XXX - FIXME - when we alow inital rotation, it should be here */
-    LXAllocateMemory(pScrn, pScrni, pGeode->rotation);
-
     /* Clear the framebuffer */
-    memset(pGeode->FBBase + pGeode->displayOffset, 0, pGeode->displaySize);
+    memset(pGeode->FBBase, 0, pGeode->displaySize);
 
-    /* Set the video mode */
-    LXSetVideoMode(pScrni, pScrni->currentMode);
+    /* Set the modes */
+    if (!xf86SetDesiredModes(pScrni))
+	return FALSE;
 
-    pGeode->curMode = pScrni->currentMode;
     pScrni->vtSema = TRUE;
 
     return TRUE;
@@ -1202,86 +809,13 @@ LXLoadPalette(ScrnInfoPtr pScrni,
     }
 }
 
-#ifdef DPMSExtension
-
-static void
-LXDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
-{
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
-    if (!pScrni->vtSema)
-	return;
-
-    if (pGeode->Output & OUTPUT_DCON) {
-	if (DCONDPMSSet(pScrni, mode, flags))
-	    return;
-    }
-
-    switch (mode) {
-    case DPMSModeOn:
-	lx_enable_dac_power(pScrni, 1);
-	break;
-
-    case DPMSModeStandby:
-	lx_disable_dac_power(pScrni, DF_CRT_STANDBY);
-	break;
-
-    case DPMSModeSuspend:
-	lx_disable_dac_power(pScrni, DF_CRT_SUSPEND);
-	break;
-
-    case DPMSModeOff:
-	lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
-	break;
-    }
-}
-
-#endif
-
-static Bool
-LXCreateScreenResources(ScreenPtr pScreen)
-{
-    ScrnInfoPtr pScrni = xf86Screens[pScreen->myNum];
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-
-    pScreen->CreateScreenResources = pGeode->CreateScreenResources;
-    if (!(*pScreen->CreateScreenResources) (pScreen))
-	return FALSE;
-
-    if (xf86LoaderCheckSymbol("LXRandRSetConfig")
-	&& pGeode->rotation != RR_Rotate_0) {
-	Rotation(*LXRandRSetConfig) (ScreenPtr pScreen, Rotation rr, int rate,
-	    RRScreenSizePtr pSize) = NULL;
-	RRScreenSize p;
-	Rotation requestedRotation = pGeode->rotation;
-
-	pGeode->rotation = RR_Rotate_0;
-
-	/* Just setup enough for an initial rotate */
-
-	p.width = pScreen->width;
-	p.height = pScreen->height;
-	p.mmWidth = pScreen->mmWidth;
-	p.mmHeight = pScreen->mmHeight;
-
-	LXRandRSetConfig = LoaderSymbol("LXRandRSetConfig");
-	if (LXRandRSetConfig) {
-	    pGeode->starting = TRUE;
-	    (*LXRandRSetConfig) (pScreen, requestedRotation, 0, &p);
-	    pGeode->starting = FALSE;
-	}
-    }
-
-    return TRUE;
-}
-
 static Bool
 LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 {
     ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    XF86ModReqInfo shadowReq;
-    int maj, min, ret, rotate;
+    int ret;
+    unsigned int dwidth;
 
     pGeode->starting = TRUE;
 
@@ -1297,21 +831,18 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
     if (!pGeode->NoAccel) {
 
-	pGeode->pExa = xnfcalloc(sizeof(ExaDriverRec), 1);
+	pGeode->pExa = exaDriverAlloc();
 
 	if (pGeode->pExa) {
 
-	    /* THis is set in LXAllocMem */
 	    pGeode->pExa->memoryBase = 0;
-
-	    /* This is set in LXAllocateMemory */
 	    pGeode->pExa->memorySize = 0;
 
 	    pGeode->pExa->pixmapOffsetAlign = 32;
 	    pGeode->pExa->pixmapPitchAlign = 32;
 	    pGeode->pExa->flags = EXA_OFFSCREEN_PIXMAPS;
-	    pGeode->pExa->maxX = pGeode->maxWidth - 1;
-	    pGeode->pExa->maxY = pGeode->maxHeight - 1;
+	    pGeode->pExa->maxX = LX_MAX_WIDTH - 1;
+	    pGeode->pExa->maxY = LX_MAX_HEIGHT - 1;
 	} else {
 	    xf86DrvMsg(scrnIndex, X_ERROR,
 		"Couldn't allocate the EXA structure.\n");
@@ -1323,6 +854,8 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
     if (!LXMapMem(pScrni))
 	return FALSE;
+
+    LXInitOffscreen(pScrni);
 
     /* XXX FIXME - Take down any of the structures on failure? */
     if (!LXEnterGraphics(pScrn, pScrni))
@@ -1347,12 +880,21 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 
     miSetPixmapDepths();
 
+    if (pScrni->virtualX > pScrni->displayWidth)
+	pScrni->displayWidth = pScrni->virtualX;
+
     /* Point at the visible area to start */
 
-    ret = fbScreenInit(pScrn, pGeode->FBBase + pGeode->displayOffset,
+    /* fbScreenInit assumes that the stride is display width *
+     * bytes per pixel.  If compression is on, then our stride might
+     * be completely different, so we divide the pitch by the
+     * bytes per pixel to fake fbScreenInit into doing the right thing */
+
+    dwidth = pGeode->Pitch / ((pScrni->bitsPerPixel + 7) / 8);
+
+    ret = fbScreenInit(pScrn, pGeode->FBBase,
 	pScrni->virtualX, pScrni->virtualY,
-	pScrni->xDpi, pScrni->yDpi, pGeode->displayWidth,
-	pScrni->bitsPerPixel);
+	pScrni->xDpi, pScrni->yDpi, dwidth, pScrni->bitsPerPixel);
 
     if (!ret)
 	return FALSE;
@@ -1390,7 +932,7 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
     /* Set up the HW cursor - must follow the soft cursor init */
 
     if (pGeode->tryHWCursor) {
-	if (!LXHWCursorInit(pScrn))
+	if (!LXCursorInit(pScrn))
 	    xf86DrvMsg(scrnIndex, X_ERROR,
 		"Hardware cursor initialization failed.\n");
     }
@@ -1409,47 +951,21 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 	    return FALSE;
 	}
     }
-#ifdef DPMSExtension
-    xf86DPMSInit(pScrn, LXDPMSSet, 0);
-#endif
+    xf86DPMSInit(pScrn, xf86DPMSSet, 0);
 
     LXInitVideo(pScrn);
 
-    /* Set up RandR */
-    /* We provide our own RandR goodness - disable the default */
-    xf86DisableRandR();
-
-    memset(&shadowReq, 0, sizeof(shadowReq));
-    shadowReq.majorversion = 1;
-    shadowReq.minorversion = 1;
-
-    if (LoadSubModule(pScrni->module, "shadow",
-	    NULL, NULL, NULL, &shadowReq, &maj, &min)) {
-
-	rotate = RR_Rotate_0 | RR_Rotate_90 | RR_Rotate_180 | RR_Rotate_270;
-	shadowSetup(pScrn);
-    } else {
-	LoaderErrorMsg(NULL, "shadow", maj, min);
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-	    "Error loading shadow - rotation not available.\n");
-
-	if (pGeode->rotation != RR_Rotate_0)
-	    xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-		"Reverting back to normal rotation.\n");
-
-	rotate = pGeode->rotation = RR_Rotate_0;
-    }
-
-    LXRandRInit(pScrn, rotate);
-
     pGeode->PointerMoved = pScrni->PointerMoved;
     pScrni->PointerMoved = GeodePointerMoved;
-    pGeode->CreateScreenResources = pScrn->CreateScreenResources;
-    pScrn->CreateScreenResources = LXCreateScreenResources;
 
     pGeode->CloseScreen = pScrn->CloseScreen;
     pScrn->CloseScreen = LXCloseScreen;
     pScrn->SaveScreen = LXSaveScreen;
+
+    if (!xf86CrtcScreenInit(pScrn)) {
+	xf86DrvMsg(scrnIndex, X_ERROR, "CRTCScreenInit failed.\n");
+	return FALSE;
+    }
 
     if (serverGeneration == 1)
 	xf86ShowUnusedOptions(pScrni->scrnIndex, pScrni->options);
@@ -1462,71 +978,13 @@ LXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 static int
 LXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
-    GeodeRec *pGeode = GEODEPTR(pScrni);
-    int p, ret;
-    VG_QUERY_MODE vgQueryMode;
-
-    memset(&vgQueryMode, 0, sizeof(vgQueryMode));
-
-    /* For builtin and default modes, try to look up the mode in Cimarron */
-
-    if ((pMode->type & M_T_BUILTIN) || (pMode->type & M_T_DEFAULT)) {
-
-	if (pGeode->Output & OUTPUT_PANEL) {
-
-	    /* Can't scale this mode */
-
-	    if ((pGeode->PanelY != pMode->CrtcHDisplay) &&
-		pMode->CrtcHDisplay > 1024)
-		return MODE_NOMODE;
-
-	    vgQueryMode.panel_width = pGeode->PanelX;
-	    vgQueryMode.panel_height = pGeode->PanelY;
-
-	    vgQueryMode.query_flags |=
-		VG_QUERYFLAG_PANELWIDTH | VG_QUERYFLAG_PANELHEIGHT;
-	}
-
-	vgQueryMode.active_width = pMode->CrtcHDisplay;
-	vgQueryMode.active_height = pMode->CrtcVDisplay;
-	vgQueryMode.bpp = pScrni->bitsPerPixel;
-	vgQueryMode.hz = GeodeGetRefreshRate(pMode);
-	vgQueryMode.query_flags |= VG_QUERYFLAG_REFRESH | VG_QUERYFLAG_BPP |
-	    VG_QUERYFLAG_ACTIVEWIDTH | VG_QUERYFLAG_ACTIVEHEIGHT;
-
-	ret = vg_get_display_mode_index(&vgQueryMode);
-
-	if (ret < 0)
-	    return MODE_BAD;
-    }
-
-    if (pGeode->tryCompression)
-	p = GeodeCalculatePitchBytes(pMode->CrtcHDisplay,
-	    pScrni->bitsPerPixel);
-    else
-	p = ((pMode->CrtcHDisplay + 3) & ~3) * (pScrni->bitsPerPixel >> 3);
-
-    if (p * pMode->CrtcVDisplay > pGeode->FBAvail)
-	return MODE_MEM;
-
     return MODE_OK;
 }
-
-/* XXX - Way more to do here */
 
 static Bool
 LXEnterVT(int scrnIndex, int flags)
 {
-    ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
-    Bool ret = LXEnterGraphics(NULL, pScrni);
-
-    /* Reallocate a shadow area, if we need it */
-
-    if (ret == TRUE)
-	ret = LXAllocShadow(pScrni);
-
-    return ret;
+    return LXEnterGraphics(NULL, xf86Screens[scrnIndex]);
 }
 
 static void
@@ -1536,14 +994,7 @@ LXLeaveVT(int scrnIndex, int flags)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     pGeode->PrevDisplayOffset = vg_get_display_offset();
-    LXLeaveGraphics(xf86Screens[scrnIndex]);
-
-    /* Destroy any shadow area, if we have it */
-
-    if (pGeode->shadowArea != NULL) {
-	exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
-	pGeode->shadowArea = NULL;
-    }
+    LXLeaveGraphics(pScrni);
 }
 
 void

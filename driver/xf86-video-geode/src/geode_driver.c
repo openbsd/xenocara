@@ -42,7 +42,9 @@
 /* Includes that are used by all drivers */
 #include "xf86.h"
 #include "xf86_OSproc.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#endif
 #include "compiler.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
@@ -72,8 +74,13 @@
 #ifdef DPMSExtension
 #include "globals.h"
 #include "opaque.h"
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 #endif /* DPMSExtension */
 
 /* A few things all drivers should have */
@@ -191,16 +198,14 @@ OptionInfoRec LX_GeodeOptions[] = {
     {LX_OPTION_HW_CURSOR, "HWcursor", OPTV_BOOLEAN, {0}, FALSE},
     {LX_OPTION_NOCOMPRESSION, "NoCompression", OPTV_BOOLEAN, {0}, FALSE},
     {LX_OPTION_NOACCEL, "NoAccel", OPTV_BOOLEAN, {0}, FALSE},
-    {LX_OPTION_ACCEL_METHOD, "AccelMethod", OPTV_STRING, {0}, FALSE},
     {LX_OPTION_TV_SUPPORT, "TV", OPTV_ANYSTR, {0}, FALSE},
     {LX_OPTION_TV_OUTPUT, "TV_Output", OPTV_ANYSTR, {0}, FALSE},
     {LX_OPTION_TV_OVERSCAN, "TVOverscan", OPTV_ANYSTR, {0}, FALSE},
     {LX_OPTION_ROTATE, "Rotate", OPTV_ANYSTR, {0}, FALSE},
     {LX_OPTION_NOPANEL, "NoPanel", OPTV_BOOLEAN, {0}, FALSE},
-    {LX_OPTION_COLOR_KEY, "ColorKey", OPTV_INTEGER, {0}, FALSE},
     {LX_OPTION_EXA_SCRATCH_BFRSZ, "ExaScratch", OPTV_INTEGER, {0}, FALSE},
     {LX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE},
-    {LX_OPTION_PANEL_GEOMETRY, "PanelGeometry", OPTV_STRING, {0}, FALSE},
+    {LX_OPTION_PANEL_MODE, "PanelMode", OPTV_STRING, {0}, FALSE},
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
@@ -219,7 +224,6 @@ OptionInfoRec GX_GeodeOptions[] = {
     {GX_OPTION_TV_OVERSCAN, "TVOverscan", OPTV_ANYSTR, {0}, FALSE},
     {GX_OPTION_ROTATE, "Rotate", OPTV_ANYSTR, {0}, FALSE},
     {GX_OPTION_NOPANEL, "NoPanel", OPTV_BOOLEAN, {0}, FALSE},
-    {GX_OPTION_COLOR_KEY, "ColorKey", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_OSM_IMG_BUFS, "OSMImageBuffers", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_OSM_CLR_BUFS, "OSMColorExpBuffers", OPTV_INTEGER, {0}, FALSE},
     {GX_OPTION_FBSIZE, "FBSize", OPTV_INTEGER, {0}, FALSE},
@@ -230,69 +234,6 @@ OptionInfoRec GX_GeodeOptions[] = {
 
 OptionInfoRec no_GeodeOptions[] = {
     {-1, NULL, OPTV_NONE, {0}, FALSE}
-};
-
-/* List of symbols from other modules that this module references.The purpose
-* is that to avoid unresolved symbol warnings
-*/
-const char *amdVgahwSymbols[] = {
-    "vgaHWGetHWRec",
-    "vgaHWUnlock",
-    "vgaHWInit",
-    "vgaHWSave",
-    "vgaHWRestore",
-    "vgaHWProtect",
-    "vgaHWGetIOBase",
-    "vgaHWMapMem",
-    "vgaHWLock",
-    "vgaHWFreeHWRec",
-    "vgaHWSaveScreen",
-    NULL
-};
-
-const char *amdVbeSymbols[] = {
-    "VBEInit",
-    "vbeDoEDID",
-    "vbeFree",
-    NULL
-};
-
-const char *amdInt10Symbols[] = {
-    "xf86ExecX86int10",
-    "xf86InitInt10",
-    "xf86Int10AllocPages",
-    "xf86Int10Addr",
-    NULL
-};
-
-const char *amdFbSymbols[] = {
-    "fbScreenInit",
-    "fbPictureInit",
-    NULL
-};
-
-const char *amdXaaSymbols[] = {
-    "XAADestroyInfoRec",
-    "XAACreateInfoRec",
-    "XAAInit",
-    "XAAScreenIndex",
-    NULL
-};
-
-const char *amdExaSymbols[] = {
-    "exaGetVersion",
-    "exaDriverInit",
-    "exaDriverFini",
-    "exaOffscreenAlloc",
-    "exaOffscreenFree",
-    NULL
-};
-
-const char *amdRamdacSymbols[] = {
-    "xf86InitCursor",
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    NULL
 };
 
 #ifdef XFree86LOADER
@@ -344,9 +285,6 @@ GeodeSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
     init = TRUE;
     xf86AddDriver(&GEODE, Module, flag);
 
-    LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
-	amdFbSymbols, amdXaaSymbols, amdInt10Symbols, amdRamdacSymbols, NULL);
-
     return (pointer) TRUE;
 }
 
@@ -365,12 +303,6 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
 #endif
 	    );
 
-	/* Tell the loader about symbols from other modules that this
-	 * module might refer to.
-	 */
-	LoaderRefSymLists(amdVgahwSymbols, amdVbeSymbols,
-	    amdFbSymbols, amdXaaSymbols,
-	    amdInt10Symbols, amdRamdacSymbols, NULL);
 	return (pointer) TRUE;
     }
 
@@ -546,11 +478,12 @@ AmdProbe(DriverPtr drv, int flags)
 		/* so take the first one */
 		for (i = 0; i < numUsed; i++) {
 		    /* Allocate a ScrnInfoRec  */
-		    ScrnInfoPtr pScrni = xf86AllocateScreen(drv, 0);
-
+		    ScrnInfoPtr pScrni = NULL;
 		    EntityInfoPtr pEnt = xf86GetEntityInfo(usedChips[i]);
 		    PciChipsets *p_id;
 
+		    pScrni = xf86ConfigPciEntity(pScrni, 0, usedChips[i],
+						 GeodePCIchipsets, NULL, NULL, NULL, NULL, NULL);
 		    for (p_id = GeodePCIchipsets; p_id->numChipset != -1;
 			p_id++) {
 			if (pEnt->chipset == p_id->numChipset) {
@@ -587,8 +520,7 @@ AmdProbe(DriverPtr drv, int flags)
 		    drvr_setup(pScrni);
 
 		    foundScreen = TRUE;
-		    xf86ConfigActivePciEntity(pScrni, usedChips[i],
-			GeodePCIchipsets, NULL, NULL, NULL, NULL, NULL);
+
 		}
 	    }
 	}

@@ -30,7 +30,6 @@
 /* Includes that are used by all drivers */
 #include <xf86.h>
 #include <xf86_OSproc.h>
-#include <xf86Resources.h>
 #include <compiler.h>
 
 #include "geode.h"
@@ -45,13 +44,13 @@ dcon_present(void)
     static int _dval = -1;
 
     if (_dval == -1)
-	_dval = (access("/sys/devices/platform/dcon", F_OK) == 0);
+	_dval = (access("/sys/class/power_supply/olpc-ac", F_OK) == 0);
 
     return (Bool) _dval;
 }
 
 int
-DCONDPMSSet(ScrnInfoPtr pScrni, int mode, int flags)
+DCONDPMSSet(ScrnInfoPtr pScrni, int mode)
 {
     static int failed = -1;
     int fd;
@@ -92,19 +91,39 @@ dcon_init(ScrnInfoPtr pScrni)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
+    pGeode->mm_width = 0;
+    pGeode->mm_height = 0;
+
     if (!dcon_present()) {
 	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "No DCON is present\n");
 	return FALSE;
     }
 
+    pGeode->panelMode = xnfcalloc(1, sizeof(DisplayModeRec));
+    if (pGeode->panelMode == NULL)
+	return FALSE;
+
+    /* Set up the panel mode structure automagically */
+
+    pGeode->panelMode->type = M_T_DRIVER|M_T_PREFERRED;
+    pGeode->panelMode->Clock = 57275;
+    pGeode->panelMode->HDisplay = 1200;
+    pGeode->panelMode->HSyncStart = 1208;
+    pGeode->panelMode->HSyncEnd = 1216;
+    pGeode->panelMode->HTotal = 1240;
+    pGeode->panelMode->VDisplay = 900;
+    pGeode->panelMode->VSyncStart = 905;
+    pGeode->panelMode->VSyncEnd = 908;
+    pGeode->panelMode->VTotal = 912;
+    pGeode->panelMode->Flags = V_NHSYNC | V_NVSYNC;
+
+    pGeode->mm_width = 152;
+    pGeode->mm_height = 114;
+
+    xf86SetModeDefaultName(pGeode->panelMode);
+
     /* TODO: Print board revision once sysfs exports it. */
     xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "DCON detected.\n");
 
-    /* Panel size setup */
-    pGeode->PanelX = DCON_DEFAULT_XRES;
-    pGeode->PanelY = DCON_DEFAULT_YRES;
-
-    /* FIXME:  Mode setup should go here */
-    /* FIXME:  Controller setup should go here */
     return TRUE;
 }

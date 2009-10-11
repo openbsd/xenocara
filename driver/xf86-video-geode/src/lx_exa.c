@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 Advanced Micro Devices, Inc.
+ * Copyright (c) 2007-2008 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,6 +30,8 @@
    support multiple pass operations?
 */
 
+/* To support PictOptAdd with a mask */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -42,6 +44,9 @@
 #include "cim_regs.h"
 
 #include "geode_blend.h"
+
+#define F(x)    IntToxFixed(x)
+#define I(x)    xFixedToInt(x)
 
 static const struct exa_format_t
 {
@@ -68,6 +73,7 @@ static const struct exa_format_t
 #define COMP_TYPE_MASK 0
 #define COMP_TYPE_ONEPASS 1
 #define COMP_TYPE_TWOPASS 3
+#define COMP_TYPE_ROTATE  5
 
 static struct
 {
@@ -86,6 +92,10 @@ static struct
     unsigned int bufferOffset;
     struct exa_format_t *srcFormat;
     struct exa_format_t *dstFormat;
+
+    int rotate;
+    PictTransform *transform;
+
 } exaScratch;
 
 static const int SDfn[16] = {
@@ -285,6 +295,7 @@ lx_prepare_solid(PixmapPtr pxMap, int alu, Pixel planemask, Pixel fg)
     exaScratch.op = op;
 
     gp_set_solid_source(fg);
+
     gp_set_strides(pitch, pitch);
     gp_write_parameters();
     return TRUE;
@@ -340,15 +351,11 @@ lx_do_copy(PixmapPtr pxDst, int srcX, int srcY,
     gp_declare_blt(lx_copy_flags(srcX, srcY, dstX, dstY, w, h,
 	    exaScratch.op));
 
-    //gp_declare_blt(0);
-
     srcOffset = exaScratch.srcOffset + (exaScratch.srcPitch * srcY) +
 	(exaScratch.srcBpp) * srcX;
 
-    dstOffset = exaGetPixmapOffset(pxDst) + (dstPitch * dstY) +
-	(dstBpp * dstX);
-
-    flags = 0;
+    dstOffset = exaGetPixmapOffset(pxDst) +
+	(dstPitch * dstY) + (dstBpp * dstX);
 
     if (dstX > srcX)
 	flags |= CIMGP_NEGXDIR;
@@ -461,16 +468,68 @@ lx_get_format(PicturePtr p)
 	    return (&lx_exa_formats[i]);
     }
 
-#if 0
-    ErrorF("Couldn't match on format %x\n", format);
-    ErrorF("BPP = %d, type = %d, ARGB(%d,%d,%d,%d)n",
-	PICT_FORMAT_BPP(format),
-	PICT_FORMAT_TYPE(format),
-	PICT_FORMAT_A(format),
-	PICT_FORMAT_R(format), PICT_FORMAT_G(format), PICT_FORMAT_B(format));
-#endif
-
     return NULL;
+}
+
+static Bool
+lx_process_transform(PicturePtr pSrc)
+{
+    PictTransformPtr t = pSrc->transform;
+    xFixed c0 = t->matrix[0][0];
+    xFixed s0 = t->matrix[0][1];
+    xFixed s1 = t->matrix[1][0];
+    xFixed c1 = t->matrix[1][1];
+
+    /* If the transform doesn't have any rotation
+     * or scaling components, then just grab the
+     * translate coordinates */
+
+    if (t->matrix[0][0] == 0 &&
+	t->matrix[0][1] == 0 &&
+	t->matrix[1][0] == 0 && t->matrix[1][1] == 0) {
+	exaScratch.transform = pSrc->transform;
+	return TRUE;
+    }
+
+    /* Otherwise, see if this is a simple
+     * rotate transform - if it isn't, then
+     * we have to punt back to software */
+
+    if (t->matrix[2][2] != F(1))
+	return FALSE;
+
+    /* The rotate matrix looks like this:
+     * [ cos X   -sin x 
+     * sin X   cos X ]
+     * 
+     * Where X is the angle.  We do a simple
+     * check first - if [0,0] != [1,1], then 
+     * scaling was specified too, and we can 
+     * bail, and if [0,1] != -[1,1] then this
+     * isn't scaling that we can handle.
+     */
+
+    if ((c0 != c1) || (s0 != -s1))
+	return FALSE;
+
+    /* Now, figure out what angle we want - we
+     * can only accelerate right angle rotations,
+     * so this turns into an easy set of if statements */
+
+    if (c0 == F(1) && s1 == F(0))
+	exaScratch.rotate = RR_Rotate_0;
+    else if (c0 == F(0) && s1 == F(1))
+	exaScratch.rotate = RR_Rotate_90;
+    else if (c0 == F(-1) && s1 == F(0))
+	exaScratch.rotate = RR_Rotate_180;
+    else if (c0 == F(0) && s1 == F(-1))
+	exaScratch.rotate = RR_Rotate_270;
+    else
+	return FALSE;
+
+    exaScratch.transform = pSrc->transform;
+
+    return TRUE;
 }
 
 static Bool
@@ -488,6 +547,9 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 	    return FALSE;
     }
 
+    if (pMsk && op == PictOpAdd)
+	return FALSE;
+
     /* Check that the filter matches what we support */
 
     switch (pSrc->filter) {
@@ -498,13 +560,21 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 	break;
 
     default:
-	ErrorF("invalid filter %d\n", pSrc->filter);
+	/* WE don't support bilinear or convolution filters */
 	return FALSE;
     }
 
-    /* We don't handle transforms */
+    /* We don't support any mask transforms */
+    if (pMsk && pMsk->transform)
+	return FALSE;
 
-    if (pSrc->transform)
+    /* Keep an eye out for source rotation transforms - those we can
+     * do something about */
+
+    exaScratch.rotate = RR_Rotate_0;
+    exaScratch.transform = NULL;
+
+    if (pSrc->transform && !lx_process_transform(pSrc))
 	return FALSE;
 
     /* XXX - I don't understand PICT_a8 enough - so I'm punting */
@@ -537,20 +607,24 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     /* Make sure operations that need alpha bits have them */
     /* If a mask is enabled, the alpha will come from there */
 
-    if (!pMsk && (!srcFmt->alphabits && usesSrcAlpha(op))) {
-	ErrorF("EXA:  Source needs alpha bits\n");
+    if (!pMsk && (!srcFmt->alphabits && usesSrcAlpha(op)))
 	return FALSE;
-    }
 
-    if (!pMsk && (!dstFmt->alphabits && usesDstAlpha(op))) {
-	ErrorF("EXA: Dest needs alpha bits\n");
+    if (!pMsk && (!dstFmt->alphabits && usesDstAlpha(op)))
 	return FALSE;
-    }
 
     /* FIXME:  See a way around this! */
 
     if (srcFmt->alphabits == 0 && dstFmt->alphabits != 0)
 	return FALSE;
+
+    /* If this is a rotate operation, then make sure the src and dst
+     * formats are the same */
+
+    if (exaScratch.rotate != RR_Rotate_0 && srcFmt != dstFmt) {
+	ErrorF("EXA: Can't rotate and convert formats at the same time\n");
+	return FALSE;
+    }
 
     /* Set up the scratch buffer with the information we need */
 
@@ -612,6 +686,8 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     } else {
 	if (usesPasses(op))
 	    exaScratch.type = COMP_TYPE_TWOPASS;
+	else if (exaScratch.rotate != RR_Rotate_0)
+	    exaScratch.type = COMP_TYPE_ROTATE;
 	else
 	    exaScratch.type = COMP_TYPE_ONEPASS;
 
@@ -685,8 +761,6 @@ get_op_type(struct exa_format_t *src, struct exa_format_t *dst, int type)
  * ifdefed out until such time that we are sure its not needed
  */
 
-#if 1
-
 static void
 lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
     unsigned long srcOffset, int width, int height)
@@ -714,99 +788,6 @@ lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
 
     gp_screen_to_screen_convert(dstOffset, srcOffset, width, height, 0);
 }
-
-#else
-
-/* XXX - For now, we assume that the conversion will fit */
-
-static void
-lx_composite_onepass(PixmapPtr pxDst, unsigned long dstOffset,
-    unsigned long srcOffset, int width, int height)
-{
-    struct blend_ops_t *opPtr;
-    int apply, type;
-    int sbpp = lx_get_bpp_from_format(exaScratch.srcFormat->fmt);
-
-    /* Copy the destination into the scratch buffer */
-
-    gp_declare_blt(0);
-
-    gp_set_bpp(sbpp);
-
-    gp_set_source_format(exaScratch.dstFormat->fmt);
-
-    gp_set_raster_operation(0xCC);
-    gp_set_strides(exaScratch.srcPitch, exaGetPixmapPitch(pxDst));
-    gp_screen_to_screen_convert(exaScratch.bufferOffset, dstOffset, width,
-	height, 0);
-
-    /* Do the blend */
-
-    opPtr = &lx_alpha_ops[exaScratch.op * 2];
-    apply = (exaScratch.srcFormat->alphabits == 0) ?
-	CIMGP_APPLY_BLEND_TO_RGB : CIMGP_APPLY_BLEND_TO_ALL;
-
-    gp_declare_blt(0);
-    gp_set_bpp(sbpp);
-
-    type =
-	get_op_type(exaScratch.srcFormat, exaScrach.dstFormat, opPtr->type);
-
-    gp_set_alpha_operation(opPtr->operation, type, opPtr->channel, apply, 0);
-
-    gp_set_strides(exaScratch.srcPitch, exaScratch.srcPitch);
-    gp_screen_to_screen_blt(exaScratch.bufferOffset, srcOffset,
-	width, height, 0);
-
-    /* And copy back */
-
-    gp_declare_blt(0);
-    gp_set_bpp(pxDst->drawable.bitsPerPixel);
-    gp_set_source_format(exaScratch.srcFormat->fmt);
-    gp_set_raster_operation(0xCC);
-    gp_set_strides(exaGetPixmapPitch(pxDst), exaScratch.srcPitch);
-    gp_screen_to_screen_convert(dstOffset, exaScratch.bufferOffset,
-	width, height, 0);
-}
-
-#endif
-
-#if 0
-
-lx_composite_convert(PixmapPtr pxDst, unsigned long dstOffset,
-    unsigned long srcOffset, int width, int height)
-{
-    /* Step 1 - copy the destination into the scratch buffer */
-
-    gp_declare_blt(0);
-    gp_set_bpp(lx_get_bpp_from_format(exaScratch.dstFormat->fmt));
-
-    gp_set_raster_operation(0xCC);
-    gp_set_strides(exaGetPixmapPitch(pxDst), exaGetPixmapPitch(pxDst));
-
-    gp_screen_to_screen_blt(exaScratch.bufferOffset, dstOffset, width, height,
-	0);
-
-    /* Step 2 - Do the original blend */
-
-    lx_composite_onepass(pxDst, exaScratch.bufferOffset, srcOffset, width,
-	height);
-
-    /* Step 3 - copy back and fixup the alpha */
-    gp_declare_blt(0);
-    gp_set_bpp(lx_get_bpp_from_format(exaScratch.dstFormat->fmt));
-    gp_set_strides(exaGetPixmapPitch(pxDst), exaGetPixmapPitch(pxDst));
-
-    /* FIXME: Does this alpha value need to be changed for the mode? */
-
-    gp_set_alpha_operation(CIMGP_ALPHA_TIMES_A, CIMGP_CONSTANT_ALPHA,
-	CIMGP_CHANNEL_A_SOURCE, CIMGP_APPLY_BLEND_TO_ALPHA, 1);
-
-    gp_screen_to_screen_blt(dstOffset, exaScratch.bufferOffset, width, height,
-	0);
-}
-
-#endif
 
 /* This function handles the multipass blend functions */
 
@@ -877,6 +858,39 @@ lx_composite_multipass(PixmapPtr pxDst, unsigned long dstOffset,
 }
 
 static void
+lx_composite_rotate(PixmapPtr pxDst, unsigned long dstOffset,
+    unsigned int srcOffset, int width, int height)
+{
+    int degrees = 0;
+
+    gp_declare_blt(0);
+    gp_set_bpp(lx_get_bpp_from_format(exaScratch.dstFormat->fmt));
+    gp_set_strides(exaGetPixmapPitch(pxDst), exaScratch.srcPitch);
+
+    lx_set_source_format(exaScratch.srcFormat->fmt,
+	exaScratch.dstFormat->fmt);
+
+    gp_set_raster_operation(0xCC);
+
+    /* RandR rotation is counter-clockwise, our rotation
+     * is clockwise, so adjust the numbers accordingly */
+
+    switch (exaScratch.rotate) {
+    case RR_Rotate_90:
+	degrees = 270;
+	break;
+    case RR_Rotate_180:
+	degrees = 180;
+	break;
+    case RR_Rotate_270:
+	degrees = 90;
+	break;
+    }
+
+    gp_rotate_blt(dstOffset, srcOffset, width, height, degrees);
+}
+
+static void
 lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset,
     unsigned int maskOffset, int width, int height)
 {
@@ -897,46 +911,114 @@ lx_do_composite_mask(PixmapPtr pxDst, unsigned long dstOffset,
   (exaGetPixmapPitch((px)) * (y)) + \
   ((((px)->drawable.bitsPerPixel + 7) / 8) * (x)) )
 
+#define GetSrcOffset(_x, _y) (exaScratch.srcOffset + ((_y) * exaScratch.srcPitch) + \
+			      ((_x) * exaScratch.srcBpp))
+
+static void
+transformPoint(PictTransform * t, xPointFixed * point)
+{
+    PictVector v;
+
+    v.vector[0] = point->x;
+    v.vector[1] = point->y;
+    v.vector[2] = xFixed1;
+
+    if (t != NULL)
+	PictureTransformPoint(t, &v);
+
+    point->x = v.vector[0];
+    point->y = v.vector[1];
+}
+
 static void
 lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
     int maskY, int dstX, int dstY, int width, int height)
 {
-
     struct blend_ops_t *opPtr = &lx_alpha_ops[exaScratch.op * 2];
 
-    unsigned int dstOffset, srcOffset;
+    unsigned int dstOffset, srcOffset = 0;
 
-    unsigned int opX = dstX;
-    unsigned int opY = dstY;
-    unsigned int opWidth = width;
-    unsigned int opHeight = height;
+    xPointFixed srcPoint;
 
-    if (exaScratch.type == COMP_TYPE_MASK)
-	srcOffset = exaScratch.srcOffset + (maskY * exaScratch.srcPitch) +
-	    (maskX * exaScratch.srcBpp);
-    else
-	srcOffset = exaScratch.srcOffset + (srcY * exaScratch.srcPitch) +
-	    (srcX * exaScratch.srcBpp);
+    int opX = dstX;
+    int opY = dstY;
+    int opWidth = width;
+    int opHeight = height;
 
-    /* Adjust the width / height of the operation the size of the source */
+    /* Transform the source coordinates */
 
-    if (exaScratch.srcWidth < width)
+    if (exaScratch.type == COMP_TYPE_MASK) {
+	srcPoint.x = F(maskX);
+	srcPoint.y = F(maskY);
+    } else {
+	srcPoint.x = F(srcX);
+	srcPoint.y = F(srcY);
+    }
+
+    /* srcX, srcY point to the upper right side of the bounding box
+     * in the unrotated coordinate space.  Depending on the orientation,
+     * we have to translate the coordinates to point to the origin of
+     * the rectangle in the source pixmap */
+
+    switch (exaScratch.rotate) {
+    case RR_Rotate_270:
+	srcPoint.x += F(width);
+
+	opWidth = height;
+	opHeight = width;
+	break;
+
+    case RR_Rotate_180:
+	srcPoint.x += F(width);
+	srcPoint.y += F(height);
+
+	srcX += width;
+	srcY += height;
+	break;
+
+    case RR_Rotate_90:
+	srcPoint.y += F(height);
+
+	opWidth = height;
+	opHeight = width;
+	break;
+    }
+
+    transformPoint(exaScratch.transform, &srcPoint);
+
+    /* Adjust the point to fit into the pixmap */
+
+    if (I(srcPoint.x) < 0) {
+	opWidth += I(srcPoint.x);
+	srcPoint.x = F(0);
+    }
+
+    if (I(srcPoint.y) < 0) {
+	opHeight += I(srcPoint.y);
+	srcPoint.y = F(0);
+    }
+
+    srcOffset = GetSrcOffset(I(srcPoint.x), I(srcPoint.y));
+
+    if (exaScratch.srcWidth < opWidth)
 	opWidth = exaScratch.srcWidth;
 
-    if (exaScratch.srcHeight < height)
+    if (exaScratch.srcHeight < opHeight)
 	opHeight = exaScratch.srcHeight;
 
     while (1) {
+
 	dstOffset = GetPixmapOffset(pxDst, opX, opY);
 
 	switch (exaScratch.type) {
+
 	case COMP_TYPE_MASK:{
 		int direction =
 		    (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
 
 		if (direction == 1) {
 		    dstOffset =
-			GetPixmapOffset(exaScratch.srcPixmap, dstX, dstY);
+			GetPixmapOffset(exaScratch.srcPixmap, opX, opY);
 		    lx_do_composite_mask(exaScratch.srcPixmap, dstOffset,
 			srcOffset, opWidth, opHeight);
 		} else {
@@ -953,6 +1035,10 @@ lx_do_composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
 
 	case COMP_TYPE_TWOPASS:
 	    lx_composite_multipass(pxDst, dstOffset, srcOffset, opWidth,
+		opHeight);
+
+	case COMP_TYPE_ROTATE:
+	    lx_composite_rotate(pxDst, dstOffset, srcOffset, opWidth,
 		opHeight);
 	    break;
 	}
@@ -988,6 +1074,50 @@ lx_done(PixmapPtr ptr)
 {
 }
 
+#if 0
+static void
+lx_upload_to_screen(PixmapPtr pxDst, int x, int y, int w, int h,
+    char *src, int src_pitch)
+{
+    GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
+    int dst_pitch = exaGetPixmapPitch(pxDst);
+    int cpp = (pxDst->drawable.bitsPerPixel + 7) / 8;
+
+    char *dst;
+    int offset = exaGetPixmapOffset(pxDst);
+
+    dst = (char *)(pGeode->FBBase + offset + (y * dst_pitch) + (x * cpp));
+    int i;
+
+    for (i = 0; i < h; i++) {
+	memcpy(dst, src, w * cpp);
+	dst += dst_pitch;
+	src += src_pitch;
+    }
+}
+#endif
+
+#if EXA_VERSION_MINOR >= 2
+
+static Bool
+lx_exa_pixmap_is_offscreen(PixmapPtr pPixmap)
+{
+    ScrnInfoPtr pScrni = xf86Screens[pPixmap->drawable.pScreen->myNum];
+    GeodeRec *pGeode = GEODEPTR(pScrni);
+    void *start = (void *)(pGeode->FBBase);
+    void *end =
+	(void *)(pGeode->FBBase + pGeode->offscreenStart +
+	pGeode->offscreenSize);
+
+    if ((void *)pPixmap->devPrivate.ptr >= start &&
+	(void *)pPixmap->devPrivate.ptr < end)
+	return TRUE;
+
+    return FALSE;
+}
+
+#endif
+
 Bool
 LXExaInit(ScreenPtr pScreen)
 {
@@ -1013,6 +1143,13 @@ LXExaInit(ScreenPtr pScreen)
     pExa->PrepareComposite = lx_prepare_composite;
     pExa->Composite = lx_do_composite;
     pExa->DoneComposite = lx_done;
+    //pExa->UploadToScreen =  lx_upload_to_screen;
+
+#if EXA_VERSION_MINOR >= 2
+    pExa->PixmapIsOffscreen = lx_exa_pixmap_is_offscreen;
+#endif
+
+    //pExa->flags = EXA_OFFSCREEN_PIXMAPS;
 
     return exaDriverInit(pScreen, pGeode->pExa);
 }

@@ -1757,8 +1757,8 @@ amd_gx_exa_Composite(PixmapPtr pxDst, int srcX, int srcY, int maskX,
     int maskY, int dstX, int dstY, int width, int height)
 {
     int op, current_line, max_lines, lines, pass, scratchPitch;
-    unsigned int srcOffset, srcOfs=0, srcPitch, srcPch=0, srcBpp;
-    unsigned int dstOffset, dstOfs=0, dstPitch, dstPch=0, dstBpp;
+    unsigned int srcOffset, srcOfs = 0, srcPitch, srcPch = 0, srcBpp;
+    unsigned int dstOffset, dstOfs = 0, dstPitch, dstPch = 0, dstBpp;
     unsigned int sizes, strides, blt_mode = 0, rop = 0;
     GeodeRec *pGeode = GEODEPTR_FROM_PIXMAP(pxDst);
 

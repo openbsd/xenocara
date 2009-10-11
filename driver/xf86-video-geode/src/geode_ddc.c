@@ -56,6 +56,7 @@
 #define DDC_CLK_LOW      (DDC_SCL_PIN << 16)
 
 #define CS5536_ISA_DEVICE 0x20901022
+#define CS5535_ISA_DEVICE 0x002b100b
 
 static unsigned short
 geode_gpio_iobase(void)
@@ -64,10 +65,15 @@ geode_gpio_iobase(void)
     struct pci_device *pci;
 
     /* The CS5536 GPIO device is always in the same slot: 00:0f.0 */
+    /* The CS5535 device should be in same slot as well */
+
     pci = pci_device_find_by_slot(0, 0, 0xF, 0x0);
 
     if (pci == NULL)
 	return 0;
+
+    if (pci_device_probe(pci) != 0)
+        return 0;
 
     /* The GPIO I/O address is in resource 1 */
     return (unsigned short)pci->regions[1].base_addr;
@@ -76,8 +82,12 @@ geode_gpio_iobase(void)
 
     Tag = pciFindFirst(CS5536_ISA_DEVICE, 0xFFFFFFFF);
 
-    if (Tag == PCI_NOT_FOUND)
-	return 0;
+    if (Tag == PCI_NOT_FOUND) {
+        Tag = pciFindFirst(CS5535_ISA_DEVICE, 0xFFFFFFFF);
+
+        if (Tag == PCI_NOT_FOUND)
+	    return 0;
+    }
 
     /* The GPIO I/O address is in resource 1 */
     return (unsigned short)(pciReadLong(Tag, 0x14) & ~1);
@@ -106,19 +116,18 @@ geode_ddc_getbits(I2CBusPtr b, int *scl, int *sda)
     *sda = (dat & DDC_DATA_HIGH) ? 1 : 0;
 }
 
-static xf86MonPtr
-GeodeGetDDC(ScrnInfoPtr pScrni)
+Bool
+GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, char *name)
 {
-    xf86MonPtr mon = NULL;
     I2CBusPtr bus;
-    unsigned long ddciobase;
+    unsigned int ddciobase;
 
     ddciobase = geode_gpio_iobase();
 
     if (ddciobase == 0) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 	    "Could not find the GPIO I/O base\n");
-	return NULL;
+	return FALSE;
     }
 
     /* The GPIO pins for DDC are multiplexed with a
@@ -130,42 +139,48 @@ GeodeGetDDC(ScrnInfoPtr pScrni)
 	(inl(ddciobase + GPIO_OUT_AUX1) & DDC_DATA_HIGH)) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 	    "GPIO pins are in serial mode.  Assuming no DDC\n");
-	return NULL;
+	return FALSE;
     }
-
-    /* Set up the pins */
 
     outl(ddciobase + GPIO_OUT_ENABLE, DDC_DATA_HIGH | DDC_CLK_HIGH);
     outl(ddciobase + GPIO_IN_ENABLE, DDC_DATA_HIGH | DDC_CLK_HIGH);
 
     bus = xf86CreateI2CBusRec();
 
-    if (bus == NULL) {
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-	    "Could not create the I2C structre\n");
-	goto err;
-    }
+    if (!bus)
+	return FALSE;
 
-    bus->BusName = "CS5536 DDC BUS";
+    bus->BusName = name;
     bus->scrnIndex = pScrni->scrnIndex;
+
     bus->I2CGetBits = geode_ddc_getbits;
     bus->I2CPutBits = geode_ddc_putbits;
     bus->DriverPrivate.ptr = (void *)(ddciobase);
 
-    if (xf86I2CBusInit(bus)) {
-	mon = xf86DoEDID_DDC2(pScrni->scrnIndex, bus);
+    if (!xf86I2CBusInit(bus))
+	return FALSE;
+
+    *ptr = bus;
+    return TRUE;
+}
+
+static xf86MonPtr
+GeodeGetDDC(ScrnInfoPtr pScrni)
+{
+    xf86MonPtr mon = NULL;
+    I2CBusPtr bus;
+
+    if (!GeodeI2CInit(pScrni, &bus, "CS5536 DDC BUS"))
+	return NULL;
+
+    mon = xf86DoEDID_DDC2(pScrni->scrnIndex, bus);
 
 #if (XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,4,99,0,0))
-	if (mon)
-	    xf86DDCApplyQuirks(pScrni->scrnIndex, mon);
+    if (mon)
+	xf86DDCApplyQuirks(pScrni->scrnIndex, mon);
 #endif
-    }
 
     xf86DestroyI2CBusRec(bus, FALSE, FALSE);
-
-  err:
-    outl(ddciobase + GPIO_OUT_ENABLE, DDC_DATA_LOW | DDC_CLK_LOW);
-    outl(ddciobase + GPIO_IN_ENABLE, DDC_DATA_LOW | DDC_CLK_LOW);
 
     return mon;
 }
