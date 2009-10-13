@@ -34,6 +34,10 @@ AC_CANONICAL_HOST
 
 AC_CHECK_LIB(z, gzopen,, AC_MSG_ERROR([zlib not found]))
 
+# Check for openpty() in -lutil if the UNIX98-style pty functions are not
+# available. E.g. for GNU libc 2.0.
+AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
+
 AC_ARG_WITH(localealiasfile,
         AC_HELP_STRING([--with-localealiasfile=<path>],
                        [The locale alias file (default: ${datadir}/X11/locale/locale.alias)]),
@@ -42,7 +46,7 @@ AC_ARG_WITH(localealiasfile,
 AC_SUBST([LOCALEALIASFILE])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(LUIT, x11 fontenc)
+PKG_CHECK_MODULES(LUIT, fontenc)
 
 case $host_os in
     linux*)

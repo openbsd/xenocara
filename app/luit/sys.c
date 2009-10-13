@@ -34,6 +34,10 @@ THE SOFTWARE.
 #include <signal.h>
 #include <errno.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef SVR4
 #define HAVE_POLL
 #endif
@@ -54,14 +58,19 @@ THE SOFTWARE.
 #endif
 
 
-#if (defined(__GLIBC__) && \
-     (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1))) || \
-    defined(SVR4)
-#define HAVE_GRANTPT
-#endif
-
 #ifdef __GLIBC__
 #include <pty.h>
+#endif
+
+#ifdef HAVE_LIBUTIL
+#if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#include <util.h>
+#define HAVE_OPENPTY
+#endif
+#if defined(__FreeBSD__) || defined(__DragonFly__)
+#include <libutil.h>
+#define HAVE_OPENPTY
+#endif
 #endif
 
 #ifdef SVR4
@@ -327,6 +336,10 @@ fix_pty_perms(char *line)
     return 1;
 }
 
+#ifdef HAVE_OPENPTY
+static int opened_tty = -1;
+#endif
+
 int
 allocatePty(int *pty_return, char **line_return)
 {
@@ -372,10 +385,16 @@ allocatePty(int *pty_return, char **line_return)
     *pty_return = pty;
     *line_return = line;
     return 0;
-
-  bsd:
 #endif /* HAVE_GRANTPT */
 
+#ifdef HAVE_OPENPTY
+    if(openpty(pty_return, &opened_tty, NULL, NULL, NULL) < 0)
+        return -1;
+    *line_return = NULL;	/* unused, but free()ed */
+    return 0;
+#endif /* HAVE_OPENPTY */
+
+  bsd:
     strcpy(name, "/dev/pty??");
     for(p1 = name1; *p1; p1++) {
         name[8] = *p1;
@@ -416,7 +435,11 @@ openTty(char *line)
     int rc;
     int tty = -1;
 
+#if !defined(HAVE_GRANTPT) && defined(HAVE_OPENPTY)
+    tty = opened_tty;
+#else
     tty = open(line, O_RDWR | O_NOCTTY);
+#endif
  
     if(tty < 0)
         goto bail;
