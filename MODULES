@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.90 2009/10/10 07:30:04 matthieu Exp $
+ $OpenBSD: MODULES,v 1.91 2009/10/13 22:34:56 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -11,25 +11,25 @@ app/editres		1.0.4	7.5	needs-update
 app/fonttosfnt		1.0.4	7.4
 app/fslsfonts		1.0.2	7.4
 app/fstobdf		1.0.3 	7.4
-app/iceauth		1.0.2	7.3
+app/iceauth		1.0.3	7.5	needs-update
 app/ico			1.0.2	7.3
 app/listres		1.0.1	7.0
 app/luit		1.0.4	7.5	needs-update
 app/mkcomposecache	1.2.1	7.5	needs-import
-app/mkfontdir		1.0.4	7.4
-app/mkfontscale		1.0.6	7.4+
+app/mkfontdir		1.0.5	7.5	needs-update
+app/mkfontscale		1.0.7	7.5	needs-update
 app/oclock		1.0.1	7.0
 app/rgb			1.0.3	7.4
 app/scripts		1.0.1	7.0
-app/sessreg		1.0.4	7.4
-app/setxkbmap		1.1.0	7.4+	needs-update
+app/sessreg		1.0.5	7.5	needs-update
+app/setxkbmap		1.1.0	7.4+
 app/showfont		1.0.2	7.4
 app/smproxy		1.0.2	7.1
 app/twm			1.0.4	7.4
 app/viewres		1.0.1	7.0
 app/x11perf		1.5	7.3
 app/xauth		1.0.4	7.5
-app/xbacklight		1.1.1	7.5	needs-update
+app/xbacklight		1.1.1	7.5
 app/xbiff		1.0.1	7.0
 app/xcalc		1.0.2	7.3
 app/xclipboard		1.0.1	7.0
@@ -40,40 +40,40 @@ app/xdm			1.1.9	7.5	needs-update
 app/xdpyinfo		1.0.3	7.4
 app/xdriinfo		1.0.2	7.3
 app/xedit		1.1.2	7.4
-app/xev			1.0.3	7.4
+app/xev			1.0.4	7.5	needs-update
 app/xeyes		1.0.1	7.0
 app/xf86dga		1.0.2	7.2RC1
 app/xfd			1.0.1	7.0
 app/xfontsel		1.0.2	7.2+
-app/xfs			1.1.0	7.4+	needs-update
+app/xfs			1.1.0	7.4+
 app/xfsinfo		1.0.2	7.4
 app/xfwp		1.0.1	7.0
 app/xgamma		1.0.2	7.3
 app/xgc			1.0.1	7.0
 app/xhost		1.0.2	7.3
 app/xinit		1.1.1	7.4+
-app/xinput		1.4.2	7.4+
+app/xinput		1.5.0	7.5	needs-update
 app/xkbcomp		1.1.1	7.5	needs-update
 app/xkbevd		1.0.2	7.1
 app/xkbprint		1.0.1	7.0
 app/xkbutils		1.0.1	7.0
-app/xkill		1.0.1	7.0
+app/xkill		1.0.2	7.5	needs-update
 app/xload		1.0.2	7.3
 app/xlogo		1.0.1	7.0
-app/xlsatoms		1.0.1	7.0
+app/xlsatoms		1.0.2	7.5	needs-update
 app/xlsclients		1.0.1	7.0
 app/xlsfonts		1.0.2	7.2+
 app/xmag		1.0.3	7.5
 app/xman		1.0.3	7.3
 app/xmessage		1.0.2	7.3
-app/xmodmap		1.0.4	7.5	needs-update
+app/xmodmap		1.0.4	7.5
 app/xmore		1.0.1	7.0
 app/xpr			1.0.2	7.2+
-app/xprop		1.0.4	7.4
+app/xprop		1.1.0	7.5	needs-update
 app/xrandr		1.3.2	7.5
-app/xrdb		1.0.5	7.4
+app/xrdb		1.0.6	7.5	needs-update
 app/xrefresh		1.0.2	7.1
-app/xset		1.1.0	7.5	needs-update
+app/xset		1.1.0	7.5
 app/xsetroot		1.0.2	7.3
 app/xsm			1.0.1	7.0
 app/xstdcmap		1.0.1	7.0
@@ -81,10 +81,10 @@ app/xtrap		1.0.2	7.1	deprecated
 app/xvidtune		1.0.1	7.0
 app/xvinfo		1.0.2	7.3
 app/xwd			1.0.2	7.4
-app/xwininfo		1.0.4	7.4
-app/xwud		1.0.1	7.0
+app/xwininfo		1.0.5	7.5	needs-update
+app/xwud		1.0.2	7.5	needs-update
 
-data/bitmaps		1.0.1	7.0
+data/bitmaps		1.1.0	7.5	needs-update
 data/xkbdata		1.0.1	7.0	deprecated
 
 doc/xorg-docs		1.4	7.3	needs-update
@@ -109,7 +109,7 @@ driver/xf86-video-ati		6.12.4	7.4+	needs-update
 driver/xf86-video-chips		1.2.2	7.4+	needs-update
 driver/xf86-video-cirrus	1.3.2	7.4	needs-update
 driver/xf86-video-dummy		0.3.2	7.4+	needs-update
-driver/xf86-video-geode		2.11.6	7.5	needs-update
+driver/xf86-video-geode		2.11.6	7.5
 driver/xf86-video-glint		1.2.4	7.4+	needs-update
 driver/xf86-video-i128		1.3.3	7.4+	needs-update
 driver/xf86-video-i740		1.3.2	7.4+	needs-update
@@ -118,7 +118,7 @@ driver/xf86-video-mach64	6.8.2	7.4	needs-update
 driver/xf86-video-mga		1.4.11	7.4+	needs-update
 driver/xf86-video-neomagic	1.2.4	7.4+	needs-update
 driver/xf86-video-newport	0.2.3	7.4+	needs-update
-driver/xf86-video-nv		2.1.15	7.4+	needs-update
+driver/xf86-video-nv		2.1.15	7.4+
 driver/xf86-video-openchrome	0.2.904	7.5	needs-update
 driver/xf86-video-r128		6.8.1	7.4	needs update
 driver/xf86-video-radeonhd	1.3.0	7.5	needs-update
@@ -146,8 +146,8 @@ driver/xf86-video-voodoo	1.2.3	7.4+	needs-update
 driver/xf86-video-wsfb		0.2.1	7.2
 
 fonts/encodings 		1.0.2	7.2RC2
-fonts/adobe-100dpi		1.0.0
-fonts/adobe-75dpi		1.0.0
+fonts/adobe-100dpi		1.0.1	
+fonts/adobe-75dpi		1.0.1
 fonts/adobe-utopia-100dpi	1.0.1
 fonts/adobe-utopia-75dpi	1.0.1
 fonts/adobe-utopia-type1	1.0.1
@@ -180,7 +180,7 @@ fonts/schumacher-misc		1.0.0
 fonts/screen-cyrillic		1.0.1
 fonts/sony-misc			1.0.0
 fonts/sun-misc			1.0.0
-fonts/util			1.1.0	needs-update
+fonts/util			1.1.1	needs-update
 fonts/winitzki-cyrillic		1.0.0
 fonts/xfree86-type1		1.0.1
 
@@ -242,8 +242,8 @@ proto/fontcacheproto		0.1.3	7.5	needs-update
 proto/fontsproto		2.1.0	7.4+	needs-update
 proto/glproto			1.4.10	7.4	needs-update
 proto/inputproto		2.0	7.5	needs-update
-proto/kbproto			1.0.3	7.2RC1
-proto/pmproto			1.0.2	7.0	deprecated
+proto/kbproto			1.0.4	7.5	needs-update
+proto/pmproto			1.0.3	7.5	deprecated
 proto/printproto		1.0.4	7.4	deprecated
 proto/randrproto		1.3.1	7.5	needs-update
 proto/recordproto		1.14	7.5	needs-update
@@ -259,7 +259,7 @@ proto/xextproto			7.1.1	7.4+	needs-update
 proto/xf86bigfontproto		1.2.0	7.4+	needs-update
 proto/xf86dgaproto		2.1	7.5	needs-update
 proto/xf86driproto		2.1.0	7.4+	needs-update
-proto/xf86miscproto		0.9.2	7.0
+proto/xf86miscproto		0.9.3	7.5	needs-update
 proto/xf86vidmodeproto		2.3	7.5	needs-update
 proto/xineramaproto		1.2	7.5	needs-update
 
@@ -267,6 +267,6 @@ util/cf				1.0.2
 util/gccmakedep			1.0.2
 util/imake			1.0.2
 util/macros			1.3.0	7.4+	needs-update
-util/makedepend			1.0.1	7.3
+util/makedepend			1.0.2	7.5	needs-update
 
 xserver				1.7.0	7.5	needs-update
