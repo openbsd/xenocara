@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.17 2009/09/22 22:00:54 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.18 2009/10/19 20:01:30 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -505,7 +505,8 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	if (flags24 & Support24bppFb)
 		flags24 |= SupportConvert32to24 | PreferConvert32to24;
 	
-	if (!xf86SetDepthBpp(pScrn, defaultDepth, 0, 0, flags24))
+	if (!xf86SetDepthBpp(pScrn, defaultDepth, 0,
+		fPtr->info.depth, flags24))
 		return FALSE;
 
 	if (wstype == WSDISPLAY_TYPE_PCIVGA) {
