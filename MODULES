@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.92 2009/10/23 19:43:48 matthieu Exp $
+ $OpenBSD: MODULES,v 1.93 2009/10/23 19:51:07 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -24,21 +24,21 @@ app/scripts		1.0.1	7.0
 app/sessreg		1.0.5	7.5	needs-update
 app/setxkbmap		1.1.0	7.4+
 app/showfont		1.0.2	7.4
-app/smproxy		1.0.2	7.1
+app/smproxy		1.0.3	7.5	needs-update
 app/twm			1.0.4	7.4
 app/viewres		1.0.1	7.0
-app/x11perf		1.5	7.3
+app/x11perf		1.5.1	7.5	needs-update
 app/xauth		1.0.4	7.5
 app/xbacklight		1.1.1	7.5
 app/xbiff		1.0.1	7.0
 app/xcalc		1.0.2	7.3
-app/xclipboard		1.0.1	7.0
+app/xclipboard		1.1.0	7.5	needs-update
 app/xclock		1.0.4	7.5
-app/xcmsdb		1.0.1	7.0
+app/xcmsdb		1.0.2	7.5	needs-update
 app/xconsole		1.0.3	7.3
 app/xdm			1.1.9	7.5	needs-update
-app/xdpyinfo		1.0.3	7.4
-app/xdriinfo		1.0.2	7.3
+app/xdpyinfo		1.1.0	7.5	needs-update
+app/xdriinfo		1.0.3	7.5	needs-update
 app/xedit		1.1.2	7.4
 app/xev			1.0.4	7.5	needs-update
 app/xeyes		1.0.1	7.0
@@ -48,39 +48,39 @@ app/xfontsel		1.0.2	7.2+
 app/xfs			1.1.0	7.4+
 app/xfsinfo		1.0.2	7.4
 app/xfwp		1.0.1	7.0
-app/xgamma		1.0.4	7.3
+app/xgamma		1.0.3	7.5	needs-update
 app/xgc			1.0.1	7.0
-app/xhost		1.0.2	7.3
+app/xhost		1.0.3	7.5	needs-update
 app/xinit		1.1.1	7.4+
 app/xinput		1.5.0	7.5	needs-update
 app/xkbcomp		1.1.1	7.5	needs-update
-app/xkbevd		1.0.2	7.1
+app/xkbevd		1.1.0	7.5	needs-update
 app/xkbprint		1.0.1	7.0
-app/xkbutils		1.0.1	7.0
+app/xkbutils		1.0.2	7.5	needs-update
 app/xkill		1.0.2	7.5	needs-update
 app/xload		1.0.2	7.3
 app/xlogo		1.0.1	7.0
 app/xlsatoms		1.0.2	7.5	needs-update
-app/xlsclients		1.0.1	7.0
+app/xlsclients		1.0.2	7.5	needs-update
 app/xlsfonts		1.0.2	7.2+
 app/xmag		1.0.3	7.5
-app/xman		1.0.3	7.3
+app/xman		1.1.0	7.5	needs-update
 app/xmessage		1.0.2	7.3
 app/xmodmap		1.0.4	7.5
 app/xmore		1.0.1	7.0
-app/xpr			1.0.2	7.2+
+app/xpr			1.0.3	7.5	needs-update
 app/xprop		1.1.0	7.5	needs-update
 app/xrandr		1.3.2	7.5
 app/xrdb		1.0.6	7.5	needs-update
-app/xrefresh		1.0.2	7.1
+app/xrefresh		1.0.3	7.5	needs-update
 app/xset		1.1.0	7.5
-app/xsetroot		1.0.2	7.3
+app/xsetroot		1.0.3	7.5	needs-update
 app/xsm			1.0.1	7.0
 app/xstdcmap		1.0.1	7.0
 app/xtrap		1.0.2	7.1	deprecated
 app/xvidtune		1.0.1	7.0
-app/xvinfo		1.0.2	7.3
-app/xwd			1.0.2	7.4
+app/xvinfo		1.1.0	7.5	needs-update
+app/xwd			1.0.3	7.5	needs-update
 app/xwininfo		1.0.5	7.5	needs-update
 app/xwud		1.0.2	7.5	needs-update
 
@@ -88,7 +88,7 @@ data/bitmaps		1.1.0	7.5	needs-update
 data/xkbdata		1.0.1	7.0	deprecated
 
 doc/xorg-docs		1.4	7.3	needs-update
-doc/xorg-sgml-doctools	1.1.1	7.2RC2
+doc/xorg-sgml-doctools	1.3	7.5	needs-update
 
 driver/xf86-input-acecad	1.4.0	7.4+	needs-update
 driver/xf86-input-citron	2.2.2	7.4
@@ -187,18 +187,18 @@ font/xfree86-type1		1.0.2	needs-update
 lib/libFS			1.0.2	7.4+
 lib/libICE			1.0.6	7.4+	needs-update
 lib/libSM			1.1.1	7.4+
-lib/libX11			1.3	7.5	needs-update
+lib/libX11			1.3.1	7.5	needs-update
 lib/libXRes			1.0.4	7.5	needs-update
 lib/libXScrnSaver		1.2.0	7.4+	needs-update
 lib/libXTrap			1.0.0	7.0	deprecated
 lib/libXau			1.0.5	7.4+	needs-update
-lib/libXaw			1.0.6	7.4+	needs-update
+lib/libXaw			1.0.7	7.5	needs-update
 lib/libXcomposite		0.4.1	7.5	needs-update
 lib/libXcursor			1.1.10	7.4+	needs-update
 lib/libXdamage			1.1.2	7.5	needs-update
 lib/libXdmcp			1.0.3	7.5	needs-update
 lib/libXevie			1.0.2	7.2RC1	deprecated
-lib/libXext			1.1	7.5	needs-update
+lib/libXext			1.1.1	7.5	needs-update
 lib/libXfixes			4.0.4	7.5	needs-update
 lib/libXfont			1.4.1	7.5	needs-update
 lib/libXfontcache		1.0.5	7.5	needs-update
@@ -227,7 +227,7 @@ lib/libpthread-stubs		0.2	7.5	needs-update
 lib/libxcb			1.4	7.4+
 lib/libxkbfile			1.0.6	7.5	needs-update
 lib/libxkbui			1.0.2	7.1
-lib/libxtrans			1.2.4	7.4+	needs-update
+lib/libxtrans			1.2.5	7.5	needs-update
 lib/pixman			0.16.0	7.4+	needs-update
 lib/xcb-util			0.3.6	7.4+
 
@@ -263,10 +263,10 @@ proto/xf86miscproto		0.9.3	7.5	needs-update
 proto/xf86vidmodeproto		2.3	7.5	needs-update
 proto/xineramaproto		1.2	7.5	needs-update
 
-util/cf				1.0.2
+util/cf				1.0.3	7.5	needs-update
 util/gccmakedep			1.0.2
 util/imake			1.0.2
 util/macros			1.3.0	7.4+	needs-update
 util/makedepend			1.0.2	7.5	needs-update
 
-xserver				1.7.0	7.5	needs-update
+xserver				1.7.1	7.5	needs-update
