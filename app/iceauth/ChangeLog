@@ -1,3 +1,36 @@
+commit 42a269e9d35234306d3208eef9c8bdb2c04caf08
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 10 19:58:20 2009 -0700
+
+    iceauth 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e772cc19bf632b3f94c5a6e841f4eef4f7b89e72
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 10 19:57:34 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 42a6f0bc10530c31643b2fd768c48750ec451391
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:17 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 04f61947ea6c3638001057934588938473b454b3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 15 18:38:12 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck. There weren't any gcc 4.3 and sparse warnings.
+
 commit 5e52eb5d27986490dfad02781a452b8d0650f4b9
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Jul 23 18:23:56 2007 -0700
