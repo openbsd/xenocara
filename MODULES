@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.91 2009/10/13 22:34:56 matthieu Exp $
+ $OpenBSD: MODULES,v 1.92 2009/10/23 19:43:48 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -48,7 +48,7 @@ app/xfontsel		1.0.2	7.2+
 app/xfs			1.1.0	7.4+
 app/xfsinfo		1.0.2	7.4
 app/xfwp		1.0.1	7.0
-app/xgamma		1.0.2	7.3
+app/xgamma		1.0.4	7.3
 app/xgc			1.0.1	7.0
 app/xhost		1.0.2	7.3
 app/xinit		1.1.1	7.4+
@@ -145,44 +145,44 @@ driver/xf86-video-vmware	10.16.8	7.4+	needs-update
 driver/xf86-video-voodoo	1.2.3	7.4+	needs-update
 driver/xf86-video-wsfb		0.2.1	7.2
 
-fonts/encodings 		1.0.2	7.2RC2
-fonts/adobe-100dpi		1.0.1	
-fonts/adobe-75dpi		1.0.1
-fonts/adobe-utopia-100dpi	1.0.1
-fonts/adobe-utopia-75dpi	1.0.1
-fonts/adobe-utopia-type1	1.0.1
-fonts/alias			1.0.1
-fonts/arabic-misc		1.0.0
-fonts/bh-100dpi			1.0.0
-fonts/bh-75dpi			1.0.0
-fonts/bh-lucidatypewriter-100dpi	1.0.0
-fonts/bh-lucidatypewriter-75dpi	1.0.0
-fonts/bh-ttf			1.0.0
-fonts/bh-type1			1.0.0
-fonts/bitstream-100dpi		1.0.0
-fonts/bitstream-75dpi		1.0.0
-fonts/bitstream-speedo		1.0.0	deprecated
-fonts/bitstream-type1		1.0.0
-fonts/cronyx-cyrillic		1.0.0
-fonts/cursor-misc		1.0.0
-fonts/daewoo-misc		1.0.0
-fonts/dec-misc			1.0.0
-fonts/ibm-type1			1.0.0
-fonts/isas-misc			1.0.0
-fonts/jis-misc			1.0.0
-fonts/micro-misc		1.0.0
-fonts/misc-cyrillic		1.0.0
-fonts/misc-ethiopic		1.0.0
-fonts/misc-meltho		1.0.0
-fonts/misc-misc			1.0.0
-fonts/mutt-misc			1.0.0
-fonts/schumacher-misc		1.0.0
-fonts/screen-cyrillic		1.0.1
-fonts/sony-misc			1.0.0
-fonts/sun-misc			1.0.0
-fonts/util			1.1.1	needs-update
-fonts/winitzki-cyrillic		1.0.0
-fonts/xfree86-type1		1.0.1
+font/encodings 			1.0.3	needs-update
+font/adobe-100dpi		1.0.1	needs-update
+font/adobe-75dpi		1.0.1	needs-update
+font/adobe-utopia-100dpi	1.0.2	needs-update
+font/adobe-utopia-75dpi	1.0.2	needs-update
+font/adobe-utopia-type1	1.0.2	needs-update
+font/alias			1.0.2	needs-update
+font/arabic-misc		1.0.1	needs-update
+font/bh-100dpi			1.0.1	needs-update
+font/bh-75dpi			1.0.1	needs-update
+font/bh-lucidatypewriter-100dpi	1.0.1	needs-update
+font/bh-lucidatypewriter-75dpi	1.0.1	needs-update
+font/bh-ttf			1.0.1	needs-update
+font/bh-type1			1.0.1	needs-update
+font/bitstream-100dpi		1.0.1	needs-update
+font/bitstream-75dpi		1.0.1	needs-update
+font/bitstream-speedo		1.0.1	deprecated
+font/bitstream-type1		1.0.1	needs-update
+font/cronyx-cyrillic		1.0.1	needs-update
+font/cursor-misc		1.0.1	needs-update
+font/daewoo-misc		1.0.1	needs-update
+font/dec-misc			1.0.1	needs-update
+font/ibm-type1			1.0.1	needs-update
+font/isas-misc			1.0.1	needs-update
+font/jis-misc			1.0.1	needs-update
+font/micro-misc			1.0.1	needs-update
+font/misc-cyrillic		1.0.1	needs-update
+font/misc-ethiopic		1.0.1	needs-update
+font/misc-meltho		1.0.1	needs-update
+font/misc-misc			1.1.0	needs-update
+font/mutt-misc			1.0.1	needs-update
+font/schumacher-misc		1.1.0	needs-update
+font/screen-cyrillic		1.0.2	needs-update
+font/sony-misc			1.0.1	needs-update
+font/sun-misc			1.0.1	needs-update
+font/util			1.1.1	needs-update
+font/winitzki-cyrillic		1.0.1	needs-update
+font/xfree86-type1		1.0.2	needs-update
 
 lib/libFS			1.0.2	7.4+
 lib/libICE			1.0.6	7.4+	needs-update
