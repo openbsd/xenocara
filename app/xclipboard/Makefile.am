@@ -21,9 +21,10 @@
 
 bin_PROGRAMS = xclipboard xcutsel
 
+AM_CFLAGS = $(CWARNFLAGS) $(XCLIPBOARD_CFLAGS)
+
 # xclipboard
 
-xclipboard_CFLAGS = $(XCLIPBOARD_CFLAGS)
 xclipboard_LDADD = $(XCLIPBOARD_LIBS)
 
 xclipboard_SOURCES =	\
@@ -31,7 +32,6 @@ xclipboard_SOURCES =	\
 
 # xcutsel
 
-xcutsel_CFLAGS = $(XCLIPBOARD_CFLAGS)
 xcutsel_LDADD = $(XCLIPBOARD_LIBS)
 
 xcutsel_SOURCES =	\
@@ -45,30 +45,20 @@ appman_PRE = \
 
 # App default files  (*.ad)
 
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+
 appdefaultdir = @appdefaultdir@
 
-
-APPDEFAULTFILES = \
-        XClipboard
-
-SUFFIXES = .ad
-
-.ad:
-	cp $< $@
-
-appdefault_DATA = $(APPDEFAULTFILES)
-
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad)
-
-CLEANFILES = $(APPDEFAULTFILES)
+dist_appdefault_DATA = \
+        app-defaults/XClipboard
 
 
 appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
+EXTRA_DIST = $(appman_PRE)
+CLEANFILES = $(appman_DATA)
 
 SED = sed
 
@@ -89,7 +79,17 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

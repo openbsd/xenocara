@@ -27,6 +27,7 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Ralph Swick, DEC/Project Athena
  * Updated for R4:  Chris D. Peterson,  MIT X Consortium.
  * Reauthored by: Keith Packard, MIT X Consortium.
+ * UTF-8 and CTEXT support: Stanislav Maslovski <stanislav.maslovski@gmail.com>
  */
 /* $XFree86: xc/programs/xclipboard/xclipboard.c,v 1.8tsi Exp $ */
 
@@ -73,6 +74,11 @@ static Atom wm_protocols;
 
 static void EraseTextWidget ( void );
 static void NewCurrentClipContents ( char *data, int len );
+
+static String fallback_resources[] = {
+    "*international: true",
+    NULL
+};
 
 static long 
 TextLength(Widget w)
@@ -130,7 +136,7 @@ NewClip(Widget w, ClipPtr old)
     newClip = (ClipPtr) malloc (sizeof (ClipRec));
     if (!newClip)
 	return newClip;
-    newClip->clip = 0;
+    newClip->clip = NULL;
     newClip->avail = 0;
     newClip->prev = old;
     newClip->next = NULL;
@@ -425,7 +431,7 @@ EraseTextWidget(void)
 }
 
 
-XtActionsRec xclipboard_actions[] = {
+static XtActionsRec xclipboard_actions[] = {
     { "NewClip", 	NewCurrentClip }, 
     { "NextClip",	NextCurrentClip },
     { "PrevClip",	PrevCurrentClip },
@@ -456,25 +462,70 @@ InsertClipboard(Widget w, XtPointer client_data, Atom *selection,
 		Atom *type, XtPointer value, unsigned long *length, 
 		int *format)
 {
-    if (*type != XT_CONVERT_FAIL)
-	NewCurrentClipContents ((char *) value, *length);
-    else
+    Display *d = XtDisplay(w);
+    Atom target = (Atom)client_data;
+    Boolean convert_failed = (*type == XT_CONVERT_FAIL);
+
+    if (!convert_failed)
     {
-	Arg arg;
-	XtSetArg (arg, XtNlabel, "CLIPBOARD selection conversion failed");
-	XtSetValues (failDialog, &arg, 1);
-	CenterWidgetOnWidget (failDialogShell, text);
-	XtPopup (failDialogShell, XtGrabNone);
+	char **list;
+	int i, ret, count;
+
+	XTextProperty prop;
+	prop.value = value;
+	prop.nitems = *length;
+	prop.format = *format;
+	prop.encoding = *type;
+	ret = XmbTextPropertyToTextList(d, &prop, &list, &count);
+	if (ret >= Success)
+	{
+	    /* manuals say something about multiple strings in a disjoint
+	    text selection (?), it should be harmless to get them all */
+	    for (i = 0; i < count; i++)
+		NewCurrentClipContents(list[i], strlen(list[i]));
+	    XFreeStringList(list);
+	} else
+	    convert_failed = True;
+	XFree(value);
+    }
+
+    if (convert_failed) {
+	/* if UTF8_STRING failed try COMPOUND_TEXT */
+	if (target == XA_UTF8_STRING(d))
+	{
+	    XtGetSelectionValue(w, *selection, XA_COMPOUND_TEXT(d),
+				InsertClipboard,
+				(XtPointer)(XA_COMPOUND_TEXT(d)),
+				CurrentTime);
+	    return;
+	}
+	/* if COMPOUND_TEXT failed try STRING */
+	else if (target == XA_COMPOUND_TEXT(d))
+	{
+	    XtGetSelectionValue(w, *selection, XA_STRING,
+				InsertClipboard,
+				NULL,
+				CurrentTime);
+	    return;
+	}
+	/* all conversions failed */
+	else
+	{
+	    Arg arg;
+	    XtSetArg (arg, XtNlabel, "CLIPBOARD selection conversion failed");
+	    XtSetValues (failDialog, &arg, 1);
+	    CenterWidgetOnWidget (failDialogShell, text);
+	    XtPopup (failDialogShell, XtGrabNone);
 #ifdef XKB
-	XkbStdBell( XtDisplay(w), XtWindow(w), 0, XkbBI_MinorError );
+	    XkbStdBell (d, XtWindow(w), 0, XkbBI_MinorError);
 #else
-	XBell( XtDisplay(w), 0 );
+	    XBell (d, 0);
 #endif
+	}
     }
     
     XtOwnSelection(top, ClipboardAtom, CurrentTime,
 		   ConvertSelection, LoseSelection, NULL);
-    XFree(value);
 }
 
 static Boolean 
@@ -493,10 +544,12 @@ ConvertSelection(Widget w, Atom *selection, Atom *target,
 	XmuConvertStandardSelection(w, req->time, selection, target, type,
 				    (XPointer*)&std_targets, &std_length,
 				    format);
-	*value = XtMalloc(sizeof(Atom)*(std_length + 5));
+	*value = XtMalloc(sizeof(Atom)*(std_length + 7));
 	targetP = *(Atom**)value;
 	*targetP++ = XA_STRING;
 	*targetP++ = XA_TEXT(d);
+	*targetP++ = XA_UTF8_STRING(d);
+	*targetP++ = XA_COMPOUND_TEXT(d);
 	*targetP++ = XA_LENGTH(d);
 	*targetP++ = XA_LIST_LENGTH(d);
 	*targetP++ = XA_CHARACTER_POSITION(d);
@@ -541,19 +594,38 @@ ConvertSelection(Widget w, Atom *selection, Atom *target,
     }
     
     if (*target == XA_STRING ||
-      *target == XA_TEXT(d) ||
-      *target == XA_COMPOUND_TEXT(d))
+	*target == XA_TEXT(d) ||
+	*target == XA_UTF8_STRING(d) ||
+	*target == XA_COMPOUND_TEXT(d))
     {
-    	if (*target == XA_COMPOUND_TEXT(d))
-	    *type = *target;
-    	else
-	    *type = XA_STRING;
-	*length = TextLength (text);
-    	*value = _XawTextGetSTRING((TextWidget) text, 0, *length);
-    	*format = 8;
-    	return True;
+	Arg args[1];
+	Widget source;
+	XTextProperty prop;
+	int ret, style = XStdICCTextStyle; /* a safe default for TEXT */
+	char *data;
+
+	source = XawTextGetSource (text);
+	XtSetArg (args[0], XtNstring, &data);
+	XtGetValues (source, args, 1);
+
+	if (*target == XA_UTF8_STRING(d))
+	    style = XUTF8StringStyle;
+	else if (*target == XA_COMPOUND_TEXT(d))
+	    style = XCompoundTextStyle;
+	else if (*target == XA_STRING)
+	    style = XStringStyle;
+
+	ret = XmbTextListToTextProperty (d, &data, 1, style, &prop);
+	if (ret >= Success) {
+	    *length = prop.nitems;
+	    *value = prop.value;
+	    *type = prop.encoding;
+	    *format = prop.format;
+	    return True;
+	} else
+	    return False;
     }
-    
+
     if (XmuConvertStandardSelection(w, req->time, selection, target, type,
 				    (XPointer *) value, length, format))
 	return True;
@@ -564,8 +636,9 @@ ConvertSelection(Widget w, Atom *selection, Atom *target,
 static void 
 LoseSelection(Widget w, Atom *selection)
 {
-    XtGetSelectionValue(w, *selection, XA_STRING, InsertClipboard,
-			NULL, CurrentTime);
+    Display *d = XtDisplay(w);
+    XtGetSelectionValue(w, *selection, XA_UTF8_STRING(d), InsertClipboard,
+			(XtPointer)(XA_UTF8_STRING(d)), CurrentTime);
 }
 
 /*ARGSUSED*/
@@ -592,7 +665,7 @@ static ResourceData userOptions;
 
 #define Offset(field) XtOffsetOf(ResourceData, field)
 
-XtResource resources[] = {
+static XtResource resources[] = {
   {"wrap", "Wrap", XtRBoolean, sizeof(Boolean),
      Offset(wrap), XtRImmediate, (XtPointer)False}
 };
@@ -610,7 +683,7 @@ main(int argc, char *argv[])
     XtSetLanguageProc(NULL, NULL, NULL);
 
     top = XtAppInitialize( &xtcontext, "XClipboard", table, XtNumber(table),
-			  &argc, argv, NULL, NULL, 0);
+			  &argc, argv, fallback_resources, NULL, 0);
 
     XtGetApplicationResources(top, (XtPointer)&userOptions, resources, 
 			      XtNumber(resources), NULL, 0);

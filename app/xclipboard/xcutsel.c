@@ -62,7 +62,7 @@ typedef struct {
     int     length;
 } OptionsRec;
 
-OptionsRec options;
+static OptionsRec options;
 
 #define Offset(field) XtOffsetOf(OptionsRec, field)
 
