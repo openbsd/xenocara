@@ -1,35 +1,220 @@
-2006-04-01  Adam Jackson  <ajax@freedesktop.org>
+commit 170f17b373da6f45db8bce2f0b3cc18b9f05e6bd
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 16:32:38 2009 -0700
 
-	* configure.ac:
-	Bump to 1.0.2.
+    smproxy 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2006-02-03  Alan Coopersmith  <alan.coopersmith@sun.com>
+commit db43f974d4b653cc903dbbc9d22fca0711cf0ee6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 18:31:59 2009 -0700
 
-	* smproxy.man: 
-	Wrong name in .TH line in smproxy man page.
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 6519b61438b36e66a42e44b42fbf6b7f75a450d0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:19 2009 -0700
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c2514a2a3fb2e01f904d9a0e4b4b50bf24ed316d
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 19 16:38:49 2009 -0200
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and all gcc 4.3 and sparse warnings.
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c3f8e7bd4dcb059265ad47152c57305b1ebf1652
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:37:07 2007 -0500
 
-	* Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Replace static ChangeLog with dist-hook to generate from git log
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c1e12fb138711721d74d9c4accf1c76f1829a411
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:51:12 2007 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Add *~ to .gitignore to skip patch/emacs droppings
 
-2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 142c50a44b9bca6ecc2d137a52f3a2d2d18ea753
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:24:37 2007 -0400
 
-	* configure.ac:
-	Update package version number for RC1 release.
+    Rename .cvsignore to .gitignore
 
+commit a712e5b1ac3fba792e2696a52781fee3ac7f2c26
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Apr 2 00:43:00 2006 +0000
+
+    Bump to 1.0.2
+
+commit 5df8681ca60408ec2b0f2e73930cf34d46474e02
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Feb 3 23:24:37 2006 +0000
+
+    Wrong name in .TH line in smproxy man page.
+
+commit 129d0d20f0fe3b4e2d007b40eb8d18493e72feb5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:47 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit a24c9fb0dfc98f5e2a1c530b2e5623ca37085e92
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:22:41 2005 +0000
+
+    Stub COPYING files
+
+commit ca04f02395af13eb7411b6d7a2235441260162ed
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:04 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 8bfee9823e3352b2b891815fb17ac8b4b0b9ec1f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:18 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit c6ddfcb8295f9bd95ff6c10dfc72eb06c1dfebfc
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:17 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 1cda990e2da2c81676263a743148792cdd24bf76
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:01:39 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit f316c47cd92a8787aa054454b328992ea5a1c335
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:34:58 2005 +0000
+
+    Another pass at .cvsignores for apps.
+
+commit adf4750e5d0b867f9aebcb9e04f45615c78d564b
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sun Nov 20 22:08:50 2005 +0000
+
+    Add/improve .cvsignore files for apps.
+
+commit 62c0c632565fc25c6af2199fecc1e8cec21beb82
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:47:50 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 7154ca09d51094eee67bd38d35ea1a42f0243165
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 23:56:20 2005 +0000
+
+    Use @APP_MAN_SUFFIX@ instead of $(APP_MAN_SUFFIX) in macro substitutions to
+        work better with BSD make
+
+commit 4b08eb40f81ad4ac6f276d91a485e7eb3d690a61
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Oct 14 00:25:42 2005 +0000
+
+    Use sed to fill in variables in man page
+
+commit 8be426eb8e1d2be0264c34bd618a25822055fcc6
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Aug 1 20:25:28 2005 +0000
+
+    Install man pages to section 1 instead of section m (Patch from Donnie
+        Berkholz)
+
+commit a1da8fe3444ec4373d823b55d3db4c20f70b813c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:30 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 1c36f6e6523670598c310ad5cd55e6e3c800ba36
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Jul 20 19:31:50 2005 +0000
+
+    Use a unique token for PKG_CHECK_MODULES. Otherwise, if you use a global
+        configure cache, you cache it, and the cached value is probably wrong.
+
+commit 4c13f27d1178fa4c1176686d53c5641addf675b8
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sat Jul 16 22:07:13 2005 +0000
+
+    Add #ifdef HAVE_CONFIG_H/#include "config.h" to files that need it to get
+        HAS_MKSTEMP defined in modular builds.
+
+commit b3d8e92288c109bec89946ae3d550616dbc8d04c
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sat Jul 16 21:59:14 2005 +0000
+
+    Define HAS_MKSTEMP if mkstemp() is present (needed for improved protection
+        against tempfile race conditions in many places)
+
+commit 05ef9ba24d0b1b5c17e04036d03770a44efd6b78
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 6 17:25:57 2005 +0000
+
+    Build system for smproxy
+
+commit 2935d0350a985e7638cdeaa32b06d935bef2a983
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:37 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 5bab1fd41c825d7e89cd7329eead0169640cc3dd
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:34:56 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit c43c8cfd14136c9486ddf269a0e876c20670848e
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:54 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit ad7fbb2be57bc3aef4b403b3e3341627c98d88b6
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:15 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit b3303bf17a8975b4a3f13462cb7b13207a016395
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:57 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 2a637a09ff68246161945821392656492f1fbde1
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:58 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit f4d5033f594bf278ff1171091219b3c28dc45446
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 15:54:53 2003 +0000
+
+    R6.6 is the Xorg base-line

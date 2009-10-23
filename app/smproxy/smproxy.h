@@ -1,5 +1,5 @@
 /* $Xorg: smproxy.h,v 1.4 2001/02/09 02:05:36 xorgcvs Exp $ */
-/* $XdotOrg: app/smproxy/smproxy.h,v 1.3 2005/07/16 22:07:13 alanc Exp $ */
+/* $XdotOrg: $ */
 /******************************************************************************
 
 Copyright 1994, 1998  The Open Group
@@ -107,5 +107,6 @@ extern void ReadProxyFile ( char *filename );
 extern char * WriteProxyFile ( void );
 extern char * LookupClientID ( WinInfo *theWindow );
 
+extern WinInfo *win_head;
 
 #define SAVEFILE_VERSION 1

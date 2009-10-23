@@ -33,9 +33,7 @@ Author:  Ralph Mor, X Consortium
 #endif
 
 
-ProxyFileEntry *proxyFileHead = NULL;
-
-extern WinInfo *win_head;
+static ProxyFileEntry *proxyFileHead = NULL;
 
 static int write_byte ( FILE *file, unsigned char b );
 static int write_short ( FILE *file, unsigned short s );
@@ -73,11 +71,7 @@ write_short (FILE *file, unsigned short s)
 
 
 static int
-write_counted_string (file, string)
-
-FILE	*file;
-char	*string;
-
+write_counted_string(FILE *file, char *string)
 {
     if (string)
     {
@@ -100,11 +94,7 @@ char	*string;
 
 
 static int
-read_byte (file, bp)
-
-FILE		*file;
-unsigned char	*bp;
-
+read_byte(FILE *file, unsigned char *bp)
 {
     if (fread ((char *) bp, 1, 1, file) != 1)
 	return 0;
@@ -113,11 +103,7 @@ unsigned char	*bp;
 
 
 static int
-read_short (file, shortp)
-
-FILE		*file;
-unsigned short	*shortp;
-
+read_short(FILE *file, unsigned short *shortp)
 {
     unsigned char   file_short[2];
 
@@ -129,11 +115,7 @@ unsigned short	*shortp;
 
 
 static int
-read_counted_string (file, stringp)
-
-FILE	*file;
-char	**stringp;
-
+read_counted_string(FILE *file, char **stringp)
 {
     unsigned char  len;
     char	   *data;
@@ -141,7 +123,7 @@ char	**stringp;
     if (read_byte (file, &len) == 0)
 	return 0;
     if (len == 0) {
-	data = 0;
+	data = NULL;
     } else {
     	data = (char *) malloc ((unsigned) len + 1);
     	if (!data)
@@ -178,11 +160,7 @@ char	**stringp;
  */
 
 int
-WriteProxyFileEntry (proxyFile, theWindow)
-
-FILE *proxyFile;
-WinInfo *theWindow;
-
+WriteProxyFileEntry(FILE *proxyFile, WinInfo *theWindow)
 {
     int i;
 
@@ -214,11 +192,7 @@ WinInfo *theWindow;
 
 
 int
-ReadProxyFileEntry (proxyFile, pentry)
-
-FILE *proxyFile;
-ProxyFileEntry **pentry;
-
+ReadProxyFileEntry(FILE *proxyFile, ProxyFileEntry **pentry)
 {
     ProxyFileEntry *entry;
     unsigned char byte;
@@ -294,10 +268,7 @@ give_up:
 
 
 void
-ReadProxyFile (filename)
-
-char *filename;
-
+ReadProxyFile(char *filename)
 {
     FILE *proxyFile;
     ProxyFileEntry *entry;
@@ -332,17 +303,11 @@ char *filename;
 
 #ifndef HAS_MKSTEMP
 static char *
-unique_filename (path, prefix)
-char *path;
-char *prefix;
+unique_filename(char *path, char *prefix)
 #else
 static char *
-unique_filename (path, prefix, pFd)
-char *path;
-char *prefix;
-int *pFd;
+unique_filename(char *path, char *prefix, int *pFd)
 #endif
-
 {
 #ifndef HAS_MKSTEMP
 #ifndef X_NOT_POSIX
@@ -380,8 +345,7 @@ int *pFd;
 
 
 char *
-WriteProxyFile ()
-
+WriteProxyFile(void)
 {
     FILE *proxyFile = NULL;
     char *filename = NULL;
@@ -449,10 +413,7 @@ WriteProxyFile ()
 
 
 char *
-LookupClientID (theWindow)
-
-WinInfo *theWindow;
-
+LookupClientID(WinInfo *theWindow)
 {
     ProxyFileEntry *ptr;
     int found = 0;

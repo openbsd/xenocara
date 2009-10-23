@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = smproxy
 
-smproxy_CFLAGS = $(SMPROXY_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(SMPROXY_CFLAGS)
 smproxy_LDADD = $(SMPROXY_LIBS)
 
 smproxy_SOURCES =	\
@@ -62,4 +62,14 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

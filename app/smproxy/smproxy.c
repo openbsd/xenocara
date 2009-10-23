@@ -31,75 +31,72 @@ Author:  Ralph Mor, X Consortium
 #include <unistd.h>
 #include <X11/Xmu/WinUtil.h>
 
-XtAppContext appContext;
-Display *disp;
+static XtAppContext appContext;
+static Display *disp;
 
-Atom wmProtocolsAtom;
-Atom wmSaveYourselfAtom;
-Atom wmStateAtom;
-Atom smClientIdAtom;
-Atom wmClientLeaderAtom;
+static Atom wmProtocolsAtom;
+static Atom wmSaveYourselfAtom;
+static Atom wmStateAtom;
+static Atom smClientIdAtom;
+static Atom wmClientLeaderAtom;
 
-Bool debug = 0;
+static Bool debug = 0;
 
-SmcConn proxy_smcConn;
-XtInputId proxy_iceInputId;
-char *proxy_clientId = NULL;
+static SmcConn proxy_smcConn;
+static XtInputId proxy_iceInputId;
+static char *proxy_clientId = NULL;
 
 WinInfo *win_head = NULL;
 
-int proxy_count = 0;
-int die_count = 0;
+static int proxy_count = 0;
+static int die_count = 0;
 
-Bool ok_to_die = 0;
+static Bool ok_to_die = 0;
 
-Bool caught_error = 0;
+static Bool caught_error = 0;
 
-Bool sent_save_done = 0;
+static Bool sent_save_done = 0;
 
-int Argc;
-char **Argv;
+static int Argc;
+static char **Argv;
 
-Bool HasSaveYourself ( Window window );
-Bool HasXSMPsupport ( Window window );
-WinInfo * GetClientLeader ( WinInfo *winptr );
-char * CheckFullyQuantifiedName ( char *name, int *newstring );
-void FinishSaveYourself ( WinInfo *winInfo, Bool has_WM_SAVEYOURSELF );
-void SaveYourselfCB ( SmcConn smcConn, SmPointer clientData, int saveType, 
-		      Bool shutdown, int interactStyle, Bool fast );
-void DieCB ( SmcConn smcConn, SmPointer clientData );
-void SaveCompleteCB ( SmcConn smcConn, SmPointer clientData );
-void ShutdownCancelledCB ( SmcConn smcConn, SmPointer clientData );
-void ProcessIceMsgProc ( XtPointer client_data, int *source, XtInputId *id );
-void NullIceErrorHandler ( IceConn iceConn, Bool swap, 
+static Bool HasSaveYourself ( Window window );
+static Bool HasXSMPsupport ( Window window );
+static WinInfo * GetClientLeader ( WinInfo *winptr );
+static char * CheckFullyQuantifiedName ( char *name, int *newstring );
+static void FinishSaveYourself ( WinInfo *winInfo, Bool has_WM_SAVEYOURSELF );
+static void SaveYourselfCB ( SmcConn smcConn, SmPointer clientData, int saveType, 
+			    Bool shutdown, int interactStyle, Bool fast );
+static void DieCB ( SmcConn smcConn, SmPointer clientData );
+static void SaveCompleteCB ( SmcConn smcConn, SmPointer clientData );
+static void ShutdownCancelledCB ( SmcConn smcConn, SmPointer clientData );
+static void ProcessIceMsgProc ( XtPointer client_data, int *source, XtInputId *id );
+static void NullIceErrorHandler ( IceConn iceConn, Bool swap, 
 			   int offendingMinorOpCode, 
 			   unsigned long offendingSequence, 
 			   int errorClass, int severity, IcePointer values );
-void ConnectClientToSM ( WinInfo *winInfo );
-int MyErrorHandler ( Display *display, XErrorEvent *event );
-Bool LookupWindow ( Window window, WinInfo **ptr_ret, WinInfo **prev_ptr_ret );
-WinInfo * AddNewWindow ( Window window );
-void RemoveWindow ( WinInfo *winptr );
-void Got_WM_STATE ( WinInfo *winptr );
-void HandleCreate ( XCreateWindowEvent *event );
-void HandleDestroy ( XDestroyWindowEvent *event );
-void HandleUpdate ( XPropertyEvent *event );
-void ProxySaveYourselfPhase2CB ( SmcConn smcConn, SmPointer clientData );
-void ProxySaveYourselfCB ( SmcConn smcConn, SmPointer clientData, 
+static void ConnectClientToSM ( WinInfo *winInfo );
+static int MyErrorHandler ( Display *display, XErrorEvent *event );
+static Bool LookupWindow ( Window window, WinInfo **ptr_ret, WinInfo **prev_ptr_ret );
+static WinInfo * AddNewWindow ( Window window );
+static void RemoveWindow ( WinInfo *winptr );
+static void Got_WM_STATE ( WinInfo *winptr );
+static void HandleCreate ( XCreateWindowEvent *event );
+static void HandleDestroy ( XDestroyWindowEvent *event );
+static void HandleUpdate ( XPropertyEvent *event );
+static void ProxySaveYourselfPhase2CB ( SmcConn smcConn, SmPointer clientData );
+static void ProxySaveYourselfCB ( SmcConn smcConn, SmPointer clientData, 
 			   int saveType, Bool shutdown, int interactStyle, 
 			   Bool fast );
-void ProxyDieCB ( SmcConn smcConn, SmPointer clientData );
-void ProxySaveCompleteCB ( SmcConn smcConn, SmPointer clientData );
-void ProxyShutdownCancelledCB ( SmcConn smcConn, SmPointer clientData );
-Status ConnectProxyToSM ( char *previous_id );
-void CheckForExistingWindows ( Window root );
+static void ProxyDieCB ( SmcConn smcConn, SmPointer clientData );
+static void ProxySaveCompleteCB ( SmcConn smcConn, SmPointer clientData );
+static void ProxyShutdownCancelledCB ( SmcConn smcConn, SmPointer clientData );
+static Status ConnectProxyToSM ( char *previous_id );
+static void CheckForExistingWindows ( Window root );
 
 
-Bool
-HasSaveYourself (window)
-
-Window window;
-
+static Bool
+HasSaveYourself(Window window)
 {
     Atom *protocols;
     int numProtocols;
@@ -126,11 +123,8 @@ Window window;
 
 
 
-Bool
-HasXSMPsupport (window)
-
-Window window;
-
+static Bool
+HasXSMPsupport(Window window)
 {
     XTextProperty tp;
     Bool hasIt = 0;
@@ -149,11 +143,8 @@ Window window;
 
 
 
-WinInfo *
-GetClientLeader (winptr)
-
-WinInfo *winptr;
-
+static WinInfo *
+GetClientLeader(WinInfo *winptr)
 {
     Atom actual_type;
     int actual_format;
@@ -201,12 +192,8 @@ WinInfo *winptr;
 
 
 
-char *
-CheckFullyQuantifiedName (name, newstring)
-
-char *name;
-int *newstring;
-
+static char *
+CheckFullyQuantifiedName(char *name, int *newstring)
 {
     /*
      * Due to a bug in Xlib (for hpux in particular), some clients
@@ -250,11 +237,8 @@ int *newstring;
 
 
 
-void FinishSaveYourself (winInfo, has_WM_SAVEYOURSELF)
-
-WinInfo *winInfo;
-Bool has_WM_SAVEYOURSELF;
-
+static void
+FinishSaveYourself(WinInfo *winInfo, Bool has_WM_SAVEYOURSELF)
 {
     SmProp prop1, prop2, prop3, *props[3];
     SmPropValue prop1val, prop2val, prop3val;
@@ -345,16 +329,9 @@ Bool has_WM_SAVEYOURSELF;
 
 
 
-void
-SaveYourselfCB (smcConn, clientData, saveType, shutdown, interactStyle, fast)
-
-SmcConn smcConn;
-SmPointer clientData;
-int saveType;
-Bool shutdown;
-int interactStyle;
-Bool fast;
-
+static void
+SaveYourselfCB(SmcConn smcConn, SmPointer clientData, int saveType,
+	       Bool shutdown, int interactStyle, Bool fast)
 {
     WinInfo *winInfo = (WinInfo *) clientData;
 
@@ -402,12 +379,8 @@ Bool fast;
 
 
 
-void
-DieCB (smcConn, clientData)
-
-SmcConn smcConn;
-SmPointer clientData;
-
+static void
+DieCB(SmcConn smcConn, SmPointer clientData)
 {
     WinInfo *winInfo = (WinInfo *) clientData;
 
@@ -440,12 +413,8 @@ SmPointer clientData;
 
 
 
-void
-SaveCompleteCB (smcConn, clientData)
-
-SmcConn smcConn;
-SmPointer clientData;
-
+static void
+SaveCompleteCB(SmcConn smcConn, SmPointer clientData)
 {
     /*
      * Nothing to do here.
@@ -454,12 +423,8 @@ SmPointer clientData;
 
 
 
-void
-ShutdownCancelledCB (smcConn, clientData)
-
-SmcConn smcConn;
-SmPointer clientData;
-
+static void
+ShutdownCancelledCB(SmcConn smcConn, SmPointer clientData)
 {
     /*
      * Since we did not request to interact or request save yourself
@@ -470,13 +435,8 @@ SmPointer clientData;
 
 
 
-void
-ProcessIceMsgProc (client_data, source, id)
-
-XtPointer	client_data;
-int 		*source;
-XtInputId	*id;
-
+static void
+ProcessIceMsgProc(XtPointer client_data, int *source, XtInputId *id)
 {
     IceConn	ice_conn = (IceConn) client_data;
 
@@ -485,28 +445,17 @@ XtInputId	*id;
 
 
 
-void
-NullIceErrorHandler (iceConn, swap,
-    offendingMinorOpcode, offendingSequence, errorClass, severity, values)
-
-IceConn		iceConn;
-Bool		swap;
-int		offendingMinorOpcode;
-unsigned long	offendingSequence;
-int 		errorClass;
-int		severity;
-IcePointer	values;
-
+static void
+NullIceErrorHandler(IceConn iceConn, Bool swap, int offendingMinorOpcode,
+		    unsigned long offendingSequence, int errorClass,
+		    int severity, IcePointer values)
 {
     return;
 }
 
 
-void
-ConnectClientToSM (winInfo)
-
-WinInfo *winInfo;
-
+static void
+ConnectClientToSM(WinInfo *winInfo)
 {
     char errorMsg[256];
     unsigned long mask;
@@ -576,12 +525,8 @@ WinInfo *winInfo;
 
 
 
-int
-MyErrorHandler (display, event)
-
-Display *display;
-XErrorEvent *event;
-
+static int
+MyErrorHandler(Display *display, XErrorEvent *event)
 {
     caught_error = 1;
     return 0;
@@ -589,13 +534,8 @@ XErrorEvent *event;
 
 
 
-Bool
-LookupWindow (window, ptr_ret, prev_ptr_ret)
-
-Window window;
-WinInfo **ptr_ret;
-WinInfo **prev_ptr_ret;
-
+static Bool
+LookupWindow(Window window, WinInfo **ptr_ret, WinInfo **prev_ptr_ret)
 {
     WinInfo *ptr, *prev;
 
@@ -627,11 +567,8 @@ WinInfo **prev_ptr_ret;
 
 
 
-WinInfo *
-AddNewWindow (window)
-
-Window window;
-
+static WinInfo *
+AddNewWindow(Window window)
 {
     WinInfo *newptr;
 
@@ -666,11 +603,8 @@ Window window;
 
 
 
-void
-RemoveWindow (winptr)
-
-WinInfo *winptr;
-
+static void
+RemoveWindow(WinInfo *winptr)
 {
     WinInfo *ptr, *prev;
 
@@ -705,11 +639,8 @@ WinInfo *winptr;
 
 
 
-void
-Got_WM_STATE (winptr)
-
-WinInfo *winptr;
-
+static void
+Got_WM_STATE(WinInfo *winptr)
 {
     WinInfo *leader_winptr;
 
@@ -802,11 +733,8 @@ WinInfo *winptr;
 
 
 
-void
-HandleCreate (event)
-
-XCreateWindowEvent *event;
-
+static void
+HandleCreate(XCreateWindowEvent *event)
 {
     Atom actual_type;
     int actual_format;
@@ -887,11 +815,8 @@ XCreateWindowEvent *event;
 
 
 
-void
-HandleDestroy (event)
-
-XDestroyWindowEvent *event;
-
+static void
+HandleDestroy(XDestroyWindowEvent *event)
 {
     WinInfo *winptr;
 
@@ -917,11 +842,8 @@ XDestroyWindowEvent *event;
 
 
 
-void
-HandleUpdate (event)
-
-XPropertyEvent *event;
-
+static void
+HandleUpdate(XPropertyEvent *event)
 {
     Window window = event->window;
     WinInfo *winptr;
@@ -955,12 +877,8 @@ XPropertyEvent *event;
 
 
 
-void
-ProxySaveYourselfPhase2CB (smcConn, clientData)
-
-SmcConn smcConn;
-SmPointer clientData;
-
+static void
+ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
 {
     char *filename;
     Bool success = True;
@@ -1080,17 +998,9 @@ SmPointer clientData;
 
 
 
-void
-ProxySaveYourselfCB (smcConn, clientData, saveType,
-    shutdown, interactStyle, fast)
-
-SmcConn smcConn;
-SmPointer clientData;
-int saveType;
-Bool shutdown;
-int interactStyle;
-Bool fast;
-
+static void
+ProxySaveYourselfCB(SmcConn smcConn, SmPointer clientData, int saveType,
+		    Bool shutdown, int interactStyle, Bool fast)
 {
     /*
      * We want the proxy to respond to the Save Yourself after all
@@ -1110,12 +1020,8 @@ Bool fast;
 
 
 
-void
-ProxyDieCB (smcConn, clientData)
-
-SmcConn smcConn;
-SmPointer clientData;
-
+static void
+ProxyDieCB(SmcConn smcConn, SmPointer clientData)
 {
     SmcCloseConnection (proxy_smcConn, 0, NULL);
     XtRemoveInput (proxy_iceInputId);
@@ -1128,24 +1034,16 @@ SmPointer clientData;
 
 
 
-void
-ProxySaveCompleteCB (smcConn, clientData)
-
-SmcConn smcConn;
-SmPointer clientData;
-
+static void
+ProxySaveCompleteCB(SmcConn smcConn, SmPointer clientData)
 {
     ;
 }
 
 
 
-void
-ProxyShutdownCancelledCB (smcConn, clientData)
-
-SmcConn smcConn;
-SmPointer clientData;
-
+static void
+ProxyShutdownCancelledCB(SmcConn smcConn, SmPointer clientData)
 {
     if (!sent_save_done)
     {
@@ -1156,11 +1054,8 @@ SmPointer clientData;
 
 
 
-Status
-ConnectProxyToSM (previous_id)
-
-char *previous_id;
-
+static Status
+ConnectProxyToSM(char *previous_id)
 {
     char errorMsg[256];
     unsigned long mask;
@@ -1210,11 +1105,8 @@ char *previous_id;
 
 
 
-void
-CheckForExistingWindows (root)
-
-Window root;
-
+static void
+CheckForExistingWindows(Window root)
 {
     Window dontCare1, dontCare2, *children, client_window;
     unsigned int nchildren, i;
