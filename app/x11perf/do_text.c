@@ -444,8 +444,8 @@ InitAAText(XParms xp, Parms p, int reps)
 	printf ("Cannot allocate black\n");
 	XftFontClose (xp->d, aafont);
 	XftDrawDestroy (aadraw);
-	aafont = 0;
-	aadraw = 0;
+	aafont = NULL;
+	aadraw = NULL;
 	return 0;
     }
     

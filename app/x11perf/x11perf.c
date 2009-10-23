@@ -49,7 +49,7 @@ int	abortTest;
 
 typedef struct _RopNames { char	*name; int  rop; } RopNameRec, *RopNamePtr;
 
-RopNameRec ropNames[] = {
+static RopNameRec ropNames[] = {
 	{ "clear",    	  GXclear },		/* 0 */
 	{ "and",	  GXand },		/* src AND dst */
 	{ "andReverse",	  GXandReverse }, 	/* src AND NOT dst */
@@ -68,7 +68,7 @@ RopNameRec ropNames[] = {
 	{ "set",	  GXset }		/* 1 */
 };
 
-RopNameRec popNames[] = {
+static RopNameRec popNames[] = {
 	{ "Clear",    	  PictOpClear },
 	{ "Src",	  PictOpSrc },
 	{ "Dst",	  PictOpDst },
@@ -85,7 +85,7 @@ RopNameRec popNames[] = {
 	{ "Saturate",	  PictOpSaturate },
 };
 
-RopNameRec formatNames[] = {
+static RopNameRec formatNames[] = {
     { "RGB24",	  PictStandardRGB24 },
     { "ARGB32",	  PictStandardARGB32 },
     { "A8",	  PictStandardA8 },
@@ -94,7 +94,7 @@ RopNameRec formatNames[] = {
     { "NATIVE",	  PictStandardNative },
 };
 
-char *(visualClassNames)[] = {
+static char *(visualClassNames)[] = {
     "StaticGray",
     "GrayScale",
     "StaticColor",
@@ -1093,14 +1093,14 @@ main(int argc, char *argv[])
 	    len = strlen(argv[i]);
 	    if(len>=3)
 	    ForEachTest (j) {
-		if (Strstr (test[j].option, argv[i]+1) != 0) {
+		if (Strstr (test[j].option, argv[i]+1) != NULL) {
 		    fprintf(stderr,"	-> %s	%s\n", test[j].option, LABELP(j));
 		    doit[j] = found = True;
 		}
 	    }
 	    if(!found)
 	    ForEachTest (j) {
-		if (Strstr (LABELP(j), argv[i]+1) != 0) {
+		if (Strstr (LABELP(j), argv[i]+1) != NULL) {
 		    fprintf(stderr,"	-> %s	%s\n", test[j].option, LABELP(j));
 		    doit[j] = found = True;
 		}

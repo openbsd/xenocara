@@ -200,7 +200,7 @@ InitCopyPix(XParms xp, Parms p, int reps)
 
     /* Create pixmap to write stuff into, and initialize it */
     pix = XCreatePixmap(xp->d, xp->w, WIDTH, HEIGHT, xp->vinfo.depth);
-    pixgc = XCreateGC(xp->d, pix, 0, 0);
+    pixgc = XCreateGC(xp->d, pix, 0, NULL);
     /* need a gc with GXcopy cos pixmaps contain junk on creation. mmm */
     XCopyArea(xp->d, xp->w, pix, pixgc, 0, 0, WIDTH, HEIGHT, 0, 0);
     XFreeGC(xp->d, pixgc);
@@ -214,8 +214,8 @@ InitGetImage(XParms xp, Parms p, int reps)
 
     /* Create image to stuff bits into */
     image = XGetImage(xp->d, xp->w, 0, 0, WIDTH, HEIGHT, xp->planemask,
-		      p->font==0?ZPixmap:XYPixmap);
-    if(image==0){
+		      p->font==NULL?ZPixmap:XYPixmap);
+    if(image==NULL){
 	printf("XGetImage failed\n");
 	return False;
     }	
@@ -284,7 +284,7 @@ DoGetImage(XParms xp, Parms p, int reps)
     int format;
 
     size = p->special;
-    format = (p->font == 0) ? ZPixmap : XYPixmap;
+    format = (p->font == NULL) ? ZPixmap : XYPixmap;
     for (sa = segsa, sb = segsb, i = 0; i != reps; i++, sa++, sb++) {
 	XDestroyImage(image);
 	image = XGetImage(xp->d, xp->w, sa->x1, sa->y1, size, size,
@@ -404,7 +404,7 @@ InitShmPutImage(XParms xp, Parms p, int reps)
 	perror ("shmget");
 	return False;
     }
-    shm_info.shmaddr = (char *) shmat(shm_info.shmid, 0, 0);
+    shm_info.shmaddr = (char *) shmat(shm_info.shmid, NULL, 0);
     if (shm_info.shmaddr == ((char *) -1))
     {
 	/*
@@ -417,7 +417,7 @@ InitShmPutImage(XParms xp, Parms p, int reps)
 	free(segsa);
 	free(segsb);
 	perror ("shmat");
-	shmctl (shm_info.shmid, IPC_RMID, 0);
+	shmctl (shm_info.shmid, IPC_RMID, NULL);
 	return False;
     }
     shm_info.readOnly = True;
@@ -439,7 +439,7 @@ InitShmPutImage(XParms xp, Parms p, int reps)
 	free(segsb);
 	if(shmdt (shm_info.shmaddr)==-1)
 	    perror("shmdt:");
-	if(shmctl (shm_info.shmid, IPC_RMID, 0)==-1)
+	if(shmctl (shm_info.shmid, IPC_RMID, NULL)==-1)
 	    perror("shmctl rmid:");
 	return False;
     }
@@ -478,7 +478,7 @@ EndShmPutImage(XParms xp, Parms p)
     XSync(xp->d, False);	/* need server to detach so can remove id */
     if(shmdt (shm_info.shmaddr)==-1)
 	perror("shmdt:");
-    if(shmctl (shm_info.shmid, IPC_RMID, 0)==-1)
+    if(shmctl (shm_info.shmid, IPC_RMID, NULL)==-1)
 	perror("shmctl rmid:");
 }
 
@@ -528,7 +528,7 @@ InitCopyPlane(XParms xp, Parms p, int reps)
 
     /* Create pixmap to write stuff into, and initialize it */
     pix = XCreatePixmap(xp->d, xp->w, WIDTH, HEIGHT, 
-	    p->font==0 ? 1 : xp->vinfo.depth);
+	    p->font==NULL ? 1 : xp->vinfo.depth);
     gcv.graphics_exposures = False;
     gcv.foreground = 0;
     gcv.background = 1;
@@ -607,6 +607,9 @@ InitCompositePix(XParms xp, Parms p, int reps)
 	break;
     case PictStandardA1:
 	depth = 1;
+	break;
+    default:
+	depth = 0;
 	break;
     }
     if (!format)

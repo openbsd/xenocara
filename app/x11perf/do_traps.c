@@ -172,8 +172,8 @@ InitFixedTraps(XParms xp, Parms p, int reps)
     maskFormat = XRenderFindStandardFormat (xp->d, std_fmt);
     
     maskPixmap = XCreatePixmap (xp->d, xp->w, WIDTH, HEIGHT, depth);
-    
-    mask = XRenderCreatePicture (xp->d, maskPixmap, maskFormat, 0, 0);
+
+    mask = XRenderCreatePicture (xp->d, maskPixmap, maskFormat, 0, NULL);
     
     color.red = 0;
     color.green = 0;
@@ -185,7 +185,7 @@ InitFixedTraps(XParms xp, Parms p, int reps)
 			     &color, &aablack))
     {
 	XftDrawDestroy (aadraw);
-	aadraw = 0;
+	aadraw = NULL;
 	return 0;
     }
     color.red = 0xffff;
@@ -198,7 +198,7 @@ InitFixedTraps(XParms xp, Parms p, int reps)
 			     &color, &aawhite))
     {
 	XftDrawDestroy (aadraw);
-	aadraw = 0;
+	aadraw = NULL;
 	return 0;
     }
 
@@ -304,7 +304,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int reps)
 					0);
     }
     else
-	maskFormat = 0;
+	maskFormat = NULL;
     color.red = 0;
     color.green = 0;
     color.blue = 0;
@@ -315,7 +315,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int reps)
 			     &color, &aablack))
     {
 	XftDrawDestroy (aadraw);
-	aadraw = 0;
+	aadraw = NULL;
 	return 0;
     }
     color.red = 0xffff;
@@ -328,7 +328,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int reps)
 			     &color, &aawhite))
     {
 	XftDrawDestroy (aadraw);
-	aadraw = 0;
+	aadraw = NULL;
 	return 0;
     }
 

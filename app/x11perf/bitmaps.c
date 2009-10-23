@@ -782,9 +782,7 @@ static unsigned char escherknot_bits[] = {
 
 # define GCBits	(GCFillStyle|GCTileStipXOrigin|GCTileStipYOrigin)
 
-void SetFillStyle(xp, p)
-    XParms  xp;
-    Parms   p;
+void SetFillStyle(XParms xp, Parms p)
 {
     int	    xorg = 0, yorg = 0;
 
