@@ -1,3 +1,39 @@
+commit e8be20c2cd3ba3ac94b3a9d9b5a22b31aa2686a8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 10 22:47:34 2009 -0700
+
+    mkfontdir 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 006fa08ebb08b03b2c390c708e96d005f3613538
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 10 22:47:09 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ca2834cb13734a4a3fa7b44f00ae1d69f7b8d364
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:18 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5cff04431124e447f3499850924601ae28d4fceb
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Jan 16 20:11:47 2009 -0200
+
+    Use XORG_CHANGELOG to correct "make distcheck"
+
+commit ae3643d936ae4eed9d0b1dfa60fe83718a9987e8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 16:47:38 2008 -0500
+
+    mkfontdir 1.0.4
+
 commit 24c0bbb24d2bc5aa37f4ef0bc79882d9ed48b94d
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Jan 11 12:40:52 2008 -0800

@@ -24,7 +24,7 @@ bin_SCRIPTS = mkfontdir
 appman_PRE = mkfontdir.man
 
 .cpp:
-	$(SED) s,BINDIR,`echo @bindir@/mkfontscale | $(SED) s,/[^/]*$$,,`, < $< | $(SED) s/XCOMM/\#/ > $@
+	$(AM_V_GEN)$(SED) s,BINDIR,`echo @bindir@/mkfontscale | $(SED) s,/[^/]*$$,,`, < $< | $(SED) s/XCOMM/\#/ > $@
 
 EXTRA_DIST = mkfontdir.cpp
 CLEANFILES = $(bin_SCRIPTS)
@@ -35,8 +35,6 @@ appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
 CLEANFILES += $(appman_DATA)
-
-SED = sed
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
@@ -58,7 +56,7 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 EXTRA_DIST += ChangeLog
 MAINTAINERCLEANFILES = ChangeLog
@@ -66,6 +64,6 @@ MAINTAINERCLEANFILES = ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog

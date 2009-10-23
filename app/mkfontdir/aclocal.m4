@@ -116,6 +116,230 @@ AC_CONFIG_COMMANDS_PRE(
 Usually this means the macro was only invoked conditionally.]])
 fi])])
 
+
+# Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
+# Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# serial 8
+
+# There are a few dirty hacks below to avoid letting `AC_PROG_CC' be
+# written in clear, in which case automake, when reading aclocal.m4,
+# will think it sees a *use*, and therefore will trigger all it's
+# C support machinery.  Also note that it means that autoscan, seeing
+# CC etc. in the Makefile, will ask for an AC_PROG_CC use...
+
+
+# _AM_DEPENDENCIES(NAME)
+# ----------------------
+# See how the compiler implements dependency checking.
+# NAME is "CC", "CXX", "GCJ", or "OBJC".
+# We try a few techniques and use that to set a single cache variable.
+#
+# We don't AC_REQUIRE the corresponding AC_PROG_CC since the latter was
+# modified to invoke _AM_DEPENDENCIES(CC); we would have a circular
+# dependency, and given that the user is not expected to run this macro,
+# just rely on AC_PROG_CC.
+AC_DEFUN([_AM_DEPENDENCIES],
+[AC_REQUIRE([AM_SET_DEPDIR])dnl
+AC_REQUIRE([AM_OUTPUT_DEPENDENCY_COMMANDS])dnl
+AC_REQUIRE([AM_MAKE_INCLUDE])dnl
+AC_REQUIRE([AM_DEP_TRACK])dnl
+
+ifelse([$1], CC,   [depcc="$CC"   am_compiler_list=],
+       [$1], CXX,  [depcc="$CXX"  am_compiler_list=],
+       [$1], OBJC, [depcc="$OBJC" am_compiler_list='gcc3 gcc'],
+       [$1], GCJ,  [depcc="$GCJ"  am_compiler_list='gcc3 gcc'],
+                   [depcc="$$1"   am_compiler_list=])
+
+AC_CACHE_CHECK([dependency style of $depcc],
+               [am_cv_$1_dependencies_compiler_type],
+[if test -z "$AMDEP_TRUE" && test -f "$am_depcomp"; then
+  # We make a subdir and do the tests there.  Otherwise we can end up
+  # making bogus files that we don't know about and never remove.  For
+  # instance it was reported that on HP-UX the gcc test will end up
+  # making a dummy file named `D' -- because `-MD' means `put the output
+  # in D'.
+  mkdir conftest.dir
+  # Copy depcomp to subdir because otherwise we won't find it if we're
+  # using a relative directory.
+  cp "$am_depcomp" conftest.dir
+  cd conftest.dir
+  # We will build objects and dependencies in a subdirectory because
+  # it helps to detect inapplicable dependency modes.  For instance
+  # both Tru64's cc and ICC support -MD to output dependencies as a
+  # side effect of compilation, but ICC will put the dependencies in
+  # the current directory while Tru64 will put them in the object
+  # directory.
+  mkdir sub
+
+  am_cv_$1_dependencies_compiler_type=none
+  if test "$am_compiler_list" = ""; then
+     am_compiler_list=`sed -n ['s/^#*\([a-zA-Z0-9]*\))$/\1/p'] < ./depcomp`
+  fi
+  for depmode in $am_compiler_list; do
+    # Setup a source with many dependencies, because some compilers
+    # like to wrap large dependency lists on column 80 (with \), and
+    # we should not choose a depcomp mode which is confused by this.
+    #
+    # We need to recreate these files for each test, as the compiler may
+    # overwrite some of them when testing with obscure command lines.
+    # This happens at least with the AIX C compiler.
+    : > sub/conftest.c
+    for i in 1 2 3 4 5 6; do
+      echo '#include "conftst'$i'.h"' >> sub/conftest.c
+      # Using `: > sub/conftst$i.h' creates only sub/conftst1.h with
+      # Solaris 8's {/usr,}/bin/sh.
+      touch sub/conftst$i.h
+    done
+    echo "${am__include} ${am__quote}sub/conftest.Po${am__quote}" > confmf
+
+    case $depmode in
+    nosideeffect)
+      # after this tag, mechanisms are not by side-effect, so they'll
+      # only be used when explicitly requested
+      if test "x$enable_dependency_tracking" = xyes; then
+	continue
+      else
+	break
+      fi
+      ;;
+    none) break ;;
+    esac
+    # We check with `-c' and `-o' for the sake of the "dashmstdout"
+    # mode.  It turns out that the SunPro C++ compiler does not properly
+    # handle `-M -o', and we need to detect this.
+    if depmode=$depmode \
+       source=sub/conftest.c object=sub/conftest.${OBJEXT-o} \
+       depfile=sub/conftest.Po tmpdepfile=sub/conftest.TPo \
+       $SHELL ./depcomp $depcc -c -o sub/conftest.${OBJEXT-o} sub/conftest.c \
+         >/dev/null 2>conftest.err &&
+       grep sub/conftst6.h sub/conftest.Po > /dev/null 2>&1 &&
+       grep sub/conftest.${OBJEXT-o} sub/conftest.Po > /dev/null 2>&1 &&
+       ${MAKE-make} -s -f confmf > /dev/null 2>&1; then
+      # icc doesn't choke on unknown options, it will just issue warnings
+      # or remarks (even with -Werror).  So we grep stderr for any message
+      # that says an option was ignored or not supported.
+      # When given -MP, icc 7.0 and 7.1 complain thusly:
+      #   icc: Command line warning: ignoring option '-M'; no argument required
+      # The diagnosis changed in icc 8.0:
+      #   icc: Command line remark: option '-MP' not supported
+      if (grep 'ignoring option' conftest.err ||
+          grep 'not supported' conftest.err) >/dev/null 2>&1; then :; else
+        am_cv_$1_dependencies_compiler_type=$depmode
+        break
+      fi
+    fi
+  done
+
+  cd ..
+  rm -rf conftest.dir
+else
+  am_cv_$1_dependencies_compiler_type=none
+fi
+])
+AC_SUBST([$1DEPMODE], [depmode=$am_cv_$1_dependencies_compiler_type])
+AM_CONDITIONAL([am__fastdep$1], [
+  test "x$enable_dependency_tracking" != xno \
+  && test "$am_cv_$1_dependencies_compiler_type" = gcc3])
+])
+
+
+# AM_SET_DEPDIR
+# -------------
+# Choose a directory name for dependency files.
+# This macro is AC_REQUIREd in _AM_DEPENDENCIES
+AC_DEFUN([AM_SET_DEPDIR],
+[AC_REQUIRE([AM_SET_LEADING_DOT])dnl
+AC_SUBST([DEPDIR], ["${am__leading_dot}deps"])dnl
+])
+
+
+# AM_DEP_TRACK
+# ------------
+AC_DEFUN([AM_DEP_TRACK],
+[AC_ARG_ENABLE(dependency-tracking,
+[  --disable-dependency-tracking  speeds up one-time build
+  --enable-dependency-tracking   do not reject slow dependency extractors])
+if test "x$enable_dependency_tracking" != xno; then
+  am_depcomp="$ac_aux_dir/depcomp"
+  AMDEPBACKSLASH='\'
+fi
+AM_CONDITIONAL([AMDEP], [test "x$enable_dependency_tracking" != xno])
+AC_SUBST([AMDEPBACKSLASH])
+])
+
+# Generate code to set up dependency tracking.              -*- Autoconf -*-
+
+# Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
+# Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+#serial 3
+
+# _AM_OUTPUT_DEPENDENCY_COMMANDS
+# ------------------------------
+AC_DEFUN([_AM_OUTPUT_DEPENDENCY_COMMANDS],
+[for mf in $CONFIG_FILES; do
+  # Strip MF so we end up with the name of the file.
+  mf=`echo "$mf" | sed -e 's/:.*$//'`
+  # Check whether this is an Automake generated Makefile or not.
+  # We used to match only the files named `Makefile.in', but
+  # some people rename them; so instead we look at the file content.
+  # Grep'ing the first line is not enough: some people post-process
+  # each Makefile.in and add a new line on top of each file to say so.
+  # So let's grep whole file.
+  if grep '^#.*generated by automake' $mf > /dev/null 2>&1; then
+    dirpart=`AS_DIRNAME("$mf")`
+  else
+    continue
+  fi
+  # Extract the definition of DEPDIR, am__include, and am__quote
+  # from the Makefile without running `make'.
+  DEPDIR=`sed -n 's/^DEPDIR = //p' < "$mf"`
+  test -z "$DEPDIR" && continue
+  am__include=`sed -n 's/^am__include = //p' < "$mf"`
+  test -z "am__include" && continue
+  am__quote=`sed -n 's/^am__quote = //p' < "$mf"`
+  # When using ansi2knr, U may be empty or an underscore; expand it
+  U=`sed -n 's/^U = //p' < "$mf"`
+  # Find all dependency output files, they are included files with
+  # $(DEPDIR) in their names.  We invoke sed twice because it is the
+  # simplest approach to changing $(DEPDIR) to its actual value in the
+  # expansion.
+  for file in `sed -n "
+    s/^$am__include $am__quote\(.*(DEPDIR).*\)$am__quote"'$/\1/p' <"$mf" | \
+       sed -e 's/\$(DEPDIR)/'"$DEPDIR"'/g' -e 's/\$U/'"$U"'/g'`; do
+    # Make sure the directory exists.
+    test -f "$dirpart/$file" && continue
+    fdir=`AS_DIRNAME(["$file"])`
+    AS_MKDIR_P([$dirpart/$fdir])
+    # echo "creating $dirpart/$file"
+    echo '# dummy' > "$dirpart/$file"
+  done
+done
+])# _AM_OUTPUT_DEPENDENCY_COMMANDS
+
+
+# AM_OUTPUT_DEPENDENCY_COMMANDS
+# -----------------------------
+# This macro should only be invoked once -- use via AC_REQUIRE.
+#
+# This code is only required when automatic dependency tracking
+# is enabled.  FIXME.  This creates each `.P' file that we will
+# need in order to bootstrap the dependency handling code.
+AC_DEFUN([AM_OUTPUT_DEPENDENCY_COMMANDS],
+[AC_CONFIG_COMMANDS([depfiles],
+     [test x"$AMDEP_TRUE" != x"" || _AM_OUTPUT_DEPENDENCY_COMMANDS],
+     [AMDEP_TRUE="$AMDEP_TRUE" ac_aux_dir="$ac_aux_dir"])
+])
+
 # Do all the work for Automake.                             -*- Autoconf -*-
 
 # Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
@@ -293,6 +517,58 @@ AC_DEFUN([AM_MAINTAINER_MODE],
 )
 
 AU_DEFUN([jm_MAINTAINER_MODE], [AM_MAINTAINER_MODE])
+
+# Check to see how 'make' treats includes.	            -*- Autoconf -*-
+
+# Copyright (C) 2001, 2002, 2003, 2005  Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# serial 3
+
+# AM_MAKE_INCLUDE()
+# -----------------
+# Check to see how make treats includes.
+AC_DEFUN([AM_MAKE_INCLUDE],
+[am_make=${MAKE-make}
+cat > confinc << 'END'
+am__doit:
+	@echo done
+.PHONY: am__doit
+END
+# If we don't find an include directive, just comment out the code.
+AC_MSG_CHECKING([for style of include used by $am_make])
+am__include="#"
+am__quote=
+_am_result=none
+# First try GNU make style include.
+echo "include confinc" > confmf
+# We grep out `Entering directory' and `Leaving directory'
+# messages which can occur if `w' ends up in MAKEFLAGS.
+# In particular we don't look at `^make:' because GNU make might
+# be invoked under some other name (usually "gmake"), in which
+# case it prints its new name instead of `make'.
+if test "`$am_make -s -f confmf 2> /dev/null | grep -v 'ing directory'`" = "done"; then
+   am__include=include
+   am__quote=
+   _am_result=GNU
+fi
+# Now try BSD make style include.
+if test "$am__include" = "#"; then
+   echo '.include "confinc"' > confmf
+   if test "`$am_make -s -f confmf 2> /dev/null`" = "done"; then
+      am__include=.include
+      am__quote="\""
+      _am_result=BSD
+   fi
+fi
+AC_SUBST([am__include])
+AC_SUBST([am__quote])
+AC_MSG_RESULT([$_am_result])
+rm -f confinc confmf
+])
 
 # Fake the existence of programs that GNU maintainers use.  -*- Autoconf -*-
 
@@ -549,6 +825,7 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
+dnl xorg-macros.m4.  Generated from xorg-macros.m4.in xorgversion.m4 by configure.
 dnl
 dnl Copyright 2005-2006 Sun Microsystems, Inc.  All rights reserved.
 dnl 
@@ -585,27 +862,24 @@ dnl of the copyright holder.
 # your configure.ac with the minimum required version, such as:
 # XORG_MACROS_VERSION(1.1)
 #
-# To force at least a version with this macro defined, also add:
-# m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later before running autoconf/autogen])])
+# To ensure that this macro is defined, also add:
+# m4_ifndef([XORG_MACROS_VERSION],
+#     [m4_fatal([must install xorg-macros 1.1 or later before running autoconf/autogen])])
 #
 #
 # See the "minimum version" comment for each macro you use to see what 
 # version you require.
-AC_DEFUN([XORG_MACROS_VERSION],[
-	[XORG_MACROS_needed_version=$1
-	XORG_MACROS_needed_major=`echo $XORG_MACROS_needed_version | sed 's/\..*$//'`
-	XORG_MACROS_needed_minor=`echo $XORG_MACROS_needed_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
-	AC_MSG_CHECKING([if xorg-macros used to generate configure is at least ${XORG_MACROS_needed_major}.${XORG_MACROS_needed_minor}])
-	[XORG_MACROS_version=1.1.6
-	XORG_MACROS_major=`echo $XORG_MACROS_version | sed 's/\..*$//'`
-	XORG_MACROS_minor=`echo $XORG_MACROS_version | sed -e 's/^[0-9]*\.//' -e 's/\..*$//'`]
-	if test $XORG_MACROS_major -ne $XORG_MACROS_needed_major ; then
-		AC_MSG_ERROR([configure built with incompatible version of xorg-macros.m4 - requires version ${XORG_MACROS_major}.x])
-	fi
-	if test $XORG_MACROS_minor -lt $XORG_MACROS_needed_minor ; then
-		AC_MSG_ERROR([configure built with too old of a version of xorg-macros.m4 - requires version ${XORG_MACROS_major}.${XORG_MACROS_minor}.0 or newer])
-	fi
-	AC_MSG_RESULT([yes, $XORG_MACROS_version])
+m4_defun([XORG_MACROS_VERSION],[
+m4_define([vers_have], [1.3.0])
+m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
+m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
+m4_if(m4_cmp(maj_have, maj_needed), 0,,
+    [m4_fatal([xorg-macros major version ]maj_needed[ is required but ]vers_have[ found])])
+m4_if(m4_version_compare(vers_have, [$1]), -1,
+    [m4_fatal([xorg-macros version $1 or higher is required but ]vers_have[ found])])
+m4_undefine([vers_have])
+m4_undefine([maj_have])
+m4_undefine([maj_needed])
 ]) # XORG_MACROS_VERSION
 
 # XORG_PROG_RAWCPP()
@@ -630,6 +904,10 @@ else
 	if test `${RAWCPP} -undef < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
 		RAWCPPFLAGS=-undef
 		AC_MSG_RESULT([yes])
+	# under Cygwin unix is still defined even with -undef
+	elif test `${RAWCPP} -undef -ansi < conftest.$ac_ext | grep -c 'unix'` -eq 1 ; then
+		RAWCPPFLAGS="-undef -ansi"
+		AC_MSG_RESULT([yes, with -ansi])
 	else
 		AC_MSG_ERROR([${RAWCPP} defines unix with or without -undef.  I don't know what to do.])
 	fi
@@ -742,7 +1020,9 @@ AC_SUBST([ADMIN_MAN_DIR])
 # Whether or not the necessary tools and files are found can be checked
 # with the AM_CONDITIONAL "BUILD_LINUXDOC"
 AC_DEFUN([XORG_CHECK_LINUXDOC],[
-XORG_SGML_PATH=$prefix/share/sgml
+if test x$XORG_SGML_PATH = x ; then
+    XORG_SGML_PATH=$prefix/share/sgml
+fi
 HAVE_DEFS_ENT=
 
 if test x"$cross_compiling" = x"yes" ; then
@@ -798,7 +1078,9 @@ AC_SUBST(MAKE_HTML)
 # indicates whether the necessary tools and files are found and, if set,
 # $(MAKE_XXX) blah.sgml will produce blah.xxx.
 AC_DEFUN([XORG_CHECK_DOCBOOK],[
-XORG_SGML_PATH=$prefix/share/sgml
+if test x$XORG_SGML_PATH = x ; then
+    XORG_SGML_PATH=$prefix/share/sgml
+fi
 HAVE_DEFS_ENT=
 BUILDTXTDOC=no
 BUILDPDFDOC=no
@@ -864,7 +1146,7 @@ AC_SUBST(MAKE_HTML)
 # their AM_CFLAGS (or other appropriate *_CFLAGS) to use them.
 AC_DEFUN([XORG_CHECK_MALLOC_ZERO],[
 AC_ARG_ENABLE(malloc0returnsnull,
-	AC_HELP_STRING([--enable-malloc0returnsnull],
+	AS_HELP_STRING([--enable-malloc0returnsnull],
 		       [malloc(0) returns NULL (default: auto)]),
 	[MALLOC_ZERO_RETURNS_NULL=$enableval],
 	[MALLOC_ZERO_RETURNS_NULL=auto])
@@ -916,7 +1198,7 @@ AC_SUBST([XTMALLOC_ZERO_CFLAGS])
 AC_DEFUN([XORG_WITH_LINT],[
 
 # Allow checking code with lint, sparse, etc.
-AC_ARG_WITH(lint, [AC_HELP_STRING([--with-lint],
+AC_ARG_WITH(lint, [AS_HELP_STRING([--with-lint],
 		[Use a lint-style source code checker (default: disabled)])],
 		[use_lint=$withval], [use_lint=no])
 if test "x$use_lint" = "xyes" ; then
@@ -957,7 +1239,7 @@ AM_CONDITIONAL(LINT, [test x$LINT != xno])
 AC_DEFUN([XORG_LINT_LIBRARY],[
 AC_REQUIRE([XORG_WITH_LINT])
 # Build lint "library" for more indepth checks of programs calling this library
-AC_ARG_ENABLE(lint-library, [AC_HELP_STRING([--enable-lint-library],
+AC_ARG_ENABLE(lint-library, [AS_HELP_STRING([--enable-lint-library],
 	[Create lint library (default: disabled)])],
 	[make_lint_lib=$enableval], [make_lint_lib=no])
 if test "x$make_lint_lib" != "xno" ; then
@@ -975,6 +1257,75 @@ AM_CONDITIONAL(MAKE_LINT_LIB, [test x$make_lint_lib != xno])
 
 ]) # XORG_LINT_LIBRARY
 
+# XORG_CWARNFLAGS
+# ---------------
+# Minimum version: 1.2.0
+#
+# Defines CWARNFLAGS to enable C compiler warnings.
+#
+AC_DEFUN([XORG_CWARNFLAGS], [
+AC_REQUIRE([AC_PROG_CC])
+if  test "x$GCC" = xyes ; then
+    CWARNFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes \
+-Wmissing-declarations -Wnested-externs -fno-strict-aliasing \
+-Wbad-function-cast"
+    case `$CC -dumpversion` in
+    3.4.* | 4.*)
+	CWARNFLAGS="$CWARNFLAGS -Wold-style-definition -Wdeclaration-after-statement"
+	;;
+    esac
+else
+    AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
+    if test "x$SUNCC" = "xyes"; then
+	CWARNFLAGS="-v"
+    fi
+fi
+AC_SUBST(CWARNFLAGS)
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+]) # XORG_CWARNFLAGS
+
+# XORG_STRICT_OPTION
+# -----------------------
+# Minimum version: 1.3.0
+#
+# Add configure option to enable strict compilation
+AC_DEFUN([XORG_STRICT_OPTION], [
+AC_REQUIRE([AC_PROG_CC])
+AC_REQUIRE([AC_PROG_CC_C99])
+AC_REQUIRE([XORG_CWARNFLAGS])
+
+AC_ARG_ENABLE(strict-compilation,
+			  AS_HELP_STRING([--enable-strict-compilation],
+			  [Enable all warnings from compiler and make them errors (default: disabled)]),
+			  [STRICT_COMPILE=$enableval], [STRICT_COMPILE=no])
+if test "x$STRICT_COMPILE" = "xyes"; then
+	AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
+	AC_CHECK_DECL([__INTEL_COMPILER], [INTELCC="yes"], [INTELCC="no"])
+	if test "x$GCC" = xyes ; then
+		STRICT_CFLAGS="-pedantic -Werror"
+	elif test "x$SUNCC" = "xyes"; then
+		STRICT_CFLAGS="-errwarn"
+    elif test "x$INTELCC" = "xyes"; then
+		STRICT_CFLAGS="-Werror"
+	fi
+fi
+CWARNFLAGS="$CWARNFLAGS $STRICT_CFLAGS"
+AC_SUBST([CWARNFLAGS])
+]) # XORG_STRICT_OPTION
+
+# XORG_DEFAULT_OPTIONS
+# --------------------
+# Minimum version: 1.3.0
+#
+# Defines default options for X.Org modules.
+#
+AC_DEFUN([XORG_DEFAULT_OPTIONS], [
+XORG_CWARNFLAGS
+XORG_STRICT_OPTION
+XORG_RELEASE_VERSION
+XORG_CHANGELOG
+XORG_MANPAGE_SECTIONS
+]) # XORG_DEFAULT_OPTIONS
 dnl Copyright 2005 Red Hat, Inc
 dnl
 dnl Permission to use, copy, modify, distribute, and sell this software and its
@@ -1009,7 +1360,7 @@ dnl
  
 AC_DEFUN([XORG_RELEASE_VERSION],[
 	AC_ARG_WITH(release-version,
-			AC_HELP_STRING([--with-release-version=STRING],
+			AS_HELP_STRING([--with-release-version=STRING],
 				[Use release version string in package name]),
 			[RELEASE_VERSION="$withval"],
 			[RELEASE_VERSION=""])
@@ -1036,4 +1387,21 @@ AC_DEFUN([XORG_RELEASE_VERSION],[
 		[$PVP],
 		[Patch version of this package])
 ])
+
+# XORG_CHANGELOG()
+# ----------------
+# Minimum version: 1.2.0
+#
+# Defines the variable CHANGELOG_CMD as the command to generate
+# ChangeLog from git.
+#
+# Arrange that distcleancheck ignores ChangeLog left over by distclean.
+#
+AC_DEFUN([XORG_CHANGELOG], [
+CHANGELOG_CMD="(GIT_DIR=\$(top_srcdir)/.git git log > .changelog.tmp && \
+mv .changelog.tmp ChangeLog) || (rm -f .changelog.tmp; touch ChangeLog; \
+echo 'git directory not found: installing possibly empty changelog.' >&2)"
+AC_SUBST([CHANGELOG_CMD])
+AC_SUBST([distcleancheck_listfiles], ['find . -type f ! -name ChangeLog -print'])
+]) # XORG_CHANGELOG
 
