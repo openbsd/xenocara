@@ -53,7 +53,7 @@ static int _XcmsGetProperty(Display *pDpy, Window w, Atom property,
 			    unsigned long *pNBytes, char **pValue);
 
 
-char *ProgramName;
+static char *ProgramName;
 
 static void
 Syntax (void)

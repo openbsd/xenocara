@@ -1479,7 +1479,7 @@ LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
     }
 
     token1 = strtok((char*)NULL, DATA_DELIMS);
-    if ((strcmp(token1, TXT_FORMAT_VERSION) != 0) &&
+    if ( token1 && (strcmp(token1, TXT_FORMAT_VERSION) != 0) &&
 	    (strcmp(token1, "0.3") != 0)) {
 	fprintf(stderr,
     "Screen data format version mismatch in file %s-- expected %s, found %s\n",
