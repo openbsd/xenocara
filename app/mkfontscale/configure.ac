@@ -21,22 +21,37 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(mkfontscale, [1.0.5], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], mkfontscale)
+AC_INIT(mkfontscale, [1.0.7], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], mkfontscale)
 AM_INIT_AUTOMAKE([dist-bzip2 foreign])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
+# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+
 AC_PROG_CC
 AC_PROG_INSTALL
+
+XORG_DEFAULT_OPTIONS
 
 AC_CHECK_LIB(z, gzopen, [], 
 	[AC_MSG_ERROR([zlib is required, but was not found.])])
 
-			
+AC_ARG_WITH(bzip2, 
+	AS_HELP_STRING([--with-bzip2], 
+			[Support bzip2 compressed bitmap fonts]),
+	[], [with_bzip2=no])
+if test "x$with_bzip2" = xyes; then
+	AC_CHECK_LIB(bz2, BZ2_bzopen, [],
+		AC_MSG_ERROR([*** libbz2 is required for bzip2 support]))
+	AC_DEFINE(X_BZIP2_FONT_COMPRESSION,1,[Support bzip2 for bitmap fonts])
+fi
+
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(MKFONTSCALE, fontenc freetype2)
-
 AC_SUBST(MKFONTSCALE_CFLAGS)
 AC_SUBST(MKFONTSCALE_LIBS)
 
@@ -45,17 +60,5 @@ AC_SUBST(X11_CFLAGS)
 
 dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
-
-if test $host_cpu = sh; then
-	case $host_os in
-		openbsd*)
-		CFLAGS="-O0 -pipe"
-		;;
-	esac
-fi
 
 AC_OUTPUT([Makefile])
