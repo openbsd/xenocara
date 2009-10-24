@@ -34,7 +34,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xproto.h>
 #include <X11/Xmu/Error.h>
 
-char *ProgramName;
+static char *ProgramName;
 
 static void do_name ( Display *dpy, char *format, char *name );
 static int parse_range ( char *range, long *lowp, long *highp );
