@@ -79,7 +79,7 @@ int add_to_list(list_ptr lp, void *item)
 	Creates a new list and sets its pointers to NULL.  
 	Returns a pointer to the new list.
     -------------------------------------------------------------------- **/
-list_ptr new_list ()
+list_ptr new_list (void)
 {
     list_ptr lp;
 

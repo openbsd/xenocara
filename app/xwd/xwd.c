@@ -91,14 +91,14 @@ typedef unsigned long Pixel;
 
 /* Setable Options */
 
-int format = ZPixmap;
-Bool nobdrs = False;
-Bool on_root = False;
-Bool standard_out = True;
-Bool debug = False;
-Bool silent = False;
-Bool use_installed = False;
-long add_pixel_value = 0;
+static int format = ZPixmap;
+static Bool nobdrs = False;
+static Bool on_root = False;
+static Bool standard_out = True;
+static Bool debug = False;
+static Bool silent = False;
+static Bool use_installed = False;
+static long add_pixel_value = 0;
 
 
 extern int main(int, char **);
@@ -112,8 +112,7 @@ static int Get24bitDirectColors(XColor **);
 static int ReadColors(Visual *, Colormap, XColor **);
 
 
-static long parse_long (s)
-    char *s;
+static long parse_long (char *s)
 {
     char *fmt = "%lu";
     long retval = 0L;
@@ -129,9 +128,7 @@ static long parse_long (s)
 }
 
 int
-main(argc, argv)
-    int argc;
-    char **argv;
+main(int argc, char **argv)
 {
     register int i;
     Window target_win;
@@ -215,8 +212,7 @@ main(argc, argv)
 }
 
 static int
-Get24bitDirectColors(colors)
-XColor **colors ;
+Get24bitDirectColors(XColor **colors)
 {
     int i , ncolors = 256 ;
     XColor *tcol ;
@@ -239,9 +235,7 @@ XColor **colors ;
  */
 
 void
-Window_Dump(window, out)
-     Window window;
-     FILE *out;
+Window_Dump(Window window, FILE *out)
 {
     unsigned long swaptest = 1;
     XColor *colors;
@@ -515,7 +509,7 @@ Window_Dump(window, out)
  * Report the syntax for calling xwd.
  */
 void
-usage()
+usage(void)
 {
     fprintf (stderr,
 "usage: %s [-display host:dpy] [-debug] [-help] %s [-nobdrs] [-out <file>]",
@@ -529,8 +523,7 @@ usage()
  * Determine the pixmap size.
  */
 
-int Image_Size(image)
-     XImage *image;
+int Image_Size(XImage *image)
 {
     if (image->format != ZPixmap)
       return(image->bytes_per_line * image->height * image->depth);
@@ -541,10 +534,7 @@ int Image_Size(image)
 #define lowbit(x) ((x) & (~(x) + 1))
 
 static int
-ReadColors(vis,cmap,colors)
-Visual *vis ;
-Colormap cmap ;
-XColor **colors ;
+ReadColors(Visual *vis, Colormap cmap, XColor **colors)
 {
     int i,ncolors ;
 
@@ -589,9 +579,7 @@ XColor **colors ;
 /*
  * Get the XColors of all pixels in image - returns # of colors
  */
-int Get_XColors(win_info, colors)
-     XWindowAttributes *win_info;
-     XColor **colors;
+int Get_XColors(XWindowAttributes *win_info, XColor **colors)
 {
     int i, ncolors;
     Colormap cmap = win_info->colormap;
@@ -606,9 +594,7 @@ int Get_XColors(win_info, colors)
 }
 
 void
-_swapshort (bp, n)
-    register char *bp;
-    register unsigned n;
+_swapshort (register char *bp, register unsigned n)
 {
     register char c;
     register char *ep = bp + n;
@@ -622,9 +608,7 @@ _swapshort (bp, n)
 }
 
 void
-_swaplong (bp, n)
-    register char *bp;
-    register unsigned n;
+_swaplong (register char *bp, register unsigned n)
 {
     register char c;
     register char *ep = bp + n;
