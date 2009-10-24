@@ -25,12 +25,10 @@
 #include <ctype.h>
 #include <string.h>
 
-typedef int (*prog)(
-#if NeedFunctionPrototypes
-		    Display* display, int argc, char *argv[],
-		    char *prog_name, char *prog_desc
-#endif
-);
+int xi_opcode;
+
+typedef int (*prog)(Display* display, int argc, char *argv[],
+		    char *prog_name, char *prog_desc);
 
 typedef struct
 {
@@ -70,7 +68,7 @@ static entry drivers[] =
      set_mode
     },
     {"list",
-     "[--loop || --short || <device name>...]",
+     "[--short || --long] [<device name>...]",
      list
     },
     {"query-state",
@@ -81,17 +79,13 @@ static entry drivers[] =
      "[-proximity] <device name>",
      test
     },
-    {"version",
-     "",
-     version
-    },
 #if HAVE_XI2
     { "create-master",
-      "<id> [sendCore (dflt:1)] [enable (dflt:1)]",
+      "<id> [<sendCore (dflt:1)>] [<enable (dflt:1)>]",
       create_master
     },
     { "remove-master",
-      "<id> [returnMode (dflt:Floating)] [returnPointer] [returnKeyboard]",
+      "<id> [Floating|AttachToMaster (dflt:Floating)] [<returnPointer>] [<returnKeyboard>]",
       remove_master
     },
     { "reattach",
@@ -105,6 +99,10 @@ static entry drivers[] =
     { "set-cp",
       "<window> <device>",
       set_clientpointer
+    },
+    { "test-xi2",
+      "<device>",
+      test_xi2,
     },
 #endif
     { "list-props",
@@ -131,29 +129,62 @@ static entry drivers[] =
       "<device> <property>",
       delete_prop
     },
+    { "set-prop",
+      "<device> [--type=atom|float|int] [--format=8|16|32] <property> <val> [<val> ...]",
+      set_prop
+    },
     {NULL, NULL, NULL
     }
 };
 
-static Bool
-is_xinput_present(Display	*display)
+static const char version_id[] = VERSION;
+
+int
+print_version()
 {
     XExtensionVersion	*version;
-    Bool		present;
+    Display *display;
 
-#if HAVE_XI2
-    version = XQueryInputVersion(display, XI_2_Major, XI_2_Minor);
-#else
+    printf("xinput version %s\n", version_id);
+
+    display = XOpenDisplay(NULL);
+
+    printf("XI version on server: ");
+
+    if (display == NULL)
+        printf("Failed to open display.\n");
+    else {
+        version = XGetExtensionVersion(display, INAME);
+        if (!version || (version == (XExtensionVersion*) NoSuchExtension))
+            printf(" Extension not supported.\n");
+        else {
+            printf("%d.%d\n", version->major_version,
+                    version->minor_version);
+            XFree(version);
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int
+xinput_version(Display	*display)
+{
+    XExtensionVersion	*version;
+    static int vers = -1;
+
+    if (vers != -1)
+        return vers;
+
     version = XGetExtensionVersion(display, INAME);
-#endif
 
     if (version && (version != (XExtensionVersion*) NoSuchExtension)) {
-	present = version->present;
+	vers = version->major_version;
 	XFree(version);
-	return present;
-    } else {
-	return False;
     }
+
+    return vers;
 }
 
 XDeviceInfo*
@@ -200,6 +231,41 @@ find_device_info(Display	*display,
     return found;
 }
 
+#ifdef HAVE_XI2
+XIDeviceInfo*
+xi2_find_device_info(Display *display, char *name)
+{
+    XIDeviceInfo *info;
+    int ndevices;
+    Bool is_id = True;
+    int i, id = -1;
+
+    for(i = 0; i < strlen(name); i++) {
+	if (!isdigit(name[i])) {
+	    is_id = False;
+	    break;
+	}
+    }
+
+    if (is_id) {
+	id = atoi(name);
+    }
+
+    info = XIQueryDevice(display, XIAllDevices, &ndevices);
+    for(i = 0; i < ndevices; i++)
+    {
+        if ((is_id && info[i].deviceid == id) ||
+                (!is_id && strcmp(info[i].name, name) == 0))
+        {
+            return &info[i];
+        }
+    }
+
+    XIFreeDeviceInfo(info);
+    return NULL;
+}
+#endif
+
 static void
 usage(void)
 {
@@ -220,10 +286,18 @@ main(int argc, char * argv[])
     Display	*display;
     entry	*driver = drivers;
     char        *func;
+    int event, error;
 
     if (argc < 2) {
 	usage();
 	return EXIT_FAILURE;
+    }
+
+    func = argv[1];
+    while((*func) == '-') func++;
+
+    if (strcmp("version", func) == 0) {
+        return print_version(argv[0]);
     }
 
     display = XOpenDisplay(NULL);
@@ -233,10 +307,12 @@ main(int argc, char * argv[])
 	return EXIT_FAILURE;
     }
 
-    func = argv[1];
-    while((*func) == '-') func++;
+    if (!XQueryExtension(display, "XInputExtension", &xi_opcode, &event, &error)) {
+        printf("X Input extension not available.\n");
+        return EXIT_FAILURE;
+    }
 
-    if (!is_xinput_present(display)) {
+    if (!xinput_version(display)) {
 	fprintf(stderr, "%s extension not available\n", INAME);
 	return EXIT_FAILURE;
     }

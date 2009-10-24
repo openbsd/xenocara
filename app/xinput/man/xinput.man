@@ -1,89 +1,104 @@
-.\" $Id: xinput.man,v 1.3 2009/05/18 20:50:16 matthieu Exp $
-.TH xinput 1 "$Date: 2009/05/18 20:50:16 $" "Frederic Lepied"
+.TH xinput 1 __xorgversion__
 
 .SH NAME
-xinput - utility to configure and test XInput devices
+xinput - utility to configure and test X input devices
 
 .SH SYNOPSIS
-.B xinput
-[version] [list [\fIdevice_name\fP]] [set-pointer \fIdevice_name\fP]
-[get-feedbacks \fIdevice_name\fP]
-[set-mode \fIdevice_name\fP \fIABSOLUTE|RELATIVE\fP]
-[set-ptr-feedback \fIdevice_name\fP \fIthreshold\fP \fInum\fP \fIdenom\fP]
-[set-integer-feedback \fIdevice_name\fP \fIindex\fP \fIvalue\fP]
-[set-button-map \fIdevice_name\fP \fImap button 1\fP [\fImap button 2\fP [\fI...\fP]]]
-[query-state \fIdevice_name\fP]
-[test [-proximity] \fIdevice_name\fP]
+.B xinput [OPTIONS] [DEVICE]
 
 .SH DESCRIPTION
+xinput is a utility to list available input devices, query information about
+a device and change input device settings.
+.SH OPTIONS
 .TP 8
-.B xinput version
-test if the XInput extension is available and return the version number
-of the program.
+.B --version
+Test if the X Input extension is available and return the version number
+of the program and the version supported by the server. This option does not
+require a device name.
 .PP
 .TP 8
-.B xinput list [\fIdevice_name\fP]
-If no argument is given list all the input devices showing all their
-features. If an argument is given, show all the feature of \fIdevice_name\fP.
-Uses XListInputDevices(3).
+.B --list [--short || --long] [\fIdevice\fP]
+If no argument is given list all the input devices. If an argument is given,
+show all the features of \fIdevice\fP. Uses XListInputDevices(3).
+If --long is provided, the output includes detailed information about the
+capabilities of each devices. Otherwise, or if --short is provided, only the
+device names and some minimal information is listed.
 .PP
 .TP 8
-.B xinput get-feedbacks \fIdevice_name\fP
-Display the feedbacks of \fIdevice_name\fP. Uses XGetFeedbackControl(3).
+.B --get-feedbacks \fIdevice\fP
+Display the feedbacks of \fIdevice\fP.
 .PP
 .TP 8
-.B xinput set-pointer \fIdevice_name\fP
-Switch \fIdevice_name\fP in core pointer. Uses XChangePointerDevice(3).
+.B --set-pointer \fIdevice\fP
+Switch \fIdevice\fP in core pointer.
+This option does nothing on X servers 1.5 and later.
 .PP
 .TP 8
-.B xinput set-mode \fIdevice_name\fP \fIABSOLUTE|RELATIVE\fP
-Change the mode of \fIdevice_name\fP. Uses XSetDeviceMode(3).
+.B --set-mode \fIdevice\fP \fIABSOLUTE|RELATIVE\fP
+Change the mode of \fIdevice\fP.
 .PP
 .TP 8
-.B xinput set-ptr-feedback \fIdevice_name\fP \fIthreshold\fP \fInum\fP \fIdenom\fP
-Change the acceleration of \fIdevice_name\fP. Uses XChangeFeedbackControl(3).
+.B --set-ptr-feedback \fIdevice\fP \fIthreshold\fP \fInum\fP \fIdenom\fP
+Change the acceleration of \fIdevice\fP.
 .PP
 .TP 8
-.B xinput set-integer-feedback \fIdevice_name\fP \fIindex\fP \fIvalue\fP
-Change the value of an integer feedback of \fIdevice_name\fP. Uses XChangeFeedbackControl(3).
+.B --set-integer-feedback \fIdevice\fP \fIindex\fP \fIvalue\fP
+Change the value of an integer feedback of \fIdevice\fP.
 .PP
 .TP 8
-.B xinput set-button-map \fIdevice_name\fP \fImap button 1\fP [\fImap button 2\fP [\fI...\fP]]
-Change the button mapping of \fIdevice_name\fP. Uses XSetDeviceButtonMapping(3).
+.B --set-button-map \fIdevice\fP \fImap_button_1\fP [\fImap_button_2\fP [\fI...\fP]]
+Change the button mapping of \fIdevice\fP. The buttons are specified in
+physical order (starting with button 1) and are mapped to the logical button
+provided. 0 disables a button. The default button mapping for a device is 1
+2 3 4 5 6 etc.
 .PP
 .TP 8
-.B xinput query-state \fIdevice_name\fP
-Query the device state. Uses XQueryDeviceState(3).
+.B --query-state \fIdevice\fP
+Query the device state.
 .PP
 .TP 8
-.B xinput list-props \fIdevice_name\fP [\fIdevice_name\fP...]
+.B --list-props \fIdevice\fP [\fIdevice\fP [\fI...\fP]]
 Lists properties that can be set for the given device(s).
 .PP
 .TP 8
-.B xinput set-int-prop \fIdevice_name\fP \fIproperty\fP \fIformat\fP \fIvalue\fP
+.B --set-int-prop \fIdevice\fP \fIproperty\fP \fIformat\fP \fIvalue\fP
 Sets an integer property for the device.  Appropriate values for \fIformat\fP
-are 8, 16, or 32, depending on the property.
+are 8, 16, or 32, depending on the property. Deprecated, use
+.B --set-prop
+instead.
 .PP
 .TP 8
-.B xinput set-float-prop \fIdevice_name\fP \fIproperty\fP \fIvalue\fP
-Sets a float property for the device.
+.B --set-float-prop \fIdevice\fP \fIproperty\fP \fIvalue\fP
+Sets a float property for the device. Deprecated, use
+.B --set-prop
+instead.
 .PP
 .TP 8
-.B xinput watch-props \fIdevice_name\fP
+.B --set\-prop [\-\-type=\fIatom|float|int\fP] [\-\-format=\fI8|16|32\fP] \fIdevice\fP \fIproperty\fP \fIvalue\fP [...]
+Set the property to the given value(s).  If not specified, the format and type
+of the property are left as-is.  The arguments are interpreted according to the
+property type.
+.PP
+.TP 8
+.B --watch-props \fIdevice\fP
 Prints to standard out when property changes occur.
 .PP
 .TP 8
-.B xinput delete-prop \fIdevice_name\fP \fIproperty\fP
+.B --delete-prop \fIdevice\fP \fIproperty\fP
 Delete the property from the device.
 .PP
-.PP
 .TP 8
-.B xinput test [-proximity] \fIdevice_name\fP
-Register all extended events from \fIdevice_name\fP and enter an endless
+.B --test [-proximity] \fIdevice\fP
+Register all extended events from \fIdevice\fP and enter an endless
 loop displaying events received. If the -proximity is given, ProximityIn
 and ProximityOut are registered.
 .PP
-\fIdevice_name\fP can be the device name as a string or the XID of the
+.TP 8
+.B --test_xi2
+Register for a number of XI2 events and display them. This option does not
+take a device argument.
+.PP
+\fIdevice\fP can be the device name as a string or the XID of the
 device.
 .PP
 \fIproperty\fP can be the property as a string or the Atom value.
@@ -94,11 +109,13 @@ Copyright 1996,1997, Frederic Lepied.
 .PP
 Copyright 2008, Philip Langdale.
 
-.SH AUTHOR
+.SH AUTHORS
 
 .nf
 Philip Langdale, <philipl@alumni.utexas.net>
 Frederic Lepied, France <Frederic.Lepied@sugix.frmug.org>
+Peter Hutterer <peter.hutterer@who-t.net>
+Julien Cristau <jcristau@debian.org>
+Thomas Jaeger <ThJaeger@gmail.com>
+and more.
 .fi
-
-Patches, bug reports, and suggestions are welcome.

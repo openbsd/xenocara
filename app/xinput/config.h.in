@@ -27,7 +27,7 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* XInput Version 2 Enabled */
+/* XI2 available */
 #undef HAVE_XI2
 
 /* Name of package */

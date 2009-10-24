@@ -40,7 +40,7 @@
 int
 create_master(Display* dpy, int argc, char** argv, char* name, char *desc)
 {
-    XCreateMasterInfo c;
+    XIAddMasterInfo c;
 
     if (argc == 0)
     {
@@ -48,12 +48,12 @@ create_master(Display* dpy, int argc, char** argv, char* name, char *desc)
         return EXIT_FAILURE;
     }
 
-    c.type = CH_CreateMasterDevice;
+    c.type = XIAddMaster;
     c.name = argv[0];
-    c.sendCore = (argc >= 2) ? atoi(argv[1]) : 1;
+    c.send_core = (argc >= 2) ? atoi(argv[1]) : 1;
     c.enable = (argc >= 3) ? atoi(argv[2]) : 1;
 
-    return XChangeDeviceHierarchy(dpy, (XAnyHierarchyChangeInfo*)&c, 1);
+    return XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&c, 1);
 }
 
 /**
@@ -64,9 +64,8 @@ create_master(Display* dpy, int argc, char** argv, char* name, char *desc)
 int
 remove_master(Display* dpy, int argc, char** argv, char *name, char *desc)
 {
-    XDeviceInfo *info;
-    XRemoveMasterInfo r;
-    XDevice* master = NULL, *ptr = NULL, *keybd = NULL;
+    XIRemoveMasterInfo r;
+    XIDeviceInfo *info;
     int ret;
 
     if (argc == 0)
@@ -75,45 +74,67 @@ remove_master(Display* dpy, int argc, char** argv, char *name, char *desc)
         return EXIT_FAILURE;
     }
 
-    info = find_device_info(dpy, argv[0], False);
+    info = xi2_find_device_info(dpy, argv[0]);
 
     if (!info) {
 	fprintf(stderr, "unable to find device %s\n", argv[0]);
 	return EXIT_FAILURE;
     }
 
-    master = XOpenDevice(dpy, info->id);
-    if (!master)
-        Error(BadValue, "Unable to open device %s.\n", argv[0]);
-
-    r.type = CH_RemoveMasterDevice;
-    r.device = master;
+    r.type = XIRemoveMaster;
+    r.deviceid = info->deviceid;
     if (argc >= 2)
     {
         if (!strcmp(argv[1], "Floating"))
-            r.returnMode = Floating;
+            r.return_mode = XIFloating;
         else if (!strcmp(argv[1], "AttachToMaster"))
-            r.returnMode = AttachToMaster;
+            r.return_mode = XIAttachToMaster;
         else
-            Error(BadValue, "Invalid returnMode.\n");
+            Error(BadValue, "Invalid return_mode.\n");
     } else
-        r.returnMode = Floating;
+        r.return_mode = XIFloating;
 
-    if (r.returnMode == AttachToMaster)
+    if (r.return_mode == XIAttachToMaster)
     {
-        ptr = XOpenDevice(dpy, atoi(argv[2]));
-        keybd = XOpenDevice(dpy, atoi(argv[3]));
-        if (!ptr || !keybd)
-            Error(BadValue, "Invalid fallback master.\n");
-        r.returnPointer = ptr;
-        r.returnKeyboard = keybd;
+        r.return_pointer = 0;
+        if (argc >= 3) {
+            info = xi2_find_device_info(dpy, argv[2]);
+            if (!info) {
+                fprintf(stderr, "unable to find device %s\n", argv[2]);
+                return EXIT_FAILURE;
+            }
+
+            r.return_pointer = info->deviceid;
+        }
+
+        r.return_keyboard = 0;
+        if (argc >= 4) {
+            info = xi2_find_device_info(dpy, argv[3]);
+            if (!info) {
+                fprintf(stderr, "unable to find device %s\n", argv[3]);
+                return EXIT_FAILURE;
+            }
+
+            r.return_keyboard = info->deviceid;
+        }
+
+        if (!r.return_pointer || !r.return_keyboard) {
+            int i, ndevices;
+            info = XIQueryDevice(dpy, XIAllMasterDevices, &ndevices);
+            for(i = 0; i < ndevices; i++) {
+                if (info[i].use == XIMasterPointer && !r.return_pointer)
+                    r.return_pointer = info[i].deviceid;
+                if (info[i].use == XIMasterKeyboard && !r.return_keyboard)
+                    r.return_keyboard = info[i].deviceid;
+                if (r.return_pointer && r.return_keyboard)
+                    break;
+            }
+
+            XIFreeDeviceInfo(info);
+        }
     }
 
-    ret = XChangeDeviceHierarchy(dpy, (XAnyHierarchyChangeInfo*)&r, 1);
-    if (ptr)
-        XCloseDevice(dpy, ptr);
-    if (keybd)
-        XCloseDevice(dpy, keybd);
+    ret = XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&r, 1);
     return ret;
 }
 
@@ -123,9 +144,8 @@ remove_master(Display* dpy, int argc, char** argv, char *name, char *desc)
 int
 change_attachment(Display* dpy, int argc, char** argv, char *name, char* desc)
 {
-    XDeviceInfo *info_sd, *info_md;
-    XChangeAttachmentInfo c;
-    XDevice *slave, *master;
+    XIDeviceInfo *sd_info, *md_info;
+    XIAttachSlaveInfo c;
     int ret;
 
     if (argc < 2)
@@ -134,36 +154,24 @@ change_attachment(Display* dpy, int argc, char** argv, char *name, char* desc)
         return EXIT_FAILURE;
     }
 
-    info_sd = find_device_info(dpy, argv[0], True);
-    info_md = find_device_info(dpy, argv[1], False);
+    sd_info = xi2_find_device_info(dpy, argv[0]);
+    md_info= xi2_find_device_info(dpy, argv[1]);
 
-    if (!info_sd) {
+    if (!sd_info) {
 	fprintf(stderr, "unable to find device %s\n", argv[0]);
 	return EXIT_FAILURE;
     }
 
-    if (!info_md) {
+    if (!md_info) {
 	fprintf(stderr, "unable to find device %s\n", argv[1]);
 	return EXIT_FAILURE;
     }
 
-    slave = XOpenDevice(dpy, info_sd->id);
-    master = XOpenDevice(dpy, info_md->id);
+    c.type = XIAttachSlave;
+    c.deviceid = sd_info->deviceid;
+    c.new_master = md_info->deviceid;
 
-    if (!slave)
-        Error(BadValue, "Invalid slave device given %d\n", atoi(argv[0]));
-
-    if (!master)
-        Error(BadValue, "Invalid master device given %d\n", atoi(argv[1]));
-
-    c.type = CH_ChangeAttachment;
-    c.changeMode = AttachToMaster;
-    c.device = slave;
-    c.newMaster = master;
-
-    ret = XChangeDeviceHierarchy(dpy, (XAnyHierarchyChangeInfo*)&c, 1);
-    XCloseDevice(dpy, slave);
-    XCloseDevice(dpy, master);
+    ret = XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&c, 1);
     return ret;
 }
 
@@ -173,9 +181,8 @@ change_attachment(Display* dpy, int argc, char** argv, char *name, char* desc)
 int
 float_device(Display* dpy, int argc, char** argv, char* name, char* desc)
 {
-    XDeviceInfo *info;
-    XChangeAttachmentInfo c;
-    XDevice *slave;
+    XIDeviceInfo *info;
+    XIDetachSlaveInfo c;
     int ret;
 
     if (argc < 1)
@@ -184,24 +191,17 @@ float_device(Display* dpy, int argc, char** argv, char* name, char* desc)
         return EXIT_FAILURE;
     }
 
-    info = find_device_info(dpy, argv[0], True);
+    info = xi2_find_device_info(dpy, argv[0]);
 
     if (!info) {
 	fprintf(stderr, "unable to find device %s\n", argv[0]);
 	return EXIT_FAILURE;
     }
 
-    slave = XOpenDevice(dpy, info->id);
+    c.type = XIDetachSlave;
+    c.deviceid = info->deviceid;
 
-    if (!slave)
-        return BadValue;
-
-    c.type = CH_ChangeAttachment;
-    c.changeMode = Floating;
-    c.device = slave;
-
-    ret = XChangeDeviceHierarchy(dpy, (XAnyHierarchyChangeInfo*)&c, 1);
-    XCloseDevice(dpy, slave);
+    ret = XIChangeHierarchy(dpy, (XIAnyHierarchyChangeInfo*)&c, 1);
     return ret;
 }
 

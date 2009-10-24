@@ -26,8 +26,8 @@ xinput_LDADD = $(XINPUT_LIBS)
 
 
 if HAVE_XI2
-    xinput2_files = hierarchy.c setcp.c
-endif # HAVE_XI2
+xinput2_files = hierarchy.c setcp.c test_xi2.c
+endif
 
 xinput_SOURCES = \
     buttonmap.c \
@@ -39,7 +39,6 @@ xinput_SOURCES = \
     state.c \
     property.c \
     test.c \
-    version.c \
     xinput.c \
     xinput.h \
     $(xinput2_files)

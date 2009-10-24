@@ -27,6 +27,9 @@
 
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput.h>
+#ifdef HAVE_XI2
+#include <X11/extensions/XInput2.h>
+#endif
 #include <X11/Xutil.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,255 +41,41 @@
 #define EXIT_FAILURE 0
 #endif
 
-XDeviceInfo*
-find_device_info(
-#if NeedFunctionPrototypes
-		 Display	*display,
-		 char		*name,
-		 Bool		only_extended
+extern int xi_opcode; /* xinput extension op code */
+XDeviceInfo* find_device_info( Display *display, char *name, Bool only_extended);
+#if HAVE_XI2
+XIDeviceInfo* xi2_find_device_info(Display *display, char *name);
+int xinput_version(Display* display);
 #endif
-		 );
-int
-get_feedbacks(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
 
-int
-set_ptr_feedback(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
+int get_feedbacks( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_ptr_feedback( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int get_button_map( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_button_map( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_pointer( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 
-int
-get_button_map(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
+int set_mode( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int list( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int test( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int version( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_integer_feedback( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int query_state( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 
-int
-set_button_map(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
+/* X Input 1.5 */
+int list_props( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_int_prop( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_float_prop( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_atom_prop( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int watch_props( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int delete_prop( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_prop( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 
-int
-set_pointer(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-set_mode(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-list(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-test(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-version(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-set_integer_feedback(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-query_state(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-create_master(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-remove_master(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-change_attachment(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-float_device(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-set_clientpointer(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-list_props(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-
-int
-set_int_prop(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-set_float_prop(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-set_atom_prop(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-watch_props(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
-
-int
-delete_prop(
-#if NeedFunctionPrototypes
-		 Display*	display,
-		 int		argc,
-		 char		*argv[],
-		 char		*prog_name,
-		 char		*prog_desc
-#endif
-);
+/* X Input 2.0 */
+int create_master( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int remove_master( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int change_attachment( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int float_device( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int set_clientpointer( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int test_xi2( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 
 /* end of xinput.h */

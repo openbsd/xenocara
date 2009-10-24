@@ -71,14 +71,14 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__xinput_SOURCES_DIST = buttonmap.c feedback.c list.c setint.c \
-	setmode.c setptr.c state.c property.c test.c version.c \
-	xinput.c xinput.h hierarchy.c setcp.c
-@HAVE_XI2_TRUE@am__objects_1 = hierarchy.$(OBJEXT) setcp.$(OBJEXT)
+	setmode.c setptr.c state.c property.c test.c xinput.c xinput.h \
+	hierarchy.c setcp.c test_xi2.c
+@HAVE_XI2_TRUE@am__objects_1 = hierarchy.$(OBJEXT) setcp.$(OBJEXT) \
+@HAVE_XI2_TRUE@	test_xi2.$(OBJEXT)
 am_xinput_OBJECTS = buttonmap.$(OBJEXT) feedback.$(OBJEXT) \
 	list.$(OBJEXT) setint.$(OBJEXT) setmode.$(OBJEXT) \
 	setptr.$(OBJEXT) state.$(OBJEXT) property.$(OBJEXT) \
-	test.$(OBJEXT) version.$(OBJEXT) xinput.$(OBJEXT) \
-	$(am__objects_1)
+	test.$(OBJEXT) xinput.$(OBJEXT) $(am__objects_1)
 xinput_OBJECTS = $(am_xinput_OBJECTS)
 am__DEPENDENCIES_1 =
 xinput_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -158,6 +158,8 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+XI2_CFLAGS = @XI2_CFLAGS@
+XI2_LIBS = @XI2_LIBS@
 XINPUT_CFLAGS = @XINPUT_CFLAGS@
 XINPUT_LIBS = @XINPUT_LIBS@
 ac_ct_CC = @ac_ct_CC@
@@ -206,7 +208,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_CFLAGS = $(XINPUT_CFLAGS)
 xinput_LDADD = $(XINPUT_LIBS)
-@HAVE_XI2_TRUE@xinput2_files = hierarchy.c setcp.c
+@HAVE_XI2_TRUE@xinput2_files = hierarchy.c setcp.c test_xi2.c
 xinput_SOURCES = \
     buttonmap.c \
     feedback.c \
@@ -217,7 +219,6 @@ xinput_SOURCES = \
     state.c \
     property.c \
     test.c \
-    version.c \
     xinput.c \
     xinput.h \
     $(xinput2_files)
@@ -299,7 +300,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setptr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/state.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_xi2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xinput.Po@am__quote@
 
 .c.o:
