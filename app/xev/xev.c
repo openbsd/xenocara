@@ -1065,6 +1065,7 @@ main (int argc, char **argv)
 	    printf ("Unknown event type %d\n", event.type);
 	    break;
 	}
+	fflush(stdout);
     }
 
     XCloseDisplay (dpy);
