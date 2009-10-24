@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 #endif
 
     fd_width = GetFdWidth();
-    sprintf(mask_mesg,"SET_MASK %lu\n",(unsigned long)(M_FOCUS_CHANGE));
+    snprintf(mask_mesg, sizeof(mask_mesg), "SET_MASK %lu\n",(unsigned long)(M_FOCUS_CHANGE));
     SendInfo(fd,mask_mesg,0);
 
     while(1)
