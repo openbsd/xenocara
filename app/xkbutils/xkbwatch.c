@@ -45,9 +45,8 @@
 
 /***====================================================================***/
 
-	Display *	inDpy,*outDpy;
-	int		evBase,errBase;
-	Bool		synch;
+static	Display *	inDpy,*outDpy;
+static	int		evBase,errBase;
 
 /***====================================================================***/
 

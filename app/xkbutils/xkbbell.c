@@ -195,7 +195,7 @@ int	i1,i2,i3,i4,i5;
     }
     if (force && (nameAtom!=None))
 	fprintf(stderr,"Warning! Name ignored for forced bell requests\n");
-    if (bellName!='\0')
+    if (bellName!=NULL)
 	nameAtom = XInternAtom(dpy,bellName,0);
     if ((devSpec==XkbUseCoreKbd)&&(class<0)) {
 	Bool ok;

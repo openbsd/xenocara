@@ -192,10 +192,8 @@ GetPixmaps(LEDWidget lw)
 }
 
 /* ARGSUSED */
-static void Initialize(request, new, args, num_args)
-    Widget request, new;
-    ArgList args;
-    Cardinal *num_args;
+static void
+Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 {
     LEDWidget lw = (LEDWidget) new;
 

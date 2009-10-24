@@ -173,9 +173,7 @@ extern	char *uStringDup(
 #define	DEBUG_VAR	debugFlags
 #endif
 
-#ifdef DEBUG_VAR_NOT_LOCAL
 extern
-#endif
 unsigned	int	DEBUG_VAR;
 
 extern	void	uDebug( char *s, ... );
@@ -223,13 +221,13 @@ extern	void	uEntry(int l, char *s, ... );
 extern	void	uExit(
     int l,char *rtVal
 );
+
+extern	int	uEntryLevel;
 #ifdef ENTRY_TRACKING_ON
 #define	ENTRY_BIT	0x10
 #define	LOW_ENTRY_BIT	0x1000
 #define	ENTER	(DEBUG_VAR&ENTRY_BIT)
 #define	FLAG(fLag)	(DEBUG_VAR&(fLag))
-
-extern	int	uEntryLevel;
 
 #define	uENTRY(s)			{ if (ENTER) uEntry(1,s);}
 #define	uENTRY1(s,a)			{ if (ENTER) uEntry(1,s,a);}

@@ -35,6 +35,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -55,12 +56,15 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+build_triplet = @build@
+host_triplet = @host@
 bin_PROGRAMS = xkbvleds$(EXEEXT) xkbwatch$(EXEEXT) xkbbell$(EXEEXT)
-subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile depcomp install-sh missing mkinstalldirs
+	compile config.guess config.sub depcomp install-sh missing \
+	mkinstalldirs
+subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -70,7 +74,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_xkbbell_OBJECTS = xkbbell-xkbbell.$(OBJEXT)
@@ -95,6 +99,14 @@ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(xkbbell_SOURCES) $(xkbvleds_SOURCES) $(xkbwatch_SOURCES)
 DIST_SOURCES = $(xkbbell_SOURCES) $(xkbvleds_SOURCES) \
 	$(xkbwatch_SOURCES)
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+appmanDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(appman_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -107,11 +119,14 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
+ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
+ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+APP_MAN_DIR = @APP_MAN_DIR@
+APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -119,14 +134,23 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
+DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FILE_MAN_DIR = @FILE_MAN_DIR@
+FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -134,11 +158,15 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIB_MAN_DIR = @LIB_MAN_DIR@
+LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MISC_MAN_DIR = @MISC_MAN_DIR@
+MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -151,11 +179,7 @@ PKG_CONFIG = @PKG_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
-TMP_XAW_LIBS = @TMP_XAW_LIBS@
 VERSION = @VERSION@
-XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
-XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
 XKBBELL_CFLAGS = @XKBBELL_CFLAGS@
 XKBBELL_LIBS = @XKBBELL_LIBS@
 XKBVLEDS_CFLAGS = @XKBVLEDS_CFLAGS@
@@ -163,8 +187,6 @@ XKBVLEDS_LIBS = @XKBVLEDS_LIBS@
 XKBWATCH_CFLAGS = @XKBWATCH_CFLAGS@
 XKBWATCH_LIBS = @XKBWATCH_LIBS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -173,45 +195,89 @@ am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
+build = @build@
 build_alias = @build_alias@
+build_cpu = @build_cpu@
+build_os = @build_os@
+build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+host = @host@
 host_alias = @host_alias@
+host_cpu = @host_cpu@
+host_os = @host_os@
+host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+AM_CFLAGS = $(CWARNFLAGS)
 
 # xkbvleds
 xkbvleds_SOURCES = xkbvleds.c LED.c LED.h LEDP.h utils.c utils.h
-xkbvleds_CFLAGS = $(XKBVLEDS_CFLAGS)
+xkbvleds_CFLAGS = $(XKBVLEDS_CFLAGS) $(AM_CFLAGS)
 xkbvleds_LDADD = $(XKBVLEDS_LIBS)
 
 # xkbbell
 xkbbell_SOURCES = xkbbell.c
-xkbbell_CFLAGS = $(XKBBELL_CFLAGS)
+xkbbell_CFLAGS = $(XKBBELL_CFLAGS) $(AM_CFLAGS)
 xkbbell_LDADD = $(XKBBELL_LIBS)
 
 # xkbwatch
 xkbwatch_SOURCES = xkbwatch.c LED.c LED.h LEDP.h utils.c utils.h
-xkbwatch_CFLAGS = $(XKBWATCH_CFLAGS)
+xkbwatch_CFLAGS = $(XKBWATCH_CFLAGS) $(AM_CFLAGS)
 xkbwatch_LDADD = $(XKBWATCH_LIBS)
+
+# Man pages
+appman_PRE = xkbbell.man xkbvleds.man xkbwatch.man  
+appmandir = $(APP_MAN_DIR)
+appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+EXTRA_DIST = $(appman_PRE) ChangeLog
+CLEANFILES = $(appman_DATA)
+MAINTAINERCLEANFILES = ChangeLog
+
+# Strings to replace in man pages
+XORGRELSTRING = @PACKAGE_STRING@
+XORGMANNAME = X Version 11
+SED = sed
+MAN_SUBSTS = \
+	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
+	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
+	-e 's|__xservername__|Xorg|g' \
+	-e 's|__xconfigfile__|xorg.conf|g' \
+	-e 's|__projectroot__|$(prefix)|g' \
+	-e 's|__apploaddir__|$(appdefaultdir)|' \
+	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
+	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
+	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
+	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
+	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
+
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -421,6 +487,23 @@ xkbwatch-utils.obj: utils.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbwatch_CFLAGS) $(CFLAGS) -c -o xkbwatch-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
 uninstall-info-am:
+install-appmanDATA: $(appman_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
+	@list='$(appman_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(appmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appmandir)/$$f'"; \
+	  $(appmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+
+uninstall-appmanDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(appman_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -499,6 +582,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -598,9 +684,9 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS) config.h
+all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -620,6 +706,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -627,6 +714,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -648,7 +736,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-appmanDATA
 
 install-exec-am: install-binPROGRAMS
 
@@ -677,22 +765,34 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am
+uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binPROGRAMS \
+	install-appmanDATA install-binPROGRAMS install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-info-am
 
+
+.man.$(APP_MAN_SUFFIX):
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

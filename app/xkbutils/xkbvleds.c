@@ -49,17 +49,17 @@
 #define	NO		0
 #define	DONT_CARE	-1
 
-	Display *	inDpy,*outDpy;
+static	Display *	inDpy,*outDpy;
 static	unsigned long	wanted,real,named,explicit,automatic,virtual;
 static	char *		inDpyName;
-	int		wantNamed= DONT_CARE;
-	int		wantExplicit= DONT_CARE;
-	int		wantAutomatic= DONT_CARE;
-	int		wantReal= DONT_CARE;
-	int		wantVirtual= DONT_CARE;
-	int		evBase,errBase;
-	Bool		synch;
-	Bool		useUnion= True;
+static	int		wantNamed= DONT_CARE;
+static	int		wantExplicit= DONT_CARE;
+static	int		wantAutomatic= DONT_CARE;
+static	int		wantReal= DONT_CARE;
+static	int		wantVirtual= DONT_CARE;
+static	int		evBase,errBase;
+static	Bool		synch;
+static	Bool		useUnion= True;
 
 /***====================================================================***/
 

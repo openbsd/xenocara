@@ -22,30 +22,40 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xkbutils,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xkbutils)
+AC_INIT(xkbutils, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xkbutils)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
+
+# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 
+XORG_DEFAULT_OPTIONS
+
 # xkbvleds checks
-XAW_CHECK_XPRINT_SUPPORT(XKBVLEDS)
+PKG_CHECK_MODULES(XKBVLEDS, xaw7)
 AC_SUBST(XKBVLEDS_CFLAGS)
 AC_SUBST(XKBVLEDS_LIBS)
 
 # xkbbell checks
-PKG_CHECK_MODULES(XKBBELL, xkbfile x11)
+PKG_CHECK_MODULES(XKBBELL, xkbfile x11 inputproto)
 AC_SUBST(XKBBELL_CFLAGS)
 AC_SUBST(XKBBELL_LIBS)
 
 # xkbwatch checks
-XAW_CHECK_XPRINT_SUPPORT(XKBWATCH)
+PKG_CHECK_MODULES(XKBWATCH, xaw7)
 AC_SUBST(XKBWATCH_CFLAGS)
 AC_SUBST(XKBWATCH_LIBS)
 
+XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+XORG_CHANGELOG
 
 AC_OUTPUT([Makefile])
