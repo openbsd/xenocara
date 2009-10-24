@@ -1,31 +1,216 @@
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 47f2d188a231a1c59d5d3030a1a2470c774d1e0d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 18:56:01 2009 -0700
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    xlsclients 1.0.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 376f461667f06939ff442163e15feff96ce716b6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 18:54:25 2009 -0700
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Fill in COPYING file with copyright/license notice from code & docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 5e7259ed47251b2969a57b078f1e505d960bfd1a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 18:10:46 2009 -0700
 
-	* Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 0f1f71e0338bb06ae70297f3215ce8489599c907
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:26 2009 -0700
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-11-20  Alan Coopersmith  <alan.coopersmith@sun.com>
+commit bc6a081e2d51bf41c9c4e2f02b82601a7bd4a33e
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 22 15:52:43 2009 -0200
 
-	* configure.ac:
-	Change dependency from xmu to xmuu since the full xmu
-	(with all its baggage like Xt) is not needed here.
+    Correct make distcheck and sparse warnings.
 
-2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit e5161d278fcfbf7ec3c4a73b6580993ad563e7ea
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:37:23 2007 -0500
 
-	* configure.ac:
-	Update package version number for RC1 release.
+    Replace static ChangeLog with dist-hook to generate from git log
 
+commit 6ca14b864bbbc1b50bdf42806e0f1762a7cf9ca1
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:51:36 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit a594d26e113c64ff534692d868a5dcdbd548a48b
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:24:59 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit c7648ac811f6c959e6e74201c37f0774bc1159e0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:52 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 5d13f433f12ec1564c9cf9b3d0493bc8b8163b73
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:22:45 2005 +0000
+
+    Stub COPYING files
+
+commit 7955793d1713f9917ec2e0ba7a175eead9da5694
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:08 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit de5dc90f5febe52daab9a089fcb226149a7d37a2
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:23 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit f88b24ebe74ddb225f12f10d2c74ef852e30668f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:26 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 2b00b194bf146d22f89449dc55cfedfb66633042
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:01:44 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit f183cb257095d2a8d02cbb99d6fe8121fdac2196
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:35:02 2005 +0000
+
+    Another pass at .cvsignores for apps.
+
+commit 7b29ef60ab764a0d662f934b6133ecdd15001183
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 21 03:14:16 2005 +0000
+
+    Change dependency from xmu to xmuu since the full xmu (with all its baggage
+        like Xt) is not needed here.
+
+commit 1fbf3bec38cec44ba7a14890925104b0a8e97c8a
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sun Nov 20 22:08:53 2005 +0000
+
+    Add/improve .cvsignore files for apps.
+
+commit daf42472d8b8dea164258f9a4d3a2d362cc04d87
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:47:55 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 4b6c61e82c0665be51157f7ea611024b2a8c344a
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 23:56:24 2005 +0000
+
+    Use @APP_MAN_SUFFIX@ instead of $(APP_MAN_SUFFIX) in macro substitutions to
+        work better with BSD make
+
+commit 95f73789ffc2f1e1f85624a00215a539f84f309e
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Oct 14 00:25:46 2005 +0000
+
+    Use sed to fill in variables in man page
+
+commit 231c23c7e1f424dc4075fdecf16d291cf60cd533
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Thu Oct 6 03:47:12 2005 +0000
+
+    Fix file names of beforelight, x11perfcomp, and xlsclients man pages
+
+commit 33bb15df1f98464203100cc71026bca16d4f1f42
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Aug 1 20:25:30 2005 +0000
+
+    Install man pages to section 1 instead of section m (Patch from Donnie
+        Berkholz)
+
+commit 8a7081e92b71fa14864ecd1aa47d433ae25d92b7
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:35 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 9428b06892b05ff2382d1bf2032b062bc10a1013
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Jul 20 19:32:02 2005 +0000
+
+    Use a unique token for PKG_CHECK_MODULES. Otherwise, if you use a global
+        configure cache, you cache it, and the cached value is probably wrong.
+
+commit bc737d5ade74d17b7b7af4d83b3a03cd570061c3
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 5 22:51:10 2005 +0000
+
+    Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,
+        xmh, xmore. lib/Xaw/xaw.m4: Add an AM_CONDITIONAL and a shell variable
+        xaw_use_xprint symlink.sh: add some extra files for xgc, xinit,
+        xkbcomp, xlogo, xmb, and xmodmap xc/programs/xmore/xmore.c:
+        Conditionalize use of xprint
+
+commit 208df1618f1509e8a3ffc2677a60a3bb0a98d4ca
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:58 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 4143e84ebf67868f0123063061250e46d2f54b61
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:35:37 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 36452911208fb2afee18850aace32043150b518b
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:13:14 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit c6d0786cde8ad0f09f623bcff358263488f7f696
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:26 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit eb6565bd3bf035fbbf9ee67a71c10b5a0fdc2f15
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:24:14 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 863c432062bcfd43a04c19162ce61383b9ea8e3d
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:49:23 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit c687123ca586b6f54caec1c8c2c22f21c751c237
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 15:54:54 2003 +0000
+
+    R6.6 is the Xorg base-line

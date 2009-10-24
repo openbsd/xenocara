@@ -37,7 +37,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xutil.h>
 #include <X11/Xmu/WinUtil.h>
 
-char *ProgramName;
+static char *ProgramName;
 
 static void lookat ( Display *dpy, Window root, Bool verbose, int maxcmdlen );
 static void print_client_properties ( Display *dpy, Window w, 
