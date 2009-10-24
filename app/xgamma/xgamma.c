@@ -32,9 +32,9 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-char *ProgramName;
-int MajorVersion, MinorVersion;
-int EventBase, ErrorBase;
+static char *ProgramName;
+static int MajorVersion, MinorVersion;
+static int EventBase, ErrorBase;
 
 /* Minimum extension version required */
 #define MINMAJOR 2
