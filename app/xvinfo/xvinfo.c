@@ -11,7 +11,7 @@
 static void
 PrintUsage(void)
 {
-   fprintf(stderr, "Usage:  xvinfo [-display host:dpy]\n");
+   fprintf(stderr, "Usage:  xvinfo [-display host:dpy] [-short]\n");
    exit(0);
 }
 
@@ -28,14 +28,22 @@ int main(int argc, char *argv[])
     XvFormat *format;
     XvImageFormatValues *formats;
     char * disname = NULL;
+    char shortmode = 0;
 
-    if((argc != 1) && (argc != 3))
+    if((argc > 4))
        PrintUsage();
 
     if(argc != 1) {
-       if(strcmp(argv[1], "-display"))
-	  PrintUsage();
-	disname = argv[2];
+       for ( i = 1; i < argc; i ++ ) {
+           if(! strcmp(argv[i], "-display")) {
+	       disname = argv[i + 1];
+	       i ++;
+	   } else if(! strcmp(argv[i], "-short") )
+	       shortmode = 1;
+	     else {
+	       PrintUsage();
+	     }
+       }
     }
 
 
@@ -96,10 +104,12 @@ int main(int argc, char *argv[])
 
 	    format = ainfo[j].formats;
 
-	    fprintf(stdout, "    supported visuals:\n");
-	    for(k = 0; k < ainfo[j].num_formats; k++, format++) {
-	         fprintf(stdout, "      depth %i, visualID 0x%2lx\n",
+	    if ( ! shortmode ) {
+		    fprintf(stdout, "    supported visuals:\n");
+		    for(k = 0; k < ainfo[j].num_formats; k++, format++) {
+		         fprintf(stdout, "      depth %i, visualID 0x%2lx\n",
 				 format->depth, format->visual_id);
+		    }
 	    }
 
 	    attributes = XvQueryPortAttributes(dpy, ainfo[j].base_id, &nattr);
@@ -114,13 +124,18 @@ int main(int argc, char *argv[])
 					attributes[k].max_value);
 
 		    if(attributes[k].flags & XvSettable)
-		    	fprintf(stdout, "              client settable attribute\n");
+			if ( ! shortmode )
+		    	  fprintf(stdout, "              client settable attribute\n");
+		        else fprintf(stdout, "              settable");
 
 		    if(attributes[k].flags & XvGettable) {
 			Atom the_atom;
 			int value;
+			
+			if ( ! shortmode )
+		    	  fprintf(stdout, "              client gettable attribute");
+			else fprintf(stdout, ", gettable");
 
-		    	fprintf(stdout, "              client gettable attribute");
 			the_atom = XInternAtom(dpy, attributes[k].name, True);
 
 			if(the_atom != None){
@@ -128,8 +143,10 @@ int main(int argc, char *argv[])
 					ainfo[j].base_id, the_atom, &value)))
 		    	       fprintf(stdout, " (current value is %i)", value);
 			}
-		        fprintf(stdout, "\n");
+			fprintf(stdout, "\n");
 		    }
+		    else if (shortmode) 
+			fprintf(stdout, "\n");
 
 		}
 		XFree(attributes);
@@ -198,59 +215,61 @@ int main(int argc, char *argv[])
 			} else {
 			  fprintf(stdout, "\n");
 			}
-			fprintf(stdout, "        guid: ");
-			fprintf(stdout, "%02x", (unsigned char) 
+			if ( ! shortmode ) {
+			    fprintf(stdout, "        guid: ");
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[0]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[1]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[2]);
-			fprintf(stdout, "%02x-", (unsigned char) 
+			    fprintf(stdout, "%02x-", (unsigned char) 
 						formats[n].guid[3]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[4]);
-			fprintf(stdout, "%02x-", (unsigned char) 
+			    fprintf(stdout, "%02x-", (unsigned char) 
 						formats[n].guid[5]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[6]);
-			fprintf(stdout, "%02x-", (unsigned char) 
+			    fprintf(stdout, "%02x-", (unsigned char) 
 						formats[n].guid[7]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[8]);
-			fprintf(stdout, "%02x-", (unsigned char) 
+			    fprintf(stdout, "%02x-", (unsigned char) 
 						formats[n].guid[9]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[10]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[11]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[12]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[13]);
-			fprintf(stdout, "%02x", (unsigned char) 
+			    fprintf(stdout, "%02x", (unsigned char) 
 						formats[n].guid[14]);
-			fprintf(stdout, "%02x\n", (unsigned char) 
+			    fprintf(stdout, "%02x\n", (unsigned char) 
 						formats[n].guid[15]);
 
-			fprintf(stdout, "        bits per pixel: %i\n",
+			    fprintf(stdout, "        bits per pixel: %i\n",
 					formats[n].bits_per_pixel);
-			fprintf(stdout, "        number of planes: %i\n",
+			    fprintf(stdout, "        number of planes: %i\n",
 					formats[n].num_planes);
-			fprintf(stdout, "        type: %s (%s)\n", 
-			 (formats[n].type == XvRGB) ? "RGB" : "YUV",
-			 (formats[n].format == XvPacked) ? "packed" : "planar");
+			    fprintf(stdout, "        type: %s (%s)\n", 
+			      (formats[n].type == XvRGB) ? "RGB" : "YUV",
+			      (formats[n].format == XvPacked) ? "packed" : "planar");
 
-			if(formats[n].type == XvRGB) {
-			    fprintf(stdout, "        depth: %i\n", 
+			    if(formats[n].type == XvRGB) {
+			        fprintf(stdout, "        depth: %i\n", 
                                         formats[n].depth);
 
-			    fprintf(stdout, "        red, green, blue masks: " 
+			        fprintf(stdout, "        red, green, blue masks: " 
 					"0x%x, 0x%x, 0x%x\n", 
 					formats[n].red_mask,
 					formats[n].green_mask,
 					formats[n].blue_mask);
-			} else {
+			    } else {
 
+			    } 
 			}
 			
 	

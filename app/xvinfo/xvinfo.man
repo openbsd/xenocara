@@ -17,6 +17,9 @@ with the display that are accessible through the X-Video extension.
 .TP 8
 .B "-display \fIdisplay\fP"
 This argument allows you to specify the server to query; see \fIX(__miscmansuffix__)\fP.
+.TP 8
+.B "-short"
+Output less details, to reduce the amount of text.
 .SH ENVIRONMENT
 .PP
 .TP 8
