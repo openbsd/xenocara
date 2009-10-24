@@ -58,8 +58,6 @@ static Widget * ConvertNamesToWidgets(Widget parent, char ** names);
 
 #define TOPARGS 5
 
-extern Atom wm_delete_window;	/* in main.c */
-
 Widget top;			/* needed in PopupWarning, misc.c */
 
 void

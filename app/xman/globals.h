@@ -30,6 +30,9 @@ from the X Consortium.
 */
 /* $XFree86$ */
 
+#ifndef _globals_h
+#define _globals_h
+
 #include "man.h"
 
 extern Xman_Resources resources;	/* Resource manager sets these. */
@@ -54,3 +57,9 @@ extern Widget initial_widget;	      /* The initial widget, never realized. */
 
 extern char **saved_argv;
 extern int saved_argc;
+
+extern Atom wm_delete_window;
+
+extern Widget top;
+
+#endif /* _globals_h */

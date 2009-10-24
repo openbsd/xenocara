@@ -24,7 +24,8 @@ bin_PROGRAMS = xman
 helpdir=@HELPDIR@
 dist_help_DATA = xman.help
 
-xman_CFLAGS = $(XMAN_CFLAGS) -D_BSD_SOURCE -DHELPFILE=\"$(helpdir)/xman.help\"
+AM_CFLAGS = $(CWARNFLAGS) $(XMAN_CFLAGS) \
+	-D_BSD_SOURCE -DHELPFILE=\"$(helpdir)/xman.help\"
 xman_LDADD = $(XMAN_LIBS)
 
 xman_SOURCES =	\
@@ -50,39 +51,23 @@ xman_SOURCES =	\
         vendor.h \
         version.h
 
-if XAW_USE_XPRINT
-xman_SOURCES += \
-        print.c \
-        print.h
-endif
-
 appman_PRE = \
         xman.man
 
-# App default files  (*.ad)
+# App default files
+
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
 appdefaultdir = @appdefaultdir@
 
-if XAW_USE_XPRINT
-Xman: Xman-xprint.ad
-	ln -s $(top_srcdir)/Xman-xprint.ad Xman
-else
-Xman: Xman-noxprint.ad
-	ln -s $(top_srcdir)/Xman-noxprint.ad Xman
-endif
-
-appdefault_DATA = Xman
-
-EXTRA_DIST = Xman-xprint.ad Xman-noxprint.ad
-
-CLEANFILES = Xman
+dist_appdefault_DATA = app-defaults/Xman
 
 appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
+EXTRA_DIST = $(appman_PRE)
+CLEANFILES = $(appman_DATA)
 
 SED = sed
 
@@ -106,4 +91,14 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

@@ -87,7 +87,7 @@ int
 Man(void)
 {
   SectionList *list = NULL;
-  char *ptr, *lang = 0, manpath[BUFSIZ], buf[BUFSIZ], *path, *current_label;
+  char *ptr, *lang = NULL, manpath[BUFSIZ], buf[BUFSIZ], *path, *current_label;
   int sect, num_alloced;
 
 /* 
@@ -127,7 +127,7 @@ Man(void)
 
   for ( path = manpath ; (ptr = index(path , ':')) != NULL ; path = ++ptr) { 
     *ptr = '\0';
-    if (lang != 0) {
+    if (lang != NULL) {
       strcpy(buf, path);
       strcat(buf, "/");
       strncat(buf, lang, sizeof(buf) - strlen(path) + 1);
@@ -136,7 +136,7 @@ Man(void)
     }
     ReadMandescFile(&list, path);
   }
-  if (lang != 0) {
+  if (lang != NULL) {
     strcpy(buf, path);
     strcat(buf, "/");
     strncat(buf, lang, sizeof(buf) - strlen(path) + 1);
@@ -239,10 +239,10 @@ SortList(SectionList ** list)
       head = local;
 
       /* Find end of standard block */
-      for (old = 0 ; (local->next != NULL) && (local->flags) 
+      for (old = NULL ; (local->next != NULL) && (local->flags) 
 	   ; old = local, local = local->next); 
 
-      if (old != 0) {
+      if (old != NULL) {
           last->next = old->next; /* Move the block. */
           old->next = *list;
           *list = head;
@@ -447,6 +447,14 @@ ReadCurrentSection(Manual * local_manual, char * path)
     else if (streq(ptr + 1, GZIP_EXTENSION))
       *ptr = '\0';
 #endif
+#ifdef BZIP2_EXTENSION
+    else if (streq(ptr + 1, BZIP2_EXTENSION))
+      *ptr = '\0';
+#endif
+#ifdef LZMA_EXTENSION
+    else if (streq(ptr + 1, LZMA_EXTENSION))
+      *ptr = '\0';
+#endif
   }
   
   nentries = local_manual->nentries;
@@ -483,6 +491,14 @@ ReadCurrentSection(Manual * local_manual, char * path)
 	*ptr = '\0';
 #ifdef GZIP_EXTENSION
       else if (streq(ptr + 1, GZIP_EXTENSION))
+	*ptr = '\0';
+#endif
+#ifdef BZIP2_EXTENSION
+      else if (streq(ptr + 1, BZIP2_EXTENSION))
+	*ptr = '\0';
+#endif
+#ifdef LZMA_EXTENSION
+      else if (streq(ptr + 1, LZMA_EXTENSION))
 	*ptr = '\0';
 #endif
 #ifdef IGNORE_EXTENSION

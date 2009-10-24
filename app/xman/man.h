@@ -166,6 +166,8 @@ typedef struct _ManpageGlobals{
 				   page from. */
   Boolean compress;		/* Compress file on save? */
   Boolean gzip;			/* Gzip file on save? */
+  Boolean bzip2;		/* Bzip2 file on save? */
+  Boolean lzma;
   Boolean deletetempfile;	/* Need to delete tempfile when done? */
   char ** section_name;		/* The name of each of the sections */
 

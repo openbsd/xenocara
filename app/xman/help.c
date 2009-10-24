@@ -38,8 +38,6 @@ from the X Consortium.
 
 #include "globals.h"
 
-extern Atom wm_delete_window;	/* in main.c */
-
 /*	Function Name: MakeHelpWidget.
  *	Description: This function creates the help widget so that it will be
  *                   ready to be displayed.

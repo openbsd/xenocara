@@ -30,10 +30,6 @@ from the X Consortium.
 */
 /* $XFree86: xc/programs/xman/ScrollByL.c,v 1.6tsi Exp $ */
 
-#if !defined(lint) && !defined(SABER) && 0
-  static char rcs_version[] = "$Athena: ScrollByL.c,v 4.5 88/12/19 13:46:04 kit Exp $";
-#endif
-
 #include <stdio.h>
 #include <ctype.h>
 #include <X11/Xos.h>

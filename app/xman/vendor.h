@@ -59,7 +59,7 @@ from the X Consortium.
 #  define SEARCHDIR  MAN
 #endif
 
-#if ( defined(sgi) || (defined(i386) && (defined(SYSV) || defined(SVR4))  && !defined(sun)) || (defined(BSD) && (BSD >= 199103)) || defined(linux) )
+#if ( defined(sgi) || (defined(i386) && (defined(SYSV) || defined(SVR4))  && !defined(sun)) || (defined(BSD) && (BSD >= 199103)) || defined(linux) || defined(__CYGWIN__) )
 # define SEARCHOTHER CAT
 #endif
 
@@ -137,6 +137,17 @@ from the X Consortium.
 #    define GUNZIP_FORMAT "gzip -c -d < %s >> %s"
 #  endif
 #  define GZIP_COMPRESS "gzip"
+#  define BZIP2_EXTENSION "bz2"
+#  define LZMA_EXTENSION "lzma"
+#  ifndef HAS_MKSTEMP
+#    define BUNZIP2_FORMAT "bunzip2 -c -d < %s > %s"
+#    define UNLZMA_FORMAT "unlzma -c -d < %s > %s"
+#  else
+#    define BUNZIP2_FORMAT "bunzip2 -c -d < %s >> %s"
+#    define UNLZMA_FORMAT "unlzma -c -d < %s >> %s"
+#  endif
+#  define BZIP2_COMPRESS "bzip2"
+#  define LZMA_COMPRESS "lzma"
 #endif
 
 
@@ -172,7 +183,7 @@ from the X Consortium.
 #  define FORMAT "| eqn | tbl | nroff -mandoc"
 # elif defined(BSD) && (BSD >= 199103)
 #  define FORMAT "| eqn | tbl | nroff -man"
-# elif defined(linux)
+# elif defined(linux) || defined(__CYGWIN__)
 #  define FORMAT "| pic | eqn | tbl -Tlatin1 | GROFF_NO_SGR= groff -Tlatin1 -mandoc"
 # else
 #  define FORMAT "| neqn | nroff -man"      /* The format command. */

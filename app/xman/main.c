@@ -42,10 +42,6 @@ from the X Consortium.
 #include <X11/Xaw/Cardinals.h>
 #endif /* ZERO */
 
-#if !defined(lint) && !defined(SABER)
-  static char version[] = XMAN_VERSION;  /* via strings. */
-#endif
-
 static void ArgError(int argc, char ** argv);
 static void AdjustDefResources(void);
 
@@ -71,7 +67,7 @@ static XtResource my_resources[] = {
   {"pointerColorBackground", XtCBackground, XtRPixel, sizeof(Pixel),
      Offset(cursors.bg_color), XtRString, "XtDefaultBackground"},
   {"help", XtCBoolean, XtRBoolean, sizeof(Boolean),
-     Offset(show_help_syntax), XtRImmediate, FALSE},
+     Offset(show_help_syntax), XtRImmediate, NULL},
   {"helpFile", XtCFile, XtRString, sizeof(char *),
      Offset(help_file), XtRString, HELPFILE},
   {"topBox", XtCBoolean, XtRBoolean, sizeof(Boolean),
@@ -117,7 +113,7 @@ static XrmOptionDescRec xman_options[] = {
 {"-iconic",   "iconic",                  XrmoptionNoArg,  (caddr_t) "True"},
 };
 
-XtActionsRec xman_actions[] = {
+static XtActionsRec xman_actions[] = {
   {"GotoPage",          GotoPage},
   {"Quit",              Quit},
   {"Search",            Search},
