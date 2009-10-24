@@ -3,7 +3,7 @@
 /* Path to CPP program */
 #undef CPP
 
-/* Define to 1 if you have the `mkstemp' function. */
+/* Define to 1 if you have the 'mkstemp' function. */
 #undef HAS_MKSTEMP
 
 /* Define to 1 if you have the <inttypes.h> header file. */

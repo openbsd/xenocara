@@ -1,3 +1,63 @@
+commit b3a7a1fb2356d6fba676746f60176f1a69b9a72a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 15:04:50 2009 -0700
+
+    xrdb 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit eafabf10c3738bba223d7522f8b5804d1d54c6d4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 14:55:22 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit d2c5485dcab34074fa9bd62b7a0567364382e07b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 14:37:28 2009 -0700
+
+    Fill in COPYING file with notices from xrdb.c & xrdb.man
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b2aebe2b2879c6f6a23d34c7b7b637b8b216e2a3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:29 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 29f87977d6f503186da4863eea28db2f206bca22
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 26 16:45:11 2009 -0200
+
+    Correct make distcheck and sparse warnings.
+
+commit fc0b73673a7b91b386d8a346652f9cc0c4a68d44
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 20 14:33:23 2008 -0700
+
+    Allow specifying multiple paths to --with-cpp and running if none is found
+    
+    Merge of code from the old Solaris xrdb that allows having cpp found at
+    compile time, but not erroring out if it's not found at runtime, and
+    if necessary, checking for it in multiple locations.
+
+commit 0de4f54967a7ab923817712eb96b64ca1ebe84a5
+Author: Stuart Kreitman <Stuart.Kreitman@sun.com>
+Date:   Mon Aug 4 17:12:58 2008 -0700
+
+    Avoid divide by zero crash if DDX mistakenly returns screen size of 0mm.
+
+commit d8b7fa56de252ba78edab5e504a2c7650e9e9123
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 17:16:36 2008 -0500
+
+    xrdb 1.0.5
+
 commit 09ef847d16333d6ae04c3f88ff7f535381cb9405
 Author: Luca Capello <luca@pca.it>
 Date:   Mon Jan 7 23:48:12 2008 +0100

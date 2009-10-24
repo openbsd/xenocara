@@ -116,31 +116,32 @@ typedef struct _String {
     int room, used;
 } String;
 
-char *ProgramName;
-Bool quiet = False;
-char tmpname[32];
-char *filename = NULL;
+static char *ProgramName;
+static Bool quiet = False;
+static char tmpname[32];
+static char *filename = NULL;
 #ifdef PATHETICCPP
-Bool need_real_defines = False;
-char tmpname2[32];
+static Bool need_real_defines = False;
+static char tmpname2[32];
 #ifdef WIN32
-char tmpname3[32];
+static char tmpname3[32];
 #endif
 #endif
-int oper = OPLOAD;
-char *editFile = NULL;
-char *cpp_program = CPP;
-char *backup_suffix = BACKUP_SUFFIX;
-Bool dont_execute = False;
-String defines;
-int defines_base;
+static int oper = OPLOAD;
+static char *editFile = NULL;
+static const char *cpp_program = NULL;
+static const char* const cpp_locations[] = { CPP };
+static char *backup_suffix = BACKUP_SUFFIX;
+static Bool dont_execute = False;
+static String defines;
+static int defines_base;
 #define MAX_CMD_DEFINES 512
-char *cmd_defines[MAX_CMD_DEFINES];
-int num_cmd_defines = 0;
-String includes;
-Display *dpy;
-Buffer buffer;
-Entries newDB;
+static char *cmd_defines[MAX_CMD_DEFINES];
+static int num_cmd_defines = 0;
+static String includes;
+static Display *dpy;
+static Buffer buffer;
+static Entries newDB;
 
 static void fatal(char *, ...);
 static void addstring ( String *arg, const char *s );
@@ -489,7 +490,10 @@ DoCmdDefines(String *buff)
 static int 
 Resolution(int pixels, int mm)
 {
-    return ((pixels * 100000 / mm) + 50) / 100;
+    if (mm == 0)
+	return 0;
+    else
+	return ((pixels * 100000 / mm) + 50) / 100;
 }
 
 
@@ -540,7 +544,7 @@ DoDisplayDefines(Display *display, String *defs, char *host)
     XFreeExtensionList(extnames);
 }
 
-char *ClassNames[] = {
+static char *ClassNames[] = {
     "StaticGray",
     "GrayScale",
     "StaticColor",
@@ -874,6 +878,19 @@ main(int argc, char *argv[])
 	    filename = arg;
     }							/* end for */
 
+    /* If cpp to use was not specified, check for ones in default locations */
+    if (cpp_program == NULL) {
+	int number_of_elements
+	    = (sizeof cpp_locations) / (sizeof cpp_locations[0]);
+	int j;
+
+	for (j = 0; j < number_of_elements; j++) {
+	    if (access(cpp_locations[j], X_OK) == 0) {
+		cpp_program = cpp_locations[j];
+		break;
+	    }
+	} 
+    }
 #ifndef WIN32
     while ((i = open("/dev/null", O_RDONLY)) < 3)
 	; /* make sure later freopen won't clobber things */

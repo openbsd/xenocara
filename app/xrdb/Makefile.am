@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xrdb
 
-AM_CFLAGS = $(XRDB_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XRDB_CFLAGS)
 xrdb_LDADD = $(XRDB_LIBS)
 
 xrdb_SOURCES =	\
@@ -34,14 +34,14 @@ appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST = $(appman_PRE) ChangeLog autogen.sh
+EXTRA_DIST = $(appman_PRE) ChangeLog
 CLEANFILES = $(appman_DATA)
 MAINTAINERCLEANFILES=ChangeLog
 
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
@@ -67,4 +67,4 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

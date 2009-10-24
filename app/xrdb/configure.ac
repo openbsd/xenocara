@@ -21,17 +21,23 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xrdb,[1.0.5], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xrdb)
+AC_INIT(xrdb, [1.0.6], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xrdb)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
-
 AM_CONFIG_HEADER(config.h)
+
+# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 
 AC_PROG_CC
 AC_PROG_INSTALL
 
+XORG_DEFAULT_OPTIONS
+
 AC_CHECK_FUNC([mkstemp], 
-   AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the `mkstemp' function.]))
+   AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the 'mkstemp' function.]))
 
 # Find MAXHOSTNAMELEN definition
 # Common hidey holes:
@@ -66,20 +72,18 @@ fi
 # in Imake config files for each OS
 AC_ARG_WITH([cpp], 
 	AC_HELP_STRING([--with-cpp=path],
-		       [path to cpp command for xrdb to use at runtime]), 
+		       [comma-separated list of paths to cpp command for xrdb to use at runtime]), 
 	[AC_MSG_CHECKING(for cpp)
 	CPP_PATH=$withval
-	AC_MSG_RESULT($CPP_PATH)], 
+	AC_MSG_RESULT(--with-cpp specified $CPP_PATH)], 
 	[AC_PATH_PROG([CPP_PATH],[cpp], [cpp], 
  [$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/ccs/lib:/usr/ccs/lbin:/lib])])
+CPP_PATH=`echo ${CPP_PATH} | sed 's/,/\\",\\"/g'`
 AC_DEFINE_UNQUOTED([CPP], "$CPP_PATH", [Path to CPP program])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XRDB, xmuu x11)
 AC_SUBST(XRDB_CFLAGS)
 AC_SUBST(XRDB_LIBS)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])
