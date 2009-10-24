@@ -48,8 +48,8 @@ from The Open Group.
 
 #include <X11/Xmu/WinUtil.h>
 
-Display *dpy = NULL;
-char *ProgramName;
+static Display *dpy = NULL;
+static char *ProgramName;
 
 #define SelectButtonAny (-1)
 #define SelectButtonFirst (-2)
@@ -107,6 +107,7 @@ main(int argc, char *argv[])
     Bool top = False;
 
     ProgramName = argv[0];
+    button = SelectButtonFirst;
 
     for (i = 1; i < argc; i++) {
 	char *arg = argv[i];
@@ -161,9 +162,7 @@ main(int argc, char *argv[])
 	if (!button_name)
 	    button_name = XGetDefault (dpy, ProgramName, "Button");
 
-	if (!button_name)
-	    button = SelectButtonFirst;
-	else if (!parse_button (button_name, &button)) {
+	if (button_name && !parse_button (button_name, &button)) {
 	    fprintf (stderr, "%s:  invalid button specification \"%s\"\n",
 		     ProgramName, button_name);
 	    Exit (1);
