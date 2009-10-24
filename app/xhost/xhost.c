@@ -141,9 +141,9 @@ static signal_t nameserver_lost(int sig);
 
 #define NAMESERVER_TIMEOUT 5	/* time to wait for nameserver */
 
-volatile int nameserver_timedout;
- 
-char *ProgramName;
+static volatile int nameserver_timedout;
+
+static char *ProgramName;
 
 #ifdef NEEDSOCKETS
 static int 
@@ -175,7 +175,7 @@ XFamily(int af)
 }
 #endif /* NEEDSOCKETS */
 
-Display *dpy;
+static Display *dpy;
 
 int
 main(int argc, char *argv[])

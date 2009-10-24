@@ -1,3 +1,39 @@
+commit 887b3da0c2cf25b1239b200fa82935cff61edc74
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 13 17:37:15 2009 -0700
+
+    xhost 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit fb7a5116803237dbf7c6871e6ba299ca9490c0b5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 13 17:17:42 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a10568d219ce8f67732a3cfad8b4f173b414c356
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:24 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 2e313cc7b5f0353e545a874ade80ab568687473f
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 21 19:11:50 2009 -0200
+
+    Correct make distcheck and sparse warnings.
+
+commit 1ab923fdd812a35dd46fe663780f8c8271aa5d89
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 17 10:08:35 2007 -0700
+
+    Use AM_CFLAGS instead of xhost_CFLAGS to avoid automake-1.10 warnings
+
 commit ebf6f7d4b36d69a83aeca39405d6140d8cbdcb01
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Jul 16 14:51:39 2007 -0700
