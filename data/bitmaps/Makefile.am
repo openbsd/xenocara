@@ -12,7 +12,9 @@ dist_bitmap_DATA =	\
 	1x1		\
 	2x2		\
 	black		\
+	black6		\
 	boxes		\
+	box6		\
 	calculator	\
 	cntr_ptr	\
 	cntr_ptrmsk	\
@@ -78,3 +80,13 @@ dist_bitmap_DATA =	\
 	xlogo32		\
 	xlogo64		\
 	xsnow
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
