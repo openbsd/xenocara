@@ -45,16 +45,16 @@ in this Software without prior written authorization from The Open Group.
 
 #define Dynamic 1
 
-char *program_name;
-Display *dpy;
-int screen;
-Window root;
-char *fore_color = NULL;
-char *back_color = NULL;
-int reverse = 0;
-int save_colors = 0;
-int unsave_past = 0;
-Pixmap save_pixmap = (Pixmap)None;
+static char *program_name;
+static Display *dpy;
+static int screen;
+static Window root;
+static char *fore_color = NULL;
+static char *back_color = NULL;
+static int reverse = 0;
+static int save_colors = 0;
+static int unsave_past = 0;
+static Pixmap save_pixmap = (Pixmap)None;
 
 static void usage(void);
 static void FixupState(void);

@@ -1,3 +1,41 @@
+commit 1a978aec136389c13fcdda31b34cb58d4dd3bf25
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:32:50 2009 -0700
+
+    xsetroot 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit d8ec58af0f62076805bd6b691e284bcd2176724b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:32:06 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit cc4216ff1f17c97fb5aa1a9a5f58e2574ca8af0b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:29:11 2009 -0700
+
+    Fill in COPYING file with copyright/license notice from code & docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 90bbea206988567520f7cb2b7f6e95ef704c172d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:30 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 67c87156d9bf8c7f520106c9e2fa786f3d21eaa2
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 26 18:12:56 2009 -0200
+
+    Correct make distcheck and sparse warnings.
+
 commit ba9fbd14258ab44c794bb1a6dd9af51c5f4c01ff
 Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
 Date:   Fri Aug 10 10:45:46 2007 +0200
