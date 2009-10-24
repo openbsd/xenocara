@@ -1,3 +1,47 @@
+commit ae7e1530f9e60e9a8747a1d4c38579510675f023
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:13:21 2009 -0700
+
+    xpr 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b4d488d7586892cfb8199b82a27f982a1717be66
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:12:22 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 304cd93438d75fe8b6964fe5a7bb077f031cac9e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:29 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f53142c6882f08b646ebe6d614bb6f14d5dcdb57
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 22 17:34:02 2009 -0200
+
+    Correct make distcheck and most gcc/sparse warnings.
+    
+      Remaining warnings are due to bit/shift operations mixed with
+    addition/multiplication/etc. "1<<2-1" should be read as
+    "1 << (2 - 1)", and not "(1 << 2) - 1". The first 2 warnings
+    appear to be for a confusing case, as a few lines bellow
+    it is adding parenthesis to the shift operation, but should be
+    being parsed correctly (not added parenthesis to avoid the
+    adding them wrong, and "hiding" the warning...)
+
+commit bee786458655a081487f2caff112f85aa0c3c8de
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:08 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
 commit cceb5d7387f8dcc39000f8e27b82230e9a8f5019
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Sat Jan 27 23:50:00 2007 -0800

@@ -34,7 +34,7 @@ static void p_bitmap(
   unsigned long buflen,
   unsigned char *buf);
 
-static plane = 0;
+static int plane = 0;
 #define FONT_HEIGHT 40
 #define FONT_HEIGHT_PIXELS (FONT_HEIGHT*75/PPI)
 #define FONT_WIDTH 24
@@ -65,7 +65,7 @@ void x2pmp(FILE *in, FILE *out,
 
     if (header.file_version != XWD_FILE_VERSION) {
 	fprintf(stderr,"%s: file format version %d, not %d\n", progname,
-		header.file_version, XWD_FILE_VERSION);
+		(int)header.file_version, XWD_FILE_VERSION);
     }
 
     win_name_size = abs_(header.header_size - sizeof(header));
@@ -95,6 +95,7 @@ void x2pmp(FILE *in, FILE *out,
 	if (head) real_height += FONT_HEIGHT_PIXELS << 1;
 	if (foot) real_height += FONT_HEIGHT_PIXELS << 1;
 	switch(orient) {
+	default:
 	case PORTRAIT:
 	case UPSIDE_DOWN:
 	    scale = min_((p_width - 2*x_pos) / fixed_width,
@@ -165,7 +166,7 @@ void x2pmp(FILE *in, FILE *out,
     }
 
     /* we don't want the last bits up to the byte/word alignment set */
-    if (no_of_bits = fixed_width - width) {
+    if ((no_of_bits = fixed_width - width)) {
 	int i, j, mask = ~bits_set(no_of_bits % 8);
 	for(i = 0; i < height; i++) {
 	    unsigned char *s = buffer + (i+1) * byte_width ;

@@ -69,6 +69,7 @@ from the X Consortium.
 
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <X11/Xlib.h>
 #include <X11/XWDFile.h>
 
@@ -258,7 +259,11 @@ static void write_image (
   int scale,
   enum orientation orient,
   enum device device);
-static void fatal_err (const char *s, ...);
+static void fatal_err (const char *s, ...)
+#if defined(__GNUC__) && (__GNUC__ > 2)
+__attribute__((noreturn, format(printf, 1, 2)))
+#endif
+    ;
 
 
 /* Computes the centipoint width of one printer dot. */
@@ -478,7 +483,8 @@ void scale_and_orient_image (
                     break;
        case   PJET: *density = 90;
                     break;
-       case PJETXL: *density = 180;
+       case PJETXL:
+       default:	    *density = 180;
                     break;
     }
   }
@@ -491,7 +497,7 @@ void scale_and_orient_image (
   set_image_limits(*scale, *density, *orient, usable);
 
   /* Determine header/trailer string length clipping */
-  set_header_trailer_limits(header, trailer, usable.width);
+  set_header_trailer_limits((char *)header, (char *)trailer, usable.width);
 
   /* Calculate locations for page layout */
   set_print_locations(*scale, *density, top, left,
@@ -500,7 +506,7 @@ void scale_and_orient_image (
 }
 
 
-unsigned short fullintensity;
+static unsigned short fullintensity;
 
 #define BLACK 1
 #define WHITE 0
@@ -514,20 +520,20 @@ unsigned short fullintensity;
  * numbers into a pjcolor index number.  This style of mapping is done when
  * interpreting non-Direct/TrueColor visual types.
  */
-long *colormap;
+static long *colormap;
 
 
 /* Pjcolor array is used to hold the scaled RGB triple values 
  * programmed into the printer.
  */
-long pjcolor[MAX_PJ_COLOR];
+static long pjcolor[MAX_PJ_COLOR];
 
 
 static int color_warning_given = FALSE;
 
 
 /* Global visual type indicator, used to select color interpretation method. */
-char Direct_or_TrueColor;
+static char Direct_or_TrueColor;
 
 
 /* Color index element definition, these are linked into a circular list
@@ -545,7 +551,7 @@ typedef struct colorindex {
  * TrueColor visual types).  It also holds color processing switches and a	
  * pointer to the output file to reduce parameter passing overhead.
  */
-struct {
+static struct {
   int PaintJet;
   int Invert;
   unsigned int CutOff;
@@ -1061,7 +1067,8 @@ void validate_visual(void)
     break;
   default:
     fatal_err((catgets(nlmsg_fd,NL_SETN,26,
-		"visual class #%d not supported.\n")), xwd_header.visual_class);
+		       "visual class #%d not supported.\n")),
+	      (int)xwd_header.visual_class);
   }
 }
 
@@ -1183,8 +1190,8 @@ void write_image_prefix (
 
     /* Set picture width for PaintJet */
     fprintf(out,"\033*r%dS",
-	    ((int) (orient == PORTRAIT) ? limit.width : limit.height)
-	    * scale);
+	    (int) (((orient == PORTRAIT) ? limit.width : limit.height)
+		   * scale));
   }
 
   /* Enable various options for PaintJet XL */
@@ -1226,11 +1233,11 @@ void write_image_prefix (
      * Set picture width for PaintJet XL    *
      ****************************************/
     fprintf(out,"\033*r%dS",
-	    ((int) (orient == PORTRAIT) ? xwd_header.pixmap_width
-					: xwd_header.pixmap_height));
+	    (int) ((orient == PORTRAIT) ? xwd_header.pixmap_width
+		   : xwd_header.pixmap_height));
     fprintf(out,"\033*r%dT",
-	    ((int) (orient == PORTRAIT) ? xwd_header.pixmap_height
-					: xwd_header.pixmap_width));
+	    (int) ((orient == PORTRAIT) ? xwd_header.pixmap_height
+		   : xwd_header.pixmap_width));
 
     dotsize = dot_centipoints(scale, density);
 
@@ -1346,6 +1353,9 @@ unsigned long Z_image_pixel (int x, int y)
 		(unsigned long)*(image+1) << 8 |
 		(unsigned long)*(image+2) << 16 |
 		(unsigned long)*(image+3) << 24);
+    break;
+  default:
+    pixel = 0;
     break;
   }
   return (pixel & Z_pixel_mask);
@@ -1685,7 +1695,13 @@ void x2jet(
 static
 void fatal_err (const char *s, ...)
 {
-  fprintf(stderr, "%s: %s\n", progname, s);
-  exit(EXIT_FAILURE);
+    va_list	ap;
+
+    fprintf(stderr, "%s: ", progname);
+    va_start(ap, s);
+    vfprintf(stderr, s, ap);
+    va_end(ap);
+    fputc('\n', stderr);
+    exit(EXIT_FAILURE);
 }
 

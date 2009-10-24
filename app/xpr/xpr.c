@@ -131,7 +131,7 @@ int debug = 0;
 
 #define DEFAULT_CUTOFF ((unsigned int) (0xFFFF * 0.50))
 
-char *infilename = NULL;
+static char *infilename = NULL;
 char *progname   = NULL;
 
 typedef struct _grayRec {
@@ -140,29 +140,29 @@ typedef struct _grayRec {
     unsigned long *grayscales;	/* pointer to the encoded pixels */
 } GrayRec, *GrayPtr;
 
-unsigned long grayscale2x2[] =
+static unsigned long grayscale2x2[] =
 	{0, 1, 9, 11, 15};
-unsigned long grayscale3x3[] =
+static unsigned long grayscale3x3[] =
 	{0, 16, 68, 81, 325, 341, 349, 381, 383, 511};
-unsigned long grayscale4x4[] =
+static unsigned long grayscale4x4[] =
 	{0, 64, 4160, 4161, 20545, 21057, 23105,
 	 23113, 23145, 24169, 24171, 56939, 55275, 55279,
 	 57327, 65519, 65535};
 
-GrayRec gray2x2 = {sizeof(grayscale2x2)/sizeof(long), 2, 2, grayscale2x2};
-GrayRec gray3x3 = {sizeof(grayscale3x3)/sizeof(long), 3, 3, grayscale3x3};
-GrayRec gray4x4 = {sizeof(grayscale4x4)/sizeof(long), 4, 4, grayscale4x4};
+static GrayRec gray2x2 = {sizeof(grayscale2x2)/sizeof(long), 2, 2, grayscale2x2};
+static GrayRec gray3x3 = {sizeof(grayscale3x3)/sizeof(long), 3, 3, grayscale3x3};
+static GrayRec gray4x4 = {sizeof(grayscale4x4)/sizeof(long), 4, 4, grayscale4x4};
 
 /* mapping tables to map a byte in to the hex representation of its
  * bit-reversal
  */
-const
+static const
 char hex1[]="084c2a6e195d3b7f084c2a6e195d3b7f084c2a6e195d3b7f084c2a6e195d3b7f\
 084c2a6e195d3b7f084c2a6e195d3b7f084c2a6e195d3b7f084c2a6e195d3b7f\
 084c2a6e195d3b7f084c2a6e195d3b7f084c2a6e195d3b7f084c2a6e195d3b7f\
 084c2a6e195d3b7f084c2a6e195d3b7f084c2a6e195d3b7f084c2a6e195d3b7f";
 
-const
+static const
 char hex2[]="000000000000000088888888888888884444444444444444cccccccccccccccc\
 2222222222222222aaaaaaaaaaaaaaaa6666666666666666eeeeeeeeeeeeeeee\
 111111111111111199999999999999995555555555555555dddddddddddddddd\
@@ -224,7 +224,6 @@ void build_sixmap(
   int hpad,
   XWDFileHeader *win,
   const char *data);
-static void build_output_filename(const char *name, enum device device, char *oname);
 static
 void ln03_setup(
   int iw,
@@ -257,10 +256,6 @@ void ps_setup(
   const char *trailer,
   const char *name);
 static void ps_finish(void);
-static void ln03_alter_background(
-  unsigned char (*sixmap)[],
-  int iw,
-  int ih);
 static
 void ln03_output_sixels(
   unsigned char (*sixmap)[],
@@ -423,6 +418,7 @@ int main(int argc, char **argv)
     if (device == PS) {
 	iw = win.pixmap_width;
 	ih = win.pixmap_height;
+	sixmap = NULL;
     } else {
 	/* calculate w and h cell count */
 	iw = win.pixmap_width;
@@ -459,8 +455,8 @@ int main(int argc, char **argv)
     /* print some statistics */
     if (flags & F_REPORT) {
 	fprintf(stderr, "Name: %s\n", w_name);
-	fprintf(stderr, "Width: %d, Height: %d\n", win.pixmap_width, 
-		win.pixmap_height);
+	fprintf(stderr, "Width: %d, Height: %d\n", (int)win.pixmap_width, 
+		(int)win.pixmap_height);
 	fprintf(stderr, "Orientation: %s, Scale: %d\n", 
 		(orientation==PORTRAIT) ? "Portrait" : "Landscape", scale);
     }
@@ -1131,16 +1127,6 @@ void build_sixmap(
     }
 }
 
-static
-void build_output_filename(const char *name, enum device device, char *oname)
-{
-    while (*name && *name != '.') *oname++ = *name++;
-    switch (device) {
-    case LN03:	bcopy(".ln03", oname, 6); break;
-    case LA100:	bcopy(".la100", oname, 7); break;
-    }
-}
-
 /*
 ln03_grind_fonts(sixmap, iw, ih, scale, pixmap)
 unsigned char (*sixmap)[];
@@ -1288,7 +1274,7 @@ void dump_prolog(int flags)
 #else /* XPROLOG */
 /* postscript "programs" to unpack and print the bitmaps being sent */
 
-const
+static const
 char *ps_prolog_compact[] = {
     "%%Pages: 1",
     "%%EndProlog",
@@ -1359,10 +1345,10 @@ char *ps_prolog_compact[] = {
     "			{ bitgen }",
     "			image",
     "	} def",
-    0
+    NULL
 };
 
-const 
+static const 
 char *ps_prolog[] = {
     "%%Pages: 1",
     "%%EndProlog",
@@ -1391,7 +1377,7 @@ char *ps_prolog[] = {
     "	{ currentfile picstr readhexstring pop }",
     "	image",
     "} def",
-    0
+    NULL
 };
 
 static
@@ -1548,53 +1534,20 @@ void ps_setup(
     }
 }
 
-const
+static const
 char *ps_epilog[] = {
 	"",
 	"showpage",
 	"%%Trailer",
-	0
+    NULL
 };
 
 static
 void ps_finish(void)
 {
-	char **p = ps_epilog;
+	char **p = (char **)ps_epilog;
 
 	while (*p) printf("%s\n",*p++);
-}
-
-static
-void ln03_alter_background(
-  unsigned char (*sixmap)[],
-  int iw,
-  int ih)
-{
-    register unsigned char *c, *stopc;
-    register unsigned char *startc;
-    register int n;
-
-    c = (unsigned char *)sixmap;
-    stopc = c + (iw * ih);
-    n = 0;
-    while (c < stopc) {
-	switch (*c) {
-	case 0x08: case 0x11: case 0x04: case 0x22:
-	case 0x20: case 0x21: case 0x24: case 0x00:
-	    if (n == 0) startc = c;
-	    n++;
-	    break;
-
-	default:
-	    if (n >= 2) {
-		while (n-- > 0) *startc++ = 0x00;
-	    } else {
-		n = 0;
-	    }
-	    break;
-	}
-	c++;
-    }
 }
 
 static
@@ -1779,7 +1732,7 @@ void ps_output_bits(
 	 * to avoid special cases at the boundaries
 	 */
 	obuf = malloc((unsigned)(owidth*oheight));
-	if (obuf==0) {
+	if (obuf==NULL) {
 	    fprintf(stderr,"xpr: cannot allocate %d bytes\n",owidth*oheight);
 	    exit(1);
 	}
@@ -1817,7 +1770,7 @@ void ps_output_bits(
     }
 }
 
-const
+static const
 unsigned char _reverse_byte[0x100] = {
 	0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
 	0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
