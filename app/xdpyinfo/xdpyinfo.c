@@ -46,11 +46,13 @@ in this Software without prior written authorization from The Open Group.
 #  define XKB
 # endif
 
-# if HAVE_X11_EXTENSIONS_XF86VMODE_H && HAVE_X11_EXTENSIONS_XF86VMSTR_H
+# if HAVE_X11_EXTENSIONS_XF86VMODE_H && \
+	(HAVE_X11_EXTENSIONS_XF86VMSTR_H || HAVE_X11_EXTENSIONS_XF86VMPROTO_H)
 #  define XF86VIDMODE
 # endif
 
-# if HAVE_X11_EXTENSIONS_XF86DGA_H && HAVE_X11_EXTENSIONS_XF86DGASTR_H
+# if (HAVE_X11_EXTENSIONS_XXF86DGA_H && HAVE_X11_EXTENSIONS_XF86DGAPROTO_H) \
+  || (HAVE_X11_EXTENSIONS_XF86DGA_H && HAVE_X11_EXTENSIONS_XF86DGASTR_H)
 #  define XFreeXDGA
 # endif
 
@@ -64,6 +66,10 @@ in this Software without prior written authorization from The Open Group.
 
 # if HAVE_X11_EXTENSIONS_XRENDER_H
 #  define XRENDER
+# endif
+
+# if HAVE_X11_EXTENSIONS_XCOMPOSITE_H
+#  define COMPOSITE
 # endif
 
 # if HAVE_X11_EXTENSIONS_XINERAMA_H
@@ -100,11 +106,20 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #ifdef XF86VIDMODE
 #include <X11/extensions/xf86vmode.h>
-#include <X11/extensions/xf86vmstr.h>
+# if HAVE_X11_EXTENSIONS_XF86VMPROTO_H /* xf86vidmodeproto 2.2.99.1 & later */
+#  include <X11/extensions/xf86vmproto.h>
+# else
+#  include <X11/extensions/xf86vmstr.h>
+# endif
 #endif
 #ifdef XFreeXDGA
-#include <X11/extensions/xf86dga.h>
-#include <X11/extensions/xf86dgastr.h>
+# if HAVE_X11_EXTENSIONS_XXF86DGA_H && HAVE_X11_EXTENSIONS_XF86DGAPROTO_H
+#  include <X11/extensions/Xxf86dga.h>
+#  include <X11/extensions/xf86dgaproto.h>
+# else
+#  include <X11/extensions/xf86dga.h>
+#  include <X11/extensions/xf86dgastr.h>
+# endif
 #endif
 #ifdef XF86MISC
 #include <X11/extensions/xf86misc.h>
@@ -115,6 +130,9 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #ifdef XRENDER
 #include <X11/extensions/Xrender.h>
+#endif
+#ifdef COMPOSITE
+#include <X11/extensions/Xcomposite.h>
 #endif
 #ifdef PANORAMIX
 #include <X11/extensions/Xinerama.h>
@@ -132,8 +150,8 @@ in this Software without prior written authorization from The Open Group.
 /* Turn a NULL pointer string into an empty string */
 #define NULLSTR(x) (((x)!=NULL)?(x):(""))
 
-char *ProgramName;
-Bool queryExtensions = False;
+static char *ProgramName;
+static Bool queryExtensions = False;
 
 static int
 silent_errors(Display *dpy, XErrorEvent *ev)
@@ -725,7 +743,8 @@ print_shape_info(Display *dpy, char *extname)
 static int
 print_dga_info(Display *dpy, char *extname)
 {
-    int majorrev, minorrev, width, bank, ram, offset, flags;
+    unsigned int offset;
+    int majorrev, minorrev, width, bank, ram, flags;
 
     if (!XF86DGAQueryVersion(dpy, &majorrev, &minorrev))
 	return 0;
@@ -763,6 +782,35 @@ print_dga_info(Display *dpy, char *extname)
 #define V_PCSYNC        0x080
 #define V_NCSYNC        0x100
 
+static void
+print_XF86VidMode_modeline(
+    unsigned int        dotclock,
+    unsigned short      hdisplay,
+    unsigned short      hsyncstart,
+    unsigned short      hsyncend,
+    unsigned short      htotal,
+    unsigned short      vdisplay,
+    unsigned short      vsyncstart,
+    unsigned short      vsyncend,
+    unsigned short      vtotal,
+    unsigned int        flags)
+{
+    printf("    %6.2f   %4d %4d %4d %4d   %4d %4d %4d %4d ",
+	   (float)dotclock/1000.0,
+	   hdisplay, hsyncstart, hsyncend, htotal,
+	   vdisplay, vsyncstart, vsyncend, vtotal);
+    if (flags & V_PHSYNC)    printf(" +hsync");
+    if (flags & V_NHSYNC)    printf(" -hsync");
+    if (flags & V_PVSYNC)    printf(" +vsync");
+    if (flags & V_NVSYNC)    printf(" -vsync");
+    if (flags & V_INTERLACE) printf(" interlace");
+    if (flags & V_CSYNC)     printf(" composite");
+    if (flags & V_PCSYNC)    printf(" +csync");
+    if (flags & V_NCSYNC)    printf(" -csync");
+    if (flags & V_DBLSCAN)   printf(" doublescan");
+    printf("\n");
+}
+
 static int
 print_XF86VidMode_info(Display *dpy, char *extname)
 {
@@ -775,72 +823,59 @@ print_XF86VidMode_info(Display *dpy, char *extname)
 	return 0;
     print_standard_extension_info(dpy, extname, majorrev, minorrev);
 
-    if (!XF86VidModeGetMonitor(dpy, DefaultScreen(dpy), &monitor))
-	return 0;
-    printf("  Monitor Information:\n");
-    printf("    Vendor: %s, Model: %s\n", 
-	monitor.vendor == NULL ? "" : monitor.vendor,
-	monitor.model == NULL ? "" : monitor.model);
-    printf("    Num hsync: %d, Num vsync: %d\n", monitor.nhsync, monitor.nvsync);
-    for (i = 0; i < monitor.nhsync; i++) {
-        printf("    hsync range %d: %6.2f - %6.2f\n", i, monitor.hsync[i].lo,
-               monitor.hsync[i].hi);
+    if (XF86VidModeGetMonitor(dpy, DefaultScreen(dpy), &monitor)) {
+	printf("  Monitor Information:\n");
+	printf("    Vendor: %s, Model: %s\n",
+	       monitor.vendor == NULL ? "" : monitor.vendor,
+	       monitor.model == NULL ? "" : monitor.model);
+	printf("    Num hsync: %d, Num vsync: %d\n",
+	       monitor.nhsync, monitor.nvsync);
+	for (i = 0; i < monitor.nhsync; i++) {
+	    printf("    hsync range %d: %6.2f - %6.2f\n", i,
+		   monitor.hsync[i].lo, monitor.hsync[i].hi);
+	}
+	for (i = 0; i < monitor.nvsync; i++) {
+	    printf("    vsync range %d: %6.2f - %6.2f\n", i,
+		   monitor.vsync[i].lo, monitor.vsync[i].hi);
+	}
+	XFree(monitor.vendor);
+	XFree(monitor.model);
+	XFree(monitor.hsync);
+	XFree(monitor.vsync);
+    } else {
+	printf("  Monitor Information not available\n");
     }
-    for (i = 0; i < monitor.nvsync; i++) {
-        printf("    vsync range %d: %6.2f - %6.2f\n", i, monitor.vsync[i].lo,
-               monitor.vsync[i].hi);
-    }
-    XFree(monitor.vendor);
-    XFree(monitor.model);
-    XFree(monitor.hsync);
-    XFree(monitor.vsync);
 
     if ((majorrev > 0) || (majorrev == 0 && minorrev > 5)) {
-      if (!XF86VidModeGetAllModeLines(dpy, DefaultScreen(dpy), &modecount,
-				      &modelines))
-	return 0;
-      printf("  Available Video Mode Settings:\n");
-      printf("     Clock   Hdsp Hbeg Hend Httl   Vdsp Vbeg Vend Vttl  Flags\n");
-      for (i = 0; i < modecount; i++) {
-        printf("    %6.2f   %4d %4d %4d %4d   %4d %4d %4d %4d ",
-            (float)modelines[i]->dotclock/1000.0,
-            modelines[i]->hdisplay, modelines[i]->hsyncstart,
-            modelines[i]->hsyncend, modelines[i]->htotal,
-            modelines[i]->vdisplay, modelines[i]->vsyncstart,
-            modelines[i]->vsyncend, modelines[i]->vtotal);
-        if (modelines[i]->flags & V_PHSYNC)    printf(" +hsync");
-        if (modelines[i]->flags & V_NHSYNC)    printf(" -hsync");
-        if (modelines[i]->flags & V_PVSYNC)    printf(" +vsync");
-        if (modelines[i]->flags & V_NVSYNC)    printf(" -vsync");
-        if (modelines[i]->flags & V_INTERLACE) printf(" interlace");
-        if (modelines[i]->flags & V_CSYNC)     printf(" composite");
-        if (modelines[i]->flags & V_PCSYNC)    printf(" +csync");
-        if (modelines[i]->flags & V_PCSYNC)    printf(" -csync");
-        if (modelines[i]->flags & V_DBLSCAN)   printf(" doublescan");
-        printf("\n");
+      if (XF86VidModeGetAllModeLines(dpy, DefaultScreen(dpy), &modecount,
+				     &modelines)) {
+	  printf("  Available Video Mode Settings:\n");
+	  printf("     Clock   Hdsp Hbeg Hend Httl   Vdsp Vbeg Vend Vttl  Flags\n");
+	  for (i = 0; i < modecount; i++) {
+	      print_XF86VidMode_modeline
+		  (modelines[i]->dotclock, modelines[i]->hdisplay,
+		   modelines[i]->hsyncstart, modelines[i]->hsyncend,
+		   modelines[i]->htotal, modelines[i]->vdisplay,
+		   modelines[i]->vsyncstart, modelines[i]->vsyncend,
+		   modelines[i]->vtotal, modelines[i]->flags);
+	  }
+	  XFree(modelines);
+      } else {
+	  printf("  Available Video Mode Settings not available\n");
       }
-      XFree(modelines);
 
-      if (!XF86VidModeGetModeLine(dpy, DefaultScreen(dpy),
-				  &dotclock, &modeline))
-	return 0;
-      printf("  Current Video Mode Setting:\n");
-      printf("    %6.2f   %4d %4d %4d %4d   %4d %4d %4d %4d ",
-	     (float)dotclock/1000.0,
-	     modeline.hdisplay, modeline.hsyncstart,
-	     modeline.hsyncend, modeline.htotal,
-	     modeline.vdisplay, modeline.vsyncstart,
-	     modeline.vsyncend, modeline.vtotal);
-      if (modeline.flags & V_PHSYNC)    printf(" +hsync");
-      if (modeline.flags & V_NHSYNC)    printf(" -hsync");
-      if (modeline.flags & V_PVSYNC)    printf(" +vsync");
-      if (modeline.flags & V_NVSYNC)    printf(" -vsync");
-      if (modeline.flags & V_INTERLACE) printf(" interlace");
-      if (modeline.flags & V_CSYNC)     printf(" composite");
-      if (modeline.flags & V_PCSYNC)    printf(" +csync");
-      if (modeline.flags & V_PCSYNC)    printf(" -csync");
-      if (modeline.flags & V_DBLSCAN)   printf(" doublescan");
-      printf("\n");
+      if (XF86VidModeGetModeLine(dpy, DefaultScreen(dpy),
+				 &dotclock, &modeline)) {
+	  printf("  Current Video Mode Setting:\n");
+	  print_XF86VidMode_modeline(dotclock,
+				     modeline.hdisplay, modeline.hsyncstart,
+				     modeline.hsyncend, modeline.htotal,
+				     modeline.vdisplay, modeline.vsyncstart,
+				     modeline.vsyncend, modeline.vtotal,
+				     modeline.flags);
+      } else {
+	  printf("  Current Video Mode Setting not available\n");
+      }
     }
 
     return 1;
@@ -849,14 +884,14 @@ print_XF86VidMode_info(Display *dpy, char *extname)
 
 #ifdef XF86MISC
 
-char *kbdtable[] = { "Unknown", "84-key", "101-key", "Other", "Xqueue" };
-char *msetable[] = { "None", "Microsoft", "MouseSystems", "MMSeries",
+static char *kbdtable[] = { "Unknown", "84-key", "101-key", "Other", "Xqueue" };
+static char *msetable[] = { "None", "Microsoft", "MouseSystems", "MMSeries",
 		     "Logitech", "BusMouse", "Mouseman", "PS/2", "MMHitTab",
 		     "GlidePoint", "IntelliMouse", "ThinkingMouse",
 		     "IMPS/2", "ThinkingMousePS/2", "MouseManPlusPS/2",
 		     "GlidePointPS/2", "NetMousePS/2", "NetScrollPS/2",
 		     "SysMouse", "Auto" };
-char *flgtable[] = { "None", "ClearDTR", "ClearRTS",
+static char *flgtable[] = { "None", "ClearDTR", "ClearRTS",
 		     "ClearDTR and ClearRTS" };
 
 static int
@@ -1165,6 +1200,20 @@ print_xrender_info(Display *dpy, char *extname)
 }
 #endif /* XRENDER */
 
+#ifdef COMPOSITE
+static int
+print_composite_info(Display *dpy, char *extname)
+{
+    int majorrev, minorrev, foo;
+
+    if (!XCompositeQueryExtension(dpy, &foo, &foo))
+	return 0;
+    if (!XCompositeQueryVersion(dpy, &majorrev, &minorrev))
+	return 0;
+    print_standard_extension_info(dpy, extname, majorrev, minorrev);
+    return 1;
+}
+#endif
 
 #ifdef PANORAMIX
 
@@ -1411,7 +1460,7 @@ typedef struct {
     Bool printit;
 } ExtensionPrintInfo;
 
-ExtensionPrintInfo known_extensions[] =
+static ExtensionPrintInfo known_extensions[] =
 {
 #ifdef MITSHM
     {"MIT-SHM",	print_mitshm_info, False},
@@ -1442,6 +1491,9 @@ ExtensionPrintInfo known_extensions[] =
 #ifdef XRENDER
     {RENDER_NAME, print_xrender_info, False},
 #endif
+#ifdef COMPOSITE
+    {COMPOSITE_NAME, print_composite_info, False},
+#endif
 #ifdef PANORAMIX
     {"XINERAMA", print_xinerama_info, False},
 #endif
@@ -1454,7 +1506,7 @@ ExtensionPrintInfo known_extensions[] =
     /* add new extensions here */
 };
 
-int num_known_extensions = sizeof known_extensions / sizeof known_extensions[0];
+static int num_known_extensions = sizeof known_extensions / sizeof known_extensions[0];
 
 static void
 print_known_extensions(FILE *f)

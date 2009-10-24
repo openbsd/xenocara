@@ -85,7 +85,8 @@ xdpyinfo_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -115,7 +116,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -131,7 +131,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -139,6 +142,8 @@ DPY_DMX_CFLAGS = @DPY_DMX_CFLAGS@
 DPY_DMX_LIBS = @DPY_DMX_LIBS@
 DPY_X11_CFLAGS = @DPY_X11_CFLAGS@
 DPY_X11_LIBS = @DPY_X11_LIBS@
+DPY_XCOMPOSITE_CFLAGS = @DPY_XCOMPOSITE_CFLAGS@
+DPY_XCOMPOSITE_LIBS = @DPY_XCOMPOSITE_LIBS@
 DPY_XEXT_CFLAGS = @DPY_XEXT_CFLAGS@
 DPY_XEXT_LIBS = @DPY_XEXT_LIBS@
 DPY_XF86DGA_CFLAGS = @DPY_XF86DGA_CFLAGS@
@@ -164,9 +169,11 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -203,8 +210,6 @@ VERSION = @VERSION@
 XDPYINFO_CFLAGS = @XDPYINFO_CFLAGS@
 XDPYINFO_LIBS = @XDPYINFO_LIBS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -219,29 +224,38 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_CFLAGS = \
 	$(XDPYINFO_CFLAGS) \
+	$(CWARNFLAGS) \
 	$(DPY_XEXT_CFLAGS) \
 	$(DPY_XKB_CFLAGS) \
 	$(DPY_XF86VIDMODE_CFLAGS) \
@@ -249,6 +263,7 @@ AM_CFLAGS = \
 	$(DPY_XF86MISC_CFLAGS) \
 	$(DPY_XINPUT_CFLAGS) \
 	$(DPY_XRENDER_CFLAGS) \
+	$(DPY_XCOMPOSITE_CFLAGS) \
 	$(DPY_XINERAMA_CFLAGS) \
 	$(DPY_DMX_CFLAGS) \
 	$(DPY_XPRINT_CFLAGS) \
@@ -263,6 +278,7 @@ xdpyinfo_LDADD = \
 	$(DPY_XF86MISC_LIBS) \
 	$(DPY_XINPUT_LIBS) \
 	$(DPY_XRENDER_LIBS) \
+	$(DPY_XCOMPOSITE_LIBS) \
 	$(DPY_XINERAMA_LIBS) \
 	$(DPY_DMX_LIBS) \
 	$(DPY_XPRINT_LIBS) \
@@ -705,12 +721,12 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 @LINT_TRUE@lint:
 @LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(AM_CFLAGS) $(xdpyinfo_SOURCES)

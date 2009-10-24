@@ -23,6 +23,7 @@ bin_PROGRAMS = xdpyinfo
 
 AM_CFLAGS = \
 	$(XDPYINFO_CFLAGS) \
+	$(CWARNFLAGS) \
 	$(DPY_XEXT_CFLAGS) \
 	$(DPY_XKB_CFLAGS) \
 	$(DPY_XF86VIDMODE_CFLAGS) \
@@ -30,6 +31,7 @@ AM_CFLAGS = \
 	$(DPY_XF86MISC_CFLAGS) \
 	$(DPY_XINPUT_CFLAGS) \
 	$(DPY_XRENDER_CFLAGS) \
+	$(DPY_XCOMPOSITE_CFLAGS) \
 	$(DPY_XINERAMA_CFLAGS) \
 	$(DPY_DMX_CFLAGS) \
 	$(DPY_XPRINT_CFLAGS) \
@@ -44,6 +46,7 @@ xdpyinfo_LDADD = \
 	$(DPY_XF86MISC_LIBS) \
 	$(DPY_XINPUT_LIBS) \
 	$(DPY_XRENDER_LIBS) \
+	$(DPY_XCOMPOSITE_LIBS) \
 	$(DPY_XINERAMA_LIBS) \
 	$(DPY_DMX_LIBS) \
 	$(DPY_XPRINT_LIBS) \
@@ -67,7 +70,7 @@ MAINTAINERCLEANFILES = ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
@@ -93,7 +96,7 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \

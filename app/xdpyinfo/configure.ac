@@ -22,14 +22,20 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xdpyinfo,[1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdpyinfo)
+AC_INIT(xdpyinfo, [1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdpyinfo)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
 AC_PROG_INSTALL
+
+XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XDPYINFO, xext x11 xtst)
@@ -54,7 +60,7 @@ PKG_CHECK_MODULES(DPY_XKB, x11,
 PKG_CHECK_MODULES(DPY_XF86VIDMODE, xxf86vm, 
 	[SAVE_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $DPY_XF86VIDMODE_CFLAGS $DPY_X11_CFLAGS"
-	AC_CHECK_HEADERS([X11/extensions/xf86vmode.h X11/extensions/xf86vmstr.h],,,[#include <X11/Xlib.h>])
+	AC_CHECK_HEADERS([X11/extensions/xf86vmode.h X11/extensions/xf86vmstr.h X11/extensions/xf86vmproto.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
 AC_ARG_WITH(dga, AC_HELP_STRING([--without-dga],[Disable dga support.]), 
@@ -63,7 +69,7 @@ if test "x$USE_DGA" != "xno" ; then
 	PKG_CHECK_MODULES(DPY_XF86DGA, xxf86dga, 
 		[SAVE_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$CPPFLAGS $DPY_XF86DGA_CFLAGS $DPY_X11_CFLAGS"
-		AC_CHECK_HEADERS([X11/extensions/xf86dga.h X11/extensions/xf86dgastr.h],,,
+		AC_CHECK_HEADERS([X11/extensions/Xxf86dga.h X11/extensions/xf86dgaproto.h X11/extensions/xf86dga.h X11/extensions/xf86dgastr.h],,,
 				 [#include <X11/Xlib.h>
 #include <X11/Xproto.h>])
 		CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
@@ -72,13 +78,19 @@ else
 fi
 
 
-PKG_CHECK_MODULES(DPY_XF86MISC, xxf86misc, 
-	[SAVE_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS $DPY_XF86MISC_CFLAGS $DPY_X11_CFLAGS"
-	AC_CHECK_HEADERS([X11/extensions/xf86misc.h X11/extensions/xf86mscstr.h],,,
-			  [#include <X11/Xlib.h>
+AC_ARG_WITH(xf86misc, AC_HELP_STRING([--without-xf86misc],[Disable xf86misc support.]), 
+		[USE_XF86MISC="$withval"], [USE_XF86MISC="yes"])
+if test "x$USE_XF86MISC" != "xno" ; then
+	PKG_CHECK_MODULES(DPY_XF86MISC, xxf86misc, 
+		[SAVE_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS $DPY_XF86MISC_CFLAGS $DPY_X11_CFLAGS"
+		AC_CHECK_HEADERS([X11/extensions/xf86misc.h X11/extensions/xf86mscstr.h],,,
+				  [#include <X11/Xlib.h>
 #include <X11/Xproto.h>])
-	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+		CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+else
+	echo "without xf86misc"
+fi
 
 PKG_CHECK_MODULES(DPY_XINPUT, xi, 
 	[SAVE_CPPFLAGS="$CPPFLAGS"
@@ -90,6 +102,12 @@ PKG_CHECK_MODULES(DPY_XRENDER, xrender,
 	[SAVE_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $DPY_XRENDER_CFLAGS $DPY_X11_CFLAGS"
 	AC_CHECK_HEADERS([X11/extensions/Xrender.h],,,[#include <X11/Xlib.h>])
+	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+
+PKG_CHECK_MODULES(DPY_XCOMPOSITE, xcomposite,
+	[SAVE_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $DPY_XCOMPOSITE_CFLAGS $DPY_X11_CFLAGS"
+	AC_CHECK_HEADERS([X11/extensions/Xcomposite.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
 AC_ARG_WITH(xinerama, AC_HELP_STRING([--without-xinerama],[Disable xinerama support.]),
@@ -116,11 +134,17 @@ else
 	echo "without dmx"
 fi
 
-PKG_CHECK_MODULES(DPY_XPRINT, xp, 
-	[SAVE_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS $DPY_XPRINT_CFLAGS $DPY_X11_CFLAGS"
-	AC_CHECK_HEADERS([X11/extensions/Print.h],,,[#include <X11/Xlib.h>])
-	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+AC_ARG_WITH(xprint, AC_HELP_STRING([--without-xprint],[Disable xprint support.]), 
+		[USE_XPRINT="$withval"], [USE_XPRINT="yes"])
+if test "x$USE_XPRINT" != "xno" ; then
+	PKG_CHECK_MODULES(DPY_XPRINT, xp, 
+		[SAVE_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS $DPY_XPRINT_CFLAGS $DPY_X11_CFLAGS"
+		AC_CHECK_HEADERS([X11/extensions/Print.h],,,[#include <X11/Xlib.h>])
+		CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+else
+	echo "without xprint"
+fi
 
 PKG_CHECK_MODULES(DPY_XTST, xtst, 
 	[SAVE_CPPFLAGS="$CPPFLAGS"
@@ -130,8 +154,5 @@ PKG_CHECK_MODULES(DPY_XTST, xtst,
 
 dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])

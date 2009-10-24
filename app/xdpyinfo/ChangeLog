@@ -1,3 +1,130 @@
+commit a02c4aad3cbe284630de60f6de9c1bfc3dd6a853
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 16:07:10 2009 -0700
+
+    xdpyinfo 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a2f989d387ec8f6002240be53fa24e264392b693
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Oct 13 11:34:11 2009 -0700
+
+    Added --without-{xf86misc,xprint} configure time options
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit 5d44998f53644954200f3e6adbfbef068b5755e6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 18:01:22 2009 -0700
+
+    Use $(AM_V_GEN) to silence man page creation too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9ca9d19206114788da85c81a5aba2525baef80cb
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 18:00:15 2009 -0700
+
+    Use Xxf86dga.h & xf86dgaproto.h if present, to avoid warnings from old headers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 26b3ee9b9fd5a58ef7812ecabebd78bd10d57878
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 2 17:00:45 2009 -0700
+
+    Remove empty INSTALL so automake installs a real one
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 22e3bfdb5d700c9f767366db39ec1dec72785929
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:22 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f9eaeadea17cb96ab85ee6cc0b5aa3867a832bcc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Sep 21 16:27:55 2009 -0700
+
+    Use xf86vmproto.h instead of xf86vmstr.h if it is installed
+    
+    Clears warnings when built with xf86vidmodeproto 2.2.99.1 & later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bd89c302aa44c5a7a6e5f5d6e6f131e04b8e61c1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Sep 21 16:22:30 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5e33ed3a2852a84fbbeb4fb4172928053cf677bf
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 1 21:54:11 2009 -0700
+
+    Move CWARNFLAGS addition to CFLAGS from configure.ac to Makefile.am
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f1974e686a9622fa526268697d29ceab83edf0d0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 1 20:50:51 2009 -0700
+
+    Improved XF86-VidModeExtension printing
+    
+    - Combine common modeline printing code into single function
+    - Don't return 0 unless extension isn't supported, since that
+      makes xdpyinfo report the extension isn't supported.
+    - Don't exit immediately if some information is not available,
+      since other info may be present.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ffa604b5e6b60c5a98cc18819e70786b26b0b07c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 1 07:22:17 2009 -0700
+
+    Bug 3438: xdpyinfo reporting wrong information on xf86vidmode extension
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=3438
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit bb7e3c9ac00d5b3933b69470e03fadfe1800f7ae
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Feb 4 13:43:34 2009 -0800
+
+    Print Composite extension version for "-ext Composite"
+    
+    The only other information I could see to query in the Composite 0.4
+    protocol spec is the Composite Overlay Window XID, but the request to
+    get that ID has the side effect of mapping the overlay window, and
+    xdpyinfo shouldn't have side effects like that.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3a041bbccdee28b628ce5243e77d7d3125a186d4
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 13 20:10:23 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, and corrects
+    make distcheck.
+
+commit 0fbda267334eb531b7153c3b9035fe7470302e13
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Jun 13 12:23:03 2008 -0600
+
+    Don't print '(null)' when XF86VidModeGetMonitor() returns NULL fields.
+
 commit 53743925d1067b830dd80f9193444f5799f55e28
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed May 21 14:19:52 2008 -0400
