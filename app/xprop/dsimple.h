@@ -59,6 +59,7 @@ extern int screen;                           /* The current screen */
     /* Declarations for functions in just_display.c */
 
 char *Malloc(unsigned);
+char *Realloc(char *,unsigned);
 char *Get_Display_Name(int *, char **);
 Display *Open_Display(const char *);
 void Setup_Display_And_Screen(int *, char **);

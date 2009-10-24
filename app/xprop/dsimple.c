@@ -72,7 +72,17 @@ char *Malloc(unsigned size)
 
 	return(data);
 }
-	
+
+/*
+ * Realloc: like realloc but handles out of memory using Fatal_Error:
+ */
+char *Realloc(char *mem, unsigned size)
+{
+    if (!(mem = realloc (mem, size)))
+	Fatal_Error("Out of memory!");
+
+    return mem;
+}
 
 /*
  * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obselete)
@@ -123,8 +133,7 @@ Display *Open_Display(const char *display_name)
 	if (d == NULL) {
 	    fprintf (stderr, "%s:  unable to open display '%s'\n",
 		     program_name, XDisplayName (display_name));
-	    usage ();
-	    /* doesn't return */
+	    exit(1);
 	}
 
 	return(d);

@@ -216,6 +216,12 @@ The field is a signed integer.
 m
 The field is a set of bit flags, 1 meaning on.
 .TP
+o
+The field is an array of icons, packed as a sequence of 32 bit numbers
+consisting of the width, height and ARGB pixel values, as defined for
+the _NET_WM_ICON property in the \fIExtended Window Manager Hints\fP
+specification.   A field of this type must be of size 32.
+.TP
 s
 This field and the next ones until either a 0 or the end of the property
 represent a sequence of bytes.  This format character is only usable with
