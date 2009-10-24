@@ -94,8 +94,8 @@ This option is like \fB\-children\fP but displays all children recursively.
 This option causes the display of various attributes pertaining to 
 the location and appearance of the selected window.
 Information displayed includes the location of the window,
-its width and height, its depth, border width, class, colormap id if any,
-map state, backing-store hint, and location of the corners.
+its width and height, its depth, border width, visual id and class,
+colormap id if any, map state, backing-store hint, and location of the corners.
 .PP
 .TP 8
 .B \-bits
@@ -169,6 +169,7 @@ xwininfo: Window id: 0x60000f "xterm"
   Width: 579
   Height: 316
   Depth: 8
+  Visual: 0x1e
   Visual Class: PseudoColor
   Border width: 0
   Class: InputOutput

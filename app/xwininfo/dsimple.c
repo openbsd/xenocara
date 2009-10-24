@@ -110,8 +110,7 @@ Display *Open_Display(char *display_name)
 	if (d == NULL) {
 	    fprintf (stderr, "%s:  unable to open display '%s'\n",
 		     program_name, XDisplayName (display_name));
-	    usage ();
-	    /* doesn't return */
+	    exit(1);
 	}
 
 	return(d);

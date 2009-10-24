@@ -22,6 +22,8 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 
+#include "clientwin.h"
+
 static Atom atom_wm_state = None;
 
 /*
@@ -68,7 +70,7 @@ Window_Is_Viewable(Display * dpy, Window win)
  * Children are searched in top-down stacking order.
  * The first matching window is returned, None if no match is found.
  */
-Window
+static Window
 Find_Client_In_Children(Display * dpy, Window win)
 {
     Window root, parent;
@@ -114,7 +116,7 @@ Find_Client_In_Children(Display * dpy, Window win)
 /*
  * Find virtual roots (_NET_VIRTUAL_ROOTS)
  */
-unsigned long *
+static unsigned long *
 Find_Roots(Display * dpy, Window root, unsigned int *num)
 {
     Atom type_ret;
