@@ -1,3 +1,39 @@
+commit a5041bd0be9d1b54f4e6683c141745f5ed0d6294
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 16:20:33 2009 -0700
+
+    xdriinfo 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7c88f82a86249eac513643c2a5f4dceb86cb754d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 16:20:14 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit cdec3cdf9e45c8232ffba8f8ad51d2880d8e6da9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:22 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 10444fb87f13b5c531714f2564c976ca6ca5fd90
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 20 16:29:24 2009 -0200
+
+    Correct make distcheck failure and sparse warnings.
+
+commit 4cd79eba9a2a4763f34a30d0ed71c9a5ac6f4353
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:06 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
 commit 46dcc268ae983b7f1214b1839776f8f5d72f4222
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Aug 17 16:27:11 2007 -0700

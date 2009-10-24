@@ -20,7 +20,7 @@
 
 bin_PROGRAMS = xdriinfo
 
-AM_CFLAGS = $(XDRIINFO_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XDRIINFO_CFLAGS)
 # mesa should really use pkg-config ...
 xdriinfo_LDADD = $(XDRIINFO_LIBS)
 
@@ -38,8 +38,10 @@ EXTRA_DIST = $(appman_PRE) ChangeLog autogen.sh
 CLEANFILES = $(appman_DATA)
 MAINTAINERCLEANFILES=ChangeLog
 
+.PHONY: ChangeLog
+
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
@@ -65,4 +67,4 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

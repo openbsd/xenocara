@@ -33,8 +33,8 @@
 typedef const char * glXGetScreenDriver_t (Display *dpy, int scrNum);
 typedef const char * glXGetDriverConfig_t (const char *driverName);
 
-glXGetScreenDriver_t *GetScreenDriver;
-glXGetDriverConfig_t *GetDriverConfig;
+static glXGetScreenDriver_t *GetScreenDriver;
+static glXGetDriverConfig_t *GetDriverConfig;
 
 enum INFO_FUNC {
     LIST, NSCREENS, DRIVER, OPTIONS
