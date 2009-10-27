@@ -227,6 +227,8 @@
 ./usr/X11R6/include/X11/bitmaps/Term
 ./usr/X11R6/include/X11/bitmaps/Up
 ./usr/X11R6/include/X11/bitmaps/black
+./usr/X11R6/include/X11/bitmaps/black6
+./usr/X11R6/include/X11/bitmaps/box6
 ./usr/X11R6/include/X11/bitmaps/boxes
 ./usr/X11R6/include/X11/bitmaps/calculator
 ./usr/X11R6/include/X11/bitmaps/ccode.icon
@@ -996,9 +998,12 @@
 ./usr/X11R6/man/man1/xhost.1
 ./usr/X11R6/man/man1/xinit.1
 ./usr/X11R6/man/man1/xinput.1
+./usr/X11R6/man/man1/xkbbell.1
 ./usr/X11R6/man/man1/xkbcomp.1
 ./usr/X11R6/man/man1/xkbevd.1
 ./usr/X11R6/man/man1/xkbprint.1
+./usr/X11R6/man/man1/xkbvleds.1
+./usr/X11R6/man/man1/xkbwatch.1
 ./usr/X11R6/man/man1/xkill.1
 ./usr/X11R6/man/man1/xload.1
 ./usr/X11R6/man/man1/xlock.1
