@@ -522,7 +522,11 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
 
     /* Fallback to platform default frame buffer driver */
     if (i < (nmatches - 1)) {
-#if !defined(__linux__) && defined(__sparc__)
+#if defined(__OpenBSD__)
+#  if !defined(__i386__) && !defined(__amd64__)
+	matches[i++] = xnfstrdup("wsfb");
+#  endif
+#elif !defined(__linux__) && defined(__sparc__)
 	matches[i++] = xnfstrdup("wsfb");
 #else
 	matches[i++] = xnfstrdup("fbdev");
