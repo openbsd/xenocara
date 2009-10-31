@@ -38,7 +38,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@KERBEROS_TRUE@am__append_1 = k5encode.c
 check_PROGRAMS = Autest$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
@@ -68,12 +67,8 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libXau_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__libXau_la_SOURCES_DIST = AuDispose.c AuFileName.c AuGetAddr.c \
-	AuGetBest.c AuLock.c AuRead.c AuUnlock.c AuWrite.c k5encode.c
-@KERBEROS_TRUE@am__objects_1 = k5encode.lo
 am_libXau_la_OBJECTS = AuDispose.lo AuFileName.lo AuGetAddr.lo \
-	AuGetBest.lo AuLock.lo AuRead.lo AuUnlock.lo AuWrite.lo \
-	$(am__objects_1)
+	AuGetBest.lo AuLock.lo AuRead.lo AuUnlock.lo AuWrite.lo
 libXau_la_OBJECTS = $(am_libXau_la_OBJECTS)
 am_Autest_OBJECTS = Autest.$(OBJEXT)
 Autest_OBJECTS = $(am_Autest_OBJECTS)
@@ -90,7 +85,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libXau_la_SOURCES) $(Autest_SOURCES)
-DIST_SOURCES = $(am__libXau_la_SOURCES_DIST) $(Autest_SOURCES)
+DIST_SOURCES = $(libXau_la_SOURCES) $(Autest_SOURCES)
 libmanDATA_INSTALL = $(INSTALL_DATA)
 lintlibDATA_INSTALL = $(INSTALL_DATA)
 pkgconfigDATA_INSTALL = $(INSTALL_DATA)
@@ -109,7 +104,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -127,8 +121,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -150,12 +146,11 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-KERBEROS_FALSE = @KERBEROS_FALSE@
-KERBEROS_TRUE = @KERBEROS_TRUE@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -196,18 +191,9 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XAU_CFLAGS = @XAU_CFLAGS@
 XAU_LIBS = @XAU_LIBS@
-ac_ct_AR = @ac_ct_AR@
-ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -224,23 +210,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -250,8 +244,16 @@ AM_CFLAGS = $(XAU_CFLAGS)
 INCLUDES = -I${top_srcdir}/include
 libXau_la_LDFLAGS = -version-number 6:0:0 -no-undefined
 libXau_la_LIBADD = $(XAU_LIBS)
-libXau_la_SOURCES = AuDispose.c AuFileName.c AuGetAddr.c AuGetBest.c \
-	AuLock.c AuRead.c AuUnlock.c AuWrite.c $(am__append_1)
+libXau_la_SOURCES = \
+	AuDispose.c \
+	AuFileName.c \
+	AuGetAddr.c \
+	AuGetBest.c \
+	AuLock.c \
+	AuRead.c \
+	AuUnlock.c \
+	AuWrite.c
+
 xauincludedir = $(includedir)/X11
 xauinclude_HEADERS = include/X11/Xauth.h
 pkgconfigdir = $(libdir)/pkgconfig
@@ -398,7 +400,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuUnlock.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuWrite.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Autest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/k5encode.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -879,7 +880,7 @@ Xau.$(LIB_MAN_SUFFIX): $(srcdir)/Xau.man
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
