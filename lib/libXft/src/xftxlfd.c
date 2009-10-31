@@ -1,6 +1,4 @@
 /*
- * $Id: xftxlfd.c,v 1.1.1.1 2006/11/25 17:21:38 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -102,35 +100,35 @@ XftXlfdParse (const char *xlfd_orig, FcBool ignore_scalable, FcBool complete)
     double	dpixel;
 
     if (*xlfd != '-')
-	return 0;
-    if (!(xlfd = strchr (foundry = ++xlfd, '-'))) return 0;
-    if (!(xlfd = strchr (family = ++xlfd, '-'))) return 0;
-    if (!(xlfd = strchr (weight_name = ++xlfd, '-'))) return 0;
-    if (!(xlfd = strchr (slant = ++xlfd, '-'))) return 0;
-    if (!(xlfd = strchr (/* setwidth_name = */ ++xlfd, '-'))) return 0;
-    if (!(xlfd = strchr (/* add_style_name = */ ++xlfd, '-'))) return 0;
-    if (!(xlfd = XftGetInt (++xlfd, &pixel))) return 0;
-    if (!(xlfd = XftGetInt (++xlfd, &point))) return 0;
-    if (!(xlfd = XftGetInt (++xlfd, &resx))) return 0;
-    if (!(xlfd = XftGetInt (++xlfd, &resy))) return 0;
-    if (!(xlfd = strchr (/* spacing = */ ++xlfd, '-'))) return 0;
-    if (!(xlfd = strchr (/* average_width = */ ++xlfd, '-'))) return 0;
-    if (!(xlfd = strchr (registry = ++xlfd, '-'))) return 0;
+	return NULL;
+    if (!(xlfd = strchr (foundry = ++xlfd, '-'))) return NULL;
+    if (!(xlfd = strchr (family = ++xlfd, '-'))) return NULL;
+    if (!(xlfd = strchr (weight_name = ++xlfd, '-'))) return NULL;
+    if (!(xlfd = strchr (slant = ++xlfd, '-'))) return NULL;
+    if (!(xlfd = strchr (/* setwidth_name = */ ++xlfd, '-'))) return NULL;
+    if (!(xlfd = strchr (/* add_style_name = */ ++xlfd, '-'))) return NULL;
+    if (!(xlfd = XftGetInt (++xlfd, &pixel))) return NULL;
+    if (!(xlfd = XftGetInt (++xlfd, &point))) return NULL;
+    if (!(xlfd = XftGetInt (++xlfd, &resx))) return NULL;
+    if (!(xlfd = XftGetInt (++xlfd, &resy))) return NULL;
+    if (!(xlfd = strchr (/* spacing = */ ++xlfd, '-'))) return NULL;
+    if (!(xlfd = strchr (/* average_width = */ ++xlfd, '-'))) return NULL;
+    if (!(xlfd = strchr (registry = ++xlfd, '-'))) return NULL;
     /* make sure no fields follow this one */
-    if ((xlfd = strchr (encoding = ++xlfd, '-'))) return 0;
+    if ((xlfd = strchr (encoding = ++xlfd, '-'))) return NULL;
 
     if (!pixel)
-	return 0;
+	return NULL;
     
     pat = FcPatternCreate ();
     if (!pat)
-	return 0;
+	return NULL;
     
     save = (char *) malloc (strlen (foundry) + 1);
     
     if (!save) {
 	FcPatternDestroy (pat);
-	return 0;
+	return NULL;
     }
 
     if (!FcPatternAddString (pat, XFT_XLFD, (FcChar8 *) xlfd_orig)) goto bail;
@@ -175,5 +173,5 @@ XftXlfdParse (const char *xlfd_orig, FcBool ignore_scalable, FcBool complete)
 bail:
     free (save);
     FcPatternDestroy (pat);
-    return 0;
+    return NULL;
 }

@@ -1,6 +1,4 @@
 /*
- * $Id: xftlist.c,v 1.1.1.1 2006/11/25 17:21:39 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -30,7 +28,7 @@ XftListFontsPatternObjects (Display	    *dpy,
 			    FcPattern	    *pattern,
 			    FcObjectSet    *os)
 {
-    return FcFontList (0, pattern, os);
+    return FcFontList (NULL, pattern, os);
 }
 
 _X_EXPORT FcFontSet *
@@ -45,8 +43,8 @@ XftListFonts (Display	*dpy,
     const char	    *first;
 
     va_start (va, screen);
-    
-    FcPatternVapBuild (pattern, 0, va);
+
+    FcPatternVapBuild (pattern, NULL, va);
     
     first = va_arg (va, const char *);
     FcObjectSetVapBuild (os, first, va);

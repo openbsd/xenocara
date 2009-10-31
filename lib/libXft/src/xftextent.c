@@ -1,6 +1,4 @@
 /*
- * $Id: xftextent.c,v 1.1.1.1 2006/11/25 17:21:39 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -55,7 +53,7 @@ XftGlyphExtents (Display	    *dpy,
 	XftFontLoadGlyphs (dpy, pub, FcFalse, missing, nmissing);
     g = glyphs;
     n = nglyphs;
-    xftg = 0;
+    xftg = NULL;
     while (n)
     {
 	glyph = *g++;

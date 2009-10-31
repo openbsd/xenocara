@@ -1,6 +1,4 @@
 /*
- * $Id: xftcore.c,v 1.1.1.1 2006/11/25 17:21:37 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -999,7 +997,7 @@ XftGlyphCore (XftDraw		*draw,
 	else
 	{
 	    draw->core.use_pixmap--;
-	    image = 0;
+	    image = NULL;
 	}
 	if (!image && (depth = XftDrawDepth (draw)))
 	{
@@ -1155,7 +1153,7 @@ XftGlyphSpecCore (XftDraw		*draw,
 	else
 	{
 	    draw->core.use_pixmap--;
-	    image = 0;
+	    image = NULL;
 	}
 	if (!image && (depth = XftDrawDepth (draw)))
 	{
@@ -1306,7 +1304,7 @@ XftGlyphFontSpecCore (XftDraw			*draw,
 	else
 	{
 	    draw->core.use_pixmap--;
-	    image = 0;
+	    image = NULL;
 	}
 	if (!image && (depth = XftDrawDepth (draw)))
 	{

@@ -1,6 +1,4 @@
 /*
- * $Id: xftdraw.c,v 1.1.1.1 2006/11/25 17:21:38 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -136,7 +134,7 @@ XftDrawCreate (Display   *dpy,
 
     draw = (XftDraw *) malloc (sizeof (XftDraw));
     if (!draw)
-	return 0;
+	return NULL;
     
     draw->dpy = dpy;
     draw->drawable = drawable;
@@ -146,7 +144,7 @@ XftDrawCreate (Display   *dpy,
     draw->visual = visual;
     draw->colormap = colormap;
     draw->render.pict = 0;
-    draw->core.gc = 0;
+    draw->core.gc = NULL;
     draw->core.use_pixmap = 0;
     draw->clip_type = XftClipTypeNone;
     draw->subwindow_mode = ClipByChildren;
@@ -162,16 +160,16 @@ XftDrawCreateBitmap (Display	*dpy,
 
     draw = (XftDraw *) malloc (sizeof (XftDraw));
     if (!draw)
-	return 0;
+	return NULL;
     draw->dpy = dpy;
     draw->drawable = (Drawable) bitmap;
-    draw->screen = _XftDrawScreen (dpy, bitmap, 0);
+    draw->screen = _XftDrawScreen (dpy, bitmap, NULL);
     draw->depth = 1;
     draw->bits_per_pixel = 1;
-    draw->visual = 0;
+    draw->visual = NULL;
     draw->colormap = 0;
     draw->render.pict = 0;
-    draw->core.gc = 0;
+    draw->core.gc = NULL;
     draw->core.use_pixmap = 0;
     draw->clip_type = XftClipTypeNone;
     draw->subwindow_mode = ClipByChildren;
@@ -188,16 +186,16 @@ XftDrawCreateAlpha (Display *dpy,
 
     draw = (XftDraw *) malloc (sizeof (XftDraw));
     if (!draw)
-	return 0;
+	return NULL;
     draw->dpy = dpy;
     draw->drawable = (Drawable) pixmap;
-    draw->screen = _XftDrawScreen (dpy, pixmap, 0);
+    draw->screen = _XftDrawScreen (dpy, pixmap, NULL);
     draw->depth = depth;
     draw->bits_per_pixel = 0;	/* don't find out until we need it */
-    draw->visual = 0;
+    draw->visual = NULL;
     draw->colormap = 0;
     draw->render.pict = 0;
-    draw->core.gc = 0;
+    draw->core.gc = NULL;
     draw->core.use_pixmap = 0;
     draw->clip_type = XftClipTypeNone;
     draw->subwindow_mode = ClipByChildren;
@@ -211,9 +209,9 @@ _XftDrawFormat (XftDraw	*draw)
     XftDisplayInfo  *info = _XftDisplayInfoGet (draw->dpy, True);
 
     if (!info || !info->hasRender)
-	return 0;
+	return NULL;
 
-    if (draw->visual == 0)
+    if (draw->visual == NULL)
     {
 	XRenderPictFormat   pf;
 
@@ -246,7 +244,7 @@ XftDrawChange (XftDraw	*draw,
     if (draw->core.gc)
     {
 	XFreeGC (draw->dpy, draw->core.gc);
-	draw->core.gc = 0;
+	draw->core.gc = NULL;
     }
 }
 
@@ -809,7 +807,10 @@ XftDrawRect (XftDraw		*draw,
     }
     else if (_XftDrawCorePrepare (draw, color))
     {
-	XftRectCore (draw, color, x, y, width, height);
+	/* note: not XftRectCore() */
+	XSetForeground (draw->dpy, draw->core.gc, color->pixel);
+	XFillRectangle (draw->dpy, draw->drawable, draw->core.gc,
+			x, y, width, height);
     }
 }
 
@@ -817,7 +818,7 @@ _X_EXPORT Bool
 XftDrawSetClip (XftDraw	*draw,
 		Region	r)
 {
-    Region			n = 0;
+    Region			n = NULL;
 
     /*
      * Check for quick exits
@@ -906,7 +907,7 @@ XftDrawSetClipRectangles (XftDraw		*draw,
 			  _Xconst XRectangle	*rects,
 			  int			n)
 {
-    XftClipRect	*new = 0;
+    XftClipRect	*new = NULL;
 
     /*
      * Check for quick exit

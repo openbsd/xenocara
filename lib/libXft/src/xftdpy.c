@@ -1,6 +1,4 @@
 /*
- * $Id: xftdpy.c,v 1.1.1.1 2006/11/25 17:21:37 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -85,7 +83,7 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
 	}
     }
     if (!createIfNecessary)
-	return 0;
+	return NULL;
 
     info = (XftDisplayInfo *) malloc (sizeof (XftDisplayInfo));
     if (!info)
@@ -96,10 +94,10 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
     (void) XESetCloseDisplay (dpy, info->codes->extension, _XftCloseDisplay);
 
     info->display = dpy;
-    info->defaults = 0;
-    info->solidFormat = 0;
+    info->defaults = NULL;
+    info->solidFormat = NULL;
     info->hasRender = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
-		       (XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
+		       (XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != NULL));
     info->use_free_glyphs = FcTrue;
     if (info->hasRender)
     {
@@ -157,12 +155,12 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
 	info->colors[i].screen = -1;
 	info->colors[i].pict = 0;
     }
-    info->fonts = 0;
+    info->fonts = NULL;
     
     info->next = _XftDisplayInfo;
     _XftDisplayInfo = info;
-    
-    info->glyph_memory = 0;
+
+    info->glyph_memory = NULL;
     info->max_glyph_memory = XftDefaultGetInteger (dpy,
 						   XFT_MAX_GLYPH_MEMORY, 0,
 						   XFT_DPY_MAX_GLYPH_MEMORY);
@@ -187,7 +185,7 @@ bail0:
     {
 	printf ("XftDisplayInfoGet failed to initialize, Xft unhappy\n");
     }
-    return 0;
+    return NULL;
 }
 
 /*
@@ -395,7 +393,7 @@ _XftDefaultInit (Display *dpy)
 bail1:
     FcPatternDestroy (pat);
 bail0:
-    return 0;
+    return NULL;
 }
 
 static FcResult

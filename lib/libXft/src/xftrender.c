@@ -1,6 +1,4 @@
 /*
- * $Id: xftrender.c,v 1.1.1.1 2006/11/25 17:21:39 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -397,7 +395,7 @@ XftCharSpecRender (Display		*dpy,
 static XRenderPictFormat *
 XftPreferFormat (Display *dpy, XRenderPictFormat *a, XRenderPictFormat *b)
 {
-    XRenderPictFormat	*prefer = 0;
+    XRenderPictFormat	*prefer = NULL;
     
     if (a == b)
 	prefer = a;
@@ -503,7 +501,7 @@ XftGlyphFontSpecRender (Display			    *dpy,
      * Compute the number of glyph elts needed
      */
     nelt = 1;
-    firstFont = 0;
+    firstFont = NULL;
     for (i = 0; i < nglyphs; i++)
     {
 	XftFont	    *pub = glyphs[i].font;
@@ -524,7 +522,7 @@ XftGlyphFontSpecRender (Display			    *dpy,
     format = firstFont->format;
     x = glyphs[i].x + glyph->metrics.xOff;
     y = glyphs[i].y + glyph->metrics.yOff;
-    prevPublic = 0;
+    prevPublic = NULL;
     while (++i < nglyphs)
     {
 	XftFont	    *pub = glyphs[i].font;
@@ -568,7 +566,7 @@ XftGlyphFontSpecRender (Display			    *dpy,
     x = y = 0;
     n = 0;
     j = 0;
-    prevPublic = 0;
+    prevPublic = NULL;
     for (i = 0; i < nglyphs; i++)
     {
 	XftFont	    *pub = glyphs[i].font;

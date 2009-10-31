@@ -1,6 +1,4 @@
 #
-#  $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:21:35 matthieu Exp $
-#
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -30,4 +28,12 @@ pkgconfig_DATA = xft.pc
 
 CLEANFILES = xft-config
 
-EXTRA_DIST = xft-config.in xft.pc.in autogen.sh
+EXTRA_DIST = xft-config.in xft.pc.in ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

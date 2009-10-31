@@ -1,6 +1,4 @@
 /*
- * $Id: XftCompat.h,v 1.1.1.1 2006/11/25 17:21:40 matthieu Exp $
- *
  * Copyright © 2001 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

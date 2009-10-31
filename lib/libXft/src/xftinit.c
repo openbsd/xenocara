@@ -1,6 +1,4 @@
 /*
- * $Id: xftinit.c,v 1.1.1.1 2006/11/25 17:21:39 matthieu Exp $
- *
  * Copyright © 2000 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -24,7 +22,7 @@
 
 #include "xftint.h"
 
-_X_HIDDEN Bool	    _XftConfigInitialized;
+static Bool _XftConfigInitialized;
 
 _X_EXPORT Bool
 XftInit (_Xconst char *config)

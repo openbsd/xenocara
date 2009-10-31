@@ -1,6 +1,4 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.2 2006/12/16 21:12:18 matthieu Exp $
-dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -27,22 +25,37 @@ AC_PREREQ([2.57])
 
 dnl
 dnl This is the package version number, not the shared library
-dnl version.  This same version number must appear in Xft.h
-dnl Yes, it is a pain to synchronize version numbers.  Unfortunately, it's
-dnl not possible to extract the version number here from Xft.h
+dnl version.  This version number will be substituted into Xft.h
 dnl Please bump the minor library number at each release as well.
 dnl
-AC_INIT(libXft, 2.1.12, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXft)
+AC_INIT(libXft, 2.1.14, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXft)
 AC_CONFIG_AUX_DIR(.)
 
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER(config.h)
 
 # checks for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
+XORG_DEFAULT_OPTIONS
+
+# Set library version for Xft.h from package version set in AC_INIT
+# copied from PACKAGE_VERSION_* settings in XORG_VERSION
+AC_CONFIG_HEADERS([include/X11/Xft/Xft.h])
+AC_DEFINE_UNQUOTED([XFT_MAJOR],
+                [`echo $PACKAGE_VERSION | cut -d . -f 1`],
+                [Major version of Xft])
+AC_DEFINE_UNQUOTED([XFT_MINOR],
+                [`echo $PACKAGE_VERSION | cut -d . -f 2 | cut -d - -f 1`],
+                [Minor version of Xft])
+AC_DEFINE_UNQUOTED([XFT_REVISION],
+                [`echo $PACKAGE_VERSION | cut -d . -f 3 | cut -d - -f 1`],
+                [Micro revision of Xft])
 
 #
 # Check for Xrender
@@ -129,17 +142,6 @@ CFLAGS="$fontconfig_save_cflags"
 if test "$VERSION" = "" ; then
        VERSION=$PACKAGE_VERSION;
 fi
-
-WARN_CFLAGS=""
-
-if test "x$GCC" = "xyes"; then
-	WARN_CFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -fno-strict-aliasing"
-fi
-AC_SUBST(WARN_CFLAGS)
-
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   xft.pc

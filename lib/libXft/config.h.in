@@ -86,3 +86,12 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Major version of Xft */
+#undef XFT_MAJOR
+
+/* Minor version of Xft */
+#undef XFT_MINOR
+
+/* Micro revision of Xft */
+#undef XFT_REVISION
