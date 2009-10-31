@@ -24,16 +24,15 @@ AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = src man 
 
-AM_CFLAGS = $(RESOURCEEXT_CFLAGS) $(XRES_CFLAGS)
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xres.pc
 
-EXTRA_DIST = xres.pc.in autogen.sh ChangeLog
+EXTRA_DIST = xres.pc.in ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
 
-CLEANFILES = ChangeLog
+.PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog

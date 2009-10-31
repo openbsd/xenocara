@@ -1,3 +1,70 @@
+commit 08032a51fccda19ad4722015f4cc0b1a587592f7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 9 07:54:44 2009 -0700
+
+    libXres 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 619eec21134a0ca9a8adb92383a05deea05b768d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 23:48:41 2009 -0700
+
+    XRes.man: Fix typo, improve wording, drop RCS tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e854448a9bfcdfdeb6262b89a93bcbe8bcd7545c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 23:39:04 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1805655654217830ae943806e6a7d653cdc48047
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:31 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 13ee4d00a06421dfb5ee613cbd99a3111135c379
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Jan 30 16:56:38 2009 -0200
+
+    Janitor: Correct make distcheck and remove extra .gitignore files.
+
+commit 168153d1e7d196ca46c5b2e286fcf7e7793f2804
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 17:53:23 2008 +0930
+
+    Rename parameters to clarify QueryVersion/QueryExtension.
+    
+    These parameters are not treated as input. Rename them to make the inner
+    workings slightly more obvious.
+    
+    X.Org Bug 14511 <http://bugs.freedesktop.org/show_bug.cgi?id=14511>
+
+commit 5d2e4b05ff988a0f941aa78e62857791ae2d56aa
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 00:19:31 2008 +0100
+
+    nuke RCS Ids
+
+commit a4323e1bb491cbfc5b5090311cc16c805b9dd7d6
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:14 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 04381b5f703975ffa6514d474f5fe31bc76540c4
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:53:33 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
 commit 322797ec5679919b8616c17c51492b2d596efecb
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:29:45 2006 +0200

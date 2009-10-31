@@ -1,4 +1,3 @@
-# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 16:50:26 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
@@ -31,14 +30,12 @@ LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
 
 libman_PRE = XRes.man
 
-BUILT_SOURCES = shadows.DONE
-
 EXTRA_DIST = $(libman_PRE)
 
 CLEANFILES = $(libman_DATA) $(BUILT_SOURCES)
 
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
-	      $(XRes_shadows:=.@LIB_MAN_SUFFIX@)
+	      $(XRes_shadowmen)
 
 SED = sed
 
@@ -57,7 +54,7 @@ MAN_SUBSTS = \
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 .man.$(LIB_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Generate man page shadow files (Replaces InstallManPageAliases from Imake)
 
@@ -68,8 +65,8 @@ XRes_shadows =                              \
     XResQueryClientResources                \
     XResQueryClientPixmapBytes
 
-shadows.DONE:
-	-rm -f $(XRes_shadows:=.@LIB_MAN_SUFFIX@)
-	(for i in $(XRes_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XRes.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
+XRes_shadowmen = $(XRes_shadows:=.@LIB_MAN_SUFFIX@)
+
+$(XRes_shadowmen):
+	$(AM_V_GEN) echo .so man$(LIB_MAN_DIR_SUFFIX)/XRes.$(LIB_MAN_SUFFIX) > $@
+

@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.2 2006/12/17 10:44:14 matthieu Exp $
+dnl  $Id: configure.ac,v 1.2 2009/10/31 17:40:00 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
@@ -32,40 +32,34 @@ dnl try to keep these the same.  Note that the library has an extra
 dnl digit in the version number to track changes which don't affect the
 dnl protocol, so XRes version l.n.m corresponds to protocol version l.n
 dnl
-AC_INIT(libXres, 1.0.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXres)
+AC_INIT(libXres, 1.0.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXres)
 AC_CONFIG_AUX_DIR(.)
 AM_INIT_AUTOMAKE([dist-bzip2])
+
+# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+
 AM_CONFIG_HEADER(config.h)
 
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
 
-# get modules
-PKG_CHECK_MODULES(XRES, x11 xext xextproto)
+XORG_DEFAULT_OPTIONS
 
-AC_SUBST(XRES_CFLAGS)
-AC_SUBST(XRES_LIBS)
+# get modules
 
 # Check xres configuration, strip extra digits from package version to
 # find the required protocol version
-
 RES_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
-PKG_CHECK_MODULES(RESOURCEEXT, resourceproto >= $RES_VERSION)
-
-AC_SUBST(RESOURCEEXT_CFLAGS)
-AC_SUBST(RESOURCEEXT_LIBS)
-
-if test "x$GCC" = "xyes"; then
-	GCC_WARNINGS="-Wall -Wpointer-arith -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -fno-strict-aliasing"
-	CFLAGS="$GCC_WARNINGS $CFLAGS"
-fi
+PKG_CHECK_MODULES(XRES, x11 xext xextproto [resourceproto >= $RES_VERSION])
+XRES_CFLAGS="$CWARNFLAGS $XRES_CFLAGS"
+AC_SUBST(XRES_CFLAGS)
+AC_SUBST(XRES_LIBS)
 
 XORG_CHECK_MALLOC_ZERO
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile

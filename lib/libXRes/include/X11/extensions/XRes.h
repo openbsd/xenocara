@@ -24,14 +24,14 @@ _XFUNCPROTOBEGIN
 
 Bool XResQueryExtension (
    Display *dpy,
-   int *event_base,
-   int *error_base
+   int *event_base_return,
+   int *error_base_return
 );
 
 Status XResQueryVersion (
    Display *dpy,
-   int *major_versionp,
-   int *minor_versionp
+   int *major_version_return,
+   int *minor_version_return
 );
 
 Status XResQueryClients (

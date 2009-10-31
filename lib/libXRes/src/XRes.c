@@ -47,15 +47,15 @@ static XEXT_GENERATE_FIND_DISPLAY (find_display, xres_ext_info,
 
 Bool XResQueryExtension (
     Display *dpy,
-    int *event_basep,
-    int *error_basep
+    int *event_base_return,
+    int *error_base_return
 )
 {
     XExtDisplayInfo *info = find_display (dpy);
 
     if (XextHasExtension(info)) {
-        *event_basep = info->codes->first_event;
-        *error_basep = info->codes->first_error;
+        *event_base_return = info->codes->first_event;
+        *error_base_return = info->codes->first_error;
         return True;
     } else {
         return False;
@@ -64,8 +64,8 @@ Bool XResQueryExtension (
 
 Status XResQueryVersion(
     Display *dpy,
-    int *major_versionp, 
-    int *minor_versionp
+    int *major_version_return,
+    int *minor_version_return
 )
 {
     XExtDisplayInfo *info = find_display (dpy);
@@ -85,8 +85,8 @@ Status XResQueryVersion(
         SyncHandle ();
         return 0;
     }
-    *major_versionp = rep.server_major;
-    *minor_versionp = rep.server_minor;
+    *major_version_return = rep.server_major;
+    *minor_version_return = rep.server_minor;
     UnlockDisplay (dpy);
     SyncHandle ();
     return 1;
