@@ -37,4 +37,46 @@
 	dpy->request++
 #endif
 
+_XFUNCPROTOBEGIN
+
+Status _xvmc_create_context(
+    Display *		/* dpy */,
+    XvMCContext *	/* context */,
+    int *		/* priv_count */,
+    CARD32 **		/* priv_data */
+);
+
+Status _xvmc_destroy_context(
+    Display *		/* dpy */,
+    XvMCContext *	/* context */
+);
+
+Status _xvmc_create_surface (
+    Display *		/* dpy */,
+    XvMCContext *	/* context */,
+    XvMCSurface *	/* surface */,
+    int *		/* priv_count */,
+    CARD32 **		/* priv_data */
+);
+
+Status _xvmc_destroy_surface (
+    Display *		/* dpy */,
+    XvMCSurface *	/* surface */
+);
+
+Status _xvmc_create_subpicture (
+    Display *		/* dpy */,
+    XvMCContext *	/* context */,
+    XvMCSubpicture *	/* subpicture */,
+    int *		/* priv_count */,
+    CARD32 **		/* priv_data */
+);
+
+Status _xvmc_destroy_subpicture(
+    Display *		/* dpy */,
+    XvMCSubpicture *	/* subpicture */
+);
+
+_XFUNCPROTOEND
+
 #endif /* XVMCLIBINT_H */

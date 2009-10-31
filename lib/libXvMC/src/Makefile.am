@@ -7,7 +7,8 @@ libXvMC_la_SOURCES = \
 libXvMCW_la_SOURCES = \
 	XvMCWrapper.c
 
-AM_CFLAGS = @XVMC_CFLAGS@ -I$(top_srcdir)/include @MALLOC_ZERO_CFLAGS@
+AM_CFLAGS = $(CWARNFLAGS) @XVMC_CFLAGS@
+AM_CPPFLAGS = -I$(top_srcdir)/include @MALLOC_ZERO_CFLAGS@
 
 libXvMC_la_LIBADD = @XVMC_LIBS@
 libXvMC_la_CFLAGS = $(AM_CFLAGS)
