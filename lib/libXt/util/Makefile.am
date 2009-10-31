@@ -5,6 +5,8 @@ noinst_PROGRAMS = makestrs
 endif
 
 CC = @CC_FOR_BUILD@
+CFLAGS = @CFLAGS_FOR_BUILD@
+LDFLAGS = @LDFLAGS_FOR_BUILD@
 
 EXTRA_DIST = \
 	Shell.ht \
@@ -42,4 +44,4 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

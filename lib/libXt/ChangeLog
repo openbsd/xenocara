@@ -1,3 +1,74 @@
+commit 5d63df924d7f66d2207c8db67e5d6cce8c7b245b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 21:50:35 2009 -0700
+
+    libXt 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f82769a1a75e17f66b67a5f71dcf889955569a57
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 21:33:27 2009 -0700
+
+    Replace AC_DEFINE_DIR with AX_DEFINE_DIR from Autoconf Archive
+
+commit 0ce97e4422409de070af7fd70da590db12c58579
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 6 16:12:03 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Includes adding many $(AM_V_GEN) calls for the AM_SILENT_RULES included
+    by XORG_DEFAULT_OPTIONS when automake-1.11 or newer is used
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 254e2e0a8197e47bcef3e3c0b461ef8156a1af64
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 6 16:29:59 2009 -0700
+
+    Use make rules instead of shell for loops to generate shadow man pages
+    
+    Allows parallel make and simpler build logs/error reporting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit fedc095da647b6f4fda8ca5edc5644458e2b2fbf
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Aug 25 18:31:49 2009 +0200
+
+    Link against libICE
+    
+    libXt uses IceConnectionNumber() and IceProcessMessages(), so make sure
+    we link against -lICE.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit f77482f0618f954de1d080599ada058e9a3c24ff
+Author: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Date:   Tue Jul 28 11:59:41 2009 +0200
+
+    Fix compilation of host tools in cross-compilation case
+    
+    At 36e9f0d351afbf7fd2595990b2d39e7c551f6420, a fix was added to use
+    the host gcc instead of the target gcc when cross-compiling
+    libXt. This fix works, but is not solve the whole problem: the CFLAGS
+    and LDFLAGS used with the host compilers are the one defined for the
+    target compiler (and the flags for both compilers might be very
+    different).
+    
+    This new fix let libXt obey to CFLAGS_FOR_BUILD and LDFLAGS_FOR_BUILD
+    environment variables, and use them to compile the host tools in
+    util/.
+    
+    Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+
+commit 369629611609f20c89499c1f6b5562a4f3cca983
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 13:28:01 2009 -0400
+
+    libXt 1.0.6
+
 commit 28677468c56888b18c44d71a62903d23e5c294cf
 Author: Jon TURNEY <jon.turney@dronecode.org.uk>
 Date:   Tue May 19 23:25:15 2009 +0100
@@ -217,7 +288,7 @@ Date:   Tue Jan 2 17:49:17 2007 -0800
     <https://bugs.freedesktop.org/show_bug.cgi?id=9514>
 
 commit 75f83503ba1db628137ffc9d1d9e4f2a7a2fd97a
-Merge: 2f201b1 153264a
+Merge: 2f201b1... 153264a...
 Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
 Date:   Sat Dec 9 09:31:02 2006 -0600
 
