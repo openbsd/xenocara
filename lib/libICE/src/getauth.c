@@ -33,13 +33,9 @@ Author: Ralph Mor, X Consortium
 #endif
 #include <X11/ICE/ICElib.h>
 #include "ICElibint.h"
-#include <X11/ICE/ICEutil.h>
 
 static Bool auth_valid (const char *auth_name, int num_auth_names,
 			char **auth_names, int *index_ret);
-
-extern int		_IcePaAuthDataEntryCount;
-extern IceAuthDataEntry _IcePaAuthDataEntries[];
 
 
 /*

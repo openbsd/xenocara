@@ -37,6 +37,7 @@ Author: Ralph Mor, X Consortium
 #include <X11/ICE/ICEproto.h>
 #include <X11/ICE/ICEconn.h>
 #include <X11/ICE/ICEmsg.h>
+#include <X11/ICE/ICEutil.h>
 #ifdef WIN32
 #include <X11/Xwindows.h>
 #endif
@@ -410,6 +411,8 @@ extern _IceWatchProc	*_IceWatchProcs;
 extern IceErrorHandler   _IceErrorHandler;
 extern IceIOErrorHandler _IceIOErrorHandler;
 
+extern IceAuthDataEntry	 _IcePaAuthDataEntries[];
+extern int		 _IcePaAuthDataEntryCount;
 
 extern void _IceErrorBadMajor (
     IceConn		/* iceConn */,

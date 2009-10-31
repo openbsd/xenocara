@@ -1,3 +1,37 @@
+commit 94992c686a6850f2303aa78057a64a6369b64692
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 28 14:17:50 2009 +1000
+
+    libICE 1.0.6
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7a8bb2a2c991919bcdef63359c74e239045a3f4c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:30 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit dbb950061f185e1ccf27bff9c71adc34ab4cfae0
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 28 16:55:37 2009 -0200
+
+    Janitor: Correct sparse warnings.
+    
+      Also reorders some code in configure.ac and Makefile.am to
+    match pattern used on other packages.
+
+commit 2f41ddb3a917c4e71184452b68561a15593d33b8
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 6 17:25:25 2009 -0200
+
+    Update .gitignore.
+    
+      Don't warn about files left after a build and/or make distcheck
+    in 'git status -a'.
+
 commit ab9dff549534c6d7b33f440bff7a841d60c1206c
 Author: Peter Breitenlohner <peb@mppmu.mpg.de>
 Date:   Mon Dec 8 18:45:44 2008 +0100
