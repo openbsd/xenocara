@@ -6455,6 +6455,7 @@ if test "$ac_res" != no; then
 
 fi
 
+ if test "$ac_cv_search_socket$ac_cv_search_gethostbyname" = "nono"; then
 
 { $as_echo "$as_me:$LINENO: checking for main in -lws2_32" >&5
 $as_echo_n "checking for main in -lws2_32... " >&6; }
@@ -6525,6 +6526,7 @@ _ACEOF
 fi
 ac_cv_lib_ws2_32=ac_cv_lib_ws2_32_main
 
+ fi
 
  # Needs to come after above checks for libsocket & libnsl for SVR4 systems
  # Check whether --enable-ipv6 was given.

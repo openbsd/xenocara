@@ -244,9 +244,8 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-ACLOCAL_AMFLAGS = -I m4
 configdir = $(sysconfdir)/X11/fs
-FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO -DFONTCACHE
+FONT_FLAGS = -DFONT_PCF -DFONT_FS -DFONT_SPEEDO
 AM_CPPFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
 	$(FONT_FLAGS) -D_BSD_SOURCE -DFONT_t -DTRANS_SERVER -DTRANS_REOPEN
 
