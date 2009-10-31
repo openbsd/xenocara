@@ -1,6 +1,4 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.1 2006/11/25 17:10:46 matthieu Exp $
-dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -34,33 +32,30 @@ dnl protocol, so Xfixes version l.n.m corresponds to protocol version l.n,
 dnl that 'revision' number appears in Xfixes.h and has to be manually
 dnl synchronized.
 dnl
-AC_INIT(libXfixes, 4.0.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXfixes)
+AC_INIT(libXfixes, 4.0.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXfixes)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER(config.h)
 
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
 
-# Check for X
-PKG_CHECK_MODULES(X, x11)
-
-AC_SUBST(X_CFLAGS)
-AC_SUBST(X_LIBS)
+XORG_DEFAULT_OPTIONS
 		  
 # Check fixesext configuration, strip extra digits from package version to
 # find the required protocol version
 
 FIXESEXT_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 AC_SUBST(FIXESEXT_VERSION)
-PKG_CHECK_MODULES(FIXESEXT, xproto [fixesproto >= $FIXESEXT_VERSION] xextproto)
+PKG_CHECK_MODULES(FIXESEXT, xproto [fixesproto >= $FIXESEXT_VERSION] xextproto x11)
 AC_SUBST(FIXESEXT_CFLAGS)
 AC_SUBST(FIXESEXT_LIBS)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile

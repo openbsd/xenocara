@@ -35,11 +35,11 @@ XFixes \- Augmented versions of core protocol requests
 .nf    
 .sp
 Bool XFixesQueryExtension \^(\^Display *\fIdpy\fP, 
-	int *\fIevent_basep\fP, int *\fIerror_basep\fP\^);
+	int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
 .sp
 Status XFixesQueryVersion \^(\^Display *\fIdpy\fP,
-	int *\fImajor_versionp\fP,
-	int *\fIminor_versionp\fP\^);
+	int *\fImajor_version_return\fP,
+	int *\fIminor_version_return\fP\^);
 .sp
 void XFixesChangeSaveSet \^(\^Display *dpy,
 	Window \fIwindow\fP,

@@ -113,10 +113,12 @@ typedef struct {
 
 _XFUNCPROTOBEGIN
 
-Bool XFixesQueryExtension (Display *dpy, int *event_basep, int *error_basep);
+Bool XFixesQueryExtension (Display *dpy,
+			    int *event_base_return,
+			    int *error_base_return);
 Status XFixesQueryVersion (Display *dpy,
-			    int     *major_versionp,
-			    int     *minor_versionp);
+			    int     *major_version_return,
+			    int     *minor_version_return);
 
 int XFixesVersion (void);
 

@@ -8,8 +8,8 @@ libXfixes_la_SOURCES = 	\
 	Xfixes.c	\
 	Xfixesint.h
 
-libXfixes_la_LIBADD = @X_LIBS@
-AM_CFLAGS = @X_CFLAGS@ @FIXESEXT_CFLAGS@
+libXfixes_la_LIBADD = @FIXESEXT_LIBS@
+AM_CFLAGS = $(CWARNFLAGS) @FIXESEXT_CFLAGS@
 
 INCLUDES = -I$(top_srcdir)/include/X11/extensions
 

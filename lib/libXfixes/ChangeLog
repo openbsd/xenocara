@@ -1,85 +1,308 @@
-2006-05-12  Adam Jackson  <ajax@freedesktop.org>
+commit ed2f91926bcef1610abe3c9cef61b1bb1c918ec8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 08:45:02 2009 -0700
 
-	* src/Makefile.am:
-	Fix the soversion to 3.1.0.
+    libXfixes 4.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2006-04-11  Adam Jackson  <ajax@freedesktop.org>
+commit dc9e2c696121f677065919bc5b011eb650791831
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 08:44:24 2009 -0700
 
-	Bump to 4.0 for release.
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2006-04-02  Adam Jackson  <ajax@freedesktop.org>
+commit c83a721ba0b142177b3f01dd0c0a5e47e06a991a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:33 2009 -0800
 
-	* src/Xfixes.c:
-	Coverity #576: Plug a leak on the error path.
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2006-3-13   Deron Johnson  <deron.johnson@sun.com>
+commit 9784df5ba9f04163da7486c005eaf2383c37b127
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 29 17:40:24 2009 -0200
 
-	* configure.ac
-	* include/X11/extensions/Xfixes.h
-	* src/Cursor.c
-	Composite Version 0.3: CompositeGetOverlayWindow, CompositeReleaseOverlayWindow
-	Xfixes Version 4.0: XFixesHideCursor, XFixesShowCursor
+    Janitor: Correct make distcheck and gcc/sparse warnings.
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 839ef4a38dceec053c3fb33878e59eb26bd8d580
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 17:31:04 2008 +0930
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Rename parameters to clarify QueryVersion/QueryExtension.
+    
+    These parameters are not treated as input. Rename them to make the inner
+    workings slightly more obvious.
+    
+    X.Org Bug 14511 <http://bugs.freedesktop.org/show_bug.cgi?id=14511>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d7778d80356f9a7f0bc4ffd0f0cf0bfa86928249
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 08:19:27 2008 +0100
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    nuke RCS Ids
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit e211f3647823d89dd25a1cff8981c3154a6c429d
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:38:28 2007 -0500
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Replace static ChangeLog with dist-hook to generate from git log
 
-2005-11-19  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit cad41f810023db454f33feea4f89d4d053737732
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Nov 8 16:14:41 2006 +0200
 
-	* xfixes.pc.in:
-	Update pkgconfig files to separate library build-time dependencies
-	from application build-time dependencies.
-	* configure.ac:
-	Update dependencies to work with separate build roots.
+    bump to 4.0.3
 
-2005-11-12  Alan Coopersmith  <alan.coopersmith@sun.com>
+commit 9dc7945eaa9216bf7b0056e815fba5bf8b5ded07
+Author: Lars Knoll <lars@trolltech.com>
+Date:   Sun Oct 15 14:13:14 2006 -0700
 
-	* man/Makefile.am: 
-	* configure.ac:
-	Use sed to substitute variables in man pages.
+    Don't unlock the Display when you have not locked it.
+    
+    Acked-by: Jamey Sharp <jamey@minilop.net>
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit fcd9a56f0614521127d82954c4a4d77c92e62e53
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 16:12:54 2006 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Bump to 4.0.2
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 8b43f6b0b5d77ab33efc50e4b1f588e51d029eb8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Sep 27 19:03:11 2006 -0700
 
-	* configure.ac:
-	* src/Makefile.am:
-	Update pkgcheck dependencies to work with separate build roots.
+    Add *~ to .gitignore to skip over emacs droppings
 
-2005-10-26  Adam Jackson  <ajax@freedesktop.org>
+commit 6c4d82990973b02a756ab3ba83ea345fed4bf87e
+Author: Stuart Kreitman <stuart.kreitman@sun.com>
+Date:   Wed Sep 27 19:02:02 2006 -0700
 
-	* configure.ac:
-	Add check for xproto.
+    Sun bug #5099413/Xorg bugzilla #1554: Gnopernicus full-screen mag not working
+    
+    Sun bug #5099413: Gnopernicus full-screen magnification not working
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=5099413>
+    
+    includes fix for Xorg bug #1554: rect defined in XFixesInvertRegion is not used
+    <https://bugs.freedesktop.org/show_bug.cgi?id=1554>
 
-2005-07-08  Keith Packard  <keithp@keithp.com>
+commit cd58068a11dbec3a17099fb699885e5e20e6ae36
+Author: David Nusinow <dnusinow@debian.org>
+Date:   Mon Sep 18 18:24:29 2006 -0400
 
-	* .cvsignore:
-	* man/.cvsignore:
-	* src/.cvsignore:
-	* src/Makefile.am:
-	Add .cvsignore files
-	Switch _la_CFLAGS for AM_CFLAGS to clean up directory
+    Add 01_include_xlib.h.diff. Xfixes.h relies on the "Bool" define from
+    X11/Xlib.h but did not include that header (directly or indirectly)
+    See debian bug #372756
 
-2005-05-17    <ssp@aware-of-vacuity.boston.redhat.com>
+commit 78e08086c13b2053f7cf1f74a8ec49b7e970a420
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri Sep 1 17:12:39 2006 +0200
 
-	* configure.ac: Remove rest of half-removed if statement
+    Bug #4902: _XRead32() expects a signed long pointer on 64 bit systems.
 
-	* ChangeLog: remove irrelevant entries
+commit 4ac8fb34617e392a5af35bf34d86df61903ec482
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jul 13 14:58:54 2006 -0700
 
-2005-04-16  Josh Triplett  <josh@freedesktop.org>
+    renamed: .cvsignore -> .gitignore
 
-	* Makefile.am: Tell automake about the manpage.
+commit f506712c5117d48cee6b36bc8b9ef1760b0506d6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri May 12 15:18:54 2006 +0000
+
+    Fix the soversion to 3.1.0.
+
+commit 2284047bd919826e2ef1a8898eabfc3c8ec5d1a8
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 28 20:53:15 2006 +0000
+
+    Bump to 4.0
+
+commit 0ce5551f030c27705b3828b41647824577e30f74
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Apr 3 00:58:13 2006 +0000
+
+    Coverity #576: Plug a leak on the error path.
+
+commit e9e432a987682ee16ed0dbc1e9b520fa5720150c
+Author: Deron Johnson <deron.johnson@sun.com>
+Date:   Mon Mar 13 21:59:05 2006 +0000
+
+    Part 2 of 3 (Other parts are in proto and xserver) Composite Version 0.3:
+        CompositeGetOverlayWindow, CompositeReleaseOverlayWindow Xfixes Version
+        4.0: XFixesHideCursor, XFixesShowCursor
+
+commit 96275f0b9f97be0fd9e002fd14bce4f4a015278a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:29 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit c775b60f1aec6730be283cba3e9ba4b2348fb6ba
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:43 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit eb7159b541fe31d0d84313b49503bedd44a95bec
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:43 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit be6cbf68064b4d45f77cbb0a1d4670e9789d2343
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:03:05 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 4b9884c72b23b276eeb2b2e6b3c749fbb54fdc36
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Nov 19 07:15:41 2005 +0000
+
+    Update pkgconfig files to separate library build-time dependencies from
+        application build-time dependencies, and update package deps to work
+        with separate build roots.
+
+commit 593a37675b72053c36924785a2fea51a06ad1c37
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sun Nov 13 01:48:25 2005 +0000
+
+    Use sed to substitute variables in man pages.
+
+commit b21e46646371edbf7155eae621fefc0b572b006e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:20 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 097f483e522f721eae4816e659237da94a4796d3
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:19:13 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 750cac0b61ecde7489ea98e69f60417d169329c7
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:11:51 2005 +0000
+
+    Update pkgcheck dependencies to work with separate build roots.
+
+commit 92f0e71679f00f6ce18f445f505962bd1c6c8141
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Oct 26 22:27:27 2005 +0000
+
+    Bug #4868: Add check for xproto.
+
+commit 15fba21d80922c8f93f5406b0616022b92eaa5c1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:51 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit c6bd02dc03af0e475d2396d5c399201969348151
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Jul 23 05:27:00 2005 +0000
+
+    Fix distchecks
+
+commit abdd66912a8c9087ae171b62c9910af8bb00e437
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat Jul 16 07:06:31 2005 +0000
+
+    Set soversion to 3.0.0 using -version-number.
+
+commit 366322d9d9354ed80fde808322207ee57599f7cb
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Jul 9 06:18:56 2005 +0000
+
+    Add .cvsignore files Switch _la_CFLAGS for AM_CFLAGS to clean up directory
+
+commit c3c7a139e8a4c01aa55a19ecc9a1acf7dad5bbe7
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Jul 3 07:00:56 2005 +0000
+
+    Add Xtrans definitions (FONT_t, TRANS_CLIENT) to clean up warnings.
+    Add XSERV_t, TRANS_SERVER, TRANS_REOPEN to quash warnings.
+    Add #include <dix-config.h> or <xorg-config.h>, as appropriate, to all
+        source files in the xserver/xorg tree, predicated on defines of
+        HAVE_{DIX,XORG}_CONFIG_H. Change all Xfont includes to
+        <X11/fonts/foo.h>.
+
+commit 3afe915a1bc5243229d8c31dc6e3023b92821911
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Jul 2 06:35:03 2005 +0000
+
+    Add appropriate lib*_CFLAGS to Makefile.am's -- fixes build problems
+
+commit e1825a381734f2bb98430329179b047ec8ca5cb5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu May 19 00:22:32 2005 +0000
+
+    revert last change, didn't do right thing at all, sorry for the noise
+
+commit 4b09a3bfa3b3fa43230cb8ebc5d84257b31473bc
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu May 19 00:10:08 2005 +0000
+
+    Require automake 1.7 in AM_INIT_AUTOMAKE
+
+commit 1406e1cbe2cf76e6e056377af831f9fdf710e487
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue May 17 17:02:24 2005 +0000
+
+    Conditionally include config.h in xc/lib/Xdamage and xc/lib/Xfixes
+
+commit 03d31637787906378bc2809758b6dbfe79ea55ad
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue May 17 16:11:26 2005 +0000
+
+    Remove rest of half-removed if statement
+    remove irrelevant entries
+
+commit 7d85687a6d8319ac1a48e0294228632ffbefdc8a
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue May 17 15:22:23 2005 +0000
+
+    And here
+
+commit 8424a78dff9a51f7f6ccbfe111a78242867ccdf4
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue May 17 15:21:58 2005 +0000
+
+    Check in Makefile.am here
+
+commit 23a209b91fd011539c6d9a9447860dac4e12eae9
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue May 17 15:21:14 2005 +0000
+
+    Really check in the build system for Xfixes
+
+commit 58394a76ec740d0242097975e25ce6a6f148cb9d
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:42:47 2004 +0000
+
+    Encoding of numerous files changed to UTF-8
+
+commit b083c691fe7707146f728e563247a18aa601c19b
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sat Jul 31 05:50:39 2004 +0000
+
+    Bring in Xfixes, Xdamage, and Xcomposite userland from xserver CVS:
+    - Update Xfixes headers to protocol major version 3.
+    - Add composite headers.
+    - Add libXfixes, libXdamage, and libXcomposite.
+    - Add imake glue for new libraries, but leave Composite off by default
+        until issues are resolved.

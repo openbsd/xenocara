@@ -1,6 +1,4 @@
 /*
- * $Id: Region.c,v 1.1.1.1 2006/11/25 17:11:05 matthieu Exp $
- *
  * Copyright © 2003 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -318,7 +316,7 @@ XFixesFetchRegionAndBounds (Display	    *dpy,
     long    			nbytes;
     long			nread;
 
-    XFixesCheckExtension (dpy, info, 0);
+    XFixesCheckExtension (dpy, info, NULL);
     LockDisplay (dpy);
     GetReq (XFixesFetchRegion, req);
     req->reqType = info->codes->major_opcode;
@@ -329,7 +327,7 @@ XFixesFetchRegionAndBounds (Display	    *dpy,
     {
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
     bounds->x = rep.x;
     bounds->y = rep.y;
@@ -344,7 +342,7 @@ XFixesFetchRegionAndBounds (Display	    *dpy,
 	_XEatData (dpy, nbytes);
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
     _XRead16 (dpy, (short *) rects, nrects << 3);
     /* skip any padding */

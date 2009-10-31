@@ -79,7 +79,7 @@ XFixesGetCursorImage (Display *dpy)
     XFixesCursorImage			*image;
     char				*name;
 
-    XFixesCheckExtension (dpy, info, 0);
+    XFixesCheckExtension (dpy, info, NULL);
     LockDisplay (dpy);
     GetReq (XFixesGetCursorImageAndName, req);
     req->reqType = info->codes->major_opcode;
@@ -91,7 +91,7 @@ XFixesGetCursorImage (Display *dpy)
     {
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
     if (info->major_version < 2)
     {
@@ -115,7 +115,7 @@ XFixesGetCursorImage (Display *dpy)
 	_XEatData (dpy, nbytes);
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
     image->x = rep.x;
     image->y = rep.y;
@@ -171,9 +171,9 @@ XFixesGetCursorName (Display *dpy, Cursor cursor, Atom *atom)
     xXFixesGetCursorNameReply	rep;
     char			*name;
 
-    XFixesCheckExtension (dpy, info, 0);
+    XFixesCheckExtension (dpy, info, NULL);
     if (info->major_version < 2)
-	return 0;
+	return NULL;
     LockDisplay (dpy);
     GetReq (XFixesGetCursorName, req);
     req->reqType = info->codes->major_opcode;
@@ -183,7 +183,7 @@ XFixesGetCursorName (Display *dpy, Cursor cursor, Atom *atom)
     {
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
     *atom = rep.atom;
     if ((name = (char *) Xmalloc(rep.nbytes+1))) {
