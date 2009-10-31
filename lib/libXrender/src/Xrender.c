@@ -346,7 +346,7 @@ _XRenderFindFormat (XRenderInfo *xri, PictFormat format)
     for (nf = 0; nf < xri->nformat; nf++)
 	if (xri->format[nf].id == format)
 	    return &xri->format[nf];
-    return 0;
+    return NULL;
 }
 
 static Visual *
@@ -601,15 +601,15 @@ XRenderFindVisualFormat (Display *dpy, _Xconst Visual *visual)
     int		    nv;
     XRenderInfo	    *xri;
     XRenderVisual   *xrv;
-    
-    RenderCheckExtension (dpy, info, 0);
+
+    RenderCheckExtension (dpy, info, NULL);
     if (!XRenderQueryFormats (dpy))
-        return 0;
+        return NULL;
     xri = info->info;
     for (nv = 0, xrv = xri->visual; nv < xri->nvisual; nv++, xrv++)
 	if (xrv->visual == visual)
 	    return xrv->format;
-    return 0;
+    return NULL;
 }
 
 XRenderPictFormat *
@@ -621,10 +621,10 @@ XRenderFindFormat (Display		*dpy,
     XRenderExtDisplayInfo *info = XRenderFindDisplay (dpy);
     int		    nf;
     XRenderInfo     *xri;
-    
-    RenderCheckExtension (dpy, info, 0);
+
+    RenderCheckExtension (dpy, info, NULL);
     if (!XRenderQueryFormats (dpy))
-	return 0;
+	return NULL;
     xri = info->info;
     for (nf = 0; nf < xri->nformat; nf++)
     {
@@ -667,7 +667,7 @@ XRenderFindFormat (Display		*dpy,
 	if (count-- == 0)
 	    return &xri->format[nf];
     }
-    return 0;
+    return NULL;
 }
 
 XRenderPictFormat *
@@ -820,7 +820,7 @@ XRenderFindStandardFormat (Display  *dpy,
 				  standardFormats[format].mask,
 				  &standardFormats[format].templ,
 				  0);
-    return 0;
+    return NULL;
 }
 
 XIndexValue *
@@ -834,7 +834,7 @@ XRenderQueryPictIndexValues(Display			*dpy,
     XIndexValue				*values;
     int					nbytes, nread, rlength, i;
 
-    RenderCheckExtension (dpy, info, 0);
+    RenderCheckExtension (dpy, info, NULL);
 
     LockDisplay (dpy);
     GetReq (RenderQueryPictIndexValues, req);
@@ -845,7 +845,7 @@ XRenderQueryPictIndexValues(Display			*dpy,
     {
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
 
     /* request data length */
@@ -862,7 +862,7 @@ XRenderQueryPictIndexValues(Display			*dpy,
 	_XEatData (dpy, nbytes);
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
 
     /* read the values one at a time and convert */

@@ -40,14 +40,14 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
     long			nbytes, nbytesAlias, nbytesName;
     
     if (!RenderHasExtension (info))
-	return 0;
+	return NULL;
 
     if (!XRenderQueryFormats (dpy))
-	return 0;
+	return NULL;
 
     xri = info->info;
     if (xri->minor_version < 6)
-	return 0;
+	return NULL;
     
     LockDisplay (dpy);
     GetReq (RenderQueryFilters, req);
@@ -58,7 +58,7 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
     {
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
     /*
      * Compute total number of bytes for filter names
@@ -82,7 +82,7 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
 	_XEatData (dpy, (unsigned long) rep.length << 2);
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 0;
+	return NULL;
     }
 
     /*
@@ -146,7 +146,7 @@ XRenderSetPictureFilter  (Display   *dpy,
     req->nbytes = nbytes;
     req->length += ((nbytes + 3) >> 2) + nparams;
     Data (dpy, filter, nbytes);
-    Data32 (dpy, params, nparams << 2);
+    Data (dpy, (_Xconst char *)params, nparams << 2);
     UnlockDisplay(dpy);
     SyncHandle();
 }

@@ -1,532 +1,298 @@
-2006-04-26  Adam Jackson  <ajax@freedesktop.org>
+commit 5865c457191da7f7357b7c7cdfb1a6e695e630df
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 22:34:19 2009 -0700
 
-	* configure.ac:
-	Bump to 0.9.1
+    libXrender 0.9.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2006-04-02  Adam Jackson  <ajax@freedesktop.org>
+commit cb8df63ef0a8a70dfff21eef02f9d50095854ec0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 22:28:05 2009 -0700
 
-	* src/Xrender.c:
-	Coverity #428: Fix a potential NULL chase.
-	Coverity #930: Verify that a malloc succeeds.
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 394342d73472c3921eb941bf5f07c24237d89b1a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 22:15:30 2009 -0700
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Move libXrender documentation from xorg-docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit cc94fadacb4be63f8577c3c4de65dacaee531776
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:36 2009 -0800
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-02  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 3747f97f133b5fe8dea0d1991d68c4693d488aae
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Jan 30 16:49:59 2009 -0200
 
-	* configure.ac:
-	* src/Makefile.am:
-	Add check and cflags for malloc(0) returning NULL.
+    Janitor: make distcheck, compiler warnings, .gitignore.
 
-2005-11-19  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit f6f784c0f98c28915bd26d04e4d8839806e29877
+Author: Pierre-Loup Griffais <pgriffais@nvidia.com>
+Date:   Fri Apr 18 17:32:32 2008 -0700
 
-	* xrender.pc.in:
-	Update pkgconfig files to separate library build-time dependencies
-	from application build-time dependencies.
-	* configure.ac:
-	Update dependencies to work with separate build roots.
+    Use Data instead of Data32 to avoid truncating the filter parameters on 64-bit systems.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
-2005-07-08  Keith Packard  <keithp@keithp.com>
+commit 5653231fcde636e4215c70b1e436554e1ffe07a7
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 08:39:12 2008 +0100
 
-	* .cvsignore:
-	* src/.cvsignore:
-	Add .cvsignore files
+    nuke RCS Ids
 
-2005-06-09  Alexander Gottwald  <ago@freedesktop.org>
+commit e1333b82c0f6e7b9acdbae19d18377a0ed65bddb
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:38:43 2007 -0500
 
-	* src/Makefile.am: 
-	Use $(top_srcdir)/... instead of $(top_builddir)/... in INCLUDES
-	Added $(top_srcdir) to INCLUDES 
+    Replace static ChangeLog with dist-hook to generate from git log
 
-2004-11-22  Carl Worth  <cworth@cworth.org>
+commit e10d5cbe4c5ed98ae1856e20a0e9d31321330d53
+Merge: 497dda5... 9d3f9fd...
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Sep 5 08:25:12 2007 -0700
 
-	* configure.ac: Remove AC_CONFIG_AUX_DIR (it was in the wrong
-	place for automake-1.9, and it was set to the default value
-	anyway).
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/lib/libXrender
 
-2004-10-18  Noah Levitt  <nlevitt@columbia.edu>
+commit 497dda5615d0484d34f3a0a580353ac10ceaced5
+Author: Eric Anholt <eric@anholt.net>
+Date:   Wed Sep 5 08:20:33 2007 -0700
 
-	* configure.ac: Export RENDER_CFLAGS.
+    Bump version to 0.9.4.
 
-2004-09-05  Keith Packard  <keithp@keithp.com>
+commit 89bc96e2c10c3902b82d74da95608bb48319ad29
+Author: Paul Bender <pebender@san.rr.com>
+Date:   Wed Sep 5 08:19:55 2007 -0700
 
-	* configure.ac:
-	Move AC_CONFIG_AUX_DIR above AM_INIT_AUTOMAKE to make 
-	automake 1.9 happy
+    Reorder render.h include so that XID has been picked up by then.
+    
+    While libXrender built fine. some software requiring libXrender didn't include
+    Xlib.h beforehand.
 
-2004-07-29  Keith Packard  <keithp@keithp.com>
+commit 9d3f9fd3f6f37112fecb2e96e9b25eb860a4b67d
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:53:49 2007 -0400
 
-	* Makefile.am:
-	* Xrender.h:
-	* configure.ac:
-	Update to protocol 0.9 which includes RenderAddTraps request
+    Add *~ to .gitignore to skip patch/emacs droppings
 
-2004-04-10  Keith Packard  <keithp@keithp.com>
+commit 3fcca95b2628167be4c908a9a315f070eb195660
+Author: David Reveman <davidr@novell.com>
+Date:   Mon Aug 20 14:40:44 2007 -0400
 
-	reviewed by: Mark Ashley <mark@ibiblio.org>
+    Bump to 0.9.3
 
-	* Xrenderint.h:
-	Solaris appears to need <string.h> included to compile
-	this library.  Who knows.  It seems harmless enough,
-	and the configure script already detected it's presence,
-	so we just included it whenever available.
+commit 5b38b2d9b981d425587a4eb440acb2f0d6b0db13
+Author: David Reveman <davidr@novell.com>
+Date:   Mon Aug 20 14:38:33 2007 -0400
 
-2004-02-03  Jim Gettys  <jg@freedesktop.org>
+    Properly set length field in gradient requests (bug 9526).
 
-	* AUTHORS: Get a author's list going.
+commit 9fc870a4b68c2e7f5a7bcaca72d96fe105737bb5
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 16:26:35 2006 -0400
 
-2004-01-15  Daniel Stone  <daniel@fooishbar.org>
-	* Tag release 0.8.4 for first freedesktop.org clientside lib release.
+    Bump to 0.9.2
 
-2004-01-15  Harold L Hunt II <huntharo@msu.edu>
-	* Makefile.am: Pass -no-undefined to libtool via LDFLAGS.
+commit f7f2d491eff707d6087dcdec1d8a1bbd733b5f14
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sat Sep 16 20:26:02 2006 +0200
 
-2003-12-12  Keith Packard  <keithp@keithp.com>
+    Const-ified the filter argument to XRenderSetPictureFilter().
 
-	* configure.ac:
-	* xrender.pc.in:
-	Use Requires: in xrender.pc when x11.pc exists
+commit 28600498df66dd0d7cc25cb1dd48648ae8ba0d30
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jul 13 14:59:06 2006 -0700
 
-2003-06-08 10:56  keithp
+    renamed: .cvsignore -> .gitignore
 
-	* Filter.c, Makefile.am, Xrender.c, Xrenderint.h, configure.ac:
-	Bail on bogus Xsun servers, compile with -DXTHREADS if necessary,
-	get rid of unecessary cast to XRenderInfo *
+commit c4bfb815c36911e7b7b752fd3273b09ab246068d
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Apr 27 00:21:27 2006 +0000
 
-2003-05-06 09:05  branden
+    Bump to 0.9.1
 
-	* ChangeLog: Huh.  Did Keith tag xrender-0_8_2 *before* running
-	cvs2cl?  Running it again.
+commit 9779025f33c917b74349200e6018d0c94d6ff0ab
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Apr 3 01:10:02 2006 +0000
 
-2003-05-05 20:56  keithp
+    Coverity #428: Fix a potential NULL chase. Coverity #930: Verify that a
+        malloc succeeds.
 
-	* ChangeLog: Update ChangeLog with spiffy cvs2cl script (thanks
-	Branden)
+commit ab1b6bdbce1c83c53ef9ea610466a7c813ab643d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:34 2005 +0000
 
-2003-05-05 20:49  keithp
+    Update package version number for final X11R7 release candidate.
 
-	* configure.ac: Update version to 0.8.2, add some version-related
-	comments
+commit 94a90971fed66cf636f466b6fdd08a485042c38f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:45 2005 +0000
 
-2003-05-05 20:18  branden
+    Update package version number for X11R7 RC3 release.
 
-	* debian/: changelog, compat, control, copyright,
-	libxrender-dev.install, libxrender-dev.postrm,
-	libxrender-dev.preinst, libxrender1-dbg.install,
-	libxrender1-dbg.postrm, libxrender1-dbg.preinst,
-	libxrender1.install, libxrender1.postrm, libxrender1.preinst,
-	rules: Check in Debian packaging infrastructure per Keith's
-	request.  This is the stuff that corresponds to Debian's xrender
-	0.8.1-1 package.
+commit 874af611e76e4edadfb53479b80ddbd021052aae
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 04:41:50 2005 +0000
 
-2003-05-05 19:06  keithp
+    Add check and cflags for malloc(0) returning NULL.
 
-	* Xrenderint.h, configure.ac: Remove bogus Xext.h include.  Fix
-	Render version comparison
+commit c2874804715f99c6c735079cc018db77494ba0cd
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Nov 19 07:15:43 2005 +0000
 
-2003-05-03 13:00  keithp
+    Update pkgconfig files to separate library build-time dependencies from
+        application build-time dependencies, and update package deps to work
+        with separate build roots.
 
-	* Makefile.am, configure.ac: Bump to version 0.8.1, library version
-	1.2.2 after extutil was removed
+commit 438e7bc5783ae00c200ef239cb0ebbe828cdb900
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:52 2005 +0000
 
-2003-04-26 08:52  nlevitt
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
 
-	* Xrenderint.h: Get rid of reference to XMissingExtension. It's in
-	libXext, which we don't link, and we don't want to print an error
-	message anyway.
+commit bd4ccfc68aba1bfd75350311b70c0c84c20f3137
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Jul 23 18:09:40 2005 +0000
 
-2003-04-23 20:29  nlevitt
+    Modify modular libs to use Xregion.h instead of region.h
 
-	* ChangeLog, Composite.c, Cursor.c, FillRect.c, FillRects.c,
-	Filter.c, Glyph.c, Makefile.am, Picture.c, Trap.c, Tri.c,
-	Xrender.c, Xrenderint.h, configure.ac, extutil.h, xrender.pc.in:
-	Get rid of libXext dependency.
+commit 9fc7ab9a00f99088432529af9129c5e4702e7c6f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Jul 23 18:06:16 2005 +0000
 
-2003-04-22 09:59  nlevitt
+    lib/Xrender/Picture.c Change region.h to Xregion.h and modify internal
+        references to include <X11/Xregion.h>.
 
-	* .cvsignore: Testing syncmail.
+commit 27962f426c54ee19d648601825485c2ca2b50832
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jul 19 04:53:20 2005 +0000
 
-2003-04-21 23:41  nlevitt
+    Use correct path to region.h.
 
-	* xrender.pc.in: Xrender.h #includes render.h, so it needs the
-	Render CFLAGS.
+commit 62c6d0bf4b5d5e27f586bb8a1beccc27bab4ef4c
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Jul 9 06:48:50 2005 +0000
 
-2003-04-21 23:12  nlevitt
+    Add .cvsignore files
 
-	* xrender.pc.in: s/@PACKAGE_VERSION@/@VERSION@/ (Jeff Waugh, bug
-	#71)
+commit b1051c48a51a9731bce10dd4951485f5554ca605
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Jul 3 07:00:57 2005 +0000
 
-2003-04-21 21:46  nlevitt
+    Add Xtrans definitions (FONT_t, TRANS_CLIENT) to clean up warnings.
+    Add XSERV_t, TRANS_SERVER, TRANS_REOPEN to quash warnings.
+    Add #include <dix-config.h> or <xorg-config.h>, as appropriate, to all
+        source files in the xserver/xorg tree, predicated on defines of
+        HAVE_{DIX,XORG}_CONFIG_H. Change all Xfont includes to
+        <X11/fonts/foo.h>.
 
-	* Makefile.am, Xrenderint.h, configure.ac: Use local extutil.h if
-	not installed on the system.
+commit 9359b40d8c41901844924060a864a854dac4adbf
+Author: Lars Knoll <lars@trolltech.com>
+Date:   Fri Jul 1 10:04:51 2005 +0000
 
-2003-04-21 10:36  keithp
+    Add support for gradients and solid fills to Render.
 
-	* COPYING, ChangeLog, INSTALL, configure.ac: Fix render header
-	version check to use VERSION, eliminate duplicate version numbers
-	from configure.ac
+commit 60cc17fd8fac9b28363e0979d6b0443be6838613
+Author: Alexander Gottwald <alexander.gottwald@s1999.tu-chemnitz.de>
+Date:   Thu Jun 9 13:49:06 2005 +0000
 
-2003-04-21 10:22  keithp
+    Use $(top_srcdir)/... instead of $(top_builddir)/... in INCLUDES Added
+        $(top_srcdir) to INCLUDES
 
-	* Color.c, Composite.c, Cursor.c, FillRects.c, Filter.c, Glyph.c,
-	Picture.c, Poly.c, Trap.c, Tri.c, Xrender-def.cpp, Xrender.h,
-	Xrenderint.h, extutil.h: Switch CVS id tags so regular CVS can cope
+commit 8f765c413911d355dd95a312e31deaf1166206f9
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Thu May 19 20:33:55 2005 +0000
 
-2003-04-21 09:47  keithp
+    Add forgotten region.h
 
-	* Makefile.am: Xrender .so is 1.2.  switch order of dependent
-	libraries
+commit 65cb00ad3da0cdaad1429ac5cb01e12d7f4a6d0d
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Thu May 19 19:58:24 2005 +0000
 
-2003-04-20 23:49  nlevitt
+    - Add Xrender build system
 
-	* FillRect.c: Testing syncmail again.
+commit 99a8286d49152c45ebead33df9f32bf6b7799bee
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Thu May 19 19:26:35 2005 +0000
 
-2003-04-20 23:44  nlevitt
+    - Conditionally include config.h in xc/lib/Xrender/*.c
+    - Add Xrender to symlink.sh
 
-	* Xrender.c: Testing syncmail.
+commit f11802cdcd65d4e50c7ed8eadf5c907af40b544c
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:42:48 2004 +0000
 
-2003-04-19 16:02  nlevitt
+    Encoding of numerous files changed to UTF-8
 
-	* xrender.pc.in: Add X libs to pkg-config --libs.
+commit 87e1ae59ec19eeeee70978c922c43e1b219699d5
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Aug 7 00:40:40 2004 +0000
 
-2003-04-19 11:32  nlevitt
+    Update to version 0.9 of Xrender (includes XRenderAddTraps)
 
-	* Makefile.am: Link with -lX11 -lXext.
+commit a8302c03f1810fe30aea90f3d42a77663e5cd8a0
+Author: Egbert Eich <eich@suse.de>
+Date:   Mon May 24 19:05:01 2004 +0000
 
-2003-04-19 11:21  nlevitt
+    Muffle compiler warnings.
+    fix option name in log message.
+    improve debugging messages.
 
-	* Makefile.am, Xrenderint.h, configure.ac: Use installed
-	<X11/extenstions/extutil.h>. (Thanks, jdub). Make sure X is found
-	at ./configure time. Bump .so version to 1.1.1.
+commit 7faeec0e653838dc78d8df0c1eb10b833ff0c816
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 18:43:50 2004 +0000
 
-2003-04-17 17:43  nlevitt
+    Merging XORG-CURRENT into trunk
 
-	* configure.ac: Xrender version is the same as Render.
+commit 3cdb1c4406d51f671f60f530c557ebfca81bfd3c
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:32:25 2004 +0000
 
-2003-04-17 16:41  nlevitt
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
 
-	* .cvsignore: Quiet, please.
+commit cb66a1ca643b1756d61bc8bfe6cfef2885791d66
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:11:30 2004 +0000
 
-2003-04-17 15:53  nlevitt
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
 
-	* xrender.pc.in: Fix typo
+commit 88d1d0b4e14be414a5afb16bcf83ac2e6b5ea7a6
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:33 2004 +0000
 
-2003-04-17 15:49  nlevitt
+    readding XFree86's cvs IDs
 
-	* Imakefile, Makefile.am, Xrenderint.h, autogen.sh, configure.ac,
-	extutil.h, region.h, xrender.pc.in: Initial automake support.
+commit 48b8124dfef71e9302e9b1404870c23a07d799ae
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:22:44 2004 +0000
 
-2003-03-24 20:18  dawes
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
 
-	* Xrender-def.cpp:   26. Updates for building on OS/2 (#5650, Frank
-	Giessler).
+commit 4d0650c66361abac955cf0583291fa12f61137ac
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:49 2003 +0000
 
-2002-11-24 13:46  tsi
+    XFree86 4.3.0.1
 
-	* Cursor.c: Warning fix
+commit 35a608915a0512ca419fb0d4f3116fd68d2d8bc5
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:49 2003 +0000
 
-2002-11-22 18:34  keithp
-
-	* Cursor.c, Xrender.h: Add animate cursor support, client side
-
-2002-11-21 18:10  keithp
-
-	* Xrender.c: Skip unexpected data in QueryFormats.  Deal with
-	broken X servers a bit better
-
-2002-11-14 13:01  tsi
-
-	* Imakefile: First pass at imake warnings.  + some ATI driver
-	formatting changes.
-	
-	Please ensure these changes are reflected in DRI's CVS.
-
-2002-11-06 14:47  keithp
-
-	* Xrender.c, Xrender.h: XRenderQueryPictIndexValues support (from
-	Olivier Chapuis).  Bump Render version to 0.7
-
-2002-11-05 15:22  keithp
-
-	* Glyph.c, Trap.c, Tri.c, Xrenderint.h: Render uses int for 32
-	bits, Xlib uses long.  This matters on alpha
-
-2002-10-17 18:13  keithp
-
-	* Glyph.c: Miscomputing request length for String16 and String32
-
-2002-10-01 07:31  alanh
-
-	* Xrender-def.cpp:  358. Enable version controlled .dll's on
-	Cygwin/XFree86 (Alexander Gottwald).
-	 357. Some build fixes for Cygwin/XFree86 (Alan Hourihane).
-
-2002-09-29 16:39  keithp
-
-	* Xrender.c, Xrender.h: Update RandR to 1.0 (library version 2.0)
-
-2002-09-27 09:40  keithp
-
-	* Trap.c: Obey max request length even with BIG-REQUESTS
-
-2002-09-25 19:56  keithp
-
-	* Filter.c, Imakefile, Picture.c, Xrender.c, Xrender.h,
-	Xrenderint.h: Add image transformation and sub-pixel ordering to
-	Render
-
-2002-08-31 11:15  keithp
-
-	* Glyph.c: Remember not to write code at 1am. 
-	CompositeText{8,16,32} werent switching glyphsets at the right
-	time.
-
-2002-08-30 23:52  keithp
-
-	* Glyph.c: CompositeGlyphs functions were re-using overwritten data
-	and trashing the output buffer
-
-2002-08-22 22:48  keithp
-
-	* Cursor.c, Imakefile, Xrender.h: Add CreateCursor request to
-	Render
-
-2002-07-24 08:26  tsi
-
-	* Imakefile: Make libXrender buildable in non-XFree86 environments.
-
-2002-06-07 11:04  keithp
-
-	* Imakefile: Get Xrender to build out of the XFree86 environment
-
-2002-06-04 16:22  keithp
-
-	* Poly.c: Free edges structure after drawing Render polygons
-
-2002-05-30 23:38  keithp
-
-	* Imakefile: Fix up support for building Xft1, Xrender and
-	fontconfig out of the tree
-
-2002-05-21 13:39  keithp
-
-	* Poly.c: Xrender library didnt render some concave polygons right
-
-2002-05-17 16:54  keithp
-
-	* Xrender.c: standard 1-bit render format had incorrect depth in
-	spec
-
-2002-05-17 15:34  keithp
-
-	* Color.c, Imakefile, Xrender.h: Add Render color parse routine for
-	rgba colorspace
-
-2002-05-16 23:54  keithp
-
-	* Poly.c: Another tesselation fix for Rendered polygons
-
-2002-05-16 08:28  tsi
-
-	* Poly.c: Warning fix
-
-2002-05-14 23:43  keithp
-
-	* Tri.c: Fix up triangle request encodings
-
-2002-05-14 23:42  keithp
-
-	* Xrender.c, Xrender.h: Add XRenderFindStandardFormat
-
-2002-05-14 23:39  keithp
-
-	* Poly.c: Redo tesselation to match foley and vanDam
-
-2002-05-13 00:21  keithp
-
-	* Poly.c: Make tesselation function do something reasonable
-
-2002-05-12 22:21  keithp
-
-	* Imakefile, Xrender.h, Poly.c, Trap.c, Tri.c: Update render
-	extension to include trapezoids
-
-2002-02-11 23:17  keithp
-
-	* Glyph.c: XRenderFreeGlyphs wasnt sending the glyphset
-
-2002-01-02 11:57  tsi
-
-	* Glyph.c, Xrender.h: Resync with today's trunk.
-
-2001-12-26 17:16  keithp
-
-	* Glyph.c, Xrender.h: Add Render equivalents of XPolyText*
-
-2001-12-18 09:08  tsi
-
-	* FillRect.c, FillRects.c, Glyph.c, Picture.c, Xrender.c,
-	Xrender.h: Another resync with HEAD branch.
-
-2001-12-16 10:27  keithp
-
-	* FillRect.c, FillRects.c, Glyph.c, Picture.c, Xrender.c,
-	Xrender.h: lib/Xrender: add a bunch of _Xconst to make c++ happier
-
-2001-10-10 20:26  keithp
-
-	* Xrender.c: Check malloc return for Xrender query reply temp data
-
-2001-09-05 13:13  mvojkovi
-
-	* Xrender.c: 
-	  Missing SyncHandle() in XRenderQueryFormats.
-
-2001-07-31 17:44  tsi
-
-	* Xrender.h:  168. Fix 16bpp colour maps on Mach64's (Marc La
-	France).
-	 167. Fix Mach64 DPMS bug (Marc La France).
-	 166. Fix bug that prevented hardware cursors on Mach64 CT's (Marc
-	La France).
-	 165. Document what a ChipAdjustFrame() function should to to
-	prevent moving
-	      of hardware cursors during mode switches (Marc La France).
-	 164. -Wimplicit warning cleanup [`make World` >required<] (Marc La
-	France).
-	 163. Ensure installed headers can find the headers they, in turn,
-	#include
-	      (Marc La France).
-	 162. Make imake pass its -W* flags to cpp (Marc La France).
-	 161. More accomodations for newer GCC's (Mike A. Harris).
-
-2001-07-06 13:46  keithp
-
-	* Xrender.c: Fix a couple of locking bugs in Xrender library
-
-2001-05-16 03:33  keithp
-
-	* Xrender.c: Clean up memory leaks in Xrender library
-
-2001-02-13 11:19  dawes
-
-	* Xrender-def.cpp:  135. Updates for Cygwin support (#4433, Suhaib
-	M. Siddiqi).
-	 134. Fix a bug in the fonts.sgml doc (#4432, Juliusz Chroboczek).
-	 133. Fix the xdpyinfo so that it will build when the XKB extension
-	isn't
-	      defined (#4422, Jim Gettys).
-	 132. Fix the xdm greeter so that it will build when the XKB
-	extension isn't
-	      defined (#4421, Jim Gettys).
-	 131. Only build setxkbmap when building the XKB lib support (based
-	on #4420,
-	      Jim Gettys).
-	 130. Improve the mga driver messages when the HAL module isn't
-	available
-	      (#4451, David Woodhouse).
-	 129. Add G450 support to the mga driver (#4416, Luugi Marsan
-	(Matrox),
-	      4449, David Woodhouse).
-	 128. Mga driver updates, including HAL cleanups, add a Crtc2Ram
-	option,
-	      and merge with Matrox beta4 source (#4415, Antii Tapaninen,
-	#4423,
-	      Simon Hosie).
-	 127. Fix a rounding problem in the wacom driver that was causing
-	some
-	      position instability (#4417, Hannes Eriksson).
-
-2000-12-07 15:55  keithp
-
-	* Picture.c: Xrender: missing mask field in ChangePictureAttributes
-	request encoding
-
-2000-12-04 23:42  keithp
-
-	* Picture.c: Xft,Xrender: make clip rectangles actually work
-
-2000-12-04 19:13  keithp
-
-	* Picture.c, Xrender.h: Xft,Xrender,Render: c++ support, clip
-	rectangles, warnings
-
-2000-12-04 13:01  dawes
-
-	* Xrender-def.cpp: missing ident lines
-
-2000-12-04 10:49  dawes
-
-	* Xrender-def.cpp: 1085. Updates for Hurd support (#A.209, Marcus
-	Brinkmann).  1084. Bump the minor revisions of libXmu (UTF8_STRING)
-	and libX11	 (Xutf8LookupString).  1083. Fixes for all known
-	bugs in the CompoundText parser and generator,	     (#4333, Bruno
-	Haible).  1082. Fix documentation for XSetOMValues() (#4332, Bruno
-	Haible).  1081. Fix namespace polution in <X11/Xlib.h> introduced
-	with patch #4293       (#4331, Bruno Haible).  1080. Fix a bug in
-	the newly introduced Xutf8LookupString() function that	     loses
-	input not representable in the locale encoding (#4330,	     Bruno
-	Haible).  1079. Avoid four new gcc warnings about const in lcUTF8.c
-	introduced by	    patch #4293 (#4329, Bruno Haible).	1078. Fix
-	some additional cases of confusing local typedef for wchar_t	  
-	(#4328, Bruno Haible).	1077. Fix some round-trip conversion errors
-	in COMPOUND_TEXT -> UTF8_STRING ->	 COMPOUND_TEXT due to wrong
-	tables introduced by patches #4214, 4215       (#4327, Pablo
-	Saratxaga).  1076. Cygwin update for building Xrender DLL (#4326,
-	Suhaib M. Siddiqi).  1075. Fix an undefined SUBDIRS in
-	xc/lib/GL/mesa/src/drv/Imakefile when	    compiling on something
-	other than x86, alpha or sparc (#4325,	     Brian Paul).  1074.
-	Don't have the neomagic driver disable stretching when a mode that 
-	     fills the panel is selected (#4324, Andrew C. Aitchison). 
-	1073. Fix a bug in Xlib's _XimLocalMbLookupString() that causes a
-	crash when	 a zero keycode keypress event is received (#4322,
-	HIBINO Kei).
-
-2000-12-03 15:41  keithp
-
-	* Xrender.h: Xrender: prototype using "template" collides with
-	reserved c++ word
-
-2000-12-02 01:38  keithp
-
-	* Glyph.c: Xrender: 16/32 bit glyph functions using wrong minor
-	request code
-
-2000-12-01 13:31  keithp
-
-	* Glyph.c, Picture.c, Xrender.c, Xrender.h: Xrender/Xft: handle
-	long strings, use unsigned int for 32-bit glyphs
-
-2000-11-29 00:25  keithp
-
-	* Glyph.c, Xrender.h: add 16/32 bit glyph rendering to Xrender
-	library
-
-2000-11-19 23:13  keithp
-
-	* FillRect.c, FillRects.c, Imakefile, Picture.c, Xrender.h: Add
-	component alpha to Render extension
-
-2000-08-27 19:43  tsi
-
-	* Composite.c, Glyph.c, Picture.c, Xrender.c, Xrender.h,
-	Xrenderint.h: Ident lines
-
-2000-08-26 09:37  keithp
-
-	* Imakefile: Get render library to actually build and install
-	correctly
-
-2000-08-25 17:38  keithp
-
-	* Composite.c, Glyph.c, Imakefile, Picture.c, Xrender.c, Xrender.h,
-	Xrenderint.h: Add Xrender library
-
+    Initial revision

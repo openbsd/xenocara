@@ -1,6 +1,4 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.2 2007/09/30 07:47:05 matthieu Exp $
-dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -32,26 +30,19 @@ dnl try to keep these the same.  Note that the library has an extra
 dnl digit in the version number to track changes which don't affect the
 dnl protocol, so Xrender version l.n.m corresponds to protocol version l.n
 dnl
-AC_INIT(libXrender, 0.9.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXrender)
+AC_INIT(libXrender, 0.9.5, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXrender)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER(config.h)
 
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
-
-# Check for X
-PKG_CHECK_MODULES(X, x11)
-		  
-X_REQUIRES="x11"
-X_NON_PKG_CFLAGS=""
-X_NON_PKG_LIBS=""
-
-AC_SUBST(X_REQUIRES)
-AC_SUBST(X_NON_PKG_CFLAGS)
-AC_SUBST(X_NON_PKG_LIBS)
+XORG_DEFAULT_OPTIONS
 
 # Check render configuration, strip extra digits from package version to
 # find the required protocol version
@@ -61,12 +52,10 @@ if test "$VERSION" = "" ; then
 fi
 RENDER_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 AC_SUBST(RENDER_VERSION)
-PKG_CHECK_MODULES(RENDER, renderproto >= $RENDER_VERSION)
-
+PKG_CHECK_MODULES(RENDER, x11 renderproto >= $RENDER_VERSION)
 AC_SUBST(RENDER_CFLAGS)
 
 XORG_CHECK_MALLOC_ZERO
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile

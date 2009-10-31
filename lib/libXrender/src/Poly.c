@@ -99,7 +99,7 @@ XRenderComputeTrapezoids (Edge		*edges,
     qsort (edges, nedges, sizeof (Edge), CompareEdge);
     
     y = edges[0].edge.p1.y;
-    active = 0;
+    active = NULL;
     inactive = 0;
     while (active || inactive < nedges)
     {
@@ -112,7 +112,7 @@ XRenderComputeTrapezoids (Edge		*edges,
 	    /* move this edge into the active list */
 	    inactive++;
 	    e->next = active;
-	    e->prev = 0;
+	    e->prev = NULL;
 	    if (active)
 		active->prev = e;
 	    active = e;
