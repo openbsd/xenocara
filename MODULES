@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.94 2009/10/24 16:24:07 matthieu Exp $
+ $OpenBSD: MODULES,v 1.95 2009/10/31 20:34:57 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -14,7 +14,7 @@ app/fstobdf		1.0.3 	7.4
 app/iceauth		1.0.3	7.5
 app/ico			1.0.2	7.3
 app/listres		1.0.1	7.0
-app/luit		1.0.4	7.5	needs-update
+app/luit		1.0.4	7.5
 app/mkcomposecache	1.2.1	7.5	needs-import
 app/mkfontdir		1.0.5	7.5
 app/mkfontscale		1.0.7	7.5
