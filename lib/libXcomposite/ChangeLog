@@ -1,3 +1,72 @@
+commit 90c243accfb2dc3d4d85dd57d8aca518dab98842
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 00:28:45 2009 -0700
+
+    libXcomposite 0.4.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit c302ae79f7819f75628f798d15c980cbf42eec91
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 00:23:42 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Also some changes to man/Makefile.am to make it work better with the
+    AM_SILENT_RULES option that's enabled in XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3418a26aa83fbba78ad5a214ca7db2984a44190b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:32 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit c469e20fe52db54be01533b0e4748fa011d1ddc4
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 29 15:27:52 2009 -0200
+
+    Janitor: Correct make distcheck
+    
+      Remove extra .gitignore in subdirectories
+      Correct a sparse warning
+
+commit 16ae68423eb30639d880445c6bbe70d539e4b198
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 17:15:39 2008 +0930
+
+    Rename parameters to clarify QueryVersion/QueryExtension.
+    
+    These parameters are not treated as input. Rename them to make the inner
+    workings slightly more obvious.
+    
+    X.Org Bug 14511 <http://bugs.freedesktop.org/show_bug.cgi?id=14511>
+
+commit e59817872ee6aec0544bd56ebb83ded9e4a5851c
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 00:30:40 2008 +0100
+
+    nuke RCS Ids
+
+commit 8c046523f304525615cb8c5391711fddb94fcc04
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:15 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 097228085c98062a439237d7c9170023e69d0543
+Author: Keith Packard <keithp@neko.keithp.com>
+Date:   Tue Jul 3 19:40:52 2007 -0700
+
+    Follow composite protocol version to 0.4, although there is no ABI change.
+    
+    Composite protocol 0.4 changes clipping semantics, but doesn't affect any of
+    the interfaces. As such, this library version is exactly the same as the 0.3
+    series, but the documentation includes a description of the semantic change.
+
 commit 2de0bef64b425889d9c060c1ef0ee891b8376469
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed May 2 15:16:27 2007 -0700

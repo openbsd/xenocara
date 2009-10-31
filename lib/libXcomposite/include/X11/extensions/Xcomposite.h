@@ -1,6 +1,4 @@
 /*
- * $Id: Xcomposite.h,v 1.1.1.1 2006/11/25 16:58:23 matthieu Exp $
- *
  * Copyright © 2006 Sun Microsystems
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -60,11 +58,13 @@
 
 _XFUNCPROTOBEGIN
 
-Bool XCompositeQueryExtension (Display *dpy, int *event_basep, int *error_basep);
+Bool XCompositeQueryExtension (Display *dpy,
+                               int *event_base_return,
+                               int *error_base_return);
 
 Status XCompositeQueryVersion (Display *dpy,
-			       int     *major_versionp,
-			       int     *minor_versionp);
+                               int     *major_version_return,
+                               int     *minor_version_return);
 
 int XCompositeVersion (void);
 

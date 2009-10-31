@@ -66,14 +66,14 @@
   <funcprototype>
    <funcdef>Bool <function>XCompositeQueryExtension</function></funcdef>
    <paramdef><type>Display *</type><parameter>dpy</parameter></paramdef>
-   <paramdef>int *<parameter>event_basep</parameter></paramdef>
-   <paramdef>int *<parameter>error_basep</parameter></paramdef>
+   <paramdef>int *<parameter>event_base_return</parameter></paramdef>
+   <paramdef>int *<parameter>error_base_return</parameter></paramdef>
   </funcprototype>
   <funcprototype>
    <funcdef>Status <function>XCompositeQueryVersion</function></funcdef>
    <paramdef>Display *<parameter>dpy</parameter></paramdef>
-   <paramdef>int *<parameter>major_versionp</parameter></paramdef>
-   <paramdef>int *<parameter>minor_versionp</parameter></paramdef>
+   <paramdef>int *<parameter>major_version_return</parameter></paramdef>
+   <paramdef>int *<parameter>minor_version_return</parameter></paramdef>
   </funcprototype>
   <funcprototype>
    <funcdef>int <function>XCompositeVersion</function></funcdef>
@@ -203,28 +203,28 @@ contents of all descendants.
    </para></listitem>
   </varlistentry>
   <varlistentry>
-   <term><parameter>event_basep</parameter></term>
+   <term><parameter>event_base_return</parameter></term>
    <listitem><para>
     Pointer to integer where the base value for Composite Extension events
     will be stored.
    </para></listitem>
   </varlistentry>
   <varlistentry>
-   <term><parameter>error_basep</parameter></term>
+   <term><parameter>error_base_return</parameter></term>
    <listitem><para>
     Pointer to integer where the base value for Composite Extension errors
     will be stored.
    </para></listitem>
   </varlistentry>
   <varlistentry>
-   <term><parameter>major_versionp</parameter></term>
+   <term><parameter>major_version_return</parameter></term>
    <listitem><para>
     Pointer to integer where the major version of the Composite Extension
     supported by the X server will be stored.
    </para></listitem>
   </varlistentry>
   <varlistentry>
-   <term><parameter>minor_versionp</parameter></term>
+   <term><parameter>minor_version_return</parameter></term>
    <listitem><para>
     Pointer to integer where the minor version of the Composite Extension
     supported by the X server will be stored.

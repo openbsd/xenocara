@@ -19,8 +19,10 @@ Xcomposite_man_aliases = 			\
 	XCompositeGetOverlayWindow		\
 	XCompositeReleaseOverlayWindow
 
+Xcomposite_shadowmen = $(Xcomposite_man_aliases:=.@LIB_MAN_SUFFIX@)
+
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
-	      $(Xcomposite_man_aliases:=.@LIB_MAN_SUFFIX@)
+	      $(Xcomposite_shadowmen)
 
 EXTRA_DIST  = $(libman_PRE) $(libman_xml)
 
@@ -29,17 +31,8 @@ CLEANFILES  = $(libman_DATA)
 MAINTAINERCLEANFILES = $(libman_PRE)
 
 # Generate man page shadow files (Replaces InstallManPageAliases from Imake)
-
-BUILT_SOURCES = shadows.DONE
-
-shadows.DONE:
-	-rm -f $(Xcomposite_man_aliases:=.@LIB_MAN_SUFFIX@)
-	(for i in $(Xcomposite_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/Xcomposite.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	touch shadows.DONE
-
-CLEANFILES += shadows.DONE
+$(Xcomposite_shadowmen):
+	$(AM_V_GEN) echo .so man$(LIB_MAN_DIR_SUFFIX)/Xcomposite.$(LIB_MAN_SUFFIX) > $@
 
 # Substitute system-specific values in man pages
 
@@ -62,7 +55,7 @@ MAN_SUBSTS = \
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man .xml
 
 Xcomposite.$(LIB_MAN_SUFFIX): Xcomposite.man
-	sed $(MAN_SUBSTS) < ${srcdir}/Xcomposite.man > Xcomposite.${LIB_MAN_SUFFIX}
+	$(AM_V_GEN)sed $(MAN_SUBSTS) < ${srcdir}/Xcomposite.man > Xcomposite.${LIB_MAN_SUFFIX}
 
 # Generate nroff sources from DocBook/xml
 
@@ -70,8 +63,9 @@ dist-hook: $(libman_PRE)
 
 if HAVE_XMLTO
 .xml.man:
-	$(XMLTO) man $< && mv $*.__libmansuffix__ $@
+	$(AM_V_GEN)$(XMLTO) man $< && mv $*.__libmansuffix__ $@
 else
 .xml.man:
 	@echo "WARNING: configure did not find xmlto, cannot create $@ without it"
 endif
+

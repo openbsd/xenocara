@@ -1,6 +1,4 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.2 2007/09/30 06:12:46 matthieu Exp $
-dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -27,22 +25,28 @@ AC_PREREQ([2.57])
 
 dnl
 dnl Version should match the current XComposite version. XCompositeQueryVersion
-dnl returns the version from xcompositewire.h, NOT the version we set here. But we
-dnl try to keep these the same.  Note that the library has an extra
+dnl returns the version from xcompositewire.h, NOT the version we set here.
+dnl But we try to keep these the same.  Note that the library has an extra
 dnl digit in the version number to track changes which don't affect the
 dnl protocol, so Xcomposite version l.n.m corresponds to protocol version l.n
 dnl that 'revision' number appears in Xcomposite.h and has to be manually
 dnl synchronized.
 dnl
-AC_INIT(libXcomposite, 0.4.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXcomposite)
+AC_INIT(libXcomposite, 0.4.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXcomposite)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER(config.h)
 
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
+
+XORG_DEFAULT_OPTIONS
 
 AC_ARG_VAR([XMLTO], [Path to xmlto command])
 AC_PATH_PROG([XMLTO], [xmlto])
@@ -62,9 +66,6 @@ AC_SUBST(COMPOSITEEXT_VERSION)
 PKG_CHECK_MODULES(XCOMPOSITE, [compositeproto >= $COMPOSITEEXT_VERSION] x11 xfixes xext fixesproto)
 AC_SUBST(XCOMPOSITE_CFLAGS)
 AC_SUBST(XCOMPOSITE_LIBS)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile

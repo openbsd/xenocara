@@ -1,10 +1,25 @@
-		RandR
-	  X RandR Extension
-	    Version 1.0
-	      2002-10-4
+libXcomposite - client library for the Composite extension to the X11 protocol
 
-This package contains header files and documentation for the X RandR
-extension.  Library and server implementations are separate.
+All questions regarding this software should be directed at the
+Xorg mailing list:
 
-Keith Packard
-keithp@keithp.com
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+Please submit bug reports to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/lib/libXcomposite
+
+        http://cgit.freedesktop.org/xorg/lib/libXcomposite
+
+For patch submission instructions, see:
+
+	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage
+
