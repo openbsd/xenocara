@@ -62,3 +62,31 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xdmcp.pc
 
 EXTRA_DIST = xdmcp.pc.in autogen.sh Wraphelp.c Wraphelp.README.crypto
+
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
+lint:
+	$(LINT) $(ALL_LINT_FLAGS) $(libXdmcp_la_SOURCES) $(nodist_libXdmcp_la_SOURCES) $(LIBS) $(XDMCP_LIBS)
+endif LINT
+
+if MAKE_LINT_LIB
+lintlibdir = $(libdir)
+
+lintlib_DATA = $(LINTLIB)
+
+$(LINTLIB): $(libXdmcp_la_SOURCES) $(nodist_libXdmcp_la_SOURCES)
+	$(LINT) -y -oXdmcp -x $(ALL_LINT_FLAGS) $(libXdmcp_la_SOURCES) $(nodist_libXdmcp_la_SOURCES)
+endif MAKE_LINT_LIB
+
+MAINTAINERCLEANFILES=ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
+
+CLEANFILES=$(lintlib_DATA)

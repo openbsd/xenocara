@@ -36,9 +36,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xdmcp.h>
 
 int
-XdmcpReadARRAYofARRAY8 (buffer, array)
-    XdmcpBufferPtr	buffer;
-    ARRAYofARRAY8Ptr	array;
+XdmcpReadARRAYofARRAY8 (XdmcpBufferPtr buffer, ARRAYofARRAY8Ptr array)
 {
     int	    i;
 
@@ -47,7 +45,7 @@ XdmcpReadARRAYofARRAY8 (buffer, array)
 	/* Must set array->data to NULL to guarantee safe call of
  	 * XdmcpDisposeARRAY*(array) (which calls Xfree(array->data));
          * see defect 7329 */
-	array->data = 0;
+	array->data = NULL;
 	return FALSE;
     }
     if (!array->length)

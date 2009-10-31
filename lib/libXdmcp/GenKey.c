@@ -50,7 +50,7 @@ getbits (long data, unsigned char *dst)
 
 #include <stdlib.h>
 
-#if defined(SYSV) || defined(SVR4)
+#if defined(HAVE_LRAND48) && defined(HAVE_SRAND48)
 #define srandom srand48
 #define random lrand48
 #endif
