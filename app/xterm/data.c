@@ -1,4 +1,4 @@
-/* $XTermId: data.c,v 1.90 2009/08/09 17:22:56 tom Exp $ */
+/* $XTermId: data.c,v 1.91 2009/10/12 00:33:20 tom Exp $ */
 
 /*
  * Copyright 2002-2006,2007 by Thomas E. Dickey
@@ -109,4 +109,8 @@ int mapstate = -1;
 
 #if OPT_SESSION_MGT
 int ice_fd = -1;
+#endif
+
+#ifdef USE_IGNORE_RC
+int ignore_unused;
 #endif

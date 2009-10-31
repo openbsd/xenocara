@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.433 2009/08/13 01:18:00 tom Exp $
+.\" $XTermId: xterm.man,v 1.437 2009/10/10 12:15:41 tom Exp $
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
@@ -1534,9 +1534,15 @@ should be allowed.
 The default is \*(``true.\*(''
 .TP
 .B "allowWindowOps (\fPclass\fB AllowWindowOps)"
-Specifies whether extended window control sequences (as used in dtterm)
+Specifies whether extended window control sequences
+(as used in \fIdtterm\fP)
 should be allowed.
-The default is \*(``true.\*(''
+These include several control sequences which manipulate the window size or
+position, as well as reporting these values and the title or icon name.
+Each of these can be abused in a script;
+curiously enough most terminal emulators that implement these
+restrict only a small part of the repertoire.
+The default is \*(``false.\*(''
 .TP 8
 .B "altIsNotMeta (\fPclass\fB AltIsNotMeta\fP)"
 If \*(``true\*('', treat the Alt-key as if it were the Meta-key.
@@ -1830,6 +1836,19 @@ These specify the colors for the 256-color extension.
 The default resource values
 are for colors 16 through 231 to make a 6x6x6 color cube, and colors
 232 through 255 to make a grayscale ramp.
+.IP
+Resources past \fBcolor15\fP are available as a compile-time option.
+Due to a hardcoded limit in the X libraries on the total number of
+resources (to 400), the resources for 256-colors
+are omitted when wide-character support and \fIluit\fP are enabled.
+Besides inconsistent behavior if only part of the resources were allowed,
+determining the exact cutoff is difficult, and the X libraries tend
+to crash if the number of resources exceeds the limit.
+The color palette is still initialized to the same default values,
+and can be modified via control sequences.
+.IP
+On the other hand, the resource limit does permit including the entire
+range for 88-colors.
 .TP 8
 .B "colorAttrMode (\fPclass\fB ColorAttrMode)"
 Specifies whether \fBcolorBD\fP, \fBcolorBL\fP, \fBcolorRV\fP, and
@@ -2183,6 +2202,12 @@ and makes line-drawing characters directly as needed.
 If \*(``true\*('', \fIxterm\fP assumes the font does not contain the
 line-drawing characters, and draws them directly.
 The default is \*(``false.\*(''
+.TP 8
+.B "forcePackedFont (\fPclass\fB ForcePackedFont)"
+Specifies whether \fIxterm\fP should use the maximum or minimum glyph
+width when displaying using a bitmap font.
+Use the maximum width to help with proportional fonts.
+The default is \*(``true,\*('' denoting the minimum width.
 .TP 8
 .B "foreground (\fPclass\fB Foreground)"
 Specifies the color to use for displaying text in the window.
@@ -3322,6 +3347,9 @@ This entry invokes the \fBset-vt-font(s)\fP action.
 .B "font-linedrawing (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-font-linedrawing(s)\fP action.
 .TP 8
+.B "font-packed (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-font-packed(s)\fP action.
+.TP 8
 .B "font-doublesize (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-font-doublesize(s)\fP action.
 .TP 8
@@ -4054,6 +4082,12 @@ When set, tells \fIxterm\fP to draw its own line-drawing characters.
 Otherwise it relies on the font containing these.
 Compare to the \fBforceBoxChars\fP resource.
 .TP
+Packed Font (font-packed)
+When set, tells \fIxterm\fP to use the minimum glyph-width from a font
+when displaying characters.
+Use the maximum width (unchecked) to help display proportional fonts.
+Compare to the \fBforcePackedFont\fP resource.
+.TP
 Doublesized Characters (font-doublesize)
 When set, \fIxterm\fP may ask the font server to produce scaled versions
 of the normal font, for VT102 double-size characters.
@@ -4640,6 +4674,11 @@ This action toggles the \fBjumpscroll\fP resource and is also invoked by the
 This action toggles the \fIxterm\fR's state regarding whether the current font
 has line-drawing characters and whether it should draw them directly.
 It is also invoked by the \fBfont-linedrawing\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "set-font-packed(\fIon/off/toggle\fP)"
+This action toggles the \fIforcePackedFont\fR's resource
+which controls to use the font's minimum or maximum glyph width.
+It is also invoked by the \fBfont-packed\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-keep-selection(\fIon/off/toggle\fP)"
 This action toggles the \fBkeepSelection\fP resource and is also invoked by

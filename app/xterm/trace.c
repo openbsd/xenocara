@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.102 2009/07/03 13:57:08 tom Exp $ */
+/* $XTermId: trace.c,v 1.104 2009/10/12 00:08:00 tom Exp $ */
 
 /************************************************************
 
@@ -59,13 +59,13 @@ extern "C" {
 }
 #endif
 #endif
-char *trace_who = "parent";
+const char *trace_who = "parent";
 
 void
 Trace(const char *fmt,...)
 {
     static FILE *fp;
-    static char *trace_out;
+    static const char *trace_out;
     va_list ap;
 
     if (fp != 0
@@ -255,7 +255,7 @@ visibleIChar(IChar * buf, unsigned len)
     static unsigned used;
 
     if (buf != 0) {
-	unsigned limit = ((len + 1) * 6) + 1;
+	unsigned limit = ((len + 1) * 8) + 1;
 	char *dst;
 
 	if (limit > used) {

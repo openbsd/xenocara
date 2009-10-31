@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.143 2009/08/09 17:23:47 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.145 2009/10/12 21:56:35 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -374,6 +374,9 @@ WindowScroll(XtermWidget xw, int top)
     ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
 
     ScrollBarDrawThumb(screen->scrollWidget);
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
+    RestartBlinking(screen);
+#endif
 }
 
 #ifdef SCROLLBAR_RIGHT
@@ -553,7 +556,7 @@ ScrollTextUpDownBy(
  * assume that b is alphabetic and allow plural
  */
 static int
-CompareWidths(char *a, char *b, int *modifier)
+CompareWidths(const char *a, const char *b, int *modifier)
 {
     int result;
     char ca, cb;

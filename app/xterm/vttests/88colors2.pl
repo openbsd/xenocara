@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $XTermId: 88colors2.pl,v 1.5 2007/07/17 00:42:15 tom Exp $
+# $XTermId: 88colors2.pl,v 1.6 2009/10/10 14:57:12 tom Exp $
 # Authors: Steve Wall <swall@redcom.com>
 #          Thomas E Dickey
 #
@@ -13,8 +13,14 @@ use strict;
 
 use Getopt::Std;
 
-our ($opt_r);
-&getopts('r') || die("Usage: $0 [-r]");
+our ($opt_h, $opt_q, $opt_r);
+&getopts('hqr') || die("Usage: $0 [-q] [-r]");
+die("Usage: $0 [options]\n
+Options:
+  -h  display this message
+  -q  quieter output by merging all palette initialization
+  -r  display the reverse of the usual palette
+") if ( $opt_h);
 
 our (@steps);
 our ($red, $green, $blue);
@@ -34,14 +40,17 @@ sub map_gray($) {
 
 # colors 16-79 are a 4x4x4 color cube
 @steps=(0,139,205,255);
+printf("\x1b]4") if ($opt_q);
 for ($red = 0; $red < 4; $red++) {
     for ($green = 0; $green < 4; $green++) {
 	for ($blue = 0; $blue < 4; $blue++) {
-	    printf("\x1b]4;%d;rgb:%2.2x/%2.2x/%2.2x\x1b\\",
+	    printf("\x1b]4") unless ($opt_q);
+	    printf(";%d;rgb:%2.2x/%2.2x/%2.2x",
 		   16 + (map_cube($red) * 16) + (map_cube($green) * 4) + map_cube($blue),
 		   int (@steps[$red]),
 		   int (@steps[$green]),
 		   int (@steps[$blue]));
+	    printf("\x1b\\") unless ($opt_q);
 	}
     }
 }
@@ -51,9 +60,12 @@ for ($red = 0; $red < 4; $red++) {
 for ($gray = 0; $gray < 8; $gray++) {
     $level = (map_gray($gray) * 23.18181818) + 46.36363636;
     if( $gray > 0 ) { $level += 23.18181818; }
-    printf("\x1b]4;%d;rgb:%2.2x/%2.2x/%2.2x\x1b\\",
+    printf("\x1b]4") unless ($opt_q);
+    printf(";%d;rgb:%2.2x/%2.2x/%2.2x",
 	   80 + $gray, int($level), int($level), int($level));
+    printf("\x1b\\") unless ($opt_q);
 }
+printf("\x1b\\") if ($opt_q);
 
 
 # display the colors

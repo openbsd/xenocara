@@ -1,10 +1,8 @@
-/* $XTermId: xstrings.c,v 1.28 2008/12/30 17:10:37 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/xstrings.c,v 1.10 2006/02/13 01:14:59 dickey Exp $ */
+/* $XTermId: xstrings.c,v 1.30 2009/10/12 22:25:54 tom Exp $ */
 
 /************************************************************
 
-Copyright 2000-2007,2008 by Thomas E. Dickey
+Copyright 2000-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -99,7 +97,7 @@ x_skip_nonblanks(char *s)
 int
 x_strcasecmp(const char *s1, const char *s2)
 {
-    unsigned len = strlen(s1);
+    size_t len = strlen(s1);
 
     if (len != strlen(s2))
 	return 1;
@@ -146,7 +144,7 @@ x_strdup(const char *s)
  * or NULL if there are none.
  */
 char *
-x_strindex(char *s1, char *s2)
+x_strindex(char *s1, const char *s2)
 {
     char *s3;
     size_t s2len = strlen(s2);

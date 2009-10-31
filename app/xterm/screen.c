@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.396 2009/08/30 00:06:07 tom Exp $ */
+/* $XTermId: screen.c,v 1.403 2009/10/01 00:30:19 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -704,7 +704,8 @@ ScrnClearCells(XtermWidget xw, int row, int col, unsigned len)
     if_OPT_WIDE_CHARS(screen, {
 	int kl;
 	int kr;
-	if (DamagedCells(screen, len, &kl, &kr, INX2ROW(screen, row), col)
+
+	if (DamagedCells(screen, len, &kl, &kr, row, col)
 	    && kr >= kl) {
 	    ClearCells(xw, flags, (unsigned) (kr - kl + 1), row, kl);
 	}
@@ -754,6 +755,10 @@ ScrnWriteText(XtermWidget xw,
     unsigned real_width = visual_width(str, length);
 
     (void) cur_fg_bg;
+
+    if (real_width + (unsigned) screen->cur_col > (unsigned) MaxCols(screen)) {
+	real_width = (unsigned) (MaxCols(screen) - screen->cur_col);
+    }
 
     if (avail <= 0)
 	return;
@@ -1156,7 +1161,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     assert(last > (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
-	int xx = INX2ROW(screen, screen->cur_row);
+	int xx = screen->cur_row;
 	int kl;
 	int kr = screen->cur_col;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
@@ -1220,7 +1225,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	int kl;
 	int kr;
 	if (DamagedCells(screen, n, &kl, &kr,
-			 INX2ROW(screen, screen->cur_row),
+			 screen->cur_row,
 			 screen->cur_col))
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
     });
@@ -1647,13 +1652,15 @@ ClearBufRows(XtermWidget xw,
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
-	LineData *ld = getLineData(screen, ROW2INX(screen, row));
-	if_OPT_DEC_CHRSET({
-	    /* clearing the whole row resets the doublesize characters */
-	    SetLineDblCS(ld, CSET_SWL);
-	});
-	LineClrWrapped(ld);
-	ClearCells(xw, 0, len, row, 0);
+	LineData *ld = getLineData(screen, row);
+	if (ld != 0) {
+	    if_OPT_DEC_CHRSET({
+		/* clearing the whole row resets the doublesize characters */
+		SetLineDblCS(ld, CSET_SWL);
+	    });
+	    LineClrWrapped(ld);
+	    ClearCells(xw, 0, len, row, 0);
+	}
     }
 }
 
@@ -1777,8 +1784,8 @@ ScreenResize(XtermWidget xw,
 
 		    if (amount < 0) {
 			/* move line-data from visible-buffer to save-buffer */
-			saveEditBufLines(screen, dst, -amount);
-			move_up = -amount;
+			saveEditBufLines(screen, dst, (unsigned) -amount);
+			move_up = (unsigned) -amount;
 			move_down_by = amount;
 		    } else {
 			move_down_by = 0;

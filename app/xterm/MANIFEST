@@ -1,4 +1,4 @@
-MANIFEST for xterm-247, version xterm-247
+MANIFEST for xterm-250, version xterm-250
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -13,6 +13,7 @@ Makefile.in                     configure script template for Makefile
 README                          overview & caveats for 'xterm'
 README.i18n                     i18n readme:
 README.os390                    overview for os390 (EBCDIC) port of 'xterm'
+THANKS                          list of direct contributors
 TekPrsTbl.c                     Tek4014 parser state tables
 Tekparse.def                    template for generating Tekparse.h
 Tekparse.h                      Tek4014 parser-state definitions

@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.309 2009/06/18 00:08:40 tom Exp $ */
+/* $XTermId: input.c,v 1.310 2009/10/12 00:12:34 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -125,13 +125,14 @@ typedef struct {
     char strbuf[STRBUFSIZE];
 } KEY_DATA;
 
-/*                       0123456789 abc def0123456789abcdef0123456789abcdef0123456789abcd */
-static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
-
-/*                       0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd */
-static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
-
-static char *curfinal = "HDACB  FE";
+static
+const char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
+/*                      0123456789 abc def0123456789abcdef0123456789abcdef0123456789abcd */
+static
+const char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
+/*                      0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd */
+static
+const char *curfinal = "HDACB  FE";
 
 static int decfuncvalue(KEY_DATA *);
 static void sunfuncvalue(ANSI *, KEY_DATA *);
@@ -139,10 +140,10 @@ static void hpfuncvalue(ANSI *, KEY_DATA *);
 static void scofuncvalue(ANSI *, KEY_DATA *);
 
 #if OPT_TRACE
-static char *
+static const char *
 ModifierName(unsigned modifier)
 {
-    char *s = "";
+    const char *s = "";
     if (modifier & ShiftMask)
 	s = " Shift";
     else if (modifier & LockMask)
@@ -1786,7 +1787,8 @@ TranslationsUseKeyword(Widget w, char **cache, const char *keyword)
 	}
 	free(test);
     }
-    TRACE(("TranslationsUseKeyword(%p, %s) = %d\n", w, keyword, result));
+    TRACE(("TranslationsUseKeyword(%p, %s) = %d\n",
+	   (void *) w, keyword, result));
     return result;
 }
 
@@ -1803,7 +1805,7 @@ xtermHasTranslation(XtermWidget xw, const char *keyword)
 
 #if OPT_EXTRA_PASTE
 static void
-addTranslation(XtermWidget xw, char *fromString, char *toString)
+addTranslation(XtermWidget xw, const char *fromString, const char *toString)
 {
     unsigned have = (xw->keyboard.extra_translations
 		     ? strlen(xw->keyboard.extra_translations)

@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.109 2009/09/10 09:06:30 tom Exp $ */
+/* $XTermId: print.c,v 1.110 2009/10/12 00:04:19 tom Exp $ */
 
 /************************************************************
 
@@ -69,7 +69,7 @@ static void send_SGR(XtermWidget /* xw */ ,
 		     unsigned /* fg */ ,
 		     unsigned /* bg */ );
 static void stringToPrinter(XtermWidget /* xw */ ,
-			    char * /*str */ );
+			    const char * /*str */ );
 
 static FILE *Printer;
 static pid_t Printer_pid;
@@ -296,7 +296,7 @@ static void
 send_CharSet(XtermWidget xw, LineData * ld)
 {
 #if OPT_DEC_CHRSET
-    char *msg = 0;
+    const char *msg = 0;
 
     switch (GetLineDblCS(ld)) {
     case CSET_SWL:
@@ -434,7 +434,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 }
 
 static void
-stringToPrinter(XtermWidget xw, char *str)
+stringToPrinter(XtermWidget xw, const char *str)
 {
     while (*str)
 	charToPrinter(xw, CharOf(*str++));

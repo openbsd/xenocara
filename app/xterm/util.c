@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.489 2009/09/10 09:22:43 tom Exp $ */
+/* $XTermId: util.c,v 1.504 2009/10/11 20:23:19 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -649,6 +649,10 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	   screen->cur_col,
 	   len, visibleIChar(str, len)));
 
+    if (cells + (unsigned) screen->cur_col > (unsigned) MaxCols(screen)) {
+	cells = (unsigned) (MaxCols(screen) - screen->cur_col);
+    }
+
     if (ScrnHaveSelection(screen)
 	&& ScrnIsLineInSelection(screen, INX2ROW(screen, screen->cur_row))) {
 	ScrnDisownSelection(xw);
@@ -744,7 +748,7 @@ InsertLine(XtermWidget xw, int n)
     int scrolltop;
     int scrollheight;
 
-    if (!ScrnIsLineInMargins(screen, INX2ROW(screen, screen->cur_row)))
+    if (!ScrnIsLineInMargins(screen, screen->cur_row))
 	return;
 
     TRACE(("InsertLine count=%d\n", n));
@@ -753,7 +757,12 @@ InsertLine(XtermWidget xw, int n)
 	HideCursor();
 
     if (ScrnHaveSelection(screen)
-	&& ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg)) {
+	&& ScrnAreLinesInSelection(screen,
+				   INX2ROW(screen, screen->top_marg),
+				   INX2ROW(screen, screen->cur_row - 1))
+	&& ScrnAreLinesInSelection(screen,
+				   INX2ROW(screen, screen->cur_row),
+				   INX2ROW(screen, screen->bot_marg))) {
 	ScrnDisownSelection(xw);
     }
 
@@ -820,7 +829,7 @@ DeleteLine(XtermWidget xw, int n)
 					  && !screen->whichBuf
 					  && screen->cur_row == 0);
 
-    if (!ScrnIsLineInMargins(screen, INX2ROW(screen, screen->cur_row)))
+    if (!ScrnIsLineInMargins(screen, screen->cur_row))
 	return;
 
     TRACE(("DeleteLine count=%d\n", n));
@@ -828,14 +837,17 @@ DeleteLine(XtermWidget xw, int n)
     if (screen->cursor_state)
 	HideCursor();
 
+    if (n > (i = screen->bot_marg - screen->cur_row + 1)) {
+	n = i;
+    }
     if (ScrnHaveSelection(screen)
-	&& ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg)) {
+	&& ScrnAreLinesInSelection(screen,
+				   INX2ROW(screen, screen->cur_row),
+				   INX2ROW(screen, screen->cur_row + n - 1))) {
 	ScrnDisownSelection(xw);
     }
 
     screen->do_wrap = False;
-    if (n > (i = screen->bot_marg - screen->cur_row + 1))
-	n = i;
     if (screen->jumpscroll) {
 	if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
 	    if (screen->refresh_amt + n > MaxRows(screen))
@@ -847,8 +859,25 @@ DeleteLine(XtermWidget xw, int n)
 		FlushScroll(xw);
 	}
     }
-    if (!screen->scroll_amt) {
 
+    /* adjust screen->buf */
+    if (n > 0) {
+	if (scroll_all_lines)
+	    ScrnDeleteLine(xw,
+			   screen->saveBuf_index,
+			   screen->bot_marg + screen->savelines,
+			   0,
+			   (unsigned) n);
+	else
+	    ScrnDeleteLine(xw,
+			   screen->visbuf,
+			   screen->bot_marg,
+			   screen->cur_row,
+			   (unsigned) n);
+    }
+
+    /* repaint the screen, as needed */
+    if (!screen->scroll_amt) {
 	shift = INX2ROW(screen, 0);
 	bot = screen->max_row - shift;
 	scrollheight = i - n;
@@ -876,6 +905,14 @@ DeleteLine(XtermWidget xw, int n)
 	    }
 	}
 	vertical_copy_area(xw, scrolltop + n, scrollheight, n);
+	if (shift > 0 && refreshheight > 0) {
+	    int rows = refreshheight;
+	    if (rows > shift)
+		rows = shift;
+	    ScrnUpdate(xw, refreshtop, 0, rows, MaxCols(screen), True);
+	    refreshtop += shift;
+	    refreshheight -= shift;
+	}
 	if (refreshheight > 0) {
 	    ClearCurBackground(xw,
 			       (int) refreshtop * FontHeight(screen) + screen->border,
@@ -883,21 +920,6 @@ DeleteLine(XtermWidget xw, int n)
 			       (unsigned) (refreshheight * FontHeight(screen)),
 			       (unsigned) Width(screen));
 	}
-    }
-    /* adjust screen->buf */
-    if (n > 0) {
-	if (scroll_all_lines)
-	    ScrnDeleteLine(xw,
-			   screen->saveBuf_index,
-			   screen->bot_marg + screen->savelines,
-			   0,
-			   (unsigned) n);
-	else
-	    ScrnDeleteLine(xw,
-			   screen->visbuf,
-			   screen->bot_marg,
-			   screen->cur_row,
-			   (unsigned) n);
     }
 }
 
@@ -1069,7 +1091,7 @@ ClearAbove(XtermWidget xw)
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
 	    if ((height = screen->cur_row + top) > screen->max_row)
-		height = screen->max_row;
+		height = screen->max_row + 1;
 	    if ((height -= top) > 0) {
 		ClearCurBackground(xw,
 				   top * FontHeight(screen) + screen->border,
@@ -1081,8 +1103,7 @@ ClearAbove(XtermWidget xw)
 	ClearBufRows(xw, 0, screen->cur_row - 1);
     }
 
-    if (INX2ROW(screen, screen->cur_row) <= screen->max_row)
-	ClearLeft(xw);
+    ClearLeft(xw);
 }
 
 /*
@@ -2771,21 +2792,19 @@ drawXtermText(XtermWidget xw,
 		if (xtermIsDecGraphic(ch)) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
-		     * in cells 1-31.  Check for this, and attempt to fill in
-		     * from real line-drawing character in the font at the
-		     * Unicode position.  Failing that, use our own
-		     * box-characters.
+		     * in cells 1-31.  Assume this (we cannot inspect the
+		     * picture easily...), and attempt to fill in from real
+		     * line-drawing character in the font at the Unicode
+		     * position.  Failing that, use our own box-characters.
 		     */
-		    if (xtermXftMissing(xw, font, ch)) {
-			if (screen->force_box_chars
-			    || xtermXftMissing(xw, font, dec2ucs(ch))) {
-			    missing = 1;
-			} else {
-			    ch = dec2ucs(ch);
-			    replace = True;
-			}
+		    if (screen->force_box_chars
+			|| xtermXftMissing(xw, font, dec2ucs(ch))) {
+			missing = 1;
+		    } else {
+			ch = dec2ucs(ch);
+			replace = True;
 		    }
-		} else if (ch > 256) {
+		} else if (ch >= 256) {
 		    /*
 		     * If we're reading UTF-8 from the client, we may have a
 		     * line-drawing character.  Translate it back to our
@@ -2909,16 +2928,16 @@ drawXtermText(XtermWidget xw,
 			    ? WhichVFontData(screen, fnts[fBold])
 			    : WhichVFontData(screen, fnts[fNorm]));
 
-	xtermFillCells(xw, flags, gc, x, y, len);
-
 	while (len--) {
+	    int cells = WideCells(*text);
 #if OPT_BOX_CHARS
+#if OPT_WIDE_CHARS
+	    if (*text == HIDDEN_CHAR) {
+		++text;
+		continue;
+	    } else
+#endif
 	    if (IsXtermMissingChar(screen, *text, font)) {
-
-		width = 1;
-		if_OPT_WIDE_CHARS(screen, {
-		    width = my_wcwidth((wchar_t) (*text)) * FontWidth(screen);
-		});
 		adj = 0;
 	    } else
 #endif
@@ -2935,7 +2954,10 @@ drawXtermText(XtermWidget xw,
 		    width = XTextWidth(font->fs, temp, 1);
 		});
 		adj = (FontWidth(screen) - width) / 2;
+		if (adj < 0)
+		    adj = 0;
 	    }
+	    xtermFillCells(xw, flags, gc, x, y, (Cardinal) cells);
 	    x = drawXtermText(xw,
 			      flags | NOBACKGROUND | CHARBYCHAR,
 			      gc, x + adj, y, chrset,

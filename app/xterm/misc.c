@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.425 2009/08/07 23:18:31 tom Exp $ */
+/* $XTermId: misc.c,v 1.428 2009/10/12 00:44:44 tom Exp $ */
 
 /*
  *
@@ -516,7 +516,7 @@ HandleKeyPressed(Widget w GCC_UNUSED,
 		 String * params GCC_UNUSED,
 		 Cardinal *nparams GCC_UNUSED)
 {
-    TRACE(("Handle insert-seven-bit for %p\n", w));
+    TRACE(("Handle insert-seven-bit for %p\n", (void *) w));
 #ifdef ACTIVEWINDOWINPUTONLY
     if (w == CURRENT_EMU())
 #endif
@@ -530,7 +530,7 @@ HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 			 String * params GCC_UNUSED,
 			 Cardinal *nparams GCC_UNUSED)
 {
-    TRACE(("Handle insert-eight-bit for %p\n", w));
+    TRACE(("Handle insert-eight-bit for %p\n", (void *) w));
 #ifdef ACTIVEWINDOWINPUTONLY
     if (w == CURRENT_EMU())
 #endif
@@ -634,7 +634,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
     } else if (!pid) {
 	/* We are the child */
 	if (child_cwd) {
-	    chdir(child_cwd);	/* We don't care if this fails */
+	    IGNORE_RC(chdir(child_cwd));	/* We don't care if this fails */
 	}
 
 	if (setuid(screen->uid) == -1
@@ -1139,7 +1139,7 @@ HandleDabbrevExpand(Widget w,
 {
     XtermWidget xw;
 
-    TRACE(("Handle dabbrev-expand for %p\n", w));
+    TRACE(("Handle dabbrev-expand for %p\n", (void *) w));
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = &xw->screen;
 	if (!dabbrev_expand(screen))
@@ -1667,7 +1667,8 @@ StartLog(TScreen * screen)
 		 && ((pw = getpwuid(screen->uid)) == NULL
 		     || *(cp = pw->pw_shell) == 0))
 		|| (shell = CastMallocN(char, strlen(cp))) == 0) {
-		shell = "/bin/sh";
+		static char dummy[] = "/bin/sh";
+		shell = dummy;
 	    } else {
 		strcpy(shell, cp);
 	    }
@@ -1733,7 +1734,7 @@ FlushLog(TScreen * screen)
 	cp = VTbuffer->next;
 	if (screen->logstart != 0
 	    && (i = cp - screen->logstart) > 0) {
-	    write(screen->logfd, (char *) screen->logstart, (unsigned) i);
+	    IGNORE_RC(write(screen->logfd, screen->logstart, (unsigned) i));
 	}
 	screen->logstart = VTbuffer->next;
     }
@@ -2030,7 +2031,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 	    PDATA('7', CUT_BUFFER7),
     };
 
-    char *base = buf;
+    const char *base = buf;
     char *used = x_strdup(base);
     Cardinal j, n = 0;
     char **select_args = 0;
@@ -3014,7 +3015,7 @@ udk_lookup(int keycode, int *len)
 }
 
 static void
-ChangeGroup(XtermWidget xw, String attribute, char *value)
+ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 {
 #if OPT_WIDE_CHARS
     static Char *converted;	/* NO_LEAKS */
@@ -3022,6 +3023,7 @@ ChangeGroup(XtermWidget xw, String attribute, char *value)
     static char empty[1];
 
     Arg args[1];
+    char *my_attr = x_strdup(attribute);
     char *original = (value != 0) ? value : empty;
     char *name = original;
     TScreen *screen = TScreenOf(xw);
@@ -3031,7 +3033,7 @@ ChangeGroup(XtermWidget xw, String attribute, char *value)
     Char *c1 = (Char *) original;
     Char *cp;
 
-    TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
+    TRACE(("ChangeGroup(attribute=%s, value=%s)\n", my_attr, name));
 
     if (!AllowTitleOps(xw))
 	return;
@@ -3085,7 +3087,7 @@ ChangeGroup(XtermWidget xw, String attribute, char *value)
 
     if (resource.sameName) {
 	char *buf;
-	XtSetArg(args[0], attribute, &buf);
+	XtSetArg(args[0], my_attr, &buf);
 	XtGetValues(top, args, 1);
 	TRACE(("...comparing{%s}\n", buf));
 	if (strcmp(name, buf) == 0)
@@ -3093,9 +3095,9 @@ ChangeGroup(XtermWidget xw, String attribute, char *value)
     }
 #endif /* OPT_SAME_NAME */
 
-    TRACE(("...updating %s\n", attribute));
+    TRACE(("...updating %s\n", my_attr));
     TRACE(("...value is %s\n", name));
-    XtSetArg(args[0], attribute, name);
+    XtSetArg(args[0], my_attr, name);
     XtSetValues(top, args, 1);
 
 #if OPT_WIDE_CHARS
@@ -3103,7 +3105,7 @@ ChangeGroup(XtermWidget xw, String attribute, char *value)
 	Display *dpy = XtDisplay(xw);
 	Atom my_atom;
 
-	const char *propname = (!strcmp(attribute, XtNtitle)
+	const char *propname = (!strcmp(my_attr, XtNtitle)
 				? "_NET_WM_NAME"
 				: "_NET_WM_ICON_NAME");
 	if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
@@ -3121,13 +3123,16 @@ ChangeGroup(XtermWidget xw, String attribute, char *value)
 	}
     }
 #endif
+    free(my_attr);
 }
 
 void
 ChangeIconName(XtermWidget xw, char *name)
 {
-    if (name == 0)
-	name = "";
+    if (name == 0) {
+	static char dummy[] = "";
+	name = dummy;
+    }
 #if OPT_ZICONBEEP		/* If warning should be given then give it */
     if (resource.zIconBeep && xw->screen.zIconBeep_flagged) {
 	char *newname = CastMallocN(char, strlen(name) + 4);
@@ -3247,7 +3252,7 @@ AllocateTermColor(XtermWidget xw,
 
 /* ARGSUSED */
 void
-Panic(char *s GCC_UNUSED, int a GCC_UNUSED)
+Panic(const char *s GCC_UNUSED, int a GCC_UNUSED)
 {
 #ifdef DEBUG
     if (debug) {
@@ -3470,7 +3475,7 @@ xtermCopyEnv(char **oldenv)
  * to have to do a realloc().
  */
 void
-xtermSetenv(char *var, char *value)
+xtermSetenv(const char *var, const char *value)
 {
     if (value != 0) {
 	char *test;
@@ -3782,7 +3787,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 	Cardinal k;
 	XrmOptionDescRec *res_array = sortedOptDescs(descs, numDescs);
 	int code;
-	char *mesg;
+	const char *mesg;
 #else
 	(void) descs;
 	(void) numDescs;
@@ -3863,9 +3868,10 @@ xtermEnvLocale(void)
 
     if (result == 0) {
 	if ((result = x_nonempty(setlocale(LC_CTYPE, 0))) == 0) {
-	    result = "C";
+	    result = x_strdup("C");
+	} else {
+	    result = x_strdup(result);
 	}
-	result = x_strdup(result);
 	TRACE(("xtermEnvLocale ->%s\n", result));
     }
     return result;

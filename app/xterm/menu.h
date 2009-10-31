@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.114 2009/05/02 14:35:39 Ovidiu.Gheorghioiu Exp $ */
+/* $XTermId: menu.h,v 1.117 2009/10/11 22:45:22 tom Exp $ */
 
 /*
 
@@ -56,7 +56,7 @@ from The Open Group.
 #include <xterm.h>
 
 typedef struct _MenuEntry {
-    char *name;
+    const char *name;
     void (*function) PROTO_XT_CALLBACK_ARGS;
     Widget widget;
 } MenuEntry;
@@ -90,6 +90,7 @@ extern void HandleDeleteIsDEL      PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontBoxChars     PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
+extern void HandleFontPacked       PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
@@ -257,6 +258,7 @@ typedef enum {
     fontMenu_line1,
 #if OPT_BOX_CHARS
     fontMenu_font_boxchars,
+    fontMenu_font_packedfont,
 #endif
 #if OPT_DEC_CHRSET
     fontMenu_font_doublesize,
@@ -427,8 +429,10 @@ extern void update_font_doublesize(void);
 
 #if OPT_BOX_CHARS
 extern void update_font_boxchars(void);
+extern void update_font_packed(void);
 #else
 #define update_font_boxchars() /* nothing */
+#define update_font_packed() /* nothing */
 #endif
 
 #if OPT_DEC_SOFTFONT

@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.89 2009/08/15 15:58:44 tom Exp $
+! $XTermId: XTerm.ad,v 1.90 2009/09/27 22:02:30 tom Exp $
 
 *scrollBar: true
 *saveLines: 1024
@@ -89,6 +89,7 @@
 *fontMenu*font-linedrawing*Label: Line-Drawing Characters
 *fontMenu*font-doublesize*Label: Doublesized Characters
 *fontMenu*font-loadable*Label:	VT220 Soft Fonts
+*fontMenu*font-packed*Label:	Packed Font
 *fontMenu*render-font*Label:	TrueType Fonts
 *fontMenu*utf8-mode*Label:	UTF-8
 *fontMenu*utf8-title*Label:	UTF-8 Titles

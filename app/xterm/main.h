@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.42 2009/03/28 17:39:51 tom Exp $ */
+/* $XTermId: main.h,v 1.44 2009/10/10 09:38:25 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -104,7 +104,7 @@
 #endif
 
 #ifndef DEF_ALLOW_WINDOW
-#define DEF_ALLOW_WINDOW	True
+#define DEF_ALLOW_WINDOW	False
 #endif
 
 #if OPT_BLINK_TEXT
@@ -168,5 +168,10 @@
 #define DEFLOCALEFILTER1(x)	DEFLOCALEFILTER2(x)
 #define DEFLOCALEFILTER		DEFLOCALEFILTER1(PROJECTROOT) "/bin/luit"
 #endif
+
+/*
+ * See lib/Xt/Resources.c
+ */
+#define MAXRESOURCES            400
 
 #endif	/* included_main_h */

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $XTermId: 256colors2.pl,v 1.8 2007/07/17 00:44:54 tom Exp $
+# $XTermId: 256colors2.pl,v 1.9 2009/10/10 14:45:26 tom Exp $
 # Authors: Todd Larason <jtl@molehill.org>
 #          Thomas E Dickey
 #
@@ -11,8 +11,14 @@ use strict;
 
 use Getopt::Std;
 
-our ($opt_r);
-&getopts('r') || die("Usage: $0 [-r]");
+our ($opt_h, $opt_q, $opt_r);
+&getopts('hqr') || die("Usage: $0 [-q] [-r]");
+die("Usage: $0 [options]\n
+Options:
+  -h  display this message
+  -q  quieter output by merging all palette initialization
+  -r  display the reverse of the usual palette
+") if ( $opt_h);
 
 our ($red, $green, $blue);
 our ($gray, $level, $color);
@@ -29,15 +35,18 @@ sub map_gray($) {
 	return $value;
 }
 
+printf("\x1b]4") if ($opt_q);
 # colors 16-231 are a 6x6x6 color cube
 for ($red = 0; $red < 6; $red++) {
     for ($green = 0; $green < 6; $green++) {
 	for ($blue = 0; $blue < 6; $blue++) {
-	    printf("\x1b]4;%d;rgb:%2.2x/%2.2x/%2.2x\x1b\\",
+	    printf("\x1b]4") unless ($opt_q);
+	    printf(";%d;rgb:%2.2x/%2.2x/%2.2x",
 		   16 + (map_cube($red) * 36) + (map_cube($green) * 6) + map_cube($blue),
 		   ($red ? ($red * 40 + 55) : 0),
 		   ($green ? ($green * 40 + 55) : 0),
 		   ($blue ? ($blue * 40 + 55) : 0));
+	    printf("\x1b\\") unless ($opt_q);
 	}
     }
 }
@@ -46,9 +55,12 @@ for ($red = 0; $red < 6; $red++) {
 # black and white
 for ($gray = 0; $gray < 24; $gray++) {
     $level = (map_gray($gray) * 10) + 8;
-    printf("\x1b]4;%d;rgb:%2.2x/%2.2x/%2.2x\x1b\\",
+    printf("\x1b]4") unless ($opt_q);
+    printf(";%d;rgb:%2.2x/%2.2x/%2.2x",
 	   232 + $gray, $level, $level, $level);
+    printf("\x1b\\") unless ($opt_q);
 }
+printf("\x1b\\") if ($opt_q);
 
 
 # display the colors

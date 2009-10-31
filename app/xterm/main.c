@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.594 2009/08/30 21:40:45 Alex.Hornung Exp $ */
+/* $XTermId: main.c,v 1.597 2009/10/12 21:58:27 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -448,11 +448,11 @@ extern char *ptsname(int);
 #endif
 
 #ifndef VMS
-static SIGNAL_T reapchild(int n);
+static SIGNAL_T reapchild(int /* n */ );
 static int spawnXTerm(XtermWidget /* xw */ );
-static void remove_termcap_entry(char *buf, char *str);
+static void remove_termcap_entry(char *, const char *);
 #ifdef USE_PTY_SEARCH
-static int pty_search(int *pty);
+static int pty_search(int * /* pty */ );
 #endif
 #endif /* ! VMS */
 
@@ -640,7 +640,7 @@ static struct jtchars d_jtc =
 static Boolean override_tty_modes = False;
 /* *INDENT-OFF* */
 static struct _xttymodes {
-    char *name;
+    const char *name;
     size_t len;
     int set;
     int value;
@@ -1334,7 +1334,7 @@ decode_keyvalue(char **ptr, int termcap)
 }
 
 static int
-abbrev(char *tst, char *cmp, size_t need)
+abbrev(const char *tst, const char *cmp, size_t need)
 {
     size_t len = strlen(tst);
     return ((len >= need) && (!strncmp(tst, cmp, len)));
@@ -2306,7 +2306,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
 	buf[0] = '\0';
 	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU())));
-	write(screen->respond, buf, strlen(buf));
+	IGNORE_RC(write(screen->respond, buf, strlen(buf)));
     }
 #ifdef AIXV3
 #if (OSMAJORVERSION < 4)
@@ -2716,7 +2716,7 @@ pty_search(int *pty)
  */
 
 #if OPT_TEK4014
-static char *tekterm[] =
+static const char *tekterm[] =
 {
     "tek4014",
     "tek4015",			/* 4014 with APL character set support */
@@ -2735,7 +2735,7 @@ static char *tekterm[] =
  * The VT420 has up to 48 lines on the screen.
  */
 
-static char *vtterm[] =
+static const char *vtterm[] =
 {
 #ifdef USE_X11TERM
     "x11term",			/* for people who want special term name */
@@ -2852,7 +2852,9 @@ HsSysError(int error)
 	       handshake.fatal_error,
 	       handshake.buffer));
 	TRACE_HANDSHAKE("writing", &handshake);
-	write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+	IGNORE_RC(write(cp_pipe[1],
+			(const char *) &handshake,
+			sizeof(handshake)));
     } else {
 	fprintf(stderr,
 		"%s: fatal pty error errno=%d, error=%d device \"%s\"\n",
@@ -2881,7 +2883,9 @@ first_map_occurred(void)
 	if (pc_pipe[1] >= 0) {
 	    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
 	    TRACE_HANDSHAKE("writing", &handshake);
-	    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+	    IGNORE_RC(write(pc_pipe[1],
+			    (const char *) &handshake,
+			    sizeof(handshake)));
 	    close(cp_pipe[0]);
 	    close(pc_pipe[1]);
 	}
@@ -3040,7 +3044,7 @@ spawnXTerm(XtermWidget xw)
 
     char *ptr, *shname, *shname_minus;
     int i, no_dev_tty = False;
-    char **envnew;		/* new environment */
+    const char **envnew;	/* new environment */
     char buf[64];
     char *TermName = NULL;
 #ifdef TTYSIZE_STRUCT
@@ -3280,15 +3284,22 @@ spawnXTerm(XtermWidget xw)
      */
     ok_termcap = True;
     if (!get_termcap(TermName = resource.term_name, newtc)) {
-	char *last = NULL;
-	TermName = *envnew;
+	const char *last = NULL;
+	char *next;
+
+	TermName = x_strdup(*envnew);
 	ok_termcap = False;
 	while (*envnew != NULL) {
-	    if ((last == NULL || strcmp(last, *envnew))
-		&& get_termcap(*envnew, newtc)) {
-		TermName = *envnew;
-		ok_termcap = True;
-		break;
+	    if (last == NULL || strcmp(last, *envnew)) {
+		next = x_strdup(*envnew);
+		if (get_termcap(next, newtc)) {
+		    free(TermName);
+		    TermName = next;
+		    ok_termcap = True;
+		    break;
+		} else {
+		    free(next);
+		}
 	    }
 	    last = *envnew;
 	    envnew++;
@@ -3312,8 +3323,9 @@ spawnXTerm(XtermWidget xw)
     } else if (resource.ptyInitialErase) {
 	;
     } else if (ok_termcap) {
+	static char name[] = TERMCAP_ERASE;
 	char temp[1024], *p = temp;
-	char *s = tgetstr(TERMCAP_ERASE, &p);
+	char *s = tgetstr(name, &p);
 	TRACE(("...extracting initial_erase value from termcap\n"));
 	if (s != 0) {
 	    initial_erase = decode_keyvalue(&s, True);
@@ -3567,8 +3579,9 @@ spawnXTerm(XtermWidget xw)
 			handshake.error = errno;
 			strcpy(handshake.buffer, ttydev);
 			TRACE_HANDSHAKE("writing", &handshake);
-			write(cp_pipe[1], (char *) &handshake,
-			      sizeof(handshake));
+			IGNORE_RC(write(cp_pipe[1],
+					(const char *) &handshake,
+					sizeof(handshake)));
 
 			/* get reply from parent */
 			i = read(pc_pipe[0], (char *) &handshake,
@@ -3914,7 +3927,7 @@ spawnXTerm(XtermWidget xw)
 		for (i = 0; i <= 2; i++)
 		    if (i != ttyfd) {
 			(void) close(i);
-			(void) dup(ttyfd);
+			IGNORE_RC(dup(ttyfd));
 		    }
 #ifndef ATT
 		/* and close the tty */
@@ -4223,7 +4236,9 @@ spawnXTerm(XtermWidget xw)
 		handshake.error = 0;
 		(void) strcpy(handshake.buffer, ttydev);
 		TRACE_HANDSHAKE("writing", &handshake);
-		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+		IGNORE_RC(write(cp_pipe[1],
+				(const char *) &handshake,
+				sizeof(handshake)));
 
 		if (resource.wait_for_map) {
 		    i = read(pc_pipe[0], (char *) &handshake,
@@ -4327,7 +4342,7 @@ spawnXTerm(XtermWidget xw)
 		if (((ptr = x_getenv("SHELL")) == NULL) &&
 		    ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
 		     *(ptr = pw->pw_shell) == 0)) {
-		    ptr = "/bin/sh";
+		    ptr = x_strdup("/bin/sh");
 		}
 	    } else {
 		xtermSetenv("SHELL", explicit_shname);
@@ -4390,7 +4405,7 @@ spawnXTerm(XtermWidget xw)
 		if (xw->misc.login_shell) {
 		    int u;
 		    u = (term->misc.use_encoding ? 2 : 0);
-		    command_to_exec_with_luit[u + 1] = "-argv0";
+		    command_to_exec_with_luit[u + 1] = x_strdup("-argv0");
 		    command_to_exec_with_luit[u + 2] = shname_minus;
 		    command_to_exec_with_luit[u + 3] = NULL;
 		}
@@ -4453,13 +4468,17 @@ spawnXTerm(XtermWidget xw)
 				ProgramName, strerror(errno));
 			handshake.status = PTY_NOMORE;
 			TRACE_HANDSHAKE("writing", &handshake);
-			write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+			IGNORE_RC(write(pc_pipe[1],
+					(const char *) &handshake,
+					sizeof(handshake)));
 			exit(ERROR_PTYS);
 		    }
 		    handshake.status = PTY_NEW;
 		    (void) strcpy(handshake.buffer, ttydev);
 		    TRACE_HANDSHAKE("writing", &handshake);
-		    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+		    IGNORE_RC(write(pc_pipe[1],
+				    (const char *) &handshake,
+				    sizeof(handshake)));
 		    break;
 
 		case PTY_FATALERROR:
@@ -4841,7 +4860,7 @@ reapchild(int n GCC_UNUSED)
 #endif /* !VMS */
 
 static void
-remove_termcap_entry(char *buf, char *str)
+remove_termcap_entry(char *buf, const char *str)
 {
     char *base = buf;
     char *first = base;

@@ -1,13 +1,9 @@
 /* xtermcfg.h.  Generated automatically by configure.  */
-/* $XTermId: xtermcfg.hin,v 1.163 2007/03/21 22:05:18 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
- */
+/* $XTermId: xtermcfg.hin,v 1.178 2009/08/09 17:23:19 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2006,2007 by Thomas E. Dickey
+Copyright 1997-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -38,6 +34,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* #undef ALLOWLOGFILEEXEC */		/* CF_ARG_ENABLE(enable-logfile-exec) */
 /* #undef ALLOWLOGGING */		/* CF_ARG_ENABLE(enable-logging) */
 #define CC_HAS_PROTOS 1		/* CF_ANSI_CC */
+/* #undef CSRG_BASED */		/* CF_TYPE_FD_MASK */
 /* #undef DECL_ERRNO */		/* CF_ERRNO */
 /* #undef DFT_COLORMODE */		/* AC_ARG_WITH(default-color-mode) */
 #define DFT_DECID "100"		/* AC_ARG_WITH(default-terminal-id) */
@@ -63,7 +60,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define HAVE_STRERROR 1		/* AC_CHECK_FUNCS(strerror) */
 #define HAVE_STRFTIME 1		/* AC_CHECK_FUNCS(strftime) */
 /* #undef HAVE_SYS_TIME_H */		/* AC_HEADER_TIME */
-#define HAVE_SYS_TTYDEFAULTS_H	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
+#define HAVE_SYS_TTYDEFAULTS_H 1	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
 #define HAVE_SYS_WAIT_H 1		/* AC_HEADER_SYS_WAIT */
 #define HAVE_TCGETATTR 1		/* AC_CHECK_FUNCS(tcgetattr) */
 #define HAVE_TERMCAP_H 1		/* AC_CHECK_HEADERS(termcap.h) */
@@ -72,6 +69,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define HAVE_TERM_H 1		/* AC_CHECK_HEADERS(term.h) */
 #define HAVE_TIGETSTR 1		/* AC_CHECK_FUNCS(tigetstr) */
 #define HAVE_UNISTD_H 1		/* AC_CHECK_HEADERS(unistd.h) */
+#define HAVE_USE_EXTENDED_NAMES 1	/* AC_CHECK_FUNCS(use_extended_names) */
 #define HAVE_UTMP 1		/* CF_UTMP */
 #define HAVE_UTMP_UT_HOST 1	/* CF_UTMP_UT_HOST */
 /* #undef HAVE_UTMP_UT_SESSION */	/* CF_UTMP_UT_SESSION */
@@ -84,7 +82,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define HAVE_WCWIDTH 1		/* AC_CHECK_FUNCS(wcwidth) */
 #define HAVE_X11_DECKEYSYM_H 1	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #define HAVE_X11_SUNKEYSYM_H 1	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
-#define HAVE_X11_XF86KEYSYM_H 1		/* AC_CHECK_HEADERS(X11/XF86keysym.h) */
+#define HAVE_X11_XF86KEYSYM_H 1	/* AC_CHECK_HEADERS(X11/XF86keysym.h) */
 #define HAVE_X11_XPOLL_H 1		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
 #define HAVE_XFTDRAWSETCLIP 1	/* CF_X_FREETYPE */
 #define HAVE_XFTDRAWSETCLIPRECTANGLES 1 /* CF_X_FREETYPE */
@@ -105,8 +103,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* #undef OPT_DABBREV */		/* CF_ARG_ENABLE(dabbrev) */
 /* #undef OPT_DEC_CHRSET */		/* CF_ARG_DISABLE(doublechars) */
 /* #undef OPT_DEC_LOCATOR */		/* CF_ARG_ENABLE(dec-locator) */
-/* #undef OPT_DEC_RECTOPS */		/* CF_ARG_ENABLE(rectangles) */
+#define OPT_DEC_RECTOPS 1		/* CF_ARG_ENABLE(rectangles) */
 /* #undef OPT_EXEC_XTERM */		/* CF_ARG_ENABLE(exec-xterm) */
+/* #undef OPT_FIFO_LINES */		/* CF_ARG_ENABLE(fifo-lines) */
 /* #undef OPT_HIGHLIGHT_COLOR */	/* CF_ARG_DISABLE(highlighting) */
 /* #undef OPT_HP_FUNC_KEYS */		/* CF_ARG_ENABLE(hp-fkeys) */
 /* #undef OPT_I18N_SUPPORT */		/* CF_ARG_DISABLE(i18n) */
@@ -118,7 +117,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* #undef OPT_MAXIMIZE */		/* CF_ARG_DISABLE(maximize) */
 /* #undef OPT_MINI_LUIT */		/* CF_ARG_ENABLE(mini-luit) */
 /* #undef OPT_NUM_LOCK */		/* CF_ARG_DISABLE(num-lock) */
-#define OPT_PASTE64 0		/* CF_ARG_ENABLE(past64) */
+#define OPT_PASTE64 1		/* CF_ARG_ENABLE(past64) */
 /* #undef OPT_PC_COLORS */		/* CF_ARG_DISABLE(pc-color) */
 #define OPT_PTY_HANDSHAKE 1	/* CF_ARG_ENABLE(pty-handshake) */
 /* #undef OPT_READLINE */		/* CF_ARG_ENABLE(readline-mouse) */
@@ -132,6 +131,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* #undef OPT_TEK4014 */		/* CF_ARG_DISABLE(tek4014) */
 /* #undef OPT_TOOLBAR */		/* CF_ARG_ENABLE(toolbar) */
 /* #undef OPT_VT52_MODE */		/* CF_ARG_DISABLE(vt52) */
+/* #undef OPT_WIDER_ICHAR */		/* CF_ARG_ENABLE(16bit-chars) */
 #define OPT_WIDE_CHARS 1		/* CF_ARG_OPTION(wide-chars) */
 /* #undef OPT_XMC_GLITCH */		/* CF_ARG_ENABLE(xmc-glitch) */
 /* #undef OPT_ZICONBEEP */		/* CF_ARG_DISABLE(ziconbeep) */
@@ -191,7 +191,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifdef USE_MY_MEMMOVE
 #define memmove(d,s,n) my_memmove(d,s,n)
-extern char * my_memmove(char * s1, char * s2, size_t n);
+extern void * my_memmove(void * s1, void * s2, size_t n);
 #endif
 
 #ifndef HAVE_STRERROR

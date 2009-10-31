@@ -1,4 +1,4 @@
-/* $XTermId: scrollback.c,v 1.11 2009/08/06 08:34:30 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.12 2009/10/12 00:06:18 tom Exp $ */
 
 /************************************************************
 
@@ -48,7 +48,7 @@ getScrollback(TScreen * screen, int row)
     unsigned which = ROW2FIFO(screen, row);
     ScrnBuf where = scrnHeadAddr(screen, screen->saveBuf_index, which);
 
-    TRACE(("getScrollback %d -> %d -> %p\n", row, which, where));
+    TRACE(("getScrollback %d -> %d -> %p\n", row, which, (void *) where));
     return (LineData *) where;
 }
 
@@ -80,7 +80,7 @@ addScrollback(TScreen * screen)
 	     */
 	    if (prior->attribs != 0) {
 		TRACE(("...freeing prior FIFO data in slot %d: %p->%p\n",
-		       which, prior, prior->attribs));
+		       which, (void *) prior, prior->attribs));
 		free(prior->attribs);
 		prior->attribs = 0;
 	    }
@@ -93,7 +93,7 @@ addScrollback(TScreen * screen)
 	setupLineData(screen, where, (Char *) block, 1, ncols);
 
 	TRACE(("...storing new FIFO data in slot %d: %p->%p\n",
-	       which, where, block));
+	       which, (void *) where, block));
 
     }
     return (LineData *) where;
@@ -111,7 +111,7 @@ deleteScrollback(TScreen * screen, int row)
      */
     if (prior->attribs != 0) {
 	TRACE(("...freeing prior FIFO data in slot %d: %p->%p\n",
-	       which, prior, prior->attribs));
+	       which, (void *) prior, prior->attribs));
 	free(prior->attribs);
 	prior->attribs = 0;
     }

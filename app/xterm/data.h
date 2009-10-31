@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.109 2009/08/09 17:23:01 tom Exp $ */
+/* $XTermId: data.h,v 1.110 2009/10/12 00:33:08 tom Exp $ */
 
 /*
  * Copyright 2002-2007,2009 by Thomas E. Dickey
@@ -210,5 +210,9 @@ typedef struct XTERM_RESOURCE {
 } XTERM_RESOURCE;
 
 extern XTERM_RESOURCE resource;
+
+#ifdef USE_IGNORE_RC
+extern int ignore_unused;
+#endif
 
 #endif /* included_data_h */

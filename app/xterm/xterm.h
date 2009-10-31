@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.582 2009/09/10 09:01:22 tom Exp $ */
+/* $XTermId: xterm.h,v 1.589 2009/10/12 00:34:48 tom Exp $ */
 
 /************************************************************
 
@@ -52,6 +52,13 @@ authorization.
 #ifndef GCC_NORETURN
 #define GCC_NORETURN		/* nothing */
 #endif
+
+#if defined(__GNUC__) && defined(_FORTIFY_SOURCE)
+#define USE_IGNORE_RC
+#define IGNORE_RC(func) ignore_unused = func
+#else
+#define IGNORE_RC(func) (void) func
+#endif /* gcc workarounds */
 
 #include <X11/Xos.h>
 
@@ -402,6 +409,7 @@ extern char **environ;
 #define XtNfontStyle		"fontStyle"
 #define XtNfontWarnings		"fontWarnings"
 #define XtNforceBoxChars	"forceBoxChars"
+#define XtNforcePackedFont	"forcePackedFont"
 #define XtNformatOtherKeys	"formatOtherKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNhighlightColor	"highlightColor"
@@ -561,6 +569,7 @@ extern char **environ;
 #define XtCFontStyle		"FontStyle"
 #define XtCFontWarnings		"FontWarnings"
 #define XtCForceBoxChars	"ForceBoxChars"
+#define XtCForcePackedFont	"ForcePackedFont"
 #define XtCFormatOtherKeys	"FormatOtherKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"
 #define XtCHighlightColorMode	"HighlightColorMode"
@@ -748,7 +757,10 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 #if OPT_WIDE_CHARS
 extern Bool iswide(int  /* i */);
 #define FIRST_WIDECHAR 256
-#define isWide(n) ((int) (n) >= FIRST_WIDECHAR && iswide(n))
+#define WideCells(n) (((IChar)(n) >= FIRST_WIDECHAR) ? my_wcwidth((wchar_t) (n)) : 1)
+#define isWide(n)    (((IChar)(n) >= FIRST_WIDECHAR) && iswide(n))
+#else
+#define WideCells(n) 1
 #endif
 
 /* cachedCgs.c */
@@ -777,6 +789,7 @@ extern int VTInit (XtermWidget /* xw */);
 extern int v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
 extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);
 extern void HideCursor (void);
+extern void RestartBlinking(TScreen * /* screen */);
 extern void ShowCursor (void);
 extern void SwitchBufPtrs (TScreen * /* screen */);
 extern void ToggleAlternate (XtermWidget /* xw */);
@@ -794,7 +807,7 @@ extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int  /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
-extern void unparseputs (XtermWidget /* xw */, char * /* s */);
+extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
 extern void xtermAddInput(Widget  /* w */);
 
@@ -936,7 +949,7 @@ extern void HandleKeyPressed           PROTO_XT_ACTIONS_ARGS;
 extern void HandleLeaveWindow          PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleSpawnTerminal        PROTO_XT_ACTIONS_ARGS;
 extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
-extern void Panic (char * /* s */, int  /* a */);
+extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
 extern void ReverseOldColors (void);
 extern void SysError (int  /* i */) GCC_NORETURN;
@@ -958,7 +971,7 @@ extern void xt_error (String  /* message */);
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
-extern void xtermSetenv (char * /* var */, char * /* value */);
+extern void xtermSetenv (const char * /* var */, const char * /* value */);
 extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 
 #if OPT_DABBREV

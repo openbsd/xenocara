@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.252 2009/07/03 15:01:14 tom Exp $ */
+/* $XTermId: menu.c,v 1.254 2009/10/11 22:46:44 tom Exp $ */
 
 /*
 
@@ -177,6 +177,7 @@ static void do_cursorblink     PROTO_XT_CALLBACK_ARGS;
 
 #if OPT_BOX_CHARS
 static void do_font_boxchars   PROTO_XT_CALLBACK_ARGS;
+static void do_font_packed     PROTO_XT_CALLBACK_ARGS;
 #endif
 
 #if OPT_DEC_CHRSET
@@ -351,6 +352,7 @@ MenuEntry fontMenuEntries[] = {
     { "line1",		NULL,		NULL },
 #if OPT_BOX_CHARS
     { "font-linedrawing",do_font_boxchars,NULL },
+    { "font-packed",	do_font_packed,NULL },
 #endif
 #if OPT_DEC_CHRSET
     { "font-doublesize",do_font_doublesize,NULL },
@@ -712,6 +714,10 @@ domenu(Widget w,
 	    update_font_boxchars();
 	    SetItemSensitivity(
 				  fontMenuEntries[fontMenu_font_boxchars].widget,
+				  True);
+	    update_font_packed();
+	    SetItemSensitivity(
+				  fontMenuEntries[fontMenu_font_packedfont].widget,
 				  True);
 #endif
 #if OPT_DEC_SOFTFONT		/* FIXME: not implemented */
@@ -1496,6 +1502,16 @@ do_font_boxchars(Widget gw GCC_UNUSED,
     update_font_boxchars();
     Redraw();
 }
+
+static void
+do_font_packed(Widget gw GCC_UNUSED,
+	       XtPointer closure GCC_UNUSED,
+	       XtPointer data GCC_UNUSED)
+{
+    ToggleFlag(term->screen.force_packed);
+    update_font_packed();
+    SetVTFont(term, term->screen.menu_font_number, True, NULL);
+}
 #endif
 
 #if OPT_DEC_SOFTFONT
@@ -1833,7 +1849,7 @@ HandleSendSignal(Widget w,
 {
     /* *INDENT-OFF* */
     static struct sigtab {
-	char *name;
+	const char *name;
 	int sig;
     } signals[] = {
 #ifdef SIGTSTP
@@ -2248,6 +2264,16 @@ HandleFontBoxChars(Widget w,
 		   Cardinal *param_count)
 {
     handle_vt_toggle(do_font_boxchars, term->screen.force_box_chars,
+		     params, *param_count, w);
+}
+
+void
+HandleFontPacked(Widget w,
+		 XEvent * event GCC_UNUSED,
+		 String * params,
+		 Cardinal *param_count)
+{
+    handle_vt_toggle(do_font_packed, term->screen.force_packed,
 		     params, *param_count, w);
 }
 #endif
@@ -3175,6 +3201,15 @@ update_font_boxchars(void)
 		   fontMenuEntries,
 		   fontMenu_font_boxchars,
 		   term->screen.force_box_chars);
+}
+
+void
+update_font_packed(void)
+{
+    UpdateCheckbox("update_font_packed",
+		   fontMenuEntries,
+		   fontMenu_font_packedfont,
+		   term->screen.force_packed);
 }
 #endif
 

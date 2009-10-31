@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.790 2009/09/11 23:10:00 tom Exp $
+  $XTermId: xterm.log.html,v 1.846 2009/10/13 09:28:07 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_250">Patch #250 - 2009/10/13</A>
+<LI><A HREF="#xterm_249">Patch #249 - 2009/10/1</A>
 <LI><A HREF="#xterm_248">Patch #248 - 2009/9/11</A>
 <LI><A HREF="#xterm_247">Patch #247 - 2009/8/30</A>
 <LI><A HREF="#xterm_246">Patch #246 - 2009/8/16</A>
@@ -295,6 +297,102 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_250">Patch #250 - 2009/10/13</A></H1>
+<ul>
+	<li>add check and error-message for fonts that have no printable
+	    values in the ISO-8859-1 range (Debian #542434).
+
+	<li>some compiler-warning cleanup, in particular workaround for
+	    defective implementation of gcc's attribute warn_unused_result
+	    (report by Bram Moolenaar).
+
+	<li>improve estimate of single-column width for packed TrueType
+	    fonts by ignoring extents for codes 127 and 159.
+
+	<li>improve line-drawing for TrueType fonts which happen to have
+	    defined glyphs which are <em>not</em> line-drawing in 0..31
+	    by assuming they're not, and just checking the existence of
+	    the Unicode codepoints.  This makes it more likely that the
+	    user can override a misconfigured font using the "Line-Drawing
+	    Characters" menu entry.
+
+	<li>limit minimum cell-width for packed font to maximum-advance
+	    reported by Xft.  Some fonts are wider than that, even in the
+	    Latin-1 range (Debian #550497).
+
+	<li>add list of direct-contributors in "THANKS" file.
+
+	<li>stylistic changes to this file to help scripted extraction of
+	    list of contributors.
+
+	<li>correct off-by-one in <code>okPosition</code> fix from
+	    <a href="#xterm_249">patch #249</a> limit-checks which
+	    prevented double-click selection on the bottom line of the
+	    screen (reports by Rajeev V. Pillai, Debian #550368).
+
+	<li>add <code>-q</code> option to
+	    <code>vttest/256colors2.pl</code> and
+	    <code>vttest/88colors2.pl</code>
+	    to demonstrate bulk initialization of color palette.
+
+	<li>improve the workaround from patch #188 by enabling resources for
+	    the 88-color model.
+
+	<li>document in xterm manpage the limited availability of resources
+	    <code>color16</code> to <code>color255</code> as noted in
+	    <a href="#xterm_188">patch #188</a> (Ubuntu #438850).
+</ul>
+
+<H1><A NAME="xterm_249">Patch #249 - 2009/10/1</A></H1>
+<ul>
+	<li>change default for <code>allowWindowOps</code> resource to false.
+	    <!-- on the other hand, gnome-terminal, pterm and rxvt-unicode
+	        leave most of the related functionality enabled ;-) -->
+
+	<li>add limit-checks for result of visual_width() function,
+	    needed from <a href="#xterm_242">patch #242</a> and
+	    exposed by #244 changes (Debian #548321).
+
+	<li>improve limit-checks in select/paste.
+
+	<li>fix a remaining bug from 
+	    <a href="#xterm_230">patch #230</a>
+	    changes for displaying multi-column
+	    characters in a proportional font (report by Chris Jones).
+
+	<li>add new resource forcePackedFont and menu entry "Packed Font" to
+	    control whether to use the font's minimum (default) or maximum
+	    width when those differ.  The workaround which xterm uses to
+	    accommodate proportional fonts is not necessary with certain
+	    fonts such as unifont which happen to store a mixture of
+	    multicolumn glyphs (report by Chris Jones).
+
+	<li>fix an (old) bug which did not restart the timer for blinking text
+	    if the only blinking text was temporarily scrolled out of view,
+	    e.g., using the scrollbar.
+
+	<li>fix an (old) flaw in the delete-line operation where the text which
+	    is scrolled into view while the display is scrolled up was not
+	    repainted.
+
+	<li>improve delete-line and insert-line operations, retaining selection
+	    when the selection does not intersect the deleted/inserted lines.
+
+	<li>fix an (old) off-by-one error when an application cleared above the
+	    cursor position while the display was scrolled up, that would leave
+	    an extra line of text uncleared.
+
+	<li>fix a similar problem where the double-size attribute would not be
+	    reset when clearing the screen while the display was scrolled up.
+
+	<li>fix an indexing error which would occur if an application cleared
+	    a line while the display was scrolled up and was also in UTF-8 mode
+	    (Redhat #524503).
+	    The error was from <a href="#xterm_228">patch #228</a>
+	    but more visible after
+	    changes from <a href="#xterm_244">patch #244</a>.
+</ul>
 
 <H1><A NAME="xterm_248">Patch #248 - 2009/9/11</A></H1>
 <ul>
@@ -771,8 +869,7 @@ is the latest version of this file.
 	    <code>termios.h</code> (prompted by comments by Robert Delius Royar
 	    and Jeremy Huddleston).
 
-	<li>patches from Alan Coopersmith.  These correspond
-	    to bug-ids on bugs.opensolaris.org 
+	<li>bug-fixes for bugs.opensolaris.org (patches from Alan Coopersmith)
 	    <dl>
 	    <dt>4029911
 	    <dd>fix a typo in manpage
@@ -922,8 +1019,8 @@ is the latest version of this file.
 	    are available in the font.
 
 	<li>modify rectangle-support functions to preserve colors when
-	    filling/erasing (request by Enzo Toscano, to match WRQ Reflection
-	    behavior).
+	    filling/erasing to match WRQ Reflection behavior
+	    (request by Enzo Toscano).
 
 	<li>add getopt-parsing to tcapquery.pl, including feature to test the
 	    extended cursor/editing keys.
@@ -971,7 +1068,7 @@ is the latest version of this file.
 	<li>extend terminfo building blocks for modified editing keys to
 	    include all six keys.
 
-	<li>synchronize terminfo with ncurses (report by Stephane Chazelas):
+	<li>synchronize terminfo with ncurses (report by Stephane Chazelas)
 	    <ul>
 	    <li>equate <code>xterm-xfree86</code>
 	        and <code>xterm-xf86-v44</code>.
@@ -1368,7 +1465,7 @@ is the latest version of this file.
 	<li>fixes configure script macros that use <code>$X_EXTRA_LIBS</code>.
 
 	<li>modify configure script to provide support for pre-package config
-	    versions of Xft (FreeType).
+	    versions of Xft aka "FreeType".
 
 	<li>add the Xaw scrollbar translations resource to the xterm manpage,
 	    add an example showing how to change the mouse button assignments
@@ -1720,7 +1817,7 @@ is the latest version of this file.
 	    when headers undefine this as a side-effect of
 	    <code>_POSIX_C_SOURCE</code>, etc.
 
-	<li>resync with XFree86 CVS:
+	<li>resync with XFree86 CVS
 	<ul>
 	   <li>ifdef-out chmod of terminal device for OS/2 (XFree86 #1663,
 	       Frank Giessler).
@@ -1936,8 +2033,9 @@ is the latest version of this file.
 
 	<li>revert part of recent XFree86 Imakefile change, restoring the
 	    <code>-I.</code> needed for <code>xmkmf</code> builds of xterm
-	    (XFree86 Bugzilla #1633, reports by Alexander Pohoyda and Matthieu
-	    Herrb).
+	    (XFree86 Bugzilla #1633,
+	     reports by Alexander Pohoyda,
+	     Matthieu Herrb).
 
 	<li>change compiled-in default for <code>printerCommand</code>
 	    resource to an empty string.  People who want to use the
@@ -2126,7 +2224,7 @@ is the latest version of this file.
 
 	<li>improve fix from <a href="#xterm_198">patch #198</a> for
 	    <code>Cleanup()</code> by ensuring it is not called from the
-	    SIGCHLD handler (patch from OpenBSD by Todd Miller).
+	    SIGCHLD handler (patch by Todd Miller (OpenBSD CVS)).
 
 	<li>eliminate a retry for a better-matching bold font, to work around
 	    recent font server changes.
@@ -2221,8 +2319,9 @@ is the latest version of this file.
 	<li>make paste of UTF-8 faster for Western character sets by checking
 	    range of incoming data (patch by Joe Allen).
 
-	<li>adapted patch by Joe Allen to add experimental option to allow
-	    applications to get or set the selection data as a BASE64 string.
+	<li>add experimental option to allow
+	    applications to get or set the selection data as a BASE64 string
+	    (adapted from patch by Joe Allen).
 
 	<li>fix an off-by-one error parsing <code>-S/nn</code> option
 	    (Debian #311438, report/fix by Peter Chubb).
@@ -2415,7 +2514,7 @@ is the latest version of this file.
 	    Brand and Bernhard R Link).
 
 	<li>fix a typo in Imakefile from <a href="#xterm_198">patch #198</a>
-	    (reports/patches by Stefan Dirsch, and Mike Castle).
+	    (reports/patches by Stefan Dirsch, Mike Castle).
 </ul>
 
 <H1><A NAME="xterm_198">Patch #198 - 2005/1/13 - XFree86 4.4.99.21</A></H1>
@@ -2925,8 +3024,8 @@ is the latest version of this file.
 
 	<li>modify <code>Imakefile</code> to remove dependency of "install"
 	    target on the <code>xterm</code> executable to make installs from
-	    tree without attempting to rebuild anything (David Dawes, based on
-	    a patch and report from Lee Olsen).
+	    tree without attempting to rebuild anything (commit by David Dawes,
+	    report/patch from Lee Olsen).
 
 	<li>remove call to <code>ShowCursor</code> from
 	    <code>SetCursorBlink()</code> since that is redundant,
@@ -3040,7 +3139,7 @@ is the latest version of this file.
 	    and libraries.
 
 	<li>modify <code>Imakefile</code> to put the current directory at the
-	    beginning of the include searchpath (David Dawes).
+	    beginning of the include searchpath (patch by David Dawes).
 </ul>
 
 <H1><A NAME="xterm_182">Patch #182 - 2003/12/2 - XFree86 4.3.99.901</A></H1>
@@ -3063,7 +3162,7 @@ is the latest version of this file.
 
 	<li>compiler-warning fixes (patch by Christian Biere).
 
-	<li>add README.i18n (Tomohiro KUBOTA).
+	<li>add README.i18n (Tomohiro Kubota).
 
 	<li>correct initialization of G1 character set mapping, which used
 	    line-drawing set as a result of confusion between "DEC Supplemental
@@ -3100,8 +3199,7 @@ is the latest version of this file.
 	    subresources have the same names as the fonts which they replace,
 	    e.g., <code>font</code>, <code>font1</code>, etc., so that the
 	    ISO-10646-1 fonts can be specified in the <code>XTerm</code>
-	    app-defaults file (this is an adaptation of a patch by Tomohiro
-	    KUBOTA).
+	    app-defaults file (adapted from patch by Tomohiro Kubota).
 
 	<li>improve Set Font escape string handling by making the relative
 	    settings apply to the size of the font, as in shift keypad
@@ -3129,15 +3227,15 @@ is the latest version of this file.
 	<li>add <code>indp</code> and <code>rin</code> to terminfo entry.
 
 	<li>fix an out-of-bounds array reference in ScrnRefresh() for wide
-	    characters (report by Dan Harnett, patch by Todd Miller, bug dates
-	    from <a href="#xterm_141">patch #141</a>).
+	    characters (report by Dan Harnett, patch by Todd Miller).
+	    This bug dates from <a href="#xterm_141">patch #141</a>.
 </ul>
 
 <H1><A NAME="xterm_180">Patch #180 - 2003/10/12 - XFree86 4.3.99.15</A></H1>
 <ul>
-	<li>several fixes for rendering using Xft (option <code>-fa</code>):
+	<li>several fixes for rendering using Xft via option <code>-fa</code>:
 	  <ul>
-	  <li>translate Unicode values (from UTF-8 output to xterm) for
+	  <li>translate Unicode values, i.e,. from UTF-8 output to xterm, for
 	      line-drawing to xterm's internal code, etc., since TrueType fonts
 	      generally do not have either set of line-drawing glyphs.  xterm
 	      can draw these directly (report by Abigail Brady).
@@ -3222,7 +3320,7 @@ is the latest version of this file.
 	   <a href="#xterm_171">patch #171</a>) to append the process-id rather
 	   than a random value.
 
-	<li>resync with XFree86 CVS:
+	<li>resync with XFree86 CVS
 	<ul>
 	   <li>Enable SCO function keys in xterm
 	   <li>Make Delete key send DEL by default on SCO in xterm
@@ -3527,7 +3625,7 @@ is the latest version of this file.
 
 	<li>update config.guess, config.sub
 
-	<li>resync with XFree86 CVS:
+	<li>resync with XFree86 CVS
 	<ul>
 	  <li>fix va_args glitches for xterm/libfontconfig:  0 == (void*)0
 	    isn't true for all platforms (Egbert Eich).
@@ -3605,8 +3703,8 @@ is the latest version of this file.
 
 	<li>modify logic for <code>metaSendsEscape</code> to allow it to work
 	  in a setup where the Meta-key is not recognized as a modifier by
-	  the key-translations logic (from a discussion of eightBitInput
-	  with H.J.Lu, however Vincent Lefevre reported this in January).
+	  the key-translations logic (discussion of eightBitInput with H.J.Lu).
+	  Note however that Vincent Lefevre reported this in January).
 
 	<li>use null pointer values consistently, rather than literal "0", for
 	  ending variable-length argument lists, e.g., for
@@ -3637,8 +3735,9 @@ is the latest version of this file.
 	<li>fix several places in ctlseqs.ms which had no boxes around the
 	  literal text (report by Ilya Zakharevich).
 
-	<li>integrated patch from Ilya Zakharevich to extend mouse support for
-	  readline (ifdef'd with OPT_READLINE).
+	<li>extend mouse support for readline,
+	    ifdef'd with OPT_READLINE
+	    (integrated patch from Ilya Zakharevich).
 
 	<li>modify terminfo description to match default for
 	  <code>modifyCursorKeys</code> resource.
@@ -3649,8 +3748,8 @@ is the latest version of this file.
 	  with CSI and puts the modifier as the second parameter, to avoid
 	  confusing applications that would interpret the first parameter as a
 	  repeat count.  The original behavior can be obtained by setting the
-	  resource to 0 (from newsgroup discussion with Stephen J Turnbull
-	  and Jeffrey Altman).
+	  resource to 0 (newsgroup discussion with Stephen J Turnbull,
+	  Jeffrey Altman).
 
 	<li>correct missing initializations for <code>appdefaultCursor</code>
 	  and <code>appdefaultKeypad</code> resources.
@@ -3658,9 +3757,7 @@ is the latest version of this file.
 	<li>add configure option <code>--enable-luit</code> and ifdef'd the
 	  luit-related code with OPT_LUIT_PROG.
 
-	<li>integrate patch by Tomohiro KUBOTA from
-	  http://www.xfree86.org/pipermail/i18n/2002-July/003378.html which
-	  modifies xterm to invoke luit.
+	<li>modify xterm to invoke luit (integrated patch by Tomohiro Kubota)
 
 	<li>update wcwidth.c to match Markus Kuhn's 2002-05-18 version.
 
@@ -3765,17 +3862,17 @@ is the latest version of this file.
 	  &lt;Stephan.Binner@gmx.de&gt;).
 
 	<li>fixes for ctlseqs.ms and xterm.man
-	  (patch by Werner LEMBERG &lt;wl@gnu.org&gt;).
+	  (patch by Werner Lemberg &lt;wl@gnu.org&gt;).
 
 	<li>add check for monochrome display, disabling colorMode in that
 	  case (fixes Debian #134130).
 
-	<li>resync with XFree86 CVS:
+	<li>resync with XFree86 CVS
 	<ul>
-	   <li>Fix some xterm build warnings on *BSD (David Dawes).
-	   <li>Only use SA_RESTART in xterm when it's available (Frank Liu).
+	   <li>Fix some xterm build warnings on *BSD (patch by David Dawes).
+	   <li>Only use SA_RESTART in xterm when it's available (patch by Frank Liu).
 	   <li>Fix incorrect code in signal handlers in most of the clients,
-	     xterm and xdm not done yet (Matthieu Herrb).
+	     xterm and xdm not done yet (patch by Matthieu Herrb).
 	</ul>
 </ul>
 
@@ -3817,7 +3914,7 @@ is the latest version of this file.
 	<li>fix a couple of typos in comments in the app-defaults files
 	  (David Krause &lt;xfree86@davidkrause.com&gt;).
 
-	<li>resync with XFree86 CVS:
+	<li>resync with XFree86 CVS
 	  <ul>
 	  <li>update language of copyrights in some files to reflect the fact
 	      that they were reassigned from X Consortium to The Open Group in
@@ -3826,10 +3923,10 @@ is the latest version of this file.
 	      Consortium or The Open Group after that date, hence we do not add
 	      The Open Group's 1998 copyright date to related files.
 
-	  <li>save/restore <code>errno</code> in signal catcher (Matthieu Herrb).
+	  <li>save/restore <code>errno</code> in signal catcher (patch by Matthieu Herrb).
 
 	  <li>modify UXTerm.ad's font5 resource so that xterm can display double
-	      width characters using a font distributed with XFree86 (Tomohiro KUBOTA).
+	      width characters using a font distributed with XFree86 (Tomohiro Kubota).
 	  </ul>
 </ul>
 
@@ -3896,7 +3993,7 @@ is the latest version of this file.
 	<li>correct Imakefile install-rule for <code>uxname</code> script
 	   (reported by Nam SungHyun &lt;namsh@lge.com&gt;).
 
-	<li>resync with XFree86 CVS: correct typo in <code>&lt;ncurses/term.h&gt;</code>
+	<li>resync with XFree86 CVS &ndash; correct typo in <code>&lt;ncurses/term.h&gt;</code>
 	   ifdef.
 </ul>
 
@@ -3929,7 +4026,7 @@ is the latest version of this file.
 	    already addressed by the <a href="#xterm_141">UXTerm</a>
 	    app-defaults file.
 
-	<li>resync with XFree86 CVS:
+	<li>resync with XFree86 CVS
 	<ul>
 	<li>Modified xterm app default to use LFD fontnames instead of old type
 	    (Michael Schroeder).
@@ -3972,8 +4069,8 @@ is the latest version of this file.
 	<li>modify xterm to obtain the closest matching color if an exact color
 	   is not available, e.g., on 8-bit displays (patch by Steve Wall)
 
-	<li>patch by Tomohiro KUBOTA &lt;tkubota@riken.go.jp&gt; to implement
-	  "OverTheSpot" preedit type of XIM input:
+	<li>implement "OverTheSpot" preedit type of XIM input
+	   (patch by Tomohiro Kubota):
 	  <ul>
 	  <li>This preedit type is a reasonable compromise between
 	    simpleness of implementation and usefulness.  "Root" preedit
@@ -4014,8 +4111,7 @@ is the latest version of this file.
 	  </ul>
 
 	<li>adjust configure script to accommodate repackaging of keysym2ucs.c
-	  as include-file for xutf8.c (patch by Tomohiro KUBOTA
-	  &lt;kubota@debian.org&gt;).
+	  as include-file for xutf8.c (patch by Tomohiro Kubota).
 
 	<li>add the <code>UXTerm</code> app-defaults file to makefile install
 	  rules (request by Juliusz Chroboczek).
@@ -4031,9 +4127,9 @@ is the latest version of this file.
 	  original border color, so it can restore that when an application
 	  flashes the screen (Bugzilla #38872).
 
-	<li>resync with XFree86 CVS:
+	<li>resync with XFree86 CVS
 	<ul>
-	  <li>remove ifdef's for X_NOT_STDC_ENV (David Dawes).
+	  <li>remove ifdef's for X_NOT_STDC_ENV (patch by David Dawes).
 	  <li>add Cygwin to special errno handling case in ptydata.c (Alan Hourihane)
 	  <li>set screen size earlier in initialization, to address a race
 	    with window manager resizing its clients (Keith Packard).
@@ -4042,7 +4138,7 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_157">Patch #157 - 2001/6/18 - XFree86 4.1.0</A></H1>
 <ul>
-	<li>patch by Juliusz Chroboczek to clean up button.c and input.c.  The
+	<li>clean up button.c and input.c (patch by Juliusz Chroboczek).  The
 	  basic idea is to use a single set of APIs in the XTerm core, and put
 	  a set of workarounds in a separate file.  As you will notice, this
 	  drastically simplifies parts of the code; in particular, the only
@@ -4261,7 +4357,7 @@ is the latest version of this file.
 	  conditions (report/analysis by Paul Gilmartin).
 
 	<li>remove spurious "%|" from terminfo sgr capabilities
-	  (report/analysis by Adam M Costello, Debian bug #89222).
+	  (report/analysis by Adam M Costello, Debian #89222).
 
 	<li>add shell script to adjust list of dynamic libraries linked by
 	  <code>resize</code> when building with the standalone configure
@@ -4273,8 +4369,7 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_151">Patch #151 - 2001/3/10 - XFree86 4.0.2</A></H1>
 <ul>
-	<li>patch from Juliusz Chroboczek &lt;jch@pps.jussieu.fr&gt; which
-	  alters the behaviour of selections in XTerm.
+	<li>alter the behaviour of selections in XTerm (patch by Juliusz Chroboczek).
 	  It is believed to follow the ICCCM + UTF8_STRING to the letter, both
 	  in UTF-8 and in eight-bit mode.  From his description:
 	  <ul>
@@ -4304,15 +4399,15 @@ is the latest version of this file.
 	<li>remove an incorrect ifdef from patch #141 which suppressed
 	  overstriking to simulate bold font when xterm was compiled to support
 	  wide characters (report/analysis by Adam M Costello
-	  &lt;amc@cs.berkeley.edu&gt;, fixes Debian bugs #76404, #77575).
+	  &lt;amc@cs.berkeley.edu&gt;, Debian #76404, Debian #77575).
 
 	<li>modify <code>RequestResize()</code> function to save/restore window
 	  manager hints.  Its call to <code>XtMakeResizeRequest()</code> had
 	  the undesirable side-effect of clearing window manager hints, e.g.,
 	  when switching to 132-columns via DECCOLM escape sequence.  Window
 	  manager hints make it simple to resize xterm in terms of character
-	  cells rather than pixels (reported by Christian Weisgerber as well
-	  as Debian bug #79939).
+	  cells rather than pixels (reports by Christian Weisgerber,
+	  Debian #79939).
 	  <p>
 	  This applies to the normal configuration.  When built with toolbar
 	  support, the hints are applied to a different widget level (more
@@ -4361,7 +4456,7 @@ is the latest version of this file.
 	  <code>--program-transform-name</code> options (request by Alison
 	  Winters &lt;alison@mirrabooka.com&gt;).
 
-	<li>patch from Robert Brady
+	<li>fixes for wide/combining characters (Robert Brady):
 	<ul>
 	   <li>fix a scrolling / combining characters display anomaly
 
@@ -4457,9 +4552,9 @@ is the latest version of this file.
 	<li>add configure script option <code>--enable-tcap-query</code>
 	  (request by Bram Moolenaar).
 
-	<li>patch by Bram Moolenaar to add a
-	  "Co" or "colors" entry to the OPT_TCAP_QUERY feature.
-	<li>patch by Kiyokazu SUTO &lt;suto@ks-and-ks.ne.jp&gt;:
+	<li>add a "Co" or "colors" entry to the OPT_TCAP_QUERY feature
+	    (patch by Bram Moolenaar).
+	<li>patch by Kiyokazu Suto &lt;suto@ks-and-ks.ne.jp&gt;:
 	<ul>
 	  <li>add support for bold font for double width characters.
 	     The font name may be specified with the command line option
@@ -4531,7 +4626,7 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_145">Patch #145 - 2000/9/11 - XFree86 4.0.1c</A></H1>
 <ul>
-	<li>several changes from Robert Brady for UTF-8 configuration:
+	<li>changes for UTF-8 configuration (Robert Brady):
 	<ul>
 	  <li>doublewide characters don't lose their accents when the cursor
 	    moves onto or from them (a visual bug)
@@ -4636,9 +4731,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_141">Patch #141 - 2000/8/14 - XFree86 4.0.1b</A></H1>
 <ul>
-	<li>Most of this patch is an integration of Robert Brady's patch #11
-	  for doublewidth and combining characters, from
-	  http://www.ecs.soton.ac.uk/~rwb197/xterm/.  In this context,
+	<li>changes for doublewidth and combining characters, from
+	  http://www.ecs.soton.ac.uk/~rwb197/xterm/
+	  (integrated patch by Robert Brady).
+	  In this context,
 	  doublewidth refers to 16-bit character sets which may have glyphs
 	  occupying two cells.
 
@@ -4673,7 +4769,7 @@ is the latest version of this file.
 	  Tektronix emulation, and description of -nul/+nul command-line
 	  options (report by Eric Fischer &lt;enf@pobox.com&gt;).
 
-	<li>update config.guess and config.sub (from tin and lynx)
+	<li>update config.guess and config.sub, from tin and lynx.
 </ul>
 
 <H1><A NAME="xterm_139">Patch #139 - 2000/6/17 - XFree86 4.0d</A></H1>
@@ -4736,12 +4832,12 @@ is the latest version of this file.
 	  Kevin Buettner &lt;kev@primenet.com&gt; for elf64_ia64
 	  Bernd Kuemmerlen &lt;bkuemmer@mevis.de&gt; and MacOS X.
 
-	<li>patch from Paul Gilmartin for os390 to check for errno set to
+	<li>for os390, add check for errno set to
 	  ENODEV on failure to open /dev/tty when there is no controlling
-	  terminal.
+	  terminal (patch by Paul Gilmartin).
 
-	<li>patch from H Merijn Brand &lt;h.m.brand@hccnet.nl&gt; for
-	  building on Digital Unix 4.0 and AIX 4.2.
+	<li>fixes for building on Digital Unix 4.0 and AIX 4.2
+	    (patch from H Merijn Brand &lt;h.m.brand@hccnet.nl&gt;).
 
 	<li>modify DECRQSS reply for DECSCL to additionally report if the
 	  terminal is set for 8-bit controls.
@@ -4816,7 +4912,7 @@ is the latest version of this file.
 	  values 9-16.
 	</ul>
 
-	<li>patches from Paul Gilmartin for os390:
+	<li>fixes for os390 (Paul Gilmartin):
 	<ul>
 	<li>regularize the definition of CONTROL() and remove an
 	  acknowledged "trial and error" table.
@@ -4846,8 +4942,8 @@ is the latest version of this file.
 	  &lt;neil.bird@rdel.co.uk&gt;).
 
 	<li>remove a redundant check for working <code>setuid()</code> function
-	  introduced in patch #132 (Greg Smith reports that this does not work
-	  as intended on os390).
+	  introduced in patch #132. Greg Smith reports that this does not work
+	  as intended on os390.
 
 	<li>change line speed from 9600bd to 38400bd, to accommodate people who
 	  mistakenly use $TERM set to <em>vt100</em>, to reduce the effect of
@@ -4895,8 +4991,7 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_131">Patch #131 - 2000/3/3 - XFree86 3.9.18b</A></H1>
 <ul>
-	<li>integrate patch by Branden Robinson for improving logfile
-	  security:
+	<li>improve logfile security (integrated patch by Branden Robinson)
 	  <ul>
 	  <li>make the <code>creat_as()</code> function more strict by using
 	    O_EXCL rather than O_APPEND.
@@ -4997,10 +5092,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_126">Patch #126 - 2000/2/8 - XFree86 3.9.17c</A></H1>
 <ul>
-	<li>patch by Markus Kuhn:
-	  ensure that xterm will automatically activate the UTF-8 mode whenever
+	<li>ensure that xterm will automatically activate the UTF-8 mode whenever
 	  the name of the locale environment variable suggests that a UTF-8
-	  locale is in use.  This will help that by simply setting LC_CTYPE an
+	  locale is in use (patch by Markus Kuhn).
+	  This will help that by simply setting LC_CTYPE an
 	  entire system can be switched over to UTF-8, without users having to
 	  remember the UTF-8 command line options ("-u8", etc.) of the various
 	  applications.  Command line options and X resource entries can still
@@ -5020,8 +5115,8 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_125">Patch #125 - 2000/1/31 - XFree86 3.9.17c</A></H1>
 <ul>
-	<li>integrate patch by David Mathog
-	  &lt;mathog@seqaxp.bio.caltech.edu&gt; to make this work on OpenVMS
+	<li>make this work on OpenVMS
+	    (integrated patch by David Mathog).
 
 	<li>rename some functions, e.g., <code>Index</code> to
 	  <code>xtermIndex</code> so that ports such as VMS which link
@@ -5218,8 +5313,8 @@ is the latest version of this file.
 	  ptyInitialErase logic will work when xterm is linked with a terminfo
 	  library (based on a patch by Dr Werner Fink &lt;werner@suse.de&gt;).
 
-	<li>fix definition of HAVE_UTMP_UT_HOST for ISC configuration (patch by
-	  &lt;michael.rohleder@stadt-frankfurt.de&gt;)
+	<li>fix definition of HAVE_UTMP_UT_HOST for ISC configuration
+	    (patch by Michael Rohleder).
 
 	<li>improve configure script's utmp tests (based on reports by Greg
 	  Smith for os390, and David Ellement for HPUX).
@@ -5332,9 +5427,9 @@ is the latest version of this file.
 
 	<li>minor cleanup of ifdef's for makeColorPair (patch by Steve Wall).
 
-	<li>patch by Alexander V Lukyanov to work around problem observed
-	 in XFree86 3.3.5, reported as bug #5419 to Mozilla.  From the
-	 problem report:
+	<li>work around problem observed in XFree86 3.3.5
+	    (patch by Alexander V Lukyanov, Mozilla #5419).
+	    From the problem report:
 	<blockquote>
 	xterm consumes cpu when selecting text with mouse (holding
 	down left mouse button) and when a program working under the
@@ -5372,31 +5467,30 @@ is the latest version of this file.
 	  &lt;plaettner@aem.umn.edu&gt; in comp.unix.programmer, that the IRIX
 	  winterm provides this option).
 
-	<li>integrated change by Steve Wall to
-	  add support for DEC Locator control sequences for xterm:
+	<li>add support for DEC Locator control sequences for xterm
+	  (integrated patch by Steve Wall):
 	  <pre>
 
-		DECEFR - Enable Filter Rectangle
-		DECELR - Enable Locator Reports
-		DECSLE - Select Locator Events
-		DECRQLP - Request Locator Position
+		DECEFR, "Enable Filter Rectangle"
+		DECELR, "Enable Locator Reports"
+		DECSLE, "Select Locator Events"
+		DECRQLP, "Request Locator Position"
 	  </pre>
 	  This allows the xterm mouse to be used with applications that use the
 	  DEC Locator sequences, such as VAX Tpu, or SMG$ based applications.
 
-	<li>patch from Matthias Baake &lt;Matthias.Baake@gmx.de&gt;, for print
-	  action.  From his notes:
+	<li>improve print action (patch by Matthias Baake).  From his notes,
 	  <ul>
-	    <li>Bug 1:
-	      Underlined text is preceded by ESC [0;2m . This should be ESC [0;4m , ESC
-	      [2m doesn't seem to have any effect. (print.c/send_SGR)
+	    <li>Bug 1<br>
+	      Underlined text is preceded by ESC&nbsp;[0;2m . This should be ESC&nbsp;[0;4m&nbsp;,
+	      ESC&nbsp;[2m doesn't seem to have any effect. (print.c/send_SGR)
 
-	    <li>Bug 2:
+	    <li>Bug 2<br>
 	      The check for the last non-empty column (while (last &gt; 0) ... in
 	      print.c/printLine) omits the rightmost column of the screen, the loop must
 	      start with last = screen-&gt;max_col+1 instead of last = screen-&gt;max_col.
 
-	    <li>Bug 3:
+	    <li>Bug 3<br>
 	      Any attributes of the first character (and of all immediately following
 	      characters with the same attributes) are ignored. The variable attr
 	      (print.c/printLine) should be initialized with 0, not with *a &amp; SGR_MASK.
@@ -5478,7 +5572,7 @@ longterm plan to allow configuring with Motif libraries.
 
 	<li>correct a missing return-value in get_pty(), for SCO
 
-	<li>add E2A fix for backspace (Greg Smith), i.e.,<br>
+	<li>add E2A fix for backspace (patch by Greg Smith), i.e.,<br>
 	  #define VAL_INITIAL_ERASE A2E(127)
 
 	<li>correct foreground color within cursor outline when the
@@ -5520,7 +5614,7 @@ longterm plan to allow configuring with Motif libraries.
 	<li>generate header file to initialize default resources for colors
 	  16-255.
 
-	<li>patches by Greg Smith for os390:
+	<li>fixes for os390 (Greg Smith):
 	<ul>
 	  <li>add README.os390
 
@@ -5570,11 +5664,12 @@ longterm plan to allow configuring with Motif libraries.
 	  underlined double size characters.
 
 	<li>increased cache size for double size fonts to 8, to allow for both
-	  normal and bold fonts (from discussion with Aryeh Koenigsberg
+	  normal and bold fonts (discussion with Aryeh Koenigsberg
 	  &lt;aryeh.koenigsberg@telrad.co.il&gt;).
 
-	<li>integrated patch from Greg Smith &lt;rys@epaibm.rtpnc.epa.gov&gt;
-	  for port to OS390 (aka MVS).  OS390 uses EBCDIC rather than ASCII.
+	<li>add fixes for port to OS390 aka MVS
+	    (integrated patch from Greg Smith &lt;rys@epaibm.rtpnc.epa.gov&gt;).
+	    OS390 uses EBCDIC rather than ASCII.
 
 	<li>correct an off-by-one in binary search limits in keysym2ucs.c (Markus
 	  Kuhn).
@@ -5681,7 +5776,7 @@ longterm plan to allow configuring with Motif libraries.
 	a cursorblink item to the vtMenu to enable/disable it.
 	</blockquote>
 
-	<li>Integrated a patch from Juliusz Chroboczek &lt;jec@dcs.ed.ac.uk&gt;.
+	<li>improve selection (integrated patch by Juliusz Chroboczek).
 	  From his description:
 	<blockquote>
 	With this patch, selection conversion works properly:
@@ -5706,8 +5801,9 @@ longterm plan to allow configuring with Motif libraries.
 	  of 16-bit characters when overwriting them with a 8-bit character
 	  string (reported by Thomas Wolff).
 
-	<li>integrate patch by Markus Kuhn to provide limited support for
-	  input of UTF-8 16-bit data by a lookup table.
+	<li>provide limited support for
+	    input of UTF-8 16-bit data by a lookup table
+	    (integrated patch by Markus Kuhn).
 
 	<li>correct check in non_blank_line to ensure we're in wide-character
 	  mode before looking at the high bytes, for InsertChar.
@@ -5722,7 +5818,7 @@ longterm plan to allow configuring with Motif libraries.
 	  Jeremy &lt;jeremy@exit109.com&gt;
 	  and (Michael Fuller &lt;msf@mds.rmit.edu.au&gt;).
 
-	<li>add patch by Matthieu Herrb to include term.h in resize for OpenBSD.
+	<li>include term.h in resize for OpenBSD (patch by Matthieu Herrb).
 
 	<li>correct logic for UTF-8 in functions that hide and show the cursor;
 	  it was displaying a space whenever the low byte of the character at
@@ -5982,7 +6078,7 @@ the Imakefile defines this).
 	  when sunKeyBoard resource is true.
 
 	<li>modify ifdef's for Linux-2.2.x with Glibc-2.1 to work with
-	  Glibc-2.1 and no Unix98 PTY support (patch from From Andreas Jaeger
+	  Glibc-2.1 and no Unix98 PTY support (patch from Andreas Jaeger
 	  &lt;aj@arthur.rhein-neckar.de&gt;)
 
 	<li>add optional feature (resource and command-line options) to make
@@ -6060,10 +6156,8 @@ the Imakefile defines this).
 	<li>corrected ifdef's for menus, which did not allow tek4014 to
 	  be suppressed properly (reported by Clint Olsen).
 
-	<li>integrated patch from Pavel Roskin
-	  &lt;pavel_roskin@geocities.com&gt;
-	  for Linux-2.2.x with GLibc-2.1 and
-	  /dev/ptmx support:
+	<li>changes for Linux-2.2.x with GLibc-2.1 and
+	  /dev/ptmx support (integrated patch from Pavel Roskin):
 	<ul>
 	  <li>main.c and resize.c were using different rules to determine
 	    whether ATT should be defined (actually USE_USG_PTYS is more
@@ -6394,9 +6488,10 @@ as well as
 
 <H1><A NAME="sync_83">Resync #83 - 1998/10/7 - XFree86 3.3.2e</A></H1>
 
-Merge changes through patch #83 with the 3.3.2e version.  This follows a
-patch by Matthieu Herrb &lt;matthieu@laas.fr&gt; to add checks for non-null
-return from malloc.
+Merge changes through patch #83 with the 3.3.2e version.
+<p>
+This follows a change from XFree86 CVS which adds checks for non-null
+return from malloc (patch by Matthieu Herrb).
 
 <H1><A NAME="xterm_83">Patch #83 - 1998/8/25 - XFree86 3.9Nb</A></H1>
 Several small fixes and enhancements:
@@ -6405,8 +6500,8 @@ Several small fixes and enhancements:
 	  based on previously installed xterm (reported by Stephen Marley
 	  and Stefan Dalibor).
 
-	<li>integrate/extend patch by Jason Bacon to implement quasi-continuous
-	  mouse reporting.
+	<li>implement quasi-continuous mouse reporting
+	    (integrated patch by Jason Bacon).
 
 	<li>correct control sequences transmitted by function keys F1 to F4
 	  when sunFunctionKeys resource is true (it was still using the
@@ -6593,12 +6688,11 @@ The rest of the patch fixes several minor bugs, and adds a few features:
 
 	<li>correct length of underlining, reducing it by one pixel to avoid
 	  leaving a dot when the application does not clear the whole screen
-	  (patch by (Sergei Laskavy &lt;Laskavy@cs.msu.su&gt;).
-<p>
 	  I noticed this only recently myself (and other people as well); it
 	  depends on the font chosen.  A 6x10 font shows it, but the other
-	  fonts (from XTerm.ad) do not.  I also see a similar problem with the
+	  fonts from XTerm.ad do not.  I also see a similar problem with the
 	  emulation of bold fonts.
+	  (patch by Sergei Laskavy &lt;Laskavy@cs.msu.su&gt;).
 
 	<li>add include for Xos.h to xterm.h, to ensure proper definitions
 	  (reported by Holger Veit).
@@ -6909,7 +7003,7 @@ This fixes the following problems with xterm:
 	<LI>corrects a length in checking command-line options, which caused the
 	  "-help" message to not work when X was not running.
 
-	<LI>adds some detail to the man-page (requested by Jason Bacon
+	<LI>add some detail to the man-page (requested by Jason Bacon
 	  &lt;acadix@execpc.com&gt;)
 
 	<LI>modify the standalone configure script to ignore the broken nsl and
@@ -6978,7 +7072,7 @@ This patch modifies the reset behavior of xterm slightly:
 	<LI>modifies the treatment of hard reset by the xterm program to
 	  reset the saved lines.
 
-	<LI>corrects hard reset by also resetting user-defined keys (DECUDK).
+	<LI>corrects hard reset by also resetting user-defined keys, i.e., DECUDK.
 </UL>
 
 <H1><A NAME="xterm_60">Patch #60 - 1998/1/10 - XFree86 3.9Ab</A></H1>
@@ -7156,10 +7250,11 @@ typos):
 	  mode.  So the logfile is opened as the real user, without having
 	  to fork.
 
-	<LI>Michael Rohleder &lt;michael.rohleder@stadt-frankfurt.de&gt; sent
-	  me a patch which implements right-scrollbars for xterm.  I used that
-	  as a starting point, renamed the command-line options and reduced
-	  the number of ifdef's.
+	<LI>improve Rohleder's changes by
+	    renaming the command-line options and reducing the number of ifdef's.
+
+	<LI>implement right-scrollbars for xterm
+	  (patch by Michael Rohleder &lt;michael.rohleder@stadt-frankfurt.de&gt;).
 </UL>
 
 <H1><A NAME="xterm_52">Patch #52 - 1997/9/29 - XFree86 3.9q</A></H1>
@@ -7190,7 +7285,7 @@ Some of the changes are interrelated (it was an unusually busy week).
 
 	<LI>add resource colorAttrMode to specify whether colorULMode and
 	  colorBDMode can override the ANSI colors
-	  (from a problem report by Clint Olsen).
+	  (report by Clint Olsen).
 
 	<LI>correct a conflict between colorULMode/colorBDMode versus ANSI
 	  colors, where exposure events would occasionally pick up the
@@ -7703,8 +7798,8 @@ This patch does the following:
 	  dtterm, that seems to be what it does).
 
 	<LI>change some memmove calls to memcpy for slightly better performance.
-	  (also, a couple of memset calls to bzero - Quantify says bzero runs
-	  20% faster, I assume because there's one less argument).
+	  also, a couple of memset calls to bzero, since Quantify says bzero runs
+	  20% faster, I assume because there's one less argument.
 
 	<LI>interpret character sets 1 and 2 (so that vttest gives a reasonable
 	  result) Both rxvt and dtterm do something equivalent.
@@ -7729,7 +7824,7 @@ This implements the following:
 	  the hpa code and added some other stuff by comparing to ncurses'
 	  description and rxvt's).
 
-	<LI>a tweak to the patch by Michael Rohleder for the color translation
+	<LI>a tweak to the changes by Michael Rohleder for the color translation
 
 	<LI>re-order attribute codes to allow later implementation of protected
 	  fields (dtterm supposedly does this; it's probably more useful than
