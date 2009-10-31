@@ -4,8 +4,8 @@ libXdamage_la_SOURCES = \
 	xdamageint.h	\
 	Xdamage.c
 
-libXdamage_la_LIBADD = $(XDAMAGE_LIBS) $(X_LIBS)
-AM_CFLAGS = $(XDAMAGE_CFLAGS) $(X_CFLAGS)
+libXdamage_la_LIBADD = $(XDAMAGE_LIBS)
+AM_CFLAGS = $(CWARNFLAGS) $(XDAMAGE_CFLAGS)
 
 INCLUDES = -I$(top_srcdir)/include/X11/extensions
 

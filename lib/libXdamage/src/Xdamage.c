@@ -1,5 +1,5 @@
 /*
- * $Id: Xdamage.c,v 1.1.1.2 2007/09/30 06:44:31 matthieu Exp $
+ * $Id: Xdamage.c,v 1.2 2009/10/31 17:48:42 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  * Copyright © 2007 Eric Anholt
@@ -89,7 +89,7 @@ XDamageExtAddDisplay (XDamageExtInfo	*extinfo,
 	    UnlockDisplay (dpy);
 	    SyncHandle ();
 	    Xfree(info);
-	    return 0;
+	    return NULL;
 	}
 	info->major_version = rep.majorVersion;
 	info->minor_version = rep.minorVersion;
@@ -231,7 +231,8 @@ XDamageWireToEvent(Display *dpy, XEvent *event, xEvent *wire)
 	aevent->display = dpy;
 	aevent->drawable = awire->drawable;
 	aevent->damage = awire->damage;
-	aevent->level = awire->level;
+	aevent->level = awire->level & ~DamageNotifyMore;
+	aevent->more = (awire->level & DamageNotifyMore) ? True : False;
 	aevent->timestamp = awire->timestamp;
 	aevent->area.x = awire->area.x;
 	aevent->area.y = awire->area.y;
@@ -264,7 +265,7 @@ XDamageEventToWire(Display *dpy, XEvent *event, xEvent *wire)
 	awire->type = aevent->type | (aevent->send_event ? 0x80 : 0);
 	awire->drawable = aevent->drawable;
 	awire->damage = aevent->damage;
-	awire->level = aevent->level;
+	awire->level = aevent->level | (aevent->more ? DamageNotifyMore : 0);
 	awire->timestamp = aevent->timestamp;
 	awire->area.x = aevent->area.x;
 	awire->area.y = aevent->area.y;
@@ -281,14 +282,16 @@ XDamageEventToWire(Display *dpy, XEvent *event, xEvent *wire)
 }
 
 Bool 
-XDamageQueryExtension (Display *dpy, int *event_basep, int *error_basep)
+XDamageQueryExtension (Display *dpy,
+			int *event_base_return,
+			int *error_base_return)
 {
     XDamageExtDisplayInfo *info = XDamageFindDisplay (dpy);
 
     if (XDamageHasExtension(info)) 
     {
-	*event_basep = info->codes->first_event;
-	*error_basep = info->codes->first_error;
+	*event_base_return = info->codes->first_event;
+	*error_base_return = info->codes->first_error;
 	return True;
     } 
     else
@@ -297,15 +300,15 @@ XDamageQueryExtension (Display *dpy, int *event_basep, int *error_basep)
 
 Status 
 XDamageQueryVersion (Display *dpy,
-		    int	    *major_versionp,
-		    int	    *minor_versionp)
+		    int	    *major_version_return,
+		    int	    *minor_version_return)
 {
     XDamageExtDisplayInfo	*info = XDamageFindDisplay (dpy);
 
     XDamageCheckExtension (dpy, info, 0);
 
-    *major_versionp = info->major_version;
-    *minor_versionp = info->minor_version;
+    *major_version_return = info->major_version;
+    *minor_version_return = info->minor_version;
     return 1;
 }
 
@@ -369,7 +372,6 @@ XDamageAdd (Display *dpy, Drawable drawable, XserverRegion region)
 {
     XDamageExtDisplayInfo	*info = XDamageFindDisplay (dpy);
     xDamageAddReq		*req;
-    int				len;
 
     XDamageSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);

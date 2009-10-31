@@ -1,5 +1,5 @@
 /*
- * $Id: Xdamage.h,v 1.1.1.2 2007/09/30 06:44:31 matthieu Exp $
+ * $Id: Xdamage.h,v 1.2 2009/10/31 17:48:42 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -49,11 +49,13 @@ typedef struct {
 
 _XFUNCPROTOBEGIN
 
-Bool XDamageQueryExtension (Display *dpy, int *event_basep, int *error_basep);
+Bool XDamageQueryExtension (Display *dpy,
+                            int *event_base_return,
+                            int *error_base_return);
 
 Status XDamageQueryVersion (Display *dpy,
-			    int     *major_versionp,
-			    int     *minor_versionp);
+			    int     *major_version_return,
+			    int     *minor_version_return);
 
 Damage
 XDamageCreate (Display	*dpy, Drawable drawable, int level);
