@@ -55,6 +55,7 @@ SOFTWARE.
 
 #include <X11/Xfuncproto.h>
 #include <X11/extensions/Xv.h>
+#include <X11/extensions/XShm.h>
 
 typedef struct {
   int numerator;
@@ -366,8 +367,6 @@ extern int XvShmPutImage (
    Bool send_event
 );
 
-#ifdef _XSHM_H_
-
 extern XvImage * XvShmCreateImage (
    Display *display,
    XvPortID port,
@@ -377,8 +376,6 @@ extern XvImage * XvShmCreateImage (
    int height,
    XShmSegmentInfo *shminfo
 );
-
-#endif
 
 
 _XFUNCPROTOEND

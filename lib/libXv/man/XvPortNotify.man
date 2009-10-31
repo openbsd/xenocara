@@ -1,8 +1,8 @@
-.TH XvPortNotify __libmansuffix__  __vendorversion__
-.SH Name
+.TH XvPortNotify __libmansuffix__  __vendorversion__ "libXv Functions"
+.SH NAME
 XvPortNotify \- event generated when port attributes change
 .\"
-.SH Syntax
+.SH SYNOPSIS
 .B #include <X11/extensions/Xvlib.h>
 .br
 .sp 1l
@@ -43,15 +43,15 @@ An atom specifying the attribute that changed.
 .IP \fIvalue\fR 15
 The new value of the attribute.
 .\"
-.SH Description
+.SH DESCRIPTION
 .\"
 XvPortNotify events are generated when a port attribute is set using
-the XvSetPortAttribute(__libmansuffix__) function.
+the
+.BR XvSetPortAttribute (__libmansuffix__)
+function.
 .\"
-.SH See Also
-XvSetPortAttribute(__libmansuffix__), XvGetPortAttribute(__libmansuffix__), XvSelectPortNotify(__libmansuffix__)
+.SH SEE ALSO
+.BR XvSetPortAttribute (__libmansuffix__),
+.BR XvGetPortAttribute (__libmansuffix__),
+.BR XvSelectPortNotify (__libmansuffix__).
 .\"
-
-
-
-

@@ -1,8 +1,8 @@
-.TH XvVideoNotify __libmansuffix__  __vendorversion__
-.SH Name
+.TH XvVideoNotify __libmansuffix__  __vendorversion__ "libXv Functions"
+.SH NAME
 XvVideoNotify \- event generated for video processing
 .\"
-.SH Syntax
+.SH SYNOPSIS
 .B #include <X11/extensions/Xvlib.h>
 .br
 .sp 1l
@@ -29,7 +29,8 @@ XvVideoNotify \- event generated for video processing
 .EE
 .\"
 .IP \fItype\fR 8
-Specifies the type of event: XvVideoNotify(__libmansuffix__).
+Specifies the type of event:
+.BR XvVideoNotify .
 .IP \fIserial\fR 8
 Number of the last request processed by the server.
 .IP \fIsend_event\fR 8
@@ -39,19 +40,24 @@ A pointer to the display the event was read from.
 .IP \fIdrawable\fR 8
 The drawable for which the event was generated.
 .IP \fIreason\fR 8
-The reason the event was generated: \fBXvStarted\fR, \fBXvStopped\fR, 
+The reason the event was generated: \fBXvStarted\fR, \fBXvStopped\fR,
 \fBXvPreempted\fR, \fBXvBusy\fR, \fBXvHardError\fR.
 .IP \fIport_id\fR 8
 The port processing the video for which the event was generated.
 .\"
-.SH Description
+.SH DESCRIPTION
 .\"
-XvVideoNotify(__libmansuffix__) events are generated when video
-is started, stopped, preempted by another video
-request, ignored because the port is grabbed by another client, or interrupted
-because of a hard transmission or reception error.
+.B XvVideoNotify
+events are generated when video is started, stopped, preempted by
+another video request, ignored because the port is grabbed by another
+client, or interrupted because of a hard transmission or reception
+error.
 .\"
-.SH See Also
-XvPutVideo(__libmansuffix__), XvPutStill(__libmansuffix__), XvGetVideo(__libmansuffix__), XvGetStill(__libmansuffix__), 
-XvStopVideo(__libmansuffix__), XvSelectVideoNotify(__libmansuffix__)
+.SH SEE ALSO
+.BR XvPutVideo (__libmansuffix__),
+.BR XvPutStill (__libmansuffix__),
+.BR XvGetVideo (__libmansuffix__),
+.BR XvGetStill (__libmansuffix__),
+.BR XvStopVideo (__libmansuffix__),
+.BR XvSelectVideoNotify (__libmansuffix__)
 .\"

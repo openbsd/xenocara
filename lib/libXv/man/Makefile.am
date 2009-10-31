@@ -29,29 +29,37 @@ libmandir = $(LIB_MAN_DIR)
 
 libman_PRE = \
          Xv.man \
+         XvCreateImage.man \
          XvFreeAdaptorInfo.man \
          XvFreeEncodingInfo.man \
          XvGetPortAttribute.man \
          XvGetStill.man \
          XvGetVideo.man \
          XvGrabPort.man \
+         XvListImageFormats.man \
          XvPortNotify.man \
+         XvPutImage.man \
          XvPutStill.man \
          XvPutVideo.man \
          XvQueryAdaptors.man \
          XvQueryBestSize.man \
          XvQueryEncodings.man \
          XvQueryExtension.man \
+         XvQueryPortAttributes.man \
          XvSelectPortNotify.man \
          XvSelectVideoNotify.man \
          XvSetPortAttribute.man \
+         XvShmCreateImage.man \
+         XvShmPutImage.man \
          XvStopVideo.man \
          XvUngrabPort.man \
          XvVideoNotify.man
 
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
 
-EXTRA_DIST = $(libman_PRE)
+LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
+
+EXTRA_DIST = $(libman_PRE) xv-library-v2.2.txt
 
 CLEANFILES = $(libman_DATA)
 
@@ -63,9 +71,10 @@ XORGRELSTRING = @PACKAGE_STRING@
 
 MAN_SUBSTS = \
 	-e 's/__vendorversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/' \
+	-e 's/__libmandirsuffix__/$(LIB_MAN_DIR_SUFFIX)/g' \
 	-e 's/__libmansuffix__/$(LIB_MAN_SUFFIX)/g' 
 
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 .man.$(LIB_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

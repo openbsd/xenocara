@@ -1,16 +1,16 @@
-.TH XvPutVideo __libmansuffix__  __vendorversion__
-.SH Name
+.TH XvPutVideo __libmansuffix__  __vendorversion__ "libXv Functions"
+.SH NAME
 XvPutVideo \- write video into a drawable
 .\"
-.SH Syntax
+.SH SYNOPSIS
 .B #include <X11/extensions/Xvlib.h>
 .sp
 .nf
-.BI "XvPutVideo(Display *" dpy ", XvPortID " port ", Drawable " d ", GC " gc ",
-.BI "           int " vx ", int " vy ", unsigned int " vw ", unsigned int " vh ",
-.BI "           int " dx ", int " dy ", unsigned int " dw ", unsigned int " dh ");"
+.BI "int XvPutVideo(Display *" dpy ", XvPortID " port ", Drawable " d ", GC " gc ","
+.BI "               int " vx ", int " vy ", unsigned int " vw ", unsigned int " vh ","
+.BI "               int " dx ", int " dy ", unsigned int " dw ", unsigned int " dh ");"
 .fi
-.SH Arguments
+.SH ARGUMENTS
 .\"
 .IP \fIdpy\fR 15
 Specifies the connection to the X server.
@@ -19,37 +19,46 @@ Defines the port from which to get video.
 .IP \fId\fR 15
 Defines the drawable (window) into which video is to be written.
 .IP \fIgc\fR 15
-Defines the graphical context.  
-GC components are: 
-.I subwindow-mode, 
-.I clip-x-origin, 
-.I clip-y-origin,
-and 
-.I clip-mask.  
+Defines the graphical context.
+GC components are:
+.IR subwindow-mode ,
+.IR clip-x-origin ,
+.IR clip-y-origin ,
+and
+.IR clip-mask .
 .IP \fIvx,vy,vw,vh\fR 15
-Define the size and location of the source (video) region 
-to be written.  \fIvx\fP and \fIvy\fP define the 
+Define the size and location of the source (video) region
+to be written.  \fIvx\fP and \fIvy\fP define the
 upper-left pixel of the region. \fIvw\fP and \fIvh\fP
 define the width and height, in pixels, of the region.
 .IP \fIdx,dy,dw,dh\fR 15
-Define the location and size of the destination (drawable) region 
-into which the video image is written.  
-.I dx 
+Define the location and size of the destination (drawable) region
+into which the video image is written.
+.I dx
 and
-.I dy 
+.I dy
 define the upper-left pixel of the region.
-.I dw 
-and 
-.I dh 
+.I dw
+and
+.I dh
 define the width and height, in pixels, of the region.
 .\"
-.SH Description
+.SH DESCRIPTION
 .\"
 XvPutVideo writes video into a drawable.
-The position and size of the source (video) 
-rectangle is specified by \fIvx, vy, vw\fR, and \fIvh\fR.  
-The position and size of the destination (drawable) 
-rectangle is specified by \fIdx, dy, dw\fR, and \fIdh\fR.
+The position and size of the source (video) rectangle is specified by
+.IR vx ,
+.IR vy ,
+.IR vw ,
+and
+.IR vh .
+The position and size of the destination (drawable)
+rectangle is specified by
+.IR dx ,
+.IR dy ,
+.IR dw ,
+and
+.IR dh .
 .PP
 Video data is clipped to the bounds of the video encoding, scaled to the
 requested drawable region size (or the closest size supported) and
@@ -65,14 +74,16 @@ generated for the drawable. If the port is not receiving a valid video
 signal or if the video signal is interrupted while video is active a
 VideoNotify event with detail XvHardError is generated for the drawable.
 .\"
-.SH Returned Values
+.SH RETURN VALUES
 .IP [Success] 8
-Returned if XvPutVideo(__libmansuffix__) completed successfully.
+Returned if
+.BR XvPutVideo (__libmansuffix__)
+completed successfully.
 .IP [XvBadExtension] 8
 Returned if the Xv extension is unavailable.
 .IP [XvBadAlloc] 8
 Returned if there were insufficient resources to process the request.
-.SH Diagnostics
+.SH DIAGNOSTICS
 .IP [XvBadPort] 8
 Generated if the requested port does not exist.
 .IP [BadDrawable] 8
@@ -82,7 +93,8 @@ Generated if the requested graphics context does not exist.
 .IP [BadAlloc] 8
 Generated if there were insufficient resources to process the request.
 .\"
-.SH See Also
+.SH SEE ALSO
 .\"
-XvPutStill(__libmansuffix__), XvGetVideo(__libmansuffix__), XvVideoNotify(__libmansuffix__)
-.br
+.BR XvPutStill (__libmansuffix__),
+.BR XvGetVideo (__libmansuffix__),
+.BR XvVideoNotify (__libmansuffix__)

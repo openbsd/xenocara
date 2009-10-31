@@ -1,3 +1,73 @@
+commit 5be9a0099a83d1acf464640e930518a4c46c0920
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 02:12:52 2009 -0700
+
+    libXv 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5aa62bb376608cd0350e46263dec74f861019431
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 01:53:56 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 4d189188c913e6956344689802a582589db04abe
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 01:31:44 2009 -0700
+
+    Convert documentation from xv-library-v2.2.txt into man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7303af622984579e600893934a3958c0654d57bf
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 2 08:55:52 2009 -0700
+
+    Man page cleanups and formatting fixes
+    
+     - Convert man page section headings to traditional style/names
+       Make them all caps, and use 'synopsis' instead of 'syntax'
+     - Strip trailing whitespace from man pages
+     - Add return types to function prototypes
+     - Fix unbalanced quoting and other formatting issues
+     - Use .BR for formatting man page references
+     - Add "libXv Functions" to man page header
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ea79759a6940855dab10472a876e784fb8494eee
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 23:04:56 2009 -0700
+
+    Move xv-library-v2.2.txt document from xorg-docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit dbf88774a77d91f3f7996071dfccf61636afa77b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat May 9 17:13:11 2009 -0700
+
+    Adjust flags definitions to fix lint library build
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7cc28e8ae807e69663e0a73cd12edf9963277a2d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:37 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 245b7cffe78203eeb265ac73177ed258471cb227
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Feb 2 13:58:34 2009 -0200
+
+    Janitor: make distcheck, compiler warnings, .gitignore.
+
 commit 2c0dc990a1ad96b71c95800d83378413eab63dbb
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Mar 17 20:01:01 2008 -0700

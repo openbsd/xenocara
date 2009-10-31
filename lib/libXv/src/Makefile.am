@@ -5,7 +5,8 @@ libXv_la_SOURCES = \
          Xvlibint.h
 
 libXv_la_LIBADD = @XV_LIBS@
-AM_CFLAGS = @XV_CFLAGS@ -I$(top_srcdir)/include @MALLOC_ZERO_CFLAGS@
+AM_CPPFLAGS = @XV_CFLAGS@ -I$(top_srcdir)/include @MALLOC_ZERO_CFLAGS@
+AM_CFLAGS = $(CWARNFLAGS)
 
 libXv_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 
@@ -23,6 +24,8 @@ lintlibdir = $(libdir)
 lintlib_DATA = $(LINTLIB)
 
 $(LINTLIB): $(libXau_la_SOURCES)
-	$(LINT) -y -oXv -x $(ALL_LINT_FLAGS) $(libXv_la_SOURCES) 
+	$(LINT) -y -oXv -x $(ALL_LINT_FLAGS) $(libXv_la_SOURCES)
+
+CLEANFILES = $(LINTLIB)
 endif MAKE_LINT_LIB
 
