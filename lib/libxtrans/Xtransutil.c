@@ -225,6 +225,13 @@ TRANS(ConvertAddress)(int *familyp, int *addrlenp, Xtransaddr **addrp)
 
 #ifdef ICE_t
 
+/* Needed for _XGethostbyaddr usage in TRANS(GetPeerNetworkId) */
+# if defined(TCPCONN) || defined(UNIXCONN)
+#  define X_INCLUDE_NETDB_H
+#  define XOS_USE_NO_LOCKING
+#  include <X11/Xos_r.h>
+# endif
+
 #include <signal.h>
 
 char *
@@ -440,10 +447,10 @@ TRANS(WSAStartup) (void)
 }
 #endif
 
+#include <ctype.h>
 
 static int
-is_numeric (char *str)
-
+is_numeric (const char *str)
 {
     int i;
 
@@ -474,7 +481,7 @@ is_numeric (char *str)
  * bit cannot be set and fail.
  */
 static int 
-trans_mkdir(char *path, int mode)
+trans_mkdir(const char *path, int mode)
 {
     struct stat buf;
 
@@ -486,7 +493,7 @@ trans_mkdir(char *path, int mode)
 	}
 	/* Dir doesn't exist. Try to create it */
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__CYGWIN__)
 	/*
 	 * 'sticky' bit requested: assume application makes
 	 * certain security implications. If effective user ID
@@ -611,7 +618,7 @@ trans_mkdir(char *path, int mode)
 		    return -1;
 		}
 #endif
-#ifndef __APPLE_CC__
+#if !defined(__APPLE_CC__) && !defined(__CYGWIN__)
 	  	PRMSG(1, "mkdir: Owner of %s should be set to root\n",
 		      path, 0, 0);
 #endif

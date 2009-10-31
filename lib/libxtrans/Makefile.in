@@ -35,11 +35,14 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-subdir = .
+build_triplet = @build@
+host_triplet = @host@
 DIST_COMMON = README $(Xtransinclude_HEADERS) $(am__configure_deps) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/xtrans.pc.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS install-sh missing
+	ChangeLog INSTALL NEWS config.guess config.sub install-sh \
+	missing
+subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -56,11 +59,12 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(aclocaldir)" \
+am__installdirs = "$(DESTDIR)$(aclocaldir)" "$(DESTDIR)$(docdir)" \
 	"$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(Xtransincludedir)"
 aclocalDATA_INSTALL = $(INSTALL_DATA)
+docDATA_INSTALL = $(INSTALL_DATA)
 pkgconfigDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(aclocal_DATA) $(pkgconfig_DATA)
+DATA = $(aclocal_DATA) $(doc_DATA) $(pkgconfig_DATA)
 XtransincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(Xtransinclude_HEADERS)
 ETAGS = etags
@@ -76,25 +80,42 @@ DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
+ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
+ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+APP_MAN_DIR = @APP_MAN_DIR@
+APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_DOCS_FALSE = @BUILD_DOCS_FALSE@
+BUILD_DOCS_TRUE = @BUILD_DOCS_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
+DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FILE_MAN_DIR = @FILE_MAN_DIR@
+FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+GROFF = @GROFF@
+HAVE_PS2PDF_FALSE = @HAVE_PS2PDF_FALSE@
+HAVE_PS2PDF_TRUE = @HAVE_PS2PDF_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -102,11 +123,15 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIB_MAN_DIR = @LIB_MAN_DIR@
+LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MISC_MAN_DIR = @MISC_MAN_DIR@
+MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -115,12 +140,12 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PS2PDF = @PS2PDF@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -129,23 +154,38 @@ am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
+build = @build@
 build_alias = @build_alias@
+build_cpu = @build_cpu@
+build_os = @build_os@
+build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
 distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 fchown_define = @fchown_define@
+host = @host@
 host_alias = @host_alias@
+host_cpu = @host_cpu@
+host_os = @host_os@
+host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sticky_bit_define = @sticky_bit_define@
@@ -164,13 +204,32 @@ Xtransinclude_HEADERS = \
 
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = xtrans.m4
-pkgconfigdir = $(libdir)/pkgconfig
+pkgconfigdir = $(datadir)/pkgconfig
 pkgconfig_DATA = xtrans.pc
-EXTRA_DIST = xtrans.pc.in ${aclocal_DATA}
-CLEANFILES = ChangeLog
+EXTRA_DIST = xtrans.pc.in ${aclocal_DATA} ChangeLog Xtrans.mm
+MAINTAINERCLEANFILES = ChangeLog
+
+# Rules to convert documentation from troff to other formats
+doc_sources = Xtrans.mm
+@HAVE_PS2PDF_FALSE@printable_format = .ps
+@HAVE_PS2PDF_TRUE@printable_format = .pdf
+@BUILD_DOCS_TRUE@doc_DATA = $(doc_sources:.mm=.txt) \
+@BUILD_DOCS_TRUE@		$(doc_sources:.mm=$(printable_format)) \
+@BUILD_DOCS_TRUE@		$(doc_sources:.mm=.html)
+
+@BUILD_DOCS_TRUE@CLEANFILES = $(doc_DATA)
+@BUILD_DOCS_TRUE@MOSTLYCLEANFILES = index.*
+
+# Pass version string as a troff string for substitution
+@BUILD_DOCS_TRUE@GROFF_DEFS = -dxV="$(PACKAGE_STRING)"
+
+# -t to run through tbl
+@BUILD_DOCS_TRUE@GROFF_FLAGS = -t -mm $(GROFF_DEFS)
+@BUILD_DOCS_TRUE@SUFFIXES = .mm .ps .txt .html .pdf
 all: all-am
 
 .SUFFIXES:
+.SUFFIXES: .mm .ps .txt .html .pdf
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -223,6 +282,23 @@ uninstall-aclocalDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(aclocaldir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(aclocaldir)/$$f"; \
+	done
+install-docDATA: $(doc_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(docdir)" || $(mkdir_p) "$(DESTDIR)$(docdir)"
+	@list='$(doc_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(docDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(docdir)/$$f'"; \
+	  $(docDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(docdir)/$$f"; \
+	done
+
+uninstall-docDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(doc_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(docdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(docdir)/$$f"; \
 	done
 install-pkgconfigDATA: $(pkgconfig_DATA)
 	@$(NORMAL_INSTALL)
@@ -441,7 +517,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(aclocaldir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(Xtransincludedir)"; do \
+	for dir in "$(DESTDIR)$(aclocaldir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(Xtransincludedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -459,6 +535,7 @@ install-strip:
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
+	-test -z "$(MOSTLYCLEANFILES)" || rm -f $(MOSTLYCLEANFILES)
 
 clean-generic:
 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
@@ -469,6 +546,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-generic mostlyclean-am
@@ -489,7 +567,7 @@ info: info-am
 info-am:
 
 install-data-am: install-XtransincludeHEADERS install-aclocalDATA \
-	install-pkgconfigDATA
+	install-docDATA install-pkgconfigDATA
 
 install-exec-am:
 
@@ -518,7 +596,7 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-XtransincludeHEADERS uninstall-aclocalDATA \
-	uninstall-info-am uninstall-pkgconfigDATA
+	uninstall-docDATA uninstall-info-am uninstall-pkgconfigDATA
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-generic ctags dist dist-all dist-bzip2 dist-gzip \
@@ -526,14 +604,14 @@ uninstall-am: uninstall-XtransincludeHEADERS uninstall-aclocalDATA \
 	distclean-generic distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-XtransincludeHEADERS install-aclocalDATA \
-	install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-pkgconfigDATA install-strip installcheck \
+	install-am install-data install-data-am install-docDATA \
+	install-exec install-exec-am install-info install-info-am \
+	install-man install-pkgconfigDATA install-strip installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am tags uninstall uninstall-XtransincludeHEADERS \
-	uninstall-aclocalDATA uninstall-am uninstall-info-am \
-	uninstall-pkgconfigDATA
+	uninstall-aclocalDATA uninstall-am uninstall-docDATA \
+	uninstall-info-am uninstall-pkgconfigDATA
 
 
 .PHONY: ChangeLog
@@ -542,6 +620,21 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
+
+@BUILD_DOCS_TRUE@.mm.ps:
+@BUILD_DOCS_TRUE@	-$(AM_V_GEN) $(GROFF) -Tps $(GROFF_FLAGS) $< 2> index.$@.raw > $@
+@BUILD_DOCS_TRUE@	@if grep '^[^1-9.]' index.$@.raw | grep -v warning; then exit 1; \
+@BUILD_DOCS_TRUE@	 else test $$? -le 1; fi
+
+@BUILD_DOCS_TRUE@.mm.txt:
+@BUILD_DOCS_TRUE@	$(AM_V_GEN) env GROFF_NO_SGR=TRUE $(GROFF) -Tutf8 $(GROFF_FLAGS) \
+@BUILD_DOCS_TRUE@	 $< 2> index.$@.raw > $@
+
+@BUILD_DOCS_TRUE@.mm.html:
+@BUILD_DOCS_TRUE@	$(AM_V_GEN) $(GROFF) -Thtml $(GROFF_FLAGS) $< 2> index.$@.raw > $@
+
+@BUILD_DOCS_TRUE@.ps.pdf:
+@BUILD_DOCS_TRUE@	$(AM_V_GEN) $(PS2PDF) $< $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
