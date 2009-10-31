@@ -56,9 +56,7 @@
  * note that 's' could stand both for "special" and "slow" ;-)
  */
 static int
-sGetc(data, file)
-    xpmData *data;
-    FILE *file;
+sGetc(xpmData *data, FILE *file)
 {
     int c = getc(data->stream.file);
     if (c == '\n') {
@@ -71,10 +69,7 @@ sGetc(data, file)
 }
 
 static void
-sUngetc(data, c, file)
-    xpmData *data;
-    int c;
-    FILE *file;
+sUngetc(xpmData *data, int c, FILE *file)
 {
     ungetc(c, data->stream.file);
     if (c == '\n') {
@@ -94,7 +89,7 @@ sUngetc(data, c, file)
 #include "Attrib.c"
 #include "Image.c"
 
-void
+static void
 ErrorMessage(
     int ErrorStatus,
     xpmData *data)
@@ -143,9 +138,7 @@ ErrorMessage(
 }
 
 int
-main(argc, argv)
-    int argc;
-    char **argv;
+main(int argc, char **argv)
 {
     XpmImage image;
     char *filename;

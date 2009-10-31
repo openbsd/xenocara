@@ -101,8 +101,10 @@ BUILD_SXPM_TRUE = @BUILD_SXPM_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -112,6 +114,7 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -122,6 +125,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -141,6 +145,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -151,6 +156,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -161,13 +167,9 @@ USE_GETTEXT_TRUE = @USE_GETTEXT_TRUE@
 VERSION = @VERSION@
 XPM_CFLAGS = @XPM_CFLAGS@
 XPM_LIBS = @XPM_LIBS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -184,28 +186,36 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-@BUILD_SXPM_TRUE@AM_CFLAGS = $(SXPM_CFLAGS)
+@BUILD_SXPM_TRUE@AM_CFLAGS = $(CWARNFLAGS) $(SXPM_CFLAGS)
 @BUILD_SXPM_TRUE@AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 @BUILD_SXPM_TRUE@sxpm_SOURCES = sxpm.c
 @BUILD_SXPM_TRUE@sxpm_LDADD = $(XPM_LIBS) $(SXPM_LIBS) $(top_builddir)/src/libXpm.la
@@ -215,7 +225,6 @@ target_alias = @target_alias@
 @BUILD_SXPM_TRUE@appman_PRE = sxpm.man
 @BUILD_SXPM_TRUE@appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 @BUILD_SXPM_TRUE@CLEANFILES = $(appman_DATA) $(am__append_1)
-@BUILD_SXPM_TRUE@SED = sed
 
 # Strings to replace in man pages
 @BUILD_SXPM_TRUE@XORGRELSTRING = @PACKAGE_STRING@
@@ -535,10 +544,10 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 
 @BUILD_SXPM_TRUE@.man.$(APP_MAN_SUFFIX):
-@BUILD_SXPM_TRUE@	sed $(MAN_SUBSTS) < $< > $@
+@BUILD_SXPM_TRUE@	$(AM_V_GEN)sed $(MAN_SUBSTS) < $< > $@
 
 @BUILD_SXPM_TRUE@@USE_GETTEXT_TRUE@sxpm.po: $(sxpm_SOURCES:%=$(srcdir)/%)
-@BUILD_SXPM_TRUE@@USE_GETTEXT_TRUE@	xgettext -c"L10N_Comments" -d sxpm -n $(sxpm_SOURCES:%=$(srcdir)/%)
+@BUILD_SXPM_TRUE@@USE_GETTEXT_TRUE@	$(AM_V_GEN)xgettext -c"L10N_Comments" -d sxpm -n $(sxpm_SOURCES:%=$(srcdir)/%)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -41,8 +41,7 @@
  * Init returned data to free safely later on
  */
 void
-xpmInitXpmInfo(info)
-    XpmInfo *info;
+xpmInitXpmInfo(XpmInfo *info)
 {
     if (info) {
 	info->hints_cmt = NULL;
@@ -57,8 +56,7 @@ xpmInitXpmInfo(info)
  * Free the XpmInfo data which have been allocated
  */
 void
-XpmFreeXpmInfo(info)
-    XpmInfo *info;
+XpmFreeXpmInfo(XpmInfo *info)
 {
     if (info) {
 	if (info->valuemask & XpmComments) {
@@ -88,9 +86,9 @@ XpmFreeXpmInfo(info)
  * Set the XpmInfo valuemask to retrieve required info
  */
 void
-xpmSetInfoMask(info, attributes)
-    XpmInfo *info;
-    XpmAttributes *attributes;
+xpmSetInfoMask(
+    XpmInfo		*info,
+    XpmAttributes	*attributes)
 {
     info->valuemask = 0;
     if (attributes->valuemask & XpmReturnInfos)
@@ -103,9 +101,9 @@ xpmSetInfoMask(info, attributes)
  * Fill in the XpmInfo with the XpmAttributes
  */
 void
-xpmSetInfo(info, attributes)
-    XpmInfo *info;
-    XpmAttributes *attributes;
+xpmSetInfo(
+    XpmInfo		*info,
+    XpmAttributes	*attributes)
 {
     info->valuemask = 0;
     if (attributes->valuemask & XpmInfos) {

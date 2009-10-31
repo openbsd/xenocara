@@ -42,9 +42,9 @@ LFUNC(AtomMake, xpmHashAtom, (char *name, void *data));
 LFUNC(HashTableGrows, int, (xpmHashTable * table));
 
 static xpmHashAtom
-AtomMake(name, data)			/* makes an atom */
-    char *name;				/* WARNING: is just pointed to */
-    void *data;
+AtomMake(				/* makes an atom */
+    char	*name,			/* WARNING: is just pointed to */
+    void	*data)
 {
     xpmHashAtom object = (xpmHashAtom) XpmMalloc(sizeof(struct _xpmHashAtom));
 
@@ -107,9 +107,9 @@ AtomMake(name, data)			/* makes an atom */
  */
 
 xpmHashAtom *
-xpmHashSlot(table, s)
-    xpmHashTable *table;
-    char *s;
+xpmHashSlot(
+    xpmHashTable	*table,
+    char		*s)
 {
     xpmHashAtom *atomTable = table->atomTable;
     unsigned int hash;
@@ -134,8 +134,7 @@ xpmHashSlot(table, s)
 }
 
 static int
-HashTableGrows(table)
-    xpmHashTable *table;
+HashTableGrows(xpmHashTable *table)
 {
     xpmHashAtom *atomTable = table->atomTable;
     unsigned int size = table->size;
@@ -171,10 +170,10 @@ HashTableGrows(table)
  */
 
 int
-xpmHashIntern(table, tag, data)
-    xpmHashTable *table;
-    char *tag;
-    void *data;
+xpmHashIntern(
+    xpmHashTable	*table,
+    char		*tag,
+    void		*data)
 {
     xpmHashAtom *slot;
 
@@ -200,8 +199,7 @@ xpmHashIntern(table, tag, data)
  */
 
 int
-xpmHashTableInit(table)
-    xpmHashTable *table;
+xpmHashTableInit(xpmHashTable *table)
 {
     xpmHashAtom *p;
     xpmHashAtom *atomTable;
@@ -226,8 +224,7 @@ xpmHashTableInit(table)
  */
 
 void
-xpmHashTableFree(table)
-    xpmHashTable *table;
+xpmHashTableFree(xpmHashTable *table)
 {
     xpmHashAtom *p;
     xpmHashAtom *atomTable = table->atomTable;

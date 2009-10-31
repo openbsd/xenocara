@@ -43,8 +43,7 @@
  * which does the trick
  */
 char *
-xpmstrdup(s1)
-    char *s1;
+xpmstrdup(char *s1)
 {
     char *s2;
     size_t l = strlen(s1) + 1;
@@ -57,10 +56,10 @@ xpmstrdup(s1)
 #endif
 
 unsigned int
-xpmatoui(p, l, ui_return)
-    register char *p;
-    unsigned int l;
-    unsigned int *ui_return;
+xpmatoui(
+    register char	*p,
+    unsigned int	 l,
+    unsigned int	*ui_return)
 {
     register unsigned int n, i;
 
@@ -82,8 +81,7 @@ xpmatoui(p, l, ui_return)
  * Function returning a character string related to an error code.
  */
 char *
-XpmGetErrorString(errcode)
-    int errcode;
+XpmGetErrorString(int errcode)
 {
     switch (errcode) {
     case XpmColorError:
@@ -108,7 +106,7 @@ XpmGetErrorString(errcode)
  * newer or older than the one with which a program has been first compiled.
  */
 int
-XpmLibraryVersion()
+XpmLibraryVersion(void)
 {
     return XpmIncludeVersion;
 }
@@ -120,8 +118,7 @@ XpmLibraryVersion()
 #endif
 
 void
-XpmFree(ptr)
-    void *ptr;
+XpmFree(void *ptr)
 {
     free(ptr);
 }

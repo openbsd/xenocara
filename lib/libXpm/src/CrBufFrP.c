@@ -38,13 +38,12 @@
 #include "XpmI.h"
 
 int
-XpmCreateBufferFromPixmap(display, buffer_return, pixmap, shapemask,
-			  attributes)
-    Display *display;
-    char **buffer_return;
-    Pixmap pixmap;
-    Pixmap shapemask;
-    XpmAttributes *attributes;
+XpmCreateBufferFromPixmap(
+    Display		 *display,
+    char		**buffer_return,
+    Pixmap		  pixmap,
+    Pixmap		  shapemask,
+    XpmAttributes	 *attributes)
 {
     XImage *ximage = NULL;
     XImage *shapeimage = NULL;

@@ -1,17 +1,23 @@
-# $Id: configure.ac,v 1.1.1.2 2007/09/30 08:38:09 matthieu Exp $
-
 AC_PREREQ(2.57)
-AC_INIT([libXpm], 3.5.7, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXpm)
+AC_INIT([libXpm], 3.5.8, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXpm)
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_MAINTAINER_MODE
+
+# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 
 AM_CONFIG_HEADER([config.h])
 
 # Checks for programs.
 AC_PROG_LIBTOOL
 AC_PROG_CC
+LT_AC_PROG_SED
+
+XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XPM, xproto x11)
@@ -24,22 +30,13 @@ AC_HEADER_STDC
 # Checks for functions
 AC_CHECK_FUNCS([strlcat])
 
-# Checks for typedefs, structures, and compiler characteristics.
-
-if test "x$GCC" = "xyes"; then
-	GCC_WARNINGS="-Wall -Wpointer-arith -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -fno-strict-aliasing"
-	CFLAGS="$GCC_WARNINGS $CFLAGS"
-fi
-
 # Internationalization & localization support
 AC_SEARCH_LIBS([gettext], [intl], [USE_GETTEXT="yes"], [USE_GETTEXT="no"])
 AC_MSG_CHECKING([where to install localized messages])
 AC_ARG_WITH([localedir], AC_HELP_STRING([--with-localedir=<path>],
 	[Path to install message files in (default: datadir/locale)]),
 	[LOCALEDIR=${withval}], [LOCALEDIR=${datadir}/locale])
-AC_DEFINE_DIR([LOCALEDIR], [LOCALEDIR], [Location of translated messages])
+AX_DEFINE_DIR([LOCALEDIR], [LOCALEDIR], [Location of translated messages])
 if test "x$LOCALEDIR" = "xno" -o "x$USE_GETTEXT" = "xno" ; then
 	AC_MSG_RESULT([nowhere])
 	USE_GETTEXT="no"
@@ -64,11 +61,7 @@ if test x$STAT_ZFILE = xyes ; then
 fi
 
 PKG_CHECK_MODULES(SXPM, xt xext xextproto, build_sxpm=true, build_sxpm=false)
-
 AM_CONDITIONAL(BUILD_SXPM, test x$build_sxpm = xtrue)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
            src/Makefile

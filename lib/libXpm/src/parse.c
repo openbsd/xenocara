@@ -82,12 +82,16 @@ char *xpmColorKeys[] = {
 };
 
 int
-xpmParseValues(data, width, height, ncolors, cpp,
-	    x_hotspot, y_hotspot, hotspot, extensions)
-    xpmData *data;
-    unsigned int *width, *height, *ncolors, *cpp;
-    unsigned int *x_hotspot, *y_hotspot, *hotspot;
-    unsigned int *extensions;
+xpmParseValues(
+    xpmData		*data,
+    unsigned int	*width,
+    unsigned int	*height,
+    unsigned int	*ncolors,
+    unsigned int	*cpp,
+    unsigned int	*x_hotspot,
+    unsigned int	*y_hotspot,
+    unsigned int	*hotspot,
+    unsigned int	*extensions)
 {
     unsigned int l;
     char buf[BUFSIZ + 1];
@@ -192,12 +196,12 @@ xpmParseValues(data, width, height, ncolors, cpp,
 }
 
 int
-xpmParseColors(data, ncolors, cpp, colorTablePtr, hashtable)
-    xpmData *data;
-    unsigned int ncolors;
-    unsigned int cpp;
-    XpmColor **colorTablePtr;
-    xpmHashTable *hashtable;
+xpmParseColors(
+    xpmData		 *data,
+    unsigned int	  ncolors,
+    unsigned int	  cpp,
+    XpmColor		**colorTablePtr,
+    xpmHashTable	 *hashtable)
 {
     unsigned int key = 0, l, a, b, len;
     unsigned int curkey;		/* current color key */
@@ -365,15 +369,15 @@ xpmParseColors(data, ncolors, cpp, colorTablePtr, hashtable)
 }
 
 static int
-ParsePixels(data, width, height, ncolors, cpp, colorTable, hashtable, pixels)
-    xpmData *data;
-    unsigned int width;
-    unsigned int height;
-    unsigned int ncolors;
-    unsigned int cpp;
-    XpmColor *colorTable;
-    xpmHashTable *hashtable;
-    unsigned int **pixels;
+ParsePixels(
+    xpmData		 *data,
+    unsigned int	  width,
+    unsigned int	  height,
+    unsigned int	  ncolors,
+    unsigned int	  cpp,
+    XpmColor		 *colorTable,
+    xpmHashTable	 *hashtable,
+    unsigned int	**pixels)
 {
     unsigned int *iptr, *iptr2 = NULL; /* found by Egbert Eich */
     unsigned int a, x, y;
@@ -538,10 +542,10 @@ do \
 }
 
 int
-xpmParseExtensions(data, extensions, nextensions)
-    xpmData *data;
-    XpmExtension **extensions;
-    unsigned int *nextensions;
+xpmParseExtensions(
+    xpmData		 *data,
+    XpmExtension	**extensions,
+    unsigned int	 *nextensions)
 {
     XpmExtension *exts = NULL, *ext;
     unsigned int num = 0;
@@ -659,10 +663,10 @@ do { \
  * in an an XpmImage structure which is returned.
  */
 int
-xpmParseData(data, image, info)
-    xpmData *data;
-    XpmImage *image;
-    XpmInfo *info;
+xpmParseData(
+    xpmData	*data,
+    XpmImage	*image,
+    XpmInfo	*info)
 {
     /* variables to return */
     unsigned int width, height, ncolors, cpp;

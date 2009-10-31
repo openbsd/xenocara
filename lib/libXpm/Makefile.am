@@ -15,3 +15,13 @@ EXTRA_DIST = \
 	README.AMIGA \
 	README.html \
 	README.MSW
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

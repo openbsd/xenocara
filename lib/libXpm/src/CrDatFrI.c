@@ -59,12 +59,12 @@ LFUNC(CreateExtensions, void, (char **dataptr, unsigned int data_size,
 			       unsigned int ext_nlines));
 
 int
-XpmCreateDataFromImage(display, data_return, image, shapeimage, attributes)
-    Display *display;
-    char ***data_return;
-    XImage *image;
-    XImage *shapeimage;
-    XpmAttributes *attributes;
+XpmCreateDataFromImage(
+    Display		  *display,
+    char		***data_return,
+    XImage		  *image,
+    XImage		  *shapeimage,
+    XpmAttributes	  *attributes)
 {
     XpmImage xpmimage;
     XpmInfo info;
@@ -102,10 +102,10 @@ do \
 } while(0)
 
 int
-XpmCreateDataFromXpmImage(data_return, image, info)
-    char ***data_return;
-    XpmImage *image;
-    XpmInfo *info;
+XpmCreateDataFromXpmImage(
+    char	***data_return,
+    XpmImage	  *image,
+    XpmInfo	  *info)
 {
     /* calculation variables */
     int ErrorStatus;
@@ -244,12 +244,12 @@ exit:
 }
 
 static int
-CreateColors(dataptr, data_size, colors, ncolors, cpp)
-    char **dataptr;
-    unsigned int *data_size;
-    XpmColor *colors;
-    unsigned int ncolors;
-    unsigned int cpp;
+CreateColors(
+    char		**dataptr,
+    unsigned int	 *data_size,
+    XpmColor		 *colors,
+    unsigned int	  ncolors,
+    unsigned int	  cpp)
 {
     char buf[BUFSIZ];
     unsigned int a, key, l;
@@ -295,14 +295,14 @@ CreateColors(dataptr, data_size, colors, ncolors, cpp)
 }
 
 static void
-CreatePixels(dataptr, data_size, width, height, cpp, pixels, colors)
-    char **dataptr;
-    unsigned int data_size;
-    unsigned int width;
-    unsigned int height;
-    unsigned int cpp;
-    unsigned int *pixels;
-    XpmColor *colors;
+CreatePixels(
+    char		**dataptr,
+    unsigned int	  data_size,
+    unsigned int	  width,
+    unsigned int	  height,
+    unsigned int	  cpp,
+    unsigned int	 *pixels,
+    XpmColor		 *colors)
 {
     char *s;
     unsigned int x, y, h, offset;
@@ -345,11 +345,11 @@ CreatePixels(dataptr, data_size, width, height, cpp, pixels, colors)
 }
 
 static void
-CountExtensions(ext, num, ext_size, ext_nlines)
-    XpmExtension *ext;
-    unsigned int num;
-    unsigned int *ext_size;
-    unsigned int *ext_nlines;
+CountExtensions(
+    XpmExtension	*ext,
+    unsigned int	 num,
+    unsigned int	*ext_size,
+    unsigned int	*ext_nlines)
 {
     unsigned int x, y, a, size, nlines;
     char **line;
@@ -371,13 +371,13 @@ CountExtensions(ext, num, ext_size, ext_nlines)
 }
 
 static void
-CreateExtensions(dataptr, data_size, offset, ext, num, ext_nlines)
-    char **dataptr;
-    unsigned int data_size;
-    unsigned int offset;
-    XpmExtension *ext;
-    unsigned int num;
-    unsigned int ext_nlines;
+CreateExtensions(
+    char		**dataptr,
+    unsigned int	  data_size,
+    unsigned int	  offset,
+    XpmExtension	 *ext,
+    unsigned int	  num,
+    unsigned int	  ext_nlines)
 {
     unsigned int x, y, a, b;
     char **line;

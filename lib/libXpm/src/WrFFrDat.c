@@ -38,9 +38,9 @@
 #include "XpmI.h"
 
 int
-XpmWriteFileFromData(filename, data)
-    char *filename;
-    char **data;
+XpmWriteFileFromData(
+    char	 *filename,
+    char	**data)
 {
     XpmImage image;
     XpmInfo info;

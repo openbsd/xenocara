@@ -40,9 +40,9 @@
 #include "XpmI.h"
 
 int
-XpmWriteFileFromBuffer(filename, buffer)
-    char *filename;
-    char *buffer;
+XpmWriteFileFromBuffer(
+    char	*filename,
+    char	*buffer)
 {
     int fcheck, len;
     FILE *fp = fopen(filename, "w");

@@ -53,15 +53,19 @@
 LFUNC(OpenReadFile, int, (char *filename, xpmData *mdata));
 LFUNC(xpmDataClose, void, (xpmData *mdata));
 
+FUNC(xpmPipeThrough, FILE*, (int fd,
+			     const char *cmd,
+			     const char *arg1,
+			     const char *mode));
+
 #ifndef CXPMPROG
 int
-XpmReadFileToImage(display, filename,
-		   image_return, shapeimage_return, attributes)
-    Display *display;
-    char *filename;
-    XImage **image_return;
-    XImage **shapeimage_return;
-    XpmAttributes *attributes;
+XpmReadFileToImage(
+    Display		 *display,
+    char		 *filename,
+    XImage		**image_return,
+    XImage		**shapeimage_return,
+    XpmAttributes	 *attributes)
 {
     XpmImage image;
     XpmInfo info;
@@ -100,10 +104,10 @@ XpmReadFileToImage(display, filename,
 }
 
 int
-XpmReadFileToXpmImage(filename, image, info)
-    char *filename;
-    XpmImage *image;
-    XpmInfo *info;
+XpmReadFileToXpmImage(
+    char	*filename,
+    XpmImage	*image,
+    XpmInfo	*info)
 {
     xpmData mdata;
     int ErrorStatus;
@@ -128,11 +132,11 @@ XpmReadFileToXpmImage(filename, image, info)
 #ifndef NO_ZPIPE
 /* Do not depend on errno after read_through */
 FILE*
-xpmPipeThrough(fd, cmd, arg1, mode)
-    int fd;
-    const char* cmd;
-    const char* arg1;
-    const char* mode;
+xpmPipeThrough(
+    int		 fd,
+    const char	*cmd,
+    const char	*arg1,
+    const char	*mode)
 {
     FILE* fp;
     int status, fds[2], in = 0, out = 1;
@@ -190,9 +194,9 @@ fail2:
  * open the given file to be read as an xpmData which is returned.
  */
 static int
-OpenReadFile(filename, mdata)
-    char *filename;
-    xpmData *mdata;
+OpenReadFile(
+    char	*filename,
+    xpmData	*mdata)
 {
     if (!filename) {
 	mdata->stream.file = (stdin);
@@ -263,8 +267,7 @@ OpenReadFile(filename, mdata)
  * close the file related to the xpmData if any
  */
 static void
-xpmDataClose(mdata)
-    xpmData *mdata;
+xpmDataClose(xpmData *mdata)
 {
     if (mdata->stream.file != (stdin))
 	fclose(mdata->stream.file);

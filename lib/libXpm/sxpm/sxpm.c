@@ -110,16 +110,14 @@ static char *plaid[] = {
 #define xrdb XtDatabase(dpy)
 static Colormap colormap;
 
-void Usage();
-void ErrorMessage();
-void Punt();
-void VersionInfo();
-
-#ifdef __STDC__
+void Usage(void);
+void ErrorMessage(int ErrorStatus, char *tag);
+void Punt(int i);
+void VersionInfo(void);
 void kinput(Widget widget, char *tag, XEvent *xe, Boolean *b);
-#else
-void kinput();
-#endif
+void GetNumbers(int num, int *format_return,
+		int *libmajor_return,
+		char *libminor_return);
 
 #define IWIDTH      50
 #define IHEIGHT     50
@@ -139,9 +137,9 @@ static XrmOptionDescRec options[] = {
 };
 
 int
-main(argc, argv)
-    int argc;
-    char **argv;
+main(
+    int		  argc,
+    char	**argv)
 {
     int ErrorStatus;
     unsigned int verbose = 0;		/* performs verbose output */
@@ -578,7 +576,7 @@ main(argc, argv)
 }
 
 void
-Usage()
+Usage(void)
 {
     /* L10N_Comments : Usage message (sxpm -h) in two parts. 
        In the first part %s is replaced by the command name. */
@@ -616,9 +614,9 @@ if no input is specified sxpm reads from standard input.\n\
 
 
 void
-ErrorMessage(ErrorStatus, tag)
-    int ErrorStatus;
-    char *tag;
+ErrorMessage(
+    int		 ErrorStatus,
+    char	*tag)
 {
     char *error = NULL;
     char *warning = NULL;
@@ -674,8 +672,7 @@ ErrorMessage(ErrorStatus, tag)
 }
 
 void
-Punt(i)
-    int i;
+Punt(int i)
 {
     if (icon.pixmap) {
 	XFreePixmap(dpy, icon.pixmap);
@@ -703,11 +700,11 @@ Punt(i)
 }
 
 void
-kinput(widget, tag, xe, b)
-    Widget widget;
-    char *tag;
-    XEvent *xe;
-    Boolean *b;
+kinput(
+    Widget	 widget,
+    char	*tag,
+    XEvent	*xe,
+    Boolean	*b)
 {
     char c = '\0';
 
@@ -721,11 +718,11 @@ kinput(widget, tag, xe, b)
  * number (following the rule described in xpm.h).
  */
 void
-GetNumbers(num, format_return, libmajor_return, libminor_return)
-    int num;
-    int *format_return;
-    int *libmajor_return;
-    char *libminor_return;
+GetNumbers(
+    int		 num,
+    int		*format_return,
+    int		*libmajor_return,
+    char	*libminor_return)
 {
     *format_return = num / 10000;
     *libmajor_return = (num % 10000) / 100;
@@ -733,7 +730,7 @@ GetNumbers(num, format_return, libmajor_return, libminor_return)
 }
 
 void
-VersionInfo()
+VersionInfo(void)
 {
     int format, libmajor;
     char libminor;

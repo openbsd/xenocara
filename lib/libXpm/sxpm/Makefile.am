@@ -2,7 +2,7 @@ if BUILD_SXPM
 
 bin_PROGRAMS = sxpm
 
-AM_CFLAGS = $(SXPM_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(SXPM_CFLAGS)
 
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
@@ -17,8 +17,6 @@ appman_PRE = sxpm.man
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 CLEANFILES = $(appman_DATA)
-
-SED = sed
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
@@ -40,13 +38,13 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)sed $(MAN_SUBSTS) < $< > $@
 
 if USE_GETTEXT
 noinst_DATA = sxpm.po
 
 sxpm.po: $(sxpm_SOURCES:%=$(srcdir)/%)
-	xgettext -c"L10N_Comments" -d sxpm -n $(sxpm_SOURCES:%=$(srcdir)/%)
+	$(AM_V_GEN)xgettext -c"L10N_Comments" -d sxpm -n $(sxpm_SOURCES:%=$(srcdir)/%)
 
 CLEANFILES += sxpm.po
 endif
