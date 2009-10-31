@@ -1,6 +1,8 @@
 INCLUDES =                      \
 	-I${top_srcdir}/include
 
+AM_CFLAGS = $(XFONT_CFLAGS) $(OS_CFLAGS) $(CWARNFLAGS)
+
 noinst_LTLIBRARIES = libfc.la
 
 libfc_la_SOURCES = 		\

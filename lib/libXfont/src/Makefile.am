@@ -1,6 +1,4 @@
 # 
-#  $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:14:31 matthieu Exp $
-# 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,10 +21,7 @@
 
 lib_LTLIBRARIES = libXfont.la
 
-if XFONT_FONTCACHE
-FONTCACHE_DIR = fontcache
-FONTCACHE_LIB = fontcache/libfontcache.la
-endif
+AM_CFLAGS = $(OS_CFLAGS) $(CWARNFLAGS)
 
 if XFONT_FONTFILE
 FONTFILE_DIR = fontfile
@@ -53,16 +48,6 @@ FC_DIR = fc
 FC_LIB = fc/libfc.la
 endif
 
-if XFONT_TYPE1
-TYPE1_DIR = Type1
-TYPE1_LIB = Type1/libtype1.la
-endif
-
-if XFONT_SPEEDO
-SPEEDO_DIR = Speedo
-SPEEDO_LIB = Speedo/libspeedo.la
-endif
-
 UTIL_DIR = util
 UTIL_LIB = util/libutil.la
 
@@ -71,14 +56,12 @@ STUBS_DIR = stubs
 
 SUBDIRS=\
 	$(FONTFILE_DIR) $(FREETYPE_DIR) $(BITMAP_DIR) \
-	$(BUILTINS_DIR) $(FC_DIR) $(UTIL_DIR) $(STUBS_DIR) $(FONTCACHE_DIR) \
-	$(TYPE1_DIR) $(SPEEDO_DIR)
+	$(BUILTINS_DIR) $(FC_DIR) $(UTIL_DIR) $(STUBS_DIR)
 
 libXfont_la_LIBADD = \
 	$(FONTFILE_LIB) $(FREETYPE_LIB) $(BITMAP_LIB) \
-	$(BUILTINS_LIB) $(FC_LIB) $(UTIL_LIB) $(STUBS_LIB) $(FONTCACHE_LIB) \
-	$(TYPE1_LIB) $(SPEEDO_LIB) \
-	$(FREETYPE_LIBS) $(Z_LIBS) $(MATH_LIBS) 	
+	$(BUILTINS_LIB) $(FC_LIB) $(UTIL_LIB) $(STUBS_LIB) \
+	$(FREETYPE_LIBS) $(Z_LIBS) $(MATH_LIBS) $(XFONT_LIBS)
 
 libXfont_la_SOURCES = dummy.c
 

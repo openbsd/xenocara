@@ -57,12 +57,7 @@ FontFileOpen (const char *name)
 	return 0;
     }
     len = strlen (name);
-#ifndef __UNIXOS2__
     if (len > 2 && !strcmp (name + len - 2, ".Z")) {
-#else
-    if (len > 2 && (!strcmp (name + len - 4, ".pcz") || 
-		    !strcmp (name + len - 2, ".Z"))) {
-#endif
 	cooked = BufFilePushCompressed (raw);
 	if (!cooked) {
 	    BufFileClose (raw, TRUE);
@@ -72,6 +67,15 @@ FontFileOpen (const char *name)
 #ifdef X_GZIP_FONT_COMPRESSION
     } else if (len > 3 && !strcmp (name + len - 3, ".gz")) {
 	cooked = BufFilePushZIP (raw);
+	if (!cooked) {
+	    BufFileClose (raw, TRUE);
+	    return 0;
+	}
+	raw = cooked;
+#endif
+#ifdef X_BZIP2_FONT_COMPRESSION
+    } else if (len > 4 && !strcmp (name + len - 4, ".bz2")) {
+	cooked = BufFilePushBZIP2 (raw);
 	if (!cooked) {
 	    BufFileClose (raw, TRUE);
 	    return 0;

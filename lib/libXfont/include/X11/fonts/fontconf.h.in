@@ -1,6 +1,4 @@
 /*
- * $Id: fontconf.h.in,v 1.1.1.2 2006/12/16 18:23:45 matthieu Exp $
- *
  * Copyright © 2005 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -24,12 +22,6 @@
 
 /* Define as 1 if you have FreeType support in Xfont */
 #undef XFONT_FREETYPE
-
-/* Define as 1 if you have Type1 font support in Xfont */
-#undef XFONT_TYPE1
-
-/* Define as 1 if you have Speedo support in Xfont */
-#undef XFONT_SPEEDO
 
 /* Define as 1 if you have builtin font support in Xfont */
 #undef XFONT_BUILTINS

@@ -2,6 +2,8 @@ INCLUDES =			\
 	-I${top_srcdir}/include \
 	-I${top_srcdir}/src/bitmap
 
+AM_CFLAGS = $(XFONT_CFLAGS) $(OS_CFLAGS) $(CWARNFLAGS)
+
 noinst_LTLIBRARIES = libbuiltins.la
 
 libbuiltins_la_SOURCES = 	\

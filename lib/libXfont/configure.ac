@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 AC_PREREQ([2.57])
 
 AC_INIT([libXfont],
-	1.3.2,
+	1.4.1,
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	libXfont)
 dnl
@@ -36,6 +36,10 @@ AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADERS([include/X11/fonts/fontconf.h])
 
+# Require xorg-macros version >= 1.3.0 for XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
@@ -43,18 +47,25 @@ dnl If the first PKG_CHECK_MODULES appears inside a conditional, pkg-config
 dnl must first be located explicitly.
 PKG_PROG_PKG_CONFIG
 
+XORG_DEFAULT_OPTIONS
+
+# xmlto is used to convert doc/fontlib.xml from DocBook to PDF/HTML
+AC_ARG_VAR([XMLTO], [Path to xmlto command])
+AC_PATH_PROG([XMLTO], [xmlto])
+AM_CONDITIONAL([HAVE_XMLTO], [test "x$XMLTO" != "x"])
+
+# Option to enable support for building developer internals docs
+AC_ARG_ENABLE(devel-docs,
+	AS_HELP_STRING([--enable-devel-docs],
+	    [Build internals documentation for developers (default: enabled)]),
+	    [DEVEL_DOCS=$enableval], [DEVEL_DOCS=yes])
+AM_CONDITIONAL([MAKE_DEVEL_DOCS], [test "x$DEVEL_DOCS" = "xyes"])
+
 # Look for headers
 AC_CHECK_HEADERS([endian.h poll.h sys/poll.h])
 AC_CHECK_FUNCS([poll])
 
 m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
-
-DEFAULT_ENCODINGSDIR=${libdir}/X11/fonts/encodings
-AC_ARG_WITH(encodingsdir,
-	AS_HELP_STRING([--with-encodingsdir=ENCODINGSDIR], [Path to font encodings]),
-	[ENCODINGSDIR="$withval"],
-	[ENCODINGSDIR="$DEFAULT_ENCODINGSDIR"])
-AC_SUBST(ENCODINGSDIR)
 
 #
 # select libraries to include
@@ -65,7 +76,6 @@ XFONT_FONTFILE=no
 #
 # Scalable fonts in files:
 # 	FreeType
-#	IBM Type1 rasterizer
 #	Bitstream Speedo rasterizer
 #
 AC_ARG_ENABLE(freetype, [ --disable-freetype],[XFONT_FREETYPE=$enableval],[XFONT_FREETYPE=yes])
@@ -103,20 +113,6 @@ AC_SUBST(FREETYPE_LIBS)
 AC_SUBST(FREETYPE_CFLAGS)
 AC_SUBST(FREETYPE_REQUIRES)
 
-AC_ARG_ENABLE(type1, [ --enable-type1 ], [XFONT_TYPE1=$enableval], [XFONT_TYPE1=yes])
-if test "x$XFONT_TYPE1" = xyes; then
-	AC_DEFINE(XFONT_TYPE1,1,[Support IBM Type 1 rasterizer for Type1 font files])
-	XFONT_FONTFILE=yes
-fi
-AM_CONDITIONAL(XFONT_TYPE1, [test "x$XFONT_TYPE1" = xyes ])
-
-AC_ARG_ENABLE(speedo, [ --disable-speedo ], [XFONT_SPEEDO=$enableval], [XFONT_SPEEDO=yes])
-AM_CONDITIONAL(XFONT_SPEEDO, [test "x$XFONT_SPEEDO" = xyes ])
-if test "x$XFONT_SPEEDO" = xyes; then
-	AC_DEFINE(XFONT_SPEEDO,1,[Support Speedo font files])
-	XFONT_FONTFILE=yes
-fi
-
 #
 # Bitmap fonts in files:
 #	Builtins (gzipped pcf format in .text segment)
@@ -128,6 +124,19 @@ fi
 AC_DEFINE(X_GZIP_FONT_COMPRESSION,1,[Support gzip for bitmap fonts])
 X_GZIP_FONT_COMPRESSION=1
 AC_SUBST(X_GZIP_FONT_COMPRESSION)
+AC_CHECK_LIB(z, gzopen, [Z_LIBS=-lz], AC_MSG_ERROR([*** zlib is required]))
+
+AC_ARG_WITH(bzip2, 
+	AS_HELP_STRING([--with-bzip2], 
+			[Support bzip2 compressed bitmap fonts]),
+	[], [with_bzip2=no])
+if test "x$with_bzip2" = xyes; then
+	AC_CHECK_LIB(bz2, BZ2_bzopen, [Z_LIBS="$Z_LIBS -lbz2"],
+		AC_MSG_ERROR([*** libbz2 is required for bzip2 support]))
+	AC_DEFINE(X_BZIP2_FONT_COMPRESSION,1,[Support bzip2 for bitmap fonts])
+fi
+AM_CONDITIONAL(X_BZIP2_FONT_COMPRESSION, [test "x$with_bzip2" = xyes ])
+AC_SUBST(Z_LIBS)
 
 AC_ARG_ENABLE(builtins, [ --disable-builtins ], [XFONT_BUILTINS=$enableval], [XFONT_BUILTINS=yes])
 AM_CONDITIONAL(XFONT_BUILTINS, [test "x$XFONT_BUILTINS" = xyes ])
@@ -168,28 +177,6 @@ if test "x$XFONT_FONTFILE" = xyes; then
 	AC_DEFINE(XFONT_FONTFILE,1,[Support fonts in files])
 fi
 
-AC_ARG_ENABLE(loadable-font-modules, 
-  AC_HELP_STRING([--disable-loadable-font-modules], 
-       	 [support dynamically loaded font modules (default is enabled)]),
-	[LOADABLE_FONTS=$enableval], [LOADABLE_FONTS=yes])
-if test "x$LOADABLE_FONTS" = xyes; then
-	AC_DEFINE(LOADABLEFONTS,1,[Support dynamically loaded font modules])
-fi
-
-#
-# Font cache extension support?
-#
-
-AC_ARG_ENABLE(fontcache, [ --disable-fontcache ],[XFONT_FONTCACHE=$enableval],[XFONT_FONTCACHE=yes])
-AM_CONDITIONAL(XFONT_FONTCACHE, [test "x$XFONT_FONTCACHE" = xyes])
-if test "x$XFONT_FONTCACHE" = xyes; then
-	AC_DEFINE(FONTCACHE,1,[Support the font caching extension])
-	PKG_CHECK_MODULES(FONTCACHEPROTO, fontcacheproto)
-else
-	FONTCACHEPROTO_CFLAGS=""
-fi
-AC_SUBST(FONTCACHEPROTO_CFLAGS)
-
 #
 # Support connection to font servers?
 #
@@ -200,9 +187,6 @@ if test "x$XFONT_FC" = xyes; then
 	AC_DEFINE(XFONT_FC,1,[Support the X Font Services Protocol])
 fi
 
-AC_CHECK_LIB(z, gzopen, [Z_LIBS=-lz
-AC_SUBST(Z_LIBS)], AC_MSG_ERROR([*** zlib is required]))
-
 
 AC_CHECK_LIB(m, hypot, [MATH_LIBS=-lm
 AC_SUBST(MATH_LIBS)], AC_MSG_ERROR([*** libm is required]))
@@ -211,13 +195,6 @@ PKG_CHECK_MODULES(XFONT, xproto xtrans fontsproto fontenc)
 
 # Transport selection macro from xtrans.m4
 XTRANS_CONNECTION_FLAGS
-
-if test "x$GCC" = "xyes"; then
-	GCC_WARNINGS="-Wall -Wpointer-arith -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -fno-strict-aliasing"
-	CFLAGS="$GCC_WARNINGS $CFLAGS"
-fi
 
 case $host_os in
     linux*)
@@ -230,21 +207,14 @@ case $host_os in
         OS_CFLAGS=
         ;;
 esac
-
-CFLAGS="$CFLAGS $XFONT_CFLAGS $OS_CFLAGS"
-LIBS="$LIBS $XFONT_LIBS"
-
-XORG_RELEASE_VERSION
+AC_SUBST([OS_CFLAGS])
 
 AC_OUTPUT([Makefile
 	   src/Makefile
-	   src/fontcache/Makefile
 	   src/fontfile/Makefile
 	   src/FreeType/Makefile
 	   src/builtins/Makefile
 	   src/bitmap/Makefile
-	   src/Type1/Makefile
-	   src/Speedo/Makefile
 	   src/fc/Makefile
 	   src/util/Makefile
 	   src/stubs/Makefile

@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2009/06/04 00:40:05 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2009/10/31 17:57:11 matthieu Exp $
 .include <bsd.xconf.mk>
 
-SHARED_LIBS=	Xfont 8.0
+SHARED_LIBS=	Xfont 9.0
 
 .if ${XENOCARA_HAVE_SHARED_LIBS:L} == "no"
 CONFIGURE_ARGS+= --disable-loadable-font-modules

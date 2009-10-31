@@ -1,3 +1,400 @@
+commit 64f21944c5f374b0da63657f01e289b34d00904c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 9 17:38:33 2009 -0700
+
+    libXfont 1.4.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 947d3162f5edaaa05bbbfcfe2303d0c8b796f9ca
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Oct 7 13:05:26 2009 -0700
+
+    Remove unused setting of ENCODINGSDIR
+    
+    Seems to have been a leftover from before the encoding code was split
+    out into libfontenc by XFree86
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 18053ffbf92473ffce23a3c5182de92b608b9cdf
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Oct 7 10:44:27 2009 -0700
+
+    Convert documentation from troff to DocBook/XML
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 96a4daad7097ce94d4340a4e9ce779e378f9b83c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Oct 7 08:31:54 2009 -0700
+
+    Move fontlib.ms from xorg-docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b7be4a976a59f3149590cf62a2ea8144aa729c2a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 6 13:03:25 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 18c5e2ff1097880e8dea951079ae49a93ec315b0
+Author: Bob Ham <rah@bash.sh>
+Date:   Tue Sep 15 14:28:12 2009 +1000
+
+     Fixed int(*)()->double cast warning
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0045b2555b288099c90b65f97bd4b4a5ebc8c688
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Feb 18 13:53:14 2009 -0500
+
+    libXfont 1.4.0
+
+commit 04ced93e997b185b5d9124cacc96fa39a77b2ab7
+Author: Peter Astrand <astrand@maggie.lkpg.cendio.se>
+Date:   Wed Feb 4 22:09:25 2009 +0100
+
+    Avoid sending uninitialized padding data over the network.
+    
+    Besides cluttering Valgrind output, this might also be an information leak.
+    
+    Signed-off-by: Peter Astrand <astrand@cendio.se>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e15dca77fa76252dd8499f8585d8ce922ac3b869
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 29 18:02:34 2009 -0200
+
+    Janitor: make distcheck and .gitignore
+    
+      Distribute ChangeLog but not autogen.sh.
+      Use a single toplevel .gitignore file, instead of one per subdirectory.
+
+commit 38bac54519a67ab1a276b66dbaa84a3327ccf827
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Sep 27 02:06:27 2008 -0400
+
+    Remove some strcasecmp silliness
+
+commit f431b4eb4dc743ccdf94b1b2ed858cc21f63c091
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 23:23:40 2009 -0500
+
+    Allow case insensitive filename matching in fontfile.
+    
+    Simplify the freetype renderer list to match.
+
+commit 903d39aeea73a973fb8b05ca1ac147c2cca146cb
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 23:21:29 2009 -0500
+
+    Delete some dead ifdefs
+
+commit daa7af2bb2326de363aa5ea51c29616e3634343a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 23:20:20 2009 -0500
+
+    Move the copy of CopyISOLatin1Lowered near its user, and un-weak it.
+
+commit 6c29007756301f513c0151e2b63af073f310af66
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 23:17:55 2009 -0500
+
+    Drop OS/2 support
+
+commit 0cdc9b8f850342d50b72a57507db3413eacc6fb8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 23:16:35 2009 -0500
+
+    xalloc -> malloc, etc.
+
+commit 632a2e90a4b209facc84d7a18873f19a720ea7df
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Sep 27 01:30:13 2008 -0400
+
+    Remove PMF support.
+    
+    .pmf files are printer font metrics; they have no glyphs, just boxes for
+    layout.  They can't possibly be useful in a post-Xprint world.
+
+commit e1927f80deabe0268dc18b4a9f3ceda1325171f5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 22:57:35 2009 -0500
+
+    Remove printer font support.
+    
+    Xprint is just insidious, isn't it.
+
+commit 732191d5d6ad58caab25e24df16fb89efaea2e9a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 22:42:22 2009 -0500
+
+    Remove loadable renderer support.
+
+commit 423d0a2c1dfad969f4a238618811937bc5f49776
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Sep 27 01:55:47 2008 -0400
+
+    Remove useless #define
+
+commit 50bca6dd881c2d787b3afa4d98a2c2667f767614
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 22:33:06 2009 -0500
+
+    Get rid of a useless array
+
+commit 6ba0565362ba9c8d1037c0e4725cb31faa141656
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 22:29:10 2009 -0500
+
+    const cleanup
+
+commit 1247f01ee36f80222e30c1678f940329aadb8335
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 01:13:08 2009 -0500
+
+    Delete Type1
+    
+    Yes, these are still real fonts, but freetype can handle them just fine.
+
+commit 85b66b8a7f3095f10437c8ecb3dcbfe68c9cfced
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 20 01:03:16 2009 -0500
+
+    Delete speedo
+    
+    OUT OUT OUT
+
+commit 1559d8086e8063c692aae008006578b88e1368fe
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sun Dec 28 12:35:37 2008 -0800
+
+    Added missing AM_CFLAGS for -Wl,-flat_namespace
+    
+    Fixes commit f859a76b0f325b07952ad1c5c818318307c589b0
+
+commit 99bad52b592f4f11887bf9033590b61880c3c976
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sat Mar 1 16:45:55 2008 -0300
+
+    Disable some fun stdio wrapping.
+    
+      The code is still there but no magic with macros is attempted anymore
+    to handle files.
+      This should really be changed to just use stdio, and properly adapt
+     functions like T1Decript, T1eexec, etc.
+
+commit 95760fbe45a700ea4cc118daa536604393721a59
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 19 16:24:39 2008 -0800
+
+    Restore comment deleted by b6f793d7d5
+
+commit b6f793d7d5c7f7c55911e6524dede41b92dcbc22
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Mar 14 01:30:24 2008 -0300
+
+    libXfont ansification and removal of xf86_ansic.h dependency
+    
+      Basically the code is now compiled as if FONTMODULE was never defined,
+    but also removed some "magic" defining _XOPEN_SOURCE before including
+    math.h.
+      Also removed some #if 0'ed code instead of fixing prototypes inside
+    the "dead code".
+      Changes to spdo_prv.h were due to defines like:
+      <hash>define foo() sp_foo()
+      that would not compile with the ansification in the format:
+      type foo(void)
+      due to the macro receiving "void" as an argument.
+
+commit 282ac4226195d58e3818e7ac97093e396aa78086
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 19 15:07:21 2008 -0800
+
+    Version bump: 1.3.4
+
+commit 5c631ad798fcdea4f2b7d0b012ac94182fad4184
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 19 14:01:28 2008 -0800
+
+    miscutil.c:108: warning: old-style parameter declaration
+
+commit d21d6c5b23a23f120f32b483ec6b86cf88cb3a98
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 19 13:47:48 2008 -0800
+
+    Add simple README with pointers to bugzilla/git/mailing list
+
+commit d3be1261d29b7d8eda124add3497a93ebe34712c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 19 13:47:27 2008 -0800
+
+    Update COPYING file with additional copyrights/licenses
+
+commit b5cc4a10c0fe365b40be19613777f192a1ada0db
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 19 13:05:32 2008 -0800
+
+    Use XORG_CWARNFLAGS & XORG_CHANGELOG macros from xorg-macros 1.2
+
+commit 377584bb71ccb2cc380c3a8f71f0acd7e755ad33
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Dec 18 21:22:31 2008 -0800
+
+    Always scan catalogue dirs at startup, even if their mtime < 0
+    
+    Works around bug in VMWare that caused the Solaris kernel to fail to read
+    the time-of-day chip on boot, and start with a time < 0 (i.e. back to the
+    1960's) - when the system was then installed from this mode, Xorg wouldn't
+    start after reboot, since the mtime would be < 0 and the catalogue dir was
+    then skipped as not changed since reading at the 0 initially set in the
+    cat->mtime.
+    
+    Fixes OpenSolaris bug #4780
+       <http://defect.opensolaris.org/bz/show_bug.cgi?id=4780>
+
+commit 9ad7f24fafe876851b89190732034da6fb640788
+Author: Benjamin Close <Benjamin.Close@clearchain.com>
+Date:   Thu Dec 11 15:26:13 2008 +1030
+
+    Make sure font names/font alias names are null terminated
+    
+    This fixes a crash upon server restart where the saved fonts were
+    being restored however strlen(font_name) was incorrect hence memory
+    was being clobbered.
+
+commit d93cc906d4a2f42d11629e245fb13a2d08cf2a61
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Dec 4 16:56:56 2008 -0800
+
+    Pad CreateAC packets with 0 auths to workaround xfs bug
+    
+    Versions of xfs before commit 3fe28a31a2974287acc182c7c9bfd68d94ea6292
+    will reject CreateAC packets with 0 auths unless they claim to have at
+    least 4 bytes of authentication data that isn't actually read.
+
+commit f859a76b0f325b07952ad1c5c818318307c589b0
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Nov 4 19:24:29 2008 +0100
+
+    Don't clobber CFLAGS in configure
+    
+    This lets the user set CFLAGS when running make.
+
+commit 6bf52de1fb84d61b227daf7a7077af9ea3ec27a3
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Mon Oct 20 19:32:23 2008 -0700
+
+    X.Org Bug 17945: avoid gcc warnings for libXfont
+    
+    <http://bugs.freedesktop.org/show_bug.cgi?id=17945>
+    
+    Avoid two gcc warnings
+    src/fontfile/ffcheck.c:150: warning: initialization discards qualifiers from pointer target type
+    src/fontfile/register.c:98: warning: initialization discards qualifiers from pointer target type
+
+commit b012dcf65b1f0e41def2f595f1b1e7b06a49d275
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 28 15:36:06 2008 -0400
+
+    Retry font server connections faster.
+
+commit 8a6df69750a2d350074715fb31d9d20195d00b4c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Aug 28 15:35:16 2008 -0400
+
+    Nuke fontcache.
+    
+    Hasn't been relevant since the X-TT merge ages ago.
+
+commit 5d5587a36453d731e9a7353a98fa391dbb51b57d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Aug 21 19:58:06 2008 -0700
+
+    Add support for bzip2 bitmap font compression
+    
+    Code originally written for Solaris Xsun in 2003, ported now to current Xorg
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=4819077>
+
+commit 624b7a507cdea25cec0728b4679610df3fb3097c
+Author: Derek Wang <derek.wang@sun.com>
+Date:   Thu Aug 21 16:06:51 2008 -0700
+
+    Sun bug 4510977: dtremote fails to start session
+    
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=4510977>
+
+commit 684c000e57f30344777cf763f2f1b540ef008b38
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jul 2 15:30:03 2008 -0400
+
+    libXfont 1.3.3
+
+commit 11edbc3a818e15ea2b622b31e6f87159ee68ae4a
+Author: Maarten ter Huurne <maarten.ter.huurne@philips.com>
+Date:   Sat Jun 28 15:34:50 2008 -0400
+
+    Do not call FT_Get_BDF_Charset_ID() if configured with --disable-bdfformat
+    
+    When I configure libXfont-1.3.2 with --disable-bdfformat and link it against
+    FreeType that is built without BDF support, I get the following link error:
+    
+    libXfont.so: undefined reference to ‘FT_Get_BDF_Charset_ID’
+    
+    I fixed it by checking XFONT_BDFFORMAT and if BDF support is disabled, the call
+    to FT_Get_BDF_Charset_ID() is omitted and the result code is set as if the call
+    had failed.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 1ab07ce0eec4f6c7ed66c7aba3edf8c4315dd907
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 13 17:26:57 2008 -0700
+
+    FontFileDirectoryChanged: check length of "fonts.alias" as well as "fonts.dir"
+
+commit 0f9db4aa7de6e0644ac9c5811b949e5f936c9d61
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri May 9 12:36:30 2008 -0700
+
+    Don't allow a font alias to point to itself and create a loop
+    
+    Part of fix for Sun bug 4258475
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=4258475>
+
+commit 67311922a2e02d8a763831831b65bb4833db58b5
+Author: Colin Harrison <colin.harrison-at-virgin.net>
+Date:   Mon May 5 22:17:55 2008 +0100
+
+    Fix build for WIN32
+
+commit 6ba408c956ca8e241d10d463c45b4e987b757333
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 08:21:34 2008 +0100
+
+    nuke RCS Ids
+
+commit 754cabe62e91b9ad50c3027c063f4269775f7add
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Mar 7 12:19:22 2008 +0100
+
+    Add missing include in src/FreeType/ftfuncs.c
+    
+    Fixes compiler warning:
+    ../../../src/FreeType/ftfuncs.c: In function 'restrict_code_range_by_str':
+    ../../../src/FreeType/ftfuncs.c:2081: warning: implicit declaration of function 'isspace'
+
+commit 0fd2a1428df56d8b29e148b08dcec2dfed9302fa
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 5 22:04:06 2008 -0500
+
+    libXfont 1.3.2
+
 commit b76df66d2c507898472bba0f9986ef5700029a36
 Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
 Date:   Thu Jan 17 15:30:37 2008 +0100

@@ -1,6 +1,8 @@
 INCLUDES =			\
 	-I${top_srcdir}/include
 
+AM_CFLAGS = $(XFONT_CFLAGS) $(OS_CFLAGS) $(CWARNFLAGS)
+
 noinst_LTLIBRARIES = libstubs.la
 
 libstubs_la_SOURCES = 		\
@@ -10,7 +12,6 @@ libstubs_la_SOURCES = 		\
 	errorf.c		\
 	fatalerror.c		\
 	findoldfnt.c		\
-	fontmod.c		\
 	getcres.c		\
 	getdefptsize.c		\
 	getnewfntcid.c		\
@@ -21,5 +22,4 @@ libstubs_la_SOURCES = 		\
 	servclient.c		\
 	setfntauth.c		\
 	stfntcfnt.c		\
-	stubs.h			\
-	xpstubs.c
+	stubs.h	

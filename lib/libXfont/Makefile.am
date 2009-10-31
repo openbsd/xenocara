@@ -1,5 +1,4 @@
 # 
-# 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -32,7 +31,6 @@ libXfontinclude_HEADERS = \
 	include/X11/fonts/fntfilst.h \
 	include/X11/fonts/fontencc.h \
 	include/X11/fonts/fontmisc.h \
-	include/X11/fonts/fontmod.h  \
 	include/X11/fonts/fontshow.h \
 	include/X11/fonts/fontutil.h \
 	include/X11/fonts/fontxlfd.h \
@@ -45,13 +43,33 @@ nodist_libXfontinclude_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xfont.pc
 
-EXTRA_DIST = xfont.pc.in autogen.sh include/X11/fonts/fontconf.h.in ChangeLog
+EXTRA_DIST = xfont.pc.in ChangeLog include/X11/fonts/fontconf.h.in
 
 .PHONY: ChangeLog
 
-CLEANFILES = ChangeLog
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
+# Developer documentation - not installed on system
+EXTRA_DIST += doc/fontlib.xml doc/fontlib.xsl doc/fontlib.css
+
+if MAKE_DEVEL_DOCS
+if HAVE_XMLTO
+noinst_DATA = doc/fontlib.txt doc/fontlib.html $(srcdir)/doc/fontlib.css
+CLEANFILES = doc/fontlib.txt doc/fontlib.html doc/fontlib.pdf doc/fontlib.ps
+
+doc/fontlib.txt: $(srcdir)/doc/fontlib.xml $(srcdir)/doc/fontlib.xsl
+	$(AM_V_GEN)$(XMLTO) -m $(srcdir)/doc/fontlib.xsl -o doc txt $(srcdir)/doc/fontlib.xml
+
+doc/fontlib.html: $(srcdir)/doc/fontlib.xml $(srcdir)/doc/fontlib.xsl
+	$(AM_V_GEN)$(XMLTO) -m $(srcdir)/doc/fontlib.xsl -o doc xhtml-nochunks $(srcdir)/doc/fontlib.xml
+
+doc/fontlib.pdf: $(srcdir)/doc/fontlib.xml $(srcdir)/doc/fontlib.xsl
+	$(AM_V_GEN)$(XMLTO) -m $(srcdir)/doc/fontlib.xsl -o doc pdf $(srcdir)/doc/fontlib.xml
+
+doc/fontlib.ps: $(srcdir)/doc/fontlib.xml $(srcdir)/doc/fontlib.xsl
+	$(AM_V_GEN)$(XMLTO) -m $(srcdir)/doc/fontlib.xsl -o doc ps $(srcdir)/doc/fontlib.xml
+endif HAVE_XMLTO
+endif MAKE_DEVEL_DOCS

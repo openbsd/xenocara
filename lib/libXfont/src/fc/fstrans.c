@@ -1,6 +1,4 @@
 /*
- * $Id: fstrans.c,v 1.1.1.1 2006/11/25 17:14:49 matthieu Exp $
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

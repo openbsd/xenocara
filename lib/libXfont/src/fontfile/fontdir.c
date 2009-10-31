@@ -51,7 +51,7 @@ FontFileInitTable (FontTablePtr table, int size)
 	return FALSE;
     if (size)
     {
-	table->entries = (FontEntryPtr) xalloc(sizeof(FontEntryRec) * size);
+	table->entries = malloc(sizeof(FontEntryRec) * size);
 	if (!table->entries)
 	    return FALSE;
     }
@@ -70,32 +70,28 @@ FontFileFreeEntry (FontEntryPtr entry)
     int i;
 
     if (entry->name.name)
-	xfree(entry->name.name);
+	free(entry->name.name);
     entry->name.name = NULL;
 
     switch (entry->type)
     {
     case FONT_ENTRY_SCALABLE:
-	xfree (entry->u.scalable.fileName);
+	free (entry->u.scalable.fileName);
 	extra = entry->u.scalable.extra;
 	for (i = 0; i < extra->numScaled; i++)
 	    if (extra->scaled[i].vals.ranges)
-		xfree (extra->scaled[i].vals.ranges);
-	xfree (extra->scaled);
-	xfree (extra);
+		free (extra->scaled[i].vals.ranges);
+	free (extra->scaled);
+	free (extra);
 	break;
     case FONT_ENTRY_BITMAP:
-	xfree (entry->u.bitmap.fileName);
+	free (entry->u.bitmap.fileName);
 	entry->u.bitmap.fileName = NULL;
 	break;
     case FONT_ENTRY_ALIAS:
-	xfree (entry->u.alias.resolved);
+	free (entry->u.alias.resolved);
 	entry->u.alias.resolved = NULL;
 	break;
-#ifdef NOTYET
-    case FONT_ENTRY_BC:
-	break;
-#endif
     }
 }
 
@@ -106,7 +102,7 @@ FontFileFreeTable (FontTablePtr table)
 
     for (i = 0; i < table->used; i++)
 	FontFileFreeEntry (&table->entries[i]);
-    xfree (table->entries);
+    free (table->entries);
 }
 
 FontDirectoryPtr
@@ -118,7 +114,7 @@ FontFileMakeDir(char *dirName, int size)
     char		*attrib;
     int			attriblen;
 
-#if !defined(__UNIXOS2__) && !defined(WIN32)
+#if !defined(WIN32)
     attrib = strchr(dirName, ':');
 #else
     /* OS/2 uses the colon in the drive letter descriptor, skip this */
@@ -136,19 +132,19 @@ FontFileMakeDir(char *dirName, int size)
     if (dirlen)     /* leave out slash for builtins */
 #endif
 	needslash = 1;
-    dir = (FontDirectoryPtr) xalloc(sizeof *dir + dirlen + needslash + 1 +
-				    (attriblen ? attriblen + 1 : 0));
+    dir = malloc(sizeof *dir + dirlen + needslash + 1 +
+		 (attriblen ? attriblen + 1 : 0));
     if (!dir)
 	return (FontDirectoryPtr)0;
     if (!FontFileInitTable (&dir->scalable, 0))
     {
-	xfree (dir);
+	free (dir);
 	return (FontDirectoryPtr)0;
     }
     if (!FontFileInitTable (&dir->nonScalable, size))
     {
 	FontFileFreeTable (&dir->scalable);
-	xfree (dir);
+	free (dir);
 	return (FontDirectoryPtr)0;
     }
     dir->directory = (char *) (dir + 1);
@@ -172,7 +168,7 @@ FontFileFreeDir (FontDirectoryPtr dir)
 {
     FontFileFreeTable (&dir->scalable);
     FontFileFreeTable (&dir->nonScalable);
-    xfree(dir);
+    free(dir);
 }
 
 FontEntryPtr
@@ -186,8 +182,7 @@ FontFileAddEntry(FontTablePtr table, FontEntryPtr prototype)
 	return (FontEntryPtr) 0;    /* "cannot" happen */
     if (table->used == table->size) {
 	newsize = table->size + 100;
-	entry = (FontEntryPtr) xrealloc(table->entries,
-					   newsize * sizeof(FontEntryRec));
+	entry = realloc(table->entries, newsize * sizeof(FontEntryRec));
 	if (!entry)
 	    return (FontEntryPtr)0;
 	table->size = newsize;
@@ -195,7 +190,7 @@ FontFileAddEntry(FontTablePtr table, FontEntryPtr prototype)
     }
     entry = &table->entries[table->used];
     *entry = *prototype;
-    entry->name.name = (char *) xalloc(prototype->name.length + 1);
+    entry->name.name = malloc(prototype->name.length + 1);
     if (!entry->name.name)
 	return (FontEntryPtr)0;
     memcpy (entry->name.name, prototype->name.name, prototype->name.length);
@@ -439,7 +434,7 @@ FontFileSaveString (char *s)
 {
     char    *n;
 
-    n = (char *) xalloc (strlen (s) + 1);
+    n = malloc (strlen (s) + 1);
     if (!n)
 	return 0;
     strcpy (n, s);
@@ -457,6 +452,8 @@ FontFileFindNameInScalableDir(FontTablePtr table, FontNamePtr pat,
                 private;
     FontNamePtr	name;
 
+    if (!table->entries)
+	return NULL;
     if ((i = SetupWildMatch(table, pat, &start, &stop, &private)) >= 0)
 	return &table->entries[i];
     for (i = start; i < stop; i++) {
@@ -693,7 +690,7 @@ FontFileAddFontFile (FontDirectoryPtr dir, char *fontName, char *fileName)
 	    return FALSE;
 	if (!(bitmap = FontFileAddEntry (&dir->nonScalable, &entry)))
 	{
-	    xfree (entry.u.bitmap.fileName);
+	    free (entry.u.bitmap.fileName);
 	    return FALSE;
 	}
     }
@@ -721,7 +718,7 @@ FontFileAddFontFile (FontDirectoryPtr dir, char *fontName, char *fileName)
 		{
 		    existing->u.scalable.extra->defaults = vals;
 
-		    xfree (existing->u.scalable.fileName);
+		    free (existing->u.scalable.fileName);
 		    if (!(existing->u.scalable.fileName = FontFileSaveString (fileName)))
 			return FALSE;
 		}
@@ -736,10 +733,10 @@ FontFileAddFontFile (FontDirectoryPtr dir, char *fontName, char *fileName)
 	}
 	if (!(entry.u.scalable.fileName = FontFileSaveString (fileName)))
 	    return FALSE;
-	extra = (FontScalableExtraPtr) xalloc (sizeof (FontScalableExtraRec));
+	extra = malloc (sizeof (FontScalableExtraRec));
 	if (!extra)
 	{
-	    xfree (entry.u.scalable.fileName);
+	    free (entry.u.scalable.fileName);
 	    return FALSE;
 	}
 	bzero((char *)&extra->defaults, sizeof(extra->defaults));
@@ -750,10 +747,11 @@ FontFileAddFontFile (FontDirectoryPtr dir, char *fontName, char *fileName)
 	{
 	    FontResolutionPtr resolution;
 	    int num;
+	    int default_point_size = GetDefaultPointSize();
 
 	    extra->defaults.point_matrix[0] =
 		extra->defaults.point_matrix[3] =
-		    (double)GetDefaultPointSize() / 10.0;
+	            (double)default_point_size / 10.0;
 	    extra->defaults.point_matrix[1] =
 		extra->defaults.point_matrix[2] = 0.0;
 	    extra->defaults.values_supplied =
@@ -789,8 +787,8 @@ FontFileAddFontFile (FontDirectoryPtr dir, char *fontName, char *fileName)
 	entry.u.scalable.extra = extra;
 	if (!(scalable = FontFileAddEntry (&dir->scalable, &entry)))
 	{
-	    xfree (extra);
-	    xfree (entry.u.scalable.fileName);
+	    free (extra);
+	    free (entry.u.scalable.fileName);
 	    return FALSE;
 	}
 	if (vals.values_supplied & SIZE_SPECIFY_MASK)
@@ -811,6 +809,10 @@ FontFileAddFontAlias (FontDirectoryPtr dir, char *aliasName, char *fontName)
 {
     FontEntryRec	entry;
 
+    if (strcmp(aliasName,fontName) == 0) {
+        /* Don't allow an alias to point to itself and create a loop */
+        return FALSE;
+    }
     entry.name.length = strlen (aliasName);
     CopyISOLatin1Lowered (aliasName, aliasName, entry.name.length);
     entry.name.name = aliasName;
@@ -820,7 +822,7 @@ FontFileAddFontAlias (FontDirectoryPtr dir, char *aliasName, char *fontName)
 	return FALSE;
     if (!FontFileAddEntry (&dir->nonScalable, &entry))
     {
-	xfree (entry.u.alias.resolved);
+	free (entry.u.alias.resolved);
 	return FALSE;
     }
     return TRUE;
