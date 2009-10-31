@@ -82,13 +82,15 @@ static XEXT_GENERATE_CLOSE_DISPLAY (close_display, fontcache_info)
  *****************************************************************************/
 
 Bool
-FontCacheQueryExtension(Display *dpy, int *event_basep, int *error_basep)
+FontCacheQueryExtension(Display *dpy,
+                        int *event_base_return,
+                        int *error_base_return)
 {
     XExtDisplayInfo *info = find_display (dpy);
 
     if (XextHasExtension(info)) {
-	*event_basep = info->codes->first_event;
-	*error_basep = info->codes->first_error;
+	*event_base_return = info->codes->first_event;
+	*error_base_return = info->codes->first_error;
 	return True;
     } else {
 	return False;
@@ -96,7 +98,9 @@ FontCacheQueryExtension(Display *dpy, int *event_basep, int *error_basep)
 }
 
 Bool
-FontCacheQueryVersion(Display *dpy, int *majorVersion, int *minorVersion)
+FontCacheQueryVersion(Display *dpy,
+                      int *major_version_return,
+                      int *minor_version_return)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xFontCacheQueryVersionReply rep;
@@ -113,8 +117,8 @@ FontCacheQueryVersion(Display *dpy, int *majorVersion, int *minorVersion)
 	SyncHandle();
 	return False;
     }
-    *majorVersion = rep.majorVersion;
-    *minorVersion = rep.minorVersion;
+    *major_version_return = rep.majorVersion;
+    *minor_version_return = rep.minorVersion;
     UnlockDisplay(dpy);
     SyncHandle();
     return True;

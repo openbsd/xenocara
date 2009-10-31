@@ -1,3 +1,78 @@
+commit efbf3cbbef62179b5a10b6e90da427aa270fa6e0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 13:30:43 2009 -0700
+
+    libXfontcache 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1793fd9277ba5d43c5c0d3f7efa1c33b7e7cbf0b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 13:29:26 2009 -0700
+
+    Delete empty INSTALL so automake provides the more useful default
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 25c8c26aa1890e7fc4cb9a202cbd466f42cce9cc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 13:27:21 2009 -0700
+
+    Fill in COPYING with Copyright/License info
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit d3e85cdf1f3d0a1d9bb7774698730e75a7866107
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 8 13:25:17 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 4f9150ca6210cabab8c5e46ffcbdd66495acfd8a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:34 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9d31e0b8972648fb9edd4a389b784190655b2054
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 29 18:22:12 2009 -0200
+
+    Janitor: Correct make distcheck.
+
+commit dd8d4c3bf0025d7a79de623d8b6eac192a832e0f
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 17:48:52 2008 +0930
+
+    Rename parameters to clarify QueryVersion/QueryExtension.
+    
+    These parameters are not treated as input. Rename them to make the inner
+    workings slightly more obvious.
+    
+    X.Org Bug 14511 <http://bugs.freedesktop.org/show_bug.cgi?id=14511>
+
+commit 6a87b3473d2694f7a6cd6cf57a5220ded9daf3f2
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 08:23:35 2008 +0100
+
+    nuke RCS Ids
+
+commit 63e50cd371a9d4d8275fff83572aa97a46932a21
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:17 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit b01ce2639e79109c31772e82e06a3837d7db399f
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:53:38 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
 commit 0945a24c0470860f5d9cbc87cb28defd44144710
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Dec 16 01:22:56 2006 +0200
