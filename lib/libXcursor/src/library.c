@@ -1,6 +1,4 @@
 /*
- * $Id: library.c,v 1.1.1.2 2007/09/18 21:09:55 matthieu Exp $
- *
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -234,7 +232,7 @@ XcursorScanTheme (const char *theme, const char *name)
      * Scan this theme
      */
     for (path = XcursorLibraryPath ();
-	 path && f == 0;
+	 path && f == NULL;
 	 path = _XcursorNextPath (path))
     {
 	dir = _XcursorBuildThemeDir (path, theme);
@@ -261,7 +259,7 @@ XcursorScanTheme (const char *theme, const char *name)
     /*
      * Recurse to scan inherited themes
      */
-    for (i = inherits; i && f == 0; i = _XcursorNextPath (i))
+    for (i = inherits; i && f == NULL; i = _XcursorNextPath (i))
 	f = XcursorScanTheme (i, name);
     if (inherits != NULL)
 	free (inherits);

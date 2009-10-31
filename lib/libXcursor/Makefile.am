@@ -1,6 +1,4 @@
 # 
-#  $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:00:27 matthieu Exp $
-# 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -28,9 +26,19 @@ AM_CFLAGS = $(XRENDER_CFLAGS) $(XFIXES_CFLAGS) $(X_CFLAGS)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xcursor.pc
 
-EXTRA_DIST = xcursor.pc.in autogen.sh
+EXTRA_DIST = xcursor.pc.in
 
 if LINT
 lint:
 	(cd src && $(MAKE) $(MFLAGS) lint)
 endif LINT
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
