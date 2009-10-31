@@ -799,8 +799,8 @@ XmuScanline *
 XmuScanlineNot(XmuScanline *scanline, int minx, int maxx)
 {
   XmuSegment *z;
-  static XmuSegment x = { 0, 0, 0 };
-  static XmuScanline and = { 0, &x, 0 };
+  static XmuSegment x = { 0, 0, NULL };
+  static XmuScanline and = { 0, &x, NULL };
 
   if (!scanline)
     return (scanline);

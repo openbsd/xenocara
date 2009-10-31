@@ -1,5 +1,3 @@
-# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:27:50 matthieu Exp $
-
 SUBDIRS = include src
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -8,5 +6,19 @@ pkgconfig_DATA = xmu.pc xmuu.pc
 EXTRA_DIST = \
 	xmu.pc.in \
 	xmuu.pc.in \
-	autogen.sh \
-	include/X11/Xmu/WhitePoint.h
+	include/X11/Xmu/WhitePoint.h \
+	ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
+
+if LINT
+# Check source code with tools like lint & sparse
+lint:
+	(cd src && $(MAKE) $(MFLAGS) lint)
+endif LINT

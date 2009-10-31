@@ -57,6 +57,9 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <ctype.h>
 #include <X11/Xmu/Drawing.h>
+#ifdef WIN32
+#include <X11/Xwindows.h>
+#endif
 
 #define MAX_SIZE 255
 

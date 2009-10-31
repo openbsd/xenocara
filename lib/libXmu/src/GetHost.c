@@ -41,6 +41,7 @@ in this Software without prior written authorization from The Open Group.
 #include <unistd.h>
 
 #ifdef WIN32
+#include <X11/Xlibint.h>
 #include <X11/Xwinsock.h>
 #endif
 
@@ -61,7 +62,7 @@ XmuGetHostname(char *buf, int maxlen)
 #ifdef WIN32
     static WSADATA wsadata;
 
-    if (!wsadata.wVersion && WSAStartup(MAKEWORD(1,1), &wsadata))
+    if (!wsadata.wVersion && WSAStartup(MAKEWORD(2,2), &wsadata))
 	return -1;
 #endif
 

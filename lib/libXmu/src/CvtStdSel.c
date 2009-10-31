@@ -114,7 +114,9 @@ get_os_name(void)
 #ifdef OS_NAME
 	return XtNewString(OS_NAME);
 #else
+#if defined(X_OS_FILE) || defined(MOTD_FILE)	
 	FILE *f = NULL;
+#endif
 
 #ifdef USE_UNAME
 	struct utsname utss;
@@ -142,6 +144,7 @@ get_os_name(void)
 #ifdef MOTD_FILE
 	       f = fopen(MOTD_FILE, "r");
 #endif
+#if defined(X_OS_FILE) || defined(MOTD_FILE)
 	if (f) {
 	    char motd[512];
 	    motd[0] = '\0';
@@ -155,6 +158,7 @@ get_os_name(void)
 		return XtNewString(motd);
 	    }
 	}
+#endif
 
 #ifdef sun
 	return XtNewString("SunOS");

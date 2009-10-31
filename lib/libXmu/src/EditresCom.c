@@ -1611,7 +1611,7 @@ InsertWidget(ProtocolStream *stream, Widget w)
   unsigned long *widget_list;
     register int i, num_widgets;
 
-  for (temp = w, i = 0; temp != 0; temp = XtParent(temp), i++)
+  for (temp = w, i = 0; temp != NULL; temp = XtParent(temp), i++)
     ;
 
     num_widgets = i;
@@ -2123,7 +2123,7 @@ _XEditresGetStringValues(Widget w, Arg *warg, int numargs)
   /* try to get the value in the proper size */
   switch (res->resource_size)
     {
-#ifdef LONG_64
+#ifdef LONG64
       long v8;
 #endif
       int v4;
@@ -2145,7 +2145,7 @@ _XEditresGetStringValues(Widget w, Arg *warg, int numargs)
       XtGetValues(w, args, 1);
       value = (int)v4;
       break;
-#ifdef LONG_64
+#ifdef LONG64
     case 8:
       XtSetArg(args[0], res->resource_name, &v8);
       XtGetValues(w, args, 1);
@@ -2197,7 +2197,7 @@ _XEditresGetStringValues(Widget w, Arg *warg, int numargs)
 	    case sizeof(int):
 	      XmuSnprintf(buffer, sizeof(buffer), "0x%08x", (int)value);
 	      break;
-#ifdef LONG_64
+#ifdef LONG64
 	    case sizeof(long):
 	      XmuSnprintf(buffer, sizeof(buffer), "0x%016lx", value);
 	      break;

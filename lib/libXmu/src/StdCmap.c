@@ -91,7 +91,7 @@ XmuStandardColormap(Display *dpy, int screen, VisualID visualid,
     vinfo_template.depth = depth;
     vinfo_mask = VisualIDMask | VisualScreenMask | VisualDepthMask;
     if ((vinfo = XGetVisualInfo(dpy, vinfo_mask, &vinfo_template, &n)) == NULL)
-	return 0;
+	return NULL;
 
     /* Check the validity of the combination of visual characteristics,
      * allocation, and colormap property.  Create an XStandardColormap
@@ -101,7 +101,7 @@ XmuStandardColormap(Display *dpy, int screen, VisualID visualid,
     if (! valid_args(vinfo, red_max, green_max, blue_max, property)
 	|| ((stdcmap = XAllocStandardColormap()) == NULL)) {
 	XFree((char *) vinfo);
-	return 0;
+	return NULL;
     }
 
     /* Fill in the XStandardColormap structure */

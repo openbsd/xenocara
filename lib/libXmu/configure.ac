@@ -5,7 +5,7 @@
 AC_PREREQ(2.57)
 
 AC_INIT([libXmu],
-        1.0.3,
+        1.0.5,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         libXmu)
 
@@ -15,14 +15,19 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS, XORG_WITH_LINT
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER([config.h])
+
 
 # Checks for programs.
 AC_PROG_LIBTOOL
 AC_PROG_CC
+XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XMU, xt xext xextproto)
+PKG_CHECK_MODULES(XMU, xt xext x11 xextproto)
 AC_SUBST(XMU_CFLAGS)
 AC_SUBST(XMU_LIBS)
 
@@ -51,7 +56,11 @@ XTRANS_CONNECTION_FLAGS
 AC_DEFINE(HAS_SNPRINTF, [], [Whether we have snprintf()])
 AC_SUBST(HAS_SNPRINTF)
 
-XORG_RELEASE_VERSION
+dnl Allow checking code with lint, sparse, etc.
+XORG_WITH_LINT
+XORG_LINT_LIBRARY([Xmu])
+LINTLIBUU=`echo $LINTLIB | sed s/Xmu/Xmuu/`
+AC_SUBST(LINTLIBUU)
 
 AC_OUTPUT([Makefile
            include/Makefile
