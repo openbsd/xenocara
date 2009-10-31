@@ -1,3 +1,171 @@
+commit 439c58849304907900e4dc7429aedb0192749c02
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Oct 11 22:03:32 2009 -0700
+
+    Bump version to 1.6.5
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 7f2f71da5125ae01a8279a4886090a711100d671
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 28 14:18:45 2009 +1000
+
+    ephyr: if -parent is given, check for a trailing -screen. (#24144)
+    
+    If -parent is given, don't open up a new window if -screen is given as well.
+    The commandline option -screen allows to set the depth of the embedded
+    Xephry instance, even though width and height are autoscaled on -parent.
+    
+    This patch checks for a -screen parameter after -parent and - if one is
+    found - delays initializing the screen. The parent window id is stored
+    temporarily but re-set after a -screen argument.
+    The following command is thus valid:
+    
+    Xephyr -parent 1234 -screen 640x480@8 -screen 1024x768
+    
+    It embeds the first 8-bit screen into window 1234 and opens up a new window
+    for the second screen. Multiple parent arguments are possible, the screens
+    are embedded in-order.
+    
+    X.Org Bug 24144 <http://bugs.freedesktop.org/show_bug.cgi?id=24144>
+    
+    Tested-by: Vic Lee
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 19be992d9dc542b61fa3f4fd32a09071c9e64880)
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit c07b2368a7dedb66455eea313c06859afa2e1a9c
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Oct 1 15:24:58 2009 -0700
+
+    Bump to version 1.6.4.901
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit fc31f76b6ff735e4a4006c5454c4d496ee8b154a
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Sep 30 11:40:19 2009 -0700
+
+    Re-fix DGA removal.
+    
+    Removing DGA ended up breaking any drivers calling into the old
+    xf86DiDGAInit function as it tried to see if DGA was already enabled
+    and ended up crashing if the VT wasn't completely initialized. Oops.
+    
+    Also, if the driver initializes DGA itself, have the DiDGA
+    initialization overwrite that information as the DiDGA code will call
+    ReInit on mode detect.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit db98b26ee145f70e732e2cf4a6ac3de77fdf4adc)
+
+commit 8cf659f3a5914369a2137ac17b689e5a9fe9ca27
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Sep 27 19:21:45 2009 -0700
+
+    Bump to version 1.6.4
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit a26fd1a6d61507b3e69a04d6f6c192a6ec363c5c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 16 15:46:55 2009 +1000
+
+    Don't send events through the master if the device has SendCoreEvents off.
+    
+    In server 1.6, all devices are attached to the master device (VCP or VCK).
+    Sending an event through the master device means the device is sending core
+    events. If a device is configured as SendCoreEvents, just send through the
+    device, not through the master.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 507e57381fea6334f7dc8da6925e53d2c76fddcb
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Sep 18 21:12:17 2009 -0700
+
+    xfree86/modes: Remove all framebuffer support from DGA
+    
+    This removes all rendering and mapping code from xf86DiDGA, leaving
+    just mode setting and raw input device access. The mapping code didn't
+    have the offset within /dev/mem for the frame buffer and the pixmap
+    support assumed that the framebuffer was never reallocated.
+    (cherry picked from 0b7c6c728c2e2d8433a188315cc591308a89cd85)
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c3d182a47902d02f9e64f933b8565ae336f73f54
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Sep 14 17:09:59 2009 +0200
+
+    dix: append "built-ins" to the font path in SetDefaultFontPath
+    
+    49b93df8a3002db7196aa3fc1fd8dca1c12a55d6 made the hard dependency on
+    a "fixed" font go away but only Xorg could use the built-ins fonts by
+    default.
+    
+    With this commit, all DDXs get "built-ins" appended to their FontPath, not
+    just Xorg.
+    
+    Tested with Xorg, Xvfb and Xnest.
+    (cherry picked from commit f56cbe1ef24415d0142b9a7d0ab0a031069ccb52)
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Tested-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 9bc4a69040493e589a3811ca5e085e323438996d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Sep 9 15:48:33 2009 +1000
+
+    fbdevhw: Test for graphics:fb%d as well as graphics/fb%d
+    
+    Apparently the kernel can't decide on an API to expose to userspace, so
+    let's just try both in the hope that one will work.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Acked-by: Michel Dänzer <michel@daenzer.net>
+    (cherry picked from commit f4350c66b493d63fa06be87caa958d7033232ea4)
+
+commit d78669c92d751464bc3c8f79f2aa21ca0951e3a9
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Sep 22 12:09:48 2009 -0700
+
+    render: return the supported version rather than just passing the proto's version
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit f5d1da499c3d64f0a4ac217eb19911b8e35cb49b
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Tue Jun 23 16:45:39 2009 +0200
+
+    dri2: Don't crash if pPriv is NULL.
+    (cherry picked from commit df597709d71f47b8516e27c6fb1bfffd59de5e48)
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 468787bdd2c34f9edf46da76b6357034c216fa7b
+Author: Richard Hughes <richard@hughsie.com>
+Date:   Fri Aug 14 11:44:35 2009 +0100
+
+    Don't reset the lastDeviceEventTime when doing DPMS actions
+    
+    When we change the DPMS mode, don't play games with the last event time as
+    this breaks applications using IDLETIME to turn the backlight off after a
+    preset time.
+    
+    This patch fixes gnome-power-manager and xfce-power-manager
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit c1d901d723c3bee523736eacc15b44a7dff484fe)
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
 commit 3044711412d0a08ba65a491bd2441c0c8980f5e2
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Aug 25 22:37:16 2009 -0700
