@@ -105,13 +105,13 @@
 ./usr/X11R6/lib/libXcomposite.so.3.0
 ./usr/X11R6/lib/libXcursor.so.4.0
 ./usr/X11R6/lib/libXdamage.so.3.1
-./usr/X11R6/lib/libXdmcp.so.9.0
+./usr/X11R6/lib/libXdmcp.so.10.0
 ./usr/X11R6/lib/libXevie.so.2.0
 ./usr/X11R6/lib/libXext.so.10.0
 ./usr/X11R6/lib/libXfixes.so.5.0
-./usr/X11R6/lib/libXfont.so.8.0
+./usr/X11R6/lib/libXfont.so.9.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
-./usr/X11R6/lib/libXft.so.7.0
+./usr/X11R6/lib/libXft.so.8.0
 ./usr/X11R6/lib/libXi.so.10.1
 ./usr/X11R6/lib/libXinerama.so.5.0
 ./usr/X11R6/lib/libXmu.so.10.0
