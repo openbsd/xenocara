@@ -318,4 +318,5 @@
 ./usr/X11R6/man/man7/Xprint.7
 ./usr/X11R6/share/aclocal/xorg-server.m4
 ./var/db/xkb
+./var/db/xkb/README.compiled
 ./var/log
