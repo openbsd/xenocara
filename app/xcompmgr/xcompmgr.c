@@ -1,5 +1,5 @@
 /*
- * $Id: xcompmgr.c,v 1.3 2009/11/08 10:14:59 matthieu Exp $
+ * $Id: xcompmgr.c,v 1.4 2009/11/08 10:27:36 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -1851,7 +1851,7 @@ ev_window (XEvent *ev)
 }
 #endif
 
-void
+static void
 usage (char *program)
 {
     fprintf (stderr, "%s v1.1.5\n", program);
