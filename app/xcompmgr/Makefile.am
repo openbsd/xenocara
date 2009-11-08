@@ -1,9 +1,8 @@
 bin_PROGRAMS = xcompmgr
 man_MANS = xcompmgr.1
 
-xcompmgr_LDADD = @XCOMPMGR_LIBS@ -lm
-
-INCLUDES = @XCOMPMGR_CFLAGS@
+AM_CFLAGS = $(CWARNFLAGS) $(XCOMPMGR_CFLAGS)
+xcompmgr_LDADD = $(XCOMPMGR_LIBS) -lm
 
 EXTRA_DIST = \
 	autogen.sh \
@@ -15,7 +14,7 @@ MAINTAINERCLEANFILES=ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
