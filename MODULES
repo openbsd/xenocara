@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.95 2009/10/31 20:34:57 matthieu Exp $
+ $OpenBSD: MODULES,v 1.96 2009/11/08 10:49:08 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -35,6 +35,7 @@ app/xcalc		1.0.2	7.3
 app/xclipboard		1.1.0	7.5
 app/xclock		1.0.4	7.5
 app/xcmsdb		1.0.2	7.5
+app/xcompmgr		1.1.5	7.5+	needs-update
 app/xconsole		1.0.3	7.3
 app/xdm			1.1.9	7.5	needs-update
 app/xdpyinfo		1.1.0	7.5
@@ -86,7 +87,7 @@ app/xwud		1.0.2	7.5
 data/bitmaps		1.1.0	7.5
 data/xkbdata		1.0.1	7.0	deprecated
 
-doc/xorg-docs		1.4	7.3	needs-update
+doc/xorg-docs		1.5	7.3	needs-update
 doc/xorg-sgml-doctools	1.3	7.5	needs-update
 
 driver/xf86-input-acecad	1.4.0	7.4+	needs-update
@@ -94,7 +95,7 @@ driver/xf86-input-citron	2.2.2	7.4
 driver/xf86-input-elographics	1.2.3	7.4+
 driver/xf86-input-fpit		1.3.0	7.4+
 driver/xf86-input-hyperpen	1.3.0	7.4+
-driver/xf86-input-joystick	1.4.1	7.4+
+driver/xf86-input-joystick	1.5.0	7.5	needs-update
 driver/xf86-input-keyboard	1.4.0	7.5	needs-update
 driver/xf86-input-mouse		1.5.0	7.5	needs-update
 driver/xf86-input-mutouch	1.2.1	7.4+
@@ -184,49 +185,49 @@ font/winitzki-cyrillic		1.0.1	needs-update
 font/xfree86-type1		1.0.2	needs-update
 
 lib/libFS			1.0.2	7.4+
-lib/libICE			1.0.6	7.4+	needs-update
+lib/libICE			1.0.6	7.5
 lib/libSM			1.1.1	7.4+
-lib/libX11			1.3.1	7.5	needs-update
-lib/libXRes			1.0.4	7.5	needs-update
+lib/libX11			1.3.2	7.5	needs-update
+lib/libXRes			1.0.4	7.5
 lib/libXScrnSaver		1.2.0	7.4+	needs-update
 lib/libXTrap			1.0.0	7.0	deprecated
-lib/libXau			1.0.5	7.4+	needs-update
+lib/libXau			1.0.5	7.5
 lib/libXaw			1.0.7	7.5	needs-update
-lib/libXcomposite		0.4.1	7.5	needs-update
-lib/libXcursor			1.1.10	7.4+	needs-update
-lib/libXdamage			1.1.2	7.5	needs-update
-lib/libXdmcp			1.0.3	7.5	needs-update
+lib/libXcomposite		0.4.1	7.5
+lib/libXcursor			1.1.10	7.5
+lib/libXdamage			1.1.2	7.5
+lib/libXdmcp			1.0.3	7.5
 lib/libXevie			1.0.2	7.2RC1	deprecated
 lib/libXext			1.1.1	7.5	needs-update
-lib/libXfixes			4.0.4	7.5	needs-update
-lib/libXfont			1.4.1	7.5	needs-update
-lib/libXfontcache		1.0.5	7.5	needs-update
-lib/libXft			2.1.14	7.5	needs-update
+lib/libXfixes			4.0.4	7.5
+lib/libXfont			1.4.1	7.5
+lib/libXfontcache		1.0.5	7.5
+lib/libXft			2.1.14	7.5
 lib/libXi			1.3	7.5	needs-update
 lib/libXinerama			1.1	7.5	needs-update
-lib/libXmu			1.0.5	7.5	needs-update
+lib/libXmu			1.0.5	7.5
 lib/libXp			1.0.0	7.0	deprecated
-lib/libXpm			3.5.8	7.5	needs-update
+lib/libXpm			3.5.8	7.5
 lib/libXprintAppUtil		1.0.1	7.0	deprecated
 lib/libXprintUtil		1.0.1	7.0	deprecated
-lib/libXrandr			1.3.1	7.4+	needs-update
-lib/libXrender			0.9.5	7.5	needs-update
-lib/libXt			1.0.7	7.5	needs-update
+lib/libXrandr			1.3.0	7.5
+lib/libXrender			0.9.5	7.5
+lib/libXt			1.0.7	7.5
 lib/libXtst			1.1.0	7.5	needs-update
-lib/libXv			1.0.5	7.5	needs-update
-lib/libXvMC			1.0.5	7.5	needs-update
+lib/libXv			1.0.5	7.5
+lib/libXvMC			1.0.5	7.5
 lib/libXxf86dga			1.1.1	7.5	needs-update
 lib/libXxf86misc		1.0.2	7.5	needs-update
 lib/libXxf86vm			1.1.0	7.5	needs-update
 lib/libdmx			1.1.0	7.5	needs-update
-lib/libfontenc			1.0.5	7.4+	needs-update
+lib/libfontenc			1.0.5	7.5
 lib/liblbxutil			1.0.4	7.2RC4	deprecated
 lib/libpciaccess		0.10.9	7.5	needs-update
 lib/libpthread-stubs		0.2	7.5	needs-update
 lib/libxcb			1.4	7.4+
 lib/libxkbfile			1.0.6	7.5	needs-update
 lib/libxkbui			1.0.2	7.1
-lib/libxtrans			1.2.5	7.5	needs-update
+lib/libxtrans			1.2.5	7.5
 lib/pixman			0.16.0	7.4+	needs-update
 lib/xcb-util			0.3.6	7.4+
 
