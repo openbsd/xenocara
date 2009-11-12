@@ -1,5 +1,3 @@
-/* $XdotOrg: $ */
-/* $Xorg: def.h,v 1.4 2001/02/09 02:03:16 xorgcvs Exp $ */
 /*
 
 Copyright (c) 1993, 1994, 1998 The Open Group.
@@ -25,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/config/makedepend/def.h,v 3.13tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H /* Autotooled for Xorg 7.0? */
 # include "makedepend-config.h"
@@ -38,13 +35,6 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#if 0
-#ifndef X_NOT_POSIX
-#ifndef _POSIX_SOURCE
-#define _POSIX_SOURCE
-#endif
-#endif
-#endif
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -127,7 +117,7 @@ struct	inclist {
 };
 
 struct filepointer {
-	char	*f_name;
+	const char	*f_name;
 	char	*f_p;
 	char	*f_base;
 	char	*f_end;
@@ -139,25 +129,24 @@ struct filepointer {
 };
 
 #include <stdlib.h>
-#if defined(macII) && !defined(__STDC__)  /* stdlib.h fails to define these */
-char *malloc(), *realloc();
-#endif /* macII */
 
-char			*copy(char *str);
-int                     match(char *str, char **list);
-char			*base_name(char *file);
+#define copy(s)		strdup(s)
+int                     match(const char *str, const char * const *list);
+char			*base_name(const char *file);
 char			*getnextline(struct filepointer *fp);
 struct symtab		**slookup(char *symbol, struct inclist *file);
 struct symtab		**isdefined(char *symbol, struct inclist *file,
 				    struct inclist **srcfile);
 struct symtab		**fdefined(char *symbol, struct inclist *file,
 				   struct inclist **srcfile);
-struct filepointer	*getfile(char *file);
+struct filepointer	*getfile(const char *file);
 void                    included_by(struct inclist *ip, 
 				    struct inclist *newfile);
-struct inclist		*newinclude(char *newfile, char *incstring);
+struct inclist		*newinclude(const char *newfile,
+				    const char *incstring);
 void                    inc_clean (void);
-struct inclist		*inc_path(char *file, char *include, int type);
+struct inclist		*inc_path(const char *file, const char *include,
+				  int type);
 
 void                    freefile(struct filepointer *fp);
 
@@ -170,19 +159,20 @@ int                     find_includes(struct filepointer *filep,
 				      int recursion, boolean failOK);
 
 void                    recursive_pr_include(struct inclist *head, 
-					     char *file, char *base);
+					     const char *file,
+					     const char *base);
 void                    add_include(struct filepointer *filep, 
 				    struct inclist *file, 
 				    struct inclist *file_red, 
-				    char *include, int type,
+				    const char *include, int type,
 				    boolean failOK);
 
-int                     cppsetup(char *filename,
-				 char *line,
+int                     cppsetup(const char *filename,
+				 const char *line,
 				 struct filepointer *filep,
 				 struct inclist *inc);
 
 
-extern void fatalerr(char *, ...);
-extern void warning(char *, ...);
-extern void warning1(char *, ...);
+extern void fatalerr(const char *, ...) _X_ATTRIBUTE_PRINTF(1, 2);
+extern void warning(const char *, ...) _X_ATTRIBUTE_PRINTF(1, 2);
+extern void warning1(const char *, ...) _X_ATTRIBUTE_PRINTF(1, 2);

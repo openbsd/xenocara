@@ -1,4 +1,3 @@
-/* $Xorg: cppsetup.c,v 1.5 2001/02/09 02:03:16 xorgcvs Exp $ */
 /*
 
 Copyright (c) 1993, 1994, 1998  The Open Group
@@ -24,109 +23,15 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/config/makedepend/cppsetup.c,v 3.10 2001/12/14 19:53:20 dawes Exp $ */
 
 #include "def.h"
 
-#ifdef	CPP
-/*
- * This file is strictly for the sake of cpy.y and yylex.c (if
- * you indeed have the source for cpp).
- */
-#define IB 1
-#define SB 2
-#define NB 4
-#define CB 8
-#define QB 16
-#define WB 32
-#define SALT '#'
-#if defined(pdp11) || defined(vax) || defined(ns16000) || defined(mc68000) || defined(ibm032)
-#define COFF 128
-#else
-#define COFF 0
-#endif
-/*
- * These variables used by cpy.y and yylex.c
- */
-extern char	*outp, *inp, *newp, *pend;
-extern char	*ptrtab;
-extern char	fastab[];
-extern char	slotab[];
-
-/*
- * cppsetup
- */
-struct filepointer	*currentfile;
-struct inclist		*currentinc;
-
-int
-cppsetup(char *line, struct filepointer *filep, struct inclist *inc)
-{
-	char *p, savec;
-	static boolean setupdone = FALSE;
-	boolean	value;
-
-	if (!setupdone) {
-		cpp_varsetup();
-		setupdone = TRUE;
-	}
-
-	currentfile = filep;
-	currentinc = inc;
-	inp = newp = line;
-	for (p=newp; *p; p++)
-		;
-
-	/*
-	 * put a newline back on the end, and set up pend, etc.
-	 */
-	*p++ = '\n';
-	savec = *p;
-	*p = '\0';
-	pend = p;
-
-	ptrtab = slotab+COFF;
-	*--inp = SALT; 
-	outp=inp; 
-	value = yyparse();
-	*p = savec;
-	return(value);
-}
-
-struct symtab **lookup(symbol)
-	char	*symbol;
-{
-	static struct symtab    *undefined;
-	struct symtab   **sp;
-
-	sp = isdefined(symbol, currentinc, NULL);
-	if (sp == NULL) {
-		sp = &undefined;
-		(*sp)->s_value = NULL;
-	}
-	return (sp);
-}
-
-pperror(tag, x0,x1,x2,x3,x4)
-	int	tag,x0,x1,x2,x3,x4;
-{
-	warning("\"%s\", line %d: ", currentinc->i_file, currentfile->f_line);
-	warning(x0,x1,x2,x3,x4);
-}
-
-
-yyerror(s)
-	register char	*s;
-{
-	fatalerr("Fatal error: %s\n", s);
-}
-#else /* not CPP */
-
 #include "ifparser.h"
+
 struct _parse_data {
     struct filepointer *filep;
     struct inclist *inc;
-    char *filename;
+    const char *filename;
     const char *line;
 };
 
@@ -135,7 +40,7 @@ my_if_errors (IfParser *ip, const char *cp, const char *expecting)
 {
     struct _parse_data *pd = (struct _parse_data *) ip->data;
     int lineno = pd->filep->f_line;
-    char *filename = pd->filename;
+    const char *filename = pd->filename;
     char prefix[300];
     int prefixlen;
     int i;
@@ -164,7 +69,7 @@ lookup_variable (IfParser *ip, const char *var, int len)
     struct _parse_data *pd = (struct _parse_data *) ip->data;
 
     if (len > MAXNAMELEN)
-	return 0;
+	return NULL;
 
     strncpy (tmpbuf, var, len);
     tmpbuf[len] = '\0';
@@ -205,8 +110,8 @@ my_eval_variable (IfParser *ip, const char *var, int len)
 }
 
 int
-cppsetup(char *filename,
-	 char *line,
+cppsetup(const char *filename,
+	 const char *line,
 	 struct filepointer *filep,
 	 struct inclist *inc)
 {
@@ -229,5 +134,4 @@ cppsetup(char *filename,
     else
 	return IFFALSE;
 }
-#endif /* CPP */
 

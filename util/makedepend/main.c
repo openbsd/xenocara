@@ -1,5 +1,3 @@
-/* $Xorg: main.c,v 1.5 2001/02/09 02:03:16 xorgcvs Exp $ */
-/* $XdotOrg: $ */
 /*
 
 Copyright (c) 1993, 1994, 1998 The Open Group
@@ -25,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/config/makedepend/main.c,v 3.31tsi Exp $ */
 
 #include "def.h"
 #ifdef hpux
@@ -48,6 +45,10 @@ in this Software without prior written authorization from The Open Group.
 
 #include <stdarg.h>
 
+#ifdef __sun
+# include <sys/utsname.h>
+#endif
+
 #ifdef DEBUG
 int	_debugmask;
 #endif
@@ -62,9 +63,9 @@ int	_debugmask;
 #define DASH_INC_PRE    "#include \""
 #define DASH_INC_POST   "\""
 
-char *ProgramName;
+const char *ProgramName;
 
-char	*directives[] = {
+const char * const directives[] = {
 	"if",
 	"ifdef",
 	"ifndef",
@@ -85,9 +86,7 @@ char	*directives[] = {
 	NULL
 };
 
-#define MAKEDEPEND
-#include "imakemdep.h"	/* from config sources */
-#undef MAKEDEPEND
+#include "imakemdep.h"
 
 struct	inclist inclist[ MAXFILES ],
 		*inclistp = inclist,
@@ -95,7 +94,7 @@ struct	inclist inclist[ MAXFILES ],
 		maininclist;
 
 static char	*filelist[ MAXFILES ];
-char		*includedirs[ MAXDIRS + 1 ],
+const char	*includedirs[ MAXDIRS + 1 ],
 		**includedirsnext = includedirs;
 char		*notdotdot[ MAXDIRS ];
 static int	cmdinc_count = 0;
@@ -112,7 +111,7 @@ boolean		show_where_not = FALSE;
 boolean 	warn_multiple = FALSE;
 
 static void setfile_cmdinc(struct filepointer *filep, long count, char **list);
-static void redirect(char *line, char *makefile);
+static void redirect(const char *line, const char *makefile);
 
 static
 #ifdef RETSIGTYPE
@@ -141,7 +140,7 @@ catch (int sig)
 #define sa_mask sv_mask
 #define sa_flags sv_flags
 #endif
-struct sigaction sig_act;
+static struct sigaction sig_act;
 #endif /* USGISH */
 
 #ifndef USING_AUTOCONF
@@ -154,12 +153,12 @@ int
 main(int argc, char *argv[])
 {
 	char	**fp = filelist;
-	char	**incp = includedirs;
+	const char	**incp = includedirs;
 	char	*p;
 	struct inclist	*ip;
 	char	*makefile = NULL;
 	struct filepointer	*filecontent;
-	struct symtab *psymp = predefs;
+	const struct symtab *psymp = predefs;
 	char *endmarker = NULL;
 	char *defincdir = NULL;
 	char **undeflist = NULL;
@@ -172,6 +171,25 @@ main(int argc, char *argv[])
 	    define2(psymp->s_name, psymp->s_value, &maininclist);
 	    psymp++;
 	}
+#ifdef __sun
+	/* Solaris predefined values that are computed, not hardcoded */
+	{
+	    struct utsname name;
+
+	    if (uname(&name) >= 0) {
+		char osrevdef[SYS_NMLN + SYS_NMLN + 5];
+		snprintf(osrevdef, sizeof(osrevdef), "__%s_%s",
+			 name.sysname, name.release);
+
+		for (p = osrevdef; *p != '\0'; p++) {
+		    if (!isalnum(*p)) {
+			*p = '_';
+		    }
+		}
+		define2(osrevdef, "1", &maininclist);
+	    }
+	}
+#endif
 	if (argc == 2 && argv[1][0] == '@') {
 	    struct stat ast;
 	    int afd;
@@ -529,7 +547,7 @@ elim_cr(char *buf, int sz)
 #endif
 
 struct filepointer *
-getfile(char *file)
+getfile(const char *file)
 {
 	int	fd;
 	struct filepointer	*content;
@@ -579,16 +597,8 @@ freefile(struct filepointer *fp)
 	free(fp);
 }
 
-char *copy(char *str)
-{
-	char	*p = (char *)malloc(strlen(str) + 1);
-
-	strcpy(p, str);
-	return(p);
-}
-
 int
-match(char *str, char **list)
+match(const char *str, const char * const *list)
 {
 	int	i;
 
@@ -729,11 +739,10 @@ done:
  * Strip the file name down to what we want to see in the Makefile.
  * It will have objprefix and objsuffix around it.
  */
-char *base_name(char *file)
+char *base_name(const char *in_file)
 {
 	char	*p;
-
-	file = copy(file);
+	char	*file = copy(in_file);
 	for(p=file+strlen(file); p>file && *p != '.'; p--) ;
 
 	if (*p == '.')
@@ -764,8 +773,8 @@ int rename (char *from, char *to)
 }
 #endif /* NEED_RENAME */
 
-void
-redirect(char *line, char *makefile)
+static void
+redirect(const char *line, const char *makefile)
 {
 	struct stat	st;
 	FILE	*fdin, *fdout;
@@ -835,7 +844,7 @@ redirect(char *line, char *makefile)
 }
 
 void
-fatalerr(char *msg, ...)
+fatalerr(const char *msg, ...)
 {
 	va_list args;
 	fprintf(stderr, "%s: error:  ", ProgramName);
@@ -846,7 +855,7 @@ fatalerr(char *msg, ...)
 }
 
 void
-warning(char *msg, ...)
+warning(const char *msg, ...)
 {
 	va_list args;
 	fprintf(stderr, "%s: warning:  ", ProgramName);
@@ -856,7 +865,7 @@ warning(char *msg, ...)
 }
 
 void
-warning1(char *msg, ...)
+warning1(const char *msg, ...)
 {
 	va_list args;
 	va_start(args, msg);

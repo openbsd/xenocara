@@ -1,4 +1,3 @@
-/* $Xorg: pr.c,v 1.4 2001/02/09 02:03:16 xorgcvs Exp $ */
 /*
 
 Copyright (c) 1993, 1994, 1998 The Open Group
@@ -24,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/config/makedepend/pr.c,v 1.4 2001/04/29 23:25:02 tsi Exp $ */
 
 #include "def.h"
 
@@ -39,7 +37,7 @@ extern boolean	show_where_not;
 
 void
 add_include(struct filepointer *filep, struct inclist *file, 
-	    struct inclist *file_red, char *include, int type,
+	    struct inclist *file_red, const char *include, int type,
 	    boolean failOK)
 {
 	register struct inclist	*newfile;
@@ -53,10 +51,10 @@ add_include(struct filepointer *filep, struct inclist *file,
 		if (failOK)
 		    return;
 		if (file != file_red)
-			warning("%s (reading %s, line %d): ",
+			warning("%s (reading %s, line %ld): ",
 				file_red->i_file, file->i_file, filep->f_line);
 		else
-			warning("%s, line %d: ", file->i_file, filep->f_line);
+			warning("%s, line %ld: ", file->i_file, filep->f_line);
 		warning1("cannot find include file \"%s\"\n", include);
 		show_where_not = TRUE;
 		newfile = inc_path(file->i_file, include, type);
@@ -75,9 +73,9 @@ add_include(struct filepointer *filep, struct inclist *file,
 }
 
 static void
-pr(struct inclist *ip, char *file, char *base)
+pr(struct inclist *ip, const char *file, const char *base)
 {
-	static char	*lastfile;
+	static const char *lastfile;
 	static int	current_len;
 	register int	len, i;
 	char	buf[ BUFSIZ ];
@@ -110,7 +108,7 @@ pr(struct inclist *ip, char *file, char *base)
 }
 
 void
-recursive_pr_include(struct inclist *head, char *file, char *base)
+recursive_pr_include(struct inclist *head, const char *file, const char *base)
 {
 	int	i;
 

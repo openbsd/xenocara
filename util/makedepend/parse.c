@@ -1,4 +1,3 @@
-/* $Xorg: parse.c,v 1.6 2001/02/09 02:03:16 xorgcvs Exp $ */
 /*
 
 Copyright (c) 1993, 1994, 1998 The Open Group
@@ -24,16 +23,15 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/config/makedepend/parse.c,v 1.11 2001/12/17 20:52:22 dawes Exp $ */
 
 #include "def.h"
 
-extern char	*directives[];
+extern const char * const directives[];
 extern struct inclist	inclist[ MAXFILES ],
 			*inclistnext,
 			maininclist;
-extern char	*includedirs[ ],
-		**includedirsnext;
+extern const char	*includedirs[ ],
+			**includedirsnext;
 
 static int deftype (char *line, struct filepointer *filep,
 		    struct inclist *file_red, struct inclist *file,
@@ -90,7 +88,7 @@ gobble(struct filepointer *filep, struct inclist *file,
 			warning("%s", file_red->i_file);
 			if (file_red != file)
 				warning1(" (reading %s)", file->i_file);
-			warning1(", line %d: unknown directive == \"%s\"\n",
+			warning1(", line %ld: unknown directive == \"%s\"\n",
 				filep->f_line, line);
 			break;
 		}
@@ -555,7 +553,7 @@ find_includes(struct filepointer *filep, struct inclist *file,
 	      struct inclist *file_red, int recursion, boolean failOK)
 {
 	struct inclist	*inclistp;
-	char		**includedirsp;
+	const char	**includedirsp;
 	register char	*line;
 	register int	type;
 	boolean recfailOK;
@@ -637,7 +635,7 @@ find_includes(struct filepointer *filep, struct inclist *file,
 			    warning("%s", file_red->i_file);
 			    if (file_red != file)
 				warning1(" (reading %s)", file->i_file);
-			    warning1(", line %d: incomplete undef == \"%s\"\n",
+			    warning1(", line %ld: incomplete undef == \"%s\"\n",
 				filep->f_line, line);
 			    break;
 			}
@@ -660,7 +658,7 @@ find_includes(struct filepointer *filep, struct inclist *file,
 		    	warning("%s", file_red->i_file);
 			if (file_red != file)
 				warning1(" (reading %s)", file->i_file);
-			warning1(", line %d: %s\n",
+			warning1(", line %ld: %s\n",
 				 filep->f_line, line);
 		    	break;
 		    
@@ -673,14 +671,14 @@ find_includes(struct filepointer *filep, struct inclist *file,
 			warning("%s", file_red->i_file);
 			if (file_red != file)
 			    warning1(" (reading %s)", file->i_file);
-			warning1(", line %d: unknown directive == \"%s\"\n",
+			warning1(", line %ld: unknown directive == \"%s\"\n",
 				 filep->f_line, line);
 			break;
 		case -2:
 			warning("%s", file_red->i_file);
 			if (file_red != file)
 			    warning1(" (reading %s)", file->i_file);
-			warning1(", line %d: incomplete include == \"%s\"\n",
+			warning1(", line %ld: incomplete include == \"%s\"\n",
 				 filep->f_line, line);
 			break;
 		}

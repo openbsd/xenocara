@@ -1,4 +1,3 @@
-/* $Xorg: include.c,v 1.4 2001/02/09 02:03:16 xorgcvs Exp $ */
 /*
 
 Copyright (c) 1993, 1994, 1998 The Open Group
@@ -24,21 +23,20 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/config/makedepend/include.c,v 3.6 2001/04/29 23:25:02 tsi Exp $ */
 
 
 #include "def.h"
 
 extern struct	inclist	inclist[ MAXFILES ],
 			*inclistp, *inclistnext;
-extern char	*includedirs[ ],
-		**includedirsnext;
+extern const char	*includedirs[ ],
+			**includedirsnext;
 extern char	*notdotdot[ ];
 extern boolean show_where_not;
 extern boolean warn_multiple;
 
 static boolean
-isdot(char *p)
+isdot(const char *p)
 {
 	if(p && *p++ == '.' && *p++ == '\0')
 		return(TRUE);
@@ -46,7 +44,7 @@ isdot(char *p)
 }
 
 static boolean
-isdotdot(char *p)
+isdotdot(const char *p)
 {
 	if(p && *p++ == '.' && *p++ == '.' && *p++ == '\0')
 		return(TRUE);
@@ -54,7 +52,7 @@ isdotdot(char *p)
 }
 
 static boolean
-issymbolic(char *dir, char *component)
+issymbolic(const char *dir, const char *component)
 {
 #ifdef S_IFLNK
 	struct stat	st;
@@ -153,7 +151,7 @@ remove_dotdot(char *path)
  * Add an include file to the list of those included by 'file'.
  */
 struct inclist *
-newinclude(char *newfile, char *incstring)
+newinclude(const char *newfile, const char *incstring)
 {
 	register struct inclist	*ip;
 
@@ -235,10 +233,10 @@ inc_clean (void)
 }
 
 struct inclist *
-inc_path(char *file, char *include, int type)
+inc_path(const char *file, const char *include, int type)
 {
 	static char		path[ BUFSIZ ];
-	register char		**pp, *p;
+	register const char	**pp, *p;
 	register struct inclist	*ip;
 	struct stat		st;
 
