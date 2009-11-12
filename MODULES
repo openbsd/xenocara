@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.96 2009/11/08 10:49:08 matthieu Exp $
+ $OpenBSD: MODULES,v 1.97 2009/11/12 21:32:13 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -35,7 +35,7 @@ app/xcalc		1.0.2	7.3
 app/xclipboard		1.1.0	7.5
 app/xclock		1.0.4	7.5
 app/xcmsdb		1.0.2	7.5
-app/xcompmgr		1.1.5	7.5+	needs-update
+app/xcompmgr		1.1.5	7.5+
 app/xconsole		1.0.3	7.3
 app/xdm			1.1.9	7.5	needs-update
 app/xdpyinfo		1.1.0	7.5
@@ -50,13 +50,13 @@ app/xfs			1.1.0	7.4+
 app/xfsinfo		1.0.2	7.4
 app/xfwp		1.0.1	7.0
 app/xgamma		1.0.3	7.5
-app/xgc			1.0.1	7.0
+app/xgc			1.0.2	7.5+	needs-update
 app/xhost		1.0.3	7.5
 app/xinit		1.1.1	7.4+
 app/xinput		1.5.0	7.5
 app/xkbcomp		1.1.1	7.5	needs-update
 app/xkbevd		1.1.0	7.5	needs-update
-app/xkbprint		1.0.1	7.0
+app/xkbprint		1.0.2	7.5+	needs-update
 app/xkbutils		1.0.2	7.5
 app/xkill		1.0.2	7.5
 app/xload		1.0.2	7.3
@@ -228,7 +228,7 @@ lib/libxcb			1.4	7.4+
 lib/libxkbfile			1.0.6	7.5	needs-update
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.5	7.5
-lib/pixman			0.16.0	7.4+	needs-update
+lib/pixman			0.16.2	7.4+	needs-update
 lib/xcb-util			0.3.6	7.4+
 
 proto/bigreqsproto		1.1.0	7.4+	needs-update
@@ -263,10 +263,10 @@ proto/xf86miscproto		0.9.3	7.5	needs-update
 proto/xf86vidmodeproto		2.3	7.5	needs-update
 proto/xineramaproto		1.2	7.5	needs-update
 
-util/cf				1.0.3	7.5	needs-update
+util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
 util/imake			1.0.2
-util/macros			1.3.0	7.4+	needs-update
-util/makedepend			1.0.2	7.5	needs-update
+util/macros			1.3.0	7.5
+util/makedepend			1.0.2	7.5
 
 xserver				1.7.1	7.5	needs-update
