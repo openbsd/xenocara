@@ -34,7 +34,6 @@ RULEFILES = \
 	oldlib.rules \
 	os2.rules \
 	os2Lib.rules \
-	os2Lib.rules \
 	osfLib.rules \
 	scoLib.rules \
 	sequentLib.rules \
@@ -149,3 +148,13 @@ version.def:
 	@touch version.def
 
 CLEANFILES = $(BUILT_DEFFILES)
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

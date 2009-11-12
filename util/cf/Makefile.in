@@ -34,11 +34,13 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-subdir = .
+build_triplet = @build@
+host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(dist_config_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/site.def.in $(top_srcdir)/configure COPYING \
-	ChangeLog install-sh missing
+	ChangeLog config.guess config.sub install-sh missing
+subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -69,29 +71,55 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
+ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
+ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
+AMDEP_FALSE = @AMDEP_FALSE@
+AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+APP_MAN_DIR = @APP_MAN_DIR@
+APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+CC = @CC@
+CCDEPMODE = @CCDEPMODE@
+CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
+CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
+DEPDIR = @DEPDIR@
+DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
+DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
+EXEEXT = @EXEEXT@
+FILE_MAN_DIR = @FILE_MAN_DIR@
+FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIB_MAN_DIR = @LIB_MAN_DIR@
+LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MISC_MAN_DIR = @MISC_MAN_DIR@
+MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -104,26 +132,46 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XCONFDIR = @XCONFDIR@
-ac_ct_STRIP = @ac_ct_STRIP@
+ac_ct_CC = @ac_ct_CC@
+am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
+am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
+am__include = @am__include@
 am__leading_dot = @am__leading_dot@
+am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
+build = @build@
 build_alias = @build_alias@
+build_cpu = @build_cpu@
+build_os = @build_os@
+build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+host = @host@
 host_alias = @host_alias@
+host_cpu = @host_cpu@
+host_os = @host_os@
+host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -163,7 +211,6 @@ RULEFILES = \
 	nto.rules \
 	oldlib.rules \
 	os2.rules \
-	os2Lib.rules \
 	os2Lib.rules \
 	osfLib.rules \
 	scoLib.rules \
@@ -263,12 +310,9 @@ CFFILES = \
 configdir = @XCONFDIR@
 dist_config_DATA = $(RULEFILES) $(TMPLFILES) $(DEFFILES) $(CFFILES)
 config_DATA = $(BUILT_DEFFILES)
-EXTRA_DIST = \
-	os2def.db \
-	site.sample \
-	xprint_host.def
-
+EXTRA_DIST = os2def.db site.sample xprint_host.def ChangeLog
 CLEANFILES = $(BUILT_DEFFILES)
+MAINTAINERCLEANFILES = ChangeLog
 all: all-am
 
 .SUFFIXES:
@@ -379,6 +423,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -508,6 +555,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-generic mostlyclean-am
@@ -559,17 +607,17 @@ uninstall-am: uninstall-configDATA uninstall-dist_configDATA \
 	uninstall-info-am
 
 .PHONY: all all-am all-local am--refresh check check-am clean \
-	clean-generic dist dist-all dist-bzip2 dist-gzip dist-shar \
-	dist-tarZ dist-zip distcheck distclean distclean-generic \
-	distcleancheck distdir distuninstallcheck dvi dvi-am html \
-	html-am info info-am install install-am install-configDATA \
-	install-data install-data-am install-dist_configDATA \
-	install-exec install-exec-am install-info install-info-am \
-	install-man install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am uninstall \
-	uninstall-am uninstall-configDATA uninstall-dist_configDATA \
-	uninstall-info-am
+	clean-generic dist dist-all dist-bzip2 dist-gzip dist-hook \
+	dist-shar dist-tarZ dist-zip distcheck distclean \
+	distclean-generic distcleancheck distdir distuninstallcheck \
+	dvi dvi-am html html-am info info-am install install-am \
+	install-configDATA install-data install-data-am \
+	install-dist_configDATA install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am uninstall uninstall-am uninstall-configDATA \
+	uninstall-dist_configDATA uninstall-info-am
 
 
 all-local: $(BUILT_DEFFILES)
@@ -580,6 +628,13 @@ date.def:
 	@touch date.def
 version.def:
 	@touch version.def
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

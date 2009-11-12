@@ -1,4 +1,4 @@
-XCOMM $XdotOrg: util/cf/darwin.cf,v 1.8 2005/04/01 01:22:07 torrey Exp $
+XCOMM $XdotOrg: xc/config/cf/darwin.cf,v 1.7 2005/03/17 01:12:07 torrey Exp $
 XCOMM platform:  $XFree86: xc/config/cf/darwin.cf,v 1.50 2004/01/20 23:54:50 torrey Exp $
 
 /* Darwin / Mac OS X configuration by John Carmack <johnc@idsoftware.com> */

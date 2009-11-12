@@ -1,4 +1,4 @@
-XCOMM $XdotOrg: util/cf/Imake.cf,v 1.12 2005/11/08 06:33:24 jkj Exp $
+XCOMM $XdotOrg: xc/config/cf/Imake.cf,v 1.7 2005/03/02 11:20:29 gisburn Exp $
 XCOMM $Xorg: Imake.cf,v 1.4 2000/08/17 19:41:45 cpqbld Exp $
 /*
  * To add support for another platform:
@@ -811,6 +811,9 @@ XCOMM $XFree86: xc/config/cf/Imake.cf,v 3.88 2003/12/16 21:30:21 herrb Exp $
 # undef linux
 # ifdef __linux__
 #  define LinuxArchitecture
+# endif
+# ifdef __GLIBC__
+#  define GNUArchitecture
 # endif
 # ifdef i386
 #  ifndef i386Architecture

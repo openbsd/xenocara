@@ -195,7 +195,7 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
  * Disabled for NetBSD/vax until I figure out the scheme. --CS 
  */
 #if ((OSMajorVersion > 0) && defined(i386Architecture)) || \
-    defined(PpcArchitecture)
+    defined(PpcArchitecture) || defined(AMD64Architecture)
 #  ifndef DoLoadableServer
 #  define DoLoadableServer	YES
 #  endif
@@ -231,7 +231,7 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
 #  define ServerExtraSysLibs	-li386
 # endif
 #else
-# define OptimizedCDebugFlags 	-O2
+# define OptimizedCDebugFlags 	-O2 GccAliasingArgs
 # if defined(SparcArchitecture)
 #  define ServerOSDefines 	-DDDXOSINIT
 # elif defined(AlphaArchitecture)
@@ -284,6 +284,8 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
 #  ifndef XFree86ConsoleDefines
 #    define XFree86ConsoleDefines	-DWSCONS_SUPPORT
 #  endif
+#elif defined(ia64Architecture) || defined(AMD64Architecture)
+#define ServerExtraDefines GccGasOption XFree86ServerDefines -D_XSERVER64
 #else
 #  define ServerExtraDefines GccGasOption
 #endif
@@ -403,6 +405,10 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
 #  endif
 # endif /* MTRRBuiltin */
 #endif /* i386Architecture */
+
+#if defined(AMD64Architecture)
+# define HasMTRRBuiltin		YES
+#endif
 
 /*
  * agpgart support (NetBSD 1.5Y and up)
@@ -590,7 +596,7 @@ InstallManPageAliasesBase(file,destdir,aliases)
 # define BuildXInputLib          YES
 #endif
 
-#if defined(i386Architecture) || defined(Arm32Architecture) || defined(AlphaArchitecture) || defined(PpcArchitecture)
+#if defined(i386Architecture) || defined(Arm32Architecture) || defined(AlphaArchitecture) || defined(PpcArchitecture) || defined(AMD64Architecture)
 # include <xorg.cf>
 #endif
 
@@ -651,7 +657,7 @@ sed 's/\.[0-9]*$$//'`
  */
 #ifdef PpcArchitecture
 
-# define OptimizedCDebugFlags 	-O2
+# define OptimizedCDebugFlags 	-O2 GccAliasingArgs
 # define XkbServerDefines	-DXKB_ALWAYS_USES_SOFT_REPEAT
 
 # ifndef DoLoadableServer

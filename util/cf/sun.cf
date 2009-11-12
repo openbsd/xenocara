@@ -1,4 +1,4 @@
-XCOMM $XdotOrg: util/cf/sun.cf,v 1.34 2005/12/03 17:20:48 alanc Exp $
+XCOMM $XdotOrg: xc/config/cf/sun.cf,v 1.9 2004/08/19 16:28:42 kem Exp $
 XCOMM platform:  $Xorg: sun.cf,v 1.4 2000/08/17 19:41:48 cpqbld Exp $
 
 

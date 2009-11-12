@@ -1,4 +1,4 @@
-XCOMM platform:  $XdotOrg: util/cf/ibm.cf,v 1.3 2004/08/30 13:32:51 kem Exp $
+XCOMM platform:  $XdotOrg: xc/config/cf/ibm.cf,v 1.2 2004/04/23 18:41:58 eich Exp $
 XCOMM platform:  $Xorg: ibm.cf,v 1.3 2000/08/17 19:41:47 cpqbld Exp $
 
 #ifndef OSName

@@ -1,4 +1,4 @@
-XCOMM $XdotOrg: util/cf/xorg.cf,v 1.53 2005/10/03 16:08:44 alanc Exp $
+XCOMM $XdotOrg: xc/config/cf/xorg.cf,v 1.44 2005/01/27 03:50:46 ajax Exp $
 /*
  * This configuration file contains all of the configuration
  * information for the Xorg based X Servers.
