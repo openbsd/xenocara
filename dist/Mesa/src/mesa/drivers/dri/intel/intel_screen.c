@@ -565,13 +565,6 @@ intel_init_bufmgr(intelScreenPrivate *intelScreen)
    }
    /* Otherwise, use the classic buffer manager. */
    if (intelScreen->bufmgr == NULL) {
-      if (gem_disable) {
-	 fprintf(stderr, "GEM disabled.  Using classic.\n");
-      } else {
-	 fprintf(stderr, "Failed to initialize GEM.  "
-		 "Falling back to classic.\n");
-      }
-
       if (intelScreen->tex.size == 0) {
 	 fprintf(stderr, "[%s:%u] Error initializing buffer manager.\n",
 		 __func__, __LINE__);
