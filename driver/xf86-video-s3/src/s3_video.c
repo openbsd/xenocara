@@ -289,9 +289,25 @@ static void S3StopVideo(ScrnInfoPtr pScrn, pointer data, Bool exit)
 	if (exit) {
 		SET_FIFO_CNTL(0x00080000 | FIFO_PS24_SS0);
 
-		if (pPriv->videoStatus & CLIENT_VIDEO_ON)
+		if (pPriv->videoStatus & CLIENT_VIDEO_ON) {
+			WaitVSync();
+			SET_SSTREAM_CNTL(0x03000000);
+			SET_SSTREAM_FBADDR0(0x00000000);
+			SET_SSTREAM_FBADDR1(0x00000000);
+			SET_SSTREAM_STRIDE(0x00000001);
+			SET_SSTREAM_START(0x07ff07ff);
+			SET_SSTREAM_WIND(0x00010001);
+
+			SET_CHROMA_KEY(0x00000000);
+			SET_SSTRETCH(0x00000000);
+			SET_OPAQUE_OVERLAY(0x40000000);
+			SET_K1_VSCALE(0x00000000);
+			SET_K2_VSCALE(0x00000000);
+			SET_DDA_VERT(0x00000000);
 			SET_BLEND_CNTL(0x01000000);
-		
+			WaitVSync();
+		}
+
 		if (pPriv->area) {
 			xf86FreeOffscreenLinear(pPriv->area);
 	        	pPriv->area = NULL;
@@ -353,7 +369,7 @@ static int S3PutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
 	S3PortPrivPtr pPriv = pS3->portPrivate;
    	INT32 x1, x2, y1, y2;
    	CARD8 *dst_start; 
-   	int pitch, new_h, offset, offsetV = 0, offsetU = 0;
+   	int offset, offsetV = 0, offsetU = 0;
    	int srcPitch, srcPitchUV = 0, dstPitch, dstSize;
    	int top, bottom, right, left, npixels, nlines;
    	BoxRec dstBox;

@@ -1,0 +1,240 @@
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH s3 __drivermansuffix__ __vendorversion__
+.SH NAME
+s3 \- S3 video driver
+.SH SYNOPSIS
+.B Section \*qDevice\*q
+.RS 2
+.B Identifier \*q\fIdevname\fP\*q
+.br
+.B Driver \*qs3\*q
+.br
+.B ...
+.br
+[\fBOption\fP "optionname" ["optionvalue"]]
+.RE
+.B EndSection
+
+.SH SUPPORTED HARDWARE
+The
+.B s3
+driver supports PCI video cards based on the following S3 chips:
+.TP 12
+.B Trio32
+86C732
+.TP 12
+.B Trio64
+86C764
+.TP 12
+.B Trio64V+
+86C765
+.TP 12
+.B Aurora64V+
+86CM65
+.TP 12
+.B Trio64UV+
+86C767
+.TP 12
+.B Trio64V2/DX
+86C775
+.TP 12
+.B Trio64V2/GX
+86C785
+.TP 12
+.B Vision964
+86C964
+.TP 12
+.B Vision968
+86C968
+
+.PP
+Also driver supports the following RAMDACs:
+.TP 12
+.B IBM 524, IBM 524A, IBM 526, IBM 526DB
+.TP 12
+.B TI ViewPoint 3025 
+
+.SH DESCRIPTION
+\fBs3\fP is an __xservername__ driver for S3 based video cards. The
+driver provides full accelerated support for the following colour
+depths: 8, 15, 16 and 24. The overlay video (Xv) is supported in
+depths 16 and 24 for the Trio64V+, Trio64UV+, Trio64V2/DX and
+Trio64V2/GX chips.
+
+.SH CONFIGURATION DETAILS
+Please refer to __xconfigfile__(__filemansuffix__) for general
+configuration details.  This section only covers configuration details
+specific to this driver. All options names are case and white space
+insensitive when parsed by the server, for example, "trio 32/64" and
+"Trio32/64" are equivalent.
+
+.SS
+Chip overriding
+.PP
+The driver auto-detects the chipset and RAMDAC, but the following
+\fBChipset\fP names may optionally be specified in the configuration
+file \fB\*qDevice\*q\fP section, and will override the auto-detection:
+
+.PP
+.RS 4
+.TP 18
+"964-0", "964-1"
+86C964 (rev.0 and rev.1)
+.TP 18
+"968"
+86C968
+.TP 18
+"Trio32/64"
+86C732/86C764
+.TP 18 
+"Aurora64V+"
+86CM65
+.TP 18
+"Trio64UV+"
+86C767 
+.TP 18
+"Trio64V2/DX/GX"
+86C775/86C785
+.RE
+
+.PP
+The 86C765 (Trio64V+) is \fBChipset\fP "Trio32/64" with \fBChipRev\fP
+greater or equal 0x40.
+
+An overriding of RAMDAC auto-detection currently is not implemented.
+
+.SS
+Colour depth
+.PP
+For every supported colour depth the X server automatically selects an
+appropriate number of bits per pixel (bpp) for framebuffer. The depth
+8 is represented by 8 bpp framebuffer (1 byte/pixel), the depths 15
+and 16 (respectively 5.5.5 and 5.6.5 pixel formats) are represented by
+the 16 bpp framebuffer (2 bytes/pixel). Whenever the depth 24 is
+configured, the X server by default uses the 32 bpp framebuffer (4
+bytes/pixel), and the hardware is adjusted accordingly to the X.8.8.8
+pixel format, where X is the ignored upper byte.
+
+.PP
+As the second option for the depth 24, the X server can be configured
+to use 24 bpp framebuffer with the 8.8.8 pixel format (3 bytes/pixel),
+which is supported by Trio64V+, Trio64UV+, Trio64V2/DX and
+Trio64V2/GX. If the video board has limited video RAM the 24 bpp
+framebuffer has an advantage over 32 bpp framebuffer as it requires
+less memory to store screen, and, therefore, more space will be
+available for a video frame (see "Overlay video" section).  The 24 bpp
+framebuffer can be selected by X server's option \fB-fbbpp 24\fP or by
+specifying \fBDefaultFbBpp\fP option in
+__xconfigfile__(__filemansuffix__):
+
+.RS 4
+.B Section \*qScreen\*q
+.RS 2
+.B DefaultFbBpp 24
+.br
+.B DefaultDepth 24
+.br
+.B ...
+.RE
+.B EndSection
+.RE
+
+.PP
+However, the 24 bpp framebuffer mode has the hardware limitations: (i)
+the 2D acceleration doesn't work with this mode (use the
+\fB\*qshadowFB\*q\fP option to speed up drawing routines in this
+case); (ii) 24 bpp framebuffer cannot be used with either interlaced
+or doublescan graphics modes.
+
+.SS
+Overlay video
+.PP
+If your video board has limited RAM it would be useful to estimate how
+large video frame might be placed in offscreen video memory. Suppose
+that the video board has 2 MB of RAM, and X server is configured to
+display 800x600 with the depth 24. By default the 32 bpp framebuffer
+will be chosen for this depth, so 800 x 600 x 4 = 1875 kB will be
+reserved for screen, and 2 MB - 1875 kB = 173 kB will remain for the
+offscreen area. This is sufficient space, for example, for the VCD
+NTSC 352x240 frame. If you need to upscale video with a bigger frame,
+but it doesn't fit the offscreen area, the only way to do this is to
+lower either the resolution or framebuffer's depth or both before the
+viewing, otherwise, you will get the allocation error and will not see
+the video. For example, with 24 bpp framebuffer and the same
+resolution 800x600 the offscreen area will be about 640 kB - it's
+enough for the 640x480 frame. 800x600 with the 16 bpp framebuffer
+gives about 1110 kB of offscreen area - this allows to upscale up to
+768x576 movies. Note, that all movie resolutions in examples above are
+provided as a reference; the movies can have the different aspect
+ratios and non-standard dimensions. A total pixel amount is the main
+consideration not the certain width and height.
+.PP
+Due to hardware limitation the overlay video will not work with the
+interlaced/doublescan modes. Downscaling is not implemented in
+hardware.
+
+.SS
+Configuration options
+.PP
+The following display
+.B Options
+are supported:
+.TP
+.BI "Option \*qHWCursor\*q \*q" boolean \*q
+Enable or disable the hardware cursor. Currently, hardware cursor is
+not implemented, so the option will be ignored. Default: off (software
+cursor).
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disable acceleration. Very useful for determining if the driver has
+problems with drawing and acceleration routines. This is the first
+option to try if your server runs but you see graphic corruption on
+the screen. Using it decreases performance, as it uses software
+emulation for drawing operations the video driver can accelerate with
+hardware. Default: off (acceleration is enabled).
+.TP
+.BI "Option \*qShadowFB\*q \*q" boolean \*q
+Use shadow framebuffer. Disables hardware acceleration. Use this
+option when the hardware acceleration is not available or
+undesirable. Default: off.
+.TP
+.BI "Option \*qXVideo\*q \*q" boolean \*q
+Enable or disable Xv support. Default: on.
+
+.PP
+The following video memory \fBOptions\fP are supported:
+.TP
+.BI "Option \*qslow_dram_refresh\*q \*q" boolean \*q
+Enable three refresh cycles per scanline. Default: off (one refresh
+cycle).
+.TP
+.BI "Option \*qslow_edodram\*q \*q" boolean \*q
+Switch to 2-cycle EDO mode. Try this if you encounter pixel
+corruption. Using this option will cause a decrease in
+performance. Default: off (BIOS defaults).
+.TP
+.BI "Option \*qslow_dram\*q \*q" boolean \*q
+For Trio and Aurora64V+ chips: increase -RAS Precharge Timing to 3.5
+MCLK. Try this option if you encounter pixel errors. Default: off
+(BIOS defaults).
+.TP
+.BI "Option \*qslow_vram\*q \*q" boolean \*q
+For Vision964, Vision968 chips: increase -RAS Low Timing to 4.5
+MCLK. Default: off (BIOS defaults).
+
+.SH SEE ALSO
+__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1),
+X(__miscmansuffix__)
+
+.SH AUTHORS
+Thomas Roell, Mark Vojkovich, Kevin E. Martin, Amancio Hasty, Jon
+N. Tombs and others were the original authors of driver for XFree86
+3.x. Ani Joshi reworked driver for XFree86 4.x. The further
+modifications were made by the following contributors: Adam Jackson,
+Alan Coopersmith, Dave Airlie, Andrew Radrianasulu, Paulo Cesar
+Pereira de Andrade, Eric Anholt, Søren Sandmann Pedersen, Alex
+Deucher, Evgeny M. Zubok, Daniel Stone and others.
+
+.PP
+The manual was written by Evgeny M. Zubok <evgeny.zubok@tochka.ru>

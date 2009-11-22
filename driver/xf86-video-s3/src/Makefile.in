@@ -84,7 +84,7 @@ am_libs3_accel_pio_la_OBJECTS = libs3_accel_pio_la-s3_accel.lo
 libs3_accel_pio_la_OBJECTS = $(am_libs3_accel_pio_la_OBJECTS)
 s3_drv_la_DEPENDENCIES = libs3_accel_newmmio.la libs3_accel_pio.la
 am_s3_drv_la_OBJECTS = s3_bios.lo s3_cursor.lo s3_dga.lo s3_driver.lo \
-	s3_IBMRGB.lo s3_Ti.lo s3_Trio64DAC.lo
+	s3_IBMRGB.lo s3_Ti.lo s3_Trio64DAC.lo s3_shadow.lo
 s3_drv_la_OBJECTS = $(am_s3_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -117,6 +117,10 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
+BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
+BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
+BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -143,6 +147,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -153,12 +158,17 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LINUXDOC = @LINUXDOC@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAKE_HTML = @MAKE_HTML@
+MAKE_PDF = @MAKE_PDF@
+MAKE_PS = @MAKE_PS@
+MAKE_TEXT = @MAKE_TEXT@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -173,6 +183,7 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
+PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -183,15 +194,9 @@ XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
 XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -208,24 +213,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -251,7 +263,8 @@ s3_drv_la_SOURCES = \
 	 s3_pcirename.h \
          s3_reg.h \
          s3_Ti.c \
-         s3_Trio64DAC.c
+         s3_Trio64DAC.c \
+	 s3_shadow.c
 
 noinst_LTLIBRARIES = libs3_accel_newmmio.la libs3_accel_pio.la
 s3_drv_la_LIBADD = libs3_accel_newmmio.la libs3_accel_pio.la
@@ -351,6 +364,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_dga.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_driver.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s3_shadow.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

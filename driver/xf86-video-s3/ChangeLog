@@ -1,3 +1,44 @@
+2009-06-25  Evgeny M. zubok <evgeny.zubok@tochka.ru>
+
+	* src/s3_driver.c:
+	Revert the old behaviour when the BIOS settings are used for
+	intialization of DRAM/VRAM timings, i. e. we don't touch the
+	timings during initialization phase until any memory option (like
+	slow_edodram) is specified.
+	
+	Add manual page.	
+
+2009-05-25  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+	
+	* src/s3_driver.c:
+	* src/s3_video.c:
+	
+	Enable Xv extension for Trio64V+ (thanks to Egor Ivanov for 
+	testing on real hardware) and Trio64UV+ (Tested only on Trio64V2 by
+	overriding Chipset with "Trio64UV+" but not on real hardware).
+
+	S3 Trio64V+ now using NewMMIO. Trio64V+ chips have the same ChipId
+	as Trio32/64 but only with chip revision greater or eq 0x40. So if 
+	you have problems with NewMMIO, you may override ChipRev in "Device" 
+ 	section of your xorg.conf: "ChipRev" 0x00. Note: disabling the NewMMIO 
+	also disables overlay video (Xv) because it isn't implemented for
+	Old MMIO yet.
+	
+2009-05-04  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+
+	* src/s3_driver.c:
+	* src/s3_shadow.c:
+
+	Add shadowFB option. It can be used to speedup drawing when
+	hardware acceleration is undesirable or unavailable (for colour depth
+	24 with 24 bpp framebuffer, for example). shadowFB is disabled by
+	default. Enabling shadowFB option disables HW acceleration. Thanks
+	to Egor Ivanov for initial porting of shadowFB from s3virge.
+
+	Interlace mode support.
+
+	Close bug #14999.
+	
 2008-07-06  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
 
 	* src/s3_video.c: 
@@ -14,7 +55,7 @@
 	not implemented yet for all chipsets).
 
 	Close bug #5527: 24-bit colour depth support (24bpp and 
-	32bpp framebuffer) for TRIO64V2. Acceleration doesn't work
+	32bpp framebuffer) for TRIOs. Acceleration doesn't work
 	with packed colour mode (24 bpp FB) but works with 32bpp 
 	framebuffer mode (hardware limitation? -- need data).
 
