@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.1.1.1 2009/11/22 19:10:59 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.2 2009/11/22 22:20:26 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -53,9 +53,7 @@
 #include <extnsionst.h>
 #include <extinit.h>
 
-#ifdef XFree86LOADER
 #include "xf86Module.h"
-#endif
 
 
 #ifdef USB_GET_REPORT_ID
@@ -119,11 +117,9 @@ struct USBTDevice {
 };
 
 /* Function prototypes */
-#ifdef XFree86LOADER
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
 static const OptionInfoRec *UsbTabletAvailableOptions(void *);
-#endif
 
 static LocalDevicePtr UsbTabletAllocateStylus(InputDriverPtr);
 static LocalDevicePtr UsbTabletAllocateEraser(InputDriverPtr);
@@ -145,7 +141,6 @@ static void UsbTabletOutOfProx(USBTDevicePtr prx);
 static void UsbTabletIntoProx(USBTDevicePtr prx, USBTState *ds);
 
 
-#ifdef XFree86LOADER
 static XF86ModuleVersionInfo VersionRec = {
 	"usbtablet",
 	MODULEVENDORSTRING,
@@ -158,7 +153,6 @@ static XF86ModuleVersionInfo VersionRec = {
 	MOD_CLASS_XINPUT,
 	{0, 0, 0, 0}		/* signature to be patched into the file */
 };
-#endif
 
 typedef enum {
 	USBTOPT_DEVICE,
@@ -213,7 +207,6 @@ static int debug_level = 0;
  ** Function definitions
  **/
 
-#ifdef XFree86LOADER
 static pointer
 SetupProc(pointer module,
 	  pointer options,
@@ -237,7 +230,6 @@ TearDownProc(pointer p)
 	DBG(1, ErrorF("USB Tablet TearDownProc Called\n"));
 }
 	
-#endif /* XFree86LOADER */
 
 static int
 UsbTabletProc(DeviceIntPtr pUSBT, int what)
@@ -787,13 +779,12 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 	return 1;
 }
 
-#ifdef XFree86LOADER
 static const OptionInfoRec *
 UsbTabletAvailableOptions(void *unused)
 {
 	return USBTOptions;
 }
-#endif
+
 static InputInfoPtr
 UsbTabletAllocate(InputDriverPtr drv, char *name, int flag)
 {
