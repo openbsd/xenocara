@@ -35,8 +35,13 @@ authorization from The XFree86 Project or Silicon Motion.
 #include "smi_501.h"
 #include "regsmi.h"
 
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 /* Want to see register dumps for now */
 #undef VERBLEV

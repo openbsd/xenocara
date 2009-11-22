@@ -78,9 +78,6 @@ static void
 SMI_Composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
               int dstX, int dstY, int width, int height);
 static void
-SMI501_Composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
-		 int dstX, int dstY, int width, int height);
-static void
 SMI730_Composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
               int dstX, int dstY, int width, int height);
 static void
@@ -169,12 +166,11 @@ SMI_EXAInit(ScreenPtr pScreen)
     pSmi->EXADriverPtr->CheckComposite = SMI_CheckComposite;
     pSmi->EXADriverPtr->PrepareComposite = SMI_PrepareComposite;
 
-    if (IS_MSOC(pSmi))
-	pSmi->EXADriverPtr->Composite = SMI501_Composite;
-    else if (pSmi->Chipset == SMI_COUGAR3DR)
+    if (IS_MSOC(pSmi) || pSmi->Chipset == SMI_COUGAR3DR)
 	pSmi->EXADriverPtr->Composite = SMI730_Composite;
     else
 	pSmi->EXADriverPtr->Composite = SMI_Composite;
+
     pSmi->EXADriverPtr->DoneComposite = SMI_DoneComposite;
 
     if(!exaDriverInit(pScreen, pSmi->EXADriverPtr)) {
@@ -711,38 +707,22 @@ SMI_Composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
     LEAVE();
 }
 
-#define MSOC_ROTBLTWIDTH		8
-static void
-SMI501_Composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
-		 int dstX, int dstY, int width, int height)
-{
-    ENTER();
-
-    /* SMI501 cannot rotate-blt more than 32 bytes.
-     * Based on smi's sample smi_shadow.c */
-    while (height > MSOC_ROTBLTWIDTH) {
-	SMI_Composite(pDst, srcX, srcY, maskX, maskY, dstX, dstY,
-		      width, MSOC_ROTBLTWIDTH);
-	srcY	+= MSOC_ROTBLTWIDTH;
-	dstY	+= MSOC_ROTBLTWIDTH;
-	height	-= MSOC_ROTBLTWIDTH;
-    }
-    SMI_Composite(pDst, srcX, srcY, maskX, maskY, dstX, dstY, width, height);
-
-    LEAVE();
-}
-
 static void
 SMI730_Composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
 		int dstX, int dstY, int width, int height)
 {
+    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    SMIPtr pSmi = SMIPTR(pScrn);
     int maxPixels;
 
     ENTER();
 
-    /* SM731 cannot rotate-blt more than a certain number of pixels
-       (based on a calculation from the Windows driver source */
-    maxPixels = 1280 / pDst->drawable.bitsPerPixel;
+    /* Both SM501 and SM731 cannot rotate-blt more than a certain
+       number of pixels. */
+    if(IS_MSOC(pSmi))
+        maxPixels = 128 / pDst->drawable.bitsPerPixel;
+    else
+        maxPixels = 1280 / pDst->drawable.bitsPerPixel;
 
     while(height>0){
 	SMI_Composite(pDst, srcX, srcY, maskX, maskY, dstX, dstY, width, min(height, maxPixels));

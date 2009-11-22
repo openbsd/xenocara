@@ -31,11 +31,15 @@ authorization from The XFree86 Project or Silicon Motion.
 #include "config.h"
 #endif
 
-#include "xf86Resources.h"
-#include "xf86RAC.h"
+#include "xf86.h"
 #include "xf86DDC.h"
 #include "xf86int10.h"
 #include "vbe.h"
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
+#include "xf86Resources.h"
+#include "xf86RAC.h"
+#endif
 
 #include "smi.h"
 #include "smi_501.h"
@@ -43,8 +47,13 @@ authorization from The XFree86 Project or Silicon Motion.
 #include "smi_crtc.h"
 
 #include "globals.h"
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 /*
  * Internals
@@ -190,104 +199,6 @@ static const OptionInfoRec SMIOptions[] =
     { -1,		     NULL,		  OPTV_NONE,	{0}, FALSE }
 };
 
-/*
- * Lists of symbols that may/may not be required by this driver.
- * This allows the loader to know which ones to issue warnings for.
- *
- * Note that vgahwSymbols and xaaSymbols are referenced outside the
- * XFree86LOADER define in later code, so are defined outside of that
- * define here also.
- */
-
-static const char *vgahwSymbols[] =
-{
-    "vgaHWCopyReg",
-    "vgaHWGetHWRec",
-    "vgaHWGetIOBase",
-    "vgaHWGetIndex",
-    "vgaHWInit",
-    "vgaHWLock",
-    "vgaHWMapMem",
-    "vgaHWProtect",
-    "vgaHWRestore",
-    "vgaHWSave",
-    "vgaHWSaveScreen",
-    "vgaHWSetMmioFuncs",
-    "vgaHWSetStdFuncs",
-    "vgaHWUnmapMem",
-    "vgaHWddc1SetSpeedWeak",
-    NULL
-};
-
-static const char *xaaSymbols[] =
-{
-    "XAAGetCopyROP",
-    "XAACreateInfoRec",
-    "XAADestroyInfoRec",
-    "XAAGetFallbackOps",
-    "XAAInit",
-    "XAAGetPatternROP",
-    NULL
-};
-
-static const char *exaSymbols[] =
-{
-    "exaDriverAlloc",
-    "exaDriverInit",
-    "exaDriverFini",
-    "exaOffscreenAlloc",
-    "exaOffscreenFree",
-    "exaGetPixmapPitch",
-    "exaGetPixmapOffset",
-    "exaGetPixmapSize",
-    NULL
-};
-
-static const char *ddcSymbols[] =
-{
-    "xf86PrintEDID",
-    "xf86DoEDID_DDC1",
-    "xf86DoEDID_DDC2",
-    "xf86SetDDCproperties",
-    NULL
-};
-
-static const char *i2cSymbols[] =
-{
-    "xf86CreateI2CBusRec",
-    "xf86CreateI2CDevRec",
-    "xf86DestroyI2CBusRec",
-    "xf86DestroyI2CDevRec",
-    "xf86I2CBusInit",
-    "xf86I2CDevInit",
-    "xf86I2CReadBytes",
-    "xf86I2CWriteByte",
-    NULL
-};
-
-static const char *int10Symbols[] =
-{
-    "xf86ExecX86int10",
-    "xf86FreeInt10",
-    "xf86InitInt10",
-    NULL
-};
-
-static const char *vbeSymbols[] =
-{
-    "VBEInit",
-    "vbeDoEDID",
-    "vbeFree",
-    NULL
-};
-
-static const char *fbSymbols[] =
-{
-    "fbPictureInit",
-    "fbScreenInit",
-    NULL
-};
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(siliconmotionSetup);
@@ -328,19 +239,6 @@ siliconmotionSetup(pointer module, pointer opts, int *errmaj, int *errmin)
     if (!setupDone) {
 	setupDone = TRUE;
 	xf86AddDriver(&SILICONMOTION, module, 0);
-
-	/*
-	 * Modules that this driver always requires can be loaded here
-	 * by calling LoadSubModule().
-	 */
-
-	/*
-	 * Tell the loader about symbols from other modules that this module
-	 * might refer to.
-	 */
-	LoaderRefSymLists(vgahwSymbols, fbSymbols, xaaSymbols, exaSymbols,
-					  ddcSymbols, i2cSymbols, int10Symbols, vbeSymbols,
-					  NULL);
 
 	/*
 	 * The return value must be non-NULL on success even though there
@@ -522,7 +420,7 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	LEAVE(TRUE);
     }
 
-    if (pEnt->location.type != BUS_PCI || pEnt->resources) {
+    if (pEnt->location.type != BUS_PCI) {
 	xfree(pEnt);
 	SMI_FreeRec(pScrn);
 	LEAVE(FALSE);
@@ -536,8 +434,6 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	/* The vgahw module should be loaded here when needed */
 	if (!xf86LoadSubModule(pScrn, "vgahw"))
 	    LEAVE(FALSE);
-
-	xf86LoaderReqSymLists(vgahwSymbols, NULL);
 
 	/*
 	 * Allocate a vgaHWRec
@@ -577,6 +473,8 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     }
 
     xf86PrintDepthBpp(pScrn);
+
+    pSmi->Bpp = pScrn->bitsPerPixel >> 3;
 
     /*
      * This must happen after pScrn->display has been set because
@@ -719,12 +617,10 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 
     if (pSmi->useBIOS) {
 	if (xf86LoadSubModule(pScrn,"int10")) {
-	    xf86LoaderReqSymLists(int10Symbols,NULL);
 	    pSmi->pInt10 = xf86InitInt10(pEnt->index);
 	}
 
 	if (pSmi->pInt10 && xf86LoadSubModule(pScrn, "vbe")) {
-	    xf86LoaderReqSymLists(vbeSymbols, NULL);
 	    pSmi->pVbe = VBEInit(pSmi->pInt10, pEnt->index);
 	}
 
@@ -734,10 +630,9 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	}
     }
 
+#ifndef XSERVER_LIBPCIACCESS
     xf86RegisterResources(pEnt->index, NULL, ResExclusive);
-/*  xf86SetOperatingState(resVgaIo, pEnt->index, ResUnusedOpr); */
-/*  xf86SetOperatingState(resVgaMem, pEnt->index, ResDisableOpr); */
-
+#endif
     /*
      * Set the Chipset and ChipRev, allowing config file entries to
      * override.
@@ -888,12 +783,9 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 
     if(!IS_MSOC(pSmi)){
 	if (xf86LoadSubModule(pScrn, "i2c")) {
-	    xf86LoaderReqSymLists(i2cSymbols, NULL);
 	    SMI_I2CInit(pScrn);
 	}
-	if (xf86LoadSubModule(pScrn, "ddc")) {
-	    xf86LoaderReqSymLists(ddcSymbols, NULL);
-	}
+	xf86LoadSubModule(pScrn, "ddc");
     }
 
     /*
@@ -937,7 +829,25 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     /* Only allow growing the screen dimensions if EXA is being used */
     if (!xf86InitialConfiguration (pScrn, !pSmi->NoAccel && pSmi->useEXA)){
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No valid modes found\n");
+
+	SMI_EnableVideo(pScrn);
+	SMI_UnmapMem(pScrn);
 	LEAVE(FALSE);
+    }
+
+    /* Ensure that the framebuffer size just set fits in video memory. */
+    {
+	int aligned_pitch = (pScrn->virtualX*pSmi->Bpp + 15) & ~15;
+
+	if(aligned_pitch * pScrn->virtualY > pSmi->FBReserved){
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Not enough video memory "
+		       "for the configured screen size (%dx%d) and color depth.\n",
+                       pScrn->virtualX, pScrn->virtualY);
+
+	    SMI_EnableVideo(pScrn);
+	    SMI_UnmapMem(pScrn);
+	    LEAVE(FALSE);
+	}
     }
 
 
@@ -961,8 +871,6 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	LEAVE(FALSE);
     }
 
-    xf86LoaderReqSymLists(fbSymbols, NULL);
-
     /* Load XAA or EXA if needed */
     if (!pSmi->NoAccel) {
 	if (!pSmi->useEXA) {
@@ -970,7 +878,6 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 		SMI_FreeRec(pScrn);
 		LEAVE(FALSE);
 	    }
-	    xf86LoaderReqSymLists(xaaSymbols, NULL);
 	} else {
 	    XF86ModReqInfo req;
 	    int errmaj, errmin;
@@ -985,7 +892,6 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 		SMI_FreeRec(pScrn);
 		LEAVE(FALSE);
 	    }
-	    xf86LoaderReqSymLists(exaSymbols, NULL);
 	}
     }
 
@@ -1230,10 +1136,21 @@ SMI_DetectMCLK(ScrnInfoPtr pScrn)
 	/* The SM712 can be safely clocked up to 157MHz, according to
 	   Silicon Motion engineers. */
 	pSmi->MCLK = 157000;
-    }else
-	pSmi->MCLK = 0;
 
-    pSmi->MXCLK = 0;
+    } else if (IS_MSOC(pSmi)) {
+       /* Set some sane defaults for the clock settings if we are on a
+          SM502 and it's likely to be uninitialized. */
+
+       if (!xf86IsPrimaryPci(pSmi->PciInfo) &&
+           (READ_SCR(pSmi, DEVICE_ID) & 0xFF) >= 0xC0) {
+          pSmi->MCLK = 112000;
+          pSmi->MXCLK = 144000;
+       }
+
+    } else {
+        pSmi->MCLK = 0;
+        pSmi->MXCLK = 0;
+    }
 
     /* MCLK from user settings */
     if (xf86GetOptValFreq(pSmi->Options, OPTION_MCLK, OPTUNITS_MHZ, &real)) {
@@ -1423,6 +1340,55 @@ SMI_MapMmio(ScrnInfoPtr pScrn)
     return (TRUE);
 }
 
+/* HACK - In some cases the BIOS hasn't filled in the "scratchpad
+   registers" (SR71) with the right amount of memory installed (e.g. MIPS
+   platform). Probe it manually. */
+static unsigned long
+SMI_ProbeMem(ScrnInfoPtr pScrn, unsigned long mem_skip, unsigned long mem_max)
+{
+    SMIPtr pSmi = SMIPTR(pScrn);
+    unsigned long mem_probe = 1024*1024;
+    unsigned long aperture_base;
+    void* mem;
+
+    ENTER();
+
+    aperture_base = PCI_REGION_BASE(pSmi->PciInfo, 0, REGION_MEM) + mem_skip;
+    mem_max = min(mem_max , PCI_REGION_SIZE(pSmi->PciInfo, 0) - mem_skip);
+
+#ifndef XSERVER_LIBPCIACCESS
+    mem = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO, pSmi->PciTag,
+			aperture_base, mem_max);
+
+    if(!mem)
+	LEAVE(0);
+#else
+    if(pci_device_map_range(pSmi->PciInfo, aperture_base, mem_max,
+			    PCI_DEV_MAP_FLAG_WRITABLE, &mem))
+	LEAVE(0);
+#endif
+
+    while(mem_probe <= mem_max){
+	MMIO_OUT32(mem, mem_probe-4, 0x55555555);
+	if(MMIO_IN32(mem, mem_probe-4) != 0x55555555)
+	    break;
+
+	MMIO_OUT32(mem, mem_probe-4, 0xAAAAAAAA);
+	if(MMIO_IN32(mem, mem_probe-4) != 0xAAAAAAAA)
+	    break;
+
+	mem_probe <<= 1;
+    }
+
+#ifndef XSERVER_LIBPCIACCESS
+    xf86UnMapVidMem(pScrn->scrnIndex, mem, mem_max);
+#else
+    pci_device_unmap_range(pSmi->PciInfo, mem, mem_max);
+#endif
+
+    LEAVE(mem_probe >> 1);
+}
+
 static Bool
 SMI_DetectMem(ScrnInfoPtr pScrn)
 {
@@ -1451,6 +1417,9 @@ SMI_DetectMem(ScrnInfoPtr pScrn)
 		case SMI_LYNX3D:
 		    pSmi->videoRAMKBytes = lynx3d_table[config >> 6] * 1024 +
 			512;
+		    break;
+		case SMI_LYNXEMplus:
+		    pSmi->videoRAMKBytes = SMI_ProbeMem(pScrn, 0, 0x400000) / 1024;
 		    break;
 		case SMI_LYNX3DM:
 		    pSmi->videoRAMKBytes = lynx3dm_table[config >> 6] * 1024;
@@ -1672,7 +1641,6 @@ SMI_ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     pScrn->vtSema = TRUE;
     pScrn->pScreen = pScreen;
 
-    pSmi->Bpp = pScrn->bitsPerPixel >> 3;
     pScrn->displayWidth = ((pScrn->virtualX * pSmi->Bpp + 15) & ~15) / pSmi->Bpp;
 
     pSmi->fbArea = NULL;

@@ -241,7 +241,7 @@ SMILynx_CrtcModeFixup(xf86CrtcPtr crtc,
 	/* Adjust the pixel clock in case it is near one of the known
 	   stable frequencies (KHz) */
 	int stable_clocks[] = {46534,};
-	int epsilon = 2000;
+	int epsilon = 3000;
 	int i;
 
 	for (i=0; i < sizeof(stable_clocks)/sizeof(int); i++) {

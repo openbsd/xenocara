@@ -1,3 +1,104 @@
+commit 52f40e7569bbcc9bce8f5d885b0de2868398e8df
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Aug 5 11:09:26 2009 +1000
+
+    fix build after headers moved
+
+commit 9d9bfe0349693b283e5dc1ced6fa882f10619253
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Aug 5 11:08:15 2009 +1000
+
+    update for 1.7.3
+
+commit 115b564f78b038baef2d14c037785850efb4e9ca
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
+
+    siliconmotion: change to using ABI version check
+
+commit 70f2463faa6d21517d97aa460871e1b5f3fa6505
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:36 2009 +1000
+
+    siliconmotion: update for resources/RAC API removal
+
+commit 841df790b5b6700e9a1d6d41ee04b0b913329084
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 11:55:05 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d754e9a2954e56a26a94e58d87a450a825c250e6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:43:52 2009 -0400
+
+    siliconmotion 1.7.2
+
+commit cd9e9f25294abb739c1772e3a9a7a9c0a921ee82
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue Jun 23 13:11:02 2009 +0200
+
+    Fix EXA rotation for SM502 at 32bpp (bug 22432).
+
+commit 97498c048c897e5753e61d3b4ab231025974d67c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:17:58 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 536e5df957698251206326edc5a13e833f7c72b1
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Wed May 27 01:23:36 2009 +0200
+
+    Program MCLK/MXCLK on startup for a secondary SM502.
+    
+    This should allow using a SM502 as secondary display
+    device (bug 21810).
+
+commit 6a370fa2b6b8fcbd556dd6f9bf92872e9bea23e8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 22:31:30 2009 -0700
+
+    Fill in COPYING file, add SubmittingPatches URL to README
+
+commit 962e0c4f08180ac51994aef8d6d042108d5841c1
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Sun May 10 01:53:05 2009 +0200
+
+    Widen the pixel clock readjust interval for SM712.
+    
+    Set it to 3MHz so that the pixel clock frequency is overridden
+    when it's found to be 49MHz, which is reported to be unstable.
+
+commit 3cc1b9d4bcf1b7a756ea4426c93392ff6d82e9a6
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue May 5 00:45:10 2009 +0200
+
+    Fail gracefully when the specified virtual screen doesn't fit in RAM.
+
+commit 32628d9884d577d7a672c172c12b7097be276700
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue May 5 00:44:17 2009 +0200
+
+    Probe the amount of installed memory by trial and error on SM712.
+    
+    In some cases the BIOS hasn't filled in the "scratchpad registers"
+    (SR71) with the right amount of memory installed (e.g. MIPS
+    platform). There seems to be no other way to do it than to test it.
+    
+    This should fix bug 21528.
+
+commit 00921b014fa0b5358c22a769cf2450cbd4bdc8a5
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Tue Apr 28 22:24:03 2009 +0200
+
+    Bump version to 1.7.1.
+
 commit abf1ba79f2bfe61f24cfa43deb0400d7c5f95bd5
 Author: Francisco Jerez <currojerez@riseup.net>
 Date:   Tue Apr 21 21:37:45 2009 +0200
