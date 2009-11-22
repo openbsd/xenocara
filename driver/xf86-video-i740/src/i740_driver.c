@@ -52,8 +52,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "xf86.h"
 #include "xf86_OSproc.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
 #include "xf86RAC.h"
+#endif
 #include "xf86cmap.h"
 
 /* If the driver uses port I/O directly, it needs: */
@@ -187,54 +189,6 @@ static const OptionInfoRec I740Options[] = {
   { -1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
-static const char *vgahwSymbols[] = {
-    "vgaHWGetHWRec",
-    "vgaHWSave", /* Added */
-    "vgaHWRestore", /* Added */
-    "vgaHWProtect",
-    "vgaHWInit",
-    "vgaHWMapMem",
-    "vgaHWSetMmioFuncs",
-    "vgaHWGetIOBase",
-    "vgaHWLock",
-    "vgaHWUnlock",
-    "vgaHWFreeHWRec",
-    "vgaHWSaveScreen",
-    "vgaHWHandleColormaps",
-    0
-};
-
-#ifdef XFree86LOADER
-static const char *fbSymbols[] = {
-    "fbScreenInit",
-    "fbPictureInit",
-    NULL
-};
-#endif
-
-static const char *xaaSymbols[] = {
-    "XAADestroyInfoRec",
-    "XAACreateInfoRec",
-    "XAAInit",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86InitCursor",
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    NULL
-};
-
-#ifdef XFree86LOADER
-static const char *vbeSymbols[] = {
-    "VBEInit",
-    "vbeDoEDID",
-    "vbeFree",
-    NULL
-};
-#endif
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(i740Setup);
@@ -270,14 +224,6 @@ i740Setup(pointer module, pointer opts, int *errmaj, int *errmin)
 	 * Modules that this driver always requires may be loaded here
 	 * by calling LoadSubModule().
 	 */
-
-	/*
-	 * Tell the loader about symbols from other modules that this module
-	 * might refer to.
-	 */
-	LoaderRefSymLists(vgahwSymbols, fbSymbols, xaaSymbols, 
-			  ramdacSymbols, vbeSymbols,
-			  NULL);
 
 	/*
 	 * The return value must be non-NULL on success even though there
@@ -481,8 +427,6 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
   /* The vgahw module should be loaded here when needed */
   if (!xf86LoadSubModule(pScrn, "vgahw")) return FALSE;
 
-  xf86LoaderReqSymLists(vgahwSymbols, NULL);
-
   /* Allocate a vgaHWRec */
   if (!vgaHWGetHWRec(pScrn)) return FALSE;
 
@@ -490,7 +434,6 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
 #ifndef XSERVER_LIBPCIACCESS
   pI740->PciTag = pciTag(pI740->PciInfo->bus, pI740->PciInfo->device,
 			 pI740->PciInfo->func);
-#endif
 
   if (xf86RegisterResources(pI740->pEnt->index, 0, ResNone))
       return FALSE;
@@ -498,7 +441,7 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
     pScrn->racIoFlags = RAC_FB | RAC_COLORMAP;
   else
     pScrn->racMemFlags = RAC_FB | RAC_COLORMAP;
-
+#endif
   /* Set pScrn->monitor */
   pScrn->monitor = pScrn->confScreen->monitor;
 
@@ -781,14 +724,12 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
     I740FreeRec(pScrn);
     return FALSE;
   }
-  xf86LoaderReqSymbols("fbScreenInit","fbPictureInit", NULL);
 
   if (!xf86ReturnOptValBool(pI740->Options, OPTION_NOACCEL, FALSE)) {
     if (!xf86LoadSubModule(pScrn, "xaa")) {
       I740FreeRec(pScrn);
       return FALSE;
     }
-    xf86LoaderReqSymLists(xaaSymbols, NULL);
   }
 
   if (!xf86ReturnOptValBool(pI740->Options, OPTION_SW_CURSOR, FALSE)) {
@@ -796,11 +737,11 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
       I740FreeRec(pScrn);
       return FALSE;
     }
-    xf86LoaderReqSymLists(ramdacSymbols, NULL);
   }
 
   /*  We wont be using the VGA access after the probe */
   if (!xf86ReturnOptValBool(pI740->Options, OPTION_USE_PIO, FALSE)) {
+#ifndef XSERVER_LIBPCIACCESS
     resRange vgaio[] = { {ResShrIoBlock,0x3B0,0x3BB},
 			 {ResShrIoBlock,0x3C0,0x3DF},
 			 _END };
@@ -808,11 +749,13 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
 			 {ResShrMemBlock,0xB8000,0xBFFFF},
 			 {ResShrMemBlock,0xB0000,0xB7FFF},
 			 _END };
-
+#endif
     pI740->usePIO=FALSE;
     I740SetMMIOAccess(pI740);
+#ifndef XSERVER_LIBPCIACCESS
     xf86SetOperatingState(vgaio, pI740->pEnt->index, ResUnusedOpr);
     xf86SetOperatingState(vgamem, pI740->pEnt->index, ResDisableOpr);
+#endif
   } else {
     pI740->usePIO=TRUE;
   }

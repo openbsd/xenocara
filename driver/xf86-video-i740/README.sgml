@@ -96,7 +96,6 @@ section of your xorg.conf file are:
            Driver     "i740"
        EndSection
 </verb>
-or let <tt>xorgconfig</tt> do this for you.
 
 However, if you have problems with auto-detection, you can specify:
 <itemize>
@@ -140,7 +139,7 @@ if it is incorrectly detected.
    <item>Daryll Strauss <email>daryll@precisioninsight.com</email>
 </itemize>
 
-The X11R&relvers; version of this driver originally came from XFree86 4.4 rc2.
+The Xorg version of this driver originally came from XFree86 4.4 rc2.
 
 The XFree86 version of this driver was donated to The XFree86 Project by:
 <verb>

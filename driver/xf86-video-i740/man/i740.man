@@ -15,16 +15,64 @@ i740 \- Intel i740 video driver
 .SH DESCRIPTION
 .B i740
 is an __xservername__ driver for Intel i740 video cards.
-THIS MAN PAGE NEEDS TO BE FILLED IN.
 .SH SUPPORTED HARDWARE
 The
 .B i740
-driver supports...
+driver supports Intel 740 based cards.  A list of cards reported to work
+is provided in the README file with the driver source.
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
 driver.
+.PP
+The driver auto-detects all device information necessary to initialize
+the card.
+.PP
+However, if you have problems with auto-detection, you can specify:
+.TP
+.BI VideoRam " - in kilobytes"
+.TP
+.BI DacSpeed " - in MHz"
+.TP
+.BI MemBase " - physical address of the linear framebuffer"
+.TP
+.BI IOBase "  - physical address of the memory mapped IO registers"
+.PP
+The following driver
+.B options
+are supported on all chipsets:
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disable or enable 2D acceleration. Default: acceleration is enabled.
+.TP
+.BI "Option \*qSWCursor\*q \*q" boolean \*q
+Request a software cursor (hardware is default). Default: off
+.TP
+.BI "Option \*qSDRAM\*q \*q" boolean \*q
+Force the use of SDRAM timings. Default: off
+.TP
+.BI "Option \*qSGRAM\*q \*q" boolean \*q
+Force the use of SGRAM timings. Default: off
+.TP
+.BI "Option \*qSlowRam\*q \*q" boolean \*q
+Force the use of slower ram timings. Default: off
+.TP
+.BI "Option \*qDac6Bit\*q \*q" boolean \*q
+Force the use of a 6 Bit Dac (8 Bit is the default). Default: off
+.TP
+.BI "Option \*qUsePIO\*q \*q" boolean \*q
+Force the use of programmed IO (Memory mapped is the default). Default: off
+.PP
+Note: the i740 X server should automatically detect whether your card
+has SGRAM or SDRAM.  Use the \*qsgram\*q and \*qsdram\*q options if it is
+incorrectly detected.
 .SH "SEE ALSO"
 __xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__)
 .SH AUTHORS
-Authors include: ...
+Authors include:  Kevin E Martin and Daryll Strauss of Precision Insight, Inc.
+.PP
+The XFree86 version of this driver was donated to The XFree86 Project by
+Precision Insight, Inc., Cedar Park, TX, USA
+.PP
+The Xorg version of this driver originally came from XFree86 4.4rc2.
+
