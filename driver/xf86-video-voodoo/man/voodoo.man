@@ -67,6 +67,6 @@ The driver interacts badly with the
 sstfb frame buffer driver as there is insufficient information to restore
 the chip to its previous state. 
 .SH "SEE ALSO"
-__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__)
 .SH AUTHORS
 Authors: Alan Cox, Ghozlane Toumi, Henrik Harmsen.

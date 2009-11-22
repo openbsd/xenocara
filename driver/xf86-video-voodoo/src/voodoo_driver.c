@@ -56,8 +56,10 @@
 #include "xf86cmap.h"
 #include "shadowfb.h"
 #include "vgaHW.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86RAC.h"
 #include "xf86Resources.h"
+#endif
 #include "compiler.h"
 #include "xaa.h"
 
@@ -67,8 +69,13 @@
 #include <X11/extensions/xf86dgastr.h>
 
 #include "opaque.h"
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 static const OptionInfoRec * VoodooAvailableOptions(int chipid, int busid);
 static void	VoodooIdentify(int flags);
@@ -128,34 +135,6 @@ static SymTabRec VoodooChipsets[] = {
   {-1, NULL }
 };
 
-
-/*
- * List of symbols from other modules that this module references.  This
- * list is used to tell the loader that it is OK for symbols here to be
- * unresolved providing that it hasn't been told that they haven't been
- * told that they are essential via a call to xf86LoaderReqSymbols() or
- * xf86LoaderReqSymLists().  The purpose is this is to avoid warnings about
- * unresolved symbols that are not required.
- */
-
-static const char *fbSymbols[] = {
-  "fbScreenInit",
-  "fbPictureInit",
-  NULL
-};
-
-static const char *xaaSymbols[] = {
-    "XAACreateInfoRec",
-    "XAAInit",
-    "XAADestroyInfoRec",
-    NULL
-};
-
-static const char *shadowSymbols[] = {
-  "ShadowFBInit",
-  NULL
-};
-
 #ifdef XFree86LOADER
 
 static XF86ModuleVersionInfo voodooVersRec =
@@ -181,7 +160,6 @@ static pointer voodooSetup(pointer module, pointer opts, int *errmaj, int *errmi
   {
     setupDone = TRUE;
     xf86AddDriver(&VOODOO, module, 0);
-    LoaderRefSymLists(fbSymbols, shadowSymbols, xaaSymbols,NULL);
     return (pointer)1;    
   }
   return NULL;
@@ -583,14 +561,10 @@ VoodooPreInit(ScrnInfoPtr pScrn, int flags)
     return FALSE;
   }
 
-  xf86LoaderReqSymLists(fbSymbols, NULL);
-
   if (!xf86LoadSubModule(pScrn, "xaa")) {
     VoodooFreeRec(pScrn);
     return FALSE;
   }
-  
-  xf86LoaderReqSymLists(xaaSymbols, NULL);
   
   if(pVoo->ShadowFB)
   {
@@ -599,7 +573,6 @@ VoodooPreInit(ScrnInfoPtr pScrn, int flags)
       VoodooFreeRec(pScrn);
       return FALSE;
     }
-    xf86LoaderReqSymLists(shadowSymbols, NULL);
   }
   return TRUE;
 }
