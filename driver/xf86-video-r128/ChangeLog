@@ -1,3 +1,73 @@
+commit d519ef9adca6e60bbafbc5649f1bafef43cebb4e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
+
+    r128: change to using ABI version check
+
+commit e3568b4e5d404076c0f02c1b64af35c8e6d5745f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:32 2009 +1000
+
+    r128: update for resources/RAC API removal
+
+commit 38d301388cfa1f228a6fa0cddf5b7ad6258154d2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 15 15:44:01 2009 -0400
+
+    Use XORG_CHANGELOG macro to create ChangeLog. #22611
+    
+    Adding the macro in configure.ac and use it in Makefile.am
+        Refer to: https://bugs.freedesktop.org/show_bug.cgi?id=22611
+        Global maintenance on all modules
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 178e6f509bb8b351cfa01425ada7331781843954
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 11:51:08 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5d8a8df3aca2f14366946e48df9b674d7254ce04
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jun 13 19:20:24 2009 +0200
+
+    Don't de-reference a NULL pointer in R128FreeScreen in the error path.
+    
+    If R128PreInit() failed, R128FreeRec() was already called and info
+    will be NULL.
+
+commit 771c707eb2bba21b6013327bb62859c37be08673
+Author: John Nielsen <lists@jnielsen.net>
+Date:   Fri Apr 17 16:16:57 2009 -0400
+
+    R128: fix zaphod dualhead after libpciaccess switch
+    
+    fixes bug 21251
+
+commit 08d56c886c6f5cb848e4f5079a66da781ef6da21
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:58:51 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 23a502faeae838010061269184082348a5c43b39
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:32:13 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit ba8cdda0c8c1151e528d5cd432612ab664abf4f3
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 21 19:55:55 2008 +0200
+
+    Kill bare RCS id.
+
 commit e65e95c8c44f47ef044980f59a2549684e6c9403
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Apr 28 10:24:50 2008 +1000

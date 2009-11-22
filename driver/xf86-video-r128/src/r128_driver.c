@@ -87,8 +87,10 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86PciInfo.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86RAC.h"
 #include "xf86Resources.h"
+#endif
 #include "xf86cmap.h"
 #include "xf86xv.h"
 #include "vbe.h"
@@ -101,8 +103,13 @@
 #include "dixstruct.h"
 
 				/* DPMS support. */
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
@@ -234,6 +241,16 @@ static Bool R128MapMMIO(ScrnInfoPtr pScrn)
     if (info->FBDev) {
 	info->MMIO = fbdevHWMapMMIO(pScrn);
     } else {
+        /* If the primary screen has already mapped the MMIO region,
+           use its pointer instead of mapping it a second time. */
+        if (info->IsSecondary) {
+            DevUnion* pPriv = xf86GetEntityPrivate(pScrn->entityList[0], 
+                                                   getR128EntityIndex());
+            R128EntPtr pR128Ent = pPriv->ptr;
+            R128InfoPtr info0 = R128PTR(pR128Ent->pPrimaryScrn);
+            info->MMIO=info0->MMIO;
+            if (info->MMIO) return TRUE;
+        }
 #ifndef XSERVER_LIBPCIACCESS
 	info->MMIO = xf86MapPciMem(pScrn->scrnIndex,
 				   VIDMEM_MMIO | VIDMEM_READSIDEEFFECT,
@@ -1965,10 +1982,12 @@ Bool R128PreInit(ScrnInfoPtr pScrn, int flags)
 	       PCI_DEV_DEV(info->PciInfo),
 	       PCI_DEV_FUNC(info->PciInfo));
 
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(info->pEnt->index, 0, ResNone)) goto fail;
     if (xf86SetOperatingState(resVga, info->pEnt->index, ResUnusedOpr)) goto fail;
 
     pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_VIEWPORT | RAC_CURSOR;
+#endif
     pScrn->monitor     = pScrn->confScreen->monitor;
 
     if (!R128PreInitVisual(pScrn))    goto fail;
