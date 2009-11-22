@@ -35,7 +35,6 @@
 
 #include "sisusb.h"
 
-#include "xf86RAC.h"
 #include "dixstruct.h"
 #include "shadowfb.h"
 #include "fb.h"
@@ -51,8 +50,13 @@
 
 #include "globals.h"
 
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 /*
  * This is intentionally screen-independent.  It indicates the binding
@@ -90,24 +94,6 @@ static SymTabRec SISUSBChipsets[] = {
     { -1,              NULL }
 };
 
-static const char *fbSymbols[] = {
-    "fbPictureInit",
-    "fbScreenInit",
-    NULL
-};
-
-static const char *shadowSymbols[] = {
-    "ShadowFBInit",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(sisusbSetup);
@@ -143,7 +129,6 @@ sisusbSetup(pointer module, pointer opts, int *errmaj, int *errmin)
     if(!setupDone) {
        setupDone = TRUE;
        xf86AddDriver(&SISUSB, module, SISUSB_HaveDriverFuncs);
-       LoaderRefSymLists(fbSymbols, shadowSymbols, ramdacSymbols, NULL);
        return (pointer)TRUE;
     }
 
@@ -862,19 +847,12 @@ SISUSBPreInit(ScrnInfoPtr pScrn, int flags)
 		pScrn->chipset, pSiSUSB->sisusbversion, pSiSUSB->sisusbrevision,
 		pSiSUSB->sisusbpatchlevel);
 
-    /* Operations for which memory access is required */
-    /* USB2VGA: We never need memory or i/o access */
-    pScrn->racMemFlags = 0;
-    pScrn->racIoFlags = 0;
-
     /* Load ramdac module */
     if(!xf86LoadSubModule(pScrn, "ramdac")) {
        SISUSBErrorLog(pScrn, "Could not load ramdac module\n");
        SISUSBFreeRec(pScrn);
        return FALSE;
     }
-
-    xf86LoaderReqSymLists(ramdacSymbols, NULL);
 
     /* Set pScrn->monitor */
     pScrn->monitor = pScrn->confScreen->monitor;
@@ -1444,7 +1422,6 @@ SISUSBPreInit(ScrnInfoPtr pScrn, int flags)
         SISUSBFreeRec(pScrn);
         return FALSE;
     }
-    xf86LoaderReqSymLists(fbSymbols, NULL);
 
     /* Load shadowfb (if needed) */
     if(pSiSUSB->ShadowFB) {
@@ -1454,7 +1431,6 @@ SISUSBPreInit(ScrnInfoPtr pScrn, int flags)
 	  SISUSBFreeRec(pScrn);
           return FALSE;
        }
-       xf86LoaderReqSymLists(shadowSymbols, NULL);
     }
 
     pSiSUSB->UseVESA = 0;

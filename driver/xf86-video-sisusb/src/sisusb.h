@@ -83,7 +83,6 @@
 #include "compiler.h"
 #include "xf86Priv.h"
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
 #include "xf86.h"
 #include "xf86Cursor.h"
 #include "xf86cmap.h"
