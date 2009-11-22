@@ -29,9 +29,13 @@ in this Software without prior written authorization from the XFree86 Project.
 #endif
 
 #include <unistd.h>
+
+#include "xf86.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
 /* Needed by Resources Access Control (RAC) */
 #include "xf86RAC.h"
+#endif
 
 #include "xf86DDC.h"
 #include "vbe.h"
@@ -58,8 +62,13 @@ in this Software without prior written authorization from the XFree86 Project.
 		
 
 #include "globals.h"
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 #ifndef USE_INT10
 #define USE_INT10 0
@@ -252,101 +261,6 @@ static const OptionInfoRec S3VOptions[] =
    {-1, NULL, OPTV_NONE,	{0}, FALSE}
 };
 
-
-/*
- * Lists of symbols that may/may not be required by this driver.
- * This allows the loader to know which ones to issue warnings for.
- *
- * Note that vgahwSymbols and xaaSymbols are referenced outside the
- * XFree86LOADER define in later code, so are defined outside of that
- * define here also.
- */
-
-static const char *vgahwSymbols[] = {
-    "vgaHWBlankScreen",
-    "vgaHWCopyReg",
-    "vgaHWGetHWRec",
-    "vgaHWGetIOBase",
-    "vgaHWGetIndex",
-    "vgaHWInit",
-    "vgaHWLock",
-    "vgaHWMapMem",
-    "vgaHWProtect",
-    "vgaHWRestore",
-    "vgaHWSave",
-    "vgaHWSaveScreen",
-    "vgaHWSetMmioFuncs",
-    "vgaHWSetStdFuncs",
-    "vgaHWUnmapMem",
-    "vgaHWddc1SetSpeedWeak",
-   /* not used by ViRGE (at the moment :( ) */
-   /*
-    "vgaHWUnlock",
-    "vgaHWFreeHWRec",
-    */
-    NULL
-};
-
-static const char *xaaSymbols[] = {
-    "XAAGetCopyROP",
-    "XAAGetCopyROP_PM",
-    "XAADestroyInfoRec",
-    "XAACreateInfoRec",
-    "XAAHelpPatternROP",
-    "XAAHelpSolidROP",
-    "XAAInit",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86InitCursor",
-#if 0
-    "xf86DestroyCursorInfoRec",
-#endif
-    NULL
-};
-
-static const char *ddcSymbols[] = {
-    "xf86PrintEDID",
-    "xf86DoEDID_DDC1",
-    "xf86DoEDID_DDC2",
-    "xf86SetDDCproperties",
-    NULL
-};
-
-static const char *i2cSymbols[] = {
-    "xf86CreateI2CBusRec",
-    "xf86I2CBusInit",
-    NULL
-};
-
-static const char *shadowSymbols[] = {
-    "ShadowFBInit",
-    NULL
-};
-
-static const char *vbeSymbols[] = {
-    "VBEInit",
-    "vbeDoEDID",
-    "vbeFree",
-    NULL
-};
-
-static const char *fbSymbols[] = {
-  "fbPictureInit",
-  "fbScreenInit",
-  NULL
-};
-
-#if USE_INT10
-static const char *int10Symbols[] = {
-    "xf86InitInt10",
-    "xf86FreeInt10",
-    NULL
-};
-#endif
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(s3virgeSetup);
@@ -386,22 +300,6 @@ s3virgeSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	setupDone = TRUE;
 	xf86AddDriver(&S3VIRGE, module, 0);
 
-	/*
-	 * Modules that this driver always requires can be loaded here
-	 * by calling LoadSubModule().
-	 */
-
-	/*
-	 * Tell the loader about symbols from other modules that this module
-	 * might refer to.
-	 */
-	LoaderRefSymLists(vgahwSymbols, xaaSymbols, ramdacSymbols,
-			  ddcSymbols, i2cSymbols,
-#if USE_INT10
-			  int10Symbols,
-#endif
-			  vbeSymbols, shadowSymbols, fbSymbols, NULL);
-			  
 	/*
 	 * The return value must be non-NULL on success even though there
 	 * is no TearDownProc.
@@ -616,8 +514,6 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
     if (!xf86LoadSubModule(pScrn, "vgahw"))
 	return FALSE;
 	   
-    xf86LoaderReqSymLists(vgahwSymbols, NULL);
-	
     /*
      * Allocate a vgaHWRec
      */
@@ -899,16 +795,17 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
     
     pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
     
+#ifndef XSERVER_LIBPCIACCESS
     if (pEnt->resources) {
 	xfree(pEnt);
 	S3VFreeRec(pScrn);
 	return FALSE;
     }
+#endif
 
 #if USE_INT10
     if (xf86LoadSubModule(pScrn, "int10")) {
  	xf86Int10InfoPtr pInt;
- 	xf86LoaderReqSymLists(int10Symbols, NULL);
 #if 1
 	xf86DrvMsg(pScrn->scrnIndex,X_INFO,"initializing int10\n");
 	pInt = xf86InitInt10(pEnt->index);
@@ -917,14 +814,15 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
     }
 #endif
     if (xf86LoadSubModule(pScrn, "vbe")) {
-	xf86LoaderReqSymLists(vbeSymbols, NULL);
 	ps3v->pVbe =  VBEInit(NULL,pEnt->index);
     }
 
     ps3v->PciInfo = xf86GetPciInfoForEntity(pEnt->index);
+#ifndef XSERVER_LIBPCIACCESS
     xf86RegisterResources(pEnt->index,NULL,ResNone);
     xf86SetOperatingState(resVgaIo, pEnt->index, ResUnusedOpr);
     xf86SetOperatingState(resVgaMem, pEnt->index, ResDisableOpr);
+#endif
 
     /*
      * Set the Chipset and ChipRev, allowing config file entries to
@@ -1032,7 +930,6 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
    if (xf86LoadSubModule(pScrn, "ddc")) {
        xf86MonPtr pMon = NULL;
        
-       xf86LoaderReqSymLists(ddcSymbols, NULL);
        if ((ps3v->pVbe) 
 	   && ((pMon = xf86PrintEDID(vbeDoEDID(ps3v->pVbe, NULL))) != NULL))
 	   xf86SetDDCproperties(pScrn,pMon);
@@ -1427,7 +1324,6 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 	S3VFreeRec(pScrn);
 	return FALSE;
     }	       
-    xf86LoaderReqSymLists(fbSymbols, NULL);       
 
     /* Load XAA if needed */
     if (!ps3v->NoAccel || ps3v->hwcursor ) {
@@ -1435,7 +1331,6 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 	    S3VFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(xaaSymbols, NULL);
     }
 
     /* Load ramdac if needed */
@@ -1444,7 +1339,6 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 	    S3VFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(ramdacSymbols, NULL);
     }
 
     if (ps3v->shadowFB) {
@@ -1452,7 +1346,6 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 	    S3VFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(shadowSymbols, NULL);
     }
 
     /* Setup WAITFIFO() for accel and ModeInit() */
@@ -3890,7 +3783,6 @@ S3Vddc2(int scrnIndex)
     S3VPtr ps3v = S3VPTR(pScrn);
     
     if ( xf86LoadSubModule(pScrn, "i2c") ) {
-	xf86LoaderReqSymLists(i2cSymbols,NULL);
 	if (S3V_I2CInit(pScrn)) {
 	    CARD32 tmp = (INREG(DDC_REG));
 	    OUTREG(DDC_REG,(tmp | 0x13));

@@ -221,7 +221,7 @@ development debug option.  Default: off.
 Enable or disable a cr3a fix added for ViRGE MX.  Default: on.
 
 .SH SEE ALSO
-__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__)
 
 .SH KNOWN BUGS
 The VideoRam generic driver parameter is presently ignored by the
