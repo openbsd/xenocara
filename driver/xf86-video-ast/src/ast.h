@@ -158,6 +158,7 @@ typedef struct _ASTRec {
     ScreenBlockHandlerProcPtr BlockHandler;
 
     UCHAR		jChipType;
+    UCHAR		jDRAMType;
              
     Bool 		noAccel;
     Bool 		noHWC;
@@ -186,6 +187,11 @@ typedef struct _ASTRec {
     HWCINFO    		HWCInfo;
     ULONG		ulCMDReg;   
     Bool		EnableClip;
+
+    int			clip_left;    
+    int			clip_top;
+    int			clip_right;    
+    int			clip_bottom;    	
    		
 } ASTRec, *ASTRecPtr;
 	

@@ -25,8 +25,6 @@
 #endif
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
-#include "xf86RAC.h"
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mibstore.h"
@@ -59,16 +57,20 @@
 /* Prototype type declaration*/
 void vASTOpenKey(ScrnInfoPtr pScrn);
 Bool bASTRegInit(ScrnInfoPtr pScrn);
+void GetDRAMInfo(ScrnInfoPtr pScrn);
 ULONG GetVRAMInfo(ScrnInfoPtr pScrn);
 ULONG GetMaxDCLK(ScrnInfoPtr pScrn);
 void GetChipType(ScrnInfoPtr pScrn);
 void vAST1000DisplayOn(ASTRecPtr pAST);
 void vAST1000DisplayOff(ASTRecPtr pAST);
+void ASTBlankScreen(ScrnInfoPtr pScrn, Bool unblack);
 void vSetStartAddressCRT1(ASTRecPtr pAST, ULONG base);
 void vASTLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices, LOCO *colors, VisualPtr pVisual);
 void ASTDisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode, int flags);
 Bool GetVGA2EDID(ScrnInfoPtr pScrn, unsigned char *pEDIDBuffer);
 void vInitDRAMReg(ScrnInfoPtr pScrn);
+Bool bIsVGAEnabled(ScrnInfoPtr pScrn);
+Bool InitVGA(ScrnInfoPtr pScrn);
 
 void
 vASTOpenKey(ScrnInfoPtr pScrn)
@@ -90,6 +92,46 @@ bASTRegInit(ScrnInfoPtr pScrn)
    return (TRUE);
    	
 }
+
+void
+GetDRAMInfo(ScrnInfoPtr pScrn)
+{
+    ASTRecPtr pAST = ASTPTR(pScrn);
+    ULONG ulData;
+    
+    if ( (pAST->jChipType != AST2000) )
+    {
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = 0x1e6e0000;
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;
+                        
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0x10000) = 0xFC600309;
+        do {
+           ; 	
+        } while (*(volatile ULONG *) (pAST->MMIOVirtualAddr + 0x10000) != 0x01);
+        
+        ulData = *(volatile ULONG *) (pAST->MMIOVirtualAddr + 0x10004);
+        
+        switch (ulData & 0x0C)
+        {
+        case 0x00:	
+        case 0x04:
+            pAST->jDRAMType = DRAMTYPE_512Mx16;
+            break;        
+        
+        case 0x08:
+            if (ulData & 0x40)		/* 16bits */
+                pAST->jDRAMType = DRAMTYPE_1Gx16;
+            else			/* 32bits */
+                pAST->jDRAMType = DRAMTYPE_512Mx32;
+            break;
+            
+        case 0x0C:
+            pAST->jDRAMType = DRAMTYPE_1Gx32;
+            break;
+        }	
+   }	
+	
+} /* GetDRAMInfo */
 
 ULONG
 GetVRAMInfo(ScrnInfoPtr pScrn)
@@ -275,6 +317,17 @@ vAST1000DisplayOn(ASTRecPtr pAST)
     
 }	
 
+void ASTBlankScreen(ScrnInfoPtr pScrn, Bool unblack)
+{
+   ASTRecPtr pAST;
+
+   pAST = ASTPTR(pScrn);
+	
+    if (unblack)
+        vAST1000DisplayOn(pAST);
+    else
+        vAST1000DisplayOff(pAST);	
+} 
 
 void
 vASTLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices, LOCO *colors,
@@ -474,6 +527,69 @@ GetVGA2EDID(ScrnInfoPtr pScrn, unsigned char *pEDIDBuffer)
 
 } /* GetVGA2EDID */
 
+/* Init VGA */
+Bool bIsVGAEnabled(ScrnInfoPtr pScrn)
+{
+    ASTRecPtr pAST;
+    UCHAR ch;
+   
+    pAST = ASTPTR(pScrn);
+
+    ch = GetReg(pAST->RelocateIO+0x43);
+
+    return (ch & 0x01);	
+}	
+
+void vEnableVGA(ScrnInfoPtr pScrn)
+{
+    ASTRecPtr pAST;
+   
+    pAST = ASTPTR(pScrn);
+
+    SetReg(pAST->RelocateIO+0x43, 0x01);
+    SetReg(pAST->RelocateIO+0x42, 0x01);   
+	
+}	
+
+UCHAR ExtRegInfo[] = {
+    0x0F,
+    0x07,
+    0x1C,
+    0xFF
+};
+
+void vSetDefExtReg(ScrnInfoPtr pScrn)
+{
+    ASTRecPtr pAST;
+    UCHAR i, jIndex, *pjExtRegInfo;
+   
+    pAST = ASTPTR(pScrn);
+
+    /* Reset Scratch */
+    for (i=0x81; i<=0x8F; i++)
+    {
+        SetIndexReg(CRTC_PORT, i, 0x00);
+    }
+
+    /* Set Ext. Reg */
+    pjExtRegInfo = ExtRegInfo;    
+    jIndex = 0xA0;
+    while (*(UCHAR *) (pjExtRegInfo) != 0xFF)
+    {
+        SetIndexRegMask(CRTC_PORT,jIndex, 0x00, *(UCHAR *) (pjExtRegInfo));
+        jIndex++;
+        pjExtRegInfo++;
+    }
+
+    /* Set Ext. Default */
+    SetIndexRegMask(CRTC_PORT,0x8C, 0x00, 0x01);    	
+    SetIndexRegMask(CRTC_PORT,0xB7, 0x00, 0x00);    	
+    
+    /* Enable RAMDAC for A1, ycchen@113005 */
+    SetIndexRegMask(CRTC_PORT,0xB6, 0xFF, 0x04);    	
+      	
+}	
+
 typedef struct _AST_DRAMStruct {
 	
     USHORT 	Index;
@@ -619,7 +735,7 @@ void vInitDRAMReg(ScrnInfoPtr pScrn)
 {
     AST_DRAMStruct *pjDRAMRegInfo;
     ASTRecPtr pAST = ASTPTR(pScrn);
-    ULONG i, ulTemp;
+    ULONG i, ulTemp, ulData;
     UCHAR jReg;
 
     GetIndexRegMask(CRTC_PORT, 0xD0, 0xFF, jReg);  
@@ -640,9 +756,7 @@ void vInitDRAMReg(ScrnInfoPtr pScrn)
                 
         }
     	else	/* AST2100/1100 */	
-    	{
-    	    GetChipType(pScrn);
-            
+    	{           
     	    if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200))
                 pjDRAMRegInfo = AST2100DRAMTableData;
     	    else
@@ -672,9 +786,17 @@ void vInitDRAMReg(ScrnInfoPtr pScrn)
             }
             else if ( (pjDRAMRegInfo->Index == 0x0004) && (pAST->jChipType != AST2000) )
             {
+            	ulData = pjDRAMRegInfo->Data;
+            	
+            	if (pAST->jDRAMType == DRAMTYPE_1Gx16)
+            	    ulData = 0x00000d89;
+            	else if (pAST->jDRAMType == DRAMTYPE_1Gx32)
+            	    ulData = 0x00000c8d;
+            	        
                 ulTemp = *(ULONG *) (pAST->MMIOVirtualAddr + 0x12070);
                 ulTemp &= 0x0000000C;
-                *(ULONG *) (pAST->MMIOVirtualAddr + 0x10000 + pjDRAMRegInfo->Index) = (pjDRAMRegInfo->Data | ulTemp);               
+                ulTemp <<= 2;                
+                *(ULONG *) (pAST->MMIOVirtualAddr + 0x10000 + pjDRAMRegInfo->Index) = (ulData | ulTemp);               
             }	                
             else
             {	           	           
@@ -708,3 +830,29 @@ void vInitDRAMReg(ScrnInfoPtr pScrn)
     } while ((jReg & 0x40) == 0);
        
 } /* vInitDRAMReg */
+
+Bool InitVGA(ScrnInfoPtr pScrn)
+{
+   ASTRecPtr pAST;
+   ULONG ulData;
+
+   pAST = ASTPTR(pScrn);
+
+   {
+       /* Enable PCI */
+       PCI_READ_LONG(pAST->PciInfo, &ulData, 0x04);
+       ulData |= 0x03;
+       PCI_WRITE_LONG(pAST->PciInfo, ulData, 0x04);       
+
+       /* Enable VGA */
+       vEnableVGA(pScrn);
+       
+       vASTOpenKey(pScrn);
+       vSetDefExtReg(pScrn);
+       
+       vInitDRAMReg(pScrn);      
+             
+   }
+
+   return (TRUE);	
+} /* Init VGA */

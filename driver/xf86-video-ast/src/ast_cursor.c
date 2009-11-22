@@ -25,8 +25,6 @@
 #endif
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
-#include "xf86RAC.h"
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mibstore.h"
@@ -200,12 +198,18 @@ static void
 ASTSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
 {
     ASTRecPtr 	pAST = ASTPTR(pScrn);
-    
-    pAST->HWCInfo.fg = (fg & 0x0F) | (((fg>>8) & 0x0F) << 4) | (((fg>>16) & 0x0F) << 8);
-    pAST->HWCInfo.bg = (bg & 0x0F) | (((bg>>8) & 0x0F) << 4) | (((bg>>16) & 0x0F) << 8);    
+    ULONG fg1, bg1;
+        
+    fg1 = (fg & 0x0F) | (((fg>>8) & 0x0F) << 4) | (((fg>>16) & 0x0F) << 8);
+    bg1 = (bg & 0x0F) | (((bg>>8) & 0x0F) << 4) | (((bg>>16) & 0x0F) << 8);    
 
-    /* Fixed xorg bugzilla #20609, ycchen@031209 */    
-    ASTLoadCursorImage(pScrn, pAST->HWCInfo.cursorpattern);
+    /* Fixed xorg bugzilla #20609, ycchen@031209 */
+    if ( (fg1 != pAST->HWCInfo.fg) || (bg1 != pAST->HWCInfo.bg) )    
+    {
+    	pAST->HWCInfo.fg = fg1;
+    	pAST->HWCInfo.bg = bg1;
+        ASTLoadCursorImage(pScrn, pAST->HWCInfo.cursorpattern);
+    }    
 
 }
 
@@ -230,7 +234,7 @@ ASTLoadCursorImage(ScrnInfoPtr pScrn, UCHAR *src)
     /* copy to hwc info */
     for (i=0; i< MAX_HWC_WIDTH*MAX_HWC_HEIGHT/4; i+=4)
        *(ULONG *) (pAST->HWCInfo.cursorpattern + i) = *(ULONG *) (src + i);
-
+ 
     /* copy cursor image to cache */
     pjSrcXor = src;
     pjSrcAnd = src + (MAX_HWC_WIDTH*MAX_HWC_HEIGHT/8);
@@ -250,12 +254,11 @@ ASTLoadCursorImage(ScrnInfoPtr pScrn, UCHAR *src)
                 ulTempDstAnd32[1] = ((jTempSrcAnd32 >> (k-1)) & 0x01) ? 0x80000000L:0x00L;   
                 ulTempDstXor32[1] = ((jTempSrcXor32 >> (k-1)) & 0x01) ? 0x40000000L:0x00L;                   	                                  	  
                 ulTempDstData32[1] = ((jTempSrcXor32 >> (k-1)) & 0x01) ? (pAST->HWCInfo.fg << 16):(pAST->HWCInfo.bg << 16);
-                ulTempDstData32[1] = ((jTempSrcXor32 >> (k-1)) & 0x01) ? (pAST->HWCInfo.fg << 16):(pAST->HWCInfo.bg << 16);               
                 /* No inverse for X Window cursor, ycchen@111808 */
                 if (ulTempDstAnd32[0])
                     ulTempDstXor32[0] = 0;
                 if (ulTempDstAnd32[1])
-                    ulTempDstXor32[1] = 0;                
+                    ulTempDstXor32[1] = 0;                    
                 *((ULONG *) pjDstData) = ulTempDstAnd32[0] | ulTempDstXor32[0] | ulTempDstData32[0] | ulTempDstAnd32[1] | ulTempDstXor32[1] | ulTempDstData32[1];
                 ulCheckSum += *((ULONG *) pjDstData);                               
                 pjDstData += 4;

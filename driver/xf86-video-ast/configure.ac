@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-ast],
-        0.89.0,
+        0.89.9,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-ast)
 

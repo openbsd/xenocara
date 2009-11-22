@@ -1,3 +1,9 @@
+2009-06-03  Y.C. Chen  <yc_chen@aspedtech.com>
+        * src/ast_driver.c, ast_vgatool.c
+        - Fixed the screen flashing issue while running x11perf
+        * src/ast.h, ast_driver.c, ast_vgatool.c/h
+        - Fixed Suspend can't resume issue
+        
 2009-04-13  Y.C. Chen  <yc_chen@aspedtech.com>
         * src/ast.h, ast_cursor.c
         - Fixed xorg bugzilla #20606

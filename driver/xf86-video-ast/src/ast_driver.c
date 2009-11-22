@@ -25,8 +25,10 @@
 #endif
 #include "xf86.h"
 #include "xf86_OSproc.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
 #include "xf86RAC.h"
+#endif
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mibstore.h"
@@ -64,6 +66,7 @@ extern void ASTUnmapMMIO(ScrnInfoPtr pScrn);
 
 extern void vASTOpenKey(ScrnInfoPtr pScrn);
 extern Bool bASTRegInit(ScrnInfoPtr pScrn);
+extern void GetDRAMInfo(ScrnInfoPtr pScrn);
 extern ULONG GetVRAMInfo(ScrnInfoPtr pScrn);
 extern ULONG GetMaxDCLK(ScrnInfoPtr pScrn);
 extern void GetChipType(ScrnInfoPtr pScrn);
@@ -73,6 +76,9 @@ extern void vSetStartAddressCRT1(ASTRecPtr pAST, ULONG base);
 extern Bool ASTSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
 extern Bool GetVGA2EDID(ScrnInfoPtr pScrn, unsigned char *pEDIDBuffer);
 extern void vInitDRAMReg(ScrnInfoPtr pScrn);
+extern Bool bIsVGAEnabled(ScrnInfoPtr pScrn);
+extern void ASTBlankScreen(ScrnInfoPtr pScreen, Bool unblack);
+extern Bool InitVGA(ScrnInfoPtr pScrn);
 
 extern Bool bInitCMDQInfo(ScrnInfoPtr pScrn, ASTRecPtr pAST);
 extern Bool bEnableCMDQ(ScrnInfoPtr pScrn, ASTRecPtr pAST);
@@ -158,93 +164,6 @@ static const OptionInfoRec ASTOptions[] = {
    {-1,			NULL,		OPTV_NONE,	{0}, 	FALSE}
 };
 
-const char *vgahwSymbols[] = {
-   "vgaHWFreeHWRec",
-   "vgaHWGetHWRec",
-   "vgaHWGetIOBase",
-   "vgaHWGetIndex",
-   "vgaHWInit",
-   "vgaHWLock",
-   "vgaHWMapMem",
-   "vgaHWProtect",
-   "vgaHWRestore",
-   "vgaHWSave",
-   "vgaHWSaveScreen",
-   "vgaHWSetMmioFuncs",
-   "vgaHWUnlock",
-   "vgaHWUnmapMem",
-   NULL
-};
-
-const char *fbSymbols[] = {
-   "fbPictureInit",
-   "fbScreenInit",
-   NULL
-};
-
-const char *vbeSymbols[] = {
-   "VBEInit",
-   "VBEFreeModeInfo",
-   "VBEFreeVBEInfo",
-   "VBEGetModeInfo",
-   "VBEGetModePool",
-   "VBEGetVBEInfo",
-   "VBEGetVBEMode",
-   "VBEPrintModes",
-   "VBESaveRestore",
-   "VBESetDisplayStart",
-   "VBESetGetDACPaletteFormat",
-   "VBESetGetLogicalScanlineLength",
-   "VBESetGetPaletteData",
-   "VBESetModeNames",
-   "VBESetModeParameters",
-   "VBESetVBEMode",
-   "VBEValidateModes",
-   "vbeDoEDID",
-   "vbeFree",
-   NULL
-};
-
-#ifdef XFree86LOADER
-static const char *vbeOptionalSymbols[] = {
-   "VBEDPMSSet",
-   "VBEGetPixelClock",
-   NULL
-};
-#endif
-
-const char *ddcSymbols[] = {
-   "xf86PrintEDID",
-   "xf86SetDDCproperties",
-   NULL
-};
-
-const char *int10Symbols[] = {
-   "xf86ExecX86int10",
-   "xf86InitInt10",
-   "xf86Int10AllocPages",
-   "xf86int10Addr",
-   "xf86FreeInt10",
-   NULL
-};
-
-const char *xaaSymbols[] = {
-   "XAACreateInfoRec",
-   "XAADestroyInfoRec",
-   "XAAInit",
-   "XAACopyROP",
-   "XAAPatternROP",
-   NULL
-};
-
-const char *ramdacSymbols[] = {
-   "xf86CreateCursorInfoRec",
-   "xf86DestroyCursorInfoRec",
-   "xf86InitCursor",
-   NULL
-};
-
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(astSetup);
@@ -278,15 +197,6 @@ astSetup(pointer module, pointer opts, int *errmaj, int *errmin)
    if (!setupDone) {
       setupDone = TRUE;
       xf86AddDriver(&AST, module, 0);
-
-      /*
-       * Tell the loader about symbols from other modules that this module
-       * might refer to.
-       */
-      LoaderRefSymLists(vgahwSymbols,
-			fbSymbols, xaaSymbols, ramdacSymbols,
-			vbeSymbols, vbeOptionalSymbols,
-			ddcSymbols, int10Symbols, NULL);
 
       /*
        * The return value must be non-NULL on success even though there
@@ -439,18 +349,18 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    if (pEnt->location.type != BUS_PCI)
        return FALSE;
 
+#ifndef XSERVER_LIBPCIACCESS
    if (xf86RegisterResources(pEnt->index, 0, ResExclusive))
        return FALSE;
+#endif
 
    /* The vgahw module should be loaded here when needed */
    if (!xf86LoadSubModule(pScrn, "vgahw"))
       return FALSE;
-   xf86LoaderReqSymLists(vgahwSymbols, NULL);
 
    /* The fb module should be loaded here when needed */
    if (!xf86LoadSubModule(pScrn, "fb"))
       return FALSE;
-   xf86LoaderReqSymLists(fbSymbols, NULL);      
    	
    /* Allocate a vgaHWRec */
    if (!vgaHWGetHWRec(pScrn))
@@ -492,8 +402,10 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    pScrn->progClock = TRUE;
    pScrn->rgbBits = 6;
    pScrn->monitor = pScrn->confScreen->monitor; /* should be initialized before set gamma */
+#ifndef XSERVER_LIBPCIACCESS
    pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;
    pScrn->racIoFlags = RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;   
+#endif
       
    /*
     * If the driver can do gamma correction, it should call xf86SetGamma()
@@ -624,13 +536,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    /* Init VGA Adapter */
    if (!xf86IsPrimaryPci(pAST->PciInfo))
    {
-       if (xf86LoadSubModule(pScrn, "int10")) {
- 	       xf86Int10InfoPtr pInt10;
-	       xf86LoaderReqSymLists(int10Symbols, NULL);
-	       xf86DrvMsg(pScrn->scrnIndex,X_INFO,"initializing int10\n");
-	       pInt10 = xf86InitInt10(pAST->pEnt->index);
-	       xf86FreeInt10(pInt10);
-       }
+       InitVGA(pScrn);      	
    }
 
    vASTOpenKey(pScrn);
@@ -642,10 +548,8 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    else
        pAST->jChipType = AST2000;
 
-   if (!xf86IsPrimaryPci(pAST->PciInfo))
-   {   
-       vInitDRAMReg (pScrn);
-   }
+   /* Get DRAM Info */
+   GetDRAMInfo(pScrn);
       
    /* Map Framebuffer */
    pScrn->videoRam = GetVRAMInfo(pScrn) / 1024;
@@ -731,7 +635,6 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
 	   ASTFreeRec(pScrn);
 	   return FALSE;
        }       
-       xf86LoaderReqSymLists(xaaSymbols, NULL);
        
        pAST->noAccel = FALSE; 
        
@@ -765,7 +668,6 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
 	 ASTFreeRec(pScrn);
 	 return FALSE;
       }
-      xf86LoaderReqSymLists(ramdacSymbols, NULL);
       
       pAST->noHWC = FALSE;  
       pAST->HWCInfo.HWC_NUM = DEFAULT_HWC_NUM;
@@ -776,9 +678,11 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    }    
 #endif
 
+#ifndef XSERVER_LIBPCIACCESS
    /*  We won't be using the VGA access after the probe */
    xf86SetOperatingState(resVgaIo, pAST->pEnt->index, ResUnusedOpr);
    xf86SetOperatingState(resVgaMem, pAST->pEnt->index, ResDisableOpr);
+#endif
 
    return TRUE;
 }
@@ -977,6 +881,13 @@ ASTEnterVT(int scrnIndex, int flags)
 {
    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
 
+   /* Fixed suspend can't resume issue */
+   if (!bIsVGAEnabled(pScrn))
+   {
+       InitVGA(pScrn);      	   	
+       ASTRestore(pScrn);
+   }   
+
    if (!ASTModeInit(pScrn, pScrn->currentMode))
       return FALSE;
    ASTAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
@@ -1113,7 +1024,17 @@ ASTFreeRec(ScrnInfoPtr pScrn)
 static Bool
 ASTSaveScreen(ScreenPtr pScreen, Bool unblack)
 {
-   return vgaHWSaveScreen(pScreen, unblack);
+   /* replacement of vgaHWBlankScreen(pScrn, unblank) without seq reset */
+   /* return vgaHWSaveScreen(pScreen, unblack); */   
+   ScrnInfoPtr pScrn = NULL;
+
+   if (pScreen != NULL)
+      pScrn = xf86Screens[pScreen->myNum];
+
+   if ((pScrn != NULL) && pScrn->vtSema) {
+     ASTBlankScreen(pScrn, unblack);
+   }
+   return (TRUE);   
 }
 
 static Bool
@@ -1261,7 +1182,6 @@ ASTDoDDC(ScrnInfoPtr pScrn, int index)
    }
 
    if (xf86LoadSubModule(pScrn, "vbe") && (pVbe = VBEInit(NULL, index))) {
-      xf86LoaderReqSymLists(vbeSymbols, NULL);
       MonInfo1 = vbeDoEDID(pVbe, NULL);
       MonInfo = MonInfo1;
       
