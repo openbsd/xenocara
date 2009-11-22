@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-wsfb],
-        0.2.1,
+        0.3.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-wsfb)
 

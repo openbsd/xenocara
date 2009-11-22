@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.18 2009/10/19 20:01:30 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.19 2009/11/22 18:48:19 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -68,8 +68,10 @@
 #endif
 #include "fb.h"
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
 #include "xf86RAC.h"
+#endif
 
 #ifdef XvExtension
 #include "xf86xv.h"
@@ -183,22 +185,6 @@ static const OptionInfoRec WsfbOptions[] = {
 	{ -1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
-/* Symbols needed from other modules. */
-static const char *fbSymbols[] = {
-	"fbPictureInit",
-	"fbScreenInit",
-	NULL
-};
-static const char *shadowSymbols[] = {
-	"shadowAdd",
-	"shadowSetup",
-	"shadowUpdatePacked",
-	"shadowUpdatePackedWeak",
-	"shadowUpdateRotatePacked",
-	"shadowUpdateRotatePackedWeak",
-	NULL
-};
-
 #ifdef XFree86LOADER
 static XF86ModuleVersionInfo WsfbVersRec = {
 	"wsfb",
@@ -236,7 +222,6 @@ WsfbSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	if (!setupDone) {
 		setupDone = TRUE;
 		xf86AddDriver(&WSFB, module, HaveDriverFuncs);
-		LoaderRefSymLists(fbSymbols, shadowSymbols, NULL);
 		return (pointer)1;
 	} else {
 		if (errmaj != NULL)
@@ -433,8 +418,10 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 
 	fPtr->pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 	pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;
 	pScrn->racIoFlags = pScrn->racMemFlags;
+#endif
 
 	dev = xf86FindOptionValue(fPtr->pEnt->device->options, "device");
 	fPtr->fd = wsfb_open(dev);
@@ -779,18 +766,10 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			WsfbFreeRec(pScrn);
 			return FALSE;
 		}
-		xf86LoaderReqSymLists(shadowSymbols, NULL);
 	}
 	if (mod && xf86LoadSubModule(pScrn, mod) == NULL) {
 		WsfbFreeRec(pScrn);
 		return FALSE;
-	}
-	if (mod) {
-		if (reqSym) {
-			xf86LoaderReqSymbols(reqSym, NULL);
-		} else {
-			xf86LoaderReqSymLists(fbSymbols, NULL);
-		}
 	}
 	TRACE_EXIT("PreInit");
 	return TRUE;
