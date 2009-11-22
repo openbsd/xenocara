@@ -73,8 +73,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -155,6 +157,7 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -180,6 +183,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
 sbindir = @sbindir@
+sdkdir = @sdkdir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
@@ -234,9 +238,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  man/Makefile
+	  $(AUTOMAKE) --foreign  man/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
