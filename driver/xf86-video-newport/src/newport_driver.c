@@ -247,7 +247,9 @@ NewportProbe(DriverPtr drv, int flags)
 	Bool foundScreen = FALSE;
 	GDevPtr *devSections;
 	GDevPtr dev = NULL;
+#ifndef XSERVER_LIBPCIACCESS
 	resRange range[] = { {ResExcMemBlock ,0,0}, _END };
+#endif
 	unsigned probedIDs[NEWPORT_MAX_BOARDS];
 	memType base;
 
@@ -270,10 +272,12 @@ NewportProbe(DriverPtr drv, int flags)
 					ScrnInfoPtr pScrn = NULL;
 
 					entity = xf86ClaimNoSlot(drv, 0, dev, TRUE);
+#ifndef XSERVER_LIBPCIACCESS
 					base = (NEWPORT_BASE_ADDR0
 						+ busID * NEWPORT_BASE_OFFSET);
 					RANGE(range[0], base, base + sizeof(NewportRegs),\
 							ResExcMemBlock);
+#endif
 					pScrn = xf86AllocateScreen(drv, 0);
 					xf86AddEntityToScreen(pScrn, entity);
 					pScrn->driverVersion = NEWPORT_VERSION;
