@@ -1,3 +1,89 @@
+commit 1377264aaf712025ee695eb51b0ec076ee29bea8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 11 11:36:23 2009 +1000
+
+    void 1.3.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1f8f6431bf84228b3c5877be8e20eeb43dcab64d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 10 11:25:21 2009 +1000
+
+    Require xorg-macros 1.3 and XORG_DEFAULT_OPTIONS.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6b476f2e22337e6d0b4f0e6194ed25e0ed0f9330
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 7 17:05:56 2009 +1000
+
+    Don't pass an empty RMLVO to InitKeyboardDeviceStruct.
+    
+    Passing in NULL is ok, an empty one isn't.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6bc27d6b56336c6dbaad026fb0478f7e620c6258
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 7 14:52:11 2009 +1000
+
+    Remove some unused variables from configure.
+
+commit df567ec35b67ae83269e97d377e4c4e060c6eb63
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 7 14:49:15 2009 +1000
+
+    man: void is only necessary for server < 1.4
+    
+    1.4 and input hotplug introduced virtual core devices.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a2ce16486c63e48446cc0fb0e5ea4153cae98e90
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 7 14:48:05 2009 +1000
+
+    Remove RCS tags, some useless comments, empty AUTHORS from man.
+
+commit 7d62e4c5d4dc158be6224b5a048f206d2ff7b0ec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 8 15:10:34 2009 +1000
+
+    void doesn't require randrproto or inputproto.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e1e98ad7d6b813854420206bca6c88356656c299
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 8 15:09:10 2009 +1000
+
+    Remove long-obsolete chunks from configure.ac.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f8bd425aeff224b01bede7ec4b4731132de1a1bd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 8 14:51:17 2009 +1000
+
+    Replace changelog command with CHANGELOG_CMD from m4 macros.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fb5ef37927c9c440c0ded515cea6ccaca418d00b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 19 08:29:59 2009 +1000
+
+    Remove obsolete chunk, focus/key class is added by InitKeyboardDeviceStruct.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1c549f65bdcb735f45000d88ec5e6016fe00b72d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 19 08:38:14 2009 +1000
+
+    Adjust for ABI_XINPUT_VERSION >= 7
+
 commit c1932081e5a6ba2f6196b8f862fe246668e92124
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Feb 25 08:52:53 2009 +1000
@@ -72,7 +158,7 @@ Date:   Fri Sep 7 09:36:14 2007 -0700
     Replace static ChangeLog with dist-hook to generate from git log
 
 commit fde354a19e19730ce90365732480674fd155cf6e
-Merge: 4df595e... d293873...
+Merge: 4df595e d293873
 Author: James Cloos <cloos@jhcloos.com>
 Date:   Mon Sep 3 06:06:06 2007 -0400
 
