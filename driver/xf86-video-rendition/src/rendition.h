@@ -37,11 +37,13 @@
 /* All drivers using the mi colormap manipulation need this */
 #include "micmap.h"
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 /* Needed by Resources Access Control (RAC) */
 #include "xf86RAC.h"
 
 /* Several predefined resource lists */
 #include "xf86Resources.h"
+#endif
 
 /* Needed by the Shadow Framebuffer */
 #include "shadowfb.h"

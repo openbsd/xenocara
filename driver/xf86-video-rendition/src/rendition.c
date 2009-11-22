@@ -200,72 +200,6 @@ _X_EXPORT DriverRec RENDITION={
 #endif
 };
 
-static const char *vgahwSymbols[]={
-    "vgaHWBlankScreen",
-    "vgaHWDPMSSet",
-    "vgaHWFreeHWRec",
-    "vgaHWGetHWRec",
-    "vgaHWGetIOBase",
-    "vgaHWGetIndex",
-    "vgaHWLock",
-    "vgaHWMapMem",
-    "vgaHWProtect",
-    "vgaHWRestore",
-    "vgaHWSave",
-    "vgaHWSaveScreen",
-    "vgaHWUnlock",
-    "vgaHWHandleColormaps",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
-#if defined(XFree86LOADER) || USE_ACCEL
-static const char *xaaSymbols[] = {
-    "XAACreateInfoRec",
-    "XAADestroyInfoRec",
-    "XAAInit",
-    NULL
-};
-#endif
-
-static const char *ddcSymbols[] = {
-    "xf86DoEDID_DDC1",
-    "xf86PrintEDID",
-    NULL
-};
-
-static const char *int10Symbols[] = {
-    "xf86FreeInt10",
-    "xf86InitInt10",
-    NULL
-};
-
-static const char *fbSymbols[]={
-    "fbScreenInit",
-    "fbPictureInit",
-    NULL
-};
-
-static const char *shadowfbSymbols[] = {
-    "ShadowFBInit",
-    NULL
-};
-
-static const char *vbeSymbols[] = {
-    "VBEInit",
-    "vbeDoEDID",
-    "vbeFree",
-    NULL
-};
-
-
-
 #ifdef XFree86LOADER
 
 /* Module loader interface */
@@ -297,9 +231,6 @@ renditionSetup(pointer Module, pointer Options, int *ErrorMajor,
     if (!Initialised) {
         Initialised = TRUE;
         xf86AddDriver(&RENDITION, Module, 1);
-        LoaderRefSymLists(vgahwSymbols, ramdacSymbols,
-			  fbSymbols, xaaSymbols, ddcSymbols, int10Symbols,
-			  shadowfbSymbols, vbeSymbols, NULL);
         return (pointer) TRUE;
     }
 
@@ -597,8 +528,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
     if (xf86LoadSubModule(pScreenInfo, "int10")){
         xf86Int10InfoPtr pInt=NULL;
 
-        xf86LoaderReqSymLists(int10Symbols, NULL);
-
         xf86DrvMsg(pScreenInfo->scrnIndex, X_INFO, "Initializing int10\n");
         pInt = xf86InitInt10(pRendition->pEnt->index);
         xf86FreeInt10(pInt);
@@ -609,7 +538,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
     pRendition->PciInfo = xf86GetPciInfoForEntity(pRendition->pEnt->index);
     pRendition->pcitag= pciTag(pRendition->PciInfo->bus,
                pRendition->PciInfo->device, pRendition->PciInfo->func);
-#endif
 
     /*
      * XXX This could be refined if some VGA memory resources are not
@@ -620,11 +548,12 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
     if (xf86RegisterResources(pRendition->pEnt->index, NULL, ResExclusive))
          return FALSE;
 
+
     /* Operations for which memory access is required. */
     pScreenInfo->racMemFlags = RAC_FB | RAC_CURSOR;
     /* Operations for which I/O access is required. (XXX Check this) */
     pScreenInfo->racIoFlags = RAC_FB | RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;
-    
+#endif
     /* determine depth, bpp, etc. */
     if (!xf86SetDepthBpp(pScreenInfo, 0, 0, 0, Support32bppFb))
         return FALSE;
@@ -678,8 +607,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
     if (!xf86LoadSubModule(pScreenInfo, "fb"))
       return FALSE;
 
-    xf86LoaderReqSymLists(fbSymbols, NULL);
-
     /* determine colour weights */
     pScreenInfo->rgbBits=8;
     
@@ -727,7 +654,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
     if (!xf86LoadSubModule(pScreenInfo, "vgahw")){
         return FALSE;
     }
-    xf86LoaderReqSymLists(vgahwSymbols, NULL);
 
     if (!vgaHWGetHWRec(pScreenInfo))
         return FALSE;
@@ -827,7 +753,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
 		       "Oops, \"ShadowFB\" module loading failed, disabling ShadowFB!\n");
 	}
 	else{
-	    xf86LoaderReqSymLists(shadowfbSymbols, NULL);
 	    pRendition->board.shadowfb=TRUE;
 	    xf86DrvMsg(pScreenInfo->scrnIndex, X_INFO,
 		       "Using \"Shadow Framebuffer\"\n");
@@ -846,7 +771,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
       if (!xf86LoadSubModule(pScreenInfo, "ramdac")) {
 	return FALSE;
       }
-      xf86LoaderReqSymLists(ramdacSymbols, NULL);
     }
 
 #if 0
@@ -857,7 +781,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
 		   ("Loading of DDC library failed, skipping DDC-probe\n"));
       }
       else {
-	xf86LoaderReqSymLists(ddcSymbols, NULL);
 	pScreenInfo->monitor->DDC = renditionDDC(pScreenInfo);
       }
     }
@@ -874,7 +797,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
       }
       else {
 	  xf86MonPtr mon;
-	  xf86LoaderReqSymLists(ddcSymbols, NULL);
 	  mon = renditionProbeDDC(pScreenInfo, pRendition->pEnt->index);
 	  xf86PrintEDID(mon);
 	  xf86SetDDCproperties(pScreenInfo, mon);
@@ -951,7 +873,6 @@ renditionPreInit(ScrnInfoPtr pScreenInfo, int flags)
 	!pRendition->board.shadowfb) {
 	/* Load XAA if needed */
 	if (xf86LoadSubModule(pScreenInfo, "xaa")) {
-	    xf86LoaderReqSymLists(xaaSymbols, NULL);
 	    renditionMapMem(pScreenInfo);
   	    RENDITIONAccelPreInit (pScreenInfo);
 	    renditionUnmapMem(pScreenInfo);
@@ -1551,8 +1472,6 @@ renditionProbeDDC(ScrnInfoPtr pScreenInfo, int index)
   xf86MonPtr mon = NULL;
 
   if (xf86LoadSubModule(pScreenInfo, "vbe")) {
-    xf86LoaderReqSymLists(vbeSymbols, NULL);
-
     pVbe = VBEInit(NULL,index);
     mon = vbeDoEDID(pVbe, NULL);
     vbeFree(pVbe);

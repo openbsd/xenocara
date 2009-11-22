@@ -1,3 +1,45 @@
+commit 2d62a81b452641999207c0576a08d82aee41cf06
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 7 14:42:11 2009 +1000
+
+    rendition 4.2.3
+
+commit 47b68f542c836a76f4adb0d7951b7f0b6aaeabd1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
+
+    rendition: change to using ABI version check
+
+commit d9e34c59faf63162f18dc87f599e36de024f557c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:35 2009 +1000
+
+    rendition: update for resources/RAC API removal
+
+commit 2013e650484bd66c238a497f241c23d82361e49e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:28:29 2009 -0400
+
+    rendition 4.2.2
+
+commit c22f51f750dc495b9c58f8390c6a0d9fff756829
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:13:38 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 560e4fd2d289615297b7529bcbd61799db5b277b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 22:24:37 2009 -0700
+
+    Fill in COPYING file
+
+commit 7ad4b3479433de0cbfca7ba756b07df09678b22a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Feb 24 10:17:19 2009 -0500
+
+    rendition 4.2.1
+
 commit 29c9c203a1541df36685b6bedd3d4955c5882508
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Jan 9 16:32:50 2009 -0800
