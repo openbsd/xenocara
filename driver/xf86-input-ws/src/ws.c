@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.2 2009/11/22 19:26:48 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.3 2009/11/22 22:08:57 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -339,6 +339,10 @@ wsProc(DeviceIntPtr pWS, int what)
 	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
 	unsigned char map[NBUTTONS + 1];
 	int i;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+    Atom btn_labels[NBUTTONS] = {0};
+    Atom axes_labels[NAXES] = {0};
+#endif
  
 	switch (what) {
 	case DEVICE_INIT:
@@ -353,6 +357,9 @@ wsProc(DeviceIntPtr pWS, int what)
 			map[i + 1] = i + 1;
 		InitPointerDeviceStruct((DevicePtr)pWS, map,
 				min(priv->buttons, NBUTTONS),
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                                btn_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 		    miPointerGetMotionEvents,
 #elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
@@ -364,11 +371,22 @@ wsProc(DeviceIntPtr pWS, int what)
 #else
 		    GetMotionHistorySize(), NAXES
 #endif
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                                , axes_labels
+#endif
 		    );
-		xf86InitValuatorAxisStruct(pWS, 0, 0, -1, 1, 0, 1);
+		xf86InitValuatorAxisStruct(pWS, 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                axes_labels[0],
+#endif
+		    0, 0, -1, 1, 0, 1);
 		xf86InitValuatorDefaults(pWS, 0);
 		
-		xf86InitValuatorAxisStruct(pWS, 1, 0, -1, 1, 0, 1);
+		xf86InitValuatorAxisStruct(pWS, 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+		    axes_labels[1],
+#endif
+		    1, 0, -1, 1, 0, 1);
 		xf86InitValuatorDefaults(pWS, 1);
 		xf86MotionHistoryAllocate(pInfo);
 		AssignTypeAndName(pWS, pInfo->atom, pInfo->name);
