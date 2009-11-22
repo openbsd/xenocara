@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.97 2009/11/12 21:32:13 matthieu Exp $
+ $OpenBSD: MODULES,v 1.98 2009/11/22 18:53:03 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -52,7 +52,7 @@ app/xfwp		1.0.1	7.0
 app/xgamma		1.0.3	7.5
 app/xgc			1.0.2	7.5+	needs-update
 app/xhost		1.0.3	7.5
-app/xinit		1.1.1	7.4+
+app/xinit		1.2.0	7.5+	needs-update
 app/xinput		1.5.0	7.5
 app/xkbcomp		1.1.1	7.5	needs-update
 app/xkbevd		1.1.0	7.5	needs-update
@@ -90,60 +90,58 @@ data/xkbdata		1.0.1	7.0	deprecated
 doc/xorg-docs		1.5	7.3	needs-update
 doc/xorg-sgml-doctools	1.3	7.5	needs-update
 
-driver/xf86-input-acecad	1.4.0	7.4+	needs-update
+driver/xf86-input-acecad	1.4.0	7.4+
 driver/xf86-input-citron	2.2.2	7.4
 driver/xf86-input-elographics	1.2.3	7.4+
 driver/xf86-input-fpit		1.3.0	7.4+
 driver/xf86-input-hyperpen	1.3.0	7.4+
-driver/xf86-input-joystick	1.5.0	7.5	needs-update
+driver/xf86-input-joystick	1.5.0	7.5
 driver/xf86-input-keyboard	1.4.0	7.5	needs-update
 driver/xf86-input-mouse		1.5.0	7.5	needs-update
 driver/xf86-input-mutouch	1.2.1	7.4+
 driver/xf86-input-penmount	1.4.0	7.4+
-driver/xf86-input-vmmouse	12.6.5	7.4+	needs-update
-driver/xf86-input-void		1.3.0	7.4+	needs-update
-driver/xf86-video-apm		1.2.2	7.4+	needs-update
-driver/xf86-video-ark		0.7.2	7.4+	needs-update
-driver/xf86-video-ast		0.89.9	7.4+	needs-update
+driver/xf86-input-vmmouse	12.6.5	7.4+
+driver/xf86-input-void		1.3.0	7.4+
+driver/xf86-video-apm		1.2.2	7.4+
+driver/xf86-video-ark		0.7.2	7.4+
+driver/xf86-video-ast		0.89.9	7.4+
 driver/xf86-video-ati		6.12.4	7.4+	needs-update
-driver/xf86-video-chips		1.2.2	7.4+	needs-update
-driver/xf86-video-cirrus	1.3.2	7.4	needs-update
-driver/xf86-video-dummy		0.3.2	7.4+	needs-update
+driver/xf86-video-chips		1.2.2	7.4+
+driver/xf86-video-cirrus	1.3.2	7.4	
+driver/xf86-video-dummy		0.3.2	7.4+
 driver/xf86-video-geode		2.11.6	7.5
 driver/xf86-video-glint		1.2.4	7.4+	needs-update
 driver/xf86-video-i128		1.3.3	7.4+	needs-update
-driver/xf86-video-i740		1.3.2	7.4+	needs-update
+driver/xf86-video-i740		1.3.2	7.4+
 driver/xf86-video-intel		2.9.0	7.5	needs-update
 driver/xf86-video-mach64	6.8.2	7.4	needs-update
 driver/xf86-video-mga		1.4.11	7.4+	needs-update
-driver/xf86-video-neomagic	1.2.4	7.4+	needs-update
-driver/xf86-video-newport	0.2.3	7.4+	needs-update
+driver/xf86-video-neomagic	1.2.4	7.4+
+driver/xf86-video-newport	0.2.3	7.4+
 driver/xf86-video-nv		2.1.15	7.4+
 driver/xf86-video-openchrome	0.2.904	7.5	needs-update
-driver/xf86-video-r128		6.8.1	7.4	needs update
+driver/xf86-video-r128		6.8.1	7.4
 driver/xf86-video-radeonhd	1.3.0	7.5	needs-update
-driver/xf86-video-rendition	4.2.3	7.4+	needs-update
-driver/xf86-video-s3		0.6.3	7.4+	needs-update
-driver/xf86-video-s3virge	1.10.4	7.4+	needs-update
-driver/xf86-video-savage	2.3.1	7.4+	needs-update
-driver/xf86-video-siliconmotion	1.7.3	7.4+	needs-update
-driver/xf86-video-sis		0.10.2	7.4+	needs-update
-driver/xf86-video-sisusb	0.9.3	7.4+	needs-update
-driver/xf86-video-sunbw2	1.1.0	7.1	deprecated
+driver/xf86-video-rendition	4.2.3	7.4+
+driver/xf86-video-s3		0.6.3	7.4+
+driver/xf86-video-s3virge	1.10.4	7.4+
+driver/xf86-video-savage	2.3.1	7.4+
+driver/xf86-video-siliconmotion	1.7.3	7.4+
+driver/xf86-video-sis		0.10.2	7.4+
+driver/xf86-video-sisusb	0.9.3	7.4+
 driver/xf86-video-suncg14	1.1.0	7.1
 driver/xf86-video-suncg3	1.1.1	7.4+
-driver/xf86-video-suncg6	1.1.1	7.4+
 driver/xf86-video-sunffb	1.2.1	7.4+	needs-update
 driver/xf86-video-sunleo	1.2.0	7.4
 driver/xf86-video-suntcx	1.1.1	7.4+
-driver/xf86-video-tdfx		1.4.3	7.4+	needs-update
-driver/xf86-video-tga		1.2.1	7.4+	needs-update
-driver/xf86-video-trident	1.3.3	7.4+	needs-update
-driver/xf86-video-tseng		1.2.3	7.4+	needs-update
-driver/xf86-video-vesa		2.2.1	7.4+	needs-update
-driver/xf86-video-vmware	10.16.8	7.4+	needs-update
-driver/xf86-video-voodoo	1.2.3	7.4+	needs-update
-driver/xf86-video-wsfb		0.2.1	7.2
+driver/xf86-video-tdfx		1.4.3	7.4+
+driver/xf86-video-tga		1.2.1	7.4+
+driver/xf86-video-trident	1.3.3	7.4+
+driver/xf86-video-tseng		1.2.3	7.4+
+driver/xf86-video-vesa		2.2.1	7.4+
+driver/xf86-video-vmware	10.16.8	7.4+
+driver/xf86-video-voodoo	1.2.3	7.4+
+driver/xf86-video-wsfb		0.2.1	7.5
 
 font/encodings 			1.0.3	needs-update
 font/adobe-100dpi		1.0.1	needs-update
