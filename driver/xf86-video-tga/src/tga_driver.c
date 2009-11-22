@@ -28,6 +28,7 @@
 #endif
 
 #include <string.h>
+#include <unistd.h>
 
 /* everybody includes these */
 #include "xf86.h"
@@ -37,9 +38,10 @@
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
-/* RAC stuff */
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
-
+#include "xf86RAC.h"
+#endif
 /*  #include "vgaHW.h" */
 
 /* software cursor */
@@ -52,9 +54,6 @@
 #include "micmap.h"
 
 #include "fb.h"
-
-/* more RAC stuff */
-#include "xf86RAC.h"
 
 /* Gamma Correction? */
 #include "xf86cmap.h"
@@ -69,8 +68,13 @@
 #endif
 
 #include "globals.h"
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
@@ -176,33 +180,6 @@ static RamDacSupportedInfoRec BTramdacs[] = {
     { -1 }
 };
 
-static const char *ramdacSymbols[] = {
-    "BTramdacProbe",
-    "RamDacCreateInfoRec",
-    "RamDacDestroyInfoRec",
-    "RamDacFreeRec",
-    "RamDacGetHWIndex",
-    "RamDacHandleColormaps",
-    "RamDacInit",
-    "xf86CreateCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
-static const char *xaaSymbols[] = {
-    "XAACreateInfoRec",
-    "XAADestroyInfoRec",
-    "XAAGetGCIndex",
-    "XAAInit",
-    NULL
-};
-
-static const char *fbSymbols[] = {
-    "fbPictureInit",
-    "fbScreenInit",
-    NULL
-};
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(tgaSetup);
@@ -231,13 +208,6 @@ tgaSetup(pointer module, pointer opts, int *errmaj, int *errmin)
     if (!setupDone) {
 	setupDone = TRUE;
 	xf86AddDriver(&TGA, module, 0);
-
-	/*
-	 * Modules that this driver always requires can be loaded here
-	 * by calling LoadSubModule().
-	 */
-
-	LoaderRefSymLists(ramdacSymbols, fbSymbols, xaaSymbols, NULL);
 
 	/*
 	 * The return value must be non-NULL on success even though there
@@ -479,8 +449,6 @@ TGAPreInit(ScrnInfoPtr pScrn, int flags)
     if (!xf86LoadSubModule(pScrn, "ramdac"))
 	return FALSE;
 
-    xf86LoaderReqSymLists(ramdacSymbols, NULL);
-
     /* Allocate the TGARec driverPrivate */
     if (!TGAGetRec(pScrn)) {
 	return FALSE;
@@ -501,7 +469,9 @@ TGAPreInit(ScrnInfoPtr pScrn, int flags)
     /* This is the general case */
     for (i = 0; i < pScrn->numEntities; i++) {
 	pTga->pEnt = xf86GetEntityInfo(pScrn->entityList[i]);
+#ifndef XSERVER_LIBPCIACCESS
 	if (pTga->pEnt->resources) return FALSE;
+#endif
 	pTga->Chipset = pTga->pEnt->chipset;
 	pScrn->chipset = (char *)xf86TokenToString(TGAChipsets,
 						   pTga->pEnt->chipset);
@@ -795,6 +765,7 @@ TGAPreInit(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsg(pScrn->scrnIndex, from, "MMIO registers at 0x%lX\n",
 	       (unsigned long)pTga->IOAddress);
 
+#ifndef XSERVER_LIBPCIACCESS
     /* RAC stuff: we don't have any resources we need to reserve,
        but we should do this here anyway */
     if (xf86RegisterResources(pTga->pEnt->index, NULL, ResExclusive)) {
@@ -803,8 +774,7 @@ TGAPreInit(ScrnInfoPtr pScrn, int flags)
       TGAFreeRec(pScrn);
       return FALSE;
     }
-
-    
+#endif
 
     /* HW bpp matches reported bpp */
     pTga->HwBpp = pScrn->bitsPerPixel;
@@ -836,15 +806,12 @@ TGAPreInit(ScrnInfoPtr pScrn, int flags)
 	return FALSE;
     }
 
-    xf86LoaderReqSymLists(fbSymbols, NULL);
-
     /* Load XAA if needed */
     if (!pTga->NoAccel || pTga->HWCursor) {
 	if (!xf86LoadSubModule(pScrn, "xaa")) {
 	    TGAFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(xaaSymbols, NULL);
     }
 
     
