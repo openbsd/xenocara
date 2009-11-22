@@ -133,6 +133,6 @@ Choose acceleration architecture, either "XAA" or "EXA".  XAA is the old
 simpler acceleration architecture designed to better accelerate the X Render
 extension.  Default: "XAA".
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHOR
 Author: Alan Hourihane, EXA for Blade chips by Jesse Barnes

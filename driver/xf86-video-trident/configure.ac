@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-trident],
-        1.3.1,
+        1.3.3,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-trident)
 
@@ -56,6 +56,10 @@ XORG_DRIVER_CHECK_EXT(XFreeXDGA, xf86dgaproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
+                  HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
+                  HAVE_XEXTPROTO_71="no")
+AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 save_CFLAGS="$CFLAGS"
