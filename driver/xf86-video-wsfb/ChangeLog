@@ -1,3 +1,216 @@
+commit 3346d752ad5d2301501e28e4b4acc7ed429f9115
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:43:42 2009 +0200
+
+    wsfb: do not forget tiny.
+
+commit b014e2f9d18193be1b1f1ebf1b51e925fc3e76dc
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:39:54 2009 +0200
+
+    wsfb: fix typo in previous bump
+
+commit 568797c21bb7b08292e1b200fe743826b05bba3e
+Merge: cf24313 f056af6
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:31:16 2009 +0200
+
+    Merge branch 'master' into obsd
+
+commit f056af63d7fdd7f5ba32558bb3dde7b149c04e4d
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:30:03 2009 +0200
+
+    wsfb: bump for release 0.3
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 872c691cbad253e4670a98349395b650677269cd
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:21:49 2009 +0200
+
+    Call shadowRemove() in wsfbCloseScreen().
+    
+    This fixes a free memory dereference on exit. Hint by Daniel Stone.
+    Thanks.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit ffe84aa5f99cb95467c86fc914724496cab53952
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:21:03 2009 +0200
+
+    wsfb: update for resources/RAC API removal
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit cf24313f5da749335af816232442017a73b50c5b
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:21:49 2009 +0200
+
+    Call shadowRemove() in wsfbCloseScreen().
+    
+    This fixes a free memory dereference on exit. Hint by Daniel Stone.
+    Thanks.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 708bb0fc2ed0955c8ed22e36fd350c48b3deea4d
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:21:03 2009 +0200
+
+    wsfb: update for resources/RAC API removal
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 4c708639e374e7443f6ae36af60b5a2725649ce9
+Merge: ae675f7 23ca8d8
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Sep 12 19:37:28 2009 +0200
+
+    Merge commit 'origin/master' into obsd
+
+commit 23ca8d8f9bc90ced9102c51ca588dab16956293b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 7 11:12:13 2009 -0400
+
+    xf86-video-wsfb: Remove unused .cvsignore file #23776
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ae675f738559e173b9f0005e228c1775978bad32
+Merge: c2476d4 15b8321
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jul 19 13:52:02 2009 +0200
+
+    Merge commit 'origin/master' into obsd
+
+commit 15b83219b51deb2f87f4d2be4a8ac14f15ffbde2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 8 09:58:43 2009 -0400
+
+    wsfb: use XORG_CHANGELOG macro to create ChangeLog. #22611
+    
+    Build break: Makefile.am: command not found: git-log
+    Adding the macro in configure.ac and use it in Makefile.am
+    Refer to: https://bugs.freedesktop.org/show_bug.cgi?id=22611
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ad757e0c29f7e826f48b60df2d5b8b436d243449
+Author: Jasper Lievisse Adriaanse <jasper@openbsd.org>
+Date:   Mon Jun 1 14:34:39 2009 -0600
+
+    add some missing TRACE_EXITs, tweak and clean up comments.
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit c2476d45cf833dabb17db8487adc5905b1c33afe
+Author: Jasper Lievisse Adriaanse <jasper@openbsd.org>
+Date:   Mon Jun 1 14:34:39 2009 -0600
+
+    add some missing TRACE_EXITs, tweak and clean up comments.
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 15ab9819af3fe554f37c1244f13c7c2388343edc
+Merge: b6cb2ce bce9fd2
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun May 31 12:48:54 2009 -0600
+
+    Merge commit 'origin/master' into obsd
+
+commit bce9fd21483fbeddc84672a1ef01fdd9b58c88ed
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:28:20 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit b6cb2cece5134adc258998fc8acd090bc56586c6
+Merge: 2cd44cc bb53781
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Feb 4 23:40:27 2009 +0100
+
+    Merge commit 'origin/master' into obsd
+
+commit bb53781f1e274dd9adef4038bd1b06bea2d55c35
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 21:07:23 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 2cd44ccb773ab4642b17fc1e252cca3adae249c1
+Merge: 18a0acc f5540f7
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jan 17 12:00:07 2009 +0100
+
+    Merge commit 'origin/master' into obsd
+
+commit f5540f76b1c756521b541601902b20e1fa118a87
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 13 15:04:12 2009 -0800
+
+    Don't call xf1bpp or xf4bpp if they're not present (xorg-server-1.6 & later)
+
+commit 18a0accfecb5d1c61718af857203996f98158d4a
+Merge: 3c8194b 7a654c5
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 11 17:00:43 2009 +0100
+
+    Merge commit 'origin/master' into obsd
+
+commit 7a654c551ae470f63052fe58fd13d961090cc468
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:39:31 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 5f5df6a1e170317d323b7e1ea45f7560b4067ad3
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Sep 30 00:09:30 2008 +0200
+
+    Remove old libc wrapper stuff. now works with xserver 1.5.
+
+commit 3c8194bbcf787d5d30a495fb69163ea6d99ff039
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Sep 30 00:09:30 2008 +0200
+
+    Remove old libc wrapper stuff. now works with xserver 1.5.
+
+commit d80dc17073f2a0b11d4540874d694f1e170934ef
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Sep 29 23:39:15 2008 +0200
+
+    BSD Makefile
+
+commit 42c0fcc9e255619d03b705a4da1e0978075b79e2
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 00:10:59 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 22d5f6a0ffd8103c049a2bd13333bcf25aea5ffc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 27 13:46:26 2007 -0800
+
+    Change XFree86 to __xservername__ in man page See Also section
+
+commit ea7029410336675de8fecc7c6ebe62c8504ae988
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 26 14:38:26 2007 -0800
+
+    If using shadowfb, allocate shadow area before fbScreenInit
+    
+    (Copied from xf86-video-fbdev)
+
+commit 09d7df64c837c819c7feb88891b8845ab660c150
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Jan 2 16:09:45 2007 +0100
+
+    Makefile.am: make ChangeLog hook safer
+    
+    Make ChangeLog hook as safe as possible
+    Bump patchlevel.
+
 commit 1ac8c63bba9a65a706334aa98d8bdbc489cc2ab6
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Tue Jan 2 15:54:14 2007 +0100
