@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.3 2009/11/22 22:08:57 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.4 2009/11/22 23:00:43 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -33,8 +33,6 @@
 #include <xisb.h>
 #include <mipointer.h>
 #include <extinit.h>
-
-#include "xf86Module.h"
 
 #define NAXES 2			/* X and Y axes only */
 #define NBUTTONS 32		/* max theoretical buttons */
@@ -59,7 +57,6 @@ typedef struct WSDevice {
 
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
-static const OptionInfoRec *wsAvailableOptions(void *);
 
 static InputInfoPtr wsPreInit(InputDriverPtr, IDevPtr, int);
 static int wsProc(DeviceIntPtr, int);
@@ -102,20 +99,6 @@ typedef enum {
 
 #define WS_NOZMAP 0
 
-static const OptionInfoRec WSOptions[] = {
-	{ WSOPT_DEVICE, "device", OPTV_STRING, {0}, FALSE },
-	{ WSOPT_DEBUG_LEVEL, "debugLevel", OPTV_INTEGER, {0}, FALSE },
-	{ WSOPT_MINX, "minX", OPTV_INTEGER, {0}, FALSE },
-	{ WSOPT_MAXX, "maxX", OPTV_INTEGER, {0}, FALSE },
-	{ WSOPT_MINY, "minY", OPTV_INTEGER, {0}, FALSE },
-	{ WSOPT_MAXY, "maxY", OPTV_INTEGER, {0}, FALSE },
-	{ WSOPT_ROTATE, "rotate", OPTV_STRING, {0}, FALSE },
-	{ WSOPT_SWAPXY, "swapxy", OPTV_BOOLEAN, {0}, FALSE },
-	{ WSOPT_SCREENNO, "ScreenNo", OPTV_INTEGER, {0}, FALSE },
-	{ WSOPT_ZAXIS_MAPPING, "ZAxisMapping", OPTV_STRING, {0}, FALSE },
-	{ -1, NULL, OPTV_NONE, {0}, FALSE }
-};
-
 XF86ModuleData wsModuleData = {&VersionRec,
 			       SetupProc, TearDownProc };
 
@@ -156,12 +139,6 @@ static void
 TearDownProc(pointer p)
 {
 	DBG(1, ErrorF("WS TearDownProc called\n"));
-}
-
-static const OptionInfoRec *
-wsAvailableOptions(void *unused)
-{
-	return WSOptions;
 }
 
 static InputInfoPtr
