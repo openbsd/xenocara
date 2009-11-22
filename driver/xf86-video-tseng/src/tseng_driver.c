@@ -42,8 +42,10 @@
 
 #include "fb.h"
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86RAC.h"
 #include "xf86Resources.h"
+#endif
 #include "xf86int10.h"
 
 #include "xf86xv.h"
@@ -180,58 +182,6 @@ static const OptionInfoRec TsengOptions[] =
 	{0}, FALSE}
 };
 
-static const char *int10Symbols[] = {
-    "xf86FreeInt10",
-    "xf86InitInt10",
-    NULL
-};
-
-static const char *vgaHWSymbols[] = {
-  "vgaHWFreeHWRec",
-  "vgaHWGetHWRec",
-  "vgaHWGetIOBase",
-  "vgaHWGetIndex",
-  "vgaHWHandleColormaps",
-  "vgaHWInit",
-  "vgaHWLock",
-  "vgaHWMapMem",
-  "vgaHWProtect",
-  "vgaHWRestore",
-  "vgaHWSave", 
-  "vgaHWSaveScreen",
-  "vgaHWUnlock",
-  "vgaHWUnmapMem",
-  NULL
-};
-
-#ifdef XFree86LOADER
-static const char* miscfbSymbols[] = {
-  "xf1bppScreenInit",
-  "xf4bppScreenInit",
-  NULL
-};
-#endif
-
-static const char* fbSymbols[] = {
-  "fbPictureInit",
-  "fbScreenInit",
-  NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
-static const char *xaaSymbols[] = {
-    "XAACreateInfoRec",
-    "XAADestroyInfoRec",
-    "XAAInit",
-    NULL
-};
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(tsengSetup);
@@ -265,17 +215,6 @@ tsengSetup(pointer module, pointer opts, int *errmaj, int *errmin)
     if (!setupDone) {
 	setupDone = TRUE;
 	xf86AddDriver(&TSENG, module, 0);
-
-	/*
-	 * Modules that this driver always requires can be loaded here
-	 * by calling LoadSubModule().
-	 */
-	/*
-	 * Tell the loader about symbols from other modules that this module
-	 * might refer to.
-	 */
-	LoaderRefSymLists(vgaHWSymbols, miscfbSymbols, fbSymbols, xaaSymbols,
-			  int10Symbols, ramdacSymbols,  NULL);
 
 	/*
 	 * The return value must be non-NULL on success even though there
@@ -952,10 +891,12 @@ TsengGetFbAddress(ScrnInfoPtr pScrn)
         pTseng->FbAddress = PCI_REGION_BASE(pTseng->PciInfo, 0, REGION_MEM);
 
 
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(pTseng->pEnt->index,NULL,ResNone)) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Cannot register FB memory.\n");
         return FALSE;
     }
+#endif
 
     /* The W32 linear map address space is always 4Mb (mainly because the
      * memory-mapped registers are located near the top of the 4MB area). 
@@ -1020,7 +961,6 @@ TsengPreInit(ScrnInfoPtr pScrn, int flags)
 #if 1
     if (xf86LoadSubModule(pScrn, "int10")) {
  	xf86Int10InfoPtr pInt;
-	xf86LoaderReqSymLists(int10Symbols, NULL);
 #if 1
 	xf86DrvMsg(pScrn->scrnIndex,X_INFO,"initializing int10\n");
 	pInt = xf86InitInt10(pTseng->pEnt->index);
@@ -1031,7 +971,6 @@ TsengPreInit(ScrnInfoPtr pScrn, int flags)
     
     if (!xf86LoadSubModule(pScrn, "vgahw"))
 	return FALSE;
-    xf86LoaderReqSymLists(vgaHWSymbols, NULL);
     /*
      * Allocate a vgaHWRec
      */
@@ -1154,13 +1093,14 @@ TsengPreInit(ScrnInfoPtr pScrn, int flags)
     else
 	VGAHWPTR(pScrn)->MapSize = 0x10000;
 
+#ifndef XSERVER_LIBPCIACCESS
     /*
      * XXX At least part of this range does appear to be disabled,
      * but to play safe, it is marked as "unused" for now.
      * Changed this to "disable". Otherwise it might interfere with DGA.
      */
     xf86SetOperatingState(resVgaMem, pTseng->pEnt->index, ResDisableOpr);
-    
+#endif
     /* hibit processing (TsengProcessOptions() must have been called first) */
     pTseng->save_divide = 0x40;	       /* default */
     if (pTseng->ChipType == ET4000) {
@@ -1240,21 +1180,18 @@ TsengPreInit(ScrnInfoPtr pScrn, int flags)
 	  TsengFreeRec(pScrn);
 	  return FALSE;
 	}
-	xf86LoaderReqSymbols("xf1bppScreenInit", NULL);
 	break;
     case 4:
 	if (xf86LoadSubModule(pScrn, "xf4bpp") == NULL) {
 	  TsengFreeRec(pScrn);
 	  return FALSE;
 	}
-	xf86LoaderReqSymbols("xf4bppScreenInit", NULL);
 	break;
     default:
 	if (xf86LoadSubModule(pScrn, "fb") == NULL) {
 	  TsengFreeRec(pScrn);
 	  return FALSE;
 	}
-	xf86LoaderReqSymLists(fbSymbols, NULL);
 	break;
     }
 
@@ -1264,7 +1201,6 @@ TsengPreInit(ScrnInfoPtr pScrn, int flags)
 	    TsengFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(xaaSymbols, NULL);
     }
     /* Load ramdac if needed */
     if (pTseng->HWCursor) {
@@ -1272,7 +1208,6 @@ TsengPreInit(ScrnInfoPtr pScrn, int flags)
 	    TsengFreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(ramdacSymbols, NULL);
     }
 /*    TsengLock(pScrn); */
 
@@ -1536,9 +1471,10 @@ TsengScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     if (pScrn->depth == 4 || pScrn->depth == 8) { /* fb and xf4bpp */
 	vgaHWHandleColormaps(pScreen);
     }
+#ifndef XSERVER_LIBPCIACCESS
     pScrn->racIoFlags = RAC_FB | RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;
     pScrn->racMemFlags = pScrn->racIoFlags;
-
+#endif
     /* Wrap the current CloseScreen and SaveScreen functions */
     pScreen->SaveScreen = TsengSaveScreen;
 
