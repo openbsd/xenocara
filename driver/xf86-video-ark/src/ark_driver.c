@@ -35,7 +35,6 @@
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
-#include "xf86Resources.h"
 #include "xf86fbman.h"
 #include "xf86cmap.h"
 #include "compiler.h"
@@ -45,6 +44,10 @@
 #include "mibstore.h"
 #include "fb.h"
 #include "ark.h"
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
+#include "xf86Resources.h"
+#endif
 
 #include <string.h>
 
@@ -113,34 +116,6 @@ static const OptionInfoRec ARKOptions[] = {
 	{ -1,		  NULL,	     OPTV_NONE,	   {0}, FALSE }
 };
 
-static const char *fbSymbols[] = {
-	"fbPictureInit",
-	"fbScreenInit",
-	NULL
-};
-
-static const char *vgaHWSymbols[] = {
-	"vgaHWFreeHWRec",
-	"vgaHWGetHWRec",
-	"vgaHWGetIOBase",
-	"vgaHWGetIndex",
-	"vgaHWInit",
-	"vgaHWLock",
-	"vgaHWProtect",
-	"vgaHWRestore",
-	"vgaHWSave",
-	"vgaHWSaveScreen",
-	"vgaHWUnlock",
-	"vgaHWUnmapMem",
-	NULL
-};
-
-static const char *xaaSymbols[] = {
-	"XAACreateInfoRec",
-	"XAAInit",
-	NULL
-};
-
 #ifdef XFree86LOADER
 
 MODULESETUPPROTO(ARKSetup);
@@ -167,7 +142,6 @@ pointer ARKSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	if (!setupDone) {
 		setupDone = TRUE;
 		xf86AddDriver(&ARK, module, 0);
-		LoaderRefSymLists(fbSymbols, vgaHWSymbols, xaaSymbols, NULL);
 		return (pointer) 1;
 	} else {
 		if (errmaj)
@@ -236,7 +210,10 @@ static Bool ARKProbe(DriverPtr drv, int flags)
 	if (flags & PROBE_DETECT)
 		foundScreen = TRUE;
 	else for (i=0; i<numUsed; i++) {
-		ScrnInfoPtr pScrn = xf86AllocateScreen(drv, 0);
+	        ScrnInfoPtr pScrn = NULL;
+
+		pScrn = xf86ConfigPciEntity(pScrn, 0, usedChips[i], ARKPciChipsets,
+					    NULL, NULL, NULL, NULL, NULL);
 
 		pScrn->driverVersion = VERSION_MAJOR;
 		pScrn->driverName = DRIVER_NAME;
@@ -250,8 +227,6 @@ static Bool ARKProbe(DriverPtr drv, int flags)
 		pScrn->LeaveVT = ARKLeaveVT;
 		pScrn->FreeScreen = ARKFreeScreen;
 		foundScreen = TRUE;
-		xf86ConfigActivePciEntity(pScrn, usedChips[i], ARKPciChipsets,
-					  NULL, NULL, NULL, NULL, NULL);
 	}
 
 	xfree(usedChips);
@@ -276,8 +251,6 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 
 	if (!xf86LoadSubModule(pScrn, "vgahw"))
 		return FALSE;
-
-	xf86LoaderReqSymLists(vgaHWSymbols, NULL);
 
 	if (!vgaHWGetHWRec(pScrn))
 		return FALSE;
@@ -343,16 +316,7 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 	}
 
 	pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
-	if (pEnt->resources) {
-		xfree(pEnt);
-		ARKFreeRec(pScrn);
-		return FALSE;
-	}
-
 	pARK->PciInfo = xf86GetPciInfoForEntity(pEnt->index);
-	xf86RegisterResources(pEnt->index, NULL, ResNone);
-	xf86SetOperatingState(resVgaIo, pEnt->index, ResUnusedOpr);
-	xf86SetOperatingState(resVgaMem, pEnt->index, ResDisableOpr);
 
 	if (pEnt->device->chipset && *pEnt->device->chipset) {
 		pScrn->chipset = pEnt->device->chipset;
@@ -499,14 +463,11 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 	    return FALSE;
 	}
 
-	xf86LoaderReqSymLists(fbSymbols, NULL);
-
 	if (!pARK->NoAccel) {
 		if (!xf86LoadSubModule(pScrn, "xaa")) {
 			ARKFreeRec(pScrn);
 			return FALSE;
 		}
-		xf86LoaderReqSymLists(xaaSymbols, NULL);
 	}
 
 	return TRUE;
