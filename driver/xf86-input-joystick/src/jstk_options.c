@@ -35,34 +35,8 @@
 #include <X11/XF86keysym.h>
 #include "jstk.h"
 #include "jstk_options.h"
-#include "StrKeysym.h"
 
 
-
-
-
-/***********************************************************************
- *
- * jstkGetKeyNumberInMap --
- *
- * Adds a KeySym to the keymap and returns the index
- *
- ***********************************************************************
- */
-
-static int
-jstkGetKeyNumberInMap(JoystickDevPtr priv,
-                      KeySym keysym)
-{
-    int j;
-    for (j=0; j<priv->keymap.size; j++)
-        if (priv->keymap.map[j] == keysym)
-            break;
-    if (j >= sizeof(priv->keymap.map)/sizeof(priv->keymap.map[0])) return 0;
-    priv->keymap.map[j] = keysym;
-    if (j + 1 > priv->keymap.size) priv->keymap.size = j + 1;
-    return j;
-}
 
 
 /***********************************************************************
@@ -156,21 +130,17 @@ jstkParseButtonOption(const char* org,
         button->mapping = JSTK_MAPPING_KEY;
 
         for (value = 0; value < MAXKEYSPERBUTTON; value++) if (current != NULL) {
-            unsigned key;
+            unsigned int key;
             next = strchr(current, ',');
-	    if (!next) next = strchr(current, '+');
+            if (!next) next = strchr(current, '+');
             if (next) *(next++) = '\0';
-#ifdef _STRKEYSYM_H_INCLUDED_
-            key = XStringToKeysym(current);
-            if (key == NoSymbol)
-#endif
-                key = strtol(current, NULL, 0);
+            key = strtol(current, NULL, 0);
             DBG(3, ErrorF("Parsed %s to %d\n", current, key));
             if (key == 0)
                 xf86Msg(X_WARNING, "%s: error parsing key value: %s.\n", 
                         name, current);
             else {
-                button->keys[value] = jstkGetKeyNumberInMap(priv, key);
+                button->keys[value] = key;
             }
             current = next;
         } else button->keys[value] = 0;
@@ -272,17 +242,13 @@ jstkParseAxisOption(const char* org,
 		    if (!next) next = strchr(current, '+');
                     if (next) *(next++) = '\0';
 
-#ifdef _STRKEYSYM_H_INCLUDED_
-                    key = XStringToKeysym(current);
-                    if (key == NoSymbol)
-#endif
-                        key = strtol(current, NULL, 0);
+                    key = strtol(current, NULL, 0);
                     DBG(3, ErrorF("Parsed %s to %d\n", current, key));
                     if (key == 0)
                         xf86Msg(X_WARNING, "%s: error parsing keylow value: %s.\n", 
                                 name, current);
                     else {
-                        axis->keys_low[value] = jstkGetKeyNumberInMap(priv, key);
+                        axis->keys_low[value] = key;
                     }
                     current = next;
                 } else axis->keys_low[value] = 0;
@@ -299,20 +265,16 @@ jstkParseAxisOption(const char* org,
             for (value = 0; value < MAXKEYSPERBUTTON; value++) 
                 if (current != NULL) {
                     next = strchr(current, ',');
-		    if (!next) next = strchr(current, '+');
+                    if (!next) next = strchr(current, '+');
                     if (next) *(next++) = '\0';
                     key = strtol(current, NULL, 0);
-#ifdef _STRKEYSYM_H_INCLUDED_
-                    key = XStringToKeysym(current);
-                    if (key == NoSymbol)
-#endif
-                        key = strtol(current, NULL, 0);
+                    key = strtol(current, NULL, 0);
                     DBG(3, ErrorF("Parsed %s to %d\n", current, key));
                     if (key == 0)
                         xf86Msg(X_WARNING, "%s: error parsing keyhigh value: %s.\n", 
                                 name, current);
                     else {
-                        axis->keys_high[value] = jstkGetKeyNumberInMap(priv, key);
+                        axis->keys_high[value] = key;
                     }
                     current = next;
                 } else axis->keys_high[value] = 0;

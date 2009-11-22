@@ -71,7 +71,7 @@ jstkSetProperty(DeviceIntPtr pJstk, Atom atom, XIPropertyValuePtr val,
 {
     InputInfoPtr  pInfo = pJstk->public.devicePrivate;
     JoystickDevPtr priv = pInfo->private;
-    int i;
+    int i, j;
 
     if (atom == prop_debuglevel)
     {
@@ -173,12 +173,38 @@ jstkSetProperty(DeviceIntPtr pJstk, Atom atom, XIPropertyValuePtr val,
         }
     }else if (atom == prop_axis_keys_low)
     {
-        /* FIXME */
-        return BadValue;
+        unsigned char *values;
+        if (val->size != priv->num_axes*MAXKEYSPERBUTTON || val->format != 8 || val->type != XA_INTEGER)
+            return BadMatch;
+        if (!checkonly)
+        {
+            values = (unsigned char*)val->data;
+            for (i =0; i<val->size/MAXKEYSPERBUTTON; i++) {
+                DBG(1, ErrorF("key_low of axis %d set to ", i));
+                for (j = 0; j<MAXKEYSPERBUTTON; j++) {
+                    priv->axis[i].keys_low[j] = values[i*MAXKEYSPERBUTTON+j];
+                    DBG(1, ErrorF("%d ", priv->axis[i].keys_low[j]));
+                }
+                DBG(1, ErrorF("\n"));
+            }
+        }
     }else if (atom == prop_axis_keys_high)
     {
-        /* FIXME */
-        return BadValue;
+        unsigned char *values;
+        if (val->size != priv->num_axes*MAXKEYSPERBUTTON || val->format != 8 || val->type != XA_INTEGER)
+            return BadMatch;
+        if (!checkonly)
+        {
+            values = (unsigned char*)val->data;
+            for (i =0; i<val->size/MAXKEYSPERBUTTON; i++) {
+                DBG(1, ErrorF("key_high of axis %d set to ", i));
+                for (j = 0; j<MAXKEYSPERBUTTON; j++) {
+                    priv->axis[i].keys_high[j] = values[i*MAXKEYSPERBUTTON+j];
+                    DBG(1, ErrorF("%d ", priv->axis[i].keys_high[j]));
+                }
+                DBG(1, ErrorF("\n"));
+            }
+        }
     }else if (atom == prop_button_mapping)
     {
         INT8 *values;
@@ -231,8 +257,21 @@ jstkSetProperty(DeviceIntPtr pJstk, Atom atom, XIPropertyValuePtr val,
         }
     }else if (atom == prop_button_keys)
     {
-        /* FIXME */
-        return BadValue;
+        unsigned char *values;
+        if (val->size != priv->num_buttons*MAXKEYSPERBUTTON || val->format != 8 || val->type != XA_INTEGER)
+            return BadMatch;
+        if (!checkonly)
+        {
+            values = (unsigned char*)val->data;
+            for (i = 0; i<val->size/MAXKEYSPERBUTTON; i++) {
+                DBG(1, ErrorF("keys of button %d set to ", i));
+                for (j = 0; j<MAXKEYSPERBUTTON; j++) {
+                    priv->button[i].keys[j] = values[i*MAXKEYSPERBUTTON+j];
+                    DBG(1, ErrorF("%d ", priv->button[i].keys[j]));
+                }
+                DBG(1, ErrorF("\n"));
+            }
+        }
     }
 
     /* property not handled, report success */
@@ -243,11 +282,11 @@ Bool
 jstkInitProperties(DeviceIntPtr pJstk, JoystickDevPtr priv)
 {
     INT32 axes_values32[MAXAXES];
-    INT8  axes_values8[MAXAXES];
-    INT8  button_values8[MAXBUTTONS];
+    INT8  axes_values8[MAXAXES*MAXKEYSPERBUTTON];
+    INT8  button_values8[MAXBUTTONS*MAXKEYSPERBUTTON];
     float axes_floats[MAXAXES];
     float button_floats[MAXBUTTONS];
-    int i;
+    int i, j;
 
     XIRegisterPropertyHandler(pJstk, jstkSetProperty, NULL, NULL);
 
@@ -347,12 +386,26 @@ jstkInitProperties(DeviceIntPtr pJstk, JoystickDevPtr priv)
     }
 
     /* priv->axis[].keys_low */
-    /* FIXME: prop_axis_keys_low */
+    for (i=0;i<priv->num_axes;i++)
+        for (j=0;j<MAXKEYSPERBUTTON;j++)
+            axes_values8[i*MAXKEYSPERBUTTON+j] = (INT8)priv->axis[i].keys_low[j];
+    prop_axis_keys_low = MakeAtom(JSTK_PROP_AXIS_KEYS_LOW, strlen(JSTK_PROP_AXIS_KEYS_LOW), TRUE);
+    XIChangeDeviceProperty(pJstk, prop_axis_keys_low, XA_INTEGER, 8,
+                                PropModeReplace, priv->num_axes*MAXKEYSPERBUTTON,
+                                axes_values8,
+                                FALSE);
+    XISetDevicePropertyDeletable(pJstk, prop_axis_keys_low, FALSE);
 
     /* priv->axis[].keys_high */
-    /* FIXME: prop_axis_keys_high */
-
-
+    for (i=0;i<priv->num_axes;i++)
+        for (j=0;j<MAXKEYSPERBUTTON;j++)
+            axes_values8[i*MAXKEYSPERBUTTON+j] = (INT8)priv->axis[i].keys_high[j];
+    prop_axis_keys_high = MakeAtom(JSTK_PROP_AXIS_KEYS_HIGH, strlen(JSTK_PROP_AXIS_KEYS_HIGH), TRUE);
+    XIChangeDeviceProperty(pJstk, prop_axis_keys_high, XA_INTEGER, 8,
+                                PropModeReplace, priv->num_axes*MAXKEYSPERBUTTON,
+                                axes_values8,
+                                FALSE);
+    XISetDevicePropertyDeletable(pJstk, prop_axis_keys_high, FALSE);
 
 
     /* priv->button[].mapping */
@@ -391,7 +444,15 @@ jstkInitProperties(DeviceIntPtr pJstk, JoystickDevPtr priv)
     }
 
     /* priv->button[].keys */
-    /* FIXME: prop_button_keys */
+    for (i=0;i<priv->num_buttons;i++)
+        for (j=0;j<MAXKEYSPERBUTTON;j++)
+            button_values8[i*MAXKEYSPERBUTTON+j] = (INT8)priv->button[i].keys[j];
+    prop_button_keys = MakeAtom(JSTK_PROP_BUTTON_KEYS, strlen(JSTK_PROP_BUTTON_KEYS), TRUE);
+    XIChangeDeviceProperty(pJstk, prop_button_keys, XA_INTEGER, 8,
+                                PropModeReplace, priv->num_buttons*MAXKEYSPERBUTTON,
+                                button_values8,
+                                FALSE);
+    XISetDevicePropertyDeletable(pJstk, prop_button_keys, FALSE);
 
     return TRUE;
 }

@@ -33,13 +33,13 @@
 	<!-- EXAMPLES
 	<merge key="input.x11_options.DebugLevel" type="string">5</merge>
 	<merge key="input.x11_options.AutoRepeat" type="string">500 4</merge>
-	<merge key="input.x11_options.MapButton4" type="string">key=Alt_L+Tab</merge>
+	<merge key="input.x11_options.MapButton4" type="string">key=64+23</merge>
 	<merge key="input.x11_options.MapButton8" type="string">amplify=0.3</merge>
 	<merge key="input.x11_options.MapButton9" type="string">disable-mouse</merge>
-	<merge key="input.x11_options.MapButton10" type="string">key=space</merge>
+	<merge key="input.x11_options.MapButton10" type="string">key=65</merge>
 
-	<merge key="input.x11_options.MapAxis1" type="string">mode=accelerated keylow=Left keyhigh=Right</merge>
-	<merge key="input.x11_options.MapAxis2" type="string">mode=accelerated keylow=Up keyhigh=Down</merge>
+	<merge key="input.x11_options.MapAxis1" type="string">mode=accelerated keylow=113 keyhigh=114</merge>
+	<merge key="input.x11_options.MapAxis2" type="string">mode=accelerated keylow=111 keyhigh=116</merge>
 	-->
       </match>
     </match>

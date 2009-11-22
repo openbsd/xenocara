@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-joystick],
-        1.4.1,
+        1.5.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-joystick)
 
@@ -72,7 +72,7 @@ XORG_DRIVER_CHECK_EXT(XKB, kbproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, 
-               [xorg-server >= 1.3.99.901 xorg-server <= 1.6.99] xproto $REQUIRED_MODULES)
+               [xorg-server >= 1.3.99.901] xproto $REQUIRED_MODULES)
 XORG_CFLAGS="$CWARNFLAGS $XORG_CFLAGS"
 xorg_sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 AC_ARG_WITH(sdkdir,
@@ -136,7 +136,8 @@ echo Building BSD usbhid backend: $bsd_backend
 if test "x$linux_backend" != "xyes" -a \
 	"x$bsd_backend" != "xyes" -a \
 	"x$evdev_backend" != "xyes"; then
-    AC_MSG_ERROR([No backends were found. Your operating is not supported by the
-                  joystick driver. Contact xorg@lists.freedesktop.org if you are 
-                  interested in porting it.])
+    AC_MSG_ERROR([No backends were found. Your operating system is not
+                  supported by the joystick driver. Contact
+                  xorg@lists.freedesktop.org if you are interested in
+                  porting it.])
 fi

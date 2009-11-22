@@ -93,12 +93,12 @@ typedef enum _JSTK_MAPPING {
 /* FLOAT[MAXAXES], movement amplify per axis */
 #define JSTK_PROP_AXIS_AMPLIFY "Axis Amplify"
 
-/** Set KeySyms for axis in low position */
-/* TODO 16 bit */
+/** Scancodes for axis in low position */
+/* 8 bit, 4 per axis */
 #define JSTK_PROP_AXIS_KEYS_LOW "Axis Keys (low)"
 
-/** Set KeySyms for axis in high position */
-/* TODO 16 bit */
+/** Scancodes for axis in high position */
+/* 8 bit, 4 per axis */
 #define JSTK_PROP_AXIS_KEYS_HIGH "Axis keys (high)"
 
 /** Set the mapping of each button to
@@ -115,8 +115,8 @@ typedef enum _JSTK_MAPPING {
 /* FLOAT[MAXBUTTONS], amplify value per button */
 #define JSTK_PROP_BUTTON_AMPLIFY "Button Amplify"
 
-/** Set KeySyms for button */
-/* TODO 16 bit, set keysyms for button. Format: (button keysym1 keysym2 keysym3 keysym4) */
+/** Scancodes for button */
+/* 8 bit, 4 per button */
 #define JSTK_PROP_BUTTON_KEYS "Button Keys"
 
 

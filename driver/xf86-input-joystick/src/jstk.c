@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2008 by Sascha Hlusiak. <saschahlusiak@freedesktop.org>     
+ * Copyright 2007-2009 by Sascha Hlusiak. <saschahlusiak@freedesktop.org>     
  * Copyright 1995-1999 by Frederic Lepied, France. <Lepied@XFree86.org>       
  *                                                                            
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -44,6 +44,9 @@
 #include "jstk_key.h"
 #include "jstk_options.h"
 #include "jstk_properties.h"
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
+    #include <xserver-properties.h>
+#endif
 
 #ifdef LINUX_BACKEND
     #include "backend_joystick.h"
@@ -326,6 +329,10 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
     int i;
     LocalDevicePtr   local = (LocalDevicePtr)pJstk->public.devicePrivate;
     JoystickDevPtr   priv  = (JoystickDevPtr)XI_PRIVATE(pJstk);
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+    Atom             btn_labels[BUTTONMAP_SIZE+1] = {0}; /* TODO: fillme */
+    Atom             axes_labels[MAXAXES] = {0}; /* TODO: fillme */
+#endif
 
     switch (what) {
     case DEVICE_INIT: {
@@ -341,9 +348,16 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
             priv->close_proc(priv);
         }
 
-        for (m=0; m<=BUTTONMAP_SIZE; m++)
+        for (m=0; m<=BUTTONMAP_SIZE; m++) {
             buttonmap[m] = m;
+	}
+
+            
+            
         if (InitButtonClassDeviceStruct(pJstk, BUTTONMAP_SIZE, 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+            btn_labels,
+#endif
             buttonmap) == FALSE) {
             ErrorF("unable to allocate Button class device\n");
             return !Success;
@@ -361,6 +375,9 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
 
         if (InitValuatorClassDeviceStruct(pJstk, 
                                           m,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                                          axes_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                                           xf86GetMotionEvents, 
 #endif
@@ -371,6 +388,9 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
         } else {
             InitValuatorAxisStruct(pJstk,
                                    0, /* valuator num */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                                   XIGetKnownProperty(AXIS_LABEL_PROP_REL_X),
+#endif
                                    0, /* min val */
                                    screenInfo.screens[0]->width, /* max val */
                                    1, /* resolution */
@@ -378,6 +398,9 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
                                    1); /* max_res */
             InitValuatorAxisStruct(pJstk,
                                    1, /* valuator num */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                                   XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y),
+#endif
                                    0, /* min val */
                                    screenInfo.screens[0]->height, /* max val */
                                    1, /* resolution */
@@ -388,6 +411,9 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
             {
                 InitValuatorAxisStruct(pJstk,
                                        priv->axis[i].valuator,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                                       axes_labels[i],
+#endif
                                        -32768, /* min val */
                                        32767,  /* max val */
                                        1, /* resolution */
@@ -529,8 +555,6 @@ jstkCorePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->keys_enabled = TRUE;
     priv->amplify = 1.0f;
     priv->keyboard_device = NULL;
-    priv->keymap.size = 1;
-    memset(priv->keymap.map, NoSymbol, sizeof(priv->keymap.map));
     priv->repeat_delay = 0;
     priv->repeat_interval = 0;
     priv->num_axes    = MAXAXES;
@@ -634,6 +658,26 @@ jstkCorePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
         }
         xfree(s);
     }
+    
+    priv->rmlvo.rules = xf86SetStrOption(dev->commonOptions, "xkb_rules", NULL);
+    if (!priv->rmlvo.rules)
+	priv->rmlvo.rules = xf86SetStrOption(dev->commonOptions, "XkbRules", "evdev");
+
+    priv->rmlvo.model = xf86SetStrOption(dev->commonOptions, "xkb_model", NULL);
+    if (!priv->rmlvo.model)
+	priv->rmlvo.model = xf86SetStrOption(dev->commonOptions, "XkbModel", "evdev");
+
+    priv->rmlvo.layout = xf86SetStrOption(dev->commonOptions, "xkb_layout", NULL);
+    if (!priv->rmlvo.layout)
+	priv->rmlvo.layout = xf86SetStrOption(dev->commonOptions, "XkbLayout", "us");
+
+    priv->rmlvo.variant = xf86SetStrOption(dev->commonOptions, "xkb_variant", NULL);
+    if (!priv->rmlvo.variant)
+	priv->rmlvo.variant = xf86SetStrOption(dev->commonOptions, "XkbVariant", "");
+
+    priv->rmlvo.options = xf86SetStrOption(dev->commonOptions, "xkb_options", NULL);
+    if (!priv->rmlvo.options)
+	priv->rmlvo.options = xf86SetStrOption(dev->commonOptions, "XkbOptions", "");
 
     priv->mouse_enabled = xf86SetBoolOption(dev->commonOptions, "StartMouseEnabled", TRUE);
     priv->keys_enabled = xf86SetBoolOption(dev->commonOptions, "StartKeysEnabled", TRUE);

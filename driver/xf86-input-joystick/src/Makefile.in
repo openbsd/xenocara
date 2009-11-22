@@ -81,10 +81,9 @@ LTLIBRARIES = $(@DRIVER_NAME@_drv_la_LTLIBRARIES)
 @DRIVER_NAME@_drv_la_LIBADD =
 am__@DRIVER_NAME@_drv_la_SOURCES_DIST = jstk.c jstk.h jstk_axis.c \
 	jstk_axis.h jstk_key.c jstk_key.h jstk_options.c \
-	jstk_options.h jstk_properties.c jstk_properties.h StrKeysym.c \
-	StrKeysym.h ks_tables.h backend_bsd.c backend_bsd.h \
-	backend_joystick.c backend_joystick.h backend_evdev.c \
-	backend_evdev.h
+	jstk_options.h jstk_properties.c jstk_properties.h \
+	backend_bsd.c backend_bsd.h backend_joystick.c \
+	backend_joystick.h backend_evdev.c backend_evdev.h
 am__objects_1 = backend_bsd.lo
 @BSD_BACKEND_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = backend_joystick.lo
@@ -92,8 +91,8 @@ am__objects_3 = backend_joystick.lo
 am__objects_5 = backend_evdev.lo
 @EVDEV_BACKEND_TRUE@am__objects_6 = $(am__objects_5)
 am_@DRIVER_NAME@_drv_la_OBJECTS = jstk.lo jstk_axis.lo jstk_key.lo \
-	jstk_options.lo jstk_properties.lo StrKeysym.lo \
-	$(am__objects_2) $(am__objects_4) $(am__objects_6)
+	jstk_options.lo jstk_properties.lo $(am__objects_2) \
+	$(am__objects_4) $(am__objects_6)
 @DRIVER_NAME@_drv_la_OBJECTS = $(am_@DRIVER_NAME@_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -260,8 +259,8 @@ AM_CFLAGS = $(XORG_CFLAGS)
 INCLUDES = -I$(top_srcdir)/include/
 @DRIVER_NAME@_drv_la_SOURCES = jstk.c jstk.h jstk_axis.c jstk_axis.h \
 	jstk_key.c jstk_key.h jstk_options.c jstk_options.h \
-	jstk_properties.c jstk_properties.h StrKeysym.c StrKeysym.h \
-	ks_tables.h $(am__append_1) $(am__append_3) $(am__append_4)
+	jstk_properties.c jstk_properties.h $(am__append_1) \
+	$(am__append_3) $(am__append_4)
 BSD_SRCS = backend_bsd.c backend_bsd.h
 LINUX_SRCS = backend_joystick.c backend_joystick.h
 EVDEV_SRCS = backend_evdev.c backend_evdev.h
@@ -335,7 +334,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StrKeysym.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backend_bsd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backend_evdev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backend_joystick.Plo@am__quote@

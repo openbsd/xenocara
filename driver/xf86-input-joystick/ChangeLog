@@ -1,16 +1,124 @@
-commit 88a084952f547ebc2f30a257e441930024a69be9
+commit 657c01c8ebb9e0571d498356e6d3d03917199328
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
-Date:   Tue Apr 14 22:33:01 2009 +0200
+Date:   Wed Oct 7 09:24:39 2009 +0200
 
-    Fail configure on xorg-server >= 1.6.99
+    Revert "add shave support"
     
-    The 1.4 branch is broken on xorg-server >= 1.6.99. Use master instead.
+    This reverts commit 1fa414dd6f32d68378bc9d571c439a603c2e7888.
 
-commit 7d6a068c29e372747fc621020976797df9f61bac
+commit 565de79d42350106c9d62f8f0939a0c35138989d
+Merge: 729b5bc 1fa414d
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
-Date:   Tue Apr 14 22:25:49 2009 +0200
+Date:   Fri Oct 2 11:32:40 2009 +0200
 
-    Bump 1.4.1
+    Merge branch 'scancodes'
+    
+    Conflicts:
+    	configure.ac
+
+commit 1fa414dd6f32d68378bc9d571c439a603c2e7888
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Oct 2 11:31:14 2009 +0200
+
+    add shave support
+    
+    clean up compile output
+
+commit 5fdab9ca49474d78f2ebfb27aa931565ce985e08
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Sep 11 18:23:26 2009 +0200
+
+    Fix NULL pointers in rmlvo
+
+commit 462aae4db1302bc5a89ccf4a1db25e1c09a04132
+Merge: b2de71f 5e2b2a6
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Fri Sep 11 17:54:13 2009 +0200
+
+    Merge branch 'scancodes' of ssh://deepthought/home/sascha/develop/xorg/xf86-input-joystick into scancodes
+
+commit 729b5bc6e3dba76ff763de27ec4c6e4c0933a9cd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 11 13:53:55 2009 +1000
+
+    joystick 1.4.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e8f22493833e33683e659ae348d9f58a43838252
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 11 13:55:50 2009 +1000
+
+    Fix typo in configure.
+
+commit b2de71f4366c61a165562a573b30e1edd336ba5f
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Jun 23 23:51:32 2009 +0200
+
+    Support for axis labels; fix build on master
+    
+    The first two axes are always REL_X and REL_Y. All other axes and buttons
+    are set to 'None', proper labeling will follow.
+    
+    Thanks to Peter for the heads up.
+    
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit 5e2b2a631063974ea6de7796f39106b85b2db31d
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Apr 15 00:29:44 2009 +0200
+
+    fix manpage and examples to reflect recent key changes
+
+commit bf8626967263ee92d45759c58dc5bcc42a57176b
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Apr 14 23:25:44 2009 +0200
+
+    Property support for scancodes
+    
+    Allows setting scancodes for keys using input-properties
+
+commit 57bf11bc03a04fd68bb3ee2cd5375f04326e5c28
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 11 14:25:07 2009 +0200
+
+    configure.ac: this is 1.4.99
+    
+    Major changes in configuration call for a major release.
+
+commit 7f6e390fb1f8ca006b2a995877128f3de0a445ba
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 11 14:19:58 2009 +0200
+
+    Use preset keyboard layout instead of custom generated keymap.
+    
+    Restored compatibility with recent xkb changes and xorg-server-1.7.
+    Keys are configured now using scancodes instead of keysyms. Depends on
+    set keymap; people could write custom layouts.
+
+commit 4fbfcb17d6f6e7e44633f97e48b3ece8769758f0
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 11 13:13:16 2009 +0200
+
+    Remove parsing of keysyms.
+    
+    Key options are expected to be scancodes/plain numbers now.
+
+commit 7c677b3d26a1a21f15e8acc96f57f05659265204
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 11 13:12:17 2009 +0200
+
+    Remove ks_tables.h
+    
+    No more keysym parsing
+
+commit 8075ee4808a9c9eab25fb8716498208b895e6287
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Apr 11 13:11:24 2009 +0200
+
+    Remove parsing of keysyms
+    
+    Change of configuration semantics again. Keys are specified in scancodes instead of keysyms.
 
 commit e1710072396a97369ef71b1fd1738ad092a5e902
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>

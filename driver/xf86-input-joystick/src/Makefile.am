@@ -36,8 +36,7 @@ INCLUDES=-I$(top_srcdir)/include/
 				jstk_axis.c jstk_axis.h \
 				jstk_key.c jstk_key.h \
 				jstk_options.c jstk_options.h \
-				jstk_properties.c jstk_properties.h \
-				StrKeysym.c StrKeysym.h ks_tables.h
+				jstk_properties.c jstk_properties.h
 
 BSD_SRCS   = backend_bsd.c backend_bsd.h
 LINUX_SRCS = backend_joystick.c backend_joystick.h

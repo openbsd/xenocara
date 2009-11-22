@@ -55,6 +55,17 @@
 #define XI_JOYSTICK "JOYSTICK"
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 5
+typedef struct {
+    char *rules;
+    char *model;
+    char *layout;
+    char *variant;
+    char *options;
+} XkbRMLVOSet;
+#endif
+
+
 
 typedef enum _JOYSTICKEVENT {
     EVENT_NONE=0,
@@ -69,7 +80,7 @@ typedef void(*jstkCloseDeviceProc)(JoystickDevPtr joystick);
 typedef int(*jstkReadDataProc)(JoystickDevPtr joystick,
                                JOYSTICKEVENT *event, int *number);
 
-typedef unsigned int KEYSCANCODES [MAXKEYSPERBUTTON];
+typedef unsigned char KEYSCANCODES [MAXKEYSPERBUTTON];
 
 typedef struct _AXIS {
     JSTK_TYPE    type;
@@ -118,11 +129,7 @@ typedef struct _JoystickDevRec {
 
     CARD8        num_buttons, num_axes; /* Detected number of buttons/axes */
 
-    struct _KEYMAP {
-        int size;
-        KeySym map[256-MIN_KEYCODE];
-    } keymap;
-
+    XkbRMLVOSet rmlvo;
     AXIS axis[MAXAXES];           /* Configuration per axis */
     BUTTON button[MAXBUTTONS];    /* Configuration per button */
 } JoystickDevRec;
