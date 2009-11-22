@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.1.1.1 2009/11/22 19:13:10 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.2 2009/11/22 19:26:48 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -34,9 +34,7 @@
 #include <mipointer.h>
 #include <extinit.h>
 
-#ifdef XFree86LOADER
 #include "xf86Module.h"
-#endif
 
 #define NAXES 2			/* X and Y axes only */
 #define NBUTTONS 32		/* max theoretical buttons */
@@ -59,11 +57,9 @@ typedef struct WSDevice {
 	int negativeW, positiveW; /* mappings for W axis */
 } WSDeviceRec, *WSDevicePtr;
 
-#ifdef XFree86LOADER
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
 static const OptionInfoRec *wsAvailableOptions(void *);
-#endif
 
 static InputInfoPtr wsPreInit(InputDriverPtr, IDevPtr, int);
 static int wsProc(DeviceIntPtr, int);
@@ -144,7 +140,6 @@ static int debug_level = 0;
 # define DBG(lvl, f)
 #endif
 
-#ifdef XFree86LOADER
 static pointer
 SetupProc(pointer module, pointer options, int *errmaj, int *errmin)
 {
@@ -168,7 +163,6 @@ wsAvailableOptions(void *unused)
 {
 	return WSOptions;
 }
-#endif /* XFree86LOADER */
 
 static InputInfoPtr
 wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
