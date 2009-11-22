@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.3 2009/11/22 22:30:18 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.4 2009/11/22 23:06:24 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -52,9 +52,6 @@
 #include <exevents.h>		/* Needed for InitValuator/Proximity stuff */
 #include <extnsionst.h>
 #include <extinit.h>
-
-#include "xf86Module.h"
-
 
 #ifdef USB_GET_REPORT_ID
 #define USB_NEW_HID
@@ -119,7 +116,6 @@ struct USBTDevice {
 /* Function prototypes */
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
-static const OptionInfoRec *UsbTabletAvailableOptions(void *);
 
 static LocalDevicePtr UsbTabletAllocateStylus(InputDriverPtr);
 static LocalDevicePtr UsbTabletAllocateEraser(InputDriverPtr);
@@ -161,15 +157,6 @@ typedef enum {
 	USBTOPT_THRESHOLD,
 	USBTOPT_SUPPRESS,
 } USBTOpts;
-
-static const OptionInfoRec USBTOptions[] = {
-	{ USBTOPT_DEVICE, "device", OPTV_STRING, {0}, FALSE },
-	{ USBTOPT_DEBUG_LEVEL, "debuglevel", OPTV_INTEGER, {0}, FALSE},
-	{ USBTOPT_HISTORY_SIZE, "historysize", OPTV_INTEGER, {0}, FALSE},
-	{ USBTOPT_THRESHOLD, "threshold", OPTV_INTEGER, {0}, FALSE}, 
-	{ USBTOPT_SUPPRESS, "suppress", OPTV_INTEGER, {0}, FALSE},
-	{ -1, NULL, OPTV_NONE, {0}, FALSE}
-};
 
 
 XF86ModuleData usbtabletModuleData = {&VersionRec,
@@ -803,12 +790,6 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       0, /* min_res */
 			       mils(1000)); /* max_res */
 	return 1;
-}
-
-static const OptionInfoRec *
-UsbTabletAvailableOptions(void *unused)
-{
-	return USBTOptions;
 }
 
 static InputInfoPtr
