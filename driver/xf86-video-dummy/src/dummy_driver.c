@@ -125,30 +125,6 @@ static const OptionInfoRec DUMMYOptions[] = {
     { -1,                  NULL,           OPTV_NONE,	{0}, FALSE }
 };
 
-
-/*
- * List of symbols from other modules that this module references.  This
- * list is used to tell the loader that it is OK for symbols here to be
- * unresolved providing that it hasn't been told that they haven't been
- * told that they are essential via a call to xf86LoaderReqSymbols() or
- * xf86LoaderReqSymLists().  The purpose is this is to avoid warnings about
- * unresolved symbols that are not required.
- */
-
-static const char *fbSymbols[] = {
-    "fbPictureInit",
-    "fbScreenInit",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(dummySetup);
@@ -187,11 +163,6 @@ dummySetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	 * by calling LoadSubModule().
 	 */
 
-	/*
-	 * Tell the loader about symbols from other modules that this module
-	 * might refer to.
-	 */
-	LoaderRefSymLists(fbSymbols, ramdacSymbols, NULL);
 	/*
 	 * The return value must be non-NULL on success even though there
 	 * is no TearDownProc.
@@ -470,12 +441,10 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
     if (xf86LoadSubModule(pScrn, "fb") == NULL) {
 	RETURN;
     }
-    xf86LoaderReqSymLists(fbSymbols, NULL);
 
     if (!dPtr->swCursor) {
 	if (!xf86LoadSubModule(pScrn, "ramdac"))
 	    RETURN;
-	xf86LoaderReqSymLists(ramdacSymbols, NULL);
     }
     
     /* We have no contiguous physical fb in physical memory */
