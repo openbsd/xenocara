@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.2 2009/11/22 22:20:26 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.3 2009/11/22 22:30:18 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -238,6 +238,10 @@ UsbTabletProc(DeviceIntPtr pUSBT, int what)
 	USBTDevicePtr priv = (USBTDevicePtr)XI_PRIVATE(pUSBT);
 	CARD8 map[NBUTTONS+1];
 	int i;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	Atom btn_labels[NBUTTONS] = {0};
+	Atom axes_labels[NAXES] = {0};
+#endif
 
 	switch (what) {
 	case DEVICE_INIT:
@@ -246,9 +250,11 @@ UsbTabletProc(DeviceIntPtr pUSBT, int what)
 		for (i = 1; i <= NBUTTONS; i++) {
 			map[i] = i;
 		}
-		if (InitButtonClassDeviceStruct(pUSBT,
-						NBUTTONS, 
-						map) == FALSE) {
+		if (InitButtonClassDeviceStruct(pUSBT, NBUTTONS,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			btn_labels,
+#endif
+			map) == FALSE) {
 			xf86Msg(X_ERROR, 
 				"unable to allocate Button class device\n");
 			return !Success;
@@ -273,6 +279,9 @@ UsbTabletProc(DeviceIntPtr pUSBT, int what)
 
 		if (InitValuatorClassDeviceStruct(
 			pUSBT, NAXES, 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			axes_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
 			xf86GetMotionEvents, 
 #endif
@@ -711,7 +720,9 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 	USBTDevicePtr priv = (USBTDevicePtr)XI_PRIVATE(pUSBT);
 	USBTCommonPtr comm = priv->comm;
 	int i;
-
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	Atom axes_labels[NAXES] = {0};
+#endif
 	hid_item_t	*h = &comm->hidTip_Pressure;
     
 	DBG(1, ErrorF("UsbTabletOpenDevice start\n"));
@@ -743,6 +754,9 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 	/* XXX scaling done here, since Xorg 7.3 does not call UsbTabletConvert */
 	InitValuatorAxisStruct(pUSBT,
 			       0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			       axes_labels[0],
+#endif
 			       comm->hidX.logical_minimum * comm->factorX, /* min val */
 			       comm->hidX.logical_maximum * comm->factorX, /* max val */
 			       mils(1000), /* resolution */
@@ -750,6 +764,9 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       mils(1000)); /* max_res */
 	InitValuatorAxisStruct(pUSBT,
 			       1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			       axes_labels[1],
+#endif
 			       comm->hidY.logical_minimum * comm->factorY, /* min val */
 			       comm->hidY.logical_maximum * comm->factorY, /* max val */
 			       mils(1000), /* resolution */
@@ -757,6 +774,9 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       mils(1000)); /* max_res */
 	InitValuatorAxisStruct(pUSBT,
 			       2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			       axes_labels[2],
+#endif
 			       h->logical_minimum, /* min val */
 			       h->logical_maximum, /* max val */
 			       mils(1000), /* resolution */
@@ -764,6 +784,9 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       mils(1000)); /* max_res */
 	InitValuatorAxisStruct(pUSBT,
 			       3,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			       axes_labels[3],
+#endif
 			       comm->hidTiltX.logical_minimum, /* min val */
 			       comm->hidTiltX.logical_maximum, /* max val */
 			       mils(1000), /* resolution */
@@ -771,6 +794,9 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       mils(1000)); /* max_res */
 	InitValuatorAxisStruct(pUSBT,
 			       4,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			       axes_labels[4],
+#endif
 			       comm->hidTiltY.logical_minimum, /* min val */
 			       comm->hidTiltY.logical_maximum, /* max val */
 			       mils(1000), /* resolution */
