@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile,v 1.31 2009/06/05 21:26:36 matthieu Exp $
+# $OpenBSD: Makefile,v 1.32 2009/11/22 19:16:48 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
-	openbsd-input-usbtablet \
-	openbsd-input-ws \
 	xf86-input-keyboard \
 	xf86-input-mouse \
-	xf86-input-void
+	xf86-input-usbtablet \
+	xf86-input-void \
+	xf86-input-ws
 
 INPUT_DRV_COMMON= \
 	${INPUT_DRV_DEFAULT} \
