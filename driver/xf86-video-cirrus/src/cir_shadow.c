@@ -11,7 +11,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "shadowfb.h"
@@ -19,7 +18,7 @@
 #include "cir.h"
 #include "alp.h"
 
-void
+_X_EXPORT void
 cirRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 {
     CirPtr pCir = CIRPTR(pScrn);
@@ -46,7 +45,7 @@ cirRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
     }
 } 
 
-void
+_X_EXPORT void
 cirPointerMoved(int index, int x, int y)
 {
     ScrnInfoPtr pScrn = xf86Screens[index];
@@ -64,7 +63,7 @@ cirPointerMoved(int index, int x, int y)
     (*pCir->PointerMoved)(index, newX, newY);
 }
 
-void
+_X_EXPORT void
 cirRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 {
     CirPtr pCir = CIRPTR(pScrn);
@@ -110,7 +109,7 @@ cirRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 } 
 
 
-void
+_X_EXPORT void
 cirRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 {
     CirPtr pCir = CIRPTR(pScrn);
@@ -157,7 +156,7 @@ cirRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 
 
 /* this one could be faster */
-void
+_X_EXPORT void
 cirRefreshArea24(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 {
     CirPtr pCir = CIRPTR(pScrn);
@@ -208,7 +207,7 @@ cirRefreshArea24(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
     }
 }
 
-void
+_X_EXPORT void
 cirRefreshArea32(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 {
     CirPtr pCir = CIRPTR(pScrn);

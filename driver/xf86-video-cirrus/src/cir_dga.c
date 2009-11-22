@@ -67,7 +67,7 @@ DGAFunctionRec CirDGAFuncs = {
 
 
 
-Bool
+_X_EXPORT Bool
 CirDGAInit(ScreenPtr pScreen)
 {
   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];

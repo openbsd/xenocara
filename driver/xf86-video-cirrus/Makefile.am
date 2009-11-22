@@ -21,4 +21,14 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 
-EXTRA_DIST = README.multihead
+EXTRA_DIST = README.multihead ChangeLog
+
+MAINTAINERCLEANFILES=ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
+

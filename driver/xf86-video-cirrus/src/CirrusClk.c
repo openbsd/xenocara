@@ -88,7 +88,7 @@ static cirrusClockRec cirrusClockTab[] = {
  * use the tested clock since others can be unstable.
  */
 
-Bool
+_X_EXPORT Bool
 CirrusFindClock(int *rfreq, int max_clock, int *num_out, int *den_out)
 {
 	int n, i;

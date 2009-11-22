@@ -21,8 +21,9 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
-
+#endif
 /* All drivers need this */
 
 /* Drivers for PCI hardware need this */
@@ -93,7 +94,7 @@ SymTabRec CIRChipsets[] = {
 };
 
 /* List of PCI chipset names */
-PciChipsets CIRPciChipsets[] = {
+_X_EXPORT PciChipsets CIRPciChipsets[] = {
 	{ PCI_CHIP_GD5430,	PCI_CHIP_GD5430,	RES_SHARED_VGA },
 	{ PCI_CHIP_GD5434_4,PCI_CHIP_GD5434_4,	RES_SHARED_VGA },
 	{ PCI_CHIP_GD5434_8,PCI_CHIP_GD5434_8,	RES_SHARED_VGA },
@@ -107,33 +108,6 @@ PciChipsets CIRPciChipsets[] = {
 	{ PCI_CHIP_GD5465,	PCI_CHIP_GD5465,	RES_SHARED_VGA },
 	{ PCI_CHIP_GD7548,	PCI_CHIP_GD7548,	RES_SHARED_VGA },
 	{ -1,				-1,					RES_UNDEFINED}
-};
-
-/*
- * List of symbols from other modules that this module references.  This
- * list is used to tell the loader that it is OK for symbols here to be
- * unresolved providing that it hasn't been told that they haven't been
- * told that they are essential via a call to xf86LoaderReqSymbols() or
- * xf86LoaderReqSymLists().  The purpose of this is to avoid warnings about
- * unresolved symbols that are not required.
- */
-
-static const char *alpSymbols[] = {
-	"AlpAvailableOptions",
-	"AlpProbe",
-	NULL
-};
-static const char *lgSymbols[] = {
-	"LgAvailableOptions",
-	"LgProbe",
-	NULL
-};
-
-static const char *vbeSymbols[] = {
-	"VBEInit",
-	"vbeDoEDID",
-	"vbeFree",
-	NULL
 };
 
 #ifdef XFree86LOADER
@@ -171,7 +145,6 @@ cirSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 		setupDone = TRUE;
 		xf86AddDriver(&CIRRUS, module, 0);
 
-		LoaderRefSymLists(alpSymbols, lgSymbols, vbeSymbols, NULL);
 		return (pointer)1;
 	}
 	if (errmaj) *errmaj = LDR_ONCEONLY;
@@ -236,13 +209,11 @@ CIRProbe(DriverPtr drv, int flags)
     if (flags & PROBE_DETECT) {
 	if (!lg_loaded) {
 	    if (xf86LoadDrvSubModule(drv, "cirrus_laguna")) {
-		xf86LoaderReqSymLists(lgSymbols, NULL);
 		lg_loaded = TRUE;
 	    }
 	}
 	if (!alp_loaded) {
 	    if (xf86LoadDrvSubModule(drv, "cirrus_alpine")) {
-		xf86LoaderReqSymLists(alpSymbols, NULL);
 		alp_loaded = TRUE;
 	    }
 	}
@@ -288,7 +259,6 @@ CIRProbe(DriverPtr drv, int flags)
  	    if (!lg_loaded) {
  		if (!xf86LoadDrvSubModule(drv, "cirrus_laguna")) 
 		    continue;
- 		xf86LoaderReqSymLists(lgSymbols, NULL);
  		lg_loaded = TRUE;
  	    }
 	    pScrn = LgProbe(usedChips[i]);
@@ -296,7 +266,6 @@ CIRProbe(DriverPtr drv, int flags)
  	    if (!alp_loaded) {
  		if (!xf86LoadDrvSubModule(drv, "cirrus_alpine")) 
  		    continue;
- 		xf86LoaderReqSymLists(alpSymbols, NULL);
  		alp_loaded = TRUE;
  	    }
  	    pScrn = AlpProbe(usedChips[i]);
@@ -320,7 +289,7 @@ CIRProbe(DriverPtr drv, int flags)
  * Map the framebuffer and MMIO memory.
  */
 
-Bool
+_X_EXPORT Bool
 CirMapMem(CirPtr pCir, int scrnIndex)
 {
 	int mmioFlags;
@@ -410,7 +379,7 @@ CirMapMem(CirPtr pCir, int scrnIndex)
  * Unmap the framebuffer and MMIO memory.
  */
 
-Bool
+_X_EXPORT Bool
 CirUnmapMem(CirPtr pCir, int scrnIndex)
 {
 #ifdef CIR_DEBUG
@@ -438,13 +407,12 @@ CirUnmapMem(CirPtr pCir, int scrnIndex)
 	return TRUE;
 }
 
-void
+_X_EXPORT void
 cirProbeDDC(ScrnInfoPtr pScrn, int index)
 {
     vbeInfoPtr pVbe;
 
     if (xf86LoadSubModule(pScrn, "vbe")) {
-	xf86LoaderReqSymLists(vbeSymbols,NULL);
         pVbe = VBEInit(NULL,index);
         ConfiguredMonitor = vbeDoEDID(pVbe, NULL);
 	vbeFree(pVbe);

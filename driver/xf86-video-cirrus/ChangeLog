@@ -1,67 +1,433 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 4ecaa548a996475fbb4c6403698b2ecaf35e9d6b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:40 2009 +1000
 
-	* configure.ac:
-	* src/CirrusClk.c:
-	* src/alp_driver.c:
-	* src/alp_hwcurs.c:
-	* src/alp_i2c.c:
-	* src/alp_xaa.c:
-	* src/alp_xaam.c:
-	* src/cir.h:
-	* src/cir_dga.c:
-	* src/cir_driver.c:
-	* src/cir_shadow.c:
-	* src/lg_driver.c:
-	* src/lg_hwcurs.c:
-	* src/lg_i2c.c:
-	* src/lg_xaa.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+    cirrus: change to using ABI version check
 
-	* src/cir_driver.c:
-	VERSION -> CIR_VERSION
+commit 2765aba56fe66038ab7de554474b8d30995f3ef0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:29 2009 +1000
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    cirrus: update for resources/RAC API removal
 
-	* configure.ac:
-	Update package version for X11R7 release.
+commit ecdf94e86d44bdbeff1bb944fb372da92d2fa907
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 10:28:20 2009 -0400
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    cirrus 1.3.1
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+commit 2939b59585d96bb9b6f852ddb1eaa5ffd4df1cfb
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 10 14:16:32 2009 +1000
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    cirrus: add inputstr.h explicitly
+    
+    using inputInfo requires inputstr.h this got included by accident before
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+commit f07b4a3c5dd3e6834367e223aa454054c34a2ac8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 14:53:06 2009 -0400
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Remove useless loader symbol lists.
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+commit 15b1632d4136d4d20e006626836fb1f73c5a61f7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu May 7 06:56:57 2009 -0700
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Version 1.3.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+commit b2dd1f8616e0863710abe1efd0d6444d749b6c49
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu May 7 06:45:12 2009 -0700
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+    Updates to COPYING, README, & cirrus.man
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-	* configure.ac:
-	Only build dlloader modules by default.
+commit 5db201643fc0e1554fb522db3a215f55938dd1e3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu May 7 06:43:12 2009 -0700
 
-2005-11-28  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    renamed:    {man,src}/.cvsignore -> {man,src}/.gitignore
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-	* src/Makefile.am:
-	Separate cirrus driver into _drv, _alpine and _laguna components
-	as they are in the monolithic tree.
+commit 8676a781c9fcbf03e61f9805c436d21555220e9a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 29 18:30:25 2009 -0700
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Raise minimum xorg-server required to 1.4 for miGetPointerPosition
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+commit 6e13b31347c298e72f0f4bcaf94b56172a48bd5c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Apr 24 02:31:23 2009 -0700
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Replace static ChangeLog with XORG_CHANGELOG, use XORG_CWARNFLAGS too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+commit 19b9d2335a89269b271583101d4fe377c5dfdddf
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:38:04 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit c5c3a60d085efdc32132f0a19de50b559dcf3827
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:26:50 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit d92459edcb8917d51435110f6b30a133d8ce7d52
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Sep 16 23:48:07 2008 +0200
+
+    alpine: fix order of arguments of PCI_WRITE_LONG().
+
+commit 6dcbf42d6ddf0f8b55feb72008c4f79b18a1603a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jul 17 19:06:42 2008 -0300
+
+    Update to use miPointerGetPosition.
+    
+      miPointerPosition is deprecated.
+
+commit 8341f8b0298eef41ff9db582305e3b7006cdf27a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jul 28 19:09:16 2008 -0300
+
+    Export symbols used by different cirrus driver modules.
+    
+    Symbols are used by cirrus_drv.so, cirrus_alpine.so, and cirrus_laguna.so.
+    
+    These must have public visibility if compiling with hidden symbols.
+
+commit 5dfd5d1772e2119c6b54f4548ae359cc9483e8fc
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 15:43:45 2008 -0400
+
+    cirrus 1.2.1
+
+commit e44db96ed07ff1425a1a465ab32fd2d53a81b10c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Mar 24 14:54:13 2008 -0400
+
+    Bug #10715: Fix depth configuration for alpine chips.
+    
+    In particular, don't try to set up 24+32 on the chip that qemu emulates,
+    since it doesn't work, either in qemu or in hardware.
+
+commit e9d517d8bd7398aa9ca33ceb64db46d659f70707
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 13:45:30 2008 -0400
+
+    chips 1.2.0
+
+commit 0bb813fa212b0c349b92c3ae2f9165738003533d
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Mar 13 12:44:21 2008 +1000
+
+    cirrus: set default depth to 24bpp
+    
+    this fixes autoconfiguation and it shouldn't override anything else.
+
+commit 2cece73303455fb9a28e723d6b8c1e3eb867b8ed
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:27:13 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 78ce737e57867472c8166135a4dccd06eb1b2023
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jan 21 18:16:33 2008 +1000
+
+    fixup iomapsize so we only map the 4k not 16k which is an error
+
+commit 25abf8e9b55efe51b9ef0fcde3b98c38bf3a7ba6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 15:49:24 2008 +1000
+
+    make dist check pass
+
+commit 8a33d2b5a820789309688855c81a4b11f8283500
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 15:48:00 2008 +1000
+
+    test for 1/4 bpp in case server is configured with them off
+
+commit 46e982ec0208bf7a32d47cd7cf7b1895e7bbfe1d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 15:06:33 2008 +1000
+
+    cirrus initial pci access support
+
+commit 6d114041dc22763aa89ef6a4f4af3246de3e3b1b
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 10:26:40 2007 +0200
+
+    Define CIR_*_VERSION* using PACKAGE_VERSION_*
+
+commit 6438659655d3cc23e39be9c0c9673c3247282997
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Mar 1 10:42:30 2007 -0800
+
+     renamed: .cvsignore -> .gitignore
+
+commit 43d9703ddf79314015b66c81c671ef254fbb3934
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Mar 1 10:41:58 2007 -0800
+
+    Replace references to XFree86/XF86Config in man page
+
+commit 1ba52ebddd605c9341ff7f0a880c272a78f467ed
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:57:40 2006 +0000
+
+    VERSION -> CIR_VERSION
+
+commit e6588f26e12bb737551b9448911c31129978ea85
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:44:20 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 9ca7e7fcfc53ae9054661219aa366409089c3f8d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:59 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 2d8e201ee988646bd8601dbc2b8c32571fdac017
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:52 2005 +0000
+
+    Stub COPYING files
+
+commit dbf028bd0148d2317e7b87fad857ad0f7accd234
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:16 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 4456ba0a597443aed32bf686b79c22ef19ac0102
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:33 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 134440cd4ab932803b100bf7767776fb0ffb2d0d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:33 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 2f48ba72c2009bc3c7b83d2b1415df897a2b26e4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:07 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 444b38c206b6a7c037615694c2a7ada84380698e
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:58 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 6d3a17ba84343fb5c0cf75039a4e5cbd3274cfc3
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:08 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 2820e709f8d2366cdaf2aa7df8b9ad44fafc1886
+Author: Kevin E Martin <kem@kem.org>
+Date:   Mon Nov 28 16:05:38 2005 +0000
+
+    Separate cirrus driver into _drv, _alpine and _laguna components as they
+        are in the monolithic tree.
+
+commit 53e79befceacccee15bfa47b56b34b180f3039cb
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:11 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit ad036f9f6ef53fa454f63f4426a17e55d7598343
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:14 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 4c88ee7e2f5297a260b8d4871869cfa0494d157f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:52 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 44e282ad51518a06f6c5cd8c871b0bcd08ec0477
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:02 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 2fe8297b577524e052987756a4902a20b7f41606
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:53 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 2b3c8a3d754b4511ae7f90051c5ed995b1e45765
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:32 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit a5f509023c24021c5eb1a272a4423cbfe4b634c5
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:02 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 96c957a338d3aca2756b86680c052f602fee1e10
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Sep 27 20:53:19 2005 +0000
+
+    Update build system for apm, chips, cirrus, glint, i740, mga, neomagic,
+        newport to accomodate various new documentation and utility files.
+
+commit 60d397b933810bf2a377c00b3b2ce1ea5048b384
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:46 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 31a03e7fac786df5b3e51586a9f338cf019210a9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:43 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 269bb85534031d11bd008b530e39e52b86734832
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon Jul 25 23:46:27 2005 +0000
+
+    src/Makefile.am
+
+commit 6ced8240c5d328b1edc2ba54d49f3d362e596244
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon Jul 25 23:46:15 2005 +0000
+
+    man/Makefile.am
+
+commit c8160cf29932bef0a9b850c068587d1f1ad579ba
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon Jul 25 23:45:41 2005 +0000
+
+    Build system for Cirrus driver
+
+commit 133e8b674546c50db80cb39d0ca526d6fb1ed12b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:46 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 88c1e79c6b3fff064ca5ba2cc500714707d605be
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Jun 26 04:38:12 2005 +0000
+
+    Bug #3628: Fix video driver submodule visibility.
+
+commit 57144d6c9ea250b1d9a40bac4c70180593c1ca2c
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:54 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 264b155fdc7f0f860a5cfa5932fb683e5d1934ef
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:23 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 979f1e0c830891c9e4f0b4837980766cc7eac3d7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Jul 30 20:30:52 2004 +0000
+
+    Bug #400 (partial): Driver fixes for the dlloader. When using dlloader, all
+        framebuffer formats except cfb and the overlay modes should work, and
+        r128 and radeon need to be loaded from the ati driver (both issues to
+        be fixed soon). Tested on i740, s3virge, mach64, tdfx, vesa, and vga
+        drivers. elfloader users shouldn't be affected.
+
+commit c15b8a386fc6915e2ec13b0b8b9a15eb7277d665
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:02 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 5308a983f77e8cd96538c4637062aa29a705caa3
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:28:21 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit fb8a70faaa717c7b998ad531e8b0c0620f56a731
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:20 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit d54af9086282437c9928ba667a763bff2cbaf740
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:18 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit cc1c352f76fc1138223cab6449bdbf5538400e27
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:52 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 99774def5b55af0af2d53f78c4e09000c9105c29
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:18 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 08e4d07d7203d7db746839725d632756ede8816d
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:36 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 2c120fef2e3e4fa5751e29e6e80e70edba6e3e7a
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 97c9ec2c1201ec09c359f92817033281045c537e
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision
