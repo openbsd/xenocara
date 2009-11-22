@@ -90,7 +90,7 @@ following options are needed to avoid a lock-up of the graphic engine:
 .fi
 
 .SH "SEE ALSO"
-__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Jens Owen, Kevin E. Martin, and also Egbert Eich,  
 Mark Vojkovich, Alan Hourihane.
