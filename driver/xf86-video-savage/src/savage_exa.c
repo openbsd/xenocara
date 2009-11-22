@@ -69,31 +69,8 @@ SavageDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h, char *dst, 
 #define	GXset	0xFF
 #endif
 
-static int SavageGetCopyROP(int rop) {
-
-    int ALUCopyROP[16] =
-    {
-       0x00, /*ROP_0 GXclear */
-       0x88, /*ROP_DSa GXand */
-       0x44, /*ROP_SDna GXandReverse */
-       0xCC, /*ROP_S GXcopy */
-       0x22, /*ROP_DSna GXandInverted */
-       0xAA, /*ROP_D GXnoop */
-       0x66, /*ROP_DSx GXxor */
-       0xEE, /*ROP_DSo GXor */
-       0x11, /*ROP_DSon GXnor */
-       0x99, /*ROP_DSxn GXequiv */
-       0x55, /*ROP_Dn GXinvert*/
-       0xDD, /*ROP_SDno GXorReverse */
-       0x33, /*ROP_Sn GXcopyInverted */
-       0xBB, /*ROP_DSno GXorInverted */
-       0x77, /*ROP_DSan GXnand */
-       0xFF, /*ROP_1 GXset */
-    };
-
-    return (ALUCopyROP[rop]);
-
-}
+/* Definition moved to savage_accel.c */
+int SavageGetCopyROP(int rop);
 
 static int SavageGetSolidROP(int rop) {
 
@@ -382,7 +359,7 @@ SavagePrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir, int ydir
 
     /*ErrorF("in preparecopy\n");*/
 
-    cmd = BCI_CMD_RECT | BCI_CMD_DEST_PBD_NEW | BCI_CMD_SRC_SBD_COLOR_NEW;
+    cmd = BCI_CMD_RECT | BCI_CMD_DEST_PBD | BCI_CMD_SRC_SBD_COLOR;
 
     BCI_CMD_SET_ROP( cmd, SavageGetCopyROP(alu) );
 
@@ -397,18 +374,23 @@ SavagePrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir, int ydir
 
     psav->SavedBciCmd = cmd;
 
-    psav->WaitQueue(psav,7);
+    psav->WaitQueue(psav,8);
 
     BCI_SEND(BCI_SET_REGISTER
 	     | BCI_SET_REGISTER_COUNT(1)
 	     | BCI_BITPLANE_WRITE_MASK);
     BCI_SEND(planemask);
 
-    BCI_SEND(psav->SavedBciCmd);
     /* src */
+    BCI_SEND(BCI_SET_REGISTER
+	     | BCI_SET_REGISTER_COUNT(2)
+	     | BCI_SBD_1);
     BCI_SEND(psav->sbd_offset);
     BCI_SEND(psav->sbd_high);
     /* dst */
+    BCI_SEND(BCI_SET_REGISTER
+	     | BCI_SET_REGISTER_COUNT(2)
+	     | BCI_PBD_1);
     BCI_SEND(psav->pbd_offset);
     BCI_SEND(psav->pbd_high);
 
@@ -437,7 +419,8 @@ SavageCopy(PixmapPtr pDstPixmap, int srcX, int srcY, int dstX, int dstY, int wid
         height ++;
     }
 
-    psav->WaitQueue(psav,4);
+    psav->WaitQueue(psav,5);
+    BCI_SEND(psav->SavedBciCmd);
     BCI_SEND(BCI_X_Y(srcX, srcY));
     BCI_SEND(BCI_X_Y(dstX, dstY));
     BCI_SEND(BCI_W_H(width, height));
@@ -457,10 +440,73 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
     BCI_GET_PTR;
     int i, j, dwords, queue, Bpp;
     unsigned int cmd;
-    CARD32 * srcp; 
+    CARD32 * srcp;
+    unsigned int dst_pitch;
+    unsigned int dst_yoffset;
+    int agp_possible;
     
+    exaWaitSync(pDst->drawable.pScreen);
+
     Bpp = pDst->drawable.bitsPerPixel / 8;
 
+    /* Test for conditions for AGP Mastered Image Transfer (MIT). AGP memory
+       needs to be available, the XVideo AGP needs to be enabled, the 
+       framebuffer destination must be a multiple of 32 bytes, and the source
+       pitch must span the entirety of the destination pitch. This last 
+       condition allows the code to consider this upload as equivalent to a 
+       plain memcpy() call. */
+    dst_pitch = exaGetPixmapPitch(pDst);
+    dst_yoffset = exaGetPixmapOffset(pDst) + y * dst_pitch;
+    agp_possible = 
+        (!psav->IsPCI && psav->drmFD > 0 && psav->DRIServerInfo != NULL &&
+        psav->DRIServerInfo->agpXVideo.size > 0 &&
+        x == 0 && src_pitch == dst_pitch && w * Bpp == dst_pitch &&
+        (dst_yoffset & 0x1f) == 0);
+
+    if (agp_possible) {
+      	SAVAGEDRIServerPrivatePtr pSAVAGEDRIServer = psav->DRIServerInfo;
+        if (pSAVAGEDRIServer->agpXVideo.map != NULL || 
+            0 <= drmMap( psav->drmFD,
+		pSAVAGEDRIServer->agpXVideo.handle,
+		pSAVAGEDRIServer->agpXVideo.size,
+		&pSAVAGEDRIServer->agpXVideo.map)) {
+        
+            unsigned char * agpMap = pSAVAGEDRIServer->agpXVideo.map;
+            unsigned int agpOffset = drmAgpBase(psav->drmFD) + pSAVAGEDRIServer->agpXVideo.offset;
+            unsigned int bytesTotal = dst_pitch * h;            
+
+            while (bytesTotal > 0) {
+                unsigned int bytesTransfer = 
+                    (bytesTotal > pSAVAGEDRIServer->agpXVideo.size) 
+                    ? pSAVAGEDRIServer->agpXVideo.size 
+                    : bytesTotal;
+                unsigned int qwordsTransfer = bytesTransfer >> 3;
+
+                /* Copy source into AGP buffer */
+                memcpy(agpMap, src, bytesTransfer);
+                
+                psav->WaitQueue(psav,6);
+                BCI_SEND(BCI_SET_REGISTER | BCI_SET_REGISTER_COUNT(2) | 0x51);
+                BCI_SEND(agpOffset | 3);        /* Source buffer in AGP memory */
+                BCI_SEND(dst_yoffset);          /* Destination buffer in framebuffer */
+
+                BCI_SEND(BCI_SET_REGISTER | BCI_SET_REGISTER_COUNT(1) | 0x50);
+                BCI_SEND(0x00000002 | ((qwordsTransfer - 1) << 3)); /* Select MIT, sysmem to framebuffer */
+
+                /* I want to wait here for any reads from AGP memory and any 
+                   framebuffer writes performed by the MIT to stop. */
+                BCI_SEND(0xC0000000 | ((0x08 | 0x01) << 16));
+
+                bytesTotal -= bytesTransfer;
+                src += bytesTransfer;
+                dst_yoffset += bytesTransfer;
+            }
+            exaMarkSync(pDst->drawable.pScreen);
+            return TRUE;
+        }
+    }
+
+    /* If we reach here, AGP transfer is not possible, or failed to drmMap() */
     psav->sbd_offset = exaGetPixmapOffset(pDst);
     psav->sbd_high = SavageSetBD(psav, pDst);
 
@@ -489,19 +535,27 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
     dwords = (((w * Bpp) + 3) >> 2);
     for (i = 0; i < h; i++) {
 	srcp = (CARD32 *)src;
-	for (j = 0; j < dwords; j++) {
-	    if (queue < 4) {
-		BCI_RESET;
-		queue = 120 * 1024;
+
+	if (4 * dwords <= queue) {
+	    /* WARNING: breaking BCI_PTR abstraction here */
+	    memcpy(bci_ptr, srcp, 4 * dwords);
+	    bci_ptr += dwords;
+	    queue -= 4 * dwords;
+	} else {
+	    for (j = 0; j < dwords; j++) {
+		if (queue < 4) {
+		    BCI_RESET;
+		    queue = 120 * 1024;
+		}
+		BCI_SEND(*srcp++);
+		queue -= 4;
 	    }
-	    BCI_SEND(*srcp++);
-	    queue -= 4;
 	}
 	src += src_pitch;
     }
 
     /*exaWaitSync(pDst->drawable.pScreen);*/
-
+    exaMarkSync(pDst->drawable.pScreen);
     return TRUE;
 }
 

@@ -139,6 +139,13 @@ driver use your mode line timing exactly, turn off the UseBios option.
 Use of the BIOS is required for dualhead operation. 
 Default: on (use the BIOS).
 .TP
+.BI "Option \*qIgnoreEDID\*q \*q" boolean \*q
+Do not use EDID data for mode validation, but DDC is still used
+for monitor detection. This is different from NoDDC option.
+.br
+The default value is
+.B off.
+.TP 
 .BI "Option \*qShadowStatus\*q \*q" boolean \*q
 Enables the use of a shadow status register.  There is a chip bug in the 
 Savage graphics engine that can cause a bus lock when reading the engine
@@ -162,8 +169,30 @@ applies to Savage4 and newer chips.  Default: \*qoff\*q (use COB).
 .BI "Option \*qBCIforXv\*q \*q" boolean \*q  
 Use the BCI to copy and reformat Xv pixel data.  Using the BCI for Xv causes 
 graphics artifacts on some chips.  This option only applies to Savage4 and 
-prosavage/twister chips.  Default: on for prosavage and twister (use BCI for Xv); 
-off for savage4 (do not use the BCI for Xv).
+prosavage/twister chips. On some combinations of chipsets and video players,
+BCI formatting might actually be slower than software formatting (\*qAGPforXv\*q 
+might help in this case). BCI formatting can only be used on video data with
+a width that is a multiple of 16 pixels (which is the vast majority of videos). 
+Other widths are handled through software formatting. Default: on for prosavage 
+and twister (use BCI for Xv); off for savage4 (do not use the BCI for Xv).
+.TP
+.BI "Option \*qAGPforXv\*q \*q" boolean \*q
+Instructs the BCI Xv pixel formatter to use AGP memory as a scratch buffer.
+Ordinarily the BCI formatter uses a an area in framebuffer memory to hold 
+YV12 planar data to be converted for display. This requires a somewhat expensive
+upload of YV12 data to framebuffer memory. The \*qAGPforXv\*q option causes the BCI
+formatter to place the YV12 data in AGP memory instead, which can be uploaded
+faster than the framebuffer. Use of this option cuts upload overhead by 25%
+according to benchmarks. This option also smooths out most of the shearing
+present when using BCI for pixel conversion. Currently this option is 
+.B experimental
+and is disabled by default. Video width restrictions that apply to \*qBCIforXv\*q 
+also apply here. Only valid when \*qDRI\*q and \*qBCIforXv\*q are both active, 
+and only on AGP chipsets. Default: \*qoff\*q.
+.br
+If \*qAccelMethod\*q is set to \*qEXA\*q and \*qAGPforXv\*q is enabled, then the
+driver will also attempt to reuse the AGP scratch buffer for UploadToScreen 
+acceleration.
 .TP 
 .BI "Option \*qAGPMode\*q \*q" integer \*q
 Set AGP data transfer rate.
@@ -228,7 +257,7 @@ Default: \*qon\*q (enable DRI).
 .SH FILES
 savage_drv.o
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include Tim Roberts (timr@probo.com) and Ani Joshi (ajoshi@unixbox.com)
 for this version, and Tim Roberts and S. Marineau for the original driver from 

@@ -520,6 +520,15 @@ static Bool SAVAGEDRIAgpInit(ScreenPtr pScreen)
        }
    }
 
+   if (psav->AGPforXv) {
+       pSAVAGEDRIServer->agpXVideo.offset = offset;
+       pSAVAGEDRIServer->agpXVideo.size = 2 * 1024 * 1024; /* Max XV image is 1024x1024x16bpp */
+       offset += pSAVAGEDRIServer->agpXVideo.size;
+   } else {
+       pSAVAGEDRIServer->agpXVideo.offset = 0;
+       pSAVAGEDRIServer->agpXVideo.size = 0;
+   }
+
    pSAVAGEDRIServer->agpTextures.offset = offset;
    pSAVAGEDRIServer->agpTextures.size = (pSAVAGEDRIServer->agp.size - offset);
 
@@ -578,6 +587,25 @@ static Bool SAVAGEDRIAgpInit(ScreenPtr pScreen)
 		       "[agp] DMA buffers mapped at 0x%08lx\n",
 		       (unsigned long)pSAVAGEDRIServer->buffers.map );
 	   */
+       }
+   }
+
+   /* XVideo buffer
+    */
+   if (pSAVAGEDRIServer->agpXVideo.size != 0) {
+       if ( drmAddMap( psav->drmFD,
+		   pSAVAGEDRIServer->agpXVideo.offset,
+		   pSAVAGEDRIServer->agpXVideo.size,
+		   DRM_AGP, 0,
+		   &pSAVAGEDRIServer->agpXVideo.handle ) < 0 ) {
+	    xf86DrvMsg( pScreen->myNum, X_ERROR,
+		  "[agp] Could not add agpXVideo, will use framebuffer upload (slower) \n" );
+	    pSAVAGEDRIServer->agpXVideo.size = 0;
+	    pSAVAGEDRIServer->agpXVideo.handle = 0;
+       } else {
+	    xf86DrvMsg( pScreen->myNum, X_INFO,
+	       "[agp] agpXVideo handle = 0x%08lx\n",
+	       pSAVAGEDRIServer->agpXVideo.handle );
        }
    }
 
@@ -1278,6 +1306,12 @@ void SAVAGEDRICloseScreen( ScreenPtr pScreen )
       pSAVAGEDRIServer->aperture.map = NULL;
    }
 
+   if ( pSAVAGEDRIServer->agpXVideo.map ) {
+      drmUnmap( pSAVAGEDRIServer->agpXVideo.map, 
+                pSAVAGEDRIServer->agpXVideo.size );
+      pSAVAGEDRIServer->agpXVideo.map = NULL;
+   }
+
    if ( pSAVAGEDRIServer->agpTextures.map ) {
       drmUnmap( pSAVAGEDRIServer->agpTextures.map, 
                 pSAVAGEDRIServer->agpTextures.size );
@@ -1292,6 +1326,9 @@ void SAVAGEDRICloseScreen( ScreenPtr pScreen )
 
    if (pSAVAGEDRIServer->aperture.handle)
        drmRmMap(psav->drmFD,pSAVAGEDRIServer->registers.handle);
+
+   if (pSAVAGEDRIServer->agpXVideo.handle)
+       drmRmMap(psav->drmFD,pSAVAGEDRIServer->agpXVideo.handle);
 
    if (pSAVAGEDRIServer->agpTextures.handle)
        drmRmMap(psav->drmFD,pSAVAGEDRIServer->agpTextures.handle);
@@ -1541,6 +1578,9 @@ SAVAGEDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 	psav->AccelInfoRec->NeedToSync = TRUE;
 }
 
+/* Definition in savage_accel.c */
+int SavageGetCopyROP(int rop);
+
 static void 
 SAVAGEDRISetupForScreenToScreenCopy(
     ScrnInfoPtr pScrn,
@@ -1554,7 +1594,7 @@ SAVAGEDRISetupForScreenToScreenCopy(
     int cmd =0;
 
     cmd = BCI_CMD_RECT | BCI_CMD_DEST_PBD | BCI_CMD_SRC_PBD_COLOR;
-    BCI_CMD_SET_ROP( cmd, XAAGetCopyROP(rop) );
+    BCI_CMD_SET_ROP( cmd, SavageGetCopyROP(rop) );
     if (transparency_color != -1)
         cmd |= BCI_CMD_SEND_COLOR | BCI_CMD_SRC_TRANSPARENT;
 

@@ -51,7 +51,9 @@
 #include "compiler.h"
 #include "vgaHW.h"
 #include "xf86.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#endif
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
 #include "xf86_OSproc.h"
@@ -136,6 +138,9 @@ typedef struct _server{
 
    /* command DMA */
    drmRegion cmdDma;
+
+   /* XVideo through AGP */
+   drmRegion agpXVideo;
 } SAVAGEDRIServerPrivateRec, *SAVAGEDRIServerPrivatePtr;
 
 #endif
@@ -486,6 +491,7 @@ typedef struct _Savage {
 
     Bool bDisableXvMC;
 
+    Bool AGPforXv;
 #endif
 
     Bool disableCOB;
