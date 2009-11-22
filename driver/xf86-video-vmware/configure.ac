@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-vmware],
-        10.16.6,
+        10.16.8,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-vmware)
 

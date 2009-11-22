@@ -19,12 +19,14 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
+
 
 #include <X11/extensions/panoramiXproto.h>
 
 #ifdef XSERVER_LIBPCIACCESS
 #include <pciaccess.h>
+#else
+#include "xf86Resources.h"
 #endif
 
 #include "compiler.h"	        /* inb/outb */
@@ -102,6 +104,7 @@ typedef struct {
 
     VMWARERegRec SavedReg;
     VMWARERegRec ModeReg;
+    CARD32 suspensionSavedRegId;
 
     DisplayModePtr dynModes[NUM_DYN_MODES];
 
@@ -244,6 +247,10 @@ void vmwareSendSVGACmdUpdate(
    VMWAREPtr pVMWARE, BoxPtr pBB
    );
 
+void vmwareSendSVGACmdUpdateFullScreen(
+   VMWAREPtr pVMWARE
+   );
+
 DisplayModeRec *VMWAREAddDisplayMode(
     ScrnInfoPtr pScrn,
     const char *name,
@@ -254,6 +261,10 @@ DisplayModeRec *VMWAREAddDisplayMode(
 Bool vmwareIsRegionEqual(
     const RegionPtr reg1,
     const RegionPtr reg2
+   );
+
+void vmwareNextXineramaState(
+   VMWAREPtr pVMWARE
    );
 
 /* vmwarecurs.c */
