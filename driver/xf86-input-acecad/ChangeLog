@@ -1,3 +1,82 @@
+commit da1d7acc20a1b9ef4450b40781f1f207d9fa4e3d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 9 12:44:10 2009 +1000
+
+    acecad 1.4.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c51255043e97ff65adebb7527c6b5b68fa2ff038
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 11 11:54:31 2009 +1000
+
+    Require xorg-macros 1.3 for XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f6d158802c2a3a0083d110428699027939276e44
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 9 12:33:41 2009 +1000
+
+    Remove redefinition of read()
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 26c7872b49674d40a8d6b74915257c90a9708dd0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 9 12:32:08 2009 +1000
+
+    Remove unused code from TearDownProc
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b54f57f070ae02d480857d0616b879809cc652df
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 9 12:30:30 2009 +1000
+
+    unifdef XFree86LOADER, this isn't optional anymore anyway.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2bd6c562d123cbbe613ebbd90eb4af1d1525d347
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 9 12:28:28 2009 +1000
+
+    Remove RCS tags
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1a9ad110aa6df430fbf9ded35d8dbb8a75ee1872
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 9 12:27:32 2009 +1000
+
+    remove un-used _ACECAD_C_ define
+
+commit e7c779b05b92ae1fb4a2891727d85a309d53b832
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 7 11:12:13 2009 -0400
+
+    xf86-input-acecad: Remove unused .cvsignore file #23776
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a87f59f431c86272e45fdc3ed328fd30be1db2ae
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 22 13:36:54 2009 +1000
+
+    Cope with ABI_XINPUT_VERSION 7 - requires button/axes labels.
+    
+    We don't have an atom for relative pressure, so if the device is set to
+    relative, we export the axis as REL_Z instead.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8da028291921a3948486c60ad8c7a52c4f431a56
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 19:25:11 2009 -0700
+
+    Fill in COPYING file, add SubmittingPatches URL to README
+
 commit 1685d3b518cf5fe4cc6a8fb3e3c28beb9b3ddb82
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Feb 24 13:22:46 2009 +1000
@@ -278,7 +357,7 @@ Date:   Fri Apr 27 14:40:43 2007 +0200
     the "Name" option.
 
 commit 947aa75cf284b651c77ae1f0431cae0c3c3d3d05
-Merge: 581635e... 805ccfb...
+Merge: 581635e 805ccfb
 Author: Giuseppe Bilotta <giuseppe.bilotta@gmail.com>
 Date:   Fri Apr 27 12:23:44 2007 +0200
 

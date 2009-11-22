@@ -23,7 +23,6 @@
  *
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/input/acecad/acecad.c,v 1.4 2003/10/30 00:40:45 dawes Exp $ */
 
 #include "config.h"
 
@@ -35,7 +34,6 @@
 #define XORG_BOTCHED_INPUT 0
 #endif
 
-#define _ACECAD_C_
 /*****************************************************************************
  *	Standard Headers
  ****************************************************************************/
@@ -78,6 +76,11 @@
 #endif
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+#include <X11/Xatom.h>
+#include <xserver-properties.h>
+#endif
+
 /* Previously found in xf86Xinput.h */
 #ifdef DBG
 #undef DBG
@@ -97,9 +100,6 @@
  *	Local Variables
  ****************************************************************************/
 
-#undef read
-#define read(a,b,c) xf86ReadSerial((a),(b),(c))
-
 /* max number of input events to read in one read call */
 #define MAX_EVENTS 50
 
@@ -114,7 +114,6 @@ _X_EXPORT InputDriverRec ACECAD =
 	0
 };
 
-#ifdef XFree86LOADER
 static XF86ModuleVersionInfo VersionRec =
 {
 	"acecad",
@@ -153,20 +152,7 @@ SetupProc(	pointer module,
 static void
 TearDownProc( pointer p )
 {
-#if 0
-	LocalDevicePtr local = (LocalDevicePtr) p;
-	AceCadPrivatePtr priv = (AceCadPrivatePtr) local->private;
-
-	DeviceOff (local->dev);
-
-	xf86CloseSerial (local->fd);
-	XisbFree (priv->buffer);
-	xfree (priv);
-	xfree (local->name);
-	xfree (local);
-#endif
 }
-#endif
 
 static const char *default_options[] =
 {
@@ -627,13 +613,36 @@ DeviceInit (DeviceIntPtr dev)
     int rx, ry;
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
     AceCadPrivatePtr priv = (AceCadPrivatePtr) (local->private);
-    unsigned char map[] =
-    {0, 1, 2, 3};
+    unsigned char map[] = {0, 1, 2, 3};
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+    Atom btn_labels[3];
+    Atom axes_labels[3];
+
+    btn_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
+    btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
+    btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
+
+    if ((priv->flags & ABSOLUTE_FLAG))
+    {
+        axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
+        axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
+        axes_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE);
+    } else
+    {
+        axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);
+        axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
+        axes_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Z);
+    }
+#endif
 
     xf86MsgVerb(X_INFO, 4, "%s Init\n", local->name);
 
     /* 3 boutons */
-    if (InitButtonClassDeviceStruct (dev, 3, map) == FALSE)
+    if (InitButtonClassDeviceStruct (dev, 3,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                btn_labels,
+#endif
+                map) == FALSE)
     {
         xf86Msg(X_ERROR, "%s: unable to allocate ButtonClassDeviceStruct\n", local->name);
         return !Success;
@@ -653,6 +662,9 @@ DeviceInit (DeviceIntPtr dev)
 
     /* 3 axes */
     if (InitValuatorClassDeviceStruct (dev, 3,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                axes_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                 xf86GetMotionEvents,
 #endif
@@ -668,6 +680,9 @@ DeviceInit (DeviceIntPtr dev)
 
         InitValuatorAxisStruct(dev,
                 0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                axes_labels[0],
+#endif
                 0,			/* min val */
 #if XORG_BOTCHED_INPUT
                 screenInfo.screens[0]->width,
@@ -679,6 +694,9 @@ DeviceInit (DeviceIntPtr dev)
                 1000);			/* max_res */
         InitValuatorAxisStruct(dev,
                 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                axes_labels[1],
+#endif
                 0,			/* min val */
 #if XORG_BOTCHED_INPUT
                 screenInfo.screens[0]->height,
@@ -690,6 +708,9 @@ DeviceInit (DeviceIntPtr dev)
                 1000);			/* max_res */
         InitValuatorAxisStruct(dev,
                 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                axes_labels[2],
+#endif
                 0,			/* min val */
                 priv->acecadMaxZ,	/* max val */
                 1000,			/* resolution */
@@ -854,7 +875,7 @@ USBReadInput (LocalDevicePtr local)
     /* Was the device available last time we checked? */
     int avail = priv->flags & AVAIL_FLAG;
 
-    SYSCALL(len = read(local->fd, eventbuf, sizeof(eventbuf)));
+    SYSCALL(len = xf86ReadSerial(local->fd, eventbuf, sizeof(eventbuf)));
 
     if (len <= 0) {
         if (avail) {

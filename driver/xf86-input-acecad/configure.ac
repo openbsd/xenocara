@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-acecad],
-        1.3.0,
+        1.4.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-acecad)
 
@@ -32,16 +32,16 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER([config.h])
 
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
-XORG_CWARNFLAGS
+XORG_DEFAULT_OPTIONS
 
 AH_TOP([#include "xorg-server.h"])
 
@@ -95,9 +95,5 @@ AM_CONDITIONAL(HAVE_LIBSYSFS, test x$HAVE_LIBSYSFS = xyes)
 
 DRIVER_NAME=acecad
 AC_SUBST([DRIVER_NAME])
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
 AC_OUTPUT([Makefile src/Makefile man/Makefile])
