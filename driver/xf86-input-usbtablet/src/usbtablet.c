@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.4 2009/11/22 23:06:24 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.5 2009/11/22 23:16:54 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -52,10 +52,6 @@
 #include <exevents.h>		/* Needed for InitValuator/Proximity stuff */
 #include <extnsionst.h>
 #include <extinit.h>
-
-#ifdef USB_GET_REPORT_ID
-#define USB_NEW_HID
-#endif
 
 #include <usbhid.h>
 
@@ -347,10 +343,6 @@ UsbTabletReadInput(InputInfoPtr pInfo)
 			break;
 		}
 	    
-#ifndef USB_NEW_HID
-		if (comm->reportId)
-			p++;
-#endif
 		ds.x = hid_get_data(p, &comm->hidX);
 		ds.y = hid_get_data(p, &comm->hidY);
 		ds.buttons = 0;
@@ -581,10 +573,7 @@ UsbTabletOpen(InputInfoPtr pInfo)
 	hid_item_t     h;
 	report_desc_t rd;
 	int nSwitch = 0;
-#ifdef USB_NEW_HID
-	int            r;
-#endif
-	int i;
+	int            i, r;
 
 	DBG(1, ErrorF("opening %s\n", comm->devName));
 
@@ -595,14 +584,12 @@ UsbTabletOpen(InputInfoPtr pInfo)
 			comm->devName, strerror(errno));
 		return !Success;
 	}
-#ifdef USB_NEW_HID
 	SYSCALL(r = ioctl(pInfo->fd, USB_GET_REPORT_ID, &comm->reportId));
 	if (r == -1) {
 		ErrorF("Error ioctl USB_GET_REPORT_ID on %s : %s\n", 
 		       comm->devName, strerror(errno));
 		return !Success;
 	}
-#endif
 
 	DBG(1, ErrorF("initializing tablet\n"));
     
@@ -623,11 +610,8 @@ UsbTabletOpen(InputInfoPtr pInfo)
 	for (i = 0; i < NBUTTONS; i++) {
 		memset(&comm->hidBarrel_Switch[i], 0, sizeof (hid_item_t));
 	}
-	for (d = hid_start_parse(rd, 1<<hid_input
-#ifdef USB_NEW_HID
-				 , comm->reportId
-#endif
-		); hid_get_item(d, &h); ) {
+	for (d = hid_start_parse(rd, 1<<hid_input, comm->reportId); 
+	     hid_get_item(d, &h); ) {
 		if (h.kind != hid_input || (h.flags & HIO_CONST))
 			continue;
 		if (h.usage == HID_USAGE2(HUP_GENERIC_DESKTOP, HUG_X))
@@ -649,11 +633,7 @@ UsbTabletOpen(InputInfoPtr pInfo)
 	}
 	hid_end_parse(d);
 	comm->nSwitch = nSwitch;
-#ifdef USB_NEW_HID
 	comm->reportSize = hid_report_size(rd, hid_input, comm->reportId);
-#else
-	comm->reportSize = hid_report_size(rd, hid_input, &comm->reportId);
-#endif
 	hid_dispose_report_desc(rd);
 	if (comm->hidX.report_size == 0 ||
 	    comm->hidY.report_size == 0 ||
