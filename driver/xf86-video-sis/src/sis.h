@@ -77,7 +77,9 @@
 #include "xf86Pci.h"
 #include "xf86Priv.h"
 #include "xf86_OSproc.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#endif
 #include "xf86.h"
 #include "xf86PciInfo.h"
 #include "xf86Cursor.h"
@@ -747,7 +749,7 @@ typedef struct {
     UChar  sisRegsGR[10];
     UChar  sisDAC[768];
     UChar  sisRegs3C4[0x80];
-    UChar  sisRegs3D4[0xff];
+    UChar  sisRegs3D4[0x100];
     UChar  sisRegs3C2;
     UChar  sisCapt[0x60];
     UChar  sisVid[0x50];

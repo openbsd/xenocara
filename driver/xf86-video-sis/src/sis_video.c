@@ -4174,7 +4174,7 @@ SISStopVideoBlit(ScrnInfoPtr pScrn, ULong index, Bool shutdown)
     * adapt->flags but we provide it anyway.
     */
 
-   if(index > NUM_BLIT_PORTS) return;
+   if(index >= NUM_BLIT_PORTS) return;
 
    REGION_EMPTY(pScrn->pScreen, &pPriv->blitClip[index]);
 
@@ -4214,7 +4214,7 @@ SISPutImageBlit(
    SiS_Packet12_YUV MyPacket;
    Bool first;
 
-   if(index > NUM_BLIT_PORTS) return BadMatch;
+   if(index >= NUM_BLIT_PORTS) return BadMatch;
 
    if(!height || !width) return Success;
 

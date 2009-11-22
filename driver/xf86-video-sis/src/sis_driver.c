@@ -49,7 +49,9 @@
 
 #include "sis.h"
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86RAC.h"
+#endif
 #include "dixstruct.h"
 #include "shadowfb.h"
 #include "fb.h"
@@ -78,8 +80,13 @@
 
 #include "globals.h"
 
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 #ifdef XF86DRI
 #include "dri.h"
@@ -191,127 +198,6 @@ static PciChipsets XGIPciChipsets[] = {
     { -1,                   -1,                 RES_UNDEFINED }
 };
 
-#ifdef SIS_USE_XAA
-static const char *xaaSymbols[] = {
-    "XAACreateInfoRec",
-    "XAADestroyInfoRec",
-    "XAAHelpPatternROP",
-    "XAAInit",
-    NULL
-};
-#endif
-
-#ifdef SIS_USE_EXA
-static const char *exaSymbols[] = {
-    "exaDriverAccel",
-    "exaDriverInit",
-    "exaDriverFini",
-    "exaOffscreenAlloc",
-    "exaOffscreenFree",
-    NULL
-};
-#endif
-
-static const char *fbSymbols[] = {
-    "fbPictureInit",
-    "fbScreenInit",
-    NULL
-};
-
-static const char *shadowSymbols[] = {
-    "ShadowFBInit",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
-static const char *ddcSymbols[] = {
-    "xf86PrintEDID",
-    "xf86SetDDCproperties",
-    "xf86InterpretEDID",
-    NULL
-};
-
-static const char *int10Symbols[] = {
-    "xf86FreeInt10",
-    "xf86InitInt10",
-    NULL
-};
-
-static const char *vbeSymbols[] = {
-#if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,2,99,0,0)
-    "VBEInit",
-#else
-    "VBEExtendedInit",
-#endif
-    "vbeDoEDID",
-    "vbeFree",
-    "VBEGetVBEInfo",
-    "VBEFreeVBEInfo",
-    "VBEGetModeInfo",
-    "VBEFreeModeInfo",
-    "VBESaveRestore",
-    "VBESetVBEMode",
-    "VBEGetVBEMode",
-    "VBESetDisplayStart",
-    "VBESetGetLogicalScanlineLength",
-    NULL
-};
-
-#ifdef XF86DRI
-static const char *drmSymbols[] = {
-    "drmAddMap",
-    "drmAgpAcquire",
-    "drmAgpRelease",
-    "drmAgpAlloc",
-    "drmAgpFree",
-    "drmAgpBase",
-    "drmAgpBind",
-    "drmAgpUnbind",
-    "drmAgpEnable",
-    "drmAgpGetMode",
-    "drmCtlInstHandler",
-    "drmCtlUninstHandler",
-    "drmGetInterruptFromBusID",
-#ifndef SISHAVEDRMWRITE
-    "drmSiSAgpInit",
-#else
-    "drmCommandWrite",
-#endif
-#if XF86_VERSION_CURRENT >= XF86_VERSION_NUMERIC(4,3,0,0,0)
-    "drmGetVersion",
-    "drmFreeVersion",
-#endif
-    NULL
-};
-
-static const char *driSymbols[] = {
-    "DRICreateInfoRec",
-    "DRIScreenInit",
-    "DRIFinishScreenInit",
-    "DRIDestroyInfoRec",
-    "DRICloseScreen",
-    "DRIGetSAREAPrivate",
-    "DRILock",
-    "DRIUnlock",
-    "DRIQueryVersion",
-    "GlxSetVisualConfigs",
-    NULL
-};
-
-#ifdef XFree86LOADER
-static const char *driRefSymbols[] = {
-    "DRICreatePCIBusID",  /* not REQUIRED, but eventually referenced */
-    NULL
-};
-#endif
-#endif  /* XF86DRI */
-
 #ifdef XFree86LOADER
 
 static MODULESETUPPROTO(sisSetup);
@@ -347,19 +233,6 @@ sisSetup(pointer module, pointer opts, int *errmaj, int *errmin)
     if(!setupDone) {
        setupDone = TRUE;
        xf86AddDriver(&SIS, module, SIS_HaveDriverFuncs);
-       LoaderRefSymLists(fbSymbols,
-#ifdef SIS_USE_XAA
-			 xaaSymbols,
-#endif
-#ifdef SIS_USE_EXA
-			 exaSymbols,
-#endif
-			 shadowSymbols, ramdacSymbols,
-			 vbeSymbols, int10Symbols,
-#ifdef XF86DRI
-			 drmSymbols, driSymbols, driRefSymbols,
-#endif
-			 NULL);
        return (pointer)TRUE;
     }
 
@@ -2949,7 +2822,6 @@ SiS_LoadInitVBE(ScrnInfoPtr pScrn)
     if(pSiS->pVbe) return;
 
     if(xf86LoadSubModule(pScrn, "vbe")) {
-       xf86LoaderReqSymLists(vbeSymbols, NULL);
 #if XF86_VERSION_CURRENT < XF86_VERSION_NUMERIC(4,2,99,0,0)
        pSiS->pVbe = VBEInit(pSiS->pInt, pSiS->pEnt->index);
 #else
@@ -3628,7 +3500,6 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
 	  xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		"Initializing adapter through int10\n");
 	  if(xf86LoadSubModule(pScrn, "int10")) {
-	     xf86LoaderReqSymLists(int10Symbols, NULL);
 	     pSiS->pInt = xf86InitInt10(pSiS->pEnt->index);
 	  } else {
 	     SISErrorLog(pScrn, "Failed to load int10 module\n");
@@ -3683,6 +3554,7 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
     SiS_MapVGAMem(pScrn);
 #endif
 
+#ifndef XSERVER_LIBPCIACCESS
     /* Set operating state */
 
     /* 1. memory */
@@ -3712,13 +3584,13 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
     /* Operations for which I/O access is required */
     pScrn->racIoFlags = RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;
 
+#endif
+
     /* Load ramdac module */
     if(!xf86LoadSubModule(pScrn, "ramdac")) {
        SISErrorLog(pScrn, "Could not load ramdac module\n");
        goto my_error_1;
     }
-
-    xf86LoaderReqSymLists(ramdacSymbols, NULL);
 
     /* Set pScrn->monitor */
     pScrn->monitor = pScrn->confScreen->monitor;
@@ -4557,6 +4429,7 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsg(pScrn->scrnIndex, from, "MMIO registers at 0x%lX (size %ldK)\n",
 	   (ULong)pSiS->IOAddress, pSiS->mmioSize);
 
+#ifndef XSERVER_LIBPCIACCESS
     /* Register the PCI-assigned resources */
     if(xf86RegisterResources(pSiS->pEnt->index, NULL, ResExclusive)) {
        SISErrorLog(pScrn, "PCI resource conflicts detected\n");
@@ -4568,6 +4441,7 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
        SISFreeRec(pScrn);
        return FALSE;
     }
+#endif
 
     from = X_PROBED;
     if(pSiS->pEnt->device->videoRam != 0) {
@@ -6086,7 +5960,6 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
     if((pSiS->VGAEngine == SIS_300_VGA) || (pSiS->VGAEngine == SIS_315_VGA)) {
        if(xf86LoadSubModule(pScrn, "ddc")) {
 	  int crtnum = 0;
-	  xf86LoaderReqSymLists(ddcSymbols, NULL);
 	  if((pMonitor = SiSDoPrivateDDC(pScrn, &crtnum))) {
 	     didddc2 = TRUE;
 	     xf86DrvMsg(pScrn->scrnIndex, X_PROBED, ddcsstr, crtnum);
@@ -6118,8 +5991,6 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
     if(!didddc2) {
 
        if(xf86LoadSubModule(pScrn, "ddc")) {
-
-	  xf86LoaderReqSymLists(ddcSymbols, NULL);
 
 	  /* Now load and initialize VBE module. */
 	  SiS_LoadInitVBE(pScrn);
@@ -6957,18 +6828,15 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
 	SISErrorLog(pScrn, "Unsupported framebuffer bpp (%d)\n", pScrn->bitsPerPixel);
 	goto my_error_1;
     }
-    xf86LoaderReqSymLists(fbSymbols, NULL);
 
     /* Load XAA/EXA (if needed) */
     if(!pSiS->NoAccel) {
-       const char **symNames = NULL;
 #ifdef SIS_USE_XAA
        if(!pSiS->useEXA) {
 	  if (!xf86LoadSubModule(pScrn, "xaa")) {
 	    SISErrorLog(pScrn, "Could not load xaa module\n");
 	    goto my_error_1;
 	  }
-	  symNames = xaaSymbols;
        }
 #endif
 #ifdef SIS_USE_EXA
@@ -6984,13 +6852,9 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
 	    LoaderErrorMsg(NULL, "exa", errmaj, errmin);
 	    goto my_error_1;
 	  }
-	  symNames = exaSymbols;
        }
 #endif
-       if(symNames) {
-	  xf86LoaderReqSymLists(symNames, NULL);
-	  xf86DrvMsg(pScrn->scrnIndex, X_INFO, "2D acceleration enabled\n");
-       }
+       xf86DrvMsg(pScrn->scrnIndex, X_INFO, "2D acceleration enabled\n");
     }
 
     /* Load shadowfb (if needed) */
@@ -6999,7 +6863,6 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
 	  SISErrorLog(pScrn, "Could not load shadowfb module\n");
 	  goto my_error_1;
        }
-       xf86LoaderReqSymLists(shadowSymbols, NULL);
     }
 
     /* Load the dri and glx modules if requested. */
@@ -7008,9 +6871,7 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
        if(!xf86LoaderCheckSymbol("DRIScreenInit")) {
 	  if(xf86LoadSubModule(pScrn, "dri")) {
 	     if(!xf86LoaderCheckSymbol("GlxSetVisualConfigs")) {
-	        if(xf86LoadSubModule(pScrn, "glx")) {
-		   xf86LoaderReqSymLists(driSymbols, drmSymbols, NULL);
-		} else {
+	        if(!xf86LoadSubModule(pScrn, "glx")) {
 		   SISErrorLog(pScrn, "Failed to load glx module\n");
 		}
 	     }
