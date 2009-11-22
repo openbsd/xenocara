@@ -217,7 +217,7 @@ of what the BIOS is saying set this option to off. Don't set it to off
 if a panel is connected.
 Default: value probed by BIOS.
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .PP
 You are also recommended to read the README.chips file that comes with all
 __xservername__ distributions, which discusses the
