@@ -35,7 +35,11 @@
 /* All drivers should typically include these */
 #include "xf86.h"
 #include "xf86_OSproc.h"
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#include "xf86RAC.h"
+#endif
 
 /* All drivers need this */
 
@@ -66,8 +70,7 @@
 /* Dga definitions */
 #include "dgaproc.h"
 
-#include "xf86Resources.h"
-#include "xf86RAC.h"
+
 
 #include "fb.h"
 

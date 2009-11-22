@@ -59,8 +59,13 @@
 #include "xf86Modes.h"
 
 /* DPMS */
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
+
 
 /* Mandatory functions */
 static const OptionInfoRec * VESAAvailableOptions(int chipid, int busid);
@@ -673,6 +678,13 @@ VESAPreInit(ScrnInfoPtr pScrn, int flags)
 
     if ((pScrn->monitor->DDC = pVesa->monitor) != NULL)
 	xf86SetDDCproperties(pScrn, pVesa->monitor);
+#ifdef HAVE_PANELID
+    else {
+	void *panelid = VBEReadPanelID(pVesa->pVbe);
+	VBEInterpretPanelID(pScrn->scrnIndex, panelid);
+	xfree(panelid);
+    }
+#endif
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, DEBUG_VERB,
 			"Searching for matching VESA mode(s):\n");
