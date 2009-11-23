@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.14 2009/11/23 18:29:13 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.15 2009/11/23 21:11:27 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -272,11 +272,6 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		}
 	}
 	priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 0);
-	if (priv->raw) {
-		xf86Msg(X_CONFIG,
-		    "%s device will work in raw mode\n",
-		    dev->identifier);
-	}
 	if (wsOpen(pInfo) != Success) {
 		goto fail;
 	}
@@ -286,10 +281,21 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
 	if (priv->type == WSMOUSE_TYPE_TPANEL)
 		pInfo->type_name = XI_TOUCHSCREEN;
-	else
+	else {
 		pInfo->type_name = XI_MOUSE;
-
+		if (priv->raw) {
+			xf86Msg(X_WARNING, "Device is not a touch panel,"
+			    "ignoring 'Option \"Raw\"'\n");
+			priv->raw = 0;
+		}
+	}
 	if (priv->raw) {
+		xf86Msg(X_CONFIG,
+		    "%s device will work in raw mode\n",
+		    dev->identifier);
+	}
+
+	if (priv->type == WSMOUSE_TYPE_TPANEL && priv->raw) {
 		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
 			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
 			    strerror(errno));
@@ -483,18 +489,22 @@ wsDeviceOn(DeviceIntPtr pWS)
 		    strerror(errno));
 			return !Success;
 	}
-	raw = priv->raw;
-	if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
-		xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
-		    strerror(errno));
-		return !Success;
-	}
-	priv->raw = coords.samplelen;
-	coords.samplelen = raw;
-	if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
-		xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
-		    strerror(errno));
-		return !Success;
+
+	if (priv->type == WSMOUSE_TYPE_TPANEL) {
+		/* Set raw mode */
+		raw = priv->raw;
+		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
+			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+			    strerror(errno));
+			return !Success;
+		}
+		priv->raw = coords.samplelen;
+		coords.samplelen = raw;
+		if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
+			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+			    strerror(errno));
+			return !Success;
+		}
 	}
 	priv->buffer = XisbNew(pInfo->fd,
 	    sizeof(struct wscons_event) * NUMEVENTS);
@@ -517,18 +527,20 @@ wsDeviceOff(DeviceIntPtr pWS)
 	int raw;
 
 	DBG(1, ErrorF("WS DEVICE OFF\n"));
-	raw = priv->raw;
-	if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
-		xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
-		    strerror(errno));
+	if (priv->type == WSMOUSE_TYPE_TPANEL) {
+		/* Restore raw mode */
+		raw = priv->raw;
+		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
+			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+			    strerror(errno));
+		}
+		priv->raw = coords.samplelen;
+		coords.samplelen = raw;
+		if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
+			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+			    strerror(errno));
+		}
 	}
-	priv->raw = coords.samplelen;
-	coords.samplelen = raw;
-	if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
-		xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
-		    strerror(errno));
-	}
- 
 	if (pInfo->fd >= 0) {
 		xf86RemoveEnabledDevice(pInfo);
 		wsClose(pInfo);
