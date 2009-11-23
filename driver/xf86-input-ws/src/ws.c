@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.11 2009/11/23 16:21:50 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.12 2009/11/23 16:55:52 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -31,6 +31,7 @@
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include <xf86Xinput.h>
+#include <exevents.h>
 #include <xisb.h>
 #include <mipointer.h>
 #include <extinit.h>
@@ -365,7 +366,7 @@ wsDeviceInit(DeviceIntPtr pWS)
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
 	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
 	unsigned char map[NBUTTONS + 1];
-	int i;
+	int i, xmin, xmax, ymin, ymax;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	Atom btn_labels[NBUTTONS] = {0};
 	Atom axes_labels[NAXES] = {0};
@@ -391,6 +392,18 @@ wsDeviceInit(DeviceIntPtr pWS)
 		map))
 		return !Success;
 	
+	if (priv->type == WSMOUSE_TYPE_TPANEL) {
+		xmin = priv->min_x;
+		xmax = priv->max_x;
+		ymin = priv->min_y;
+		ymax = priv->max_y;
+	} else {
+		xmin = -1;
+		xmax = -1;
+		ymin = -1;
+		ymax = -1;
+	}
+
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	if ((priv->type == WSMOUSE_TYPE_TPANEL)) {
 		axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
@@ -415,18 +428,18 @@ wsDeviceInit(DeviceIntPtr pWS)
 	if (!InitPtrFeedbackClassDeviceStruct(pWS, wsControlProc))
 		return !Success;
 	
-	xf86InitValuatorAxisStruct(pWS,
+	xf86InitValuatorAxisStruct(pWS, 0,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	    axes_labels[0],
 #endif
-	    0, 0, -1, 1, 0, 1);
+	    xmin, xmax, 1, 0, 1);
 	xf86InitValuatorDefaults(pWS, 0);
 	
-	xf86InitValuatorAxisStruct(pWS,
+	xf86InitValuatorAxisStruct(pWS, 1,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	    axes_labels[1],
 #endif
-	    1, 0, -1, 1, 0, 1);
+	    ymin, ymax, 1, 0, 1);
 	xf86InitValuatorDefaults(pWS, 1);
 	xf86MotionHistoryAllocate(pInfo);
 	AssignTypeAndName(pWS, pInfo->atom, pInfo->name);
