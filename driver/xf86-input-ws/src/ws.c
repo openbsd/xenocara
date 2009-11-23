@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.8 2009/11/23 14:00:17 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.9 2009/11/23 15:16:52 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -62,6 +62,9 @@ static void TearDownProc(pointer);
 
 static InputInfoPtr wsPreInit(InputDriverPtr, IDevPtr, int);
 static int wsProc(DeviceIntPtr, int);
+static int wsDeviceInit(DeviceIntPtr);
+static int wsDeviceOn(DeviceIntPtr);
+static void wsDeviceOff(DeviceIntPtr);
 static void wsReadInput(InputInfoPtr);
 static void wsSendButtons(InputInfoPtr, int);
 static int wsChangeControl(InputInfoPtr, xDeviceCtl *);
@@ -327,102 +330,16 @@ static int
 wsProc(DeviceIntPtr pWS, int what)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
-	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
-	unsigned char map[NBUTTONS + 1];
-	int i;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-    Atom btn_labels[NBUTTONS] = {0};
-    Atom axes_labels[NAXES] = {0};
-#endif
 
 	switch (what) {
 	case DEVICE_INIT:
-		DBG(1, ErrorF("WS DEVICE_INIT\n"));
-
-		priv->screen_width =
-		    screenInfo.screens[priv->screen_no]->width;
-		priv->screen_height =
-		    screenInfo.screens[priv->screen_no]->height;
-
-		for (i = 0; i < NBUTTONS; i++)
-			map[i + 1] = i + 1;
-		if (!InitButtonClassDeviceStruct(pWS,
-			min(priv->buttons, NBUTTONS),
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-			btn_labels,
-#endif
-			map))
-			return !Success;
-
-		if (!InitValuatorClassDeviceStruct(pWS,
-			NAXES,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-			axes_labels,
-#endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-			xf86GetMotionEvents,
-#endif
-			GetMotionHistorySize(),
-			priv->type == WSMOUSE_TYPE_TPANEL ?
-			Absolute : Relative))
-			return !Success;
-		if (!InitPtrFeedbackClassDeviceStruct(pWS, wsControlProc))
-			return !Success;
-
-		xf86InitValuatorAxisStruct(pWS,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-                axes_labels[0],
-#endif
-		    0, 0, -1, 1, 0, 1);
-		xf86InitValuatorDefaults(pWS, 0);
-
-		xf86InitValuatorAxisStruct(pWS,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-		    axes_labels[1],
-#endif
-		    1, 0, -1, 1, 0, 1);
-		xf86InitValuatorDefaults(pWS, 1);
-		xf86MotionHistoryAllocate(pInfo);
-		AssignTypeAndName(pWS, pInfo->atom, pInfo->name);
-		pWS->public.on = FALSE;
-		/* This should correspond to the center of the screen */
-		priv->x = (priv->max_x - priv->min_x) / 2;
-		priv->y = (priv->max_y - priv->min_y) / 2;
-		if (wsOpen(pInfo) != Success) {
-			return !Success;
-		}
-		break;
+		return wsDeviceInit(pWS);
 
 	case DEVICE_ON:
-		DBG(1, ErrorF("WS DEVICE ON\n"));
-		if ((pInfo->fd < 0) && (wsOpen(pInfo) != Success)) {
-			xf86Msg(X_ERROR, "wsOpen failed %s\n",
-				strerror(errno));
-			return !Success;
-		}
-		priv->buffer = XisbNew(pInfo->fd,
-		    sizeof(struct wscons_event) * NUMEVENTS);
-		if (priv->buffer == NULL) {
-			xf86Msg(X_ERROR, "cannot alloc xisb buffer\n");
-			wsClose(pInfo);
-			return !Success;
-		}
-		xf86AddEnabledDevice(pInfo);
-		pWS->public.on = TRUE;
-
-		break;
+		return wsDeviceOn(pWS);
 
 	case DEVICE_OFF:
-		DBG(1, ErrorF("WS DEVICE OFF\n"));
-		if (pInfo->fd >= 0) {
-			xf86RemoveEnabledDevice(pInfo);
-			wsClose(pInfo);
-		}
-		if (priv->buffer) {
-			XisbFree(priv->buffer);
-			priv->buffer = NULL;
-		}
-		pWS->public.on = FALSE;
+		wsDeviceOff(pWS);
 		break;
 
 	case DEVICE_CLOSE:
@@ -436,6 +353,115 @@ wsProc(DeviceIntPtr pWS, int what)
 	} /* switch */
 	return Success;
 } /* wsProc */
+
+static int
+wsDeviceInit(DeviceIntPtr pWS)
+{
+	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
+	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
+	unsigned char map[NBUTTONS + 1];
+	int i;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	Atom btn_labels[NBUTTONS] = {0};
+	Atom axes_labels[NAXES] = {0};
+#endif
+
+	DBG(1, ErrorF("WS DEVICE_INIT\n"));
+	
+	priv->screen_width = screenInfo.screens[priv->screen_no]->width;
+	priv->screen_height = screenInfo.screens[priv->screen_no]->height;
+	
+	for (i = 0; i < NBUTTONS; i++)
+		map[i + 1] = i + 1;
+	if (!InitButtonClassDeviceStruct(pWS,
+		min(priv->buttons, NBUTTONS),
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+		btn_labels,
+#endif
+		map))
+		return !Success;
+	
+	if (!InitValuatorClassDeviceStruct(pWS,
+		NAXES,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+		axes_labels,
+#endif
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+		xf86GetMotionEvents,
+#endif
+		GetMotionHistorySize(),
+		priv->type == WSMOUSE_TYPE_TPANEL ?
+		Absolute : Relative))
+		return !Success;
+	if (!InitPtrFeedbackClassDeviceStruct(pWS, wsControlProc))
+		return !Success;
+	
+	xf86InitValuatorAxisStruct(pWS,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	    axes_labels[0],
+#endif
+	    0, 0, -1, 1, 0, 1);
+	xf86InitValuatorDefaults(pWS, 0);
+	
+	xf86InitValuatorAxisStruct(pWS,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	    axes_labels[1],
+#endif
+	    1, 0, -1, 1, 0, 1);
+	xf86InitValuatorDefaults(pWS, 1);
+	xf86MotionHistoryAllocate(pInfo);
+	AssignTypeAndName(pWS, pInfo->atom, pInfo->name);
+	pWS->public.on = FALSE;
+	/* This should correspond to the center of the screen */
+	priv->x = (priv->max_x - priv->min_x) / 2;
+	priv->y = (priv->max_y - priv->min_y) / 2;
+	if (wsOpen(pInfo) != Success) {
+		return !Success;
+	}
+	return Success;
+}
+
+static int
+wsDeviceOn(DeviceIntPtr pWS)
+{
+	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
+	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
+
+	DBG(1, ErrorF("WS DEVICE ON\n"));
+	if ((pInfo->fd < 0) && (wsOpen(pInfo) != Success)) {
+		xf86Msg(X_ERROR, "wsOpen failed %s\n",
+		    strerror(errno));
+			return !Success;
+	}
+	priv->buffer = XisbNew(pInfo->fd,
+	    sizeof(struct wscons_event) * NUMEVENTS);
+	if (priv->buffer == NULL) {
+		xf86Msg(X_ERROR, "cannot alloc xisb buffer\n");
+		wsClose(pInfo);
+		return !Success;
+	}
+	xf86AddEnabledDevice(pInfo);
+	pWS->public.on = TRUE;
+	return Success;
+}
+
+static void
+wsDeviceOff(DeviceIntPtr pWS)
+{
+	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
+	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
+
+	DBG(1, ErrorF("WS DEVICE OFF\n"));
+	if (pInfo->fd >= 0) {
+		xf86RemoveEnabledDevice(pInfo);
+		wsClose(pInfo);
+	}
+	if (priv->buffer) {
+		XisbFree(priv->buffer);
+		priv->buffer = NULL;
+	}
+	pWS->public.on = FALSE;
+}
 
 static void
 wsReadInput(InputInfoPtr pInfo)
