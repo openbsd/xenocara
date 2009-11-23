@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.10 2009/11/23 15:25:11 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.11 2009/11/23 16:21:50 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -34,6 +34,11 @@
 #include <xisb.h>
 #include <mipointer.h>
 #include <extinit.h>
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+#include <X11/Xatom.h>
+#include <xserver-properties.h>
+#endif
 
 #define NAXES 2			/* X and Y axes only */
 #define NBUTTONS 32		/* max theoretical buttons */
@@ -367,7 +372,12 @@ wsDeviceInit(DeviceIntPtr pWS)
 #endif
 
 	DBG(1, ErrorF("WS DEVICE_INIT\n"));
-	
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	btn_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
+	btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
+	btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
+#endif
 	priv->screen_width = screenInfo.screens[priv->screen_no]->width;
 	priv->screen_height = screenInfo.screens[priv->screen_no]->height;
 	
@@ -381,6 +391,15 @@ wsDeviceInit(DeviceIntPtr pWS)
 		map))
 		return !Success;
 	
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	if ((priv->type == WSMOUSE_TYPE_TPANEL)) {
+		axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
+		axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
+	} else {
+		axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);
+		axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
+	}
+#endif
 	if (!InitValuatorClassDeviceStruct(pWS,
 		NAXES,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
