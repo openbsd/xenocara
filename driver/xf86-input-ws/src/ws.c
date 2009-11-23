@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.9 2009/11/23 15:16:52 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.10 2009/11/23 15:25:11 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -664,6 +664,9 @@ static Bool
 wsOpen(InputInfoPtr pInfo)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
+#ifdef __NetBSD__
+	int version = WSMOUSE_EVENT_VERSION;
+#endif
 
 	DBG(1, ErrorF("WS open %s\n", priv->devName));
 	pInfo->fd = xf86OpenSerial(pInfo->options);
@@ -671,6 +674,13 @@ wsOpen(InputInfoPtr pInfo)
 	    xf86Msg(X_ERROR, "%s: cannot open input device\n", pInfo->name);
 	    return !Success;
 	}
+#ifdef __NetBSD__
+	if (ioctl(pInfo->fd, WSMOUSEIO_SETVERSION, &version) == -1) {
+		xf86Msg(X_ERROR, "%s: cannot set wsmouse event version\n",
+		    pInfo->name);
+		return !Success;
+	}
+#endif
 	return Success;
 }
 
