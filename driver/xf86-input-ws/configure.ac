@@ -24,7 +24,7 @@ AC_PREREQ(2.57)
 AC_INIT([xf86-input-ws],
         1.2.9,
         [http://www.openbsd.org/],
-        openbsd-input-ws)
+        xf86-input-ws)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
