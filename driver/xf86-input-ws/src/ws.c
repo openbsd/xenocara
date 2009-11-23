@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.5 2009/11/23 12:35:40 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.6 2009/11/23 12:37:32 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -129,7 +129,7 @@ static pointer
 SetupProc(pointer module, pointer options, int *errmaj, int *errmin)
 {
 	static Bool Initialised = FALSE;
-	
+
 	if (!Initialised) {
 		xf86AddInputDriver(&WS, module, 0);
 		Initialised = TRUE;
@@ -150,13 +150,13 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	WSDevicePtr priv;
 	MessageType buttons_from = X_CONFIG;
 	char *s;
-	
+
 	pInfo = xf86AllocateInput(drv, 0);
 	if (pInfo == NULL) {
 		return NULL;
 	}
 	priv = (WSDevicePtr)xcalloc(1, sizeof(WSDeviceRec));
-	if (priv == NULL) 
+	if (priv == NULL)
 		goto fail;
 	pInfo->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
 	pInfo->conf_idev = dev;
@@ -166,13 +166,13 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	xf86CollectInputOptions(pInfo, NULL, NULL);
 	xf86ProcessCommonOptions(pInfo, pInfo->options);
 #ifdef DEBUG
-	debug_level = xf86SetIntOption(pInfo->options, "DebugLevel", 
+	debug_level = xf86SetIntOption(pInfo->options, "DebugLevel",
 	    debug_level);
 	xf86Msg(X_INFO, "%s: debuglevel %d\n", dev->identifier, debug_level);
 #endif
 	priv->devName = xf86FindOptionValue(pInfo->options, "Device");
 	if (priv->devName == NULL) {
-		xf86Msg(X_ERROR, "%s: No Device specified.\n", 
+		xf86Msg(X_ERROR, "%s: No Device specified.\n",
 			dev->identifier);
 		goto fail;
 	}
@@ -182,17 +182,17 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		buttons_from = X_DEFAULT;
 	}
 	priv->negativeZ =  priv->positiveZ = WS_NOZMAP;
-	s = xf86SetStrOption(pInfo->options, "ZAxisMapping", NULL);	
+	s = xf86SetStrOption(pInfo->options, "ZAxisMapping", NULL);
 	if (s) {
 		int b1, b2;
 
-		if (sscanf(s, "%d %d", &b1, &b2) == 2 && 
+		if (sscanf(s, "%d %d", &b1, &b2) == 2 &&
 		    b1 > 0 && b1 <= NBUTTONS &&
 		    b2 > 0 && b2 <= NBUTTONS) {
 			priv->negativeZ = b1;
 			priv->positiveZ = b2;
-			xf86Msg(X_CONFIG, 
-			    "%s: ZAxisMapping: buttons %d and %d\n", 
+			xf86Msg(X_CONFIG,
+			    "%s: ZAxisMapping: buttons %d and %d\n",
 			    pInfo->name, b1, b2);
 		} else {
 			xf86Msg(X_WARNING, "%s: invalid ZAxisMapping value: "
@@ -208,17 +208,17 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		buttons_from = X_CONFIG;
 	}
 	priv->negativeW =  priv->positiveW = WS_NOZMAP;
-	s = xf86SetStrOption(pInfo->options, "WAxisMapping", NULL);	
+	s = xf86SetStrOption(pInfo->options, "WAxisMapping", NULL);
 	if (s) {
 		int b1, b2;
 
-		if (sscanf(s, "%d %d", &b1, &b2) == 2 && 
+		if (sscanf(s, "%d %d", &b1, &b2) == 2 &&
 		    b1 > 0 && b1 <= NBUTTONS &&
 		    b2 > 0 && b2 <= NBUTTONS) {
 			priv->negativeW = b1;
 			priv->positiveW = b2;
-			xf86Msg(X_CONFIG, 
-			    "%s: WAxisMapping: buttons %d and %d\n", 
+			xf86Msg(X_CONFIG,
+			    "%s: WAxisMapping: buttons %d and %d\n",
 			    pInfo->name, b1, b2);
 		} else {
 			xf86Msg(X_WARNING, "%s: invalid WAxisMapping value: "
@@ -235,31 +235,31 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
 
 	priv->screen_no = xf86SetIntOption(pInfo->options, "ScreenNo", 0);
-	xf86Msg(X_CONFIG, "%s associated screen: %d\n", 
-	    dev->identifier, priv->screen_no);  
+	xf86Msg(X_CONFIG, "%s associated screen: %d\n",
+	    dev->identifier, priv->screen_no);
 	if (priv->screen_no >= screenInfo.numScreens ||
 	    priv->screen_no < 0) {
 		priv->screen_no = 0;
 	}
 
-	priv->max_x = xf86SetIntOption(pInfo->options, "MaxX", 
+	priv->max_x = xf86SetIntOption(pInfo->options, "MaxX",
 	    screenInfo.screens[priv->screen_no]->width - 1);
-	xf86Msg(X_INFO, "%s maximum x position: %d\n", 
+	xf86Msg(X_INFO, "%s maximum x position: %d\n",
 	    dev->identifier, priv->max_x);
 	priv->min_x = xf86SetIntOption(pInfo->options, "MinX", 0);
-	xf86Msg(X_INFO, "%s minimum x position: %d\n", 
+	xf86Msg(X_INFO, "%s minimum x position: %d\n",
 	    dev->identifier, priv->min_x);
-	priv->max_y = xf86SetIntOption(pInfo->options, "MaxY", 
+	priv->max_y = xf86SetIntOption(pInfo->options, "MaxY",
 	    screenInfo.screens[priv->screen_no]->height - 1);
-	xf86Msg(X_INFO, "%s maximum y position: %d\n", 
+	xf86Msg(X_INFO, "%s maximum y position: %d\n",
 	    dev->identifier, priv->max_y);
 	priv->min_y = xf86SetIntOption(pInfo->options, "MinY", 0);
-	xf86Msg(X_INFO, "%s minimum y position: %d\n", 
+	xf86Msg(X_INFO, "%s minimum y position: %d\n",
 	    dev->identifier, priv->min_y);
 
 	priv->swap_axes = xf86SetBoolOption(pInfo->options, "SwapXY", 0);
 	if (priv->swap_axes) {
-		xf86Msg(X_CONFIG, 
+		xf86Msg(X_CONFIG,
 		    "%s device will work with X and Y axes swapped\n",
 		    dev->identifier);
 	}
@@ -292,7 +292,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		wsClose(pInfo);
 		goto fail;
 	}
-	if (priv->type == WSMOUSE_TYPE_TPANEL) 
+	if (priv->type == WSMOUSE_TYPE_TPANEL)
 		pInfo->type_name = XI_TOUCHSCREEN;
 	else
 		pInfo->type_name = XI_MOUSE;
@@ -309,14 +309,14 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	pInfo->old_x = -1;
 	pInfo->old_y = -1;
 	xf86Msg(buttons_from, "%s: Buttons: %d\n", pInfo->name, priv->buttons);
-	
+
 	/* mark the device configured */
 	pInfo->flags |= XI86_CONFIGURED;
 	return pInfo;
 fail:
 	if (priv != NULL)
 		xfree(priv);
-	if (pInfo != NULL) 
+	if (pInfo != NULL)
 		xfree(pInfo);
 	return NULL;
 }
@@ -332,26 +332,26 @@ wsProc(DeviceIntPtr pWS, int what)
     Atom btn_labels[NBUTTONS] = {0};
     Atom axes_labels[NAXES] = {0};
 #endif
- 
+
 	switch (what) {
 	case DEVICE_INIT:
 		DBG(1, ErrorF("WS DEVICE_INIT\n"));
 
-		priv->screen_width = 
+		priv->screen_width =
 		    screenInfo.screens[priv->screen_no]->width;
-		priv->screen_height = 
+		priv->screen_height =
 		    screenInfo.screens[priv->screen_no]->height;
 
 		for (i = 0; i < NBUTTONS; i++)
 			map[i + 1] = i + 1;
 		if (!InitButtonClassDeviceStruct(pWS,
-			min(priv->buttons, NBUTTONS), 
+			min(priv->buttons, NBUTTONS),
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 			btn_labels,
 #endif
 			map))
 			return !Success;
-		
+
 		if (!InitValuatorClassDeviceStruct(pWS,
 			NAXES,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -361,20 +361,20 @@ wsProc(DeviceIntPtr pWS, int what)
 			xf86GetMotionEvents,
 #endif
 			GetMotionHistorySize(),
-			priv->type == WSMOUSE_TYPE_TPANEL ? 
+			priv->type == WSMOUSE_TYPE_TPANEL ?
 			Absolute : Relative))
 			return !Success;
 		if (!InitPtrFeedbackClassDeviceStruct(pWS, wsControlProc))
 			return !Success;
-		
-		xf86InitValuatorAxisStruct(pWS, 
+
+		xf86InitValuatorAxisStruct(pWS,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                 axes_labels[0],
 #endif
 		    0, 0, -1, 1, 0, 1);
 		xf86InitValuatorDefaults(pWS, 0);
-		
-		xf86InitValuatorAxisStruct(pWS, 
+
+		xf86InitValuatorAxisStruct(pWS,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 		    axes_labels[1],
 #endif
@@ -398,7 +398,7 @@ wsProc(DeviceIntPtr pWS, int what)
 				strerror(errno));
 			return !Success;
 		}
-		priv->buffer = XisbNew(pInfo->fd, 
+		priv->buffer = XisbNew(pInfo->fd,
 		    sizeof(struct wscons_event) * NUMEVENTS);
 		if (priv->buffer == NULL) {
 			xf86Msg(X_ERROR, "cannot alloc xisb buffer\n");
@@ -427,7 +427,7 @@ wsProc(DeviceIntPtr pWS, int what)
 		DBG(1, ErrorF("WS DEVICE_CLOSE\n"));
 		wsClose(pInfo);
 		break;
-		
+
 	default:
 		xf86Msg(X_ERROR, "WS: unknown command %d\n", what);
 		return !Success;
@@ -440,11 +440,11 @@ wsReadInput(InputInfoPtr pInfo)
 {
 	WSDevicePtr priv;
 	static struct wscons_event eventList[NUMEVENTS];
-	int n, c; 
+	int n, c;
 	struct wscons_event *event = eventList;
 	unsigned char *pBuf;
 	int ax, ay;
-	
+
 	priv = pInfo->private;
 
 	XisbBlockDuration(priv->buffer, -1);
@@ -453,10 +453,10 @@ wsReadInput(InputInfoPtr pInfo)
 	while (n < sizeof(eventList) && (c = XisbRead(priv->buffer)) >= 0) {
 		pBuf[n++] = (unsigned char)c;
 	}
-	
+
 	if (n == 0)
 		return;
-	
+
 	n /= sizeof(struct wscons_event);
 	while( n-- ) {
 		int buttons = priv->lastButtons;
@@ -518,7 +518,7 @@ wsReadInput(InputInfoPtr pInfo)
 			break;
 #endif
 		default:
-			xf86Msg(X_WARNING, "%s: bad wsmouse event type=%d\n", 
+			xf86Msg(X_WARNING, "%s: bad wsmouse event type=%d\n",
 			    pInfo->name, event->type);
 			++event;
 			continue;
@@ -526,7 +526,7 @@ wsReadInput(InputInfoPtr pInfo)
 
 		if (dx || dy) {
 			/* relative motion event */
-			DBG(3, ErrorF("postMotionEvent dX %d dY %d\n", 
+			DBG(3, ErrorF("postMotionEvent dX %d dY %d\n",
 				      dx, dy));
 #if 0
 			priv->x += dx;
@@ -535,22 +535,22 @@ wsReadInput(InputInfoPtr pInfo)
 			priv->y += dy;
 			if (priv->y < priv->min_y) priv->y = priv->min_y;
 			if (priv->y > priv->max_y) priv->y = priv->max_y;
-			xf86PostMotionEvent(pInfo->dev, 1, 0, 2, 
+			xf86PostMotionEvent(pInfo->dev, 1, 0, 2,
 			    priv->x, priv->y);
 #else
-			xf86PostMotionEvent(pInfo->dev, 0, 0, 2, 
+			xf86PostMotionEvent(pInfo->dev, 0, 0, 2,
 			    dx, dy);
 #endif
 		}
-		if (dz && priv->negativeZ != WS_NOZMAP 
+		if (dz && priv->negativeZ != WS_NOZMAP
 		    && priv->positiveZ != WS_NOZMAP) {
 			buttons &= ~(priv->negativeZ | priv->positiveZ);
 			if (dz < 0) {
-				DBG(4, ErrorF("Z -> button %d\n", 
+				DBG(4, ErrorF("Z -> button %d\n",
 					priv->negativeZ));
 				zbutton = 1 << (priv->negativeZ - 1);
 			} else {
-				DBG(4, ErrorF("Z -> button %d\n", 
+				DBG(4, ErrorF("Z -> button %d\n",
 					priv->positiveZ));
 				zbutton = 1 << (priv->positiveZ - 1);
 			}
@@ -583,14 +583,14 @@ wsReadInput(InputInfoPtr pInfo)
 		}
 		if (ax) {
 			/* absolute position event */
-			DBG(3, ErrorF("postMotionEvent X %d %d\n", 
+			DBG(3, ErrorF("postMotionEvent X %d %d\n",
 				      ax, priv->y));
 			xf86PostMotionEvent(pInfo->dev, 1, 0, 2, ax, priv->y);
 			priv->x = ax;
 		}
 		if (ay) {
 			/* absolute position event */
-			DBG(3, ErrorF("postMotionEvent y %d %d\n", 
+			DBG(3, ErrorF("postMotionEvent y %d %d\n",
 				      priv->x, ay));
 			xf86PostMotionEvent(pInfo->dev, 1, 0, 2, priv->x, ay);
 			priv->y = ay;
@@ -610,7 +610,7 @@ wsSendButtons(InputInfoPtr pInfo, int buttons)
 		mask = 1 << (button - 1);
 		if ((mask & priv->lastButtons) != (mask & buttons)) {
 			xf86PostButtonEvent(pInfo->dev, TRUE,
-			    button, (buttons & mask) != 0, 
+			    button, (buttons & mask) != 0,
 					    0, 0); /*2, priv->x, priv->y);*/
 			DBG(3, ErrorF("post button event %d %d\n",
 				button, (buttons & mask) != 0))
@@ -654,7 +654,7 @@ wsClose(InputInfoPtr pInfo)
 }
 
 static Bool
-wsConvert(InputInfoPtr pInfo, int first, int num, 
+wsConvert(InputInfoPtr pInfo, int first, int num,
 	  int v0, int v1, int v2, int v3, int v4, int v5,
 	  int *x, int *y)
 {
@@ -676,16 +676,16 @@ wsConvert(InputInfoPtr pInfo, int first, int num,
 		*y = xf86ScaleAxis(v1, 0, priv->screen_height - 1,
 				   priv->min_y, priv->max_y);
 	}
-  
+
 	/*
 	 * Need to check if still on the correct screen.
 	 * This call is here so that this work can be done after
 	 * calib and before posting the event.
 	 */
 	xf86XInputSetScreen(pInfo, priv->screen_no, *x, *y);
-	
+
 	DBG(3, ErrorF("WSConvert: x(%d), y(%d)\n", *x, *y));
-	
+
 	return TRUE;
 }
 
