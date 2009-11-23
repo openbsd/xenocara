@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.15 2009/11/23 21:11:27 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.16 2009/11/23 22:10:29 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -78,8 +78,6 @@ static int wsChangeControl(InputInfoPtr, xDeviceCtl *);
 static int wsSwitchMode(ClientPtr, DeviceIntPtr, int);
 static Bool wsOpen(InputInfoPtr);
 static void wsClose(InputInfoPtr);
-static Bool wsConvert(InputInfoPtr, int, int, int, int, int, int, int, int,
-    int *, int *);
 static void wsControlProc(DeviceIntPtr , PtrCtrl *);
 
 
@@ -334,7 +332,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	pInfo->read_input = wsReadInput;
 	pInfo->control_proc = wsChangeControl;
 	pInfo->switch_mode = wsSwitchMode;
-	pInfo->conversion_proc = wsConvert;
+	pInfo->conversion_proc = NULL;
 	pInfo->reverse_conversion_proc = NULL;
 	pInfo->private = priv;
 	pInfo->old_x = -1;
@@ -778,42 +776,6 @@ wsClose(InputInfoPtr pInfo)
 {
 	xf86CloseSerial(pInfo->fd);
 	pInfo->fd = -1;
-}
-
-static Bool
-wsConvert(InputInfoPtr pInfo, int first, int num,
-	  int v0, int v1, int v2, int v3, int v4, int v5,
-	  int *x, int *y)
-{
-	WSDevicePtr priv = (WSDevicePtr) pInfo->private;
-	if (first != 0 || num != 2) {
-		return FALSE;
-	}
-
-	DBG(3, ErrorF("WSConvert: v0(%d), v1(%d)\n", v0, v1));
-
-	if (priv->swap_axes != 0) {
-		*x = xf86ScaleAxis(v1, 0, priv->screen_width - 1,
-				   priv->min_y, priv->max_y);
-		*y = xf86ScaleAxis(v0, 0, priv->screen_height - 1,
-				   priv->min_x, priv->max_x);
-	} else {
-		*x = xf86ScaleAxis(v0, 0, priv->screen_width - 1,
-				   priv->min_x, priv->max_x);
-		*y = xf86ScaleAxis(v1, 0, priv->screen_height - 1,
-				   priv->min_y, priv->max_y);
-	}
-
-	/*
-	 * Need to check if still on the correct screen.
-	 * This call is here so that this work can be done after
-	 * calib and before posting the event.
-	 */
-	xf86XInputSetScreen(pInfo, priv->screen_no, *x, *y);
-
-	DBG(3, ErrorF("WSConvert: x(%d), y(%d)\n", *x, *y));
-
-	return TRUE;
 }
 
 static void
