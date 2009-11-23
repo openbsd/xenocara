@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 Matthieu Herrb
+ * Copyright (c) 2005-2009 Matthieu Herrb
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.4 2009/11/22 23:00:43 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.5 2009/11/23 12:35:40 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -21,6 +21,7 @@
 
 #include <unistd.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <dev/wscons/wsconsio.h>
 
@@ -41,6 +42,7 @@
 
 typedef struct WSDevice {
 	char *devName;		/* device name */
+	int type;		/* ws device type */
 	unsigned int buttons;	/* # of buttons */
 	unsigned int lastButtons; /* last state of buttons */
 	int x, y;		/* current abs coordinates */
@@ -283,16 +285,26 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 				" or \"UD\"\n");
 		}
 	}
+	if (wsOpen(pInfo) != Success) {
+		goto fail;
+	}
+	if (ioctl(pInfo->fd, WSMOUSEIO_GTYPE, &priv->type) != 0) {
+		wsClose(pInfo);
+		goto fail;
+	}
+	if (priv->type == WSMOUSE_TYPE_TPANEL) 
+		pInfo->type_name = XI_TOUCHSCREEN;
+	else
+		pInfo->type_name = XI_MOUSE;
+	wsClose(pInfo);
 
 	pInfo->name = dev->identifier;
-	pInfo->type_name = "wscons pointer";
 	pInfo->device_control = wsProc;
 	pInfo->read_input = wsReadInput;
 	pInfo->control_proc = wsChangeControl;
 	pInfo->switch_mode = wsSwitchMode;
 	pInfo->conversion_proc = wsConvert;
 	pInfo->reverse_conversion_proc = NULL;
-	pInfo->fd = -1;
 	pInfo->private = priv;
 	pInfo->old_x = -1;
 	pInfo->old_y = -1;
@@ -332,26 +344,29 @@ wsProc(DeviceIntPtr pWS, int what)
 
 		for (i = 0; i < NBUTTONS; i++)
 			map[i + 1] = i + 1;
-		InitPointerDeviceStruct((DevicePtr)pWS, map,
-				min(priv->buttons, NBUTTONS),
+		if (!InitButtonClassDeviceStruct(pWS,
+			min(priv->buttons, NBUTTONS), 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-                                btn_labels,
+			btn_labels,
 #endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-		    miPointerGetMotionEvents,
-#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-		    GetMotionHistory, 
-#endif
-		    wsControlProc, 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-		    miPointerGetMotionBufferSize()
-#else
-		    GetMotionHistorySize(), NAXES
-#endif
+			map))
+			return !Success;
+		
+		if (!InitValuatorClassDeviceStruct(pWS,
+			NAXES,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-                                , axes_labels
+			axes_labels,
 #endif
-		    );
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+			xf86GetMotionEvents,
+#endif
+			GetMotionHistorySize(),
+			priv->type == WSMOUSE_TYPE_TPANEL ? 
+			Absolute : Relative))
+			return !Success;
+		if (!InitPtrFeedbackClassDeviceStruct(pWS, wsControlProc))
+			return !Success;
+		
 		xf86InitValuatorAxisStruct(pWS, 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                 axes_labels[0],
@@ -685,4 +700,3 @@ wsControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 	priv->den = ctrl->den;
 	priv->threshold = ctrl->threshold;
 }
-
