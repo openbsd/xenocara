@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.7 2009/11/23 12:54:04 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.8 2009/11/23 14:00:17 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -385,7 +385,7 @@ wsProc(DeviceIntPtr pWS, int what)
 		xf86MotionHistoryAllocate(pInfo);
 		AssignTypeAndName(pWS, pInfo->atom, pInfo->name);
 		pWS->public.on = FALSE;
-		/* This sould correspond to the center of the screen */
+		/* This should correspond to the center of the screen */
 		priv->x = (priv->max_x - priv->min_x) / 2;
 		priv->y = (priv->max_y - priv->min_y) / 2;
 		if (wsOpen(pInfo) != Success) {
