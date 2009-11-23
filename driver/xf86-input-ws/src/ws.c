@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.13 2009/11/23 17:36:23 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.14 2009/11/23 18:29:13 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -54,6 +54,7 @@ typedef struct WSDevice {
 	int x, y;		/* current abs coordinates */
 	int min_x, max_x, min_y, max_y; /* coord space */
 	int swap_axes;
+	int raw;
 	int inv_x, inv_y;
 	int screen_width, screen_height;
 	int screen_no;
@@ -144,6 +145,7 @@ TearDownProc(pointer p)
 static InputInfoPtr
 wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
+	struct wsmouse_calibcoords coords;
 	InputInfoPtr pInfo = NULL;
 	WSDevicePtr priv;
 	MessageType buttons_from = X_CONFIG;
@@ -240,20 +242,6 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		priv->screen_no = 0;
 	}
 
-	priv->max_x = xf86SetIntOption(pInfo->options, "MaxX",
-	    screenInfo.screens[priv->screen_no]->width - 1);
-	xf86Msg(X_INFO, "%s maximum x position: %d\n",
-	    dev->identifier, priv->max_x);
-	priv->min_x = xf86SetIntOption(pInfo->options, "MinX", 0);
-	xf86Msg(X_INFO, "%s minimum x position: %d\n",
-	    dev->identifier, priv->min_x);
-	priv->max_y = xf86SetIntOption(pInfo->options, "MaxY",
-	    screenInfo.screens[priv->screen_no]->height - 1);
-	xf86Msg(X_INFO, "%s maximum y position: %d\n",
-	    dev->identifier, priv->max_y);
-	priv->min_y = xf86SetIntOption(pInfo->options, "MinY", 0);
-	xf86Msg(X_INFO, "%s minimum y position: %d\n",
-	    dev->identifier, priv->min_y);
 
 	priv->swap_axes = xf86SetBoolOption(pInfo->options, "SwapXY", 0);
 	if (priv->swap_axes) {
@@ -283,6 +271,12 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 				" or \"UD\"\n");
 		}
 	}
+	priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 0);
+	if (priv->raw) {
+		xf86Msg(X_CONFIG,
+		    "%s device will work in raw mode\n",
+		    dev->identifier);
+	}
 	if (wsOpen(pInfo) != Success) {
 		goto fail;
 	}
@@ -294,7 +288,40 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		pInfo->type_name = XI_TOUCHSCREEN;
 	else
 		pInfo->type_name = XI_MOUSE;
-	wsClose(pInfo);
+
+	if (priv->raw) {
+		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
+			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+			    strerror(errno));
+			wsClose(pInfo);
+			goto fail;
+		}
+
+		/* get default coordinate space from kernel */
+		priv->min_x = coords.minx;
+		priv->max_x = coords.maxx;
+		priv->min_y = coords.miny;
+		priv->max_y = coords.maxy;
+	} else {
+		/* in calibrated mode, coordinate space, is screen coords */
+		priv->min_x = 0;
+		priv->max_x = screenInfo.screens[priv->screen_no]->width - 1;
+		priv->min_y = 0;
+		priv->max_y = screenInfo.screens[priv->screen_no]->height - 1;
+	}
+	/* Allow options to override this */
+	priv->min_x = xf86SetIntOption(pInfo->options, "MinX", priv->min_x);
+	xf86Msg(X_INFO, "%s minimum x position: %d\n",
+	    dev->identifier, priv->min_x);
+	priv->max_x = xf86SetIntOption(pInfo->options, "MaxX", priv->max_x);
+	xf86Msg(X_INFO, "%s maximum x position: %d\n",
+	    dev->identifier, priv->max_x);
+	priv->min_y = xf86SetIntOption(pInfo->options, "MinY", priv->min_y);
+	xf86Msg(X_INFO, "%s minimum y position: %d\n",
+	    dev->identifier, priv->min_y);
+	priv->max_y = xf86SetIntOption(pInfo->options, "MaxY", priv->max_y);
+	xf86Msg(X_INFO, "%s maximum y position: %d\n",
+	    dev->identifier, priv->max_y);
 
 	pInfo->name = dev->identifier;
 	pInfo->device_control = wsProc;
@@ -307,6 +334,8 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	pInfo->old_x = -1;
 	pInfo->old_y = -1;
 	xf86Msg(buttons_from, "%s: Buttons: %d\n", pInfo->name, priv->buttons);
+
+	wsClose(pInfo);
 
 	/* mark the device configured */
 	pInfo->flags |= XI86_CONFIGURED;
@@ -445,12 +474,27 @@ wsDeviceOn(DeviceIntPtr pWS)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
 	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
+	struct wsmouse_calibcoords coords;
+	int raw;
 
 	DBG(1, ErrorF("WS DEVICE ON\n"));
 	if ((pInfo->fd < 0) && (wsOpen(pInfo) != Success)) {
 		xf86Msg(X_ERROR, "wsOpen failed %s\n",
 		    strerror(errno));
 			return !Success;
+	}
+	raw = priv->raw;
+	if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
+		xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+		    strerror(errno));
+		return !Success;
+	}
+	priv->raw = coords.samplelen;
+	coords.samplelen = raw;
+	if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
+		xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+		    strerror(errno));
+		return !Success;
 	}
 	priv->buffer = XisbNew(pInfo->fd,
 	    sizeof(struct wscons_event) * NUMEVENTS);
@@ -469,8 +513,22 @@ wsDeviceOff(DeviceIntPtr pWS)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
 	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
+	struct wsmouse_calibcoords coords;
+	int raw;
 
 	DBG(1, ErrorF("WS DEVICE OFF\n"));
+	raw = priv->raw;
+	if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
+		xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+		    strerror(errno));
+	}
+	priv->raw = coords.samplelen;
+	coords.samplelen = raw;
+	if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
+		xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+		    strerror(errno));
+	}
+ 
 	if (pInfo->fd >= 0) {
 		xf86RemoveEnabledDevice(pInfo);
 		wsClose(pInfo);
