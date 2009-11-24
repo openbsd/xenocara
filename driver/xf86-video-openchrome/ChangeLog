@@ -1,3 +1,111 @@
+2009-09-26  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Save/restore ECK Clock Synthesizer
+
+	* src/via_driver.c: (VIASave), (VIARestore):
+	* src/via_driver.h:
+
+2009-09-21  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fixed bug with panel autodetection using
+	ViaPanelGetNativeModeFromScratchPad function
+
+	* src/via_panel.c:
+
+2009-09-21  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fixed problem with backlite (Ticket #308)
+
+	* src/via_lvds.c: (ViaLVDSSoftwarePowerFirstSequence),
+	(ViaLVDSSoftwarePowerSecondSequence),
+	(ViaLVDSHardwarePowerFirstSequence),
+	(ViaLVDSHardwarePowerSecondSequence), (ViaLVDSPower):
+
+2009-09-15  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	TV-out VT1625 chip support
+
+	* src/via_bios.h:
+	* src/via_crtc.c: (ViaFirstCRTCSetMode):
+	* src/via_display.c: (ViaDisplayEnableDVO), (ViaDisplayDisableDVO),
+	(ViaDisplaySetStreamOnDVO):
+	* src/via_driver.c: (VIASetupDefaultOptions), (VIAPreInit):
+	* src/via_mode.c: (ViaTVSetMode), (ViaOutputsSelect), (ViaModeSet):
+	* src/via_vt162x.c: (ViaSetTVClockSource), (VT1622ModeI2C),
+	(VT1622ModeCrtc):
+	* src/via_vt162x.h:
+
+2009-09-15  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Cursor support speedup
+
+	* src/via_cursor.c: (viaHWCursorInit), (viaCursorStore),
+	(viaCursorRestore), (viaShowCursor), (viaHideCursor),
+	(viaSetCursorPosition), (viaLoadCursorImage), (viaLoadCursorARGB):
+
+2009-09-14  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Removed two old variables:
+	pBIOSInfo->panelX
+	pBIOSInfo->panelY
+	
+	and replaced it by:
+	pBIOSInfo->Panel->NativeMode->Width
+	pBIOSInfo->Panel->NativeMode->Height
+
+	* src/via_bios.h:
+	* src/via_driver.c: (VIASetupDefaultOptions):
+	* src/via_mode.c: (ViaPanelGetIndex), (VIASetLCDMode),
+	(ViaModePrimaryLegacy), (ViaModeSecondaryLegacy):
+	* src/via_swov.c: (SetVideoWindow):
+	* src/via_video.c: (DecideOverlaySupport):
+
+2009-09-10  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix bug with DFP Power Off (ticket #317)
+
+	* src/via_mode.c: (ViaDFPPower):
+
+2009-08-20  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix bug with wrong panel size value (http://www.openchrome.org/trac/ticket/301)
+        This bug appeared only when UseLegacyModeSwitch was TRUE
+
+	* src/via_driver.c: (VIASetupDefaultOptions):
+	* src/via_video.c: (DecideOverlaySupport):
+
+2009-08-17  Bartosz Kosiorek <gang65@poczta.onet.pl>
+
+	Added support of the VIA OpenBook
+
+	* src/via_id.c:
+
+2009-08-08  Bartosz Kosiorek <gang65@poczta.onet.pl>
+
+	Added support for screen rotate upside-down and remove "magic numbers"
+
+	* src/via_driver.c:
+	* src/via_driver.h:
+	* src/via_shadow.c:
+
+2009-07-28  Jon Nettleton <jon.nettleton@gmail.com>
+
+	Forgot to remove an old Dot Clock entry from the table.
+
+	* src/via_mode.h:
+
+2009-07-28  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	XO 1.5 Panel patch contributed by Xavier Bachelot.
+	Fixup some of the Dotclock code and add working plls
+	for the XO 1.5
+
+	* src/via_bios.h:
+	* src/via_mode.c: (ViaSetDotclock), (ViaSetPrimaryDotclock),
+	(ViaSetSecondaryDotclock):
+	* src/via_mode.h:
+	* src/via_panel.c:
+
 2009-03-21  Xavier Bachelot  <xavier@bachelot.org>
 
 	* src/via_bios.h:

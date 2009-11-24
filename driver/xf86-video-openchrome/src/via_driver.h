@@ -36,7 +36,11 @@
 
 #include "vgaHW.h"
 #include "xf86.h"
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6 
 #include "xf86Resources.h"
+#endif
+
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
 #include "xf86_OSproc.h"
@@ -100,10 +104,18 @@
 #define DRIVER_NAME     "openchrome"
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   2
-#define PATCHLEVEL      903
+#define PATCHLEVEL      904
 #define VIA_VERSION     ((VERSION_MAJOR<<24) | (VERSION_MINOR<<16) | PATCHLEVEL)
 
 #define VIA_VQ_SIZE             (256 * 1024)
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6 
+#define VIA_RES_SHARED RES_SHARED_VGA
+#define VIA_RES_UNDEF RES_UNDEFINED
+#else
+#define VIA_RES_SHARED NULL
+#define VIA_RES_UNDEF NULL
+#endif
 
 typedef struct {
     CARD8   SR08, SR0A, SR0F;
@@ -114,7 +126,7 @@ typedef struct {
     CARD8   SR1F, SR20, SR21, SR22,SR23,SR24,SR25,SR26;
     CARD8   SR27, SR28, SR29, SR2A,SR2B,SR2C,SR2D,SR2E;
     CARD8   SR2F, SR30, SR31, SR32,SR33,SR34,SR40,SR41;
-    CARD8   SR42, SR43, SR44, SR45,SR46,SR47;
+    CARD8   SR42, SR43, SR44, SR45,SR46,SR47,SR48,SR49;
     CARD8   SR4A, SR4B, SR4C;
 
     /*   extended CRTC registers */
@@ -229,7 +241,7 @@ typedef struct _VIA {
     Bool		hwcursor;
     Bool                NoAccel;
     Bool                shadowFB;
-    int                 rotate;
+    Rotation            rotate;
     Bool                vbeSR;
     int                 agpMem;
 
@@ -294,6 +306,9 @@ typedef struct _VIA {
     char *              texAddr;
     char *              dBounce;
 #endif
+
+    /* Rotation */
+    Bool    RandRRotation;
 
     /* BIOS Info Ptr */
     VIABIOSInfoPtr      pBIOSInfo;

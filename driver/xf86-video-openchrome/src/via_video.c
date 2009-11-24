@@ -32,7 +32,11 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6 
 #include "xf86Resources.h"
+#endif
+
 #include "compiler.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
@@ -277,6 +281,7 @@ DecideOverlaySupport(ScrnInfoPtr pScrn)
         pVia->ChipId != PCI_CHIP_VT3314 && 
         pVia->ChipId != PCI_CHIP_VT3327 && 
         pVia->ChipId != PCI_CHIP_VT3336 && 
+        pVia->ChipId != PCI_CHIP_VT3409 && 
         pVia->ChipId != PCI_CHIP_VT3364 && 
         pVia->ChipId != PCI_CHIP_VT3324 &&
 	pVia->ChipId != PCI_CHIP_VT3353) {
@@ -574,6 +579,7 @@ viaInitVideo(ScreenPtr pScreen)
         (pVia->Chipset == VIA_P4M900) ||
         (pVia->Chipset == VIA_CX700) ||
         (pVia->Chipset == VIA_VX800) ||
+        (pVia->Chipset == VIA_VX855) ||
         (pVia->Chipset == VIA_P4M890));
     if ((pVia->drmVerMajor < 2) ||
         ((pVia->drmVerMajor == 2) && (pVia->drmVerMinor < 9)))
@@ -592,7 +598,8 @@ viaInitVideo(ScreenPtr pScreen)
         (pVia->Chipset == VIA_K8M800) || (pVia->Chipset == VIA_PM800) ||
         (pVia->Chipset == VIA_VM800) || (pVia->Chipset == VIA_K8M890) ||
         (pVia->Chipset == VIA_P4M900) || (pVia->Chipset == VIA_CX700) ||
-        (pVia->Chipset == VIA_P4M890) || (pVia->Chipset == VIA_VX800)) {
+        (pVia->Chipset == VIA_P4M890) || (pVia->Chipset == VIA_VX800) || 
+        (pVia->Chipset == VIA_VX855)) {
         num_new = viaSetupAdaptors(pScreen, &newAdaptors);
         num_adaptors = xf86XVListGenericAdaptors(pScrn, &adaptors);
     } else {
@@ -667,7 +674,7 @@ viaVideoFillPixmap(ScrnInfoPtr pScrn,
 {
     int i;
 
-    ErrorF("pitch %lu, depth %d, x %d, y %d, w %d h %d, color 0x%08lx\n",
+    ErrorF("pitch %lu, depth %d, x %d, y %d, w %d, h %d, color 0x%08lx\n",
             pitch, depth, x, y, w, h, color);
 
     depth = (depth + 7) >> 3;
@@ -1260,6 +1267,20 @@ viaDmaBlitImage(VIAPtr pVia,
 #endif
 
 
+/*
+ * The source rectangle of the video is defined by (src_x, src_y, src_w, src_h).
+ * The dest rectangle of the video is defined by (drw_x, drw_y, drw_w, drw_h).
+ * id is a fourcc code for the format of the video.
+ * buf is the pointer to the source data in system memory.
+ * width and height are the w/h of the source data.
+ * If "sync" is TRUE, then we must be finished with *buf at the point of return
+ * (which we always are).
+ * clipBoxes is the clipping region in screen space.
+ * data is a pointer to our port private.
+ * pDraw is a Drawable, which might not be the screen in the case of
+ * compositing.  It's a new argument to the function in the 1.1 server.
+ */
+
 static int
 viaPutImage(ScrnInfoPtr pScrn,
         short src_x, short src_y,
@@ -1313,7 +1334,7 @@ viaPutImage(ScrnInfoPtr pScrn,
             /*  Copy image data from system memory to video memory
              *  TODO: use DRM's DMA feature to accelerate data copy
              */
-            if (FOURCC_XVMC != id) {
+            if (id != FOURCC_XVMC) {
                 dstPitch = pVia->swov.SWDevice.dwPitch;
 
                 if (pVia->useDmaBlit) {

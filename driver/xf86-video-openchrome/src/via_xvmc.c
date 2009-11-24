@@ -27,7 +27,11 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6 
 #include "xf86Resources.h"
+#endif
+
 #include "compiler.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
@@ -322,6 +326,7 @@ ViaInitXVMC(ScreenPtr pScreen)
     if ((pVia->Chipset == VIA_KM400) ||
         (pVia->Chipset == VIA_CX700) ||
         (pVia->Chipset == VIA_VX800) ||
+        (pVia->Chipset == VIA_VX855) ||
         (pVia->Chipset == VIA_K8M890) ||
         (pVia->Chipset == VIA_P4M900)) {
         xf86DrvMsg(pScrn->scrnIndex, X_WARNING,

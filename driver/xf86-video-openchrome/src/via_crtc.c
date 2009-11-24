@@ -173,6 +173,7 @@ ViaFirstCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_CX700:
         case VIA_P4M900:
 	case VIA_VX800:
+	case VIA_VX855:
             break;
         default:
             ViaSeqMask(hwp, 0x16, 0x08, 0xBF);
@@ -276,6 +277,7 @@ ViaFirstCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_CX700:
         case VIA_P4M900:
 	case VIA_VX800:
+	case VIA_VX855:
             break;
         default:
             /* some leftovers */
@@ -302,7 +304,8 @@ ViaFirstCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         temp += 0x03;
         temp &= ~0x03;
     }
-    hwp->writeSeq(hwp, 0x1C, (temp >> 1) & 0xFF);
+
+    hwp->writeSeq(hwp, 0x1C, ((temp >> 1)+1) & 0xFF);
     ViaSeqMask(hwp, 0x1D, temp >> 9, 0x03);
 
     switch (pVia->ChipId) {
@@ -310,6 +313,7 @@ ViaFirstCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_CX700:
         case VIA_P4M900:
 	case VIA_VX800:
+	case VIA_VX855:
             break;
         default:
             /* some leftovers */
@@ -429,6 +433,7 @@ ViaSecondCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_CX700:
         case VIA_P4M900:
 	case VIA_VX800:
+	case VIA_VX855:
             break;
         default:
             ViaSeqMask(hwp, 0x16, 0x08, 0xBF);
@@ -512,6 +517,7 @@ ViaSecondCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_CX700:
         case VIA_P4M900:
 	case VIA_VX800:
+	case VIA_VX855:
             break;
         default:
             /* some leftovers */

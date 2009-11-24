@@ -42,6 +42,7 @@
 #define     VIA_PANEL10X6                   13
 #define     VIA_PANEL14X9                   14
 #define     VIA_PANEL1280X720               15
+#define     VIA_PANEL12X9                   16
 #define     VIA_PANEL_INVALID               255
 
 #define     TVTYPE_NONE                     0x00
@@ -97,6 +98,13 @@
 /* Digital Output Bus Width */
 #define	    VIA_DI_12BIT		    0x00
 #define	    VIA_DI_24BIT		    0x01
+
+/* Digital Port */
+#define     VIA_DI_PORT_NONE        0x0
+#define     VIA_DI_PORT_DVP0        0x1
+#define     VIA_DI_PORT_DVP1        0x2
+#define     VIA_DI_PORT_DFPLOW      0x4
+#define     VIA_DI_PORT_DFPHIGH     0x8
 
 typedef struct ViaPanelMode {
     int Width ;
@@ -159,8 +167,6 @@ typedef struct _VIABIOSINFO {
     Bool        SetDVI;
     /* LCD Simultaneous Expand Mode HWCursor Y Scale */
     Bool        scaleY;
-    int         panelX;
-    int         panelY;
     int         resY;
 
     /* DFP */
@@ -187,6 +193,7 @@ typedef struct _VIABIOSINFO {
     int         TVDeflicker;
     CARD8       TVRegs[0xFF];
     int         TVNumRegs;
+    int         TVDIPort;
 
     /* TV Callbacks */
     void (*TVSave) (ScrnInfoPtr pScrn);

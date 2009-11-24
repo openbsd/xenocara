@@ -33,6 +33,7 @@
 #include "via_vgahw.h"
 #include "via_ch7xxx.h"
 #include "via_id.h"
+#include <unistd.h>
 
 #ifdef HAVE_DEBUG
 /*

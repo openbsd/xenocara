@@ -327,6 +327,12 @@
 #define VIDEO_FIFO_PRETHRESHOLD_VT3336      250
 #define VIDEO_EXPIRE_NUM_VT3336             31
 
+/* Those values are only valid for IGA1 */
+#define VIDEO_FIFO_DEPTH_VT3409		400
+#define VIDEO_FIFO_THRESHOLD_VT3409	320
+#define VIDEO_FIFO_PRETHRESHOLD_VT3409	230
+#define VIDEO_EXPIRE_NUM_VT3409		160
+
 /* ALPHA_V3_FIFO_CONTROL        0x278
  * IA2 has 32 level FIFO for packet mode video format
  *         32 level FIFO for planar mode video YV12. with extension reg 230 bit 21 enable

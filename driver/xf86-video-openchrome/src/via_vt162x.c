@@ -32,6 +32,40 @@
 #include "via_vt162x.h"
 #include "via_id.h"
 
+static void
+ViaSetTVClockSource(ScrnInfoPtr pScrn)
+{
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaSetTVClockSource\n"));
+
+    VIAPtr pVia = VIAPTR(pScrn);
+    VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
+
+    /* External TV: */
+    switch(pVia->Chipset) {
+        case VIA_CX700:
+        case VIA_VX800:
+            if (pBIOSInfo->FirstCRTC->IsActive) {
+                if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP1)
+                    ViaCrtcMask(hwp, 0x6C, 0xB0, 0xF0);
+                else if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP0)
+                    ViaCrtcMask(hwp, 0x6C, 0x90, 0xF0);
+            } else {
+                /* IGA2 */
+                if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP1)
+                    ViaCrtcMask(hwp, 0x6C, 0x0B, 0x0F);
+                else if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP0)
+                    ViaCrtcMask(hwp, 0x6C, 0x09, 0x0F);
+            }
+            break;
+        default:
+            if (pBIOSInfo->FirstCRTC->IsActive)
+                ViaCrtcMask(hwp, 0x6C, 0x21, 0x21);
+            else
+                ViaCrtcMask(hwp, 0x6C, 0xA1, 0xA1);
+            break;
+    }
+}
 
 static void
 VT162xPrintRegs(ScrnInfoPtr pScrn)
@@ -650,11 +684,30 @@ VT1622ModeI2C(ScrnInfoPtr pScrn, DisplayModePtr mode)
             xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x2B, Table.RGB[4]);
         if (Table.RGB[5])
             xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x2C, Table.RGB[5]);
+        if (pBIOSInfo->TVEncoder == VIA_VT1625) {
+            if (pBIOSInfo->TVType < TVTYPE_480P) {
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x02, 0x12);
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x23, 0x7E);
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x4A, 0x85);
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x4B, 0x0A);
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x4E, 0x00);
+            } else {
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x02, 0x12);
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x4A, 0x85);
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x4B, 0x0A);
+            }
+        }
     } else if (pBIOSInfo->TVOutput == TVOUTPUT_YCBCR) {
         xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x02, 0x03);
         xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x65, Table.YCbCr[0]);
         xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x66, Table.YCbCr[1]);
         xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x67, Table.YCbCr[2]);
+        if (pBIOSInfo->TVEncoder == VIA_VT1625) {
+            if (pBIOSInfo->TVType < TVTYPE_480P) {
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x23, 0x7E);
+                xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x4E, 0x00);
+            }
+        }
     }
 
     /* Configure flicker filter. */
@@ -721,8 +774,7 @@ VT1622ModeCrtc(ScrnInfoPtr pScrn, DisplayModePtr mode)
     }
     pBIOSInfo->ClockExternal = TRUE;
     ViaCrtcMask(hwp, 0x6A, 0x40, 0x40);
-    ViaCrtcMask(hwp, 0x6C, 0x01, 0x01);
-    ViaSeqMask(hwp, 0x1E, 0xF0, 0xF0);  /* enable DI0/DVP0 */
+    ViaSetTVClockSource(pScrn);
 }
 
 

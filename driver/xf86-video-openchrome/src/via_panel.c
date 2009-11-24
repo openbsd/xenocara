@@ -45,16 +45,20 @@ static ViaPanelModeRec ViaPanelNativeModes[] = {
     {1280, 768},
     {1280, 1024},
     {1400, 1050},
-    {1600, 1200},
-    {1280, 800},
-    {800, 480},
-    {1366, 768},
-    {1360, 768},
+    {1600, 1200},   /* 0x6 Resolution 1440x900 */
+    {1280, 800},    /* 0x7 Resolution 1280x800 (Samsung NC20) */
+    {800, 480},     /* 0x8 For Quanta 800x480 */
+    {1024, 600},    /* 0x9 Resolution 1024x600 (for HP 2133) */
+    {1366, 768},    /* 0xA Resolution 1366x768 */
     {1920, 1080},
     {1920, 1200},
-    {1024, 600},
-    {1440, 900},
-    {1280, 720}
+    {1280, 1024},   /* 0xD Need to be fixed to 1920x1200 */
+    {1440, 900},    /* 0xE Need to be fixed to 640x240 */
+    {1280, 720},    /* 0xF 480x640 */
+    {1200, 900},   /* 0x10 For Panasonic 1280x768 18bit Dual-Channel Panel */
+    {1360, 768},   /* 0x11 Resolution 1360X768 */
+    {1024, 768},   /* 0x12 Resolution 1024x768 */
+    {800, 480}     /* 0x13 General 8x4 panel use this setting */
 };
 
 static int
@@ -62,6 +66,7 @@ ViaPanelLookUpModeIndex(int width, int height)
 {
     int i, index = VIA_PANEL_INVALID;
     int length = sizeof(ViaPanelNativeModes) / sizeof(ViaPanelModeRec);
+
 
     for (i = 0; i < length; i++) {
         if (ViaPanelNativeModes[i].Width == width
@@ -283,10 +288,13 @@ ViaPanelPreInit(ScrnInfoPtr pScrn)
 */
         if (ret) {
             panel->NativeModeIndex = ViaPanelLookUpModeIndex(width, height);
+            DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaPanelLookUpModeIndex, Width %d, Height %d, NativeModeIndex%d\n", width, height, panel->NativeModeIndex));
             if (panel->NativeModeIndex != VIA_PANEL_INVALID) {
                 panel->NativeMode->Width = width;
                 panel->NativeMode->Height = height;
             }
+        } else {
+            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Unable to get panel size from EDID. Return code: %d\n", ret);
         }
     }
 
@@ -378,6 +386,7 @@ ViaPanelGetSizeFromEDID(ScrnInfoPtr pScrn, xf86MonPtr pMon,
 
 Bool
 ViaPanelGetSizeFromDDCv1(ScrnInfoPtr pScrn, int *width, int *height)
+
 {
     VIAPtr pVia = VIAPTR(pScrn);
     xf86MonPtr pMon;

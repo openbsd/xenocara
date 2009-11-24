@@ -195,6 +195,7 @@ viaFlushPCI(ViaCommandBuffer * buf)
                      */
 					switch (pVia->Chipset) {
 					    case VIA_VX800:
+					    case VIA_VX855:
 							while ((VIAGETREG(VIA_REG_STATUS) &
 							       (VIA_CMD_RGTR_BUSY_H5 | VIA_2D_ENG_BUSY_H5))
 									&& (loop++ < MAXLOOP)) ;
@@ -471,7 +472,7 @@ viaInitialize2DEngine(ScrnInfoPtr pScrn)
         VIASETREG(i, 0x0);
     }
 
-    if (pVia->Chipset == VIA_VX800) {
+    if (pVia->Chipset == VIA_VX800 || pVia->Chipset == VIA_VX855) {
         for (i = 0x44; i < 0x5c; i += 4) {
             VIASETREG(i, 0x0);
         }
@@ -480,6 +481,7 @@ viaInitialize2DEngine(ScrnInfoPtr pScrn)
     /* Make the VIA_REG() macro magic work */
     switch (pVia->Chipset) {
     case VIA_VX800:
+    case VIA_VX855:
         pVia->TwodRegs = via_2d_regs_m1;
         break;
     default:
@@ -527,6 +529,7 @@ viaAccelSync(ScrnInfoPtr pScrn)
 
     switch (pVia->Chipset) {
         case VIA_VX800:
+        case VIA_VX855:
             while ((VIAGETREG(VIA_REG_STATUS) &
                     (VIA_CMD_RGTR_BUSY_H5 | VIA_2D_ENG_BUSY_H5 | VIA_3D_ENG_BUSY_H5))
                    && (loop++ < MAXLOOP)) ;
@@ -587,7 +590,7 @@ viaPitchHelper(VIAPtr pVia, unsigned dstPitch, unsigned srcPitch)
     unsigned val = (dstPitch >> 3) << 16 | (srcPitch >> 3);
     RING_VARS;
 
-    if (pVia->Chipset != VIA_VX800) {
+    if (pVia->Chipset != VIA_VX800 && pVia->Chipset != VIA_VX855) {
         val |= VIA_PITCH_ENABLE;
     }
     OUT_RING_H1(VIA_REG(pVia, PITCH), val);
@@ -1289,17 +1292,23 @@ viaInitXAA(ScreenPtr pScreen)
      * test with x11perf -shmput500!
      */
 
-    if (pVia->Chipset != VIA_K8M800 &&
-        pVia->Chipset != VIA_K8M890 &&
-        pVia->Chipset != VIA_P4M900 &&
-        pVia->Chipset != VIA_VX800)
-        xaaptr->ImageWriteFlags |= NO_GXCOPY;
+    switch (pVia->Chipset) {
+        case VIA_K8M800:
+        case VIA_K8M890:
+        case VIA_P4M900:
+        case VIA_VX800:
+        case VIA_VX855:
+            break;
+        default:
+            xaaptr->ImageWriteFlags |= NO_GXCOPY;
+            break;
+    }
 
     xaaptr->SetupForImageWrite = viaSetupForImageWrite;
     xaaptr->SubsequentImageWriteRect = viaSubsequentImageWriteRect;
     xaaptr->ImageWriteBase = pVia->BltBase;
 
-    if (pVia->Chipset == VIA_VX800)
+    if (pVia->Chipset == VIA_VX800 || pVia->Chipset == VIA_VX855)
         xaaptr->ImageWriteRange = VIA_MMIO_BLTSIZE;
     else
         xaaptr->ImageWriteRange = (64 * 1024);
@@ -2015,7 +2024,8 @@ viaExaUploadToScratch(PixmapPtr pSrc, PixmapPtr pDst)
         dstPitch = 8;
     if (dstPitch * h > pVia->exaScratchSize * 1024) {
         ErrorF("EXA UploadToScratch Failed %u %u %u %u\n",
-               dstPitch, h, dstPitch * h, pVia->exaScratchSize * 1024);
+               (unsigned int)dstPitch, h, (unsigned int)(dstPitch * h),
+               pVia->exaScratchSize * 1024);
         return FALSE;
     }
 
@@ -2354,7 +2364,27 @@ viaInitAccel(ScreenPtr pScreen)
     VIAPtr pVia = VIAPTR(pScrn);
     BoxRec AvailFBArea;
     int maxY;
+    Bool ret;
     Bool nPOTSupported;
+
+
+    /*  HW Limitation are described here:
+     *
+     *  1. H2/H5/H6 2D source and destination:
+     *     Pitch: (1 << 14) - 1 = 16383
+     *     Dimension: (1 << 12) = 4096
+     *     X, Y position: (1 << 12) - 1 = 4095.
+     *
+     *  2. H2 3D engine Render target:
+     *     Pitch: (1 << 14) - 1 = 16383
+     *     Clip Rectangle: 0 - 2047
+     *
+     *  3. H5/H6 3D engine Render target:
+     *     Pitch: ((1 << 10) - 1)*32 = 32736
+     *     Clip Rectangle: Color Window, 12bits. As Spec saied: 0 - 2048
+     *                     Scissor is the same as color window.
+     * */
+
 
     pVia->VQStart = 0;
     if (((pVia->FBFreeEnd - pVia->FBFreeStart) >= VIA_VQ_SIZE)
@@ -2425,6 +2455,10 @@ viaInitAccel(ScreenPtr pScreen)
         return TRUE;
     }
 
+    /*
+     * Finally, we set up the memory space available to the pixmap
+     * cache.
+     */
     AvailFBArea.x1 = 0;
     AvailFBArea.y1 = 0;
     AvailFBArea.x2 = pScrn->displayWidth;
@@ -2447,10 +2481,25 @@ viaInitAccel(ScreenPtr pScreen)
     if (maxY > 4 * pScrn->virtualY)
         maxY = 4 * pScrn->virtualY;
 
+    /* Non-rotate */
+    AvailFBArea.y2 = maxY;
     pVia->FBFreeStart = (maxY + 1) * pVia->Bpl;
 
-    AvailFBArea.y2 = maxY;
-    xf86InitFBManager(pScreen, &AvailFBArea);
+    /*
+    *   Initialization of the XFree86 framebuffer manager is done via
+    *   Bool xf86InitFBManager(ScreenPtr pScreen, BoxPtr FullBox) 
+    *   FullBox represents the area of the framebuffer that the manager
+    *   is allowed to manage. This is typically a box with a width 
+    *   of pScrn->displayWidth and a height of as many lines as can be fit
+    *   within the total video memory
+    */
+    ret = xf86InitFBManager(pScreen, &AvailFBArea);
+    if (ret != TRUE) {
+    	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "VIAInitAccel xf86InitFBManager init failed\n");
+    }
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+               "Frame Buffer From (%d,%d) To (%d,%d)\n",
+               AvailFBArea.x1, AvailFBArea.y1, AvailFBArea.x2, AvailFBArea.y2));
     VIAInitLinear(pScreen);
 
     pVia->driSize = (pVia->FBFreeEnd - pVia->FBFreeStart - pVia->Bpl);

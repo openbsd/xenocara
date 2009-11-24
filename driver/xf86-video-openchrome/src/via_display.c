@@ -111,6 +111,38 @@ ViaDisplayDisableCRT(ScrnInfoPtr pScrn)
     ViaCrtcMask(hwp, 0x36, 0x30, 0x30);
 }
 
+void
+ViaDisplayEnableDVO(ScrnInfoPtr pScrn, int port)
+{
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaDisplayEnableDVO, port: %d\n", port));
+    switch (port) {
+        case VIA_DI_PORT_DVP0:
+            ViaSeqMask(hwp, 0x1E, 0xC0, 0xC0);
+            break;
+        case VIA_DI_PORT_DVP1:
+            ViaSeqMask(hwp, 0x1E, 0x30, 0x30);
+            break;
+    }
+}
+
+void
+ViaDisplayDisableDVO(ScrnInfoPtr pScrn, int port)
+{
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
+
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaDisplayDisableDVO, port: %d\n", port));
+    switch (port) {
+        case VIA_DI_PORT_DVP0:
+            ViaSeqMask(hwp, 0x1E, 0x00, 0xC0);
+            break;
+        case VIA_DI_PORT_DVP1:
+            ViaSeqMask(hwp, 0x1E, 0x00, 0x30);
+            break;
+    }
+}
+
 /*
  * Sets the primary or secondary display stream on CRT.
  */
@@ -141,5 +173,34 @@ ViaDisplaySetStreamOnDFP(ScrnInfoPtr pScrn, Bool primary)
         ViaCrtcMask(hwp, 0x99, 0x00, 0x10);
     else
         ViaCrtcMask(hwp, 0x99, 0x10, 0x10);
+}
+
+void
+ViaDisplaySetStreamOnDVO(ScrnInfoPtr pScrn, int port, Bool primary)
+{
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
+    int regNum;
+    
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaDisplaySetStreamOnDVO, port: %d\n", port));
+
+    switch (port) {
+        case VIA_DI_PORT_DVP0:
+            regNum = 0x96;
+            break;
+        case VIA_DI_PORT_DVP1:
+            regNum = 0x9B;
+            break;
+        case VIA_DI_PORT_DFPLOW:
+            regNum = 0x97;
+            break;
+        case VIA_DI_PORT_DFPHIGH:
+            regNum = 0x99;
+            break;
+    }
+
+    if (primary)
+        ViaCrtcMask(hwp, regNum, 0x00, 0x10);
+    else
+        ViaCrtcMask(hwp, regNum, 0x10, 0x10);
 }
 

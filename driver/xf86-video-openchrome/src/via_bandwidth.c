@@ -244,6 +244,11 @@ ViaSetPrimaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
             hwp->writeSeq(hwp, 0x18, 0x26); /* 152/4   = 38 */ 
             hwp->writeSeq(hwp, 0x22, 0x10); /*  64/4   = 16 */
             break;
+        case VIA_VX855:
+              hwp->writeSeq(hwp, 0x16, 0x50); /* 320/4   = 80 */
+              hwp->writeSeq(hwp, 0x17, 0xC7); /* 400/2-1 = 199 */
+              hwp->writeSeq(hwp, 0x18, 0x50); /* 320/4   = 80 */
+              hwp->writeSeq(hwp, 0x22, 0x28); /* 160/4   = 40 */
         default:
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ViaSetPrimaryFIFO: "
                        "Chipset %d not implemented\n", pVia->Chipset);
@@ -411,6 +416,8 @@ ViaSetSecondaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
                 ViaCrtcMask(hwp, 0x94, 0x10, 0x7F);
             else
                 ViaCrtcMask(hwp, 0x94, 0x20, 0x7F);
+            break;
+        case VIA_VX855:
             break;
         default:
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ViaSetSecondaryFIFO: "

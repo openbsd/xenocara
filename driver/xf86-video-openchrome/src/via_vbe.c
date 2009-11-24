@@ -112,7 +112,6 @@ static Bool
 ViaVbeSetActiveDevices(ScrnInfoPtr pScrn, int mode, int refresh)
 {
     VIAPtr pVia = VIAPTR(pScrn);
-    VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
     vbeInfoPtr pVbe = pVia->pVbe;
 
     ViaVbeInitInt10(pVbe);
@@ -140,7 +139,6 @@ static Bool
 ViaVbeSetPanelMode(ScrnInfoPtr pScrn, Bool expand)
 {
     VIAPtr pVia = VIAPTR(pScrn);
-    VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
     vbeInfoPtr pVbe = pVia->pVbe;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaVbeSetPanelMode\n"));
@@ -162,7 +160,6 @@ static Bool
 ViaVbeSetRefresh(ScrnInfoPtr pScrn, int maxRefresh)
 {
     VIAPtr pVia = VIAPTR(pScrn);
-    VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaVbeSetRefresh\n"));
     vbeInfoPtr pVbe = pVia->pVbe;
@@ -351,8 +348,7 @@ ViaVbeModePreInit(ScrnInfoPtr pScrn)
 {
     VIAPtr pVia = VIAPTR(pScrn);
     VbeInfoBlock *vbe;
-    VbeModeInfoBlock *vbeMode;
-    DisplayModePtr pMode;
+
     int i;
 
     memset(&(pVia->vbeMode), 0, sizeof(ViaVbeModeInfo));

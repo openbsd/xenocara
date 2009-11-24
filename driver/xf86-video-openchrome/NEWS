@@ -1,3 +1,72 @@
+openchrome 0.2.904 (09/10/2009)
+-------------------------------
+* New features :
+- Basic VX855 support.
+- VX800 support.
+- CX700, VX800 integrated TMDS support.
+- ARGB cursor support.
+- Panel modesetting code rework.
+
+* Bug fixes and enhancements :
+- Add checking of the initialization of the XFree86 framebuffer manager.
+- Save/restore ECK Clock Synthesizer.
+- Fix bug with panel autodetection.
+- Fixed problem with backlite (Ticket #308).
+- Better VT1625 chipset support.
+- Cursor support speedup.
+- Fix bug with wrong panel size (Ticket #301).
+- Remove build warnings and removed unused variables.
+- Unified variable names with RandR.
+- RandR initial support.
+- Updated manpage.
+- Add rotate upside-down and remove "Magic numbers".
+- Disable TMDS by default for now, output detection is not working properly.
+- Fix hardlock on resolution change.
+- Remove loader symbol lists.
+- XO-1.5 panel patch and dot clock fixup.
+- Switch on LVDS pads only for active channel.
+- Modify PLL generation and add VX855 support.
+- Fix cursor on secondary.
+- Fix a segfault on shutdown in ViaCleanupXVMC when there's no Xv.
+- Fix null pointer dereference in viaExaCheckComposite.
+- Clean up duplicate defines in via_regs.h.
+- Remove VT8454B LCD flag.
+- Make sure Chrome9 chipsets use software rasterizer for 3D.
+- Cosmetic fix for ViaMMIODisable.
+- Fix DFP pad mask.
+- Fix possible use of uninitialized variable (ticket#292).
+- Fix use of uninitialized variable.
+- Fix 2D engine init.
+- ViaPanelGetIndex: 1 bugfix and 1 cosmetic fix.
+- Set P4M890 primary FIFO.
+- Initialize CRTC before a mode switch. Fix bug #260.
+- Small bug fixes for XAA and EXA.
+- Minor bug fixes and tweaks.
+- Remove support for old EXA.
+- Fix 2d initialization for P4M900.
+- Temporary workaround for freedesktop bug 21563.
+- Adjust monitor values to handle preset LCD panel and TV modes.
+- Fix placement of pVia->FrameBufferBase to MapFB.
+- Clean up compile warnings.
+- Fix crash worked around by XaaNoImageWriteRect.
+- Restore panel backlight after VT switch (Ticket #29).
+- XvMC Unichrome Pro allocation fixes.
+- Add more needed modes to ViaPanelModes.
+- XvMC symbol visibility.
+- Properly link XvMC.
+- Hide overlay when video is invisible (ticket #266).
+- Allow FullHD with DDR400.
+- Add missing 640x480 PAL mode for VT1625.
+- Remove support for pre-xorg 7.1rc1 Xv ABI.
+
+* New boards :
+- Axper XP-M8VM800, Gigabyte M704 / RoverPC A700GQ, IBM AnyPlace Kiosk 3xx,
+  ECS P4M890T-M v2.0, Foxconn P4M800P7MB-RS2H, Haier A60-440256080BD,
+  Lenovo S12, Mitac 8624 (w/ P4M890), MSI K8M Neo-V (broken pci id), 
+  MSI P4M900M3-L, Packard Bell Lima (ASUS MBP5VDZ-NVM), Samsung NC20,
+  Twinhead H12V, Twinhead M6, VIA Epia M700. VIA Openbook, Sharp PC-AE30J.
+
+
 openchrome 0.2.903 (19/08/2008)
 -------------------------------
 * Enhancements and bug fixes:

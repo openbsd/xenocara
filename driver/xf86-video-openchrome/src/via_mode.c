@@ -39,6 +39,7 @@
 #include "via_driver.h"
 #include "via_vgahw.h"
 #include "via_id.h"
+#include <unistd.h>
 
 /*
  * Modetable nonsense.
@@ -250,6 +251,10 @@ ViaTVSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
     if (pBIOSInfo->TVModeCrtc)
         pBIOSInfo->TVModeCrtc(pScrn, mode);
+
+    /* TV reset. */
+    xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x1D, 0x00);
+    xf86I2CWriteByte(pBIOSInfo->TVI2CDev, 0x1D, 0x80);
 }
 
 void
@@ -299,7 +304,7 @@ ViaDFPDetect(ScrnInfoPtr pScrn)
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaDFPDetect\n"));
 
     VIAPtr pVia = VIAPTR(pScrn);
-    VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
+
     xf86MonPtr          monPtr = NULL;
 
     if (pVia->pI2CBus2)
@@ -371,17 +376,20 @@ ViaOutputsDetect(ScrnInfoPtr pScrn)
         }
     }
     
-    if ((pVia->Chipset == VIA_CX700) || (pVia->Chipset == VIA_VX800)) {
-        
-        if (ViaDFPDetect(pScrn)) {
-            pBIOSInfo->DfpPresent = TRUE;
-            xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                       "DFP is connected.\n");
-        } else {
-            pBIOSInfo->DfpPresent = FALSE;
-            xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                       "DFP is disconnected.\n");
-        }
+    switch (pVia->Chipset) {
+        case VIA_CX700:
+        case VIA_VX800:
+        case VIA_VX855:
+            if (ViaDFPDetect(pScrn)) {
+                pBIOSInfo->DfpPresent = TRUE;
+                xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                           "DFP is connected.\n");
+            } else {
+                pBIOSInfo->DfpPresent = FALSE;
+                xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                           "DFP is disconnected.\n");
+            }
+            break;
     }
 }
 
@@ -491,6 +499,8 @@ ViaOutputsSelect(ScrnInfoPtr pScrn)
             pBIOSInfo->CrtPresent = TRUE;
             pBIOSInfo->CrtActive = TRUE;
         }
+        if (pBIOSInfo->TVActive)
+            pBIOSInfo->FirstCRTC->IsActive = TRUE ;
     }
     if (!pVia->UseLegacyModeSwitch) {
         if (pBIOSInfo->CrtActive)
@@ -499,8 +509,14 @@ ViaOutputsSelect(ScrnInfoPtr pScrn)
             pBIOSInfo->FirstCRTC->IsActive = TRUE ;
         if (pBIOSInfo->Panel->IsActive) {
             pVia->pBIOSInfo->SecondCRTC->IsActive = TRUE ;
-            if (pVia->Chipset == VIA_P4M900 || pVia->Chipset == VIA_CX700 || pVia->Chipset == VIA_VX800 )
-                pVia->pBIOSInfo->Lvds->IsActive = TRUE ;
+            switch (pVia->Chipset) {
+                case VIA_P4M900:
+                case VIA_CX700:
+                case VIA_VX800:
+                case VIA_VX855:
+                    pVia->pBIOSInfo->Lvds->IsActive = TRUE ;
+                    break;
+            }
         }
     }
 
@@ -536,13 +552,14 @@ VIAGetPanelSize(ScrnInfoPtr pScrn)
     int height = 0;
     Bool ret;
 
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "VIAGetPanelSize\n"));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "VIAGetPanelSize (UseLegacyModeSwitch)\n"));
 
     ret = ViaPanelGetSizeFromDDCv1(pScrn, &width, &height);
     if (!ret)
         ret = ViaPanelGetSizeFromDDCv2(pScrn, &width);
 
     if (ret) {
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "EDID returned resolution %d x %d \n", width, height));
         switch (width) {
             case 640:
                 pBIOSInfo->Panel->NativeModeIndex = VIA_PANEL6X4;
@@ -571,6 +588,7 @@ VIAGetPanelSize(ScrnInfoPtr pScrn)
         }
     } else {
         pBIOSInfo->Panel->NativeModeIndex = hwp->readCrtc(hwp, 0x3F) >> 4;
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Unable to get information from EDID. Resolution from Scratchpad: %d \n", pBIOSInfo->Panel->NativeModeIndex));
         if (pBIOSInfo->Panel->NativeModeIndex == 0) {
             /* VIA_PANEL6X4 == 0, but that value equals unset */
             xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Unable to "
@@ -665,13 +683,6 @@ ViaPanelGetIndex(ScrnInfoPtr pScrn, DisplayModePtr mode)
         }
     }
 
-    if ((mode->PrivSize != sizeof(struct ViaModePriv))
-        || (mode->Private != (void *)&ViaPanelPrivate)) {
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-                   "ViaPanelGetIndex: Mode not supported by Panel.\n");
-        return FALSE;
-    }
-
     if (!ViaGetResolutionIndex(pScrn, mode)) {
         xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Panel does not support this"
                    " resolution: %s\n", mode->name);
@@ -681,8 +692,8 @@ ViaPanelGetIndex(ScrnInfoPtr pScrn, DisplayModePtr mode)
     for (i = 0; ViaResolutionTable[i].Index != VIA_RES_INVALID; i++) {
         if (ViaResolutionTable[i].PanelIndex
             == pBIOSInfo->Panel->NativeModeIndex) {
-            pBIOSInfo->panelX = ViaResolutionTable[i].X;
-            pBIOSInfo->panelY = ViaResolutionTable[i].Y;
+            pBIOSInfo->Panel->NativeMode->Width = ViaResolutionTable[i].X;
+            pBIOSInfo->Panel->NativeMode->Height = ViaResolutionTable[i].Y;
             break;
         }
     }
@@ -693,8 +704,8 @@ ViaPanelGetIndex(ScrnInfoPtr pScrn, DisplayModePtr mode)
         return FALSE;
     }
 
-    if ((pBIOSInfo->panelX != mode->CrtcHDisplay)
-        || (pBIOSInfo->panelY != mode->CrtcVDisplay)) {
+    if ((pBIOSInfo->Panel->NativeMode->Width != mode->CrtcHDisplay)
+        || (pBIOSInfo->Panel->NativeMode->Height != mode->CrtcVDisplay)) {
         xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaPanelGetIndex: Non-native"
                    " resolutions are broken.\n");
         return FALSE;
@@ -719,7 +730,7 @@ ViaPanelGetIndex(ScrnInfoPtr pScrn, DisplayModePtr mode)
                 pBIOSInfo->PanelIndex = i;
                 DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaPanelGetIndex:"
                                  "index: %d (%dx%d)\n", pBIOSInfo->PanelIndex,
-                                 pBIOSInfo->panelX, pBIOSInfo->panelY));
+                                 pBIOSInfo->Panel->NativeMode->Width, pBIOSInfo->Panel->NativeMode->Height));
                 return TRUE;
             }
 
@@ -832,7 +843,7 @@ ViaGetMemoryBandwidth(ScrnInfoPtr pScrn)
 {
     VIAPtr pVia = VIAPTR(pScrn);
 
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaGetMemoryBandwidth\n"));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaGetMemoryBandwidth. Memory type: %d\n", pVia->MemClk));
 
     switch (pVia->MemClk) {
         case VIA_MEM_SDR66:
@@ -873,7 +884,7 @@ ViaValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
     if (pVia->pVbe)
         return MODE_OK;
 
-    DEBUG(xf86DrvMsg(scrnIndex, X_INFO, "ViaValidMode: Validating %s (%d)\n",
+    DEBUG(xf86DrvMsg(scrnIndex, X_INFO, "ViaValidMode: Validating %s (Clock: %d)\n",
                      mode->name, mode->Clock));
 
     if (mode->Flags & V_INTERLACE)
@@ -968,22 +979,47 @@ ViaSetUseExternalClock(vgaHWPtr hwp)
  *
  */
 static void
-ViaSetPrimaryDotclock(ScrnInfoPtr pScrn, CARD32 clock)
+ViaSetDotclock(ScrnInfoPtr pScrn, CARD32 clock, int base, int probase)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     VIAPtr pVia = VIAPTR(pScrn);
 
     DEBUG(xf86DrvMsg(hwp->pScrn->scrnIndex, X_INFO,
-                     "ViaSetPrimaryDotclock to 0x%06x\n", (unsigned)clock));
+                     "ViaSetDotclock to 0x%06x\n", (unsigned)clock));
 
     if ((pVia->Chipset == VIA_CLE266) || (pVia->Chipset == VIA_KM400)) {
-        hwp->writeSeq(hwp, 0x46, clock >> 8);
-        hwp->writeSeq(hwp, 0x47, clock & 0xFF);
+        hwp->writeSeq(hwp, base, clock >> 8);
+        hwp->writeSeq(hwp, base+1, clock & 0xFF);
     } else {  /* unichrome pro */
-        hwp->writeSeq(hwp, 0x44, clock >> 16);
-        hwp->writeSeq(hwp, 0x45, (clock >> 8) & 0xFF);
-        hwp->writeSeq(hwp, 0x46, clock & 0xFF);
+        union pllparams pll;
+        int dtz, dr, dn, dm;
+        pll.packed = clock;
+        dtz = pll.params.dtz;
+        dr  = pll.params.dr;
+        dn  = pll.params.dn;
+        dm  = pll.params.dm;
+
+        /* The VX855 does not modify dm/dn, but earlier chipsets do. */
+        if (pVia->Chipset != VIA_VX855) {
+            dm -= 2;
+            dn -= 2;
+        }
+
+        hwp->writeSeq(hwp, probase, dm & 0xff);
+        hwp->writeSeq(hwp, probase+1, ((dm >> 8) & 0x03) | (dr << 2) | ((dtz & 1) << 7));
+        hwp->writeSeq(hwp, probase+2, (dn & 0x7f) | ((dtz & 2) << 6));
     }
+}
+
+/*
+ *
+ */
+static void
+ViaSetPrimaryDotclock(ScrnInfoPtr pScrn, CARD32 clock)
+{
+    vgaHWPtr hwp = VGAHWPTR(pScrn);
+
+    ViaSetDotclock(pScrn, clock, 0x46, 0x44);
 
     ViaSeqMask(hwp, 0x40, 0x02, 0x02);
     ViaSeqMask(hwp, 0x40, 0x00, 0x02);
@@ -996,22 +1032,21 @@ static void
 ViaSetSecondaryDotclock(ScrnInfoPtr pScrn, CARD32 clock)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
-    VIAPtr pVia = VIAPTR(pScrn);
 
-    DEBUG(xf86DrvMsg(hwp->pScrn->scrnIndex, X_INFO,
-                     "ViaSetSecondaryDotclock to 0x%06x\n", (unsigned)clock));
-
-    if ((pVia->Chipset == VIA_CLE266) || (pVia->Chipset == VIA_KM400)) {
-        hwp->writeSeq(hwp, 0x44, clock >> 8);
-        hwp->writeSeq(hwp, 0x45, clock & 0xFF);
-    } else {  /* unichrome pro */
-        hwp->writeSeq(hwp, 0x4A, clock >> 16);
-        hwp->writeSeq(hwp, 0x4B, (clock >> 8) & 0xFF);
-        hwp->writeSeq(hwp, 0x4C, clock & 0xFF);
-    }
+    ViaSetDotclock(pScrn, clock, 0x44, 0x4A);
 
     ViaSeqMask(hwp, 0x40, 0x04, 0x04);
     ViaSeqMask(hwp, 0x40, 0x00, 0x04);
+}
+
+/*
+ *
+ */
+static void
+ViaSetECKDotclock(ScrnInfoPtr pScrn, CARD32 clock)
+{
+    /* Does the non-pro chip have an ECK clock ? */  
+    ViaSetDotclock(pScrn, clock, 0, 0x47);
 }
 
 /*
@@ -1065,8 +1100,8 @@ VIASetLCDMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         ViaVgahwWrite(hwp, 0x300 + port, offset, 0x301 + port, data);
     }
 
-    if ((mode->CrtcHDisplay != pBIOSInfo->panelX)
-        || (mode->CrtcVDisplay != pBIOSInfo->panelY)) {
+    if ((mode->CrtcHDisplay != pBIOSInfo->Panel->NativeMode->Width)
+        || (mode->CrtcVDisplay != pBIOSInfo->Panel->NativeMode->Height)) {
         VIALCDModeEntryPtr Main;
         VIALCDMPatchEntryPtr Patch1, Patch2;
         int numPatch1, numPatch2;
@@ -1162,7 +1197,7 @@ VIASetLCDMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         for (i = 0; i < numPatch2; i++, Patch2++) {
             if (Patch2->Mode == modeNum) {
                 if (!pBIOSInfo->Center
-                    && (mode->CrtcHDisplay == pBIOSInfo->panelX))
+                    && (mode->CrtcHDisplay == pBIOSInfo->Panel->NativeMode->Width))
                     pBIOSInfo->scaleY = FALSE;
 
                 for (j = 0; j < Patch2->numEntry; j++) {
@@ -1247,7 +1282,7 @@ VIASetLCDMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 static CARD32
 ViaComputeDotClock(unsigned clock)
 {
-    double fvco, fout, fref, err, minErr;
+    double fout, fref, err, minErr;
     CARD32 dr, dn, dm, maxdm, maxdn;
     CARD32 factual, best;
 
@@ -1281,15 +1316,16 @@ ViaComputeProDotClock(unsigned clock)
 {
     double fvco, fout, fref, err, minErr;
     CARD32 dr = 0, dn, dm, maxdm, maxdn;
-    CARD32 factual, bestClock;
-
+    CARD32 factual;
+    union pllparams bestClock;
+    
     fref = 14.318e6;
     fout = (double)clock * 1.e3;
 
     factual = ~0;
-    maxdm = factual / 14318000U - 2;
+    maxdm = factual / 14318000U;
     minErr = 1.e10;
-    bestClock = 0U;
+    bestClock.packed = 0U;
 
     do {
         fvco = fout * (1 << dr);
@@ -1300,30 +1336,31 @@ ViaComputeProDotClock(unsigned clock)
     }
 
     if (clock < 30000)
-        maxdn = 6;
+        maxdn = 8;
     else if (clock < 45000)
-        maxdn = 5;
+        maxdn = 7;
     else if (clock < 170000)
-        maxdn = 4;
+        maxdn = 6;
     else
-        maxdn = 3;
+        maxdn = 5;
 
-    for (dn = 0; dn < maxdn; ++dn) {
-        for (dm = 0; dm < maxdm; ++dm) {
-            factual = 14318000U * (dm + 2);
-            factual /= (dn + 2) << dr;
+    for (dn = 2; dn < maxdn; ++dn) {
+        for (dm = 2; dm < maxdm; ++dm) {
+            factual = 14318000U * dm;
+            factual /= dn << dr;
             if ((err = fabs((double)factual / fout - 1.)) < 0.005) {
                 if (err < minErr) {
                     minErr = err;
-                    bestClock = ((dm & 0xff) << 16) |
-                            (((1 << 7) | (dr << 2) | ((dm & 0x300) >> 8)) << 8)
-                            | (dn & 0x7f);
+                    bestClock.params.dtz = 1;
+                    bestClock.params.dr = dr;
+                    bestClock.params.dn = dn;
+                    bestClock.params.dm = dm;
                 }
             }
         }
     }
 
-    return bestClock;
+    return bestClock.packed;
 }
 
 /*
@@ -1348,12 +1385,13 @@ ViaModeDotClockTranslate(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
         DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                          "ViaComputeDotClock %d : %04x : %04x\n",
-                         mode->Clock, best1, best2));
+                         mode->Clock, (unsigned int)best1, (unsigned int)best2));                         
+
         return best2;
     } else {
         for (i = 0; ViaDotClocks[i].DotClock; i++)
             if (ViaDotClocks[i].DotClock == mode->Clock)
-                return ViaDotClocks[i].UniChromePro;
+                return ViaDotClocks[i].UniChromePro.packed;
         return ViaComputeProDotClock(mode->Clock);
     }
 
@@ -1370,7 +1408,7 @@ ViaModePrimaryLegacy(ScrnInfoPtr pScrn, DisplayModePtr mode)
     VIAPtr pVia = VIAPTR(pScrn);
     VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
 
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaModePrimary\n"));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaModePrimaryLegacy\n"));
     DEBUG(ViaPrintMode(pScrn, mode));
 
     /* Turn off Screen */
@@ -1449,7 +1487,7 @@ ViaModeSecondaryLegacy(ScrnInfoPtr pScrn, DisplayModePtr mode)
     VIAPtr pVia = VIAPTR(pScrn);
     VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
 
-    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaModeSecondary\n"));
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaModeSecondaryLegacy\n"));
     DEBUG(ViaPrintMode(pScrn, mode));
 
     /* Turn off Screen */
@@ -1557,15 +1595,16 @@ ViaDFPPower(ScrnInfoPtr pScrn, Bool On)
         xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaDFPPower: Off.\n");
 #endif
     vgaHWPtr hwp = VGAHWPTR(pScrn);
-    VIAPtr pVia = VIAPTR(pScrn);
-    VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
 
     /* Display Channel Select */
     ViaCrtcMask(hwp, 0xD2, 0x30, 0x30);
 
-    /* Power on TMDS */
-    ViaCrtcMask(hwp, 0xD2, 0x00, 0x08);
-    
+    if (On)
+        /* Power on TMDS */
+        ViaCrtcMask(hwp, 0xD2, 0x00, 0x08);
+    else
+        /* Power off TMDS */
+        ViaCrtcMask(hwp, 0xD2, 0x08, 0x08);
 }
 
 
@@ -1583,6 +1622,20 @@ ViaModeFirstCRTC(ScrnInfoPtr pScrn, DisplayModePtr mode)
     ViaFirstCRTCSetMode(pScrn, mode);
     pBIOSInfo->Clock = ViaModeDotClockTranslate(pScrn, mode);
     pBIOSInfo->ClockExternal = FALSE;
+
+    /* Enable MMIO & PCI burst (1 wait state) */
+    switch (pVia->Chipset) {
+        case VIA_CLE266:
+        case VIA_KM400:
+        case VIA_K8M800:
+        case VIA_PM800:
+        case VIA_VM800:
+            ViaSeqMask(hwp, 0x1A, 0x06, 0x06);
+            break;
+        default:
+            ViaSeqMask(hwp, 0x1A, 0x0C, 0x0C);
+            break;
+    }
 
     ViaSetPrimaryFIFO(pScrn, mode);
 
@@ -1667,6 +1720,13 @@ ViaModeSet(ScrnInfoPtr pScrn, DisplayModePtr mode)
             /* DFP on FirstCrtc */
             ViaDisplaySetStreamOnDFP(pScrn, TRUE);
             ViaDFPPower(pScrn, TRUE);
+        }
+
+        if (pBIOSInfo->TVActive) {
+            /* TV on FirstCrtc */
+            ViaDisplaySetStreamOnDVO(pScrn, pBIOSInfo->TVDIPort, TRUE);
+            ViaDisplayEnableDVO(pScrn, pBIOSInfo->TVDIPort);
+            ViaTVSetMode(pScrn, mode);
         }
         
         ViaModeFirstCRTC(pScrn, mode);

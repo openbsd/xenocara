@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.3 2009/06/25 21:27:18 matthieu Exp $
+# $Id: Makefile.am,v 1.4 2009/11/24 16:54:55 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
@@ -59,4 +59,4 @@ SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 	sed $(MAN_SUBSTS) < $< > $@
 
 @DRIVER_NAME@.man:
-	ln -s -f $(top_srcdir)/src/@DRIVER_NAME@.man .
+	ln -s -f $(top_srcdir)/man/@DRIVER_NAME@.man .
