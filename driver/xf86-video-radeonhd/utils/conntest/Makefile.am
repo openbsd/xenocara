@@ -5,6 +5,11 @@ include $(top_srcdir)/RadeonHD.am
 EXTRA_DIST = README Imakefile
 
 EXTRA_PROGRAMS = rhd_conntest rhd_dump
+
+if XSERVER_LIBPCIACCESS
+noinst_PROGRAMS = rhd_conntest rhd_dump
+endif
+
 if HAVE_PCI_PCI_H
 if HAVE_ZLIB
 noinst_PROGRAMS = rhd_conntest rhd_dump
@@ -24,8 +29,16 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/AtomBios/includes
 
 rhd_conntest_SOURCES = rhd_conntest.c
 nodist_rhd_conntest_SOURCES = git_version.h
+if XSERVER_LIBPCIACCESS
+rhd_conntest_LDADD   = @PCIACCESS_LIBS@
+else
 rhd_conntest_LDADD   = @PCIUTILS_LIBS@
+endif
 
 rhd_dump_SOURCES = rhd_dump.c
 nodist_rhd_dump_SOURCES = git_version.h
-rhd_dump_LDADD = @PCIUTILS_LIBS@
+if XSERVER_LIBPCIACCESS
+rhd_dump_LDADD   = @PCIACCESS_LIBS@
+else
+rhd_dump_LDADD   = @PCIUTILS_LIBS@
+endif

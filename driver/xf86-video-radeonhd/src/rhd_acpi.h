@@ -1,8 +1,7 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
- * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
- * Copyright 2007, 2008  Advanced Micro Devices, Inc.
+ * Copyright 2009  Luc Verhaegen <libv@exsuse.de>
+ * Copyright 2009  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2009  Egbert Eich   <eich@novell.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,23 +21,11 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef RHD_MC_H
-# define RHD_MC_H
 
-/* to be fixed for good !@#$ */
-#include <stdint.h>
-#define CARD64 uint64_t
+#ifndef RHD_ACPI_H
+# define RHD_ACPI_H
 
-extern void RHDMCInit(RHDPtr rhdPtr);
-extern void RHDMCDestroy(RHDPtr rhdPtr);
-extern void RHDMCSave(RHDPtr rhdPtr);
-extern void RHDMCRestore(RHDPtr rhdPtr);
-extern Bool RHDMCSetupFBLocation(RHDPtr rhdPtr, CARD64 Address, CARD32 Size);
-extern Bool RHDMCIdleWait(RHDPtr rhdPtr, CARD32 count);
-extern void RHDMCTuneAccessForDisplay(RHDPtr rhdPtr, int Crtc, DisplayModePtr Mode,
-				DisplayModePtr ScaledToMode);
-extern CARD64 RHDMCGetFBLocation(RHDPtr rhdPtr, CARD32 *size);
+int RhdACPIGetBacklightControl(struct rhdOutput *Output);
+void RhdACPISetBacklightControl(struct rhdOutput *Output, int val);
 
-extern Bool RHD_MC_IGP_SideportMemoryPresent(RHDPtr rhdPtr);
-
-#endif /* RHD_MC_H */
+#endif

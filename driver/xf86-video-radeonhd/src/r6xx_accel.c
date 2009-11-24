@@ -64,7 +64,6 @@
 /* Flush the indirect buffer to the kernel for submission to the card */
 void R600CPFlushIndirect(ScrnInfoPtr pScrn, drmBufPtr ib)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
     drmBufPtr          buffer = ib;
     int                start  = 0;
     drm_radeon_indirect_t  indirect;
@@ -72,14 +71,9 @@ void R600CPFlushIndirect(ScrnInfoPtr pScrn, drmBufPtr ib)
 
     if (!buffer) return;
 
-    //xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Flushing buffer %d\n",
-    //       buffer->idx);
-
     while (buffer->used & 0x3c){
         E32(buffer, CP_PACKET2()); /* fill up to multiple of 16 dwords */
     }
-
-    //ErrorF("buffer bytes: %d\n", buffer->used);
 
     indirect.idx     = buffer->idx;
     indirect.start   = start;
@@ -102,12 +96,11 @@ void R600IBDiscard(ScrnInfoPtr pScrn, drmBufPtr ib)
 void
 wait_3d_idle_clean(ScrnInfoPtr pScrn, drmBufPtr ib)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
-    //flush caches, don't generate timestamp
+    /* flush caches, don't generate timestamp */
     PACK3(ib, IT_EVENT_WRITE, 1);
     E32(ib, CACHE_FLUSH_AND_INV_EVENT);
-    // wait for 3D idle clean
+    /* wait for 3D idle clean */
     EREG(ib, WAIT_UNTIL,                          (WAIT_3D_IDLE_bit |
 						     WAIT_3D_IDLECLEAN_bit));
 }
@@ -115,10 +108,7 @@ wait_3d_idle_clean(ScrnInfoPtr pScrn, drmBufPtr ib)
 void
 wait_3d_idle(ScrnInfoPtr pScrn, drmBufPtr ib)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
-
     EREG(ib, WAIT_UNTIL,                          WAIT_3D_IDLE_bit);
-
 }
 
 /* 
@@ -161,16 +151,15 @@ wait_vline_range(ScrnInfoPtr pScrn, drmBufPtr ib, int crtc, int start, int stop)
     else
 	E32(ib, D2MODE_VLINE_STATUS >> 2);
     E32(ib, 0);
-    E32(ib, 0); // Ref value
-    E32(ib, 0x1000); // Mask
-    E32(ib, 10); // Wait interval 
+    E32(ib, 0); /* Ref value */
+    E32(ib, 0x1000); /* Mask */
+    E32(ib, 10); /* Wait interval */
 }
 
 static void
 reset_cb(ScrnInfoPtr pScrn, drmBufPtr ib)
 {
     int i;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     PACK0(ib, CB_COLOR0_INFO, 8);
     for (i = 0; i < 8; i++)
@@ -181,7 +170,6 @@ static void
 reset_td_samplers(ScrnInfoPtr pScrn, drmBufPtr ib)
 {
     int i;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     wait_3d_idle(pScrn, ib);
 
@@ -199,7 +187,6 @@ static void
 reset_sampler_const (ScrnInfoPtr pScrn, drmBufPtr ib)
 {
     int i;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     for (i = 0; i < SQ_TEX_SAMPLER_WORD_all_num; i++) {
 	PACK0 (ib, SQ_TEX_SAMPLER_WORD + i * SQ_TEX_SAMPLER_WORD_offset, 3);
@@ -213,7 +200,6 @@ static void
 reset_dx9_alu_consts(ScrnInfoPtr pScrn, drmBufPtr ib)
 {
     int i;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     const int count = SQ_ALU_CONSTANT_all_num * (SQ_ALU_CONSTANT_offset >> 2);
 
@@ -226,7 +212,6 @@ static void
 reset_bool_loop_const(ScrnInfoPtr pScrn, drmBufPtr ib)
 {
     int i;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     PACK0(ib, SQ_BOOL_CONST, SQ_BOOL_CONST_all_num);
     for (i = 0; i < SQ_BOOL_CONST_all_num; i++)
@@ -260,7 +245,7 @@ start_3d(ScrnInfoPtr pScrn, drmBufPtr ib)
  * Setup of functional groups
  */
 
-// asic stack/thread/gpr limits - need to query the drm
+/* asic stack/thread/gpr limits - need to query the drm */
 static void
 sq_setup(ScrnInfoPtr pScrn, drmBufPtr ib, sq_config_t *sq_conf)
 {
@@ -274,8 +259,9 @@ sq_setup(ScrnInfoPtr pScrn, drmBufPtr ib, sq_config_t *sq_conf)
 	(rhdPtr->ChipSet == RHD_M74) ||
 	(rhdPtr->ChipSet == RHD_M82) ||
 	(rhdPtr->ChipSet == RHD_RS780) ||
+	(rhdPtr->ChipSet == RHD_RS880) ||
 	(rhdPtr->ChipSet == RHD_RV710))
-	sq_config = 0;						// no VC
+	sq_config = 0;						/* no VC */
     else
 	sq_config = VC_ENABLE_bit;
 
@@ -351,21 +337,21 @@ set_render_target(ScrnInfoPtr pScrn, drmBufPtr ib, cb_config_t *cb_conf)
 
     EREG(ib, (CB_COLOR0_BASE + (4 * cb_conf->id)), (cb_conf->base >> 8));
 
-    // rv6xx workaround
+    /* rv6xx workaround */
     if ((rhdPtr->ChipSet > RHD_R600) &&
 	(rhdPtr->ChipSet < RHD_RV770)) {
 	PACK3(ib, IT_SURFACE_BASE_UPDATE, 1);
 	E32(ib, (2 << cb_conf->id));
     }
 
-    // pitch only for ARRAY_LINEAR_GENERAL, other tiling modes require addrlib
+    /* pitch only for ARRAY_LINEAR_GENERAL, other tiling modes require addrlib */
     EREG(ib, (CB_COLOR0_SIZE + (4 * cb_conf->id)), ((pitch << PITCH_TILE_MAX_shift)	|
 						    (slice << SLICE_TILE_MAX_shift)));
     EREG(ib, (CB_COLOR0_VIEW + (4 * cb_conf->id)), ((0    << SLICE_START_shift)		|
 						    (0    << SLICE_MAX_shift)));
     EREG(ib, (CB_COLOR0_INFO + (4 * cb_conf->id)), cb_color_info);
-    EREG(ib, (CB_COLOR0_TILE + (4 * cb_conf->id)), (0     >> 8));	// CMASK per-tile data base/256
-    EREG(ib, (CB_COLOR0_FRAG + (4 * cb_conf->id)), (0     >> 8));	// FMASK per-tile data base/256
+    EREG(ib, (CB_COLOR0_TILE + (4 * cb_conf->id)), (0     >> 8));	/* CMASK per-tile data base/256 */
+    EREG(ib, (CB_COLOR0_FRAG + (4 * cb_conf->id)), (0     >> 8));	/* FMASK per-tile data base/256 */
     EREG(ib, (CB_COLOR0_MASK + (4 * cb_conf->id)), ((0    << CMASK_BLOCK_MAX_shift)	|
 						    (0    << FMASK_TILE_MAX_shift)));
 }
@@ -373,8 +359,6 @@ set_render_target(ScrnInfoPtr pScrn, drmBufPtr ib, cb_config_t *cb_conf)
 void
 cp_set_surface_sync(ScrnInfoPtr pScrn, drmBufPtr ib, uint32_t sync_type, uint32_t size, uint64_t mc_addr)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
-
     uint32_t cp_coher_size;
     if (size == 0xffffffff)
 	cp_coher_size = 0xffffffff;
@@ -392,7 +376,6 @@ void
 fs_setup(ScrnInfoPtr pScrn, drmBufPtr ib, shader_config_t *fs_conf)
 {
     uint32_t sq_pgm_resources;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     sq_pgm_resources = ((fs_conf->num_gprs << NUM_GPRS_shift) |
 			(fs_conf->stack_size << STACK_SIZE_shift));
@@ -409,7 +392,6 @@ void
 vs_setup(ScrnInfoPtr pScrn, drmBufPtr ib, shader_config_t *vs_conf)
 {
     uint32_t sq_pgm_resources;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     sq_pgm_resources = ((vs_conf->num_gprs << NUM_GPRS_shift) |
 			(vs_conf->stack_size << STACK_SIZE_shift));
@@ -430,7 +412,6 @@ void
 ps_setup(ScrnInfoPtr pScrn, drmBufPtr ib, shader_config_t *ps_conf)
 {
     uint32_t sq_pgm_resources;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     sq_pgm_resources = ((ps_conf->num_gprs << NUM_GPRS_shift) |
 			(ps_conf->stack_size << STACK_SIZE_shift));
@@ -455,7 +436,6 @@ set_alu_consts(ScrnInfoPtr pScrn, drmBufPtr ib, int offset, int count, float *co
 {
     int i;
     const int countreg = count * (SQ_ALU_CONSTANT_offset >> 2);
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     PACK0(ib, SQ_ALU_CONSTANT + offset * SQ_ALU_CONSTANT_offset, countreg);
     for (i = 0; i < countreg; i++)
@@ -475,7 +455,6 @@ void
 set_vtx_resource(ScrnInfoPtr pScrn, drmBufPtr ib, vtx_resource_t *res)
 {
     uint32_t sq_vtx_constant_word2;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     sq_vtx_constant_word2 = ((((res->vb_addr) >> 32) & BASE_ADDRESS_HI_mask) |
 			     ((res->vtx_size_dw << 2) << SQ_VTX_CONSTANT_WORD2_0__STRIDE_shift) |
@@ -492,13 +471,13 @@ set_vtx_resource(ScrnInfoPtr pScrn, drmBufPtr ib, vtx_resource_t *res)
 	    sq_vtx_constant_word2 |= SQ_VTX_CONSTANT_WORD2_0__SRF_MODE_ALL_bit;
 
     PACK0(ib, SQ_VTX_RESOURCE + res->id * SQ_VTX_RESOURCE_offset, 7);
-    E32(ib, res->vb_addr & 0xffffffff);				// 0: BASE_ADDRESS
-    E32(ib, (res->vtx_num_entries << 2) - 1);			// 1: SIZE
-    E32(ib, sq_vtx_constant_word2);	// 2: BASE_HI, STRIDE, CLAMP, FORMAT, ENDIAN
-    E32(ib, res->mem_req_size << MEM_REQUEST_SIZE_shift);		// 3: MEM_REQUEST_SIZE ?!?
-    E32(ib, 0);							// 4: n/a
-    E32(ib, 0);							// 5: n/a
-    E32(ib, SQ_TEX_VTX_VALID_BUFFER << SQ_VTX_CONSTANT_WORD6_0__TYPE_shift);	// 6: TYPE
+    E32(ib, res->vb_addr & 0xffffffff);				/* 0: BASE_ADDRESS */
+    E32(ib, (res->vtx_num_entries << 2) - 1);			/* 1: SIZE */
+    E32(ib, sq_vtx_constant_word2);	/* 2: BASE_HI, STRIDE, CLAMP, FORMAT, ENDIAN */
+    E32(ib, res->mem_req_size << MEM_REQUEST_SIZE_shift);		/* 3: MEM_REQUEST_SIZE ?!? */
+    E32(ib, 0);							/* 4: n/a */
+    E32(ib, 0);							/* 5: n/a */
+    E32(ib, SQ_TEX_VTX_VALID_BUFFER << SQ_VTX_CONSTANT_WORD6_0__TYPE_shift);	/* 6: TYPE */
 }
 
 void
@@ -506,7 +485,6 @@ set_tex_resource(ScrnInfoPtr pScrn, drmBufPtr ib, tex_resource_t *tex_res)
 {
     uint32_t sq_tex_resource_word0, sq_tex_resource_word1, sq_tex_resource_word4;
     uint32_t sq_tex_resource_word5, sq_tex_resource_word6;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     sq_tex_resource_word0 = ((tex_res->dim << DIM_shift) |
 			     (tex_res->tile_mode << SQ_TEX_RESOURCE_WORD0_0__TILE_MODE_shift));
@@ -568,7 +546,6 @@ void
 set_tex_sampler (ScrnInfoPtr pScrn, drmBufPtr ib, tex_sampler_t *s)
 {
     uint32_t sq_tex_sampler_word0, sq_tex_sampler_word1, sq_tex_sampler_word2;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     sq_tex_sampler_word0 = ((s->clamp_x       << SQ_TEX_SAMPLER_WORD0_0__CLAMP_X_shift)		|
 			    (s->clamp_y       << CLAMP_Y_shift)					|
@@ -613,11 +590,10 @@ set_tex_sampler (ScrnInfoPtr pScrn, drmBufPtr ib, tex_sampler_t *s)
     E32(ib, sq_tex_sampler_word2);
 }
 
-//XXX deal with clip offsets in clip setup
+/* XXX deal with clip offsets in clip setup */
 void
 set_screen_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int y2)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     EREG(ib, PA_SC_SCREEN_SCISSOR_TL,              ((x1 << PA_SC_SCREEN_SCISSOR_TL__TL_X_shift) |
 						    (y1 << PA_SC_SCREEN_SCISSOR_TL__TL_Y_shift)));
@@ -628,8 +604,6 @@ set_screen_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int 
 void
 set_vport_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int id, int x1, int y1, int x2, int y2)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
-
     EREG(ib, PA_SC_VPORT_SCISSOR_0_TL +
 	 id * PA_SC_VPORT_SCISSOR_0_TL_offset, ((x1 << PA_SC_VPORT_SCISSOR_0_TL__TL_X_shift) |
 						(y1 << PA_SC_VPORT_SCISSOR_0_TL__TL_Y_shift) |
@@ -642,8 +616,6 @@ set_vport_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int id, int x1, int y1, int x
 void
 set_generic_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int y2)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
-
     EREG(ib, PA_SC_GENERIC_SCISSOR_TL,            ((x1 << PA_SC_GENERIC_SCISSOR_TL__TL_X_shift) |
 						   (y1 << PA_SC_GENERIC_SCISSOR_TL__TL_Y_shift) |
 						   WINDOW_OFFSET_DISABLE_bit));
@@ -654,8 +626,6 @@ set_generic_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int
 void
 set_window_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int y2)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
-
     EREG(ib, PA_SC_WINDOW_SCISSOR_TL,             ((x1 << PA_SC_WINDOW_SCISSOR_TL__TL_X_shift) |
 						   (y1 << PA_SC_WINDOW_SCISSOR_TL__TL_Y_shift) |
 						   WINDOW_OFFSET_DISABLE_bit));
@@ -666,8 +636,6 @@ set_window_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int 
 void
 set_clip_rect(ScrnInfoPtr pScrn, drmBufPtr ib, int id, int x1, int y1, int x2, int y2)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
-
     EREG(ib, PA_SC_CLIPRECT_0_TL +
 	 id * PA_SC_CLIPRECT_0_TL_offset,     ((x1 << PA_SC_CLIPRECT_0_TL__TL_X_shift) |
 					       (y1 << PA_SC_CLIPRECT_0_TL__TL_Y_shift)));
@@ -687,7 +655,7 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     shader_config_t fs_conf;
     sq_config_t sq_conf;
     int i;
-//    uint32_t reg;
+
     RHDPtr rhdPtr = RHDPTR(pScrn);
     struct r6xx_accel_state *accel_state = rhdPtr->TwoDPrivate;
 
@@ -703,7 +671,7 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
 
     wait_3d_idle(pScrn, ib);
 
-    // ASIC specific setup, see drm
+    /* ASIC specific setup, see drm */
     if (rhdPtr->ChipSet < RHD_RV770) {
 	EREG(ib, TA_CNTL_AUX,                     (( 3 << GRADIENT_CREDIT_shift)		|
 						   (28 << TD_FIFO_CREDIT_shift)));
@@ -735,14 +703,15 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     reset_bool_loop_const (pScrn, ib);
     reset_sampler_const (pScrn, ib);
 
-    // SQ
+    /* SQ */
     sq_conf.ps_prio = 0;
     sq_conf.vs_prio = 1;
     sq_conf.gs_prio = 2;
     sq_conf.es_prio = 3;
-    // need to set stack/thread/gpr limits based on the asic
-    // for now just set them low enough so any card will work
-    // see r600_cp.c in the drm
+    /* need to set stack/thread/gpr limits based on the asic
+     * for now just set them low enough so any card will work
+     * see r600_cp.c in the drm
+     */
     switch (rhdPtr->ChipSet) {
     case RHD_R600:
 	sq_conf.num_ps_gprs = 192;
@@ -783,6 +752,7 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     case RHD_M82:
     case RHD_RV620:
     case RHD_RS780:
+    case RHD_RS880:
     default:
 	sq_conf.num_ps_gprs = 84;
 	sq_conf.num_vs_gprs = 36;
@@ -815,6 +785,7 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
 	sq_conf.num_es_stack_entries = 16;
 	break;
     case RHD_RV770:
+    case RHD_RV790:
     case RHD_M98:
 	sq_conf.num_ps_gprs = 192;
 	sq_conf.num_vs_gprs = 56;
@@ -831,6 +802,7 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
 	sq_conf.num_es_stack_entries = 0;
 	break;
     case RHD_RV730:
+    case RHD_RV740:
     case RHD_M96:
 	sq_conf.num_ps_gprs = 84;
 	sq_conf.num_vs_gprs = 36;
@@ -869,17 +841,17 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     EREG(ib, SQ_VTX_START_INST_LOC,               0);
 
     PACK0(ib, SQ_ESGS_RING_ITEMSIZE, 9);
-    E32(ib, 0);							// SQ_ESGS_RING_ITEMSIZE
-    E32(ib, 0);							// SQ_GSVS_RING_ITEMSIZE
-    E32(ib, 0);							// SQ_ESTMP_RING_ITEMSIZE
-    E32(ib, 0);							// SQ_GSTMP_RING_ITEMSIZE
-    E32(ib, 0);							// SQ_VSTMP_RING_ITEMSIZE
-    E32(ib, 0);							// SQ_PSTMP_RING_ITEMSIZE
-    E32(ib, 0);							// SQ_FBUF_RING_ITEMSIZE
-    E32(ib, 0);							// SQ_REDUC_RING_ITEMSIZE
-    E32(ib, 0);							// SQ_GS_VERT_ITEMSIZE
+    E32(ib, 0);							/* SQ_ESGS_RING_ITEMSIZE */
+    E32(ib, 0);							/* SQ_GSVS_RING_ITEMSIZE */
+								   E32(ib, 0); /* SQ_ESTMP_RING_ITEMSIZE */
+    E32(ib, 0);							/* SQ_GSTMP_RING_ITEMSIZE */
+    E32(ib, 0);							/* SQ_VSTMP_RING_ITEMSIZE */
+    E32(ib, 0);							/* SQ_PSTMP_RING_ITEMSIZE */
+    E32(ib, 0);							/* SQ_FBUF_RING_ITEMSIZE */
+    E32(ib, 0);							/* SQ_REDUC_RING_ITEMSIZE */
+    E32(ib, 0);							/* SQ_GS_VERT_ITEMSIZE */
 
-    // DB
+    /* DB */
     EREG(ib, DB_DEPTH_INFO,                       0);
     EREG(ib, DB_STENCIL_CLEAR,                    0);
     EREG(ib, DB_DEPTH_CLEAR,                      0);
@@ -896,11 +868,11 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
 						   (2 << ALPHA_TO_MASK_OFFSET2_shift)	|
 						   (2 << ALPHA_TO_MASK_OFFSET3_shift)));
 
-    // SX
+    /* SX */
     EREG(ib, SX_ALPHA_TEST_CONTROL,               0);
     EREG(ib, SX_ALPHA_REF,                        0);
 
-    // CB
+    /* CB */
     reset_cb(pScrn, ib);
 
     PACK0(ib, CB_BLEND_RED, 4);
@@ -910,7 +882,7 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     E32(ib, 0x00000000);
 
     /* CB_COLOR_CONTROL.PER_MRT_BLEND is off */
-    // RV6xx+ have per-MRT blend
+    /* RV6xx+ have per-MRT blend */
     if (rhdPtr->ChipSet > RHD_R600) {
 	PACK0(ib, CB_BLEND0_CONTROL, CB_BLEND0_CONTROL_num);
 	for (i = 0; i < CB_BLEND0_CONTROL_num; i++)
@@ -928,10 +900,10 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
 
     EREG(ib, CB_COLOR_CONTROL,                    0);
     PACK0(ib, CB_CLRCMP_CONTROL, 4);
-    E32(ib, 1 << CLRCMP_FCN_SEL_shift);				// CB_CLRCMP_CONTROL: use CLRCMP_FCN_SRC
-    E32(ib, 0);							// CB_CLRCMP_SRC
-    E32(ib, 0);							// CB_CLRCMP_DST
-    E32(ib, 0);							// CB_CLRCMP_MSK
+    E32(ib, 1 << CLRCMP_FCN_SEL_shift);				/* CB_CLRCMP_CONTROL: use CLRCMP_FCN_SRC */
+    E32(ib, 0);							/* CB_CLRCMP_SRC */
+    E32(ib, 0);							/* CB_CLRCMP_DST */
+    E32(ib, 0);							/* CB_CLRCMP_MSK */
 
 
     if (rhdPtr->ChipSet < RHD_RV770) {
@@ -943,7 +915,7 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     }
     EREG(ib, CB_TARGET_MASK,                      (0x0f << TARGET0_ENABLE_shift));
 
-    // SC
+    /* SC */
     set_generic_scissor(pScrn, ib, 0, 0, 8192, 8192);
     set_screen_scissor (pScrn, ib, 0, 0, 8192, 8192);
     EREG(ib, PA_SC_WINDOW_OFFSET,                 ((0 << WINDOW_X_OFFSET_shift) |
@@ -978,7 +950,7 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     EREG(ib, PA_SC_AA_CONFIG,                     0);
     EREG(ib, PA_SC_AA_MASK,                       0xFFFFFFFF);
 
-    //XXX: double check this
+    /* XXX: double check this */
     if (rhdPtr->ChipSet > RHD_R600) {
 	EREG(ib, PA_SC_AA_SAMPLE_LOCS_MCTX,       0);
 	EREG(ib, PA_SC_AA_SAMPLE_LOCS_8S_WD1_M,   0);
@@ -987,30 +959,30 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     EREG(ib, PA_SC_LINE_STIPPLE,                  0);
     EREG(ib, PA_SC_MPASS_PS_CNTL,                 0);
 
-    // CL
+    /* CL */
     PACK0(ib, PA_CL_VPORT_XSCALE_0, 6);
-    EFLOAT(ib, 0.0f);						// PA_CL_VPORT_XSCALE
-    EFLOAT(ib, 0.0f);						// PA_CL_VPORT_XOFFSET
-    EFLOAT(ib, 0.0f);						// PA_CL_VPORT_YSCALE
-    EFLOAT(ib, 0.0f);						// PA_CL_VPORT_YOFFSET
-    EFLOAT(ib, 0.0f);						// PA_CL_VPORT_ZSCALE
-    EFLOAT(ib, 0.0f);						// PA_CL_VPORT_ZOFFSET
+    EFLOAT(ib, 0.0f);						/* PA_CL_VPORT_XSCALE */
+    EFLOAT(ib, 0.0f);						/* PA_CL_VPORT_XOFFSET */
+    EFLOAT(ib, 0.0f);						/* PA_CL_VPORT_YSCALE */
+    EFLOAT(ib, 0.0f);						/* PA_CL_VPORT_YOFFSET */
+    EFLOAT(ib, 0.0f);						/* PA_CL_VPORT_ZSCALE */
+    EFLOAT(ib, 0.0f);						/* PA_CL_VPORT_ZOFFSET */
     EREG(ib, PA_CL_CLIP_CNTL,                     (CLIP_DISABLE_bit | DX_CLIP_SPACE_DEF_bit));
     EREG(ib, PA_CL_VTE_CNTL,                      0);
     EREG(ib, PA_CL_VS_OUT_CNTL,                   0);
     EREG(ib, PA_CL_NANINF_CNTL,                   0);
     PACK0(ib, PA_CL_GB_VERT_CLIP_ADJ, 4);
-    EFLOAT(ib, 1.0);						// PA_CL_GB_VERT_CLIP_ADJ
-    EFLOAT(ib, 1.0);						// PA_CL_GB_VERT_DISC_ADJ
-    EFLOAT(ib, 1.0);						// PA_CL_GB_HORZ_CLIP_ADJ
-    EFLOAT(ib, 1.0);						// PA_CL_GB_HORZ_DISC_ADJ
+    EFLOAT(ib, 1.0);						/* PA_CL_GB_VERT_CLIP_ADJ */
+    EFLOAT(ib, 1.0);						/* PA_CL_GB_VERT_DISC_ADJ */
+    EFLOAT(ib, 1.0);						/* PA_CL_GB_HORZ_CLIP_ADJ */
+    EFLOAT(ib, 1.0);						/* PA_CL_GB_HORZ_DISC_ADJ */
 
     /* user clipping planes are disabled by default */
     PACK0(ib, PA_CL_UCP_0_X, 24);
     for (i = 0; i < 24; i++)
 	EFLOAT(ib, 0.0);
 
-    // SU
+    /* SU */
     EREG(ib, PA_SU_SC_MODE_CNTL,                  FACE_bit);
     EREG(ib, PA_SU_POINT_SIZE,                    0);
     EREG(ib, PA_SU_POINT_MINMAX,                  0);
@@ -1021,11 +993,11 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     EREG(ib, PA_SU_POLY_OFFSET_FRONT_OFFSET,      0);
 
     EREG(ib, PA_SU_LINE_CNTL,                     (8 << PA_SU_LINE_CNTL__WIDTH_shift)); /* Line width 1 pixel */
-    EREG(ib, PA_SU_VTX_CNTL,                      ((2 << PA_SU_VTX_CNTL__ROUND_MODE_shift) |
+    EREG(ib, PA_SU_VTX_CNTL,                      ((2 << PA_SU_VTX_CNTL__ROUND_MODE_shift) | PIX_CENTER_bit |
 						   (5 << QUANT_MODE_shift))); /* Round to Even, fixed point 1/256 */
     EREG(ib, PA_SU_POLY_OFFSET_CLAMP,             0);
 
-    // SPI
+    /* SPI */
     if (rhdPtr->ChipSet < RHD_RV770)
 	EREG(ib, R7xx_SPI_THREAD_GROUPING,        0);
     else
@@ -1045,10 +1017,10 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
 	E32(ib, 0x03020100 + i*0x04040404);
     EREG(ib, SPI_VS_OUT_CONFIG,                   0);
 
-    // clear FS
+    /* clear FS */
     fs_setup(pScrn, ib, &fs_conf);
 
-    // VGT
+    /* VGT */
     EREG(ib, VGT_MAX_VTX_INDX,                    2048); /* XXX set to a reasonably large number of indices */
     EREG(ib, VGT_MIN_VTX_INDX,                    0);
     EREG(ib, VGT_INDX_OFFSET,                     0);
@@ -1076,19 +1048,19 @@ set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     EREG(ib, VGT_VTX_CNT_EN,                      0);
     EREG(ib, VGT_STRMOUT_BUFFER_EN,               0);
 
-    // clear tex resources - PS
+    /* clear tex resources - PS */
     for (i = 0; i < 16; i++) {
 	tex_res.id = i;
 	set_tex_resource(pScrn, ib, &tex_res);
     }
 
-    // clear tex resources - VS
+    /* clear tex resources - VS */
     for (i = 160; i < 164; i++) {
 	tex_res.id = i;
 	set_tex_resource(pScrn, ib, &tex_res);
     }
 
-    // clear tex resources - FS
+    /* clear tex resources - FS */
     for (i = 320; i < 335; i++) {
 	tex_res.id = i;
 	set_tex_resource(pScrn, ib, &tex_res);
@@ -1105,7 +1077,6 @@ void
 draw_immd(ScrnInfoPtr pScrn, drmBufPtr ib, draw_config_t *draw_conf, uint32_t *indices)
 {
     uint32_t i, count;
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
 
     EREG(ib, VGT_PRIMITIVE_TYPE, draw_conf->prim_type);
     PACK3(ib, IT_INDEX_TYPE, 1);
@@ -1113,7 +1084,7 @@ draw_immd(ScrnInfoPtr pScrn, drmBufPtr ib, draw_config_t *draw_conf, uint32_t *i
     PACK3(ib, IT_NUM_INSTANCES, 1);
     E32(ib, draw_conf->num_instances);
 
-    // calculate num of packets
+    /* calculate num of packets */
     count = 2;
     if (draw_conf->index_type == DI_INDEX_SIZE_16_BIT)
 	count += (draw_conf->num_indices + 1) / 2;
@@ -1140,8 +1111,6 @@ draw_immd(ScrnInfoPtr pScrn, drmBufPtr ib, draw_config_t *draw_conf, uint32_t *i
 void
 draw_auto(ScrnInfoPtr pScrn, drmBufPtr ib, draw_config_t *draw_conf)
 {
-//    RHDPtr rhdPtr = RHDPTR(pScrn);
-
     EREG(ib, VGT_PRIMITIVE_TYPE, draw_conf->prim_type);
     PACK3(ib, IT_INDEX_TYPE, 1);
     E32(ib, draw_conf->index_type);

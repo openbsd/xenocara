@@ -229,22 +229,16 @@ HdmiAudioInfoFrame(
 }
 
 /*
- * it's unknown what these bits do excatly, but it's indeed quite usefull for debugging
+ * test if audio buffer is filled enough to start playing
  */
-static void
-HdmiAudioDebugWorkaround(struct rhdHdmi* hdmi, Bool Enable)
+static Bool
+IsAudioBufferFilled(struct rhdHdmi *hdmi)
 {
-    if(Enable) {
-	RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x1000, 0x1000);
-	RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG, 0xffffff);
-    } else {
-	RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0, 0x1000);
-    }
+    return (RHDRegRead(hdmi, hdmi->Offset+HDMI_STATUS) & 0x10) != 0;
 }
 
 /*
  * allocate/initialize the HDMI structure
- * and register with audio engine
  * output selects which engine is used
  */
 struct rhdHdmi*
@@ -253,17 +247,21 @@ RHDHdmiInit(RHDPtr rhdPtr, struct rhdOutput* Output)
     struct rhdHdmi *hdmi;
     RHDFUNC(rhdPtr);
 
-    if(rhdPtr->ChipSet >= RHD_R600) {
+    if(rhdPtr->ChipSet >= RHD_RS600) {
 	hdmi = (struct rhdHdmi *) xnfcalloc(sizeof(struct rhdHdmi), 1);
 	hdmi->scrnIndex = rhdPtr->scrnIndex;
 	hdmi->Output = Output;
+
 	switch(Output->Id) {
 	    case RHD_OUTPUT_TMDSA:
 		hdmi->Offset = HDMI_TMDS;
 		break;
 
 	    case RHD_OUTPUT_LVTMA:
-		hdmi->Offset = HDMI_LVTMA;
+		if(RHDOutputTmdsIndex(Output) == 0)
+		    hdmi->Offset = HDMI_TMDS;
+		else
+		    hdmi->Offset = HDMI_LVTMA;
 		break;
 
 	    case RHD_OUTPUT_UNIPHYA:
@@ -283,7 +281,6 @@ RHDHdmiInit(RHDPtr rhdPtr, struct rhdOutput* Output)
 		break;
 	}
 	hdmi->Stored = FALSE;
-	RHDAudioRegisterHdmi(rhdPtr, hdmi);
 	return hdmi;
     } else
 	return NULL;
@@ -300,8 +297,6 @@ RHDHdmiSetMode(struct rhdHdmi *hdmi, DisplayModePtr Mode)
 
     RHDAudioSetClock(RHDPTRI(hdmi), hdmi->Output, Mode->Clock);
 
-    HdmiAudioDebugWorkaround(hdmi, FALSE);
-
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_UNKNOWN_0, 0x1000);
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_UNKNOWN_1, 0x0);
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_UNKNOWN_2, 0x1000);
@@ -309,25 +304,51 @@ RHDHdmiSetMode(struct rhdHdmi *hdmi, DisplayModePtr Mode)
     HdmiAudioClockRegeneration(hdmi, Mode->Clock);
 
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_VIDEOCNTL, 0x13);
+
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_VERSION, 0x202);
 
     HdmiVideoInfoFrame(hdmi, RGB, FALSE, 0, 0, 0,
 	0, 0, FALSE, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
+    /* it's unknown what these bits do excatly, but it's indeed quite usefull for debugging */
+    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_0, 0x00FFFFFF);
+    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_1, 0x007FFFFF);
+    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_2, 0x00000001);
+    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_3, 0x00000001);
+
+    RHDHdmiCommitAudioWorkaround(hdmi);
+
     /* audio packets per line, does anyone know how to calc this ? */
-    RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x020000, 0x1F0000);
+    RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x00040000, 0x001F0000);
 
     /* update? reset? don't realy know */
     RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x14000000, 0x14000000);
 }
 
 /*
- * update settings whith current parameters from audio engine
+ * have buffer status changed since last call?
+ */
+Bool
+RHDHdmiBufferStatusChanged(struct rhdHdmi* hdmi)
+{
+    Bool status, result;
+
+    if(!hdmi) return FALSE;
+    RHDFUNC(hdmi);
+
+    status = IsAudioBufferFilled(hdmi);
+    result = hdmi->SavedBufferStatus != status;
+    hdmi->SavedBufferStatus = status;
+
+    return result;
+}
+
+/*
+ * update settings with current parameters from audio engine
  */
 void
 RHDHdmiUpdateAudioSettings(
     struct rhdHdmi* hdmi,
-    Bool playing,
     int channels,
     int rate,
     int bps,
@@ -342,13 +363,11 @@ RHDHdmiUpdateAudioSettings(
 
     xf86DrvMsg(hdmi->scrnIndex, X_INFO, "%s: %s with "
 	"%d channels, %d Hz sampling rate, %d bits per sample,\n",
-	 __func__, playing ? "playing" : "stoped", channels, rate, bps);
+	__func__, IsAudioBufferFilled(hdmi) ? "playing" : "stopped",
+	channels, rate, bps);
     xf86DrvMsg(hdmi->scrnIndex, X_INFO, "%s: "
 	"0x%02x IEC60958 status bits and 0x%02x category code\n",
-	 __func__, (int)status_bits, (int)category_code);
-
-    /* start delivering audio frames */
-    RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, playing ? 1 : 0, 0x1);
+	__func__, (int)status_bits, (int)category_code);
 
     iec = 0;
     if(status_bits & AUDIO_STATUS_PROFESSIONAL)	iec |= 1 << 0;
@@ -382,14 +401,19 @@ RHDHdmiUpdateAudioSettings(
 
     RHDRegMask(hdmi, hdmi->Offset+HDMI_IEC60958_2, iec, 0x5000f);
 
+    /* 0x021 or 0x031 sets the audio frame length */
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIOCNTL, 0x31);
     HdmiAudioInfoFrame(hdmi, channels-1, 0, 0, 0, 0, 0, 0, FALSE);
 
-    RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x400000, 0x400000);
+    RHDHdmiCommitAudioWorkaround(hdmi);
+
+    /* update? reset? don't realy know */
+    RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x04000000, 0x04000000);
 }
 
 /*
  * enable/disable the HDMI engine
+ * and register with audio engine
  */
 void
 RHDHdmiEnable(struct rhdHdmi *hdmi, Bool Enable)
@@ -401,24 +425,76 @@ RHDHdmiEnable(struct rhdHdmi *hdmi, Bool Enable)
      * so enabling/disabling HDMI was moved here for TMDSA and LVTMA */
     switch(hdmi->Output->Id) {
 	case RHD_OUTPUT_TMDSA:
-	     RHDRegMask(hdmi, TMDSA_CNTL, Enable ? 0x4 : 0x0, 0x4);
-	     RHDRegWrite(hdmi, hdmi->Offset+HDMI_ENABLE, Enable ? 0x101 : 0x0);
-	     break;
+	    RHDRegMask(hdmi, TMDSA_CNTL, Enable ? 0x4 : 0x0, 0x4);
+	    RHDRegWrite(hdmi, hdmi->Offset+HDMI_ENABLE, Enable ? 0x101 : 0x0);
+	    break;
 
 	case RHD_OUTPUT_LVTMA:
-	     RHDRegMask(hdmi, LVTMA_CNTL, Enable ? 0x4 : 0x0, 0x4);
-	     RHDRegWrite(hdmi, hdmi->Offset+HDMI_ENABLE, Enable ? 0x105 : 0x0);
-	     break;
+	    RHDRegMask(hdmi, LVTMA_CNTL, Enable ? 0x4 : 0x0, 0x4);
+	    RHDRegWrite(hdmi, hdmi->Offset+HDMI_ENABLE, Enable ? 0x105 : 0x0);
+	    break;
 
 	case RHD_OUTPUT_UNIPHYA:
 	case RHD_OUTPUT_UNIPHYB:
 	case RHD_OUTPUT_KLDSKP_LVTMA:
+	    /* This part is doubtfull in my opinion */
 	    RHDRegWrite(hdmi, hdmi->Offset+HDMI_ENABLE, Enable ? 0x110 : 0x0);
 	    break;
 
 	default:
 	    xf86DrvMsg(hdmi->scrnIndex, X_ERROR, "%s: unknown HDMI output type\n", __func__);
 	    break;
+    }
+    if(Enable)
+	RHDAudioRegisterHdmi(RHDPTRI(hdmi), hdmi);
+    else
+	RHDAudioUnregisterHdmi(RHDPTRI(hdmi), hdmi);
+}
+
+/*
+ * enable/disable the audio workaround function
+ */
+void
+RHDHdmiSetAudioWorkaround(struct rhdHdmi* hdmi, Bool Enable)
+{
+    if(!hdmi) return;
+    RHDFUNC(hdmi);
+
+    hdmi->AudioDebugWorkaround = Enable;
+}
+
+/*
+ * get status of the audio workaround function
+ */
+Bool
+RHDHdmiGetAudioWorkaround(struct rhdHdmi* hdmi)
+{
+    if(!hdmi) return FALSE;
+    RHDFUNC(hdmi);
+
+    return hdmi->AudioDebugWorkaround;
+}
+
+/*
+ * commit the audio workaround status to the hardware
+ */
+void
+RHDHdmiCommitAudioWorkaround(struct rhdHdmi* hdmi)
+{
+    if(!hdmi) return;
+    RHDFUNC(hdmi);
+
+    if(IsAudioBufferFilled(hdmi)) {
+	/* disable audio workaround and start delivering of audio frames */
+	RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x00000001, 0x00001001);
+
+    } else if(hdmi->AudioDebugWorkaround) {
+	/* enable audio workaround and start delivering of audio frames */
+	RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x00001001, 0x00001001);
+
+    } else {
+	/* disable audio workaround and stop delivering of audio frames */
+	RHDRegMask(hdmi, hdmi->Offset+HDMI_CNTL, 0x00000000, 0x00001001);
     }
 }
 
@@ -433,7 +509,10 @@ RHDHdmiSave(struct rhdHdmi *hdmi)
 
     hdmi->StoreEnable = RHDRegRead(hdmi, hdmi->Offset+HDMI_ENABLE);
     hdmi->StoreControl = RHDRegRead(hdmi, hdmi->Offset+HDMI_CNTL);
-    hdmi->StoredAudioDebugWorkaround = RHDRegRead(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG);
+    hdmi->StoredAudioDebugWorkaround[0x0] = RHDRegRead(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_0);
+    hdmi->StoredAudioDebugWorkaround[0x1] = RHDRegRead(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_1);
+    hdmi->StoredAudioDebugWorkaround[0x2] = RHDRegRead(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_2);
+    hdmi->StoredAudioDebugWorkaround[0x3] = RHDRegRead(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_3);
 
     hdmi->StoredFrameVersion = RHDRegRead(hdmi, hdmi->Offset+HDMI_VERSION);
 
@@ -483,7 +562,10 @@ RHDHdmiRestore(struct rhdHdmi *hdmi)
 
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_ENABLE, hdmi->StoreEnable);
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_CNTL, hdmi->StoreControl);
-    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG, hdmi->StoredAudioDebugWorkaround);
+    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_0, hdmi->StoredAudioDebugWorkaround[0x0]);
+    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_1, hdmi->StoredAudioDebugWorkaround[0x1]);
+    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_2, hdmi->StoredAudioDebugWorkaround[0x2]);
+    RHDRegWrite(hdmi, hdmi->Offset+HDMI_AUDIO_DEBUG_3, hdmi->StoredAudioDebugWorkaround[0x3]);
 
     RHDRegWrite(hdmi, hdmi->Offset+HDMI_VERSION, hdmi->StoredFrameVersion);
 

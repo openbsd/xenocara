@@ -79,6 +79,7 @@ R600DoneTexturedVideo(ScrnInfoPtr pScrn)
 	(rhdPtr->ChipSet == RHD_M74) ||
 	(rhdPtr->ChipSet == RHD_M82) ||
 	(rhdPtr->ChipSet == RHD_RS780) ||
+	(rhdPtr->ChipSet == RHD_RS880) ||
 	(rhdPtr->ChipSet == RHD_RV710))
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit,
 			    accel_state->vb_size, accel_state->vb_mc_addr);
@@ -126,18 +127,44 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
     shader_config_t vs_conf, ps_conf;
     int uv_offset;
 
-    static float ps_alu_consts[] = {
-        1.0,  0.0,      1.4020,    0,  // r - c[0]
-        1.0, -0.34414, -0.71414,  0,  // g - c[1]
-        1.0,  1.7720,   0.0,        0,  // b - c[2]
+    /* Constants for Rec.709 */
+    static float ps_alu_consts_rec709[] = {
+	1.0,  0.0,      1.5748,   0,  /* r - c[0] */
+	1.0, -0.18732, -0.46812,  0,  /* g - c[1] */
+	1.0,  1.8556,   0.0,      0,  /* b - c[2] */
 	/* Constants for undoing Y'CbCr scaling
 	 *  - Y' is scaled from 16:235
 	 *  - Cb/Cr are scaled from 16:240
 	 * Unscaled value N' = N * N_mul + N_shift (N' in range [-0.5, 0.5])
 	 * Vector is [Y_mul, Y_shfit, C_mul, C_shift]
 	 */
-        256.0/219.0, -16.0/219.0, 256.0/224.0, -128.0/224.0,
+	255.0/219.0, -16.0/219.0, 255.0/224.0, -128.0/224.0,
     };
+
+    /* Constants for Rec.601
+     * Same structure as above */
+    static float ps_alu_consts_rec601[] = {
+        1.0,  0.0,      1.4020,   0,  /* r - c[0] */
+        1.0, -0.34414, -0.71414,  0,  /* g - c[1] */
+        1.0,  1.7720,   0.0,      0,  /* b - c[2] */
+        255.0/219.0, -16.0/219.0, 255.0/224.0, -128.0/224.0,
+    };
+
+    float *ps_alu_consts;
+
+    /* Pick Y'CbCr color space to use
+     * For video with _encoded_ width of 928 or above, choose Rec. 709. This should cover
+     * 720p and 1080i/p, as well as most videos with non-standard resolutions that most likely
+     * came from such a source.
+     * The exact value of the cutoff is aribrary as there is no standarization of resolution
+     * between "EDTV" and 720p HD content.
+     * */
+    if ((pPriv->color_space == RHD_XV_COLOR_SPACE_REC709) ||
+        (pPriv->color_space == RHD_XV_COLOR_SPACE_AUTODETECT && pPriv->src_w >= 928)) {
+        ps_alu_consts = ps_alu_consts_rec709;
+    } else {
+        ps_alu_consts = ps_alu_consts_rec601;
+    }
 
     CLEAR (cb_conf);
     CLEAR (tex_res);
@@ -148,7 +175,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
     accel_state->dst_pitch = exaGetPixmapPitch(pPixmap) / (pPixmap->drawable.bitsPerPixel / 8);
     accel_state->src_pitch[0] = pPriv->BufferPitch;
 
-    // bad pitch
+    /* bad pitch */
     if (accel_state->src_pitch[0] & 7)
 	return;
     if (accel_state->dst_pitch & 7)
@@ -167,7 +194,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
     /* Init */
     start_3d(pScrn, accel_state->ib);
 
-    //cp_set_surface_sync(pScrn, accel_state->ib);
+    /* cp_set_surface_sync(pScrn, accel_state->ib); */
 
     set_default_state(pScrn, accel_state->ib);
 
@@ -219,8 +246,8 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
     ps_conf.export_mode         = 2;
     ps_setup                    (pScrn, accel_state->ib, &ps_conf);
 
-    // PS alu constants
-    set_alu_consts(pScrn, accel_state->ib, 0, sizeof(ps_alu_consts) / SQ_ALU_CONSTANT_offset, ps_alu_consts);
+    /* PS alu constants */
+    set_alu_consts(pScrn, accel_state->ib, 0, sizeof(ps_alu_consts_rec709) / SQ_ALU_CONSTANT_offset, ps_alu_consts);
 
     /* Texture */
     switch(pPriv->id) {
@@ -233,7 +260,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit, accel_state->src_size[0],
 			    accel_state->src_mc_addr[0]);
 
-	// Y texture
+	/* Y texture */
 	tex_res.id                  = 0;
 	tex_res.w                   = pPriv->w;
 	tex_res.h                   = pPriv->h;
@@ -244,7 +271,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	tex_res.mip_base            = accel_state->src_mc_addr[0];
 
 	tex_res.format              = FMT_8;
-	tex_res.dst_sel_x           = SQ_SEL_X; //Y
+	tex_res.dst_sel_x           = SQ_SEL_X; /* Y */
 	tex_res.dst_sel_y           = SQ_SEL_1;
 	tex_res.dst_sel_z           = SQ_SEL_1;
 	tex_res.dst_sel_w           = SQ_SEL_1;
@@ -256,14 +283,14 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	tex_res.interlaced          = 0;
 	set_tex_resource            (pScrn, accel_state->ib, &tex_res);
 
-	// Y sampler
+	/* Y sampler */
 	tex_samp.id                 = 0;
 	tex_samp.clamp_x            = SQ_TEX_CLAMP_LAST_TEXEL;
 	tex_samp.clamp_y            = SQ_TEX_CLAMP_LAST_TEXEL;
 	tex_samp.clamp_z            = SQ_TEX_WRAP;
 
 
-	// UV texture
+	/* UV texture */
 	uv_offset = accel_state->src_pitch[0] * pPriv->h;
 	uv_offset = (uv_offset + 255) & ~255;
 
@@ -276,17 +303,17 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	tex_res.w                   = pPriv->w >> 1;
 	tex_res.h                   = pPriv->h >> 1;
 	tex_res.pitch               = accel_state->src_pitch[0] >> 1;
-	tex_res.dst_sel_x           = SQ_SEL_X; //V or U
+	tex_res.dst_sel_x           = SQ_SEL_X; /* V or U */
 	tex_res.dst_sel_y           = SQ_SEL_1;
 	tex_res.dst_sel_z           = SQ_SEL_1;
 	tex_res.dst_sel_w           = SQ_SEL_1;
 	tex_res.interlaced          = 0;
-	// XXX tex bases need to be 256B aligned
+	/* XXX tex bases need to be 256B aligned */
 	tex_res.base                = accel_state->src_mc_addr[0] + uv_offset;
 	tex_res.mip_base            = accel_state->src_mc_addr[0] + uv_offset;
 	set_tex_resource            (pScrn, accel_state->ib, &tex_res);
 
-	// xxx: switch to bicubic
+	/* xxx: switch to bicubic */
 	tex_samp.xy_mag_filter      = SQ_TEX_XY_FILTER_BILINEAR;
 	tex_samp.xy_min_filter      = SQ_TEX_XY_FILTER_BILINEAR;
 
@@ -294,11 +321,11 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	tex_samp.mip_filter         = 0;			/* no mipmap */
 	set_tex_sampler             (pScrn, accel_state->ib, &tex_samp);
 
-	// UV sampler
+	/* UV sampler */
 	tex_samp.id                 = 1;
 	set_tex_sampler             (pScrn, accel_state->ib, &tex_samp);
 
-	// UV texture
+	/* UV texture */
 	uv_offset += ((accel_state->src_pitch[0] >> 1) * (pPriv->h >> 1));
 	uv_offset = (uv_offset + 255) & ~255;
 
@@ -311,17 +338,17 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	tex_res.w                   = pPriv->w >> 1;
 	tex_res.h                   = pPriv->h >> 1;
 	tex_res.pitch               = accel_state->src_pitch[0] >> 1;
-	tex_res.dst_sel_x           = SQ_SEL_X; //V or U
+	tex_res.dst_sel_x           = SQ_SEL_X; /* V or U */
 	tex_res.dst_sel_y           = SQ_SEL_1;
 	tex_res.dst_sel_z           = SQ_SEL_1;
 	tex_res.dst_sel_w           = SQ_SEL_1;
 	tex_res.interlaced          = 0;
-	// XXX tex bases need to be 256B aligned
+	/* XXX tex bases need to be 256B aligned */
 	tex_res.base                = accel_state->src_mc_addr[0] + uv_offset;
 	tex_res.mip_base            = accel_state->src_mc_addr[0] + uv_offset;
 	set_tex_resource            (pScrn, accel_state->ib, &tex_res);
 
-	// xxx: switch to bicubic
+	/* xxx: switch to bicubic */
 	tex_samp.xy_mag_filter      = SQ_TEX_XY_FILTER_BILINEAR;
 	tex_samp.xy_min_filter      = SQ_TEX_XY_FILTER_BILINEAR;
 
@@ -329,7 +356,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	tex_samp.mip_filter         = 0;			/* no mipmap */
 	set_tex_sampler             (pScrn, accel_state->ib, &tex_samp);
 
-	// UV sampler
+	/* UV sampler */
 	tex_samp.id                 = 2;
 	set_tex_sampler             (pScrn, accel_state->ib, &tex_samp);
 	break;
@@ -343,7 +370,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit, accel_state->src_size[0],
 			    accel_state->src_mc_addr[0]);
 
-	// Y texture
+	/* Y texture */
 	tex_res.id                  = 0;
 	tex_res.w                   = pPriv->w;
 	tex_res.h                   = pPriv->h;
@@ -355,9 +382,9 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 
 	tex_res.format              = FMT_8_8;
 	if (pPriv->id == FOURCC_UYVY)
-	    tex_res.dst_sel_x           = SQ_SEL_Y; //Y
+	    tex_res.dst_sel_x           = SQ_SEL_Y; /* Y */
 	else
-	    tex_res.dst_sel_x           = SQ_SEL_X; //Y
+	    tex_res.dst_sel_x           = SQ_SEL_X; /* Y */
 	tex_res.dst_sel_y           = SQ_SEL_1;
 	tex_res.dst_sel_z           = SQ_SEL_1;
 	tex_res.dst_sel_w           = SQ_SEL_1;
@@ -369,35 +396,35 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	tex_res.interlaced          = 0;
 	set_tex_resource            (pScrn, accel_state->ib, &tex_res);
 
-	// Y sampler
+	/* Y sampler */
 	tex_samp.id                 = 0;
 	tex_samp.clamp_x            = SQ_TEX_CLAMP_LAST_TEXEL;
 	tex_samp.clamp_y            = SQ_TEX_CLAMP_LAST_TEXEL;
 	tex_samp.clamp_z            = SQ_TEX_WRAP;
 
 
-	// UV texture
+	/* UV texture */
 	tex_res.id                  = 1;
 	tex_res.format              = FMT_8_8_8_8;
 	tex_res.w                   = pPriv->w >> 1;
 	tex_res.h                   = pPriv->h;
 	tex_res.pitch               = accel_state->src_pitch[0] >> 2;
 	if (pPriv->id == FOURCC_UYVY) {
-	    tex_res.dst_sel_x = SQ_SEL_X; //V
-	    tex_res.dst_sel_y = SQ_SEL_Z; //U
+	    tex_res.dst_sel_x = SQ_SEL_X; /* V */
+	    tex_res.dst_sel_y = SQ_SEL_Z; /* U */
 	} else {
-	    tex_res.dst_sel_x = SQ_SEL_Y; //V
-	    tex_res.dst_sel_y = SQ_SEL_W; //U
+	    tex_res.dst_sel_x = SQ_SEL_Y; /* V */
+	    tex_res.dst_sel_y = SQ_SEL_W; /* U */
 	}
 	tex_res.dst_sel_z           = SQ_SEL_1;
 	tex_res.dst_sel_w           = SQ_SEL_1;
 	tex_res.interlaced          = 0;
-	// XXX tex bases need to be 256B aligned
+	/* XXX tex bases need to be 256B aligned */
 	tex_res.base                = accel_state->src_mc_addr[0];
 	tex_res.mip_base            = accel_state->src_mc_addr[0];
 	set_tex_resource            (pScrn, accel_state->ib, &tex_res);
 
-	// xxx: switch to bicubic
+	/* xxx: switch to bicubic */
 	tex_samp.xy_mag_filter      = SQ_TEX_XY_FILTER_BILINEAR;
 	tex_samp.xy_min_filter      = SQ_TEX_XY_FILTER_BILINEAR;
 
@@ -405,7 +432,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 	tex_samp.mip_filter         = 0;			/* no mipmap */
 	set_tex_sampler             (pScrn, accel_state->ib, &tex_samp);
 
-	// UV sampler
+	/* UV sampler */
 	tex_samp.id                 = 1;
 	set_tex_sampler             (pScrn, accel_state->ib, &tex_samp);
 	break;
@@ -428,15 +455,15 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
     case 16:
 	if (pPixmap->drawable.depth == 15) {
 	    cb_conf.format = COLOR_1_5_5_5;
-	    cb_conf.comp_swap = 1; //ARGB
+	    cb_conf.comp_swap = 1; /* ARGB */
 	} else {
 	    cb_conf.format = COLOR_5_6_5;
-	    cb_conf.comp_swap = 2; //RGB
+	    cb_conf.comp_swap = 2; /* RGB */
 	}
 	break;
     case 32:
 	cb_conf.format = COLOR_8_8_8_8;
-	cb_conf.comp_swap = 1; //ARGB
+	cb_conf.comp_swap = 1; /* ARGB */
 	break;
     default:
 	return;
@@ -453,7 +480,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv)
 								DUAL_EXPORT_ENABLE_bit)); /* Only useful if no depth export */
 
     /* Interpolator setup */
-    // export tex coords from VS
+    /* export tex coords from VS */
     EREG(accel_state->ib, SPI_VS_OUT_CONFIG, ((1 - 1) << VS_EXPORT_COUNT_shift));
     EREG(accel_state->ib, SPI_VS_OUT_ID_0, (0 << SEMANTIC_0_shift));
 

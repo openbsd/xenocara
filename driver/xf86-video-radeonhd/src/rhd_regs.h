@@ -31,13 +31,19 @@ enum {
     BUS_CNTL		  =       0x4C, /* (RW) */
     MC_IND_INDEX	  =       0x70, /* (RW) */
     MC_IND_DATA           =       0x74, /* (RW) */
+    RS600_MC_INDEX	  =	  0x70,
+    RS600_MC_DATA	  =	  0x74,
+    RS690_MC_INDEX	  =	  0x78,
+    RS690_MC_DATA	  =	  0x7c,
+    RS780_MC_INDEX	  =	  0x28f8,
+    RS780_MC_DATA	  =	  0x28fc,
+
+    RS60_MC_NB_MC_INDEX	  =	  0x78,
+    RS60_MC_NB_MC_DATA	  =	  0x7C,
     CONFIG_CNTL		  =	  0xE0,
-    /* RS690 ?? */
-    RS60_MC_NB_MC_INDEX		  =	  0x78,
-    RS60_MC_NB_MC_DATA		  =	  0x7C,
-    RS69_MC_INDEX		  =	  0xE8,
-    RS69_MC_DATA		  =	  0xEC,
-    R5XX_CONFIG_MEMSIZE            = 0x00F8,
+    PCIE_RS69_MC_INDEX	  =	  0xE8,
+    PCIE_RS69_MC_DATA	  =	  0xEC,
+    R5XX_CONFIG_MEMSIZE	  =	  0x00F8,
 
     HDP_FB_LOCATION       =	  0x0134,
 
@@ -106,8 +112,6 @@ enum {
     AUDIO_CLK_SRCSEL		   = 0x0534,
 
     DCCG_DISP_CLK_SRCSEL           = 0x0538, /* rv620+ */
-
-    SRBM_STATUS                    = 0x0E50,
 
     AGP_STATUS                     = 0x0F5C,
 
@@ -512,7 +516,7 @@ enum RV620_EXT1_DIFF_POST_DIV_CNTL_BITS {
 enum RV620_EXT2_DIFF_POST_DIV_CNTL_BITS {
     RV62_EXT2_DIFF_POST_DIV_RESET = 1 << 0,
     RV62_EXT2_DIFF_POST_DIV_SELECT = 1 << 4,
-    RV62_EXT2_DIFF_DRIVER_ENABLE = 1 << 8
+    RV62_EXT2_DIFF_DRIVER_ENABLE = 3 << 8
 };
 
 enum RV620_LVTMA_PWRSEQ_CNTL_BITS {
@@ -817,8 +821,8 @@ enum RS69_DDIA_PCIE_LINK_CONTROL3_BITS {
 };
 
 enum RS69_MC_INDEX_BITS {
-    RS69_MC_IND_ADDR = (0x1 << 0),
-    RS69_MC_IND_WR_EN = (0x1 << 9)
+    PCIE_RS69_MC_IND_ADDR = (0x1 << 0),
+    PCIE_RS69_MC_IND_WR_EN = (0x1 << 9)
 };
 
 enum RS60_MC_NB_MC_INDEX_BITS {
@@ -868,22 +872,45 @@ enum _rs600MCRegs {
     RS60_NB_FB_LOCATION		=	0xa
 };
 
+enum RS600_MC_INDEX_BITS {
+    RS600_MC_INDEX_ADDR_MASK	 = 0xffff,
+    RS600_MC_INDEX_SEQ_RBS_0	 = (1 << 16),
+    RS600_MC_INDEX_SEQ_RBS_1	 = (1 << 17),
+    RS600_MC_INDEX_SEQ_RBS_2	 = (1 << 18),
+    RS600_MC_INDEX_SEQ_RBS_3	 = (1 << 19),
+    RS600_MC_INDEX_AIC_RBS	 = (1 << 20),
+    RS600_MC_INDEX_CITF_ARB0	 = (1 << 21),
+    RS600_MC_INDEX_CITF_ARB1	 = (1 << 22),
+    RS600_MC_INDEX_WR_EN	 = (1 << 23)
+};
+
+enum RS690_MC_INDEX_BITS {
+    RS690_MC_INDEX_ADDR_MASK	 = 0x1ff,
+    RS690_MC_INDEX_WR_EN	 = (1 << 9),
+    RS690_MC_INDEX_WR_ACK	 = 0x7f
+};
+
+enum RS780_MC_INDEX_BITS {
+    RS780_MC_INDEX_ADDR_MASK	 = 0x1ff,
+    RS780_MC_INDEX_WR_EN	 = (1 << 9)
+};
+
 enum _rs780NBRegs {
-    RS78_NB_MC_IND_INDEX	= 0x70,
-    RS78_NB_MC_IND_DATA         = 0x74
+    PCIE_RS78_NB_MC_IND_INDEX	= 0x70,
+    PCIE_RS78_NB_MC_IND_DATA         = 0x74
 };
 
 enum RS78_NB_IND_INDEX_BITS {
-    RS78_NB_MC_IND_INDEX_MASK = (0xffff << 0),
-    RS78_MC_IND_SEQ_RBS_0     = (0x1 << 16),
-    RS78_MC_IND_SEQ_RBS_1     = (0x1 << 17),
-    RS78_MC_IND_SEQ_RBS_2     = (0x1 << 18),
-    RS78_MC_IND_SEQ_RBS_3     = (0x1 << 19),
-    RS78_MC_IND_AIC_RBS       = (0x1 << 20),
-    RS78_MC_IND_CITF_ARB0     = (0x1 << 21),
-    RS78_MC_IND_CITF_ARB1     = (0x1 << 22),
-    RS78_MC_IND_WR_EN         = (0x1 << 23),
-    RS78_MC_IND_RD_INV        = (0x1 << 24)
+    PCIE_RS78_NB_MC_IND_INDEX_MASK = (0xffff << 0),
+    PCIE_RS78_MC_IND_SEQ_RBS_0     = (0x1 << 16),
+    PCIE_RS78_MC_IND_SEQ_RBS_1     = (0x1 << 17),
+    PCIE_RS78_MC_IND_SEQ_RBS_2     = (0x1 << 18),
+    PCIE_RS78_MC_IND_SEQ_RBS_3     = (0x1 << 19),
+    PCIE_RS78_MC_IND_AIC_RBS       = (0x1 << 20),
+    PCIE_RS78_MC_IND_CITF_ARB0     = (0x1 << 21),
+    PCIE_RS78_MC_IND_CITF_ARB1     = (0x1 << 22),
+    PCIE_RS78_MC_IND_WR_EN         = (0x1 << 23),
+    PCIE_RS78_MC_IND_RD_INV        = (0x1 << 24)
 };
 
 enum _rs780MCRegs {
@@ -1092,6 +1119,7 @@ enum AGP_STATUS_BITS {
 enum {
     /* HDMI registers */
     HDMI_ENABLE           = 0x00,
+    HDMI_STATUS           = 0x04,
     HDMI_CNTL             = 0x08,
     HDMI_UNKNOWN_0        = 0x0C,
     HDMI_AUDIOCNTL        = 0x10,
@@ -1113,7 +1141,10 @@ enum {
     HDMI_IEC60958_1       = 0xd4,
     HDMI_IEC60958_2       = 0xd8,
     HDMI_UNKNOWN_2        = 0xdc,
-    HDMI_AUDIO_DEBUG      = 0xe0
+    HDMI_AUDIO_DEBUG_0    = 0xe0,
+    HDMI_AUDIO_DEBUG_1    = 0xe4,
+    HDMI_AUDIO_DEBUG_2    = 0xe8,
+    HDMI_AUDIO_DEBUG_3    = 0xec
 };
 
 #endif /* _RHD_REGS_H */

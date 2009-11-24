@@ -72,7 +72,7 @@ Solution:
 ---------
 
 Your system lacks one or more of these files in /usr/share/aclocal:
-    xorg-macros.m4 xorg-server.m4 xorgversion.m4
+    xorg-macros.m4 xorg-server.m4
 
 Make sure you have all required X.org development packages installed. These
 may be called xorg-dev, xorg-x11-server-sdk and xorg-x11-util-macros,

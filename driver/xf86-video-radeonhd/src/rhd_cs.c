@@ -643,7 +643,7 @@ RHDCSInit(ScrnInfoPtr pScrn)
 
     if (rhdPtr->ChipSet >= RHD_R600) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		   "%s: No CS for R600 and up yet.\n", __func__);
+		   "%s: CS for R600 requires DRI.\n", __func__);
 	xfree(CS);
 	rhdPtr->CS = NULL;
 	return;

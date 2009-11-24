@@ -3079,7 +3079,7 @@ enum {
 	INC_mask                                          = 0xff << 24,
 	INC_shift                                         = 24,
     SQ_BOOL_CONST_0                                       = 0x0003e380,
-	SQ_BOOL_CONST_0_num                               = 3,
+	SQ_BOOL_CONST_0_num                               = 3
 
 } ;
 

@@ -48,6 +48,7 @@
 #include "rhd_output.h"
 #include "rhd_regs.h"
 #include "rhd_hdmi.h"
+#include "rhd_acpi.h"
 #ifdef ATOM_BIOS
 #include "rhd_atombios.h"
 #include "rhd_atomout.h"
@@ -138,12 +139,13 @@ struct LVDSPrivate {
     CARD32 StoreMacroControl;
     CARD32 StoreTXControl;
     CARD32 StoreBlModCntl;
-#ifdef NOT_YET
+
+    void (*SetBacklight)(struct rhdOutput *Output, int val);
+    int  (*GetBacklight)(struct rhdOutput *Output);
     /* to hook in AtomBIOS property callback */
     Bool (*WrappedPropertyCallback) (struct rhdOutput *Output,
 		      enum rhdPropertyAction Action, enum rhdOutputProperty Property, union rhdPropertyData *val);
     void *PropertyPrivate;
-#endif
 };
 
 /*
@@ -203,10 +205,8 @@ LVDSDebugBacklight(struct rhdOutput *Output)
  *
  */
 static void
-LVDSSetBacklight(struct rhdOutput *Output)
+LVDSSetBacklight(struct rhdOutput *Output, int level)
 {
-    struct LVDSPrivate *Private = (struct LVDSPrivate *) Output->Private;
-    int level = Private->BlLevel;
     RHDPtr rhdPtr = RHDPTRI(Output);
 
     xf86DrvMsg(rhdPtr->scrnIndex, X_INFO,
@@ -231,6 +231,28 @@ LVDSSetBacklight(struct rhdOutput *Output)
 /*
  *
  */
+static int
+LVDSGetBacklight(struct rhdOutput *Output)
+{
+    RHDPtr rhdPtr = RHDPTRI(Output);
+    CARD32 level;
+
+    if (rhdPtr->ChipSet >= RHD_RS600)
+	level = RHDRegRead(rhdPtr, LVTMA_BL_MOD_CNTL);
+    else
+	level = RHDRegRead(rhdPtr, LVTMA_BL_MOD_CNTL);
+
+    if ((level & 0x01) != 0x01)
+	return -1;
+
+    RHDDebug(Output->scrnIndex, "%s: Backlight %i\n",__func__,(level >> 8) & 0xFF);
+
+    return (level >> 8) & 0xFF;
+}
+
+/*
+ *
+ */
 static Bool
 LVDSPropertyControl(struct rhdOutput *Output, enum rhdPropertyAction Action,
 		    enum rhdOutputProperty Property, union rhdPropertyData *val)
@@ -240,9 +262,9 @@ LVDSPropertyControl(struct rhdOutput *Output, enum rhdPropertyAction Action,
     switch (Action) {
 	case rhdPropertyCheck:
 	    switch (Property) {
-		if (Private->BlLevel < 0)
-		    return FALSE;
 		case RHD_OUTPUT_BACKLIGHT:
+		    if (Private->BlLevel < 0)
+			return FALSE;
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -250,6 +272,7 @@ LVDSPropertyControl(struct rhdOutput *Output, enum rhdPropertyAction Action,
 	case rhdPropertyGet:
 	    switch (Property) {
 		case RHD_OUTPUT_BACKLIGHT:
+		    Private->BlLevel = Private->GetBacklight(Output);
 		    if (Private->BlLevel < 0)
 			return FALSE;
 		    val->integer = Private->BlLevel;
@@ -274,7 +297,7 @@ LVDSPropertyControl(struct rhdOutput *Output, enum rhdPropertyAction Action,
 		case RHD_OUTPUT_BACKLIGHT:
 		    if (Private->BlLevel < 0)
 			return FALSE;
-		    LVDSSetBacklight(Output);
+		    Private->SetBacklight(Output, Private->BlLevel);
 		    break;
 		default:
 		    return FALSE;
@@ -430,7 +453,7 @@ LVDSEnable(struct rhdOutput *Output)
 		   __func__, i, (int) tmp);
     }
     if (Private->BlLevel >= 0) {
-	LVDSSetBacklight(Output);
+	Private->SetBacklight(Output, Private->BlLevel);
     }
 }
 
@@ -719,10 +742,8 @@ LVDSDestroy(struct rhdOutput *Output)
     if (!Private)
 	return;
 
-#ifdef NOT_YET
     if (Private->PropertyPrivate)
 	RhdAtomDestroyBacklightControlProperty(Output, Private->PropertyPrivate);
-#endif
     xfree(Private);
     Output->Private = NULL;
 }
@@ -1048,6 +1069,7 @@ TMDSBPropertyControl(struct rhdOutput *Output,
 	    switch (Property) {
 		case RHD_OUTPUT_COHERENT:
 		case RHD_OUTPUT_HDMI:
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -1059,6 +1081,9 @@ TMDSBPropertyControl(struct rhdOutput *Output,
 		    return TRUE;
 		case RHD_OUTPUT_HDMI:
 		    val->Bool = Private->HdmiEnabled;
+		    return TRUE;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    val->Bool = RHDHdmiGetAudioWorkaround(Private->Hdmi);
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -1072,6 +1097,9 @@ TMDSBPropertyControl(struct rhdOutput *Output,
 		case RHD_OUTPUT_HDMI:
 		    Private->HdmiEnabled = val->Bool;
 		    break;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    RHDHdmiSetAudioWorkaround(Private->Hdmi, val->Bool);
+		    break;
 		default:
 		    return FALSE;
 	    }
@@ -1082,6 +1110,9 @@ TMDSBPropertyControl(struct rhdOutput *Output,
 		case RHD_OUTPUT_HDMI:
 		    Output->Mode(Output, Private->Mode);
 		    Output->Power(Output, RHD_POWER_ON);
+		    break;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    RHDHdmiCommitAudioWorkaround(Private->Hdmi);
 		    break;
 		default:
 		    return FALSE;
@@ -1308,7 +1339,6 @@ TMDSBDestroy(struct rhdOutput *Output)
     Output->Private = NULL;
 }
 
-#ifdef NOT_YET
 static Bool
 LVDSPropertyWrapper(struct rhdOutput *Output,
 		    enum rhdPropertyAction Action,
@@ -1327,7 +1357,6 @@ LVDSPropertyWrapper(struct rhdOutput *Output,
 
     return ret;
 }
-#endif
 
 /*
  *
@@ -1367,17 +1396,33 @@ RHDLVTMAInit(RHDPtr rhdPtr, CARD8 Type)
 	Output->Property = LVDSPropertyControl;
 	Output->Destroy = LVDSDestroy;
 	Output->Private = Private =  LVDSInfoRetrieve(rhdPtr);
-#ifdef NOT_YET
-	if (Private->BlLevel < 0) {
-	    Private->BlLevel = RhdAtomSetupBacklightControlProperty(Output, &Private->WrappedPropertyCallback,
-								    &Private->PropertyPrivate);
-	    if (Private->PropertyPrivate)
-		Output->Property = LVDSPropertyWrapper;
-	} else
-#else
-	if (Private->BlLevel >= 0)
-#endif
+
+	if (Private->BlLevel >= 0) {
+	    Private->SetBacklight = LVDSSetBacklight;
+	    Private->GetBacklight = LVDSGetBacklight;
 	    LVDSDebugBacklight(Output);
+		xf86DrvMsg(Output->scrnIndex,X_INFO, "Native Backlight Control found.\n");
+	} else {
+	    Private->BlLevel = RhdACPIGetBacklightControl(Output);
+	    if (Private->BlLevel >= 0) {
+		xf86DrvMsg(Output->scrnIndex,X_INFO, "ACPI Backlight Control found.\n");
+		Private->SetBacklight = RhdACPISetBacklightControl;
+		Private->GetBacklight = RhdACPIGetBacklightControl;
+	    }
+#ifdef ATOM_BIOS
+	    else {
+		Private->BlLevel = RhdAtomSetupBacklightControlProperty(
+		    Output,
+		    &Private->WrappedPropertyCallback,
+		    &Private->PropertyPrivate);
+		if (Private->PropertyPrivate)
+		    Output->Property = LVDSPropertyWrapper;
+		xf86DrvMsg(Output->scrnIndex,X_INFO,
+			   "Falling back to AtomBIOS controlled Backlight.\n");
+	    }
+#endif
+	}
+
 
     } else {
 	struct rhdTMDSBPrivate *Private = xnfcalloc(sizeof(struct rhdTMDSBPrivate), 1);

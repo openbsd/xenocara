@@ -51,7 +51,7 @@ enum {
     SET_LOOP_CONST_offset          = 0x0003e200,
     SET_LOOP_CONST_end             = 0x0003e380,
     SET_BOOL_CONST_offset          = 0x0003e380,
-    SET_BOOL_CONST_end             = 0x0003e38c,
+    SET_BOOL_CONST_end             = 0x0003e38c
 };
 
 /* packet3 IT_SURFACE_BASE_UPDATE bits */
@@ -85,14 +85,6 @@ enum {
 
 	WAIT_REG    = (0<<4),
 	WAIT_MEM    = (1<<4)
-};
-
-/* CP packet types */
-enum {
-    RADEON_CP_PACKET0              = 0x00000000,
-    RADEON_CP_PACKET1              = 0x40000000,
-    RADEON_CP_PACKET2              = 0x80000000,
-    RADEON_CP_PACKET3              = 0xC0000000
 };
 
 /* Packet3 commands */

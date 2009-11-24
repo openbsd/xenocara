@@ -37,7 +37,7 @@ struct r6xx_accel_state {
     drmBufPtr         ib;
     int               vb_index;
 
-    // shader storage
+    /* shader storage */
     ExaOffscreenArea  *shaders;
     uint32_t          solid_vs_offset;
     uint32_t          solid_ps_offset;
@@ -49,7 +49,7 @@ struct r6xx_accel_state {
     uint32_t          xv_vs_offset;
     uint32_t          xv_ps_offset;
 
-    //size/addr stuff
+    /*size/addr stuff */
     uint32_t          src_size[2];
     uint64_t          src_mc_addr[2];
     uint32_t          src_pitch[2];
@@ -68,20 +68,20 @@ struct r6xx_accel_state {
     uint32_t          vb_size;
     uint64_t          vb_mc_addr;
 
-    // UTS/DFS
+    /* UTS/DFS */
     drmBufPtr         scratch;
 
-    // copy
+    /* copy */
     ExaOffscreenArea  *copy_area;
     Bool              same_surface;
     int               rop;
     uint32_t          planemask;
 
-    //comp
+    /*comp */
     unsigned short texW[2];
     unsigned short texH[2];
     Bool is_transform[2];
-    struct _PictTransform *transform[2];
+    struct pixman_transform *transform[2];
     Bool has_mask;
     Bool component_alpha;
     Bool src_alpha;

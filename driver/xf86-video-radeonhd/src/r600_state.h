@@ -40,7 +40,7 @@ typedef struct {
     uint64_t base;
     int format;
     int endian;
-    int array_mode;						// tiling
+    int array_mode;						/* tiling */
     int number_type;
     int read_size;
     int comp_swap;
@@ -62,7 +62,7 @@ typedef struct {
     uint64_t base;
     int format;
     int read_size;
-    int array_mode;						// tiling
+    int array_mode;						/* tiling */
     int tile_surface_en;
     int tile_compact;
     int zrange_precision;

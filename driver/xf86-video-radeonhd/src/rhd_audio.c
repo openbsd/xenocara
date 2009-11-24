@@ -90,14 +90,16 @@ AudioRate(struct rhdAudio* Audio)
     return result;
 }
 
+#if 0
 /*
- * something playing ?
+ * something playing ? (not used anymore)
  */
 static Bool
 AudioPlaying(struct rhdAudio* Audio)
 {
     return (RHDRegRead(Audio, AUDIO_PLAYING) >> 4) & 1;
 }
+#endif
 
 /*
  * iec 60958 status bits
@@ -124,35 +126,36 @@ static CARD32
 AudioUpdateHdmi(OsTimerPtr timer, CARD32 time, pointer ptr)
 {
     struct rhdAudio *Audio = (struct rhdAudio*)ptr;
-    Bool playing = AudioPlaying(Audio);
     int channels = AudioChannels(Audio);
     int rate = AudioRate(Audio);
     int bps = AudioBitsPerSample(Audio);
     CARD8 status_bits = AudioStatusBits(Audio);
     CARD8 category_code = AudioCategoryCode(Audio);
 
+    Bool changes = FALSE;
+
     struct rhdHdmi* hdmi;
 
-    if(playing != Audio->SavedPlaying ||
-	channels != Audio->SavedChannels ||
-	rate != Audio->SavedRate ||
-	bps != Audio->SavedBitsPerSample ||
-	status_bits != Audio->SavedStatusBits ||
-	category_code != Audio->SavedCategoryCode) {
+    changes |= channels != Audio->SavedChannels;
+    changes |= rate != Audio->SavedRate;
+    changes |= bps != Audio->SavedBitsPerSample;
+    changes |= status_bits != Audio->SavedStatusBits;
+    changes |= category_code != Audio->SavedCategoryCode;
 
-	Audio->SavedPlaying = playing;
+    if(changes) {
 	Audio->SavedChannels = channels;
 	Audio->SavedRate = rate;
 	Audio->SavedBitsPerSample = bps;
 	Audio->SavedStatusBits = status_bits;
 	Audio->SavedCategoryCode = category_code;
+    }
 
-	for(hdmi=Audio->Registered; hdmi != NULL; hdmi=hdmi->Next)
+    for(hdmi=Audio->Registered; hdmi != NULL; hdmi=hdmi->Next)
+	if(changes || RHDHdmiBufferStatusChanged(hdmi))
 	    RHDHdmiUpdateAudioSettings(
-		hdmi, playing, channels,
+		hdmi, channels,
 		rate, bps, status_bits,
 		category_code);
-    }
 
     return AUDIO_TIMER_INTERVALL;
 }
@@ -188,7 +191,7 @@ RHDAudioSetEnable(RHDPtr rhdPtr, Bool Enable)
     if (!Audio)	return;
     RHDFUNC(Audio);
 
-    RHDRegMask(Audio, AUDIO_ENABLE, Enable ? 0x80000000 : 0x0, 0x80000000);
+    RHDRegMask(Audio, AUDIO_ENABLE, Enable ? 0x81000000 : 0x0, 0x81000000);
     if(Enable) {
 	/* the hardware generates an interrupt if audio starts/stops playing,
 	 * but since drm doesn't support this interrupt, we check
@@ -241,27 +244,21 @@ RHDAudioSetClock(RHDPtr rhdPtr, struct rhdOutput* Output, CARD32 Clock)
 	    break;
 
 	default:
+	    xf86DrvMsg(Audio->scrnIndex, X_ERROR, "%s: unsupported output type\n", __func__);
 	    break;
     }
 
-    switch(Output->Id) {
-	case RHD_OUTPUT_TMDSA:
-	case RHD_OUTPUT_UNIPHYA:
+    switch(RHDOutputTmdsIndex(Output)) {
+	case 0:
 	    RHDRegWrite(Audio, AUDIO_PLL1_MUL, Rate*50);
 	    RHDRegWrite(Audio, AUDIO_PLL1_DIV, Clock*100);
 	    RHDRegWrite(Audio, AUDIO_CLK_SRCSEL, 0);
 	    break;
 
-	case RHD_OUTPUT_LVTMA:
-	case RHD_OUTPUT_UNIPHYB:
-	case RHD_OUTPUT_KLDSKP_LVTMA:
+	case 1:
 	    RHDRegWrite(Audio, AUDIO_PLL2_MUL, Rate*50);
 	    RHDRegWrite(Audio, AUDIO_PLL2_DIV, Clock*100);
 	    RHDRegWrite(Audio, AUDIO_CLK_SRCSEL, 1);
-	    break;
-
-	default:
-	    xf86DrvMsg(Audio->scrnIndex, X_ERROR, "%s: unsupported output type\n", __func__);
 	    break;
     }
 }
@@ -309,6 +306,9 @@ RHDAudioRegisterHdmi(RHDPtr rhdPtr, struct rhdHdmi* rhdHdmi)
     if(!rhdHdmi)
 	return;
 
+    /* make shure the HDMI interface is not registered */
+    RHDAudioUnregisterHdmi(rhdPtr, rhdHdmi);
+
     rhdHdmi->Next = Audio->Registered;
     Audio->Registered = rhdHdmi;
 }
@@ -324,7 +324,7 @@ void RHDAudioUnregisterHdmi(RHDPtr rhdPtr, struct rhdHdmi* rhdHdmi)
     if (!Audio)	return;
     RHDFUNC(Audio);
 
-    for(hdmiPtr=&Audio->Registered; hdmiPtr!=NULL;hdmiPtr=&(*hdmiPtr)->Next)
+    for(hdmiPtr=&Audio->Registered; *hdmiPtr!=NULL;hdmiPtr=&(*hdmiPtr)->Next)
 	if(*hdmiPtr == rhdHdmi) {
 	    *hdmiPtr = rhdHdmi->Next;
 	    rhdHdmi->Next = NULL;
@@ -375,7 +375,9 @@ RHDAudioRestore(RHDPtr rhdPtr)
         return;
     }
 
-    /* shoutdown the audio engine before doing anything else */
+    /* 
+     * Shutdown the audio engine before doing anything else.
+     */
     RHDAudioSetEnable(rhdPtr, FALSE);
 
     RHDRegWrite(Audio, AUDIO_TIMING, Audio->StoreTiming);

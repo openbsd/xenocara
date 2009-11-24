@@ -33,6 +33,10 @@
 # include "config.h"
 #endif
 
+/* The _AtomBIOS property is experimental for now - only enable if needed.
+ * Beware - there be dragons and crashes */
+#define ENABLE_PROPERTY_ATOMBIOS 0
+
 /* Xserver interface */
 #include "xf86.h"
 
@@ -44,8 +48,13 @@
 # include "xf86RandR12.h"
 # include "xaa.h"
 # include "exa.h"
+#ifdef HAVE_XEXTPROTO_71
+# include "X11/extensions/dpmsconst.h"
+#else
 # define DPMS_SERVER
 # include "X11/extensions/dpms.h"
+#endif
+
 # include "X11/Xatom.h"
 #endif /* RANDR_12_SUPPORT */
 
@@ -111,20 +120,25 @@ struct rhdRandrCrtc {
     } u;
 };
 
+#define ATOM_EDID             "EDID"
+#define ATOM_EDID2            "EDID_DATA"
 #define ATOM_SIGNAL_FORMAT    "SignalFormat"
 #define ATOM_CONNECTOR_TYPE   "ConnectorType"
 #define ATOM_CONNECTOR_NUMBER "ConnectorNumber"
 #define ATOM_OUTPUT_NUMBER    "_OutputNumber"
 #define ATOM_PANNING_AREA     "_PanningArea"
-#define ATOM_BACKLIGHT        "_Backlight"
+#define ATOM_BACKLIGHT        "Backlight"
 #define ATOM_COHERENT         "_Coherent"
 #define ATOM_HDMI             "_HDMI"
+#define ATOM_AUDIO_WORKAROUND "_AudioStreamSilence"
+#define ATOM_ATOMBIOS         "_AtomBIOS"
 
 static Atom atom_SignalFormat, atom_ConnectorType, atom_ConnectorNumber,
     atom_OutputNumber, atom_PanningArea, atom_Backlight, atom_Coherent,
-    atom_HdmiProperty;
+    atom_HdmiProperty, atom_AudioWorkaround;
 static Atom atom_unknown, atom_VGA, atom_TMDS, atom_LVDS, atom_DisplayPort, atom_TV;
 static Atom atom_DVI, atom_DVII, atom_DVID, atom_DVIA, atom_HDMI, atom_Panel;
+static Atom atom_EDID, atom_EDID2, atom_AtomBIOS;
 
 
 /* Get RandR property values */
@@ -473,34 +487,23 @@ rhdRRCrtcCommit(xf86CrtcPtr crtc)
     RHDDebugRandrState(rhdPtr, rhdCrtc->Name);
 }
 
-/*
- * They just had to do NIH again here: Old X functionality provides a size, a
- * list of indices, and a table of RGB unsigned shorts. RandR provides what
- * is below. Apart from horribly breaking any attempt at being backwards
- * compatible, this also pretty much rules out the usage of indexed colours, as
- * each time even a single colour is changed an entirely new table has to be
- * uploaded. Just cute. -- libv.
- */
 static void
 rhdRRCrtcGammaSet(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
 		  int size)
 {
     struct rhdCrtc *rhdCrtc = ((struct rhdRandrCrtc *)(crtc->driver_private))->rhdCrtc;
-    int indices[0x100]; /* would RandR use a size larger than 256? */
-    LOCO colors[0x100];
-    int i;
-
     RHDDebug(rhdCrtc->scrnIndex, "%s: %s.\n", __func__, rhdCrtc->Name);
 
-    /* thanks so very much */
-    for (i = 0; i < size; i++) {
-	indices[i] = i;
-	colors[i].red = red[i] >> 6;
-	colors[i].green = green[i] >> 6;
-	colors[i].blue = blue[i] >> 6;
+    if (size < 256) {
+        xf86DrvMsg(rhdCrtc->scrnIndex, X_ERROR,
+                   "LUT: only %d rows of LUT given, when 256 expected; aborting", size);
+        return;
+    } else if (size > 256) {
+        xf86DrvMsg(rhdCrtc->scrnIndex, X_WARNING,
+                   "LUT: %d rows of LUT given, when 256 expected; some rows are ignored", size);
     }
 
-    rhdCrtc->LUT->Set(rhdCrtc->LUT, size, indices, colors);
+    rhdCrtc->LUT->Set(rhdCrtc->LUT, red, green, blue);
 }
 
 /* Dummy, because not tested for NULL */
@@ -538,10 +541,17 @@ rhdRROutputCreateResources(xf86OutputPtr out)
     CARD32            num;
     int               err;
     INT32             range[2];
+    static xf86OutputPtr first_output = NULL;
 
     RHDFUNC(rhdPtr);
+    if (! first_output)
+	first_output = out;
 
     /* Create atoms for RandR 1.3 properties */
+    atom_EDID            = MakeAtom(ATOM_EDID,
+				    sizeof(ATOM_EDID)-1, TRUE);
+    atom_EDID2           = MakeAtom(ATOM_EDID2,
+				    sizeof(ATOM_EDID2)-1, TRUE);
     atom_SignalFormat    = MakeAtom(ATOM_SIGNAL_FORMAT,
 				    sizeof(ATOM_SIGNAL_FORMAT)-1, TRUE);
     atom_ConnectorType   = MakeAtom(ATOM_CONNECTOR_TYPE,
@@ -552,6 +562,8 @@ rhdRROutputCreateResources(xf86OutputPtr out)
 				    sizeof(ATOM_OUTPUT_NUMBER)-1, TRUE);
     atom_PanningArea     = MakeAtom(ATOM_PANNING_AREA,
 				    sizeof(ATOM_PANNING_AREA)-1, TRUE);
+    atom_AtomBIOS        = MakeAtom(ATOM_ATOMBIOS,
+				    sizeof(ATOM_ATOMBIOS)-1, TRUE);
 
     /* Create atoms for RandR 1.3 property values */
     atom_unknown         = MakeAtom("unknown", 7, TRUE);
@@ -610,13 +622,29 @@ rhdRROutputCreateResources(xf86OutputPtr out)
 			   XA_STRING, 8, PropModeReplace,
 			   0, NULL, FALSE, FALSE);
 
+#if ENABLE_PROPERTY_ATOMBIOS
+    /* AtomBIOS usage */
+    /* We don't have per-CRTC or even per-GPU properties;
+     * so fake this by only applying to first output */
+    if (out == first_output) {
+	char *string;
+	RRConfigureOutputProperty(out->randr_output, atom_AtomBIOS,
+				  FALSE, FALSE, FALSE, 0, NULL);
+	string = rhdReturnAtomBIOSUsage(rhdPtr);
+	RRChangeOutputProperty(out->randr_output, atom_AtomBIOS,
+			       XA_STRING, 8, PropModeReplace,
+			       strlen(string), string, FALSE, FALSE);
+	free (string);
+    }
+#endif
+
     if (rout->Output->Property) {
 	if (rout->Output->Property(rout->Output, rhdPropertyCheck, RHD_OUTPUT_BACKLIGHT, NULL)) {
 	    atom_Backlight = MakeAtom(ATOM_BACKLIGHT,
 				      sizeof(ATOM_BACKLIGHT)-1, TRUE);
 
 	    range[0] = 0;
-	    range[1] = 255;
+	    range[1] = RHD_BACKLIGHT_PROPERTY_MAX;
 	    err = RRConfigureOutputProperty(out->randr_output, atom_Backlight,
 					    FALSE, TRUE, FALSE, 2, range);
 	    if (err != 0)
@@ -626,7 +654,7 @@ rhdRROutputCreateResources(xf86OutputPtr out)
 		union rhdPropertyData val;
 
 		if (!rout->Output->Property(rout->Output, rhdPropertyGet, RHD_OUTPUT_BACKLIGHT, &val))
-		    val.integer = 255;
+		    val.integer = RHD_BACKLIGHT_PROPERTY_MAX; /* max */
 
 		err = RRChangeOutputProperty(out->randr_output, atom_Backlight,
 					     XA_INTEGER, 32, PropModeReplace,
@@ -678,6 +706,30 @@ rhdRROutputCreateResources(xf86OutputPtr out)
 		if (!rout->Output->Property(rout->Output, rhdPropertyGet, RHD_OUTPUT_HDMI, &val))
 		    val.Bool = 1;
 		err = RRChangeOutputProperty(out->randr_output, atom_HdmiProperty,
+					     XA_INTEGER, 32, PropModeReplace,
+					     1, &val.Bool, FALSE, FALSE);
+		if (err != 0)
+		    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+			       "In %s RRChangeOutputProperty error: %d\n",
+			       __func__, err);
+	    }
+	}
+	if (rout->Output->Property(rout->Output, rhdPropertyCheck, RHD_OUTPUT_AUDIO_WORKAROUND, NULL)) {
+	    atom_AudioWorkaround = MakeAtom(ATOM_AUDIO_WORKAROUND, sizeof(ATOM_AUDIO_WORKAROUND)-1, TRUE);
+
+	    range[0] = 0;
+	    range[1] = 1;
+	    err = RRConfigureOutputProperty(out->randr_output, atom_AudioWorkaround,
+					    FALSE, TRUE, FALSE, 2, range);
+	    if (err != 0)
+		xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR,
+			   "RRConfigureOutputProperty error: %d\n", err);
+	    else {
+		union rhdPropertyData val;
+
+		if (!rout->Output->Property(rout->Output, rhdPropertyGet, RHD_OUTPUT_AUDIO_WORKAROUND, &val))
+		    val.Bool = 1;
+		err = RRChangeOutputProperty(out->randr_output, atom_AudioWorkaround,
 					     XA_INTEGER, 32, PropModeReplace,
 					     1, &val.Bool, FALSE, FALSE);
 		if (err != 0)
@@ -1292,9 +1344,16 @@ rhdRROutputSetProperty(xf86OutputPtr out, Atom property,
 {
     RHDPtr            rhdPtr = RHDPTR(out->scrn);
     rhdRandrOutputPtr rout   = (rhdRandrOutputPtr) out->driver_private;
+    char              buf[256];
 
     RHDFUNC(rhdPtr);
 
+    /* Unfortunately, strings are not necessarily 0 terminated */
+    if (value->type == XA_STRING && value->format == 8) {
+	int len = value->size < 255 ? value->size : 255;
+	memcpy (buf, value->data, len);
+	buf[len] = 0;
+    }
     if (property == atom_PanningArea) {
 	int w = 0, h = 0, x = 0, y = 0;
 	struct rhdCrtc *Crtc = rout->Output->Crtc;
@@ -1314,7 +1373,7 @@ rhdRROutputSetProperty(xf86OutputPtr out, Atom property,
 	}
 	if (value->type != XA_STRING || value->format != 8)
 	    return FALSE;
-	switch (sscanf(value->data, "%dx%d+%d+%d", &w, &h, &x, &y)) {
+	switch (sscanf(buf, "%dx%d+%d+%d", &w, &h, &x, &y)) {
 	case 0:
 	case 2:
 	case 4:
@@ -1374,6 +1433,35 @@ rhdRROutputSetProperty(xf86OutputPtr out, Atom property,
 					  RHD_OUTPUT_HDMI, NULL);
 	}
 	return FALSE;
+    } else if (property == atom_AudioWorkaround) {
+	if (value->type != XA_INTEGER || value->format != 32) {
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "%s: wrong value\n", __func__);
+	    return FALSE;
+	}
+	if (rout->Output->Property) {
+	    union rhdPropertyData val;
+	    val.Bool = *(int*)(value->data);
+	    if(rout->Output->Property(rout->Output, rhdPropertySet,
+					  RHD_OUTPUT_AUDIO_WORKAROUND, &val))
+		return rout->Output->Property(rout->Output, rhdPropertyCommit,
+					  RHD_OUTPUT_AUDIO_WORKAROUND, NULL);
+	}
+	return FALSE;
+#if ENABLE_PROPERTY_ATOMBIOS
+    } else if (property == atom_AtomBIOS) {
+	if (value->type != XA_STRING || value->format != 8)
+	    return FALSE;
+	if (rhdUpdateAtomBIOSUsage(rhdPtr, buf)) {
+	    free (value->data);
+	    value->data = rhdReturnAtomBIOSUsage(rhdPtr);
+	    value->size = strlen(value->data);
+	    return TRUE;
+	}
+	return FALSE;
+#endif
+    } else if (property == atom_EDID || property == atom_EDID2) {
+	/* Don't do anything, but allow change */
+	return TRUE;
     }
 
     return FALSE;	/* Others are not mutable */
@@ -1411,8 +1499,8 @@ rhdRRCrtcShadowAllocate(xf86CrtcPtr crtc, int Width, int Height)
 	return ((char *)rhdPtr->FbBase
 		+ rhdRRCrtc->u.MemEXA->offset);
     }
-
 #endif /* USE_EXA */
+
     if (rhdPtr->AccelMethod == RHD_ACCEL_XAA) {
 	int Align = (4096 + OctPerPixel - 1) / OctPerPixel;
 	Size = (Size + OctPerPixel - 1) / OctPerPixel;
@@ -1501,7 +1589,7 @@ rhdRROutputGetProperty(xf86OutputPtr out, Atom property)
     int err = BadValue;
     union rhdPropertyData val;
 
-    xf86DrvMsg(rhdPtr->scrnIndex, X_INFO, "In %s\n", __func__);
+    RHDFUNC(rhdPtr);
 
     if (property == atom_Backlight) {
 	if (rout->Output->Property == NULL)
@@ -1525,12 +1613,34 @@ rhdRROutputGetProperty(xf86OutputPtr out, Atom property)
 	err = RRChangeOutputProperty(out->randr_output, atom_Coherent,
 				     XA_INTEGER, 32, PropModeReplace,
 				     1, &val.Bool, FALSE, FALSE);
+    } else if (property == atom_HdmiProperty) {
+	if (rout->Output->Property == NULL)
+	    return FALSE;
+
+	if (!rout->Output->Property(rout->Output, rhdPropertyGet,
+				    RHD_OUTPUT_HDMI, &val))
+	    return FALSE;
+
+	err = RRChangeOutputProperty(out->randr_output, atom_HdmiProperty,
+				     XA_INTEGER, 32, PropModeReplace,
+				     1, &val.Bool, FALSE, FALSE);
+     } else if (property == atom_AudioWorkaround) {
+	if (rout->Output->Property == NULL)
+	    return FALSE;
+
+	if (!rout->Output->Property(rout->Output, rhdPropertyGet,
+				    RHD_OUTPUT_AUDIO_WORKAROUND, &val))
+	    return FALSE;
+
+	err = RRChangeOutputProperty(out->randr_output, atom_AudioWorkaround,
+				     XA_INTEGER, 32, PropModeReplace,
+				     1, &val.Bool, FALSE, FALSE);
     }
 
-    if (err != 0) {
-	xf86DrvMsg(rhdPtr->scrnIndex, X_ERROR, "In %s RRChangeOutputProperty error: %d\n", __func__, err);
+    RHDDebug(rhdPtr->scrnIndex, "%s 0x%x returns %d\n", __func__, property, err);
+
+    if (err != 0)
 	return FALSE;
-    }
     return TRUE;
 }
 
@@ -1912,6 +2022,21 @@ RHDRandrPreInit(ScrnInfoPtr pScrn)
     }
     xfree(RandrOutput);
     rhdPtr->randr = randr;
+
+    /* Unless we're able to shrink/enlarge FB on the fly (GEM etc.), allocate
+     * large enough (TM) virtual size */
+    if (!pScrn->display->virtualX || !pScrn->display->virtualY) {
+        /* Have at least enough space for double buffering and z Buffer + some textures */
+        if (2 * 1920*1920 * ((unsigned)pScrn->bitsPerPixel/8) <= rhdPtr->FbFreeSize / 4) {
+            /* Fits on 128MB and up */
+            pScrn->display->virtualX = 2 * 1920;
+            pScrn->display->virtualY = 1920;
+        } else if (2 * 1680*1280 * ((unsigned)pScrn->bitsPerPixel/8) <= rhdPtr->FbFreeSize / 4) {
+            /* Fits on 64MB and up */
+            pScrn->display->virtualX = 2 * 1680;
+            pScrn->display->virtualY = 1280;
+        }
+    }
 
     if (!xf86InitialConfiguration(pScrn, FALSE)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,

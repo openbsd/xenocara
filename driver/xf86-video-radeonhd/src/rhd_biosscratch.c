@@ -43,8 +43,13 @@
 #  include <stdio.h>
 # endif
 
+#ifdef HAVE_XEXTPROTO_71
+# include "X11/extensions/dpmsconst.h"
+#else
 # define DPMS_SERVER
 # include "X11/extensions/dpms.h"
+#endif
+
 
 # include "rhd.h"
 
@@ -670,7 +675,7 @@ rhdBIOSScratchUpdateBIOSScratchForOutput(struct rhdOutput *Output)
 	/* connected - enable */
 	Device = rhdBIOSScratchSetDeviceForOutput(Output);
 
-	if (Device == atomNone && rhdPtr->Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE) {
+	if (Device == atomNone && (!rhdPtr->Card || rhdPtr->Card->ConnectorInfo[0].Type != RHD_CONNECTOR_NONE)) {
 	    xf86DrvMsg(Output->scrnIndex, X_WARNING, "%s: AtomBIOS DeviceID unknown\n",__func__);
 	    return Device;
 	}

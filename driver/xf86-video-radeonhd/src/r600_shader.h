@@ -60,47 +60,47 @@
 /* Oder of instructions: All CF, All ALU, All Tex/Vtx fetches */
 
 
-// CF insts
-// addr
+/* CF insts */
+/* addr */
 #define ADDR(x)  (x)
-// pc
+/* pc */
 #define POP_COUNT(x)      (x)
-// const
+/* const */
 #define CF_CONST(x)       (x)
-// cond
-#define COND(x)        (x)		// SQ_COND_*
-// count
+/* cond */
+#define COND(x)        (x)		/* SQ_COND_* */
+/* count */
 #define I_COUNT(x)        ((x) ? ((x) - 1) : 0)
-//r7xx
+/*r7xx */
 #define COUNT_3(x)        (x)
-// call count
+/* call count */
 #define CALL_COUNT(x)     (x)
-// eop
+/* eop */
 #define END_OF_PROGRAM(x)   (x)
-// vpm
+/* vpm */
 #define VALID_PIXEL_MODE(x) (x)
-// cf inst
-#define CF_INST(x)        (x)		// SQ_CF_INST_*
+/* cf inst */
+#define CF_INST(x)        (x)		/* SQ_CF_INST_* */
 
-// wqm
+/* wqm */
 #define WHOLE_QUAD_MODE(x)  (x)
-// barrier
+/* barrier */
 #define BARRIER(x)          (x)
-//kb0
+/*kb0 */
 #define KCACHE_BANK0(x)          (x)
-//kb1
+/*kb1 */
 #define KCACHE_BANK1(x)          (x)
-// km0/1
+/* km0/1 */
 #define KCACHE_MODE0(x)          (x)
-#define KCACHE_MODE1(x)          (x)	// SQ_CF_KCACHE_*
-//
+#define KCACHE_MODE1(x)          (x)	/* SQ_CF_KCACHE_* */
+/* */
 #define KCACHE_ADDR0(x)          (x)
 #define KCACHE_ADDR1(x)          (x)
-// uw
+/* uw */
 #define USES_WATERFALL(x)        (x)
 
 #define ARRAY_BASE(x)        (x)
-// export pixel
+/* export pixel */
 #define CF_PIXEL_MRT0         0
 #define CF_PIXEL_MRT1         1
 #define CF_PIXEL_MRT2         2
@@ -109,7 +109,7 @@
 #define CF_PIXEL_MRT5         5
 #define CF_PIXEL_MRT6         6
 #define CF_PIXEL_MRT7         7
-// *_FOG: r6xx only
+/* *_FOG: r6xx only */
 #define CF_PIXEL_MRT0_FOG     16
 #define CF_PIXEL_MRT1_FOG     17
 #define CF_PIXEL_MRT2_FOG     18
@@ -119,21 +119,21 @@
 #define CF_PIXEL_MRT6_FOG     22
 #define CF_PIXEL_MRT7_FOG     23
 #define CF_PIXEL_Z            61
-// export pos
+/* export pos */
 #define CF_POS0               60
 #define CF_POS1               61
 #define CF_POS2               62
 #define CF_POS3               63
-// export param
-// 0...31
-#define TYPE(x)              (x)	// SQ_EXPORT_*
+/* export param */
+/* 0...31 */
+#define TYPE(x)              (x)	/* SQ_EXPORT_* */
 #if 0
-// type export
+/* type export */
 #define SQ_EXPORT_PIXEL              0
 #define SQ_EXPORT_POS                1
 #define SQ_EXPORT_PARAM              2
-// reserved 3
-// type mem
+/* reserved 3 */
+/* type mem */
 #define SQ_EXPORT_WRITE              0
 #define SQ_EXPORT_WRITE_IND          1
 #define SQ_EXPORT_WRITE_ACK          2
@@ -150,16 +150,16 @@
 #define R6xx_ELEM_LOOP(x)            (x)
 #define BURST_COUNT(x)          (x ? (x - 1) : 0)
 
-// swiz
-#define SRC_SEL_X(x)    (x)		// SQ_SEL_* each
+/* swiz */
+#define SRC_SEL_X(x)    (x)		/* SQ_SEL_* each */
 #define SRC_SEL_Y(x)    (x)
 #define SRC_SEL_Z(x)    (x)
 #define SRC_SEL_W(x)    (x)
 
 #define CF_DWORD0(addr) (addr)
-// R7xx has another entry (COUNT3), but that is only used for adding a bit to count.
-// We allow one more bit for count in the argument of the macro on R7xx instead.
-// R6xx: [0,7]  R7xx: [1,16]
+/* R7xx has another entry (COUNT3), but that is only used for adding a bit to count. */
+/* We allow one more bit for count in the argument of the macro on R7xx instead. */
+/* R6xx: [0,7]  R7xx: [1,16] */
 #define CF_DWORD1(pc, cf_const, cond, count, call_count, eop, vpm, cf_inst, wqm, b) \
         (((pc) << 0) | ((cf_const) << 3) | ((cond) << 8) | (((count) & 7) << 10) | (((count) >> 3) << 19) | \
          ((call_count) << 13) | ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | ((wqm) << 30) | ((b) << 31))
@@ -172,9 +172,9 @@
 #define CF_ALLOC_IMP_EXP_DWORD0(array_base, type, rw_gpr, rr, index_gpr, es) \
 	 (((array_base) << 0) | ((type) << 13) | ((rw_gpr) << 15) | ((rr) << 22) | ((index_gpr) << 23) | \
           ((es) << 30))
-// R7xx apparently doesn't have the ELEM_LOOP entry any more
-// We still expose it, but ELEM_LOOP is explicitely R6xx now.
-// TODO: is this just forgotten in the docs, or really not available any more?
+/* R7xx apparently doesn't have the ELEM_LOOP entry any more */
+/* We still expose it, but ELEM_LOOP is explicitely R6xx now. */
+/* TODO: is this just forgotten in the docs, or really not available any more? */
 #define CF_ALLOC_IMP_EXP_DWORD1_BUF(array_size, comp_mask, el, bc, eop, vpm, cf_inst, wqm, b) \
         (((array_size) << 0) | ((comp_mask) << 12) | ((el) << 16) | ((bc) << 17) | \
 	 ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | ((wqm) << 30) | ((b) << 31))
@@ -183,20 +183,20 @@
 	 ((bc) << 17) | ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | \
 	 ((wqm) << 30) | ((b) << 31))
 
-// ALU clause insts
+/* ALU clause insts */
 #define SRC0_SEL(x)        (x)
 #define SRC1_SEL(x)        (x)
 #define SRC2_SEL(x)        (x)
-// src[0-2]_sel
-//   0-127 GPR
-// 128-159 kcache constants bank 0
-// 160-191 kcache constants bank 1
-// 248-255 special SQ_ALU_SRC_* (0, 1, etc.)
+/* src[0-2]_sel */
+/*   0-127 GPR */
+/* 128-159 kcache constants bank 0 */
+/* 160-191 kcache constants bank 1 */
+/* 248-255 special SQ_ALU_SRC_* (0, 1, etc.) */
 
 #define SRC0_REL(x)        (x)
 #define SRC1_REL(x)        (x)
 #define SRC2_REL(x)        (x)
-// elem
+/* elem */
 #define SRC0_ELEM(x)        (x)
 #define SRC1_ELEM(x)        (x)
 #define SRC2_ELEM(x)        (x)
@@ -204,33 +204,33 @@
 #define ELEM_Y        1
 #define ELEM_Z        2
 #define ELEM_W        3
-// neg
+/* neg */
 #define SRC0_NEG(x)        (x)
 #define SRC1_NEG(x)        (x)
 #define SRC2_NEG(x)        (x)
-// im
-#define INDEX_MODE(x)    (x)		// SQ_INDEX_*
-// ps
-#define PRED_SEL(x)      (x)		// SQ_PRED_SEL_*
-// last
+/* im */
+#define INDEX_MODE(x)    (x)		/* SQ_INDEX_* */
+/* ps */
+#define PRED_SEL(x)      (x)		/* SQ_PRED_SEL_* */
+/* last */
 #define LAST(x)          (x)
-// abs
+/* abs */
 #define SRC0_ABS(x)       (x)
 #define SRC1_ABS(x)       (x)
-// uem
+/* uem */
 #define UPDATE_EXECUTE_MASK(x) (x)
-// up
+/* up */
 #define UPDATE_PRED(x)      (x)
-// wm
+/* wm */
 #define WRITE_MASK(x)   (x)
-// fm
+/* fm */
 #define FOG_MERGE(x)    (x)
-// omod
-#define OMOD(x)        (x)		// SQ_ALU_OMOD_*
-// alu inst
-#define ALU_INST(x)        (x)		// SQ_ALU_INST_*
-//bs
-#define BANK_SWIZZLE(x)        (x)	// SQ_ALU_VEC_*
+/* omod */
+#define OMOD(x)        (x)		/* SQ_ALU_OMOD_* */
+/* alu inst */
+#define ALU_INST(x)        (x)		/* SQ_ALU_INST_* */
+/*bs */
+#define BANK_SWIZZLE(x)        (x)	/* SQ_ALU_VEC_* */
 #define DST_GPR(x)        (x)
 #define DST_REL(x)        (x)
 #define DST_ELEM(x)       (x)
@@ -240,7 +240,7 @@
         (((src0_sel) << 0) | ((s0r) << 9) | ((s0e) << 10) | ((s0n) << 12) | \
          ((src1_sel) << 13) | ((s1r) << 22) | ((s1e) << 23) | ((s1n) << 25) | \
 	 ((im) << 26) | ((ps) << 29) | ((last) << 31))
-// R7xx has alu_inst at a different slot, and no fog merge any more (no fix function fog any more)
+/* R7xx has alu_inst at a different slot, and no fog merge any more (no fix function fog any more) */
 #define R6xx_ALU_DWORD1_OP2(s0a, s1a, uem, up, wm, fm, omod, alu_inst, bs, dst_gpr, dr, de, clamp) \
         (((s0a) << 0) | ((s1a) << 1) | ((uem) << 2) | ((up) << 3) | ((wm) << 4) | \
          ((fm) << 5) | ((omod) << 6) | ((alu_inst) << 8) | ((bs) << 18) | ((dst_gpr) << 21) | \
@@ -249,8 +249,8 @@
         (((s0a) << 0) | ((s1a) << 1) | ((uem) << 2) | ((up) << 3) | ((wm) << 4) | \
          ((omod) << 5) | ((alu_inst) << 7) | ((bs) << 18) | ((dst_gpr) << 21) | \
 	 ((dr) << 28) | ((de) << 29) | ((clamp) << 31))
-// This is a general chipset macro, but due to selection by chipid typically not usable in static arrays
-// Fog is NOT USED on R7xx, even if specified.
+/* This is a general chipset macro, but due to selection by chipid typically not usable in static arrays */
+/* Fog is NOT USED on R7xx, even if specified. */
 #define ALU_DWORD1_OP2(chipid, s0a, s1a, uem, up, wm, fm, omod, alu_inst, bs, dst_gpr, dr, de, clamp) \
     ((chipid) < RHD_RV770 ? \
      R6xx_ALU_DWORD1_OP2(s0a, s1a, uem, up, wm, fm, omod, alu_inst, bs, dst_gpr, dr, de, clamp) : \
@@ -260,12 +260,12 @@
          ((alu_inst) << 13) | ((bs) << 18) | ((dst_gpr) << 21) | ((dr) << 28) | \
 	 ((de) << 29) | ((clamp) << 31))
 
-// VTX clause insts
-// vxt insts
-#define VTX_INST(x)        (x)		// SQ_VTX_INST_*
+/* VTX clause insts */
+/* vxt insts */
+#define VTX_INST(x)        (x)		/* SQ_VTX_INST_* */
 
-// fetch type
-#define FETCH_TYPE(x)        (x)	// SQ_VTX_FETCH_*
+/* fetch type */
+#define FETCH_TYPE(x)        (x)	/* SQ_VTX_FETCH_* */
 
 #define FETCH_WHOLE_QUAD(x)        (x)
 #define BUFFER_ID(x)        (x)
@@ -280,19 +280,19 @@
 #define DST_SEL_W(x)          (x)
 #define USE_CONST_FIELDS(x)   (x)
 #define DATA_FORMAT(x)        (x)
-// num format
-#define NUM_FORMAT_ALL(x)     (x)	// SQ_NUM_FORMAT_*
-// format comp
-#define FORMAT_COMP_ALL(x)     (x)	// SQ_FORMAT_COMP_*
-// sma
+/* num format */
+#define NUM_FORMAT_ALL(x)     (x)	/* SQ_NUM_FORMAT_* */
+/* format comp */
+#define FORMAT_COMP_ALL(x)     (x)	/* SQ_FORMAT_COMP_* */
+/* sma */
 #define SRF_MODE_ALL(x)     (x)
 #define SRF_MODE_ZERO_CLAMP_MINUS_ONE      0
 #define SRF_MODE_NO_ZERO                   1
 #define OFFSET(x)     (x)
-// endian swap
-#define ENDIAN_SWAP(x)     (x)		// SQ_ENDIAN_*
+/* endian swap */
+#define ENDIAN_SWAP(x)     (x)		/* SQ_ENDIAN_* */
 #define CONST_BUF_NO_STRIDE(x)     (x)
-// mf
+/* mf */
 #define MEGA_FETCH(x)     (x)
 
 #define VTX_DWORD0(vtx_inst, ft, fwq, buffer_id, src_gpr, sr, ssx, mfc) \
@@ -308,9 +308,9 @@
 	 (((offset) << 0) | ((es) << 16) | ((cbns) << 18) | ((mf) << 19))
 #define VTX_DWORD_PAD 0x00000000
 
-// TEX clause insts
-// tex insts
-#define TEX_INST(x)     (x)		// SQ_TEX_INST_*
+/* TEX clause insts */
+/* tex insts */
+#define TEX_INST(x)     (x)		/* SQ_TEX_INST_* */
 
 #define BC_FRAC_MODE(x)         (x)
 #define FETCH_WHOLE_QUAD(x)     (x)
@@ -318,7 +318,7 @@
 #define R7xx_ALT_CONST(x)            (x)
 
 #define LOD_BIAS(x)     (x)
-//ct
+/*ct */
 #define COORD_TYPE_X(x)     (x)
 #define COORD_TYPE_Y(x)     (x)
 #define COORD_TYPE_Z(x)     (x)
@@ -330,7 +330,7 @@
 #define OFFSET_Z(x)     (((int)(x) * 2) & 0x1f)
 #define SAMPLER_ID(x)     (x)
 
-// R7xx has an additional parameter ALT_CONST. We always expose it, but ALT_CONST is R7xx only
+/* R7xx has an additional parameter ALT_CONST. We always expose it, but ALT_CONST is R7xx only */
 #define TEX_DWORD0(tex_inst, bfm, fwq, resource_id, src_gpr, sr, ac) \
 	 (((tex_inst) << 0) | ((bfm) << 5) | ((fwq) << 7) | ((resource_id) << 8) | \
           ((src_gpr) << 16) | ((sr) << 23) | ((ac) << 24))

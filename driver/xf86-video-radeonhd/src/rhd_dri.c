@@ -87,7 +87,7 @@
 #define IS_RADEONHD_DRIVER 1
 #include "radeon_dri.h"
 
-#ifdef RANDR_12_SUPPORT		// FIXME check / move to rhd_randr.c
+#ifdef RANDR_12_SUPPORT		/* FIXME check / move to rhd_randr.c */
 # include "xf86i2c.h" /* this is complete BS, stop using unnamed structs! */
 # include "xf86Crtc.h"
 #endif
@@ -158,7 +158,7 @@ struct rhdDri {
     drmAddress        ring;             /* Map */
     int               ringSizeLog2QW;
 
-    // TODO: what is r/o ring space for (1 page)
+    /* TODO: what is r/o ring space for (1 page) */
     unsigned long     ringReadOffset;   /* Offset into GART space */
     drm_handle_t      ringReadPtrHandle; /* Handle from drmAddMap */
     drmSize           ringReadMapSize;  /* Size of map */
@@ -527,10 +527,9 @@ static void RHDDRIInitGARTValues(struct rhdDri * rhdDRI)
 }
 
 /* Set AGP transfer mode according to requests and constraints */
-static Bool RHDSetAgpMode(struct rhdDri * rhdDRI, ScreenPtr pScreen)
+static Bool RHDSetAgpMode(struct rhdDri * rhdDRI)
 {
-    ScrnInfoPtr    pScrn  = xf86Screens[pScreen->myNum];
-    RHDPtr rhdPtr = RHDPTR(pScrn);
+    RHDPtr rhdPtr = RHDPTRI(rhdDRI);
     unsigned long mode   = drmAgpGetMode(rhdDRI->drmFD);	/* Default mode */
     unsigned int  vendor = drmAgpVendorId(rhdDRI->drmFD);
     unsigned int  device = drmAgpDeviceId(rhdDRI->drmFD);
@@ -553,7 +552,7 @@ static Bool RHDSetAgpMode(struct rhdDri * rhdDRI, ScreenPtr pScreen)
 	    else
 		rhdDRI->agpMode = 1;
 	}
-	xf86DrvMsg(pScreen->myNum, X_DEFAULT, "Using AGP %dx\n", rhdDRI->agpMode);
+	xf86DrvMsg(rhdDRI->scrnIndex, X_DEFAULT, "Using AGP %dx\n", rhdDRI->agpMode);
 
 	mode &= ~AGP_MODE_MASK;
 	if (is_v3) {
@@ -572,12 +571,12 @@ static Bool RHDSetAgpMode(struct rhdDri * rhdDRI, ScreenPtr pScreen)
     } else
 	rhdDRI->agpMode = 8; /* doesn't matter at this point */
 
-    xf86DrvMsg(pScreen->myNum, X_INFO,
+    xf86DrvMsg(rhdDRI->scrnIndex, X_INFO,
 	       "[agp] Mode 0x%08lx [AGP 0x%04x/0x%04x]\n",
 	       mode, vendor, device);
 
     if (drmAgpEnable(rhdDRI->drmFD, mode) < 0) {
-	xf86DrvMsg(pScreen->myNum, X_ERROR, "[agp] AGP not enabled\n");
+	xf86DrvMsg(rhdDRI->scrnIndex, X_ERROR, "[agp] AGP not enabled\n");
 	drmAgpRelease(rhdDRI->drmFD);
 	return FALSE;
     }
@@ -586,10 +585,9 @@ static Bool RHDSetAgpMode(struct rhdDri * rhdDRI, ScreenPtr pScreen)
 }
 
 /* Initialize Radeon's AGP registers */
-static void RHDSetAgpBase(struct rhdDri * rhdDRI, ScreenPtr pScreen)
+static void RHDSetAgpBase(struct rhdDri * rhdDRI)
 {
-    ScrnInfoPtr    pScrn  = xf86Screens[pScreen->myNum];
-    RHDPtr rhdPtr = RHDPTR(pScrn);
+    RHDPtr rhdPtr = RHDPTRI(rhdDRI);
 
     if (rhdPtr->ChipSet < RHD_R600)
 	RHDRegWrite (rhdDRI, AGP_BASE, drmAgpBase(rhdDRI->drmFD));
@@ -608,7 +606,7 @@ static Bool RHDDRIAgpInit(struct rhdDri * rhdDRI, ScreenPtr pScreen)
 	return FALSE;
     }
 
-    if (!RHDSetAgpMode(rhdDRI, pScreen))
+    if (!RHDSetAgpMode(rhdDRI))
 	return FALSE;
 
     RHDDRIInitGARTValues(rhdDRI);
@@ -709,7 +707,7 @@ static Bool RHDDRIAgpInit(struct rhdDri * rhdDRI, ScreenPtr pScreen)
 	       "[agp] GART Texture map mapped at 0x%08lx\n",
 	       (unsigned long)rhdDRI->gartTex);
 
-    RHDSetAgpBase(rhdDRI, pScreen);
+    RHDSetAgpBase(rhdDRI);
 
     return TRUE;
 }
@@ -892,11 +890,11 @@ static int RHDDRIKernelInit(RHDPtr rhdPtr, ScreenPtr pScreen)
 	return FALSE;
     }
 
-    // FIXME: this is to be moved to rhd_cp
-    /* DRM_RADEON_CP_INIT does an engine reset, which resets some engine
-     * registers back to their default values, so we need to restore
-     * those engine register here. */
-//    R5xx2DSetup(pScrn);
+    /* - FIXME: this is to be moved to rhd_cp
+     * - DRM_RADEON_CP_INIT does an engine reset, which resets some engine
+     *   registers back to their default values, so we need to restore
+     *   those engine register here.
+     * - R5xx2DSetup(pScrn); */
 
     return TRUE;
 }
@@ -980,8 +978,8 @@ static void RHDDRIIrqInit(RHDPtr rhdPtr, ScreenPtr pScreen)
 		       "[drm] falling back to irq-free operation\n");
 	    rhdDRI->irq = 0;
 	} else {
-// FIXME
-//	    rhdDRI->ModeReg->gen_int_cntl = RHDRegRead (rhdDRI,  RADEON_GEN_INT_CNTL );
+/* FIXME 
+	    rhdDRI->ModeReg->gen_int_cntl = RHDRegRead (rhdDRI,  RADEON_GEN_INT_CNTL ); */
 	}
     }
 
@@ -1118,13 +1116,15 @@ static Bool RHDDRISetVBlankInterrupt(ScrnInfoPtr pScrn, Bool on)
 
     if (rhdDRI->irq) {
         if (on) {
-#ifdef RANDR_12_SUPPORT		// FIXME check / move to rhd_randr.c
-	    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-  	    if (xf86_config->num_crtc > 1 && xf86_config->crtc[1]->enabled)
-	        value = DRM_RADEON_VBLANK_CRTC1 | DRM_RADEON_VBLANK_CRTC2;
-	    else
+	    value = DRM_RADEON_VBLANK_CRTC1;
+
+#ifdef RANDR_12_SUPPORT		/* FIXME check / move to rhd_randr.c */
+	    if (RHDPTR(pScrn)->randr) {
+		xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+		if (xf86_config->num_crtc > 1 && xf86_config->crtc[1]->enabled)
+		    value |= DRM_RADEON_VBLANK_CRTC2;
+	    }
 #endif
-	        value = DRM_RADEON_VBLANK_CRTC1;
 	}
 
 	if (RHDDRISetParam(pScrn, RADEON_SETPARAM_VBLANK_CRTC, value)) {
@@ -1161,19 +1161,6 @@ Bool RHDDRIPreInit(ScrnInfoPtr pScrn)
 		   "Please use a RandR merged framebuffer setup if you "
 		   "want Dual-head with DRI.\n");
 	return FALSE;
-    }
-
-    if (rhdPtr->ChipSet >= RHD_R600) {
-	if (rhdPtr->useDRI.set && rhdPtr->useDRI.val.bool) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		       "Direct rendering for R600 and up forced on - "
-		       "This is NOT officially supported yet "
-		       "and may cause instability or lockups\n");
-	} else {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		       "Direct rendering not officially supported on R600 and up\n");
-	    return FALSE;
-	}
     }
 
     if (!RHDDRIVersionCheck(rhdPtr)) {
@@ -1624,9 +1611,9 @@ void RHDDRIEnterVT(ScreenPtr pScreen)
 	return;
 
     if (rhdPtr->cardType == RHD_CARD_AGP) {
-	if (!RHDSetAgpMode(rhdDRI, pScreen))
+	if (!RHDSetAgpMode(rhdDRI))
 	    return;
-	RHDSetAgpBase(rhdDRI, pScreen);
+	RHDSetAgpBase(rhdDRI);
     }
 
     /* TODO: maybe using CP_INIT instead of CP_RESUME is enough, so we wouldn't
@@ -1684,7 +1671,7 @@ Bool RHDDRICloseScreen(ScreenPtr pScreen)
     ScrnInfoPtr    pScrn  = xf86Screens[pScreen->myNum];
     RHDPtr         rhdPtr = RHDPTR(pScrn);
     struct rhdDri *rhdDRI   = rhdPtr->dri;
-    //drm_radeon_init_t drmInfo;
+    /* drm_radeon_init_t drmInfo; */
     drm_radeon_init_t drmInfo;
 
     RHDFUNC(pScrn);
@@ -1693,7 +1680,7 @@ Bool RHDDRICloseScreen(ScreenPtr pScreen)
 	RHDDRISetVBlankInterrupt (pScrn, FALSE);
 	drmCtlUninstHandler(rhdDRI->drmFD);
 	rhdDRI->irq = 0;
-//	rhdDRI->ModeReg->gen_int_cntl = 0;
+/*	rhdDRI->ModeReg->gen_int_cntl = 0; */
     }
 
     /* invalidate GART location for EXA */
@@ -1784,8 +1771,8 @@ static void RHDDRITransitionSingleToMulti3d(ScreenPtr pScreen)
 
 static void RHDDRITransitionMultiToSingle3d(ScreenPtr pScreen)
 {
-    /* Let the remaining 3d app start page flipping again */
-//    RHDEnablePageFlip(pScreen);
+    /* Let the remaining 3d app start page flipping again 
+     * RHDEnablePageFlip(pScreen); */
 }
 
 static void RHDDRITransitionTo3d(ScreenPtr pScreen)
@@ -1794,8 +1781,8 @@ static void RHDDRITransitionTo3d(ScreenPtr pScreen)
     struct rhdDri *rhdDRI   = RHDPTR(pScrn)->dri;
 
     rhdDRI->have3Dwindows = TRUE;
-//    RHDChangeSurfaces(pScrn);	// FIXME needed for tiling
-//    RHDEnablePageFlip(pScreen);
+/*    RHDChangeSurfaces(pScrn);	*//* FIXME needed for tiling */
+/*    RHDEnablePageFlip(pScreen); */
 
     RHDDRISetVBlankInterrupt(pScrn, TRUE);
 }
@@ -1820,7 +1807,7 @@ static void RHDDRITransitionTo2d(ScreenPtr pScreen)
 		   "[dri] RHDDRITransitionTo2d: "
 		   "kernel failed to unflip buffers.\n");
     }
-//    RHDChangeSurfaces(pScrn);
+/*   RHDChangeSurfaces(pScrn); */
 
     RHDDRISetVBlankInterrupt(pScrn, FALSE);
 }
@@ -1927,7 +1914,7 @@ RHDDRMCPBuffer(int scrnIndex)
 	int ret = drmDMA(Dri->drmFD, &dma);
 	if (!ret) {
 	    buf = &Dri->buffers->list[indx];
-	    //xf86DrvMsg(scrnIndex, X_INFO, "%s: index %d, addr %p\n",  __func__, buf->idx, buf->address);
+	    /* xf86DrvMsg(scrnIndex, X_INFO, "%s: index %d, addr %p\n",  __func__, buf->idx, buf->address); */
 	    buf->used = 0;
 	    return buf;
 	} else if (ret != -16)

@@ -30,6 +30,13 @@
 # define uint32_t CARD32
 # define uint64_t CARD64
 
+enum RHDXvColorSpace {
+    RHD_XV_COLOR_SPACE_AUTODETECT,
+    RHD_XV_COLOR_SPACE_REC601,
+    RHD_XV_COLOR_SPACE_REC709,
+    RHD_XV_NUM_COLOR_SPACE
+};
+
 /* Xvideo port struct */
 struct RHDPortPriv {
     DrawablePtr pDraw;
@@ -50,6 +57,8 @@ struct RHDPortPriv {
     int h;
     int drw_x;
     int drw_y;
+
+    enum RHDXvColorSpace color_space;
 };
 
 extern void RHDRADEONDisplayTexturedVideo(ScrnInfoPtr pScrn, struct RHDPortPriv *pPriv);

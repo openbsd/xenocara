@@ -82,7 +82,7 @@ struct R5xx3D {
     unsigned short texH[2];
 
     Bool is_transform[2];
-    struct _PictTransform *transform[2];
+    struct pixman_transform *transform[2];
     Bool has_mask;
     /* Whether we are tiling horizontally and vertically */
     Bool need_src_tile_x;

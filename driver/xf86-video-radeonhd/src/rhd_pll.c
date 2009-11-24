@@ -732,8 +732,14 @@ RV620PLL1Power(struct rhdPLL *PLL, int Power)
 	RHDRegMask(PLL, P1PLL_CNTL, 0x01, 0x01); /* Reset */
 	usleep(2);
 
-	RHDRegMask(PLL, P1PLL_CNTL, 0x02, 0x02); /* Power down */
+	/* Sometimes we have to keep unused PLL running, see bug #18016 */
+	if ((RHDRegRead(PLL, RV620_EXT1_DIFF_POST_DIV_CNTL) & RV62_EXT1_DIFF_DRIVER_ENABLE) == 0)
+	    RHDRegMask(PLL, P1PLL_CNTL, 0x02, 0x02); /* Power down */
+	else
+	  xf86DrvMsg(PLL->scrnIndex, X_WARNING, "PHYA differential clock driver not disabled\n");
 	usleep(200);
+
+	RHDRegMask(PLL, P1PLL_CNTL, 0x2000, 0x2000); /* reset anti-glitch */
 
 	return;
     }
@@ -781,8 +787,14 @@ RV620PLL2Power(struct rhdPLL *PLL, int Power)
 	RHDRegMask(PLL, P2PLL_CNTL, 0x01, 0x01); /* Reset */
 	usleep(2);
 
-	RHDRegMask(PLL, P2PLL_CNTL, 0x02, 0x02); /* Power down */
+	/* Sometimes we have to keep unused PLL running, see bug #18016 */
+	if ((RHDRegRead(PLL, RV620_EXT2_DIFF_POST_DIV_CNTL) &  RV62_EXT2_DIFF_DRIVER_ENABLE) == 0)
+	    RHDRegMask(PLL, P2PLL_CNTL, 0x02, 0x02); /* Power down */
+	else
+	  xf86DrvMsg(PLL->scrnIndex, X_WARNING, "PHYB differential clock driver not disabled\n");
 	usleep(200);
+
+	RHDRegMask(PLL, P2PLL_CNTL, 0x2000, 0x2000); /* reset anti-glitch */
 
 	return;
     }
@@ -1231,13 +1243,13 @@ RHDSetupLimits(RHDPtr rhdPtr, CARD32 *RefClock,
     *PixMax = RHD_PLL_MAX_DEFAULT;
 
 #ifdef ATOM_BIOS
-    getPLLValuesFromAtomBIOS(rhdPtr, GET_MIN_PIXEL_CLOCK_PLL_OUTPUT, "minimum PLL output",
+    getPLLValuesFromAtomBIOS(rhdPtr, ATOM_GET_MIN_PIXEL_CLOCK_PLL_OUTPUT, "minimum PLL output",
 			     IntMin,  PLL_MIN);
-    getPLLValuesFromAtomBIOS(rhdPtr, GET_MAX_PIXEL_CLOCK_PLL_OUTPUT, "maximum PLL output",
+    getPLLValuesFromAtomBIOS(rhdPtr, ATOM_GET_MAX_PIXEL_CLOCK_PLL_OUTPUT, "maximum PLL output",
 			     IntMax, PLL_MAX);
-    getPLLValuesFromAtomBIOS(rhdPtr, GET_MAX_PIXEL_CLK, "Pixel Clock",
+    getPLLValuesFromAtomBIOS(rhdPtr, ATOM_GET_MAX_PIXEL_CLK, "Pixel Clock",
 			     PixMax, PLL_MAX);
-    getPLLValuesFromAtomBIOS(rhdPtr, GET_REF_CLOCK, "reference clock",
+    getPLLValuesFromAtomBIOS(rhdPtr, ATOM_GET_REF_CLOCK, "reference clock",
 			     RefClock, PLL_NONE);
     if (*IntMax == 0) {
 	if (rhdPtr->ChipSet < RHD_RV620)

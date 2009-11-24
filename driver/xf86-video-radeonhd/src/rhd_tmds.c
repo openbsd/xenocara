@@ -243,6 +243,7 @@ TMDSAPropertyControl(struct rhdOutput *Output,
 	    switch (Property) {
 		case RHD_OUTPUT_COHERENT:
 		case RHD_OUTPUT_HDMI:
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -254,6 +255,9 @@ TMDSAPropertyControl(struct rhdOutput *Output,
 		    return TRUE;
 		case RHD_OUTPUT_HDMI:
 		    val->Bool = Private->HdmiEnabled;
+		    return TRUE;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    val->Bool = RHDHdmiGetAudioWorkaround(Private->Hdmi);
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -267,6 +271,9 @@ TMDSAPropertyControl(struct rhdOutput *Output,
 		case RHD_OUTPUT_HDMI:
 		    Private->HdmiEnabled = val->Bool;
 		    break;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    RHDHdmiSetAudioWorkaround(Private->Hdmi, val->Bool);
+		    break;
 		default:
 		    return FALSE;
 	    }
@@ -277,6 +284,9 @@ TMDSAPropertyControl(struct rhdOutput *Output,
 		case RHD_OUTPUT_HDMI:
 		    Output->Mode(Output, Private->Mode);
 		    Output->Power(Output, RHD_POWER_ON);
+		    break;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    RHDHdmiCommitAudioWorkaround(Private->Hdmi);
 		    break;
 		default:
 		    return FALSE;

@@ -251,7 +251,7 @@ R5xx3DSetup(int scrnIndex)
 	if (IS_R500_3D)
 	    R5XXPowerPipes(pScrn);
 
-	gb_tile_config = (R300_ENABLE_TILING | R300_TILE_SIZE_16 | R300_SUBPIXEL_1_16);
+	gb_tile_config = (R300_ENABLE_TILING | R300_TILE_SIZE_16);
 
 	switch(num_gb_pipes) {
 	case 2: gb_tile_config |= R300_PIPE_COUNT_R300; break;
@@ -287,21 +287,21 @@ R5xx3DSetup(int scrnIndex)
 	OUT_ACCEL_REG(R300_GB_AA_CONFIG, 0);
 	OUT_ACCEL_REG(R300_RB3D_DSTCACHE_CTLSTAT, R300_DC_FLUSH_3D | R300_DC_FREE_3D);
 	OUT_ACCEL_REG(R300_RB3D_ZCACHE_CTLSTAT, R300_ZC_FLUSH | R300_ZC_FREE);
-	OUT_ACCEL_REG(R300_GB_MSPOS0, ((8 << R300_MS_X0_SHIFT) |
-				       (8 << R300_MS_Y0_SHIFT) |
-				       (8 << R300_MS_X1_SHIFT) |
-				       (8 << R300_MS_Y1_SHIFT) |
-				       (8 << R300_MS_X2_SHIFT) |
-				       (8 << R300_MS_Y2_SHIFT) |
-				       (8 << R300_MSBD0_Y_SHIFT) |
-				       (7 << R300_MSBD0_X_SHIFT)));
-	OUT_ACCEL_REG(R300_GB_MSPOS1, ((8 << R300_MS_X3_SHIFT) |
-				       (8 << R300_MS_Y3_SHIFT) |
-				       (8 << R300_MS_X4_SHIFT) |
-				       (8 << R300_MS_Y4_SHIFT) |
-				       (8 << R300_MS_X5_SHIFT) |
-				       (8 << R300_MS_Y5_SHIFT) |
-				       (8 << R300_MSBD1_SHIFT)));
+	OUT_ACCEL_REG(R300_GB_MSPOS0, ((6 << R300_MS_X0_SHIFT) |
+				       (6 << R300_MS_Y0_SHIFT) |
+				       (6 << R300_MS_X1_SHIFT) |
+				       (6 << R300_MS_Y1_SHIFT) |
+				       (6 << R300_MS_X2_SHIFT) |
+				       (6 << R300_MS_Y2_SHIFT) |
+				       (6 << R300_MSBD0_Y_SHIFT) |
+				       (6 << R300_MSBD0_X_SHIFT)));
+	OUT_ACCEL_REG(R300_GB_MSPOS1, ((6 << R300_MS_X3_SHIFT) |
+				       (6 << R300_MS_Y3_SHIFT) |
+				       (6 << R300_MS_X4_SHIFT) |
+				       (6 << R300_MS_Y4_SHIFT) |
+				       (6 << R300_MS_X5_SHIFT) |
+				       (6 << R300_MS_Y5_SHIFT) |
+				       (6 << R300_MSBD1_SHIFT)));
 	FINISH_ACCEL();
 
 	BEGIN_ACCEL(5);
@@ -756,18 +756,22 @@ R5xx3DSetup(int scrnIndex)
 
 	BEGIN_ACCEL(7);
 	OUT_ACCEL_REG(R300_SC_EDGERULE, 0xA5294A5);
-	OUT_ACCEL_REG(R300_SC_SCISSOR0, ((0 << R300_SCISSOR_X_SHIFT) |
-					 (0 << R300_SCISSOR_Y_SHIFT)));
-	OUT_ACCEL_REG(R300_SC_SCISSOR1, ((8191 << R300_SCISSOR_X_SHIFT) |
-					 (8191 << R300_SCISSOR_Y_SHIFT)));
 
 	if (IS_R300_3D) {
 	    /* clip has offset 1440 */
-	    OUT_ACCEL_REG(R300_SC_CLIP_0_A, ((1088 << R300_CLIP_X_SHIFT) |
-					     (1088 << R300_CLIP_Y_SHIFT)));
-	    OUT_ACCEL_REG(R300_SC_CLIP_0_B, (((1080 + 2920) << R300_CLIP_X_SHIFT) |
-					     ((1080 + 2920) << R300_CLIP_Y_SHIFT)));
+	    OUT_ACCEL_REG(R300_SC_SCISSOR0, ((1440 << R300_SCISSOR_X_SHIFT) |
+					     (1440 << R300_SCISSOR_Y_SHIFT)));
+	    OUT_ACCEL_REG(R300_SC_SCISSOR1, ((8191 << R300_SCISSOR_X_SHIFT) |
+					     (8191 << R300_SCISSOR_Y_SHIFT)));
+	    OUT_ACCEL_REG(R300_SC_CLIP_0_A, ((1440 << R300_CLIP_X_SHIFT) |
+					     (1440 << R300_CLIP_Y_SHIFT)));
+	    OUT_ACCEL_REG(R300_SC_CLIP_0_B, ((4080 << R300_CLIP_X_SHIFT) |
+					     (4080 << R300_CLIP_Y_SHIFT)));
 	} else {
+	    OUT_ACCEL_REG(R300_SC_SCISSOR0, ((0 << R300_SCISSOR_X_SHIFT) |
+					     (0 << R300_SCISSOR_Y_SHIFT)));
+	    OUT_ACCEL_REG(R300_SC_SCISSOR1, ((8191 << R300_SCISSOR_X_SHIFT) |
+					     (8191 << R300_SCISSOR_Y_SHIFT)));
 	    OUT_ACCEL_REG(R300_SC_CLIP_0_A, ((0 << R300_CLIP_X_SHIFT) |
 					     (0 << R300_CLIP_Y_SHIFT)));
 	    OUT_ACCEL_REG(R300_SC_CLIP_0_B, ((4080 << R300_CLIP_X_SHIFT) |

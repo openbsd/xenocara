@@ -290,7 +290,7 @@ DACGetElectrical(RHDPtr rhdPtr, enum outputType type, int dac, CARD8 *bandgap, C
 
 	if (atomBiosArg.val = 0x18,
 	    RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-				   ATOMBIOS_GET_CODE_DATA_TABLE,
+				   ATOM_GET_CODE_DATA_TABLE,
 				   &atomBiosArg) == ATOM_SUCCESS) {
 	    struct AtomDacCodeTableData *data
 		= (struct AtomDacCodeTableData *)atomBiosArg.CommandDataTable.loc;
@@ -648,7 +648,7 @@ DACSenseRV620(struct rhdOutput *Output, CARD32 offset, Bool TV)
     /* enable comparators for R/G/B, disable DDET and SDET reference */
     RHDRegMask(Output, offset + RV620_DACA_COMPARATOR_ENABLE, 0x70000, 0x070101);
     RHDRegMask(Output, offset + RV620_DACA_AUTODETECT_CONTROL, 0x01, 0xff);
-    usleep(32);
+    usleep(50);
     ret = RHDRegRead(Output, offset + RV620_DACA_AUTODETECT_STATUS);
     RHDRegWrite(Output, offset + RV620_DACA_AUTODETECT_CONTROL, DetectControl);
     RHDRegWrite(Output, offset + RV620_DACA_MACRO_CNTL, Control1);

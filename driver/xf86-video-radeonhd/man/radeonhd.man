@@ -30,7 +30,8 @@ has the following limitations:
 .\".TP "\w'\fB\(bu\fR'u+1n"
 .TP 2
 \(bu
-Support for hardware-based 2D acceleration and Xvideo needs more testing on R6xx and R7xx based cards.
+Support for hardware-based 2D acceleration and Xvideo needs more testing on
+R6xx and R7xx based cards.
 .TP
 \(bu
 No TV and Component connector support so far.
@@ -166,23 +167,38 @@ RS740, RS740M
 .B RS780
 Radeon HD 3100/3200/3300 Series
 .TP 8
-.B RV770
-Radeon HD 4800 Series; Everest, K2, Denali ATI FirePro
-.TP 8
 .B R700
 Radeon R700
 .TP 8
-.B M98
-Radeon M98 Mobility
+.B RV710
+Radeon HD4570, HD4350
 .TP 8
 .B RV730
 Radeon HD4670, HD4650
 .TP 8
-.B M96
-Radeon M96 Mobility
+.B RV740
+Radeon HD4770. EXPERIMENTAL AND UNTESTED
 .TP 8
-.B RV710
-Radeon HD4570, HD4350
+.B RV770
+Radeon HD 4800 Series; Everest, K2, Denali ATI FirePro
+.TP 8
+.B RV790
+Radeon HD 4890
+.TP 8
+.B M92
+Mobility Radeon HD4330, HD4530, HD4570. EXPERIMENTAL
+.TP 8
+.B M93
+Mobility Radeon M93. EXPERIMENTAL AND UNTESTED
+.TP 8
+.B M96
+Mobility Radeon HD4600
+.TP 8
+.B M97
+Mobility Radeon HD4860. EXPERIMENTAL AND UNTESTED
+.TP 8
+.B M98
+Mobility Radeon HD4850, HD4870
 .\" END_DEVICE_LIST marker - do not delete
 .PD
 .\"
@@ -220,21 +236,22 @@ is the newer but more experimental hardware-based acceleration technique.
 .RS
 .PD
 .PP
-The default is
-.BR "depending on the chipset" ,
-driver version, and state of acceleration techniques and tries to give the best
-user experience.
-.br
+Default value
+.B depends on the chipset
+and the acceleration techniques available for that chipset, and is chosen to
+give the best user experience.
+.PP
+Note that R600 and above require
+.BR DRI
+to be enabled for "exa".
+.PP
 Rotation isn't supported for the AccelMethods \*qnone\*q and \*qshadowfb\*q.
 .RE
 .TP
 .BI "Option \*qDRI\*q"
 Use this option to enable 3D and Xv acceleration using DRI.
-Currently, the default is
-.B on
-on R5xx and RS6xx chips, and
-.B off
-on all others.
+Default is
+.B on.
 .TP
 .BI "Option \*qOffscreenSize\*q \*q" <integer>M|<integer>% \*q
 Specify the amount of framebuffer memory used for offscreen pixmaps, in
@@ -400,25 +417,26 @@ mailing list.
 .TP
 .BI "Option \*qAudio\*q \*q" boolean \*q
 This option enables the audio hardware, which is responsible for delivering audio data
-to the different HDMI capable conntectors and used to communicate with the audio
+to the different HDMI capable connectors and used to communicate with the audio
 driver of the operation system. The default is
 .BR off .
 .TP
 .BI "Option \*qHDMI\*q \*q" string \*q
 Possible values are "DVI-I_0", "DVI-I_1"..,"DVI-D_0","DVI-I_1",.., "all".
 This option enables HDMI-Audio and HDMI-Info packets on the specified connector.
-This is the only way enabling HDMI at the moment, since decoding E-EDID data to check if monitor supports HDMI is not implemented (yet).
+This is the only way enabling HDMI at the moment, since decoding E-EDID data
+to check if monitor supports HDMI is not implemented (yet).
 .TP
 .BI "Option \*qCoherent\*q \*q" string \*q
 There are two different ways to program the TMDS encoder in an output
-for best signal quality for the transmitter chip used inside a digital 
-monitor. This option may be used to set the programming for each output 
+for best signal quality for the transmitter chip used inside a digital
+monitor. This option may be used to set the programming for each output
 individually. The string is a space separated list of
-.B <output_transmitter>=on|off. 
-Possible  values for 
-.B <output_transmitter> 
-are: 
-.B TMDS_A, 
+.B <output_transmitter>=on|off.
+Possible  values for
+.B <output_transmitter>
+are:
+.B TMDS_A,
 .B TMDS_B,
 .B UNIPHY_A,
 .B UNIPHY_B,
@@ -426,14 +444,14 @@ are:
 .B AtomOutputLVTMA,
 .B AtomOutputKldskpLvtma,
 .B AtomOutputUniphyA,
-.B  AtomOutputUniphyB. 
-The log file should be consulted 
+.B  AtomOutputUniphyB.
+The log file should be consulted
 on which ones to use. The line:
 .B "Option \*qCoherent\*q \*qTMDS_A=off TMDS_B=on\*q"
-will set coherent mode to 
-.B off 
-for TMDS A and to 
-.B on 
+will set coherent mode to
+.B off
+for TMDS A and to
+.B on
 for TMDS B.
 The default for all outputs is
 .BR off .
@@ -470,6 +488,16 @@ This option isn't implemented yet and has no effect.
 .RE
 .PP
 .PD
+.TP
+.BI "Option \*qForceLowPowerMode\*q \*q" boolean \*q
+Enable to statically set GPU engine clock to a lower than default value. This
+can help reduce power consumption. The default is
+.B off.
+.TP
+.BI "Option \*qLowPowerModeEngineClock\*q \*q" integer \*q
+Engine clock frequency to use when ForceLowPowerMode is enabled, in Hz. If not
+set, the minimum known working frequency is used.  If integer is negative,
+validation is skipped, and the absolute value is used for the engine clock.
 .\"
 .\"
 .SH RANDR OUTPUT PROPERTIES
@@ -591,7 +619,7 @@ panning, which is included in Xserver 1.6.  It is considerable more flexible,
 and should support rotated pans.
 .RE
 .TP
-.B _Backlight
+.B Backlight
 .RS
 .TP 16
 .PD 0
@@ -604,7 +632,7 @@ int32
 .RS
 .PD
 .PP
-Specifies the backlight intensity on laptop panels, if controlable by the driver.
+Specifies the backlight intensity on laptop panels, if controllable by the driver.
 .RE
 .TP
 .B _Coherent
@@ -623,6 +651,31 @@ int32
 Sets the coherent flag for TMDS signals. See also
 .I Option
 .IR "Coherent" .
+.\"
+.\"
+.SH XVIDEO ATTRIBUTES
+On R600 and above, the following XVideo attributes are supported.
+Use
+.B xvattr
+to query and set these values at runtime.
+.TP
+.B XV_COLORSPACE
+Select the Y'CbCr color space of the source video.  Accepted values
+are 'auto-detect'(0), 'Rec.601'(1), and 'Rec.709'(2).
+.RS
+.PP
+Rec.709 is the standard which applies to high-definition television
+broadcasting and "HD" digital video in general; Rec.601 applies to all
+other digital video.
+When 'auto-detect' is selected, Rec.709 is used for videos encoded
+at least 928px wide, and Rec.601 is used otherwise.
+This cut-off is lower than 720p so that the correct color space can be
+applied to some media with non-standard resolutions that have high-probability
+of having originated from Rec.709 encoded content.
+.PP
+Default is
+.B 'auto-detect'(0).
+.RE
 .\"
 .\"
 .SH KNOWN BUGS
@@ -677,5 +730,6 @@ Query the bugtracker for radeonhd bugs
 .\"
 .\"
 .SH AUTHORS
-Egbert Eich, Luc Verhaegen, Matthias Hopf, Hans Ulrich Niedermann, Christian Koenig, Alexander Deucher, and others.
+Egbert Eich, Luc Verhaegen, Matthias Hopf, Hans Ulrich Niedermann,
+Christian Koenig, Alexander Deucher, and others.
 .\" vim: syntax=nroff

@@ -34,7 +34,7 @@ enum {
     MM_INDEX                                              = 0x0000,
     MM_DATA                                               = 0x0004,
 
-    /*SRBM_STATUS                                         = 0x0e50, */
+    SRBM_STATUS                                           = 0x0e50,
 	RLC_RQ_PENDING_bit                                = 1 << 3,
 	RCU_RQ_PENDING_bit                                = 1 << 4,
 	GRBM_RQ_PENDING_bit                               = 1 << 5,
@@ -401,19 +401,19 @@ enum {
 	IB1_INT_STAT_bit                                  = 1 << 30,
 	RB_INT_STAT_bit                                   = 1 << 31,
 
-//  SX_ALPHA_TEST_CONTROL                                 = 0x00028410,
+/*  SX_ALPHA_TEST_CONTROL                                 = 0x00028410, */
 	ALPHA_FUNC__REF_NEVER                             = 0,
 	ALPHA_FUNC__REF_ALWAYS                            = 7,
-//  DB_SHADER_CONTROL                                     = 0x0002880c,
+/*  DB_SHADER_CONTROL                                     = 0x0002880c, */
 	Z_ORDER__EARLY_Z_THEN_LATE_Z                      = 2,
-//  PA_SU_SC_MODE_CNTL                                    = 0x00028814,
-//	POLY_MODE_mask                                    = 0x03 << 3,
+/*  PA_SU_SC_MODE_CNTL                                    = 0x00028814, */
+/*	POLY_MODE_mask                                    = 0x03 << 3, */
 	POLY_MODE__TRIANGLES = 0, POLY_MODE__DUAL_MODE,
-//	POLYMODE_FRONT_PTYPE_mask                         = 0x07 << 5,
+/*	POLYMODE_FRONT_PTYPE_mask                         = 0x07 << 5, */
 	POLYMODE_PTYPE__POINTS = 0, POLYMODE_PTYPE__LINES, POLYMODE_PTYPE__TRIANGLES,
     PA_SC_AA_SAMPLE_LOCS_8S_WD1_M                         = 0x00028c20,
     DB_SRESULTS_COMPARE_STATE0                            = 0x00028d28,	/* See autoregs: DB_SRESULTS_COMPARE_STATE1 */
-//  DB_SRESULTS_COMPARE_STATE1                            = 0x00028d2c,
+/*  DB_SRESULTS_COMPARE_STATE1                            = 0x00028d2c, */
     DB_ALPHA_TO_MASK                                      = 0x00028d44,
 	ALPHA_TO_MASK_ENABLE                              = 1 << 0,
 	ALPHA_TO_MASK_OFFSET0_mask                        = 0x03 << 8,
@@ -425,8 +425,8 @@ enum {
 	ALPHA_TO_MASK_OFFSET3_mask                        = 0x03 << 8,
 	ALPHA_TO_MASK_OFFSET3_shift                       = 14,
 
-//  SQ_VTX_CONSTANT_WORD2_0                               = 0x00038008,
-//    	SQ_VTX_CONSTANT_WORD2_0__DATA_FORMAT_mask         = 0x3f << 20,
+/*  SQ_VTX_CONSTANT_WORD2_0                               = 0x00038008, */
+/*    	SQ_VTX_CONSTANT_WORD2_0__DATA_FORMAT_mask         = 0x3f << 20, */
 	FMT_INVALID=0,      FMT_8,          FMT_4_4,            FMT_3_3_2,
 	                    FMT_16=5,       FMT_16_FLOAT,       FMT_8_8,
 	FMT_5_6_5,          FMT_6_5_5,      FMT_1_5_5_5,        FMT_4_4_4_4,
@@ -441,7 +441,7 @@ enum {
 	FMT_8_8_8,          FMT_16_16_16,   FMT_16_16_16_FLOAT, FMT_32_32_32,
 	FMT_32_32_32_FLOAT=48,
 
-//  High level register file lengths
+/*  High level register file lengths */
     SQ_ALU_CONSTANT                                       = SQ_ALU_CONSTANT0_0,	/* 256 PS, 256 VS */
     SQ_ALU_CONSTANT_ps_num                                = 256,
     SQ_ALU_CONSTANT_vs_num                                = 256,
@@ -497,7 +497,7 @@ enum {
     SQ_BOOL_CONST_offset                                  = 4,
     SQ_BOOL_CONST_ps                                      = 0,
     SQ_BOOL_CONST_vs                                      = SQ_BOOL_CONST_ps + SQ_BOOL_CONST_ps_num,
-    SQ_BOOL_CONST_gs                                      = SQ_BOOL_CONST_vs + SQ_BOOL_CONST_vs_num,
+    SQ_BOOL_CONST_gs                                      = SQ_BOOL_CONST_vs + SQ_BOOL_CONST_vs_num
 };
 
 

@@ -30,16 +30,23 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
+
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#ifdef XSERVER_LIBPCIACCESS
+#include <pciaccess.h>
+#else
 #include <pci/pci.h>
+#endif
+
 #include <unistd.h>
 #include <stdlib.h>
 
 #define DEFAULT_START 0x7200
 #define DEFAULT_END   0x7300
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
 #include "git_version.h"
 
 #ifndef ULONG
@@ -272,6 +279,8 @@ struct RHDDevice {
 /*
  *
  */
+#ifndef XSERVER_LIBPCIACCESS
+/* Only for libpci use */
 static struct pci_dev *
 DeviceLocate(struct pci_dev *devices, int bus, int dev, int func)
 {
@@ -283,12 +292,17 @@ DeviceLocate(struct pci_dev *devices, int bus, int dev, int func)
 	    return device;
     return NULL;
 }
+#endif
 
 /*
  *
  */
 static struct RHDDevice *
+#ifdef XSERVER_LIBPCIACCESS
+DeviceMatch(struct pci_device *device)
+#else
 DeviceMatch(struct pci_dev *device)
+#endif
 {
     int i;
 
@@ -303,6 +317,8 @@ DeviceMatch(struct pci_dev *device)
 /*
  *
  */
+#ifndef XSERVER_LIBPCIACCESS
+/* Only used by pci */
 static void *
 MapBar(struct pci_dev *device, int ioBar, int devMem)
 {
@@ -318,6 +334,7 @@ MapBar(struct pci_dev *device, int ioBar, int devMem)
 
     return map;
 }
+#endif
 
 /*
  *
@@ -363,7 +380,14 @@ print_help(const char* progname, const char* message, const char* msgarg)
 {
 	if (message != NULL)
 	    fprintf(stderr, "%s %s\n", message, msgarg);
-	fprintf(stderr, "Usage: %s [-r start,end | -w addr val | -l {0|1}] PCI-tag\n"
+	fprintf(stderr, "Usage: %s "
+#if defined(XSERVER_LIBPCIACCESS) && defined (HAVE_PCI_DEVICE_ENABLE)
+			"[-e] "
+#endif
+			"[-r start,end | -w addr val | -l {0|1}] PCI-tag\n"
+#if defined(XSERVER_LIBPCIACCESS) && defined (HAVE_PCI_DEVICE_ENABLE)
+		        "       -e: enable PCI card (not normally needed)\n"
+#endif
 			"       PCI-tag: bus:dev.func\n\n",
 		progname);
 }
@@ -375,14 +399,21 @@ print_help(const char* progname, const char* message, const char* msgarg)
 int
 main(int argc, char *argv[])
 {
+#ifdef XSERVER_LIBPCIACCESS
+    struct pci_device *device = NULL;
+# if HAVE_PCI_DEVICE_ENABLE
+    int enable_device = FALSE;
+# endif
+#else
     struct pci_dev *device = NULL;
     struct pci_access *pciAccess;
-    struct RHDDevice *rhdDevice = NULL;
     int devMem;
+    int saved_errno;
+#endif
+    struct RHDDevice *rhdDevice = NULL;
     void *io;
     int bus, dev, func;
     int ret;
-    int saved_errno;
     Bool deviceSet = FALSE;
     CARD32 start = DEFAULT_START, end = DEFAULT_END;
     CARD32 addr, val;
@@ -400,10 +431,20 @@ main(int argc, char *argv[])
     printf("%s: v%s, %s\n",
 	   "rhd_dump", PACKAGE_VERSION, GIT_MESSAGE);
 
+
+#ifdef XSERVER_LIBPCIACCESS
+    /* Initialise pciaccess */
+    if ((i = pci_system_init())) {
+	fprintf(stderr, "ERROR: pciaccess failed to initialise PCI bus"
+		        " (error %d)\n", i);
+	return 1;
+    }
+#else
     /* init libpci */
     pciAccess = pci_alloc();
     pci_init(pciAccess);
     pci_scan_bus(pciAccess);
+#endif
 
     if (argc < 2) {
 	print_help(argv[0], "Missing argument: please provide a PCI tag\n",
@@ -412,6 +453,13 @@ main(int argc, char *argv[])
     }
 
     for (i = 1; i < argc; i++) {
+#ifdef XSERVER_LIBPCIACCESS
+# if HAVE_PCI_DEVICE_ENABLE
+	if (!strncmp("-e", argv[i], 3)) {
+	    enable_device = TRUE;
+	}else
+# endif
+#endif
 	if (!strncmp("-r",argv[i],3)) {
 	    action = READ;
 
@@ -461,7 +509,7 @@ main(int argc, char *argv[])
 		i--;
 		ret = 0;
 	    }
-	    
+
 	    if (addr > 1) ret = 0;
 	    if (ret != 1) {
 		print_help(argv[0], "Invalid LUT id:", argv[i]);
@@ -490,13 +538,26 @@ main(int argc, char *argv[])
     }
 
     if (deviceSet) {
-	/* find our toy */
+#ifdef XSERVER_LIBPCIACCESS
+	/* Find the toy using pciaccess */
+	if ((device = pci_device_find_by_slot(0, bus, dev, func)) == NULL) {
+	    fprintf(stderr, "ERROR: Unable to find PCI device at %02X:%02X.%02X.\n",
+		    bus, dev, func);
+	    return 1;
+	}
+# if HAVE_PCI_DEVICE_ENABLE
+	if (enable_device)
+	    pci_device_enable(device);
+# endif
+#else
+	/* find our toy using pci */
 	device = DeviceLocate(pciAccess->devices, bus, dev, func);
 	if (!device) {
 	    fprintf(stderr, "Unable to find PCI device at %02X:%02X.%02X.\n",
 		    bus, dev, func);
 	    return 1;
 	}
+#endif
 
 	rhdDevice = DeviceMatch(device);
 	if (!rhdDevice) {
@@ -511,6 +572,24 @@ main(int argc, char *argv[])
 	return 1;
     }
 
+    /* Map into CPU memory space the required PCI memory */
+
+#ifdef XSERVER_LIBPCIACCESS
+    pci_device_probe(device);
+
+    if (device->regions[rhdDevice->bar].base_addr == 0) {
+	fprintf(stderr, "ERROR: Failed to find required resource on PCI card.\n");
+	return 1;
+    }
+
+    if ((i = pci_device_map_range(device,device->regions[rhdDevice->bar].base_addr,
+					 device->regions[rhdDevice->bar].size,
+					 PCI_DEV_MAP_FLAG_WRITABLE, &io))) {
+	fprintf(stderr, "ERROR: Couldn't map IO memory: %s.\n", strerror(i));
+	return i;
+    }
+
+#else
 
     /* make sure we can actually read DEV_MEM before we do anything else */
     devMem = open(DEV_MEM, O_RDWR);
@@ -522,11 +601,12 @@ main(int argc, char *argv[])
     io = MapBar(device, rhdDevice->bar, devMem);
     saved_errno = errno;
     close (devMem);
-    if (!io) {
+    if (io == (void *) -1) {
 	fprintf(stderr, "Unable to map IO memory: %s.\n",
 		strerror(saved_errno));
 	return 1;
     }
+#endif
 
     ChipType = rhdDevice->type;
     if (action == READ) {
@@ -556,6 +636,11 @@ main(int argc, char *argv[])
 	    printf("%02X: %3X %3X %3X\n", j, r, g, b);
 	}
     }
+
+#ifdef XSERVER_LIBPCIACCESS
+    pci_device_unmap_range(device, io, device->regions[rhdDevice->bar].size);
+    pci_system_cleanup();
+#endif
 
     return 0;
 }

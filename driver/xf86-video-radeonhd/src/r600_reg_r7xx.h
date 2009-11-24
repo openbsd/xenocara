@@ -33,7 +33,7 @@ enum {
 
     /* R7XX_MC_VM_FB_LOCATION                             = 0x00002024, */
 
-//  GRBM_STATUS                                           = 0x00008010,
+/*  GRBM_STATUS                                           = 0x00008010, */
 	R7XX_TA_BUSY_bit                                  = 1 << 14,
 
     R7xx_SQ_DYN_GPR_CNTL_PS_FLUSH_REQ                     = 0x00008d8c,
@@ -43,14 +43,14 @@ enum {
 	ISOLATE_GS_ENABLE_bit                             = 1 << 13,
 	VS_PC_LIMIT_ENABLE_bit                            = 1 << 14,
 
-//  SQ_ALU_WORD0                                          = 0x00008dfc,
-//	SRC0_SEL_mask                                     = 0x1ff << 0,
-// 	SRC1_SEL_mask                                     = 0x1ff << 13,
+/*  SQ_ALU_WORD0                                          = 0x00008dfc, */
+/*	SRC0_SEL_mask                                     = 0x1ff << 0, */
+/* 	SRC1_SEL_mask                                     = 0x1ff << 13, */
 	    R7xx_SQ_ALU_SRC_1_DBL_L                       = 0xf4,
 	    R7xx_SQ_ALU_SRC_1_DBL_M                       = 0xf5,
 	    R7xx_SQ_ALU_SRC_0_5_DBL_L                     = 0xf6,
 	    R7xx_SQ_ALU_SRC_0_5_DBL_M                     = 0xf7,
-// 	INDEX_MODE_mask                                   = 0x07 << 26,
+/* 	INDEX_MODE_mask                                   = 0x07 << 26, */
 	    R7xx_SQ_INDEX_GLOBAL                          = 0x05,
 	    R7xx_SQ_INDEX_GLOBAL_AR_X                     = 0x06,
     R6xx_SQ_ALU_WORD1_OP2                                 = 0x00008dfc,
@@ -74,46 +74,46 @@ enum {
 	    R7xx_SQ_OP2_INST_PRED_SETGT_64                = 0x7c,
 	    R7xx_SQ_OP2_INST_PRED_SETE_64                 = 0x7d,
 	    R7xx_SQ_OP2_INST_PRED_SETGE_64                = 0x7e,
-//  SQ_ALU_WORD1_OP3                                      = 0x00008dfc,
-//	SRC2_SEL_mask                                     = 0x1ff << 0,
-//	    R7xx_SQ_ALU_SRC_1_DBL_L                       = 0xf4,
-//	    R7xx_SQ_ALU_SRC_1_DBL_M                       = 0xf5,
-//	    R7xx_SQ_ALU_SRC_0_5_DBL_L                     = 0xf6,
-//	    R7xx_SQ_ALU_SRC_0_5_DBL_M                     = 0xf7,
-// 	SQ_ALU_WORD1_OP3__ALU_INST_mask                   = 0x1f << 13,
+/*  SQ_ALU_WORD1_OP3                                      = 0x00008dfc, */
+/*	SRC2_SEL_mask                                     = 0x1ff << 0, */
+/*	    R7xx_SQ_ALU_SRC_1_DBL_L                       = 0xf4, */
+/*	    R7xx_SQ_ALU_SRC_1_DBL_M                       = 0xf5, */
+/*	    R7xx_SQ_ALU_SRC_0_5_DBL_L                     = 0xf6, */
+/*	    R7xx_SQ_ALU_SRC_0_5_DBL_M                     = 0xf7, */
+/* 	SQ_ALU_WORD1_OP3__ALU_INST_mask                   = 0x1f << 13, */
 	    R7xx_SQ_OP3_INST_MULADD_64                    = 0x08,
 	    R7xx_SQ_OP3_INST_MULADD_64_M2                 = 0x09,
 	    R7xx_SQ_OP3_INST_MULADD_64_M4                 = 0x0a,
 	    R7xx_SQ_OP3_INST_MULADD_64_D2                 = 0x0b,
-//  SQ_CF_ALU_WORD1                                       = 0x00008dfc,
+/*  SQ_CF_ALU_WORD1                                       = 0x00008dfc, */
 	R6xx_USES_WATERFALL_bit                           = 1 << 25,
 	R7xx_SQ_CF_ALU_WORD1__ALT_CONST_bit               = 1 << 25,
-//  SQ_CF_ALLOC_EXPORT_WORD0                              = 0x00008dfc,
-//	ARRAY_BASE_mask                                   = 0x1fff << 0,
-//	TYPE_mask                                         = 0x03 << 13,
-//	    SQ_EXPORT_PARAM                               = 0x02,
-//	    X_UNUSED_FOR_SX_EXPORTS                       = 0x03,
-//	ELEM_SIZE_mask                                    = 0x03 << 30,
-//  SQ_CF_ALLOC_EXPORT_WORD1                              = 0x00008dfc,
-//	SQ_CF_ALLOC_EXPORT_WORD1__CF_INST_mask            = 0x7f << 23,
+/*  SQ_CF_ALLOC_EXPORT_WORD0                              = 0x00008dfc, */
+/*	ARRAY_BASE_mask                                   = 0x1fff << 0, */
+/*	TYPE_mask                                         = 0x03 << 13, */
+/*	    SQ_EXPORT_PARAM                               = 0x02, */
+/*	    X_UNUSED_FOR_SX_EXPORTS                       = 0x03, */
+/*	ELEM_SIZE_mask                                    = 0x03 << 30, */
+/*  SQ_CF_ALLOC_EXPORT_WORD1                              = 0x00008dfc, */
+/*	SQ_CF_ALLOC_EXPORT_WORD1__CF_INST_mask            = 0x7f << 23, */
 	    R7xx_SQ_CF_INST_MEM_EXPORT                    = 0x3a,
-//  SQ_CF_WORD1                                           = 0x00008dfc,
-//	SQ_CF_WORD1__COUNT_mask                           = 0x07 << 10,
+/*  SQ_CF_WORD1                                           = 0x00008dfc, */
+/*	SQ_CF_WORD1__COUNT_mask                           = 0x07 << 10, */
 	R7xx_COUNT_3_bit                                  = 1 << 19,
-//	SQ_CF_WORD1__CF_INST_mask                         = 0x7f << 23,
+/*	SQ_CF_WORD1__CF_INST_mask                         = 0x7f << 23, */
 	    R7xx_SQ_CF_INST_END_PROGRAM                   = 0x19,
 	    R7xx_SQ_CF_INST_WAIT_ACK                      = 0x1a,
 	    R7xx_SQ_CF_INST_TEX_ACK                       = 0x1b,
 	    R7xx_SQ_CF_INST_VTX_ACK                       = 0x1c,
 	    R7xx_SQ_CF_INST_VTX_TC_ACK                    = 0x1d,
-//  SQ_VTX_WORD0                                          = 0x00008dfc,
-//	VTX_INST_mask                                     = 0x1f << 0,
+/*  SQ_VTX_WORD0                                          = 0x00008dfc, */
+/*	VTX_INST_mask                                     = 0x1f << 0, */
 	    R7xx_SQ_VTX_INST_MEM                          = 0x02,
-//  SQ_VTX_WORD2                                          = 0x00008dfc,
+/*  SQ_VTX_WORD2                                          = 0x00008dfc, */
 	R7xx_SQ_VTX_WORD2__ALT_CONST_bit                  = 1 << 20,
 
-//  SQ_TEX_WORD0                                          = 0x00008dfc,
-//	TEX_INST_mask                                     = 0x1f << 0,
+/*  SQ_TEX_WORD0                                          = 0x00008dfc, */
+/*	TEX_INST_mask                                     = 0x1f << 0, */
 	    R7xx_X_MEMORY_READ                            = 0x02,
 	    R7xx_SQ_TEX_INST_KEEP_GRADIENTS               = 0x0a,
 	    R7xx_X_FETCH4_LOAD4_INSTRUCTION_FOR_DX10_1    = 0x0f,
@@ -138,11 +138,11 @@ enum {
 	RT5_ENABLE_bit                                    = 1 << 5,
 	RT6_ENABLE_bit                                    = 1 << 6,
 	RT7_ENABLE_bit                                    = 1 << 7,
-//  DB_ALPHA_TO_MASK                                      = 0x00028d44,
+/*  DB_ALPHA_TO_MASK                                      = 0x00028d44, */
 	R7xx_OFFSET_ROUND_bit                             = 1 << 16,
-//  SQ_TEX_SAMPLER_MISC_0                                 = 0x0003d03c,
+/*  SQ_TEX_SAMPLER_MISC_0                                 = 0x0003d03c, */
 	R7xx_TRUNCATE_COORD_bit                           = 1 << 9,
-	R7xx_DISABLE_CUBE_WRAP_bit                        = 1 << 10,
+	R7xx_DISABLE_CUBE_WRAP_bit                        = 1 << 10
 
 } ;
 

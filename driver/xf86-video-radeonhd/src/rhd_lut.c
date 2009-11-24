@@ -69,8 +69,8 @@ LUTxSave(struct rhdLUT *LUT)
 	RHDRegWrite(LUT, DC_LUT_READ_PIPE_SELECT, 1);
 
     RHDRegWrite(LUT, DC_LUT_RW_INDEX, 0);
-    for (i = 0; i < 0x300; i++)
-	LUT->StoreEntry[i] = RHDRegRead(LUT, DC_LUT_SEQ_COLOR);
+    for (i = 0; i < 256; i++)
+	LUT->StoreEntry[i] = RHDRegRead(LUT, DC_LUT_30_COLOR);
 
     LUT->Stored = TRUE;
 }
@@ -112,21 +112,23 @@ LUTxRestore(struct rhdLUT *LUT)
     RHDRegWrite(LUT, DC_LUT_RW_MODE, 0); /* Table */
     RHDRegWrite(LUT, DC_LUT_WRITE_EN_MASK, 0x0000003F);
     RHDRegWrite(LUT, DC_LUT_RW_INDEX, 0);
-    for (i = 0; i < 0x300; i++)
-	RHDRegWrite(LUT, DC_LUT_SEQ_COLOR, LUT->StoreEntry[i]);
+    for (i = 0; i < 256; i++)
+	RHDRegWrite(LUT, DC_LUT_30_COLOR, LUT->StoreEntry[i]);
 
     RHDRegWrite(LUT, RegOff + DC_LUTA_CONTROL, LUT->StoreControl);
 }
 
 /*
+ * Load a new LUT
  *
+ * Assumes 256 rows of input. It's up to the caller to ensure there are exactly
+ * 256 rows of data, as that's what the hardware exepcts.
  */
 static void
-LUTxSet(struct rhdLUT *LUT, int numColors, int *indices, LOCO *colors)
+rhdLUTSet(struct rhdLUT *LUT, CARD16 *red, CARD16 *green, CARD16 *blue)
 {
-    ScrnInfoPtr pScrn = xf86Screens[LUT->scrnIndex];
     CARD16 RegOff;
-    int i, index, hw_index;
+    int i;
 
     LUT->Initialised = TRUE; /* thank you RandR */
 
@@ -153,66 +155,43 @@ LUTxSet(struct rhdLUT *LUT, int numColors, int *indices, LOCO *colors)
     RHDRegWrite(LUT, DC_LUT_RW_MODE, 0); /* table */
     RHDRegWrite(LUT, DC_LUT_WRITE_EN_MASK, 0x0000003F);
 
-    /* DC_LUT_RW_INDEX is incremented automatically when DC_LUT_30_COLOR
-     * is accessed; hw_index is used to track the value of DC_LUT_RW_INDEX
-     * so that we can properly handle the very unlikely case that the input
-     * table indexes are not monotonically increasing
-     */
-    switch (pScrn->depth) {
-    case 8:
-    case 24:
-    case 32:
-        RHDRegWrite(LUT, DC_LUT_RW_INDEX, 0);
-        hw_index = 0;
-	for (i = 0; i < numColors; i++) {
-            index = indices[i];
-            if (hw_index != index) {
-                RHDRegWrite(LUT, DC_LUT_RW_INDEX, index);
-                hw_index = index;
-            }
-	    RHDRegWrite(LUT, DC_LUT_30_COLOR, (colors[index].red << 20) |
-			(colors[index].green << 10) | (colors[index].blue));
-            hw_index++;
-	}
-	break;
-    case 16:
-        RHDRegWrite(LUT, DC_LUT_RW_INDEX, 0);
-        hw_index = 0;
-	for (i = 0; i < numColors; i++) {
-	    int j;
+    RHDRegWrite(LUT, DC_LUT_RW_INDEX, 0);
+    for (i = 0; i < 256; i++) {
+        RHDRegWrite(LUT, DC_LUT_30_COLOR,
+                    ((red[i] & 0xFFC0) << 14) | ((green[i] & 0xFFC0) << 4) | (blue[i] >> 6));
+    }
+}
 
-	    index = indices[i];
-            if (hw_index != 4 * index) {
-                RHDRegWrite(LUT, DC_LUT_RW_INDEX, 4 * index);
-                hw_index = 4 * index;
-            }
+/*
+ * Set specific rows of the LUT
+ *
+ * Assumes LUTs are already initialized to a sane state, and will only update
+ * specific rows.  Use ONLY when just specific rows need to be updated.
+ */
+static void
+rhdLUTSetRows(struct rhdLUT *LUT, int numColors, int *indices, LOCO *colors)
+{
+    CARD16 RegOff;
+    int i, index;
 
-	    for (j = 0; j < 4; j++) {
-		RHDRegWrite(LUT, DC_LUT_30_COLOR, (colors[index/2].red << 20) |
-			    (colors[index].green << 10) | (colors[index/2].blue));
-                hw_index++;
-            }
-	}
-	break;
-    case 15:
-        RHDRegWrite(LUT, DC_LUT_RW_INDEX, 0);
-        hw_index = 0;
-	for (i = 0; i < numColors; i++) {
-	    int j;
+    if (LUT->Id == RHD_LUT_A)
+	RegOff = RHD_REGOFFSET_LUTA;
+    else
+	RegOff = RHD_REGOFFSET_LUTB;
 
-	    index = indices[i];
-            if (hw_index != 8 * index) {
-                RHDRegWrite(LUT, DC_LUT_RW_INDEX, 8 * index);
-                hw_index = 8 * index;
-            }
+    if (LUT->Id == RHD_LUT_A)
+	RHDRegWrite(LUT, DC_LUT_RW_SELECT, 0);
+    else
+	RHDRegWrite(LUT, DC_LUT_RW_SELECT, 1);
 
-	    for (j = 0; j < 8; j++) {
-		RHDRegWrite(LUT, DC_LUT_30_COLOR, (colors[index].red << 20) |
-			    (colors[index].green << 10) | (colors[index].blue));
-                hw_index++;
-            }
-	}
-	break;
+    RHDRegWrite(LUT, DC_LUT_RW_MODE, 0); /* table */
+    RHDRegWrite(LUT, DC_LUT_WRITE_EN_MASK, 0x0000003F);
+
+    for (i = 0; i < numColors; i++) {
+        index = indices[i];
+        RHDRegWrite(LUT, DC_LUT_RW_INDEX, index);
+        RHDRegWrite(LUT, DC_LUT_30_COLOR,
+                    (colors[index].red << 20) | (colors[index].green << 10) | (colors[index].blue));
     }
 }
 
@@ -234,7 +213,8 @@ RHDLUTsInit(RHDPtr rhdPtr)
 
     LUT->Save = LUTxSave;
     LUT->Restore = LUTxRestore;
-    LUT->Set = LUTxSet;
+    LUT->Set = rhdLUTSet;
+    LUT->SetRows = rhdLUTSetRows;
 
     rhdPtr->LUT[0] = LUT;
 
@@ -246,7 +226,8 @@ RHDLUTsInit(RHDPtr rhdPtr)
 
     LUT->Save = LUTxSave;
     LUT->Restore = LUTxRestore;
-    LUT->Set = LUTxSet;
+    LUT->Set = rhdLUTSet;
+    LUT->SetRows = rhdLUTSetRows;
 
     rhdPtr->LUT[1] = LUT;
 }
@@ -335,8 +316,7 @@ RHDLUTsDestroy(RHDPtr rhdPtr)
 void
 RHDLUTCopyForRR(struct rhdLUT *LUT)
 {
-    int indices[0x100];
-    LOCO colors[0x100];
+    CARD16 red[256], green[256], blue[256];
     CARD32 entry;
     int i;
 
@@ -349,50 +329,12 @@ RHDLUTCopyForRR(struct rhdLUT *LUT)
     else
 	RHDRegWrite(LUT, DC_LUT_READ_PIPE_SELECT, 0);
 
-    switch (xf86Screens[LUT->scrnIndex]->depth) {
-    case 8:
-    case 24:
-    case 32:
-	RHDRegWrite(LUT, DC_LUT_RW_INDEX, 0);
-
-	for (i = 0; i < 0x100; i++) {
-	    indices[i] = i;
-
-	    entry = RHDRegRead(LUT, DC_LUT_30_COLOR);
-
-	    colors[i].red = (entry >> 20) & 0x3FF;
-	    colors[i].green = (entry >> 10) & 0x3FF;
-	    colors[i].blue = (entry) & 0x3FF;
-	}
-	LUT->Set(LUT, 0x100, indices, colors);
-	break;
-    case 16:
-	for (i = 0; i < 0x40; i++) {
-	    indices[i] = i;
-
-	    RHDRegWrite(LUT, DC_LUT_RW_INDEX, 4 * i);
-
-	    entry = RHDRegRead(LUT, DC_LUT_30_COLOR);
-
-	    colors[i / 2].red = (entry >> 20) & 0x3FF;
-	    colors[i].green = (entry >> 10) & 0x3FF;
-	    colors[i / 2].blue = (entry) & 0x3FF;
-	}
-	LUT->Set(LUT, 0x40, indices, colors);
-	break;
-    case 15:
-	for (i = 0; i < 0x20; i++) {
-	    indices[i] = i;
-
-	    RHDRegWrite(LUT, DC_LUT_RW_INDEX, 8 * i);
-
-	    entry = RHDRegRead(LUT, DC_LUT_30_COLOR);
-
-	    colors[i].red = (entry >> 20) & 0x3FF;
-	    colors[i].green = (entry >> 10) & 0x3FF;
-	    colors[i].blue = (entry) & 0x3FF;
-	}
-	LUT->Set(LUT, 0x20, indices, colors);
-	break;
+    for (i = 0; i < 256; i++) {
+        entry = RHDRegRead(LUT, DC_LUT_30_COLOR);
+        red[i] = (entry >> 14) & 0xFFC0;
+        green[i] = (entry >> 4) & 0xFFC0;
+        blue[i] = (entry << 6) & 0xFFC0;
     }
+
+    rhdLUTSet(LUT, red, green, blue);
 }

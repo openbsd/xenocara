@@ -462,6 +462,7 @@ rhd5xxWriteReadChunk(I2CDevPtr i2cDevPtr, int line, I2CByte *WriteBuffer,
     I2CBusPtr I2CPtr = i2cDevPtr->pI2CBus;
     rhdI2CPtr I2C = (rhdI2CPtr)(I2CPtr->DriverPrivate.ptr);
     int prescale = I2C->prescale;
+    int i;
     CARD32 save_I2C_CONTROL1, save_494;
     CARD32  tmp32;
     Bool ret = TRUE;
@@ -476,8 +477,13 @@ rhd5xxWriteReadChunk(I2CDevPtr i2cDevPtr, int line, I2CByte *WriteBuffer,
 	       R5_DC_I2C_SW_WANTS_TO_USE_I2C,
 	       R5_DC_I2C_SW_WANTS_TO_USE_I2C);
 
-    if (!RHDRegRead(I2CPtr, R5_DC_I2C_ARBITRATION) & R5_DC_I2C_SW_CAN_USE_I2C) {
-	RHDDebug(I2CPtr->scrnIndex, "%s SW cannot use I2C line %i\n",__func__,line);
+    for (i = 0; i < 50; i++) {
+	if (RHDRegRead(I2CPtr, R5_DC_I2C_ARBITRATION) & R5_DC_I2C_SW_CAN_USE_I2C)
+	    break;
+	usleep(1);
+    }
+    if (i >= 50) {
+	xf86DrvMsg(I2CPtr->scrnIndex,X_ERROR, "%s: SW cannot use I2C line %i\n",__func__,line);
 	ret = FALSE;
     } else {
 
@@ -1157,7 +1163,7 @@ rhdGetI2CPrescale(RHDPtr rhdPtr)
 
     if (rhdPtr->ChipSet < RHD_R600) {
 	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-			    GET_DEFAULT_ENGINE_CLOCK, &atomBiosArg)
+			    ATOM_GET_DEFAULT_ENGINE_CLOCK, &atomBiosArg)
 	    == ATOM_SUCCESS)
 	    return (0x7f << 8)
 		+ (atomBiosArg.val / (4 * 0x7f * TARGET_HW_I2C_CLOCK));
@@ -1166,13 +1172,13 @@ rhdGetI2CPrescale(RHDPtr rhdPtr)
 		+ (DEFAULT_ENGINE_CLOCK / (4 * 0x7f * TARGET_HW_I2C_CLOCK));
     } else if (rhdPtr->ChipSet < RHD_RV620) {
 	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-			    GET_REF_CLOCK, &atomBiosArg) == ATOM_SUCCESS)
+			    ATOM_GET_REF_CLOCK, &atomBiosArg) == ATOM_SUCCESS)
 	    return (atomBiosArg.val / TARGET_HW_I2C_CLOCK);
 	else
 	    return (DEFAULT_REF_CLOCK / TARGET_HW_I2C_CLOCK);
     } else {
 	if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS,
-			    GET_REF_CLOCK, &atomBiosArg) == ATOM_SUCCESS)
+			    ATOM_GET_REF_CLOCK, &atomBiosArg) == ATOM_SUCCESS)
 	    return (atomBiosArg.val / (4 * TARGET_HW_I2C_CLOCK));
 	else
 	    return (DEFAULT_REF_CLOCK / (4 * TARGET_HW_I2C_CLOCK));

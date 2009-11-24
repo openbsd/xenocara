@@ -59,7 +59,8 @@ typedef enum rhdSensedOutput {
 enum rhdOutputProperty {
     RHD_OUTPUT_BACKLIGHT,
     RHD_OUTPUT_COHERENT,
-    RHD_OUTPUT_HDMI
+    RHD_OUTPUT_HDMI,
+    RHD_OUTPUT_AUDIO_WORKAROUND
 };
 
 enum rhdOutputAllocation {
@@ -115,6 +116,7 @@ void RHDOutputsRestore(RHDPtr rhdPtr);
 void RHDOutputsDestroy(RHDPtr rhdPtr);
 void RHDOutputPrintSensedType(struct rhdOutput *Output);
 void RHDOutputAttachConnector(struct rhdOutput *Output, struct rhdConnector *Connector);
+int RHDOutputTmdsIndex(struct rhdOutput *Output);
 
 /* output local functions. */
 struct rhdOutput *RHDDACAInit(RHDPtr rhdPtr);
@@ -123,6 +125,6 @@ struct rhdOutput *RHDTMDSAInit(RHDPtr rhdPtr);
 struct rhdOutput *RHDLVTMAInit(RHDPtr rhdPtr, CARD8 Type);
 struct rhdOutput *RHDDIGInit(RHDPtr rhdPtr,  enum rhdOutputType outputType, CARD8 ConnectorType);
 struct rhdOutput *RHDDDIAInit(RHDPtr rhdPtr);
-struct rhdOutput *RHDAtomOutputInit(RHDPtr rhdPtr, rhdConnectorType ConnectorType, rhdOutputType OutputType);
+struct rhdOutput *RHDAtomOutputInit(RHDPtr rhdPtr, enum rhdConnectorType ConnectorType, enum rhdOutputType OutputType);
 
 #endif /* _RHD_OUTPUT_H */

@@ -331,7 +331,7 @@ rhdMonitorPanel(struct rhdConnector *Connector)
 	AtomBiosResult Result;
 
 	Result = RHDAtomBiosFunc(Connector->scrnIndex, rhdPtr->atomBIOS,
-				 ATOMBIOS_GET_PANEL_MODE, &data);
+				 ATOM_GET_PANEL_MODE, &data);
 	if (Result == ATOM_SUCCESS) {
 	    Mode = data.mode;
 	    Mode->type |= M_T_PREFERRED;
@@ -339,7 +339,7 @@ rhdMonitorPanel(struct rhdConnector *Connector)
 	if (!EDID) {
 	    Result = RHDAtomBiosFunc(Connector->scrnIndex,
 				     rhdPtr->atomBIOS,
-				     ATOMBIOS_GET_PANEL_EDID, &data);
+				     ATOM_GET_PANEL_EDID, &data);
 	    if (Result == ATOM_SUCCESS)
 		EDID = xf86InterpretEDID(Connector->scrnIndex,
 					 data.EDIDBlock);
@@ -380,6 +380,21 @@ rhdMonitorPanel(struct rhdConnector *Connector)
 		   "%s: No panel mode information found.\n", __func__);
 	xfree(Monitor);
 	return NULL;
+    }
+
+    /* Fixup some broken modes - if we can do so, otherwise we might have no
+     * chance of driving the panel at all */
+    if (Monitor->NativeMode) {
+
+	/* Some Panels have H or VSyncEnd values greater than H or VTotal. */
+	if (Monitor->NativeMode->HTotal <= Monitor->NativeMode->HSyncEnd)
+	    Monitor->NativeMode->HTotal =  Monitor->NativeMode->CrtcHTotal = Monitor->NativeMode->HSyncEnd + 1;
+	if (Monitor->NativeMode->VTotal <= Monitor->NativeMode->VSyncEnd)
+	    Monitor->NativeMode->VTotal =  Monitor->NativeMode->CrtcVTotal = Monitor->NativeMode->VSyncEnd + 1;
+	if (Monitor->NativeMode->CrtcHBlankEnd <= Monitor->NativeMode->CrtcHSyncEnd)
+	    Monitor->NativeMode->CrtcHBlankEnd  = Monitor->NativeMode->CrtcHSyncEnd + 1;
+	if (Monitor->NativeMode->CrtcVBlankEnd <= Monitor->NativeMode->CrtcVSyncEnd)
+	    Monitor->NativeMode->CrtcVBlankEnd =  Monitor->NativeMode->CrtcVSyncEnd + 1;
     }
 
     /* panel should be driven at native resolution only. */

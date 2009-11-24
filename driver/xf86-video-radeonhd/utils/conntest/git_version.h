@@ -20,7 +20,7 @@
 #define GIT_REPO 1
 
 /* Git SHA ID of last commit */
-#define GIT_SHAID "cb54f48b"
+#define GIT_SHAID "8cbff7bf"
 
 /* Branch this tree is on */
 #define GIT_BRANCH "master"

@@ -1,7 +1,7 @@
 /*
- * Copyright 2007, 2008  Luc Verhaegen <libv@exsuse.de>
- * Copyright 2007, 2008  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007, 2008  Egbert Eich   <eich@novell.com>
+ * Copyright 2007 - 2009  Luc Verhaegen <libv@exsuse.de>
+ * Copyright 2007 - 2009  Matthias Hopf <mhopf@novell.com>
+ * Copyright 2007 - 2009  Egbert Eich   <eich@novell.com>
  * Copyright 2007, 2008  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -81,7 +81,7 @@ enum RHD_CHIPSETS {
     RHD_M72,
     RHD_M74,
     RHD_M76,
-    /* RV670 came into existence after RV6x0 and M7x */
+    /* R600 second batch - RV670 came into existence after RV6x0 and M7x */
     RHD_RV670,
     RHD_M88,
     RHD_R680,
@@ -92,11 +92,17 @@ enum RHD_CHIPSETS {
     RHD_RS780,
     RHD_RS880,
     RHD_RV770,
+    /* R700 */
     RHD_R700,
     RHD_M98,
     RHD_RV730,
     RHD_M96,
     RHD_RV710,
+    RHD_M92,
+    RHD_M93,
+    RHD_M97,
+    RHD_RV790,
+    RHD_RV740,
     RHD_CHIP_END
 };
 
@@ -135,6 +141,8 @@ union rhdPropertyData
     char *string;
     Bool Bool;
 };
+
+#define RHD_BACKLIGHT_PROPERTY_MAX 255
 
 #define RHD_CONNECTORS_MAX 6
 
@@ -239,8 +247,12 @@ typedef struct RHDRec {
     RHDOpt		scaleTypeOpt;
     RHDOpt		unverifiedFeatures;
     RHDOpt		audio;
+    RHDOpt		audioWorkaround;
     RHDOpt		hdmi;
     RHDOpt		coherent;
+    RHDOpt              lowPowerMode;
+    RHDOpt              lowPowerModeEngineClock;
+    RHDOpt              lowPowerModeMemoryClock;
     enum RHD_HPD_USAGE	hpdUsage;
     unsigned int        FbMapSize;
     pointer             FbBase;   /* map base of fb   */
@@ -336,6 +348,8 @@ typedef struct RHDRec {
     RHDOpt		UseAtomBIOS;
     CARD32		UseAtomFlags;
 
+    struct rhdPm       *Pm;
+
     struct rhdOutput *DigEncoderOutput[2];
 # define RHD_CHECKDEBUGFLAG(rhdPtr, FLAG) (rhdPtr->DebugFlags & (1 << FLAG))
 #ifndef NO_ASSERT
@@ -369,6 +383,14 @@ enum rhdOptStatus {
     RHD_OPTION_DEFAULT,
     RHD_OPTION_OFF,
     RHD_OPTION_ON
+};
+
+struct rhdPowerState {
+    /* All entries: 0 means unknown / unspecified / dontchange */
+    /* Clocks in kHz, Voltage in mV */
+    CARD32 EngineClock;
+    CARD32 MemoryClock;
+    CARD32 VDDCVoltage;
 };
 
 /* rhd_driver.c */

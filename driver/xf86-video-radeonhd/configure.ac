@@ -2,7 +2,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-radeonhd],
-        1.2.5,
+        1.3.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/radeonhd],
         xf86-video-radeonhd)
 
@@ -13,6 +13,9 @@ AC_CONFIG_AUX_DIR(.)
 AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_MAINTAINER_MODE
+
+AC_CONFIG_FILES([shave shave-libtool])
+
 
 # Program checks.
 AC_DISABLE_STATIC
@@ -48,19 +51,19 @@ AH_BOTTOM([#endif])
 
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
-                           [Default xorg module directory [[default=$libdir/xorg/modules]]]),
+                           [Default xorg module directory (default $libdir/xorg/modules)]),
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
 
 AC_ARG_ENABLE(exa,
               AC_HELP_STRING([--disable-exa],
-	                     [Disable EXA support [[default enabled]]]),
+	                     [Disable EXA support (default enabled)]),
               [EXA="$enableval"],
               [EXA=yes])
 
 AC_ARG_ENABLE(dri,
               AC_HELP_STRING([--disable-dri],
-	                     [Disable DRI support [[default enabled]]]),
+	                     [Disable DRI support (default enabled)]),
               [DRI="$enableval"],
               [DRI=yes])
 
@@ -76,6 +79,10 @@ XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 # @@@@ need to check for the right server version once RandR 1.2 is in.
 # @@@ do we really need fontsproto here?
 PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
+                  HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
+                  HAVE_XEXTPROTO_71="no")
+AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 
@@ -220,6 +227,10 @@ AC_CHECK_DECL(xf86RotateFreeShadow,
                #include <windowstr.h>
                #include <xf86Crtc.h>])
 
+AC_CHECK_DECL(pci_device_enable,
+              [AC_DEFINE(HAVE_PCI_DEVICE_ENABLE, 1, [Have pci_device_enable prototype])],
+              [],
+              [#include <pciaccess.h>])
 
 CFLAGS="$SAVED_CFLAGS"
 
@@ -297,20 +308,21 @@ for w in \
   -Wpointer-arith -Woverlength-strings -Wvolatile-register-var \
   -Winit-self -Wbad-function-cast \
   -Wstrict-prototypes -Wold-style-definition \
-  -Wnested-externs -Wdisabled-optimization ;
+  -Wnested-externs -Wdisabled-optimization \
+  -Wno-unknown-pragmas ;
 do
   AC_PROG_CC_FLAG($w,[WARN_CFLAGS="$WARN_CFLAGS $w"],)
 done
 
-# Due to AtomBIOS spitting out too much with -pedantic
+# atombios.h prohibits -std=c99 due to unnamed unions
 PEDANTIC_CFLAGS=""
-for w in -pedantic -Wno-long-long -Wno-variadic-macros ; do
+for w in -Wno-long-long -Wno-variadic-macros ; do
   AC_PROG_CC_FLAG($w,[PEDANTIC_CFLAGS="$PEDANTIC_CFLAGS $w"],)
 done
 
 # AtomBios special flags
 ATOMBIOS_CFLAGS=""
-for w in -std=c99 -Wno-unknown-pragmas ; do
+for w in -Wno-unknown-pragmas ; do
   AC_PROG_CC_FLAG($w,[ATOMBIOS_CFLAGS="$ATOMBIOS_CFLAGS $w"],)
 done
 
@@ -359,6 +371,8 @@ AC_DEFINE_UNQUOTED([PACKAGE_VERSION_PATCHLEVEL],
 		[$(echo $PACKAGE_VERSION | cut -d . -f 3)],
 		[Patchlevel Version])
 fi
+
+SHAVE_INIT(.,enable)
 
 AC_OUTPUT([
 	Makefile

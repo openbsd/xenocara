@@ -463,6 +463,11 @@ static Bool R100CheckCompositeTexture(PicturePtr pPict, int unit)
 	RADEON_FALLBACK(("Unsupported filter 0x%x\n", pPict->filter));
     }
 
+    if (pPict->repeat && pPict->repeatType != RepeatNormal)
+    {
+	RADEON_FALLBACK(("Unsupported repeat type %d\n", pPict->repeat));
+    }
+
     return TRUE;
 }
 # endif ONLY_ONCE
@@ -766,6 +771,11 @@ static Bool R200CheckCompositeTexture(PicturePtr pPict, int unit)
     if (pPict->filter != PictFilterNearest &&
 	pPict->filter != PictFilterBilinear)
 	RADEON_FALLBACK(("Unsupported filter 0x%x\n", pPict->filter));
+
+    if (pPict->repeat && pPict->repeatType != RepeatNormal)
+    {
+	RADEON_FALLBACK(("Unsupported repeat type %d\n", pPict->repeat));
+    }
 
     return TRUE;
 }
@@ -1098,6 +1108,11 @@ static Bool R300CheckCompositeTexture(PicturePtr pPict,
     if (pPict->transform != 0 && !pPict->repeat && PICT_FORMAT_A(pPict->format) == 0) {
 	if (!(((op == PictOpSrc) || (op == PictOpClear)) && (PICT_FORMAT_A(pDstPict->format) == 0)))
 	    RADEON_FALLBACK(("REPEAT_NONE unsupported for transformed xRGB source\n"));
+    }
+
+    if (pPict->repeat && pPict->repeatType != RepeatNormal)
+    {
+	RADEON_FALLBACK(("Unsupported repeat type %d\n", pPict->repeat));
     }
 
     return TRUE;
@@ -1539,7 +1554,7 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 			   R300_RS_COUNT_HIRES_EN));
 
 	    /* R300_INST_COUNT_RS - highest RS instruction used */
-	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1) | R300_TX_OFFSET_RS(6));
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1));
 
 	    OUT_ACCEL_REG(R300_US_CODE_OFFSET, (R300_ALU_CODE_OFFSET(0) |
 						R300_ALU_CODE_SIZE(0) |
@@ -1558,7 +1573,7 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
 			   R300_RS_COUNT_HIRES_EN));
 
-	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0) | R300_TX_OFFSET_RS(6));
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0));
 
 	    OUT_ACCEL_REG(R300_US_CODE_OFFSET, (R300_ALU_CODE_OFFSET(0) |
 						R300_ALU_CODE_SIZE(0) |
@@ -1753,7 +1768,7 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 			   R300_RS_COUNT_HIRES_EN));
 
 	    /* 2 RS instructions: 1 for tex0 (src), 1 for tex1 (mask) */
-	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1) | R300_TX_OFFSET_RS(6));
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(1));
 
 	    OUT_ACCEL_REG(R500_US_CODE_ADDR, (R500_US_CODE_START_ADDR(0) |
 					      R500_US_CODE_END_ADDR(2)));
@@ -1765,7 +1780,7 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 			  ((2 << R300_RS_COUNT_IT_COUNT_SHIFT) |
 			   R300_RS_COUNT_HIRES_EN));
 
-	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0) | R300_TX_OFFSET_RS(6));
+	    OUT_ACCEL_REG(R300_RS_INST_COUNT, R300_INST_COUNT_RS(0));
 
 	    OUT_ACCEL_REG(R500_US_CODE_ADDR, (R500_US_CODE_START_ADDR(0) |
 					      R500_US_CODE_END_ADDR(1)));

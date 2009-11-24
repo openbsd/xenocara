@@ -72,12 +72,17 @@ BEGIN_DEVICE_LIST
   * RS690:	Radeon X1200, X1250, X1270
   * RS740:	RS740, RS740M
   * RS780:	Radeon HD 3100/3200/3300 Series
-  * RV770:	Radeon HD 4800 Series; Everest, K2, Denali ATI FirePro
   * R700:	Radeon R700
-  * M98:	Radeon M98 Mobility
-  * RV730:	Radeon HD4670, HD4650
-  * M96:	Radeon M96 Mobility
   * RV710:	Radeon HD4570, HD4350
+  * RV730:	Radeon HD4670, HD4650
+  * RV740:	Radeon HD4770. EXPERIMENTAL AND UNTESTED
+  * RV770:	Radeon HD 4800 Series; Everest, K2, Denali ATI FirePro
+  * RV790:	Radeon HD 4890
+  * M92:	Mobility Radeon HD4330, HD4530, HD4570. EXPERIMENTAL
+  * M93:	Mobility Radeon M93. EXPERIMENTAL AND UNTESTED
+  * M96:	Mobility Radeon HD4600
+  * M97:	Mobility Radeon HD4860. EXPERIMENTAL AND UNTESTED
+  * M98:	Mobility Radeon HD4850, HD4870
 END_DEVICE_LIST
 
 
@@ -86,6 +91,23 @@ Major Changes
 =============
 
 Read ChangeLog for a complete list.
+
+- Version 1.3.0
+
+  - Added support for RV740, M92, M93, M97.
+  - Added support for HDMI audio on RS690 and R700.
+  - Added support for power management.
+  - Implemented almost correct analysis of PowerPlay AtomBIOS tables.
+  - 2D acceleration (EXA) is enabled by default now, except on RV740.
+  - Backlight handling finally fixed - compatible with xbacklight 1.1.1.
+  - Overhaul of memory controller setup. Fixes many "MC not idle" issues.
+  - Overhaul of cursor handling. Fixes most cursor bugs.
+  - Selectable color space for XVideo on R6xx/R7xx.
+  - Tons of bug fixes (DDC, EXA, LUT, RandR, AtomBIOS).
+  - More quirk table entries.
+  - Shave support (cleaner compilation output).
+  - All warnings fixed.
+  - Some start of Developer's documentation in README.coding.
 
 - Version 1.2.5
 

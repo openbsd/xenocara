@@ -215,11 +215,11 @@ RHDOutputAttachConnector(struct rhdOutput *Output, struct rhdConnector *Connecto
     RHDPtr rhdPtr = RHDPTRI(Output);
 
     if(Output->Connector == Connector)
-	return; /* output is allready attached to this connector -> nothing todo */
+	return; /* output is already attached to this connector -> nothing todo */
 
     Output->Connector = Connector;
 
-    if(!Output->Property) /* property controll available? */
+    if(!Output->Property) /* property control available? */
 	return;  /* no -> we are done here */
 
     /* yes -> check if we need to set any properties */
@@ -260,4 +260,61 @@ RHDOutputAttachConnector(struct rhdOutput *Output, struct rhdConnector *Connecto
 	if(!Output->Property(Output, rhdPropertySet, RHD_OUTPUT_HDMI, &val))
 	    xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING, "Failed to %s HDMI on %s\n", val.Bool ? "disable" : "enable", Output->Name);
     }
+
+    /* check config option if we should enable audio workaround */
+    if (Output->Property(Output, rhdPropertyCheck, RHD_OUTPUT_AUDIO_WORKAROUND, NULL)) {
+	union rhdPropertyData val;
+	switch(RhdParseBooleanOption(&rhdPtr->audioWorkaround, Connector->Name)) {
+	    case RHD_OPTION_NOT_SET:
+	    case RHD_OPTION_OFF:
+		val.Bool = FALSE;
+		break;
+	    case RHD_OPTION_ON:
+	    case RHD_OPTION_DEFAULT:
+		val.Bool = TRUE;
+		break;
+	}
+	if(!Output->Property(Output, rhdPropertySet, RHD_OUTPUT_AUDIO_WORKAROUND, &val))
+	    xf86DrvMsg(rhdPtr->scrnIndex, X_WARNING,
+		"Failed to %s audio workaorund on %s\n",
+		val.Bool ? "disable" : "enable", Output->Name);
+    }
+}
+
+/*
+ * Returns the TMDS index of the given output, important for HDMI/Audio setup
+ */
+int
+RHDOutputTmdsIndex(struct rhdOutput *Output)
+{
+    struct rhdOutput *i = RHDPTRI(Output)->Outputs;
+    int index;
+
+    switch(Output->Id) {
+	case RHD_OUTPUT_TMDSA:
+	case RHD_OUTPUT_UNIPHYA:
+	    index=0;
+	    break;
+
+	case RHD_OUTPUT_LVTMA:
+	    /* special case check if an TMDSA is present */
+	    index=0;
+	    while(i) {
+		if(i->Id==RHD_OUTPUT_TMDSA)
+		    index++;
+		i = i->Next;
+	    }
+	    break;
+
+	case RHD_OUTPUT_UNIPHYB:
+	case RHD_OUTPUT_KLDSKP_LVTMA:
+	    index=1;
+	    break;
+
+	default:
+	    xf86DrvMsg(Output->scrnIndex, X_ERROR, "%s: unsupported output type\n", __func__);
+            index=-1;
+	    break;
+    }
+    return index;
 }

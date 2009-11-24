@@ -74,7 +74,7 @@ typedef unsigned short USHORT;
 #  endif
 # endif
 
-# include "atombios.h"
+# include "atombios_rev.h"
 # include "ObjectID.h"
 
 typedef AtomBiosResult (*AtomBiosRequestFunc)(atomBiosHandlePtr handle,
@@ -126,6 +126,21 @@ atomSetRegisterListLocation(atomBiosHandlePtr handle, AtomBiosRequestID func, At
 static AtomBiosResult
 atomRestoreRegisters(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data);
 
+static AtomBiosResult
+rhdAtomSetClock(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomGetClock(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomPmSetup(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomChipLimits(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomGetVoltage(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomSetVoltage(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data);
+static AtomBiosResult
+rhdAtomChipConfigs(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data);
+
 
 enum msgDataFormat {
     MSG_FORMAT_NONE,
@@ -146,45 +161,45 @@ struct atomBIOSRequests {
     char *message;
     enum msgDataFormat message_format;
 } AtomBiosRequestList [] = {
-    {ATOMBIOS_INIT,			rhdAtomInit,
+    {ATOM_INIT,			rhdAtomInit,
      "AtomBIOS Init",				MSG_FORMAT_NONE},
-    {ATOMBIOS_TEARDOWN,			rhdAtomTearDown,
+    {ATOM_TEARDOWN,			rhdAtomTearDown,
      "AtomBIOS Teardown",			MSG_FORMAT_NONE},
 # ifdef ATOM_BIOS_PARSER
-    {ATOMBIOS_EXEC,			rhdAtomExec,
+    {ATOM_EXEC,			rhdAtomExec,
      "AtomBIOS Exec",				MSG_FORMAT_NONE},
 #endif
-    {ATOMBIOS_ALLOCATE_FB_SCRATCH,	rhdAtomAllocateFbScratch,
+    {ATOM_ALLOCATE_FB_SCRATCH,	rhdAtomAllocateFbScratch,
      "AtomBIOS Set FB Space",			MSG_FORMAT_NONE},
-    {ATOMBIOS_GET_CONNECTORS,		rhdAtomConnectorInfo,
+    {ATOM_GET_CONNECTORS,		rhdAtomConnectorInfo,
      "AtomBIOS Get Connectors",			MSG_FORMAT_NONE},
-    {ATOMBIOS_GET_OUTPUT_DEVICE_LIST,	rhdAtomOutputDeviceList,
+    {ATOM_GET_OUTPUT_DEVICE_LIST,	rhdAtomOutputDeviceList,
      "AtomBIOS Get Output Info",		MSG_FORMAT_NONE},
-    {ATOMBIOS_GET_PANEL_MODE,		rhdAtomLvdsGetTimings,
+    {ATOM_GET_PANEL_MODE,		rhdAtomLvdsGetTimings,
      "AtomBIOS Get Panel Mode",			MSG_FORMAT_NONE},
-    {ATOMBIOS_GET_PANEL_EDID,		rhdAtomLvdsGetTimings,
+    {ATOM_GET_PANEL_EDID,		rhdAtomLvdsGetTimings,
      "AtomBIOS Get Panel EDID",			MSG_FORMAT_NONE},
-    {ATOMBIOS_GET_CODE_DATA_TABLE,	rhdAtomGetDataInCodeTable,
+    {ATOM_GET_CODE_DATA_TABLE,	rhdAtomGetDataInCodeTable,
      "AtomBIOS Get Datatable from Codetable",   MSG_FORMAT_NONE},
-    {GET_DEFAULT_ENGINE_CLOCK,		rhdAtomFirmwareInfoQuery,
+    {ATOM_GET_DEFAULT_ENGINE_CLOCK,		rhdAtomFirmwareInfoQuery,
      "Default Engine Clock",			MSG_FORMAT_DEC},
-    {GET_DEFAULT_MEMORY_CLOCK,		rhdAtomFirmwareInfoQuery,
+    {ATOM_GET_DEFAULT_MEMORY_CLOCK,		rhdAtomFirmwareInfoQuery,
      "Default Memory Clock",			MSG_FORMAT_DEC},
-    {GET_MAX_PIXEL_CLOCK_PLL_OUTPUT,	rhdAtomFirmwareInfoQuery,
+    {ATOM_GET_MAX_PIXEL_CLOCK_PLL_OUTPUT,	rhdAtomFirmwareInfoQuery,
      "Maximum Pixel ClockPLL Frequency Output", MSG_FORMAT_DEC},
-    {GET_MIN_PIXEL_CLOCK_PLL_OUTPUT,	rhdAtomFirmwareInfoQuery,
+    {ATOM_GET_MIN_PIXEL_CLOCK_PLL_OUTPUT,	rhdAtomFirmwareInfoQuery,
      "Minimum Pixel ClockPLL Frequency Output", MSG_FORMAT_DEC},
-    {GET_MAX_PIXEL_CLOCK_PLL_INPUT,	rhdAtomFirmwareInfoQuery,
+    {ATOM_GET_MAX_PIXEL_CLOCK_PLL_INPUT,	rhdAtomFirmwareInfoQuery,
      "Maximum Pixel ClockPLL Frequency Input", MSG_FORMAT_DEC},
-    {GET_MIN_PIXEL_CLOCK_PLL_INPUT,	rhdAtomFirmwareInfoQuery,
+    {ATOM_GET_MIN_PIXEL_CLOCK_PLL_INPUT,	rhdAtomFirmwareInfoQuery,
      "Minimum Pixel ClockPLL Frequency Input", MSG_FORMAT_DEC},
-    {GET_MAX_PIXEL_CLK,			rhdAtomFirmwareInfoQuery,
+    {ATOM_GET_MAX_PIXEL_CLK,			rhdAtomFirmwareInfoQuery,
      "Maximum Pixel Clock",			MSG_FORMAT_DEC},
-    {GET_REF_CLOCK,			rhdAtomFirmwareInfoQuery,
+    {ATOM_GET_REF_CLOCK,			rhdAtomFirmwareInfoQuery,
      "Reference Clock",				MSG_FORMAT_DEC},
-    {GET_FW_FB_START,			rhdAtomVramInfoQuery,
+    {ATOM_GET_FW_FB_START,			rhdAtomVramInfoQuery,
       "Start of VRAM area used by Firmware",	MSG_FORMAT_HEX},
-    {GET_FW_FB_SIZE,			rhdAtomVramInfoQuery,
+    {ATOM_GET_FW_FB_SIZE,			rhdAtomVramInfoQuery,
       "Framebuffer space used by Firmware (kb)", MSG_FORMAT_DEC},
     {ATOM_TMDS_MAX_FREQUENCY,		rhdAtomTmdsInfoQuery,
      "TMDS Max Frequency",			MSG_FORMAT_DEC},
@@ -270,7 +285,27 @@ struct atomBIOSRequests {
      "Register List Location",			MSG_FORMAT_NONE},
     {ATOM_RESTORE_REGISTERS, atomRestoreRegisters,
      "Restore Registers",			MSG_FORMAT_NONE},
-    {FUNC_END,					NULL,
+    {ATOM_GET_ENGINE_CLOCK, rhdAtomGetClock,
+     "Current Engine Clock",			MSG_FORMAT_DEC},
+    {ATOM_GET_MEMORY_CLOCK, rhdAtomGetClock,
+     "Current Memory Clock",			MSG_FORMAT_DEC},
+    {ATOM_SET_ENGINE_CLOCK, rhdAtomSetClock,
+     "Set Engine Clock",			MSG_FORMAT_NONE},
+    {ATOM_SET_MEMORY_CLOCK, rhdAtomSetClock,
+     "Set Memory Clock",			MSG_FORMAT_NONE},
+    {ATOM_PM_SETUP, rhdAtomPmSetup,
+     "Set Power Management",			MSG_FORMAT_NONE},
+    {ATOM_PM_CLOCKGATING_SETUP, rhdAtomPmSetup,
+     "Set Dynamic Clock Gating",		MSG_FORMAT_NONE},
+    {ATOM_GET_CHIP_LIMITS, rhdAtomChipLimits,
+     "Get Chip Limits",				MSG_FORMAT_NONE},
+    {ATOM_GET_VOLTAGE, rhdAtomGetVoltage,
+     "Current Chip Voltage",			MSG_FORMAT_DEC},
+    {ATOM_SET_VOLTAGE, rhdAtomSetVoltage,
+     "Set Chip Voltage",			MSG_FORMAT_NONE},
+    {ATOM_GET_CHIP_CONFIGS, rhdAtomChipConfigs,
+     "Get Chip Configs",			MSG_FORMAT_NONE},
+    {ATOM_FUNC_END,				NULL,
      NULL,					MSG_FORMAT_NONE}
 };
 
@@ -325,7 +360,13 @@ typedef struct _atomDataTables
         ATOM_COMPONENT_VIDEO_INFO       *ComponentVideoInfo;
         ATOM_COMPONENT_VIDEO_INFO_V21   *ComponentVideoInfo_v21;
     } ComponentVideoInfo;
-/**/unsigned char                       *PowerPlayInfo;
+    union {
+	void                            *base;
+	ATOM_POWERPLAY_INFO             *PowerPlayInfo;
+	ATOM_POWERPLAY_INFO_V2          *PowerPlayInfo_V_2_1;
+	ATOM_POWERPLAY_INFO_V3          *PowerPlayInfo_V_3_1;
+	ATOM_POWERPLAY_INFO_V4          *PowerPlayInfo_V_4_1;
+    } PowerPlayInfo;
     COMPASSIONATE_DATA                  *CompassionateData;
     ATOM_DISPLAY_DEVICE_PRIORITY_INFO   *SaveRestoreInfo;
 /**/unsigned char                       *PPLL_SS_Info;
@@ -422,6 +463,92 @@ CailDebug(int scrnIndex, const char *format, ...)
   CailDebug(((atomBiosHandlePtr)(ptr))->scrnIndex, "CAIL: %s\n", __func__)
 
 #  endif
+
+static int
+rhdAtomBIOSGetArg(CARD32 *val, char *ptr)
+{
+    int cnt = 0;
+    if (isspace(*ptr) || *ptr == '=') {
+	ptr++;
+	cnt++;
+    }
+    if (!strncasecmp("off",ptr,3)) {
+	*val = RHD_ATOMBIOS_OFF;
+	return cnt + 3;
+    } else if (!strncasecmp("on",ptr,2)) {
+	*val = RHD_ATOMBIOS_ON;
+	return cnt + 2;
+    } else if (!strncasecmp("force_off",ptr,9)) {
+	*val = RHD_ATOMBIOS_OFF | RHD_ATOMBIOS_FORCE;
+	return cnt + 9;
+    } else if (!strncasecmp("force_on",ptr,8)) {
+	*val = RHD_ATOMBIOS_ON | RHD_ATOMBIOS_FORCE;
+	return cnt + 8;
+    } else
+	return 0;
+}
+
+int
+rhdUpdateAtomBIOSUsage(RHDPtr rhdPtr, char *string)
+{
+    char *ptr = string;
+    CARD32 val;
+
+    while (*ptr != '\0') {
+	int c;
+	while (isspace(*ptr))
+	    ptr++;
+	if (*ptr == '\0')
+	    break;
+
+	if (!strncasecmp("crtc",ptr,4)) {
+	    ptr += 4;
+	    if (!(c = rhdAtomBIOSGetArg(&val,ptr)))
+		return FALSE;
+	    ptr += c;
+	    rhdPtr->UseAtomFlags &= ~((RHD_ATOMBIOS_FORCE | RHD_ATOMBIOS_ON | RHD_ATOMBIOS_OFF) << RHD_ATOMBIOS_CRTC);
+	    rhdPtr->UseAtomFlags |= (val << RHD_ATOMBIOS_CRTC);
+	}
+	else if (!strncasecmp("output",ptr,6)) {
+	    ptr += 6;
+	    if (!(c = rhdAtomBIOSGetArg(&val,ptr)))
+		return FALSE;
+	    ptr += c;
+	    rhdPtr->UseAtomFlags &= ~((RHD_ATOMBIOS_FORCE | RHD_ATOMBIOS_ON | RHD_ATOMBIOS_OFF) << RHD_ATOMBIOS_OUTPUT);
+	    rhdPtr->UseAtomFlags |= (val << RHD_ATOMBIOS_OUTPUT);
+	}
+	else if (!strncasecmp("pll",ptr,3)) {
+	    ptr += 3;
+	    if (!(c = rhdAtomBIOSGetArg(&val,ptr)))
+		return FALSE;
+	    ptr += c;
+	    rhdPtr->UseAtomFlags &= ~((RHD_ATOMBIOS_FORCE | RHD_ATOMBIOS_ON | RHD_ATOMBIOS_OFF) << RHD_ATOMBIOS_PLL);
+	    rhdPtr->UseAtomFlags |= (val << RHD_ATOMBIOS_PLL);
+	} else
+	    return FALSE;
+    }
+    return TRUE;
+}
+
+char *
+rhdReturnAtomBIOSUsage(RHDPtr rhdPtr)
+{
+    char *type[] = { "crtc", "output", "pll", NULL };
+    int  shift[] = { RHD_ATOMBIOS_CRTC, RHD_ATOMBIOS_OUTPUT, RHD_ATOMBIOS_PLL };
+    char *vals[] = { "", "on", "off", "unknown", "unknown", "force_on", "force_off", "unknown" };
+    int  i;
+    char buf[40];
+    char *p = buf;
+
+    for (i = 0; type[i]; i++) {
+	int val = (rhdPtr->UseAtomFlags >> shift[i]) & 0x07;
+	if (val)
+	    p += sprintf (p, "%s=%s ", type[i], vals[val]);
+    }
+    if (p != buf)
+	*--p = 0;
+    return strdup(buf);
+}
 
 #  define DEBUG_VERSION(index, handle, version) \
     xf86DrvMsgVerb(handle->scrnIndex, X_INFO, 3, "%s returned version %i for index 0x%x\n" ,__func__,version.cref,index)
@@ -630,7 +757,7 @@ rhdAtomGetFbBaseAndSize(atomBiosHandlePtr handle, unsigned int *base,
 			unsigned int *size)
 {
     AtomBiosArgRec data;
-    if (RHDAtomBiosFunc(handle->scrnIndex, handle, GET_FW_FB_SIZE, &data)
+    if (RHDAtomBiosFunc(handle->scrnIndex, handle, ATOM_GET_FW_FB_SIZE, &data)
 	== ATOM_SUCCESS) {
 	if (data.val == 0) {
 	    xf86DrvMsg(handle->scrnIndex, X_WARNING, "%s: AtomBIOS specified VRAM "
@@ -641,7 +768,7 @@ rhdAtomGetFbBaseAndSize(atomBiosHandlePtr handle, unsigned int *base,
 	    *size = (int)data.val;
     } else
 	return FALSE;
-    if (RHDAtomBiosFunc(handle->scrnIndex, handle, GET_FW_FB_START, &data)
+    if (RHDAtomBiosFunc(handle->scrnIndex, handle, ATOM_GET_FW_FB_START, &data)
 	== ATOM_SUCCESS) {
 	if (data.val == 0)
 	    return FALSE;
@@ -722,11 +849,11 @@ rhdAtomASICInit(atomBiosHandlePtr handle)
     RHDFUNC(handle);
 
     RHDAtomBiosFunc(handle->scrnIndex, handle,
-		    GET_DEFAULT_ENGINE_CLOCK,
+		    ATOM_GET_DEFAULT_ENGINE_CLOCK,
 		    &data);
     asicInit.sASICInitClocks.ulDefaultEngineClock = data.val / 10;/*in 10 Khz*/
     RHDAtomBiosFunc(handle->scrnIndex, handle,
-		    GET_DEFAULT_MEMORY_CLOCK,
+		    ATOM_GET_DEFAULT_MEMORY_CLOCK,
 		    &data);
     asicInit.sASICInitClocks.ulDefaultMemoryClock = data.val / 10;/*in 10 Khz*/
     data.exec.dataSpace = NULL;
@@ -736,7 +863,7 @@ rhdAtomASICInit(atomBiosHandlePtr handle)
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling ASIC Init\n");
     atomDebugPrintPspace(handle, &data, sizeof(asicInit));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "ASIC_INIT Successful\n");
 	return TRUE;
     }
@@ -797,7 +924,7 @@ rhdAtomSetScaler(atomBiosHandlePtr handle, enum atomScaler scalerID, enum atomSc
     atomDebugPrintPspace(handle, &data, sizeof(scaler));
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling EnableScaler\n");
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "EnableScaler Successful\n");
 	return TRUE;
     }
@@ -838,7 +965,7 @@ rhdAtomSetTVEncoder(atomBiosHandlePtr handle, Bool enable, int mode)
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling SetTVEncoder\n");
     atomDebugPrintPspace(handle, &data, sizeof(tvEncoder));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "SetTVEncoder Successful\n");
 	return TRUE;
     }
@@ -1052,7 +1179,7 @@ rhdAtomDigTransmitterControl(atomBiosHandlePtr handle, enum atomTransmitter id,
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling %s\n",name);
     atomDebugPrintPspace(handle, &data, sizeof(Transmitter));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "%s Successful\n",name);
 	return TRUE;
     }
@@ -1205,7 +1332,7 @@ rhdAtomOutputControl(atomBiosHandlePtr handle, enum atomOutput OutputId, enum at
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling %s\n",name);
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "%s Successful\n",name);
 	return TRUE;
     }
@@ -1330,7 +1457,7 @@ AtomDACLoadDetection(atomBiosHandlePtr handle, enum atomDevice Device, enum atom
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling DAC_LoadDetection\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "DAC_LoadDetection Successful\n");
 	return TRUE;
     }
@@ -1850,7 +1977,7 @@ rhdAtomEncoderControl(atomBiosHandlePtr handle, enum atomEncoder EncoderId,
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling %s\n",name);
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "%s Successful\n",name);
 	return TRUE;
     }
@@ -1959,7 +2086,7 @@ rhdAtomUpdateCRTC_DoubleBufferRegisters(atomBiosHandlePtr handle, enum atomCrtc 
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling UpdateCRTC_DoubleBufferRegisters\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "UpdateCRTC_DoubleBufferRegisters Successful\n");
 	return TRUE;
     }
@@ -2024,7 +2151,7 @@ rhdAtomEnableCrtc(atomBiosHandlePtr handle, enum atomCrtc CrtcId,
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling EnableCRTC\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "EnableCRTC Successful\n");
 	return TRUE;
     }
@@ -2089,7 +2216,7 @@ rhdAtomEnableCrtcMemReq(atomBiosHandlePtr handle, enum atomCrtc CrtcId,
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling EnableCRTCMemReq\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "EnableCRTCMemReq Successful\n");
 	return TRUE;
     }
@@ -2169,7 +2296,7 @@ rhdAtomSetCRTCTimings(atomBiosHandlePtr handle, enum atomCrtc id, DisplayModePtr
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling SetCRTC_Timing\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "SetCRTC_Timing Successful\n");
 	return TRUE;
     }
@@ -2227,7 +2354,7 @@ rhdAtomSetCRTCOverscan(atomBiosHandlePtr handle, enum atomCrtc id, struct atomCr
     xf86DrvMsg(handle->scrnIndex, X_INFO, "CallingSetCRTC_OverScan\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "Set CRTC_OverScan Successful\n");
 	return TRUE;
     }
@@ -2291,7 +2418,7 @@ rhdAtomBlankCRTC(atomBiosHandlePtr handle, enum atomCrtc id, struct atomCrtcBlan
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling BlankCRTC\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "BlankCRTC Successful\n");
 	return TRUE;
     }
@@ -2433,13 +2560,14 @@ rhdAtomSetPixelClock(atomBiosHandlePtr handle, enum atomPxclk PCLKId, struct ato
 		ps.pclk_v2.ucMiscInfo |= (atomGetDevice(handle, Config->u.v2.Device)
 					  << MISC_DEVICE_INDEX_SHIFT);
 	    RHDDebug(handle->scrnIndex,"%s Device: %i PixelClock: %i RefDiv: 0x%x FbDiv: 0x%x PostDiv: 0x%x "
-		     "PLL: %i Crtc: %i MiscInfo: 0x%x\n",
+		     "FracFbDiv: %i PLL: %i Crtc: %i MiscInfo: 0x%x\n",
 		   __func__,
 		   Config->u.v2.Device,
 		   ps.pclk_v2.usPixelClock,
 		   ps.pclk_v2.usRefDiv,
 		   ps.pclk_v2.usFbDiv,
 		   ps.pclk_v2.ucPostDiv,
+		   ps.pclk_v2.ucFracFbDiv,
 		   ps.pclk_v2.ucPpll,
 		   ps.pclk_v2.ucCRTC,
 		   ps.pclk_v2.ucMiscInfo
@@ -2526,13 +2654,14 @@ rhdAtomSetPixelClock(atomBiosHandlePtr handle, enum atomPxclk PCLKId, struct ato
 		| (Config->u.v3.UsePpll ?  PIXEL_CLOCK_MISC_USE_ENGINE_FOR_DISPCLK : 0x0)
 		| ((Config->Crtc == atomCrtc2) ? PIXEL_CLOCK_MISC_CRTC_SEL_CRTC2 : PIXEL_CLOCK_MISC_CRTC_SEL_CRTC1);
 
-	    RHDDebug(handle->scrnIndex,"%s PixelClock: %i RefDiv: 0x%x FbDiv: 0x%x PostDiv: 0x%x PLL: %i OutputType: %x "
-		   "EncoderMode: %x MiscInfo: 0x%x\n",
+	    RHDDebug(handle->scrnIndex,"%s PixelClock: %i RefDiv: 0x%x FbDiv: 0x%x PostDiv: 0x%x FracFbDiv: %i PLL: %i "
+		   "OutputType: %x EncoderMode: %x MiscInfo: 0x%x\n",
 		   __func__,
 		   ps.pclk_v3.usPixelClock,
 		   ps.pclk_v3.usRefDiv,
 		   ps.pclk_v3.usFbDiv,
 		   ps.pclk_v3.ucPostDiv,
+		   ps.pclk_v3.ucFracFbDiv,
 		   ps.pclk_v3.ucPpll,
 		   ps.pclk_v3.ucTransmitterId,
 		   ps.pclk_v3.ucEncoderMode,
@@ -2549,7 +2678,7 @@ rhdAtomSetPixelClock(atomBiosHandlePtr handle, enum atomPxclk PCLKId, struct ato
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling SetPixelClock\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "SetPixelClock Successful\n");
 	return TRUE;
     }
@@ -2730,7 +2859,7 @@ rhdAtomSelectCrtcSource(atomBiosHandlePtr handle, enum atomCrtc CrtcId,
     xf86DrvMsg(handle->scrnIndex, X_INFO, "Calling SelectCRTCSource\n");
     atomDebugPrintPspace(handle, &data, sizeof(ps));
     if (RHDAtomBiosFunc(handle->scrnIndex, handle,
-			ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+			ATOM_EXEC, &data) == ATOM_SUCCESS) {
 	xf86DrvMsg(handle->scrnIndex, X_INFO, "SelectCRTCSource Successful\n");
 	return TRUE;
     }
@@ -2885,11 +3014,11 @@ rhdAtomVramInfoQuery(atomBiosHandlePtr handle, AtomBiosRequestID func,
     atomDataPtr = handle->atomDataPtr;
 
     switch (func) {
-	case GET_FW_FB_START:
+	case ATOM_GET_FW_FB_START:
 	    *val = atomDataPtr->VRAM_UsageByFirmware
 		->asFirmwareVramReserveInfo[0].ulStartAddrUsedByFirmware;
 	    break;
-	case GET_FW_FB_SIZE:
+	case ATOM_GET_FW_FB_SIZE:
 	    *val = atomDataPtr->VRAM_UsageByFirmware
 		->asFirmwareVramReserveInfo[0].usFirmwareUseInKb;
 	    break;
@@ -3085,7 +3214,7 @@ rhdAtomLvdsGetTimings(atomBiosHandlePtr handle, AtomBiosRequestID func,
 
 	case 1:
 	    switch (func) {
-		case ATOMBIOS_GET_PANEL_MODE:
+		case ATOM_GET_PANEL_MODE:
 		    data->mode = rhdAtomLvdsTimings(handle,
 						    &atomDataPtr->LVDS_Info
 						    .LVDS_Info->sLCDTiming);
@@ -3096,7 +3225,7 @@ rhdAtomLvdsGetTimings(atomBiosHandlePtr handle, AtomBiosRequestID func,
 	    }
 	case 2:
 	    switch (func) {
-		case ATOMBIOS_GET_PANEL_MODE:
+		case ATOM_GET_PANEL_MODE:
 		    data->mode = rhdAtomLvdsTimings(handle,
 						    &atomDataPtr->LVDS_Info
 						    .LVDS_Info_v12->sLCDTiming);
@@ -3104,7 +3233,7 @@ rhdAtomLvdsGetTimings(atomBiosHandlePtr handle, AtomBiosRequestID func,
 			return ATOM_SUCCESS;
 		    return ATOM_FAILED;
 
-		case ATOMBIOS_GET_PANEL_EDID:
+		case ATOM_GET_PANEL_EDID:
 		    offset = (unsigned long)&atomDataPtr->LVDS_Info.base
 			- (unsigned long)handle->BIOSBase
 			+ atomDataPtr->LVDS_Info
@@ -3640,34 +3769,34 @@ rhdAtomFirmwareInfoQuery(atomBiosHandlePtr handle,
     switch (crev) {
 	case 1:
 	    switch (func) {
-		case GET_DEFAULT_ENGINE_CLOCK:
+		case ATOM_GET_DEFAULT_ENGINE_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo->ulDefaultEngineClock * 10;
 		    break;
-		case GET_DEFAULT_MEMORY_CLOCK:
+		case ATOM_GET_DEFAULT_MEMORY_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo->ulDefaultMemoryClock * 10;
 		    break;
-		case GET_MAX_PIXEL_CLOCK_PLL_OUTPUT:
+		case ATOM_GET_MAX_PIXEL_CLOCK_PLL_OUTPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo->ulMaxPixelClockPLL_Output * 10;
 		    break;
-		case GET_MIN_PIXEL_CLOCK_PLL_OUTPUT:
+		case ATOM_GET_MIN_PIXEL_CLOCK_PLL_OUTPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo->usMinPixelClockPLL_Output * 10;
-		case GET_MAX_PIXEL_CLOCK_PLL_INPUT:
+		case ATOM_GET_MAX_PIXEL_CLOCK_PLL_INPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo->usMaxPixelClockPLL_Input * 10;
 		    break;
-		case GET_MIN_PIXEL_CLOCK_PLL_INPUT:
+		case ATOM_GET_MIN_PIXEL_CLOCK_PLL_INPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo->usMinPixelClockPLL_Input * 10;
 		    break;
-		case GET_MAX_PIXEL_CLK:
+		case ATOM_GET_MAX_PIXEL_CLK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo->usMaxPixelClock * 10;
 		    break;
-		case GET_REF_CLOCK:
+		case ATOM_GET_REF_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo->usReferenceClock * 10;
 		    break;
@@ -3676,35 +3805,35 @@ rhdAtomFirmwareInfoQuery(atomBiosHandlePtr handle,
 	    }
 	case 2:
 	    switch (func) {
-		case GET_DEFAULT_ENGINE_CLOCK:
+		case ATOM_GET_DEFAULT_ENGINE_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_2->ulDefaultEngineClock * 10;
 		    break;
-		case GET_DEFAULT_MEMORY_CLOCK:
+		case ATOM_GET_DEFAULT_MEMORY_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_2->ulDefaultMemoryClock * 10;
 		    break;
-		case GET_MAX_PIXEL_CLOCK_PLL_OUTPUT:
+		case ATOM_GET_MAX_PIXEL_CLOCK_PLL_OUTPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_2->ulMaxPixelClockPLL_Output * 10;
 		    break;
-		case GET_MIN_PIXEL_CLOCK_PLL_OUTPUT:
+		case ATOM_GET_MIN_PIXEL_CLOCK_PLL_OUTPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_2->usMinPixelClockPLL_Output * 10;
 		    break;
-		case GET_MAX_PIXEL_CLOCK_PLL_INPUT:
+		case ATOM_GET_MAX_PIXEL_CLOCK_PLL_INPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_2->usMaxPixelClockPLL_Input * 10;
 		    break;
-		case GET_MIN_PIXEL_CLOCK_PLL_INPUT:
+		case ATOM_GET_MIN_PIXEL_CLOCK_PLL_INPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_2->usMinPixelClockPLL_Input * 10;
 		    break;
-		case GET_MAX_PIXEL_CLK:
+		case ATOM_GET_MAX_PIXEL_CLK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_2->usMaxPixelClock * 10;
 		    break;
-		case GET_REF_CLOCK:
+		case ATOM_GET_REF_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_2->usReferenceClock * 10;
 		    break;
@@ -3714,35 +3843,35 @@ rhdAtomFirmwareInfoQuery(atomBiosHandlePtr handle,
 	    break;
 	case 3:
 	    switch (func) {
-		case GET_DEFAULT_ENGINE_CLOCK:
+		case ATOM_GET_DEFAULT_ENGINE_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_3->ulDefaultEngineClock * 10;
 		    break;
-		case GET_DEFAULT_MEMORY_CLOCK:
+		case ATOM_GET_DEFAULT_MEMORY_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_3->ulDefaultMemoryClock * 10;
 		    break;
-		case GET_MAX_PIXEL_CLOCK_PLL_OUTPUT:
+		case ATOM_GET_MAX_PIXEL_CLOCK_PLL_OUTPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_3->ulMaxPixelClockPLL_Output * 10;
 		    break;
-		case GET_MIN_PIXEL_CLOCK_PLL_OUTPUT:
+		case ATOM_GET_MIN_PIXEL_CLOCK_PLL_OUTPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_3->usMinPixelClockPLL_Output * 10;
 		    break;
-		case GET_MAX_PIXEL_CLOCK_PLL_INPUT:
+		case ATOM_GET_MAX_PIXEL_CLOCK_PLL_INPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_3->usMaxPixelClockPLL_Input * 10;
 		    break;
-		case GET_MIN_PIXEL_CLOCK_PLL_INPUT:
+		case ATOM_GET_MIN_PIXEL_CLOCK_PLL_INPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_3->usMinPixelClockPLL_Input * 10;
 		    break;
-		case GET_MAX_PIXEL_CLK:
+		case ATOM_GET_MAX_PIXEL_CLK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_3->usMaxPixelClock * 10;
 		    break;
-		case GET_REF_CLOCK:
+		case ATOM_GET_REF_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_3->usReferenceClock * 10;
 		    break;
@@ -3752,35 +3881,35 @@ rhdAtomFirmwareInfoQuery(atomBiosHandlePtr handle,
 	    break;
 	case 4:
 	    switch (func) {
-		case GET_DEFAULT_ENGINE_CLOCK:
+		case ATOM_GET_DEFAULT_ENGINE_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_4->ulDefaultEngineClock * 10;
 		    break;
-		case GET_DEFAULT_MEMORY_CLOCK:
+		case ATOM_GET_DEFAULT_MEMORY_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_4->ulDefaultMemoryClock * 10;
 		    break;
-		case GET_MAX_PIXEL_CLOCK_PLL_INPUT:
+		case ATOM_GET_MAX_PIXEL_CLOCK_PLL_INPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_4->usMaxPixelClockPLL_Input * 10;
 		    break;
-		case GET_MIN_PIXEL_CLOCK_PLL_INPUT:
+		case ATOM_GET_MIN_PIXEL_CLOCK_PLL_INPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_4->usMinPixelClockPLL_Input * 10;
 		    break;
-		case GET_MAX_PIXEL_CLOCK_PLL_OUTPUT:
+		case ATOM_GET_MAX_PIXEL_CLOCK_PLL_OUTPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_4->ulMaxPixelClockPLL_Output * 10;
 		    break;
-		case GET_MIN_PIXEL_CLOCK_PLL_OUTPUT:
+		case ATOM_GET_MIN_PIXEL_CLOCK_PLL_OUTPUT:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_4->usMinPixelClockPLL_Output * 10;
 		    break;
-		case GET_MAX_PIXEL_CLK:
+		case ATOM_GET_MAX_PIXEL_CLK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_4->usMaxPixelClock * 10;
 		    break;
-		case GET_REF_CLOCK:
+		case ATOM_GET_REF_CLOCK:
 		    *val = atomDataPtr->FirmwareInfo
 			.FirmwareInfo_V_1_4->usReferenceClock * 10;
 		    break;
@@ -4429,6 +4558,7 @@ rhdAtomConnectorInfoFromObjectHeader(atomBiosHandlePtr handle,
 	}
 	cp[ncon].Type = rhdAtomGetConnectorID(handle, rhd_connector_objs[obj_id].con, num);
 	cp[ncon].Name = RhdAppendString(cp[ncon].Name,name);
+	cp[ncon].DDC  = RHD_DDC_NONE;
 
 	for (j = 0; ((j < SrcDstTable->ucNumberOfSrc) &&
 		     (j < MAX_OUTPUTS_PER_CONNECTOR)); j++) {
@@ -4704,38 +4834,53 @@ rhdAtomConnectorInfoFromSupportedDevices(atomBiosHandlePtr handle,
 	cp[ncon].Name = xstrdup(devices[n].name);
 	cp[ncon].Name = RhdAppendString(cp[ncon].Name, devices[n].outputName);
 
-	if (devices[n].dual) {
-	    if (devices[n].ddc == RHD_DDC_NONE)
+	if (devices[n].ddc == RHD_DDC_NONE) {
+	    if (devices[n].dual)
 		xf86DrvMsg(handle->scrnIndex, X_ERROR,
 			   "No DDC channel for device %s found."
 			   " Cannot find matching device.\n",devices[n].name);
-	    else {
-		for (i = n + 1; i < ATOM_MAX_SUPPORTED_DEVICE; i++) {
+	} else {
+	    for (i = n + 1; i < ATOM_MAX_SUPPORTED_DEVICE; i++) {
 
-		    if (!devices[i].dual)
-			continue;
+		if (!devices[n].dual && !devices[i].dual)
+		    continue;
 
-		    if (devices[n].ddc != devices[i].ddc)
-			continue;
+		if (devices[n].ddc != devices[i].ddc)
+		    continue;
 
-		    if (((devices[n].ot == RHD_OUTPUT_DACA
-			  || devices[n].ot == RHD_OUTPUT_DACB)
-			 && (devices[i].ot == RHD_OUTPUT_LVTMA
-			     || devices[i].ot == RHD_OUTPUT_TMDSA))
-			|| ((devices[i].ot == RHD_OUTPUT_DACA
-			     || devices[i].ot == RHD_OUTPUT_DACB)
-			    && (devices[n].ot == RHD_OUTPUT_LVTMA
-				|| devices[n].ot == RHD_OUTPUT_TMDSA))) {
+		if ((devices[n].ot == RHD_OUTPUT_DACA
+		     || devices[n].ot == RHD_OUTPUT_DACB)
+		    && (devices[i].ot == RHD_OUTPUT_LVTMA
+			|| devices[i].ot == RHD_OUTPUT_TMDSA)) {
 
-			cp[ncon].Output[1] = devices[i].ot;
+		    /* If VGA is listed before DVI, swap */
+		    cp[ncon].Output[0] = devices[i].ot;
+		    cp[ncon].Output[1] = devices[n].ot;
+		    cp[ncon].Type      = devices[i].con;
 
-			if (cp[ncon].HPD == RHD_HPD_NONE)
-			    cp[ncon].HPD = devices[i].hpd;
+		    if (cp[ncon].HPD == RHD_HPD_NONE)
+			cp[ncon].HPD = devices[i].hpd;
 
-			cp[ncon].Name = RhdAppendString(cp[ncon].Name,
-							devices[i].outputName);
-			devices[i].ot = RHD_OUTPUT_NONE; /* zero the device */
-		    }
+		    xfree (cp[ncon].Name);
+		    cp[ncon].Name = xstrdup(devices[i].name);
+		    cp[ncon].Name = RhdAppendString(cp[ncon].Name,
+						    devices[i].outputName);
+		    cp[ncon].Name = RhdAppendString(cp[ncon].Name,
+						    devices[n].outputName);
+		    devices[i].ot = RHD_OUTPUT_NONE; /* zero the device */
+		} else if ((devices[i].ot == RHD_OUTPUT_DACA
+			    || devices[i].ot == RHD_OUTPUT_DACB)
+			   && (devices[n].ot == RHD_OUTPUT_LVTMA
+			       || devices[n].ot == RHD_OUTPUT_TMDSA)) {
+
+		    cp[ncon].Output[1] = devices[i].ot;
+
+		    if (cp[ncon].HPD == RHD_HPD_NONE)
+			cp[ncon].HPD = devices[i].hpd;
+
+		    cp[ncon].Name = RhdAppendString(cp[ncon].Name,
+						    devices[i].outputName);
+		    devices[i].ot = RHD_OUTPUT_NONE; /* zero the device */
 		}
 	    }
 	}
@@ -4884,6 +5029,7 @@ rhdAtomExec (atomBiosHandlePtr handle,
     int idx = data->exec.index;
     void *pspace = data->exec.pspace;
     pointer *dataSpace = data->exec.dataSpace;
+    unsigned short offset;
 
     RHDFUNCI(handle->scrnIndex);
 
@@ -4901,6 +5047,15 @@ rhdAtomExec (atomBiosHandlePtr handle,
 	} else
 	    *dataSpace = (CARD8*)handle->scratchBase;
     }
+
+    /* OMFG - ParseTable returns CD_SUCCESS if the command table does not exist */
+    offset = ((USHORT *)&(((ATOM_MASTER_COMMAND_TABLE *)handle->codeTable)
+			  ->ListOfCommandTables))[idx];
+    if (! offset) {
+	xf86DrvMsg(handle->scrnIndex, X_WARNING, "AtomBIOS command table %d does not exist\n", idx);
+	return ATOM_NOT_IMPLEMENTED;
+    }
+
     ret = ParseTableWrapper(pspace, idx, handle,
 			    handle->BIOSBase,
 			    &msg);
@@ -4925,7 +5080,7 @@ RHDAtomBiosFunc(int scrnIndex, atomBiosHandlePtr handle,
 
     RHDFUNCI(scrnIndex);
 
-    for (i = 0; AtomBiosRequestList[i].id != FUNC_END; i++) {
+    for (i = 0; AtomBiosRequestList[i].id != ATOM_FUNC_END; i++) {
 	if (id ==  AtomBiosRequestList[i].id) {
 	    req_func = AtomBiosRequestList[i].request;
 	    msg = AtomBiosRequestList[i].message;
@@ -4939,10 +5094,10 @@ RHDAtomBiosFunc(int scrnIndex, atomBiosHandlePtr handle,
 	return ATOM_NOT_IMPLEMENTED;
     }
     /* Hack for now */
-    if (id == ATOMBIOS_INIT)
+    if (id == ATOM_INIT)
 	data->val = scrnIndex;
 
-    if (id == ATOMBIOS_INIT || handle)
+    if (id == ATOM_INIT || handle)
 	ret = req_func(handle, id, data);
 
     if (ret == ATOM_SUCCESS) {
@@ -5098,6 +5253,356 @@ atomRestoreRegisters(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosA
 
     return ATOM_SUCCESS;
 }
+
+static AtomBiosResult
+rhdAtomGetClock(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    AtomBiosArgRec idx;
+    GET_ENGINE_CLOCK_PARAMETERS eng_p;
+    GET_MEMORY_CLOCK_PARAMETERS mem_p;
+
+    RHDFUNC(handle);
+
+    idx.exec.dataSpace = NULL;
+
+    if (func == ATOM_GET_ENGINE_CLOCK) {
+        idx.exec.index = GetIndexIntoMasterTable(COMMAND, GetEngineClock);
+        idx.exec.pspace = &eng_p;
+    } else if (func == ATOM_GET_MEMORY_CLOCK) {
+        idx.exec.index = GetIndexIntoMasterTable(COMMAND, GetMemoryClock);
+        idx.exec.pspace = &mem_p;
+    } else
+	return ATOM_NOT_IMPLEMENTED;
+
+    if (RHDAtomBiosFunc(handle->scrnIndex, handle,
+	                ATOM_EXEC, &idx) == ATOM_SUCCESS) {
+        data->val = (func == ATOM_GET_ENGINE_CLOCK) ?
+                        eng_p.ulReturnEngineClock :
+                        mem_p.ulReturnMemoryClock;
+        data->val *= 10;
+	return ATOM_SUCCESS;
+    }
+
+    return ATOM_FAILED;
+}
+
+static AtomBiosResult
+rhdAtomSetClock(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    AtomBiosArgRec execData;
+    SET_ENGINE_CLOCK_PS_ALLOCATION eng_clock_ps;
+    SET_MEMORY_CLOCK_PS_ALLOCATION mem_clock_ps;
+
+    RHDFUNC(handle);
+    execData.exec.dataSpace = NULL;
+
+    if (func == ATOM_SET_ENGINE_CLOCK) {
+	eng_clock_ps.ulTargetEngineClock = data->clockValue / 10;
+        execData.exec.index = GetIndexIntoMasterTable(COMMAND, SetEngineClock);
+	execData.exec.pspace = &eng_clock_ps;
+	xf86DrvMsg(handle->scrnIndex, X_INFO, "Attempting to set Engine Clock to %lu\n", data->clockValue);
+    } else if (func == ATOM_SET_MEMORY_CLOCK) {
+	mem_clock_ps.ulTargetMemoryClock = data->clockValue / 10;
+        execData.exec.index = GetIndexIntoMasterTable(COMMAND, SetMemoryClock);
+	execData.exec.pspace = &mem_clock_ps;
+	xf86DrvMsg(handle->scrnIndex, X_INFO, "Attempting to set Memory Clock to %lu\n", data->clockValue);
+    } else
+	return ATOM_NOT_IMPLEMENTED;
+
+    if (RHDAtomBiosFunc(handle->scrnIndex, handle,
+	                ATOM_EXEC, &execData) == ATOM_SUCCESS) {
+	return ATOM_SUCCESS;
+    }
+
+    xf86DrvMsg(handle->scrnIndex, X_WARNING, "Failed to set %s Clock\n",
+                (func == ATOM_SET_ENGINE_CLOCK) ? "Engine" : "Memory");
+    return ATOM_FAILED;
+}
+
+static AtomBiosResult
+rhdAtomPmSetup(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    AtomBiosArgRec execData;
+    ENABLE_ASIC_STATIC_PWR_MGT_PS_ALLOCATION pwrmgt_ps;
+    DYNAMIC_CLOCK_GATING_PS_ALLOCATION dynclk_ps;
+
+    RHDFUNC(handle);
+    execData.exec.dataSpace = NULL;
+
+    if (func == ATOM_PM_SETUP) {
+	pwrmgt_ps.ucEnable = data->val;
+	execData.exec.index = GetIndexIntoMasterTable(COMMAND, EnableASIC_StaticPwrMgt);
+	execData.exec.pspace = &pwrmgt_ps;
+	xf86DrvMsg(handle->scrnIndex, X_INFO, "Attempting to %sable power management\n", data->val ? "en":"dis");
+    } else if (func == ATOM_PM_CLOCKGATING_SETUP) {
+	dynclk_ps.ucEnable = data->val;
+        execData.exec.index = GetIndexIntoMasterTable(COMMAND, DynamicClockGating);
+	execData.exec.pspace = &dynclk_ps;
+	xf86DrvMsg(handle->scrnIndex, X_INFO, "Attempting to %sable clock gating\n", data->val ? "en":"dis");
+    } else
+	return ATOM_NOT_IMPLEMENTED;
+
+    if (RHDAtomBiosFunc(handle->scrnIndex, handle,
+	                ATOM_EXEC, &execData) == ATOM_SUCCESS) {
+	return ATOM_SUCCESS;
+    }
+
+    xf86DrvMsg(handle->scrnIndex, X_WARNING, "Failed to set %s\n",
+                (func == ATOM_PM_SETUP) ? "power management" : "dynamic clock gating");
+    return ATOM_FAILED;
+}
+
+static AtomBiosResult
+rhdAtomChipLimits(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    atomDataTablesPtr atomDataPtr = handle->atomDataPtr;
+    AtomBiosArgRec		    execData;
+    ATOM_VOLTAGE_OBJECT_INFO	   *voltage;
+    AtomChipLimits		   *lim = &data->chipLimits;
+    CARD8    crev, frev;
+    uint16_t FirmwareInfoRev = 0;
+
+    RHDFUNC(handle);
+    memset (lim, 0, sizeof (*lim));
+
+    if (rhdAtomGetTableRevisionAndSize (
+	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->FirmwareInfo.base),
+	    &crev,&frev,NULL))
+	FirmwareInfoRev = (frev << 8) | crev;
+
+    xf86DrvMsg (handle->scrnIndex, X_INFO, "FirmwareInfo Revision %04x\n", FirmwareInfoRev);
+    switch (FirmwareInfoRev) {
+    case 0x104:
+	{
+	    ATOM_FIRMWARE_INFO_V1_4 *fw = atomDataPtr->FirmwareInfo.FirmwareInfo_V_1_4;
+	    lim->Default.VDDCVoltage = fw->usBootUpVDDCVoltage;
+	}
+    case 0x103:	/* fall through */
+	{
+	    ATOM_FIRMWARE_INFO_V1_3 *fw = atomDataPtr->FirmwareInfo.FirmwareInfo_V_1_3;
+	    xf86DrvMsg (handle->scrnIndex, X_INFO, "Unused attribute: ul3DAccelerationEngineClock %lu\n",
+			(unsigned long) fw->ul3DAccelerationEngineClock * 10);
+	}
+    case 0x102:	/* fall through */
+    case 0x101:	/* fall through */
+	{
+	    ATOM_FIRMWARE_INFO *fw = atomDataPtr->FirmwareInfo.FirmwareInfo;
+	    lim->Maximum.EngineClock = fw->ulASICMaxEngineClock * 10;
+	    lim->Maximum.MemoryClock = fw->ulASICMaxMemoryClock * 10;
+	    /* Scary bits: PLL post divider is 2 ?!? Minimum for pixel PLL, so probably here as well */
+	    lim->Minimum.EngineClock = fw->usMinEngineClockPLL_Output * 5;
+	    lim->Minimum.MemoryClock = fw->usMinMemoryClockPLL_Output * 5;
+	    xf86DrvMsg (handle->scrnIndex, X_INFO, "Unused attribute: ulDriverTargetEngineClock %lu\n",
+			(unsigned long) fw->ulDriverTargetEngineClock * 10);
+	    xf86DrvMsg (handle->scrnIndex, X_INFO, "Unused attribute: ulDriverTargetMemoryClock %lu\n",
+			(unsigned long) fw->ulDriverTargetMemoryClock * 10);
+	    xf86DrvMsg (handle->scrnIndex, X_INFO, "Unused attribute: ucASICMaxTemperature %d\n",
+			(int) fw->ucASICMaxTemperature);
+	    xf86DrvMsg (handle->scrnIndex, X_INFO, "Scary bits: Estimated MinEngineClock %d kHz\n",
+			(int) fw->usMinEngineClockPLL_Output * 5);
+	    xf86DrvMsg (handle->scrnIndex, X_INFO, "Scary bits: Estimated MinMemoryClock %d kHz\n",
+			(int) fw->usMinMemoryClockPLL_Output * 5);
+	    break;
+	}
+    default:
+	xf86DrvMsg(handle->scrnIndex, X_ERROR, "Unusupported FirmwareInfo Revision\n");
+	return ATOM_NOT_IMPLEMENTED;
+    }
+
+    if ( (voltage = atomDataPtr->VoltageObjectInfo) ) {
+	char *last = ((char *) voltage) + voltage->sHeader.usStructureSize;
+	while ((char *) &voltage->asVoltageObj[0].ucVoltageType < last) {
+	    if (voltage->asVoltageObj[0].ucVoltageType == SET_VOLTAGE_TYPE_ASIC_VDDC) {
+		lim->Minimum.VDDCVoltage = voltage->asVoltageObj[0].asFormula.usVoltageBaseLevel;
+		lim->Maximum.VDDCVoltage = lim->Minimum.VDDCVoltage +
+		    voltage->asVoltageObj[0].asFormula.usVoltageStep *
+		    (voltage->asVoltageObj[0].asFormula.ucNumOfVoltageEntries - 1) /
+		    (voltage->asVoltageObj[0].asFormula.ucFlag & 0x01 ? 2 : 1);
+		break;
+	    }
+	    voltage = (ATOM_VOLTAGE_OBJECT_INFO *) (((char *) voltage) + voltage->asVoltageObj[0].ucSize);
+	}
+    } else
+	xf86DrvMsg (handle->scrnIndex, X_INFO, "No VoltageObjectInfo table\n");
+
+    if (RHDAtomBiosFunc (handle->scrnIndex, handle, ATOM_GET_DEFAULT_ENGINE_CLOCK,
+			 &execData) == ATOM_SUCCESS)
+	lim->Default.EngineClock = execData.val;
+    if (RHDAtomBiosFunc (handle->scrnIndex, handle, ATOM_GET_DEFAULT_MEMORY_CLOCK,
+			 &execData) == ATOM_SUCCESS)
+	lim->Default.MemoryClock = execData.val;
+
+    return ATOM_SUCCESS;
+}
+
+
+static AtomBiosResult
+rhdAtomChipConfigs(atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    atomDataTablesPtr atomDataPtr = handle->atomDataPtr;
+    AtomChipConfigs		   *conf = &data->chipConfigs;
+    CARD8    crev, frev;
+    uint16_t PowerPlayInfoRev = 0;
+
+    RHDFUNC(handle);
+    memset (conf, 0, sizeof (*conf));
+
+    if (rhdAtomGetTableRevisionAndSize (
+	    (ATOM_COMMON_TABLE_HEADER *)(atomDataPtr->PowerPlayInfo.base),
+	    &crev,&frev,NULL))
+	PowerPlayInfoRev = (frev << 8) | crev;
+    xf86DrvMsg (handle->scrnIndex, X_INFO, "PowerPlayInfo Revision %04x\n", PowerPlayInfoRev);
+
+    switch (PowerPlayInfoRev) {
+    case 0x101:
+    case 0x201:
+    case 0x301:
+	xf86DrvMsg (handle->scrnIndex, X_WARNING, "PowerPlayInfo Revision not yet implemented\n");
+	return ATOM_NOT_IMPLEMENTED;
+
+    case 0x401:
+	{
+	    ATOM_POWERPLAY_INFO_V4    *pp = atomDataPtr->PowerPlayInfo.PowerPlayInfo_V_4_1;
+	    unsigned char             *uc = ((unsigned char *)pp) + _U16 (pp->OffsetPowerIndexEntries);	/* ATOM_POWERINDEX_INFO_V4 */
+	    ATOM_POWERMODE_INFO_V4    *pm = (ATOM_POWERMODE_INFO_V4 *)    (((unsigned char *)pp) + _U16 (pp->OffsetPowerModeEntries));
+	    ATOM_POWERUNKNOWN_INFO_V4 *pu = (ATOM_POWERUNKNOWN_INFO_V4 *) (((unsigned char *)pp) + _U16 (pp->OffsetPowerUnknownEntries));
+	    int i, j, num = 0;
+
+	    for (i = 0; i < pp->NumPowerIndexEntries && uc < (unsigned char *) pm; i++) {
+		uc++;			/* First entry is index */
+		for (j = 1; j < pp->SizeOfPowerIndexEntry; j++) {
+		    if (*uc > num)
+			num = *uc;
+		    uc++;
+		}
+	    }
+	    conf->num = num;
+	    if (i < pp->NumPowerIndexEntries)
+		xf86DrvMsg (handle->scrnIndex, X_ERROR,
+			    "Expected %d ATOM_POWERINDEX_INFO_V4 entries, got only %d\n", num, i);
+
+	    conf->Settings = xnfcalloc (num, sizeof (struct rhdPowerState));
+	    for (i = 0; i < num && pm < (ATOM_POWERMODE_INFO_V4 *) pu; i++) {
+		conf->Settings[i].EngineClock = _U24 (pm->engineClock) * 10;
+		conf->Settings[i].MemoryClock = _U24 (pm->memoryClock) * 10;
+		conf->Settings[i].VDDCVoltage = _U16 (pm->voltage);
+		pm++;
+	    }
+	    if (i < num)
+		xf86DrvMsg (handle->scrnIndex, X_ERROR,
+			    "Expected %d ATOM_POWERMODE_INFO_V4 entries, got only %d\n", num, i);
+
+	    return ATOM_SUCCESS;
+	}
+
+    default:
+	xf86DrvMsg (handle->scrnIndex, X_ERROR, "Unusupported PowerPlayInfo Revision\n");
+	return ATOM_NOT_IMPLEMENTED;
+    }
+}
+
+#define SET_VOLTAGE_GET_MAX_VOLTAGE	6
+static AtomBiosResult
+rhdAtomGetVoltage (atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    AtomBiosArgRec execData;
+    CARD8    crev, frev;
+    uint16_t SetVoltageRev = 0;
+    int      SetVoltageIdx;
+
+    RHDFUNC(handle);
+
+    SetVoltageIdx = GetIndexIntoMasterTable (COMMAND, SetVoltage);
+    if (rhdAtomGetCommandTableRevisionSize (handle, SetVoltageIdx, &crev, &frev, NULL))
+	SetVoltageRev = (frev << 8) | crev;
+
+    execData.exec.dataSpace = NULL;
+
+    switch (SetVoltageRev) {
+    case 0x0101:
+	{
+	    SET_VOLTAGE_PARAMETERS	setVolt;
+	    xf86DrvMsg (handle->scrnIndex, X_WARNING, "Not supporting SetVoltage V1 yet\n");
+	    setVolt.ucVoltageType  = SET_VOLTAGE_GET_MAX_VOLTAGE;
+	    setVolt.ucVoltageMode  = SET_ASIC_VOLTAGE_MODE_ALL_SOURCE;
+	    setVolt.ucVoltageIndex = 0;
+	    execData.exec.index    = SetVoltageIdx;
+	    execData.exec.pspace   = &setVolt;
+	    if (RHDAtomBiosFunc (handle->scrnIndex, handle, ATOM_EXEC, &execData) == ATOM_SUCCESS) {
+		xf86DrvMsg (handle->scrnIndex, X_INFO,
+			    "Unused attribute: SET_VOLTAGE_GET_MAX_VOLTAGE: type %d mode %d index %d\n",
+			    setVolt.ucVoltageType, setVolt.ucVoltageMode, setVolt.ucVoltageIndex);
+		/* TODO: Map index into voltage */
+	    }
+	    return ATOM_NOT_IMPLEMENTED;
+	}
+    case 0x0102:
+	{
+	    SET_VOLTAGE_PARAMETERS_V2	setVolt2;
+	    setVolt2.ucVoltageType = SET_VOLTAGE_GET_MAX_VOLTAGE;
+	    setVolt2.ucVoltageMode = SET_ASIC_VOLTAGE_MODE_GET_GPIOVAL;
+	    setVolt2.usVoltageLevel = 0;
+	    execData.exec.index    = SetVoltageIdx;
+	    execData.exec.pspace   = &setVolt2;
+	    if (RHDAtomBiosFunc (handle->scrnIndex, handle, ATOM_EXEC, &execData) == ATOM_SUCCESS) {
+		data->val = setVolt2.usVoltageLevel;
+		return ATOM_SUCCESS;
+	    }
+	    return ATOM_FAILED;
+        }
+    default:
+	xf86DrvMsg(handle->scrnIndex, X_WARNING, "Unusupported SetVoltage Revision\n");
+	return ATOM_NOT_IMPLEMENTED;
+    }
+}
+
+static AtomBiosResult
+rhdAtomSetVoltage (atomBiosHandlePtr handle, AtomBiosRequestID func, AtomBiosArgPtr data)
+{
+    AtomBiosArgRec execData;
+    CARD8    crev, frev;
+    uint16_t SetVoltageRev = 0;
+    int      SetVoltageIdx;
+
+    RHDFUNC(handle);
+
+    SetVoltageIdx = GetIndexIntoMasterTable (COMMAND, SetVoltage);
+    if (rhdAtomGetCommandTableRevisionSize (handle, SetVoltageIdx, &crev, &frev, NULL))
+	SetVoltageRev = (frev << 8) | crev;
+
+    execData.exec.dataSpace = NULL;
+
+    switch (SetVoltageRev) {
+    case 0x0101:
+	{
+#if 0
+	    SET_VOLTAGE_PARAMETERS	setVolt;
+	    setVolt.ucVoltageType  = SET_VOLTAGE_TYPE_ASIC_VDDC;
+            setVolt.ucVoltageMode  = SET_ASIC_VOLTAGE_MODE_ALL_SOURCE;
+	    setVolt.ucVoltageIndex = ###INDEX###;
+	    execData.exec.index    = SetVoltageIdx;
+	    execData.exec.pspace   = &setVolt;
+	    return RHDAtomBiosFunc (handle->scrnIndex, handle, ATOM_EXEC, &execData);
+#endif
+	    xf86DrvMsg (handle->scrnIndex, X_WARNING, "Not supporting SetVoltage V1 yet\n");
+	    return ATOM_NOT_IMPLEMENTED;
+	}
+    case 0x0102:
+	{
+	    SET_VOLTAGE_PARAMETERS_V2	setVolt2;
+	    setVolt2.ucVoltageType  = SET_VOLTAGE_TYPE_ASIC_VDDC;
+            setVolt2.ucVoltageMode  = SET_ASIC_VOLTAGE_MODE_ALL_SOURCE;
+	    setVolt2.usVoltageLevel = data->val;
+	    execData.exec.index     = SetVoltageIdx;
+	    execData.exec.pspace    = &setVolt2;
+	    return RHDAtomBiosFunc (handle->scrnIndex, handle, ATOM_EXEC, &execData);
+        }
+    default:
+	xf86DrvMsg(handle->scrnIndex, X_WARNING, "Unusupported SetVoltage Revision\n");
+	return ATOM_NOT_IMPLEMENTED;
+    }
+}
+
 
 # ifdef ATOM_BIOS_PARSER
 

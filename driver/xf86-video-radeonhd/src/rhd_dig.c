@@ -42,6 +42,7 @@
 #include "rhd_output.h"
 #include "rhd_regs.h"
 #include "rhd_hdmi.h"
+#include "rhd_acpi.h"
 #ifdef ATOM_BIOS
 #include "rhd_atombios.h"
 #include "rhd_atomout.h"
@@ -65,11 +66,9 @@ struct transmitter {
     void (*Destroy) (struct rhdOutput *Output);
     Bool (*Property) (struct rhdOutput *Output,
 		      enum rhdPropertyAction Action, enum rhdOutputProperty Property, union rhdPropertyData *val);
-#ifdef NOT_YET
     Bool (*WrappedPropertyCallback) (struct rhdOutput *Output,
 		      enum rhdPropertyAction Action, enum rhdOutputProperty Property, union rhdPropertyData *val);
     void *PropertyPrivate;
-#endif
     void *Private;
 };
 
@@ -121,6 +120,10 @@ struct DIGPrivate
     CARD32 OffDelay;
     struct rhdFMTDither FMTDither;
     int BlLevel;
+
+    void (*SetBacklight)(struct rhdOutput *Output, int val);
+    int  (*GetBacklight)(struct rhdOutput *Output);
+
 };
 
 /*
@@ -159,11 +162,8 @@ LVTMATransmitterModeValid(struct rhdOutput *Output, DisplayModePtr Mode)
 }
 
 static void
-LVDSSetBacklight(struct rhdOutput *Output)
+LVDSSetBacklight(struct rhdOutput *Output, int level)
 {
-    struct DIGPrivate *Private = (struct DIGPrivate *) Output->Private;
-    int level = Private->BlLevel;
-
     RHDFUNC(Output);
 
     RHDRegMask(Output, RV620_LVTMA_PWRSEQ_REF_DIV,
@@ -178,6 +178,20 @@ LVDSSetBacklight(struct rhdOutput *Output)
 /*
  *
  */
+static int
+LVDSGetBacklight(struct rhdOutput *Output)
+{
+    CARD32 level;
+
+    level = RHDRegRead(Output, RV620_LVTMA_BL_MOD_CNTL);
+    if ((level & 0x01) != 0x01) return -1;
+
+    return (level >> LVTMA_BL_MOD_LEVEL_SHIFT) & 0xFF;
+}
+
+/*
+ *
+ */
 static Bool
 LVDSTransmitterPropertyControl(struct rhdOutput *Output,
 	     enum rhdPropertyAction Action, enum rhdOutputProperty Property, union rhdPropertyData *val)
@@ -187,19 +201,20 @@ LVDSTransmitterPropertyControl(struct rhdOutput *Output,
     RHDFUNC(Output);
     switch (Action) {
 	case rhdPropertyCheck:
-	    if (Private->BlLevel < 0)
-		return FALSE;
 	switch (Property) {
 	    case RHD_OUTPUT_BACKLIGHT:
-		    return TRUE;
+		if (Private->BlLevel < 0)
+		    return FALSE;
+		return TRUE;
 	    default:
 		return FALSE;
 	}
 	case rhdPropertyGet:
-	    if (Private->BlLevel < 0)
-		return FALSE;
 	    switch (Property) {
 		case RHD_OUTPUT_BACKLIGHT:
+		    Private->BlLevel = Private->GetBacklight(Output);
+		    if (Private->BlLevel < 0)
+			return FALSE;
 		    val->integer = Private->BlLevel;
 		    return TRUE;
 		default:
@@ -207,10 +222,10 @@ LVDSTransmitterPropertyControl(struct rhdOutput *Output,
 	    }
 	    break;
 	case rhdPropertySet:
-	    if (Private->BlLevel < 0)
-		return FALSE;
 	    switch (Property) {
 		case RHD_OUTPUT_BACKLIGHT:
+		    if (Private->BlLevel < 0)
+			return FALSE;
 		    Private->BlLevel = val->integer;
 		    return TRUE;
 		default:
@@ -220,7 +235,9 @@ LVDSTransmitterPropertyControl(struct rhdOutput *Output,
 	case rhdPropertyCommit:
 	    switch (Property) {
 		case RHD_OUTPUT_BACKLIGHT:
-		    LVDSSetBacklight(Output);
+		    if (Private->BlLevel < 0)
+			return FALSE;
+		    Private->SetBacklight(Output, Private->BlLevel);
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -245,6 +262,7 @@ TMDSTransmitterPropertyControl(struct rhdOutput *Output,
 	    switch (Property) {
 		case RHD_OUTPUT_COHERENT:
 		case RHD_OUTPUT_HDMI:
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
 		    return TRUE;
 	        default:
 		    return FALSE;
@@ -256,6 +274,9 @@ TMDSTransmitterPropertyControl(struct rhdOutput *Output,
 		    return TRUE;
 		case RHD_OUTPUT_HDMI:
 		    val->Bool = Private->EncoderMode == TMDS_HDMI;
+		    return TRUE;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    val->Bool = RHDHdmiGetAudioWorkaround(Private->Hdmi);
 		    return TRUE;
 		default:
 		    return FALSE;
@@ -269,6 +290,9 @@ TMDSTransmitterPropertyControl(struct rhdOutput *Output,
 		case RHD_OUTPUT_HDMI:
 		    Private->EncoderMode = val->Bool ? TMDS_HDMI : TMDS_DVI;
 		    break;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    RHDHdmiSetAudioWorkaround(Private->Hdmi, val->Bool);
+		    break;
 		default:
 		    return FALSE;
 	    }
@@ -279,6 +303,9 @@ TMDSTransmitterPropertyControl(struct rhdOutput *Output,
 		case RHD_OUTPUT_HDMI:
 		    Output->Mode(Output, Private->Mode);
 		    Output->Power(Output, RHD_POWER_ON);
+		    break;
+		case RHD_OUTPUT_AUDIO_WORKAROUND:
+		    RHDHdmiCommitAudioWorkaround(Private->Hdmi);
 		    break;
 		default:
 		    return FALSE;
@@ -308,7 +335,6 @@ LVTMATransmitterSet(struct rhdOutput *Output, struct rhdCrtc *Crtc, DisplayModeP
 	RHDRegMask(Output, RV620_LVTMA_TRANSMITTER_CONTROL,
 		   doCoherent ? 0 : RV62_LVTMA_BYPASS_PLL, RV62_LVTMA_BYPASS_PLL);
 
-    Private->Mode = Mode;
 #ifdef ATOM_BIOS
     RHDDebug(Output->scrnIndex, "%s: SynthClock: %i Hex: %x EncoderMode: %x\n",__func__,
 	     (Mode->SynthClock),(Mode->SynthClock / 10), Private->EncoderMode);
@@ -322,7 +348,7 @@ LVTMATransmitterSet(struct rhdOutput *Output, struct rhdCrtc *Crtc, DisplayModeP
 
     /* Get data from DIG2TransmitterControl table */
     data.val = 0x4d;
-    if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS, ATOMBIOS_GET_CODE_DATA_TABLE,
+    if (RHDAtomBiosFunc(rhdPtr->scrnIndex, rhdPtr->atomBIOS, ATOM_GET_CODE_DATA_TABLE,
 			&data) == ATOM_SUCCESS) {
 	AtomBiosArgRec data1;
 	CARD32 *d_p = NULL;
@@ -1313,7 +1339,7 @@ GetLVDSInfo(RHDPtr rhdPtr, struct DIGPrivate *Private)
 			   & RV62_LVDS_24BIT_ENABLE) != 0);
 
     tmp = RHDRegRead(rhdPtr, RV620_LVTMA_BL_MOD_CNTL);
-    if (tmp & 0x1)
+    if (tmp & LVTMA_BL_MOD_EN)
 	Private->BlLevel = ( tmp >> LVTMA_BL_MOD_LEVEL_SHIFT )  & 0xff;
     else
 	Private->BlLevel = -1;
@@ -1456,11 +1482,11 @@ DigPropertyControl(struct rhdOutput *Output,
 	case RHD_OUTPUT_COHERENT:
 	case RHD_OUTPUT_BACKLIGHT:
 	case RHD_OUTPUT_HDMI:
+	case RHD_OUTPUT_AUDIO_WORKAROUND:
 	{
 	    if (!Private->Transmitter.Property)
 		return FALSE;
-	    Private->Transmitter.Property(Output, Action, Property, val);
-	    break;
+	    return Private->Transmitter.Property(Output, Action, Property, val);
 	}
 	default:
 	    return FALSE;
@@ -1481,6 +1507,8 @@ DigMode(struct rhdOutput *Output, DisplayModePtr Mode)
     struct rhdCrtc *Crtc = Output->Crtc;
 
     RHDFUNC(Output);
+
+    Private->Mode = Mode;
 
     /*
      * For dual link capable DVI we need to decide from the pix clock if we are dual link.
@@ -1543,10 +1571,8 @@ DigDestroy(struct rhdOutput *Output)
     Encoder->Destroy(Output);
     Transmitter->Destroy(Output);
     RHDHdmiDestroy(Private->Hdmi);
-#ifdef NOT_YET
     if (Transmitter->PropertyPrivate)
 	RhdAtomDestroyBacklightControlProperty(Output, Transmitter->PropertyPrivate);
-#endif
     xfree(Private);
     Output->Private = NULL;
 }
@@ -1641,7 +1667,6 @@ DigAllocFree(struct rhdOutput *Output, enum rhdOutputAllocation Alloc)
 /*
  *
  */
-#ifdef NOT_YET
 static Bool
 digTransmitterPropertyWrapper(struct rhdOutput *Output,
 			      enum rhdPropertyAction Action,
@@ -1660,7 +1685,6 @@ digTransmitterPropertyWrapper(struct rhdOutput *Output,
 
     return ret;
 }
-#endif
 
 /*
  *
@@ -1830,17 +1854,31 @@ RHDDIGInit(RHDPtr rhdPtr,  enum rhdOutputType outputType, CARD8 ConnectorType)
 	case RHD_CONNECTOR_PANEL:
 	    Private->EncoderMode = LVDS;
 	    GetLVDSInfo(rhdPtr, Private);
+	    if (Private->BlLevel >= 0) {
+		Private->SetBacklight = LVDSSetBacklight;
+		Private->GetBacklight = LVDSGetBacklight;
+		xf86DrvMsg(Output->scrnIndex,X_INFO, "Native Backlight Control found.\n");
+	    }  else {
+		Private->BlLevel = RhdACPIGetBacklightControl(Output);
+		if (Private->BlLevel >= 0) {
+		    xf86DrvMsg(Output->scrnIndex,X_INFO, "ACPI Backlight Control found.\n");
+		    Private->SetBacklight = RhdACPISetBacklightControl;
+		    Private->GetBacklight = RhdACPIGetBacklightControl;
+		}
 #ifdef ATOM_BIOS
-#ifdef NOT_YET
-	    if (Private->BlLevel < 0) {
-		Private->BlLevel = RhdAtomSetupBacklightControlProperty(Output,
-									&Private->Transmitter.WrappedPropertyCallback,
-									&Private->Transmitter.PropertyPrivate);
-		if (Private->Transmitter.PropertyPrivate)
-		    Private->Transmitter.Property = digTransmitterPropertyWrapper;
+		else {
+		    Private->BlLevel = RhdAtomSetupBacklightControlProperty(
+			Output,
+			&Private->Transmitter.WrappedPropertyCallback,
+			&Private->Transmitter.PropertyPrivate);
+		    if (Private->Transmitter.PropertyPrivate)
+			Private->Transmitter.Property = digTransmitterPropertyWrapper;
+		    xf86DrvMsg(Output->scrnIndex,X_INFO,
+			       "Falling back to AtomBIOS controlled Backlight.\n");
+		}
+#endif
 	    }
-#endif
-#endif
+
 	    Private->Hdmi = NULL;
 	    break;
 	case RHD_CONNECTOR_DVI:

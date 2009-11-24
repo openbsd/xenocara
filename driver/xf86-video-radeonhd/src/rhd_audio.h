@@ -34,7 +34,6 @@ struct rhdAudio {
 	struct rhdHdmi* Registered;
 	OsTimerPtr 	Timer;
 
-	Bool	SavedPlaying;
 	int	SavedChannels;
 	int	SavedRate;
 	int	SavedBitsPerSample;

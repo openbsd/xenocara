@@ -35,11 +35,14 @@ struct rhdHdmi {
 	struct rhdOutput* Output;
 	CARD16 Offset;
 
+	Bool SavedBufferStatus;
+	Bool AudioDebugWorkaround;
+
 	Bool Stored;
 	CARD32 StoreEnable;
 	CARD32 StoreControl;
 	CARD32 StoreUnknown[0x3];
-	CARD32 StoredAudioDebugWorkaround;
+	CARD32 StoredAudioDebugWorkaround[0x4];
 
 	CARD32 StoredFrameVersion;
 	CARD32 StoredVideoControl;
@@ -63,15 +66,20 @@ struct rhdHdmi* RHDHdmiInit(RHDPtr rhdPtr, struct rhdOutput* Output);
 
 void RHDHdmiSetMode(struct rhdHdmi* rhdHdmi, DisplayModePtr Mode);
 void RHDHdmiEnable(struct rhdHdmi* rhdHdmi, Bool Enable);
+
+Bool RHDHdmiBufferStatusChanged(struct rhdHdmi* hdmi);
 void RHDHdmiUpdateAudioSettings(
 	struct rhdHdmi* rhdHdmi,
-	Bool playing,
 	int channels,
 	int rate,
 	int bps,
 	CARD8 status_bits,
 	CARD8 catgory_code
 );
+
+void RHDHdmiSetAudioWorkaround(struct rhdHdmi* rhdHdmi, Bool Enabled);
+Bool RHDHdmiGetAudioWorkaround(struct rhdHdmi* rhdHdmi);
+void RHDHdmiCommitAudioWorkaround(struct rhdHdmi* rhdHdmi);
 
 void RHDHdmiSave(struct rhdHdmi* rhdHdmi);
 void RHDHdmiRestore(struct rhdHdmi* rhdHdmi);

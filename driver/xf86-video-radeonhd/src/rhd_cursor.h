@@ -38,8 +38,6 @@ struct rhdCursor
 
     int RegOffset;
 
-    int Width;
-    int Height;
     int Base;
 
     int X;

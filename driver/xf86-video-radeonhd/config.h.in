@@ -27,6 +27,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Have pci_device_enable prototype */
+#undef HAVE_PCI_DEVICE_ENABLE
+
 /* Define to 1 if you have <pci/pci.h>. */
 #undef HAVE_PCI_PCI_H
 
@@ -50,6 +53,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* xextproto 7.1 available */
+#undef HAVE_XEXTPROTO_71
 
 /* Define to 1 if you have <${sdkdir}/xf86_ansic.h>. */
 #undef HAVE_XF86_ANSIC_H

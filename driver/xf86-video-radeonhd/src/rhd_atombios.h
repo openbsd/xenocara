@@ -37,27 +37,27 @@
 #define RHD_ATOMBIOS_OUTPUT 8
 
 typedef enum _AtomBiosRequestID {
-    ATOMBIOS_INIT,
-    ATOMBIOS_TEARDOWN,
+    ATOM_INIT,
+    ATOM_TEARDOWN,
 #  ifdef ATOM_BIOS_PARSER
-    ATOMBIOS_EXEC,
+    ATOM_EXEC,
 #  endif
-    ATOMBIOS_ALLOCATE_FB_SCRATCH,
-    ATOMBIOS_GET_CONNECTORS,
-    ATOMBIOS_GET_OUTPUT_DEVICE_LIST,
-    ATOMBIOS_GET_PANEL_MODE,
-    ATOMBIOS_GET_PANEL_EDID,
-    ATOMBIOS_GET_CODE_DATA_TABLE,
-    GET_DEFAULT_ENGINE_CLOCK,
-    GET_DEFAULT_MEMORY_CLOCK,
-    GET_MAX_PIXEL_CLOCK_PLL_OUTPUT,
-    GET_MIN_PIXEL_CLOCK_PLL_OUTPUT,
-    GET_MAX_PIXEL_CLOCK_PLL_INPUT,
-    GET_MIN_PIXEL_CLOCK_PLL_INPUT,
-    GET_MAX_PIXEL_CLK,
-    GET_REF_CLOCK,
-    GET_FW_FB_START,
-    GET_FW_FB_SIZE,
+    ATOM_ALLOCATE_FB_SCRATCH,
+    ATOM_GET_CONNECTORS,
+    ATOM_GET_OUTPUT_DEVICE_LIST,
+    ATOM_GET_PANEL_MODE,
+    ATOM_GET_PANEL_EDID,
+    ATOM_GET_CODE_DATA_TABLE,
+    ATOM_GET_DEFAULT_ENGINE_CLOCK,
+    ATOM_GET_DEFAULT_MEMORY_CLOCK,
+    ATOM_GET_MAX_PIXEL_CLOCK_PLL_OUTPUT,
+    ATOM_GET_MIN_PIXEL_CLOCK_PLL_OUTPUT,
+    ATOM_GET_MAX_PIXEL_CLOCK_PLL_INPUT,
+    ATOM_GET_MIN_PIXEL_CLOCK_PLL_INPUT,
+    ATOM_GET_MAX_PIXEL_CLK,
+    ATOM_GET_REF_CLOCK,
+    ATOM_GET_FW_FB_START,
+    ATOM_GET_FW_FB_SIZE,
     ATOM_TMDS_MAX_FREQUENCY,
     ATOM_TMDS_PLL_CHARGE_PUMP,
     ATOM_TMDS_PLL_DUTY_CYCLE,
@@ -101,7 +101,17 @@ typedef enum _AtomBiosRequestID {
     ATOM_GET_PCIE_LANES,
     ATOM_SET_REGISTER_LIST_LOCATION,
     ATOM_RESTORE_REGISTERS,
-    FUNC_END
+    ATOM_GET_ENGINE_CLOCK,
+    ATOM_GET_MEMORY_CLOCK,
+    ATOM_SET_ENGINE_CLOCK,
+    ATOM_SET_MEMORY_CLOCK,
+    ATOM_PM_SETUP,
+    ATOM_PM_CLOCKGATING_SETUP,
+    ATOM_GET_CHIP_LIMITS,
+    ATOM_GET_VOLTAGE,
+    ATOM_SET_VOLTAGE,
+    ATOM_GET_CHIP_CONFIGS,
+    ATOM_FUNC_END
 } AtomBiosRequestID;
 
 typedef enum _AtomBiosResult {
@@ -187,6 +197,20 @@ typedef struct AtomGoldenSettings
 
 } AtomGoldenSettings;
 
+typedef struct AtomChipLimits
+{
+    struct rhdPowerState Minimum;
+    struct rhdPowerState Maximum;
+    struct rhdPowerState Default;
+} AtomChipLimits;
+
+typedef struct AtomChipConfigs
+{
+    int    num;
+    struct rhdPowerState *Settings;
+} AtomChipConfigs;
+
+
 typedef union AtomBiosArg
 {
     CARD32 val;
@@ -209,6 +233,9 @@ typedef union AtomBiosArg
     AtomExecRec			exec;
     AtomFbRec			fb;
     enum RHD_TV_MODE		tvMode;
+    unsigned long		clockValue;
+    AtomChipLimits		chipLimits;
+    AtomChipConfigs		chipConfigs;
 } AtomBiosArgRec, *AtomBiosArgPtr;
 
 enum atomCrtc {
@@ -484,6 +511,9 @@ struct atomCrtcBlank {
     enum atomBlankAction Action;
     unsigned short r, g, b;
 };
+
+extern int rhdUpdateAtomBIOSUsage(RHDPtr rhdPtr, char *string);
+extern char *rhdReturnAtomBIOSUsage(RHDPtr rhdPtr);
 
 extern AtomBiosResult RHDAtomBiosFunc(int scrnIndex, atomBiosHandlePtr handle,
 		AtomBiosRequestID id, AtomBiosArgPtr data);

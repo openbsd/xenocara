@@ -62,6 +62,8 @@
 #include <X11/extensions/Xv.h>
 #include "fourcc.h"
 
+static Atom xvColorSpace;
+
 #ifdef USE_EXA
 /*
  *
@@ -193,7 +195,15 @@ rhdSetPortAttribute(ScrnInfoPtr  pScrn,
 		       INT32	    value,
 		       pointer	    data)
 {
-    return BadMatch;
+    /*RHDPtr rhdPtr = RHDPTR(pScrn);*/
+    struct RHDPortPriv *pPriv = (struct RHDPortPriv*)data;
+
+    if (attribute == xvColorSpace)
+        pPriv->color_space = value;
+    else
+        return BadMatch;
+
+    return Success;
 }
 
 /*
@@ -205,7 +215,15 @@ rhdGetPortAttribute(ScrnInfoPtr  pScrn,
 		       INT32	    *value,
 		       pointer	    data)
 {
-    return BadMatch;
+    /*RHDPtr rhdPtr = RHDPTR(pScrn);*/
+    struct RHDPortPriv *pPriv = (struct RHDPortPriv*)data;
+
+    if (attribute == xvColorSpace)
+        *value = pPriv->color_space;
+    else
+        return BadMatch;
+
+    return Success;
 }
 
 /*
@@ -875,6 +893,14 @@ static XF86ImageRec Images[NUM_IMAGES] =
     XVIMAGE_UYVY
 };
 
+#define NUM_ATTRIBUTES 1
+
+static XF86AttributeRec Attributes[NUM_ATTRIBUTES+1] =
+{
+   {XvSettable | XvGettable, 0, RHD_XV_NUM_COLOR_SPACE-1, "XV_COLORSPACE"},
+   { 0, 0, 0, NULL}  /* place holder */
+};
+
 /*
  *
  */
@@ -889,6 +915,9 @@ rhdSetupImageTexturedVideo(ScreenPtr pScreen)
     int num_texture_ports = 16;
 
     RHDFUNC(pScrn);
+
+    /* Create attribute atoms */
+    xvColorSpace = MakeAtom("XV_COLORSPACE", 13, TRUE);
 
     adapt = xnfcalloc(1, sizeof(XF86VideoAdaptorRec) + num_texture_ports *
 		      (sizeof(struct RHDPortPriv) + sizeof(DevUnion)));
@@ -914,8 +943,14 @@ rhdSetupImageTexturedVideo(ScreenPtr pScreen)
     pPortPriv =
 	(struct RHDPortPriv *)(&adapt->pPortPrivates[num_texture_ports]);
 
-    adapt->nAttributes = 0;
-    adapt->pAttributes = NULL;
+    /* Xv Attributes for r6xx/r7xx only for now */
+    if (rhdPtr->ChipSet >= RHD_R600) {
+        adapt->nAttributes = NUM_ATTRIBUTES;
+        adapt->pAttributes = Attributes;
+    } else {
+        adapt->nAttributes = 0;
+        adapt->pAttributes = NULL;
+    }
     adapt->pImages = Images;
     adapt->nImages = NUM_IMAGES;
     adapt->PutVideo = NULL;
@@ -935,6 +970,9 @@ rhdSetupImageTexturedVideo(ScreenPtr pScreen)
 
 	/* gotta uninit this someplace, XXX: shouldn't be necessary for textured */
 	REGION_NULL(pScreen, &pPriv->clip);
+
+        /* Set default attribute values */
+        pPriv->color_space = RHD_XV_COLOR_SPACE_AUTODETECT;
 
 	adapt->pPortPrivates[i].ptr = (pointer) (pPriv);
     }
@@ -987,5 +1025,4 @@ RHDInitVideo(ScreenPtr pScreen)
 
     if (newAdaptors)
 	xfree(newAdaptors);
-
 }

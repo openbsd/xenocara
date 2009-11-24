@@ -18,6 +18,7 @@ radeonhd_drv_la_LIBADD += @PCIACCESS_LIBS@
 endif
 
 radeonhd_drv_la_SOURCES = \
+	atombios_rev.h \
 	r5xx_3dregs.h \
 	r5xx_accel.c \
 	r5xx_accel.h \
@@ -76,6 +77,8 @@ radeonhd_drv_la_SOURCES = \
 	rhd_output.h \
 	rhd_pll.c \
 	rhd_pll.h \
+	rhd_pm.c \
+	rhd_pm.h \
 	rhd_randr.c \
 	rhd_randr.h \
 	rhd_regs.h \
@@ -85,7 +88,9 @@ radeonhd_drv_la_SOURCES = \
 	rhd_vga.c \
 	rhd_vga.h \
 	rhd_video.c \
-	rhd_video.h
+	rhd_video.h \
+	rhd_acpi.c \
+	rhd_acpi.h
 
 nodist_radeonhd_drv_la_SOURCES = \
 	git_version.h
@@ -146,8 +151,7 @@ if HAVE_SED_WITH_REASONABLE_SUBSTITUTION
 SRCMAN = $(top_srcdir)/man/radeonhd.man
 CLEANFILES += radeonhd.man.new
 radeonhd.man.new: rhd_id.c $(SRCMAN)
-	echo "Generating radeon.man.new..."; \
-	(	$(SED) -n '1,/^\.\\" START_DEVICE_LIST marker - do not delete/p' "$(SRCMAN)"; \
+	$(Q)(	$(SED) -n '1,/^\.\\" START_DEVICE_LIST marker - do not delete/p' "$(SRCMAN)"; \
 		$(SED)	-e '1,/^[ 	]*\/\* START_DEVICE_LIST marker - do not delete \*\/ *$$/d' \
 			-e '/^[ 	]*\/\* END_DEVICE_LIST marker - do not delete \*\/ *$$/,$$d' \
 			-e '/^[ 	]\{1,\}xf86Msg(X_NONE,/d' \
@@ -162,8 +166,7 @@ radeonhd.man.new: rhd_id.c $(SRCMAN)
 SRCREADME = $(top_srcdir)/README
 CLEANFILES += README.new
 README.new: rhd_id.c $(top_srcdir)/README
-	echo "Generating README.new..."; \
-	(	$(SED) -n '1,/^BEGIN_DEVICE_LIST$$/p' "$(SRCREADME)"; \
+	$(Q)(	$(SED) -n '1,/^BEGIN_DEVICE_LIST$$/p' "$(SRCREADME)"; \
 		$(SED)	-e '1,/^[ 	]*\/\* START_DEVICE_LIST marker - do not delete \*\/ *$$/d' \
 			-e '/^[ 	]*\/\* END_DEVICE_LIST marker - do not delete \*\/ *$$/,$$d' \
 			-e '/^[ 	]\{1,\}xf86Msg(X_NONE,/d' \
@@ -180,13 +183,13 @@ README.new: rhd_id.c $(top_srcdir)/README
 all-local: radeonhd.man.new README.new
 	@changed=""; \
 	if diff -u "$(SRCMAN)" radeonhd.man.new; then \
-		echo "radeon(4) man page is current."; \
+		if test "x$(Q)" = "x@"; then :; else echo "radeon(4) man page is current."; fi \
 	else \
                 changed="$$changed $(SRCMAN)"; \
 		mv -f radeonhd.man.new "$(SRCMAN)"; \
 	fi; \
 	if diff -u "$(SRCREADME)" README.new; then \
-		echo "README file is current."; \
+		if test "x$(Q)" = "x@"; then :; else echo "README file is current."; fi \
 	else \
                 changed="$$changed $(SRCREADME)"; \
 		mv -f README.new "$(SRCREADME)"; \

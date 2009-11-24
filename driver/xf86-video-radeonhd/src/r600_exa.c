@@ -316,6 +316,7 @@ R600DoneSolid(PixmapPtr pPix)
 	(rhdPtr->ChipSet == RHD_M74) ||
 	(rhdPtr->ChipSet == RHD_M82) ||
 	(rhdPtr->ChipSet == RHD_RS780) ||
+	(rhdPtr->ChipSet == RHD_RS880) ||
 	(rhdPtr->ChipSet == RHD_RV710))
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit,
 			    accel_state->vb_size, accel_state->vb_mc_addr);
@@ -559,6 +560,7 @@ R600DoCopy(ScrnInfoPtr pScrn)
 	(rhdPtr->ChipSet == RHD_M74) ||
 	(rhdPtr->ChipSet == RHD_M82) ||
 	(rhdPtr->ChipSet == RHD_RS780) ||
+	(rhdPtr->ChipSet == RHD_RS880) ||
 	(rhdPtr->ChipSet == RHD_RV710))
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit,
 			    accel_state->vb_size, accel_state->vb_mc_addr);
@@ -1391,6 +1393,11 @@ static Bool R600PrepareComposite(int op, PicturePtr pSrcPicture,
     cb_config_t cb_conf;
     shader_config_t vs_conf, ps_conf;
 
+    /* RV740 seems to be particularly problematic */
+    /* if ((rhdPtr->ChipSet == RHD_RV740) && (w < 32 || h < 32)) */
+    if (rhdPtr->ChipSet == RHD_RV740)
+	return FALSE;
+
     /* return FALSE; */
 
     if (pMask) {
@@ -1723,6 +1730,7 @@ static void R600DoneComposite(PixmapPtr pDst)
 	(rhdPtr->ChipSet == RHD_M74) ||
 	(rhdPtr->ChipSet == RHD_M82) ||
 	(rhdPtr->ChipSet == RHD_RS780) ||
+	(rhdPtr->ChipSet == RHD_RS880) ||
 	(rhdPtr->ChipSet == RHD_RV710))
 	cp_set_surface_sync(pScrn, accel_state->ib, TC_ACTION_ENA_bit,
 			    accel_state->vb_size, accel_state->vb_mc_addr);
@@ -1852,6 +1860,12 @@ R600DownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
     uint32_t scratch_pitch = scratch_pitch_bytes / (bpp / 8);
     int wpass = w * (bpp/8);
     drmBufPtr scratch;
+
+    /* RV740 seems to be particularly problematic with small xfers */
+    /* if ((rhdPtr->ChipSet == RHD_RV740) && (w < 32 || h < 32)) */
+    /* Composite in software with DFS partially active breaks badly */
+    if (rhdPtr->ChipSet == RHD_RV740)
+	return FALSE;
 
     if (src_pitch & 7)
 	return FALSE;

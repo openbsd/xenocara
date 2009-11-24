@@ -1,3 +1,1206 @@
+commit 8cbff7bfa1201faa1e5dbf7019f17c2f4b1d2b7f
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Oct 9 17:42:45 2009 +0200
+
+    Bump to 1.3.0. Update README.
+
+commit bd2145d8fab854fb5617abd09f7517321d2b35be
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Oct 9 17:42:30 2009 +0200
+
+    pm: Comment out currently unused variable.
+
+commit 5c437ecd5d06e1b214d2a309dfed60fadf071829
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Oct 9 17:31:29 2009 +0200
+
+    README.coding: Add rhd_acpi.[ch] and atombios_rev.h
+
+commit 0c8cc053741d7113254776d6c64745ecc5a1256e
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Oct 9 11:25:06 2009 +0200
+
+    i2c: Hardware may need a while to indicate availability to the host
+    
+    Fixes fdo #24330.
+
+commit 57b97e0fefd7e5a0069573befabdb28ee0094f8d
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Oct 8 17:10:05 2009 +0200
+
+    pm: Improve wording of lowPowerModeEngineClock logging.
+
+commit a1cd56ddd2955ce74cccc4adcd482feda0985b72
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Oct 8 16:59:55 2009 +0200
+
+    pm: Ignore validation when setting negative engine/mem frequencies.
+
+commit 5d5d8e3d8655a7adbc17a548372bc0fad6d67cb7
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Oct 8 16:57:21 2009 +0200
+
+    pm: Use minimum known working frequency instead of default/2.
+
+commit 0a94f8eb56ec0155864858f8aefc4c64d3e1bf77
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Oct 8 16:02:46 2009 +0200
+
+    pm: Do NOT set idle engine clocks to default/2 unless ForceLowPowerMode is used.
+    
+    Accidentally, we set this by default since commit fedddb7.
+    Using different engine clocks has side effects that are not handled yet.
+
+commit eebdbf0a9723c79975015354830550f7dfb57509
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Oct 8 09:15:32 2009 +0200
+
+    Improve DAC load detection on RS780.
+    
+    Increase delay before reading out DAC autodetect status.
+
+commit 422ac06b69cfcbfbaa802fdc916d3b87f40eeb41
+Author: Christian König <deathsimple@vodafone.de>
+Date:   Thu Oct 8 00:04:01 2009 +0200
+
+    Silence audio stream option.
+    
+    This patch adds an option to play silence instead of playing no sound at all.
+    This fixes some issues where a receiver needs 1-2 seconds to adjust to a new audio stream.
+    This option can be enabled by setting AudioStreamSilence in xorg.conf or by xrandr.
+
+commit 3cef2a6553359b063b760a2f436ce84365c60682
+Author: Egbert Eich <eich@linux-21vw.site>
+Date:   Wed Jul 1 14:06:27 2009 +0200
+
+    Improve test for disabled differential clock driver.
+
+commit 392a13923eb4d44a8bdb204922230e126b188fae
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Oct 7 12:23:56 2009 +0200
+
+    Properites: Get HW for Backlight setting on every query.
+    
+     * Backlight brightness may be changed from underneath (ie. thru hot keys).
+       Thus the HW needs to be reprobed every time.
+     * This patch adds ACPI backlight support also for AtomBIOS based mode
+       setting.
+
+commit f695445b386050de346211baec5e487813187cfd
+Author: David Morrison <dave@bnl.gov>
+Date:   Tue Oct 6 11:13:26 2009 -0700
+
+    LUT: Fix syntax error in 59085c4a
+
+commit 59085c4aa0f420a56699c0a77aa3fd6883b41efe
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Tue Oct 6 10:47:38 2009 -0700
+
+    LUT: Fix RHDLUTCopyForRR() not actually modifying LUT
+
+commit 8b3561d2aabeed34c77d9845e2f9814de8375bed
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Oct 6 19:30:32 2009 +0200
+
+    ID: Added quirk entry for HIS Excalibur Radeon XT1650 Pro IceQ 256M
+    
+    This card reports 2 DVI ports but has only 1 VGA and 1 DVI.
+    Also HPD isn't working on the DVI port.
+
+commit 0a79a28c5552a437e4bc4876a2aac9ce8c062485
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Oct 6 19:29:44 2009 +0200
+
+    PM: Removed unnneeded define.
+
+commit 4758ba31d49dbafb1e8c9e19aad84d41183c7f19
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Oct 5 22:19:27 2009 +0200
+
+    Add ACPI controlled Backlight support for Linux.
+    
+    ACPI Backlight support is system specific and only implemented for
+    Linux so far.
+
+commit be7216fca954396d92b94335ccb18d22c354c195
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Sep 30 15:46:46 2009 +0200
+
+    randr: Select virtual large enough for typical dual-monitor situations
+    
+    Unless we're able to shrink/enlarge FB on the fly (TTM etc.), allocate
+    large enough (TM) virtual size for general use cases.
+
+commit b9648ff4f60a55e9997afc574c91b1f92645f7c2
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Sep 30 15:41:58 2009 +0200
+
+    RV740: Choose shadowfb by default.
+
+commit eb1fc6c0070077a23a4eb20c934e2743b6661b9b
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Sep 30 12:48:55 2009 +0200
+
+    Fix missing parenthesis.
+    
+    As ! has a higher precedence than &, this commit changes the semantics. This
+    could fix some obscure bugs, but could also regress.
+
+commit 136dbca77332bf119768b0719ed069d4fa1c74a9
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Sep 30 12:16:26 2009 +0200
+
+    Disable DRI by default if shadowfb is explicitly selected.
+
+commit 209aa4c76330d15c387185f61be008b412aae4b3
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Sep 30 12:04:05 2009 +0200
+
+    RV740: disable DFS and Composite
+    
+    Small transfers seem problematic on all rv740 chips, and composite cannot be
+    disabled per size, so until we can find a solution, disable them.
+
+commit 21f033c1f812598d5e80d5bc9462807244f0d037
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Sep 7 16:06:04 2009 +0200
+
+    Add quirk table entry for Wyse R-Class.
+
+commit ee508b375ba6a1fe132cb3bd8cf461445c814ea8
+Author: Hans Ulrich Niedermann <hun@n-dimensional.de>
+Date:   Sat Sep 19 15:15:35 2009 +0200
+
+    Hide README, radeon.man non-updates if --enable-shave
+    
+    If configured with --enable-shave (default), hide the updates
+    to README, radeon.man if they result in zero changes.
+    
+    If they result in changes, the changes will still be shown.
+    
+    On --disable-shave, the commands generating README.new and radeon.man.new
+    will always be shown.
+
+commit b7a50a6f00bb6d207f5240f00cf83fbbd56bbf60
+Author: Hans Ulrich Niedermann <hun@n-dimensional.de>
+Date:   Fri Sep 18 23:23:32 2009 +0200
+
+    Fix RHDRegWrite macro invocation breakage
+    
+    This appears to be an obvious fix to a bug introduced with bab7c5f9.
+    
+    Neither ignoring the blue component nor discarding the calculation
+    does made sense to me, and the obvious explanation for that would
+    be a misplaced parenthesis.
+
+commit ae41ab2fe49ca456c4fb23859af8683c32c2429c
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Sep 16 17:22:28 2009 +0200
+
+    Add quirk table entry for ATI Radeon X1550.
+
+commit 37ccdde4fef03f132ed2cd5cb6797f83f2b7f41e
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Sep 14 14:21:35 2009 +0200
+
+    Add ugly hack for uint32_t to rhd_pm as well.
+
+commit d9d0cecbfa54a58c2553e1750ee8124e178679b0
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Sep 14 13:16:46 2009 +0200
+
+    Fix typo in non-DRI case.
+
+commit ca1e34f85387bdf3eb1727d2fb628e4774f893a1
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Tue Sep 8 17:22:57 2009 +0200
+
+    Revert "Fix softlocks on rs690. Idle commands have to be flushed to be of any use."
+    
+    This reverts commit d8329927aaac5f2d4949785951326ebc782bc420.
+
+commit d934165ce11d5c8abfe577a72f57cc97c4a6e734
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Tue Sep 8 17:20:41 2009 +0200
+
+    Revert "More idle/flush swaps."
+    
+    This reverts commit b3f16ffdeb95fcd07f773756a563a5873647a760.
+    
+    When looking at this code in depth, it is clear that these changes make the
+    sequence of commands useless.
+
+commit b3f16ffdeb95fcd07f773756a563a5873647a760
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Sep 8 16:53:50 2009 +0200
+
+    More idle/flush swaps.
+
+commit d8329927aaac5f2d4949785951326ebc782bc420
+Author: Marc Dietrich <marvin24@gmx.de>
+Date:   Tue Sep 8 15:32:38 2009 +0200
+
+    Fix softlocks on rs690. Idle commands have to be flushed to be of any use.
+
+commit b00c0a75a97136aaae887580a51acefc25ce7c4b
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Sun Sep 6 21:42:40 2009 -0700
+
+    LUT: Make sure LUT_RW_INDEX is reset to 0 before loading LUT
+
+commit 57916f27c08122b6aaea0da44c0ba21634706dce
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Sun Sep 6 15:53:57 2009 -0700
+
+    LUT: Use DC_LUT_30_COLOR for saving/restoring LUT
+
+commit bab7c5f97ddcd23772e6fdd66084f791c30218cd
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Sun Sep 6 15:31:15 2009 -0700
+
+    LUT: Change internal functions to reflect hardware
+    
+    Existing implementation of LUT setter uses a LoadPalette()-like
+    function signature, where as the actual hardware is more accurately
+    reflected by RandR style gamma setter.  On a RandR gamma adjustment
+    call, this results the following sequence of frivolous conversions:
+    
+      (u16*,u16*,u16*) -> LOCO* -> (u16*,u16*,u16*)
+    
+    New implementation changes the LUT setter to accept a triplet of CARD16*,
+    and move the LoadPalette()-specific logic to RHDLoadPalette().
+    
+    A new rhdLUTSetRow() function is added, which deals with setting only
+    specific rows of a LUT.  LUTxSet() previously made bad assumptions in
+    these cases.
+
+commit 27cfbaa3c34844771b5a4262a5deaf71b79cb6bc
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Sep 2 16:45:12 2009 +0200
+
+    atombios.h prohibits -std=c99 due to unnamed unions
+
+commit fa6312784e3a03afb17ec1ea5e0e1912ca34d2b9
+Author: Marc Dietrich <marvin24@gmx.de>
+Date:   Fri Aug 28 09:07:34 2009 +0200
+
+    silence some compiler warnings
+    
+    This patch silences some compile warnings
+    mostly comming from C++ style comments.
+    
+    I left the Atombios stuff untouched.
+
+commit f7ad9380b7e5af6b0c85a5423ab5b7a31f08fd8c
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Sep 1 16:17:11 2009 +0200
+
+    Fix segfault due to missing Card NULL check.
+
+commit f047271abb94226df0076f3715c960e5b3c45b06
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Sep 1 14:54:04 2009 +0200
+
+    Also combine outputs if only the second of them has .dual set.
+    
+    Additionally, sometimes the VGA output is listed before the DVI-I.
+    Previously these outputs were not combined.
+
+commit 9ca0fc45ceee43003a983176301edde0bcaad2fe
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Aug 28 17:12:06 2009 +0200
+
+    Add atombios_rev.h to files list.
+
+commit fe7dbc2484edcf92944c11dde50b50e5b21f0bad
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Aug 18 12:28:54 2009 +0200
+
+    Consider Backlight property to be a known good property now.
+
+commit 78b6ed065aa6bc9bd66a20665daad9849e3696e3
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Tue Aug 25 14:52:21 2009 -0700
+
+    Put back logging of PCI IDs not in database during probing.
+    
+    Revert of 45e733556671e78adbb2afafd6b98a461bb29825 with modifications.
+    That was the only place were users are informed of the maillinglist, so
+    removing it was a bad idea.
+
+commit 45e733556671e78adbb2afafd6b98a461bb29825
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Mon Aug 17 16:39:34 2009 -0700
+
+    Do not log about "Unknown card detected" when AtomBIOS is available
+    
+    There's a lot of confusion about this message; time to kill it now that
+    AtomBIOS modesetting is significantly more stable.
+
+commit 10133f5d04c2e709c7cf2ed3d6dcd16b13b96607
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Mon Aug 17 16:27:42 2009 -0700
+
+    Use DRM and EXA by default on r6xx/r7xx
+    
+    Manpage updated accordingly.
+
+commit d44b359c7b12236f0045734bcc42de397409ab9f
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Mon Aug 17 16:21:52 2009 -0700
+
+    Fallback to ShadowFB on r6xx/r7xx if DRI pre-init fails
+
+commit ed98d7311d021849993ac764b2caffd6ddceeb2a
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Wed May 6 14:22:13 2009 -0700
+
+    Make EXA the default AccelMethod on r5xx
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 865215c800f50d8718544acf2af222c5f2ef777a
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Aug 14 12:44:50 2009 +0200
+
+    Non-existent AtomBIOS command tables should issue a warning only.
+    
+    This is not fatal and sometimes even anticipated.
+
+commit be2c65fa35e8f9ae04e799f43400822478d764d2
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Aug 5 01:01:07 2009 -0400
+
+    rs880: enable accel
+
+commit 62e60e31db474e69dbb2dcee2838cb58039c1be6
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Aug 3 16:02:43 2009 -0400
+
+    r7xx: add some new pci ids
+
+commit d0ff1c5823b3c186dd80fb65105b62bff28630e6
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 30 17:16:14 2009 +0200
+
+    INSTALL: xorgversion.m4 is obsolete for a long time already.
+
+commit 2d73df84b71378bc427054397d936e66ceea6769
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jul 27 19:08:11 2009 +0200
+
+    Fix logic bug in sideport memory detection.
+
+commit f6c57ac9630d1bd8d4e417ae1a05a1abd1573520
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jul 27 18:11:46 2009 +0200
+
+    MC: Major overhaul for RS600, RS690, RS760, RS780, RS880.
+    
+    Use same registers and register spaces as radeon now.
+
+commit 83ed13f303538197ab73a02cdb68b4624d15d8e2
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jul 27 17:32:59 2009 +0200
+
+    Rename registers in PCIE space.
+
+commit b5911fd908efe63933f620ec39511444c5f4964f
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jul 27 15:56:40 2009 +0200
+
+    RS690 MC idle: Wait for system idle instead of sequencer idle.
+    
+    Inspired by radeon code.
+
+commit 050f523309063d8e836169014dd4f6a991f555b7
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jul 27 11:48:31 2009 +0200
+
+    Typo.
+
+commit da5b9c2fb0338e616f5376b6e40b4531fa3d7e1c
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Aug 3 17:17:44 2009 +0200
+
+    Fix autoconf issues.
+    
+    Apparently, autoconf 2.64 has "interesting" issues with spaces in double
+    quoted strings, as used in configure.ac. Change that to parantheses.
+    Based on a patch by Jens Lody <radeonhd@jenslody.de>.
+    
+    Additionally, autogen.sh didn't --force so far.
+
+commit 9cabfb076b874f9ab17bb4d219ac492d55e77abb
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Mon Jul 27 23:08:42 2009 -0700
+
+    Xv: Make color space selectable on r6xx/r7xx
+    
+    Add functionality to switch between Rec.601 and Rec.709 color space
+    conversion constants.
+    
+    Default behaviour is to use Rec.709 for videos 928px or wider,
+    and Rec.601 otherwise.  Force a particular color space by setting the
+    new XV_COLORSPACE attribute to 1 (Rec.601) or 2 (Rec.709).  A value of 0
+    means do auto-detection.
+    
+    man page updated accordingly.
+    
+    This is a follow-up to bug #22901.
+
+commit ca21df5b3583c64cd9f78d449b689d4f48158002
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
+
+    radeonhd: change to using ABI version check
+
+commit d389503eace03c0d8adf2028ade099b7a7f38a8a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:39:32 2009 +1000
+
+    radeonhd: further RAC/resources changes
+
+commit e688cffa33ececfef8630c05380f93d9e38b3edf
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:35 2009 +1000
+
+    radeonhd: update for resources/RAC API removal
+
+commit d19a10b753d3a235cda21246c1b1721673fe1061
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jul 24 16:01:30 2009 +0200
+
+    Work around ParseTable returning CD_SUCCESS if the command table doesn't exist
+    
+    Typical example: GET_MEMORY_CLOCK doesn't exist, and some random value that
+    happens to be stored in the call struct is considered to be the correct value.
+
+commit 3d031afba8c23b7099d32b97a16ccdf06a906fdd
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jul 24 15:30:39 2009 +0200
+
+    Validate current clocks - some AtomBIOSes provide broken values.
+
+commit eabbde4e4cc8fa2bd9f3f1f347e557b6b1210f0d
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 18:52:39 2009 +0200
+
+    Fix C++ comments warnings in reverse engineered AtomBIOS.
+
+commit baa8d6e2de33b0b4f7276af86b701bf2f16452bc
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 18:48:42 2009 +0200
+
+    Add check for -Wno-unknown-pragmas in configure.ac.
+
+commit 6f32189092c30d05452063367a440a59ae920f50
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 18:34:19 2009 +0200
+
+    Import known good chip settings from AtomBIOS.
+    
+    Include reverse engineered AtomBIOS addon header.
+    Pragmas in the header are needed for AtomDis.
+
+commit 0684714cc2542b37248f746c20f561b5c577b2c4
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 16:54:25 2009 +0200
+
+    Remove warnings in rhd_pm.c on 32bit.
+
+commit e5e54f76d74bb86ce9436448cee27354e58e9b5d
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 16:51:27 2009 +0200
+
+    Consolidate structures in rhd_pm.c and rhd_atombios.c.
+    
+    Also nuke copy routine for power states.
+
+commit 9c66f5fbd43a42db4f4843abafd0e103551171a8
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 15:44:22 2009 +0200
+
+    Improve chip limit validations. Again. 2.
+
+commit eed4bed6ab3e79eb1510b86332a073496fe61761
+Author: Javeed Shaikh <syscrash2k@gmail.com>
+Date:   Thu Jul 23 13:10:56 2009 +0200
+
+    Xv: Fix YUV scaling and use Rec709 coefficients
+    
+    Described in fdo bug 22901. Coefficients are now based on the color space used
+    for HDTV, which seems more appropriate.
+    Also fixes some off-by-one bugs.
+
+commit 7c2df35a8fa7bc836f1444a508ac3ab5dcab15e9
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 12:46:40 2009 +0200
+
+    Improve chip limit validations. Again.
+    
+    Probably will take a few more iterations until we get it completely right.
+
+commit 8f0f6217feb198200c60a0e11fb332a9cae28dd5
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 12:40:37 2009 +0200
+
+    Improve output for powermanagement.
+
+commit 8f3f3647aad1613c41ec4b5bd030e571b74b7cf2
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 12:31:09 2009 +0200
+
+    Improve chip limit validations.
+
+commit e9cd2d257f304041fd1a127a58aeea0415d984bb
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jul 23 11:51:00 2009 +0200
+
+    Typo.
+
+commit 98f46c6abebdc63b8be3d2c814da1ada9aa8ddef
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Jul 22 18:41:08 2009 +0200
+
+    Add code fetch chip clock and voltage limits and validate them.
+
+commit d9288b43ecd639713e64aa435943697c5e1c9c8c
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Jul 21 17:43:32 2009 +0200
+
+    Consolidate prefixes for ATOM_*.
+    
+    Some had ATOMBIOS_, some had no prefix.
+
+commit fedddb78ab01e3972854ba6b115ea653fa8a4b7c
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Jul 21 17:08:37 2009 +0200
+
+    Rework powermanagement: Introduce the notion of levels, change interface.
+    
+    Old style didn't scale with new requirements.
+
+commit b1be3143266f8b6a89dfe635321f16797601f1bb
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Jul 21 12:10:53 2009 +0200
+
+    Rewrite to use structured data for power settings.
+
+commit 5995c731da030631e56020e8cc4dcdcb92f5f935
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Jul 22 13:15:49 2009 +0200
+
+    Clean up most warnings.
+
+commit 2e2e4d118e497cfc50f0bc23741236a89d9798f3
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jul 21 18:04:07 2009 +0200
+
+    Add better fallback heuristics for acceleration methods.
+    
+    - R6xx and up don't support XAA: fall back to EXA.
+    - If DRI is not compiled in on R6xx and up fall back to Shadow_FB.
+
+commit de3f80bc6ec2adaab40912fee92fe5f38564d1fe
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jun 30 18:54:18 2009 +0200
+
+    Reenabling AtomBIOS controlled backlight.
+    
+    This code used to be commented out because it triggered some crashes.
+    It doesn't crash for me (tested LVTMA nor DIG). Let's wait and see
+    what reports will come in and check what the issue is.
+
+commit 1ff8649877a8d75b2614b40f90da60e3690fc88d
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jun 30 18:47:54 2009 +0200
+
+    Move test for backlight support enabled to proper place.
+
+commit e4d5f972358ffbd115eafce00fdc578ed2a98cc6
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jun 30 18:46:34 2009 +0200
+
+    Spelling fixes.
+
+commit a006e56b0b845028780a25d905cd15eb94b34fd6
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jun 30 18:45:26 2009 +0200
+
+    Remove superfluous function arguments.
+
+commit b22e7a21a589b5205ad61a8cf39a61c8e5ca5791
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 13:27:21 2009 +1000
+
+    radeonhd: Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bc42c63d0cf7756a9d31c16d68d1c33a9e225b83
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jul 6 19:00:06 2009 +0200
+
+    Add shave (nuking excessive libtool output).
+
+commit 09a62f9426ccf5c6cbcc19cb9fd7ba66c3231002
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Tue Jun 30 12:57:03 2009 +0200
+
+    Fix build with --disable-atombios
+
+commit 3e0d3aab927db2def6375b11fa97e788d1b6dcec
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Mon Jun 29 21:31:43 2009 +0200
+
+    DRI: Fix VBlankInterrupt setting when not using RandR1.2.
+
+commit c7168b6e835fdf7f2837913ed8580f1911135fdd
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Mon Jun 29 21:03:05 2009 +0200
+
+    Cursor: fix logic error in cursor visibility checking.
+    
+    Cursor->(X,Y) were always null and never set until Crtc->(X,Y) were within
+    CURSOR_MAX_(WIDTH,HEIGHT) boundaries. This only affected xf86Cursor code.
+
+commit 645a0a0a6e5e57a4bb77c3b9c7d20b58d4c9ec28
+Author: Roland Scheidegger <sroland@tungstengraphics.com>
+Date:   Sun Jun 28 17:00:20 2009 -0400
+
+    R6xx/R7xx: fix pixel centers
+    
+    Make sure we are using GL mode (centers at 0.5) rather
+    than D3D mode (centers at 0.0). This also fixes fdo
+    bug 21963.
+
+commit afc94a3b398340768e9e6aac07a1609e8302dd84
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jun 26 15:34:43 2009 +0200
+
+    Add Developer's documentation. Or better: Some start of.
+    
+    Initiated by Rafal, who had to ask Dave, John, and Jerome for quite some
+    stuff, and others might benefit from that.
+
+commit 0624f7e6a9c5fff44c8e50e0df6a97835ad3484f
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jun 26 12:18:39 2009 +0200
+
+    Add quirks table entry for ASUS EAH3450.
+
+commit fbc7fbfa1e7244622adfbd8850a742818e18df72
+Author: Christian Koenig <deathsimple@vodafone.de>
+Date:   Wed Jun 10 00:43:11 2009 +0200
+
+    R700 HDMI audio support.
+    
+    Setting just one more bit gets audio going on R700.
+    This time the tanks for debugging this goes to Jaren Peterson.
+
+commit 47a052a44f7566431308c5441539b65bb3dc6600
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Thu Jun 18 09:57:31 2009 +0200
+
+    PM: Fix printing units and variable typo in memory code
+
+commit 8a3fa92b6fdcd86b502973c947e5aed1bd3e1ada
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed May 13 16:36:54 2009 +0200
+
+    randr: Reformat AtomBIOS parameter correctly when setting.
+
+commit ebcac22cadb28132a4133426ff9c5d662f9ff3e6
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed May 13 16:08:52 2009 +0200
+
+    randr: XA_STRING property values are not necessarily 0-terminated.
+
+commit 87dc50fbfa9a284f6387356b4840de6598de8139
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jun 15 16:35:19 2009 +0200
+
+    randr: Export EDID property correctly.
+    
+    Wasn't exported because rhdRROutputSetProperty() is called by RandR layer, and
+    the function didn't know about this property.
+
+commit f7260fc38a50b50395ff21ff76d568d7761677b1
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jun 15 16:32:43 2009 +0200
+
+    randr: Add AtomBIOS property for on-the-fly setting. Experimental.
+    
+    Currently disabled by default.
+    To enable set ENABLE_PROPERTY_ATOMBIOS to 1 in rhd_randr.c.
+
+commit aa1a56fe12b76abe8d483fdb0b6d0858c43a5d90
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed May 13 15:44:51 2009 +0200
+
+    Refactor AtomBIOS option handling.
+
+commit 4b4a439ef35af340b9c8e48e3760e375b07f873c
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Jun 10 12:23:55 2009 +0200
+
+    Move setting of Private->Modes to correct place.
+    
+    Was done for LVTMA only before.
+    Based on a patch by Rafał Miłecki. Fixes xorg bug #21877.
+
+commit fc31eb65edf6ffac969eb33a7c588dad7c93b7f4
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Tue Jun 9 18:26:30 2009 +0200
+
+    PLL: RV620 PLL shutdowning fix (sometimes we need unused PLL running)
+    
+    This makes RV620PLLnPower follow AtomBIOS method, fixes bug #18016
+
+commit c83bd5c43832ed5602ee75db74bbe9ca06922d16
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Jun 9 15:34:14 2009 +0200
+
+    randr: Remove useless error messages when fetching unknown/invalid properties.
+
+commit 9e8608c4ee55ca7798c3c120938d2ecf1f7e9f00
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jun 8 13:45:21 2009 +0200
+
+    Adapt for nuked xf86LoaderReqSymLists() in Xserver 1.6.99.1.
+
+commit 1103cff7f79e3212af2dcf3e0bf684006c9b79e4
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jun 5 19:32:55 2009 +0200
+
+    Add quirk table entry for Asus F3JR.
+
+commit 5dd9d814c8a9a35fbf5556d88297eb5e934731d7
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jun 5 19:22:27 2009 +0200
+
+    Initialize fresh connector object correctly in AtomBIOS case.
+    
+    Otherwise connectors without DDC object would get DDC0.
+
+commit cca9c0b2766139e225208c6d1e39c56f865480b2
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jun 5 18:36:16 2009 +0200
+
+    Add AtomBIOS based static powermanagement enablement
+    
+    Also add dynamic clock gating on pre-R6xx chips, but only if AtomBIOS is
+    available.
+
+commit 086e6c4aae8b9d1f077e39b35c1e15b92df0903c
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jun 5 16:49:45 2009 +0200
+
+    Add some more PCI Ids, improve RV740 handling, fix descriptions.
+
+commit 1eec42729e048d7bb9be7fbf50f49a0573093c4d
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Wed Jun 3 19:56:27 2009 +0200
+
+    AtomBIOS: add pixel clock's ucFracFbDiv to debugging messages
+
+commit b8533a98448f8dc2d67137e02a180430def17e0b
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Wed Jun 3 19:27:24 2009 +0200
+
+    RandR: add returning HDMI property value
+
+commit efa0b5475517e4252c5a97389ee5612ed7da453f
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Wed Jun 3 19:03:48 2009 +0200
+
+    RandR: fix return in DigPropertyControl
+    
+    Currently for all properties (coherent, backlight and hdmi) we
+    always return true. This leads to exporting not supported proprs
+    to randr.
+
+commit c559887b9663531a8aac526031e6eb4ca7c48efd
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Jun 4 15:13:27 2009 +0200
+
+    Add quirk entry for 0x7146:0x174B:0x0940. Bug #21947.
+
+commit c6f607fd6cc40d6f5f9ebbecd1f1e5152d5d0a9c
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Wed Jun 3 12:33:59 2009 -0700
+
+    Fix incorrectly reporting XAA/EXA init as failing for r5xx
+    
+    Oops, missed some braces.
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit d89f5d870a816291620d18439eebae79557bde53
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Thu May 28 21:27:31 2009 -0700
+
+    Raise warnings when 2D acceleration initialization fails
+    
+    Raise a warning when 2D acceleration is diabled during initialization
+    for whatever reason.
+    
+    Also update the R600 CS unavailability warning to point out requirement
+    of DRI instead of cliaming lack if implementation.
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 1d611211d8814c462e658c7cb8771ea98c9a7bb6
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Sat May 23 11:59:38 2009 -0700
+
+    MC: Remove duplicated definition of SRBM_STATUS
+    
+    Use SRBM_STATUS from r600_reg_r6xx.h and remove old definition in
+    rhd_regs.h.
+    
+    Show names of bits are actually being checked in R600MCWaitIdle() instead
+    of using magic number.
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 792c736887bf99f8631e385fa35cd0ec1e1b1713
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Jun 3 19:14:05 2009 +0200
+
+    Fix switch construction in LVDSPropertyControl
+
+commit 23653f8d3abe08da04feb7024d643071f09592aa
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Fri May 22 11:39:01 2009 +0200
+
+    PM: add memory downclocking. Commented out for now.
+    
+    Currently we don't call RHDPmSetClock directly after rhdAllIdle(...) which
+    may be needed. It works on my M82 but we need more testing.
+
+commit ebabbe7220cae9aa281b097ad826badeb37a5e83
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Fri May 22 11:24:12 2009 +0200
+
+    PM: get rid of EnableForced field
+    
+    We can use ForcedEngineClock to determine if we should change engine clock.
+    It's set to 0 on init and some bigger value if we decide to downclock. It's
+    unnecessary and would be pain in future to keep fields like ForceEngine,
+    ForceMemory, ForceLanes, etc.
+
+commit d84490c8ce93f51815cd81c3a8624eecf9cf396a
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Fri May 22 11:10:24 2009 +0200
+
+    PM: add RHDGetDefaultMemoryClock
+
+commit b452d15fcf14401f88ef36bfa8eaa1fede1f15ab
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Fri May 22 10:48:12 2009 +0200
+
+    PM: fix broken engine clock setting logic
+    
+    Block of code detecting RHDGetDefaultEngineClock failure was placed in wrong
+    place. Additionaly Pm->Stored wasn't set to FALSE on init.
+
+commit 08acc05a4c252ff5c55ed1c8f55f106aa6c68546
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed May 20 18:14:29 2009 +0200
+
+    modes: Fixup broken panel modes if possible
+    
+    Panels only, and if we can do so only. Otherwise we might have no chance of
+    driving the panel at all. Inspired by commit 57a02b50c from the intel driver.
+    Fixes Novell bug #472013.
+
+commit d5844f5ba6708b186b2914ddc7cb39c3833570b8
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Tue May 19 11:36:41 2009 +0200
+
+    PM: Save and restore engine clock on VT switching
+
+commit 2644e121f404c9112293debe19dc5241d3b25326
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Tue May 19 09:38:15 2009 +0200
+
+    clean power management code
+    
+    This patch moves PM initialization to separated function, creates
+    struct rhdPm and stores ForcedEngineClock.
+    
+    It will be followed by saving & restoring engine clock on VT switching.
+    
+    --
+    Rafał Miłecki
+
+commit 5a0b48dae2284f8d2bf6f8c9584f60177ee74ce6
+Author: Christian Koenig <deathsimple@vodafone.de>
+Date:   Wed May 13 22:20:09 2009 +0200
+
+    Initial RS690 HDMI Audio support.
+    
+    Based on a patch from Christiaan van Dijk, but stripped down the bare minimum.
+
+commit 23d25fe7ed0ad6d519672439484cb39653785848
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Thu May 14 00:42:04 2009 -0700
+
+    Cursor: optimize lockCursor()
+    
+    It is not necessary to use RHDRegMask() when manipulating D*CUR_UPDATE.
+    Using RHDRegWrite() instead saves 2 register reads per mouse operation.
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 08461642370b3315cf3412c3a35bf5f1f2db251a
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Thu May 14 00:30:07 2009 -0700
+
+    Cursor: clean-up: eliminate Width and Height from rhdCursor struct
+    
+    Hardware always expects a 64x64 cursor image, so there is no benefit to
+    explicitly storing cursor size.
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit dd287015dcf8ee74de35bd14c8a1a7d63cabdbc7
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Fri May 8 16:09:56 2009 -0700
+
+    Cursor: refactor non-RandR cursor code
+    
+    The non-RandR cursor calls now call into the rhdCrtc* cursor functions.
+    
+    displayCursor() has been eliminated entirely.
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 4be5f7152f71c292f16b6e30c59c07b282ea4772
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Mon May 4 13:38:27 2009 -0700
+
+    Cursor: Fix remaning corruption cases
+    
+    Port of f668cc06cd7f338888a7dce1507026af0e9e36ad to new code
+    
+    Found by Alex:
+    Apparently the cursor image cannot end on a multiple of 128 pixels.
+    Also, for panning, the end of the cursor image cannot extend past
+    the end of the viewport.
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 669e0befdf73a6e1502b0f499a4a9d2122929854
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Sun Apr 26 15:31:29 2009 -0700
+
+    Cursor: refactor RandR cursor code
+    
+    Eliminate calls to displayCursor() and generally reduce the number of
+    register writes.
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 6f378a0d63df5fad86e16504c9d15c17849a67d3
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Mon May 4 13:31:42 2009 -0700
+
+    Cursor: Do not change cursor mode when disabling; fixes bug #13405
+    
+    Alex finally found the real cause of the cursor corruption issue. Yay!
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit a282d6da64d339a99c3e59637785661c607c1240
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 4 13:02:24 2009 -0400
+
+    Fix scissor offsets for r5xx in last patch
+
+commit 633a9307684bac38f61ef75a0289ecedaf463631
+Author: Marvin <marvin24@gmx.de>
+Date:   Mon May 4 12:21:39 2009 -0400
+
+    Port lockup fix from radeon
+    
+    Port of my patch from bug 16198
+
+commit de6e2cb62e3962f5b9978a1e57b71fc373bd2104
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon May 4 17:03:04 2009 +0200
+
+    utils: Only allow -e if pci_device_enable() is available.
+
+commit ea7a38d4291c5571d3fffb59bfb2303944edb435
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 4 10:20:04 2009 -0400
+
+    Fix build on systems without pci_device_enable()
+    
+    this time for rhd_dump
+
+commit e7db50e801057133eced58972f5dad25539e2d72
+Author: Thomas Jaeger <ThJaeger@gmail.com>
+Date:   Mon May 4 10:14:53 2009 -0400
+
+    Fall back to software for unsupported repeat modes
+    
+    fixes bug 19728
+
+commit 367c99f1892efe433463431be69e4ff186e61daf
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 4 10:07:59 2009 -0400
+
+    RS690: fix EXA corruption
+    
+    Thanks to Marvin for porting my patch to rhd.
+
+commit 929a77f2f4d2007d47be8196589afb3174541527
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon May 4 10:06:25 2009 -0400
+
+    Fix build on systems without pci_device_enable()
+
+commit cefd136eb01d23bc7afdc860bfc08cb5c0b1b7cb
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon May 4 16:08:39 2009 +0200
+
+    rhd_dump: move pci_device_enable to correct case (pciaccess)
+
+commit 357f190d059e7e53f2b956cb5eba33a12899a7bd
+Author: Jakub Zawadzki <darkjames@darkjames.ath.cx>
+Date:   Wed Apr 29 18:57:51 2009 +0200
+
+    rhd_conntest: mmap() returns -1 on error, not NULL
+
+commit e2260b0d77572a42d7a71d75f80c581a18e69d46
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Apr 29 18:54:19 2009 +0200
+
+    man: cleanup
+    
+    Wrap long lines at textwidth=78, remove trailing spaces.
+
+commit 89088e5353025eec852935d1a8c852a13da95d84
+Author: Tristan Hoffmann <info@tristanhoffmann.de>
+Date:   Wed Apr 29 18:48:57 2009 +0200
+
+    man: Add lowpower options.
+
+commit 8932f43933437308b1fe5248a12cfe481f7d4ef3
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Apr 23 17:27:43 2009 +0200
+
+    Nuke some trailing whitespace.
+
+commit 2f3c0b5318f404237a3c4a2bad5052680ef5f6e0
+Author: Michael Cree <mcree@orcon.net.nz>
+Date:   Wed Mar 18 22:26:59 2009 +1300
+
+    Updated Makefile in utils/conntest to enable link with libpciaccess.
+    
+    This is needed to compile rhd_dump and rhd_conntest with libpciaccess.
+
+commit 87ba9c2e81f7ab9070d98ca186e63facaf6cf41e
+Author: Michael Cree <mcree@orcon.net.nz>
+Date:   Wed Mar 18 22:22:18 2009 +1300
+
+    Added code to use libpciaccess and access PCI ROM
+    
+    Uses libpciaccess if XSERVER_LIBPCIACCESS defined.
+    New features:
+      Can read BIOS from PCI ROM if unposted when using libpciaccess.
+      New options -e (enable PCI card) and -r (use PCI ROM not VBIOS)
+
+commit 9ad3554cd83654c2f2cff1dc29d6af9604b514a3
+Author: Michael Cree <mcree@orcon.net.nz>
+Date:   Wed Mar 18 22:17:21 2009 +1300
+
+    Added code to use libpciaccess
+    
+    Added support for using libpciaccess to access PCI resources.
+    Uses libpciaccess if XSERVER_LIBPCIACCESS defined.
+    Added -e option to enable pci card.
+
+commit 107d5d9f2ba0fef524c23aa00a20ed74b8a0c773
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Fri Apr 17 16:15:43 2009 -0700
+
+    PM: Add ForceLowPowerMode and LowPowerModeEngineClock options
+    
+    - LowPowerMode enables static low-power mode by setting engine clock.
+    - LowPowerModeEngineClock controls what the clock is set to, in Hz.
+      If unset, (default_engine_clock / 2) is used
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 55b3bade631f7038bd2dc569ad89db2a7fd9d186
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Fri Apr 17 15:13:58 2009 -0700
+
+    PM: Add functions for get/setting engine and memory clocks
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit 82c1dee0bcb47ecff7d8a8765093cd14d25b36b3
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Sat Mar 7 13:05:44 2009 -0800
+
+    AtomBIOS: add hooks to call memory and engine clock getters and setters
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+
+commit f668cc06cd7f338888a7dce1507026af0e9e36ad
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Apr 23 16:33:40 2009 +0200
+
+    Fix #13405: Cursor corruption
+    
+    Found by Alex:
+    Apparently the cursor image cannot end on a multiple of 128 pixels.
+    Also, for panning, the end of the cursor image cannot extend past
+    the end of the viewport.
+
+commit 881334543d2711f159c8fcaf4a30b8b0db3186d7
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Apr 17 15:24:32 2009 +0200
+
+    FB mapping cleanup didn't reflect changes to allocation. Fixes #21233.
+
+commit 8bb8cd80f08d094c8b451e005e57c495dc6e4d42
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Thu Apr 16 15:07:56 2009 +0200
+
+    Extend ugly hack for CARD64 to rhd_mc.h. This time actually working.
+
+commit 950842aa998618217de6d4e9440bdc5faccce7b1
+Author: Florian Forster <octo@leeloo.lan.home.verplant.org>
+Date:   Mon Apr 13 14:56:17 2009 +0200
+
+    man/radeonhd.man: Fix two typos.
+
+commit 71a2d799714d224ae512b2a464c45b43099ab619
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Apr 14 17:23:04 2009 +0200
+
+    Consolidated chip identifiers.
+    
+    Potentially adds support for RV740, M92, M93, M97. Untested, though.
+
+commit 8885256ee3987eb2c607eeec210a093555e91994
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Apr 14 17:05:55 2009 +0200
+
+    Extend ugly hack for CARD64 to rhd_mc.h.
+    
+    Seriously, we need a reasonable fix for this issue.
+
 commit cb54f48b212d5ae54e13bbdf24575b6163798c0d
 Author: Matthias Hopf <mhopf@suse.de>
 Date:   Thu Apr 9 15:11:37 2009 +0200
