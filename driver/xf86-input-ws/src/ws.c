@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.16 2009/11/23 22:10:29 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.17 2009/11/25 17:59:42 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -643,19 +643,8 @@ wsReadInput(InputInfoPtr pInfo)
 			/* relative motion event */
 			DBG(3, ErrorF("postMotionEvent dX %d dY %d\n",
 				      dx, dy));
-#if 0
-			priv->x += dx;
-			if (priv->x < priv->min_x) priv->x = priv->min_x;
-			if (priv->x > priv->max_x) priv->x = priv->max_x;
-			priv->y += dy;
-			if (priv->y < priv->min_y) priv->y = priv->min_y;
-			if (priv->y > priv->max_y) priv->y = priv->max_y;
-			xf86PostMotionEvent(pInfo->dev, 1, 0, 2,
-			    priv->x, priv->y);
-#else
 			xf86PostMotionEvent(pInfo->dev, 0, 0, 2,
 			    dx, dy);
-#endif
 		}
 		if (dz && priv->negativeZ != WS_NOZMAP
 		    && priv->positiveZ != WS_NOZMAP) {
@@ -698,16 +687,14 @@ wsReadInput(InputInfoPtr pInfo)
 		}
 		if (ax) {
 			/* absolute position event */
-			DBG(3, ErrorF("postMotionEvent X %d %d\n",
-				      ax, priv->y));
-			xf86PostMotionEvent(pInfo->dev, 1, 0, 2, ax, priv->y);
+			DBG(3, ErrorF("postMotionEvent X %d\n", ax));
+			xf86PostMotionEvent(pInfo->dev, 1, 0, 1, ax);
 			priv->x = ax;
 		}
 		if (ay) {
 			/* absolute position event */
-			DBG(3, ErrorF("postMotionEvent y %d %d\n",
-				      priv->x, ay));
-			xf86PostMotionEvent(pInfo->dev, 1, 0, 2, priv->x, ay);
+			DBG(3, ErrorF("postMotionEvent y %d\n", ay));
+			xf86PostMotionEvent(pInfo->dev, 1, 1, 1, ay);
 			priv->y = ay;
 		}
 		++event;
@@ -726,7 +713,7 @@ wsSendButtons(InputInfoPtr pInfo, int buttons)
 		if ((mask & priv->lastButtons) != (mask & buttons)) {
 			xf86PostButtonEvent(pInfo->dev, TRUE,
 			    button, (buttons & mask) != 0,
-					    0, 0); /*2, priv->x, priv->y);*/
+					    0, 0);
 			DBG(3, ErrorF("post button event %d %d\n",
 				button, (buttons & mask) != 0))
 		}
