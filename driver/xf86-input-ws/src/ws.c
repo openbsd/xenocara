@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.22 2009/11/25 19:31:35 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.23 2009/11/25 19:36:57 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -285,7 +285,6 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 				" or \"UD\"\n");
 		}
 	}
-	priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 1);
 	if (wsOpen(pInfo) != Success) {
 		goto fail;
 	}
@@ -293,10 +292,12 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		wsClose(pInfo);
 		goto fail;
 	}
-	if (priv->type == WSMOUSE_TYPE_TPANEL)
+	if (priv->type == WSMOUSE_TYPE_TPANEL) {
 		pInfo->type_name = XI_TOUCHSCREEN;
-	else {
+		priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 1);
+	} else {
 		pInfo->type_name = XI_MOUSE;
+		priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 0);
 		if (priv->raw) {
 			xf86Msg(X_WARNING, "Device is not a touch panel,"
 			    "ignoring 'Option \"Raw\"'\n");
