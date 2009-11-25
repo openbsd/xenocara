@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.21 2009/11/25 19:11:55 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.22 2009/11/25 19:31:35 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -826,6 +826,8 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	struct wsmouse_calibcoords coords;
 	int need_update = 0;
+	AxisInfoPtr ax = device->valuator->axes,
+		    ay = device->valuator->axes + 1;
 
 	DBG(1, ErrorF("wsSetProperty\n"));
 
@@ -856,10 +858,10 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 				need_update++;
 			}
 			/* Update axes descriptors */
-			InitValuatorAxisStruct(device, 0,
-			    priv->min_x, priv->max_x, 1, 0, 1);
-			InitValuatorAxisStruct(device, 1, 
-			    priv->min_y, priv->max_y, 1, 0, 1);
+			ax->min_value = priv->min_x;
+			ax->max_value = priv->max_x;
+			ay->min_value = priv->min_y;
+			ay->max_value = priv->max_y;
 		}
 	} else if (atom == prop_swap) {
 		if (val->format != 8 || val->type != XA_INTEGER || 
