@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.7 2009/11/25 18:30:13 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.8 2009/11/25 19:43:05 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -482,6 +482,17 @@ main(int argc, char *argv[], char *env[])
 		exit(1);
 	}
 
+	prop_calibration = XInternAtom(display, WS_PROP_CALIBRATION, True);
+	if (prop_calibration == None) {
+		fprintf(stderr, "cannot find atom %s\n", WS_PROP_CALIBRATION);
+		exit(1);
+	}
+	prop_swap = XInternAtom(display, WS_PROP_SWAP_AXES, True);
+	if (prop_swap == None) {
+		fprintf(stderr, "cannot find atom %s\n", WS_PROP_SWAP_AXES);
+		exit(1);
+	}
+
 	screen = DefaultScreen(display);
 	root = RootWindow(display, screen);
 
@@ -511,18 +522,6 @@ main(int argc, char *argv[], char *env[])
 	device = XOpenDevice(display, info->id);
 	if (!register_events(info, device, argv[1], 0))
 		exit(1);
-
-
-	prop_calibration = XInternAtom(display, WS_PROP_CALIBRATION, True);
-	if (prop_calibration == None) {
-		fprintf(stderr, "cannot find atom %s\n", WS_PROP_CALIBRATION);
-		exit(1);
-	}
-	prop_swap = XInternAtom(display, WS_PROP_SWAP_AXES, True);
-	if (prop_swap == None) {
-		fprintf(stderr, "cannot find atom %s\n", WS_PROP_SWAP_AXES);
-		exit(1);
-	}
 
 	uncalibrate(device);
 calib:
