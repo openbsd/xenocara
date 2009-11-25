@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.18 2009/11/25 18:03:42 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.19 2009/11/25 18:10:26 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -35,6 +35,16 @@
 #include <xisb.h>
 #include <mipointer.h>
 #include <extinit.h>
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
+#define HAVE_PROPERTIES 1
+#endif
+
+#ifdef HAVE_PROPERTIES
+#include <X11/Xatom.h>
+#include "ws-properties.h"
+#endif
+
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <X11/Xatom.h>
@@ -81,6 +91,13 @@ static Bool wsOpen(InputInfoPtr);
 static void wsClose(InputInfoPtr);
 static void wsControlProc(DeviceIntPtr , PtrCtrl *);
 
+#ifdef HAVE_PROPERTIES
+static void wsInitProperty(DeviceIntPtr);
+static int wsSetProperty(DeviceIntPtr, Atom, XIPropertyValuePtr, BOOL);
+
+static Atom prop_calibration = 0;
+static Atom prop_swap = 0;
+#endif
 
 static XF86ModuleVersionInfo VersionRec = {
 	"ws",
@@ -471,6 +488,10 @@ wsDeviceInit(DeviceIntPtr pWS)
 	if (wsOpen(pInfo) != Success) {
 		return !Success;
 	}
+#ifdef HAVE_PROPERTIES
+	wsInitProperty(pWS);
+	XIRegisterPropertyHandler(pWS, wsSetProperty, NULL, NULL);
+#endif
 	return Success;
 }
 
@@ -772,3 +793,112 @@ wsControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 	priv->den = ctrl->den;
 	priv->threshold = ctrl->threshold;
 }
+
+#ifdef HAVE_PROPERTIES
+static void 
+wsInitProperty(DeviceIntPtr device)
+{
+	InputInfoPtr pInfo = device->public.devicePrivate;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
+	int rc;
+
+	DBG(1, ErrorF("wsInitProperty\n"));
+	if (priv->type != WSMOUSE_TYPE_TPANEL)
+		return;
+
+	prop_calibration = MakeAtom(WS_PROP_CALIBRATION,
+	    strlen(WS_PROP_CALIBRATION), TRUE);
+	rc = XIChangeDeviceProperty(device, prop_calibration, XA_INTEGER, 32,
+	    PropModeReplace, 4, &priv->min_x, FALSE);
+	if (rc != Success)
+		return;
+
+	XISetDevicePropertyDeletable(device, prop_calibration, FALSE);
+
+	prop_swap = MakeAtom(WS_PROP_SWAP_AXES, 
+	    strlen(WS_PROP_SWAP_AXES), TRUE);
+	rc = XIChangeDeviceProperty(device, prop_swap, XA_INTEGER, 8,
+	    PropModeReplace, 1, &priv->swap_axes, FALSE);
+	if (rc != Success) 
+		return;
+	return;
+}
+
+static int
+wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
+    BOOL checkonly)
+{
+	InputInfoPtr pInfo = device->public.devicePrivate;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
+	struct wsmouse_calibcoords coords;
+	int need_update = 0;
+
+	DBG(1, ErrorF("wsSetProperty\n"));
+
+	/* Ignore non panel devices */
+	if (priv->type != WSMOUSE_TYPE_TPANEL)
+		return Success;
+
+	if (atom == prop_calibration) {
+		if (val->format != 32 || val->type != XA_INTEGER)
+			return BadMatch;
+		if (val->size != 4 && val->size != 0)
+			return BadMatch;
+		if (!checkonly) {
+			if (val->size == 0) {
+				DBG(1, ErrorF(" uncalibrate\n"));
+				priv->min_x = 0;
+				priv->max_x = -1;
+				priv->min_y = 0;
+				priv->max_y = -1;
+			} else {
+				priv->min_x = ((int *)(val->data))[0];
+				priv->max_x = ((int *)(val->data))[1];
+				priv->min_y = ((int *)(val->data))[2];
+				priv->max_y = ((int *)(val->data))[3];
+				DBG(1, ErrorF(" calibrate %d %d %d %d\n",
+					priv->min_x, priv->max_x,
+					priv->min_y, priv->max_y));
+				need_update++;
+			}
+			/* Update axes descriptors */
+			InitValuatorAxisStruct(device, 0,
+			    priv->min_x, priv->max_x, 1, 0, 1);
+			InitValuatorAxisStruct(device, 1, 
+			    priv->min_y, priv->max_y, 1, 0, 1);
+		}
+	} else if (atom == prop_swap) {
+		if (val->format != 8 || val->type != XA_INTEGER || 
+		    val->size != 1)
+			return BadMatch;
+		if (!checkonly) {
+			priv->swap_axes = *((BOOL *)val->data);
+			DBG(1, ErrorF("swap_axes %d\n", priv->swap_axes));
+			need_update++;
+		}
+	} else {
+		return BadMatch;
+	}
+	if (need_update) {
+		/* Update the saved values to be restored on device off */
+		priv->coords.minx = priv->min_x;
+		priv->coords.maxx = priv->max_x;
+		priv->coords.miny = priv->min_y;
+		priv->coords.maxy = priv->max_y;
+		priv->coords.swapxy = priv->swap_axes;
+
+		/* Update the kernel calibration table */
+		coords.minx = priv->min_x;
+		coords.maxx = priv->max_x;
+		coords.miny = priv->min_y;
+		coords.maxy = priv->max_y;
+		coords.swapxy = priv->swap_axes;
+		coords.samplelen = priv->raw;
+		if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
+			xf86Msg(X_ERROR, "SCALIBCOORDS failed %s\n",
+			    strerror(errno));
+		}
+	}
+	return Success;
+}
+#endif
