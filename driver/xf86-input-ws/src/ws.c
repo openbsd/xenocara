@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.19 2009/11/25 18:10:26 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.20 2009/11/25 18:14:23 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -61,7 +61,6 @@ typedef struct WSDevice {
 	int type;		/* ws device type */
 	unsigned int buttons;	/* # of buttons */
 	unsigned int lastButtons; /* last state of buttons */
-	int x, y;		/* current abs coordinates */
 	int min_x, max_x, min_y, max_y; /* coord space */
 	int swap_axes;
 	int raw;
@@ -482,9 +481,6 @@ wsDeviceInit(DeviceIntPtr pWS)
 	xf86MotionHistoryAllocate(pInfo);
 	AssignTypeAndName(pWS, pInfo->atom, pInfo->name);
 	pWS->public.on = FALSE;
-	/* This should correspond to the center of the screen */
-	priv->x = (priv->max_x - priv->min_x) / 2;
-	priv->y = (priv->max_y - priv->min_y) / 2;
 	if (wsOpen(pInfo) != Success) {
 		return !Success;
 	}
@@ -706,13 +702,11 @@ wsReadInput(InputInfoPtr pInfo)
 			/* absolute position event */
 			DBG(3, ErrorF("postMotionEvent X %d\n", ax));
 			xf86PostMotionEvent(pInfo->dev, 1, 0, 1, ax);
-			priv->x = ax;
 		}
 		if (ay) {
 			/* absolute position event */
 			DBG(3, ErrorF("postMotionEvent y %d\n", ay));
 			xf86PostMotionEvent(pInfo->dev, 1, 1, 1, ay);
-			priv->y = ay;
 		}
 		++event;
 	}
