@@ -85,4 +85,4 @@ AC_SUBST([sdkdir])
 # Checks for header files.
 AC_HEADER_STDC
 
-AC_OUTPUT([Makefile src/Makefile man/Makefile])
+AC_OUTPUT([Makefile src/Makefile man/Makefile include/Makefile])

@@ -217,7 +217,7 @@ target_alias = @target_alias@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = src man
+SUBDIRS = src man include
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
