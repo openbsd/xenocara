@@ -1,6 +1,7 @@
-/*      $OpenBSD: xtsscale.c,v 1.6 2007/08/31 21:53:55 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.7 2009/11/25 18:30:13 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
+ * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,25 +25,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Copyright 1996 by Frederic Lepied, France. <Frederic.Lepied@sugix.frmug.org>
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is  hereby granted without fee, provided that
+ * the  above copyright   notice appear  in   all  copies and  that both  that
+ * copyright  notice   and   this  permission   notice  appear  in  supporting
+ * documentation, and that   the  name of  the authors  not  be  used  in
+ * advertising or publicity pertaining to distribution of the software without
+ * specific,  written      prior  permission.     The authors  make  no
+ * representations about the suitability of this software for any purpose.  It
+ * is provided "as is" without express or implied warranty.
+ *
+ * THE AUTHORS DISCLAIM ALL   WARRANTIES WITH REGARD  TO  THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED   WARRANTIES OF MERCHANTABILITY  AND   FITNESS, IN NO
+ * EVENT  SHALL THE AUTHORS  BE   LIABLE   FOR ANY  SPECIAL, INDIRECT   OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ * DATA  OR PROFITS, WHETHER  IN  AN ACTION OF  CONTRACT,  NEGLIGENCE OR OTHER
+ * TORTIOUS  ACTION, ARISING    OUT OF OR   IN  CONNECTION  WITH THE USE    OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ *
+ */
+
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
 #include <X11/Xatom.h>
-#include <X11/keysym.h>
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrender.h>
+#include <X11/extensions/XInput.h>
 
-
-#include <sys/param.h>
-#include <sys/ioctl.h>
-#include <dev/wscons/wsconsio.h>
-
-#include <err.h>
+#include <ctype.h>
 #include <stdio.h>
-#include <termios.h>
 #include <stdlib.h>
 #include <math.h>
 
+#include <ws-properties.h>
 
 #define FONT_NAME		"mono"
 #define FONT_SIZE		14
@@ -51,6 +68,16 @@
 #define TouchCross	        "black"
 #define PromptText		"black"
 #define Error			"red"
+
+#define INVALID_EVENT_TYPE	-1
+
+static int           motion_type = INVALID_EVENT_TYPE;
+static int           button_press_type = INVALID_EVENT_TYPE;
+static int           button_release_type = INVALID_EVENT_TYPE;
+static int           proximity_in_type = INVALID_EVENT_TYPE;
+static int           proximity_out_type = INVALID_EVENT_TYPE;
+
+Atom prop_calibration, prop_swap;
 
 /* where the calibration points are placed */
 #define SCREEN_DIVIDE	16
@@ -70,10 +97,12 @@ XftColor	cross, errorColor, promptColor, bg;
 XftDraw	       *draw;
 unsigned int    width, height;	/* window size */
 char           *progname;
-int             evfd;
 
 int    cx[5], cy[5];
 int    x[5], y[5];
+
+struct { int minx, maxx, miny, maxy, swapxy, resx, resy; } calib, old_calib;
+Bool old_swap;
 
 static char    *prompt_message[] = {
 	"TOUCH SCREEN CALIBRATION",
@@ -88,47 +117,11 @@ static char *error_message[] = {
 };
 
 void
-get_events(int i)
-{
-	ssize_t         len;
-	int             down;
-	struct wscons_event ev;
-
-	down = 0;
-	x[i] = y[i] = -1;
-	while (down || x[i] == -1 || y[i] == -1) {
-		len = read(evfd, &ev, sizeof(ev));
-		if (len != 16)
-			break;
-		switch (ev.type) {
-		case WSCONS_EVENT_MOUSE_DOWN:
-			down = 1;
-			break;
-		case WSCONS_EVENT_MOUSE_UP:
-			down = 0;
-			break;
-		case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
-			if (down)
-				x[i] = ev.value;
-			break;
-		case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
-			if (down)
-				y[i] = ev.value;
-			break;
-		default:
-			break;
-		}
-	}
-}
-
-
-void
 cleanup_exit()
 {
 	XUngrabServer(display);
 	XUngrabKeyboard(display, CurrentTime);
 	XCloseDisplay(display);
-	close(evfd);
 }
 
 void
@@ -232,7 +225,7 @@ draw_graphics(int i, int j, int n)
 }
 
 Cursor
-create_empty_cursor()
+create_empty_cursor(void)
 {
 	char            nothing[] = {0};
 	XColor          nullcolor;
@@ -246,35 +239,249 @@ create_empty_cursor()
 	return mcyursor;
 }
 
+XDeviceInfo*
+find_device_info(char *name)
+{
+	XDeviceInfo    *devices;
+	XDeviceInfo    *found = NULL;
+	int		i;
+	int		num_devices, num_found;
+	Bool		is_id = True;
+	XID		id = (XID)-1;
+	const char	       *errstr;
+	
+	devices = XListInputDevices(display, &num_devices);
+
+	if (name != NULL) {
+		for(i = 0; i < strlen(name); i++) {
+			if (!isdigit(name[i])) {
+				is_id = False;
+				break;
+			}
+		}
+		if (is_id) {
+			id = strtonum(name, 0, num_devices - 1, &errstr);
+			if (errstr != NULL) {
+				fprintf(stderr, "Invalid device id %s: %s\n",
+				    name, errstr);
+				exit(1);
+			}
+		}
+	}
+
+	
+	num_found = 0;
+	for(i = 0; i < num_devices; i++) {
+		if (devices[i].use != IsXExtensionPointer)
+			continue;
+		if (name == NULL) {
+			found = &devices[i];
+			num_found++;
+			continue;
+		}
+		if ((!is_id && strcmp(devices[i].name, name) == 0) ||
+		    (is_id && devices[i].id == id)) {
+			found = &devices[i];
+			num_found++;
+		}
+	}
+	if (num_found > 1) {
+		fprintf(stderr,
+		    "Error: found multiple matching devices.\n"
+		    "To ensure the correct one is selected, please use "
+		    "the device ID instead.\n");
+		return NULL;
+	}
+	return found;
+}
+
+static int
+register_events(XDeviceInfo *info, XDevice *device, 
+    char *dev_name, Bool handle_proximity)
+{
+	int		 number = 0;	/* number of events registered */
+	XEventClass	 event_list[7];
+	int		 i;
+	unsigned long	 screen;
+	XInputClassInfo	*ip;
+	
+	screen = DefaultScreen(display);
+	
+	if (!device) {
+		fprintf(stderr, "unable to open device %s\n", dev_name);
+		return 0;
+	}
+	
+	if (device->num_classes > 0) {
+		for (ip = device->classes, i=0; i<info->num_classes; 
+		     ip++, i++) {
+			switch (ip->input_class) {
+			case ButtonClass:
+				DeviceButtonPress(device, button_press_type, 
+				    event_list[number]); 
+				number++;
+				DeviceButtonRelease(device, 
+				    button_release_type, event_list[number]); 
+				number++;
+				break;
+				
+			case ValuatorClass:
+				DeviceMotionNotify(device, motion_type, 
+				    event_list[number]); number++;
+				if (handle_proximity) {
+					ProximityIn(device, proximity_in_type, 
+					    event_list[number]); number++;
+					ProximityOut(device, 
+					    proximity_out_type, 
+					    event_list[number]); number++;
+				}
+				break;
+				
+			default:
+				fprintf(stderr, "unknown class\n");
+				break;
+			}
+		}
+		
+		if (XSelectExtensionEvent(display, root, event_list, number)) {
+			fprintf(stderr, "error selecting extended events\n");
+			return 0;
+		}
+	}
+	return number;
+}
+
+static void
+get_events(int i)
+{
+	XEvent Event;
+	XDeviceMotionEvent *motion = (XDeviceMotionEvent *) &Event;
+	int j, a;
+
+	x[i] = y[i] = -1;
+	while (1) {
+		XNextEvent(display, &Event);
+
+		if (Event.type == motion_type) {
+			for (j = 0; j < motion->axes_count; j++) {
+				a = motion->first_axis + j;
+				switch (a) {
+				case 0:
+					x[i] = motion->axis_data[j];
+					break;
+				case 1:
+					y[i] = motion->axis_data[j];
+					break;
+				default:
+					fprintf(stderr, 
+					    "unknown axis %d\n", a);
+				}
+			}
+		} else if (Event.type == button_release_type) {
+			if (x[i] != -1 && y[i] != -1)
+				break;
+		}
+	}
+}
+
+int
+uncalibrate(XDevice *device)
+{
+	Atom type;
+	int format;
+	unsigned long nitems, nbytes;
+	long values[4] = { 0, 32767, 0, 32767 }; /* uncalibrated */
+	Bool swap = 0;
+	unsigned char *retval;
+	
+	/* Save old values */
+	XGetDeviceProperty(display, device, prop_calibration, 0,
+	    4, False, XA_INTEGER, &type, &format, &nitems, 
+	    &nbytes, &retval);
+
+	if (type != XA_INTEGER) { 
+		fprintf(stderr, WS_PROP_CALIBRATION " isn't integer\n");
+		return -1;
+	}
+	if (nitems != 4 && nitems != 0) {
+		fprintf(stderr, WS_PROP_CALIBRATION " bad number of items\n");
+		return -1;
+	}
+	old_calib.minx = *(long *)retval;
+	old_calib.maxx = *((long *)retval + 1);
+	old_calib.miny = *((long *)retval + 2);
+	old_calib.maxy = *((long *)retval + 3);
+	
+	XFree(retval);
+
+	XGetDeviceProperty(display, device, prop_swap, 0,
+	    1, False, XA_INTEGER, &type, &format, &nitems,
+	    &nbytes, &retval);
+	old_swap = *(Bool *)retval;
+	XFree(retval);
+	
+	/* Force uncalibrated state */
+	XChangeDeviceProperty(display, device, prop_calibration, 
+	    XA_INTEGER, 32, PropModeReplace, (unsigned char *)values, 4);
+	XChangeDeviceProperty(display, device, prop_swap,
+	    XA_INTEGER, 8, PropModeReplace, (unsigned char *)&swap, 1);
+
+	return 0;
+}
+
+		
 int
 main(int argc, char *argv[], char *env[])
 {
 	char           *display_name = NULL;
 	XSetWindowAttributes xswa;
-	int             i = 0, orawmode;
+	int             i = 0;
 	double          a, a1, a2, b, b1, b2, xerr, yerr;
-	struct		wsmouse_calibcoords wmcoords;
-	extern char	*__progname;
+	int		xi_opcode, event, error;
+	XExtensionVersion *version;
+	XDeviceInfo	*info;
+	XDevice		*device;
+	long		 calib_data[4];
+	unsigned char	 swap;
 
 	/* Crosshair placement */
 	int		cpx[] = { 0, 0, 1, 1, 1 };
 	int		cpy[] = { 0, 1, 0, 0, 1 };
 
-	if (argc != 2) {
-		fprintf(stderr, "usage: %s <device>\n", __progname);
+	if (argc != 1 && argc != 2) {
+		fprintf(stderr, "usage: %s [device]\n", argv[0]);
 		return 1;
 	}
-
-	if ((evfd = open(argv[1], O_RDONLY)) == -1)
-		err(1, "open()");
 
 	/* connect to X server */
 	if ((display = XOpenDisplay(display_name)) == NULL) {
 		fprintf(stderr, "%s: cannot connect to X server %s\n",
 			progname, XDisplayName(display_name));
-		close(evfd);
 		exit(1);
 	}
+	if (!XQueryExtension(display, INAME, &xi_opcode, 
+		&event, &error)) {
+		fprintf(stderr, "X Input extension not available.\n");
+		exit(1);
+	}
+
+	version = XGetExtensionVersion(display, INAME);
+	if (version == NULL || 
+	    version == (XExtensionVersion *)NoSuchExtension) {
+		fprintf(stderr, "Cannot query X Input version.\n");
+		exit(1);
+	}
+	XFree(version);
+	info = find_device_info(argv[1]);
+	if (info == NULL) {
+		fprintf(stderr, "Unable to find device %s\n", argv[1]);
+		exit(1);
+	}
+	if (info->use != IsXPointer && info->use != IsXExtensionPointer) {
+		fprintf(stderr, "%s is not an X pointer device", info->name);
+		exit(1);
+	}
+
 	screen = DefaultScreen(display);
 	root = RootWindow(display, screen);
 
@@ -301,15 +508,23 @@ main(int argc, char *argv[], char *env[])
 
 	XClearWindow(display, win);
 
-        if (ioctl(evfd, WSMOUSEIO_GCALIBCOORDS, &wmcoords) < 0)
-                err(1, "WSMOUSEIO_GCALIBCOORDS");
+	device = XOpenDevice(display, info->id);
+	if (!register_events(info, device, argv[1], 0))
+		exit(1);
 
-        orawmode = wmcoords.samplelen;
-        wmcoords.samplelen = 1;
 
-        if (ioctl(evfd, WSMOUSEIO_SCALIBCOORDS, &wmcoords) < 0)
-                err(1, "WSMOUSEIO_SCALIBCOORDS");
+	prop_calibration = XInternAtom(display, WS_PROP_CALIBRATION, True);
+	if (prop_calibration == None) {
+		fprintf(stderr, "cannot find atom %s\n", WS_PROP_CALIBRATION);
+		exit(1);
+	}
+	prop_swap = XInternAtom(display, WS_PROP_SWAP_AXES, True);
+	if (prop_swap == None) {
+		fprintf(stderr, "cannot find atom %s\n", WS_PROP_SWAP_AXES);
+		exit(1);
+	}
 
+	uncalibrate(device);
 calib:
 	XftDrawRect(draw, &bg, 0, 0, width, height);
 
@@ -322,7 +537,9 @@ calib:
 
 	/* Check if  X and Y should be swapped */
 	if (fabs(x[0] - x[1]) > fabs(y[0] - y[1])) {
-		wmcoords.swapxy = 1;
+
+		calib.swapxy = 1;
+
 		for (i = 0; i < 5; i++) {
 			int t = x[i];
 			x[i] = y[i];
@@ -345,8 +562,8 @@ calib:
 			fabs(xerr));
 		goto err;
 	}
-	wmcoords.minx = (int) (b + 0.5);
-	wmcoords.maxx = (int) (a * width + b + 0.5);
+	calib.minx = (int) (b + 0.5);
+	calib.maxx = (int) (a * width + b + 0.5);
 
 	/* get touch pad resolution to screen resolution ratio */
 	a1 = (double) (y[4] - y[0]) / (double) (cy[4] - cy[0]);
@@ -363,23 +580,36 @@ calib:
 			fabs(yerr));
 		goto err;
 	}
-	wmcoords.miny = (int) (b + 0.5);
-	wmcoords.maxy = (int) (a * height + b + 0.5);
+	calib.miny = (int) (b + 0.5);
+	calib.maxy = (int) (a * height + b + 0.5);
 
 	XFlush(display);
 
-        wmcoords.samplelen = orawmode;
-	wmcoords.resx = width;
-	wmcoords.resy = height;
+	calib.resx = width;
+	calib.resy = height;
 
-        if (ioctl(evfd, WSMOUSEIO_SCALIBCOORDS, &wmcoords) < 0)
-                err(1, "WSMOUSEIO_SCALIBCOORDS");
+	/* Send new values to the X server */
+	calib_data[0] = calib.minx;
+	calib_data[1] = calib.maxx;
+	calib_data[2] = calib.miny;
+	calib_data[3] = calib.maxy;
+	XChangeDeviceProperty(display, device, prop_calibration, 
+	    XA_INTEGER, 32, PropModeReplace, (unsigned char *)calib_data, 4);
 
+	swap = calib.swapxy;
+	XChangeDeviceProperty(display, device, prop_swap, 
+	    XA_INTEGER, 8, PropModeReplace, (unsigned char *)&swap, 1);
+
+	XCloseDevice(display, device);
+
+	XCloseDisplay(display);
+
+	/* And print them for storage in wsconsctl.conf */
 	printf("mouse.scale=%d,%d,%d,%d,%d,%d,%d\n",
-	    wmcoords.minx, wmcoords.maxx,
-	    wmcoords.miny, wmcoords.maxy,
-	    wmcoords.swapxy,
-	    wmcoords.resx, wmcoords.resy);
+	    calib.minx, calib.maxx,
+	    calib.miny, calib.maxy,
+	    calib.swapxy,
+	    calib.resx, calib.resy);
 
 	return 0;
 err:

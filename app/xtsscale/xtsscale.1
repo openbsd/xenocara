@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.4 2007/08/31 22:02:51 matthieu Exp $
+.\" $OpenBSD: xtsscale.1,v 1.5 2009/11/25 18:30:13 matthieu Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\"
@@ -39,6 +39,17 @@
 is used interactively to calculate both the scaling and offset values which
 will make the pointer act at the indicated location on the screen.
 .Pp
+.Ar device 
+is the name or numerical identifier of the X Input extension device 
+to calibrate.
+Use
+.Pp
+.Dl # xinput --list
+.Pp
+to figure out the actual name for the X configuration.
+.Ar device
+can be omitted if there is only one X extension pointer in the system.
+.Pp
 When good deviations are calculated from the selections made at these
 points,
 .Nm
@@ -54,13 +65,11 @@ for further use, or can be immediately applied using:
 .Sh NOTES
 To use 
 .Nm
-a special 
+the mode of the raw mode of the input device should be set in the
 .Pa /etc/X11/xorg.conf
-X configuration file is needed, in which the input device driver is
-replaced by the
-.Xr void 4
-driver so that the device to calibrate is not opened by X during the
-calibration.
+X configuration file. See 
+.Xr ws 4
+for details.
 .Pp
 .Pa /etc/wsconsctl.conf
 cannot currently be used to set the calibration data of a device
@@ -68,9 +77,11 @@ that is not the first device. (
 .Pa /dev/wsmouse0
 )
 .Sh SEE ALSO
+.Xr xinput 1 ,
 .Xr ioctl 2 ,
 .Xr uts 4 ,
 .Xr wscons 4 ,
+.Xr ws 4 ,
 .Xr wsconsctl 8 ,
 .Xr X 7
 .Sh HISTORY
