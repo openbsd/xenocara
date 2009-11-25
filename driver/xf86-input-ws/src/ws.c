@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.17 2009/11/25 17:59:42 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.18 2009/11/25 18:03:42 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -62,6 +62,7 @@ typedef struct WSDevice {
 	pointer buffer;
 	int negativeZ, positiveZ; /* mappings for Z axis */
 	int negativeW, positiveW; /* mappings for W axis */
+	struct wsmouse_calibcoords coords; /* mirror of the kernel values */
 } WSDeviceRec, *WSDevicePtr;
 
 static MODULESETUPPROTO(SetupProc);
@@ -143,7 +144,6 @@ TearDownProc(pointer p)
 static InputInfoPtr
 wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
-	struct wsmouse_calibcoords coords;
 	InputInfoPtr pInfo = NULL;
 	WSDevicePtr priv;
 	MessageType buttons_from = X_CONFIG;
@@ -294,7 +294,8 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
 
 	if (priv->type == WSMOUSE_TYPE_TPANEL && priv->raw) {
-		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
+		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, 
+			&priv->coords) != 0) {
 			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
 			    strerror(errno));
 			wsClose(pInfo);
@@ -302,10 +303,10 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		}
 
 		/* get default coordinate space from kernel */
-		priv->min_x = coords.minx;
-		priv->max_x = coords.maxx;
-		priv->min_y = coords.miny;
-		priv->max_y = coords.maxy;
+		priv->min_x = priv->coords.minx;
+		priv->max_x = priv->coords.maxx;
+		priv->min_y = priv->coords.miny;
+		priv->max_y = priv->coords.maxy;
 	} else {
 		/* in calibrated mode, coordinate space, is screen coords */
 		priv->min_x = 0;
@@ -479,7 +480,6 @@ wsDeviceOn(DeviceIntPtr pWS)
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
 	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
 	struct wsmouse_calibcoords coords;
-	int raw;
 
 	DBG(1, ErrorF("WS DEVICE ON\n"));
 	if ((pInfo->fd < 0) && (wsOpen(pInfo) != Success)) {
@@ -489,19 +489,22 @@ wsDeviceOn(DeviceIntPtr pWS)
 	}
 
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
-		/* Set raw mode */
-		raw = priv->raw;
+		/* save calibration values */
 		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
 			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
 			    strerror(errno));
 			return !Success;
 		}
-		priv->raw = coords.samplelen;
-		coords.samplelen = raw;
-		if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
-			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
-			    strerror(errno));
-			return !Success;
+		memcpy(&priv->coords, &coords, sizeof coords);
+		/* set raw mode */
+		if (coords.samplelen != priv->raw) {
+			coords.samplelen = priv->raw;
+			if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, 
+				&coords) != 0) {
+				xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+				    strerror(errno));
+				return !Success;
+			}
 		}
 	}
 	priv->buffer = XisbNew(pInfo->fd,
@@ -522,20 +525,13 @@ wsDeviceOff(DeviceIntPtr pWS)
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
 	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
 	struct wsmouse_calibcoords coords;
-	int raw;
 
 	DBG(1, ErrorF("WS DEVICE OFF\n"));
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
-		/* Restore raw mode */
-		raw = priv->raw;
-		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
-			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
-			    strerror(errno));
-		}
-		priv->raw = coords.samplelen;
-		coords.samplelen = raw;
+		/* Restore calibration data */
+		memcpy(&coords, &priv->coords, sizeof coords);
 		if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
-			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+			xf86Msg(X_ERROR, "SCALIBCOORS failed %s\n",
 			    strerror(errno));
 		}
 	}
