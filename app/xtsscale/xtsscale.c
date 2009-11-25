@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.8 2009/11/25 19:43:05 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.9 2009/11/25 23:00:57 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -244,13 +244,18 @@ find_device_info(char *name)
 {
 	XDeviceInfo    *devices;
 	XDeviceInfo    *found = NULL;
-	int		i;
+	int		i, max_id;
 	int		num_devices, num_found;
 	Bool		is_id = True;
 	XID		id = (XID)-1;
 	const char	       *errstr;
 	
 	devices = XListInputDevices(display, &num_devices);
+	max_id = 0;
+	for (i = 0; i < num_devices; i++)
+		if (devices[i].id > max_id)
+			max_id = devices[i].id;
+	
 
 	if (name != NULL) {
 		for(i = 0; i < strlen(name); i++) {
@@ -260,7 +265,7 @@ find_device_info(char *name)
 			}
 		}
 		if (is_id) {
-			id = strtonum(name, 0, num_devices - 1, &errstr);
+			id = strtonum(name, 0, max_id, &errstr);
 			if (errstr != NULL) {
 				fprintf(stderr, "Invalid device id %s: %s\n",
 				    name, errstr);
@@ -297,7 +302,7 @@ find_device_info(char *name)
 
 static int
 register_events(XDeviceInfo *info, XDevice *device, 
-    char *dev_name, Bool handle_proximity)
+    Bool handle_proximity)
 {
 	int		 number = 0;	/* number of events registered */
 	XEventClass	 event_list[7];
@@ -306,11 +311,6 @@ register_events(XDeviceInfo *info, XDevice *device,
 	XInputClassInfo	*ip;
 	
 	screen = DefaultScreen(display);
-	
-	if (!device) {
-		fprintf(stderr, "unable to open device %s\n", dev_name);
-		return 0;
-	}
 	
 	if (device->num_classes > 0) {
 		for (ip = device->classes, i=0; i<info->num_classes; 
@@ -434,6 +434,7 @@ int
 main(int argc, char *argv[], char *env[])
 {
 	char           *display_name = NULL;
+	char	       *device_name = NULL;
 	XSetWindowAttributes xswa;
 	int             i = 0;
 	double          a, a1, a2, b, b1, b2, xerr, yerr;
@@ -452,7 +453,9 @@ main(int argc, char *argv[], char *env[])
 		fprintf(stderr, "usage: %s [device]\n", argv[0]);
 		return 1;
 	}
-
+	if (argc == 2) 
+		device_name = argv[1];
+	
 	/* connect to X server */
 	if ((display = XOpenDisplay(display_name)) == NULL) {
 		fprintf(stderr, "%s: cannot connect to X server %s\n",
@@ -472,9 +475,10 @@ main(int argc, char *argv[], char *env[])
 		exit(1);
 	}
 	XFree(version);
-	info = find_device_info(argv[1]);
+	info = find_device_info(device_name);
 	if (info == NULL) {
-		fprintf(stderr, "Unable to find device %s\n", argv[1]);
+		fprintf(stderr, "Unable to find the %s device\n", 
+			device_name ? device_name : "default");
 		exit(1);
 	}
 	if (info->use != IsXPointer && info->use != IsXExtensionPointer) {
@@ -520,7 +524,12 @@ main(int argc, char *argv[], char *env[])
 	XClearWindow(display, win);
 
 	device = XOpenDevice(display, info->id);
-	if (!register_events(info, device, argv[1], 0))
+	if (!device) {
+		fprintf(stderr, "unable to open device %s\n", info->name);
+		return 0;
+	}
+	
+	if (!register_events(info, device, 0))
 		exit(1);
 
 	uncalibrate(device);
