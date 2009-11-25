@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.20 2009/11/25 18:14:23 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.21 2009/11/25 19:11:55 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -285,7 +285,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 				" or \"UD\"\n");
 		}
 	}
-	priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 0);
+	priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 1);
 	if (wsOpen(pInfo) != Success) {
 		goto fail;
 	}
