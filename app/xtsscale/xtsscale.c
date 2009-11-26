@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.11 2009/11/26 11:35:29 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.12 2009/11/26 14:25:05 sobrado Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -481,7 +481,7 @@ main(int argc, char *argv[], char *env[])
 	int		cpy[] = { 0, 1, 0, 0, 1 };
 
 	if (argc != 1 && argc != 2) {
-		fprintf(stderr, "Usage: %s [device]\n", argv[0]);
+		fprintf(stderr, "usage: %s [device]\n", argv[0]);
 		return 1;
 	}
 	if (argc == 2) 
