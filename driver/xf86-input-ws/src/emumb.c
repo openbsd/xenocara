@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.1 2009/11/26 16:42:06 matthieu Exp $ */
+/*	$OpenBSD: emumb.c,v 1.2 2009/11/26 18:18:34 matthieu Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -196,11 +196,11 @@ int
 wsmbEmuTimer(InputInfoPtr pInfo)
 {
 	WSDevicePtr priv = pInfo->private;
-	int	sigstate;
+	int sigstate;
 	int id;
-	
-	sigstate = xf86BlockSIGIO ();
-	
+
+	sigstate = xf86BlockSIGIO();
+
 	priv->emulateMB.pending = FALSE;
 	if ((id = stateTab[priv->emulateMB.state][4][0]) != 0) {
 		xf86PostButtonEvent(pInfo->dev, 0, abs(id), (id >= 0), 0, 0);
@@ -210,8 +210,8 @@ wsmbEmuTimer(InputInfoPtr pInfo)
 		ErrorF("Got unexpected buttonTimer in state %d\n",
 		    priv->emulateMB.state);
 	}
-	
-	xf86UnblockSIGIO (sigstate);
+
+	xf86UnblockSIGIO(sigstate);
 	return 0;
 }
 
@@ -232,25 +232,25 @@ wsmbEmuFilterEvent(InputInfoPtr pInfo, int button, BOOL press)
 	int id;
 	int *btstate;
 	int ret = FALSE;
-	
+
 	if (!priv->emulateMB.enabled)
 		return ret;
-	
+
 	if (button == 2) {
 		wsmbEmuEnable(pInfo, FALSE);
 		return ret;
 	}
-	
+
 	/* don't care about other buttons */
 	if (button != 1 && button != 3)
 		return ret;
-	
+
 	btstate = &priv->emulateMB.buttonstate;
 	if (press)
 		*btstate |= (button == 1) ? 0x1 : 0x2;
 	else
 		*btstate &= (button == 1) ? ~0x1 : ~0x2;
-	
+
 	if ((id = stateTab[priv->emulateMB.state][*btstate][0]) != 0) {
 		xf86PostButtonEvent(pInfo->dev, 0, abs(id), (id >= 0), 0, 0);
 		ret = TRUE;
@@ -259,11 +259,11 @@ wsmbEmuFilterEvent(InputInfoPtr pInfo, int button, BOOL press)
 		xf86PostButtonEvent(pInfo->dev, 0, abs(id), (id >= 0), 0, 0);
 		ret = TRUE;
 	}
-	
+
 	priv->emulateMB.state = stateTab[priv->emulateMB.state][*btstate][2];
-	
+
 	if (stateTab[priv->emulateMB.state][4][0] != 0) {
-		priv->emulateMB.expires = GetTimeInMillis() 
+		priv->emulateMB.expires = GetTimeInMillis()
 		    + priv->emulateMB.timeout;
 		priv->emulateMB.pending = TRUE;
 		ret = TRUE;
@@ -274,15 +274,15 @@ wsmbEmuFilterEvent(InputInfoPtr pInfo, int button, BOOL press)
 }
 
 
-void 
+void
 wsmbEmuWakeupHandler(pointer data,
     int i,
     pointer LastSelectMask)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)data;
-	WSDevicePtr     priv = (WSDevicePtr)pInfo->private;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int ms;
-	
+
 	if (priv->emulateMB.pending) {
 		ms = priv->emulateMB.expires - GetTimeInMillis();
 		if (ms <= 0)
@@ -290,20 +290,20 @@ wsmbEmuWakeupHandler(pointer data,
 	}
 }
 
-void 
+void
 wsmbEmuBlockHandler(pointer data,
     struct timeval **waitTime,
     pointer LastSelectMask)
 {
-	InputInfoPtr    pInfo = (InputInfoPtr) data;
-	WSDevicePtr        priv= (WSDevicePtr) pInfo->private;
-	int             ms;
-	
+	InputInfoPtr pInfo = (InputInfoPtr) data;
+	WSDevicePtr priv= (WSDevicePtr) pInfo->private;
+	int ms;
+
 	if (priv->emulateMB.pending) {
 		ms = priv->emulateMB.expires - GetTimeInMillis();
 		if (ms <= 0)
 			ms = 0;
-		AdjustWaitForDelay (waitTime, ms);
+		AdjustWaitForDelay(waitTime, ms);
 	}
 }
 
@@ -312,7 +312,7 @@ wsmbEmuPreInit(InputInfoPtr pInfo)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	priv->emulateMB.enabled = MBEMU_AUTO;
-	
+
 	DBG(1, ErrorF("wsmbEmuPreInit\n"));
 	if (xf86FindOption(pInfo->options, "Emulate3Buttons")) {
 		priv->emulateMB.enabled = xf86SetBoolOption(pInfo->options,
@@ -322,7 +322,7 @@ wsmbEmuPreInit(InputInfoPtr pInfo)
 		    "emulation %s.\n",
 		    pInfo->name, (priv->emulateMB.enabled) ? "on" : "off");
 	}
-	
+
 	priv->emulateMB.timeout = xf86SetIntOption(pInfo->options,
 	    "Emulate3Timeout", 50);
 }
@@ -339,7 +339,7 @@ wsmbEmuFinalize(InputInfoPtr pInfo)
 {
 	RemoveBlockAndWakeupHandlers(wsmbEmuBlockHandler,
 	    wsmbEmuWakeupHandler, (pointer)pInfo);
-	
+
 }
 
 /* Enable/disable middle mouse button emulation. */
@@ -359,26 +359,26 @@ wsmbEmuSetProperty(DeviceIntPtr dev, Atom atom, XIPropertyValuePtr val,
                       BOOL checkonly)
 {
 	InputInfoPtr pInfo  = dev->public.devicePrivate;
-	WSDevicePtr     priv = pInfo->private;
-	
+	WSDevicePtr priv = pInfo->private;
+
 	DBG(1, ErrorF("wsmbEmuSetProperty %s\n", NameForAtom(atom)));
 
 	if (atom == prop_mbemu) {
-		if (val->format != 8 || val->size != 1 || 
+		if (val->format != 8 || val->size != 1 ||
 		    val->type != XA_INTEGER)
 			return BadMatch;
-		
+
 		if (!checkonly)
 			priv->emulateMB.enabled = *((BOOL*)val->data);
 	} else if (atom == prop_mbtimeout) {
-		if (val->format != 32 || val->size != 1 || 
+		if (val->format != 32 || val->size != 1 ||
 		    val->type != XA_INTEGER)
 			return BadMatch;
-		
+
 		if (!checkonly)
 			priv->emulateMB.timeout = *((CARD32*)val->data);
 	}
-	
+
 	return Success;
 }
 
@@ -389,15 +389,15 @@ void
 wsmbEmuInitProperty(DeviceIntPtr dev)
 {
 	InputInfoPtr pInfo  = dev->public.devicePrivate;
-	WSDevicePtr     priv = pInfo->private;
-	int          rc;
+	WSDevicePtr priv = pInfo->private;
+	int rc;
 
 	DBG(1, ErrorF("wsmbEmuInitProperty\n"));
 
 	if (!dev->button) /* don't init prop for keyboards */
 		return;
-	
-	prop_mbemu = MakeAtom(WS_PROP_MIDBUTTON, 
+
+	prop_mbemu = MakeAtom(WS_PROP_MIDBUTTON,
 	    strlen(WS_PROP_MIDBUTTON), TRUE);
 	rc = XIChangeDeviceProperty(dev, prop_mbemu, XA_INTEGER, 8,
 	    PropModeReplace, 1, &priv->emulateMB.enabled, FALSE);
@@ -407,21 +407,21 @@ wsmbEmuInitProperty(DeviceIntPtr dev)
 		return;
 	}
 	XISetDevicePropertyDeletable(dev, prop_mbemu, FALSE);
-	
+
 	prop_mbtimeout = MakeAtom(WS_PROP_MIDBUTTON_TIMEOUT,
 	    strlen(WS_PROP_MIDBUTTON_TIMEOUT),
 	    TRUE);
-	rc = XIChangeDeviceProperty(dev, prop_mbtimeout, 
+	rc = XIChangeDeviceProperty(dev, prop_mbtimeout,
 	    XA_INTEGER, 32, PropModeReplace, 1,
 	    &priv->emulateMB.timeout, FALSE);
-	
+
 	if (rc != Success) {
 		xf86Msg(X_ERROR, "cannot create device property %s\n",
 		WS_PROP_MIDBUTTON_TIMEOUT);
 		return;
 	}
 	XISetDevicePropertyDeletable(dev, prop_mbtimeout, FALSE);
-	
+
 	XIRegisterPropertyHandler(dev, wsmbEmuSetProperty, NULL, NULL);
 }
 #endif

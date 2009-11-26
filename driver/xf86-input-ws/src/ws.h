@@ -59,7 +59,7 @@ typedef struct WSDevice {
 		int state;       /* state machine (see emumb.c) */
 		Time expires;     /* time of expiry */
 		Time timeout;
-	} emulateMB; 
+	} emulateMB;
 } WSDeviceRec, *WSDevicePtr;
 
 extern int wsmbEmuTimer(InputInfoPtr);

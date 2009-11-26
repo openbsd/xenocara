@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.12 2009/11/26 14:25:05 sobrado Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.13 2009/11/26 18:13:47 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -128,10 +128,10 @@ cleanup_exit(XDevice *device)
 	values[2] = old_calib.miny;
 	values[3] = old_calib.maxy;
 
-	XChangeDeviceProperty(display, device, prop_calibration, 
+	XChangeDeviceProperty(display, device, prop_calibration,
 	    XA_INTEGER, 32, PropModeReplace, (unsigned char *)values, 4);
 
-	XChangeDeviceProperty(display, device, prop_swap, 
+	XChangeDeviceProperty(display, device, prop_swap,
 	    XA_INTEGER, 8, PropModeReplace, (unsigned char *)&old_swap, 1);
 
 	XCloseDevice(display, device);
@@ -266,13 +266,13 @@ find_device_info(char *name)
 	Bool		is_id = True;
 	XID		id = (XID)-1;
 	const char	       *errstr;
-	
+
 	devices = XListInputDevices(display, &num_devices);
 	max_id = 0;
 	for (i = 0; i < num_devices; i++)
 		if (devices[i].id > max_id)
 			max_id = devices[i].id;
-	
+
 
 	if (name != NULL) {
 		for(i = 0; i < strlen(name); i++) {
@@ -291,7 +291,6 @@ find_device_info(char *name)
 		}
 	}
 
-	
 	num_found = 0;
 	for(i = 0; i < num_devices; i++) {
 		if (devices[i].use != IsXExtensionPointer)
@@ -318,7 +317,7 @@ find_device_info(char *name)
 }
 
 static int
-register_events(XDeviceInfo *info, XDevice *device, 
+register_events(XDeviceInfo *info, XDevice *device,
     Bool handle_proximity)
 {
 	int		 number = 0;	/* number of events registered */
@@ -326,34 +325,34 @@ register_events(XDeviceInfo *info, XDevice *device,
 	int		 i;
 	unsigned long	 screen;
 	XInputClassInfo	*ip;
-	
+
 	screen = DefaultScreen(display);
-	
+
 	if (device->num_classes > 0) {
-		for (ip = device->classes, i=0; i<info->num_classes; 
+		for (ip = device->classes, i=0; i<info->num_classes;
 		     ip++, i++) {
 			switch (ip->input_class) {
 			case ButtonClass:
-				DeviceButtonPress(device, button_press_type, 
-				    event_list[number]); 
+				DeviceButtonPress(device, button_press_type,
+				    event_list[number]);
 				number++;
-				DeviceButtonRelease(device, 
-				    button_release_type, event_list[number]); 
+				DeviceButtonRelease(device,
+				    button_release_type, event_list[number]);
 				number++;
 				break;
-				
+
 			case ValuatorClass:
-				DeviceMotionNotify(device, motion_type, 
+				DeviceMotionNotify(device, motion_type,
 				    event_list[number]); number++;
 				if (handle_proximity) {
-					ProximityIn(device, proximity_in_type, 
+					ProximityIn(device, proximity_in_type,
 					    event_list[number]); number++;
-					ProximityOut(device, 
-					    proximity_out_type, 
+					ProximityOut(device,
+					    proximity_out_type,
 					    event_list[number]); number++;
 				}
 				break;
-				
+
 			default:
 				fprintf(stderr,
 				    "Found unknown device class %d\n",
@@ -361,7 +360,7 @@ register_events(XDeviceInfo *info, XDevice *device,
 				break;
 			}
 		}
-		
+
 		if (XSelectExtensionEvent(display, root, event_list, number)) {
 			fprintf(stderr, "Error selecting extended events\n");
 			return 0;
@@ -393,7 +392,7 @@ get_events(int i)
 					y[i] = motion->axis_data[j];
 					break;
 				default:
-					fprintf(stderr, 
+					fprintf(stderr,
 					    "Unknown axis %d\n", a);
 				}
 			}
@@ -421,20 +420,20 @@ uncalibrate(XDevice *device)
 	long values[4] = { 0, 32767, 0, 32767 }; /* uncalibrated */
 	Bool swap = 0;
 	unsigned char *retval;
-	
+
 	/* Save old values */
 	XGetDeviceProperty(display, device, prop_calibration, 0,
-	    4, False, XA_INTEGER, &type, &format, &nitems, 
+	    4, False, XA_INTEGER, &type, &format, &nitems,
 	    &nbytes, &retval);
 
-	if (type != XA_INTEGER) { 
-		fprintf(stderr, "Device property \"%s\": invalid type %s\n", 
+	if (type != XA_INTEGER) {
+		fprintf(stderr, "Device property \"%s\": invalid type %s\n",
 		    WS_PROP_CALIBRATION, XGetAtomName(display, type));
 		return -1;
 	}
 	if (nitems != 4 && nitems != 0) {
 		fprintf(stderr, "Device property \"%s\": "
-		    "invalid number of items %ld\n", 
+		    "invalid number of items %ld\n",
 		    WS_PROP_CALIBRATION, nitems);
 		return -1;
 	}
@@ -442,7 +441,7 @@ uncalibrate(XDevice *device)
 	old_calib.maxx = *((long *)retval + 1);
 	old_calib.miny = *((long *)retval + 2);
 	old_calib.maxy = *((long *)retval + 3);
-	
+
 	XFree(retval);
 
 	XGetDeviceProperty(display, device, prop_swap, 0,
@@ -450,9 +449,9 @@ uncalibrate(XDevice *device)
 	    &nbytes, &retval);
 	old_swap = *(Bool *)retval;
 	XFree(retval);
-	
+
 	/* Force uncalibrated state */
-	XChangeDeviceProperty(display, device, prop_calibration, 
+	XChangeDeviceProperty(display, device, prop_calibration,
 	    XA_INTEGER, 32, PropModeReplace, (unsigned char *)values, 4);
 	XChangeDeviceProperty(display, device, prop_swap,
 	    XA_INTEGER, 8, PropModeReplace, (unsigned char *)&swap, 1);
@@ -460,7 +459,6 @@ uncalibrate(XDevice *device)
 	return 0;
 }
 
-		
 int
 main(int argc, char *argv[], char *env[])
 {
@@ -484,16 +482,16 @@ main(int argc, char *argv[], char *env[])
 		fprintf(stderr, "usage: %s [device]\n", argv[0]);
 		return 1;
 	}
-	if (argc == 2) 
+	if (argc == 2)
 		device_name = argv[1];
-	
+
 	/* connect to X server */
 	if ((display = XOpenDisplay(display_name)) == NULL) {
 		fprintf(stderr, "%s: cannot connect to X server %s\n",
 		    argv[0], XDisplayName(display_name));
 		exit(1);
 	}
-	if (!XQueryExtension(display, INAME, &xi_opcode, 
+	if (!XQueryExtension(display, INAME, &xi_opcode,
 		&event, &error)) {
 		fprintf(stderr, "%s: X Input extension not available.\n",
 		    argv[0]);
@@ -501,7 +499,7 @@ main(int argc, char *argv[], char *env[])
 	}
 
 	version = XGetExtensionVersion(display, INAME);
-	if (version == NULL || 
+	if (version == NULL ||
 	    version == (XExtensionVersion *)NoSuchExtension) {
 		fprintf(stderr, "Cannot query X Input version.\n");
 		exit(1);
@@ -509,7 +507,7 @@ main(int argc, char *argv[], char *env[])
 	XFree(version);
 	info = find_device_info(device_name);
 	if (info == NULL) {
-		fprintf(stderr, "Unable to find the %s device\n", 
+		fprintf(stderr, "Unable to find the %s device\n",
 			device_name ? device_name : "default");
 		exit(1);
 	}
@@ -556,11 +554,11 @@ main(int argc, char *argv[], char *env[])
 
 	device = XOpenDevice(display, info->id);
 	if (!device) {
-		fprintf(stderr, "Unable to open the X input device \"%s\"\n", 
+		fprintf(stderr, "Unable to open the X input device \"%s\"\n",
 		    info->name);
 		return 0;
 	}
-	
+
 	if (!register_events(info, device, 0))
 		exit(1);
 
@@ -571,13 +569,13 @@ calib:
 	for (i = 0; i < 5; i++) {
 		draw_graphics(cpx[i], cpy[i], i);
 		XFlush(display);
-		if (!get_events(i)) 
+		if (!get_events(i))
 			break;
 		XftDrawRect(draw, &bg, 0, 0, width, height);
 	}
 	if (interrupted)
 		cleanup_exit(device);
-		
+
 	/* Check if  X and Y should be swapped */
 	if (fabs(x[0] - x[1]) > fabs(y[0] - y[1])) {
 
@@ -636,11 +634,11 @@ calib:
 	calib_data[1] = calib.maxx;
 	calib_data[2] = calib.miny;
 	calib_data[3] = calib.maxy;
-	XChangeDeviceProperty(display, device, prop_calibration, 
+	XChangeDeviceProperty(display, device, prop_calibration,
 	    XA_INTEGER, 32, PropModeReplace, (unsigned char *)calib_data, 4);
 
 	swap = calib.swapxy;
-	XChangeDeviceProperty(display, device, prop_swap, 
+	XChangeDeviceProperty(display, device, prop_swap,
 	    XA_INTEGER, 8, PropModeReplace, (unsigned char *)&swap, 1);
 
 	XCloseDevice(display, device);

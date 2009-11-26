@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.25 2009/11/26 16:42:06 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.26 2009/11/26 18:18:34 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -85,7 +85,7 @@ static XF86ModuleVersionInfo VersionRec = {
 	MODINFOSTRING2,
 	XORG_VERSION_CURRENT,
 	PACKAGE_VERSION_MAJOR,
-	PACKAGE_VERSION_MINOR, 
+	PACKAGE_VERSION_MINOR,
 	PACKAGE_VERSION_PATCHLEVEL,
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
@@ -152,7 +152,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 #ifdef DEBUG
 	ws_debug_level = xf86SetIntOption(pInfo->options, "DebugLevel",
 	    ws_debug_level);
-	xf86Msg(X_INFO, "%s: debuglevel %d\n", dev->identifier, 
+	xf86Msg(X_INFO, "%s: debuglevel %d\n", dev->identifier,
 	    ws_debug_level);
 #endif
 	priv->devName = xf86FindOptionValue(pInfo->options, "Device");
@@ -282,7 +282,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
 
 	if (priv->type == WSMOUSE_TYPE_TPANEL && priv->raw) {
-		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, 
+		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS,
 			&priv->coords) != 0) {
 			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
 			    strerror(errno));
@@ -392,7 +392,7 @@ wsDeviceInit(DeviceIntPtr pWS)
 #endif
 	priv->screen_width = screenInfo.screens[priv->screen_no]->width;
 	priv->screen_height = screenInfo.screens[priv->screen_no]->height;
-	
+
 	for (i = 0; i < NBUTTONS; i++)
 		map[i + 1] = i + 1;
 	if (!InitButtonClassDeviceStruct(pWS,
@@ -402,7 +402,7 @@ wsDeviceInit(DeviceIntPtr pWS)
 #endif
 		map))
 		return !Success;
-	
+
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
 		xmin = priv->min_x;
 		xmax = priv->max_x;
@@ -438,14 +438,14 @@ wsDeviceInit(DeviceIntPtr pWS)
 		return !Success;
 	if (!InitPtrFeedbackClassDeviceStruct(pWS, wsControlProc))
 		return !Success;
-	
+
 	xf86InitValuatorAxisStruct(pWS, 0,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	    axes_labels[0],
 #endif
 	    xmin, xmax, 1, 0, 1);
 	xf86InitValuatorDefaults(pWS, 0);
-	
+
 	xf86InitValuatorAxisStruct(pWS, 1,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	    axes_labels[1],
@@ -491,7 +491,7 @@ wsDeviceOn(DeviceIntPtr pWS)
 		/* set raw mode */
 		if (coords.samplelen != priv->raw) {
 			coords.samplelen = priv->raw;
-			if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, 
+			if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS,
 				&coords) != 0) {
 				xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
 				    strerror(errno));
@@ -700,7 +700,7 @@ wsSendButtons(InputInfoPtr pInfo, int buttons)
 	for (button = 1; button < NBUTTONS; button++) {
 		mask = 1 << (button - 1);
 		if ((mask & priv->lastButtons) != (mask & buttons)) {
-			if (!wsmbEmuFilterEvent(pInfo, button, 
+			if (!wsmbEmuFilterEvent(pInfo, button,
 				(buttons & mask) != 0)) {
 				xf86PostButtonEvent(pInfo->dev, TRUE,
 				    button, (buttons & mask) != 0,
@@ -770,7 +770,7 @@ wsControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 }
 
 #ifdef HAVE_PROPERTIES
-static void 
+static void
 wsInitProperty(DeviceIntPtr device)
 {
 	InputInfoPtr pInfo = device->public.devicePrivate;
@@ -790,11 +790,11 @@ wsInitProperty(DeviceIntPtr device)
 
 	XISetDevicePropertyDeletable(device, prop_calibration, FALSE);
 
-	prop_swap = MakeAtom(WS_PROP_SWAP_AXES, 
+	prop_swap = MakeAtom(WS_PROP_SWAP_AXES,
 	    strlen(WS_PROP_SWAP_AXES), TRUE);
 	rc = XIChangeDeviceProperty(device, prop_swap, XA_INTEGER, 8,
 	    PropModeReplace, 1, &priv->swap_axes, FALSE);
-	if (rc != Success) 
+	if (rc != Success)
 		return;
 	return;
 }
@@ -845,7 +845,7 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 			ay->max_value = priv->max_y;
 		}
 	} else if (atom == prop_swap) {
-		if (val->format != 8 || val->type != XA_INTEGER || 
+		if (val->format != 8 || val->type != XA_INTEGER ||
 		    val->size != 1)
 			return BadMatch;
 		if (!checkonly) {
@@ -853,7 +853,7 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 			DBG(1, ErrorF("swap_axes %d\n", priv->swap_axes));
 			need_update++;
 		}
-	} 
+	}
 	if (need_update) {
 		/* Update the saved values to be restored on device off */
 		priv->coords.minx = priv->min_x;
