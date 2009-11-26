@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.9 2009/11/25 23:00:57 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.10 2009/11/26 10:58:45 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -97,6 +97,7 @@ XftColor	cross, errorColor, promptColor, bg;
 XftDraw	       *draw;
 unsigned int    width, height;	/* window size */
 char           *progname;
+Bool		interrupted = False;
 
 int    cx[5], cy[5];
 int    x[5], y[5];
@@ -107,6 +108,7 @@ Bool old_swap;
 static char    *prompt_message[] = {
 	"TOUCH SCREEN CALIBRATION",
 	"Press on the cross hairs please...",
+	"Use the ESC key to cancel.",
 	NULL
 };
 
@@ -117,11 +119,26 @@ static char *error_message[] = {
 };
 
 void
-cleanup_exit()
+cleanup_exit(XDevice *device)
 {
+	long values[4];
+
+	values[0] = old_calib.minx;
+	values[1] = old_calib.maxx;
+	values[2] = old_calib.miny;
+	values[3] = old_calib.maxy;
+
+	XChangeDeviceProperty(display, device, prop_calibration, 
+	    XA_INTEGER, 32, PropModeReplace, (unsigned char *)values, 4);
+
+	XChangeDeviceProperty(display, device, prop_swap, 
+	    XA_INTEGER, 8, PropModeReplace, (unsigned char *)&old_swap, 1);
+
+	XCloseDevice(display, device);
 	XUngrabServer(display);
 	XUngrabKeyboard(display, CurrentTime);
 	XCloseDisplay(display);
+	exit(1);
 }
 
 void
@@ -351,12 +368,13 @@ register_events(XDeviceInfo *info, XDevice *device,
 	return number;
 }
 
-static void
+static Bool
 get_events(int i)
 {
 	XEvent Event;
 	XDeviceMotionEvent *motion = (XDeviceMotionEvent *) &Event;
 	int j, a;
+	char c;
 
 	x[i] = y[i] = -1;
 	while (1) {
@@ -380,8 +398,16 @@ get_events(int i)
 		} else if (Event.type == button_release_type) {
 			if (x[i] != -1 && y[i] != -1)
 				break;
+		} else if (Event.type == KeyPress) {
+			a = XLookupString(&Event.xkey, &c, 1, NULL, NULL);
+			if ((a == 1) && ((c == 'q') || (c == 'Q') ||
+				(c == '\03') || (c == '\033'))) {
+				interrupted++;
+				return False;
+			}
 		}
 	}
+	return True;
 }
 
 int
@@ -539,10 +565,13 @@ calib:
 	for (i = 0; i < 5; i++) {
 		draw_graphics(cpx[i], cpy[i], i);
 		XFlush(display);
-		get_events(i);
+		if (!get_events(i)) 
+			break;
 		XftDrawRect(draw, &bg, 0, 0, width, height);
 	}
-
+	if (interrupted)
+		cleanup_exit(device);
+		
 	/* Check if  X and Y should be swapped */
 	if (fabs(x[0] - x[1]) > fabs(y[0] - y[1])) {
 
