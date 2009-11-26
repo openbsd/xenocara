@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.3 2009/11/25 19:11:55 matthieu Exp $
+.\"	$OpenBSD: ws.man,v 1.4 2009/11/26 11:10:09 matthieu Exp $
 .\"
 .\" Copyright (c) 2005,2009 Matthieu Herrb
 .\"
@@ -111,5 +111,20 @@ is mapped to the negative W axis motion and button
 .I N2
 is mapped to the positive W axis motion.
 Default: no mapping.
+.SH "SUPPORTED PROPERTIES"
+The following properties are provided by the
+.B ws
+driver.
+.TP 7
+.BI "WS Pointer Axis Calibration"
+4 32 bits values, in the order min-x, max-x, min-y, max-y.
+This property is present only for devices with absolute coordinates (ie
+tablets and touchscreens). 
+.TP 7
+.BI "WS Pointer Axes Swap"
+1 boolean value (8 bits, 0 or 1). 1 swaps x/y axes. This property
+is present only for devices with absolute coordinates (ie
+tablets and touchscreens).
+
 .SH "SEE ALSO"
-Xorg(1), xorg.conf(__filemansuffix__), uts(4), zts(4), sysctl(8), xtsscale(8), ztsscale(8).
+Xorg(1), xinput(1), xorg.conf(__filemansuffix__), uts(4), zts(4), sysctl(8), xtsscale(8), ztsscale(8).
