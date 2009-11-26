@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.23 2009/11/25 19:36:57 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.24 2009/11/26 10:57:35 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -891,6 +891,8 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 		coords.maxy = priv->max_y;
 		coords.swapxy = priv->swap_axes;
 		coords.samplelen = priv->raw;
+		coords.resx = priv->coords.resx;
+		coords.resy = priv->coords.resy;
 		if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
 			xf86Msg(X_ERROR, "SCALIBCOORDS failed %s\n",
 			    strerror(errno));
