@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.10 2009/11/26 10:58:45 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.11 2009/11/26 11:35:29 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -150,22 +150,22 @@ render_init(void)
 	    NULL);
 	if (!XftColorAllocName(display, XDefaultVisual(display, screen),
 		DefaultColormap(display, screen), TouchCross, &cross)) {
-		fprintf(stderr, "cannot get color");
+		fprintf(stderr, "Cannot get color");
 		exit(2);
 	}
 	if (!XftColorAllocName(display, XDefaultVisual(display, screen),
 		DefaultColormap(display, screen), PromptText, &promptColor)) {
-		fprintf(stderr, "cannot get color");
+		fprintf(stderr, "Cannot get color");
 		exit(2);
 	}
 	if (!XftColorAllocName(display, XDefaultVisual(display, screen),
 		DefaultColormap(display, screen), Background, &bg)) {
-		fprintf(stderr, "cannot get bg color");
+		fprintf(stderr, "Cannot get bg color");
 		exit(2);
 	}
 	if (!XftColorAllocName(display, XDefaultVisual(display, screen),
 		DefaultColormap(display, screen), Error, &errorColor)) {
-		fprintf(stderr, "cannot get color");
+		fprintf(stderr, "Cannot get color");
 		exit(2);
 	}
 	draw = XftDrawCreate(display, win, DefaultVisual(display, screen),
@@ -355,13 +355,15 @@ register_events(XDeviceInfo *info, XDevice *device,
 				break;
 				
 			default:
-				fprintf(stderr, "unknown class\n");
+				fprintf(stderr,
+				    "Found unknown device class %d\n",
+				    ip->input_class);
 				break;
 			}
 		}
 		
 		if (XSelectExtensionEvent(display, root, event_list, number)) {
-			fprintf(stderr, "error selecting extended events\n");
+			fprintf(stderr, "Error selecting extended events\n");
 			return 0;
 		}
 	}
@@ -392,7 +394,7 @@ get_events(int i)
 					break;
 				default:
 					fprintf(stderr, 
-					    "unknown axis %d\n", a);
+					    "Unknown axis %d\n", a);
 				}
 			}
 		} else if (Event.type == button_release_type) {
@@ -426,11 +428,14 @@ uncalibrate(XDevice *device)
 	    &nbytes, &retval);
 
 	if (type != XA_INTEGER) { 
-		fprintf(stderr, WS_PROP_CALIBRATION " isn't integer\n");
+		fprintf(stderr, "Device property \"%s\": invalid type %s\n", 
+		    WS_PROP_CALIBRATION, XGetAtomName(display, type));
 		return -1;
 	}
 	if (nitems != 4 && nitems != 0) {
-		fprintf(stderr, WS_PROP_CALIBRATION " bad number of items\n");
+		fprintf(stderr, "Device property \"%s\": "
+		    "invalid number of items %ld\n", 
+		    WS_PROP_CALIBRATION, nitems);
 		return -1;
 	}
 	old_calib.minx = *(long *)retval;
@@ -476,7 +481,7 @@ main(int argc, char *argv[], char *env[])
 	int		cpy[] = { 0, 1, 0, 0, 1 };
 
 	if (argc != 1 && argc != 2) {
-		fprintf(stderr, "usage: %s [device]\n", argv[0]);
+		fprintf(stderr, "Usage: %s [device]\n", argv[0]);
 		return 1;
 	}
 	if (argc == 2) 
@@ -485,12 +490,13 @@ main(int argc, char *argv[], char *env[])
 	/* connect to X server */
 	if ((display = XOpenDisplay(display_name)) == NULL) {
 		fprintf(stderr, "%s: cannot connect to X server %s\n",
-			progname, XDisplayName(display_name));
+		    argv[0], XDisplayName(display_name));
 		exit(1);
 	}
 	if (!XQueryExtension(display, INAME, &xi_opcode, 
 		&event, &error)) {
-		fprintf(stderr, "X Input extension not available.\n");
+		fprintf(stderr, "%s: X Input extension not available.\n",
+		    argv[0]);
 		exit(1);
 	}
 
@@ -507,19 +513,18 @@ main(int argc, char *argv[], char *env[])
 			device_name ? device_name : "default");
 		exit(1);
 	}
-	if (info->use != IsXPointer && info->use != IsXExtensionPointer) {
-		fprintf(stderr, "%s is not an X pointer device", info->name);
-		exit(1);
-	}
 
 	prop_calibration = XInternAtom(display, WS_PROP_CALIBRATION, True);
 	if (prop_calibration == None) {
-		fprintf(stderr, "cannot find atom %s\n", WS_PROP_CALIBRATION);
+		fprintf(stderr, "Unable to find the \"%s\" device property.\n"
+		    "There are probably no calibrable devices "
+		    "on this system.\n", WS_PROP_CALIBRATION);
 		exit(1);
 	}
 	prop_swap = XInternAtom(display, WS_PROP_SWAP_AXES, True);
 	if (prop_swap == None) {
-		fprintf(stderr, "cannot find atom %s\n", WS_PROP_SWAP_AXES);
+		fprintf(stderr, "Unable to find the \"%s\" device property\n",
+		    WS_PROP_SWAP_AXES);
 		exit(1);
 	}
 
@@ -551,7 +556,8 @@ main(int argc, char *argv[], char *env[])
 
 	device = XOpenDevice(display, info->id);
 	if (!device) {
-		fprintf(stderr, "unable to open device %s\n", info->name);
+		fprintf(stderr, "Unable to open the X input device \"%s\"\n", 
+		    info->name);
 		return 0;
 	}
 	
