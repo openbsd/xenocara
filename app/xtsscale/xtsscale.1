@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.5 2009/11/25 18:30:13 matthieu Exp $
+.\" $OpenBSD: xtsscale.1,v 1.6 2009/11/26 11:02:35 matthieu Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\"
@@ -59,9 +59,11 @@ will exit and provide on standard output a result like the following:
 .Pp
 This result should be placed into
 .Pa /etc/wsconsctl.conf
-for further use, or can be immediately applied using:
-.Pp
-.Dl # wsconsctl mouse.scale=200,3400,312,3672,0,1024,768
+for further use. 
+The new calibration is automatically used by the X server.
+The Calibration process can be interrupted at any time using the ESC 
+key.
+In this case the current screen calibration data will not be modified.
 .Sh NOTES
 To use 
 .Nm
