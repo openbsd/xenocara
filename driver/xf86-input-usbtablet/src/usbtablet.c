@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.5 2009/11/22 23:16:54 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.6 2009/11/26 21:30:19 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -59,11 +59,9 @@
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 #define mils(res) (res * 1000 / 2.54) /* resolution */
 
-#define STYLUS_SEC	"usbstylus" /* config section name */
 #define STYLUS_XI	"Stylus"    /* X device name for the stylus */
 #define STYLUS_ID	1	    /* local id */
 
-#define ERASER_SEC	"usberaser" /* config section name */
 #define ERASER_XI	"Eraser"    /* X device name for the stylus */
 #define ERASER_ID	2	    /* local id */
 
@@ -122,9 +120,6 @@ static void UsbTabletReadInput(InputInfoPtr);
 static int UsbTabletChangeControl(InputInfoPtr, xDeviceCtl *);
 static int UsbTabletSwitchMode(ClientPtr, DeviceIntPtr, int);
 static void UsbTabletClose(InputInfoPtr);
-static Bool UsbTabletConvert(InputInfoPtr, int, int, int, int, int,
-			   int, int, int, int *, int *);
-static Bool UsbTabletReverseConvert(InputInfoPtr, int, int, int *);
 static void UsbTabletControlProc(DeviceIntPtr, PtrCtrl *);
 static int UsbTabletOpenDevice(DeviceIntPtr);
 static void UsbTabletSendEvents(InputInfoPtr, int, USBTState *);
@@ -132,28 +127,20 @@ static void UsbTabletSendButtons(InputInfoPtr, int, int, int, int, int, int);
 static void UsbTabletOutOfProx(USBTDevicePtr prx);
 static void UsbTabletIntoProx(USBTDevicePtr prx, USBTState *ds);
 
-
 static XF86ModuleVersionInfo VersionRec = {
 	"usbtablet",
 	MODULEVENDORSTRING,
 	MODINFOSTRING1,
 	MODINFOSTRING2,
 	XORG_VERSION_CURRENT,
-	1, 0, 0,
+	PACKAGE_VERSION_MAJOR,
+	PACKAGE_VERSION_MINOR,
+	PACKAGE_VERSION_PATCHLEVEL,
 	ABI_CLASS_XINPUT,
 	ABI_XINPUT_VERSION,
 	MOD_CLASS_XINPUT,
 	{0, 0, 0, 0}		/* signature to be patched into the file */
 };
-
-typedef enum {
-	USBTOPT_DEVICE,
-	USBTOPT_DEBUG_LEVEL,
-	USBTOPT_HISTORY_SIZE,
-	USBTOPT_THRESHOLD,
-	USBTOPT_SUPPRESS,
-} USBTOpts;
-
 
 XF86ModuleData usbtabletModuleData = {&VersionRec,
 				      SetupProc, TearDownProc };
@@ -522,42 +509,6 @@ UsbTabletClose(InputInfoPtr pInfo)
 	pInfo->fd = -1;
 }
 
-static Bool
-UsbTabletConvert(InputInfoPtr pInfo, int first, int num, 
-		 int v0, int v1, int v2, int v3, int v4, int v5,
-		 int *x, int *y)
-{
-	USBTCommonPtr comm = ((USBTDevicePtr)pInfo->private)->comm;
-
-	DBG(6, ErrorF("UsbTabletConvert\n"));
-
-	if (first != 0 || num == 1)
-		return FALSE;
-
-	*x = v0 * comm->factorX;
-	*y = v1 * comm->factorY;
-
-	DBG(6, ErrorF("USB tablet converted v0=%d v1=%d to x=%d y=%d\n",
-		      v0, v1, *x, *y));
-
-	return TRUE;
-}
-
-static Bool
-UsbTabletReverseConvert(InputInfoPtr pInfo, int x, int y,
-			int *valuators)
-{
-	USBTCommonPtr comm = ((USBTDevicePtr)pInfo->private)->comm;
-
-	valuators[0] = x / comm->factorX;
-	valuators[1] = y / comm->factorY;
-
-	DBG(6, ErrorF("USB tablet converted x=%d y=%d to v0=%d v1=%d\n", x, y,
-		      valuators[0], valuators[1]));
-
-	return TRUE;
-}
-
 static void
 UsbTabletControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 {
@@ -801,8 +752,8 @@ UsbTabletAllocate(InputDriverPtr drv, char *name, int flag)
 	pInfo->read_input = UsbTabletReadInput;
 	pInfo->control_proc = UsbTabletChangeControl;
 	pInfo->switch_mode = UsbTabletSwitchMode;
-	pInfo->conversion_proc = UsbTabletConvert;
-	pInfo->reverse_conversion_proc = UsbTabletReverseConvert;
+	pInfo->conversion_proc = NULL;
+	pInfo->reverse_conversion_proc = NULL;
 	pInfo->fd = -1;
 	pInfo->private = priv;
 	pInfo->old_x = -1;
@@ -829,7 +780,7 @@ UsbTabletAllocateStylus(InputDriverPtr drv)
 	if (pInfo == NULL) {
 		return NULL;
 	}
-	pInfo->type_name = "USBT Stylus";
+	pInfo->type_name = XI_TABLET;
 	return pInfo;
 }
 
@@ -841,7 +792,7 @@ UsbTabletAllocateEraser(InputDriverPtr drv)
 	if (pInfo == NULL) {
 		return NULL;
 	}
-	pInfo->type_name = "USBT Eraser";
+	pInfo->type_name = XI_TABLET;
 	return pInfo;
 }
 
