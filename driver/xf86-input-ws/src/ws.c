@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2009 Matthieu Herrb
+ * Copyright © 2005-2009 Matthieu Herrb
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.24 2009/11/26 10:57:35 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.25 2009/11/26 16:42:06 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -36,9 +36,7 @@
 #include <mipointer.h>
 #include <extinit.h>
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
-#define HAVE_PROPERTIES 1
-#endif
+#include "ws.h"
 
 #ifdef HAVE_PROPERTIES
 #include <X11/Xatom.h>
@@ -51,28 +49,6 @@
 #include <xserver-properties.h>
 #endif
 
-#define NAXES 2			/* X and Y axes only */
-#define NBUTTONS 32		/* max theoretical buttons */
-#define DFLTBUTTONS 3		/* default number of buttons */
-#define NUMEVENTS 16		/* max # of ws events to read at once */
-
-typedef struct WSDevice {
-	char *devName;		/* device name */
-	int type;		/* ws device type */
-	unsigned int buttons;	/* # of buttons */
-	unsigned int lastButtons; /* last state of buttons */
-	int min_x, max_x, min_y, max_y; /* coord space */
-	int swap_axes;
-	int raw;
-	int inv_x, inv_y;
-	int screen_width, screen_height;
-	int screen_no;
-	int num, den, threshold; /* relative accel params */
-	pointer buffer;
-	int negativeZ, positiveZ; /* mappings for Z axis */
-	int negativeW, positiveW; /* mappings for W axis */
-	struct wsmouse_calibcoords coords; /* mirror of the kernel values */
-} WSDeviceRec, *WSDevicePtr;
 
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
@@ -96,6 +72,10 @@ static int wsSetProperty(DeviceIntPtr, Atom, XIPropertyValuePtr, BOOL);
 
 static Atom prop_calibration = 0;
 static Atom prop_swap = 0;
+#endif
+
+#ifdef DEBUG
+int ws_debug_level = 0;
 #endif
 
 static XF86ModuleVersionInfo VersionRec = {
@@ -128,16 +108,6 @@ InputDriverRec WS = {
 	NULL,
 	0
 };
-
-/* #undef DEBUG */
-#define DEBUG
-#undef DBG
-static int debug_level = 0;
-#ifdef DEBUG
-# define DBG(lvl, f) { if ((lvl) <= debug_level) f;}
-#else
-# define DBG(lvl, f)
-#endif
 
 static pointer
 SetupProc(pointer module, pointer options, int *errmaj, int *errmin)
@@ -180,9 +150,10 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	xf86CollectInputOptions(pInfo, NULL, NULL);
 	xf86ProcessCommonOptions(pInfo, pInfo->options);
 #ifdef DEBUG
-	debug_level = xf86SetIntOption(pInfo->options, "DebugLevel",
-	    debug_level);
-	xf86Msg(X_INFO, "%s: debuglevel %d\n", dev->identifier, debug_level);
+	ws_debug_level = xf86SetIntOption(pInfo->options, "DebugLevel",
+	    ws_debug_level);
+	xf86Msg(X_INFO, "%s: debuglevel %d\n", dev->identifier, 
+	    ws_debug_level);
 #endif
 	priv->devName = xf86FindOptionValue(pInfo->options, "Device");
 	if (priv->devName == NULL) {
@@ -359,6 +330,8 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
 	wsClose(pInfo);
 
+	wsmbEmuPreInit(pInfo);
+
 	/* mark the device configured */
 	pInfo->flags |= XI86_CONFIGURED;
 	return pInfo;
@@ -488,6 +461,7 @@ wsDeviceInit(DeviceIntPtr pWS)
 #ifdef HAVE_PROPERTIES
 	wsInitProperty(pWS);
 	XIRegisterPropertyHandler(pWS, wsSetProperty, NULL, NULL);
+	wsmbEmuInitProperty(pWS);
 #endif
 	return Success;
 }
@@ -533,6 +507,7 @@ wsDeviceOn(DeviceIntPtr pWS)
 		return !Success;
 	}
 	xf86AddEnabledDevice(pInfo);
+	wsmbEmuOn(pInfo);
 	pWS->public.on = TRUE;
 	return Success;
 }
@@ -545,6 +520,7 @@ wsDeviceOff(DeviceIntPtr pWS)
 	struct wsmouse_calibcoords coords;
 
 	DBG(1, ErrorF("WS DEVICE OFF\n"));
+	wsmbEmuFinalize(pInfo);
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
 		/* Restore calibration data */
 		memcpy(&coords, &priv->coords, sizeof coords);
@@ -720,14 +696,18 @@ wsSendButtons(InputInfoPtr pInfo, int buttons)
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int button, mask;
 
+
 	for (button = 1; button < NBUTTONS; button++) {
 		mask = 1 << (button - 1);
 		if ((mask & priv->lastButtons) != (mask & buttons)) {
-			xf86PostButtonEvent(pInfo->dev, TRUE,
-			    button, (buttons & mask) != 0,
-					    0, 0);
-			DBG(3, ErrorF("post button event %d %d\n",
-				button, (buttons & mask) != 0))
+			if (!wsmbEmuFilterEvent(pInfo, button, 
+				(buttons & mask) != 0)) {
+				xf86PostButtonEvent(pInfo->dev, TRUE,
+				    button, (buttons & mask) != 0,
+				    0, 0);
+				DBG(3, ErrorF("post button event %d %d\n",
+					button, (buttons & mask) != 0))
+				    }
 		}
 	} /* for */
 	priv->lastButtons = buttons;
@@ -830,7 +810,7 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 	AxisInfoPtr ax = device->valuator->axes,
 		    ay = device->valuator->axes + 1;
 
-	DBG(1, ErrorF("wsSetProperty\n"));
+	DBG(1, ErrorF("wsSetProperty %s\n", NameForAtom(atom)));
 
 	/* Ignore non panel devices */
 	if (priv->type != WSMOUSE_TYPE_TPANEL)
@@ -873,9 +853,7 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 			DBG(1, ErrorF("swap_axes %d\n", priv->swap_axes));
 			need_update++;
 		}
-	} else {
-		return BadMatch;
-	}
+	} 
 	if (need_update) {
 		/* Update the saved values to be restored on device off */
 		priv->coords.minx = priv->min_x;
