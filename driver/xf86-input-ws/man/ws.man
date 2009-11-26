@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.4 2009/11/26 11:10:09 matthieu Exp $
+.\"	$OpenBSD: ws.man,v 1.5 2009/11/26 16:42:52 matthieu Exp $
 .\"
 .\" Copyright (c) 2005,2009 Matthieu Herrb
 .\"
@@ -25,6 +25,8 @@ WS \- wscons pointer input driver for *BSD
 .BI "    Identifier \*q" name \*q
 .B  "    Driver \*qws\*q"
 .BI "    Option \*qButtons\*q \*q" integer \*q
+.BI "    Option \*qEmulate3Buttons\*q \*q" boolean \*q
+.BI "    Option \*qEmulate3Timeout\*q \*q" integer \*q
 .BI "    Option \*qDebugLevel\*q \*q" integer \*q
 .BI "    Option \*qDevice\*q  \*q" path \*q
 .BI "    Option \*qMinX\*q \*q" integer \*q
@@ -56,6 +58,18 @@ This section only covers configuration details specific to this driver.
 Specifies the number of mouse buttons.
 In cases where the number of buttons cannot be auto-detected, the
 default value is 3.
+.TP 4
+.BI "Option \*qEmulate3Buttons\*q \*q" boolean \*q
+Enable/disable the emulation of  the middle mouse button for mice which
+only have two physical buttons. The third button is emulated by pressing
+both buttons simultaneously. Default: on, until a middle button event
+is detected.
+.TP 4
+.BI "Option \*qEmulate3Timeout\*q \*q" integer \*q
+Sets the timeout (in milliseconds) that the driver waits before deciding
+if two buttons where pressed "simultaneously" when 3 button emulation is
+enabled.  Default: 50.
+.TP 4
 .TP 4
 .BI "Option \*qDebugLevel\*q \*q" integer \*q
 This option sets the verbosity level of the driver.
@@ -115,6 +129,12 @@ Default: no mapping.
 The following properties are provided by the
 .B ws
 driver.
+.TP 7
+.BI "WS Pointer Middle Button Emulation"
+1 boolean value (8 bit, 0 or 1) 
+.TP 7
+.BI "WS Pointer Middle Button Timeout"
+1 16-bit positive value (unit: milliseconds)
 .TP 7
 .BI "WS Pointer Axis Calibration"
 4 32 bits values, in the order min-x, max-x, min-y, max-y.
