@@ -17,6 +17,12 @@
 #ifndef _WS_PROPERTIES_H
 #define _WS_PROPERTIES_H
 
+/* Middle mouse button emulation */
+/* BOOL */
+#define WS_PROP_MIDBUTTON "WS Pointer Middle Button Emulation"
+/* CARD32 */
+#define WS_PROP_MIDBUTTON_TIMEOUT "WS Pointer Middle Button Timeout"
+
 /* Run-time calibration */
 /* CARD32, 4 values [minx, maxx, miny, maxy], or no values for unset */
 #define WS_PROP_CALIBRATION "WS Pointer Axis Calibration"
