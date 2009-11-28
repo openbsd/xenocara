@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.18 2009/11/22 21:38:50 tobias Exp $
+ * $Id: screen.c,v 1.19 2009/11/28 17:52:12 tobias Exp $
  */
 
 #include "headers.h"
@@ -77,7 +77,7 @@ screen_init_xinerama(struct screen_ctx *sc)
 		HasXinerama = 0;
 		sc->xinerama_no = 0;
 	}
-		
+
 	info = XineramaQueryScreens(X_Dpy, &no);
 	if (info == NULL) {
 		/* Is xinerama actually off, instead of a malloc failure? */

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.65 2009/09/25 15:57:49 oga Exp $
+ * $Id: client.c,v 1.66 2009/11/28 17:52:12 tobias Exp $
  */
 
 #include "headers.h"
@@ -441,7 +441,7 @@ client_draw_border(struct client_ctx *cc)
 static void
 client_update(struct client_ctx *cc)
 {
-	Atom	*p; 
+	Atom	*p;
 	int	 i;
 	long	 n;
 
@@ -694,10 +694,10 @@ client_getsizehints(struct client_ctx *cc)
 	cc->geom.inch = MAX(1, cc->geom.inch);
 
 	if (cc->size->flags & PAspect) {
-		if (cc->size->min_aspect.x > 0) 
+		if (cc->size->min_aspect.x > 0)
 			cc->geom.mina = (float)cc->size->min_aspect.y /
 			    cc->size->min_aspect.x;
-		if (cc->size->max_aspect.y > 0) 
+		if (cc->size->max_aspect.y > 0)
 			cc->geom.maxa = (float)cc->size->max_aspect.x /
 			    cc->size->max_aspect.y;
 	}

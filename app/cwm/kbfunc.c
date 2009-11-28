@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.43 2009/09/05 16:06:15 okan Exp $
+ * $Id: kbfunc.c,v 1.44 2009/11/28 17:52:12 tobias Exp $
  */
 
 #include <paths.h>
@@ -386,7 +386,7 @@ kbfunc_client_label(struct client_ctx *cc, union arg *arg)
 	char		*current;
 
 	TAILQ_INIT(&menuq);
-	
+
 	current = cc->label;
 
 	if ((mi = menu_filter(&menuq, "label", current, 1,

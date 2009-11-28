@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.43 2009/08/27 01:38:08 okan Exp $
+ * $Id: xevents.c,v 1.44 2009/11/28 17:52:12 tobias Exp $
  */
 
 /*
@@ -375,7 +375,7 @@ xev_handle_randr(XEvent *ee)
 	}
 }
 
-/* 
+/*
  * Called when the keymap has changed.
  * Ungrab all keys, reload keymap and then regrab
  */
