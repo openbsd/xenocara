@@ -332,6 +332,11 @@ mgaCheckSourceTexture(int tmu, PicturePtr pPict)
         return FALSE;
     }
 
+    if (pPict->repeatType != RepeatNormal) {
+        DEBUG_MSG(("Unsupported repeat type %d\n", pPict->repeatType));
+        return FALSE;
+    }
+
     if (pPict->repeat && ((w & (w - 1)) != 0 || (h & (h - 1)) != 0)) {
         DEBUG_MSG(("NPOT repeat unsupported (%dx%d)\n", w, h));
         return FALSE;

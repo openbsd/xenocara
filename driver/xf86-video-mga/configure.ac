@@ -22,9 +22,8 @@
 
 AC_PREREQ(2.57)
 
-# When the version number is modified here, also modify it in src/mga.h.
 AC_INIT([xf86-video-mga],
-        1.4.9,
+        1.4.11,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-mga)
 
@@ -32,6 +31,11 @@ XORG_RELEASE_VERSION
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
+
+# Require xorg-macros: XORG_RELEASE_VERSION XORG_CHANGELOG
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.2)
+
 AC_CONFIG_AUX_DIR(.)
 
 AM_INIT_AUTOMAKE([dist-bzip2])
@@ -109,10 +113,16 @@ CFLAGS="$XORG_CFLAGS"
 AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
               [XSERVER_LIBPCIACCESS=yes], [XSERVER_LIBPCIACCESS=no],
               [#include "xorg-server.h"])
+CFLAGS="$save_CFLAGS"
+
+save_CFLAGS="$CFLAGS"
+CFLAGS="$XORG_CFLAGS"
 AC_CHECK_DECL(xf86ModeBandwidth,
 	      [AC_DEFINE(HAVE_XF86MODEBANDWIDTH, 1, [Have xf86ModeBandwidth])],
 	      [],
-	      [#include "xf86Modes.h"])
+	      [#include <X11/extensions/randr.h>
+	       #include "xorg-server.h"
+	       #include "xf86Modes.h"])
 CFLAGS="$save_CFLAGS"
 
 if test "x$XSERVER_LIBPCIACCESS" = xyes; then
@@ -168,6 +178,7 @@ AC_SUBST([DRIVER_NAME])
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+XORG_CHANGELOG
 
 AC_OUTPUT([
 	Makefile

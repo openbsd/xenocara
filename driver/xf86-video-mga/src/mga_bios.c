@@ -41,7 +41,6 @@
 /* All drivers should typically include these */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
 
 /* All drivers need this */
 
@@ -326,8 +325,9 @@ Bool mga_read_and_process_bios( ScrnInfoPtr pScrn )
      * isn't found or can't be read we'll still have some reasonable values
      * to use.
      */
-    (void) memcpy(& pMga->bios, & pMga->chip_attribs->default_bios_values,
-		  sizeof(struct mga_bios_values));
+    if (pMga->chip_attribs)
+	(void) memcpy(& pMga->bios, & pMga->chip_attribs->default_bios_values,
+                      sizeof(struct mga_bios_values));
 
 
     /* If the BIOS address was probed, it was found from the PCI config space

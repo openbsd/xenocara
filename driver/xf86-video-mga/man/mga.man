@@ -170,7 +170,7 @@ option is primarily intended for testing purposes, but it could also
 be used on systems with a buggy or poorly function AGP implementation.
 Default: off.
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Radoslaw Kapitan, Mark Vojkovich, and also David Dawes, Guy
 Desbief, Dirk Hohndel, Doug Merritt, Andrew E. Mileski, Andrew van der Stock,

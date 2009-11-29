@@ -464,9 +464,9 @@ typedef struct {
 #else
     pciVideoPtr		PciInfo;
     PCITAG		PciTag;
+    xf86AccessRec	Access;
 #endif
     const struct mga_device_attributes * chip_attribs;
-    xf86AccessRec	Access;
     int			Chipset;
     int                 ChipRev;
 

@@ -1,3 +1,217 @@
+commit e29477ef4d4ae50c39ef608ad0e2344c5c68ed40
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:40 2009 +1000
+
+    mga: change to using ABI version check
+
+commit 26ca92acc58b74202ec5eacaffc8e418d878da5e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:31 2009 +1000
+
+    mga: update for resources/RAC API removal
+
+commit c1b8e89f367510958ffa8072ccbf416a13790c96
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jul 9 13:09:42 2009 -0400
+
+    xf86-video-mga: use XORG_CHANGELOG macro to create ChangeLog. #22611
+    
+    Adding the macro in configure.ac and use it in Makefile.am
+    Refer to: https://bugs.freedesktop.org/show_bug.cgi?id=22611
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 828b55d822f644976df40c8b835043895b7785e3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:06:19 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit afda628bf77d4c6d58de6f1b88a8fa5391f1df1a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 22:20:56 2009 -0700
+
+    Fill in COPYING file, add SubmittingPatches URL to README
+
+commit 2972b5707bbee5ac0d046b5100bcf572d82e1c4d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 6 14:12:35 2009 -0400
+
+    Do E-EDID if built against a server that supports it.
+
+commit b3fc1acaedd5d45b2c8eb2ba99b24579cf7d2a79
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 6 13:02:36 2009 -0400
+
+    Normalize DDC for the second head.
+    
+    The exit path wasn't symmetric with the exit path for the first head.
+
+commit bf6aee62b891d4305cb96f8a37e625e5cf7c1504
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 6 12:04:48 2009 -0400
+
+    Remove redundant MGAuseI2C macro
+
+commit 626af26098ab5d0823bf1d6c08157b4c89ec578a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Apr 27 14:01:03 2009 -0400
+
+    mga 1.4.10
+
+commit d33b06038223b2b121be7e3f8c207de5f518b28c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Apr 27 14:00:00 2009 -0400
+
+    Fix ChangeLog generation
+
+commit 06b6ead9a1b367e08ed6b3e75dfde0ee3b4a82b8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Apr 27 13:37:42 2009 -0400
+
+    G200SE: Only force 16bpp on low-memory cards
+
+commit 8b84fe236a42336e87048317880cc437494655f1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Apr 27 13:36:45 2009 -0400
+
+    Move device ID and memory sizing much earlier in setup
+
+commit 9a82c5db3f8332d10b31d68e5b86d3a6b136dc5e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Apr 27 13:26:03 2009 -0400
+
+    Fix xf86ModeBandwidth check
+
+commit 58888aefd0bad7bfca231ec7a54865d9c26c8095
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Apr 27 13:19:42 2009 -0400
+
+    Remove a leftover from overlay support
+
+commit 19c44d537e982fcf0fe2dc9f3273ac6166302510
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Tue Apr 21 10:00:24 2009 -0400
+
+    Fixed bad vga access in memory count routine.
+
+commit 2388c4d512554258bce2b78c8f8aa1151b161c3e
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Tue Apr 21 09:51:34 2009 -0400
+
+    Force pitch of 1024 for G200SE Pilot1 when edid is used as modeline.
+
+commit 32bc0bcec815a363a47b9e7337d06370baf0c0d4
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Thu Apr 16 15:34:12 2009 +0200
+
+    Prevent MergedFB setups from crashing.
+    
+    Second time mga_read_and_process_bios() is called pMga->chip_attribs
+    is a NULL pointer for some reason. (#21022)
+
+commit 70681daa0392e5fa413f888d92a30ddacdcc9c8c
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Tue Mar 31 11:41:00 2009 -0400
+
+    Fixed G200SE PLL selection routine of m,n,p.
+
+commit c955c1fdabfe0449369d0ccf31ab7e6ef3d7bffe
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Mon Mar 30 13:38:39 2009 -0400
+
+    fixed memory count rountine for G200eW to detect up to 16Megs on X server without libpciaccess.
+
+commit 16a5e3a7e13c0a2c1091ad452250cbc231b8f427
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Thu Mar 26 10:58:06 2009 -0400
+
+    Modified memory count rountine for G200eW to detect up to 16Megs.
+
+commit 36ae47b82310d96f158694765105fc010911702f
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Wed Mar 11 16:31:43 2009 -0400
+
+    Fixed bad access issues and ddc1 implementation for IP core.
+    Fixed a bug in PLL programming sequence for G200eW/G200eV where a register IO offset was used instead of
+    a memory offset.
+    Removed clock selection toggling in PLL programming sequence for G200eW.
+    Fixed ddc1 protocol to support correct I/O lines according to chip attribute.
+    Fixed a bug in CRTC2 programming seqence where a register IO offset was used instead of a memory offset.
+
+commit 669acb55023bce505f4a912bed6f1e9f3efa2856
+Author: Thomas Jaeger <ThJaeger@gmail.com>
+Date:   Fri Jan 30 16:18:34 2009 -0500
+
+    Fall back to software for unsupported repeat modes
+    
+    [anholt: dropped unneded ->repeat check -- it's a misguided compat field for
+    drivers from before repeatType existed]
+
+commit 496342b09b7379bff95627ec357d4dd24123dc85
+Author: Chris Ball <cjb@laptop.org>
+Date:   Fri Feb 27 10:54:17 2009 -0500
+
+    Revert "Build fix for EXA 3"
+    
+    This reverts commit 4aac5618278d47a801bef40d3eede1c360c1ea28.
+    The EXA developers have backed out this ABI bump.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 4aac5618278d47a801bef40d3eede1c360c1ea28
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 12:48:54 2009 -0500
+
+    Build fix for EXA 3
+    
+    EXA in xserver head now requires us to pass -DEXA_DRIVER_KNOWN_MAJOR=3.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 0e9df5fe820d69387355c3ef857cde4cc72220b0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:41:56 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit aa64a0c7b31858802f953b787991ef9c22a94cc5
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Wed Jan 21 09:56:41 2009 -0500
+
+    Updated PLL algorithm for G200eW.
+    Changed the m,n,p selection for G200eW and programming sequence.
+
+commit 808d887d910636aaa64c42d6add896e9f9b1833a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:30:43 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit ba376973ae0d25557fdcd920e03474c0e6632e97
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Thu Nov 20 23:02:49 2008 -0500
+
+    Fixed PLL m,n,p selection for G200eW to respect byte granularity.
+    Renamed G200 eW Winbond ID string to Nuvoton.
+    Added EV suffix to G200 Maxim.
+    Blocked double scan mode for G200 eW.
+    Fixed memory bandwidth limitation for G200eW to 318.77 Mhz.
+    Added a workaround (blit 1x1 with rop=xor) to fix the black screen problem for G200eW.
+
+commit 01e60b391f39f2ebcf2eeb3be2424a2e291ec8ca
+Author: Yannick Heneault <yheneaul@matrox.com>
+Date:   Wed Oct 1 21:39:40 2008 -0400
+
+    fixed winbond/nuvoton min pll clock to correct value (18.75Mhz).
+
+commit a0ebccaa10668bff6a51d9c027cd43e29a030e2b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jul 2 15:02:32 2008 -0400
+
+    mga 1.4.9
+
 commit 62c8f0ad5bb3dd23226a6b481ed4f260c6770f55
 Author: Yannick Henault <yheneaul@matrox.com>
 Date:   Mon Jun 30 17:00:16 2008 -0400

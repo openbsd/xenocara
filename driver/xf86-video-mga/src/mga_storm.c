@@ -1138,6 +1138,20 @@ void MGAStormEngineInit( ScrnInfoPtr pScrn )
 	break;
     }
 
+    if (pMga->is_G200WB)
+    {
+        CARD32 dwgctl = MGADWG_RSTR | 0x00060000 | MGADWG_SHIFTZERO |
+			MGADWG_BITBLT | MGADWG_BFCOL;
+        WAITFIFO(7);
+        OUTREG(MGAREG_DWGCTL, dwgctl);
+        OUTREG(MGAREG_SGN, 0);
+        OUTREG(MGAREG_AR5, 1);
+        OUTREG(MGAREG_AR0, 1);
+        OUTREG(MGAREG_AR3, 0);
+        OUTREG(MGAREG_FXBNDRY, (1 << 16) | (1 & 0xffff));
+        OUTREG(MGAREG_YDSTLEN + MGAREG_EXEC, (1 << 16) | 1);
+    }
+
     xf86SetLastScrnFlag(pScrn->entityList[0], pScrn->scrnIndex);
 }
 

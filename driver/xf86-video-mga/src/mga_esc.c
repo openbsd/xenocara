@@ -15,7 +15,6 @@
 /* All drivers should typically include these */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
 
 /* All drivers need this */
 
@@ -36,7 +35,6 @@
 #include "micmap.h"
 
 #include "xf86DDC.h"
-#include "xf86RAC.h"
 #include "vbe.h"
 
 #include "fb.h"
