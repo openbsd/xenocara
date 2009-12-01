@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile,v 1.5 2009/11/25 18:30:13 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2009/12/01 21:20:56 matthieu Exp $
 .include <bsd.xconf.mk>
 
 PROG=	xtsscale
 MAN=	xtsscale.1
 
 CPPFLAGS+=	-I${X11BASE}/include -I${X11BASE}/include/freetype2 \
-		-I${X11BASE}/include/xorg 
+		-I${.CURDIR}/../../driver/xf86-input-ws/include
 LDADD+=		-L${X11BASE}/lib -lXft -lXi -lXrender -lX11 -lXau \
 		-lXdmcp -lfontconfig -lexpat -lfreetype -lz
 
