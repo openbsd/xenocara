@@ -62,6 +62,7 @@
 ./usr/X11R6/include/xorg/rrtransform.h
 ./usr/X11R6/include/xorg/shmint.h
 ./usr/X11R6/include/xorg/wfbrename.h
+./usr/X11R6/include/xorg/ws-properties.h
 ./usr/X11R6/include/xorg/xf86Crtc.h
 ./usr/X11R6/include/xorg/xf86Modes.h
 ./usr/X11R6/include/xorg/xf86Optrec.h

@@ -42,6 +42,7 @@
 ./usr/X11R6/include/xorg/ptrveloc.h
 ./usr/X11R6/include/xorg/rrtransform.h
 ./usr/X11R6/include/xorg/shmint.h
+./usr/X11R6/include/xorg/ws-properties.h
 ./usr/X11R6/include/xorg/xkbrules.h
 ./usr/X11R6/include/xorg/xserver-properties.h
 ./usr/X11R6/lib/libX11-xcb.so.1.0
