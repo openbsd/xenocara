@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile,v 1.5 2009/10/31 21:14:03 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2009/12/05 09:02:58 matthieu Exp $
 
-# util must come 1st, alias must come last
-SUBDIR= util encodings \
+# util is done early, alias must come last
+SUBDIR= encodings \
 	adobe-100dpi adobe-75dpi adobe-utopia-100dpi adobe-utopia-75dpi	\
 	adobe-utopia-type1 arabic-misc bh-100dpi bh-75dpi \
 	bh-lucidatypewriter-100dpi bh-lucidatypewriter-75dpi bh-ttf \
