@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.26 2009/11/26 18:18:34 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.27 2009/12/06 10:32:31 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -336,10 +336,13 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	pInfo->flags |= XI86_CONFIGURED;
 	return pInfo;
 fail:
-	if (priv != NULL)
+	if (priv != NULL) {
 		xfree(priv);
-	if (pInfo != NULL)
-		xfree(pInfo);
+		pInfo->private = NULL;
+	}
+	if (pInfo != NULL) {
+		xf86DeleteInput(pInfo, 0);
+	}
 	return NULL;
 }
 
