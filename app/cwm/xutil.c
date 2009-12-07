@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.18 2009/12/07 21:20:52 okan Exp $
+ * $Id: xutil.c,v 1.19 2009/12/07 22:21:59 oga Exp $
  */
 
 #include "headers.h"
@@ -181,6 +181,7 @@ char 		*atoms[CWM_NO_ATOMS] = {
 	"_NET_SUPPORTED",
 	"_NET_SUPPORTING_WM_CHECK",
 	"_NET_WM_NAME",
+	"_NET_ACTIVE_WINDOW",
 };
 
 void
