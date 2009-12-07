@@ -42,7 +42,18 @@
 struct nameint {
   int val;
   char *name;
-} kbdenc[] = { KB_OVRENC, KB_ENCTAB, { 0 } }, kbdvar[] = { KB_VARTAB, { 0 } };
+} kbdenc[] = { KB_OVRENC, KB_ENCTAB, { 0 } };
+
+struct nameint kbdvar[] = {
+	{ KB_NODEAD, "nodeadkeys" },
+	{ KB_DVORAK, "dvorak" },
+	{ 0 }
+};
+
+struct nameint kbdopt[] = {
+	{ KB_SWAPCTRLCAPS, "ctrl:swapcaps" },
+	{ 0 }
+};
 #endif
 
 extern void KbdGetMapping(InputInfoPtr pInfo, KeySymsPtr pKeySyms,
@@ -550,12 +561,20 @@ OpenKeyboard(InputInfoPtr pInfo)
             xf86addNewOption(pInfo->options, "XkbLayout", kbdenc[i].name);
             break;
         }
-    if (xf86findOption(pInfo->options, "XkbOptions") == NULL)
+    if (xf86findOption(pInfo->options, "XkbVariant") == NULL)
         for (i = 0; kbdvar[i].val; i++)
             if (KB_VARIANT(wsenc) == kbdvar[i].val) {
-		xf86Msg(X_PROBED, "%s: using wscons option %s\n",
+		xf86Msg(X_PROBED, "%s: using wscons variant %s\n",
 			pInfo->name, kbdvar[i].name);
-                xf86addNewOption(pInfo->options, "XkbOptions", kbdvar[i].name);
+                xf86addNewOption(pInfo->options, "XkbVariant", kbdvar[i].name);
+                break;
+            }
+    if (xf86findOption(pInfo->options, "XkbOptions") == NULL)
+        for (i = 0; kbdopt[i].val; i++)
+            if (KB_VARIANT(wsenc) == kbdopt[i].val) {
+		xf86Msg(X_PROBED, "%s: using wscons option %s\n",
+			pInfo->name, kbdopt[i].name);
+                xf86addNewOption(pInfo->options, "XkbOptions", kbdopt[i].name);
                 break;
             }
 #endif
