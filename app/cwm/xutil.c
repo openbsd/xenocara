@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.20 2009/12/07 22:46:15 oga Exp $
+ * $Id: xutil.c,v 1.21 2009/12/07 23:19:51 oga Exp $
  */
 
 #include "headers.h"
@@ -183,6 +183,7 @@ char 		*atoms[CWM_NO_ATOMS] = {
 	"_NET_WM_NAME",
 	"_NET_ACTIVE_WINDOW",
 	"_NET_CLIENT_LIST",
+	"_NET_NUMBER_OF_DESKTOPS",
 };
 
 void
