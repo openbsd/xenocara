@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.45 2009/12/07 19:44:31 okan Exp $
+ * $Id: kbfunc.c,v 1.46 2009/12/07 19:45:36 okan Exp $
  */
 
 #include <paths.h>
@@ -49,7 +49,7 @@ kbfunc_moveresize(struct client_ctx *cc, union arg *arg)
 	int			 x, y, flags, amt;
 	u_int			 mx, my;
 
-	sc = screen_current();
+	sc = cc->sc;
 	mx = my = 0;
 
 	flags = arg->i;
