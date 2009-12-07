@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.100 2009/12/07 22:21:59 oga Exp $
+ * $Id: calmwm.h,v 1.101 2009/12/07 22:46:15 oga Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -527,7 +527,8 @@ extern struct conf			 Conf;
 #define	_NET_SUPPORTING_WM_CHECK	 cwm_atoms[8]
 #define	_NET_WM_NAME			 cwm_atoms[9]
 #define	_NET_ACTIVE_WINDOW		 cwm_atoms[10]
-#define CWM_NO_ATOMS			 11
+#define _NET_CLIENT_LIST		 cwm_atoms[11]
+#define CWM_NO_ATOMS			 12
 #define CWM_NETWM_START			 7
 
 extern Atom				 cwm_atoms[CWM_NO_ATOMS];
