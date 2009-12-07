@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.70 2009/08/25 12:05:11 okan Exp $
+ * $Id: conf.c,v 1.71 2009/12/07 19:42:59 okan Exp $
  */
 
 #include "headers.h"
@@ -30,8 +30,6 @@
 
 static void	 conf_mouseunbind(struct conf *, struct mousebinding *);
 static void	 conf_unbind(struct conf *, struct keybinding *);
-
-extern struct screen_ctx	*Curscreen;
 
 /* Add an command menu entry to the end of the menu */
 void
