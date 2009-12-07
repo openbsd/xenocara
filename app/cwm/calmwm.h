@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.98 2009/08/27 01:38:08 okan Exp $
+ * $Id: calmwm.h,v 1.99 2009/12/07 21:20:52 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -29,6 +29,7 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 #define	CONFFILE	".cwmrc"
+#define	WMNAME	 	"CWM"
 
 #define ChildMask	(SubstructureRedirectMask|SubstructureNotifyMask)
 #define ButtonMask	(ButtonPressMask|ButtonReleaseMask)
@@ -384,6 +385,7 @@ void			 xu_setstate(struct client_ctx *, int);
 int			 xu_getstate(struct client_ctx *, int *);
 unsigned long		 xu_getcolor(struct screen_ctx *, char *);
 void			 xu_freecolor(struct screen_ctx *, unsigned long);
+void			 xu_setwmname(struct screen_ctx *);
 
 int			 u_spawn(char *);
 void			 u_exec(char *);
@@ -515,7 +517,17 @@ extern struct conf			 Conf;
 #define WM_PROTOCOLS			 cwm_atoms[3]
 #define _MOTIF_WM_HINTS			 cwm_atoms[4]
 #define	_CWM_GRP			 cwm_atoms[5]
-#define CWM_NO_ATOMS			 6
+#define	UTF8_STRING			 cwm_atoms[6]
+/*
+ * please make all hints below this point netwm hints, starting with
+ * _NET_SUPPORTED. If you change other hints make sure you update
+ * CWM_NETWM_START
+ */
+#define	_NET_SUPPORTED			 cwm_atoms[7]
+#define	_NET_SUPPORTING_WM_CHECK	 cwm_atoms[8]
+#define	_NET_WM_NAME			 cwm_atoms[9]
+#define CWM_NO_ATOMS			 10
+#define CWM_NETWM_START			 7
 
 extern Atom				 cwm_atoms[CWM_NO_ATOMS];
 

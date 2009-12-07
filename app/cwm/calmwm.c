@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.43 2009/08/24 21:22:48 oga Exp $
+ * $Id: calmwm.c,v 1.44 2009/12/07 21:20:52 okan Exp $
  */
 
 #include "headers.h"
@@ -165,6 +165,8 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 
 	/* Initialize menu window. */
 	menu_init(sc);
+
+	xu_setwmname(sc);
 
 	/* Deal with existing clients. */
 	XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins);
