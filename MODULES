@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.98 2009/11/22 18:53:03 matthieu Exp $
+ $OpenBSD: MODULES,v 1.99 2009/12/07 20:50:12 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -108,7 +108,7 @@ driver/xf86-video-ast		0.89.9	7.4+
 driver/xf86-video-ati		6.12.4	7.4+	needs-update
 driver/xf86-video-chips		1.2.2	7.4+
 driver/xf86-video-cirrus	1.3.2	7.4	
-driver/xf86-video-dummy		0.3.2	7.4+
+driver/xf86-video-dummy		0.3.3	7.5+	needs-update
 driver/xf86-video-geode		2.11.6	7.5
 driver/xf86-video-glint		1.2.4	7.4+	needs-update
 driver/xf86-video-i128		1.3.3	7.4+	needs-update
@@ -219,7 +219,7 @@ lib/libXxf86misc		1.0.2	7.5	needs-update
 lib/libXxf86vm			1.1.0	7.5	needs-update
 lib/libdmx			1.1.0	7.5	needs-update
 lib/libfontenc			1.0.5	7.5
-lib/liblbxutil			1.0.4	7.2RC4	deprecated
+lib/liblbxutil			1.1.0	7.5+	deprecated
 lib/libpciaccess		0.10.9	7.5	needs-update
 lib/libpthread-stubs		0.2	7.5	needs-update
 lib/libxcb			1.4	7.4+
@@ -267,4 +267,4 @@ util/imake			1.0.2
 util/macros			1.3.0	7.5
 util/makedepend			1.0.2	7.5
 
-xserver				1.7.1	7.5	needs-update
+xserver				1.7.3	7.5	needs-update
