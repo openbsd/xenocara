@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.45 2009/12/07 23:19:51 oga Exp $
+ * $Id: calmwm.c,v 1.46 2009/12/08 16:52:17 okan Exp $
  */
 
 #include "headers.h"
@@ -156,10 +156,10 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	sc->xmax = DisplayWidth(X_Dpy, sc->which);
 	sc->ymax = DisplayHeight(X_Dpy, sc->which);
 
-	conf_color(&Conf);
+	conf_color(&Conf, sc);
 
 	font_init(sc);
-	conf_font(&Conf);
+	conf_font(&Conf, sc);
 
 	TAILQ_INIT(&sc->mruq);
 

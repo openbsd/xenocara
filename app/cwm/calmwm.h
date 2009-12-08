@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.102 2009/12/07 23:19:51 oga Exp $
+ * $Id: calmwm.h,v 1.103 2009/12/08 16:52:17 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -79,6 +79,8 @@ struct screen_ctx {
 
 	XftDraw		*xftdraw;
 	XftColor	 xftcolor;
+	XftFont		*font;
+	u_int		 fontheight;
 
 	int		 xinerama_no;
 	XineramaScreenInfo *xinerama;
@@ -284,8 +286,6 @@ struct conf {
 
 #define	DEFAULTFONTNAME		 "sans-serif:pixelsize=14:bold"
 	char			*DefaultFontName;
-	XftFont			*DefaultFont;
-	u_int			 FontHeight;
 	int			 gap_top, gap_bottom, gap_left, gap_right;
 };
 
@@ -410,8 +410,8 @@ void			 conf_bindname(struct conf *, char *, char *);
 void			 conf_mousebind(struct conf *, char *, char *);
 void			 conf_grab_mouse(struct client_ctx *);
 void			 conf_reload(struct conf *);
-void			 conf_font(struct conf *);
-void			 conf_color(struct conf *);
+void			 conf_font(struct conf *, struct screen_ctx *);
+void			 conf_color(struct conf *, struct screen_ctx *);
 void			 conf_init(struct conf *);
 void			 conf_clear(struct conf *);
 void			 conf_cmd_add(struct conf *, char *, char *, int);
@@ -485,14 +485,14 @@ void			 group_autogroup(struct client_ctx *);
 void			 group_movetogroup(struct client_ctx *, int);
 
 void			 font_init(struct screen_ctx *);
-int			 font_width(const char *, int);
+int			 font_width(struct screen_ctx *, const char *, int);
 void			 font_draw(struct screen_ctx *, const char *, int,
 			     Drawable, int, int);
 XftFont			*font_make(struct screen_ctx *, const char *);
 
-#define font_ascent()	Conf.DefaultFont->ascent
-#define font_descent()	Conf.DefaultFont->descent
-#define	font_height()	Conf.FontHeight
+#define	font_ascent(sc)		sc->font->ascent
+#define	font_descent(sc)	sc->font->descent
+#define	font_height(sc)		sc->fontheight
 
 /* Externs */
 
