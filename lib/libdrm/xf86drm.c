@@ -283,7 +283,7 @@ static int drmOpenDevice(long dev, int minor, int type)
     }
 
 #ifndef X_PRIVSEP
-    fb = open(buf, O_RDWR, 0);
+    fd = open(buf, O_RDWR, 0);
 #else
     fd = priv_open_device(buf);
 #endif
