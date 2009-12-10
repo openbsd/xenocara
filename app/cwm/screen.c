@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.20 2009/12/10 17:16:51 oga Exp $
+ * $Id: screen.c,v 1.21 2009/12/10 23:14:58 oga Exp $
  */
 
 #include "headers.h"
@@ -97,4 +97,15 @@ screen_find_xinerama(struct screen_ctx *sc, int x, int y)
 			return (info);
 	}
 	return (NULL);
+}
+
+void
+screen_update_geometry(struct screen_ctx *sc, int width, int height)
+{
+	int	geom[2];
+
+	sc->xmax = geom[0] = width;
+	sc->ymax = geom[1] = height;
+	XChangeProperty(X_Dpy, sc->rootwin, _NET_DESKTOP_GEOMETRY,
+	    XA_CARDINAL, 32, PropModeReplace, (unsigned char *)geom , 2);
 }

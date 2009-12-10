@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.45 2009/12/10 17:16:51 oga Exp $
+ * $Id: xevents.c,v 1.46 2009/12/10 23:14:58 oga Exp $
  */
 
 /*
@@ -368,8 +368,7 @@ xev_handle_randr(XEvent *ee)
 	TAILQ_FOREACH(sc, &Screenq, entry) {
 		if (sc->which == (u_int)i) {
 			XRRUpdateConfiguration(ee);
-			sc->xmax = rev->width;
-			sc->ymax = rev->height;
+			screen_update_geometry(sc, rev->width, rev->height);
 			screen_init_xinerama(sc);
 		}
 	}
