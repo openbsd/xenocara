@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.68 2009/12/07 22:46:15 oga Exp $
+ * $Id: client.c,v 1.69 2009/12/10 17:16:51 oga Exp $
  */
 
 #include "headers.h"
@@ -548,14 +548,12 @@ match:
 }
 
 struct client_ctx *
-client_cycle(int reverse)
+client_cycle(struct screen_ctx *sc, int reverse)
 {
 	struct client_ctx	*oldcc, *newcc;
-	struct screen_ctx	*sc;
 	int			 again = 1;
 
 	oldcc = client_current();
-	sc = screen_current();
 
 	/* If no windows then you cant cycle */
 	if (TAILQ_EMPTY(&sc->mruq))

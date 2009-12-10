@@ -15,13 +15,11 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.19 2009/11/28 17:52:12 tobias Exp $
+ * $Id: screen.c,v 1.20 2009/12/10 17:16:51 oga Exp $
  */
 
 #include "headers.h"
 #include "calmwm.h"
-
-extern struct screen_ctx	*Curscreen;
 
 struct screen_ctx *
 screen_fromroot(Window rootwin)
@@ -36,21 +34,12 @@ screen_fromroot(Window rootwin)
 	return (TAILQ_FIRST(&Screenq));
 }
 
-struct screen_ctx *
-screen_current(void)
-{
-	return (Curscreen);
-}
-
 void
-screen_updatestackingorder(void)
+screen_updatestackingorder(struct screen_ctx *sc)
 {
 	Window			*wins, w0, w1;
-	struct screen_ctx	*sc;
 	struct client_ctx	*cc;
 	u_int			 nwins, i, s;
-
-	sc = screen_current();
 
 	if (!XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins))
 		return;

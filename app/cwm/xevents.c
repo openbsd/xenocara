@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.44 2009/11/28 17:52:12 tobias Exp $
+ * $Id: xevents.c,v 1.45 2009/12/10 17:16:51 oga Exp $
  */
 
 /*
@@ -227,7 +227,7 @@ static void
 xev_handle_buttonpress(XEvent *ee)
 {
 	XButtonEvent		*e = &ee->xbutton;
-	struct client_ctx	*cc;
+	struct client_ctx	*cc, fakecc;
 	struct screen_ctx	*sc;
 	struct mousebinding	*mb;
 
@@ -244,15 +244,13 @@ xev_handle_buttonpress(XEvent *ee)
 
 	if (mb == NULL)
 		return;
-
 	if (mb->context == MOUSEBIND_CTX_ROOT) {
 		if (e->window != sc->rootwin)
 			return;
-	} else if (mb->context == MOUSEBIND_CTX_WIN) {
-		cc = client_find(e->window);
-		if (cc == NULL)
-			return;
-	}
+		cc = &fakecc;
+		cc->sc = screen_fromroot(e->window);
+	} else if (cc == NULL) /* (mb->context == MOUSEBIND_CTX_WIN */
+		return;
 
 	(*mb->callback)(cc, e);
 }
@@ -270,7 +268,7 @@ static void
 xev_handle_keypress(XEvent *ee)
 {
 	XKeyEvent		*e = &ee->xkey;
-	struct client_ctx	*cc = NULL;
+	struct client_ctx	*cc = NULL, fakecc;
 	struct keybinding	*kb;
 	KeySym			 keysym, skeysym;
 	int			 modshift;
@@ -298,12 +296,14 @@ xev_handle_keypress(XEvent *ee)
 
 	if (kb == NULL)
 		return;
-
-	if ((kb->flags & (KBFLAG_NEEDCLIENT)) &&
-	    (cc = client_find(e->window)) == NULL &&
-	    (cc = client_current()) == NULL)
-		if (kb->flags & KBFLAG_NEEDCLIENT)
+	if (kb->flags & KBFLAG_NEEDCLIENT) {
+		if (((cc = client_find(e->window)) == NULL) &&
+		    (cc = client_current()) == NULL)
 			return;
+	} else {
+		cc = &fakecc;
+		cc->sc = screen_fromroot(e->window);
+	}
 
 	(*kb->callback)(cc, &kb->argument);
 }
