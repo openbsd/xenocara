@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.46 2009/12/10 23:14:58 oga Exp $
+ * $Id: xevents.c,v 1.47 2009/12/11 17:51:42 oga Exp $
  */
 
 /*
@@ -170,6 +170,7 @@ static void
 xev_handle_propertynotify(XEvent *ee)
 {
 	XPropertyEvent		*e = &ee->xproperty;
+	struct screen_ctx	*sc;
 	struct client_ctx	*cc;
 
 	if ((cc = client_find(e->window)) != NULL) {
@@ -184,7 +185,17 @@ xev_handle_propertynotify(XEvent *ee)
 			/* do nothing */
 			break;
 		}
+	} else {
+		TAILQ_FOREACH(sc, &Screenq, entry) 
+			if (sc->rootwin == e->window)
+				goto test;
+		return;
+
+test:
+		if (e->atom == _NET_DESKTOP_NAMES)
+			group_update_names(sc);
 	}
+
 }
 
 void

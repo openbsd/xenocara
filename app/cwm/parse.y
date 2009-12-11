@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.21 2009/06/20 00:22:39 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.22 2009/12/11 17:51:42 oga Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -123,29 +123,13 @@ main		: FONTNAME STRING		{
 			free($3);
 		}
 		| AUTOGROUP NUMBER STRING	{
-			struct autogroupwin *aw;
-			char *p;
-
 			if ($2 < 0 || $2 > 9) {
 				free($3);
 				yyerror("autogroup number out of range: %d", $2);
 				YYERROR;
 			}
 
-			aw = xcalloc(1, sizeof(*aw));
-
-			if ((p = strchr($3, ',')) == NULL) {
-				aw->name = NULL;
-				aw->class = xstrdup($3);
-			} else {
-				*(p++) = '\0';
-				aw->name = xstrdup($3);
-				aw->class = xstrdup(p);
-			}
-			aw->group = xstrdup(shortcut_to_name[$2]);
-
-			TAILQ_INSERT_TAIL(&conf->autogroupq, aw, entry);
-
+			group_make_autogroup(conf, $3, $2);
 			free($3);
 		}
 		| IGNORE STRING {

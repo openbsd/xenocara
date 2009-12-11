@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.72 2009/12/08 16:52:17 okan Exp $
+ * $Id: conf.c,v 1.73 2009/12/11 17:51:42 oga Exp $
  */
 
 #include "headers.h"
@@ -225,7 +225,6 @@ conf_clear(struct conf *c)
 		xfree(ag->class);
 		if (ag->name)
 			xfree(ag->name);
-		xfree(ag->group);
 		xfree(ag);
 	}
 
