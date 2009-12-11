@@ -1,7 +1,10 @@
 ./usr/X11R6/bin/Xephyr
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
+./usr/X11R6/lib/modules/drivers/wsudl_drv.la
+./usr/X11R6/lib/modules/drivers/wsudl_drv.so
 ./usr/X11R6/man/man1/Xephyr.1
 ./usr/X11R6/man/man3/XFree86-DGA.3
+./usr/X11R6/man/man4/wsudl.4
 ./usr/X11R6/man/man7/Xprint.7
 ./var/db/xkb
 ./var/log

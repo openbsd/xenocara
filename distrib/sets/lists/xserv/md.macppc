@@ -148,6 +148,8 @@
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
+./usr/X11R6/lib/modules/drivers/wsudl_drv.la
+./usr/X11R6/lib/modules/drivers/wsudl_drv.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
 ./usr/X11R6/lib/modules/extensions/libdbe.so
 ./usr/X11R6/lib/modules/extensions/libdri.la
@@ -254,6 +256,7 @@
 ./usr/X11R6/man/man4/void.4
 ./usr/X11R6/man/man4/ws.4
 ./usr/X11R6/man/man4/wsfb.4
+./usr/X11R6/man/man4/wsudl.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man7/Xprint.7
 ./usr/X11R6/share/aclocal/xorg-server.m4
