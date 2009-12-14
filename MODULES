@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.99 2009/12/07 20:50:12 matthieu Exp $
+ $OpenBSD: MODULES,v 1.100 2009/12/14 21:59:51 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -60,7 +60,7 @@ app/xkbprint		1.0.2	7.5+	needs-update
 app/xkbutils		1.0.2	7.5
 app/xkill		1.0.2	7.5
 app/xload		1.0.2	7.3
-app/xlogo		1.0.1	7.0
+app/xlogo		1.0.2	7.5+	needs-update
 app/xlsatoms		1.0.2	7.5
 app/xlsclients		1.0.2	7.5
 app/xlsfonts		1.0.2	7.2+
@@ -264,7 +264,7 @@ proto/xineramaproto		1.2	7.5	needs-update
 util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
 util/imake			1.0.2
-util/macros			1.3.0	7.5
+util/macros			1.4.0	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
 xserver				1.7.3	7.5	needs-update
