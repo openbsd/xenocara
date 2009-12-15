@@ -15,24 +15,11 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.113 2009/12/15 03:34:34 okan Exp $
+ * $Id: calmwm.h,v 1.114 2009/12/15 04:10:42 okan Exp $
  */
 
 #ifndef _CALMWM_H_
 #define _CALMWM_H_
-
-#include <sys/param.h>
-#include <sys/queue.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-
-#include <ctype.h>
-#include <err.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
 
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>

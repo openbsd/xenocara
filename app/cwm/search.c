@@ -14,11 +14,20 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: search.c,v 1.19 2009/12/15 03:34:34 okan Exp $
+ * $Id: search.c,v 1.20 2009/12/15 04:10:42 okan Exp $
  */
 
+#include <sys/param.h>
+#include <sys/queue.h>
+
 #include <assert.h>
+#include <err.h>
+#include <errno.h>
 #include <fnmatch.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "calmwm.h"
 

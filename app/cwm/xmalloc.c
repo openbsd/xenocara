@@ -15,8 +15,18 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xmalloc.c,v 1.5 2009/12/15 03:24:36 okan Exp $
+ * $Id: xmalloc.c,v 1.6 2009/12/15 04:10:42 okan Exp $
  */
+
+#include <sys/param.h>
+#include <sys/queue.h>
+
+#include <err.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #include "calmwm.h"
 

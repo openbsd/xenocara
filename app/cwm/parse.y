@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.23 2009/12/15 03:24:36 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.24 2009/12/15 04:10:42 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -21,7 +21,11 @@
 
 %{
 
+#include <sys/param.h>
+#include <sys/queue.h>
+
 #include <ctype.h>
+#include <err.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
