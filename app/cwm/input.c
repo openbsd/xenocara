@@ -15,10 +15,9 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: input.c,v 1.8 2009/06/20 00:55:42 okan Exp $
+ * $Id: input.c,v 1.9 2009/12/15 03:24:36 okan Exp $
  */
 
-#include "headers.h"
 #include "calmwm.h"
 
 int

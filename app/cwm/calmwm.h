@@ -15,11 +15,38 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.110 2009/12/14 16:39:01 oga Exp $
+ * $Id: calmwm.h,v 1.111 2009/12/15 03:24:36 okan Exp $
  */
 
 #ifndef _CALMWM_H_
 #define _CALMWM_H_
+
+#include <sys/param.h>
+#include <sys/queue.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+
+#include <assert.h>
+#include <ctype.h>
+#include <err.h>
+#include <errno.h>
+#include <dirent.h>
+#include <getopt.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#include <X11/Xatom.h>
+#include <X11/Xft/Xft.h>
+#include <X11/Xlib.h>
+#include <X11/Xproto.h>
+#include <X11/Xutil.h>
+#include <X11/cursorfont.h>
+#include <X11/extensions/Xinerama.h>
+#include <X11/extensions/Xrandr.h>
+#include <X11/keysym.h>
 
 #define CALMWM_MAXNAMELEN 256
 

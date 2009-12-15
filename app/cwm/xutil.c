@@ -15,10 +15,9 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.27 2009/12/14 16:39:01 oga Exp $
+ * $Id: xutil.c,v 1.28 2009/12/15 03:24:36 okan Exp $
  */
 
-#include "headers.h"
 #include "calmwm.h"
 
 static unsigned int ign_mods[] = { 0, LockMask, Mod2Mask, Mod2Mask | LockMask };

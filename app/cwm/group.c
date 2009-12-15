@@ -16,10 +16,9 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.39 2009/12/14 16:39:01 oga Exp $
+ * $Id: group.c,v 1.40 2009/12/15 03:24:36 okan Exp $
  */
 
-#include "headers.h"
 #include "calmwm.h"
 
 static void		 group_add(struct group_ctx *, struct client_ctx *);

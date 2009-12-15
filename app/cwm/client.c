@@ -15,10 +15,9 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.69 2009/12/10 17:16:51 oga Exp $
+ * $Id: client.c,v 1.70 2009/12/15 03:24:36 okan Exp $
  */
 
-#include "headers.h"
 #include "calmwm.h"
 
 static struct client_ctx	*client_mrunext(struct client_ctx *);

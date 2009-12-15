@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.47 2009/12/11 17:51:42 oga Exp $
+ * $Id: xevents.c,v 1.48 2009/12/15 03:24:36 okan Exp $
  */
 
 /*
@@ -24,7 +24,6 @@
  *   management of the xevent's.
  */
 
-#include "headers.h"
 #include "calmwm.h"
 
 static void	 xev_handle_maprequest(XEvent *);

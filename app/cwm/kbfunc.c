@@ -15,12 +15,11 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.47 2009/12/10 17:16:51 oga Exp $
+ * $Id: kbfunc.c,v 1.48 2009/12/15 03:24:36 okan Exp $
  */
 
 #include <paths.h>
 
-#include "headers.h"
 #include "calmwm.h"
 
 #define KNOWN_HOSTS	".ssh/known_hosts"

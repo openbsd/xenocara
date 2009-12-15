@@ -14,11 +14,11 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: search.c,v 1.17 2009/06/26 12:45:12 oga Exp $
+ * $Id: search.c,v 1.18 2009/12/15 03:24:36 okan Exp $
  */
 
 #include <fnmatch.h>
-#include "headers.h"
+
 #include "calmwm.h"
 
 static int	strsubmatch(char *, char *, int);

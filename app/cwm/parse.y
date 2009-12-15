@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.22 2009/12/11 17:51:42 oga Exp $ */
+/*	$OpenBSD: parse.y,v 1.23 2009/12/15 03:24:36 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "headers.h"
 #include "calmwm.h"
 
 TAILQ_HEAD(files, file)		 files = TAILQ_HEAD_INITIALIZER(files);
