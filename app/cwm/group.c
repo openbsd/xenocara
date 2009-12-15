@@ -16,8 +16,10 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.40 2009/12/15 03:24:36 okan Exp $
+ * $Id: group.c,v 1.41 2009/12/15 03:34:34 okan Exp $
  */
+
+#include <assert.h>
 
 #include "calmwm.h"
 
