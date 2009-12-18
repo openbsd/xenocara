@@ -1,5 +1,4 @@
-/* $XFree86$ */
-/* $OpenBSD: hppa_video.c,v 1.1 2006/11/28 20:29:31 matthieu Exp $ */
+/* $OpenBSD: hppa_video.c,v 1.2 2009/12/18 22:47:56 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -25,16 +24,16 @@
  *
  */
 
-/* $XConsortium: bsd_video.c /main/10 1996/10/25 11:37:57 kaleb $ */
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 
-#include "X.h"
+#include <X11/X.h>
 #include "xf86.h"
 #include "xf86Priv.h"
 
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
-
-/* #include "bus/Pci.h" */
 
 #ifndef MAP_FAILED
 #define MAP_FAILED ((caddr_t)-1)
@@ -55,6 +54,9 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 	pVidMem->linearSupported = TRUE;
 	pVidMem->mapMem = hppaMapVidMem;
 	pVidMem->unmapMem = hppaUnmapVidMem;
+#if HAVE_PCI_SYSTEM_INIT_DEV_MEM
+       pci_system_init_dev_mem(xf86Info.screenFd);
+#endif
 	pVidMem->initialised = TRUE;
 }
 
@@ -68,12 +70,13 @@ hppaMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 	pointer base;
 
 #ifdef DEBUG
-	ErrorF("mapVidMem %lx, %lx, fd = %d\n", Base, Size, fd);
+	xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d\n", 
+	    Base, Size, fd);
 #endif
 
 	base = mmap(0, Size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, Base);
 	if (base == MAP_FAILED)
-		FatalError("%s: could not mmap screen [s=%x,a=%x] (%s)",
+		FatalError("%s: could not mmap screen [s=%lx,a=%lx] (%s)",
 			   "xf86MapVidMem", Size, Base, strerror(errno));
 
 	return base;
@@ -98,26 +101,14 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
 /* Interrupt Handling section                                              */
 /***************************************************************************/
 
-Bool
-xf86DisableInterrupts()
-{
-
-	return(TRUE);
-}
-
-void
-xf86EnableInterrupts()
-{
-
-	return;
-}
-
+#ifdef X_PRIVSEP
 /*
  * Do all initialisation that need root privileges 
  */
 void
 xf86PrivilegedInit(void)
 {
-	/* pciInit(); */
+	/* pci_system_init(); */
 	xf86OpenConsole();
 }
+#endif
