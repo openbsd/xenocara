@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.65 2009/12/07 20:50:12 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.66 2009/12/20 08:18:19 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -39,7 +39,7 @@ Archive Site:	http://ftp.gnome.org/pub/GNOME/sources/ttf-bitstream-vera/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.27
+Current Vers:	5.29.1
 Maintainer:	bagleyd@tux.org
 Archive Site:	http://www.tux.org/~bagleyd/latest/
 
@@ -49,54 +49,46 @@ Current Vers:	1.7
 Maintainer:	xkb@listserv.bat.ru
 Archive Site:	http://www.freedesktop.org/wiki/Software/XKeyboardConfig
 
-Package:	fvwm
-Version:	2.2.5
-Current Vers:	
-Maintainer:
-Archive Site:
-
 Package:	ssh-ask-pass
 Version:	1.2.4.1
 Current Vers:	1.2.4.1
 Maintainer:	Jim Knoble
 Archive Site:	http://www.jmknoble.net/software/x11-ssh-askpass/
 
+
+Package:	fvwm
+Version:	2.2.5
+Comment:	Locally forked, newer upstream versions have incompatible
+		licensing.
+
 Package:	cwm
 Version:	3
 Current Vers:	3
 Maintainer:	marius@openbsd.org
 Archive Site:	http://monkey.org/~marius/pages/?page=cwm
+Comment:	Now maintained in Xenocara. Abandonned upstreams.
 
 Package:	xidle
-Version:
-Current Vers:
 Maintainer:	fgsch@openbsd.org
-Archive Site:
+Comment:	developed and maintained in Xenocara
 
 Package:	xsystrace
-Version:
-Current Vers:
 Maintainer:	matthieu@openbsd.org
-Archive Site:
+Comment:	developed and maintained in Xenocara
 
 Package:	xvctl
-Version:
-Current Vers:
 Maintainer:	espie@openbsd.org
-Archive Site:
+Comment:	developed and maintained in Xenocara
 
-Package:	openbsd-input-usbtablet
-Version:
-Current Vers:
+Package:	xf86-input-usbtablet
 Maintainer:	matthieu@openbsd.org
-Archive Site:
+Comment:	developed and maintained in Xenocara
 
-Package:	openbsd-input-ws
-Version:	1.1
-Current Vers:	1.1
+Package:	xf86-input-ws
 Maintainer:	matthieu@openbsd.org
-Archive Site:	http://www.xenocara.org/src
+Comment:	developed and maintained in Xenocara
 
 Package:	xf86-input-gunze
 Maintainer:	Alessandro Rubini <rubini@linux.it>
 Archive Site:	http://www.linux.it/~rubini/software/gunzets/gunzets.html
+Comment:	unmaintained
