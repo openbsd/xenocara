@@ -359,8 +359,6 @@
 ./usr/X11R6/include/X11/extensions/dmxproto.h
 ./usr/X11R6/include/X11/extensions/dpms.h
 ./usr/X11R6/include/X11/extensions/dpmsstr.h
-./usr/X11R6/include/X11/extensions/dri2proto.h
-./usr/X11R6/include/X11/extensions/dri2tokens.h
 ./usr/X11R6/include/X11/extensions/extutil.h
 ./usr/X11R6/include/X11/extensions/fontcache.h
 ./usr/X11R6/include/X11/extensions/fontcacheP.h
@@ -823,7 +821,6 @@
 ./usr/X11R6/lib/pkgconfig/damageproto.pc
 ./usr/X11R6/lib/pkgconfig/dmx.pc
 ./usr/X11R6/lib/pkgconfig/dmxproto.pc
-./usr/X11R6/lib/pkgconfig/dri2proto.pc
 ./usr/X11R6/lib/pkgconfig/evieproto.pc
 ./usr/X11R6/lib/pkgconfig/fixesproto.pc
 ./usr/X11R6/lib/pkgconfig/fontcacheproto.pc
@@ -840,7 +837,6 @@
 ./usr/X11R6/lib/pkgconfig/libfs.pc
 ./usr/X11R6/lib/pkgconfig/pciaccess.pc
 ./usr/X11R6/lib/pkgconfig/printproto.pc
-./usr/X11R6/lib/pkgconfig/pthread-stubs.pc
 ./usr/X11R6/lib/pkgconfig/randrproto.pc
 ./usr/X11R6/lib/pkgconfig/recordproto.pc
 ./usr/X11R6/lib/pkgconfig/renderproto.pc
@@ -2848,7 +2844,6 @@
 ./usr/X11R6/share/doc/damageproto
 ./usr/X11R6/share/doc/damageproto/damageproto.txt
 ./usr/X11R6/share/doc/dri2proto
-./usr/X11R6/share/doc/dri2proto/dri2proto.txt
 ./usr/X11R6/share/doc/fontconfig
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel.pdf
