@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.101 2009/12/20 08:13:13 matthieu Exp $
+ $OpenBSD: MODULES,v 1.102 2010/01/03 15:33:02 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -139,7 +139,7 @@ driver/xf86-video-tga		1.2.1	7.4+
 driver/xf86-video-trident	1.3.3	7.4+
 driver/xf86-video-tseng		1.2.3	7.4+
 driver/xf86-video-vesa		2.2.1	7.4+
-driver/xf86-video-vmware	10.16.8	7.4+
+driver/xf86-video-vmware	10.16.9	7.5+	needs-update
 driver/xf86-video-voodoo	1.2.3	7.4+
 driver/xf86-video-wsfb		0.2.1	7.5
 
