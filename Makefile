@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.33 2009/12/01 21:36:52 matthieu Exp $
+# $OpenBSD: Makefile,v 1.34 2010/01/10 13:36:10 ajacoutot Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -105,6 +105,12 @@ release-install:
 		${XCONFIG} ${DESTDIR}/etc/X11 ; \
 	fi
 .endif
+	touch ${DESTDIR}/var/db/sysmerge/xetcsum
+	TMPSUM=`mktemp /tmp/_xetcsum.XXXXXXXXXX` || exit 1; \
+	sort distrib/sets/lists/xetc/{mi,md.${MACHINE}} > $${TMPSUM}; \
+	cd ${DESTDIR} && \
+		xargs cksum < $${TMPSUM} > ${DESTDIR}/var/db/sysmerge/xetcsum; \
+	rm -f $${TMPSUM}
 
 dist-rel:
 	${MAKE} RELEASEDIR=`pwd`/rel DESTDIR=`pwd`/dest dist 2>&1 | tee distlog
