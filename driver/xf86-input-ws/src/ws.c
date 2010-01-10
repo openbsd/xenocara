@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.30 2010/01/10 15:22:47 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.31 2010/01/10 16:33:44 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -392,9 +392,6 @@ wsDeviceInit(DeviceIntPtr pWS)
 	btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
 	btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
 #endif
-	priv->screen_width = screenInfo.screens[priv->screen_no]->width;
-	priv->screen_height = screenInfo.screens[priv->screen_no]->height;
-
 	for (i = 0; i < NBUTTONS; i++)
 		map[i + 1] = i + 1;
 	if (!InitButtonClassDeviceStruct(pWS,

@@ -44,7 +44,6 @@ typedef struct WSDevice {
 	int swap_axes;
 	int raw;
 	int inv_x, inv_y;
-	int screen_width, screen_height;
 	int screen_no;
 	int num, den, threshold; /* relative accel params */
 	pointer buffer;
