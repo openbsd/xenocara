@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.29 2009/12/31 18:01:14 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.30 2010/01/10 15:22:47 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -42,7 +42,6 @@
 #include <X11/Xatom.h>
 #include "ws-properties.h"
 #endif
-
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <X11/Xatom.h>
@@ -494,7 +493,7 @@ wsDeviceOn(DeviceIntPtr pWS)
 	}
 
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
-		/* save calibration values */
+		/* get calibration values */
 		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
 			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
 			    strerror(errno));
@@ -506,7 +505,7 @@ wsDeviceOn(DeviceIntPtr pWS)
 			coords.samplelen = priv->raw;
 			if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS,
 				&coords) != 0) {
-				xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
+				xf86Msg(X_ERROR, "SCALIBCOORS failed %s\n",
 				    strerror(errno));
 				return !Success;
 			}
