@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2009/12/05 09:02:58 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2010/01/11 20:30:50 matthieu Exp $
 
 # util is done early, alias must come last
 SUBDIR= encodings \
@@ -14,9 +14,6 @@ SUBDIR= encodings \
 	alias
 
 EXTRAS=	bitstream-vera-ttf
-
-# Deprecated
-# bitstream-speedo 
 
 .include <bsd.subdir.mk>
 
