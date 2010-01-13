@@ -90,7 +90,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define LUIT_PATH "/usr/X11R6/bin/luit"		/* CF_ARG_ENABLE(luit) */
 /* #undef NO_ACTIVE_ICON */		/* CF_ARG_DISABLE(active-icon) */
 /* #undef NO_LEAKS */			/* CF_ARG_DISABLE(leaks) */
-/* #undef OPT_256_COLORS */		/* CF_ARG_ENABLE(256-color) */
+#define OPT_256_COLORS 1		/* CF_ARG_ENABLE(256-color) */
 /* #undef OPT_88_COLORS */		/* CF_ARG_ENABLE(88-color) */
 /* #undef OPT_AIX_COLORS */		/* CF_ARG_DISABLE(16-color) */
 /* #undef OPT_BLINK_CURS */		/* CF_ARG_DISABLE(blink-cursor) */
