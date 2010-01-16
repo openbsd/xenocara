@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.67 2010/01/03 15:33:02 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.68 2010/01/16 08:58:54 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -36,6 +36,12 @@ Version:	1.10
 Current Vers:	1.10
 Maintainer:	The Gnome Foundation
 Archive Site:	http://ftp.gnome.org/pub/GNOME/sources/ttf-bitstream-vera/
+
+Package:	DejaVu Fonts
+Version:	2.30
+Current Vers:	2.30
+Maintainer:	Freedesktop.org
+Archive Site:	http://dejavu-fonts.org/
 
 Package:	xlockmore
 Version:	5.22
