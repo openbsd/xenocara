@@ -934,6 +934,7 @@ with_pic
 with_tags
 enable_strict_compilation
 with_release_version
+with_xmlto
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1606,6 +1607,8 @@ Optional Packages:
   --with-tags[=TAGS]      include additional configurations [automatic]
   --with-release-version=STRING
                           Use release version string in package name
+  --with-xmlto            Use xmlto to regenerate documentation (default: yes,
+                          if installed)
 
 Some influential environment variables:
   CC          C compiler command
@@ -4429,7 +4432,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4432 "configure"' > conftest.$ac_ext
+  echo '#line 4435 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7537,11 +7540,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7540: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7543: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7544: \$? = $ac_status" >&5
+   echo "$as_me:7547: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7827,11 +7830,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7830: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7833: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7834: \$? = $ac_status" >&5
+   echo "$as_me:7837: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7931,11 +7934,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7934: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7937: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7938: \$? = $ac_status" >&5
+   echo "$as_me:7941: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10331,7 +10334,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10334 "configure"
+#line 10337 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10431,7 +10434,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10434 "configure"
+#line 10437 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12840,11 +12843,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12843: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12846: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12847: \$? = $ac_status" >&5
+   echo "$as_me:12850: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12944,11 +12947,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12947: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12950: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12951: \$? = $ac_status" >&5
+   echo "$as_me:12954: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14527,11 +14530,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14530: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14533: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14534: \$? = $ac_status" >&5
+   echo "$as_me:14537: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14631,11 +14634,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14634: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14637: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14638: \$? = $ac_status" >&5
+   echo "$as_me:14641: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16846,11 +16849,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16849: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16852: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16853: \$? = $ac_status" >&5
+   echo "$as_me:16856: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17136,11 +17139,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17139: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17142: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17143: \$? = $ac_status" >&5
+   echo "$as_me:17146: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17240,11 +17243,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17243: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17246: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17247: \$? = $ac_status" >&5
+   echo "$as_me:17250: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -20470,7 +20473,18 @@ fi
 
 
 
-# Extract the first word of "xmlto", so it can be a program name with args.
+
+
+# Check whether --with-xmlto was given.
+if test "${with_xmlto+set}" = set; then
+  withval=$with_xmlto; use_xmlto=$withval
+else
+  use_xmlto=auto
+fi
+
+
+if test "x$use_xmlto" = x"auto"; then
+   # Extract the first word of "xmlto", so it can be a program name with args.
 set dummy xmlto; ac_word=$2
 { $as_echo "$as_me:$LINENO: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -20510,9 +20524,73 @@ $as_echo "no" >&6; }
 fi
 
 
+   if test "x$XMLTO" = "x"; then
+        { $as_echo "$as_me:$LINENO: WARNING: xmlto not found - documentation targets will be skipped" >&5
+$as_echo "$as_me: WARNING: xmlto not found - documentation targets will be skipped" >&2;}
+	have_xmlto=no
+   else
+        have_xmlto=yes
+   fi
+elif test "x$use_xmlto" = x"yes" ; then
+   # Extract the first word of "xmlto", so it can be a program name with args.
+set dummy xmlto; ac_word=$2
+{ $as_echo "$as_me:$LINENO: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_path_XMLTO+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  case $XMLTO in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_XMLTO="$XMLTO" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_XMLTO="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+XMLTO=$ac_cv_path_XMLTO
+if test -n "$XMLTO"; then
+  { $as_echo "$as_me:$LINENO: result: $XMLTO" >&5
+$as_echo "$XMLTO" >&6; }
+else
+  { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+fi
 
 
-if test "x$XMLTO" != "x"; then
+   if test "x$XMLTO" = "x"; then
+        { $as_echo "$as_me:$LINENO: WARNING: --with-xmlto=yes specified but xmlto not found in PATH" >&5
+$as_echo "$as_me: WARNING: --with-xmlto=yes specified but xmlto not found in PATH" >&2;}
+   fi
+   have_xmlto=yes
+elif test "x$use_xmlto" = x"no" ; then
+   if test "x$XMLTO" != "x"; then
+      { $as_echo "$as_me:$LINENO: WARNING: ignoring XMLTO environment variable since --with-xmlto=no was specified" >&5
+$as_echo "$as_me: WARNING: ignoring XMLTO environment variable since --with-xmlto=no was specified" >&2;}
+   fi
+   have_xmlto=no
+else
+   { { $as_echo "$as_me:$LINENO: error: --with-xmlto expects 'yes' or 'no'" >&5
+$as_echo "$as_me: error: --with-xmlto expects 'yes' or 'no'" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+if test "$have_xmlto" = yes; then
   HAVE_XMLTO_TRUE=
   HAVE_XMLTO_FALSE='#'
 else
@@ -20520,10 +20598,7 @@ else
   HAVE_XMLTO_FALSE=
 fi
 
-if test "x$XMLTO" = "x" -a ! -f $srcdir/man/Xcomposite.man ; then
-	{ $as_echo "$as_me:$LINENO: WARNING: xmlto not found - cannot create man pages without it" >&5
-$as_echo "$as_me: WARNING: xmlto not found - cannot create man pages without it" >&2;}
-fi
+
 
 # Check compositeext configuration, strip extra digits from package version to
 # find the required protocol version

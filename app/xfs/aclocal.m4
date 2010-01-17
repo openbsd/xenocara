@@ -1307,6 +1307,57 @@ AC_SUBST(MAKE_PDF)
 AC_SUBST(MAKE_HTML)
 ]) # XORG_CHECK_DOCBOOK
 
+# XORG_WITH_XMLTO
+# ----------------
+# Minimum version: 1.5.0
+#
+# Documentation tools are not always available on all platforms and sometimes
+# not at the appropriate level. This macro enables a module to test for the
+# presence of the tool and obtain it's path in separate variables. Coupled with
+# the --with-xmlto option, it allows maximum flexibilty in making decisions
+# as whether or not to use the xmlto package.
+#
+# Interface to module:
+# HAVE_XMLTO: 	used in makefiles to conditionally generate documentation
+# XMLTO:	returns the path of the xmlto program found
+#		returns the path set by the user in the environment
+# --with-xmlto:	'yes' user instructs the module to use xmlto
+#		'no' user instructs the module not to use xmlto
+#
+# If the user sets the value of XMLTO, AC_PATH_PROG skips testing the path.
+#
+AC_DEFUN([XORG_WITH_XMLTO],[
+AC_ARG_VAR([XMLTO], [Path to xmlto command])
+AC_ARG_WITH(xmlto,
+	AS_HELP_STRING([--with-xmlto],
+	   [Use xmlto to regenerate documentation (default: yes, if installed)]),
+	   [use_xmlto=$withval], [use_xmlto=auto])
+
+if test "x$use_xmlto" = x"auto"; then
+   AC_PATH_PROG([XMLTO], [xmlto])
+   if test "x$XMLTO" = "x"; then
+        AC_MSG_WARN([xmlto not found - documentation targets will be skipped])
+	have_xmlto=no
+   else
+        have_xmlto=yes
+   fi
+elif test "x$use_xmlto" = x"yes" ; then
+   AC_PATH_PROG([XMLTO], [xmlto])
+   if test "x$XMLTO" = "x"; then
+        AC_MSG_WARN([--with-xmlto=yes specified but xmlto not found in PATH])
+   fi
+   have_xmlto=yes
+elif test "x$use_xmlto" = x"no" ; then
+   if test "x$XMLTO" != "x"; then
+      AC_MSG_WARN([ignoring XMLTO environment variable since --with-xmlto=no was specified])
+   fi
+   have_xmlto=no
+else
+   AC_MSG_ERROR([--with-xmlto expects 'yes' or 'no'])
+fi
+AM_CONDITIONAL([HAVE_XMLTO], [test "$have_xmlto" = yes])
+]) # XORG_CHECK_XMLTO
+
 # XORG_CHECK_MALLOC_ZERO
 # ----------------------
 # Minimum version: 1.0.0

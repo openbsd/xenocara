@@ -764,6 +764,7 @@ ac_user_opts='
 enable_option_checking
 enable_maintainer_mode
 enable_dependency_tracking
+with_xmlto
 with_default_config_file
 with_default_font_path
 enable_devel_docs
@@ -1438,6 +1439,8 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-xmlto            Use xmlto to regenerate documentation (default: yes,
+                          if installed)
   --with-default-config-file=PATH
                           comma-separated list of paths to look for config
                           file when not specified (default:
@@ -5499,7 +5502,18 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 # xmlto is used to convert doc/design.xml from DocBook to PDF/HTML
 
-# Extract the first word of "xmlto", so it can be a program name with args.
+
+
+# Check whether --with-xmlto was given.
+if test "${with_xmlto+set}" = set; then
+  withval=$with_xmlto; use_xmlto=$withval
+else
+  use_xmlto=auto
+fi
+
+
+if test "x$use_xmlto" = x"auto"; then
+   # Extract the first word of "xmlto", so it can be a program name with args.
 set dummy xmlto; ac_word=$2
 { $as_echo "$as_me:$LINENO: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -5539,15 +5553,80 @@ $as_echo "no" >&6; }
 fi
 
 
+   if test "x$XMLTO" = "x"; then
+        { $as_echo "$as_me:$LINENO: WARNING: xmlto not found - documentation targets will be skipped" >&5
+$as_echo "$as_me: WARNING: xmlto not found - documentation targets will be skipped" >&2;}
+	have_xmlto=no
+   else
+        have_xmlto=yes
+   fi
+elif test "x$use_xmlto" = x"yes" ; then
+   # Extract the first word of "xmlto", so it can be a program name with args.
+set dummy xmlto; ac_word=$2
+{ $as_echo "$as_me:$LINENO: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if test "${ac_cv_path_XMLTO+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+  case $XMLTO in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_XMLTO="$XMLTO" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_XMLTO="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+XMLTO=$ac_cv_path_XMLTO
+if test -n "$XMLTO"; then
+  { $as_echo "$as_me:$LINENO: result: $XMLTO" >&5
+$as_echo "$XMLTO" >&6; }
+else
+  { $as_echo "$as_me:$LINENO: result: no" >&5
+$as_echo "no" >&6; }
+fi
 
 
-if test "x$XMLTO" != "x"; then
+   if test "x$XMLTO" = "x"; then
+        { $as_echo "$as_me:$LINENO: WARNING: --with-xmlto=yes specified but xmlto not found in PATH" >&5
+$as_echo "$as_me: WARNING: --with-xmlto=yes specified but xmlto not found in PATH" >&2;}
+   fi
+   have_xmlto=yes
+elif test "x$use_xmlto" = x"no" ; then
+   if test "x$XMLTO" != "x"; then
+      { $as_echo "$as_me:$LINENO: WARNING: ignoring XMLTO environment variable since --with-xmlto=no was specified" >&5
+$as_echo "$as_me: WARNING: ignoring XMLTO environment variable since --with-xmlto=no was specified" >&2;}
+   fi
+   have_xmlto=no
+else
+   { { $as_echo "$as_me:$LINENO: error: --with-xmlto expects 'yes' or 'no'" >&5
+$as_echo "$as_me: error: --with-xmlto expects 'yes' or 'no'" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+if test "$have_xmlto" = yes; then
   HAVE_XMLTO_TRUE=
   HAVE_XMLTO_FALSE='#'
 else
   HAVE_XMLTO_TRUE='#'
   HAVE_XMLTO_FALSE=
 fi
+
 
 
 
