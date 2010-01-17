@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.32 2009/05/22 15:46:13 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.33 2010/01/17 20:48:49 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -53,7 +53,6 @@ _SRCDIR?=	${.CURDIR}
 
 CONFIGURE_ENV=	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
 		CONFIG_SITE=$(CONFIG_SITE) \
-		XMLTO=: \
 		CFLAGS="$(CFLAGS:C/ *$//)" \
 		MAKE="${MAKE}"
 

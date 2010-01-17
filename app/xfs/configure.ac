@@ -44,9 +44,7 @@ AC_PROG_INSTALL
 AC_CANONICAL_HOST
 
 # xmlto is used to convert doc/design.xml from DocBook to PDF/HTML
-AC_ARG_VAR([XMLTO], [Path to xmlto command])
-AC_PATH_PROG([XMLTO], [xmlto])
-AM_CONDITIONAL([HAVE_XMLTO], [test "x$XMLTO" != "x"])
+XORG_WITH_XMLTO
 
 AC_CHECK_HEADERS([stdint.h])
 

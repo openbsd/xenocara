@@ -50,9 +50,7 @@ PKG_PROG_PKG_CONFIG
 XORG_DEFAULT_OPTIONS
 
 # xmlto is used to convert doc/fontlib.xml from DocBook to PDF/HTML
-AC_ARG_VAR([XMLTO], [Path to xmlto command])
-AC_PATH_PROG([XMLTO], [xmlto])
-AM_CONDITIONAL([HAVE_XMLTO], [test "x$XMLTO" != "x"])
+XORG_WITH_XMLTO
 
 # Option to enable support for building developer internals docs
 AC_ARG_ENABLE(devel-docs,
