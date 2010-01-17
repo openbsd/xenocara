@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.102 2010/01/03 15:33:02 matthieu Exp $
+ $OpenBSD: MODULES,v 1.103 2010/01/17 21:40:01 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -78,7 +78,7 @@ app/xset		1.1.0	7.5
 app/xsetroot		1.0.3	7.5
 app/xsm			1.0.1	7.0
 app/xstdcmap		1.0.1	7.0
-app/xvidtune		1.0.1	7.0
+app/xvidtune		1.0.2	7.5+	needs-update
 app/xvinfo		1.1.0	7.5
 app/xwd			1.0.3	7.5
 app/xwininfo		1.0.5	7.5
@@ -113,7 +113,7 @@ driver/xf86-video-geode		2.11.6	7.5
 driver/xf86-video-glint		1.2.4	7.4+	needs-update
 driver/xf86-video-i128		1.3.3	7.4+	needs-update
 driver/xf86-video-i740		1.3.2	7.4+
-driver/xf86-video-intel		2.9.0	7.5	needs-update
+driver/xf86-video-intel		2.10.0	7.5+	needs-update
 driver/xf86-video-mach64	6.8.2	7.4	needs-update
 driver/xf86-video-mga		1.4.11	7.4+	needs-update
 driver/xf86-video-neomagic	1.2.4	7.4+
@@ -138,7 +138,7 @@ driver/xf86-video-tdfx		1.4.3	7.4+
 driver/xf86-video-tga		1.2.1	7.4+
 driver/xf86-video-trident	1.3.3	7.4+
 driver/xf86-video-tseng		1.2.3	7.4+
-driver/xf86-video-vesa		2.2.1	7.4+
+driver/xf86-video-vesa		2.3.0	7.5+	needs-update
 driver/xf86-video-vmware	10.16.9	7.5+	needs-update
 driver/xf86-video-voodoo	1.2.3	7.4+
 driver/xf86-video-wsfb		0.2.1	7.5
@@ -185,7 +185,7 @@ font/xfree86-type1		1.0.2	needs-update
 lib/libFS			1.0.2	7.4+
 lib/libICE			1.0.6	7.5
 lib/libSM			1.1.1	7.4+
-lib/libX11			1.3.2	7.5	needs-update
+lib/libX11			1.3.3	7.5+	needs-update
 lib/libXRes			1.0.4	7.5
 lib/libXScrnSaver		1.2.0	7.4+	needs-update
 lib/libXTrap			1.0.0	7.0	deprecated
@@ -232,13 +232,13 @@ lib/xcb-util			0.3.6	7.4+
 proto/bigreqsproto		1.1.0	7.4+	needs-update
 proto/compositeproto		0.4.1	7.5	needs-update
 proto/damageproto		1.2.0	7.4+	needs-update
-proto/dri2proto			2.1	7.4+
+proto/dri2proto			2.2	7.5+	needs-update
 proto/dmxproto			2.3	7.5	needs-update
 proto/evieproto			1.1.0	7.4+	deprecated
 proto/fixesproto		4.1.1	7.5	needs-update
 proto/fontcacheproto		0.1.3	7.5	needs-update
 proto/fontsproto		2.1.0	7.4+	needs-update
-proto/glproto			1.4.10	7.4	needs-update
+proto/glproto			1.4.11	7.5+	needs-update
 proto/inputproto		2.0	7.5	needs-update
 proto/kbproto			1.0.4	7.5	needs-update
 proto/pmproto			1.0.3	7.5	deprecated
@@ -264,7 +264,7 @@ proto/xineramaproto		1.2	7.5	needs-update
 util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
 util/imake			1.0.2
-util/macros			1.4.1	7.5+	needs-update
+util/macros			1.4.2	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
-xserver				1.7.3	7.5	needs-update
+xserver				1.7.4	7.5+	needs-update
