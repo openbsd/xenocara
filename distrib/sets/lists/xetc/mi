@@ -58,6 +58,9 @@
 ./etc/fonts/conf.avail/10-sub-pixel-vrgb.conf
 ./etc/fonts/conf.avail/10-unhinted.conf
 ./etc/fonts/conf.avail/20-fix-globaladvance.conf
+./etc/fonts/conf.avail/20-unhint-small-dejavu-sans-mono.conf
+./etc/fonts/conf.avail/20-unhint-small-dejavu-sans.conf
+./etc/fonts/conf.avail/20-unhint-small-dejavu-serif.conf
 ./etc/fonts/conf.avail/20-unhint-small-vera.conf
 ./etc/fonts/conf.avail/25-unhint-nonlatin.conf
 ./etc/fonts/conf.avail/30-metric-aliases.conf
@@ -79,6 +82,9 @@
 ./etc/fonts/conf.avail/90-synthetic.conf
 ./etc/fonts/conf.d/10-autohint.conf
 ./etc/fonts/conf.d/20-fix-globaladvance.conf
+./etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf
+./etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf
+./etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf
 ./etc/fonts/conf.d/20-unhint-small-vera.conf
 ./etc/fonts/conf.d/30-metric-aliases.conf
 ./etc/fonts/conf.d/30-urw-aliases.conf
