@@ -698,8 +698,8 @@ void createDialog(AppInfo *app)
    calcButtonLabelPosition(&(d->okButton));
    calcButtonLabelPosition(&(d->cancelButton));
 
-   d->w3.w.x = (app->screen_width - d->w3.w.width) / 2;
-   d->w3.w.y = (app->screen_height - d->w3.w.height) / 3;
+   d->w3.w.x = app->screen_xoffset + (app->screen_width - d->w3.w.width) / 2;
+   d->w3.w.y = app->screen_yoffset + (app->screen_height - d->w3.w.height) / 3;
    
    app->dialog = d;
 }
@@ -1504,11 +1504,15 @@ int main(int argc, char **argv)
 
    app.screen_width = WidthOfScreen(app.screen);
    app.screen_height = HeightOfScreen(app.screen);
+   app.screen_xoffset = 0;
+   app.screen_yoffset = 0;
    if (XineramaIsActive(app.dpy) &&
       (screens = XineramaQueryScreens(app.dpy, &nscreens)) != NULL &&
       nscreens) {
       app.screen_width = screens[0].width;
       app.screen_height = screens[0].height;
+      app.screen_xoffset = screens[0].x_org;
+      app.screen_yoffset = screens[0].y_org;
       XFree(screens);
    }
 
