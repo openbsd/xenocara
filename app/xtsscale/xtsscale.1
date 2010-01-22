@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.7 2009/11/26 12:01:38 matthieu Exp $
+.\" $OpenBSD: xtsscale.1,v 1.8 2010/01/22 07:47:54 matthieu Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\" Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -24,7 +24,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: November 26 2009 $
+.Dd $Mdocdate: January 22 2010 $
 .Dt XTSSCALE 1
 .Os
 .Sh NAME
@@ -33,15 +33,18 @@
 .Sh SYNOPSIS
 .Nm xtsscale
 .Bk -words
-.Op Ar device
+.Op Fl d Ar device
+.Op Fl o Ar output
 .Ek
 .Sh DESCRIPTION
 .Nm
 is used interactively to calculate both the scaling and offset values which
 will make the pointer act at the indicated location on the screen.
 .Pp
-.Ar device 
-is the name or numerical identifier of the X Input extension device 
+The following options can be used:
+.Bl -tag -width Ds
+.It Fl d Ar device 
+defines the name or numerical identifier of the X Input extension device 
 to calibrate.
 Use
 .Pp
@@ -50,6 +53,18 @@ Use
 to figure out the actual name for the X configuration.
 .Ar device
 can be omitted if there is only one X extension pointer in the system.
+.It Fl o Ar output
+specifies the XRandR output to with the touch screen is connected.
+If omitted
+.Nm
+will use all heads in multi-head configurations, which is probably
+not what is expected.
+Use
+.Pp
+.Dl # xrandr
+.Pp
+to figure out the names of the outputs.
+.El
 .Pp
 When good deviations are calculated from the selections made at these
 points,
@@ -81,7 +96,7 @@ that is not the first device. (
 )
 .Sh SEE ALSO
 .Xr xinput 1 ,
-.Xr ioctl 2 ,
+.Xr xrandr 1 ,
 .Xr uts 4 ,
 .Xr wscons 4 ,
 .Xr ws 4 ,

@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.13 2009/11/26 18:13:47 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.14 2010/01/22 07:47:54 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -54,9 +54,12 @@
 #include <X11/extensions/Xrender.h>
 #include <X11/extensions/XInput.h>
 
+#include <X11/extensions/Xrandr.h>
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <math.h>
 
 #include <ws-properties.h>
@@ -77,6 +80,11 @@ static int           button_release_type = INVALID_EVENT_TYPE;
 static int           proximity_in_type = INVALID_EVENT_TYPE;
 static int           proximity_out_type = INVALID_EVENT_TYPE;
 
+int has_xrandr = False;
+int has_xrandr_1_2 = False;
+int has_xrandr_1_3 = False;
+int has_xinerama = False;
+
 Atom prop_calibration, prop_swap;
 
 /* where the calibration points are placed */
@@ -95,12 +103,14 @@ Window          win;
 XftFont	       *font;
 XftColor	cross, errorColor, promptColor, bg;
 XftDraw	       *draw;
-unsigned int    width, height;	/* window size */
+unsigned int    xpos, ypos, width, height;	/* window size */
 char           *progname;
 Bool		interrupted = False;
 
 int    cx[5], cy[5];
 int    x[5], y[5];
+
+extern char * __progname;
 
 struct { int minx, maxx, miny, maxy, swapxy, resx, resy; } calib, old_calib;
 Bool old_swap;
@@ -459,11 +469,67 @@ uncalibrate(XDevice *device)
 	return 0;
 }
 
+void
+get_xrandr_config(Display *dpy, Window root, char *name,
+    int *x, int *y, int *width, int *height)
+{
+	XRRScreenResources *res;
+	XRROutputInfo *output_info;
+	XRRCrtcInfo *crtc_info;
+	int o, found = 0;
+
+	res = XRRGetScreenResources(dpy, root);
+
+	for (o = 0; o < res->noutput; o++) {
+		output_info = XRRGetOutputInfo (dpy, res, res->outputs[o]);
+		if (!output_info) {
+			fprintf(stderr, 
+			    "could not get output 0x%lx information\n",
+			    res->outputs[o]);
+			exit(2);
+		}
+		if (output_info->crtc != 0) {
+			crtc_info = XRRGetCrtcInfo(dpy, res,
+			    output_info->crtc);
+			if (!crtc_info) {
+				fprintf(stderr,
+				    "%s: could not get crtc 0x%lx "
+				    "information\n", __progname, 
+				    output_info->crtc);
+				exit(2);
+			}
+			printf("%s: %dx%d+%d+%d\n",
+			    output_info->name,
+			    crtc_info->width, crtc_info->height,
+			    crtc_info->x, crtc_info->y);
+			if (!strcmp(output_info->name, name)) {
+				*x = crtc_info->x;
+				*y = crtc_info->y;
+				*width = crtc_info->width;
+				*height = crtc_info->height;
+				found = 1;
+			}
+		}
+	}
+	if (!found) {
+		fprintf(stderr, "%s: output %s not found\n", __progname, name);
+		exit(2);
+	}
+}
+
+void __dead
+usage(void)
+{
+	fprintf(stderr, "usage: xtsscale [-d device][-o output]\n");
+	exit(2);
+}
+
 int
 main(int argc, char *argv[], char *env[])
 {
 	char           *display_name = NULL;
 	char	       *device_name = NULL;
+	char	       *output_name = NULL;
 	XSetWindowAttributes xswa;
 	int             i = 0;
 	double          a, a1, a2, b, b1, b2, xerr, yerr;
@@ -473,23 +539,71 @@ main(int argc, char *argv[], char *env[])
 	XDevice		*device;
 	long		 calib_data[4];
 	unsigned char	 swap;
+	int ch;
 
 	/* Crosshair placement */
 	int		cpx[] = { 0, 0, 1, 1, 1 };
 	int		cpy[] = { 0, 1, 0, 0, 1 };
 
-	if (argc != 1 && argc != 2) {
-		fprintf(stderr, "usage: %s [device]\n", argv[0]);
-		return 1;
+	while ((ch = getopt(argc, argv, "d:o:")) != -1) {
+		switch (ch) {
+		case 'd':
+			device_name = optarg;
+			break;
+		case 'o':
+			output_name = optarg;
+			break;
+		default:
+			usage();
+			/* NOTREACHED */
+		}
 	}
-	if (argc == 2)
-		device_name = argv[1];
+	argc -= optind;
+	argv += optind;
+
+	if (argc != 0)
+		usage();
 
 	/* connect to X server */
 	if ((display = XOpenDisplay(display_name)) == NULL) {
 		fprintf(stderr, "%s: cannot connect to X server %s\n",
 		    argv[0], XDisplayName(display_name));
 		exit(1);
+	}
+	screen = DefaultScreen(display);
+	root = RootWindow(display, screen);
+
+	/* get screen size from display structure macro */
+	xpos = 0;
+	ypos = 0;
+	width = DisplayWidth(display, screen);
+	height = DisplayHeight(display, screen);
+
+        if (XRRQueryExtension(display, &event, &error)) {
+                int major, minor;
+
+                if (XRRQueryVersion(display, &major, &minor) != True) {
+                        fprintf(stderr, "Error querying XRandR version");
+                } else {
+                        printf("XRandR extension version %d.%d present\n",
+                            major, minor);
+                        has_xrandr = True;
+                        if (major > 1 || (major == 1 && minor >=2))
+                                has_xrandr_1_2 = True;
+                        if (major > 1 || (major == 1 && minor >=3))
+                                has_xrandr_1_3 = True;
+                }
+        }
+        
+	if (output_name != NULL) {
+		if (has_xrandr_1_2) {
+			get_xrandr_config(display, root, output_name, 
+			    &xpos, &ypos, &width, &height);
+		} else {
+			fprintf(stderr, "%s: can not specify an output "
+			    "whithout XRandr 1.2 or later", __progname);
+			exit(2);
+		}
 	}
 	if (!XQueryExtension(display, INAME, &xi_opcode,
 		&event, &error)) {
@@ -526,21 +640,14 @@ main(int argc, char *argv[], char *env[])
 		exit(1);
 	}
 
-	screen = DefaultScreen(display);
-	root = RootWindow(display, screen);
-
 	/* setup window attributes */
 	xswa.override_redirect = True;
 	xswa.background_pixel = BlackPixel(display, screen);
 	xswa.event_mask = ExposureMask | KeyPressMask;
 	xswa.cursor = create_empty_cursor();
 
-	/* get screen size from display structure macro */
-	width = DisplayWidth(display, screen);
-	height = DisplayHeight(display, screen);
-
 	win = XCreateWindow(display, RootWindow(display, screen),
-			    0, 0, width, height, 0,
+			    xpos, ypos, width, height, 0,
 			    CopyFromParent, InputOutput, CopyFromParent,
 			    CWOverrideRedirect | CWBackPixel | CWEventMask |
 			    CWCursor, &xswa);
