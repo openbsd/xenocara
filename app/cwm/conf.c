@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.75 2009/12/15 04:10:42 okan Exp $
+ * $Id: conf.c,v 1.76 2010/01/27 03:04:50 okan Exp $
  */
 
 #include <sys/param.h>
@@ -61,6 +61,12 @@ conf_cmd_add(struct conf *c, char *image, char *label, int flags)
 }
 
 void
+conf_gap(struct conf *c, struct screen_ctx *sc)
+{
+	sc->gap = c->gap;
+}
+
+void
 conf_font(struct conf *c, struct screen_ctx *sc)
 {
 	sc->font = font_make(sc, c->DefaultFontName);
@@ -92,6 +98,7 @@ conf_reload(struct conf *c)
 	TAILQ_FOREACH(cc, &Clientq, entry)
 		client_draw_border(cc);
 	TAILQ_FOREACH(sc, &Screenq, entry) {
+		conf_gap(c, sc);
 		conf_color(c, sc);
 		conf_font(c, sc);
 	}

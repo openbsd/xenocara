@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.51 2009/12/15 04:10:42 okan Exp $
+ * $Id: calmwm.c,v 1.52 2010/01/27 03:04:50 okan Exp $
  */
 
 #include <sys/param.h>
@@ -159,6 +159,7 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	sc->which = which;
 	sc->rootwin = RootWindow(X_Dpy, sc->which);
 
+	conf_gap(&Conf, sc);
 	screen_update_geometry(sc, DisplayWidth(X_Dpy, sc->which),
 	    DisplayHeight(X_Dpy, sc->which));
 

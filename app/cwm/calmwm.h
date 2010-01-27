@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.114 2009/12/15 04:10:42 okan Exp $
+ * $Id: calmwm.h,v 1.115 2010/01/27 03:04:50 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -65,6 +65,12 @@ struct color {
 	unsigned long	 pixel;
 	char		*name;
 };
+struct gap {
+	int		 top;
+	int		 bottom;
+	int		 left;
+	int		 right;
+};
 
 struct client_ctx;
 
@@ -97,6 +103,7 @@ struct screen_ctx {
 	int			 xmax;
 	int			 ymax;
 
+	struct gap		 gap;
 	struct cycle_entry_q	 mruq;
 
 	XftDraw			*xftdraw;
@@ -284,6 +291,7 @@ struct conf {
 	int			 bwidth;
 #define	CONF_MAMOUNT		 1
 	int			 mamount;
+	struct gap		 gap;
 
 #define CONF_COLOR_ACTIVEBORDER		"#CCCCCC"
 #define CONF_COLOR_INACTIVEBORDER	"#666666"
@@ -298,7 +306,6 @@ struct conf {
 
 #define	DEFAULTFONTNAME		 "sans-serif:pixelsize=14:bold"
 	char			*DefaultFontName;
-	int			 gap_top, gap_bottom, gap_left, gap_right;
 };
 
 /* Menu stuff */
@@ -423,6 +430,7 @@ void			 conf_bindname(struct conf *, char *, char *);
 void			 conf_mousebind(struct conf *, char *, char *);
 void			 conf_grab_mouse(struct client_ctx *);
 void			 conf_reload(struct conf *);
+void			 conf_gap(struct conf *, struct screen_ctx *);
 void			 conf_font(struct conf *, struct screen_ctx *);
 void			 conf_color(struct conf *, struct screen_ctx *);
 void			 conf_init(struct conf *);

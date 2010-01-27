@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.25 2009/12/15 04:10:42 okan Exp $
+ * $Id: screen.c,v 1.26 2010/01/27 03:04:50 okan Exp $
  */
 
 #include <sys/param.h>
@@ -119,12 +119,12 @@ screen_update_geometry(struct screen_ctx *sc, int width, int height)
 	XChangeProperty(X_Dpy, sc->rootwin, _NET_DESKTOP_GEOMETRY,
 	    XA_CARDINAL, 32, PropModeReplace, (unsigned char *)geom , 2);
 
-	/* x, y, width, height. XXX gap */
+	/* x, y, width, height. */
 	for (i = 0; i < CALMWM_NGROUPS; i++) {
-		workareas[i][0] = 0;
-		workareas[i][1] = 0;
-		workareas[i][2] = width;
-		workareas[i][3] = height;
+		workareas[i][0] = sc->gap.left;
+		workareas[i][1] = sc->gap.top;
+		workareas[i][2] = width - (sc->gap.left + sc->gap.right);
+		workareas[i][3] = height - (sc->gap.top + sc->gap.bottom);
 	}
 
 	XChangeProperty(X_Dpy, sc->rootwin, _NET_WORKAREA,
