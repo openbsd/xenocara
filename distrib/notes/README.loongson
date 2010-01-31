@@ -1,0 +1,21 @@
+Post-installation instructions for X.Org on OpenBSD/loongson
+------------------------------------------------------------
+
+OpenBSD use the X.Org X server on loongson.
+
+Currently, the X server is only supported on the Lemote Yeelong netbooks
+with a smfb(4) frame buffer. The wsfb driver provides an unaccelerated
+frame buffer for use with the X server. 
+
+The default /etc/X11/xorg.conf which is installed, provides a ready-to-run
+configuration. Due to the current lack of dynamic object lazy binding on
+OpenBSD/loongson, A few modules modules need to be force loaded. 
+
+To start xdm, the X display manager, activate the xdm_flags option in
+/etc/rc.conf. You will need to disable the console getty in /etc/ttys.
+
+Alternatively, you can log in at the console and run `startx'.
+
+problem_blurb
+
+$OpenBSD: README.loongson,v 1.1 2010/01/31 22:12:08 matthieu Exp $
