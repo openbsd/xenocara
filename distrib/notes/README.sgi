@@ -9,13 +9,7 @@ with the X server.
 
 The default /etc/X11/xorg.conf which is installed, provides a ready-to-run
 configuration. Due to the current lack of dynamic object lazy binding on
-OpenBSD/sgi, the `shadow' and `fb' modules need to be force loaded. This can be
-achieved by ensuring that the following is included in the xorg.conf file:
-
-	Section "Module"
-		Load	"shadow"
-		Load	"fb"
-	EndSection
+OpenBSD/sgi, a few modules need to be force loaded.
 
 To start xdm, the X display manager, activate the xdm_flags option in
 /etc/rc.conf. You will need to disable the console getty in /etc/ttys.
@@ -24,4 +18,4 @@ Alternatively, you can log in at the console and run `startx'.
 
 problem_blurb
 
-$OpenBSD: README.sgi,v 1.3 2008/08/31 07:33:29 matthieu Exp $
+$OpenBSD: README.sgi,v 1.4 2010/01/31 22:11:35 matthieu Exp $
