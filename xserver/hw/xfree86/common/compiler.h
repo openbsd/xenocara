@@ -869,7 +869,7 @@ static __inline__ void stw_u(unsigned long val, unsigned short *p)
 #    define write_mem_barrier()   /* XXX: nop for now */
 
 #   elif defined(__mips__) || (defined(__arm32__) && !defined(__linux__))
-#    ifdef __arm32__
+#    if defined(__arm32__) || defined(__mips64__)
 #     define PORT_SIZE long
 #    else
 #     define PORT_SIZE short
@@ -1021,14 +1021,18 @@ xf86WriteMmio32Be(__volatile__ void *base, const unsigned long offset,
 #     else  /* !linux */
 
 #      define stq_u(v,p)	stl_u(v,p)
-#      define stl_u(v,p)	(*(unsigned char *)(p)) = (v); \
+#      if X_BYTE_ORDER == X_BIG_ENDIAN
+#       define stl_u(v,p)	(*(unsigned char *)(p)) = (v); \
 			(*(unsigned char *)(p)+1) = ((v) >> 8);  \
 			(*(unsigned char *)(p)+2) = ((v) >> 16); \
 			(*(unsigned char *)(p)+3) = ((v) >> 24)
 
-#      define stw_u(v,p)	(*(unsigned char *)(p)) = (v); \
+#       define stw_u(v,p)	(*(unsigned char *)(p)) = (v); \
 				(*(unsigned char *)(p)+1) = ((v) >> 8)
-
+#      else
+#       define stl_u(v,p)	(*(unsigned int   *)(p)) = (v)
+#       define stw_u(v,p)	(*(unsigned short *)(p)) = (v)
+#      endif
 #      define mem_barrier()   /* NOP */
 #     endif /* !linux */
 #    endif /* __mips__ */
