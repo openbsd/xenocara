@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.73 2010/01/27 03:04:50 okan Exp $
+ * $Id: client.c,v 1.74 2010/02/02 19:28:46 stsp Exp $
  */
 
 #include <sys/param.h>
@@ -627,7 +627,7 @@ client_placecalc(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	int			 xslack, yslack;
 
-	if (cc->size->flags & USPosition) {
+	if (cc->size->flags & (USPosition|PPosition)) {
 		/*
 		 * Ignore XINERAMA screens, just make sure it's somewhere
 		 * in the virtual desktop. else it stops people putting xterms
