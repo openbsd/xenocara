@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2009/05/17 20:20:24 matthieu Exp $
+# $OpenBSD: Makefile,v 1.9 2010/02/03 12:44:10 matthieu Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
@@ -410,12 +410,6 @@ x86_xform4.so: matypes.h
 .PATH: ${MESA}/drivers/common
 
 .include <bsd.xorg.mk>
-
-# Prevent a gcc ICE
-.if ${MACHINE_ARCH} == mips64
-s_copypix.so: s_copypix.c
-	${CC} -c -O0 ${CPPFLAGS} -fpic -DPIC $<
-.endif
 
 .if ${MACHINE} == sparc
 PICFLAG=-fPIC
