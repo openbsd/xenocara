@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.19 2009/11/22 18:48:19 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.20 2010/02/04 06:24:47 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -595,6 +595,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			masks.blue = 0xff0000;
 			break;
 		case WSDISPLAY_TYPE_PXALCD:
+		case WSDISPLAY_TYPE_SMFB:
 			masks.red = 0x1f << 11;
 			masks.green = 0x3f << 5;
 			masks.blue = 0x1f;
