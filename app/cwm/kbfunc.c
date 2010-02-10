@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.50 2009/12/15 04:10:42 okan Exp $
+ * $Id: kbfunc.c,v 1.51 2010/02/10 01:23:05 okan Exp $
  */
 
 #include <sys/param.h>
@@ -400,19 +400,19 @@ kbfunc_client_label(struct client_ctx *cc, union arg *arg)
 {
 	struct menu	*mi;
 	struct menu_q	 menuq;
-	char		*current;
 
 	TAILQ_INIT(&menuq);
 
-	current = cc->label;
+	/* dummy is set, so this will always return */
+	mi = menu_filter(cc->sc, &menuq, "label", cc->label, 1,
+	    search_match_text, NULL);
 
-	if ((mi = menu_filter(cc->sc, &menuq, "label", current, 1,
-	    search_match_text, NULL)) != NULL) {
+	if (!mi->abort) {
 		if (cc->label != NULL)
 			xfree(cc->label);
 		cc->label = xstrdup(mi->text);
-		xfree(mi);
 	}
+	xfree(mi);
 }
 
 void
