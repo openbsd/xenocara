@@ -3,9 +3,9 @@ Post-installation instructions for X.Org on OpenBSD/loongson
 
 OpenBSD use the X.Org X server on loongson.
 
-Currently, the X server is only supported on the Lemote Yeelong netbooks
-with a smfb(4) frame buffer. The wsfb driver provides an unaccelerated
-frame buffer for use with the X server. 
+Currently, the X server is supported on the Lemote Yeelong and EMTEC
+Gdium Liberty netbooks with a smfb(4) frame buffer. The wsfb driver
+provides an unaccelerated frame buffer for use with the X server. 
 
 The default /etc/X11/xorg.conf which is installed, provides a ready-to-run
 configuration. Due to the current lack of dynamic object lazy binding on
@@ -18,4 +18,4 @@ Alternatively, you can log in at the console and run `startx'.
 
 problem_blurb
 
-$OpenBSD: README.loongson,v 1.1 2010/01/31 22:12:08 matthieu Exp $
+$OpenBSD: README.loongson,v 1.2 2010/02/13 09:15:16 matthieu Exp $
