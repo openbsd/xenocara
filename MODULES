@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.103 2010/01/17 21:40:01 matthieu Exp $
+ $OpenBSD: MODULES,v 1.104 2010/02/14 10:08:29 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -226,7 +226,7 @@ lib/libxcb			1.4	7.4+
 lib/libxkbfile			1.0.6	7.5	needs-update
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.5	7.5
-lib/pixman			0.16.4	7.4+	needs-update
+lib/pixman			0.16.6	7.4+	needs-update
 lib/xcb-util			0.3.6	7.4+
 
 proto/bigreqsproto		1.1.0	7.4+	needs-update
@@ -264,7 +264,7 @@ proto/xineramaproto		1.2	7.5	needs-update
 util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
 util/imake			1.0.2
-util/macros			1.4.2	7.5+	needs-update
+util/macros			1.6.0	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
 xserver				1.7.4	7.5+	needs-update
