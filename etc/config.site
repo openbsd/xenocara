@@ -1,4 +1,4 @@
-# $OpenBSD: config.site,v 1.1 2008/05/11 20:58:10 matthieu Exp $
+# $OpenBSD: config.site,v 1.2 2010/02/20 17:49:05 matthieu Exp $
 ac_cv_c_compiler_gnu=${ac_cv_c_compiler_gnu=yes}
 ac_cv_c_const=${ac_cv_c_const=yes}
 ac_cv_cxx_compiler_gnu=${ac_cv_cxx_compiler_gnu=yes}
@@ -21,3 +21,4 @@ ac_cv_prog_lex_root=${ac_cv_prog_lex_root=lex.yy}
 ac_cv_prog_lex_yytext_pointer=${ac_cv_prog_lex_yytext_pointer=yes}
 ac_cv_prog_make_make_set=${ac_cv_prog_make_make_set=yes}
 lt_cv_sys_max_cmd_len=${lt_cv_sys_max_cmd_len=131072}
+lt_cv_path_SED=${lt_cv_path_SED=/usr/bin/sed}
