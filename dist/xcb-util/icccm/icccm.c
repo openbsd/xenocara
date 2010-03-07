@@ -442,14 +442,16 @@ xcb_get_wm_size_hints_from_reply(xcb_size_hints_t *hints, xcb_get_property_reply
   length = xcb_get_property_value_length(reply) / (reply->format / 8);
 
   if (!(reply->type == WM_SIZE_HINTS &&
-        (reply->format == 8  || reply->format == 16 ||
-         reply->format == 32) &&
+         reply->format == 32 &&
         /* OldNumPropSizeElements = 15 (pre-ICCCM) */
         length >= 15))
     return 0;
 
+  if (length > XCB_NUM_WM_SIZE_HINTS_ELEMENTS)
+    length = XCB_NUM_WM_SIZE_HINTS_ELEMENTS;
+
   memcpy(hints, (xcb_size_hints_t *) xcb_get_property_value (reply),
-         length * reply->format >> 3);
+         length * (reply->format / 8));
 
   flags = (XCB_SIZE_HINT_US_POSITION | XCB_SIZE_HINT_US_SIZE |
            XCB_SIZE_HINT_P_POSITION | XCB_SIZE_HINT_P_SIZE |
@@ -632,16 +634,17 @@ xcb_get_wm_hints_from_reply(xcb_wm_hints_t *hints,
 {
   int length, num_elem;
 
-  if(!reply)
+  if(!reply || reply->type != WM_HINTS || reply->format != 32)
     return 0;
 
   length = xcb_get_property_value_length(reply);
   num_elem = length / (reply->format / 8);
 
-  if (reply->type != WM_HINTS
-      || reply->format != 32
-      || num_elem < XCB_NUM_WM_HINTS_ELEMENTS - 1)
+  if(num_elem < XCB_NUM_WM_HINTS_ELEMENTS - 1)
     return 0;
+
+  if (length > sizeof(xcb_size_hints_t))
+    length = sizeof(xcb_size_hints_t);
 
   memcpy(hints, (xcb_size_hints_t *) xcb_get_property_value(reply), length);
 
