@@ -524,7 +524,9 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
     if (i < (nmatches - 1)) {
 #if defined(__OpenBSD__)
 #  if !defined(__i386__) && !defined(__amd64__)
-	matches[i++] = xnfstrdup("wsfb");
+	if (i == 0) {
+	    matches[i++] = xnfstrdup("wsfb");
+        }
 #  endif
 #elif !defined(__linux__) && defined(__sparc__)
 	matches[i++] = xnfstrdup("wsfb");
