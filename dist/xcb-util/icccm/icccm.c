@@ -418,8 +418,7 @@ xcb_get_property_cookie_t
 xcb_get_wm_size_hints(xcb_connection_t *c, xcb_window_t window,
                       xcb_atom_t property)
 {
-  /* NumPropSizeElements = 18 (ICCCM version 1). */
-  return xcb_get_property(c, 0, window, property, WM_SIZE_HINTS, 0L, 18);
+  return xcb_get_property(c, 0, window, property, WM_SIZE_HINTS, 0L, XCB_NUM_WM_SIZE_HINTS_ELEMENTS);
 }
 
 xcb_get_property_cookie_t
@@ -427,7 +426,7 @@ xcb_get_wm_size_hints_unchecked(xcb_connection_t *c, xcb_window_t window,
                                 xcb_atom_t property)
 {
   return xcb_get_property_unchecked(c, 0, window, property, WM_SIZE_HINTS,
-                                    0L, 18);
+                                    0L, XCB_NUM_WM_SIZE_HINTS_ELEMENTS);
 }
 
 uint8_t
@@ -439,13 +438,11 @@ xcb_get_wm_size_hints_from_reply(xcb_size_hints_t *hints, xcb_get_property_reply
   if(!reply)
     return 0;
 
-  length = xcb_get_property_value_length(reply) / (reply->format / 8);
-
   if (!(reply->type == WM_SIZE_HINTS &&
-         reply->format == 32 &&
-        /* OldNumPropSizeElements = 15 (pre-ICCCM) */
-        length >= 15))
+         reply->format == 32))
     return 0;
+
+  length = xcb_get_property_value_length(reply) / (reply->format / 8);
 
   if (length > XCB_NUM_WM_SIZE_HINTS_ELEMENTS)
     length = XCB_NUM_WM_SIZE_HINTS_ELEMENTS;
