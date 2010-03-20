@@ -58,7 +58,7 @@ xcb_get_text_property_reply(xcb_connection_t *c,
 {
   xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, e);
 
-  if(!reply)
+  if(!reply || reply->type == XCB_NONE)
     return 0;
 
   prop->_reply = reply;
