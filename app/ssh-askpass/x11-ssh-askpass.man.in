@@ -78,8 +78,8 @@ button discards the
 pass-phrase, and the dialog exits with non-zero status.
 .Pp
 The following keystrokes work as expected:
-.Bl -tag -width "[Backspace]" -offset indent -compact
 .Pp
+.Bl -tag -width "[Backspace]" -offset indent -compact
 .It Bq Backspace 
 .It Bq Delete
 Erase previous character
