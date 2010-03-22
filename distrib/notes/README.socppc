@@ -1,0 +1,8 @@
+Post-installation instructions for X.Org on OpenBSD/socppc
+-----------------------------------------------------------
+
+There is no X server for socppc.  Only userland X.
+
+problem_blurb
+
+$OpenBSD: README.socppc,v 1.1 2010/03/22 14:51:05 todd Exp $
