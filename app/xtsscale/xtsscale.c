@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.14 2010/01/22 07:47:54 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.15 2010/03/23 20:27:42 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -106,6 +106,7 @@ XftDraw	       *draw;
 unsigned int    xpos, ypos, width, height;	/* window size */
 char           *progname;
 Bool		interrupted = False;
+Bool		verbose = False;
 
 int    cx[5], cy[5];
 int    x[5], y[5];
@@ -418,6 +419,9 @@ get_events(int i)
 			}
 		}
 	}
+	if (verbose)
+		printf("x[%d] = %d y[%d] = %d\n", i, x[i], i, y[i]);
+
 	return True;
 }
 
@@ -545,13 +549,16 @@ main(int argc, char *argv[], char *env[])
 	int		cpx[] = { 0, 0, 1, 1, 1 };
 	int		cpy[] = { 0, 1, 0, 0, 1 };
 
-	while ((ch = getopt(argc, argv, "d:o:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:o:v")) != -1) {
 		switch (ch) {
 		case 'd':
 			device_name = optarg;
 			break;
 		case 'o':
 			output_name = optarg;
+			break;
+		case 'v':
+			verbose = True;
 			break;
 		default:
 			usage();
@@ -706,7 +713,7 @@ calib:
 	b = (b1 + b2) / 2.0;
 	xerr = a * width / 2 + b - x[2];
 	if (fabs(xerr) > fabs(a * width * .01)) {
-		fprintf(stderr, "X error (%.2f) too high, try again\n",
+		fprintf(stderr, "Calibration problem: X axis error (%.2f) too high, try again\n",
 			fabs(xerr));
 		goto err;
 	}
@@ -724,7 +731,7 @@ calib:
 	b = (b1 + b2) / 2.0;
 	yerr = a * height / 2 + b - y[2];
 	if (fabs(yerr) > fabs(a * height * 0.01)) {
-		fprintf(stderr, "Y error (%.2f) too high, try again\n",
+		fprintf(stderr, "Calibration problem: Y axis error (%.2f) too high, try again\n",
 			fabs(yerr));
 		goto err;
 	}
