@@ -483,18 +483,18 @@
       </li>
 
       <li>
+        <p>A value of&nbsp;0 for the character width means &lsquo;same as
+        character height&rsquo;, a value of&nbsp;0 for the character height
+        means &lsquo;same as character width&rsquo;.  Otherwise, it is
+        possible to specify different character widths and heights.</p>
+      </li>
+
+      <li>
         <p>The horizontal and vertical device resolutions are expressed in
         <em>dots-per-inch</em>, or <em>dpi</em>.  Normal values are 72 or
         96&nbsp;dpi for display devices like the screen.  The resolution
         is used to compute the character pixel size from the character
         point size.</p>
-      </li>
-
-      <li>
-        <p>A value of&nbsp;0 for the character width means &lsquo;same as
-        character height&rsquo;, a value of&nbsp;0 for the character height
-        means &lsquo;same as character width&rsquo;.  Otherwise, it is
-        possible to specify different character widths and heights.</p>
       </li>
 
       <li>
@@ -574,15 +574,19 @@
   glyph_index = FT_Get_Char_Index( face, charcode );
       </div>
 
-      <p>This will look the glyph index corresponding to the given
+      <p>This will look up the glyph index corresponding to the given
       <tt>charcode</tt> in the charmap that is currently selected for the
-      face.  If no charmap was selected, the function simply returns the
+      face.  You should use the UTF-32 representation form of Unicode; for
+      example, if you want to load character U+1F028, use value 0x1F028 as
+      the value for <tt>charcode</tt>.
+
+      <p>If no charmap was selected, the function simply returns the
       charcode.</p>
 
       <p>Note that this is one of the rare FreeType functions that do not
       return an error code.  However, when a given character code has no
       glyph image in the face, the value&nbsp;0 is returned.  By convention,
-      it always correspond to a special glyph image called the <em>missing
+      it always corresponds to a special glyph image called the <em>missing
       glyph</em>, which is commonly displayed as a box or a space.</p>
 
       <h4>
@@ -1094,7 +1098,7 @@
   <a href="step2.html">FreeType&nbsp;2 Tutorial Step&nbsp;2</a>
 </h3>
 
-<p><font size=-3>Last update: 08-Aug-2007</font></p>
+<p><font size=-3>Last update: 19-Oct-2009</font></p>
 
 </body>
 </html>

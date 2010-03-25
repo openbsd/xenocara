@@ -780,13 +780,20 @@
       horizontal direction in nearly all cases except really extreme
       ones.</p>
 
-      <p>Not all font formats contain kerning information.  Instead, they
-      sometimes rely on an additional file that contains various glyph
-      metrics, including kerning, but no glyph images.  A good example is
-      the Type&nbsp;1 format where glyph images are stored in a file with
-      extension <tt>.pfa</tt> or <tt>.pfb</tt>, and where kerning metrics
-      can be found in an additional file with extension <tt>.afm</tt> or
-      <tt>.pfm</tt>.</p>
+      <p>Not all font formats contain kerning information, and not all
+      kerning formats are supported by FreeType; in particular, for TrueType
+      fonts, the API can only access kerning via the &lsquo;kern&rsquo;
+      table; <b>OpenType kerning via the &lsquo;GPOS&rsquo; table is not
+      supported.</b> You need a higher-level library like <a
+      href="http://www.pango.org">Pango</a> or <a
+      href="http://www.icu-project.org">ICU</a> to handle that.</p>
+
+      <p>Sometimes, the font file is associated with an additional file that
+      contains various glyph metrics, including kerning, but no glyph
+      images.  A good example is the Type&nbsp;1 format where glyph images
+      are stored in a file with extension <tt>.pfa</tt> or <tt>.pfb</tt>,
+      and where kerning metrics can be found in a file with extension
+      <tt>.afm</tt> or <tt>.pfm</tt>.</p>
 
       <p>FreeType&nbsp;2 allows you to deal with this, by providing the <a
       href="../reference/ft2-base_interface.html#FT_Attach_File">
@@ -914,7 +921,7 @@
 
 
       FT_Get_Kerning( face, previous, glyph_index,
-                      ft_kerning_mode_default, &amp;delta );
+                      FT_KERNING_DEFAULT, &amp;delta );
 
       pen_x += delta.x &gt;&gt; 6;
     }
@@ -943,7 +950,7 @@
         <li>
 
           <p>As kerning is determined from glyph indices, we need to
-          explicitly convert our character codes into a glyph indices, then
+          explicitly convert our character codes into glyph indices, then
           later call <tt>FT_Load_Glyph</tt> instead of
           <tt>FT_Load_Char</tt>.</p>
         </li>
@@ -1170,7 +1177,7 @@
           <p>We call <tt>FT_Glyph_To_Bitmap</tt> with the <tt>destroy</tt>
           parameter set to&nbsp;0 (false), in order to avoid destroying the
           original glyph image.  The new glyph bitmap is accessed through
-          <tt>image</tt> after the call and is typecasted to
+          <tt>image</tt> after the call and is typecast to
           <tt>FT_BitmapGlyph</tt>.</p>
         </li>
 
@@ -1223,7 +1230,7 @@
       </div>
 
       <p>We also translate each glyph image directly after it is loaded to
-      its position on the baseline at load time.  As we will see, this as
+      its position on the baseline at load time.  As we will see, this has
       several advantages.  Our glyph sequence loader thus becomes:</p>
 
       <div class="pre">
@@ -1651,6 +1658,11 @@
     service on top of FreeType&nbsp;2, and you could possibly stop here if
     you want.</p>
 
+    <p>The demo programs in the &lsquo;ft2demos&rsquo; bundle (especially
+    &lsquo;ftview&rsquo;) are a kind of reference implementation, and are a
+    good resource to turn to for answers.  They also show how to use
+    additional features, such as the glyph stroker and cache.</p>
+
     <p>The next section will deal with FreeType&nbsp;2 internals (like
     modules, vector outlines, font drivers, renderers), as well as a few
     font format specific issues (mainly, how to access certain TrueType or
@@ -1664,7 +1676,7 @@
   <a href="step3.html">FreeType&nbsp;2 Tutorial Step&nbsp;3</a>
 </h3>
 
-<p><font size=-3>Last update: 07-Mar-2009</font></p>
+<p><font size=-3>Last update: 19-Nov-2009</font></p>
 
 </body>
 </html>
