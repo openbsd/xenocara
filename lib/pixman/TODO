@@ -14,6 +14,8 @@
         the required precision by simply adding offset_x/y to the
         relevant rendering API?
 
+      - Get rid of workaround for X server bug.
+
       - pixman_image_set_indexed() should copy its argument, and X
         should be ported over to use a pixman_image as the
         representation of a Picture, rather than creating one on each

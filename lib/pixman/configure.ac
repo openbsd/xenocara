@@ -31,7 +31,7 @@ AC_PREREQ([2.57])
 #
 #   - Released development versions have an odd MINOR number
 #
-#   - Released stable versions have an event MINOR number
+#   - Released stable versions have an even MINOR number
 #
 #   - Versions that break ABI must have a new MAJOR number
 #
@@ -53,8 +53,8 @@ AC_PREREQ([2.57])
 #
 
 m4_define([pixman_major], 0)
-m4_define([pixman_minor], 15)
-m4_define([pixman_micro], 8)
+m4_define([pixman_minor], 16)
+m4_define([pixman_micro], 6)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
@@ -65,6 +65,8 @@ AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_HOST
 
+test_CFLAGS=${CFLAGS+set} # We may override autoconf default CFLAGS.
+
 AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_CHECK_FUNCS([getisax])
@@ -74,6 +76,16 @@ AC_C_INLINE
 # Checks for Sun Studio compilers
 AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
 AC_CHECK_DECL([__amd64], [AMD64_ABI="yes"], [AMD64_ABI="no"])
+
+# Default CFLAGS to -O -g rather than just the -g from AC_PROG_CC
+# if we're using Sun Studio and neither the user nor a config.site
+# has set CFLAGS.
+if test $SUNCC = yes &&			\
+   test "$test_CFLAGS" == "" &&		\
+   test "$CFLAGS" = "-g"
+then
+  CFLAGS="-O -g"
+fi
 
 # 
 # We ignore pixman_major in the version here because the major version should
@@ -101,10 +113,18 @@ AC_SUBST(LT_VERSION_INFO)
 
 changequote(,)dnl
 if test "x$GCC" = "xyes"; then
+
   case " $CFLAGS " in
   *[\ \	]-Wall[\ \	]*) ;;
   *) CFLAGS="$CFLAGS -Wall" ;;
-  esac fi changequote([,])dnl
+  esac 
+
+  case " $CFLAGS " in
+  *[\ \	]-fno-strict-aliasing[\ \	]*) ;;
+  *) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
+  esac
+
+fi changequote([,])dnl
 
 AC_PATH_PROG(PERL, perl, no)
 if test "x$PERL" = xno; then
@@ -259,9 +279,19 @@ case $host_os in
    solaris*)
       # When building 32-bit binaries, apply a mapfile to ensure that the
       # binaries aren't flagged as only able to run on MMX+SSE capable CPUs
-      # since they check at runtime before using those instructions
+      # since they check at runtime before using those instructions.
+      # Not all linkers grok the mapfile format so we check for that first.
       if test "$AMD64_ABI" = "no" ; then
-         HWCAP_LDFLAGS='-Wl,-M,$(srcdir)/solaris-hwcap.mapfile'
+	 use_hwcap_mapfile=no
+	 AC_MSG_CHECKING(whether to use a hardware capability map file)
+	 hwcap_save_LDFLAGS="$LDFLAGS"
+	 HWCAP_LDFLAGS='-Wl,-M,$(srcdir)/solaris-hwcap.mapfile'
+	 LDFLAGS="$LDFLAGS -Wl,-M,pixman/solaris-hwcap.mapfile"
+	 AC_LINK_IFELSE([int main() { return 0; }],
+			use_hwcap_mapfile=yes,
+			HWCAP_LDFLAGS="")
+	 LDFLAGS="$hwcap_save_LDFLAGS"
+	 AC_MSG_RESULT($use_hwcap_mapfile)
       fi
       if test "x$MMX_LDFLAGS" = "x" ; then
          MMX_LDFLAGS="$HWCAP_LDFLAGS"
@@ -288,7 +318,7 @@ fi
 have_vmx_intrinsics=no
 AC_MSG_CHECKING(whether to use VMX/Altivec intrinsics)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $VMX_CFLAGS"
+CFLAGS="$VMX_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
 error "Need GCC >= 3.4 for sane altivec support"
@@ -325,13 +355,14 @@ AC_SUBST(VMX_CFLAGS)
 
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
+dnl ===========================================================================
 dnl Check for ARM SIMD instructions
-ARM_SIMD_CFLAGS=""
+ARM_SIMD_CFLAGS="-mcpu=arm1136j-s"
 
 have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $ARM_SIMD_CFLAGS"
+CFLAGS="$ARM_SIMD_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
 int main () {
     asm("uqadd8 r1, r1, r2");
@@ -359,13 +390,18 @@ if test $enable_arm_simd = yes && test $have_arm_simd = no ; then
    AC_MSG_ERROR([ARM SIMD intrinsics not detected])
 fi
 
+AC_SUBST(ARM_SIMD_CFLAGS)
+
+AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
+
+dnl ==========================================================================
 dnl Check for ARM NEON instructions
-ARM_NEON_CFLAGS="-mfpu=neon -mfloat-abi=softfp"
+ARM_NEON_CFLAGS="-mfpu=neon -mcpu=cortex-a8"
 
 have_arm_neon=no
 AC_MSG_CHECKING(whether to use ARM NEON)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $ARM_NEON_CFLAGS"
+CFLAGS="$ARM_NEON_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
 #include <arm_neon.h>
 int main () {
@@ -389,11 +425,16 @@ else
    ARM_NEON_CFLAGS=
 fi
 
+AC_SUBST(ARM_NEON_CFLAGS)
+
+AM_CONDITIONAL(USE_ARM_NEON, test $have_arm_neon = yes)
+
 AC_MSG_RESULT($have_arm_neon)
 if test $enable_arm_neon = yes && test $have_arm_neon = no ; then
    AC_MSG_ERROR([ARM NEON intrinsics not detected])
 fi
 
+dnl =========================================================================================
 dnl Check for GNU-style inline assembly support
 
 have_gcc_inline_asm=no
@@ -423,15 +464,23 @@ if test $enable_gcc_inline_asm = yes && test $have_gcc_inline_asm = no ; then
    AC_MSG_ERROR([GNU-style inline assembler not detected])
 fi
 
-
-AC_SUBST(ARM_SIMD_CFLAGS)
-AC_SUBST(ARM_NEON_CFLAGS)
-
-AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
-AM_CONDITIONAL(USE_ARM_NEON, test $have_arm_neon = yes)
 AM_CONDITIONAL(USE_GCC_INLINE_ASM, test $have_gcc_inline_asm = yes)
 
+dnl ==============================================
+dnl Timers
 
+AC_ARG_ENABLE(timers,
+   [AC_HELP_STRING([--enable-timers],
+		   [enable TIMER_BEGIN and TIMER_END macros [default=no]])],
+   [enable_timers=$enableval], [enable_timers=no])
+
+if test $enable_timers = yes ; then 
+   AC_DEFINE(PIXMAN_TIMERS, 1, [enable TIMER_BEGIN/TIMER_END macros])
+fi
+AC_SUBST(PIXMAN_TIMERS)
+
+dnl ===================================
+dnl GTK+
 
 AC_ARG_ENABLE(gtk,
    [AC_HELP_STRING([--enable-gtk],
@@ -452,7 +501,15 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(DEP_CFLAGS)
 AC_SUBST(DEP_LIBS)
-		  
+
+dnl =====================================
+dnl posix_memalign 
+
+AC_CHECK_FUNC(posix_memalign, have_posix_memalign=yes, have_posix_memalign=no)
+if test x$have_posix_memalign = xyes; then
+   AC_DEFINE(HAVE_POSIX_MEMALIGN, 1, [Whether we have posix_memalign()])
+fi
+
 AC_OUTPUT([pixman-1.pc
            pixman-1-uninstalled.pc
            Makefile

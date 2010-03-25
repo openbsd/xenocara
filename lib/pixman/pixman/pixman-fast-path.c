@@ -23,110 +23,139 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 #include <string.h>
 #include "pixman-private.h"
 #include "pixman-combine32.h"
-#define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
-
-#undef READ
-#undef WRITE
-#define READ(img,x) (*(x))
-#define WRITE(img,ptr,v) ((*(ptr)) = (v))
 
 static force_inline uint32_t
-fbOver (uint32_t src, uint32_t dest)
+fetch_24 (uint8_t *a)
 {
-    // dest = (dest * (255 - alpha)) / 255 + src
-    uint32_t a = ~src >> 24; // 255 - alpha == 255 + (~alpha + 1) == ~alpha
-    FbByteMulAdd(dest, a, src);
+    if (((unsigned long)a) & 1)
+    {
+#ifdef WORDS_BIGENDIAN
+	return (*a << 16) | (*(uint16_t *)(a + 1));
+#else
+	return *a | (*(uint16_t *)(a + 1) << 8);
+#endif
+    }
+    else
+    {
+#ifdef WORDS_BIGENDIAN
+	return (*(uint16_t *)a << 8) | *(a + 2);
+#else
+	return *(uint16_t *)a | (*(a + 2) << 16);
+#endif
+    }
+}
+
+static force_inline void
+store_24 (uint8_t *a,
+          uint32_t v)
+{
+    if (((unsigned long)a) & 1)
+    {
+#ifdef WORDS_BIGENDIAN
+	*a = (uint8_t) (v >> 16);
+	*(uint16_t *)(a + 1) = (uint16_t) (v);
+#else
+	*a = (uint8_t) (v);
+	*(uint16_t *)(a + 1) = (uint16_t) (v >> 8);
+#endif
+    }
+    else
+    {
+#ifdef WORDS_BIGENDIAN
+	*(uint16_t *)a = (uint16_t)(v >> 8);
+	*(a + 2) = (uint8_t)v;
+#else
+	*(uint16_t *)a = (uint16_t)v;
+	*(a + 2) = (uint8_t)(v >> 16);
+#endif
+    }
+}
+
+static force_inline uint32_t
+over (uint32_t src,
+      uint32_t dest)
+{
+    uint32_t a = ~src >> 24;
+
+    UN8x4_MUL_UN8_ADD_UN8x4 (dest, a, src);
 
     return dest;
 }
 
 static uint32_t
-fbOver24 (uint32_t x, uint32_t y)
+in (uint32_t x,
+    uint8_t  y)
 {
-    uint16_t  a = ~x >> 24;
-    uint16_t  t;
-    uint32_t  m,n,o;
+    uint16_t a = y;
 
-    m = FbOverU(x,y,0,a,t);
-    n = FbOverU(x,y,8,a,t);
-    o = FbOverU(x,y,16,a,t);
-    return m|n|o;
-}
+    UN8x4_MUL_UN8 (x, a);
 
-static uint32_t
-fbIn (uint32_t x, uint8_t y)
-{
-    uint16_t  a = y;
-    uint16_t  t;
-    uint32_t  m,n,o,p;
-
-    m = FbInU(x,0,a,t);
-    n = FbInU(x,8,a,t);
-    o = FbInU(x,16,a,t);
-    p = FbInU(x,24,a,t);
-    return m|n|o|p;
+    return x;
 }
 
 /*
  * Naming convention:
  *
- *  opSRCxMASKxDST
+ *  op_src_mask_dest
  */
-
 static void
-fbCompositeOver_x888x8x8888 (pixman_implementation_t *imp,
-			     pixman_op_t      op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
-			     int32_t      xSrc,
-			     int32_t      ySrc,
-			     int32_t      xMask,
-			     int32_t      yMask,
-			     int32_t      xDst,
-			     int32_t      yDst,
-			     int32_t     width,
-			     int32_t     height)
+fast_composite_over_x888_8_8888 (pixman_implementation_t *imp,
+                                 pixman_op_t              op,
+                                 pixman_image_t *         src_image,
+                                 pixman_image_t *         mask_image,
+                                 pixman_image_t *         dst_image,
+                                 int32_t                  src_x,
+                                 int32_t                  src_y,
+                                 int32_t                  mask_x,
+                                 int32_t                  mask_y,
+                                 int32_t                  dest_x,
+                                 int32_t                  dest_y,
+                                 int32_t                  width,
+                                 int32_t                  height)
 {
-    uint32_t	*src, *srcLine;
-    uint32_t    *dst, *dstLine;
-    uint8_t	*mask, *maskLine;
-    int		 srcStride, maskStride, dstStride;
+    uint32_t    *src, *src_line;
+    uint32_t    *dst, *dst_line;
+    uint8_t     *mask, *mask_line;
+    int src_stride, mask_stride, dst_stride;
     uint8_t m;
     uint32_t s, d;
     uint16_t w;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
     while (height--)
     {
-	src = srcLine;
-	srcLine += srcStride;
-	dst = dstLine;
-	dstLine += dstStride;
-	mask = maskLine;
-	maskLine += maskStride;
+	src = src_line;
+	src_line += src_stride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
 
 	w = width;
 	while (w--)
 	{
-	    m = READ(pMask, mask++);
+	    m = *mask++;
 	    if (m)
 	    {
-		s = READ(pSrc, src) | 0xff000000;
+		s = *src | 0xff000000;
 
 		if (m == 0xff)
-		    WRITE(pDst, dst, s);
+		{
+		    *dst = s;
+		}
 		else
 		{
-		    d = fbIn (s, m);
-		    WRITE(pDst, dst, fbOver (d, READ(pDst, dst)));
+		    d = in (s, m);
+		    *dst = over (d, *dst);
 		}
 	    }
 	    src++;
@@ -136,55 +165,53 @@ fbCompositeOver_x888x8x8888 (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSolidMaskIn_nx8x8 (pixman_implementation_t *imp,
-			      pixman_op_t      op,
-			      pixman_image_t    *iSrc,
-			      pixman_image_t    *iMask,
-			      pixman_image_t    *iDst,
-			      int32_t      xSrc,
-			      int32_t      ySrc,
-			      int32_t      xMask,
-			      int32_t      yMask,
-			      int32_t      xDst,
-			      int32_t      yDst,
-			      int32_t     width,
-			      int32_t     height)
+fast_composite_in_n_8_8 (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         pixman_image_t *         src_image,
+                         pixman_image_t *         mask_image,
+                         pixman_image_t *         dest_image,
+                         int32_t                  src_x,
+                         int32_t                  src_y,
+                         int32_t                  mask_x,
+                         int32_t                  mask_y,
+                         int32_t                  dest_x,
+                         int32_t                  dest_y,
+                         int32_t                  width,
+                         int32_t                  height)
 {
-    uint32_t	src, srca;
-    uint8_t	*dstLine, *dst, dstMask;
-    uint8_t	*maskLine, *mask, m;
-    int	dstStride, maskStride;
-    uint16_t	w;
-    uint16_t    t;
+    uint32_t src, srca;
+    uint8_t     *dst_line, *dst;
+    uint8_t     *mask_line, *mask, m;
+    int dst_stride, mask_stride;
+    uint16_t w;
+    uint16_t t;
 
-    fbComposeGetSolid(iSrc, src, iDst->bits.format);
+    src = _pixman_image_get_solid (src_image, dest_image->bits.format);
 
-    dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (iDst->bits.format));
     srca = src >> 24;
 
-    fbComposeGetStart (iDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (iMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
-    if (srca == 0xff) {
+    if (srca == 0xff)
+    {
 	while (height--)
 	{
-	    dst = dstLine;
-	    dstLine += dstStride;
-	    mask = maskLine;
-	    maskLine += maskStride;
+	    dst = dst_line;
+	    dst_line += dst_stride;
+	    mask = mask_line;
+	    mask_line += mask_stride;
 	    w = width;
 
 	    while (w--)
 	    {
 		m = *mask++;
+
 		if (m == 0)
-		{
 		    *dst = 0;
-		}
 		else if (m != 0xff)
-		{
-		    *dst = FbIntMult(m, *dst, t);
-		}
+		    *dst = MUL_UN8 (m, *dst, t);
+
 		dst++;
 	    }
 	}
@@ -193,133 +220,127 @@ fbCompositeSolidMaskIn_nx8x8 (pixman_implementation_t *imp,
     {
 	while (height--)
 	{
-	    dst = dstLine;
-	    dstLine += dstStride;
-	    mask = maskLine;
-	    maskLine += maskStride;
+	    dst = dst_line;
+	    dst_line += dst_stride;
+	    mask = mask_line;
+	    mask_line += mask_stride;
 	    w = width;
 
 	    while (w--)
 	    {
 		m = *mask++;
-		m = FbIntMult(m, srca, t);
+		m = MUL_UN8 (m, srca, t);
+
 		if (m == 0)
-		{
 		    *dst = 0;
-		}
 		else if (m != 0xff)
-		{
-		    *dst = FbIntMult(m, *dst, t);
-		}
+		    *dst = MUL_UN8 (m, *dst, t);
+
 		dst++;
 	    }
 	}
     }
 }
 
-
 static void
-fbCompositeSrcIn_8x8 (pixman_implementation_t *imp,
-		      pixman_op_t      op,
-		      pixman_image_t  *iSrc,
-		      pixman_image_t  *iMask,
-		      pixman_image_t  *iDst,
-		      int32_t          xSrc,
-		      int32_t          ySrc,
-		      int32_t          xMask,
-		      int32_t          yMask,
-		      int32_t          xDst,
-		      int32_t          yDst,
-		      int32_t         width,
-		      int32_t         height)
+fast_composite_in_8_8 (pixman_implementation_t *imp,
+                       pixman_op_t              op,
+                       pixman_image_t *         src_image,
+                       pixman_image_t *         mask_image,
+                       pixman_image_t *         dest_image,
+                       int32_t                  src_x,
+                       int32_t                  src_y,
+                       int32_t                  mask_x,
+                       int32_t                  mask_y,
+                       int32_t                  dest_x,
+                       int32_t                  dest_y,
+                       int32_t                  width,
+                       int32_t                  height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*srcLine, *src;
-    int	dstStride, srcStride;
-    uint16_t	w;
-    uint8_t	s;
-    uint16_t	t;
+    uint8_t     *dst_line, *dst;
+    uint8_t     *src_line, *src;
+    int dst_stride, src_stride;
+    uint16_t w;
+    uint8_t s;
+    uint16_t t;
 
-    fbComposeGetStart (iSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (iDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint8_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 	while (w--)
 	{
 	    s = *src++;
+
 	    if (s == 0)
-	    {
 		*dst = 0;
-	    }
 	    else if (s != 0xff)
-	    {
-		*dst = FbIntMult(s, *dst, t);
-	    }
+		*dst = MUL_UN8 (s, *dst, t);
+
 	    dst++;
 	}
     }
 }
 
 static void
-fbCompositeSolidMask_nx8x8888 (pixman_implementation_t *imp,
-			       pixman_op_t      op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int32_t      xSrc,
-			       int32_t      ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
-			       int32_t     width,
-			       int32_t     height)
+fast_composite_over_n_8_8888 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
 {
-    uint32_t	 src, srca;
-    uint32_t	*dstLine, *dst, d, dstMask;
-    uint8_t	*maskLine, *mask, m;
-    int		 dstStride, maskStride;
-    uint16_t	 w;
+    uint32_t src, srca;
+    uint32_t    *dst_line, *dst, d;
+    uint8_t     *mask_line, *mask, m;
+    int dst_stride, mask_stride;
+    uint16_t w;
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
-    dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	mask = maskLine;
-	maskLine += maskStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
 	w = width;
 
 	while (w--)
 	{
-	    m = READ(pMask, mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
-		    WRITE(pDst, dst, src & dstMask);
+		    *dst = src;
 		else
-		    WRITE(pDst, dst, fbOver (src, READ(pDst, dst)) & dstMask);
+		    *dst = over (src, *dst);
 	    }
 	    else if (m)
 	    {
-		d = fbIn (src, m);
-		WRITE(pDst, dst, fbOver (d, READ(pDst, dst)) & dstMask);
+		d = in (src, m);
+		*dst = over (d, *dst);
 	    }
 	    dst++;
 	}
@@ -327,136 +348,187 @@ fbCompositeSolidMask_nx8x8888 (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
-				   pixman_op_t op,
-				   pixman_image_t * pSrc,
-				   pixman_image_t * pMask,
-				   pixman_image_t * pDst,
-				   int32_t      xSrc,
-				   int32_t      ySrc,
-				   int32_t      xMask,
-				   int32_t      yMask,
-				   int32_t      xDst,
-				   int32_t      yDst,
-				   int32_t     width,
-				   int32_t     height)
+fast_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
+				   pixman_op_t              op,
+				   pixman_image_t *         src_image,
+				   pixman_image_t *         mask_image,
+				   pixman_image_t *         dst_image,
+				   int32_t                  src_x,
+				   int32_t                  src_y,
+				   int32_t                  mask_x,
+				   int32_t                  mask_y,
+				   int32_t                  dest_x,
+				   int32_t                  dest_y,
+				   int32_t                  width,
+				   int32_t                  height)
 {
-    uint32_t	src, srca;
-    uint32_t	*dstLine, *dst, d, dstMask;
-    uint32_t	*maskLine, *mask, ma;
-    int	dstStride, maskStride;
-    uint16_t	w;
-    uint32_t	m, n, o, p;
+    uint32_t src, srca, s;
+    uint32_t    *dst_line, *dst, d;
+    uint32_t    *mask_line, *mask, ma;
+    int dst_stride, mask_stride;
+    uint16_t w;
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
-    dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint32_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint32_t, mask_stride, mask_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	mask = maskLine;
-	maskLine += maskStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
 	w = width;
 
 	while (w--)
 	{
-	    ma = READ(pMask, mask++);
+	    ma = *mask++;
+
+	    if (ma)
+	    {
+		d = *dst;
+		s = src;
+
+		UN8x4_MUL_UN8x4_ADD_UN8x4 (s, ma, d);
+
+		*dst = s;
+	    }
+
+	    dst++;
+	}
+    }
+}
+
+static void
+fast_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
+                                    pixman_op_t              op,
+                                    pixman_image_t *         src_image,
+                                    pixman_image_t *         mask_image,
+                                    pixman_image_t *         dst_image,
+                                    int32_t                  src_x,
+                                    int32_t                  src_y,
+                                    int32_t                  mask_x,
+                                    int32_t                  mask_y,
+                                    int32_t                  dest_x,
+                                    int32_t                  dest_y,
+                                    int32_t                  width,
+                                    int32_t                  height)
+{
+    uint32_t src, srca, s;
+    uint32_t    *dst_line, *dst, d;
+    uint32_t    *mask_line, *mask, ma;
+    int dst_stride, mask_stride;
+    uint16_t w;
+
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+
+    srca = src >> 24;
+    if (src == 0)
+	return;
+
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint32_t, mask_stride, mask_line, 1);
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
+	w = width;
+
+	while (w--)
+	{
+	    ma = *mask++;
 	    if (ma == 0xffffffff)
 	    {
 		if (srca == 0xff)
-		    WRITE(pDst, dst, src & dstMask);
+		    *dst = src;
 		else
-		    WRITE(pDst, dst, fbOver (src, READ(pDst, dst)) & dstMask);
+		    *dst = over (src, *dst);
 	    }
 	    else if (ma)
 	    {
-		d = READ(pDst, dst);
-#define FbInOverC(src,srca,msk,dst,i,result) { \
-    uint16_t  __a = FbGet8(msk,i); \
-    uint32_t  __t, __ta; \
-    uint32_t  __i; \
-    __t = FbIntMult (FbGet8(src,i), __a,__i); \
-    __ta = (uint8_t) ~FbIntMult (srca, __a,__i); \
-    __t = __t + FbIntMult(FbGet8(dst,i),__ta,__i); \
-    __t = (uint32_t) (uint8_t) (__t | (-(__t >> 8))); \
-    result = __t << (i); \
-}
-		FbInOverC (src, srca, ma, d, 0, m);
-		FbInOverC (src, srca, ma, d, 8, n);
-		FbInOverC (src, srca, ma, d, 16, o);
-		FbInOverC (src, srca, ma, d, 24, p);
-		WRITE(pDst, dst, m|n|o|p);
+		d = *dst;
+		s = src;
+
+		UN8x4_MUL_UN8x4 (s, ma);
+		UN8x4_MUL_UN8 (ma, srca);
+		ma = ~ma;
+		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, s);
+
+		*dst = d;
 	    }
+
 	    dst++;
 	}
     }
 }
 
 static void
-fbCompositeSolidMask_nx8x0888 (pixman_implementation_t *imp,
-			       pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int32_t      xSrc,
-			       int32_t      ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
-			       int32_t     width,
-			       int32_t     height)
+fast_composite_over_n_8_0888 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
 {
-    uint32_t	src, srca;
-    uint8_t	*dstLine, *dst;
-    uint32_t	d;
-    uint8_t	*maskLine, *mask, m;
-    int	dstStride, maskStride;
-    uint16_t	w;
+    uint32_t src, srca;
+    uint8_t     *dst_line, *dst;
+    uint32_t d;
+    uint8_t     *mask_line, *mask, m;
+    int dst_stride, mask_stride;
+    uint16_t w;
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 3);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 3);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	mask = maskLine;
-	maskLine += maskStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
 	w = width;
 
 	while (w--)
 	{
-	    m = READ(pMask, mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
+		{
 		    d = src;
+		}
 		else
 		{
-		    d = Fetch24(pDst, dst);
-		    d = fbOver24 (src, d);
+		    d = fetch_24 (dst);
+		    d = over (src, d);
 		}
-		Store24(pDst, dst,d);
+		store_24 (dst, d);
 	    }
 	    else if (m)
 	    {
-		d = fbOver24 (fbIn(src,m), Fetch24(pDst, dst));
-		Store24(pDst, dst, d);
+		d = over (in (src, m), fetch_24 (dst));
+		store_24 (dst, d);
 	    }
 	    dst += 3;
 	}
@@ -464,63 +536,65 @@ fbCompositeSolidMask_nx8x0888 (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSolidMask_nx8x0565 (pixman_implementation_t *imp,
-			       pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
-				  int32_t      xSrc,
-				  int32_t      ySrc,
-				  int32_t      xMask,
-				  int32_t      yMask,
-				  int32_t      xDst,
-				  int32_t      yDst,
-				  int32_t     width,
-				  int32_t     height)
+fast_composite_over_n_8_0565 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
 {
-    uint32_t	src, srca;
-    uint16_t	*dstLine, *dst;
-    uint32_t	d;
-    uint8_t	*maskLine, *mask, m;
-    int	dstStride, maskStride;
-    uint16_t	w;
+    uint32_t src, srca;
+    uint16_t    *dst_line, *dst;
+    uint32_t d;
+    uint8_t     *mask_line, *mask, m;
+    int dst_stride, mask_stride;
+    uint16_t w;
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	mask = maskLine;
-	maskLine += maskStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
 	w = width;
 
 	while (w--)
 	{
-	    m = READ(pMask, mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
+		{
 		    d = src;
+		}
 		else
 		{
-		    d = READ(pDst, dst);
-		    d = fbOver24 (src, cvt0565to0888(d));
+		    d = *dst;
+		    d = over (src, CONVERT_0565_TO_0888 (d));
 		}
-		WRITE(pDst, dst, cvt8888to0565(d));
+		*dst = CONVERT_8888_TO_0565 (d);
 	    }
 	    else if (m)
 	    {
-		d = READ(pDst, dst);
-		d = fbOver24 (fbIn(src,m), cvt0565to0888(d));
-		WRITE(pDst, dst, cvt8888to0565(d));
+		d = *dst;
+		d = over (in (src, m), CONVERT_0565_TO_0888 (d));
+		*dst = CONVERT_8888_TO_0565 (d);
 	    }
 	    dst++;
 	}
@@ -528,73 +602,76 @@ fbCompositeSolidMask_nx8x0565 (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSolidMask_nx8888x0565C (pixman_implementation_t *imp,
-				   pixman_op_t op,
-				   pixman_image_t * pSrc,
-				   pixman_image_t * pMask,
-				   pixman_image_t * pDst,
-				   int32_t      xSrc,
-				   int32_t      ySrc,
-				   int32_t      xMask,
-				   int32_t      yMask,
-				   int32_t      xDst,
-				   int32_t      yDst,
-				   int32_t     width,
-				   int32_t     height)
+fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
+                                    pixman_op_t              op,
+                                    pixman_image_t *         src_image,
+                                    pixman_image_t *         mask_image,
+                                    pixman_image_t *         dst_image,
+                                    int32_t                  src_x,
+                                    int32_t                  src_y,
+                                    int32_t                  mask_x,
+                                    int32_t                  mask_y,
+                                    int32_t                  dest_x,
+                                    int32_t                  dest_y,
+                                    int32_t                  width,
+                                    int32_t                  height)
 {
-    uint32_t	src, srca;
-    uint16_t	src16;
-    uint16_t	*dstLine, *dst;
-    uint32_t	d;
-    uint32_t	*maskLine, *mask, ma;
-    int	dstStride, maskStride;
-    uint16_t	w;
-    uint32_t	m, n, o;
+    uint32_t  src, srca, s;
+    uint16_t  src16;
+    uint16_t *dst_line, *dst;
+    uint32_t  d;
+    uint32_t *mask_line, *mask, ma;
+    int dst_stride, mask_stride;
+    uint16_t w;
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    src16 = cvt8888to0565(src);
+    src16 = CONVERT_8888_TO_0565 (src);
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint32_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint32_t, mask_stride, mask_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	mask = maskLine;
-	maskLine += maskStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
 	w = width;
 
 	while (w--)
 	{
-	    ma = READ(pMask, mask++);
+	    ma = *mask++;
 	    if (ma == 0xffffffff)
 	    {
 		if (srca == 0xff)
 		{
-		    WRITE(pDst, dst, src16);
+		    *dst = src16;
 		}
 		else
 		{
-		    d = READ(pDst, dst);
-		    d = fbOver24 (src, cvt0565to0888(d));
-		    WRITE(pDst, dst, cvt8888to0565(d));
+		    d = *dst;
+		    d = over (src, CONVERT_0565_TO_0888 (d));
+		    *dst = CONVERT_8888_TO_0565 (d);
 		}
 	    }
 	    else if (ma)
 	    {
-		d = READ(pDst, dst);
-		d = cvt0565to0888(d);
-		FbInOverC (src, srca, ma, d, 0, m);
-		FbInOverC (src, srca, ma, d, 8, n);
-		FbInOverC (src, srca, ma, d, 16, o);
-		d = m|n|o;
-		WRITE(pDst, dst, cvt8888to0565(d));
+		d = *dst;
+		d = CONVERT_0565_TO_0888 (d);
+
+		s = src;
+
+		UN8x4_MUL_UN8x4 (s, ma);
+		UN8x4_MUL_UN8 (ma, srca);
+		ma = ~ma;
+		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, s);
+
+		*dst = CONVERT_8888_TO_0565 (d);
 	    }
 	    dst++;
 	}
@@ -602,96 +679,95 @@ fbCompositeSolidMask_nx8888x0565C (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSrc_8888x8888 (pixman_implementation_t *imp,
-			  pixman_op_t op,
-			 pixman_image_t * pSrc,
-			 pixman_image_t * pMask,
-			 pixman_image_t * pDst,
-			 int32_t      xSrc,
-			 int32_t      ySrc,
-			 int32_t      xMask,
-			 int32_t      yMask,
-			 int32_t      xDst,
-			 int32_t      yDst,
-			 int32_t     width,
-			 int32_t     height)
+fast_composite_over_8888_8888 (pixman_implementation_t *imp,
+                               pixman_op_t              op,
+                               pixman_image_t *         src_image,
+                               pixman_image_t *         mask_image,
+                               pixman_image_t *         dst_image,
+                               int32_t                  src_x,
+                               int32_t                  src_y,
+                               int32_t                  mask_x,
+                               int32_t                  mask_y,
+                               int32_t                  dest_x,
+                               int32_t                  dest_y,
+                               int32_t                  width,
+                               int32_t                  height)
 {
-    uint32_t	*dstLine, *dst, dstMask;
-    uint32_t	*srcLine, *src, s;
-    int	dstStride, srcStride;
-    uint8_t	a;
-    uint16_t	w;
+    uint32_t    *dst_line, *dst;
+    uint32_t    *src_line, *src, s;
+    int dst_stride, src_stride;
+    uint8_t a;
+    uint16_t w;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-
-    dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (a == 0xff)
-		WRITE(pDst, dst, s & dstMask);
+		*dst = s;
 	    else if (s)
-		WRITE(pDst, dst, fbOver (s, READ(pDst, dst)) & dstMask);
+		*dst = over (s, *dst);
 	    dst++;
 	}
     }
 }
 
 static void
-fbCompositeSrc_8888x0888 (pixman_implementation_t *imp,
-			  pixman_op_t op,
-			 pixman_image_t * pSrc,
-			 pixman_image_t * pMask,
-			 pixman_image_t * pDst,
-			 int32_t      xSrc,
-			 int32_t      ySrc,
-			 int32_t      xMask,
-			 int32_t      yMask,
-			 int32_t      xDst,
-			 int32_t      yDst,
-			 int32_t     width,
-			 int32_t     height)
+fast_composite_over_8888_0888 (pixman_implementation_t *imp,
+			       pixman_op_t              op,
+			       pixman_image_t *         src_image,
+			       pixman_image_t *         mask_image,
+			       pixman_image_t *         dst_image,
+			       int32_t                  src_x,
+			       int32_t                  src_y,
+			       int32_t                  mask_x,
+			       int32_t                  mask_y,
+			       int32_t                  dest_x,
+			       int32_t                  dest_y,
+			       int32_t                  width,
+			       int32_t                  height)
 {
-    uint8_t	*dstLine, *dst;
-    uint32_t	d;
-    uint32_t	*srcLine, *src, s;
-    uint8_t	a;
-    int	dstStride, srcStride;
-    uint16_t	w;
+    uint8_t     *dst_line, *dst;
+    uint32_t d;
+    uint32_t    *src_line, *src, s;
+    uint8_t a;
+    int dst_stride, src_stride;
+    uint16_t w;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 3);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 3);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (a)
 	    {
 		if (a == 0xff)
 		    d = s;
 		else
-		    d = fbOver24 (s, Fetch24(pDst, dst));
-		Store24(pDst, dst, d);
+		    d = over (s, fetch_24 (dst));
+
+		store_24 (dst, d);
 	    }
 	    dst += 3;
 	}
@@ -699,52 +775,54 @@ fbCompositeSrc_8888x0888 (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSrc_8888x0565 (pixman_implementation_t *imp,
-			  pixman_op_t op,
-			 pixman_image_t * pSrc,
-			 pixman_image_t * pMask,
-			 pixman_image_t * pDst,
-			 int32_t      xSrc,
-			 int32_t      ySrc,
-			 int32_t      xMask,
-			 int32_t      yMask,
-			 int32_t      xDst,
-			 int32_t      yDst,
-			 int32_t     width,
-			 int32_t     height)
+fast_composite_over_8888_0565 (pixman_implementation_t *imp,
+                               pixman_op_t              op,
+                               pixman_image_t *         src_image,
+                               pixman_image_t *         mask_image,
+                               pixman_image_t *         dst_image,
+                               int32_t                  src_x,
+                               int32_t                  src_y,
+                               int32_t                  mask_x,
+                               int32_t                  mask_y,
+                               int32_t                  dest_x,
+                               int32_t                  dest_y,
+                               int32_t                  width,
+                               int32_t                  height)
 {
-    uint16_t	*dstLine, *dst;
-    uint32_t	d;
-    uint32_t	*srcLine, *src, s;
-    uint8_t	a;
-    int	dstStride, srcStride;
-    uint16_t	w;
+    uint16_t    *dst_line, *dst;
+    uint32_t d;
+    uint32_t    *src_line, *src, s;
+    uint8_t a;
+    int dst_stride, src_stride;
+    uint16_t w;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (s)
 	    {
 		if (a == 0xff)
+		{
 		    d = s;
+		}
 		else
 		{
-		    d = READ(pDst, dst);
-		    d = fbOver24 (s, cvt0565to0888(d));
+		    d = *dst;
+		    d = over (s, CONVERT_0565_TO_0888 (d));
 		}
-		WRITE(pDst, dst, cvt8888to0565(d));
+		*dst = CONVERT_8888_TO_0565 (d);
 	    }
 	    dst++;
 	}
@@ -752,90 +830,90 @@ fbCompositeSrc_8888x0565 (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSrc_x888x0565 (pixman_implementation_t *imp,
-			  pixman_op_t op,
-                          pixman_image_t * pSrc,
-                          pixman_image_t * pMask,
-                          pixman_image_t * pDst,
-                          int32_t      xSrc,
-                          int32_t      ySrc,
-                          int32_t      xMask,
-                          int32_t      yMask,
-                          int32_t      xDst,
-                          int32_t      yDst,
-                          int32_t     width,
-                          int32_t     height)
+fast_composite_src_x888_0565 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
 {
-    uint16_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src, s;
-    int	dstStride, srcStride;
-    uint16_t	w;
+    uint16_t    *dst_line, *dst;
+    uint32_t    *src_line, *src, s;
+    int dst_stride, src_stride;
+    uint16_t w;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
-	    WRITE(pDst, dst, cvt8888to0565(s));
+	    s = *src++;
+	    *dst = CONVERT_8888_TO_0565 (s);
 	    dst++;
 	}
     }
 }
 
 static void
-fbCompositeSrcAdd_8000x8000 (pixman_implementation_t *imp,
-			     pixman_op_t	op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
-			     int32_t      xSrc,
-			     int32_t      ySrc,
-			     int32_t      xMask,
-			     int32_t      yMask,
-			     int32_t      xDst,
-			     int32_t      yDst,
-			     int32_t     width,
-			     int32_t     height)
+fast_composite_add_8000_8000 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*srcLine, *src;
-    int	dstStride, srcStride;
-    uint16_t	w;
-    uint8_t	s, d;
-    uint16_t	t;
+    uint8_t     *dst_line, *dst;
+    uint8_t     *src_line, *src;
+    int dst_stride, src_stride;
+    uint16_t w;
+    uint8_t s, d;
+    uint16_t t;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint8_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    if (s)
 	    {
 		if (s != 0xff)
 		{
-		    d = READ(pDst, dst);
+		    d = *dst;
 		    t = d + s;
 		    s = t | (0 - (t >> 8));
 		}
-		WRITE(pDst, dst, s);
+		*dst = s;
 	    }
 	    dst++;
 	}
@@ -843,57 +921,49 @@ fbCompositeSrcAdd_8000x8000 (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSrcAdd_8888x8888 (pixman_implementation_t *imp,
-			     pixman_op_t	op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
-			     int32_t      xSrc,
-			     int32_t      ySrc,
-			     int32_t      xMask,
-			     int32_t      yMask,
-			     int32_t      xDst,
-			     int32_t      yDst,
-			     int32_t     width,
-			     int32_t     height)
+fast_composite_add_8888_8888 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
 {
-    uint32_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src;
-    int	dstStride, srcStride;
-    uint16_t	w;
-    uint32_t	s, d;
-    uint16_t	t;
-    uint32_t	m,n,o,p;
+    uint32_t    *dst_line, *dst;
+    uint32_t    *src_line, *src;
+    int dst_stride, src_stride;
+    uint16_t w;
+    uint32_t s, d;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    if (s)
 	    {
 		if (s != 0xffffffff)
 		{
-		    d = READ(pDst, dst);
+		    d = *dst;
 		    if (d)
-		    {
-			m = FbAdd(s,d,0,t);
-			n = FbAdd(s,d,8,t);
-			o = FbAdd(s,d,16,t);
-			p = FbAdd(s,d,24,t);
-			s = m|n|o|p;
-		    }
+			UN8x4_ADD_UN8x4 (s, d);
 		}
-		WRITE(pDst, dst, s);
+		*dst = s;
 	    }
 	    dst++;
 	}
@@ -901,54 +971,54 @@ fbCompositeSrcAdd_8888x8888 (pixman_implementation_t *imp,
 }
 
 static void
-fbCompositeSrcAdd_8888x8x8 (pixman_implementation_t *imp,
-			    pixman_op_t op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
-			    int32_t      xSrc,
-			    int32_t      ySrc,
-			    int32_t      xMask,
-			    int32_t      yMask,
-			    int32_t      xDst,
-			    int32_t      yDst,
-			    int32_t     width,
-			    int32_t     height)
+fast_composite_add_8888_8_8 (pixman_implementation_t *imp,
+                             pixman_op_t              op,
+                             pixman_image_t *         src_image,
+                             pixman_image_t *         mask_image,
+                             pixman_image_t *         dst_image,
+                             int32_t                  src_x,
+                             int32_t                  src_y,
+                             int32_t                  mask_x,
+                             int32_t                  mask_y,
+                             int32_t                  dest_x,
+                             int32_t                  dest_y,
+                             int32_t                  width,
+                             int32_t                  height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*maskLine, *mask;
-    int	dstStride, maskStride;
-    uint16_t	w;
-    uint32_t	src;
-    uint8_t	sa;
+    uint8_t     *dst_line, *dst;
+    uint8_t     *mask_line, *mask;
+    int dst_stride, mask_stride;
+    uint16_t w;
+    uint32_t src;
+    uint8_t sa;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    fbComposeGetSolid (pSrc, src, pDst->bits.format);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
     sa = (src >> 24);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	mask = maskLine;
-	maskLine += maskStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
 	w = width;
 
 	while (w--)
 	{
-	    uint16_t	tmp;
-	    uint16_t	a;
-	    uint32_t	m, d;
-	    uint32_t	r;
+	    uint16_t tmp;
+	    uint16_t a;
+	    uint32_t m, d;
+	    uint32_t r;
 
-	    a = READ(pMask, mask++);
-	    d = READ(pDst, dst);
+	    a = *mask++;
+	    d = *dst;
 
-	    m = FbInU (sa, 0, a, tmp);
-	    r = FbAdd (m, d, 0, tmp);
+	    m = MUL_UN8 (sa, a, tmp);
+	    r = ADD_UN8 (m, d, tmp);
 
-	    WRITE(pDst, dst++, r);
+	    *dst++ = r;
 	}
     }
 }
@@ -958,229 +1028,249 @@ fbCompositeSrcAdd_8888x8x8 (pixman_implementation_t *imp,
  */
 
 static void
-fbCompositeSolidFill (pixman_implementation_t *imp,
-		      pixman_op_t op,
-		      pixman_image_t * pSrc,
-		      pixman_image_t * pMask,
-		      pixman_image_t * pDst,
-		      int32_t      xSrc,
-		      int32_t      ySrc,
-		      int32_t      xMask,
-		      int32_t      yMask,
-		      int32_t      xDst,
-		      int32_t      yDst,
-		      int32_t     width,
-		      int32_t     height)
+fast_composite_solid_fill (pixman_implementation_t *imp,
+                           pixman_op_t              op,
+                           pixman_image_t *         src_image,
+                           pixman_image_t *         mask_image,
+                           pixman_image_t *         dst_image,
+                           int32_t                  src_x,
+                           int32_t                  src_y,
+                           int32_t                  mask_x,
+                           int32_t                  mask_y,
+                           int32_t                  dest_x,
+                           int32_t                  dest_y,
+                           int32_t                  width,
+                           int32_t                  height)
 {
-    uint32_t	src;
+    uint32_t src;
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
-    if (pDst->bits.format == PIXMAN_a8)
+    if (dst_image->bits.format == PIXMAN_a8)
+    {
 	src = src >> 24;
-    else if (pDst->bits.format == PIXMAN_r5g6b5 ||
-	     pDst->bits.format == PIXMAN_b5g6r5)
-	src = cvt8888to0565 (src);
+    }
+    else if (dst_image->bits.format == PIXMAN_r5g6b5 ||
+             dst_image->bits.format == PIXMAN_b5g6r5)
+    {
+	src = CONVERT_8888_TO_0565 (src);
+    }
 
-    pixman_fill (pDst->bits.bits, pDst->bits.rowstride,
-		 PIXMAN_FORMAT_BPP (pDst->bits.format),
-		 xDst, yDst,
-		 width, height,
-		 src);
+    pixman_fill (dst_image->bits.bits, dst_image->bits.rowstride,
+                 PIXMAN_FORMAT_BPP (dst_image->bits.format),
+                 dest_x, dest_y,
+                 width, height,
+                 src);
 }
 
 static void
-fbCompositeSrc_8888xx888 (pixman_implementation_t *imp,
-			  pixman_op_t op,
-			  pixman_image_t * pSrc,
-			  pixman_image_t * pMask,
-			  pixman_image_t * pDst,
-			  int32_t      xSrc,
-			  int32_t      ySrc,
-			  int32_t      xMask,
-			  int32_t      yMask,
-			  int32_t      xDst,
-			  int32_t      yDst,
-			  int32_t     width,
-			  int32_t     height)
+fast_composite_src_8888_x888 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
 {
-    uint32_t	*dst;
+    uint32_t    *dst;
     uint32_t    *src;
-    int		 dstStride, srcStride;
-    uint32_t	 n_bytes = width * sizeof (uint32_t);
+    int dst_stride, src_stride;
+    uint32_t n_bytes = width * sizeof (uint32_t);
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, src, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dst, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst, 1);
 
     while (height--)
     {
 	memcpy (dst, src, n_bytes);
 
-	dst += dstStride;
-	src += srcStride;
+	dst += dst_stride;
+	src += src_stride;
     }
 }
 
-static const FastPathInfo c_fast_paths[] =
+static const pixman_fast_path_t c_fast_paths[] =
 {
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565, 0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565, 0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r8g8b8,   fbCompositeSolidMask_nx8x0888, 0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b8g8r8,   fbCompositeSolidMask_nx8x0888, 0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8x8888, 0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8x8888, 0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8x8888, 0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8x8888, 0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8888x8888C, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8888x8888C, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8888x0565C, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8888x8888C, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8888x8888C, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8888x0565C, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,	PIXMAN_x8r8g8b8, fbCompositeOver_x888x8x8888,       0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,	PIXMAN_a8r8g8b8, fbCompositeOver_x888x8x8888,       0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,	PIXMAN_x8b8g8r8, fbCompositeOver_x888x8x8888,       0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,	PIXMAN_a8b8g8r8, fbCompositeOver_x888x8x8888,       0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888,	   0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888,	   0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_r5g6b5,	 fbCompositeSrc_8888x0565,	   0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8888,	   0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888,	   0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_8888x0565,	   0 },
-    { PIXMAN_OP_ADD, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeSrcAdd_8888x8888,   0 },
-    { PIXMAN_OP_ADD, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrcAdd_8888x8888,   0 },
-    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000,   0 },
-    { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fbCompositeSrcAdd_8888x8x8,    0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSolidFill, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSolidFill, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeSolidFill, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSolidFill, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8,       fbCompositeSolidFill, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSolidFill, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSrc_8888xx888, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSrc_8888xx888, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888xx888, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888xx888, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrc_x888x0565, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrc_x888x0565, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_x888x0565, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_x888x0565, 0 },
-    { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcIn_8x8,   0 },
-    { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeSolidMaskIn_nx8x8, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fast_composite_over_n_8_0565, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fast_composite_over_n_8_0565, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r8g8b8,   fast_composite_over_n_8_0888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b8g8r8,   fast_composite_over_n_8_0888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, fast_composite_over_n_8_8888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, fast_composite_over_n_8_8888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, fast_composite_over_n_8_8888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, fast_composite_over_n_8_8888, 0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fast_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fast_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fast_composite_over_n_8888_0565_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fast_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fast_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fast_composite_over_n_8888_0565_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fast_composite_over_x888_8_8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fast_composite_over_x888_8_8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, fast_composite_over_x888_8_8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, fast_composite_over_x888_8_8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fast_composite_over_8888_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, fast_composite_over_8888_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   fast_composite_over_8888_0565,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, fast_composite_over_8888_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, fast_composite_over_8888_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fast_composite_over_8888_0565,    0 },
+    { PIXMAN_OP_ADD, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_a8r8g8b8, fast_composite_add_8888_8888,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_a8b8g8r8, fast_composite_add_8888_8888,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fast_composite_add_8000_8000,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fast_composite_add_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fast_composite_add_8888_8_8,    0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8r8g8b8, fast_composite_solid_fill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_x8r8g8b8, fast_composite_solid_fill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8b8g8r8, fast_composite_solid_fill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_x8b8g8r8, fast_composite_solid_fill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8,       fast_composite_solid_fill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_r5g6b5,   fast_composite_solid_fill, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fast_composite_src_8888_x888, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fast_composite_src_8888_x888, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fast_composite_src_8888_x888, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fast_composite_src_8888_x888, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_r5g6b5,   fast_composite_src_x888_0565, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_r5g6b5,   fast_composite_src_x888_0565, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_b5g6r5,   fast_composite_src_x888_0565, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_b5g6r5,   fast_composite_src_x888_0565, 0 },
+    { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fast_composite_in_8_8,   0 },
+    { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fast_composite_in_n_8_8, 0 },
     { PIXMAN_OP_NONE },
 };
 
 static void
-fbCompositeSrcScaleNearest (pixman_implementation_t *imp,
-			    pixman_op_t     op,
-			    pixman_image_t *pSrc,
-			    pixman_image_t *pMask,
-			    pixman_image_t *pDst,
-			    int32_t         xSrc,
-			    int32_t         ySrc,
-			    int32_t         xMask,
-			    int32_t         yMask,
-			    int32_t         xDst,
-			    int32_t         yDst,
-			    int32_t        width,
-			    int32_t        height)
+fast_composite_src_scale_nearest (pixman_implementation_t *imp,
+                                  pixman_op_t              op,
+                                  pixman_image_t *         src_image,
+                                  pixman_image_t *         mask_image,
+                                  pixman_image_t *         dst_image,
+                                  int32_t                  src_x,
+                                  int32_t                  src_y,
+                                  int32_t                  mask_x,
+                                  int32_t                  mask_y,
+                                  int32_t                  dest_x,
+                                  int32_t                  dest_y,
+                                  int32_t                  width,
+                                  int32_t                  height)
 {
     uint32_t       *dst;
     uint32_t       *src;
-    int             dstStride, srcStride;
-    int             i, j;
+    int dst_stride, src_stride;
+    int i, j;
     pixman_vector_t v;
-    
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dst, 1);
-    /* pass in 0 instead of xSrc and ySrc because xSrc and ySrc need to be
+
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst, 1);
+    /* pass in 0 instead of src_x and src_y because src_x and src_y need to be
      * transformed from destination space to source space */
-    fbComposeGetStart (pSrc, 0, 0, uint32_t, srcStride, src, 1);
-    
+    PIXMAN_IMAGE_GET_LINE (src_image, 0, 0, uint32_t, src_stride, src, 1);
+
     /* reference point is the center of the pixel */
-    v.vector[0] = pixman_int_to_fixed(xSrc) + pixman_fixed_1 / 2;
-    v.vector[1] = pixman_int_to_fixed(ySrc) + pixman_fixed_1 / 2;
+    v.vector[0] = pixman_int_to_fixed (src_x) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (src_y) + pixman_fixed_1 / 2;
     v.vector[2] = pixman_fixed_1;
-    
-    if (!pixman_transform_point_3d (pSrc->common.transform, &v))
-        return;
-    
+
+    if (!pixman_transform_point_3d (src_image->common.transform, &v))
+	return;
+
     /* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
     v.vector[0] -= pixman_fixed_e;
     v.vector[1] -= pixman_fixed_e;
-    
-    for (j = 0; j < height; j++) {
-        pixman_fixed_t vx = v.vector[0];
-        pixman_fixed_t vy = v.vector[1];
-        for (i = 0; i < width; ++i) {
-            pixman_bool_t inside_bounds;
-            uint32_t result;
-            int x, y;
-            x = vx >> 16;
-            y = vy >> 16;
-	    
-            /* apply the repeat function */
-            switch (pSrc->common.repeat) {
+
+    for (j = 0; j < height; j++)
+    {
+	pixman_fixed_t vx = v.vector[0];
+	pixman_fixed_t vy = v.vector[1];
+
+	for (i = 0; i < width; ++i)
+	{
+	    pixman_bool_t inside_bounds;
+	    uint32_t result;
+	    int x, y;
+	    x = vx >> 16;
+	    y = vy >> 16;
+
+	    /* apply the repeat function */
+	    switch (src_image->common.repeat)
+	    {
 	    case PIXMAN_REPEAT_NORMAL:
-		x = MOD (x, pSrc->bits.width);
-		y = MOD (y, pSrc->bits.height);
+		x = MOD (x, src_image->bits.width);
+		y = MOD (y, src_image->bits.height);
 		inside_bounds = TRUE;
 		break;
-		
+
 	    case PIXMAN_REPEAT_PAD:
-		x = CLIP (x, 0, pSrc->bits.width-1);
-		y = CLIP (y, 0, pSrc->bits.height-1);
+		x = CLIP (x, 0, src_image->bits.width - 1);
+		y = CLIP (y, 0, src_image->bits.height - 1);
 		inside_bounds = TRUE;
 		break;
-		
+
 	    case PIXMAN_REPEAT_REFLECT:
-		x = MOD (x, pSrc->bits.width * 2);
-		if (x >= pSrc->bits.width)
-		    x = pSrc->bits.width * 2 - x - 1;
-		y = MOD (y, pSrc->bits.height * 2);
-		if (y >= pSrc->bits.height)
-		    y = pSrc->bits.height * 2 - y - 1;
+		x = MOD (x, src_image->bits.width * 2);
+		if (x >= src_image->bits.width)
+		    x = src_image->bits.width * 2 - x - 1;
+		y = MOD (y, src_image->bits.height * 2);
+		if (y >= src_image->bits.height)
+		    y = src_image->bits.height * 2 - y - 1;
 		inside_bounds = TRUE;
 		break;
-		
+
 	    case PIXMAN_REPEAT_NONE:
 	    default:
-		inside_bounds = (x >= 0 && x < pSrc->bits.width && y >= 0 && y < pSrc->bits.height);
+		inside_bounds =
+		    (x >= 0				&&
+		     x < src_image->bits.width		&&
+		     y >= 0				&&
+		     y < src_image->bits.height);
 		break;
-            }
-	    
-            if (inside_bounds) {
-                //XXX: we should move this multiplication out of the loop
-                result = READ(pSrc, src + y * srcStride + x);
-            } else {
-                result = 0;
-            }
-            WRITE(pDst, dst + i, result);
-	    
-            /* adjust the x location by a unit vector in the x direction:
-             * this is equivalent to transforming x+1 of the destination point to source space */
-            vx += pSrc->common.transform->matrix[0][0];
-        }
-        /* adjust the y location by a unit vector in the y direction
-         * this is equivalent to transforming y+1 of the destination point to source space */
-        v.vector[1] += pSrc->common.transform->matrix[1][1];
-        dst += dstStride;
+	    }
+
+	    if (inside_bounds)
+	    {
+		/* XXX: we should move this multiplication out of the loop */
+		result = *(src + y * src_stride + x);
+	    }
+	    else
+	    {
+		result = 0;
+	    }
+	    *(dst + i) = result;
+
+	    /* adjust the x location by a unit vector in the x direction:
+	     * this is equivalent to transforming x+1 of the destination
+	     * point to source space
+	     */
+	    vx += src_image->common.transform->matrix[0][0];
+	}
+	/* adjust the y location by a unit vector in the y direction
+	 * this is equivalent to transforming y+1 of the destination point
+	 * to source space
+	 */
+	v.vector[1] += src_image->common.transform->matrix[1][1];
+	dst += dst_stride;
     }
 }
 
 static void
 fast_path_composite (pixman_implementation_t *imp,
-		     pixman_op_t     op,
-		     pixman_image_t *src,
-		     pixman_image_t *mask,
-		     pixman_image_t *dest,
-		     int32_t         src_x,
-		     int32_t         src_y,
-		     int32_t         mask_x,
-		     int32_t         mask_y,
-		     int32_t         dest_x,
-		     int32_t         dest_y,
-		     int32_t        width,
-		     int32_t        height)
+                     pixman_op_t              op,
+                     pixman_image_t *         src,
+                     pixman_image_t *         mask,
+                     pixman_image_t *         dest,
+                     int32_t                  src_x,
+                     int32_t                  src_y,
+                     int32_t                  mask_x,
+                     int32_t                  mask_y,
+                     int32_t                  dest_x,
+                     int32_t                  dest_y,
+                     int32_t                  width,
+                     int32_t                  height)
 {
     if (src->type == BITS
         && src->common.transform
@@ -1188,57 +1278,55 @@ fast_path_composite (pixman_implementation_t *imp,
         && op == PIXMAN_OP_SRC
         && !src->common.alpha_map && !dest->common.alpha_map
         && (src->common.filter == PIXMAN_FILTER_NEAREST)
-        && PIXMAN_FORMAT_BPP(dest->bits.format) == 32
+        && PIXMAN_FORMAT_BPP (dest->bits.format) == 32
         && src->bits.format == dest->bits.format
-        && src->common.src_clip == &(src->common.full_region)
-        && !src->common.read_func && !src->common.write_func
-        && !dest->common.read_func && !dest->common.write_func)
+        && !src->bits.read_func && !src->bits.write_func
+        && !dest->bits.read_func && !dest->bits.write_func)
     {
-        /* ensure that the transform matrix only has a scale */
-        if (src->common.transform->matrix[0][1] == 0 &&
-            src->common.transform->matrix[1][0] == 0 &&
-            src->common.transform->matrix[2][0] == 0 &&
-            src->common.transform->matrix[2][1] == 0 &&
-            src->common.transform->matrix[2][2] == pixman_fixed_1)
+	/* ensure that the transform matrix only has a scale */
+	if (src->common.transform->matrix[0][1] == 0 &&
+	    src->common.transform->matrix[1][0] == 0 &&
+	    src->common.transform->matrix[2][0] == 0 &&
+	    src->common.transform->matrix[2][1] == 0 &&
+	    src->common.transform->matrix[2][2] == pixman_fixed_1)
 	{
 	    _pixman_walk_composite_region (imp, op,
-					   src, mask, dest,
-					   src_x, src_y,
-					   mask_x, mask_y,
-					   dest_x, dest_y,
-					   width, height,
-					   FALSE, FALSE, 
-					   fbCompositeSrcScaleNearest);
+	                                   src, mask, dest,
+	                                   src_x, src_y,
+	                                   mask_x, mask_y,
+	                                   dest_x, dest_y,
+	                                   width, height,
+	                                   fast_composite_src_scale_nearest);
 	    return;
 	}
     }
 
     if (_pixman_run_fast_path (c_fast_paths, imp,
-			       op, src, mask, dest,
-			       src_x, src_y,
-			       mask_x, mask_y,
-			       dest_x, dest_y,
-			       width, height))
+                               op, src, mask, dest,
+                               src_x, src_y,
+                               mask_x, mask_y,
+                               dest_x, dest_y,
+                               width, height))
     {
 	return;
     }
 
     _pixman_implementation_composite (imp->delegate, op,
-				      src, mask, dest,
-				      src_x, src_y,
-				      mask_x, mask_y,
-				      dest_x, dest_y,
-				      width, height);
+                                      src, mask, dest,
+                                      src_x, src_y,
+                                      mask_x, mask_y,
+                                      dest_x, dest_y,
+                                      width, height);
 }
 
 static void
-pixman_fill8 (uint32_t  *bits,
-	      int	stride,
-	      int	x,
-	      int	y,
-	      int	width,
-	      int	height,
-	      uint32_t  xor)
+pixman_fill8 (uint32_t *bits,
+              int       stride,
+              int       x,
+              int       y,
+              int       width,
+              int       height,
+              uint32_t xor)
 {
     int byte_stride = stride * (int) sizeof (uint32_t);
     uint8_t *dst = (uint8_t *) bits;
@@ -1258,14 +1346,15 @@ pixman_fill8 (uint32_t  *bits,
 
 static void
 pixman_fill16 (uint32_t *bits,
-	       int       stride,
-	       int       x,
-	       int       y,
-	       int       width,
-	       int       height,
-	       uint32_t  xor)
+               int       stride,
+               int       x,
+               int       y,
+               int       width,
+               int       height,
+               uint32_t xor)
 {
-    int short_stride = (stride * (int) sizeof (uint32_t)) / (int) sizeof (uint16_t);
+    int short_stride =
+	(stride * (int)sizeof (uint32_t)) / (int)sizeof (uint16_t);
     uint16_t *dst = (uint16_t *)bits;
     uint16_t v = xor & 0xffff;
     int i;
@@ -1283,12 +1372,12 @@ pixman_fill16 (uint32_t *bits,
 
 static void
 pixman_fill32 (uint32_t *bits,
-	       int       stride,
-	       int       x,
-	       int       y,
-	       int       width,
-	       int       height,
-	       uint32_t  xor)
+               int       stride,
+               int       x,
+               int       y,
+               int       width,
+               int       height,
+               uint32_t  xor)
 {
     int i;
 
@@ -1305,46 +1394,47 @@ pixman_fill32 (uint32_t *bits,
 
 static pixman_bool_t
 fast_path_fill (pixman_implementation_t *imp,
-		uint32_t *bits,
-		int stride,
-		int bpp,
-		int x,
-		int y,
-		int width,
-		int height,
-		uint32_t xor)
+                uint32_t *               bits,
+                int                      stride,
+                int                      bpp,
+                int                      x,
+                int                      y,
+                int                      width,
+                int                      height,
+                uint32_t		 xor)
 {
     switch (bpp)
     {
     case 8:
 	pixman_fill8 (bits, stride, x, y, width, height, xor);
 	break;
-	
+
     case 16:
 	pixman_fill16 (bits, stride, x, y, width, height, xor);
 	break;
-	
+
     case 32:
 	pixman_fill32 (bits, stride, x, y, width, height, xor);
 	break;
-	
+
     default:
 	return _pixman_implementation_fill (
 	    imp->delegate, bits, stride, bpp, x, y, width, height, xor);
 	break;
     }
-    
+
     return TRUE;
 }
 
 pixman_implementation_t *
-_pixman_implementation_create_fast_path (pixman_implementation_t *toplevel)
+_pixman_implementation_create_fast_path (void)
 {
-    pixman_implementation_t *general = _pixman_implementation_create_general (NULL);
-    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, general);
+    pixman_implementation_t *general = _pixman_implementation_create_general ();
+    pixman_implementation_t *imp = _pixman_implementation_create (general);
 
     imp->composite = fast_path_composite;
     imp->fill = fast_path_fill;
-    
+
     return imp;
 }
+

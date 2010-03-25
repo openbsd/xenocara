@@ -71,6 +71,7 @@ main (int argc, char **argv)
     pixman_region32_init_rect (&clip_region, 50, 0, 100, 200);
     pixman_image_set_clip_region32 (src_img, &clip_region);
     pixman_image_set_source_clipping (src_img, TRUE);
+    pixman_image_set_has_client_clip (src_img, TRUE);
     pixman_image_set_transform (src_img, &trans);
     pixman_image_set_repeat (src_img, PIXMAN_REPEAT_NORMAL);
     
