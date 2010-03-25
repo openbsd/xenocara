@@ -1,6 +1,5 @@
-/* $XTermId: xutf8.c,v 1.8 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.9 2009/11/05 23:30:05 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xutf8.c,v 1.4 2005/01/14 01:50:03 dickey Exp $ */
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -189,9 +188,10 @@ Xutf8TextPropertyToTextList(Display * dpy,
     int nelements;
     char *cp;
     char *start;
-    int i, j;
-    int datalen = (int) tp->nitems;
-    int len;
+    size_t i;
+    int j;
+    size_t datalen = tp->nitems;
+    size_t len;
 
     if (tp->format != 8)
 	return XConverterNotFound;
@@ -210,12 +210,12 @@ Xutf8TextPropertyToTextList(Display * dpy,
     }
 
     nelements = 1;
-    for (cp = (char *) tp->value, i = datalen; i > 0; cp++, i--) {
+    for (cp = (char *) tp->value, i = datalen; i != 0; cp++, i--) {
 	if (*cp == '\0')
 	    nelements++;
     }
 
-    list = TypeMallocN(char *, nelements);
+    list = TypeMallocN(char *, (unsigned) nelements);
     if (!list)
 	return XNoMemory;
 
@@ -236,7 +236,7 @@ Xutf8TextPropertyToTextList(Display * dpy,
 	l1utf8copy(start, (char *) tp->value, datalen);
     start[len] = '\0';
 
-    for (cp = start, i = len + 1, j = 0; i > 0; cp++, i--) {
+    for (cp = start, i = len + 1, j = 0; i != 0; cp++, i--) {
 	if (*cp == '\0') {
 	    list[j] = start;
 	    start = (cp + 1);

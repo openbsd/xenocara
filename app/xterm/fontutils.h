@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.76 2009/09/09 23:31:55 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.79 2009/12/31 13:31:52 tom Exp $ */
 
 /************************************************************
 
@@ -101,11 +101,14 @@ extern Bool xtermLoadWideFonts (XtermWidget /* w */, Bool /* nullOk */);
 
 #if OPT_RENDERFONT
 extern Bool xtermXftMissing (XtermWidget /* xw */, XftFont * /* font */, unsigned /* wc */);
+extern void xtermCloseXft(TScreen * /* screen */, XTermXftFonts * /* pub */);
 #endif
 
 #if OPT_SHIFT_FONTS
-extern void HandleSmallerFont PROTO_XT_ACTIONS_ARGS;
+extern char *getFaceName(XtermWidget /* xw */, Bool /* wideName */);
 extern void HandleLargerFont PROTO_XT_ACTIONS_ARGS;
+extern void HandleSmallerFont PROTO_XT_ACTIONS_ARGS;
+extern void setFaceName(XtermWidget /* xw */, const char * /*value */);
 #endif
 
 #if OPT_WIDE_CHARS

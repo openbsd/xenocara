@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.173 2009/10/12 00:31:59 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.175 2009/12/09 23:25:34 Jochen.Voss Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -457,7 +457,7 @@ Tekparse(TekWidget tw)
 	    TRACE(("case: special return to vt102 mode\n"));
 	    Tparsestate = curstate;
 	    TekRecord->ptr[-1] = ANSI_NAK;	/* remove from recording */
-	    FlushLog(&(term->screen));
+	    FlushLog(TScreenOf(term));
 	    return;
 
 	case CASE_SPT_STATE:
@@ -1311,7 +1311,7 @@ TekRun(void)
 	TEK4014_ACTIVE(term) = False;
     } else {
 	TEK4014_ACTIVE(term) = False;
-	if (VWindow(&(term->screen)) == 0) {
+	if (VWindow(TScreenOf(term)) == 0) {
 	    Exit(ERROR_TINIT);
 	}
     }
@@ -1358,6 +1358,9 @@ TekInitialize(Widget request GCC_UNUSED,
 	      Cardinal *num_args GCC_UNUSED)
 {
     Widget tekparent = SHELL_OF(wnew);
+#ifndef NO_ACTIVE_ICON
+    TekScreen *screen = TekScreenOf((TekWidget) wnew);
+#endif
 
     TRACE(("TekInitialize\n"));
 
@@ -1374,7 +1377,7 @@ TekInitialize(Widget request GCC_UNUSED,
 		      HandleBellPropertyChange, (Opaque) 0);
 
 #ifndef NO_ACTIVE_ICON
-    ((TekWidget) wnew)->screen.whichTwin = &((TekWidget) wnew)->screen.fullTwin;
+    screen->whichTwin = &(screen->fullTwin);
 #endif /* NO_ACTIVE_ICON */
 
 }
@@ -1399,7 +1402,7 @@ TekRealize(Widget gw,
     unsigned long TEKgcFontMask;
 
     TRACE(("TekRealize\n"));
-    memset(tekscr, 0, sizeof(tekscr));
+    memset(tekscr, 0, sizeof(*tekscr));
 
 #ifndef NO_ACTIVE_ICON
     tekscr->whichTwin = &tekscr->fullTwin;

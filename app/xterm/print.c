@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.110 2009/10/12 00:04:19 tom Exp $ */
+/* $XTermId: print.c,v 1.115 2009/12/10 09:44:39 tom Exp $ */
 
 /************************************************************
 
@@ -36,6 +36,7 @@ authorization.
 #include <data.h>
 #include <menu.h>
 #include <error.h>
+#include <xstrings.h>
 
 #include <stdio.h>
 
@@ -61,7 +62,8 @@ static void charToPrinter(XtermWidget /* xw */ ,
 			  unsigned /* chr */ );
 static void printLine(XtermWidget /* xw */ ,
 		      int /* row */ ,
-		      unsigned /* chr */ );
+		      unsigned /* chr */ ,
+		      PrinterFlags * /* p */ );
 static void send_CharSet(XtermWidget /* xw */ ,
 			 LineData * /* ld */ );
 static void send_SGR(XtermWidget /* xw */ ,
@@ -112,7 +114,7 @@ printCursorLine(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("printCursorLine\n"));
-    printLine(xw, screen->cur_row, '\n');
+    printLine(xw, screen->cur_row, '\n', getPrinterFlags(xw, NULL, 0));
 }
 
 #define NO_COLOR	((unsigned)-1)
@@ -123,7 +125,7 @@ printCursorLine(XtermWidget xw)
  * characters that xterm would allow as a selection (which may include blanks).
  */
 static void
-printLine(XtermWidget xw, int row, unsigned chr)
+printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
 {
     TScreen *screen = TScreenOf(xw);
     int inx = ROW2INX(screen, row);
@@ -142,6 +144,9 @@ printLine(XtermWidget xw, int row, unsigned chr)
     int last_cs = CSET_IN;
 
     ld = getLineData(screen, inx);
+    if (ld == 0)
+	return;
+
     TRACE(("printLine(row=%d/%d, top=%d:%d, chr=%d):%s\n",
 	   row, ROW2INX(screen, row), screen->topline, screen->max_row, chr,
 	   visibleIChars(ld->charData, (unsigned) last)));
@@ -156,7 +161,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	    break;
     }
     if (last) {
-	if (screen->print_attributes) {
+	if (p->print_attributes) {
 	    send_CharSet(xw, ld);
 	    send_SGR(xw, 0, NO_COLOR, NO_COLOR);
 	}
@@ -164,7 +169,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	    ch = ld->charData[col];
 #if OPT_PRINT_COLORS
 	    if (screen->colorMode) {
-		if (screen->print_attributes > 1) {
+		if (p->print_attributes > 1) {
 		    fg = (ld->attribs[col] & FG_COLOR)
 			? extract_fg(xw, ColorOf(ld, col), ld->attribs[col])
 			: NO_COLOR;
@@ -183,7 +188,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 		attr = CharOf(ld->attribs[col] & SGR_MASK);
 		last_fg = fg;
 		last_bg = bg;
-		if (screen->print_attributes)
+		if (p->print_attributes)
 		    send_SGR(xw, attr, fg, bg);
 	    }
 
@@ -197,7 +202,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 #endif
 		cs = (ch >= ' ' && ch != ANSI_DEL) ? CSET_IN : CSET_OUT;
 	    if (last_cs != cs) {
-		if (screen->print_attributes) {
+		if (p->print_attributes) {
 		    charToPrinter(xw,
 				  (unsigned) ((cs == CSET_OUT)
 					      ? SHIFT_OUT
@@ -225,34 +230,47 @@ printLine(XtermWidget xw, int row, unsigned chr)
 		}
 	    });
 	}
-	if (screen->print_attributes) {
+	if (p->print_attributes) {
 	    send_SGR(xw, 0, NO_COLOR, NO_COLOR);
 	    if (cs != CSET_IN)
 		charToPrinter(xw, SHIFT_IN);
 	}
     }
-    if (screen->print_attributes)
+
+    /* finish line (protocol for attributes needs a CR */
+    if (p->print_attributes)
 	charToPrinter(xw, '\r');
-    charToPrinter(xw, chr);
+
+    if (chr && !(p->printer_newline)) {
+	if (LineTstWrapped(ld))
+	    chr = '\0';
+    }
+
+    if (chr)
+	charToPrinter(xw, chr);
 
     return;
 }
 
+#define PrintNewLine() (unsigned) (((top < bot) || p->printer_newline) ? '\n' : '\0')
+
 void
-xtermPrintScreen(XtermWidget xw, Bool use_DECPEX)
+xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags * p)
 {
     if (XtIsRealized((Widget) xw)) {
 	TScreen *screen = TScreenOf(xw);
-	Bool extent = (use_DECPEX && screen->printer_extent);
+	Bool extent = (use_DECPEX && p->printer_extent);
 	int top = extent ? 0 : screen->top_marg;
 	int bot = extent ? screen->max_row : screen->bot_marg;
 	int was_open = initialized;
 
 	TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot));
 
-	while (top <= bot)
-	    printLine(xw, top++, '\n');
-	if (screen->printer_formfeed)
+	while (top <= bot) {
+	    printLine(xw, top, PrintNewLine(), p);
+	    ++top;
+	}
+	if (p->printer_formfeed)
 	    charToPrinter(xw, '\f');
 
 	if (!was_open || screen->printer_autoclose) {
@@ -269,7 +287,7 @@ xtermPrintScreen(XtermWidget xw, Bool use_DECPEX)
  * because the normal screen's buffer is part of the overall scrollback buffer.
  */
 void
-xtermPrintEverything(XtermWidget xw)
+xtermPrintEverything(XtermWidget xw, PrinterFlags * p)
 {
     TScreen *screen = TScreenOf(xw);
     int top = 0;
@@ -282,9 +300,11 @@ xtermPrintEverything(XtermWidget xw)
     }
 
     TRACE(("xtermPrintEverything, rows %d..%d\n", top, bot));
-    while (top <= bot)
-	printLine(xw, top++, '\n');
-    if (screen->printer_formfeed)
+    while (top <= bot) {
+	printLine(xw, top, PrintNewLine(), p);
+	++top;
+    }
+    if (p->printer_formfeed)
 	charToPrinter(xw, '\f');
 
     if (!was_open || screen->printer_autoclose) {
@@ -339,7 +359,7 @@ send_SGR(XtermWidget xw, unsigned attr, unsigned fg, unsigned bg)
     }
     if (fg != NO_COLOR) {
 #if OPT_PC_COLORS
-	if (xw->screen.boldColors
+	if (TScreenOf(xw)->boldColors
 	    && fg > 8
 	    && (attr & BOLD) != 0)
 	    fg -= 8;
@@ -463,17 +483,17 @@ xtermMediaControl(XtermWidget xw, int param, int private_seq)
 	    setPrinterControlMode(xw, 1);
 	    break;
 	case 10:		/* VT320 */
-	    xtermPrintScreen(xw, False);
+	    xtermPrintScreen(xw, False, getPrinterFlags(xw, NULL, 0));
 	    break;
 	case 11:		/* VT320 */
-	    xtermPrintEverything(xw);
+	    xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
 	    break;
 	}
     } else {
 	switch (param) {
 	case -1:
 	case 0:
-	    xtermPrintScreen(xw, True);
+	    xtermPrintScreen(xw, True, getPrinterFlags(xw, NULL, 0));
 	    break;
 	case 4:
 	    setPrinterControlMode(xw, 0);
@@ -498,7 +518,7 @@ xtermAutoPrint(XtermWidget xw, unsigned chr)
 
     if (screen->printer_controlmode == 1) {
 	TRACE(("AutoPrint %d\n", chr));
-	printLine(xw, screen->cursorp.row, chr);
+	printLine(xw, screen->cursorp.row, chr, getPrinterFlags(xw, NULL, 0));
 	if (Printer != 0)
 	    fflush(Printer);
     }
@@ -601,16 +621,69 @@ xtermHasPrinter(XtermWidget xw)
 void
 setPrinterControlMode(XtermWidget xw, int mode)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (xtermHasPrinter(xw)
-	&& xw->screen.printer_controlmode != mode) {
+	&& screen->printer_controlmode != mode) {
 	TRACE(("%s %s mode\n",
 	       (mode
 		? "set"
 		: "reset"),
 	       (mode
 		? showPrinterControlMode(mode)
-		: showPrinterControlMode(xw->screen.printer_controlmode))));
-	xw->screen.printer_controlmode = mode;
+		: showPrinterControlMode(screen->printer_controlmode))));
+	screen->printer_controlmode = mode;
 	update_print_redir();
     }
+}
+
+PrinterFlags *
+getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
+{
+    /* *INDENT-OFF* */
+    static const struct {
+	const char *name;
+	unsigned    offset;
+	int	    value;
+    } table[] = {
+	{ "noFormFeed", XtOffsetOf(PrinterFlags, printer_formfeed), 0 },
+	{ "FormFeed",	XtOffsetOf(PrinterFlags, printer_formfeed), 1 },
+	{ "noNewLine",	XtOffsetOf(PrinterFlags, printer_newline),  0 },
+	{ "NewLine",	XtOffsetOf(PrinterFlags, printer_newline),  1 },
+	{ "noAttrs",	XtOffsetOf(PrinterFlags, print_attributes), 0 },
+	{ "monoAttrs",	XtOffsetOf(PrinterFlags, print_attributes), 1 },
+	{ "colorAttrs", XtOffsetOf(PrinterFlags, print_attributes), 2 },
+    };
+    /* *INDENT-ON* */
+
+    TScreen *screen = TScreenOf(xw);
+    PrinterFlags *result = &(screen->printer_flags);
+
+    TRACE(("getPrinterFlags %d params\n", param_count ? *param_count : 0));
+
+    result->printer_extent = screen->printer_extent;
+    result->printer_formfeed = screen->printer_formfeed;
+    result->printer_newline = screen->printer_newline;
+    result->print_attributes = screen->print_attributes;
+
+    if (param_count != 0 && *param_count != 0) {
+	Cardinal j;
+	unsigned k;
+	for (j = 0; j < *param_count; ++j) {
+	    TRACE(("param%d:%s\n", j, params[j]));
+	    for (k = 0; k < XtNumber(table); ++k) {
+		if (!x_strcasecmp(params[j], table[k].name)) {
+		    int *ptr = (int *) ((char *) result + table[k].offset);
+		    TRACE(("...PrinterFlags(%s) %d->%d\n",
+			   table[k].name,
+			   *ptr,
+			   table[k].value));
+		    *ptr = table[k].value;
+		    break;
+		}
+	    }
+	}
+    }
+
+    return result;
 }

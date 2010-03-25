@@ -1,8 +1,8 @@
-/* $XTermId: ptydata.c,v 1.90 2009/08/09 17:22:05 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.94 2010/01/21 02:08:28 tom Exp $ */
 
 /************************************************************
 
-Copyright 1999-2008,2009 by Thomas E. Dickey
+Copyright 1999-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -240,7 +240,7 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
 #endif
 	data->last += size;
 #ifdef ALLOWLOGGING
-	term->screen.logstart = VTbuffer->next;
+	TScreenOf(term)->logstart = VTbuffer->next;
 #endif
     }
 
@@ -331,7 +331,7 @@ initPtyData(PtyData ** result)
 }
 
 /*
- * Initialize a buffer for the caller, using its data in 'source'.
+ * Initialize a buffer for the caller, using its data in 'next'.
  */
 #if OPT_WIDE_CHARS
 PtyData *
@@ -400,21 +400,44 @@ fillPtyData(TScreen * screen, PtyData * data, char *value, int length)
 Char *
 convertToUTF8(Char * lp, unsigned c)
 {
-    if (c < 0x80) {		/*  0*******  */
-	*lp++ = (Char) (c);
-    } else if (c < 0x800) {	/*  110***** 10******  */
-	*lp++ = (Char) (0xc0 | (c >> 6));
-	*lp++ = (Char) (0x80 | (c & 0x3f));
-    } else {			/*  1110**** 10****** 10******  */
-	*lp++ = (Char) (0xe0 | (c >> 12));
-	*lp++ = (Char) (0x80 | ((c >> 6) & 0x3f));
-	*lp++ = (Char) (0x80 | (c & 0x3f));
+#define CH(n) (Char)((c) >> ((n) * 8))
+    if (c < 0x80) {
+	/*  0*******  */
+	*lp++ = (Char) CH(0);
+    } else if (c < 0x800) {
+	/*  110***** 10******  */
+	*lp++ = (Char) (0xc0 | (CH(0) >> 6) | ((CH(1) & 0x07) << 2));
+	*lp++ = (Char) (0x80 | (CH(0) & 0x3f));
+    } else if (c < 0x00010000) {
+	/*  1110**** 10****** 10******  */
+	*lp++ = (Char) (0xe0 | ((int) (CH(1) & 0xf0) >> 4));
+	*lp++ = (Char) (0x80 | (CH(0) >> 6) | ((CH(1) & 0x0f) << 2));
+	*lp++ = (Char) (0x80 | (CH(0) & 0x3f));
+    } else if (c < 0x00200000) {
+	*lp++ = (Char) (0xf0 | ((int) (CH(2) & 0x1f) >> 2));
+	*lp++ = (Char) (0x80 |
+			((int) (CH(1) & 0xf0) >> 4) |
+			((int) (CH(2) & 0x03) << 4));
+	*lp++ = (Char) (0x80 | (CH(0) >> 6) | ((CH(1) & 0x0f) << 2));
+	*lp++ = (Char) (0x80 | (CH(0) & 0x3f));
+    } else if (c < 0x04000000) {
+	*lp++ = (Char) (0xf8 | (CH(3) & 0x03));
+	*lp++ = (Char) (0x80 | (CH(2) >> 2));
+	*lp++ = (Char) (0x80 |
+			((int) (CH(1) & 0xf0) >> 4) |
+			((int) (CH(2) & 0x03) << 4));
+	*lp++ = (Char) (0x80 | (CH(0) >> 6) | ((CH(1) & 0x0f) << 2));
+	*lp++ = (Char) (0x80 | (CH(0) & 0x3f));
+    } else {
+	*lp++ = (Char) (0xfc | ((int) (CH(3) & 0x40) >> 6));
+	*lp++ = (Char) (0x80 | (CH(3) & 0x3f));
+	*lp++ = (Char) (0x80 | (CH(2) >> 2));
+	*lp++ = (Char) (0x80 | (CH(1) >> 4) | ((CH(2) & 0x03) << 4));
+	*lp++ = (Char) (0x80 | (CH(0) >> 6) | ((CH(1) & 0x0f) << 2));
+	*lp++ = (Char) (0x80 | (CH(0) & 0x3f));
     }
-    /*
-     * UTF-8 is defined for words of up to 31 bits, but we need only 16
-     * bits here, since that's all that X11R6 supports.
-     */
     return lp;
+#undef CH
 }
 
 /*
@@ -451,6 +474,37 @@ noleaks_ptydata(void)
 #endif
 	free(VTbuffer);
 	VTbuffer = 0;
+    }
+}
+#endif
+
+#if 0
+void
+test_ptydata(void)
+{
+    PtyData *data;
+    unsigned code;
+
+    initPtyData(&data);
+    TRACE(("test_ptydata\n"));
+    for (code = 0; code <= 0x7fffffff; ++code) {
+	int use_size;
+
+	memset(data, 0, sizeof(*data));
+	data->next = data->buffer;
+	data->last = convertToUTF8(data->buffer, code);
+
+	use_size = (data->last - data->next);
+
+	if (decodeUtf8(data)) {
+	    if (code != data->utf_data) {
+		TRACE(("code %#x ->%#x\n", code, data->utf_data));
+	    } else if (use_size != data->utf_size) {
+		TRACE(("size %#x %d->%d\n", code, use_size, data->utf_size));
+	    }
+	} else {
+	    TRACE(("fail %#x\n", code));
+	}
     }
 }
 #endif

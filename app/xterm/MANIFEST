@@ -1,4 +1,4 @@
-MANIFEST for xterm-250, version xterm-250
+MANIFEST for xterm-255, version xterm-255
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -48,7 +48,7 @@ fontutils.c                     xterm functions for (re)loading fonts
 fontutils.h                     interface of fontutils.c
 gen-pc-fkeys.pl                 script to generate extended function-key terminfo
 input.c                         VT100 key-symbol and function-key translation
-install.sh                      configure script: fallback install script
+install-sh                      install-script (needed by configure)
 keysym2ucs.c                    lookup-table for UTF-8 to keysyms
 keysym2ucs.h                    interface of keysym2ucs.c
 koi8rxterm                      KOI-8 wrapper from Debian (originally me)
@@ -62,7 +62,6 @@ menu.c                          popup/pulldown menus for 'xterm'
 menu.h                          interface of menu.c
 minstall.sh                     script for installing manpages
 misc.c                          miscellaneous utility functions for 'xterm'
-mkdirs.sh                       configure script: make directories for install process
 os2main.c                       main program for OS/2 EMX port of 'xterm'
 plink.sh                        script to prune unneeded libraries from link
 precompose.c                    table of precompose sequences

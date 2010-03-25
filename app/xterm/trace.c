@@ -1,29 +1,36 @@
-/* $XTermId: trace.c,v 1.104 2009/10/12 00:08:00 tom Exp $ */
+/* $XTermId: trace.c,v 1.110 2009/12/10 09:36:28 tom Exp $ */
 
-/************************************************************
-
-Copyright 1997-2008,2009 by Thomas E. Dickey
-
-                        All Rights Reserved
-
-Permission to use, copy, modify, and distribute this software and its
-documentation for any purpose and without fee is hereby granted,
-provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in
-supporting documentation, and that the name of the above listed
-copyright holder(s) not be used in advertising or publicity pertaining
-to distribution of the software without specific, written prior
-permission.
-
-THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
-TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
-LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-********************************************************/
+/*
+ * 
+ * Copyright 1997-2008,2009 by Thomas E. Dickey
+ * 
+ *                         All Rights Reserved
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ * 
+ */
 
 /*
  * debugging support via TRACE macro.
@@ -342,6 +349,23 @@ visibleEventType(int type)
 }
 
 const char *
+visibleNotifyDetail(int code)
+{
+    const char *result = "?";
+    switch (code) {
+	CASETYPE(NotifyAncestor);
+	CASETYPE(NotifyVirtual);
+	CASETYPE(NotifyInferior);
+	CASETYPE(NotifyNonlinear);
+	CASETYPE(NotifyNonlinearVirtual);
+	CASETYPE(NotifyPointer);
+	CASETYPE(NotifyPointerRoot);
+	CASETYPE(NotifyDetailNone);
+    }
+    return result;
+}
+
+const char *
 visibleSelectionTarget(Display * d, Atom a)
 {
     const char *result = "?";
@@ -454,6 +478,39 @@ LineTstFlag(LineData ld, int flag)
 #endif /* OPT_TRACE_FLAGS */
 
 void
+TraceFocus(Widget w, XEvent * ev)
+{
+    TRACE(("trace_focus event type %d:%s\n",
+	   ev->type, visibleEventType(ev->type)));
+    switch (ev->type) {
+    case FocusIn:
+    case FocusOut:
+	{
+	    XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
+	    TRACE(("\tdetail: %s\n", visibleNotifyDetail(event->detail)));
+	    TRACE(("\tmode:   %d\n", event->mode));
+	    TRACE(("\twindow: %#lx\n", event->window));
+	}
+	break;
+    case EnterNotify:
+    case LeaveNotify:
+	{
+	    XCrossingEvent *event = (XCrossingEvent *) ev;
+	    TRACE(("\tdetail:    %s\n", visibleNotifyDetail(event->detail)));
+	    TRACE(("\tmode:      %d\n", event->mode));
+	    TRACE(("\twindow:    %#lx\n", event->window));
+	    TRACE(("\troot:      %#lx\n", event->root));
+	    TRACE(("\tsubwindow: %#lx\n", event->subwindow));
+	}
+	break;
+    }
+    while (w != 0) {
+	TRACE(("w %p -> %#lx\n", (void *) w, XtWindow(w)));
+	w = XtParent(w);
+    }
+}
+
+void
 TraceSizeHints(XSizeHints * hints)
 {
     TRACE(("size hints:\n"));
@@ -520,9 +577,9 @@ TraceTranslations(const char *name, Widget w)
 	TRACE(("... xlations %#08lx\n", (long) xlations));
 	TRACE(("... xcelerat %#08lx\n", (long) xcelerat));
 	result = _XtPrintXlations(w, xlations, xcelerat, True);
-	TRACE(("%s\n", result != 0 ? result : "(null)"));
+	TRACE(("%s\n", NonNull(result)));
 	if (result)
-	    XFree(result);
+	    XFree((char *) result);
     } else {
 	TRACE(("none (widget is null)\n"));
     }
@@ -612,7 +669,7 @@ TraceArgv(const char *tag, char **argv)
 }
 
 static char *
-parse_option(char *dst, char *src, int first)
+parse_option(char *dst, String src, int first)
 {
     char *s;
 
@@ -641,7 +698,7 @@ same_option(OptionHelp * opt, XrmOptionDescRec * res)
 }
 
 static Bool
-standard_option(char *opt)
+standard_option(String opt)
 {
     static const char *table[] =
     {

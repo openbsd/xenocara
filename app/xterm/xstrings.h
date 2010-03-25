@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.h,v 1.15 2009/10/11 23:00:59 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.19 2009/12/06 15:50:18 tom Exp $ */
 
 /************************************************************
 
@@ -35,15 +35,20 @@ authorization.
 #ifndef included_xstrings_h
 #define included_xstrings_h 1
 
+#include <X11/Intrinsic.h>
+
+extern String x_nonempty(String /* s */);
+extern String x_skip_blanks(String /* s */);
+extern String x_skip_nonblanks(String /* s */);
 extern char *x_basename(char * /* name */);
+extern char *x_decode_hex(const char * /* source */, const char ** /* next */);
+extern char *x_encode_hex(const char * /* source */);
 extern char *x_getenv(const char * /* name */);
-extern char *x_nonempty(char * /* s */);
-extern char *x_skip_blanks(char * /* s */);
-extern char *x_skip_nonblanks(char * /* s */);
 extern char *x_strdup(const char * /* s */);
 extern char *x_strindex(char * /* s1 */, const char * /* s2 */);
-extern char *x_strtrim(char * /* s */);
+extern char *x_strtrim(const char * /* s */);
 extern char x_toupper(int /* ch */);
+extern int x_hex2int(int /* ch */);
 extern int x_strcasecmp(const char * /* s1 */, const char * /* s2 */);
 extern int x_strncasecmp(const char * /* s1 */, const char * /* s2 */, unsigned  /* n */);
 

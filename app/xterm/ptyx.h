@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.632 2009/10/10 13:02:16 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.656 2010/01/04 09:09:29 tom Exp $ */
 
 /*
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -301,6 +301,17 @@ typedef unsigned char Char;		/* to support 8 bit chars */
 typedef Char *ScrnPtr;
 typedef ScrnPtr *ScrnBuf;
 
+/*
+ * Declare an X String, but for unsigned chars.
+ */
+#ifdef _CONST_X_STRING
+typedef const Char *UString;
+#else
+typedef Char *UString;
+#endif
+
+#define IsEmpty(s) ((s) == 0 || *(s) == '\0')
+
 #define CharOf(n) ((unsigned char)(n))
 
 typedef struct {
@@ -358,8 +369,8 @@ typedef struct {
 #define	NPARAM	30			/* Max. parameters		*/
 
 typedef struct {
-	char *opt;
-	char *desc;
+	String opt;
+	String desc;
 } OptionHelp;
 
 typedef short ParmType;
@@ -797,7 +808,10 @@ typedef enum {
 #define for_each_curs_gc(n) for (n = gcVTcursNormal; n <= gcVTcursOutline; ++n)
 #define for_each_gc(n)      for (n = gcNorm; n < gcMAX; ++n)
 
-/* indices for the normal terminal colors in screen.Tcolors[] */
+/*
+ * Indices for the normal terminal colors in screen.Tcolors[].
+ * See also OscTextColors, which has corresponding values.
+ */
 typedef enum {
     TEXT_FG = 0			/* text foreground */
     , TEXT_BG			/* text background */
@@ -816,6 +830,20 @@ typedef enum {
     , NCOLORS			/* total number of colors */
 } TermColors;
 
+/*
+ * Constants for titleModes resource
+ */
+typedef enum {
+    tmSetBase16 = 1		/* set title using hex-string */
+    , tmGetBase16 = 2		/* get title using hex-string */
+#if OPT_WIDE_CHARS
+    , tmSetUtf8 = 4		/* like utf8Title, but controllable */
+    , tmGetUtf8 = 8		/* retrieve title encoded as UTF-8 */
+#endif
+} TitleModes;
+
+#define IsTitleMode(xw,mode) (((xw)->screen.title_modes & mode) != 0)
+
 /* indices for mapping multiple clicks to selection types */
 typedef enum {
     Select_CHAR=0
@@ -829,6 +857,58 @@ typedef enum {
 #endif
     ,NSELECTUNITS
 } SelectUnit;
+
+typedef enum {
+    ecSetColor = 1
+    , ecGetColor
+    , ecGetAnsiColor
+    , ecLAST
+} ColorOps;
+
+typedef enum {
+    efSetFont = 1
+    , efGetFont
+    , efLAST
+} FontOps;
+
+typedef enum {
+    etSetTcap = 1
+    , etGetTcap
+    , etLAST
+} TcapOps;
+
+typedef enum {
+    /* 1-21 are chosen to be the same as the control-sequence coding */
+    ewRestoreWin = 1
+    , ewMinimizeWin = 2
+    , ewSetWinPosition = 3
+    , ewSetWinSizePixels = 4
+    , ewRaiseWin = 5
+    , ewLowerWin = 6
+    , ewRefreshWin = 7
+    , ewSetWinSizeChars = 8
+#if OPT_MAXIMIZE
+    , ewMaximizeWin = 9
+#endif
+    , ewGetWinState = 11
+    , ewGetWinPosition = 13
+    , ewGetWinSizePixels = 14
+    , ewGetWinSizeChars = 18
+#if OPT_MAXIMIZE
+    , ewGetScreenSizeChars = 19
+#endif
+    , ewGetIconTitle = 20
+    , ewGetWinTitle = 21
+    , ewPushTitle = 22
+    , ewPopTitle = 23
+    /* these do not fit into that scheme, which is why we use an array */
+    , ewSetWinLines
+    , ewSetXprop
+    , ewGetSelection
+    , ewSetSelection
+    /* get the size of the array... */
+    , ewLAST
+} WindowOps;
 
 #define	COLOR_DEFINED(s,w)	((s)->which & (1<<(w)))
 #define	COLOR_VALUE(s,w)	((s)->colors[w])
@@ -896,6 +976,8 @@ typedef enum {
 # define XK_COLORS 0x0003
 #endif
 
+# define XK_TCAPNAME 0x0004
+
 #else	/* !OPT_ISO_COLORS */
 
 #define TERM_COLOR_FLAGS(xw) 0
@@ -952,7 +1034,7 @@ typedef enum {
 	/* Use remaining bits for encoding the other character-sets */
 #define CSET_NORMAL(code)  ((code) == CSET_SWL)
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
-#define CSET_EXTEND(code)  ((code) > CSET_DWL)
+#define CSET_EXTEND(code)  ((int)(code) > CSET_DWL)
 
 #define DBLCS_BITS            4
 #define DBLCS_MASK            BITS2MASK(DBLCS_BITS)
@@ -1299,17 +1381,31 @@ typedef enum {
 #endif
 } MenuIndex;
 
+typedef enum {
+	bvOff = -1,
+	bvLow = 0,
+	bvHigh
+} BellVolume;
+
 #define NUM_POPUP_MENUS 4
 
 #if OPT_COLOR_RES
 typedef struct {
 	String		resource;
 	Pixel		value;
-	int		mode;
+	int		mode;		/* -1=invalid, 0=unset, 1=set   */
 } ColorRes;
 #else
 #define ColorRes Pixel
 #endif
+
+/* these are set in getPrinterFlags */
+typedef struct {
+	int	printer_extent;		/* print complete page		*/
+	int	printer_formfeed;	/* print formfeed per function	*/
+	int	printer_newline;	/* print newline per function	*/
+	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
+} PrinterFlags;
 
 typedef struct {
 	unsigned	which;		/* must have NCOLORS bits */
@@ -1333,6 +1429,12 @@ typedef struct {
 	Boolean		sgr_extended;	/* SGR set with extended codes? */
 #endif
 } SavedCursor;
+
+typedef struct _SaveTitle {
+    	struct _SaveTitle *next;
+	char		*iconName;
+	char		*windowName;
+} SaveTitle;
 
 #define SAVED_CURSORS 2
 
@@ -1496,17 +1598,31 @@ typedef struct {
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
 
+	Boolean		allowColorOps;	/* ColorOps mode		*/
 	Boolean		allowFontOps;	/* FontOps mode			*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
 	Boolean		allowTcapOps;	/* TcapOps mode			*/
 	Boolean		allowTitleOps;	/* TitleOps mode		*/
 	Boolean		allowWindowOps;	/* WindowOps mode		*/
 
+	Boolean		allowColorOp0;	/* initial ColorOps mode	*/
 	Boolean		allowFontOp0;	/* initial FontOps mode		*/
 	Boolean		allowSendEvent0;/* initial SendEvent mode	*/
 	Boolean		allowTcapOp0;	/* initial TcapOps mode		*/
 	Boolean		allowTitleOp0;	/* initial TitleOps mode	*/
 	Boolean		allowWindowOp0;	/* initial WindowOps mode	*/
+
+	String		disallowedColorOps;
+	char		disallow_color_ops[ecLAST];
+
+	String		disallowedFontOps;
+	char		disallow_font_ops[efLAST];
+
+	String		disallowedTcapOps;
+	char		disallow_tcap_ops[etLAST];
+
+	String		disallowedWinOps;
+	char		disallow_win_ops[ewLAST];
 
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
@@ -1536,8 +1652,11 @@ typedef struct {
 	Boolean printer_autoclose;	/* close printer when offline	*/
 	Boolean printer_extent;		/* print complete page		*/
 	Boolean printer_formfeed;	/* print formfeed per function	*/
+	Boolean printer_newline;	/* print newline per function	*/
 	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
 	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
+
+	PrinterFlags	printer_flags;	/* working copy of printer flags */
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
@@ -1647,12 +1766,17 @@ typedef struct {
 	Boolean		hp_ll_bc;	/* kludge HP-style ll for xdb	*/
 	Boolean		marginbell;	/* true if margin bell on	*/
 	int		nmarginbell;	/* columns from right margin	*/
-	int		bellarmed;	/* cursor below bell margin	*/
+	int		bellArmed;	/* cursor below bell margin	*/
+	BellVolume	marginVolume;	/* margin-bell volume           */
+	BellVolume	warningVolume;	/* warning-bell volume          */
 	Boolean		multiscroll;	/* true if multi-scroll		*/
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
 	SavedCursor	sc[SAVED_CURSORS]; /* data for restore cursor	*/
 	unsigned 	save_modes[DP_LAST]; /* save dec/xterm private modes */
+
+	int		title_modes;	/* control set/get of titles	*/
+	SaveTitle	*save_title;
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
@@ -2284,7 +2408,7 @@ typedef struct _TekWidgetRec {
 /*
  * Macro to check if we are iconified; do not use render for that case.
  */
-#define UsingRenderFont(xw)	((xw)->misc.render_font && !IsIcon(&((xw)->screen)))
+#define UsingRenderFont(xw)	((xw)->misc.render_font && !IsIcon(TScreenOf(xw)))
 
 /*
  * These definitions do not depend on whether xterm supports active-icon.
@@ -2325,11 +2449,21 @@ typedef struct _TekWidgetRec {
 #define BorderWidth(w)		((w)->core.border_width)
 #define BorderPixel(w)		((w)->core.border_pixel)
 
-#define AllowXtermOps(w,name)	((w)->screen.name && !(w)->screen.allowSendEvents)
-#define AllowFontOps(w)		AllowXtermOps(w, allowFontOps)
-#define AllowTcapOps(w)		AllowXtermOps(w, allowTcapOps)
+#define AllowXtermOps(w,name)	(TScreenOf(w)->name && !TScreenOf(w)->allowSendEvents)
+
+#define AllowColorOps(w,name)	(AllowXtermOps(w, allowColorOps) || \
+				 !TScreenOf(w)->disallow_color_ops[name])
+
+#define AllowFontOps(w,name)	(AllowXtermOps(w, allowFontOps) || \
+				 !TScreenOf(w)->disallow_font_ops[name])
+
+#define AllowTcapOps(w,name)	(AllowXtermOps(w, allowTcapOps) || \
+				 !TScreenOf(w)->disallow_tcap_ops[name])
+
 #define AllowTitleOps(w)	AllowXtermOps(w, allowTitleOps)
-#define AllowWindowOps(w)	AllowXtermOps(w, allowWindowOps)
+
+#define AllowWindowOps(w,name)	(AllowXtermOps(w, allowWindowOps) || \
+				 !TScreenOf(w)->disallow_win_ops[name])
 
 #if OPT_TOOLBAR
 #define ToolbarHeight(w)	((resource.toolBar) \
@@ -2390,6 +2524,10 @@ typedef struct Tek_Link
 
 #ifndef TRACE_CHILD
 #define TRACE_CHILD /*nothing*/
+#endif
+
+#ifndef TRACE_FOCUS
+#define TRACE_FOCUS(w,e) /*nothing*/
 #endif
 
 #ifndef TRACE_HINTS

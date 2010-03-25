@@ -1,4 +1,3 @@
-/* xtermcfg.h.  Generated automatically by configure.  */
 /* $XTermId: xtermcfg.hin,v 1.178 2009/08/09 17:23:19 tom Exp $ */
 
 /************************************************************
@@ -29,7 +28,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef included_xtermcfg_h
 #define included_xtermcfg_h 1
 
-/* This is a template for <xtermcfg.h> */
+/* This is derived for OpenBSD from  template for <xtermcfg.h> */
 
 /* #undef ALLOWLOGFILEEXEC */		/* CF_ARG_ENABLE(enable-logfile-exec) */
 /* #undef ALLOWLOGGING */		/* CF_ARG_ENABLE(enable-logging) */

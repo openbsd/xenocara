@@ -1,4 +1,4 @@
-# $XTermId: termcap,v 1.76 2009/07/19 15:54:13 tom Exp $
+# $XTermId: termcap,v 1.78 2009/11/09 00:24:26 tom Exp $
 #
 # These are termcap entries that correspond to xterm's terminfo file.
 # The file is formatted using ncurses' "tic -CNx", but is not mechanically
@@ -69,7 +69,7 @@ xb|xterm-basic|modern xterm common:\
 	:me=\E[m:ml=\El:mr=\E[7m:mu=\Em:nd=\E[C:op=\E[39;49m:\
 	:rc=\E8:rs=\E[!p\E[?3;4l\E[4l\E>:sc=\E7:se=\E[27m:sf=^J:\
 	:so=\E[7m:sr=\EM:st=\EH:te=\E[?1049l:ti=\E[?1049h:\
-	:ue=\E[24m:up=\E[A:us=\E[4m:ve=\E[?25h:vi=\E[?25l:
+	:ue=\E[24m:up=\E[A:us=\E[4m:ve=\E[?12l\E[?25h:vi=\E[?25l:vs=\E[?12;25h:
 
 # The xterm-new description has all of the features, but is not completely
 # compatible with vt220.  If you are using a Sun or PC keyboard, set the
@@ -85,17 +85,17 @@ vt|xterm-vt220|xterm emulating vt220:\
 	:tc=xterm-basic:
 
 v1|xterm-24|xterms|vs100|24x80 xterm:\
-	:li#24:tc=xterm:
+	:li#24:tc=xterm-old:
 v2|xterm-65|65x80 xterm:\
-	:li#65:tc=xterm:
+	:li#65:tc=xterm-old:
 vb|xterm-bold|xterm with bold for underline:\
-	:so=\E[7m:us=\E[1m:tc=xterm:
+	:so=\E[7m:us=\E[1m:tc=xterm-old:
 vB|xterm-boldso|xterm with bold for standout:\
-	:se=\E[m:so=\E[1m:tc=xterm:
+	:se=\E[m:so=\E[1m:tc=xterm-old:
 vm|xterm-mono|monochrome xterm:\
 	:ut@:\
 	:Co@:NC@:kn#20:pa@:\
-	:AB@:AF@:Sb@:Sf@:op@:st@:tc=xterm:
+	:AB@:AF@:Sb@:Sf@:op@:st@:tc=xterm-old:
 #
 # Alternate terminal description that "works" for interactive shells such as
 # tcsh and bash.
@@ -151,8 +151,8 @@ x8|xterm-8bit|xterm terminal emulator 8-bit controls (X Window System):\
 	:ku=\217A:le=^H:mb=\2335m:md=\2331m:me=\233m:mr=\2337m:\
 	:nd=\233C:rc=\E8:sc=\E7:se=\23327m:sf=^J:so=\2337m:sr=\215:\
 	:st=\210:ta=^I:te=\233?1049l:ti=\233?1049h:ue=\23324m:\
-	:up=\233A:us=\2334m:vb=\233?5h\233?5l:ve=\233?25h:\
-	:vi=\233?25l:
+	:up=\233A:us=\2334m:vb=\233?5h\233?5l:ve=\233?25l\233?25h:\
+	:vs=\233?12;25h:vi=\233?25l:
 #
 hp|xterm-hp|xterm with hpterm function keys:\
 	:@7=\EF:k1=\Ep:k2=\Eq:k3=\Er:k4=\Es:k5=\Et:k6=\Eu:k7=\Ev:\

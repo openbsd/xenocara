@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.356 2009/10/10 23:37:27 tom Exp $ */
+/* $XTermId: button.c,v 1.364 2010/01/04 23:13:01 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -62,6 +62,7 @@ button.c	Handles button events in the terminal emulator.
 #include <xterm.h>
 
 #include <stdio.h>
+#include <assert.h>
 
 #include <X11/Xatom.h>
 #include <X11/Xmu/Atoms.h>
@@ -1146,6 +1147,61 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned len, unsigned long *result)
     }
     return buffer;
 }
+
+int
+xtermUtf8ToTextList(XtermWidget xw,
+		    XTextProperty * text_prop,
+		    char ***text_list,
+		    int *text_list_count)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    int rc = -1;
+
+    if (text_prop->format == 8
+	&& (rc = Xutf8TextPropertyToTextList(dpy, text_prop,
+					     text_list,
+					     text_list_count)) >= 0) {
+	if (*text_list != NULL && *text_list_count != 0) {
+	    int i;
+	    Char *data;
+	    char **new_text_list, *tmp;
+	    unsigned long size, new_size;
+
+	    TRACE(("xtermUtf8ToTextList size %d\n", *text_list_count));
+
+	    /*
+	     * XLib StringList actually uses only two pointers, one for the
+	     * list itself, and one for the data.  Pointer to the data is the
+	     * first element of the list, the rest (if any) list elements point
+	     * to the same memory block as the first element
+	     */
+	    new_size = 0;
+	    for (i = 0; i < *text_list_count; ++i) {
+		data = (Char *) (*text_list)[i];
+		size = strlen((*text_list)[i]) + 1;
+		data = UTF8toLatin1(screen, data, size, &size);
+		new_size += size + 1;
+	    }
+	    new_text_list =
+		(char **) XtMalloc(sizeof(char *) * (unsigned) *text_list_count);
+	    new_text_list[0] = tmp = XtMalloc(new_size);
+	    for (i = 0; i < (*text_list_count); ++i) {
+		data = (Char *) (*text_list)[i];
+		size = strlen((*text_list)[i]) + 1;
+		data = UTF8toLatin1(screen, data, size, &size);
+		memcpy(tmp, data, size + 1);
+		new_text_list[i] = tmp;
+		tmp += size + 1;
+	    }
+	    XFreeStringList((*text_list));
+	    *text_list = new_text_list;
+	} else {
+	    rc = -1;
+	}
+    }
+    return rc;
+}
 #endif /* OPT_WIDE_CHARS */
 
 static char *
@@ -1196,7 +1252,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
 
-	if (value != 0 && *value != '\0') {
+	if (!IsEmpty(value)) {
 	    String copied = x_strdup(value);
 	    if (copied != 0) {
 		Atom *result = 0;
@@ -1823,41 +1879,8 @@ SelectionReceived(Widget w,
 #if OPT_WIDE_CHARS
 	    if (*type == XA_UTF8_STRING(dpy) &&
 		!(screen->wide_chars || screen->c1_printable)) {
-		rc = Xutf8TextPropertyToTextList(dpy, &text_prop,
-						 &text_list, &text_list_count);
-		if (text_list != NULL && text_list_count != 0) {
-		    int i;
-		    Char *data;
-		    char **new_text_list, *tmp;
-		    unsigned long size, new_size;
-		    /* XLib StringList actually uses only two
-		     * pointers, one for the list itself, and one for
-		     * the data. Pointer to the data is the first
-		     * element of the list, the rest (if any) list
-		     * elements point to the same memory block as the
-		     * first element
-		     */
-		    new_size = 0;
-		    for (i = 0; i < text_list_count; ++i) {
-			data = (Char *) text_list[i];
-			size = strlen(text_list[i]) + 1;
-			data = UTF8toLatin1(screen, data, size, &size);
-			new_size += size + 1;
-		    }
-		    new_text_list =
-			(char **) XtMalloc(sizeof(char *) * (unsigned) text_list_count);
-		    new_text_list[0] = tmp = XtMalloc(new_size);
-		    for (i = 0; i < text_list_count; ++i) {
-			data = (Char *) text_list[i];
-			size = strlen(text_list[i]) + 1;
-			data = UTF8toLatin1(screen, data, size, &size);
-			memcpy(tmp, data, size + 1);
-			new_text_list[i] = tmp;
-			tmp += size + 1;
-		    }
-		    XFreeStringList(text_list);
-		    text_list = new_text_list;
-		}
+		rc = xtermUtf8ToTextList(xw, &text_prop,
+					 &text_list, &text_list_count);
 	    } else
 #endif
 	    if (*type == XA_STRING && screen->brokenSelections) {
@@ -1965,7 +1988,7 @@ EvalSelectUnit(XtermWidget xw,
     int delta;
 
     if (button != screen->lastButton) {
-	delta = xw->screen.multiClickTime + 1;
+	delta = screen->multiClickTime + 1;
     } else if (screen->lastButtonUpTime == (Time) 0) {
 	/* first time and once in a blue moon */
 	delta = screen->multiClickTime + 1;
@@ -2601,6 +2624,7 @@ class_of(LineData * ld, CELL * cell)
     }
 #endif
 
+    assert(temp.col < ld->lineSize);
     return CharacterClass((int) (ld->charData[temp.col]));
 }
 
@@ -2629,9 +2653,11 @@ okPosition(TScreen * screen,
     if (cell->row > screen->max_row) {
 	result = False;
     } else if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
-	cell->col = 0;
-	*ld = GET_LINEDATA(screen, ++cell->row);
-	result = False;
+	if (cell->row < screen->max_row) {
+	    cell->col = 0;
+	    *ld = GET_LINEDATA(screen, ++cell->row);
+	    result = False;
+	}
     }
     return result;
 }
@@ -2733,6 +2759,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		Char *next = last;
 		unsigned data = ld->charData[col];
 
+		assert(col < ld->lineSize);
 		/* some internal points may not be drawn */
 		if (data == 0)
 		    data = ' ';
@@ -2941,6 +2968,9 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 #define PrevRow(name) \
 	ld.name = GET_LINEDATA(screen, --screen->name.row)
 
+#define MoreRows(name) \
+	(screen->name.row < screen->max_row)
+
 #define isPrevWrapped(name) \
 	(screen->name.row > 0 \
 	   && (ltmp = GET_LINEDATA(screen, screen->name.row - 1)) != 0 \
@@ -2979,7 +3009,7 @@ ComputeSelect(XtermWidget xw,
     if (first.col > 1
 	&& isWideCell(first.row, first.col - 1)
 	&& XTERM_CELL(first.row, first.col - 0) == HIDDEN_CHAR) {
-	fprintf(stderr, "Adjusting start. Changing downwards from %i.\n", first.col);
+	TRACE(("Adjusting start. Changing downwards from %i.\n", first.col));
 	first.col -= 1;
 	if (last.col == (first.col + 1))
 	    last.col--;
@@ -3038,6 +3068,8 @@ ComputeSelect(XtermWidget xw,
 		++screen->endSel.col;
 		if (screen->endSel.col > length
 		    && LineTstWrapped(ld.endSel)) {
+		    if (!MoreRows(endSel))
+			break;
 		    screen->endSel.col = 0;
 		    NextRow(endSel);
 		    length = LastTextCol(screen, ld.endSel, screen->endSel.row);
@@ -3048,7 +3080,8 @@ ComputeSelect(XtermWidget xw,
 	     * especially note that it includes the last character in a word.
 	     * So we do no --endSel.col and do special eol handling.
 	     */
-	    if (screen->endSel.col > length + 1) {
+	    if (screen->endSel.col > length + 1
+		&& MoreRows(endSel)) {
 		screen->endSel.col = 0;
 		NextRow(endSel);
 	    }
@@ -3065,7 +3098,8 @@ ComputeSelect(XtermWidget xw,
 
     case Select_LINE:
 	TRACE(("Select_LINE\n"));
-	while (LineTstWrapped(ld.endSel)) {
+	while (LineTstWrapped(ld.endSel)
+	       && MoreRows(endSel)) {
 	    NextRow(endSel);
 	}
 	if (screen->cutToBeginningOfLine
@@ -3101,7 +3135,7 @@ ComputeSelect(XtermWidget xw,
 	    }
 	    screen->startSel.col = 0;
 	    /* scan forward for end of group */
-	    while (screen->endSel.row < screen->max_row &&
+	    while (MoreRows(endSel) &&
 		   (LastTextCol(screen, ld.endSel, screen->endSel.row + 1) >
 		    0 ||
 		    LineTstWrapped(ld.endSel))) {
@@ -3115,7 +3149,7 @@ ComputeSelect(XtermWidget xw,
 	TRACE(("Select_PAGE\n"));
 	screen->startSel.row = 0;
 	screen->startSel.col = 0;
-	screen->endSel.row = screen->max_row + 1;
+	screen->endSel.row = MaxRows(screen);
 	screen->endSel.col = 0;
 	break;
 
@@ -3123,7 +3157,7 @@ ComputeSelect(XtermWidget xw,
 	TRACE(("Select_ALL\n"));
 	screen->startSel.row = -screen->savedlines;
 	screen->startSel.col = 0;
-	screen->endSel.row = screen->max_row + 1;
+	screen->endSel.row = MaxRows(screen);
 	screen->endSel.col = 0;
 	break;
 
@@ -3409,7 +3443,7 @@ AppendToSelectionBuffer(TScreen * screen, unsigned c)
 }
 
 void
-CompleteSelection(XtermWidget xw, char **args, Cardinal len)
+CompleteSelection(XtermWidget xw, String * args, Cardinal len)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -3711,6 +3745,8 @@ _OwnSelection(XtermWidget xw,
 	    unsigned long limit =
 	    (unsigned long) (4 * XMaxRequestSize(XtDisplay((Widget) xw)) - 32);
 	    if (screen->selection_length > limit) {
+		TRACE(("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
+		       screen->selection_length, cutbuffer));
 		fprintf(stderr,
 			"%s: selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, screen->selection_length, cutbuffer);
@@ -3849,6 +3885,7 @@ SaveText(TScreen * screen,
 #endif
     *eol = !LineTstWrapped(ld);
     for (i = scol; i < ecol; i++) {
+	assert(i < ld->lineSize);
 	c = E2A(ld->charData[i]);
 #if OPT_WIDE_CHARS
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a

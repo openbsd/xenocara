@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.310 2009/10/12 00:12:34 tom Exp $ */
+/* $XTermId: input.c,v 1.312 2009/12/29 23:45:29 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -115,7 +115,7 @@
 
 #define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
 
-#define TEK4014_GIN(tw) (tw != 0 && tw->screen.TekGIN)
+#define TEK4014_GIN(tw) (tw != 0 && TekScreenOf(tw)->TekGIN)
 
 typedef struct {
     KeySym keysym;
@@ -178,23 +178,24 @@ ModifierName(unsigned modifier)
 static void
 AdjustAfterInput(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->scrollkey && screen->topline != 0)
 	WindowScroll(xw, 0);
     if (screen->marginbell) {
 	int col = screen->max_col - screen->nmarginbell;
-	if (screen->bellarmed >= 0) {
-	    if (screen->bellarmed == screen->cur_row) {
+	if (screen->bellArmed >= 0) {
+	    if (screen->bellArmed == screen->cur_row) {
 		if (screen->cur_col >= col) {
 		    Bell(XkbBI_MarginBell, 0);
-		    screen->bellarmed = -1;
+		    screen->bellArmed = -1;
 		}
-	    } else
-		screen->bellarmed =
+	    } else {
+		screen->bellArmed =
 		    screen->cur_col < col ? screen->cur_row : -1;
+	    }
 	} else if (screen->cur_col < col)
-	    screen->bellarmed = screen->cur_row;
+	    screen->bellArmed = screen->cur_row;
     }
 }
 
@@ -304,7 +305,7 @@ static Bool
 allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 {
     TKeyboard *keyboard = &(xw->keyboard);
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
 
     Bool result = False;
@@ -500,11 +501,11 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
 #if OPT_NUM_LOCK
 	result = filterAltMeta(result,
 			       xw->misc.meta_mods,
-			       xw->screen.meta_sends_esc, kd);
-	if (xw->screen.alt_is_not_meta) {
+			       TScreenOf(xw)->meta_sends_esc, kd);
+	if (TScreenOf(xw)->alt_is_not_meta) {
 	    result = filterAltMeta(result,
 				   xw->misc.alt_mods,
-				   xw->screen.alt_sends_esc, kd);
+				   TScreenOf(xw)->alt_sends_esc, kd);
 	}
 #endif
     }
@@ -776,14 +777,14 @@ xtermDeleteIsDEL(XtermWidget xw)
 
     if (xw->keyboard.type == keyboardIsDefault
 	|| xw->keyboard.type == keyboardIsVT220)
-	result = (xw->screen.delete_is_del == True);
+	result = (TScreenOf(xw)->delete_is_del == True);
 
     if (xw->keyboard.type == keyboardIsLegacy)
-	result = (xw->screen.delete_is_del != False);
+	result = (TScreenOf(xw)->delete_is_del != False);
 
     TRACE(("xtermDeleteIsDEL(%d/%d) = %d\n",
 	   xw->keyboard.type,
-	   xw->screen.delete_is_del,
+	   TScreenOf(xw)->delete_is_del,
 	   result));
 
     return result;
@@ -797,7 +798,7 @@ Input(XtermWidget xw,
     Char *string;
 
     TKeyboard *keyboard = &(xw->keyboard);
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     int j;
     int key = False;

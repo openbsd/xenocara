@@ -1,4 +1,4 @@
-/* $XTermId: testxmc.c,v 1.45 2009/09/10 09:05:20 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.46 2009/11/28 14:15:24 tom Exp $ */
 
 /************************************************************
 
@@ -96,7 +96,7 @@ Mark_XMC(XtermWidget xw, int param)
 {
     static IChar *glitch;
 
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     Bool found = False;
     Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
     Char whichone = 0;
@@ -159,7 +159,7 @@ Mark_XMC(XtermWidget xw, int param)
 void
 Jump_XMC(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     if (!screen->move_sgr_ok
 	&& screen->cur_col <= LineMaxCol(screen,
 					 getLineData(screen, screen->cur_row))) {
@@ -174,7 +174,7 @@ Jump_XMC(XtermWidget xw)
 void
 Resolve_XMC(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     LineData *ld;
     Bool changed = False;
     Char start;

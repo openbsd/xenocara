@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.72 2009/09/28 23:58:59 tom Exp $ */
+/* $XTermId: linedata.c,v 1.73 2009/11/28 13:36:02 tom Exp $ */
 
 /************************************************************
 
@@ -158,7 +158,7 @@ copyLineData(LineData * dst, LineData * src)
 void
 initLineData(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     initLineExtra(screen);
 
@@ -194,7 +194,7 @@ CellData *
 newCellData(XtermWidget xw, Cardinal count)
 {
     CellData *result;
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     initLineExtra(screen);
     result = (CellData *) calloc((size_t) count, (size_t) CellDataSize(screen));

@@ -1,7 +1,36 @@
 #!/usr/bin/perl -w
-# $XTermId: tcapquery.pl,v 1.13 2008/10/05 16:20:14 tom Exp $
+# $XTermId: tcapquery.pl,v 1.18 2010/01/04 09:43:46 tom Exp $
+# -----------------------------------------------------------------------------
+# this file is part of xterm
 #
-# -- Thomas Dickey (2004/3/3)
+# Copyright 2004-2008,2010 by Thomas E. Dickey
+# 
+#                         All Rights Reserved
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# 
+# Except as contained in this notice, the name(s) of the above copyright
+# holders shall not be used in advertising or otherwise to promote the
+# sale, use or other dealings in this Software without prior written
+# authorization.
+# -----------------------------------------------------------------------------
 # Test the tcap-query option of xterm.
 
 use strict;
@@ -9,18 +38,20 @@ use strict;
 use Getopt::Std;
 use IO::Handle;
 
-our ($opt_a, $opt_b, $opt_c, $opt_e, $opt_f, $opt_i, $opt_k, $opt_m, $opt_x);
-&getopts('abcefikmx:') || die("Usage: $0 [options]\n
+our ($opt_a, $opt_b, $opt_c, $opt_e, $opt_f, $opt_i, $opt_k, $opt_m, $opt_t, $opt_x, $opt_X);
+&getopts('abcefikmt:x:X') || die("Usage: $0 [options]\n
 Options:\n
-  -a     (same as -c -e -f -k -m)
-  -b     use both terminfo and termcap (default is termcap)
-  -c     cursor-keys
-  -e     editing keypad-keys
-  -f     function-keys
-  -i     use terminfo rather than termcap names
-  -k     numeric keypad-keys
-  -m     miscellaneous (none of -c, -e, -f, -k)
-  -x KEY extended cursor/editing key (terminfo only)
+  -a      (same as -c -e -f -k -m)
+  -b      use both terminfo and termcap (default is termcap)
+  -c      cursor-keys
+  -e      editing keypad-keys
+  -f      function-keys
+  -i      use terminfo rather than termcap names
+  -k      numeric keypad-keys
+  -m      miscellaneous (none of -c, -e, -f, -k)
+  -t NAME use given NAME for \$TERM, set that in xterm's tcap keyboard
+  -x KEY  extended cursor/editing key (terminfo only)
+  -X      test all extended cursor- and/or editing-keys (terminfo)
 ");
 
 if ( not ( defined($opt_c)
@@ -30,6 +61,17 @@ if ( not ( defined($opt_c)
 	or defined($opt_m)
 	or defined($opt_x) ) ) {
 	$opt_a=1;
+}
+
+sub no_reply($) {
+	open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
+	autoflush TTY 1;
+	my $old=`stty -g`;
+	system "stty raw -echo min 0 time 5";
+
+	print TTY @_;
+	close TTY;
+	system "stty $old";
 }
 
 sub get_reply($) {
@@ -57,6 +99,12 @@ sub hexified($) {
 		$result .= sprintf("%02X", ord substr($value,$n,1));
 	}
 	return $result;
+}
+
+sub modify_tcap($) {
+	my $name = $_[0];
+	my $param = hexified($name);
+	no_reply("\x1bP+p" . $param . "\x1b\\");
 }
 
 sub query_tcap($$) {
@@ -114,6 +162,7 @@ sub query_tcap($$) {
 	}
 }
 
+# extended-keys are a feature of ncurses 5.0 and later
 sub query_extended($) {
 	my $name = $_[0];
 	my $n;
@@ -127,18 +176,23 @@ sub query_extended($) {
 	}
 }
 
+query_tcap(	"TN",	"name");
+if ( defined($opt_t) ) {
+	printf "Setting TERM=%s\n", $opt_t;
+	modify_tcap($opt_t);
+}
+
 # See xtermcapKeycode()
 if ( defined($opt_a) || defined($opt_c) ) {
-query_tcap(	"kl",	"kcub1");
-query_tcap(	"kd",	"kcud1");
 query_tcap(	"ku",	"kcuu1");
+query_tcap(	"kd",	"kcud1");
 query_tcap(	"kr",	"kcuf1");
+query_tcap(	"kl",	"kcub1");
 
-query_tcap(	"#4",	"kLFT");
-query_tcap(	"%c",	"kNXT");
-query_tcap(	"%e",	"kPRV");
+query_tcap(	"kF",	"kind");
+query_tcap(	"kR",	"kri");
 query_tcap(	"%i",	"kRIT");
-
+query_tcap(	"#4",	"kLFT");
 }
 
 if ( defined($opt_a) || defined($opt_e) ) {
@@ -157,6 +211,9 @@ query_tcap(	"*0",	"kFND");
 
 query_tcap(	"kN",	"knp");
 query_tcap(	"kP",	"kpp");
+
+query_tcap(	"%c",	"kNXT");
+query_tcap(	"%e",	"kPRV");
 }
 
 if ( defined($opt_a) || defined($opt_f) ) {
@@ -247,4 +304,21 @@ query_tcap(	"Co",	"colors");
 
 if ( defined ($opt_x) ) {
 	query_extended($opt_x);
+}
+
+if ( defined ($opt_X) ) {
+	if ( defined($opt_c) ) {
+		query_extended("DN");
+		query_extended("UP");
+		query_extended("LFT");
+		query_extended("RIT");
+	}
+	if ( defined($opt_e) ) {
+		query_extended("DC");
+		query_extended("END");
+		query_extended("HOM");
+		query_extended("IC");
+		query_extended("NXT");
+		query_extended("PRV");
+	}
 }

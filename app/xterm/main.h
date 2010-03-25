@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.44 2009/10/10 09:38:25 tom Exp $ */
+/* $XTermId: main.h,v 1.51 2010/01/01 19:53:42 tom Exp $ */
 
 /*
- * Copyright 2000-2008,2009 by Thomas E. Dickey
+ * Copyright 2000-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -91,6 +91,10 @@
 #define DEFFACESIZE		"14.0"
 #endif
 
+#ifndef DEF_ALLOW_COLOR
+#define DEF_ALLOW_COLOR		True
+#endif
+
 #ifndef DEF_ALLOW_FONT
 #define DEF_ALLOW_FONT		True
 #endif
@@ -105,6 +109,22 @@
 
 #ifndef DEF_ALLOW_WINDOW
 #define DEF_ALLOW_WINDOW	False
+#endif
+
+#ifndef DEF_DISALLOWED_COLOR
+#define DEF_DISALLOWED_COLOR	"SetColor,GetColor,GetAnsiColor"
+#endif
+
+#ifndef DEF_DISALLOWED_FONT
+#define DEF_DISALLOWED_FONT	"SetFont,GetFont"
+#endif
+
+#ifndef DEF_DISALLOWED_TCAP
+#define DEF_DISALLOWED_TCAP	"SetTcap,GetTcap"
+#endif
+
+#ifndef DEF_DISALLOWED_WINDOW
+#define DEF_DISALLOWED_WINDOW	"20,21,SetXprop,SetSelection"
 #endif
 
 #if OPT_BLINK_TEXT
@@ -143,6 +163,10 @@
 #else
 #define DEF_PTY_STTY_SIZE	True
 #endif
+#endif
+
+#ifndef DEF_TITLE_MODES
+#define DEF_TITLE_MODES		0
 #endif
 
 #ifndef PROJECTROOT

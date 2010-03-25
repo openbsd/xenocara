@@ -1,8 +1,8 @@
-/* $XTermId: xterm.h,v 1.589 2009/10/12 00:34:48 tom Exp $ */
+/* $XTermId: xterm.h,v 1.608 2010/01/20 01:36:37 tom Exp $ */
 
 /************************************************************
 
-Copyright 1999-2008,2009 by Thomas E. Dickey
+Copyright 1999-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -342,6 +342,7 @@ extern char **environ;
 /***====================================================================***/
 
 #define XtNallowC1Printable	"allowC1Printable"
+#define XtNallowColorOps	"allowColorOps"
 #define XtNallowFontOps		"allowFontOps"
 #define XtNallowSendEvents	"allowSendEvents"
 #define XtNallowTcapOps		"allowTcapOps"
@@ -390,6 +391,10 @@ extern char **environ;
 #define XtNdecTerminalID	"decTerminalID"
 #define XtNdefaultString	"defaultString"
 #define XtNdeleteIsDEL		"deleteIsDEL"
+#define XtNdisallowedColorOps	"disallowedColorOps"
+#define XtNdisallowedFontOps	"disallowedFontOps"
+#define XtNdisallowedTcapOps	"disallowedTcapOps"
+#define XtNdisallowedWindowOps	"disallowedWindowOps"
 #define XtNdynamicColors	"dynamicColors"
 #define XtNeightBitControl	"eightBitControl"
 #define XtNeightBitInput	"eightBitInput"
@@ -461,6 +466,7 @@ extern char **environ;
 #define XtNprinterControlMode	"printerControlMode"
 #define XtNprinterExtent	"printerExtent"
 #define XtNprinterFormFeed	"printerFormFeed"
+#define XtNprinterNewLine	"printerNewLine"
 #define XtNquietGrab		"quietGrab"
 #define XtNrenderFont		"renderFont"
 #define XtNresizeGravity	"resizeGravity"
@@ -485,6 +491,7 @@ extern char **environ;
 #define XtNtekStartup		"tekStartup"
 #define XtNtiXtraScroll		"tiXtraScroll"
 #define XtNtiteInhibit		"titeInhibit"
+#define XtNtitleModes		"titleModes"
 #define XtNtoolBar		"toolBar"
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
@@ -507,6 +514,7 @@ extern char **environ;
 #define XtNxmcMoveSGR		"xmcMoveSGR"
 
 #define XtCAllowC1Printable	"AllowC1Printable"
+#define XtCAllowColorOps	"AllowColorOps"
 #define XtCAllowFontOps		"AllowFontOps"
 #define XtCAllowSendEvents	"AllowSendEvents"
 #define XtCAllowTcapOps		"AllowTcapOps"
@@ -550,6 +558,10 @@ extern char **environ;
 #define XtCDecTerminalID	"DecTerminalID"
 #define XtCDefaultString	"DefaultString"
 #define XtCDeleteIsDEL		"DeleteIsDEL"
+#define XtCDisallowedColorOps	"DisallowedColorOps"
+#define XtCDisallowedFontOps	"DisallowedFontOps"
+#define XtCDisallowedTcapOps	"DisallowedTcapOps"
+#define XtCDisallowedWindowOps	"DisallowedWindowOps"
 #define XtCDynamicColors	"DynamicColors"
 #define XtCEightBitControl	"EightBitControl"
 #define XtCEightBitInput	"EightBitInput"
@@ -613,6 +625,7 @@ extern char **environ;
 #define XtCPrinterControlMode	"PrinterControlMode"
 #define XtCPrinterExtent	"PrinterExtent"
 #define XtCPrinterFormFeed	"PrinterFormFeed"
+#define XtCPrinterNewLine	"PrinterNewLine"
 #define XtCQuietGrab		"QuietGrab"
 #define XtCRenderFont		"RenderFont"
 #define XtCResizeGravity	"ResizeGravity"
@@ -635,6 +648,7 @@ extern char **environ;
 #define XtCTekStartup		"TekStartup"
 #define XtCTiXtraScroll		"TiXtraScroll"
 #define XtCTiteInhibit		"TiteInhibit"
+#define XtCTitleModes		"TitleModes"
 #define XtCToolBar		"ToolBar"
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
@@ -729,8 +743,10 @@ extern void HandleSelectStart          PROTO_XT_ACTIONS_ARGS;
 extern void HandleStartExtend          PROTO_XT_ACTIONS_ARGS;
 extern void ResizeSelection (TScreen * /* screen */, int  /* rows */, int  /* cols */);
 extern void ScrollSelection (TScreen * /* screen */, int  /* amount */,  Bool /* always */);
-extern void TrackMouse (XtermWidget /* xw */, int /* func */, CELL *  /* start */, int  /* firstrow */, int  /* lastrow */);
+extern void TrackMouse (XtermWidget /* xw */, int /* func */, CELL * /* start */, int /* firstrow */, int /* lastrow */);
 extern void ViButton                   PROTO_XT_ACTIONS_ARGS;
+
+extern int xtermUtf8ToTextList(XtermWidget /* xw */, XTextProperty * /* text_prop */, char *** /* text_list */, int * /* text_list_count */);
 
 #if OPT_DEC_LOCATOR
 extern void GetLocatorPosition (XtermWidget  /* w */);
@@ -746,7 +762,7 @@ extern void SendFocusButton(XtermWidget /* xw */, XFocusChangeEvent * /* event *
 #if OPT_PASTE64
 extern void AppendToSelectionBuffer (TScreen * /* screen */, unsigned  /* c */);
 extern void ClearSelectionBuffer (TScreen * /* screen */);
-extern void CompleteSelection (XtermWidget  /* xw */, char ** /* args */, Cardinal  /* len */);
+extern void CompleteSelection (XtermWidget  /* xw */, String * /* args */, Cardinal  /* len */);
 extern void xtermGetSelection (Widget  /* w */, Time  /* ev_time */, String * /* params */, Cardinal  /* num_params */, Atom * /* targets */);
 #endif
 
@@ -791,7 +807,7 @@ extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name *
 extern void HideCursor (void);
 extern void RestartBlinking(TScreen * /* screen */);
 extern void ShowCursor (void);
-extern void SwitchBufPtrs (TScreen * /* screen */);
+extern void SwitchBufPtrs (TScreen * /* screen */, int /* toBuf */);
 extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
 extern void VTRun (XtermWidget /* xw */);
@@ -929,6 +945,7 @@ extern char *xtermFindShell(char * /* leaf */, Bool  /* warning */);
 extern char *xtermVersion(void);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
+extern int ResetAnsiColorRequest(XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, int  /* mode */);
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);
@@ -1003,12 +1020,13 @@ extern void FlushLog (TScreen * /* screen */);
 
 /* print.c */
 extern Bool xtermHasPrinter (XtermWidget /* xw */);
+extern PrinterFlags *getPrinterFlags(XtermWidget /* xw */, String * /* params */, Cardinal * /* param_count */);
 extern int xtermPrinterControl (XtermWidget /* xw */, int /* chr */);
 extern void setPrinterControlMode (XtermWidget /* xw */, int /* mode */);
 extern void xtermAutoPrint (XtermWidget /* xw */, unsigned /* chr */);
 extern void xtermMediaControl (XtermWidget /* xw */, int  /* param */, int  /* private_seq */);
-extern void xtermPrintScreen (XtermWidget /* xw */, Bool  /* use_DECPEX */);
-extern void xtermPrintEverything (XtermWidget /* xw */);
+extern void xtermPrintScreen (XtermWidget /* xw */, Bool  /* use_DECPEX */, PrinterFlags * /* p */);
+extern void xtermPrintEverything (XtermWidget /* xw */, PrinterFlags * /* p */);
 
 /* ptydata.c */
 #ifdef VMS
@@ -1201,22 +1219,22 @@ extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* le
 
 #define getXtermForeground(xw, flags, color) \
 	(((flags) & FG_COLOR) && ((int)(color) >= 0 && (color) < MAXCOLORS) \
-			? GET_COLOR_RES(xw->screen.Acolors[color]) \
-			: T_COLOR(&(xw->screen), TEXT_FG))
+			? GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]) \
+			: T_COLOR(TScreenOf(xw), TEXT_FG))
 
 #define getXtermBackground(xw, flags, color) \
 	(((flags) & BG_COLOR) && ((int)(color) >= 0 && (color) < MAXCOLORS) \
-			? GET_COLOR_RES(xw->screen.Acolors[color]) \
-			: T_COLOR(&(xw->screen), TEXT_BG))
+			? GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]) \
+			: T_COLOR(TScreenOf(xw), TEXT_BG))
 
 #if OPT_COLOR_RES
-#define GET_COLOR_RES(res) xtermGetColorRes(&(res))
+#define GET_COLOR_RES(xw, res) xtermGetColorRes(xw, &(res))
 #define SET_COLOR_RES(res,color) (res)->value = color
 #define EQL_COLOR_RES(res,color) (res)->value == color
 #define T_COLOR(v,n) (v)->Tcolors[n].value
-extern Pixel xtermGetColorRes(ColorRes *res);
+extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 #else
-#define GET_COLOR_RES(res) res
+#define GET_COLOR_RES(xw, res) res
 #define SET_COLOR_RES(res,color) *res = color
 #define EQL_COLOR_RES(res,color) *res == color
 #define T_COLOR(v,n) (v)->Tcolors[n]
@@ -1224,6 +1242,15 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 
 #define ExtractForeground(color) (unsigned) GetCellColorFG(color)
 #define ExtractBackground(color) (unsigned) GetCellColorBG(color)
+
+#define MapToColorMode(fg, screen, flags) \
+	(((screen)->colorBLMode && ((flags) & BLINK)) \
+	 ? COLOR_BL \
+	 : (((screen)->colorULMode && ((flags) & UNDERLINE)) \
+	    ? COLOR_UL \
+	    : (((screen)->colorBDMode && ((flags) & BOLD)) \
+	       ? COLOR_BD \
+	       : fg)))
 
 #define checkVeryBoldAttr(flags, fg, code, attr) \
 	if ((flags & FG_COLOR) != 0 \
@@ -1240,11 +1267,13 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 
 #else /* !OPT_ISO_COLORS */
 
+#define MapToColorMode(fg, screen, flags) fg
+
 #define ClearDFtBackground(xw, top, left, height, width) \
 	ClearCurBackground(xw, top, left, height, width)
 
 #define ClearCurBackground(xw, top, left, height, width) \
-	XClearArea (xw->screen.display, VWindow(&(xw->screen)), \
+	XClearArea (TScreenOf(xw)->display, VWindow(TScreenOf(xw)), \
 		left, top, width, height, False)
 
 #define extract_fg(xw, color, flags) (xw)->cur_foreground
@@ -1252,8 +1281,8 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 
 		/* FIXME: Reverse-Video? */
 #define T_COLOR(v,n) (v)->Tcolors[n]
-#define getXtermBackground(xw, flags, color) T_COLOR(&(xw->screen), TEXT_BG)
-#define getXtermForeground(xw, flags, color) T_COLOR(&(xw->screen), TEXT_FG)
+#define getXtermBackground(xw, flags, color) T_COLOR(TScreenOf(xw), TEXT_BG)
+#define getXtermForeground(xw, flags, color) T_COLOR(TScreenOf(xw), TEXT_FG)
 #define makeColorPair(fg, bg) 0
 #define xtermColorPair(xw) 0
 
@@ -1268,12 +1297,12 @@ extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */
 
 #if OPT_HIGHLIGHT_COLOR
 #define isNotForeground(xw, fg, bg, sel) \
-		(Boolean) ((sel) != T_COLOR(&((xw)->screen), TEXT_FG) \
+		(Boolean) ((sel) != T_COLOR(TScreenOf(xw), TEXT_FG) \
 			   && (sel) != (fg) \
 			   && (sel) != (bg) \
 			   && (sel) != (xw)->dft_foreground)
 #define isNotBackground(xw, fg, bg, sel) \
-		(Boolean) ((sel) != T_COLOR(&((xw)->screen), TEXT_BG) \
+		(Boolean) ((sel) != T_COLOR(TScreenOf(xw), TEXT_BG) \
 			   && (sel) != (fg) \
 			   && (sel) != (bg) \
 			   && (sel) != (xw)->dft_background)

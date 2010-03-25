@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.437 2009/10/10 12:15:41 tom Exp $
+.\" $XTermId: xterm.man,v 1.451 2010/01/20 10:55:58 tom Exp $
 .\"
-.\" Copyright 1996-2008,2009 by Thomas E. Dickey
+.\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1283,8 +1283,8 @@ You cannot set this to a value less than 64.
 .TP 8
 .B "ptyHandshake (\fPclass\fB PtyHandshake)
 If \*(``true\*('', \fIxterm\fP will perform handshaking during initialization
-to ensure that the parent and child processes update the \fButmp\fP
-and \fBstty\fP state.
+to ensure that the parent and child processes update the \fIutmp\fP
+and \fIstty\fP state.
 See also \fBwaitForMap\fP which waits for the pseudo-terminal's notion
 of the screen size,
 and \fBptySttySize\fP which resets the screen size after other terminal
@@ -1492,6 +1492,11 @@ Although this corresponds to no particular standard,
 some users insist it is a VT100.
 The default is \*(``false.\*(''
 .TP
+.B "allowColorOps (\fPclass\fB AllowColorOps)"
+Specifies whether control sequences that set/query the dynamic colors should be allowed.
+ANSI colors are unaffected by this resource setting.
+The default is \*(``true.\*(''
+.TP
 .B "allowFontOps (\fPclass\fB AllowFontOps)"
 Specifies whether control sequences that set/query the font should be allowed.
 The default is \*(``true.\*(''
@@ -1542,6 +1547,7 @@ position, as well as reporting these values and the title or icon name.
 Each of these can be abused in a script;
 curiously enough most terminal emulators that implement these
 restrict only a small part of the repertoire.
+For fine-tuning, see \fBdisallowedWindowOps\fP.
 The default is \*(``false.\*(''
 .TP 8
 .B "altIsNotMeta (\fPclass\fB AltIsNotMeta\fP)"
@@ -1996,6 +2002,148 @@ the same layout on the screen as the original text.
 Specifies whether the Delete key on the editing keypad should send DEL (127)
 or the VT220-style Remove escape sequence.
 The default is \*(``false,\*('' for the latter.
+.TP 8
+.B "disallowedColorOps (\fPclass\fB DisallowedColorOps)"
+Specify which features will be disabled if \fBallowColorOps\fP is false.
+This is a comma-separated list of names.
+The default value is
+.RS
+SetColor,GetColor,GetAnsiColor
+.RE
+.IP
+The names are listed below.  \fIxterm\fP ignores capitalization, but
+they are shown in mixed-case for clarity.
+.RS
+.TP 5
+SetColor
+Set a specific dynamic color.
+.TP 5
+GetColor
+Report the current setting of a given dynamic color.
+.TP 5
+GetAnsiColor
+Report the current setting of a given ANSI color (actually any of the colors
+set via ANSI-style controls).
+.RE
+.TP 8
+.B "disallowedFontOps (\fPclass\fB DisallowedFontOps)"
+Specify which features will be disabled if \fBallowFontOps\fP is false.
+This is a comma-separated list of names.
+The default value is
+.RS
+SetFont,GetFont
+.RE
+.IP
+The names are listed below.  \fIxterm\fP ignores capitalization, but
+they are shown in mixed-case for clarity.
+.RS
+.TP 5
+SetFont
+Set the specified font.
+.TP 5
+GetFont
+Report the specified font.
+.RE
+.TP 8
+.B "disallowedTcapOps (\fPclass\fB DisallowedTcapOps)"
+Specify which features will be disabled if \fBallowTcapOps\fP is false.
+This is a comma-separated list of names.
+The default value is
+.RS
+SetTcap,GetTcap
+.RE
+.IP
+The names are listed below.  \fIxterm\fP ignores capitalization, but
+they are shown in mixed-case for clarity.
+.RS
+.TP 5
+SetTcap
+(not implemented)
+.TP 5
+GetTcap
+Report specified function- and other special keys.
+.RE
+.TP 8
+.B "disallowedWindowOps (\fPclass\fB DisallowedWindowOps)"
+Specify which features will be disabled if \fBallowWindowOps\fP is false.
+This is a comma-separated list of names, or (for the controls adapted
+from \fIdtterm\fP the operation number).
+The default value is
+.RS
+20,21,SetXprop,SetSelection
+.RE
+.IP
+The names are listed below.  \fIxterm\fP ignores capitalization, but
+they are shown in mixed-case for clarity.  Where a number can be used
+as an alternative, it is given in parentheses after the name.
+.RS
+.TP 5
+GetIconTitle (20)
+Report xterm window's icon label as a string.
+.TP 5
+GetScreenSizeChars (19)
+Report the size of the screen in characters as numbers.
+.TP 5
+GetSelection
+Report selection data as a base64 string.
+.TP 5
+GetWinPosition (13)
+Report xterm window position as numbers.
+.TP 5
+GetWinSizeChars (18)
+Report the size of the text area in characters as numbers.
+.TP 5
+GetWinSizePixels (14)
+Report xterm window in pixels as numbers.
+.TP 5
+GetWinState (11)
+Report xterm window state as a number.
+.TP 5
+GetWinTitle (21)
+Report xterm window's title as a string.
+.TP 5
+LowerWin (6)
+Lower the xterm window to the bottom of the stacking order.
+.TP 5
+MaximizeWin (9)
+Maximize window (i.e., resize to screen size).
+.TP 5
+MinimizeWin (2)
+Iconify window.
+.TP 5
+PopTitle (23)
+Pop title from internal stack.
+.TP 5
+PushTitle (22)
+Push title to internal stack.
+.TP 5
+RaiseWin (5)
+Raise the xterm window to the front of the stacking order.
+.TP 5
+RefreshWin (7)
+Refresh the xterm window.
+.TP 5
+RestoreWin (1)
+De-iconify window.
+.TP 5
+SetSelection
+Set selection data.
+.TP 5
+SetWinLines
+Resize to a given number of lines, at least 24.
+.TP 5
+SetWinPosition (3)
+Move window to given coordinates.
+.TP 5
+SetWinSizeChars (8)
+Resize the text area to given size in characters.
+.TP 5
+SetWinSizePixels (4)
+Resize the xterm window to given size in pixels.
+.TP 5
+SetXprop
+Set X property on top-level window.
+.RE
 .TP 8
 .B "dynamicColors (\fPclass\fB DynamicColors)"
 Specifies whether or not escape sequences to change colors assigned to
@@ -2669,7 +2817,8 @@ Select a line (counting wrapping).
 .TP
 group
 Select a group of adjacent lines (counting wrapping).
-The selection stops on a blank line.
+The selection stops on a blank line,
+and does not extend outside the current page.
 .TP
 page
 Select all visible lines, i.e., the page.
@@ -2781,6 +2930,11 @@ The default is \*(``false.\*(''
 Controls whether a form feed is sent to the printer at the end of a print
 page function.
 The default is \*(``false.\*(''
+.TP 8
+.B "printerNewLine (\fPclass\fB PrinterNewLine)"
+Controls whether a newline is sent to the printer at the end of a print
+page function.
+The default is \*(``true.\*(''
 .TP 8
 .B "quietGrab (\fPclass\fB QuietGrab)"
 Controls whether the cursor is repainted
@@ -2944,6 +3098,30 @@ sequences (also known as private modes) 1047, 1048 and 1049 which have the same
 effect as the original 47 control sequence.
 The default for this resource is \*(``false.\*(''
 .TP 8
+.B "titleModes (\fPclass\fB TitleModes)"
+Tells \fIxterm\fP whether to accept or return
+window- and icon-labels in ISO-8859-1
+(the default) or UTF-8.
+Either can be encoded in hexadecimal.
+The default for this resource is \*(``0.\*(''
+.IP
+Each bit (bit "0" is 1, bit "1" is 2, etc) corresponds to one of the
+parameters set by the title modes control sequence:
+.RS
+.TP 5
+0
+Set window/icon labels using hexadecimal
+.TP 5
+1
+Query window/icon labels using hexadecimal
+.TP 5
+2
+Set window/icon labels using UTF-8 (overrides \fButf8Titles\fP resource).
+.TP 5
+3
+Query window/icon labels using UTF-8
+.RE
+.TP 8
 .B "translations (\fPclass\fB Translations)"
 Specifies the key and button bindings for menus, selections, \*(``programmed
 strings,\*('' etc.
@@ -3038,6 +3216,13 @@ However, some users may wish to write a title string encoded in UTF-8.
 Set this resource to \*(``true\*('' to allow UTF-8 encoded title strings.
 That cancels the translation to UTF-8,
 allowing UTF-8 strings to be displayed as is.
+.IP
+This feature is available as a menu entry, since it is related to
+the particular applications you are running within \fIxterm\fP.
+You can also use a control sequence (see the discussion of "Title Modes"
+in the control sequences document), to set an equivalent flag.
+The \fBtitleModes\fP resource sets the same value,
+which overrides this resource.
 .IP
 The default is \*(``false.\*(''
 .TP 8
@@ -4114,6 +4299,10 @@ which can be controlled by writing escape sequences to the terminal.
 These are disabled if the SendEvents feature is enabled:
 .RS
 .TP
+Allow Color Ops (allow-font-ops)
+This corresponds to the \fBallowColorOps\fP resource.
+Enable or disable control sequences that set/query the colors.
+.TP
 Allow Font Ops (allow-font-ops)
 This corresponds to the \fBallowFontOps\fP resource.
 Enable or disable control sequences that set/query the font.
@@ -4357,6 +4546,10 @@ The following
 actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
 .TP 8
+.B "allow-color-ops(\fIon/off/toggle\fP)"
+This action set or toggles the \fBallowColorOps\fP resource and is also
+invoked by the \fBallow-color-ops\fP entry in \fIfontMenu\fP.
+.TP 8
 .B "allow-font-ops(\fIon/off/toggle\fP)"
 This action set or toggles the \fBallowFontOps\fP resource and is also
 invoked by the \fBallow-font-ops\fP entry in \fIfontMenu\fP.
@@ -4518,13 +4711,50 @@ Valid names (case is
 significant) include:  \fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP,
 and \fItekMenu\fP.
 .TP 8
-.B "print()"
+.B "print(\fIprinter-flags\fP)"
 This action prints the window and is also invoked by the
 \fIprint\fP entry in \fImainMenu\fP.
+.IP
+The action accepts optional parameters, which temporarily override
+resource settings.
+The parameter values are matched ignoring case:
+.RS
+.TP 5
+noFormFeed
+no form feed will be sent at the end of the last line printed
+(i.e., \fBprinterFormFeed\fP is ``false'').
+.TP 5
+FormFeed
+a form feed will be sent at the end of the last line printed
+(i.e., \fBprinterFormFeed\fP is ``true'').
+.TP 5
+noNewLine
+no newline will be sent at the end of the last line printed,
+and wrapped lines will be combined into long lines
+(i.e., \fBprinterNewLine\fP is ``false'').
+.TP 5
+NewLine
+a newline will be sent at the end of the last line printed,
+and each line will be limited (by adding a newline) to the screen width
+(i.e., \fBprinterNewLine\fP is ``true'').
+.TP 5
+noAttrs
+the page is printed without attributes
+(i.e., \fBprintAttributes\fP is ``0'').
+.TP 5
+monoAttrs
+the page is printed with monochrome (vt220) attributes
+(i.e., \fBprintAttributes\fP is ``1'').
+.TP 5
+colorAttrs
+the page is printed with ANSI color attributes
+(i.e., \fBprintAttributes\fP is ``2'').
+.RE
 .TP 8
-.B "print-everything()"
+.B "print-everything(\fIprinter-flags\fP)"
 This action sends the entire text history, in addition to the text
 currently visible, to the program given in the \fBprinterCommand\fP resource.
+It allows the same optional parameters as the \fBprint\fP action.
 With a suitable printer command, the action can be used to load the text
 history in an editor.
 .TP 8
@@ -5045,7 +5275,7 @@ Some shell initialization scripts may set a different locale.
 .TP 5
 XTERM_SHELL
 is set to the pathname of the program which is invoked.
-Usually that is a shell program, e.g., \fB/bin/sh\fP.
+Usually that is a shell program, e.g., \fI/bin/sh\fP.
 Since it is not necessarily a shell program however,
 it is distinct from \*(``SHELL\*(''.
 .TP 5

@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.30 2009/10/12 22:25:54 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.36 2009/12/07 09:16:23 tom Exp $ */
 
 /************************************************************
 
@@ -35,6 +35,7 @@ authorization.
 #include <xterm.h>
 
 #include <sys/types.h>
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -53,18 +54,87 @@ x_basename(char *name)
     return (cp ? cp + 1 : name);
 }
 
+/*
+ * Decode a hexadecimal string, returning the decoded string.
+ * On return, 'next' points to the first character not part of the input.
+ * The caller must free the result.
+ */
+char *
+x_decode_hex(const char *source, const char **next)
+{
+    char *result = 0;
+    int pass;
+    size_t j, k;
+
+    for (pass = 0; pass < 2; ++pass) {
+	for (j = k = 0; isxdigit(CharOf(source[j])); ++j) {
+	    if ((pass != 0) && (j & 1) != 0) {
+		result[k++] = (char) ((x_hex2int(source[j - 1]) << 4)
+				      | x_hex2int(source[j]));
+	    }
+	}
+	*next = (source + j);
+	if ((j & 1) == 0) {
+	    if (pass) {
+		result[k] = '\0';
+	    } else {
+		result = malloc(++j);
+		if (result == 0)
+		    break;	/* not enough memory */
+	    }
+	} else {
+	    break;		/* must have an even number of digits */
+	}
+    }
+    return result;
+}
+
+/*
+ * Encode a string into hexadecimal, returning the encoded string.
+ * The caller must free the result.
+ */
+char *
+x_encode_hex(const char *source)
+{
+    size_t need = (strlen(source) * 2) + 1;
+    char *result = malloc(need);
+
+    if (result != 0) {
+	unsigned j, k;
+	for (j = k = 0; source[j] != '\0'; ++j) {
+	    sprintf(result + k, "%02X", CharOf(source[j]));
+	    k += 2;
+	}
+    }
+    return result;
+}
+
 char *
 x_getenv(const char *name)
 {
-    return x_nonempty(getenv(name));
+    return x_strdup(x_nonempty(getenv(name)));
+}
+
+/*
+ * Decode a single hex "nibble", returning the nibble as 0-15, or -1 on error.
+ */ int
+x_hex2int(int c)
+{
+    if (c >= '0' && c <= '9')
+	return c - '0';
+    if (c >= 'a' && c <= 'f')
+	return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+	return c - 'A' + 10;
+    return -1;
 }
 
 /*
  * Check if the given string is nonnull/nonempty.  If so, return a pointer
  * to the beginning of its content, otherwise return null.
  */
-char *
-x_nonempty(char *s)
+String
+x_nonempty(String s)
 {
     if (s != 0) {
 	if (*s == '\0') {
@@ -78,16 +148,16 @@ x_nonempty(char *s)
     return s;
 }
 
-char *
-x_skip_blanks(char *s)
+String
+x_skip_blanks(String s)
 {
     while (isspace(CharOf(*s)))
 	++s;
     return s;
 }
 
-char *
-x_skip_nonblanks(char *s)
+String
+x_skip_nonblanks(String s)
 {
     while (*s != '\0' && !isspace(CharOf(*s)))
 	++s;
@@ -161,16 +231,18 @@ x_strindex(char *s1, const char *s2)
  * Trims leading/trailing spaces from a copy of the string.
  */
 char *
-x_strtrim(char *s)
+x_strtrim(const char *source)
 {
-    char *base = s;
+    char *result;
+    char *s;
     char *d;
 
-    if (s != 0 && *s != '\0') {
-	char *t = x_strdup(base);
+    if (source != 0 && *source != '\0') {
+	char *t = x_strdup(source);
 	s = t;
 	d = s;
-	s = x_skip_blanks(s);
+	while (isspace(CharOf(*s)))
+	    ++s;
 	while ((*d++ = *s++) != '\0') {
 	    ;
 	}
@@ -180,9 +252,11 @@ x_strtrim(char *s)
 		*--s = '\0';
 	    }
 	}
-	base = t;
+	result = t;
+    } else {
+	result = x_strdup("");
     }
-    return base;
+    return result;
 }
 
 /*

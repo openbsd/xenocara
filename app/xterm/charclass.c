@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.21 2008/12/30 17:35:09 tom Exp $ */
+/* $XTermId: charclass.c,v 1.22 2009/11/05 23:46:15 tom Exp $ */
 
 /*
  * Compact and efficient reimplementation of the
@@ -51,7 +51,8 @@ SetCharacterClassRange(int low, int high, int value)
     /* make sure we have at least one free entry left at table end */
     if (classtab[0].last > classtab[0].cclass - 2) {
 	classtab[0].cclass += 5 + classtab[0].cclass / 4;
-	classtab = TypeRealloc(struct classentry, (unsigned) classtab[0].cclass, classtab);
+	classtab = TypeRealloc(struct classentry,
+			         (unsigned) classtab[0].cclass, classtab);
 	if (!classtab)
 	    abort();
     }
@@ -77,7 +78,7 @@ init_classtab(void)
 {
     const int size = 50;
 
-    classtab = TypeMallocN(struct classentry, size);
+    classtab = TypeMallocN(struct classentry, (unsigned) size);
     if (!classtab)
 	abort();
     classtab[0].cclass = size;

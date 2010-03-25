@@ -1,4 +1,4 @@
-/* $XTermId: tabs.c,v 1.36 2009/06/21 14:34:17 tom Exp $ */
+/* $XTermId: tabs.c,v 1.37 2009/11/28 14:11:06 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -107,7 +107,7 @@ TabClear(Tabs tabs, int col)
 static int
 TabNext(XtermWidget xw, Tabs tabs, int col)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->curses && screen->do_wrap && (xw->flags & WRAPAROUND)) {
 	xtermIndex(xw, 1);
@@ -143,7 +143,7 @@ TabPrev(Tabs tabs, int col)
 Bool
 TabToNextStop(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int saved_column = screen->cur_col;
     int next = TabNext(xw, xw->tabs, screen->cur_col);
     int max = LineMaxCol(screen, getLineData(screen, screen->cur_row));
@@ -161,7 +161,7 @@ TabToNextStop(XtermWidget xw)
 Bool
 TabToPrevStop(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     int saved_column = screen->cur_col;
 
     set_cur_col(screen, TabPrev(xw->tabs, screen->cur_col));
