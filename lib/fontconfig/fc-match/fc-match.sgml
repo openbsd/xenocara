@@ -20,7 +20,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhfirstname "<firstname>Patrick</firstname>">
   <!ENTITY dhsurname   "<surname>Lam</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>Apr  6, 2006</date>">
+  <!ENTITY dhdate      "<date>Aug 13, 2008</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
@@ -63,25 +63,34 @@ manpage.1: manpage.sgml
     <cmdsynopsis>
       <command>&dhpackage;</command>
 
-      <arg><option>-svV?</option></arg>
+      <arg><option>-asvVh</option></arg>
+      <arg><option>--all</option></arg>
       <arg><option>--sort</option></arg>
       <arg><option>--verbose</option></arg>
+      <group>
+        <arg><option>-f</option> <option><replaceable>format</replaceable></option></arg>
+        <arg><option>--format</option> <option><replaceable>format</replaceable></option></arg>
+      </group>
       <arg><option>--version</option></arg>
       <arg><option>--help</option></arg>
-      <arg><option><replaceable>font-pattern</replaceable></option></arg>
+      <sbr>
+      <arg><option><replaceable>pattern</replaceable></option> <arg rep="repeat"><option><replaceable>element</replaceable></option></arg> </arg>
       
      </cmdsynopsis>
   </refsynopsisdiv>
   <refsect1>
     <title>DESCRIPTION</title>
 
-    <para><command>&dhpackage;</command> matches font-pattern (empty
+    <para><command>&dhpackage;</command> matches
+    <replaceable>pattern</replaceable> (empty
 pattern by default) using the normal fontconfig matching rules to find
-the best font available.  If --sort is given, the sorted list of best
-matching fonts is displayed.  With --verbose, the whole font pattern
-for each match is printed, otherwise only the file, family and style
-are printed..</para>
-
+the best font available.  If <option>--sort</option> is given, the sorted list of best
+matching fonts is displayed.
+The <option>--all</option> option works like
+<option>--sort</option> except that no pruning is done on the list of fonts.</para>
+<para>If any elements are specified, only those are printed.
+Otherwise short file name, family, and style are printed, unless verbose
+output is requested.</para>
   </refsect1>
   <refsect1>
     <title>OPTIONS</title>
@@ -92,27 +101,12 @@ are printed..</para>
 
     <variablelist>
       <varlistentry>
-        <term><option>-v</option>
-          <option>--verbose</option>
+        <term><option>-a</option>
+          <option>--all</option>
         </term>
         <listitem>
-          <para>Print whole font pattern for each match.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>-?</option>
-          <option>--help</option>
-        </term>
-        <listitem>
-          <para>Show summary of options.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>-V</option>
-          <option>--version</option>
-        </term>
-        <listitem>
-          <para>Show version of the program and exit.</para>
+          <para>Displays sorted list of best matching fonts, but do not do any
+		pruning on the list.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -124,11 +118,55 @@ are printed..</para>
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option><replaceable>font-pattern</replaceable></option>
+        <term><option>-v</option>
+          <option>--verbose</option>
+        </term>
+        <listitem>
+          <para>Print verbose output of the whole font pattern for each match,
+	        or <replaceable>element</replaceable>s if any is
+		provided.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-f</option>
+          <option>--format</option>
+	  <option><replaceable>format</replaceable></option>
+        </term>
+        <listitem>
+          <para>Format output according to the format specifier
+	  <replaceable>format</replaceable>.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-V</option>
+          <option>--version</option>
+        </term>
+        <listitem>
+          <para>Show version of the program and exit.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-h</option>
+          <option>--help</option>
+        </term>
+        <listitem>
+          <para>Show summary of options.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option><replaceable>pattern</replaceable></option>
         </term>
         <listitem>
           <para>Displays fonts matching
-                <replaceable>font-pattern</replaceable> (uses empty pattern by default).</para>
+                <replaceable>pattern</replaceable> (uses empty pattern by default).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option><replaceable>element</replaceable></option>
+        </term>
+        <listitem>
+          <para>If set, the <replaceable>element</replaceable> property
+                is displayed for matching fonts.</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -137,7 +175,16 @@ are printed..</para>
   <refsect1>
     <title>SEE ALSO</title>
 
-    <para><command>fc-list</command> (1).</para>
+    <para>
+      <command>fc-list</command>(1)
+      <function>FcFontMatch</function>(3)
+      <function>FcFontSort</function>(3)
+      <function>FcPatternFormat</function>(3)
+      <command>fc-cat</command>(1)
+      <command>fc-cache</command>(1)
+      <command>fc-query</command>(1)
+      <command>fc-scal</command>(1)
+    </para>
 
     <para>The fontconfig user's guide, in HTML format:
       <filename>/usr/share/doc/fontconfig/fontconfig-user.html</filename>.</para>

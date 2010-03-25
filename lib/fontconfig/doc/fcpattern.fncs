@@ -1,5 +1,5 @@
 /*
- * $Id: fcpattern.fncs,v 1.2 2009/04/05 16:43:35 matthieu Exp $
+ * fontconfig/doc/fcpattern.fncs
  *
  * Copyright © 2003 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -31,7 +31,7 @@ Creates a pattern with no properties; used to build patterns from scratch.
 
 @RET@		FcPattern *	
 @FUNC@		FcPatternDuplicate
-@TYPE1@		FcPattern * 			@ARG1@		 p
+@TYPE1@		const FcPattern * 		@ARG1@		 p
 @PURPOSE@	Copy a pattern
 @DESC@
 Copy a pattern, returning a new pattern that matches
@@ -75,6 +75,18 @@ Returns whether <parameter>pa</parameter> and <parameter>pb</parameter> are exac
 @DESC@
 Returns whether <parameter>pa</parameter> and <parameter>pb</parameter> have exactly the same values for all of the
 objects in <parameter>os</parameter>.
+@@
+
+@RET@		FcPattern *
+@FUNC@		FcPatternFilter
+@TYPE1@		FcPattern * 			@ARG1@		 p
+@TYPE2@		const FcObjectSet * 		@ARG1@		 os
+@PURPOSE@	Filter the objects of pattern
+@DESC@
+Returns a new pattern that only has those objects from
+<parameter>p</parameter> that are in <parameter>os</parameter>.
+If <parameter>os</parameter> is NULL, a duplicate of
+<parameter>p</parameter> is returned.
 @@
 
 @RET@		FcChar32
@@ -241,18 +253,20 @@ within the pattern directly.  Applications must not free this value.
 @TYPE4+++++@ 	FcBool * 			@ARG4+++++@ 	b 
 
 @PROTOTYPE++++++@
-@RET++++++@	FcBool
+@RET++++++@	FcResult
 @FUNC++++++@	FcPatternGetFTFace
 @TYPE1++++++@ 	FcPattern * 			@ARG1++++++@ 	p
 @TYPE2++++++@	const char *			@ARG2++++++@	object
-@TYPE3++++++@	const FT_Face *			@ARG3++++++@	f
+@TYPE3+++++@ 	int%  				@ARG3+++++@ 	n
+@TYPE3++++++@	FT_Face *			@ARG3++++++@	f
 
 @PROTOTYPE+++++++@
-@RET+++++++@	FcBool
+@RET+++++++@	FcResult
 @FUNC+++++++@	FcPatternGetLangSet
 @TYPE1+++++++@ 	FcPattern * 			@ARG1+++++++@ 	p
 @TYPE2+++++++@	const char *			@ARG2+++++++@	object
-@TYPE3+++++++@	const FcLangSet **		@ARG3+++++++@	l
+@TYPE3+++++@ 	int%  				@ARG3+++++@ 	n
+@TYPE3+++++++@	FcLangSet **			@ARG3+++++++@	l
 
 @PURPOSE@	Return a typed value from a pattern
 @DESC@
@@ -265,20 +279,20 @@ in preference to FcPatternGet to provide compile-time typechecking.
 
 @RET@		FcPattern *
 @FUNC@		FcPatternBuild
-@TYPE1@		FcPattern *			@ARG1@		orig
+@TYPE1@		FcPattern *			@ARG1@		pattern
 @TYPE2@ 	...
 
 @PROTOTYPE+@
 @RET+@		FcPattern *
 @FUNC+@		FcPatternVaBuild
-@TYPE1+@	FcPattern *			@ARG1+@		orig
+@TYPE1+@	FcPattern *			@ARG1+@		pattern
 @TYPE2+@	va_list% 			@ARG2+@		va
 
 @PROTOTYPE++@
 @RET++@		void
 @FUNC++@	FcPatternVapBuild
 @TYPE1++@	FcPattern *			@ARG1++@	result
-@TYPE2++@	FcPattern *			@ARG2++@	orig
+@TYPE2++@	FcPattern *			@ARG2++@	pattern
 @TYPE3++@	va_list%			@ARG3++@	va
 
 @PURPOSE@	Create patterns from arguments
@@ -379,5 +393,5 @@ Converts <parameter>name</parameter> from the standard text format described abo
 @DESC@
 Converts the given pattern into the standard text format described above.
 The return value is not static, but instead refers to newly allocated memory
-which should be freed by the caller.
+which should be freed by the caller using free().
 @@

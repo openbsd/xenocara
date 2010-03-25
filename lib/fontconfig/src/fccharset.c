@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/src/fccharset.c,v 1.18 2002/08/22 07:36:44 keithp Exp $
+ * fontconfig/src/fccharset.c
  *
  * Copyright © 2001 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -68,16 +68,47 @@ FcCharSetDestroy (FcCharSet *fcs)
     }
     if (fcs->num)
     {
+        /* the numbers here are estimates */
 	FcMemFree (FC_MEM_CHARSET, fcs->num * sizeof (intptr_t));
 	free (FcCharSetLeaves (fcs));
-    }
-    if (fcs->num)
-    {
 	FcMemFree (FC_MEM_CHARSET, fcs->num * sizeof (FcChar16));
 	free (FcCharSetNumbers (fcs));
     }
     FcMemFree (FC_MEM_CHARSET, sizeof (FcCharSet));
     free (fcs);
+}
+
+/*
+ * Search for the leaf containing with the specified num.
+ * Return its index if it exists, otherwise return negative of
+ * the (position + 1) where it should be inserted
+ */
+
+
+static int
+FcCharSetFindLeafForward (const FcCharSet *fcs, int start, FcChar16 num)
+{
+    FcChar16		*numbers = FcCharSetNumbers(fcs);
+    FcChar16		page;
+    int			low = start;
+    int			high = fcs->num - 1;
+
+    if (!numbers)
+	return -1;
+    while (low <= high)
+    {
+	int mid = (low + high) >> 1;
+	page = numbers[mid];
+	if (page == num)
+	    return mid;
+	if (page < num)
+	    low = mid + 1;
+	else
+	    high = mid - 1;
+    }
+    if (high < 0 || (high < fcs->num && numbers[high] < num))
+	high++;
+    return -(high + 1);
 }
 
 /*
@@ -89,28 +120,7 @@ FcCharSetDestroy (FcCharSet *fcs)
 static int
 FcCharSetFindLeafPos (const FcCharSet *fcs, FcChar32 ucs4)
 {
-    FcChar16		*numbers = FcCharSetNumbers(fcs);
-    FcChar16		page;
-    int			low = 0;
-    int			high = fcs->num - 1;
-
-    if (!numbers)
-	return -1;
-    ucs4 >>= 8;
-    while (low <= high)
-    {
-	int mid = (low + high) >> 1;
-	page = numbers[mid];
-	if (page == ucs4)
-	    return mid;
-	if (page < ucs4)
-	    low = mid + 1;
-	else
-	    high = mid - 1;
-    }
-    if (high < 0 || (high < fcs->num && numbers[high] < ucs4))
-	high++;
-    return -(high + 1);
+    return FcCharSetFindLeafForward (fcs, 0, ucs4 >> 8);
 }
 
 static FcCharLeaf *
@@ -121,6 +131,8 @@ FcCharSetFindLeaf (const FcCharSet *fcs, FcChar32 ucs4)
 	return FcCharSetLeaf(fcs, pos);
     return 0;
 }
+
+#define FC_IS_ZERO_OR_POWER_OF_TWO(x) (!((x) & ((x)-1)))
 
 static FcBool
 FcCharSetPutLeaf (FcCharSet	*fcs, 
@@ -134,42 +146,48 @@ FcCharSetPutLeaf (FcCharSet	*fcs,
     ucs4 >>= 8;
     if (ucs4 >= 0x10000)
 	return FcFalse;
-    if (!fcs->num)
-	leaves = malloc (sizeof (*leaves));
-    else
+
+    if (FC_IS_ZERO_OR_POWER_OF_TWO (fcs->num))
     {
-	intptr_t    *new_leaves = realloc (leaves, (fcs->num + 1) * 
-					   sizeof (*leaves));
-	intptr_t    distance = (intptr_t) new_leaves - (intptr_t) leaves;
-	
+      if (!fcs->num)
+      {
+        unsigned int alloced = 8;
+	leaves = malloc (alloced * sizeof (*leaves));
+	numbers = malloc (alloced * sizeof (*numbers));
+	FcMemAlloc (FC_MEM_CHARSET, alloced * sizeof (*leaves));
+	FcMemAlloc (FC_MEM_CHARSET, alloced * sizeof (*numbers));
+      }
+      else
+      {
+        unsigned int alloced = fcs->num;
+	intptr_t *new_leaves, distance;
+
+	FcMemFree (FC_MEM_CHARSET, alloced * sizeof (*leaves));
+	FcMemFree (FC_MEM_CHARSET, alloced * sizeof (*numbers));
+
+	alloced *= 2;
+	new_leaves = realloc (leaves, alloced * sizeof (*leaves));
+	numbers = realloc (numbers, alloced * sizeof (*numbers));
+
+	FcMemAlloc (FC_MEM_CHARSET, alloced * sizeof (*leaves));
+	FcMemAlloc (FC_MEM_CHARSET, alloced * sizeof (*numbers));
+
+	distance = (intptr_t) new_leaves - (intptr_t) leaves;
 	if (new_leaves && distance)
 	{
 	    int i;
-
 	    for (i = 0; i < fcs->num; i++)
 		new_leaves[i] -= distance;
 	}
 	leaves = new_leaves;
+      }
+
+      if (!leaves || !numbers)
+	  return FcFalse;
+
+      fcs->leaves_offset = FcPtrToOffset (fcs, leaves);
+      fcs->numbers_offset = FcPtrToOffset (fcs, numbers);
     }
-    if (!leaves)
-	return FcFalse;
-    
-    if (fcs->num)
-	FcMemFree (FC_MEM_CHARSET, fcs->num * sizeof (intptr_t));
-    FcMemAlloc (FC_MEM_CHARSET, (fcs->num + 1) * sizeof (intptr_t));
-    fcs->leaves_offset = FcPtrToOffset (fcs, leaves);
-    
-    if (!fcs->num)
-	numbers = malloc (sizeof (FcChar16));
-    else
-	numbers = realloc (numbers, (fcs->num + 1) * sizeof (FcChar16));
-    if (!numbers)
-	return FcFalse;
-    
-    if (fcs->num)
-	FcMemFree (FC_MEM_CHARSET, fcs->num * sizeof (FcChar16));
-    FcMemAlloc (FC_MEM_CHARSET, (fcs->num + 1) * sizeof (FcChar16));
-    fcs->numbers_offset = FcPtrToOffset (fcs, numbers);
     
     memmove (leaves + pos + 1, leaves + pos, 
 	     (fcs->num - pos) * sizeof (*leaves));
@@ -452,6 +470,57 @@ FcCharSetUnion (const FcCharSet *a, const FcCharSet *b)
     return FcCharSetOperate (a, b, FcCharSetUnionLeaf, FcTrue, FcTrue);
 }
 
+FcBool
+FcCharSetMerge (FcCharSet *a, const FcCharSet *b, FcBool *changed)
+{
+    int		ai = 0, bi = 0;
+    FcChar16	an, bn;
+
+    if (a->ref == FC_REF_CONSTANT) {
+	if (changed)
+	    *changed = FcFalse;
+	return FcFalse;
+    }
+
+    if (changed) {
+	*changed = !FcCharSetIsSubset(b, a);
+	if (!*changed)
+	    return FcTrue;
+    }
+
+    while (bi < b->num)
+    {
+	an = ai < a->num ? FcCharSetNumbers(a)[ai] : ~0;
+	bn = FcCharSetNumbers(b)[bi];
+
+	if (an < bn)
+	{
+	    ai = FcCharSetFindLeafForward (a, ai + 1, bn);
+	    if (ai < 0)
+		ai = -ai - 1;
+	}
+	else
+	{
+	    FcCharLeaf *bl = FcCharSetLeaf(b, bi);
+	    if (bn < an)
+	    {
+		if (!FcCharSetAddLeaf (a, bn << 8, bl))
+		    return FcFalse;
+	    }
+	    else
+	    {
+		FcCharLeaf *al = FcCharSetLeaf(a, ai);
+		FcCharSetUnionLeaf (al, al, bl);
+	    }
+
+	    ai++;
+	    bi++;
+	}
+    }
+
+    return FcTrue;
+}
+
 static FcBool
 FcCharSetSubtractLeaf (FcCharLeaf *result,
 		       const FcCharLeaf *al,
@@ -484,10 +553,14 @@ FcCharSetHasChar (const FcCharSet *fcs, FcChar32 ucs4)
 static FcChar32
 FcCharSetPopCount (FcChar32 c1)
 {
+#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+    return __builtin_popcount (c1);
+#else
     /* hackmem 169 */
     FcChar32	c2 = (c1 >> 1) & 033333333333;
     c2 = c1 - c2 - ((c2 >> 1) & 033333333333);
     return (((c2 + (c2 >> 3)) & 030707070707) % 077);
+#endif
 }
 
 FcChar32
@@ -620,29 +693,9 @@ FcCharSetIsSubset (const FcCharSet *a, const FcCharSet *b)
 	    return FcFalse;
 	else
 	{
-	    int	    low = bi + 1;
-	    int	    high = b->num - 1;
-
-	    /*
-	     * Search for page 'an' in 'b'
-	     */
-	    while (low <= high)
-	    {
-		int mid = (low + high) >> 1;
-		bn = FcCharSetNumbers(b)[mid];
-		if (bn == an)
-		{
-		    high = mid;
-		    break;
-		}
-		if (bn < an)
-		    low = mid + 1;
-		else
-		    high = mid - 1;
-	    }
-	    bi = high;
-	    while (bi < b->num && FcCharSetNumbers(b)[bi] < an)
-		bi++;
+	    bi = FcCharSetFindLeafForward (b, bi + 1, an);
+	    if (bi < 0)
+		bi = -bi - 1;
 	}
     }
     /*

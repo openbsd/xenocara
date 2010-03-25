@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/src/fcstr.c,v 1.10 2002/08/31 22:17:32 keithp Exp $
+ * fontconfig/src/fcstr.c
  *
  * Copyright © 2000 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -710,11 +710,18 @@ FcUtf16Len (const FcChar8   *string,
 void
 FcStrBufInit (FcStrBuf *buf, FcChar8 *init, int size)
 {
-    buf->buf = init;
+    if (init)
+    {
+	buf->buf = init;
+	buf->size = size;
+    } else
+    {
+	buf->buf = buf->buf_static;
+	buf->size = sizeof (buf->buf_static);
+    }
     buf->allocated = FcFalse;
     buf->failed = FcFalse;
     buf->len = 0;
-    buf->size = size;
 }
 
 void
@@ -733,7 +740,10 @@ FcStrBufDone (FcStrBuf *buf)
 {
     FcChar8 *ret;
 
-    ret = malloc (buf->len + 1);
+    if (buf->failed)
+	ret = NULL;
+    else
+	ret = malloc (buf->len + 1);
     if (ret)
     {
 	FcMemAlloc (FC_MEM_STRING, buf->len + 1);
@@ -744,6 +754,17 @@ FcStrBufDone (FcStrBuf *buf)
     return ret;
 }
 
+FcChar8 *
+FcStrBufDoneStatic (FcStrBuf *buf)
+{
+    FcStrBufChar (buf, '\0');
+
+    if (buf->failed)
+	return NULL;
+
+    return buf->buf;
+}
+
 FcBool
 FcStrBufChar (FcStrBuf *buf, FcChar8 c)
 {
@@ -751,6 +772,9 @@ FcStrBufChar (FcStrBuf *buf, FcChar8 c)
     {
 	FcChar8	    *new;
 	int	    size;
+
+	if (buf->failed)
+	    return FcFalse;
 
 	if (buf->allocated)
 	{
@@ -902,6 +926,9 @@ FcStrCanonAbsoluteFilename (const FcChar8 *s)
 	    if (slash)
 	    {
 		switch (s - slash) {
+		case 1:
+		    f -= 1;	/* squash // and trim final / from file */
+		    break;
 		case 2:
 		    if (!strncmp ((char *) slash, "/.", 2))
 		    {
@@ -940,7 +967,13 @@ FcConvertDosPath (char *str)
   char *dest = str;
   char *end = str + len;
   char last = 0;
-  
+
+  if (*p == '\\')
+    {
+      *p = '/';
+      p++;
+      dest++;
+    }
   while (p < end)
     {
       if (*p == '\\')
@@ -965,10 +998,8 @@ FcStrCanonFilename (const FcChar8 *s)
 {
 #ifdef _WIN32
     FcChar8 full[FC_MAX_FILE_LEN + 2];
-    FcChar8 basename[FC_MAX_FILE_LEN + 2];
     int size = GetFullPathName (s, sizeof (full) -1,
-				full,
-				basename);
+				full, NULL);
 
     if (size == 0)
 	perror ("GetFullPathName");

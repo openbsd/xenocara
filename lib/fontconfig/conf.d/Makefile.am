@@ -1,5 +1,5 @@
 # 
-#  $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 18:42:50 matthieu Exp $
+#  fontconfig/conf.d/Makefile.am
 # 
 #  Copyright © 2005 Keith Packard
 # 
@@ -13,9 +13,9 @@
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
 # 
-#  KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+#  THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-#  EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+#  EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
 #  CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
 #  DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -89,4 +89,11 @@ install-data-local:
 	 	rm -f $$i; \
 		echo rm -f $$i";" ln -s ../conf.avail/$$i .; \
 		ln -s ../conf.avail/$$i .; \
+	 done)
+uninstall-local:
+	@(echo cd ${DESTDIR}${confddir}; \
+	 cd ${DESTDIR}${confddir}; \
+	 for i in ${CONF_LINKS}; do \
+		echo rm -f $$i; \
+		rm -f $$i; \
 	 done)

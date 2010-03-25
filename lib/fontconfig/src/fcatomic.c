@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/src/fcatomic.c,v 1.2 2002/03/04 21:15:28 tsi Exp $
+ * fontconfig/src/fcatomic.c
  *
  * Copyright © 2002 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -142,7 +142,7 @@ FcAtomicLock (FcAtomic *atomic)
 	 * machines sharing the same filesystem will have clocks
 	 * reasonably close to each other.
 	 */
-	if (stat ((char *) atomic->lck, &lck_stat) >= 0)
+	if (FcStat ((char *) atomic->lck, &lck_stat) >= 0)
 	{
 	    time_t  now = time (0);
 	    if ((long int) (now - lck_stat.st_mtime) > 10 * 60)

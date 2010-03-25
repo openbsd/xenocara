@@ -11,9 +11,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -27,7 +27,7 @@
 #include <assert.h>
 
 static FcBool
-FcStrHashed (const FcChar8 *name);
+FcHashOwnsName(const FcChar8 *name);
 
 FcPattern *
 FcPatternCreate (void)
@@ -50,7 +50,7 @@ FcValueDestroy (FcValue v)
 {
     switch (v.type) {
     case FcTypeString:
-        if (!FcStrHashed (v.u.s))
+        if (!FcHashOwnsName(v.u.s))
             FcStrFree ((FcChar8 *) v.u.s);
 	break;
     case FcTypeMatrix:
@@ -75,15 +75,15 @@ FcValueCanonicalize (const FcValue *v)
     switch (v->type)
     {
     case FcTypeString:
-	new.u.s = fc_value_string(v);
+	new.u.s = FcValueString(v);
 	new.type = FcTypeString;
 	break;
     case FcTypeCharSet:
-	new.u.c = fc_value_charset(v);
+	new.u.c = FcValueCharSet(v);
 	new.type = FcTypeCharSet;
 	break;
     case FcTypeLangSet:
-	new.u.l = fc_value_langset(v);
+	new.u.l = FcValueLangSet(v);
 	new.type = FcTypeLangSet;
 	break;
     default:
@@ -98,7 +98,7 @@ FcValueSave (FcValue v)
 {
     switch (v.type) {
     case FcTypeString:
-	v.u.s = FcStrCopy (v.u.s);
+	v.u.s = FcStrStaticName (v.u.s);
 	if (!v.u.s)
 	    v.type = FcTypeVoid;
 	break;
@@ -131,7 +131,7 @@ FcValueListDestroy (FcValueListPtr l)
     {
 	switch (l->value.type) {
 	case FcTypeString:
-            if (!FcStrHashed ((FcChar8 *)l->value.u.s))
+            if (!FcHashOwnsName((FcChar8 *)l->value.u.s))
                 FcStrFree ((FcChar8 *)l->value.u.s);
 	    break;
 	case FcTypeMatrix:
@@ -220,7 +220,7 @@ FcStringHash (const FcChar8 *s)
 static FcChar32
 FcValueHash (const FcValue *v)
 {
-    switch (fc_storage_type(v)) {
+    switch (v->type) {
     case FcTypeVoid:
 	return 0;
     case FcTypeInteger:
@@ -228,7 +228,7 @@ FcValueHash (const FcValue *v)
     case FcTypeDouble:
 	return FcDoubleHash (v->u.d);
     case FcTypeString:
-	return FcStringHash (fc_value_string(v));
+	return FcStringHash (FcValueString(v));
     case FcTypeBool:
 	return (FcChar32) v->u.b;
     case FcTypeMatrix:
@@ -237,12 +237,12 @@ FcValueHash (const FcValue *v)
 		FcDoubleHash (v->u.m->yx) ^ 
 		FcDoubleHash (v->u.m->yy));
     case FcTypeCharSet:
-	return (FcChar32) fc_value_charset(v)->num;
+	return (FcChar32) FcValueCharSet(v)->num;
     case FcTypeFTFace:
 	return FcStringHash ((const FcChar8 *) ((FT_Face) v->u.f)->family_name) ^
 	       FcStringHash ((const FcChar8 *) ((FT_Face) v->u.f)->style_name);
     case FcTypeLangSet:
-	return FcLangSetHash (fc_value_langset(v));
+	return FcLangSetHash (FcValueLangSet(v));
     }
     return FcFalse;
 }
@@ -482,15 +482,7 @@ FcPatternObjectAddWithBinding  (FcPattern	*p,
 
     memset(new, 0, sizeof (FcValueList));
     FcMemAlloc (FC_MEM_VALLIST, sizeof (FcValueList));
-    /* dup string */
-    if (value.type == FcTypeString)
-    {
-	value.u.s = FcStrStaticName (value.u.s);
-	if (!value.u.s)
-	    value.type = FcTypeVoid;
-    }
-    else
-	value = FcValueSave (value);
+    value = FcValueSave (value);
     if (value.type == FcTypeVoid)
 	goto bail1;
 
@@ -954,23 +946,23 @@ FcPatternReference (FcPattern *p)
 }
 
 FcPattern *
-FcPatternVaBuild (FcPattern *orig, va_list va)
+FcPatternVaBuild (FcPattern *p, va_list va)
 {
     FcPattern	*ret;
     
-    FcPatternVapBuild (ret, orig, va);
+    FcPatternVapBuild (ret, p, va);
     return ret;
 }
 
 FcPattern *
-FcPatternBuild (FcPattern *orig, ...)
+FcPatternBuild (FcPattern *p, ...)
 {
     va_list	va;
     
-    va_start (va, orig);
-    FcPatternVapBuild (orig, orig, va);
+    va_start (va, p);
+    FcPatternVapBuild (p, p, va);
     va_end (va);
-    return orig;
+    return p;
 }
 
 /*
@@ -997,6 +989,43 @@ FcPatternAppend (FcPattern *p, FcPattern *s)
     return FcTrue;
 }
 
+FcPattern *
+FcPatternFilter (FcPattern *p, const FcObjectSet *os)
+{
+    int		    i;
+    FcPattern	    *ret;
+    FcPatternElt    *e;
+    FcValueListPtr  v;
+
+    if (!os)
+	return FcPatternDuplicate (p);
+
+    ret = FcPatternCreate ();
+    if (!ret)
+	return NULL;
+
+    for (i = 0; i < os->nobject; i++)
+    {
+	FcObject object = FcObjectFromName (os->objects[i]);
+	e = FcPatternObjectFindElt (p, object);
+	if (e)
+	{
+	    for (v = FcPatternEltValues(e); v; v = FcValueListNext(v))
+	    {
+		if (!FcPatternObjectAddWithBinding (ret, e->object,
+						    FcValueCanonicalize(&v->value),
+						    v->binding, FcTrue))
+		    goto bail0;
+	    }
+	}
+    }
+    return ret;
+
+bail0:
+    FcPatternDestroy (ret);
+    return NULL;
+}
+
 #define OBJECT_HASH_SIZE    31
 static struct objectBucket {
     struct objectBucket	*next;
@@ -1004,14 +1033,14 @@ static struct objectBucket {
 } *FcObjectBuckets[OBJECT_HASH_SIZE];
 
 static FcBool
-FcStrHashed (const FcChar8 *name)
+FcHashOwnsName (const FcChar8 *name)
 {
     FcChar32		hash = FcStringHash (name);
     struct objectBucket	**p;
     struct objectBucket	*b;
 
     for (p = &FcObjectBuckets[hash % OBJECT_HASH_SIZE]; (b = *p); p = &(b->next))
-	if (b->hash == hash && !strcmp ((char *)name, (char *) (b + 1)))
+	if (b->hash == hash && ((char *)name == (char *) (b + 1)))
             return FcTrue;
     return FcFalse;
 }

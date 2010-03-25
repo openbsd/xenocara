@@ -8,6 +8,7 @@
 <!ENTITY fcdircache SYSTEM "fcdircache.sgml">
 <!ENTITY fcfile SYSTEM "fcfile.sgml">
 <!ENTITY fcfontset SYSTEM "fcfontset.sgml">
+<!ENTITY fcformat SYSTEM "fcformat.sgml">
 <!ENTITY fcfreetype SYSTEM "fcfreetype.sgml">
 <!ENTITY fcinit SYSTEM "fcinit.sgml">
 <!ENTITY fclangset SYSTEM "fclangset.sgml">
@@ -21,7 +22,7 @@
 <!ENTITY version SYSTEM "version.sgml">
 ]>
 <!--
-    $Id: fontconfig-devel.sgml,v 1.2 2009/04/05 16:43:35 matthieu Exp $
+    fontconfig/doc/local-fontconfig-devel.sgml
    
     Copyright © 2003 Keith Packard
    
@@ -35,9 +36,9 @@
     representations about the suitability of this software for any purpose.  It
     is provided "as is" without express or implied warranty.
    
-    KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+    THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
     INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-    EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+    EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
     CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
     DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
     TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -70,9 +71,9 @@ specific, written prior permission.  Keith Packard makes no
 representations about the suitability of this software for any purpose.  It
 is provided "as is" without express or implied warranty.
 			</simpara><simpara>
-KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
 CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
 DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -437,6 +438,7 @@ An FcPattern is an opaque type that holds both patterns to match against the
 available fonts, as well as the information about each font.
     </para>
     &fcpattern;
+    &fcformat;
   </sect2>
   <sect2><title>FcFontSet</title>
     <para>

@@ -29,14 +29,15 @@
 # representations about the suitability of this software for any purpose.  It
 # is provided "as is" without express or implied warranty.
 #
-# KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 # INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-# EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+# EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
 # CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
 # DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 # PERFORMANCE OF THIS SOFTWARE.
 #
+
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -62,7 +63,8 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = fc-case$(EXEEXT)
 subdir = fc-case
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
@@ -83,6 +85,7 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 SOURCES = fc-case.c
 DIST_SOURCES = fc-case.c
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -114,7 +117,6 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
-DOCDIR = @DOCDIR@
 DOCMAN3 = @DOCMAN3@
 DOCSRC = @DOCSRC@
 DOLT_BASH = @DOLT_BASH@
@@ -139,6 +141,7 @@ FC_FONTPATH = @FC_FONTPATH@
 FFLAGS = @FFLAGS@
 FREETYPE_CFLAGS = @FREETYPE_CFLAGS@
 FREETYPE_LIBS = @FREETYPE_LIBS@
+GREP = @GREP@
 HASDOCBOOK = @HASDOCBOOK@
 HAVE_EXPAT = @HAVE_EXPAT@
 HAVE_XMLPARSE_H = @HAVE_XMLPARSE_H@
@@ -170,7 +173,6 @@ MS_LIB_AVAILABLE_TRUE = @MS_LIB_AVAILABLE_TRUE@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
-ORTH_FILES = @ORTH_FILES@
 OS_WIN32_FALSE = @OS_WIN32_FALSE@
 OS_WIN32_TRUE = @OS_WIN32_TRUE@
 PACKAGE = @PACKAGE@
@@ -182,6 +184,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+RM = @RM@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -190,18 +193,9 @@ USEDOCBOOK_FALSE = @USEDOCBOOK_FALSE@
 USEDOCBOOK_TRUE = @USEDOCBOOK_TRUE@
 VERSION = @VERSION@
 WARN_CFLAGS = @WARN_CFLAGS@
-ac_ct_AR = @ac_ct_AR@
-ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -219,6 +213,9 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 confdir = @confdir@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 fc_cachedir = @fc_cachedir@
 ft_config = @ft_config@
@@ -227,18 +224,22 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 ms_librarian = @ms_librarian@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -248,7 +249,7 @@ INCLUDES = -I${top_srcdir}/src -I${top_srcdir} $(WARN_CFLAGS)
 TMPL = fccase.tmpl.h
 STMPL = ${top_srcdir}/fc-case/${TMPL}
 TARG = fccase.h
-noinst_MANS = fc-case.man
+noinst_HEADERS = $(TARG)
 fc_case_SRCS = \
 	fc-case.c \
 	fccaseint.h \
@@ -258,7 +259,7 @@ CASEFOLDING = CaseFolding.txt
 SCASEFOLDING = ${top_srcdir}/fc-case/CaseFolding.txt
 EXTRA_DIST = $(TMPL) $(CASEFOLDING)
 ALIAS_FILES = fcalias.h fcaliastail.h
-BUILT_SOURCES = $(ALIAS_FILES) $(TARG)
+BUILT_SOURCES = $(ALIAS_FILES)
 CLEANFILES = $(TARG) $(ALIAS_FILES)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -422,7 +423,7 @@ distdir: $(DISTFILES)
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(PROGRAMS) $(HEADERS)
 installdirs:
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-am
@@ -516,8 +517,9 @@ uninstall-am: uninstall-info-am
 
 
 $(TARG): $(STMPL) fc-case$(EXEEXT) $(SCASEFOLDING)
-	rm -f $(TARG)
-	./fc-case$(EXEEXT) $(SCASEFOLDING) < $(STMPL) > $(TARG)
+	$(AM_V_GEN) $(RM) $(TARG); \
+	./fc-case$(EXEEXT) $(SCASEFOLDING) < $(STMPL) > $(TARG).tmp && \
+	mv $(TARG).tmp $(TARG)
 
 $(ALIAS_FILES): 
 	touch $(ALIAS_FILES)

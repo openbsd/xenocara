@@ -1,5 +1,5 @@
 /*
- * $Id: fc-glyphname.c,v 1.2 2009/04/05 16:43:36 matthieu Exp $
+ * fontconfig/fc-glyphname/fc-glyphname.c
  *
  * Copyright © 2003 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -297,7 +297,7 @@ main (int argc, char **argv)
      * Dump out entries
      */
     
-    printf ("static const struct { const FcChar32 ucs; const FcChar8 name[%d]; } glyphs[%d] = {\n",
+    printf ("static const struct { const FcChar32 ucs; const FcChar8 name[%d]; } _fc_glyph_names[%d] = {\n",
 	    max_name_len + 1, nraw);
     
     for (i = 0; i < nraw; i++)
@@ -310,12 +310,12 @@ main (int argc, char **argv)
      * Dump out name_to_ucs table
      */
 
-    dump (name_to_ucs, "name_to_ucs");
+    dump (name_to_ucs, "_fc_name_to_ucs");
     
     /*
      * Dump out ucs_to_name table
      */
-    dump (ucs_to_name, "ucs_to_name");
+    dump (ucs_to_name, "_fc_ucs_to_name");
 
     while (fgets (line, sizeof (line), stdin))
 	fputs (line, stdout);

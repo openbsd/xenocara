@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/src/fcdbg.c,v 1.10 2002/08/22 18:53:22 keithp Exp $
+ * fontconfig/src/fcdbg.c
  *
  * Copyright © 2000 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -116,13 +116,13 @@ FcCharSetPrint (const FcCharSet *c)
     }
 #endif
 		
+    printf ("\n");
     for (i = 0; i < c->num; i++)
     {
 	intptr_t	leaf_offset = leaves[i];
 	FcCharLeaf	*leaf = FcOffsetToPtr (leaves, leaf_offset, FcCharLeaf);
 	
-	if (i)
-	    printf ("\t");
+	printf ("\t");
 	printf ("%04x:", numbers[i]);
 	for (j = 0; j < 256/32; j++)
 	    printf (" %08x", leaf->map[j]);
@@ -146,26 +146,7 @@ FcPatternPrint (const FcPattern *p)
     {
 	e = &FcPatternElts(p)[i];
 	printf ("\t%s:", FcObjectName(e->object));
-	/* so that fc-match properly displays file: foo... */
-	if (e->object == FC_FILE_OBJECT)
-	{
-	    FcChar8 * s;
-	    FcPatternObjectGetString (p, FC_FILE_OBJECT, 0, &s);
-	    printf (" \"%s\"", s);
-	    switch (FcPatternEltValues(e)->binding) {
-	    case FcValueBindingWeak:
-	        printf ("(w)");
-	        break;
-	    case FcValueBindingStrong:
-	        printf ("(s)");
-	        break;
-	    case FcValueBindingSame:
-	        printf ("(=)");
-	        break;
-	    }
-	}
-	else
-	    FcValueListPrint (FcPatternEltValues(e));
+	FcValueListPrint (FcPatternEltValues(e));
 	printf ("\n");
     }
     printf ("\n");

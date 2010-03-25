@@ -29,9 +29,9 @@
 # representations about the suitability of this software for any purpose.  It
 # is provided "as is" without express or implied warranty.
 #
-# KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 # INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-# EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+# EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
 # CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
 # DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -114,7 +114,6 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
-DOCDIR = @DOCDIR@
 DOCMAN3 = @DOCMAN3@
 DOCSRC = @DOCSRC@
 DOLT_BASH = @DOLT_BASH@
@@ -139,6 +138,7 @@ FC_FONTPATH = @FC_FONTPATH@
 FFLAGS = @FFLAGS@
 FREETYPE_CFLAGS = @FREETYPE_CFLAGS@
 FREETYPE_LIBS = @FREETYPE_LIBS@
+GREP = @GREP@
 HASDOCBOOK = @HASDOCBOOK@
 HAVE_EXPAT = @HAVE_EXPAT@
 HAVE_XMLPARSE_H = @HAVE_XMLPARSE_H@
@@ -170,7 +170,6 @@ MS_LIB_AVAILABLE_TRUE = @MS_LIB_AVAILABLE_TRUE@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
-ORTH_FILES = @ORTH_FILES@
 OS_WIN32_FALSE = @OS_WIN32_FALSE@
 OS_WIN32_TRUE = @OS_WIN32_TRUE@
 PACKAGE = @PACKAGE@
@@ -182,6 +181,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+RM = @RM@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -190,18 +190,9 @@ USEDOCBOOK_FALSE = @USEDOCBOOK_FALSE@
 USEDOCBOOK_TRUE = @USEDOCBOOK_TRUE@
 VERSION = @VERSION@
 WARN_CFLAGS = @WARN_CFLAGS@
-ac_ct_AR = @ac_ct_AR@
-ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -219,6 +210,9 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 confdir = @confdir@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 fc_cachedir = @fc_cachedir@
 ft_config = @ft_config@
@@ -227,18 +221,22 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 ms_librarian = @ms_librarian@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -249,11 +247,257 @@ TMPL = fclang.tmpl.h
 STMPL = ${top_srcdir}/fc-lang/fclang.tmpl.h
 TARG = fclang.h
 noinst_MANS = fc-lang.man
-ORTH = @ORTH_FILES@
 EXTRA_DIST = $(TMPL) $(ORTH)
 ALIAS_FILES = fcalias.h fcaliastail.h
 BUILT_SOURCES = $(ALIAS_FILES) $(TARG)
 CLEANFILES = $(TARG) $(ALIAS_FILES)
+
+# NOTE:
+#
+# The order of the orth files here is extremely important (part of the cache
+# format) and should not be modified.  New orth files should be added at the
+# end.  No files should be removed either.
+#
+ORTH = \
+	aa.orth \
+	ab.orth \
+	af.orth \
+	am.orth \
+	ar.orth \
+	as.orth \
+	ast.orth \
+	av.orth \
+	ay.orth \
+	az_az.orth \
+	az_ir.orth \
+	ba.orth \
+	bm.orth \
+	be.orth \
+	bg.orth \
+	bh.orth \
+	bho.orth \
+	bi.orth \
+	bin.orth \
+	bn.orth \
+	bo.orth \
+	br.orth \
+	bs.orth \
+	bua.orth \
+	ca.orth \
+	ce.orth \
+	ch.orth \
+	chm.orth \
+	chr.orth \
+	co.orth \
+	cs.orth \
+	cu.orth \
+	cv.orth \
+	cy.orth \
+	da.orth \
+	de.orth \
+	dz.orth \
+	el.orth \
+	en.orth \
+	eo.orth \
+	es.orth \
+	et.orth \
+	eu.orth \
+	fa.orth \
+	fi.orth \
+	fj.orth \
+	fo.orth \
+	fr.orth \
+	ff.orth \
+	fur.orth \
+	fy.orth \
+	ga.orth \
+	gd.orth \
+	gez.orth \
+	gl.orth \
+	gn.orth \
+	gu.orth \
+	gv.orth \
+	ha.orth \
+	haw.orth \
+	he.orth \
+	hi.orth \
+	ho.orth \
+	hr.orth \
+	hu.orth \
+	hy.orth \
+	ia.orth \
+	ig.orth \
+	id.orth \
+	ie.orth \
+	ik.orth \
+	io.orth \
+	is.orth \
+	it.orth \
+	iu.orth \
+	ja.orth \
+	ka.orth \
+	kaa.orth \
+	ki.orth \
+	kk.orth \
+	kl.orth \
+	km.orth \
+	kn.orth \
+	ko.orth \
+	kok.orth \
+	ks.orth \
+	ku_am.orth \
+	ku_ir.orth \
+	kum.orth \
+	kv.orth \
+	kw.orth \
+	ky.orth \
+	la.orth \
+	lb.orth \
+	lez.orth \
+	ln.orth \
+	lo.orth \
+	lt.orth \
+	lv.orth \
+	mg.orth \
+	mh.orth \
+	mi.orth \
+	mk.orth \
+	ml.orth \
+	mn_cn.orth \
+	mo.orth \
+	mr.orth \
+	mt.orth \
+	my.orth \
+	nb.orth \
+	nds.orth \
+	ne.orth \
+	nl.orth \
+	nn.orth \
+	no.orth \
+	nr.orth \
+	nso.orth \
+	ny.orth \
+	oc.orth \
+	om.orth \
+	or.orth \
+	os.orth \
+	pa.orth \
+	pl.orth \
+	ps_af.orth \
+	ps_pk.orth \
+	pt.orth \
+	rm.orth \
+	ro.orth \
+	ru.orth \
+	sa.orth \
+	sah.orth \
+	sco.orth \
+	se.orth \
+	sel.orth \
+	sh.orth \
+	shs.orth \
+	si.orth \
+	sk.orth \
+	sl.orth \
+	sm.orth \
+	sma.orth \
+	smj.orth \
+	smn.orth \
+	sms.orth \
+	so.orth \
+	sq.orth \
+	sr.orth \
+	ss.orth \
+	st.orth \
+	sv.orth \
+	sw.orth \
+	syr.orth \
+	ta.orth \
+	te.orth \
+	tg.orth \
+	th.orth \
+	ti_er.orth \
+	ti_et.orth \
+	tig.orth \
+	tk.orth \
+	tl.orth \
+	tn.orth \
+	to.orth \
+	tr.orth \
+	ts.orth \
+	tt.orth \
+	tw.orth \
+	tyv.orth \
+	ug.orth \
+	uk.orth \
+	ur.orth \
+	uz.orth \
+	ve.orth \
+	vi.orth \
+	vo.orth \
+	vot.orth \
+	wa.orth \
+	wen.orth \
+	wo.orth \
+	xh.orth \
+	yap.orth \
+	yi.orth \
+	yo.orth \
+	zh_cn.orth \
+	zh_hk.orth \
+	zh_mo.orth \
+	zh_sg.orth \
+	zh_tw.orth \
+	zu.orth \
+	ak.orth \
+	an.orth \
+	ber_dz.orth \
+	ber_ma.orth \
+	byn.orth \
+	crh.orth \
+	csb.orth \
+	dv.orth \
+	ee.orth \
+	fat.orth \
+	fil.orth \
+	hne.orth \
+	hsb.orth \
+	ht.orth \
+	hz.orth \
+	ii.orth \
+	jv.orth \
+	kab.orth \
+	kj.orth \
+	kr.orth \
+	ku_iq.orth \
+	ku_tr.orth \
+	kwm.orth \
+	lg.orth \
+	li.orth \
+	mai.orth \
+	mn_mn.orth \
+	ms.orth \
+	na.orth \
+	ng.orth \
+	nv.orth \
+	ota.orth \
+	pa_pk.orth \
+	pap_an.orth \
+	pap_aw.orth \
+	qu.orth \
+	rn.orth \
+	rw.orth \
+	sc.orth \
+	sd.orth \
+	sg.orth \
+	sid.orth \
+	sn.orth \
+	su.orth \
+	ty.orth \
+	wal.orth \
+	za.orth \
+	lah.orth
+
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -510,11 +754,13 @@ uninstall-am: uninstall-info-am
 
 
 $(TARG):$(ORTH) fc-lang${EXEEXT} $(STMPL)
-	rm -f $(TARG)
-	./fc-lang${EXEEXT} -d ${srcdir} $(ORTH) < $(STMPL) > $(TARG)
+	$(AM_V_GEN) $(RM) $(TARG); \
+	./fc-lang${EXEEXT} -d ${srcdir} $(ORTH) < $(STMPL) > $(TARG).tmp && \
+	mv $(TARG).tmp $(TARG)
 
 $(ALIAS_FILES): 
 	touch $(ALIAS_FILES)
+#	^-------------- Add new orth files here
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

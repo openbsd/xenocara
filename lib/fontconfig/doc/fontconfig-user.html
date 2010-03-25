@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML
 ><HEAD
 ><TITLE
@@ -33,12 +33,22 @@ NAME="AEN8"
 ></A
 ><H2
 >Synopsis</H2
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
 ><PRE
 CLASS="SYNOPSIS"
 >   /etc/fonts/fonts.conf
    /etc/fonts/fonts.dtd
    /etc/fonts/conf.d
+   ~/.fonts.conf.d
    ~/.fonts.conf</PRE
+></TD
+></TR
+></TABLE
 ></DIV
 ><DIV
 CLASS="REFSECT1"
@@ -112,6 +122,12 @@ well known properties with associated types.  Fontconfig uses some of these
 properties for font matching and font completion.  Others are provided as a
 convenience for the applications' rendering mechanism.
     </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
 ><PRE
 CLASS="PROGRAMLISTING"
 >  Property        Type    Description
@@ -155,6 +171,9 @@ CLASS="PROGRAMLISTING"
   capability      String  List of layout capabilities in the font
   embolden        Bool    Rasterizer should synthetically embolden the font
     </PRE
+></TD
+></TR
+></TABLE
 ></DIV
 ><DIV
 CLASS="REFSECT2"
@@ -242,16 +261,31 @@ can both accept and generate.  The representation is in three parts, first a
 list of family names, second a list of point sizes and finally a list of
 additional properties:
     </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->	&lt;families&gt;-&lt;point sizes&gt;:&lt;name1&gt;=&lt;values1&gt;:&lt;name2&gt;=&lt;values2&gt;...
+>	&#60;families&#62;-&#60;point sizes&#62;:&#60;name1&#62;=&#60;values1&#62;:&#60;name2&#62;=&#60;values2&#62;...
     </PRE
+></TD
+></TR
+></TABLE
 ><P
 >Values in a list are separated with commas.  The name needn't include either
 families or point sizes; they can be elided.  In addition, there are
 symbolic constants that simultaneously indicate both a name and a value.
 Here are some examples:
     </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
 ><PRE
 CLASS="PROGRAMLISTING"
 >  Name                            Meaning
@@ -262,6 +296,9 @@ CLASS="PROGRAMLISTING"
   Monospace:matrix=1 .1 0 1       The users preferred monospace font
                                   with artificial obliquing
     </PRE
+></TD
+></TR
+></TABLE
 ><P
 >The '\', '-', ':' and ',' characters in family names must be preceeded by a
 '\' character to avoid having them misinterpreted. Similarly, values
@@ -285,6 +322,12 @@ of the FC_DEBUG environment variable. The value of this variable is
 interpreted as a number, and each bit within that value controls different
 debugging messages.
   </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
 ><PRE
 CLASS="PROGRAMLISTING"
 >  Name         Value    Meaning
@@ -303,6 +346,9 @@ CLASS="PROGRAMLISTING"
   LANGSET       2048    Dump char sets used to construct lang values
   OBJTYPES      4096    Display message when value typechecks fail
   </PRE
+></TD
+></TR
+></TABLE
 ><P
 >Add the value of the desired debug levels together and assign that (in
 base 10) to the FC_DEBUG environment variable before running the
@@ -356,14 +402,23 @@ a text editor.
 "fonts.dtd"; this is normally stored in the default font configuration
 directory (/etc/fonts).  Each configuration file should contain the
 following structure:
-    <PRE
+    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
 CLASS="PROGRAMLISTING"
->	&lt;?xml version="1.0"?&gt;
-	&lt;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&gt;
-	&lt;fontconfig&gt;
+>	&#60;?xml version="1.0"?&#62;
+	&#60;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&#62;
+	&#60;fontconfig&#62;
 	...
-	&lt;/fontconfig&gt;
+	&#60;/fontconfig&#62;
     </PRE
+></TD
+></TR
+></TABLE
 >
   </P
 ><DIV
@@ -374,25 +429,25 @@ NAME="AEN58"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;fontconfig&gt;</TT
+>&#60;fontconfig&#62;</TT
 ></H3
 ><P
 >This is the top level element for a font configuration and can contain
 <TT
 CLASS="LITERAL"
->&lt;dir&gt;</TT
+>&#60;dir&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;cache&gt;</TT
+>&#60;cache&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;include&gt;</TT
+>&#60;include&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;match&gt;</TT
+>&#60;match&#62;</TT
 > and <TT
 CLASS="LITERAL"
->&lt;alias&gt;</TT
+>&#60;alias&#62;</TT
 > elements in any order.
   </P
 ></DIV
@@ -404,7 +459,7 @@ NAME="AEN67"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;dir&gt;</TT
+>&#60;dir&#62;</TT
 ></H3
 ><P
 >This element contains a directory name which will be scanned for font files
@@ -419,7 +474,7 @@ NAME="AEN71"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;cache&gt;</TT
+>&#60;cache&#62;</TT
 ></H3
 ><P
 >This element contains a file name for the per-user cache of font
@@ -429,10 +484,10 @@ isn't present in the per-directory cache files.  It is automatically
 maintained by the fontconfig library.  The default for this file 
 is ``~/.fonts.cache-<TT
 CLASS="LITERAL"
->&lt;version&gt;</TT
+>&#60;version&#62;</TT
 >'', where <TT
 CLASS="LITERAL"
->&lt;version&gt;</TT
+>&#60;version&#62;</TT
 > is the font configuration
 file version number (currently 2).
   </P
@@ -445,7 +500,7 @@ NAME="AEN77"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;include ignore_missing="no"&gt;</TT
+>&#60;include ignore_missing="no"&#62;</TT
 ></H3
 ><P
 >This element contains the name of an additional configuration file or
@@ -466,19 +521,19 @@ NAME="AEN81"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;config&gt;</TT
+>&#60;config&#62;</TT
 ></H3
 ><P
 >This element provides a place to consolidate additional configuration
 information.  <TT
 CLASS="LITERAL"
->&lt;config&gt;</TT
+>&#60;config&#62;</TT
 > can contain <TT
 CLASS="LITERAL"
->&lt;blank&gt;</TT
+>&#60;blank&#62;</TT
 > and <TT
 CLASS="LITERAL"
->&lt;rescan&gt;</TT
+>&#60;rescan&#62;</TT
 > elements in any
 order.
   </P
@@ -491,17 +546,17 @@ NAME="AEN88"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;blank&gt;</TT
+>&#60;blank&#62;</TT
 ></H3
 ><P
 >Fonts often include "broken" glyphs which appear in the encoding but are
 drawn as blanks on the screen.  Within the <TT
 CLASS="LITERAL"
->&lt;blank&gt;</TT
+>&#60;blank&#62;</TT
 > element, place each
 Unicode characters which is supposed to be blank in an <TT
 CLASS="LITERAL"
->&lt;int&gt;</TT
+>&#60;int&#62;</TT
 > element.
 Characters outside of this set which are drawn as blank will be elided from
 the set of characters supported by the font.
@@ -515,15 +570,15 @@ NAME="AEN94"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;rescan&gt;</TT
+>&#60;rescan&#62;</TT
 ></H3
 ><P
 >The <TT
 CLASS="LITERAL"
->&lt;rescan&gt;</TT
+>&#60;rescan&#62;</TT
 > element holds an <TT
 CLASS="LITERAL"
->&lt;int&gt;</TT
+>&#60;int&#62;</TT
 > element which indicates the default
 interval between automatic checks for font configuration changes.
 Fontconfig will validate all of the configuration files and directories and
@@ -538,7 +593,7 @@ NAME="AEN100"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;selectfont&gt;</TT
+>&#60;selectfont&#62;</TT
 ></H3
 ><P
 >This element is used to black/white list fonts from being listed or matched
@@ -553,7 +608,7 @@ NAME="AEN104"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;acceptfont&gt;</TT
+>&#60;acceptfont&#62;</TT
 ></H3
 ><P
 >Fonts matched by an acceptfont element are "whitelisted"; such fonts are
@@ -571,7 +626,7 @@ NAME="AEN108"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;rejectfont&gt;</TT
+>&#60;rejectfont&#62;</TT
 ></H3
 ><P
 >Fonts matched by an rejectfont element are "blacklisted"; such fonts are
@@ -588,7 +643,7 @@ NAME="AEN112"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;glob&gt;</TT
+>&#60;glob&#62;</TT
 ></H3
 ><P
 >Glob elements hold shell-style filename matching patterns (including ? and
@@ -607,7 +662,7 @@ NAME="AEN116"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;pattern&gt;</TT
+>&#60;pattern&#62;</TT
 ></H3
 ><P
 >Pattern elements perform list-style matching on incoming fonts; that is,
@@ -626,7 +681,7 @@ NAME="AEN120"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;patelt name="property"&gt;</TT
+>&#60;patelt name="property"&#62;</TT
 ></H3
 ><P
 >Patelt elements hold a single pattern element and list of values.  They must
@@ -643,16 +698,16 @@ NAME="AEN124"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;match target="pattern"&gt;</TT
+>&#60;match target="pattern"&#62;</TT
 ></H3
 ><P
 >This element holds first a (possibly empty) list of <TT
 CLASS="LITERAL"
->&lt;test&gt;</TT
+>&#60;test&#62;</TT
 > elements and then
 a (possibly empty) list of <TT
 CLASS="LITERAL"
->&lt;edit&gt;</TT
+>&#60;edit&#62;</TT
 > elements.  Patterns which match all of the
 tests are subjected to all the edits.  If 'target' is set to "font" instead
 of the default "pattern", then this element applies to the font name
@@ -669,7 +724,7 @@ NAME="AEN130"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;test qual="any" name="property" target="default" compare="eq"&gt;</TT
+>&#60;test qual="any" name="property" target="default" compare="eq"&#62;</TT
 ></H3
 ><P
 >This element contains a single value which is compared with the target
@@ -678,10 +733,10 @@ above). 'compare' can be one of "eq", "not_eq", "less", "less_eq", "more", or
 "more_eq".  'qual' may either be the default, "any", in which case the match
 succeeds if any value associated with the property matches the test value, or
 "all", in which case all of the values associated with the property must
-match the test value.  When used in a &lt;match target="font"&gt; element,
-the target= attribute in the &lt;test&gt; element selects between matching
+match the test value.  When used in a &#60;match target="font"&#62; element,
+the target= attribute in the &#60;test&#62; element selects between matching
 the original pattern or the font.  "default" selects whichever target the
-outer &lt;match&gt; element has selected.
+outer &#60;match&#62; element has selected.
   </P
 ></DIV
 ><DIV
@@ -692,7 +747,7 @@ NAME="AEN134"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;edit name="property" mode="assign" binding="weak"&gt;</TT
+>&#60;edit name="property" mode="assign" binding="weak"&#62;</TT
 ></H3
 ><P
 >This element contains a list of expression elements (any of the value or
@@ -700,13 +755,19 @@ operator elements).  The expression elements are evaluated at run-time and
 modify the property "property".  The modification depends on whether
 "property" was matched by one of the associated <TT
 CLASS="LITERAL"
->&lt;test&gt;</TT
+>&#60;test&#62;</TT
 > elements, if so, the
 modification may affect the first matched value.  Any values inserted into
 the property are given the indicated binding ("strong", "weak" or "same")
 with "same" binding using the value from the matched pattern element.
 'mode' is one of:
-    <PRE
+    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
 CLASS="PROGRAMLISTING"
 >  Mode                    With Match              Without Match
   ---------------------------------------------------------------------
@@ -717,6 +778,9 @@ CLASS="PROGRAMLISTING"
   "append"                Append after matching   Append at end of list
   "append_last"           Append at end of list   Append at end of list
     </PRE
+></TD
+></TR
+></TABLE
 >
   </P
 ></DIV
@@ -728,21 +792,21 @@ NAME="AEN140"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;int&gt;</TT
+>&#60;int&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;double&gt;</TT
+>&#60;double&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;string&gt;</TT
+>&#60;string&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;bool&gt;</TT
+>&#60;bool&#62;</TT
 ></H3
 ><P
 >These elements hold a single value of the indicated type.  <TT
 CLASS="LITERAL"
->&lt;bool&gt;</TT
+>&#60;bool&#62;</TT
 >
 elements hold either true or false.  An important limitation exists in
 the parsing of floating point numbers -- fontconfig requires that
@@ -759,12 +823,12 @@ NAME="AEN148"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;matrix&gt;</TT
+>&#60;matrix&#62;</TT
 ></H3
 ><P
 >This element holds the four <TT
 CLASS="LITERAL"
->&lt;double&gt;</TT
+>&#60;double&#62;</TT
 > elements of an affine
 transformation.
   </P
@@ -777,7 +841,7 @@ NAME="AEN153"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;name&gt;</TT
+>&#60;name&#62;</TT
 ></H3
 ><P
 >Holds a property name.  Evaluates to the first value from the property of
@@ -792,12 +856,18 @@ NAME="AEN157"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;const&gt;</TT
+>&#60;const&#62;</TT
 ></H3
 ><P
 >Holds the name of a constant; these are always integers and serve as
 symbolic names for common font values:
-    <PRE
+    <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
 CLASS="PROGRAMLISTING"
 >  Constant        Property        Value
   -------------------------------------
@@ -846,6 +916,9 @@ CLASS="PROGRAMLISTING"
   hintmedium      hintstyle       2
   hintfull        hintstyle       3
     </PRE
+></TD
+></TR
+></TABLE
 >
       </P
 ></DIV
@@ -857,31 +930,31 @@ NAME="AEN162"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;or&gt;</TT
+>&#60;or&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;and&gt;</TT
+>&#60;and&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;plus&gt;</TT
+>&#60;plus&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;minus&gt;</TT
+>&#60;minus&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;times&gt;</TT
+>&#60;times&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;divide&gt;</TT
+>&#60;divide&#62;</TT
 ></H3
 ><P
 >These elements perform the specified operation on a list of expression
 elements.  <TT
 CLASS="LITERAL"
->&lt;or&gt;</TT
+>&#60;or&#62;</TT
 > and <TT
 CLASS="LITERAL"
->&lt;and&gt;</TT
+>&#60;and&#62;</TT
 > are boolean, not bitwise.
       </P
 ></DIV
@@ -893,22 +966,22 @@ NAME="AEN173"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;eq&gt;</TT
+>&#60;eq&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;not_eq&gt;</TT
+>&#60;not_eq&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;less&gt;</TT
+>&#60;less&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;less_eq&gt;</TT
+>&#60;less_eq&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;more&gt;</TT
+>&#60;more&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;more_eq&gt;</TT
+>&#60;more_eq&#62;</TT
 ></H3
 ><P
 >These elements compare two values, producing a boolean result.
@@ -922,7 +995,7 @@ NAME="AEN182"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;not&gt;</TT
+>&#60;not&#62;</TT
 ></H3
 ><P
 >Inverts the boolean sense of its one expression element
@@ -936,7 +1009,7 @@ NAME="AEN186"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;if&gt;</TT
+>&#60;if&#62;</TT
 ></H3
 ><P
 >This element takes three expression elements; if the value of the first is
@@ -952,44 +1025,44 @@ NAME="AEN190"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;alias&gt;</TT
+>&#60;alias&#62;</TT
 ></H3
 ><P
 >Alias elements provide a shorthand notation for the set of common match
 operations needed to substitute one font family for another.  They contain a
 <TT
 CLASS="LITERAL"
->&lt;family&gt;</TT
+>&#60;family&#62;</TT
 > element followed by optional <TT
 CLASS="LITERAL"
->&lt;prefer&gt;</TT
+>&#60;prefer&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;accept&gt;</TT
+>&#60;accept&#62;</TT
 > and <TT
 CLASS="LITERAL"
->&lt;default&gt;</TT
+>&#60;default&#62;</TT
 >
 elements.  Fonts matching the <TT
 CLASS="LITERAL"
->&lt;family&gt;</TT
+>&#60;family&#62;</TT
 > element are edited to prepend the
 list of <TT
 CLASS="LITERAL"
->&lt;prefer&gt;</TT
+>&#60;prefer&#62;</TT
 >ed families before the matching <TT
 CLASS="LITERAL"
->&lt;family&gt;</TT
+>&#60;family&#62;</TT
 >, append the
 <TT
 CLASS="LITERAL"
->&lt;accept&gt;</TT
+>&#60;accept&#62;</TT
 >able families after the matching <TT
 CLASS="LITERAL"
->&lt;family&gt;</TT
+>&#60;family&#62;</TT
 > and append the <TT
 CLASS="LITERAL"
->&lt;default&gt;</TT
+>&#60;default&#62;</TT
 >
 families to the end of the family list.
   </P
@@ -1002,7 +1075,7 @@ NAME="AEN204"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;family&gt;</TT
+>&#60;family&#62;</TT
 ></H3
 ><P
 >Holds a single font family name
@@ -1016,21 +1089,21 @@ NAME="AEN208"
 ><H3
 ><TT
 CLASS="LITERAL"
->&lt;prefer&gt;</TT
+>&#60;prefer&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;accept&gt;</TT
+>&#60;accept&#62;</TT
 >, <TT
 CLASS="LITERAL"
->&lt;default&gt;</TT
+>&#60;default&#62;</TT
 ></H3
 ><P
 >These hold a list of <TT
 CLASS="LITERAL"
->&lt;family&gt;</TT
+>&#60;family&#62;</TT
 > elements to be used by the <TT
 CLASS="LITERAL"
->&lt;alias&gt;</TT
+>&#60;alias&#62;</TT
 > element.
   </P
 ></DIV
@@ -1052,89 +1125,98 @@ NAME="AEN218"
 ><P
 >This is an example of a system-wide configuration file
     </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->&lt;?xml version="1.0"?&gt;
-&lt;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&gt;
-&lt;!-- /etc/fonts/fonts.conf file to configure system font access --&gt;
-&lt;fontconfig&gt;
-&lt;!-- 
+>&#60;?xml version="1.0"?&#62;
+&#60;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&#62;
+&#60;!-- /etc/fonts/fonts.conf file to configure system font access --&#62;
+&#60;fontconfig&#62;
+&#60;!-- 
 	Find fonts in these directories
---&gt;
-&lt;dir&gt;/usr/share/fonts&lt;/dir&gt;
-&lt;dir&gt;/usr/X11R6/lib/X11/fonts&lt;/dir&gt;
+--&#62;
+&#60;dir&#62;/usr/share/fonts&#60;/dir&#62;
+&#60;dir&#62;/usr/X11R6/lib/X11/fonts&#60;/dir&#62;
 
-&lt;!--
+&#60;!--
 	Accept deprecated 'mono' alias, replacing it with 'monospace'
---&gt;
-&lt;match target="pattern"&gt;
-	&lt;test qual="any" name="family"&gt;&lt;string&gt;mono&lt;/string&gt;&lt;/test&gt;
-	&lt;edit name="family" mode="assign"&gt;&lt;string&gt;monospace&lt;/string&gt;&lt;/edit&gt;
-&lt;/match&gt;
+--&#62;
+&#60;match target="pattern"&#62;
+	&#60;test qual="any" name="family"&#62;&#60;string&#62;mono&#60;/string&#62;&#60;/test&#62;
+	&#60;edit name="family" mode="assign"&#62;&#60;string&#62;monospace&#60;/string&#62;&#60;/edit&#62;
+&#60;/match&#62;
 
-&lt;!--
+&#60;!--
 	Names not including any well known alias are given 'sans'
---&gt;
-&lt;match target="pattern"&gt;
-	&lt;test qual="all" name="family" mode="not_eq"&gt;sans&lt;/test&gt;
-	&lt;test qual="all" name="family" mode="not_eq"&gt;serif&lt;/test&gt;
-	&lt;test qual="all" name="family" mode="not_eq"&gt;monospace&lt;/test&gt;
-	&lt;edit name="family" mode="append_last"&gt;&lt;string&gt;sans&lt;/string&gt;&lt;/edit&gt;
-&lt;/match&gt;
+--&#62;
+&#60;match target="pattern"&#62;
+	&#60;test qual="all" name="family" mode="not_eq"&#62;sans&#60;/test&#62;
+	&#60;test qual="all" name="family" mode="not_eq"&#62;serif&#60;/test&#62;
+	&#60;test qual="all" name="family" mode="not_eq"&#62;monospace&#60;/test&#62;
+	&#60;edit name="family" mode="append_last"&#62;&#60;string&#62;sans&#60;/string&#62;&#60;/edit&#62;
+&#60;/match&#62;
 
-&lt;!--
+&#60;!--
 	Load per-user customization file, but don't complain
 	if it doesn't exist
---&gt;
-&lt;include ignore_missing="yes"&gt;~/.fonts.conf&lt;/include&gt;
+--&#62;
+&#60;include ignore_missing="yes"&#62;~/.fonts.conf&#60;/include&#62;
 
-&lt;!--
+&#60;!--
 	Load local customization files, but don't complain
 	if there aren't any
---&gt;
-&lt;include ignore_missing="yes"&gt;conf.d&lt;/include&gt;
-&lt;include ignore_missing="yes"&gt;local.conf&lt;/include&gt;
+--&#62;
+&#60;include ignore_missing="yes"&#62;conf.d&#60;/include&#62;
+&#60;include ignore_missing="yes"&#62;local.conf&#60;/include&#62;
 
-&lt;!--
+&#60;!--
 	Alias well known font names to available TrueType fonts.
 	These substitute TrueType faces for similar Type1
 	faces to improve screen appearance.
---&gt;
-&lt;alias&gt;
-	&lt;family&gt;Times&lt;/family&gt;
-	&lt;prefer&gt;&lt;family&gt;Times New Roman&lt;/family&gt;&lt;/prefer&gt;
-	&lt;default&gt;&lt;family&gt;serif&lt;/family&gt;&lt;/default&gt;
-&lt;/alias&gt;
-&lt;alias&gt;
-	&lt;family&gt;Helvetica&lt;/family&gt;
-	&lt;prefer&gt;&lt;family&gt;Arial&lt;/family&gt;&lt;/prefer&gt;
-	&lt;default&gt;&lt;family&gt;sans&lt;/family&gt;&lt;/default&gt;
-&lt;/alias&gt;
-&lt;alias&gt;
-	&lt;family&gt;Courier&lt;/family&gt;
-	&lt;prefer&gt;&lt;family&gt;Courier New&lt;/family&gt;&lt;/prefer&gt;
-	&lt;default&gt;&lt;family&gt;monospace&lt;/family&gt;&lt;/default&gt;
-&lt;/alias&gt;
+--&#62;
+&#60;alias&#62;
+	&#60;family&#62;Times&#60;/family&#62;
+	&#60;prefer&#62;&#60;family&#62;Times New Roman&#60;/family&#62;&#60;/prefer&#62;
+	&#60;default&#62;&#60;family&#62;serif&#60;/family&#62;&#60;/default&#62;
+&#60;/alias&#62;
+&#60;alias&#62;
+	&#60;family&#62;Helvetica&#60;/family&#62;
+	&#60;prefer&#62;&#60;family&#62;Arial&#60;/family&#62;&#60;/prefer&#62;
+	&#60;default&#62;&#60;family&#62;sans&#60;/family&#62;&#60;/default&#62;
+&#60;/alias&#62;
+&#60;alias&#62;
+	&#60;family&#62;Courier&#60;/family&#62;
+	&#60;prefer&#62;&#60;family&#62;Courier New&#60;/family&#62;&#60;/prefer&#62;
+	&#60;default&#62;&#60;family&#62;monospace&#60;/family&#62;&#60;/default&#62;
+&#60;/alias&#62;
 
-&lt;!--
+&#60;!--
 	Provide required aliases for standard names
 	Do these after the users configuration file so that
 	any aliases there are used preferentially
---&gt;
-&lt;alias&gt;
-	&lt;family&gt;serif&lt;/family&gt;
-	&lt;prefer&gt;&lt;family&gt;Times New Roman&lt;/family&gt;&lt;/prefer&gt;
-&lt;/alias&gt;
-&lt;alias&gt;
-	&lt;family&gt;sans&lt;/family&gt;
-	&lt;prefer&gt;&lt;family&gt;Arial&lt;/family&gt;&lt;/prefer&gt;
-&lt;/alias&gt;
-&lt;alias&gt;
-	&lt;family&gt;monospace&lt;/family&gt;
-	&lt;prefer&gt;&lt;family&gt;Andale Mono&lt;/family&gt;&lt;/prefer&gt;
-&lt;/alias&gt;
-&lt;/fontconfig&gt;
+--&#62;
+&#60;alias&#62;
+	&#60;family&#62;serif&#60;/family&#62;
+	&#60;prefer&#62;&#60;family&#62;Times New Roman&#60;/family&#62;&#60;/prefer&#62;
+&#60;/alias&#62;
+&#60;alias&#62;
+	&#60;family&#62;sans&#60;/family&#62;
+	&#60;prefer&#62;&#60;family&#62;Arial&#60;/family&#62;&#60;/prefer&#62;
+&#60;/alias&#62;
+&#60;alias&#62;
+	&#60;family&#62;monospace&#60;/family&#62;
+	&#60;prefer&#62;&#60;family&#62;Andale Mono&#60;/family&#62;&#60;/prefer&#62;
+&#60;/alias&#62;
+&#60;/fontconfig&#62;
     </PRE
+></TD
+></TR
+></TABLE
 ></DIV
 ><DIV
 CLASS="REFSECT2"
@@ -1147,28 +1229,37 @@ NAME="AEN222"
 >This is an example of a per-user configuration file that lives in
 ~/.fonts.conf
     </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
 ><PRE
 CLASS="PROGRAMLISTING"
->&lt;?xml version="1.0"?&gt;
-&lt;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&gt;
-&lt;!-- ~/.fonts.conf for per-user font configuration --&gt;
-&lt;fontconfig&gt;
+>&#60;?xml version="1.0"?&#62;
+&#60;!DOCTYPE fontconfig SYSTEM "fonts.dtd"&#62;
+&#60;!-- ~/.fonts.conf for per-user font configuration --&#62;
+&#60;fontconfig&#62;
 
-&lt;!--
+&#60;!--
 	Private font directory
---&gt;
-&lt;dir&gt;~/.fonts&lt;/dir&gt;
+--&#62;
+&#60;dir&#62;~/.fonts&#60;/dir&#62;
 
-&lt;!--
+&#60;!--
 	use rgb sub-pixel ordering to improve glyph appearance on
 	LCD screens.  Changes affecting rendering, but not matching
 	should always use target="font".
---&gt;
-&lt;match target="font"&gt;
-	&lt;edit name="rgba" mode="assign"&gt;&lt;const&gt;rgb&lt;/const&gt;&lt;/edit&gt;
-&lt;/match&gt;
-&lt;/fontconfig&gt;
+--&#62;
+&#60;match target="font"&#62;
+	&#60;edit name="rgba" mode="assign"&#62;&#60;const&#62;rgb&#60;/const&#62;&#60;/edit&#62;
+&#60;/match&#62;
+&#60;/fontconfig&#62;
     </PRE
+></TD
+></TR
+></TABLE
 ></DIV
 ></DIV
 ><DIV
@@ -1179,12 +1270,9 @@ NAME="AEN226"
 ><H2
 >Files</H2
 ><P
-><SPAN
-CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 >fonts.conf</I
-></SPAN
 >
 contains configuration information for the fontconfig library
 consisting of directories to look at for font information as well as
@@ -1192,48 +1280,45 @@ instructions on editing program specified font patterns before attempting to
 match the available fonts.  It is in xml format.
   </P
 ><P
-><SPAN
-CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 >conf.d</I
-></SPAN
 >
 is the conventional name for a directory of additional configuration files
 managed by external applications or the local administrator.  The
 filenames starting with decimal digits are sorted in lexicographic order
 and used as additional configuration files.  All of these files are in xml
 format.  The master fonts.conf file references this directory in an 
-&lt;include&gt; directive.
+&#60;include&#62; directive.
   </P
 ><P
-><SPAN
-CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 >fonts.dtd</I
-></SPAN
 >
 is a DTD that describes the format of the configuration files.
   </P
 ><P
-><SPAN
-CLASS="emphasis"
+><I
+CLASS="EMPHASIS"
+>~/.fonts.conf.d</I
+>
+is the conventional name for a per-user directory of (typically
+auto-generated) configuration files, although the
+actual location is specified in the global fonts.conf file.
+  </P
+><P
 ><I
 CLASS="EMPHASIS"
 >~/.fonts.conf</I
-></SPAN
 >
 is the conventional location for per-user font configuration, although the
 actual location is specified in the global fonts.conf file.
   </P
 ><P
-><SPAN
-CLASS="emphasis"
 ><I
 CLASS="EMPHASIS"
 > ~/.fonts.cache-*</I
-></SPAN
 >
 is the conventional repository of font information that isn't found in the
 per-directory caches.  This file is automatically maintained by fontconfig.
@@ -1242,23 +1327,23 @@ per-directory caches.  This file is automatically maintained by fontconfig.
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN238"
+NAME="AEN240"
 ></A
 ><H2
 >See Also</H2
 ><P
->fc-cache(1), fc-match(1), fc-list(1)
+>fc-cat(1), fc-cache(1), fc-list(1), fc-match(1), fc-query(1)
   </P
 ></DIV
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN241"
+NAME="AEN243"
 ></A
 ><H2
 >Version</H2
 ><P
->Fontconfig version 2.6.0
+>Fontconfig version 2.8.0
 
 	    </P
 ></DIV

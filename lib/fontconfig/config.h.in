@@ -52,6 +52,9 @@
 /* Define to 1 if you have the `FT_Has_PS_Glyph_Names' function. */
 #undef HAVE_FT_HAS_PS_GLYPH_NAMES
 
+/* Define to 1 if you have the `FT_Select_Size' function. */
+#undef HAVE_FT_SELECT_SIZE
+
 /* Define to 1 if you have the `geteuid' function. */
 #undef HAVE_GETEUID
 

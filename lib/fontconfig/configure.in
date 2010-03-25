@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.in,v 1.2 2009/04/05 16:43:35 matthieu Exp $
+dnl  fontconfig/configure.in
 dnl 
 dnl  Copyright © 2003 Keith Packard
 dnl 
@@ -13,9 +13,9 @@ dnl  specific, written prior permission.  Keith Packard makes no
 dnl  representations about the suitability of this software for any purpose.  It
 dnl  is provided "as is" without express or implied warranty.
 dnl 
-dnl  KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+dnl  THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 dnl  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-dnl  EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+dnl  EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
 dnl  CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
 dnl  DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 dnl  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -33,7 +33,8 @@ dnl This is the package version number, not the shared library
 dnl version.  This same version number must appear in fontconfig/fontconfig.h
 dnl Yes, it is a pain to synchronize version numbers.  Unfortunately, it's
 dnl not possible to extract the version number here from fontconfig.h
-AM_INIT_AUTOMAKE(fontconfig, 2.6.0)
+AM_INIT_AUTOMAKE(fontconfig, 2.8.0)
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 AM_MAINTAINER_MODE
 
 dnl libtool versioning
@@ -41,11 +42,11 @@ dnl libtool versioning
 dnl bump revision when fixing bugs
 dnl bump current and age, reset revision to zero when adding APIs
 dnl bump current, leave age, reset revision to zero when changing/removing APIS
-LIBT_CURRENT=4
-LIBT_REVISION=0
+LIBT_CURRENT=5
+LIBT_REVISION=4
 AC_SUBST(LIBT_CURRENT)
 AC_SUBST(LIBT_REVISION)
-LIBT_AGE=3
+LIBT_AGE=4
 
 LIBT_VERSION_INFO="$LIBT_CURRENT:$LIBT_REVISION:$LIBT_AGE"
 AC_SUBST(LIBT_VERSION_INFO)
@@ -223,19 +224,11 @@ FREETYPE_LIBS="`$ft_config --libs`"
 AC_SUBST(FREETYPE_LIBS)
 AC_SUBST(FREETYPE_CFLAGS)
 
-#
-# Check to see whether we have:
-#  FT_Get_Next_Char
-#  FT_Get_BDF_Property
-#  FT_Get_PS_Font_Info
-#  FT_Has_PS_Glyph_Names
-#
-
 fontconfig_save_libs="$LIBS"
 fontconfig_save_cflags="$CFLAGS"
 LIBS="$LIBS $FREETYPE_LIBS"
 CFLAGS="$CFLAGS $FREETYPE_CFLAGS"
-AC_CHECK_FUNCS(FT_Get_Next_Char FT_Get_BDF_Property FT_Get_PS_Font_Info FT_Has_PS_Glyph_Names FT_Get_X11_Font_Format)
+AC_CHECK_FUNCS(FT_Get_Next_Char FT_Get_BDF_Property FT_Get_PS_Font_Info FT_Has_PS_Glyph_Names FT_Get_X11_Font_Format FT_Select_Size)
 AC_CHECK_MEMBER(FT_Bitmap_Size.y_ppem,
 		HAVE_FT_BITMAP_SIZE_Y_PPEM=1,
 		HAVE_FT_BITMAP_SIZE_Y_PPEM=0,
@@ -456,14 +449,14 @@ AC_SUBST(FC_FONTPATH)
 #
 # Set default cache directory path
 #
-AC_ARG_WITH(cache-dir,         [ --with-cache-dir=DIR           Use DIR to store cache files (default /var/cache/fontconfig)], fc_cachedir="$withval", fc_cachedir=yes)
+AC_ARG_WITH(cache-dir,         [  --with-cache-dir=DIR           Use DIR to store cache files (default LOCALSTATEDIR/cache/fontconfig)], fc_cachedir="$withval", fc_cachedir=yes)
 
 case $fc_cachedir in
 no|yes)
 	if test "$os_win32" = "yes"; then
 		fc_cachedir="WINDOWSTEMPDIR_FONTCONFIG_CACHE"
 	else
-		fc_cachedir=`eval echo "${localstatedir}/cache/"${PACKAGE}`
+		fc_cachedir='${localstatedir}/cache/${PACKAGE}'
 	fi
 	;;
 *)
@@ -477,7 +470,7 @@ FC_FONTDATE=`LC_ALL=C date`
 
 AC_SUBST(FC_FONTDATE)
 
-AC_ARG_WITH(confdir,           [  --with-confdir=DIR            Use DIR to store configuration files (default /etc/fonts)], confdir="$withval", confdir=yes)
+AC_ARG_WITH(confdir,           [  --with-confdir=DIR            Use DIR to store configuration files (default SYSCONFDIR/fonts)], confdir="$withval", confdir=yes)
 
 #
 # Set CONFDIR and FONTCONFIG_PATH
@@ -494,13 +487,6 @@ AC_SUBST(confdir)
 CONFDIR=${confdir}
 AC_DEFINE_UNQUOTED(CONFDIR, "$CONFDIR",[Font configuration directory])
 AC_SUBST(CONFDIR)
-
-#
-# Find out what language orthographies are included
-#
-
-ORTH_FILES=`cd ${srcdir}/fc-lang && echo *.orth`
-AC_SUBST(ORTH_FILES)
 
 #
 # Let people not build/install docs if they don't have docbook
@@ -544,20 +530,9 @@ fi
 AC_SUBST(DOCSRC)
 AC_SUBST(DOCMAN3)
 
-#
-# Figure out where to install documentation
-#
-
-AC_ARG_WITH(docdir,           [  --with-docdir=DIR             Use DIR to store documentation files (default ${datadir}/doc/fontconfig)], confdir="$withval")
-
-if test "x$with_docdir" = "x" ; then
-  DOCDIR='${datadir}/doc/fontconfig'
-else
-  DOCDIR=$with_docdir
-fi
-
-AC_SUBST(DOCDIR)
-
+# Seems that newer automake do that automatically ?
+RM="rm -f"
+AC_SUBST(RM)
 
 AC_OUTPUT([
 Makefile 
@@ -572,11 +547,12 @@ fc-cache/Makefile
 fc-cat/Makefile
 fc-list/Makefile
 fc-match/Makefile
+fc-query/Makefile
+fc-scan/Makefile
 doc/Makefile
 doc/version.sgml
 test/Makefile
 fontconfig.spec
 fontconfig.pc
-fonts.conf
 fontconfig-zip
 ])

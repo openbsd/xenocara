@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/fc-lang/fc-lang.c,v 1.3 2002/08/22 07:36:43 keithp Exp $
+ * fontconfig/fc-lang/fc-lang.c
  *
  * Copyright © 2002 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -129,7 +129,7 @@ static const FcCharSet *
 scan (FILE *f, char *file, FcCharSetFreezer *freezer)
 {
     FcCharSet	    *c = 0;
-    const FcCharSet *n;
+    FcCharSet	    *n;
     int		    start, end, ucs4;
     char	    line[1024];
     int		    lineno = 0;
@@ -138,18 +138,25 @@ scan (FILE *f, char *file, FcCharSetFreezer *freezer)
     {
 	if (!strncmp (line, "include", 7))
 	{
-	    file = strchr (line, ' ');
-            if (!file)
-                fatal (line, lineno, 
+	    FILE *included_f;
+	    char *included_file;
+	    included_file = strchr (line, ' ');
+            if (!included_file)
+                fatal (file, lineno,
                        "invalid syntax, expected: include filename");
-	    while (isspace(*file))
-		file++;
-	    f = scanopen (file);
-	    if (!f)
-		fatal (file, 0, "can't open");
-	    n = scan (f, file, freezer);
-	    fclose (f);
-	    return n;
+	    while (isspace(*included_file))
+		included_file++;
+	    included_f = scanopen (included_file);
+	    if (!included_f)
+		fatal (included_file, 0, "can't open");
+	    n = scan (included_f, included_file, freezer);
+	    fclose (included_f);
+	    if (!c)
+		c = FcCharSetCreate ();
+	    if (!FcCharSetMerge (c, n, NULL))
+		fatal (file, lineno, "out of memory");
+	    FcCharSetDestroy (n);
+	    continue;
 	}
 	if (strchr (line, '-'))
 	{
@@ -217,22 +224,27 @@ get_lang (char *name)
     return lang;
 }
 
+typedef struct _Entry {
+    int id;
+    char *file;
+} Entry;
+
 static int compare (const void *a, const void *b)
 {
-    const FcChar8    *const *as = a, *const *bs = b;
-    return FcStrCmpIgnoreCase (*as, *bs);
+    const Entry const *as = a, *bs = b;
+    return FcStrCmpIgnoreCase (as->file, bs->file);
 }
 
 #define MAX_LANG	    1024
 #define MAX_LANG_SET_MAP    ((MAX_LANG + 31) / 32)
 
-#define BitSet(map, id)   ((map)[(id)>>5] |= ((FcChar32) 1 << ((id) & 0x1f)))
-#define BitGet(map, id)   ((map)[(id)>>5] >> ((id) & 0x1f)) & 1)
+#define BitSet(map, i)   ((map)[(entries[i].id)>>5] |= ((FcChar32) 1 << ((entries[i].id) & 0x1f)))
+#define BitGet(map, i)   ((map)[(entries[i].id)>>5] >> ((entries[i].id) & 0x1f)) & 1)
 
 int
 main (int argc, char **argv)
 {
-    static char		*files[MAX_LANG];
+    static Entry	entries[MAX_LANG];
     static const FcCharSet	*sets[MAX_LANG];
     static int		duplicate[MAX_LANG];
     static int		country[MAX_LANG];
@@ -269,18 +281,20 @@ main (int argc, char **argv)
 	}
 	if (i == MAX_LANG)
 	    fatal (argv[0], 0, "Too many languages");
-	files[i++] = argv[argi++];
+	entries[i].id = i;
+	entries[i].file = argv[argi++];
+	i++;
     }
-    files[i] = 0;
-    qsort (files, i, sizeof (char *), compare);
+    entries[i].file = 0;
+    qsort (entries, i, sizeof (Entry), compare);
     i = 0;
-    while (files[i])
+    while (entries[i].file)
     {
-	f = scanopen (files[i]);
+	f = scanopen (entries[i].file);
 	if (!f)
-	    fatal (files[i], 0, strerror (errno));
-	sets[i] = scan (f, files[i], freezer);
-	names[i] = get_name (files[i]);
+	    fatal (entries[i].file, 0, strerror (errno));
+	sets[i] = scan (f, entries[i].file, freezer);
+	names[i] = get_name (entries[i].file);
 	langs[i] = get_lang(names[i]);
 	if (strchr (langs[i], '-'))
 	    country[ncountry++] = i;
@@ -355,6 +369,8 @@ main (int argc, char **argv)
     printf ("#define NUM(s,n)    (NUM0 + n * sizeof (FcChar16) - SET(s))\n");
     printf ("#define LEAF(o,l)   (LEAF0 + l * sizeof (FcCharLeaf) - (OFF0 + o * sizeof (intptr_t)))\n");
     printf ("#define fcLangCharSets (fcLangData.langCharSets)\n");
+    printf ("#define fcLangCharSetIndices (fcLangData.langIndices)\n");
+    printf ("#define fcLangCharSetIndicesInv (fcLangData.langIndicesInv)\n");
     printf ("\n");
     
     printf ("static const struct {\n"
@@ -362,8 +378,11 @@ main (int argc, char **argv)
 	    "    FcCharLeaf     leaves[%d];\n"
 	    "    intptr_t       leaf_offsets[%d];\n"
 	    "    FcChar16       numbers[%d];\n"
+	    "    FcChar%s       langIndices[%d];\n"
+	    "    FcChar%s       langIndicesInv[%d];\n"
 	    "} fcLangData = {\n",
-	    nsets, tl, tn, tn);
+	    nsets, tl, tn, tn,
+	    nsets < 256 ? "8 " : "16", nsets, nsets < 256 ? "8 " : "16", nsets);
 	
     /*
      * Dump sets
@@ -450,10 +469,29 @@ main (int argc, char **argv)
 	if (n % 8 != 0)
 	    printf ("\n");
     }
+    printf ("},\n");
+
+    /* langIndices */
+    printf ("{\n");
+    for (i = 0; sets[i]; i++)
+    {
+	printf ("    %d, /* %s */\n", entries[i].id, names[i]);
+    }
+    printf ("},\n");
+
+    /* langIndicesInv */
+    printf ("{\n");
+    {
+	static int		entries_inv[MAX_LANG];
+	for (i = 0; sets[i]; i++)
+	  entries_inv[entries[i].id] = i;
+	for (i = 0; sets[i]; i++)
+	    printf ("    %d, /* %s */\n", entries_inv[i], names[entries_inv[i]]);
+    }
     printf ("}\n");
-    
+
     printf ("};\n\n");
-    
+
     printf ("#define NUM_LANG_CHAR_SET	%d\n", i);
     num_lang_set_map = (i + 31) / 32;
     printf ("#define NUM_LANG_SET_MAP	%d\n", num_lang_set_map);
@@ -481,7 +519,7 @@ main (int argc, char **argv)
 		for (d = c + 1; d < ncountry; d++)
 		{
 		    int j = country[d];
-		    if (j >= 0 && !strncmp (langs[j], langs[i], l))
+		    if (j >= 0 && !strncmp (langs[j], langs[i], lang + 1))
 		    {
 			BitSet(map, j);
 			country[d] = -1;
@@ -520,7 +558,9 @@ main (int argc, char **argv)
     /*
      * Dump sets start/finish for the fastpath
      */
+    printf ("\n");
     printf ("static const FcLangCharSetRange  fcLangCharSetRanges[] = {\n");
+	printf ("\n");
     for (setRangeChar = 'a'; setRangeChar <= 'z' ; setRangeChar++)
     {
 	printf ("    { %d, %d }, /* %c */\n",

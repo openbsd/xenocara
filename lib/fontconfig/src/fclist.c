@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/src/fclist.c,v 1.11tsi Exp $
+ * fontconfig/src/fclist.c
  *
  * Copyright © 2000 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -350,7 +350,10 @@ FcGetDefaultObjectLangIndex (FcPattern *font, FcObject object)
 	    if (value.type == FcTypeString)
 	    {
 		FcLangResult res = FcLangCompare (value.u.s, lang);
-		if (res == FcLangEqual || (res == FcLangDifferentCountry && idx < 0))
+		if (res == FcLangEqual)
+		    return i;
+
+		if (res == FcLangDifferentCountry && idx < 0)
 		    idx = i;
 	    }
 	}
@@ -457,6 +460,7 @@ FcFontSetList (FcConfig	    *config,
     FcListHashTable table;
     int		    i;
     FcListBucket    *bucket;
+    int             destroy_os = 0;
 
     if (!config)
     {
@@ -468,6 +472,13 @@ FcFontSetList (FcConfig	    *config,
 	    goto bail0;
     }
     FcListHashTableInit (&table);
+
+    if (!os)
+    {
+	os = FcObjectGetSet ();
+	destroy_os = 1;
+    }
+
     /*
      * Walk all available fonts adding those that
      * match to the hash table
@@ -532,6 +543,8 @@ bail2:
 bail1:
     FcListHashTableCleanup (&table);
 bail0:
+    if (destroy_os)
+	FcObjectSetDestroy (os);
     return 0;
 }
 
@@ -545,6 +558,9 @@ FcFontList (FcConfig	*config,
 
     if (!config)
     {
+	if (!FcInitBringUptoDate ())
+	    return 0;
+
 	config = FcConfigGetCurrent ();
 	if (!config)
 	    return 0;

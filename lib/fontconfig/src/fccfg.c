@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/src/fccfg.c,v 1.23 2002/08/31 22:17:32 keithp Exp $
+ * fontconfig/src/fccfg.c
  *
  * Copyright © 2000 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -92,6 +92,10 @@ FcConfigCreate (void)
 
     config->rescanTime = time(0);
     config->rescanInterval = 30;    
+
+    config->expr_pool = NULL;
+
+    config->ref = 1;
     
     return config;
 
@@ -127,7 +131,7 @@ FcConfigNewestFile (FcStrSet *files)
     if (list)
     {
 	while ((file = FcStrListNext (list)))
-	    if (stat ((char *) file, &statb) == 0)
+	    if (FcStat ((char *) file, &statb) == 0)
 		if (!newest.set || statb.st_mtime - newest.time > 0)
 		{
 		    newest.set = FcTrue;
@@ -191,10 +195,49 @@ FcSubstDestroy (FcSubst *s)
     }
 }
 
+FcExpr *
+FcConfigAllocExpr (FcConfig *config)
+{
+  if (!config->expr_pool || config->expr_pool->next == config->expr_pool->end)
+  {
+    FcExprPage *new_page;
+
+    new_page = malloc (sizeof (FcExprPage));
+    if (!new_page)
+      return 0;
+    FcMemAlloc (FC_MEM_EXPR, sizeof (FcExprPage));
+
+    new_page->next_page = config->expr_pool;
+    new_page->next = new_page->exprs;
+    config->expr_pool = new_page;
+  }
+
+  return config->expr_pool->next++;
+}
+
+FcConfig *
+FcConfigReference (FcConfig *config)
+{
+    if (!config)
+    {
+	config = FcConfigGetCurrent ();
+	if (!config)
+	    return 0;
+    }
+
+    config->ref++;
+
+    return config;
+}
+
 void
 FcConfigDestroy (FcConfig *config)
 {
     FcSetName	set;
+    FcExprPage	*page;
+
+    if (--config->ref > 0)
+	return;
 
     if (config == _fcConfig)
 	_fcConfig = 0;
@@ -217,6 +260,15 @@ FcConfigDestroy (FcConfig *config)
     for (set = FcSetSystem; set <= FcSetApplication; set++)
 	if (config->fonts[set])
 	    FcFontSetDestroy (config->fonts[set]);
+
+    page = config->expr_pool;
+    while (page)
+    {
+      FcExprPage *next = page->next_page;
+      FcMemFree (FC_MEM_EXPR, sizeof (FcExprPage));
+      free (page);
+      page = next;
+    }
 
     free (config);
     FcMemFree (FC_MEM_CONFIG, sizeof (FcConfig));
@@ -832,7 +884,8 @@ FcConfigEvaluate (FcPattern *p, FcExpr *e)
 	break;
     case FcOpString:
 	v.type = FcTypeString;
-	v.u.s = FcStrStaticName(e->u.sval);
+	v.u.s = e->u.sval;
+	v = FcValueSave (v);
 	break;
     case FcOpMatrix:
 	v.type = FcTypeMatrix;
@@ -1671,9 +1724,10 @@ FcConfigGetPath (void)
 #ifdef _WIN32
 	if (fontconfig_path[0] == '\0')
 	{
+		char *p;
 		if(!GetModuleFileName(NULL, fontconfig_path, sizeof(fontconfig_path)))
 			goto bail1;
-		char *p = strrchr (fontconfig_path, '\\');
+		p = strrchr (fontconfig_path, '\\');
 		if (p) *p = '\0';
 		strcat (fontconfig_path, "\\fonts");
 	}

@@ -1,5 +1,5 @@
 # 
-#  $Id: Makefile.am,v 1.5 2009/04/05 16:43:36 matthieu Exp $
+#  fontconfig/fc-cat/Makefile.am
 # 
 #  Copyright © 2003 Keith Packard
 # 
@@ -13,9 +13,9 @@
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
 # 
-#  KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+#  THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-#  EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+#  EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
 #  CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
 #  DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -46,7 +46,7 @@ if USEDOCBOOK
 ${man_MANS}: ${SGML}	
 	$(RM) $@
 	$(DOC2MAN) ${SGML}
-	$(RM) manpage.refs manpage.links
+	$(RM) manpage.*
 
 all-local: $(man_MANS)
 

@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/src/fcint.h,v 1.27 2002/08/31 22:17:32 keithp Exp $
+ * fontconfig/src/fcint.h
  *
  * Copyright © 2000 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -107,9 +107,9 @@
 
 #define FC_MEM_NUM	    30
 
-#define FC_BANK_DYNAMIC 0
-#define FC_BANK_FIRST 1
-#define FC_BANK_LANGS	    0xfcfcfcfc
+#define FC_MIN(a,b) ((a) < (b) ? (a) : (b))
+#define FC_MAX(a,b) ((a) > (b) ? (a) : (b))
+#define FC_ABS(a)   ((a) < 0 ? -(a) : (a))
 
 /* slim_internal.h */
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun)
@@ -247,6 +247,15 @@ typedef struct _FcExpr {
     } u;
 } FcExpr;
 
+typedef struct _FcExprPage FcExprPage;
+
+struct _FcExprPage {
+  FcExprPage *next_page;
+  FcExpr *next;
+  FcExpr exprs[(1024 - 2/* two pointers */ - 2/* malloc overhead */) * sizeof (void *) / sizeof (FcExpr)];
+  FcExpr end[0];
+};
+
 typedef enum _FcQual {
     FcQualAny, FcQualAll, FcQualFirst, FcQualNotFirst
 } FcQual;
@@ -313,6 +322,7 @@ typedef struct _FcStrBuf {
     FcBool  failed;
     int	    len;
     int	    size;
+    FcChar8 buf_static[16 * sizeof (void *)];
 } FcStrBuf;
 
 struct _FcCache {
@@ -340,6 +350,14 @@ struct _FcCache {
  */
 
 #define FC_SERIALIZE_HASH_SIZE	8191
+
+typedef union _FcAlign {
+    double	d;
+    int		i;
+    intptr_t	ip;
+    FcBool	b;
+    void	*p;
+} FcAlign;
 
 typedef struct _FcSerializeBucket {
     struct _FcSerializeBucket *next;
@@ -399,18 +417,9 @@ typedef struct _FcCaseFold {
 
 #define FC_MAX_FILE_LEN	    4096
 
-/* XXX remove these when we're ready */
-
-#define fc_value_string(v)	FcValueString(v)
-#define fc_value_charset(v)	FcValueCharSet(v)
-#define fc_value_langset(v)	FcValueLangSet(v)
-#define fc_storage_type(v)	((v)->type)
-
-#define fc_alignof(type) offsetof (struct { char c; type member; }, member)
-
 #define FC_CACHE_MAGIC_MMAP	    0xFC02FC04
 #define FC_CACHE_MAGIC_ALLOC	    0xFC02FC05
-#define FC_CACHE_CONTENT_VERSION    2
+#define FC_CACHE_CONTENT_VERSION    3 /* also check FC_CACHE_VERSION */
 
 struct _FcAtomic {
     FcChar8	*file;		/* original file name */
@@ -483,6 +492,10 @@ struct _FcConfig {
      */
     time_t	rescanTime;	    /* last time information was scanned */
     int		rescanInterval;	    /* interval between scans */
+
+    int		ref;                /* reference count */
+
+    FcExprPage *expr_pool;	    /* pool of FcExpr's */
 };
  
 extern FcPrivate FcConfig	*_fcConfig;
@@ -493,9 +506,6 @@ typedef struct _FcFileTime {
 } FcFileTime;
 
 typedef struct _FcCharMap FcCharMap;
-
-/* watch out; assumes that v is void * -PL */
-#define ALIGN(v,type) ((void *)(((uintptr_t)(v) + fc_alignof(type) - 1) & ~(fc_alignof(type) - 1)))
 
 /* fcblanks.c */
 
@@ -522,7 +532,17 @@ FcCacheFini (void);
 FcPrivate void
 FcDirCacheReference (FcCache *cache, int nref);
 
+#ifdef _WIN32
+FcPrivate int
+FcStat (const char *file, struct stat *statb);
+#else
+#define FcStat stat
+#endif
+
 /* fccfg.c */
+
+FcPrivate FcExpr *
+FcConfigAllocExpr (FcConfig *config);
 
 FcPrivate FcBool
 FcConfigAddConfigDir (FcConfig	    *config,
@@ -636,6 +656,16 @@ FcNameUnparseCharSet (FcStrBuf *buf, const FcCharSet *c);
 FcPrivate FcCharSet *
 FcNameParseCharSet (FcChar8 *string);
 
+FcPrivate FcBool
+FcNameUnparseValue (FcStrBuf    *buf,
+                    FcValue     *v0,
+		    FcChar8     *escape);
+
+FcPrivate FcBool
+FcNameUnparseValueList (FcStrBuf	*buf,
+			FcValueListPtr	v,
+			FcChar8		*escape);
+
 FcPrivate FcCharLeaf *
 FcCharSetFindLeafCreate (FcCharSet *fcs, FcChar32 ucs4);
 
@@ -704,7 +734,7 @@ FcDirScanConfig (FcFontSet	*set,
 /* fcfont.c */
 FcPrivate int
 FcFontDebug (void);
-    
+
 /* fcfs.c */
 
 FcPrivate FcBool
@@ -712,52 +742,10 @@ FcFontSetSerializeAlloc (FcSerialize *serialize, const FcFontSet *s);
 
 FcPrivate FcFontSet *
 FcFontSetSerialize (FcSerialize *serialize, const FcFontSet * s);
-    
-/* fcgram.y */
-FcPrivate int
-FcConfigparse (void);
 
-FcPrivate int
-FcConfigwrap (void);
-    
-FcPrivate void
-FcConfigerror (char *fmt, ...);
-    
-FcPrivate char *
-FcConfigSaveField (const char *field);
-
+/* fcxml.c */
 FcPrivate void
 FcTestDestroy (FcTest *test);
-
-FcPrivate FcExpr *
-FcExprCreateInteger (int i);
-
-FcPrivate FcExpr *
-FcExprCreateDouble (double d);
-
-FcPrivate FcExpr *
-FcExprCreateString (const FcChar8 *s);
-
-FcPrivate FcExpr *
-FcExprCreateMatrix (const FcMatrix *m);
-
-FcPrivate FcExpr *
-FcExprCreateBool (FcBool b);
-
-FcPrivate FcExpr *
-FcExprCreateNil (void);
-
-FcPrivate FcExpr *
-FcExprCreateField (const char *field);
-
-FcPrivate FcExpr *
-FcExprCreateConst (const FcChar8 *constant);
-
-FcPrivate FcExpr *
-FcExprCreateOp (FcExpr *left, FcOp op, FcExpr *right);
-
-FcPrivate void
-FcExprDestroy (FcExpr *e);
 
 FcPrivate void
 FcEditDestroy (FcEdit *e);
@@ -862,6 +850,9 @@ FcObjectFromName (const char * name);
 
 FcPrivate const char *
 FcObjectName (FcObject object);
+
+FcPrivate FcObjectSet *
+FcObjectGetSet (void);
 
 FcPrivate FcBool
 FcObjectInit (void);
@@ -994,6 +985,9 @@ FcStrBufDestroy (FcStrBuf *buf);
 
 FcPrivate FcChar8 *
 FcStrBufDone (FcStrBuf *buf);
+
+FcPrivate FcChar8 *
+FcStrBufDoneStatic (FcStrBuf *buf);
 
 FcPrivate FcBool
 FcStrBufChar (FcStrBuf *buf, FcChar8 c);

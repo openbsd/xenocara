@@ -1,5 +1,5 @@
 /*
- * $RCSId: xc/lib/fontconfig/src/fcname.c,v 1.15 2002/09/26 00:17:28 keithp Exp $
+ * fontconfig/src/fcname.c
  *
  * Copyright © 2000 Keith Packard
  *
@@ -13,9 +13,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -325,6 +325,20 @@ FcObjectFromName (const char * name)
     if (o)
 	return FcObjectId (o);
     return 0;
+}
+
+FcObjectSet *
+FcObjectGetSet (void)
+{
+    int		i;
+    FcObjectSet	*os = NULL;
+
+
+    os = FcObjectSetCreate ();
+    for (i = 0; i < FcObjectsNumber; i++)
+	FcObjectSetAdd (os, FcObjects[i].object);
+
+    return os;
 }
 
 FcBool
@@ -769,7 +783,7 @@ FcNameUnparseString (FcStrBuf	    *buf,
     return FcTrue;
 }
 
-static FcBool
+FcBool
 FcNameUnparseValue (FcStrBuf	*buf,
 		    FcValue	*v0,
 		    FcChar8	*escape)
@@ -804,7 +818,7 @@ FcNameUnparseValue (FcStrBuf	*buf,
     return FcFalse;
 }
 
-static FcBool
+FcBool
 FcNameUnparseValueList (FcStrBuf	*buf,
 			FcValueListPtr	v,
 			FcChar8		*escape)

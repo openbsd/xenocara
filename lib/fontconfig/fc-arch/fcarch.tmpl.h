@@ -11,9 +11,9 @@
  * representations about the suitability of this software for any purpose.  It
  * is provided "as is" without express or implied warranty.
  *
- * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
- * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
  * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -28,11 +28,38 @@
 @@@ name. Architecture names are used to construct file names, so
 @@@ use something reasonable and don't include any spaces
 @@@
-@@@ name    endian   char     char*    int      intptr_t Pattern  EltPtr   Elt *    Elt      ObjPtr   VLPtr    Value    Binding  VL *     CharSet  Leaf**   Char16 * Char16   Leaf     Char32   Cache
-x86	    78563412_00000001_00000004_00000004_00000004_00000010_00000004_00000004_00000008_00000004_00000004_0000000c_00000004_00000004_00000010_00000004_00000004_00000002_00000020_00000004_00000020
-x86-64	    78563412_00000001_00000008_00000004_00000008_00000018_00000008_00000008_00000010_00000004_00000008_00000010_00000004_00000008_00000018_00000008_00000008_00000002_00000020_00000004_00000038
-ppc	    12345678_00000001_00000004_00000004_00000004_00000010_00000004_00000004_00000008_00000004_00000004_00000010_00000004_00000004_00000010_00000004_00000004_00000002_00000020_00000004_00000020
-ppc64	    12345678_00000001_00000008_00000004_00000008_00000018_00000008_00000008_00000010_00000004_00000008_00000010_00000004_00000008_00000018_00000008_00000008_00000002_00000020_00000004_00000038
-m68k	    12345678_00000001_00000004_00000004_00000004_00000010_00000004_00000004_00000008_00000004_00000004_0000000c_00000004_00000004_00000010_00000004_00000004_00000002_00000020_00000004_00000020
-mipsel	    78563412_00000001_00000004_00000004_00000004_00000010_00000004_00000004_00000008_00000004_00000004_00000010_00000004_00000004_00000010_00000004_00000004_00000002_00000020_00000004_00000020
-sparc64     12345678_00000001_00000008_00000004_00000008_00000018_00000008_00000008_00000010_00000004_00000008_00000010_00000004_00000008_00000018_00000008_00000008_00000002_00000020_00000004_00000038
+@@@ So far the differences boil down to: endianness, 32 vs 64 bit pointers,
+@@@ and on @@@ 32bit ones, whether double is aligned to one word or two words.
+@@@ Those result in the 6 formats listed below.
+@@@
+@@@ ,name (endianness,pointer-size,double-alignment)
+@@@ |   ,endian
+@@@ |   |    ,FcAlign
+@@@ |   |    |  ,char
+@@@ |   |    |  |  ,char*
+@@@ |   |    |  |  |  ,int
+@@@ |   |    |  |  |  |  ,intptr_t
+@@@ |   |    |  |  |  |  |  ,Pattern
+@@@ |   |    |  |  |  |  |  |  ,EltPtr
+@@@ |   |    |  |  |  |  |  |  |  ,Elt *
+@@@ |   |    |  |  |  |  |  |  |  |  ,Elt
+@@@ |   |    |  |  |  |  |  |  |  |  |  ,ObjPtr
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  ,ValueListPtr
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  ,Value
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  ,ValueBinding
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  ,ValueList *
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  ,StrSet *
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  ,CharSet
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  ,CharLeaf **
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  ,Char16 *
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  ,Char16
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  ,CharLeaf
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  ,Char32
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  ,Cache
+@@@ |   |    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+le32d4	4321_08_01_04_04_04_10_04_04_08_04_04_0c_04_04_04_10_04_04_02_20_04_20
+le32d8	4321_08_01_04_04_04_10_04_04_08_04_04_10_04_04_04_10_04_04_02_20_04_20
+le64	4321_08_01_08_04_08_18_08_08_10_04_08_10_04_08_08_18_08_08_02_20_04_38
+be32d4	1234_08_01_04_04_04_10_04_04_08_04_04_0c_04_04_04_10_04_04_02_20_04_20
+be32d8	1234_08_01_04_04_04_10_04_04_08_04_04_10_04_04_04_10_04_04_02_20_04_20
+be64	1234_08_01_08_04_08_18_08_08_10_04_08_10_04_08_08_18_08_08_02_20_04_38

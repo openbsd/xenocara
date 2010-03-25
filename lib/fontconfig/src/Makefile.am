@@ -1,4 +1,6 @@
 #
+# fontconfig/src/Makefile.am
+#
 # Copyright © 2003 Keith Packard
 #
 # Permission to use, copy, modify, distribute, and sell this software and its
@@ -11,9 +13,9 @@
 # representations about the suitability of this software for any purpose.  It
 # is provided "as is" without express or implied warranty.
 #
-# KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 # INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
-# EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+# EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
 # CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
 # DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
@@ -50,7 +52,7 @@ if MS_LIB_AVAILABLE
 noinst_DATA = fontconfig.lib
 
 fontconfig.lib : libfontconfig.la
-	lib -name:libfontconfig-$(lt_current_minus_age).dll -def:fontconfig.def -out:$@
+	lib -name:libfontconfig-@LIBT_CURRENT_MINUS_AGE@.dll -def:fontconfig.def -out:$@
 
 install-ms-import-lib:
 	$(INSTALL) fontconfig.lib $(DESTDIR)$(libdir)
@@ -81,7 +83,20 @@ noinst_HEADERS=fcint.h fcftint.h fcdeprecate.h
 
 ALIAS_FILES = fcalias.h fcaliastail.h fcftalias.h fcftaliastail.h
 
-BUILT_SOURCES = $(ALIAS_FILES)
+BUILT_SOURCES = $(ALIAS_FILES) \
+	../fc-arch/fcarch.h \
+	../fc-case/fccase.h \
+	../fc-glyphname/fcglyphname.h \
+	../fc-lang/fclang.h
+
+../fc-arch/fcarch.h:
+	cd ../fc-arch && $(MAKE) $(AM_MAKEFLAGS) fcarch.h
+../fc-case/fccase.h:
+	cd ../fc-case && $(MAKE) $(AM_MAKEFLAGS) fccase.h
+../fc-glyphname/fcglyphname.h:
+	cd ../fc-glyphname && $(MAKE) $(AM_MAKEFLAGS) fcglyphname.h
+../fc-lang/fclang.h:
+	cd ../fc-lang && $(MAKE) $(AM_MAKEFLAGS) fclang.h
 
 libfontconfig_la_SOURCES = \
 	fcatomic.c \
@@ -92,6 +107,7 @@ libfontconfig_la_SOURCES = \
 	fcdbg.c \
 	fcdefault.c \
 	fcdir.c \
+	fcformat.c \
 	fcfreetype.c \
 	fcfs.c \
 	fcinit.c \
