@@ -61,7 +61,7 @@ typedef struct {
     char *format;
   } OptionsRec;
 
-OptionsRec options;
+static OptionsRec options;
 
 #define Offset(field) XtOffsetOf(OptionsRec, field)
 
@@ -80,10 +80,10 @@ static XtResource Resources[] = {
 
 #undef Offset
 
-const char *ProgramName;
+static const char *ProgramName;
 
-void
-usage ()
+static void
+usage (void)
 {
     fprintf(stderr, "usage:  %s [-options...]\n", ProgramName);
     fprintf(stderr, "\nwhere options include:\n");
@@ -103,9 +103,7 @@ usage ()
     exit (1);
 }
 
-static void print_tree_level (wn, level)
-    register XmuWidgetNode *wn;
-    register int level;
+static void print_tree_level (register XmuWidgetNode *wn, register int level)
 {
     register int i;
 
@@ -119,7 +117,7 @@ static void print_tree_level (wn, level)
     print_tree_level (wn->siblings, level);
 }
 
-static void tree_known_widgets ()
+static void tree_known_widgets (void)
 {
     register int i;
     register XmuWidgetNode *wn;
@@ -136,10 +134,8 @@ static void tree_known_widgets ()
  * print_classname - print out the superclass-to-subclass hierchy of names
  * in the form super\sub\sub....
  */
-static int print_classname (node, topnode, level, showvar)
-    XmuWidgetNode *node, *topnode;
-    int level;
-    Bool showvar;
+static int print_classname (XmuWidgetNode *node, XmuWidgetNode *topnode,
+			    int level, Bool showvar)
 {
     int retval;
 
@@ -156,7 +152,7 @@ static int print_classname (node, topnode, level, showvar)
     return retval;
 }
 
-static void list_known_widgets ()
+static void list_known_widgets (void)
 {
     int i;
     XmuWidgetNode *wn;
@@ -176,12 +172,9 @@ static void list_known_widgets ()
 }
 
 /* ARGSUSED */
-static void print_resources (node, format, topnode, showsuper, showvar)
-    XmuWidgetNode *node;
-    const char *format;
-    XmuWidgetNode *topnode;
-    Bool showsuper;
-    Bool showvar;
+static void print_resources (XmuWidgetNode *node, const char *format,
+			     XmuWidgetNode *topnode, Bool showsuper,
+			     Bool showvar)
 {
     int i;
     XtResourceList res = node->resources;
@@ -214,13 +207,9 @@ static void print_resources (node, format, topnode, showsuper, showvar)
  * which they come
  */
 static void
-list_resources (node, format, topnode, toplevel, showsuper, showvar)
-    XmuWidgetNode *node;
-    const char *format;
-    XmuWidgetNode *topnode;
-    Widget toplevel;
-    Bool showsuper;
-    Bool showvar;
+list_resources (XmuWidgetNode *node, const char *format,
+		XmuWidgetNode *topnode, Widget toplevel,
+		Bool showsuper, Bool showvar)
 {
     static Bool first = True;
 
@@ -243,9 +232,7 @@ list_resources (node, format, topnode, toplevel, showsuper, showvar)
 
 
 int
-main (argc, argv)
-    int argc;
-    char **argv;
+main (int argc, char **argv)
 {
     int i;
     XtAppContext appcon;
