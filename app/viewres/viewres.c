@@ -75,11 +75,13 @@ typedef struct {
 			 XtIsManaged(VData(node)->resource_lw))
 
 
-struct {
+struct WidgetList {
     int n_elements;
     int max_elements;
     XmuWidgetNode **elements;
-} selected_list = { 0, 0, (XmuWidgetNode **) NULL };
+};
+
+static struct WidgetList selected_list = { 0, 0, (XmuWidgetNode **) NULL };
 
 #define INSERT_NODE(node,i) \
   selected_list.elements[VData(node)->selection_index = (i)] = (node)
@@ -88,7 +90,7 @@ struct {
   selected_list.elements[VData(node)->selection_index] = \
   (XmuWidgetNode *) NULL; VData(node)->selection_index = (-1)
 
-const char *ProgramName;
+static const char *ProgramName;
 static int NumberShowing = 0;
 
 static Arg sensitiveargs[2] = {{ XtNsensitive, (XtArgVal) FALSE },
