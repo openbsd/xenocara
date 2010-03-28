@@ -21,13 +21,14 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 
-EXTRA_DIST=ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-CLEANFILES=ChangeLog
+.PHONY: ChangeLog INSTALL
 
-.PHONY: ChangeLog
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

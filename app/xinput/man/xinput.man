@@ -19,7 +19,7 @@ require a device name.
 .TP 8
 .B --list [--short || --long] [\fIdevice\fP]
 If no argument is given list all the input devices. If an argument is given,
-show all the features of \fIdevice\fP. Uses XListInputDevices(3).
+show all the features of \fIdevice\fP.
 If --long is provided, the output includes detailed information about the
 capabilities of each devices. Otherwise, or if --short is provided, only the
 device names and some minimal information is listed.
@@ -39,7 +39,11 @@ Change the mode of \fIdevice\fP.
 .PP
 .TP 8
 .B --set-ptr-feedback \fIdevice\fP \fIthreshold\fP \fInum\fP \fIdenom\fP
-Change the acceleration of \fIdevice\fP.
+Change the pointer acceleration (or feedback) parameters of \fIdevice\fP.
+The xset(1) man page has more details. For X.Org Server 1.7
+and above, there are additional device properties pertaining to pointer
+acceleration. These do not replace, but complement the pointer feedback
+setting.
 .PP
 .TP 8
 .B --set-integer-feedback \fIdevice\fP \fIindex\fP \fIvalue\fP
@@ -98,12 +102,50 @@ and ProximityOut are registered.
 Register for a number of XI2 events and display them. This option does not
 take a device argument.
 .PP
+.TP 8
+.B --create-master \fIprefix\fP [sendCore] [enable]
+Create a new pair of master devices on an XI2-enabled server with the given
+\fIprefix\fP. The server will create one master pointer named "\fIprefix\fP
+pointer" and one master keyboard named "\fIprefix\fP keyboard".  If
+\fIsendCore\fP is 1, this pair of master devices is set to send core events
+(default).  If \fIenable\fP is 1, this master device pair will be enabled
+immediately (default).
+.PP
+.TP 8
+.B --remove-master \fImaster\fP [Floating|AttachToMaster] [returnPointer] [returnKeyboard]
+Remove \fImaster\fP  and its paired master device. Attached slave devices
+are set floating if \fIFloating\fP is specified or the argument is omitted.
+If the second argument is \fIAttachToMaster\fP, \fIreturnPointer\fP
+specifies the master pointer to attach all slave pointers to and
+\fIreturnKeyboard\fP specifies the master keyboard to attach all slave
+keyboards to.
+.PP
+.TP 8
+.B --reattach \fIslave\fP \fImaster\fP
+Reattach \fIslave\fP to \fImaster\fP.
+.PP
+.TP 8
+.B --float \fIslave\fP
+Remove \fIslave\fP from its current master device.
+.PP
+.TP 8
+.B --set-cp \fIwindow\fP \fImaster\fP
+Set the ClientPointer for the client owning \fIwindow\fP to \fImaster\fP.
+\fImaster\fP must specify a master pointer.
+.PP
 \fIdevice\fP can be the device name as a string or the XID of the
+device.
+.PP
+\fIslave\fP can be the device name as a string or the XID of a slave
+device.
+.PP
+\fImaster\fP can be the device name as a string or the XID of a master
 device.
 .PP
 \fIproperty\fP can be the property as a string or the Atom value.
 .PP
-
+.SH "SEE ALSO"
+X(__miscmansuffix__), xset(1)
 .SH COPYRIGHT
 Copyright 1996,1997, Frederic Lepied.
 .PP

@@ -258,6 +258,35 @@ test_sync_grab(Display *display, Window win)
     printf("Done\n");
 }
 
+static const char* type_to_name(int evtype)
+{
+    const char *name;
+
+    switch(evtype) {
+        case XI_DeviceChanged:    name = "DeviceChanged";       break;
+        case XI_KeyPress:         name = "KeyPress";            break;
+        case XI_KeyRelease:       name = "KeyRelease";          break;
+        case XI_ButtonPress:      name = "ButtonPress";         break;
+        case XI_ButtonRelease:    name = "ButtonRelease";       break;
+        case XI_Motion:           name = "Motion";              break;
+        case XI_Enter:            name = "Enter";               break;
+        case XI_Leave:            name = "Leave";               break;
+        case XI_FocusIn:          name = "FocusIn";             break;
+        case XI_FocusOut:         name = "FocusOut";            break;
+        case XI_HierarchyChanged: name = "HierarchyChanged";    break;
+        case XI_PropertyEvent:    name = "PropertyEvent";       break;
+        case XI_RawKeyPress:      name = "RawKeyPress";         break;
+        case XI_RawKeyRelease:    name = "RawKeyRelease";       break;
+        case XI_RawButtonPress:   name = "RawButtonPress";      break;
+        case XI_RawButtonRelease: name = "RawButtonRelease";    break;
+        case XI_RawMotion:        name = "RawMotion";           break;
+        default:
+                                  name = "unknown event type"; break;
+    }
+    return name;
+}
+
+
 int
 test_xi2(Display	*display,
          int	argc,
@@ -341,7 +370,7 @@ test_xi2(Display	*display,
             cookie->type == GenericEvent &&
             cookie->extension == xi_opcode)
         {
-            printf("EVENT type %d\n", cookie->evtype);
+            printf("EVENT type %d (%s)\n", cookie->evtype, type_to_name(cookie->evtype));
             switch (cookie->evtype)
             {
                 case XI_DeviceChanged:

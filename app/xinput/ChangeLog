@@ -1,3 +1,129 @@
+commit f1577913026eead06795c629798a41e9e7d939c1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 15 11:34:55 2010 +1000
+
+    xinput 1.5.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 88282e21598b25fca7868bf7d5fbaa76cc603bb4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 2 14:07:40 2010 +1000
+
+    test-xi2: print event type name as well.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+
+commit 4966627f5fc74b30a5cc9ca9292a0314aabf1734
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 4 15:05:36 2010 +1000
+
+    man: document XI2 options
+    
+    Document the options to modifiy the device hierarchy and change the
+    ClientPointer.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8cd99782831c6d6e8407c7e99471780d118d2648
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 11 09:23:32 2010 +1000
+
+    man: remove reference to XListInputDevices
+    
+    xinput --list uses XListInputDevices on XI1 servers and XIQueryDevice on XI2
+    servers. Also, who cares about that when reading the man page anyway...
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+
+commit 45aa64622fd2aea01de15bf192e39e1cbade9918
+Author: Simon Thum <simon.thum@gmx.de>
+Date:   Sun Oct 18 15:10:56 2009 +0200
+
+    Clarify role of set-ptr-feedback
+    
+    Signed-off-by: Simon Thum <simon.thum@gmx.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a80014b71a878c5377c3b853f242ead4a6f8a270
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Nov 29 11:04:57 2009 +0100
+
+    Add Peter and Red Hat's copyright notices and licenses to COPYING
+
+commit 4ebc9712dec4de0a466292fb4e2fa5167004a802
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit f6c61dfdf92cc783867f2b1dd27dc400a0625f16
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 1a0f0a03655769afc337a715fcc81fe8ad3c2693
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 76c7ff22a8180f7c9cac08ccbf76b9d3d55d5f0f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 3cc49225212abd82f7795c641baba3fa242fa9e8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit a813e9afba400280e5aea73f5b4a633a2a867df6
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:20 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 09b075863708e43b9c1202dd052f36d5f865f571
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Oct 13 15:25:19 2009 +1000
