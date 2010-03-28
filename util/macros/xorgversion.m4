@@ -67,12 +67,11 @@ AC_DEFUN([XORG_RELEASE_VERSION],[
 # Defines the variable CHANGELOG_CMD as the command to generate
 # ChangeLog from git.
 #
-# Arrange that distcleancheck ignores ChangeLog left over by distclean.
 #
 AC_DEFUN([XORG_CHANGELOG], [
-CHANGELOG_CMD="(GIT_DIR=\$(top_srcdir)/.git git log > .changelog.tmp && \
-mv .changelog.tmp ChangeLog) || (rm -f .changelog.tmp; touch ChangeLog; \
+CHANGELOG_CMD="(GIT_DIR=\$(top_srcdir)/.git git log > \$(top_srcdir)/.changelog.tmp && \
+mv \$(top_srcdir)/.changelog.tmp \$(top_srcdir)/ChangeLog) \
+|| (rm -f \$(top_srcdir)/.changelog.tmp; touch \$(top_srcdir)/ChangeLog; \
 echo 'git directory not found: installing possibly empty changelog.' >&2)"
 AC_SUBST([CHANGELOG_CMD])
-AC_SUBST([distcleancheck_listfiles], ['find . -type f ! -name ChangeLog -print'])
 ]) # XORG_CHANGELOG

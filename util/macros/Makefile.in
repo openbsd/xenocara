@@ -56,10 +56,11 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/xorg-macros.m4.in \
+DIST_COMMON = README $(am__configure_deps) $(dist_pkgdata_DATA) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/xorg-macros.m4.in $(srcdir)/xorg-macros.pc.in \
 	$(srcdir)/xorgversion.m4 $(top_srcdir)/configure COPYING \
-	ChangeLog install-sh missing
+	ChangeLog INSTALL install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/xorgversion.m4 \
 	$(top_srcdir)/configure.ac
@@ -68,7 +69,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(SHELL) $(install_sh) -d
-CONFIG_CLEAN_FILES = xorg-macros.m4
+CONFIG_CLEAN_FILES = xorg-macros.pc xorg-macros.m4
 SOURCES =
 DIST_SOURCES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -77,9 +78,12 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(aclocaldir)"
+am__installdirs = "$(DESTDIR)$(aclocaldir)" "$(DESTDIR)$(pkgdatadir)" \
+	"$(DESTDIR)$(pkgconfigdir)"
 aclocalDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(aclocal_DATA)
+dist_pkgdataDATA_INSTALL = $(INSTALL_DATA)
+pkgconfigDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(aclocal_DATA) $(dist_pkgdata_DATA) $(pkgconfig_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -90,6 +94,7 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
+distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
 AUTOCONF = @AUTOCONF@
@@ -109,6 +114,9 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
+MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
+MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -128,7 +136,6 @@ bindir = @bindir@
 build_alias = @build_alias@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -154,12 +161,16 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = xorg-macros.m4
+dist_pkgdata_DATA = INSTALL
+pkgconfigdir = $(datadir)/pkgconfig
+pkgconfig_DATA = xorg-macros.pc
+EXTRA_DIST = xorg-macros.pc.in
 all: all-am
 
 .SUFFIXES:
 am--refresh:
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -186,10 +197,12 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(srcdir) && $(AUTOCONF)
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+xorg-macros.pc: $(top_builddir)/config.status $(srcdir)/xorg-macros.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 xorg-macros.m4: $(top_builddir)/config.status $(srcdir)/xorg-macros.m4.in $(srcdir)/xorgversion.m4
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 uninstall-info-am:
@@ -209,6 +222,40 @@ uninstall-aclocalDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(aclocaldir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(aclocaldir)/$$f"; \
+	done
+install-dist_pkgdataDATA: $(dist_pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgdatadir)" || $(mkdir_p) "$(DESTDIR)$(pkgdatadir)"
+	@list='$(dist_pkgdata_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_pkgdataDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgdatadir)/$$f'"; \
+	  $(dist_pkgdataDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgdatadir)/$$f"; \
+	done
+
+uninstall-dist_pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_pkgdata_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(pkgdatadir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pkgdatadir)/$$f"; \
+	done
+install-pkgconfigDATA: $(pkgconfig_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgconfigdir)" || $(mkdir_p) "$(DESTDIR)$(pkgconfigdir)"
+	@list='$(pkgconfig_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(pkgconfigDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgconfigdir)/$$f'"; \
+	  $(pkgconfigDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgconfigdir)/$$f"; \
+	done
+
+uninstall-pkgconfigDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgconfig_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(pkgconfigdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pkgconfigdir)/$$f"; \
 	done
 tags: TAGS
 TAGS:
@@ -351,7 +398,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(aclocaldir)"; do \
+	for dir in "$(DESTDIR)$(aclocaldir)" "$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(pkgconfigdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -397,7 +444,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-aclocalDATA
+install-data-am: install-aclocalDATA install-dist_pkgdataDATA \
+	install-pkgconfigDATA
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 
@@ -427,19 +475,22 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-aclocalDATA uninstall-info-am
+uninstall-am: uninstall-aclocalDATA uninstall-dist_pkgdataDATA \
+	uninstall-info-am uninstall-pkgconfigDATA
 
 .PHONY: all all-am am--refresh check check-am clean clean-generic dist \
 	dist-all dist-bzip2 dist-gzip dist-hook dist-shar dist-tarZ \
 	dist-zip distcheck distclean distclean-generic distcleancheck \
 	distdir distuninstallcheck dvi dvi-am html html-am info \
 	info-am install install-aclocalDATA install-am install-data \
-	install-data-am install-data-hook install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-data-am install-data-hook install-dist_pkgdataDATA \
+	install-exec install-exec-am install-info install-info-am \
+	install-man install-pkgconfigDATA install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am uninstall uninstall-aclocalDATA uninstall-am \
-	uninstall-info-am
+	uninstall-dist_pkgdataDATA uninstall-info-am \
+	uninstall-pkgconfigDATA
 
 
 # Previous versions used to install xorgversion.m4, now integrated

@@ -21,12 +21,18 @@
 
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = xorg-macros.m4
+dist_pkgdata_DATA = INSTALL
 
 # Previous versions used to install xorgversion.m4, now integrated
 # into xorg-macros.m4.  Explicitly remove that old file in order not
 # to have a macro defined in two different files.
 install-data-hook:
 	rm -f $(DESTDIR)$(aclocaldir)/xorgversion.m4
+
+pkgconfigdir = $(datadir)/pkgconfig
+pkgconfig_DATA = xorg-macros.pc
+
+EXTRA_DIST = xorg-macros.pc.in
 
 .PHONY: ChangeLog
 

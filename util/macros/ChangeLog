@@ -1,3 +1,378 @@
+commit be6c44abf825a5814ca836165f62b66c30e7a966
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 11 11:11:42 2010 -0500
+
+    Version bump: 1.6.1
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b1660bfd095627778496bf403a741ff6ad44659a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 9 10:52:15 2010 -0500
+
+    doc: fix typo in AC_MSG_CHECKING for XORG_CHECK_LINUXDOC
+    
+    The message should start with a lowercase letter.
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2c833326fdd83039999b5563eb9f621ff57e3bf5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 9 10:13:22 2010 -0500
+
+    doc: Specify minimum xmlto version to XORG_WITH_DOXYGEN
+    
+    Adds an optional parameter to XORG_WITH_DOXYGEN to enforce a minimum
+    version needed like the asciidoc version check.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d7cedc8ce552581c9acbfbe373cbee16a689abef
+Author: Dan Nicholson <dbn.lists@gmail.com>
+Date:   Wed Mar 3 20:16:46 2010 -0800
+
+    doc: Specify minimum xmlto version to XORG_WITH_XMLTO
+    
+    Adds an optional parameter to XORG_WITH_XMLTO to enforce a minimum
+    version needed like the asciidoc version check.
+    
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit c87b5e9657e3fa1270f7283ab8b16aed1be7b5fd
+Author: Dan Nicholson <dbn.lists@gmail.com>
+Date:   Wed Mar 3 20:16:45 2010 -0800
+
+    doc: Specify minimum asciidoc version to XORG_WITH_ASCIIDOC
+    
+    Adds an optional parameter to XORG_WITH_ASCIIDOC to enforce a minimum
+    version needed.
+    
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit a01b2ce6b196555660a64c43623acab1f6fea76a
+Author: Dan Nicholson <dbn.lists@gmail.com>
+Date:   Sat Feb 27 11:28:08 2010 -0800
+
+    silent: Set AM_DEFAULT_VERBOSITY for compatibility on older automake
+    
+    Custom silent rules will become recursive on older automake where
+    AM_SILENT_RULES is not included. Set AM_DEFAULT_VERBOSITY in this
+    fallback case for compatibility.
+    
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit de24a6d42eafa1aaa089927e9b2c2c7ef8827550
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 23 11:03:42 2010 -0500
+
+    AM_SILENT_RULES: move from XORG_CWARNFLAGS to XORG_DEFAULT_OPTIONS
+    
+    This m4 statement does not belong in the macro for compiler
+    warning flags. It is more appropriate to group it with the macro
+    providing default options for X.Org modules.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0851a3455fddbbaef73fae088469a48f2f975783
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 29 14:02:26 2010 -0500
+
+    Version bump: 1.6.0
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a8f386498bb18c7f95f874a56e3526a1b0b3029c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 2 17:14:00 2010 -0500
+
+    doc: add XORG_ENABLE_DEVEL_DOCS and XORG_ENABLE_SPECS
+    
+    Identical to XORG_ENABLE_DOCS, this macros allows modules
+    to classify docs per type and selectively control their building.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1df1e7fd649b4ff3e00a908d4ade54bc6b32892f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jan 31 08:56:50 2010 -0500
+
+    XORG_WITH_GROFF: add tests for -ms and -mm macro packages
+    
+    OS and distros often splits groff in a basic and full package, the former
+    having the groff program and the later having devices, fonts and macros
+    Checking for the groff executable is not enough.
+    
+    Use HAVE_GROFF if you do not use -ms or -mm
+    Use HAVE_GROFF_MS and/or HAVE_GROFF_MM otherwise
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6fce3ec9157794d1a90ae28b2615c00ce84f95ed
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 29 10:47:40 2010 -0500
+
+    Add XORG_ENABLE_DOCS to control the building of documentation
+    
+    This macro is intended for modules to control, in a single option,
+    the building of the documentaion. Using --enable-docs=no, all
+    documentation is skipped, regardless of the tool used to build it.
+    
+    It should be used in conjunction with other XORG_WITH_* macros
+    which handle cases where some specific tool is not available.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit df1fe112b8fca77ce10ecfe2b9e4a082b29b732d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 29 10:25:00 2010 -0500
+
+    Additional doc macros for GROFF, FOP and PS2PDF
+    
+    Identical to XMLTO, DOXYGEN and ASCIIDOC.
+    Allow platform builders to selectively turn off tools that
+    are not present or back level. Matching documentation target
+    will be shipped.
+    
+    For example, --without-fop will skip the pdf format while
+    allowing other formats to proceed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4411328d3200392e9b8d830a45d9ac679abb4ead
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Feb 3 23:39:37 2010 -0800
+
+    Add -Wformat=2 to the default CWARNFLAGS
+    
+    This will include -Wformat-security to catch possible security problems in formatting in printf, scanf, etc.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit 46d22716aed8d7e8ee188c2f2d2b3ba600dc3dd3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jan 17 21:21:10 2010 -0500
+
+    Version bump: 1.5.0
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7e89b1cecfdb8115fa159584762f4d0db7455305
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jan 17 21:01:44 2010 -0500
+
+    Add XORG_WITH_ASCIIDOC and XORG_WITH_DOXYGEN
+    
+    Based on XORG_WITH_XMLTO
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 296c390247553b0070dd05260fe6f55f793a374c
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Jan 5 23:04:25 2010 +0100
+
+    Add XORG_WITH_XMLTO to factorize xmlto tests.
+    
+    This also allow to configure with --without-xmlto to ignore
+    a 3rd party xmlto tool on systems that normally don't have it,
+    in order to have reproducable builds.
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2e75ae9b22de0fa36adde6de7b7e5c1c1a825d69
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jan 16 15:00:38 2010 +0000
+
+    Bump to 1.4.2
+
+commit 1c8cfa5cd1881f810ed62ff082e67777985c7599
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 09:32:32 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 43e41a5537ba892613f2a9f79cdf209fd7c915b3
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jan 2 20:44:37 2010 +0000
+
+    INSTALL doesn't belong in docdir, use pkgdatadir instead
+    
+    docdir stays in xorg-macros.pc so we don't break the existing
+    $(INSTALL_CMD).
+    
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 29f4c09cc252d834278e6e1ad77ad56dc0545d29
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 14:25:17 2009 -0500
+
+    configure.ac: use single statement for file generation
+    
+    Reported-by: Peter Hutterer <peter.hutterer at who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c3c40da5392c2f1fe4b15c6e90dc8325b3c26561
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 14:01:05 2009 -0500
+
+    macros.m4.in: use backticks rather than $() for cmd subs
+    
+    Reviewed-by: Dan Nicholson <dbn.lists at gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 48e2b3d0ee8d637d83b88bf29c6d417f61aaa0e4
+Author: Colin Watson <cjwatson@canonical.com>
+Date:   Sat Oct 10 13:28:28 2009 +0100
+
+    Use conservative default for malloc(0) when cross-compiling #24460
+    
+    When cross-compiling, AC_RUN_IFELSE can't run test programs.
+    MALLOC_ZERO_RETURNS_NULL=yes is a conservative default in this case.
+    
+    Signed-off-by: Colin Watson <cjwatson@canonical.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2c83c9068167729652994cf3203ca27245745482
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 14 17:12:13 2009 -0500
+
+    util-macros 1.4.1
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 8e126170a4bf23ae73a08d254f6c6fb7e6b46748
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 14 17:05:48 2009 -0500
+
+    Don't mention libdir in the .pc file
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 862911eb71165c9409044986171b8ce2c1ec70b7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 14 17:05:10 2009 -0500
+
+    Install the .pc file in $(datadir)
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 03b04a6b5d61aafbd2705f7d29e58e0c92553a4a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 14 16:54:41 2009 -0500
+
+    macros 1.4.0
+
+commit 64e61146ecf6cde01a72d95f905f8d3790b78b58
+Author: Carl Worth <cworth@cworth.org>
+Date:   Mon Nov 30 20:00:31 2009 -0800
+
+    Install .pc file in $libdir where it belongs (not $datadir).
+    
+    The .pc file was previously being installed in ${prefix}/share/pkgconfig
+    but all other modules install their .pc files to ${prefix}/lib/pkgconfig
+
+commit 1e50b971bf7273f958e11cbcf3dc07a6fab04335
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 21 17:28:32 2009 -0500
+
+    xorg-macros.pc.in: create a meta data file for util-macros
+    
+    This is motivated primarly by XORG_INSTALL who needs to locate
+    the docdir when invoked from any module that may not be installed
+    using same prefix (default or otherwise).
+    
+    There are other potential use for this file.
+
+commit ceecddadf923ceae76c12057103ec7a409718a34
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:20:42 2009 -0400
+
+    Add an XORG_INSTALL macro to allow comps to copy the INSTALL file #24206
+    
+    The Makefile installs INSTALL in share/doc/util-macros
+        An INSTALL_CMD is provided in the new XORG_INSTALL macro
+        which is added to XORG_DEFAULT_OPTIONS.
+    
+        Components add INSTALL target to their Makefile similar to ChangeLog
+
+commit e6ceec1bc497ce9d311fd17e9a171e83148362ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 12 11:07:14 2009 -0400
+
+    Add an XORG_INSTALL macro to allow comps to copy the INSTALL file #24206
+    
+    The Makefile installs INSTALL in share/doc/util-macros
+    An INSTALL_CMD is provided in the new XORG_INSTALL macro
+    which is added to XORG_DEFAULT_OPTIONS.
+    
+    Components add INSTALL target to their Makefile similar to ChangeLog
+
+commit 22d7360510553775650e6a4e134f165937db4abe
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 10 15:38:19 2009 -0400
+
+    INSTALL file missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    For all X.Org components.
+
+commit bf44a8df3831ac465fd79937b059e54c4dc34486
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 10 15:33:58 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+    For all X.Org components.
+
+commit 98c7586b04dea14d89df6e7ad1c733e6539cd095
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 7 07:58:33 2009 -0500
+
+    Lower version from 2.63 to 2.60 Tinderbox failed
+
+commit b47a30d3c91fbd5b230a11b1a5ddbfb943bcd7b2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 12 10:57:13 2009 -0400
+
+    configuration: update, fix warnings, apply global maintenance #24450
+    
+    Update configure.ac using autotools utilities and wiki guidelines
+    
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    For all X.Org components.
+
+commit f8695cf7b892028bf7c502e85f26f0a756edd316
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 12 10:37:36 2009 -0400
+
+    ChangeLog: generated file not cleaned from the dist directory #24278
+    
+        CHANGELOG_CMD was written in the wrong directory.
+        Update cmd to generate in $(top_srcdir)
+    
+        Tested in regular build with git: dist, distcheck and distclean
+        Tested in VPATH build with git:  dist, distcheck and distclean
+        Tested above scenario from tarballs with git not available
+
 commit d6584a4a52a6fb0eaf979555097bb32621c13cb1
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Sep 9 13:31:38 2009 -0700
