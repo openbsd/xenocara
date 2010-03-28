@@ -1,5 +1,3 @@
-/* $XdotOrg: xc/programs/xdm/auth.c,v 1.2 2004/04/23 19:54:42 eich Exp $ */
-/* $Xorg: auth.c,v 1.5 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/auth.c,v 3.32 2003/12/22 17:48:12 tsi Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -63,7 +60,7 @@ from The Open Group.
 #endif
 
 #if defined(hpux)
-#include <sys/utsname.h>
+# include <sys/utsname.h>
 #endif
 
 #if defined(SYSV) && defined(i386)
@@ -84,45 +81,38 @@ from The Open Group.
 # include <sync/sema.h>
 #endif
 #ifdef __GNU__
-#include <netdb.h>
-#undef SIOCGIFCONF
+# include <netdb.h>
+# undef SIOCGIFCONF
 #else /* __GNU__ */
-#include <net/if.h>
+# include <net/if.h>
 #endif /* __GNU__ */
 
 #if defined(TCPCONN) && !defined(WIN32)
 # include <netinet/in.h>
 #endif
 
-/* Solaris provides an extended interface SIOCGLIFCONF.  Other systems
- * may have this as well, but the code has only been tested on Solaris
- * so far, so we only enable it there.  Other platforms may be added as
- * needed.
- *
- * Test for Solaris commented out  --  TSI @ UQV 2003.06.13
+/* Solaris provides an extended interface SIOCGLIFCONF for IPv6 support.
  */
 #ifdef SIOCGLIFCONF
-/* #if defined(sun) */
-#define USE_SIOCGLIFCONF
-/* #endif */
+# define USE_SIOCGLIFCONF
 #endif
 
 #if ((defined(SVR4) && !defined(sun)) || defined(ISC)) && \
     defined(SIOCGIFCONF) && !defined(USE_SIOCGLIFCONF)
-#define SYSV_SIOCGIFCONF
+# define SYSV_SIOCGIFCONF
 #endif
 
 #ifdef CSRG_BASED
-#include <sys/param.h>
-#if (BSD >= 199103)
-#define VARIABLE_IFREQ
-#endif
+# include <sys/param.h>
+# if (BSD >= 199103)
+#  define VARIABLE_IFREQ
+# endif
 #endif
 
 #ifdef __UNIXOS2__
-#define link rename
+# define link rename
 int chown(int a,int b,int c) {}
-#include <io.h>
+# include <io.h>
 #endif
 
 struct AuthProtocol {
@@ -291,9 +281,9 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 {
     int len;
 #if defined(SYSV) && !defined(SVR4)
-#define NAMELEN	14
+# define NAMELEN	14
 #else
-#define NAMELEN	255
+# define NAMELEN	255
 #endif
     char    cleanname[NAMELEN];
     int r;
@@ -305,22 +295,19 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
     *file = NULL;
 
     if (!d->authFile) {
-	if (d->clientAuthFile && *d->clientAuthFile)
-	    len = strlen (d->clientAuthFile) + 1;
-	else
-	{
+	if (d->clientAuthFile && *d->clientAuthFile) {
+	    d->authFile = strdup(d->clientAuthFile);
+	    if (!d->authFile)
+		return FALSE;
+	} else {
 	    CleanUpFileName (d->name, cleanname, NAMELEN - 8);
 	    len = strlen (authDir) + strlen (authdir1) + strlen (authdir2)
 		+ strlen (cleanname) + 14;
-	}
-	d->authFile = malloc (len);
-	if (!d->authFile)
-	    return FALSE;
-	if (d->clientAuthFile && *d->clientAuthFile)
-	    strcpy (d->authFile, d->clientAuthFile);
-	else
-	{
-	    sprintf (d->authFile, "%s/%s", authDir, authdir1);
+	    d->authFile = malloc (len);
+	    if (!d->authFile)
+		return FALSE;
+
+	    snprintf (d->authFile, len, "%s/%s", authDir, authdir1);
 	    r = stat(d->authFile, &statb);
 	    if (r == 0) {
 		if (statb.st_uid != uid)
@@ -328,8 +315,16 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 		if ((statb.st_mode & 0077) != 0)
 		    (void) chmod(d->authFile, statb.st_mode & 0700);
 	    } else {
-		if (errno == ENOENT)
+		if (errno == ENOENT) {
 		    r = mkdir(d->authFile, 0700);
+		    if (r < 0) {
+			LogError ("cannot make authentication directory %s: "
+				  "%s\n", d->authFile, _SysErrorMsg (errno));
+			}
+		} else {
+		    LogError ("cannot access authentication directory %s: "
+			      "%s\n", d->authFile, _SysErrorMsg (errno));
+		}
 		if (r < 0) {
 		    free (d->authFile);
 		    d->authFile = NULL;
@@ -338,20 +333,25 @@ MakeServerAuthFile (struct display *d, FILE ** file, uid_t uid, gid_t gid)
 		    (void) chown(d->authFile, uid, gid);
 		}
 	    }
-	    sprintf (d->authFile, "%s/%s/%s", authDir, authdir1, authdir2);
+	    snprintf (d->authFile, len, "%s/%s/%s",
+		      authDir, authdir1, authdir2);
 	    r = mkdir(d->authFile, 0700);
 	    if (r < 0  &&  errno != EEXIST) {
+		LogError ("cannot make authentication directory %s: %s\n",
+			  d->authFile, _SysErrorMsg (errno));
 		free (d->authFile);
 		d->authFile = NULL;
 		return FALSE;
 	    } else {
 		(void) chown(d->authFile, uid, gid);
 	    }
-	    sprintf (d->authFile, "%s/%s/%s/A%s-XXXXXX",
-		     authDir, authdir1, authdir2, cleanname);
+	    snprintf (d->authFile, len, "%s/%s/%s/A%s-XXXXXX",
+		      authDir, authdir1, authdir2, cleanname);
 #ifdef HAS_MKSTEMP
 	    fd = mkstemp (d->authFile);
 	    if (fd < 0) {
+		LogError ("cannot make authentication file %s: %s\n",
+			  d->authFile, _SysErrorMsg (errno));
 		free (d->authFile);
 		d->authFile = NULL;
 		return FALSE;
@@ -729,15 +729,15 @@ DefineLocal (FILE *file, Xauth *auth)
 	 */
 	char	tmp_displayname[100];
 	struct utsname name;
- 
+
 	tmp_displayname[0] = 0;
 	uname(&name);
 	snprintf(tmp_displayname, sizeof(tmp_displayname), "%s", name.nodename);
 	writeAddr (FamilyLocal, strlen (tmp_displayname), tmp_displayname,
        		   file, auth);
- 
+
 	/*
-	 * If _XGetHostname() returned the same value as uname(), don't 
+	 * If _XGetHostname() returned the same value as uname(), don't
 	 * write a duplicate entry.
 	 */
 	if (strcmp (displayname, tmp_displayname))
@@ -747,7 +747,7 @@ DefineLocal (FILE *file, Xauth *auth)
 }
 
 #ifdef HAS_GETIFADDRS
-#include <ifaddrs.h>
+# include <ifaddrs.h>
 
 static void
 DefineSelf(int fd, FILE *file, Xauth *auth)
@@ -755,14 +755,14 @@ DefineSelf(int fd, FILE *file, Xauth *auth)
     struct ifaddrs *ifap, *ifr;
     char *addr;
     int family, len;
-    
+
     Debug("DefineSelf\n");
-    if (getifaddrs(&ifap) < 0) 
+    if (getifaddrs(&ifap) < 0)
 	return;
     for (ifr = ifap; ifr != NULL; ifr = ifr->ifa_next) {
 	len = sizeof(*(ifr->ifa_addr));
 	family = ConvertAddr((XdmcpNetaddr)(ifr->ifa_addr), &len, &addr);
-	if (family == -1 || family == FamilyLocal) 
+	if (family == -1 || family == FamilyLocal)
 	    continue;
 	/*
 	 * don't write out 'localhost' entries, as
@@ -771,34 +771,32 @@ DefineSelf(int fd, FILE *file, Xauth *auth)
 	 * the local entry anyway, so this one can
 	 * be tossed.
 	 */
-	if (family == FamilyInternet && len == 4 &&
-	    addr[0] == 127 && addr[1] == 0 &&
-	    addr[2] == 0 && addr[3] == 1)
+	if (family == FamilyInternet && len == 4 && addr[0] == 127)
 	{
 	    Debug ("Skipping localhost address\n");
 	    continue;
 	}
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	if(family == FamilyInternet6) {
 	    if (IN6_IS_ADDR_LOOPBACK(((struct in6_addr *)addr))) {
 		Debug ("Skipping IPv6 localhost address\n");
 		continue;
 	    }
 	    /* Also skip XDM-AUTHORIZATION-1 */
-	    if (auth->name_length == 19 && 
+	    if (auth->name_length == 19 &&
 		strcmp(auth->name, "XDM-AUTHORIZATION-1") == 0) {
 		Debug ("Skipping IPv6 XDM-AUTHORIZATION-1\n");
 		continue;
 	    }
 	}
-#endif
+# endif
 	writeAddr(family, len, addr, file, auth);
-    } 
+    }
     Debug("DefineSelf done\n");
 }
 #else  /* GETIFADDRS */
 
-#ifdef SYSV_SIOCGIFCONF
+# ifdef SYSV_SIOCGIFCONF
 
 /* Deal with different SIOCGIFCONF ioctl semantics on SYSV, SVR4 */
 
@@ -815,7 +813,7 @@ ifioctl (int fd, int cmd, char *arg)
     {
 	ioc.ic_len = ((struct ifconf *) arg)->ifc_len;
 	ioc.ic_dp = ((struct ifconf *) arg)->ifc_buf;
-#ifdef ISC
+#  ifdef ISC
 	/* SIOCGIFCONF is somewhat brain damaged on ISC. The argument
 	 * buffer must contain the ifconf structure as header. Ifc_req
 	 * is also not a pointer but a one element array of ifreq
@@ -825,7 +823,7 @@ ifioctl (int fd, int cmd, char *arg)
 	 */
         ((struct ifconf *) ioc.ic_dp)->ifc_len =
                                          ioc.ic_len - sizeof(struct ifconf);
-#endif
+#  endif
     }
     else
     {
@@ -834,28 +832,28 @@ ifioctl (int fd, int cmd, char *arg)
     }
     ret = ioctl(fd, I_STR, (char *) &ioc);
     if (ret >= 0 && cmd == SIOCGIFCONF)
-#ifdef SVR4
+#  ifdef SVR4
 	((struct ifconf *) arg)->ifc_len = ioc.ic_len;
-#endif
-#ifdef ISC
+#  endif
+#  ifdef ISC
     {
 	((struct ifconf *) arg)->ifc_len =
 				 ((struct ifconf *)ioc.ic_dp)->ifc_len;
-	((struct ifconf *) arg)->ifc_buf = 
+	((struct ifconf *) arg)->ifc_buf =
 			(caddr_t)((struct ifconf *)ioc.ic_dp)->ifc_req;
     }
-#endif
+#  endif
     return(ret);
 }
-#else /* SYSV_SIOCGIFCONF */
-#define ifioctl ioctl
-#endif /* SYSV_SIOCGIFCONF */
+# else /* SYSV_SIOCGIFCONF */
+#  define ifioctl ioctl
+# endif /* SYSV_SIOCGIFCONF */
 
-#if defined(STREAMSCONN) && !defined(SYSV_SIOCGIFCONF) && !defined(NCR)
+# if defined(STREAMSCONN) && !defined(SYSV_SIOCGIFCONF) && !defined(NCR)
 
-#include <tiuser.h>
+#  include <tiuser.h>
 
-/* Define this host for access control.  Find all the hosts the OS knows about 
+/* Define this host for access control.  Find all the hosts the OS knows about
  * for this fd and add them to the selfhosts list.
  * TLI version, written without sufficient documentation.
  */
@@ -864,7 +862,7 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
 {
     struct netbuf	netb;
     char		addrret[1024]; /* easier than t_alloc */
-    
+
     netb.maxlen = sizeof(addrret);
     netb.buf = addrret;
     if (t_getname (fd, &netb, LOCALNAME) == -1)
@@ -873,20 +871,20 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
     writeAddr (FamilyInternet, 4, netb.buf+4, file, auth);
 }
 
-#else
+# else
 
-#ifdef WINTCP /* NCR with Wollongong TCP */
+#  ifdef WINTCP /* NCR with Wollongong TCP */
 
-#include <sys/un.h>
-#include <stropts.h>
-#include <tiuser.h>
+#   include <sys/un.h>
+#   include <stropts.h>
+#   include <tiuser.h>
 
-#include <sys/stream.h>
-#include <net/if.h>
-#include <netinet/ip.h>
-#include <netinet/ip_var.h>
-#include <netinet/in.h>
-#include <netinet/in_var.h>
+#   include <sys/stream.h>
+#   include <net/if.h>
+#   include <netinet/ip.h>
+#   include <netinet/ip_var.h>
+#   include <netinet/in.h>
+#   include <netinet/in_var.h>
 
 static void
 DefineSelf (int fd, FILE *file, Xauth *auth)
@@ -905,7 +903,8 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
     int	len, ipfd;
 
     if ((ipfd = open ("/dev/ip", O_RDWR, 0 )) < 0)
-        LogError ("Getting interface configuration");
+        LogError ("cannot get interface configuration; cannot open /dev/ip: "
+		  "%s\n", _SysErrorMsg (errno));
 
     /* Indicate that we want to start at the begining */
     ifnet.ib_next = (struct ipb *) 1;
@@ -919,8 +918,9 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
 
 	if (ioctl (ipfd, (int) I_STR, (char *) &str) < 0)
 	{
+	    LogError ("cannot get interface configuration; ioctl failed: %s\n",
+		      _SysErrorMsg (errno));
 	    close (ipfd);
-	    LogError ("Getting interface configuration");
 	}
 
 	ifaddr.ia_next = (struct in_ifaddr *) ifnet.if_addrlist;
@@ -931,8 +931,9 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
 
 	if (ioctl (ipfd, (int) I_STR, (char *) &str) < 0)
 	{
+	    LogError ("cannot get interface configuration; ioctl failed: %s\n",
+		      _SysErrorMsg (errno));
 	    close (ipfd);
-	    LogError ("Getting interface configuration");
 	}
 
 	/*
@@ -942,31 +943,31 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
 		continue;
 
 	writeAddr (FamilyInternet, 4, (char *)&(IA_SIN(&ifaddr)->sin_addr), file, auth);
- 
+
     }
     close(ipfd);
 }
 
-#else /* WINTCP */
+#  else /* WINTCP */
 
-#if defined(SIOCGIFCONF) || defined (USE_SIOCGLIFCONF)
+#   if defined(SIOCGIFCONF) || defined (USE_SIOCGLIFCONF)
 
-#ifdef USE_SIOCGLIFCONF
-#define ifr_type    struct lifreq
-#else
-#define ifr_type    struct ifreq
-#endif
+#    ifdef USE_SIOCGLIFCONF
+#     define ifr_type    struct lifreq
+#    else
+#     define ifr_type    struct ifreq
+#    endif
 
 /* Handle variable length ifreq in BNR2 and later */
-#ifdef VARIABLE_IFREQ
-#define ifr_size(p) (sizeof (struct ifreq) + \
+#    ifdef VARIABLE_IFREQ
+#     define ifr_size(p) (sizeof (struct ifreq) + \
 		     (p->ifr_addr.sa_len > sizeof (p->ifr_addr) ? \
 		      p->ifr_addr.sa_len - sizeof (p->ifr_addr) : 0))
-#else
-#define ifr_size(p) (sizeof (ifr_type))
-#endif
+#    else
+#     define ifr_size(p) (sizeof (ifr_type))
+#    endif
 
-/* Define this host for access control.  Find all the hosts the OS knows about 
+/* Define this host for access control.  Find all the hosts the OS knows about
  * for this fd and add them to the selfhosts list.
  */
 static void
@@ -977,19 +978,19 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
     char 		*addr;
     int 		family;
     register ifr_type  *ifr;
-#ifdef USE_SIOCGLIFCONF
+#    ifdef USE_SIOCGLIFCONF
     int			n;
     void *		bufptr = buf;
     size_t		buflen = sizeof(buf);
     struct lifconf	ifc;
-#ifdef SIOCGLIFNUM
+#     ifdef SIOCGLIFNUM
     struct lifnum	ifn;
-#endif
-#else
+#     endif
+#    else
     struct ifconf	ifc;
-#endif
-    
-#if defined(SIOCGLIFNUM) && defined(SIOCGLIFCONF)
+#    endif
+
+#    if defined(SIOCGLIFNUM) && defined(SIOCGLIFCONF)
     ifn.lifn_family = AF_UNSPEC;
     ifn.lifn_flags = 0;
     if (ioctl (fd, (int) SIOCGLIFNUM, (char *) &ifn) < 0)
@@ -998,43 +999,43 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
 	buflen = ifn.lifn_count * sizeof(struct lifreq);
 	bufptr = malloc(buflen);
     }
-#endif
+#    endif
 
-#ifdef USE_SIOCGLIFCONF
+#    ifdef USE_SIOCGLIFCONF
     ifc.lifc_family = AF_UNSPEC;
     ifc.lifc_flags = 0;
     ifc.lifc_len = buflen;
     ifc.lifc_buf = bufptr;
 
-#define IFC_IOCTL_REQ SIOCGLIFCONF
-#define IFC_IFC_REQ ifc.lifc_req
-#define IFC_IFC_LEN ifc.lifc_len
-#define IFR_IFR_ADDR ifr->lifr_addr
-#define IFR_IFR_NAME ifr->lifr_name
+#     define IFC_IOCTL_REQ SIOCGLIFCONF
+#     define IFC_IFC_REQ ifc.lifc_req
+#     define IFC_IFC_LEN ifc.lifc_len
+#     define IFR_IFR_ADDR ifr->lifr_addr
+#     define IFR_IFR_NAME ifr->lifr_name
 
-#else    
+#    else
     ifc.ifc_len = sizeof (buf);
     ifc.ifc_buf = buf;
 
-#define IFC_IOCTL_REQ SIOCGIFCONF
-#ifdef ISC
-#define IFC_IFC_REQ (struct ifreq *) ifc.ifc_buf
-#else
-#define IFC_IFC_REQ ifc.ifc_req
-#endif
-#define IFC_IFC_LEN ifc.ifc_len
-#define IFR_IFR_ADDR ifr->ifr_addr
-#define IFR_IFR_NAME ifr->ifr_name
-#endif
+#     define IFC_IOCTL_REQ SIOCGIFCONF
+#     ifdef ISC
+#      define IFC_IFC_REQ (struct ifreq *) ifc.ifc_buf
+#     else
+#      define IFC_IFC_REQ ifc.ifc_req
+#     endif
+#     define IFC_IFC_LEN ifc.ifc_len
+#     define IFR_IFR_ADDR ifr->ifr_addr
+#     define IFR_IFR_NAME ifr->ifr_name
+#    endif
 
     if (ifioctl (fd, IFC_IOCTL_REQ, (char *) &ifc) < 0) {
         LogError ("Trouble getting network interface configuration");
 
-#ifdef USE_SIOCGLIFCONF
+#    ifdef USE_SIOCGLIFCONF
 	if (bufptr != buf) {
 	    free(bufptr);
 	}
-#endif
+#    endif
 	return;
     }
 
@@ -1043,7 +1044,7 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
     for (cp = (char *) IFC_IFC_REQ; cp < cplim; cp += ifr_size (ifr))
     {
 	ifr = (ifr_type *) cp;
-#ifdef DNETCONN
+#    ifdef DNETCONN
 	/*
 	 * this is ugly but SIOCGIFCONF returns decnet addresses in
 	 * a different form from other decnet calls
@@ -1053,7 +1054,7 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
 		addr = (char *)ifr->ifr_addr.sa_data;
 		family = FamilyDECnet;
 	} else
-#endif
+#    endif
 	{
 	    family = ConvertAddr ((XdmcpNetaddr) &IFR_IFR_ADDR, &len, &addr);
 	    if (family < 0)
@@ -1078,29 +1079,29 @@ DefineSelf (int fd, FILE *file, Xauth *auth)
 		    Debug ("Skipping localhost address\n");
 		    continue;
 	    }
-#if defined(IPv6) && defined(AF_INET6)
+#    if defined(IPv6) && defined(AF_INET6)
 	    if(family == FamilyInternet6) {
 		if (IN6_IS_ADDR_LOOPBACK(((struct in6_addr *)addr))) {
 		    Debug ("Skipping IPv6 localhost address\n");
 		    continue;
 		}
 		/* Also skip XDM-AUTHORIZATION-1 */
-		if (auth->name_length == 19 && 
+		if (auth->name_length == 19 &&
 		    strcmp(auth->name, "XDM-AUTHORIZATION-1") == 0) {
 		    Debug ("Skipping IPv6 XDM-AUTHORIZATION-1\n");
 		    continue;
 		}
 	    }
-#endif
+#    endif
 	}
 	Debug ("DefineSelf: write network address, length %d\n", len);
 	writeAddr (family, len, addr, file, auth);
     }
 }
 
-#else /* SIOCGIFCONF */
+#   else /* SIOCGIFCONF */
 
-/* Define this host for access control.  Find all the hosts the OS knows about 
+/* Define this host for access control.  Find all the hosts the OS knows about
  * for this fd and add them to the selfhosts list.
  */
 static void
@@ -1118,7 +1119,7 @@ DefineSelf (int fd, int file, int auth)
 	struct  sockaddr   sa;
 	struct  sockaddr_in  in;
     } saddr;
-	
+
     struct	sockaddr_in	*inetaddr;
 
     /* hpux:
@@ -1141,10 +1142,10 @@ DefineSelf (int fd, int file, int auth)
     }
 }
 
-		 
-#endif /* SIOCGIFCONF else */
-#endif /* WINTCP else */
-#endif /* STREAMSCONN && !SYSV_SIOCGIFCONF else */
+
+#   endif /* SIOCGIFCONF else */
+#  endif /* WINTCP else */
+# endif /* STREAMSCONN && !SYSV_SIOCGIFCONF else */
 #endif /* HAS_GETIFADDRS */
 
 static void
@@ -1190,10 +1191,10 @@ writeLocalAuth (FILE *file, Xauth *auth, char *name)
     t_close (fd);
 #endif
 #ifdef TCPCONN
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
     fd = socket (AF_INET6, SOCK_STREAM, 0);
     if (fd < 0)
-#endif
+# endif
     fd = socket (AF_INET, SOCK_STREAM, 0);
     DefineSelf (fd, file, auth);
     close (fd);
@@ -1213,7 +1214,7 @@ writeRemoteAuth (FILE *file, Xauth *auth, XdmcpNetaddr peer, int peerlen, char *
 {
     int	    family = FamilyLocal;
     char    *addr;
-    
+
     Debug ("writeRemoteAuth: %s %.*s\n", name, auth->name_length, auth->name);
     if (!peer || peerlen < 2)
 	return;
@@ -1278,7 +1279,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 		    }
 		    if (new != NULL)
 			(void) fclose (new);
-		}	
+		}
 	    }
 	}
 	if (lockStatus != LOCK_SUCCESS) {
@@ -1390,16 +1391,22 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 	doneAddrs ();
 	fclose (new);
 	if (unlink (name) == -1)
-	    Debug ("unlink %s failed\n", name);
+	    if (errno != ENOENT)
+		LogError ("cannot remove old authorization file %s: %s\n",
+			  name, _SysErrorMsg (errno));
 	envname = name;
 	if (link (new_name, name) == -1) {
-	    Debug ("link failed %s %s\n", new_name, name);
-	    LogError ("Can't move authorization into place\n");
+	    LogError ("cannot link temporary authorization file %s to old "
+		      "location %s: %s\n", new_name, name,
+		      _SysErrorMsg (errno));
 	    setenv = 1;
 	    envname = new_name;
 	} else {
-	    Debug ("new is in place, go for it!\n");
-	    unlink (new_name);
+	    Debug ("authorization file %s successfully updated\n", name);
+	    if (unlink (new_name))
+		if (errno != ENOENT)
+		    LogError ("cannot remove new authorization file %s:"
+			      " %s\n", new_name, _SysErrorMsg (errno));
 	}
 	if (setenv) {
 	    verify->userEnviron = setEnv (verify->userEnviron,
@@ -1469,13 +1476,19 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
 	doneAddrs ();
 	fclose (new);
 	if (unlink (name) == -1)
-	    Debug ("unlink %s failed\n", name);
+	    if (errno != ENOENT)
+		LogError ("cannot remove new authorization file %s: %s\n",
+			  name, _SysErrorMsg (errno));
 	if (link (new_name, name) == -1) {
-	    Debug ("link failed %s %s\n", new_name, name);
-	    LogError ("Can't move authorization into place\n");
+	    LogError ("cannot link temporary authorization file %s to old "
+		      "location %s: %s\n", new_name, name,
+		      _SysErrorMsg (errno));
 	} else {
-	    Debug ("new is in place, go for it!\n");
-	    unlink (new_name);
+	    Debug ("authorization file %s successfully updated\n", name);
+	    if (unlink (new_name))
+		if (errno != ENOENT)
+		    LogError ("cannot remove new authorization file %s:"
+			      " %s\n", new_name, _SysErrorMsg (errno));
 	}
     }
     XauUnlockAuth (name);

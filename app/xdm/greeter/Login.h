@@ -1,5 +1,3 @@
-/* $XdotOrg: $ */
-/* $Xorg: Login.h,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -54,7 +52,6 @@ from The Open Group.
  * or other dealings in this Software without prior written authorization
  * of the copyright holder.
  */
-/* $XFree86: xc/programs/xdm/greeter/Login.h,v 3.7 2002/10/06 20:42:16 herrb Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -63,7 +60,7 @@ from The Open Group.
 
 
 #ifndef _XtLogin_h
-#define _XtLogin_h
+# define _XtLogin_h
 
 /***********************************************************************
  *
@@ -122,21 +119,21 @@ from The Open Group.
 # define XtNinnerFramesWidth	"innerFramesWidth"
 # define XtNsepWidth		"sepWidth"
 
-#ifdef DANCING
+# ifdef DANCING
 /* caolan begin */
-#define XtNlastEventTime "lastEventTime"
-#define XtCLastEventTime "LastEventTime"
+#  define XtNlastEventTime	"lastEventTime"
+#  define XtCLastEventTime	"LastEventTime"
 /* caolan end */
-#endif /* DANCING */
+# endif /* DANCING */
 
-#ifdef XPM
-#define XtNuseShape "useShape"
-#define XtCUseShape "UseShape"
-#define XtNlogoFileName "logoFileName"
-#define XtCLogoFileName "LogoFileName"
-#define XtNlogoPadding "logoPadding"
-#define XtCLogoPadding "LogoPadding"
-#endif /* XPM */
+# ifdef XPM
+#  define XtNuseShape		"useShape"
+#  define XtCUseShape		"UseShape"
+#  define XtNlogoFileName	"logoFileName"
+#  define XtCLogoFileName	"LogoFileName"
+#  define XtNlogoPadding	"logoPadding"
+#  define XtCLogoPadding	"LogoPadding"
+# endif /* XPM */
 
 # define XtCGreeting		"Greeting"
 # define XtCNamePrompt		"NamePrompt"
@@ -154,43 +151,43 @@ from The Open Group.
 
 /* notifyDone interface definition */
 
-#ifdef __OpenBSD__
-# include <sys/param.h>
-#endif
+# ifdef __OpenBSD__
+#  include <sys/param.h>
+# endif
 
-#include <pwd.h>
-#include <limits.h>
+# include <pwd.h>
+# include <limits.h>
 
-#ifdef USE_PAM
-# define NAME_LEN	PAM_MAX_RESP_SIZE
-# define PASSWORD_LEN	PAM_MAX_RESP_SIZE
-#endif
+# ifdef USE_PAM
+#  define NAME_LEN	PAM_MAX_RESP_SIZE
+#  define PASSWORD_LEN	PAM_MAX_RESP_SIZE
+# endif
 
 /* Defined to be in <limits.h> by SUSv2 */
-#if !defined(PASSWORD_LEN) && defined(PASS_MAX)
-# define PASSWORD_LEN PASS_MAX
-#endif
+# if !defined(PASSWORD_LEN) && defined(PASS_MAX)
+#  define PASSWORD_LEN PASS_MAX
+# endif
 
 /* _PW_NAME_LEN is found in <pwd.h> on OpenBSD > 2.8 (200012) */
-#if !defined(NAME_LEN) && defined(_PW_NAME_LEN)
-# define NAME_LEN	(_PW_NAME_LEN + 2)
-#endif
+# if !defined(NAME_LEN) && defined(_PW_NAME_LEN)
+#  define NAME_LEN	(_PW_NAME_LEN + 2)
+# endif
 
 /* _PASSWORD_LEN appears to come from 4.4BSD-Lite <pwd.h> */
-#if !defined(PASSWORD_LEN) && defined(_PASSWORD_LEN)
-# define PASSWORD_LEN	(_PASSWORD_LEN + 2)
-#endif
+# if !defined(PASSWORD_LEN) && defined(_PASSWORD_LEN)
+#  define PASSWORD_LEN	(_PASSWORD_LEN + 2)
+# endif
 
 /* Fallbacks if no other definition found */
-#ifndef NAME_LEN
-# define NAME_LEN	32
-#endif
+# ifndef NAME_LEN
+#  define NAME_LEN	32
+# endif
 
-#ifndef PASSWORD_LEN
-# define PASSWORD_LEN	32
-#endif
+# ifndef PASSWORD_LEN
+#  define PASSWORD_LEN	32
+# endif
 
-typedef struct _LoginData { 
+typedef struct _LoginData {
 	char	name[NAME_LEN], passwd[PASSWORD_LEN];
 } LoginData;
 
@@ -216,8 +213,8 @@ typedef enum {
 } loginPromptState;
 
 /* Default prompt meanings for simple username/password auth systems */
-#define LOGIN_PROMPT_USERNAME 0
-#define LOGIN_PROMPT_PASSWORD 1
+# define LOGIN_PROMPT_USERNAME 0
+# define LOGIN_PROMPT_PASSWORD 1
 
 extern int SetPrompt(Widget ctx, int promptId, const char *message,
 		     loginPromptState state, Boolean minimumTime);

@@ -1,4 +1,3 @@
-/* $Xorg: reset.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/reset.c,v 1.3 2001/01/17 23:45:21 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -37,11 +35,11 @@ from The Open Group.
  * a client remains connected with no windows.
  */
 
-# include	"dm.h"
-# include	"dm_error.h"
+#include	"dm.h"
+#include	"dm_error.h"
 
-# include	<X11/Xlib.h>
-# include	<signal.h>
+#include	<X11/Xlib.h>
+#include	<signal.h>
 
 /*ARGSUSED*/
 static int
@@ -63,7 +61,7 @@ killWindows (Display *dpy, Window window)
 	Window	root, parent, *children;
 	int	child;
 	unsigned int nchildren = 0;
-	
+
 	while (XQueryTree (dpy, window, &root, &parent, &children, &nchildren)
 	       && nchildren > 0)
 	{
@@ -87,7 +85,7 @@ abortReset (int n)
 /*
  * this display connection better not have any windows...
  */
- 
+
 void
 pseudoReset (Display *dpy)
 {

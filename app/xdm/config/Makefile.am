@@ -1,4 +1,3 @@
-# $XdotOrg: $
 #
 
 include $(top_srcdir)/cpprules.in
@@ -51,11 +50,13 @@ MKTEMP_DEFINES = -DMKTEMP_COMMAND=$(MKTEMP_COMMAND)
 #endif
 
 CPP_FILES_FLAGS = -DBINDIR="$(bindir)" -DDEFAULTVT="$(DEFAULTVT)" \
+    -DUTMP_FILE="$(UTMP_FILE)" -DWTMP_FILE="$(WTMP_FILE)" \
     -DXDMDIR="$(XDMLIBDIR)" -DXDMLOGDIR="$(XDMLOGDIR)" \
+    -DXDMXAUTHDIR="$(XDMXAUTHDIR)" \
     -DXDMPIDDIR="$(XDMPIDDIR)" -DXDMCONFIGDIR="$(XDMCONFIGDIR)" \
     -DXDMSCRIPTDIR="$(XDMSCRIPTDIR)" -DSU="$(SU)" \
     -DCHOOSERPATH="$(XDMLIBDIR)/chooser" $(XPMDEFINES) \
     -DSHELL_CMD="$(SHELL_CMD)" $(MKTEMP_DEFINES)
 
 Xservers.ws: $(srcdir)/Xservers.ws.cpp
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/Xservers.ws.cpp | $(CPP_SED_MAGIC) > $@
+	$(cpp_verbose)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/Xservers.ws.cpp | $(CPP_SED_MAGIC) > $@

@@ -1,5 +1,3 @@
-/* $XdotOrg: $ */
-/* $Xorg: LoginP.h,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -54,7 +52,6 @@ from The Open Group.
  * or other dealings in this Software without prior written authorization
  * of the copyright holder.
  */
-/* $XFree86: xc/programs/xdm/greeter/LoginP.h,v 3.8 2001/12/14 20:01:29 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -62,20 +59,20 @@ from The Open Group.
  */
 
 #ifndef _LoginP_h
-#define _LoginP_h
+# define _LoginP_h
 
-#include "Login.h"
-#include <X11/IntrinsicP.h>
-#include <X11/CoreP.h>
-#include <X11/Xlib.h>
-#ifdef USE_XFT
-# include <X11/Xft/Xft.h>
-#endif
+# include "Login.h"
+# include <X11/IntrinsicP.h>
+# include <X11/CoreP.h>
+# include <X11/Xlib.h>
+# ifdef USE_XFT
+#  include <X11/Xft/Xft.h>
+# endif
 
-#define INITIALIZING	0
-#define PROMPTING	1
-#define SHOW_MESSAGE	2
-#define DONE		3
+# define INITIALIZING	0
+# define PROMPTING	1
+# define SHOW_MESSAGE	2
+# define DONE		3
 
 typedef void (*LoginFunc)(LoginWidget, LoginData *, int);
 
@@ -86,31 +83,31 @@ typedef struct {
    	size_t		valueTextMax;	/* Size of valueText buffer */
     	int		valueShownStart;/* Amount of string shown if too */
     	int		valueShownEnd;	/*  long to fit in field */
-	int		cursor;		/* current cursor position */	
+	int		cursor;		/* current cursor position */
 	loginPromptState state;
 } loginPromptData;
 
-#define NUM_PROMPTS	2	/* Currently only 2 prompt fields supported */
-#define LAST_PROMPT	(NUM_PROMPTS - 1)
+# define NUM_PROMPTS	2	/* Currently only 2 prompt fields supported */
+# define LAST_PROMPT	(NUM_PROMPTS - 1)
 
 /* New fields for the login widget instance record */
 typedef struct {
-#ifndef USE_XFT    
+# ifndef USE_XFT
 	Pixel		textpixel;	/* foreground pixel */
 	Pixel		promptpixel;	/* prompt pixel */
 	Pixel		greetpixel;	/* greeting pixel */
 	Pixel		failpixel;	/* failure pixel */
-#endif
+# endif
 	Pixel		hipixel;	/* frame hilite pixel */
 	Pixel		shdpixel;	/* shadow frame pixel */
 	GC		textGC;		/* pointer to GraphicsContext */
 	GC		bgGC;		/* pointer to GraphicsContext */
 	GC		xorGC;		/* pointer to GraphicsContext */
-#ifndef USE_XFT
+# ifndef USE_XFT
 	GC		promptGC;
 	GC		greetGC;
 	GC		failGC;
-#endif
+# endif
 	GC		hiGC;		/* for hilight part of frame */
 	GC		shdGC;		/* for shaded part of frame */
 	char		*greeting;	/* greeting */
@@ -120,12 +117,12 @@ typedef struct {
     	char		*failMsg;	/* failure message */
 	char		*fail;		/* current error message */
     	char		*passwdChangeMsg; /* message when passwd expires */
-#ifndef USE_XFT    
+# ifndef USE_XFT
 	XFontStruct	*textFont;	/* font for text */
 	XFontStruct	*promptFont;	/* font for prompts */
 	XFontStruct	*greetFont;	/* font for greeting */
 	XFontStruct	*failFont;	/* font for failure message */
-#endif /* USE_XFT */
+# endif /* USE_XFT */
 	int		state;		/* state */
     	int		activePrompt;	/* which prompt is active */
 	int		failUp;		/* failure message displayed */
@@ -142,35 +139,35 @@ typedef struct {
 	loginPromptData	prompts[NUM_PROMPTS];
     	time_t 		msgTimeout;
 
-#ifdef DANCING
+# ifdef DANCING
 	/*caolan begin*/
 	int 		lastEventTime;
 	/*caolan end*/
-#endif /* DANCING */
-    
+# endif /* DANCING */
+
 	int		outframewidth;	/* outer frame thickness */
 	int		inframeswidth;	/* inner frames thickness */
 	int		sepwidth;	/* width of separator line */
 
-#ifdef XPM    
+# ifdef XPM
         char *logoFileName;
         unsigned int logoWidth, logoHeight, logoPadding, logoBorderWidth;
         int logoX, logoY;
         Window logoWindow;
         Boolean useShape, logoValid;
         Pixmap logoPixmap, logoMask;
-#endif /* XPM */
-#ifdef USE_XFT
+# endif /* XPM */
+# ifdef USE_XFT
 	XftDraw	       *draw;
 	XftFont        *textFace;	/* font for text */
 	XftFont        *promptFace;	/* font for prompts */
 	XftFont        *greetFace;	/* font for greeting */
-	XftFont        *failFace;  	/* font for failure message */  
+	XftFont        *failFace;  	/* font for failure message */
 	XftColor	textcolor;	/* foreground color */
 	XftColor	promptcolor;	/* prompt color */
 	XftColor	greetcolor;	/* greeting color */
 	XftColor	failcolor;	/* failure color */
-#endif
+# endif
    } LoginPart;
 
 /* Full instance record declaration */

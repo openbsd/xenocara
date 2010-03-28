@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/xdm/prngc.c,v 1.3 2003/10/17 21:23:07 herrb Exp $ */
 /*
  * Copyright (c) 1995,1999 Theo de Raadt.  All rights reserved.
  * Copyright (c) 2001-2002 Damien Miller.  All rights reserved.
@@ -28,11 +27,7 @@
 #include <sys/socket.h>
 #include <X11/Xos.h>
 #ifndef X_NO_SYS_UN
-#ifndef Lynx
-#include	<sys/un.h>
-#else
-#include	<un.h>
-#endif
+# include	<sys/un.h>
 #endif
 #include <netinet/in.h>
 #include <errno.h>
@@ -45,25 +40,25 @@
 #include "dm_error.h"
 
 #ifndef INADDR_LOOPBACK
-#define INADDR_LOOPBACK 0x7F000001U
+# define INADDR_LOOPBACK 0x7F000001U
 #endif
 
-static ssize_t atomicio(ssize_t (*)(), int, void *, size_t);
+static ssize_t atomicio(ssize_t (*)(int, void *, size_t), int, void *, size_t);
 
 #ifndef offsetof
-#  define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+# define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 #endif
 
 /*
  * Collect 'len' bytes of entropy into 'buf' from PRNGD/EGD daemon
  * listening either on 'tcp_port', or via Unix domain socket at *
  * 'socket_path'.
- * Either a non-zero tcp_port or a non-null socket_path must be 
+ * Either a non-zero tcp_port or a non-null socket_path must be
  * supplied.
  * Returns 0 on success, -1 on error
  */
 int
-get_prngd_bytes(char *buf, int len, 
+get_prngd_bytes(char *buf, int len,
     unsigned short tcp_port, char *socket_path)
 {
 	int fd, addr_len, rval, errors;
@@ -169,7 +164,7 @@ done:
  * ensure all of data on socket comes through. f==read || f==write
  */
 static ssize_t
-atomicio(ssize_t (*f)(), int fd, void *_s, size_t n)
+atomicio(ssize_t (*f)(int, void *, size_t), int fd, void *_s, size_t n)
 {
 	char *s = _s;
 	ssize_t res, pos = 0;
@@ -179,7 +174,7 @@ atomicio(ssize_t (*f)(), int fd, void *_s, size_t n)
 		switch (res) {
 		case -1:
 #ifdef EWOULDBLOCK
-			if (errno == EINTR || errno == EAGAIN 
+			if (errno == EINTR || errno == EAGAIN
 			    || errno == EWOULDBLOCK)
 #else
 			if (errno == EINTR || errno == EAGAIN)

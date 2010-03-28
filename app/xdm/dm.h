@@ -1,5 +1,3 @@
-/* $XdotOrg: app/xdm/dm.h,v 1.5 2005/11/08 06:33:31 jkj Exp $ */
-/* $Xorg: dm.h,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/dm.h,v 3.33 2003/11/19 03:57:10 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -39,103 +36,104 @@ from The Open Group.
  */
 
 #ifndef _DM_H_
-#define _DM_H_ 1
+# define _DM_H_ 1
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+# ifdef HAVE_CONFIG_H
+#  include "config.h"
+# endif
 
-#include <X11/Xos.h>
-#include <X11/Xfuncs.h>
-#include <X11/Xmd.h>
-#include <X11/Xauth.h>
-#include <X11/Intrinsic.h>
+# include <X11/Xos.h>
+# include <X11/Xfuncs.h>
+# include <X11/Xfuncproto.h>
+# include <X11/Xmd.h>
+# include <X11/Xauth.h>
+# include <X11/Intrinsic.h>
 
-#if defined(X_POSIX_C_SOURCE)
-#define _POSIX_C_SOURCE X_POSIX_C_SOURCE
-#include <setjmp.h>
-#include <limits.h>
-#undef _POSIX_C_SOURCE
-#else
-#include <setjmp.h>
-#include <limits.h>
-#endif
-#include <time.h>
-#define Time_t time_t
+# if defined(X_POSIX_C_SOURCE)
+#  define _POSIX_C_SOURCE X_POSIX_C_SOURCE
+#  include <setjmp.h>
+#  include <limits.h>
+#  undef _POSIX_C_SOURCE
+# else
+#  include <setjmp.h>
+#  include <limits.h>
+# endif
+# include <time.h>
+# define Time_t time_t
 
 /* If XDMCP symbol defined, compile to run XDMCP protocol */
 
-#define XDMCP
+# define XDMCP
 
-#ifdef XDMCP
-#include <X11/Xdmcp.h>
-#endif
+# ifdef XDMCP
+#  include <X11/Xdmcp.h>
+# endif
 
-#ifdef pegasus
-#undef dirty		/* Some bozo put a macro called dirty in sys/param.h */
-#endif /* pegasus */
+# ifdef pegasus
+#  undef dirty		/* Some bozo put a macro called dirty in sys/param.h */
+# endif /* pegasus */
 
-#ifndef X_NOT_POSIX
-#ifdef _POSIX_SOURCE
-#include <sys/wait.h>
-#else
-#define _POSIX_SOURCE
-#ifdef __SCO__
-#include <sys/procset.h>
-#include <sys/siginfo.h>
-#endif
-#include <sys/wait.h>
-#undef _POSIX_SOURCE
-#endif
-# define waitCode(w)	(WIFEXITED(w) ? WEXITSTATUS(w) : 0)
-# define waitSig(w)	(WIFSIGNALED(w) ? WTERMSIG(w) : 0)
-# define waitCore(w)    0	/* not in POSIX.  so what? */
+# ifndef X_NOT_POSIX
+#  ifdef _POSIX_SOURCE
+#   include <sys/wait.h>
+#  else
+#   define _POSIX_SOURCE
+#   ifdef __SCO__
+#    include <sys/procset.h>
+#    include <sys/siginfo.h>
+#   endif
+#   include <sys/wait.h>
+#   undef _POSIX_SOURCE
+#  endif
+#  define waitCode(w)	(WIFEXITED(w) ? WEXITSTATUS(w) : 0)
+#  define waitSig(w)	(WIFSIGNALED(w) ? WTERMSIG(w) : 0)
+#  define waitCore(w)    0	/* not in POSIX.  so what? */
 typedef int		waitType;
-#else /* X_NOT_POSIX */
-#ifdef SYSV
-# define waitCode(w)	(((w) >> 8) & 0x7f)
-# define waitSig(w)	((w) & 0xff)
-# define waitCore(w)	(((w) >> 15) & 0x01)
+# else /* X_NOT_POSIX */
+#  ifdef SYSV
+#   define waitCode(w)	(((w) >> 8) & 0x7f)
+#   define waitSig(w)	((w) & 0xff)
+#   define waitCore(w)	(((w) >> 15) & 0x01)
 typedef int		waitType;
-#else /* SYSV */
-# include <sys/wait.h>
-# define waitCode(w)	((w).w_T.w_Retcode)
-# define waitSig(w)	((w).w_T.w_Termsig)
-# define waitCore(w)	((w).w_T.w_Coredump)
+#  else /* SYSV */
+#   include <sys/wait.h>
+#   define waitCode(w)	((w).w_T.w_Retcode)
+#   define waitSig(w)	((w).w_T.w_Termsig)
+#   define waitCore(w)	((w).w_T.w_Coredump)
 typedef union wait	waitType;
-#endif
-#endif /* X_NOT_POSIX */
+#  endif
+# endif /* X_NOT_POSIX */
 
-#ifdef USE_PAM
-#include <security/pam_appl.h>
-#endif
+# ifdef USE_PAM
+#  include <security/pam_appl.h>
+# endif
 
-#ifdef CSRG_BASED
-#include <sys/param.h>
-#ifdef HAS_SETUSERCONTEXT
-#include <login_cap.h>
-#include <pwd.h>
-#ifdef USE_BSDAUTH
-#include <bsd_auth.h>
-#endif
-#endif
-#endif
+# ifdef CSRG_BASED
+#  include <sys/param.h>
+#  ifdef HAS_SETUSERCONTEXT
+#   include <login_cap.h>
+#   include <pwd.h>
+#   ifdef USE_BSDAUTH
+#    include <bsd_auth.h>
+#   endif
+#  endif
+# endif
 
 # define waitCompose(sig,core,code) ((sig) * 256 + (core) * 128 + (code))
 # define waitVal(w)	waitCompose(waitSig(w), waitCore(w), waitCode(w))
 
 typedef enum displayStatus { running, notRunning, zombie, phoenix } DisplayStatus;
 
-#ifndef FD_ZERO
+# ifndef FD_ZERO
 typedef	struct	my_fd_set { int fds_bits[1]; } my_fd_set;
-# define FD_ZERO(fdp)	bzero ((fdp), sizeof (*(fdp)))
-# define FD_SET(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] |=  (1 << ((f) % (sizeof (int) * 8))))
-# define FD_CLR(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] &= ~(1 << ((f) % (sizeof (int) * 8))))
-# define FD_ISSET(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] & (1 << ((f) % (sizeof (int) * 8))))
-# define FD_TYPE	my_fd_set
-#else
-# define FD_TYPE	fd_set
-#endif
+#  define FD_ZERO(fdp)	bzero ((fdp), sizeof (*(fdp)))
+#  define FD_SET(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] |=  (1 << ((f) % (sizeof (int) * 8))))
+#  define FD_CLR(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] &= ~(1 << ((f) % (sizeof (int) * 8))))
+#  define FD_ISSET(f,fdp)	((fdp)->fds_bits[(f) / (sizeof (int) * 8)] & (1 << ((f) % (sizeof (int) * 8))))
+#  define FD_TYPE	my_fd_set
+# else
+#  define FD_TYPE	fd_set
+# endif
 
 /*
  * local     - server runs on local host
@@ -180,7 +178,7 @@ struct display {
 	FileState	state;		/* state during HUP processing */
 	int		startTries;	/* current start try */
         Time_t          lastCrash;      /* time of last crash */
-#ifdef XDMCP
+# ifdef XDMCP
 	/* XDMCP state */
 	CARD32		sessionID;	/* ID of active session */
 	XdmcpNetaddr    peer;		/* display peer address */
@@ -192,7 +190,7 @@ struct display {
 	ARRAY8		clientAddr;	/* for chooser picking */
 	CARD16		connectionType;	/* ... */
 	int		xdmcpFd;
-#endif
+# endif
 	/* server management resources */
 	int		serverAttempts;	/* number of attempts at running X */
 	int		openDelay;	/* open delay time */
@@ -246,10 +244,10 @@ struct display {
 	char		*windowPath;	/* path to server "window" */
 };
 
-#ifdef XDMCP
+# ifdef XDMCP
 
-#define PROTO_TIMEOUT	(30 * 60)   /* 30 minutes should be long enough */
-#define XDM_BROKEN_INTERVAL (120)   /* server crashing more than once within */
+#  define PROTO_TIMEOUT	(30 * 60)   /* 30 minutes should be long enough */
+#  define XDM_BROKEN_INTERVAL (120)   /* server crashing more than once within */
                                     /* two minutes is assumed to be broken!  */
 struct protoDisplay {
 	struct protoDisplay	*next;
@@ -266,7 +264,7 @@ struct protoDisplay {
 	ARRAY8			authenticationData;
 	XdmAuthKeyRec		key;
 };
-#endif /* XDMCP */
+# endif /* XDMCP */
 
 struct greet_info {
 	char		*name;		/* user name */
@@ -300,10 +298,10 @@ struct verify_info {
 # define RESERVER_DISPLAY	3	/* force server termination */
 # define OPENFAILED_DISPLAY	4	/* XOpenDisplay failed, retry */
 
-#ifndef TRUE
-#define TRUE	1
-#define FALSE	0
-#endif
+# ifndef TRUE
+#  define TRUE	1
+#  define FALSE	0
+# endif
 
 extern char	*config;
 
@@ -320,11 +318,11 @@ extern int	removeDomainname;
 extern char	*keyFile;
 extern char	*accessFile;
 extern char	**exportList;
-#if !defined(ARC4_RANDOM)
+# if !defined(ARC4_RANDOM)
 extern char	*randomFile;
 extern char	*prngdSocket;
 extern int	prngdPort;
-#endif
+# endif
 
 extern char	*greeterLib;
 extern char	*willing;
@@ -380,9 +378,9 @@ extern void BecomeOrphan (void);
 extern void CloseOnFork (void);
 extern void RegisterCloseOnFork (int fd);
 extern void StartDisplay (struct display *d);
-#ifndef HAS_SETPROCTITLE
+# ifndef HAS_SETPROCTITLE
 extern void SetTitle (char *name, ...);
-#endif
+# endif
 
 /* in dpylist.c */
 extern int AnyDisplaysLeft (void);
@@ -400,9 +398,9 @@ extern int NetaddrFamily (XdmcpNetaddr netaddrp);
 extern int addressEqual (XdmcpNetaddr a1, int len1, XdmcpNetaddr a2, int len2);
 
 /* in policy.c */
-#if 0
+# if 0
 extern ARRAY8Ptr Accept (/* struct sockaddr *from, int fromlen, CARD16 displayNumber */);
-#endif
+# endif
 extern ARRAY8Ptr ChooseAuthentication (ARRAYofARRAY8Ptr authenticationNames);
 extern int CheckAuthentication (struct protoDisplay *pdpy, ARRAY8Ptr displayID, ARRAY8Ptr name, ARRAY8Ptr data);
 extern int SelectAuthorizationTypeIndex (ARRAY8Ptr authenticationName, ARRAYofARRAY8Ptr authorizationNames);
@@ -423,10 +421,10 @@ extern void LoadSessionResources (struct display *d);
 extern void ReinitResources (void);
 
 /* in session.c */
-#ifdef USE_PAM
+# ifdef USE_PAM
 extern pam_handle_t **thepamhp(void);
 extern pam_handle_t *thepamh(void);
-#endif
+# endif
 extern char **defaultEnv (void);
 extern char **systemEnv (struct display *d, char *user, char *home);
 extern int PingServer(struct display *d, Display *alternateDpy);
@@ -456,6 +454,11 @@ extern void CloseListenSockets (void);
 extern void ProcessListenSockets (fd_set *readmask);
 
 /* in util.c */
+# ifndef HAVE_ASPRINTF
+#  define asprintf Asprintf
+extern int Asprintf(char ** ret, const char *restrict format, ...)
+    _X_ATTRIBUTE_PRINTF(2,3);
+# endif
 extern char *localHostname (void);
 extern char **parseArgs (char **argv, char *string);
 extern char **setEnv (char **e, char *name, char *value);
@@ -488,23 +491,23 @@ extern void ProcessRequestSocket(int fd);
 # define CLOSE_ALWAYS	    0
 # define LEAVE_FOR_DISPLAY  1
 
-#include <stdlib.h>
+# include <stdlib.h>
 
-#define SIGVAL RETSIGTYPE
+# define SIGVAL RETSIGTYPE
 
-#if defined(X_NOT_POSIX) || defined(__UNIXOS2__) || defined(__NetBSD__) && defined(__sparc__)
-#if defined(SYSV) || defined(__UNIXOS2__)
-#define SIGNALS_RESET_WHEN_CAUGHT
-#define UNRELIABLE_SIGNALS
-#endif
-#define Setjmp(e)	setjmp(e)
-#define Longjmp(e,v)	longjmp(e,v)
-#define Jmp_buf		jmp_buf
-#else
-#define Setjmp(e)   sigsetjmp(e,1)
-#define Longjmp(e,v)	siglongjmp(e,v)
-#define Jmp_buf		sigjmp_buf
-#endif
+# if defined(X_NOT_POSIX) || defined(__UNIXOS2__) || defined(__NetBSD__) && defined(__sparc__)
+#  if defined(SYSV) || defined(__UNIXOS2__)
+#   define SIGNALS_RESET_WHEN_CAUGHT
+#   define UNRELIABLE_SIGNALS
+#  endif
+#  define Setjmp(e)	setjmp(e)
+#  define Longjmp(e,v)	longjmp(e,v)
+#  define Jmp_buf		jmp_buf
+# else
+#  define Setjmp(e)   sigsetjmp(e,1)
+#  define Longjmp(e,v)	siglongjmp(e,v)
+#  define Jmp_buf		sigjmp_buf
+# endif
 
 typedef SIGVAL (*SIGFUNC)(int);
 

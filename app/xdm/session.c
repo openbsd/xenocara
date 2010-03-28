@@ -1,5 +1,3 @@
-/* $XdotOrg: app/xdm/session.c,v 1.7 2006-06-03 00:05:24 alanc Exp $ */
-/* $Xorg: session.c,v 1.8 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/session.c,v 3.36 2003/09/29 21:00:08 herrb Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -54,20 +51,20 @@ from The Open Group.
 #endif
 
 #ifndef USE_PAM        /* PAM modules should handle these */
-#ifdef SECURE_RPC
-# include <rpc/rpc.h>
-# include <rpc/key_prot.h>
-# if !HAVE_DECL_KEY_SETNET
+# ifdef SECURE_RPC
+#  include <rpc/rpc.h>
+#  include <rpc/key_prot.h>
+#  if !HAVE_DECL_KEY_SETNET
 extern int key_setnet(struct key_netstarg *arg);
+#  endif
 # endif
-#endif
-#ifdef K5AUTH
-# include <krb5/krb5.h>
-#endif
+# ifdef K5AUTH
+#  include <krb5/krb5.h>
+# endif
 #endif /* USE_PAM */
 
 #ifdef __SCO__
-#include <prot.h>
+# include <prot.h>
 #endif
 
 #ifndef GREET_USER_STATIC
@@ -609,27 +606,29 @@ StartClient (
 #endif
 
 #ifndef AIXV3
-#ifndef HAS_SETUSERCONTEXT
-	if (setgid(verify->gid) < 0) {
-	    LogError ("setgid %d (user \"%s\") failed, errno=%d\n",
-		     verify->gid, name, errno);
+# ifndef HAS_SETUSERCONTEXT
+	if (setgid (verify->gid) < 0) {
+	    LogError ("setgid %d (user \"%s\") failed: %s\n",
+		      verify->gid, name, _SysErrorMsg (errno));
 	    return (0);
 	}
-#if defined(BSD) && (BSD >= 199103)
-	if (setlogin(name) < 0) {
-	    LogError ("setlogin for \"%s\" failed, errno=%d", name, errno);
-	    return(0);
-	}
-#endif
-#ifndef QNX4
-	if (initgroups(name, verify->gid) < 0) {
-	    LogError ("initgroups for \"%s\" failed, errno=%d\n", name, errno);
+#  if defined(BSD) && (BSD >= 199103)
+	if (setlogin (name) < 0) {
+	    LogError ("setlogin for \"%s\" failed: %s\n",
+		      name, _SysErrorMsg (errno));
 	    return (0);
 	}
-#endif   /* QNX4 doesn't support multi-groups, no initgroups() */
-#endif /* !HAS_SETUSERCONTEXT */
+#  endif
+#  ifndef QNX4
+	if (initgroups (name, verify->gid) < 0) {
+	    LogError ("initgroups for \"%s\" failed: %s\n",
+		      name, _SysErrorMsg (errno));
+	    return (0);
+	}
+#  endif   /* QNX4 doesn't support multi-groups, no initgroups() */
+# endif /* !HAS_SETUSERCONTEXT */
 
-#ifdef USE_PAM
+# ifdef USE_PAM
 	if (pamh) {
 	    long i;
 	    char **pam_env;
@@ -648,15 +647,15 @@ StartClient (
 	    }
 
 	}
-#endif
+# endif
 
-#ifndef HAS_SETUSERCONTEXT
+# ifndef HAS_SETUSERCONTEXT
 	if (setuid(verify->uid) < 0) {
-	    LogError ("setuid %d (user \"%s\") failed, errno=%d\n",
-		     verify->uid, name, errno);
+	    LogError ("setuid %d (user \"%s\") failed: %s\n",
+		      verify->uid, name, _SysErrorMsg (errno));
 	    return (0);
 	}
-#else /* HAS_SETUSERCONTEXT */
+# else /* HAS_SETUSERCONTEXT */
 	/*
 	 * Set the user's credentials: uid, gid, groups,
 	 * environment variables, resource limits, and umask.
@@ -664,23 +663,25 @@ StartClient (
 	pwd = getpwnam(name);
 	if (pwd) {
 	    if (setusercontext(NULL, pwd, pwd->pw_uid, LOGIN_SETALL) < 0) {
-		LogError ("setusercontext for \"%s\" failed, errno=%d\n", name,
-		    errno);
+		LogError ("setusercontext for \"%s\" failed: %s\n",
+			  name, _SysErrorMsg (errno));
 		return (0);
 	    }
 	    endpwent();
 	} else {
-	    LogError ("getpwnam for \"%s\" failed, errno=%d\n", name, errno);
+	    LogError ("getpwnam for \"%s\" failed: %s\n",
+		      name, _SysErrorMsg (errno));
 	    return (0);
 	}
-#endif /* HAS_SETUSERCONTEXT */
+# endif /* HAS_SETUSERCONTEXT */
 #else /* AIXV3 */
 	/*
 	 * Set the user's credentials: uid, gid, groups,
 	 * audit classes, user limits, and umask.
 	 */
 	if (setpcred(name, NULL) == -1) {
-	    LogError ("setpcred for \"%s\" failed, errno=%d\n", name, errno);
+	    LogError ("setpcred for \"%s\" failed: %s\n",
+		      name, _SysErrorMsg (errno));
 	    return (0);
 	}
 #endif /* AIXV3 */
@@ -690,7 +691,7 @@ StartClient (
 	 * for user-based authorization schemes,
 	 * use the password to get the user's credentials.
 	 */
-#ifdef SECURE_RPC
+# ifdef SECURE_RPC
 	/* do like "keylogin" program */
 	{
 	    char    netname[MAXNETNAMELEN+1], secretkey[HEXKEYBYTES+1];
@@ -713,7 +714,7 @@ StartClient (
             if (key_setnet(&netst) < 0) {
 		Debug ("Could not set secret key.\n");
             }
-	    free(netst.st_netname);	
+	    free(netst.st_netname);
 	    /* is there a key, and do we have the right password? */
 	    if (keyret == 1) {
 		if (*secretkey) {
@@ -744,8 +745,8 @@ StartClient (
 	    }
 	    bzero(secretkey, strlen(secretkey));
 	}
-#endif
-#ifdef K5AUTH
+# endif
+# ifdef K5AUTH
 	/* do like "kinit" program */
 	{
 	    int i, j;
@@ -771,7 +772,7 @@ StartClient (
 		}
 	    }
 	}
-#endif /* K5AUTH */
+# endif /* K5AUTH */
 #endif /* !USE_PAM */
 
 	if (d->windowPath)
@@ -804,8 +805,8 @@ StartClient (
 	if (passwd != NULL)
 	    bzero(passwd, strlen(passwd));
 	Debug ("StartSession, fork failed\n");
-	LogError ("can't start session on \"%s\", fork failed, errno=%d\n",
-		  d->name, errno);
+	LogError ("can't start session on \"%s\", fork failed: %s\n",
+		  d->name, _SysErrorMsg (errno));
 	return 0;
     default:
 	if (passwd != NULL)
@@ -869,18 +870,22 @@ runAndWait (char **args, char **environ)
 void
 execute (char **argv, char **environ)
 {
+    int err;
     /* give /dev/null as stdin */
     (void) close (0);
     open ("/dev/null", O_RDONLY);
     /* make stdout follow stderr to the log file */
     dup2 (2,1);
+    Debug ("attempting to execve() %s\n", argv[0]);
     execve (argv[0], argv, environ);
+    err = errno;
+    Debug ("execve() of %s failed: %s\n", argv[0], _SysErrorMsg (errno));
     /*
      * In case this is a shell script which hasn't been
      * made executable (or this is a SYSV box), do
      * a reasonable thing
      */
-    if (errno != ENOENT) {
+    if (err != ENOENT) {
 	char	program[1024], *e, *p, *optarg;
 	FILE	*f;
 	char	**newargv, **av;
@@ -938,6 +943,7 @@ execute (char **argv, char **environ)
 	while ((*av++ = *argv++))
 	    /* SUPPRESS 530 */
 	    ;
+	Debug ("Attempting to execve() %s\n", newargv[0]);
 	execve (newargv[0], newargv, environ);
     }
 }
@@ -977,10 +983,3 @@ systemEnv (struct display *d, char *user, char *home)
 	    env = setEnv (env, "WINDOWPATH", d->windowPath);
     return env;
 }
-
-#if (defined(Lynx) && !defined(HAS_CRYPT))
-char *crypt(char *s1, char *s2)
-{
-	return(s2);
-}
-#endif

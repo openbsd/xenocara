@@ -20,15 +20,19 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-dnl $XdotOrg: app/xdm/configure.ac,v 1.42 2006/06/03 01:01:21 alanc Exp $
 
-AC_PREREQ([2.57])
-AC_INIT(xdm,[1.1.8],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
+AC_PREREQ([2.60])
+AC_INIT(xdm,[1.1.9],[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdm)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS, XORG_CWARNFLAGS, XORG_CHANGELOG
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+
 AM_CONFIG_HEADER(config.h)
 
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_C_INLINE
@@ -37,6 +41,15 @@ AM_PROG_LIBTOOL
 AC_PROG_INSTALL
 
 XORG_PROG_RAWCPP
+XORG_DEFAULT_OPTIONS
+XORG_WITH_LINT
+
+m4_ifdef([AM_SILENT_RULES],[HAVE_AM_SILENT_RULES=yes])
+AM_CONDITIONAL(HAVE_AM_SILENT_RULES, test x$HAVE_AM_SILENT_RULES != x)
+
+XDM_CFLAGS="$XDM_CFLAGS"
+GREETER_CFLAGS="$GREETER_CFLAGS"
+CHOOSER_CFLAGS="$CHOOSER_CFLAGS"
 
 # Check for mktemp to prevent security issue noted in Xorg bug #5898
 # See https://bugs.freedesktop.org/show_bug.cgi?id=5898 for details.
@@ -76,8 +89,8 @@ if test "x$HAS_SETUSERCONTEXT" = "xyes" ; then
 		[Define to 1 if you have the 'setusercontext' function.])
 fi
 
-AC_CHECK_FUNCS([daemon sigaction])
-AC_CHECK_HEADERS([grp.h])
+AC_CHECK_FUNCS([daemon sigaction openlog asprintf])
+AC_CHECK_HEADERS([grp.h syslog.h])
 AC_TYPE_SIGNAL
 
 XTRANS_CONNECTION_FLAGS
@@ -123,7 +136,7 @@ fi
 
 case $host_os in
     linux*|gnu*|*-gnu)
-        OS_CFLAGS="-D_XOPEN_SOURCE"
+        OS_CFLAGS=""
 	SU="su"
         ;;
     darwin*)
@@ -248,6 +261,46 @@ AC_ARG_WITH(config-type,
 	[SERVERSTYPE="$withval"], [SERVERSTYPE="ws"])
 AC_SUBST(SERVERSTYPE)
 
+# Ideally we'd just pull out UTMP_FILE & WTMP_FILE from <utmp.h>
+# but that's not easy to do in autoconf
+AC_ARG_WITH(utmp_file,
+	AC_HELP_STRING([--with-utmp-file=<pathname>],
+	 [specify file to pass to sessreg -u for current logins]),
+	[UTMP_FILE="$withval"])
+if test "x$UTMP_FILE" = "xyes" ; then
+	AC_MSG_ERROR([path was not specified to --with-utmp-file])
+fi
+if test "x$UTMP_FILE" = "x" ; then
+	for UTMP_FILE in /var/adm/utmpx /var/run/utmp /var/log/utmp /var/adm/utmp /usr/adm/utmp /etc/utmp ; do
+		AC_CHECK_FILE([$UTMP_FILE], [break], [UTMP_FILE=""])
+	done
+	if test "x$UTMP_FILE" = "x" ; then
+		UTMP_FILE="/var/run/utmp"
+	fi
+fi
+AC_MSG_CHECKING([for path to file listing current logins for sessreg])
+AC_MSG_RESULT([$UTMP_FILE])
+AC_SUBST(UTMP_FILE)
+
+AC_ARG_WITH(wtmp_file,
+	AC_HELP_STRING([--with-wtmp-file=<pathname>],
+	 [specify file to pass to sessreg -w for login history]),
+	[WTMP_FILE="$withval"])
+if test "x$WTMP_FILE" = "xyes" ; then
+	AC_MSG_ERROR([path was not specified to --with-wtmp-file])
+fi
+if test "x$WTMP_FILE" = "x" ; then
+	for WTMP_FILE in /var/adm/wtmpx /var/log/wtmp /var/adm/wtmp /usr/adm/wtmp /etc/wtmp ; do 
+		AC_CHECK_FILE([$WTMP_FILE], [break], [WTMP_FILE=""])
+	done
+	if test "x$WTMP_FILE" = "x" ; then
+		WTMP_FILE="/var/log/wtmp"
+	fi
+fi
+AC_MSG_CHECKING([for path to file listing login history for sessreg])
+AC_MSG_RESULT([$WTMP_FILE])
+AC_SUBST(WTMP_FILE)
+
 case $host_os in
     *sco*|*solaris*)
 		SHELL_CMD="/bin/ksh"	;;
@@ -325,7 +378,7 @@ AC_SUBST(XDM_PIXMAPDIR)
 
 # Packages used by multiple programs
 
-XAW_CHECK_XPRINT_SUPPORT(XDM_PRINT)
+PKG_CHECK_MODULES(XDM_PRINT, xaw7)
 PKG_CHECK_MODULES(DMCP, xdmcp)
 PKG_CHECK_MODULES(XLIB, x11)
 PKG_CHECK_MODULES(AUTH, xau)
@@ -412,7 +465,7 @@ AC_SUBST(XDM_LDFLAGS)
 #
 
 PKG_CHECK_MODULES(XT, xt)
-XDMSHELL_CFLAGS="$XDM_CFLAGS $XDM_PRINT_CFLAGS $AUTH_CFLAGS $DMCP_CFLAGS $XLIB_CFLAGS $XT_CFLAGS $OS_CFLAGS"
+XDMSHELL_CFLAGS="$XDM_CFLAGS $XDM_PRINT_CFLAGS $AUTH_CFLAGS $DMCP_CFLAGS $XLIB_CFLAGS $XT_CFLAGS"
 XDMSHELL_LIBS="$XDM_LIBS $XDM_PRINT_LIBS $DMCP_LIBS"
 
 AC_SUBST(XDMSHELL_CFLAGS)
@@ -422,7 +475,7 @@ AC_SUBST(XDMSHELL_LIBS)
 # Chooser
 #
 
-CHOOSER_CFLAGS="-D_BSD_SOURCE $CHOOSER_CFLAGS $XDM_PRINT_CFLAGS $XLIB_CFLAGS $DMCP_CFLAGS $AUTH_CFLAGS"
+CHOOSER_CFLAGS="$CHOOSER_CFLAGS $XDM_PRINT_CFLAGS $XLIB_CFLAGS $DMCP_CFLAGS $AUTH_CFLAGS"
 CHOOSER_LIBS="$CHOOSER_LIBS $XDM_PRINT_LIBS $DMCP_LIBS"
 
 AC_SUBST(CHOOSER_CFLAGS)
@@ -529,7 +582,13 @@ AC_DEFINE_DIR(DEF_CHOOSER, XDMLIBDIR/chooser,
 
 # -DDEF_AUTH_DIR="$(XDMDIR)"
 
-AC_DEFINE_DIR(DEF_AUTH_DIR, XDMCONFIGDIR, 
+AC_ARG_WITH(authdir,
+	AC_HELP_STRING([--with-authdir=<pathname>],
+	  [specify directory for X auth files (default=/var/lib/xdm)]),
+	[XDMXAUTHDIR="$withval"], [XDMXAUTHDIR="/var/lib/xdm"])
+AC_SUBST(XDMXAUTHDIR)
+
+AC_DEFINE_DIR(DEF_AUTH_DIR, XDMXAUTHDIR,
 	[Define to pathname where authentication cookie files should be stored])
 
 # -DDEF_GREETER_LIB="$(XDMDIR)/libXdmGreet.so"
@@ -546,9 +605,5 @@ AC_ARG_WITH(appdefaultdir,
 AC_SUBST(appdefaultdir)
 
 AC_SUBST(MKTEMP_COMMAND)
-
-XORG_WITH_LINT
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile config/Makefile greeter/Makefile])

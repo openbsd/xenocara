@@ -1,4 +1,3 @@
-/* $Xorg: streams.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/streams.c,v 3.7 2003/07/09 15:27:39 tsi Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -39,12 +37,12 @@ from The Open Group.
 #include "dm_error.h"
 
 #ifdef XDMCP
-#ifdef STREAMSCONN
+# ifdef STREAMSCONN
 
-#include <fcntl.h>
-#include <tiuser.h>
-#include <netconfig.h>
-#include <netdir.h>
+#  include <fcntl.h>
+#  include <tiuser.h>
+#  include <netconfig.h>
+#  include <netdir.h>
 
 extern int	xdmcpFd;
 extern int	chooserFd;
@@ -84,7 +82,7 @@ CreateWellKnownSockets (void)
     RegisterCloseOnFork (xdmcpFd);
 
     service.h_host = HOST_SELF;
-    sprintf(bindbuf, "%d", request_port);
+    snprintf(bindbuf, sizeof(bindbuf), "%d", request_port);
     service.h_serv = bindbuf;
     netdir_getbyname(nconf, &service, &servaddrs);
     freenetconfigent(nconf);
@@ -165,5 +163,5 @@ void ProcessListenSockets (fd_set *readmask)
     return;
 }
 
-#endif /* STREAMSCONN */
+# endif /* STREAMSCONN */
 #endif /* XDMCP */

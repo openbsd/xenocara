@@ -1,8 +1,6 @@
 XCOMM!SHELL_CMD
 XCOMM
-XCOMM $Xorg: Xsession,v 1.4 2000/08/17 19:54:17 cpqbld Exp $
-XCOMM $OpenBSD: Xsession.cpp,v 1.5 2007/08/05 19:54:19 matthieu Exp $
-XCOMM $XFree86: xc/programs/xdm/config/Xsession,v 1.2 1998/01/11 03:48:32 dawes Exp $
+XCOMM $OpenBSD: Xsession.cpp,v 1.6 2010/03/28 09:33:02 matthieu Exp $
 
 XCOMM redirect errors to a file in user's home directory if we can
 for errfile in "$HOME/.xsession-errors" "${TMPDIR-/tmp}/xses-$USER" "/tmp/xses-$USER"

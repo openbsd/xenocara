@@ -1,5 +1,3 @@
-/* $XdotOrg: xc/programs/xdm/resource.c,v 1.2 2004/04/23 19:54:42 eich Exp $ */
-/* $Xorg: resource.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/resource.c,v 3.11 2003/07/09 15:27:39 tsi Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -36,11 +33,11 @@ from The Open Group.
  * resource.c
  */
 
-# include "dm.h"
-# include "dm_error.h"
+#include "dm.h"
+#include "dm_error.h"
 
-# include <X11/Intrinsic.h>
-# include <X11/Xmu/CharSet.h>
+#include <X11/Intrinsic.h>
+#include <X11/Xmu/CharSet.h>
 
 char	*config;
 
@@ -73,136 +70,77 @@ char	*greeterLib;
 char	*willing;
 int	choiceTimeout;	/* chooser choice timeout */
 
-# define DM_STRING	0
-# define DM_INT		1
-# define DM_BOOL	2
-# define DM_ARGV	3
+#define DM_STRING	0
+#define DM_INT		1
+#define DM_BOOL	2
+#define DM_ARGV	3
 
 /*
- * the following constants are supposed to be set in the makefile from
- * parameters set util/imake.includes/site.def (or *.macros in that directory
- * if it is server-specific).  DO NOT CHANGE THESE DEFINITIONS!
+ * The following constants are supposed to be set in Makefile or config.h
+ * from parameters set in configure.  DO NOT CHANGE THESE DEFINITIONS!
  */
-#ifndef __EMX__
-#ifndef DEF_SERVER_LINE 
-#define DEF_SERVER_LINE ":0 local /usr/bin/X11/X :0"
+#ifndef DEF_SERVER_LINE
+# define DEF_SERVER_LINE ":0 local /usr/bin/X11/X :0"
 #endif
 #ifndef XRDB_PROGRAM
-#define XRDB_PROGRAM "/usr/bin/X11/xrdb"
+# define XRDB_PROGRAM "/usr/bin/X11/xrdb"
 #endif
 #ifndef DEF_SESSION
-#define DEF_SESSION "/usr/bin/X11/xterm -ls"
+# define DEF_SESSION "/usr/bin/X11/xterm -ls"
 #endif
 #ifndef DEF_USER_PATH
-#define DEF_USER_PATH ":/bin:/usr/bin:/usr/bin/X11:/usr/ucb"
+# define DEF_USER_PATH ":/bin:/usr/bin:/usr/bin/X11:/usr/ucb"
 #endif
 #ifndef DEF_SYSTEM_PATH
-#define DEF_SYSTEM_PATH "/etc:/bin:/usr/bin:/usr/bin/X11:/usr/ucb"
+# define DEF_SYSTEM_PATH "/etc:/bin:/usr/bin:/usr/bin/X11:/usr/ucb"
 #endif
 #ifndef DEF_SYSTEM_SHELL
-#define DEF_SYSTEM_SHELL "/bin/sh"
+# define DEF_SYSTEM_SHELL "/bin/sh"
 #endif
 #ifndef DEF_FAILSAFE_CLIENT
-#define DEF_FAILSAFE_CLIENT "/usr/bin/X11/xterm"
+# define DEF_FAILSAFE_CLIENT "/usr/bin/X11/xterm"
 #endif
 #ifndef DEF_XDM_CONFIG
-#define DEF_XDM_CONFIG "/usr/lib/X11/xdm/xdm-config"
+# define DEF_XDM_CONFIG "/usr/lib/X11/xdm/xdm-config"
 #endif
 #ifndef DEF_CHOOSER
-#define DEF_CHOOSER "/usr/lib/X11/xdm/chooser"
+# define DEF_CHOOSER "/usr/lib/X11/xdm/chooser"
 #endif
 #ifndef DEF_AUTH_NAME
-#ifdef HASXDMAUTH
-#define DEF_AUTH_NAME	"XDM-AUTHORIZATION-1 MIT-MAGIC-COOKIE-1"
-#else
-#define DEF_AUTH_NAME	"MIT-MAGIC-COOKIE-1"
-#endif
+# ifdef HASXDMAUTH
+#  define DEF_AUTH_NAME	"XDM-AUTHORIZATION-1 MIT-MAGIC-COOKIE-1"
+# else
+#  define DEF_AUTH_NAME	"MIT-MAGIC-COOKIE-1"
+# endif
 #endif
 #ifndef DEF_AUTH_DIR
-#define DEF_AUTH_DIR "/usr/lib/X11/xdm"
+# define DEF_AUTH_DIR "/usr/lib/X11/xdm"
 #endif
 #ifndef DEF_USER_AUTH_DIR
-#define DEF_USER_AUTH_DIR	"/tmp"
+# define DEF_USER_AUTH_DIR	"/tmp"
 #endif
 #ifndef DEF_KEY_FILE
-#define DEF_KEY_FILE	""
+# define DEF_KEY_FILE	""
 #endif
 #ifndef DEF_ACCESS_FILE
-#define DEF_ACCESS_FILE	""
+# define DEF_ACCESS_FILE	""
 #endif
 #ifndef DEF_RANDOM_FILE
-#define DEF_RANDOM_FILE "/dev/mem"
+# define DEF_RANDOM_FILE "/dev/mem"
 #endif
 #ifdef __SCO__
-#define DEF_PRNGD_SOCKET "/etc/egd-pool"
+# define DEF_PRNGD_SOCKET "/etc/egd-pool"
 #else
-#ifndef DEF_PRNGD_SOCKET 
-#define DEF_PRNGD_SOCKET "/tmp/entropy"
-#endif
+# ifndef DEF_PRNGD_SOCKET
+#  define DEF_PRNGD_SOCKET "/tmp/entropy"
+# endif
 #endif
 #ifndef DEF_PRNGD_PORT
-#define DEF_PRNGD_PORT "0"
+# define DEF_PRNGD_PORT "0"
 #endif
 #ifndef DEF_GREETER_LIB
-#define DEF_GREETER_LIB "/usr/lib/X11/xdm/libXdmGreet.so"
+# define DEF_GREETER_LIB "/usr/lib/X11/xdm/libXdmGreet.so"
 #endif
-#else
-/* unfortunately I have to declare all of them, because there is a limit
- * in argument size in OS/2
- * but everything needs to be fixed again
- */
-#define DEF_SERVER_LINE ":0 local /XFree86/bin/X :0"
-#ifndef XRDB_PROGRAM
-#define XRDB_PROGRAM "/XFree86/bin/xrdb"
-#endif
-#ifndef DEF_SESSION
-#define DEF_SESSION "/XFree86/bin/xterm -ls"
-#endif
-#ifndef DEF_USER_PATH
-#define DEF_USER_PATH "c:\\os2;c:\\os2\apps;\\XFree86\\bin"
-#endif
-#ifndef DEF_SYSTEM_PATH
-#define DEF_SYSTEM_PATH "c:\\os2;c:\\os2\apps;\\XFree86\\bin"
-#endif
-#ifndef DEF_SYSTEM_SHELL
-#define DEF_SYSTEM_SHELL "sh"
-#endif
-#ifndef DEF_FAILSAFE_CLIENT
-#define DEF_FAILSAFE_CLIENT "/XFree86/bin/xterm"
-#endif
-#ifndef DEF_XDM_CONFIG
-#define DEF_XDM_CONFIG "/XFree86/lib/X11/xdm/xdm-config"
-#endif
-#ifndef DEF_CHOOSER
-#define DEF_CHOOSER "/XFree86/lib/X11/xdm/chooser"
-#endif
-#ifndef DEF_AUTH_NAME
-#ifdef HASXDMAUTH
-#define DEF_AUTH_NAME	"XDM-AUTHORIZATION-1 MIT-MAGIC-COOKIE-1"
-#else
-#define DEF_AUTH_NAME	"MIT-MAGIC-COOKIE-1"
-#endif
-#endif
-#ifndef DEF_AUTH_DIR
-#define DEF_AUTH_DIR "/XFree86/lib/X11/xdm"
-#endif
-#ifndef DEF_USER_AUTH_DIR
-#define DEF_USER_AUTH_DIR	"/tmp"
-#endif
-#ifndef DEF_KEY_FILE
-#define DEF_KEY_FILE	""
-#endif
-#ifndef DEF_ACCESS_FILE
-#define DEF_ACCESS_FILE	""
-#endif
-#ifndef DEF_RANDOM_FILE
-#define DEF_RANDOM_FILE ""
-#endif
-#ifndef DEF_GREETER_LIB
-#define DEF_GREETER_LIB "/XFree86/lib/X11/xdm/libXdmGreet.so"
-#endif
-
-#endif /* __EMX__ */
 
 #define DEF_UDP_PORT	"177"	    /* registered XDMCP port, dont change */
 
@@ -241,7 +179,7 @@ struct dmResources {
 #if !defined(ARC4_RANDOM)
 { "randomFile",	"RandomFile",	DM_STRING,	&randomFile,
 				DEF_RANDOM_FILE} ,
-{ "prngdSocket", "PrngdSocket", DM_STRING,	&prngdSocket, 
+{ "prngdSocket", "PrngdSocket", DM_STRING,	&prngdSocket,
 				DEF_PRNGD_SOCKET},
 { "prngdPort", "PrngdPort",	DM_INT,		(char **) &prngdPort,
 				DEF_PRNGD_PORT},
@@ -260,9 +198,9 @@ struct dmResources {
 				""} ,
 };
 
-# define NUM_DM_RESOURCES	(sizeof DmResources / sizeof DmResources[0])
+#define NUM_DM_RESOURCES	(sizeof DmResources / sizeof DmResources[0])
 
-# define boffset(f)	XtOffsetOf(struct display, f)
+#define boffset(f)	XtOffsetOf(struct display, f)
 
 struct displayResource {
 	char	*name, *class;
@@ -310,7 +248,7 @@ struct displayResource serverResources[] = {
 				"" },
 };
 
-# define NUM_SERVER_RESOURCES	(sizeof serverResources/\
+#define NUM_SERVER_RESOURCES	(sizeof serverResources/\
 				 sizeof serverResources[0])
 
 /* resources which control the session behaviour */
@@ -342,7 +280,7 @@ struct displayResource sessionResources[] = {
 				DEF_CHOOSER },
 };
 
-# define NUM_SESSION_RESOURCES	(sizeof sessionResources/\
+#define NUM_SESSION_RESOURCES	(sizeof sessionResources/\
 				 sizeof sessionResources[0])
 
 XrmDatabase	DmResourceDB;
@@ -494,8 +432,8 @@ ReinitResources (void)
     {
 	LogError ("extra arguments on command line:");
 	for (a = argv + 1; *a; a++)
-		LogError (" \"%s\"", *a);
-	LogError ("\n");
+		LogAppend (" \"%s\"", *a);
+	LogAppend ("\n");
     }
     free (argv);
 }
@@ -548,7 +486,7 @@ LoadDisplayResources (
     CleanUpName (d->name, dpyName, sizeof (dpyName));
     CleanUpName (d->class ? d->class : d->name, dpyClass, sizeof (dpyClass));
     for (i = 0; i < numResources; i++) {
-	    snprintf (name, sizeof(name), "DisplayManager.%s.%s", 
+	    snprintf (name, sizeof(name), "DisplayManager.%s.%s",
 		    dpyName, resources[i].name);
 	    snprintf (class, sizeof(class), "DisplayManager.%s.%s",
 		    dpyClass, resources[i].class);

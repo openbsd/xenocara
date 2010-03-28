@@ -1,5 +1,3 @@
-/* $Xorg: verify.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
-/* $XdotOrg: app/xdm/greeter/verify.c,v 1.9 2006/06/03 00:05:24 alanc Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/greeter/verify.c,v 3.26 2003/11/19 04:44:00 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -58,7 +55,7 @@ from The Open Group.
 # include       <prot.h>
 #endif
 
-# include	"greet.h"
+#include	"greet.h"
 
 #ifdef QNX4
 extern char *crypt(const char *, const char *);
@@ -84,12 +81,12 @@ static char *envvars[] = {
 };
 
 #ifdef KERBEROS
-#include <sys/param.h>
-#include <kerberosIV/krb.h>
+# include <sys/param.h>
+# include <kerberosIV/krb.h>
 /* OpenBSD 2.8 needs this. */
-#if defined(OpenBSD) && (OpenBSD <= 200012)
-#include <kerberosIV/kafs.h>
-#endif
+# if defined(OpenBSD) && (OpenBSD <= 200012)
+#  include <kerberosIV/kafs.h>
+# endif
 static char krbtkfile[MAXPATHLEN];
 #endif
 
@@ -182,7 +179,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 #endif
 	/* Build path of the auth script and call it */
 	snprintf(path, sizeof(path), _PATH_AUTHPROG "%s", style);
-	auth_call(as, path, style, "-s", "response", greet->name, 
+	auth_call(as, path, style, "-s", "response", greet->name,
 		  lc->lc_class, (void *)NULL);
 	authok = auth_getstate(as);
 
@@ -216,12 +213,12 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	}
 
 	/*
-	 * Shell must be in /etc/shells 
+	 * Shell must be in /etc/shells
 	 */
 	for (;;) {
 		s = getusershell();
 		if (s == NULL) {
-			/* did not found the shell in /etc/shells 
+			/* did not found the shell in /etc/shells
 			   -> failure */
 			Debug("shell not in /etc/shells\n");
 			bzero(greet->password, passwd_len);
@@ -233,7 +230,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 			endusershell();
 			break;
 		}
-	} 
+	}
 #elif defined(USESECUREWARE) /* !USE_BSDAUTH */
 /*
  * This is a global variable and will be referenced in at least session.c
@@ -332,16 +329,16 @@ int
 Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 {
 	struct passwd	*p;
-#ifndef USE_PAM
-#ifdef USESHADOW
+# ifndef USE_PAM
+#  ifdef USESHADOW
 	struct spwd	*sp;
-#endif
+#  endif
 	char		*user_pass = NULL;
-#endif
-#ifdef __OpenBSD__
+# endif
+# ifdef __OpenBSD__
 	char            *s;
 	struct timeval  tp;
-#endif
+# endif
 	char		*shell, *home;
 	char		**argv;
 
@@ -357,18 +354,18 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 		return 0;
 	}
 
-#if defined(sun) && defined(SVR4)
-	/* Solaris: If CONSOLE is set to /dev/console in /etc/default/login, 
+# if defined(sun) && defined(SVR4)
+	/* Solaris: If CONSOLE is set to /dev/console in /etc/default/login,
 	   then root can only login on system console */
 
-# define SOLARIS_LOGIN_DEFAULTS "/etc/default/login"
+#  define SOLARIS_LOGIN_DEFAULTS "/etc/default/login"
 
 	if (p->pw_uid == 0) {
 	    char *console = NULL, *tmp = NULL;
 	    FILE *fs;
 
 	    if ((fs= fopen(SOLARIS_LOGIN_DEFAULTS, "r")) != NULL)
-	    {   
+	    {
 		char str[120];
 		while (!feof(fs))
 		{
@@ -379,8 +376,8 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 			console = strdup((tmp+8));
 		}
 		fclose(fs);
-                if ( console != NULL && 
-		  (strncmp(console, "/dev/console", 12) == 0) && 
+                if ( console != NULL &&
+		  (strncmp(console, "/dev/console", 12) == 0) &&
 		  (strncmp(d->name,":0",2) != 0) )
 		{
                         Debug("Not on system console\n");
@@ -394,37 +391,38 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	    else
 	    {
 		Debug("Could not open %s\n", SOLARIS_LOGIN_DEFAULTS);
-	    }	
+	    }
 	}
-#endif    
+# endif
 
-#ifndef USE_PAM /* PAM authentication happened in GreetUser already */
-#ifdef linux
+# ifndef USE_PAM /* PAM authentication happened in GreetUser already */
+#  ifdef linux
 	if (!strcmp(p->pw_passwd, "!") || !strcmp(p->pw_passwd, "*")) {
 	    Debug ("The account is locked, no login allowed.\n");
 	    bzero(greet->password, strlen(greet->password));
 	    return 0;
 	}
-#endif
+#  endif
 	user_pass = p->pw_passwd;
-#ifdef KERBEROS
+#  ifdef KERBEROS
 	if(strcmp(greet->name, "root") != 0){
 		char name[ANAME_SZ];
 		char realm[REALM_SZ];
 		char *q;
 		int ret;
-	    
+
 		if(krb_get_lrealm(realm, 1)){
 			Debug ("Can't get Kerberos realm.\n");
 		} else {
 
-		    sprintf(krbtkfile, "%s.%s", TKT_ROOT, d->name);
+		    snprintf(krbtkfile, sizeof(krbktfile), "%s.%s",
+			     TKT_ROOT, d->name);
 		    krb_set_tkt_string(krbtkfile);
 		    unlink(krbtkfile);
-           
-		    ret = krb_verify_user(greet->name, "", realm, 
+
+		    ret = krb_verify_user(greet->name, "", realm,
 				      greet->password, 1, "rcmd");
-           
+
 		    if(ret == KSUCCESS){
 			    chown(krbtkfile, p->pw_uid, p->pw_gid);
 			    Debug("kerberos verify succeeded\n");
@@ -432,9 +430,9 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 				    if (k_setpag() == -1)
 					    LogError ("setpag() failed for %s\n",
 						      greet->name);
-				    
+
 				    if((ret = k_afsklog(NULL, NULL)) != KSUCCESS)
-					    LogError("Warning %s\n", 
+					    LogError("Warning %s\n",
 						     krb_get_err_text(ret));
 			    }
 			    goto done;
@@ -445,24 +443,24 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 		    }
 		}
 	}
-#endif
-#ifdef USESHADOW
+#  endif
+#  ifdef USESHADOW
 	errno = 0;
 	sp = getspnam(greet->name);
 	if (sp == NULL) {
-	    Debug ("getspnam() failed, errno=%d.  Are you root?\n", errno);
+	    Debug ("getspnam() failed: %s\n", _SysErrorMsg (errno));
 	} else {
 	    user_pass = sp->sp_pwdp;
 	}
-#ifndef QNX4
+#   ifndef QNX4
 	endspent();
-#endif  /* QNX4 doesn't need endspent() to end shadow passwd ops */
-#endif /* USESHADOW */
-#if defined(ultrix) || defined(__ultrix__)
+#   endif  /* QNX4 doesn't need endspent() to end shadow passwd ops */
+#  endif /* USESHADOW */
+#  if defined(ultrix) || defined(__ultrix__)
 	if (authenticate_user(p, greet->password, NULL) < 0)
-#else
+#  else
 	if (strcmp (crypt (greet->password, user_pass), user_pass))
-#endif
+#  endif
 	{
 		if(!greet->allow_null_passwd || strlen(p->pw_passwd) > 0) {
 			Debug ("password verify failed\n");
@@ -470,10 +468,10 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 			return 0;
 		} /* else: null passwd okay */
 	}
-#ifdef KERBEROS
+#  ifdef KERBEROS
 done:
-#endif
-#ifdef __OpenBSD__
+#  endif
+#  ifdef __OpenBSD__
 	/*
 	 * Only accept root logins if allowRootLogin resource is set
 	 */
@@ -483,12 +481,12 @@ done:
 		return 0;
 	}
 	/*
-	 * Shell must be in /etc/shells 
+	 * Shell must be in /etc/shells
 	 */
 	for (;;) {
 		s = getusershell();
 		if (s == NULL) {
-			/* did not found the shell in /etc/shells 
+			/* did not found the shell in /etc/shells
 			   -> failure */
 			Debug("shell not in /etc/shells\n");
 			bzero(greet->password, strlen(greet->password));
@@ -500,7 +498,7 @@ done:
 			endusershell();
 			break;
 		}
-	} 
+	}
 	/*
 	 * Test for expired password
 	 */
@@ -518,12 +516,12 @@ done:
 			Debug("account has expired.\n");
 			bzero(greet->password, strlen(greet->password));
 			return 0;
-		} 
+		}
 	}
-#endif /* __OpenBSD__ */
+#  endif /* __OpenBSD__ */
 	bzero(user_pass, strlen(user_pass)); /* in case shadow password */
 
-#endif /* USE_PAM */
+# endif /* USE_PAM */
 #endif /* USE_BSDAUTH */
 
 	Debug ("verify succeeded\n");

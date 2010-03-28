@@ -1,5 +1,3 @@
-/* $XdotOrg: app/xdm/greeter/Login.c,v 1.6 2006/06/03 00:05:24 alanc Exp $ */
-/* $Xorg: Login.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -55,7 +53,6 @@ from The Open Group.
  * of the copyright holder.
  */
 
-/* $XFree86: xc/programs/xdm/greeter/Login.c,v 3.17tsi Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -64,33 +61,34 @@ from The Open Group.
  * Login.c
  */
 
-# include <X11/IntrinsicP.h>
-# include <X11/StringDefs.h>
-# include <X11/keysym.h>
-# include <X11/DECkeysym.h>
-# include <X11/Xfuncs.h>
+#include <X11/IntrinsicP.h>
+#include <X11/StringDefs.h>
+#include <X11/keysym.h>
+#include <X11/DECkeysym.h>
+#include <X11/Xfuncs.h>
 
-# include <stdio.h>
-# include <ctype.h>
-# include <time.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <time.h>
+#include <string.h>
 
-# include "dm.h"
-# include "dm_error.h"
-# include "greet.h"
-# include "LoginP.h"
+#include "dm.h"
+#include "dm_error.h"
+#include "greet.h"
+#include "LoginP.h"
 
 #ifdef XPM
-#include <sys/stat.h>
-#include <unistd.h>
-#include <X11/Xlib.h>
-#include <X11/xpm.h>
-#include <X11/extensions/shape.h>
+# include <sys/stat.h>
+# include <unistd.h>
+# include <X11/Xlib.h>
+# include <X11/xpm.h>
+# include <X11/extensions/shape.h>
 #endif /* XPM */
 
 #include <X11/cursorfont.h>
 
 #ifdef USE_XINERAMA
-#include <X11/extensions/Xinerama.h>
+# include <X11/extensions/Xinerama.h>
 #endif
 
 #ifndef DEBUG
@@ -125,7 +123,7 @@ static XtResource resources[] = {
 	goffset(x), XtRImmediate,	(XtPointer) -1},
     {XtNy, XtCY, XtRPosition, sizeof (Position),
 	goffset(y), XtRImmediate,	(XtPointer) -1},
-#ifndef USE_XFT    
+#ifndef USE_XFT
     {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
         offset(textpixel), XtRString,	XtDefaultForeground},
     {XtNpromptColor, XtCForeground, XtRPixel, sizeof(Pixel),
@@ -143,7 +141,7 @@ static XtResource resources[] = {
 /* end (caolan) */
 #endif /* DANCING */
 
-#ifdef XPM    
+#ifdef XPM
 /* added by Ivan Griffin (ivan.griffin@ul.ie) */
         {XtNlogoFileName, XtCLogoFileName, XtRString, sizeof(char*),
         offset(logoFileName), XtRImmediate, (XtPointer)0},
@@ -167,7 +165,7 @@ static XtResource resources[] = {
         offset(sepwidth), XtRImmediate, (XtPointer) 1},
 /* end (amit) */
 
-#ifndef USE_XFT    
+#ifndef USE_XFT
     {XtNfont, XtCFont, XtRFontStruct, sizeof (XFontStruct *),
     	offset (textFont), XtRString,	"*-new century schoolbook-medium-r-normal-*-180-*"},
     {XtNpromptFont, XtCFont, XtRFontStruct, sizeof (XFontStruct *),
@@ -242,33 +240,33 @@ static XtResource resources[] = {
 # define F_DESCENT(f)	((w)->login.f##Font->max_bounds.descent)
 #endif
 
-# define TEXT_X_INC(w)		F_MAX_WIDTH(text)
-# define TEXT_Y_INC(w)		(F_ASCENT(text) + F_DESCENT(text))
+#define TEXT_X_INC(w)		F_MAX_WIDTH(text)
+#define TEXT_Y_INC(w)		(F_ASCENT(text) + F_DESCENT(text))
 
-# define PROMPT_X_INC(w)	F_MAX_WIDTH(prompt)
-# define PROMPT_Y_INC(w)	(F_ASCENT(prompt) + F_DESCENT(prompt))
+#define PROMPT_X_INC(w)	F_MAX_WIDTH(prompt)
+#define PROMPT_Y_INC(w)	(F_ASCENT(prompt) + F_DESCENT(prompt))
 
-# define GREET_X_INC(w)		F_MAX_WIDTH(greet)
-# define GREET_Y_INC(w)		(F_ASCENT(greet) + F_DESCENT(greet))
+#define GREET_X_INC(w)		F_MAX_WIDTH(greet)
+#define GREET_Y_INC(w)		(F_ASCENT(greet) + F_DESCENT(greet))
 
-# define FAIL_X_INC(w)		F_MAX_WIDTH(fail)
-# define FAIL_Y_INC(w)		(F_ASCENT(fail) + F_DESCENT(fail))
+#define FAIL_X_INC(w)		F_MAX_WIDTH(fail)
+#define FAIL_Y_INC(w)		(F_ASCENT(fail) + F_DESCENT(fail))
 
-# define Y_INC(w)	max (TEXT_Y_INC(w), PROMPT_Y_INC(w))
+#define Y_INC(w)	max (TEXT_Y_INC(w), PROMPT_Y_INC(w))
 
 
-# define PROMPT_TEXT(w,n) 	((w)->login.prompts[n].promptText)
-# define DEF_PROMPT_TEXT(w,n) 	((w)->login.prompts[n].defaultPrompt)
-# define VALUE_TEXT(w,n) 	((w)->login.prompts[n].valueText)
-# define VALUE_TEXT_MAX(w,n)	((w)->login.prompts[n].valueTextMax)
-# define VALUE_SHOW_START(w,n)	((w)->login.prompts[n].valueShownStart)
-# define VALUE_SHOW_END(w,n)	((w)->login.prompts[n].valueShownEnd)
-# define PROMPT_STATE(w,n) 	((w)->login.prompts[n].state)
-# define PROMPT_CURSOR(w,n)	((w)->login.prompts[n].cursor)
+#define PROMPT_TEXT(w,n) 	((w)->login.prompts[n].promptText)
+#define DEF_PROMPT_TEXT(w,n) 	((w)->login.prompts[n].defaultPrompt)
+#define VALUE_TEXT(w,n) 	((w)->login.prompts[n].valueText)
+#define VALUE_TEXT_MAX(w,n)	((w)->login.prompts[n].valueTextMax)
+#define VALUE_SHOW_START(w,n)	((w)->login.prompts[n].valueShownStart)
+#define VALUE_SHOW_END(w,n)	((w)->login.prompts[n].valueShownEnd)
+#define PROMPT_STATE(w,n) 	((w)->login.prompts[n].state)
+#define PROMPT_CURSOR(w,n)	((w)->login.prompts[n].cursor)
 
-# define CUR_PROMPT_CURSOR(w)	PROMPT_CURSOR(w,w->login.activePrompt)
+#define CUR_PROMPT_CURSOR(w)	PROMPT_CURSOR(w,w->login.activePrompt)
 
-# define CUR_PROMPT_TEXT(w, n)	(PROMPT_TEXT(w,n) != NULL ? \
+#define CUR_PROMPT_TEXT(w, n)	(PROMPT_TEXT(w,n) != NULL ? \
 				 PROMPT_TEXT(w,n) : DEF_PROMPT_TEXT(w,n))
 
 #ifdef USE_XFT
@@ -297,23 +295,23 @@ XmuXftTextWidth(Display *dpy, XftFont *font, FcChar8 *string, int len);
 #endif
 
 
-# define STRING_WIDTH(f, s) 	TEXT_WIDTH (f, s, strlen(s))
+#define STRING_WIDTH(f, s) 	TEXT_WIDTH (f, s, strlen(s))
 
 
 
-# define TEXT_PROMPT_W(w, m) (STRING_WIDTH(prompt, m) + w->login.inframeswidth)
+#define TEXT_PROMPT_W(w, m) (STRING_WIDTH(prompt, m) + w->login.inframeswidth)
 
-# define DEF_PROMPT_W(w,n) TEXT_PROMPT_W(w, w->login.prompts[n].defaultPrompt)
-# define CUR_PROMPT_W(w,n)  (max(MAX_DEF_PROMPT_W(w), PROMPT_TEXT(w,n) ? \
+#define DEF_PROMPT_W(w,n) TEXT_PROMPT_W(w, w->login.prompts[n].defaultPrompt)
+#define CUR_PROMPT_W(w,n)  (max(MAX_DEF_PROMPT_W(w), PROMPT_TEXT(w,n) ? \
 		     TEXT_PROMPT_W(w, PROMPT_TEXT(w,n)) : 0))
 
-# define MAX_DEF_PROMPT_W(w) (max(DEF_PROMPT_W(w,0), DEF_PROMPT_W(w,1)))
+#define MAX_DEF_PROMPT_W(w) (max(DEF_PROMPT_W(w,0), DEF_PROMPT_W(w,1)))
 
-# define GREETING(w)	((w)->login.secure_session  && !(w)->login.allow_access ?\
+#define GREETING(w)	((w)->login.secure_session  && !(w)->login.allow_access ?\
 				(w)->login.greeting : (w)->login.unsecure_greet)
-# define GREET_X(w)	((int)((w->core.width - \
+#define GREET_X(w)	((int)((w->core.width - \
 			     	STRING_WIDTH (greet, GREETING(w))) / 2))
-# define GREET_Y(w)	(GREETING(w)[0] ? 2 * GREET_Y_INC (w) : 0)
+#define GREET_Y(w)	(GREETING(w)[0] ? 2 * GREET_Y_INC (w) : 0)
 #ifndef XPM
 # define GREET_W(w)	(max (STRING_WIDTH (greet, w->login.greeting), \
 			      STRING_WIDTH (greet, w->login.unsecure_greet)))
@@ -322,29 +320,29 @@ XmuXftTextWidth(Display *dpy, XftFont *font, FcChar8 *string, int len);
 			      STRING_WIDTH (greet, w->login.unsecure_greet)) \
 			 + w->login.logoWidth + (2*w->login.logoPadding))
 #endif /* XPM */
-# define PROMPT_X(w)	(2 * PROMPT_X_INC(w))
-# define PROMPT_Y(w,n)	((GREET_Y(w) + GREET_Y_INC(w) +\
+#define PROMPT_X(w)	(2 * PROMPT_X_INC(w))
+#define PROMPT_Y(w,n)	((GREET_Y(w) + GREET_Y_INC(w) +\
 			  F_ASCENT(greet) + Y_INC(w)) + \
 			 (n * PROMPT_SPACE_Y(w)))
-# define PROMPT_W(w)	(w->core.width - (2 * TEXT_X_INC(w)))
-# define PROMPT_H(w)	(3 * Y_INC(w) / 2)
-# define VALUE_X(w,n)	(PROMPT_X(w) + CUR_PROMPT_W(w,n))
-# define PROMPT_SPACE_Y(w)	(10 * Y_INC(w) / 5)
+#define PROMPT_W(w)	(w->core.width - (2 * TEXT_X_INC(w)))
+#define PROMPT_H(w)	(3 * Y_INC(w) / 2)
+#define VALUE_X(w,n)	(PROMPT_X(w) + CUR_PROMPT_W(w,n))
+#define PROMPT_SPACE_Y(w)	(10 * Y_INC(w) / 5)
 
-# define ERROR_X(w,m)	((int)(w->core.width - STRING_WIDTH (fail, m)) / 2)
-# define FAIL_X(w)	ERROR_X(w, w->login.fail)
-# define FAIL_Y(w)	(PROMPT_Y(w,1) + 2 * FAIL_Y_INC (w) + F_ASCENT(fail))
+#define ERROR_X(w,m)	((int)(w->core.width - STRING_WIDTH (fail, m)) / 2)
+#define FAIL_X(w)	ERROR_X(w, w->login.fail)
+#define FAIL_Y(w)	(PROMPT_Y(w,1) + 2 * FAIL_Y_INC (w) + F_ASCENT(fail))
 
 # define ERROR_W(w,m)	STRING_WIDTH (fail, m)
 
-# define FAIL_W(w)	max(ERROR_W(w, w->login.failMsg), \
+#define FAIL_W(w)	max(ERROR_W(w, w->login.failMsg), \
 			    ERROR_W(w, w->login.passwdChangeMsg))
 
-# define PAD_X(w)	(2 * (PROMPT_X(w) + max (GREET_X_INC(w), FAIL_X_INC(w))))
+#define PAD_X(w)	(2 * (PROMPT_X(w) + max (GREET_X_INC(w), FAIL_X_INC(w))))
 
-# define PAD_Y(w)	(max (max (Y_INC(w), GREET_Y_INC(w)),\
+#define PAD_Y(w)	(max (max (Y_INC(w), GREET_Y_INC(w)),\
 			     FAIL_Y_INC(w)))
-	
+
 #ifndef max
 static inline int max (int a, int b) { return a > b ? a : b; }
 #endif
@@ -385,7 +383,7 @@ realizeValue (LoginWidget w, int cursor, int promptNum, GC gc)
 	int textwidth;
 	int offset = max(cursor, VALUE_SHOW_START(w, promptNum));
 	int textlen = strlen (text + offset);
-	
+
 	textwidth = TEXT_WIDTH (text, text + offset, textlen);
 
 	if (textwidth > (width - curoff)) {
@@ -400,7 +398,7 @@ realizeValue (LoginWidget w, int cursor, int promptNum, GC gc)
 		}
 		textlen--;
 		textwidth = TEXT_WIDTH (text, text + offset, textlen);
-	    } 
+	    }
 
 	    VALUE_SHOW_START(w, promptNum) = offset;
 	    VALUE_SHOW_END(w, promptNum) = offset + textlen;
@@ -439,17 +437,10 @@ realizeCursor (LoginWidget w, GC gc)
     int	x, y;
     int height, width;
 
-#ifdef FORCE_CURSOR_FLASH    
-    static int lastx, lasty;
-    static struct timeval  lastFlash;
-    struct timeval  now, timeout;
-    int sinceLastFlash;
-#endif
-
     if (w->login.state != PROMPTING) {
 	return;
     }
-    
+
     x = VALUE_X (w, w->login.activePrompt);
     y = PROMPT_Y (w, w->login.activePrompt);
     height = (F_ASCENT(text) + F_DESCENT(text));
@@ -469,10 +460,12 @@ realizeCursor (LoginWidget w, GC gc)
 	}
 	break;
     case LOGIN_PROMPT_ECHO_OFF:
-	/* Nothing special needed */
+	/* Move cursor one pixel per character to give some feedback without
+	   giving away the password length */
+	x += PROMPT_CURSOR(w, w->login.activePrompt);
 	break;
     }
-    
+
     XFillRectangle (XtDisplay (w), XtWindow (w), gc,
 		    x, y+1 - F_ASCENT(text), width, height-1);
     XDrawPoint     (XtDisplay (w), XtWindow (w), gc,
@@ -492,50 +485,23 @@ realizeCursor (LoginWidget w, GC gc)
     XDrawPoint     (XtDisplay (w), XtWindow (w), gc,
     		    x+2 , y - F_ASCENT(text)+height);
 
-#ifdef FORCE_CURSOR_FLASH
-    /* Force cursor to flash briefly to give user feedback */
-#define FLASH_MILLIS    100000 /* 0.10 seconds */
-#define MILLIS_PER_SEC 1000000    
-    X_GETTIMEOFDAY (&now);
-
-    if ((lastx == x) && (lasty == y)) {
-	if (lastFlash.tv_sec == 0)
-	    sinceLastFlash = 0;
-	else if ((lastFlash.tv_sec + 1) == now.tv_sec)
-	    sinceLastFlash =
-		(now.tv_usec + MILLIS_PER_SEC) - lastFlash.tv_usec;
-	else if (lastFlash.tv_sec == now.tv_sec)
-	    sinceLastFlash = now.tv_usec - lastFlash.tv_usec;
-	else
-	    sinceLastFlash = (now.tv_sec - lastFlash.tv_sec) * MILLIS_PER_SEC;
-
-	if (sinceLastFlash < FLASH_MILLIS) {
-	    timeout.tv_sec = 0;
-	    timeout.tv_usec = FLASH_MILLIS - sinceLastFlash;
-	    select(0, NULL, NULL, NULL, &timeout);
-	}
-    } else {
-	lastx = x; lasty = y;
-    }
-    X_GETTIMEOFDAY (&lastFlash);
-#endif /* FORCE_CURSOR_FLASH */
-    XFlush (XtDisplay(w));    
+    XFlush (XtDisplay(w));
 }
 
 static void
 EraseFail (LoginWidget w)
 {
-#ifdef USE_XFT 
+#ifdef USE_XFT
     w->login.failUp = 0;
     RedrawFail(w);
-#else    
+#else
     XSetForeground (XtDisplay (w), w->login.failGC,
 			w->core.background_pixel);
     RedrawFail(w);
     w->login.failUp = 0;
     XSetForeground (XtDisplay (w), w->login.failGC,
 			TEXT_COLOR(fail));
-#endif    
+#endif
 }
 
 static void
@@ -587,9 +553,9 @@ RedrawFail (LoginWidget w)
     int y = FAIL_Y(w);
     int maxw = w->core.width - PAD_X(w);
 
-#ifndef USE_XFT    
+#ifndef USE_XFT
     if (w->login.failUp)
-#endif	
+#endif
     {
 	Debug("RedrawFail('%s', %d)\n", w->login.fail, w->login.failUp);
 	if (ERROR_W(w, w->login.fail) > maxw) {
@@ -597,10 +563,10 @@ RedrawFail (LoginWidget w)
 	    char *tempCopy = strdup(w->login.fail);
 	    if (tempCopy != NULL) {
 		char *start, *next;
-		char lastspace;
+		char lastspace = ' ';
 
 		y = PROMPT_Y(w,LAST_PROMPT) + (2 * PROMPT_Y_INC(w));
-		
+
 		for (start = next = tempCopy; start != NULL ; start = next) {
 		    /* search for longest string broken by whitespace that
 		       will fit on a single line */
@@ -620,14 +586,14 @@ RedrawFail (LoginWidget w)
 			    next = NULL;
 			}
 		    } while ((next != NULL) && ERROR_W(w, start) < maxw);
-		    
+
 		    x = ERROR_X(w, start);
 #ifdef USE_XFT
 		    if (w->login.failUp == 0) {
 			XClearArea(XtDisplay(w), XtWindow(w), x, y,
 				   ERROR_W(w, start), FAIL_Y_INC(w), False);
 		    } else
-#endif		    
+#endif
 			DRAW_STRING (fail, x, y, start, strlen(start));
 
 		    if (next != NULL) {
@@ -648,7 +614,7 @@ RedrawFail (LoginWidget w)
 	    XClearArea(XtDisplay(w), XtWindow(w), x, y,
 		       ERROR_W(w, w->login.fail), FAIL_Y_INC(w), False);
 	} else
-#endif		    
+#endif
 	    DRAW_STRING (fail, x, y, w->login.fail, strlen (w->login.fail));
     }
 }
@@ -712,7 +678,7 @@ draw_it (LoginWidget w)
       XDrawLine(XtDisplay (w), XtWindow (w), w->login.shdGC,
     		i-1,w->core.height-i,w->core.width-i,w->core.height-i);
     }
-    
+
     /* make separator line */
     gr_line_x = w->login.outframewidth;
     gr_line_y = GREET_Y(w) + GREET_Y_INC(w);
@@ -738,16 +704,16 @@ draw_it (LoginWidget w)
 	int in_frame_x = VALUE_X(w,p) - w->login.inframeswidth - 3;
 	int in_frame_y
 	    = PROMPT_Y(w,p) - w->login.inframeswidth - 1 - TEXT_Y_INC(w);
- 
+
 	int in_width = PROMPT_W(w) - VALUE_X(w,p);
 	int in_height = PROMPT_H(w) + w->login.inframeswidth + 2;
-	
+
 	GC topLeftGC, botRightGC;
 
-#ifdef XPM	
+#ifdef XPM
 	in_width -= (w->login.logoWidth + 2*(w->login.logoPadding));
 #endif /* XPM */
-	
+
 	if ((PROMPT_STATE(w, p) == LOGIN_PROMPT_ECHO_ON) ||
 	    (PROMPT_STATE(w, p) == LOGIN_PROMPT_ECHO_OFF)) {
 	    topLeftGC = w->login.shdGC;
@@ -761,16 +727,16 @@ draw_it (LoginWidget w)
 	    /* Make top/left sides */
 	    XDrawLine(XtDisplay (w), XtWindow (w), topLeftGC,
 		      in_frame_x + i-1,         in_frame_y + i-1,
-		      in_frame_x + in_width-i,  in_frame_y + i-1); 
+		      in_frame_x + in_width-i,  in_frame_y + i-1);
 
 	    XDrawLine(XtDisplay (w), XtWindow (w), topLeftGC,
 		      in_frame_x + i-1,         in_frame_y + i-1,
-		      in_frame_x + i-1,         in_frame_y + in_height-i); 
+		      in_frame_x + i-1,         in_frame_y + in_height-i);
 
 	    /* Make bottom/right sides */
 	    XDrawLine(XtDisplay (w), XtWindow (w), botRightGC,
 		      in_frame_x + in_width-i,  in_frame_y + i-1,
-		      in_frame_x + in_width-i,  in_frame_y + in_height-i); 
+		      in_frame_x + in_width-i,  in_frame_y + in_height-i);
 
 	    XDrawLine(XtDisplay (w), XtWindow (w), botRightGC,
 		      in_frame_x + i-1,         in_frame_y + in_height-i,
@@ -783,7 +749,7 @@ draw_it (LoginWidget w)
 
 #ifdef XPM
 	gx -= ((w->login.logoWidth/2) + w->login.logoPadding);
-#endif	
+#endif
 	DRAW_STRING (greet, gx, GREET_Y(w), GREETING(w), strlen (GREETING(w)));
     }
     for (p = 0; p < NUM_PROMPTS ; p++) {
@@ -824,12 +790,12 @@ SetPrompt (Widget ctx, int promptNum, const char *message,
 	"LOGIN_PROMPT_NOT_SHOWN", "LOGIN_PROMPT_ECHO_ON",
 	"LOGIN_PROMPT_ECHO_OFF", "LOGIN_TEXT_INFO" };
     loginPromptState priorState;
-    
+
     Debug("SetPrompt(%d, %s, %s(%d))\n", promptNum,
 	  message ? message : "<NULL>", stateNames[state], state);
 
     XDM_ASSERT(promptNum >= 0 && promptNum <= LAST_PROMPT);
-    
+
     if (PROMPT_TEXT(w, promptNum) != NULL) {
 	XtFree(PROMPT_TEXT(w, promptNum));
 	PROMPT_TEXT(w, promptNum) = NULL;
@@ -847,18 +813,18 @@ SetPrompt (Widget ctx, int promptNum, const char *message,
     }
 
     messageLen = strlen(message);
-    
+
     prompt = XtMalloc(messageLen + 3);
     if (prompt == NULL) {
 	LogOutOfMem ("SetPrompt");
 	return -1;
     }
-    
+
     strncpy(prompt, message, messageLen);
-    
+
     /* Make sure text prompts have at least two spaces at end */
     e = messageLen;
-	    
+
     if (!isspace(message[messageLen - 2])) {
 	prompt[e] = ' ';
 	e++;
@@ -874,11 +840,11 @@ SetPrompt (Widget ctx, int promptNum, const char *message,
     if (w->login.state == INITIALIZING) {
 	return 0;
     }
-    
+
     if ((priorState == LOGIN_TEXT_INFO) && (w->login.msgTimeout != 0)) {
 	time_t now = time(NULL);
 	int timeleft = w->login.msgTimeout - now;
-	
+
 	if (timeleft > 0) {
 	    sleep(timeleft);
 	}
@@ -895,7 +861,7 @@ SetPrompt (Widget ctx, int promptNum, const char *message,
 	w->login.activePrompt = promptNum;
 	w->login.state = PROMPTING;
     }
-    
+
     PROMPT_CURSOR(w, promptNum) = 0;
     XClearArea (XtDisplay(w), XtWindow(w), 0, 0, 0, 0, FALSE);
     draw_it(w);
@@ -909,7 +875,7 @@ GetPrompt(Widget ctx, int promptNum)
     LoginWidget	w = (LoginWidget) ctx;
 
     XDM_ASSERT(promptNum >= 0 && promptNum <= LAST_PROMPT);
-    
+
     return CUR_PROMPT_TEXT(w,promptNum);
 }
 
@@ -920,12 +886,12 @@ SetValue(Widget ctx, int promptNum, char *value)
     LoginWidget	w = (LoginWidget) ctx;
 
     XDM_ASSERT(promptNum >= 0 && promptNum <= LAST_PROMPT);
-    
+
     if ((promptNum < 0) || (promptNum > LAST_PROMPT))
 	return -1;
 
     XDM_ASSERT(VALUE_TEXT(w, promptNum) != NULL);
-    
+
     if (VALUE_TEXT(w, promptNum) == NULL)
 	return -1;
 
@@ -939,7 +905,7 @@ SetValue(Widget ctx, int promptNum, char *value)
     VALUE_SHOW_START(w, promptNum) = 0;
     VALUE_SHOW_END(w, promptNum) = 0;
     PROMPT_CURSOR(w, promptNum) = 0;
-    
+
     return 0;
 }
 
@@ -950,7 +916,7 @@ GetValue(Widget ctx, int promptNum)
     LoginWidget	w = (LoginWidget) ctx;
 
     XDM_ASSERT(promptNum >= 0 && promptNum <= LAST_PROMPT);
-    
+
     if ((promptNum < 0) || (promptNum > LAST_PROMPT))
 	return NULL;
 
@@ -966,7 +932,7 @@ realizeDeleteChar (LoginWidget ctx)
     if (ctx->login.state == PROMPTING) {
 	int promptNum = ctx->login.activePrompt;
 	int redrawFrom = PROMPT_CURSOR(ctx, promptNum);
-	
+
 	if (PROMPT_CURSOR(ctx,promptNum) <  (int)strlen(VALUE_TEXT(ctx,promptNum))) {
 	    if (redrawFrom < VALUE_SHOW_START(ctx, ctx->login.activePrompt)) {
 		redrawFrom = 0;
@@ -1000,7 +966,7 @@ DeleteBackwardChar (Widget ctxw, XEvent *event, String *params, Cardinal *num_pa
 	CUR_PROMPT_CURSOR(ctx) -= 1;
 	realizeDeleteChar(ctx);
     }
-    XorCursor (ctx);	
+    XorCursor (ctx);
 }
 
 /*ARGSUSED*/
@@ -1017,7 +983,7 @@ DeleteForwardChar (Widget ctxw, XEvent *event, String *params, Cardinal *num_par
 
     XorCursor (ctx);
     realizeDeleteChar(ctx);
-    XorCursor (ctx);	
+    XorCursor (ctx);
 }
 
 /*ARGSUSED*/
@@ -1223,7 +1189,7 @@ TabField(Widget ctxw, XEvent *event, String *params, Cardinal *num_params)
 	if (nextPrompt > LAST_PROMPT) {
 	    nextPrompt = 0;
 	}
-    
+
 	if ((PROMPT_STATE(ctx, nextPrompt) == LOGIN_PROMPT_ECHO_ON) ||
 	    (PROMPT_STATE(ctx, nextPrompt) == LOGIN_PROMPT_ECHO_OFF)) {
 	    ctx->login.activePrompt = nextPrompt;
@@ -1441,7 +1407,7 @@ InsertChar (
 	    break;
     }
 
-    if (ctx->login.state == PROMPTING) {	
+    if (ctx->login.state == PROMPTING) {
 	if ((len + (int)strlen(VALUE_TEXT(ctx, promptNum)) >=
 	     (VALUE_TEXT_MAX(ctx,promptNum) - 1))) {
 	    len = VALUE_TEXT_MAX(ctx,promptNum) -
@@ -1476,7 +1442,7 @@ static XtConvertArgRec xftColorConvertArgs[] = {
      sizeof(Colormap)}
 };
 
-#define	donestr(type, value, tstr) \
+# define	donestr(type, value, tstr) \
 	{							\
 	    if (toVal->addr != NULL) {				\
 		if (toVal->size < sizeof(type)) {		\
@@ -1503,7 +1469,7 @@ XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
     Screen	*screen;
     Colormap	colormap;
     XftColor	*color;
-    
+
     if (*num_args != 2)
     {
 	XtAppErrorMsg (app,
@@ -1522,7 +1488,7 @@ XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
 				 XScreenNumberOfScreen (screen)),
 		  colormap, color);
 }
-    
+
 static Boolean
 XmuCvtStringToXftColor(Display *dpy,
 		       XrmValue *args, Cardinal *num_args,
@@ -1534,7 +1500,7 @@ XmuCvtStringToXftColor(Display *dpy,
     XftColor	    xftColor;
     Screen	    *screen;
     Colormap	    colormap;
-    
+
     if (*num_args != 2)
     {
 	XtAppErrorMsg (XtDisplayToApplicationContext (dpy),
@@ -1565,14 +1531,14 @@ XmuCvtStringToXftColor(Display *dpy,
     }
     else if (!XRenderParseColor (dpy, spec, &renderColor))
 	return False;
-    if (!XftColorAllocValue (dpy, 
+    if (!XftColorAllocValue (dpy,
 			     DefaultVisual (dpy,
 					    XScreenNumberOfScreen (screen)),
 			     colormap,
 			     &renderColor,
 			     &xftColor))
 	return False;
-    
+
     donestr (XftColor, xftColor, XtRXftColor);
 }
 
@@ -1582,7 +1548,7 @@ XmuFreeXftFont (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
 {
     Screen  *screen;
     XftFont *font;
-    
+
     if (*num_args != 1)
     {
 	XtAppErrorMsg (app,
@@ -1608,7 +1574,7 @@ XmuCvtStringToXftFont(Display *dpy,
     char    *name;
     XftFont *font;
     Screen  *screen;
-    
+
     if (*num_args != 1)
     {
 	XtAppErrorMsg (XtDisplayToApplicationContext (dpy),
@@ -1621,7 +1587,7 @@ XmuCvtStringToXftFont(Display *dpy,
 
     screen = *((Screen **) args[0].addr);
     name = (char *) fromVal->addr;
-    
+
     font = XftFontOpenName (dpy,
 			    XScreenNumberOfScreen (screen),
 			    name);
@@ -1651,12 +1617,12 @@ XmuXftTextWidth(Display *dpy, XftFont *font, FcChar8 *string, int len)
 
 #endif /* USE_XFT */
 
-static void 
+static void
 ClassInitialize(void)
 {
 #ifdef USE_XFT
-    XtSetTypeConverter (XtRString, XtRXftColor, 
-			XmuCvtStringToXftColor, 
+    XtSetTypeConverter (XtRString, XtRXftColor,
+			XmuCvtStringToXftColor,
 			xftColorConvertArgs, XtNumber(xftColorConvertArgs),
 			XtCacheByDisplay, XmuFreeXftColor);
     XtSetTypeConverter (XtRString, XtRXftFont,
@@ -1684,7 +1650,7 @@ static void Initialize (
     int                 s_num;
 #endif
     int 	rv = 0;
-    
+
     myXGCV.foreground = w->login.hipixel;
     myXGCV.background = w->core.background_pixel;
     valuemask = GCForeground | GCBackground;
@@ -1703,7 +1669,7 @@ static void Initialize (
 	myXGCV.font = w->login.textFont->fid;
 	valuemask |= GCFont;
     }
-#endif    
+#endif
     w->login.textGC = XtGetGC(gnew, valuemask, &myXGCV);
     myXGCV.foreground = w->core.background_pixel;
     w->login.bgGC = XtGetGC(gnew, valuemask, &myXGCV);
@@ -1780,7 +1746,7 @@ static void Initialize (
 	     &(w->login.logoPixmap),			/* pixmap */
 	     &(w->login.logoMask),			/* pixmap mask */
 	     &myAttributes);				/* XPM attributes */
-       
+
 	if ( rv < 0 )
 	{
 	    LogError("Cannot load xpm file %s: %s.\n", w->login.logoFileName,
@@ -1822,7 +1788,7 @@ SkipXpmLoad:
     VALUE_TEXT(w, LOGIN_PROMPT_USERNAME) 	= w->login.data.name;
     VALUE_TEXT_MAX(w, LOGIN_PROMPT_USERNAME)	= sizeof(w->login.data.name);
     VALUE_SHOW_START(w, LOGIN_PROMPT_USERNAME)	= 0;
-    
+
     PROMPT_TEXT(w, LOGIN_PROMPT_PASSWORD) 	= NULL;
     DEF_PROMPT_TEXT(w, LOGIN_PROMPT_PASSWORD) 	= w->login.passwdPrompt;
     VALUE_TEXT(w, LOGIN_PROMPT_PASSWORD) 	= w->login.data.passwd;
@@ -1831,7 +1797,7 @@ SkipXpmLoad:
 
     SetPrompt(gnew, LOGIN_PROMPT_PASSWORD, NULL, LOGIN_PROMPT_ECHO_OFF, False);
     SetPrompt(gnew, LOGIN_PROMPT_USERNAME, NULL, LOGIN_PROMPT_ECHO_ON, False);
-    
+
     if (w->core.width == 0)
 	w->core.width = max (GREET_W(w), FAIL_W(w)) + PAD_X(w);
     if (w->core.height == 0) {
@@ -1845,7 +1811,7 @@ SkipXpmLoad:
 
         w->core.height = max(fy + pady,
             (w->login.logoHeight + (2*w->login.logoPadding)) + pady);
-        
+
 #endif /* XPM */
     }
 #ifdef USE_XINERAMA
@@ -1858,7 +1824,7 @@ SkipXpmLoad:
 	    x = screens[0].x_org + (int)(screens[0].width - w->core.width) / 2;
 	if ((y = w->core.y) == -1)
 	    y = screens[0].y_org + (int)(screens[0].height - w->core.height) / 3;
-	
+
 	XFree(screens);
     }
     else
@@ -1876,7 +1842,7 @@ SkipXpmLoad:
     w->login.state = PROMPTING;
 }
 
- 
+
 static void Realize (
      Widget gw,
      XtValueMask *valueMask,
@@ -1900,13 +1866,13 @@ static void Realize (
     XDefineCursor(XtDisplay(gw), DefaultRootWindow(XtDisplay(gw)), cursor);
 
 #ifdef XPM
-    /* 
+    /*
      * Check if Pixmap was valid
      */
     if (True == w->login.logoValid)
     {
         /*
-         * Create pixmap window 
+         * Create pixmap window
          */
         {
             unsigned long valueMask = CWBackPixel | CWBackPixmap;
@@ -1963,8 +1929,8 @@ static void Destroy (Widget gw)
 	XftDrawDestroy(w->login.draw);
 	w->login.draw = NULL;
     }
-#endif    
-    
+#endif
+
     XtReleaseGC(gw, w->login.textGC);
     XtReleaseGC(gw, w->login.bgGC);
     XtReleaseGC(gw, w->login.xorGC);
@@ -2006,7 +1972,7 @@ static Boolean SetValues (
     Cardinal *num_args)
 {
     LoginWidget currentL, newL;
-    
+
     currentL = (LoginWidget) current;
     newL = (LoginWidget) new;
     if (GREETING (currentL) != GREETING (newL))

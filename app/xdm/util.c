@@ -1,5 +1,3 @@
-/* $XdotOrg: app/xdm/util.c,v 1.5 2006/03/30 21:14:31 alanc Exp $ */
-/* $Xorg: util.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
 /*
 
 Copyright 1989, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/util.c,v 3.20 2002/05/31 18:46:10 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -38,24 +35,59 @@ from The Open Group.
  * various utility routines
  */
 
-# include   "dm.h"
-# include   "dm_error.h"
+#include   "dm.h"
+#include   "dm_error.h"
 
 #include <X11/Xmu/SysUtil.h>	/* for XmuGetHostname */
 
 #ifdef X_POSIX_C_SOURCE
-#define _POSIX_C_SOURCE X_POSIX_C_SOURCE
-#include <signal.h>
-#undef _POSIX_C_SOURCE
+# define _POSIX_C_SOURCE X_POSIX_C_SOURCE
+# include <signal.h>
+# undef _POSIX_C_SOURCE
 #else
-#if defined(X_NOT_POSIX) || defined(_POSIX_SOURCE)
-#include <signal.h>
-#else
-#define _POSIX_SOURCE
-#include <signal.h>
-#undef _POSIX_SOURCE
+# if defined(X_NOT_POSIX) || defined(_POSIX_SOURCE)
+#  include <signal.h>
+# else
+#  define _POSIX_SOURCE
+#  include <signal.h>
+#  undef _POSIX_SOURCE
+# endif
 #endif
-#endif
+
+#ifndef HAVE_ASPRINTF
+# include <stdarg.h>
+/* Allocating sprintf found in many newer libc's
+ * Since xdm is single threaded, assumes arguments don't change
+ * between initial length calculation and copy to result buffer.
+ */
+int
+Asprintf(char ** ret, const char *restrict format, ...)
+{
+    va_list ap;
+    int len;
+    char buf[256];
+
+    va_start(ap, format);
+    len = vsnprintf(buf, sizeof(buf), format, ap);
+    if (len >= 0) {
+	*ret = malloc(len + 1);
+	if (*ret) {
+	    if (len < sizeof(buf)) {
+		memcpy(*ret, buf, len + 1);
+	    } else {
+		vsnprintf(*ret, len + 1, format, ap);
+	    }
+	} else {
+	    len = -1;
+	}
+    } else {
+	*ret = NULL;
+    }
+    va_end(ap);
+
+    return len;
+}
+#endif /* !HAVE_ASPRINTF */
 
 void
 printEnv (char **e)
@@ -69,12 +101,12 @@ makeEnv (char *name, char *value)
 {
 	char	*result;
 
-	result = malloc ((unsigned) (strlen (name) + strlen (value) + 2));
+	asprintf(&result, "%s=%s", name, value);
+
 	if (!result) {
 		LogOutOfMem ("makeEnv");
 		return NULL;
 	}
-	sprintf (result, "%s=%s", name, value);
 	return result;
 }
 
@@ -139,21 +171,21 @@ putEnv(const char *string, char **env)
 {
     char *v, *b, *n;
     int nl;
-  
+
     if ((b = strchr(string, '=')) == NULL)
 	return NULL;
     v = b + 1;
-  
+
     nl = b - string;
     if ((n = malloc(nl + 1)) == NULL)
     {
 	LogOutOfMem ("putAllEnv");
 	return NULL;
     }
-  
+
     strncpy(n, string,nl + 1);
     n[nl] = 0;
-  
+
     env = setEnv(env,n,v);
     free(n);
     return env;
@@ -172,7 +204,7 @@ freeEnv (char **env)
     }
 }
 
-# define isblank(c)	((c) == ' ' || c == '\t')
+#define isblank(c)	((c) == ' ' || c == '\t')
 
 char **
 parseArgs (char **argv, char *string)

@@ -1,6 +1,4 @@
 /*
- * $XdotOrg: app/xdm/access.c,v 1.2 2004/04/23 19:54:42 eich Exp $
- * $Xorg: access.c,v 1.5 2001/02/09 02:05:40 xorgcvs Exp $
  *
 Copyright 1990, 1998  The Open Group
 Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
@@ -28,15 +26,14 @@ in this Software without prior written authorization from the copyright holder.
  * Author:  Keith Packard, MIT X Consortium
  */
 
-/* $XFree86: xc/programs/xdm/access.c,v 3.13 2003/11/22 04:51:02 dawes Exp $ */
 
 /*
  * Access control for XDMCP - keep a database of allowable display addresses
  * and (potentially) a list of hosts to send ForwardQuery packets to
  */
 
-# include   "dm.h"
-# include   "dm_error.h"
+#include   "dm.h"
+#include   "dm_error.h"
 
 #ifdef XDMCP
 
@@ -54,20 +51,20 @@ in this Software without prior written authorization from the copyright holder.
 #  include        <arpa/inet.h>
 # endif
 
-#define ALIAS_CHARACTER	    '%'
-#define NEGATE_CHARACTER    '!'
-#define CHOOSER_STRING	    "CHOOSER"
-#define BROADCAST_STRING    "BROADCAST"
-#define NOBROADCAST_STRING  "NOBROADCAST"
-#define LISTEN_STRING	    "LISTEN"
-#define WILDCARD_STRING	    "*"
+# define ALIAS_CHARACTER	    '%'
+# define NEGATE_CHARACTER    '!'
+# define CHOOSER_STRING	    "CHOOSER"
+# define BROADCAST_STRING    "BROADCAST"
+# define NOBROADCAST_STRING  "NOBROADCAST"
+# define LISTEN_STRING	    "LISTEN"
+# define WILDCARD_STRING	    "*"
 
-#define HOST_ALIAS	    0
-#define HOST_ADDRESS	    1
-#define HOST_BROADCAST	    2
-#define HOST_CHOOSER	    3
-#define HOST_NOBROADCAST    4
-#define HOST_ANYADDR	    5
+# define HOST_ALIAS	    0
+# define HOST_ADDRESS	    1
+# define HOST_BROADCAST	    2
+# define HOST_CHOOSER	    3
+# define HOST_NOBROADCAST    4
+# define HOST_ANYADDR	    5
 
 typedef struct _hostEntry {
     struct _hostEntry	*next;
@@ -79,10 +76,10 @@ typedef struct _hostEntry {
     int			hopCount;
 } HostEntry;
 
-#define DISPLAY_ALIAS	    0
-#define DISPLAY_PATTERN	    1
-#define DISPLAY_ADDRESS	    2
-#define DISPLAY_LISTEN	    3
+# define DISPLAY_ALIAS	    0
+# define DISPLAY_PATTERN	    1
+# define DISPLAY_ADDRESS	    2
+# define DISPLAY_LISTEN	    3
 
 typedef struct _displayEntry {
     struct _displayEntry    *next;
@@ -109,10 +106,10 @@ ARRAY8Ptr
 getLocalAddress (void)
 {
     static int	haveLocalAddress;
-    
+
     if (!haveLocalAddress)
     {
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	struct addrinfo *ai;
 
 	if (getaddrinfo(localHostname(), NULL, NULL, &ai) != 0) {
@@ -124,18 +121,18 @@ getLocalAddress (void)
 	} else {
 	    if (ai->ai_addr->sa_family == AF_INET) {
 		XdmcpAllocARRAY8 (&localAddress, sizeof(struct in_addr));
-		memcpy(localAddress.data, 
+		memcpy(localAddress.data,
 		  &((struct sockaddr_in *)ai->ai_addr)->sin_addr,
 		  sizeof(struct in_addr));
 	    } else if (ai->ai_addr->sa_family == AF_INET6) {
 		XdmcpAllocARRAY8 (&localAddress, sizeof(struct in6_addr));
-		memcpy(localAddress.data, 
+		memcpy(localAddress.data,
 		  &((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr,
 		  sizeof(struct in6_addr));
-	    }	      
+	    }
 	    freeaddrinfo(ai);
 	}
-#else
+# else
 	struct hostent	*hostent;
 
 	hostent = gethostbyname (localHostname());
@@ -150,7 +147,7 @@ getLocalAddress (void)
 	    localAddress.data[2] = 0;
 	    localAddress.data[3] = 1;
 	}
-#endif
+# endif
 
     }
     return &localAddress;
@@ -210,7 +207,7 @@ FreeAccessDatabase (void)
     database = NULL;
 }
 
-#define WORD_LEN    256
+# define WORD_LEN    256
 static char	wordBuffer[WORD_LEN];
 static int	nextIsEOF;
 
@@ -290,12 +287,11 @@ tryagain:
     if (*hostOrAlias == ALIAS_CHARACTER)
     {
 	h->type = HOST_ALIAS;
-	h->entry.aliasName = malloc (strlen (hostOrAlias) + 1);
+	h->entry.aliasName = strdup (hostOrAlias);
 	if (!h->entry.aliasName) {
 	    free ((char *) h);
 	    return NULL;
 	}
-	strcpy (h->entry.aliasName, hostOrAlias);
     }
     else if (!strcmp (hostOrAlias, CHOOSER_STRING))
     {
@@ -318,11 +314,11 @@ tryagain:
     {
 	void *addr=NULL;
 	size_t addr_length=0;
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	struct addrinfo *ai = NULL;
-#else
+# else
 	struct hostent  *hostent = gethostbyname (hostOrAlias);
-#endif	
+# endif
 	char *hops = strrchr(hostOrAlias, '/');
 
 	if (hops) {
@@ -332,7 +328,7 @@ tryagain:
 		h->hopCount = 1;
 	}
 
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	if (getaddrinfo(hostOrAlias, NULL, NULL, &ai) == 0) {
 	    if (ai->ai_addr->sa_family == AF_INET) {
 		addr = &((struct sockaddr_in *)ai->ai_addr)->sin_addr;
@@ -340,14 +336,14 @@ tryagain:
 	    } else if (ai->ai_addr->sa_family == AF_INET6) {
 		addr = &((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr;
 		addr_length = sizeof(struct in6_addr);
-	    }	      
+	    }
 	}
-#else
+# else
 	if (hostent) {
 	    addr = hostent->h_addr;
 	    addr_length = hostent->h_length;
 	}
-#endif
+# endif
 	h->type = HOST_ADDRESS;
 
 	if (!addr)
@@ -355,27 +351,27 @@ tryagain:
 	    Debug ("No such host %s\n", hostOrAlias);
 	    LogError ("Access file \"%s\", host \"%s\" not found\n", accessFile, hostOrAlias);
 	    free ((char *) h);
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	    if (ai)
 		freeaddrinfo(ai);
-#endif
+# endif
 	    goto tryagain;
 	}
 	if (!XdmcpAllocARRAY8 (&h->entry.hostAddress, addr_length))
 	{
 	    LogOutOfMem ("ReadHostEntry\n");
 	    free ((char *) h);
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	    if (ai)
 		freeaddrinfo(ai);
-#endif
+# endif
 	    return NULL;
 	}
 	memmove( h->entry.hostAddress.data, addr, addr_length);
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	if (ai)
 	    freeaddrinfo(ai);
-#endif
+# endif
     }
     return h;
 }
@@ -400,7 +396,8 @@ ReadDisplayEntry (FILE *file)
     DisplayEntry    *d;
     struct _display *display;
     HostEntry	    *h, **prev;
-    
+
+tryagain:
     displayOrAlias = ReadWord (file, FALSE);
     if (!displayOrAlias)
     	return NULL;
@@ -411,15 +408,14 @@ ReadDisplayEntry (FILE *file)
     if (*displayOrAlias == ALIAS_CHARACTER)
     {
 	d->type = DISPLAY_ALIAS;
-	d->entry.aliasName = malloc (strlen (displayOrAlias) + 1);
+	d->entry.aliasName = strdup (displayOrAlias);
 	if (!d->entry.aliasName)
 	{
 	    free ((char *) d);
 	    return NULL;
 	}
-	strcpy (d->entry.aliasName, displayOrAlias);
     }
-    else if (!strcmp(displayOrAlias, LISTEN_STRING)) 
+    else if (!strcmp(displayOrAlias, LISTEN_STRING))
     {
 	d->type = DISPLAY_LISTEN;
     }
@@ -433,13 +429,12 @@ ReadDisplayEntry (FILE *file)
     	if (HasGlobCharacters (displayOrAlias))
     	{
 	    d->type = DISPLAY_PATTERN;
-	    d->entry.displayPattern = malloc (strlen (displayOrAlias) + 1);
+	    d->entry.displayPattern = strdup (displayOrAlias);
 	    if (!d->entry.displayPattern)
 	    {
 	    	free ((char *) d);
 	    	return NULL;
 	    }
-	    strcpy (d->entry.displayPattern, displayOrAlias);
     	}
     	else
     	{
@@ -447,7 +442,7 @@ ReadDisplayEntry (FILE *file)
 	    size_t addr_length = 0;
 	    int addrtype = 0;
 
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	    struct addrinfo *ai = NULL;
 
 	    if (getaddrinfo(displayOrAlias, NULL, NULL, &ai) == 0) {
@@ -458,9 +453,9 @@ ReadDisplayEntry (FILE *file)
 		} else if (addrtype == AF_INET6) {
 		    addr = &((struct sockaddr_in6 *)ai->ai_addr)->sin6_addr;
 		    addr_length = sizeof(struct in6_addr);
-		}	      
+		}
 	    }
-#else
+# else
 	    struct hostent  *hostent;
 
 	    if ((hostent = gethostbyname (displayOrAlias)) != NULL)
@@ -470,55 +465,55 @@ ReadDisplayEntry (FILE *file)
 		addrtype = hostent->h_addrtype;
 		addr_length = hostent->h_length;
 	    }
-#endif
+# endif
 	    if (addr == NULL)
 	    {
 		LogError ("Access file %s, display %s unknown\n", accessFile, displayOrAlias);
 		free ((char *) d);
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 		if (ai)
 		    freeaddrinfo(ai);
-#endif
-		return NULL;
+# endif
+		goto tryagain;
 	    }
 	    d->type = DISPLAY_ADDRESS;
 	    display = &d->entry.displayAddress;
 	    if (!XdmcpAllocARRAY8 (&display->clientAddress, addr_length))
 	    {
 	    	free ((char *) d);
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 		if (ai)
 		    freeaddrinfo(ai);
-#endif
+# endif
 	    	return NULL;
 	    }
 	    memmove( display->clientAddress.data, addr, addr_length);
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
 	    if (ai)
 		freeaddrinfo(ai);
-#endif
+# endif
 	    switch (addrtype)
 	    {
-#ifdef AF_UNIX
+# ifdef AF_UNIX
 	    case AF_UNIX:
 	    	display->connectionType = FamilyLocal;
 	    	break;
-#endif
-#ifdef AF_INET
+# endif
+# ifdef AF_INET
 	    case AF_INET:
 	    	display->connectionType = FamilyInternet;
 	    	break;
-#endif
-#if defined(IPv6) && defined(AF_INET6)
+# endif
+# if defined(IPv6) && defined(AF_INET6)
 	    case AF_INET6:
 	    	display->connectionType = FamilyInternet6;
 	    	break;
-#endif
-#ifdef AF_DECnet
+# endif
+# ifdef AF_DECnet
 	    case AF_DECnet:
 	    	display->connectionType = FamilyDECnet;
 	    	break;
-#endif
+# endif
 	    default:
 	    	display->connectionType = FamilyLocal;
 	    	break;
@@ -591,7 +586,7 @@ ScanAccessDatabase (void)
  * the local host exists on any of the lists, else FALSE
  */
 
-#define MAX_DEPTH   32
+# define MAX_DEPTH   32
 
 static int indirectAlias (
     char	*alias,
@@ -942,21 +937,21 @@ void ForEachListenAddr (
     }
     if (!listenFound) {
 	(*listenfunction) (NULL, closure);
-#if defined(IPv6) && defined(AF_INET6) && defined(XDM_DEFAULT_MCAST_ADDR6)
+# if defined(IPv6) && defined(AF_INET6) && defined(XDM_DEFAULT_MCAST_ADDR6)
 	{   /* Join default IPv6 Multicast Group */
 
 	    static ARRAY8	defaultMcastAddress;
 
 	    if (defaultMcastAddress.length == 0) {
 		struct in6_addr addr6;
-	    
+
 		if (inet_pton(AF_INET6,XDM_DEFAULT_MCAST_ADDR6,&addr6) == 1) {
-		    if (!XdmcpAllocARRAY8 (&defaultMcastAddress, 
+		    if (!XdmcpAllocARRAY8 (&defaultMcastAddress,
 		      sizeof(struct in6_addr))) {
 			LogOutOfMem ("ReadHostEntry\n");
 			defaultMcastAddress.length = -1;
 		    } else {
-			memcpy(defaultMcastAddress.data, &addr6, 
+			memcpy(defaultMcastAddress.data, &addr6,
 			  sizeof(struct in6_addr));
 		    }
 		} else {
@@ -967,7 +962,7 @@ void ForEachListenAddr (
 		(*mcastfunction) (&defaultMcastAddress, closure);
 	    }
 	}
-#endif
+# endif
     }
 }
 

@@ -6,6 +6,7 @@ Configuration files:	$(libdir)/X11/xdm
 Pixmap files:		$(libdir)/X11/xdm/pixmaps
 Log files:		/var/log
 Process id/lock files:	/var/run
+xauth cookie files:	/var/lib/xdm
 
 These may be overridden with the following options to configure:
 Loadable modules:	--with-xdmlibdir
@@ -14,9 +15,36 @@ Configuration files:	--with-xdmconfigdir (or --with-xdmlibdir)
 Pixmap files:		--with-xdmpixmapdir (or --with-xdmlibdir)
 Log files:		--with-logdir
 Process id/lock files:	--with-piddir
+xauth cookie files:	--with-authdir
 
 For instance, some packagers/sites may prefer:
-	--with-xdmconfigdir=/etc/X11/xdm --with-xdmlibdir=$(prefix)/lib/xdm
+	--with-xdmconfigdir=/etc/X11/xdm
+	--with-xdmlibdir=$(prefix)/lib/xdm
 	--with-xdmscriptdir=/etc/X11/xdm
 
-$Id: README,v 1.2 2007/08/05 19:37:39 matthieu Exp $
+	----------------------------------------------------------------
+
+All questions regarding this software should be directed at the
+Xorg mailing list:
+
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+Please submit bug reports to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/app/xdm
+
+        http://cgit.freedesktop.org/xorg/app/xdm
+
+For patch submission instructions, see:
+
+	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage
+
+$Id: README,v 1.3 2010/03/28 09:33:02 matthieu Exp $

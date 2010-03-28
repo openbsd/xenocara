@@ -179,7 +179,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -201,10 +200,12 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CHOOSER_CFLAGS = @CHOOSER_CFLAGS@
 CHOOSER_LIBS = @CHOOSER_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -241,6 +242,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 HAS_ARC4_RANDOM_FALSE = @HAS_ARC4_RANDOM_FALSE@
 HAS_ARC4_RANDOM_TRUE = @HAS_ARC4_RANDOM_TRUE@
 HAS_KERBEROS_FIVE_FALSE = @HAS_KERBEROS_FIVE_FALSE@
@@ -249,6 +251,8 @@ HAS_SECURE_RPC_FALSE = @HAS_SECURE_RPC_FALSE@
 HAS_SECURE_RPC_TRUE = @HAS_SECURE_RPC_TRUE@
 HAS_XDM_AUTH_FALSE = @HAS_XDM_AUTH_FALSE@
 HAS_XDM_AUTH_TRUE = @HAS_XDM_AUTH_TRUE@
+HAVE_AM_SILENT_RULES_FALSE = @HAVE_AM_SILENT_RULES_FALSE@
+HAVE_AM_SILENT_RULES_TRUE = @HAVE_AM_SILENT_RULES_TRUE@
 HAVE_MKTEMP_COMMAND_FALSE = @HAVE_MKTEMP_COMMAND_FALSE@
 HAVE_MKTEMP_COMMAND_TRUE = @HAVE_MKTEMP_COMMAND_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -296,13 +300,11 @@ SHELL = @SHELL@
 SHELL_CMD = @SHELL_CMD@
 STRIP = @STRIP@
 SU = @SU@
-TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
-TMP_XAW_LIBS = @TMP_XAW_LIBS@
 USE_XPM_FALSE = @USE_XPM_FALSE@
 USE_XPM_TRUE = @USE_XPM_TRUE@
+UTMP_FILE = @UTMP_FILE@
 VERSION = @VERSION@
-XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
-XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
+WTMP_FILE = @WTMP_FILE@
 XDMCONFIGDIR = @XDMCONFIGDIR@
 XDMGREET_CFLAGS = @XDMGREET_CFLAGS@
 XDMGREET_LIBS = @XDMGREET_LIBS@
@@ -312,12 +314,15 @@ XDMPIDDIR = @XDMPIDDIR@
 XDMSCRIPTDIR = @XDMSCRIPTDIR@
 XDMSHELL_CFLAGS = @XDMSHELL_CFLAGS@
 XDMSHELL_LIBS = @XDMSHELL_LIBS@
+XDMXAUTHDIR = @XDMXAUTHDIR@
 XDM_BWPIXMAP = @XDM_BWPIXMAP@
 XDM_CFLAGS = @XDM_CFLAGS@
 XDM_LDFLAGS = @XDM_LDFLAGS@
 XDM_LIBS = @XDM_LIBS@
 XDM_PIXMAP = @XDM_PIXMAP@
 XDM_PIXMAPDIR = @XDM_PIXMAPDIR@
+XDM_PRINT_CFLAGS = @XDM_PRINT_CFLAGS@
+XDM_PRINT_LIBS = @XDM_PRINT_LIBS@
 XFT_CFLAGS = @XFT_CFLAGS@
 XFT_LIBS = @XFT_LIBS@
 XINERAMA_CFLAGS = @XINERAMA_CFLAGS@
@@ -329,18 +334,9 @@ XPM_LIBS = @XPM_LIBS@
 XRDB_PROGRAM = @XRDB_PROGRAM@
 XT_CFLAGS = @XT_CFLAGS@
 XT_LIBS = @XT_LIBS@
-ac_ct_AR = @ac_ct_AR@
-ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -358,35 +354,44 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = config greeter
 xdmlibdir = $(XDMLIBDIR)
+AM_CFLAGS = $(CWARNFLAGS)
 
 #
 # xdm
 #
-xdm_CFLAGS = $(XDM_CFLAGS) -D_BSD_SOURCE $(am__append_1) \
-	$(am__append_4) $(am__append_8)
+xdm_CFLAGS = $(XDM_CFLAGS) $(am__append_1) $(am__append_4) \
+	$(am__append_8)
 xdm_LDADD = $(XDM_LIBS) $(XDM_LDFLAGS)
 xdm_SOURCES = auth.c daemon.c server.c dpylist.c dm.c error.c file.c \
 	netaddr.c reset.c resource.c protodpy.c policy.c session.c \
@@ -420,12 +425,20 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/^[         ]*XHASH/s/XHASH/\#/' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
+
+# Support for automake 1.11 AM_SILENT_RULES
+@HAVE_AM_SILENT_RULES_TRUE@cpp_verbose = $(cpp_verbose_$(V))
+@HAVE_AM_SILENT_RULES_TRUE@cpp_verbose_ = $(cpp_verbose_$(AM_DEFAULT_VERBOSITY))
+@HAVE_AM_SILENT_RULES_TRUE@cpp_verbose_0 = @echo "  CPP   " $@;
 XORGRELSTRING = @PACKAGE_STRING@
 XORGMANNAME = X Version 11
 MANDEFS = \
 	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
-	-DCHOOSERPATH=$(xdmlibdir)/chooser -DXDMLOGDIR=$(XDMLOGDIR) \
-	-DXDMDIR=$(XDMCONFIGDIR) -DBINDIR=$(bindir) -DXDMPIDDIR=$(XDMPIDDIR) \
+	-DCHOOSERPATH="$(xdmlibdir)/chooser" -DXDMLOGDIR="$(XDMLOGDIR)" \
+	-DXDMDIR="$(XDMCONFIGDIR)" -DBINDIR="$(bindir)" \
+	-DXDMPIDDIR="$(XDMPIDDIR)" -DXDMXAUTHDIR="$(XDMXAUTHDIR)" \
+	-DDEF_USER_PATH="$(DEF_USER_PATH)" \
+	-DDEF_SYSTEM_PATH="$(DEF_SYSTEM_PATH)" \
 	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
 	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
 	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
@@ -457,7 +470,7 @@ DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 APPDEFAULTFILES = app-defaults/Chooser
 appdefault_DATA = $(APPDEFAULTFILES)
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS)
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -1495,10 +1508,10 @@ uninstall-info: uninstall-info-recursive
 
 
 .cpp:
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(cpp_verbose)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .man.cpp.$(APP_MAN_SUFFIX):
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(cpp_verbose)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .ad:
 	[ -d app-defaults ] || mkdir app-defaults
@@ -1513,7 +1526,7 @@ uninstall-info: uninstall-info-recursive
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

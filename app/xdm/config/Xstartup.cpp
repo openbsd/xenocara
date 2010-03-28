@@ -1,9 +1,9 @@
 XCOMM!/bin/sh
 XCOMM 
-XCOMM $OpenBSD: Xstartup.cpp,v 1.2 2007/08/05 19:37:40 matthieu Exp $
+XCOMM $OpenBSD: Xstartup.cpp,v 1.3 2010/03/28 09:33:02 matthieu Exp $
 XCOMM
-XCOMM Register a login (derived from GiveConsole as follows:)
-XCOMM
+BINDIR/sessreg  -a -w WTMP_FILE -u UTMP_FILE \
+	-x XDMCONFIGDIR/Xservers -l $DISPLAY -h "" $USER
 if [ -f /etc/nologin ]; then
         /usr/X11R6/bin/xmessage -file /etc/nologin -timeout 30 -center
         exit 1

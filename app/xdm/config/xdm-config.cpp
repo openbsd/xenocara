@@ -1,11 +1,8 @@
 ! $Xorg: xdm-conf.cpp,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
-! $XdotOrg: xc/programs/xdm/config/xdm-conf.cpp,v 1.5 2005/12/11 20:46:25 alanc Exp $    
-! $OpenBSD: xdm-config.cpp,v 1.2 2006/11/28 15:41:12 matthieu Exp $
 !
 !
 !
 !
-! $XFree86: xc/programs/xdm/config/xdm-conf.cpp,v 1.10 2002/11/30 19:11:32 herrb Exp $
 !
 #ifndef XDMCONFIGDIR
 #define XDMCONFIGDIR XDMDIR
@@ -13,6 +10,7 @@
 #ifndef XDMSCRIPTDIR
 #define XDMSCRIPTDIR XDMDIR
 #endif
+DisplayManager.authDir:	XDMXAUTHDIR
 DisplayManager.errorLogFile:	XDMLOGDIR/xdm.log
 DisplayManager.pidFile:		XDMPIDDIR/xdm.pid
 DisplayManager.keyFile:		XDMCONFIGDIR/xdm-keys

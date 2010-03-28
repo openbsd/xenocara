@@ -14,7 +14,6 @@
 
 @SET_MAKE@
 
-# $XdotOrg: $
 #
 
 #							-*- Makefile -*-
@@ -96,10 +95,12 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CHOOSER_CFLAGS = @CHOOSER_CFLAGS@
 CHOOSER_LIBS = @CHOOSER_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -136,6 +137,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 HAS_ARC4_RANDOM_FALSE = @HAS_ARC4_RANDOM_FALSE@
 HAS_ARC4_RANDOM_TRUE = @HAS_ARC4_RANDOM_TRUE@
 HAS_KERBEROS_FIVE_FALSE = @HAS_KERBEROS_FIVE_FALSE@
@@ -144,6 +146,8 @@ HAS_SECURE_RPC_FALSE = @HAS_SECURE_RPC_FALSE@
 HAS_SECURE_RPC_TRUE = @HAS_SECURE_RPC_TRUE@
 HAS_XDM_AUTH_FALSE = @HAS_XDM_AUTH_FALSE@
 HAS_XDM_AUTH_TRUE = @HAS_XDM_AUTH_TRUE@
+HAVE_AM_SILENT_RULES_FALSE = @HAVE_AM_SILENT_RULES_FALSE@
+HAVE_AM_SILENT_RULES_TRUE = @HAVE_AM_SILENT_RULES_TRUE@
 HAVE_MKTEMP_COMMAND_FALSE = @HAVE_MKTEMP_COMMAND_FALSE@
 HAVE_MKTEMP_COMMAND_TRUE = @HAVE_MKTEMP_COMMAND_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -191,13 +195,11 @@ SHELL = @SHELL@
 SHELL_CMD = @SHELL_CMD@
 STRIP = @STRIP@
 SU = @SU@
-TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
-TMP_XAW_LIBS = @TMP_XAW_LIBS@
 USE_XPM_FALSE = @USE_XPM_FALSE@
 USE_XPM_TRUE = @USE_XPM_TRUE@
+UTMP_FILE = @UTMP_FILE@
 VERSION = @VERSION@
-XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
-XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
+WTMP_FILE = @WTMP_FILE@
 XDMCONFIGDIR = @XDMCONFIGDIR@
 XDMGREET_CFLAGS = @XDMGREET_CFLAGS@
 XDMGREET_LIBS = @XDMGREET_LIBS@
@@ -207,12 +209,15 @@ XDMPIDDIR = @XDMPIDDIR@
 XDMSCRIPTDIR = @XDMSCRIPTDIR@
 XDMSHELL_CFLAGS = @XDMSHELL_CFLAGS@
 XDMSHELL_LIBS = @XDMSHELL_LIBS@
+XDMXAUTHDIR = @XDMXAUTHDIR@
 XDM_BWPIXMAP = @XDM_BWPIXMAP@
 XDM_CFLAGS = @XDM_CFLAGS@
 XDM_LDFLAGS = @XDM_LDFLAGS@
 XDM_LIBS = @XDM_LIBS@
 XDM_PIXMAP = @XDM_PIXMAP@
 XDM_PIXMAPDIR = @XDM_PIXMAPDIR@
+XDM_PRINT_CFLAGS = @XDM_PRINT_CFLAGS@
+XDM_PRINT_LIBS = @XDM_PRINT_LIBS@
 XFT_CFLAGS = @XFT_CFLAGS@
 XFT_LIBS = @XFT_LIBS@
 XINERAMA_CFLAGS = @XINERAMA_CFLAGS@
@@ -224,18 +229,9 @@ XPM_LIBS = @XPM_LIBS@
 XRDB_PROGRAM = @XRDB_PROGRAM@
 XT_CFLAGS = @XT_CFLAGS@
 XT_LIBS = @XT_LIBS@
-ac_ct_AR = @ac_ct_AR@
-ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -253,23 +249,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -290,6 +294,11 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/^[         ]*XHASH/s/XHASH/\#/' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
+
+# Support for automake 1.11 AM_SILENT_RULES
+@HAVE_AM_SILENT_RULES_TRUE@cpp_verbose = $(cpp_verbose_$(V))
+@HAVE_AM_SILENT_RULES_TRUE@cpp_verbose_ = $(cpp_verbose_$(AM_DEFAULT_VERBOSITY))
+@HAVE_AM_SILENT_RULES_TRUE@cpp_verbose_0 = @echo "  CPP   " $@;
 xdmscriptdir = $(XDMSCRIPTDIR)
 xdmconfigdir = $(XDMCONFIGDIR)
 dist_xdmconfig_DATA = \
@@ -331,7 +340,9 @@ XPMDEFINES = -DXPM -DBITMAPDIR=$(XDM_PIXMAPDIR) -DXDM_PIXMAP=$(XDM_PIXMAP) \
 MKTEMP_DEFINES = -DMKTEMP_COMMAND=$(MKTEMP_COMMAND)
 #endif
 CPP_FILES_FLAGS = -DBINDIR="$(bindir)" -DDEFAULTVT="$(DEFAULTVT)" \
+    -DUTMP_FILE="$(UTMP_FILE)" -DWTMP_FILE="$(WTMP_FILE)" \
     -DXDMDIR="$(XDMLIBDIR)" -DXDMLOGDIR="$(XDMLOGDIR)" \
+    -DXDMXAUTHDIR="$(XDMXAUTHDIR)" \
     -DXDMPIDDIR="$(XDMPIDDIR)" -DXDMCONFIGDIR="$(XDMCONFIGDIR)" \
     -DXDMSCRIPTDIR="$(XDMSCRIPTDIR)" -DSU="$(SU)" \
     -DCHOOSERPATH="$(XDMLIBDIR)/chooser" $(XPMDEFINES) \
@@ -607,13 +618,13 @@ uninstall-am: uninstall-dist_pixmapDATA uninstall-dist_xdmconfigDATA \
 
 
 .cpp:
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(cpp_verbose)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 Xservers: Xservers.$(SERVERSTYPE)
 	ln -s Xservers.$(SERVERSTYPE) Xservers
 
 Xservers.ws: $(srcdir)/Xservers.ws.cpp
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/Xservers.ws.cpp | $(CPP_SED_MAGIC) > $@
+	$(cpp_verbose)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/Xservers.ws.cpp | $(CPP_SED_MAGIC) > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -1,5 +1,3 @@
-/* $XdotOrg: app/xdm/socket.c,v 1.5 2006/03/10 00:48:16 alanc Exp $ */
-/* $Xorg: socket.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -28,7 +26,6 @@ other dealings in this Software without prior written authorization
 from the copyright holder.
 
 */
-/* $XFree86: xc/programs/xdm/socket.c,v 3.13 2003/07/18 15:39:52 tsi Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -41,20 +38,16 @@ from the copyright holder.
 #include "dm_error.h"
 
 #ifdef XDMCP
-#ifndef STREAMSCONN
+# ifndef STREAMSCONN
 
-#include <errno.h>
-#include "dm_socket.h"
+#  include <errno.h>
+#  include "dm_socket.h"
 
-#ifndef X_NO_SYS_UN
-#ifndef Lynx
-#include <sys/un.h>
-#else
-#include <un.h>
-#endif
-#endif
-#include <netdb.h>
-#include <arpa/inet.h>
+#  ifndef X_NO_SYS_UN
+#   include <sys/un.h>
+#  endif
+#  include <netdb.h>
+#  include <arpa/inet.h>
 
 extern int	chooserFd;
 
@@ -70,15 +63,15 @@ CreateWellKnownSockets (void)
     if (request_port == 0)
 	return;
 
-#if defined(IPv6) && defined(AF_INET6)
+#  if defined(IPv6) && defined(AF_INET6)
     chooserFd = socket (AF_INET6, SOCK_STREAM, 0);
     if (chooserFd == -1)
-#endif
+#  endif
     chooserFd = socket (AF_INET, SOCK_STREAM, 0);
     Debug ("Created chooser socket %d\n", chooserFd);
     if (chooserFd == -1)
     {
-	LogError ("chooser socket creation failed, errno %d\n", errno);
+	LogError ("chooser socket creation failed: %s\n", _SysErrorMsg (errno));
 	return;
     }
     listen (chooserFd, 5);
@@ -92,28 +85,28 @@ GetChooserAddr (
     char	*addr,
     int		*lenp)
 {
-#if defined(IPv6) && defined(AF_INET6)
+#  if defined(IPv6) && defined(AF_INET6)
     struct sockaddr_storage in_addr;
-#else
+#  else
     struct sockaddr_in	in_addr;
-#endif
+#  endif
     int			len;
     int			retval = 0;
 
     len = sizeof in_addr;
-    if (chooserFd < 0) 
+    if (chooserFd < 0)
 	return -1;	/* TODO check other listening sockets */
     if (getsockname (chooserFd, (struct sockaddr *)&in_addr, (void *)&len) < 0)
 	return -1;
-#if defined(IPv6) && defined(AF_INET6)
+#  if defined(IPv6) && defined(AF_INET6)
     if (((struct sockaddr *)&in_addr)->sa_family == AF_INET6)
-	Debug ("Chooser socket port: %d (IPv6)\n", 
+	Debug ("Chooser socket port: %d (IPv6)\n",
 	  ntohs(((struct sockaddr_in6 *) &in_addr)->sin6_port));
     else
-#endif
-	Debug ("Chooser socket port: %d\n", 
+#  endif
+	Debug ("Chooser socket port: %d\n",
 	  ntohs(((struct sockaddr_in *) &in_addr)->sin_port));
-    if (*lenp < len)  
+    if (*lenp < len)
 	retval = -2;
     else
 	memmove( addr, (char *) &in_addr, len);
@@ -127,15 +120,15 @@ CreateListeningSocket (struct sockaddr *sock_addr, int salen)
 {
     int fd;
     const char *addrstring = "unknown";
-#if defined(IPv6) && defined(AF_INET6)
+#  if defined(IPv6) && defined(AF_INET6)
     char addrbuf[INET6_ADDRSTRLEN];
-#endif
+#  endif
 
     if (request_port == 0)
 	    return -1;
 
     if (debugLevel > 0) {
-#if defined(IPv6) && defined(AF_INET6)
+#  if defined(IPv6) && defined(AF_INET6)
 	void *ipaddr;
 	if (sock_addr->sa_family == AF_INET6) {
 	    ipaddr = & ((struct sockaddr_in6 *) sock_addr)->sin6_addr;
@@ -145,25 +138,26 @@ CreateListeningSocket (struct sockaddr *sock_addr, int salen)
 	addrstring =
 	  inet_ntop(sock_addr->sa_family, ipaddr, addrbuf, sizeof(addrbuf));
 
-#else
+#  else
 	addrstring = inet_ntoa(((struct sockaddr_in *) sock_addr)->sin_addr);
-#endif
+#  endif
 
-	Debug ("creating socket to listen on port %d of address %s\n", 
+	Debug ("creating socket to listen on port %d of address %s\n",
 	  request_port,addrstring);
     }
 
     fd = socket (sock_addr->sa_family, SOCK_DGRAM, 0);
 
     if (fd == -1) {
-	LogError ("XDMCP socket creation failed, errno %d\n", errno);
+	LogError ("XDMCP socket creation failed: %s\n", _SysErrorMsg (errno));
 	return fd;
     }
     RegisterCloseOnFork (fd);
 
     if (bind (fd, sock_addr, salen) == -1)
     {
-	LogError ("error %d binding socket address %d\n", errno, request_port);
+	LogError ("error binding socket address %d: %s\n", request_port,
+		  _SysErrorMsg (errno));
 	close (fd);
 	fd = -1;
 	return fd;
@@ -225,16 +219,16 @@ FindInList(struct socklist *list, ARRAY8Ptr addr)
 		addrdata = (char *)
 		  &(((struct sockaddr_in *)s->addr)->sin_addr.s_addr);
 		break;
-#if defined(IPv6) && defined(AF_INET6)
+#  if defined(IPv6) && defined(AF_INET6)
 	    case AF_INET6:
 		addrdata = (char *)
 		  &(((struct sockaddr_in6 *)s->addr)->sin6_addr.s6_addr);
 		break;
-#endif
+#  endif
 	    default:
 		/* Unrecognized address family */
 		continue;
-	    }	
+	    }
 	    if (memcmp(addrdata, addr->data, addr->length) == 0) {
 		return s;
 	    }
@@ -254,7 +248,7 @@ CreateSocklistEntry(ARRAY8Ptr addr)
 
     bzero(s, sizeof(struct socklist));
 
-    if (addr->length == 4) /* IPv4 */ 
+    if (addr->length == 4) /* IPv4 */
     {
 	struct sockaddr_in *sin;
 	sin = malloc (sizeof(struct sockaddr_in));
@@ -266,38 +260,38 @@ CreateSocklistEntry(ARRAY8Ptr addr)
 	s->addr = (struct sockaddr *) sin;
 
 	bzero (sin, sizeof (struct sockaddr_in));
-#ifdef BSD44SOCKETS
+#  ifdef BSD44SOCKETS
 	sin->sin_len = sizeof(struct sockaddr_in);
-#endif
+#  endif
 	s->salen = sizeof(struct sockaddr_in);
 	s->addrlen = sizeof(struct in_addr);
 	sin->sin_family = AF_INET;
 	sin->sin_port = htons ((short) request_port);
 	memcpy(&sin->sin_addr, addr->data, addr->length);
     }
-#if defined(IPv6) && defined(AF_INET6)
+#  if defined(IPv6) && defined(AF_INET6)
     else if (addr->length == 16) /* IPv6 */
     {
 	struct sockaddr_in6 *sin6;
 	sin6 = malloc (sizeof(struct sockaddr_in6));
 	if (sin6 == NULL) {
 	    LogOutOfMem("CreateSocklistEntry");
-	    free(s);	    
+	    free(s);
 	    return NULL;
 	}
 	s->addr = (struct sockaddr *) sin6;
 
 	bzero (sin6, sizeof (struct sockaddr_in6));
-#ifdef SIN6_LEN
+#   ifdef SIN6_LEN
 	sin6->sin6_len = sizeof(struct sockaddr_in6);
-#endif
+#   endif
 	s->salen = sizeof(struct sockaddr_in6);
 	s->addrlen = sizeof(struct in6_addr);
 	sin6->sin6_family = AF_INET6;
 	sin6->sin6_port = htons ((short) request_port);
 	memcpy(&sin6->sin6_addr, addr->data, addr->length);
-    } 
-#endif
+    }
+#  endif
     else {
 	/* Unknown address type */
 	free(s);
@@ -306,7 +300,7 @@ CreateSocklistEntry(ARRAY8Ptr addr)
     return s;
 }
 
-static void 
+static void
 UpdateListener(ARRAY8Ptr addr, void **closure)
 {
     struct socklist *s;
@@ -316,20 +310,20 @@ UpdateListener(ARRAY8Ptr addr, void **closure)
     if (addr == NULL || addr->length == 0) {
 	ARRAY8 tmpaddr;
 	struct in_addr in;
-#if defined(IPv6) && defined(AF_INET6)
+#  if defined(IPv6) && defined(AF_INET6)
 	struct in6_addr in6 = in6addr_any;
 	tmpaddr.length = sizeof(in6);
 	tmpaddr.data = (CARD8Ptr) &in6;
 	UpdateListener(&tmpaddr, closure);
 	if (*closure) return;
-#endif
+#  endif
 	in.s_addr = htonl (INADDR_ANY);
 	tmpaddr.length = sizeof(in);
 	tmpaddr.data = (CARD8Ptr) &in;
 	UpdateListener(&tmpaddr, closure);
 	return;
     }
-    
+
     s = FindInList(listensocks, addr);
 
     if (s) {
@@ -337,7 +331,7 @@ UpdateListener(ARRAY8Ptr addr, void **closure)
 	s->ref = 1;
 	return;
     }
-    
+
     s = CreateSocklistEntry(addr);
 
     if (s == NULL)
@@ -355,24 +349,24 @@ UpdateListener(ARRAY8Ptr addr, void **closure)
     *closure = (void *) s;
 }
 
-#define JOIN_MCAST_GROUP 0
-#define LEAVE_MCAST_GROUP 1
+#  define JOIN_MCAST_GROUP 0
+#  define LEAVE_MCAST_GROUP 1
 
 static void
 ChangeMcastMembership(struct socklist *s, struct socklist *g, int op)
 {
     int sockopt;
 
-    switch (s->addr->sa_family) 
+    switch (s->addr->sa_family)
     {
         case AF_INET:
         {
 	    struct ip_mreq mreq;
-	    memcpy(&mreq.imr_multiaddr, 
-	      &((struct sockaddr_in *) g->addr)->sin_addr, 
+	    memcpy(&mreq.imr_multiaddr,
+	      &((struct sockaddr_in *) g->addr)->sin_addr,
 	      sizeof(struct in_addr));
 	    memcpy(&mreq.imr_interface,
-	      &((struct sockaddr_in *) s->addr)->sin_addr, 
+	      &((struct sockaddr_in *) s->addr)->sin_addr,
 	      sizeof(struct in_addr));
 	    if (op == JOIN_MCAST_GROUP) {
 		sockopt = IP_ADD_MEMBERSHIP;
@@ -386,24 +380,24 @@ ChangeMcastMembership(struct socklist *s, struct socklist *g, int op)
 		  inet_ntoa(((struct sockaddr_in *) g->addr)->sin_addr),
 		  errno);
 	    } else if (debugLevel > 0) {
-		Debug ("XDMCP socket multicast %s to %s succeeded\n", 
+		Debug ("XDMCP socket multicast %s to %s succeeded\n",
 		  (op == JOIN_MCAST_GROUP) ? "join" : "drop",
 		  inet_ntoa(((struct sockaddr_in *) g->addr)->sin_addr));
 	    }
 	    return;
 	}
-#if defined(IPv6) && defined(AF_INET6)
-#ifndef IPV6_JOIN_GROUP
-#define IPV6_JOIN_GROUP IPV6_ADD_MEMBERSHIP 
-#endif
-#ifndef IPV6_LEAVE_GROUP
-#define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
-#endif
+#  if defined(IPv6) && defined(AF_INET6)
+#   ifndef IPV6_JOIN_GROUP
+#    define IPV6_JOIN_GROUP IPV6_ADD_MEMBERSHIP
+#   endif
+#   ifndef IPV6_LEAVE_GROUP
+#    define IPV6_LEAVE_GROUP IPV6_DROP_MEMBERSHIP
+#   endif
 	case AF_INET6:
 	{
 	    struct ipv6_mreq mreq6;
-	    memcpy(&mreq6.ipv6mr_multiaddr, 
-	      &((struct sockaddr_in6 *) g->addr)->sin6_addr, 
+	    memcpy(&mreq6.ipv6mr_multiaddr,
+	      &((struct sockaddr_in6 *) g->addr)->sin6_addr,
 	      sizeof(struct in6_addr));
 	    mreq6.ipv6mr_interface = 0;  /* TODO: fix this */
 	    if (op == JOIN_MCAST_GROUP) {
@@ -416,7 +410,7 @@ ChangeMcastMembership(struct socklist *s, struct socklist *g, int op)
 		int saveerr = errno;
 		char addrbuf[INET6_ADDRSTRLEN];
 
-		inet_ntop(s->addr->sa_family, 
+		inet_ntop(s->addr->sa_family,
 		  &((struct sockaddr_in6 *) g->addr)->sin6_addr,
 		  addrbuf, sizeof(addrbuf));
 
@@ -426,26 +420,26 @@ ChangeMcastMembership(struct socklist *s, struct socklist *g, int op)
 	    } else if (debugLevel > 0) {
 		char addrbuf[INET6_ADDRSTRLEN];
 
-		inet_ntop(s->addr->sa_family, 
+		inet_ntop(s->addr->sa_family,
 		  &((struct sockaddr_in6 *) g->addr)->sin6_addr,
 		  addrbuf, sizeof(addrbuf));
 
-		Debug ("XDMCP socket multicast %s to %s succeeded\n", 
+		Debug ("XDMCP socket multicast %s to %s succeeded\n",
 		  (op == JOIN_MCAST_GROUP) ? "join" : "drop", addrbuf);
 	    }
 	    return;
 	}
-#endif
+#  endif
     }
 }
 
-static void 
+static void
 UpdateMcastGroup(ARRAY8Ptr addr, void **closure)
 {
     struct socklist *s = (struct socklist *) *closure;
     struct socklist *g;
 
-    if (s == NULL) 
+    if (s == NULL)
 	    return;
 
     g = FindInList(s->mcastgroups, addr);
@@ -500,7 +494,7 @@ void UpdateListenSockets (void)
 		}
 	    }
 	}
-    }    
+    }
 }
 
 /* Close all additional listening sockets beyond the basic chooserFd and
@@ -526,8 +520,8 @@ void ProcessListenSockets (fd_set *readmask)
     for (s = listensocks; s != NULL; s = s->next) {
 	if (FD_ISSET(s->fd, readmask))
 	    ProcessRequestSocket(s->fd);
-    }    
+    }
 }
 
-#endif /* !STREAMSCONN */
+# endif /* !STREAMSCONN */
 #endif /* XDMCP */

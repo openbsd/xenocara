@@ -1,7 +1,3 @@
-/*
- * $XFree86: xc/programs/xdm/dm_socket.h,v 1.1 1998/10/10 15:25:33 dawes Exp $
- */
-
 /************************************************************
 
 Copyright 1998 by Thomas E. Dickey <dickey@clark.net>
@@ -21,7 +17,7 @@ in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
@@ -35,17 +31,13 @@ authorization.
 ********************************************************/
 
 #ifndef _DM_SOCKET_H_
-#define _DM_SOCKET_H_ 1
+# define _DM_SOCKET_H_ 1
 
-#include <X11/Xmd.h>
-#include <X11/Xdmcp.h>
+# include <X11/Xmd.h>
+# include <X11/Xdmcp.h>
 
-#ifndef Lynx
 # include <sys/socket.h>
-#else
-# include <socket.h>
-#endif
-#include <netinet/in.h>
+# include <netinet/in.h>
 
 /* ugly, but we need this after socket.h */
 extern ARRAY8Ptr Accept (struct sockaddr *from, int fromlen, CARD16 displayNumber);

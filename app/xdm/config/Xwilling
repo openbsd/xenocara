@@ -1,6 +1,5 @@
 #!/bin/sh
 #
-# $XFree86$
 
 # The output of this script is displayed in the chooser window.
 # (instead of "Willing to manage")

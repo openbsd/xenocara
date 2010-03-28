@@ -1,4 +1,3 @@
-/* $Xorg: rpcauth.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/rpcauth.c,v 1.3 2001/01/17 23:45:22 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -37,13 +35,13 @@ from The Open Group.
  * generate SecureRPC authorization records
  */
 
-# include   <X11/Xos.h>
-# include   <rpc/rpc.h>
-# include   <rpc/key_prot.h>
+#include   <X11/Xos.h>
+#include   <rpc/rpc.h>
+#include   <rpc/key_prot.h>
 
-# include   "dm.h"
-# include   "dm_auth.h"
-# include   "dm_error.h"
+#include   "dm.h"
+#include   "dm_auth.h"
+#include   "dm_error.h"
 
 /*ARGSUSED*/
 void

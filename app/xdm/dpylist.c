@@ -1,4 +1,3 @@
-/* $Xorg: dpylist.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/dpylist.c,v 1.5tsi Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -35,8 +33,8 @@ from The Open Group.
  * a simple linked list of known displays
  */
 
-# include "dm.h"
-# include "dm_error.h"
+#include "dm.h"
+#include "dm_error.h"
 
 static struct display	*displays;
 
@@ -121,7 +119,7 @@ FindDisplayByAddress (XdmcpNetaddr addr, int addrlen, CARD16 displayNumber)
 #endif /* XDMCP */
 
 #define IfFree(x)  if (x) free ((char *) x)
-    
+
 void
 RemoveDisplay (struct display *old)
 {
@@ -191,27 +189,25 @@ NewDisplay (char *name, char *class)
 	return NULL;
     }
     d->next = displays;
-    d->name = malloc ((unsigned) (strlen (name) + 1));
+    d->name = strdup (name);
     if (!d->name) {
 	LogOutOfMem ("NewDisplay");
 	free ((char *) d);
 	return NULL;
     }
-    strcpy (d->name, name);
     if (class)
     {
-	d->class = malloc ((unsigned) (strlen (class) + 1));
+	d->class = strdup (class);
 	if (!d->class) {
 	    LogOutOfMem ("NewDisplay");
 	    free (d->name);
 	    free ((char *) d);
 	    return NULL;
 	}
-	strcpy (d->class, class);
     }
     else
     {
-	d->class = (char *) 0;
+	d->class = NULL;
     }
     /* initialize every field to avoid possible problems */
     d->argv = NULL;

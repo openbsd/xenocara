@@ -1,5 +1,3 @@
-/* $Xorg: greet.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
-/* $XdotOrg: app/xdm/greeter/greet.c,v 1.5 2006/06/03 01:13:44 alanc Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -55,7 +53,6 @@ from The Open Group.
  * of the copyright holder.
  */
 
-/* $XFree86: xc/programs/xdm/greeter/greet.c,v 3.16tsi Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -75,7 +72,7 @@ from The Open Group.
 #include <X11/XKBlib.h>
 
 #ifdef USE_XINERAMA
-#include <X11/extensions/Xinerama.h>
+# include <X11/extensions/Xinerama.h>
 #endif
 
 #include "dm.h"
@@ -83,9 +80,18 @@ from The Open Group.
 #include "greet.h"
 #include "Login.h"
 
-#ifdef __OpenBSD__
-#include <syslog.h>
+#if defined(HAVE_OPENLOG) && defined(HAVE_SYSLOG_H)
+# define USE_SYSLOG
+# include <syslog.h>
+# ifndef LOG_AUTHPRIV
+#  define LOG_AUTHPRIV LOG_AUTH
+# endif
+# ifndef LOG_PID
+#  define LOG_PID 0
+# endif
 #endif
+
+#include <string.h>
 
 #if defined(SECURE_RPC) && defined(sun)
 /* Go figure, there's no getdomainname() prototype available */
@@ -99,13 +105,13 @@ extern int getdomainname(char *name, size_t len);
 
 int     (*__xdm_PingServer)(struct display *d, Display *alternateDpy) = NULL;
 void    (*__xdm_SessionPingFailed)(struct display *d) = NULL;
-void    (*__xdm_Debug)(char * fmt, ...) = NULL;
+void    (*__xdm_Debug)(const char * fmt, ...) = NULL;
 void    (*__xdm_RegisterCloseOnFork)(int fd) = NULL;
 void    (*__xdm_SecureDisplay)(struct display *d, Display *dpy) = NULL;
 void    (*__xdm_UnsecureDisplay)(struct display *d, Display *dpy) = NULL;
 void    (*__xdm_ClearCloseOnFork)(int fd) = NULL;
 void    (*__xdm_SetupDisplay)(struct display *d) = NULL;
-void    (*__xdm_LogError)(char * fmt, ...) = NULL;
+void    (*__xdm_LogError)(const char * fmt, ...) = NULL;
 void    (*__xdm_SessionExit)(struct display *d, int status, int removeAuth) = NULL;
 void    (*__xdm_DeleteXloginResources)(struct display *d, Display *dpy) = NULL;
 int     (*__xdm_source)(char **environ, char *file) = NULL;
@@ -115,34 +121,34 @@ char    **(*__xdm_putEnv)(const char *string, char **env) = NULL;
 char    **(*__xdm_parseArgs)(char **argv, char *string) = NULL;
 void    (*__xdm_printEnv)(char **e) = NULL;
 char    **(*__xdm_systemEnv)(struct display *d, char *user, char *home) = NULL;
-void    (*__xdm_LogOutOfMem)(char * fmt, ...) = NULL;
+void    (*__xdm_LogOutOfMem)(const char * fmt, ...) = NULL;
 void    (*__xdm_setgrent)(void) = NULL;
 struct group    *(*__xdm_getgrent)(void) = NULL;
 void    (*__xdm_endgrent)(void) = NULL;
-#ifdef USESHADOW
+# ifdef USESHADOW
 struct spwd   *(*__xdm_getspnam)(GETSPNAM_ARGS) = NULL;
-# ifndef QNX4
+#  ifndef QNX4
 void   (*__xdm_endspent)(void) = NULL;
-# endif /* QNX4 doesn't use endspent */
-#endif
+#  endif /* QNX4 doesn't use endspent */
+# endif
 struct passwd   *(*__xdm_getpwnam)(GETPWNAM_ARGS) = NULL;
-#if defined(linux) || defined(__GLIBC__)
+# if defined(linux) || defined(__GLIBC__)
 void   (*__xdm_endpwent)(void) = NULL;
-#endif
+# endif
 char     *(*__xdm_crypt)(CRYPT_ARGS) = NULL;
-#ifdef USE_PAM
+# ifdef USE_PAM
 pam_handle_t **(*__xdm_thepamhp)(void) = NULL;
-#endif
+# endif
 
 #endif
 
 #ifdef SECURE_RPC
-#include <rpc/rpc.h>
-#include <rpc/key_prot.h>
+# include <rpc/rpc.h>
+# include <rpc/key_prot.h>
 #endif
 
 #ifdef K5AUTH
-#include <krb5/krb5.h>
+# include <krb5/krb5.h>
 #endif
 
 extern Display	*dpy;
@@ -158,9 +164,9 @@ static XtIntervalId	pingTimeout;
 
 #ifdef USE_PAM
 static int pamconv(int num_msg,
-#ifndef sun
+# ifndef sun
 		   const
-#endif		   
+# endif
 		   struct pam_message **msg,
 		   struct pam_response **response, void *appdata_ptr);
 
@@ -378,7 +384,7 @@ Greet (struct display *d, struct greet_info *greet)
 #ifndef USE_PAM
 	char *ptr;
 	unsigned int c,state = WHITESPACE;
- 
+
 	/*
 	 * Process the name string to get rid of white spaces.
 	 */
@@ -408,9 +414,7 @@ Greet (struct display *d, struct greet_info *greet)
 static void
 FailedLogin (struct display *d, struct greet_info *greet)
 {
-#ifdef __OpenBSD__
-    syslog(LOG_NOTICE, "LOGIN FAILURE ON %s",
-	   d->name);
+#ifdef USE_SYSLOG
     syslog(LOG_AUTHPRIV|LOG_NOTICE,
 	   "LOGIN FAILURE ON %s, %s",
 	   d->name, greet->name);
@@ -458,20 +462,20 @@ greet_user_rtn GreetUser(
     __xdm_setgrent = dlfuncs->_setgrent;
     __xdm_getgrent = dlfuncs->_getgrent;
     __xdm_endgrent = dlfuncs->_endgrent;
-#ifdef USESHADOW
+# ifdef USESHADOW
     __xdm_getspnam = dlfuncs->_getspnam;
-# ifndef QNX4
+#  ifndef QNX4
     __xdm_endspent = dlfuncs->_endspent;
-# endif /* QNX4 doesn't use endspent */
-#endif
+#  endif /* QNX4 doesn't use endspent */
+# endif
     __xdm_getpwnam = dlfuncs->_getpwnam;
-#if defined(linux) || defined(__GLIBC__)
+# if defined(linux) || defined(__GLIBC__)
     __xdm_endpwent = dlfuncs->_endpwent;
-#endif
+# endif
     __xdm_crypt = dlfuncs->_crypt;
-#ifdef USE_PAM
+# ifdef USE_PAM
     __xdm_thepamhp = dlfuncs->_thepamhp;
-#endif
+# endif
 #endif
 
     *dpy = InitGreet (d);
@@ -485,8 +489,8 @@ greet_user_rtn GreetUser(
 	LogError ("Cannot reopen display %s for greet window\n", d->name);
 	exit (RESERVER_DISPLAY);
     }
-#ifdef __OpenBSD__
-    openlog("xdm", LOG_ODELAY, LOG_AUTH);
+#ifdef USE_SYSLOG
+    openlog("xdm", LOG_ODELAY|LOG_PID, LOG_AUTHPRIV);
 #endif
 
     for (;;) {
@@ -506,16 +510,16 @@ greet_user_rtn GreetUser(
 	SetPrompt(login, 0, NULL, LOGIN_PROMPT_NOT_SHOWN, False);
 	login_prompt  = GetPrompt(login, LOGIN_PROMPT_USERNAME);
 	SetPrompt(login, 1, NULL, LOGIN_PROMPT_NOT_SHOWN, False);
-	
-#define RUN_AND_CHECK_PAM_ERROR(function, args)			\
+
+# define RUN_AND_CHECK_PAM_ERROR(function, args)			\
 	    do { 						\
 		pam_error = function args;			\
 		if (pam_error != PAM_SUCCESS) {			\
 		    PAM_ERROR_PRINT(#function, *pamhp);		\
 		    goto pam_done;				\
 		} 						\
-	    } while (0) 
-	    
+	    } while (0)
+
 
 	RUN_AND_CHECK_PAM_ERROR(pam_start,
 				("xdm", NULL, &pc, pamhp));
@@ -533,23 +537,23 @@ greet_user_rtn GreetUser(
 		LogOutOfMem("GreetUser");
 	    } else {
 		char *colon = strrchr(hostname, ':');
-		
+
 		if (colon != NULL)
 		    *colon = '\0';
-	    
+
 		RUN_AND_CHECK_PAM_ERROR(pam_set_item,
 					(*pamhp, PAM_RHOST, hostname));
 		free(hostname);
 	    }
 	} else
 	    RUN_AND_CHECK_PAM_ERROR(pam_set_item, (*pamhp, PAM_TTY, d->name));
- 
+
 	if (!greet->allow_null_passwd) {
 	    pam_flags |= PAM_DISALLOW_NULL_AUTHTOK;
 	}
 	RUN_AND_CHECK_PAM_ERROR(pam_authenticate,
 				(*pamhp, pam_flags));
-				
+
 	/* handle expired passwords */
 	pam_error = pam_acct_mgmt(*pamhp, pam_flags);
 	pam_fname = "pam_acct_mgmt";
@@ -565,7 +569,7 @@ greet_user_rtn GreetUser(
 	    PAM_ERROR_PRINT(pam_fname, *pamhp);
 	    goto pam_done;
 	}
-	
+
 	RUN_AND_CHECK_PAM_ERROR(pam_setcred,
 				(*pamhp, 0));
 	RUN_AND_CHECK_PAM_ERROR(pam_get_item,
@@ -575,7 +579,7 @@ greet_user_rtn GreetUser(
 	    greet->name = username;
 	    greet->password = NULL;
 	}
-	    
+
       pam_done:
 	if (code != 0)
 	{
@@ -587,9 +591,18 @@ greet_user_rtn GreetUser(
 	    SetValue (login, 1, NULL);
 	    break;
 	} else {
+	    /* Try to fill in username for failed login error log */
+	    if (greet->name == NULL) {
+		if (username == NULL) {
+		    RUN_AND_CHECK_PAM_ERROR(pam_get_item,
+					    (*pamhp, PAM_USER,
+					     (void *) &username));
+		}
+		greet->name = username;
+	    }
+	    FailedLogin (d, greet);
 	    RUN_AND_CHECK_PAM_ERROR(pam_end,
 				    (*pamhp, pam_error));
-	    FailedLogin (d, greet);
 	}
 #else /* not PAM */
 	/*
@@ -635,7 +648,7 @@ greet_user_rtn GreetUser(
 	    XHostAddress	addr;
 	    char		netname[MAXNETNAMELEN+1];
 	    char		domainname[MAXNETNAMELEN+1];
-    
+
 	    getdomainname(domainname, sizeof domainname);
 	    user2netname (netname, verify->uid, domainname);
 	    addr.family = FamilyNetname;
@@ -659,7 +672,7 @@ greet_user_rtn GreetUser(
 	    d->authorizations[i] =
 		Krb5GetAuthFor(14, "MIT-KERBEROS-5", d->name);
 	    SaveServerAuthorizations (d, d->authorizations, d->authNum);
-	} 
+	}
 #endif
     }
 
@@ -669,9 +682,9 @@ greet_user_rtn GreetUser(
 
 #ifdef USE_PAM
 static int pamconv(int num_msg,
-#ifndef sun
+# ifndef sun
 		   const
-#endif		   
+# endif
 		   struct pam_message **msg,
 		   struct pam_response **response, void *appdata_ptr)
 {
@@ -682,19 +695,19 @@ static int pamconv(int num_msg,
 	= { "<invalid pam msg style>",
 	    "PAM_PROMPT_ECHO_OFF", "PAM_PROMPT_ECHO_ON",
 	    "PAM_ERROR_MSG", "PAM_TEXT_INFO" } ;
-    
+
     struct pam_message      *m;
     struct pam_response     *r;
 
     struct myconv_data	    *d = (struct myconv_data *) appdata_ptr;
 
     pam_handle_t	    **pamhp = thepamhp();
-    
+
     *response = calloc(num_msg, sizeof (struct pam_response));
     if (*response == NULL)
 	return (PAM_BUF_ERR);
 
-    m = *msg;
+    m = (struct pam_message *)*msg;
     r = *response;
 
     for (i = 0; i < num_msg; i++ , m++ , r++) {
@@ -708,8 +721,8 @@ static int pamconv(int num_msg,
 		      NULL, LOGIN_TEXT_INFO, False);
 	    SetValue(login, LOGIN_PROMPT_USERNAME, username);
 	    promptId = 1;
-	} 
-	
+	}
+
 	Debug("pam_msg: %s (%d): '%s'\n",
 	      ((m->msg_style > 0) && (m->msg_style <= 4)) ?
 	       pam_msg_styles[m->msg_style] : pam_msg_styles[0],
@@ -724,7 +737,7 @@ static int pamconv(int num_msg,
 	      SetPrompt (login, promptId, m->msg, LOGIN_TEXT_INFO, True);
 	      SetValue (login, promptId, NULL);
 	      break;
-	      
+
           case PAM_PROMPT_ECHO_ON:
 	      pStyle = LOGIN_PROMPT_ECHO_ON;
 	      /* FALLTHROUGH */
@@ -750,7 +763,7 @@ static int pamconv(int num_msg,
 	      LogError("Unknown PAM msg_style: %d\n", m->msg_style);
 	}
     }
-  pam_error:    
+  pam_error:
     if (status != PAM_SUCCESS) {
 	/* free responses */
 	r = *response;

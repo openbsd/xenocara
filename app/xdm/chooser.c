@@ -1,6 +1,4 @@
 /*
- * $XdotOrg: app/xdm/chooser.c,v 1.5 2006/03/11 04:07:00 alanc Exp $
- * $Xorg: chooser.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $
  *
 Copyright 1990, 1998  The Open Group
 
@@ -27,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Keith Packard, MIT X Consortium
  */
 
-/* $XFree86: xc/programs/xdm/chooser.c,v 3.26 2003/07/18 15:53:28 tsi Exp $ */
 
 /*
  * Chooser - display a menu of names and let the user select one
@@ -72,21 +69,21 @@ in this Software without prior written authorization from The Open Group.
 #include    <ctype.h>
 
 #ifdef USE_XINERAMA
-#include    <X11/extensions/Xinerama.h>
+# include    <X11/extensions/Xinerama.h>
 #endif
 
 #if defined(SVR4)
-#include    <sys/sockio.h>
+# include    <sys/sockio.h>
 #endif
 #if defined(SVR4) && defined(PowerMAX_OS)
-#include    <sys/stropts.h>
+# include    <sys/stropts.h>
 #endif
 #if defined(SYSV) && defined(i386)
-#include    <sys/stream.h>
-#ifdef ISC
-#include    <sys/sioctl.h>
-#include    <sys/stropts.h>
-#endif
+# include    <sys/stream.h>
+# ifdef ISC
+#  include    <sys/sioctl.h>
+#  include    <sys/stropts.h>
+# endif
 #endif
 
 #include    "dm_socket.h"
@@ -95,30 +92,30 @@ in this Software without prior written authorization from The Open Group.
 
 #include    <sys/ioctl.h>
 #ifdef STREAMSCONN
-#ifdef WINTCP /* NCR with Wollongong TCP */
-#include    <netinet/ip.h>
-#endif
-#include    <stropts.h>
-#include    <tiuser.h>
-#include    <netconfig.h>
-#include    <netdir.h>
+# ifdef WINTCP /* NCR with Wollongong TCP */
+#  include    <netinet/ip.h>
+# endif
+# include    <stropts.h>
+# include    <tiuser.h>
+# include    <netconfig.h>
+# include    <netdir.h>
 #endif
 
 #ifdef CSRG_BASED
-#include <sys/param.h>
-#if (BSD >= 199103)
-#define VARIABLE_IFREQ
-#endif
+# include <sys/param.h>
+# if (BSD >= 199103)
+#  define VARIABLE_IFREQ
+# endif
 #endif
 
 #ifdef XKB
-#include <X11/extensions/XKBbells.h>
+# include <X11/extensions/XKBbells.h>
 #endif
 
 #define BROADCAST_HOSTNAME  "BROADCAST"
 
 #ifndef ishexdigit
-#define ishexdigit(c)	(isdigit(c) || ('a' <= (c) && (c) <= 'f'))
+# define ishexdigit(c)	(isdigit(c) || ('a' <= (c) && (c) <= 'f'))
 #endif
 
 #ifdef hpux
@@ -127,11 +124,11 @@ in this Software without prior written authorization from The Open Group.
 #  include <net/if.h>
 # endif
 #else
-#ifdef __convex__
-# include <sync/queue.h>
-# include <sync/sema.h>
-#endif
-#include <net/if.h>
+# ifdef __convex__
+#  include <sync/queue.h>
+#  include <sync/sema.h>
+# endif
+# include <net/if.h>
 #endif /* hpux */
 
 #include    <netdb.h>
@@ -224,7 +221,7 @@ ifioctl (int fd, int cmd, char *arg)
     {
 	ioc.ic_len = ((struct ifconf *) arg)->ifc_len;
 	ioc.ic_dp = ((struct ifconf *) arg)->ifc_buf;
-#ifdef ISC
+# ifdef ISC
 	/* SIOCGIFCONF is somewhat brain damaged on ISC. The argument
 	 * buffer must contain the ifconf structure as header. Ifc_req
 	 * is also not a pointer but a one element array of ifreq
@@ -234,7 +231,7 @@ ifioctl (int fd, int cmd, char *arg)
 	 */
         ((struct ifconf *) ioc.ic_dp)->ifc_len =
                                          ioc.ic_len - sizeof(struct ifconf);
-#endif
+# endif
     }
     else
     {
@@ -243,21 +240,21 @@ ifioctl (int fd, int cmd, char *arg)
     }
     ret = ioctl(fd, I_STR, (char *) &ioc);
     if (ret >= 0 && cmd == SIOCGIFCONF)
-#ifdef SVR4
+# ifdef SVR4
 	((struct ifconf *) arg)->ifc_len = ioc.ic_len;
-#endif
-#ifdef ISC
+# endif
+# ifdef ISC
     {
 	((struct ifconf *) arg)->ifc_len =
 				 ((struct ifconf *)ioc.ic_dp)->ifc_len;
-	((struct ifconf *) arg)->ifc_buf = 
+	((struct ifconf *) arg)->ifc_buf =
 			(caddr_t)((struct ifconf *)ioc.ic_dp)->ifc_req;
     }
-#endif
+# endif
     return(ret);
 }
 #else /* ((SVR4 && !sun && !NCR) || ISC) && SIOCGIFCONF */
-#define ifioctl ioctl
+# define ifioctl ioctl
 #endif /* ((SVR4 && !sun) || ISC) && SIOCGIFCONF */
 
 
@@ -277,10 +274,10 @@ PingHosts (XtPointer closure, XtIntervalId *id)
 	    sfd = socketFD;
 #endif
 	if (hosts->type == QUERY)
-	    XdmcpFlush (sfd, &directBuffer, 
+	    XdmcpFlush (sfd, &directBuffer,
 			(XdmcpNetaddr) hosts->addr, hosts->addrlen);
 	else
-	    XdmcpFlush (sfd, &broadcastBuffer, 
+	    XdmcpFlush (sfd, &broadcastBuffer,
 			(XdmcpNetaddr) hosts->addr, hosts->addrlen);
     }
     if (++pingTry < TRIES)
@@ -323,7 +320,7 @@ static int
 AddHostname (ARRAY8Ptr hostname, ARRAY8Ptr status, struct sockaddr *addr, int willing)
 {
     HostName	*new, **names, *name;
-    ARRAY8	hostAddr;
+    ARRAY8	hostAddr = {0, NULL};
     CARD16	connectionType;
     int		fulllen;
 
@@ -376,7 +373,7 @@ AddHostname (ARRAY8Ptr hostname, ARRAY8Ptr status, struct sockaddr *addr, int wi
 	    	{
 	    	    struct hostent  *hostent;
 		    char	    *host;
-    	
+
 	    	    hostent = gethostbyaddr ((char *)hostAddr.data, hostAddr.length, addr->sa_family);
 	    	    if (hostent)
 	    	    {
@@ -416,14 +413,15 @@ AddHostname (ARRAY8Ptr hostname, ARRAY8Ptr status, struct sockaddr *addr, int wi
     fulllen = hostname->length;
     if (fulllen < 30)
 	fulllen = 30;
-    new->fullname = malloc (fulllen + status->length + 10);
+    fulllen += status->length + 10;
+    new->fullname = malloc (fulllen);
     if (!new->fullname)
     {
 	new->fullname = "Unknown";
     }
     else
     {
-	sprintf (new->fullname, "%-30.*s %*.*s",
+	snprintf(new->fullname, fulllen, "%-30.*s %*.*s",
 		 hostname->length, hostname->data,
 		 status->length, status->length, status->data);
     }
@@ -483,9 +481,9 @@ static void
 ReceivePacket (XtPointer closure, int *source, XtInputId *id)
 {
     XdmcpHeader	    header;
-    ARRAY8	    authenticationName;
-    ARRAY8	    hostname;
-    ARRAY8	    status;
+    ARRAY8	    authenticationName = {0, NULL};
+    ARRAY8	    hostname = {0, NULL};
+    ARRAY8	    status = {0, NULL};
     int		    saveHostname = 0;
 #if defined(IPv6) && defined(AF_INET6)
     struct sockaddr_storage addr;
@@ -502,9 +500,6 @@ ReceivePacket (XtPointer closure, int *source, XtInputId *id)
 	return;
     if (header.version != XDM_PROTOCOL_VERSION)
 	return;
-    hostname.data = NULL;
-    status.data = NULL;
-    authenticationName.data = NULL;
     switch (header.opcode) {
     case WILLING:
     	if (XdmcpReadARRAY8 (&buffer, &authenticationName) &&
@@ -576,11 +571,11 @@ RegisterHostaddr (struct sockaddr *addr, int len, xdmOpCode type)
 
 /* Handle variable length ifreq in BNR2 and later */
 #ifdef VARIABLE_IFREQ
-#define ifr_size(p) (sizeof (struct ifreq) + \
+# define ifr_size(p) (sizeof (struct ifreq) + \
 		     (p->ifr_addr.sa_len > sizeof (p->ifr_addr) ? \
 		      p->ifr_addr.sa_len - sizeof (p->ifr_addr) : 0))
 #else
-#define ifr_size(p) (sizeof (struct ifreq))
+# define ifr_size(p) (sizeof (struct ifreq))
 #endif
 
 static void
@@ -634,11 +629,11 @@ RegisterHostname (char *name)
 	if (ifioctl (socketFD, (int) SIOCGIFCONF, (char *) &ifc) < 0)
 	    return;
 
-#ifdef ISC
-#define IFC_IFC_REQ (struct ifreq *) ifc.ifc_buf
-#else
-#define IFC_IFC_REQ ifc.ifc_req
-#endif
+# ifdef ISC
+#  define IFC_IFC_REQ (struct ifreq *) ifc.ifc_buf
+# else
+#  define IFC_IFC_REQ ifc.ifc_req
+# endif
 
 	cplim = (char *) IFC_IFC_REQ + ifc.ifc_len;
 
@@ -657,33 +652,33 @@ RegisterHostname (char *name)
 #ifdef SIOCGIFBRDADDR
 	    {
 		struct ifreq    broad_req;
-    
+
 		broad_req = *ifr;
-#ifdef WINTCP /* NCR with Wollongong TCP */
+# ifdef WINTCP /* NCR with Wollongong TCP */
 		ioc.ic_cmd = IPIOC_GETIFFLAGS;
 		ioc.ic_timout = 0;
 		ioc.ic_len = sizeof( broad_req );
 		ioc.ic_dp = (char *)&broad_req;
 
 		if (ioctl (ipfd, I_STR, (char *) &ioc) != -1 &&
-#else /* WINTCP */
+# else /* WINTCP */
 		if (ifioctl (socketFD, SIOCGIFFLAGS, (char *) &broad_req) != -1 &&
-#endif /* WINTCP */
+# endif /* WINTCP */
 		    (broad_req.ifr_flags & IFF_BROADCAST) &&
 		    (broad_req.ifr_flags & IFF_UP)
 		    )
 		{
 		    broad_req = *ifr;
-#ifdef WINTCP /* NCR with Wollongong TCP */
+# ifdef WINTCP /* NCR with Wollongong TCP */
 		    ioc.ic_cmd = IPIOC_GETIFBRDADDR;
 		    ioc.ic_timout = 0;
 		    ioc.ic_len = sizeof( broad_req );
 		    ioc.ic_dp = (char *)&broad_req;
 
 		    if (ioctl (ipfd, I_STR, (char *) &ioc) != -1)
-#else /* WINTCP */
+# else /* WINTCP */
 		    if (ifioctl (socketFD, SIOCGIFBRDADDR, &broad_req) != -1)
-#endif /* WINTCP */
+# endif /* WINTCP */
 			broad_addr = broad_req.ifr_addr;
 		    else
 			continue;
@@ -721,23 +716,23 @@ RegisterHostname (char *name)
 	    struct addrinfo *ai, *nai, hints;
 	    bzero(&hints,sizeof(hints));
 	    hints.ai_socktype = SOCK_DGRAM;
-	    sprintf(sport, "%d", XDM_UDP_PORT);
+	    snprintf(sport, sizeof(sport), "%d", XDM_UDP_PORT);
 	    if (getaddrinfo(name, sport, &hints, &ai) == 0) {
 		for (nai = ai ; nai != NULL ; nai = nai->ai_next) {
-		    if ((nai->ai_family == AF_INET) || 
+		    if ((nai->ai_family == AF_INET) ||
 		        (nai->ai_family == AF_INET6)) {
-			if (((nai->ai_family == AF_INET) && 
+			if (((nai->ai_family == AF_INET) &&
 			  IN_MULTICAST(((struct sockaddr_in *) nai->ai_addr)
 			    ->sin_addr.s_addr))
-			  || ((nai->ai_family == AF_INET6) && 
+			  || ((nai->ai_family == AF_INET6) &&
 			    IN6_IS_ADDR_MULTICAST(
 				&((struct sockaddr_in6 *) nai->ai_addr)
-				  ->sin6_addr))) 
+				  ->sin6_addr)))
 			{
-			    RegisterHostaddr(nai->ai_addr, nai->ai_addrlen, 
+			    RegisterHostaddr(nai->ai_addr, nai->ai_addrlen,
 			      BROADCAST_QUERY);
 			} else {
-			    RegisterHostaddr(nai->ai_addr, nai->ai_addrlen, 
+			    RegisterHostaddr(nai->ai_addr, nai->ai_addrlen,
 			      QUERY);
 			}
 		    }
@@ -760,9 +755,9 @@ RegisterHostname (char *name)
 	    memmove( &in_addr.sin_addr, hostent->h_addr, 4);
 	}
 	in_addr.sin_port = htons (XDM_UDP_PORT);
-#ifdef BSD44SOCKETS
+# ifdef BSD44SOCKETS
 	in_addr.sin_len = sizeof(in_addr);
-#endif
+# endif
 	RegisterHostaddr ((struct sockaddr *)&in_addr, sizeof (in_addr),
 			  QUERY);
 #endif /* IPv6 */
@@ -845,18 +840,18 @@ InitXDMCP (char **argv)
 #else
     if ((socketFD = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
 	return 0;
-#if defined(IPv6) && defined(AF_INET6)
+# if defined(IPv6) && defined(AF_INET6)
     socket6FD = socket (AF_INET6, SOCK_DGRAM, 0);
-#endif
+# endif
 #endif
 #ifndef STREAMSCONN
-#ifdef SO_BROADCAST
+# ifdef SO_BROADCAST
     soopts = 1;
     if (setsockopt (socketFD, SOL_SOCKET, SO_BROADCAST, (char *)&soopts, sizeof (soopts)) < 0)
 	perror ("setsockopt");
+# endif
 #endif
-#endif
-    
+
     XtAddInput (socketFD, (XtPointer) XtInputReadMask, ReceivePacket,
 		(XtPointer) &socketFD);
 #if defined(IPv6) && defined(AF_INET6)
@@ -910,9 +905,9 @@ Choose (HostName *h)
 #if defined(IPv6) && defined(AF_INET6)
 	case AF_INET6:
 	    bzero(&in6_addr, sizeof(in6_addr));
-#ifdef SIN6_LEN
+# ifdef SIN6_LEN
 	    in6_addr.sin6_len = sizeof(in6_addr);
-#endif
+# endif
 	    in6_addr.sin6_family = family;
 	    memmove( &in6_addr.sin6_port, xdm + 2, 2);
 	    memmove( &in6_addr.sin6_addr, xdm + 4, 16);
@@ -1005,7 +1000,7 @@ Choose (HostName *h)
   (0, 1, 2, 3, 0, 1, 2, 3 ....)
 */
 
-static int 
+static int
 next_line(unsigned int current, unsigned int size, int event)
 {
   switch(event) {
@@ -1017,11 +1012,11 @@ next_line(unsigned int current, unsigned int size, int event)
       return (current + 1) % size;
     case XK_Up:
       return (current + size - 1) % size;
-  }  
+  }
   return -1;
 }
 
-/* 
+/*
   Hostselect selects a given chooser line.
   Returns 1 when host is willing and 0 if not
 */
@@ -1066,17 +1061,17 @@ Hostselect (int line)
     	    XawViewportSetCoordinates(viewport, 0,
 				      (liney + lineheight) - portheight);
 	}
-	
+
 	XtFree((char *) r);
 	return 1;
       }
     }
   }
   XtFree((char *) r);
-  return 0; 
+  return 0;
 }
 
-/* 
+/*
   Selectfirst selects the first willing host
   in the chooser list (so you can select a host without
   presence of mouse, but with pressing space or return,
@@ -1087,12 +1082,12 @@ static void
 Selectfirst (void)
 {
   int line;
-  
+
   for (line = 0; line < NameTableSize; line++)
   {
     if (Hostselect(line))
       return;
-  }        
+  }
   return;
 }
 
@@ -1110,7 +1105,7 @@ Storeold (Widget w, XEvent *event, String *params, Cardinal *num_params)
 }
 
 /*
-  Setold restores the global int oldentry 
+  Setold restores the global int oldentry
   when you try to select a host with your mouse
   who is unwilling as follows:
   <Btn1Down>:     Store() Set() CheckWilling() Setold() \n\
@@ -1159,13 +1154,13 @@ Switch_Key (Widget w, XEvent *event, String *params, Cardinal *num_params)
   XawListReturnStruct	*r;
 
   XLookupString (&event->xkey, strbuf, sizeof (strbuf),
-                           &keysym, &compose_status);    
+                           &keysym, &compose_status);
 
   if (keysym != XK_Up && keysym != XK_Down)
     return;
 
   r = XawListShowCurrent (list);
-    
+
   if (r->list_index == XAW_LIST_NONE)
     Selectfirst();
   else
@@ -1187,12 +1182,12 @@ Switch_Btn (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     XawListReturnStruct	*r;
     r = XawListShowCurrent (list);
-    
+
     if (r->list_index == XAW_LIST_NONE)
       Selectfirst();
     else
       HostCycle(r->list_index,NameTableSize,event->xbutton.button);
-    
+
     XtFree((char *) r);
     return;
 }
@@ -1230,7 +1225,7 @@ DoCheckWilling (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     XawListReturnStruct	*r;
     HostName		*h;
-    
+
     r = XawListShowCurrent (list);
     if (r->list_index != XAW_LIST_NONE) {
 	for (h = hostNamedb; h; h = h->next)
@@ -1265,7 +1260,7 @@ static XtActionsRec app_actions[] = {
     { "KeySwitch",    Switch_Key },
     { "BtnSwitch",    Switch_Btn },
     { "Store",	      Storeold },
-    { "Setold",	      Setold },    
+    { "Setold",	      Setold },
 };
 
 int
@@ -1314,7 +1309,7 @@ main (int argc, char **argv)
     {
 	x = (Position)(screens[0].x_org + (screens[0].width - width) / 2);
 	y = (Position)(screens[0].y_org + (screens[0].height - height) / 3);
-	
+
 	XFree(screens);
     }
     else

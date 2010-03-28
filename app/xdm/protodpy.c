@@ -1,5 +1,4 @@
 /*
- * $Xorg: protodpy.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $
  *
 Copyright 1989, 1998  The Open Group
 
@@ -25,7 +24,6 @@ in this Software without prior written authorization from The Open Group.
  *
  * Author:  Keith Packard, MIT X Consortium
  */
-/* $XFree86: xc/programs/xdm/protodpy.c,v 1.4 2001/07/25 15:05:19 dawes Exp $ */
 
 /*
  * protodpy.c
@@ -40,16 +38,15 @@ in this Software without prior written authorization from The Open Group.
 
 #ifdef XDMCP
 
-#include <sys/types.h>
-#include <time.h>
-#define Time_t time_t
+# include <sys/types.h>
+# include <time.h>
+# define Time_t time_t
 
 static struct protoDisplay	*protoDisplays;
 
-#ifdef DEBUG
+# ifdef DEBUG
 static
-PrintProtoDisplay (pdpy)
-    struct protoDisplay	*pdpy;
+PrintProtoDisplay (struct protoDisplay *pdpy)
 {
     Debug ("ProtoDisplay 0x%x\n", pdpy);
     Debug ("\taddress: ");
@@ -58,7 +55,7 @@ PrintProtoDisplay (pdpy)
     Debug ("\tdisplay Number %d\n", pdpy->displayNumber);
     Debug ("\tsessionID %d\n", pdpy->sessionID);
 }
-#endif
+# endif
 
 struct protoDisplay *
 FindProtoDisplay (
@@ -137,8 +134,7 @@ NewProtoDisplay (
 }
 
 void
-DisposeProtoDisplay (pdpy)
-    struct protoDisplay	*pdpy;
+DisposeProtoDisplay (struct protoDisplay *pdpy)
 {
     struct protoDisplay	*p, *prev;
 

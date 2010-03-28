@@ -1,5 +1,3 @@
-/* $XdotOrg: xc/programs/xdm/genauth.c,v 1.1.4.5 2003/12/20 00:28:31 kaleb Exp $ */
-/* $Xorg: genauth.c,v 1.5 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -27,19 +25,18 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/genauth.c,v 3.23 2003/12/20 19:45:12 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
  * Author:  Keith Packard, MIT X Consortium
  */
 
-# include   <X11/Xauth.h>
-# include   <X11/Xos.h>
+#include   <X11/Xauth.h>
+#include   <X11/Xos.h>
 
-# include   "dm.h"
-# include   "dm_auth.h"
-# include   "dm_error.h"
+#include   "dm.h"
+#include   "dm_auth.h"
+#include   "dm_error.h"
 
 #include <errno.h>
 
@@ -61,7 +58,7 @@ typedef unsigned char auth_cblock[8];	/* block size */
 typedef struct auth_ks_struct { auth_cblock _; } auth_wrapper_schedule[16];
 
 extern int _XdmcpAuthSetup(unsigned char *, auth_wrapper_schedule);
-extern int _XdmcpAuthDoIt(unsigned char *, unsigned char *, 
+extern int _XdmcpAuthDoIt(unsigned char *, unsigned char *,
     auth_wrapper_schedule, int);
 extern void _XdmcpWrapperToOddParity(unsigned char *, unsigned char *);
 
@@ -77,7 +74,7 @@ longtochars (long l, unsigned char *c)
 #endif
 
 #ifdef POLL_DEV_RANDOM
-#include <poll.h>
+# include <poll.h>
 static int
 pollRandomDevice (int fd)
 {
@@ -89,7 +86,7 @@ pollRandomDevice (int fd)
     return poll(&fds, 1, 5000);
 }
 #else
-#define pollRandomDevice(fd) 1
+# define pollRandomDevice(fd) 1
 #endif
 
 #if !defined(ARC4_RANDOM)
@@ -166,20 +163,20 @@ add_entropy (const CARD32 *in, int nwords)
  */
 
 /* The four core functions - F1 is optimized somewhat */
-#define F1(x, y, z) (z ^ (x & (y ^ z)))
-#define F2(x, y, z) F1 (z, x, y)
-#define F3(x, y, z) (x ^ y ^ z)
-#define F4(x, y, z) (y ^ (x | ~z))
+# define F1(x, y, z) (z ^ (x & (y ^ z)))
+# define F2(x, y, z) F1 (z, x, y)
+# define F3(x, y, z) (x ^ y ^ z)
+# define F4(x, y, z) (y ^ (x | ~z))
 
 /* This is the central step in the MD5 algorithm. */
-#define pmd5_step(f, w, x, y, z, data, s) \
+# define pmd5_step(f, w, x, y, z, data, s) \
 	( w += (f(x, y, z) + data) & 0xffffffff,  w = w<<s | w>>(32-s),  w += x )
 
 /*
  * The core of the MD5 algorithm, this alters an existing MD5 hash to
  * reflect the addition of 16 longwords of new data.
  */
-static void 
+static void
 pmd5_hash (CARD32 *out, const CARD32 in[16])
 {
     CARD32 a, b, c, d;
@@ -205,7 +202,7 @@ pmd5_hash (CARD32 *out, const CARD32 in[16])
     pmd5_step(F1, d, a, b, c, in[13] + 0xfd987193, 12);
     pmd5_step(F1, c, d, a, b, in[14] + 0xa679438e, 17);
     pmd5_step(F1, b, c, d, a, in[15] + 0x49b40821, 22);
-		
+
     pmd5_step(F2, a, b, c, d, in[1] + 0xf61e2562, 5);
     pmd5_step(F2, d, a, b, c, in[6] + 0xc040b340, 9);
     pmd5_step(F2, c, d, a, b, in[11] + 0x265e5a51, 14);
@@ -222,7 +219,7 @@ pmd5_hash (CARD32 *out, const CARD32 in[16])
     pmd5_step(F2, d, a, b, c, in[2] + 0xfcefa3f8, 9);
     pmd5_step(F2, c, d, a, b, in[7] + 0x676f02d9, 14);
     pmd5_step(F2, b, c, d, a, in[12] + 0x8d2a4c8a, 20);
-		
+
     pmd5_step(F3, a, b, c, d, in[5] + 0xfffa3942, 4);
     pmd5_step(F3, d, a, b, c, in[8] + 0x8771f681, 11);
     pmd5_step(F3, c, d, a, b, in[11] + 0x6d9d6122, 16);
@@ -239,7 +236,7 @@ pmd5_hash (CARD32 *out, const CARD32 in[16])
     pmd5_step(F3, d, a, b, c, in[12] + 0xe6db99e5, 11);
     pmd5_step(F3, c, d, a, b, in[15] + 0x1fa27cf8, 16);
     pmd5_step(F3, b, c, d, a, in[2] + 0xc4ac5665, 23);
-		
+
     pmd5_step(F4, a, b, c, d, in[0] + 0xf4292244, 6);
     pmd5_step(F4, d, a, b, c, in[7] + 0x432aff97, 10);
     pmd5_step(F4, c, d, a, b, in[14] + 0xab9423a7, 15);
@@ -282,7 +279,7 @@ sumFile (const char *name, int len, int whence, off_t offset)
 	    break;
 	if (cnt < 0) {
 	    close (fd);
-	    Debug("cannot read entropy source \"%s\", errno=%d\n", 
+	    Debug("cannot read entropy source \"%s\", errno=%d\n",
 		  name, errno);
 	    return -1;
 	}
@@ -302,7 +299,7 @@ AddTimerEntropy (void)
     add_entropy((CARD32 *)&now, sizeof(now)/sizeof(CARD32));
 }
 
-#define BSIZ 0x10000
+# define BSIZ 0x10000
 
 void
 AddOtherEntropy (void)
@@ -325,14 +322,14 @@ AddPreGetEntropy (void)
     AddTimerEntropy();
     if ((readlen = sumFile (randomFile, BSIZ, SEEK_SET, offset)) == BSIZ) {
 	offset += readlen;
-#ifdef FRAGILE_DEV_MEM
+# ifdef FRAGILE_DEV_MEM
 	if (!strcmp (randomFile, "/dev/mem")) {
 	    if (offset == 0xa0000) /* skip 640kB-1MB ROM mappings */
 		offset = 0x100000;
 	    else if (offset == 0xf00000) /* skip 15-16MB memory hole */
 		offset = 0x1000000;
 	}
-#endif
+# endif
 	return;
     } else if (readlen >= 0 && offset) {
 	if ((offset = sumFile (randomFile, BSIZ, SEEK_SET, 0)) == BSIZ)
@@ -349,35 +346,35 @@ InitXdmcpWrapper (void)
 {
     CARD32 sum[4];
 
-#ifdef	ARC4_RANDOM
+# ifdef	ARC4_RANDOM
     sum[0] = arc4random();
     sum[1] = arc4random();
     *(u_char *)sum = 0;
 
     _XdmcpWrapperToOddParity((unsigned char *)sum, key);
-#else
+# else
     unsigned char   tmpkey[8];
 
-#ifdef DEV_RANDOM
+#  ifdef DEV_RANDOM
     int fd;
-    
+
     if ((fd = open(randomDevice, O_RDONLY)) >= 0) {
 	if (pollRandomDevice(fd) && read(fd, tmpkey, 8) == 8) {
 	    tmpkey[0] = 0;
 	    _XdmcpWrapperToOddParity(tmpkey, key);
 	    close(fd);
-	    return;	
+	    return;
 	} else {
 	    close(fd);
 	}
     } else {
-	LogError("Cannot open randomDevice \"%s\", errno = %d\n", 
+	LogError("Cannot open randomDevice \"%s\", errno = %d\n",
 	  randomDevice, errno);
     }
-#endif    
+#  endif
     /*  Try some pseudo-random number genrator daemon next */
     if (prngdSocket != NULL || prngdPort != 0) {
-	    if (get_prngd_bytes(tmpkey, sizeof(tmpkey), prngdPort, 
+	    if (get_prngd_bytes((char *)tmpkey, sizeof(tmpkey), prngdPort,
 		    prngdSocket) == 0) {
 		    tmpkey[0] = 0;
 		    _XdmcpWrapperToOddParity(tmpkey, key);
@@ -395,7 +392,7 @@ InitXdmcpWrapper (void)
     longtochars (sum[1], tmpkey+4);
     tmpkey[0] = 0;
     _XdmcpWrapperToOddParity (tmpkey, key);
-#endif
+# endif
 }
 
 #endif
@@ -411,17 +408,17 @@ GenerateAuthData (char *auth, int len)
     static int	    xdmcpAuthInited;
     long	    ldata[2];
 
-#ifdef ITIMER_REAL
+# ifdef ITIMER_REAL
     struct timeval  now;
 
     X_GETTIMEOFDAY (&now);
     ldata[0] = now.tv_usec;
     ldata[1] = now.tv_sec;
-#else
+# else
     ldata[0] = time ((long *) 0);
     ldata[1] = getpid ();
-#endif
-    
+# endif
+
     longtochars (ldata[0], data+0);
     longtochars (ldata[1], data+4);
     if (!xdmcpAuthInited)
@@ -440,20 +437,20 @@ GenerateAuthData (char *auth, int len)
     }
     return 1;
 #else /* !XDMAUTH */
-#ifdef ARC4_RANDOM
+# ifdef ARC4_RANDOM
     CARD32 *rnd = (CARD32 *)auth;
     int i;
 
     for (i = 0; i < len; i += 4)
 	rnd[i / 4] = arc4random();
     return 1;
-#else /* !ARC4_RANDOM */
+# else /* !ARC4_RANDOM */
     CARD32 tmp[4] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476 };
-#ifdef DEV_RANDOM
+#  ifdef DEV_RANDOM
     int fd;
-    
+
     if ((fd = open(randomDevice, O_RDONLY)) >= 0) {
-	if (pollRandomDevice(fd) && 
+	if (pollRandomDevice(fd) &&
 	    read(fd, auth, len) == len) {
 	    close(fd);
 	    return 1;
@@ -461,10 +458,10 @@ GenerateAuthData (char *auth, int len)
 	close(fd);
 	LogError("Cannot read randomDevice \"%s\", errno=%d\n",
 		 randomDevice, errno);
-    } else 
-	LogError("Cannot open randomDevice \"%s\", errno = %d\n", 
+    } else
+	LogError("Cannot open randomDevice \"%s\", errno = %d\n",
 		 randomDevice, errno);
-#endif /* DEV_RANDOM */
+#  endif /* DEV_RANDOM */
     /*  Try some pseudo-random number genrator daemon next */
     if (prngdSocket != NULL || prngdPort != 0) {
 	    if (get_prngd_bytes(auth, len, prngdPort, prngdSocket) == 0) {
@@ -479,6 +476,6 @@ GenerateAuthData (char *auth, int len)
     add_entropy (tmp + 2, 1);
     memcpy (auth, tmp, len);
     return 1;
-#endif /* !ARC4_RANDOM */
+# endif /* !ARC4_RANDOM */
 #endif /* !HASXDMAUTH */
 }

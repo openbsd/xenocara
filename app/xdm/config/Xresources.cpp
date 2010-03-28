@@ -1,10 +1,8 @@
 ! $Xorg: Xresources,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
-! $OpenBSD: Xresources.cpp,v 1.7 2009/02/02 21:01:57 matthieu Exp $
 !
 !
 !
 !
-! $XFree86: xc/programs/xdm/config/Xres.cpp,v 1.6 2003/01/04 03:11:31 dawes Exp $
 !
 
 #define BS \ /* cpp can be trickier than m4 */

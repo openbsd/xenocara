@@ -1,4 +1,3 @@
-/* $Xorg: file.c,v 1.5 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/file.c,v 1.5 2001/01/17 23:45:21 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -35,10 +33,10 @@ from The Open Group.
  * file.c
  */
 
-# include	"dm.h"
-# include	"dm_error.h"
+#include	"dm.h"
+#include	"dm_error.h"
 
-# include	<ctype.h>
+#include	<ctype.h>
 
 static int
 DisplayTypeMatch (DisplayType d1, DisplayType d2)
@@ -203,11 +201,10 @@ ParseDisplay (char *source, DisplayType *acceptableTypes, int numAcceptable)
 	{
 	    char    *newclass;
 
-	    newclass = malloc ((unsigned) (strlen (class) + 1));
+	    newclass = strdup (class);
 	    if (newclass)
 	    {
 		free (d->class);
-		strcpy (newclass, class);
 		d->class = newclass;
 	    }
 	}
@@ -217,7 +214,7 @@ ParseDisplay (char *source, DisplayType *acceptableTypes, int numAcceptable)
     else
     {
 	d = NewDisplay (name, class);
-	Debug ("Found new display:  %s %s %s", 
+	Debug ("Found new display:  %s %s %s",
 		d->name, d->class ? d->class : "", type);
     }
     d->displayType = displayType;

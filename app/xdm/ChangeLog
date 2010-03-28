@@ -1,3 +1,376 @@
+commit 6061722888eab858888dac2499194393299872e4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 18 15:31:50 2009 -0700
+
+    Version bump: 1.1.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit c058aa698b6ddddd4c11608ca412b73d1ffd78d2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Sep 17 19:41:10 2009 -0700
+
+    Fill in COPYING file
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3a87227bb357ac9523f853fca84ebde3129e2f05
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Sep 17 19:11:52 2009 -0700
+
+    Log errors when failing to make authentication dirs/files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit da3cfcdd197bd900633c563412685315316804f4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Sep 17 18:33:54 2009 -0700
+
+    Refactor & constify error logging code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a7e166298a94c012420713dbfcd0b1628f5c7062
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Sep 17 18:08:06 2009 -0700
+
+    Unrecognized argument errors shouldn't print xdm error header repeatedly
+    
+    Add LogAppend function to append to previous LogError/LogInfo without
+    repeating the xdm error message header.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e60cf4a084951e697516a6c26dcb5ad14e6f14b8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 11 10:40:05 2009 -0700
+
+    Replace -D_XOPEN_SOURCE & -D_BSD_SOURCE with AC_USE_SYSTEM_EXTENSIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+
+commit 69fc0647bed461a19cf99f4d362a44df8c18de38
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 11 09:15:31 2009 -0700
+
+    Add support for AM_SILENT_RULES for building files with cpp
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3d51edf9d96f8adcb6f2ab50f4960aa9ecc76afe
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 11 08:31:55 2009 -0700
+
+    Update to using xorg-macros 1.3, including XORG_DEFAULT_OPTIONS
+    
+    Also move CWARNFLAGS addition to CFLAGS from configure.ac to Makefile.am's
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a57a7be5962f6f9536ab97751b177575a4884bd0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Aug 18 21:03:54 2009 -0700
+
+    Treat all 127.0.0.0/8 addresses as localhost
+    
+    Similar fix to http://bugs.freedesktop.org/show_bug.cgi?id=23329
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a9040b281062ddabcfb2cfdfc37e431b047531b2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jul 29 11:16:29 2009 -0700
+
+    Set utmp/wtmp paths via configure instead of hardcoding them
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit cafa4376f4761c2d565b2c1deeb7dbfb553d7045
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 28 14:31:52 2009 -0700
+
+    Truncate pid file before writing new pid to it
+    
+    Prevents trailing garbage in the file if the new pid has fewer digits
+    than the previous pid.
+    
+    (Originally reported against Solaris dtlogin as Sun bug 6627150)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 500775eb145372c5dcbc6e9814858d01730900c7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 28 12:58:58 2009 -0700
+
+    Continue processing Xaccess after unresolvable host entry found
+    
+    If there is an unresolvable host entry in Xaccess file, XDMCP access from
+    the hosts whose entries are specified after the unresolvable host in Xaccess
+    were rejected.
+    
+    (Originally reported against dtlogin as Solaris bug 6259901.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 58021c21c28fdb4949d44aa92e68874155842ccc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jul 28 08:36:10 2009 -0700
+
+    Do a better job of getting user name for failed login log when using PAM
+    
+    Check to see if username is filled in before calling FailedError, and
+    fill it in if it's not.
+    
+    Call FailedError before calling pam_end, so we don't reference a username
+    that may have been freed already.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a3f1f5f5b8b3a070de6d9510f588b39f5ebcc0fc
+Author: Jeff Chua <jeff.chua.linux@gmail.com>
+Date:   Mon Jul 20 22:21:46 2009 +0800
+
+    xdm compile failed due to asprintf()
+    
+    xdm no longer compiles due to recent commit
+    56a14b8a1f4d3aa883485b794c818581b8f07cd8 that changed to use asprintf().
+    There is an additional right-bracket that causes the problem.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 2f5bd6ea016a6405208c91c976a16a672cc04184
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Jul 17 23:07:39 2009 -0700
+
+    Add RemovePid() function, and register it with atexit()
+    
+    Debian bug#213076
+    
+    Forward-ported by David Nusinow, Eugene Konev and Julien Cristau.
+
+commit ec3152fbba9ee39bbb069913e76e9d165001f98a
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Jul 17 23:06:46 2009 -0700
+
+    Use xdm's _SysErrorMsg() function instead of strerror()
+
+commit 18f286641afbe1d3b61abd31d93c0ae8acb375e9
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Jul 17 22:51:04 2009 -0700
+
+    Use _SysErrorMsg() in the log message in various error conditions.
+    
+    Change LogError() invocations to use _SysErrorMsg() where errno might be
+    set (and not clobbered by intermediate calls).  Also make LogError() the
+    first thing we do after an error condition in those cases.
+    
+    Forward-ported by David Nusinow, Eugene Konev and Julien Cristau.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 8d15af786d96bb70aceca116a588c2a4b7c45d63
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Jul 17 22:42:40 2009 -0700
+
+    Use xdm's _SysErrorMsg() function instead of merely printing errno
+
+commit d6faa3c02a6f61c8d01accd0fcead28c39673e32
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Jul 17 22:42:08 2009 -0700
+
+    session.c: Add more debugging to execute()
+    
+    [jcristau@debian.org: save errno before calling Debug() in one place]
+
+commit 2d6d2f121bffb378676f422b44d37534c8c5d53b
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Jul 17 22:41:31 2009 -0700
+
+    Add some more log and debug messages
+    
+    Add log messages for xdm startup, shutdown, and normal exit.  Add a
+    debugging message when xdm enters its main loop.
+
+commit 72240433a85410e68a3b6705e097337ff985ae90
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Aug 20 01:30:59 2008 +0200
+
+    Call InitErrorLog() right after BecomeDaemon()
+    
+    The latter points stderr to /dev/null, so the sooner we open the log
+    after that, the better.
+
+commit 6dfbdf2823dc50c6b0ff24afbc58c67dc1651bef
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Jul 17 22:33:55 2009 -0700
+
+    spelling fix
+
+commit 195a991ef5e5d578d3499a5496d064d1b9b1dc7f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 22:29:26 2009 -0700
+
+    Clarify comment/#ifdefs for USE_SIOCGLIFCONF
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 6770509fa149cf8bc148e2ed3c8e11e0b83a4ee1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 22:21:25 2009 -0700
+
+    Remove #ifdef Lynx blocks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3beb4d278caa281ea8ebad55ae2f45ea0d46a6e6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 22:14:42 2009 -0700
+
+    Use imdent to show cpp macro nesting more clearly
+    
+    Also strip trailing whitespace to make git happier.
+    While many lines are changes, "git diff -w" shows no changes other
+    than pure whitespace.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b80b263f964031b1edef0a5e0a77a6615dc4be82
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 21:58:11 2009 -0700
+
+    Delete old A/UX (#ifdef macII) code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 70b7a9a7a83b042f46abd50bbe21b0522a0dd9a5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 21:46:46 2009 -0700
+
+    malloc(strlen()); strcpy() -> strdup()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7221da99593ee2fe1943250523965b70d59dbf56
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 21:17:36 2009 -0700
+
+    Documentation improvements
+    
+    - Remove references to setting build-time defaults via Imake configuration
+    - Show actual default $PATH & authDir settings in man page
+    - Whitespace & minor formatting fixes in man page
+    - Update man page info on multicast addresses from RFC 2373 to RFC 4291
+    - Add notes on mailing list, git repo, and patches to README
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 0c57a398cef50d13a821ad341ffb15ab0cbd2bad
+Author: Matěj Cepl <mcepl@redhat.com>
+Date:   Fri Jul 17 20:59:48 2009 -0700
+
+    Add variable DisplayManager.authDir to xdm-config (Fedora bug 388431)
+    
+    Fedora patch xdm-1.1.6-authDir-var-bug388431.patch
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 56a14b8a1f4d3aa883485b794c818581b8f07cd8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 20:37:51 2009 -0700
+
+    sprintf -> snprintf/asprintf conversions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a74131c41c63cbe5861b9550dfa7a921ec601c87
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 18:34:19 2009 -0700
+
+    Remove OS/2's duplicate copy of default path definitions in resource.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 8463017f7de43fe0a8ec144faca6bbf43168ebf9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 17 15:19:40 2009 -0700
+
+    Replace FORCE_CURSOR_FLASH code with simpler cursor update for passwd field
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 36fc6f22a529b2e9fc8dadfe944a10d54f4d3654
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jul 16 19:35:24 2009 -0700
+
+    Move xdmcp ARRAY initializators to declarations
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1e23dd0d37c276eea9c883270076926f5a2fee3f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jul 16 19:10:30 2009 -0700
+
+    Remove RCS Ids
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b21117d4eaaa7b5886c139f06b8acae9890448c2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue May 19 01:33:41 2009 -0700
+
+    Update AC_DEFINE_DIR to latest version from Autoconf Archive
+
+commit 332bd687a265642d17109eafb2d183887a53d739
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Jan 30 22:48:17 2009 +0100
+
+    getLocalAddress(): return 127.0.0.1 if the hostname doesn't resolve.
+    
+    This code already does this if IPv6 support is compiled in. It
+    was dereferencing a NULL pointer in the IPv4 only case.
+
+commit a4f47b755ae85bf3e35a3376fcf44ace67c38767
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Jan 30 10:44:01 2009 +0100
+
+    Remove RCS Id and put some comment here.
+
+commit 7a44f525570af2e1d24893635c85cd86091c5503
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 20 16:08:34 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and most gcc 4.3 and sparse warnings. Remaining
+    warning is due to passing read or write as function pointers in
+    the format ssize_t (*)(int, void *, size_t), as it is const for
+    write, but not for read.
+
+commit b4dc9afe20ab9c4ddec29a7357e147258e34bb67
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Mar 10 17:51:15 2008 +0100
+
+    Add support for syslog on more than openbsd.
+    
+    Also use LOG_AUTHPRIV by default, if that exists.
+
+commit 4fbd4bfcca12a91dacb25fb08a6a3b07822b5845
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Aug 20 10:32:50 2008 -0400
+
+    xaw8 is gone, use xaw7
+
+commit b73d0c91d32bf0aa60aa5ce2bbbd4468ce21a445
+Author: David Sainty <David.Sainty@dtsp.co.nz>
+Date:   Mon Aug 4 19:06:43 2008 -0700
+
+    Bug 16356: xdm Xstartup/Xreset configuration files malconstructed by cpp
+    
+    X.Org Bug #16356 <https://bugs.freedesktop.org/show_bug.cgi?id=16356>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
 commit c9cdec25130bc957b584ec15187e068f9c08862d
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed May 21 14:24:58 2008 -0400

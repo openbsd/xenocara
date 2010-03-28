@@ -26,11 +26,13 @@ bin_PROGRAMS = xdm xdmshell
 xdmlibdir = $(XDMLIBDIR)
 xdmlib_PROGRAMS = chooser
 
+AM_CFLAGS = $(CWARNFLAGS)
+
 #
 # xdm
 #
 
-xdm_CFLAGS = $(XDM_CFLAGS) -D_BSD_SOURCE
+xdm_CFLAGS = $(XDM_CFLAGS)
 xdm_LDADD = $(XDM_LIBS) $(XDM_LDFLAGS)
 
 xdm_SOURCES =	\
@@ -114,8 +116,11 @@ XORGRELSTRING = @PACKAGE_STRING@
 
 MANDEFS = \
 	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
-	-DCHOOSERPATH=$(xdmlibdir)/chooser -DXDMLOGDIR=$(XDMLOGDIR) \
-	-DXDMDIR=$(XDMCONFIGDIR) -DBINDIR=$(bindir) -DXDMPIDDIR=$(XDMPIDDIR) \
+	-DCHOOSERPATH="$(xdmlibdir)/chooser" -DXDMLOGDIR="$(XDMLOGDIR)" \
+	-DXDMDIR="$(XDMCONFIGDIR)" -DBINDIR="$(bindir)" \
+	-DXDMPIDDIR="$(XDMPIDDIR)" -DXDMXAUTHDIR="$(XDMXAUTHDIR)" \
+	-DDEF_USER_PATH="$(DEF_USER_PATH)" \
+	-DDEF_SYSTEM_PATH="$(DEF_SYSTEM_PATH)" \
 	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
 	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
 	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
@@ -128,7 +133,7 @@ CPP_FILES_FLAGS = $(MANDEFS) $(RANDOMMANDEFS) $(EXTRAMANDEFS)
 SUFFIXES += .$(APP_MAN_SUFFIX) .man.cpp
 
 .man.cpp.$(APP_MAN_SUFFIX):
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(cpp_verbose)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 #
 #  xdmshell
@@ -171,7 +176,7 @@ EXTRA_DIST += $(APPDEFAULTFILES:%=%.ad)
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+		$(AM_CPPFLAGS) $(CPPFLAGS)
 
 lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(xdm_CFLAGS) $(xdm_SOURCES) $(xdm_LDADD)
@@ -183,7 +188,7 @@ endif LINT
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 

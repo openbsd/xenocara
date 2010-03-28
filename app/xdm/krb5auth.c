@@ -1,4 +1,3 @@
-/* $Xorg: krb5auth.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1994, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/krb5auth.c,v 1.3 2001/01/17 23:45:21 dawes Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -147,7 +145,7 @@ Krb5GetAuth (unsigned short namelen, char *name)
 }
 
 int preauth_search_list[] = {
-	0,			
+	0,
 	KRB5_PADATA_ENC_TIMESTAMP,
 	-1
 	};

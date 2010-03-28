@@ -1,8 +1,7 @@
-/* $Xorg: xdmshell.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
 /*
  * xdmshell - simple program for running xdm from login
  *
- * 
+ *
 Copyright 1988, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -27,31 +26,21 @@ in this Software without prior written authorization from The Open Group.
  * *
  * Author:  Jim Fulton, MIT X Consortium
  *
- * This program should probably be setuid to root.  On the macII, it must be
- * run from the console so that getty doesn't get confused about zero-length
- * reads.
+ * This program should probably be setuid to root.
  *
  * WARNING:  Make sure that you tailor your Xresources file to have a
  * way of invoking the abort-display() action.  Otherwise, you won't be able
  * bring down X when you are finished.
  */
 
-/* $XFree86: xc/programs/xdm/xdmshell.c,v 3.6 2001/07/25 15:05:19 dawes Exp $ */
 
 #include <stdio.h>
 #include "dm.h"
 #include <errno.h>
-
-#ifdef macII
-#define ON_CONSOLE_ONLY
-#endif
-
-#ifdef ON_CONSOLE_ONLY
-#include <sys/ioctl.h>
-#endif
+#include <unistd.h>
 
 #ifndef BINDIR
-#define BINDIR "/usr/bin/X11"
+# define BINDIR "/usr/bin/X11"
 #endif
 
 /*
@@ -62,10 +51,10 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 #ifndef HAS_VFORK
-#define vfork() fork()
+# define vfork() fork()
 #endif
 
-char *ProgramName;
+static char *ProgramName;
 
 static int exec_args (
     char *filename,
@@ -77,7 +66,7 @@ static int exec_args (
     if (!filename) return -1;
 
     if (filename[0] != '/') {
-	fprintf (stderr, 
+	fprintf (stderr,
 	       "%s:  attempt to execute program with relative pathname:  %s\n",
 		 ProgramName, filename);
 	return -1;
@@ -98,7 +87,7 @@ static int exec_args (
     return waitCode (status);
 }
 
-#if defined(macII) || defined(sun)
+#if defined(sun)
 static int exec_one_arg (
     char    *filename,
     char    *arg)
@@ -120,12 +109,6 @@ main (
     int ttyfd;
     char cmdbuf[256];
     char *args[10];
-#ifdef ON_CONSOLE_ONLY
-    int consfd;
-    int ttypgrp, conspgrp;
-    char *ttyName;
-    extern char *ttyname();
-#endif
 
     ProgramName = argv[0];
 
@@ -136,51 +119,12 @@ main (
 
     ttyfd = open ("/dev/tty", O_RDWR, 0);
     if (ttyfd < 3) {			/* stdin = 0, stdout = 1, stderr = 2 */
-	fprintf (stderr, 
+	fprintf (stderr,
 		 "%s:  must be run directly from the console.\r\n",
 		 ProgramName);
 	exit (1);
     }
-#ifdef ON_CONSOLE_ONLY
-    if (ioctl (ttyfd, TIOCGPGRP, (char *)&ttypgrp) != 0) {
-	fprintf (stderr, "%s:  unable to get process group of /dev/tty\r\n",
-		 ProgramName);
-	(void) close (ttyfd);
-	exit (1);
-    }
-#endif
     (void) close (ttyfd);
-    
-#ifdef ON_CONSOLE_ONLY
-    ttyName = ttyname (0);
-    if (!ttyName || strcmp (ttyName, "/dev/console") != 0) {
-	fprintf (stderr, "%s:  must login on /dev/console instead of %s\r\n",
-		 ProgramName, ttyName ? ttyName : "non-terminal device");
-	exit (1);
-    }
-
-    consfd = open ("/dev/console", O_RDWR, 0);
-    if (consfd < 3) {			/* stdin = 0, stdout = 1, stderr = 2 */
-	fprintf (stderr, "%s:  unable to open /dev/console\r\n",
-		 ProgramName);
-	exit (1);
-    }
-
-    if (ioctl (consfd, TIOCGPGRP, (char *)&conspgrp) != 0) {
-	fprintf (stderr,
-		 "%s:  unable to get process group of /dev/console\r\n",
-		 ProgramName);
-	(void) close (consfd);
-	exit (1);
-    }
-    (void) close (consfd);
-
-    if (ttypgrp != conspgrp) {
-	fprintf (stderr, "%s:  must be run from /dev/console\r\n", 
-		 ProgramName);
-	exit (1);
-    }
-#endif
 
     /* make xdm run in a non-setuid environment */
     if (setuid (geteuid()) == -1) {
@@ -204,13 +148,6 @@ main (
 		 ProgramName, cmdbuf, errno, strerror(errno));
 	exit (1);
     }
-
-#ifdef macII
-    strcpy (cmdbuf, BINDIR);
-    strcat (cmdbuf, "/Xrepair");
-    (void) exec_one_arg (cmdbuf, NULL);
-    (void) exec_one_arg ("/usr/bin/screenrestore", NULL);
-#endif
 
 #ifdef sun
     strcpy (cmdbuf, BINDIR);

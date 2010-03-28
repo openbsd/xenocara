@@ -1,5 +1,3 @@
-/* $XdotOrg: app/xdm/daemon.c,v 1.3 2006/03/16 21:46:55 alanc Exp $ */
-/* $Xorg: daemon.c,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xdm/daemon.c,v 3.21 2004/01/10 21:26:29 herrb Exp $ */
 
 /*
  * xdm - display manager daemon
@@ -52,14 +49,14 @@ BecomeDaemon (void)
 #ifdef HAVE_DAEMON
     if (daemon (0, 0) < 0) {
        /* error */
-       LogError("daemon() failed, %s\n", strerror(errno));
+       LogError("daemon() failed, %s\n", _SysErrorMsg (errno));
        exit(1);
     }
 #else
     switch (fork()) {
     case -1:
        /* error */
-       LogError("daemon fork failed, %s\n", strerror(errno));
+       LogError("daemon fork failed, %s\n", _SysErrorMsg (errno));
        exit(1);
        break;
     case 0:
@@ -72,7 +69,7 @@ BecomeDaemon (void)
 
     if (setsid() == -1) {
        LogError("setting session id for daemon failed: %s\n",
-                  strerror(errno));
+                  _SysErrorMsg (errno));
        exit(1);
     }
 
