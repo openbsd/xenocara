@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2010/01/16 08:58:54 matthieu Exp $
+# $OpenBSD: Makefile,v 1.9 2010/03/28 14:13:21 matthieu Exp $
 
 # util is done early, alias must come last
 SUBDIR= encodings \
@@ -13,7 +13,7 @@ SUBDIR= encodings \
 	xfree86-type1 ${EXTRAS} \
 	alias
 
-EXTRAS=	dejavu-ttf bitstream-vera-ttf
+EXTRAS=	dejavu-ttf
 
 .include <bsd.subdir.mk>
 
