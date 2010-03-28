@@ -22,44 +22,30 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xvidtune,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xvidtune)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(xvidtune, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xvidtune)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+XORG_DEFAULT_OPTIONS
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
 AC_PROG_INSTALL
-AC_PROG_CPP
-AC_PATH_PROGS(RAWCPP, [cpp], [$(CPP)], 
-   [$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/ccs/lib:/usr/ccs/lbin:/lib])
-
-m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
 
 # Checks for pkg-config packages
-XAW_CHECK_XPRINT_SUPPORT(XAW)
-PKG_CHECK_MODULES(XVIDTUNE, xxf86vm)
-
-XVIDTUNE_CFLAGS="$XVIDTUNE_CFLAGS $XAW_CFLAGS"
-XVIDTUNE_LIBS="$XVIDTUNE_LIBS $XAW_LIBS"
-
-echo $XVIDTUNE_LIBS
-
+PKG_CHECK_MODULES(XVIDTUNE, xxf86vm xt xaw7 xmu x11)
+xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
+AC_ARG_WITH(appdefaultdir,
+	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	  [specify directory for app-defaults files (default is autodetected)]),
+	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(XVIDTUNE_CFLAGS)
 AC_SUBST(XVIDTUNE_LIBS)
-
-AC_ARG_WITH(vendor-name,
-	    AS_HELP_STRING([--with-vendor-name=VENDOR],
-			   [Vendor name for disclaimer statement]),
-	    [ VENDOR_NAME="$withval" ],
-	    [ VENDOR_NAME="The X.Org Foundation" ])
-AC_SUBST([VENDOR_NAME])
-
-PKG_CHECK_MODULES(APPDEFS, xt)
-appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
 AC_SUBST(appdefaultdir)
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])

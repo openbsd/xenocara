@@ -47,7 +47,7 @@ Xvidtune is a client interface to the X server video mode
 extension (XFree86-VidModeExtension).
 .PP
 When given one of the non-toolkit options, xvidtune provides
-a command line interface to either switch the video mode.
+a command line interface to either print or switch the video mode.
 .PP
 Without any options (or with only toolkit options) it
 presents the user with various buttons and sliders that can be
@@ -166,7 +166,9 @@ did not exit cleanly and they are still disabled, the program can
 be re-run with this option to re-enable the mode switching key
 combinations.
 .SH SEE ALSO
-__xconfigfile__(__filemansuffix__), __xservername__(__appmansuffix__)
+.BR xrandr (__appmansuffix__),
+.BR __xservername__ (__appmansuffix__),
+.BR __xconfigfile__ (__filemansuffix__).
 .SH AUTHORS
 Kaleb S. Keithley, X Consortium.
 .br

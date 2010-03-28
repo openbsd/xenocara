@@ -1,54 +1,415 @@
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit b1fac8775467a1d43a4a5881f2366ec4f86e799b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 23:09:42 2010 -0800
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    xvidtune 1.0.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit f60fe08ccc19444f2c303bd7e5bab1faf669bce3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 23:07:34 2010 -0800
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Minor man page fixes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-07  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 809f0ff36dabc2dcf47fd96ff2135e93a14af176
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 23:01:42 2010 -0800
 
-	* Makefile.am:
-	* configure.ac:
-	Change to use the app-defaults default dir configured in libXt.
+    Fix wording of message indicating modes cannot be set
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit a1449405df76225e608384d770f44b68f8f918fa
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 22:54:38 2010 -0800
 
-	* Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Replace remaining sprintf calls with snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c55a10661a790fe834fc3dfd70c8e722e54c526c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 22:44:25 2010 -0800
 
-	* configure.ac:
-	Add m4 magic to allow AS_HELP_STRING to work with older versions
-	of autoconf 2.57.
+    Use automake silencer on man page generation too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 4b073704dd69e47f68f61dba1b389f29379709f6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 22:44:04 2010 -0800
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Move CWARNFLAGS addition from configure.ac to Makefile.am
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit cb9c3a5ddad517f9386b195b7d710e6207618aeb
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 22:42:54 2010 -0800
 
-	* configure.ac:
-	Update package version number for RC1 release.
+    Raise xorg-macros requirement to 1.4
+    
+    Needed since the changes in e0da3e548b7c5f3289fd43dd63f8c8e29285b55c
+    depend on the INSTALL file delivered in xorg-macros 1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-10-18  Alan Coopersmith  <alan.coopersmith@sun.com>
+commit fed4d1968a30356c42a07b48f9a1059e2b576c74
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 22:41:52 2010 -0800
 
-	* Makefile.am: 
-	Substitute __VENDOR__ with $(VENDORNAME) in disclaimer in XVidtune
-	app-defaults file
+    Fill in COPYING with notices from sources
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-	* configure.ac: 
-	Add --with-vendor-name option to set $(VENDORNAME).
-	Set default $(VENDORNAME) to "The X.Org Foundation".	
+commit cf9e789281484747d5c5a61d74eee2e4a6b4947d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:48 2009 -0500
 
-2005-10-13  Alan Coopersmith  <alan.coopersmith@sun.com>
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-	* man/Makefile.am: 
-	* configure.ac:
-	Use sed to fill in variables in man page
+commit 66be761ba70c0e9e053f8c9e48168ebefeaf7a8d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:55 2009 -0500
 
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
 
+commit e0da3e548b7c5f3289fd43dd63f8c8e29285b55c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 5ed4c98a422a1e1df47768e2d44aab6a3b81a687
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 78b9b9614df9bc6c42a26f019c3ce8956ee5486d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 24781b9cf48865d2fb10112dda87c6d2437fd20d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 5a92ce4dd41bd71032e9b44a20e3a58ffdd73af9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:31 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 19f177db7c50aac512761ddbd79c0344d7dc04de
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Sep 26 09:55:44 2009 -0700
+
+    Add xmu & x11 to PKG_CHECK_MODULES
+    
+    http://bugs.freedesktop.org/show_bug.cgi?id=24166
+    Reported by: Bernhard Rosenkraenzer <bero@arklinux.org>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5dc3873019dfc20f923f18ab73248d7b7ecefce2
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 26 19:26:46 2009 -0200
+
+    Correct make distcheck and sparse warnings.
+    
+      Also apply "by hand" the sed -e 's/__VENDOR__/The X.Org Foundation'
+    (or any other value used in the previous --with-vendor=... configure
+    option) and use a static app-defaults file, matching pattern of
+    changes in other xorg/app programs.
+
+commit 540ce8c77fe520e6d46571cbc329db6b3784010f
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Sat Nov 8 15:33:08 2008 -0800
+
+    Fixed compilation on case-insensitive file systems
+
+commit e120d48bc3f72d5df39218c238323e48f4d80bc4
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Aug 20 10:32:53 2008 -0400
+
+    xaw8 is gone, use xaw7
+
+commit 03c62eb709d18c4c0031389c4200b018b6ee352c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 14:12:12 2008 -0400
+
+    Fix a buffer overrun on the heap.
+
+commit 716e7a755d854ec914c202f16a62625dd1bd56d9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 22 15:27:12 2008 -0800
+
+    Change xvidtune_CFLAGS to AM_CFLAGS to make automake-1.10 happier
+    
+    Makefile.am:28: compiling `xvidtune.c' with per-target flags requires `AM_PROG_CC_C_O' in `configure.ac'
+
+commit fb92c5943d19bc7cf555ebceb41c5dcdbe812265
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 22 15:25:07 2008 -0800
+
+    Bug 14190: Remove extra debugging echo from configure.ac
+    
+    <http://bugs.freedesktop.org/show_bug.cgi?id=14190>
+
+commit 94aa75677d20b62363e8aa00c7a2f04e6a83d24c
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:37:32 2007 -0500
+
+    Replace static ChangeLog with dist-hook to generate from git log
+
+commit f51c09047e186eb4d557304208bf0ea58a3254fc
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:51:54 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 840e90ae56bdfa821ee2b6e53d625e36d63323c5
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:15 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit 962ea36b940056427379e9c12a56c59e1d43c962
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:54 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit fcaf3ee10090fa2f8cac9e313cec26f57a7d22a2
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:22:47 2005 +0000
+
+    Stub COPYING files
+
+commit 71a8f9056e9d1b9875d07de9b6906aa962425752
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:12 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 1943921e9ccf275b582776dd735da4d4b8a401cd
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 7 16:18:02 2005 +0000
+
+    Change to use the app-defaults default dir configured in libXt.
+
+commit 8e5ab86825f40de99b9ebde1a8726a4ae988fc57
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:26 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 288d2214f1ddbe65740127d07dc5d2130337d1c7
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 17:08:50 2005 +0000
+
+    Add m4 magic to allow AS_HELP_STRING to work with older versions of
+        autoconf 2.57.
+
+commit 62ac03d689b5f500400bb9408dc3d8b96b9fb8d6
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:28 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit f77c11cead7e6872ec4fcbc42ef2d303be9e5f40
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:01:48 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 902ea7375a3b1cdb42b3db441da6ad3effd2940a
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:35:09 2005 +0000
+
+    Another pass at .cvsignores for apps.
+
+commit 2feeb356ca1217e2ee5a5dcd03d87463f3dd67b5
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sun Nov 20 22:08:56 2005 +0000
+
+    Add/improve .cvsignore files for apps.
+
+commit bb0d7bfe8145f6a112c66491954ca055414e149f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:47:58 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 2e0cbc53793c5defec0e76ec10e694a8b82a8d4e
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 14:44:03 2005 +0000
+
+    Substitute __VENDOR__ with $(VENDORNAME) in disclaimer in XVidtune
+        app-defaults file
+    Add --with-vendor-name option to set $(VENDORNAME). Set default
+        $(VENDORNAME) to "The X.Org Foundation".
+
+commit f5813be966f1ba771a57ff435aafb49b859ceae2
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:32:54 2005 +0000
+
+    Change default install dir for app-default files from
+        $(sysconfdir)/X11/app-defaults to $(libdir)/X11/app-defaults to match
+        the monolith & allow localization
+
+commit 12b577c0a7fde27115a3e3f75c55b249fda17e4f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 23:56:25 2005 +0000
+
+    Use @APP_MAN_SUFFIX@ instead of $(APP_MAN_SUFFIX) in macro substitutions to
+        work better with BSD make
+
+commit 3be95f39d8c3a14a25ce63a837dacbac583b263c
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Oct 14 01:38:30 2005 +0000
+
+    Use sed to fill in variables in man page
+
+commit f1c3f49e3d485176406c189bab2d63ff4e783ea8
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Aug 1 20:25:32 2005 +0000
+
+    Install man pages to section 1 instead of section m (Patch from Donnie
+        Berkholz)
+
+commit f5392e64e1e83e7a0a7153445da09f808499a512
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:38 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 95f3ea2eb32fca87da7e2e251a2944de9712a501
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jul 23 17:10:13 2005 +0000
+
+    Fix remaining DEP_{CFLAGS,LIBS} references
+
+commit fd1e75a518952bd6a5a432a037650474b45d6f15
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Jul 20 19:32:04 2005 +0000
+
+    Use a unique token for PKG_CHECK_MODULES. Otherwise, if you use a global
+        configure cache, you cache it, and the cached value is probably wrong.
+
+commit da2f699f9f2e51eb57508230be679a6ed7fa6644
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sat Jul 16 23:29:38 2005 +0000
+
+    x11perf/Makefile.am: xinit/Makefile.am: xvidtune/Makefile.am:
+    - Replace $< with portable macro xinit/Makefile.am: xinit/configure.ac:
+        xvidtune/Makefile.am: xvidtune/configure.ac:
+    - Use more portable cpp invocations for pre-processing files
+        xfs/configure.ac:
+    - Add XTRANS_CONNECTION_FLAGS so xtrans transport type defines are set
+        correctly
+
+commit 0fd158e44f7d1c5ad386cd7a19d72b4ba4511e14
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Fri Jul 1 20:09:09 2005 +0000
+
+    xtrap.pc.in: s/Xfixes/XTrap/ xi.pc.in: s/Xt/Xi/ Xv/src/Makefile.am: remove
+        whitespace after backslash modularizeapp.sh: s/destkop/desktop/
+        modular/symlink.sh: Add bitmaps for xeyes, system.xsm for xsm, and
+        Xvidtune.cpp for xvidtune. Also comment out non-existing mga_bios.h
+    Check in buildsystems for xsetroot, xsm, xstdcmap, xtrap, and xvinfo
+
+commit f1dee76b843f9d02c3e46071d97706ad630d1287
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:55:08 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 1fe2219b8aae2ba087303e34460f92ceb077c2f2
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Mar 23 13:54:01 2004 +0000
+
+    file Xvidtune.cpp was initially added on branch XORG-RELEASE-1-TM.
+
+commit 969efb17084d34e27ecdb4a23a0b1e2af02bce42
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:35:52 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 975c2ec449215ec549a663fc0c55cfcb45b78609
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:13:20 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 35f321520eb3a9249a403d9167fa2832957ddfe2
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:32 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 1a75c3cc3485b05cd3446ad508ca63bb8811e7b7
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:24:18 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 2fa30b1def7a20aa24b0f3ca243ddb3845f980e8
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:29:23 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 0f013a19b7553c5b92c627faba6897c20d386440
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:49:24 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 1f183135044de12b715a955cc7f354bed929f221
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:49:24 2003 +0000
+
+    Initial revision

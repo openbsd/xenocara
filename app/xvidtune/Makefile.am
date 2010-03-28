@@ -1,4 +1,4 @@
-# 
+# $Id: Makefile.am,v 1.3 2010/03/28 12:53:20 matthieu Exp $
 #  Copyright 2005  Red Hat, Inc.
 # 
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xvidtune
 
-xvidtune_CFLAGS = $(XVIDTUNE_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XVIDTUNE_CFLAGS)
 xvidtune_LDADD = $(XVIDTUNE_LIBS)
 
 xvidtune_SOURCES =	\
@@ -55,19 +55,28 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
-# App default files  (*.ad)
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
 appdefaultdir = @appdefaultdir@
 
-appdefault_DATA = Xvidtune
+dist_appdefault_DATA = app-defaults/Xvidtune
 
-Xvidtune: Xvidtune.cpp
-	$(RAWCPP) $(srcdir)/Xvidtune.cpp | \
-	sed -e 's/^\#.*$$//g' -e 's|__VENDOR__|$(VENDOR_NAME)|' > $@
+EXTRA_DIST = $(appman_PRE)
 
-EXTRA_DIST = Xvidtune.cpp $(appman_PRE)
-
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = Xvidtune $(appman_DATA)
 
+
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL

@@ -49,11 +49,11 @@ from Kaleb S. KEITHLEY.
 #include <stdlib.h>
 #include <signal.h>
 
-int MajorVersion, MinorVersion;
-int EventBase, ErrorBase;
-int dot_clock, mode_flags;
-unsigned long    TestTimeout=5000;  /* Default test timeout */
-XtSignalId sigId;
+static int MajorVersion, MinorVersion;
+static int EventBase, ErrorBase;
+static int dot_clock, mode_flags;
+static unsigned long TestTimeout=5000;  /* Default test timeout */
+static XtSignalId sigId;
 
 /* Minimum extension version required */
 #define MINMAJOR 0
@@ -370,13 +370,13 @@ SetLabel(fields i)
 	 XtVaSetValues(auto_apply_toggle, XtNstate, 0, NULL);
 
       if (i == Flags)
-	 (void) sprintf (buf, "%04x", sdp->val);
+	 (void) snprintf (buf, sizeof(buf), "%04x", sdp->val);
       else if (i >= PixelClock && i <= VSyncRate)
-	 (void) sprintf (buf, "%6.2f", (float)sdp->val / 1000.0);
+	 (void) snprintf (buf, sizeof(buf), "%6.2f", (float)sdp->val / 1000.0);
       else if (i == BlankDelay1 || i == BlankDelay2) {
-	 (void) sprintf (buf, "%d", sdp->val);
+	 (void) snprintf (buf, sizeof(buf), "%d", sdp->val);
       } else
-	 (void) sprintf (buf, "%5d", sdp->val);
+	 (void) snprintf (buf, sizeof(buf), "%5d", sdp->val);
 	 
       sdp->lastpercent = -1;
       if (i == Flags) {
@@ -532,9 +532,10 @@ ShowCB(Widget w, XtPointer client, XtPointer call)
     Time time;
     char tmpbuf[16];
 
-    sprintf(tmpbuf, "\"%dx%d\"",
+    snprintf(tmpbuf, sizeof(tmpbuf), "\"%dx%d\"",
 	   AppRes.field[HDisplay].val, AppRes.field[VDisplay].val);
-    sprintf(modebuf, "%-11s   %6.2f   %4d %4d %4d %4d   %4d %4d %4d %4d",
+    snprintf(modebuf, sizeof(modebuf),
+	   "%-11s   %6.2f   %4d %4d %4d %4d   %4d %4d %4d %4d",
 	   tmpbuf, (float)dot_clock/1000.0,
 	   AppRes.field[HDisplay].val,
 	   AppRes.field[HSyncStart].val,
@@ -724,10 +725,10 @@ EditCB (Widget w, XtPointer client, XtPointer call)
 	char tmp[6];
 
 	if (current < lower) {
-	    (void) sprintf (tmp, "%5d", lower);
+	    (void) snprintf (tmp, sizeof(tmp), "%5d", lower);
 	    current = lower;
 	} else {
-	    (void) sprintf (tmp, "%5d", upper);
+	    (void) snprintf (tmp, sizeof(tmp), "%5d", upper);
 	    current = upper;
 	}
 	text.firstPos = 0;
@@ -911,7 +912,7 @@ ScrollCB (Widget w, XtPointer client, XtPointer call)
         sdp->val = isValid(tmp_val, fieldindex);
         
 	sdp->lastpercent = ipercent;
-	(void) sprintf (buf, "%5d", sdp->val);
+	(void) snprintf (buf, sizeof(buf), "%5d", sdp->val);
 	XtVaSetValues (sdp->textwidget, XtNlabel, buf, NULL);
         if (sdp->val != tmp_val) {
             int base;
@@ -965,9 +966,10 @@ CreateTyp (
 
     wids[0] = XtCreateWidget (w1name, labelWidgetClass, form, NULL, 0);
     if (findex >= PixelClock && findex <= VSyncRate)
-	(void) sprintf(buf, "%6.2f", (float)AppRes.field[findex].val / 1000.0);
+	(void) snprintf(buf, sizeof(buf), "%6.2f",
+			(float)AppRes.field[findex].val / 1000.0);
     else
-	(void) sprintf (buf, "%5d", AppRes.field[findex].val);
+	(void) snprintf (buf, sizeof(buf), "%5d", AppRes.field[findex].val);
     wids[1] = XtVaCreateWidget (w2name, labelWidgetClass,
 		form, XtNlabel, buf, NULL);
     if (w3name != NULL) {
@@ -1216,7 +1218,7 @@ CreateHierarchy(Widget top)
                                      NULL);
     XtAddCallback (w, XtNcallback, AdjustCB, (XtPointer)-VTotal);
 
-    (void) sprintf (buf, "%04x", AppRes.field[Flags].val);
+    (void) snprintf (buf, sizeof(buf), "%04x", AppRes.field[Flags].val);
     wids[0] = XtCreateWidget ("Flags-label", labelWidgetClass,
 		forms[8], NULL, 0);
     wids[1] = XtVaCreateWidget ("Flags-text", asciiTextWidgetClass,
@@ -1293,7 +1295,7 @@ CreateHierarchy(Widget top)
 				   s3form, NULL);
 	XtAddCallback (wids[3], XtNcallback, ChangeBlankCB,
 			(XtPointer)-BlankDelay1);
-	(void) sprintf (buf, "%d", AppRes.field[BlankDelay1].val);
+	(void) snprintf (buf, sizeof(buf), "%d", AppRes.field[BlankDelay1].val);
 	wids[4] = XtVaCreateWidget("Blank1-text", asciiTextWidgetClass,
 			s3form, XtNstring, buf, XtNtranslations, trans, NULL);
 	AddCallback(wids[4], XtNcallback, BlankEditCB, (XPointer) BlankDelay1);
@@ -1309,7 +1311,7 @@ CreateHierarchy(Widget top)
 				   s3form, NULL);
 	XtAddCallback (wids[7], XtNcallback, ChangeBlankCB,
 			(XtPointer)-BlankDelay2);
-	(void) sprintf (buf, "%d", AppRes.field[BlankDelay2].val);
+	(void) snprintf (buf, sizeof(buf), "%d", AppRes.field[BlankDelay2].val);
 	wids[8] = XtVaCreateWidget("Blank2-text", asciiTextWidgetClass,
 			s3form, XtNstring, buf, XtNtranslations, trans, NULL);
 	AddCallback(wids[8], XtNcallback, BlankEditCB, (XPointer) BlankDelay2);
@@ -1629,7 +1631,7 @@ main (int argc, char** argv)
 	<Btn1Down>: select-start()\n");
 
     if (!ModeSettable()) {
-	printf("Video are not settable on this chip\n");
+	printf("Video modes are not settable on this chip\n");
 	displayNoTune(top);
 	modeSettable = FALSE;
     } else
