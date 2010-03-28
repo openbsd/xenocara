@@ -56,7 +56,7 @@ unquote_pairs (ButtonRecord *br, int n)
 {
     int i;
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++, br++) {
 	char *dst, *src;
 	int quoted = 0;
 
@@ -91,6 +91,7 @@ parse_name_and_exit_code_list (char *buttonlist, ButtonRecord **brptr)
     int len;
     char *copy;
 
+    *brptr = NULL;
     if (!buttonlist) return 0;
 
     /*

@@ -1,3 +1,155 @@
+commit ad5f249bf731ee06958e0948f0898ac3f3e26352
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 29 23:14:56 2010 -0800
+
+    xmessage 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ac722e899333482e96de163eadfed1a540209dce
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 29 23:14:24 2010 -0800
+
+    Rely on PKG_CHECK_MODULES to AC_SUBST XMESSAGE_CFLAGS & _LIBS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 529f0f2125a1f5e7d6382f918af955616a35d657
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 29 23:10:13 2010 -0800
+
+    Fill in COPYING file with notices from source code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 72014bab094682621a206958bb7c62f83d789cde
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 29 23:06:47 2010 -0800
+
+    Use AM_V_GEN to silence manpage generation too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit d351d89dd97e8b90e2b6a0421d8e976d22c8fb14
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 29 23:03:51 2010 -0800
+
+    Bump xorg-macros requirement to 1.4 for XORG_INSTALL changes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 093a45093e98b08763c398fc36955ea4c9350edc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:48 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7fd49423ac4497443f0e5b53588bc064f9096e7e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 3ff203878ca5361fb7d11a9589739a2cc1e2e312
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit bf0f065f4d92c9c8e9a04863fad1fff7885d60bb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 726f220cbd1a9a795c57c6b8e9d2bcc7ba25de65
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit bdd48bb136f3c7aa27845f5478c81579c39011eb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit f4f59348603fffd2fd3249f272eeeaa72f819b9a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 22 16:05:29 2009 -0200
+
+    Correct make distcheck and sparse warnings.
+
+commit 17bb13a8280da865ecc1be940a8313e65c178a35
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sun Mar 16 18:15:54 2008 -0300
+
+    Compile warning fixes.
+    
+      Declare xmessage.c:detab as static to avoid warning about missing prototype.
+      Also remove CVS id variable, and the printing of it in "xmessage -help".
+
+commit 1c6e1c795774e80c8fac489671906be2a3d8641d
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Aug 20 10:32:52 2008 -0400
+
+    xaw8 is gone, use xaw7
+
+commit 985f825a94723f9f4b876af790ce92634d1129af
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Aug 2 17:40:05 2008 +0200
+
+    Create the app-defaults dir when using a build dir (build fix)
+    
+    Also use AM_CFLAGS instead of xmessage_CFLAGS, making AM_PROG_CC_C_O
+    unnecessary.
+
+commit c87a9f9e90158ce3afe4986c6d3e85a7b24a7230
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 20:34:54 2008 -0700
+
+    Added missing AM_PROG_CC_C_O
+
+commit 0b12bb902e42ad3922f6ea6448f183dfd450d982
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 20:08:08 2008 -0700
+
+    Build fix for file systems that are not case sensitive
+
+commit d904b9e532da45d1b31621f51e5d45553ae83d89
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Sep 4 00:45:50 2007 +0200
+
+    unquote_pairs() really unquotes all pairs
+    
+    Fix unquote_pairs() to unquote every pair in br instead only
+    the first one n times.
+    
+    Reported by Viktor Horvath in Debian bug #440734.
+
 commit 24f1760790a9d2f73cac94bc00d8137fefac9f38
 Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
 Date:   Fri Aug 10 11:18:12 2007 +0200

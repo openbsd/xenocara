@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xmessage
 
-xmessage_CFLAGS = $(XMESSAGE_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XMESSAGE_CFLAGS)
 xmessage_LDADD = $(XMESSAGE_LIBS)
 
 xmessage_SOURCES =	\
@@ -34,34 +34,22 @@ xmessage_SOURCES =	\
 appman_PRE = \
         xmessage.man
 
-# App default files  (*.ad)
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
 appdefaultdir = @appdefaultdir@
 
-
-APPDEFAULTFILES = \
-        Xmessage \
-        Xmessage-color
-
-SUFFIXES = .ad
-
-.ad:
-	cp $< $@
-
-appdefault_DATA = $(APPDEFAULTFILES)
-
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) Tests
-
-CLEANFILES = $(APPDEFAULTFILES)
-
+dist_appdefault_DATA = \
+        app-defaults/Xmessage \
+        app-defaults/Xmessage-color
 
 appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA) ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+EXTRA_DIST = $(appman_PRE)
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+CLEANFILES = $(appman_DATA)
 
 SED = sed
 
@@ -82,14 +70,17 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

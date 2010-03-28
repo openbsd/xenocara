@@ -1,4 +1,3 @@
-static char*id="$XConsortium: xmessage.c,v 1.6 95/01/04 16:29:54 gildea Exp $";
 /*
 
 Copyright (c) 1988, 1991, 1994  X Consortium
@@ -73,11 +72,11 @@ static XtResource resources[] = {
     { "nearMouse", "NearMouse", XtRBoolean, sizeof (Boolean),
       offset(nearmouse), XtRString, "false" },
     { "timeout", "Timeout", XtRInt, sizeof (int),
-      offset(timeout_secs), XtRInt, 0 },
+      offset(timeout_secs), XtRInt, NULL },
     { "maxHeight", "Maximum", XtRDimension, sizeof (Dimension),
-      offset(maxHeight), XtRDimension, 0 },
+      offset(maxHeight), XtRDimension, NULL },
     { "maxWidth", "Maximum", XtRDimension, sizeof (Dimension),
-      offset(maxWidth), XtRDimension, 0 },
+      offset(maxWidth), XtRDimension, NULL },
 };
 #undef offset
 
@@ -121,7 +120,6 @@ NULL};
     fprintf (outf, "where options include:\n");
     for (cpp = options; *cpp; cpp++)
 	fprintf (outf, "%s\n", *cpp);
-    fprintf (outf, "%s\n", id+1);
 }
 
 /*
@@ -157,7 +155,7 @@ default_exit_action(Widget w, XEvent *event, String *params,
 
 /* Convert tabs to spaces in *messagep,*lengthp, copying to a new block of
    memory.  */
-void
+static void
 detab (char **messagep, int *lengthp)
 {
   int   i, n, col, psize;
