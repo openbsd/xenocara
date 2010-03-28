@@ -166,5 +166,5 @@ PieSlice			{ yylval.num = ArcPieSlice;
 %%
 
 #ifndef yywrap
-int yywrap() { return (1); }
+int yywrap(void) { return (1); }
 #endif

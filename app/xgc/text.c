@@ -66,7 +66,6 @@ create_text_choice(Widget w, int type, int length, int width)
     {XtNeditType,   (XtArgVal) XawtextEdit},
     {XtNstring,     (XtArgVal) NULL},
     {XtNlength,     (XtArgVal) NULL},
-    {XtNwidth,      (XtArgVal) NULL},
     {XtNhorizDistance, (XtArgVal) 10},
     {XtNfromHoriz,  (XtArgVal) NULL},
     {XtNinsertPosition, (XtArgVal) NULL},
@@ -83,6 +82,7 @@ create_text_choice(Widget w, int type, int length, int width)
 
   snprintf(translationtable,sizeof translationtable,
      "<Leave>:      WriteText(%d)\n\
+     <Btn1Down>:    set-keyboard-focus() select-start()\n\
      Ctrl<Key>J:    Nothing()\n\
      Ctrl<Key>M:    Nothing()\n\
      <Key>Linefeed: Nothing()\n\
@@ -120,9 +120,8 @@ create_text_choice(Widget w, int type, int length, int width)
   }
   textargs[1].value = (XtArgVal) textstrings[type];
   textargs[2].value = (XtArgVal) length;
-  textargs[3].value = (XtArgVal) width;
-  textargs[5].value = (XtArgVal) label;
-  textargs[6].value = (XtArgVal) strlen(textstrings[type]);
+  textargs[4].value = (XtArgVal) label;
+  textargs[5].value = (XtArgVal) strlen(textstrings[type]);
 
   text = XtCreateManagedWidget("text", asciiTextWidgetClass,w,
 			       textargs,XtNumber(textargs));

@@ -43,7 +43,7 @@ slider_jump(Widget w, caddr_t data, caddr_t position)
 
   float oldpercent;		/* where the scrollbar is */
   float newpercent;		/* normalized scrollbar */
-  char snewpercent[3];		/* string representation of scrollbar */
+  char snewpercent[4];		/* string representation of scrollbar */
 
   oldpercent = *(float *) position;
 
@@ -131,7 +131,6 @@ create_testfrac_choice(Widget w)
   };
 
   static Arg percentargs[] = {
-    {XtNborderWidth,    (XtArgVal) 1},
     {XtNhorizDistance,  (XtArgVal) 10},
     {XtNfromHoriz,      (XtArgVal) NULL}
   };
@@ -162,7 +161,7 @@ create_testfrac_choice(Widget w)
   label = XtCreateManagedWidget("Percentage of Test",labelWidgetClass,w,
 				labelargs,XtNumber(labelargs));
 
-  percentargs[2].value = (XtArgVal) label;
+  percentargs[1].value = (XtArgVal) label;
 
   percent = XtCreateManagedWidget("100",labelWidgetClass,w,
 				  percentargs,XtNumber(percentargs));

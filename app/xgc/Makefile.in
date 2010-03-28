@@ -59,11 +59,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xgc$(EXEEXT)
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp gram.c gram.h \
-	install-sh lex.c missing mkinstalldirs
+DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
+	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
+	gram.c gram.h install-sh lex.c missing mkinstalldirs ylwrap
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -74,15 +74,14 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
-	"$(DESTDIR)$(appmandir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
+	"$(DESTDIR)$(appdefaultdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xgc_OBJECTS = xgc-choice.$(OBJEXT) xgc-dashlist.$(OBJEXT) \
-	xgc-getfile.$(OBJEXT) xgc-gram.$(OBJEXT) \
-	xgc-interpret.$(OBJEXT) xgc-lex.$(OBJEXT) xgc-main.$(OBJEXT) \
-	xgc-planemask.$(OBJEXT) xgc-record.$(OBJEXT) \
-	xgc-testfrac.$(OBJEXT) xgc-tests.$(OBJEXT) xgc-text.$(OBJEXT)
+am_xgc_OBJECTS = choice.$(OBJEXT) dashlist.$(OBJEXT) getfile.$(OBJEXT) \
+	gram.$(OBJEXT) interpret.$(OBJEXT) lex.$(OBJEXT) \
+	main.$(OBJEXT) planemask.$(OBJEXT) record.$(OBJEXT) \
+	testfrac.$(OBJEXT) tests.$(OBJEXT) text.$(OBJEXT)
 xgc_OBJECTS = $(am_xgc_OBJECTS)
 am__DEPENDENCIES_1 =
 xgc_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -103,9 +102,9 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-appdefaultDATA_INSTALL = $(INSTALL_DATA)
 appmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appdefault_DATA) $(appman_DATA)
+dist_appdefaultDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(appman_DATA) $(dist_appdefault_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -118,7 +117,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -136,7 +134,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -145,9 +146,11 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -179,17 +182,12 @@ PKG_CONFIG = @PKG_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
-TMP_XAW_LIBS = @TMP_XAW_LIBS@
 VERSION = @VERSION@
-XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
-XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
 XGC_CFLAGS = @XGC_CFLAGS@
 XGC_LIBS = @XGC_LIBS@
 YACC = @YACC@
+YFLAGS = @YFLAGS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -197,8 +195,6 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
-
-# App default files  (*.ad)
 appdefaultdir = @appdefaultdir@
 bindir = @bindir@
 build = @build@
@@ -207,29 +203,37 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_YFLAGS = -d
-xgc_CFLAGS = $(XGC_CFLAGS) -D_BSD_SOURCE
+AM_CFLAGS = $(CWARNFLAGS) $(XGC_CFLAGS) -D_BSD_SOURCE
 xgc_LDADD = $(XGC_LIBS) -lm
 xgc_SOURCES = \
         choice.c \
@@ -240,7 +244,6 @@ xgc_SOURCES = \
         interpret.c \
 	lex.l \
         main.c \
-        main.h \
         planemask.c \
         record.c \
         testfrac.c \
@@ -252,18 +255,20 @@ appman_PRE = \
         xgc.man
 
 BUILT_SOURCES = gram.h gram.c lex.c
-MAINTAINERCLEANFILES = $(BUILT_SOURCES)
-APPDEFAULTFILES = \
-        Xgc
+MAINTAINERCLEANFILES = $(BUILT_SOURCES) ChangeLog
 
-SUFFIXES = .ad .$(APP_MAN_SUFFIX) .man
-appdefault_DATA = $(APPDEFAULTFILES)
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) tile Bugs Written/FilledRects \
-	Written/Interface Written/Jim Written/Notes Written/Notes2 \
-	Written/Outline Written/Widget $(appman_PRE)
-CLEANFILES = $(APPDEFAULTFILES) $(appman_DATA)
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+dist_appdefault_DATA = \
+        app-defaults/Xgc \
+        app-defaults/Xgc-color
+
+EXTRA_DIST = tile Bugs Written/FilledRects Written/Interface \
+	Written/Jim Written/Notes Written/Notes2 Written/Outline \
+	Written/Widget $(appman_PRE) ChangeLog
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+CLEANFILES = $(appman_DATA)
 SED = sed
 
 # Strings to replace in man pages
@@ -282,11 +287,12 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .ad .$(APP_MAN_SUFFIX) .man .c .l .o .obj .y
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .l .o .obj .y
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -370,18 +376,18 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-choice.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-dashlist.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-getfile.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-gram.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-interpret.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-lex.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-planemask.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-record.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-testfrac.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-tests.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xgc-text.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/choice.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dashlist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getfile.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gram.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/interpret.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/planemask.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/record.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testfrac.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/text.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -396,174 +402,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xgc-choice.o: choice.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-choice.o -MD -MP -MF "$(DEPDIR)/xgc-choice.Tpo" -c -o xgc-choice.o `test -f 'choice.c' || echo '$(srcdir)/'`choice.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-choice.Tpo" "$(DEPDIR)/xgc-choice.Po"; else rm -f "$(DEPDIR)/xgc-choice.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='choice.c' object='xgc-choice.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-choice.o `test -f 'choice.c' || echo '$(srcdir)/'`choice.c
-
-xgc-choice.obj: choice.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-choice.obj -MD -MP -MF "$(DEPDIR)/xgc-choice.Tpo" -c -o xgc-choice.obj `if test -f 'choice.c'; then $(CYGPATH_W) 'choice.c'; else $(CYGPATH_W) '$(srcdir)/choice.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-choice.Tpo" "$(DEPDIR)/xgc-choice.Po"; else rm -f "$(DEPDIR)/xgc-choice.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='choice.c' object='xgc-choice.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-choice.obj `if test -f 'choice.c'; then $(CYGPATH_W) 'choice.c'; else $(CYGPATH_W) '$(srcdir)/choice.c'; fi`
-
-xgc-dashlist.o: dashlist.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-dashlist.o -MD -MP -MF "$(DEPDIR)/xgc-dashlist.Tpo" -c -o xgc-dashlist.o `test -f 'dashlist.c' || echo '$(srcdir)/'`dashlist.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-dashlist.Tpo" "$(DEPDIR)/xgc-dashlist.Po"; else rm -f "$(DEPDIR)/xgc-dashlist.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dashlist.c' object='xgc-dashlist.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-dashlist.o `test -f 'dashlist.c' || echo '$(srcdir)/'`dashlist.c
-
-xgc-dashlist.obj: dashlist.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-dashlist.obj -MD -MP -MF "$(DEPDIR)/xgc-dashlist.Tpo" -c -o xgc-dashlist.obj `if test -f 'dashlist.c'; then $(CYGPATH_W) 'dashlist.c'; else $(CYGPATH_W) '$(srcdir)/dashlist.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-dashlist.Tpo" "$(DEPDIR)/xgc-dashlist.Po"; else rm -f "$(DEPDIR)/xgc-dashlist.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dashlist.c' object='xgc-dashlist.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-dashlist.obj `if test -f 'dashlist.c'; then $(CYGPATH_W) 'dashlist.c'; else $(CYGPATH_W) '$(srcdir)/dashlist.c'; fi`
-
-xgc-getfile.o: getfile.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-getfile.o -MD -MP -MF "$(DEPDIR)/xgc-getfile.Tpo" -c -o xgc-getfile.o `test -f 'getfile.c' || echo '$(srcdir)/'`getfile.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-getfile.Tpo" "$(DEPDIR)/xgc-getfile.Po"; else rm -f "$(DEPDIR)/xgc-getfile.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='getfile.c' object='xgc-getfile.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-getfile.o `test -f 'getfile.c' || echo '$(srcdir)/'`getfile.c
-
-xgc-getfile.obj: getfile.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-getfile.obj -MD -MP -MF "$(DEPDIR)/xgc-getfile.Tpo" -c -o xgc-getfile.obj `if test -f 'getfile.c'; then $(CYGPATH_W) 'getfile.c'; else $(CYGPATH_W) '$(srcdir)/getfile.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-getfile.Tpo" "$(DEPDIR)/xgc-getfile.Po"; else rm -f "$(DEPDIR)/xgc-getfile.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='getfile.c' object='xgc-getfile.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-getfile.obj `if test -f 'getfile.c'; then $(CYGPATH_W) 'getfile.c'; else $(CYGPATH_W) '$(srcdir)/getfile.c'; fi`
-
-xgc-gram.o: gram.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-gram.o -MD -MP -MF "$(DEPDIR)/xgc-gram.Tpo" -c -o xgc-gram.o `test -f 'gram.c' || echo '$(srcdir)/'`gram.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-gram.Tpo" "$(DEPDIR)/xgc-gram.Po"; else rm -f "$(DEPDIR)/xgc-gram.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gram.c' object='xgc-gram.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-gram.o `test -f 'gram.c' || echo '$(srcdir)/'`gram.c
-
-xgc-gram.obj: gram.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-gram.obj -MD -MP -MF "$(DEPDIR)/xgc-gram.Tpo" -c -o xgc-gram.obj `if test -f 'gram.c'; then $(CYGPATH_W) 'gram.c'; else $(CYGPATH_W) '$(srcdir)/gram.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-gram.Tpo" "$(DEPDIR)/xgc-gram.Po"; else rm -f "$(DEPDIR)/xgc-gram.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gram.c' object='xgc-gram.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-gram.obj `if test -f 'gram.c'; then $(CYGPATH_W) 'gram.c'; else $(CYGPATH_W) '$(srcdir)/gram.c'; fi`
-
-xgc-interpret.o: interpret.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-interpret.o -MD -MP -MF "$(DEPDIR)/xgc-interpret.Tpo" -c -o xgc-interpret.o `test -f 'interpret.c' || echo '$(srcdir)/'`interpret.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-interpret.Tpo" "$(DEPDIR)/xgc-interpret.Po"; else rm -f "$(DEPDIR)/xgc-interpret.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='interpret.c' object='xgc-interpret.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-interpret.o `test -f 'interpret.c' || echo '$(srcdir)/'`interpret.c
-
-xgc-interpret.obj: interpret.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-interpret.obj -MD -MP -MF "$(DEPDIR)/xgc-interpret.Tpo" -c -o xgc-interpret.obj `if test -f 'interpret.c'; then $(CYGPATH_W) 'interpret.c'; else $(CYGPATH_W) '$(srcdir)/interpret.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-interpret.Tpo" "$(DEPDIR)/xgc-interpret.Po"; else rm -f "$(DEPDIR)/xgc-interpret.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='interpret.c' object='xgc-interpret.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-interpret.obj `if test -f 'interpret.c'; then $(CYGPATH_W) 'interpret.c'; else $(CYGPATH_W) '$(srcdir)/interpret.c'; fi`
-
-xgc-lex.o: lex.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-lex.o -MD -MP -MF "$(DEPDIR)/xgc-lex.Tpo" -c -o xgc-lex.o `test -f 'lex.c' || echo '$(srcdir)/'`lex.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-lex.Tpo" "$(DEPDIR)/xgc-lex.Po"; else rm -f "$(DEPDIR)/xgc-lex.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lex.c' object='xgc-lex.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-lex.o `test -f 'lex.c' || echo '$(srcdir)/'`lex.c
-
-xgc-lex.obj: lex.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-lex.obj -MD -MP -MF "$(DEPDIR)/xgc-lex.Tpo" -c -o xgc-lex.obj `if test -f 'lex.c'; then $(CYGPATH_W) 'lex.c'; else $(CYGPATH_W) '$(srcdir)/lex.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-lex.Tpo" "$(DEPDIR)/xgc-lex.Po"; else rm -f "$(DEPDIR)/xgc-lex.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lex.c' object='xgc-lex.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-lex.obj `if test -f 'lex.c'; then $(CYGPATH_W) 'lex.c'; else $(CYGPATH_W) '$(srcdir)/lex.c'; fi`
-
-xgc-main.o: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-main.o -MD -MP -MF "$(DEPDIR)/xgc-main.Tpo" -c -o xgc-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-main.Tpo" "$(DEPDIR)/xgc-main.Po"; else rm -f "$(DEPDIR)/xgc-main.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='xgc-main.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
-
-xgc-main.obj: main.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-main.obj -MD -MP -MF "$(DEPDIR)/xgc-main.Tpo" -c -o xgc-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-main.Tpo" "$(DEPDIR)/xgc-main.Po"; else rm -f "$(DEPDIR)/xgc-main.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='xgc-main.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
-
-xgc-planemask.o: planemask.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-planemask.o -MD -MP -MF "$(DEPDIR)/xgc-planemask.Tpo" -c -o xgc-planemask.o `test -f 'planemask.c' || echo '$(srcdir)/'`planemask.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-planemask.Tpo" "$(DEPDIR)/xgc-planemask.Po"; else rm -f "$(DEPDIR)/xgc-planemask.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='planemask.c' object='xgc-planemask.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-planemask.o `test -f 'planemask.c' || echo '$(srcdir)/'`planemask.c
-
-xgc-planemask.obj: planemask.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-planemask.obj -MD -MP -MF "$(DEPDIR)/xgc-planemask.Tpo" -c -o xgc-planemask.obj `if test -f 'planemask.c'; then $(CYGPATH_W) 'planemask.c'; else $(CYGPATH_W) '$(srcdir)/planemask.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-planemask.Tpo" "$(DEPDIR)/xgc-planemask.Po"; else rm -f "$(DEPDIR)/xgc-planemask.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='planemask.c' object='xgc-planemask.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-planemask.obj `if test -f 'planemask.c'; then $(CYGPATH_W) 'planemask.c'; else $(CYGPATH_W) '$(srcdir)/planemask.c'; fi`
-
-xgc-record.o: record.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-record.o -MD -MP -MF "$(DEPDIR)/xgc-record.Tpo" -c -o xgc-record.o `test -f 'record.c' || echo '$(srcdir)/'`record.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-record.Tpo" "$(DEPDIR)/xgc-record.Po"; else rm -f "$(DEPDIR)/xgc-record.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='record.c' object='xgc-record.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-record.o `test -f 'record.c' || echo '$(srcdir)/'`record.c
-
-xgc-record.obj: record.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-record.obj -MD -MP -MF "$(DEPDIR)/xgc-record.Tpo" -c -o xgc-record.obj `if test -f 'record.c'; then $(CYGPATH_W) 'record.c'; else $(CYGPATH_W) '$(srcdir)/record.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-record.Tpo" "$(DEPDIR)/xgc-record.Po"; else rm -f "$(DEPDIR)/xgc-record.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='record.c' object='xgc-record.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-record.obj `if test -f 'record.c'; then $(CYGPATH_W) 'record.c'; else $(CYGPATH_W) '$(srcdir)/record.c'; fi`
-
-xgc-testfrac.o: testfrac.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-testfrac.o -MD -MP -MF "$(DEPDIR)/xgc-testfrac.Tpo" -c -o xgc-testfrac.o `test -f 'testfrac.c' || echo '$(srcdir)/'`testfrac.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-testfrac.Tpo" "$(DEPDIR)/xgc-testfrac.Po"; else rm -f "$(DEPDIR)/xgc-testfrac.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='testfrac.c' object='xgc-testfrac.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-testfrac.o `test -f 'testfrac.c' || echo '$(srcdir)/'`testfrac.c
-
-xgc-testfrac.obj: testfrac.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-testfrac.obj -MD -MP -MF "$(DEPDIR)/xgc-testfrac.Tpo" -c -o xgc-testfrac.obj `if test -f 'testfrac.c'; then $(CYGPATH_W) 'testfrac.c'; else $(CYGPATH_W) '$(srcdir)/testfrac.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-testfrac.Tpo" "$(DEPDIR)/xgc-testfrac.Po"; else rm -f "$(DEPDIR)/xgc-testfrac.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='testfrac.c' object='xgc-testfrac.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-testfrac.obj `if test -f 'testfrac.c'; then $(CYGPATH_W) 'testfrac.c'; else $(CYGPATH_W) '$(srcdir)/testfrac.c'; fi`
-
-xgc-tests.o: tests.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-tests.o -MD -MP -MF "$(DEPDIR)/xgc-tests.Tpo" -c -o xgc-tests.o `test -f 'tests.c' || echo '$(srcdir)/'`tests.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-tests.Tpo" "$(DEPDIR)/xgc-tests.Po"; else rm -f "$(DEPDIR)/xgc-tests.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tests.c' object='xgc-tests.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-tests.o `test -f 'tests.c' || echo '$(srcdir)/'`tests.c
-
-xgc-tests.obj: tests.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-tests.obj -MD -MP -MF "$(DEPDIR)/xgc-tests.Tpo" -c -o xgc-tests.obj `if test -f 'tests.c'; then $(CYGPATH_W) 'tests.c'; else $(CYGPATH_W) '$(srcdir)/tests.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-tests.Tpo" "$(DEPDIR)/xgc-tests.Po"; else rm -f "$(DEPDIR)/xgc-tests.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tests.c' object='xgc-tests.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-tests.obj `if test -f 'tests.c'; then $(CYGPATH_W) 'tests.c'; else $(CYGPATH_W) '$(srcdir)/tests.c'; fi`
-
-xgc-text.o: text.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-text.o -MD -MP -MF "$(DEPDIR)/xgc-text.Tpo" -c -o xgc-text.o `test -f 'text.c' || echo '$(srcdir)/'`text.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-text.Tpo" "$(DEPDIR)/xgc-text.Po"; else rm -f "$(DEPDIR)/xgc-text.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='text.c' object='xgc-text.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-text.o `test -f 'text.c' || echo '$(srcdir)/'`text.c
-
-xgc-text.obj: text.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -MT xgc-text.obj -MD -MP -MF "$(DEPDIR)/xgc-text.Tpo" -c -o xgc-text.obj `if test -f 'text.c'; then $(CYGPATH_W) 'text.c'; else $(CYGPATH_W) '$(srcdir)/text.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xgc-text.Tpo" "$(DEPDIR)/xgc-text.Po"; else rm -f "$(DEPDIR)/xgc-text.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='text.c' object='xgc-text.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xgc_CFLAGS) $(CFLAGS) -c -o xgc-text.obj `if test -f 'text.c'; then $(CYGPATH_W) 'text.c'; else $(CYGPATH_W) '$(srcdir)/text.c'; fi`
 
 .l.c:
 	$(LEXCOMPILE) $<
@@ -591,23 +429,6 @@ xgc-text.obj: text.c
 	sed '/^#/ s|y\.tab\.c|$@|' y.tab.c >$@t && mv $@t $@
 	rm -f y.tab.c
 uninstall-info-am:
-install-appdefaultDATA: $(appdefault_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  $(appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
-
-uninstall-appdefaultDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
@@ -624,6 +445,23 @@ uninstall-appmanDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+install-dist_appdefaultDATA: $(dist_appdefault_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  $(dist_appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
+	done
+
+uninstall-dist_appdefaultDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -677,7 +515,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/Written
+	$(mkdir_p) $(distdir)/Written $(distdir)/app-defaults
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -704,6 +542,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -806,7 +647,7 @@ check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(appmandir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(appdefaultdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -861,7 +702,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appdefaultDATA install-appmanDATA
+install-data-am: install-appmanDATA install-dist_appdefaultDATA
 
 install-exec-am: install-binPROGRAMS
 
@@ -890,32 +731,37 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am
+uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-dist_appdefaultDATA uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-appdefaultDATA install-appmanDATA install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am
+	install-appmanDATA install-binPROGRAMS install-data \
+	install-data-am install-dist_appdefaultDATA install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-appmanDATA \
+	uninstall-binPROGRAMS uninstall-dist_appdefaultDATA \
+	uninstall-info-am
 
 
 gram.h: gram.c
 
-.ad:
-	cp $< $@
-
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
