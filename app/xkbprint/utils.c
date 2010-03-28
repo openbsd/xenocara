@@ -31,11 +31,13 @@
 #include	<ctype.h>
 #include	<stdlib.h>
 
+unsigned int debugFlags;
+
+
 /***====================================================================***/
 
 Opaque
-uAlloc(size)
-    unsigned	size;
+uAlloc(unsigned size)
 {
     return((Opaque)malloc(size));
 }
@@ -43,9 +45,7 @@ uAlloc(size)
 /***====================================================================***/
 
 Opaque
-uCalloc(n,size)
-    unsigned	n;
-    unsigned	size;
+uCalloc(unsigned n, unsigned size)
 {
     return((Opaque)calloc(n,size));
 }
@@ -53,9 +53,7 @@ uCalloc(n,size)
 /***====================================================================***/
 
 Opaque
-uRealloc(old,newSize)
-    Opaque	old;
-    unsigned	newSize;
+uRealloc(Opaque old, unsigned newSize)
 {
     if (old==NULL)
 	 return((Opaque)malloc(newSize));
@@ -65,11 +63,7 @@ uRealloc(old,newSize)
 /***====================================================================***/
 
 Opaque
-uRecalloc(old,nOld,nNew,itemSize)
-    Opaque	old;
-    unsigned	nOld;
-    unsigned	nNew;
-    unsigned	itemSize;
+uRecalloc(Opaque old, unsigned nOld, unsigned nNew, unsigned itemSize)
 {
 char *rtrn;
 
@@ -87,8 +81,7 @@ char *rtrn;
 /***====================================================================***/
 
 void
-uFree(ptr)
-    Opaque ptr;
+uFree(Opaque ptr)
 {
     if (ptr!=(Opaque)NULL)
 	free((char *)ptr);
@@ -100,11 +93,10 @@ uFree(ptr)
 /***====================================================================***/
 
 static	FILE	*entryFile=	NULL;
-	int	 uEntryLevel;
+static	int	 uEntryLevel;
 
 Boolean
-uSetEntryFile(name)
-    char *name;
+uSetEntryFile(char *name)
 {
     if ((entryFile!=NULL)&&(entryFile!=stderr)) {
 	fprintf(entryFile,"switching to %s\n",name?name:"stderr");
@@ -136,9 +128,7 @@ va_list ap;
 }
 
 void
-uExit(l,rtVal)
-    int		l;
-    char *	rtVal;
+uExit(int l, char *rtVal)
 {
 int	i;
 
@@ -160,8 +150,7 @@ int	i;
 	int	 uDebugIndentSize=	4;
 
 Boolean
-uSetDebugFile(name)
-    char *name;
+uSetDebugFile(char *name)
 {
     if ((uDebugFile!=NULL)&&(uDebugFile!=stderr)) {
 	fprintf(uDebugFile,"switching to %s\n",name?name:"stderr");
@@ -317,8 +306,7 @@ uInternalError(char *s,...)
 
 #ifndef HAVE_STRDUP
 char *
-uStringDup(str)
-    char *str;
+uStringDup(char *str)
 {
 char *rtrn;
 
@@ -332,8 +320,7 @@ char *rtrn;
 
 #ifndef HAVE_STRCASECMP
 int
-uStrCaseCmp(str1, str2)
-    char *str1, *str2;
+uStrCaseCmp(char *str1, char *str2)
 {
     char buf1[512],buf2[512];
     char c, *s;
@@ -359,8 +346,7 @@ uStrCaseCmp(str1, str2)
 }
 
 int
-uStrCasePrefix(prefix, str)
-    char *prefix, *str;
+uStrCasePrefix(char *prefix, char *str)
 {
     char c1;
     char c2;

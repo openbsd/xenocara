@@ -309,7 +309,7 @@ XkbOutlinePtr	ol;
 	    }
 	    else {
 		fprintf(out,"	mark\n");
-		fprintf(out,"	%3d %3d moveto\n",pt[0].x,pt[0].y);
+		fprintf(out,"	%3d %3d moveto\n",pt[0].x + ol->corner_radius,pt[0].y);
 		fprintf(out,"	%3d %3d %3d %3d %3d arcto\n",pt[1].x,pt[0].y,
 							pt[1].x,pt[1].y,
 							ol->corner_radius);
@@ -1389,10 +1389,10 @@ int	eG,nG,gI,l,g;
 		switch (buf[0]) {
 		    case '.': case ':': case ',': case ';':
 		    case '\'': case '"': case '`': case '~':
- 		    case '^': case '\250': case '\270': case '\267':
- 		    case '\260': case '\252': case '\272': case '\271':
- 		    case '\262': case '\263': case '\264': case '\255':
- 		    case '\254': case '\257':
+		    case '^': case 0250: case 0270: case 0267:
+		    case 0260: case 0252: case 0272: case 0271:
+		    case 0262: case 0263: case 0264: case 0255:
+		    case 0254: case 0257:
 			top->size[(g*2)+l]= SZ_LARGE;
 			break;
 		}

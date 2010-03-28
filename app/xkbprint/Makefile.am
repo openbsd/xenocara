@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xkbprint
 
-xkbprint_CFLAGS = $(XKBPRINT_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XKBPRINT_CFLAGS)
 xkbprint_LDADD = $(XKBPRINT_LIBS)
 
 xkbprint_SOURCES =	\
@@ -64,4 +64,14 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

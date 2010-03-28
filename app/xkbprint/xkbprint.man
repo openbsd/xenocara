@@ -12,7 +12,7 @@ xkbprint \- print an XKB keyboard description
 .PP
 The
 .I xkbprint
-comman generates a printable or encapsulated PostScript description of the 
+command generates a printable or encapsulated PostScript description of the 
 XKB keyboard description specified by \fIsource\fP.  The \fIsource\fP can be 
 any compiled keymap (.xkm) file that includes a geometry description or an 
 X display specification.  If an \fIoutput_file\fP is specified, xkbprint 

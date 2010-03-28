@@ -80,8 +80,8 @@ static	Display *	outDpy;
 static	Bool		computeDflts= False;
 #endif
 static	XKBPrintArgs	args;
-	unsigned	warningLevel= 5;
-	Bool		synch;
+static	unsigned	warningLevel= 5;
+static	Bool		synch;
 
 /***====================================================================***/
 
@@ -448,7 +448,7 @@ register int i;
     else if (uStringEqual(inputFile,"-")) {
 	/* Nothing */
     }
-    else if (strchr(inputFile,':')==0) {
+    else if (strchr(inputFile,':')==NULL) {
 	int	len= strlen(inputFile);
 	if ((len>4)&&(strcmp(&inputFile[len-4],".xkm")==0)) {
 	    /* Nothing */
