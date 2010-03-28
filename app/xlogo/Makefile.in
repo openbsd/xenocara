@@ -26,7 +26,7 @@
 #  specific, written prior permission.  Red Hat makes no
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
-# 
+#
 #  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 #  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -59,15 +59,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xlogo$(EXEEXT)
-@XAW_USE_XPRINT_TRUE@am__append_1 = \
-@XAW_USE_XPRINT_TRUE@        print.c \
-@XAW_USE_XPRINT_TRUE@        print.h 
-
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing \
-	mkinstalldirs
+DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
+	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
+	install-sh missing mkinstalldirs
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -78,15 +74,11 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
-	"$(DESTDIR)$(appmandir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
+	"$(DESTDIR)$(appdefaultdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am__xlogo_SOURCES_DIST = Logo.c Logo.h LogoP.h RenderLogo.c \
-	RenderLogo.h xlogo.c xlogo.h print.c print.h
-@XAW_USE_XPRINT_TRUE@am__objects_1 = xlogo-print.$(OBJEXT)
-am_xlogo_OBJECTS = xlogo-Logo.$(OBJEXT) xlogo-RenderLogo.$(OBJEXT) \
-	xlogo-xlogo.$(OBJEXT) $(am__objects_1)
+am_xlogo_OBJECTS = Logo.$(OBJEXT) RenderLogo.$(OBJEXT) xlogo.$(OBJEXT)
 xlogo_OBJECTS = $(am_xlogo_OBJECTS)
 am__DEPENDENCIES_1 =
 xlogo_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -98,16 +90,16 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(xlogo_SOURCES)
-DIST_SOURCES = $(am__xlogo_SOURCES_DIST)
+DIST_SOURCES = $(xlogo_SOURCES)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-appdefaultDATA_INSTALL = $(INSTALL_DATA)
 appmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appdefault_DATA) $(appman_DATA)
+dist_appdefaultDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(appman_DATA) $(dist_appdefault_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -120,7 +112,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -138,7 +129,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -147,9 +141,11 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -178,24 +174,16 @@ PKG_CONFIG = @PKG_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
-TMP_XAW_LIBS = @TMP_XAW_LIBS@
 VERSION = @VERSION@
-XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
-XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
 XEXT_CFLAGS = @XEXT_CFLAGS@
 XEXT_LIBS = @XEXT_LIBS@
 XFT_CFLAGS = @XFT_CFLAGS@
 XFT_LIBS = @XFT_LIBS@
 XLOGO_CFLAGS = @XLOGO_CFLAGS@
 XLOGO_LIBS = @XLOGO_LIBS@
-XPRINT_UTIL_CFLAGS = @XPRINT_UTIL_CFLAGS@
-XPRINT_UTIL_LIBS = @XPRINT_UTIL_LIBS@
 XRENDER_CFLAGS = @XRENDER_CFLAGS@
 XRENDER_LIBS = @XRENDER_LIBS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -203,8 +191,6 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
-
-# App default files  (*.ad)
 appdefaultdir = @appdefaultdir@
 bindir = @bindir@
 build = @build@
@@ -213,44 +199,61 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xlogo_CFLAGS = $(XLOGO_CFLAGS)
+AM_CFLAGS = $(XLOGO_CFLAGS)
 xlogo_LDADD = $(XLOGO_LIBS)
-xlogo_SOURCES = Logo.c Logo.h LogoP.h RenderLogo.c RenderLogo.h \
-	xlogo.c xlogo.h $(am__append_1)
+xlogo_SOURCES = \
+        Logo.c \
+        Logo.h \
+        LogoP.h \
+        RenderLogo.c \
+        RenderLogo.h \
+        xlogo.c \
+        xlogo.h
+
 appman_PRE = \
         xlogo.man
 
-APPDEFAULTFILES = \
-        XLogo \
-        XLogo-color
 
-SUFFIXES = .ad .$(APP_MAN_SUFFIX) .man
-appdefault_DATA = $(APPDEFAULTFILES)
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) $(appman_PRE)
-CLEANFILES = $(APPDEFAULTFILES) $(appman_DATA)
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+dist_appdefault_DATA = \
+        app-defaults/XLogo \
+        app-defaults/XLogo-color
+
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+EXTRA_DIST = $(appman_PRE)
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+CLEANFILES = $(appman_DATA)
 SED = sed
 
 # Strings to replace in man pages
@@ -269,26 +272,27 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .ad .$(APP_MAN_SUFFIX) .man .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu '; \
-	      cd $(srcdir) && $(AUTOMAKE) --gnu  \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
+	      cd $(srcdir) && $(AUTOMAKE) --foreign  \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  Makefile
+	  $(AUTOMAKE) --foreign  Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -357,10 +361,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xlogo-Logo.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xlogo-RenderLogo.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xlogo-print.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xlogo-xlogo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Logo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RenderLogo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xlogo.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -375,80 +378,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xlogo-Logo.o: Logo.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -MT xlogo-Logo.o -MD -MP -MF "$(DEPDIR)/xlogo-Logo.Tpo" -c -o xlogo-Logo.o `test -f 'Logo.c' || echo '$(srcdir)/'`Logo.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xlogo-Logo.Tpo" "$(DEPDIR)/xlogo-Logo.Po"; else rm -f "$(DEPDIR)/xlogo-Logo.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Logo.c' object='xlogo-Logo.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -c -o xlogo-Logo.o `test -f 'Logo.c' || echo '$(srcdir)/'`Logo.c
-
-xlogo-Logo.obj: Logo.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -MT xlogo-Logo.obj -MD -MP -MF "$(DEPDIR)/xlogo-Logo.Tpo" -c -o xlogo-Logo.obj `if test -f 'Logo.c'; then $(CYGPATH_W) 'Logo.c'; else $(CYGPATH_W) '$(srcdir)/Logo.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xlogo-Logo.Tpo" "$(DEPDIR)/xlogo-Logo.Po"; else rm -f "$(DEPDIR)/xlogo-Logo.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Logo.c' object='xlogo-Logo.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -c -o xlogo-Logo.obj `if test -f 'Logo.c'; then $(CYGPATH_W) 'Logo.c'; else $(CYGPATH_W) '$(srcdir)/Logo.c'; fi`
-
-xlogo-RenderLogo.o: RenderLogo.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -MT xlogo-RenderLogo.o -MD -MP -MF "$(DEPDIR)/xlogo-RenderLogo.Tpo" -c -o xlogo-RenderLogo.o `test -f 'RenderLogo.c' || echo '$(srcdir)/'`RenderLogo.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xlogo-RenderLogo.Tpo" "$(DEPDIR)/xlogo-RenderLogo.Po"; else rm -f "$(DEPDIR)/xlogo-RenderLogo.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='RenderLogo.c' object='xlogo-RenderLogo.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -c -o xlogo-RenderLogo.o `test -f 'RenderLogo.c' || echo '$(srcdir)/'`RenderLogo.c
-
-xlogo-RenderLogo.obj: RenderLogo.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -MT xlogo-RenderLogo.obj -MD -MP -MF "$(DEPDIR)/xlogo-RenderLogo.Tpo" -c -o xlogo-RenderLogo.obj `if test -f 'RenderLogo.c'; then $(CYGPATH_W) 'RenderLogo.c'; else $(CYGPATH_W) '$(srcdir)/RenderLogo.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xlogo-RenderLogo.Tpo" "$(DEPDIR)/xlogo-RenderLogo.Po"; else rm -f "$(DEPDIR)/xlogo-RenderLogo.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='RenderLogo.c' object='xlogo-RenderLogo.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -c -o xlogo-RenderLogo.obj `if test -f 'RenderLogo.c'; then $(CYGPATH_W) 'RenderLogo.c'; else $(CYGPATH_W) '$(srcdir)/RenderLogo.c'; fi`
-
-xlogo-xlogo.o: xlogo.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -MT xlogo-xlogo.o -MD -MP -MF "$(DEPDIR)/xlogo-xlogo.Tpo" -c -o xlogo-xlogo.o `test -f 'xlogo.c' || echo '$(srcdir)/'`xlogo.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xlogo-xlogo.Tpo" "$(DEPDIR)/xlogo-xlogo.Po"; else rm -f "$(DEPDIR)/xlogo-xlogo.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xlogo.c' object='xlogo-xlogo.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -c -o xlogo-xlogo.o `test -f 'xlogo.c' || echo '$(srcdir)/'`xlogo.c
-
-xlogo-xlogo.obj: xlogo.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -MT xlogo-xlogo.obj -MD -MP -MF "$(DEPDIR)/xlogo-xlogo.Tpo" -c -o xlogo-xlogo.obj `if test -f 'xlogo.c'; then $(CYGPATH_W) 'xlogo.c'; else $(CYGPATH_W) '$(srcdir)/xlogo.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xlogo-xlogo.Tpo" "$(DEPDIR)/xlogo-xlogo.Po"; else rm -f "$(DEPDIR)/xlogo-xlogo.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xlogo.c' object='xlogo-xlogo.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -c -o xlogo-xlogo.obj `if test -f 'xlogo.c'; then $(CYGPATH_W) 'xlogo.c'; else $(CYGPATH_W) '$(srcdir)/xlogo.c'; fi`
-
-xlogo-print.o: print.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -MT xlogo-print.o -MD -MP -MF "$(DEPDIR)/xlogo-print.Tpo" -c -o xlogo-print.o `test -f 'print.c' || echo '$(srcdir)/'`print.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xlogo-print.Tpo" "$(DEPDIR)/xlogo-print.Po"; else rm -f "$(DEPDIR)/xlogo-print.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='print.c' object='xlogo-print.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -c -o xlogo-print.o `test -f 'print.c' || echo '$(srcdir)/'`print.c
-
-xlogo-print.obj: print.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -MT xlogo-print.obj -MD -MP -MF "$(DEPDIR)/xlogo-print.Tpo" -c -o xlogo-print.obj `if test -f 'print.c'; then $(CYGPATH_W) 'print.c'; else $(CYGPATH_W) '$(srcdir)/print.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xlogo-print.Tpo" "$(DEPDIR)/xlogo-print.Po"; else rm -f "$(DEPDIR)/xlogo-print.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='print.c' object='xlogo-print.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xlogo_CFLAGS) $(CFLAGS) -c -o xlogo-print.obj `if test -f 'print.c'; then $(CYGPATH_W) 'print.c'; else $(CYGPATH_W) '$(srcdir)/print.c'; fi`
 uninstall-info-am:
-install-appdefaultDATA: $(appdefault_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  $(appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
-
-uninstall-appdefaultDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
@@ -465,6 +395,23 @@ uninstall-appmanDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+install-dist_appdefaultDATA: $(dist_appdefault_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  $(dist_appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
+	done
+
+uninstall-dist_appdefaultDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -518,6 +465,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkdir_p) $(distdir)/app-defaults
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -544,6 +492,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -645,7 +596,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(appmandir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(appdefaultdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -673,6 +624,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -694,7 +646,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appdefaultDATA install-appmanDATA
+install-data-am: install-appmanDATA install-dist_appdefaultDATA
 
 install-exec-am: install-binPROGRAMS
 
@@ -723,30 +675,38 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am
+uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-dist_appdefaultDATA uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-appdefaultDATA install-appmanDATA install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am
+	install-appmanDATA install-binPROGRAMS install-data \
+	install-data-am install-dist_appdefaultDATA install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-appmanDATA \
+	uninstall-binPROGRAMS uninstall-dist_appdefaultDATA \
+	uninstall-info-am
 
-
-.ad:
-	cp $< $@
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

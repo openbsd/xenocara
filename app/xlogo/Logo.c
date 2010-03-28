@@ -1,5 +1,3 @@
-/* $XdotOrg: xc/programs/xlogo/Logo.c,v 1.2 2004/04/23 19:54:57 eich Exp $ */
-/* $Xorg: Logo.c,v 1.4 2001/02/09 02:05:54 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1994, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xlogo/Logo.c,v 1.6 2002/05/23 23:53:59 keithp Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -45,7 +42,7 @@ from The Open Group.
 
 static XtResource resources[] = {
     {XtNshapeWindow, XtCShapeWindow, XtRBoolean, sizeof (Boolean),
-       XtOffsetOf(LogoRec,logo.shape_window), XtRImmediate, 
+       XtOffsetOf(LogoRec,logo.shape_window), XtRImmediate,
        (XtPointer) FALSE},
 #ifdef XRENDER
     {XtNrender, XtCBoolean, XtRBoolean, sizeof(Boolean),
@@ -68,14 +65,14 @@ static XtResource resources[] = {
 };
 
 static void ClassInitialize ( void );
-static void Initialize ( Widget request, Widget new, ArgList args, 
+static void Initialize ( Widget request, Widget new, ArgList args,
 			 Cardinal *num_args );
 static void Destroy ( Widget gw );
-static void Realize ( Widget gw, XtValueMask *valuemaskp, 
+static void Realize ( Widget gw, XtValueMask *valuemaskp,
 		      XSetWindowAttributes *attr );
 static void Resize ( Widget gw );
 static void Redisplay ( Widget gw, XEvent *event, Region region );
-static Boolean SetValues ( Widget gcurrent, Widget grequest, Widget gnew, 
+static Boolean SetValues ( Widget gcurrent, Widget grequest, Widget gnew,
 			   ArgList args, Cardinal *num_args );
 
 LogoClassRec logoClassRec = {
@@ -130,7 +127,7 @@ WidgetClass logoWidgetClass = (WidgetClass) &logoClassRec;
  *									     *
  *****************************************************************************/
 
-static void 
+static void
 create_gcs(LogoWidget w)
 {
     XGCValues v;
@@ -145,7 +142,7 @@ create_gcs(LogoWidget w)
     w->logo.backGC = XtGetGC ((Widget) w, GCForeground, &v);
 }
 
-static void 
+static void
 check_shape(LogoWidget w)
 {
     if (w->logo.shape_window) {
@@ -157,7 +154,7 @@ check_shape(LogoWidget w)
 }
 
 /* ARGSUSED */
-static void 
+static void
 unset_shape(LogoWidget w)
 {
     XSetWindowAttributes attr;
@@ -165,7 +162,7 @@ unset_shape(LogoWidget w)
     Display *dpy = XtDisplay ((Widget) w);
     Window win = XtWindow ((Widget) w);
 
-    if (w->core.background_pixmap != None && 
+    if (w->core.background_pixmap != None &&
 	w->core.background_pixmap != XtUnspecifiedPixmap) {
 	attr.background_pixmap = w->core.background_pixmap;
 	mask = CWBackPixmap;
@@ -179,7 +176,7 @@ unset_shape(LogoWidget w)
     w->logo.need_shaping = w->logo.shape_window;
 }
 
-static void 
+static void
 set_shape(LogoWidget w)
 {
     GC ones, zeros;
@@ -239,7 +236,7 @@ RenderPrepare (LogoWidget w)
     }
 }
 
-XtConvertArgRec xftColorConvertArgs[] = {
+static XtConvertArgRec xftColorConvertArgs[] = {
     {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.screen),
      sizeof(Screen *)},
     {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.colormap),
@@ -273,7 +270,7 @@ XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
     Screen	*screen;
     Colormap	colormap;
     XftColor	*color;
-    
+
     if (*num_args != 2)
     {
 	XtAppErrorMsg (app,
@@ -292,7 +289,7 @@ XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
 				 XScreenNumberOfScreen (screen)),
 		  colormap, color);
 }
-    
+
 static Boolean
 XmuCvtStringToXftColor(Display *dpy,
 		       XrmValue *args, Cardinal *num_args,
@@ -304,7 +301,7 @@ XmuCvtStringToXftColor(Display *dpy,
     XftColor	    xftColor;
     Screen	    *screen;
     Colormap	    colormap;
-    
+
     if (*num_args != 2)
     {
 	XtAppErrorMsg (XtDisplayToApplicationContext (dpy),
@@ -335,39 +332,39 @@ XmuCvtStringToXftColor(Display *dpy,
     }
     else if (!XRenderParseColor (dpy, spec, &renderColor))
 	return False;
-    if (!XftColorAllocValue (dpy, 
+    if (!XftColorAllocValue (dpy,
 			     DefaultVisual (dpy,
 					    XScreenNumberOfScreen (screen)),
 			     colormap,
 			     &renderColor,
 			     &xftColor))
 	return False;
-    
+
     donestr (XftColor, xftColor, XtRXftColor);
 }
 
 
 #endif
 
-static void 
+static void
 ClassInitialize(void)
 {
 #ifdef XRENDER
-    XtSetTypeConverter (XtRString, XtRXftColor, 
-			XmuCvtStringToXftColor, 
+    XtSetTypeConverter (XtRString, XtRXftColor,
+			XmuCvtStringToXftColor,
 			xftColorConvertArgs, XtNumber(xftColorConvertArgs),
 			XtCacheByDisplay, XmuFreeXftColor);
 #endif
 }
 
 /* ARGSUSED */
-static void 
+static void
 Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 {
     LogoWidget w = (LogoWidget)new;
 
 #ifdef XRENDER
-    w->logo.draw = 0;
+    w->logo.draw = NULL;
     w->logo.fgpixel = w->logo.fg.pixel;
 #endif
     if (w->core.width < 1) w->core.width = 100;
@@ -379,7 +376,7 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
     w->logo.need_shaping = w->logo.shape_window;
 }
 
-static void 
+static void
 Destroy(Widget gw)
 {
     LogoWidget w = (LogoWidget) gw;
@@ -393,7 +390,7 @@ Destroy(Widget gw)
     }
 }
 
-static void 
+static void
 Realize(Widget gw, XtValueMask *valuemaskp, XSetWindowAttributes *attr)
 {
     LogoWidget w = (LogoWidget) gw;
@@ -407,7 +404,7 @@ Realize(Widget gw, XtValueMask *valuemaskp, XSetWindowAttributes *attr)
 	(gw, valuemaskp, attr);
 }
 
-static void 
+static void
 Resize(Widget gw)
 {
     LogoWidget w = (LogoWidget) gw;
@@ -416,7 +413,7 @@ Resize(Widget gw)
 }
 
 /* ARGSUSED */
-static void 
+static void
 Redisplay(Widget gw, XEvent *event, Region region)
 {
     LogoWidget w = (LogoWidget) gw;
@@ -452,8 +449,8 @@ Redisplay(Widget gw, XEvent *event, Region region)
 }
 
 /* ARGSUSED */
-static Boolean 
-SetValues (Widget gcurrent, Widget grequest, Widget gnew, 
+static Boolean
+SetValues (Widget gcurrent, Widget grequest, Widget gnew,
 	   ArgList args, Cardinal *num_args)
 {
     LogoWidget current = (LogoWidget) gcurrent;
@@ -470,7 +467,7 @@ SetValues (Widget gcurrent, Widget grequest, Widget gnew,
 	if (!new->logo.shape_window) create_gcs (new);
 	redisplay = TRUE;
     }
-   
+
    if (new->logo.shape_window != current->logo.shape_window) {
        if (new->logo.shape_window) {
 	   Destroy (gnew);

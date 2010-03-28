@@ -1,6 +1,5 @@
 /*
- * $Xorg: xlogo.h,v 1.1 2004/04/30 02:05:54 gisburn Exp $
- *
+
 Copyright 2004 Roland Mainz <roland.mainz@nrubsig.org>
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -22,7 +21,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
- *
+
  */
 
 #ifndef XLOGO_XLOGO_H
