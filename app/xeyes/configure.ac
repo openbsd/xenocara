@@ -22,21 +22,35 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xeyes,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xeyes)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(xeyes,[1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xeyes)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
+
 AC_PROG_CC
 AC_PROG_INSTALL
 
+
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XEYES, x11 xt xext xmu)
+XEYES_CFLAGS="$CWARNFLAGS $XEYES_CFLAGS"
 AC_SUBST(XEYES_CFLAGS)
 AC_SUBST(XEYES_LIBS)
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
+dnl Optional dependencies
+AC_ARG_WITH(xrender, AC_HELP_STRING([--with-xrender],[Use Xrender for rendering (Default is YES)]),use_xrender="$withval",use_xrender="try")
+if test x$use_xrender != xno ; then
+	PKG_CHECK_MODULES(XRENDER, [xrender >= 0.4])
+	XEYES_CFLAGS="$XEYES_CFLAGS $XRENDER_CFLAGS"
+	XEYES_LIBS="$XEYES_LIBS $XRENDER_LIBS"
+	AC_DEFINE([XRENDER],1,[Define to use X Render Extension])
+fi
 
 AC_OUTPUT([Makefile])

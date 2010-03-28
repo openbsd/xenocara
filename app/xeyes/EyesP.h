@@ -7,19 +7,17 @@
 
 #include "Eyes.h"
 #include <X11/CoreP.h>
+#ifdef XRENDER
+#include <X11/extensions/Xrender.h>
+#endif
 #include "transform.h"
 
 #define SEG_BUFF_SIZE		128
 
 /* New fields for the eyes widget instance record */
 typedef struct {
-	 Pixel		puppixel;	/* foreground pixel */
-	 Pixel		outline;	/* outline pixel */
-	 Pixel		center;		/* inside pixel */
-	 GC		outGC;		/* pointer to GraphicsContext */
-	 GC		pupGC;		/* pointer to GraphicsContext */
-	 GC		centerGC;	/* pointer to GraphicsContext */
-	 GC		shapeGC;	/* pointer to GraphicsContext */
+	 Pixel		pixel[PART_SHAPE];
+	 GC		gc[PART_MAX];
 /* start of graph stuff */
 	 int		backing_store;	/* backing store variety */
 	 Boolean	reverse_video;	/* swap fg and bg pixels */
@@ -31,6 +29,12 @@ typedef struct {
 	 Transform	maskt;
 	 XtIntervalId	interval_id;
 	 Pixmap		shape_mask;	/* window shape */
+#ifdef XRENDER
+	 Boolean    	render;
+	 Picture	picture;
+	 Picture	fill[PART_SHAPE];
+#endif
+	 Boolean    	distance;
    } EyesPart;
 
 /* Full instance record declaration */

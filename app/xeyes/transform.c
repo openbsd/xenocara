@@ -83,36 +83,26 @@ TDrawArc (
 #endif
 
 void
-TFillArc (dpy, d, gc, t, x, y, width, height, angle1, angle2)
-    Display	*dpy;
-    Drawable	d;
-    GC		gc;
-    Transform	*t;
-    double	x, y, width, height;
-    int		angle1, angle2;
+Trectangle(const Transform *t, const TRectangle *i, TRectangle *o)
 {
-	int	xx, xy, xw, xh;
-
-	xx = Xx(x,y,t);
-	xy = Xy(x,y,t);
-	xw = Xwidth (width, height, t);
-	xh = Xheight (width, height, t);
-	if (xw < 0) {
-		xx += xw;
-		xw = -xw;
-	}
-	if (xh < 0) {
-		xy += xh;
-		xh = -xh;
-	}
-	XFillArc (dpy, d, gc, xx, xy, xw, xh, angle1, angle2);
+    o->x = t->mx * i->x + t->bx;
+    o->y = t->my * i->y + t->by;
+    o->width = t->mx * i->width;
+    o->height = t->my * i->height;
+    if (o->width < 0) {
+	o->x += o->width;
+	o->width = -o->width;
+    }
+    if (o->height < 0) {
+	o->y += o->height;
+	o->height = -o->height;
+    }
 }
 
 void
-SetTransform (t, xx1, xx2, xy1, xy2, tx1, tx2, ty1, ty2)
-    Transform	*t;
-    int		xx1, xx2, xy1, xy2;
-    double	tx1, tx2, ty1, ty2;
+SetTransform (Transform *t,
+	      int xx1, int xx2, int xy1, int xy2,
+	      double tx1, double tx2, double ty1, double ty2)
 {
 	t->mx = ((double) xx2 - xx1) / (tx2 - tx1);
 	t->bx = ((double) xx1) - t->mx * tx1;

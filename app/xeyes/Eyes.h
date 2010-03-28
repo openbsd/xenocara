@@ -35,6 +35,20 @@
 #define XtNshapeWindow	"shapeWindow"
 #define XtCShapeWindow	"ShapeWindow"
 
+#define XtNrender	"render"
+#define XtNdistance	"distance"
+
+enum EyesPart {
+	PART_CLEAR = -1,
+
+	PART_OUTLINE,
+	PART_CENTER,
+	PART_PUPIL,
+
+	PART_SHAPE,
+	PART_MAX
+};
+
 typedef struct _EyesRec *EyesWidget;  /* completely defined in EyesPrivate.h */
 typedef struct _EyesClassRec *EyesWidgetClass;    /* completely defined in EyesPrivate.h */
 

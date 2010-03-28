@@ -26,10 +26,7 @@ typedef struct _TRectangle {
 # define Twidth(w,h,t)	(((double) (w)) / (t)->mx)
 # define Theight(w,h,t)	(((double) (h)) / (t)->my)
 
-extern void TFillArc (Display *dpy, Drawable d, GC gc,
-                      Transform *t,
-                      double x, double y, double width, double height,
-                      int angle1, int angle2);
+extern void Trectangle (const Transform *t, const TRectangle *in, TRectangle *out);
 extern void SetTransform (Transform *t,
                           int xx1, int xx2, int xy1, int xy2,
                           double tx1, double tx2, double ty1, double ty2);
