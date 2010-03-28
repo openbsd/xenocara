@@ -20,17 +20,7 @@
  *  Geoffrey Coram fixed most of the HP mode bugs.
  */
 
-#include <stdio.h>
-#include <X11/Xos.h>
-#include <math.h>
-#include <signal.h>
-#if !defined(IEEE) && defined(SVR4)
-#include <siginfo.h>
-#endif
-#include <setjmp.h>
 #include "xcalc.h"
-#include <errno.h>
-#include <X11/Xlocale.h>
 
 #ifdef _CRAY		/* kludge around Cray STDC compiler */
 double (*log_p)() = log;
@@ -72,15 +62,8 @@ double (*pow_p)() = pow;
 #define True	1
 #define False   0
 
-extern int	rpn;
-extern char 	dispstr[];
-extern void draw();
-extern void ringbell();
-extern void setflag();
-extern void Quit();
-
 #ifndef IEEE
-    jmp_buf env;
+jmp_buf env;
 #endif
 
  
@@ -88,7 +71,7 @@ extern void Quit();
  * functions.  Much of it is shared between the infix and rpn modes.
  */
 
-int 	flagINV, flagPAREN, flagM, drgmode;	/* display flags */
+static int flagINV, flagPAREN, flagM, drgmode;	/* display flags */
 
 static double drg2rad=PI/180.0;  /* Conversion factors for trig funcs */
 static double rad2drg=180.0/PI;
@@ -130,10 +113,7 @@ static int    priority(int op);
  */
 
 static void
-parse_double (src, fmt, dp)
-    char *src;
-    char *fmt;
-    double *dp;
+parse_double (char *src, char *fmt, double *dp)
 {
     int olderrno = errno;
 
@@ -144,8 +124,7 @@ parse_double (src, fmt, dp)
 
 
 /*********************************/
-int pre_op(keynum)
-     int keynum;
+int pre_op(int keynum)
 {
     if (keynum==-1) return(0);
  
@@ -168,99 +147,44 @@ int pre_op(keynum)
 
 /* cannot assign result of setjmp under ANSI C, use global instead */
 static volatile int SignalKind;
-static volatile int SignalCode;
 
-void fail_op()
+void fail_op(void)
 {
     if (SignalKind == SIGFPE)
-    switch (SignalCode) {
-#ifdef SVR4
-      case FPE_INTDIV:		/* integer divide by zero */
-      case FPE_FLTDIV:		/* floating point divide by zero */
-	strcpy(dispstr, "divide by 0");
-	break;
-      case FPE_INTOVF:		/* integer overflow */
-      case FPE_FLTOVF:		/* floating point overflow */
-	strcpy(dispstr, "overflow");
-	break;
-      case FPE_FLTUND:		/* floating point underflow */
-	strcpy(dispstr, "underflow");
-	break;
-      case FPE_FLTRES:		/* floating point inexact result */
-	strcpy(dispstr, "inexact result");
-	break;
-      case FPE_FLTINV:		/* invalid floating point operation */
-	strcpy(dispstr, "invalid op");
-	break;
-      case FPE_FLTSUB:		/* subscript out of range */
-	strcpy(dispstr, "out of range");
-	break;
-
-#endif /*SVR4*/
-
-#ifdef FPE_FLTDIV_TRAP
-      case FPE_FLTDIV_TRAP:  strcpy(dispstr,"div by zero"); break;
-#endif
-#ifdef FPE_FLTDIV_FAULT
-           case FPE_FLTDIV_FAULT: strcpy(dispstr,"div by zero"); break;
-#endif
-#ifdef FPE_FLTOVF_TRAP
-           case FPE_FLTOVF_TRAP:  strcpy(dispstr,"overflow"); break;
-#endif
-#ifdef FPE_FLTOVF_FAULT
-           case FPE_FLTOVF_FAULT: strcpy(dispstr,"overflow"); break;
-#endif
-#ifdef FPE_FLTUND_TRAP
-           case FPE_FLTUND_TRAP:  strcpy(dispstr,"underflow"); break;
-#endif
-#ifdef FPE_FLTUND_FAULT
-           case FPE_FLTUND_FAULT: strcpy(dispstr,"underflow"); break;
-#endif
-           default:               strcpy(dispstr,"error");
-    }
-    else 
-	if (SignalKind == SIGILL)
-	    strcpy(dispstr, "illegal operand");
+	strcpy(dispstr, "math error");
+    else if (SignalKind == SIGILL)
+	strcpy(dispstr, "illegal operand");
 
     entered=3;
     DrawDisplay();
     return;
 }
 
-
-/* keep SVR4 compiler from complaining about scope of arg declaration below */
-typedef struct sigcontext * sigcontextstructp;
 /*ARGSUSED*/
-signal_t fperr(sig,code,scp)
-  int sig,code;
-  sigcontextstructp scp;
+signal_t fperr(int sig)
 {
 #if defined(SYSV) || defined(SVR4) || defined(linux)
-    signal(SIGFPE,(signal_t (*)())fperr);
+    signal(SIGFPE, fperr);
 #endif
     SignalKind = sig;
-    SignalCode = code;
     longjmp(env,1);
 }
 
 /* for VAX BSD4.3 */
 /*ARGSUSED*/
-signal_t illerr(sig,code,scp)
-  int sig,code;
-  sigcontextstructp scp;
+signal_t illerr(int sig)
 {
     /* not reset when caught? */
-    signal(SIGILL,(signal_t (*)())illerr);
+    signal(SIGILL, illerr);
 
     SignalKind = sig;
-    SignalCode = code;
     longjmp(env,1);
 }
 
 #endif	/* not IEEE */
 
 
-void post_op()
+void post_op(void)
 {
 #ifdef DEBUG
     showstack("\0");
@@ -302,8 +226,7 @@ DrawDisplay(void)
 
 /*-------------------------------------------------------------------------*/
 void
-numeric(keynum)
-     int keynum;
+numeric(int keynum)
 {
     char	st[2];
     int		cell = 0;
@@ -831,7 +754,7 @@ oneop(int keynum)
 		 entered=3;
 		 break;
 	       }
-	       i=(int) (floor(dnum));
+	       dtmp = floor(dnum); i = dtmp;
 	       for (j=1,dnum=1.0; j<=i; j++) 
 		 dnum*=(float) j;
 	       break;
@@ -877,8 +800,7 @@ static int numsp;
 
 /*******/
 static void
-PushOp(op)
-   int op;
+PushOp(int op)
 /*******/
 {
   if (opsp==STACKMAX) {strcpy(dispstr,"stack error");  entered=3;}
@@ -908,8 +830,7 @@ isopempty(void)
 
 #ifdef DEBUG
 static void
-showstack(string)
-    char	*string;
+showstack(char *string)
 {
     fprintf(stderr, "%s: %lf %lf %lf\n", string, numstack[0], numstack[1],
 	    numstack[2]);
@@ -918,8 +839,7 @@ showstack(string)
 
 /*******/
 static void
-PushNum(num)
- double num;
+PushNum(double num)
 /*******/
 {
   if (rpn) {
@@ -990,8 +910,7 @@ ClearStacks(void)
 
 /*******/
 static int
-priority(op)
-         int op;
+priority(int op)
 /*******/
 {
     switch (op) {

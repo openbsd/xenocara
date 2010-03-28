@@ -39,6 +39,21 @@ from the X Consortium.
 #ifndef _XCALC_H_
 #define _XCALC_H_
 
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+
+#include <stdio.h>
+#include <X11/Xos.h>
+#include <math.h>
+#include <signal.h>
+#if !defined(IEEE) && defined(SVR4)
+#include <siginfo.h>
+#endif
+#include <setjmp.h>
+#include <errno.h>
+#include <X11/Xlocale.h>
+
+
 #ifdef SIGNALRETURNSINT
 #define signal_t int
 #else
@@ -100,6 +115,17 @@ from the X Consortium.
 #define XCalc_GRADAM	4	/* grad indicator */
 #define XCalc_PAREN	5	/* parenthesis indicator */
 
+/* actions.c */
+extern XtActionsRec Actions[];
+extern int ActionsCount;
+
+/* math.c */
+extern signal_t fperr(int sig);
+extern signal_t illerr(int sig);
+extern void fail_op(void);
+extern int pre_op(int keynum);
+extern void post_op(void);
+
 extern void numeric(int keynum);
 extern void bkspf(void);
 extern void decf(void);
@@ -119,5 +145,21 @@ extern void memf(int keynum);
 extern void oneop(int keynum);
 extern void offf(void);
 extern void ResetCalc(void);
+
+#ifndef IEEE
+extern jmp_buf env;
+#endif
+
+/* xcalc.c */
+extern void do_select(Time time);
+extern void draw(char *string);
+extern void Quit(void);
+extern void ringbell(void);
+extern void setflag(int indicator, Boolean on);
+
+extern int rpn;
+#define LCD_STR_LEN	32
+extern char dispstr[LCD_STR_LEN];
+extern Atom wm_delete_window;
 
 #endif
