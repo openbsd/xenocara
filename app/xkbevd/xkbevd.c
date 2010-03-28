@@ -58,22 +58,24 @@
 
 /***====================================================================***/
 
-char *		dpyName=	NULL;
+static char *	dpyName=	NULL;
 Display *	dpy=		NULL;
-char *		cfgFileName=	NULL;
+static char *	cfgFileName=	NULL;
 int		xkbOpcode=	0;
 int		xkbEventCode=	0;
 Bool		detectableRepeat= False;
 
+static
 CfgEntryPtr	config=		NULL;
+static
 unsigned long	eventMask=	0;
 
-Bool		synch=		False;
-int		verbose=	0;
-Bool		background=	False;
+static Bool	synch=		False;
+static int	verbose=	0;
+static Bool	background=	False;
 
-char *		soundCmd=	NULL;
-char *		soundDir=	NULL;
+static char *	soundCmd=	NULL;
+static char *	soundDir=	NULL;
 
 XkbDescPtr	xkb=		NULL;
 
@@ -201,6 +203,11 @@ register int i;
 	    return False;
 	}
     }
+    if (background == False) {
+	eventMask = XkbAllEventsMask;
+	verbose++;
+    }
+
     return True;
 }
 
@@ -382,8 +389,11 @@ char		buf[1024],*cmd;
 int		ok;
 
     cfg= FindMatchingConfig(ev);
-    if (!cfg)
+    if (!cfg) {
+	if (verbose)
+	    PrintXkbEvent(stdout,ev);
 	return False;
+    }
     if (cfg->action.type==UnknownAction) {
 	if (cfg->action.text==NULL)
 	    cfg->action.type= NoAction;
@@ -401,7 +411,7 @@ int		ok;
 	    return True;
 	case EchoAction:
 	    if (cfg->action.text!=NULL) {
-		sprintf(buf,cfg->action.text);
+		sprintf(buf,"%s",cfg->action.text);
 		cmd= SubstituteEventArgs(buf,ev);
 		printf("%s",cmd);
 	    }
@@ -478,7 +488,7 @@ Bool		ok;
 	    }
 	    sprintf(buf,DFLT_SYS_XKBEVD_CONFIG,DFLT_XKB_CONFIG_ROOT);
 	    file= fopen(cfgFileName,"r");
-	    if (file==NULL) {
+	    if (file==NULL && !eventMask) {
 		if (verbose) {
 		    uError("Couldn't find a config file anywhere\n");
 		    uAction("Exiting\n");
@@ -502,7 +512,7 @@ Bool		ok;
     ok= True;
     setScanState(cfgFileName,1);
     CFGParseFile(file);
-    if (!config) {
+    if (!config && !eventMask) {
 	uError("No configuration specified in \"%s\"\n",cfgFileName);
 	goto BAILOUT;
     }

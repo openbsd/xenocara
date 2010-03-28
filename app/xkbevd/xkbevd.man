@@ -1,4 +1,4 @@
-.\" $XdotOrg: app/xkbevd/xkbevd.man,v 1.3 2006/02/03 19:06:09 alanc Exp $
+.\" $XdotOrg: $
 .\" $Xorg: xkbevd.man,v 1.3 2000/08/17 19:54:49 cpqbld Exp $
 .\"
 .\" $XFree86: xc/programs/xkbevd/xkbevd.man,v 1.7 2001/01/27 18:21:16 dawes Exp $

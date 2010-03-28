@@ -1,61 +1,293 @@
-2006-04-01  Adam Jackson  <ajax@freedesktop.org>
+commit 9e80c1a80d0c741d31cf0e66c483a2d78700b2d3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 18:30:52 2009 -0700
 
-	* configure.ac:
-	Bump to 1.0.2.
+    xkbevd 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2006-02-03  Alan Coopersmith  <alan.coopersmith@sun.com>
+commit 7c8d8cecab250695bc3fe1e36cef309079365fc2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 13 17:56:10 2009 -0700
 
-	* xkbevd.man: 
-	Bug #5802 <https://bugs.freedesktop.org/show_bug.cgi?id=5802>
-	Wrong name in .TH line in xkbevd man page (Masatake YAMATO)
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 01320796bb9418e621f713e1e51271690e0e2065
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:25 2009 -0700
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 041e6e460d0df14f206ecea14cb77925ea029891
+Author: Michael Scherer <misc@mandriva.org>
+Date:   Sat Mar 7 13:13:04 2009 +0100
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Fix format string error
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 1f0cc20f6f558ddc059e354453c51fea32f3ee92
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 14 20:53:22 2009 -0200
 
-	* Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, and corrects
+    make distcheck. Most gcc 4.3 and sparse warnings correct (remaining
+    warnings are from yacc generated source).
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 17d3fc13961d85739d0f0776734bc9a2d6a6b012
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jul 29 16:04:57 2008 -0300
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Allow using xkbevd as a debug tool for xkb events.
+    
+      Unless the option -bg is used, it now defaults to print all Xkb events,
+    in a way similar to xev (actually, there is an #if 0'ed, almost complete
+    copy of xev.c in printev.c). This almost implements what is commented in
+    the manual page, about using xkbevd as a possible xev counterpart, or
+    replacement.
 
-2005-11-19  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 7e6765512cc2b88a1d56cc7c87cd5c06a185cf79
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 22 16:12:41 2008 -0800
 
-	* configure.ac:
-	Update dependencies to work with separate build roots.
+    Change xkbevd_CFLAGS to AM_CFLAGS to make automake-1.10 happier
+    
+    Makefile.am:26: compiling `cfgparse.c' with per-target flags requires `AM_PROG_CC_C_O' in `configure.ac'
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 12c47a9e2dc5d641194e25363e6a2d09aa49d0ed
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 22 16:07:32 2008 -0800
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Bug 14185: MAINTAINERCLEANFILES multiply defined in Makefile.am
+    
+    <http://bugs.freedesktop.org/show_bug.cgi?id=14185>
 
-2005-10-20  Donnie Berkholz  <spyderous@gentoo.org>
+commit 50c7d6c00221a8c89ed083ac9fd85eec8d8c33a6
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:37:18 2007 -0500
 
-	* Makefile.am: Set DFLT_XKB_CONFIG_ROOT instead of using hard-coded default.
+    Replace static ChangeLog with dist-hook to generate from git log
 
-2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 9f58ebd8af282f9284ee53ec35238dc0f35b8f48
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:51:26 2007 -0400
 
-	* configure.ac:
-	Update package version number for RC1 release.
+    Add *~ to .gitignore to skip patch/emacs droppings
 
-2005-10-15  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 4fa1aa0936ec2b5f8dc49378fb700acab798e878
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:24:52 2007 -0400
 
-	* Makefile.am: Have generated files be cleaned by maintainer in
-	order to pass check-tarball test.
+    Rename .cvsignore to .gitignore
 
-2005-08-02  Keith Packard  <keithp@keithp.com>
+commit 4e49bc481b465770fad3d7333e937a89ce080932
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Apr 2 01:10:38 2006 +0000
 
-	* Makefile.am:
-	Mark generated files as BUILT_SOURCES and CLEANFILES
-	to ensure they are regenerated after 'make clean' and
-	to make parallel builds work right.
+    Bump to 1.0.2.
+
+commit 6027b1917f0a417f85aacb3652753bcea35c429a
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Feb 3 19:06:09 2006 +0000
+
+    Bug #5802 <https://bugs.freedesktop.org/show_bug.cgi?id=5802> Wrong name in
+        .TH line in xkbevd man page (Masatake YAMATO)
+
+commit 40b4fb30eac67a0277d01f39a39e961cb3b506aa
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:51 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 299d9f430989a643dc5c9a75be712636789a4412
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:22:45 2005 +0000
+
+    Stub COPYING files
+
+commit 64b821adfb87eeb059e65e2f508c549c01653ebf
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:08 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 3c98f4f8c8b971708482b2883c8d9c261b5569d5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:23 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 4ab0e6efe790acfff797f06a6b8a48b6d9facc30
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:24 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit e87e7abbcc6f32689e9470a39b771c08cf087d50
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:01:43 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 405c9afd7dc2e9c635cbc68748c94fdf20d8cd6f
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:35:01 2005 +0000
+
+    Another pass at .cvsignores for apps.
+
+commit 707a63a1121231b7c931ae0c81d2bccc9cd65402
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sun Nov 20 22:08:53 2005 +0000
+
+    Add/improve .cvsignore files for apps.
+
+commit 4afe8e5b23eedebaf08592494f6eed7bd4b47f2b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Nov 19 07:15:37 2005 +0000
+
+    Update pkgconfig files to separate library build-time dependencies from
+        application build-time dependencies, and update package deps to work
+        with separate build roots.
+
+commit 81de9e6a1a5030f981fa9aa870814ae53861d901
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:09:21 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 77ef8a9c9723568785c8bbb7c6f05376551189a3
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Thu Oct 20 22:27:07 2005 +0000
+
+    Set DFLT_XKB_CONFIG_ROOT instead of using hard-coded default.
+
+commit 976fbcdd1a0bf305716ae7b41aaf4b2fc59c209c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:47:55 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 4d7e0831dcf4062604808edfec5859c076c2c4b2
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 23:56:23 2005 +0000
+
+    Use @APP_MAN_SUFFIX@ instead of $(APP_MAN_SUFFIX) in macro substitutions to
+        work better with BSD make
+
+commit 4215c00d3230612e0e84a03d7911d54b2a07bee4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Oct 15 19:35:01 2005 +0000
+
+    Have generated files be cleaned by maintainer in order to pass
+        check-tarball test.
+
+commit dd9ef6852e07fbb16b1c14a5d0dfa395cb868779
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Oct 14 00:25:46 2005 +0000
+
+    Use sed to fill in variables in man page
+
+commit f19e377a69d73ff1af3295cce65701fe703bd7cc
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Sun Oct 2 20:24:19 2005 +0000
+
+    Add xkbevd sample configuration file to app/xkbevd
+
+commit 774c0d981f0bd08e30fc8f8c68bb812073063e32
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Aug 2 18:06:57 2005 +0000
+
+    Add .cvsignore
+
+commit 17aa48a84040026cd3e34969af9c2721a3953c64
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Aug 2 18:05:15 2005 +0000
+
+    Mark generated files as BUILT_SOURCES and CLEANFILES to ensure they are
+        regenerated after 'make clean' and to make parallel builds work right.
+
+commit c3b209fe721773a74f057961028bb927e87e6896
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:35 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 96cbc3683ac96a0fc0c84ec28c3467348f2c966b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Jul 27 01:54:18 2005 +0000
+
+    Move manpages to section 1 instead of section m.
+
+commit d15204dc106437a8981a34b805658b74c24224ff
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Jul 20 19:31:57 2005 +0000
+
+    Use a unique token for PKG_CHECK_MODULES. Otherwise, if you use a global
+        configure cache, you cache it, and the cached value is probably wrong.
+
+commit 6b1df45952ed9088b8f9db18afbd62f1ee84f59d
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 6 20:38:28 2005 +0000
+
+    build system for xkbevd
+
+commit 9ff2f0062214b0a2f68e3618bc59f2f247041f4c
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:57 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 60aaede12965a3e43d0a2e8e316c4b064bc59158
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:35:36 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 0f11f7812118fdcaea765af8b13a9a2cf76a3379
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:13:14 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit abb4055cd85bde2e45bb631dd4baca7330bc4b3f
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:26 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 7a6dec37349e9f4a8cc8de2309af34fa16159042
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:24:13 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit c29f80f3b7780c8cbe9a9a638ff56505b8c38d8f
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:29:14 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 3a593fed409e418cc6c599838f8af626d31a4487
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:49:23 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 9f1e6d353042f462da0a3a2264a115eca2c859a5
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 15:54:54 2003 +0000
+
+    R6.6 is the Xorg base-line

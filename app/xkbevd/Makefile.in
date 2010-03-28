@@ -61,8 +61,8 @@ bin_PROGRAMS = xkbevd$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	cfgparse.c compile config.guess config.sub depcomp install-sh \
-	missing
+	cfgparse.c config.guess config.sub depcomp install-sh missing \
+	ylwrap
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -76,9 +76,9 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xkbevd_OBJECTS = xkbevd-cfgparse.$(OBJEXT) xkbevd-cfgscan.$(OBJEXT) \
-	xkbevd-evargs.$(OBJEXT) xkbevd-printev.$(OBJEXT) \
-	xkbevd-utils.$(OBJEXT) xkbevd-xkbevd.$(OBJEXT)
+am_xkbevd_OBJECTS = cfgparse.$(OBJEXT) cfgscan.$(OBJEXT) \
+	evargs.$(OBJEXT) printev.$(OBJEXT) utils.$(OBJEXT) \
+	xkbevd.$(OBJEXT)
 xkbevd_OBJECTS = $(am_xkbevd_OBJECTS)
 am__DEPENDENCIES_1 =
 xkbevd_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -119,6 +119,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AUTOCONF = @AUTOCONF@
@@ -128,7 +129,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -137,9 +141,12 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -172,9 +179,8 @@ VERSION = @VERSION@
 XKBEVD_CFLAGS = @XKBEVD_CFLAGS@
 XKBEVD_LIBS = @XKBEVD_LIBS@
 YACC = @YACC@
+YFLAGS = @YFLAGS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -189,28 +195,37 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xkbevd_CFLAGS = $(XKBEVD_CFLAGS) -DDFLT_XKB_CONFIG_ROOT='"$(datadir)/X11/xkb"'
+AM_CFLAGS = $(CWARNFLAGS) $(XKBEVD_CFLAGS) \
+	-DDFLT_XKB_CONFIG_ROOT='"$(datadir)/X11/xkb"'
+
 xkbevd_LDADD = $(XKBEVD_LIBS)
 xkbevd_SOURCES = \
         cfgparse.y \
@@ -227,10 +242,10 @@ appman_PRE = \
         xkbevd.man
 
 BUILT_SOURCES = cfgparse.c
-MAINTAINERCLEANFILES = $(BUILT_SOURCES)
+MAINTAINERCLEANFILES = $(BUILT_SOURCES) ChangeLog
 
-# Sample configuration file
-EXTRA_DIST = example.cf $(appman_PRE)
+# Sample configuration files
+EXTRA_DIST = example.cf xkbevd.cf $(appman_PRE) ChangeLog
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 CLEANFILES = $(appman_DATA)
@@ -341,12 +356,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbevd-cfgparse.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbevd-cfgscan.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbevd-evargs.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbevd-printev.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbevd-utils.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbevd-xkbevd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cfgparse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cfgscan.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/evargs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/printev.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xkbevd.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -361,90 +376,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xkbevd-cfgparse.o: cfgparse.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-cfgparse.o -MD -MP -MF "$(DEPDIR)/xkbevd-cfgparse.Tpo" -c -o xkbevd-cfgparse.o `test -f 'cfgparse.c' || echo '$(srcdir)/'`cfgparse.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-cfgparse.Tpo" "$(DEPDIR)/xkbevd-cfgparse.Po"; else rm -f "$(DEPDIR)/xkbevd-cfgparse.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cfgparse.c' object='xkbevd-cfgparse.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-cfgparse.o `test -f 'cfgparse.c' || echo '$(srcdir)/'`cfgparse.c
-
-xkbevd-cfgparse.obj: cfgparse.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-cfgparse.obj -MD -MP -MF "$(DEPDIR)/xkbevd-cfgparse.Tpo" -c -o xkbevd-cfgparse.obj `if test -f 'cfgparse.c'; then $(CYGPATH_W) 'cfgparse.c'; else $(CYGPATH_W) '$(srcdir)/cfgparse.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-cfgparse.Tpo" "$(DEPDIR)/xkbevd-cfgparse.Po"; else rm -f "$(DEPDIR)/xkbevd-cfgparse.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cfgparse.c' object='xkbevd-cfgparse.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-cfgparse.obj `if test -f 'cfgparse.c'; then $(CYGPATH_W) 'cfgparse.c'; else $(CYGPATH_W) '$(srcdir)/cfgparse.c'; fi`
-
-xkbevd-cfgscan.o: cfgscan.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-cfgscan.o -MD -MP -MF "$(DEPDIR)/xkbevd-cfgscan.Tpo" -c -o xkbevd-cfgscan.o `test -f 'cfgscan.c' || echo '$(srcdir)/'`cfgscan.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-cfgscan.Tpo" "$(DEPDIR)/xkbevd-cfgscan.Po"; else rm -f "$(DEPDIR)/xkbevd-cfgscan.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cfgscan.c' object='xkbevd-cfgscan.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-cfgscan.o `test -f 'cfgscan.c' || echo '$(srcdir)/'`cfgscan.c
-
-xkbevd-cfgscan.obj: cfgscan.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-cfgscan.obj -MD -MP -MF "$(DEPDIR)/xkbevd-cfgscan.Tpo" -c -o xkbevd-cfgscan.obj `if test -f 'cfgscan.c'; then $(CYGPATH_W) 'cfgscan.c'; else $(CYGPATH_W) '$(srcdir)/cfgscan.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-cfgscan.Tpo" "$(DEPDIR)/xkbevd-cfgscan.Po"; else rm -f "$(DEPDIR)/xkbevd-cfgscan.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cfgscan.c' object='xkbevd-cfgscan.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-cfgscan.obj `if test -f 'cfgscan.c'; then $(CYGPATH_W) 'cfgscan.c'; else $(CYGPATH_W) '$(srcdir)/cfgscan.c'; fi`
-
-xkbevd-evargs.o: evargs.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-evargs.o -MD -MP -MF "$(DEPDIR)/xkbevd-evargs.Tpo" -c -o xkbevd-evargs.o `test -f 'evargs.c' || echo '$(srcdir)/'`evargs.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-evargs.Tpo" "$(DEPDIR)/xkbevd-evargs.Po"; else rm -f "$(DEPDIR)/xkbevd-evargs.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='evargs.c' object='xkbevd-evargs.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-evargs.o `test -f 'evargs.c' || echo '$(srcdir)/'`evargs.c
-
-xkbevd-evargs.obj: evargs.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-evargs.obj -MD -MP -MF "$(DEPDIR)/xkbevd-evargs.Tpo" -c -o xkbevd-evargs.obj `if test -f 'evargs.c'; then $(CYGPATH_W) 'evargs.c'; else $(CYGPATH_W) '$(srcdir)/evargs.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-evargs.Tpo" "$(DEPDIR)/xkbevd-evargs.Po"; else rm -f "$(DEPDIR)/xkbevd-evargs.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='evargs.c' object='xkbevd-evargs.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-evargs.obj `if test -f 'evargs.c'; then $(CYGPATH_W) 'evargs.c'; else $(CYGPATH_W) '$(srcdir)/evargs.c'; fi`
-
-xkbevd-printev.o: printev.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-printev.o -MD -MP -MF "$(DEPDIR)/xkbevd-printev.Tpo" -c -o xkbevd-printev.o `test -f 'printev.c' || echo '$(srcdir)/'`printev.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-printev.Tpo" "$(DEPDIR)/xkbevd-printev.Po"; else rm -f "$(DEPDIR)/xkbevd-printev.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printev.c' object='xkbevd-printev.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-printev.o `test -f 'printev.c' || echo '$(srcdir)/'`printev.c
-
-xkbevd-printev.obj: printev.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-printev.obj -MD -MP -MF "$(DEPDIR)/xkbevd-printev.Tpo" -c -o xkbevd-printev.obj `if test -f 'printev.c'; then $(CYGPATH_W) 'printev.c'; else $(CYGPATH_W) '$(srcdir)/printev.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-printev.Tpo" "$(DEPDIR)/xkbevd-printev.Po"; else rm -f "$(DEPDIR)/xkbevd-printev.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printev.c' object='xkbevd-printev.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-printev.obj `if test -f 'printev.c'; then $(CYGPATH_W) 'printev.c'; else $(CYGPATH_W) '$(srcdir)/printev.c'; fi`
-
-xkbevd-utils.o: utils.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-utils.o -MD -MP -MF "$(DEPDIR)/xkbevd-utils.Tpo" -c -o xkbevd-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-utils.Tpo" "$(DEPDIR)/xkbevd-utils.Po"; else rm -f "$(DEPDIR)/xkbevd-utils.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='xkbevd-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-xkbevd-utils.obj: utils.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-utils.obj -MD -MP -MF "$(DEPDIR)/xkbevd-utils.Tpo" -c -o xkbevd-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-utils.Tpo" "$(DEPDIR)/xkbevd-utils.Po"; else rm -f "$(DEPDIR)/xkbevd-utils.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='xkbevd-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-
-xkbevd-xkbevd.o: xkbevd.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-xkbevd.o -MD -MP -MF "$(DEPDIR)/xkbevd-xkbevd.Tpo" -c -o xkbevd-xkbevd.o `test -f 'xkbevd.c' || echo '$(srcdir)/'`xkbevd.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-xkbevd.Tpo" "$(DEPDIR)/xkbevd-xkbevd.Po"; else rm -f "$(DEPDIR)/xkbevd-xkbevd.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xkbevd.c' object='xkbevd-xkbevd.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-xkbevd.o `test -f 'xkbevd.c' || echo '$(srcdir)/'`xkbevd.c
-
-xkbevd-xkbevd.obj: xkbevd.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -MT xkbevd-xkbevd.obj -MD -MP -MF "$(DEPDIR)/xkbevd-xkbevd.Tpo" -c -o xkbevd-xkbevd.obj `if test -f 'xkbevd.c'; then $(CYGPATH_W) 'xkbevd.c'; else $(CYGPATH_W) '$(srcdir)/xkbevd.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xkbevd-xkbevd.Tpo" "$(DEPDIR)/xkbevd-xkbevd.Po"; else rm -f "$(DEPDIR)/xkbevd-xkbevd.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xkbevd.c' object='xkbevd-xkbevd.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xkbevd_CFLAGS) $(CFLAGS) -c -o xkbevd-xkbevd.obj `if test -f 'xkbevd.c'; then $(CYGPATH_W) 'xkbevd.c'; else $(CYGPATH_W) '$(srcdir)/xkbevd.c'; fi`
 
 .y.c:
 	$(YACCCOMPILE) $<
@@ -562,6 +493,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -751,8 +685,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-data \
@@ -766,7 +700,14 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

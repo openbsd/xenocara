@@ -173,9 +173,7 @@ extern	char *uStringDup(
 #define	DEBUG_VAR	debugFlags
 #endif
 
-#ifndef DEBUG_VAR_LOCAL
 extern
-#endif
 unsigned	int	DEBUG_VAR;
 
 extern	void	uDebug( char *s, ... );

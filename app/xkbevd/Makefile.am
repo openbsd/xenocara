@@ -20,7 +20,8 @@
 
 bin_PROGRAMS = xkbevd
 
-xkbevd_CFLAGS = $(XKBEVD_CFLAGS) -DDFLT_XKB_CONFIG_ROOT='"$(datadir)/X11/xkb"'
+AM_CFLAGS = $(CWARNFLAGS) $(XKBEVD_CFLAGS) \
+	-DDFLT_XKB_CONFIG_ROOT='"$(datadir)/X11/xkb"'
 xkbevd_LDADD = $(XKBEVD_LIBS)
 
 xkbevd_SOURCES =	\
@@ -40,8 +41,8 @@ appman_PRE = \
 BUILT_SOURCES = cfgparse.c
 MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 
-# Sample configuration file
-EXTRA_DIST = example.cf
+# Sample configuration files
+EXTRA_DIST = example.cf xkbevd.cf
 
 appmandir = $(APP_MAN_DIR)
 
@@ -72,4 +73,14 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES += ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

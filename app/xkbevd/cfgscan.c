@@ -241,7 +241,7 @@ int ch;
     return ERROR;
 }
 
-struct _Keyword {
+static struct _Keyword {
 	char	*keyword;
 	int	 token;
 } keywords[] = {
@@ -255,7 +255,7 @@ struct _Keyword {
     { "shell",			SHELL			},
     { "sound",			SOUND			}
 };
-int	numKeywords = sizeof(keywords)/sizeof(struct _Keyword);
+static int numKeywords = sizeof(keywords)/sizeof(struct _Keyword);
 
 static int
 yyGetIdent(int first)
