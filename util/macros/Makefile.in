@@ -162,7 +162,7 @@ target_alias = @target_alias@
 aclocaldir = $(datadir)/aclocal
 aclocal_DATA = xorg-macros.m4
 dist_pkgdata_DATA = INSTALL
-pkgconfigdir = $(datadir)/pkgconfig
+pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xorg-macros.pc
 EXTRA_DIST = xorg-macros.pc.in
 all: all-am
