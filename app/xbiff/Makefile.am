@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = xbiff
 
-xbiff_CFLAGS = $(XBIFF_CFLAGS) -D_BSD_SOURCE
+AM_CFLAGS = $(CWARNFLAGS) $(XBIFF_CFLAGS) -D_BSD_SOURCE
 xbiff_LDADD = $(XBIFF_LIBS)
 
 xbiff_SOURCES =	\
@@ -40,6 +40,7 @@ appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = $(appman_DATA)
 
 SED = sed
@@ -64,4 +65,15 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL

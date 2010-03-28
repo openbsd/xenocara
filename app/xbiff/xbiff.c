@@ -38,7 +38,7 @@ from the X Consortium.
 #include "Mailbox.h"
 #include <X11/Xaw/Cardinals.h>
 
-const char *ProgramName;
+static const char *ProgramName;
 
 static XrmOptionDescRec options[] = {
 { "-update", "*mailbox.update", XrmoptionSepArg, (caddr_t) NULL },
@@ -49,11 +49,7 @@ static XrmOptionDescRec options[] = {
 
 static Atom wm_delete_window;
 
-static void quit (w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+static void quit (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (event->type == ClientMessage &&
         event->xclient.data.l[0] != wm_delete_window) {
@@ -68,7 +64,7 @@ static XtActionsRec xbiff_actions[] = {
     { "quit", quit },
 };
 
-static void Usage ()
+static void Usage (void)
 {
     static const char *help_message[] = {
 "where options include:",
@@ -93,9 +89,7 @@ NULL};
 
 
 int
-main (argc, argv)
-    int argc;
-    char **argv;
+main (int argc, char **argv)
 {
     XtAppContext xtcontext;
     Widget toplevel;

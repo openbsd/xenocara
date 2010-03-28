@@ -22,25 +22,25 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xbiff,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xbiff)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(xbiff, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xbiff)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
+
+# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
 AC_PROG_INSTALL
 
-XAW_CHECK_XPRINT_SUPPORT(XAW)
-PKG_CHECK_MODULES(XBIFF, xbitmaps xext)
+XORG_DEFAULT_OPTIONS
 
-XBIFF_CFLAGS="$XBIFF_CFLAGS $XAW_CFLAGS"
-XBIFF_LIBS="$XBIFF_LIBS $XAW_LIBS"
+PKG_CHECK_MODULES(XBIFF, xaw7 xbitmaps xext)
 
 AC_SUBST(XBIFF_CFLAGS)
 AC_SUBST(XBIFF_LIBS)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])

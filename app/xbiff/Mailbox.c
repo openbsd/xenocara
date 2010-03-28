@@ -106,7 +106,9 @@ typedef union wait	waitType;
 static char defaultTranslations[] = 
   "<ButtonPress>:  unset()";
 
-static void Check(), Set(), Unset();
+static void Set (Widget gw, XEvent *event, String *params, Cardinal *nparams);
+static void Check(Widget gw, XEvent *event, String *params, Cardinal *nparams);
+static void Unset(Widget gw, XEvent *event, String *params, Cardinal *nparams);
 
 static XtActionsRec actionsList[] = { 
     { "check",	Check },
@@ -157,10 +159,20 @@ static XtResource resources[] = {
 #undef offset
 #undef goffset
 
-static void GetMailFile(), CloseDown();
-static void check_mailbox(), redraw_mailbox(), beep();
-static void Initialize(), Realize(), Destroy(), Redisplay();
-static Boolean SetValues();
+static void GetMailFile(MailboxWidget w);
+static void CloseDown (MailboxWidget w, int status);
+
+static void check_mailbox(MailboxWidget w, Boolean force_redraw, Boolean reset);
+static void redraw_mailbox (MailboxWidget w);
+static void beep (MailboxWidget w);
+static void Initialize (Widget request, Widget new,
+			ArgList args, Cardinal *num_args);
+static void Realize (Widget gw, XtValueMask *valuemaskp,
+		     XSetWindowAttributes *attr);
+static void Destroy (Widget gw);
+static void Redisplay (Widget gw, XEvent *event, Region region);
+static Boolean SetValues (Widget gcurrent, Widget grequest, Widget gnew,
+			  ArgList args, Cardinal *num_args);
 
 MailboxClassRec mailboxClassRec = {
     { /* core fields */
@@ -212,8 +224,7 @@ WidgetClass mailboxWidgetClass = (WidgetClass) &mailboxClassRec;
  * widget initialization
  */
 
-static GC get_mailbox_gc (w)
-    MailboxWidget w;
+static GC get_mailbox_gc (MailboxWidget w)
 {
     XtGCMask valuemask;
     XGCValues xgcv;
@@ -228,10 +239,8 @@ static GC get_mailbox_gc (w)
 
 
 /* ARGSUSED */
-static void Initialize (request, new, args, num_args)
-    Widget request, new;
-    ArgList args;
-    Cardinal *num_args;
+static void Initialize (Widget request, Widget new,
+			ArgList args, Cardinal *num_args)
 {
     MailboxWidget w = (MailboxWidget) new;
     int shape_event_base, shape_error_base;
@@ -264,19 +273,13 @@ static void Initialize (request, new, args, num_args)
  */
 
 /* ARGSUSED */
-static void Set (gw, event, params, nparams)
-    Widget gw;
-    XEvent *event;
-    String *params;
-    Cardinal *nparams;
+static void Set (Widget gw, XEvent *event, String *params, Cardinal *nparams)
 {
     MailboxWidget w = (MailboxWidget) gw;
 
     w->mailbox.last_size = -1;
 
     check_mailbox (w, TRUE, FALSE);	/* redraw, no reset */
-
-    return;
 }
 
 
@@ -285,17 +288,11 @@ static void Set (gw, event, params, nparams)
  */
 
 /* ARGSUSED */
-static void Unset (gw, event, params, nparams)
-    Widget gw;
-    XEvent *event;
-    String *params;
-    Cardinal *nparams;
+static void Unset (Widget gw, XEvent *event, String *params, Cardinal *nparams)
 {
     MailboxWidget w = (MailboxWidget) gw;
 
     check_mailbox (w, TRUE, TRUE);	/* redraw, reset */
-
-    return;
 }
 
 
@@ -304,24 +301,16 @@ static void Unset (gw, event, params, nparams)
  */
 
 /* ARGSUSED */
-static void Check (gw, event, params, nparams)
-    Widget gw;
-    XEvent *event;
-    String *params;
-    Cardinal *nparams;
+static void Check (Widget gw, XEvent *event, String *params, Cardinal *nparams)
 {
     MailboxWidget w = (MailboxWidget) gw;
 
     check_mailbox (w, TRUE, FALSE);	/* redraw, no reset */
-
-    return;
 }
 
 
 /* ARGSUSED */
-static void clock_tic (client_data, id)
-    XtPointer client_data;
-    XtIntervalId *id;
+static void clock_tic (XtPointer client_data, XtIntervalId *id)
 {
     MailboxWidget w = (MailboxWidget) client_data;
 
@@ -338,13 +327,8 @@ static void clock_tic (client_data, id)
     return;
 }
 
-static Pixmap make_pixmap (dpy, w, bitmap, depth, flip, widthp, heightp)
-    Display *dpy;
-    MailboxWidget w;
-    Pixmap bitmap;
-    Boolean flip;
-    int depth;
-    int *widthp, *heightp;
+static Pixmap make_pixmap (Display *dpy, MailboxWidget w, Pixmap bitmap,
+			   int depth, Boolean flip, int *widthp, int *heightp)
 {
     Window root;
     int x, y;
@@ -367,10 +351,8 @@ static Pixmap make_pixmap (dpy, w, bitmap, depth, flip, widthp, heightp)
 				      width, height, depth, fore, back);
 }
 
-static void Realize (gw, valuemaskp, attr)
-    Widget gw;
-    XtValueMask *valuemaskp;
-    XSetWindowAttributes *attr;
+static void Realize (Widget gw, XtValueMask *valuemaskp,
+		     XSetWindowAttributes *attr)
 {
     MailboxWidget w = (MailboxWidget) gw;
     register Display *dpy = XtDisplay (w);
@@ -421,8 +403,7 @@ static void Realize (gw, valuemaskp, attr)
 }
 
 
-static void Destroy (gw)
-    Widget gw;
+static void Destroy (Widget gw)
 {
     MailboxWidget w = (MailboxWidget) gw;
     Display *dpy = XtDisplay (gw);
@@ -439,14 +420,10 @@ static void Destroy (gw)
     freepix (w->mailbox.empty.pixmap);
     freepix (w->mailbox.shape_cache.mask);
 #undef freepix
-    return;
 }
 
 
-static void Redisplay (gw, event, region)
-    Widget gw;
-    XEvent *event;
-    Region region;
+static void Redisplay (Widget gw, XEvent *event, Region region)
 {
     MailboxWidget w = (MailboxWidget) gw;
 
@@ -454,9 +431,7 @@ static void Redisplay (gw, event, region)
 }
 
 
-static void check_mailbox (w, force_redraw, reset)
-    MailboxWidget w;
-    Boolean force_redraw, reset;
+static void check_mailbox (MailboxWidget w, Boolean force_redraw, Boolean reset)
 {
     long mailboxsize = 0;
     Boolean readSinceLastWrite = FALSE;
@@ -541,8 +516,7 @@ static void check_mailbox (w, force_redraw, reset)
  * get user name for building mailbox
  */
 
-static void GetMailFile (w)
-    MailboxWidget w;
+static void GetMailFile (MailboxWidget w)
 {
     char *username;
     char *mailpath;
@@ -553,7 +527,6 @@ static void GetMailFile (w)
 	CloseDown (w, 1);
     }
 #else
-    char *getlogin();
 
     username = getlogin ();
     if (!username) {
@@ -580,9 +553,7 @@ static void GetMailFile (w)
     return;
 }
 
-static void CloseDown (w, status)
-    MailboxWidget w;
-    int status;
+static void CloseDown (MailboxWidget w, int status)
 {
     Display *dpy = XtDisplay (w);
 
@@ -593,10 +564,8 @@ static void CloseDown (w, status)
 
 
 /* ARGSUSED */
-static Boolean SetValues (gcurrent, grequest, gnew, args, num_args)
-    Widget gcurrent, grequest, gnew;
-    ArgList args;
-    Cardinal *num_args;
+static Boolean SetValues (Widget gcurrent, Widget grequest, Widget gnew,
+			  ArgList args, Cardinal *num_args)
 {
     MailboxWidget current = (MailboxWidget) gcurrent;
     MailboxWidget new = (MailboxWidget) gnew;
@@ -626,8 +595,7 @@ static Boolean SetValues (gcurrent, grequest, gnew, args, num_args)
  * drawing code
  */
 
-static void redraw_mailbox (w)
-    MailboxWidget w;
+static void redraw_mailbox (MailboxWidget w)
 {
     register Display *dpy = XtDisplay (w);
     register Window win = XtWindow (w);
@@ -679,8 +647,7 @@ static void redraw_mailbox (w)
 }
 
 
-static void beep (w)
-    MailboxWidget w;
+static void beep (MailboxWidget w)
 {
     XBell (XtDisplay (w), w->mailbox.volume);
     return;

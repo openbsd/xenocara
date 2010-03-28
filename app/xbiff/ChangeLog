@@ -1,30 +1,285 @@
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 6b546577aadec95c09da148936dbfd55b9cd0216
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Dec 17 08:32:12 2009 -0800
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    xbiff 1.0.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 82e802ad978b110dd093b620e91589ca689dcff6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Dec 17 08:25:19 2009 -0800
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Fill in COPYING with notices from source code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d8c551691ff2c28b2d90af47ada68bc3ee78bdc8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:52 2009 -0500
 
-	* Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c7475f38f7aec802914af26043bb0d950880a77e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
 
-2005-11-19  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit be7954a66400b0efacf01d159752f5ea2886564f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:38 2009 -0400
 
-	* configure.ac:
-	Update dependencies to work with separate build roots.
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
 
-2005-10-18  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 4511a4a0030b9a33a6056f76a5e126d76611c463
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
 
-	* configure.ac:
-	Update package version number for RC1 release.
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
 
+commit 111206b3ad0b0536bdc8c39425f79f50665c3000
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 18:34:18 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 492785cb489963cff20e7d20b87d33ffa5508247
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:20 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b88273dcdd403e058888fbcdf4a0470854045179
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 13 20:54:08 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and all gcc 4.3 and sparse warnings.
+
+commit 4882f2fc26a5976fe7744286932263c83f1c61dc
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Aug 20 10:32:49 2008 -0400
+
+    xaw8 is gone, use xaw7
+
+commit bdd747628f08de80eb311d6e7ef2cd1dd9b34943
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:37:09 2007 -0500
+
+    Replace static ChangeLog with dist-hook to generate from git log
+
+commit e00caacfa0a86692928f81039ece9341745bc3d0
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:51:15 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit e3abf6683d15c67e796a395b30437fd01ff3b538
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:24:40 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit 0365e1a08ddb0c5961a0c52f9cf4a8368cf312e5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:48 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 7ad243529fe6d78e52dea5a22a24f7f83a22ba62
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:22:42 2005 +0000
+
+    Stub COPYING files
+
+commit efd4fed0e413ddf6d93c366041f6cb9a6e622375
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:04 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit d54d4ef448b3e16ec9151c6dd4143ca32eaf32a5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:19 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit a2cf84dad681150f17186bc929e4958017d19d8c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:18 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 96700fc277e1a211aca0fe1b2e87d87d7f359fcc
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:01:39 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit ca0fb29b3fe6e8b574dfe2e692734127ab7a3d43
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:34:58 2005 +0000
+
+    Another pass at .cvsignores for apps.
+
+commit acded00af405734d1611db4fe6d0e9940b8bd326
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sun Nov 20 22:08:50 2005 +0000
+
+    Add/improve .cvsignore files for apps.
+
+commit 8114be741f5386cebfa24de82474b49c438dc78d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Nov 19 07:15:36 2005 +0000
+
+    Update pkgconfig files to separate library build-time dependencies from
+        application build-time dependencies, and update package deps to work
+        with separate build roots.
+
+commit 3097fcab22bf84f0bb6faee69c99c950a79bb1c4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:47:52 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 7aeb50852f7111ba9a4ad3404bea0d20e1602502
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 23:56:21 2005 +0000
+
+    Use @APP_MAN_SUFFIX@ instead of $(APP_MAN_SUFFIX) in macro substitutions to
+        work better with BSD make
+
+commit c080a49a36c2f90fae774550553791da721e9240
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Fri Oct 14 00:25:43 2005 +0000
+
+    Use sed to fill in variables in man page
+
+commit ae73bd0c0087ebde446d6e4956242088a315ab6c
+Author: Kristian Høgsberg <krh@redhat.com>
+Date:   Tue Sep 27 18:35:34 2005 +0000
+
+    Fix configure.ac to not require xaw8 unconditionally.
+
+commit 25b5d282c0264508adbd695010632cde93f55a2f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Aug 1 20:25:29 2005 +0000
+
+    Install man pages to section 1 instead of section m (Patch from Donnie
+        Berkholz)
+
+commit b89877374f51e8b9c83ca1aa55e246391038ffba
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:31 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit a8d1903bfd5ee45e6736427be85adef5624d661a
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jul 23 15:46:06 2005 +0000
+
+    xbiff depends on Xaw
+
+commit d9ea3ae597b97c173faa6dd29077ddf3a4bbc5ac
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Jul 20 19:31:51 2005 +0000
+
+    Use a unique token for PKG_CHECK_MODULES. Otherwise, if you use a global
+        configure cache, you cache it, and the cached value is probably wrong.
+
+commit df4faebea1a9a32c5c4b78a2585cbf6a443181a7
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Sat Jul 16 21:40:42 2005 +0000
+
+    Add _BSD_SOURCE - patch from Stefan Dirsch
+
+commit b3b0fffccaec04ca4bf47409dc39fba17819ee06
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Fri Jul 15 16:53:50 2005 +0000
+
+    Add dependency on xbitmaps
+
+commit ee0c19e43392bb8bc343a617d92e3784845511b6
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 6 15:21:38 2005 +0000
+
+    Build system for xbiff
+
+commit dbaae0652239411598a00da1ee5af65a5b101a98
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:54:38 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit fd6ce9234674249a5ef7cc6fb3a13d3ff604a24a
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:35:00 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit d0ae3505f328fbc52752a17b7d3033021ce2b0c3
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:55 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit c946d9c9cf9222327544ca677e26de0fe796ba95
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:36:16 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 1fb603e5ba366ab79a17f6d79f7fc6dd6988cda6
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:58 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 8dcf7ae639f46e982131632b7cc0c37a8fd4ee97
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:29:03 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit f2fc3bc2312c7af4f0cd5fee2e08be7c0ca115b3
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:58 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 248f03b4a519c635bdfa16ae1c7aa708a006c580
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:58 2003 +0000
+
+    Initial revision
