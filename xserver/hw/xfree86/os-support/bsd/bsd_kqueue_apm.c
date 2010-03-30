@@ -156,6 +156,7 @@ bsdPMConfirmEventToOs(int dummyfd, pmEvent event)
 PMClose
 xf86OSPMOpen(void)
 {
+#ifndef __OpenBSD__
     int kq;
     struct kevent ev;
 
@@ -179,6 +180,7 @@ xf86OSPMOpen(void)
     xf86PMGetEventFromOs = bsdPMGetEventFromOS;
     xf86PMConfirmEventToOs = bsdPMConfirmEventToOs;
     APMihPtr = xf86AddInputHandler(kq, xf86HandlePMEvents, NULL);
+#endif /* __OpenBSD__ */
     return bsdCloseAPM;
 }
 
