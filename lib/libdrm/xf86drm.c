@@ -221,22 +221,22 @@ static int drmMatchBusID(const char *id1, const char *id2)
 
     /* Try to match old/new-style PCI bus IDs. */
     if (strncasecmp(id1, "pci", 3) == 0) {
-	int o1, b1, d1, f1;
-	int o2, b2, d2, f2;
+	unsigned int o1, b1, d1, f1;
+	unsigned int o2, b2, d2, f2;
 	int ret;
 
-	ret = sscanf(id1, "pci:%04x:%02x:%02x.%d", &o1, &b1, &d1, &f1);
+	ret = sscanf(id1, "pci:%04x:%02x:%02x.%u", &o1, &b1, &d1, &f1);
 	if (ret != 4) {
 	    o1 = 0;
-	    ret = sscanf(id1, "PCI:%d:%d:%d", &b1, &d1, &f1);
+	    ret = sscanf(id1, "PCI:%u:%u:%u", &b1, &d1, &f1);
 	    if (ret != 3)
 		return 0;
 	}
 
-	ret = sscanf(id2, "pci:%04x:%02x:%02x.%d", &o2, &b2, &d2, &f2);
+	ret = sscanf(id2, "pci:%04x:%02x:%02x.%u", &o2, &b2, &d2, &f2);
 	if (ret != 4) {
 	    o2 = 0;
-	    ret = sscanf(id2, "PCI:%d:%d:%d", &b2, &d2, &f2);
+	    ret = sscanf(id2, "PCI:%u:%u:%u", &b2, &d2, &f2);
 	    if (ret != 3)
 		return 0;
 	}
@@ -2388,24 +2388,54 @@ void drmCloseOnce(int fd)
     }
 }
 
-#ifdef NOTYET
 int drmSetMaster(int fd)
 {
+#ifdef NOTYET
 	int ret;
 
 	fprintf(stderr,"Setting master \n");
 	ret = ioctl(fd, DRM_IOCTL_SET_MASTER, 0);
 	return ret;
+#endif
+	return 0;
 }
 
 int drmDropMaster(int fd)
 {
+#ifdef NOTYET
 	int ret;
 	fprintf(stderr,"Dropping master \n");
 	ret = ioctl(fd, DRM_IOCTL_DROP_MASTER, 0);
 	return ret;
-}
 #endif
+	return 0;
+}
+
+char *drmGetDeviceNameFromFd(int fd)
+{
+	char name[128];
+	struct stat sbuf;
+	dev_t d;
+	int i;
+
+	/* The whole drmOpen thing is a fiasco and we need to find a way
+	 * back to just using open(2).  For now, however, lets just make
+	 * things worse with even more ad hoc directory walking code to
+	 * discover the device file name. */
+
+	fstat(fd, &sbuf);
+	d = sbuf.st_rdev;
+
+	for (i = 0; i < DRM_MAX_MINOR; i++) {
+		snprintf(name, sizeof name, DRM_DEV_NAME, DRM_DIR_NAME, i);
+		if (stat(name, &sbuf) == 0 && sbuf.st_rdev == d)
+			break;
+	}
+	if (i == DRM_MAX_MINOR)
+		return NULL;
+
+	return drmStrdup(name);
+}
 
 #ifdef X_PRIVSEP
 static int
