@@ -423,6 +423,8 @@
 ./usr/X11R6/bin/fc-cat
 ./usr/X11R6/bin/fc-list
 ./usr/X11R6/bin/fc-match
+./usr/X11R6/bin/fc-query
+./usr/X11R6/bin/fc-scan
 ./usr/X11R6/bin/fontname.sh
 ./usr/X11R6/bin/fontprop.sh
 ./usr/X11R6/bin/fonttosfnt

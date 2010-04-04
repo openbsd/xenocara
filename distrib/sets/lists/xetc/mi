@@ -9,6 +9,7 @@
 ./etc/X11/app-defaults/SshAskpass
 ./etc/X11/app-defaults/UXTerm
 ./etc/X11/app-defaults/Viewres
+./etc/X11/app-defaults/Viewres-color
 ./etc/X11/app-defaults/XCalc
 ./etc/X11/app-defaults/XCalc-color
 ./etc/X11/app-defaults/XClipboard
@@ -28,6 +29,7 @@
 ./etc/X11/app-defaults/Xedit-color
 ./etc/X11/app-defaults/Xfd
 ./etc/X11/app-defaults/Xgc
+./etc/X11/app-defaults/Xgc-color
 ./etc/X11/app-defaults/Xmag
 ./etc/X11/app-defaults/Xman
 ./etc/X11/app-defaults/Xmessage

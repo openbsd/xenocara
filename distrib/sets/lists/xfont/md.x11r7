@@ -3843,16 +3843,6 @@
 ./usr/X11R6/lib/X11/fonts/TTF/DejaVuSerifCondensed-Italic.ttf
 ./usr/X11R6/lib/X11/fonts/TTF/DejaVuSerifCondensed.ttf
 ./usr/X11R6/lib/X11/fonts/TTF/GohaTibebZemen.ttf
-./usr/X11R6/lib/X11/fonts/TTF/Vera.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraBI.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraBd.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraIt.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraMoBI.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraMoBd.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraMoIt.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraMono.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraSe.ttf
-./usr/X11R6/lib/X11/fonts/TTF/VeraSeBd.ttf
 ./usr/X11R6/lib/X11/fonts/TTF/fonts.dir
 ./usr/X11R6/lib/X11/fonts/TTF/fonts.scale
 ./usr/X11R6/lib/X11/fonts/TTF/luximb.ttf
