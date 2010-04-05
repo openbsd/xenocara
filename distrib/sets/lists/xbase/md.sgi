@@ -135,13 +135,13 @@
 ./usr/X11R6/lib/libXxf86vm.so.5.0
 ./usr/X11R6/lib/libdmx.so.1.0
 ./usr/X11R6/lib/libdrm.a
-./usr/X11R6/lib/libdrm.so.2.4
-./usr/X11R6/lib/libfontconfig.so.6.0
+./usr/X11R6/lib/libdrm.so.2.5
+./usr/X11R6/lib/libfontconfig.so.7.0
 ./usr/X11R6/lib/libfontenc.so.3.0
-./usr/X11R6/lib/libfreetype.so.17.0
+./usr/X11R6/lib/libfreetype.so.17.1
 ./usr/X11R6/lib/liblbxutil.so.1.0
 ./usr/X11R6/lib/libpciaccess.so.0.10
-./usr/X11R6/lib/libpixman-1.so.15.8
+./usr/X11R6/lib/libpixman-1.so.16.6
 ./usr/X11R6/lib/libpthread-stubs.a
 ./usr/X11R6/lib/libpthread-stubs.so.0.0
 ./usr/X11R6/lib/libxcb-atom.a
