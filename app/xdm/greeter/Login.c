@@ -460,9 +460,11 @@ realizeCursor (LoginWidget w, GC gc)
 	}
 	break;
     case LOGIN_PROMPT_ECHO_OFF:
+#ifndef __OpenBSD__
 	/* Move cursor one pixel per character to give some feedback without
 	   giving away the password length */
 	x += PROMPT_CURSOR(w, w->login.activePrompt);
+#endif
 	break;
     }
 
