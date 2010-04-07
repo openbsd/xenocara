@@ -3400,7 +3400,6 @@ I830LeaveVT(int scrnIndex, int flags)
 
       if (!pI830->memory_manager) {
 	  I830DRISetVBlankInterrupt (pScrn, FALSE);
-	  drmCtlUninstHandler(pI830->drmSubFD);
       }
    }
 #endif
@@ -3432,8 +3431,10 @@ I830LeaveVT(int scrnIndex, int flags)
        if (!pI830->memory_manager)
 	   intel_bufmgr_fake_evict_all(pI830->bufmgr);
 
-       if (!pI830->memory_manager)
+       if (!pI830->memory_manager) {
 	   i830_stop_ring(pScrn, TRUE);
+	   drmCtlUninstHandler(pI830->drmSubFD);
+	}
 
        if (pI830->debug_modes) {
 	   i830CompareRegsToSnapshot(pScrn, "After LeaveVT");
