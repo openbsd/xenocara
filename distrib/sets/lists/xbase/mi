@@ -587,8 +587,6 @@
 ./usr/X11R6/lib/libX11.la
 ./usr/X11R6/lib/libXRes.a
 ./usr/X11R6/lib/libXRes.la
-./usr/X11R6/lib/libXTrap.a
-./usr/X11R6/lib/libXTrap.la
 ./usr/X11R6/lib/libXau.a
 ./usr/X11R6/lib/libXau.la
 ./usr/X11R6/lib/libXaw.a
@@ -604,8 +602,6 @@
 ./usr/X11R6/lib/libXdamage.la
 ./usr/X11R6/lib/libXdmcp.a
 ./usr/X11R6/lib/libXdmcp.la
-./usr/X11R6/lib/libXevie.a
-./usr/X11R6/lib/libXevie.la
 ./usr/X11R6/lib/libXext.a
 ./usr/X11R6/lib/libXext.la
 ./usr/X11R6/lib/libXfixes.a
@@ -661,8 +657,6 @@
 ./usr/X11R6/lib/libfontenc.a
 ./usr/X11R6/lib/libfontenc.la
 ./usr/X11R6/lib/libfreetype.a
-./usr/X11R6/lib/liblbxutil.a
-./usr/X11R6/lib/liblbxutil.la
 ./usr/X11R6/lib/libpciaccess.a
 ./usr/X11R6/lib/libpciaccess.la
 ./usr/X11R6/lib/libpixman-1.a

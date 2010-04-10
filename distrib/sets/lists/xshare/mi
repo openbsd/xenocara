@@ -336,8 +336,6 @@
 ./usr/X11R6/include/X11/extensions/Xdamage.h
 ./usr/X11R6/include/X11/extensions/Xdbe.h
 ./usr/X11R6/include/X11/extensions/Xdbeproto.h
-./usr/X11R6/include/X11/extensions/Xevie.h
-./usr/X11R6/include/X11/extensions/Xeviestr.h
 ./usr/X11R6/include/X11/extensions/Xext.h
 ./usr/X11R6/include/X11/extensions/Xfixes.h
 ./usr/X11R6/include/X11/extensions/Xge.h
@@ -405,13 +403,6 @@
 ./usr/X11R6/include/X11/extensions/xfixeswire.h
 ./usr/X11R6/include/X11/extensions/xtestext1.h
 ./usr/X11R6/include/X11/extensions/xteststr.h
-./usr/X11R6/include/X11/extensions/xtrapbits.h
-./usr/X11R6/include/X11/extensions/xtrapddmi.h
-./usr/X11R6/include/X11/extensions/xtrapdi.h
-./usr/X11R6/include/X11/extensions/xtrapemacros.h
-./usr/X11R6/include/X11/extensions/xtraplib.h
-./usr/X11R6/include/X11/extensions/xtraplibp.h
-./usr/X11R6/include/X11/extensions/xtrapproto.h
 ./usr/X11R6/include/X11/fonts
 ./usr/X11R6/include/X11/fonts/FS.h
 ./usr/X11R6/include/X11/fonts/FSlib.h
@@ -822,7 +813,6 @@
 ./usr/X11R6/lib/pkgconfig/damageproto.pc
 ./usr/X11R6/lib/pkgconfig/dmx.pc
 ./usr/X11R6/lib/pkgconfig/dmxproto.pc
-./usr/X11R6/lib/pkgconfig/evieproto.pc
 ./usr/X11R6/lib/pkgconfig/fixesproto.pc
 ./usr/X11R6/lib/pkgconfig/fontcacheproto.pc
 ./usr/X11R6/lib/pkgconfig/fontconfig.pc
@@ -834,7 +824,6 @@
 ./usr/X11R6/lib/pkgconfig/ice.pc
 ./usr/X11R6/lib/pkgconfig/inputproto.pc
 ./usr/X11R6/lib/pkgconfig/kbproto.pc
-./usr/X11R6/lib/pkgconfig/lbxutil.pc
 ./usr/X11R6/lib/pkgconfig/libfs.pc
 ./usr/X11R6/lib/pkgconfig/pciaccess.pc
 ./usr/X11R6/lib/pkgconfig/printproto.pc
@@ -844,7 +833,6 @@
 ./usr/X11R6/lib/pkgconfig/resourceproto.pc
 ./usr/X11R6/lib/pkgconfig/scrnsaverproto.pc
 ./usr/X11R6/lib/pkgconfig/sm.pc
-./usr/X11R6/lib/pkgconfig/trapproto.pc
 ./usr/X11R6/lib/pkgconfig/videoproto.pc
 ./usr/X11R6/lib/pkgconfig/x11.pc
 ./usr/X11R6/lib/pkgconfig/xau.pc
@@ -856,7 +844,6 @@
 ./usr/X11R6/lib/pkgconfig/xcursor.pc
 ./usr/X11R6/lib/pkgconfig/xdamage.pc
 ./usr/X11R6/lib/pkgconfig/xdmcp.pc
-./usr/X11R6/lib/pkgconfig/xevie.pc
 ./usr/X11R6/lib/pkgconfig/xext.pc
 ./usr/X11R6/lib/pkgconfig/xextproto.pc
 ./usr/X11R6/lib/pkgconfig/xf86bigfontproto.pc
@@ -887,7 +874,6 @@
 ./usr/X11R6/lib/pkgconfig/xscrnsaver.pc
 ./usr/X11R6/lib/pkgconfig/xt.pc
 ./usr/X11R6/lib/pkgconfig/xtrans.pc
-./usr/X11R6/lib/pkgconfig/xtrap.pc
 ./usr/X11R6/lib/pkgconfig/xtst.pc
 ./usr/X11R6/lib/pkgconfig/xv.pc
 ./usr/X11R6/lib/pkgconfig/xvmc.pc
@@ -1969,12 +1955,6 @@
 ./usr/X11R6/man/man3/XeviGetVisualInfo.3
 ./usr/X11R6/man/man3/XeviQueryExtension.3
 ./usr/X11R6/man/man3/XeviQueryVersion.3
-./usr/X11R6/man/man3/Xevie.3
-./usr/X11R6/man/man3/XevieEnd.3
-./usr/X11R6/man/man3/XevieQueryVersion.3
-./usr/X11R6/man/man3/XevieSelectInput.3
-./usr/X11R6/man/man3/XevieSendEvent.3
-./usr/X11R6/man/man3/XevieStart.3
 ./usr/X11R6/man/man3/Xfixes.3
 ./usr/X11R6/man/man3/Xfontcache.3
 ./usr/X11R6/man/man3/Xft.3
