@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.109 2010/04/03 17:22:01 matthieu Exp $
+ $OpenBSD: MODULES,v 1.110 2010/04/10 21:34:58 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -37,7 +37,7 @@ app/xclock		1.0.4	7.5
 app/xcmsdb		1.0.2	7.5
 app/xcompmgr		1.1.5	7.5+
 app/xconsole		1.0.3	7.3
-app/xdm			1.1.9	7.5
+app/xdm			1.1.10	7.5+	needs-update
 app/xdpyinfo		1.1.0	7.5
 app/xdriinfo		1.0.3	7.5
 app/xedit		1.1.2	7.4
@@ -88,7 +88,7 @@ data/bitmaps		1.1.0	7.5
 data/xkbdata		1.0.1	7.0	deprecated
 
 doc/xorg-docs		1.5	7.3	needs-update
-doc/xorg-sgml-doctools	1.3	7.5	needs-update
+doc/xorg-sgml-doctools	1.4	7.5+	needs-update
 
 driver/xf86-input-acecad	1.4.0	7.4+
 driver/xf86-input-citron	2.2.2	7.4
@@ -100,12 +100,12 @@ driver/xf86-input-keyboard	1.4.0	7.5	needs-update
 driver/xf86-input-mouse		1.5.0	7.5	needs-update
 driver/xf86-input-mutouch	1.2.1	7.4+
 driver/xf86-input-penmount	1.4.1	7.5+	needs-udate
-driver/xf86-input-vmmouse	12.6.7	7.5+	needs-update
+driver/xf86-input-vmmouse	12.6.9	7.5+	needs-update
 driver/xf86-input-void		1.3.0	7.4+
 driver/xf86-video-apm		1.2.2	7.4+
 driver/xf86-video-ark		0.7.2	7.4+
 driver/xf86-video-ast		0.89.9	7.4+
-driver/xf86-video-ati		6.12.6	7.4+	needs-update
+driver/xf86-video-ati		6.13.0	7.5+	needs-update
 driver/xf86-video-chips		1.2.2	7.4+
 driver/xf86-video-cirrus	1.3.2	7.4	
 driver/xf86-video-dummy		0.3.3	7.5+	needs-update
@@ -188,14 +188,14 @@ lib/libSM			1.1.1	7.4+
 lib/libX11			1.3.3	7.5+	needs-update
 lib/libXRes			1.0.4	7.5
 lib/libXScrnSaver		1.2.0	7.4+	needs-update
-lib/libXTrap			1.0.0	7.0	deprecated
+lib/libXTrap			1.0.0	7.0	unlinked
 lib/libXau			1.0.5	7.5
 lib/libXaw			1.0.7	7.5	needs-update
 lib/libXcomposite		0.4.1	7.5
 lib/libXcursor			1.1.10	7.5
 lib/libXdamage			1.1.2	7.5
 lib/libXdmcp			1.0.3	7.5
-lib/libXevie			1.0.2	7.2RC1	deprecated
+lib/libXevie			1.0.2	7.2RC1	unlinked
 lib/libXext			1.1.1	7.5	needs-update
 lib/libXfixes			4.0.4	7.5
 lib/libXfont			1.4.1	7.5
@@ -219,7 +219,7 @@ lib/libXxf86misc		1.0.2	7.5	needs-update
 lib/libXxf86vm			1.1.0	7.5	needs-update
 lib/libdmx			1.1.0	7.5	needs-update
 lib/libfontenc			1.0.5	7.5
-lib/liblbxutil			1.1.0	7.5+	deprecated
+lib/liblbxutil			1.1.0	7.5+	unlinked
 lib/libpciaccess		0.11.0	7.5+	needs-update
 lib/libpthread-stubs		0.2	7.5	needs-update
 lib/libxcb			1.4	7.4+
@@ -234,7 +234,7 @@ proto/compositeproto		0.4.1	7.5	needs-update
 proto/damageproto		1.2.0	7.4+	needs-update
 proto/dri2proto			2.3	7.5+	needs-update
 proto/dmxproto			2.3	7.5	needs-update
-proto/evieproto			1.1.0	7.4+	deprecated
+proto/evieproto			1.1.0	7.4+	unlinked
 proto/fixesproto		4.1.1	7.5	needs-update
 proto/fontcacheproto		0.1.3	7.5	needs-update
 proto/fontsproto		2.1.0	7.4+	needs-update
@@ -248,7 +248,7 @@ proto/recordproto		1.14	7.5	needs-update
 proto/renderproto		0.11	7.4+	needs-update
 proto/resourceproto		1.1.0	7.4+	needs-update
 proto/scrnsaverproto		1.2.0	7.4+	needs-update
-proto/trapproto			3.4.3	7.0	deprecated
+proto/trapproto			3.4.3	7.0	unlinked
 proto/videoproto		2.3.0	7.4+	needs-update
 proto/x11proto			7.0.16	7.5	needs-update
 proto/xcb-proto			1.5	7.4+
@@ -264,7 +264,7 @@ proto/xineramaproto		1.2	7.5	needs-update
 util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
 util/imake			1.0.2
-util/macros			1.6.1	7.5+	needs-update
+util/macros			1.7.0	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
 xserver				1.8.0	7.5+	needs-update
