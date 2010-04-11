@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.74 2010/02/02 19:28:46 stsp Exp $
+ * $Id: client.c,v 1.75 2010/04/11 16:51:26 okan Exp $
  */
 
 #include <sys/param.h>
@@ -495,7 +495,7 @@ client_update(struct client_ctx *cc)
 	int	 i;
 	long	 n;
 
-	if ((n = xu_getprop(cc, WM_PROTOCOLS,
+	if ((n = xu_getprop(cc->win, WM_PROTOCOLS,
 		 XA_ATOM, 20L, (u_char **)&p)) <= 0)
 		return;
 
@@ -512,7 +512,7 @@ void
 client_send_delete(struct client_ctx *cc)
 {
 	if (cc->xproto & CLIENT_PROTO_DELETE)
-		xu_sendmsg(cc, WM_PROTOCOLS, WM_DELETE_WINDOW);
+		xu_sendmsg(cc->win, WM_PROTOCOLS, WM_DELETE_WINDOW);
 	else
 		XKillClient(X_Dpy, cc->win);
 }
@@ -814,7 +814,7 @@ client_gethints(struct client_ctx *cc)
 			cc->app_class = xch.res_class;
 	}
 
-	if (xu_getprop(cc, _MOTIF_WM_HINTS, _MOTIF_WM_HINTS,
+	if (xu_getprop(cc->win, _MOTIF_WM_HINTS, _MOTIF_WM_HINTS,
 	    PROP_MWM_HINTS_ELEMENTS, (u_char **)&mwmh) == MWM_NUMHINTS)
 		if (mwmh->flags & MWM_HINTS_DECORATIONS &&
 		    !(mwmh->decorations & MWM_DECOR_ALL) &&
