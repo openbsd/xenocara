@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.c,v 1.52 2010/01/27 03:04:50 okan Exp $
+ * $Id: calmwm.c,v 1.53 2010/04/12 16:17:46 oga Exp $
  */
 
 #include <sys/param.h>
@@ -176,6 +176,12 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 
 	xu_setwmname(sc);
 
+	rootattr.event_mask = ChildMask|PropertyChangeMask|EnterWindowMask|
+	    LeaveWindowMask|ColormapChangeMask|ButtonMask;
+
+	XChangeWindowAttributes(X_Dpy, sc->rootwin,
+	    CWEventMask, &rootattr);
+
 	/* Deal with existing clients. */
 	XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins);
 
@@ -189,12 +195,6 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	XFree(wins);
 
 	screen_updatestackingorder(sc);
-
-	rootattr.event_mask = ChildMask|PropertyChangeMask|EnterWindowMask|
-	    LeaveWindowMask|ColormapChangeMask|ButtonMask;
-
-	XChangeWindowAttributes(X_Dpy, sc->rootwin,
-	    CWEventMask, &rootattr);
 
 	if (XineramaQueryExtension(X_Dpy, &fake, &fake) == 1 &&
 	    ((HasXinerama = XineramaIsActive(X_Dpy)) == 1))
