@@ -42,8 +42,12 @@
 #define NEED_EVENTS
 #include <X11/Xproto.h>
 #ifdef MITSHM
+#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
+#include <X11/extensions/shmproto.h>
+#else
 #define _XSHM_SERVER_
 #include <X11/extensions/shmstr.h>
+#endif
 #endif
 #include "scrnintstr.h"
 #include "pixmapstr.h"
@@ -319,6 +323,36 @@ uxa_get_image (DrawablePtr pDrawable, int x, int y, int w, int h,
 extern const GCOps uxa_ops;
 
 #ifdef MITSHM
+
+#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
+#define XSHM_PUT_IMAGE_ARGS \
+    DrawablePtr		/* dst */, \
+    GCPtr		/* pGC */, \
+    int			/* depth */, \
+    unsigned int	/* format */, \
+    int			/* w */, \
+    int			/* h */, \
+    int			/* sx */, \
+    int			/* sy */, \
+    int			/* sw */, \
+    int			/* sh */, \
+    int			/* dx */, \
+    int			/* dy */, \
+    char *		/* data */
+
+#define XSHM_CREATE_PIXMAP_ARGS \
+    ScreenPtr	/* pScreen */, \
+    int		/* width */, \
+    int		/* height */, \
+    int		/* depth */, \
+    char *	/* addr */
+
+typedef struct _ShmFuncs {
+    PixmapPtr	(* CreatePixmap)(XSHM_CREATE_PIXMAP_ARGS);
+    void	(* PutImage)(XSHM_PUT_IMAGE_ARGS);
+} ShmFuncs, *ShmFuncsPtr;
+
+#endif
 extern ShmFuncs uxa_shm_funcs;
 
 /* XXX these come from shmint.h, which isn't exported by the server */

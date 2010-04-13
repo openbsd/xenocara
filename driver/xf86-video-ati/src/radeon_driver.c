@@ -104,8 +104,12 @@
 #include "vgaHW.h"
 #endif
 
+#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
 
 #include "atipciids.h"
 #include "radeon_chipset_gen.h"

@@ -65,8 +65,12 @@
 #endif
 
 #include "globals.h"
+#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
 
 #define DEBUG 0
 

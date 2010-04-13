@@ -40,8 +40,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "miscstruct.h"
 #include "xf86i2c.h"
 #include "xf86Crtc.h"
+#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
+#endif
 
 #include "../i2c_vid.h"
 #include "sil164.h"
