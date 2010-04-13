@@ -7,8 +7,12 @@
 #define INITARGS void
 #endif
 
+#ifdef HAVE_X11_EXTENSIONS_SHAPEPROTO_H
+#include <X11/extensions/shapeproto.h>
+#else
 #define _SHAPE_SERVER_  /* don't want Xlib structures */
 #include <X11/extensions/shapestr.h>
+#endif
 
 #ifdef MULTIBUFFER
 extern void MultibufferExtensionInit(INITARGS);
@@ -18,9 +22,13 @@ extern void MultibufferExtensionInit(INITARGS);
 
 #ifdef XTEST
 extern void XTestExtensionInit(INITARGS);
+#ifdef HAVE_X11_EXTENSIONS_XTESTPROTO_H
+#include <X11/extensions/xtestproto.h>
+#else
 #define _XTEST_SERVER_
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/xteststr.h>
+#endif
 #endif
 
 #if 1
@@ -47,7 +55,11 @@ extern void XFree86DGARegister(INITARGS);
 
 #ifdef DPMSExtension
 extern void DPMSExtensionInit(INITARGS);
+#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#include <X11/extensions/dpmsconst.h>
+#else
 #include <X11/extensions/dpmsstr.h>
+#endif
 #endif
 
 #ifdef XV
@@ -65,7 +77,11 @@ extern void ResExtensionInit(INITARGS);
 
 #ifdef SHM
 extern void ShmExtensionInit(INITARGS);
+#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
+#include <X11/extensions/shmproto.h>
+#else
 #include <X11/extensions/shmstr.h>
+#endif
 extern void ShmRegisterFuncs(
     ScreenPtr pScreen,
     ShmFuncsPtr funcs);

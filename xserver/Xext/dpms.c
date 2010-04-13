@@ -44,9 +44,13 @@ Equipment Corporation.
 #include "dixstruct.h"
 #include "extnsionst.h"
 #include "opaque.h"
+#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#include <X11/extensions/dpmsproto.h>
+#else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
 #include <X11/extensions/dpmsstr.h>
+#endif
 #include "dpmsproc.h"
 #include "modinit.h"
 

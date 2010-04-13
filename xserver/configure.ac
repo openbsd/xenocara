@@ -1846,6 +1846,20 @@ AC_SUBST([BUILD_DATE])
 BUILD_TIME="$(date +'1%H%M%S')"
 AC_SUBST([BUILD_TIME])
 
+# XXX proto shuffle
+_saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I$prefix/include"
+AC_CHECK_HEADERS(X11/extensions/dpmsconst.h)
+AC_CHECK_HEADERS([X11/extensions/shmproto.h \
+		 X11/extensions/dbeproto.h \
+		 X11/extensions/shapeproto.h \
+		 X11/extensions/syncproto.h \
+		 X11/extensions/xtestproto.h],,,[
+#include <X11/X.h>
+#include <X11/Xmd.h>])
+CPPFLAGS="$_saved_CPPFLAGS"
+
+
 DIX_CFLAGS="-DHAVE_DIX_CONFIG_H $XSERVER_CFLAGS"
 
 AC_SUBST([DIX_CFLAGS])

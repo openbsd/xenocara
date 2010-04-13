@@ -160,12 +160,20 @@ typedef void (*InitExtension)(INITARGS);
 #endif
 
 #ifdef MITSHM
+#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
+#include <X11/extensions/shmproto.h>
+#else
 #define _XSHM_SERVER_
 #include <X11/extensions/shmstr.h>
 #endif
+#endif
 #ifdef XTEST
+#ifdef HAVE_X11_EXTENSIONS_XTESTPROTO_H
+#include <X11/extensions/xtestproto.h>
+#else
 #define _XTEST_SERVER_
 #include <X11/extensions/XTest.h>
+#endif
 #endif
 #ifdef XKB
 #include <X11/extensions/XKB.h>

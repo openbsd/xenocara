@@ -43,8 +43,12 @@ in this Software without prior written authorization from The Open Group.
 #include "dixstruct.h"
 #include "resource.h"
 #include "opaque.h"
+#ifdef HAVE_X11_EXTENSIONS_SHAPEPROTO_H
+#include <X11/extensions/shapeproto.h>
+#else
 #define _SHAPE_SERVER_	/* don't want Xlib structures */
 #include <X11/extensions/shapestr.h>
+#endif
 #include "regionstr.h"
 #include "gcstruct.h"
 #include "modinit.h"

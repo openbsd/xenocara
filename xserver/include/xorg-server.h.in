@@ -199,4 +199,10 @@
 /* Use X server privilege separation */
 #undef X_PRIVSEP
 
+/* Define to 1 if you have the <X11/extensions/dpmsconst.h> header file. */
+#undef HAVE_X11_EXTENSIONS_DPMSCONST_H
+
+/* Define to 1 if you have the <X11/extensions/shmproto.h> header file. */
+#undef HAVE_X11_EXTENSIONS_SHMPROTO_H
+
 #endif /* _XORG_SERVER_H_ */

@@ -24,11 +24,45 @@
 #define _SHMINT_H_
 
 #define _XSHM_SERVER_
+#ifndef HAVE_X11_EXTENSIONS_SHMPROTO_H
 #include <X11/extensions/shmstr.h>
+#else
+#include <X11/extensions/shmproto.h>
+#endif
 
 #include "screenint.h"
 #include "pixmap.h"
 #include "gc.h"
+
+#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
+#define XSHM_PUT_IMAGE_ARGS \
+    DrawablePtr		/* dst */, \
+    GCPtr		/* pGC */, \
+    int			/* depth */, \
+    unsigned int	/* format */, \
+    int			/* w */, \
+    int			/* h */, \
+    int			/* sx */, \
+    int			/* sy */, \
+    int			/* sw */, \
+    int			/* sh */, \
+    int			/* dx */, \
+    int			/* dy */, \
+    char *		/* data */
+
+#define XSHM_CREATE_PIXMAP_ARGS \
+    ScreenPtr	/* pScreen */, \
+    int		/* width */, \
+    int		/* height */, \
+    int		/* depth */, \
+    char *	/* addr */
+
+typedef struct _ShmFuncs {
+    PixmapPtr	(* CreatePixmap)(XSHM_CREATE_PIXMAP_ARGS);
+    void	(* PutImage)(XSHM_PUT_IMAGE_ARGS);
+} ShmFuncs, *ShmFuncsPtr;
+
+#endif
 
 void
 ShmRegisterFuncs(ScreenPtr pScreen, ShmFuncsPtr funcs);

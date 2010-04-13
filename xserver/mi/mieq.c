@@ -56,7 +56,11 @@ in this Software without prior written authorization from The Open Group.
 #ifdef DPMSExtension
 # include "dpmsproc.h"
 # define DPMS_SERVER
-# include <X11/extensions/dpms.h>
+#ifndef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#include <X11/extensions/dpms.h>
+#else  
+#include <X11/extensions/dpmsconst.h>
+#endif
 #endif
 
 #define QUEUE_SIZE  512

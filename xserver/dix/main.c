@@ -112,7 +112,11 @@ Equipment Corporation.
 
 #ifdef DPMSExtension
 #define DPMS_SERVER
+#ifndef HAVE_X11_EXTENSIONS_DPMSCONST_H
 #include <X11/extensions/dpms.h>
+#else  
+#include <X11/extensions/dpmsconst.h>
+#endif
 #include "dpmsproc.h"
 #endif
 

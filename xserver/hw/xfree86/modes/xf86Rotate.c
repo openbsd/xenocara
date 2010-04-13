@@ -40,8 +40,12 @@
 #include "xf86Modes.h"
 #include "xf86RandR12.h"
 #include "X11/extensions/render.h"
+#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#include <X11/extensions/dpmsconst.h>
+#else
 #define DPMS_SERVER
 #include "X11/extensions/dpms.h"
+#endif
 #include "X11/Xatom.h"
 
 /* borrowed from composite extension, move to Render and publish? */

@@ -42,8 +42,12 @@ SOFTWARE.
 #include <X11/extensions/Xvproto.h>
 #include "xvdix.h"
 #ifdef MITSHM
+#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
+#include <X11/extensions/shmproto.h>
+#else
 #define _XSHM_SERVER_
 #include <X11/extensions/shmstr.h>
+#endif
 #endif
 
 #include "xvdisp.h"
