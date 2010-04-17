@@ -48,7 +48,7 @@ The following command line options may be passed to \fIimake\fP:
 .TP 8
 .B \-D\fIdefine\fP
 This option is passed directly to \fIcpp\fP.  It is typically used to set
-directory-specific variables.  For example, the X Window System uses this
+directory-specific variables.  For example, the X Window System used this
 flag to set \fITOPDIR\fP to the name of the directory containing the top
 of the core distribution and \fICURDIR\fP to the name of the current 
 directory, relative to the top.
@@ -168,8 +168,13 @@ space, \fIimake\fP attempts to put back any necessary tabs (\fImake\fP is
 very picky about the difference between tabs and spaces).  For this reason,
 colons (:) in command lines must be preceded by a backslash (\\).
 .SH "USE WITH THE X WINDOW SYSTEM"
-The X Window System uses \fIimake\fP extensively, for both full builds within
-the source tree and external software.  As mentioned above, two special
+The X Window System used \fIimake\fP extensively up through the X11R6.9
+release, for both full builds within the source tree and external software.
+X has since moved to GNU autoconf and automake for its build system in
+X11R7.0 and later releases, but still maintains imake for building existing
+external software programs that have not yet converted.
+.PP
+As mentioned above, two special
 variables, \fITOPDIR\fP and \fICURDIR,\fP are set to make referencing files
 using relative path names easier.  For example, the following command is
 generated automatically to build the \fIMakefile\fP in the directory
@@ -228,6 +233,16 @@ __cpp__	default C preprocessor
 .DT
 .SH "SEE ALSO"
 make(1), xmkmf(1)
+.br
+Paul DuBois,
+.I
+imake-Related Software and Documentation,
+http://www.snake.net/software/imake-stuff/
+.br
+Paul DuBois,
+.I
+Software Portability with imake, Second Edition,
+O'Reilly & Associates, 1996.
 .br
 S. I. Feldman,
 .I

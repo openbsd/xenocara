@@ -62,8 +62,8 @@ host_triplet = @host@
 bin_PROGRAMS = imake$(EXEEXT) $(am__EXEEXT_1)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure COPYING ChangeLog compile config.guess \
-	config.sub depcomp install-sh missing
+	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
+	config.guess config.sub depcomp install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -123,6 +123,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 ARCMD = @ARCMD@
@@ -149,9 +150,11 @@ BUILD_XMKMF_TRUE = @BUILD_XMKMF_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CPP_PROGRAM = @CPP_PROGRAM@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -160,12 +163,15 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 HAS_PERL = @HAS_PERL@
 HAS_PERL_FALSE = @HAS_PERL_FALSE@
 HAS_PERL_TRUE = @HAS_PERL_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -204,8 +210,6 @@ XCONFDIR = @XCONFDIR@
 XPROTO_CFLAGS = @XPROTO_CFLAGS@
 XPROTO_LIBS = @XPROTO_LIBS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -220,29 +224,37 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 @BUILD_REVPATH_TRUE@REVPATH = revpath
-imake_CFLAGS = $(XPROTO_CFLAGS) -DCPP_PROGRAM='"$(CPP_PROGRAM)"'
+AM_CFLAGS = $(CWARNFLAGS)
+imake_CFLAGS = $(XPROTO_CFLAGS) -DCPP_PROGRAM='"$(CPP_PROGRAM)"' $(CWARNFLAGS)
 imake_SOURCES = imake.c imakemdep.h
 revpath_SOURCES = revpath.c
 @BUILD_MAKEG_TRUE@MAKEG = makeg
@@ -265,7 +277,8 @@ bin_SCRIPTS = \
 @HAS_PERL_TRUE@MKHTMLINDEX_SCRIPT = $(srcdir)/mkhtmlindex.pl
 CLEANFILES = xmkmf ccmakedep mergelib mkhtmlindex $(appman_DATA)
 EXTRA_DIST = makeg xmkmf.cpp mdepend.cpp mergelib.cpp mkdirhier \
-	cleanlinks mkhtmlindex.pl mkhtmlindex.sh $(appman_PRE)
+	cleanlinks mkhtmlindex.pl mkhtmlindex.sh $(appman_PRE) \
+	ChangeLog
 
 # Man page
 appmandir = $(APP_MAN_DIR)
@@ -280,7 +293,10 @@ appman_PRE = \
 	cleanlinks.man \
 	mkhtmlindex.man
 
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+
+# Only need to install man pages for programs/scripts being installed
+appman_needed_for = $(bin_PROGRAMS) $(bin_SCRIPTS)
+appman_DATA = $(appman_needed_for:%=%.@APP_MAN_SUFFIX@)
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
@@ -300,6 +316,7 @@ MAN_SUBSTS = \
 	-e 's|__cpp__|$(RAWCPP)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
+MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -536,6 +553,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -665,6 +685,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -720,8 +741,8 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-binPROGRAMS install-binSCRIPTS \
@@ -735,19 +756,29 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 
 
 xmkmf: xmkmf.cpp
-	$(RAWCPP) $(RAWCPPFLAGS) -DCONFIGDIRSPEC='"-I$(XCONFDIR)"' < $(srcdir)/xmkmf.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) -DCONFIGDIRSPEC='"-I$(XCONFDIR)"' < $(srcdir)/xmkmf.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
 
 ccmakedep: mdepend.cpp
-	$(RAWCPP) $(RAWCPPFLAGS) -DPREPROC='"$(PREPROCESSCMD_MKDEPEND)"' < $(srcdir)/mdepend.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) -DPREPROC='"$(PREPROCESSCMD_MKDEPEND)"' < $(srcdir)/mdepend.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
 
 mergelib: mergelib.cpp
-	$(RAWCPP) $(RAWCPPFLAGS) -DARCMD="$(ARCMD)" -DRANLIB="$(RANLIB)" < $(srcdir)/mergelib.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) -DARCMD="$(ARCMD)" -DRANLIB="$(RANLIB)" < $(srcdir)/mergelib.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
 
 mkhtmlindex: $(MKHTMLINDEX_SCRIPT)
-	cp $(MKHTMLINDEX_SCRIPT) $@
+	$(AM_V_GEN)cp $(MKHTMLINDEX_SCRIPT) $@
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

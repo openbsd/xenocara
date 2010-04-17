@@ -22,11 +22,17 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(imake, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_INIT(imake, [1.0.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+XORG_DEFAULT_OPTIONS
 
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -36,6 +42,9 @@ AC_PATH_PROG(SED, sed)
 XORG_PROG_RAWCPP
 CPP_PROGRAM=${RAWCPP}
 AC_SUBST(CPP_PROGRAM)
+
+AC_CHECK_FUNC([mkstemp],
+   AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the "mkstemp" function.]))
 
 AC_CHECK_PROG(HAS_PERL, perl, yes)
 AM_CONDITIONAL([HAS_PERL], [test "x$HAS_PERL" = xyes])
@@ -121,8 +130,5 @@ AM_CONDITIONAL([BUILD_MKHTMLINDEX], [test "x$BUILD_MKHTMLINDEX" = xyes])
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XPROTO, xproto)
 AC_SUBST(XPROTO_CFLAGS)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])

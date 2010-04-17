@@ -31,7 +31,9 @@ endif
 
 bin_PROGRAMS = imake $(REVPATH)
 
-imake_CFLAGS = $(XPROTO_CFLAGS) -DCPP_PROGRAM='"$(CPP_PROGRAM)"'
+AM_CFLAGS = $(CWARNFLAGS)
+
+imake_CFLAGS = $(XPROTO_CFLAGS) -DCPP_PROGRAM='"$(CPP_PROGRAM)"' $(CWARNFLAGS)
 imake_SOURCES = imake.c imakemdep.h
 
 revpath_SOURCES = revpath.c
@@ -74,13 +76,13 @@ bin_SCRIPTS = \
 	$(MKHTMLINDEX)
 
 xmkmf: xmkmf.cpp
-	$(RAWCPP) $(RAWCPPFLAGS) -DCONFIGDIRSPEC='"-I$(XCONFDIR)"' < $(srcdir)/xmkmf.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) -DCONFIGDIRSPEC='"-I$(XCONFDIR)"' < $(srcdir)/xmkmf.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
 
 ccmakedep: mdepend.cpp
-	$(RAWCPP) $(RAWCPPFLAGS) -DPREPROC='"$(PREPROCESSCMD_MKDEPEND)"' < $(srcdir)/mdepend.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) -DPREPROC='"$(PREPROCESSCMD_MKDEPEND)"' < $(srcdir)/mdepend.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
 
 mergelib: mergelib.cpp
-	$(RAWCPP) $(RAWCPPFLAGS) -DARCMD="$(ARCMD)" -DRANLIB="$(RANLIB)" < $(srcdir)/mergelib.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) -DARCMD="$(ARCMD)" -DRANLIB="$(RANLIB)" < $(srcdir)/mergelib.cpp | $(SED) -e /^\#/d | $(SED) -e s/XCOMM/\#/ > $@
 
 if HAS_PERL
 MKHTMLINDEX_SCRIPT = $(srcdir)/mkhtmlindex.pl
@@ -89,7 +91,7 @@ MKHTMLINDEX_SCRIPT = $(srcdir)/mkhtmlindex.sh
 endif
 
 mkhtmlindex: $(MKHTMLINDEX_SCRIPT)
-	cp $(MKHTMLINDEX_SCRIPT) $@
+	$(AM_V_GEN)cp $(MKHTMLINDEX_SCRIPT) $@
 
 
 CLEANFILES = \
@@ -122,7 +124,9 @@ appman_PRE = \
 	cleanlinks.man \
 	mkhtmlindex.man
 
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+# Only need to install man pages for programs/scripts being installed
+appman_needed_for = $(bin_PROGRAMS) $(bin_SCRIPTS)
+appman_DATA = $(appman_needed_for:%=%.@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
 CLEANFILES += $(appman_DATA)
@@ -150,4 +154,17 @@ MAN_SUBSTS = \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL

@@ -1,7 +1,7 @@
 XCOMM!/bin/sh
 XCOMM
 XCOMM $Xorg: mdepend.cpp,v 1.3 2000/08/17 19:41:52 cpqbld Exp $
-XCOMM $XdotOrg: util/imake/mdepend.cpp,v 1.4 2005/08/26 05:01:37 daniels Exp $
+XCOMM $XdotOrg: $
 XCOMM
 XCOMM	Do the equivalent of the 'makedepend' program, but do it right.
 XCOMM
