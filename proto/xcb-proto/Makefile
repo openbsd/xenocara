@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2009/05/31 16:35:28 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2010/04/18 19:55:51 matthieu Exp $
 
 PKGCONFIG=	xcb-proto.pc
 
@@ -9,6 +9,7 @@ FILES= \
 	composite.xml \
 	damage.xml \
 	dpms.xml \
+	dri2.xml \
 	glx.xml \
 	randr.xml \
 	record.xml \
