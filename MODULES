@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.111 2010/04/12 21:09:58 matthieu Exp $
+ $OpenBSD: MODULES,v 1.112 2010/04/18 17:39:13 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -232,13 +232,13 @@ lib/xcb-util			0.3.6	7.4+
 proto/bigreqsproto		1.1.0	7.4+	needs-update
 proto/compositeproto		0.4.1	7.5	needs-update
 proto/damageproto		1.2.0	7.4+	needs-update
-proto/dri2proto			2.3	7.5+	needs-update
+proto/dri2proto			2.3	7.5+
 proto/dmxproto			2.3	7.5	needs-update
 proto/evieproto			1.1.0	7.4+	unlinked
 proto/fixesproto		4.1.1	7.5	needs-update
 proto/fontcacheproto		0.1.3	7.5	needs-update
 proto/fontsproto		2.1.0	7.4+	needs-update
-proto/glproto			1.4.11	7.5+	needs-update
+proto/glproto			1.4.11	7.5+
 proto/inputproto		2.0	7.5	needs-update
 proto/kbproto			1.0.4	7.5	needs-update
 proto/pmproto			1.0.3	7.5	deprecated
@@ -263,7 +263,7 @@ proto/xineramaproto		1.2	7.5	needs-update
 
 util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
-util/imake			1.0.2
+util/imake			1.0.3	7.5+
 util/macros			1.7.0	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
