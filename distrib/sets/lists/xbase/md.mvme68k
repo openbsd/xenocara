@@ -23,6 +23,7 @@
 ./usr/X11R6/include/xcb/composite.h
 ./usr/X11R6/include/xcb/damage.h
 ./usr/X11R6/include/xcb/dpms.h
+./usr/X11R6/include/xcb/dri2.h
 ./usr/X11R6/include/xcb/glx.h
 ./usr/X11R6/include/xcb/randr.h
 ./usr/X11R6/include/xcb/record.h
@@ -134,6 +135,9 @@
 ./usr/X11R6/lib/libxcb-dpms.a
 ./usr/X11R6/lib/libxcb-dpms.so.0.0
 ./usr/X11R6/lib/libxcb-dpms_pic.a
+./usr/X11R6/lib/libxcb-dri2.a
+./usr/X11R6/lib/libxcb-dri2.so.0.0
+./usr/X11R6/lib/libxcb-dri2_pic.a
 ./usr/X11R6/lib/libxcb-event.a
 ./usr/X11R6/lib/libxcb-event.so.1.0
 ./usr/X11R6/lib/libxcb-event_pic.a
@@ -186,7 +190,7 @@
 ./usr/X11R6/lib/libxcb-xevie.so.0.0
 ./usr/X11R6/lib/libxcb-xevie_pic.a
 ./usr/X11R6/lib/libxcb-xf86dri.a
-./usr/X11R6/lib/libxcb-xf86dri.so.0.0
+./usr/X11R6/lib/libxcb-xf86dri.so.1.0
 ./usr/X11R6/lib/libxcb-xf86dri_pic.a
 ./usr/X11R6/lib/libxcb-xfixes.a
 ./usr/X11R6/lib/libxcb-xfixes.so.0.0
@@ -207,7 +211,7 @@
 ./usr/X11R6/lib/libxcb-xvmc.so.0.0
 ./usr/X11R6/lib/libxcb-xvmc_pic.a
 ./usr/X11R6/lib/libxcb.a
-./usr/X11R6/lib/libxcb.so.2.0
+./usr/X11R6/lib/libxcb.so.2.1
 ./usr/X11R6/lib/libxcb_pic.a
 ./usr/X11R6/lib/libxkbfile.so.4.0
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
@@ -224,6 +228,7 @@
 ./usr/X11R6/lib/pkgconfig/xcb-composite.pc
 ./usr/X11R6/lib/pkgconfig/xcb-damage.pc
 ./usr/X11R6/lib/pkgconfig/xcb-dpms.pc
+./usr/X11R6/lib/pkgconfig/xcb-dri2.pc
 ./usr/X11R6/lib/pkgconfig/xcb-event.pc
 ./usr/X11R6/lib/pkgconfig/xcb-glx.pc
 ./usr/X11R6/lib/pkgconfig/xcb-icccm.pc
@@ -264,6 +269,7 @@
 ./usr/X11R6/share/xcb/composite.xml
 ./usr/X11R6/share/xcb/damage.xml
 ./usr/X11R6/share/xcb/dpms.xml
+./usr/X11R6/share/xcb/dri2.xml
 ./usr/X11R6/share/xcb/glx.xml
 ./usr/X11R6/share/xcb/randr.xml
 ./usr/X11R6/share/xcb/record.xml
