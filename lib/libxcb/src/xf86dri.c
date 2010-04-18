@@ -592,8 +592,8 @@ xcb_xf86dri_get_client_driver_name_reply (xcb_connection_t                      
  ** xcb_xf86dri_create_context_cookie_t xcb_xf86dri_create_context
  ** 
  ** @param xcb_connection_t *c
- ** @param uint32_t          visual
  ** @param uint32_t          screen
+ ** @param uint32_t          visual
  ** @param uint32_t          context
  ** @returns xcb_xf86dri_create_context_cookie_t
  **
@@ -601,8 +601,8 @@ xcb_xf86dri_get_client_driver_name_reply (xcb_connection_t                      
  
 xcb_xf86dri_create_context_cookie_t
 xcb_xf86dri_create_context (xcb_connection_t *c  /**< */,
-                            uint32_t          visual  /**< */,
                             uint32_t          screen  /**< */,
+                            uint32_t          visual  /**< */,
                             uint32_t          context  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
@@ -616,8 +616,8 @@ xcb_xf86dri_create_context (xcb_connection_t *c  /**< */,
     xcb_xf86dri_create_context_cookie_t xcb_ret;
     xcb_xf86dri_create_context_request_t xcb_out;
     
-    xcb_out.visual = visual;
     xcb_out.screen = screen;
+    xcb_out.visual = visual;
     xcb_out.context = context;
     
     xcb_parts[2].iov_base = (char *) &xcb_out;
@@ -634,8 +634,8 @@ xcb_xf86dri_create_context (xcb_connection_t *c  /**< */,
  ** xcb_xf86dri_create_context_cookie_t xcb_xf86dri_create_context_unchecked
  ** 
  ** @param xcb_connection_t *c
- ** @param uint32_t          visual
  ** @param uint32_t          screen
+ ** @param uint32_t          visual
  ** @param uint32_t          context
  ** @returns xcb_xf86dri_create_context_cookie_t
  **
@@ -643,8 +643,8 @@ xcb_xf86dri_create_context (xcb_connection_t *c  /**< */,
  
 xcb_xf86dri_create_context_cookie_t
 xcb_xf86dri_create_context_unchecked (xcb_connection_t *c  /**< */,
-                                      uint32_t          visual  /**< */,
                                       uint32_t          screen  /**< */,
+                                      uint32_t          visual  /**< */,
                                       uint32_t          context  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
@@ -658,8 +658,8 @@ xcb_xf86dri_create_context_unchecked (xcb_connection_t *c  /**< */,
     xcb_xf86dri_create_context_cookie_t xcb_ret;
     xcb_xf86dri_create_context_request_t xcb_out;
     
-    xcb_out.visual = visual;
     xcb_out.screen = screen;
+    xcb_out.visual = visual;
     xcb_out.context = context;
     
     xcb_parts[2].iov_base = (char *) &xcb_out;

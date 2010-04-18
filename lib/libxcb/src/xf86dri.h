@@ -133,8 +133,6 @@ typedef struct xcb_xf86dri_open_connection_reply_t {
     uint8_t  pad0; /**<  */
     uint16_t sequence; /**<  */
     uint32_t length; /**<  */
-    uint32_t drm_client_key_low; /**<  */
-    uint32_t drm_client_key_high; /**<  */
     uint32_t sarea_handle_low; /**<  */
     uint32_t sarea_handle_high; /**<  */
     uint32_t bus_id_len; /**<  */
@@ -206,8 +204,8 @@ typedef struct xcb_xf86dri_create_context_request_t {
     uint8_t  major_opcode; /**<  */
     uint8_t  minor_opcode; /**<  */
     uint16_t length; /**<  */
-    uint32_t visual; /**<  */
     uint32_t screen; /**<  */
+    uint32_t visual; /**<  */
     uint32_t context; /**<  */
 } xcb_xf86dri_create_context_request_t;
 
@@ -889,8 +887,8 @@ xcb_xf86dri_get_client_driver_name_reply (xcb_connection_t                      
  ** xcb_xf86dri_create_context_cookie_t xcb_xf86dri_create_context
  ** 
  ** @param xcb_connection_t *c
- ** @param uint32_t          visual
  ** @param uint32_t          screen
+ ** @param uint32_t          visual
  ** @param uint32_t          context
  ** @returns xcb_xf86dri_create_context_cookie_t
  **
@@ -898,8 +896,8 @@ xcb_xf86dri_get_client_driver_name_reply (xcb_connection_t                      
  
 xcb_xf86dri_create_context_cookie_t
 xcb_xf86dri_create_context (xcb_connection_t *c  /**< */,
-                            uint32_t          visual  /**< */,
                             uint32_t          screen  /**< */,
+                            uint32_t          visual  /**< */,
                             uint32_t          context  /**< */);
 
 /**
@@ -919,8 +917,8 @@ xcb_xf86dri_create_context (xcb_connection_t *c  /**< */,
  ** xcb_xf86dri_create_context_cookie_t xcb_xf86dri_create_context_unchecked
  ** 
  ** @param xcb_connection_t *c
- ** @param uint32_t          visual
  ** @param uint32_t          screen
+ ** @param uint32_t          visual
  ** @param uint32_t          context
  ** @returns xcb_xf86dri_create_context_cookie_t
  **
@@ -928,8 +926,8 @@ xcb_xf86dri_create_context (xcb_connection_t *c  /**< */,
  
 xcb_xf86dri_create_context_cookie_t
 xcb_xf86dri_create_context_unchecked (xcb_connection_t *c  /**< */,
-                                      uint32_t          visual  /**< */,
                                       uint32_t          screen  /**< */,
+                                      uint32_t          visual  /**< */,
                                       uint32_t          context  /**< */);
 
 /**

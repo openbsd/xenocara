@@ -1786,7 +1786,7 @@ xcb_xfixes_fetch_region_rectangles (const xcb_xfixes_fetch_region_reply_t *R  /*
 int
 xcb_xfixes_fetch_region_rectangles_length (const xcb_xfixes_fetch_region_reply_t *R  /**< */)
 {
-    return R->length;
+    return (R->length / 2);
 }
 
 
@@ -1804,7 +1804,7 @@ xcb_xfixes_fetch_region_rectangles_iterator (const xcb_xfixes_fetch_region_reply
 {
     xcb_rectangle_iterator_t i;
     i.data = (xcb_rectangle_t *) (R + 1);
-    i.rem = R->length;
+    i.rem = (R->length / 2);
     i.index = (char *) i.data - (char *) R;
     return i;
 }

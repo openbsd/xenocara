@@ -303,6 +303,7 @@ typedef struct xcb_shape_get_rectangles_reply_t {
     uint16_t sequence; /**<  */
     uint32_t length; /**<  */
     uint32_t rectangles_len; /**<  */
+    uint8_t  pad0[20]; /**<  */
 } xcb_shape_get_rectangles_reply_t;
 
 /**
