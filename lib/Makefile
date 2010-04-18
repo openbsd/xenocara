@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.16 2010/04/10 21:26:00 matthieu Exp $
+# $OpenBSD: Makefile,v 1.17 2010/04/18 22:28:20 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -9,6 +9,7 @@ XCB_LIBS= \
 	libxcb/libxcb-composite \
 	libxcb/libxcb-damage \
 	libxcb/libxcb-dpms \
+	libxcb/libxcb-dri2 \
 	libxcb/libxcb-glx \
 	libxcb/libxcb-randr \
 	libxcb/libxcb-record \
