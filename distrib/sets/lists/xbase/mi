@@ -592,8 +592,6 @@
 ./usr/X11R6/lib/libXaw.a
 ./usr/X11R6/lib/libXaw7.a
 ./usr/X11R6/lib/libXaw7.la
-./usr/X11R6/lib/libXaw8.a
-./usr/X11R6/lib/libXaw8.la
 ./usr/X11R6/lib/libXcomposite.a
 ./usr/X11R6/lib/libXcomposite.la
 ./usr/X11R6/lib/libXcursor.a

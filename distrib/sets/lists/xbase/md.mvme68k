@@ -76,9 +76,8 @@
 ./usr/X11R6/lib/libX11.so.12.0
 ./usr/X11R6/lib/libXRes.so.4.0
 ./usr/X11R6/lib/libXau.so.9.0
-./usr/X11R6/lib/libXaw.so.13.0
-./usr/X11R6/lib/libXaw7.so.12.0
-./usr/X11R6/lib/libXaw8.so.13.0
+./usr/X11R6/lib/libXaw.so.14.0
+./usr/X11R6/lib/libXaw7.so.14.0
 ./usr/X11R6/lib/libXcomposite.so.3.0
 ./usr/X11R6/lib/libXcursor.so.4.0
 ./usr/X11R6/lib/libXdamage.so.3.1

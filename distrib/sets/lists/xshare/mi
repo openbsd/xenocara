@@ -837,7 +837,6 @@
 ./usr/X11R6/lib/pkgconfig/x11.pc
 ./usr/X11R6/lib/pkgconfig/xau.pc
 ./usr/X11R6/lib/pkgconfig/xaw7.pc
-./usr/X11R6/lib/pkgconfig/xaw8.pc
 ./usr/X11R6/lib/pkgconfig/xbitmaps.pc
 ./usr/X11R6/lib/pkgconfig/xcmiscproto.pc
 ./usr/X11R6/lib/pkgconfig/xcomposite.pc
@@ -2824,7 +2823,6 @@
 ./usr/X11R6/share/X11/rgb.txt
 ./usr/X11R6/share/aclocal
 ./usr/X11R6/share/aclocal/fontutil.m4
-./usr/X11R6/share/aclocal/xaw.m4
 ./usr/X11R6/share/aclocal/xorg-macros.m4
 ./usr/X11R6/share/aclocal/xtrans.m4
 ./usr/X11R6/share/doc
@@ -3023,6 +3021,11 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.pdf
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.txt
+./usr/X11R6/share/doc/libXaw
+./usr/X11R6/share/doc/libXaw/widgets.html
+./usr/X11R6/share/doc/libXaw/widgets.index.ps
+./usr/X11R6/share/doc/libXaw/widgets.ps
+./usr/X11R6/share/doc/libXaw/widgets.txt
 ./usr/X11R6/share/doc/libXrender
 ./usr/X11R6/share/doc/libXrender/libXrender.txt
 ./usr/X11R6/share/doc/libXvMC
