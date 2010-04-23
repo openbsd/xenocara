@@ -59,19 +59,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xmore$(EXEEXT)
-@XAW_USE_XPRINT_TRUE@am__append_1 = -DUSE_XPRINT
-@XAW_USE_XPRINT_TRUE@am__append_2 = \
-@XAW_USE_XPRINT_TRUE@        print.c \
-@XAW_USE_XPRINT_TRUE@        printdialog.c \
-@XAW_USE_XPRINT_TRUE@        printdialog.h \
-@XAW_USE_XPRINT_TRUE@        printdialogprivates.h \
-@XAW_USE_XPRINT_TRUE@        print.h
-
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing \
-	mkinstalldirs
+DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
+	ChangeLog INSTALL NEWS config.guess config.sub depcomp \
+	install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -79,18 +71,14 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
-	"$(DESTDIR)$(appmandir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
+	"$(DESTDIR)$(appdefaultdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am__xmore_SOURCES_DIST = xmore.c xmore.h print.c printdialog.c \
-	printdialog.h printdialogprivates.h print.h
-@XAW_USE_XPRINT_TRUE@am__objects_1 = xmore-print.$(OBJEXT) \
-@XAW_USE_XPRINT_TRUE@	xmore-printdialog.$(OBJEXT)
-am_xmore_OBJECTS = xmore-xmore.$(OBJEXT) $(am__objects_1)
+am_xmore_OBJECTS = xmore.$(OBJEXT)
 xmore_OBJECTS = $(am_xmore_OBJECTS)
 am__DEPENDENCIES_1 =
 xmore_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -102,16 +90,16 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(xmore_SOURCES)
-DIST_SOURCES = $(am__xmore_SOURCES_DIST)
+DIST_SOURCES = $(xmore_SOURCES)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-appdefaultDATA_INSTALL = $(INSTALL_DATA)
 appmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appdefault_DATA) $(appman_DATA)
+dist_appdefaultDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(appman_DATA) $(dist_appdefault_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -131,6 +119,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APPDEFS_CFLAGS = @APPDEFS_CFLAGS@
 APPDEFS_LIBS = @APPDEFS_LIBS@
 APP_MAN_DIR = @APP_MAN_DIR@
@@ -142,7 +131,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -151,9 +143,12 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -182,18 +177,10 @@ PKG_CONFIG = @PKG_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
-TMP_XAW_LIBS = @TMP_XAW_LIBS@
 VERSION = @VERSION@
-XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
-XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
 XMORE_CFLAGS = @XMORE_CFLAGS@
 XMORE_LIBS = @XMORE_LIBS@
-XPRINT_UTIL_CFLAGS = @XPRINT_UTIL_CFLAGS@
-XPRINT_UTIL_LIBS = @XPRINT_UTIL_LIBS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -201,8 +188,6 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
-
-# App default files  (*.ad)
 appdefaultdir = @appdefaultdir@
 bindir = @bindir@
 build = @build@
@@ -211,42 +196,54 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-xmore_CFLAGS = $(XMORE_CFLAGS) -DXMORE $(am__append_1)
+AM_CFLAGS = $(XMORE_CFLAGS) -DXMORE $(CWARNFLAGS)
 xmore_LDADD = $(XMORE_LIBS)
-xmore_SOURCES = xmore.c xmore.h $(am__append_2)
+xmore_SOURCES = \
+        xmore.c \
+        xmore.h
+
 appman_PRE = \
         xmore.man
 
-APPDEFAULTFILES = \
-        XMore
 
-SUFFIXES = .ad .$(APP_MAN_SUFFIX) .man
-appdefault_DATA = $(APPDEFAULTFILES)
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) xmore.sgml $(appman_PRE)
-CLEANFILES = $(APPDEFAULTFILES) $(appman_DATA)
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+dist_appdefault_DATA = \
+        app-defaults/XMore
+
+EXTRA_DIST = xmore.sgml $(appman_PRE)
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+CLEANFILES = $(appman_DATA)
 SED = sed
 
 # Strings to replace in man pages
@@ -265,26 +262,27 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .ad .$(APP_MAN_SUFFIX) .man .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu '; \
-	      cd $(srcdir) && $(AUTOMAKE) --gnu  \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
+	      cd $(srcdir) && $(AUTOMAKE) --foreign  \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  Makefile
+	  $(AUTOMAKE) --foreign  Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -353,9 +351,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmore-print.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmore-printdialog.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmore-xmore.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmore.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -370,66 +366,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xmore-xmore.o: xmore.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -MT xmore-xmore.o -MD -MP -MF "$(DEPDIR)/xmore-xmore.Tpo" -c -o xmore-xmore.o `test -f 'xmore.c' || echo '$(srcdir)/'`xmore.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmore-xmore.Tpo" "$(DEPDIR)/xmore-xmore.Po"; else rm -f "$(DEPDIR)/xmore-xmore.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmore.c' object='xmore-xmore.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -c -o xmore-xmore.o `test -f 'xmore.c' || echo '$(srcdir)/'`xmore.c
-
-xmore-xmore.obj: xmore.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -MT xmore-xmore.obj -MD -MP -MF "$(DEPDIR)/xmore-xmore.Tpo" -c -o xmore-xmore.obj `if test -f 'xmore.c'; then $(CYGPATH_W) 'xmore.c'; else $(CYGPATH_W) '$(srcdir)/xmore.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmore-xmore.Tpo" "$(DEPDIR)/xmore-xmore.Po"; else rm -f "$(DEPDIR)/xmore-xmore.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xmore.c' object='xmore-xmore.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -c -o xmore-xmore.obj `if test -f 'xmore.c'; then $(CYGPATH_W) 'xmore.c'; else $(CYGPATH_W) '$(srcdir)/xmore.c'; fi`
-
-xmore-print.o: print.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -MT xmore-print.o -MD -MP -MF "$(DEPDIR)/xmore-print.Tpo" -c -o xmore-print.o `test -f 'print.c' || echo '$(srcdir)/'`print.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmore-print.Tpo" "$(DEPDIR)/xmore-print.Po"; else rm -f "$(DEPDIR)/xmore-print.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='print.c' object='xmore-print.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -c -o xmore-print.o `test -f 'print.c' || echo '$(srcdir)/'`print.c
-
-xmore-print.obj: print.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -MT xmore-print.obj -MD -MP -MF "$(DEPDIR)/xmore-print.Tpo" -c -o xmore-print.obj `if test -f 'print.c'; then $(CYGPATH_W) 'print.c'; else $(CYGPATH_W) '$(srcdir)/print.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmore-print.Tpo" "$(DEPDIR)/xmore-print.Po"; else rm -f "$(DEPDIR)/xmore-print.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='print.c' object='xmore-print.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -c -o xmore-print.obj `if test -f 'print.c'; then $(CYGPATH_W) 'print.c'; else $(CYGPATH_W) '$(srcdir)/print.c'; fi`
-
-xmore-printdialog.o: printdialog.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -MT xmore-printdialog.o -MD -MP -MF "$(DEPDIR)/xmore-printdialog.Tpo" -c -o xmore-printdialog.o `test -f 'printdialog.c' || echo '$(srcdir)/'`printdialog.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmore-printdialog.Tpo" "$(DEPDIR)/xmore-printdialog.Po"; else rm -f "$(DEPDIR)/xmore-printdialog.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printdialog.c' object='xmore-printdialog.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -c -o xmore-printdialog.o `test -f 'printdialog.c' || echo '$(srcdir)/'`printdialog.c
-
-xmore-printdialog.obj: printdialog.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -MT xmore-printdialog.obj -MD -MP -MF "$(DEPDIR)/xmore-printdialog.Tpo" -c -o xmore-printdialog.obj `if test -f 'printdialog.c'; then $(CYGPATH_W) 'printdialog.c'; else $(CYGPATH_W) '$(srcdir)/printdialog.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmore-printdialog.Tpo" "$(DEPDIR)/xmore-printdialog.Po"; else rm -f "$(DEPDIR)/xmore-printdialog.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printdialog.c' object='xmore-printdialog.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xmore_CFLAGS) $(CFLAGS) -c -o xmore-printdialog.obj `if test -f 'printdialog.c'; then $(CYGPATH_W) 'printdialog.c'; else $(CYGPATH_W) '$(srcdir)/printdialog.c'; fi`
 uninstall-info-am:
-install-appdefaultDATA: $(appdefault_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  $(appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
-
-uninstall-appdefaultDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
@@ -446,6 +383,23 @@ uninstall-appmanDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+install-dist_appdefaultDATA: $(dist_appdefault_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  $(dist_appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
+	done
+
+uninstall-dist_appdefaultDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -499,6 +453,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkdir_p) $(distdir)/app-defaults
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -525,6 +480,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -626,7 +584,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(appmandir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(appdefaultdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -654,6 +612,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -675,7 +634,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appdefaultDATA install-appmanDATA
+install-data-am: install-appmanDATA install-dist_appdefaultDATA
 
 install-exec-am: install-binPROGRAMS
 
@@ -704,30 +663,38 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am
+uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-dist_appdefaultDATA uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-appdefaultDATA install-appmanDATA install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am
+	install-appmanDATA install-binPROGRAMS install-data \
+	install-data-am install-dist_appdefaultDATA install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-appmanDATA \
+	uninstall-binPROGRAMS uninstall-dist_appdefaultDATA \
+	uninstall-info-am
 
-
-.ad:
-	cp $< $@
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

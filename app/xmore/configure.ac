@@ -23,31 +23,34 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
 AC_INIT(xmore,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xmore)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 
+
 # Checks for pkg-config packages
-XAW_CHECK_XPRINT_SUPPORT(XMORE)
-if test "x$xaw_use_xprint" = "xyes" ; then
-   PKG_CHECK_MODULES(XPRINT_UTIL, xprintutil xp)
-
-   XMORE_CFLAGS="$XMORE_CFLAGS $XPRINT_UTIL_CFLAGS"
-   XMORE_LIBS="$XMORE_LIBS $XPRINT_UTIL_LIBS"
-fi
-
+PKG_CHECK_MODULES(XMORE, xaw7)
 AC_SUBST(XMORE_CFLAGS)
 AC_SUBST(XMORE_LIBS)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
-appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
+xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
+AC_ARG_WITH(appdefaultdir,
+	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	  [specify directory for app-defaults files (default is autodetected)]),
+	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])

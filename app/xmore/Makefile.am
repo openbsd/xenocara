@@ -21,54 +21,33 @@
 
 bin_PROGRAMS = xmore
 
-xmore_CFLAGS = $(XMORE_CFLAGS) -DXMORE
+AM_CFLAGS = $(XMORE_CFLAGS) -DXMORE $(CWARNFLAGS)
 xmore_LDADD = $(XMORE_LIBS)
 
 xmore_SOURCES =	\
         xmore.c \
         xmore.h
 
-if XAW_USE_XPRINT
-xmore_CFLAGS += -DUSE_XPRINT
-
-xmore_SOURCES += \
-        print.c \
-        printdialog.c \
-        printdialog.h \
-        printdialogprivates.h \
-        print.h
-endif
-
 appman_PRE = \
         xmore.man
 
-# App default files  (*.ad)
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
 appdefaultdir = @appdefaultdir@
 
+dist_appdefault_DATA = \
+        app-defaults/XMore
 
-APPDEFAULTFILES = \
-        XMore
-
-SUFFIXES = .ad
-
-.ad:
-	cp $< $@
-
-appdefault_DATA = $(APPDEFAULTFILES)
-
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad)
-
-CLEANFILES = $(APPDEFAULTFILES)
-
-EXTRA_DIST += xmore.sgml
+EXTRA_DIST = xmore.sgml
 
 appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+CLEANFILES = $(appman_DATA)
 
 SED = sed
 
@@ -89,7 +68,18 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL
