@@ -3928,21 +3928,13 @@ ProjectUnsharedLibReferences(XKBUI,xkbui,$(XKBUILIBSRC),XBuildLibDir)
 #endif
 
 #ifndef ExtraXawReqs
-# if BuildXaw
-#  define ExtraXawReqs $(XPLIB)
-# else
-#  define ExtraXawReqs /**/
-# endif
+# define ExtraXawReqs /**/
 #endif
 
 EXTRAXAWREQS = ExtraXawReqs
 
 #ifndef ExtraXawClientDepLibs
-# if BuildXaw
-#  define ExtraXawClientDepLibs $(DEPXPLIB)
-# else
-#  define ExtraXawClientDepLibs /**/
-# endif
+# define ExtraXawClientDepLibs /**/
 #endif
 
 EXTRAXAWCLIENTDEPLIBS = ExtraXawClientDepLibs
@@ -3952,11 +3944,7 @@ EXTRAXAWCLIENTDEPLIBS = ExtraXawClientDepLibs
 #endif
 
 #ifndef ExtraXawClientLibs
-# if BuildXaw
-#  define ExtraXawClientLibs $(XPLIB)
-# else
-#  define ExtraXawClientLibs /**/
-# endif
+# define ExtraXawClientLibs /**/
 #endif
 
 EXTRAXAWCLIENTLIBS = ExtraXawClientLibs
