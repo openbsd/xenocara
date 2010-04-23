@@ -180,8 +180,7 @@ static XtResource resources[] =
 #undef Offset
 
 
-static VendorShellWidget SearchVendorShell( w )
-    Widget w;
+static VendorShellWidget SearchVendorShell(Widget w)
 {
     while(w && !XtIsShell(w)) w = XtParent(w);
     if (w && XtIsVendorShell(w)) return((VendorShellWidget)w);

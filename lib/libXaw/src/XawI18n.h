@@ -115,8 +115,8 @@ wchar_t _Xaw_atowc
 
 #if !defined(iswalnum) && !defined(HAVE_ISWALNUM)
 #define iswalnum(c) _Xaw_iswalnum(c)
+#endif
 int _Xaw_iswalnum
 (
  wchar_t		c
  );
-#endif

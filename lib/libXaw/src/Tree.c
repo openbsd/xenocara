@@ -193,7 +193,7 @@ TreeClassRec treeClassRec = {
    },
   {
 					/* Tree class fields */
-    0,					/* ignore              */	
+    NULL,				/* ignore              */	
   }
 };
 
@@ -314,7 +314,7 @@ delete_node(Widget parent, Widget node)
     for (i = pos; i < pc->tree.n_children; i++) 
       pc->tree.children[i] = pc->tree.children[i+1];
 
-    pc->tree.children[pc->tree.n_children]=0;
+    pc->tree.children[pc->tree.n_children] = NULL;
 }
 
 static void

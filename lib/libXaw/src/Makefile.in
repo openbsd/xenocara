@@ -38,7 +38,6 @@ build_triplet = @build@
 host_triplet = @host@
 @BUILD_XAW6_TRUE@am__append_1 = libXaw6.la
 @BUILD_XAW7_TRUE@am__append_2 = libXaw7.la
-@BUILD_XAW8_TRUE@am__append_3 = libXaw8.la
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -125,40 +124,6 @@ am__objects_2 = libXaw7_la-Actions.lo libXaw7_la-AllWidgets.lo \
 @BUILD_XAW7_TRUE@	libXaw7_la-Tip.lo
 libXaw7_la_OBJECTS = $(am_libXaw7_la_OBJECTS)
 @BUILD_XAW7_TRUE@am_libXaw7_la_rpath = -rpath $(libdir)
-@BUILD_XAW8_TRUE@libXaw8_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__libXaw8_la_SOURCES_DIST = Actions.c AllWidgets.c AsciiSink.c \
-	AsciiSrc.c AsciiText.c Box.c Command.c Converters.c Dialog.c \
-	DisplayList.c Form.c Grip.c Label.c List.c MenuButton.c \
-	MultiSrc.c MultiSink.c OS.c Paned.c Panner.c Pixmap.c \
-	Porthole.c Private.h Repeater.c Scrollbar.c Simple.c \
-	SimpleMenu.c Sme.c SmeBSB.c SmeLine.c StripChart.c Text.c \
-	TextSink.c TextSrc.c TextAction.c TextPop.c TextTr.c Toggle.c \
-	Tree.c Vendor.c Viewport.c XawIm.c XawInit.c XawI18n.c \
-	XawI18n.h PrintShell.c Tip.c
-am__objects_3 = libXaw8_la-Actions.lo libXaw8_la-AllWidgets.lo \
-	libXaw8_la-AsciiSink.lo libXaw8_la-AsciiSrc.lo \
-	libXaw8_la-AsciiText.lo libXaw8_la-Box.lo \
-	libXaw8_la-Command.lo libXaw8_la-Converters.lo \
-	libXaw8_la-Dialog.lo libXaw8_la-DisplayList.lo \
-	libXaw8_la-Form.lo libXaw8_la-Grip.lo libXaw8_la-Label.lo \
-	libXaw8_la-List.lo libXaw8_la-MenuButton.lo \
-	libXaw8_la-MultiSrc.lo libXaw8_la-MultiSink.lo \
-	libXaw8_la-OS.lo libXaw8_la-Paned.lo libXaw8_la-Panner.lo \
-	libXaw8_la-Pixmap.lo libXaw8_la-Porthole.lo \
-	libXaw8_la-Repeater.lo libXaw8_la-Scrollbar.lo \
-	libXaw8_la-Simple.lo libXaw8_la-SimpleMenu.lo \
-	libXaw8_la-Sme.lo libXaw8_la-SmeBSB.lo libXaw8_la-SmeLine.lo \
-	libXaw8_la-StripChart.lo libXaw8_la-Text.lo \
-	libXaw8_la-TextSink.lo libXaw8_la-TextSrc.lo \
-	libXaw8_la-TextAction.lo libXaw8_la-TextPop.lo \
-	libXaw8_la-TextTr.lo libXaw8_la-Toggle.lo libXaw8_la-Tree.lo \
-	libXaw8_la-Vendor.lo libXaw8_la-Viewport.lo \
-	libXaw8_la-XawIm.lo libXaw8_la-XawInit.lo \
-	libXaw8_la-XawI18n.lo
-@BUILD_XAW8_TRUE@am_libXaw8_la_OBJECTS = $(am__objects_3) \
-@BUILD_XAW8_TRUE@	libXaw8_la-PrintShell.lo libXaw8_la-Tip.lo
-libXaw8_la_OBJECTS = $(am_libXaw8_la_OBJECTS)
-@BUILD_XAW8_TRUE@am_libXaw8_la_rpath = -rpath $(libdir)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -170,10 +135,9 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libXaw6_la_SOURCES) $(libXaw7_la_SOURCES) \
-	$(libXaw8_la_SOURCES)
+SOURCES = $(libXaw6_la_SOURCES) $(libXaw7_la_SOURCES)
 DIST_SOURCES = $(am__libXaw6_la_SOURCES_DIST) \
-	$(am__libXaw7_la_SOURCES_DIST) $(am__libXaw8_la_SOURCES_DIST)
+	$(am__libXaw7_la_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -190,17 +154,19 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_DOCS_FALSE = @BUILD_DOCS_FALSE@
+BUILD_DOCS_TRUE = @BUILD_DOCS_TRUE@
 BUILD_XAW6_FALSE = @BUILD_XAW6_FALSE@
 BUILD_XAW6_TRUE = @BUILD_XAW6_TRUE@
 BUILD_XAW7_FALSE = @BUILD_XAW7_FALSE@
 BUILD_XAW7_TRUE = @BUILD_XAW7_TRUE@
-BUILD_XAW8_FALSE = @BUILD_XAW8_FALSE@
-BUILD_XAW8_TRUE = @BUILD_XAW8_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -210,6 +176,7 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -220,20 +187,19 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+GROFF = @GROFF@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LIBEXT = @LIBEXT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINK_XAW6_FALSE = @LINK_XAW6_FALSE@
-LINK_XAW6_TRUE = @LINK_XAW6_TRUE@
-LINK_XAW7_FALSE = @LINK_XAW7_FALSE@
-LINK_XAW7_TRUE = @LINK_XAW7_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -242,6 +208,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -251,9 +218,12 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PLATFORM_DARWIN_FALSE = @PLATFORM_DARWIN_FALSE@
+PLATFORM_DARWIN_TRUE = @PLATFORM_DARWIN_TRUE@
 PLATFORM_WIN32_FALSE = @PLATFORM_WIN32_FALSE@
 PLATFORM_WIN32_TRUE = @PLATFORM_WIN32_TRUE@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHARED_LIBS_FALSE = @SHARED_LIBS_FALSE@
 SHARED_LIBS_TRUE = @SHARED_LIBS_TRUE@
@@ -264,17 +234,9 @@ XAW6_CFLAGS = @XAW6_CFLAGS@
 XAW6_LIBS = @XAW6_LIBS@
 XAW7_CFLAGS = @XAW7_CFLAGS@
 XAW7_LIBS = @XAW7_LIBS@
-XAW8_CFLAGS = @XAW8_CFLAGS@
-XAW8_LIBS = @XAW8_LIBS@
-XPRINT_CFLAGS = @XPRINT_CFLAGS@
-XPRINT_LIBS = @XPRINT_LIBS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -291,28 +253,36 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-lib_LTLIBRARIES = $(am__append_1) $(am__append_2) $(am__append_3)
+lib_LTLIBRARIES = $(am__append_1) $(am__append_2)
 
 #
 # This doesn't appear to be used on any
@@ -369,6 +339,7 @@ COMMON_SOURCES = \
 	XawI18n.h
 
 COMMON_CFLAGS = \
+	$(CWARNFLAGS) \
 	-I${top_srcdir}/include \
 	-I${top_srcdir}/include/X11/Xaw \
 	-DPROJECT_ROOT=\"$(prefix)\"
@@ -394,17 +365,6 @@ COMMON_CFLAGS = \
 
 @BUILD_XAW7_TRUE@libXaw7_la_LDFLAGS = -version-info 7:0:0 -no-undefined
 @BUILD_XAW7_TRUE@libXaw7_la_LIBADD = $(XAW7_LIBS)
-@BUILD_XAW8_TRUE@libXaw8_la_CFLAGS = \
-@BUILD_XAW8_TRUE@	$(COMMON_CFLAGS)		\
-@BUILD_XAW8_TRUE@	$(XAW8_CFLAGS)
-
-@BUILD_XAW8_TRUE@libXaw8_la_SOURCES = \
-@BUILD_XAW8_TRUE@	$(COMMON_SOURCES) \
-@BUILD_XAW8_TRUE@	PrintShell.c \
-@BUILD_XAW8_TRUE@	Tip.c
-
-@BUILD_XAW8_TRUE@libXaw8_la_LDFLAGS = -version-info 8:0:0 -no-undefined
-@BUILD_XAW8_TRUE@libXaw8_la_LIBADD = $(XAW8_LIBS)
 EXTRA_DIST = sharedlib.c
 all: all-am
 
@@ -470,8 +430,6 @@ libXaw6.la: $(libXaw6_la_OBJECTS) $(libXaw6_la_DEPENDENCIES)
 	$(LINK) $(am_libXaw6_la_rpath) $(libXaw6_la_LDFLAGS) $(libXaw6_la_OBJECTS) $(libXaw6_la_LIBADD) $(LIBS)
 libXaw7.la: $(libXaw7_la_OBJECTS) $(libXaw7_la_DEPENDENCIES) 
 	$(LINK) $(am_libXaw7_la_rpath) $(libXaw7_la_LDFLAGS) $(libXaw7_la_OBJECTS) $(libXaw7_la_LIBADD) $(LIBS)
-libXaw8.la: $(libXaw8_la_OBJECTS) $(libXaw8_la_DEPENDENCIES) 
-	$(LINK) $(am_libXaw8_la_rpath) $(libXaw8_la_LDFLAGS) $(libXaw8_la_OBJECTS) $(libXaw8_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -566,51 +524,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw7_la-XawI18n.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw7_la-XawIm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw7_la-XawInit.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Actions.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-AllWidgets.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-AsciiSink.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-AsciiSrc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-AsciiText.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Box.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Command.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Converters.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Dialog.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-DisplayList.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Form.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Grip.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Label.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-List.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-MenuButton.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-MultiSink.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-MultiSrc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-OS.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Paned.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Panner.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Pixmap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Porthole.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-PrintShell.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Repeater.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Scrollbar.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Simple.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-SimpleMenu.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Sme.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-SmeBSB.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-SmeLine.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-StripChart.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Text.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-TextAction.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-TextPop.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-TextSink.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-TextSrc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-TextTr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Tip.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Toggle.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Tree.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Vendor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-Viewport.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-XawI18n.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-XawIm.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXaw8_la-XawInit.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -1242,321 +1155,6 @@ libXaw7_la-Tip.lo: Tip.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw7_la_CFLAGS) $(CFLAGS) -c -o libXaw7_la-Tip.lo `test -f 'Tip.c' || echo '$(srcdir)/'`Tip.c
 
-libXaw8_la-Actions.lo: Actions.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Actions.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Actions.Tpo" -c -o libXaw8_la-Actions.lo `test -f 'Actions.c' || echo '$(srcdir)/'`Actions.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Actions.Tpo" "$(DEPDIR)/libXaw8_la-Actions.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Actions.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Actions.c' object='libXaw8_la-Actions.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Actions.lo `test -f 'Actions.c' || echo '$(srcdir)/'`Actions.c
-
-libXaw8_la-AllWidgets.lo: AllWidgets.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-AllWidgets.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-AllWidgets.Tpo" -c -o libXaw8_la-AllWidgets.lo `test -f 'AllWidgets.c' || echo '$(srcdir)/'`AllWidgets.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-AllWidgets.Tpo" "$(DEPDIR)/libXaw8_la-AllWidgets.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-AllWidgets.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='AllWidgets.c' object='libXaw8_la-AllWidgets.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-AllWidgets.lo `test -f 'AllWidgets.c' || echo '$(srcdir)/'`AllWidgets.c
-
-libXaw8_la-AsciiSink.lo: AsciiSink.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-AsciiSink.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-AsciiSink.Tpo" -c -o libXaw8_la-AsciiSink.lo `test -f 'AsciiSink.c' || echo '$(srcdir)/'`AsciiSink.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-AsciiSink.Tpo" "$(DEPDIR)/libXaw8_la-AsciiSink.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-AsciiSink.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='AsciiSink.c' object='libXaw8_la-AsciiSink.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-AsciiSink.lo `test -f 'AsciiSink.c' || echo '$(srcdir)/'`AsciiSink.c
-
-libXaw8_la-AsciiSrc.lo: AsciiSrc.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-AsciiSrc.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-AsciiSrc.Tpo" -c -o libXaw8_la-AsciiSrc.lo `test -f 'AsciiSrc.c' || echo '$(srcdir)/'`AsciiSrc.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-AsciiSrc.Tpo" "$(DEPDIR)/libXaw8_la-AsciiSrc.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-AsciiSrc.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='AsciiSrc.c' object='libXaw8_la-AsciiSrc.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-AsciiSrc.lo `test -f 'AsciiSrc.c' || echo '$(srcdir)/'`AsciiSrc.c
-
-libXaw8_la-AsciiText.lo: AsciiText.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-AsciiText.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-AsciiText.Tpo" -c -o libXaw8_la-AsciiText.lo `test -f 'AsciiText.c' || echo '$(srcdir)/'`AsciiText.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-AsciiText.Tpo" "$(DEPDIR)/libXaw8_la-AsciiText.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-AsciiText.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='AsciiText.c' object='libXaw8_la-AsciiText.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-AsciiText.lo `test -f 'AsciiText.c' || echo '$(srcdir)/'`AsciiText.c
-
-libXaw8_la-Box.lo: Box.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Box.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Box.Tpo" -c -o libXaw8_la-Box.lo `test -f 'Box.c' || echo '$(srcdir)/'`Box.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Box.Tpo" "$(DEPDIR)/libXaw8_la-Box.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Box.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Box.c' object='libXaw8_la-Box.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Box.lo `test -f 'Box.c' || echo '$(srcdir)/'`Box.c
-
-libXaw8_la-Command.lo: Command.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Command.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Command.Tpo" -c -o libXaw8_la-Command.lo `test -f 'Command.c' || echo '$(srcdir)/'`Command.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Command.Tpo" "$(DEPDIR)/libXaw8_la-Command.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Command.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Command.c' object='libXaw8_la-Command.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Command.lo `test -f 'Command.c' || echo '$(srcdir)/'`Command.c
-
-libXaw8_la-Converters.lo: Converters.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Converters.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Converters.Tpo" -c -o libXaw8_la-Converters.lo `test -f 'Converters.c' || echo '$(srcdir)/'`Converters.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Converters.Tpo" "$(DEPDIR)/libXaw8_la-Converters.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Converters.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Converters.c' object='libXaw8_la-Converters.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Converters.lo `test -f 'Converters.c' || echo '$(srcdir)/'`Converters.c
-
-libXaw8_la-Dialog.lo: Dialog.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Dialog.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Dialog.Tpo" -c -o libXaw8_la-Dialog.lo `test -f 'Dialog.c' || echo '$(srcdir)/'`Dialog.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Dialog.Tpo" "$(DEPDIR)/libXaw8_la-Dialog.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Dialog.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Dialog.c' object='libXaw8_la-Dialog.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Dialog.lo `test -f 'Dialog.c' || echo '$(srcdir)/'`Dialog.c
-
-libXaw8_la-DisplayList.lo: DisplayList.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-DisplayList.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-DisplayList.Tpo" -c -o libXaw8_la-DisplayList.lo `test -f 'DisplayList.c' || echo '$(srcdir)/'`DisplayList.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-DisplayList.Tpo" "$(DEPDIR)/libXaw8_la-DisplayList.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-DisplayList.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='DisplayList.c' object='libXaw8_la-DisplayList.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-DisplayList.lo `test -f 'DisplayList.c' || echo '$(srcdir)/'`DisplayList.c
-
-libXaw8_la-Form.lo: Form.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Form.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Form.Tpo" -c -o libXaw8_la-Form.lo `test -f 'Form.c' || echo '$(srcdir)/'`Form.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Form.Tpo" "$(DEPDIR)/libXaw8_la-Form.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Form.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Form.c' object='libXaw8_la-Form.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Form.lo `test -f 'Form.c' || echo '$(srcdir)/'`Form.c
-
-libXaw8_la-Grip.lo: Grip.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Grip.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Grip.Tpo" -c -o libXaw8_la-Grip.lo `test -f 'Grip.c' || echo '$(srcdir)/'`Grip.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Grip.Tpo" "$(DEPDIR)/libXaw8_la-Grip.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Grip.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Grip.c' object='libXaw8_la-Grip.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Grip.lo `test -f 'Grip.c' || echo '$(srcdir)/'`Grip.c
-
-libXaw8_la-Label.lo: Label.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Label.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Label.Tpo" -c -o libXaw8_la-Label.lo `test -f 'Label.c' || echo '$(srcdir)/'`Label.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Label.Tpo" "$(DEPDIR)/libXaw8_la-Label.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Label.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Label.c' object='libXaw8_la-Label.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Label.lo `test -f 'Label.c' || echo '$(srcdir)/'`Label.c
-
-libXaw8_la-List.lo: List.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-List.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-List.Tpo" -c -o libXaw8_la-List.lo `test -f 'List.c' || echo '$(srcdir)/'`List.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-List.Tpo" "$(DEPDIR)/libXaw8_la-List.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-List.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='List.c' object='libXaw8_la-List.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-List.lo `test -f 'List.c' || echo '$(srcdir)/'`List.c
-
-libXaw8_la-MenuButton.lo: MenuButton.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-MenuButton.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-MenuButton.Tpo" -c -o libXaw8_la-MenuButton.lo `test -f 'MenuButton.c' || echo '$(srcdir)/'`MenuButton.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-MenuButton.Tpo" "$(DEPDIR)/libXaw8_la-MenuButton.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-MenuButton.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MenuButton.c' object='libXaw8_la-MenuButton.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-MenuButton.lo `test -f 'MenuButton.c' || echo '$(srcdir)/'`MenuButton.c
-
-libXaw8_la-MultiSrc.lo: MultiSrc.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-MultiSrc.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-MultiSrc.Tpo" -c -o libXaw8_la-MultiSrc.lo `test -f 'MultiSrc.c' || echo '$(srcdir)/'`MultiSrc.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-MultiSrc.Tpo" "$(DEPDIR)/libXaw8_la-MultiSrc.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-MultiSrc.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MultiSrc.c' object='libXaw8_la-MultiSrc.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-MultiSrc.lo `test -f 'MultiSrc.c' || echo '$(srcdir)/'`MultiSrc.c
-
-libXaw8_la-MultiSink.lo: MultiSink.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-MultiSink.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-MultiSink.Tpo" -c -o libXaw8_la-MultiSink.lo `test -f 'MultiSink.c' || echo '$(srcdir)/'`MultiSink.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-MultiSink.Tpo" "$(DEPDIR)/libXaw8_la-MultiSink.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-MultiSink.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='MultiSink.c' object='libXaw8_la-MultiSink.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-MultiSink.lo `test -f 'MultiSink.c' || echo '$(srcdir)/'`MultiSink.c
-
-libXaw8_la-OS.lo: OS.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-OS.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-OS.Tpo" -c -o libXaw8_la-OS.lo `test -f 'OS.c' || echo '$(srcdir)/'`OS.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-OS.Tpo" "$(DEPDIR)/libXaw8_la-OS.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-OS.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='OS.c' object='libXaw8_la-OS.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-OS.lo `test -f 'OS.c' || echo '$(srcdir)/'`OS.c
-
-libXaw8_la-Paned.lo: Paned.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Paned.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Paned.Tpo" -c -o libXaw8_la-Paned.lo `test -f 'Paned.c' || echo '$(srcdir)/'`Paned.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Paned.Tpo" "$(DEPDIR)/libXaw8_la-Paned.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Paned.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Paned.c' object='libXaw8_la-Paned.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Paned.lo `test -f 'Paned.c' || echo '$(srcdir)/'`Paned.c
-
-libXaw8_la-Panner.lo: Panner.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Panner.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Panner.Tpo" -c -o libXaw8_la-Panner.lo `test -f 'Panner.c' || echo '$(srcdir)/'`Panner.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Panner.Tpo" "$(DEPDIR)/libXaw8_la-Panner.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Panner.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Panner.c' object='libXaw8_la-Panner.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Panner.lo `test -f 'Panner.c' || echo '$(srcdir)/'`Panner.c
-
-libXaw8_la-Pixmap.lo: Pixmap.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Pixmap.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Pixmap.Tpo" -c -o libXaw8_la-Pixmap.lo `test -f 'Pixmap.c' || echo '$(srcdir)/'`Pixmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Pixmap.Tpo" "$(DEPDIR)/libXaw8_la-Pixmap.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Pixmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Pixmap.c' object='libXaw8_la-Pixmap.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Pixmap.lo `test -f 'Pixmap.c' || echo '$(srcdir)/'`Pixmap.c
-
-libXaw8_la-Porthole.lo: Porthole.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Porthole.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Porthole.Tpo" -c -o libXaw8_la-Porthole.lo `test -f 'Porthole.c' || echo '$(srcdir)/'`Porthole.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Porthole.Tpo" "$(DEPDIR)/libXaw8_la-Porthole.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Porthole.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Porthole.c' object='libXaw8_la-Porthole.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Porthole.lo `test -f 'Porthole.c' || echo '$(srcdir)/'`Porthole.c
-
-libXaw8_la-Repeater.lo: Repeater.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Repeater.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Repeater.Tpo" -c -o libXaw8_la-Repeater.lo `test -f 'Repeater.c' || echo '$(srcdir)/'`Repeater.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Repeater.Tpo" "$(DEPDIR)/libXaw8_la-Repeater.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Repeater.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Repeater.c' object='libXaw8_la-Repeater.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Repeater.lo `test -f 'Repeater.c' || echo '$(srcdir)/'`Repeater.c
-
-libXaw8_la-Scrollbar.lo: Scrollbar.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Scrollbar.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Scrollbar.Tpo" -c -o libXaw8_la-Scrollbar.lo `test -f 'Scrollbar.c' || echo '$(srcdir)/'`Scrollbar.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Scrollbar.Tpo" "$(DEPDIR)/libXaw8_la-Scrollbar.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Scrollbar.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Scrollbar.c' object='libXaw8_la-Scrollbar.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Scrollbar.lo `test -f 'Scrollbar.c' || echo '$(srcdir)/'`Scrollbar.c
-
-libXaw8_la-Simple.lo: Simple.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Simple.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Simple.Tpo" -c -o libXaw8_la-Simple.lo `test -f 'Simple.c' || echo '$(srcdir)/'`Simple.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Simple.Tpo" "$(DEPDIR)/libXaw8_la-Simple.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Simple.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Simple.c' object='libXaw8_la-Simple.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Simple.lo `test -f 'Simple.c' || echo '$(srcdir)/'`Simple.c
-
-libXaw8_la-SimpleMenu.lo: SimpleMenu.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-SimpleMenu.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-SimpleMenu.Tpo" -c -o libXaw8_la-SimpleMenu.lo `test -f 'SimpleMenu.c' || echo '$(srcdir)/'`SimpleMenu.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-SimpleMenu.Tpo" "$(DEPDIR)/libXaw8_la-SimpleMenu.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-SimpleMenu.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='SimpleMenu.c' object='libXaw8_la-SimpleMenu.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-SimpleMenu.lo `test -f 'SimpleMenu.c' || echo '$(srcdir)/'`SimpleMenu.c
-
-libXaw8_la-Sme.lo: Sme.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Sme.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Sme.Tpo" -c -o libXaw8_la-Sme.lo `test -f 'Sme.c' || echo '$(srcdir)/'`Sme.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Sme.Tpo" "$(DEPDIR)/libXaw8_la-Sme.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Sme.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Sme.c' object='libXaw8_la-Sme.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Sme.lo `test -f 'Sme.c' || echo '$(srcdir)/'`Sme.c
-
-libXaw8_la-SmeBSB.lo: SmeBSB.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-SmeBSB.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-SmeBSB.Tpo" -c -o libXaw8_la-SmeBSB.lo `test -f 'SmeBSB.c' || echo '$(srcdir)/'`SmeBSB.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-SmeBSB.Tpo" "$(DEPDIR)/libXaw8_la-SmeBSB.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-SmeBSB.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='SmeBSB.c' object='libXaw8_la-SmeBSB.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-SmeBSB.lo `test -f 'SmeBSB.c' || echo '$(srcdir)/'`SmeBSB.c
-
-libXaw8_la-SmeLine.lo: SmeLine.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-SmeLine.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-SmeLine.Tpo" -c -o libXaw8_la-SmeLine.lo `test -f 'SmeLine.c' || echo '$(srcdir)/'`SmeLine.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-SmeLine.Tpo" "$(DEPDIR)/libXaw8_la-SmeLine.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-SmeLine.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='SmeLine.c' object='libXaw8_la-SmeLine.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-SmeLine.lo `test -f 'SmeLine.c' || echo '$(srcdir)/'`SmeLine.c
-
-libXaw8_la-StripChart.lo: StripChart.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-StripChart.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-StripChart.Tpo" -c -o libXaw8_la-StripChart.lo `test -f 'StripChart.c' || echo '$(srcdir)/'`StripChart.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-StripChart.Tpo" "$(DEPDIR)/libXaw8_la-StripChart.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-StripChart.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='StripChart.c' object='libXaw8_la-StripChart.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-StripChart.lo `test -f 'StripChart.c' || echo '$(srcdir)/'`StripChart.c
-
-libXaw8_la-Text.lo: Text.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Text.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Text.Tpo" -c -o libXaw8_la-Text.lo `test -f 'Text.c' || echo '$(srcdir)/'`Text.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Text.Tpo" "$(DEPDIR)/libXaw8_la-Text.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Text.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Text.c' object='libXaw8_la-Text.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Text.lo `test -f 'Text.c' || echo '$(srcdir)/'`Text.c
-
-libXaw8_la-TextSink.lo: TextSink.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-TextSink.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-TextSink.Tpo" -c -o libXaw8_la-TextSink.lo `test -f 'TextSink.c' || echo '$(srcdir)/'`TextSink.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-TextSink.Tpo" "$(DEPDIR)/libXaw8_la-TextSink.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-TextSink.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='TextSink.c' object='libXaw8_la-TextSink.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-TextSink.lo `test -f 'TextSink.c' || echo '$(srcdir)/'`TextSink.c
-
-libXaw8_la-TextSrc.lo: TextSrc.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-TextSrc.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-TextSrc.Tpo" -c -o libXaw8_la-TextSrc.lo `test -f 'TextSrc.c' || echo '$(srcdir)/'`TextSrc.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-TextSrc.Tpo" "$(DEPDIR)/libXaw8_la-TextSrc.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-TextSrc.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='TextSrc.c' object='libXaw8_la-TextSrc.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-TextSrc.lo `test -f 'TextSrc.c' || echo '$(srcdir)/'`TextSrc.c
-
-libXaw8_la-TextAction.lo: TextAction.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-TextAction.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-TextAction.Tpo" -c -o libXaw8_la-TextAction.lo `test -f 'TextAction.c' || echo '$(srcdir)/'`TextAction.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-TextAction.Tpo" "$(DEPDIR)/libXaw8_la-TextAction.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-TextAction.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='TextAction.c' object='libXaw8_la-TextAction.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-TextAction.lo `test -f 'TextAction.c' || echo '$(srcdir)/'`TextAction.c
-
-libXaw8_la-TextPop.lo: TextPop.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-TextPop.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-TextPop.Tpo" -c -o libXaw8_la-TextPop.lo `test -f 'TextPop.c' || echo '$(srcdir)/'`TextPop.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-TextPop.Tpo" "$(DEPDIR)/libXaw8_la-TextPop.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-TextPop.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='TextPop.c' object='libXaw8_la-TextPop.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-TextPop.lo `test -f 'TextPop.c' || echo '$(srcdir)/'`TextPop.c
-
-libXaw8_la-TextTr.lo: TextTr.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-TextTr.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-TextTr.Tpo" -c -o libXaw8_la-TextTr.lo `test -f 'TextTr.c' || echo '$(srcdir)/'`TextTr.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-TextTr.Tpo" "$(DEPDIR)/libXaw8_la-TextTr.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-TextTr.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='TextTr.c' object='libXaw8_la-TextTr.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-TextTr.lo `test -f 'TextTr.c' || echo '$(srcdir)/'`TextTr.c
-
-libXaw8_la-Toggle.lo: Toggle.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Toggle.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Toggle.Tpo" -c -o libXaw8_la-Toggle.lo `test -f 'Toggle.c' || echo '$(srcdir)/'`Toggle.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Toggle.Tpo" "$(DEPDIR)/libXaw8_la-Toggle.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Toggle.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Toggle.c' object='libXaw8_la-Toggle.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Toggle.lo `test -f 'Toggle.c' || echo '$(srcdir)/'`Toggle.c
-
-libXaw8_la-Tree.lo: Tree.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Tree.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Tree.Tpo" -c -o libXaw8_la-Tree.lo `test -f 'Tree.c' || echo '$(srcdir)/'`Tree.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Tree.Tpo" "$(DEPDIR)/libXaw8_la-Tree.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Tree.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Tree.c' object='libXaw8_la-Tree.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Tree.lo `test -f 'Tree.c' || echo '$(srcdir)/'`Tree.c
-
-libXaw8_la-Vendor.lo: Vendor.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Vendor.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Vendor.Tpo" -c -o libXaw8_la-Vendor.lo `test -f 'Vendor.c' || echo '$(srcdir)/'`Vendor.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Vendor.Tpo" "$(DEPDIR)/libXaw8_la-Vendor.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Vendor.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Vendor.c' object='libXaw8_la-Vendor.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Vendor.lo `test -f 'Vendor.c' || echo '$(srcdir)/'`Vendor.c
-
-libXaw8_la-Viewport.lo: Viewport.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Viewport.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Viewport.Tpo" -c -o libXaw8_la-Viewport.lo `test -f 'Viewport.c' || echo '$(srcdir)/'`Viewport.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Viewport.Tpo" "$(DEPDIR)/libXaw8_la-Viewport.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Viewport.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Viewport.c' object='libXaw8_la-Viewport.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Viewport.lo `test -f 'Viewport.c' || echo '$(srcdir)/'`Viewport.c
-
-libXaw8_la-XawIm.lo: XawIm.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-XawIm.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-XawIm.Tpo" -c -o libXaw8_la-XawIm.lo `test -f 'XawIm.c' || echo '$(srcdir)/'`XawIm.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-XawIm.Tpo" "$(DEPDIR)/libXaw8_la-XawIm.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-XawIm.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='XawIm.c' object='libXaw8_la-XawIm.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-XawIm.lo `test -f 'XawIm.c' || echo '$(srcdir)/'`XawIm.c
-
-libXaw8_la-XawInit.lo: XawInit.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-XawInit.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-XawInit.Tpo" -c -o libXaw8_la-XawInit.lo `test -f 'XawInit.c' || echo '$(srcdir)/'`XawInit.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-XawInit.Tpo" "$(DEPDIR)/libXaw8_la-XawInit.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-XawInit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='XawInit.c' object='libXaw8_la-XawInit.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-XawInit.lo `test -f 'XawInit.c' || echo '$(srcdir)/'`XawInit.c
-
-libXaw8_la-XawI18n.lo: XawI18n.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-XawI18n.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-XawI18n.Tpo" -c -o libXaw8_la-XawI18n.lo `test -f 'XawI18n.c' || echo '$(srcdir)/'`XawI18n.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-XawI18n.Tpo" "$(DEPDIR)/libXaw8_la-XawI18n.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-XawI18n.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='XawI18n.c' object='libXaw8_la-XawI18n.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-XawI18n.lo `test -f 'XawI18n.c' || echo '$(srcdir)/'`XawI18n.c
-
-libXaw8_la-PrintShell.lo: PrintShell.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-PrintShell.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-PrintShell.Tpo" -c -o libXaw8_la-PrintShell.lo `test -f 'PrintShell.c' || echo '$(srcdir)/'`PrintShell.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-PrintShell.Tpo" "$(DEPDIR)/libXaw8_la-PrintShell.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-PrintShell.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='PrintShell.c' object='libXaw8_la-PrintShell.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-PrintShell.lo `test -f 'PrintShell.c' || echo '$(srcdir)/'`PrintShell.c
-
-libXaw8_la-Tip.lo: Tip.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -MT libXaw8_la-Tip.lo -MD -MP -MF "$(DEPDIR)/libXaw8_la-Tip.Tpo" -c -o libXaw8_la-Tip.lo `test -f 'Tip.c' || echo '$(srcdir)/'`Tip.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXaw8_la-Tip.Tpo" "$(DEPDIR)/libXaw8_la-Tip.Plo"; else rm -f "$(DEPDIR)/libXaw8_la-Tip.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Tip.c' object='libXaw8_la-Tip.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXaw8_la_CFLAGS) $(CFLAGS) -c -o libXaw8_la-Tip.lo `test -f 'Tip.c' || echo '$(srcdir)/'`Tip.c
-
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -1673,10 +1271,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@BUILD_XAW6_FALSE@@BUILD_XAW7_FALSE@@BUILD_XAW8_FALSE@install-exec-hook:
-@BUILD_XAW6_FALSE@@BUILD_XAW8_FALSE@@LINK_XAW7_FALSE@install-exec-hook:
-@BUILD_XAW7_FALSE@@BUILD_XAW8_FALSE@@LINK_XAW6_FALSE@install-exec-hook:
-@BUILD_XAW8_FALSE@@LINK_XAW6_FALSE@@LINK_XAW7_FALSE@install-exec-hook:
+@BUILD_XAW6_FALSE@@BUILD_XAW7_FALSE@install-exec-hook:
 @PLATFORM_WIN32_TRUE@install-exec-hook:
 @SHARED_LIBS_FALSE@install-exec-hook:
 clean: clean-am
@@ -1746,17 +1341,17 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 	uninstall-libLTLIBRARIES
 
 
-@BUILD_XAW6_TRUE@@LINK_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
-@BUILD_XAW6_TRUE@@LINK_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.9.0
-@BUILD_XAW6_TRUE@@LINK_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.so.9.0 libXaw.so.9.0)
+@BUILD_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.6.@LIBEXT@ libXaw.6.@LIBEXT@)
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.@LIBEXT@.6 libXaw.@LIBEXT@.6)
 
-@BUILD_XAW7_TRUE@@LINK_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
-@BUILD_XAW7_TRUE@@LINK_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.12.0
-@BUILD_XAW7_TRUE@@LINK_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.12.0 libXaw.so.12.0)
-
-@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
-@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.so.13.0
-@BUILD_XAW8_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.13.0 libXaw.so.13.0)
+@BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.14.0
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.14.0 libXaw.@LIBEXT@.14.0)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

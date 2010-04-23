@@ -1448,7 +1448,7 @@ InitStringOrFile(AsciiSrcObject src, Bool newString)
 	    if (src->ascii_src.string == NULL)
 		XtErrorMsg("NoFile", "asciiSourceCreate", "XawError",
 			   "Creating a read only disk widget and no file specified.",
-			   NULL, 0);
+			   NULL, NULL);
 	    open_mode = O_RDONLY;
 	    fdopen_mode = "r";
 	    break;
@@ -1779,7 +1779,7 @@ GetDefaultPieceSize(Widget w, int offset, XrmValue *value)
 {
     static XPointer pagesize;
 
-    if (pagesize == 0) {
+    if (pagesize == NULL) {
 	pagesize = (XPointer)((long)_XawGetPageSize());
 	if (pagesize < (XPointer)BUFSIZ)
 	    pagesize = (XPointer)BUFSIZ;

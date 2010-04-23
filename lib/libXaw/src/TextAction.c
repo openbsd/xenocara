@@ -434,39 +434,6 @@ _SelectionReceived(Widget w, XtPointer client_data, Atom *selection,
 	*length = wcslen(wlist[0]);
 	XtFree((XtPointer)wlist);
 	text.format = XawFmtWide;
-    } else {
-	XTextProperty textprop;
-	char **list;
-	int count;
-
-	textprop.encoding = *type;
-	textprop.value = (unsigned char *)value;
-	textprop.nitems = strlen(value);
-	textprop.format = 8;
-
-	if (XmbTextPropertyToTextList(d, &textprop, &list, &count)
-	    !=	Success
-	    || count < 1) {
-	    XFreeStringList(list);
-
-	    /* Notify the user on strerr and in the insertion :) */
-	    fprintf(stderr, "Xaw Text Widget: An attempt was made to insert "
-		    "an illegal selection.\n");
-
-	    textprop.value = (unsigned char *)" >> ILLEGAL SELECTION << ";
-	    textprop.nitems = strlen((char *) textprop.value);
-	    if (XmbTextPropertyToTextList(d, &textprop, &list, &count)
-		!=  Success
-		|| count < 1)
-		return;
-	}
-
-	XFree(value);
-	value = (XPointer)list[0];
-
-	*length = strlen(list[0]);
-	XtFree((XtPointer)list);
-	text.format = XawFmt8Bit;
     }
     text.ptr = (char*)value;
     text.firstPos = 0;
@@ -489,6 +456,8 @@ _SelectionReceived(Widget w, XtPointer client_data, Atom *selection,
 static void
 GetSelection(Widget w, Time timev, String *params, Cardinal num_params)
 {
+    Display *d = XtDisplay(w);
+    TextWidget ctx = (TextWidget)w;
     Atom selection;
     int buffer;
 
@@ -529,7 +498,8 @@ GetSelection(Widget w, Time timev, String *params, Cardinal num_params)
 	}
 	else
 	    list = NULL;
-	XtGetSelectionValue(w, selection, XA_UTF8_STRING(XtDisplay(w)),
+	XtGetSelectionValue(w, selection, XawTextFormat(ctx, XawFmtWide) ?
+			    XA_UTF8_STRING(d) : XA_TEXT(d),
 			    _SelectionReceived, (XtPointer)list, timev);
     }
 }
@@ -1069,49 +1039,52 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 	    *length = salt->length;
 	}
 	/* Got *value,*length, now in COMPOUND_TEXT format. */
-	if (XawTextFormat(ctx, XawFmtWide) && *type == XA_STRING) {
-	    XTextProperty textprop;
-	    wchar_t **wlist;
-	    int count;
+	if (XawTextFormat(ctx, XawFmtWide)) {
+	    if (*type == XA_STRING) {
+		XTextProperty textprop;
+		wchar_t **wlist;
+		int count;
 
-	    textprop.encoding = XA_COMPOUND_TEXT(d);
-	    textprop.value = (unsigned char *)*value;
-	    textprop.nitems = strlen(*value);
-	    textprop.format = 8;
-	    if (XwcTextPropertyToTextList(d, &textprop, &wlist, &count)
-		 < Success
-		|| count < 1) {
+		textprop.encoding = XA_COMPOUND_TEXT(d);
+		textprop.value = (unsigned char *)*value;
+		textprop.nitems = strlen(*value);
+		textprop.format = 8;
+		if (XwcTextPropertyToTextList(d, &textprop, &wlist, &count)
+		     < Success
+		    || count < 1) {
+		    XtFree(*value);
+		    return (False);
+		}
 		XtFree(*value);
-		return (False);
+		if (XwcTextListToTextProperty(d, wlist, 1, XStringStyle, &textprop)
+		     < Success) {
+		    XwcFreeStringList((wchar_t**)wlist);
+		    return (False);
+		}
+		*value = (XtPointer)textprop.value;
+		*length = textprop.nitems;
+		XwcFreeStringList((wchar_t**) wlist);
 	    }
-	    XtFree(*value);
-	    if (XwcTextListToTextProperty(d, wlist, 1, XStringStyle, &textprop)
-		 < Success) {
-		XwcFreeStringList((wchar_t**)wlist);
-		return (False);
-	    }
-	    *value = (XtPointer)textprop.value;
-	    *length = textprop.nitems;
-	    XwcFreeStringList((wchar_t**) wlist);
-	} else if (*type == XA_UTF8_STRING(d)) {
-	    XTextProperty textprop;
-	    char **list;
-	    int count;
+	    else if (*type == XA_UTF8_STRING(d)) {
+		XTextProperty textprop;
+		char **list;
+		int count;
 
-	    textprop.encoding = XA_COMPOUND_TEXT(d);
-	    textprop.value = (unsigned char *)*value;
-	    textprop.nitems = strlen(*value);
-	    textprop.format = 8;
-	    if (Xutf8TextPropertyToTextList(d, &textprop, &list, &count)
-		 < Success
-		|| count < 1) {
+		textprop.encoding = XA_COMPOUND_TEXT(d);
+		textprop.value = (unsigned char *)*value;
+		textprop.nitems = strlen(*value);
+		textprop.format = 8;
+		if (Xutf8TextPropertyToTextList(d, &textprop, &list, &count)
+		    < Success
+		    || count < 1) {
+		    XtFree(*value);
+		    return (False);
+		}
 		XtFree(*value);
-		return (False);
+		*value = *list;
+		*length = strlen(*list);
+		XFree(list);
 	    }
-	    XtFree(*value);
-	    *value = *list;
-	    *length = strlen(*list);
-	    XFree(list);
 	}
 	*format = 8;
 	return (True);

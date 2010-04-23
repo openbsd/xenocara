@@ -270,8 +270,6 @@ void _XawTextSinkDisplayText(Widget, int, int, XawTextPosition, XawTextPosition,
 /*
  * From TextTr.c
  */
-extern char _XawDefaultTextTranslations[];
-
 static XawTextSelectType defaultSelectTypes[] = {
   XawselectPosition,  XawselectAlphaNumeric, XawselectWord, XawselectLine,
   XawselectParagraph, XawselectAll,	     XawselectNull,

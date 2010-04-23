@@ -613,17 +613,6 @@ to it.  The new resource is:
 Specifies the name of the popup widget to be popped up when the pointer is
 over the menu entry, or NULL.  Note that the named menu must be a child of
 the popup parent of the smeBSBObject.
-.SH RESTRICTIONS
-.B Xaw
-is actively being developed.  Programs intending to be fully compatible
-with future releases of the Xaw library should use only the public
-interfaces.  While widget subclassification is not a bad thing, and
-sometimes an encouraged programming practice, programs that access private
-data structures may have problems with newer releases in the current stage
-of
-.I Xaw
-development. Efforts are being made to avoid such problems and to guarantee
-that newer releases will be source and binary compatible.
 .SH AUTHORS
 The original X Consortium version of the Athena Widget Set and its
 documentation were the work of many people, including Chris D. Peterson,

@@ -2035,7 +2035,7 @@ _Xaw_Xlib_DataInitProc(String class_name,
   tmp_win = XCreateWindow(DisplayOfScreen(screen),
 			  RootWindowOfScreen(screen),
 			  0, 0, 1, 1, 1, depth,
-			  InputOutput, CopyFromParent, 0, NULL);
+			  InputOutput, (Visual *)CopyFromParent, 0, NULL);
   data->mask = 0;
   data->gc = XCreateGC(DisplayOfScreen(screen), tmp_win, 0, &data->values);
   XDestroyWindow(DisplayOfScreen(screen), tmp_win);

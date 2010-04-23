@@ -29,7 +29,7 @@
 #endif
 
 int
-_XawGetPageSize()
+_XawGetPageSize(void)
 {
     static int pagesize = -1;
 

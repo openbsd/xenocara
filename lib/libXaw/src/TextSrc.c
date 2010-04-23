@@ -1092,8 +1092,10 @@ XawTextSourceReplace(Widget w, XawTextPosition left,
 		    entity = anchor->entities;
 		    eprev = NULL;
 		}
-		else
+		else {
+		    anchor = NULL;
 		    break;
+		}
 		eprev = NULL;
 	    }
 
@@ -1138,7 +1140,35 @@ exit_anchor_loop:
 	    }
 
 	    if (diff) {
-		for (++i; i < src->textSrc.num_anchors; i++)
+		/*   The first anchor is never removed, and should
+		 * have position 0.
+		 *   i should be -1 if attempted to removed the first
+		 * anchor, what can be caused when removing a chunk
+		 * of text of the first entity.
+		 * */
+		if (++i == 0) {
+		    anchor = src->textSrc.anchors[0];
+		    eprev = entity = anchor->entities;
+		    while (entity) {
+			enext = entity->next;
+			if (entity->offset + entity->length <= -diff)
+			    XtFree((XtPointer)entity);
+			else
+			    break;
+			entity = enext;
+		    }
+		    if (eprev != entity) {
+			anchor->cache = NULL;
+			if ((anchor->entities = entity) != NULL) {
+			    if ((entity->offset += diff) < 0) {
+				entity->length += entity->offset;
+				entity->offset = 0;
+			    }
+			}
+		    }
+		    ++i;
+		}
+		for (; i < src->textSrc.num_anchors; i++)
 		    src->textSrc.anchors[i]->position += diff;
 	    }
 	}

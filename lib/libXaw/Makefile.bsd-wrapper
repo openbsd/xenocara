@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2008/02/09 18:08:49 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2010/04/23 19:37:47 matthieu Exp $
 
-SHARED_LIBS= Xaw7 12.0 Xaw8 13.0
+SHARED_LIBS= Xaw7 14.0
 
-CONFIGURE_ARGS= --disable-xaw6 --disable-xaw7-symlink --enable-xaw8
+CONFIGURE_ARGS= --disable-xaw6
 
 afterinstall:
 	-rm -f $(DESTDIR)$(LIBDIR)/libXaw.a
-	(cd $(DESTDIR)$(LIBDIR) && ln -s libXaw8.a libXaw.a)
+	(cd $(DESTDIR)$(LIBDIR) && ln -s libXaw7.a libXaw.a)
 
 .include <bsd.xorg.mk>

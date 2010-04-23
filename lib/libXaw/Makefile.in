@@ -38,10 +38,9 @@ build_triplet = @build@
 host_triplet = @host@
 @BUILD_XAW6_TRUE@am__append_1 = xaw6.pc
 @BUILD_XAW7_TRUE@am__append_2 = xaw7.pc
-@BUILD_XAW8_TRUE@am__append_3 = xaw8.pc
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(srcdir)/xaw6.pc.in $(srcdir)/xaw7.pc.in $(srcdir)/xaw8.pc.in \
+	$(srcdir)/xaw6.pc.in $(srcdir)/xaw7.pc.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
 	compile config.guess config.sub depcomp install-sh ltmain.sh \
 	missing
@@ -54,7 +53,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = xaw6.pc xaw7.pc xaw8.pc
+CONFIG_CLEAN_FILES = xaw6.pc xaw7.pc
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -69,11 +68,9 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(aclocaldir)" \
-	"$(DESTDIR)$(pkgconfigdir)"
-aclocalDATA_INSTALL = $(INSTALL_DATA)
+am__installdirs = "$(DESTDIR)$(pkgconfigdir)"
 pkgconfigDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(aclocal_DATA) $(pkgconfig_DATA)
+DATA = $(pkgconfig_DATA)
 ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = $(SUBDIRS)
@@ -87,7 +84,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -101,17 +97,19 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_DOCS_FALSE = @BUILD_DOCS_FALSE@
+BUILD_DOCS_TRUE = @BUILD_DOCS_TRUE@
 BUILD_XAW6_FALSE = @BUILD_XAW6_FALSE@
 BUILD_XAW6_TRUE = @BUILD_XAW6_TRUE@
 BUILD_XAW7_FALSE = @BUILD_XAW7_FALSE@
 BUILD_XAW7_TRUE = @BUILD_XAW7_TRUE@
-BUILD_XAW8_FALSE = @BUILD_XAW8_FALSE@
-BUILD_XAW8_TRUE = @BUILD_XAW8_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -121,6 +119,7 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -131,20 +130,19 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+GROFF = @GROFF@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LIBEXT = @LIBEXT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINK_XAW6_FALSE = @LINK_XAW6_FALSE@
-LINK_XAW6_TRUE = @LINK_XAW6_TRUE@
-LINK_XAW7_FALSE = @LINK_XAW7_FALSE@
-LINK_XAW7_TRUE = @LINK_XAW7_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -153,6 +151,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -162,9 +161,12 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PLATFORM_DARWIN_FALSE = @PLATFORM_DARWIN_FALSE@
+PLATFORM_DARWIN_TRUE = @PLATFORM_DARWIN_TRUE@
 PLATFORM_WIN32_FALSE = @PLATFORM_WIN32_FALSE@
 PLATFORM_WIN32_TRUE = @PLATFORM_WIN32_TRUE@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHARED_LIBS_FALSE = @SHARED_LIBS_FALSE@
 SHARED_LIBS_TRUE = @SHARED_LIBS_TRUE@
@@ -175,17 +177,9 @@ XAW6_CFLAGS = @XAW6_CFLAGS@
 XAW6_LIBS = @XAW6_LIBS@
 XAW7_CFLAGS = @XAW7_CFLAGS@
 XAW7_LIBS = @XAW7_LIBS@
-XAW8_CFLAGS = @XAW8_CFLAGS@
-XAW8_LIBS = @XAW8_LIBS@
-XPRINT_CFLAGS = @XPRINT_CFLAGS@
-XPRINT_LIBS = @XPRINT_LIBS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -202,44 +196,54 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = include src man
-aclocaldir = $(datadir)/aclocal
-aclocal_DATA = xaw.m4
+SUBDIRS = include src man spec
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = $(am__append_1) $(am__append_2) $(am__append_3)
-@BUILD_XAW6_TRUE@DEFAULT_LIB = libXaw6.so
-@BUILD_XAW7_TRUE@DEFAULT_LIB = libXaw7.so
-@BUILD_XAW8_TRUE@DEFAULT_LIB = libXaw8.so
+pkgconfig_DATA = $(am__append_1) $(am__append_2)
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@DEFAULT_LIB = libXaw6.@LIBEXT@
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@DEFAULT_LIB = libXaw.6.@LIBEXT@
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@DEFAULT_LIB = libXaw7.@LIBEXT@
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@DEFAULT_LIB = libXaw.7.@LIBEXT@
 EXTRA_DIST = xaw6.pc.in \
 	xaw7.pc.in \
-	xaw8.pc.in \
 	autogen.sh \
-	xaw.m4 \
 	old-doc/Changelog \
 	old-doc/CHANGES \
 	ChangeLog
 
+
+#if !PLATFORM_WIN32
+#install-exec-hook:
+#	cd $(DESTDIR)$(libdir) && rm -f libXaw.@LIBEXT@ && ln -s $(DEFAULT_LIB) libXaw.@LIBEXT@
+#endif
 MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -299,8 +303,6 @@ xaw6.pc: $(top_builddir)/config.status $(srcdir)/xaw6.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 xaw7.pc: $(top_builddir)/config.status $(srcdir)/xaw7.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-xaw8.pc: $(top_builddir)/config.status $(srcdir)/xaw8.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -311,23 +313,6 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-aclocalDATA: $(aclocal_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(aclocaldir)" || $(mkdir_p) "$(DESTDIR)$(aclocaldir)"
-	@list='$(aclocal_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(aclocalDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(aclocaldir)/$$f'"; \
-	  $(aclocalDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(aclocaldir)/$$f"; \
-	done
-
-uninstall-aclocalDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(aclocal_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(aclocaldir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(aclocaldir)/$$f"; \
-	done
 install-pkgconfigDATA: $(pkgconfig_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(pkgconfigdir)" || $(mkdir_p) "$(DESTDIR)$(pkgconfigdir)"
@@ -628,7 +613,7 @@ check: check-recursive
 all-am: Makefile $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(aclocaldir)" "$(DESTDIR)$(pkgconfigdir)"; do \
+	for dir in "$(DESTDIR)$(pkgconfigdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -676,7 +661,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-aclocalDATA install-pkgconfigDATA
+install-data-am: install-pkgconfigDATA
 
 install-exec-am:
 
@@ -704,8 +689,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-aclocalDATA uninstall-info-am \
-	uninstall-pkgconfigDATA
+uninstall-am: uninstall-info-am uninstall-pkgconfigDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -716,21 +700,21 @@ uninstall-info: uninstall-info-recursive
 	distclean-generic distclean-hdr distclean-libtool \
 	distclean-recursive distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-aclocalDATA install-am install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-pkgconfigDATA \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-generic \
-	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-aclocalDATA \
-	uninstall-am uninstall-info-am uninstall-pkgconfigDATA
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-pkgconfigDATA install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive \
+	mostlyclean mostlyclean-generic mostlyclean-libtool \
+	mostlyclean-recursive pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-info-am \
+	uninstall-pkgconfigDATA
 
 
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

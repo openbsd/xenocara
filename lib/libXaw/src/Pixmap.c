@@ -282,7 +282,7 @@ XawLoadPixmap(String name, Screen *screen, Colormap colormap, int depth)
   XawParams *xaw_params;
 
   if (!name)
-    return (False);
+    return (NULL);
 
   xaw_pixmap = _XawFindPixmap(name, screen, colormap, depth);
 

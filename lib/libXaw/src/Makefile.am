@@ -56,6 +56,7 @@ COMMON_SOURCES = \
 	XawI18n.h
 
 COMMON_CFLAGS = \
+	$(CWARNFLAGS) \
 	-I${top_srcdir}/include \
 	-I${top_srcdir}/include/X11/Xaw \
 	-DPROJECT_ROOT=\"$(prefix)\"
@@ -77,12 +78,16 @@ libXaw6_la_LIBADD = $(XAW6_LIBS)
 
 if SHARED_LIBS
 if !PLATFORM_WIN32
-if LINK_XAW6
 install-exec-hook::
-	-rm -f $(DESTDIR)$(libdir)/libXaw.so.9.0
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.so.9.0 libXaw.so.9.0)
+if PLATFORM_DARWIN
+	-rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
+	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.6.@LIBEXT@ libXaw.6.@LIBEXT@)
+else
+	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
+	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.@LIBEXT@.6 libXaw.@LIBEXT@.6)
 endif
 endif
+
 endif
 endif
 
@@ -104,37 +109,16 @@ libXaw7_la_LIBADD = $(XAW7_LIBS)
 
 if SHARED_LIBS
 if !PLATFORM_WIN32
-if LINK_XAW7
 install-exec-hook::
-	-rm -f $(DESTDIR)$(libdir)/libXaw.so.12.0
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.so.12.0 libXaw.so.12.0)
+if PLATFORM_DARWIN
+	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
+	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
+else
+	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.14.0
+	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.14.0 libXaw.@LIBEXT@.14.0)
 endif
 endif
-endif
-endif
 
-if BUILD_XAW8
-
-lib_LTLIBRARIES += libXaw8.la
-
-libXaw8_la_CFLAGS =			\
-	$(COMMON_CFLAGS)		\
-	$(XAW8_CFLAGS)
-
-libXaw8_la_SOURCES = \
-	$(COMMON_SOURCES) \
-	PrintShell.c \
-	Tip.c
-
-libXaw8_la_LDFLAGS = -version-info 8:0:0 -no-undefined
-libXaw8_la_LIBADD = $(XAW8_LIBS)
-
-if SHARED_LIBS
-if !PLATFORM_WIN32
-install-exec-hook::
-	-rm -f $(DESTDIR)$(libdir)/libXaw.so.13.0
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw8.so.13.0 libXaw.so.13.0)
-endif
 endif
 endif
 

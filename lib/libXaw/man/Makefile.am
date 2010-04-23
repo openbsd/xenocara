@@ -45,5 +45,4 @@ MAN_SUBSTS = -e 's/__vendorversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/'
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 .man.$(LIB_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
-
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

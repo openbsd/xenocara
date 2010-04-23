@@ -242,7 +242,7 @@ static XtResource resources[] = {
     sizeof(Cursor),
     offset(cursor),
     XtRImmediate,
-    None
+    NULL
   },
   {
     XtNgripCursor,
@@ -251,7 +251,7 @@ static XtResource resources[] = {
     sizeof(Cursor),
     offset(grip_cursor),
     XtRImmediate,
-    None
+    NULL
   },
   {
     XtNverticalGripCursor,
@@ -278,7 +278,7 @@ static XtResource resources[] = {
     sizeof(Cursor),
     offset(adjust_this_cursor),
     XtRString,
-    None
+    NULL
   },
   {
     XtNverticalBetweenCursor,

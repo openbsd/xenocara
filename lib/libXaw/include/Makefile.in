@@ -37,8 +37,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = include
-DIST_COMMON = $(am__xawinclude_HEADERS_DIST) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(xawinclude_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -48,31 +48,6 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
-am__xawinclude_HEADERS_DIST = X11/Xaw/AllWidgets.h X11/Xaw/AsciiSink.h \
-	X11/Xaw/AsciiSinkP.h X11/Xaw/AsciiSrc.h X11/Xaw/AsciiSrcP.h \
-	X11/Xaw/AsciiText.h X11/Xaw/AsciiTextP.h X11/Xaw/Box.h \
-	X11/Xaw/BoxP.h X11/Xaw/Cardinals.h X11/Xaw/Command.h \
-	X11/Xaw/CommandP.h X11/Xaw/Dialog.h X11/Xaw/DialogP.h \
-	X11/Xaw/Form.h X11/Xaw/FormP.h X11/Xaw/Grip.h X11/Xaw/GripP.h \
-	X11/Xaw/Label.h X11/Xaw/LabelP.h X11/Xaw/List.h \
-	X11/Xaw/ListP.h X11/Xaw/MenuButton.h X11/Xaw/MenuButtoP.h \
-	X11/Xaw/MultiSrc.h X11/Xaw/MultiSrcP.h X11/Xaw/MultiSink.h \
-	X11/Xaw/MultiSinkP.h X11/Xaw/Paned.h X11/Xaw/PanedP.h \
-	X11/Xaw/Panner.h X11/Xaw/PannerP.h X11/Xaw/Porthole.h \
-	X11/Xaw/PortholeP.h X11/Xaw/Repeater.h X11/Xaw/RepeaterP.h \
-	X11/Xaw/Reports.h X11/Xaw/Scrollbar.h X11/Xaw/ScrollbarP.h \
-	X11/Xaw/Simple.h X11/Xaw/SimpleP.h X11/Xaw/SimpleMenu.h \
-	X11/Xaw/SimpleMenP.h X11/Xaw/Sme.h X11/Xaw/SmeP.h \
-	X11/Xaw/SmeBSB.h X11/Xaw/SmeBSBP.h X11/Xaw/SmeLine.h \
-	X11/Xaw/SmeLineP.h X11/Xaw/StripChart.h X11/Xaw/StripCharP.h \
-	X11/Xaw/Template.c X11/Xaw/Template.h X11/Xaw/TemplateP.h \
-	X11/Xaw/Text.h X11/Xaw/TextP.h X11/Xaw/TextSink.h \
-	X11/Xaw/TextSinkP.h X11/Xaw/TextSrc.h X11/Xaw/TextSrcP.h \
-	X11/Xaw/Tip.h X11/Xaw/TipP.h X11/Xaw/Toggle.h \
-	X11/Xaw/ToggleP.h X11/Xaw/Tree.h X11/Xaw/TreeP.h \
-	X11/Xaw/VendorEP.h X11/Xaw/Viewport.h X11/Xaw/ViewportP.h \
-	X11/Xaw/XawImP.h X11/Xaw/XawInit.h X11/Xaw/Print.h \
-	X11/Xaw/PrintSP.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -98,17 +73,19 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BUILD_DOCS_FALSE = @BUILD_DOCS_FALSE@
+BUILD_DOCS_TRUE = @BUILD_DOCS_TRUE@
 BUILD_XAW6_FALSE = @BUILD_XAW6_FALSE@
 BUILD_XAW6_TRUE = @BUILD_XAW6_TRUE@
 BUILD_XAW7_FALSE = @BUILD_XAW7_FALSE@
 BUILD_XAW7_TRUE = @BUILD_XAW7_TRUE@
-BUILD_XAW8_FALSE = @BUILD_XAW8_FALSE@
-BUILD_XAW8_TRUE = @BUILD_XAW8_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -118,6 +95,7 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -128,20 +106,19 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+GROFF = @GROFF@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
+LIBEXT = @LIBEXT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINK_XAW6_FALSE = @LINK_XAW6_FALSE@
-LINK_XAW6_TRUE = @LINK_XAW6_TRUE@
-LINK_XAW7_FALSE = @LINK_XAW7_FALSE@
-LINK_XAW7_TRUE = @LINK_XAW7_TRUE@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -150,6 +127,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -159,9 +137,12 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PLATFORM_DARWIN_FALSE = @PLATFORM_DARWIN_FALSE@
+PLATFORM_DARWIN_TRUE = @PLATFORM_DARWIN_TRUE@
 PLATFORM_WIN32_FALSE = @PLATFORM_WIN32_FALSE@
 PLATFORM_WIN32_TRUE = @PLATFORM_WIN32_TRUE@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHARED_LIBS_FALSE = @SHARED_LIBS_FALSE@
 SHARED_LIBS_TRUE = @SHARED_LIBS_TRUE@
@@ -172,17 +153,9 @@ XAW6_CFLAGS = @XAW6_CFLAGS@
 XAW6_LIBS = @XAW6_LIBS@
 XAW7_CFLAGS = @XAW7_CFLAGS@
 XAW7_LIBS = @XAW7_LIBS@
-XAW8_CFLAGS = @XAW8_CFLAGS@
-XAW8_LIBS = @XAW8_LIBS@
-XPRINT_CFLAGS = @XPRINT_CFLAGS@
-XPRINT_LIBS = @XPRINT_LIBS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -199,29 +172,36 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 xawincludedir = ${includedir}/X11/Xaw
-@BUILD_XAW8_TRUE@xaw8_headers = X11/Xaw/Print.h X11/Xaw/PrintSP.h
 xawinclude_HEADERS = \
 	X11/Xaw/AllWidgets.h \
 	X11/Xaw/AsciiSink.h \
@@ -293,8 +273,7 @@ xawinclude_HEADERS = \
 	X11/Xaw/Viewport.h \
 	X11/Xaw/ViewportP.h \
 	X11/Xaw/XawImP.h \
-	X11/Xaw/XawInit.h \
-        $(xaw8_headers)
+	X11/Xaw/XawInit.h
 
 all: all-am
 

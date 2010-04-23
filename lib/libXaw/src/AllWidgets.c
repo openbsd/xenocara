@@ -32,6 +32,7 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include <X11/IntrinsicP.h>
 #include <X11/Xmu/WidgetNode.h>
+#include <X11/Xaw/AllWidgets.h>
 
 extern WidgetClass applicationShellWidgetClass;
 extern WidgetClass asciiSinkObjectClass;

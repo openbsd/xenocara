@@ -1,9 +1,5 @@
 xawincludedir=${includedir}/X11/Xaw
 
-if BUILD_XAW8
-xaw8_headers = X11/Xaw/Print.h X11/Xaw/PrintSP.h
-endif
-
 xawinclude_HEADERS = \
 	X11/Xaw/AllWidgets.h \
 	X11/Xaw/AsciiSink.h \
@@ -75,5 +71,4 @@ xawinclude_HEADERS = \
 	X11/Xaw/Viewport.h \
 	X11/Xaw/ViewportP.h \
 	X11/Xaw/XawImP.h \
-	X11/Xaw/XawInit.h \
-        $(xaw8_headers)
+	X11/Xaw/XawInit.h

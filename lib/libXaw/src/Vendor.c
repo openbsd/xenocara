@@ -114,7 +114,7 @@ static XtResource resources[] = {
  *
  ***************************************************************************/
 
-#if defined(__UNIXOS2__) || defined(__CYGWIN__) 
+#if defined(__UNIXOS2__) || defined(__CYGWIN__) || defined(__MINGW32__)
 /* to fix the EditRes problem because of wrong linker semantics */
 extern WidgetClass vendorShellWidgetClass; /* from Xt/Vendor.c */
 extern VendorShellClassRec _XawVendorShellClassRec;
@@ -137,7 +137,7 @@ unsigned long _DLL_InitTerm(unsigned long mod,unsigned long flag)
 }
 #endif
 
-#if defined(__CYGWIN__)
+#if defined(__CYGWIN__) || defined(__MINGW32__)
 int __stdcall
 DllMain(unsigned long mod_handle, unsigned long flag, void *routine)
 {
@@ -307,7 +307,7 @@ XawCvtCompoundTextToString(Display *dpy, XrmValuePtr args, Cardinal *num_args,
     if(XmbTextPropertyToTextList(dpy, &prop, &list, &count) < Success) {
 	XtAppWarningMsg(XtDisplayToApplicationContext(dpy),
 	"converter", "XmbTextPropertyToTextList", "XawError",
-	"conversion from CT to MB failed.", NULL, 0);
+	"conversion from CT to MB failed.", NULL, NULL);
 	return False;
     }
     len = strlen(*list);
@@ -361,7 +361,7 @@ XawVendorShellClassPartInit(WidgetClass cclass)
     }
 }
 
-#if defined(__osf__) || defined(__UNIXOS2__) || defined(__CYGWIN__)
+#if defined(__osf__) || defined(__UNIXOS2__) || defined(__CYGWIN__) || defined(__MINGW32__)
 /* stupid OSF/1 shared libraries have the wrong semantics */
 /* symbols do not get resolved external to the shared library */
 void _XawFixupVendorShell()

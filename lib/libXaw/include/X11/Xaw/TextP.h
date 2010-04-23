@@ -73,6 +73,8 @@ _XFUNCPROTOBEGIN
 extern XtActionsRec _XawTextActionsTable[];
 extern Cardinal _XawTextActionsTableCount;
 
+extern char _XawDefaultTextTranslations[];
+
 #define XawLF	  0x0a
 #define XawCR	  0x0d
 #define XawTAB	  0x09

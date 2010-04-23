@@ -311,7 +311,7 @@ XawTipRealize(Widget w, Mask *mask, XSetWindowAttributes *attr)
 				XtBorderWidth(w),
 				DefaultDepthOfScreen(XtScreen(w)),
 				InputOutput,
-				CopyFromParent,
+				(Visual *)CopyFromParent,
 				*mask, attr);
 }
 
@@ -564,6 +564,7 @@ TipTimeoutCallback(XtPointer closure, XtIntervalId *id)
     info->tip->tip.label = NULL;
     info->tip->tip.international = False;
     info->tip->tip.encoding = 0;
+    info->tip->tip.timer = 0;
     XtSetArg(args[0], XtNtip, &info->tip->tip.label);
     XtSetArg(args[1], XtNinternational, &info->tip->tip.international);
     XtSetArg(args[2], XtNencoding, &info->tip->tip.encoding);

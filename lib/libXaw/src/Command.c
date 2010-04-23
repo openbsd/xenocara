@@ -206,11 +206,11 @@ CommandClassRec commandClassRec = {
   },
   /* label */
   {
-    0,					/* not used */
+    NULL,				/* not used */
   },
   /* command */
   {
-    0,					/* not used */
+    NULL,				/* not used */
   },
 };
 

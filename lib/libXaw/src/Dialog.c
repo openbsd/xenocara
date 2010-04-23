@@ -116,7 +116,7 @@ static XtResource resources[] = {
     sizeof(Pixmap),
     XtOffsetOf(DialogRec, dialog.icon),
     XtRImmediate,
-    0
+    NULL
   },
 };
 
