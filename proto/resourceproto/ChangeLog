@@ -1,4 +1,157 @@
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 11843ce15572214833063a26ac87a2fa6ab74bca
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 25 16:13:15 2009 +1000
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    resourceproto 1.1.0
+
+commit 2388aa12158fca3d8c38ee59ecc5cf35eafa7d57
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 25 16:29:38 2009 +1000
+
+    Remove RCS tags.
+
+commit 0a4fd7fc0cf0f56fbe112bd14725560adfa67b73
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 27 20:06:28 2009 -0200
+
+    Janitor: Correct make distcheck and dont distribute autogen.sh
+
+commit 40fded7637faa3548052cbf419d48ea081b1b5cb
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:39:06 2007 -0500
+
+    Replace static ChangeLog with dist-hook to generate from git log
+
+commit 2740cf052e07fef8808991863409829bab22f016
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:54:15 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit c24f19b61eb4a59b7a71f8aa238f3093d71b2fb2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jul 14 18:56:31 2006 -0700
+
+    renamed: .cvsignore -> .gitignore
+
+commit 9268501218b3f4eb1b0ce13bfab9e9543adc01a1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:38 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 0002f2f7e13aeabd494b55be2280b060410a6e8a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:15 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit e09681a1043fbc48447033b78de2c87252507d1b
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Tue Aug 2 19:19:39 2005 +0000
+
+    Add basic .cvsignore files for proto modules.
+
+commit f6008b2e1f5051ab421abbe08614aac67847742e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:56 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 79eb18feab7f1a9e07d97adb3be754b3c863d696
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jun 7 18:51:23 2005 +0000
+
+    - symlink.sh: Move XRes.h from proto/Resource to
+        lib/XRes/include/X11/extensions
+    - symlink.sh: Add XRes linking
+    - xc/lib/XRes/*.c: conditionally include config.h
+    - lib/XRes: add directories and build system.
+
+commit 53500326172c6277a698926f78e042f80f03bb2d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sat May 21 04:18:30 2005 +0000
+
+    Set version to 1.0.
+
+commit f5f3a42ee3de80dfbb798727c77ad0454b70723e
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu May 19 00:22:40 2005 +0000
+
+    revert last change, didn't do right thing at all, sorry for the noise
+
+commit 5d91974af1155de1086434a36a6c1531a8d80d7b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu May 19 00:10:19 2005 +0000
+
+    Require automake 1.7 in AM_INIT_AUTOMAKE
+
+commit d66e491cd3a75b7e88177b9857dd7079d11361fe
+Author: Josh Triplett <josh@speakeasy.net>
+Date:   Tue May 17 19:43:16 2005 +0000
+
+    Add COPYING file for Resource. Per the advice of Daniel Stone, Resource
+        falls under the generic XFree86 catch-all license (from before the
+        problematic license change).
+
+commit 7e6e21adc53035ddffba7bb29676b7f483956df8
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon May 9 18:20:06 2005 +0000
+
+    Change all the protonames from <extension>Ext to <extension>Proto.
+
+commit f7ef242967454e96ecc41751ed04b8ec434d17c8
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri May 6 01:46:31 2005 +0000
+
+    Initial build system files for proto module.
+
+commit e33c0b156299bb0d582b573ffe185699d6415b88
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 18:43:06 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit eeb54769c6aec119ae900ed41a1cd12d62c88aa9
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:31:36 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 600d724bb28e8604eefa891daf2adefc38f6c03a
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:10:54 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 17c656129e003eba2f71b644c335eabb96e3361a
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:11 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit d2ba0bfffba0903acdfd37973c0c11be3bbfec48
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:22:27 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 7d9398ff4706c144a8562f2272c89b67947c7e0d
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:42 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 258c66ae0da974c415026fcf4961b1ced793eaaf
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:42 2003 +0000
+
+    Initial revision

@@ -5,4 +5,14 @@ resource_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = resourceproto.pc
 
-EXTRA_DIST = autogen.sh resourceproto.pc.in
+EXTRA_DIST = resourceproto.pc.in
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
