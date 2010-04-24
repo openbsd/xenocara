@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.17 2010/04/18 22:28:20 matthieu Exp $
+# $OpenBSD: Makefile,v 1.18 2010/04/24 20:13:07 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -41,10 +41,10 @@ XCB_LIBS= \
 SUBDIR= freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
 	libX11  libXext  libXrender libXft libdmx libfontenc \
 	libFS libICE libSM libXt \
-	libXmu libXpm libXp libXaw libXfixes libXcomposite \
+	libXmu libXpm libXaw libXfixes libXcomposite \
 	libXdamage libXcursor libXfont libXfontcache \
-	libXi libXinerama libxkbfile libxkbui libXprintUtil \
-	libXprintAppUtil libXrandr libXRes libXScrnSaver \
+	libXi libXinerama libxkbfile libxkbui  \
+	libXrandr libXRes libXScrnSaver \
 	libXtst libXv libXvMC libXxf86dga libXxf86misc libXxf86vm \
 	libpciaccess pixman
 
@@ -58,7 +58,7 @@ SUBDIR+= libGL libGLU libGLw
 .endif
 
 # deprecated
-# libXevie  liblbxutil libXTrap
+# libXevie libXprintUtil liblbxutil libXprintAppUtil libXTrap libXp
 
 .include <bsd.subdir.mk>
 
