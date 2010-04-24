@@ -1,5 +1,3 @@
-/* $XFree86: xc/include/extensions/XvMC.h,v 1.7 2001/11/14 21:54:37 mvojkovi Exp $ */
-
 #ifndef _XVMC_H_
 #define _XVMC_H_
 

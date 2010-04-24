@@ -9,4 +9,14 @@ video_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = videoproto.pc
 
-EXTRA_DIST = autogen.sh videoproto.pc.in
+EXTRA_DIST = videoproto.pc.in
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
