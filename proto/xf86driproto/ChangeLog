@@ -1,3 +1,54 @@
+commit f4e8747d545ec7785e3e0d965dcc151f625e2a70
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 12:06:02 2009 +1000
+
+    Bump to 2.1.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 734355de07c6f2d4266f842d40118cc563032fee
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 12:05:32 2009 +1000
+
+    Remove Xfuncproto.h include.
+    
+    This is a protocol header file.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit eca4c8a4de139181211523237ecdf6695a25828f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 12:04:33 2009 +1000
+
+    Move xf86dristr.h to xf86driproto.h for consistency with other modules.
+    
+    Provide a stub xf86dristr.h to avoid breaking clients.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 90e38c137b3dd7e3ca752de1daba2cb6958b9d38
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 12:02:36 2009 +1000
+
+    Remove RCS tags
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e5baafc41e4d3419e2e26bb4c8283febddc0b3c7
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jan 27 20:06:28 2009 -0200
+
+    Janitor: Correct make distcheck and dont distribute autogen.sh
+
+commit f911b95b9451bbdcb8fb83952c6c554d8c48a34a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed May 7 20:55:22 2008 +0200
+
+    Bump to 2.0.4
+    
+    Apparently this was done when building the tarballs, but never pushed to
+    git.
+
 commit beafefcb82089ec0bd629a66054e2982bdcaee51
 Author: James Cloos <cloos@jhcloos.com>
 Date:   Thu Dec 6 16:39:12 2007 -0500

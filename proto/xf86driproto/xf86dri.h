@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/GL/dri/xf86dri.h,v 1.8 2002/10/30 12:51:25 alanh Exp $ */
 /**************************************************************************
 
 Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
@@ -39,7 +38,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _XF86DRI_H_
 #define _XF86DRI_H_
 
-#include <X11/Xfuncproto.h>
 #include <xf86drm.h>
 
 #define X_XF86DRIQueryVersion			0
