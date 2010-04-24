@@ -9,4 +9,14 @@ kb_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = kbproto.pc
 
-EXTRA_DIST = autogen.sh kbproto.pc.in
+EXTRA_DIST = kbproto.pc.in
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
