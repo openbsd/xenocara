@@ -340,6 +340,7 @@
 ./usr/X11R6/include/X11/extensions/XvMCproto.h
 ./usr/X11R6/include/X11/extensions/Xvlib.h
 ./usr/X11R6/include/X11/extensions/Xvproto.h
+./usr/X11R6/include/X11/extensions/bigreqsproto.h
 ./usr/X11R6/include/X11/extensions/bigreqstr.h
 ./usr/X11R6/include/X11/extensions/composite.h
 ./usr/X11R6/include/X11/extensions/compositeproto.h
@@ -386,6 +387,7 @@
 ./usr/X11R6/include/X11/extensions/vldXvMC.h
 ./usr/X11R6/include/X11/extensions/xcmiscstr.h
 ./usr/X11R6/include/X11/extensions/xf86bigfont.h
+./usr/X11R6/include/X11/extensions/xf86bigfproto.h
 ./usr/X11R6/include/X11/extensions/xf86bigfstr.h
 ./usr/X11R6/include/X11/extensions/xf86misc.h
 ./usr/X11R6/include/X11/extensions/xf86mscstr.h

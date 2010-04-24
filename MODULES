@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.113 2010/04/24 15:32:35 matthieu Exp $
+ $OpenBSD: MODULES,v 1.114 2010/04/24 21:07:35 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -109,7 +109,7 @@ driver/xf86-video-ati		6.13.0	7.5+	needs-update
 driver/xf86-video-chips		1.2.2	7.4+
 driver/xf86-video-cirrus	1.3.2	7.4	
 driver/xf86-video-dummy		0.3.3	7.5+	needs-update
-driver/xf86-video-geode		2.11.7	7.5+	needs-update
+driver/xf86-video-geode		2.11.8	7.5+	needs-update
 driver/xf86-video-glint		1.2.4	7.4+	needs-update
 driver/xf86-video-i128		1.3.3	7.4+	needs-update
 driver/xf86-video-i740		1.3.2	7.4+
@@ -204,10 +204,10 @@ lib/libXft			2.1.14	7.5
 lib/libXi			1.3	7.5	needs-update
 lib/libXinerama			1.1	7.5	needs-update
 lib/libXmu			1.0.5	7.5
-lib/libXp			1.0.0	7.0	deprecated
+lib/libXp			1.0.0	7.0	unlinked
 lib/libXpm			3.5.8	7.5
-lib/libXprintAppUtil		1.0.1	7.0	deprecated
-lib/libXprintUtil		1.0.1	7.0	deprecated
+lib/libXprintAppUtil		1.0.1	7.0	unlinked
+lib/libXprintUtil		1.0.1	7.0	unlinked
 lib/libXrandr			1.3.0	7.5
 lib/libXrender			0.9.5	7.5
 lib/libXt			1.0.8	7.5+	needs-update
@@ -229,35 +229,35 @@ lib/libxtrans			1.2.5	7.5
 lib/pixman			0.18.0	7.5+	needs-update
 lib/xcb-util			0.3.6	7.4+
 
-proto/bigreqsproto		1.1.0	7.4+	needs-update
-proto/compositeproto		0.4.1	7.5	needs-update
-proto/damageproto		1.2.0	7.4+	needs-update
+proto/bigreqsproto		1.1.0	7.4+
+proto/compositeproto		0.4.1	7.5
+proto/damageproto		1.2.0	7.4+
 proto/dri2proto			2.3	7.5+
 proto/dmxproto			2.3	7.5	needs-update
 proto/evieproto			1.1.0	7.4+	unlinked
 proto/fixesproto		4.1.1	7.5	needs-update
-proto/fontcacheproto		0.1.3	7.5	needs-update
-proto/fontsproto		2.1.0	7.4+	needs-update
+proto/fontcacheproto		0.1.3	7.5
+proto/fontsproto		2.1.0	7.4+
 proto/glproto			1.4.11	7.5+
 proto/inputproto		2.0	7.5	needs-update
-proto/kbproto			1.0.4	7.5	needs-update
+proto/kbproto			1.0.4	7.5
 proto/pmproto			1.0.3	7.5	deprecated
-proto/printproto		1.0.4	7.4	deprecated
-proto/randrproto		1.3.1	7.5	needs-update
+proto/printproto		1.0.4	7.4	unlinked
+proto/randrproto		1.3.1	7.5
 proto/recordproto		1.14	7.5	needs-update
-proto/renderproto		0.11	7.4+	needs-update
-proto/resourceproto		1.1.0	7.4+	needs-update
+proto/renderproto		0.11	7.4+
+proto/resourceproto		1.1.0	7.4+
 proto/scrnsaverproto		1.2.0	7.4+	needs-update
 proto/trapproto			3.4.3	7.0	unlinked
-proto/videoproto		2.3.0	7.4+	needs-update
+proto/videoproto		2.3.0	7.4+
 proto/x11proto			7.0.16	7.5	needs-update
 proto/xcb-proto			1.6	7.5+
 proto/xcmiscproto		1.2.0	7.4+	needs-update
 proto/xextproto			7.1.1	7.4+	needs-update
-proto/xf86bigfontproto		1.2.0	7.4+	needs-update
+proto/xf86bigfontproto		1.2.0	7.4+
 proto/xf86dgaproto		2.1	7.5	needs-update
-proto/xf86driproto		2.1.0	7.4+	needs-update
-proto/xf86miscproto		0.9.3	7.5	needs-update
+proto/xf86driproto		2.1.0	7.4+
+proto/xf86miscproto		0.9.3	7.5
 proto/xf86vidmodeproto		2.3	7.5	needs-update
 proto/xineramaproto		1.2	7.5	needs-update
 
