@@ -1,39 +1,146 @@
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 1950869c1640590b2ce7a96e2a97746b308093f8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 27 15:43:27 2009 +1000
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    damageproto 1.2.0
 
-2005-01-16  Chris Larson <kergoth@handhelds.org>
+commit d25f083ba38d796e9a91de468fc8bec33545e400
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 25 17:48:20 2009 +1000
 
-	* configure.ac: Fix to work with automake 1.9.x.
+    Remove RCS tags
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-2004-02-03  Jim Gettys  <jg@freedesktop.org>
+commit 12b708a2fe5cb538c87239b35822ccc318f98b12
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 8 10:11:26 2009 -0400
 
-	* AUTHORS: Add AUTHORS to file
+    damageproto: use XORG_CHANGELOG macro to create ChangeLog. #22611
+    
+    Build break: Makefile.am: command not found: git-log
+    Adding the macro in configure.ac and use it in Makefile.am
+    Refer to: https://bugs.freedesktop.org/show_bug.cgi?id=22611
+    Tested: running autogen.sh, make and 'make dist'
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-2004-01-15  Daniel Stone  <daniel@fooishbar.org>
-	* Tag release 1.0 for first freedesktop.org clientside lib release.
+commit c25bdf1cce48ad1b2bb33ba45969572e6e4d385f
+Author: Owen Taylor <otaylor@fishsoup.net>
+Date:   Fri Sep 19 09:52:07 2008 -0400
 
-2003-11-03  Keith Packard  <keithp@keithp.com>
+    Document that 'parts' may be None for DamageSubtract
+    
+    The server code has handled parts == None since at least 2004.
 
-	* protocol:
-	Mark document revision
-	Credit Havoc the Tolerant for his earlier design and implementation
+commit ad1a35b351012a347c49246f986655e3a91431df
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:38:57 2007 -0500
 
-2003-10-23  Keith Packard  <keithp@keithp.com>
+    Replace static ChangeLog with dist-hook to generate from git log
 
-	* COPYING:
-	* INSTALL:
-	* Makefile.am:
-	* README:
-	* autogen.sh:
-	* configure.ac:
-	* damageext.pc.in:
-	* damageproto.h:
-	* damagewire.h:
-	* protocol:
-	Initial working version -- added DamageDestroy and damage objects
+commit 63881a6b3f5571ba4c4b3614ea9346c733eb471b
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:54:00 2007 -0400
 
-2003-10-18	Keith Packard	<keithp@keithp.com
+    Add *~ to .gitignore to skip patch/emacs droppings
 
-	Initial protocol description added
+commit cff2b116eb2a6a7827b866910a84f8357c299be0
+Author: Eric Anholt <eric@anholt.net>
+Date:   Tue Jan 9 16:19:30 2007 -0800
+
+    Rename DamagePost to DamageAdd per suggestion from keithp.
+
+commit 97c47fc81f0dc152e1d32800ce5022d2d25c3c43
+Author: Eric Anholt <eric@anholt.net>
+Date:   Mon Jan 8 13:45:10 2007 -0800
+
+    Install the protocol doc as damageproto.txt in its canonical doc dir.
+
+commit 7a6e37818a6854ec4d74f80ce5053e04b7ae75ba
+Author: Eric Anholt <eric@anholt.net>
+Date:   Mon Jan 8 13:41:20 2007 -0800
+
+    Documentation and copyright updates for 1.1 protocol (and other fixes).
+
+commit df33455a4506362eff4d393dc7d58c9d73ddf870
+Author: Eric Anholt <eric@anholt.net>
+Date:   Fri Jan 5 17:52:49 2007 -0800
+
+    Add a request to report a region of damage to a drawable.
+    
+    This bumps the protocol (and package) version to 1.1.
+
+commit 03e7a652b1674530e0d06ca8e2f869c0ba473f9f
+Author: Keith Packard <keithp@evo.keithp.com>
+Date:   Fri Feb 24 02:15:53 2006 +0100
+
+    reflect filename change to .gitignore
+
+commit e6392f4199532cfd61195e45b784a252879e4750
+Author: Keith Packard <keithp@evo.keithp.com>
+Date:   Fri Feb 24 02:15:27 2006 +0100
+
+    Import changes from X.org repository
+
+commit 1a28d9a791ed918172286110e0dcffe458489b1a
+Author: Keith Packard <keithp@evo.keithp.com>
+Date:   Fri Feb 24 02:09:04 2006 +0100
+
+    rename damageext.pc.in to damageproto.pc.in as per xorg
+
+commit 44c98d231588b6bdc1884ba7e6999b706238ecd7
+Author: Chris Larson <kergoth@handhelds.org>
+Date:   Sun Jan 16 17:30:53 2005 +0000
+
+    Fix to work with automake 1.9.x.
+
+commit e86de666f5c9629cd98ed2b0460033da5d89a55b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jan 3 05:16:14 2005 +0000
+
+    New autogen.sh from Thomas Fitzsimmons that works with srcdir != objdir.
+
+commit 648b14e2d0c1222cbe7571443ba00bb777fee2d4
+Author: Jim Gettys <jg@freedesktop.org>
+Date:   Tue Feb 3 20:44:42 2004 +0000
+
+    add author to AUTHOR's file.
+
+commit 513adccc0f3db333c4b946e7173e0f286cc5b58e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jan 15 03:40:44 2004 +0000
+
+    Tag release 1.0 for first freedesktop.org clientside lib release.
+
+commit d3ba8ef49c46fc691458ae319b80a85ccc25c121
+Author: Chris Lee <clee@c133.org>
+Date:   Wed Nov 26 03:47:58 2003 +0000
+
+    Fixes to make these work on Debian's libtool (which seems to still be buggy).
+    -clee
+
+commit b5f3d0fe86af6e077cda237fcb1b2f34ab9c1eea
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Nov 4 03:30:32 2003 +0000
+
+    Mark document revision Credit Havoc the Tolerant for his earlier design and implementation
+
+commit 4abd06d76008abede31086fccb7c0136732241a9
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Oct 24 06:39:35 2003 +0000
+
+    Add .cvsignore
+
+commit a4b351053662f4db4a165117cb18555dc4fabd33
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Oct 24 06:16:46 2003 +0000
+
+    Initial working version -- added DamageDestroy and damage objects
+
+commit 1b3ffaa1a673418fab22383bf509040924d177d3
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Oct 19 04:55:31 2003 +0000
+
+    Initial revision

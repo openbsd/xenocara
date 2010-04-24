@@ -1,6 +1,4 @@
 # 
-#  $Id: Makefile.am,v 1.1.1.2 2007/09/30 06:41:27 matthieu Exp $
-# 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -34,3 +32,13 @@ damagedoc_DATA = damageproto.txt
 
 EXTRA_DIST = autogen.sh damageproto.pc.in $(damagedoc_DATA)
 
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
