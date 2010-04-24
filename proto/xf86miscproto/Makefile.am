@@ -6,4 +6,14 @@ xf86misc_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xf86miscproto.pc
 
-EXTRA_DIST = autogen.sh xf86miscproto.pc.in
+EXTRA_DIST = xf86miscproto.pc.in
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
