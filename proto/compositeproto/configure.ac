@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.1.1.2 2007/09/30 06:10:14 matthieu Exp $
+dnl  $Id: configure.ac,v 1.2 2010/04/24 19:49:04 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
@@ -24,11 +24,15 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT([CompositeProto], [0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_INIT([CompositeProto], [0.4.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-XORG_RELEASE_VERSION
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+
+XORG_DEFAULT_OPTIONS
 
 AC_OUTPUT([Makefile
            compositeproto.pc])

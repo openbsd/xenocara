@@ -1,5 +1,5 @@
 # 
-#  $Id: Makefile.am,v 1.1.1.2 2007/09/30 06:10:14 matthieu Exp $
+#  $Id: Makefile.am,v 1.2 2010/04/24 19:49:04 matthieu Exp $
 # 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
@@ -33,3 +33,13 @@ compositedocdir = $(datadir)/doc/$(PACKAGE)
 compositedoc_DATA = compositeproto.txt
 
 EXTRA_DIST = autogen.sh compositeproto.pc.in $(compositedoc_DATA)
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
