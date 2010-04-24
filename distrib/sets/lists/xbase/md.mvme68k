@@ -16,6 +16,7 @@
 ./usr/X11R6/include/GL/osmesa.h
 ./usr/X11R6/include/X11/Xlib-xcb.h
 ./usr/X11R6/include/X11/dri/xf86dri.h
+./usr/X11R6/include/X11/dri/xf86driproto.h
 ./usr/X11R6/include/X11/dri/xf86dristr.h
 ./usr/X11R6/include/X11/extensions/dri2proto.h
 ./usr/X11R6/include/X11/extensions/dri2tokens.h
@@ -91,10 +92,7 @@
 ./usr/X11R6/lib/libXinerama.so.5.0
 ./usr/X11R6/lib/libXmu.so.10.0
 ./usr/X11R6/lib/libXmuu.so.5.0
-./usr/X11R6/lib/libXp.so.10.0
 ./usr/X11R6/lib/libXpm.so.8.0
-./usr/X11R6/lib/libXprintAppUtil.so.1.0
-./usr/X11R6/lib/libXprintUtil.so.1.0
 ./usr/X11R6/lib/libXrandr.so.6.1
 ./usr/X11R6/lib/libXrender.so.5.0
 ./usr/X11R6/lib/libXss.so.5.0

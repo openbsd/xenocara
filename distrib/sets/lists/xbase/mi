@@ -618,14 +618,8 @@
 ./usr/X11R6/lib/libXmu.la
 ./usr/X11R6/lib/libXmuu.a
 ./usr/X11R6/lib/libXmuu.la
-./usr/X11R6/lib/libXp.a
-./usr/X11R6/lib/libXp.la
 ./usr/X11R6/lib/libXpm.a
 ./usr/X11R6/lib/libXpm.la
-./usr/X11R6/lib/libXprintAppUtil.a
-./usr/X11R6/lib/libXprintAppUtil.la
-./usr/X11R6/lib/libXprintUtil.a
-./usr/X11R6/lib/libXprintUtil.la
 ./usr/X11R6/lib/libXrandr.a
 ./usr/X11R6/lib/libXrandr.la
 ./usr/X11R6/lib/libXrender.a
