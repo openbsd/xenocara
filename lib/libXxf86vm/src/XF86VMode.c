@@ -33,7 +33,8 @@ from Kaleb S. KEITHLEY.
 #define NEED_EVENTS
 #define NEED_REPLIES
 #include <X11/Xlibint.h>
-#include <X11/extensions/xf86vmstr.h>
+#include <X11/extensions/xf86vmproto.h>
+#include <X11/extensions/xf86vmode.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 
@@ -88,9 +89,7 @@ static XEXT_GENERATE_CLOSE_DISPLAY (close_display, xf86vidmode_info)
  *****************************************************************************/
 
 Bool
-XF86VidModeQueryExtension (dpy, event_basep, error_basep)
-    Display *dpy;
-    int *event_basep, *error_basep;
+XF86VidModeQueryExtension(Display *dpy, int *event_basep, int *error_basep)
 {
     XExtDisplayInfo *info = find_display (dpy);
 
@@ -104,10 +103,7 @@ XF86VidModeQueryExtension (dpy, event_basep, error_basep)
 }
 
 Bool
-XF86VidModeQueryVersion(dpy, majorVersion, minorVersion)
-    Display* dpy;
-    int* majorVersion; 
-    int* minorVersion;
+XF86VidModeQueryVersion(Display* dpy, int* majorVersion, int* minorVersion)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeQueryVersionReply rep;
@@ -201,11 +197,8 @@ XF86VidModeGetGamma(Display *dpy, int screen, XF86VidModeGamma *Gamma)
 }
 
 Bool
-XF86VidModeGetModeLine(dpy, screen, dotclock, modeline)
-    Display* dpy;
-    int screen;
-    int* dotclock; 
-    XF86VidModeModeLine* modeline;
+XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock,
+		       XF86VidModeModeLine* modeline)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeGetModeLineReply rep;
@@ -278,11 +271,8 @@ XF86VidModeGetModeLine(dpy, screen, dotclock, modeline)
 }
 
 Bool
-XF86VidModeGetAllModeLines(dpy, screen, modecount, modelinesPtr)
-    Display* dpy;
-    int screen;
-    int* modecount; 
-    XF86VidModeModeInfo ***modelinesPtr;
+XF86VidModeGetAllModeLines(Display* dpy, int screen, int* modecount,
+			   XF86VidModeModeInfo ***modelinesPtr)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeGetAllModeLinesReply rep;
@@ -440,11 +430,9 @@ XF86VidModeGetAllModeLines(dpy, screen, modecount, modelinesPtr)
 #endif
 
 Bool
-XF86VidModeAddModeLine (dpy, screen, newmodeline, aftermodeline)
-    Display *dpy;
-    int screen;
-    XF86VidModeModeInfo* newmodeline;
-    XF86VidModeModeInfo* aftermodeline;
+XF86VidModeAddModeLine(Display *dpy, int screen,
+		       XF86VidModeModeInfo* newmodeline,
+		       XF86VidModeModeInfo* aftermodeline)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeAddModeLineReq *req;
@@ -553,10 +541,8 @@ XF86VidModeAddModeLine (dpy, screen, newmodeline, aftermodeline)
 }
 
 Bool
-XF86VidModeDeleteModeLine (dpy, screen, modeline)
-    Display *dpy;
-    int screen;
-    XF86VidModeModeInfo* modeline;
+XF86VidModeDeleteModeLine(Display *dpy, int screen,
+			  XF86VidModeModeInfo* modeline)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeDeleteModeLineReq *req;
@@ -617,10 +603,7 @@ XF86VidModeDeleteModeLine (dpy, screen, modeline)
 }
 
 Bool
-XF86VidModeModModeLine (dpy, screen, modeline)
-    Display *dpy;
-    int screen;
-    XF86VidModeModeLine* modeline;
+XF86VidModeModModeLine(Display *dpy, int screen, XF86VidModeModeLine* modeline)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeModModeLineReq *req;
@@ -679,10 +662,8 @@ XF86VidModeModModeLine (dpy, screen, modeline)
 }
 
 Status
-XF86VidModeValidateModeLine (dpy, screen, modeline)
-    Display *dpy;
-    int screen;
-    XF86VidModeModeInfo* modeline;
+XF86VidModeValidateModeLine(Display *dpy, int screen,
+			    XF86VidModeModeInfo* modeline)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeValidateModeLineReq *req;
@@ -750,10 +731,7 @@ XF86VidModeValidateModeLine (dpy, screen, modeline)
 }
 
 Bool
-XF86VidModeSwitchMode(dpy, screen, zoom)
-    Display* dpy;
-    int screen;
-    int zoom;
+XF86VidModeSwitchMode(Display* dpy, int screen, int zoom)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeSwitchModeReq *req;
@@ -772,10 +750,7 @@ XF86VidModeSwitchMode(dpy, screen, zoom)
 }
     
 Bool
-XF86VidModeSwitchToMode(dpy, screen, modeline)
-    Display* dpy;
-    int screen;
-    XF86VidModeModeInfo* modeline;
+XF86VidModeSwitchToMode(Display* dpy, int screen, XF86VidModeModeInfo* modeline)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeSwitchToModeReq *req;
@@ -861,10 +836,7 @@ XF86VidModeSwitchToMode(dpy, screen, modeline)
 }
     
 Bool
-XF86VidModeLockModeSwitch(dpy, screen, lock)
-    Display* dpy;
-    int screen;
-    int lock;
+XF86VidModeLockModeSwitch(Display* dpy, int screen, int lock)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeLockModeSwitchReq *req;
@@ -883,10 +855,7 @@ XF86VidModeLockModeSwitch(dpy, screen, lock)
 }
     
 Bool
-XF86VidModeGetMonitor(dpy, screen, monitor)
-    Display* dpy;
-    int screen;
-    XF86VidModeMonitor* monitor;
+XF86VidModeGetMonitor(Display* dpy, int screen, XF86VidModeMonitor* monitor)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeGetMonitorReply rep;
@@ -972,10 +941,7 @@ XF86VidModeGetMonitor(dpy, screen, monitor)
 }
 
 Bool
-XF86VidModeGetViewPort(dpy, screen, x, y)
-    Display* dpy;
-    int screen;
-    int *x, *y;
+XF86VidModeGetViewPort(Display* dpy, int screen, int *x, int *y)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeGetViewPortReply rep;
@@ -1025,10 +991,7 @@ XF86VidModeGetViewPort(dpy, screen, x, y)
 }
 
 Bool
-XF86VidModeSetViewPort(dpy, screen, x, y)
-    Display* dpy;
-    int screen;
-    int x, y;
+XF86VidModeSetViewPort(Display* dpy, int screen, int x, int y)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeSetViewPortReq *req;
@@ -1049,11 +1012,8 @@ XF86VidModeSetViewPort(dpy, screen, x, y)
 }
 
 Bool
-XF86VidModeGetDotClocks(dpy, screen,
-	    flagsPtr, numclocksPtr, maxclocksPtr, clocksPtr)
-    Display* dpy;
-    int screen;
-    int *flagsPtr, *numclocksPtr, *maxclocksPtr, *clocksPtr[]; 
+XF86VidModeGetDotClocks(Display* dpy, int screen, int *flagsPtr,
+			int *numclocksPtr, int *maxclocksPtr, int *clocksPtr[])
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeGetDotClocksReply rep;
