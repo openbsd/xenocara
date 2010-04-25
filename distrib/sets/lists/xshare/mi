@@ -346,6 +346,7 @@
 ./usr/X11R6/include/X11/extensions/compositeproto.h
 ./usr/X11R6/include/X11/extensions/damageproto.h
 ./usr/X11R6/include/X11/extensions/damagewire.h
+./usr/X11R6/include/X11/extensions/dmx.h
 ./usr/X11R6/include/X11/extensions/dmxext.h
 ./usr/X11R6/include/X11/extensions/dmxproto.h
 ./usr/X11R6/include/X11/extensions/dpms.h
@@ -385,13 +386,16 @@
 ./usr/X11R6/include/X11/extensions/sync.h
 ./usr/X11R6/include/X11/extensions/syncstr.h
 ./usr/X11R6/include/X11/extensions/vldXvMC.h
+./usr/X11R6/include/X11/extensions/xcmiscproto.h
 ./usr/X11R6/include/X11/extensions/xcmiscstr.h
 ./usr/X11R6/include/X11/extensions/xf86bigfont.h
 ./usr/X11R6/include/X11/extensions/xf86bigfproto.h
 ./usr/X11R6/include/X11/extensions/xf86bigfstr.h
 ./usr/X11R6/include/X11/extensions/xf86misc.h
 ./usr/X11R6/include/X11/extensions/xf86mscstr.h
+./usr/X11R6/include/X11/extensions/xf86vm.h
 ./usr/X11R6/include/X11/extensions/xf86vmode.h
+./usr/X11R6/include/X11/extensions/xf86vmproto.h
 ./usr/X11R6/include/X11/extensions/xf86vmstr.h
 ./usr/X11R6/include/X11/extensions/xfixesproto.h
 ./usr/X11R6/include/X11/extensions/xfixeswire.h
