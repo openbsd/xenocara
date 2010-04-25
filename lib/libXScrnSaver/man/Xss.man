@@ -42,7 +42,7 @@ typedef struct {
     int kind;                     /\(** ScreenSaver{Blanked,Internal,External} */
     unsigned long til_or_since;   /\(** milliseconds */
     unsigned long idle;           /\(** milliseconds */
-    unsigned long event_mask;     /\(** events */
+    unsigned long eventMask;      /\(** events */
 .br
 } XScreenSaverInfo;
 
@@ -62,10 +62,10 @@ typedef struct {
 .fi
 .HP
 Bool XScreenSaverQueryExtension(Display *\fIdpy\fP,
-int *\fIevent_basep\fP, int *\fIerror_basep\fP\^);
+int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
 .HP
-Status XScreenSaverQueryVersion(Display *\fIdpy\fP, int *\fImajor_versionp\fP,
-int *\fIminor_versionp\fP\^);
+Status XScreenSaverQueryVersion(Display *\fIdpy\fP,
+int *\fImajor_version_return\fP, int *\fIminor_version_return\fP\^);
 .HP
 XScreenSaverInfo *XScreenSaverAllocInfo(\^void\^);
 .HP
@@ -153,9 +153,9 @@ returns
 .B True
 if the request succeeded; the values of the major and minor protocol
 versions supported by the server are returned in
-.I major_versionp
+.I major_version_return
 and
-.I minor_versionp .
+.I minor_version_return .
 .PP
 .B XScreenSaverAllocInfo
 allocates and returns an \fBXScreenSaverInfo\fP structure

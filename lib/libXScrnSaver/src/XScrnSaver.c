@@ -156,14 +156,14 @@ static Status event_to_wire (
 
 Bool XScreenSaverQueryExtension (
     Display	*dpy,
-    int		*event_basep,
-    int		*error_basep)
+    int		*event_base_return,
+    int		*error_base_return)
 {
     XExtDisplayInfo *info = find_display (dpy);
 
     if (XextHasExtension(info)) {
-	*event_basep = info->codes->first_event;
-	*error_basep = info->codes->first_error;
+	*event_base_return = info->codes->first_event;
+	*error_base_return = info->codes->first_error;
 	return True;
     } else {
 	return False;
@@ -173,8 +173,8 @@ Bool XScreenSaverQueryExtension (
 
 Status XScreenSaverQueryVersion(
     Display	*dpy,
-    int		*major_versionp,
-    int		*minor_versionp)
+    int		*major_version_return,
+    int		*minor_version_return)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xScreenSaverQueryVersionReply	    rep;
@@ -193,8 +193,8 @@ Status XScreenSaverQueryVersion(
 	SyncHandle ();
 	return 0;
     }
-    *major_versionp = rep.majorVersion;
-    *minor_versionp = rep.minorVersion;
+    *major_version_return = rep.majorVersion;
+    *minor_version_return = rep.minorVersion;
     UnlockDisplay (dpy);
     SyncHandle ();
     return 1;
@@ -351,7 +351,7 @@ void XScreenSaverSetAttributes (
     req->borderWidth = border_width;
     req->c_class = class;
     req->depth = depth;
-    if (visual == CopyFromParent)
+    if (visual == (Visual *)CopyFromParent)
 	req->visualID = CopyFromParent;
     else
 	req->visualID = visual->visualid;

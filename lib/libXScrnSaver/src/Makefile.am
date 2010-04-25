@@ -1,4 +1,9 @@
-AM_CFLAGS = $(XSCRNSAVER_CFLAGS) $(MALLOC_ZERO_CFLAGS)
+AM_CFLAGS = -I$(top_srcdir)/include \
+            -I$(top_srcdir)/include/X11 \
+            -I$(top_srcdir)/include/X11/extensions \
+            $(XSCRNSAVER_CFLAGS) \
+            $(MALLOC_ZERO_CFLAGS)
+
 lib_LTLIBRARIES = libXss.la
 
 libXss_la_SOURCES = \
@@ -7,6 +12,9 @@ libXss_la_SOURCES = \
 libXss_la_LIBADD = $(XSCRNSAVER_LIBS)
 
 libXss_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+
+libXScrnSaverincludedir = $(includedir)/X11/extensions
+libXScrnSaverinclude_HEADERS = $(top_srcdir)/include/X11/extensions/scrnsaver.h
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \

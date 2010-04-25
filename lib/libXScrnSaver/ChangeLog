@@ -1,3 +1,73 @@
+commit aa162e709338904604b3f945999956044bcbc7cb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 25 18:47:04 2009 +1000
+
+    Bump to 1.2.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1fd39b3fa18a3a315bf339f56a5fd9fb7a279f60
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 25 18:48:26 2009 +1000
+
+    Require scrnsaverproto 1.2 to avoid header file conflicts.
+    
+    scrnsaverproto <= 1.1 provided screensaver.h.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fb54ab90058f187f32c0679da35684accf8043c7
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu Aug 20 23:31:47 2009 +0200
+
+    Fix man vs header mismatch
+    
+    the manpage says the last member of XScreenSaverInfo is called
+    event_mask when in fact it is called eventMask in the header file.
+    
+    Debian bug#542698 <http://bugs.debian.org/542698>
+
+commit 486af8df83765525d8c77bfa42b56fb193950c8a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:31 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ed5bba86f67fdadeeaff584818d10864f3609e1a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Jan 30 17:18:09 2009 -0200
+
+    Janitor: make distcheck, compiler warnings.
+
+commit f755643f48e780c6582132269ca8d5fb750c53bf
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 22:53:40 2008 +0930
+
+    Change AM_CFLAGS to pull in new header.
+
+commit 85762a27e0203aa380c4ed26dc08c7f1181d5210
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 20:11:56 2008 +0930
+
+    Add screensaver.h to includedir.
+    
+    This header is a pure Xlib header and was moved here from the protocol module.
+    The history of the file can be found in the protocol module.
+    git://anongit.freedesktop.org/git/xorg/proto/scrnsaverproto
+
+commit ff9c27b08754c160256fe4d75cc4fbe07083f9d4
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 18:49:26 2008 +0930
+
+    Rename parameters to clarify QueryVersion/QueryExtension.
+    
+    These parameters are not treated as input. Rename them to make the
+    inner workings slightly more obvious.
+    
+    X.Org Bug 14511 <http://bugs.freedesktop.org/show_bug.cgi?id=14511>
+
 commit e3af1209b9c1fdb032d01e00b300d57278b81189
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Mar 17 18:28:14 2008 -0700
