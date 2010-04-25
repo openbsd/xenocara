@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile,v 1.1 2008/03/25 23:28:20 matthieu Exp $
+# $OpenBSD: Makefile,v 1.2 2010/04/25 19:52:58 matthieu Exp $
 
 HEADERS_SUBDIR=	X11/extensions/
-HEADERS=	xcmiscstr.h
+HEADERS=	xcmiscproto.h xcmiscstr.h
 PKGCONFIG=	xcmiscproto.pc
 
 .include <bsd.xorg.mk>
