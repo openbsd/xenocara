@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXForceWindowCreation 3X __vendorversion__
+.TH DMXForceWindowCreation __libmansuffix__ __vendorversion__
 .SH NAME
 DMXForceWindowCreation \- force immediate back-end window creation
 .SH SYNOPSIS
@@ -48,4 +48,4 @@ can generate
 .B BadWindow
 errors.
 .SH "SEE ALSO"
-.BR DMX "(3X), " Xdmx (1)
+.BR DMX "(__libmansuffix__), " Xdmx (1)

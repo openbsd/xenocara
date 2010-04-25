@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXQueryExtension 3X __vendorversion__
+.TH DMXQueryExtension __libmansuffix__ __vendorversion__
 .SH NAME
 DMXQueryExtension \- determine if DMX is available
 .SH SYNOPSIS
@@ -51,5 +51,5 @@ will be returned.  Otherwise,
 .B False
 will be returned.
 .SH "SEE ALSO"
-.BR DMXQueryVersion "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXQueryVersion "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

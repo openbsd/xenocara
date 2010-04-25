@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXRemoveScreen 3X __vendorversion__
+.TH DMXRemoveScreen __libmansuffix__ __vendorversion__
 .SH NAME
 DMXRemoveScreen \- detach a back-end screen
 .SH SYNOPSIS
@@ -56,5 +56,5 @@ is out of range, or if the back-end screen specified by
 .I screen
 has already been detached.
 .SH "SEE ALSO"
-.BR DMXAddScreen "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXAddScreen "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

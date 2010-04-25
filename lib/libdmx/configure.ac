@@ -23,25 +23,27 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
 
-AC_INIT(libdmx, 1.0.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libdmx)
+AC_INIT(libdmx, 1.1.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libdmx)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER(config.h)
 
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
+XORG_DEFAULT_OPTIONS
 
 # Check for dependencies
-PKG_CHECK_MODULES(DMX, x11 xext xextproto dmxproto)
-
+PKG_CHECK_MODULES(DMX, x11 xext xextproto [dmxproto >= 2.2.99.1])
+DMX_CFLAGS="$CWARNFLAGS $DMX_CFLAGS"
 AC_SUBST(DMX_CFLAGS)
 AC_SUBST(DMX_LIBS)
 
 XORG_CHECK_MALLOC_ZERO
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile

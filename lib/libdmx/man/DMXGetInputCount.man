@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXGetInputCount 3X __vendorversion__
+.TH DMXGetInputCount __libmansuffix__ __vendorversion__
 .SH NAME
 DMXGetInputCount \- determine number of input devices
 .SH SYNOPSIS
@@ -40,7 +40,7 @@ returns the number of input devices connected to the
 server in
 .IR input_count .
 This number is the same as that returned by
-.BR XListInputDevices (3X),
+.BR XListInputDevices (__libmansuffix__),
 but is available even when the XInput extension is not supported.
 .SH "RETURN VALUE"
 .B DMXGetInputCount()
@@ -48,6 +48,6 @@ returns
 .B True
 unless there is a protocol error.
 .SH "SEE ALSO"
-.BR DMXGetInputAttributes "(3X), "
-.BR XListInputDevices "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXGetInputAttributes "(__libmansuffix__), "
+.BR XListInputDevices "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

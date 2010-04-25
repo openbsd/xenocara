@@ -24,5 +24,15 @@ SUBDIRS = src man
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = dmx.pc
 
-EXTRA_DIST = dmx.pc.in autogen.sh
+EXTRA_DIST = dmx.pc.in
 
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

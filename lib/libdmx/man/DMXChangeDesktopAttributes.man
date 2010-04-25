@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXChangeDesktopAttributes 3X __vendorversion__
+.TH DMXChangeDesktopAttributes __libmansuffix__ __vendorversion__
 .SH NAME
 DMXChangeDesktopAttributes \- change global bounding box
 .SH SYNOPSIS
@@ -99,4 +99,4 @@ library interface), and
 .B BadValue
 (if any values are out of range).
 .SH "SEE ALSO"
-.BR DMXGetDesktopAttributes "(3X), " DMX "(3X), " Xdmx (1)
+.BR DMXGetDesktopAttributes "(__libmansuffix__), " DMX "(__libmansuffix__), " Xdmx (1)

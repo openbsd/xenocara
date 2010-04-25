@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMX 3X __vendorversion__
+.TH DMX __libmansuffix__ __vendorversion__
 .SH NAME
 DMX \- X Window System DMX (Distributed Multihead X) extension
 .SH DESCRIPTION
@@ -36,43 +36,43 @@ and modified via this protocol.
 .SH "SUMMARY OF LIBRARY FUNCTIONS"
 The following is a summary of DMX library functions:
 .sp
-DMXQueryExtension(3X) \- determine if DMX is available
+DMXQueryExtension(__libmansuffix__) \- determine if DMX is available
 .sp
-DMXQueryVersion(3X) \- determine DMX extension version
+DMXQueryVersion(__libmansuffix__) \- determine DMX extension version
 .sp
-DMXSync(3X) \- flush protocol requests between
+DMXSync(__libmansuffix__) \- flush protocol requests between
 .BR Xdmx (1)
 and back-end X servers
 .sp
-DMXForceWindowCreation(3X) \- force immediate back-end window creation
+DMXForceWindowCreation(__libmansuffix__) \- force immediate back-end window creation
 .sp
-DMXGetScreenCount(3X) \- determine number of back-end screens
+DMXGetScreenCount(__libmansuffix__) \- determine number of back-end screens
 .sp
-DMXGetScreenAttributes(3X) \- determine back-end screen attributes
+DMXGetScreenAttributes(__libmansuffix__) \- determine back-end screen attributes
 .sp
-DMXChangeScreensAttributes(3X) \- change back-end screen attributes
+DMXChangeScreensAttributes(__libmansuffix__) \- change back-end screen attributes
 .sp
-DMXAddScreen(3X) \- attach a new back-end screen
+DMXAddScreen(__libmansuffix__) \- attach a new back-end screen
 .sp
-DMXRemoveScreen(3X) \- detach a back-end screen
+DMXRemoveScreen(__libmansuffix__) \- detach a back-end screen
 .sp
-DMXGetWindowAttributes(3X) \- determine back-end window attributes
+DMXGetWindowAttributes(__libmansuffix__) \- determine back-end window attributes
 .sp
-DMXGetDesktopAttributes(3X) \- determine global bounding box
+DMXGetDesktopAttributes(__libmansuffix__) \- determine global bounding box
 .sp
-DMXChangeDesktopAttributes(3X) \- change global bounding box
+DMXChangeDesktopAttributes(__libmansuffix__) \- change global bounding box
 .sp
-DMXGetInputCount(3X) \- determine number of input devices
+DMXGetInputCount(__libmansuffix__) \- determine number of input devices
 .sp
-DMXGetInputAttributes(3X) \- determine input device attributes
+DMXGetInputAttributes(__libmansuffix__) \- determine input device attributes
 .sp
-DMXAddInput(3X) \- attach a new backend or console input
+DMXAddInput(__libmansuffix__) \- attach a new backend or console input
 .sp
-DMXRemoveInput(3X) \- detach an input
+DMXRemoveInput(__libmansuffix__) \- detach an input
 .sp
-DMXAddBackendInput(3X) \- attach a new back-end input
+DMXAddBackendInput(__libmansuffix__) \- attach a new back-end input
 .sp
-DMXAddConsoleInput(3X) \- attach a new console input
+DMXAddConsoleInput(__libmansuffix__) \- attach a new console input
 .PP
 Each of these functions is described in its own man page.
 .SH "SEE ALSO"

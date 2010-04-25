@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXChangeScreensAttributes 3X __vendorversion__
+.TH DMXChangeScreensAttributes __libmansuffix__ __vendorversion__
 .SH NAME
 DMXChangeScreensAttributes \- change back-end screen attributes
 .SH SYNOPSIS
@@ -56,7 +56,7 @@ structure is included in
 An explanation of the
 .I DMXScreenAttributes
 structure is given in
-.BR DMXGetScreenAttributes (3X).
+.BR DMXGetScreenAttributes (__libmansuffix__).
 .PP
 The values that are used to compute each value in
 .I masks
@@ -118,6 +118,6 @@ are not valid), and
 .B BadAlloc
 errors.
 .SH "SEE ALSO"
-.BR DMXGetScreenCount "(3X), "
-.BR DMXGetScreenAttributes "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXGetScreenCount "(__libmansuffix__), "
+.BR DMXGetScreenAttributes "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

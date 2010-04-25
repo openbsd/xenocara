@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXGetInputAttributes 3X __vendorversion__
+.TH DMXGetInputAttributes __libmansuffix__ __vendorversion__
 .SH NAME
 DMXGetInputAttributes \- determine input device attributes
 .SH SYNOPSIS
@@ -40,14 +40,14 @@ returns information about the input device specified with
 .IR id .
 This information cannot be
 obtained from the
-.BR XListInputDeivices (3X)
+.BR XListInputDeivices (__libmansuffix__)
 call.
 .I id
 is the same as that used by the
-.BR XListInputDevices (3X)
+.BR XListInputDevices (__libmansuffix__)
 call, and must be in
 the range 0 to one less than the value returned by
-.BR DMXGetInputCount(3X) ,
+.BR DMXGetInputCount(__libmansuffix__) ,
 inclusive.
 .PP
 The
@@ -86,14 +86,14 @@ displayed.
 For back-end devices,
 .I physicalScreen
 will identify the back-end display and can be used as an argument to
-.BR DMXGetScreenAttributes (3X)
+.BR DMXGetScreenAttributes (__libmansuffix__)
 to obtain more information;
 .I physicalId
 will be the XInput device id on the back-end X server; and
 .I name
 will be invalid (since it does not provide any additional information
 that cannot be obtained with
-.BR DMXGetScreenAttributes (3X)).
+.BR DMXGetScreenAttributes (__libmansuffix__)).
 .PP
 If
 .I isCore
@@ -114,7 +114,7 @@ If
 .I detached
 is True, then this device has been detached and is no longer producing
 input events.  The device may be reattached using
-.BR DMXAddInput (3X).
+.BR DMXAddInput (__libmansuffix__).
 .SH "RETURN VALUE"
 .B DMXGetInputAttributes()
 returns
@@ -128,8 +128,8 @@ can generate
 .I id
 is out of range).
 .SH "SEE ALSO"
-.BR DMXGetInputCount "(3X), "
-.BR XListInputDevices "(3X), "
-.BR DMXGetScreenAttributes "(3X), "
-.BR DMXAddInput "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXGetInputCount "(__libmansuffix__), "
+.BR XListInputDevices "(__libmansuffix__), "
+.BR DMXGetScreenAttributes "(__libmansuffix__), "
+.BR DMXAddInput "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

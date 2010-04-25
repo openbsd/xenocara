@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXAddInput 3X __vendorversion__
+.TH DMXAddInput __libmansuffix__ __vendorversion__
 .SH NAME
 DMXAddInput, DMXAddBackendInput, DMXAddConsoleInput \- attach a new input
 .SH SYNOPSIS
@@ -104,7 +104,7 @@ is
 the new device will be added as a true core device.
 .PP
 If a device was removed with
-.BR DMXRemoveInput (3X)
+.BR DMXRemoveInput (__libmansuffix__)
 an attempt will be made to reconnect the previous devices
 .RI ( sendsCore
 is ignored in this case).
@@ -159,4 +159,4 @@ Local devices cannot be attached or detached.
 Attributes that are not specified will default to 0.  This may lead to
 unintended results.
 .SH "SEE ALSO"
-.BR DMXRemoveInput "(3X), " DMX "(3X), " Xdmx (1)
+.BR DMXRemoveInput "(__libmansuffix__), " DMX "(__libmansuffix__), " Xdmx (1)

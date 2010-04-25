@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXGetWindowAttributes 3X __vendorversion__
+.TH DMXGetWindowAttributes __libmansuffix__ __vendorversion__
 .SH NAME
 DMXGetWindowAttributes \- determine back-end window attributes
 .SH SYNOPSIS
@@ -89,7 +89,7 @@ in window-relative coordinates -- all zeros if the window is not visible
 on the backend).
 .PP
 To obtain more information about the physical screen use the
-.BR DMXGetScreenAttributes (3X)
+.BR DMXGetScreenAttributes (__libmansuffix__)
 call.
 .PP
 Note that DMX allows multiple back-end windows to overlap in their
@@ -135,20 +135,20 @@ errors.
 .SH NOTES
 Because this call transports a great deal of information over the wire,
 please call
-.BR DMXGetScreenCount (3X)
+.BR DMXGetScreenCount (__libmansuffix__)
 first, and make sure
 .I attr
 is sufficiently large.
 .PP
 On a particular back-end server, it is possible that the associated
 window has not yet been mapped because the
-.BR XMapWindow (3X)
+.BR XMapWindow (__libmansuffix__)
 call that will eventually map the window had been buffered by Xlib's
 normal buffering system.  To avoid this race condition, please call
-.BR DMXSync (3X)
+.BR DMXSync (__libmansuffix__)
 before communicating directly with the back-end X server.
 .SH "SEE ALSO"
-.BR DMXGetScreenCount "(3X), "
-.BR DMXSync "(3X), "
-.BR DMXGetScreenAttributes "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXGetScreenCount "(__libmansuffix__), "
+.BR DMXSync "(__libmansuffix__), "
+.BR DMXGetScreenAttributes "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

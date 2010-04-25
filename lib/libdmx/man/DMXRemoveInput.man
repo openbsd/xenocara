@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXRemoveInput 3X __vendorversion__
+.TH DMXRemoveInput __libmansuffix__ __vendorversion__
 .SH NAME
 DMXRemoveInput \- detach an input
 .SH SYNOPSIS
@@ -56,4 +56,4 @@ is not valid) and
 .B BadAccess
 (if the input has already been detached).
 .SH "SEE ALSO"
-.BR DMXAddInput "(3X), " DMX "(3X), " Xdmx (1)
+.BR DMXAddInput "(__libmansuffix__), " DMX "(__libmansuffix__), " Xdmx (1)

@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXQueryVersion 3X __vendorversion__
+.TH DMXQueryVersion __libmansuffix__ __vendorversion__
 .SH NAME
 DMXQueryVersion \- determine DMX extension version
 .SH SYNOPSIS
@@ -76,5 +76,5 @@ recommend that any software that uses the DMX protocol extension to
 support only versions 2.2 and above (although they should detect earlier
 versions and either reduce functionality or fail gracefully).
 .SH "SEE ALSO"
-.BR DMXQueryExtension "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXQueryExtension "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

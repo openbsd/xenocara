@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXGetScreenAttributes 3X __vendorversion__
+.TH DMXGetScreenAttributes __libmansuffix__ __vendorversion__
 .SH NAME
 DMXGetScreenAttributes \- determine back-end screen attributes
 .SH SYNOPSIS
@@ -107,6 +107,6 @@ can generate
 .B BadValue
 errors.
 .SH "SEE ALSO"
-.BR DMXGetScreenCount "(3X), "
-.BR DMXChangeScreenAttributes "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXGetScreenCount "(__libmansuffix__), "
+.BR DMXChangeScreenAttributes "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

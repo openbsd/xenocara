@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXAddScreen 3X __vendorversion__
+.TH DMXAddScreen __libmansuffix__ __vendorversion__
 .SH NAME
 DMXAddScreen \- attach a new back-end screen
 .SH SYNOPSIS
@@ -57,9 +57,9 @@ screen number for the attached screen.
 The information stored in
 .I mask " and " attr
 is identical to that used by the
-.BR DMXChangeScreenAttributes (3X)
+.BR DMXChangeScreenAttributes (__libmansuffix__)
 and
-.BR DMXGetScreenAttribues (3X)
+.BR DMXGetScreenAttribues (__libmansuffix__)
 functions.
 .SH "RETURN VALUE"
 .B DMXAddScreen()
@@ -94,11 +94,11 @@ Attributes that are not specified will default to 0.  This may lead to
 unintended results.
 .PP
 Unlike other functions in the
-.BR DMX (3X)
+.BR DMX (__libmansuffix__)
 API, this function uses
 .I screen
 for both input and output.
 .SH "SEE ALSO"
-.BR DMXRemoveScreen "(3X), "
-.BR DMXChangeScreenAttributes "(3X), " DMXGetScreenAttributes "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXRemoveScreen "(__libmansuffix__), "
+.BR DMXChangeScreenAttributes "(__libmansuffix__), " DMXGetScreenAttributes "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)

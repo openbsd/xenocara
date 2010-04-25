@@ -23,7 +23,7 @@
 .\" ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 .\" CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.TH DMXGetScreenCount 3X __vendorversion__
+.TH DMXGetScreenCount __libmansuffix__ __vendorversion__
 .SH NAME
 DMXGetScreenCount \- determine number of back-end screens
 .SH SYNOPSIS
@@ -63,6 +63,6 @@ composite back-end screens that the
 .BR Xdmx (1)
 server is using.
 .SH "SEE ALSO"
-.BR DMXGetScreenAttribtues "(3X), "
-.BR DMXChangeScreenAttributes "(3X), "
-.BR DMX "(3X), " Xdmx (1)
+.BR DMXGetScreenAttribtues "(__libmansuffix__), "
+.BR DMXChangeScreenAttributes "(__libmansuffix__), "
+.BR DMX "(__libmansuffix__), " Xdmx (1)
