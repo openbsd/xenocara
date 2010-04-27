@@ -22,23 +22,23 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
 
-AC_INIT(libXinerama, 1.0.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXinerama)
+AC_INIT(libXinerama, 1.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXinerama)
 AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG, XORG_WITH_LINT
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 AM_CONFIG_HEADER(config.h)
-
-# Require xorg-macros version 1.1.0 or newer for XORG_WITH_LINT macro
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1 or later])])
-XORG_MACROS_VERSION(1.1)
 
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
+XORG_DEFAULT_OPTIONS
 
 # Check for dependencies
-PKG_CHECK_MODULES(XINERAMA, x11 xext xextproto xineramaproto)
-
+PKG_CHECK_MODULES(XINERAMA, x11 xext xextproto [xineramaproto >= 1.1.99.1])
+XINERAMA_CFLAGS="$CWARNFLAGS $XINERAMA_CFLAGS"
 AC_SUBST(XINERAMA_CFLAGS)
 AC_SUBST(XINERAMA_LIBS)
 
@@ -47,8 +47,6 @@ XORG_WITH_LINT
 LINT_FLAGS="${LINT_FLAGS} ${XINERAMA_CFLAGS}"
 		  
 XORG_CHECK_MALLOC_ZERO
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile

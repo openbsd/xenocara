@@ -41,11 +41,11 @@ Xinerama \- API for Xinerama extension to X11 Protocol
 .nf    
 .sp
 Bool XineramaQueryExtension \^(\^Display *\fIdpy\fP, 
-	int *\fIevent_basep\fP, int *\fIerror_basep\fP\^);
+	int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
 .sp
 Status XineramaQueryVersion \^(\^Display *\fIdpy\fP,
-	int *\fImajor_versionp\fP,
-	int *\fIminor_versionp\fP\^);
+	int *\fImajor_version_return\fP,
+	int *\fIminor_version_return\fP\^);
 .sp
 Bool XineramaIsActive \^(\^Display *\fIdpy\fP\^);
 .sp
@@ -55,13 +55,13 @@ XineramaScreenInfo * XineramaQueryScreens \^(\^Display *\fIdpy\fP,
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the connection to the X server.
-.IP \fIevent_basep\fP 1i
+.IP \fIevent_base_return\fP 1i
 Specifies the return location for the assigned base event code
-.IP \fIerror_basep\fP 1i
+.IP \fIerror_base_return\fP 1i
 Specifies the return location for the assigned base error code
-.IP \fImajor_versionp\fP 1i
+.IP \fImajor_version_return\fP 1i
 Returns the major version supported by the server
-.IP \fIminor_versionp\fP 1i
+.IP \fIminor_version_return\fP 1i
 Returns the minor version supported by the server
 .IP \fInumber\fP 1i
 Returns the number of entries in the returned XineramaScreenInfo array.
@@ -78,18 +78,18 @@ into a single logical X screen.
 .LP
 The XineramaQueryExtension function queries the Xserver to determine the 
 availability of the Xinerama Extension. If the extension is available, the 
-return value is True, and event_base and error_base are set to the base event 
-number and base error number for the extension, respectively. Otherwise, the 
-return value is False, and the values of event_base and error_base are 
-undefined.
+return value is True, and event_base_return and error_base_return are set to
+the base event number and base error number for the extension, respectively.
+Otherwise, the return value is False, and the values of event_base_return and
+error_base_return are undefined.
 .sp
 
 .SS \fBXineramaQueryVersion()\fR
 
 .LP
 The XineramaQueryVersion function returns the version of the Xinerama extension
-implemented by the Xserver. The version is returned in major_versionp and 
-minor_versionp. The major version will be incremented for protocol 
+implemented by the Xserver. The version is returned in major_version_return
+and minor_version_return. The major version will be incremented for protocol
 incompatible changes, and the minor version will be incremented for small, 
 upwardly compatible changes.
 .LP

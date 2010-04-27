@@ -78,15 +78,15 @@ static XEXT_GENERATE_CLOSE_DISPLAY (close_display, panoramiX_ext_info)
 
 Bool XPanoramiXQueryExtension (
     Display *dpy,
-    int *event_basep,
-    int *error_basep
+    int *event_base_return,
+    int *error_base_return
 )
 {
     XExtDisplayInfo *info = find_display (dpy);
 
     if (XextHasExtension(info)) {
-	*event_basep = info->codes->first_event;
-	*error_basep = info->codes->first_error;
+	*event_base_return = info->codes->first_event;
+	*error_base_return = info->codes->first_error;
 	return True;
     } else {
 	return False;
@@ -96,8 +96,8 @@ Bool XPanoramiXQueryExtension (
 
 Status XPanoramiXQueryVersion(
     Display *dpy,
-    int	    *major_versionp, 
-    int *minor_versionp
+    int     *major_version_return,
+    int     *minor_version_return
 )
 {
     XExtDisplayInfo *info = find_display (dpy);
@@ -117,8 +117,8 @@ Status XPanoramiXQueryVersion(
 	SyncHandle ();
 	return 0;
     }
-    *major_versionp = rep.majorVersion;
-    *minor_versionp = rep.minorVersion;
+    *major_version_return = rep.majorVersion;
+    *minor_version_return = rep.minorVersion;
     UnlockDisplay (dpy);
     SyncHandle ();
     return 1;
@@ -228,11 +228,11 @@ Status XPanoramiXGetScreenSize (
 
 Bool XineramaQueryExtension (
    Display *dpy,
-   int     *event_base,
-   int     *error_base
+   int     *event_base_return,
+   int     *error_base_return
 )
 {
-   return XPanoramiXQueryExtension(dpy, event_base, error_base);
+   return XPanoramiXQueryExtension(dpy, event_base_return, error_base_return);
 }
 
 Status XineramaQueryVersion(

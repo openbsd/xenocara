@@ -1,3 +1,100 @@
+commit ee877cebfea0773a91337439d32ece12444cf0a6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 2 13:27:04 2009 +1000
+
+    libXinerama 1.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c5f1f903ddf1f2216bb31408caec3e87ea795dd9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 2 13:26:17 2009 +1000
+
+    Require macros 1.3 for XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 46e5273f34fd950cb4757583e06d5687d1f10407
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 27 11:47:34 2009 +1000
+
+    libXinerama 1.0.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0bfbff6d88be339f5837aa2fff016950d07a6bc5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 27 11:46:33 2009 +1000
+
+    Require xineramaproto 1.1.99.1 to avoid header conflicts.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 90d4d23bf2e94721149ddc0a80093b10a82e8845
+Author: Benjamin Close <Benjamin.Close@clearchain.com>
+Date:   Fri Feb 13 14:48:50 2009 +1030
+
+    Proto major/minors shouldn't live in the extension header but the proto header
+    
+    Previously the Xserver was pulling in the extension header rather than the proto header
+    this led to issues when compiling the xserver. Instead we shift the proto numbers to
+    the proto header and tell the X server to use the proto header. Hence it's possible
+    to compile the server without the lib again.
+    
+    Signed-off-by: Benjamin Close <Benjamin.Close@clearchain.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9810140927d4aa646f585367215d6ca684ce60a4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:34 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 39a19b89cb7bd226ec51000d4e8e7643ac076ce6
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Jan 30 03:53:40 2009 -0200
+
+    panoramiXext.h is included in X Server build.
+    
+      The X Server build only requires the value of the macros
+    PANORAMIX_MAJOR_VERSION and PANORAMIX_MINOR_VERSION.
+
+commit 7c72e844a794a9cedd9e614e919f696b47ede5e5
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 29 19:42:06 2009 -0200
+
+    Janitor: ansification, make distcheck, compiler warnings.
+
+commit 8123c94eba27d1a3eb3f509a79c229ddfa1f881a
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 22:56:50 2008 +0930
+
+    Add Xinerama.h and panoramiXext.h to includedir.
+    
+    Were previously part of xineramaproto, but they really belong here.
+    For a history of these files please refer to
+    git://anongit.freedesktop.org/git/xorg/proto/xineramaproto
+
+commit c5ac895a7dabe5a46e33e733771f20cc08e72d95
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 17:43:19 2008 +0930
+
+    Rename parameters to clarify QueryVersion/QueryExtension.
+    
+    These parameters are not treated as input. Rename them to make the inner
+    workings slightly more obvious.
+    
+    X.Org Bug 14511 <http://bugs.freedesktop.org/show_bug.cgi?id=14511>
+
+commit cbfc4113a44053c2dfacd14475ff14f43817f3c1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 6 15:42:56 2008 -0500
+
+    libXinerama 1.0.3
+
 commit 7c169beed2d8324c95385d248777f21c721b332e
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Sun Feb 24 20:30:03 2008 -0500
