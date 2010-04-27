@@ -56,9 +56,7 @@ static XEXT_GENERATE_CLOSE_DISPLAY (close_display, xf86misc_info)
  *                                                                           *
  *****************************************************************************/
 
-Bool XF86MiscQueryExtension (dpy, event_basep, error_basep)
-    Display *dpy;
-    int *event_basep, *error_basep;
+Bool XF86MiscQueryExtension (Display *dpy, int *event_basep, int *error_basep)
 {
     XExtDisplayInfo *info = find_display (dpy);
 
@@ -71,10 +69,7 @@ Bool XF86MiscQueryExtension (dpy, event_basep, error_basep)
     }
 }
 
-Bool XF86MiscQueryVersion(dpy, majorVersion, minorVersion)
-    Display* dpy;
-    int* majorVersion; 
-    int* minorVersion;
+Bool XF86MiscQueryVersion(Display* dpy, int* majorVersion, int* minorVersion)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86MiscQueryVersionReply rep;
@@ -119,9 +114,7 @@ XF86MiscSetClientVersion(Display *dpy)
     return True;
 }
 
-Bool XF86MiscGetMouseSettings(dpy, mouseinfo)
-    Display* dpy;
-    XF86MiscMouseSettings *mouseinfo;
+Bool XF86MiscGetMouseSettings(Display* dpy, XF86MiscMouseSettings *mouseinfo)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86MiscGetMouseSettingsReply rep;
@@ -165,9 +158,7 @@ Bool XF86MiscGetMouseSettings(dpy, mouseinfo)
     return True;
 }
 
-Bool XF86MiscGetKbdSettings(dpy, kbdinfo)
-    Display* dpy;
-    XF86MiscKbdSettings *kbdinfo;
+Bool XF86MiscGetKbdSettings(Display* dpy, XF86MiscKbdSettings *kbdinfo)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86MiscGetKbdSettingsReply rep;
@@ -195,9 +186,7 @@ Bool XF86MiscGetKbdSettings(dpy, kbdinfo)
     return True;
 }
 
-Bool XF86MiscSetMouseSettings(dpy, mouseinfo)
-    Display* dpy;
-    XF86MiscMouseSettings *mouseinfo;
+Bool XF86MiscSetMouseSettings(Display* dpy, XF86MiscMouseSettings *mouseinfo)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86MiscSetMouseSettingsReq *req;
@@ -235,9 +224,7 @@ Bool XF86MiscSetMouseSettings(dpy, mouseinfo)
     return True;
 }
 
-Bool XF86MiscSetKbdSettings(dpy, kbdinfo)
-    Display* dpy;
-    XF86MiscKbdSettings *kbdinfo;
+Bool XF86MiscSetKbdSettings(Display* dpy, XF86MiscKbdSettings *kbdinfo)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86MiscSetKbdSettingsReq *req;
@@ -258,9 +245,7 @@ Bool XF86MiscSetKbdSettings(dpy, kbdinfo)
     return True;
 }
 
-int XF86MiscSetGrabKeysState(dpy, enable)
-    Display* dpy;
-    Bool enable;
+int XF86MiscSetGrabKeysState(Display* dpy, Bool enable)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86MiscSetGrabKeysStateReply rep;
@@ -284,9 +269,7 @@ int XF86MiscSetGrabKeysState(dpy, enable)
     return rep.status;
 }
 
-Bool XF86MiscGetFilePaths(dpy, filpaths)
-    Display* dpy;
-    XF86MiscFilePaths *filpaths;
+Bool XF86MiscGetFilePaths(Display* dpy, XF86MiscFilePaths *filpaths)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86MiscGetFilePathsReply rep;
@@ -354,12 +337,9 @@ Bool XF86MiscGetFilePaths(dpy, filpaths)
     return True;
 }
 
-Status XF86MiscPassMessage(dpy, screen, msgtype, msgval, retmsg)
-    Display* dpy;
-    int screen;
-    const char* msgtype;
-    const char* msgval;
-    char** retmsg;
+Status XF86MiscPassMessage(Display* dpy, int screen,
+			   const char* msgtype, const char* msgval,
+			   char** retmsg)
 {
     XExtDisplayInfo *info = find_display (dpy);
     xXF86MiscPassMessageReply rep;

@@ -1,4 +1,3 @@
-# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 18:08:12 matthieu Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 # 
@@ -31,14 +30,12 @@ LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
 
 libman_PRE = XF86Misc.man
 
-BUILT_SOURCES = shadows.DONE
-
 EXTRA_DIST = $(libman_PRE)
 
 CLEANFILES = $(libman_DATA) $(BUILT_SOURCES)
 
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
-	      $(XF86Misc_shadows:=.@LIB_MAN_SUFFIX@)
+	      $(XF86Misc_shadowmen)
 
 SED = sed
 
@@ -56,7 +53,7 @@ MAN_SUBSTS = \
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 .man.$(LIB_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Generate man page shadow files (Replaces InstallManPageAliases from Imake)
 
@@ -70,8 +67,7 @@ XF86Misc_shadows =                          \
     XF86MiscGetKbdSettings                  \
     XF86MiscSetKbdSettings
 
-shadows.DONE:
-	-rm -f $(XF86Misc_shadows:=.@LIB_MAN_SUFFIX@)
-	(for i in $(XF86Misc_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XF86Misc.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
+XF86Misc_shadowmen = $(XF86Misc_shadows:=.@LIB_MAN_SUFFIX@)
+
+$(XF86Misc_shadowmen):
+	 $(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/XF86Misc.$(LIB_MAN_SUFFIX) > $@

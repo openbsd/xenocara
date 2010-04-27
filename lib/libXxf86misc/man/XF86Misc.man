@@ -1,4 +1,4 @@
-.\" $XdotOrg: lib/Xxf86misc/man/XF86Misc.man,v 1.2 2004/04/23 19:23:08 eich Exp $
+.\" $XdotOrg$
 .\" $TOG: XF86Misc.man /main/7 1997/07/19 10:30:32 kaleb $
 .\"
 .\"
