@@ -1,10 +1,18 @@
 xineramadir = $(includedir)/X11/extensions
 xinerama_HEADERS = \
-	panoramiXext.h \
-	panoramiXproto.h \
-	Xinerama.h
+	panoramiXproto.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xineramaproto.pc
 
-EXTRA_DIST = autogen.sh xineramaproto.pc.in
+EXTRA_DIST = xineramaproto.pc.in
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
