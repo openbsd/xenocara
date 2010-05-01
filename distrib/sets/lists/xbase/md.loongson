@@ -201,7 +201,7 @@
 ./usr/X11R6/lib/libxcb-xvmc.so.0.0
 ./usr/X11R6/lib/libxcb.a
 ./usr/X11R6/lib/libxcb.so.2.1
-./usr/X11R6/lib/libxkbfile.so.4.0
+./usr/X11R6/lib/libxkbfile.so.5.0
 ./usr/X11R6/lib/libxkbui.so.4.0
 ./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/dri2proto.pc

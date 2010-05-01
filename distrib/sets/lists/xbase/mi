@@ -534,9 +534,14 @@
 ./usr/X11R6/include/GL/internal/glcore.h
 ./usr/X11R6/include/X11
 ./usr/X11R6/include/X11/dri
+./usr/X11R6/include/X11/extensions/Xxf86dga.h
 ./usr/X11R6/include/X11/extensions/xf86dga.h
 ./usr/X11R6/include/X11/extensions/xf86dga1.h
+./usr/X11R6/include/X11/extensions/xf86dga1const.h
+./usr/X11R6/include/X11/extensions/xf86dga1proto.h
 ./usr/X11R6/include/X11/extensions/xf86dga1str.h
+./usr/X11R6/include/X11/extensions/xf86dgaconst.h
+./usr/X11R6/include/X11/extensions/xf86dgaproto.h
 ./usr/X11R6/include/X11/extensions/xf86dgastr.h
 ./usr/X11R6/include/freetype2/freetype/ftgzip.h
 ./usr/X11R6/include/freetype2/freetype/ftincrem.h
