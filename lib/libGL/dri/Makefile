@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2009/05/17 20:20:23 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.8 2010/05/08 14:15:29 matthieu Exp $
 
 SUBDIR= swrast
 
@@ -20,8 +20,7 @@ INCS = \
 includes:
 	cd ${MESA_INCLUDE}/GL/internal; for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/GL/internal/$$i || \
-		${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
-		$$i ${DESTDIR}${INCSDIR}/GL/internal"; \
+		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/GL/internal"; \
 		echo "\tinstalling $$i"; \
 		eval "$$j"; \
 	done

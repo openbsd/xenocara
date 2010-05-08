@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2009/06/27 10:02:53 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2010/05/08 14:15:29 matthieu Exp $
 .include <bsd.xconf.mk>
 .include "${.CURDIR}/Makefile.inc"
 
@@ -30,8 +30,7 @@ SRCS=		xf86drm.c	\
 includes: _SUBDIRUSE
 	cd ${.CURDIR}; for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/$$i || \
-		${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
-		$$i ${DESTDIR}${INCSDIR}/"; \
+		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/"; \
 		echo "\tinstalling $$i"; \
 		eval "$$j"; \
 	done

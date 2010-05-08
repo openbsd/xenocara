@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.11 2009/05/25 18:40:11 matthieu Exp $
+# $OpenBSD: Makefile,v 1.12 2010/05/08 14:15:29 matthieu Exp $
 
 DEBUG?=
 
@@ -28,8 +28,7 @@ obj: _xenocara_obj
 includes:
 	cd ${.CURDIR}; for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/GL/$$i || \
-		${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
-		$$i ${DESTDIR}${INCSDIR}/GL"; \
+		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/GL"; \
 		echo "\tinstalling $$i"; \
 		eval "$$j"; \
 	done

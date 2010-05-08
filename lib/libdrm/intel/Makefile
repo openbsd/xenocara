@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2009/06/27 10:02:53 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2010/05/08 14:15:29 matthieu Exp $
 .include <bsd.xconf.mk>
 
 LIB=		drm_intel
@@ -24,8 +24,7 @@ LDADD+=		-L${X11BASE}/lib -lX11
 includes:
 	cd ${.CURDIR}; for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/$$i || \
-		${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
-		$$i ${DESTDIR}${INCSDIR}/"; \
+		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/"; \
 		echo "\tinstalling $$i"; \
 		eval "$$j"; \
 	done

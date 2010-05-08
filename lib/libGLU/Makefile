@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2009/05/25 18:40:11 matthieu Exp $
+# $OpenBSD: Makefile,v 1.11 2010/05/08 14:15:29 matthieu Exp $
 
 .include <bsd.own.mk>
 USE_GCC3?=No
@@ -135,8 +135,8 @@ obj: _xenocara_obj
 includes:
 	@cmp -s ${DIST}/include/GL/glu.h \
 		${DESTDIR}${X11BASE}/include/GL/glu.h \
-	|| ${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
-		${DIST}/include/GL/glu.h ${DESTDIR}${X11BASE}/include/GL 
+	|| ${INSTALL_DATA} ${DIST}/include/GL/glu.h \
+		${DESTDIR}${X11BASE}/include/GL 
 
 glu.pc: ${DIST}/src/glu/glu.pc.in Makefile
 	sed -e 's,@INSTALL_DIR@,$(X11BASE),' \

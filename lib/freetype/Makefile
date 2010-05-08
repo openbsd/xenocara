@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.15 2010/03/25 20:32:36 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.16 2010/05/08 14:15:29 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -37,24 +37,21 @@ build:
 includes:: _SUBDIRUSE
 	@cmp -s ${DESTDIR}${X11BASE}/include/ft2build.h \
 	  ${.CURDIR}/builds/unix/ft2unix.h || \
-	  ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
-	  ${.CURDIR}/builds/unix/ft2unix.h \
+	${INSTALL_DATA} ${.CURDIR}/builds/unix/ft2unix.h \
 	  ${DESTDIR}${X11BASE}/include/ft2build.h
 
 includes::
 	@cmp -s ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h \
 	  ${.CURDIR}/builds/unix/ftconfig.h || \
-	  ${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
-	  ${.CURDIR}/builds/unix/ftconfig.h \
+	${INSTALL_DATA} ${.CURDIR}/builds/unix/ftconfig.h \
 	  ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h
 
 includes:: freetype2.pc
-	${INSTALL} ${INSTALL_COPY} -m 444 -o $(BINOWN) -g $(BINGRP) \
-	freetype2.pc ${DESTDIR}${X11BASE}/lib/pkgconfig
+	${INSTALL_DATA} freetype2.pc ${DESTDIR}${X11BASE}/lib/pkgconfig
 
 includes:: freetype-config
 	${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP) \
-	freetype-config ${DESTDIR}${X11BASE}/bin
+	  freetype-config ${DESTDIR}${X11BASE}/bin
 
 freetype2.pc: freetype2.in Makefile
 	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \

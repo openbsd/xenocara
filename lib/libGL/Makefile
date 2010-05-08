@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.25 2009/05/25 18:40:11 matthieu Exp $
+# $OpenBSD: Makefile,v 1.26 2010/05/08 14:15:29 matthieu Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -128,8 +128,7 @@ SRCS = $(GLX_SOURCES)	\
 includes: _SUBDIRUSE
 	cd ${MESA_INCLUDE}/GL; for i in ${INCS}; do \
 	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/GL/$$i || \
-		${INSTALL} ${INSTALL_COPY} -o ${BINOWN} -g ${BINGRP} -m 444 \
-		$$i ${DESTDIR}${INCSDIR}/GL"; \
+		${INSTALL_DATA}	$$i ${DESTDIR}${INCSDIR}/GL"; \
 		echo "\tinstalling $$i"; \
 		eval "$$j"; \
 	done
