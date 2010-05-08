@@ -68,7 +68,7 @@ DisplayModeRec lx_panel_modes[] = {
     ,				       /* 1280x1024@60 */
     {MODEPREFIX, 162000, 1600, 1664, 1856, 2160, 0, 1200, 1201, 1204, 1250, 0,
 	V_NHSYNC | V_NVSYNC, MODESUFFIX}
-    ,				       /* 1600x100@60 */
+    ,				       /* 1600x1200@60 */
 };
 
 /* Get the legacy panel size from VSA, and return the associated mode rec */

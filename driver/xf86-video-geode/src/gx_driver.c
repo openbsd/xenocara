@@ -1412,7 +1412,7 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 {
     ScrnInfoPtr pScrni = xf86Screens[scrnIndex];
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    int p, ret;
+    int p;
     int custom = 0;
 
     if (pGeode->Panel)
@@ -1422,23 +1422,24 @@ GXValidMode(int scrnIndex, DisplayModePtr pMode, Bool Verbose, int flags)
 
     /* Use the durango lookup for !custom modes */
 
-    if (!custom) {
-	if (pGeode->Panel) {
-	    if (pMode->CrtcHDisplay > pGeode->PanelX ||
-		pMode->CrtcVDisplay > pGeode->PanelY ||
-		gfx_is_panel_mode_supported(pGeode->PanelX, pGeode->PanelY,
-		    pMode->CrtcHDisplay, pMode->CrtcVDisplay,
-		    pScrni->bitsPerPixel) < 0) {
+    if (!custom && pGeode->Panel) {
+        if (pMode->CrtcHDisplay > pGeode->PanelX ||
+            pMode->CrtcVDisplay > pGeode->PanelY ||
+            gfx_is_panel_mode_supported(pGeode->PanelX,
+                                        pGeode->PanelY,
+                                        pMode->CrtcHDisplay,
+                                        pMode->CrtcVDisplay,
+                                        pScrni->bitsPerPixel) < 0) {
 
-		return MODE_BAD;
-	    }
-	}
+            return MODE_BAD;
+        }
+    }
 
-	ret = gfx_is_display_mode_supported(pMode->CrtcHDisplay,
-	    pMode->CrtcVDisplay,
-	    pScrni->bitsPerPixel, GeodeGetRefreshRate(pMode));
-	if (ret < 0)
-	    return MODE_BAD;
+    if (gfx_is_display_mode_supported(pMode->CrtcHDisplay,
+                                      pMode->CrtcVDisplay,
+                                      pScrni->bitsPerPixel,
+                                      GeodeGetRefreshRate(pMode)) < 0) {
+        return MODE_BAD;
     }
 
     if (pMode->Flags & V_INTERLACE)

@@ -23,9 +23,12 @@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir) \
-  -I$(top_srcdir)/src/cim -I$(top_srcdir)/src/gfx \
-  -I$(top_srcdir)/src/panel -I$(top_srcdir)/linux_v26
+
+AM_CPPFLAGS = 			\
+	-I$(top_srcdir)/src/cim \
+	-I$(top_srcdir)/src/gfx \
+	-I$(top_srcdir)/src/panel \
+	-I$(top_srcdir)/linux_v26
 
 # -DPNL_SUP is now provided by AMD_CFLAGS
 #

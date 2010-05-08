@@ -31,6 +31,7 @@
   *     gfx_get_display_mode_count
   *     gfx_get_display_mode
   *     gfx_is_display_mode_supported
+  *     gfx_is_panel_mode_supported
   *     gfx_get_display_details
   *     gfx_set_display_mode
   *     gfx_set_display_bpp
@@ -51,6 +52,7 @@
   *     gfx_set_compression_pitch
   *     gfx_set_compression_size
   *     gfx_set_display_priority_high
+  *     gfx_set_panel_present
   *     gfx_test_timing_active
   *     gfx_test_vertical_active
   *     gfx_wait_vertical_blank

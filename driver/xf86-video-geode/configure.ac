@@ -20,21 +20,24 @@
 #
 # Process this file with autoconf to produce a configure script
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.59)
 AC_INIT([xf86-video-geode],
-        2.11.6,
+        2.11.8,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode],
-        xf86-video-geode)
+        xf86-video-geode,
+	[http://www.x.org/wiki/GeodeDriver])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(.)
 
-# Require xorg-macros: XORG_CHANGELOG
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], 
+          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+XORG_DEFAULT_OPTIONS
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AM_MAINTAINER_MODE
 
@@ -83,7 +86,6 @@ XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
 XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
-XORG_DRIVER_CHECK_EXT(XFreeXDGA, xf86dgaproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
@@ -91,7 +93,6 @@ PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
 AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
 SAVE_CPPFLAGS="$CPPFLAGS"
@@ -130,10 +131,6 @@ AM_CONDITIONAL([I386ARCH], [test $is386 = true])
 
 DRIVER_NAME=geode
 AC_SUBST([DRIVER_NAME])
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
 AC_OUTPUT([
 	Makefile

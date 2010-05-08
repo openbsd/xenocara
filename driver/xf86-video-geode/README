@@ -132,6 +132,5 @@ Rotate: Select a orientation to start with - LEFT, INVERT, CCW
 NoPanel: Disable panel support
 ExaScratch: Specify the amount of extra EXA scratch buffer (in bytes)
 FBSize: Specify the size of the video space (in bytes)
-PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
 
 = EOF =

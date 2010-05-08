@@ -65,12 +65,6 @@
 #include "vgaHW.h"
 #include "vbe.h"
 
-/* Check for some extensions */
-#ifdef XFreeXDGA
-#define _XF86_DGA_SERVER_
-#include <X11/extensions/xf86dgastr.h>
-#endif /* XFreeXDGA */
-
 #ifdef DPMSExtension
 #include "globals.h"
 #include "opaque.h"
@@ -429,7 +423,7 @@ AmdPciProbe(DriverPtr driver,
  *
  * Returns	:TRUE on success and FALSE on failure.
  *
- * Comments     :This should ne minimal probe and it should under no
+ * Comments     :This should be minimal probe and it should under no
  *               circumstances change the state of the hardware.Don't do
  *               any intiallizations other than the required
  *               ScreenInforec.

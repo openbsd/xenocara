@@ -582,6 +582,12 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     if (pSrc->format == PICT_a8 || pDst->format == PICT_a8)
 	return FALSE;
 
+    if (pMsk && op != PictOpClear) {
+	/* We can only do masks with a 8bpp or a 4bpp mask */
+	if (pMsk->format != PICT_a8 && pMsk->format != PICT_a4)
+	    return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -637,11 +643,6 @@ lx_prepare_composite(int op, PicturePtr pSrc, PicturePtr pMsk,
     if (pMsk && op != PictOpClear) {
 	struct blend_ops_t *opPtr = &lx_alpha_ops[op * 2];
 	int direction = (opPtr->channel == CIMGP_CHANNEL_A_SOURCE) ? 0 : 1;
-
-	/* We can only do masks with a 8bpp or a 4bpp mask */
-
-	if (pMsk->format != PICT_a8 && pMsk->format != PICT_a4)
-	    return FALSE;
 
 	/* Direction 0 indicates src->dst, 1 indiates dst->src */
 
