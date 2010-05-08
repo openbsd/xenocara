@@ -1,52 +1,397 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 84b8dac3e6d869aa7e7b012add892fad9c3ce136
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
 
-	* configure.ac:
-	* src/dummy.h:
-	* src/dummy_cursor.c:
-	* src/dummy_dga.c:
-	* src/dummy_driver.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 0.2.0.
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
 
-	* src/dummy_driver.c:
-	VERSION -> DUMMY_VERSION
+commit be0e614859c5754a18dc7c8ad2dd55090ab166c7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
 
-	* configure.ac:
-	Update package version for X11R7 release.
+commit 2fc665b979a56faaac388b065c4cd91e0d2994d3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+commit 27946998e6ec8537e7137fd453e229d81c092f54
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+commit 50b546f499ae1cafbdf8e890234616733e2e6633
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 13:00:42 2009 -0400
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+commit 7aefb53beeaac7de52c44be0032a5a699706b74b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
 
-	* configure.ac:
-	Only build dlloader modules by default.
+commit 4d4e41812e21490e39da34ac123b2c66bf20598c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 18 09:37:49 2009 -0500
 
-2005-11-15  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Canonically re-wrap too.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-	* configure.ac:
-	Add check for DGA extension to fix issues when building with
-	separate build roots.
+commit b5983dbbd5f0cb4416b0e484fb43c80208feca25
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 18 09:36:34 2009 -0500
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Compile fix.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+commit e39d9a265572c273915f1803a729e7211d7b247b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Nov 17 13:46:27 2009 -0500
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+    Add support for HW_SKIP_CONSOLE
+    
+    Acked-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+commit a8366277a70797a7fa9c8c0b739a5fdac066816f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Nov 17 13:36:30 2009 -0500
+
+    Properly un/rewrap CreateWindow
+    
+    Acked-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit ecf513ae11399c5778ff7d988e838a2b6211a88b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:08:25 2009 -0400
+
+    dummy 0.3.2
+
+commit 8fe24e48acc7ec03972ee0acb5d7ab205ecbf7e0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 14:54:17 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 17885c5cb1dbcfb48ee593260bcd1b1ff2887989
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:38:25 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit d876e719969e9d33e7e4502448a544f12eb0fab8
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Jan 25 23:25:33 2009 +0100
+
+    dummy 0.3.1
+
+commit 33e86171bd1815a23f35bb992a91c02785c22402
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 14:05:04 2008 -0400
+
+    Uninclude xf86Version.h
+
+commit 0dcdce106d01aa6ff611436c3f8374241e7a8da8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 17:31:28 2008 -0400
+
+    dummy 0.3.0
+
+commit ba7ab1d468e9a5ba37c064b3b128fa3bbb721044
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 17:26:51 2008 -0400
+
+    Death to RCS tags.
+
+commit 2aeec40b3d48705bc1de9da3f06deac365c25895
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:30 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 1874204e0c807c1686c28782d5eef62bd49fab04
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:48 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit 345de2bd048fcc7b177a3b504522fe100b34f1e0
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 10:50:06 2007 +0200
+
+    Define DUMMY_*_VERSION* using PACKAGE_VERSION_*
+
+commit 22e38bed8cd2d1e54c47d0763436012eeccb2d32
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:59:48 2006 +0000
+
+    VERSION -> DUMMY_VERSION
+
+commit 7432eaf48b70437bd55e5cc98833cce224d9e131
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:50:19 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 474af880791908da7e006c4d500bc7318107bbd1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:59 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 9b9ea496e698e4d078c67b8f5674fd6479e3b2bb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:53 2005 +0000
+
+    Stub COPYING files
+
+commit d2cff58c1e7ff03109bd17c5f8247b9b166b71f2
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:17 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 39f1e4449acb3e5da96aaaaa86e2544e9be968b1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:33 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 1b47f2e8f47501122a3b613b95ea5de99f76a8c2
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:08 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit c2c245b18409db7013dee0b0b4b7176daae7e290
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:58 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit e6887d858e8b837c29c7833ab4b55034b736c6d8
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:12 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit ec562722d0ae21f82a0dcc1a4a3e45ed52592aed
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 15 05:42:03 2005 +0000
+
+    Add check for DGA extension to fix issues when building with separate build
+        roots.
+
+commit 1073cc5a2bd62b6972fcda4d4d9ccbe43f2506d4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:14 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 5ced29a35f7571899f281af094fbd1f242f95e7d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:52 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit ffa97f23462ff045834b4abae33cf645ed6c3517
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:02 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 4bb6048d8d0d87f3d91a93fef737882434702bb0
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:02 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit f586bde47b9ed6561b5350c03b088acfe2e227f6
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:46 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit d43c40d00ab34ae85e4684cc3860f641b0bea65c
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:24 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit ef552d7e1765386c652748a97df67f4ba00beef0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:43 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit c5f63f703d838cfae54269c595e14a06ea04f243
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 13 21:52:24 2005 +0000
+
+    Add Makefile.am here. Also, for the record, CVS needs a bullet through its
+        head
+
+commit 30a2cce4b61e2b0e550479ee87f25c895cbca513
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 13 21:45:21 2005 +0000
+
+    Build system for dummy video driver
+
+commit ec9e85771609d6ec8a94b777fc784db4d1026f20
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:47 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 7b856f1c89ceae998c2133fcd9bba2c1493744e0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:54 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit a467602c6c419bd7288d80ad50a6fa62aeff3ec8
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:23 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 53407449153e20f7529ed9b403cee5aab25880d0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Feb 25 16:38:34 2005 +0000
+
+    Bug #2605: Make the cyrix, dummy, glint, neomagic, tga, and trident drivers
+        build when BuildXF86DGA NO.
+    (also fix some datestamps in the changelog)
+
+commit 73816949f2a28a0b8fe39108a8e493f9e47f7718
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Jan 28 16:12:59 2005 +0000
+
+    Modifying X.Org Xserver DDX to allow to run X with ordinary user
+        permissions when no access to HW registers is required. For API changes
+        which mostly involve the modifications to make the RRFunc (introduced
+        with 6.8) more flexible please check Bugzilla #2407. NOTE: This patch
+        applies changes to OS specific files for other OSes which I cannot
+        test.
+
+commit 720c9b05f47c3529aa2561ab4c88319322893780
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:43:05 2004 +0000
+
+    Encoding of numerous files changed to UTF-8
+
+commit b227226476ae94d094376c561d77e85589592fe6
+Author: Stuart Kreitman <stuart.kreitman@sun.com>
+Date:   Fri Oct 15 21:09:00 2004 +0000
+
+    Bugzilla #1644: Attach an atom "VFB" to root window of dummy driver.
+        Committing in Head.
+    Modified Files: dummy.h dummy_driver.c
+
+commit a571d5efb53cfe793d61d1b48c2bddc8d337d381
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:03 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 289ef4abc51e6ba8e902db4093cb5380721cbfe7
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed May 26 16:24:08 2004 +0000
+
+    Fixing setting of physical framebuffer base for several drivers. C&T
+        driver: Fixed setting of minimal clocks for HiQV chipsets. Neomagic
+        driver: improved support for lowres double scan modes.
+
+commit 5d8038b2977b7c0ab0ea17e263b3720cef83db59
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:30:15 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit f8e1ff3e00a773139aa1ab0ae72c83dc7792c175
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:20 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit d268ada4b7e5c48cf48825a632af7f0faeaff6d0
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:18 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 2ba39037fa8840a654432f032cc97b6830946cf9
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:52 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit f352d52a2a89e4c55689a90db83a9f7e03e562c1
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:18 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 77748634e71f2c42d03d708515e65351f0b755cb
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:36 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 106069b23188837f06b1057e03db24cad2018ea3
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit ca3b63783fc4aa1df725dbd0e560a446dcc17913
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

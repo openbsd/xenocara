@@ -759,20 +759,22 @@ dummyModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     return(TRUE);
 }
 
-
 Atom VFB_PROP  = 0;
 #define  VFB_PROP_NAME  "VFB_IDENT"
-
-
 
 static Bool
 DUMMYCreateWindow(WindowPtr pWin)
 {
+    ScreenPtr pScreen = pWin->drawable.pScreen;
     DUMMYPtr dPtr = DUMMYPTR(DUMMYScrn);
     WindowPtr pWinRoot;
     int ret;
-	
-    ret = dPtr->CreateWindow(pWin);
+
+    pScreen->CreateWindow = dPtr->CreateWindow;
+    ret = pScreen->CreateWindow(pWin);
+    dPtr->CreateWindow = pScreen->CreateWindow;
+    pScreen->CreateWindow = DUMMYCreateWindow;
+
     if(ret != TRUE)
 	return(ret);
 	
@@ -792,6 +794,9 @@ DUMMYCreateWindow(WindowPtr pWin)
     return TRUE;
 }
 
+#ifndef HW_SKIP_CONSOLE
+#define HW_SKIP_CONSOLE 4
+#endif
 
 static Bool
 dummyDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op, pointer ptr)
@@ -801,7 +806,7 @@ dummyDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op, pointer ptr)
     switch (op) {
 	case GET_REQUIRED_HW_INTERFACES:
 	    flag = (CARD32*)ptr;
-	    (*flag) = 0;
+	    (*flag) = HW_SKIP_CONSOLE;
 	    return TRUE;
 	default:
 	    return FALSE;
