@@ -1,8 +1,8 @@
-/* $XTermId: trace.h,v 1.51 2009/11/27 18:31:16 tom Exp $ */
+/* $XTermId: trace.h,v 1.52 2010/04/05 00:11:01 tom Exp $ */
 
 /*
  * 
- * Copyright 1997-2008,2009 by Thomas E. Dickey
+ * Copyright 1997-2009,2010 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -102,7 +102,9 @@ extern	void	TraceXtermResources(void);
 extern	int	TraceResizeRequest(const char * /* fn */, int  /* ln */, Widget  /* w */, Dimension  /* reqwide */, Dimension  /* reqhigh */, Dimension * /* gotwide */, Dimension * /* gothigh */);
 #undef  REQ_RESIZE
 #define REQ_RESIZE(w, reqwide, reqhigh, gotwide, gothigh) \
-	TraceResizeRequest(__FILE__, __LINE__, w, reqwide, reqhigh, gotwide, gothigh)
+	TraceResizeRequest(__FILE__, __LINE__, w, \
+			   (Dimension) (reqwide), (Dimension) (reqhigh), \
+			   (gotwide), (gothigh))
 
 #else
 

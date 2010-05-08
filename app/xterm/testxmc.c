@@ -1,8 +1,8 @@
-/* $XTermId: testxmc.c,v 1.46 2009/11/28 14:15:24 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.47 2010/04/17 17:11:33 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2006,2009 by Thomas E. Dickey
+Copyright 1997-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -88,8 +88,8 @@ authorization.
 #include <xterm.h>
 #include <data.h>
 
-#define MARK_ON(a)  (my_attrs & a) != 0 && (xw->flags & (whichone = CharOf(a))) == 0
-#define MARK_OFF(a) (my_attrs & a) != 0 && (xw->flags & (whichone = CharOf(a))) != 0
+#define MARK_ON(a)  (Bool) ((my_attrs & a) != 0 && (xw->flags & (whichone = CharOf(a))) == 0)
+#define MARK_OFF(a) (Bool) ((my_attrs & a) != 0 && (xw->flags & (whichone = CharOf(a))) != 0)
 
 void
 Mark_XMC(XtermWidget xw, int param)
@@ -98,8 +98,8 @@ Mark_XMC(XtermWidget xw, int param)
 
     TScreen *screen = TScreenOf(xw);
     Bool found = False;
-    Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
-    Char whichone = 0;
+    unsigned my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
+    unsigned whichone = 0;
 
     if (glitch == 0) {
 	unsigned len = screen->xmc_glitch;

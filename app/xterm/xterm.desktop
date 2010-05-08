@@ -1,4 +1,4 @@
-# $XTermId: xterm.desktop,v 1.8 2007/12/30 15:09:12 tom Exp $
+# $XTermId: xterm.desktop,v 1.9 2010/03/06 16:17:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -38,4 +38,4 @@ Terminal=false
 Type=Application
 Encoding=UTF-8
 Icon=xterm-color_48x48
-Categories=System;
+Categories=System;TerminalEmulator;

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.336 2010/01/01 15:02:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.340 2010/04/18 16:48:46 tom Exp $ */
 
 /************************************************************
 
@@ -261,17 +261,20 @@ get_font_name_props(Display * dpy, XFontStruct * fs, char *result)
     XFontProp *fp;
     int i;
     Atom fontatom = XInternAtom(dpy, "FONT", False);
-    char *name;
+    char *name = 0;
     char *str;
 
     /*
      * first get the full font name
      */
-    for (name = 0, i = 0, fp = fs->properties;
-	 i < fs->n_properties;
-	 i++, fp++)
-	if (fp->name == fontatom)
-	    name = XGetAtomName(dpy, fp->card32);
+    if (fontatom != 0) {
+	for (i = 0, fp = fs->properties; i < fs->n_properties; i++, fp++) {
+	    if (fp->name == fontatom) {
+		name = XGetAtomName(dpy, fp->card32);
+		break;
+	    }
+	}
+    }
 
     if (name == 0)
 	return 0;
@@ -700,11 +703,13 @@ is_double_width_font_xft(Display * dpy, XftFont * font)
 		    *  (fs)->max_bounds.width)
 
 const VTFontNames *
-xtermFontName(char *normal)
+xtermFontName(const char *normal)
 {
     static VTFontNames data;
+    if (data.f_n)
+	free(data.f_n);
     memset(&data, 0, sizeof(data));
-    data.f_n = normal;
+    data.f_n = x_strdup(normal);
     return &data;
 }
 
@@ -1198,7 +1203,7 @@ xtermLoadFont(XtermWidget xw,
     set_menu_font(True);
     if (tmpname) {		/* if setting escape or sel */
 	if (screen->MenuFontName(fontnum))
-	    free(screen->MenuFontName(fontnum));
+	    free((void *) screen->MenuFontName(fontnum));
 	screen->MenuFontName(fontnum) = tmpname;
 	if (fontnum == fontMenu_fontescape) {
 	    SetItemSensitivity(fontMenuEntries[fontMenu_fontescape].widget,
@@ -1417,8 +1422,8 @@ HandleLoadVTFonts(Widget w,
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
 	char buf[80];
-	char *myName = (*param_count > 0) ? params[0] : empty;
-	char *convert = (*param_count > 1) ? params[1] : myName;
+	char *myName = (char *) ((*param_count > 0) ? params[0] : empty);
+	char *convert = (char *) ((*param_count > 1) ? params[1] : myName);
 	char *myClass = (char *) MyStackAlloc(strlen(convert), buf);
 	int n;
 
@@ -1748,7 +1753,7 @@ getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
 #else
     char *result = xw->misc.face_name;
 #endif
-    if (!IsEmpty(result) && !strncmp(result, "xft:", 4))
+    if (!IsEmpty(result) && !strncmp(result, "xft:", (size_t) 4))
 	result += 4;
     return x_nonempty(result);
 }
@@ -1835,15 +1840,15 @@ xtermComputeFontInfo(XtermWidget xw,
 		    face_size = 14.0;
 		} else {
 		    double ratio;
-		    int num = screen->menu_font_sizes[fontnum];
-		    int den = screen->menu_font_sizes[0];
+		    long num = screen->menu_font_sizes[fontnum];
+		    long den = screen->menu_font_sizes[0];
 
 		    if (den <= 0)
 			den = 1;
-		    ratio = mySquareRoot((1.0 * num) / den);
+		    ratio = mySquareRoot((double) num / (double) den);
 
 		    face_size = (ratio * xw->misc.face_size[0]);
-		    TRACE(("scaled using %3d/%d = %.2f -> %f\n",
+		    TRACE(("scaled using %3ld/%ld = %.2f -> %f\n",
 			   num, den, ratio, face_size));
 		}
 #else
@@ -2689,7 +2694,7 @@ useFaceSizes(XtermWidget xw)
 	if (!result) {
 	    Boolean broken_fonts = True;
 	    TScreen *screen = TScreenOf(xw);
-	    int first = screen->menu_font_sizes[0];
+	    long first = screen->menu_font_sizes[0];
 
 	    lookupFontSizes(xw);
 	    for (n = 0; n < NMENUFONTS; n++) {

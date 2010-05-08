@@ -1,4 +1,4 @@
-/* $XTermId: VTparse.h,v 1.50 2009/12/29 22:57:16 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.51 2010/04/09 22:29:17 tom Exp $ */
 
 /*
  * Copyright 2002-2008,2009 by Thomas E. Dickey
@@ -261,5 +261,6 @@ extern Const PARSE_T esc_pct_table[];
 #define CASE_RM_TITLE 140
 #define CASE_DECSMBV 141
 #define CASE_DECSWBV 142
+#define CASE_DECLL 143
 
 #endif /* included_VTparse_h */

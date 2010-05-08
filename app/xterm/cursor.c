@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.54 2009/11/28 13:26:13 tom Exp $ */
+/* $XTermId: cursor.c,v 1.55 2010/04/17 17:12:01 tom Exp $ */
 
 /*
- * Copyright 2002-2008,2009 by Thomas E. Dickey
+ * Copyright 2002-2009,2010 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -310,8 +310,8 @@ CursorRestore(XtermWidget xw)
 	resetCharsets(screen);
     }
 
-    xw->flags &= ~DECSC_FLAGS;
-    xw->flags |= sc->flags & DECSC_FLAGS;
+    UIntClr(xw->flags, DECSC_FLAGS);
+    UIntSet(xw->flags, sc->flags & DECSC_FLAGS);
     CursorSet(screen,
 	      ((xw->flags & ORIGIN)
 	       ? sc->row - screen->top_marg

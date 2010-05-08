@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.906 2010/01/22 01:00:37 tom Exp $
+  $XTermId: xterm.log.html,v 1.933 2010/05/02 01:07:19 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -41,7 +41,7 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright &copy; 1997-2008,2009 by <A
+Copyright &copy; 1997-2009,2010 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
@@ -56,6 +56,9 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_258">Patch #258 - 2010/5/1</A>
+<LI><A HREF="#xterm_257">Patch #257 - 2010/4/22</A>
+<LI><A HREF="#xterm_256">Patch #256 - 2010/3/6</A>
 <LI><A HREF="#xterm_255">Patch #255 - 2010/1/21</A>
 <LI><A HREF="#xterm_254">Patch #254 - 2010/1/6</A>
 <LI><A HREF="#xterm_253">Patch #253 - 2009/12/10</A>
@@ -313,6 +316,108 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_258">Patch #258 - 2010/5/1</A></H1>
+<ul>
+	<li>add pointer-checks in <code>ScrnRefresh</code> to fix a case in
+	    rapid scrolling where an empty record is fetched from the
+	    scrollback FIFO.
+</ul>
+
+<H1><A NAME="xterm_257">Patch #257 - 2010/4/22</A></H1>
+<ul>
+	<li>correct ctlseqs.ms description of OSC 17 and OSC 19
+	    (patch by Emanuele Giaquinta).
+
+	<li>corrected logic for <code>menuLocale</code> resource;
+	    the <code>setlocale</code> function returns the original locale
+	    only when querying.
+
+	<li>improve filtering of translations resource, narrowing the scope
+	    of the <code>alwaysUseMods</code> to address only the translations
+	    that would cause a key to be sent to the host (report by Andrew
+	    Gaylard).
+
+	<li>change default value of <code>menuLocale</code> resource to "C",
+	    to work around
+	    longstanding <a href="http://invisible-island.net/xterm/xterm.faq.html#slow_menus">Xorg bug</a>.
+
+	<li>modify handling of <code>scrollKey</code> feature to ignore
+	    XON/XOFF keys.
+
+	<li>implement scroll-lock feature.
+
+	<li>revise memory allocation in UTF8toLatin1() to fix an out-of-bounds
+	    index (Mandriva #54531).
+
+	<li>compute value for first wide-character rather than assuming it is
+	    256, fixes problem with <code>-cjk_width</code> introduced in
+	    patches
+	    <a href="#xterm_242">242</a> and
+	    <a href="#xterm_249">249</a>
+	    (report by Thomas Wolff).
+
+	<li>improve configure script:
+	<ul>
+	    <li>corrected check for <code>_XOPEN_SOURCE</code> for OpenSolaris.
+
+	    <li>when possible, add rpath option for libraries in unusual places
+
+	    <li>add configure option <code>--disable-rpath-hack</code> to
+	        control whether the rpath option can be added.
+	</ul>
+
+	<li>modify <code>AllocateTermColor()</code> to separate initialization
+	    from control sequences,
+	    fixing problem from <a href="#xterm_254">patch #254</a> changes
+	    where enabling <code>allowSendEvents</code>
+	    resource prevents setting cursor color on command-line
+	    (Debian #572928). 
+
+	<li>amend logic from <a href="#xterm_185">patch #185</a> to not
+	    reallocate cell-array if processing <code>ESC&nbsp;%&nbsp;G</code>
+	    to switch from UTF-8 if already in ISO-8859-1 character set
+	    (report by Michael Koehne).
+
+	<li>fix to avoid calling <code>XmuInternStrings()</code> with zero
+	    count (report by Johan Bockg&#229;rd).
+
+	<li>fix build when --disable-ansi-color configure option is used.
+
+	<li>fix build when neither OPT_TCAP_QUERY or OPT_TCAP_FKEYS is defined
+	    (patch by Matthieu Herrb)
+</ul>
+
+<H1><A NAME="xterm_256">Patch #256 - 2010/3/6</A></H1>
+<ul>
+	<li>add TerminalEmulator to desktop category files.
+
+	<li>modify <code>sinstall.sh</code> to ignore the "." appended to
+	    permissions by selinux.
+
+	<li>change app-defaults organization, installing UXTerm-color
+	    and KOI8XTerm-color for consistent behavior regarding
+	    <code>customization:&nbsp;color</code> (prompted by discussion
+	    in Ubuntu #421261).
+
+	<li>fix typo in <code>minstall.sh</code> from
+	    <a href="#xterm_255">patch #255</a> changes,
+	    and add case for
+	    <code>/var/run</code> needed for full path of utmp
+	    (report by Julien Cristau).
+
+	<li>minor fix to xterm manpage, remove a comment stating that margin
+	    bell can be changed via the VT Options menu.  That was replaced in 
+	    <a href="#xterm_225">patch #225</a>
+
+	<li>add a "docs" rule to makefile.
+
+	<li>fix initialization of Atom used for <code>XkbBell</code> feature
+	    from <a href="#xterm_243">patch 243</a> changes.
+	    Unlike the other calls to <code>XInternAtom()</code>,
+	    in this case the flag telling X to create the Atom was unset
+	    (patch by Chris Adams).
+</ul>
 
 <H1><A NAME="xterm_255">Patch #255 - 2010/1/21</A></H1>
 <ul>

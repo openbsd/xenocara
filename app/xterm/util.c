@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.523 2010/01/03 23:56:24 tom Exp $ */
+/* $XTermId: util.c,v 1.534 2010/04/18 17:06:44 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -90,6 +90,7 @@ static void vertical_copy_area(XtermWidget xw,
 			       int amount);
 
 #if OPT_WIDE_CHARS
+unsigned first_widechar;
 int (*my_wcwidth) (wchar_t);
 #endif
 
@@ -459,82 +460,98 @@ xtermScroll(XtermWidget xw, int amount)
     if (amount > i)
 	amount = i;
 
-    if (ScrnHaveSelection(screen))
-	adjustHiliteOnFwdScroll(xw, amount, scroll_all_lines);
-
-    if (screen->jumpscroll) {
-	if (screen->scroll_amt > 0) {
-	    if (!screen->fastscroll) {
-		if (screen->refresh_amt + amount > i)
-		    FlushScroll(xw);
-	    }
-	    screen->scroll_amt += amount;
-	    screen->refresh_amt += amount;
-	} else {
-	    if (!screen->fastscroll) {
-		if (screen->scroll_amt < 0)
-		    FlushScroll(xw);
-	    }
-	    screen->scroll_amt = amount;
-	    screen->refresh_amt = amount;
-	}
+#if OPT_SCROLL_LOCK
+    if (screen->allowScrollLock && screen->scroll_lock) {
 	refreshheight = 0;
-    } else {
-	ScrollSelection(screen, -(amount), False);
-	if (amount == i) {
-	    ClearScreen(xw);
-	    screen->cursor_busy -= 1;
-	    return;
+	screen->scroll_amt = 0;
+	screen->refresh_amt = 0;
+	if (--(screen->topline) < -screen->savelines) {
+	    screen->topline = -screen->savelines;
+	    screen->scroll_dirty = True;
 	}
+	if (++(screen->savedlines) > screen->savelines) {
+	    screen->savedlines = screen->savelines;
+	}
+    } else
+#endif
+    {
+	if (ScrnHaveSelection(screen))
+	    adjustHiliteOnFwdScroll(xw, amount, scroll_all_lines);
 
-	shift = INX2ROW(screen, 0);
-	bot = screen->max_row - shift;
-	scrollheight = i - amount;
-	refreshheight = amount;
-
-	if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
-	    (i = screen->max_row - refreshheight + 1))
-	    refreshtop = i;
-
-	if (scroll_all_lines) {
-	    scrolltop = 0;
-	    if ((scrollheight += shift) > i)
-		scrollheight = i;
-	    if ((i = screen->savedlines) < screen->savelines) {
-		if ((i += amount) > screen->savelines)
-		    i = screen->savelines;
-		screen->savedlines = i;
-		ScrollBarDrawThumb(screen->scrollWidget);
+	if (screen->jumpscroll) {
+	    if (screen->scroll_amt > 0) {
+		if (!screen->fastscroll) {
+		    if (screen->refresh_amt + amount > i)
+			FlushScroll(xw);
+		}
+		screen->scroll_amt += amount;
+		screen->refresh_amt += amount;
+	    } else {
+		if (!screen->fastscroll) {
+		    if (screen->scroll_amt < 0)
+			FlushScroll(xw);
+		}
+		screen->scroll_amt = amount;
+		screen->refresh_amt = amount;
 	    }
+	    refreshheight = 0;
 	} else {
-	    scrolltop = screen->top_marg + shift;
-	    if ((i = screen->bot_marg - bot) > 0) {
-		scrollheight -= i;
-		if ((i = screen->top_marg + amount - 1 - bot) >= 0) {
-		    refreshtop += i;
-		    refreshheight -= i;
+	    ScrollSelection(screen, -(amount), False);
+	    if (amount == i) {
+		ClearScreen(xw);
+		screen->cursor_busy -= 1;
+		return;
+	    }
+
+	    shift = INX2ROW(screen, 0);
+	    bot = screen->max_row - shift;
+	    scrollheight = i - amount;
+	    refreshheight = amount;
+
+	    if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
+		(i = screen->max_row - refreshheight + 1))
+		refreshtop = i;
+
+	    if (scroll_all_lines) {
+		scrolltop = 0;
+		if ((scrollheight += shift) > i)
+		    scrollheight = i;
+		if ((i = screen->savedlines) < screen->savelines) {
+		    if ((i += amount) > screen->savelines)
+			i = screen->savelines;
+		    screen->savedlines = i;
+		    ScrollBarDrawThumb(screen->scrollWidget);
+		}
+	    } else {
+		scrolltop = screen->top_marg + shift;
+		if ((i = screen->bot_marg - bot) > 0) {
+		    scrollheight -= i;
+		    if ((i = screen->top_marg + amount - 1 - bot) >= 0) {
+			refreshtop += i;
+			refreshheight -= i;
+		    }
 		}
 	    }
-	}
 
-	if (screen->multiscroll && amount == 1 &&
-	    screen->topline == 0 && screen->top_marg == 0 &&
-	    screen->bot_marg == screen->max_row) {
-	    if (screen->incopy < 0 && screen->scrolls == 0)
-		CopyWait(xw);
-	    screen->scrolls++;
-	}
+	    if (screen->multiscroll && amount == 1 &&
+		screen->topline == 0 && screen->top_marg == 0 &&
+		screen->bot_marg == screen->max_row) {
+		if (screen->incopy < 0 && screen->scrolls == 0)
+		    CopyWait(xw);
+		screen->scrolls++;
+	    }
 
-	scrolling_copy_area(xw, scrolltop + amount, scrollheight, amount);
+	    scrolling_copy_area(xw, scrolltop + amount, scrollheight, amount);
 
-	if (refreshheight > 0) {
-	    ClearCurBackground(xw,
-			       (int) refreshtop * FontHeight(screen) + screen->border,
-			       (int) OriginX(screen),
-			       (unsigned) (refreshheight * FontHeight(screen)),
-			       (unsigned) Width(screen));
-	    if (refreshheight > shift)
-		refreshheight = shift;
+	    if (refreshheight > 0) {
+		ClearCurBackground(xw,
+				   (int) refreshtop * FontHeight(screen) + screen->border,
+				   (int) OriginX(screen),
+				   (unsigned) (refreshheight * FontHeight(screen)),
+				   (unsigned) Width(screen));
+		if (refreshheight > shift)
+		    refreshheight = shift;
+	    }
 	}
     }
 
@@ -665,7 +682,8 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
     unsigned cells = visual_width(str, len);
     GC currentGC;
 
-    TRACE(("WriteText (%2d,%2d) %3d:%s\n",
+    TRACE(("WriteText %d (%2d,%2d) %3d:%s\n",
+	   screen->topline,
 	   screen->cur_row,
 	   screen->cur_col,
 	   len, visibleIChar(str, len)));
@@ -712,9 +730,12 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	       screen->cur_row));
 
 	test = flags;
+#if OPT_ISO_COLORS
 	if (screen->colorAttrMode) {
 	    fg = MapToColorMode(xw->cur_foreground, screen, flags);
-	} else {
+	} else
+#endif
+	{
 	    fg = xw->cur_foreground;
 	}
 	checkVeryBoldColors(test, fg);
@@ -2242,7 +2263,9 @@ xtermXftDrawString(XtermWidget xw,
 	} else
 #endif
 	    if ((flags & BOLDATTR(screen))
+#if OPT_ISO_COLORS
 		&& !screen->colorBDMode
+#endif
 		&& XFT_FONT(renderWideBold[fontnum])) {
 	    wfont = XFT_FONT(renderWideBold[fontnum]);
 	} else {
@@ -3369,7 +3392,7 @@ getXtermSizeHints(XtermWidget xw)
  * current screen foreground and background colors.
  */
 GC
-updatedXtermGC(XtermWidget xw, unsigned flags, CellColor fg_bg, Bool hilite)
+updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
@@ -3506,7 +3529,7 @@ resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
  * BOLD or UNDERLINE color-mode active, those will be used.
  */
 unsigned
-extract_fg(XtermWidget xw, CellColor color, unsigned flags)
+extract_fg(XtermWidget xw, unsigned color, unsigned flags)
 {
     unsigned fg = ExtractForeground(color);
 
@@ -3522,7 +3545,7 @@ extract_fg(XtermWidget xw, CellColor color, unsigned flags)
  * If we've got INVERSE color-mode active, that will be used.
  */
 unsigned
-extract_bg(XtermWidget xw, CellColor color, unsigned flags)
+extract_bg(XtermWidget xw, unsigned color, unsigned flags)
 {
     unsigned bg = ExtractBackground(color);
 
@@ -3887,20 +3910,22 @@ systemWcwidthOk(int samplesize, int samplepass)
 #endif /* HAVE_WCWIDTH */
 
 void
-decode_wcwidth(int mode, int samplesize, int samplepass)
+decode_wcwidth(XtermWidget xw)
 {
+    int mode = ((xw->misc.cjk_width ? 2 : 0)
+		+ (xw->misc.mk_width ? 1 : 0)
+		+ 1);
+
     switch (mode) {
     default:
 #if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
-	if (xtermEnvUTF8() && systemWcwidthOk(samplesize, samplepass)) {
+	if (xtermEnvUTF8() &&
+	    systemWcwidthOk(xw->misc.mk_samplesize, xw->misc.mk_samplepass)) {
 	    my_wcwidth = wcwidth;
 	    TRACE(("using system wcwidth() function\n"));
 	    break;
 	}
 	/* FALLTHRU */
-#else
-	(void) samplesize;
-	(void) samplepass;
 #endif
     case 2:
 	my_wcwidth = &mk_wcwidth;
@@ -3911,6 +3936,13 @@ decode_wcwidth(int mode, int samplesize, int samplepass)
 	my_wcwidth = &mk_wcwidth_cjk;
 	TRACE(("using MK-CJK wcwidth() function\n"));
 	break;
+    }
+
+    for (first_widechar = 128; first_widechar < 4500; ++first_widechar) {
+	if (my_wcwidth((int) first_widechar) > 1) {
+	    TRACE(("first_widechar %#x\n", first_widechar));
+	    break;
+	}
     }
 }
 #endif

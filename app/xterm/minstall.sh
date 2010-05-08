@@ -1,12 +1,12 @@
 #!/bin/sh
-# $XTermId: minstall.sh,v 1.19 2010/01/20 10:55:42 tom Exp $
+# $XTermId: minstall.sh,v 1.20 2010/03/03 23:44:49 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
 # Copyright 2001-2009,2010 by Thomas E. Dickey
-# 
+#
 #                         All Rights Reserved
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -14,10 +14,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,7 +25,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# 
+#
 # Except as contained in this notice, the name(s) of the above copyright
 # holders shall not be used in advertising or otherwise to promote the
 # sale, use or other dealings in this Software without prior written
@@ -74,9 +74,9 @@ MY_MANSECT=$suffix
 # are only a few common choices.  Note that they may not necessarily appear
 # in the same directories.  Prefer utmpx/wtmpx to utmp/wtmp, since that's
 # the way the configure script is designed.
-UTMP_NAME=utmp22
+UTMP_NAME=utmp
 UTMP_PATH=/etc
-for name in /etc /var/adm /var/log
+for name in /etc /var/adm /var/run /var/log
 do
 	if test -f $name/utmpx ; then
 		UTMP_NAME=utmpx
@@ -91,7 +91,7 @@ UTMP_PATH=$UTMP_PATH/$UTMP_NAME
 
 WTMP_NAME=wtmp
 WTMP_PATH=/etc
-for name in /etc /var/adm /var/log
+for name in /etc /var/adm /var/run /var/log
 do
 	if test -f $name/wtmpx ; then
 		WTMP_NAME=wtmpx

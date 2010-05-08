@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.73 2009/11/28 13:28:03 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.74 2010/04/16 08:45:59 tom Exp $ */
 
 /************************************************************
 
@@ -293,7 +293,7 @@ xterm_DoubleGC(XtermWidget xw,
 	    result = getCgsGC(xw, cgsWin, cgsId);
 	    *inxp = n;
 	} else if (flags & BOLD) {
-	    flags &= ~BOLD;
+	    UIntClr(flags, BOLD);
 	    result = xterm_DoubleGC(xw, chrset, flags, old_gc, inxp);
 	}
     }

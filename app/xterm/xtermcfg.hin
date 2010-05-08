@@ -1,8 +1,8 @@
-/* $XTermId: xtermcfg.hin,v 1.178 2009/08/09 17:23:19 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.180 2010/04/21 00:19:23 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2008,2009 by Thomas E. Dickey
+Copyright 1997-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -80,11 +80,14 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_WCSWIDTH		/* AC_CHECK_FUNCS(wcswidth) */
 #undef HAVE_WCWIDTH		/* AC_CHECK_FUNCS(wcwidth) */
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
+#undef HAVE_X11_EXTENSIONS_XKB_H /* AC_CHECK_HEADERS(X11/extensions/XKB.h) */
 #undef HAVE_X11_SUNKEYSYM_H	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
 #undef HAVE_X11_XF86KEYSYM_H	/* AC_CHECK_HEADERS(X11/XF86keysym.h) */
+#undef HAVE_X11_XKBLIB_H	/* AC_CHECK_HEADERS(X11/XKBlib.h) */
 #undef HAVE_X11_XPOLL_H		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
 #undef HAVE_XFTDRAWSETCLIP	/* CF_X_FREETYPE */
 #undef HAVE_XFTDRAWSETCLIPRECTANGLES /* CF_X_FREETYPE */
+#undef HAVE_XKBQUERYEXTENSION	/* AC_CHECK_FUNCS(XkbQueryExtension) */
 #undef HAVE_XKB_BELL_EXT	/* CF_XKB_BELL_EXT */
 #undef LUIT_PATH		/* CF_ARG_ENABLE(luit) */
 #undef NO_ACTIVE_ICON		/* CF_ARG_DISABLE(active-icon) */

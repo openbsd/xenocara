@@ -1,8 +1,8 @@
-! $XTermId: KOI8RXTerm.ad,v 1.3 2007/12/30 15:49:14 tom Exp $
+! $XTermId: KOI8RXTerm.ad,v 1.4 2010/03/04 01:17:49 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
-! Copyright 2007 by Thomas E. Dickey
+! Copyright 2007,2010 by Thomas E. Dickey
 ! 
 !                         All Rights Reserved
 ! 
@@ -36,7 +36,7 @@
 !	xterm -class KOI8RXTerm
 ! to set resources for KOI8-R mode with corresponding fonts.
 
-#include "XTerm-color"
+#include "XTerm"
 
 *fontMenu.Label:  KOI8-R Fonts
 *VT100*allowC1Printable:	true

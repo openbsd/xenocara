@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.55 2009/12/29 22:01:11 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.57 2010/04/10 00:19:56 tom Exp $ */
 
 /*
  *
@@ -550,7 +550,7 @@ CASE_CPR,
 CASE_GROUND_STATE,
 /*	p		q		r		s	*/
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECLL,
 CASE_DECSTBM,
 CASE_DECSC,
 /*	t		u		v		w	*/
@@ -710,7 +710,7 @@ CASE_CPR,
 CASE_GROUND_STATE,
 /*      eth             ntilde          ograve          oacute          */
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECLL,
 CASE_DECSTBM,
 CASE_DECSC,
 /*      ocircumflex     otilde          odiaeresis      division        */
@@ -874,7 +874,7 @@ CASE_CPR,
 CASE_GROUND_STATE,
 /*	p		q		r		s	*/
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECLL,
 CASE_DECSTBM,
 CASE_DECSC,
 /*	t		u		v		w	*/
@@ -1034,7 +1034,7 @@ CASE_CPR,
 CASE_GROUND_STATE,
 /*      eth             ntilde          ograve          oacute          */
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECLL,
 CASE_DECSTBM,
 CASE_DECSC,
 /*      ocircumflex     otilde          odiaeresis      division        */

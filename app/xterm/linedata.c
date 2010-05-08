@@ -1,8 +1,8 @@
-/* $XTermId: linedata.c,v 1.73 2009/11/28 13:36:02 tom Exp $ */
+/* $XTermId: linedata.c,v 1.78 2010/04/14 23:41:10 tom Exp $ */
 
 /************************************************************
 
-Copyright 2009 by Thomas E. Dickey
+Copyright 2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -48,6 +48,7 @@ getLineData(TScreen * screen, int row)
 {
     LineData *result = 0;
     ScrnBuf buffer;
+    int max_row = screen->max_row;
 
     if (row >= 0) {
 	buffer = screen->visbuf;
@@ -58,10 +59,10 @@ getLineData(TScreen * screen, int row)
 #else
 	buffer = screen->saveBuf_index;
 	row += screen->savelines;
+	max_row += screen->savelines;
 #endif
     }
-    if (row >= 0) {
-	assert(row <= screen->max_row);
+    if (row >= 0 && row <= max_row) {
 	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);
 	if (result != 0) {
 #if 1				/* FIXME - these should be done in setupLineData, etc. */
@@ -162,23 +163,23 @@ initLineData(XtermWidget xw)
 
     initLineExtra(screen);
 
-    TRACE(("initLineData %d\n", screen->lineExtra));
-    TRACE(("...sizeof(LineData)  %d\n", sizeof(LineData)));
+    TRACE(("initLineData %lu\n", (unsigned long) screen->lineExtra));
+    TRACE(("...sizeof(LineData)  %lu\n", (unsigned long) sizeof(LineData)));
 #if OPT_ISO_COLORS
-    TRACE(("...sizeof(CellColor) %d\n", sizeof(CellColor)));
+    TRACE(("...sizeof(CellColor) %lu\n", (unsigned long) sizeof(CellColor)));
 #endif
-    TRACE(("...sizeof(RowData)   %d\n", sizeof(RowData)));
-    TRACE(("...offset(lineSize)  %d\n", offsetof(LineData, lineSize)));
-    TRACE(("...offset(bufHead)   %d\n", offsetof(LineData, bufHead)));
+    TRACE(("...sizeof(RowData)   %lu\n", (unsigned long) sizeof(RowData)));
+    TRACE(("...offset(lineSize)  %lu\n", (unsigned long) offsetof(LineData, lineSize)));
+    TRACE(("...offset(bufHead)   %lu\n", (unsigned long) offsetof(LineData, bufHead)));
 #if OPT_WIDE_CHARS
-    TRACE(("...offset(combSize)  %d\n", offsetof(LineData, combSize)));
+    TRACE(("...offset(combSize)  %lu\n", (unsigned long) offsetof(LineData, combSize)));
 #endif
-    TRACE(("...offset(attribs)   %d\n", offsetof(LineData, attribs)));
+    TRACE(("...offset(attribs)   %lu\n", (unsigned long) offsetof(LineData, attribs)));
 #if OPT_ISO_COLORS
-    TRACE(("...offset(color)     %d\n", offsetof(LineData, color)));
+    TRACE(("...offset(color)     %lu\n", (unsigned long) offsetof(LineData, color)));
 #endif
-    TRACE(("...offset(charData)  %d\n", offsetof(LineData, charData)));
-    TRACE(("...offset(combData)  %d\n", offsetof(LineData, combData)));
+    TRACE(("...offset(charData)  %lu\n", (unsigned long) offsetof(LineData, charData)));
+    TRACE(("...offset(combData)  %lu\n", (unsigned long) offsetof(LineData, combData)));
 }
 
 /*

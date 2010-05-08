@@ -599,6 +599,14 @@ CSI Ps ; Ps " p
             Ps = 0  -> 8-bit controls
             Ps = 1  -> 7-bit controls (always set for VT100)
             Ps = 2  -> 8-bit controls
+CSI Ps q  Load LEDs (DECLL)
+            Ps = 0  -> Clear all LEDS (default)
+            Ps = 1  -> Light Num Lock
+            Ps = 2  -> Light Caps Lock
+            Ps = 3  -> Light Scroll Lock
+            Ps = 2  1  -> Extinguish Num Lock
+            Ps = 2  2  -> Extinguish Caps Lock
+            Ps = 2  3  -> Extinguish Scroll Lock
 CSI Ps SP q
           Set cursor style (DECSCUSR, VT520)
             Ps = 0  -> blinking block
@@ -859,8 +867,9 @@ OSC Ps ; Pt BEL
             Ps = 1 4  -> Change mouse background color to Pt
             Ps = 1 5  -> Change Tektronix foreground color to Pt
             Ps = 1 6  -> Change Tektronix background color to Pt
-            Ps = 1 7  -> Change highlight color to Pt
+            Ps = 1 7  -> Change highlight background color to Pt
             Ps = 1 8  -> Change Tektronix cursor color to Pt
+            Ps = 1 9  -> Change highlight foreground color to Pt
 
             Ps = 4 6  -> Change Log File to Pt (normally disabled by a
           compile-time option)

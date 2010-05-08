@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.94 2010/01/21 02:08:28 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.96 2010/04/18 17:51:56 tom Exp $ */
 
 /************************************************************
 
@@ -62,7 +62,7 @@ Bool
 decodeUtf8(PtyData * data)
 {
     int i;
-    int length = data->last - data->next;
+    int length = (int) (data->last - data->next);
     int utf_count = 0;
     unsigned utf_char = 0;
 
@@ -192,7 +192,7 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
 	int save_err;
 	trimPtyData(screen, data);
 
-	size = read(screen->respond, (char *) data->last, (unsigned) FRG_SIZE);
+	size = (int) read(screen->respond, (char *) data->last, (size_t) FRG_SIZE);
 	save_err = errno;
 #if (defined(i386) && defined(SVR4) && defined(sun)) || defined(__CYGWIN__)
 	/*
@@ -322,7 +322,8 @@ initPtyData(PtyData ** result)
     TRACE(("initPtyData using minBufSize %d, maxBufSize %d\n",
 	   FRG_SIZE, BUF_SIZE));
 
-    data = (PtyData *) XtMalloc(sizeof(*data) + (unsigned) (BUF_SIZE + FRG_SIZE));
+    data = (PtyData *) XtMalloc((Cardinal) (sizeof(*data)
+					    + (unsigned) (BUF_SIZE + FRG_SIZE)));
 
     memset(data, 0, sizeof(*data));
     data->next = data->buffer;
@@ -359,7 +360,7 @@ trimPtyData(TScreen * screen GCC_UNUSED, PtyData * data)
     FlushLog(screen);
 
     if (data->next != data->buffer) {
-	int n = (data->last - data->next);
+	int n = (int) (data->last - data->next);
 
 	TRACE(("shifting buffer down by %d\n", n));
 	for (i = 0; i < n; ++i) {
@@ -385,7 +386,7 @@ fillPtyData(TScreen * screen, PtyData * data, char *value, int length)
     trimPtyData(screen, data);
 
     VTbuffer->last += length;
-    size = VTbuffer->last - VTbuffer->next;
+    size = (int) (VTbuffer->last - VTbuffer->next);
 
     /* shift the unused portion up to make room */
     for (n = size; n >= length; --n)

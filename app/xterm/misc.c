@@ -1,10 +1,9 @@
-/* $XTermId: misc.c,v 1.482 2010/01/21 09:34:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.493 2010/04/18 17:51:44 tom Exp $ */
 
 /*
- *
  * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
- *                        All Rights Reserved
+ *                         All Rights Reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -135,7 +134,7 @@ Readlink(const char *filename)
 	buf = TypeRealloc(char, size, buf);
 	memset(buf, 0, size);
 
-	n = readlink(filename, buf, size);
+	n = (int) readlink(filename, buf, size);
 	if (n < 0) {
 	    free(buf);
 	    return NULL;
@@ -184,6 +183,7 @@ selectwindow(TScreen * screen, int flag)
 	if (screen->cursor_state)
 	    ShowCursor();
     }
+    GetScrollLock(screen);
 }
 
 static void
@@ -677,8 +677,8 @@ HandleInterpret(Widget w GCC_UNUSED,
     if (*param_count == 1) {
 	char *value = params[0];
 	int need = (int) strlen(value);
-	int used = VTbuffer->next - VTbuffer->buffer;
-	int have = VTbuffer->last - VTbuffer->buffer;
+	int used = (int) (VTbuffer->next - VTbuffer->buffer);
+	int have = (int) (VTbuffer->last - VTbuffer->buffer);
 
 	if (have - used + need < BUF_SIZE) {
 
@@ -800,7 +800,7 @@ AtomBell(XtermWidget xw, int which)
 
     for (n = 0; n < XtNumber(table); ++n) {
 	if (table[n].value == which) {
-	    result = XInternAtom(XtDisplay(xw), table[n].name, True);
+	    result = XInternAtom(XtDisplay(xw), table[n].name, False);
 	    break;
 	}
     }
@@ -1074,8 +1074,8 @@ dabbrev_expand(TScreen * screen)
     char *expansion;
     Char *copybuffer;
     size_t hint_len;
-    unsigned del_cnt;
-    unsigned buf_cnt;
+    size_t del_cnt;
+    size_t buf_cnt;
     int result = 0;
     LineData *ld;
 
@@ -1138,7 +1138,7 @@ dabbrev_expand(TScreen * screen)
 	    memmove(copybuffer + del_cnt,
 		    expansion + hint_len,
 		    strlen(expansion) - hint_len);
-	    v_write(pty, copybuffer, buf_cnt);
+	    v_write(pty, copybuffer, (unsigned) buf_cnt);
 	    /* v_write() just reset our flag */
 	    screen->dabbrev_working = True;
 	    free(copybuffer);
@@ -1760,8 +1760,8 @@ FlushLog(TScreen * screen)
 #endif /* VMS */
 	cp = VTbuffer->next;
 	if (screen->logstart != 0
-	    && (i = cp - screen->logstart) > 0) {
-	    IGNORE_RC(write(screen->logfd, screen->logstart, (unsigned) i));
+	    && (i = (int) (cp - screen->logstart)) > 0) {
+	    IGNORE_RC(write(screen->logfd, screen->logstart, (size_t) i));
 	}
 	screen->logstart = VTbuffer->next;
     }
@@ -1941,7 +1941,7 @@ AllocateAnsiColor(XtermWidget xw,
 	    result = 1;
 	    SET_COLOR_RES(res, def.pixel);
 	    TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
-		   (res - screen->Acolors), spec, def.pixel));
+		   (int) (res - screen->Acolors), spec, def.pixel));
 #if OPT_COLOR_RES
 	    if (!res->mode)
 		result = 0;
@@ -1965,7 +1965,7 @@ xtermGetColorRes(XtermWidget xw, ColorRes * res)
 	result = res->value;
     } else {
 	TRACE(("xtermGetColorRes for Acolors[%d]\n",
-	       res - TScreenOf(xw)->Acolors));
+	       (int) (res - TScreenOf(xw)->Acolors)));
 
 	if (res >= TScreenOf(xw)->Acolors) {
 	    assert(res - TScreenOf(xw)->Acolors < MAXCOLORS);
@@ -2093,8 +2093,8 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 	while (!IsEmpty(buf)) {
 	    char *next;
 
-	    color = strtol(buf, &next, 10);
-	    if (next == buf)
+	    color = (int) strtol(buf, &next, 10);
+	    if ((next == buf) || (color < 0))
 		break;		/* no number at all */
 	    if (next != 0) {
 		if (strchr(";", *next) == 0)
@@ -2292,7 +2292,7 @@ GetOldColors(XtermWidget xw)
 {
     int i;
     if (pOldColors == NULL) {
-	pOldColors = (ScrnColors *) XtMalloc(sizeof(ScrnColors));
+	pOldColors = (ScrnColors *) XtMalloc((Cardinal) sizeof(ScrnColors));
 	if (pOldColors == NULL) {
 	    fprintf(stderr, "allocation failure in GetOldColors\n");
 	    return (False);
@@ -2475,7 +2475,7 @@ ChangeColorsRequest(XtermWidget xw,
 		} else if (!pOldColors->names[ndx]
 			   || (thisName
 			       && strcmp(thisName, pOldColors->names[ndx]))) {
-		    AllocateTermColor(xw, &newColors, ndx, thisName);
+		    AllocateTermColor(xw, &newColors, ndx, thisName, False);
 		}
 	    }
 	}
@@ -2514,7 +2514,7 @@ ResetColorsRequest(XtermWidget xw,
 	if (thisName != 0
 	    && pOldColors->names[ndx] != 0
 	    && strcmp(thisName, pOldColors->names[ndx])) {
-	    AllocateTermColor(xw, &newColors, ndx, thisName);
+	    AllocateTermColor(xw, &newColors, ndx, thisName, False);
 
 	    if (newColors.which != 0) {
 		ChangeColors(xw, &newColors);
@@ -2698,7 +2698,7 @@ ChangeFontRequest(XtermWidget xw, char *buf)
 /***====================================================================***/
 
 void
-do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
+do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
 {
     TScreen *screen = TScreenOf(xw);
     int mode;
@@ -2735,7 +2735,8 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    /* FALLTHRU */
 	case 1:
 	    if (*cp != ';') {
-		TRACE(("do_osc did not find semicolon offset %d\n", cp - oscbuf));
+		TRACE(("do_osc did not find semicolon offset %d\n",
+		       (int) (cp - oscbuf)));
 		return;
 	    }
 	    state = 2;
@@ -2754,7 +2755,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 		default:
 		    TRACE(("do_osc found nonprinting char %02X offset %d\n",
 			   CharOf(*cp),
-			   cp - oscbuf));
+			   (int) (cp - oscbuf)));
 		    return;
 		}
 	    }
@@ -3173,7 +3174,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
     Bool okay;
     ANSI params;
 
-    TRACE(("do_dcs(%s:%d)\n", (char *) dcsbuf, dcslen));
+    TRACE(("do_dcs(%s:%lu)\n", (char *) dcsbuf, (unsigned long) dcslen));
 
     if (dcslen != strlen(cp))
 	/* shouldn't have nulls in the string */
@@ -3392,7 +3393,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 
     char *my_attr;
     char *name;
-    unsigned limit;
+    size_t limit;
     Char *c1;
     Char *cp;
 
@@ -3624,11 +3625,12 @@ Bool
 AllocateTermColor(XtermWidget xw,
 		  ScrnColors * pNew,
 		  int ndx,
-		  const char *name)
+		  const char *name,
+		  Bool always)
 {
     Bool result = False;
 
-    if (AllowColorOps(xw, ecSetColor)) {
+    if (always || AllowColorOps(xw, ecSetColor)) {
 	XColor def;
 	TScreen *screen = TScreenOf(xw);
 	Colormap cmap = xw->core.colormap;
@@ -4156,7 +4158,7 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
 	res_array = TypeCallocN(XrmOptionDescRec, res_count);
 	for (j = 0; j < res_count; j++)
 	    res_array[j] = descs[j];
-	qsort(res_array, res_count, sizeof(*res_array), cmp_resources);
+	qsort(res_array, (size_t) res_count, sizeof(*res_array), cmp_resources);
     }
     return res_array;
 }
@@ -4184,7 +4186,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 #endif
 
     if (opt_array == 0) {
-	Cardinal opt_count, j;
+	size_t opt_count, j;
 #if OPT_TRACE
 	Cardinal k;
 	XrmOptionDescRec *res_array = sortedOptDescs(descs, numDescs);
@@ -4345,7 +4347,7 @@ xtermVersion(void)
 	else {
 	    /* some vendors leave trash in this string */
 	    for (;;) {
-		if (!strncmp(vendor, "Version ", 8))
+		if (!strncmp(vendor, "Version ", (size_t) 8))
 		    vendor += 8;
 		else if (isspace(CharOf(*vendor)))
 		    ++vendor;

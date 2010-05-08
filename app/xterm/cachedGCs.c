@@ -1,8 +1,8 @@
-/* $XTermId: cachedGCs.c,v 1.56 2009/11/28 13:24:07 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.59 2010/04/15 00:00:17 tom Exp $ */
 
 /************************************************************
 
-Copyright 2007-2008,2009 by Thomas E. Dickey
+Copyright 2007-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -65,7 +65,7 @@ typedef struct {
 } CgsCacheData;
 
 #define DEPTH 8
-#define ITEM()      (me->data - me->list)
+#define ITEM()      (int) (me->data - me->list)
 #define LIST(item)  me->list[item]
 #define LINK(item)  me->data = (me->list + (item))
 #define THIS(field) me->data->field
@@ -549,7 +549,7 @@ clrCgsFonts(XtermWidget xw, VTwin * cgsWin, XTermFonts * font)
 			    traceFont(font)));
 		    NEXT(font) = 0;
 		    NEXT(cset) = 0;
-		    me->mask &= ~(GCFont | GC_CSet);
+		    me->mask &= (unsigned) ~(GCFont | GC_CSet);
 		}
 	    }
 	}

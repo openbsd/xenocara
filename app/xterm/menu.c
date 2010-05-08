@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.261 2010/01/04 22:16:06 tom Exp $ */
+/* $XTermId: menu.c,v 1.262 2010/04/17 15:52:49 tom Exp $ */
 
 /*
  *
@@ -444,13 +444,19 @@ static MenuList tek_shell[NUM_POPUP_MENUS];
 static String
 setMenuLocale(Bool before, String substitute)
 {
-    String result;
+    String result = setlocale(LC_CTYPE, 0);
 
-    result = setlocale(LC_CTYPE, substitute);
     if (before) {
 	result = x_strdup(result);
-    } else {
-	result = 0;
+    }
+    (void) setlocale(LC_CTYPE, substitute);
+    TRACE(("setMenuLocale %s:%s\n",
+	   (before
+	    ? "before"
+	    : "after"),
+	   NonNull(result)));
+    if (!before) {
+	free((void *) substitute);
     }
     return result;
 }

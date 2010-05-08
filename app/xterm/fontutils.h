@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.79 2009/12/31 13:31:52 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.80 2010/04/16 21:23:13 tom Exp $ */
 
 /************************************************************
 
@@ -40,7 +40,7 @@ authorization.
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
 extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, fontWarningTypes /* warn */, Bool /* force */);
 extern XTermFonts * xtermCloseFont (XtermWidget /* xw */, XTermFonts * /* fnt */);
-extern const VTFontNames * xtermFontName (char */* normal */);
+extern const VTFontNames * xtermFontName (const char */* normal */);
 extern int lookupRelativeFontSize (XtermWidget /* xw */, int /* old */, int /* relative */);
 extern int xtermGetFont(const char * /* param */);
 extern int xtermLoadFont (XtermWidget /* xw */, const VTFontNames */* fonts */, Bool /* doresize */, int /* fontnum */);

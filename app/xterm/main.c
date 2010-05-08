@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.602 2010/01/20 22:07:23 tom Exp $ */
+/* $XTermId: main.c,v 1.610 2010/04/18 17:09:13 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -844,7 +844,7 @@ static XtResource application_resources[] =
     Bres("messages", "Messages", messages, True),
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
-    Sres("menuLocale", "MenuLocale", menuLocale, ""),
+    Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -1823,7 +1823,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		Version();
 	    } else if (abbrev(argv[n], "-help", unique)) {
 		Help();
-	    } else if (abbrev(argv[n], "-class", 3)) {
+	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
 		if ((my_class = argv[++n]) == 0) {
 		    Help();
 		} else {
@@ -1832,7 +1832,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		unique = 3;
 	    } else {
 #if OPT_COLOR_RES
-		if (abbrev(argv[n], "-reverse", 2)
+		if (abbrev(argv[n], "-reverse", (size_t) 2)
 		    || !strcmp("-rv", argv[n])) {
 		    reversed = True;
 		} else if (!strcmp("+rv", argv[n])) {
@@ -2913,7 +2913,8 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
     int why;
 
     TRACE_IDS;
-    TRACE(("set_owner(%s, uid=%d, gid=%d, mode=%#o\n", device, uid, gid, mode));
+    TRACE(("set_owner(%s, uid=%d, gid=%d, mode=%#o\n",
+	   device, uid, gid, (unsigned) mode));
 
     if (chown(device, uid, gid) < 0) {
 	why = errno;
@@ -2941,7 +2942,7 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 			(unsigned long) (sb.st_mode & 0777U),
 			strerror(why));
 		TRACE(("...stat uid=%d, gid=%d, mode=%#o\n",
-		       sb.st_uid, sb.st_gid, sb.st_mode));
+		       sb.st_uid, sb.st_gid, (unsigned) sb.st_mode));
 	    }
 	}
 	TRACE(("...chmod failed: %s\n", strerror(why)));
@@ -3492,13 +3493,13 @@ spawnXTerm(XtermWidget xw)
 		     */
 		    if (cp_pipe[1] <= 2) {
 			if ((i = fcntl(cp_pipe[1], F_DUPFD, 3)) >= 0) {
-			    (void) close(cp_pipe[1]);
+			    IGNORE_RC(close(cp_pipe[1]));
 			    cp_pipe[1] = i;
 			}
 		    }
 		    if (pc_pipe[0] <= 2) {
 			if ((i = fcntl(pc_pipe[0], F_DUPFD, 3)) >= 0) {
-			    (void) close(pc_pipe[0]);
+			    IGNORE_RC(close(pc_pipe[0]));
 			    pc_pipe[0] = i;
 			}
 		    }
@@ -3506,7 +3507,8 @@ spawnXTerm(XtermWidget xw)
 		    /* we don't need the socket, or the pty master anymore */
 		    close(ConnectionNumber(screen->display));
 #ifndef __MVS__
-		    close(screen->respond);
+		    if (screen->respond >= 0)
+			close(screen->respond);
 #endif /* __MVS__ */
 
 		    /* Now is the time to set up our process group and
@@ -3514,9 +3516,9 @@ spawnXTerm(XtermWidget xw)
 		     */
 #ifdef USE_SYSV_PGRP
 #if defined(CRAY) && (OSMAJORVERSION > 5)
-		    (void) setsid();
+		    IGNORE_RC(setsid());
 #else
-		    (void) setpgrp();
+		    IGNORE_RC(setpgrp());
 #endif
 #endif /* USE_SYSV_PGRP */
 
@@ -3543,7 +3545,7 @@ spawnXTerm(XtermWidget xw)
 			}
 #endif /* TIOCNOTTY && !glibc >= 2.1 */
 #ifdef CSRG_BASED
-			(void) revoke(ttydev);
+			IGNORE_RC(revoke(ttydev));
 #endif
 			if ((ttyfd = open(ttydev, O_RDWR)) >= 0) {
 #if defined(CRAY) && defined(TCSETCTTY)
@@ -3832,7 +3834,7 @@ spawnXTerm(XtermWidget xw)
 		    if (fd == -1 || ioctl(fd, SRIOCSREDIR, ttyfd) == -1)
 			fprintf(stderr, "%s: cannot open console: %s\n",
 				ProgramName, strerror(errno));
-		    (void) close(fd);
+		    IGNORE_RC(close(fd));
 #endif
 		}
 #endif /* TIOCCONS */
@@ -3912,20 +3914,20 @@ spawnXTerm(XtermWidget xw)
 #if defined(CRAY) && (OSMAJORVERSION >= 6)
 		close_fd(ttyfd);
 
-		(void) close(0);
+		IGNORE_RC(close(0));
 
 		if (open("/dev/tty", O_RDWR)) {
 		    SysError(ERROR_OPDEVTTY);
 		}
-		(void) close(1);
-		(void) close(2);
+		IGNORE_RC(close(1));
+		IGNORE_RC(close(2));
 		dup(0);
 		dup(0);
 #else
 		/* dup the tty */
 		for (i = 0; i <= 2; i++)
 		    if (i != ttyfd) {
-			(void) close(i);
+			IGNORE_RC(close(i));
 			IGNORE_RC(dup(ttyfd));
 		    }
 #ifndef ATT
@@ -4032,7 +4034,7 @@ spawnXTerm(XtermWidget xw)
 		TRACE(("getutid: NULL\n"));
 	    else
 		TRACE(("getutid: pid=%d type=%d user=%s line=%s id=%s\n",
-		       utret->ut_pid, utret->ut_type, utret->ut_user,
+		       (int) utret->ut_pid, utret->ut_type, utret->ut_user,
 		       utret->ut_line, utret->ut_id));
 #endif
 
@@ -4201,13 +4203,13 @@ spawnXTerm(XtermWidget xw)
 		handshake.error = 0;
 		strcpy(handshake.buffer, ttydev);
 		TRACE_HANDSHAKE("writing", &handshake);
-		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+		IGNORE_RC(write(cp_pipe[1], (char *) &handshake, sizeof(handshake)));
 	    }
 #endif /* OPT_PTY_HANDSHAKE */
 #endif /* USE_UTEMPTER */
 #endif /* HAVE_UTMP */
 
-	    (void) setgid(screen->gid);
+	    IGNORE_RC(setgid(screen->gid));
 	    TRACE_IDS;
 #ifdef HAS_BSD_GROUPS
 	    if (geteuid() == 0 && pw) {
@@ -4423,7 +4425,7 @@ spawnXTerm(XtermWidget xw)
 	    /* Exec failed. */
 	    fprintf(stderr, "%s: Could not exec %s: %s\n", ProgramName,
 		    ptr, strerror(errno));
-	    (void) sleep(5);
+	    IGNORE_RC(sleep(5));
 	    exit(ERROR_EXEC);
 	}
 	/* end if in child after fork */
@@ -4461,7 +4463,7 @@ spawnXTerm(XtermWidget xw)
 		    /* The open of the pty failed!  Let's get
 		     * another one.
 		     */
-		    (void) close(screen->respond);
+		    IGNORE_RC(close(screen->respond));
 		    if (get_pty(&screen->respond, XDisplayString(screen->display))) {
 			/* no more ptys! */
 			fprintf(stderr,

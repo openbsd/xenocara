@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.51 2010/01/01 19:53:42 tom Exp $ */
+/* $XTermId: main.h,v 1.52 2010/04/14 09:51:45 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -151,6 +151,10 @@
 
 #ifndef DEF_INITIAL_ERASE
 #define DEF_INITIAL_ERASE	False
+#endif
+
+#ifndef DEF_MENU_LOCALE
+#define DEF_MENU_LOCALE		"C"
 #endif
 
 #ifndef DEF_POINTER_MODE

@@ -1,8 +1,8 @@
-/* $XTermId: xstrings.c,v 1.36 2009/12/07 09:16:23 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.37 2010/04/04 22:34:17 tom Exp $ */
 
 /************************************************************
 
-Copyright 2000-2008,2009 by Thomas E. Dickey
+Copyright 2000-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -172,7 +172,7 @@ x_strcasecmp(const char *s1, const char *s2)
     if (len != strlen(s2))
 	return 1;
 
-    return x_strncasecmp(s1, s2, len);
+    return x_strncasecmp(s1, s2, (unsigned) len);
 }
 
 int

@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.145 2009/10/12 21:56:35 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.169 2010/04/21 00:19:04 tom Exp $ */
 
 /*
- * Copyright 2000-2008,2009 by Thomas E. Dickey
+ * Copyright 2000-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -64,6 +64,13 @@
 #include <X11/neXtaw/Scrollbar.h>
 #elif defined(HAVE_LIB_XAWPLUS)
 #include <X11/XawPlus/Scrollbar.h>
+#endif
+
+#if defined(HAVE_XKBQUERYEXTENSION) && defined(HAVE_X11_XKBLIB_H) && defined(HAVE_X11_EXTENSIONS_XKB_H)
+#include <X11/extensions/XKB.h>
+#include <X11/XKBlib.h>
+#else
+#undef HAVE_XKBQUERYEXTENSION
 #endif
 
 #include <data.h>
@@ -331,52 +338,62 @@ ResizeScrollBar(XtermWidget xw)
 }
 
 void
-WindowScroll(XtermWidget xw, int top)
+WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 {
     TScreen *screen = TScreenOf(xw);
     int i, lines;
     int scrolltop, scrollheight, refreshtop;
 
-    if (top < -screen->savedlines)
-	top = -screen->savedlines;
-    else if (top > 0)
-	top = 0;
-    if ((i = screen->topline - top) == 0) {
-	ScrollBarDrawThumb(screen->scrollWidget);
-	return;
-    }
-
-    if (screen->cursor_state)
-	HideCursor();
-    lines = i > 0 ? i : -i;
-    if (lines > MaxRows(screen))
-	lines = MaxRows(screen);
-    scrollheight = screen->max_row - lines + 1;
-    if (i > 0)
-	refreshtop = scrolltop = 0;
-    else {
-	scrolltop = lines;
-	refreshtop = scrollheight;
-    }
-    scrolling_copy_area(xw, scrolltop, scrollheight, -i);
-    screen->topline = top;
-
-    ScrollSelection(screen, i, True);
-
-    XClearArea(
-		  screen->display,
-		  VWindow(screen),
-		  OriginX(screen),
-		  OriginY(screen) + refreshtop * FontHeight(screen),
-		  (unsigned) Width(screen),
-		  (unsigned) (lines * FontHeight(screen)),
-		  False);
-    ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
-
-    ScrollBarDrawThumb(screen->scrollWidget);
-#if OPT_BLINK_CURS || OPT_BLINK_TEXT
-    RestartBlinking(screen);
+#if OPT_SCROLL_LOCK
+    if (screen->allowScrollLock && (screen->scroll_lock && !always)) {
+	if (screen->scroll_dirty) {
+	    screen->scroll_dirty = False;
+	    ScrnRefresh(xw, 0, 0, MaxRows(screen), MaxCols(screen), False);
+	}
+    } else
 #endif
+    {
+	if (top < -screen->savedlines) {
+	    top = -screen->savedlines;
+	} else if (top > 0) {
+	    top = 0;
+	}
+
+	if ((i = screen->topline - top) != 0) {
+
+	    if (screen->cursor_state)
+		HideCursor();
+	    lines = i > 0 ? i : -i;
+	    if (lines > MaxRows(screen))
+		lines = MaxRows(screen);
+	    scrollheight = screen->max_row - lines + 1;
+	    if (i > 0)
+		refreshtop = scrolltop = 0;
+	    else {
+		scrolltop = lines;
+		refreshtop = scrollheight;
+	    }
+	    scrolling_copy_area(xw, scrolltop, scrollheight, -i);
+	    screen->topline = top;
+
+	    ScrollSelection(screen, i, True);
+
+	    XClearArea(
+			  screen->display,
+			  VWindow(screen),
+			  OriginX(screen),
+			  OriginY(screen) + refreshtop * FontHeight(screen),
+			  (unsigned) Width(screen),
+			  (unsigned) (lines * FontHeight(screen)),
+			  False);
+	    ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
+
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
+	    RestartBlinking(screen);
+#endif
+	}
+    }
+    ScrollBarDrawThumb(screen->scrollWidget);
 }
 
 #ifdef SCROLLBAR_RIGHT
@@ -521,7 +538,7 @@ ScrollTextTo(
 	 */
 	thumbTop = (int) (*topPercent * (screen->savedlines + MaxRows(screen)));
 	newTopLine = thumbTop - screen->savedlines;
-	WindowScroll(xw, newTopLine);
+	WindowScroll(xw, newTopLine, True);
     }
 }
 
@@ -540,7 +557,7 @@ ScrollTextUpDownBy(
 	TScreen *screen = TScreenOf(xw);
 	int rowOnScreen, newTopLine;
 
-	rowOnScreen = pixels / FontHeight(screen);
+	rowOnScreen = (int) (pixels / FontHeight(screen));
 	if (rowOnScreen == 0) {
 	    if (pixels < 0)
 		rowOnScreen = -1;
@@ -548,7 +565,7 @@ ScrollTextUpDownBy(
 		rowOnScreen = 1;
 	}
 	newTopLine = ROW2INX(screen, rowOnScreen);
-	WindowScroll(xw, newTopLine);
+	WindowScroll(xw, newTopLine, True);
     }
 }
 
@@ -673,3 +690,232 @@ HandleScrollBack(
 	ScrollTextUpDownBy(xw, (XtPointer) 0, (XtPointer) amount);
     }
 }
+
+#if OPT_SCROLL_LOCK
+#define SCROLL_LOCK_LED 3
+
+#ifdef HAVE_XKBQUERYEXTENSION
+/*
+ * Check for Xkb on client and server.
+ */
+static int
+have_xkb(Display * dpy)
+{
+    static int initialized = -1;
+
+    if (initialized < 0) {
+	int xkbmajor = XkbMajorVersion;
+	int xkbminor = XkbMinorVersion;
+	int xkbopcode, xkbevent, xkberror;
+
+	initialized = 0;
+	if (XkbLibraryVersion(&xkbmajor, &xkbminor)
+	    && XkbQueryExtension(dpy,
+				 &xkbopcode,
+				 &xkbevent,
+				 &xkberror,
+				 &xkbmajor,
+				 &xkbminor)) {
+	    TRACE(("we have Xkb\n"));
+	    initialized = 1;
+#if OPT_TRACE
+	    {
+		XkbDescPtr xkb;
+		unsigned int mask;
+		int n;
+		char *modStr;
+
+		xkb = XkbGetKeyboard(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
+		if (xkb != NULL) {
+
+		    TRACE(("XkbGetKeyboard ok\n"));
+		    for (n = 0; n < XkbNumVirtualMods; ++n) {
+			if (xkb->names->vmods[n] != 0) {
+			    modStr = XGetAtomName(xkb->dpy,
+						  xkb->names->vmods[n]);
+			    if (modStr != 0) {
+				XkbVirtualModsToReal(xkb, 1 << n, &mask);
+				TRACE(("  name[%d] %s (%#x)\n", n, modStr, mask));
+			    }
+			}
+		    }
+		    XkbFreeKeyboard(xkb, 0, True);
+		}
+	    }
+#endif
+	}
+    }
+    return initialized;
+}
+
+static Boolean
+getXkbLED(Display * dpy, const char *name, Boolean * result)
+{
+    Atom my_atom;
+    Boolean success = False;
+    Bool state;
+
+    if (have_xkb(dpy)) {
+	my_atom = XInternAtom(dpy, name, True);
+	if ((my_atom != None) &&
+	    XkbGetNamedIndicator(dpy, my_atom, NULL, &state, NULL, NULL)) {
+	    *result = (Boolean) state;
+	    success = True;
+	}
+    }
+
+    return success;
+}
+
+/*
+ * Use Xkb if we have it (still unreliable, but slightly better than hardcoded).
+ */
+static Boolean
+showXkbLED(Display * dpy, const char *name, Bool enable)
+{
+    Atom my_atom;
+    Boolean result = False;
+
+    if (have_xkb(dpy)) {
+	my_atom = XInternAtom(dpy, name, True);
+	if ((my_atom != None) &&
+	    XkbGetNamedIndicator(dpy, my_atom, NULL, NULL, NULL, NULL) &&
+	    XkbSetNamedIndicator(dpy, my_atom, True, enable, False, NULL)) {
+	    result = True;
+	}
+    }
+
+    return result;
+}
+#endif
+
+static const char *led_table[] =
+{
+    "Num Lock",
+    "Caps Lock",
+    "Scroll Lock"
+};
+
+static Boolean
+xtermGetLED(TScreen * screen, Cardinal led_number)
+{
+    Display *dpy = screen->display;
+    Boolean result = False;
+
+#ifdef HAVE_XKBQUERYEXTENSION
+    if (!getXkbLED(dpy, led_table[led_number - 1], &result))
+#endif
+    {
+	XKeyboardState state;
+	unsigned long my_bit = (unsigned long) (1 << (led_number - 1));
+
+	XGetKeyboardControl(dpy, &state);
+
+	result = (Boolean) ((state.led_mask & my_bit) != 0);
+    }
+
+    TRACE(("xtermGetLED %d:%s\n", led_number, BtoS(result)));
+    return result;
+}
+
+/*
+ * Display the given LED, preferably independent of keyboard state.
+ */
+void
+xtermShowLED(TScreen * screen, Cardinal led_number, Bool enable)
+{
+    TRACE(("xtermShowLED %d:%s\n", led_number, BtoS(enable)));
+    if ((led_number >= 1) && (led_number <= XtNumber(led_table))) {
+	Display *dpy = screen->display;
+
+#ifdef HAVE_XKBQUERYEXTENSION
+	if (!showXkbLED(dpy, led_table[led_number - 1], enable))
+#endif
+	{
+	    XKeyboardState state;
+	    XKeyboardControl values;
+	    unsigned long use_mask;
+	    unsigned long my_bit = (unsigned long) (1 << (led_number - 1));
+
+	    XGetKeyboardControl(dpy, &state);
+	    use_mask = state.led_mask;
+	    if (enable) {
+		use_mask |= my_bit;
+	    } else {
+		use_mask &= ~my_bit;
+	    }
+
+	    if (state.led_mask != use_mask) {
+		values.led = (int) led_number;
+		values.led_mode = enable;
+		XChangeKeyboardControl(dpy, KBLed | KBLedMode, &values);
+	    }
+	}
+    }
+}
+
+void
+xtermClearLEDs(TScreen * screen)
+{
+    Display *dpy = screen->display;
+    XKeyboardControl values;
+
+    TRACE(("xtermClearLEDs\n"));
+    memset(&values, 0, sizeof(values));
+    XChangeKeyboardControl(dpy, KBLedMode, &values);
+}
+
+void
+ShowScrollLock(TScreen * screen, Bool enable)
+{
+    xtermShowLED(screen, SCROLL_LOCK_LED, enable);
+}
+
+void
+GetScrollLock(TScreen * screen)
+{
+    if (screen->allowScrollLock)
+	screen->scroll_lock = xtermGetLED(screen, SCROLL_LOCK_LED);
+}
+
+void
+SetScrollLock(TScreen * screen, Bool enable)
+{
+    if (screen->allowScrollLock) {
+	if (screen->scroll_lock != enable) {
+	    screen->scroll_lock = (Boolean) enable;
+	    ShowScrollLock(screen, enable);
+	}
+    }
+}
+
+void
+HandleScrollLock(Widget w,
+		 XEvent * event GCC_UNUSED,
+		 String * params,
+		 Cardinal *param_count)
+{
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
+
+	if (screen->allowScrollLock) {
+	    /*
+	     * The default action (used with KeyRelease event) is to cycle the
+	     * state on/off.
+	     */
+	    if (*param_count == 0) {
+		SetScrollLock(screen, !screen->scroll_lock);
+		TRACE(("HandleScrollLock ->%d\n",
+		       screen->scroll_lock));
+	    } else {
+		SetScrollLock(screen, atoi(params[0]));
+		TRACE(("HandleScrollLock(%s) ->%d\n",
+		       params[0],
+		       screen->scroll_lock));
+	    }
+	}
+    }
+}
+#endif

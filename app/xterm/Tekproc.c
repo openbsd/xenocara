@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.175 2009/12/09 23:25:34 Jochen.Voss Exp $ */
+/* $XTermId: Tekproc.c,v 1.176 2010/04/18 16:22:54 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -754,7 +754,7 @@ Tekparse(TekWidget tw)
 
 		Char buf2[512];
 		IChar c2;
-		unsigned len = 0;
+		size_t len = 0;
 		while ((c2 = input()) != ANSI_BEL) {
 		    if (!isprint((int) (c2 & 0x7f))
 			|| len + 2 >= (int) sizeof(buf2))

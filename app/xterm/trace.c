@@ -1,8 +1,8 @@
-/* $XTermId: trace.c,v 1.110 2009/12/10 09:36:28 tom Exp $ */
+/* $XTermId: trace.c,v 1.112 2010/04/15 21:45:37 tom Exp $ */
 
 /*
  * 
- * Copyright 1997-2008,2009 by Thomas E. Dickey
+ * Copyright 1997-2009,2010 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -568,7 +568,7 @@ TraceTranslations(const char *name, Widget w)
     XtTranslations xlations;
     Widget xcelerat;
 
-    TRACE(("TraceTranslations for %s (widget %#lx)\n", name, (long) w));
+    TRACE(("TraceTranslations for %s (widget %#lx) {{\n", name, (long) w));
     if (w) {
 	XtVaGetValues(w,
 		      XtNtranslations, &xlations,
@@ -583,6 +583,7 @@ TraceTranslations(const char *name, Widget w)
     } else {
 	TRACE(("none (widget is null)\n"));
     }
+    TRACE(("}}\n"));
     XSetErrorHandler(save);
 }
 

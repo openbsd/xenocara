@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.211 2010/01/04 09:12:55 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.213 2010/04/18 14:52:50 Emanuele.Giaquinta Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -1085,6 +1085,16 @@ Valid values for the second parameter:
   \*(Ps = \*1 \(-> 7-bit controls (always set for VT100)
   \*(Ps = \*2 \(-> 8-bit controls
 .
+.IP \\*(Cs\\*(Ps\\*s\\*q
+Load LEDs (DECLL)
+  \*(Ps = \*0 \(-> Clear all LEDS (default)
+  \*(Ps = \*1 \(-> Light Num Lock
+  \*(Ps = \*2 \(-> Light Caps Lock
+  \*(Ps = \*3 \(-> Light Scroll Lock
+  \*(Ps = \*2 \*1 \(-> Extinguish Num Lock
+  \*(Ps = \*2 \*2 \(-> Extinguish Caps Lock
+  \*(Ps = \*2 \*3 \(-> Extinguish Scroll Lock
+.
 .IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*q
 Set cursor style (DECSCUSR, VT520)
   \*(Ps = \*0 \(-> blinking block
@@ -1375,8 +1385,9 @@ be given in one control sequence, \fBxterm\fR can make more than one reply.
   \*(Ps = \*1\*4 \(-> Change mouse background color to \*(Pt
   \*(Ps = \*1\*5 \(-> Change Tektronix foreground color to \*(Pt
   \*(Ps = \*1\*6 \(-> Change Tektronix background color to \*(Pt
-  \*(Ps = \*1\*7 \(-> Change highlight color to \*(Pt
+  \*(Ps = \*1\*7 \(-> Change highlight background color to \*(Pt
   \*(Ps = \*1\*8 \(-> Change Tektronix cursor color to \*(Pt
+  \*(Ps = \*1\*9 \(-> Change highlight foreground color to \*(Pt
 .sp
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt (normally disabled by a
 compile-time option)

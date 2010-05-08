@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.256 2010/01/04 21:41:10 tom Exp $
+dnl $XTermId: configure.in,v 1.262 2010/04/21 00:16:24 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -280,7 +280,9 @@ AC_CHECK_HEADERS( \
 	X11/DECkeysym.h \
 	X11/Sunkeysym.h \
 	X11/XF86keysym.h \
+	X11/XKBlib.h \
 	X11/Xpoll.h \
+	X11/extensions/XKB.h \
 	)
 
 CF_X_ATHENA
@@ -300,7 +302,10 @@ freebsd*|netbsd*|dragonfly*) # 2004/8/15 - revisit this if/when grantpt is known
 	;;
 esac
 
+AC_CHECK_FUNCS(XkbQueryExtension)
+
 CF_XKB_BELL_EXT
+
 AC_CHECK_FUNCS(Xutf8LookupString, [],[
 	EXTRAHDRS="$EXTRAHDRS xutf8.h"
 	EXTRASRCS="$EXTRASRCS xutf8.c"
@@ -583,7 +588,7 @@ fi
 
 AC_MSG_CHECKING(if you want saved-lines stored as a FIFO)
 CF_ARG_DISABLE(fifo-lines,
-	[  --enable-fifo-lines     disable FIFO-storage for saved-lines],
+	[  --disable-fifo-lines    disable FIFO-storage for saved-lines],
 	[enable_fifo_lines=no],
 	[enable_fifo_lines=yes])
 AC_MSG_RESULT($enable_fifo_lines)
@@ -980,6 +985,9 @@ for cf_def in \
 do
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-D$cf_def//`
 done
+
+CF_MAKE_TAGS
+CF_DISABLE_RPATH_HACK
 
 ###	output Makefile and xtermcfg.h
 AC_OUTPUT(Makefile)

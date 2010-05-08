@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.364 2010/01/04 23:13:01 tom Exp $ */
+/* $XTermId: button.c,v 1.375 2010/04/18 17:48:58 tom Exp $ */
 
 /*
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -346,7 +346,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     state = (event->xbutton.state
 	     & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8;
     /* update mask to "after" state */
-    state ^= 1 << button;
+    state ^= ((unsigned) (1 << button));
     /* swap Button1 & Button3 */
     state = ((state & (unsigned) ~(4 | 1))
 	     | ((state & 1) ? 4 : 0)
@@ -836,10 +836,10 @@ DiredButton(Widget w,
 	if ((event->type == ButtonPress || event->type == ButtonRelease)
 	    && (event->xbutton.y >= screen->border)
 	    && (event->xbutton.x >= OriginX(screen))) {
-	    line = ((unsigned) (event->xbutton.y - screen->border)
-		    / FontHeight(screen));
-	    col = ((unsigned) (event->xbutton.x - OriginX(screen))
-		   / FontWidth(screen));
+	    line = (unsigned) ((event->xbutton.y - screen->border)
+			       / FontHeight(screen));
+	    col = (unsigned) ((event->xbutton.x - OriginX(screen))
+			      / FontWidth(screen));
 	    Line[0] = CONTROL('X');
 	    Line[1] = ANSI_ESC;
 	    Line[2] = 'G';
@@ -1075,28 +1075,38 @@ DECtoASCII(unsigned ch)
     }
     return ch;
 }
+
+#if OPT_WIDE_CHARS
+static Cardinal
+addXtermChar(Char ** buffer, Cardinal *used, Cardinal offset, unsigned value)
+{
+    if (offset + 1 >= *used) {
+	*used = 1 + (2 * (offset + 1));
+	allocXtermChars(buffer, *used);
+    }
+    (*buffer)[offset++] = (Char) value;
+    return offset;
+}
+#define AddChar(buffer, used, offset, value) \
+	offset = addXtermChar(buffer, used, offset, (unsigned) value)
+
 /*
  * Convert a UTF-8 string to Latin-1, replacing non Latin-1 characters by `#',
  * or ASCII/Latin-1 equivalents for special cases.
  */
-#if OPT_WIDE_CHARS
 static Char *
-UTF8toLatin1(TScreen * screen, Char * s, unsigned len, unsigned long *result)
+UTF8toLatin1(TScreen * screen, Char * s, unsigned long len, unsigned long *result)
 {
     static Char *buffer;
     static Cardinal used;
 
-    Char *p, *q;
+    Cardinal offset = 0;
 
-    if (len > used) {
-	used = 1 + (2 * len);
-	allocXtermChars(&buffer, used);
-    }
+    Char *p;
 
-    if (buffer != 0) {
+    if (len != 0) {
 	PtyData data;
 
-	q = buffer;
 	fakePtyData(&data, s, s + len);
 	while (decodeUtf8(&data)) {
 	    Bool fails = False;
@@ -1105,17 +1115,17 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned len, unsigned long *result)
 	    if (value == UCS_REPL) {
 		fails = True;
 	    } else if (value < 256) {
-		*q++ = CharOf(value);
+		AddChar(&buffer, &used, offset, CharOf(value));
 	    } else {
 		unsigned eqv = ucs2dec(value);
 		if (xtermIsDecGraphic(eqv)) {
-		    *q++ = (Char) DECtoASCII(eqv);
+		    AddChar(&buffer, &used, offset, DECtoASCII(eqv));
 		} else {
 		    eqv = AsciiEquivs(value);
 		    if (eqv == value) {
 			fails = True;
 		    } else {
-			*q++ = (Char) eqv;
+			AddChar(&buffer, &used, offset, eqv);
 		    }
 		    if (isWide((wchar_t) value))
 			extra = True;
@@ -1129,19 +1139,14 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned len, unsigned long *result)
 	     */
 	    if (fails) {
 		for (p = (Char *) screen->default_string; *p != '\0'; ++p) {
-		    len = (unsigned) (3 + q - buffer);
-		    if (len >= used) {
-			used = 1 + (2 * len);
-			allocXtermChars(&buffer, used);
-		    }
-		    *q++ = *p;
+		    AddChar(&buffer, &used, offset, *p);
 		}
 	    }
 	    if (extra)
-		*q++ = ' ';
+		AddChar(&buffer, &used, offset, ' ');
 	}
-	*q = 0;
-	*result = (unsigned long) (q - buffer);
+	AddChar(&buffer, &used, offset, '\0');
+	*result = (unsigned long) (offset - 1);
     } else {
 	*result = 0;
     }
@@ -1184,8 +1189,8 @@ xtermUtf8ToTextList(XtermWidget xw,
 		new_size += size + 1;
 	    }
 	    new_text_list =
-		(char **) XtMalloc(sizeof(char *) * (unsigned) *text_list_count);
-	    new_text_list[0] = tmp = XtMalloc(new_size);
+		(char **) XtMalloc((Cardinal) sizeof(char *) * (unsigned) *text_list_count);
+	    new_text_list[0] = tmp = XtMalloc((Cardinal) new_size);
 	    for (i = 0; i < (*text_list_count); ++i) {
 		data = (Char *) (*text_list)[i];
 		size = strlen((*text_list)[i]) + 1;
@@ -1264,12 +1269,13 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 		    if (copied[n] == ',')
 			++count;
 		}
-		result = (Atom *) XtMalloc(((2 * count) + 1) * sizeof(Atom));
+		result = (Atom *) XtMalloc(((2 * count) + 1)
+					   * (Cardinal) sizeof(Atom));
 		if (result == NULL) {
 		    TRACE(("Couldn't allocate selection types\n"));
 		} else {
 		    char nextc = '?';
-		    char *listp = copied;
+		    char *listp = (char *) copied;
 		    count = 0;
 		    do {
 			char *nextp = parseItem(listp, &nextc);
@@ -1418,7 +1424,7 @@ UnmapSelections(XtermWidget xw)
 
     if (screen->mappedSelect) {
 	for (n = 0; screen->mappedSelect[n] != 0; ++n)
-	    free(screen->mappedSelect[n]);
+	    free((void *) screen->mappedSelect[n]);
 	free(screen->mappedSelect);
 	screen->mappedSelect = 0;
     }
@@ -1478,10 +1484,10 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
  * If it is not a cut-buffer, it is the primary selection (-1).
  */
 static int
-CutBuffer(unsigned code)
+CutBuffer(Atom code)
 {
     int cutbuffer;
-    switch (code) {
+    switch ((unsigned) code) {
     case XA_CUT_BUFFER0:
 	cutbuffer = 0;
 	break;
@@ -1544,6 +1550,8 @@ xtermGetSelection(Widget w,
 
     XtermWidget xw;
 
+    if (num_params == 0)
+	return;
     if ((xw = getXtermWidget(w)) == 0)
 	return;
 
@@ -1739,7 +1747,7 @@ _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 }
 
 static void
-_WriteSelectionData(TScreen * screen, Char * line, unsigned length)
+_WriteSelectionData(TScreen * screen, Char * line, size_t length)
 {
     /* Write data to pty a line at a time. */
     /* Doing this one line at a time may no longer be necessary
@@ -1792,7 +1800,7 @@ _WriteKey(TScreen * screen, Char * in)
 {
     Char line[16];
     unsigned count = 0;
-    unsigned length = strlen((char *) in);
+    size_t length = strlen((char *) in);
 
     if (screen->control_eight_bits) {
 	line[count++] = ANSI_CSI;
@@ -1912,7 +1920,7 @@ SelectionReceived(Widget w,
 	}
 #endif
 	for (i = 0; i < text_list_count; i++) {
-	    unsigned len = strlen(text_list[i]);
+	    size_t len = strlen(text_list[i]);
 	    _WriteSelectionData(screen, (Char *) text_list[i], len);
 	}
 #if OPT_PASTE64
@@ -2496,23 +2504,23 @@ PointToCELL(TScreen * screen,
 static int
 LastTextCol(TScreen * screen, LineData * ld, int row)
 {
-    int i;
+    int i = -1;
     Char *ch;
 
-    if (okScrnRow(screen, row)) {
-	for (i = screen->max_col,
-	     ch = ld->attribs + i;
-	     i >= 0 && !(*ch & CHARDRAWN);
-	     ch--, i--) {
-	    ;
-	}
+    if (ld != 0) {
+	if (okScrnRow(screen, row)) {
+	    for (i = screen->max_col,
+		 ch = ld->attribs + i;
+		 i >= 0 && !(*ch & CHARDRAWN);
+		 ch--, i--) {
+		;
+	    }
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(GetLineDblCS(ld))) {
-	    i *= 2;
-	}
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
+		i *= 2;
+	    }
 #endif
-    } else {
-	i = -1;
+	}
     }
     return (i);
 }
@@ -2736,7 +2744,7 @@ static char *
 make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 {
     Char *result = 0;
-    unsigned need = (length + 1);
+    size_t need = (length + 1);
 
     /*
      * Get a quick upper bound to the number of bytes needed, if the whole
@@ -2781,13 +2789,13 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		    }
 		});
 
-		indexed[used] = last - result;
+		indexed[used] = (int) (last - result);
 		*next = 0;
 		/* TRACE(("index[%d.%d] %d:%s\n", row, used, indexed[used], last)); */
 		last = next;
 		++used;
 		++col;
-		indexed[used] = next - result;
+		indexed[used] = (int) (next - result);
 	    }
 	} while (used < length &&
 		 LineTstWrapped(ld) &&
@@ -2903,7 +2911,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 		    for (col = 0; indexed[col] < len; ++col) {
 			if (regexec(&preg,
 				    search + indexed[col],
-				    1, &match, 0) == 0) {
+				    (size_t) 1, &match, 0) == 0) {
 			    int start_inx = match.rm_so + indexed[col];
 			    int finis_inx = match.rm_eo + indexed[col];
 			    int start_col = indexToCol(indexed, len, start_inx);
@@ -3317,7 +3325,7 @@ SaltTextAway(XtermWidget xw,
     /* now get some memory to save it in */
 
     if (screen->selection_size <= j) {
-	if ((line = (Char *) malloc((unsigned) j + 1)) == 0)
+	if ((line = (Char *) malloc((size_t) j + 1)) == 0)
 	    SysError(ERROR_BMALLOC2);
 	XtFree((char *) screen->selection_data);
 	screen->selection_data = line;
@@ -3364,7 +3372,7 @@ ClearSelectionBuffer(TScreen * screen)
 }
 
 static void
-AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
+AppendStrToSelectionBuffer(TScreen * screen, Char * text, size_t len)
 {
     if (len != 0) {
 	int j = (int) (screen->selection_length + len);		/* New length */
@@ -3373,7 +3381,7 @@ AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
 	    if (!screen->selection_length) {
 		/* New buffer */
 		Char *line;
-		if ((line = (Char *) malloc((unsigned) k)) == 0)
+		if ((line = (Char *) malloc((size_t) k)) == 0)
 		    SysError(ERROR_BMALLOC2);
 		XtFree((char *) screen->selection_data);
 		screen->selection_data = line;
@@ -3381,7 +3389,7 @@ AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
 		/* Realloc buffer */
 		screen->selection_data = (Char *)
 		    realloc(screen->selection_data,
-			    (unsigned) k);
+			    (size_t) k);
 		if (screen->selection_data == 0)
 		    SysError(ERROR_BMALLOC2);
 	    }
@@ -3423,21 +3431,21 @@ AppendToSelectionBuffer(TScreen * screen, unsigned c)
     case 2:
 	ch = CharOf((screen->base64_accu << 6) + six);
 	screen->base64_count = 0;
-	AppendStrToSelectionBuffer(screen, &ch, 1);
+	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
 	break;
 
     case 4:
 	ch = CharOf((screen->base64_accu << 4) + (six >> 2));
 	screen->base64_accu = (six & 0x3);
 	screen->base64_count = 2;
-	AppendStrToSelectionBuffer(screen, &ch, 1);
+	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
 	break;
 
     case 6:
 	ch = CharOf((screen->base64_accu << 2) + (six >> 4));
 	screen->base64_accu = (six & 0xF);
 	screen->base64_count = 4;
-	AppendStrToSelectionBuffer(screen, &ch, 1);
+	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
 	break;
     }
 }
@@ -3497,13 +3505,15 @@ SaveConvertedLength(XtPointer *target, unsigned long source)
 	if (sizeof(unsigned long) == 4) {
 	    *(unsigned long *) *target = source;
 	} else if (sizeof(unsigned) == 4) {
-	    *(unsigned *) *target = source;
+	    *(unsigned *) *target = (unsigned) source;
 	} else if (sizeof(unsigned short) == 4) {
 	    *(unsigned short *) *target = (unsigned short) source;
 	} else {
 	    /* FIXME - does this depend on byte-order? */
 	    unsigned long temp = source;
-	    memcpy((char *) *target, ((char *) &temp) + sizeof(temp) - 4, 4);
+	    memcpy((char *) *target,
+		   ((char *) &temp) + sizeof(temp) - 4,
+		   (size_t) 4);
 	}
     }
     return result;
@@ -3644,7 +3654,7 @@ ConvertSelection(Widget w,
     }
 #endif
     else if (*target == XA_LIST_LENGTH(dpy)) {
-	result = SaveConvertedLength(value, 1);
+	result = SaveConvertedLength(value, (unsigned long) 1);
 	*type = XA_INTEGER;
 	*length = 1;
 	*format = 32;
@@ -3726,6 +3736,8 @@ _OwnSelection(XtermWidget xw,
     Cardinal i;
     Bool have_selection = False;
 
+    if (count == 0)
+	return;
     if (screen->selection_length == 0)
 	return;
 

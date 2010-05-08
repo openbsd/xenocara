@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.656 2010/01/04 09:09:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.666 2010/04/18 16:50:09 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -77,22 +77,22 @@
 #define MyStackAlloc(size, stack_cache_array)     \
     ((size) <= sizeof(stack_cache_array)	  \
     ?  (XtPointer)(stack_cache_array)		  \
-    :  (XtPointer)malloc((unsigned)(size)))
+    :  (XtPointer)malloc((size_t)(size)))
 
 #define MyStackFree(pointer, stack_cache_array) \
     if ((pointer) != ((char *)(stack_cache_array))) free(pointer)
 
 /* adapted from vile (vi-like-emacs) */
-#define TypeCallocN(type,n)	(type *)calloc((n), sizeof(type))
-#define TypeCalloc(type)	TypeCallocN(type,1)
+#define TypeCallocN(type,n)	(type *)calloc((size_t) (n), sizeof(type))
+#define TypeCalloc(type)	TypeCallocN(type, 1)
 
-#define TypeMallocN(type,n)	(type *)malloc(sizeof(type) * (n))
-#define TypeMalloc(type)	TypeMallocN(type,1)
+#define TypeMallocN(type,n)	(type *)malloc(sizeof(type) * (size_t) (n))
+#define TypeMalloc(type)	TypeMallocN(type, 1)
 
 #define TypeRealloc(type,n,p)	(type *)realloc(p, (n) * sizeof(type))
 
 /* use these to allocate partly-structured data */
-#define CastMallocN(type,n)	(type *)malloc(sizeof(type) + (n))
+#define CastMallocN(type,n)	(type *)malloc(sizeof(type) + (size_t) (n))
 #define CastMalloc(type)	CastMallocN(type,0)
 
 #define BumpBuffer(type, buffer, size, want) \
@@ -330,6 +330,8 @@ typedef struct {
  */
 #define ANSI_BEL	0x07
 #define	ANSI_FF		0x0C		/* C0, C1 control names		*/
+#define	ANSI_XON	0x11		/* DC1 */
+#define	ANSI_XOFF	0x13		/* DC3 */
 #define	ANSI_NAK	0x15
 #define	ANSI_CAN	0x18
 #define	ANSI_ESC	0x1B
@@ -634,6 +636,10 @@ typedef struct {
 #define OPT_SUN_FUNC_KEYS 1 /* true if xterm supports Sun-style function keys */
 #endif
 
+#ifndef OPT_SCROLL_LOCK
+#define OPT_SCROLL_LOCK 1 /* true if xterm interprets fontsize-shifting */
+#endif
+
 #ifndef OPT_SELECT_REGEX
 #define OPT_SELECT_REGEX 0 /* true if xterm supports regular-expression selects */
 #endif
@@ -910,12 +916,12 @@ typedef enum {
     , ewLAST
 } WindowOps;
 
-#define	COLOR_DEFINED(s,w)	((s)->which & (1<<(w)))
+#define	COLOR_DEFINED(s,w)	((s)->which & (unsigned) (1<<(w)))
 #define	COLOR_VALUE(s,w)	((s)->colors[w])
-#define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w] = (v)), ((s)->which |= (1<<(w))))
+#define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w] = (v)), UIntSet((s)->which, (1<<(w))))
 
 #define	COLOR_NAME(s,w)		((s)->names[w])
-#define	SET_COLOR_NAME(s,w,v)	(((s)->names[w] = (v)), ((s)->which |= (1<<(w))))
+#define	SET_COLOR_NAME(s,w,v)	(((s)->names[w] = (v)), ((s)->which |= (unsigned) (1<<(w))))
 
 #define	UNDEFINE_COLOR(s,w)	((s)->which &= (~((w)<<1)))
 
@@ -976,8 +982,6 @@ typedef enum {
 # define XK_COLORS 0x0003
 #endif
 
-# define XK_TCAPNAME 0x0004
-
 #else	/* !OPT_ISO_COLORS */
 
 #define TERM_COLOR_FLAGS(xw) 0
@@ -987,6 +991,8 @@ typedef enum {
 		       (!(flags & INVERSE) &&  hilite))
 
 #endif	/* OPT_ISO_COLORS */
+
+# define XK_TCAPNAME 0x0004
 
 #if OPT_AIX_COLORS
 #define if_OPT_AIX_COLORS(screen, code) if(screen->colorMode) code
@@ -1806,6 +1812,13 @@ typedef struct {
 	unsigned	restore_height;
 #endif
 
+#if OPT_SCROLL_LOCK
+	Boolean		allowScrollLock;/* ScrollLock mode		*/
+	Boolean		allowScrollLock0;/* initial ScrollLock mode	*/
+	Boolean		scroll_lock;	/* true to keep buffer in view	*/
+	Boolean		scroll_dirty;	/* scrolling makes screen dirty	*/
+#endif
+
 #if OPT_VT52_MODE
 	int		vt52_save_level; /* save-area for DECANM	*/
 	Char		vt52_save_curgl;
@@ -1983,7 +1996,7 @@ typedef struct _TekScreen {
 #if OPT_READLINE
 #define SCREEN_FLAG(screenp,f)		(1&(screenp)->f)
 #define SCREEN_FLAG_set(screenp,f)	((screenp)->f |= 1)
-#define SCREEN_FLAG_unset(screenp,f)	((screenp)->f &= ~1L)
+#define SCREEN_FLAG_unset(screenp,f)	((screenp)->f &= (unsigned) ~1L)
 #define SCREEN_FLAG_save(screenp,f)	\
 	((screenp)->f = (((screenp)->f)<<1) | SCREEN_FLAG(screenp,f))
 #define SCREEN_FLAG_restore(screenp,f)	((screenp)->f = (((screenp)->f)>>1))
@@ -2170,10 +2183,10 @@ typedef struct _Misc {
 #if OPT_NUM_LOCK
     Boolean real_NumLock;	/* true if we treat NumLock key specially */
     Boolean alwaysUseMods;	/* true if we always want f-key modifiers */
-    unsigned long num_lock;	/* modifier for Num_Lock */
-    unsigned long alt_mods;	/* modifier for Alt_L or Alt_R */
-    unsigned long meta_mods;	/* modifier for Meta_L or Meta_R */
-    unsigned long other_mods;	/* conflicting modifiers, e.g., Mode_Switch */
+    unsigned num_lock;		/* modifier for Num_Lock */
+    unsigned alt_mods;		/* modifier for Alt_L or Alt_R */
+    unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
+    unsigned other_mods;	/* conflicting modifiers, e.g., Mode_Switch */
 #endif
 #if OPT_RENDERFONT
     char *face_name;

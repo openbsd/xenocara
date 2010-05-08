@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: sinstall.sh,v 1.17 2008/03/02 23:35:02 tom Exp $
+# $XTermId: sinstall.sh,v 1.18 2010/03/06 16:19:13 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2006,2008 by Thomas E. Dickey
+# Copyright 1999-2008,2010 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -159,7 +159,7 @@ elif test -f "$REF_PROG" ; then
 		PROG_USR=
 		;;
 	esac
-	PROG_MODE=`echo ".$cf_mode" | sed -e 's/^..//' -e 's/rw./7/g' -e 's/r-./5/g' -e 's/---/0/g' -e 's/--[sxt]/1/g' -e 's/+//g'`
+	PROG_MODE=`echo ".$cf_mode" | sed -e 's/^..//' -e 's/rw./7/g' -e 's/r-./5/g' -e 's/---/0/g' -e 's/--[sxt]/1/g' -e 's/[^0-7]//g'`
 fi
 
 # passed-in options override the reference

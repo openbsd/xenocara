@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.121 2009/08/06 00:39:09 tom Exp $
+-- $XTermId: INSTALL,v 1.122 2010/04/14 10:56:29 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2007,2008 by Thomas E. Dickey
+-- Copyright 1997-2009,2010 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -257,6 +257,11 @@ The options (in alphabetic order):
 	(e.g., X11R5) do not perform the geometry computation correctly,
 	leaving the right scrollbar incorrectly positioned after changing
 	the font size.
+
+  --disable-rpath-hack    don't add rpath options for additional libraries
+
+	By default, the configure script looks for libraries in unusual places
+	and adds an rpath linker option to help.
 
   --disable-samename      disable check for redundant name-change
 
@@ -560,6 +565,13 @@ The options (in alphabetic order):
 
 	If regular expressions are not disable (--disable-regex), use PCRE
 	rather than the POSIX regular expressions.
+
+  --with-pkg-config{=path} enable/disable use of pkg-config
+
+	The configure script looks for certain libraries which have well
+	established pkg-config scripts, and will use those settings if
+	available.  Not all pkg-config scripts work; this option suppresses
+	the check and relies on normal library search paths.
 
   --with-reference=XXX    program to use as permissions-reference
 

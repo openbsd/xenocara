@@ -1,8 +1,8 @@
-/* $XTermId: print.c,v 1.115 2009/12/10 09:44:39 tom Exp $ */
+/* $XTermId: print.c,v 1.116 2010/04/05 00:11:13 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2007,2009 by Thomas E. Dickey
+Copyright 1997-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -434,7 +434,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 	    close(my_pipe[0]);	/* won't read from printer */
 	    Printer = fdopen(my_pipe[1], "w");
 	    TRACE(("opened printer from pid %d/%d\n",
-		   (int) getpid(), Printer_pid));
+		   (int) getpid(), (int) Printer_pid));
 	}
 #endif
 	initialized++;
