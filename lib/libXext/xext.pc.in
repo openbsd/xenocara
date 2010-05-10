@@ -7,6 +7,6 @@ Name: Xext
 Description: Misc X Extension Library
 Version: @PACKAGE_VERSION@
 Requires: xextproto
-Requires.private: x11 xau
+Requires.private: x11
 Cflags: -I${includedir}
 Libs: -L${libdir} -lXext

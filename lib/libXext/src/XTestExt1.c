@@ -67,6 +67,7 @@ University of California.
 #include <X11/Xproto.h>
 #include <X11/Xlibint.h>
 #include <X11/extensions/xtestext1.h>
+#include <X11/extensions/xtestext1proto.h>
 
 /******************************************************************************
  * variables

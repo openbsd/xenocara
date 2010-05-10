@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <X11/Xlibint.h>
 #include <X11/extensions/XLbx.h>
-#include <X11/extensions/lbxstr.h>
+#include <X11/extensions/lbxproto.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 

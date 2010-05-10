@@ -29,7 +29,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #endif
 #include <X11/Xlibint.h>
 #include <X11/extensions/XEVI.h>
-#include <X11/extensions/XEVIstr.h>
+#include <X11/extensions/EVIproto.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 #include <X11/Xutil.h>

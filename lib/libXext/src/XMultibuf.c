@@ -36,7 +36,8 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
-#include <X11/extensions/multibufst.h>
+#include <X11/extensions/multibufproto.h>
+#include <X11/extensions/multibuf.h>
 
 static XExtensionInfo _multibuf_info_data;
 static XExtensionInfo *multibuf_info = &_multibuf_info_data;
@@ -634,7 +635,7 @@ Window XmbufCreateStereoWindow (
     req->borderWidth = border_width;
     req->depth = depth;
     req->class = class;
-    if (visual == CopyFromParent)
+    if (visual == (Visual *)CopyFromParent)
 	req->visual = CopyFromParent;
     else
 	req->visual = visual->visualid;

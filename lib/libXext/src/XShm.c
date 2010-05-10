@@ -39,7 +39,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xlibint.h>
 #include <X11/ImUtil.h>
 #include <X11/extensions/XShm.h>
-#include <X11/extensions/shmstr.h>
+#include <X11/extensions/shmproto.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 
@@ -235,12 +235,11 @@ Status XShmAttach(Display *dpy, XShmSegmentInfo *shminfo)
 
     ShmCheckExtension (dpy, info, 0);
 
-    shminfo->shmseg = XAllocID(dpy);
     LockDisplay(dpy);
     GetReq(ShmAttach, req);
     req->reqType = info->codes->major_opcode;
     req->shmReqType = X_ShmAttach;
-    req->shmseg = shminfo->shmseg;
+    req->shmseg = shminfo->shmseg = XAllocID(dpy);
     req->shmid = shminfo->shmid;
     req->readOnly = shminfo->readOnly ? xTrue : xFalse;
     UnlockDisplay(dpy);

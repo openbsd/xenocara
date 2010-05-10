@@ -41,8 +41,8 @@
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
-#define NEED_DBE_PROTOCOL
 #include <X11/extensions/Xdbe.h>
+#include <X11/extensions/dbeproto.h>
 
 static XExtensionInfo _dbe_info_data;
 static XExtensionInfo *dbe_info = &_dbe_info_data;

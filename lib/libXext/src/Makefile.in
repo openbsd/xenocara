@@ -15,6 +15,7 @@
 @SET_MAKE@
 
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -38,7 +39,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = src
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(libXextinclude_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -52,14 +54,15 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)" \
+	"$(DESTDIR)$(libXextincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libXext_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_libXext_la_OBJECTS = DPMS.lo MITMisc.lo XAppgroup.lo XEVI.lo \
 	XLbx.lo XMultibuf.lo XSecurity.lo XShape.lo XShm.lo XSync.lo \
-	XTestExt1.lo Xcup.lo Xdbe.lo extutil.lo globals.lo
+	XTestExt1.lo Xcup.lo Xdbe.lo Xge.lo extutil.lo globals.lo
 libXext_la_OBJECTS = $(am_libXext_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -76,6 +79,8 @@ SOURCES = $(libXext_la_SOURCES)
 DIST_SOURCES = $(libXext_la_SOURCES)
 lintlibDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(lintlib_DATA)
+libXextincludeHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(libXextinclude_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -95,8 +100,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -117,6 +124,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -166,15 +174,9 @@ XEXT_LIBS = @XEXT_LIBS@
 XEXT_SOREV = @XEXT_SOREV@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -191,29 +193,41 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libXext.la
-AM_CFLAGS = $(XEXT_CFLAGS) $(MALLOC_ZERO_CFLAGS)
+AM_CFLAGS = \
+          -I$(top_srcdir)/include \
+          -I$(top_srcdir)/include/X11/extensions\
+          $(XEXT_CFLAGS) $(MALLOC_ZERO_CFLAGS)
+
 libXext_la_LDFLAGS = -version-number $(XEXT_SOREV) -no-undefined
 libXext_la_LIBADD = $(XEXT_LIBS)
 libXext_la_SOURCES = \
@@ -230,8 +244,30 @@ libXext_la_SOURCES = \
 	XTestExt1.c \
 	Xcup.c \
 	Xdbe.c \
+        Xge.c \
 	extutil.c \
 	globals.c
+
+libXextincludedir = $(includedir)/X11/extensions
+libXextinclude_HEADERS = $(top_srcdir)/include/X11/extensions/dpms.h \
+			 $(top_srcdir)/include/X11/extensions/extutil.h \
+			 $(top_srcdir)/include/X11/extensions/lbxbuf.h \
+			 $(top_srcdir)/include/X11/extensions/lbxbufstr.h \
+			 $(top_srcdir)/include/X11/extensions/lbximage.h \
+			 $(top_srcdir)/include/X11/extensions/MITMisc.h \
+			 $(top_srcdir)/include/X11/extensions/multibuf.h \
+			 $(top_srcdir)/include/X11/extensions/security.h \
+			 $(top_srcdir)/include/X11/extensions/shape.h \
+			 $(top_srcdir)/include/X11/extensions/sync.h \
+			 $(top_srcdir)/include/X11/extensions/Xag.h \
+			 $(top_srcdir)/include/X11/extensions/Xcup.h \
+			 $(top_srcdir)/include/X11/extensions/Xdbe.h \
+			 $(top_srcdir)/include/X11/extensions/XEVI.h \
+			 $(top_srcdir)/include/X11/extensions/Xext.h \
+			 $(top_srcdir)/include/X11/extensions/Xge.h \
+			 $(top_srcdir)/include/X11/extensions/XLbx.h \
+			 $(top_srcdir)/include/X11/extensions/XShm.h \
+			 $(top_srcdir)/include/X11/extensions/xtestext1.h
 
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 @LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS)
@@ -251,9 +287,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -320,6 +356,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XTestExt1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xcup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xdbe.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Xge.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extutil.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/globals.Plo@am__quote@
 
@@ -369,6 +406,23 @@ uninstall-lintlibDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(lintlibdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(lintlibdir)/$$f"; \
+	done
+install-libXextincludeHEADERS: $(libXextinclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(libXextincludedir)" || $(mkdir_p) "$(DESTDIR)$(libXextincludedir)"
+	@list='$(libXextinclude_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(libXextincludeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(libXextincludedir)/$$f'"; \
+	  $(libXextincludeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(libXextincludedir)/$$f"; \
+	done
+
+uninstall-libXextincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libXextinclude_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(libXextincludedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(libXextincludedir)/$$f"; \
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -420,6 +474,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/../include/X11/extensions
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -448,9 +503,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(DATA)
+all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)" "$(DESTDIR)$(libXextincludedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -498,7 +553,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-lintlibDATA
+install-data-am: install-libXextincludeHEADERS install-lintlibDATA
 
 install-exec-am: install-libLTLIBRARIES
 
@@ -527,7 +582,7 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
-	uninstall-lintlibDATA
+	uninstall-libXextincludeHEADERS uninstall-lintlibDATA
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libLTLIBRARIES clean-libtool ctags distclean \
@@ -535,12 +590,13 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
 	install-exec-am install-info install-info-am \
-	install-libLTLIBRARIES install-lintlibDATA install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-info-am uninstall-libLTLIBRARIES \
+	install-libLTLIBRARIES install-libXextincludeHEADERS \
+	install-lintlibDATA install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-info-am \
+	uninstall-libLTLIBRARIES uninstall-libXextincludeHEADERS \
 	uninstall-lintlibDATA
 
 

@@ -90,10 +90,11 @@ Status XShmDetach(
 XImage *XShmCreateImage (
 	Display *display;
 	Visual *visual;
-	unsigned int depth, width, height;
+	unsigned int depth;
 	int format;
 	char *data;
-	XShmSegmentInfo *shminfo);
+	XShmSegmentInfo *shminfo;
+	unsigned int width, height);
 .LP
 Status XShmPutImage(
 	Display *display;

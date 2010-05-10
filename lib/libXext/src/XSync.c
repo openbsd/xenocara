@@ -1,4 +1,3 @@
-/* $Xorg: XSync.c,v 1.5 2001/02/09 02:03:49 xorgcvs Exp $ */
 /*
 
 Copyright 1991, 1993, 1998  The Open Group
@@ -61,7 +60,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
-#include <X11/extensions/syncstr.h>
+#include <X11/extensions/sync.h>
+#include <X11/extensions/syncproto.h>
 
 static XExtensionInfo _sync_info_data;
 static XExtensionInfo *sync_info = &_sync_info_data;
@@ -287,11 +287,10 @@ XSyncListSystemCounters(Display *dpy, int *n_counters_return)
 	int replylen;
 	int i;
 
-	list = (XSyncSystemCounter *)Xmalloc(
-			rep.nCounters * sizeof(XSyncSystemCounter));
+	list = Xmalloc(rep.nCounters * sizeof(XSyncSystemCounter));
 	replylen = rep.length << 2;
-	pWireSysCounter = (xSyncSystemCounter *) Xmalloc ((unsigned) replylen + 1);
-                /* +1 to leave room for last null-terminator */
+	pWireSysCounter = Xmalloc ((unsigned) replylen + sizeof(XSyncCounter));
+        /* +1 to leave room for last counter read-ahead */
 
 	if ((!list) || (!pWireSysCounter))
 	{
@@ -698,24 +697,6 @@ XSyncGetPriority(Display *dpy, XID client_resource_id, int *return_priority)
 /*
  *  Functions corresponding to the macros for manipulating 64-bit values
  */
-
-/* get rid of macros so we can define corresponding functions */
-#undef XSyncIntToValue
-#undef XSyncIntsToValue
-#undef XSyncValueGreaterThan
-#undef XSyncValueLessThan
-#undef XSyncValueGreaterOrEqual
-#undef XSyncValueLessOrEqual
-#undef XSyncValueEqual
-#undef XSyncValueIsNegative
-#undef XSyncValueIsZero
-#undef XSyncValueIsPositive
-#undef XSyncValueLow32
-#undef XSyncValueHigh32
-#undef XSyncValueAdd
-#undef XSyncValueSubtract
-#undef XSyncMaxValue
-#undef XSyncMinValue
 
 void
 XSyncIntToValue(XSyncValue *pv, int i)

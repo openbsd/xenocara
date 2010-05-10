@@ -34,7 +34,7 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include <X11/Xlibint.h>
 #include <X11/extensions/MITMisc.h>
-#include <X11/extensions/mitmiscstr.h>
+#include <X11/extensions/mitmiscproto.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 

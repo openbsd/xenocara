@@ -48,25 +48,26 @@ EXTRA_DIST  = $(libman_PRE)
 CLEANFILES  = $(libman_DATA)
 
 # Generate man page shadow files (Replaces InstallManPageAliases from Imake)
-BUILT_SOURCES = shadows.DONE
 
-shadows.DONE:
-	-rm -f $(all_aliases:=.@LIB_MAN_SUFFIX@)
-	(for i in $(XShape_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/XShape.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	(for i in $(XShm_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/XShm.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	(for i in $(Xmbuf_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/Xmbuf.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	(for i in $(Xevi_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/Xevi.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	touch shadows.DONE
+XShape_shadowmen = $(XShape_man_aliases:=.@LIB_MAN_SUFFIX@)
 
-CLEANFILES += shadows.DONE
+$(XShape_shadowmen):
+	$(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/XShape.$(LIB_MAN_SUFFIX) > $@
+
+XShm_shadowmen = $(XShm_man_aliases:=.@LIB_MAN_SUFFIX@)
+
+$(XShm_shadowmen):
+	$(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/XShm.$(LIB_MAN_SUFFIX) > $@
+
+Xmbuf_shadowmen = $(Xmbuf_man_aliases:=.@LIB_MAN_SUFFIX@)
+
+$(Xmbuf_shadowmen):
+	$(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/Xmbuf.$(LIB_MAN_SUFFIX) > $@
+
+Xevi_shadowmen = $(Xevi_man_aliases:=.@LIB_MAN_SUFFIX@)
+
+$(Xevi_shadowmen):
+	$(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/Xevi.$(LIB_MAN_SUFFIX) > $@
 
 # Rules for generating files using the C pre-processor
 # (Replaces CppFileTarget from Imake)
@@ -106,5 +107,5 @@ MANDEFS = \
 	-D__projectroot__=$(prefix)
 
 .man.$(LIB_MAN_SUFFIX):
-	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
 

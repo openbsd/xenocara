@@ -73,8 +73,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -95,6 +97,7 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -147,15 +150,9 @@ XEXT_LIBS = @XEXT_LIBS@
 XEXT_SOREV = @XEXT_SOREV@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -172,23 +169,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -232,10 +237,13 @@ libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
 	      $(all_aliases:=.@LIB_MAN_SUFFIX@)
 
 EXTRA_DIST = $(libman_PRE)
-CLEANFILES = $(libman_DATA) shadows.DONE
+CLEANFILES = $(libman_DATA)
 
 # Generate man page shadow files (Replaces InstallManPageAliases from Imake)
-BUILT_SOURCES = shadows.DONE
+XShape_shadowmen = $(XShape_man_aliases:=.@LIB_MAN_SUFFIX@)
+XShm_shadowmen = $(XShm_man_aliases:=.@LIB_MAN_SUFFIX@)
+Xmbuf_shadowmen = $(Xmbuf_man_aliases:=.@LIB_MAN_SUFFIX@)
+Xevi_shadowmen = $(Xevi_man_aliases:=.@LIB_MAN_SUFFIX@)
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 # Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
@@ -267,8 +275,7 @@ MANDEFS = \
 	-D__adminmansuffix__=$(ADMIN_MAN_SUFFIX) \
 	-D__projectroot__=$(prefix)
 
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .$(LIB_MAN_SUFFIX) .man
@@ -281,9 +288,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  man/Makefile
+	  $(AUTOMAKE) --foreign  man/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -363,15 +370,13 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
+check: check-am
 all-am: Makefile $(DATA)
 installdirs:
 	for dir in "$(DESTDIR)$(libmandir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -396,7 +401,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -454,24 +458,20 @@ uninstall-am: uninstall-info-am uninstall-libmanDATA
 	uninstall uninstall-am uninstall-info-am uninstall-libmanDATA
 
 
-shadows.DONE:
-	-rm -f $(all_aliases:=.@LIB_MAN_SUFFIX@)
-	(for i in $(XShape_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/XShape.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	(for i in $(XShm_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/XShm.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	(for i in $(Xmbuf_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/Xmbuf.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	(for i in $(Xevi_man_aliases:=.@LIB_MAN_SUFFIX@) ; do \
-	echo .so man$(LIB_MAN_DIR_SUFFIX)/Xevi.$(LIB_MAN_SUFFIX) > $$i; \
-	done)
-	touch shadows.DONE
+$(XShape_shadowmen):
+	$(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/XShape.$(LIB_MAN_SUFFIX) > $@
+
+$(XShm_shadowmen):
+	$(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/XShm.$(LIB_MAN_SUFFIX) > $@
+
+$(Xmbuf_shadowmen):
+	$(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/Xmbuf.$(LIB_MAN_SUFFIX) > $@
+
+$(Xevi_shadowmen):
+	$(AM_V_GEN)echo .so man$(LIB_MAN_DIR_SUFFIX)/Xevi.$(LIB_MAN_SUFFIX) > $@
 
 .man.$(LIB_MAN_SUFFIX):
-	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

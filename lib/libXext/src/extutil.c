@@ -54,7 +54,11 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
+#include <X11/extensions/ge.h>
 
+/* defined in Xge.c */
+extern Bool 
+xgeExtRegister(Display* dpy, int extension, XExtensionHooks* callbacks);
 
 /*
  * XextCreateExtension - return an extension descriptor containing context
@@ -118,6 +122,11 @@ XExtDisplayInfo *XextAddDisplay (
 	    XESetWireToEvent (dpy, j, hooks->wire_to_event);
 	    XESetEventToWire (dpy, j, hooks->event_to_wire);
 	}
+
+        /* register extension for XGE */
+        if (strcmp(ext_name, GE_NAME))
+            xgeExtRegister(dpy, dpyinfo->codes->major_opcode, hooks);
+
 	if (hooks->create_gc)
 	  XESetCreateGC (dpy, dpyinfo->codes->extension, hooks->create_gc);
 	if (hooks->copy_gc)
@@ -235,7 +244,7 @@ XExtDisplayInfo *XextFindDisplay (XExtensionInfo *extinfo, Display *dpy)
 
 
 
-static int _default_exterror (Display *dpy, char *ext_name, char *reason)
+static int _default_exterror (Display *dpy, _Xconst char *ext_name, _Xconst char *reason)
 {
     fprintf (stderr, "Xlib:  extension \"%s\" %s on display \"%s\".\n",
 	     ext_name, reason, DisplayString(dpy));
@@ -248,11 +257,11 @@ static int _default_exterror (Display *dpy, char *ext_name, char *reason)
  * requested extension is referenced.  This should eventually move into Xlib.
  */
 
-extern int (*_XExtensionErrorFunction)(Display*, char *, char * );
+extern XextErrorHandler _XExtensionErrorFunction;
 
-int (*XSetExtensionErrorHandler(int (*handler)(Display*, char *, char * )))(Display*, char *, char * )
+XextErrorHandler XSetExtensionErrorHandler (XextErrorHandler handler)
 {
-    int (*oldhandler)(Display*, char *, char * ) = _XExtensionErrorFunction;
+    XextErrorHandler oldhandler = _XExtensionErrorFunction;
 
     _XExtensionErrorFunction = (handler ? handler :
 				_default_exterror);
@@ -265,8 +274,8 @@ int (*XSetExtensionErrorHandler(int (*handler)(Display*, char *, char * )))(Disp
  */
 int XMissingExtension (Display *dpy, _Xconst char *ext_name)
 {
-    int (*func)(Display*, char *, char *) = (_XExtensionErrorFunction ?
-		     _XExtensionErrorFunction : _default_exterror);
+    XextErrorHandler func = (_XExtensionErrorFunction ?
+			     _XExtensionErrorFunction : _default_exterror);
 
     if (!ext_name) ext_name = X_EXTENSION_UNKNOWN;
     return (*func) (dpy, ext_name, X_EXTENSION_MISSING);

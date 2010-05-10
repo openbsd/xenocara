@@ -1,6 +1,9 @@
 lib_LTLIBRARIES=libXext.la
 
-AM_CFLAGS=$(XEXT_CFLAGS) $(MALLOC_ZERO_CFLAGS)
+AM_CFLAGS=\
+          -I$(top_srcdir)/include \
+          -I$(top_srcdir)/include/X11/extensions\
+          $(XEXT_CFLAGS) $(MALLOC_ZERO_CFLAGS)
 
 libXext_la_LDFLAGS = -version-number $(XEXT_SOREV) -no-undefined
 
@@ -20,8 +23,30 @@ libXext_la_SOURCES = \
 	XTestExt1.c \
 	Xcup.c \
 	Xdbe.c \
+        Xge.c \
 	extutil.c \
 	globals.c
+
+libXextincludedir = $(includedir)/X11/extensions
+libXextinclude_HEADERS = $(top_srcdir)/include/X11/extensions/dpms.h \
+			 $(top_srcdir)/include/X11/extensions/extutil.h \
+			 $(top_srcdir)/include/X11/extensions/lbxbuf.h \
+			 $(top_srcdir)/include/X11/extensions/lbxbufstr.h \
+			 $(top_srcdir)/include/X11/extensions/lbximage.h \
+			 $(top_srcdir)/include/X11/extensions/MITMisc.h \
+			 $(top_srcdir)/include/X11/extensions/multibuf.h \
+			 $(top_srcdir)/include/X11/extensions/security.h \
+			 $(top_srcdir)/include/X11/extensions/shape.h \
+			 $(top_srcdir)/include/X11/extensions/sync.h \
+			 $(top_srcdir)/include/X11/extensions/Xag.h \
+			 $(top_srcdir)/include/X11/extensions/Xcup.h \
+			 $(top_srcdir)/include/X11/extensions/Xdbe.h \
+			 $(top_srcdir)/include/X11/extensions/XEVI.h \
+			 $(top_srcdir)/include/X11/extensions/Xext.h \
+			 $(top_srcdir)/include/X11/extensions/Xge.h \
+			 $(top_srcdir)/include/X11/extensions/XLbx.h \
+			 $(top_srcdir)/include/X11/extensions/XShm.h \
+			 $(top_srcdir)/include/X11/extensions/xtestext1.h
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \

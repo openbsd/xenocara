@@ -36,7 +36,8 @@ in this Software without prior written authorization from The Open Group.
 #define NEED_EVENTS
 #define NEED_REPLIES
 #include <X11/Xlibint.h>
-#include <X11/extensions/Xagstr.h>
+#include <X11/extensions/Xag.h>
+#include <X11/extensions/agproto.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 
