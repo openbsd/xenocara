@@ -26,8 +26,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i810/i830_common.h,v 1.1 2002/09/11 00:29:32 dawes Exp $ */
-
 #ifndef _I830_COMMON_H_
 #define _I830_COMMON_H_
 
@@ -35,7 +33,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #define I830_NR_TEX_REGIONS 255	/* maximum due to use of chars for next/prev */
 #define I830_LOG_MIN_TEX_REGION_SIZE 14
-
 
 /* Driver specific DRM command indices
  * NOTE: these are not OS specific, but they are driver specific
@@ -57,43 +54,42 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define DRM_I830_GET_VBLANK_PIPE	  0x0e
 #define DRM_I830_HWS_PAGE_ADDR		  0x11
 
-
 typedef struct {
-   enum {
-      I830_INIT_DMA = 0x01,
-      I830_CLEANUP_DMA = 0x02,
-      I830_RESUME_DMA = 0x03
-   } func;
-   unsigned int mmio_offset;
-   int sarea_priv_offset;
-   unsigned int ring_start;
-   unsigned int ring_end;
-   unsigned int ring_size;
-   unsigned int front_offset;
-   unsigned int back_offset;
-   unsigned int depth_offset;
-   unsigned int w;
-   unsigned int h;
-   unsigned int pitch; /* Pitch of front buffer in units of pixels */
-   unsigned int pitch_bits;
-   unsigned int back_pitch;
-   unsigned int depth_pitch;
-   unsigned int cpp;
-   unsigned int chipset;
+	enum {
+		I830_INIT_DMA = 0x01,
+		I830_CLEANUP_DMA = 0x02,
+		I830_RESUME_DMA = 0x03
+	} func;
+	unsigned int mmio_offset;
+	int sarea_priv_offset;
+	unsigned int ring_start;
+	unsigned int ring_end;
+	unsigned int ring_size;
+	unsigned int front_offset;
+	unsigned int back_offset;
+	unsigned int depth_offset;
+	unsigned int w;
+	unsigned int h;
+	unsigned int pitch;	/* Pitch of front buffer in units of pixels */
+	unsigned int pitch_bits;
+	unsigned int back_pitch;
+	unsigned int depth_pitch;
+	unsigned int cpp;
+	unsigned int chipset;
 } drmI830Init;
 
 typedef struct {
-	drmTextureRegion texList[I830_NR_TEX_REGIONS+1];
-        int last_upload;	/* last time texture was uploaded */
-        int last_enqueue;	/* last time a buffer was enqueued */
+	drmTextureRegion texList[I830_NR_TEX_REGIONS + 1];
+	int last_upload;	/* last time texture was uploaded */
+	int last_enqueue;	/* last time a buffer was enqueued */
 	volatile int last_dispatch;	/* age of the most recently dispatched buffer */
 	int ctxOwner;		/* last context to upload state */
 	int texAge;
-        int pf_enabled;		/* is pageflipping allowed? */
-        int pf_active;               
-        int pf_current_page;	/* which buffer is being displayed? */
-        int perf_boxes;	        /* performance boxes to be displayed */   
-	int width, height;      /* screen size in pixels */
+	int pf_enabled;		/* is pageflipping allowed? */
+	int pf_active;
+	int pf_current_page;	/* which buffer is being displayed? */
+	int perf_boxes;		/* performance boxes to be displayed */
+	int width, height;	/* screen size in pixels */
 
 	drm_handle_t front_handle;
 	int front_offset;
@@ -112,17 +108,17 @@ typedef struct {
 	int tex_size;
 	int log_tex_granularity;
 	int pitch;
-	int rotation;           /* 0, 90, 180 or 270 */
+	int rotation;		/* 0, 90, 180 or 270 */
 	int rotated_offset;
 	int rotated_size;
 	int rotated_pitch;
 	int virtualX, virtualY;
 
-        unsigned int front_tiled;
-        unsigned int back_tiled;
-        unsigned int depth_tiled;
-        unsigned int rotated_tiled;
-        unsigned int rotated2_tiled;
+	unsigned int front_tiled;
+	unsigned int back_tiled;
+	unsigned int depth_tiled;
+	unsigned int rotated_tiled;
+	unsigned int rotated2_tiled;
 
 	int pipeA_x;
 	int pipeA_y;
@@ -151,31 +147,30 @@ typedef struct {
 
 /* Flags for perf_boxes
  */
-#define I830_BOX_RING_EMPTY    0x1 /* populated by kernel */
-#define I830_BOX_FLIP          0x2 /* populated by kernel */
-#define I830_BOX_WAIT          0x4 /* populated by kernel & client */
-#define I830_BOX_TEXTURE_LOAD  0x8 /* populated by kernel */
-#define I830_BOX_LOST_CONTEXT  0x10 /* populated by client */
-
+#define I830_BOX_RING_EMPTY    0x1	/* populated by kernel */
+#define I830_BOX_FLIP          0x2	/* populated by kernel */
+#define I830_BOX_WAIT          0x4	/* populated by kernel & client */
+#define I830_BOX_TEXTURE_LOAD  0x8	/* populated by kernel */
+#define I830_BOX_LOST_CONTEXT  0x10	/* populated by client */
 
 typedef struct {
-   	int start;		/* agp offset */
+	int start;		/* agp offset */
 	int used;		/* nr bytes in use */
 	int DR1;		/* hw flags for GFX_OP_DRAWRECT_INFO */
-        int DR4;		/* window origin for GFX_OP_DRAWRECT_INFO*/
+	int DR4;		/* window origin for GFX_OP_DRAWRECT_INFO */
 	int num_cliprects;	/* mulitpass with multiple cliprects? */
-        drm_clip_rect_t *cliprects; /* pointer to userspace cliprects */
+	drm_clip_rect_t *cliprects;	/* pointer to userspace cliprects */
 } drmI830BatchBuffer;
 
 typedef struct {
-   	char *buf;		/* agp offset */
-	int sz; 		/* nr bytes in use */
+	char *buf;		/* agp offset */
+	int sz;			/* nr bytes in use */
 	int DR1;		/* hw flags for GFX_OP_DRAWRECT_INFO */
-        int DR4;		/* window origin for GFX_OP_DRAWRECT_INFO*/
+	int DR4;		/* window origin for GFX_OP_DRAWRECT_INFO */
 	int num_cliprects;	/* mulitpass with multiple cliprects? */
-        drm_clip_rect_t *cliprects; /* pointer to userspace cliprects */
+	drm_clip_rect_t *cliprects;	/* pointer to userspace cliprects */
 } drmI830CmdBuffer;
- 
+
 typedef struct {
 	int *irq_seq;
 } drmI830IrqEmit;
@@ -190,7 +185,7 @@ typedef struct {
 } drmI830GetParam;
 
 #define I830_PARAM_IRQ_ACTIVE     1
-#define I830_PARAM_ALLOW_BATCHBUFFER   2 
+#define I830_PARAM_ALLOW_BATCHBUFFER   2
 
 typedef struct {
 	int param;
@@ -200,7 +195,6 @@ typedef struct {
 #define I830_SETPARAM_USE_MI_BATCHBUFFER_START  1
 #define I830_SETPARAM_TEX_LRU_LOG_GRANULARITY   2
 #define I830_SETPARAM_ALLOW_BATCHBUFFER         3
-
 
 /* A memory manager for regions of shared memory:
  */
@@ -221,7 +215,7 @@ typedef struct {
 typedef struct {
 	int region;
 	int size;
-	int start;	
+	int start;
 } drmI830MemInitHeap;
 
 typedef struct {

@@ -73,10 +73,10 @@ static void
 i830_hdmi_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 		   DisplayModePtr adjusted_mode)
 {
-    ScrnInfoPtr pScrn = output->scrn;
+    ScrnInfoPtr scrn = output->scrn;
     I830OutputPrivatePtr intel_output = output->driver_private;
     struct i830_hdmi_priv *dev_priv = intel_output->dev_priv;
-    I830Ptr pI830 = I830PTR(pScrn);
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     xf86CrtcPtr crtc = output->crtc;
     I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
     uint32_t sdvox;
@@ -99,10 +99,10 @@ i830_hdmi_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 static void
 i830_hdmi_dpms(xf86OutputPtr output, int mode)
 {
-    ScrnInfoPtr pScrn = output->scrn;
+    ScrnInfoPtr scrn = output->scrn;
     I830OutputPrivatePtr intel_output = output->driver_private;
     struct i830_hdmi_priv *dev_priv = intel_output->dev_priv;
-    I830Ptr pI830 = I830PTR(pScrn);
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t  temp;
 
     if (mode == DPMSModeOff) {
@@ -117,10 +117,10 @@ i830_hdmi_dpms(xf86OutputPtr output, int mode)
 static void
 i830_hdmi_save(xf86OutputPtr output)
 {
-    ScrnInfoPtr pScrn = output->scrn;
+    ScrnInfoPtr scrn = output->scrn;
     I830OutputPrivatePtr intel_output = output->driver_private;
     struct i830_hdmi_priv *dev_priv = intel_output->dev_priv;
-    I830Ptr pI830 = I830PTR(pScrn);
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
     dev_priv->save_SDVO = INREG(dev_priv->output_reg);
 }
@@ -128,10 +128,10 @@ i830_hdmi_save(xf86OutputPtr output)
 static void
 i830_hdmi_restore(xf86OutputPtr output)
 {
-    ScrnInfoPtr pScrn = output->scrn;
+    ScrnInfoPtr scrn = output->scrn;
     I830OutputPrivatePtr intel_output = output->driver_private;
     struct i830_hdmi_priv *dev_priv = intel_output->dev_priv;
-    I830Ptr pI830 = I830PTR(pScrn);
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
     OUTREG(dev_priv->output_reg, dev_priv->save_SDVO);
 }
@@ -145,10 +145,10 @@ i830_hdmi_restore(xf86OutputPtr output)
 static xf86OutputStatus
 i830_hdmi_detect(xf86OutputPtr output)
 {
-    ScrnInfoPtr	pScrn = output->scrn;
+    ScrnInfoPtr	scrn = output->scrn;
     I830OutputPrivatePtr intel_output = output->driver_private;
     struct i830_hdmi_priv *dev_priv = intel_output->dev_priv;
-    I830Ptr pI830 = I830PTR(pScrn);
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t temp, bit;
     xf86OutputStatus status;
     xf86MonPtr edid_mon;
@@ -159,21 +159,29 @@ i830_hdmi_detect(xf86OutputPtr output)
      * Failure to do so will result in spurious interrupts being
      * generated on the port when a cable is not attached.
      */
-    if (IS_G4X(pI830) && !IS_GM45(pI830)) {
+    if (IS_G4X(intel) && !IS_GM45(intel)) {
 	temp = INREG(PEG_BAND_GAP_DATA);
 	OUTREG(PEG_BAND_GAP_DATA, (temp & ~0xf) | 0xd);
     }
 
     temp = INREG(PORT_HOTPLUG_EN);
 
-    OUTREG(PORT_HOTPLUG_EN,
-	   temp |
-	   HDMIB_HOTPLUG_INT_EN |
-	   HDMIC_HOTPLUG_INT_EN |
-	   HDMID_HOTPLUG_INT_EN);
+    switch (dev_priv->output_reg) {
+    case SDVOB:
+	temp |= HDMIB_HOTPLUG_INT_EN;
+	break;
+    case SDVOC:
+	temp |= HDMIC_HOTPLUG_INT_EN;
+	break;
+    default:
+	return XF86OutputStatusUnknown;
+    }
+
+    OUTREG(PORT_HOTPLUG_EN, temp);
 
     POSTING_READ(PORT_HOTPLUG_EN);
 
+    i830WaitForVblank(scrn);
     switch (dev_priv->output_reg) {
     case SDVOB:
 	bit = HDMIB_HOTPLUG_INT_STATUS;
@@ -198,8 +206,8 @@ i830_hdmi_detect(xf86OutputPtr output)
 	    xf86MonitorIsHDMI(edid_mon))
 	dev_priv->has_hdmi_sink = TRUE;
 
-    if (pI830->debug_modes)
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+    if (intel->debug_modes)
+	xf86DrvMsg(scrn->scrnIndex, X_INFO,
 			"%s monitor detected on HDMI-%d\n",
 			dev_priv->has_hdmi_sink ? "HDMI" : "DVI",
 			(dev_priv->output_reg == SDVOB) ? 1 : 2);
@@ -222,17 +230,17 @@ i830_hdmi_destroy (xf86OutputPtr output)
 static void
 i830_hdmi_create_resources(xf86OutputPtr output)
 {
-    ScrnInfoPtr                 pScrn = output->scrn;
-    I830Ptr                     pI830 = I830PTR(pScrn);
+    ScrnInfoPtr                 scrn = output->scrn;
+    intel_screen_private        *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr        intel_output = output->driver_private;
     struct i830_hdmi_priv       *dev_priv = intel_output->dev_priv;
     INT32			broadcast_range[2];
     int                         err;
 
     /* only R G B are 8bit color mode */
-    if (pScrn->depth != 24 ||
+    if (scrn->depth != 24 ||
         /* only 965G and G4X platform */
-        !(IS_I965G(pI830) || IS_G4X(pI830)))
+        !(IS_I965G(intel) || IS_G4X(intel)))
         return;
 
     broadcast_atom =
@@ -244,7 +252,7 @@ i830_hdmi_create_resources(xf86OutputPtr output)
                                     broadcast_atom,
                                     FALSE, TRUE, FALSE, 2, broadcast_range);
     if (err != 0) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
                    "RRConfigureOutputProperty error, %d\n", err);
         return;
     }
@@ -256,7 +264,7 @@ i830_hdmi_create_resources(xf86OutputPtr output)
                                  1, &dev_priv->broadcast_rgb,
                                  FALSE, TRUE);
     if (err != 0) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
                    "RRChangeOutputProperty error, %d\n", err);
         return;
     }
@@ -266,8 +274,8 @@ static Bool
 i830_hdmi_set_property(xf86OutputPtr output, Atom property,
                        RRPropertyValuePtr value)
 {
-    ScrnInfoPtr             pScrn = output->scrn;
-    I830Ptr                 pI830 = I830PTR(pScrn);
+    ScrnInfoPtr             scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_hdmi_priv   *dev_priv = intel_output->dev_priv;
     uint32_t temp;
@@ -319,13 +327,13 @@ static const xf86OutputFuncsRec i830_hdmi_output_funcs = {
 };
 
 void
-i830_hdmi_init(ScrnInfoPtr pScrn, int output_reg)
+i830_hdmi_init(ScrnInfoPtr scrn, int output_reg)
 {
     xf86OutputPtr output;
     I830OutputPrivatePtr intel_output;
     struct i830_hdmi_priv *dev_priv;
 
-    output = xf86OutputCreate(pScrn, &i830_hdmi_output_funcs,
+    output = xf86OutputCreate(scrn, &i830_hdmi_output_funcs,
 			      (output_reg == SDVOB) ? "HDMI-1" : "HDMI-2");
     if (!output)
 	return;
@@ -350,11 +358,11 @@ i830_hdmi_init(ScrnInfoPtr pScrn, int output_reg)
 
     /* Set up the DDC bus. */
     if (output_reg == SDVOB)
-	I830I2CInit(pScrn, &intel_output->pDDCBus, GPIOE, "HDMIDDC_B");
+	I830I2CInit(scrn, &intel_output->pDDCBus, GPIOE, "HDMIDDC_B");
     else
-	I830I2CInit(pScrn, &intel_output->pDDCBus, GPIOD, "HDMIDDC_C");
+	I830I2CInit(scrn, &intel_output->pDDCBus, GPIOD, "HDMIDDC_C");
 
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+    xf86DrvMsg(scrn->scrnIndex, X_INFO,
 	       "HDMI output %d detected\n",
 	       (output_reg == SDVOB) ? 1 : 2);
 }

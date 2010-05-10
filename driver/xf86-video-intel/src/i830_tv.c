@@ -779,8 +779,8 @@ static const color_conversion_t hdtv_component_color = {
 static void
 i830_tv_dpms(xf86OutputPtr output, int mode)
 {
-    ScrnInfoPtr pScrn = output->scrn;
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = output->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
     switch(mode) {
 	case DPMSModeOn:
@@ -792,14 +792,14 @@ i830_tv_dpms(xf86OutputPtr output, int mode)
 	    OUTREG(TV_CTL, INREG(TV_CTL) & ~TV_ENC_ENABLE);
 	    break;
     }
-    i830WaitForVblank(pScrn);
+    i830WaitForVblank(scrn);
 }
 
 static void
 i830_tv_save(xf86OutputPtr output)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_tv_priv	    *dev_priv = intel_output->dev_priv;
     int			    i;
@@ -848,8 +848,8 @@ i830_tv_save(xf86OutputPtr output)
 static void
 i830_tv_restore(xf86OutputPtr output)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_tv_priv	    *dev_priv = intel_output->dev_priv;
     int			    i;
@@ -893,14 +893,14 @@ i830_tv_restore(xf86OutputPtr output)
 	/* Flush the plane changes */
 	OUTREG(dspbase_reg, INREG(dspbase_reg));
 
-	if (!IS_I9XX(pI830)) {
+	if (!IS_I9XX(intel)) {
 	    /* Wait for vblank for the disable to take effect */
-	    i830WaitForVblank(pScrn);
+	    i830WaitForVblank(scrn);
 	}
 
 	OUTREG(pipeconf_reg, pipeconf & ~PIPEACONF_ENABLE);
 	/* Wait for vblank for the disable to take effect. */
-	i830WaitForVblank(pScrn);
+	i830WaitForVblank(scrn);
 
 	/* Filter ctl must be set before TV_WIN_SIZE */
 	OUTREG(TV_FILTER_CTL_1, dev_priv->save_TV_FILTER_CTL_1);
@@ -925,7 +925,7 @@ i830_tv_restore(xf86OutputPtr output)
 
     OUTREG(TV_DAC, dev_priv->save_TV_DAC);
     OUTREG(TV_CTL, dev_priv->save_TV_CTL);
-    i830WaitForVblank(pScrn);
+    i830WaitForVblank(scrn);
 }
 
 static const tv_mode_t *
@@ -967,8 +967,8 @@ static Bool
 i830_tv_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 		DisplayModePtr adjusted_mode)
 {
-    ScrnInfoPtr		pScrn = output->scrn;
-    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    ScrnInfoPtr		scrn = output->scrn;
+    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     int			i;
     const tv_mode_t	*tv_mode = i830_tv_mode_find (output);
 
@@ -1056,7 +1056,7 @@ float_to_fix_2_6(float f)
 }
 
 static void
-i830_tv_update_brightness(I830Ptr pI830, uint8_t brightness)
+i830_tv_update_brightness(intel_screen_private *intel, uint8_t brightness)
 {
     /* brightness in 2's comp value */
     uint32_t val = INREG(TV_CLR_KNOBS) & ~TV_BRIGHTNESS_MASK;
@@ -1067,13 +1067,13 @@ i830_tv_update_brightness(I830Ptr pI830, uint8_t brightness)
 }
 
 static void
-i830_tv_update_contrast(I830Ptr pI830, uint8_t contrast)
+i830_tv_update_contrast(intel_screen_private *intel, uint8_t contrast)
 {
     uint32_t val = INREG(TV_CLR_KNOBS) & ~TV_CONTRAST_MASK;;
     float con;
     uint8_t c;
 
-    if (IS_I965G(pI830)) {
+    if (IS_I965G(intel)) {
 	/* 2.6 fixed point */
 	con = 3.0 * ((float) contrast / 255);
 	c = float_to_fix_2_6(con);
@@ -1087,14 +1087,14 @@ i830_tv_update_contrast(I830Ptr pI830, uint8_t contrast)
 }
 
 static void
-i830_tv_update_saturation(I830Ptr pI830, uint8_t saturation)
+i830_tv_update_saturation(intel_screen_private *intel, uint8_t saturation)
 {
     uint32_t val = INREG(TV_CLR_KNOBS) & ~TV_SATURATION_MASK;
     float sat;
     uint8_t s;
 
     /* same as contrast */
-    if (IS_I965G(pI830)) {
+    if (IS_I965G(intel)) {
 	sat = 3.0 * ((float) saturation / 255);
 	s = float_to_fix_2_6(sat);
     } else {
@@ -1106,7 +1106,7 @@ i830_tv_update_saturation(I830Ptr pI830, uint8_t saturation)
 }
 
 static void
-i830_tv_update_hue(I830Ptr pI830, uint8_t hue)
+i830_tv_update_hue(intel_screen_private *intel, uint8_t hue)
 {
     uint32_t val = INREG(TV_CLR_KNOBS) & ~TV_HUE_MASK;
 
@@ -1118,8 +1118,8 @@ static void
 i830_tv_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 		DisplayModePtr adjusted_mode)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     xf86CrtcPtr	    crtc = output->crtc;
     I830OutputPrivatePtr    intel_output = output->driver_private;
     I830CrtcPrivatePtr	    intel_crtc = crtc->driver_private;
@@ -1235,7 +1235,7 @@ i830_tv_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 	tv_mode->dda3_inc << TV_SCDDA3_INC_SHIFT;
 
     /* Enable two fixes for the chips that need them. */
-    if (DEVICE_ID(pI830->PciInfo) < PCI_CHIP_I945_G)
+    if (DEVICE_ID(intel->PciInfo) < PCI_CHIP_I945_G)
 	tv_ctl |= TV_ENC_C0_FIX | TV_ENC_SDP_FIX;
 
     OUTREG(TV_H_CTL_1, hctl1);
@@ -1290,14 +1290,14 @@ i830_tv_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 	/* Flush the plane changes */
 	OUTREG(dspbase_reg, INREG(dspbase_reg));
 
-	if (!IS_I9XX(pI830)) {
+	if (!IS_I9XX(intel)) {
 	    /* Wait for vblank for the disable to take effect */
-	    i830WaitForVblank(pScrn);
+	    i830WaitForVblank(scrn);
 	}
 
 	OUTREG(pipeconf_reg, pipeconf & ~PIPEACONF_ENABLE);
 	/* Wait for vblank for the disable to take effect. */
-	i830WaitForVblank(pScrn);
+	i830WaitForVblank(scrn);
 
 	/* Filter ctl must be set before TV_WIN_SIZE */
 	OUTREG(TV_FILTER_CTL_1, TV_AUTO_SCALE);
@@ -1333,7 +1333,7 @@ i830_tv_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 	OUTREG(TV_V_CHROMA_0 + (i<<2), tv_mode->filter_table[j++]);
     OUTREG(TV_DAC, 0);
     OUTREG(TV_CTL, tv_ctl);
-    i830WaitForVblank(pScrn);
+    i830WaitForVblank(scrn);
 }
 
 static const DisplayModeRec reported_modes[] = {
@@ -1365,8 +1365,8 @@ static int
 i830_tv_detect_type (xf86CrtcPtr    crtc,
 		xf86OutputPtr  output)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     uint32_t		    tv_ctl, save_tv_ctl;
     uint32_t		    tv_dac, save_tv_dac;
@@ -1386,6 +1386,9 @@ i830_tv_detect_type (xf86CrtcPtr    crtc,
 	tv_ctl &= ~TV_TEST_MODE_MASK;
 	tv_ctl |= TV_TEST_MODE_MONITOR_DETECT;
 	tv_dac &= ~TVDAC_SENSE_MASK;
+        tv_dac &= ~DAC_A_MASK;
+        tv_dac &= ~DAC_B_MASK;
+        tv_dac &= ~DAC_C_MASK;
 	tv_dac |= (TVDAC_STATE_CHG_EN |
 		TVDAC_A_SENSE_CTL |
 		TVDAC_B_SENSE_CTL |
@@ -1396,11 +1399,11 @@ i830_tv_detect_type (xf86CrtcPtr    crtc,
 		DAC_C_0_7_V);
 	OUTREG(TV_CTL, tv_ctl);
 	OUTREG(TV_DAC, tv_dac);
-	i830WaitForVblank(pScrn);
+	i830WaitForVblank(scrn);
 	tv_dac = INREG(TV_DAC);
 	OUTREG(TV_DAC, save_tv_dac);
 	OUTREG(TV_CTL, save_tv_ctl);
-	i830WaitForVblank(pScrn);
+	i830WaitForVblank(scrn);
     }
     /*
      *  A B C
@@ -1409,26 +1412,26 @@ i830_tv_detect_type (xf86CrtcPtr    crtc,
      *  0 0 0 Component
      */
     if ((tv_dac & TVDAC_SENSE_MASK) == (TVDAC_B_SENSE | TVDAC_C_SENSE)) {
-	if (pI830->debug_modes) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	if (intel->debug_modes) {
+	    xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		       "Detected Composite TV connection\n");
 	}
 	type = TV_TYPE_COMPOSITE;
     } else if ((tv_dac & (TVDAC_A_SENSE|TVDAC_B_SENSE)) == TVDAC_A_SENSE) {
-	if (pI830->debug_modes) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	if (intel->debug_modes) {
+	    xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		       "Detected S-Video TV connection\n");
 	}
 	type = TV_TYPE_SVIDEO;
     } else if ((tv_dac & TVDAC_SENSE_MASK) == 0) {
-	if (pI830->debug_modes) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	if (intel->debug_modes) {
+	    xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		       "Detected Component TV connection\n");
 	}
 	type = TV_TYPE_COMPONENT;
     } else {
-	if (pI830->debug_modes) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	if (intel->debug_modes) {
+	    xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		       "No TV connection detected\n");
 	}
 	type = TV_TYPE_NONE;
@@ -1648,23 +1651,23 @@ static void
 i830_tv_color_set_property(xf86OutputPtr output, Atom property,
 			   uint8_t val)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_tv_priv	    *dev_priv = intel_output->dev_priv;
 
     if (property == brightness_atom) {
 	dev_priv->brightness = val;
-	i830_tv_update_brightness(pI830, val);
+	i830_tv_update_brightness(intel, val);
     } else if (property == contrast_atom) {
 	dev_priv->contrast = val;
-	i830_tv_update_contrast(pI830, val);
+	i830_tv_update_contrast(intel, val);
     } else if (property == saturation_atom) {
 	dev_priv->saturation = val;
-	i830_tv_update_saturation(pI830, val);
+	i830_tv_update_saturation(intel, val);
     } else if (property == hue_atom) {
 	dev_priv->hue = val;
-	i830_tv_update_hue(pI830, val);
+	i830_tv_update_hue(intel, val);
     }
 }
 
@@ -1672,7 +1675,7 @@ static void
 i830_tv_color_create_property(xf86OutputPtr output, Atom *property,
 			      char *name, int name_len, uint8_t val)
 {
-    ScrnInfoPtr	pScrn = output->scrn;
+    ScrnInfoPtr	scrn = output->scrn;
     INT32 range[2];
     int err = 0;
 
@@ -1682,7 +1685,7 @@ i830_tv_color_create_property(xf86OutputPtr output, Atom *property,
     err = RRConfigureOutputProperty(output->randr_output, *property,
 				    FALSE, TRUE, FALSE, 2, range);
     if (err != 0) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		   "RRConfigureOutputProperty error, %d\n", err);
 	goto out;
     }
@@ -1693,7 +1696,7 @@ i830_tv_color_create_property(xf86OutputPtr output, Atom *property,
 				 XA_INTEGER, 32, PropModeReplace, 1, &val,
 				 FALSE, FALSE);
     if (err != 0) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		   "RRChangeOutputProperty error, %d\n", err);
     }
 out:
@@ -1706,8 +1709,8 @@ static void
 i830_tv_create_resources(xf86OutputPtr output)
 {
 #ifdef RANDR_12_INTERFACE
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_tv_priv	    *dev_priv = intel_output->dev_priv;
     int			    err, i;
@@ -1726,13 +1729,13 @@ i830_tv_create_resources(xf86OutputPtr output)
     err = i830_tv_format_configure_property (output);
 
     if (err != 0) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		   "RRConfigureOutputProperty error, %d\n", err);
     }
 
     /* Set the current value of the tv_format property */
     if (!i830_tv_format_set_property (output))
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		   "RRChangeOutputProperty error, %d\n", err);
 
     for (i = 0; i < 4; i++)
@@ -1747,7 +1750,7 @@ i830_tv_create_resources(xf86OutputPtr output)
 				    TRUE, TRUE, FALSE, 2, range);
 
 	if (err != 0)
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	    xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		       "RRConfigureOutputProperty error, %d\n", err);
 
 	err = RRChangeOutputProperty(output->randr_output, margin_atoms[i],
@@ -1755,7 +1758,7 @@ i830_tv_create_resources(xf86OutputPtr output)
 				     1, &dev_priv->margin[i],
 				     FALSE, TRUE);
 	if (err != 0)
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	    xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		       "RRChangeOutputProperty error, %d\n", err);
     }
 
@@ -1766,12 +1769,12 @@ i830_tv_create_resources(xf86OutputPtr output)
     i830_tv_color_create_property(output, &contrast_atom,
 				  TV_CONTRAST_NAME,
 				  sizeof(TV_CONTRAST_NAME),
-				  IS_I965G(pI830) ? TV_CONTRAST_DEFAULT :
+				  IS_I965G(intel) ? TV_CONTRAST_DEFAULT :
 						TV_CONTRAST_DEFAULT_945G);
     i830_tv_color_create_property(output, &saturation_atom,
 				  TV_SATURATION_NAME,
 				  sizeof(TV_SATURATION_NAME),
-				  IS_I965G(pI830) ? TV_SATURATION_DEFAULT :
+				  IS_I965G(intel) ? TV_SATURATION_DEFAULT :
 						TV_SATURATION_DEFAULT_945G);
     i830_tv_color_create_property(output, &hue_atom, TV_HUE_NAME,
 				  sizeof(TV_HUE_NAME), TV_HUE_DEFAULT);
@@ -1789,7 +1792,7 @@ i830_tv_set_property(xf86OutputPtr output, Atom property,
     {
 	I830OutputPrivatePtr    intel_output = output->driver_private;
 	struct i830_tv_priv	*dev_priv = intel_output->dev_priv;
-	I830Ptr			pI830 = I830PTR(output->scrn);
+        intel_screen_private    *intel = intel_get_screen_private(output->scrn);
 	Atom			atom;
 	const char		*name;
 	char			*val;
@@ -1816,7 +1819,7 @@ i830_tv_set_property(xf86OutputPtr output, Atom property,
 	xfree (dev_priv->tv_format);
 	dev_priv->tv_format = val;
 
-	if (pI830->starting)
+	if (intel->starting || output->crtc == NULL)
 	    return TRUE;
 
 	/* TV format change will generate new modelines, try
@@ -1900,11 +1903,11 @@ i830_tv_set_property(xf86OutputPtr output, Atom property,
 static xf86CrtcPtr
 i830_tv_get_crtc(xf86OutputPtr output)
 {
-    ScrnInfoPtr	pScrn = output->scrn;
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr	scrn = output->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     int pipe = !!(INREG(TV_CTL) & TV_ENC_PIPEB_SELECT);
 
-    return i830_pipe_to_crtc(pScrn, pipe);
+    return i830_pipe_to_crtc(scrn, pipe);
 }
 #endif
 
@@ -1930,9 +1933,9 @@ static const xf86OutputFuncsRec i830_tv_output_funcs = {
 };
 
 void
-i830_tv_init(ScrnInfoPtr pScrn)
+i830_tv_init(ScrnInfoPtr scrn)
 {
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     xf86OutputPtr	    output;
     I830OutputPrivatePtr    intel_output;
     struct i830_tv_priv	    *dev_priv;
@@ -1941,7 +1944,7 @@ i830_tv_init(ScrnInfoPtr pScrn)
     char		    *tv_format = NULL;
     char		    *tv_type = NULL;
 
-    if (pI830->quirk_flag & QUIRK_IGNORE_TV)
+    if (intel->quirk_flag & QUIRK_IGNORE_TV)
 	return;
 
     if ((INREG(TV_CTL) & TV_FUSE_STATE_MASK) == TV_FUSE_STATE_DISABLED)
@@ -1970,10 +1973,10 @@ i830_tv_init(ScrnInfoPtr pScrn)
 	    (tv_dac_off & TVDAC_STATE_CHG_EN) != 0)
 	return;
 
-    if (!pI830->tv_present) /* VBIOS claims no TV connector */
+    if (!intel->tv_present) /* VBIOS claims no TV connector */
 	return;
 
-    output = xf86OutputCreate (pScrn, &i830_tv_output_funcs, "TV");
+    output = xf86OutputCreate (scrn, &i830_tv_output_funcs, "TV");
 
     if (!output)
 	return;
@@ -2023,14 +2026,14 @@ i830_tv_init(ScrnInfoPtr pScrn)
 	else if (strcasecmp(tv_type, "Component") == 0)
 	    dev_priv->type = TV_TYPE_COMPONENT;
 	else {
-	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+	    xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 		    "Unknown TV Connector type %s\n", tv_type);
 	    dev_priv->force_type = FALSE;
 	}
     }
 
     if (dev_priv->force_type)
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		"Force TV Connector type as %s\n", tv_type);
 
     output->driver_private = intel_output;

@@ -722,3 +722,5 @@ struct i830_sdvo_encode{
     uint8_t dvi_rev;
     uint8_t hdmi_rev;
 } __attribute__ ((packed));
+
+#define SDVO_STALL_FLAG (1 << 7)

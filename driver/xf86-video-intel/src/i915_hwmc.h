@@ -39,24 +39,21 @@
 #define I915_NUM_XVMC_ATTRIBUTES       0x02
 #define I915_XVMC_VALID 0x80000000
 
-typedef struct
-{
-    struct _intel_xvmc_common comm;
-    unsigned int ctxno; /* XvMC private context reference number */
-    struct hwmc_buffer sis;
-    struct hwmc_buffer ssb;
-    struct hwmc_buffer msb;
-    struct hwmc_buffer psp;
-    struct hwmc_buffer psc;
-    struct hwmc_buffer corrdata;/* Correction Data Buffer */
-    unsigned int sarea_priv_offset;
-    int deviceID;
+typedef struct {
+	struct _intel_xvmc_common comm;
+	unsigned int ctxno;	/* XvMC private context reference number */
+	struct hwmc_buffer sis;
+	struct hwmc_buffer ssb;
+	struct hwmc_buffer msb;
+	struct hwmc_buffer psp;
+	struct hwmc_buffer psc;
+	struct hwmc_buffer corrdata;	/* Correction Data Buffer */
+	int deviceID;
 } I915XvMCCreateContextRec;
 
-typedef struct 
-{
-    unsigned int srfno;
-    struct hwmc_buffer srf;
+typedef struct {
+	unsigned int srfno;
+	struct hwmc_buffer srf;
 } I915XvMCCreateSurfaceRec;
 
 #endif /* _I915_HWMC_H */

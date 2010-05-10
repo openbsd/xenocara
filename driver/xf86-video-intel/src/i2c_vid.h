@@ -129,8 +129,4 @@ typedef struct _I830I2CVidOutputRec {
     void (*dump_regs)(I2CDevPtr d);
 } I830I2CVidOutputRec, *I830I2CVidOutputPtr;
 
-/* XXX change this name to avoid driver-specific prefix */
-DisplayModePtr
-i830_dvo_get_current_mode (xf86OutputPtr output);
-
 #endif

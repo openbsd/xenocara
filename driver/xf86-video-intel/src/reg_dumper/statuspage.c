@@ -41,41 +41,41 @@
 
 int main(int argc, char **argv)
 {
-    I830Rec i830;
-    I830Ptr pI830 = &i830;
-    int devmem;
-    uint32_t hws_offset;
-    volatile uint32_t *hws;
+	I830Rec i830;
+	I830Ptr pI830 = &i830;
+	int devmem;
+	uint32_t hws_offset;
+	volatile uint32_t *hws;
 
-    intel_i830rec_init(pI830);
+	intel_i830rec_init(pI830);
 
-    if (HWS_NEED_GFX(pI830))
-	errx(1, "status page in graphics virtual unsupported.\n");
+	if (HWS_NEED_GFX(pI830))
+		errx(1, "status page in graphics virtual unsupported.\n");
 
-    hws_offset = INREG(HWS_PGA);
+	hws_offset = INREG(HWS_PGA);
 
-    devmem = open("/dev/mem", O_RDWR, 0);
-    if (devmem == -1)
-	err(1, "Couldn't open /dev/mem");
+	devmem = open("/dev/mem", O_RDWR, 0);
+	if (devmem == -1)
+		err(1, "Couldn't open /dev/mem");
 
-    hws = mmap(NULL, 4096, PROT_READ, MAP_SHARED, devmem, hws_offset);
-    if (hws == MAP_FAILED)
-	err(1, "Couldn't map /dev/mem at 0x%08x", hws_offset);
+	hws = mmap(NULL, 4096, PROT_READ, MAP_SHARED, devmem, hws_offset);
+	if (hws == MAP_FAILED)
+		err(1, "Couldn't map /dev/mem at 0x%08x", hws_offset);
 
-    close(devmem);
+	close(devmem);
 
-    for (;;) {
-	int i;
+	for (;;) {
+		int i;
 
-	printf("\n");
+		printf("\n");
 
-	for (i = 0; i < 64; i += 4) {
-	    printf("0x%04x: 0x%08x 0x%08x 0x%08x 0x%08x\n", i * 4,
-		   hws[i], hws[i + 1], hws[i + 2], hws[i + 3]);
+		for (i = 0; i < 64; i += 4) {
+			printf("0x%04x: 0x%08x 0x%08x 0x%08x 0x%08x\n", i * 4,
+			       hws[i], hws[i + 1], hws[i + 2], hws[i + 3]);
+		}
+
+		sleep(1);
 	}
 
-	sleep(1);
-    }
-
-    return 0;
+	return 0;
 }

@@ -37,68 +37,71 @@
 #include <err.h>
 
 #ifndef DEFFILEMODE
-#define DEFFILEMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH) /* 0666*/
+#define DEFFILEMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)	/* 0666 */
 #endif
 
 static void usage(void)
 {
-    fprintf(stderr, "usage: bios_dumper <filename>\n");
-    exit(1);
+	fprintf(stderr, "usage: bios_dumper <filename>\n");
+	exit(1);
 }
 
 int main(int argc, char **argv)
 {
-    struct pci_device *dev;
-    void *bios;
-    int err, fd;
+	struct pci_device *dev;
+	void *bios;
+	int err, fd;
 
-    if (argc != 2)
-	usage();
+	if (argc != 2)
+		usage();
 
-    err = pci_system_init();
-    if (err != 0) {
-	fprintf(stderr, "Couldn't initialize PCI system: %s\n", strerror(err));
-	exit(1);
-    }
+	err = pci_system_init();
+	if (err != 0) {
+		fprintf(stderr, "Couldn't initialize PCI system: %s\n",
+			strerror(err));
+		exit(1);
+	}
 
-    /* Grab the graphics card */
-    dev = pci_device_find_by_slot(0, 0, 2, 0);
-    if (dev == NULL)
-	errx(1, "Couldn't find graphics card");
+	/* Grab the graphics card */
+	dev = pci_device_find_by_slot(0, 0, 2, 0);
+	if (dev == NULL)
+		errx(1, "Couldn't find graphics card");
 
-    err = pci_device_probe(dev);
-    if (err != 0) {
-	fprintf(stderr, "Couldn't probe graphics card: %s\n", strerror(err));
-	exit(1);
-    }
+	err = pci_device_probe(dev);
+	if (err != 0) {
+		fprintf(stderr, "Couldn't probe graphics card: %s\n",
+			strerror(err));
+		exit(1);
+	}
 
-    if (dev->vendor_id != 0x8086)
-	errx(1, "Graphics card is non-intel");
+	if (dev->vendor_id != 0x8086)
+		errx(1, "Graphics card is non-intel");
 
-    bios = malloc(dev->rom_size);
-    if (bios == NULL)
-	errx(1, "Couldn't allocate memory for BIOS data\n");
+	bios = malloc(dev->rom_size);
+	if (bios == NULL)
+		errx(1, "Couldn't allocate memory for BIOS data\n");
 
-    err = pci_device_read_rom(dev, bios);
-    if (err != 0) {
-	fprintf(stderr, "Couldn't read graphics card ROM: %s\n",
-		strerror(err));
-	exit(1);
-    }
+	err = pci_device_read_rom(dev, bios);
+	if (err != 0) {
+		fprintf(stderr, "Couldn't read graphics card ROM: %s\n",
+			strerror(err));
+		exit(1);
+	}
 
-    fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, DEFFILEMODE);
-    if (fd < 0) {
-	fprintf(stderr, "Couldn't open output: %s\n", strerror(errno));
-	exit(1);
-    }
+	fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, DEFFILEMODE);
+	if (fd < 0) {
+		fprintf(stderr, "Couldn't open output: %s\n", strerror(errno));
+		exit(1);
+	}
 
-    if (write(fd, bios, dev->rom_size) < dev->rom_size) {
-	fprintf(stderr, "Couldn't write BIOS data: %s\n", strerror(errno));
-	exit(1);
-    }
+	if (write(fd, bios, dev->rom_size) < dev->rom_size) {
+		fprintf(stderr, "Couldn't write BIOS data: %s\n",
+			strerror(errno));
+		exit(1);
+	}
 
-    close(fd);
-    pci_system_cleanup();
+	close(fd);
+	pci_system_cleanup();
 
-    return 0;
+	return 0;
 }

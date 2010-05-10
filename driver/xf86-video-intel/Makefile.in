@@ -61,8 +61,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	config.guess config.sub depcomp install-sh ltmain.sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -91,7 +90,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -112,8 +110,10 @@ BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -121,7 +121,6 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DOLT_BASH = @DOLT_BASH@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -131,8 +130,6 @@ DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DRM_CFLAGS = @DRM_CFLAGS@
 DRM_LIBS = @DRM_LIBS@
-DRM_MODE_CFLAGS = @DRM_MODE_CFLAGS@
-DRM_MODE_LIBS = @DRM_MODE_LIBS@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -144,25 +141,27 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GEN4ASM_CFLAGS = @GEN4ASM_CFLAGS@
+GEN4ASM_LIBS = @GEN4ASM_LIBS@
 GREP = @GREP@
 HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
+HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
+HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+KMS_ONLY_FALSE = @KMS_ONLY_FALSE@
+KMS_ONLY_TRUE = @KMS_ONLY_TRUE@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
-LIBPCIACCESS_FALSE = @LIBPCIACCESS_FALSE@
-LIBPCIACCESS_TRUE = @LIBPCIACCESS_TRUE@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUXDOC = @LINUXDOC@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -189,24 +188,16 @@ PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
-SERVER_1_5_CFLAGS = @SERVER_1_5_CFLAGS@
-SERVER_1_5_LIBS = @SERVER_1_5_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 VIDEO_DEBUG_FALSE = @VIDEO_DEBUG_FALSE@
 VIDEO_DEBUG_TRUE = @VIDEO_DEBUG_TRUE@
-WARN_CFLAGS = @WARN_CFLAGS@
 XEXT_CFLAGS = @XEXT_CFLAGS@
 XEXT_LIBS = @XEXT_LIBS@
-XMODES_CFLAGS = @XMODES_CFLAGS@
-XMODES_FALSE = @XMODES_FALSE@
-XMODES_TRUE = @XMODES_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
-XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
-XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
 XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
 XVMCLIB_LIBS = @XVMCLIB_LIBS@
 XVMC_FALSE = @XVMC_FALSE@
@@ -231,10 +222,10 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
-gen4asm = @gen4asm@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -263,7 +254,6 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = uxa src man
 EXTRA_DIST = README AUTHORS NEWS
-DISTCLEANFILES = doltcompile
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -627,7 +617,6 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"

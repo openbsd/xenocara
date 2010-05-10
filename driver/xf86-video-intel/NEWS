@@ -1,39 +1,199 @@
-Release 2.7.1 (2009-05-12)
---------------------------
-This is a maintenance release on the 2.7 branch. Compared to 2.7.0 it
-consists only of a few carefully hand-picked fixes for bugs,
-(including GPU crashers). We encourage all users of 2.7.0 to upgrade
-to 2.7.1.
+Release 2.9.1 (2009-10-26)
+==========================
+We are pleased to announce a maintenance release (2.9.1) of the
+xf86-video-intel driver. This release comes one month after 2.9.0 and
+consists only of a few, hand-picked bug fixes since that release.
 
-Bug fixes since 2.7.0:
+Complete list of fixes in 2.9.1 compared to 2.9.0
+-------------------------------------------------
+ * Fix corruption and artifacts due to wrong colors in the colormap
+   with X server 1.7
 
-    * KMS: Hook up output properties for RANDR, (this allows output
-      properties to be controlled in the KMS case just as in the UMS
-      case). [Zhenyu Wang <zhenyu.z.wang@intel.com>]
+ * Fix incorrect rendering, such as missing scrollbar arrows in some
+   themes (http://bugs.freedesktop.org/show_bug.cgi?id=24459)
 
-    * Fix multiplication error when computing required batch space.
-      This could fix any number of cases where the driver did
-      inexplicable things (due to having computed the wrong
-      size). [Keith Packard <keithp@keithp.com>]
+ * Fix black screen when X server is reset
+   (https://bugs.freedesktop.org/show_bug.cgi?id=24383)
 
-    * Hold reference to video binding table until all rects are
-      painted. This prevent general chaos in the buffer
-      manager. [Keith Packard <keithp@keithp.com>]
+ * Fix regressions detecting DVI monitors
 
-    * Split i915 textured video commands to fit into batch
-      buffers. Video and 3D setup commands share the same batch
-      buffer, so without this fix, various problems could occur when
-      video and 3D clients were both heavily active at the same
-      time. [Keith Packard <keithp@keithp.com>]
+   http://bugs.freedesktop.org/show_bug.cgi?id=24255
+   http://bugs.freedesktop.org/show_bug.cgi?id=24282
+   http://bugs.freedesktop.org/show_bug.cgi?id=24458
 
-    * Fix crash with XV with large virtual display (> 2049). [Albert
-      Damen <albrt@gmx.net>]
+Release 2.9.0 (2009-09-28)
+==========================
+We are pleased to announce the 2.9.0 release of the xf86-video-intel
+driver. (If you have been following along at home, this release is
+identical to the 2.8.99.902 release candidate other than the version
+number).
 
-    * Provide missing value to 3D_STATE_VERTEX_BUFFERS command. We
-      don't know that this was causing any problem, but the change
-      does bring the driver into conformance with what the
-      specification says the hardware requires here. [Keith Packard
-      <keithp@keithp.com>]
+New features in 2.9 compared to 2.8
+-----------------------------------
+* Support for the B43 chipset.
+
+Major fixes in 2.9.0 compared to 2.8.0
+--------------------------------------
+* Multiple fixes to make the driver stable for 8xx chipsets, (855GM,
+  865G, etc.). The 2.8 driver series was extremely unstable with many
+  of these chipsets.
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=22904 (and many duplicates)
+  https://bugs.freedesktop.org/show_bug.cgi?id=22947
+
+* Add support for BACKLIGHT property when using kernel modesetting
+  (KMS). This allows backlight adjustment with programs such as
+  "xbacklight -set <percentage>" or "xrandr --set BACKLIGHT <value>".
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=20963
+
+* Fix so that "xrandr --scale" works when using KMS.
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=22893
+
+* Fix segfaults of X server when logging out.
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=20516
+
+* Avoid falling back to software for 1-bit alpha-only masks.
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=23184
+
+* Fix pixel sampling position for 8xx chipsets, (fixes some cairo-test
+  suite failures).
+
+Snapshot 2.8.99.901 (2009-09-09)
+================================
+This is the first release candidate in preparation for the upcoming
+2.9.0 release. We will appreciate any feedback we can get from testing
+of this snapshot to improve the 2.9.0 release.
+
+See the commit log for changes in this release, and developers, please
+provide me summaries for any major features in this release that you
+think should appear in NEWS and in the 2.9.0 release notes.
+
+Note: We are still investigating failures with 865G chipsets, (these
+failures existed in the 2.8 series as well). We are hoping to fix
+these failures before the 2.9.0 release.
+
+Release 2.8.0 (2009-07-20)
+==========================
+We are pleased to present this major release of the xf86-video-intel
+driver. This release is very similar to the 2.7.99.902 release
+candidate but includes a couple of additional bug fixes, (for bugs
+#22760 and @22483).
+
+Compared to the 2.7 releases this driver contains several new features
+and many bug fixes. The driver now depends on X server 1.6 or later,
+and eliminates several obsolete code paths, (XAA and EXA removed in
+favor of UXA, DRI1 support eliminated). The driver certainly will work
+best with an i915 module from a recent kernel (2.6.31) and with
+kernel-modesetting (KMS, specified by loading i915 with the option
+"modeset=1").
+
+New features in 2.8.0 compared to 2.7
+-------------------------------------
+* Remove XAA/EXA/DRI1 and NoAccel, and only support UXA/DRI2 now
+  (requiring xserver 1.6).
+
+* VLD support added into XvMC for Mpeg2, which decreases CPU usage
+  when playing video.
+
+Major fixes in 2.8.0 compared to 2.7
+------------------------------------
+* Fix broken front-buffer rendering
+  https://bugs.freedesktop.org/show_bug.cgi?id=19174
+
+* Fix disabling of XvMC disabled
+  https://bugs.freedesktop.org/show_bug.cgi?id=20790
+
+* Fix broken VT switch on some machines
+  https://bugs.freedesktop.org/show_bug.cgi?id=19578
+
+* Improve performance of trapezoid rendering for UXA
+  https://bugs.freedesktop.org/show_bug.cgi?id=21376
+
+* Vblank sync'd GL buffer swap (fixing video tearing under composite)
+  https://bugs.freedesktop.org/show_bug.cgi?id=20664
+
+* Fix G41 DRM support
+  https://bugs.freedesktop.org/show_bug.cgi?id=21095
+
+* Fix crash on some 8xx
+  https://bugs.freedesktop.org/show_bug.cgi?id=18974
+
+Various fixes for GPU hangs, and more...
+
+Snapshot 2.7.99.902 (2009-07-13)
+--------------------------------
+This is the first release candidate in preparation for the upcoming
+2.8.0 release. Most major and critical bugs should be fixed, but some
+minor bugs may still be present. We will appreciate any feedback we
+can get from testing of this snapshot to improve the 2.8.0 release.
+
+Snapshot 2.7.99.901 (2009-06-10)
+--------------------------------
+This is the first release candidate in preparation for the upcoming
+2.8.0 release. Most critical bugs should be fixed, but some major
+bugs may still be present. We will appreciate any feedback we can
+get from testing of this snapshot to improve the 2.8.0 release.
+
+Some of the major fixes in this snapshot include:
+
+	* Several fixes for intermittent GPU hangs/crashes, (some of
+	  which already appeared in the 2.7.1 release)
+
+	* Fix to avoid X crash when viewing large images in browser
+
+	* Fix X server failure when running old (non-GEM) kernel
+
+	* Fixes for SDVO LVDS mode detection
+
+	* Fix major performance regression of trapezoid rendering
+          compared to XAA/EXA
+
+	* New support for tear-free video when using KMS
+
+	* New support for tear-free DRI2 CopyRegion
+
+Snapshot 2.7.99.1 (2009-04-28)
+------------------------------
+This is a development snapshot very early in the process toward
+developing 2.8. There have been some big changes to the code, and
+we're anxious to get feedback on these changes as early as possible.
+
+Here is a summary of the biggest changes:
+
+  * Driver now depends on X server 1.6 or later
+
+  * Eliminate XAA and EXA support (in favor of UXA)
+
+  * Eliminate DRI1 support
+
+  * Fixes for running without DRI at all
+
+These code removals represent a deletion of a substantial amount of
+code, (and hopefully piles of bugs), as well as reduce the maintenance
+effort going forward as the number of combinatorial configurations for
+the driver are greatly reduced. This means that users are much more
+likely to be running code that has actually been tested, and it will
+be much easy for developers to replicate bugs that users experience.
+
+One of the things that would be most useful in testing this release is
+to revisit any outstanding bugs that you have previously reported. If
+the buggy behavior is gone, (or the bug is no longer relevant---such
+as a bug that's specific to XAA only), please feel free to indicate so
+in bugzilla or even just close the bug.
+
+If you confirm that the bug is still present, please indicate so in
+the bug report. (I was going to ask that you select a 1.7.99 version,
+but it looks like bugzilla only has versions for products not
+compoenents, while we use a "xorg" product and a "driver/intel"
+component.) We definitely want to make any such confirmed bugs a
+priority, so it would be nice to have a consistent mechanism to search
+for these bugs. Suggestions are welcome on the best approach.
+
+Thanks in advance for any testing or feedback on this snapshot.
 
 Release 2.7.0 (2009-04-15)
 --------------------------

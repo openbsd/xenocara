@@ -39,7 +39,7 @@ typedef struct {
     int chipType;
     int subsysVendor;
     int subsysCard;
-    void (*hook)(I830Ptr);
+    void (*hook)(intel_screen_private *);
 } i830_quirk, *i830_quirk_ptr;
 
 enum i830_dmi_data_t {
@@ -70,12 +70,13 @@ static char *i830_dmi_data[dmi_data_max];
 static void i830_dmi_store_##field(void) \
 {\
     FILE *f = NULL;\
+    int ret;\
     f = fopen(DMIID_FILE(field), "r");\
     if (f == NULL) {\
 	xfree(i830_dmi_data[field]); i830_dmi_data[field] = NULL;\
 	return;\
     }\
-    fread(i830_dmi_data[field], 64, 1, f);\
+    ret = fread(i830_dmi_data[field], 64, 1, f);	\
     fclose(f);\
 }
 
@@ -165,46 +166,46 @@ static void i830_dmi_dump(void)
  * Old chips have undocumented panel fitting registers.  Some of them actually
  * work; this quirk indicates that.
  */
-static void quirk_pfit_safe (I830Ptr pI830)
+static void quirk_pfit_safe (intel_screen_private *intel)
 {
-    pI830->quirk_flag |= QUIRK_PFIT_SAFE;
+    intel->quirk_flag |= QUIRK_PFIT_SAFE;
 }
 
 /*
  * Some machines hose the display regs regardless of the ACPI DOS
  * setting, so we need to reset modes at ACPI event time.
  */
-static void quirk_reset_modes (I830Ptr pI830)
+static void quirk_reset_modes (intel_screen_private *intel)
 {
-    pI830->quirk_flag |= QUIRK_RESET_MODES;
+    intel->quirk_flag |= QUIRK_RESET_MODES;
 }
 
-static void quirk_pipea_force (I830Ptr pI830)
+static void quirk_pipea_force (intel_screen_private *intel)
 {
-    pI830->quirk_flag |= QUIRK_PIPEA_FORCE;
+    intel->quirk_flag |= QUIRK_PIPEA_FORCE;
 }
 
-static void quirk_ignore_tv (I830Ptr pI830)
+static void quirk_ignore_tv (intel_screen_private *intel)
 {
-    pI830->quirk_flag |= QUIRK_IGNORE_TV;
+    intel->quirk_flag |= QUIRK_IGNORE_TV;
 }
 
-static void quirk_ignore_lvds (I830Ptr pI830)
+static void quirk_ignore_lvds (intel_screen_private *intel)
 {
-    pI830->quirk_flag |= QUIRK_IGNORE_LVDS;
+    intel->quirk_flag |= QUIRK_IGNORE_LVDS;
 }
 
-static void quirk_ignore_crt (I830Ptr pI830)
+static void quirk_ignore_crt (intel_screen_private *intel)
 {
-    pI830->quirk_flag |= QUIRK_IGNORE_CRT;
+    intel->quirk_flag |= QUIRK_IGNORE_CRT;
 }
 
-static void quirk_mac_mini (I830Ptr pI830)
+static void quirk_mac_mini (intel_screen_private *intel)
 {
-    pI830->quirk_flag |= QUIRK_IGNORE_MACMINI_LVDS;
+    intel->quirk_flag |= QUIRK_IGNORE_MACMINI_LVDS;
 }
 
-static void quirk_lenovo_tv_dmi (I830Ptr pI830)
+static void quirk_lenovo_tv_dmi (intel_screen_private *intel)
 {
     /* X60, X60s has no TV output.
      * Z61 has S-video TV output.
@@ -219,10 +220,10 @@ static void quirk_lenovo_tv_dmi (I830Ptr pI830)
     }
     if (!strncmp(i830_dmi_data[bios_version], "7B", 2) || /* X60, X60s */
 	    !strncmp(i830_dmi_data[bios_version], "7E", 2)) /* R60e */
-	pI830->quirk_flag |= QUIRK_IGNORE_TV;
+	intel->quirk_flag |= QUIRK_IGNORE_TV;
 }
 
-static void quirk_msi_lvds_dmi (I830Ptr pI830)
+static void quirk_msi_lvds_dmi (intel_screen_private *intel)
 {
    /* MSI IM-945GSE-A has no TV output, nor a LVDS connection.
     */
@@ -231,32 +232,32 @@ static void quirk_msi_lvds_dmi (I830Ptr pI830)
        return;
    }
    if (!strncmp(i830_dmi_data[board_name],"A9830IMS",8)) {
-       pI830->quirk_flag |= QUIRK_IGNORE_LVDS;
-       pI830->quirk_flag |= QUIRK_IGNORE_TV;
+       intel->quirk_flag |= QUIRK_IGNORE_LVDS;
+       intel->quirk_flag |= QUIRK_IGNORE_TV;
    }
 }
 
-static void quirk_ibase_lvds (I830Ptr pI830)
+static void quirk_ibase_lvds (intel_screen_private *intel)
 {
    if (!i830_dmi_data[board_name]) {
        ErrorF("Failed to load DMI info, iBase LVDS quirk not applied.\n");
        return;
    }
    if (!strncmp(i830_dmi_data[board_name], "i855-W83627HF", 13)) {
-       pI830->quirk_flag |= QUIRK_IGNORE_LVDS;
+       intel->quirk_flag |= QUIRK_IGNORE_LVDS;
    }
 }
 
-static void quirk_ivch_dvob (I830Ptr pI830)
+static void quirk_ivch_dvob (intel_screen_private *intel)
 {
-	pI830->quirk_flag |= QUIRK_IVCH_NEED_DVOB;
+	intel->quirk_flag |= QUIRK_IVCH_NEED_DVOB;
 }
 
 /* For broken hw/bios for incorrect acpi _LID state that
    can't be fixed with customed DSDT or other way */
-static void quirk_broken_acpi_lid (I830Ptr pI830)
+static void quirk_broken_acpi_lid (intel_screen_private *intel)
 {
-	pI830->quirk_flag |= QUIRK_BROKEN_ACPI_LID;
+	intel->quirk_flag |= QUIRK_BROKEN_ACPI_LID;
 }
 
 /* keep this list sorted by OEM, then by chip ID */
@@ -329,6 +330,10 @@ static i830_quirk i830_quirk_list[] = {
     { PCI_CHIP_GM45_GM, 0x103c, 0x30e8, quirk_ignore_tv },
     /* HP Compaq 2730p needs pipe A force quirk (LP: #291555) */
     { PCI_CHIP_GM45_GM, 0x103c, 0x30eb, quirk_pipea_force },
+    /* HP Mini needs pipe A force quirk (LP: #322104) */
+    { PCI_CHIP_I945_GME,0x103c, 0x361a, quirk_pipea_force },
+    /* HP Mini 5101 needs pipe A force quirk */
+    { PCI_CHIP_I945_GME,0x103c, 0x3632, quirk_pipea_force },
 
     /* Thinkpad R31 needs pipe A force quirk */
     { PCI_CHIP_I830_M, 0x1014, 0x0505, quirk_pipea_force },
@@ -355,6 +360,8 @@ static i830_quirk i830_quirk_list[] = {
 
     { PCI_CHIP_I855_GM, 0x161f, 0x2030, quirk_pfit_safe },
 
+    /* ThinkPad X30 needs pipe A force quirk (LP: #304614) */
+    { PCI_CHIP_I830_M,  0x1014, 0x0513, quirk_pipea_force },
     /* ThinkPad X40 needs pipe A force quirk */
     { PCI_CHIP_I855_GM, 0x1014, 0x0557, quirk_pipea_force },
 
@@ -398,7 +405,7 @@ static i830_quirk i830_quirk_list[] = {
 
 void i830_fixup_devices(ScrnInfoPtr scrn)
 {
-    I830Ptr pI830 = I830PTR(scrn);
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     i830_quirk_ptr p = i830_quirk_list;
     int i;
 
@@ -408,12 +415,12 @@ void i830_fixup_devices(ScrnInfoPtr scrn)
 	i830_dmi_dump();
 
     while (p && p->chipType != 0) {
-	if (DEVICE_ID(pI830->PciInfo) == p->chipType &&
-	    (SUBVENDOR_ID(pI830->PciInfo) == p->subsysVendor ||
+	if (DEVICE_ID(intel->PciInfo) == p->chipType &&
+	    (SUBVENDOR_ID(intel->PciInfo) == p->subsysVendor ||
 	     p->subsysVendor == SUBSYS_ANY) &&
-	    (SUBSYS_ID(pI830->PciInfo) == p->subsysCard ||
+	    (SUBSYS_ID(intel->PciInfo) == p->subsysCard ||
 	     p->subsysCard == SUBSYS_ANY))
-	    p->hook(pI830);
+	    p->hook(intel);
 	++p;
     }
 

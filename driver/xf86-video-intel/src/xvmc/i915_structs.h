@@ -35,53 +35,51 @@
 
 #define OPC_MI_FLUSH                            (0x04)
 
-struct i915_mi_flush
-{
-    struct {
-        unsigned map_cache_invalidate : 1;
-        unsigned pad0 : 1;
-        unsigned render_cache_flush_inhibit : 1;
-        unsigned scene_count : 1;
-        unsigned end_scene : 1;
-        unsigned pad1 : 18;
-        unsigned opcode : 6;
-        unsigned type : 3;
-    } dw0;
+struct i915_mi_flush {
+	struct {
+		unsigned map_cache_invalidate:1;
+		unsigned pad0:1;
+		unsigned render_cache_flush_inhibit:1;
+		unsigned scene_count:1;
+		unsigned end_scene:1;
+		unsigned pad1:18;
+		unsigned opcode:6;
+		unsigned type:3;
+	} dw0;
 };
 
 /* BLT */
 #define CMD_2D          0x02
 #define OPC_COLOR_BLT                           (0x40)
 
-struct i915_color_blt
-{
-    struct {
-        unsigned length : 5;
-        unsigned pad0 : 15;
-        unsigned bpp_mask : 2;
-        unsigned opcode : 7;
-        unsigned type : 3;
-    } dw0;
+struct i915_color_blt {
+	struct {
+		unsigned length:5;
+		unsigned pad0:15;
+		unsigned bpp_mask:2;
+		unsigned opcode:7;
+		unsigned type:3;
+	} dw0;
 
-    struct {
-        unsigned pitch : 16;
-        unsigned rop : 8;
-        unsigned color_depth : 2;
-        unsigned pad0 : 6;
-    } dw1;
+	struct {
+		unsigned pitch:16;
+		unsigned rop:8;
+		unsigned color_depth:2;
+		unsigned pad0:6;
+	} dw1;
 
-    struct {
-        unsigned width : 16;
-        unsigned height : 16;
-    } dw2;
+	struct {
+		unsigned width:16;
+		unsigned height:16;
+	} dw2;
 
-    struct {
-        unsigned address;
-    } dw3;
+	struct {
+		unsigned address;
+	} dw3;
 
-    struct {
-        unsigned pattern;
-    } dw4;
+	struct {
+		unsigned pattern;
+	} dw4;
 };
 
 /* 3D_INSTRUCTION */
@@ -89,7 +87,7 @@ struct i915_color_blt
 
 #define OPC_3DMPEG_MACROBLOCK_IPICTURE          (0x01 + (0x1e << 5))
 #define OPC_3DMPEG_SET_ORIGIN                   (0x10 + (0x1e << 5))
-#define OPC_3DMPEG_MACROBLOCK                   (0x11 + (0x1e << 5))        
+#define OPC_3DMPEG_MACROBLOCK                   (0x11 + (0x1e << 5))
 #define OPC_3DMPEG_SLICE                        (0x12 + (0x1e << 5))
 #define OPC_3DMPEG_QM_PALETTE_LOAD              (0x13 + (0x1e << 5))
 
@@ -115,128 +113,118 @@ struct i915_color_blt
 /*
  * 3DMPEG instructions
  */
-struct i915_3dmpeg_macroblock_header
-{
-    struct {
-        unsigned length : 19;
-        unsigned opcode : 10;
-        unsigned type : 3;
-    } dw0;
-    
-    struct {
-        unsigned mb_intra : 1;
-        unsigned forward : 1;
-        unsigned backward : 1;
-        unsigned h263_4mv : 1;
-        unsigned pad0 : 1;
-        unsigned dct_type : 1;
-        unsigned pad1 : 2;
-        unsigned motion_type : 2;
-        unsigned pad2 : 2;
-        unsigned vertical_field_select : 4;
-        unsigned coded_block_pattern : 6;
-        unsigned pad3 : 2;
-        unsigned skipped_macroblocks : 7;
-        unsigned pad4 : 1;
-    } dw1;
+struct i915_3dmpeg_macroblock_header {
+	struct {
+		unsigned length:19;
+		unsigned opcode:10;
+		unsigned type:3;
+	} dw0;
+
+	struct {
+		unsigned mb_intra:1;
+		unsigned forward:1;
+		unsigned backward:1;
+		unsigned h263_4mv:1;
+		unsigned pad0:1;
+		unsigned dct_type:1;
+		unsigned pad1:2;
+		unsigned motion_type:2;
+		unsigned pad2:2;
+		unsigned vertical_field_select:4;
+		unsigned coded_block_pattern:6;
+		unsigned pad3:2;
+		unsigned skipped_macroblocks:7;
+		unsigned pad4:1;
+	} dw1;
 };
 
-struct i915_3dmpeg_macroblock_0mv
-{
-    struct i915_3dmpeg_macroblock_header header;
+struct i915_3dmpeg_macroblock_0mv {
+	struct i915_3dmpeg_macroblock_header header;
 };
 
-struct i915_3dmpeg_macroblock_1fbmv
-{
-    struct i915_3dmpeg_macroblock_header header;    
-    unsigned dw2;
-    unsigned dw3;
+struct i915_3dmpeg_macroblock_1fbmv {
+	struct i915_3dmpeg_macroblock_header header;
+	unsigned dw2;
+	unsigned dw3;
 };
-struct i915_3dmpeg_macroblock_2fbmv
-{
-    struct i915_3dmpeg_macroblock_header header;
-    unsigned dw2;
-    unsigned dw3;
-    unsigned dw4;
-    unsigned dw5;
+struct i915_3dmpeg_macroblock_2fbmv {
+	struct i915_3dmpeg_macroblock_header header;
+	unsigned dw2;
+	unsigned dw3;
+	unsigned dw4;
+	unsigned dw5;
 };
 
-struct i915_3dmpeg_macroblock_5fmv
-{
-    struct i915_3dmpeg_macroblock_header header;
-    unsigned dw2;
-    unsigned dw3;
-    unsigned dw4;
-    unsigned dw5;
-    unsigned dw6;
-};
-  
-struct i915_3dmpeg_macroblock_ipicture
-{
-    struct {
-        unsigned pad0 : 5;
-        unsigned dct_type : 1;
-        unsigned pad1 : 13;
-        unsigned opcode : 10;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dmpeg_macroblock_5fmv {
+	struct i915_3dmpeg_macroblock_header header;
+	unsigned dw2;
+	unsigned dw3;
+	unsigned dw4;
+	unsigned dw5;
+	unsigned dw6;
 };
 
-struct i915_3dmpeg_set_origin
-{
-    struct {
-        unsigned length : 19;
-        unsigned opcode : 10;
-        unsigned type : 3;
-    } dw0;
-
-    struct {
-        unsigned v_origin : 7;
-        unsigned pad0 : 1;
-        unsigned h_origin : 7;
-        unsigned pad1 : 17;
-    } dw1;
-};
-      
-struct i915_3dmpeg_slice
-{
-    struct {
-        unsigned length : 19;
-        unsigned opcode : 10;
-        unsigned type : 3;
-    } dw0;
-    
-    struct {
-        unsigned fst_mb_bit_off : 3;
-        unsigned pad0 : 5;
-        unsigned mb_count : 7;
-        unsigned pad1 : 1;
-        unsigned v_position : 7;
-        unsigned pad2 : 1;
-        unsigned h_position : 7;
-        unsigned pad3 : 1;
-    } dw1;
-
-    struct {
-        unsigned length_minus_one : 17;
-        unsigned pad0 : 7;
-        unsigned qt_scale_code : 5;
-        unsigned pad1 : 3;
-    } dw2;
+struct i915_3dmpeg_macroblock_ipicture {
+	struct {
+		unsigned pad0:5;
+		unsigned dct_type:1;
+		unsigned pad1:13;
+		unsigned opcode:10;
+		unsigned type:3;
+	} dw0;
 };
 
-struct i915_3dmpeg_qm_palette_load
-{
-    struct {
-        unsigned length : 4;
-        unsigned pad0 : 15;
-        unsigned opcode : 10;
-        unsigned type : 3;
-    } dw0;
-    
-    unsigned quantmatrix[16];    
-};        
+struct i915_3dmpeg_set_origin {
+	struct {
+		unsigned length:19;
+		unsigned opcode:10;
+		unsigned type:3;
+	} dw0;
 
+	struct {
+		unsigned v_origin:7;
+		unsigned pad0:1;
+		unsigned h_origin:7;
+		unsigned pad1:17;
+	} dw1;
+};
+
+struct i915_3dmpeg_slice {
+	struct {
+		unsigned length:19;
+		unsigned opcode:10;
+		unsigned type:3;
+	} dw0;
+
+	struct {
+		unsigned fst_mb_bit_off:3;
+		unsigned pad0:5;
+		unsigned mb_count:7;
+		unsigned pad1:1;
+		unsigned v_position:7;
+		unsigned pad2:1;
+		unsigned h_position:7;
+		unsigned pad3:1;
+	} dw1;
+
+	struct {
+		unsigned length_minus_one:17;
+		unsigned pad0:7;
+		unsigned qt_scale_code:5;
+		unsigned pad1:3;
+	} dw2;
+};
+
+struct i915_3dmpeg_qm_palette_load {
+	struct {
+		unsigned length:4;
+		unsigned pad0:15;
+		unsigned opcode:10;
+		unsigned type:3;
+	} dw0;
+
+	unsigned quantmatrix[16];
+};
 
 /*
  * 3DSTATE instruction
@@ -249,31 +237,30 @@ struct i915_3dmpeg_qm_palette_load
 #define TILEWALK_XMAJOR         0
 #define TILEWALK_YMAJOR         1
 
-struct i915_3dstate_buffer_info
-{
-    struct {
-        unsigned length : 16;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dstate_buffer_info {
+	struct {
+		unsigned length:16;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 
-    struct {
-        unsigned pad0 : 2;
-        unsigned pitch : 12;
-        unsigned pad1 : 7;
-        unsigned walk : 1;
-        unsigned tiled_surface : 1;
-        unsigned fence_regs : 1;
-        unsigned buffer_id : 4;
-        unsigned aux_id : 1;
-        unsigned pad2 : 3;
-    } dw1;
+	struct {
+		unsigned pad0:2;
+		unsigned pitch:12;
+		unsigned pad1:7;
+		unsigned walk:1;
+		unsigned tiled_surface:1;
+		unsigned fence_regs:1;
+		unsigned buffer_id:4;
+		unsigned aux_id:1;
+		unsigned pad2:3;
+	} dw1;
 
-    struct {
-        unsigned pad0 : 2;
-        unsigned base_address : 27;
-        unsigned pad1 : 3;
-    } dw2;
+	struct {
+		unsigned pad0:2;
+		unsigned base_address:27;
+		unsigned pad1:3;
+	} dw2;
 };
 
 #define COLORBUFFER_8BIT         0x00
@@ -288,33 +275,31 @@ struct i915_3dstate_buffer_info
 #define COLORBUFFER_A1R5G5B5     0x09
 #define COLORBUFFER_A2R10G10B10  0x0a
 
+struct i915_3dstate_dest_buffer_variables {
+	struct {
+		unsigned length:16;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 
-struct i915_3dstate_dest_buffer_variables
-{
-    struct {
-        unsigned length : 16;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
-    
-    struct {
-        unsigned v_ls_offset : 1;
-        unsigned v_ls : 1;
-        unsigned depth_fmt : 2;
-        unsigned pad0 : 4;
-        unsigned color_fmt : 4;
-        unsigned yuv422_select : 3;
-        unsigned pad1 : 1;
-        unsigned dest_v_bias : 4;
-        unsigned dest_h_bias : 4;
-        unsigned dither_enhancement : 1;
-        unsigned linear_gamma : 1;
-        unsigned dither_pattern : 2;
-        unsigned lod_preclamp : 1;
-        unsigned edt_zone : 1;          /* early depth test in zone rendering */
-        unsigned texture_default_color : 1;
-        unsigned edt_classic : 1;       /* early depth test in classic mode */
-    } dw1;
+	struct {
+		unsigned v_ls_offset:1;
+		unsigned v_ls:1;
+		unsigned depth_fmt:2;
+		unsigned pad0:4;
+		unsigned color_fmt:4;
+		unsigned yuv422_select:3;
+		unsigned pad1:1;
+		unsigned dest_v_bias:4;
+		unsigned dest_h_bias:4;
+		unsigned dither_enhancement:1;
+		unsigned linear_gamma:1;
+		unsigned dither_pattern:2;
+		unsigned lod_preclamp:1;
+		unsigned edt_zone:1;	/* early depth test in zone rendering */
+		unsigned texture_default_color:1;
+		unsigned edt_classic:1;	/* early depth test in classic mode */
+	} dw1;
 };
 
 #define MPEG_DECODE_MC          0
@@ -331,56 +316,55 @@ struct i915_3dstate_dest_buffer_variables
 #define MC_SUB_1V               0
 #define MC_SUB_2V               1
 
-struct i915_3dstate_dest_buffer_variables_mpeg
-{
-    struct {
-        unsigned length : 16;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dstate_dest_buffer_variables_mpeg {
+	struct {
+		unsigned length:16;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 
-    struct {
-        unsigned picture_width : 7;
-        unsigned pad0 : 1;
-        unsigned v_subsample_factor : 2;
-        unsigned h_subsample_factor : 2;
-        unsigned tff : 1;
-        unsigned mismatch : 1;
-        unsigned pad1 : 1;
-        unsigned intra8 : 1;
-        unsigned abort_on_error : 8;
-        unsigned pad2 : 4;
-        unsigned bidir_avrg_control : 1;
-        unsigned rcontrol : 1;
-        unsigned decode_mode : 2;
-    } dw1;
+	struct {
+		unsigned picture_width:7;
+		unsigned pad0:1;
+		unsigned v_subsample_factor:2;
+		unsigned h_subsample_factor:2;
+		unsigned tff:1;
+		unsigned mismatch:1;
+		unsigned pad1:1;
+		unsigned intra8:1;
+		unsigned abort_on_error:8;
+		unsigned pad2:4;
+		unsigned bidir_avrg_control:1;
+		unsigned rcontrol:1;
+		unsigned decode_mode:2;
+	} dw1;
 
-    struct {
-        unsigned pad0 : 1;
-        unsigned picture_coding_type : 2;
-        unsigned pad1 : 2;
-        unsigned scan_order : 1;
-        unsigned pad2 : 2;
-        unsigned q_scale_type : 1;
-        unsigned concealment : 1;
-        unsigned fpf_dct : 1;
-        unsigned pad3 : 2;
-        unsigned intra_dc : 2;
-        unsigned intra_vlc : 1;
-        unsigned f_code00 : 4;
-        unsigned f_code01 : 4;
-        unsigned f_code10 : 4;
-        unsigned f_code11 : 4;
-    } dw2;
+	struct {
+		unsigned pad0:1;
+		unsigned picture_coding_type:2;
+		unsigned pad1:2;
+		unsigned scan_order:1;
+		unsigned pad2:2;
+		unsigned q_scale_type:1;
+		unsigned concealment:1;
+		unsigned fpf_dct:1;
+		unsigned pad3:2;
+		unsigned intra_dc:2;
+		unsigned intra_vlc:1;
+		unsigned f_code00:4;
+		unsigned f_code01:4;
+		unsigned f_code10:4;
+		unsigned f_code11:4;
+	} dw2;
 };
 
 struct i915_mc_static_indirect_state_buffer {
-    struct i915_3dstate_buffer_info dest_y;
-    struct i915_3dstate_buffer_info dest_u;
-    struct i915_3dstate_buffer_info dest_v;
-    struct i915_3dstate_dest_buffer_variables dest_buf;
-    struct i915_3dstate_dest_buffer_variables_mpeg dest_buf_mpeg;
-    struct i915_3dstate_buffer_info corr;
+	struct i915_3dstate_buffer_info dest_y;
+	struct i915_3dstate_buffer_info dest_u;
+	struct i915_3dstate_buffer_info dest_v;
+	struct i915_3dstate_dest_buffer_variables dest_buf;
+	struct i915_3dstate_dest_buffer_variables_mpeg dest_buf_mpeg;
+	struct i915_3dstate_buffer_info corr;
 };
 
 #define MAP_MAP0        0x0001
@@ -400,61 +384,59 @@ struct i915_mc_static_indirect_state_buffer {
 #define MAP_MAP14       0x4000
 #define MAP_MAP15       0x8000
 
-struct texture_map
-{
-    struct {
-        unsigned v_ls_offset : 1;
-        unsigned v_ls : 1;
-        unsigned base_address : 27;
-        unsigned pad0 : 2;
-        unsigned untrusted : 1;
-    } tm0;
+struct texture_map {
+	struct {
+		unsigned v_ls_offset:1;
+		unsigned v_ls:1;
+		unsigned base_address:27;
+		unsigned pad0:2;
+		unsigned untrusted:1;
+	} tm0;
 
-    struct {
-        unsigned tile_walk : 1;
-        unsigned tiled_surface : 1;
-        unsigned utilize_fence_regs : 1;
-        unsigned texel_fmt : 4;
-        unsigned surface_fmt : 3;
-        unsigned width : 11;
-        unsigned height : 11;
-    } tm1;
-    
-    struct {
-        unsigned depth : 8;
-        unsigned mipmap_layout : 1;
-        unsigned max_lod : 6;
-        unsigned cube_face : 6;
-        unsigned pitch : 11;
-    } tm2;
+	struct {
+		unsigned tile_walk:1;
+		unsigned tiled_surface:1;
+		unsigned utilize_fence_regs:1;
+		unsigned texel_fmt:4;
+		unsigned surface_fmt:3;
+		unsigned width:11;
+		unsigned height:11;
+	} tm1;
+
+	struct {
+		unsigned depth:8;
+		unsigned mipmap_layout:1;
+		unsigned max_lod:6;
+		unsigned cube_face:6;
+		unsigned pitch:11;
+	} tm2;
 };
 
-struct i915_3dstate_map_state
-{
-    struct {
-        unsigned length : 6;
-        unsigned pad0 : 9;
-        unsigned retain : 1;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dstate_map_state {
+	struct {
+		unsigned length:6;
+		unsigned pad0:9;
+		unsigned retain:1;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 
-    struct {
-        unsigned map_mask : 16;
-        unsigned pad0 : 16;
-    } dw1;
+	struct {
+		unsigned map_mask:16;
+		unsigned pad0:16;
+	} dw1;
 };
 
 struct i915_mc_map_state {
-    struct i915_3dstate_map_state y_map;
-    struct texture_map y_forward;
-    struct texture_map y_backward;
-    struct i915_3dstate_map_state u_map;
-    struct texture_map u_forward;
-    struct texture_map u_backward;
-    struct i915_3dstate_map_state v_map;
-    struct texture_map v_forward;
-    struct texture_map v_backward;
+	struct i915_3dstate_map_state y_map;
+	struct texture_map y_forward;
+	struct texture_map y_backward;
+	struct i915_3dstate_map_state u_map;
+	struct texture_map u_forward;
+	struct texture_map u_backward;
+	struct i915_3dstate_map_state v_map;
+	struct texture_map v_forward;
+	struct texture_map v_backward;
 };
 
 #define SAMPLER_SAMPLER0        0x0001
@@ -505,209 +487,202 @@ struct i915_mc_map_state {
 #define TEXCOORDMODE_CLAMP_BORDER       4
 #define TEXCOORDMODE_MIRROR_ONCE        5
 
-struct texture_sampler
-{
-    struct {
-        unsigned shadow_function : 3;
-        unsigned max_anisotropy : 1;
-        unsigned shadow_enable : 1;
-        unsigned lod_bias : 9;
-        unsigned min_filter : 3;
-        unsigned mag_filter : 3;
-        unsigned mip_filter : 2;
-        unsigned base_level : 5;
-        unsigned chromakey_index : 2;
-        unsigned color_conversion : 1;
-        unsigned planar2packet : 1;
-        unsigned reverse_gamma : 1;
-    } ts0;
+struct texture_sampler {
+	struct {
+		unsigned shadow_function:3;
+		unsigned max_anisotropy:1;
+		unsigned shadow_enable:1;
+		unsigned lod_bias:9;
+		unsigned min_filter:3;
+		unsigned mag_filter:3;
+		unsigned mip_filter:2;
+		unsigned base_level:5;
+		unsigned chromakey_index:2;
+		unsigned color_conversion:1;
+		unsigned planar2packet:1;
+		unsigned reverse_gamma:1;
+	} ts0;
 
-    struct {
-        unsigned east_deinterlacer : 1;
-        unsigned map_index : 4;
-        unsigned normalized_coor : 1;
-        unsigned tcz_control : 3;
-        unsigned tcy_control : 3;
-        unsigned tcx_control : 3;
-        unsigned chromakey_enable : 1;
-        unsigned keyed_texture_filter : 1;
-        unsigned kill_pixel : 1;
-        unsigned pad0 : 6;
-        unsigned min_lod : 8;
-    } ts1;
+	struct {
+		unsigned east_deinterlacer:1;
+		unsigned map_index:4;
+		unsigned normalized_coor:1;
+		unsigned tcz_control:3;
+		unsigned tcy_control:3;
+		unsigned tcx_control:3;
+		unsigned chromakey_enable:1;
+		unsigned keyed_texture_filter:1;
+		unsigned kill_pixel:1;
+		unsigned pad0:6;
+		unsigned min_lod:8;
+	} ts1;
 
-    struct {
-        unsigned default_color;
-    } ts2;
+	struct {
+		unsigned default_color;
+	} ts2;
 };
 
-struct i915_3dstate_sampler_state
-{
-    struct {
-        unsigned length : 6;
-        unsigned pad0 : 10;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dstate_sampler_state {
+	struct {
+		unsigned length:6;
+		unsigned pad0:10;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 
-    struct {
-        unsigned sampler_masker : 16;
-        unsigned pad0 : 16;
-    } dw1;
-    /* we always use two samplers for mc */
-    struct texture_sampler sampler0;
-    struct texture_sampler sampler1;
+	struct {
+		unsigned sampler_masker:16;
+		unsigned pad0:16;
+	} dw1;
+	/* we always use two samplers for mc */
+	struct texture_sampler sampler0;
+	struct texture_sampler sampler1;
 };
 
-struct arithmetic_inst
-{
-    struct {
-        unsigned pad0 : 2;
-        unsigned src0_reg : 5;
-        unsigned src0_reg_t : 3;
-        unsigned dest_channel_mask : 4;
-        unsigned dest_reg : 4;
-        unsigned pad1 : 1;
-        unsigned dest_reg_t: 3;
-        unsigned dest_saturate : 1;
-        unsigned pad2 : 1;
-        unsigned opcode : 5;
-        unsigned pad3 : 3;
-    } dw0;
+struct arithmetic_inst {
+	struct {
+		unsigned pad0:2;
+		unsigned src0_reg:5;
+		unsigned src0_reg_t:3;
+		unsigned dest_channel_mask:4;
+		unsigned dest_reg:4;
+		unsigned pad1:1;
+		unsigned dest_reg_t:3;
+		unsigned dest_saturate:1;
+		unsigned pad2:1;
+		unsigned opcode:5;
+		unsigned pad3:3;
+	} dw0;
 
-    struct {
-        unsigned src1_y_select : 3;
-        unsigned src1_y_negate : 1;
-        unsigned src1_x_select : 3;
-        unsigned src1_x_negate : 1;
-        unsigned src1_reg : 5;
-        unsigned src1_reg_t : 3;
-        unsigned src0_w_select : 3;
-        unsigned src0_w_negate : 1;
-        unsigned src0_z_select : 3;
-        unsigned src0_z_negate : 1;
-        unsigned src0_y_select : 3;
-        unsigned src0_y_negate : 1;
-        unsigned src0_x_select : 3;
-        unsigned src0_x_negate : 1;
-    } dw1;
+	struct {
+		unsigned src1_y_select:3;
+		unsigned src1_y_negate:1;
+		unsigned src1_x_select:3;
+		unsigned src1_x_negate:1;
+		unsigned src1_reg:5;
+		unsigned src1_reg_t:3;
+		unsigned src0_w_select:3;
+		unsigned src0_w_negate:1;
+		unsigned src0_z_select:3;
+		unsigned src0_z_negate:1;
+		unsigned src0_y_select:3;
+		unsigned src0_y_negate:1;
+		unsigned src0_x_select:3;
+		unsigned src0_x_negate:1;
+	} dw1;
 
-    struct {
-        unsigned src2_w_select : 3;
-        unsigned src2_w_negate : 1;
-        unsigned src2_z_select : 3;
-        unsigned src2_z_negate : 1;
-        unsigned src2_y_select : 3;
-        unsigned src2_y_negate : 1;
-        unsigned src2_x_select : 3;
-        unsigned src2_x_negate : 1;
-        unsigned src2_reg : 5;
-        unsigned src2_reg_t : 3;
-        unsigned src1_w_select : 3;
-        unsigned src1_w_negate : 1;
-        unsigned src1_z_select : 3;
-        unsigned src1_z_negate : 1;
-    } dw2;
+	struct {
+		unsigned src2_w_select:3;
+		unsigned src2_w_negate:1;
+		unsigned src2_z_select:3;
+		unsigned src2_z_negate:1;
+		unsigned src2_y_select:3;
+		unsigned src2_y_negate:1;
+		unsigned src2_x_select:3;
+		unsigned src2_x_negate:1;
+		unsigned src2_reg:5;
+		unsigned src2_reg_t:3;
+		unsigned src1_w_select:3;
+		unsigned src1_w_negate:1;
+		unsigned src1_z_select:3;
+		unsigned src1_z_negate:1;
+	} dw2;
 };
 
-struct texture_inst
-{
-    struct {
-        unsigned sampler_reg : 4;
-        unsigned pad0 : 10;
-        unsigned dest_reg : 4;
-        unsigned pad1 : 1;
-        unsigned dest_reg_t : 3;
-        unsigned pad2 : 2;
-        unsigned opcode : 5;
-        unsigned pad3 : 3;
-    } dw0;
+struct texture_inst {
+	struct {
+		unsigned sampler_reg:4;
+		unsigned pad0:10;
+		unsigned dest_reg:4;
+		unsigned pad1:1;
+		unsigned dest_reg_t:3;
+		unsigned pad2:2;
+		unsigned opcode:5;
+		unsigned pad3:3;
+	} dw0;
 
-    struct {
-        unsigned pad0 : 16;
-        unsigned address_reg : 5;
-        unsigned pad1 : 3;
-        unsigned address_reg_t : 3;
-        unsigned pad2 : 5;
-    } dw1;
+	struct {
+		unsigned pad0:16;
+		unsigned address_reg:5;
+		unsigned pad1:3;
+		unsigned address_reg_t:3;
+		unsigned pad2:5;
+	} dw1;
 
-    struct {
-        unsigned pad0;
-    } dw2;
+	struct {
+		unsigned pad0;
+	} dw2;
 };
 
-struct declaration_inst
-{
-    struct {
-        unsigned pad0 : 10;
-        unsigned decl_channel_mask : 4;
-        unsigned decl_reg : 4;
-        unsigned pad1 : 1;
-        unsigned decl_reg_t : 2;
-        unsigned pad2 : 1;
-        unsigned sampler_type : 2;
-        unsigned opcode : 5;
-        unsigned pad3 : 3;
-    } dw0;
+struct declaration_inst {
+	struct {
+		unsigned pad0:10;
+		unsigned decl_channel_mask:4;
+		unsigned decl_reg:4;
+		unsigned pad1:1;
+		unsigned decl_reg_t:2;
+		unsigned pad2:1;
+		unsigned sampler_type:2;
+		unsigned opcode:5;
+		unsigned pad3:3;
+	} dw0;
 
-    struct {
-        unsigned pad0;
-    } dw1;
+	struct {
+		unsigned pad0;
+	} dw1;
 
-    struct {
-        unsigned pad0;
-    } dw2;
+	struct {
+		unsigned pad0;
+	} dw2;
 };
 
-union shader_inst 
-{
-    struct arithmetic_inst a;
-    struct texture_inst t;
-    struct declaration_inst d;
+union shader_inst {
+	struct arithmetic_inst a;
+	struct texture_inst t;
+	struct declaration_inst d;
 };
 
 struct i915_3dstate_pixel_shader_header {
-    unsigned length : 9;
-    unsigned pad0 : 6;
-    unsigned retain : 1;
-    unsigned opcode : 13;
-    unsigned type : 3;
+	unsigned length:9;
+	unsigned pad0:6;
+	unsigned retain:1;
+	unsigned opcode:13;
+	unsigned type:3;
 };
 
-struct i915_3dstate_pixel_shader_program
-{
-    struct i915_3dstate_pixel_shader_header shader0;
-    /* mov oC, c0.0000 */
-    uint32_t inst0[3];
+struct i915_3dstate_pixel_shader_program {
+	struct i915_3dstate_pixel_shader_header shader0;
+	/* mov oC, c0.0000 */
+	uint32_t inst0[3];
 
-    struct i915_3dstate_pixel_shader_header shader1;
-    /* dcl t0.xy */
-    /* dcl t1.xy */
-    /* dcl_2D s0 */
-    /* texld r0, t0, s0 */
-    /* mov oC, r0 */
-    uint32_t inst1[3*5];
+	struct i915_3dstate_pixel_shader_header shader1;
+	/* dcl t0.xy */
+	/* dcl t1.xy */
+	/* dcl_2D s0 */
+	/* texld r0, t0, s0 */
+	/* mov oC, r0 */
+	uint32_t inst1[3 * 5];
 
-    struct i915_3dstate_pixel_shader_header shader2;
-    /* dcl t2.xy */
-    /* dcl t3.xy */
-    /* dcl_2D s1 */
-    /* texld r0, t2, s1 */
-    /* mov oC, r0 */
-    uint32_t inst2[3*5];
+	struct i915_3dstate_pixel_shader_header shader2;
+	/* dcl t2.xy */
+	/* dcl t3.xy */
+	/* dcl_2D s1 */
+	/* texld r0, t2, s1 */
+	/* mov oC, r0 */
+	uint32_t inst2[3 * 5];
 
-    struct i915_3dstate_pixel_shader_header shader3;
-    /* dcl t0.xy */
-    /* dcl t1.xy */
-    /* dcl t2.xy */
-    /* dcl t3.xy */
-    /* dcl_2D s0 */
-    /* dcl_2D s1 */
-    /* texld r0, t0, s0 */
-    /* texld r0, t2, s1 */
-    /* add r0, r0, r1*/
-    /* mov oC, r0 */
-    uint32_t inst3[3*10];
+	struct i915_3dstate_pixel_shader_header shader3;
+	/* dcl t0.xy */
+	/* dcl t1.xy */
+	/* dcl t2.xy */
+	/* dcl t3.xy */
+	/* dcl_2D s0 */
+	/* dcl_2D s1 */
+	/* texld r0, t0, s0 */
+	/* texld r0, t2, s1 */
+	/* add r0, r0, r1 */
+	/* mov oC, r0 */
+	uint32_t inst3[3 * 10];
 };
 
 #define REG_CR0         0x00000001
@@ -743,28 +718,26 @@ struct i915_3dstate_pixel_shader_program
 #define REG_CR30        0x40000000
 #define REG_CR31        0x80000000
 
-struct shader_constant
-{
-    float x;
-    float y;
-    float z;
-    float w;
+struct shader_constant {
+	float x;
+	float y;
+	float z;
+	float w;
 };
 
-struct i915_3dstate_pixel_shader_constants
-{
-    struct {
-        unsigned length : 8;
-        unsigned pad0 : 8;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dstate_pixel_shader_constants {
+	struct {
+		unsigned length:8;
+		unsigned pad0:8;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 
-    struct {
-        unsigned reg_mask;
-    } dw1;
-    /* we only need one constant */
-    struct shader_constant value;
+	struct {
+		unsigned reg_mask;
+	} dw1;
+	/* we only need one constant */
+	struct shader_constant value;
 };
 
 #define BLOCK_SIS       0x01
@@ -774,39 +747,36 @@ struct i915_3dstate_pixel_shader_constants
 #define BLOCK_PSP       0x10
 #define BLOCK_PSC       0x20
 
-typedef struct _state_ddword
-{
-    struct {
-        unsigned valid : 1;
-        unsigned force : 1;
-        unsigned buffer_address : 30;
-    } dw0;
+typedef struct _state_ddword {
+	struct {
+		unsigned valid:1;
+		unsigned force:1;
+		unsigned buffer_address:30;
+	} dw0;
 
-    struct {
-        unsigned length : 9;
-        unsigned pad0 : 23;
-    } dw1;
+	struct {
+		unsigned length:9;
+		unsigned pad0:23;
+	} dw1;
 } sis_state, ssb_state, msb_state, psp_state, psc_state;
 
-typedef struct _state_dword
-{
-    struct {
-        unsigned valid : 1;
-        unsigned reset : 1;
-        unsigned buffer_address : 30;
-    } dw0;
+typedef struct _state_dword {
+	struct {
+		unsigned valid:1;
+		unsigned reset:1;
+		unsigned buffer_address:30;
+	} dw0;
 } dis_state;
 
-struct i915_3dstate_load_indirect
-{
-    struct {
-        unsigned length : 8;
-        unsigned block_mask : 6;
-        unsigned mem_select : 1;
-        unsigned pad0 : 1;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dstate_load_indirect {
+	struct {
+		unsigned length:8;
+		unsigned block_mask:6;
+		unsigned mem_select:1;
+		unsigned pad0:1;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 };
 
 #define TEXCOORDFMT_2FP       0x00
@@ -816,52 +786,50 @@ struct i915_3dstate_load_indirect
 #define TEXCOORDFMT_2FP_16    0x04
 #define TEXCOORDFMT_4FP_16    0x05
 #define TEXCOORDFMT_NOT_PRESENT  0x0f
-struct s2_dword
-{
-    unsigned set0_texcoord_fmt : 4;
-    unsigned set1_texcoord_fmt : 4;
-    unsigned set2_texcoord_fmt : 4;
-    unsigned set3_texcoord_fmt : 4;
-    unsigned set4_texcoord_fmt : 4;
-    unsigned set5_texcoord_fmt : 4;
-    unsigned set6_texcoord_fmt : 4;
-    unsigned set7_texcoord_fmt : 4;
+struct s2_dword {
+	unsigned set0_texcoord_fmt:4;
+	unsigned set1_texcoord_fmt:4;
+	unsigned set2_texcoord_fmt:4;
+	unsigned set3_texcoord_fmt:4;
+	unsigned set4_texcoord_fmt:4;
+	unsigned set5_texcoord_fmt:4;
+	unsigned set6_texcoord_fmt:4;
+	unsigned set7_texcoord_fmt:4;
 };
 
-struct s3_dword
-{
-    unsigned set0_pcd : 1;
-    unsigned set0_ws_tcz : 1;
-    unsigned set0_ws_tcy : 1;
-    unsigned set0_ws_tcx : 1;
-    unsigned set1_pcd : 1;
-    unsigned set1_ws_tcz : 1;
-    unsigned set1_ws_tcy : 1;
-    unsigned set1_ws_tcx : 1;
-    unsigned set2_pcd : 1;
-    unsigned set2_ws_tcz : 1;
-    unsigned set2_ws_tcy : 1;
-    unsigned set2_ws_tcx : 1;
-    unsigned set3_pcd : 1;
-    unsigned set3_ws_tcz : 1;
-    unsigned set3_ws_tcy : 1;
-    unsigned set3_ws_tcx : 1;
-    unsigned set4_pcd : 1;
-    unsigned set4_ws_tcz : 1;
-    unsigned set4_ws_tcy : 1;
-    unsigned set4_ws_tcx : 1;
-    unsigned set5_pcd : 1;
-    unsigned set5_ws_tcz : 1;
-    unsigned set5_ws_tcy : 1;
-    unsigned set5_ws_tcx : 1;
-    unsigned set6_pcd : 1;
-    unsigned set6_ws_tcz : 1;
-    unsigned set6_ws_tcy : 1;
-    unsigned set6_ws_tcx : 1;
-    unsigned set7_pcd : 1;
-    unsigned set7_ws_tcz : 1;
-    unsigned set7_ws_tcy : 1;
-    unsigned set7_ws_tcx : 1;
+struct s3_dword {
+	unsigned set0_pcd:1;
+	unsigned set0_ws_tcz:1;
+	unsigned set0_ws_tcy:1;
+	unsigned set0_ws_tcx:1;
+	unsigned set1_pcd:1;
+	unsigned set1_ws_tcz:1;
+	unsigned set1_ws_tcy:1;
+	unsigned set1_ws_tcx:1;
+	unsigned set2_pcd:1;
+	unsigned set2_ws_tcz:1;
+	unsigned set2_ws_tcy:1;
+	unsigned set2_ws_tcx:1;
+	unsigned set3_pcd:1;
+	unsigned set3_ws_tcz:1;
+	unsigned set3_ws_tcy:1;
+	unsigned set3_ws_tcx:1;
+	unsigned set4_pcd:1;
+	unsigned set4_ws_tcz:1;
+	unsigned set4_ws_tcy:1;
+	unsigned set4_ws_tcx:1;
+	unsigned set5_pcd:1;
+	unsigned set5_ws_tcz:1;
+	unsigned set5_ws_tcy:1;
+	unsigned set5_ws_tcx:1;
+	unsigned set6_pcd:1;
+	unsigned set6_ws_tcz:1;
+	unsigned set6_ws_tcy:1;
+	unsigned set6_ws_tcx:1;
+	unsigned set7_pcd:1;
+	unsigned set7_ws_tcz:1;
+	unsigned set7_ws_tcy:1;
+	unsigned set7_ws_tcx:1;
 };
 
 #define VERTEXHAS_XYZ      1
@@ -876,103 +844,97 @@ struct s3_dword
 
 #define SHADEMODE_LINEAR   0
 #define SHADEMODE_FLAT     1
-struct s4_dword
-{
-    unsigned anti_aliasing_enable : 1;
-    unsigned sprite_point_enable : 1;
-    unsigned fog_parameter_present : 1;
-    unsigned local_depth_offset_enable : 1;
-    unsigned force_specular_diffuse_color : 1;
-    unsigned force_default_diffuse_color : 1;
-    unsigned position_mask : 3;
-    unsigned local_depth_offset_present : 1;
-    unsigned diffuse_color_presetn : 1;
-    unsigned specular_color_fog_factor_present : 1;
-    unsigned point_width_present : 1;
-    unsigned cull_mode : 2;
-    unsigned color_shade_mode : 1;
-    unsigned specular_shade_mode : 1;
-    unsigned fog_shade_mode : 1;
-    unsigned alpha_shade_mode : 1;
-    unsigned line_width : 4;
-    unsigned point_width : 9;
+struct s4_dword {
+	unsigned anti_aliasing_enable:1;
+	unsigned sprite_point_enable:1;
+	unsigned fog_parameter_present:1;
+	unsigned local_depth_offset_enable:1;
+	unsigned force_specular_diffuse_color:1;
+	unsigned force_default_diffuse_color:1;
+	unsigned position_mask:3;
+	unsigned local_depth_offset_present:1;
+	unsigned diffuse_color_presetn:1;
+	unsigned specular_color_fog_factor_present:1;
+	unsigned point_width_present:1;
+	unsigned cull_mode:2;
+	unsigned color_shade_mode:1;
+	unsigned specular_shade_mode:1;
+	unsigned fog_shade_mode:1;
+	unsigned alpha_shade_mode:1;
+	unsigned line_width:4;
+	unsigned point_width:9;
 };
 
-struct s5_dword 
-{
-    unsigned logic_op_enable : 1;
-    unsigned color_dither_enable  : 1;
-    unsigned stencil_test_enable : 1;
-    unsigned stencil_buffer_write_enable : 1;
-    unsigned stencil_pass_depth_pass_op : 3;
-    unsigned stencil_pass_depth_fail_op : 3;
-    unsigned stencil_fail_op : 3;
-    unsigned stencil_test_function : 3;
-    unsigned stencil_reference_value : 8;
-    unsigned fog_enable : 1;
-    unsigned global_depth_offset_enable : 1;
-    unsigned last_pixel_enable : 1;
-    unsigned force_default_point_width : 1;
-    unsigned color_buffer_component_write_disable : 4;
+struct s5_dword {
+	unsigned logic_op_enable:1;
+	unsigned color_dither_enable:1;
+	unsigned stencil_test_enable:1;
+	unsigned stencil_buffer_write_enable:1;
+	unsigned stencil_pass_depth_pass_op:3;
+	unsigned stencil_pass_depth_fail_op:3;
+	unsigned stencil_fail_op:3;
+	unsigned stencil_test_function:3;
+	unsigned stencil_reference_value:8;
+	unsigned fog_enable:1;
+	unsigned global_depth_offset_enable:1;
+	unsigned last_pixel_enable:1;
+	unsigned force_default_point_width:1;
+	unsigned color_buffer_component_write_disable:4;
 };
 
-struct s6_dword
-{
-    unsigned triangle_pv : 2;
-    unsigned color_buffer_write : 1;
-    unsigned depth_buffer_write : 1;
-    unsigned dest_blend_factor : 4;
-    unsigned src_blend_factor : 4;
-    unsigned color_blend_function : 3;
-    unsigned color_buffer_blend : 1;
-    unsigned depth_test_function : 3;
-    unsigned depth_test_enable : 1;
-    unsigned alpha_reference_value : 8;
-    unsigned alpha_test_function : 3;
-    unsigned alpha_test_enable : 1;
-    
+struct s6_dword {
+	unsigned triangle_pv:2;
+	unsigned color_buffer_write:1;
+	unsigned depth_buffer_write:1;
+	unsigned dest_blend_factor:4;
+	unsigned src_blend_factor:4;
+	unsigned color_blend_function:3;
+	unsigned color_buffer_blend:1;
+	unsigned depth_test_function:3;
+	unsigned depth_test_enable:1;
+	unsigned alpha_reference_value:8;
+	unsigned alpha_test_function:3;
+	unsigned alpha_test_enable:1;
+
 };
 
-struct s7_dword
-{
-    unsigned global_depth_offset_const;
+struct s7_dword {
+	unsigned global_depth_offset_const;
 };
 
-struct i915_3dstate_load_state_immediate_1
-{
-    struct {
-        unsigned length : 4;
-        unsigned load_s0 : 1;
-        unsigned load_s1 : 1;
-        unsigned load_s2 : 1;
-        unsigned load_s3 : 1;
-        unsigned load_s4 : 1;
-        unsigned load_s5 : 1;
-        unsigned load_s6 : 1;
-        unsigned load_s7 : 1;
-        unsigned pad0 : 4;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dstate_load_state_immediate_1 {
+	struct {
+		unsigned length:4;
+		unsigned load_s0:1;
+		unsigned load_s1:1;
+		unsigned load_s2:1;
+		unsigned load_s3:1;
+		unsigned load_s4:1;
+		unsigned load_s5:1;
+		unsigned load_s6:1;
+		unsigned load_s7:1;
+		unsigned pad0:4;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 };
 
-struct i915_3dstate_scissor_rectangle
-{
-    struct {
-        unsigned length : 16;
-        unsigned opcode : 13;
-        unsigned type : 3;
-    } dw0;
+struct i915_3dstate_scissor_rectangle {
+	struct {
+		unsigned length:16;
+		unsigned opcode:13;
+		unsigned type:3;
+	} dw0;
 
-    struct {
-        unsigned min_x : 16;
-        unsigned min_y : 16;
-    } dw1;
+	struct {
+		unsigned min_x:16;
+		unsigned min_y:16;
+	} dw1;
 
-    struct {
-        unsigned max_x : 16;
-        unsigned max_y : 16;
-    } dw2;
+	struct {
+		unsigned max_x:16;
+		unsigned max_y:16;
+	} dw2;
 };
 
 #define VERTEX_INLINE         0x00
@@ -991,40 +953,37 @@ struct i915_3dstate_scissor_rectangle
 #define PRIM_CLEAR_RECT       0x0a
 #define PRIM_ZONE_INIT        0x0d
 
-struct texture_coordinate_set
-{
-    unsigned tcx;
-    unsigned tcy;
+struct texture_coordinate_set {
+	unsigned tcx;
+	unsigned tcy;
 };
 
-struct vertex_data
-{
-    unsigned x;
-    unsigned y;
-    struct texture_coordinate_set tc0;
-    struct texture_coordinate_set tc1;
+struct vertex_data {
+	unsigned x;
+	unsigned y;
+	struct texture_coordinate_set tc0;
+	struct texture_coordinate_set tc1;
 };
 
-struct i915_3dprimitive
-{
-    union {
-        struct {
-            unsigned length : 18;
-            unsigned prim : 5;
-            unsigned vertex_location : 1;
-            unsigned opcode : 5;
-            unsigned type : 3;
-        } inline_prim;
+struct i915_3dprimitive {
+	union {
+		struct {
+			unsigned length:18;
+			unsigned prim:5;
+			unsigned vertex_location:1;
+			unsigned opcode:5;
+			unsigned type:3;
+		} inline_prim;
 
-        struct {
-            unsigned vertex_count : 16;
-            unsigned pad0 : 1;
-            unsigned vertex_access_mode : 1;
-            unsigned prim : 5;
-            unsigned vertex_location : 1;
-            unsigned opcode : 5;
-            unsigned type : 3;
-        } indirect_prim;            
-    } dw0;
+		struct {
+			unsigned vertex_count:16;
+			unsigned pad0:1;
+			unsigned vertex_access_mode:1;
+			unsigned prim:5;
+			unsigned vertex_location:1;
+			unsigned opcode:5;
+			unsigned type:3;
+		} indirect_prim;
+	} dw0;
 };
 #endif /*_I915_STRUCTS_H */

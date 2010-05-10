@@ -56,24 +56,19 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@XSERVER_LIBPCIACCESS_TRUE@am__append_1 = @PCIACCESS_LIBS@
-@XMODES_TRUE@am__append_2 = \
-@XMODES_TRUE@	$(XMODE_SRCS)
-
-@DRI_TRUE@am__append_3 = \
+@DRI_TRUE@am__append_1 = \
 @DRI_TRUE@	$(INTEL_DRI_SRCS)
 
-@DRI_TRUE@am__append_4 = \
+@DRI_TRUE@am__append_2 = \
 @DRI_TRUE@	$(DRI_LIBS)
 
-@XVMC_TRUE@am__append_5 = \
+@XVMC_TRUE@am__append_3 = \
 @XVMC_TRUE@	$(INTEL_XVMC_SRCS)
 
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -90,53 +85,45 @@ intel_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(intel_drv_la_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 @DRI_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-intel_drv_la_DEPENDENCIES = ../uxa/libuxa.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_2)
+intel_drv_la_DEPENDENCIES = ../uxa/libuxa.la $(am__DEPENDENCIES_2)
 am__intel_drv_la_SOURCES_DIST = brw_defines.h brw_structs.h common.h \
 	i2c_vid.h i810_accel.c i810_common.h i810_cursor.c i810_dga.c \
 	i810_driver.c i810.h i810_io.c i810_memory.c i810_reg.h \
 	i810_ring.h i810_video.c i810_wmark.c i830_3d.c i830_accel.c \
 	i830_bios.c i830_bios.h i830_batchbuffer.c i830_batchbuffer.h \
-	i830_common.h i830_crt.c i830_cursor.c i830_debug.c \
-	i830_debug.h i830_display.c i830_display.h i830_quirks.c \
-	i830_driver.c i830_dvo.c i830.h i830_hdmi.c i830_i2c.c \
-	i830_io.c i830_lvds.c i830_memory.c i830_modes.c i830_video.c \
-	i830_video.h i830_reg.h i830_ring.h i830_sdvo.c i830_sdvo.h \
-	i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h i915_reg.h \
-	i915_video.c i965_video.c i830_exa.c i830_xaa.c i830_render.c \
-	i915_render.c i965_render.c drmmode_display.c \
-	local_xf86Rename.h parser/xf86Parser.h parser/xf86Optrec.h \
-	modes/xf86Modes.h modes/xf86Modes.c modes/xf86cvt.c \
-	modes/xf86Crtc.h modes/xf86Crtc.c modes/xf86Cursors.c \
-	modes/xf86EdidModes.c modes/xf86RandR12.c modes/xf86RandR12.h \
-	modes/xf86Rename.h modes/xf86Rotate.c modes/xf86DiDGA.c \
+	i830_common.h i830_crt.c i830_cursor.c i830_display.c \
+	i830_display.h i830_quirks.c i830_driver.c i830_dvo.c i830.h \
+	i830_hdmi.c i830_i2c.c i830_io.c i830_lvds.c i830_memory.c \
+	i830_modes.c i830_video.c i830_video.h i830_reg.h i830_ring.h \
+	i830_sdvo.c i830_sdvo.h i830_sdvo_regs.h i830_tv.c i915_3d.c \
+	i915_3d.h i915_reg.h i915_video.c i965_video.c i830_uxa.c \
+	i830_render.c i915_render.c i965_render.c drmmode_display.c \
 	i810_dri.c i810_dri.h i830_dri.c i810_hwmc.c i830_dri.h \
 	i830_hwmc.h i830_hwmc.c i915_hwmc.c i915_hwmc.h i965_hwmc.c \
 	i965_hwmc.h
-am__objects_1 = xf86Modes.lo xf86cvt.lo xf86Crtc.lo xf86Cursors.lo \
-	xf86EdidModes.lo xf86RandR12.lo xf86Rotate.lo xf86DiDGA.lo
-@XMODES_TRUE@am__objects_2 = $(am__objects_1)
-am__objects_3 = i810_dri.lo i830_dri.lo i810_hwmc.lo
-@DRI_TRUE@am__objects_4 = $(am__objects_3)
-am__objects_5 = i830_hwmc.lo i915_hwmc.lo i965_hwmc.lo
-@XVMC_TRUE@am__objects_6 = $(am__objects_5)
+am__objects_1 = i810_dri.lo i830_dri.lo i810_hwmc.lo
+@DRI_TRUE@am__objects_2 = $(am__objects_1)
+am__objects_3 = i830_hwmc.lo i915_hwmc.lo i965_hwmc.lo
+@XVMC_TRUE@am__objects_4 = $(am__objects_3)
 am_intel_drv_la_OBJECTS = i810_accel.lo i810_cursor.lo i810_dga.lo \
 	i810_driver.lo i810_io.lo i810_memory.lo i810_video.lo \
 	i810_wmark.lo i830_3d.lo i830_accel.lo i830_bios.lo \
-	i830_batchbuffer.lo i830_crt.lo i830_cursor.lo i830_debug.lo \
-	i830_display.lo i830_quirks.lo i830_driver.lo i830_dvo.lo \
-	i830_hdmi.lo i830_i2c.lo i830_io.lo i830_lvds.lo \
-	i830_memory.lo i830_modes.lo i830_video.lo i830_sdvo.lo \
-	i830_tv.lo i915_3d.lo i915_video.lo i965_video.lo i830_exa.lo \
-	i830_xaa.lo i830_render.lo i915_render.lo i965_render.lo \
-	drmmode_display.lo $(am__objects_2) $(am__objects_4) \
-	$(am__objects_6)
+	i830_batchbuffer.lo i830_crt.lo i830_cursor.lo i830_display.lo \
+	i830_quirks.lo i830_driver.lo i830_dvo.lo i830_hdmi.lo \
+	i830_i2c.lo i830_io.lo i830_lvds.lo i830_memory.lo \
+	i830_modes.lo i830_video.lo i830_sdvo.lo i830_tv.lo i915_3d.lo \
+	i915_video.lo i965_video.lo i830_uxa.lo i830_render.lo \
+	i915_render.lo i965_render.lo drmmode_display.lo \
+	$(am__objects_2) $(am__objects_4)
 intel_drv_la_OBJECTS = $(am_intel_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -150,8 +137,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	uninstall-recursive
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = xvmc bios_reader ch7017 ch7xxx ivch sil164 tfp410 \
-	reg_dumper
+DIST_SUBDIRS = $(SUBDIRS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -173,8 +159,10 @@ BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -182,7 +170,6 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DOLT_BASH = @DOLT_BASH@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -192,8 +179,6 @@ DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DRM_CFLAGS = @DRM_CFLAGS@
 DRM_LIBS = @DRM_LIBS@
-DRM_MODE_CFLAGS = @DRM_MODE_CFLAGS@
-DRM_MODE_LIBS = @DRM_MODE_LIBS@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -205,25 +190,27 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GEN4ASM_CFLAGS = @GEN4ASM_CFLAGS@
+GEN4ASM_LIBS = @GEN4ASM_LIBS@
 GREP = @GREP@
 HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
+HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
+HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+KMS_ONLY_FALSE = @KMS_ONLY_FALSE@
+KMS_ONLY_TRUE = @KMS_ONLY_TRUE@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
-LIBPCIACCESS_FALSE = @LIBPCIACCESS_FALSE@
-LIBPCIACCESS_TRUE = @LIBPCIACCESS_TRUE@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUXDOC = @LINUXDOC@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -250,24 +237,16 @@ PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
-SERVER_1_5_CFLAGS = @SERVER_1_5_CFLAGS@
-SERVER_1_5_LIBS = @SERVER_1_5_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 VIDEO_DEBUG_FALSE = @VIDEO_DEBUG_FALSE@
 VIDEO_DEBUG_TRUE = @VIDEO_DEBUG_TRUE@
-WARN_CFLAGS = @WARN_CFLAGS@
 XEXT_CFLAGS = @XEXT_CFLAGS@
 XEXT_LIBS = @XEXT_LIBS@
-XMODES_CFLAGS = @XMODES_CFLAGS@
-XMODES_FALSE = @XMODES_FALSE@
-XMODES_TRUE = @XMODES_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
-XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
-XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
 XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
 XVMCLIB_LIBS = @XVMCLIB_LIBS@
 XVMC_FALSE = @XVMC_FALSE@
@@ -292,10 +271,10 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
-gen4asm = @gen4asm@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -321,40 +300,21 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-@LIBPCIACCESS_TRUE@REGDUMPER = reg_dumper
-SUBDIRS = xvmc bios_reader ch7017 ch7xxx ivch sil164 tfp410 $(REGDUMPER)
+SUBDIRS = xvmc bios_reader ch7017 ch7xxx ivch sil164 tfp410 reg_dumper render_program
 
 # this is obnoxious:
 # -module lets us name the module exactly how we want
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @WARN_CFLAGS@ @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI_CFLAGS@ \
-	@PCIACCESS_CFLAGS@ -I$(top_srcdir)/uxa \
-	@XMODES_CFLAGS@ -DI830_XV -DI830_USE_XAA -DI830_USE_EXA -DI830_USE_UXA
+AM_CFLAGS = @CWARNFLAGS@ @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI_CFLAGS@ \
+	@PCIACCESS_CFLAGS@ -I$(top_srcdir)/uxa -I$(top_srcdir)/src/render_program
 
 intel_drv_la_LTLIBRARIES = intel_drv.la
 intel_drv_la_LDFLAGS = -module -avoid-version
 intel_drv_ladir = @moduledir@/drivers
 intel_drv_la_LIBADD = -lm @DRM_LIBS@ -ldrm_intel ../uxa/libuxa.la \
-	$(am__append_1) $(am__append_4)
-XMODE_SRCS = \
-	 local_xf86Rename.h \
-	 parser/xf86Parser.h \
-	 parser/xf86Optrec.h \
-	 modes/xf86Modes.h \
-	 modes/xf86Modes.c \
-	 modes/xf86cvt.c \
-	 modes/xf86Crtc.h \
-	 modes/xf86Crtc.c \
-	 modes/xf86Cursors.c \
-	 modes/xf86EdidModes.c \
-	 modes/xf86RandR12.c \
-	 modes/xf86RandR12.h \
-	 modes/xf86Rename.h \
-	 modes/xf86Rotate.c \
-	 modes/xf86DiDGA.c
-
+	@PCIACCESS_LIBS@ $(am__append_2)
 INTEL_DRI_SRCS = \
          i810_dri.c \
          i810_dri.h \
@@ -375,77 +335,23 @@ intel_drv_la_SOURCES = brw_defines.h brw_structs.h common.h i2c_vid.h \
 	i810_driver.c i810.h i810_io.c i810_memory.c i810_reg.h \
 	i810_ring.h i810_video.c i810_wmark.c i830_3d.c i830_accel.c \
 	i830_bios.c i830_bios.h i830_batchbuffer.c i830_batchbuffer.h \
-	i830_common.h i830_crt.c i830_cursor.c i830_debug.c \
-	i830_debug.h i830_display.c i830_display.h i830_quirks.c \
-	i830_driver.c i830_dvo.c i830.h i830_hdmi.c i830_i2c.c \
-	i830_io.c i830_lvds.c i830_memory.c i830_modes.c i830_video.c \
-	i830_video.h i830_reg.h i830_ring.h i830_sdvo.c i830_sdvo.h \
-	i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h i915_reg.h \
-	i915_video.c i965_video.c i830_exa.c i830_xaa.c i830_render.c \
-	i915_render.c i965_render.c drmmode_display.c $(am__append_2) \
-	$(am__append_3) $(am__append_5)
-INTEL_G4A = \
-	packed_yuv_sf.g4a		\
-	packed_yuv_wm.g4a		\
-	exa_sf.g4a 			\
-	exa_sf_mask.g4a 		\
-	exa_wm_src_affine.g4a 		\
-	exa_wm_src_projective.g4a 	\
-	exa_wm_src_sample_argb.g4a 	\
-	exa_wm_src_sample_a.g4a 	\
-	exa_wm_src_sample_planar.g4a 	\
-	exa_wm_mask_affine.g4a 		\
-	exa_wm_mask_projective.g4a 	\
-	exa_wm_mask_sample_argb.g4a 	\
-	exa_wm_mask_sample_a.g4a 	\
-	exa_wm_noca.g4a			\
-	exa_wm_ca.g4a			\
-	exa_wm_ca_srcalpha.g4a		\
-	exa_wm_write.g4a 		\
-	exa_wm_yuv_rgb.g4a		\
-	exa_wm_xy.g4a
-
-INTEL_G4I = \
-	exa_wm.g4i			\
-	exa_wm_affine.g4i		\
-	exa_wm_projective.g4i
-
-INTEL_G4B = \
-	packed_yuv_sf.g4b		\
-	packed_yuv_wm.g4b		\
-	exa_sf.g4b 			\
-	exa_sf_mask.g4b 		\
-	exa_wm_src_affine.g4b 		\
-	exa_wm_src_projective.g4b 	\
-	exa_wm_src_sample_argb.g4b 	\
-	exa_wm_src_sample_a.g4b 	\
-	exa_wm_src_sample_planar.g4b 	\
-	exa_wm_mask_affine.g4b 		\
-	exa_wm_mask_projective.g4b 	\
-	exa_wm_mask_sample_argb.g4b 	\
-	exa_wm_mask_sample_a.g4b 	\
-	exa_wm_noca.g4b			\
-	exa_wm_ca.g4b			\
-	exa_wm_ca_srcalpha.g4b		\
-	exa_wm_write.g4b 		\
-	exa_wm_yuv_rgb.g4b		\
-	exa_wm_xy.g4b
-
+	i830_common.h i830_crt.c i830_cursor.c i830_display.c \
+	i830_display.h i830_quirks.c i830_driver.c i830_dvo.c i830.h \
+	i830_hdmi.c i830_i2c.c i830_io.c i830_lvds.c i830_memory.c \
+	i830_modes.c i830_video.c i830_video.h i830_reg.h i830_ring.h \
+	i830_sdvo.c i830_sdvo.h i830_sdvo_regs.h i830_tv.c i915_3d.c \
+	i915_3d.h i915_reg.h i915_video.c i965_video.c i830_uxa.c \
+	i830_render.c i915_render.c i965_render.c drmmode_display.c \
+	$(am__append_1) $(am__append_3)
 EXTRA_DIST = \
 	$(XMODE_SRCS)	\
-	$(INTEL_G4A)	\
-	$(INTEL_G4I)	\
-	$(INTEL_G4B)	\
 	$(INTEL_DRI_SRCS) \
 	$(INTEL_XVMC_SRCS)
 
-@HAVE_GEN4ASM_TRUE@SUFFIXES = .g4a .g4b
-@HAVE_GEN4ASM_TRUE@BUILT_SOURCES = $(INTEL_G4B)
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+all: all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .g4a .g4b .c .lo .o .obj
+.SUFFIXES: .c .lo .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -528,12 +434,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_bios.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_crt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_cursor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_debug.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_dri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_dvo.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_exa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_hdmi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_i2c.Plo@am__quote@
@@ -545,8 +449,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_sdvo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_tv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_uxa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_video.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_xaa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_3d.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_render.Plo@am__quote@
@@ -554,14 +458,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_video.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Crtc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Cursors.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86DiDGA.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86EdidModes.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Modes.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86RandR12.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Rotate.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86cvt.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -583,62 +479,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-xf86Modes.lo: modes/xf86Modes.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Modes.lo -MD -MP -MF "$(DEPDIR)/xf86Modes.Tpo" -c -o xf86Modes.lo `test -f 'modes/xf86Modes.c' || echo '$(srcdir)/'`modes/xf86Modes.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86Modes.Tpo" "$(DEPDIR)/xf86Modes.Plo"; else rm -f "$(DEPDIR)/xf86Modes.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modes/xf86Modes.c' object='xf86Modes.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Modes.lo `test -f 'modes/xf86Modes.c' || echo '$(srcdir)/'`modes/xf86Modes.c
-
-xf86cvt.lo: modes/xf86cvt.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86cvt.lo -MD -MP -MF "$(DEPDIR)/xf86cvt.Tpo" -c -o xf86cvt.lo `test -f 'modes/xf86cvt.c' || echo '$(srcdir)/'`modes/xf86cvt.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86cvt.Tpo" "$(DEPDIR)/xf86cvt.Plo"; else rm -f "$(DEPDIR)/xf86cvt.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modes/xf86cvt.c' object='xf86cvt.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86cvt.lo `test -f 'modes/xf86cvt.c' || echo '$(srcdir)/'`modes/xf86cvt.c
-
-xf86Crtc.lo: modes/xf86Crtc.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Crtc.lo -MD -MP -MF "$(DEPDIR)/xf86Crtc.Tpo" -c -o xf86Crtc.lo `test -f 'modes/xf86Crtc.c' || echo '$(srcdir)/'`modes/xf86Crtc.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86Crtc.Tpo" "$(DEPDIR)/xf86Crtc.Plo"; else rm -f "$(DEPDIR)/xf86Crtc.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modes/xf86Crtc.c' object='xf86Crtc.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Crtc.lo `test -f 'modes/xf86Crtc.c' || echo '$(srcdir)/'`modes/xf86Crtc.c
-
-xf86Cursors.lo: modes/xf86Cursors.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Cursors.lo -MD -MP -MF "$(DEPDIR)/xf86Cursors.Tpo" -c -o xf86Cursors.lo `test -f 'modes/xf86Cursors.c' || echo '$(srcdir)/'`modes/xf86Cursors.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86Cursors.Tpo" "$(DEPDIR)/xf86Cursors.Plo"; else rm -f "$(DEPDIR)/xf86Cursors.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modes/xf86Cursors.c' object='xf86Cursors.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Cursors.lo `test -f 'modes/xf86Cursors.c' || echo '$(srcdir)/'`modes/xf86Cursors.c
-
-xf86EdidModes.lo: modes/xf86EdidModes.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86EdidModes.lo -MD -MP -MF "$(DEPDIR)/xf86EdidModes.Tpo" -c -o xf86EdidModes.lo `test -f 'modes/xf86EdidModes.c' || echo '$(srcdir)/'`modes/xf86EdidModes.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86EdidModes.Tpo" "$(DEPDIR)/xf86EdidModes.Plo"; else rm -f "$(DEPDIR)/xf86EdidModes.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modes/xf86EdidModes.c' object='xf86EdidModes.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86EdidModes.lo `test -f 'modes/xf86EdidModes.c' || echo '$(srcdir)/'`modes/xf86EdidModes.c
-
-xf86RandR12.lo: modes/xf86RandR12.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86RandR12.lo -MD -MP -MF "$(DEPDIR)/xf86RandR12.Tpo" -c -o xf86RandR12.lo `test -f 'modes/xf86RandR12.c' || echo '$(srcdir)/'`modes/xf86RandR12.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86RandR12.Tpo" "$(DEPDIR)/xf86RandR12.Plo"; else rm -f "$(DEPDIR)/xf86RandR12.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modes/xf86RandR12.c' object='xf86RandR12.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86RandR12.lo `test -f 'modes/xf86RandR12.c' || echo '$(srcdir)/'`modes/xf86RandR12.c
-
-xf86Rotate.lo: modes/xf86Rotate.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Rotate.lo -MD -MP -MF "$(DEPDIR)/xf86Rotate.Tpo" -c -o xf86Rotate.lo `test -f 'modes/xf86Rotate.c' || echo '$(srcdir)/'`modes/xf86Rotate.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86Rotate.Tpo" "$(DEPDIR)/xf86Rotate.Plo"; else rm -f "$(DEPDIR)/xf86Rotate.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modes/xf86Rotate.c' object='xf86Rotate.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Rotate.lo `test -f 'modes/xf86Rotate.c' || echo '$(srcdir)/'`modes/xf86Rotate.c
-
-xf86DiDGA.lo: modes/xf86DiDGA.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86DiDGA.lo -MD -MP -MF "$(DEPDIR)/xf86DiDGA.Tpo" -c -o xf86DiDGA.lo `test -f 'modes/xf86DiDGA.c' || echo '$(srcdir)/'`modes/xf86DiDGA.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xf86DiDGA.Tpo" "$(DEPDIR)/xf86DiDGA.Plo"; else rm -f "$(DEPDIR)/xf86DiDGA.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modes/xf86DiDGA.c' object='xf86DiDGA.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86DiDGA.lo `test -f 'modes/xf86DiDGA.c' || echo '$(srcdir)/'`modes/xf86DiDGA.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -783,7 +623,6 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/modes $(distdir)/parser
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -826,16 +665,14 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-recursive
+check: check-recursive
 all-am: Makefile $(LTLIBRARIES)
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(intel_drv_ladir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-recursive
+install: install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
@@ -859,12 +696,10 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
-@HAVE_GEN4ASM_FALSE@clean-local:
 clean: clean-recursive
 
 clean-am: clean-generic clean-intel_drv_laLTLIBRARIES clean-libtool \
-	clean-local mostlyclean-am
+	mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -916,27 +751,19 @@ uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
 	clean clean-generic clean-intel_drv_laLTLIBRARIES \
-	clean-libtool clean-local clean-recursive ctags \
-	ctags-recursive distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-recursive distclean-tags distdir \
-	dvi dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-intel_drv_laLTLIBRARIES \
-	install-man install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am uninstall-info-am \
-	uninstall-intel_drv_laLTLIBRARIES
+	clean-libtool clean-recursive ctags ctags-recursive distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-recursive distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-intel_drv_laLTLIBRARIES install-man \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-info-am uninstall-intel_drv_laLTLIBRARIES
 
-@HAVE_GEN4ASM_TRUE@.g4a.g4b:
-@HAVE_GEN4ASM_TRUE@	m4 -I$(srcdir) -s $< > $*.g4m && intel-gen4asm -o $@ $*.g4m && rm $*.g4m
-
-@HAVE_GEN4ASM_TRUE@$(INTEL_G4B): $(INTEL_G4I)
-
-@HAVE_GEN4ASM_TRUE@clean-local:
-@HAVE_GEN4ASM_TRUE@	-rm -f $(INTEL_G4B)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

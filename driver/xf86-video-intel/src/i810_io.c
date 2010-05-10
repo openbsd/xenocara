@@ -24,24 +24,10 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i810/i810_io.c,v 1.4 2002/01/25 21:56:04 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-/*
- * Reformatted with GNU indent (2.2.8), using the following options:
- *
- *    -bad -bap -c41 -cd0 -ncdb -ci6 -cli0 -cp0 -ncs -d0 -di3 -i3 -ip3 -l78
- *    -lp -npcs -psl -sob -ss -br -ce -sc -hnl
- *
- * This provides a good match with the original i810 code and preferred
- * XFree86 formatting conventions.
- *
- * When editing this driver, please follow the existing formatting, and edit
- * with <TAB> characters expanded at 8-column intervals.
- */
 
 /*
  * Authors:
@@ -55,8 +41,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #ifdef BUILD_FOR_I830
 #include "i830.h"
-#define pI810 pI830
-#define I810Ptr I830Ptr
+#define pI810 intel
+#define I810Ptr intel_screen_private *
 #define I810WriteControlPIO I830WriteControlPIO
 #define I810ReadControlPIO I830ReadControlPIO
 #define I810WriteStandardPIO I830WriteStandardPIO

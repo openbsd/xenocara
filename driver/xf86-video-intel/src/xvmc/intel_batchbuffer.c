@@ -45,228 +45,147 @@
 
 #include "intel_xvmc.h"
 #include "intel_batchbuffer.h"
-
+#include "brw_defines.h"
+#include "brw_structs.h"
 #define MI_BATCH_BUFFER_END     (0xA << 23)
-
+#define BATCH_SIZE 8*1024	/* one bo is allocated each time, so the size can be small */
 static int intelEmitIrqLocked(void)
 {
-   drmI830IrqEmit ie;
-   int ret, seq;
+	drmI830IrqEmit ie;
+	int ret, seq;
 
-   ie.irq_seq = &seq;
-   ret = drmCommandWriteRead(xvmc_driver->fd, DRM_I830_IRQ_EMIT,
-                             &ie, sizeof(ie));
+	ie.irq_seq = &seq;
+	ret = drmCommandWriteRead(xvmc_driver->fd, DRM_I830_IRQ_EMIT,
+				  &ie, sizeof(ie));
 
-   if ( ret ) {
-      fprintf(stderr, "%s: drmI830IrqEmit: %d\n", __FUNCTION__, ret);
-      exit(1);
-   }
+	if (ret) {
+		fprintf(stderr, "%s: drmI830IrqEmit: %d\n", __FUNCTION__, ret);
+		exit(1);
+	}
 
-   return seq;
+	return seq;
 }
 
 static void intelWaitIrq(int seq)
 {
-   int ret;
-   drmI830IrqWait iw;
+	int ret;
+	drmI830IrqWait iw;
 
-   iw.irq_seq = seq;
+	iw.irq_seq = seq;
 
-   do {
-      ret = drmCommandWrite(xvmc_driver->fd, DRM_I830_IRQ_WAIT, &iw, sizeof(iw) );
-   } while (ret == -EAGAIN || ret == -EINTR);
+	do {
+		ret =
+		    drmCommandWrite(xvmc_driver->fd, DRM_I830_IRQ_WAIT, &iw,
+				    sizeof(iw));
+	} while (ret == -EAGAIN || ret == -EINTR);
 
-   if (ret) {
-      fprintf(stderr, "%s: drmI830IrqWait: %d\n", __FUNCTION__, ret);
-      exit(1);
-   }
+	if (ret) {
+		fprintf(stderr, "%s: drmI830IrqWait: %d\n", __FUNCTION__, ret);
+		exit(1);
+	}
 }
 
-static void intelDestroyBatchBuffer(void)
+static void i965_end_batch(void)
 {
-   if (xvmc_driver->alloc.offset) {
-       xvmc_driver->alloc.ptr = NULL;
-       xvmc_driver->alloc.offset = 0;
-   } else if (xvmc_driver->alloc.ptr) {
-      free(xvmc_driver->alloc.ptr);
-      xvmc_driver->alloc.ptr = NULL;
-   }
-
-   memset(&xvmc_driver->batch, 0, sizeof(xvmc_driver->batch));
+	unsigned int size = xvmc_driver->batch.ptr -
+	    xvmc_driver->batch.init_ptr;
+	if ((size & 4) == 0) {
+		*(unsigned int *)xvmc_driver->batch.ptr = 0;
+		xvmc_driver->batch.ptr += 4;
+	}
+	*(unsigned int *)xvmc_driver->batch.ptr = MI_BATCH_BUFFER_END;
+	xvmc_driver->batch.ptr += 4;
 }
-
 
 Bool intelInitBatchBuffer(void)
 {
-    if (drmMap(xvmc_driver->fd,
-		xvmc_driver->batchbuffer.handle,
-		xvmc_driver->batchbuffer.size,
-		(drmAddress *)&xvmc_driver->batchbuffer.map) != 0) {
-	XVMC_ERR("fail to map batch buffer\n");
-	return False;
-    }
+	int i;
 
-    if (xvmc_driver->batchbuffer.map) {
-	xvmc_driver->alloc.size = xvmc_driver->batchbuffer.size;
-	xvmc_driver->alloc.offset = xvmc_driver->batchbuffer.offset;
-	xvmc_driver->alloc.ptr = xvmc_driver->batchbuffer.map;
-    } else {
-	xvmc_driver->alloc.size = 8 * 1024;
-	xvmc_driver->alloc.offset = 0;
-	xvmc_driver->alloc.ptr = malloc(xvmc_driver->alloc.size);
-    }
+	if ((xvmc_driver->batch.buf =
+	     drm_intel_bo_alloc(xvmc_driver->bufmgr,
+				"batch buffer", BATCH_SIZE, 0x1000)) == NULL) {
+		fprintf(stderr, "unable to alloc batch buffer\n");
+		return False;
+	}
 
-    xvmc_driver->alloc.active_buf = 0;
-    assert(xvmc_driver->alloc.ptr);
-    return True;
+	if (xvmc_driver->kernel_exec_fencing)
+		drm_intel_gem_bo_map_gtt(xvmc_driver->batch.buf);
+	else
+		drm_intel_bo_map(xvmc_driver->batch.buf, 1);
+
+	xvmc_driver->batch.init_ptr = xvmc_driver->batch.buf->virtual;
+	xvmc_driver->batch.size = BATCH_SIZE;
+	xvmc_driver->batch.space = BATCH_SIZE;
+	xvmc_driver->batch.ptr = xvmc_driver->batch.init_ptr;
+	return True;
 }
 
 void intelFiniBatchBuffer(void)
 {
-    if (xvmc_driver->batchbuffer.map) {
-        drmUnmap(xvmc_driver->batchbuffer.map, xvmc_driver->batchbuffer.size);
-        xvmc_driver->batchbuffer.map = NULL;
-    }
-    intelDestroyBatchBuffer();
+	if (xvmc_driver->kernel_exec_fencing)
+		drm_intel_gem_bo_unmap_gtt(xvmc_driver->batch.buf);
+	else
+		drm_intel_bo_unmap(xvmc_driver->batch.buf);
+
+	drm_intel_bo_unreference(xvmc_driver->batch.buf);
 }
 
-static void intelBatchbufferRequireSpace(unsigned int sz)
+void intelFlushBatch(Bool refill)
 {
-   if (xvmc_driver->batch.space < sz)
-      intelFlushBatch(TRUE);
+	i965_end_batch();
+
+	if (xvmc_driver->kernel_exec_fencing)
+		drm_intel_gem_bo_unmap_gtt(xvmc_driver->batch.buf);
+	else
+		drm_intel_bo_unmap(xvmc_driver->batch.buf);
+
+	drm_intel_bo_exec(xvmc_driver->batch.buf,
+			  xvmc_driver->batch.ptr - xvmc_driver->batch.init_ptr,
+			  0, 0, 0);
+
+	if (xvmc_driver == &i915_xvmc_mc_driver)
+		dri_bo_wait_rendering(xvmc_driver->batch.buf);
+
+	drm_intel_bo_unreference(xvmc_driver->batch.buf);
+	if ((xvmc_driver->batch.buf =
+	     drm_intel_bo_alloc(xvmc_driver->bufmgr,
+				"batch buffer", BATCH_SIZE, 0x1000)) == NULL) {
+		fprintf(stderr, "unable to alloc batch buffer\n");
+	}
+
+	if (xvmc_driver->kernel_exec_fencing)
+		drm_intel_gem_bo_map_gtt(xvmc_driver->batch.buf);
+	else
+		drm_intel_bo_map(xvmc_driver->batch.buf, 1);
+
+	xvmc_driver->batch.init_ptr = xvmc_driver->batch.buf->virtual;
+	xvmc_driver->batch.size = BATCH_SIZE;
+	xvmc_driver->batch.space = BATCH_SIZE;
+	xvmc_driver->batch.ptr = xvmc_driver->batch.init_ptr;
+}
+
+void intelBatchbufferRequireSpace(int size)
+{
+	assert(xvmc_driver->batch.ptr - xvmc_driver->batch.init_ptr + size <
+	       xvmc_driver->batch.size - 8);
+	if (xvmc_driver->batch.ptr - xvmc_driver->batch.init_ptr + size
+	    >= xvmc_driver->batch.size - 8)
+		intelFlushBatch(1);
 }
 
 void intelBatchbufferData(const void *data, unsigned bytes, unsigned flags)
 {
-   assert((bytes & 0x3) == 0);
-
-   intelBatchbufferRequireSpace(bytes);
-   memcpy(xvmc_driver->batch.ptr, data, bytes);
-   xvmc_driver->batch.ptr += bytes;
-   xvmc_driver->batch.space -= bytes;
-
-   assert(xvmc_driver->batch.space >= 0);
+	intelBatchbufferRequireSpace(bytes);
+	memcpy(xvmc_driver->batch.ptr, data, bytes);
+	xvmc_driver->batch.ptr += bytes;
+	xvmc_driver->batch.space -= bytes;
 }
 
-#define MI_FLUSH                ((0 << 29) | (4 << 23))
-#define FLUSH_MAP_CACHE         (1 << 0)
-#define FLUSH_RENDER_CACHE      (0 << 2)
-#define FLUSH_WRITE_DIRTY_STATE (1 << 4)
-
-static void intelRefillBatchLocked(Bool allow_unlock)
+void intel_batch_emit_reloc(dri_bo * bo, uint32_t read_domain,
+			    uint32_t write_domain, uint32_t delta,
+			    unsigned char *ptr)
 {
-   unsigned half = xvmc_driver->alloc.size >> 1;
-   unsigned buf = (xvmc_driver->alloc.active_buf ^= 1);
-   unsigned dword[2];
-
-   dword[0] = MI_FLUSH | FLUSH_WRITE_DIRTY_STATE | FLUSH_RENDER_CACHE | FLUSH_MAP_CACHE;
-   dword[1] = 0;
-   intelCmdIoctl((char *)&dword[0], sizeof(dword));
-   xvmc_driver->alloc.irq_emitted = intelEmitIrqLocked();
-
-   if (xvmc_driver->alloc.irq_emitted) {
-       intelWaitIrq(xvmc_driver->alloc.irq_emitted);
-   }
-
-   xvmc_driver->batch.start_offset = xvmc_driver->alloc.offset + buf * half;
-   xvmc_driver->batch.ptr = (unsigned char *)xvmc_driver->alloc.ptr + buf * half;
-   xvmc_driver->batch.size = half - 8;
-   xvmc_driver->batch.space = half - 8;
-   assert(xvmc_driver->batch.space >= 0);
-}
-
-
-static void intelFlushBatchLocked(Bool ignore_cliprects,
-				  Bool refill,
-				  Bool allow_unlock)
-{
-   drmI830BatchBuffer batch;
-
-   if (xvmc_driver->batch.space != xvmc_driver->batch.size) {
-
-      batch.start = xvmc_driver->batch.start_offset;
-      batch.used = xvmc_driver->batch.size - xvmc_driver->batch.space;
-      batch.cliprects = 0;
-      batch.num_cliprects = 0;
-      batch.DR1 = 0;
-      batch.DR4 = 0;
-
-      if (xvmc_driver->alloc.offset) {
-          if ((batch.used & 0x4) == 0) {
-              ((int *)xvmc_driver->batch.ptr)[0] = 0;
-              ((int *)xvmc_driver->batch.ptr)[1] = MI_BATCH_BUFFER_END;
-              batch.used += 0x8;
-              xvmc_driver->batch.ptr += 0x8;
-          } else {
-              ((int *)xvmc_driver->batch.ptr)[0] = MI_BATCH_BUFFER_END;
-              batch.used += 0x4;
-              xvmc_driver->batch.ptr += 0x4;
-          }
-      }
-
-      xvmc_driver->batch.start_offset += batch.used;
-      xvmc_driver->batch.size -= batch.used;
-
-      if (xvmc_driver->batch.size < 8) {
-         refill = TRUE;
-         xvmc_driver->batch.space = xvmc_driver->batch.size = 0;
-      }
-      else {
-         xvmc_driver->batch.size -= 8;
-         xvmc_driver->batch.space = xvmc_driver->batch.size;
-      }
-
-      assert(xvmc_driver->batch.space >= 0);
-      assert(batch.start >= xvmc_driver->alloc.offset);
-      assert(batch.start < xvmc_driver->alloc.offset + xvmc_driver->alloc.size);
-      assert(batch.start + batch.used > xvmc_driver->alloc.offset);
-      assert(batch.start + batch.used <= xvmc_driver->alloc.offset + xvmc_driver->alloc.size);
-
-      if (xvmc_driver->alloc.offset) {
-          if (drmCommandWrite(xvmc_driver->fd, DRM_I830_BATCHBUFFER, &batch, sizeof(batch))) {
-              fprintf(stderr, "DRM_I830_BATCHBUFFER: %d\n",  -errno);
-              exit(1);
-          }
-      } else {
-         drmI830CmdBuffer cmd;
-         cmd.buf = (char *)xvmc_driver->alloc.ptr + batch.start;
-         cmd.sz = batch.used;
-         cmd.DR1 = batch.DR1;
-         cmd.DR4 = batch.DR4;
-         cmd.num_cliprects = batch.num_cliprects;
-         cmd.cliprects = batch.cliprects;
-
-         if (drmCommandWrite(xvmc_driver->fd, DRM_I830_CMDBUFFER, 
-                             &cmd, sizeof(cmd))) {
-            fprintf(stderr, "DRM_I915_CMDBUFFER: %d\n",  -errno);
-            exit(1);
-         }
-      }
-   }
-
-   if (refill)
-      intelRefillBatchLocked(allow_unlock);
-}
-
-void intelFlushBatch(Bool refill )
-{
-   intelFlushBatchLocked(FALSE, refill, TRUE);
-}
-
-void intelCmdIoctl(char *buf, unsigned used)
-{
-   drmI830CmdBuffer cmd;
-
-   cmd.buf = buf;
-   cmd.sz = used;
-   cmd.cliprects = 0;
-   cmd.num_cliprects = 0;
-   cmd.DR1 = 0;
-   cmd.DR4 = 0;
-
-   if (drmCommandWrite(xvmc_driver->fd, DRM_I830_CMDBUFFER, 
-                       &cmd, sizeof(cmd))) {
-      fprintf(stderr, "DRM_I830_CMDBUFFER: %d\n",  -errno);
-      exit(1);
-   }
+	drm_intel_bo_emit_reloc(xvmc_driver->batch.buf,
+				ptr - xvmc_driver->batch.init_ptr, bo, delta,
+				read_domain, write_domain);
 }

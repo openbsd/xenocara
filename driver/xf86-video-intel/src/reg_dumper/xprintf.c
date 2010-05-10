@@ -28,33 +28,31 @@
 #include <stdarg.h>
 #include "reg_dumper.h"
 
-static char *
-XNFvprintf(const char *format, va_list va)
+static char *XNFvprintf(const char *format, va_list va)
 {
-    char *ret;
-    int size;
-    va_list va2;
+	char *ret;
+	int size;
+	va_list va2;
 
-    va_copy(va2, va);
-    size = vsnprintf(NULL, 0, format, va2);
-    va_end(va2);
+	va_copy(va2, va);
+	size = vsnprintf(NULL, 0, format, va2);
+	va_end(va2);
 
-    ret = (char *)malloc(size + 1);
-    if (ret == NULL)
-        return NULL;
+	ret = (char *)malloc(size + 1);
+	if (ret == NULL)
+		return NULL;
 
-    vsnprintf(ret, size + 1, format, va);
-    ret[size] = 0;
-    return ret;
+	vsnprintf(ret, size + 1, format, va);
+	ret[size] = 0;
+	return ret;
 }
 
-char *
-XNFprintf(const char *format, ...)
+char *XNFprintf(const char *format, ...)
 {
-    char *ret;
-    va_list va;
-    va_start(va, format);
-    ret = XNFvprintf(format, va);
-    va_end(va);
-    return ret;
+	char *ret;
+	va_list va;
+	va_start(va, format);
+	ret = XNFvprintf(format, va);
+	va_end(va);
+	return ret;
 }

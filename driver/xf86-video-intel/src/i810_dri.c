@@ -1,17 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i810/i810_dri.c,v 1.41 2003/09/24 02:43:23 dawes Exp $ */
-/*
- * Reformatted with GNU indent (2.2.8), using the following options:
- *
- *    -bad -bap -c41 -cd0 -ncdb -ci6 -cli0 -cp0 -ncs -d0 -di3 -i3 -ip3 -l78
- *    -lp -npcs -psl -sob -ss -br -ce -sc -hnl
- *
- * This provides a good match with the original i810 code and preferred
- * XFree86 formatting conventions.
- *
- * When editing this driver, please follow the existing formatting, and edit
- * with <TAB> characters expanded at 8-column intervals.
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -354,14 +340,8 @@ I810DRIScreenInit(ScreenPtr pScreen)
    } else {
       pDRIInfo->busIdString = xalloc(64);
       sprintf(pDRIInfo->busIdString, "PCI:%d:%d:%d",
-#if XSERVER_LIBPCIACCESS
 	      ((pI810->PciInfo->domain << 8) | pI810->PciInfo->bus),
 	      pI810->PciInfo->dev, pI810->PciInfo->func
-#else
-	      ((pciConfigPtr) pI810->PciInfo->thisCard)->busnum,
-	      ((pciConfigPtr) pI810->PciInfo->thisCard)->devnum,
-	      ((pciConfigPtr) pI810->PciInfo->thisCard)->funcnum
-#endif
 	      );
    }
    pDRIInfo->ddxDriverMajorVersion = I810_MAJOR_VERSION;
@@ -978,19 +958,10 @@ I810DRIScreenInit(ScreenPtr pScreen)
 
    if (!pI810DRI->irq) {
       pI810DRI->irq = drmGetInterruptFromBusID(pI810->drmSubFD,
-#if XSERVER_LIBPCIACCESS
 					       ((pI810->PciInfo->domain << 8) |
 						pI810->PciInfo->bus),
 					       pI810->PciInfo->dev,
 					       pI810->PciInfo->func
-#else
-					       ((pciConfigPtr) pI810->
-						PciInfo->thisCard)->busnum,
-					       ((pciConfigPtr) pI810->
-						PciInfo->thisCard)->devnum,
-					       ((pciConfigPtr) pI810->
-						PciInfo->thisCard)->funcnum
-#endif
 					       );
       if ((drmCtlInstHandler(pI810->drmSubFD, pI810DRI->irq)) != 0) {
 	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,

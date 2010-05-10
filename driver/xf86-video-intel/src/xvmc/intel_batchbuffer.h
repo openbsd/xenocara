@@ -10,6 +10,7 @@ extern int VERBOSE;
 
 #define BEGIN_BATCH(n)                                                  \
     do {                                                                \
+	assert(xvmc_driver->batch.space >= (n) *4);			\
         if (xvmc_driver->batch.space < (n)*4)                           \
             intelFlushBatch(TRUE);                            		\
         batch_ptr = xvmc_driver->batch.ptr;                             \
@@ -18,6 +19,13 @@ extern int VERBOSE;
 #define OUT_BATCH(n)                                                    \
     do {                                                                \
         *(unsigned int *)batch_ptr = (n);                               \
+        batch_ptr += 4;                                                 \
+    } while (0)
+
+#define OUT_RELOC(bo,read_domains,write_domains,delta)  \
+    do { \
+        *(unsigned int *)batch_ptr = delta + bo->offset; \
+        intel_batch_emit_reloc(bo, read_domains, write_domains, delta, batch_ptr); \
         batch_ptr += 4;                                                 \
     } while (0)
 
@@ -44,4 +52,7 @@ extern void intelBatchbufferData(const void *, unsigned, unsigned);
 extern Bool intelInitBatchBuffer(void);
 extern void intelFiniBatchBuffer(void);
 extern void intelCmdIoctl(char *, unsigned);
+extern void intel_batch_emit_reloc(dri_bo * bo, uint32_t read_domain,
+				   uint32_t write_domain, uint32_t delta,
+				   unsigned char *);
 #endif /* _INTEL_BATCHBUFFER_H */

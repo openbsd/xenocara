@@ -29,17 +29,15 @@
 
 /* i830_display.c */
 void i830PipeSetBase(xf86CrtcPtr crtc, int x, int y);
-void i830WaitForVblank(ScrnInfoPtr pScrn);
-void i830DescribeOutputConfiguration(ScrnInfoPtr pScrn);
-void i830_set_new_crtc_bo(ScrnInfoPtr pScrn);
+void i830WaitForVblank(ScrnInfoPtr scrn);
+void i830DescribeOutputConfiguration(ScrnInfoPtr scrn);
+void i830_set_new_crtc_bo(ScrnInfoPtr scrn);
 void i830_crtc_disable(xf86CrtcPtr crtc, Bool disable_pipe);
-void i830_crtc_enable(xf86CrtcPtr crtc);
 
-xf86CrtcPtr i830GetLoadDetectPipe(xf86OutputPtr output, DisplayModePtr mode, int *dpms_mode);
+xf86CrtcPtr i830GetLoadDetectPipe(xf86OutputPtr output, DisplayModePtr mode,
+				  int *dpms_mode);
 void i830ReleaseLoadDetectPipe(xf86OutputPtr output, int dpms_mode);
-void i830_crtc_init(ScrnInfoPtr pScrn, int pipe);
-void i830_crtc_load_lut(xf86CrtcPtr crtc);
-DisplayModePtr i830_crtc_mode_get(ScrnInfoPtr pScrn, xf86CrtcPtr crtc);
-void i830_output_prepare (xf86OutputPtr output);
-void i830_output_commit (xf86OutputPtr output);
-
+void i830_crtc_init(ScrnInfoPtr scrn, int pipe);
+DisplayModePtr i830_crtc_mode_get(ScrnInfoPtr scrn, xf86CrtcPtr crtc);
+void i830_output_prepare(xf86OutputPtr output);
+void i830_output_commit(xf86OutputPtr output);

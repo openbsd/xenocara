@@ -29,83 +29,81 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <pciaccess.h>
 #include <err.h>
 
 #include "reg_dumper.h"
 
 int main(int argc, char **argv)
 {
-    struct pci_device *dev;
-    I830Rec i830;
-    ScrnInfoRec scrn;
-    int err, mmio_bar;
-    void *mmio;
+	struct pci_device *dev;
+	I830Rec i830;
+	ScrnInfoRec scrn;
+	int err, mmio_bar;
+	void *mmio;
 
-    err = pci_system_init();
-    if (err != 0) {
-	fprintf(stderr, "Couldn't initialize PCI system: %s\n", strerror(err));
-	exit(1);
-    }
+	err = pci_system_init();
+	if (err != 0) {
+		fprintf(stderr, "Couldn't initialize PCI system: %s\n",
+			strerror(err));
+		exit(1);
+	}
 
-    /* Grab the graphics card */
-    dev = pci_device_find_by_slot(0, 0, 2, 0);
-    if (dev == NULL)
-	errx(1, "Couldn't find graphics card");
+	/* Grab the graphics card */
+	dev = pci_device_find_by_slot(0, 0, 2, 0);
+	if (dev == NULL)
+		errx(1, "Couldn't find graphics card");
 
-    err = pci_device_probe(dev);
-    if (err != 0) {
-	fprintf(stderr, "Couldn't probe graphics card: %s\n", strerror(err));
-	exit(1);
-    }
+	err = pci_device_probe(dev);
+	if (err != 0) {
+		fprintf(stderr, "Couldn't probe graphics card: %s\n",
+			strerror(err));
+		exit(1);
+	}
 
-    if (dev->vendor_id != 0x8086)
-	errx(1, "Graphics card is non-intel");
+	if (dev->vendor_id != 0x8086)
+		errx(1, "Graphics card is non-intel");
 
-    i830.PciInfo = &i830.pci_info_rec;
-    i830.PciInfo->chipType = dev->device_id;
+	i830.PciInfo = dev;
 
-    i830.pci_dev = dev;
+	mmio_bar = IS_I9XX((&i830)) ? 0 : 1;
 
-    mmio_bar = IS_I9XX((&i830)) ? 0 : 1;
+	err = pci_device_map_range(dev,
+				   dev->regions[mmio_bar].base_addr,
+				   dev->regions[mmio_bar].size,
+				   PCI_DEV_MAP_FLAG_WRITABLE, &mmio);
 
-    err = pci_device_map_range (dev,
-				dev->regions[mmio_bar].base_addr,
-				dev->regions[mmio_bar].size, 
-				PCI_DEV_MAP_FLAG_WRITABLE,
-				&mmio);
-    
-    if (err != 0) {
-	fprintf(stderr, "Couldn't map MMIO region: %s\n", strerror(err));
-	exit(1);
-    }
-    i830.mmio = mmio;
+	if (err != 0) {
+		fprintf(stderr, "Couldn't map MMIO region: %s\n",
+			strerror(err));
+		exit(1);
+	}
+	i830.mmio = mmio;
 
-    scrn.scrnIndex = 0;
-    scrn.pI830 = &i830;
+	scrn.scrnIndex = 0;
+	scrn.pI830 = &i830;
 
-    i830DumpRegs(&scrn);
+	i830DumpRegs(&scrn);
 
-    return 0;
+	return 0;
 }
 
 void xf86DrvMsg(int scrnIndex, int severity, const char *format, ...)
 {
-    va_list va;
+	va_list va;
 
-    switch (severity) {
-    case X_INFO:
-	printf("(II): ");
-	break;
-    case X_WARNING:
-	printf("(WW): ");
-	break;
-    case X_ERROR:
-	printf("(EE): ");
-	break;
-    }
+	switch (severity) {
+	case X_INFO:
+		printf("(II): ");
+		break;
+	case X_WARNING:
+		printf("(WW): ");
+		break;
+	case X_ERROR:
+		printf("(EE): ");
+		break;
+	}
 
-    va_start(va, format);
-    vprintf(format, va);
-    va_end(va);
+	va_start(va, format);
+	vprintf(format, va);
+	va_end(va);
 }

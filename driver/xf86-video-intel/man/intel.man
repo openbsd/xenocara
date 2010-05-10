@@ -56,11 +56,6 @@ The following driver
 .B Options
 are supported
 .TP
-.BI "Option \*qNoAccel\*q \*q" boolean \*q
-Disable or enable acceleration.
-.IP
-Default: acceleration is enabled.
-.TP
 .BI "Option \*qColorKey\*q \*q" integer \*q
 This sets the default pixel value for the YUV video overlay key.
 .IP
@@ -89,6 +84,16 @@ Default: enabled on supported configurations.
 This option controls whether memory buffers are allocated in tiled mode.  In
 most cases (especially for complex rendering), tiling dramatically improves
 performance.
+.IP
+Default: enabled.
+.TP
+.BI "Option \*qSwapbuffersWait\*q \*q" boolean \*q
+This option controls the behavior of glXSwapBuffers and glXCopySubBufferMESA
+calls by GL applications.  If enabled, the calls will avoid tearing by making
+sure the display scanline is outside of the area to be copied before the copy
+occurs.  If disabled, no scanline synchronization is performed, meaning tearing
+will likely occur.  Note that when enabled, this option can adversely affect
+the framerate of applications that render frames at less than refresh rate.
 .IP
 Default: enabled.
 .TP
@@ -124,6 +129,11 @@ This option specifies the amount of system memory to use for graphics, in KB.
 The default is 8192 if AGP allocable memory is < 128 MB, 16384 if < 192 MB,
 24576 if higher. DRI require at least a value of 16384. Higher values may give
 better 3D performance, at expense of available system memory.
+.TP
+.BI "Option \*qNoAccel\*q \*q" boolean \*q
+Disable or enable acceleration.
+.IP
+Default: acceleration is enabled.
 
 .PP
 The following driver
@@ -145,16 +155,6 @@ option can be used to place the overlay first for applications which don't
 have options for selecting adaptors.
 .IP
 Default: Textured video adaptor is preferred.
-.TP
-.BI "Option \*qAccelMethod\*q \*q" string \*q
-Choose acceleration architecture, either "XAA", "EXA", or "UXA".  XAA is the old
-XFree86 based acceleration architecture.  EXA is a simpler
-acceleration architecture designed to better accelerate the X Render extension.
-UXA is a newer acceleration architecture built from the EXA acceleration
-code but taking advantage of kernel memory management to provide simpler,
-faster code.
-.IP
-Default: "UXA" if kernel-modesetting is available, "EXA" otherwise.
 .TP
 .BI "Option \*qModeDebug\*q \*q" boolean \*q
 Enable printing of additional debugging information about modesetting to
@@ -186,6 +186,31 @@ within the X server.  This option instead selects the physical format
 frame buffer color depth is really a matter of preference by the user,
 while setting the pixel format here is a requirement of the connected
 hardware.
+.BI "Option \*qDebugFlushBatches\*q \*q" boolean \*q
+Flush the batch buffer after every single operation.
+.IP
+Default: Disabled
+.TP
+.BI "Option \*qDebugFlushCaches\*q \*q" boolean \*q
+Include an MI_FLUSH at the end of every batch buffer to force data to
+be flushed out of cache and into memory before the completion of the
+batch.
+.IP
+Default: Disabled
+.TP
+.BI "Option \*qDebugWait\*q \*q" boolean \*q
+Wait for the completion of every batch buffer before continuing,
+i.e. perform synchronous rendering.
+.IP
+Default: Disabled
+.TP
+.BI "Option \*qSwapbuffersWait\*q \*q" boolean \*q
+This option controls the behavior of glXSwapBuffers and glXCopySubBufferMESA
+calls by GL applications.  If enabled, the calls will avoid tearing by making
+sure the display scanline is outside of the area to be copied before the copy
+occurs.  If disabled, no scanline synchronization is performed, meaning tearing
+will likely occur.  Note that when enabled, this option can adversely affect
+the framerate of applications that render frames at less than refresh rate.
 .IP
 Leaving this unset implies the default value of false,
 which is almost always going to be right choice.  If your

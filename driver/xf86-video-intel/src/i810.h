@@ -27,7 +27,6 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/i810/i810.h,v 1.41 2003/06/18 13:14:17 dawes Exp $ */
 
 /*
  * Authors:
@@ -51,9 +50,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "vgaHW.h"
 
 #include "xorg-server.h"
-#ifdef XSERVER_LIBPCIACCESS
 #include <pciaccess.h>
-#endif
 
 #ifdef XF86DRI
 #include "xf86drm.h"
@@ -190,12 +187,7 @@ typedef struct _I810Rec {
    unsigned long MMIOAddr;
    IOADDRESS ioBase;
    EntityInfoPtr pEnt;
-#if XSERVER_LIBPCIACCESS
    struct pci_device *PciInfo;
-#else
-   pciVideoPtr PciInfo;
-   PCITAG PciTag;
-#endif
 
    I810RingBuffer *LpRing;
    unsigned int BR[20];
@@ -273,8 +265,6 @@ typedef struct _I810Rec {
    Bool have3DWindows;
    int  drmMinor;
 } I810Rec;
-
-extern const char *I810vbeSymbols[];
 
 #define I810PTR(p) ((I810Ptr)((p)->driverPrivate))
 

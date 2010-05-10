@@ -33,13 +33,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define OUT_RING(n) do {						\
     if (I810_DEBUG & DEBUG_VERBOSE_RING)				\
 	ErrorF("OUT_RING 0x%08x: 0x%08x, (mask %x)\n",			\
-	       pI830->ring_next, (unsigned int)(n),			\
-	       pI830->ring.tail_mask);					\
-    *(volatile uint32_t *)(pI830->ring.virtual_start +			\
-			   pI830->ring_next) = n;			\
-    pI830->ring_used += 4;						\
-    pI830->ring_next += 4;						\
-    pI830->ring_next &= pI830->ring.tail_mask;				\
+	       intel->ring_next, (unsigned int)(n),			\
+	       intel->ring.tail_mask);					\
+    *(volatile uint32_t *)(intel->ring.virtual_start +			\
+			   intel->ring_next) = n;			\
+    intel->ring_used += 4;						\
+    intel->ring_next += 4;						\
+    intel->ring_next &= intel->ring.tail_mask;				\
 } while (0)
 
 #define OUT_RING_F(x) do {			\
@@ -49,43 +49,43 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 } while(0)
 
 #define ADVANCE_LP_RING() do {						\
-    if (pI830->ring_emitting == 0)					\
+    if (intel->ring_emitting == 0)					\
 	FatalError("%s: ADVANCE_LP_RING called with no matching "	\
 		   "BEGIN_LP_RING\n", __FUNCTION__);			\
-    if (pI830->ring_used > pI830->ring_emitting)			\
+    if (intel->ring_used > intel->ring_emitting)			\
 	FatalError("%s: ADVANCE_LP_RING: exceeded allocation %d/%d\n ",	\
-		   __FUNCTION__, pI830->ring_used,			\
-		   pI830->ring_emitting);				\
-    if (pI830->ring_used < pI830->ring_emitting)			\
+		   __FUNCTION__, intel->ring_used,			\
+		   intel->ring_emitting);				\
+    if (intel->ring_used < intel->ring_emitting)			\
 	FatalError("%s: ADVANCE_LP_RING: under-used allocation %d/%d\n ", \
-		   __FUNCTION__, pI830->ring_used,			\
-		   pI830->ring_emitting);				\
-    pI830->ring.tail = pI830->ring_next;				\
-    pI830->ring.space -= pI830->ring_used;				\
-    if (pI830->ring_next & 0x07)					\
+		   __FUNCTION__, intel->ring_used,			\
+		   intel->ring_emitting);				\
+    intel->ring.tail = intel->ring_next;				\
+    intel->ring.space -= intel->ring_used;				\
+    if (intel->ring_next & 0x07)					\
 	FatalError("%s: ADVANCE_LP_RING: "				\
 		   "ring_next (0x%x) isn't on a QWord boundary\n",	\
-		   __FUNCTION__, pI830->ring_next);			\
-    OUTREG(LP_RING + RING_TAIL, pI830->ring_next);			\
-    pI830->ring_emitting = 0;						\
+		   __FUNCTION__, intel->ring_next);			\
+    OUTREG(LP_RING + RING_TAIL, intel->ring_next);			\
+    intel->ring_emitting = 0;						\
 } while (0)
 
 #define BEGIN_LP_RING(n)						\
 do {									\
-    if (pI830->ring_emitting != 0)					\
+    if (intel->ring_emitting != 0)					\
 	FatalError("%s: BEGIN_LP_RING called without closing "		\
 		   "ADVANCE_LP_RING\n", __FUNCTION__);			\
     if ((n) > 2 && (I810_DEBUG&DEBUG_ALWAYS_SYNC))			\
-	i830_wait_ring_idle(pScrn);					\
-    pI830->ring_emitting = (n) * 4;					\
+	i830_wait_ring_idle(scrn);					\
+    intel->ring_emitting = (n) * 4;					\
     if ((n) & 1)							\
-	pI830->ring_emitting += 4;					\
-    if (pI830->ring.space < pI830->ring_emitting)			\
-	WaitRingFunc(pScrn, pI830->ring_emitting, 0);			\
-    pI830->ring_next = pI830->ring.tail;				\
+	intel->ring_emitting += 4;					\
+    if (intel->ring.space < intel->ring_emitting)			\
+	WaitRingFunc(scrn, intel->ring_emitting, 0);			\
+    intel->ring_next = intel->ring.tail;				\
     if (I810_DEBUG & DEBUG_VERBOSE_RING)				\
 	ErrorF( "BEGIN_LP_RING %d in %s\n", n, FUNCTION_NAME);		\
-    pI830->ring_used = 0;						\
+    intel->ring_used = 0;						\
     if ((n) & 1)							\
 	OUT_RING(MI_NOOP);						\
 } while (0)

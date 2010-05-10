@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-intel],
-        2.7.1,
+        2.9.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-intel)
 
@@ -30,20 +30,26 @@ AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(.)
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AM_MAINTAINER_MODE
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], 
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
-DOLT
 AC_PROG_CC
 AM_PROG_CC_C_O
 
-AC_CHECK_PROG(gen4asm, [intel-gen4asm], yes, no)
+PKG_CHECK_MODULES(GEN4ASM, [intel-gen4asm >= 1.0], [gen4asm=yes], [gen4asm=no])
 AM_CONDITIONAL(HAVE_GEN4ASM, test x$gen4asm = xyes)
 
+AC_HEADER_STDC
 AC_CHECK_HEADERS(sys/mman.h)
 AC_CHECK_FUNCS(mprotect)
 
@@ -65,44 +71,36 @@ AC_ARG_ENABLE(video-debug, AC_HELP_STRING([--enable-video-debug],
               [VIDEO_DEBUG="$enableval"],
               [VIDEO_DEBUG=no])
 
-AC_ARG_WITH(xserver-source,AC_HELP_STRING([--with-xserver-source=XSERVER_SOURCE],
-					  [Path to X server source tree]),
-			   [ XSERVER_SOURCE="$withval" ],
-			   [ XSERVER_SOURCE="" ])
-
 AC_ARG_ENABLE(xvmc, AC_HELP_STRING([--disable-xvmc],
-                                  [Disable XvMC support [[default=auto]]]),
+                                  [Disable XvMC support [[default=yes]]]),
               [XVMC="$enableval"],
-              [XVMC=auto])
+              [XVMC=yes])
+
+AC_ARG_ENABLE(kms-only, AC_HELP_STRING([--enable-kms-only],
+                                  [Assume KMS support [[default=no]]]),
+              [KMS_ONLY="$enableval"],
+              [KMS_ONLY=no])
 
 # Checks for extensions
-XORG_DRIVER_CHECK_EXT(XINERAMA, xineramaproto)
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
 XORG_DRIVER_CHECK_EXT(XF86DRI, xextproto x11)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
-
-PKG_CHECK_MODULES(SERVER_1_5, [xorg-server >= 1.5],
-			      [SERVER_1_5=yes], [SERVER_1_5=no])
-
-if test "$SERVER_1_5" = yes; then
-   AC_DEFINE(SERVER_1_5, 1, [Building against server 1.5])
-fi
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.6 xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(DRM, [libdrm >= 2.4.11])
+PKG_CHECK_MODULES(PCIACCESS, [pciaccess >= 0.10])
+PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
+                  HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
+                  HAVE_XEXTPROTO_71="no")
+AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
 
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
-drm_cflags=$(pkg-config --cflags libdrm)
-
-# Checks for libraries.
-
-# Checks for header files.
-AC_HEADER_STDC
 
 save_CFLAGS="$CFLAGS"
-CFLAGS="$XORG_CFLAGS $DRI_CFLAGS $drm_cflags"
-CPPFLAGS="$XORG_CFLAGS $DRI_CFLAGS $drm_cflags"
+CFLAGS="$XORG_CFLAGS $DRI_CFLAGS $DRM_CFLAGS"
+CPPFLAGS="$XORG_CFLAGS $DRI_CFLAGS $DRM_CFLAGS"
 AC_MSG_CHECKING([whether to include DRI support])
 if test x$DRI != xno; then
         AC_CHECK_FILE([${sdkdir}/dri.h],
@@ -123,90 +121,8 @@ if test x$DRI = xauto; then
         fi
 fi
 AC_MSG_RESULT([$DRI])
+CFLAGS="$save_CFLAGS $DEBUGFLAGS"
 
-AC_CHECK_HEADER(xf86Modes.h,[XMODES=yes],[XMODES=no],[#include "xorg-server.h"])
-AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
-	      [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
-	      [#include "xorg-server.h"])
-CFLAGS="$save_CFLAGS"
-
-if test x$XSERVER_LIBPCIACCESS = xyes; then
-	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10])
-else
-	PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.10],
-				       have_libpciaccess=yes,
-				       have_libpciaccess=no)
-fi
-AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
-AM_CONDITIONAL(LIBPCIACCESS,
-	test "x$XSERVER_LIBPCIACCESS" = xyes -o "x$have_libpciaccess" = xyes)
-AM_CONDITIONAL(XMODES, test "x$XMODES" = xno)
-
-if test "x$XSERVER_SOURCE" = x; then
-	if test -d ../../xserver; then
-		XSERVER_SOURCE="`cd ../../xserver && pwd`"
-	fi
-fi
-	
-if test -d "$XSERVER_SOURCE"; then
-	case "$XSERVER_SOURCE" in
-	/*)
-		;;
-	*)
-		XSERVER_SOURCE="`cd $XSERVER_SOURCE && pwd`"
-		;;
-	esac
-	if test -f $srcdir/src/modes/xf86Modes.h; then
-		:
-	else
-		ln -sf $XSERVER_SOURCE/hw/xfree86/modes $srcdir/src/modes
-	fi
-	
-	if test -f $srcdir/src/parser/xf86Parser.h; then
-		:
-	else
-		ln -sf $XSERVER_SOURCE/hw/xfree86/parser $srcdir/src/parser
-	fi
-fi
-
-if test "x$XMODES" = xyes; then
-	AC_MSG_NOTICE([X server has new mode code])
-	AC_DEFINE(XMODES, 1,[X server has built-in mode code])
-	XMODES_CFLAGS=
-else
-	if test -f $srcdir/src/modes/xf86Modes.h -a -f $srcdir/src/parser/xf86Parser.h; then
-		AC_MSG_NOTICE([X server is missing new mode code, using local copy])
-	else
-		AC_MSG_ERROR([Must have X server >= 1.3 source tree for mode setting code. Please specify --with-xserver-source])
-	fi
-	XMODES_CFLAGS='-DXF86_MODES_RENAME -I$(top_srcdir)/src -I$(top_srcdir)/src/modes -I$(top_srcdir)/src/parser'
-fi
-
-AC_SUBST([XMODES_CFLAGS])
-
-SAVE_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-
-AC_CHECK_DECL(xf86RotateFreeShadow,
-	      [AC_DEFINE(HAVE_FREE_SHADOW, 1, [have new FreeShadow API])],
-	      [],
-	      [#include <xorg-server.h>
-	       #include <windowstr.h>
-	       #include <xf86Crtc.h>])
-	     
-CPPFLAGS="$SAVE_CPPFLAGS"
-
-dnl Use lots of warning flags with GCC
-
-WARN_CFLAGS=""
-
-if test "x$GCC" = "xyes"; then
-	WARN_CFLAGS="-Wall -Wpointer-arith -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -fno-strict-aliasing"
-fi
-
-PKG_CHECK_MODULES(DRM, [libdrm >= 2.4.6])
 AM_CONDITIONAL(DRI, test x$DRI = xyes)
 if test "$DRI" = yes; then
         PKG_CHECK_MODULES(DRI, [xf86driproto glproto])
@@ -214,48 +130,31 @@ if test "$DRI" = yes; then
         AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
 fi
 
-dnl Server 1.5's set_mode_major required for DRM_MODE.
-PKG_CHECK_MODULES(DRM_MODE, [xorg-server >= 1.5],
-		 [DRM_MODE=yes], [DRM_MODE=no])
-if test "x$DRM_MODE" = xyes; then
-	AC_DEFINE(XF86DRM_MODE,1,[DRM kernel modesetting])
-fi
-
 AM_CONDITIONAL(VIDEO_DEBUG, test x$VIDEO_DEBUG = xyes)
 if test "$VIDEO_DEBUG" = yes; then
 	AC_DEFINE(VIDEO_DEBUG,1,[Enable debug support])
 fi
 
-if test "$XVMC" = auto; then
-	XVMC="$DRI"
-fi
-if test "$XVMC" = yes && test "$DRI" = no; then
-	AC_MSG_ERROR([XvMC can't be enabled without DRI])
-fi
 if test "$XVMC" = yes; then
-	PKG_CHECK_MODULES(XVMCLIB, [xvmc], [XVMC=yes], [XVMC=no])
-	PKG_CHECK_MODULES(XEXT, [xext])
+	PKG_CHECK_MODULES(XVMCLIB, [xvmc xext xfixes dri2proto], [XVMC=yes], [XVMC=no])
 fi
 AC_MSG_CHECKING([whether to include XvMC support])
 AC_MSG_RESULT([$XVMC])
 AM_CONDITIONAL(XVMC, test x$XVMC = xyes)
 if test "$XVMC" = yes; then
 	AC_DEFINE(ENABLE_XVMC,1,[Enable XvMC support])
-    	AC_SUBST([XVMCLIB_CFLAGS])
+fi
+
+AM_CONDITIONAL(KMS_ONLY, test x$KMS_ONLY = xyes)
+if test "$KMS_ONLY" = yes; then
+	AC_DEFINE(KMS_ONLY,1,[Assume KMS support])
 fi
 
 AC_SUBST([DRI_CFLAGS])
-AC_SUBST([XORG_CFLAGS])
-AC_SUBST([WARN_CFLAGS])
-AC_SUBST([moduledir])
 
 DRIVER_NAME=intel
 AC_SUBST([DRIVER_NAME])
-
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.1.3)
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
+AC_SUBST([moduledir])
 
 XORG_CHECK_LINUXDOC
 
@@ -264,6 +163,9 @@ AC_OUTPUT([
 	uxa/Makefile
 	src/Makefile
 	src/xvmc/Makefile
+	src/xvmc/shader/Makefile
+	src/xvmc/shader/mc/Makefile
+	src/xvmc/shader/vld/Makefile
 	src/bios_reader/Makefile
 	src/ch7017/Makefile
 	src/ch7xxx/Makefile
@@ -272,4 +174,5 @@ AC_OUTPUT([
 	src/sil164/Makefile
 	src/tfp410/Makefile
 	man/Makefile
+	src/render_program/Makefile
 ])

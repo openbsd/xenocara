@@ -1,0 +1,133 @@
+/* GRF allocation:
+   g1~g30: constant buffer
+           g1~g2:intra IQ matrix in UB format
+           g3~g4:non intra IQ matrix in UB format
+           g5~g20:IDCT table
+   g32~g55:DCT data before IQ
+   g56~g79:DCT data after IQ
+   g84~g107: IDCT data after idct
+   g82:    thread payload backup
+   g126.8:   ip before jump to the lib
+*/
+jmpi MOTION_FRAME_Y;
+jmpi MOTION_FRAME_UV;
+jmpi MOTION_FIELD_Y;
+jmpi MOTION_FIELD_UV;
+jmpi ADD_IDCT;
+
+mov (16) g84.0<1>W g33.0<16,16,1>W {align1};
+mov (16) g85.0<1>W g34.0<16,16,1>W {align1};
+mov (16) g86.0<1>W g35.0<16,16,1>W {align1};
+mov (16) g87.0<1>W g36.0<16,16,1>W {align1};
+mov (16) g88.0<1>W g37.0<16,16,1>W {align1};
+mov (16) g89.0<1>W g38.0<16,16,1>W {align1};
+mov (16) g90.0<1>W g39.0<16,16,1>W {align1};
+mov (16) g91.0<1>W g40.0<16,16,1>W {align1};
+mov (16) g92.0<1>W g41.0<16,16,1>W {align1};
+mov (16) g93.0<1>W g42.0<16,16,1>W {align1};
+mov (16) g94.0<1>W g43.0<16,16,1>W {align1};
+mov (16) g95.0<1>W g44.0<16,16,1>W {align1};
+mov (16) g96.0<1>W g45.0<16,16,1>W {align1};
+mov (16) g97.0<1>W g46.0<16,16,1>W {align1};
+mov (16) g98.0<1>W g47.0<16,16,1>W {align1};
+mov (16) g99.0<1>W g48.0<16,16,1>W {align1};
+
+mov (16) g100.0<1>W g49.0<16,16,1>W {align1};
+mov (16) g101.0<1>W g50.0<16,16,1>W {align1};
+mov (16) g102.0<1>W g51.0<16,16,1>W {align1};
+mov (16) g103.0<1>W g52.0<16,16,1>W {align1};
+mov (16) g104.0<1>W g53.0<16,16,1>W {align1};
+mov (16) g105.0<1>W g54.0<16,16,1>W {align1};
+mov (16) g106.0<1>W g55.0<16,16,1>W {align1};
+mov (16) g107.0<1>W g56.0<16,16,1>W {align1};
+
+//Y0
+and.nz (1) null g82.12<1,1,1>UW 0x20UW {align1};
+(f0) jmpi block_y1;
+mov (8) g84.0<1>W 0W {align1};
+mov (8) g85.0<1>W 0W {align1};
+mov (8) g86.0<1>W 0W {align1};
+mov (8) g87.0<1>W 0W {align1};
+mov (8) g88.0<1>W 0W {align1};
+mov (8) g89.0<1>W 0W {align1};
+mov (8) g90.0<1>W 0W {align1};
+mov (8) g91.0<1>W 0W {align1};
+
+//Y1
+block_y1:
+and.nz (1) null g82.12<1,1,1>UW 0x10UW {align1};
+(f0) jmpi block_y2;
+mov (8) g84.16<1>W 0W {align1};
+mov (8) g85.16<1>W 0W {align1};
+mov (8) g86.16<1>W 0W {align1};
+mov (8) g87.16<1>W 0W {align1};
+mov (8) g88.16<1>W 0W {align1};
+mov (8) g89.16<1>W 0W {align1};
+mov (8) g90.16<1>W 0W {align1};
+mov (8) g91.16<1>W 0W {align1};
+
+//Y2
+block_y2:
+and.nz (1) null g82.12<1,1,1>UW 0x08UW {align1};
+(f0) jmpi block_y3;
+mov (8) g92.0<1>W 0W {align1};
+mov (8) g93.0<1>W 0W {align1};
+mov (8) g94.0<1>W 0W {align1};
+mov (8) g95.0<1>W 0W {align1};
+mov (8) g96.0<1>W 0W {align1};
+mov (8) g97.0<1>W 0W {align1};
+mov (8) g98.0<1>W 0W {align1};
+mov (8) g99.0<1>W 0W {align1};
+
+//Y3
+block_y3:
+and.nz (1) null g82.12<1,1,1>UW 0x04UW {align1};
+(f0) jmpi block_u;
+mov (8) g92.16<1>W 0W {align1};
+mov (8) g93.16<1>W 0W {align1};
+mov (8) g94.16<1>W 0W {align1};
+mov (8) g95.16<1>W 0W {align1};
+mov (8) g96.16<1>W 0W {align1};
+mov (8) g97.16<1>W 0W {align1};
+mov (8) g98.16<1>W 0W {align1};
+mov (8) g99.16<1>W 0W {align1};
+
+//U
+block_u:
+and.nz (1) null g82.12<1,1,1>UW 0x02UW {align1};
+(f0) jmpi block_v;
+mov (16) g100.0<1>W 0W {align1};
+mov (16) g101.0<1>W 0W {align1};
+mov (16) g102.0<1>W 0W {align1};
+mov (16) g103.0<1>W 0W {align1};
+
+//V
+block_v:
+and.nz (1) null g82.12<1,1,1>UW 0x01UW {align1};
+(f0) jmpi out;
+mov (16) g104.0<1>W 0W {align1};
+mov (16) g105.0<1>W 0W {align1};
+mov (16) g106.0<1>W 0W {align1};
+mov (16) g107.0<1>W 0W {align1};
+
+out:
+add (1) ip g126.8<1,1,1>UD 0x20UD {align1};            //jump back
+
+MOTION_FRAME_Y:
+include(`motion_frame_y_igd.g4i')
+add (1) ip g126.8<1,1,1>UD 0x20UD {align1};            //jump back
+
+MOTION_FRAME_UV:
+include(`motion_frame_uv_igd.g4i')
+add (1) ip g126.8<1,1,1>UD 0x20UD {align1};            //jump back
+
+MOTION_FIELD_Y:
+include(`motion_field_y_igd.g4i')
+add (1) ip g126.8<1,1,1>UD 0x20UD {align1};            //jump back
+
+MOTION_FIELD_UV:
+include(`motion_field_uv_igd.g4i')
+add (1) ip g126.8<1,1,1>UD 0x20UD {align1};            //jump back
+
+ADD_IDCT:
+include(`addidct_igd.g4i')

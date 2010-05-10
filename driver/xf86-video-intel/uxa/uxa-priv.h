@@ -42,8 +42,8 @@
 #define NEED_EVENTS
 #include <X11/Xproto.h>
 #ifdef MITSHM
-#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
-#include <X11/extensions/shmproto.h>
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/shm.h>
 #else
 #define _XSHM_SERVER_
 #include <X11/extensions/shmstr.h>
@@ -68,6 +68,15 @@
 #endif
 #include "damage.h"
 
+/* Provide substitutes for gcc's __FUNCTION__ on other compilers */
+#if !defined(__GNUC__) && !defined(__FUNCTION__)
+# if defined(__STDC__) && (__STDC_VERSION__>=199901L)	/* C99 */
+#  define __FUNCTION__ __func__
+# else
+#  define __FUNCTION__ ""
+# endif
+#endif
+
 /* 1.6 and earlier server compat */
 #ifndef miGetCompositeClip
 #define miCopyRegion fbCopyRegion
@@ -85,8 +94,7 @@ if (uxa_get_screen(screen)->fallback_debug) {			\
 	ErrorF x;						\
 }
 
-char
-uxa_drawable_location(DrawablePtr pDrawable);
+char uxa_drawable_location(DrawablePtr pDrawable);
 
 #if DEBUG_PIXMAP
 #define DBG_PIXMAP(a) ErrorF a
@@ -95,68 +103,76 @@ uxa_drawable_location(DrawablePtr pDrawable);
 #endif
 
 typedef struct {
-    unsigned char sha1[20];
+	unsigned char sha1[20];
 } uxa_cached_glyph_t;
 
 typedef struct {
-    /* The identity of the cache, statically configured at initialization */
-    unsigned int format;
-    int glyphWidth;
-    int glyphHeight;
+	/* The identity of the cache, statically configured at initialization */
+	unsigned int format;
+	int glyphWidth;
+	int glyphHeight;
 
-    int size; /* Size of cache; eventually this should be dynamically determined */
+	/* Size of cache; eventually this should be dynamically determined */
+	int size;
 
-    /* Hash table mapping from glyph sha1 to position in the glyph; we use
-     * open addressing with a hash table size determined based on size and large
-     * enough so that we always have a good amount of free space, so we can
-     * use linear probing. (Linear probing is preferrable to double hashing
-     * here because it allows us to easily remove entries.)
-     */
-    int *hashEntries;
-    int hashSize;
-    
-    uxa_cached_glyph_t *glyphs;
-    int glyphCount; /* Current number of glyphs */
-    
-    PicturePtr picture;   /* Where the glyphs of the cache are stored */
-    int yOffset;          /* y location within the picture where the cache starts */
-    int columns;          /* Number of columns the glyphs are layed out in */
-    int evictionPosition; /* Next random position to evict a glyph */
+	/* Hash table mapping from glyph sha1 to position in the glyph; we use
+	 * open addressing with a hash table size determined based on size and large
+	 * enough so that we always have a good amount of free space, so we can
+	 * use linear probing. (Linear probing is preferrable to double hashing
+	 * here because it allows us to easily remove entries.)
+	 */
+	int *hashEntries;
+	int hashSize;
+
+	uxa_cached_glyph_t *glyphs;
+	int glyphCount;		/* Current number of glyphs */
+
+	PicturePtr picture;	/* Where the glyphs of the cache are stored */
+	int yOffset;		/* y location within the picture where the cache starts */
+	int columns;		/* Number of columns the glyphs are layed out in */
+	int evictionPosition;	/* Next random position to evict a glyph */
 } uxa_glyph_cache_t;
 
 #define UXA_NUM_GLYPH_CACHES 4
 
-typedef void (*EnableDisableFBAccessProcPtr)(int, Bool);
 typedef struct {
-    uxa_driver_t		*info;
-    CreateGCProcPtr 		 SavedCreateGC;
-    CloseScreenProcPtr 		 SavedCloseScreen;
-    GetImageProcPtr 		 SavedGetImage;
-    GetSpansProcPtr 		 SavedGetSpans;
-#ifndef SERVER_1_5
-    PaintWindowBackgroundProcPtr SavedPaintWindowBackground;
-    PaintWindowBorderProcPtr	 SavedPaintWindowBorder;
-#endif
-    CreatePixmapProcPtr 	 SavedCreatePixmap;
-    DestroyPixmapProcPtr 	 SavedDestroyPixmap;
-    CopyWindowProcPtr 		 SavedCopyWindow;
-    ChangeWindowAttributesProcPtr SavedChangeWindowAttributes;
-    BitmapToRegionProcPtr        SavedBitmapToRegion;
+	uint32_t color;
+	PicturePtr picture;
+} uxa_solid_cache_t;
+
+#define UXA_NUM_SOLID_CACHE 16
+
+typedef void (*EnableDisableFBAccessProcPtr) (int, Bool);
+typedef struct {
+	uxa_driver_t *info;
+	CreateGCProcPtr SavedCreateGC;
+	CloseScreenProcPtr SavedCloseScreen;
+	GetImageProcPtr SavedGetImage;
+	GetSpansProcPtr SavedGetSpans;
+	CreatePixmapProcPtr SavedCreatePixmap;
+	DestroyPixmapProcPtr SavedDestroyPixmap;
+	CopyWindowProcPtr SavedCopyWindow;
+	ChangeWindowAttributesProcPtr SavedChangeWindowAttributes;
+	BitmapToRegionProcPtr SavedBitmapToRegion;
 #ifdef RENDER
-    CompositeProcPtr             SavedComposite;
-    TrianglesProcPtr		 SavedTriangles;
-    GlyphsProcPtr                SavedGlyphs;
-    TrapezoidsProcPtr            SavedTrapezoids;
-    AddTrapsProcPtr		 SavedAddTraps;
+	CompositeProcPtr SavedComposite;
+	TrianglesProcPtr SavedTriangles;
+	GlyphsProcPtr SavedGlyphs;
+	TrapezoidsProcPtr SavedTrapezoids;
+	AddTrapsProcPtr SavedAddTraps;
 #endif
-    EnableDisableFBAccessProcPtr SavedEnableDisableFBAccess;
+	EnableDisableFBAccessProcPtr SavedEnableDisableFBAccess;
 
-    Bool			 fallback_debug;
-    Bool			 swappedOut;
-    unsigned			 disableFbCount;
-    unsigned			 offScreenCounter;
+	Bool fallback_debug;
+	Bool swappedOut;
+	unsigned disableFbCount;
+	unsigned offScreenCounter;
 
-    uxa_glyph_cache_t             glyphCaches[UXA_NUM_GLYPH_CACHES];
+	uxa_glyph_cache_t glyphCaches[UXA_NUM_GLYPH_CACHES];
+
+	PicturePtr solid_clear, solid_black, solid_white;
+	uxa_solid_cache_t solid_cache[UXA_NUM_SOLID_CACHE];
+	int solid_cache_size;
 } uxa_screen_t;
 
 /*
@@ -172,15 +188,10 @@ typedef struct {
 #endif
 
 extern int uxa_screen_index;
-static inline uxa_screen_t *
-uxa_get_screen(ScreenPtr screen)
+static inline uxa_screen_t *uxa_get_screen(ScreenPtr screen)
 {
-#ifdef SERVER_1_5
-    return (uxa_screen_t *)dixLookupPrivate(&screen->devPrivates,
-					    &uxa_screen_index);
-#else
-    return screen->devPrivates[uxa_screen_index].ptr;
-#endif
+	return (uxa_screen_t *) dixLookupPrivate(&screen->devPrivates,
+						 &uxa_screen_index);
 }
 
 /** Align an offset to an arbitrary alignment */
@@ -190,180 +201,140 @@ uxa_get_screen(ScreenPtr screen)
 #define UXA_ALIGN2(offset, align) (((offset) + (align) - 1) & ~((align) - 1))
 
 typedef struct {
-    INT16 xSrc;
-    INT16 ySrc;
-    INT16 xDst;
-    INT16 yDst;
-    INT16 width;
-    INT16 height;
+	INT16 xSrc;
+	INT16 ySrc;
+	INT16 xDst;
+	INT16 yDst;
+	INT16 width;
+	INT16 height;
 } uxa_composite_rect_t;
 
 /**
  * exaDDXDriverInit must be implemented by the DDX using EXA, and is the place
  * to set EXA options or hook in screen functions to handle using EXA as the AA.
   */
-void exaDDXDriverInit (ScreenPtr pScreen);
+void exaDDXDriverInit(ScreenPtr pScreen);
 
-Bool
-uxa_prepare_access_window(WindowPtr pWin);
+Bool uxa_prepare_access_window(WindowPtr pWin);
 
-void
-uxa_finish_access_window(WindowPtr pWin);
+void uxa_finish_access_window(WindowPtr pWin);
 
 /* uxa-unaccel.c */
-Bool
-uxa_prepare_access_gc(GCPtr pGC);
+Bool uxa_prepare_access_gc(GCPtr pGC);
+
+void uxa_finish_access_gc(GCPtr pGC);
 
 void
-uxa_finish_access_gc(GCPtr pGC);
+uxa_check_fill_spans(DrawablePtr pDrawable, GCPtr pGC, int nspans,
+		     DDXPointPtr ppt, int *pwidth, int fSorted);
 
 void
-uxa_check_fill_spans  (DrawablePtr pDrawable, GCPtr pGC, int nspans,
-		   DDXPointPtr ppt, int *pwidth, int fSorted);
+uxa_check_set_spans(DrawablePtr pDrawable, GCPtr pGC, char *psrc,
+		    DDXPointPtr ppt, int *pwidth, int nspans, int fSorted);
 
 void
-uxa_check_set_spans (DrawablePtr pDrawable, GCPtr pGC, char *psrc,
-		 DDXPointPtr ppt, int *pwidth, int nspans, int fSorted);
-
-void
-uxa_check_put_image (DrawablePtr pDrawable, GCPtr pGC, int depth,
-		 int x, int y, int w, int h, int leftPad, int format,
-		 char *bits);
+uxa_check_put_image(DrawablePtr pDrawable, GCPtr pGC, int depth,
+		    int x, int y, int w, int h, int leftPad, int format,
+		    char *bits);
 
 RegionPtr
-uxa_check_copy_area (DrawablePtr pSrc, DrawablePtr pDst, GCPtr pGC,
-		 int srcx, int srcy, int w, int h, int dstx, int dsty);
+uxa_check_copy_area(DrawablePtr pSrc, DrawablePtr pDst, GCPtr pGC,
+		    int srcx, int srcy, int w, int h, int dstx, int dsty);
 
 RegionPtr
-uxa_check_copy_plane (DrawablePtr pSrc, DrawablePtr pDst, GCPtr pGC,
-		  int srcx, int srcy, int w, int h, int dstx, int dsty,
-		  unsigned long bitPlane);
+uxa_check_copy_plane(DrawablePtr pSrc, DrawablePtr pDst, GCPtr pGC,
+		     int srcx, int srcy, int w, int h, int dstx, int dsty,
+		     unsigned long bitPlane);
 
 void
-uxa_check_poly_point (DrawablePtr pDrawable, GCPtr pGC, int mode, int npt,
-		  DDXPointPtr pptInit);
+uxa_check_poly_point(DrawablePtr pDrawable, GCPtr pGC, int mode, int npt,
+		     DDXPointPtr pptInit);
 
 void
-uxa_check_poly_lines (DrawablePtr pDrawable, GCPtr pGC,
-		  int mode, int npt, DDXPointPtr ppt);
+uxa_check_poly_lines(DrawablePtr pDrawable, GCPtr pGC,
+		     int mode, int npt, DDXPointPtr ppt);
 
 void
-uxa_check_poly_segment (DrawablePtr pDrawable, GCPtr pGC,
-		    int nsegInit, xSegment *pSegInit);
+uxa_check_poly_segment(DrawablePtr pDrawable, GCPtr pGC,
+		       int nsegInit, xSegment * pSegInit);
 
 void
-uxa_check_poly_arc (DrawablePtr pDrawable, GCPtr pGC,
-		int narcs, xArc *pArcs);
+uxa_check_poly_arc(DrawablePtr pDrawable, GCPtr pGC, int narcs, xArc * pArcs);
 
 void
-uxa_check_poly_fill_rect (DrawablePtr pDrawable, GCPtr pGC,
-		     int nrect, xRectangle *prect);
+uxa_check_poly_fill_rect(DrawablePtr pDrawable, GCPtr pGC,
+			 int nrect, xRectangle * prect);
 
 void
-uxa_check_image_glyph_blt (DrawablePtr pDrawable, GCPtr pGC,
-		      int x, int y, unsigned int nglyph,
-		      CharInfoPtr *ppci, pointer pglyphBase);
+uxa_check_image_glyph_blt(DrawablePtr pDrawable, GCPtr pGC,
+			  int x, int y, unsigned int nglyph,
+			  CharInfoPtr * ppci, pointer pglyphBase);
 
 void
-uxa_check_poly_glyph_blt (DrawablePtr pDrawable, GCPtr pGC,
-		     int x, int y, unsigned int nglyph,
-		     CharInfoPtr *ppci, pointer pglyphBase);
+uxa_check_poly_glyph_blt(DrawablePtr pDrawable, GCPtr pGC,
+			 int x, int y, unsigned int nglyph,
+			 CharInfoPtr * ppci, pointer pglyphBase);
 
 void
-uxa_check_push_pixels (GCPtr pGC, PixmapPtr pBitmap,
-		   DrawablePtr pDrawable,
-		   int w, int h, int x, int y);
+uxa_check_push_pixels(GCPtr pGC, PixmapPtr pBitmap,
+		      DrawablePtr pDrawable, int w, int h, int x, int y);
 
 void
-uxa_check_get_spans (DrawablePtr pDrawable,
-		 int wMax,
-		 DDXPointPtr ppt,
-		 int *pwidth,
-		 int nspans,
-		 char *pdstStart);
+uxa_check_get_spans(DrawablePtr pDrawable,
+		    int wMax,
+		    DDXPointPtr ppt, int *pwidth, int nspans, char *pdstStart);
 
-void uxa_check_paint_window (WindowPtr pWin, RegionPtr pRegion, int what);
+void uxa_check_paint_window(WindowPtr pWin, RegionPtr pRegion, int what);
 
 void
-uxa_check_add_traps (PicturePtr	pPicture,
-		  INT16		x_off,
-		  INT16		y_off,
-		  int		ntrap,
-		  xTrap		*traps);
+uxa_check_add_traps(PicturePtr pPicture,
+		    INT16 x_off, INT16 y_off, int ntrap, xTrap * traps);
 
 /* uxa-accel.c */
 
 static _X_INLINE Bool
 uxa_gc_reads_destination(DrawablePtr pDrawable, unsigned long planemask,
-		      unsigned int fillStyle, unsigned char alu)
+			 unsigned int fillStyle, unsigned char alu)
 {
-    return ((alu != GXcopy && alu != GXclear &&alu != GXset &&
-	     alu != GXcopyInverted) || fillStyle == FillStippled ||
-	    !UXA_PM_IS_SOLID(pDrawable, planemask));
+	return ((alu != GXcopy && alu != GXclear && alu != GXset &&
+		 alu != GXcopyInverted) || fillStyle == FillStippled ||
+		!UXA_PM_IS_SOLID(pDrawable, planemask));
 }
 
-void
-uxa_copy_window(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc);
+void uxa_copy_window(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc);
 
 Bool
-uxa_fill_region_tiled (DrawablePtr	pDrawable, RegionPtr pRegion, PixmapPtr pTile,
-		    DDXPointPtr pPatOrg, CARD32 planemask, CARD32 alu);
+uxa_fill_region_tiled(DrawablePtr pDrawable, RegionPtr pRegion, PixmapPtr pTile,
+		      DDXPointPtr pPatOrg, CARD32 planemask, CARD32 alu);
 
 void
-uxa_shm_put_image(DrawablePtr pDrawable, GCPtr pGC, int depth, unsigned int format,
-	       int w, int h, int sx, int sy, int sw, int sh, int dx, int dy,
-	       char *data);
+uxa_shm_put_image(DrawablePtr pDrawable, GCPtr pGC, int depth,
+		  unsigned int format, int w, int h, int sx, int sy, int sw,
+		  int sh, int dx, int dy, char *data);
 
 void uxa_paint_window(WindowPtr pWin, RegionPtr pRegion, int what);
 
 void
-uxa_get_image (DrawablePtr pDrawable, int x, int y, int w, int h,
-	     unsigned int format, unsigned long planeMask, char *d);
+uxa_get_image(DrawablePtr pDrawable, int x, int y, int w, int h,
+	      unsigned int format, unsigned long planeMask, char *d);
 
 extern const GCOps uxa_ops;
 
 #ifdef MITSHM
-
-#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
-#define XSHM_PUT_IMAGE_ARGS \
-    DrawablePtr		/* dst */, \
-    GCPtr		/* pGC */, \
-    int			/* depth */, \
-    unsigned int	/* format */, \
-    int			/* w */, \
-    int			/* h */, \
-    int			/* sx */, \
-    int			/* sy */, \
-    int			/* sw */, \
-    int			/* sh */, \
-    int			/* dx */, \
-    int			/* dy */, \
-    char *		/* data */
-
-#define XSHM_CREATE_PIXMAP_ARGS \
-    ScreenPtr	/* pScreen */, \
-    int		/* width */, \
-    int		/* height */, \
-    int		/* depth */, \
-    char *	/* addr */
-
-typedef struct _ShmFuncs {
-    PixmapPtr	(* CreatePixmap)(XSHM_CREATE_PIXMAP_ARGS);
-    void	(* PutImage)(XSHM_PUT_IMAGE_ARGS);
-} ShmFuncs, *ShmFuncsPtr;
-
-#endif
-extern ShmFuncs uxa_shm_funcs;
-
 /* XXX these come from shmint.h, which isn't exported by the server */
-void
-ShmRegisterFuncs(ScreenPtr pScreen, ShmFuncsPtr funcs);
 
-void
-ShmSetPixmapFormat(ScreenPtr pScreen, int format);
+#ifdef HAVE_XEXTPROTO_71
+#include "shmint.h"
+#else
 
-void
-fbShmPutImage(XSHM_PUT_IMAGE_ARGS);
+void ShmRegisterFuncs(ScreenPtr pScreen, ShmFuncsPtr funcs);
+
+void ShmSetPixmapFormat(ScreenPtr pScreen, int format);
+
+void fbShmPutImage(XSHM_PUT_IMAGE_ARGS);
+#endif
+
+extern ShmFuncs uxa_shm_funcs;
 
 #endif
 
@@ -371,132 +342,101 @@ fbShmPutImage(XSHM_PUT_IMAGE_ARGS);
 
 /* XXX these are in fbpict.h, which is not installed */
 void
-fbComposite (CARD8      op,
-	     PicturePtr pSrc,
-	     PicturePtr pMask,
-	     PicturePtr pDst,
-	     INT16      xSrc,
-	     INT16      ySrc,
-	     INT16      xMask,
-	     INT16      yMask,
-	     INT16      xDst,
-	     INT16      yDst,
-	     CARD16     width,
-	     CARD16     height);
+fbComposite(CARD8 op,
+	    PicturePtr pSrc,
+	    PicturePtr pMask,
+	    PicturePtr pDst,
+	    INT16 xSrc,
+	    INT16 ySrc,
+	    INT16 xMask,
+	    INT16 yMask, INT16 xDst, INT16 yDst, CARD16 width, CARD16 height);
 
 void
-fbAddTraps (PicturePtr	pPicture,
-	    INT16	xOff,
-	    INT16	yOff,
-	    int		ntrap,
-	    xTrap	*traps);
+fbAddTraps(PicturePtr pPicture,
+	   INT16 xOff, INT16 yOff, int ntrap, xTrap * traps);
 
 void
-uxa_check_composite (CARD8      op,
-		  PicturePtr pSrc,
-		  PicturePtr pMask,
-		  PicturePtr pDst,
-		  INT16      xSrc,
-		  INT16      ySrc,
-		  INT16      xMask,
-		  INT16      yMask,
-		  INT16      xDst,
-		  INT16      yDst,
-		  CARD16     width,
-		  CARD16     height);
+uxa_check_composite(CARD8 op,
+		    PicturePtr pSrc,
+		    PicturePtr pMask,
+		    PicturePtr pDst,
+		    INT16 xSrc,
+		    INT16 ySrc,
+		    INT16 xMask,
+		    INT16 yMask,
+		    INT16 xDst, INT16 yDst, CARD16 width, CARD16 height);
 #endif
 
 /* uxa.c */
-Bool
-uxa_prepare_access(DrawablePtr pDrawable, uxa_access_t access);
+Bool uxa_prepare_access(DrawablePtr pDrawable, uxa_access_t access);
+
+void uxa_finish_access(DrawablePtr pDrawable);
 
 void
-uxa_finish_access(DrawablePtr pDrawable);
+uxa_get_drawable_deltas(DrawablePtr pDrawable, PixmapPtr pPixmap,
+			int *xp, int *yp);
 
-void
-uxa_get_drawable_deltas (DrawablePtr pDrawable, PixmapPtr pPixmap,
-		      int *xp, int *yp);
+Bool uxa_drawable_is_offscreen(DrawablePtr pDrawable);
 
-Bool
-uxa_drawable_is_offscreen (DrawablePtr pDrawable);
+Bool uxa_pixmap_is_offscreen(PixmapPtr p);
 
-Bool
-uxa_pixmap_is_offscreen(PixmapPtr p);
+PixmapPtr uxa_get_offscreen_pixmap(DrawablePtr pDrawable, int *xp, int *yp);
 
-PixmapPtr
-uxa_get_offscreen_pixmap (DrawablePtr pDrawable, int *xp, int *yp);
-
-PixmapPtr
-uxa_get_drawable_pixmap(DrawablePtr pDrawable);
+PixmapPtr uxa_get_drawable_pixmap(DrawablePtr pDrawable);
 
 RegionPtr
 uxa_copy_area(DrawablePtr pSrcDrawable, DrawablePtr pDstDrawable, GCPtr pGC,
-	    int srcx, int srcy, int width, int height, int dstx, int dsty);
+	      int srcx, int srcy, int width, int height, int dstx, int dsty);
 
 void
-uxa_copy_n_to_n (DrawablePtr    pSrcDrawable,
-	     DrawablePtr    pDstDrawable,
-	     GCPtr	    pGC,
-	     BoxPtr	    pbox,
-	     int	    nbox,
-	     int	    dx,
-	     int	    dy,
-	     Bool	    reverse,
-	     Bool	    upsidedown,
-	     Pixel	    bitplane,
-	     void	    *closure);
+uxa_copy_n_to_n(DrawablePtr pSrcDrawable,
+		DrawablePtr pDstDrawable,
+		GCPtr pGC,
+		BoxPtr pbox,
+		int nbox,
+		int dx,
+		int dy,
+		Bool reverse, Bool upsidedown, Pixel bitplane, void *closure);
 
 /* uxa_render.c */
-Bool
-uxa_op_reads_destination (CARD8 op);
+Bool uxa_op_reads_destination(CARD8 op);
 
 void
-uxa_composite(CARD8	op,
-	     PicturePtr pSrc,
-	     PicturePtr pMask,
-	     PicturePtr pDst,
-	     INT16	xSrc,
-	     INT16	ySrc,
-	     INT16	xMask,
-	     INT16	yMask,
-	     INT16	xDst,
-	     INT16	yDst,
-	     CARD16	width,
-	     CARD16	height);
+uxa_composite(CARD8 op,
+	      PicturePtr pSrc,
+	      PicturePtr pMask,
+	      PicturePtr pDst,
+	      INT16 xSrc,
+	      INT16 ySrc,
+	      INT16 xMask,
+	      INT16 yMask, INT16 xDst, INT16 yDst, CARD16 width, CARD16 height);
 
 void
-uxa_composite_rects(CARD8	            op,
-		    PicturePtr		    pSrc,
-		    PicturePtr		    pDst,
-		    int			    nrect,
-		    uxa_composite_rect_t    *rects);
+uxa_composite_rects(CARD8 op,
+		    PicturePtr pSrc,
+		    PicturePtr pDst, int nrect, uxa_composite_rect_t * rects);
 
 void
-uxa_trapezoids (CARD8 op, PicturePtr pSrc, PicturePtr pDst,
-		PictFormatPtr maskFormat, INT16 xSrc, INT16 ySrc,
-		int ntrap, xTrapezoid *traps);
-
-void
-uxa_triangles (CARD8 op, PicturePtr pSrc, PicturePtr pDst,
+uxa_trapezoids(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
 	       PictFormatPtr maskFormat, INT16 xSrc, INT16 ySrc,
-	       int ntri, xTriangle *tris);
+	       int ntrap, xTrapezoid * traps);
+
+void
+uxa_triangles(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
+	      PictFormatPtr maskFormat, INT16 xSrc, INT16 ySrc,
+	      int ntri, xTriangle * tris);
 
 /* uxa_glyph.c */
-void
-uxa_glyphs_init(ScreenPtr pScreen);
+void uxa_glyphs_init(ScreenPtr pScreen);
+
+void uxa_glyphs_fini(ScreenPtr pScreen);
 
 void
-uxa_glyphs_fini (ScreenPtr pScreen);
-
-void
-uxa_glyphs (CARD8	op,
-	  PicturePtr	pSrc,
-	  PicturePtr	pDst,
-	  PictFormatPtr	maskFormat,
-	  INT16		xSrc,
-	  INT16		ySrc,
-	  int		nlist,
-	  GlyphListPtr	list,
-	  GlyphPtr	*glyphs);
+uxa_glyphs(CARD8 op,
+	   PicturePtr pSrc,
+	   PicturePtr pDst,
+	   PictFormatPtr maskFormat,
+	   INT16 xSrc,
+	   INT16 ySrc, int nlist, GlyphListPtr list, GlyphPtr * glyphs);
 
 #endif /* UXAPRIV_H */

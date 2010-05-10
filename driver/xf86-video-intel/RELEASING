@@ -19,7 +19,8 @@ The process for releasing a new tarball is as follows:
 3. Update your module version (usually found in configure.ac)
 
 	$ vi configure.ac # bump version
-        $ git push origin # make sure you're on the release branch
+	$ git commit
+	$ git push origin # make sure you're on the release branch
 
 4. Verify your module builds
 
@@ -37,7 +38,7 @@ The process for releasing a new tarball is as follows:
 
 	At the very least, add the release notes from the NEWS file.
 
-	The message is generated as xf86-video-inte-<version>.announce
+	The message is generated as xf86-video-intel-<version>.announce
 
 	For snapshots and release candidates, mail to:
 

@@ -1,0 +1,30 @@
+/* GRF allocation:
+   g1~g30: constant buffer
+           g1~g2:intra IQ matrix
+           g3~g4:non intra IQ matrix
+           g5~g20:IDCT table
+   g31:    thread payload 
+   g58~g81:reference data
+   g82:    thread payload backup
+   g83~g106:IDCT data
+   g115:   message descriptor for reading reference data   
+*/
+
+mov (1) g115.8<1>UD 0x07000FUD {align1};
+and.nz (1) null g115.16<1,1,1>UW 1UW {align1};
+(f0) jmpi read_backward;
+
+send (16) 0 g40.0<1>UW g115<8,8,1>UW read(5,2,0,2) mlen 1 rlen 4 {align1};
+send (16) 0 g48.0<1>UW g115<8,8,1>UW read(6,2,0,2) mlen 1 rlen 4 {align1};
+jmpi put_data;
+
+read_backward:
+send (16) 0 g40.0<1>UW g115<8,8,1>UW read(8,2,0,2) mlen 1 rlen 4 {align1};
+send (16) 0 g48.0<1>UW g115<8,8,1>UW read(9,2,0,2) mlen 1 rlen 4 {align1};
+
+put_data:
+mov (16) g32.0<1>UW g40.0<8,8,1>UB {align1 compr};
+mov (16) g34.0<1>UW g42.0<8,8,1>UB {align1 compr};
+
+mov (16) g36.0<1>UW g48.0<8,8,1>UB {align1 compr};
+mov (16) g38.0<1>UW g50.0<8,8,1>UB {align1 compr};

@@ -838,6 +838,27 @@ struct brw_wm_unit_state
    
    float global_depth_offset_constant;  
    float global_depth_offset_scale;   
+
+   struct {
+      unsigned int pad0:1;
+      unsigned int grf_reg_count_1:3; 
+      unsigned int pad1:2;
+      unsigned int kernel_start_pointer_1:26;
+   } wm8;       
+
+   struct {
+      unsigned int pad0:1;
+      unsigned int grf_reg_count_2:3; 
+      unsigned int pad1:2;
+      unsigned int kernel_start_pointer_2:26;
+   } wm9;       
+
+   struct {
+      unsigned int pad0:1;
+      unsigned int grf_reg_count_3:3; 
+      unsigned int pad1:2;
+      unsigned int kernel_start_pointer_3:26;
+   } wm10;       
 };
 
 /* The hardware supports two different modes for border color. The

@@ -8,9 +8,6 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
-/* have new FreeShadow API */
-#undef HAVE_FREE_SHADOW
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -44,6 +41,12 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* xextproto 7.1 available */
+#undef HAVE_XEXTPROTO_71
+
+/* Assume KMS support */
+#undef KMS_ONLY
+
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
 
@@ -74,9 +77,6 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
-/* Building against server 1.5 */
-#undef SERVER_1_5
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -91,9 +91,3 @@
 
 /* Enable developmental DRI driver support */
 #undef XF86DRI_DEVEL
-
-/* DRM kernel modesetting */
-#undef XF86DRM_MODE
-
-/* X server has built-in mode code */
-#undef XMODES

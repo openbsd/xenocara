@@ -32,18 +32,19 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <errno.h>
 
 #include "xf86.h"
 #include "i830.h"
 #include "i830_ring.h"
 #include "i915_drm.h"
 
+#define DUMP_BATCHBUFFERS NULL /* "/tmp/i915-batchbuffers.dump" */
+
 static int
 intel_nondrm_exec(dri_bo *bo, unsigned int used, void *priv)
 {
-    ScrnInfoPtr pScrn = priv;
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = priv;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
     BEGIN_LP_RING(4);
     OUT_RING(MI_BATCH_BUFFER_START | (2 << 6));
@@ -58,13 +59,13 @@ intel_nondrm_exec(dri_bo *bo, unsigned int used, void *priv)
 static int
 intel_nondrm_exec_i830(dri_bo *bo, unsigned int used, void *priv)
 {
-    ScrnInfoPtr pScrn = priv;
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = priv;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
     BEGIN_LP_RING(4);
     OUT_RING(MI_BATCH_BUFFER);
     OUT_RING(bo->offset);
-    OUT_RING(bo->offset + pI830->batch_used - 4);
+    OUT_RING(bo->offset + intel->batch_used - 4);
     OUT_RING(MI_NOOP);
     ADVANCE_LP_RING();
 
@@ -96,121 +97,230 @@ intel_nondrm_emit(void *priv)
 static void
 intel_nondrm_wait(unsigned int fence, void *priv)
 {
-    ScrnInfoPtr pScrn = priv;
+    ScrnInfoPtr scrn = priv;
 
-    i830_wait_ring_idle(pScrn);
+    i830_wait_ring_idle(scrn);
 }
 
-static void
-intel_next_batch(ScrnInfoPtr pScrn)
+static void intel_next_batch(ScrnInfoPtr scrn)
 {
-    I830Ptr pI830 = I830PTR(pScrn);
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+	int ret;
 
-    /* The 865 has issues with larger-than-page-sized batch buffers. */
-    if (IS_I865G(pI830))
-	pI830->batch_bo = dri_bo_alloc(pI830->bufmgr, "batch", 4096, 4096);
-    else
-	pI830->batch_bo = dri_bo_alloc(pI830->bufmgr, "batch", 4096 * 4, 4096);
+	/* The 865 has issues with larger-than-page-sized batch buffers. */
+	if (IS_I865G(intel))
+		intel->batch_bo =
+		    dri_bo_alloc(intel->bufmgr, "batch", 4096, 4096);
+	else
+		intel->batch_bo =
+		    dri_bo_alloc(intel->bufmgr, "batch", 4096 * 4, 4096);
 
-    if (dri_bo_map(pI830->batch_bo, 1) != 0)
-	FatalError("Failed to map batchbuffer: %s\n", strerror(errno));
+	ret = dri_bo_map(intel->batch_bo, 1);
+	if (ret != 0)
+		FatalError("Failed to map batchbuffer: %s\n", strerror(-ret));
 
-    pI830->batch_used = 0;
-    pI830->batch_ptr = pI830->batch_bo->virtual;
+	intel->batch_used = 0;
+	intel->batch_ptr = intel->batch_bo->virtual;
 
-    /* If we are using DRI2, we don't know when another client has executed,
-     * so we have to reinitialize our 3D state per batch.
-     */
-    if (pI830->directRenderingType == DRI_DRI2)
-	pI830->last_3d = LAST_3D_OTHER;
+	/* We don't know when another client has executed, so we have
+	 * to reinitialize our 3D state per batch.
+	 */
+	intel->last_3d = LAST_3D_OTHER;
 }
 
-void
-intel_batch_init(ScrnInfoPtr pScrn)
+void intel_batch_init(ScrnInfoPtr scrn)
 {
-    I830Ptr pI830 = I830PTR(pScrn);
+	intel_screen_private *intel = intel_get_screen_private(scrn);
 
-    pI830->batch_emit_start = 0;
-    pI830->batch_emitting = 0;
+	intel->batch_emit_start = 0;
+	intel->batch_emitting = 0;
 
-    intel_next_batch(pScrn);
+	intel_next_batch(scrn);
 
-    if (pI830->directRenderingType <= DRI_NONE) {
-	if (IS_I830(pI830) || IS_845G(pI830)) {
-	    intel_bufmgr_fake_set_exec_callback(pI830->bufmgr,
-						intel_nondrm_exec_i830,
-						pScrn);
-	} else {
-	    intel_bufmgr_fake_set_exec_callback(pI830->bufmgr,
-						intel_nondrm_exec,
-						pScrn);
+	if (!intel->have_gem) {
+		if (IS_I830(intel) || IS_845G(intel)) {
+			intel_bufmgr_fake_set_exec_callback(intel->bufmgr,
+			    intel_nondrm_exec_i830, scrn);
+		} else {
+			intel_bufmgr_fake_set_exec_callback(intel->bufmgr,
+			    intel_nondrm_exec, scrn);
+		}
+		intel_bufmgr_fake_set_fence_callback(intel->bufmgr,
+		    intel_nondrm_emit, intel_nondrm_wait, scrn);
 	}
-	intel_bufmgr_fake_set_fence_callback(pI830->bufmgr,
-					     intel_nondrm_emit,
-					     intel_nondrm_wait,
-					     pScrn);
-    }
 }
 
-void
-intel_batch_teardown(ScrnInfoPtr pScrn)
+void intel_batch_teardown(ScrnInfoPtr scrn)
 {
-    I830Ptr pI830 = I830PTR(pScrn);
+	intel_screen_private *intel = intel_get_screen_private(scrn);
 
-    if (pI830->batch_ptr != NULL) {
-	dri_bo_unmap(pI830->batch_bo);
-	dri_bo_unreference(pI830->batch_bo);
-	pI830->batch_ptr = NULL;
-    }
+	if (intel->batch_ptr != NULL) {
+		dri_bo_unmap(intel->batch_bo);
+		intel->batch_ptr = NULL;
+
+		dri_bo_unreference(intel->batch_bo);
+		intel->batch_bo = NULL;
+
+		dri_bo_unreference(intel->last_batch_bo);
+		intel->last_batch_bo = NULL;
+	}
 }
 
-void
-intel_batch_flush(ScrnInfoPtr pScrn, Bool flushed)
+void intel_batch_emit_flush(ScrnInfoPtr scrn)
 {
-    I830Ptr pI830 = I830PTR(pScrn);
-    int ret;
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+	int flags;
 
-    if (pI830->batch_used == 0)
-	return;
+	assert (!intel->in_batch_atomic);
 
-    /* If we're not using GEM, then emit a flush after each batch buffer */
-    if (pI830->memory_manager == NULL && !flushed) {
-	int flags = MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE;
+	/* Big hammer, look to the pipelined flushes in future. */
+	flags = MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE;
+	if (IS_I965G(intel))
+		flags = 0;
 
-	if (IS_I965G(pI830))
-	    flags = 0;
+	BEGIN_BATCH(1);
+	OUT_BATCH(MI_FLUSH | flags);
+	ADVANCE_BATCH();
 
-	*(uint32_t *)(pI830->batch_ptr + pI830->batch_used) = MI_FLUSH | flags;
-	pI830->batch_used += 4;
-    }
-	
-    /* Emit a padding dword if we aren't going to be quad-word aligned. */
-    if ((pI830->batch_used & 4) == 0) {
-	*(uint32_t *)(pI830->batch_ptr + pI830->batch_used) = MI_NOOP;
-	pI830->batch_used += 4;
-    }
+	while (!list_is_empty(&intel->flush_pixmaps)) {
+		struct intel_pixmap *entry;
 
-    /* Mark the end of the batchbuffer. */
-    *(uint32_t *)(pI830->batch_ptr + pI830->batch_used) = MI_BATCH_BUFFER_END;
-    pI830->batch_used += 4;
+		entry = list_first_entry(&intel->flush_pixmaps,
+					 struct intel_pixmap,
+					 flush);
 
-    dri_bo_unmap(pI830->batch_bo);
-    pI830->batch_ptr = NULL;
+		entry->flush_read_domains = entry->flush_write_domain = 0;
+		list_del(&entry->flush);
+	}
 
-    ret = dri_bo_exec(pI830->batch_bo, pI830->batch_used, NULL, 0, 0xffffffff);
-    if (ret != 0)
-	FatalError("Failed to submit batchbuffer: %s\n", strerror(-ret));
+	intel->need_mi_flush = FALSE;
+}
 
-    dri_bo_unreference(pI830->batch_bo);
-    intel_next_batch(pScrn);
+void intel_batch_submit(ScrnInfoPtr scrn)
+{
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+	int ret;
 
-    /* Mark that we need to flush whatever potential rendering we've done in the
-     * blockhandler.  We could set this less often, but it's probably not worth
-     * the work.
-     */
-    if (pI830->memory_manager != NULL)
-	pI830->need_mi_flush = TRUE;
+	assert (!intel->in_batch_atomic);
 
-    if (pI830->batch_flush_notify)
-	pI830->batch_flush_notify (pScrn);
+	if (intel->batch_used == 0)
+		return;
+
+	/* Emit a padding dword if we aren't going to be quad-word aligned. */
+	if ((intel->batch_used & 4) == 0) {
+		*(uint32_t *) (intel->batch_ptr + intel->batch_used) = MI_NOOP;
+		intel->batch_used += 4;
+	}
+
+	/* Mark the end of the batchbuffer. */
+	*(uint32_t *) (intel->batch_ptr + intel->batch_used) =
+	    MI_BATCH_BUFFER_END;
+	intel->batch_used += 4;
+
+	if (DUMP_BATCHBUFFERS) {
+	    FILE *file = fopen(DUMP_BATCHBUFFERS, "a");
+	    if (file) {
+		fwrite (intel->batch_ptr, intel->batch_used, 1, file);
+		fclose(file);
+	    }
+	}
+
+	dri_bo_unmap(intel->batch_bo);
+	intel->batch_ptr = NULL;
+
+	ret =
+	    dri_bo_exec(intel->batch_bo, intel->batch_used, NULL, 0,
+			0xffffffff);
+	if (ret != 0) {
+		static int once;
+
+		if (!once) {
+			xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+				   "Failed to submit batch buffer, expect rendering corruption "
+				   "or even a frozen display: %s.\n",
+				   strerror(-ret));
+			once = 1;
+		}
+	}
+
+	while (!list_is_empty(&intel->batch_pixmaps)) {
+		struct intel_pixmap *entry;
+
+		entry = list_first_entry(&intel->batch_pixmaps,
+					 struct intel_pixmap,
+					 batch);
+
+		entry->batch_read_domains = entry->batch_write_domain = 0;
+		list_del(&entry->batch);
+	}
+
+	/* Mark that we need to flush whatever potential rendering we've done in the
+	 * blockhandler.  We could set this less often, but it's probably not worth
+	 * the work.
+	 */
+	intel->need_mi_flush = !list_is_empty(&intel->flush_pixmaps);
+	while (!list_is_empty(&intel->flush_pixmaps)) {
+		struct intel_pixmap *entry;
+
+		entry = list_first_entry(&intel->flush_pixmaps,
+					 struct intel_pixmap,
+					 flush);
+
+		entry->flush_read_domains = entry->flush_write_domain = 0;
+		list_del(&entry->flush);
+	}
+
+	while (!list_is_empty(&intel->in_flight)) {
+		struct intel_pixmap *entry;
+
+		entry = list_first_entry(&intel->in_flight,
+					 struct intel_pixmap,
+					 in_flight);
+
+		dri_bo_unreference(entry->bo);
+		list_del(&entry->in_flight);
+		xfree(entry);
+	}
+
+	/* Save a ref to the last batch emitted, which we use for syncing
+	 * in debug code.
+	 */
+	dri_bo_unreference(intel->last_batch_bo);
+	intel->last_batch_bo = intel->batch_bo;
+	intel->batch_bo = NULL;
+
+	intel_next_batch(scrn);
+
+	if (intel->debug_flush & DEBUG_FLUSH_WAIT)
+		intel_batch_wait_last(scrn);
+
+	if (intel->batch_flush_notify)
+		intel->batch_flush_notify(scrn);
+}
+
+/** Waits on the last emitted batchbuffer to be completed. */
+void intel_batch_wait_last(ScrnInfoPtr scrn)
+{
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+
+	/* Map it CPU write, which guarantees it's done.  This is a completely
+	 * non performance path, so we don't need anything better.
+	 */
+	drm_intel_bo_map(intel->last_batch_bo, TRUE);
+	drm_intel_bo_unmap(intel->last_batch_bo);
+}
+
+void intel_sync(ScrnInfoPtr scrn)
+{
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+
+	if (I810_DEBUG & (DEBUG_VERBOSE_ACCEL | DEBUG_VERBOSE_SYNC))
+		ErrorF("I830Sync\n");
+
+	if (!scrn->vtSema || !intel->batch_bo || !intel->batch_ptr)
+		return;
+
+	intel_batch_emit_flush(scrn);
+	intel_batch_submit(scrn);
+	intel_batch_wait_last(scrn);
 }

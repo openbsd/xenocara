@@ -1,0 +1,50 @@
+/* GRF allocation:
+   g1~g30: constant buffer
+           g1~g2:intra IQ matrix
+           g3~g4:non intra IQ matrix
+           g5~g20:IDCT table
+   g31:    thread payload 
+   g32:    message descriptor for reading reference data
+   g58~g81:reference data
+   g82:    thread payload backup
+   g83~g106:IDCT data                           */
+/*
+mov (8) g82.0<1>UD g31.0<8,8,1>UD {align1};
+define(`UV_red',`0xffffffffUD')
+define(`UV_white',`0x7f7f7f7fUD')
+define(`UV_green',`0x00000000UD')
+mov(1) g31.8<1>UD 0x000f000fUD  { align1 };
+mov(16) m1<1>UD 0xFFFFFFFFUD {align1 compr};
+mov(16) m3<1>UD 0xFFFFFFFFUD {align1 compr};
+mov(16) m5<1>UD 0xFFFFFFFFUD {align1 compr};
+mov(16) m7<1>UD 0xFFFFFFFFUD {align1 compr};
+send (16) 0 acc0<1>UW g31<8,8,1>UW write(0, 0, 2, 0) mlen 9 rlen 0 { align1 };
+shr (2) g31.0<1>UD g82.0<2,2,1>UD  1UW {align1};
+mov(1) g31.8<1>UD 0x00070007UD  { align1 };
+mov (16) m1<1>UD UV_green {align1 compr};
+send (16) 0 acc0<1>UW g31<8,8,1>UW write(2, 0, 2, 0) mlen 3 rlen 0 { align1 };
+send (16) 0 acc0<1>UW g31<8,8,1>UW write(1, 0, 2, 0) mlen 3 rlen 0 { align1 };
+send (16) 0 acc0<1>UW g0<8,8,1>UW 
+	thread_spawner(0, 0, 0) mlen 1 rlen 0 { align1 EOT};
+*/
+
+mov (8) g82.0<1>UD g31.0<8,8,1>UD {align1};
+mov (1) g126.8<1>UD ip {align1};
+add (1) ip g21.0<1,1,1>UD 0x50UD {align1};  //jump to the lib to do IDCT         
+ 
+//Y, (x', y') = (x, y) + (motion_vector.x >> 1, motion_vector.y >> 1) 
+asr (2) g31.14<1>W g82.18<2,2,1>W 1W {align1};
+add (2) g32.0<1>UD g31.0<2,2,1>UD g31.14<2,2,1>W {align1};
+mov (1) g32.16<1>UW 1UW {align1};           //0:forward 1:backward
+mov (1) a0.0<1>UD 0x0A52UD {align1};        //g82.18,motion vector
+mov (1) g126.8<1>UD ip {align1};
+add (1) ip g21.0<1,1,1>UD 0x0UD {align1};   //jump to the lib to read reference data  
+
+//UV, (x', y') = (x >> 1, y >> 1) + (motion_vector.x >> 2, motion_vector.y >> 2)
+shr (2) g31.0<1>UD g31.0<2,2,1>UD 1UD {align1};
+asr (2) g31.14<1>W g82.18<2,2,1>W 2W {align1};
+add (2) g32.0<1>UD g31.0<2,2,1>UD g31.14<2,2,1>W {align1};
+mov (1) g126.8<1>UD ip {align1};
+add (1) ip g21.0<1,1,1>UD 0x10UD {align1};          //jump to the lib to read reference data  
+
+add (1) ip g21.0<1,1,1>UD 0x40UD {align1};          //jump to the lib to add the reference and idct data

@@ -36,56 +36,51 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = intel_reg_dumper$(EXEEXT) intel_gtt$(EXEEXT) \
-	intel_idle$(EXEEXT) intel_stepping$(EXEEXT) \
-	intel_statuspage$(EXEEXT) intel_hotplug$(EXEEXT)
+noinst_PROGRAMS = intel_gtt$(EXEEXT) intel_statuspage$(EXEEXT) \
+	intel_hotplug$(EXEEXT) intel_lid$(EXEEXT) intel_audio$(EXEEXT)
 subdir = src/reg_dumper
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
+am_intel_audio_OBJECTS = audio.$(OBJEXT) util.$(OBJEXT)
+intel_audio_OBJECTS = $(am_intel_audio_OBJECTS)
+am__DEPENDENCIES_1 =
+intel_audio_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_intel_gtt_OBJECTS = gtt.$(OBJEXT) util.$(OBJEXT)
 intel_gtt_OBJECTS = $(am_intel_gtt_OBJECTS)
-am__DEPENDENCIES_1 =
 intel_gtt_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_intel_hotplug_OBJECTS = hotplug.$(OBJEXT) xprintf.$(OBJEXT) \
-	i830_debug.$(OBJEXT)
+am_intel_hotplug_OBJECTS = hotplug.$(OBJEXT) xprintf.$(OBJEXT)
 intel_hotplug_OBJECTS = $(am_intel_hotplug_OBJECTS)
 intel_hotplug_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_intel_idle_OBJECTS = idle.$(OBJEXT) xprintf.$(OBJEXT) \
-	i830_debug.$(OBJEXT)
-intel_idle_OBJECTS = $(am_intel_idle_OBJECTS)
-intel_idle_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_intel_reg_dumper_OBJECTS = main.$(OBJEXT) xprintf.$(OBJEXT) \
-	i830_debug.$(OBJEXT)
-intel_reg_dumper_OBJECTS = $(am_intel_reg_dumper_OBJECTS)
-intel_reg_dumper_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_intel_lid_OBJECTS = lid.$(OBJEXT) util.$(OBJEXT)
+intel_lid_OBJECTS = $(am_intel_lid_OBJECTS)
+intel_lid_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_intel_statuspage_OBJECTS = statuspage.$(OBJEXT) util.$(OBJEXT)
 intel_statuspage_OBJECTS = $(am_intel_statuspage_OBJECTS)
 intel_statuspage_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_intel_stepping_OBJECTS = stepping.$(OBJEXT)
-intel_stepping_OBJECTS = $(am_intel_stepping_OBJECTS)
-intel_stepping_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(intel_gtt_SOURCES) $(intel_hotplug_SOURCES) \
-	$(intel_idle_SOURCES) $(intel_reg_dumper_SOURCES) \
-	$(intel_statuspage_SOURCES) $(intel_stepping_SOURCES)
-DIST_SOURCES = $(intel_gtt_SOURCES) $(intel_hotplug_SOURCES) \
-	$(intel_idle_SOURCES) $(intel_reg_dumper_SOURCES) \
-	$(intel_statuspage_SOURCES) $(intel_stepping_SOURCES)
+SOURCES = $(intel_audio_SOURCES) $(intel_gtt_SOURCES) \
+	$(intel_hotplug_SOURCES) $(intel_lid_SOURCES) \
+	$(intel_statuspage_SOURCES)
+DIST_SOURCES = $(intel_audio_SOURCES) $(intel_gtt_SOURCES) \
+	$(intel_hotplug_SOURCES) $(intel_lid_SOURCES) \
+	$(intel_statuspage_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -109,8 +104,10 @@ BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -118,7 +115,6 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DOLT_BASH = @DOLT_BASH@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -128,8 +124,6 @@ DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DRM_CFLAGS = @DRM_CFLAGS@
 DRM_LIBS = @DRM_LIBS@
-DRM_MODE_CFLAGS = @DRM_MODE_CFLAGS@
-DRM_MODE_LIBS = @DRM_MODE_LIBS@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -141,25 +135,27 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GEN4ASM_CFLAGS = @GEN4ASM_CFLAGS@
+GEN4ASM_LIBS = @GEN4ASM_LIBS@
 GREP = @GREP@
 HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
+HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
+HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+KMS_ONLY_FALSE = @KMS_ONLY_FALSE@
+KMS_ONLY_TRUE = @KMS_ONLY_TRUE@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
-LIBPCIACCESS_FALSE = @LIBPCIACCESS_FALSE@
-LIBPCIACCESS_TRUE = @LIBPCIACCESS_TRUE@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUXDOC = @LINUXDOC@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -186,24 +182,16 @@ PKG_CONFIG = @PKG_CONFIG@
 PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
-SERVER_1_5_CFLAGS = @SERVER_1_5_CFLAGS@
-SERVER_1_5_LIBS = @SERVER_1_5_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 VIDEO_DEBUG_FALSE = @VIDEO_DEBUG_FALSE@
 VIDEO_DEBUG_TRUE = @VIDEO_DEBUG_TRUE@
-WARN_CFLAGS = @WARN_CFLAGS@
 XEXT_CFLAGS = @XEXT_CFLAGS@
 XEXT_LIBS = @XEXT_LIBS@
-XMODES_CFLAGS = @XMODES_CFLAGS@
-XMODES_FALSE = @XMODES_FALSE@
-XMODES_TRUE = @XMODES_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
-XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
-XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
 XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
 XVMCLIB_LIBS = @XVMCLIB_LIBS@
 XVMC_FALSE = @XVMC_FALSE@
@@ -228,10 +216,10 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
-gen4asm = @gen4asm@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -257,44 +245,37 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-intel_reg_dumper_SOURCES = \
-	main.c \
-	reg_dumper.h \
-	xprintf.c \
-	../i830_debug.c
-
 intel_gtt_SOURCES = \
 	gtt.c \
 	reg_dumper.h \
 	util.c
 
-intel_idle_SOURCES = \
-	idle.c \
-	reg_dumper.h \
-	xprintf.c \
-	../i830_debug.c
-
 intel_hotplug_SOURCES = \
 	hotplug.c \
 	reg_dumper.h \
-	xprintf.c \
-	../i830_debug.c
-
-intel_stepping_SOURCES = \
-	stepping.c
+	xprintf.c
 
 intel_statuspage_SOURCES = \
 	statuspage.c \
 	reg_dumper.h \
 	util.c
 
+intel_lid_SOURCES = \
+	lid.c \
+	reg_dumper.h \
+	util.c
+
+intel_audio_SOURCES = \
+	audio.c \
+	reg_dumper.h \
+	util.c
+
 intel_hotplug_LDADD = $(PCIACCESS_LIBS)
-intel_reg_dumper_LDADD = $(PCIACCESS_LIBS)
 intel_gtt_LDADD = $(PCIACCESS_LIBS)
-intel_idle_LDADD = $(PCIACCESS_LIBS)
-intel_stepping_LDADD = $(PCIACCESS_LIBS)
 intel_statuspage_LDADD = $(PCIACCESS_LIBS)
-AM_CFLAGS = $(PCIACCESS_CFLAGS) $(WARN_CFLAGS) \
+intel_lid_LDADD = $(PCIACCESS_LIBS)
+intel_audio_LDADD = $(PCIACCESS_LIBS)
+AM_CFLAGS = $(PCIACCESS_CFLAGS) $(CWARNFLAGS) \
 	-I$(srcdir)/.. -DREG_DUMPER
 
 all: all-am
@@ -337,24 +318,21 @@ clean-noinstPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
+intel_audio$(EXEEXT): $(intel_audio_OBJECTS) $(intel_audio_DEPENDENCIES) 
+	@rm -f intel_audio$(EXEEXT)
+	$(LINK) $(intel_audio_LDFLAGS) $(intel_audio_OBJECTS) $(intel_audio_LDADD) $(LIBS)
 intel_gtt$(EXEEXT): $(intel_gtt_OBJECTS) $(intel_gtt_DEPENDENCIES) 
 	@rm -f intel_gtt$(EXEEXT)
 	$(LINK) $(intel_gtt_LDFLAGS) $(intel_gtt_OBJECTS) $(intel_gtt_LDADD) $(LIBS)
 intel_hotplug$(EXEEXT): $(intel_hotplug_OBJECTS) $(intel_hotplug_DEPENDENCIES) 
 	@rm -f intel_hotplug$(EXEEXT)
 	$(LINK) $(intel_hotplug_LDFLAGS) $(intel_hotplug_OBJECTS) $(intel_hotplug_LDADD) $(LIBS)
-intel_idle$(EXEEXT): $(intel_idle_OBJECTS) $(intel_idle_DEPENDENCIES) 
-	@rm -f intel_idle$(EXEEXT)
-	$(LINK) $(intel_idle_LDFLAGS) $(intel_idle_OBJECTS) $(intel_idle_LDADD) $(LIBS)
-intel_reg_dumper$(EXEEXT): $(intel_reg_dumper_OBJECTS) $(intel_reg_dumper_DEPENDENCIES) 
-	@rm -f intel_reg_dumper$(EXEEXT)
-	$(LINK) $(intel_reg_dumper_LDFLAGS) $(intel_reg_dumper_OBJECTS) $(intel_reg_dumper_LDADD) $(LIBS)
+intel_lid$(EXEEXT): $(intel_lid_OBJECTS) $(intel_lid_DEPENDENCIES) 
+	@rm -f intel_lid$(EXEEXT)
+	$(LINK) $(intel_lid_LDFLAGS) $(intel_lid_OBJECTS) $(intel_lid_LDADD) $(LIBS)
 intel_statuspage$(EXEEXT): $(intel_statuspage_OBJECTS) $(intel_statuspage_DEPENDENCIES) 
 	@rm -f intel_statuspage$(EXEEXT)
 	$(LINK) $(intel_statuspage_LDFLAGS) $(intel_statuspage_OBJECTS) $(intel_statuspage_LDADD) $(LIBS)
-intel_stepping$(EXEEXT): $(intel_stepping_OBJECTS) $(intel_stepping_DEPENDENCIES) 
-	@rm -f intel_stepping$(EXEEXT)
-	$(LINK) $(intel_stepping_LDFLAGS) $(intel_stepping_OBJECTS) $(intel_stepping_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -362,13 +340,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/audio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gtt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hotplug.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_debug.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/idle.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/statuspage.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stepping.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xprintf.Po@am__quote@
 
@@ -392,20 +368,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-i830_debug.o: ../i830_debug.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i830_debug.o -MD -MP -MF "$(DEPDIR)/i830_debug.Tpo" -c -o i830_debug.o `test -f '../i830_debug.c' || echo '$(srcdir)/'`../i830_debug.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/i830_debug.Tpo" "$(DEPDIR)/i830_debug.Po"; else rm -f "$(DEPDIR)/i830_debug.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../i830_debug.c' object='i830_debug.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i830_debug.o `test -f '../i830_debug.c' || echo '$(srcdir)/'`../i830_debug.c
-
-i830_debug.obj: ../i830_debug.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT i830_debug.obj -MD -MP -MF "$(DEPDIR)/i830_debug.Tpo" -c -o i830_debug.obj `if test -f '../i830_debug.c'; then $(CYGPATH_W) '../i830_debug.c'; else $(CYGPATH_W) '$(srcdir)/../i830_debug.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/i830_debug.Tpo" "$(DEPDIR)/i830_debug.Po"; else rm -f "$(DEPDIR)/i830_debug.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='../i830_debug.c' object='i830_debug.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o i830_debug.obj `if test -f '../i830_debug.c'; then $(CYGPATH_W) '../i830_debug.c'; else $(CYGPATH_W) '$(srcdir)/../i830_debug.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

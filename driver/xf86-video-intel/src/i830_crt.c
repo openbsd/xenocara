@@ -37,8 +37,8 @@
 static void
 i830_crt_dpms(xf86OutputPtr output, int mode)
 {
-    ScrnInfoPtr	    pScrn = output->scrn;
-    I830Ptr	    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr	    scrn = output->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t	    temp;
 
     temp = INREG(ADPA);
@@ -66,26 +66,26 @@ i830_crt_dpms(xf86OutputPtr output, int mode)
 static void
 i830_crt_save (xf86OutputPtr output)
 {
-    ScrnInfoPtr	pScrn = output->scrn;
-    I830Ptr	pI830 = I830PTR(pScrn);
+    ScrnInfoPtr	scrn = output->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
-    pI830->saveADPA = INREG(ADPA);
+    intel->saveADPA = INREG(ADPA);
 }
 
 static void
 i830_crt_restore (xf86OutputPtr output)
 {
-    ScrnInfoPtr	pScrn = output->scrn;
-    I830Ptr	pI830 = I830PTR(pScrn);
+    ScrnInfoPtr	scrn = output->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
-    OUTREG(ADPA, pI830->saveADPA);
+    OUTREG(ADPA, intel->saveADPA);
 }
 
 static int
 i830_crt_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
 {
-    ScrnInfoPtr pScrn = output->scrn;
-    I830Ptr	pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = output->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     int		maxclock;
 
     if (pMode->Flags & V_DBLSCAN)
@@ -94,7 +94,7 @@ i830_crt_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
     if (pMode->Clock < 25000)
 	return MODE_CLOCK_LOW;
 
-    if (!IS_I9XX(pI830))
+    if (!IS_I9XX(intel))
 	maxclock = 350000;
     else
 	maxclock = 400000;
@@ -116,8 +116,8 @@ static void
 i830_crt_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 		  DisplayModePtr adjusted_mode)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private   *intel = intel_get_screen_private(scrn);
     xf86CrtcPtr		    crtc = output->crtc;
     I830CrtcPrivatePtr	    i830_crtc = crtc->driver_private;
     int			    dpll_md_reg;
@@ -131,7 +131,7 @@ i830_crt_mode_set(xf86OutputPtr output, DisplayModePtr mode,
      * Disable separate mode multiplier used when cloning SDVO to CRT
      * XXX this needs to be adjusted when we really are cloning
      */
-    if (IS_I965G(pI830))
+    if (IS_I965G(intel))
     {
 	dpll_md = INREG(dpll_md_reg);
 	OUTREG(dpll_md_reg, dpll_md & ~DPLL_MD_UDI_MULTIPLIER_MASK);
@@ -168,8 +168,8 @@ i830_crt_mode_set(xf86OutputPtr output, DisplayModePtr mode,
 static Bool
 i830_crt_detect_hotplug(xf86OutputPtr output)
 {
-    ScrnInfoPtr	pScrn = output->scrn;
-    I830Ptr	pI830 = I830PTR(pScrn);
+    ScrnInfoPtr	scrn = output->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t	hotplug_en, temp;
     const int	timeout_ms = 1000;
     int		starttime, curtime;
@@ -178,14 +178,14 @@ i830_crt_detect_hotplug(xf86OutputPtr output)
 
     /* On 4 series desktop, CRT detect sequence need to be done twice
      * to get a reliable result. */
-    if (IS_G4X(pI830) && !IS_GM45(pI830))
+    if (IS_G4X(intel) && !IS_GM45(intel))
 	tries = 2;
     else
 	tries = 1;
 
     hotplug_en = INREG(PORT_HOTPLUG_EN);
 
-    hotplug_en &= ~CRT_HOTPLUG_MASK;
+    hotplug_en &= CRT_FORCE_HOTPLUG_MASK;
 
     /* This starts the detection sequence */
     hotplug_en |= CRT_HOTPLUG_FORCE_DETECT;
@@ -193,7 +193,7 @@ i830_crt_detect_hotplug(xf86OutputPtr output)
     /* GM45 requires a longer activation period to reliably
      * detect CRT
      */
-    if (IS_GM45(pI830))
+    if (IS_G4X(intel))
 	hotplug_en |= CRT_HOTPLUG_ACTIVATION_PERIOD_64;
 
     /* Use the default voltage value */
@@ -235,8 +235,8 @@ static Bool
 i830_crt_detect_load (xf86CrtcPtr	    crtc,
 		      xf86OutputPtr    output)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830CrtcPrivatePtr	    i830_crtc = I830CrtcPrivate(crtc);
     uint32_t		    save_bclrpat;
     uint32_t		    save_vtotal;
@@ -282,12 +282,13 @@ i830_crt_detect_load (xf86CrtcPtr	    crtc,
     /* Set the border color to purple. */
     OUTREG(bclrpat_reg, 0x500050);
     
-    if (IS_I9XX (pI830))
+    if (IS_I9XX (intel))
     {
 	uint32_t	pipeconf = INREG(pipeconf_reg);
 	OUTREG(pipeconf_reg, pipeconf | PIPECONF_FORCE_BORDER);
-	
-	st00 = pI830->readStandard (pI830, 0x3c2);
+        /* Wait for next Vblank to substitue border color for Color info */
+        i830WaitForVblank (scrn);
+	st00 = intel->readStandard (intel, 0x3c2);
 	present = (st00 & (1 << 4)) != 0;
 	OUTREG(pipeconf_reg, pipeconf);
     }
@@ -331,7 +332,7 @@ i830_crt_detect_load (xf86CrtcPtr	    crtc,
 	do {
 	    count++;
 	    /* Read the ST00 VGA status register */
-	    st00 = pI830->readStandard(pI830, 0x3c2);
+	    st00 = intel->readStandard(intel, 0x3c2);
 	    if (st00 & (1 << 4))
 		detect++;
 	} while ((INREG(pipe_dsl_reg) == dsl));
@@ -366,7 +367,7 @@ i830_crt_detect_load (xf86CrtcPtr	    crtc,
 static Bool
 i830_crt_detect_ddc(xf86OutputPtr output)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
+    ScrnInfoPtr		    scrn = output->scrn;
     I830OutputPrivatePtr    i830_output = output->driver_private;
     Bool detect;
 
@@ -374,7 +375,7 @@ i830_crt_detect_ddc(xf86OutputPtr output)
     if (i830_output->type != I830_OUTPUT_ANALOG)
 	return FALSE;
 
-    I830I2CInit(pScrn, &i830_output->pDDCBus, GPIOA, "CRTDDC_A");
+    I830I2CInit(scrn, &i830_output->pDDCBus, GPIOA, "CRTDDC_A");
     detect = xf86I2CProbeAddress(i830_output->pDDCBus, 0x00A0);
     xf86DestroyI2CBusRec(i830_output->pDDCBus, TRUE, TRUE);
 
@@ -390,8 +391,8 @@ i830_crt_detect_ddc(xf86OutputPtr output)
 static xf86OutputStatus
 i830_crt_detect(xf86OutputPtr output)
 {
-    ScrnInfoPtr		    pScrn = output->scrn;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     xf86CrtcPtr		    crtc;
     int			    dpms_mode;
     xf86OutputStatus	    status;
@@ -400,8 +401,8 @@ i830_crt_detect(xf86OutputPtr output)
     /*
      * Try hotplug detection where supported
      */
-    if (IS_I945G(pI830) || IS_I945GM(pI830) || IS_I965G(pI830) ||
-	    IS_G33CLASS(pI830)) {
+    if (IS_I945G(intel) || IS_I945GM(intel) || IS_I965G(intel) ||
+	    IS_G33CLASS(intel)) {
 	if (i830_crt_detect_hotplug(output))
 	    status = XF86OutputStatusConnected;
 	else
@@ -447,11 +448,11 @@ i830_crt_destroy (xf86OutputPtr output)
 static xf86CrtcPtr
 i830_crt_get_crtc(xf86OutputPtr output)
 {
-    ScrnInfoPtr	pScrn = output->scrn;
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr	scrn = output->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     int pipe = !!(INREG(ADPA) & ADPA_PIPE_SELECT_MASK);
    
-    return i830_pipe_to_crtc(pScrn, pipe);
+    return i830_pipe_to_crtc(scrn, pipe);
 }
 #endif
 
@@ -523,16 +524,16 @@ static const xf86OutputFuncsRec i830_crt_output_funcs = {
 };
 
 void
-i830_crt_init(ScrnInfoPtr pScrn)
+i830_crt_init(ScrnInfoPtr scrn)
 {
     xf86OutputPtr	    output;
     I830OutputPrivatePtr    i830_output;
-    I830Ptr		    pI830 = I830PTR(pScrn);
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
 
-    if (pI830->quirk_flag & QUIRK_IGNORE_CRT)
+    if (intel->quirk_flag & QUIRK_IGNORE_CRT)
 	return;
 
-    output = xf86OutputCreate (pScrn, &i830_crt_output_funcs, "VGA");
+    output = xf86OutputCreate (scrn, &i830_crt_output_funcs, "VGA");
     if (!output)
 	return;
     i830_output = xnfcalloc (sizeof (I830OutputPrivateRec), 1);
@@ -543,7 +544,7 @@ i830_crt_init(ScrnInfoPtr pScrn)
     }
     i830_output->type = I830_OUTPUT_ANALOG;
     /* i830 (almador) cannot place the analog adaptor on pipe B */
-    if (IS_I830(pI830))
+    if (IS_I830(intel))
 	i830_output->pipe_mask = (1 << 0);
     else
 	i830_output->pipe_mask = ((1 << 0) | (1 << 1));

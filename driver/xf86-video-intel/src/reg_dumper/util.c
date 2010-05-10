@@ -41,46 +41,45 @@
  */
 void intel_i830rec_init(I830Ptr pI830)
 {
-    struct pci_device *dev;
-    int err, mmio_bar;
-    void *mmio;
+	struct pci_device *dev;
+	int err, mmio_bar;
+	void *mmio;
 
-    err = pci_system_init();
-    if (err != 0) {
-	fprintf(stderr, "Couldn't initialize PCI system: %s\n", strerror(err));
-	exit(1);
-    }
+	err = pci_system_init();
+	if (err != 0) {
+		fprintf(stderr, "Couldn't initialize PCI system: %s\n",
+			strerror(err));
+		exit(1);
+	}
 
-    /* Grab the graphics card */
-    dev = pci_device_find_by_slot(0, 0, 2, 0);
-    if (dev == NULL)
-	errx(1, "Couldn't find graphics card");
+	/* Grab the graphics card */
+	dev = pci_device_find_by_slot(0, 0, 2, 0);
+	if (dev == NULL)
+		errx(1, "Couldn't find graphics card");
 
-    err = pci_device_probe(dev);
-    if (err != 0) {
-	fprintf(stderr, "Couldn't probe graphics card: %s\n", strerror(err));
-	exit(1);
-    }
+	err = pci_device_probe(dev);
+	if (err != 0) {
+		fprintf(stderr, "Couldn't probe graphics card: %s\n",
+			strerror(err));
+		exit(1);
+	}
 
-    if (dev->vendor_id != 0x8086)
-	errx(1, "Graphics card is non-intel");
+	if (dev->vendor_id != 0x8086)
+		errx(1, "Graphics card is non-intel");
 
-    pI830->PciInfo = &pI830->pci_info_rec;
-    pI830->PciInfo->chipType = dev->device_id;
+	pI830->PciInfo = dev;
 
-    pI830->pci_dev = dev;
+	mmio_bar = IS_I9XX(pI830) ? 0 : 1;
 
-    mmio_bar = IS_I9XX(pI830) ? 0 : 1;
+	err = pci_device_map_range(dev,
+				   dev->regions[mmio_bar].base_addr,
+				   dev->regions[mmio_bar].size,
+				   PCI_DEV_MAP_FLAG_WRITABLE, &mmio);
 
-    err = pci_device_map_range (dev,
-				dev->regions[mmio_bar].base_addr,
-				dev->regions[mmio_bar].size,
-				PCI_DEV_MAP_FLAG_WRITABLE,
-				&mmio);
-
-    if (err != 0) {
-	fprintf(stderr, "Couldn't map MMIO region: %s\n", strerror(err));
-	exit(1);
-    }
-    pI830->mmio = mmio;
+	if (err != 0) {
+		fprintf(stderr, "Couldn't map MMIO region: %s\n",
+			strerror(err));
+		exit(1);
+	}
+	pI830->mmio = mmio;
 }

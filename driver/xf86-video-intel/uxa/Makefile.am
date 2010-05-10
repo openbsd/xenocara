@@ -4,10 +4,7 @@ noinst_LTLIBRARIES = libuxa.la
 # built (in hw/xfree86/os-support/solaris) until after UXA is built
 SOLARIS_ASM_CFLAGS=""
 
-INCLUDES = \
-	$(XORG_INCS)
-
-AM_CFLAGS = $(WARN_CFLAGS) $(XORG_CFLAGS) $(DIX_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XORG_CFLAGS)
 
 libuxa_la_SOURCES = \
 	uxa.c \

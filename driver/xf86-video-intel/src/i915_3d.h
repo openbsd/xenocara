@@ -88,7 +88,7 @@
 #define REG_NR(reg)		((reg) & 0xff)
 
 struct i915_fs_op {
-    uint32_t ui[3];
+	uint32_t ui[3];
 };
 
 #define X_CHANNEL_VAL		1
@@ -106,15 +106,15 @@ struct i915_fs_op {
  */
 struct i915_fs_operand {
     /**< REG_TYPE_* register type */
-    int reg;
+	int reg;
     /**< *_CHANNEL_VAL swizzle value, with optional negation */
-    int x;
+	int x;
     /**< *_CHANNEL_VAL swizzle value, with optional negation */
-    int y;
+	int y;
     /**< *_CHANNEL_VAL swizzle value, with optional negation */
-    int z;
+	int z;
     /**< *_CHANNEL_VAL swizzle value, with optional negation */
-    int w;
+	int w;
 };
 
 /**
@@ -144,24 +144,23 @@ struct i915_fs_operand {
 static inline struct i915_fs_operand
 _i915_fs_operand(int reg, int x, int y, int z, int w)
 {
-    struct i915_fs_operand operand;
+	struct i915_fs_operand operand;
 
-    operand.reg = reg;
-    operand.x = x;
-    operand.y = y;
-    operand.z = z;
-    operand.w = w;
+	operand.reg = reg;
+	operand.x = x;
+	operand.y = y;
+	operand.z = z;
+	operand.w = w;
 
-    return operand;
+	return operand;
 }
 
 /**
  * Returns an operand containing (0.0, 0.0, 0.0, 0.0).
  */
-static inline struct i915_fs_operand
-i915_fs_operand_zero(void)
+static inline struct i915_fs_operand i915_fs_operand_zero(void)
 {
-    return i915_fs_operand(FS_R0, ZERO, ZERO, ZERO, ZERO);
+	return i915_fs_operand(FS_R0, ZERO, ZERO, ZERO, ZERO);
 }
 
 /**
@@ -172,33 +171,31 @@ i915_fs_operand_zero(void)
 /**
  * Returns an operand containing (1.0, 1.0, 1.0, 1.0).
  */
-static inline struct i915_fs_operand
-i915_fs_operand_one(void)
+static inline struct i915_fs_operand i915_fs_operand_one(void)
 {
-    return i915_fs_operand(FS_R0, ONE, ONE, ONE, ONE);
+	return i915_fs_operand(FS_R0, ONE, ONE, ONE, ONE);
 }
 
-static inline int
-i915_get_hardware_channel_val(int channel_val)
+static inline int i915_get_hardware_channel_val(int channel_val)
 {
-    if (channel_val < 0)
-	channel_val = -channel_val;
+	if (channel_val < 0)
+		channel_val = -channel_val;
 
-    switch (channel_val) {
-    case X_CHANNEL_VAL:
-	return SRC_X;
-    case Y_CHANNEL_VAL:
-	return SRC_Y;
-    case Z_CHANNEL_VAL:
-	return SRC_Z;
-    case W_CHANNEL_VAL:
-	return SRC_W;
-    case ZERO_CHANNEL_VAL:
-	return SRC_ZERO;
-    case ONE_CHANNEL_VAL:
-	return SRC_ONE;
-    }
-    FatalError("Bad channel value %d\n", channel_val);
+	switch (channel_val) {
+	case X_CHANNEL_VAL:
+		return SRC_X;
+	case Y_CHANNEL_VAL:
+		return SRC_Y;
+	case Z_CHANNEL_VAL:
+		return SRC_Z;
+	case W_CHANNEL_VAL:
+		return SRC_W;
+	case ZERO_CHANNEL_VAL:
+		return SRC_ZERO;
+	case ONE_CHANNEL_VAL:
+		return SRC_ONE;
+	}
+	FatalError("Bad channel value %d\n", channel_val);
 }
 
 /**
@@ -213,19 +210,18 @@ do {									\
  * Constructs a fragment shader command to declare a sampler or texture
  * register.
  */
-static inline struct i915_fs_op
-_i915_fs_dcl(int reg)
+static inline struct i915_fs_op _i915_fs_dcl(int reg)
 {
-    struct i915_fs_op op;
+	struct i915_fs_op op;
 
-    op.ui[0] = D0_DCL | (REG_TYPE(reg) << D0_TYPE_SHIFT) |
-	(REG_NR(reg) << D0_NR_SHIFT);
-    op.ui[1] = 0;
-    op.ui[2] = 0;
-    if (REG_TYPE(reg) != REG_TYPE_S)
-	op.ui[0] |= D0_CHANNEL_ALL;
+	op.ui[0] = D0_DCL | (REG_TYPE(reg) << D0_TYPE_SHIFT) |
+	    (REG_NR(reg) << D0_NR_SHIFT);
+	op.ui[1] = 0;
+	op.ui[2] = 0;
+	if (REG_TYPE(reg) != REG_TYPE_S)
+		op.ui[0] |= D0_CHANNEL_ALL;
 
-    return op;
+	return op;
 }
 
 /**
@@ -244,23 +240,23 @@ do {									\
 static inline struct i915_fs_op
 _i915_fs_texld(int load_op, int dest_reg, int sampler_reg, int address_reg)
 {
-    struct i915_fs_op op;
+	struct i915_fs_op op;
 
-    op.ui[0] = 0;
-    op.ui[1] = 0;
-    op.ui[2] = 0;
+	op.ui[0] = 0;
+	op.ui[1] = 0;
+	op.ui[2] = 0;
 
-    if (REG_TYPE(sampler_reg) != REG_TYPE_S)
-	FatalError("Bad sampler reg type\n");
+	if (REG_TYPE(sampler_reg) != REG_TYPE_S)
+		FatalError("Bad sampler reg type\n");
 
-    op.ui[0] |= load_op;
-    op.ui[0] |= REG_TYPE(dest_reg) << T0_DEST_TYPE_SHIFT;
-    op.ui[0] |= REG_NR(dest_reg) << T0_DEST_NR_SHIFT;
-    op.ui[0] |= REG_NR(sampler_reg) << T0_SAMPLER_NR_SHIFT;
-    op.ui[1] |= REG_TYPE(address_reg) << T1_ADDRESS_REG_TYPE_SHIFT;
-    op.ui[1] |= REG_NR(address_reg) << T1_ADDRESS_REG_NR_SHIFT;
+	op.ui[0] |= load_op;
+	op.ui[0] |= REG_TYPE(dest_reg) << T0_DEST_TYPE_SHIFT;
+	op.ui[0] |= REG_NR(dest_reg) << T0_DEST_NR_SHIFT;
+	op.ui[0] |= REG_NR(sampler_reg) << T0_SAMPLER_NR_SHIFT;
+	op.ui[1] |= REG_TYPE(address_reg) << T1_ADDRESS_REG_TYPE_SHIFT;
+	op.ui[1] |= REG_NR(address_reg) << T1_ADDRESS_REG_NR_SHIFT;
 
-    return op;
+	return op;
 }
 
 #define i915_fs_arith(op, dest_reg, operand0, operand1, operand2)	\
@@ -269,94 +265,93 @@ _i915_fs_texld(int load_op, int dest_reg, int sampler_reg, int address_reg)
 static inline struct i915_fs_op
 _i915_fs_arith(int cmd, int dest_reg,
 	       struct i915_fs_operand operand0,
-	       struct i915_fs_operand operand1,
-	       struct i915_fs_operand operand2)
+	       struct i915_fs_operand operand1, struct i915_fs_operand operand2)
 {
-    struct i915_fs_op op;
+	struct i915_fs_op op;
 
-    op.ui[0] = 0;
-    op.ui[1] = 0;
-    op.ui[2] = 0;
+	op.ui[0] = 0;
+	op.ui[1] = 0;
+	op.ui[2] = 0;
 
-    /* Set up destination register and write mask */
-    op.ui[0] |= cmd;
-    op.ui[0] |= REG_TYPE(dest_reg) << A0_DEST_TYPE_SHIFT;
-    op.ui[0] |= REG_NR(dest_reg) << A0_DEST_NR_SHIFT;
-    op.ui[0] |= A0_DEST_CHANNEL_ALL;
+	/* Set up destination register and write mask */
+	op.ui[0] |= cmd;
+	op.ui[0] |= REG_TYPE(dest_reg) << A0_DEST_TYPE_SHIFT;
+	op.ui[0] |= REG_NR(dest_reg) << A0_DEST_NR_SHIFT;
+	op.ui[0] |= A0_DEST_CHANNEL_ALL;
 
-    /* Set up operand 0 */
-    op.ui[0] |= REG_TYPE(operand0.reg) << A0_SRC0_TYPE_SHIFT;
-    op.ui[0] |= REG_NR(operand0.reg) << A0_SRC0_NR_SHIFT;
+	/* Set up operand 0 */
+	op.ui[0] |= REG_TYPE(operand0.reg) << A0_SRC0_TYPE_SHIFT;
+	op.ui[0] |= REG_NR(operand0.reg) << A0_SRC0_NR_SHIFT;
 
-    op.ui[1] |= i915_get_hardware_channel_val(operand0.x) <<
-	A1_SRC0_CHANNEL_X_SHIFT;
-    if (operand0.x < 0)
-	op.ui[1] |= A1_SRC0_CHANNEL_X_NEGATE;
+	op.ui[1] |= i915_get_hardware_channel_val(operand0.x) <<
+	    A1_SRC0_CHANNEL_X_SHIFT;
+	if (operand0.x < 0)
+		op.ui[1] |= A1_SRC0_CHANNEL_X_NEGATE;
 
-    op.ui[1] |= i915_get_hardware_channel_val(operand0.y) <<
-	A1_SRC0_CHANNEL_Y_SHIFT;
-    if (operand0.y < 0)
-	op.ui[1] |= A1_SRC0_CHANNEL_Y_NEGATE;
+	op.ui[1] |= i915_get_hardware_channel_val(operand0.y) <<
+	    A1_SRC0_CHANNEL_Y_SHIFT;
+	if (operand0.y < 0)
+		op.ui[1] |= A1_SRC0_CHANNEL_Y_NEGATE;
 
-    op.ui[1] |= i915_get_hardware_channel_val(operand0.z) <<
-	A1_SRC0_CHANNEL_Z_SHIFT;
-    if (operand0.z < 0)
-	op.ui[1] |= A1_SRC0_CHANNEL_Z_NEGATE;
+	op.ui[1] |= i915_get_hardware_channel_val(operand0.z) <<
+	    A1_SRC0_CHANNEL_Z_SHIFT;
+	if (operand0.z < 0)
+		op.ui[1] |= A1_SRC0_CHANNEL_Z_NEGATE;
 
-    op.ui[1] |= i915_get_hardware_channel_val(operand0.w) <<
-	A1_SRC0_CHANNEL_W_SHIFT;
-    if (operand0.w < 0)
-	op.ui[1] |= A1_SRC0_CHANNEL_W_NEGATE;
+	op.ui[1] |= i915_get_hardware_channel_val(operand0.w) <<
+	    A1_SRC0_CHANNEL_W_SHIFT;
+	if (operand0.w < 0)
+		op.ui[1] |= A1_SRC0_CHANNEL_W_NEGATE;
 
-    /* Set up operand 1 */
-    op.ui[1] |= REG_TYPE(operand1.reg) << A1_SRC1_TYPE_SHIFT;
-    op.ui[1] |= REG_NR(operand1.reg) << A1_SRC1_NR_SHIFT;
+	/* Set up operand 1 */
+	op.ui[1] |= REG_TYPE(operand1.reg) << A1_SRC1_TYPE_SHIFT;
+	op.ui[1] |= REG_NR(operand1.reg) << A1_SRC1_NR_SHIFT;
 
-    op.ui[1] |= i915_get_hardware_channel_val(operand1.x) <<
-	A1_SRC1_CHANNEL_X_SHIFT;
-    if (operand1.x < 0)
-	op.ui[1] |= A1_SRC1_CHANNEL_X_NEGATE;
+	op.ui[1] |= i915_get_hardware_channel_val(operand1.x) <<
+	    A1_SRC1_CHANNEL_X_SHIFT;
+	if (operand1.x < 0)
+		op.ui[1] |= A1_SRC1_CHANNEL_X_NEGATE;
 
-    op.ui[1] |= i915_get_hardware_channel_val(operand1.y) <<
-	A1_SRC1_CHANNEL_Y_SHIFT;
-    if (operand1.y < 0)
-	op.ui[1] |= A1_SRC1_CHANNEL_Y_NEGATE;
+	op.ui[1] |= i915_get_hardware_channel_val(operand1.y) <<
+	    A1_SRC1_CHANNEL_Y_SHIFT;
+	if (operand1.y < 0)
+		op.ui[1] |= A1_SRC1_CHANNEL_Y_NEGATE;
 
-    op.ui[2] |= i915_get_hardware_channel_val(operand1.z) <<
-	A2_SRC1_CHANNEL_Z_SHIFT;
-    if (operand1.z < 0)
-	op.ui[2] |= A2_SRC1_CHANNEL_Z_NEGATE;
+	op.ui[2] |= i915_get_hardware_channel_val(operand1.z) <<
+	    A2_SRC1_CHANNEL_Z_SHIFT;
+	if (operand1.z < 0)
+		op.ui[2] |= A2_SRC1_CHANNEL_Z_NEGATE;
 
-    op.ui[2] |= i915_get_hardware_channel_val(operand1.w) <<
-	A2_SRC1_CHANNEL_W_SHIFT;
-    if (operand1.w < 0)
-	op.ui[2] |= A2_SRC1_CHANNEL_W_NEGATE;
+	op.ui[2] |= i915_get_hardware_channel_val(operand1.w) <<
+	    A2_SRC1_CHANNEL_W_SHIFT;
+	if (operand1.w < 0)
+		op.ui[2] |= A2_SRC1_CHANNEL_W_NEGATE;
 
-    /* Set up operand 2 */
-    op.ui[2] |= REG_TYPE(operand2.reg) << A2_SRC2_TYPE_SHIFT;
-    op.ui[2] |= REG_NR(operand2.reg) << A2_SRC2_NR_SHIFT;
+	/* Set up operand 2 */
+	op.ui[2] |= REG_TYPE(operand2.reg) << A2_SRC2_TYPE_SHIFT;
+	op.ui[2] |= REG_NR(operand2.reg) << A2_SRC2_NR_SHIFT;
 
-    op.ui[2] |= i915_get_hardware_channel_val(operand2.x) <<
-	A2_SRC2_CHANNEL_X_SHIFT;
-    if (operand2.x < 0)
-	op.ui[2] |= A2_SRC2_CHANNEL_X_NEGATE;
+	op.ui[2] |= i915_get_hardware_channel_val(operand2.x) <<
+	    A2_SRC2_CHANNEL_X_SHIFT;
+	if (operand2.x < 0)
+		op.ui[2] |= A2_SRC2_CHANNEL_X_NEGATE;
 
-    op.ui[2] |= i915_get_hardware_channel_val(operand2.y) <<
-	A2_SRC2_CHANNEL_Y_SHIFT;
-    if (operand2.y < 0)
-	op.ui[2] |= A2_SRC2_CHANNEL_Y_NEGATE;
+	op.ui[2] |= i915_get_hardware_channel_val(operand2.y) <<
+	    A2_SRC2_CHANNEL_Y_SHIFT;
+	if (operand2.y < 0)
+		op.ui[2] |= A2_SRC2_CHANNEL_Y_NEGATE;
 
-    op.ui[2] |= i915_get_hardware_channel_val(operand2.z) <<
-	A2_SRC2_CHANNEL_Z_SHIFT;
-    if (operand2.z < 0)
-	op.ui[2] |= A2_SRC2_CHANNEL_Z_NEGATE;
+	op.ui[2] |= i915_get_hardware_channel_val(operand2.z) <<
+	    A2_SRC2_CHANNEL_Z_SHIFT;
+	if (operand2.z < 0)
+		op.ui[2] |= A2_SRC2_CHANNEL_Z_NEGATE;
 
-    op.ui[2] |= i915_get_hardware_channel_val(operand2.w) <<
-	A2_SRC2_CHANNEL_W_SHIFT;
-    if (operand2.w < 0)
-	op.ui[2] |= A2_SRC2_CHANNEL_W_NEGATE;
+	op.ui[2] |= i915_get_hardware_channel_val(operand2.w) <<
+	    A2_SRC2_CHANNEL_W_SHIFT;
+	if (operand2.w < 0)
+		op.ui[2] |= A2_SRC2_CHANNEL_W_NEGATE;
 
-    return op;
+	return op;
 }
 
 /** Move operand0 to dest_reg */
@@ -425,8 +420,8 @@ do {									\
  */
 #define FS_LOCALS(x)							\
     uint32_t _shader_buf[(x) * 3];					\
-    int _max_shader_commands = x;					\
-    int _cur_shader_commands
+    unsigned int _max_shader_commands = x;				\
+    unsigned int _cur_shader_commands
 
 #define FS_BEGIN()							\
 do {									\
@@ -435,18 +430,19 @@ do {									\
 
 #define FS_OUT(_shaderop)						\
 do {									\
+    if (_cur_shader_commands >= _max_shader_commands)			\
+	 FatalError("fragment shader command buffer exceeded (%d)\n",	\
+		    _cur_shader_commands);				\
     _shader_buf[_cur_shader_commands * 3 + 0] = _shaderop.ui[0];	\
     _shader_buf[_cur_shader_commands * 3 + 1] = _shaderop.ui[1];	\
     _shader_buf[_cur_shader_commands * 3 + 2] = _shaderop.ui[2];	\
-    if (++_cur_shader_commands > _max_shader_commands)			\
-	 FatalError("fragment shader command buffer exceeded (%d)\n",	\
-		    _cur_shader_commands);				\
+    ++_cur_shader_commands;						\
 } while (0)
 
 #define FS_END()							\
 do {									\
     int _i, _pad = (_cur_shader_commands & 0x1) ? 0 : 1;		\
-    BEGIN_BATCH(_cur_shader_commands * 3 + 1 + _pad);			\
+    ATOMIC_BATCH(_cur_shader_commands * 3 + 1 + _pad);			\
     OUT_BATCH(_3DSTATE_PIXEL_SHADER_PROGRAM |				\
 	     (_cur_shader_commands * 3 - 1));				\
     for (_i = 0; _i < _cur_shader_commands * 3; _i++)			\

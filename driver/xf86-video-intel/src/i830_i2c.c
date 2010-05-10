@@ -31,8 +31,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Resources.h"
-#include "xf86RAC.h"
 #include "xf86cmap.h"
 #include "compiler.h"
 #include "mibstore.h"
@@ -57,8 +55,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 static void i830_setscl(I2CBusPtr b, int state)
 {
-    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = xf86Screens[b->scrnIndex];
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t val;
 
     OUTREG(b->DriverPrivate.uval,
@@ -69,8 +67,8 @@ static void i830_setscl(I2CBusPtr b, int state)
 
 static void i830_setsda(I2CBusPtr b, int state)
 {
-    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = xf86Screens[b->scrnIndex];
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t val;
 
     OUTREG(b->DriverPrivate.uval,
@@ -81,8 +79,8 @@ static void i830_setsda(I2CBusPtr b, int state)
 
 static void i830_getscl(I2CBusPtr b, int *state)
 {
-    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = xf86Screens[b->scrnIndex];
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t val;
 
     OUTREG(b->DriverPrivate.uval, GPIO_CLOCK_DIR_IN | GPIO_CLOCK_DIR_MASK);
@@ -93,8 +91,8 @@ static void i830_getscl(I2CBusPtr b, int *state)
 
 static int i830_getsda(I2CBusPtr b)
  {
-     ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
-     I830Ptr pI830 = I830PTR(pScrn);
+     ScrnInfoPtr scrn = xf86Screens[b->scrnIndex];
+     intel_screen_private *intel = intel_get_screen_private(scrn);
      uint32_t val;
 
      OUTREG(b->DriverPrivate.uval, GPIO_DATA_DIR_IN | GPIO_DATA_DIR_MASK);
@@ -270,8 +268,8 @@ static Bool first = TRUE;
 static void
 i830I2CGetBits(I2CBusPtr b, int *clock, int *data)
 {
-    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = xf86Screens[b->scrnIndex];
+    intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t val;
 
     val = INREG(b->DriverPrivate.uval);
@@ -302,8 +300,8 @@ i830I2CPutBits(I2CBusPtr b, int clock, int data)
     int cur_clock, cur_data;
 #endif
 
-    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
-    I830Ptr pI830 = I830PTR(pScrn);
+    ScrnInfoPtr scrn = xf86Screens[b->scrnIndex];
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
 #if I2C_DEBUG
     i830I2CGetBits(b, &cur_clock, &cur_data);
@@ -319,7 +317,7 @@ i830I2CPutBits(I2CBusPtr b, int clock, int data)
 	   data ? '^' : 'v');
 #endif
 
-    if (!IS_I830(pI830) && !IS_845G(pI830)) {
+    if (!IS_I830(intel) && !IS_845G(intel)) {
 	/* On most chips, these bits must be preserved in software. */
 	reserved = INREG(b->DriverPrivate.uval) &
 	    (GPIO_DATA_PULLUP_DISABLE | GPIO_CLOCK_PULLUP_DISABLE);
@@ -343,10 +341,10 @@ i830I2CPutBits(I2CBusPtr b, int clock, int data)
 
 /* the i830 has a number of I2C Buses */
 Bool
-I830I2CInit(ScrnInfoPtr pScrn, I2CBusPtr *bus_ptr, int i2c_reg, char *name)
+I830I2CInit(ScrnInfoPtr scrn, I2CBusPtr *bus_ptr, int i2c_reg, char *name)
 {
     I2CBusPtr pI2CBus;
-    I830Ptr pI830 = I830PTR(pScrn);
+    intel_screen_private *intel = intel_get_screen_private(scrn);
 
     pI2CBus = xf86CreateI2CBusRec();
 
@@ -354,7 +352,7 @@ I830I2CInit(ScrnInfoPtr pScrn, I2CBusPtr *bus_ptr, int i2c_reg, char *name)
 	return FALSE;
 
     pI2CBus->BusName = name;
-    pI2CBus->scrnIndex = pScrn->scrnIndex;
+    pI2CBus->scrnIndex = scrn->scrnIndex;
 #if AIRLIED_I2C
     pI2CBus->I2CGetByte = I830I2CGetByte;
     pI2CBus->I2CPutByte = I830I2CPutByte;
