@@ -59,7 +59,8 @@ from The Open Group.
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
-#include <X11/extensions/recordstr.h>
+#include <X11/extensions/recordproto.h>
+#include <X11/extensions/record.h>
 
 static XExtensionInfo _xrecord_info_data;
 static XExtensionInfo *xrecord_info = &_xrecord_info_data;
@@ -251,16 +252,13 @@ SendRange(
  **************************************************************************/
 
 XID
-XRecordIdBaseMask(dpy)
-    Display *dpy;
+XRecordIdBaseMask(Display *dpy)
 {
     return 0x1fffffff & ~dpy->resource_mask;
 }
 
 Status
-XRecordQueryVersion (dpy, cmajor_return, cminor_return)
-    Display 	*dpy;
-    int 	*cmajor_return, *cminor_return;
+XRecordQueryVersion(Display *dpy, int *cmajor_return, int *cminor_return)
 {
     XExtDisplayInfo *info = find_display (dpy);
     register xRecordQueryVersionReq   	*req;
@@ -288,13 +286,9 @@ XRecordQueryVersion (dpy, cmajor_return, cminor_return)
 }
 
 XRecordContext
-XRecordCreateContext(dpy, datum_flags, clients, nclients, ranges, nranges)
-    Display 		*dpy;
-    int			datum_flags;
-    XRecordClientSpec   *clients;
-    int 	        nclients;
-    XRecordRange  	**ranges;
-    int			nranges;
+XRecordCreateContext(Display *dpy, int datum_flags,
+		     XRecordClientSpec *clients, int nclients,
+		     XRecordRange **ranges, int nranges)
 {
     XExtDisplayInfo 	*info = find_display (dpy);
     register xRecordCreateContextReq 	*req;
@@ -322,20 +316,15 @@ XRecordCreateContext(dpy, datum_flags, clients, nclients, ranges, nranges)
 }
 
 XRecordRange *
-XRecordAllocRange()
+XRecordAllocRange(void)
 {
     return (XRecordRange*)Xcalloc(1, sizeof(XRecordRange));
 }
 
 Status
-XRecordRegisterClients(dpy, context, datum_flags, clients, nclients, ranges, nranges)
-    Display 		*dpy;
-    XRecordContext	context;
-    int			datum_flags;
-    XRecordClientSpec   *clients;
-    int 	        nclients;
-    XRecordRange  	**ranges;
-    int			nranges;
+XRecordRegisterClients(Display *dpy, XRecordContext context, int datum_flags,
+		       XRecordClientSpec *clients, int nclients,
+		       XRecordRange **ranges, int nranges)
 {
     XExtDisplayInfo *info = find_display (dpy);
     register xRecordRegisterClientsReq 	*req;
@@ -363,11 +352,8 @@ XRecordRegisterClients(dpy, context, datum_flags, clients, nclients, ranges, nra
 }
 
 Status
-XRecordUnregisterClients(dpy, context, clients, nclients)
-    Display 		*dpy;
-    XRecordContext	context;
-    XRecordClientSpec   *clients;
-    int			nclients;
+XRecordUnregisterClients(Display *dpy, XRecordContext context,
+			 XRecordClientSpec *clients, int nclients)
 {
     XExtDisplayInfo *info = find_display (dpy);
     register xRecordUnregisterClientsReq 	*req;
@@ -418,19 +404,17 @@ WireToLibRange(
 }
 
 Status
-XRecordGetContext(dpy, context, state_return)
-    Display 		*dpy;
-    XRecordContext	context;
-    XRecordState 	**state_return;
+XRecordGetContext(Display *dpy, XRecordContext context,
+		  XRecordState **state_return)
 {
     XExtDisplayInfo 	*info = find_display (dpy);
     register 		xRecordGetContextReq   	*req;
     xRecordGetContextReply 	rep;
     int			count, i, rn;
     xRecordRange   	xrange;
-    XRecordRange	*ranges;
+    XRecordRange	*ranges = NULL;
     xRecordClientInfo   xclient_inf;
-    XRecordClientInfo	**client_inf, *client_inf_str;
+    XRecordClientInfo	**client_inf, *client_inf_str = NULL;
     XRecordState	*ret;
 
     XRecordCheckExtension (dpy, info, 0);
@@ -519,8 +503,7 @@ XRecordGetContext(dpy, context, state_return)
 }
 
 void
-XRecordFreeState(state)
-    XRecordState *state;
+XRecordFreeState(XRecordState *state)
 {
     int i;
 
@@ -608,8 +591,7 @@ static XRecordInterceptData *alloc_inter_data(XExtDisplayInfo *info)
 }
 
 void
-XRecordFreeData(data)
-    XRecordInterceptData *data;
+XRecordFreeData(XRecordInterceptData *data)
 {
     /* we can do this cast because that is what we really allocated */
     struct intercept_queue *iq = (struct intercept_queue *)data;
@@ -849,11 +831,8 @@ parse_reply_call_callback(
 }
 
 Status
-XRecordEnableContext(dpy, context, callback, closure)
-    Display 		*dpy;
-    XRecordContext 	 context;
-    XRecordInterceptProc callback;
-    XPointer		 closure;
+XRecordEnableContext(Display *dpy, XRecordContext context,
+		     XRecordInterceptProc callback, XPointer closure)
 {
     XExtDisplayInfo *info = find_display (dpy);
     register xRecordEnableContextReq   	*req;
@@ -986,11 +965,8 @@ record_async_handler(
  * to get the rest.
  */
 Status
-XRecordEnableContextAsync(dpy, context, callback, closure)
-    Display 		*dpy;
-    XRecordContext 	 context;
-    XRecordInterceptProc callback;
-    XPointer		 closure;
+XRecordEnableContextAsync(Display *dpy, XRecordContext context,
+			  XRecordInterceptProc callback, XPointer closure)
 {
     XExtDisplayInfo *info = find_display (dpy);
     register xRecordEnableContextReq *req;
@@ -1059,16 +1035,13 @@ XRecordEnableContextAsync(dpy, context, callback, closure)
 }
 
 void
-XRecordProcessReplies(dpy)
-    Display   *dpy;
+XRecordProcessReplies(Display *dpy)
 {
     (void) XPending(dpy);
 }
 
 Status
-XRecordDisableContext(dpy, context)
-    Display 		*dpy;
-    XRecordContext 	context;
+XRecordDisableContext(Display *dpy, XRecordContext context)
 {
     XExtDisplayInfo *info = find_display (dpy);
     register xRecordDisableContextReq 	*req;
@@ -1086,9 +1059,7 @@ XRecordDisableContext(dpy, context)
 }
 
 Status
-XRecordFreeContext(dpy, context)
-    Display 		*dpy;
-    XRecordContext	context;
+XRecordFreeContext(Display *dpy, XRecordContext context)
 {
     XExtDisplayInfo *info = find_display (dpy);
     register xRecordFreeContextReq 	*req;

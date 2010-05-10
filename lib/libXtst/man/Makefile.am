@@ -28,30 +28,30 @@ libmandir = $(LIB_MAN_DIR)
 
 LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
 
-libman_xml = $(srcdir)/XTest.xml
+libman_xml = XTest.xml
 
-XTest_manpages =	\
-	XTestQueryExtension                 \
-	XTestCompareCursorWithWindow        \
-	XTestCompareCurrentCursorWithWindow \
-	XTestFakeKeyEvent                   \
-	XTestFakeButtonEvent                \
-	XTestFakeMotionEvent                \
-	XTestFakeRelativeMotionEvent        \
-	XTestGrabControl                    \
-	XTestSetGContextOfGC                \
-	XTestSetVisualIDOfVisual            \
-	XTestDiscard
+libman_PRE =	\
+	XTestQueryExtension.man \
+	XTestCompareCursorWithWindow.man \
+	XTestCompareCurrentCursorWithWindow.man \
+	XTestFakeKeyEvent.man \
+	XTestFakeButtonEvent.man \
+	XTestFakeMotionEvent.man \
+	XTestFakeRelativeMotionEvent.man \
+	XTestGrabControl.man \
+	XTestSetGContextOfGC.man \
+	XTestSetVisualIDOfVisual.man \
+	XTestDiscard.man
 
-libman_PRE = $(XTest_manpages:%=%.man)
-
-EXTRA_DIST = $(libman_PRE) $(libman_xml)
+EXTRA_DIST = $(libman_PRE) $(libman_xml) x.stamp
 
 CLEANFILES = $(libman_DATA) $(BUILT_SOURCES)
 
 MAINTAINERCLEANFILES = $(libman_PRE)
 
+if HAVE_XMLTO
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
+endif
 
 SED = sed
 
@@ -72,15 +72,25 @@ SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 .man.$(LIB_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
 
-# Generate nroff sources from DocBook/xml
-
-dist-hook: $(libman_PRE)
-
+# This is ugly, but handling of tools with multiple outputs in make is a
+# huge PITA. The commands below are taken from the automake manual:
+# http://www.gnu.org/software/automake/manual/automake.html#Multiple-Outputs
 if HAVE_XMLTO
-$(libman_PRE): $(libman_xml)
-	$(XMLTO) man $(libman_xml)
-	for m in $(XTest_manpages); do \
-	  mv -f $$m.__libmansuffix__ $$m.man ; \
+x.stamp: $(libman_xml)
+	@rm -f x.tmp
+	@touch x.tmp
+	$(XMLTO) man $^
+	@for man in $(libman_PRE); do \
+	  out=`echo $$man | sed 's/\.man/.__libmansuffix__/'`; \
+	  echo mv -f $$out $$man; \
+	  mv -f $$out $$man || exit 1; \
 	done
-
-endif HAVE_XMLTO
+	@mv -f x.tmp $@
+$(libman_PRE): x.stamp
+	@if test -f $@; then :; else \
+	  rm -f $<; \
+	  $(MAKE) $(AM_MAKEFLAGS) $<; \
+	fi
+CLEANFILES += x.tmp
+MAINTAINERCLEANFILES += x.stamp
+endif # HAVE_XMLTO

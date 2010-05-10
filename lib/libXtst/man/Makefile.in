@@ -62,6 +62,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@HAVE_XMLTO_TRUE@am__append_1 = x.tmp
+@HAVE_XMLTO_TRUE@am__append_2 = x.stamp
 subdir = man
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -99,8 +101,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -188,6 +192,7 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -217,25 +222,24 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 libmandir = $(LIB_MAN_DIR)
 LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
-libman_xml = $(srcdir)/XTest.xml
-XTest_manpages = \
-	XTestQueryExtension                 \
-	XTestCompareCursorWithWindow        \
-	XTestCompareCurrentCursorWithWindow \
-	XTestFakeKeyEvent                   \
-	XTestFakeButtonEvent                \
-	XTestFakeMotionEvent                \
-	XTestFakeRelativeMotionEvent        \
-	XTestGrabControl                    \
-	XTestSetGContextOfGC                \
-	XTestSetVisualIDOfVisual            \
-	XTestDiscard
+libman_xml = XTest.xml
+libman_PRE = \
+	XTestQueryExtension.man \
+	XTestCompareCursorWithWindow.man \
+	XTestCompareCurrentCursorWithWindow.man \
+	XTestFakeKeyEvent.man \
+	XTestFakeButtonEvent.man \
+	XTestFakeMotionEvent.man \
+	XTestFakeRelativeMotionEvent.man \
+	XTestGrabControl.man \
+	XTestSetGContextOfGC.man \
+	XTestSetVisualIDOfVisual.man \
+	XTestDiscard.man
 
-libman_PRE = $(XTest_manpages:%=%.man)
-EXTRA_DIST = $(libman_PRE) $(libman_xml)
-CLEANFILES = $(libman_DATA) $(BUILT_SOURCES)
-MAINTAINERCLEANFILES = $(libman_PRE)
-libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
+EXTRA_DIST = $(libman_PRE) $(libman_xml) x.stamp
+CLEANFILES = $(libman_DATA) $(BUILT_SOURCES) $(am__append_1)
+MAINTAINERCLEANFILES = $(libman_PRE) $(am__append_2)
+@HAVE_XMLTO_TRUE@libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
@@ -317,7 +321,6 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/$(srcdir)
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -344,9 +347,6 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
-	$(MAKE) $(AM_MAKEFLAGS) \
-	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
-	  dist-hook
 check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
@@ -427,29 +427,37 @@ ps-am:
 uninstall-am: uninstall-info-am uninstall-libmanDATA
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
-	dist-hook distclean distclean-generic distclean-libtool \
-	distdir dvi dvi-am html html-am info info-am install \
-	install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am \
-	install-libmanDATA install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-info-am uninstall-libmanDATA
+	distclean distclean-generic distclean-libtool distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-exec install-exec-am \
+	install-info install-info-am install-libmanDATA install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	uninstall uninstall-am uninstall-info-am uninstall-libmanDATA
 
 
 .man.$(LIB_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
 
-# Generate nroff sources from DocBook/xml
-
-dist-hook: $(libman_PRE)
-
-@HAVE_XMLTO_TRUE@$(libman_PRE): $(libman_xml)
-@HAVE_XMLTO_TRUE@	$(XMLTO) man $(libman_xml)
-@HAVE_XMLTO_TRUE@	for m in $(XTest_manpages); do \
-@HAVE_XMLTO_TRUE@	  mv -f $$m.__libmansuffix__ $$m.man ; \
+# This is ugly, but handling of tools with multiple outputs in make is a
+# huge PITA. The commands below are taken from the automake manual:
+# http://www.gnu.org/software/automake/manual/automake.html#Multiple-Outputs
+@HAVE_XMLTO_TRUE@x.stamp: $(libman_xml)
+@HAVE_XMLTO_TRUE@	@rm -f x.tmp
+@HAVE_XMLTO_TRUE@	@touch x.tmp
+@HAVE_XMLTO_TRUE@	$(XMLTO) man $^
+@HAVE_XMLTO_TRUE@	@for man in $(libman_PRE); do \
+@HAVE_XMLTO_TRUE@	  out=`echo $$man | sed 's/\.man/.__libmansuffix__/'`; \
+@HAVE_XMLTO_TRUE@	  echo mv -f $$out $$man; \
+@HAVE_XMLTO_TRUE@	  mv -f $$out $$man || exit 1; \
 @HAVE_XMLTO_TRUE@	done
+@HAVE_XMLTO_TRUE@	@mv -f x.tmp $@
+@HAVE_XMLTO_TRUE@$(libman_PRE): x.stamp
+@HAVE_XMLTO_TRUE@	@if test -f $@; then :; else \
+@HAVE_XMLTO_TRUE@	  rm -f $<; \
+@HAVE_XMLTO_TRUE@	  $(MAKE) $(AM_MAKEFLAGS) $<; \
+@HAVE_XMLTO_TRUE@	fi
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

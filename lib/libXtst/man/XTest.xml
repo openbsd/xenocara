@@ -80,17 +80,17 @@ cc [ flag ... ] file ... -lXtst  [ library ... ]
 <funcprototype>
 <funcdef><function>Bool</function> XTestQueryExtension</funcdef>
 <paramdef><parameter>display</parameter></paramdef>
-<paramdef><parameter>event_base</parameter></paramdef>
-<paramdef><parameter>error_base</parameter></paramdef>
-<paramdef><parameter>major_version</parameter></paramdef>
-<paramdef><parameter>minor_version</parameter></paramdef>
+<paramdef><parameter>event_base_return</parameter></paramdef>
+<paramdef><parameter>error_base_return</parameter></paramdef>
+<paramdef><parameter>major_version_return</parameter></paramdef>
+<paramdef><parameter>minor_version_return</parameter></paramdef>
 </funcprototype>
 <funcsynopsisinfo>
  Display *display;
- int *event_base;
- int *error_base;
- int *major_version;
- int *minor_version;
+ int *event_base_return;
+ int *error_base_return;
+ int *major_version_return;
+ int *minor_version_return;
 </funcsynopsisinfo>
 <funcprototype>
 <funcdef><function>Bool</function> XTestCompareCursorWithWindow</funcdef>

@@ -1,3 +1,161 @@
+commit ddc11c4ef1bd0e6c970630dea74f54bb2b0ea893
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 5 11:38:38 2009 +1000
+
+    libXtst 1.1.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e3d74ecf1a3a7adfeafca8cd02c1da82e95d5eaf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 5 11:40:53 2009 +1000
+
+    Require libXext 1.0.99.4
+    
+    libXext 1.0.99.1 up to including 1.0.99.3 had the XTest.h header which is
+    now in this module.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7a9b269ed83c106265896373120603b9c06997f3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 5 10:38:34 2009 +1000
+
+    Require macros 1.3 for XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9f727168f561c76c5ae6c3115282ac803172e9f8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 25 14:09:47 2009 +1000
+
+    Version bump: 1.0.99.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 527759ae93ceaafca670995ab97545112f89bfbc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 18 11:12:37 2009 +1000
+
+    Include recordproto.h instead of recordstr.h
+
+commit 849fa907e129575831fbd3fa69249ff843413fd5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 14 14:15:48 2009 +1000
+
+    Move record headers to here.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1c928d9c138c90512d534e67e96bced247ca3241
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 14 15:00:15 2009 +1000
+
+    XRecord: avoid use of uninitialised variables.
+    
+    Both variables are initialized inside an if condition but later checked for
+    NULL.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c0404c6db9a8eacc07d140093982b910e54e3f97
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 22 20:34:51 2009 +1000
+
+    Version bump: 1.0.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3f4b895a29b1b48336621e6dcc80831a5910bed9
+Author: Magnus Kessler <Magnus.Kessler@gmx.net>
+Date:   Wed Jul 22 09:29:16 2009 +0100
+
+    Rename xtest.h to xtestconst.h to avoid a collision with XTest.h on case-insensitive filesystems
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ab9ad139b1f20866405ddcc44d25b7b141cd7bce
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 20 13:26:45 2009 +1000
+
+    Move XTest.h header from xextproto/libXext to here.
+    
+    XTest.h was in xextproto until xextproto-7.1 and did a short but whoefully
+    misguided visit to libXext during the cleanup of the xextproto headers.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a119baf3c5aa4f035040e0b991e99e6b382b9670
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 09:41:33 2009 +1000
+
+    Include xtestproto.h, not xteststr.h
+    
+    Require xextproto 7.0.99.1.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 378db00ee91a11629666fc1c5e5a5e13c65ffefc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Feb 2 20:34:37 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3237cc5b45a41ffe93ebde10b1090a7f2db6f88e
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Jan 30 20:41:31 2009 -0200
+
+    Janitor: ansification, make distcheck, compiler warnings.
+    
+      Manual page generation, and xmlto handling, shamelessly cut&paste'd
+    from libXi/man/Makefile.am, so that make distcheck will work.
+
+commit 48544103324d1816139dfafe5873a11c88ee05b6
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Fri Aug 8 10:18:19 2008 +0930
+
+    Require xi.pc for XInput.h include.
+    
+    XInput.h is now part of libXi. But just in case we have an older version of
+    libXi floating around, pull in inputproto too.
+
+commit 5b4ba84a422d168c01b335c4fc4046a7316463e0
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed May 21 12:38:00 2008 -0700
+
+    Add .PHONY build target to fix parallel builds
+
+commit 56bc832134b4f6884999797f0f0c1b846602088d
+Author: Peter Hutterer <peter@cs.unisa.edu.au>
+Date:   Mon May 19 17:38:08 2008 +0930
+
+    Rename parameters to clarify QueryExtension call.
+    
+    These parameters are not treated as input. Rename them to make the inner
+    workings slightly more obvious.
+    
+    X.Org Bug 14511 <http://bugs.freedesktop.org/show_bug.cgi?id=14511>
+
+commit f3971bca54ff6018758642303108eec975d80cd5
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:20 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 8db9ffdf7a16162cd81da2bf1e914ecf3981d0ee
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Oct 16 14:27:57 2007 +0200
+
+    Wrong place. Reverting srcdir patch.
+
+commit 7684e7da5648fb8664c145a5f4d79d8e2d085808
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Oct 15 11:44:53 2007 +0200
+
+    Fix man page build when srcdir is specified.
+
 commit 4a5ac6a63c22bdfac9a873803f3a0fa3d6e20a5b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Aug 17 14:57:22 2007 -0700
