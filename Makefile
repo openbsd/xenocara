@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.35 2010/01/31 14:28:45 matthieu Exp $
+# $OpenBSD: Makefile,v 1.36 2010/05/11 18:51:21 espie Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -11,7 +11,7 @@ RM?=rm
 XSERVER= xserver
 .endif
 
-.if ${USE_GCC3:L} == "yes"
+.if ${COMPILER_VERSION:L:Mgcc[34]*}
 XSERVER+= kdrive
 .endif
 
