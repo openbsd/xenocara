@@ -1,7 +1,6 @@
-# $OpenBSD: Makefile,v 1.11 2010/05/08 14:15:29 matthieu Exp $
+# $OpenBSD: Makefile,v 1.12 2010/05/13 17:38:57 espie Exp $
 
 .include <bsd.own.mk>
-USE_GCC3?=No
 DEBUG?=
 
 MESA_MAJOR=	7
@@ -124,7 +123,8 @@ CPPFLAGS+=	-I${DIST}/include \
 		-I${GLU}/libnurbs/interface \
 		-I${GLU}/libnurbs/nurbtess \
 		-DLIBRARYBUILD -D_EXTENSIONS_
-.if ${USE_GCC3:L} == "yes"
+
+.if ${COMPILER_VERSION:L:Mgcc[34]*}
 LDADD+=	-lsupc++
 .endif
 
