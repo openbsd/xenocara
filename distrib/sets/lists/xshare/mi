@@ -1467,7 +1467,6 @@
 ./usr/X11R6/man/man3/XFreeColors.3
 ./usr/X11R6/man/man3/XFreeCursor.3
 ./usr/X11R6/man/man3/XFreeDeviceList.3
-./usr/X11R6/man/man3/XFreeEventData.3
 ./usr/X11R6/man/man3/XFreeExtensionList.3
 ./usr/X11R6/man/man3/XFreeFont.3
 ./usr/X11R6/man/man3/XFreeFontInfo.3
@@ -1480,7 +1479,6 @@
 ./usr/X11R6/man/man3/XFreeStringList.3
 ./usr/X11R6/man/man3/XGCValues.3
 ./usr/X11R6/man/man3/XGContextFromGC.3
-./usr/X11R6/man/man3/XGenericEventCookie.3
 ./usr/X11R6/man/man3/XGetAtomName.3
 ./usr/X11R6/man/man3/XGetAtomNames.3
 ./usr/X11R6/man/man3/XGetClassHint.3
@@ -1495,7 +1493,6 @@
 ./usr/X11R6/man/man3/XGetDeviceProperty.3
 ./usr/X11R6/man/man3/XGetErrorDatabaseText.3
 ./usr/X11R6/man/man3/XGetErrorText.3
-./usr/X11R6/man/man3/XGetEventData.3
 ./usr/X11R6/man/man3/XGetExtensionVersion.3
 ./usr/X11R6/man/man3/XGetFeedbackControl.3
 ./usr/X11R6/man/man3/XGetFontPath.3
