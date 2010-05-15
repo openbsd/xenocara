@@ -39,10 +39,14 @@
 #include "ffb_regs.h"
 #include "xf86sbusBus.h"
 #include "ffb_dac.h"
+#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#include <X11/extensions/dpmsconst.h>
+#else
 #ifndef  DPMS_SERVER
 #define  DPMS_SERVER
 #endif   /* DPMS_SERVER */
 #include <X11/extensions/dpms.h>
+#endif
 
 
 /* Various offsets in virtual (ie. mmap()) spaces Linux and Solaris support. */
