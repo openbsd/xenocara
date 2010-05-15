@@ -1078,7 +1078,7 @@ drm_intel_gem_bo_get_subdata(drm_intel_bo *bo, unsigned long offset,
 static void
 drm_intel_gem_bo_wait_rendering(drm_intel_bo *bo)
 {
-	drm_intel_gem_bo_start_gtt_access(bo, 0);
+	drm_intel_gem_bo_start_gtt_access(bo, 1);
 }
 
 /**
@@ -1683,6 +1683,14 @@ drm_intel_gem_bo_disable_reuse(drm_intel_bo *bo)
 }
 
 static int
+drm_intel_gem_bo_is_reusable(drm_intel_bo *bo)
+{
+	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
+
+	return bo_gem->reusable;
+}
+
+static int
 _drm_intel_gem_bo_references(drm_intel_bo *bo, drm_intel_bo *target_bo)
 {
 	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
@@ -1829,6 +1837,7 @@ drm_intel_bufmgr_gem_init(int fd, int batch_size)
 	bufmgr_gem->bufmgr.check_aperture_space =
 	    drm_intel_gem_check_aperture_space;
 	bufmgr_gem->bufmgr.bo_disable_reuse = drm_intel_gem_bo_disable_reuse;
+	bufmgr_gem->bufmgr.bo_is_reusable = drm_intel_gem_bo_is_reusable;
 	bufmgr_gem->bufmgr.get_pipe_from_crtc_id =
 	    drm_intel_gem_get_pipe_from_crtc_id;
 	bufmgr_gem->bufmgr.bo_references = drm_intel_gem_bo_references;
