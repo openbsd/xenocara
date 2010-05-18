@@ -1,4 +1,3 @@
-/* $Xorg: PeekEvent.c,v 1.4 2001/02/09 02:03:35 xorgcvs Exp $ */
 /*
 
 Copyright 1986, 1998  The Open Group
@@ -24,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/X11/PeekEvent.c,v 1.3 2001/01/17 19:41:41 dawes Exp $ */
 
 #define NEED_EVENTS
 #ifdef HAVE_CONFIG_H
@@ -43,10 +41,15 @@ XPeekEvent (
 	register Display *dpy,
 	register XEvent *event)
 {
+	XEvent copy;
 	LockDisplay(dpy);
 	if (dpy->head == NULL)
 	    _XReadEvents(dpy);
 	*event = (dpy->head)->event;
+	if (_XCopyEventCookie(dpy, &event->xcookie, &copy.xcookie)) {
+	    _XStoreEventCookie(dpy, &copy);
+	    *event = copy;
+	}
 	UnlockDisplay(dpy);
 	return 1;
 }

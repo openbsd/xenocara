@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/Dis3C.man,v 1.2 2001/01/27 18:19:56 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -180,10 +179,10 @@ The
 macro returns the client white point of the screen associated with
 the specified CCC.
 .SH "SEE ALSO"
-XcmsCCCOfColormap(3X11),
-XcmsConvertColors(3X11),
-XcmsCreateCCC(3X11),
-XcmsDefaultCCC(3X11),
-XcmsSetWhitePoint(3X11)
+XcmsCCCOfColormap(__libmansuffix__),
+XcmsConvertColors(__libmansuffix__),
+XcmsCreateCCC(__libmansuffix__),
+XcmsDefaultCCC(__libmansuffix__),
+XcmsSetWhitePoint(__libmansuffix__)
 .br
 \fI\*(xL\fP

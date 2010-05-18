@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XSeTile.man,v 1.2 2001/01/27 18:20:05 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -230,13 +229,13 @@ to match in some other way required by the request.
 .ZN BadPixmap
 A value for a Pixmap argument does not name a defined Pixmap.
 .SH "SEE ALSO"
-XCreateGC(3X11),
-XQueryBestSize(3X11),
-XSetArcMode(3X11),
-XSetClipOrigin(3X11),
-XSetFillStyle(3X11),
-XSetFont(3X11),
-XSetLineAttributes(3X11),
-XSetState(3X11)
+XCreateGC(__libmansuffix__),
+XQueryBestSize(__libmansuffix__),
+XSetArcMode(__libmansuffix__),
+XSetClipOrigin(__libmansuffix__),
+XSetFillStyle(__libmansuffix__),
+XSetFont(__libmansuffix__),
+XSetLineAttributes(__libmansuffix__),
+XSetState(__libmansuffix__)
 .br
 \fI\*(xL\fP

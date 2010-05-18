@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XcmsCClrs.man,v 1.2 2001/01/27 18:20:06 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -193,10 +192,10 @@ a device-dependent format (for example,
 all specifications are converted to CIE XYZ format and then to the target
 device-dependent format.
 .SH "SEE ALSO"
-DisplayOfCCC(3X11),
-XcmsCCCOfColormap(3X11),
-XcmsCreateCCC(3X11),
-XcmsDefaultCCC(3X11),
-XcmsSetWhitePoint(3X11)
+DisplayOfCCC(__libmansuffix__),
+XcmsCCCOfColormap(__libmansuffix__),
+XcmsCreateCCC(__libmansuffix__),
+XcmsDefaultCCC(__libmansuffix__),
+XcmsSetWhitePoint(__libmansuffix__)
 .br
 \fI\*(xL\fP

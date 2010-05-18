@@ -41,7 +41,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XEnumDB.man,v 1.4 2003/04/28 22:17:54 herrb Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -228,8 +227,8 @@ If Xlib has been initialized for threads, the procedure is called with
 the database locked and the result of a call by the procedure to any
 Xlib function using the same database is not defined.
 .SH "SEE ALSO"
-XrmGetResource(3X11),
-XrmInitialize(3X11),
-XrmPutResource(3X11)
+XrmGetResource(__libmansuffix__),
+XrmInitialize(__libmansuffix__),
+XrmPutResource(__libmansuffix__)
 .br
 \fI\*(xL\fP

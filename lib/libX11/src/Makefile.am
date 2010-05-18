@@ -8,7 +8,7 @@ lib_LTLIBRARIES=libX11.la
 BUILT_SOURCES=ks_tables.h
 CLEANFILES=ks_tables.h ks_tables_h
 
-AM_CFLAGS= \
+AM_CPPFLAGS= \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/include/X11 \
 	-I$(top_builddir)/include \
@@ -16,10 +16,12 @@ AM_CFLAGS= \
 	-I$(top_srcdir)/src/xcms \
 	-I$(top_srcdir)/src/xkb \
 	-I$(top_srcdir)/src/xlibi18n \
+	-D_BSD_SOURCE -DX11_t -DTRANS_CLIENT
+
+AM_CFLAGS= \
 	$(X11_CFLAGS) \
 	$(BIGFONT_CFLAGS) \
 	$(XDMCP_CFLAGS) \
-	-D_BSD_SOURCE -DX11_t -DTRANS_CLIENT \
 	$(XMALLOC_ZERO_CFLAGS)
 
 #
@@ -130,6 +132,7 @@ libX11_la_SOURCES = \
                   FreeCols.c \
                   FreeCurs.c \
                   FreeEData.c \
+                  FreeEventData.c \
                   FreeGC.c \
                   FreePix.c \
                   FSSaver.c \
@@ -139,6 +142,7 @@ libX11_la_SOURCES = \
                   GetAtomNm.c \
                   GetColor.c \
                   GetDflt.c \
+                  GetEventData.c \
                   GetFPath.c \
                   GetFProp.c \
                   GetGCVals.c \
@@ -297,6 +301,7 @@ libX11_la_SOURCES = \
                   UnldFont.c \
                   UnmapSubs.c \
                   UnmapWin.c \
+                  utlist.h \
                   VisUtil.c \
                   WarpPtr.c \
                   Window.c \
@@ -373,7 +378,7 @@ if XKB
 USE_XKB_LIBS = $(XKB_LIBS)
 endif
 
-libX11_la_LDFLAGS = -version-number 6:2:0 -no-undefined
+libX11_la_LDFLAGS = -version-number 6:3:0 -no-undefined
 
 libX11_la_LIBADD = \
 	$(USE_I18N_LIBS) \
@@ -412,7 +417,7 @@ lintlib_src = $(libX11_la_SOURCES) xcms/*.c xkb/*.c
 CLEANFILES += $(lintlib_DATA)
 
 $(LINTLIB): $(libX11_la_SOURCES)
-	$(LINT) -y -oX11 -x $(ALL_LINT_FLAGS) $(lintlib_src)
+	$(AM_V_GEN)$(LINT) -y -oX11 -x $(ALL_LINT_FLAGS) $(lintlib_src)
 endif MAKE_LINT_LIB
 
 #

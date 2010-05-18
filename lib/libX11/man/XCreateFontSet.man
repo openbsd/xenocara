@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XCreFSet.man,v 1.2 2001/01/27 18:19:57 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -369,8 +368,8 @@ list, and
 .ZN XFontSetExtents , 
 if any, are freed.
 .SH "SEE ALSO"
-XExtentsofFontSet(3X11),
-XFontsOfFontSet(3X11),
-XFontSetExtents(3X11)
+XExtentsofFontSet(__libmansuffix__),
+XFontsOfFontSet(__libmansuffix__),
+XFontSetExtents(__libmansuffix__)
 .br
 \fI\*(xL\fP

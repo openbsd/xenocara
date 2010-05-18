@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XFlush.man,v 1.2 2001/01/27 18:19:59 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -257,9 +256,9 @@ with the mode
 .ZN QueuedAfterFlush
 specified.
 .SH "SEE ALSO"
-AllPlanes(3X11),
-XIfEvent(3X11),
-XNextEvent(3X11),
-XPutBackEvent(3X11)
+AllPlanes(__libmansuffix__),
+XIfEvent(__libmansuffix__),
+XNextEvent(__libmansuffix__),
+XPutBackEvent(__libmansuffix__)
 .br
 \fI\*(xL\fP

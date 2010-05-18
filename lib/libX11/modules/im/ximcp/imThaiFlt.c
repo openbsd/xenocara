@@ -1,4 +1,3 @@
-/* $Xorg: imThaiFlt.c,v 1.5 2001/02/09 02:03:39 xorgcvs Exp $ */
 /***********************************************************
 
 Copyright 1993, 1998  The Open Group
@@ -45,7 +44,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86: xc/lib/X11/imThaiFlt.c,v 3.22tsi Exp $ */
 
 /*
 **++
@@ -560,13 +558,37 @@ IC_RealGetPreviousChar(Xic ic, unsigned short pos)
         {
             c = 0;
         } else {
+            Xim     im;
+            XlcConv conv;
+            int     from_left;
+            int     to_left;
+            char   *from_buf;
+            char   *to_buf;
+
+            im = (Xim) XIMOfIC((XIC)ic);
             if (screc.text->encoding_is_wchar) {
-                c = ucs2tis(screc.text->string.wcs[0]);
-                XFree(screc.text->string.wcs);
+                conv = _XlcOpenConverter(im->core.lcd, XlcNWideChar,
+                                         im->core.lcd, XlcNCharSet);
+                from_buf = (char *) screc.text->string.wcs;
+                from_left = screc.text->length * sizeof(wchar_t);
             } else {
-                c = screc.text->string.mbs[0];
-                XFree(screc.text->string.mbs);
+                conv = _XlcOpenConverter(im->core.lcd, XlcNMultiByte,
+                                         im->core.lcd, XlcNCharSet);
+                from_buf = screc.text->string.mbs;
+                from_left = screc.text->length;
             }
+            to_buf = (char *)&c;
+            to_left = 1;
+
+            _XlcResetConverter(conv);
+            if (_XlcConvert(conv, (XPointer *)&from_buf, &from_left,
+                            (XPointer *)&to_buf, &to_left, NULL, 0) < 0)
+            {
+                c = (unsigned char) b->mb[b->tree[(ic)->private.local.context].mb];
+            }
+            _XlcCloseConverter(conv);
+
+            XFree(screc.text->string.mbs);
         }
         XFree(screc.text);
         return c;
@@ -1236,6 +1258,22 @@ ThaiFltReplaceInput(Xic ic, unsigned char new_char, KeySym symbol)
     return True;
 }
 
+Private unsigned
+NumLockMask(Display *d)
+{
+    int i;
+    XModifierKeymap *map = XGetModifierMapping (d);
+    KeyCode numlock_keycode = XKeysymToKeycode (d, XK_Num_Lock);
+    if (numlock_keycode == NoSymbol)
+        return 0;
+
+    for (i = 0; i < 8; i++) {
+        if (map->modifiermap[map->max_keypermod * i] == numlock_keycode)
+            return 1 << i;
+    }
+    return 0;
+}
+
 /*
  * Filter function for TACTIS
  */
@@ -1267,7 +1305,7 @@ _XimThaiFilter(Display *d, Window w, XEvent *ev, XPointer client_data)
     XwcLookupString((XIC)ic, &ev->xkey, wbuf, sizeof(wbuf) / sizeof(wbuf[0]),
 		    &symbol, NULL);
 
-    if ((ev->xkey.state & (AllMods & ~ShiftMask)) ||
+    if ((ev->xkey.state & (AllMods & ~(ShiftMask|LockMask|NumLockMask(d)))) ||
          ((symbol >> 8 == 0xFF) &&
          ((XK_BackSpace <= symbol && symbol <= XK_Clear) ||
            (symbol == XK_Return) ||

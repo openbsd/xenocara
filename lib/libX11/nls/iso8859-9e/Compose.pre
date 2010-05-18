@@ -3,7 +3,6 @@ XCOMM ISO 8859-9e (Latin??) Compose Sequence
 XCOMM
 XCOMM Sequence Definition
 XCOMM
-XCOMM $XFree86: xc/nls/Compose/iso8859-9e,v 1.1 2000/10/27 18:30:51 dawes Exp $
 XCOMM
 XCOMM <Multi_key> Means <Compose>
 XCOMM Special Character
@@ -97,10 +96,10 @@ XCOMM Special Character
 <Multi_key> <underscore> <a>		: "\252"	ordfeminine
 <Multi_key> <A> <underscore>		: "\252"	ordfeminine
 <Multi_key> <underscore> <A>		: "\252"	ordfeminine
-<Multi_key> <o> <underscore>		: "\272"	ordmasculine
-<Multi_key> <underscore> <o>		: "\272"	ordmasculine
-<Multi_key> <O> <underscore>		: "\272"	ordmasculine
-<Multi_key> <underscore> <O>		: "\272"	ordmasculine
+<Multi_key> <o> <underscore>		: "\272"	masculine
+<Multi_key> <underscore> <o>		: "\272"	masculine
+<Multi_key> <O> <underscore>		: "\272"	masculine
+<Multi_key> <underscore> <O>		: "\272"	masculine
 <Multi_key> <less> <less>		: "\253"	guillemotleft
 <Multi_key> <greater> <greater>		: "\273"	guillemotright
 <Multi_key> <0> <asciicircum>		: "\260"	degree

@@ -1,4 +1,3 @@
-/* $Xorg: OpenDis.c,v 1.4 2001/02/09 02:03:34 xorgcvs Exp $ */
 /*
 
 Copyright 1985, 1986, 1998  The Open Group
@@ -24,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/X11/OpenDis.c,v 3.16 2003/07/04 16:24:23 eich Exp $ */
 
 #define NEED_REPLIES
 #define NEED_EVENTS
@@ -273,21 +271,28 @@ XOpenDisplay (
 #ifndef XLIBMINBUFSIZE
 #define XLIBMINBUFSIZE BUFSIZE /* old default buffer size */
 #endif
-    if ((xlib_buffer_size = getenv("XLIBBUFFERSIZE")) == NULL)
-        conn_buf_size = XLIBDEFAULTBUFSIZE;
-    else
-        conn_buf_size = 1024 * strtol(xlib_buffer_size, NULL, 10);
-    if (conn_buf_size < XLIBMINBUFSIZE)
-        conn_buf_size = XLIBMINBUFSIZE;
+	xlib_buffer_size = getenv("XLIBBUFFERSIZE");
 
-    if ((dpy->bufptr = dpy->buffer = Xcalloc(1, conn_buf_size)) == NULL) {
-         OutOfMemory (dpy, setup);
-         return(NULL);
-    }
-    dpy->bufmax = dpy->buffer + conn_buf_size;
+#ifdef __sun /* Backwards compatibility for old Solaris libX11 name */
+	if (xlib_buffer_size == NULL)
+	    xlib_buffer_size = getenv("XSUNBUFFERSIZE");
+#endif
+
+	if (xlib_buffer_size == NULL)
+	    conn_buf_size = XLIBDEFAULTBUFSIZE;
+	else
+	    conn_buf_size = 1024 * strtol(xlib_buffer_size, NULL, 10);
+	if (conn_buf_size < XLIBMINBUFSIZE)
+	    conn_buf_size = XLIBMINBUFSIZE;
+
+	if ((dpy->bufptr = dpy->buffer = Xcalloc(1, conn_buf_size)) == NULL) {
+	    OutOfMemory (dpy, setup);
+	    return(NULL);
+	}
+	dpy->bufmax = dpy->buffer + conn_buf_size;
 #if USE_XCB
-    dpy->xcb->real_bufmax = dpy->bufmax;
-    dpy->bufmax = dpy->buffer;
+	dpy->xcb->real_bufmax = dpy->bufmax;
+	dpy->bufmax = dpy->buffer;
 #endif
 
 	/* Set up the input event queue and input event queue parameters. */
@@ -790,6 +795,17 @@ _XBigReqHandler(
 
 void _XFreeDisplayStructure(Display *dpy)
 {
+	/* move all cookies in the EQ to the jar, then free them. */
+	if (dpy->qfree) {
+	    _XQEvent *qelt = dpy->qfree;
+	    while (qelt) {
+		if (_XIsEventCookie(dpy, &qelt->event))
+		    _XStoreEventCookie(dpy, &qelt->event);
+		qelt = qelt->next;
+	    }
+        }
+	if (dpy->cookiejar)
+	    _XFreeEventCookies(dpy);
 	while (dpy->ext_procs) {
 	    _XExtension *ext = dpy->ext_procs;
 	    dpy->ext_procs = ext->next;

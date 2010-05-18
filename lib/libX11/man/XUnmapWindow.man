@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XUnmapWin.man,v 1.2 2001/01/27 18:20:06 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -201,11 +200,11 @@ error.
 .ZN BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XChangeWindowAttributes(3X11),
-XConfigureWindow(3X11),
-XCreateWindow(3X11),
-XDestroyWindow(3X11),
-XMapWindow(3X11)
-XRaiseWindow(3X11)
+XChangeWindowAttributes(__libmansuffix__),
+XConfigureWindow(__libmansuffix__),
+XCreateWindow(__libmansuffix__),
+XDestroyWindow(__libmansuffix__),
+XMapWindow(__libmansuffix__)
+XRaiseWindow(__libmansuffix__)
 .br
 \fI\*(xL\fP

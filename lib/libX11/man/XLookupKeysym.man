@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XLookKsym.man,v 1.4 2003/02/15 17:48:39 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -265,8 +264,12 @@ No text conversions are performed;
 the client is responsible for supplying appropriately encoded strings.
 Note that you can rebind a KeySym that may not exist.
 .SH "SEE ALSO"
-XButtonEvent(3X11),
-XMapEvent(3X11),
-XStringToKeysym(3X11)
+XButtonEvent(__libmansuffix__),
+XMapEvent(__libmansuffix__),
+XStringToKeysym(__libmansuffix__),
+XmbLookupString(__libmansuffix__),
+XwcLookupString(__libmansuffix__),
+Xutf8LookupString(__libmansuffix__),
+Compose(__filemansuffix__)
 .br
 \fI\*(xL\fP

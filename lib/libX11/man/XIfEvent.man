@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XIfEvent.man,v 1.3 2003/04/28 22:17:55 herrb Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -244,9 +243,9 @@ After finding a match, the predicate procedure must return
 If it did not find a match, it must return
 .ZN False .
 .SH "SEE ALSO"
-XAnyEvent(3X11),
-XNextEvent(3X11),
-XPutBackEvent(3X11)
-XSendEvent(3X11)
+XAnyEvent(__libmansuffix__),
+XNextEvent(__libmansuffix__),
+XPutBackEvent(__libmansuffix__)
+XSendEvent(__libmansuffix__)
 .br
 \fI\*(xL\fP

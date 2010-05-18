@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XcmsQBlk.man,v 1.2 2001/01/27 18:20:07 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -199,8 +198,8 @@ The
 function returns the color specification in the specified target format
 for full-intensity red, green, and blue.
 .SH "SEE ALSO"
-XcmsCIELabQueryMaxC(3X11),
-XcmsCIELuvQueryMaxC(3X11),
-XcmsTekHVCQueryMaxC(3X11)
+XcmsCIELabQueryMaxC(__libmansuffix__),
+XcmsCIELuvQueryMaxC(__libmansuffix__),
+XcmsTekHVCQueryMaxC(__libmansuffix__)
 .br
 \fI\*(xL\fP

@@ -41,8 +41,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\"
-.\" $XFree86: xc/doc/man/X11/XSLTTProp.man,v 1.5 2003/04/28 22:17:56 herrb Exp $
-.\" $XdotOrg: lib/X11/man/XStringListToTextProperty.man,v 1.2 2004-04-23 18:42:09 eich Exp $
 .\" 
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -237,19 +235,19 @@ typedef struct {
 } XTextProperty;
 .De
 .SH "SEE ALSO"
-XAllocClassHint(3X11),
-XAllocIconSize(3X11),
-XAllocSizeHints(3X11),
-XAllocWMHints(3X11),
-XFree(3X11),
-XSetCommand(3X11),
-XSetTransientForHint(3X11),
-XSetTextProperty(3X11),
-XSetWMClientMachine(3X11),
-XSetWMColormapWindows(3X11),
-XSetWMIconName(3X11),
-XSetWMName(3X11),
-XSetWMProperties(3X11),
-XSetWMProtocols(3X11)
+XAllocClassHint(__libmansuffix__),
+XAllocIconSize(__libmansuffix__),
+XAllocSizeHints(__libmansuffix__),
+XAllocWMHints(__libmansuffix__),
+XFree(__libmansuffix__),
+XSetCommand(__libmansuffix__),
+XSetTransientForHint(__libmansuffix__),
+XSetTextProperty(__libmansuffix__),
+XSetWMClientMachine(__libmansuffix__),
+XSetWMColormapWindows(__libmansuffix__),
+XSetWMIconName(__libmansuffix__),
+XSetWMName(__libmansuffix__),
+XSetWMProperties(__libmansuffix__),
+XSetWMProtocols(__libmansuffix__)
 .br
 \fI\*(xL\fP

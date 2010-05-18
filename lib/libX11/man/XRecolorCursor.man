@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XRecCur.man,v 1.2 2001/01/27 18:20:03 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -226,8 +225,8 @@ A value for a Cursor argument does not name a defined Cursor.
 .ZN BadDrawable
 A value for a Drawable argument does not name a defined Window or Pixmap.
 .SH "SEE ALSO"
-XCreateColormap(3X11),
-XCreateFontCursor(3X11),
-XDefineCursor(3X11)
+XCreateColormap(__libmansuffix__),
+XCreateFontCursor(__libmansuffix__),
+XDefineCursor(__libmansuffix__)
 .br
 \fI\*(xL\fP

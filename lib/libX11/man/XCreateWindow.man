@@ -41,8 +41,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XCreWin.man,v 1.5 2003/04/28 22:17:54 herrb Exp $
-.\" $XdotOrg: lib/X11/man/XCreateWindow.man,v 1.3 2005-08-17 01:27:08 alanc Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -487,12 +485,12 @@ alternatives can generate this error.
 .ZN BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XChangeWindowAttributes(3X11),
-XConfigureWindow(3X11), 
-XDefineCursor(3X11),
-XDestroyWindow(3X11), 
-XMapWindow(3X11), 
-XRaiseWindow(3X11),
-XUnmapWindow(3X11)
+XChangeWindowAttributes(__libmansuffix__),
+XConfigureWindow(__libmansuffix__), 
+XDefineCursor(__libmansuffix__),
+XDestroyWindow(__libmansuffix__), 
+XMapWindow(__libmansuffix__), 
+XRaiseWindow(__libmansuffix__),
+XUnmapWindow(__libmansuffix__)
 .br
 \fI\*(xL\fP

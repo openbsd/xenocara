@@ -41,8 +41,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XDrArc.man,v 1.4 2003/04/28 22:17:54 herrb Exp $
-.\" $XdotOrg: lib/X11/man/XDrawArc.man,v 1.3 2005-08-17 01:27:08 alanc Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -334,8 +332,8 @@ window is used as a Drawable.
 Some argument or pair of arguments has the correct type and range but fails
 to match in some other way required by the request.
 .SH "SEE ALSO"
-XDrawLine(3X11),
-XDrawPoint(3X11),
-XDrawRectangle(3X11)
+XDrawLine(__libmansuffix__),
+XDrawPoint(__libmansuffix__),
+XDrawRectangle(__libmansuffix__)
 .br
 \fI\*(xL\fP

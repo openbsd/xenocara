@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XStTKsym.man,v 1.2 2001/01/27 18:20:05 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -217,6 +216,6 @@ upper_return.
 Support for conversion of other than Latin and Cyrillic KeySyms is
 implementation-dependent.
 .SH "SEE ALSO"
-XLookupKeysym(3X11)
+XLookupKeysym(__libmansuffix__)
 .br
 \fI\*(xL\fP

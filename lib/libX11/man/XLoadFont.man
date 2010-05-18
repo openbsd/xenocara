@@ -40,8 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XLoadFont.man,v 1.3 2003/04/28 22:17:55 herrb Exp $
-.\" $XdotOrg: lib/X11/man/XLoadFont.man,v 1.2 2004-04-23 18:42:09 eich Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -534,8 +532,8 @@ A value for a Font or GContext argument does not name a defined Font.
 .ZN BadName
 A font or color of the specified name does not exist.
 .SH "SEE ALSO"
-XCreateGC(3X11),
-XListFonts(3X11),
-XSetFontPath(3X11)
+XCreateGC(__libmansuffix__),
+XListFonts(__libmansuffix__),
+XSetFontPath(__libmansuffix__)
 .br
 \fI\*(xL\fP

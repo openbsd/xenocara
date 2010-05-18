@@ -1,3 +1,1018 @@
+commit 68530599e61cf9fef3fcc91650e7cef21837fce7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Jan 16 11:41:32 2010 -0800
+
+    libX11 1.3.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1e5af224b9fbdb154620f898558704f2bc4bf4e9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 18:33:39 2010 -0800
+
+    Update COPYING file with actual licenses from libX11 code & docs
+    
+    COPYING was previously a years out-of-date copy of the LICENSES
+    doc summarizing all licenses for all XFree86 components, many of
+    which did not apply to libX11.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ddb1786720d6136b1b28be599c75c10ad1b76a2a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 17:38:26 2010 -0800
+
+    Purge CVS/RCS id tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit c1db9ddcfa7091f173478dca45bf720badedfca4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 15:39:14 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1aaa7c0358c5c035b99625f5715cb722bc2d2a2f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 08:28:22 2010 -0800
+
+    Add %S substitutions to Compose man page
+    
+    Commit 9df349a7894725f9469b106af645f57f7f3f9af3 added support for %S
+    in Compose file include statements - this documents it in the Compose
+    file man page.
+    
+    Also changes the existing substitution documentation to list format
+    instead of a paragraph format to allow easier adding of %S.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 94b45db93058cffa25598fe27dd3e385ace9d305
+Author: Richard Purdie <rpurdie@linux.intel.com>
+Date:   Thu Jan 14 08:04:28 2010 -0800
+
+    Fix configure.ac PKG_ macro calls
+    
+    If the first call to PKG_CHECK_MODULES() may not be called during execution
+    which is the case here since its inside a case statement, call
+    PKG_PROG_PKG_CONFIG() to ensure things worked correctly.
+    
+    Fixes a configure failure introduced by commit
+    87529c039050ce3336ff9ce00f1b5a21d15690da when xcb is enabled.
+    
+    http://bugs.freedesktop.org/show_bug.cgi?id=26041
+    
+    Signed-off-by: Richard Purdie <rpurdie@linux.intel.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit df559d8bc2238a2c369152fcb06e5b5ab132a5dc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 12 09:18:15 2010 -0800
+
+    Raise xorg-macros requirement to 1.4
+    
+    Needed since the changes in 464390f16d7ed4aa5bf80f89863ba92273075ec2
+    depend on the INSTALL file delivered in xorg-macros 1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9df349a7894725f9469b106af645f57f7f3f9af3
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Jan 13 11:04:38 2010 -0500
+
+    Allow inclusion of system level compose files.
+    
+    With the release of XFree86 4.4 an inclusion system of compose files was
+    added to Xlib to allow inclusion of the default compose file (with %L),
+    any compose files from user’s home directory (with %H), or a compose
+    file with a hard coded path¹. However, even today including system level
+    compose files is not possible in a platform independent manner although
+    the machinery for including compose files and overriding previously
+    defined compositions is already in place.
+    
+    With the ability to include system level compose files one could greatly
+    reduce the need for compose file rule duplication and the work needed to
+    propagate changes in one compose file to others. For example, currently
+    the Finnish compose file fi_FI.UTF-8 weights over 5000 lines² but it
+    is almost identical with en_US.UTF-8 except for perhaps half a dozen
+    compositions.
+    
+    This commit allows one to include system level compose files with the
+    following kind of syntax:
+    
+    include "%S/en_US.UTF-8/Compose"
+    
+    1] http://www.xfree86.org/4.4.0/RELNOTES5.html#42
+    2] http://cgit.freedesktop.org/xorg/lib/libX11/tree/nls/fi_FI.UTF-8/Compose.pre
+    
+    Signed-off-by: Marko Myllynen <myllynen@redhat.com>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit ccf21a8877f40136e25f2f62d0668b0c76b3cfbd
+Author: Thien-Thi Nguyen <ttn@gnuvola.org>
+Date:   Tue Dec 1 10:31:47 2009 +0100
+
+    libX11: Fix comment: Invert polarity (direction) of reformat description.
+    
+    Signed-off-by: Thien-Thi Nguyen <ttn@gnuvola.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 4d4676c0d6324d2ff9d00d15ab485fa5d848a369
+Author: Osamu Sayama <osamu.sayama@sun.com>
+Date:   Tue Jan 5 17:26:40 2010 -0800
+
+    set_fontset_extents crash after get_rotate_fontname fix in 2bef065b70f7
+    
+    - In set_fontset_extents, check font_data is not NULL before running
+      loop that may increment it to a non-NULL invalid pointer.
+    - Make sure get_rotate_fontname counts the final field
+    
+    Fixes OpenSolaris bug 6913809: X application dumps core in ja_JP.UTF-8 locale
+    <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6913809>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 87529c039050ce3336ff9ce00f1b5a21d15690da
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 5 18:02:37 2010 -0800
+
+    Merge X11, XKBPROTO, & XPROTO pkg-config lists
+    
+    Since the XPROTO_CFLAGS & XKBPROTO_CFLAGS are just merged into X11_CFLAGS
+    in configure.ac anyway, might as well combine the lists passed to
+    PKG_CHECK_MODULES to reduce duplication in the flags.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2dd053667b44c55e2bf601aec7b75fc6fee1cf44
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 5 17:56:58 2010 -0800
+
+    Add XCompose man page shadow for Compose man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 02543bba816e065c02cd36e0c9e21519a9ee9c96
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 5 17:47:44 2010 -0800
+
+    Add $(AM_V_GEN) to silence lint rules too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit db7c6fdeeaef9475458498e4cf09d6b1329e9aa3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 5 17:42:42 2010 -0800
+
+    Remove GCC_WARNINGS now that XORG_CWARNFLAGS sets them for us
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 6b4e526e7ba105622f6b143e8e2639b44cb6cc19
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 29 10:44:24 2009 -0500
+
+    configure.ac: restore correct order for XORG_DEFAULT_OPTIONS
+    
+    It must be following AC_USE_SYSTEM_EXTENSION
+
+commit 3dbaa11d1c8705e1b309c6686f354766b651ad20
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 29 10:01:44 2009 -0500
+
+    Add .gitignore in /specs for generated files
+    
+    Being in /specs, it will apply for all 3 subdirs
+
+commit f45d39d37aab04742e44cd8c3c993aad7587e40c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:03 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 464390f16d7ed4aa5bf80f89863ba92273075ec2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 6360e7f0ce6a75da2bed33ede7fea783a1fb80e1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit d02f943c98fde2f14319bc57fd9ad77eb9a2a572
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:42 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit f77c89c751a6a63c8ef11ecdddca2aed11ff6e29
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 46c7b0e9d0d85cf5ccc0d40d19821fcc3335503b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Nov 12 23:05:40 2009 -0800
+
+    Add compose-check.pl to EXTRA_DIST
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 54c64267cc8bc98641cc39a22cb7bd71673e89e0
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu Oct 29 17:17:24 2009 +0100
+
+    man: fix XCopyGC argument order
+    
+    Ubuntu bug#408337
+
+commit aad10032651cdc2a53b359035954454a28d6db67
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 23 13:55:14 2009 -0700
+
+    libX11 1.3.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 6303ada89cb228c0f9656036f798703afb42fc29
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 21 12:42:07 2009 +1000
+
+    Add smiley faces to compose sequences.
+    
+    I wonder how we could have lasted that long without them.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    Acked-By: James Cloos <cloos@jhcloos.com>
+
+commit 0e104ebd8628803c27e36b16922ad1edd891325a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 22 23:12:30 2009 -0700
+
+    Add man page for Compose file format
+    
+    Based on grammar description in modules/im/ximcp/imLcPrs.c and
+    note on XFree86 changes formerly found in xorg-docs RELNOTES.sgml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9c95f2af7c442b3a59b1a30cf804f1ef4e7fc5b5
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Oct 20 12:46:03 2009 -0700
+
+    Add extra configuration and sanity checks for groff and ps2pdf
+    
+    1) Add AC_ARG_VAR for GROFF and PS2PDF to inform users of these
+       environment variables.
+    2) Check that groff -ms works
+    
+    Some distributions ship the ms macros as a separate package which may
+    not be installed together with groff, so we need to make sure that groff
+    works and the required macros are actually installed before attempting
+    to build the specs.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+commit d3f801fd2f9198eaad6797414dba652f9c006c6d
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Sun Oct 18 17:34:53 2009 -0500
+
+    Fix VPATH build of libX11 specs
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+commit ad15e1a89d30ccc11d80745897b83def1448e8c0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 17 16:14:34 2009 -0700
+
+    libX11 1.3.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 0cbf98c17a7484bb58b2464b98d63bb3b4ea2594
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 17 16:28:25 2009 -0700
+
+    Fix make distcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 082e62ad268ef16a3bebc5a3c9fa008dbdc483ed
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:25:35 2009 -0700
+
+    Use $(AM_V_GEN) to silence echo commands for generating shadow man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 4e66da0783b2e5e3b288aaecd3c89396ed425c20
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Oct 14 16:18:24 2009 -0700
+
+    Move libX11 & XIM/locale specs from xorg-docs
+    
+    If groff is found, and --disable-specs is not passed to configure,
+    specs will be converted to text, html and ps (or pdf if ps2pdf is
+    found) and installed to $(docdir)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5d3d817a42ddcc8d0c6efd33efd1442fe14f5c6b
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Tue Oct 13 19:15:51 2009 -0500
+
+    Provide _Xsetlocale compat wrappers on Cygwin
+    
+    Previous versions of Cygwin did not have proper locale support, so Cygwin/X
+    defined X_LOCALE, using _Xsetlocale instead.  Cygwin 1.7 has added locale
+    support, but we can't remove the _Xsetlocale entry point without breaking
+    ABI.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+commit 2c8b3a877a713bb66a6316a7051b43c46af6e1a0
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Tue Oct 13 19:15:49 2009 -0500
+
+    dolt: add Cygwin to supported platforms
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+commit a2c8e3e34b15b57ff881a52101fc961a602f35e4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Oct 14 13:23:30 2009 -0700
+
+    Recognize XSUNBUFFERSIZE alias for XLIBBUFFERSIZE on Solaris
+    
+    Also fix indenting of the XLIBBUFFERSIZE code to match surrounding code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 34ddfca7b7d58240b0fe74bec6b2e0652d15c051
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Feb 10 17:47:25 2009 +0000
+
+    Include sys/select.h for select() and struct timeval, if it exists
+    
+    This is a cygwin build fix
+
+commit 383165916ddac91740d4c780174d4c0d07cdb994
+Author: Xake <xake@rymdraket.net>
+Date:   Sun Sep 27 11:16:36 2009 +0200
+
+    Use AM_V_GEN instead of customized macros for AM_SILENT_RULES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 854269d55cdda8caf425515bfed2855e211a5ada
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Oct 6 16:11:24 2009 +0200
+
+    configure: quote argument to m4_pattern_forbid
+    
+    Without this, configure spits out
+    ../configure: line 12364: ac_fn_c_check_member: command not found
+    ../configure: line 12378: ac_fn_c_check_type: command not found
+    
+    Also anchor the pattern to make it stricter.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 3bb020587ce74e0737ec7aceb20041f1e77d3b87
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Oct 1 22:20:38 2009 -0700
+
+    Split CFLAGS into CPPFLAGS and CFLAGS
+    
+    On some build systems, CPPFLAGS is set to "-I/some/prefix/include".  If older
+    X11 headers are in /some/prefix/include, they will be preferred over the
+    shipped headers.  This corrects that problem.
+
+commit d54caf1c9c55af8247621b7ba6afb20b23699839
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 2 10:59:08 2009 +1000
+
+    libX11 1.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dd201bcf9e7f8863b7ef32273a5ef021678133c1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 2 12:10:29 2009 +1000
+
+    nls: remove duplicate Compose sequences from pt_BR.UTF-8
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a293ae9e83739067fc92db1a39c262857bc2283e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 25 11:19:41 2009 +1000
+
+    Add XF86TouchpadToggle to XKeysymDB
+    
+    Lenovo laptops provide a key to enable or disable the touchpad and the
+    trackstick. This key is usually located on Fn + F8.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Adam Jackson <ajax@redhat.com>
+
+commit 69839f8903a24eab08f17a781b3797fb64dce9cf
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sun Sep 27 10:34:16 2009 -0700
+
+    Bug 24173: libX11 from git fails to build with automake older then 1.11
+    
+    AM_CONDITIONAL must come *before* the AC_OUTPUT that creates the
+    Makefiles, instead of after.
+    <http://bugs.freedesktop.org/show_bug.cgi?id=24173>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f5effd041f58ef07703cca2b4f396758811e1eec
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 15 10:59:23 2009 -0700
+
+    Resolve conflicting Compose sequences in iso8859-2, el_GR.UTF-8 & pt_BR.UTF-8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3843778358d3a0cd6a2d07dba5dd061248053ac9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 15 10:56:09 2009 -0700
+
+    Add perl script to check for duplicate or conflicting compose file entries
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 19cc5e1fa17a285045662820a8b4de2a0f9a194d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 18 17:10:04 2009 -0700
+
+    Use make rules instead of shell for loops to generate shadow man pages
+    
+    Allows parallel make and simpler build logs/error reporting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7dabcac973d0b6692a3cd62bd6d8e0467b24200b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 18 16:58:53 2009 -0700
+
+    Add AM_SILENT_RULES support for cpp rules for man & nls files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit bfa19cddd8546b4930a773f3bbd81137c362d82b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 18 16:58:16 2009 -0700
+
+    Update to using xorg-macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 51396066c8003a96a6399c9a4bed2a81e512b582
+Author: Mikko Niskanen <mikko.niskanen@iki.fi>
+Date:   Fri Sep 4 10:11:15 2009 +1000
+
+    Fix wrong typedef on HP-UX (#18998)
+    
+    shl_dt doesn't exist, the type is shl_t.
+    
+    X.Org Bug 18998 <http://bugs.freedesktop.org/show_bug.cgi?id=18998>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 615220a312b9430a580fe6dcf51703c6ef244f66
+Author: Paul Bender <pebender@gmail.com>
+Date:   Fri Sep 4 09:57:10 2009 +1000
+
+    Don't require xdmcp in configure.ac (#22583)
+    
+    X.Org Bug 22583 <http://bugs.freedesktop.org/show_bug.cgi?id=22583>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 20f9ecd86ad2a9ac6966f7eee32234cb5ef77c29
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 3 14:02:44 2009 +1000
+
+    man: fix parameters to XkbAllocGeomOverlay{Rows|Keys} (#23499)
+    
+    X.Org Bug 23499 <http://bugs.freedesktop.org/show_bug.cgi?id=23499>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c2814a614dc4d9409bfa0f44c18bfd69ad7f7b85
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 3 12:05:25 2009 +1000
+
+    man: XQueryTree may return BadWindow. (#23416)
+    
+    X.Org Bug 23416 <http://bugs.freedesktop.org/show_bug.cgi?id=XXX>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dbe98d456ccc6eeca9fa3e241a3db0a4d83c5a65
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 28 23:07:58 2009 +0800
+
+    Fix version tag in .TH line of several XKB man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit bf24400936c10af6f5aa0c75cfe2207ab9b680b4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 28 23:04:38 2009 +0800
+
+    XkbSetDeviceButtonActions.man: remove non-existent actions argument
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 53affa9335116f2d367f041e6502a411d4619e47
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 28 23:00:17 2009 +0800
+
+    XkbQueryExtension.man: Arguments should be pointers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 6233948885acc5873a5abddfff235afec555f3c2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 28 22:53:03 2009 +0800
+
+    XkbSAActionSetCtrls.man: Fix typo in formatting macro
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 28a9ca57cdec4aa9ca92322f963b01f0c2daf47a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 28 22:49:31 2009 +0800
+
+    Convert Xkb API man pages to ANSI prototypes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit fa2eecca85baab9616f7143cc1a853a594b4a90c
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Aug 24 06:35:17 2009 -0400
+
+    Add some (Serbian) Cyrillic NFD sequences.
+    
+    A number of characters in use in the various countries which use the
+    Cyrillic script do not appear as pre-composed characters in The UCS
+    or Unicode; they are only available as combining-character sequences.
+    
+    This commit adds support for using (prefix) dead keys and Multi_key-
+    initiated sequences to enter a number of these combining-character
+    sequences.  This ensures that users can enter these scripts even
+    when using the current Cyrillic keymaps, which lack support for
+    the combining characters.
+    
+    Please see the discussions on the xkb mailing list.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit d1bdc909f9246119696c8b0d9afb7bd8afb71b60
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Aug 5 18:14:23 2009 +0200
+
+    man/xkb: delete spurious newline in .TH headers
+
+commit ee723b83b24682db833a2f0abd96cd319b8a62af
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Aug 5 16:45:19 2009 +0200
+
+    man: use __libmansuffix__ instead of 3X11 for references to other pages
+
+commit 595e204feb82c798a92eea41fea03be6476ac181
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Aug 5 16:43:36 2009 +0200
+
+    man/xkb: use __libmansuffix__ instead of hardcoding 3Xkb for manpage sections
+
+commit 9da7e230d5320e1556ad2084fcd06ee7994385ea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 5 14:15:02 2009 +1000
+
+    Bump to 1.2.99.901 (1.3 RC1)
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8f78c7b4e3570cd46c5a220982963c17fe2157b8
+Author: Filippo Giunchedi <filippo@debian.org>
+Date:   Sat Jun 6 16:56:54 2009 +0200
+
+    nls: add {left,right}wards arrow to compose table
+    
+    Debian bug#532117 <http://bugs.debian.org/532117>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7949bfa00390241d994f32463e50d4bd78920568
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Jul 31 13:33:52 2009 +0200
+
+    Update library version for new symbols
+    
+    Commit 554f755e5545f63d3c8f299297927238da155773 added generic event
+    cookie handling.  Bump libX11 version number accordingly.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 640fec5f4feacd01a00eea3dcd4edb220907d3dc
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Aug 2 17:18:31 2009 +0200
+
+    Add _XFUNCPROTOBEGIN/END to Xlib-xcb.h
+    
+    X.Org bug#22252 <https://bugs.freedesktop.org/show_bug.cgi?id=22252>
+    
+    Reported-by: Riku Salminen <rsalmin2@cc.hut.fi>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit bc06d49e9dac1836d6824769ddb2ac5ba9f14df7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 29 08:44:09 2009 +1000
+
+    Fix compiler warning 'unused variable qelt'
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 03f4907e14f5755e72309f08742977b871e81e33
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 29 08:34:57 2009 +1000
+
+    Add utlist.h to the Makefile.am
+    
+    utlist.h contains the linked list macros, it was added with the recent
+    addition of event cookies but utlist.h wasn't added to the Makefile.am. As a
+    result, make dist failed.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 554f755e5545f63d3c8f299297927238da155773
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 26 11:27:43 2009 +1000
+
+    Add generic event cookie handling to libX11.
+    
+    Generic events require more bytes than Xlib provides in the standard XEvent.
+    Memory allocated by the extension and stored as pointers inside the event is
+    prone to leak by simple 'while (1) { XNextEvent(...); }' loops.
+    
+    This patch adds cookie handling for generic events. Extensions may register
+    a cookie handler in addition to the normal event vectors. If an extension
+    has registered a cookie handler, _all_ generic events for this extensions
+    must be handled through cookies. Otherwise, the default event handler is
+    used.
+    
+    The cookie handler must return an XGenericEventCookie with a pointer to the
+    data.The rest of the event (type, serialNumber, etc.) are to be filled as
+    normal. When a client retrieves such a cookie event, the data is stored in
+    an internal queue (the 'cookiejar'). This data is freed on the next call to
+    XNextEvent().
+    
+    New extension interfaces:
+        XESetWireToEventCookie(display, extension_number, cookie_handler)
+    
+    Where cookie_handler must set cookie->data. The data pointer is of arbitray
+    size and type but must be a single memory block. This memory block
+    represents the actual extension's event.
+    
+    New client interfaces:
+        XGetEventData(display, *cookie);
+        XFreeEventData(display, *cookie);
+    
+    If the client needs the actual event data, it must call XGetEventData() with
+    the cookie. This returns the data pointer (and removes it from the cookie
+    jar) and the client is then responsible for freeing the event with
+    XFreeEventData(). It is safe to call either function with a non-cookie
+    event. Events unclaimed or not handled by the XGetEventData() are cleaned up
+    automatically.
+    
+    Example client code:
+        XEvent event;
+        XGenericEventCookie *cookie = &ev;
+    
+        XNextEvent(display, &event);
+        if (XGetEventData(display, cookie)) {
+            XIEvent *xievent = cookie->data;
+            ...
+        } else if (cookie->type == GenericEvent) {
+            /* handle generic event */
+        } else {
+            /* handle extension/core event */
+        }
+        XFreeEventData(display, cookie);
+    
+    Cookies are not multi-threading safe. Clients that use XGetEventData() must
+    lock between XNextEvent and XGetEventData to avoid other threads freeing
+    cookies.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d7675cb8fa7155e7aff1459636a117a97aa1bf28
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 6 13:17:35 2009 +1000
+
+    Bump to 1.2.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 75fe48e7a42a685d7098e8d7108b9b956c471563
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 10 14:07:34 2009 +1000
+
+    Bump to 1.2.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5d0fe0e0e92759af5667c5dca2eacb1b6f2d66ea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 2 09:10:25 2009 +1000
+
+    XMaskEvent/XCheckMaskedEvents must not check for GenericEvents.
+    
+    GenericEvent cannot be selected for in the core event masks and they must
+    thus be treated like extension events.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c1bf65b89f4e361f6178a73dd5334c8f2bd95732
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 2 09:06:05 2009 +1000
+
+    XWindowEvent/XCheckWindowEvent must not return GenericEvents.
+    
+    GenericEvents have no fixed position for the window, so they must be treated
+    like extension events.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 38f9054554d63525d2dd51aafb5eb57821158ab9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Jun 15 19:00:43 2009 -0700
+
+    Drop ancient USG SysV #ifdefs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7bfe1323f16a1a69cc474659f7ac0c2570b1cf42
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Jun 12 12:44:01 2009 -0400
+
+    Remove X_NOT_STDC_ENV usage. (#6527)
+
+commit 6dd74d7fb414ca1e99bae5c13e333961f396eb36
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 29 11:18:11 2009 +0200
+
+    nls: remove more duplicated aliases
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit e4b0899f516da224010e68bd2d953d5293d94993
+Author: parag <parag@rawhideTM.pnq.redhat.com>
+Date:   Thu May 28 11:29:35 2009 +0530
+
+    nls: Add pa_PK locale information and make pa_IN as default for pa.
+    
+    X.Org bug#21954 <http://bugs.freedesktop.org/show_bug.cgi?id=21954>
+    
+    [jcristau: removed the pa_PK.UTF-8 alias to itself]
+    
+    Signed-off-by: parag <pnemade@redhat.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit f0ea1f6d51145592f8617854f9320ec5dbff3299
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 29 10:58:20 2009 +0200
+
+    nls: remove broken sd_IN.UTF-8 alias
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit e29e010dabdb17d6498f2ef1786f69b8830c18ca
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 29 10:57:43 2009 +0200
+
+    nls: remove duplicated en_US* aliases
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit a89a300d87852c84389ad97db66dcb8930cb45dd
+Author: Caolan McNamara <caolanm@redhat.com>
+Date:   Thu May 21 18:41:05 2009 +0200
+
+    man: missing space in XAllocColor man page
+    
+    X.Org bug#21854 <http://bugs.freedesktop.org/show_bug.cgi?id=21854>
+
+commit c1c001e36504fd304f76f69bf6af3643225c49ea
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed May 13 13:03:54 2009 -0400
+
+    [nls] Replace remaining UCS Combining Characters in Compose sequences.
+    
+    The replaces the instances of keysyms which match <U03[0-6][0-9A-Fa-f]>,
+    where the keysym is used as a dead_key, with an actual dead_key symbol.
+    
+    The only remaining instances of UCS combining characters in the
+    compose sequences are of U0338 COMBINING LONG SOLIDUS OVERLAY
+    used as a suffix in Multi_key-initiated sequences to create
+    mathematics characters such as ∉ U+2209 NOT AN ELEMENT OF
+    from ∈ U+2208 ELEMENT OF.
+
+commit e2b0bad3d3b9e9ca781fc264eb7584afbe2a1a4f
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed May 13 09:58:59 2009 -0400
+
+    [nls] Remove extraneous instances of UCS Combining Characters in Compose sequences.
+    
+    This removes those instances of keysyms which match <U03[0-6][0-9A-Fa-f]>,
+    where the matching keysym is used as a dead_key, and for which alternative
+    compose sequences exist.
+
+commit 79f47e6dff2f0a0b673bbfecc47528edca814baa
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Fri May 8 20:11:54 2009 -0400
+
+    [nls] Remove combining_ keysyms from the Compose files
+    
+    Some of the UTF-8 Compose tables included combining_ keysyms in
+    the compose sequences as though they were dead symbols.  This
+    is contrary to how combining characters are used in the UCS.
+    Therefore, those lines have been removed from the Compose tables.
+    
+    There were also some combining_ keysyms as targets.  As those
+    are not included in x11proto’s keysymdef.h, and as those do
+    exist there as Uxxxx keysyms, they are replaced with the Uxxxx
+    keysym names.
+    
+    This addresses http://bugzilla.freedesktop.org/show_bug.cgi?id=5107
+    and is based on attachment 25644 by samuel.thibault@ens-lyon.org.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 4a08a3dfbda497b2be46e3e5fe6b777815ea27f9
+Author: parag <pnemade@redhat.com>
+Date:   Tue May 5 16:50:47 2009 +0530
+
+    libX11: Add new Indic language information to nls directory files. #21560
+    
+    Signed-off-by: parag <pnemade@redhat.com>
+
+commit aaf81096eb44b4c2812108721ba02738391884da
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat May 2 01:38:14 2009 -0700
+
+    Correct return type in XkbGetKeyboard man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 2bef065b70f70af520b5de8fb23529254d15f003
+Author: Christoph Pfister <christophpfister@gmail.com>
+Date:   Mon Apr 27 22:32:57 2009 -0700
+
+    X.Org Bug #21117: crash in get_rotate_fontname (omGeneric.c)
+    
+    http://bugs.freedesktop.org/show_bug.cgi?id=21117
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5c1cde105db10df24d3c532f032cbc59050c7313
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Apr 17 22:14:47 2009 -0700
+
+    Use AC_USE_SYSTEM_EXTENSIONS instead of hand-rolled check for _GNU_SOURCE
+    
+    Raises minimum autoconf version required to 2.60
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 84b7a91ef84f345384e4b0e13907385ca3ca3255
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Apr 14 15:59:57 2009 +0100
+
+    Fix fi_FI.UTF-8, again
+    
+    Commit 97fc6babd4ccaf300e25708868aa2a738893dc30 "NLS: Add UTF-8 compose
+    file for Finnish" made fi_FI.UTF-8 use a broken empty XLC_LOCALE file.
+    This reverts it back to using the en_US.UTF-8 one.
+
+commit 128daff4422f973ea40dd1e31b2db230e643549e
+Author: Theppitak Karoonboonyanan <thep@linux.thai.net>
+Date:   Thu Apr 9 12:01:07 2009 +0700
+
+    Thai XIM not retrieve MB surrounding on UTF-8 LC
+    
+    On th_TH.UTF-8 locale, Thai XIM rejects all combining characters for GTK+ apps
+    that use X Input Method.
+    
+    This is because GTK+ imxim immodule passes surrounding text in locale encoding,
+    which is UTF-8 for UTF-8 locales. But current Thai XIM in Xlib assumes the
+    multi-byte StringConversionText response for the StringConversionCallback to
+    always be TIS-620, by retrieving a single byte and using it as-is.
+    
+    If the Thai XIM tries to convert the multi-byte text based on locale codeset
+    before using it, it will work again.
+    
+    X.Org But 12759 <http://bugs.freedesktop.org/show_bug.cgi?id=12759>
+    
+    Signed-off-by: Theppitak Karoonboonyanan <thep@linux.thai.net>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit e09f0d227fbf95b6252759af9d426efd57686f9f
+Author: Theppitak Karoonboonyanan <thep@linux.thai.net>
+Date:   Thu Apr 9 11:47:55 2009 +0700
+
+    Thai XIM not filters when NumLock or CapsLock is on
+    
+    The Thai XIM component in libx11 activated on 'th*' locales normally filters
+    input sequence according to orthographic rules. However, when NumLock/CapsLock
+    is on, this stops working. All sequences are passed through.
+    
+    This is caused by missing masks in _XimThaiFilter(), which normally screens out
+    certain special keys from entering orthographic rules. Unfortunately, this
+    included events with NumLock/CapsLock on. Negating the masks from the check
+    allows the events to be tested by the rules.
+    
+    X.Org Bug 12517 <http://bugs.freedesktop.org/show_bug.cgi?id=12517>
+    
+    Signed-off-by: Theppitak Karoonboonyanan <thep@linux.thai.net>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit d108d3c706af3502820b5202564488ea19908b77
+Author: Theppitak Karoonboonyanan <thep@linux.thai.net>
+Date:   Thu Apr 9 11:25:25 2009 +0700
+
+    CharSet-to-CompoundText Conversion Failed for Thai Locales
+    
+    SCIM fails to commit Thai input characters on Thai locales, because it commits
+    string in compound text form, which was converted via
+    XwcTextListToTextProperty(). But the XLC_LOCALE for th_TH and th_TH.UTF-8
+    declares cs1's ct_encoding as TIS620-0:GR, which was commented out in
+    src/xlibi18n/lcCT.c default_ct_data, in favor of ISO8859-11 ESC sequence.
+    So, declaring cs1 as ISO8859-11:GR instead makes it work.
+    
+    Besides, for th_TH.UTF-8, adding cs2 class with ISO10646-1 encoding also adds
+    support for UTF-8 input.
+    
+    And, along discussion in the bug, a similar problem was found for fontset, too,
+    by causing delays on X apps startups on systems without tis620-0 fonts. This
+    is normally the case, as mkfontdir and mkfontscale generate iso8859-11 entries
+    by default for Thai X fonts. So, Thai fontset charset is also patched.
+    
+    X.Org Bug 16475 <http://bugs.freedesktop.org/show_bug.cgi?id=16475>
+    
+    Signed-off-by: Theppitak Karoonboonyanan <thep@linux.thai.net>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit fd62d3318c846cd43d66a505946e94704d7d83dc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 8 19:42:25 2009 -0700
+
+    Revert "Change masculine to ordmasculine in Compose file comments"
+    
+    This reverts commit 892b401d5acc055803a20e349ede0d64490f2230.
+    
+    As Julien Cristau correctly points out, I misread the Compose file grammar
+    in modules/im/ximcp/imLcPrs.c, and those are keysyms, not comments, and
+    the keysym is named XK_masculine in keysymdef.h.   This change is thus a
+    bug in the Solaris compose tables to be fixed, not an improvement to bring
+    upstream.
+
 commit eac57c77afdf44f50692225b8b0345a7c927bc84
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Apr 7 15:38:45 2009 -0700

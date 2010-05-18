@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XGrButton.man,v 1.2 2001/01/27 18:19:59 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -305,9 +304,9 @@ alternatives can generate this error.
 .ZN BadWindow
 A value for a Window argument does not name a defined Window.
 .SH "SEE ALSO"
-XAllowEvents(3X11),
-XGrabPointer(3X11),
-XGrabKey(3X11),
-XGrabKeyboard(3X11),
+XAllowEvents(__libmansuffix__),
+XGrabPointer(__libmansuffix__),
+XGrabKey(__libmansuffix__),
+XGrabKeyboard(__libmansuffix__),
 .br
 \fI\*(xL\fP

@@ -1,5 +1,3 @@
-/* $XdotOrg: lib/X11/src/SetLocale.c,v 1.4 2005-07-03 07:00:55 daniels Exp $ */
-/* $Xorg: SetLocale.c,v 1.4 2001/02/09 02:03:36 xorgcvs Exp $ */
 
 /*
  * Copyright 1990, 1991 by OMRON Corporation, NTT Software Corporation,
@@ -56,7 +54,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/lib/X11/SetLocale.c,v 3.20 2003/11/17 22:20:08 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -121,7 +118,7 @@ _Xsetlocale(
 
 #else /* X_LOCALE */
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__CYGWIN__)
 char *
 _Xsetlocale(
     int           category,
@@ -130,7 +127,7 @@ _Xsetlocale(
 {
     return setlocale(category, name);
 }
-#endif /* __APPLE__ */
+#endif /* __APPLE__ || __CYGWIN__ */
 
 /*
  * _XlcMapOSLocaleName is an implementation dependent routine that derives

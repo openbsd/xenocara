@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/ImageOrd.man,v 1.2 2001/01/27 18:19:56 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -238,9 +237,9 @@ typedef struct {
 } XPixmapFormatValues;
 .De
 .SH "SEE ALSO"
-AllPlanes(3X11),
-BlackPixelOfScreen(3X11),
-IsCursorKey(3X11),
-XFree(3X11)
+AllPlanes(__libmansuffix__),
+BlackPixelOfScreen(__libmansuffix__),
+IsCursorKey(__libmansuffix__),
+XFree(__libmansuffix__)
 .br
 \fI\*(xL\fP

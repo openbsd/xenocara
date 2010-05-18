@@ -1,4 +1,3 @@
-/* $Xorg: ChkMaskEv.c,v 1.4 2001/02/09 02:03:31 xorgcvs Exp $ */
 /*
 
 Copyright 1985, 1987, 1998  The Open Group
@@ -24,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/X11/ChkMaskEv.c,v 3.5 2001/10/28 03:32:29 tsi Exp $ */
 
 #define NEED_EVENTS
 #ifdef HAVE_CONFIG_H
@@ -54,12 +52,16 @@ Bool XCheckMaskEvent (
 	int n;			/* time through count */
 
         LockDisplay(dpy);
+
+	/* Delete unclaimed cookies */
+	_XFreeEventCookies(dpy);
+
 	prev = NULL;
 	for (n = 3; --n >= 0;) {
 	    for (qelt = prev ? prev->next : dpy->head;
 		 qelt;
 		 prev = qelt, qelt = qelt->next) {
-		if ((qelt->event.type < LASTEvent) &&
+		if ((qelt->event.type < GenericEvent) &&
 		    (_Xevent_to_mask[qelt->event.type] & mask) &&
 		    ((qelt->event.type != MotionNotify) ||
 		     (mask & AllPointers) ||

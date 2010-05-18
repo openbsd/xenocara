@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XMDBases.man,v 1.2 2001/01/27 18:20:01 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -209,8 +208,8 @@ The database entries are merged without changing values or types,
 regardless of the locale of the database.
 The locale of the target database is not modified.
 .SH "SEE ALSO"
-XrmGetResource(3X11),
-XrmInitialize(3X11),
-XrmPutResource(3X11)
+XrmGetResource(__libmansuffix__),
+XrmInitialize(__libmansuffix__),
+XrmPutResource(__libmansuffix__)
 .br
 \fI\*(xL\fP

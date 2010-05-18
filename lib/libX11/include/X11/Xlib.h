@@ -1,5 +1,3 @@
-/* $XdotOrg: lib/X11/include/X11/Xlib.h,v 1.6 2005-11-08 06:33:25 jkj Exp $ */
-/* $Xorg: Xlib.h,v 1.6 2001/02/09 02:03:38 xorgcvs Exp $ */
 /*
 
 Copyright 1985, 1986, 1987, 1991, 1998  The Open Group
@@ -25,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/X11/Xlib.h,v 3.25 2003/11/17 22:20:10 dawes Exp $ */
 
 
 /*
@@ -38,20 +35,7 @@ in this Software without prior written authorization from The Open Group.
 
 #define XlibSpecificationRelease 6
 
-#ifdef USG
-#ifndef __TYPES__
-#include <sys/types.h>			/* forgot to protect it... */
-#define __TYPES__
-#endif /* __TYPES__ */
-#else
-#if defined(_POSIX_SOURCE) && defined(MOTOROLA)
-#undef _POSIX_SOURCE
 #include <sys/types.h>
-#define _POSIX_SOURCE
-#else
-#include <sys/types.h>
-#endif
-#endif /* USG */
 
 #if defined(__SCO__) || defined(__UNIXWARE__)
 #include <stdint.h>
@@ -62,14 +46,6 @@ in this Software without prior written authorization from The Open Group.
 /* applications should not depend on these two headers being included! */
 #include <X11/Xfuncproto.h>
 #include <X11/Xosdefs.h>
-
-#ifndef X_WCHAR
-#ifdef X_NOT_STDC_ENV
-#ifndef ISC
-#define X_WCHAR
-#endif
-#endif
-#endif
 
 #ifndef X_WCHAR
 #include <stddef.h>
@@ -987,6 +963,17 @@ typedef struct
     int            evtype;       /* actual event type. */
     } XGenericEvent;
 
+typedef struct {
+    int            type;         /* of event. Always GenericEvent */
+    unsigned long  serial;       /* # of last request processed */
+    Bool           send_event;   /* true if from SendEvent request */
+    Display        *display;     /* Display the event was read from */
+    int            extension;    /* major opcode of extension that caused the event */
+    int            evtype;       /* actual event type. */
+    unsigned int   cookie;
+    void           *data;
+} XGenericEventCookie;
+
 /*
  * this union is defined so Xlib can always use the same sized
  * event structure internally, to avoid memory fragmentation.
@@ -1024,6 +1011,8 @@ typedef union _XEvent {
 	XMappingEvent xmapping;
 	XErrorEvent xerror;
 	XKeymapEvent xkeymap;
+	XGenericEvent xgeneric;
+	XGenericEventCookie xcookie;
 	long pad[24];
 } XEvent;
 #endif
@@ -4017,6 +4006,16 @@ extern int _Xmbtowc(
 extern int _Xwctomb(
     char *			/* str */,
     wchar_t			/* wc */
+);
+
+extern Bool XGetEventData(
+    Display*			/* dpy */,
+    XGenericEventCookie*	/* cookie*/
+);
+
+extern void XFreeEventData(
+    Display*			/* dpy */,
+    XGenericEventCookie*	/* cookie*/
 );
 
 _XFUNCPROTOEND

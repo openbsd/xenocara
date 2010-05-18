@@ -1,11 +1,8 @@
-XCOMM	$XdotOrg: lib/X11/nls/locale.dir.pre,v 1.10 2005-09-30 07:52:46 daniels Exp $
-XCOMM	$Xorg: locale.dir,v 1.3 2000/08/17 19:46:48 cpqbld Exp $
 XCOMM
 XCOMM	This file contains locale database file names
 XCOMM	The first word is the locale database file name and
 XCOMM	the second word is the full locale name.
 XCOMM
-XCOMM	$XFree86: xc/nls/locale.dir,v 1.44 2003/12/18 04:14:22 dawes Exp $
 XCOMM
 
 C/XLC_LOCALE:				C
@@ -260,6 +257,7 @@ en_US.UTF-8/XLC_LOCALE:			ar_AE.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ar_BH.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ar_DZ.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ar_EG.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 ar_IN.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ar_IQ.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ar_JO.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ar_KW.UTF-8
@@ -281,6 +279,7 @@ en_US.UTF-8/XLC_LOCALE:			be_BY.UTF-8
 en_US.UTF-8/XLC_LOCALE:			bg_BG.UTF-8
 en_US.UTF-8/XLC_LOCALE:			bn_BD.UTF-8
 en_US.UTF-8/XLC_LOCALE:			bn_IN.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 bo_IN.UTF-8
 en_US.UTF-8/XLC_LOCALE:			br_FR.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ca_AD.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ca_ES.UTF-8
@@ -336,7 +335,7 @@ en_US.UTF-8/XLC_LOCALE:			es_VE.UTF-8
 en_US.UTF-8/XLC_LOCALE:			et_EE.UTF-8
 en_US.UTF-8/XLC_LOCALE:			eu_ES.UTF-8
 en_US.UTF-8/XLC_LOCALE:			fa_IR.UTF-8
-fi_FI.UTF-8/XLC_LOCALE:			fi_FI.UTF-8
+en_US.UTF-8/XLC_LOCALE:			fi_FI.UTF-8
 en_US.UTF-8/XLC_LOCALE:			fo_FO.UTF-8
 en_US.UTF-8/XLC_LOCALE:			fr_BE.UTF-8
 en_US.UTF-8/XLC_LOCALE:			fr_CA.UTF-8
@@ -350,6 +349,7 @@ en_US.UTF-8/XLC_LOCALE:			gu_IN.UTF-8
 en_US.UTF-8/XLC_LOCALE:			gv_GB.UTF-8
 en_US.UTF-8/XLC_LOCALE:			he_IL.UTF-8
 en_US.UTF-8/XLC_LOCALE:			hi_IN.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 hne_IN.UTF-8
 en_US.UTF-8/XLC_LOCALE:			hr_HR.UTF-8
 en_US.UTF-8/XLC_LOCALE:			hu_HU.UTF-8
 en_US.UTF-8/XLC_LOCALE:			hy_AM.UTF-8
@@ -363,12 +363,15 @@ en_US.UTF-8/XLC_LOCALE:			ka_GE.UTF-8
 en_US.UTF-8/XLC_LOCALE:			kl_GL.UTF-8
 en_US.UTF-8/XLC_LOCALE:			kk_KZ.UTF-8
 en_US.UTF-8/XLC_LOCALE:			kn_IN.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 ks_IN.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 ks_IN@devanagari.UTF-8
 ko_KR.UTF-8/XLC_LOCALE:			ko_KR.UTF-8
 en_US.UTF-8/XLC_LOCALE:			kw_GB.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ky_KG.UTF-8
 en_US.UTF-8/XLC_LOCALE:			lo_LA.UTF-8
 en_US.UTF-8/XLC_LOCALE:			lt_LT.UTF-8
 en_US.UTF-8/XLC_LOCALE:			lv_LV.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 mai_IN.UTF-8
 en_US.UTF-8/XLC_LOCALE:			mi_NZ.UTF-8
 en_US.UTF-8/XLC_LOCALE:			mk_MK.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ml_IN.UTF-8
@@ -386,6 +389,7 @@ en_US.UTF-8/XLC_LOCALE:			ny_NO.UTF-8
 en_US.UTF-8/XLC_LOCALE:			oc_FR.UTF-8
 en_US.UTF-8/XLC_LOCALE:			or_IN.UTF-8
 en_US.UTF-8/XLC_LOCALE:			pa_IN.UTF-8
+en_US.UTF-8/XLC_LOCALE:			pa_PK.UTF-8
 en_US.UTF-8/XLC_LOCALE:			pd_DE.UTF-8
 en_US.UTF-8/XLC_LOCALE:			pd_US.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ph_PH.UTF-8
@@ -396,7 +400,10 @@ en_US.UTF-8/XLC_LOCALE:			pt_PT.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ro_RO.UTF-8
 ru_RU.UTF-8/XLC_LOCALE:			ru_RU.UTF-8
 en_US.UTF-8/XLC_LOCALE:			ru_UA.UTF-8
-en_US.UTF-8/XLC_LOCALE:         rw_RW.UTF-8
+en_US.UTF-8/XLC_LOCALE:         	rw_RW.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 sa_IN.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 sd_IN.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 sd_IN@devanagari.UTF-8
 en_US.UTF-8/XLC_LOCALE:			se_NO.UTF-8
 en_US.UTF-8/XLC_LOCALE:			sh_BA.UTF-8
 en_US.UTF-8/XLC_LOCALE:			sh_YU.UTF-8
@@ -432,6 +439,7 @@ en_US.UTF-8/XLC_LOCALE:			vi_VN.UTF-8
 en_US.UTF-8/XLC_LOCALE:			wa_BE.UTF-8
 en_US.UTF-8/XLC_LOCALE:			xh_ZA.UTF-8
 en_US.UTF-8/XLC_LOCALE:			yi_US.UTF-8
+en_US.UTF-8/XLC_LOCALE:                 ne_NP.UTF-8
 zh_CN.UTF-8/XLC_LOCALE:			zh_CN.UTF-8
 zh_HK.UTF-8/XLC_LOCALE:			zh_HK.UTF-8
 zh_CN.UTF-8/XLC_LOCALE:			zh_SG.UTF-8

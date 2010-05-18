@@ -1,4 +1,3 @@
-/* $Xorg: MaskEvent.c,v 1.4 2001/02/09 02:03:34 xorgcvs Exp $ */
 /*
 
 Copyright 1986, 1998  The Open Group
@@ -24,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/X11/MaskEvent.c,v 3.5 2001/10/28 03:32:30 tsi Exp $ */
 
 #define NEED_EVENTS
 #ifdef HAVE_CONFIG_H
@@ -53,12 +51,16 @@ XMaskEvent (
 	unsigned long qe_serial = 0;
 
         LockDisplay(dpy);
+
+	/* Delete unclaimed cookies */
+	_XFreeEventCookies(dpy);
+
 	prev = NULL;
 	while (1) {
 	    for (qelt = prev ? prev->next : dpy->head;
 		 qelt;
 		 prev = qelt, qelt = qelt->next) {
-		if ((qelt->event.type < LASTEvent) &&
+		if ((qelt->event.type < GenericEvent) &&
 		    (_Xevent_to_mask[qelt->event.type] & mask) &&
 		    ((qelt->event.type != MotionNotify) ||
 		     (mask & AllPointers) ||

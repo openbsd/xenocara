@@ -40,7 +40,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\" 
-.\" $XFree86: xc/doc/man/X11/XGrServer.man,v 1.2 2001/01/27 18:20:00 dawes Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -163,9 +162,9 @@ The
 function restarts processing of requests and close downs on other connections.
 You should avoid grabbing the X server as much as possible.
 .SH "SEE ALSO"
-XGrabButton(3X11),
-XGrabKey(3X11),
-XGrabKeyboard(3X11),
-XGrabPointer(3X11)
+XGrabButton(__libmansuffix__),
+XGrabKey(__libmansuffix__),
+XGrabKeyboard(__libmansuffix__),
+XGrabPointer(__libmansuffix__)
 .br
 \fI\*(xL\fP

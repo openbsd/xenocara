@@ -1,28 +1,34 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.60)
 AC_INIT([libX11],
-        1.2.1,
+        1.3.3,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         libX11)
 AC_CONFIG_SRCDIR([Makefile.am])
-AM_INIT_AUTOMAKE([dist-bzip2 foreign])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER([src/config.h])
 AC_CONFIG_HEADER([include/X11/XlibConf.h])
 
-# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG, XORG_WITH_LINT
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+
+# Set common system defines for POSIX extensions, such as _GNU_SOURCE
+# Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
+# to avoid autoconf errors.
+AC_USE_SYSTEM_EXTENSIONS
+XORG_DEFAULT_OPTIONS
 
 # Checks for programs.
 AC_PROG_LIBTOOL
 DOLT
 AC_PROG_CC
-XORG_CWARNFLAGS
 
 if test x"$CC_FOR_BUILD" = x; then
 	if test x"$cross_compiling" = xyes; then
@@ -35,6 +41,15 @@ AC_SUBST([CC_FOR_BUILD])
 
 XORG_PROG_RAWCPP
 
+# Find perl for "make check" tests in nls/localerules.in
+AC_ARG_WITH(perl,
+	AC_HELP_STRING([--with-perl=<path>],
+			[path to perl interpreter for build-time tests]),
+	[PERL=$withval ; AC_MSG_CHECKING([perl]) ;
+	 AC_MSG_RESULT([(from --with-perl) $PERL])],
+	AC_CHECK_PROGS([PERL], [perl], [no]))
+AM_CONDITIONAL(HAVE_PERL, test x$PERL != xno)
+
 # Build with XCB support?
 AC_ARG_WITH(xcb,
 	AC_HELP_STRING([--with-xcb], [use XCB for low-level protocol implementation]),
@@ -43,26 +58,37 @@ AC_CACHE_CHECK([whether to use XCB], [ac_cv_use_xcb], [ac_cv_use_xcb=yes])
 AM_CONDITIONAL(XCB, test x$ac_cv_use_xcb != xno)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XPROTO, [xproto >= 7.0.13])
-AC_SUBST(XPROTO_CFLAGS)
+
+# Always required
+X11_REQUIRES='xproto >= 7.0.13 xextproto xtrans'
+
+PKG_PROG_PKG_CONFIG()
 
 case "$ac_cv_use_xcb" in
 no)
-	X11_REQUIRES="xau xcmiscproto bigreqsproto"
-	X11_EXTRA_DEPS="xau xdmcp"
-	PKG_CHECK_MODULES(XDMCP, xdmcp)
-	AC_CHECK_LIB(Xdmcp, XdmcpWrap, [xdmauth="yes"], [xdmauth="no"], [$XDMCP_LIBS])
+	X11_REQUIRES="${X11_REQUIRES} xau xcmiscproto bigreqsproto"
+	X11_EXTRA_DEPS="xau"
+	PKG_CHECK_MODULES(XDMCP, xdmcp,
+		AC_CHECK_LIB(Xdmcp, XdmcpWrap,
+			[
+			AC_CHECK_LIB(Xdmcp, XdmcpWrap, [xdmauth="yes"], [xdmauth="no"], [$XDMCP_LIBS])
+			X11_EXTRA_DEPS="$X11_EXTRA_DEPS xdmcp"
+			],
+			[
+			XDMCP_CFLAGS=
+			XDMCP_LIBS=
+			], [$XDMCP_LIBS]),
+		[AC_MSG_RESULT(no)])
 	AC_DEFINE(USE_XCB, 0, [Use XCB for low-level protocol implementation])
 	;;
 *)
-	X11_REQUIRES="xcb >= 1.1.92"
+	X11_REQUIRES="${X11_REQUIRES} xcb >= 1.1.92"
 	X11_EXTRA_DEPS="xcb >= 1.1.92"
 	xdmauth="no" # XCB handles all auth
 	AC_DEFINE(USE_XCB, 1, [Use XCB for low-level protocol implementation])
 	;;
 esac
 AC_SUBST(X11_EXTRA_DEPS)
-PKG_CHECK_MODULES(X11, xextproto xtrans $X11_REQUIRES)
 
 dnl Issue an error if xtrans.m4 was not found and XTRANS_CONNECTION_FLAGS macro
 dnl was not expanded, since libX11 with no transport types is rather useless.
@@ -71,7 +97,7 @@ dnl If you're seeing an error here, be sure you installed the lib/xtrans module
 dnl first and if it's not in the default location, that you set the ACLOCAL
 dnl environment variable to find it, such as:
 dnl	ACLOCAL="aclocal -I ${PREFIX}/share/aclocal"
-m4_pattern_forbid(XTRANS_CONNECTION_FLAGS)
+m4_pattern_forbid([^XTRANS_CONNECTION_FLAGS$])
 
 # Transport selection macro from xtrans.m4
 XTRANS_CONNECTION_FLAGS
@@ -158,7 +184,7 @@ AC_MSG_RESULT($XLIB_LOADABLE_XCURSOR)
 
 # Checks for header files.
 AC_HEADER_STDC
-dnl AC_CHECK_HEADERS([stdio.h stdlib.h math.h])
+AC_CHECK_HEADERS([sys/select.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 
@@ -238,7 +264,6 @@ if test x$xthreads = xyes ; then
 fi
 AC_SUBST(XTHREADLIB)
 AC_SUBST(XTHREAD_CFLAGS)
-X11_CFLAGS="$X11_CFLAGS $XTHREAD_CFLAGS"
 
 case x$xdmauth in
 xyes)
@@ -316,8 +341,6 @@ AC_ARG_ENABLE(xkb,
                 [Disable XKB support *EXPERIMENTAL*]),
               [XKB=$enableval],[XKB=yes])
 
-XORG_MANPAGE_SECTIONS
-
 AC_ARG_ENABLE(man-pages,
 	      AC_HELP_STRING([--enable-man-pages=section],
 			     [Choose manual section for installing man pages]),
@@ -332,10 +355,8 @@ AM_CONDITIONAL(MANPAGES, [ test x$LIBMAN '!=' xno ])
 AM_CONDITIONAL(XKB, [ test x$XKB = xyes ])
 if test x"$XKB" = "xyes"; then
    XKBPROTO_REQUIRES="kbproto"
-   PKG_CHECK_MODULES(XKBPROTO, kbproto inputproto)
+   X11_REQUIRES="${X11_REQUIRES} kbproto inputproto"
    AC_DEFINE(XKB,1,[Use XKB])
-   X11_CFLAGS="$X11_CFLAGS $XKBPROTO_CFLAGS"
-   X11_LIBS="$X11_LIBS $XKBPROTO_LIBS"
 else
    XKBPROTO_REQUIRES=""
 fi
@@ -355,22 +376,6 @@ fi
 dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
 XORG_LINT_LIBRARY([X11])
-LINT_FLAGS="${LINT_FLAGS} ${X11_CFLAGS} ${XPROTO_CFLAGS}"
-
-if test "x$GCC" = "xyes"; then
-	GCC_WARNINGS="-Wall -Wpointer-arith -Wstrict-prototypes \
-	-Wmissing-prototypes -Wmissing-declarations \
-	-Wnested-externs -fno-strict-aliasing"
-	X11_CFLAGS="$GCC_WARNINGS $X11_CFLAGS"
-fi
-
-AC_TRY_COMPILE([
-#include <features.h>
-#ifndef __GLIBC__
-#error not glibc
-#endif
-], [], [AC_DEFINE(_GNU_SOURCE, 1,
-    [ Enable GNU and other extensions to the C environment for glibc])])
 
 X11_DATADIR="${datadir}/X11"
 AC_DEFINE_DIR(X11_DATADIR, X11_DATADIR, [Location of libX11 data])
@@ -380,7 +385,8 @@ X11_LIBDIR="${libdir}/X11"
 AC_DEFINE_DIR(X11_LIBDIR, X11_LIBDIR, [Location of libX11 library data])
 AC_SUBST(X11_LIBDIR)
 
-X11_CFLAGS="$CWARNFLAGS $X11_CFLAGS $XPROTO_CFLAGS"
+PKG_CHECK_MODULES(X11, [$X11_REQUIRES])
+X11_CFLAGS="$CWARNFLAGS $X11_CFLAGS $XTHREAD_CFLAGS"
 AC_SUBST(X11_CFLAGS)
 AC_SUBST(X11_LIBS)
 
@@ -413,10 +419,46 @@ AC_DEFINE_DIR(XKEYSYMDB, XKEYSYMDB, [Location of keysym database])
 XERRORDB="${X11_DATADIR}/XErrorDB"
 AC_DEFINE_DIR(XERRORDB, XERRORDB, [Location of error message database])
 
-
 XORG_CHECK_MALLOC_ZERO
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
+
+# Specification documents are currently provided in troff format
+AC_ARG_VAR([GROFF], [Path to a groff executable that supports -ms])
+AC_PATH_PROGS([GROFF], [groff], [none], [$PATH:/usr/gnu/bin])
+
+AC_ARG_VAR([PS2PDF], [Path to a ps2pdf executable])
+AC_PATH_PROGS([PS2PDF], [ps2pdf], [none], [$PATH:/usr/gnu/bin])
+
+if test "x${GROFF}" != xnone ; then
+    AC_MSG_CHECKING([whether ${GROFF} -ms works])
+    if ${GROFF} -ms -I. /dev/null >/dev/null 2>&1 ; then
+        groff_ms_works=yes
+    else
+        groff_ms_works=no
+        GROFF=none
+    fi
+    AC_MSG_RESULT([${groff_ms_works}])
+fi
+
+AC_MSG_CHECKING([whether to build specifications])
+AC_ARG_ENABLE(specs, AC_HELP_STRING([--enable-specs],
+                                   [Enable building of specification docs]),
+              [build_specs="${enableval}"], [build_specs="auto"])
+
+if test "x${build_specs}" = xauto; then
+    if test "x${GROFF}" = xnone ; then
+        build_specs=no
+    else
+        build_specs=yes
+    fi
+fi
+AC_MSG_RESULT([${build_specs}])
+if test "x${build_specs}" = xyes && test "x${GROFF}" = xnone ; then
+    AC_MSG_ERROR([can't build documentation without groff])
+fi
+
+AM_CONDITIONAL(BUILD_SPECS, [test x$build_specs = xyes])
+AM_CONDITIONAL(HAVE_PS2PDF, [test x$PS2PDF != xnone])
+
 
 AC_OUTPUT([Makefile
            include/Makefile
@@ -498,6 +540,10 @@ AC_OUTPUT([Makefile
 	   nls/zh_TW/Makefile
 	   nls/zh_TW.big5/Makefile
 	   nls/zh_TW.UTF-8/Makefile
+	   specs/Makefile
+	   specs/i18n/Makefile
+	   specs/libX11/Makefile
+	   specs/XIM/Makefile
 	   x11.pc
 	   x11-xcb.pc])
 

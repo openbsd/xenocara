@@ -1,12 +1,9 @@
-XCOMM	$XdotOrg: lib/X11/nls/locale.alias.pre,v 1.12 2005-09-30 07:52:46 daniels Exp $
-XCOMM	$Xorg: locale.alias,v 1.3 2000/08/17 19:46:48 cpqbld Exp $
 XCOMM
 XCOMM	This file contains alias name of locale.
 XCOMM	Each alias name is described within one line.
 XCOMM	The first word is the alias name (simplified locale name)
 XCOMM	the second word is full locale name.
 XCOMM
-XCOMM	$XFree86: xc/nls/locale.alias,v 1.65 2004/01/03 03:31:00 dawes Exp $
 XCOMM
 
 POSIX:						C
@@ -51,6 +48,8 @@ ar_EG:						ar_EG.ISO8859-6
 ar_EG.iso88596:					ar_EG.ISO8859-6
 ar_EG.ISO-8859-6:				ar_EG.ISO8859-6
 ar_EG.utf8:					ar_EG.UTF-8
+ar_IN.utf8:					ar_IN.UTF-8
+ar_IN.UTF-8:					ar_IN.UTF-8
 ar_IQ:						ar_IQ.ISO8859-6
 ar_IQ.iso88596:					ar_IQ.ISO8859-6
 ar_IQ.ISO-8859-6:				ar_IQ.ISO8859-6
@@ -60,7 +59,6 @@ ar_JO.iso88596:					ar_JO.ISO8859-6
 ar_JO.ISO-8859-6:				ar_JO.ISO8859-6
 ar_JO.utf8:					ar_JO.UTF-8
 ar_KW:						ar_KW.ISO8859-6
-ar_KW.iso88596:					ar_KW.ISO8859-6
 ar_KW.iso88596:					ar_KW.ISO8859-6
 ar_KW.ISO-8859-6:				ar_KW.ISO8859-6
 ar_KW.utf8:					ar_KW.UTF-8
@@ -132,6 +130,8 @@ bg_BG.koi8r:					bg_BG.KOI8-R
 be_BG.utf8:					bg_BG.UTF-8
 bn_IN.utf8:					bn_IN.UTF-8
 bn_IN.UTF-8:					bn_IN.UTF-8
+bo_IN.utf8:					bo_IN.UTF-8
+bo_IN.UTF-8:					bo_IN.UTF-8
 br:						br_FR.ISO8859-1
 br_FR:						br_FR.ISO8859-1
 br_FR.iso88591:					br_FR.ISO8859-1
@@ -350,15 +350,6 @@ en_US.ISO-8859-1:				en_US.ISO8859-1
 en_US.ISO_8859-1:				en_US.ISO8859-1
 en_US.iso885915:				en_US.ISO8859-15
 en_US.ISO-8859-15:				en_US.ISO8859-15
-en_US.8859-15:					en_US.ISO8859-15
-en_US.ISO8859-15@euro:				en_US.ISO8859-15
-en_US.utf8:					en_US.UTF-8
-EN_US.UTF-8:					en_US.UTF-8
-en_US.88591.en:					en_US.ISO8859-1
-en_US.iso88591:					en_US.ISO8859-1
-en_US.ISO-8859-1:				en_US.ISO8859-1
-en_US.ISO_8859-1:				en_US.ISO8859-1
-en_US.iso885915:				en_US.ISO8859-15
 en_US.8859-15:					en_US.ISO8859-15
 en_US.ISO8859-15@euro:				en_US.ISO8859-15
 en_US.utf8:					en_US.UTF-8
@@ -640,6 +631,9 @@ HI_IN:						hi_IN.ISCII-DEV
 hi_IN.isciidev:					hi_IN.ISCII-DEV
 hi_IN.utf8:					hi_IN.UTF-8
 HI_IN.UTF-8:					hi_IN.UTF-8
+hne:						hne_IN.UTF-8
+hne_IN.utf8:					hne_IN.UTF-8
+hne_IN.UTF-8:					hne_IN.UTF-8
 hr:						hr_HR.ISO8859-2
 hr_HR:						hr_HR.ISO8859-2
 hr_HR.iso88592:					hr_HR.ISO8859-2
@@ -704,9 +698,7 @@ ja_JP.S90:					ja_JP.S90
 ja:						ja_JP.eucJP
 ja.JIS:						ja_JP.JIS7
 ja.SJIS:					ja_JP.SJIS
-ja_JP:						ja_JP.eucJP
 ja_JP.ujis:					ja_JP.eucJP
-ja_JP.eucjp:					ja_JP.eucJP
 Jp_JP:						ja_JP.eucJP
 ja_JP.AJEC:					ja_JP.eucJP
 ja_JP.EUC:					ja_JP.eucJP
@@ -746,6 +738,12 @@ ko_KR.euc:					ko_KR.eucKR
 ko_KR.euckr:					ko_KR.eucKR
 ko_KR.utf8:					ko_KR.UTF-8
 KO_KR.UTF-8:					ko_KR.UTF-8
+ks:						ks_IN.UTF-8
+ks_IN.utf8:					ks_IN.UTF-8
+ks_IN.UTF-8:					ks_IN.UTF-8
+ks_IN@devanagari:				ks_IN@devanagari.UTF-8
+ks_IN@devanagari.utf8:				ks_IN@devanagari.UTF-8
+ks_IN@devanagari.UTF-8:				ks_IN@devanagari.UTF-8
 kw:						kw_GB.ISO8859-1
 kw_GB:						kw_GB.ISO8859-1
 kw_GB.iso88591:					kw_GB.ISO8859-1
@@ -787,6 +785,9 @@ lv_LV.iso885913:				lv_LV.ISO8859-13
 lv_LV.ISO-8859-13:				lv_LV.ISO8859-13
 lv_LV.ISO_8859-13:				lv_LV.ISO8859-13
 lv_LV.utf8:					lv_LV.UTF-8
+mai:						mai_IN.UTF-8
+mai_IN.utf8:					mai_IN.UTF-8
+mai_IN.UTF-8:					mai_IN.UTF-8
 mi:						mi_NZ.ISO8859-1
 mi_NZ:						mi_NZ.ISO8859-1
 mi_NZ.iso88591:					mi_NZ.ISO8859-1
@@ -802,8 +803,10 @@ mk_MK.utf8:					mk_MK.UTF-8
 ml:						ml_IN.UTF-8
 ml_IN.utf8:					ml_IN.UTF-8
 ml_IN.UTF-8:					ml_IN.UTF-8
+mr:						mr_IN.UTF-8
 mr_IN:						mr_IN.UTF-8
 mr_IN.utf8:					mr_IN.UTF-8
+mr_IN.UTF-8:					mr_IN.UTF-8
 ms:						ms_MY.ISO8859-1
 ms_MY:						ms_MY.ISO8859-1
 ms_MY.iso88591:					ms_MY.ISO8859-1
@@ -818,6 +821,8 @@ nb_NO.iso88591:					nb_NO.ISO8859-1
 nb_NO.ISO-8859-1:				nb_NO.ISO8859-1
 nb_NO.iso885915:				nb_NO.ISO8859-15
 nb_NO.ISO-8859-15:				nb_NO.ISO8859-15
+ne_NP.utf8:					ne_NP.UTF-8
+ne_NP.UTF-8:					ne_NP.UTF-8
 nl:						nl_NL.ISO8859-1
 nl.ISO8859-15:					nl_NL.ISO8859-15
 nl_BE:						nl_BE.ISO8859-1
@@ -887,8 +892,10 @@ oc_FR@euro:					oc_FR.ISO8859-15
 or:						or_IN.UTF-8
 or_IN.utf8:					or_IN.UTF-8
 or_IN.UTF-8:					or_IN.UTF-8
+pa:						pa_IN.UTF-8
 pa_IN.utf8:					pa_IN.UTF-8
 pa_IN.UTF-8:					pa_IN.UTF-8
+pa_PK.utf8:					pa_PK.UTF-8
 pd:						pd_US.ISO8859-1
 pd_DE:						pd_DE.ISO8859-1
 pd_US:						pd_US.ISO8859-1
@@ -964,6 +971,11 @@ rw_RW:                      rw_RW.ISO8859-1
 rw_RW.iso8859-1:            rw_RW.ISO8859-1
 rw_RW.ISO-8859-1:           rw_RW.ISO8859-1
 rw_RW.utf8:                 rw_RW.UTF-8
+sd:						sd_IN.UTF-8
+sd_IN.utf8:					sd_IN.UTF-8
+sd:						sd_IN@devanagari.UTF-8
+sd_IN@devanagari.utf8:				sd_IN@devanagari.UTF-8
+sd_IN@devanagari.UTF-8:				sd_IN@devanagari.UTF-8
 se_NO:						se_NO.UTF-8
 se_NO.utf8:					se_NO.UTF-8
 XCOMM sh was the old ISO code for Serbo-Croatian (now individual sr and hr).

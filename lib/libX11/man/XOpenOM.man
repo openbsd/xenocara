@@ -41,7 +41,6 @@
 .\" of this documentation for any purpose.
 .\" It is provided ``as is'' without express or implied warranty.
 .\"
-.\" $XFree86: xc/doc/man/X11/XOpenOM.man,v 1.4 2001/02/09 03:47:45 tsi Exp $
 .\"
 .ds xT X Toolkit Intrinsics \- C Language Interface
 .ds xW Athena X Widgets \- C Language X Toolkit Interface
@@ -252,7 +251,7 @@ The
 .ZN XLocaleOfOM
 returns the locale associated with the specified output method.
 .SH "SEE ALSO"
-XCreateOC(3X11),
-XCreateFontSet(3X11)
+XCreateOC(__libmansuffix__),
+XCreateFontSet(__libmansuffix__)
 .br
 \fI\*(xL\fP
