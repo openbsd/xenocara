@@ -1,5 +1,3 @@
-/* $Xorg: XQueryDv.c,v 1.4 2001/02/09 02:03:51 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XQueryDv.c,v 3.3 2001/12/14 19:55:20 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -61,9 +58,9 @@ SOFTWARE.
 #include "XIint.h"
 
 XDeviceState *
-XQueryDeviceState(dpy, dev)
-    register Display *dpy;
-    XDevice *dev;
+XQueryDeviceState(
+    register Display	*dpy,
+    XDevice		*dev)
 {
     int i, j;
     int rlen;
@@ -163,7 +160,8 @@ XQueryDeviceState(dpy, dev)
 		CARD32 *valuators = (CARD32 *) (v + 1);
 
 		V->class = v->class;
-		V->length = sizeof(XValuatorState);
+		V->length = sizeof(XValuatorState) +
+			    v->num_valuators * sizeof(int);
 		V->num_valuators = v->num_valuators;
 		V->mode = v->mode;
 		Any = (XInputClass *) (V + 1);
@@ -186,8 +184,7 @@ XQueryDeviceState(dpy, dev)
 }
 
 void
-XFreeDeviceState(list)
-    XDeviceState *list;
+XFreeDeviceState(XDeviceState *list)
 {
     XFree((char *)list);
 }

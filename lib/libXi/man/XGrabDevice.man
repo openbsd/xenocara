@@ -1,203 +1,285 @@
+'\" t
+.\"     Title: xgrabdevice
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
+.\"      Date: 10/02/2009
+.\"    Manual: [FIXME: manual]
+.\"    Source: [FIXME: source]
+.\"  Language: English
 .\"
-.\" $XFree86: xc/doc/man/Xi/XGrabDev.man,v 1.2 2001/01/27 18:20:21 dawes Exp $
-.\"
-.\"
-.\" Copyright ([\d,\s]*) by Hewlett-Packard Company, Ardent Computer, 
-.\" 
-.\" Permission to use, copy, modify, distribute, and sell this documentation 
-.\" for any purpose and without fee is hereby granted, provided that the above
-.\" copyright notice and this permission notice appear in all copies.
-.\" Ardent, and Hewlett-Packard make no representations about the 
-.\" suitability for any purpose of the information in this document.  It is 
-.\" provided \`\`as is'' without express or implied warranty.
-.\" 
-.\" $Xorg: XGrabDev.man,v 1.3 2000/08/17 19:41:56 cpqbld Exp $
-.ds xL Programming With Xlib
-.TH XGrabDevice __LIB_MAN_SUFFIX__ __xorgversion__ "X FUNCTIONS"
-.SH NAME
+.TH "XGRABDEVICE" "libmansuffix" "10/02/2009" "[FIXME: source]" "[FIXME: manual]"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
 XGrabDevice, XUngrabDevice \- grab/release the specified extension device
-.SH SYNTAX
+.SH "SYNOPSIS"
+.sp
 .nf
-\fB
-.HP
-int XGrabDevice\^(\^Display *\fIdisplay\fP\^, XDevice *\fIdevice\fP\^, Window
-\fIgrab_window\fP\^, Bool \fIowner_events\fP\^, int \fIevent_count\fP\^,
-XEventClass *\fIevent_list\fP\^, int \fIthis_device_mode\fP\^,
-int \fIother_devices_mode\fP\^, Time \fItime\fP\^); 
-.HP 
-int XUngrabDevice\^(\^Display *\fIdisplay\fP\^, XDevice *\fIdevice\fP\^, Time
-\fItime\fP\^); 
+#include <X11/extensions/XInput\&.h>
 .fi
-\fP
-.SH ARGUMENTS
-.TP 12
-.I display
-Specifies the connection to the X server.
-.TP 12
-.I device
-Specifies the device to be grabbed or released.
-.TP 12
-.I grab_window
-Specifies the id of a window to be associated with the device.
-.TP 12
-.I owner_events
-Specifies a Boolean value that indicates whether the 
-events from the device 
-are to be reported as usual or reported with respect to the grab window 
-if selected by the event list.
-.TP 12
-.I event_count
-Specifies the number of elements in the event_list array.
-.TP 12
-.I event_list
-Specifies a pointer to a list of event classes that indicates which events
-the client wishes to receive.  These event classes must have been
-obtained specifying the device being grabbed.
-.TP 12
-.I this_device_mode
-Specifies further processing of events from this device.
-You can pass 
-\fIGrabModeSync\fP
-or
-\fIGrabModeAsync\fP.
-.TP 12
-.I other_devices_mode
-Specifies further processing of events from other devices.
-You can pass 
-\fIGrabModeSync\fP 
-or
-\fIGrabModeAsync\fP.
-.TP 12
-.I time
-Specifies the time.
-You can pass either a timestamp or
-\fICurrentTime\fP.
-.SH DESCRIPTION
-The
-\fIXGrabDevice\fP
-request actively grabs control of the device and generates
-\fIDeviceFocusIn\fP
-and
-\fIDeviceFocusOut\fP
-events.
-Further device events are reported only to the
-grabbing client.
-\fIXGrabDevice\fP
-overrides any active device grab by this client.
-event_list is a pointer to a list of event classes.  This list indicates
-which events the client wishes to receive while the grab is active.
-If owner_events is 
-\fIFalse\fP , 
-all generated device events are reported with
-respect to grab_window if selected.
-If owner_events is 
-\fITrue\fP  
-and if a generated
-device event would normally be reported to this client, it is reported
-normally; otherwise, the event is reported with respect to the
-grab_window, and is only reported if specified in the event_list.
-.LP
-If the this_device_mode argument is 
-\fIGrabModeAsync\fP ,
-device event processing continues
-as usual. 
-If the device is currently frozen by this client, 
-then processing of device events is resumed.
-If the this_device_mode  argument is
-\fIGrabModeSync\fP ,
-the state of the device (as seen by client applications) appears to freeze,
-and the X server generates no further device events until the
-grabbing client issues a releasing 
-\fIXAllowDeviceEvents\fP 
-call or until the device grab is released.
-Actual device changes are not lost while the device is frozen; 
-they are simply queued in the server for later processing.
-.LP
-If other_devices_mode is 
-\fIGrabModeAsync\fP ,
-processing of events from other devices is unaffected
-by activation of the grab.  
-If other_devices_mode is 
-\fIGrabModeSync\fP,
-the state of all devices except the grabbed device
- (as seen by client applications) appears to freeze, 
-and the X server generates no further events from those devices
-until the grabbing client issues a releasing 
-\fIXAllowDeviceEvents\fP 
-call or until the device grab is released.
-Actual events are not lost while the devices are frozen; 
-they are simply queued in the server for later processing.
-.LP
+.sp
+.nf
+int XGrabDevice( Display *display,
+                 XDevice* device,
+                 Window grab_window,
+                 Bool owner_events,
+                 int event_count,
+                 XEventClass *event_list,
+                 int this_device_mode,
+                 int other_devices_mode,
+                 Time time);
+.fi
+.sp
+.nf
+int XUngrabDevice( Display *display,
+                   XDevice *device,
+                   Time time);
+.fi
+.sp
+.nf
+display
+       Specifies the connection to the X server\&.
+.fi
+.sp
+.nf
+device
+       Specifies the device to be grabbed or released\&.
+.fi
+.sp
+.nf
+grab_window
+       Specifies the id of a window to be associated with the
+       device\&.
+.fi
+.sp
+.nf
+owner_events
+       Specifies a Boolean value that indicates whether
+       theevents from the deviceare to be reported as usual or
+       reported with respect to the grab windowif selected by
+       the event list\&.
+.fi
+.sp
+.nf
+event_count
+       Specifies the number of elements in the event_list
+       array\&.
+.fi
+.sp
+.nf
+event_list
+       Specifies a pointer to a list of event classes that
+       indicates which eventsthe client wishes to receive\&.
+       These event classes must have beenobtained specifying
+       the device being grabbed\&.
+.fi
+.sp
+.nf
+this_device_mode
+       Specifies further processing of events from this
+       device\&.You can pass GrabModeSyncor GrabModeAsync\&.
+.fi
+.sp
+.nf
+other_devices_mode
+       Specifies further processing of events from other
+       devices\&.You can pass GrabModeSyncor GrabModeAsync\&.
+.fi
+.sp
+.nf
+time
+       Specifies the time\&.You can pass either a timestamp or
+       CurrentTime\&.
+.fi
+.SH "DESCRIPTION"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The XGrabDevice request actively grabs control of the device
+and generates DeviceFocusIn and DeviceFocusOut events\&. Further
+device events are reported only to the grabbing
+client\&.XGrabDevice overrides any active device grab by this
+client\&. event_list is a pointer to a list of event classes\&.
+This list indicates which events the client wishes to receive
+while the grab is active\&. If owner_events is False, all
+generated device events are reported with respect to
+grab_window if selected\&. If owner_events is True and if a
+generated device event would normally be reported to this
+client, it is reported normally; otherwise, the event is
+reported with respect to the grab_window, and is only reported
+if specified in the event_list\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+If the this_device_mode argument is GrabModeAsync, device event
+processing continues as usual\&. If the device is currently
+frozen by this client, then processing of device events is
+resumed\&. If the this_device_mode argument is GrabModeSync, the
+state of the device (as seen by client applications) appears to
+freeze, and the X server generates no further device events
+until the grabbing client issues a releasing XAllowDeviceEvents
+call or until the device grab is released\&. Actual device
+changes are not lost while the device is frozen; they are
+simply queued in the server for later processing\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+If other_devices_mode is GrabModeAsync, processing of events
+from other devices is unaffected by activation of the grab\&. If
+other_devices_mode is GrabModeSync, the state of all devices
+except the grabbed device (as seen by client applications)
+appears to freeze, and the X server generates no further events
+from those devices until the grabbing client issues a releasing
+XAllowDeviceEvents call or until the device grab is released\&.
+Actual events are not lost while the devices are frozen; they
+are simply queued in the server for later processing\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
 If the device is actively grabbed by some other client,
-\fIXGrabDevice\fP
-fails and returns
-\fIAlreadyGrabbed\fP.
-If grab_window is not viewable,
-it fails and returns
-\fIGrabNotViewable\fP.
-If the device is frozen by an active grab of another client,
-it fails and returns
-\fIGrabFrozen\fP.
-If the specified time is earlier than the last-device-grab time 
-or later than the current X server time,
-it fails and returns
-\fIGrabInvalidTime\fP.
-Otherwise, the last-device-grab time is set to the specified time
-\fI( CurrentTime\fP 
-is replaced by the current X server time).
-.LP
-If a grabbed device is closed by a client while an active grab by that
-client is in effect, the active grab is released.  If the device is
-frozen only by an active grab of the requesting client, it is thawed.
-.LP
-\fIXGrabDevice\fP
-can generate
-\fIBadClass\fP, \fIBadDevice\fP, \fIBadValue\fP, and \fIBadWindow\fP 
-errors.
-.LP
-The
-\fIXUngrabDevice\fP
-request
-releases the device and any queued events if this client has it actively 
-grabbed from either
-\fIXGrabDevice\fP
-or
-\fIXGrabDeviceKey\fP.
-If other devices are frozen by the grab, \fIXUngrabDevice\fP thaws them.
-\fIXUngrabDevice\fP
-does not release the device and any queued events
-if the specified time is earlier than
-the last-device-grab time or is later than the current X server time.
-It also generates
-\fIDeviceFocusIn\fP 
-and 
-\fIDeviceFocusOut\fP 
-events.
-The X server automatically performs an 
-\fIUngrabDevice\fP 
-request if the event window for an
-active device grab becomes not viewable.
-.LP
-\fIXUngrabDevice\fP
-can generate a \fIBadDevice\fP error.
-.SH DIAGNOSTICS
-.TP 12
-\fIBadDevice\fP
-An invalid device was specified.  The specified device does not exist or has 
-not been opened by this client via \fIXOpenInputDevice\fP.  This error may
-also occur if the specified device is the X keyboard or X pointer device.
-.TP 12
-\fIBadValue\fP
-Some numeric value falls outside the range of values accepted by the request.
-Unless a specific range is specified for an argument, the full range defined
-by the argument's type is accepted.  Any argument defined as a set of
-alternatives can generate this error.
-.TP 12
-\fIBadWindow\fP
-A value for a Window argument does not name a defined Window.
+XGrabDevice fails and returns AlreadyGrabbed\&. If grab_window is
+not viewable, it fails and returns GrabNotViewable\&. If the
+device is frozen by an active grab of another client, it fails
+and returns GrabFrozen\&. If the specified time is earlier than
+the last\-device\-grab time or later than the current X server
+time, it fails and returns GrabInvalidTime\&. Otherwise, the
+last\-device\-grab time is set to the specified time (
+CurrentTime is replaced by the current X server time)\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+If a grabbed device is closed by a client while an active grab
+by that client is in effect, the active grab is released\&. If
+the device is frozen only by an active grab of the requesting
+client, it is thawed\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+XGrabDevice can generate BadClass, BadDevice, BadValue, and
+BadWindow errors\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The XUngrabDevice request releases the device and any queued
+events if this client has it actively grabbed from either
+XGrabDevice or XGrabDeviceKey\&. If other devices are frozen by
+the grab, XUngrabDevice thaws them\&.XUngrabDevice does not
+release the device and any queued events if the specified time
+is earlier than the last\-device\-grab time or is later than the
+current X server time\&. It also generates DeviceFocusIn and
+DeviceFocusOut events\&. The X server automatically performs an
+UngrabDevice request if the event window for an active device
+grab becomes not viewable\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+XUngrabDevice can generate a BadDevice error\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "DIAGNOSTICS"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+BadDevice
+       An invalid device was specified\&. The specified device
+       does not exist or has not been opened by this client via
+       XOpenInputDevice\&. This error may also occur if the
+       specified device is the X keyboard or X pointer device\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+BadValue
+       Some numeric value falls outside the range of values
+       accepted by the request\&. Unless a specific range is
+       specified for an argument, the full range defined by the
+       argument\'s type is accepted\&. Any argument defined as a
+       set of alternatives can generate this error\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+BadWindow
+       A value for a Window argument does not name a defined
+       Window\&.
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
-XAllowDeviceEvents(3),
-XGrabDeviceButton(3),
-XGrabDeviceKey(3),
-.br
-\fI\*(xL\fP
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+XAllowDeviceEvents(libmansuffix), XGrabDeviceButton(libmansuffix), XGrabDeviceKey(libmansuffix)
+.fi
+.if n \{\
+.RE
+.\}

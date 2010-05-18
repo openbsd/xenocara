@@ -1,5 +1,3 @@
-/* $Xorg: XGetKMap.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XGetKMap.c,v 3.4 2002/10/16 00:37:28 dawes Exp $ */
 
 /***********************************************************************
  *

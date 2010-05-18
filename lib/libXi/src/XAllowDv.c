@@ -1,5 +1,3 @@
-/* $Xorg: XAllowDv.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XAllowDv.c,v 3.3 2001/12/14 19:55:03 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -61,11 +58,11 @@ SOFTWARE.
 #include "XIint.h"
 
 int
-XAllowDeviceEvents(dpy, dev, event_mode, time)
-    register Display *dpy;
-    XDevice *dev;
-    int event_mode;
-    Time time;
+XAllowDeviceEvents(
+    register Display	*dpy,
+    XDevice		 *dev,
+    int			 event_mode,
+    Time		 time)
 {
     xAllowDeviceEventsReq *req;
     XExtDisplayInfo *info = XInput_find_display(dpy);

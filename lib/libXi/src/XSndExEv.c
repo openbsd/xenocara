@@ -1,5 +1,3 @@
-/* $Xorg: XSndExEv.c,v 1.4 2001/02/09 02:03:51 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XSndExEv.c,v 3.3 2001/12/14 19:55:23 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -60,23 +57,21 @@ SOFTWARE.
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
 
-extern Status _XiEventToWire();
-
 Status
-XSendExtensionEvent(dpy, dev, dest, prop, count, list, event)
-    register Display *dpy;
-    XDevice *dev;
-    Window dest;
-    Bool prop;
-    int count;
-    XEventClass *list;
-    XEvent *event;
+XSendExtensionEvent(
+    register Display	*dpy,
+    XDevice		*dev,
+    Window		 dest,
+    Bool		 prop,
+    int			 count,
+    XEventClass		*list,
+    XEvent		*event)
 {
     int num_events;
     int ev_size;
     xSendExtensionEventReq *req;
     xEvent *ev;
-    register Status(**fp) ();
+    register Status(**fp) (Display *, XEvent*, xEvent **, int *);
     Status status;
     XExtDisplayInfo *info = XInput_find_display(dpy);
 

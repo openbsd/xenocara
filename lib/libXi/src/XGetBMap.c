@@ -1,5 +1,3 @@
-/* $Xorg: XGetBMap.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XGetBMap.c,v 3.3 2001/12/14 19:55:13 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -66,11 +63,11 @@ SOFTWARE.
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 int
-XGetDeviceButtonMapping(dpy, device, map, nmap)
-    register Display *dpy;
-    XDevice *device;
-    unsigned char map[];
-    unsigned int nmap;
+XGetDeviceButtonMapping(
+    register Display	*dpy,
+    XDevice		*device,
+    unsigned char	 map[],
+    unsigned int	 nmap)
 {
     int status = 0;
     unsigned char mapping[256];	/* known fixed size */

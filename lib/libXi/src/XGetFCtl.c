@@ -1,5 +1,3 @@
-/* $Xorg: XGetFCtl.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XGetFCtl.c,v 3.3 2001/12/14 19:55:14 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -62,10 +59,10 @@ SOFTWARE.
 #include "XIint.h"
 
 XFeedbackState *
-XGetFeedbackControl(dpy, dev, num_feedbacks)
-    register Display *dpy;
-    XDevice *dev;
-    int *num_feedbacks;
+XGetFeedbackControl(
+    register Display	*dpy,
+    XDevice		*dev,
+    int			*num_feedbacks)
 {
     int size = 0;
     int nbytes, i;
@@ -265,8 +262,7 @@ XGetFeedbackControl(dpy, dev, num_feedbacks)
 }
 
 void
-XFreeFeedbackList(list)
-    XFeedbackState *list;
+XFreeFeedbackList(XFeedbackState *list)
 {
     XFree((char *)list);
 }

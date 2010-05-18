@@ -1,14 +1,15 @@
+#
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
-# 
+#
 # Permission to use, copy, modify, distribute, and sell this software and its
 # documentation for any purpose is hereby granted without fee, provided that
 # the above copyright notice appear in all copies and that both that
 # copyright notice and this permission notice appear in supporting
 # documentation.
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,174 +17,170 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-# 
+#
 # Except as contained in this notice, the name of the copyright holders shall
 # not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization
 # from the copyright holders.
-# 
+#
 
 libmandir = $(LIB_MAN_DIR)
 
 LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
 
-libman_PRE = \
-	XAllowDeviceEvents.man \
-	XChangeDeviceDontPropagateList.man \
-	XChangeKeyboardDevice.man \
-	XChangePointerDevice.man \
-	XDeviceBell.man \
-	XGetDeviceControl.man \
-	XGetDeviceKeyMapping.man \
-	XGetDeviceModifierMapping.man \
-	XGetDeviceMotionEvents.man \
-	XGetExtensionVersion.man \
-	XGetFeedbackControl.man \
-	XGrabDevice.man \
-	XGrabDeviceButton.man \
-	XGrabDeviceKey.man \
-	XListInputDevices.man \
-	XOpenDevice.man \
-	XQueryDeviceState.man \
-	XSelectExtensionEvent.man \
-	XSendExtensionEvent.man \
-	XSetDeviceButtonMapping.man \
-	XSetDeviceFocus.man \
-	XSetDeviceMode.man \
-	XSetDeviceValuators.man \
-	XListDeviceProperties.man \
-	XGetDeviceProperty.man
+XI2_manpages = \
+	XIChangeHierarchy.txt \
+	XIDefineCursor.txt \
+	XIGrabButton.txt \
+	XIGrabDevice.txt \
+        XIGrabEnter.txt \
+	XIQueryDevice.txt \
+	XIQueryPointer.txt \
+	XIQueryVersion.txt \
+	XISelectEvents.txt \
+	XISetClientPointer.txt \
+	XISetFocus.txt \
+	XIWarpPointer.txt \
+	XIListProperties.txt \
+	XIChangeProperty.txt
 
-BUILT_SOURCES = shadows.DONE
+libman_txt = \
+	XAllowDeviceEvents.txt \
+	XChangeDeviceDontPropagateList.txt \
+	XChangeKeyboardDevice.txt \
+	XChangePointerDevice.txt \
+	XDeviceBell.txt \
+	XGetDeviceControl.txt \
+	XGetDeviceKeyMapping.txt \
+	XGetDeviceModifierMapping.txt \
+	XGetDeviceMotionEvents.txt \
+	XGetDeviceProperty.txt \
+	XGetExtensionVersion.txt \
+	XGetFeedbackControl.txt \
+	XGrabDeviceButton.txt \
+	XGrabDeviceKey.txt \
+	XGrabDevice.txt \
+	XListDeviceProperties.txt \
+	XListInputDevices.txt \
+	XOpenDevice.txt \
+	XQueryDeviceState.txt \
+	XSelectExtensionEvent.txt \
+	XSendExtensionEvent.txt \
+	XSetDeviceButtonMapping.txt \
+	XSetDeviceFocus.txt \
+	XSetDeviceMode.txt \
+	XSetDeviceValuators.txt \
+        $(XI2_manpages)
 
-EXTRA_DIST = $(libman_PRE)
+libman_xml = $(libman_txt:.txt=.xml)
+# manpages that are references to another page. These are produced as a
+# side effect of the xmlto rule, so they need to be handled specially.
 
-CLEANFILES = $(libman_DATA) $(BUILT_SOURCES)
+XI2_refpages = \
+	XIUndefineCursor.man \
+	XIUngrabButton.man \
+	XIGrabKeycode.man \
+	XIUngrabKeycode.man \
+	XIUngrabDevice.man  \
+        XIUngrabEnter.man \
+        XIGrabFocusIn.man \
+        XIUngrabFocusIn.man \
+	XIGetClientPointer.man \
+	XIGetFocus.man \
+	XIGetSelectedEvents.man \
+	XIDeleteProperty.man \
+	XIGetProperty.man \
+	XIFreeDeviceInfo.man
 
-libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
-	      $(all_shadows:=.@LIB_MAN_SUFFIX@)
+libman_ref = \
+	XGetDeviceDontPropagateList.man \
+	XChangeDeviceControl.man \
+	XChangeDeviceKeyMapping.man \
+	XSetDeviceModifierMapping.man \
+	XChangeFeedbackControl.man \
+	XUngrabDeviceButton.man \
+	XUngrabDeviceKey.man \
+	XUngrabDevice.man \
+	XDeviceTimeCoord.man \
+	XFreeDeviceList.man \
+	XCloseDevice.man \
+	XGetSelectedExtensionEvents.man \
+	XGetDeviceButtonMapping.man \
+	XGetDeviceFocus.man \
+	XChangeDeviceProperty.man \
+	XDeleteDeviceProperty.man \
+        $(XI2_refpages)
 
-SED = sed
+
+libman_pre = $(libman_txt:.txt=.man) $(libman_ref)
+
+if HAVE_DOCTOOLS
+nodist_libman_DATA = $(libman_pre:.man=.$(LIB_MAN_SUFFIX))
+endif
+
+EXTRA_DIST = $(libman_txt) $(libman_pre)
+CLEANFILES = $(nodist_libman_DATA) *.libmansuffix
+MAINTAINERCLEANFILES = $(libman_pre) *.xml
+
+# prerequisites for the side effect pages
+XGetDeviceDontPropagateList.man: XChangeDeviceDontPropagateList.man
+XChangeDeviceControl.man: XGetDeviceControl.man
+XChangeDeviceKeyMapping.man: XGetDeviceKeyMapping.man
+XSetDeviceModifierMapping.man: XGetDeviceModifierMapping.man
+XDeviceTimeCoord.man: XGetDeviceMotionEvents.man
+XChangeFeedbackControl.man: XGetFeedbackControl.man
+XUngrabDeviceButton.man: XGrabDeviceButton.man
+XUngrabDeviceKey.man: XGrabDeviceKey.man
+XUngrabDevice.man: XGrabDevice.man
+XFreeDeviceList.man: XListInputDevices.man
+XCloseDevice.man: XOpenDevice.man
+XGetSelectedExtensionEvents.man: XSelectExtensionEvent.man
+XGetDeviceButtonMapping.man: XSetDeviceButtonMapping.man
+XGetDeviceFocus.man: XSetDeviceFocus.man
+XChangeDeviceProperty.man: XGetDeviceProperty.man
+XDeleteDeviceProperty.man: XGetDeviceProperty.man
+
+# XI2 prereqs
+XIUndefineCursor.man: XIDefineCursor.man
+XIUngrabButton.man XIGrabKeycode.man XIUngrabKeycode.man: XIGrabButton.man
+XIGetClientPointer.man: XISetClientPointer.man
+XIGetFocus.man: XISetFocus.man
+XIUngrabDevice.man: XIGrabDevice.man
+XIGetProperty.man: XIChangeProperty.man
+XIDeleteProperty.man: XIChangeProperty.man
+XIUngrabEnter.man XIGrabFocusIn.man XIUngrabFocusIn.man: XIGrabEnter.man
+XIGetSelectedEvents.man: XISelectEvents.man
+XIFreeDeviceInfo.man: XIQueryDevice.man
 
 # Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
+XORGRELSTRING = $(PACKAGE_STRING)
   XORGMANNAME = X Version 11
 
-SUFFIXES = .$(LIB_MAN_SUFFIX) .man
+MAN_SUBSTS = \
+	-e 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/' \
+	-e 's/__xservername__/Xorg/g' \
+	-e 's/__xconfigfile__/xorg.conf/g' \
+	-e 's/__appmansuffix__/$(APP_MAN_SUFFIX)/g' \
+	-e 's/libmansuffix/$(LIB_MAN_SUFFIX)/g' \
+	-e 's/__filemansuffix__/$(FILE_MAN_SUFFIX)/g'
 
+SUFFIXES = .man .$(LIB_MAN_SUFFIX)
 .man.$(LIB_MAN_SUFFIX):
-	sed 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/;  s/__LIB_MAN_SUFFIX__/$(LIB_MAN_SUFFIX)/' < $< > $@
+	$(SED) $(MAN_SUBSTS) < $< > $@
 
-# Generate man page shadow files (Replaces InstallManPageAliases from Imake)
+if HAVE_DOCTOOLS
+SUFFIXES += .txt .xml
+.txt.xml:
+	$(ASCIIDOC) -b docbook -d manpage -o $@ $<
+.xml.man:
+	$(XMLTO) man $<
+	mv -f $(@:.man=.libmansuffix) $@
 
-all_shadows =                                \
-    $(XGetDeviceControl_shadows)             \
-    $(XGetFeedbackControl_shadows)           \
-    $(XGetDeviceKeyMapping_shadows)          \
-    $(XGetDeviceModifierMapping_shadows)     \
-    $(XChangeDeviceDontPropagateList_shadows) \
-    $(XGetDeviceMotionEvents_shadows)        \
-    $(XGrabDeviceButton_shadows)             \
-    $(XGrabDeviceKey_shadows)                \
-    $(XGrabDevice_shadows)                   \
-    $(XListInputDevices_shadows)             \
-    $(XOpenDevice_shadows)                   \
-    $(XSetDeviceButtonMapping_shadows)       \
-    $(XSetDeviceFocus_shadows)               \
-    $(XSelectExtensionEvent_shadows)         \
-    $(XGetDeviceProperty_shadows)
-
-
-XGetDeviceControl_shadows =                 \
-    XChangeDeviceControl
-
-XGetFeedbackControl_shadows =               \
-    XChangeFeedbackControl
-
-XGetDeviceKeyMapping_shadows =              \
-    XChangeDeviceKeyMapping
-
-XGetDeviceModifierMapping_shadows =         \
-    XSetDeviceModifierMapping
-
-XChangeDeviceDontPropagateList_shadows =    \
-    XGetDeviceDontPropagateList
-
-XGetDeviceMotionEvents_shadows =            \
-    XDeviceTimeCoord
-
-XGrabDeviceButton_shadows =                 \
-    XUngrabDeviceButton
-
-XGrabDeviceKey_shadows =                    \
-    XUngrabDeviceKey
-
-XGrabDevice_shadows =                       \
-    XUngrabDevice
-
-XListInputDevices_shadows =                 \
-    XFreeDeviceList
-
-XOpenDevice_shadows =                       \
-    XCloseDevice
-
-XSetDeviceButtonMapping_shadows =           \
-    XGetDeviceButtonMapping
-
-XSetDeviceFocus_shadows =                   \
-    XGetDeviceFocus
-
-XSelectExtensionEvent_shadows =             \
-    XGetSelectedExtensionEvents
-
-XGetDeviceProperty_shadows =                \
-    XDeleteDeviceProperty \
-    XChangeDeviceProperty
-
-shadows.DONE:
-	-rm -f $(all_shadows:=.@LIB_MAN_SUFFIX@)
-	(for i in $(XGetDeviceControl_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceControl.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetFeedbackControl_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetFeedbackControl.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetDeviceKeyMapping_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceKeyMapping.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetDeviceModifierMapping_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceModifierMapping.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XChangeDeviceDontPropagateList_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XChangeDeviceDontPropagateList.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetDeviceMotionEvents_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceMotionEvents.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGrabDeviceButton_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGrabDeviceButton.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGrabDeviceKey_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGrabDeviceKey.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGrabDevice_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGrabDevice.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XListInputDevices_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XListInputDevices.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XOpenDevice_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XOpenDevice.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XSetDeviceButtonMapping_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XSetDeviceButtonMapping.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XSetDeviceFocus_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XSetDeviceFocus.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XSelectExtensionEvent_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XSelectExtensionEvent.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetDeviceProperty_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceProperty.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
+# need to force asciidoc/xmlto to run if necessary for side effect pages
+$(libman_ref):
+	@if test ! -f $(@:.man=.libmansuffix); then \
+	  rm -f $<; \
+	  $(MAKE) $(AM_MAKEFLAGS) $< || exit 1; \
+	fi
+	mv -f $(@:.man=.libmansuffix) $@
+endif

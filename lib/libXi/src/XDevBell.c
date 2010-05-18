@@ -1,5 +1,3 @@
-/* $Xorg: XDevBell.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XDevBell.c,v 3.3 2001/12/14 19:55:08 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -61,11 +58,12 @@ SOFTWARE.
 #include "XIint.h"
 
 int
-XDeviceBell(dpy, dev, feedbackclass, feedbackid, percent)
-    register Display *dpy;
-    XDevice *dev;
-    XID feedbackclass, feedbackid;
-    int percent;
+XDeviceBell(
+    register Display	*dpy,
+    XDevice		*dev,
+    XID			 feedbackclass,
+    XID			 feedbackid,
+    int			 percent)
 {
     xDeviceBellReq *req;
     XExtDisplayInfo *info = XInput_find_display(dpy);

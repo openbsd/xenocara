@@ -14,17 +14,18 @@
 
 @SET_MAKE@
 
+#
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
-# 
+#
 # Permission to use, copy, modify, distribute, and sell this software and its
 # documentation for any purpose is hereby granted without fee, provided that
 # the above copyright notice appear in all copies and that both that
 # copyright notice and this permission notice appear in supporting
 # documentation.
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -32,12 +33,12 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-# 
+#
 # Except as contained in this notice, the name of the copyright holders shall
 # not be used in advertising or otherwise to promote the sale, use or
 # other dealings in this Software without prior written authorization
 # from the copyright holders.
-# 
+#
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -61,6 +62,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@HAVE_DOCTOOLS_TRUE@am__append_1 = .txt .xml
 subdir = man
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -79,8 +81,8 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libmandir)"
-libmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(libman_DATA)
+nodist_libmanDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(nodist_libman_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -88,9 +90,11 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
+ASCIIDOC = @ASCIIDOC@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -98,8 +102,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -121,6 +127,9 @@ FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
+HAVE_DOCTOOLS_FALSE = @HAVE_DOCTOOLS_FALSE@
+HAVE_DOCTOOLS_TRUE = @HAVE_DOCTOOLS_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -151,7 +160,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
-SED = sed
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -159,6 +168,7 @@ VERSION = @VERSION@
 XI_CFLAGS = @XI_CFLAGS@
 XI_LIBS = @XI_LIBS@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
+XMLTO = @XMLTO@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
@@ -209,114 +219,110 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 libmandir = $(LIB_MAN_DIR)
 LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
-libman_PRE = \
-	XAllowDeviceEvents.man \
-	XChangeDeviceDontPropagateList.man \
-	XChangeKeyboardDevice.man \
-	XChangePointerDevice.man \
-	XDeviceBell.man \
-	XGetDeviceControl.man \
-	XGetDeviceKeyMapping.man \
-	XGetDeviceModifierMapping.man \
-	XGetDeviceMotionEvents.man \
-	XGetExtensionVersion.man \
-	XGetFeedbackControl.man \
-	XGrabDevice.man \
-	XGrabDeviceButton.man \
-	XGrabDeviceKey.man \
-	XListInputDevices.man \
-	XOpenDevice.man \
-	XQueryDeviceState.man \
-	XSelectExtensionEvent.man \
-	XSendExtensionEvent.man \
-	XSetDeviceButtonMapping.man \
-	XSetDeviceFocus.man \
-	XSetDeviceMode.man \
-	XSetDeviceValuators.man \
-	XListDeviceProperties.man \
-	XGetDeviceProperty.man
+XI2_manpages = \
+	XIChangeHierarchy.txt \
+	XIDefineCursor.txt \
+	XIGrabButton.txt \
+	XIGrabDevice.txt \
+        XIGrabEnter.txt \
+	XIQueryDevice.txt \
+	XIQueryPointer.txt \
+	XIQueryVersion.txt \
+	XISelectEvents.txt \
+	XISetClientPointer.txt \
+	XISetFocus.txt \
+	XIWarpPointer.txt \
+	XIListProperties.txt \
+	XIChangeProperty.txt
 
-BUILT_SOURCES = shadows.DONE
-EXTRA_DIST = $(libman_PRE)
-CLEANFILES = $(libman_DATA) $(BUILT_SOURCES)
-libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
-	      $(all_shadows:=.@LIB_MAN_SUFFIX@)
+libman_txt = \
+	XAllowDeviceEvents.txt \
+	XChangeDeviceDontPropagateList.txt \
+	XChangeKeyboardDevice.txt \
+	XChangePointerDevice.txt \
+	XDeviceBell.txt \
+	XGetDeviceControl.txt \
+	XGetDeviceKeyMapping.txt \
+	XGetDeviceModifierMapping.txt \
+	XGetDeviceMotionEvents.txt \
+	XGetDeviceProperty.txt \
+	XGetExtensionVersion.txt \
+	XGetFeedbackControl.txt \
+	XGrabDeviceButton.txt \
+	XGrabDeviceKey.txt \
+	XGrabDevice.txt \
+	XListDeviceProperties.txt \
+	XListInputDevices.txt \
+	XOpenDevice.txt \
+	XQueryDeviceState.txt \
+	XSelectExtensionEvent.txt \
+	XSendExtensionEvent.txt \
+	XSetDeviceButtonMapping.txt \
+	XSetDeviceFocus.txt \
+	XSetDeviceMode.txt \
+	XSetDeviceValuators.txt \
+        $(XI2_manpages)
 
+libman_xml = $(libman_txt:.txt=.xml)
+# manpages that are references to another page. These are produced as a
+# side effect of the xmlto rule, so they need to be handled specially.
+XI2_refpages = \
+	XIUndefineCursor.man \
+	XIUngrabButton.man \
+	XIGrabKeycode.man \
+	XIUngrabKeycode.man \
+	XIUngrabDevice.man  \
+        XIUngrabEnter.man \
+        XIGrabFocusIn.man \
+        XIUngrabFocusIn.man \
+	XIGetClientPointer.man \
+	XIGetFocus.man \
+	XIGetSelectedEvents.man \
+	XIDeleteProperty.man \
+	XIGetProperty.man \
+	XIFreeDeviceInfo.man
+
+libman_ref = \
+	XGetDeviceDontPropagateList.man \
+	XChangeDeviceControl.man \
+	XChangeDeviceKeyMapping.man \
+	XSetDeviceModifierMapping.man \
+	XChangeFeedbackControl.man \
+	XUngrabDeviceButton.man \
+	XUngrabDeviceKey.man \
+	XUngrabDevice.man \
+	XDeviceTimeCoord.man \
+	XFreeDeviceList.man \
+	XCloseDevice.man \
+	XGetSelectedExtensionEvents.man \
+	XGetDeviceButtonMapping.man \
+	XGetDeviceFocus.man \
+	XChangeDeviceProperty.man \
+	XDeleteDeviceProperty.man \
+        $(XI2_refpages)
+
+libman_pre = $(libman_txt:.txt=.man) $(libman_ref)
+@HAVE_DOCTOOLS_TRUE@nodist_libman_DATA = $(libman_pre:.man=.$(LIB_MAN_SUFFIX))
+EXTRA_DIST = $(libman_txt) $(libman_pre)
+CLEANFILES = $(nodist_libman_DATA) *.libmansuffix
+MAINTAINERCLEANFILES = $(libman_pre) *.xml
 
 # Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
+XORGRELSTRING = $(PACKAGE_STRING)
 XORGMANNAME = X Version 11
-SUFFIXES = .$(LIB_MAN_SUFFIX) .man
+MAN_SUBSTS = \
+	-e 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/' \
+	-e 's/__xservername__/Xorg/g' \
+	-e 's/__xconfigfile__/xorg.conf/g' \
+	-e 's/__appmansuffix__/$(APP_MAN_SUFFIX)/g' \
+	-e 's/libmansuffix/$(LIB_MAN_SUFFIX)/g' \
+	-e 's/__filemansuffix__/$(FILE_MAN_SUFFIX)/g'
 
-# Generate man page shadow files (Replaces InstallManPageAliases from Imake)
-all_shadows = \
-    $(XGetDeviceControl_shadows)             \
-    $(XGetFeedbackControl_shadows)           \
-    $(XGetDeviceKeyMapping_shadows)          \
-    $(XGetDeviceModifierMapping_shadows)     \
-    $(XChangeDeviceDontPropagateList_shadows) \
-    $(XGetDeviceMotionEvents_shadows)        \
-    $(XGrabDeviceButton_shadows)             \
-    $(XGrabDeviceKey_shadows)                \
-    $(XGrabDevice_shadows)                   \
-    $(XListInputDevices_shadows)             \
-    $(XOpenDevice_shadows)                   \
-    $(XSetDeviceButtonMapping_shadows)       \
-    $(XSetDeviceFocus_shadows)               \
-    $(XSelectExtensionEvent_shadows)         \
-    $(XGetDeviceProperty_shadows)
-
-XGetDeviceControl_shadows = \
-    XChangeDeviceControl
-
-XGetFeedbackControl_shadows = \
-    XChangeFeedbackControl
-
-XGetDeviceKeyMapping_shadows = \
-    XChangeDeviceKeyMapping
-
-XGetDeviceModifierMapping_shadows = \
-    XSetDeviceModifierMapping
-
-XChangeDeviceDontPropagateList_shadows = \
-    XGetDeviceDontPropagateList
-
-XGetDeviceMotionEvents_shadows = \
-    XDeviceTimeCoord
-
-XGrabDeviceButton_shadows = \
-    XUngrabDeviceButton
-
-XGrabDeviceKey_shadows = \
-    XUngrabDeviceKey
-
-XGrabDevice_shadows = \
-    XUngrabDevice
-
-XListInputDevices_shadows = \
-    XFreeDeviceList
-
-XOpenDevice_shadows = \
-    XCloseDevice
-
-XSetDeviceButtonMapping_shadows = \
-    XGetDeviceButtonMapping
-
-XSetDeviceFocus_shadows = \
-    XGetDeviceFocus
-
-XSelectExtensionEvent_shadows = \
-    XGetSelectedExtensionEvents
-
-XGetDeviceProperty_shadows = \
-    XDeleteDeviceProperty \
-    XChangeDeviceProperty
-
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+SUFFIXES = .man .$(LIB_MAN_SUFFIX) $(am__append_1)
+all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(LIB_MAN_SUFFIX) .man
+.SUFFIXES: .man .$(LIB_MAN_SUFFIX) .txt .xml
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -326,9 +332,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  man/Makefile
+	  $(AUTOMAKE) --foreign  man/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -356,19 +362,19 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-libmanDATA: $(libman_DATA)
+install-nodist_libmanDATA: $(nodist_libman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(libmandir)" || $(mkdir_p) "$(DESTDIR)$(libmandir)"
-	@list='$(libman_DATA)'; for p in $$list; do \
+	@list='$(nodist_libman_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(libmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(libmandir)/$$f'"; \
-	  $(libmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(libmandir)/$$f"; \
+	  echo " $(nodist_libmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(libmandir)/$$f'"; \
+	  $(nodist_libmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(libmandir)/$$f"; \
 	done
 
-uninstall-libmanDATA:
+uninstall-nodist_libmanDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(libman_DATA)'; for p in $$list; do \
+	@list='$(nodist_libman_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(libmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(libmandir)/$$f"; \
@@ -408,15 +414,13 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
+check: check-am
 all-am: Makefile $(DATA)
 installdirs:
 	for dir in "$(DESTDIR)$(libmandir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -441,7 +445,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -460,7 +464,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-libmanDATA
+install-data-am: install-nodist_libmanDATA
 
 install-exec-am:
 
@@ -486,69 +490,64 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libmanDATA
+uninstall-am: uninstall-info-am uninstall-nodist_libmanDATA
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-libmanDATA install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-info-am uninstall-libmanDATA
+	install-info install-info-am install-man \
+	install-nodist_libmanDATA install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-info-am uninstall-nodist_libmanDATA
 
 
+# prerequisites for the side effect pages
+XGetDeviceDontPropagateList.man: XChangeDeviceDontPropagateList.man
+XChangeDeviceControl.man: XGetDeviceControl.man
+XChangeDeviceKeyMapping.man: XGetDeviceKeyMapping.man
+XSetDeviceModifierMapping.man: XGetDeviceModifierMapping.man
+XDeviceTimeCoord.man: XGetDeviceMotionEvents.man
+XChangeFeedbackControl.man: XGetFeedbackControl.man
+XUngrabDeviceButton.man: XGrabDeviceButton.man
+XUngrabDeviceKey.man: XGrabDeviceKey.man
+XUngrabDevice.man: XGrabDevice.man
+XFreeDeviceList.man: XListInputDevices.man
+XCloseDevice.man: XOpenDevice.man
+XGetSelectedExtensionEvents.man: XSelectExtensionEvent.man
+XGetDeviceButtonMapping.man: XSetDeviceButtonMapping.man
+XGetDeviceFocus.man: XSetDeviceFocus.man
+XChangeDeviceProperty.man: XGetDeviceProperty.man
+XDeleteDeviceProperty.man: XGetDeviceProperty.man
+
+# XI2 prereqs
+XIUndefineCursor.man: XIDefineCursor.man
+XIUngrabButton.man XIGrabKeycode.man XIUngrabKeycode.man: XIGrabButton.man
+XIGetClientPointer.man: XISetClientPointer.man
+XIGetFocus.man: XISetFocus.man
+XIUngrabDevice.man: XIGrabDevice.man
+XIGetProperty.man: XIChangeProperty.man
+XIDeleteProperty.man: XIChangeProperty.man
+XIUngrabEnter.man XIGrabFocusIn.man XIUngrabFocusIn.man: XIGrabEnter.man
+XIGetSelectedEvents.man: XISelectEvents.man
+XIFreeDeviceInfo.man: XIQueryDevice.man
 .man.$(LIB_MAN_SUFFIX):
-	sed 's/__xorgversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/;  s/__LIB_MAN_SUFFIX__/$(LIB_MAN_SUFFIX)/' < $< > $@
+	$(SED) $(MAN_SUBSTS) < $< > $@
+@HAVE_DOCTOOLS_TRUE@.txt.xml:
+@HAVE_DOCTOOLS_TRUE@	$(ASCIIDOC) -b docbook -d manpage -o $@ $<
+@HAVE_DOCTOOLS_TRUE@.xml.man:
+@HAVE_DOCTOOLS_TRUE@	$(XMLTO) man $<
+@HAVE_DOCTOOLS_TRUE@	mv -f $(@:.man=.libmansuffix) $@
 
-shadows.DONE:
-	-rm -f $(all_shadows:=.@LIB_MAN_SUFFIX@)
-	(for i in $(XGetDeviceControl_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceControl.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetFeedbackControl_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetFeedbackControl.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetDeviceKeyMapping_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceKeyMapping.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetDeviceModifierMapping_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceModifierMapping.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XChangeDeviceDontPropagateList_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XChangeDeviceDontPropagateList.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetDeviceMotionEvents_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceMotionEvents.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGrabDeviceButton_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGrabDeviceButton.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGrabDeviceKey_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGrabDeviceKey.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGrabDevice_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGrabDevice.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XListInputDevices_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XListInputDevices.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XOpenDevice_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XOpenDevice.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XSetDeviceButtonMapping_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XSetDeviceButtonMapping.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XSetDeviceFocus_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XSetDeviceFocus.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XSelectExtensionEvent_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XSelectExtensionEvent.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
-	(for i in $(XGetDeviceProperty_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/XGetDeviceProperty.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
+# need to force asciidoc/xmlto to run if necessary for side effect pages
+@HAVE_DOCTOOLS_TRUE@$(libman_ref):
+@HAVE_DOCTOOLS_TRUE@	@if test ! -f $(@:.man=.libmansuffix); then \
+@HAVE_DOCTOOLS_TRUE@	  rm -f $<; \
+@HAVE_DOCTOOLS_TRUE@	  $(MAKE) $(AM_MAKEFLAGS) $< || exit 1; \
+@HAVE_DOCTOOLS_TRUE@	fi
+@HAVE_DOCTOOLS_TRUE@	mv -f $(@:.man=.libmansuffix) $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

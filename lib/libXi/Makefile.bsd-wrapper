@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2009/05/02 15:23:04 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2010/05/18 19:28:54 matthieu Exp $
 
-SHARED_LIBS=	Xi 10.1
+SHARED_LIBS=	Xi 11.0
 
 .include <bsd.xorg.mk>

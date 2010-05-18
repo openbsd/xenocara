@@ -1,5 +1,3 @@
-/* $Xorg: XUngrDvK.c,v 1.4 2001/02/09 02:03:51 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XUngrDvK.c,v 3.3 2001/12/14 19:55:26 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -61,13 +58,13 @@ SOFTWARE.
 #include "XIint.h"
 
 int
-XUngrabDeviceKey(dpy, dev, key, modifiers, modifier_dev, grab_window)
-    register Display *dpy;
-    XDevice *dev;
-    unsigned int key;	/* CARD8 */
-    unsigned int modifiers;	/* CARD16 */
-    XDevice *modifier_dev;
-    Window grab_window;
+XUngrabDeviceKey(
+    register Display	*dpy,
+    XDevice		*dev,
+    unsigned int	 key,		/* CARD8 */
+    unsigned int	 modifiers,	/* CARD16 */
+    XDevice		*modifier_dev,
+    Window		 grab_window)
 {
     register xUngrabDeviceKeyReq *req;
     XExtDisplayInfo *info = XInput_find_display(dpy);

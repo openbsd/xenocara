@@ -1,5 +1,3 @@
-/* $Xorg: XGrabDev.c,v 1.4 2001/02/09 02:03:51 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XGrabDev.c,v 3.3 2001/12/14 19:55:17 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -61,17 +58,16 @@ SOFTWARE.
 #include "XIint.h"
 
 int
-XGrabDevice(dpy, dev, grab_window, ownerEvents, event_count, event_list,
-	    this_device_mode, other_devices_mode, time)
-    register Display *dpy;
-    XDevice *dev;
-    Window grab_window;
-    Bool ownerEvents;
-    int event_count;
-    XEventClass *event_list;
-    int this_device_mode;
-    int other_devices_mode;
-    Time time;
+XGrabDevice(
+    register Display	*dpy,
+    XDevice		*dev,
+    Window		 grab_window,
+    Bool		 ownerEvents,
+    int			 event_count,
+    XEventClass		*event_list,
+    int			 this_device_mode,
+    int			 other_devices_mode,
+    Time		 time)
 {
     xGrabDeviceReply rep;
     register xGrabDeviceReq *req;

@@ -14,7 +14,6 @@
 
 @SET_MAKE@
 
-# $XdotOrg: lib/Xi/src/Makefile.am,v 1.6 2005/12/03 04:41:49 kem Exp $
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -39,8 +38,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = src
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/config.h.in
+DIST_COMMON = $(libXiinclude_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/config.h.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -54,20 +53,25 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libXiincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libXi_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libXi_la_OBJECTS = XAllowDv.lo XChgDCtl.lo XChgFCtl.lo XChDProp.lo \
+am__objects_1 = XIAllowEvents.lo XIGrabDevice.lo XIQueryVersion.lo \
+	XIQueryDevice.lo XISetDevFocus.lo XIGetDevFocus.lo \
+	XIPassiveGrab.lo XIProperties.lo XISelEv.lo XIWarpPointer.lo \
+	XIHierarchy.lo XIDefineCursor.lo XIQueryPointer.lo
+am_libXi_la_OBJECTS = XAllowDv.lo XChDProp.lo XChgDCtl.lo XChgFCtl.lo \
 	XChgKbd.lo XChgKMap.lo XChgPnt.lo XChgProp.lo XCloseDev.lo \
-	XDelDProp.lo XDevBell.lo XExtToWire.lo XGetBMap.lo XGetDCtl.lo \
-	XGetDProp.lo XGetFCtl.lo XGetKMap.lo XGetMMap.lo XGetProp.lo \
-	XGetVers.lo XGMotion.lo XGrabDev.lo XGrDvBut.lo XGrDvKey.lo \
-	XGtFocus.lo XGtSelect.lo XListDev.lo XListDProp.lo XOpenDev.lo \
-	XQueryDv.lo XSelect.lo XSetBMap.lo XSetDVal.lo XSetMMap.lo \
-	XSetMode.lo XSndExEv.lo XStFocus.lo XUngrDev.lo XUngrDvB.lo \
-	XUngrDvK.lo XExtInt.lo
+	XDelDProp.lo XDevBell.lo XExtToWire.lo XGetBMap.lo XGetCPtr.lo \
+	XGetDCtl.lo XGetDProp.lo XGetFCtl.lo XGetKMap.lo XGetMMap.lo \
+	XGetProp.lo XGetVers.lo XGMotion.lo XGrabDev.lo XGrDvBut.lo \
+	XGrDvKey.lo XGtFocus.lo XGtSelect.lo XListDev.lo XListDProp.lo \
+	XOpenDev.lo XQueryDv.lo XSelect.lo XSetBMap.lo XSetCPtr.lo \
+	XSetDVal.lo XSetMMap.lo XSetMode.lo XSndExEv.lo XStFocus.lo \
+	XUngrDev.lo XUngrDvB.lo XUngrDvK.lo XExtInt.lo \
+	$(am__objects_1)
 libXi_la_OBJECTS = $(am_libXi_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -82,6 +86,8 @@ LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libXi_la_SOURCES)
 DIST_SOURCES = $(libXi_la_SOURCES)
+libXiincludeHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(libXiinclude_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -91,9 +97,11 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
+ASCIIDOC = @ASCIIDOC@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -101,8 +109,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -124,6 +134,9 @@ FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
+HAVE_DOCTOOLS_FALSE = @HAVE_DOCTOOLS_FALSE@
+HAVE_DOCTOOLS_TRUE = @HAVE_DOCTOOLS_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -162,6 +175,7 @@ VERSION = @VERSION@
 XI_CFLAGS = @XI_CFLAGS@
 XI_LIBS = @XI_LIBS@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
+XMLTO = @XMLTO@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
@@ -211,11 +225,25 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libXi.la
+XI2_sources = XIAllowEvents.c \
+		  XIGrabDevice.c \
+		  XIQueryVersion.c \
+		  XIQueryDevice.c \
+		  XISetDevFocus.c \
+		  XIGetDevFocus.c \
+		  XIPassiveGrab.c \
+		  XIProperties.c \
+		  XISelEv.c \
+		  XIWarpPointer.c \
+		  XIHierarchy.c \
+		  XIDefineCursor.c \
+		  XIQueryPointer.c
+
 libXi_la_SOURCES = \
 		  XAllowDv.c \
+		  XChDProp.c \
 		  XChgDCtl.c \
 		  XChgFCtl.c \
-		  XChDProp.c \
 		  XChgKbd.c \
 		  XChgKMap.c \
 		  XChgPnt.c \
@@ -225,6 +253,7 @@ libXi_la_SOURCES = \
 		  XDevBell.c \
 		  XExtToWire.c \
 		  XGetBMap.c \
+		  XGetCPtr.c \
 		  XGetDCtl.c \
 		  XGetDProp.c \
 		  XGetFCtl.c \
@@ -244,6 +273,7 @@ libXi_la_SOURCES = \
 		  XQueryDv.c \
 		  XSelect.c \
 		  XSetBMap.c \
+		  XSetCPtr.c \
 		  XSetDVal.c \
 		  XSetMMap.c \
 		  XSetMode.c \
@@ -253,16 +283,21 @@ libXi_la_SOURCES = \
 		  XUngrDvB.c \
 		  XUngrDvK.c \
 		  XExtInt.c  \
-		  XIint.h
+		  XIint.h \
+		  $(XI2_sources)
 
 libXi_la_LIBADD = $(XI_LIBS)
-AM_CFLAGS = $(XI_CFLAGS) $(MALLOC_ZERO_CFLAGS)
+AM_CFLAGS = -I$(top_srcdir)/include \
+            -I$(top_srcdir)/include/X11 \
+            -I$(top_srcdir)/include/X11/extensions \
+            $(XI_CFLAGS) \
+            $(MALLOC_ZERO_CFLAGS)
 
-#INCLUDES = -I$(top_srcdir)/include/X11/extensions
-libXi_la_LDFLAGS = -version-number 6:0:0 -no-undefined
+libXi_la_LDFLAGS = -version-number 6:1:0 -no-undefined
+libXiincludedir = $(includedir)/X11/extensions
+libXiinclude_HEADERS = $(top_srcdir)/include/X11/extensions/XInput.h \
+		       $(top_srcdir)/include/X11/extensions/XInput2.h
 
-#libXiincludedir = $(includedir)/X11/extensions
-#libXiinclude_HEADERS = $(top_srcdir)/include/X11/extensions/Xi.h 
 EXTRA_DIST = XFreeLst.c
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -278,9 +313,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -366,6 +401,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XExtToWire.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGMotion.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetBMap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetCPtr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetDCtl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetDProp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGetFCtl.Plo@am__quote@
@@ -378,12 +414,26 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGrabDev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGtFocus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGtSelect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIAllowEvents.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIDefineCursor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIGetDevFocus.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIGrabDevice.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIHierarchy.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIPassiveGrab.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIProperties.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIQueryDevice.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIQueryPointer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIQueryVersion.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XISelEv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XISetDevFocus.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIWarpPointer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XListDProp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XListDev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XOpenDev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XQueryDv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XSelect.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XSetBMap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XSetCPtr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XSetDVal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XSetMMap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XSetMode.Plo@am__quote@
@@ -423,6 +473,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-libXiincludeHEADERS: $(libXiinclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(libXiincludedir)" || $(mkdir_p) "$(DESTDIR)$(libXiincludedir)"
+	@list='$(libXiinclude_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(libXiincludeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(libXiincludedir)/$$f'"; \
+	  $(libXiincludeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(libXiincludedir)/$$f"; \
+	done
+
+uninstall-libXiincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libXiinclude_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(libXiincludedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(libXiincludedir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -473,6 +540,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/../include/X11/extensions
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -501,9 +569,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) config.h
+all-am: Makefile $(LTLIBRARIES) $(HEADERS) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libXiincludedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -551,7 +619,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-libXiincludeHEADERS
 
 install-exec-am: install-libLTLIBRARIES
 
@@ -579,7 +647,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
+uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
+	uninstall-libXiincludeHEADERS
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libLTLIBRARIES clean-libtool ctags distclean \
@@ -587,12 +656,13 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-libLTLIBRARIES install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-info-am uninstall-libLTLIBRARIES
+	install-info-am install-libLTLIBRARIES \
+	install-libXiincludeHEADERS install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-info-am \
+	uninstall-libLTLIBRARIES uninstall-libXiincludeHEADERS
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

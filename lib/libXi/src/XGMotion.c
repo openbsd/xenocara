@@ -1,5 +1,3 @@
-/* $Xorg: XGMotion.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XGMotion.c,v 3.3 2001/12/14 19:55:12 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -60,21 +57,15 @@ SOFTWARE.
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
 
-XDeviceTimeCoord
-    * XGetDeviceMotionEvents(dpy, dev, start, stop, nEvents, mode, axis_count)
-    register Display *
-	dpy;
-    XDevice *
-	dev;
-
-Time start;
-Time stop;
-    int *
-	nEvents;
-    int *
-	mode;
-    int *
-	axis_count;
+XDeviceTimeCoord *
+XGetDeviceMotionEvents(
+    register Display	*dpy,
+    XDevice		*dev,
+    Time		 start,
+    Time		 stop,
+    int			*nEvents,
+    int			*mode,
+    int			*axis_count)
 {
     xGetDeviceMotionEventsReq *req;
     xGetDeviceMotionEventsReply rep;
@@ -140,8 +131,7 @@ Time stop;
 }
 
 void
-XFreeDeviceMotionEvents(events)
-    XDeviceTimeCoord *events;
+XFreeDeviceMotionEvents(XDeviceTimeCoord *events)
 {
     XFree((char *)events);
 }

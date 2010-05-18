@@ -1,5 +1,3 @@
-/* $Xorg: XChgProp.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XChgProp.c,v 3.3 2001/12/14 19:55:05 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -62,12 +59,12 @@ SOFTWARE.
 #include "XIint.h"
 
 int
-XChangeDeviceDontPropagateList(dpy, window, count, events, mode)
-    register Display *dpy;
-    Window window;
-    int count;
-    XEventClass *events;
-    int mode;
+XChangeDeviceDontPropagateList(
+    register Display	*dpy,
+    Window		 window,
+    int			 count,
+    XEventClass		*events,
+    int			 mode)
 {
     xChangeDeviceDontPropagateListReq *req;
     XExtDisplayInfo *info = XInput_find_display(dpy);

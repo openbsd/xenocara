@@ -1,12 +1,24 @@
-# $XdotOrg: lib/Xi/src/Makefile.am,v 1.6 2005/12/03 04:41:49 kem Exp $
-
 lib_LTLIBRARIES = libXi.la
+
+XI2_sources = XIAllowEvents.c \
+		  XIGrabDevice.c \
+		  XIQueryVersion.c \
+		  XIQueryDevice.c \
+		  XISetDevFocus.c \
+		  XIGetDevFocus.c \
+		  XIPassiveGrab.c \
+		  XIProperties.c \
+		  XISelEv.c \
+		  XIWarpPointer.c \
+		  XIHierarchy.c \
+		  XIDefineCursor.c \
+		  XIQueryPointer.c
 
 libXi_la_SOURCES = \
 		  XAllowDv.c \
+		  XChDProp.c \
 		  XChgDCtl.c \
 		  XChgFCtl.c \
-		  XChDProp.c \
 		  XChgKbd.c \
 		  XChgKMap.c \
 		  XChgPnt.c \
@@ -16,6 +28,7 @@ libXi_la_SOURCES = \
 		  XDevBell.c \
 		  XExtToWire.c \
 		  XGetBMap.c \
+		  XGetCPtr.c \
 		  XGetDCtl.c \
 		  XGetDProp.c \
 		  XGetFCtl.c \
@@ -35,6 +48,7 @@ libXi_la_SOURCES = \
 		  XQueryDv.c \
 		  XSelect.c \
 		  XSetBMap.c \
+		  XSetCPtr.c \
 		  XSetDVal.c \
 		  XSetMMap.c \
 		  XSetMode.c \
@@ -44,17 +58,23 @@ libXi_la_SOURCES = \
 		  XUngrDvB.c \
 		  XUngrDvK.c \
 		  XExtInt.c  \
-		  XIint.h
+		  XIint.h \
+		  $(XI2_sources)
+
 
 libXi_la_LIBADD = $(XI_LIBS)
 
-AM_CFLAGS = $(XI_CFLAGS) $(MALLOC_ZERO_CFLAGS)
+AM_CFLAGS = -I$(top_srcdir)/include \
+            -I$(top_srcdir)/include/X11 \
+            -I$(top_srcdir)/include/X11/extensions \
+            $(XI_CFLAGS) \
+            $(MALLOC_ZERO_CFLAGS)
 
-#INCLUDES = -I$(top_srcdir)/include/X11/extensions
 
-libXi_la_LDFLAGS = -version-number 6:0:0 -no-undefined
+libXi_la_LDFLAGS = -version-number 6:1:0 -no-undefined
 
-#libXiincludedir = $(includedir)/X11/extensions
-#libXiinclude_HEADERS = $(top_srcdir)/include/X11/extensions/Xi.h 
+libXiincludedir = $(includedir)/X11/extensions
+libXiinclude_HEADERS = $(top_srcdir)/include/X11/extensions/XInput.h \
+		       $(top_srcdir)/include/X11/extensions/XInput2.h
 
 EXTRA_DIST = XFreeLst.c

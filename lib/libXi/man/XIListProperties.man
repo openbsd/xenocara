@@ -1,0 +1,61 @@
+'\" t
+.\"     Title: xilistproperties
+.\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
+.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
+.\"      Date: 10/02/2009
+.\"    Manual: [FIXME: manual]
+.\"    Source: [FIXME: source]
+.\"  Language: English
+.\"
+.TH "XILISTPROPERTIES" "libmansuffix" "10/02/2009" "[FIXME: source]" "[FIXME: manual]"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+XIListProperties \- List a device\'s properties\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+#include <X11/extensions/XInput2\&.h>
+.fi
+.sp
+.nf
+Atom* XListProperties( Display *display,
+                       int deviceid,
+                       int *nprops_return);
+.fi
+.sp
+.nf
+display
+       Specifies the connection to the X server\&.
+.fi
+.sp
+.nf
+deviceid
+       The device to list the properties for\&.
+.fi
+.sp
+.nf
+nprops_return
+       Specifies the number of Atoms returned\&.
+.fi
+.SH "DESCRIPTION"
+.sp
+The XIListProperties function returns a list of the properties associated with the input device specified with deviceid\&. Each device may have an arbitrary number of properties attached, some of which were created by the driver and/or server, others created by clients at runtime\&.
+.sp
+The client is expected to free the list of properties using XFree\&.
+.sp
+XIListProperties can generate a BadDevice error\&.
+.SH "DIAGNOSTICS"
+.sp
+BadDevice An invalid device was specified\&. The device does not exist\&.
+.SH "SEE ALSO"
+.sp
+XIChangeProperty(libmansuffix), XIGetProperty(libmansuffix), XIDeleteProperty(libmansuffix)

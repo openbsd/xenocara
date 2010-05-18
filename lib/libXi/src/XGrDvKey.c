@@ -1,5 +1,3 @@
-/* $Xorg: XGrDvKey.c,v 1.4 2001/02/09 02:03:51 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XGrDvKey.c,v 3.3 2001/12/14 19:55:17 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -61,20 +58,18 @@ SOFTWARE.
 #include "XIint.h"
 
 int
-XGrabDeviceKey(dpy, dev, key, modifiers, modifier_device,
-	       grab_window, owner_events, event_count, event_list,
-	       this_device_mode, other_devices_mode)
-    register Display *dpy;
-    XDevice *dev;
-    unsigned int key;	/* CARD8 */
-    unsigned int modifiers;	/* CARD16 */
-    XDevice *modifier_device;
-    Window grab_window;
-    Bool owner_events;
-    unsigned int event_count;
-    XEventClass *event_list;
-    int this_device_mode;
-    int other_devices_mode;
+XGrabDeviceKey(
+    register Display	*dpy,
+    XDevice		*dev,
+    unsigned int	 key,		/* CARD8 */
+    unsigned int	 modifiers,	/* CARD16 */
+    XDevice		*modifier_device,
+    Window		 grab_window,
+    Bool		 owner_events,
+    unsigned int	 event_count,
+    XEventClass		*event_list,
+    int			 this_device_mode,
+    int			 other_devices_mode)
 {
     register xGrabDeviceKeyReq *req;
     XExtDisplayInfo *info = XInput_find_display(dpy);

@@ -1,5 +1,3 @@
-/* $Xorg: XCloseDev.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XCloseDev.c,v 3.3 2001/12/14 19:55:06 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -61,9 +58,9 @@ SOFTWARE.
 #include "XIint.h"
 
 int
-XCloseDevice(dpy, dev)
-    register Display *dpy;
-    register XDevice *dev;
+XCloseDevice(
+    register Display	*dpy,
+    register XDevice	*dev)
 {
     xCloseDeviceReq *req;
     XExtDisplayInfo *info = XInput_find_display(dpy);

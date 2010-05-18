@@ -1,5 +1,3 @@
-/* $Xorg: XSetMMap.c,v 1.4 2001/02/09 02:03:51 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XSetMMap.c,v 3.3 2001/12/14 19:55:22 dawes Exp $ */
 
 /***********************************************************************
  *
@@ -61,10 +58,10 @@ SOFTWARE.
 #include "XIint.h"
 
 int
-XSetDeviceModifierMapping(dpy, dev, modmap)
-    register Display *dpy;
-    XDevice *dev;
-    XModifierKeymap *modmap;
+XSetDeviceModifierMapping(
+    register Display	*dpy,
+    XDevice		*dev,
+    XModifierKeymap	*modmap)
 {
     int mapSize = modmap->max_keypermod << 3;	/* 8 modifiers */
     xSetDeviceModifierMappingReq *req;

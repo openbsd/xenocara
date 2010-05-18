@@ -1,5 +1,3 @@
-/* $Xorg: XGetVers.c,v 1.4 2001/02/09 02:03:50 xorgcvs Exp $ */
-
 /************************************************************
 
 Copyright 1989, 1998  The Open Group
@@ -45,7 +43,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ********************************************************/
-/* $XFree86: xc/lib/Xi/XGetVers.c,v 3.6 2003/07/08 15:39:47 tsi Exp $ */
 
 /***********************************************************************
  *
@@ -75,8 +72,9 @@ XGetExtensionVersion(register Display * dpy, _Xconst char *name)
     return (ext);
 }
 
-XExtensionVersion *
-_XiGetExtensionVersion(register Display * dpy, _Xconst char *name, XExtDisplayInfo *info)
+_X_HIDDEN XExtensionVersion *
+_XiGetExtensionVersion(register Display * dpy, _Xconst char *name,
+                       XExtDisplayInfo *info)
 {
     xGetExtensionVersionReq *req;
     xGetExtensionVersionReply rep;
@@ -88,7 +86,7 @@ _XiGetExtensionVersion(register Display * dpy, _Xconst char *name, XExtDisplayIn
     GetReq(GetExtensionVersion, req);
     req->reqType = info->codes->major_opcode;
     req->ReqType = X_GetExtensionVersion;
-    req->nbytes = name ? strlen(name) : 0;
+    req->nbytes = strlen(name);
     req->length += (unsigned)(req->nbytes + 3) >> 2;
     _XSend(dpy, name, (long)req->nbytes);
 
