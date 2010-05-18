@@ -1,20 +1,21 @@
 inputdir = $(includedir)/X11/extensions
 input_HEADERS = \
 	XI.h \
-	XInput.h \
-	XIproto.h
+	XIproto.h \
+	XI2.h \
+	XI2proto.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = inputproto.pc
 
-EXTRA_DIST = autogen.sh inputproto.pc.in
+EXTRA_DIST = inputproto.pc.in
 
-EXTRA_DIST += ChangeLog
+EXTRA_DIST += ChangeLog XI2proto.txt XIproto.txt
 MAINTAINERCLEANFILES = ChangeLog
 
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
