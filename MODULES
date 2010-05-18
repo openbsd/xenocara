@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.119 2010/05/10 20:29:58 matthieu Exp $
+ $OpenBSD: MODULES,v 1.120 2010/05/18 20:33:59 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -115,7 +115,7 @@ driver/xf86-video-i128		1.3.3	7.4+	needs-update
 driver/xf86-video-i740		1.3.2	7.4+
 driver/xf86-video-intel		2.11.0	7.5+	needs-update
 driver/xf86-video-mach64	6.8.2	7.4	needs-update
-driver/xf86-video-mga		1.4.11	7.4+	needs-update
+driver/xf86-video-mga		1.4.12	7.4+	needs-update
 driver/xf86-video-neomagic	1.2.4	7.4+
 driver/xf86-video-newport	0.2.3	7.4+
 driver/xf86-video-nv		2.1.17	7.5+	deprecated
@@ -184,7 +184,7 @@ font/xfree86-type1		1.0.2	needs-update
 lib/libFS			1.0.2	7.4+
 lib/libICE			1.0.6	7.5
 lib/libSM			1.1.1	7.4+
-lib/libX11			1.3.3	7.5+	needs-update
+lib/libX11			1.3.3	7.5+
 lib/libXRes			1.0.4	7.5
 lib/libXScrnSaver		1.2.0	7.4+
 lib/libXTrap			1.0.0	7.0	unlinked
@@ -200,7 +200,7 @@ lib/libXfixes			4.0.4	7.5
 lib/libXfont			1.4.1	7.5
 lib/libXfontcache		1.0.5	7.5
 lib/libXft			2.1.14	7.5
-lib/libXi			1.3	7.5	needs-update
+lib/libXi			1.3	7.5
 lib/libXinerama			1.1	7.5
 lib/libXmu			1.0.5	7.5
 lib/libXp			1.0.0	7.0	unlinked
@@ -238,7 +238,7 @@ proto/fixesproto		4.1.1	7.5
 proto/fontcacheproto		0.1.3	7.5
 proto/fontsproto		2.1.0	7.4+
 proto/glproto			1.4.11	7.5+
-proto/inputproto		2.0	7.5	needs-update
+proto/inputproto		2.0	7.5
 proto/kbproto			1.0.4	7.5
 proto/pmproto			1.0.3	7.5	deprecated
 proto/printproto		1.0.4	7.4	unlinked
@@ -249,7 +249,7 @@ proto/resourceproto		1.1.0	7.4+
 proto/scrnsaverproto		1.2.0	7.4+
 proto/trapproto			3.4.3	7.0	unlinked
 proto/videoproto		2.3.0	7.4+
-proto/x11proto			7.0.16	7.5	needs-update
+proto/x11proto			7.0.17	7.5
 proto/xcb-proto			1.6	7.5+
 proto/xcmiscproto		1.2.0	7.4+
 proto/xextproto			7.1.1	7.4+
@@ -266,4 +266,4 @@ util/imake			1.0.3	7.5+
 util/macros			1.7.0	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
-xserver				1.8.0	7.5+	needs-update
+xserver				1.8.1	7.5+	needs-update
