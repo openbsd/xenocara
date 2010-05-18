@@ -99,7 +99,7 @@
 ./usr/X11R6/lib/libX11-xcb.a
 ./usr/X11R6/lib/libX11-xcb.la
 ./usr/X11R6/lib/libX11-xcb.so.1.0
-./usr/X11R6/lib/libX11.so.12.0
+./usr/X11R6/lib/libX11.so.13.0
 ./usr/X11R6/lib/libXRes.so.4.0
 ./usr/X11R6/lib/libXau.so.9.0
 ./usr/X11R6/lib/libXaw.so.14.0
@@ -113,7 +113,7 @@
 ./usr/X11R6/lib/libXfont.so.9.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXft.so.8.0
-./usr/X11R6/lib/libXi.so.10.1
+./usr/X11R6/lib/libXi.so.11.0
 ./usr/X11R6/lib/libXinerama.so.5.0
 ./usr/X11R6/lib/libXmu.so.10.0
 ./usr/X11R6/lib/libXmuu.so.5.0
