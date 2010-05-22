@@ -965,7 +965,7 @@ static inline int i830_fb_compression_supported(intel_screen_private *intel)
      * that device. See this bug report for more details:
      * https://bugs.freedesktop.org/show_bug.cgi?id=16257
      */
-    if (IS_I965GM(intel))
+    if (IS_I965GM(intel) || IS_I915GM(intel) || IS_I945GM(intel))
 	return FALSE;
     return TRUE;
 }
