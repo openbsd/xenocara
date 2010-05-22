@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.117 2010/04/11 16:51:26 okan Exp $
+ * $Id: calmwm.h,v 1.118 2010/05/22 22:10:31 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -401,7 +401,7 @@ void			 xu_key_grab(Window, int, int);
 void			 xu_key_ungrab(Window, int, int);
 void			 xu_sendmsg(Window, Atom, long);
 int			 xu_getprop(Window, Atom, Atom, long, u_char **);
-char			*xu_getstrprop(struct client_ctx *, Atom atm);
+int			 xu_getstrprop(Window, Atom, char **);
 void			 xu_setstate(struct client_ctx *, int);
 int			 xu_getstate(struct client_ctx *, int *);
 unsigned long		 xu_getcolor(struct screen_ctx *, char *);
