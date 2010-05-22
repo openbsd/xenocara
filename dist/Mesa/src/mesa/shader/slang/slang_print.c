@@ -119,22 +119,22 @@ print_type(const slang_fully_specified_type *t)
    case SLANG_SPEC_MAT43:
       printf("mat4x3");
       break;
-   case SLANG_SPEC_SAMPLER1D:
+   case SLANG_SPEC_SAMPLER_1D:
       printf("sampler1D");
       break;
-   case SLANG_SPEC_SAMPLER2D:
+   case SLANG_SPEC_SAMPLER_2D:
       printf("sampler2D");
       break;
-   case SLANG_SPEC_SAMPLER3D:
+   case SLANG_SPEC_SAMPLER_3D:
       printf("sampler3D");
       break;
-   case SLANG_SPEC_SAMPLERCUBE:
+   case SLANG_SPEC_SAMPLER_CUBE:
       printf("samplerCube");
       break;
-   case SLANG_SPEC_SAMPLER1DSHADOW:
+   case SLANG_SPEC_SAMPLER_1D_SHADOW:
       printf("sampler1DShadow");
       break;
-   case SLANG_SPEC_SAMPLER2DSHADOW:
+   case SLANG_SPEC_SAMPLER_2D_SHADOW:
       printf("sampler2DShadow");
       break;
    case SLANG_SPEC_STRUCT:
@@ -261,6 +261,7 @@ slang_print_tree(const slang_operation *op, int indent)
       break;
 
    case SLANG_OPER_BLOCK_NEW_SCOPE:
+   case SLANG_OPER_NON_INLINED_CALL:
       spaces(indent);
       printf("{{ // new scope  locals=%p outer=%p: ",
              (void *) op->locals,
@@ -344,6 +345,13 @@ slang_print_tree(const slang_operation *op, int indent)
    case SLANG_OPER_RETURN:
       spaces(indent);
       printf("RETURN\n");
+      if (op->num_children > 0)
+         slang_print_tree(&op->children[0], indent + 3);
+      break;
+
+   case SLANG_OPER_RETURN_INLINED:
+      spaces(indent);
+      printf("RETURN_INLINED\n");
       if (op->num_children > 0)
          slang_print_tree(&op->children[0], indent + 3);
       break;
@@ -478,7 +486,7 @@ slang_print_tree(const slang_operation *op, int indent)
                    (void *) scope,
                    (void *) op->locals,
                    (void *) op->locals->outer_scope);
-            assert(scope);
+            /*assert(scope);*/
          }
       }
       break;
@@ -690,7 +698,7 @@ slang_print_function(const slang_function *f, GLboolean body)
    GLuint i;
 
 #if 0
-   if (_mesa_strcmp((char *) f->header.a_name, "main") != 0)
+   if (strcmp((char *) f->header.a_name, "main") != 0)
      return;
 #endif
 
@@ -775,21 +783,21 @@ slang_type_string(slang_type_specifier_type t)
       return "mat3";
    case SLANG_SPEC_MAT4:
       return "mat4";
-   case SLANG_SPEC_SAMPLER1D:
+   case SLANG_SPEC_SAMPLER_1D:
       return "sampler1D";
-   case SLANG_SPEC_SAMPLER2D:
+   case SLANG_SPEC_SAMPLER_2D:
       return "sampler2D";
-   case SLANG_SPEC_SAMPLER3D:
+   case SLANG_SPEC_SAMPLER_3D:
       return "sampler3D";
-   case SLANG_SPEC_SAMPLERCUBE:
+   case SLANG_SPEC_SAMPLER_CUBE:
       return "samplerCube";
-   case SLANG_SPEC_SAMPLER1DSHADOW:
+   case SLANG_SPEC_SAMPLER_1D_SHADOW:
       return "sampler1DShadow";
-   case SLANG_SPEC_SAMPLER2DSHADOW:
+   case SLANG_SPEC_SAMPLER_2D_SHADOW:
       return "sampler2DShadow";
-   case SLANG_SPEC_SAMPLER2DRECT:
+   case SLANG_SPEC_SAMPLER_RECT:
       return "sampler2DRect";
-   case SLANG_SPEC_SAMPLER2DRECTSHADOW:
+   case SLANG_SPEC_SAMPLER_RECT_SHADOW:
       return "sampler2DRectShadow";
    case SLANG_SPEC_STRUCT:
       return "struct";

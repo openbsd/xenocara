@@ -30,9 +30,9 @@
 
 #include "main/glheader.h"
 #include "main/bufferobj.h"
+#include "main/condrender.h"
 #include "main/image.h"
 #include "main/macros.h"
-#include "main/pixel.h"
 
 #include "s_context.h"
 #include "s_span.h"
@@ -50,18 +50,20 @@ _swrast_Bitmap( GLcontext *ctx, GLint px, GLint py,
 		const struct gl_pixelstore_attrib *unpack,
 		const GLubyte *bitmap )
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLint row, col;
    GLuint count = 0;
    SWspan span;
 
    ASSERT(ctx->RenderMode == GL_RENDER);
 
-   bitmap = _mesa_map_bitmap_pbo(ctx, unpack, bitmap);
+   if (!_mesa_check_conditional_render(ctx))
+      return; /* don't draw */
+
+   bitmap = (const GLubyte *) _mesa_map_pbo_source(ctx, unpack, bitmap);
    if (!bitmap)
       return;
 
-   RENDER_START(swrast,ctx);
+   swrast_render_start(ctx);
 
    if (SWRAST_CONTEXT(ctx)->NewState)
       _swrast_validate_derived( ctx );
@@ -123,18 +125,15 @@ _swrast_Bitmap( GLcontext *ctx, GLint px, GLint py,
       if (count + width >= MAX_WIDTH || row + 1 == height) {
          /* flush the span */
          span.end = count;
-         if (ctx->Visual.rgbMode)
-            _swrast_write_rgba_span(ctx, &span);
-         else
-            _swrast_write_index_span(ctx, &span);
+         _swrast_write_rgba_span(ctx, &span);
          span.end = 0;
          count = 0;
       }
    }
 
-   RENDER_FINISH(swrast,ctx);
+   swrast_render_finish(ctx);
 
-   _mesa_unmap_bitmap_pbo(ctx, unpack);
+   _mesa_unmap_pbo_source(ctx, unpack);
 }
 
 
@@ -157,7 +156,7 @@ _swrast_Bitmap( GLcontext *ctx, GLint px, GLint py,
    ASSERT(ctx->RenderMode == GL_RENDER);
    ASSERT(bitmap);
 
-   RENDER_START(swrast,ctx);
+   swrast_render_start(ctx);
 
    if (SWRAST_CONTEXT(ctx)->NewState)
       _swrast_validate_derived( ctx );
@@ -190,10 +189,7 @@ _swrast_Bitmap( GLcontext *ctx, GLint px, GLint py,
             }
          }
 
-         if (ctx->Visual.rgbMode)
-            _swrast_write_rgba_span(ctx, &span);
-         else
-	    _swrast_write_index_span(ctx, &span);
+         _swrast_write_rgba_span(ctx, &span);
 
          /* get ready for next row */
          if (mask != 1)
@@ -213,10 +209,7 @@ _swrast_Bitmap( GLcontext *ctx, GLint px, GLint py,
             }
          }
 
-         if (ctx->Visual.rgbMode)
-            _swrast_write_rgba_span(ctx, &span);
-         else
-            _swrast_write_index_span(ctx, &span);
+         _swrast_write_rgba_span(ctx, &span);
 
          /* get ready for next row */
          if (mask != 128)
@@ -224,6 +217,6 @@ _swrast_Bitmap( GLcontext *ctx, GLint px, GLint py,
       }
    }
 
-   RENDER_FINISH(swrast,ctx);
+   swrast_render_finish(ctx);
 }
 #endif

@@ -31,7 +31,7 @@
  */
 
 	.file	"read_rgba_span_x86.S"
-#if !defined(__DJGPP__) && !defined(__MINGW32__) /* this one cries for assyntax.h */
+#if !defined(__DJGPP__) && !defined(__MINGW32__) && !defined(__APPLE__) /* this one cries for assyntax.h */
 /* Kevin F. Quinn 2nd July 2006
  * Replaced data segment constants with text-segment instructions.
  */
@@ -522,7 +522,7 @@ _generic_read_RGBA_span_RGB565_MMX:
 	addl	$32,%esp
 
 	sarl	$2, %ecx
-	jle	.L01		/* Bail early if the count is negative. */
+	jl	.L01		/* Bail early if the count is negative. */
 	jmp	.L02
 
 .L03:
@@ -671,7 +671,7 @@ _generic_read_RGBA_span_RGB565_MMX:
 	emms
 #endif
 	ret
-#endif /* !defined(__DJGPP__) && !defined(__MINGW32__) */
+#endif /* !defined(__DJGPP__) && !defined(__MINGW32__) && !defined(__APPLE__) */
 	
 #if defined (__ELF__) && defined (__linux__)
 	.section .note.GNU-stack,"",%progbits

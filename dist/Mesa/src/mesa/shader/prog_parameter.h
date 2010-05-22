@@ -43,6 +43,7 @@
 #define PROG_PARAM_BIT_INVARIANT  0x2  /**< for varying vars (GLSL 1.20) */
 #define PROG_PARAM_BIT_FLAT       0x4  /**< for varying vars (GLSL 1.30) */
 #define PROG_PARAM_BIT_LINEAR     0x8  /**< for varying vars (GLSL 1.30) */
+#define PROG_PARAM_BIT_CYL_WRAP  0x10  /**< XXX gallium debug */
 /*@}*/
 
 
@@ -54,9 +55,15 @@
 struct gl_program_parameter
 {
    const char *Name;        /**< Null-terminated string */
-   enum register_file Type; /**< PROGRAM_NAMED_PARAM, CONSTANT or STATE_VAR */
+   gl_register_file Type;   /**< PROGRAM_NAMED_PARAM, CONSTANT or STATE_VAR */
    GLenum DataType;         /**< GL_FLOAT, GL_FLOAT_VEC2, etc */
-   GLuint Size;             /**< Number of components (1..4) */
+   /**
+    * Number of components (1..4), or more.
+    * If the number of components is greater than 4,
+    * this parameter is part of a larger uniform like a GLSL matrix or array.
+    * The next program parameter's Size will be Size-4 of this parameter.
+    */
+   GLuint Size;
    GLboolean Used;          /**< Helper flag for GLSL uniform tracking */
    GLboolean Initialized;   /**< Has the ParameterValue[] been set? */
    GLbitfield Flags;        /**< Bitmask of PROG_PARAM_*_BIT */
@@ -84,6 +91,9 @@ struct gl_program_parameter_list
 extern struct gl_program_parameter_list *
 _mesa_new_parameter_list(void);
 
+extern struct gl_program_parameter_list *
+_mesa_new_parameter_list_sized(unsigned size);
+
 extern void
 _mesa_free_parameter_list(struct gl_program_parameter_list *paramList);
 
@@ -102,7 +112,7 @@ _mesa_num_parameters(const struct gl_program_parameter_list *list)
 
 extern GLint
 _mesa_add_parameter(struct gl_program_parameter_list *paramList,
-                    enum register_file type, const char *name,
+                    gl_register_file type, const char *name,
                     GLuint size, GLenum datatype, const GLfloat *values,
                     const gl_state_index state[STATE_LENGTH],
                     GLbitfield flags);
@@ -161,11 +171,11 @@ _mesa_lookup_parameter_constant(const struct gl_program_parameter_list *list,
 
 extern GLuint
 _mesa_longest_parameter_name(const struct gl_program_parameter_list *list,
-                             enum register_file type);
+                             gl_register_file type);
 
 extern GLuint
 _mesa_num_parameters_of_type(const struct gl_program_parameter_list *list,
-                             enum register_file type);
+                             gl_register_file type);
 
 
 #endif /* PROG_PARAMETER_H */

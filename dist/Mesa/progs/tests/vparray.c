@@ -8,11 +8,10 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#define GL_GLEXT_PROTOTYPES
+#include "GL/glew.h"
 #include "GL/glut.h"
 
 #define MAXVERTS 10000
@@ -37,13 +36,16 @@ static void read_surface( char *filename )
    }
 
    numverts = 0;
-   while (!feof(f) && numverts < MAXVERTS) {
-      fscanf( f, "%f %f %f  %f %f %f",
-	      &data[numverts][0], &data[numverts][1], &data[numverts][2],
-	      &data[numverts][3], &data[numverts][4], &data[numverts][5] );
+   while (numverts < MAXVERTS) {
+      int result;
+      result = fscanf( f, "%f %f %f  %f %f %f",
+	               &data[numverts][0], &data[numverts][1], &data[numverts][2],
+	               &data[numverts][3], &data[numverts][4], &data[numverts][5] );
+      if (result == EOF) {
+         break;
+      }
       numverts++;
    }
-   numverts--;
 
    printf("%d vertices, %d triangles\n", numverts, numverts-2);
    printf("data = %p\n", (void *) data);
@@ -180,7 +182,7 @@ static void init_program(void)
    static const GLfloat bias[4] = {1.0, 1.0, 1.0, 0.0};
 
    if (!glutExtensionSupported("GL_NV_vertex_program")) {
-      printf("Sorry, this program requires GL_NV_vertex_program");
+      printf("Sorry, this program requires GL_NV_vertex_program\n");
       exit(1);
    }
 
@@ -282,6 +284,7 @@ int main(int argc, char **argv)
    if (glutCreateWindow("Isosurface") <= 0) {
       exit(0);
    }
+   glewInit();
    glutReshapeFunc(Reshape);
    glutKeyboardFunc(Key);
    glutSpecialFunc(SpecialKey);

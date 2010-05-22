@@ -39,8 +39,9 @@ typedef struct slang_variable_
    GLuint array_len;                /**< only if type == SLANG_SPEC_ARRAy */
    struct slang_operation_ *initializer; /**< Optional initializer code */
    GLuint size;                     /**< Variable's size in bytes */
+   GLboolean is_global;
    GLboolean isTemp;                /**< a named temporary (__resultTmp) */
-   GLboolean declared;              /**< for debug */
+   GLboolean declared;              /**< has the var been declared? */
    struct slang_ir_storage_ *store; /**< Storage for this var */
 } slang_variable;
 

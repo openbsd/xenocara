@@ -61,21 +61,11 @@ do {									\
    printf( "\n" );							\
 } while (0)
 
-#if defined(__BEOS__) || defined(__HAIKU__) || defined(_LP64)
 #define OFFSET( s, t, m )						\
-   printf( "#define %s\t%ld\n", s, offsetof( t, m ) );
-#else
-#define OFFSET( s, t, m )						\
-   printf( "#define %s\t%d\n", s, offsetof( t, m ) );
-#endif
+   printf( "#define %s\t%lu\n", s, (unsigned long) offsetof( t, m ) );
 
-#if defined(__BEOS__) || defined(__HAIKU__) || defined(_LP64)
 #define SIZEOF( s, t )							\
-   printf( "#define %s\t%ld\n", s, sizeof(t) );
-#else
-#define SIZEOF( s, t )							\
-   printf( "#define %s\t%d\n", s, sizeof(t) );
-#endif
+   printf( "#define %s\t%lu\n", s, (unsigned long) sizeof(t) );
 
 #define DEFINE( s, d )							\
    printf( "#define %s\t0x%x\n", s, d );
@@ -120,22 +110,22 @@ int main( int argc, char **argv )
    OFFSET( "VB_COUNT               ", struct vertex_buffer, Count );
    printf( "\n" );
    OFFSET( "VB_ELTS                ", struct vertex_buffer, Elts );
-   OFFSET( "VB_OBJ_PTR             ", struct vertex_buffer, ObjPtr );
+   OFFSET( "VB_OBJ_PTR             ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_POS] );
    OFFSET( "VB_EYE_PTR             ", struct vertex_buffer, EyePtr );
    OFFSET( "VB_CLIP_PTR            ", struct vertex_buffer, ClipPtr );
    OFFSET( "VB_PROJ_CLIP_PTR       ", struct vertex_buffer, NdcPtr );
    OFFSET( "VB_CLIP_OR_MASK        ", struct vertex_buffer, ClipOrMask );
    OFFSET( "VB_CLIP_MASK           ", struct vertex_buffer, ClipMask );
-   OFFSET( "VB_NORMAL_PTR          ", struct vertex_buffer, NormalPtr );
+   OFFSET( "VB_NORMAL_PTR          ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_NORMAL] );
    OFFSET( "VB_EDGE_FLAG           ", struct vertex_buffer, EdgeFlag );
-   OFFSET( "VB_TEX0_COORD_PTR      ", struct vertex_buffer, TexCoordPtr[0] );
-   OFFSET( "VB_TEX1_COORD_PTR      ", struct vertex_buffer, TexCoordPtr[1] );
-   OFFSET( "VB_TEX2_COORD_PTR      ", struct vertex_buffer, TexCoordPtr[2] );
-   OFFSET( "VB_TEX3_COORD_PTR      ", struct vertex_buffer, TexCoordPtr[3] );
-   OFFSET( "VB_INDEX_PTR           ", struct vertex_buffer, IndexPtr );
-   OFFSET( "VB_COLOR_PTR           ", struct vertex_buffer, ColorPtr );
-   OFFSET( "VB_SECONDARY_COLOR_PTR ", struct vertex_buffer, SecondaryColorPtr );
-   OFFSET( "VB_FOG_COORD_PTR       ", struct vertex_buffer, FogCoordPtr );
+   OFFSET( "VB_TEX0_COORD_PTR      ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX0] );
+   OFFSET( "VB_TEX1_COORD_PTR      ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX1] );
+   OFFSET( "VB_TEX2_COORD_PTR      ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX2] );
+   OFFSET( "VB_TEX3_COORD_PTR      ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_TEX3] );
+   OFFSET( "VB_INDEX_PTR           ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_COLOR_INDEX] );
+   OFFSET( "VB_COLOR_PTR           ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_COLOR0] );
+   OFFSET( "VB_SECONDARY_COLOR_PTR ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_COLOR1] );
+   OFFSET( "VB_FOG_COORD_PTR       ", struct vertex_buffer, AttribPtr[_TNL_ATTRIB_FOG] );
    OFFSET( "VB_PRIMITIVE           ", struct vertex_buffer, Primitive );
    printf( "\n" );
 
@@ -197,7 +187,7 @@ int main( int argc, char **argv )
    OFFSET( "LIGHT_DIFFUSE           ", struct gl_light, Diffuse );
    OFFSET( "LIGHT_SPECULAR          ", struct gl_light, Specular );
    OFFSET( "LIGHT_EYE_POSITION      ", struct gl_light, EyePosition );
-   OFFSET( "LIGHT_EYE_DIRECTION     ", struct gl_light, EyeDirection );
+   OFFSET( "LIGHT_SPOT_DIRECTION    ", struct gl_light, SpotDirection );
    OFFSET( "LIGHT_SPOT_EXPONENT     ", struct gl_light, SpotExponent );
    OFFSET( "LIGHT_SPOT_CUTOFF       ", struct gl_light, SpotCutoff );
    OFFSET( "LIGHT_COS_CUTOFF        ", struct gl_light, _CosCutoff );
@@ -211,7 +201,7 @@ int main( int argc, char **argv )
    OFFSET( "LIGHT_POSITION          ", struct gl_light, _Position );
    OFFSET( "LIGHT_VP_INF_NORM       ", struct gl_light, _VP_inf_norm );
    OFFSET( "LIGHT_H_INF_NORM        ", struct gl_light, _h_inf_norm );
-   OFFSET( "LIGHT_NORM_DIRECTION    ", struct gl_light, _NormDirection );
+   OFFSET( "LIGHT_NORM_DIRECTION    ", struct gl_light, _NormSpotDirection );
    OFFSET( "LIGHT_VP_INF_SPOT_ATTEN ", struct gl_light, _VP_inf_spot_attenuation );
    printf( "\n" );
    OFFSET( "LIGHT_SPOT_EXP_TABLE    ", struct gl_light, _SpotExpTable );

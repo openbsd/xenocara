@@ -62,7 +62,7 @@ void brw_set_predicate_control( struct brw_compile *p, GLuint pc )
 
 void brw_set_conditionalmod( struct brw_compile *p, GLuint conditional )
 {
-   p->current->header.destreg__conditonalmod = conditional;
+   p->current->header.destreg__conditionalmod = conditional;
 }
 
 void brw_set_access_mode( struct brw_compile *p, GLuint access_mode )
@@ -237,7 +237,7 @@ brw_resolve_cals(struct brw_compile *c)
         struct brw_glsl_call *call, *next;
         for (call = c->first_call; call; call = next) {
 	    next = call->next;
-	    _mesa_free(call);
+	    free(call);
 	}
 	c->first_call = NULL;
     }
@@ -247,7 +247,7 @@ brw_resolve_cals(struct brw_compile *c)
         struct brw_glsl_label *label, *next;
 	for (label = c->first_label; label; label = next) {
 	    next = label->next;
-	    _mesa_free(label);
+	    free(label);
 	}
 	c->first_label = NULL;
     }

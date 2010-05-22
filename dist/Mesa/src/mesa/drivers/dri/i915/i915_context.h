@@ -39,6 +39,8 @@
 #define I915_FALLBACK_LOGICOP		 0x20000
 #define I915_FALLBACK_POLYGON_SMOOTH	 0x40000
 #define I915_FALLBACK_POINT_SMOOTH	 0x80000
+#define I915_FALLBACK_POINT_SPRITE_COORD_ORIGIN	 0x100000
+#define I915_FALLBACK_DRAW_OFFSET	 0x200000
 
 #define I915_UPLOAD_CTX              0x1
 #define I915_UPLOAD_BUFFERS          0x2
@@ -48,6 +50,7 @@
 #define I915_UPLOAD_FOG              0x20
 #define I915_UPLOAD_INVARIENT        0x40
 #define I915_UPLOAD_DEFAULTS         0x80
+#define I915_UPLOAD_RASTER_RULES     0x100
 #define I915_UPLOAD_TEX(i)           (0x00010000<<(i))
 #define I915_UPLOAD_TEX_ALL          (0x00ff0000)
 #define I915_UPLOAD_TEX_0_SHIFT      16
@@ -82,7 +85,9 @@
 #define I915_CTXREG_IAB   	 	6
 #define I915_CTXREG_BLENDCOLOR0		7
 #define I915_CTXREG_BLENDCOLOR1		8
-#define I915_CTX_SETUP_SIZE		9
+#define I915_CTXREG_BF_STENCIL_OPS	9
+#define I915_CTXREG_BF_STENCIL_MASKS	10
+#define I915_CTX_SETUP_SIZE		11
 
 #define I915_FOGREG_COLOR		0
 #define I915_FOGREG_MODE0		1
@@ -110,14 +115,22 @@
 #define I915_DEFREG_Z1    5
 #define I915_DEF_SETUP_SIZE    6
 
+enum {
+   I915_RASTER_RULES,
+   I915_RASTER_RULES_SETUP_SIZE,
+};
 
 #define I915_MAX_CONSTANT      32
 #define I915_CONSTANT_SIZE     (2+(4*I915_MAX_CONSTANT))
 
+#define I915_MAX_INSN          (I915_MAX_DECL_INSN + \
+				I915_MAX_TEX_INSN + \
+				I915_MAX_ALU_INSN)
 
-#define I915_PROGRAM_SIZE      192
-
-#define I915_MAX_INSN          (I915_MAX_TEX_INSN+I915_MAX_ALU_INSN)
+/* Maximum size of the program packet, which matches the limits on
+ * decl, tex, and ALU instructions.
+ */
+#define I915_PROGRAM_SIZE      (I915_MAX_INSN * 3 + 1)
 
 /* Hardware version of a parsed fragment program.  "Derived" from the
  * mesa fragment_program struct.
@@ -147,8 +160,9 @@ struct i915_fragment_program
     */
    GLcontext *ctx;
 
-   GLuint declarations[I915_PROGRAM_SIZE];
-   GLuint program[I915_PROGRAM_SIZE];
+   /* declarations contains the packet header. */
+   GLuint declarations[I915_MAX_DECL_INSN * 3 + 1];
+   GLuint program[(I915_MAX_TEX_INSN + I915_MAX_ALU_INSN) * 3];
 
    GLfloat constant[I915_MAX_CONSTANT][4];
    GLuint constant_flags[I915_MAX_CONSTANT];
@@ -206,6 +220,7 @@ struct i915_hw_state
    GLuint Stipple[I915_STP_SETUP_SIZE];
    GLuint Fog[I915_FOG_SETUP_SIZE];
    GLuint Defaults[I915_DEF_SETUP_SIZE];
+   GLuint RasterRules[I915_RASTER_RULES_SETUP_SIZE];
    GLuint Tex[I915_TEX_UNITS][I915_TEX_SETUP_SIZE];
    GLuint Constant[I915_CONSTANT_SIZE];
    GLuint ConstantSize;
@@ -245,7 +260,7 @@ struct i915_context
 
    struct i915_fragment_program *current_program;
 
-   struct i915_hw_state meta, initial, state, *current;
+   struct i915_hw_state state;
 };
 
 
@@ -304,7 +319,7 @@ do {									\
  * i915_context.c
  */
 extern GLboolean i915CreateContext(const __GLcontextModes * mesaVis,
-                                   __DRIcontextPrivate * driContextPriv,
+                                   __DRIcontext * driContextPriv,
                                    void *sharedContextPrivate);
 
 
@@ -321,6 +336,8 @@ extern void i915_print_ureg(const char *msg, GLuint ureg);
 extern void i915InitStateFunctions(struct dd_function_table *functions);
 extern void i915InitState(struct i915_context *i915);
 extern void i915_update_fog(GLcontext * ctx);
+extern void i915_update_stencil(GLcontext * ctx);
+extern void i915_update_provoking_vertex(GLcontext *ctx);
 
 
 /*======================================================================
@@ -328,12 +345,6 @@ extern void i915_update_fog(GLcontext * ctx);
  */
 extern void i915UpdateTextureState(struct intel_context *intel);
 extern void i915InitTextureFuncs(struct dd_function_table *functions);
-
-/*======================================================================
- * i915_metaops.c
- */
-void i915InitMetaFuncs(struct i915_context *i915);
-
 
 /*======================================================================
  * i915_fragprog.c

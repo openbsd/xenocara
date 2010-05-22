@@ -173,10 +173,20 @@ static void special(int k, int x, int y)
   }
 }
 
+static void cleanup(void)
+{
+  glDeleteTextures(1, &t1id);
+  glDeleteTextures(1, &t2id);
+  glDeleteLists(teapotdlist, 1);
+  glDeleteLists(basedlist, 1);
+  glDeleteLists(lightdlist, 1);
+}
+
 static void key(unsigned char k, int x, int y)
 {
   switch(k) {
   case 27:
+    cleanup();
     exit(0);
     break;
     
@@ -628,7 +638,6 @@ int main(int ac, char **av)
     }
     */
 
-  glutInitWindowPosition(0,0);
   glutInitWindowSize(WIDTH,HEIGHT);
   glutInit(&ac,av);
 
@@ -670,6 +679,7 @@ int main(int ac, char **av)
   glutIdleFunc(draw);
 
   glutMainLoop();
+  cleanup();
 
   return 0;
 }

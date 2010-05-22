@@ -29,9 +29,7 @@
   *   Keith Whitwell <keith@tungstengraphics.com>
   */
              
-#include "main/texformat.h"
 #include "brw_context.h"
-#include "brw_util.h"
 #include "brw_wm.h"
 #include "brw_state.h"
 
@@ -41,13 +39,13 @@ GLuint brw_wm_nr_args( GLuint opcode )
 {
    switch (opcode) {
    case WM_FRONTFACING:
-      return 0;
    case WM_PIXELXY:
+      return 0;
    case WM_CINTERP:
    case WM_WPOSXY:
+   case WM_DELTAXY:
       return 1;
    case WM_LINTERP:
-   case WM_DELTAXY:
    case WM_PIXELW:
       return 2;
    case WM_FB_WRITE:
@@ -82,6 +80,58 @@ GLuint brw_wm_is_scalar_result( GLuint opcode )
 }
 
 
+/**
+ * Do GPU code generation for non-GLSL shader.  non-GLSL shaders have
+ * no flow control instructions so we can more readily do SSA-style
+ * optimizations.
+ */
+static void
+brw_wm_non_glsl_emit(struct brw_context *brw, struct brw_wm_compile *c)
+{
+   /* Augment fragment program.  Add instructions for pre- and
+    * post-fragment-program tasks such as interpolation and fogging.
+    */
+   brw_wm_pass_fp(c);
+
+   /* Translate to intermediate representation.  Build register usage
+    * chains.
+    */
+   brw_wm_pass0(c);
+
+   /* Dead code removal.
+    */
+   brw_wm_pass1(c);
+
+   /* Register allocation.
+    * Divide by two because we operate on 16 pixels at a time and require
+    * two GRF entries for each logical shader register.
+    */
+   c->grf_limit = BRW_WM_MAX_GRF / 2;
+
+   brw_wm_pass2(c);
+
+   /* how many general-purpose registers are used */
+   c->prog_data.total_grf = c->max_wm_grf;
+
+   /* Scratch space is used for register spilling */
+   if (c->last_scratch) {
+      c->prog_data.total_scratch = c->last_scratch + 0x40;
+   }
+   else {
+      c->prog_data.total_scratch = 0;
+   }
+
+   /* Emit GEN4 code.
+    */
+   brw_wm_emit(c);
+}
+
+
+/**
+ * All Mesa program -> GPU code generation goes through this function.
+ * Depending on the instructions used (i.e. flow control instructions)
+ * we'll use one of two code generators.
+ */
 static void do_wm_prog( struct brw_context *brw,
 			struct brw_fragment_program *fp, 
 			struct brw_wm_prog_key *key)
@@ -92,52 +142,54 @@ static void do_wm_prog( struct brw_context *brw,
 
    c = brw->wm.compile_data;
    if (c == NULL) {
-     brw->wm.compile_data = calloc(1, sizeof(*brw->wm.compile_data));
-     c = brw->wm.compile_data;
+      brw->wm.compile_data = calloc(1, sizeof(*brw->wm.compile_data));
+      c = brw->wm.compile_data;
+      if (c == NULL) {
+         /* Ouch - big out of memory problem.  Can't continue
+          * without triggering a segfault, no way to signal,
+          * so just return.
+          */
+         return;
+      }
+      c->instruction = calloc(1, BRW_WM_MAX_INSN * sizeof(*c->instruction));
+      c->prog_instructions = calloc(1, BRW_WM_MAX_INSN *
+					  sizeof(*c->prog_instructions));
+      c->vreg = calloc(1, BRW_WM_MAX_VREG * sizeof(*c->vreg));
+      c->refs = calloc(1, BRW_WM_MAX_REF * sizeof(*c->refs));
    } else {
-     memset(c, 0, sizeof(*brw->wm.compile_data));
+      void *instruction = c->instruction;
+      void *prog_instructions = c->prog_instructions;
+      void *vreg = c->vreg;
+      void *refs = c->refs;
+      memset(c, 0, sizeof(*brw->wm.compile_data));
+      c->instruction = instruction;
+      c->prog_instructions = prog_instructions;
+      c->vreg = vreg;
+      c->refs = refs;
    }
    memcpy(&c->key, key, sizeof(*key));
 
    c->fp = fp;
    c->env_param = brw->intel.ctx.FragmentProgram.Parameters;
 
-    brw_init_compile(brw, &c->func);
-   if (brw_wm_is_glsl(&c->fp->program)) {
-       brw_wm_glsl_emit(brw, c);
-   } else {
-       /* Augment fragment program.  Add instructions for pre- and
-	* post-fragment-program tasks such as interpolation and fogging.
-	*/
-       brw_wm_pass_fp(c);
+   brw_init_compile(brw, &c->func);
 
-       /* Translate to intermediate representation.  Build register usage
-	* chains.
-	*/
-       brw_wm_pass0(c);
+   /* temporary sanity check assertion */
+   ASSERT(fp->isGLSL == brw_wm_is_glsl(&c->fp->program));
 
-       /* Dead code removal.
-	*/
-       brw_wm_pass1(c);
-
-       /* Register allocation.
-	*/
-       c->grf_limit = BRW_WM_MAX_GRF/2;
-
-       brw_wm_pass2(c);
-
-       c->prog_data.total_grf = c->max_wm_grf;
-       if (c->last_scratch) {
-	   c->prog_data.total_scratch =
-	       c->last_scratch + 0x40;
-       } else {
-	   c->prog_data.total_scratch = 0;
-       }
-
-       /* Emit GEN4 code.
-	*/
-       brw_wm_emit(c);
+   /*
+    * Shader which use GLSL features such as flow control are handled
+    * differently from "simple" shaders.
+    */
+   if (fp->isGLSL) {
+      c->dispatch_width = 8;
+      brw_wm_glsl_emit(brw, c);
    }
+   else {
+      c->dispatch_width = 16;
+      brw_wm_non_glsl_emit(brw, c);
+   }
+
    if (INTEL_DEBUG & DEBUG_WM)
       fprintf(stderr, "\n");
 
@@ -146,12 +198,13 @@ static void do_wm_prog( struct brw_context *brw,
    program = brw_get_program(&c->func, &program_size);
 
    dri_bo_unreference(brw->wm.prog_bo);
-   brw->wm.prog_bo = brw_upload_cache( &brw->cache, BRW_WM_PROG,
-				       &c->key, sizeof(c->key),
-				       NULL, 0,
-				       program, program_size,
-				       &c->prog_data,
-				       &brw->wm.prog_data );
+   brw->wm.prog_bo = brw_upload_cache_with_auxdata(&brw->cache, BRW_WM_PROG,
+						   &c->key, sizeof(c->key),
+						   NULL, 0,
+						   program, program_size,
+						   &c->prog_data,
+						   sizeof(c->prog_data),
+						   &brw->wm.prog_data);
 }
 
 
@@ -161,8 +214,9 @@ static void brw_wm_populate_key( struct brw_context *brw,
 {
    GLcontext *ctx = &brw->intel.ctx;
    /* BRW_NEW_FRAGMENT_PROGRAM */
-   struct brw_fragment_program *fp = 
+   const struct brw_fragment_program *fp = 
       (struct brw_fragment_program *)brw->fragment_program;
+   GLboolean uses_depth = (fp->program.Base.InputsRead & (1 << FRAG_ATTRIB_WPOS)) != 0;
    GLuint lookup = 0;
    GLuint line_aa;
    GLuint i;
@@ -176,7 +230,7 @@ static void brw_wm_populate_key( struct brw_context *brw,
        ctx->Color.AlphaEnabled)
       lookup |= IZ_PS_KILL_ALPHATEST_BIT;
 
-   if (fp->program.Base.OutputsWritten & (1<<FRAG_RESULT_DEPR))
+   if (fp->program.Base.OutputsWritten & BITFIELD64_BIT(FRAG_RESULT_DEPTH))
       lookup |= IZ_PS_COMPUTES_DEPTH_BIT;
 
    /* _NEW_DEPTH */
@@ -188,7 +242,7 @@ static void brw_wm_populate_key( struct brw_context *brw,
       lookup |= IZ_DEPTH_WRITE_ENABLE_BIT;
 
    /* _NEW_STENCIL */
-   if (ctx->Stencil.Enabled) {
+   if (ctx->Stencil._Enabled) {
       lookup |= IZ_STENCIL_TEST_ENABLE_BIT;
 
       if (ctx->Stencil.WriteMask[0] ||
@@ -224,14 +278,18 @@ static void brw_wm_populate_key( struct brw_context *brw,
 	 
    brw_wm_lookup_iz(line_aa,
 		    lookup,
+		    uses_depth,
 		    key);
 
 
    /* BRW_NEW_WM_INPUT_DIMENSIONS */
-   key->projtex_mask = brw->wm.input_size_masks[4-1] >> (FRAG_ATTRIB_TEX0 - FRAG_ATTRIB_WPOS); 
+   key->proj_attrib_mask = brw->wm.input_size_masks[4-1];
 
    /* _NEW_LIGHT */
    key->flat_shade = (ctx->Light.ShadeModel == GL_FLAT);
+
+   /* _NEW_HINT */
+   key->linear_color = (ctx->Hint.PerspectiveCorrection == GL_FASTEST);
 
    /* _NEW_TEXTURE */
    for (i = 0; i < BRW_MAX_TEX_UNIT; i++) {
@@ -242,9 +300,14 @@ static void brw_wm_populate_key( struct brw_context *brw,
          const struct gl_texture_image *img = t->Image[0][t->BaseLevel];
 	 if (img->InternalFormat == GL_YCBCR_MESA) {
 	    key->yuvtex_mask |= 1 << i;
-	    if (img->TexFormat->MesaFormat == MESA_FORMAT_YCBCR)
+	    if (img->TexFormat == MESA_FORMAT_YCBCR)
 		key->yuvtex_swap_mask |= 1 << i;
 	 }
+
+         key->tex_swizzles[i] = t->_Swizzle;
+      }
+      else {
+         key->tex_swizzles[i] = SWIZZLE_NOOP;
       }
    }
 
@@ -258,6 +321,9 @@ static void brw_wm_populate_key( struct brw_context *brw,
     * from the incoming screen origin relative position we get as part of our
     * payload.
     *
+    * This is only needed for the WM_WPOSXY opcode when the fragment program
+    * uses the gl_FragCoord input.
+    *
     * We could avoid recompiling by including this as a constant referenced by
     * our program, but if we were to do that it would also be nice to handle
     * getting that constant updated at batchbuffer submit time (when we
@@ -266,19 +332,20 @@ static void brw_wm_populate_key( struct brw_context *brw,
     * just avoid using this as key data if the program doesn't use
     * fragment.position.
     *
-    * This pretty much becomes moot with DRI2 and redirected buffers anyway,
-    * as our origins will always be zero then.
+    * For DRI2 the origin_x/y will always be (0,0) but we still need the
+    * drawable height in order to invert the Y axis.
     */
-   if (brw->intel.driDrawable != NULL) {
-      key->origin_x = brw->intel.driDrawable->x;
-      key->origin_y = brw->intel.driDrawable->y;
-      key->drawable_height = brw->intel.driDrawable->h;
+   if (fp->program.Base.InputsRead & FRAG_BIT_WPOS) {
+      key->drawable_height = ctx->DrawBuffer->Height;
    }
 
-   /* Extra info:
-    */
-   key->program_string_id = fp->id;
+   key->nr_color_regions = brw->state.nr_color_regions;
 
+   /* CACHE_NEW_VS_PROG */
+   key->vp_outputs_written = brw->vs.prog_data->outputs_written;
+
+   /* The unique fragment program ID */
+   key->program_string_id = fp->id;
 }
 
 
@@ -302,12 +369,11 @@ static void brw_prepare_wm_prog(struct brw_context *brw)
 }
 
 
-/* See brw_wm.c:
- */
 const struct brw_tracked_state brw_wm_prog = {
    .dirty = {
       .mesa  = (_NEW_COLOR |
 		_NEW_DEPTH |
+                _NEW_HINT |
 		_NEW_STENCIL |
 		_NEW_POLYGON |
 		_NEW_LINE |
@@ -317,7 +383,7 @@ const struct brw_tracked_state brw_wm_prog = {
       .brw   = (BRW_NEW_FRAGMENT_PROGRAM |
 		BRW_NEW_WM_INPUT_DIMENSIONS |
 		BRW_NEW_REDUCED_PRIMITIVE),
-      .cache = 0
+      .cache = CACHE_NEW_VS_PROG,
    },
    .prepare = brw_prepare_wm_prog
 };

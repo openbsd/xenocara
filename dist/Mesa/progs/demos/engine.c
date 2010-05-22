@@ -5,12 +5,11 @@
  * June 2006
  */
 
-#define GL_GLEXT_PROTOTYPES
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 #include "readtex.h"
 #include "trackball.h"
@@ -26,6 +25,8 @@
 
 /* Target engine speed: */
 const int RPM = 100.0;
+
+static int Win = 0;
 
 
 /**
@@ -121,7 +122,11 @@ static Engine Engines[NUM_ENGINES] =
       0.3,  /* CrankJournalRadius */
       0.4,  /* CrankJournalLength */
       1.5,  /* ConnectingRodLength */
-      0.1   /* ConnectingRodThickness */
+      0.1,  /* ConnectingRodThickness */
+      0,    /* CrankList */
+      0,    /* ConnRodList */
+      0,    /* PistonList */
+      0     /* BlockList */
    },
    {
       "Inline-4",
@@ -137,7 +142,11 @@ static Engine Engines[NUM_ENGINES] =
       0.3,  /* CrankJournalRadius */
       0.4,  /* CrankJournalLength */
       1.5,  /* ConnectingRodLength */
-      0.1   /* ConnectingRodThickness */
+      0.1,  /* ConnectingRodThickness */
+      0,    /* CrankList */
+      0,    /* ConnRodList */
+      0,    /* PistonList */
+      0     /* BlockList */
    },
    {
       "Boxer-6",
@@ -153,7 +162,11 @@ static Engine Engines[NUM_ENGINES] =
       0.3,  /* CrankJournalRadius */
       0.4,  /* CrankJournalLength */
       1.5,  /* ConnectingRodLength */
-      0.1   /* ConnectingRodThickness */
+      0.1,  /* ConnectingRodThickness */
+      0,    /* CrankList */
+      0,    /* ConnRodList */
+      0,    /* PistonList */
+      0     /* BlockList */
    }
 };
 
@@ -387,7 +400,10 @@ DrawPositionedPiston(const Engine *eng, float crankAngle)
    glPushMatrix();
       glRotatef(-90, 1, 0, 0);
       glTranslatef(0, 0, pos);
-      DrawPiston(eng);
+      if (eng->PistonList)
+         glCallList(eng->PistonList);
+      else
+         DrawPiston(eng);
    glPopMatrix();
 }
 
@@ -555,7 +571,7 @@ SquareWithHole(float squareSize, float holeRadius)
    for (i = 0; i <= 360; i += 5) {
       const float x1 = holeRadius * cos(DEG_TO_RAD(i));
       const float y1 = holeRadius * sin(DEG_TO_RAD(i));
-      float x2, y2;
+      float x2 = 0.0F, y2 = 0.0F;
       if (i > 315 || i <= 45) {
          x2 = squareSize;
          y2 = squareSize * tan(DEG_TO_RAD(i));
@@ -962,6 +978,28 @@ Draw(void)
 	 glEnable(GL_TEXTURE_2D);
    }
 
+   /* also print out a periodic fps to stdout.  useful for trying to
+    * figure out the performance impact of rendering the string above
+    * with glBitmap.
+    */
+   {
+      static GLint T0 = 0;
+      static GLint Frames = 0;
+      GLint t = glutGet(GLUT_ELAPSED_TIME);
+      
+      Frames++;
+         
+      if (t - T0 >= 5000) {
+         GLfloat seconds = (t - T0) / 1000.0;
+         GLfloat fps = Frames / seconds;
+         printf("%d frames in %6.3f seconds = %6.3f FPS\n", Frames, seconds, fps);
+         fflush(stdout);
+         T0 = t;
+         Frames = 0;
+      }
+   }
+
+
    glutSwapBuffers();
 }
 
@@ -1118,6 +1156,7 @@ OptRotate(void)
 static void
 OptExit(void)
 {
+   glutDestroyWindow(Win);
    exit(0);
 }
 
@@ -1284,10 +1323,11 @@ Init(void)
 int
 main(int argc, char *argv[])
 {
-   glutInit(&argc, argv);
    glutInitWindowSize(WinWidth, WinHeight);
+   glutInit(&argc, argv);
    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-   glutCreateWindow("OpenGL Engine Demo");
+   Win = glutCreateWindow("OpenGL Engine Demo");
+   glewInit();
    glutReshapeFunc(Reshape);
    glutMouseFunc(Mouse);
    glutMotionFunc(Motion);

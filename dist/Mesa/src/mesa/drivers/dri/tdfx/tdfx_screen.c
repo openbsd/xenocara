@@ -36,9 +36,7 @@
 #include "tdfx_dri.h"
 #include "tdfx_context.h"
 #include "tdfx_lock.h"
-#include "tdfx_vb.h"
 #include "tdfx_span.h"
-#include "tdfx_tris.h"
 
 #include "main/framebuffer.h"
 #include "main/renderbuffer.h"
@@ -69,11 +67,8 @@ static const __DRIextension *tdfxExtensions[] = {
 
 static const GLuint __driNConfigOptions = 1;
 
-extern const struct dri_extension card_extensions[];
-extern const struct dri_extension napalm_extensions[];
-
 static GLboolean
-tdfxCreateScreen( __DRIscreenPrivate *sPriv )
+tdfxCreateScreen( __DRIscreen *sPriv )
 {
    tdfxScreenPrivate *fxScreen;
    TDFXDRIPtr fxDRIPriv = (TDFXDRIPtr) sPriv->pDevPriv;
@@ -124,7 +119,7 @@ tdfxCreateScreen( __DRIscreenPrivate *sPriv )
 
 
 static void
-tdfxDestroyScreen( __DRIscreenPrivate *sPriv )
+tdfxDestroyScreen( __DRIscreen *sPriv )
 {
    tdfxScreenPrivate *fxScreen = (tdfxScreenPrivate *) sPriv->private;
 
@@ -142,7 +137,7 @@ tdfxDestroyScreen( __DRIscreenPrivate *sPriv )
 
 
 static GLboolean
-tdfxInitDriver( __DRIscreenPrivate *sPriv )
+tdfxInitDriver( __DRIscreen *sPriv )
 {
    if ( TDFX_DEBUG & DEBUG_VERBOSE_DRI ) {
       fprintf( stderr, "%s( %p )\n", __FUNCTION__, (void *)sPriv );
@@ -158,8 +153,8 @@ tdfxInitDriver( __DRIscreenPrivate *sPriv )
 
 
 static GLboolean
-tdfxCreateBuffer( __DRIscreenPrivate *driScrnPriv,
-                  __DRIdrawablePrivate *driDrawPriv,
+tdfxCreateBuffer( __DRIscreen *driScrnPriv,
+                  __DRIdrawable *driDrawPriv,
                   const __GLcontextModes *mesaVis,
                   GLboolean isPixmap )
 {
@@ -173,7 +168,7 @@ tdfxCreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
       {
          driRenderbuffer *frontRb
-            = driNewRenderbuffer(GL_RGBA, NULL, screen->cpp,
+            = driNewRenderbuffer(MESA_FORMAT_ARGB8888, NULL, screen->cpp,
                                  screen->fbOffset, screen->width, driDrawPriv);
          tdfxSetSpanFunctions(frontRb, mesaVis);
          _mesa_add_renderbuffer(fb, BUFFER_FRONT_LEFT, &frontRb->Base);
@@ -181,7 +176,7 @@ tdfxCreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
       if (mesaVis->doubleBufferMode) {
          driRenderbuffer *backRb
-            = driNewRenderbuffer(GL_RGBA, NULL, screen->cpp,
+            = driNewRenderbuffer(MESA_FORMAT_ARGB8888, NULL, screen->cpp,
                                  screen->backOffset, screen->width,
                                  driDrawPriv);
          tdfxSetSpanFunctions(backRb, mesaVis);
@@ -191,7 +186,7 @@ tdfxCreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
       if (mesaVis->depthBits == 16) {
          driRenderbuffer *depthRb
-            = driNewRenderbuffer(GL_DEPTH_COMPONENT16, NULL, screen->cpp,
+            = driNewRenderbuffer(MESA_FORMAT_Z16, NULL, screen->cpp,
                                  screen->depthOffset, screen->width,
                                  driDrawPriv);
          tdfxSetSpanFunctions(depthRb, mesaVis);
@@ -199,7 +194,7 @@ tdfxCreateBuffer( __DRIscreenPrivate *driScrnPriv,
       }
       else if (mesaVis->depthBits == 24) {
          driRenderbuffer *depthRb
-            = driNewRenderbuffer(GL_DEPTH_COMPONENT24, NULL, screen->cpp,
+            = driNewRenderbuffer(MESA_FORMAT_Z24_S8, NULL, screen->cpp,
                                  screen->depthOffset, screen->width,
                                  driDrawPriv);
          tdfxSetSpanFunctions(depthRb, mesaVis);
@@ -208,7 +203,7 @@ tdfxCreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
       if (mesaVis->stencilBits > 0) {
          driRenderbuffer *stencilRb
-            = driNewRenderbuffer(GL_STENCIL_INDEX8_EXT, NULL, screen->cpp,
+            = driNewRenderbuffer(MESA_FORMAT_S8, NULL, screen->cpp,
                                  screen->depthOffset, screen->width,
                                  driDrawPriv);
          tdfxSetSpanFunctions(stencilRb, mesaVis);
@@ -230,14 +225,14 @@ tdfxCreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
 
 static void
-tdfxDestroyBuffer(__DRIdrawablePrivate *driDrawPriv)
+tdfxDestroyBuffer(__DRIdrawable *driDrawPriv)
 {
-   _mesa_unreference_framebuffer((GLframebuffer **)(&(driDrawPriv->driverPrivate)));
+   _mesa_reference_framebuffer((GLframebuffer **)(&(driDrawPriv->driverPrivate)), NULL);
 }
 
 
 static void
-tdfxSwapBuffers( __DRIdrawablePrivate *driDrawPriv )
+tdfxSwapBuffers( __DRIdrawable *driDrawPriv )
 
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -256,7 +251,7 @@ tdfxSwapBuffers( __DRIdrawablePrivate *driDrawPriv )
     * we have to do a glFinish (per the GLX spec).
     */
    if ( ctx ) {
-      __DRIdrawablePrivate *curDrawPriv;
+      __DRIdrawable *curDrawPriv;
       fxMesa = TDFX_CONTEXT(ctx);
       curDrawPriv = fxMesa->driContext->driDrawablePriv;
 
@@ -299,6 +294,8 @@ tdfxSwapBuffers( __DRIdrawablePrivate *driDrawPriv )
       }
    }
 #endif
+
+   assert(fxMesa);
 
    if (fxMesa->scissoredClipRects) {
       /* restore clip rects without scissor box */
@@ -344,7 +341,7 @@ tdfxSwapBuffers( __DRIdrawablePrivate *driDrawPriv )
 }
 
 static const __DRIconfig **
-tdfxFillInModes(__DRIscreenPrivate *psp,
+tdfxFillInModes(__DRIscreen *psp,
 		unsigned pixel_bits,
 		unsigned depth_bits,
 		unsigned stencil_bits,
@@ -361,6 +358,7 @@ tdfxFillInModes(__DRIscreenPrivate *psp,
 	static const GLenum db_modes[2] = { GLX_NONE, GLX_SWAP_UNDEFINED_OML };
 	uint8_t depth_bits_array[4];
 	uint8_t stencil_bits_array[4];
+        uint8_t msaa_samples_array[1];
 	if(deep) {
 		depth_bits_array[0] = 0;
 		depth_bits_array[1] = 24;
@@ -377,13 +375,18 @@ tdfxFillInModes(__DRIscreenPrivate *psp,
 		stencil_bits_array[3] = 8;
 	}
 
-	return driCreateConfigs(
-		deep ? GL_RGBA : GL_RGB,
-		deep ? GL_UNSIGNED_INT_8_8_8_8 : GL_UNSIGNED_SHORT_5_6_5,
-		depth_bits_array,
-		stencil_bits_array,
-		deep ? 2 : 4,
-		db_modes, 2);
+	msaa_samples_array[0] = 0;
+
+	return (const __DRIconfig **)
+	   driCreateConfigs(deep ? GL_RGBA : GL_RGB,
+			    deep ? GL_UNSIGNED_INT_8_8_8_8 :
+				   GL_UNSIGNED_SHORT_5_6_5,
+			    depth_bits_array,
+			    stencil_bits_array,
+			    deep ? 2 : 4,
+			    db_modes, 2,
+			    msaa_samples_array, 1,
+			    GL_TRUE);
 }
 
 /**
@@ -413,19 +416,6 @@ tdfxInitScreen(__DRIscreen *psp)
 				      &psp->drm_version, & drm_expected ) )
       return NULL;
 
-   /* Calling driInitExtensions here, with a NULL context pointer,
-    * does not actually enable the extensions.  It just makes sure
-    * that all the dispatch offsets for all the extensions that
-    * *might* be enables are known.  This is needed because the
-    * dispatch offsets need to be known when _mesa_context_create is
-    * called, but we can't enable the extensions until we have a
-    * context pointer.
-    *
-    * Hello chicken.  Hello egg.  How are you two today?
-    */
-   driInitExtensions( NULL, card_extensions, GL_FALSE );
-   driInitExtensions( NULL, napalm_extensions, GL_FALSE );
-
    if (!tdfxInitDriver(psp))
       return NULL;
       
@@ -450,4 +440,11 @@ const struct __DriverAPIRec driDriverAPI = {
    .WaitForMSC      = NULL,
    .WaitForSBC      = NULL,
    .SwapBuffersMSC  = NULL
+};
+
+/* This is the table of extensions that the loader will dlsym() for. */
+PUBLIC const __DRIextension *__driDriverExtensions[] = {
+    &driCoreExtension.base,
+    &driLegacyExtension.base,
+    NULL
 };

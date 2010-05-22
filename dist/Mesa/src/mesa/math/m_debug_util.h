@@ -61,7 +61,7 @@ extern long counter_overhead;
  */
 extern char *mesa_profile;
 
-/* Modify the the number of tests if you like.
+/* Modify the number of tests if you like.
  * We take the minimum of all results, because every error should be
  * positive (time used by other processes, task switches etc).
  * It is assumed that all calculations are done in the cache.
@@ -231,8 +231,8 @@ extern char *mesa_profile;
 #define  BEGIN_RACE(x)                                                        \
 x = LONG_MAX;                                                                 \
 for (cycle_i = 0; cycle_i <10; cycle_i++) {                                   \
-   register long cycle_tmp1 asm("l0");					      \
-   register long cycle_tmp2 asm("l1");					      \
+   register long cycle_tmp1 __asm__("l0");				      \
+   register long cycle_tmp2 __asm__("l1");				      \
    /* rd %tick, %l0 */							      \
    __asm__ __volatile__ (".word 0xa1410000" : "=r" (cycle_tmp1));  /*  save timestamp   */
 

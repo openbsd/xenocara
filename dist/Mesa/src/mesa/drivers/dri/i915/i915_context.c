@@ -27,7 +27,7 @@
 
 #include "i915_context.h"
 #include "main/imports.h"
-#include "intel_tex.h"
+#include "main/macros.h"
 #include "intel_tris.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
@@ -37,28 +37,15 @@
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
 
-#include "utils.h"
 #include "i915_reg.h"
+#include "i915_program.h"
 
-#include "intel_regions.h"
-#include "intel_batchbuffer.h"
 #include "intel_tris.h"
 #include "intel_span.h"
-#include "intel_pixel.h"
 
 /***************************************
  * Mesa's Driver Functions
  ***************************************/
-
-static const struct dri_extension i915_extensions[] = {
-   {"GL_ARB_depth_texture", NULL},
-   {"GL_ARB_fragment_program", NULL},
-   {"GL_ARB_shadow", NULL},
-   {"GL_ARB_texture_non_power_of_two", NULL},
-   {"GL_ATI_texture_env_combine3",       NULL},
-   {"GL_EXT_shadow_funcs", NULL},
-   {NULL, NULL}
-};
 
 /* Override intel default.
  */
@@ -83,8 +70,14 @@ i915InvalidateState(GLcontext * ctx, GLuint new_state)
          p->params_uptodate = 0;
    }
 
-   if (new_state & (_NEW_FOG | _NEW_HINT | _NEW_PROGRAM))
+   if (new_state & (_NEW_FOG | _NEW_HINT | _NEW_PROGRAM | _NEW_PROGRAM_CONSTANTS))
       i915_update_fog(ctx);
+   if (new_state & (_NEW_STENCIL | _NEW_BUFFERS | _NEW_POLYGON))
+      i915_update_stencil(ctx);
+   if (new_state & (_NEW_LIGHT))
+       i915_update_provoking_vertex(ctx);
+   if (new_state & (_NEW_PROGRAM | _NEW_PROGRAM_CONSTANTS))
+       i915_update_program(ctx);
 }
 
 
@@ -93,7 +86,6 @@ i915InitDriverFunctions(struct dd_function_table *functions)
 {
    intelInitDriverFunctions(functions);
    i915InitStateFunctions(functions);
-   i915InitTextureFuncs(functions);
    i915InitFragProgFuncs(functions);
    functions->UpdateState = i915InvalidateState;
 }
@@ -103,7 +95,7 @@ extern const struct tnl_pipeline_stage *intel_pipeline[];
 
 GLboolean
 i915CreateContext(const __GLcontextModes * mesaVis,
-                  __DRIcontextPrivate * driContextPriv,
+                  __DRIcontext * driContextPriv,
                   void *sharedContextPrivate)
 {
    struct dd_function_table functions;
@@ -116,10 +108,9 @@ i915CreateContext(const __GLcontextModes * mesaVis,
       return GL_FALSE;
 
    if (0)
-      _mesa_printf("\ntexmem-0-3 branch\n\n");
+      printf("\ntexmem-0-3 branch\n\n");
 
    i915InitVtbl(i915);
-   i915InitMetaFuncs(i915);
 
    i915InitDriverFunctions(&functions);
 
@@ -128,6 +119,8 @@ i915CreateContext(const __GLcontextModes * mesaVis,
       FREE(i915);
       return GL_FALSE;
    }
+
+   _math_matrix_ctr(&intel->ViewportMatrix);
 
    /* Initialize swrast, tnl driver tables: */
    intelInitSpanFuncs(ctx);
@@ -143,7 +136,10 @@ i915CreateContext(const __GLcontextModes * mesaVis,
    ctx->Const.MaxTextureUnits = I915_TEX_UNITS;
    ctx->Const.MaxTextureImageUnits = I915_TEX_UNITS;
    ctx->Const.MaxTextureCoordUnits = I915_TEX_UNITS;
-
+   ctx->Const.MaxVarying = I915_TEX_UNITS;
+   ctx->Const.MaxCombinedTextureImageUnits =
+      ctx->Const.MaxVertexTextureImageUnits +
+      ctx->Const.MaxTextureImageUnits;
 
    /* Advertise the full hardware capabilities.  The new memory
     * manager should cope much better with overload situations:
@@ -153,6 +149,8 @@ i915CreateContext(const __GLcontextModes * mesaVis,
    ctx->Const.MaxCubeTextureLevels = 12;
    ctx->Const.MaxTextureRectSize = (1 << 11);
    ctx->Const.MaxTextureUnits = I915_TEX_UNITS;
+
+   ctx->Const.MaxTextureMaxAnisotropy = 4.0;
 
    /* GL_ARB_fragment_program limits - don't think Mesa actually
     * validates programs against these, and in any case one ARB
@@ -169,11 +167,13 @@ i915CreateContext(const __GLcontextModes * mesaVis,
    ctx->Const.FragmentProgram.MaxNativeTexIndirections =
       I915_MAX_TEX_INDIRECT;
    ctx->Const.FragmentProgram.MaxNativeAddressRegs = 0; /* I don't think we have one */
+   ctx->Const.FragmentProgram.MaxEnvParams =
+      MIN2(ctx->Const.FragmentProgram.MaxNativeParameters,
+	   ctx->Const.FragmentProgram.MaxEnvParams);
 
    ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
 
-   driInitExtensions(ctx, i915_extensions, GL_FALSE);
-
+   ctx->Const.MaxDrawBuffers = 1;
 
    _tnl_init_vertices(ctx, ctx->Const.MaxArrayLockSize + 12,
                       36 * sizeof(GLfloat));

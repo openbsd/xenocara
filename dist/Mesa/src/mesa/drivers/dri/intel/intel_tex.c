@@ -2,6 +2,7 @@
 #include "main/texobj.h"
 #include "main/teximage.h"
 #include "main/mipmap.h"
+#include "drivers/common/meta.h"
 #include "intel_context.h"
 #include "intel_mipmap_tree.h"
 #include "intel_tex.h"
@@ -93,7 +94,7 @@ intelFreeTextureImageData(GLcontext * ctx, struct gl_texture_image *texImage)
 static void *
 do_memcpy(void *dest, const void *src, size_t n)
 {
-   if ((((unsigned) src) & 63) || (((unsigned) dest) & 63)) {
+   if ((((unsigned long) src) & 63) || (((unsigned long) dest) & 63)) {
       return __memcpy(dest, src, n);
    }
    else
@@ -145,7 +146,7 @@ timed_memcpy(void *dest, const void *src, size_t n)
    double rate;
 
    if ((((unsigned) src) & 63) || (((unsigned) dest) & 63))
-      _mesa_printf("Warning - non-aligned texture copy!\n");
+      printf("Warning - non-aligned texture copy!\n");
 
    t1 = fastrdtsc();
    ret = do_memcpy(dest, src, n);
@@ -153,86 +154,63 @@ timed_memcpy(void *dest, const void *src, size_t n)
 
    rate = time_diff(t1, t2);
    rate /= (double) n;
-   _mesa_printf("timed_memcpy: %u %u --> %f clocks/byte\n", t1, t2, rate);
+   printf("timed_memcpy: %u %u --> %f clocks/byte\n", t1, t2, rate);
    return ret;
 }
 #endif /* DO_DEBUG */
 
+
 /**
- * Generate new mipmap data from BASE+1 to BASE+p (the minimally-sized mipmap
- * level).
- *
- * The texture object's miptree must be mapped.
- *
- * It would be really nice if this was just called by Mesa whenever mipmaps
- * needed to be regenerated, rather than us having to remember to do so in
- * each texture image modification path.
- *
- * This function should also include an accelerated path.
+ * Called via ctx->Driver.GenerateMipmap()
+ * This is basically a wrapper for _mesa_meta_GenerateMipmap() which checks
+ * if we'll be using software mipmap generation.  In that case, we need to
+ * map/unmap the base level texture image.
  */
-void
-intel_generate_mipmap(GLcontext *ctx, GLenum target,
-                      struct gl_texture_object *texObj)
+static void
+intelGenerateMipmap(GLcontext *ctx, GLenum target,
+                    struct gl_texture_object *texObj)
 {
-   struct intel_context *intel = intel_context(ctx);
-   struct intel_texture_object *intelObj = intel_texture_object(texObj);
-   GLuint nr_faces = (intelObj->base.Target == GL_TEXTURE_CUBE_MAP) ? 6 : 1;
-   int face, i;
+   if (_mesa_meta_check_generate_mipmap_fallback(ctx, target, texObj)) {
+      /* sw path: need to map texture images */
+      struct intel_context *intel = intel_context(ctx);
+      struct intel_texture_object *intelObj = intel_texture_object(texObj);
+      intel_tex_map_level_images(intel, intelObj, texObj->BaseLevel);
+      _mesa_generate_mipmap(ctx, target, texObj);
+      intel_tex_unmap_level_images(intel, intelObj, texObj->BaseLevel);
 
-   _mesa_generate_mipmap(ctx, target, texObj);
-
-   /* Update the level information in our private data in the new images, since
-    * it didn't get set as part of a normal TexImage path.
-    */
-   for (face = 0; face < nr_faces; face++) {
-      for (i = texObj->BaseLevel + 1; i < texObj->MaxLevel; i++) {
-         struct intel_texture_image *intelImage;
-
-	 intelImage = intel_texture_image(texObj->Image[face][i]);
-	 if (intelImage == NULL)
-	    break;
-
-	 intelImage->level = i;
-	 intelImage->face = face;
-	 /* Unreference the miptree to signal that the new Data is a bare
-	  * pointer from mesa.
-	  */
-	 intel_miptree_release(intel, &intelImage->mt);
+      {
+         GLuint nr_faces = (texObj->Target == GL_TEXTURE_CUBE_MAP) ? 6 : 1;
+         GLuint face, i;
+         /* Update the level information in our private data in the new images,
+          * since it didn't get set as part of a normal TexImage path.
+          */
+         for (face = 0; face < nr_faces; face++) {
+            for (i = texObj->BaseLevel + 1; i < texObj->MaxLevel; i++) {
+               struct intel_texture_image *intelImage =
+                  intel_texture_image(texObj->Image[face][i]);
+               if (!intelImage)
+                  break;
+               intelImage->level = i;
+               intelImage->face = face;
+               /* Unreference the miptree to signal that the new Data is a
+                * bare pointer from mesa.
+                */
+               intel_miptree_release(intel, &intelImage->mt);
+            }
+         }
       }
+   }
+   else {
+      _mesa_meta_GenerateMipmap(ctx, target, texObj);
    }
 }
 
-static void intelGenerateMipmap(GLcontext *ctx, GLenum target, struct gl_texture_object *texObj)
-{
-   struct intel_context *intel = intel_context(ctx);
-   struct intel_texture_object *intelObj = intel_texture_object(texObj);
-
-   intel_tex_map_level_images(intel, intelObj, texObj->BaseLevel);
-   intel_generate_mipmap(ctx, target, texObj);
-   intel_tex_unmap_level_images(intel, intelObj, texObj->BaseLevel);
-}
 
 void
 intelInitTextureFuncs(struct dd_function_table *functions)
 {
    functions->ChooseTextureFormat = intelChooseTextureFormat;
-   functions->TexImage1D = intelTexImage1D;
-   functions->TexImage2D = intelTexImage2D;
-   functions->TexImage3D = intelTexImage3D;
-   functions->TexSubImage1D = intelTexSubImage1D;
-   functions->TexSubImage2D = intelTexSubImage2D;
-   functions->TexSubImage3D = intelTexSubImage3D;
-   functions->CopyTexImage1D = intelCopyTexImage1D;
-   functions->CopyTexImage2D = intelCopyTexImage2D;
-   functions->CopyTexSubImage1D = intelCopyTexSubImage1D;
-   functions->CopyTexSubImage2D = intelCopyTexSubImage2D;
-   functions->GetTexImage = intelGetTexImage;
    functions->GenerateMipmap = intelGenerateMipmap;
-
-   /* compressed texture functions */
-   functions->CompressedTexImage2D = intelCompressedTexImage2D;
-   functions->CompressedTexSubImage2D = intelCompressedTexSubImage2D;
-   functions->GetCompressedTexImage = intelGetCompressedTexImage;
 
    functions->NewTextureObject = intelNewTextureObject;
    functions->NewTextureImage = intelNewTextureImage;

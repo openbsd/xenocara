@@ -8,10 +8,10 @@
  */
 
 
-#define GL_GLEXT_PROTOTYPES
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 
@@ -31,6 +31,7 @@
 
 #define BORDER_TEXTURE 1
 #define NO_BORDER_TEXTURE 2
+#define COLOR_TEX_CORNERS 0
 
 #define SIZE 8
 static GLubyte BorderImage[SIZE+2][SIZE+2][4];
@@ -71,7 +72,7 @@ static struct wrap_mode modes[] = {
    WRAP_EXT ( GL_MIRROR_CLAMP_TO_EDGE_EXT, "GL_ATI_texture_mirror_once",
 	                                   "GL_EXT_texture_mirror_clamp",
 	      999.0 ),
-   { 0 }
+   { 0, NULL, GL_FALSE, 0.0, { NULL, NULL } }
 };
 
 static void
@@ -258,11 +259,60 @@ static void Init( void )
    }
 
    glBindTexture(GL_TEXTURE_2D, BORDER_TEXTURE);
+#ifdef TEST_PBO_DLIST
+   /* test fetching teximage from PBO in display list */
+   {
+      GLuint b = 42, l = 10;
+
+      glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, b);
+      glBufferDataARB(GL_PIXEL_UNPACK_BUFFER, sizeof(BorderImage),
+                      BorderImage, GL_STREAM_DRAW);
+
+      glNewList(l, GL_COMPILE);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SIZE+2, SIZE+2, 1,
+                GL_RGBA, GL_UNSIGNED_BYTE, (void *) 0/* BorderImage*/);
+      glEndList();
+      glCallList(l);
+      glBindBufferARB(GL_PIXEL_UNPACK_BUFFER, 0);
+   }
+#else
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SIZE+2, SIZE+2, 1,
                 GL_RGBA, GL_UNSIGNED_BYTE, (void *) BorderImage);
+#endif
 
    for (i = 0; i < SIZE; i++) {
       for (j = 0; j < SIZE; j++) {
+#if COLOR_TEX_CORNERS
+         if (i == 0 && j == 0) {
+            /* lower-left texel = RED */
+            NoBorderImage[i][j][0] = 255;
+            NoBorderImage[i][j][1] = 0;
+            NoBorderImage[i][j][2] = 0;
+            NoBorderImage[i][j][3] = 255;
+         }
+         else  if (i == 0 && j == SIZE-1) {
+            /* lower-right corner = GREEN */
+            NoBorderImage[i][j][0] = 0;
+            NoBorderImage[i][j][1] = 255;
+            NoBorderImage[i][j][2] = 0;
+            NoBorderImage[i][j][3] = 255;
+         }
+         else  if (i == SIZE-1 && j == 0) {
+            /* upper-left corner = BLUE */
+            NoBorderImage[i][j][0] = 0;
+            NoBorderImage[i][j][1] = 0;
+            NoBorderImage[i][j][2] = 255;
+            NoBorderImage[i][j][3] = 255;
+         }
+         else  if (i == SIZE-1 && j == SIZE-1) {
+            /* upper-right corner = YELLOW */
+            NoBorderImage[i][j][0] = 255;
+            NoBorderImage[i][j][1] = 255;
+            NoBorderImage[i][j][2] = 0;
+            NoBorderImage[i][j][3] = 255;
+         }
+         else
+#endif
          if ((i + j) & 1) {
             /* white */
             NoBorderImage[i][j][0] = 255;
@@ -294,6 +344,7 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( 1000, 270 );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
    glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

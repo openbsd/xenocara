@@ -1,3 +1,4 @@
+#ifdef USE_X86_ASM
 #if defined(__i386__) || defined(__386__)
 
 #include "main/imports.h"
@@ -6,10 +7,12 @@
 #define DISASSEM 0
 #define X86_TWOB 0x0f
 
+#if 0
 static unsigned char *cptr( void (*label)() )
 {
    return (unsigned char *)(unsigned long)label;
 }
+#endif
 
 
 static void do_realloc( struct x86_function *p )
@@ -290,7 +293,7 @@ void x86_call( struct x86_function *p, void (*label)())
 void x86_call( struct x86_function *p, struct x86_reg reg)
 {
    emit_1ub(p, 0xff);
-   emit_modrm(p, reg, reg);
+   emit_modrm_noreg(p, 2, reg);
 }
 #endif
 
@@ -1181,7 +1184,7 @@ void x86_release_func( struct x86_function *p )
 void (*x86_get_func( struct x86_function *p ))(void)
 {
    if (DISASSEM && p->store)
-      _mesa_printf("disassemble %p %p\n", p->store, p->csr);
+      printf("disassemble %p %p\n", p->store, p->csr);
    return (void (*)(void)) (unsigned long) p->store;
 }
 
@@ -1192,3 +1195,9 @@ void x86sse_dummy( void )
 }
 
 #endif
+
+#else  /* USE_X86_ASM */
+
+int x86sse_c_dummy_var; /* silence warning */
+
+#endif /* USE_X86_ASM */

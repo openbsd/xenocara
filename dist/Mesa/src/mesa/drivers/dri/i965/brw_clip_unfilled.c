@@ -39,7 +39,6 @@
 #include "brw_defines.h"
 #include "brw_context.h"
 #include "brw_eu.h"
-#include "brw_util.h"
 #include "brw_clip.h"
 
 
@@ -453,6 +452,7 @@ void brw_emit_unfilled_clip( struct brw_clip_compile *c )
 
    brw_clip_tri_alloc_regs(c, 3 + c->key.nr_userclip + 6);
    brw_clip_tri_init_vertices(c);
+   brw_clip_init_ff_sync(c);
 
    assert(c->offset[VERT_RESULT_EDGE]);
 

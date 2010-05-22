@@ -12,6 +12,7 @@
 #include "framebuffer.h"
 #include "renderbuffer.h"
 #include "drivers/common/driverfuncs.h"
+#include "drivers/common/meta.h"
 #include "vbo/vbo.h"
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
@@ -34,7 +35,7 @@ wmesa_new_framebuffer(HDC hdc, GLvisual *visual)
     WMesaFramebuffer pwfb
         = (WMesaFramebuffer) malloc(sizeof(struct wmesa_framebuffer));
     if (pwfb) {
-        _mesa_initialize_framebuffer(&pwfb->Base, visual);
+        _mesa_initialize_window_framebuffer(&pwfb->Base, visual);
         pwfb->hDC = hdc;
         /* insert at head of list */
         pwfb->next = FirstFramebuffer;
@@ -62,7 +63,7 @@ wmesa_free_framebuffer(HDC hdc)
 	else
 	    prev->next = pwfb->next;
         fb = &pwfb->Base;
-        _mesa_unreference_framebuffer(&fb); 
+        _mesa_reference_framebuffer(&fb, NULL); 
     }
 }
 
@@ -247,16 +248,6 @@ static void wmesa_flush(GLcontext *ctx)
  */
 
 /*
- * Set the color index used to clear the color buffer.
- */
-static void clear_index(GLcontext *ctx, GLuint index)
-{
-    WMesaContext pwc = wmesa_context(ctx);
-    /* Note that indexed mode is not supported yet */
-    pwc->clearColorRef = RGB(0,0,0);
-}
-
-/*
  * Set the color used to clear the color buffer.
  */
 static void clear_color(GLcontext *ctx, const GLfloat color[4])
@@ -300,10 +291,10 @@ static void clear(GLcontext *ctx, GLbitfield mask)
 
     /* Let swrast do all the work if the masks are not set to
      * clear all channels. */
-    if (ctx->Color.ColorMask[0] != 0xff ||
-	ctx->Color.ColorMask[1] != 0xff ||
-	ctx->Color.ColorMask[2] != 0xff ||
-	ctx->Color.ColorMask[3] != 0xff) {
+    if (!ctx->Color.ColorMask[0][0] ||
+	!ctx->Color.ColorMask[0][1] ||
+	!ctx->Color.ColorMask[0][2] ||
+	!ctx->Color.ColorMask[0][3]) {
 	_swrast_Clear(ctx, mask);
 	return;
     }
@@ -481,7 +472,7 @@ static void write_rgba_span_front(const GLcontext *ctx,
       };
    } BGRA;
    BGRA *bgra, c;
-   int i;
+   GLuint i;
 
    if (n < 16) {   // the value 16 is just guessed
       y=FLIP(y);
@@ -826,9 +817,9 @@ static void read_rgba_span_32(const GLcontext *ctx,
     lpdw = ((LPDWORD)(pwfb->pbPixels + pwfb->ScanWidth * y)) + x;
     for (i=0; i<n; i++) {
 	pixel = lpdw[i];
-	rgba[i][RCOMP] = (pixel & 0x00ff0000) >> 16;
-	rgba[i][GCOMP] = (pixel & 0x0000ff00) >> 8;
-	rgba[i][BCOMP] = (pixel & 0x000000ff);
+	rgba[i][RCOMP] = (GLubyte)((pixel & 0x00ff0000) >> 16);
+	rgba[i][GCOMP] = (GLubyte)((pixel & 0x0000ff00) >> 8);
+	rgba[i][BCOMP] = (GLubyte)(pixel & 0x000000ff);
 	rgba[i][ACOMP] = 255;
     }
 }
@@ -850,9 +841,9 @@ static void read_rgba_pixels_32(const GLcontext *ctx,
 	GLint y2 = FLIP(y[i]);
 	lpdw = ((LPDWORD)(pwfb->pbPixels + pwfb->ScanWidth * y2)) + x[i];
 	pixel = *lpdw;
-	rgba[i][RCOMP] = (pixel & 0x00ff0000) >> 16;
-	rgba[i][GCOMP] = (pixel & 0x0000ff00) >> 8;
-	rgba[i][BCOMP] = (pixel & 0x000000ff);
+	rgba[i][RCOMP] = (GLubyte)((pixel & 0x00ff0000) >> 16);
+	rgba[i][GCOMP] = (GLubyte)((pixel & 0x0000ff00) >> 8);
+	rgba[i][BCOMP] = (GLubyte)(pixel & 0x000000ff);
 	rgba[i][ACOMP] = 255;
   }
 }
@@ -1244,7 +1235,7 @@ static void read_rgba_pixels_16(const GLcontext *ctx,
 static void
 wmesa_delete_renderbuffer(struct gl_renderbuffer *rb)
 {
-    _mesa_free(rb);
+    free(rb);
 }
 
 
@@ -1270,7 +1261,7 @@ wmesa_renderbuffer_storage(GLcontext *ctx,
  * on if we're drawing to the front or back color buffer.
  */
 void wmesa_set_renderbuffer_funcs(struct gl_renderbuffer *rb, int pixelformat,
-                                  BYTE cColorBits, int double_buffer)
+                                  int cColorBits, int double_buffer)
 {
     if (double_buffer) {
         /* back buffer */
@@ -1285,9 +1276,6 @@ void wmesa_set_renderbuffer_funcs(struct gl_renderbuffer *rb, int pixelformat,
 	    rb->PutMonoValues = write_mono_rgba_pixels_16;
 	    rb->GetRow = read_rgba_span_16;
 	    rb->GetValues = read_rgba_pixels_16;
-            rb->RedBits = 5;
-            rb->GreenBits = 6;
-            rb->BlueBits = 5;
 	    break;
 	case PF_8R8G8B:
 		if (cColorBits == 24)
@@ -1299,9 +1287,6 @@ void wmesa_set_renderbuffer_funcs(struct gl_renderbuffer *rb, int pixelformat,
 		    rb->PutMonoValues = write_mono_rgba_pixels_24;
 		    rb->GetRow = read_rgba_span_24;
 		    rb->GetValues = read_rgba_pixels_24;
-	        rb->RedBits = 8;
-	        rb->GreenBits = 8;
-	        rb->BlueBits = 8;		
 		}
 		else
 		{
@@ -1312,9 +1297,6 @@ void wmesa_set_renderbuffer_funcs(struct gl_renderbuffer *rb, int pixelformat,
 	        rb->PutMonoValues = write_mono_rgba_pixels_32;
 	        rb->GetRow = read_rgba_span_32;
 	        rb->GetValues = read_rgba_pixels_32;
-            rb->RedBits = 8;
-            rb->GreenBits = 8;
-            rb->BlueBits = 8;
 		}
 	    break;
 	default:
@@ -1330,9 +1312,6 @@ void wmesa_set_renderbuffer_funcs(struct gl_renderbuffer *rb, int pixelformat,
 	rb->PutMonoValues = write_mono_rgba_pixels_front;
 	rb->GetRow = read_rgba_span_front;
 	rb->GetValues = read_rgba_pixels_front;
-        rb->RedBits = 8; /* XXX fix these (565?) */
-        rb->GreenBits = 8;
-        rb->BlueBits = 8;
     }
 }
 
@@ -1472,12 +1451,10 @@ WMesaContext WMesaCreateContext(HDC hDC,
 	break;
     }
     /* Create visual based on flags */
-    visual = _mesa_create_visual(rgb_flag,
-                                 db_flag,    /* db_flag */
+    visual = _mesa_create_visual(db_flag,    /* db_flag */
                                  GL_FALSE,   /* stereo */
                                  red_bits, green_bits, blue_bits, /* color RGB */
                                  alpha_flag ? alpha_bits : 0, /* color A */
-                                 0,          /* index bits */
                                  DEFAULT_SOFTWARE_DEPTH_BITS, /* depth_bits */
                                  8,          /* stencil_bits */
                                  16,16,16,   /* accum RGB */
@@ -1485,7 +1462,7 @@ WMesaContext WMesaCreateContext(HDC hDC,
                                  1);         /* num samples */
     
     if (!visual) {
-	_mesa_free(c);
+	free(c);
 	return NULL;
     }
 
@@ -1496,7 +1473,6 @@ WMesaContext WMesaCreateContext(HDC hDC,
     functions.GetBufferSize = wmesa_get_buffer_size;
     functions.Flush = wmesa_flush;
     functions.Clear = clear;
-    functions.ClearIndex = clear_index;
     functions.ClearColor = clear_color;
     functions.ResizeBuffers = wmesa_resize_buffers;
     functions.Viewport = wmesa_viewport;
@@ -1515,13 +1491,15 @@ WMesaContext WMesaCreateContext(HDC hDC,
     _mesa_enable_2_0_extensions(ctx);
     _mesa_enable_2_1_extensions(ctx);
   
+    _mesa_meta_init(ctx);
+
     /* Initialize the software rasterizer and helper modules. */
     if (!_swrast_CreateContext(ctx) ||
         !_vbo_CreateContext(ctx) ||
         !_tnl_CreateContext(ctx) ||
 	!_swsetup_CreateContext(ctx)) {
 	_mesa_free_context_data(ctx);
-	_mesa_free(c);
+	free(c);
 	return NULL;
     }
     _swsetup_Wakeup(ctx);
@@ -1558,13 +1536,15 @@ void WMesaDestroyContext( WMesaContext pwc )
     DeleteObject(pwc->clearPen); 
     DeleteObject(pwc->clearBrush); 
     
+    _mesa_meta_free(ctx);
+
     _swsetup_DestroyContext(ctx);
     _tnl_DestroyContext(ctx);
     _vbo_DestroyContext(ctx);
     _swrast_DestroyContext(ctx);
     
     _mesa_free_context_data(ctx);
-    _mesa_free(pwc);
+    free(pwc);
 }
 
 
@@ -1679,80 +1659,3 @@ void WMesaShareLists(WMesaContext ctx_to_share, WMesaContext ctx)
 	_mesa_share_state(&ctx->gl_ctx, &ctx_to_share->gl_ctx);	
 }
 
-/* This is hopefully a temporary hack to define some needed dispatch
- * table entries.  Hopefully, I'll find a better solution.  The
- * dispatch table generation scripts ought to be making these dummy
- * stubs as well. */
-#if !defined(__MINGW32__) || !defined(GL_NO_STDCALL)
-void gl_dispatch_stub_543(void){}
-void gl_dispatch_stub_544(void){}
-void gl_dispatch_stub_545(void){}
-void gl_dispatch_stub_546(void){}
-void gl_dispatch_stub_547(void){}
-void gl_dispatch_stub_548(void){}
-void gl_dispatch_stub_549(void){}
-void gl_dispatch_stub_550(void){}
-void gl_dispatch_stub_551(void){}
-void gl_dispatch_stub_552(void){}
-void gl_dispatch_stub_553(void){}
-void gl_dispatch_stub_554(void){}
-void gl_dispatch_stub_555(void){}
-void gl_dispatch_stub_556(void){}
-void gl_dispatch_stub_557(void){}
-void gl_dispatch_stub_558(void){}
-void gl_dispatch_stub_559(void){}
-void gl_dispatch_stub_560(void){}
-void gl_dispatch_stub_561(void){}
-void gl_dispatch_stub_565(void){}
-void gl_dispatch_stub_566(void){}
-void gl_dispatch_stub_577(void){}
-void gl_dispatch_stub_578(void){}
-void gl_dispatch_stub_603(void){}
-void gl_dispatch_stub_645(void){}
-void gl_dispatch_stub_646(void){}
-void gl_dispatch_stub_647(void){}
-void gl_dispatch_stub_648(void){}
-void gl_dispatch_stub_649(void){}
-void gl_dispatch_stub_650(void){}
-void gl_dispatch_stub_651(void){}
-void gl_dispatch_stub_652(void){}
-void gl_dispatch_stub_653(void){}
-void gl_dispatch_stub_733(void){}
-void gl_dispatch_stub_734(void){}
-void gl_dispatch_stub_735(void){}
-void gl_dispatch_stub_736(void){}
-void gl_dispatch_stub_737(void){}
-void gl_dispatch_stub_738(void){}
-void gl_dispatch_stub_744(void){}
-void gl_dispatch_stub_745(void){}
-void gl_dispatch_stub_746(void){}
-void gl_dispatch_stub_760(void){}
-void gl_dispatch_stub_761(void){}
-void gl_dispatch_stub_763(void){}
-void gl_dispatch_stub_765(void){}
-void gl_dispatch_stub_766(void){}
-void gl_dispatch_stub_767(void){}
-void gl_dispatch_stub_768(void){}
-
-void gl_dispatch_stub_562(void){}
-void gl_dispatch_stub_563(void){}
-void gl_dispatch_stub_564(void){}
-void gl_dispatch_stub_567(void){}
-void gl_dispatch_stub_568(void){}
-void gl_dispatch_stub_569(void){}
-void gl_dispatch_stub_580(void){}
-void gl_dispatch_stub_581(void){}
-void gl_dispatch_stub_606(void){}
-void gl_dispatch_stub_654(void){}
-void gl_dispatch_stub_655(void){}
-void gl_dispatch_stub_656(void){}
-void gl_dispatch_stub_739(void){}
-void gl_dispatch_stub_740(void){}
-void gl_dispatch_stub_741(void){}
-void gl_dispatch_stub_748(void){}
-void gl_dispatch_stub_749(void){}
-void gl_dispatch_stub_769(void){}
-void gl_dispatch_stub_770(void){}
-void gl_dispatch_stub_771(void){}
-
-#endif

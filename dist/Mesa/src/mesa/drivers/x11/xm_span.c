@@ -471,8 +471,26 @@ static void put_row_8R8G8B_pixmap( PUT_ROW_ARGS )
    if (mask) {
       for (i=0;i<n;i++,x++) {
          if (mask[i]) {
+#if 1
+            /*
+             * XXX Something funny is going on here.
+             * If we're drawing into a window that uses a depth 32 TrueColor
+             * visual, we see the right pixels on screen, but when we read
+             * them back with XGetImage() we get random colors.
+             * The alternative code below which uses XPutImage() instead
+             * seems to mostly fix the problem, but not always.
+             * We don't normally create windows with this visual, but glean
+             * does and we're seeing some failures there.
+             */
             XMesaSetForeground( dpy, gc, PACK_8R8G8B( rgba[i][RCOMP], rgba[i][GCOMP], rgba[i][BCOMP] ));
             XMesaDrawPoint( dpy, buffer, gc, (int) x, (int) y );
+#else
+            /* This code works more often, but not always */
+            XMesaImage *rowimg = XMESA_BUFFER(ctx->DrawBuffer)->rowimage;
+            GLuint *ptr4 = (GLuint *) rowimg->data;
+            *ptr4 = PACK_8R8G8B( rgba[i][RCOMP], rgba[i][GCOMP], rgba[i][BCOMP] );
+            XMesaPutImage( dpy, buffer, gc, rowimg, 0, 0, x, y, 1, 1 );
+#endif
          }
       }
    }
@@ -3755,7 +3773,7 @@ static void put_values_ci_ximage( PUT_VALUES_ARGS )
  *          else return number of pixels to skip in the destination array.
  */
 static int
-clip_for_xgetimage(GLcontext *ctx, GLuint *n, GLint *x, GLint *y)
+clip_for_xgetimage(GLcontext *ctx, XMesaPixmap pixmap, GLuint *n, GLint *x, GLint *y)
 {
    XMesaContext xmesa = XMESA_CONTEXT(ctx);
    XMesaBuffer source = XMESA_BUFFER(ctx->DrawBuffer);
@@ -3765,7 +3783,7 @@ clip_for_xgetimage(GLcontext *ctx, GLuint *n, GLint *x, GLint *y)
    GLint dx, dy;
    if (source->type == PBUFFER || source->type == PIXMAP)
       return 0;
-   XTranslateCoordinates(xmesa->display, source->frontxrb->pixmap, rootWin,
+   XTranslateCoordinates(xmesa->display, pixmap, rootWin,
                          *x, *y, &dx, &dy, &child);
    if (dx >= screenWidth) {
       /* totally clipped on right */
@@ -3809,7 +3827,7 @@ get_row_ci(GLcontext *ctx, struct gl_renderbuffer *rb,
 #ifndef XFree86Server
       XMesaImage *span = NULL;
       int error;
-      int k = clip_for_xgetimage(ctx, &n, &x, &y);
+      int k = clip_for_xgetimage(ctx, xrb->pixmap, &n, &x, &y);
       if (k < 0)
          return;
       index += k;
@@ -3874,7 +3892,7 @@ get_row_rgba(GLcontext *ctx, struct gl_renderbuffer *rb,
 #else
       int k;
       y = YFLIP(xrb, y);
-      k = clip_for_xgetimage(ctx, &n, &x, &y);
+      k = clip_for_xgetimage(ctx, xrb->pixmap, &n, &x, &y);
       if (k < 0)
          return;
       rgba += k;

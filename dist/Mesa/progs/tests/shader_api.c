@@ -5,8 +5,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define GL_GLEXT_PROTOTYPES
+#include <GL/glew.h>
 #include <GL/glut.h>
+
+#ifndef APIENTRY
+#define APIENTRY
+#endif
 
 static void assert_test(const char *file, int line, int cond, const char *msg)
 {
@@ -42,7 +46,7 @@ static void assert_error_test(const char *file, int line, GLenum expect)
 
 #define assert_error(err) assert_error_test(__FILE__, __LINE__, (err))
 
-static void check_status(GLuint id, GLenum pname, void (*query)(GLuint, GLenum, GLint *))
+static void check_status(GLuint id, GLenum pname, void (APIENTRY *query)(GLuint, GLenum, GLint *))
 {
     GLint status;
 
@@ -113,7 +117,8 @@ static void test_uniform_size_type1(const char *glslType, GLenum glType, const c
    GLenum type;
    GLint size;
 
-   printf("  Running subtest %s\n", glslType); fflush(stdout);
+   printf("  Running subtest %s\n", glslType);
+   fflush(stdout);
    sprintf(buffer, "#version 120\nuniform %s m[60];\nvoid main() { gl_Position[0] = m[59]%s; }\n",
            glslType, el);
 
@@ -169,7 +174,8 @@ static void test_attrib_size_type1(const char *glslType, GLenum glType, const ch
    GLenum type;
    GLint size;
 
-   printf("  Running subtest %s\n", glslType); fflush(stdout);
+   printf("  Running subtest %s\n", glslType);
+   fflush(stdout);
    sprintf(buffer, "#version 120\nattribute %s m;\nvoid main() { gl_Position[0] = m%s; }\n",
            glslType, el);
 
@@ -302,8 +308,6 @@ static void test_uniform_multiple_samplers(void)
    assert_no_error();
    program = make_program(NULL, "uniform sampler2D s[2];\nvoid main() { gl_FragColor = texture2D(s[1], vec2(0.0, 0.0)); }\n");
    location = glGetUniformLocation(program, "s[0]");
-   if (location == -1)  /* Mesa doesn't currently support indexing */
-      location = glGetUniformLocation(program, "s");
    assert(location != -1);
    assert_no_error();
    glUniform1iv(location, 2, values);
@@ -321,8 +325,17 @@ static void run_test(const char *name, void (*callback)(void))
 
 int main(int argc, char **argv)
 {
+   const char *version;
+
    glutInit(&argc, argv);
    glutCreateWindow("Mesa bug demo");
+   glewInit();
+
+   version = (const char *) glGetString(GL_VERSION);
+   if (version[0] == '1') {
+      printf("Sorry, this test requires OpenGL 2.x GLSL support\n");
+      exit(0);
+   }
 
    RUN_TEST(test_uniform_size_type);
    RUN_TEST(test_attrib_size_type);

@@ -30,10 +30,9 @@
 #include "context.h"
 #include "light.h"
 #include "macros.h"
-#if FEATURE_dlist
 #include "dlist.h"
-#endif
-#include "glapi/dispatch.h"
+#include "eval.h"
+#include "main/dispatch.h"
 
 
 /**
@@ -42,6 +41,9 @@
  * These functions are used when outside glBegin/glEnd or outside display
  * lists.
  */
+
+
+#if FEATURE_beginend
 
 
 static void GLAPIENTRY _mesa_noop_EdgeFlag( GLboolean b )
@@ -477,7 +479,7 @@ static void GLAPIENTRY _mesa_noop_VertexAttrib4fvNV( GLuint index, const GLfloat
 static void GLAPIENTRY _mesa_noop_VertexAttrib1fARB( GLuint index, GLfloat x )
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_ATTRIBS) {
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
       ASSIGN_4V(ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index], x, 0, 0, 1);
    }
    else
@@ -487,7 +489,7 @@ static void GLAPIENTRY _mesa_noop_VertexAttrib1fARB( GLuint index, GLfloat x )
 static void GLAPIENTRY _mesa_noop_VertexAttrib1fvARB( GLuint index, const GLfloat *v )
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_ATTRIBS) {
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
       ASSIGN_4V(ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index], v[0], 0, 0, 1);
    }
    else
@@ -497,7 +499,7 @@ static void GLAPIENTRY _mesa_noop_VertexAttrib1fvARB( GLuint index, const GLfloa
 static void GLAPIENTRY _mesa_noop_VertexAttrib2fARB( GLuint index, GLfloat x, GLfloat y )
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_ATTRIBS) {
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
       ASSIGN_4V(ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index], x, y, 0, 1);
    }
    else
@@ -507,7 +509,7 @@ static void GLAPIENTRY _mesa_noop_VertexAttrib2fARB( GLuint index, GLfloat x, GL
 static void GLAPIENTRY _mesa_noop_VertexAttrib2fvARB( GLuint index, const GLfloat *v )
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_ATTRIBS) {
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
       ASSIGN_4V(ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index], v[0], v[1], 0, 1);
    }
    else
@@ -518,7 +520,7 @@ static void GLAPIENTRY _mesa_noop_VertexAttrib3fARB( GLuint index, GLfloat x,
                                   GLfloat y, GLfloat z )
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_ATTRIBS) {
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
       ASSIGN_4V(ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index], x, y, z, 1);
    }
    else
@@ -528,7 +530,7 @@ static void GLAPIENTRY _mesa_noop_VertexAttrib3fARB( GLuint index, GLfloat x,
 static void GLAPIENTRY _mesa_noop_VertexAttrib3fvARB( GLuint index, const GLfloat *v )
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_ATTRIBS) {
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
       ASSIGN_4V(ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index], v[0], v[1], v[2], 1);
    }
    else
@@ -539,7 +541,7 @@ static void GLAPIENTRY _mesa_noop_VertexAttrib4fARB( GLuint index, GLfloat x,
                                   GLfloat y, GLfloat z, GLfloat w )
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_ATTRIBS) {
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
       ASSIGN_4V(ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index], x, y, z, w);
    }
    else
@@ -549,7 +551,7 @@ static void GLAPIENTRY _mesa_noop_VertexAttrib4fARB( GLuint index, GLfloat x,
 static void GLAPIENTRY _mesa_noop_VertexAttrib4fvARB( GLuint index, const GLfloat *v )
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index < MAX_VERTEX_ATTRIBS) {
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS) {
       ASSIGN_4V(ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + index], v[0], v[1], v[2], v[3]);
    }
    else
@@ -731,7 +733,7 @@ _mesa_noop_DrawElements(GLenum mode, GLsizei count, GLenum type,
    GET_CURRENT_CONTEXT(ctx);
    GLint i;
 
-   if (!_mesa_validate_DrawElements( ctx, mode, count, type, indices ))
+   if (!_mesa_validate_DrawElements( ctx, mode, count, type, indices, 0 ))
       return;
 
    CALL_Begin(GET_DISPATCH(), (mode));
@@ -757,6 +759,43 @@ _mesa_noop_DrawElements(GLenum mode, GLsizei count, GLenum type,
    CALL_End(GET_DISPATCH(), ());
 }
 
+static void GLAPIENTRY
+_mesa_noop_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type,
+				  const GLvoid *indices, GLint basevertex)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   GLint i;
+
+   if (!_mesa_validate_DrawElements( ctx, mode, count, type, indices,
+				     basevertex ))
+      return;
+
+   CALL_Begin(GET_DISPATCH(), (mode));
+
+   switch (type) {
+   case GL_UNSIGNED_BYTE:
+      for (i = 0 ; i < count ; i++)
+	  CALL_ArrayElement(GET_DISPATCH(), ( ((GLubyte *)indices)[i] +
+					      basevertex));
+      break;
+   case GL_UNSIGNED_SHORT:
+      for (i = 0 ; i < count ; i++)
+	  CALL_ArrayElement(GET_DISPATCH(), ( ((GLushort *)indices)[i] +
+					      basevertex ));
+      break;
+   case GL_UNSIGNED_INT:
+      for (i = 0 ; i < count ; i++)
+	  CALL_ArrayElement(GET_DISPATCH(), ( ((GLuint *)indices)[i] +
+					      basevertex ));
+      break;
+   default:
+      _mesa_error( ctx, GL_INVALID_ENUM, "glDrawElementsBaseVertex(type)" );
+      break;
+   }
+
+   CALL_End(GET_DISPATCH(), ());
+}
+
 
 static void GLAPIENTRY
 _mesa_noop_DrawRangeElements(GLenum mode,
@@ -768,8 +807,56 @@ _mesa_noop_DrawRangeElements(GLenum mode,
 
    if (_mesa_validate_DrawRangeElements( ctx, mode,
 					 start, end,
-					 count, type, indices ))
+					 count, type, indices, 0 ))
        CALL_DrawElements(GET_DISPATCH(), (mode, count, type, indices));
+}
+
+/* GL_EXT_multi_draw_arrays */
+void GLAPIENTRY
+_mesa_noop_MultiDrawElements(GLenum mode, const GLsizei *count, GLenum type,
+			     const GLvoid **indices, GLsizei primcount)
+{
+   GLsizei i;
+
+   for (i = 0; i < primcount; i++) {
+      if (count[i] > 0) {
+	 CALL_DrawElements(GET_DISPATCH(), (mode, count[i], type, indices[i]));
+      }
+   }
+}
+
+static void GLAPIENTRY
+_mesa_noop_DrawRangeElementsBaseVertex(GLenum mode,
+				       GLuint start, GLuint end,
+				       GLsizei count, GLenum type,
+				       const GLvoid *indices, GLint basevertex)
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   if (_mesa_validate_DrawRangeElements( ctx, mode,
+					 start, end,
+					 count, type, indices, basevertex ))
+      CALL_DrawElementsBaseVertex(GET_DISPATCH(), (mode, count, type, indices,
+						   basevertex));
+}
+
+/* GL_EXT_multi_draw_arrays */
+void GLAPIENTRY
+_mesa_noop_MultiDrawElementsBaseVertex(GLenum mode, const GLsizei *count,
+				       GLenum type,
+				       const GLvoid **indices,
+				       GLsizei primcount,
+				       const GLint *basevertex)
+{
+   GLsizei i;
+
+   for (i = 0; i < primcount; i++) {
+      if (count[i] > 0) {
+	 CALL_DrawElementsBaseVertex(GET_DISPATCH(), (mode, count[i], type,
+						      indices[i],
+						      basevertex[i]));
+      }
+   }
 }
 
 /*
@@ -907,26 +994,21 @@ _mesa_noop_EvalMesh2( GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2 )
 void
 _mesa_noop_vtxfmt_init( GLvertexformat *vfmt )
 {
-   vfmt->ArrayElement = _ae_loopback_array_elt;	        /* generic helper */
+   _MESA_INIT_ARRAYELT_VTXFMT(vfmt, _ae_);
+
    vfmt->Begin = _mesa_noop_Begin;
-#if FEATURE_dlist
-   vfmt->CallList = _mesa_CallList;
-   vfmt->CallLists = _mesa_CallLists;
-#endif
+
+   _MESA_INIT_DLIST_VTXFMT(vfmt, _mesa_);
+
    vfmt->Color3f = _mesa_noop_Color3f;
    vfmt->Color3fv = _mesa_noop_Color3fv;
    vfmt->Color4f = _mesa_noop_Color4f;
    vfmt->Color4fv = _mesa_noop_Color4fv;
    vfmt->EdgeFlag = _mesa_noop_EdgeFlag;
    vfmt->End = _mesa_noop_End;
-#if FEATURE_evaluators
-   vfmt->EvalCoord1f = _mesa_noop_EvalCoord1f;
-   vfmt->EvalCoord1fv = _mesa_noop_EvalCoord1fv;
-   vfmt->EvalCoord2f = _mesa_noop_EvalCoord2f;
-   vfmt->EvalCoord2fv = _mesa_noop_EvalCoord2fv;
-   vfmt->EvalPoint1 = _mesa_noop_EvalPoint1;
-   vfmt->EvalPoint2 = _mesa_noop_EvalPoint2;
-#endif
+
+   _MESA_INIT_EVAL_VTXFMT(vfmt, _mesa_noop_);
+
    vfmt->FogCoordfEXT = _mesa_noop_FogCoordfEXT;
    vfmt->FogCoordfvEXT = _mesa_noop_FogCoordfvEXT;
    vfmt->Indexf = _mesa_noop_Indexf;
@@ -980,6 +1062,11 @@ _mesa_noop_vtxfmt_init( GLvertexformat *vfmt )
    vfmt->DrawArrays = _mesa_noop_DrawArrays;
    vfmt->DrawElements = _mesa_noop_DrawElements;
    vfmt->DrawRangeElements = _mesa_noop_DrawRangeElements;
-   vfmt->EvalMesh1 = _mesa_noop_EvalMesh1;
-   vfmt->EvalMesh2 = _mesa_noop_EvalMesh2;
+   vfmt->MultiDrawElementsEXT = _mesa_noop_MultiDrawElements;
+   vfmt->DrawElementsBaseVertex = _mesa_noop_DrawElementsBaseVertex;
+   vfmt->DrawRangeElementsBaseVertex = _mesa_noop_DrawRangeElementsBaseVertex;
+   vfmt->MultiDrawElementsBaseVertex = _mesa_noop_MultiDrawElementsBaseVertex;
 }
+
+
+#endif /* FEATURE_beginend */

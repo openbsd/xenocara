@@ -70,6 +70,10 @@ struct intel_mipmap_level
     * always zero in that case.
     */
    GLuint level_offset;
+   /** Offset to this miptree level, used in computing x_offset. */
+   GLuint level_x;
+   /** Offset to this miptree level, used in computing y_offset. */
+   GLuint level_y;
    GLuint width;
    GLuint height;
    /** Depth of the mipmap at this level: 1 for 1D/2D/CUBE, n for 3D. */
@@ -86,7 +90,7 @@ struct intel_mipmap_level
     * compute the offsets of depth/cube images within a mipmap level,
     * so have to store them as a lookup table.
     */
-   GLuint *image_offset;
+   GLuint *x_offset, *y_offset;
 };
 
 struct intel_mipmap_tree
@@ -126,6 +130,7 @@ struct intel_mipmap_tree
 
 struct intel_mipmap_tree *intel_miptree_create(struct intel_context *intel,
                                                GLenum target,
+                                               GLenum base_format,
                                                GLenum internal_format,
                                                GLuint first_level,
                                                GLuint last_level,
@@ -148,6 +153,7 @@ intel_miptree_create_for_region(struct intel_context *intel,
 
 int intel_miptree_pitch_align (struct intel_context *intel,
 			       struct intel_mipmap_tree *mt,
+			       uint32_t tiling,
 			       int pitch);
 
 void intel_miptree_reference(struct intel_mipmap_tree **dst,
@@ -159,8 +165,7 @@ void intel_miptree_release(struct intel_context *intel,
 /* Check if an image fits an existing mipmap tree layout
  */
 GLboolean intel_miptree_match_image(struct intel_mipmap_tree *mt,
-                                    struct gl_texture_image *image,
-                                    GLuint face, GLuint level);
+                                    struct gl_texture_image *image);
 
 /* Return a pointer to an image within a tree.  Return image stride as
  * well.
@@ -174,19 +179,10 @@ GLubyte *intel_miptree_image_map(struct intel_context *intel,
 void intel_miptree_image_unmap(struct intel_context *intel,
                                struct intel_mipmap_tree *mt);
 
-
-/* Return the linear offset of an image relative to the start of the
- * tree:
- */
-GLuint intel_miptree_image_offset(struct intel_mipmap_tree *mt,
-                                  GLuint face, GLuint level);
-
-/* Return pointers to each 2d slice within an image.  Indexed by depth
- * value.
- */
-const GLuint *intel_miptree_depth_offsets(struct intel_mipmap_tree *mt,
-                                          GLuint level);
-
+void
+intel_miptree_get_image_offset(struct intel_mipmap_tree *mt,
+			       GLuint level, GLuint face, GLuint depth,
+			       GLuint *x, GLuint *y);
 
 void intel_miptree_set_level_info(struct intel_mipmap_tree *mt,
                                   GLuint level,
@@ -197,7 +193,6 @@ void intel_miptree_set_level_info(struct intel_mipmap_tree *mt,
 void intel_miptree_set_image_offset(struct intel_mipmap_tree *mt,
                                     GLuint level,
                                     GLuint img, GLuint x, GLuint y);
-
 
 /* Upload an image into a tree
  */
@@ -218,10 +213,13 @@ void intel_miptree_image_copy(struct intel_context *intel,
 /* i915_mipmap_tree.c:
  */
 GLboolean i915_miptree_layout(struct intel_context *intel,
-			      struct intel_mipmap_tree *mt);
+			      struct intel_mipmap_tree *mt,
+			      uint32_t tiling);
 GLboolean i945_miptree_layout(struct intel_context *intel,
-			      struct intel_mipmap_tree *mt);
+			      struct intel_mipmap_tree *mt,
+			      uint32_t tiling);
 GLboolean brw_miptree_layout(struct intel_context *intel,
-			     struct intel_mipmap_tree *mt);
+			     struct intel_mipmap_tree *mt,
+			     uint32_t tiling);
 
 #endif

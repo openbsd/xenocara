@@ -39,7 +39,6 @@
 #include "brw_defines.h"
 #include "brw_context.h"
 #include "brw_eu.h"
-#include "brw_util.h"
 #include "brw_clip.h"
 
 static void release_tmps( struct brw_clip_compile *c )
@@ -51,6 +50,7 @@ static void release_tmps( struct brw_clip_compile *c )
 void brw_clip_tri_alloc_regs( struct brw_clip_compile *c, 
 			      GLuint nr_verts )
 {
+   struct intel_context *intel = &c->func.brw->intel;
    GLuint i = 0,j;
 
    /* Register usage is static, precompute here:
@@ -77,6 +77,10 @@ void brw_clip_tri_alloc_regs( struct brw_clip_compile *c,
    if (c->nr_attrs & 1) {
       for (j = 0; j < 3; j++) {
 	 GLuint delta = c->nr_attrs*16 + 32;
+
+         if (intel->gen == 5)
+             delta = c->nr_attrs * 16 + 32 * 3;
+
 	 brw_MOV(&c->func, byte_offset(c->reg.vertex[j], delta), brw_imm_f(0));
       }
    }
@@ -112,6 +116,11 @@ void brw_clip_tri_alloc_regs( struct brw_clip_compile *c,
       i++;
       c->reg.tmp0    = brw_vec4_grf(i, 0);
       c->reg.tmp1    = brw_vec4_grf(i, 4);
+      i++;
+   }
+
+   if (intel->needs_ff_sync) {
+      c->reg.ff_sync = retype(brw_vec1_grf(i, 0), BRW_REGISTER_TYPE_UD);
       i++;
    }
 
@@ -179,14 +188,20 @@ void brw_clip_tri_flat_shade( struct brw_clip_compile *c )
 	   brw_imm_ud(_3DPRIM_POLYGON));
 
    is_poly = brw_IF(p, BRW_EXECUTE_1);
-   {   
+   {
       brw_clip_copy_colors(c, 1, 0);
       brw_clip_copy_colors(c, 2, 0);
    }
    is_poly = brw_ELSE(p, is_poly);
    {
-      brw_clip_copy_colors(c, 0, 2);
-      brw_clip_copy_colors(c, 1, 2);
+      if (c->key.pv_first) {
+         brw_clip_copy_colors(c, 1, 0);
+         brw_clip_copy_colors(c, 2, 0);
+      }
+      else {
+         brw_clip_copy_colors(c, 0, 2);
+         brw_clip_copy_colors(c, 1, 2);
+      }
    }
    brw_ENDIF(p, is_poly);
 }
@@ -556,13 +571,15 @@ void brw_emit_tri_clip( struct brw_clip_compile *c )
 {
    struct brw_instruction *neg_rhw;
    struct brw_compile *p = &c->func;
+   struct brw_context *brw = p->brw;
    brw_clip_tri_alloc_regs(c, 3 + c->key.nr_userclip + 6);
    brw_clip_tri_init_vertices(c);
    brw_clip_init_clipmask(c);
+   brw_clip_init_ff_sync(c);
 
    /* if -ve rhw workaround bit is set, 
       do cliptest */
-   if (!BRW_IS_G4X(p->brw)) {
+   if (brw->has_negative_rhw_bug) {
       brw_set_conditionalmod(p, BRW_CONDITIONAL_NZ);
       brw_AND(p, brw_null_reg(), get_element_ud(c->reg.R0, 2), 
               brw_imm_ud(1<<20));
@@ -579,11 +596,12 @@ void brw_emit_tri_clip( struct brw_clip_compile *c )
    if (c->key.do_flat_shading) 
       brw_clip_tri_flat_shade(c); 
       
-   if (c->key.clip_mode == BRW_CLIPMODE_NORMAL)
+   if ((c->key.clip_mode == BRW_CLIPMODE_NORMAL) ||
+       (c->key.clip_mode == BRW_CLIPMODE_KERNEL_CLIP))
       do_clip_tri(c);
    else 
       maybe_do_clip_tri(c);
-      
+
    brw_clip_tri_emit_polygon(c);
 
    /* Send an empty message to kill the thread:

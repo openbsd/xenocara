@@ -43,6 +43,7 @@
 #include "main/macros.h"
 #include "program.h"
 #include "prog_parameter.h"
+#include "prog_print.h"
 #include "prog_instruction.h"
 #include "nvfragparse.h"
 
@@ -170,7 +171,7 @@ record_error(struct parse_state *parseState, const char *msg, int lineNo)
    _mesa_debug(parseState->ctx,
                "nvfragparse.c(%d): line %d, column %d:%s (%s)\n",
                lineNo, line, column, (char *) lineStr, msg);
-   _mesa_free((void *) lineStr);
+   free((void *) lineStr);
 #else
    (void) lineNo;
 #endif
@@ -199,7 +200,7 @@ do {									\
 #define RETURN_ERROR2(msg1, msg2)					\
 do {									\
    char err[1000];							\
-   _mesa_sprintf(err, "%s %s", msg1, msg2);				\
+   sprintf(err, "%s %s", msg1, msg2);				\
    record_error(parseState, err, __LINE__);				\
    return GL_FALSE;							\
 } while(0)
@@ -216,8 +217,14 @@ MatchInstruction(const GLubyte *token)
    const struct instruction_pattern *inst;
    struct instruction_pattern result;
 
+   result.name = NULL;
+   result.opcode = MAX_OPCODE; /* i.e. invalid instruction */
+   result.inputs = 0;
+   result.outputs = 0;
+   result.suffixes = 0;
+
    for (inst = Instructions; inst->name; inst++) {
-      if (_mesa_strncmp((const char *) token, inst->name, 3) == 0) {
+      if (strncmp((const char *) token, inst->name, 3) == 0) {
          /* matched! */
          int i = 3;
          result = *inst;
@@ -246,7 +253,7 @@ MatchInstruction(const GLubyte *token)
          return result;
       }
    }
-   result.opcode = MAX_OPCODE; /* i.e. invalid instruction */
+
    return result;
 }
 
@@ -371,7 +378,7 @@ Peek_Token(struct parse_state *parseState, GLubyte *token)
       parseState->pos += (-i);
       return GL_FALSE;
    }
-   len = (GLint)_mesa_strlen((const char *) token);
+   len = (GLint) strlen((const char *) token);
    parseState->pos += (i - len);
    return GL_TRUE;
 }
@@ -383,16 +390,6 @@ static const char *InputRegisters[MAX_NV_FRAGMENT_PROGRAM_INPUTS + 1] = {
    "WPOS", "COL0", "COL1", "FOGC",
    "TEX0", "TEX1", "TEX2", "TEX3", "TEX4", "TEX5", "TEX6", "TEX7", NULL
 };
-
-static const char *OutputRegisters[MAX_NV_FRAGMENT_PROGRAM_OUTPUTS + 1] = {
-   "COLR", "COLH",
-   /* These are only allows for register combiners */
-   /*
-   "TEX0", "TEX1", "TEX2", "TEX3",
-   */
-   "DEPR", NULL
-};
-
 
 
 
@@ -459,7 +456,7 @@ Parse_ScalarConstant(struct parse_state *parseState, GLfloat *number)
 {
    char *end = NULL;
 
-   *number = (GLfloat) _mesa_strtod((const char *) parseState->pos, &end);
+   *number = (GLfloat) _mesa_strtof((const char *) parseState->pos, &end);
 
    if (end && end > (char *) parseState->pos) {
       /* got a number */
@@ -583,7 +580,7 @@ Parse_TextureImageId(struct parse_state *parseState,
        imageSrc[2] != 'X') {
       RETURN_ERROR1("Expected TEX# source");
    }
-   unit = _mesa_atoi((const char *) imageSrc + 3);
+   unit = atoi((const char *) imageSrc + 3);
    if ((unit < 0 || unit > MAX_TEXTURE_IMAGE_UNITS) ||
        (unit == 0 && (imageSrc[3] != '0' || imageSrc[4] != 0))) {
       RETURN_ERROR1("Invalied TEX# source index");
@@ -645,7 +642,7 @@ Parse_SwizzleSuffix(const GLubyte *token, GLuint swizzle[4])
    else {
       /* 4-component swizzle (vector) */
       GLint k;
-      for (k = 0; token[k] && k < 4; k++) {
+      for (k = 0; k < 4 && token[k]; k++) {
          if (token[k] == 'x')
             swizzle[k] = 0;
          else if (token[k] == 'y')
@@ -720,7 +717,7 @@ Parse_TempReg(struct parse_state *parseState, GLint *tempRegNum)
       RETURN_ERROR1("Expected R## or H##");
 
    if (IsDigit(token[1])) {
-      GLint reg = _mesa_atoi((const char *) (token + 1));
+      GLint reg = atoi((const char *) (token + 1));
       if (token[0] == 'H')
          reg += 32;
       if (reg >= MAX_NV_FRAGMENT_PROGRAM_TEMPS)
@@ -771,7 +768,7 @@ Parse_ProgramParamReg(struct parse_state *parseState, GLint *regNum)
 
    if (IsDigit(token[0])) {
       /* a numbered program parameter register */
-      GLint reg = _mesa_atoi((const char *) token);
+      GLint reg = atoi((const char *) token);
       if (reg >= MAX_NV_FRAGMENT_PROGRAM_PARAMS)
          RETURN_ERROR1("Invalid constant program number");
       *regNum = reg;
@@ -805,7 +802,7 @@ Parse_FragReg(struct parse_state *parseState, GLint *tempRegNum)
       RETURN_ERROR;
    }
    for (j = 0; InputRegisters[j]; j++) {
-      if (_mesa_strcmp((const char *) token, InputRegisters[j]) == 0) {
+      if (strcmp((const char *) token, InputRegisters[j]) == 0) {
          *tempRegNum = j;
          parseState->inputsRead |= (1 << j);
          break;
@@ -828,7 +825,6 @@ static GLboolean
 Parse_OutputReg(struct parse_state *parseState, GLint *outputRegNum)
 {
    GLubyte token[100];
-   GLint j;
 
    /* Match "o[" */
    if (!Parse_String(parseState, "o["))
@@ -839,19 +835,19 @@ Parse_OutputReg(struct parse_state *parseState, GLint *outputRegNum)
       RETURN_ERROR;
 
    /* try to match an output register name */
-   for (j = 0; OutputRegisters[j]; j++) {
-      if (_mesa_strcmp((const char *) token, OutputRegisters[j]) == 0) {
-         static GLuint bothColors = (1 << FRAG_RESULT_COLR) | (1 << FRAG_RESULT_COLH);
-         *outputRegNum = j;
-         parseState->outputsWritten |= (1 << j);
-         if ((parseState->outputsWritten & bothColors) == bothColors) {
-            RETURN_ERROR1("Illegal to write to both o[COLR] and o[COLH]");
-         }
-         break;
-      }
+   if (strcmp((char *) token, "COLR") == 0 ||
+       strcmp((char *) token, "COLH") == 0) {
+      /* note that we don't distinguish between COLR and COLH */
+      *outputRegNum = FRAG_RESULT_COLOR;
+      parseState->outputsWritten |= (1 << FRAG_RESULT_COLOR);
    }
-   if (!OutputRegisters[j])
+   else if (strcmp((char *) token, "DEPR") == 0) {
+      *outputRegNum = FRAG_RESULT_DEPTH;
+      parseState->outputsWritten |= (1 << FRAG_RESULT_DEPTH);
+   }
+   else {
       RETURN_ERROR1("Invalid output register name");
+   }
 
    /* Match ']' */
    if (!Parse_String(parseState, "]"))
@@ -872,8 +868,8 @@ Parse_MaskedDstReg(struct parse_state *parseState,
    if (!Peek_Token(parseState, token))
       RETURN_ERROR;
 
-   if (_mesa_strcmp((const char *) token, "RC") == 0 ||
-       _mesa_strcmp((const char *) token, "HC") == 0) {
+   if (strcmp((const char *) token, "RC") == 0 ||
+       strcmp((const char *) token, "HC") == 0) {
       /* a write-only register */
       dstReg->File = PROGRAM_WRITE_ONLY;
       if (!Parse_DummyReg(parseState, &idx))
@@ -967,6 +963,7 @@ Parse_VectorSrc(struct parse_state *parseState,
    GLfloat sign = 1.0F;
    GLubyte token[100];
    GLint idx;
+   GLuint negateBase, negateAbs;
 
    /*
     * First, take care of +/- and absolute value stuff.
@@ -978,20 +975,22 @@ Parse_VectorSrc(struct parse_state *parseState,
 
    if (Parse_String(parseState, "|")) {
       srcReg->Abs = GL_TRUE;
-      srcReg->NegateAbs = (sign < 0.0F) ? GL_TRUE : GL_FALSE;
+      negateAbs = (sign < 0.0F) ? NEGATE_XYZW : NEGATE_NONE;
 
       if (Parse_String(parseState, "-"))
-         srcReg->NegateBase = NEGATE_XYZW;
+         negateBase = NEGATE_XYZW;
       else if (Parse_String(parseState, "+"))
-         srcReg->NegateBase = NEGATE_NONE;
+         negateBase = NEGATE_NONE;
       else
-         srcReg->NegateBase = NEGATE_NONE;
+         negateBase = NEGATE_NONE;
    }
    else {
       srcReg->Abs = GL_FALSE;
-      srcReg->NegateAbs = GL_FALSE;
-      srcReg->NegateBase = (sign < 0.0F) ? NEGATE_XYZW : NEGATE_NONE;
+      negateAbs = NEGATE_NONE;
+      negateBase = (sign < 0.0F) ? NEGATE_XYZW : NEGATE_NONE;
    }
+
+   srcReg->Negate = srcReg->Abs ? negateAbs : negateBase;
 
    /* This should be the real src vector/register name */
    if (!Peek_Token(parseState, token))
@@ -1093,6 +1092,7 @@ Parse_ScalarSrcReg(struct parse_state *parseState,
    GLfloat sign = 1.0F;
    GLboolean needSuffix = GL_TRUE;
    GLint idx;
+   GLuint negateBase, negateAbs;
 
    /*
     * First, take care of +/- and absolute value stuff.
@@ -1104,20 +1104,22 @@ Parse_ScalarSrcReg(struct parse_state *parseState,
 
    if (Parse_String(parseState, "|")) {
       srcReg->Abs = GL_TRUE;
-      srcReg->NegateAbs = (sign < 0.0F) ? GL_TRUE : GL_FALSE;
+      negateAbs = (sign < 0.0F) ? NEGATE_XYZW : NEGATE_NONE;
 
       if (Parse_String(parseState, "-"))
-         srcReg->NegateBase = NEGATE_XYZW;
+         negateBase = NEGATE_XYZW;
       else if (Parse_String(parseState, "+"))
-         srcReg->NegateBase = NEGATE_NONE;
+         negateBase = NEGATE_NONE;
       else
-         srcReg->NegateBase = NEGATE_NONE;
+         negateBase = NEGATE_NONE;
    }
    else {
       srcReg->Abs = GL_FALSE;
-      srcReg->NegateAbs = GL_FALSE;
-      srcReg->NegateBase = (sign < 0.0F) ? NEGATE_XYZW : NEGATE_NONE;
+      negateAbs = NEGATE_NONE;
+      negateBase = (sign < 0.0F) ? NEGATE_XYZW : NEGATE_NONE;
    }
+
+   srcReg->Negate = srcReg->Abs ? negateAbs : negateBase;
 
    if (!Peek_Token(parseState, token))
       RETURN_ERROR;
@@ -1229,9 +1231,9 @@ Parse_PrintInstruction(struct parse_state *parseState,
    for (len = 0; str[len] != '\''; len++) /* find closing quote */
       ;
    parseState->pos += len + 1;
-   msg = (GLubyte*) _mesa_malloc(len + 1);
+   msg = (GLubyte*) malloc(len + 1);
 
-   _mesa_memcpy(msg, str, len);
+   memcpy(msg, str, len);
    msg[len] = 0;
    inst->Data = msg;
 
@@ -1257,9 +1259,8 @@ Parse_PrintInstruction(struct parse_state *parseState,
    }
 
    inst->SrcReg[0].Swizzle = SWIZZLE_NOOP;
-   inst->SrcReg[0].NegateBase = NEGATE_NONE;
    inst->SrcReg[0].Abs = GL_FALSE;
-   inst->SrcReg[0].NegateAbs = GL_FALSE;
+   inst->SrcReg[0].Negate = NEGATE_NONE;
 
    return GL_TRUE;
 }
@@ -1318,8 +1319,6 @@ Parse_InstructionSequence(struct parse_state *parseState,
       }
       else if (Parse_String(parseState, "END")) {
          inst->Opcode = OPCODE_END;
-         inst->StringPos = parseState->curLine - parseState->start;
-         assert(inst->StringPos >= 0);
          parseState->numInst++;
          if (Parse_Token(parseState, token)) {
             RETURN_ERROR1("Code after END opcode.");
@@ -1346,8 +1345,6 @@ Parse_InstructionSequence(struct parse_state *parseState,
          inst->SaturateMode = (instMatch.suffixes & (_S))
             ? SATURATE_ZERO_ONE : SATURATE_OFF;
          inst->CondUpdate = (instMatch.suffixes & (_C)) ? GL_TRUE : GL_FALSE;
-         inst->StringPos = parseState->curLine - parseState->start;
-         assert(inst->StringPos >= 0);
 
          /*
           * parse the input and output operands
@@ -1482,11 +1479,11 @@ _mesa_parse_nv_fragment_program(GLcontext *ctx, GLenum dstTarget,
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glLoadProgramNV");
       return;
    }
-   MEMCPY(programString, str, len);
+   memcpy(programString, str, len);
    programString[len] = 0;
 
    /* Get ready to parse */
-   _mesa_bzero(&parseState, sizeof(struct parse_state));
+   memset(&parseState, 0, sizeof(struct parse_state));
    parseState.ctx = ctx;
    parseState.start = programString;
    parseState.program = program;
@@ -1498,11 +1495,11 @@ _mesa_parse_nv_fragment_program(GLcontext *ctx, GLenum dstTarget,
    _mesa_set_program_error(ctx, -1, NULL);
 
    /* check the program header */
-   if (_mesa_strncmp((const char *) programString, "!!FP1.0", 7) == 0) {
+   if (strncmp((const char *) programString, "!!FP1.0", 7) == 0) {
       target = GL_FRAGMENT_PROGRAM_NV;
       parseState.pos = programString + 7;
    }
-   else if (_mesa_strncmp((const char *) programString, "!!FCP1.0", 8) == 0) {
+   else if (strncmp((const char *) programString, "!!FCP1.0", 8) == 0) {
       /* fragment / register combiner program - not supported */
       _mesa_set_program_error(ctx, 0, "Invalid fragment program header");
       _mesa_error(ctx, GL_INVALID_OPERATION, "glLoadProgramNV(bad header)");
@@ -1551,7 +1548,7 @@ _mesa_parse_nv_fragment_program(GLcontext *ctx, GLenum dstTarget,
       program->Base.String = programString;
       program->Base.Format = GL_PROGRAM_FORMAT_ASCII_ARB;
       if (program->Base.Instructions) {
-         _mesa_free(program->Base.Instructions);
+         free(program->Base.Instructions);
       }
       program->Base.Instructions = newInst;
       program->Base.NumInstructions = parseState.numInst;
@@ -1569,9 +1566,9 @@ _mesa_parse_nv_fragment_program(GLcontext *ctx, GLenum dstTarget,
 #endif
 
 #ifdef DEBUG_foo
-      _mesa_printf("--- glLoadProgramNV(%d) result ---\n", program->Base.Id);
-      _mesa_print_nv_fragment_program(program);
-      _mesa_printf("----------------------------------\n");
+      printf("--- glLoadProgramNV(%d) result ---\n", program->Base.Id);
+      _mesa_fprint_program_opt(stdout, &program->Base, PROG_PRINT_NV, 0);
+      printf("----------------------------------\n");
 #endif
    }
    else {
@@ -1582,243 +1579,6 @@ _mesa_parse_nv_fragment_program(GLcontext *ctx, GLenum dstTarget,
 }
 
 
-static void
-PrintSrcReg(const struct gl_fragment_program *program,
-            const struct prog_src_register *src)
-{
-   static const char comps[5] = "xyzw";
-
-   if (src->NegateAbs) {
-      _mesa_printf("-");
-   }
-   if (src->Abs) {
-      _mesa_printf("|");
-   }
-   if (src->NegateBase) {
-      _mesa_printf("-");
-   }
-   if (src->File == PROGRAM_NAMED_PARAM) {
-      if (program->Base.Parameters->Parameters[src->Index].Type
-          == PROGRAM_CONSTANT) {
-         const GLfloat *v;
-         v = program->Base.Parameters->ParameterValues[src->Index];
-         _mesa_printf("{%g, %g, %g, %g}", v[0], v[1], v[2], v[3]);
-      }
-      else {
-         ASSERT(program->Base.Parameters->Parameters[src->Index].Type
-                == PROGRAM_NAMED_PARAM);
-         _mesa_printf("%s", program->Base.Parameters->Parameters[src->Index].Name);
-      }
-   }
-   else if (src->File == PROGRAM_OUTPUT) {
-      _mesa_printf("o[%s]", OutputRegisters[src->Index]);
-   }
-   else if (src->File == PROGRAM_INPUT) {
-      _mesa_printf("f[%s]", InputRegisters[src->Index]);
-   }
-   else if (src->File == PROGRAM_LOCAL_PARAM) {
-      _mesa_printf("p[%d]", src->Index);
-   }
-   else if (src->File == PROGRAM_TEMPORARY) {
-      if (src->Index >= 32)
-         _mesa_printf("H%d", src->Index);
-      else
-         _mesa_printf("R%d", src->Index);
-   }
-   else if (src->File == PROGRAM_WRITE_ONLY) {
-      _mesa_printf("%cC", "HR"[src->Index]);
-   }
-   else {
-      _mesa_problem(NULL, "Invalid fragment register %d", src->Index);
-      return;
-   }
-   if (GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 1) &&
-       GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 2) &&
-       GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 3)) {
-      _mesa_printf(".%c", comps[GET_SWZ(src->Swizzle, 0)]);
-   }
-   else if (src->Swizzle != SWIZZLE_NOOP) {
-      _mesa_printf(".%c%c%c%c",
-                   comps[GET_SWZ(src->Swizzle, 0)],
-                   comps[GET_SWZ(src->Swizzle, 1)],
-                   comps[GET_SWZ(src->Swizzle, 2)],
-                   comps[GET_SWZ(src->Swizzle, 3)]);
-   }
-   if (src->Abs) {
-      _mesa_printf("|");
-   }
-}
-
-static void
-PrintTextureSrc(const struct prog_instruction *inst)
-{
-   _mesa_printf("TEX%d, ", inst->TexSrcUnit);
-   switch (inst->TexSrcTarget) {
-   case TEXTURE_1D_INDEX:
-      _mesa_printf("1D");
-      break;
-   case TEXTURE_2D_INDEX:
-      _mesa_printf("2D");
-      break;
-   case TEXTURE_3D_INDEX:
-      _mesa_printf("3D");
-      break;
-   case TEXTURE_RECT_INDEX:
-      _mesa_printf("RECT");
-      break;
-   case TEXTURE_CUBE_INDEX:
-      _mesa_printf("CUBE");
-      break;
-   default:
-      _mesa_problem(NULL, "Invalid textue target in PrintTextureSrc");
-   }
-}
-
-static void
-PrintCondCode(const struct prog_dst_register *dst)
-{
-   static const char *comps = "xyzw";
-   static const char *ccString[] = {
-      "??", "GT", "EQ", "LT", "UN", "GE", "LE", "NE", "TR", "FL", "??"
-   };
-
-   _mesa_printf("%s", ccString[dst->CondMask]);
-   if (GET_SWZ(dst->CondSwizzle, 0) == GET_SWZ(dst->CondSwizzle, 1) &&
-       GET_SWZ(dst->CondSwizzle, 0) == GET_SWZ(dst->CondSwizzle, 2) &&
-       GET_SWZ(dst->CondSwizzle, 0) == GET_SWZ(dst->CondSwizzle, 3)) {
-      _mesa_printf(".%c", comps[GET_SWZ(dst->CondSwizzle, 0)]);
-   }
-   else if (dst->CondSwizzle != SWIZZLE_NOOP) {
-      _mesa_printf(".%c%c%c%c",
-                   comps[GET_SWZ(dst->CondSwizzle, 0)],
-                   comps[GET_SWZ(dst->CondSwizzle, 1)],
-                   comps[GET_SWZ(dst->CondSwizzle, 2)],
-                   comps[GET_SWZ(dst->CondSwizzle, 3)]);
-   }
-}
-
-
-static void
-PrintDstReg(const struct prog_dst_register *dst)
-{
-   if (dst->File == PROGRAM_OUTPUT) {
-      _mesa_printf("o[%s]", OutputRegisters[dst->Index]);
-   }
-   else if (dst->File == PROGRAM_TEMPORARY) {
-      if (dst->Index >= 32)
-         _mesa_printf("H%d", dst->Index);
-      else
-         _mesa_printf("R%d", dst->Index);
-   }
-   else if (dst->File == PROGRAM_LOCAL_PARAM) {
-      _mesa_printf("p[%d]", dst->Index);
-   }
-   else if (dst->File == PROGRAM_WRITE_ONLY) {
-      _mesa_printf("%cC", "HR"[dst->Index]);
-   }
-   else {
-      _mesa_printf("???");
-   }
-
-   if (dst->WriteMask != 0 && dst->WriteMask != WRITEMASK_XYZW) {
-      _mesa_printf(".");
-      if (dst->WriteMask & WRITEMASK_X)
-         _mesa_printf("x");
-      if (dst->WriteMask & WRITEMASK_Y)
-         _mesa_printf("y");
-      if (dst->WriteMask & WRITEMASK_Z)
-         _mesa_printf("z");
-      if (dst->WriteMask & WRITEMASK_W)
-         _mesa_printf("w");
-   }
-
-   if (dst->CondMask != COND_TR ||
-       dst->CondSwizzle != SWIZZLE_NOOP) {
-      _mesa_printf(" (");
-      PrintCondCode(dst);
-      _mesa_printf(")");
-   }
-}
-
-
-/**
- * Print (unparse) the given vertex program.  Just for debugging.
- */
-void
-_mesa_print_nv_fragment_program(const struct gl_fragment_program *program)
-{
-   const struct prog_instruction *inst;
-
-   for (inst = program->Base.Instructions; inst->Opcode != OPCODE_END; inst++) {
-      int i;
-      for (i = 0; Instructions[i].name; i++) {
-         if (inst->Opcode == Instructions[i].opcode) {
-            /* print instruction name */
-            _mesa_printf("%s", Instructions[i].name);
-            if (inst->Precision == FLOAT16)
-               _mesa_printf("H");
-            else if (inst->Precision == FIXED12)
-               _mesa_printf("X");
-            if (inst->CondUpdate)
-               _mesa_printf("C");
-            if (inst->SaturateMode == SATURATE_ZERO_ONE)
-               _mesa_printf("_SAT");
-            _mesa_printf(" ");
-
-            if (Instructions[i].inputs == INPUT_CC) {
-               PrintCondCode(&inst->DstReg);
-            }
-            else if (Instructions[i].outputs == OUTPUT_V ||
-                     Instructions[i].outputs == OUTPUT_S) {
-               /* print dest register */
-               PrintDstReg(&inst->DstReg);
-               _mesa_printf(", ");
-            }
-
-            /* print source register(s) */
-            if (Instructions[i].inputs == INPUT_1V ||
-                Instructions[i].inputs == INPUT_1S) {
-               PrintSrcReg(program, &inst->SrcReg[0]);
-            }
-            else if (Instructions[i].inputs == INPUT_2V ||
-                     Instructions[i].inputs == INPUT_2S) {
-               PrintSrcReg(program, &inst->SrcReg[0]);
-               _mesa_printf(", ");
-               PrintSrcReg(program, &inst->SrcReg[1]);
-            }
-            else if (Instructions[i].inputs == INPUT_3V) {
-               PrintSrcReg(program, &inst->SrcReg[0]);
-               _mesa_printf(", ");
-               PrintSrcReg(program, &inst->SrcReg[1]);
-               _mesa_printf(", ");
-               PrintSrcReg(program, &inst->SrcReg[2]);
-            }
-            else if (Instructions[i].inputs == INPUT_1V_T) {
-               PrintSrcReg(program, &inst->SrcReg[0]);
-               _mesa_printf(", ");
-               PrintTextureSrc(inst);
-            }
-            else if (Instructions[i].inputs == INPUT_3V_T) {
-               PrintSrcReg(program, &inst->SrcReg[0]);
-               _mesa_printf(", ");
-               PrintSrcReg(program, &inst->SrcReg[1]);
-               _mesa_printf(", ");
-               PrintSrcReg(program, &inst->SrcReg[2]);
-               _mesa_printf(", ");
-               PrintTextureSrc(inst);
-            }
-            _mesa_printf(";\n");
-            break;
-         }
-      }
-      if (!Instructions[i].name) {
-         _mesa_printf("Invalid opcode %d\n", inst->Opcode);
-      }
-   }
-   _mesa_printf("END\n");
-}
-
-
 const char *
 _mesa_nv_fragment_input_register_name(GLuint i)
 {
@@ -1826,10 +1586,3 @@ _mesa_nv_fragment_input_register_name(GLuint i)
    return InputRegisters[i];
 }
 
-
-const char *
-_mesa_nv_fragment_output_register_name(GLuint i)
-{
-   ASSERT(i < MAX_NV_FRAGMENT_PROGRAM_OUTPUTS);
-   return OutputRegisters[i];
-}

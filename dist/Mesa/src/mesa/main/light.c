@@ -1,8 +1,9 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0
+ * Version:  7.5
  *
- * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -64,6 +65,37 @@ _mesa_ShadeModel( GLenum mode )
 
 
 /**
+ * Set the provoking vertex (the vertex which specifies the prim's
+ * color when flat shading) to either the first or last vertex of the
+ * triangle or line.
+ */
+void GLAPIENTRY
+_mesa_ProvokingVertexEXT(GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   ASSERT_OUTSIDE_BEGIN_END(ctx);
+
+   if (MESA_VERBOSE&VERBOSE_API)
+      _mesa_debug(ctx, "glProvokingVertexEXT 0x%x\n", mode);
+
+   switch (mode) {
+   case GL_FIRST_VERTEX_CONVENTION_EXT:
+   case GL_LAST_VERTEX_CONVENTION_EXT:
+      break;
+   default:
+      _mesa_error(ctx, GL_INVALID_ENUM, "glProvokingVertexEXT(0x%x)", mode);
+      return;
+   }
+
+   if (ctx->Light.ProvokingVertex == mode)
+      return;
+
+   FLUSH_VERTICES(ctx, _NEW_LIGHT);
+   ctx->Light.ProvokingVertex = mode;
+}
+
+
+/**
  * Helper function called by _mesa_Lightfv and _mesa_PopAttrib to set
  * per-light state.
  * For GL_POSITION and GL_SPOT_DIRECTION the params position/direction
@@ -110,10 +142,10 @@ _mesa_light(GLcontext *ctx, GLuint lnum, GLenum pname, const GLfloat *params)
       break;
    case GL_SPOT_DIRECTION:
       /* NOTE: Direction already transformed by inverse ModelView! */
-      if (TEST_EQ_3V(light->EyeDirection, params))
+      if (TEST_EQ_3V(light->SpotDirection, params))
 	 return;
       FLUSH_VERTICES(ctx, _NEW_LIGHT);
-      COPY_3V(light->EyeDirection, params);
+      COPY_3V(light->SpotDirection, params);
       break;
    case GL_SPOT_EXPONENT:
       ASSERT(params[0] >= 0.0);
@@ -174,7 +206,10 @@ _mesa_light(GLcontext *ctx, GLuint lnum, GLenum pname, const GLfloat *params)
 void GLAPIENTRY
 _mesa_Lightf( GLenum light, GLenum pname, GLfloat param )
 {
-   _mesa_Lightfv( light, pname, &param );
+   GLfloat fparam[4];
+   fparam[0] = param;
+   fparam[1] = fparam[2] = fparam[3] = 0.0F;
+   _mesa_Lightfv( light, pname, fparam );
 }
 
 
@@ -253,7 +288,10 @@ _mesa_Lightfv( GLenum light, GLenum pname, const GLfloat *params )
 void GLAPIENTRY
 _mesa_Lighti( GLenum light, GLenum pname, GLint param )
 {
-   _mesa_Lightiv( light, pname, &param );
+   GLint iparam[4];
+   iparam[0] = param;
+   iparam[1] = iparam[2] = iparam[3] = 0;
+   _mesa_Lightiv( light, pname, iparam );
 }
 
 
@@ -325,7 +363,7 @@ _mesa_GetLightfv( GLenum light, GLenum pname, GLfloat *params )
          COPY_4V( params, ctx->Light.Light[l].EyePosition );
          break;
       case GL_SPOT_DIRECTION:
-         COPY_3V( params, ctx->Light.Light[l].EyeDirection );
+         COPY_3V( params, ctx->Light.Light[l].SpotDirection );
          break;
       case GL_SPOT_EXPONENT:
          params[0] = ctx->Light.Light[l].SpotExponent;
@@ -387,9 +425,9 @@ _mesa_GetLightiv( GLenum light, GLenum pname, GLint *params )
          params[3] = (GLint) ctx->Light.Light[l].EyePosition[3];
          break;
       case GL_SPOT_DIRECTION:
-         params[0] = (GLint) ctx->Light.Light[l].EyeDirection[0];
-         params[1] = (GLint) ctx->Light.Light[l].EyeDirection[1];
-         params[2] = (GLint) ctx->Light.Light[l].EyeDirection[2];
+         params[0] = (GLint) ctx->Light.Light[l].SpotDirection[0];
+         params[1] = (GLint) ctx->Light.Light[l].SpotDirection[1];
+         params[2] = (GLint) ctx->Light.Light[l].SpotDirection[2];
          break;
       case GL_SPOT_EXPONENT:
          params[0] = (GLint) ctx->Light.Light[l].SpotExponent;
@@ -496,7 +534,7 @@ _mesa_LightModeliv( GLenum pname, const GLint *params )
          break;
       default:
          /* Error will be caught later in gl_LightModelfv */
-         ;
+         ASSIGN_4V(fparam, 0.0F, 0.0F, 0.0F, 0.0F);
    }
    _mesa_LightModelfv( pname, fparam );
 }
@@ -505,14 +543,20 @@ _mesa_LightModeliv( GLenum pname, const GLint *params )
 void GLAPIENTRY
 _mesa_LightModeli( GLenum pname, GLint param )
 {
-   _mesa_LightModeliv( pname, &param );
+   GLint iparam[4];
+   iparam[0] = param;
+   iparam[1] = iparam[2] = iparam[3] = 0;
+   _mesa_LightModeliv( pname, iparam );
 }
 
 
 void GLAPIENTRY
 _mesa_LightModelf( GLenum pname, GLfloat param )
 {
-   _mesa_LightModelfv( pname, &param );
+   GLfloat fparam[4];
+   fparam[0] = param;
+   fparam[1] = fparam[2] = fparam[3] = 0.0F;
+   _mesa_LightModelfv( pname, fparam );
 }
 
 
@@ -604,7 +648,7 @@ _mesa_update_material( GLcontext *ctx, GLuint bitmask )
    struct gl_light *light, *list = &ctx->Light.EnabledList;
    GLfloat (*mat)[4] = ctx->Light.Material.Attrib;
 
-   if (MESA_VERBOSE&VERBOSE_IMMEDIATE) 
+   if (MESA_VERBOSE & VERBOSE_MATERIAL) 
       _mesa_debug(ctx, "_mesa_update_material, mask 0x%x\n", bitmask);
 
    if (!bitmask)
@@ -1049,31 +1093,22 @@ _mesa_update_lighting( GLcontext *ctx )
     * FLUSH_UPDATE_CURRENT, as when any outstanding material changes
     * are flushed, they will update the derived state at that time.
     */
-   if (ctx->Visual.rgbMode) {
-      if (ctx->Light.Model.TwoSide)
-	 _mesa_update_material( ctx, 
-				MAT_BIT_FRONT_EMISSION |
-				MAT_BIT_FRONT_AMBIENT |
-				MAT_BIT_FRONT_DIFFUSE | 
-				MAT_BIT_FRONT_SPECULAR |
-				MAT_BIT_BACK_EMISSION |
-				MAT_BIT_BACK_AMBIENT |
-				MAT_BIT_BACK_DIFFUSE | 
-				MAT_BIT_BACK_SPECULAR);
-      else
-	 _mesa_update_material( ctx, 
-				MAT_BIT_FRONT_EMISSION |
-				MAT_BIT_FRONT_AMBIENT |
-				MAT_BIT_FRONT_DIFFUSE | 
-				MAT_BIT_FRONT_SPECULAR);
-   }
-   else {
-      static const GLfloat ci[3] = { .30F, .59F, .11F };
-      foreach(light, &ctx->Light.EnabledList) {
-	 light->_dli = DOT3(ci, light->Diffuse);
-	 light->_sli = DOT3(ci, light->Specular);
-      }
-   }
+   if (ctx->Light.Model.TwoSide)
+      _mesa_update_material(ctx,
+			    MAT_BIT_FRONT_EMISSION |
+			    MAT_BIT_FRONT_AMBIENT |
+			    MAT_BIT_FRONT_DIFFUSE |
+			    MAT_BIT_FRONT_SPECULAR |
+			    MAT_BIT_BACK_EMISSION |
+			    MAT_BIT_BACK_AMBIENT |
+			    MAT_BIT_BACK_DIFFUSE |
+			    MAT_BIT_BACK_SPECULAR);
+   else
+      _mesa_update_material(ctx,
+			    MAT_BIT_FRONT_EMISSION |
+			    MAT_BIT_FRONT_AMBIENT |
+			    MAT_BIT_FRONT_DIFFUSE |
+			    MAT_BIT_FRONT_SPECULAR);
 }
 
 
@@ -1139,23 +1174,23 @@ compute_light_positions( GLcontext *ctx )
          /* Note: we normalize the spot direction now */
 
 	 if (ctx->_NeedEyeCoords) {
-	    COPY_3V( light->_NormDirection, light->EyeDirection );
-            NORMALIZE_3FV( light->_NormDirection );
+	    COPY_3V( light->_NormSpotDirection, light->SpotDirection );
+            NORMALIZE_3FV( light->_NormSpotDirection );
 	 }
          else {
             GLfloat spotDir[3];
-            COPY_3V(spotDir, light->EyeDirection);
+            COPY_3V(spotDir, light->SpotDirection);
             NORMALIZE_3FV(spotDir);
-	    TRANSFORM_NORMAL( light->_NormDirection,
+	    TRANSFORM_NORMAL( light->_NormSpotDirection,
 			      spotDir,
 			      ctx->ModelviewMatrixStack.Top->m);
 	 }
 
-	 NORMALIZE_3FV( light->_NormDirection );
+	 NORMALIZE_3FV( light->_NormSpotDirection );
 
 	 if (!(light->_Flags & LIGHT_POSITIONAL)) {
 	    GLfloat PV_dot_dir = - DOT3(light->_VP_inf_norm,
-					light->_NormDirection);
+					light->_NormSpotDirection);
 
 	    if (PV_dot_dir > light->_CosCutoff) {
 	       double x = PV_dot_dir * (EXP_TABLE_SIZE-1);
@@ -1224,15 +1259,15 @@ _mesa_update_tnl_spaces( GLcontext *ctx, GLuint new_state )
 	 ctx->Driver.LightingSpaceChange( ctx );
    }
    else {
-      GLuint new_state = ctx->NewState;
+      GLuint new_state2 = ctx->NewState;
 
       /* Recalculate that same state only if it has been invalidated
        * by other statechanges.
        */
-      if (new_state & _NEW_MODELVIEW)
+      if (new_state2 & _NEW_MODELVIEW)
 	 update_modelview_scale(ctx);
 
-      if (new_state & (_NEW_LIGHT|_NEW_MODELVIEW))
+      if (new_state2 & (_NEW_LIGHT|_NEW_MODELVIEW))
 	 compute_light_positions( ctx );
    }
 }
@@ -1279,7 +1314,7 @@ init_light( struct gl_light *l, GLuint n )
       ASSIGN_4V( l->Specular, 0.0, 0.0, 0.0, 1.0 );
    }
    ASSIGN_4V( l->EyePosition, 0.0, 0.0, 1.0, 0.0 );
-   ASSIGN_3V( l->EyeDirection, 0.0, 0.0, -1.0 );
+   ASSIGN_3V( l->SpotDirection, 0.0, 0.0, -1.0 );
    l->SpotExponent = 0.0;
    _mesa_invalidate_spot_exp_table( l );
    l->SpotCutoff = 180.0;
@@ -1348,6 +1383,7 @@ _mesa_init_lighting( GLcontext *ctx )
    init_lightmodel( &ctx->Light.Model );
    init_material( &ctx->Light.Material );
    ctx->Light.ShadeModel = GL_SMOOTH;
+   ctx->Light.ProvokingVertex = GL_LAST_VERTEX_CONVENTION_EXT;
    ctx->Light.Enabled = GL_FALSE;
    ctx->Light.ColorMaterialFace = GL_FRONT_AND_BACK;
    ctx->Light.ColorMaterialMode = GL_AMBIENT_AND_DIFFUSE;
@@ -1373,6 +1409,7 @@ _mesa_init_lighting( GLcontext *ctx )
    /* Miscellaneous */
    ctx->Light._NeedEyeCoords = GL_FALSE;
    ctx->_NeedEyeCoords = GL_FALSE;
+   ctx->_ForceEyeCoords = GL_FALSE;
    ctx->_ModelViewInvScale = 1.0;
 }
 
@@ -1387,7 +1424,7 @@ _mesa_free_lighting_data( GLcontext *ctx )
 
    /* Free lighting shininess exponentiation table */
    foreach_s( s, tmps, ctx->_ShineTabList ) {
-      _mesa_free( s );
+      free( s );
    }
-   _mesa_free( ctx->_ShineTabList );
+   free( ctx->_ShineTabList );
 }

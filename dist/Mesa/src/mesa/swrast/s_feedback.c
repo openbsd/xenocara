@@ -25,7 +25,6 @@
 #include "main/glheader.h"
 #include "main/colormac.h"
 #include "main/context.h"
-#include "main/enums.h"
 #include "main/feedback.h"
 #include "main/macros.h"
 
@@ -47,7 +46,7 @@ feedback_vertex(GLcontext * ctx, const SWvertex * v, const SWvertex * pv)
    win[2] = v->attrib[FRAG_ATTRIB_WPOS][2] / ctx->DrawBuffer->_DepthMaxF;
    win[3] = 1.0F / v->attrib[FRAG_ATTRIB_WPOS][3];
 
-   _mesa_feedback_vertex(ctx, win, color, v->attrib[FRAG_ATTRIB_CI][0], vtc);
+   _mesa_feedback_vertex(ctx, win, color, vtc);
 }
 
 
@@ -58,9 +57,9 @@ void
 _swrast_feedback_triangle(GLcontext *ctx, const SWvertex *v0,
                           const SWvertex *v1, const SWvertex *v2)
 {
-   if (_swrast_culltriangle(ctx, v0, v1, v2)) {
-      FEEDBACK_TOKEN(ctx, (GLfloat) (GLint) GL_POLYGON_TOKEN);
-      FEEDBACK_TOKEN(ctx, (GLfloat) 3); /* three vertices */
+   if (!_swrast_culltriangle(ctx, v0, v1, v2)) {
+      _mesa_feedback_token(ctx, (GLfloat) (GLint) GL_POLYGON_TOKEN);
+      _mesa_feedback_token(ctx, (GLfloat) 3); /* three vertices */
 
       if (ctx->Light.ShadeModel == GL_SMOOTH) {
          feedback_vertex(ctx, v0, v0);
@@ -86,7 +85,7 @@ _swrast_feedback_line(GLcontext *ctx, const SWvertex *v0,
    if (swrast->StippleCounter == 0)
       token = GL_LINE_RESET_TOKEN;
 
-   FEEDBACK_TOKEN(ctx, (GLfloat) (GLint) token);
+   _mesa_feedback_token(ctx, (GLfloat) (GLint) token);
 
    if (ctx->Light.ShadeModel == GL_SMOOTH) {
       feedback_vertex(ctx, v0, v0);
@@ -104,7 +103,7 @@ _swrast_feedback_line(GLcontext *ctx, const SWvertex *v0,
 void
 _swrast_feedback_point(GLcontext *ctx, const SWvertex *v)
 {
-   FEEDBACK_TOKEN(ctx, (GLfloat) (GLint) GL_POINT_TOKEN);
+   _mesa_feedback_token(ctx, (GLfloat) (GLint) GL_POINT_TOKEN);
    feedback_vertex(ctx, v, v);
 }
 
@@ -113,7 +112,7 @@ void
 _swrast_select_triangle(GLcontext *ctx, const SWvertex *v0,
                         const SWvertex *v1, const SWvertex *v2)
 {
-   if (_swrast_culltriangle(ctx, v0, v1, v2)) {
+   if (!_swrast_culltriangle(ctx, v0, v1, v2)) {
       const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
 
       _mesa_update_hitflag( ctx, v0->attrib[FRAG_ATTRIB_WPOS][2] * zs );

@@ -23,30 +23,33 @@
  */
 
 
-#ifndef OCCLUDE_H
-#define OCCLUDE_H
+#ifndef QUERYOBJ_H
+#define QUERYOBJ_H
 
 
-extern struct gl_query_object *
-_mesa_new_query_object(GLcontext *ctx, GLuint id);
+#include "main/mtypes.h"
+#include "main/hash.h"
 
-extern void
-_mesa_init_query(GLcontext *ctx);
 
-extern void
-_mesa_free_query_data(GLcontext *ctx);
+#if FEATURE_queryobj
 
-extern void
-_mesa_delete_query(GLcontext *ctx, struct gl_query_object *q);
+#define _MESA_INIT_QUERYOBJ_FUNCTIONS(driver, impl)      \
+   do {                                                  \
+      (driver)->NewQueryObject = impl ## NewQueryObject; \
+      (driver)->DeleteQuery    = impl ## DeleteQuery;    \
+      (driver)->BeginQuery     = impl ## BeginQuery;     \
+      (driver)->EndQuery       = impl ## EndQuery;       \
+      (driver)->WaitQuery      = impl ## WaitQuery;      \
+      (driver)->CheckQuery     = impl ## CheckQuery;     \
+   } while (0)
 
-extern void
-_mesa_begin_query(GLcontext *ctx, struct gl_query_object *q);
 
-extern void
-_mesa_end_query(GLcontext *ctx, struct gl_query_object *q);
-
-extern void
-_mesa_wait_query(GLcontext *ctx, struct gl_query_object *q);
+static INLINE struct gl_query_object *
+_mesa_lookup_query_object(GLcontext *ctx, GLuint id)
+{
+   return (struct gl_query_object *)
+      _mesa_HashLookup(ctx->Query.QueryObjects, id);
+}
 
 
 extern void GLAPIENTRY
@@ -59,12 +62,6 @@ extern GLboolean GLAPIENTRY
 _mesa_IsQueryARB(GLuint id);
 
 extern void GLAPIENTRY
-_mesa_BeginQueryARB(GLenum target, GLuint id);
-
-extern void GLAPIENTRY
-_mesa_EndQueryARB(GLenum target);
-
-extern void GLAPIENTRY
 _mesa_GetQueryivARB(GLenum target, GLenum pname, GLint *params);
 
 extern void GLAPIENTRY
@@ -73,11 +70,33 @@ _mesa_GetQueryObjectivARB(GLuint id, GLenum pname, GLint *params);
 extern void GLAPIENTRY
 _mesa_GetQueryObjectuivARB(GLuint id, GLenum pname, GLuint *params);
 
-extern void GLAPIENTRY
-_mesa_GetQueryObjecti64vEXT(GLuint id, GLenum pname, GLint64EXT *params);
+extern void
+_mesa_init_query_object_functions(struct dd_function_table *driver);
 
-extern void GLAPIENTRY
-_mesa_GetQueryObjectui64vEXT(GLuint id, GLenum pname, GLuint64EXT *params);
+extern void
+_mesa_init_queryobj_dispatch(struct _glapi_table *disp);
+
+#else /* FEATURE_queryobj */
+
+#define _MESA_INIT_QUERYOBJ_FUNCTIONS(driver, impl) do { } while (0)
+
+static INLINE void
+_mesa_init_query_object_functions(struct dd_function_table *driver)
+{
+}
+
+static INLINE void
+_mesa_init_queryobj_dispatch(struct _glapi_table *disp)
+{
+}
+
+#endif /* FEATURE_queryobj */
+
+extern void
+_mesa_init_queryobj(GLcontext *ctx);
+
+extern void
+_mesa_free_queryobj_data(GLcontext *ctx);
 
 
-#endif /* OCCLUDE_H */
+#endif /* QUERYOBJ_H */

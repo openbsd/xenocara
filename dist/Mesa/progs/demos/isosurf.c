@@ -27,13 +27,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #ifdef _WIN32
 #include <windows.h>
 #undef CLIP_MASK
 #endif
-#define GL_GLEXT_PROTOTYPES
+#include <GL/glew.h>
 #include "GL/glut.h"
 
 #include "readtex.h"
@@ -69,6 +68,7 @@
 #define NO_STIPPLE	0x08000000
 #define POLYGON_FILL	0x10000000
 #define POLYGON_LINE	0x20000000
+#define POLYGON_POINT	0x40000000
 
 #define LIGHT_MASK		(LIT|UNLIT|REFLECT)
 #define FILTER_MASK		(POINT_FILTER|LINEAR_FILTER)
@@ -81,7 +81,7 @@
 #define SHADE_MASK		(SHADE_SMOOTH|SHADE_FLAT)
 #define FOG_MASK		(FOG|NO_FOG)
 #define STIPPLE_MASK		(STIPPLE|NO_STIPPLE)
-#define POLYGON_MASK		(POLYGON_FILL|POLYGON_LINE)
+#define POLYGON_MASK		(POLYGON_FILL|POLYGON_LINE|POLYGON_POINT)
 
 #define MAXVERTS 10000
 static GLint maxverts = MAXVERTS;
@@ -131,9 +131,11 @@ static void read_surface( char *filename )
 
    numverts = 0;
    while (!feof(f) && numverts<maxverts) {
-      fscanf( f, "%f %f %f  %f %f %f",
-	      &data[numverts][0], &data[numverts][1], &data[numverts][2],
-	      &data[numverts][3], &data[numverts][4], &data[numverts][5] );
+      int result;
+      result = fscanf( f, "%f %f %f  %f %f %f",
+	               &data[numverts][0], &data[numverts][1], &data[numverts][2],
+	               &data[numverts][3], &data[numverts][4], &data[numverts][5] );
+      (void) result;
       numverts++;
    }
    numverts--;
@@ -147,7 +149,7 @@ static void read_surface( char *filename )
 static void print_flags( const char *msg, GLuint flags ) 
 {
    fprintf(stderr, 
-	   "%s (0x%x): %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+	   "%s (0x%x): %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 	   msg, flags,
 	   (flags & GLVERTEX) ? "glVertex, " : "",
 	   (flags & DRAW_ARRAYS) ? "glDrawArrays, " : "",
@@ -166,7 +168,8 @@ static void print_flags( const char *msg, GLuint flags )
 	   (flags & MATERIALS) ? "materials, " : "",
 	   (flags & FOG) ? "fog, " : "",
 	   (flags & STIPPLE) ? "stipple, " : "",
-	   (flags & POLYGON_LINE) ? "polygon mode line, " : "");
+	   (flags & POLYGON_LINE) ? "polygon mode line, " : "",
+	   (flags & POLYGON_POINT) ? "polygon mode point, " : "");
 }
 
 
@@ -512,12 +515,27 @@ static void draw_surface( unsigned int with_state )
       break;
 
    case (GLVERTEX|STRIPS):
-      glBegin( GL_TRIANGLE_STRIP );
-      for (i=0;i<numverts;i++) {
-         glNormal3fv( &data[i][3] );
-         glVertex3fv( &data[i][0] );
+      if (with_state & MATERIALS) {
+         glBegin( GL_TRIANGLE_STRIP );
+         for (i=0;i<numverts;i++) {
+            if (i % 600 == 0 && i != 0) {
+               unsigned j = i / 600;
+               glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, col[j]);
+               glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, col[j]);
+            }
+            glNormal3fv( &data[i][3] );
+            glVertex3fv( &data[i][0] );
+         }
+         glEnd();
       }
-      glEnd();
+      else {
+         glBegin( GL_TRIANGLE_STRIP );
+         for (i=0;i<numverts;i++) {
+            glNormal3fv( &data[i][3] );
+            glVertex3fv( &data[i][0] );
+         }
+         glEnd();
+      }
       break;
 
    default:
@@ -711,8 +729,11 @@ static void ModeMenu(int m)
       if (m & POLYGON_FILL) {
 	 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       }
-      else {
+      else if (m & POLYGON_LINE) {
 	 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      }
+      else {
+	 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
       }
    }
 
@@ -827,8 +848,8 @@ static void Init(int argc, char *argv[])
 
    glClearColor(0.0, 0.0, 1.0, 0.0);
    glEnable( GL_DEPTH_TEST );
-   glEnable( GL_VERTEX_ARRAY_EXT );
-   glEnable( GL_NORMAL_ARRAY_EXT );
+   glEnableClientState( GL_VERTEX_ARRAY );
+   glEnableClientState( GL_NORMAL_ARRAY );
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -1033,7 +1054,6 @@ static GLint Args(int argc, char **argv)
 int main(int argc, char **argv)
 {
    GLenum type;
-   char *extensions;
 
    GLuint arg_mode = Args(argc, argv);
 
@@ -1042,9 +1062,8 @@ int main(int argc, char **argv)
 
    read_surface( "isosurf.dat" );
 
-   glutInit( &argc, argv);
-   glutInitWindowPosition(0, 0);
    glutInitWindowSize(400, 400);
+   glutInit( &argc, argv);
 
    type = GLUT_DEPTH;
    type |= GLUT_RGB;
@@ -1055,15 +1074,15 @@ int main(int argc, char **argv)
       exit(0);
    }
 
-   /* Make sure server supports the vertex array extension */
-   extensions = (char *) glGetString( GL_EXTENSIONS );
+   glewInit();
 
-   if (!strstr( extensions, "GL_EXT_vertex_array" ))
+   /* Make sure server supports the vertex array extension */
+   if (!GLEW_EXT_vertex_array)
    {
       printf("Vertex arrays not supported by this renderer\n");
       allowed &= ~(LOCKED|DRAW_ARRAYS|DRAW_ELTS|ARRAY_ELT);
    }
-   else if (!strstr( extensions, "GL_EXT_compiled_vertex_array" ))
+   else if (!GLEW_EXT_compiled_vertex_array)
    {
       printf("Compiled vertex arrays not supported by this renderer\n");
       allowed &= ~LOCKED;
@@ -1090,6 +1109,7 @@ int main(int argc, char **argv)
    glutAddMenuEntry("", 0);
    glutAddMenuEntry("Polygon Mode Fill",     POLYGON_FILL);
    glutAddMenuEntry("Polygon Mode Line",     POLYGON_LINE);
+   glutAddMenuEntry("Polygon Mode Points",   POLYGON_POINT);
    glutAddMenuEntry("", 0);
    glutAddMenuEntry("Point Filtered",        POINT_FILTER);
    glutAddMenuEntry("Linear Filtered",       LINEAR_FILTER);

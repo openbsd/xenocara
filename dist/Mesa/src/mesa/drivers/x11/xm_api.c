@@ -79,6 +79,7 @@
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
 #include "drivers/common/driverfuncs.h"
+#include "drivers/common/meta.h"
 
 /**
  * Global X driver lock
@@ -252,7 +253,7 @@ bits_per_pixel( XMesaVisual xmv )
    /* grab the bits/pixel value */
    bitsPerPixel = img->bits_per_pixel;
    /* free the XImage */
-   _mesa_free( img->data );
+   free( img->data );
    img->data = NULL;
    XMesaDestroyImage( img );
    return bitsPerPixel;
@@ -374,7 +375,7 @@ create_xmesa_buffer(XMesaDrawable d, BufferType type,
    b->type = type;
    b->cmap = cmap;
 
-   _mesa_initialize_framebuffer(&b->mesa_buffer, &vis->mesa_visual);
+   _mesa_initialize_window_framebuffer(&b->mesa_buffer, &vis->mesa_visual);
    b->mesa_buffer.Delete = xmesa_delete_framebuffer;
 
    /*
@@ -382,7 +383,7 @@ create_xmesa_buffer(XMesaDrawable d, BufferType type,
     */
    b->frontxrb = xmesa_new_renderbuffer(NULL, 0, &vis->mesa_visual, GL_FALSE);
    if (!b->frontxrb) {
-      _mesa_free(b);
+      free(b);
       return NULL;
    }
    b->frontxrb->Parent = b;
@@ -398,7 +399,7 @@ create_xmesa_buffer(XMesaDrawable d, BufferType type,
       b->backxrb = xmesa_new_renderbuffer(NULL, 0, &vis->mesa_visual, GL_TRUE);
       if (!b->backxrb) {
          /* XXX free front xrb too */
-         _mesa_free(b);
+         free(b);
          return NULL;
       }
       b->backxrb->Parent = b;
@@ -492,7 +493,7 @@ xmesa_free_buffer(XMesaBuffer buffer)
          b->frontxrb->drawable = 0;
 
          /* Unreference.  If count = zero we'll really delete the buffer */
-         _mesa_unreference_framebuffer(&fb);
+         _mesa_reference_framebuffer(&fb, NULL);
 
          return;
       }
@@ -510,12 +511,12 @@ xmesa_free_buffer(XMesaBuffer buffer)
 static void
 copy_colortable_info(XMesaBuffer dst, const XMesaBuffer src)
 {
-   MEMCPY(dst->color_table, src->color_table, sizeof(src->color_table));
-   MEMCPY(dst->pixel_to_r, src->pixel_to_r, sizeof(src->pixel_to_r));
-   MEMCPY(dst->pixel_to_g, src->pixel_to_g, sizeof(src->pixel_to_g));
-   MEMCPY(dst->pixel_to_b, src->pixel_to_b, sizeof(src->pixel_to_b));
+   memcpy(dst->color_table, src->color_table, sizeof(src->color_table));
+   memcpy(dst->pixel_to_r, src->pixel_to_r, sizeof(src->pixel_to_r));
+   memcpy(dst->pixel_to_g, src->pixel_to_g, sizeof(src->pixel_to_g));
+   memcpy(dst->pixel_to_b, src->pixel_to_b, sizeof(src->pixel_to_b));
    dst->num_alloced = src->num_alloced;
-   MEMCPY(dst->alloced_colors, src->alloced_colors,
+   memcpy(dst->alloced_colors, src->alloced_colors,
           sizeof(src->alloced_colors));
 }
 
@@ -595,7 +596,7 @@ noFaultXAllocColor( int client,
        || prevCmapSize != cmapSize || !ctable) {
       /* free previously cached color table */
       if (ctable)
-         _mesa_free(ctable);
+         free(ctable);
       /* Get the color table from X */
       ctable = (XMesaColor *) MALLOC(cmapSize * sizeof(XMesaColor));
       assert(ctable);
@@ -651,8 +652,8 @@ noFaultXAllocColor( int client,
       *alloced = 0;
    }
 #ifdef XFree86Server
-   _mesa_free(ppixIn);
-   _mesa_free(ctable);
+   free(ppixIn);
+   free(ctable);
 #else
    /* don't free table, save it for next time */
 #endif
@@ -683,9 +684,7 @@ setup_grayscale(int client, XMesaVisual v,
       }
 
       prevBuffer = xmesa_find_buffer(v->display, cmap, buffer);
-      if (prevBuffer &&
-          (buffer->xm_visual->mesa_visual.rgbMode ==
-           prevBuffer->xm_visual->mesa_visual.rgbMode)) {
+      if (prevBuffer) {
          /* Copy colormap stuff from previous XMesaBuffer which uses same
           * X colormap.  Do this to avoid time spent in noFaultXAllocColor.
           */
@@ -772,9 +771,7 @@ setup_dithered_color(int client, XMesaVisual v,
       }
 
       prevBuffer = xmesa_find_buffer(v->display, cmap, buffer);
-      if (prevBuffer &&
-          (buffer->xm_visual->mesa_visual.rgbMode ==
-           prevBuffer->xm_visual->mesa_visual.rgbMode)) {
+      if (prevBuffer) {
          /* Copy colormap stuff from previous, matching XMesaBuffer.
           * Do this to avoid time spent in noFaultXAllocColor.
           */
@@ -1046,10 +1043,11 @@ setup_monochrome( XMesaVisual v, XMesaBuffer b )
  */
 static GLboolean
 initialize_visual_and_buffer(XMesaVisual v, XMesaBuffer b,
-                             GLboolean rgb_flag, XMesaDrawable window,
+                             XMesaDrawable window,
                              XMesaColormap cmap)
 {
    int client = 0;
+   const int xclass = v->mesa_visual.visualType;
 
 #ifdef XFree86Server
    client = (window) ? CLIENT_ID(window->id) : 0;
@@ -1061,45 +1059,34 @@ initialize_visual_and_buffer(XMesaVisual v, XMesaBuffer b,
    v->BitsPerPixel = bits_per_pixel(v);
    assert(v->BitsPerPixel > 0);
 
-   if (rgb_flag == GL_FALSE) {
-      /* COLOR-INDEXED WINDOW:
-       * Even if the visual is TrueColor or DirectColor we treat it as
-       * being color indexed.  This is weird but might be useful to someone.
-       */
-      v->dithered_pf = v->undithered_pf = PF_Index;
-      v->mesa_visual.indexBits = GET_VISUAL_DEPTH(v);
+   /* RGB WINDOW:
+    * We support RGB rendering into almost any kind of visual.
+    */
+   if (xclass == GLX_TRUE_COLOR || xclass == GLX_DIRECT_COLOR) {
+      setup_truecolor( v, b, cmap );
    }
-   else {
-      /* RGB WINDOW:
-       * We support RGB rendering into almost any kind of visual.
-       */
-      const int xclass = v->mesa_visual.visualType;
-      if (xclass == GLX_TRUE_COLOR || xclass == GLX_DIRECT_COLOR) {
-	 setup_truecolor( v, b, cmap );
-      }
-      else if (xclass == GLX_STATIC_GRAY && GET_VISUAL_DEPTH(v) == 1) {
-	 setup_monochrome( v, b );
-      }
-      else if (xclass == GLX_GRAY_SCALE || xclass == GLX_STATIC_GRAY) {
-         if (!setup_grayscale( client, v, b, cmap )) {
-            return GL_FALSE;
-         }
-      }
-      else if ((xclass == GLX_PSEUDO_COLOR || xclass == GLX_STATIC_COLOR)
-               && GET_VISUAL_DEPTH(v)>=4 && GET_VISUAL_DEPTH(v)<=16) {
-	 if (!setup_dithered_color( client, v, b, cmap )) {
-            return GL_FALSE;
-         }
-      }
-      else {
-	 _mesa_warning(NULL, "XMesa: RGB mode rendering not supported in given visual.\n");
+   else if (xclass == GLX_STATIC_GRAY && GET_VISUAL_DEPTH(v) == 1) {
+      setup_monochrome( v, b );
+   }
+   else if (xclass == GLX_GRAY_SCALE || xclass == GLX_STATIC_GRAY) {
+      if (!setup_grayscale( client, v, b, cmap )) {
 	 return GL_FALSE;
       }
-      v->mesa_visual.indexBits = 0;
-
-      if (_mesa_getenv("MESA_NO_DITHER")) {
-	 v->dithered_pf = v->undithered_pf;
+   }
+   else if ((xclass == GLX_PSEUDO_COLOR || xclass == GLX_STATIC_COLOR)
+	    && GET_VISUAL_DEPTH(v)>=4 && GET_VISUAL_DEPTH(v)<=16) {
+      if (!setup_dithered_color( client, v, b, cmap )) {
+	 return GL_FALSE;
       }
+   }
+   else {
+      _mesa_warning(NULL, "XMesa: RGB mode rendering not supported in given visual.\n");
+      return GL_FALSE;
+   }
+   v->mesa_visual.indexBits = 0;
+
+   if (_mesa_getenv("MESA_NO_DITHER")) {
+      v->dithered_pf = v->undithered_pf;
    }
 
 
@@ -1109,12 +1096,12 @@ initialize_visual_and_buffer(XMesaVisual v, XMesaBuffer b,
     * reports bugs.
     */
    if (_mesa_getenv("MESA_INFO")) {
-      _mesa_printf("X/Mesa visual = %p\n", (void *) v);
-      _mesa_printf("X/Mesa dithered pf = %u\n", v->dithered_pf);
-      _mesa_printf("X/Mesa undithered pf = %u\n", v->undithered_pf);
-      _mesa_printf("X/Mesa level = %d\n", v->mesa_visual.level);
-      _mesa_printf("X/Mesa depth = %d\n", GET_VISUAL_DEPTH(v));
-      _mesa_printf("X/Mesa bits per pixel = %d\n", v->BitsPerPixel);
+      printf("X/Mesa visual = %p\n", (void *) v);
+      printf("X/Mesa dithered pf = %u\n", v->dithered_pf);
+      printf("X/Mesa undithered pf = %u\n", v->undithered_pf);
+      printf("X/Mesa level = %d\n", v->mesa_visual.level);
+      printf("X/Mesa depth = %d\n", GET_VISUAL_DEPTH(v));
+      printf("X/Mesa bits per pixel = %d\n", v->BitsPerPixel);
    }
 
    if (b && window) {
@@ -1302,67 +1289,6 @@ xmesa_convert_from_x_visual_type( int visualType )
 /**********************************************************************/
 
 
-#ifdef IN_DRI_DRIVER
-#define need_GL_VERSION_1_3
-#define need_GL_VERSION_1_4
-#define need_GL_VERSION_1_5
-#define need_GL_VERSION_2_0
-
-/* sw extensions for imaging */
-#define need_GL_EXT_blend_color
-#define need_GL_EXT_blend_minmax
-#define need_GL_EXT_convolution
-#define need_GL_EXT_histogram
-#define need_GL_SGI_color_table
-
-/* sw extensions not associated with some GL version */
-#define need_GL_ARB_shader_objects
-#define need_GL_ARB_vertex_program
-#define need_GL_APPLE_vertex_array_object
-#define need_GL_ATI_fragment_shader
-#define need_GL_EXT_depth_bounds_test
-#define need_GL_EXT_framebuffer_object
-#define need_GL_EXT_framebuffer_blit
-#define need_GL_EXT_gpu_program_parameters
-#define need_GL_EXT_paletted_texture
-#define need_GL_IBM_multimode_draw_arrays
-#define need_GL_MESA_resize_buffers
-#define need_GL_NV_vertex_program
-#define need_GL_NV_fragment_program
-
-#include "extension_helper.h"
-#include "utils.h"
-
-const struct dri_extension card_extensions[] =
-{
-   { "GL_VERSION_1_3",			GL_VERSION_1_3_functions },
-   { "GL_VERSION_1_4",			GL_VERSION_1_4_functions },
-   { "GL_VERSION_1_5",			GL_VERSION_1_5_functions },
-   { "GL_VERSION_2_0",			GL_VERSION_2_0_functions },
-
-   { "GL_EXT_blend_color",		GL_EXT_blend_color_functions },
-   { "GL_EXT_blend_minmax",		GL_EXT_blend_minmax_functions },
-   { "GL_EXT_convolution",		GL_EXT_convolution_functions },
-   { "GL_EXT_histogram",		GL_EXT_histogram_functions },
-   { "GL_SGI_color_table",		GL_SGI_color_table_functions },
-
-   { "GL_ARB_shader_objects",		GL_ARB_shader_objects_functions },
-   { "GL_ARB_vertex_program",		GL_ARB_vertex_program_functions },
-   { "GL_APPLE_vertex_array_object",	GL_APPLE_vertex_array_object_functions },
-   { "GL_ATI_fragment_shader",		GL_ATI_fragment_shader_functions },
-   { "GL_EXT_depth_bounds_test",	GL_EXT_depth_bounds_test_functions },
-   { "GL_EXT_framebuffer_object",	GL_EXT_framebuffer_object_functions },
-   { "GL_EXT_framebuffer_blit",		GL_EXT_framebuffer_blit_functions },
-   { "GL_EXT_gpu_program_parameters",	GL_EXT_gpu_program_parameters_functions },
-   { "GL_EXT_paletted_texture",		GL_EXT_paletted_texture_functions },
-   { "GL_IBM_multimode_draw_arrays",	GL_IBM_multimode_draw_arrays_functions },
-   { "GL_MESA_resize_buffers",		GL_MESA_resize_buffers_functions },
-   { "GL_NV_vertex_program",		GL_NV_vertex_program_functions },
-   { "GL_NV_fragment_program",		GL_NV_fragment_program_functions },
-   { NULL,				NULL }
-};
-#endif
-
 /*
  * Create a new X/Mesa visual.
  * Input:  display - X11 display
@@ -1408,14 +1334,6 @@ XMesaVisual XMesaCreateVisual( XMesaDisplay *display,
    XMesaVisual v;
    GLint red_bits, green_bits, blue_bits, alpha_bits;
 
-#ifdef IN_DRI_DRIVER
-   /* driInitExtensions() should be called once per screen to setup extension
-    * indices.  There is no need to call it when the context is created since
-    * XMesa enables mesa sw extensions on its own.
-    */
-   driInitExtensions( NULL, card_extensions, GL_FALSE );
-#endif
-
 #ifndef XFree86Server
    /* For debugging only */
    if (_mesa_getenv("MESA_XSYNC")) {
@@ -1427,6 +1345,10 @@ XMesaVisual XMesaCreateVisual( XMesaDisplay *display,
    }
 #endif
 
+   /* Color-index rendering not supported. */
+   if (!rgb_flag)
+      return NULL;
+
    v = (XMesaVisual) CALLOC_STRUCT(xmesa_visual);
    if (!v) {
       return NULL;
@@ -1434,17 +1356,17 @@ XMesaVisual XMesaCreateVisual( XMesaDisplay *display,
 
    v->display = display;
 
-   /* Save a copy of the XVisualInfo struct because the user may X_mesa_free()
+   /* Save a copy of the XVisualInfo struct because the user may Xfree()
     * the struct but we may need some of the information contained in it
     * at a later time.
     */
 #ifndef XFree86Server
    v->visinfo = (XVisualInfo *) MALLOC(sizeof(*visinfo));
    if(!v->visinfo) {
-      _mesa_free(v);
+      free(v);
       return NULL;
    }
-   MEMCPY(v->visinfo, visinfo, sizeof(*visinfo));
+   memcpy(v->visinfo, visinfo, sizeof(*visinfo));
 #endif
 
    /* check for MESA_GAMMA environment variable */
@@ -1496,7 +1418,7 @@ XMesaVisual XMesaCreateVisual( XMesaDisplay *display,
    if (alpha_flag)
       v->mesa_visual.alphaBits = 8;
 
-   (void) initialize_visual_and_buffer( v, NULL, rgb_flag, 0, 0 );
+   (void) initialize_visual_and_buffer( v, NULL, 0, 0 );
 
    {
       const int xclass = v->mesa_visual.visualType;
@@ -1521,10 +1443,9 @@ XMesaVisual XMesaCreateVisual( XMesaDisplay *display,
    }
 
    _mesa_initialize_visual( &v->mesa_visual,
-                            rgb_flag, db_flag, stereo_flag,
+                            db_flag, stereo_flag,
                             red_bits, green_bits,
                             blue_bits, alpha_bits,
-                            v->mesa_visual.indexBits,
                             depth_size,
                             stencil_size,
                             accum_red_size, accum_green_size,
@@ -1541,9 +1462,9 @@ PUBLIC
 void XMesaDestroyVisual( XMesaVisual v )
 {
 #ifndef XFree86Server
-   _mesa_free(v->visinfo);
+   free(v->visinfo);
 #endif
-   _mesa_free(v);
+   free(v);
 }
 
 
@@ -1582,8 +1503,16 @@ XMesaContext XMesaCreateContext( XMesaVisual v, XMesaContext share_list )
    if (!_mesa_initialize_context(mesaCtx, &v->mesa_visual,
                       share_list ? &(share_list->mesa) : (GLcontext *) NULL,
                       &functions, (void *) c)) {
-      _mesa_free(c);
+      free(c);
       return NULL;
+   }
+
+   /* Enable this to exercise fixed function -> shader translation
+    * with software rendering.
+    */
+   if (0) {
+      mesaCtx->VertexProgram._MaintainTnlProgram = GL_TRUE;
+      mesaCtx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
    }
 
    _mesa_enable_sw_extensions(mesaCtx);
@@ -1624,7 +1553,7 @@ XMesaContext XMesaCreateContext( XMesaVisual v, XMesaContext share_list )
        !_tnl_CreateContext( mesaCtx ) ||
        !_swsetup_CreateContext( mesaCtx )) {
       _mesa_free_context_data(&c->mesa);
-      _mesa_free(c);
+      free(c);
       return NULL;
    }
 
@@ -1634,6 +1563,8 @@ XMesaContext XMesaCreateContext( XMesaVisual v, XMesaContext share_list )
    /* swrast setup */
    xmesa_register_swrast_functions( mesaCtx );
    _swsetup_Wakeup(mesaCtx);
+
+   _mesa_meta_init(mesaCtx);
 
    return c;
 }
@@ -1649,12 +1580,14 @@ void XMesaDestroyContext( XMesaContext c )
    FXdestroyContext( XMESA_BUFFER(mesaCtx->DrawBuffer) );
 #endif
 
+   _mesa_meta_free( mesaCtx );
+
    _swsetup_DestroyContext( mesaCtx );
    _swrast_DestroyContext( mesaCtx );
    _tnl_DestroyContext( mesaCtx );
    _vbo_DestroyContext( mesaCtx );
    _mesa_free_context_data( mesaCtx );
-   _mesa_free( c );
+   free( c );
 }
 
 
@@ -1711,8 +1644,7 @@ XMesaCreateWindowBuffer(XMesaVisual v, XMesaWindow w)
    if (!b)
       return NULL;
 
-   if (!initialize_visual_and_buffer( v, b, v->mesa_visual.rgbMode,
-                                      (XMesaDrawable) w, cmap )) {
+   if (!initialize_visual_and_buffer( v, b, (XMesaDrawable) w, cmap )) {
       xmesa_free_buffer(b);
       return NULL;
    }
@@ -1742,8 +1674,7 @@ XMesaCreatePixmapBuffer(XMesaVisual v, XMesaPixmap p, XMesaColormap cmap)
    if (!b)
       return NULL;
 
-   if (!initialize_visual_and_buffer(v, b, v->mesa_visual.rgbMode,
-				     (XMesaDrawable) p, cmap)) {
+   if (!initialize_visual_and_buffer(v, b, (XMesaDrawable) p, cmap)) {
       xmesa_free_buffer(b);
       return NULL;
    }
@@ -1803,8 +1734,7 @@ XMesaCreatePixmapTextureBuffer(XMesaVisual v, XMesaPixmap p,
    b->TextureFormat = format;
    b->TextureMipmap = mipmap;
 
-   if (!initialize_visual_and_buffer(v, b, v->mesa_visual.rgbMode,
-				     (XMesaDrawable) p, cmap)) {
+   if (!initialize_visual_and_buffer(v, b, (XMesaDrawable) p, cmap)) {
       xmesa_free_buffer(b);
       return NULL;
    }
@@ -1834,8 +1764,7 @@ XMesaCreatePBuffer(XMesaVisual v, XMesaColormap cmap,
    if (!b)
       return NULL;
 
-   if (!initialize_visual_and_buffer(v, b, v->mesa_visual.rgbMode,
-				     drawable, cmap)) {
+   if (!initialize_visual_and_buffer(v, b, drawable, cmap)) {
       xmesa_free_buffer(b);
       return NULL;
    }
@@ -1930,19 +1859,17 @@ GLboolean XMesaMakeCurrent2( XMesaContext c, XMesaBuffer drawBuffer,
                          &drawBuffer->mesa_buffer,
                          &readBuffer->mesa_buffer);
 
-      if (c->xm_visual->mesa_visual.rgbMode) {
-         /*
-          * Must recompute and set these pixel values because colormap
-          * can be different for different windows.
-          */
-         c->clearpixel = xmesa_color_to_pixel( &c->mesa,
-                                               c->clearcolor[0],
-                                               c->clearcolor[1],
-                                               c->clearcolor[2],
-                                               c->clearcolor[3],
-                                               c->xm_visual->undithered_pf);
-         XMesaSetForeground(c->display, drawBuffer->cleargc, c->clearpixel);
-      }
+      /*
+       * Must recompute and set these pixel values because colormap
+       * can be different for different windows.
+       */
+      c->clearpixel = xmesa_color_to_pixel( &c->mesa,
+					    c->clearcolor[0],
+					    c->clearcolor[1],
+					    c->clearcolor[2],
+					    c->clearcolor[3],
+					    c->xm_visual->undithered_pf);
+      XMesaSetForeground(c->display, drawBuffer->cleargc, c->clearpixel);
 
       /* Solution to Stephane Rehel's problem with glXReleaseBuffersMESA(): */
       drawBuffer->wasCurrent = GL_TRUE;
@@ -2412,11 +2339,8 @@ xbuffer_to_renderbuffer(int buffer)
    case GLX_AUX0_EXT:
       return BUFFER_AUX0;
    case GLX_AUX1_EXT:
-      return BUFFER_AUX1;
    case GLX_AUX2_EXT:
-      return BUFFER_AUX2;
    case GLX_AUX3_EXT:
-      return BUFFER_AUX3;
    case GLX_AUX4_EXT:
    case GLX_AUX5_EXT:
    case GLX_AUX6_EXT:

@@ -30,7 +30,7 @@
  * it (via \c glPopClientAttrib).  After popping, the state of the VAO is
  * examined.
  * 
- * According the the APPLE_vertex_array_object spec, the contents of the VAO
+ * According to the APPLE_vertex_array_object spec, the contents of the VAO
  * should be restored to the values that they had when pushed.
  * 
  * \author Ian Romanick <idr@us.ibm.com>
@@ -49,6 +49,7 @@ typedef void (* PFNGLGENVERTEXARRAYSAPPLEPROC) (GLsizei n, GLuint *arrays);
 typedef GLboolean (* PFNGLISVERTEXARRAYAPPLEPROC) (GLuint array);
 
 #else
+#include <GL/glew.h>
 #include <GL/glut.h>
 #endif
 
@@ -124,10 +125,10 @@ static void Init( void )
       exit(2);
    }
 
-   bind_vertex_array = glutGetProcAddress( "glBindVertexArrayAPPLE" );
-   gen_vertex_arrays = glutGetProcAddress( "glGenVertexArraysAPPLE" );
-   delete_vertex_arrays = glutGetProcAddress( "glDeleteVertexArraysAPPLE" );
-   is_vertex_array = glutGetProcAddress( "glIsVertexArrayAPPLE" );
+   bind_vertex_array = (PFNGLBINDVERTEXARRAYAPPLEPROC) glutGetProcAddress( "glBindVertexArrayAPPLE" );
+   gen_vertex_arrays = (PFNGLGENVERTEXARRAYSAPPLEPROC) glutGetProcAddress( "glGenVertexArraysAPPLE" );
+   delete_vertex_arrays = (PFNGLDELETEVERTEXARRAYSAPPLEPROC) glutGetProcAddress( "glDeleteVertexArraysAPPLE" );
+   is_vertex_array = (PFNGLISVERTEXARRAYAPPLEPROC) glutGetProcAddress( "glIsVertexArrayAPPLE" );
 
 
    (*gen_vertex_arrays)( 1, & obj );
@@ -194,6 +195,7 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( Width, Height );
    glutInitDisplayMode( GLUT_RGB );
    glutCreateWindow( "GL_APPLE_vertex_array_object demo" );
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

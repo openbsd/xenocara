@@ -55,24 +55,25 @@ _swrast_update_rasterflags( GLcontext *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLbitfield rasterMask = 0;
+   GLuint i;
 
    if (ctx->Color.AlphaEnabled)           rasterMask |= ALPHATEST_BIT;
    if (ctx->Color.BlendEnabled)           rasterMask |= BLEND_BIT;
    if (ctx->Depth.Test)                   rasterMask |= DEPTH_BIT;
    if (swrast->_FogEnabled)               rasterMask |= FOG_BIT;
    if (ctx->Scissor.Enabled)              rasterMask |= CLIP_BIT;
-   if (ctx->Stencil.Enabled)              rasterMask |= STENCIL_BIT;
-   if (ctx->Visual.rgbMode) {
-      const GLuint colorMask = *((GLuint *) &ctx->Color.ColorMask);
-      if (colorMask != 0xffffffff)        rasterMask |= MASKING_BIT;
-      if (ctx->Color._LogicOpEnabled)     rasterMask |= LOGIC_OP_BIT;
-      if (ctx->Texture._EnabledUnits)     rasterMask |= TEXTURE_BIT;
+   if (ctx->Stencil._Enabled)             rasterMask |= STENCIL_BIT;
+   for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
+      if (!ctx->Color.ColorMask[i][0] ||
+          !ctx->Color.ColorMask[i][1] ||
+          !ctx->Color.ColorMask[i][2] ||
+          !ctx->Color.ColorMask[i][3]) {
+         rasterMask |= MASKING_BIT;
+         break;
+      }
    }
-   else {
-      if (ctx->Color.IndexMask != 0xffffffff) rasterMask |= MASKING_BIT;
-      if (ctx->Color.IndexLogicOpEnabled)     rasterMask |= LOGIC_OP_BIT;
-   }
-
+   if (ctx->Color._LogicOpEnabled)     rasterMask |= LOGIC_OP_BIT;
+   if (ctx->Texture._EnabledUnits)     rasterMask |= TEXTURE_BIT;
    if (   ctx->Viewport.X < 0
        || ctx->Viewport.X + ctx->Viewport.Width > (GLint) ctx->DrawBuffer->Width
        || ctx->Viewport.Y < 0
@@ -92,12 +93,17 @@ _swrast_update_rasterflags( GLcontext *ctx )
       /* more than one color buffer designated for writing (or zero buffers) */
       rasterMask |= MULTI_DRAW_BIT;
    }
-   else if (ctx->Visual.rgbMode && *((GLuint *) ctx->Color.ColorMask) == 0) {
-      rasterMask |= MULTI_DRAW_BIT; /* all RGBA channels disabled */
+
+   for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
+      if (ctx->Color.ColorMask[i][0] +
+          ctx->Color.ColorMask[i][1] +
+          ctx->Color.ColorMask[i][2] +
+          ctx->Color.ColorMask[i][3] == 0) {
+         rasterMask |= MULTI_DRAW_BIT; /* all RGBA channels disabled */
+         break;
+      }
    }
-   else if (!ctx->Visual.rgbMode && ctx->Color.IndexMask==0) {
-      rasterMask |= MULTI_DRAW_BIT; /* all color index bits disabled */
-   }
+
 
    if (ctx->FragmentProgram._Current) {
       rasterMask |= FRAGPROG_BIT;
@@ -131,26 +137,26 @@ _swrast_update_polygon( GLcontext *ctx )
    if (ctx->Polygon.CullFlag) {
       switch (ctx->Polygon.CullFaceMode) {
       case GL_BACK:
-         backface_sign = -1.0;
+         backface_sign = -1.0F;
 	 break;
       case GL_FRONT:
-         backface_sign = 1.0;
+         backface_sign = 1.0F;
 	 break;
       case GL_FRONT_AND_BACK:
          /* fallthrough */
       default:
-	 backface_sign = 0.0;
+	 backface_sign = 0.0F;
       }
    }
    else {
-      backface_sign = 0.0;
+      backface_sign = 0.0F;
    }
 
    SWRAST_CONTEXT(ctx)->_BackfaceCullSign = backface_sign;
 
    /* This is for front/back-face determination, but not for culling */
    SWRAST_CONTEXT(ctx)->_BackfaceSign
-      = (ctx->Polygon.FrontFace == GL_CW) ? -1.0 : 1.0;
+      = (ctx->Polygon.FrontFace == GL_CW) ? -1.0F : 1.0F;
 }
 
 
@@ -172,19 +178,29 @@ _swrast_update_fog_hint( GLcontext *ctx )
 
 
 /**
- * Update the swrast->_AnyTextureCombine flag.
+ * Update the swrast->_TextureCombinePrimary flag.
  */
 static void
 _swrast_update_texture_env( GLcontext *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLuint i;
-   swrast->_AnyTextureCombine = GL_FALSE;
+
+   swrast->_TextureCombinePrimary = GL_FALSE;
+
    for (i = 0; i < ctx->Const.MaxTextureUnits; i++) {
-      if (ctx->Texture.Unit[i].EnvMode == GL_COMBINE_EXT ||
-          ctx->Texture.Unit[i].EnvMode == GL_COMBINE4_NV) {
-         swrast->_AnyTextureCombine = GL_TRUE;
-         return;
+      const struct gl_tex_env_combine_state *combine =
+         ctx->Texture.Unit[i]._CurrentCombine;
+      GLuint term;
+      for (term = 0; term < combine->_NumArgsRGB; term++) {
+         if (combine->SourceRGB[term] == GL_PRIMARY_COLOR) {
+            swrast->_TextureCombinePrimary = GL_TRUE;
+            return;
+         }
+         if (combine->SourceA[term] == GL_PRIMARY_COLOR) {
+            swrast->_TextureCombinePrimary = GL_TRUE;
+            return;
+         }
       }
    }
 }
@@ -206,8 +222,11 @@ _swrast_update_deferred_texture(GLcontext *ctx)
    else {
       const struct gl_fragment_program *fprog
          = ctx->FragmentProgram._Current;
-      if (fprog && (fprog->Base.OutputsWritten & (1 << FRAG_RESULT_DEPR))) {
+      if (fprog && (fprog->Base.OutputsWritten & (1 << FRAG_RESULT_DEPTH))) {
          /* Z comes from fragment program/shader */
+         swrast->_DeferredTexture = GL_FALSE;
+      }
+      else if (fprog && fprog->UsesKill) {
          swrast->_DeferredTexture = GL_FALSE;
       }
       else if (ctx->Query.CurrentOcclusionObject) {
@@ -254,19 +273,32 @@ _swrast_update_fragment_program(GLcontext *ctx, GLbitfield newState)
 {
    const struct gl_fragment_program *fp = ctx->FragmentProgram._Current;
    if (fp) {
-#if 0
-      /* XXX Need a way to trigger the initial loading of parameters
-       * even when there's no recent state changes.
-       */
-      if (fp->Base.Parameters->StateFlags & newState)
-#endif
-         _mesa_load_state_parameters(ctx, fp->Base.Parameters);
+      _mesa_load_state_parameters(ctx, fp->Base.Parameters);
    }
 }
 
 
+/**
+ * See if we can do early diffuse+specular (primary+secondary) color
+ * add per vertex instead of per-fragment.
+ */
+static void
+_swrast_update_specular_vertex_add(GLcontext *ctx)
+{
+   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+   GLboolean separateSpecular = ctx->Fog.ColorSumEnabled ||
+      (ctx->Light.Enabled &&
+       ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR);
+
+   swrast->SpecularVertexAdd = (separateSpecular
+                                && ctx->Texture._EnabledUnits == 0x0
+                                && !ctx->FragmentProgram._Current
+                                && !ctx->ATIFragmentShader._Enabled);
+}
+
 
 #define _SWRAST_NEW_DERIVED (_SWRAST_NEW_RASTERMASK |	\
+                             _NEW_PROGRAM_CONSTANTS |   \
 			     _NEW_TEXTURE |		\
 			     _NEW_HINT |		\
 			     _NEW_POLYGON )
@@ -326,9 +358,7 @@ _swrast_validate_triangle( GLcontext *ctx,
    swrast->choose_triangle( ctx );
    ASSERT(swrast->Triangle);
 
-   if (ctx->Texture._EnabledUnits == 0
-       && NEED_SECONDARY_COLOR(ctx)
-       && !ctx->FragmentProgram._Current) {
+   if (swrast->SpecularVertexAdd) {
       /* separate specular color, but no texture */
       swrast->SpecTriangle = swrast->Triangle;
       swrast->Triangle = _swrast_add_spec_terms_triangle;
@@ -350,9 +380,7 @@ _swrast_validate_line( GLcontext *ctx, const SWvertex *v0, const SWvertex *v1 )
    swrast->choose_line( ctx );
    ASSERT(swrast->Line);
 
-   if (ctx->Texture._EnabledUnits == 0
-       && NEED_SECONDARY_COLOR(ctx)
-       && !ctx->FragmentProgram._Current) {
+   if (swrast->SpecularVertexAdd) {
       swrast->SpecLine = swrast->Line;
       swrast->Line = _swrast_add_spec_terms_line;
    }
@@ -372,9 +400,7 @@ _swrast_validate_point( GLcontext *ctx, const SWvertex *v0 )
    _swrast_validate_derived( ctx );
    swrast->choose_point( ctx );
 
-   if (ctx->Texture._EnabledUnits == 0
-       && NEED_SECONDARY_COLOR(ctx)
-       && !ctx->FragmentProgram._Current) {
+   if (swrast->SpecularVertexAdd) {
       swrast->SpecPoint = swrast->Point;
       swrast->Point = _swrast_add_spec_terms_point;
    }
@@ -502,13 +528,6 @@ _swrast_invalidate_state( GLcontext *ctx, GLbitfield new_state )
       new_state = ~0;
    }
 
-   {
-      const struct gl_fragment_program *fp = ctx->FragmentProgram._Current;
-      if (fp && (fp->Base.Parameters->StateFlags & new_state)) {
-         _mesa_load_state_parameters(ctx, fp->Base.Parameters);
-      }
-   }
-
    if (new_state & swrast->InvalidateTriangleMask)
       swrast->Triangle = _swrast_validate_triangle;
 
@@ -532,6 +551,9 @@ _swrast_update_texture_samplers(GLcontext *ctx)
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    GLuint u;
+
+   if (!swrast)
+      return; /* pipe hack */
 
    for (u = 0; u < ctx->Const.MaxTextureImageUnits; u++) {
       const struct gl_texture_object *tObj = ctx->Texture.Unit[u]._Current;
@@ -622,17 +644,7 @@ _swrast_validate_derived( GLcontext *ctx )
       if (swrast->NewState & (_NEW_FOG | _NEW_PROGRAM))
          _swrast_update_fog_state( ctx );
 
-      if (swrast->NewState & (_NEW_MODELVIEW |
-                              _NEW_PROJECTION |
-                              _NEW_TEXTURE_MATRIX |
-                              _NEW_FOG |
-                              _NEW_LIGHT |
-                              _NEW_LINE |
-                              _NEW_TEXTURE |
-                              _NEW_TRANSFORM |
-                              _NEW_POINT |
-                              _NEW_VIEWPORT |
-                              _NEW_PROGRAM))
+      if (swrast->NewState & (_NEW_PROGRAM_CONSTANTS | _NEW_PROGRAM))
 	 _swrast_update_fragment_program( ctx, swrast->NewState );
 
       if (swrast->NewState & (_NEW_TEXTURE | _NEW_PROGRAM)) {
@@ -652,6 +664,12 @@ _swrast_validate_derived( GLcontext *ctx )
                               _NEW_PROGRAM |
                               _NEW_TEXTURE))
          _swrast_update_active_attribs(ctx);
+
+      if (swrast->NewState & (_NEW_FOG | 
+                              _NEW_PROGRAM |
+                              _NEW_LIGHT |
+                              _NEW_TEXTURE))
+         _swrast_update_specular_vertex_add(ctx);
 
       swrast->NewState = 0;
       swrast->StateChanges = 0;
@@ -817,8 +835,8 @@ _swrast_CreateContext( GLcontext *ctx )
    swrast->PointSpan.facing = 0;
    swrast->PointSpan.array = swrast->SpanArrays;
 
-   swrast->TexelBuffer = (GLchan *) MALLOC(ctx->Const.MaxTextureImageUnits *
-                                           MAX_WIDTH * 4 * sizeof(GLchan));
+   swrast->TexelBuffer = (GLfloat *) MALLOC(ctx->Const.MaxTextureImageUnits *
+                                           MAX_WIDTH * 4 * sizeof(GLfloat));
    if (!swrast->TexelBuffer) {
       FREE(swrast->SpanArrays);
       FREE(swrast);
@@ -862,12 +880,7 @@ _swrast_flush( GLcontext *ctx )
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    /* flush any pending fragments from rendering points */
    if (swrast->PointSpan.end > 0) {
-      if (ctx->Visual.rgbMode) {
-         _swrast_write_rgba_span(ctx, &(swrast->PointSpan));
-      }
-      else {
-         _swrast_write_index_span(ctx, &(swrast->PointSpan));
-      }
+      _swrast_write_rgba_span(ctx, &(swrast->PointSpan));
       swrast->PointSpan.end = 0;
    }
 }

@@ -36,7 +36,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/glheader.h"
 
 #include "radeon_context.h"
-#include "radeon_ioctl.h"
 #include "radeon_sanity.h"
 
 /* Set this '1' to get more verbiage.
@@ -44,11 +43,11 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define MORE_VERBOSE 1
 
 #if MORE_VERBOSE
-#define VERBOSE (RADEON_DEBUG & DEBUG_VERBOSE)
+#define VERBOSE (RADEON_DEBUG & RADEON_VERBOSE)
 #define NORMAL  (1)
 #else
 #define VERBOSE 0
-#define NORMAL  (RADEON_DEBUG & DEBUG_VERBOSE)
+#define NORMAL  (RADEON_DEBUG & RADEON_VERBOSE)
 #endif
 
 
@@ -973,7 +972,7 @@ static int radeon_emit_packet3_cliprect( drm_radeon_cmd_buffer_t *cmdbuf )
 }
 
 
-int radeonSanityCmdBuffer( radeonContextPtr rmesa,
+int radeonSanityCmdBuffer( r100ContextPtr rmesa,
 			   int nbox,
 			   drm_clip_rect_t *boxes )
 {

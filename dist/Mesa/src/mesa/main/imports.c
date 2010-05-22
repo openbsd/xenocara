@@ -48,6 +48,13 @@
 #include "context.h"
 #include "version.h"
 
+#ifdef _GNU_SOURCE
+#include <locale.h>
+#ifdef __APPLE__
+#include <xlocale.h>
+#endif
+#endif
+
 
 #define MAXSTRING 4000  /* for vsnprintf() */
 
@@ -63,27 +70,6 @@ extern int vsnprintf(char *str, size_t count, const char *fmt, va_list arg);
 /**********************************************************************/
 /** \name Memory */
 /*@{*/
-
-/** Wrapper around malloc() */
-void *
-_mesa_malloc(size_t bytes)
-{
-   return malloc(bytes);
-}
-
-/** Wrapper around calloc() */
-void *
-_mesa_calloc(size_t bytes)
-{
-   return calloc(1, bytes);
-}
-
-/** Wrapper around free() */
-void
-_mesa_free(void *ptr)
-{
-   free(ptr);
-}
 
 /**
  * Allocate aligned memory.
@@ -101,8 +87,8 @@ _mesa_align_malloc(size_t bytes, unsigned long alignment)
 {
 #if defined(HAVE_POSIX_MEMALIGN)
    void *mem;
-
-   (void) posix_memalign(& mem, alignment, bytes);
+   int err = posix_memalign(& mem, alignment, bytes);
+   (void) err;
    return mem;
 #elif defined(_WIN32) && defined(_MSC_VER)
    return _aligned_malloc(bytes, alignment);
@@ -111,7 +97,7 @@ _mesa_align_malloc(size_t bytes, unsigned long alignment)
 
    ASSERT( alignment > 0 );
 
-   ptr = (uintptr_t) _mesa_malloc(bytes + alignment + sizeof(void *));
+   ptr = (uintptr_t) malloc(bytes + alignment + sizeof(void *));
    if (!ptr)
       return NULL;
 
@@ -131,8 +117,8 @@ _mesa_align_malloc(size_t bytes, unsigned long alignment)
 }
 
 /**
- * Same as _mesa_align_malloc(), but using _mesa_calloc() instead of
- * _mesa_malloc()
+ * Same as _mesa_align_malloc(), but using calloc(1, ) instead of
+ * malloc()
  */
 void *
 _mesa_align_calloc(size_t bytes, unsigned long alignment)
@@ -160,7 +146,7 @@ _mesa_align_calloc(size_t bytes, unsigned long alignment)
 
    ASSERT( alignment > 0 );
 
-   ptr = (uintptr_t) _mesa_calloc(bytes + alignment + sizeof(void *));
+   ptr = (uintptr_t) calloc(1, bytes + alignment + sizeof(void *));
    if (!ptr)
       return NULL;
 
@@ -196,7 +182,7 @@ _mesa_align_free(void *ptr)
 #else
    void **cubbyHole = (void **) ((char *) ptr - sizeof(void *));
    void *realAddr = *cubbyHole;
-   _mesa_free(realAddr);
+   free(realAddr);
 #endif /* defined(HAVE_POSIX_MEMALIGN) */
 }
 
@@ -214,7 +200,7 @@ _mesa_align_realloc(void *oldBuffer, size_t oldSize, size_t newSize,
    const size_t copySize = (oldSize < newSize) ? oldSize : newSize;
    void *newBuf = _mesa_align_malloc(newSize, alignment);
    if (newBuf && oldBuffer && copySize > 0) {
-      _mesa_memcpy(newBuf, oldBuffer, copySize);
+      memcpy(newBuf, oldBuffer, copySize);
    }
    if (oldBuffer)
       _mesa_align_free(oldBuffer);
@@ -229,34 +215,12 @@ void *
 _mesa_realloc(void *oldBuffer, size_t oldSize, size_t newSize)
 {
    const size_t copySize = (oldSize < newSize) ? oldSize : newSize;
-   void *newBuffer = _mesa_malloc(newSize);
+   void *newBuffer = malloc(newSize);
    if (newBuffer && oldBuffer && copySize > 0)
-      _mesa_memcpy(newBuffer, oldBuffer, copySize);
+      memcpy(newBuffer, oldBuffer, copySize);
    if (oldBuffer)
-      _mesa_free(oldBuffer);
+      free(oldBuffer);
    return newBuffer;
-}
-
-/** memcpy wrapper */
-void *
-_mesa_memcpy(void *dest, const void *src, size_t n)
-{
-#if defined(SUNOS4)
-   return memcpy((char *) dest, (char *) src, (int) n);
-#else
-   return memcpy(dest, src, n);
-#endif
-}
-
-/** Wrapper around memset() */
-void
-_mesa_memset( void *dst, int val, size_t n )
-{
-#if defined(SUNOS4)
-   memset( (char *) dst, (int) val, (int) n );
-#else
-   memset(dst, val, n);
-#endif
 }
 
 /**
@@ -270,28 +234,6 @@ _mesa_memset16( unsigned short *dst, unsigned short val, size_t n )
 {
    while (n-- > 0)
       *dst++ = val;
-}
-
-/** Wrapper around either memset() or bzero() */
-void
-_mesa_bzero( void *dst, size_t n )
-{
-#if defined(__FreeBSD__)
-   bzero( dst, n );
-#else
-   memset( dst, 0, n );
-#endif
-}
-
-/** Wrapper around memcmp() */
-int
-_mesa_memcmp( const void *s1, const void *s2, size_t n )
-{
-#if defined(SUNOS4)
-   return memcmp( (char *) s1, (char *) s2, (int) n );
-#else
-   return memcmp(s1, s2, n);
-#endif
 }
 
 /*@}*/
@@ -453,7 +395,7 @@ _mesa_inv_sqrtf(float n)
 #if 0 /* not used, see below -BP */
         float r3, x3, y3;
 #endif
-        union { float f; unsigned int i; } u;
+        fi_type u;
         unsigned int magic;
 
         /*
@@ -557,7 +499,7 @@ _mesa_pow(double x, double y)
  * Find the first bit set in a word.
  */
 int
-_mesa_ffs(int i)
+_mesa_ffs(int32_t i)
 {
 #if (defined(_WIN32) ) || defined(__IBMC__) || defined(__IBMCPP__)
    register int bit = 0;
@@ -594,11 +536,7 @@ _mesa_ffs(int i)
  *          if no bits set.
  */
 int
-#ifdef __MINGW32__
-_mesa_ffsll(long val)
-#else
-_mesa_ffsll(long long val)
-#endif
+_mesa_ffsll(int64_t val)
 {
 #ifdef ffsll
    return ffsll(val);
@@ -607,11 +545,11 @@ _mesa_ffsll(long long val)
 
    assert(sizeof(val) == 8);
 
-   bit = _mesa_ffs(val);
+   bit = _mesa_ffs((int32_t)val);
    if (bit != 0)
       return bit;
 
-   bit = _mesa_ffs(val >> 32);
+   bit = _mesa_ffs((int32_t)(val >> 32));
    if (bit != 0)
       return 32 + bit;
 
@@ -626,11 +564,16 @@ _mesa_ffsll(long long val)
 unsigned int
 _mesa_bitcount(unsigned int n)
 {
+#if defined(__GNUC__) && \
+	((_GNUC__ == 3 && __GNUC_MINOR__ >= 4) || __GNUC__ >= 4)
+   return __builtin_popcount(n);
+#else
    unsigned int bits;
    for (bits = 0; n > 0; n = n >> 1) {
       bits += (n & 1);
    }
    return bits;
+#endif
 }
 
 
@@ -642,10 +585,10 @@ _mesa_bitcount(unsigned int n)
 GLhalfARB
 _mesa_float_to_half(float val)
 {
-   const int flt = *((int *) (void *) &val);
-   const int flt_m = flt & 0x7fffff;
-   const int flt_e = (flt >> 23) & 0xff;
-   const int flt_s = (flt >> 31) & 0x1;
+   const fi_type fi = {val};
+   const int flt_m = fi.i & 0x7fffff;
+   const int flt_e = (fi.i >> 23) & 0xff;
+   const int flt_s = (fi.i >> 31) & 0x1;
    int s, e, m = 0;
    GLhalfARB result;
    
@@ -732,7 +675,8 @@ _mesa_half_to_float(GLhalfARB val)
    const int m = val & 0x3ff;
    const int e = (val >> 10) & 0x1f;
    const int s = (val >> 15) & 0x1;
-   int flt_m, flt_e, flt_s, flt;
+   int flt_m, flt_e, flt_s;
+   fi_type fi;
    float result;
 
    /* sign bit */
@@ -767,8 +711,8 @@ _mesa_half_to_float(GLhalfARB val)
       flt_m = m << 13;
    }
 
-   flt = (flt_s << 31) | (flt_e << 23) | flt_m;
-   result = *((float *) (void *) &flt);
+   fi.i = (flt_s << 31) | (flt_e << 23) | flt_m;
+   result = fi.f;
    return result;
 }
 
@@ -833,67 +777,18 @@ _mesa_getenv( const char *var )
 /** \name String */
 /*@{*/
 
-/** Wrapper around strstr() */
-char *
-_mesa_strstr( const char *haystack, const char *needle )
-{
-   return strstr(haystack, needle);
-}
-
-/** Wrapper around strncat() */
-char *
-_mesa_strncat( char *dest, const char *src, size_t n )
-{
-   return strncat(dest, src, n);
-}
-
-/** Wrapper around strcpy() */
-char *
-_mesa_strcpy( char *dest, const char *src )
-{
-   return strcpy(dest, src);
-}
-
-/** Wrapper around strncpy() */
-char *
-_mesa_strncpy( char *dest, const char *src, size_t n )
-{
-   return strncpy(dest, src, n);
-}
-
-/** Wrapper around strlen() */
-size_t
-_mesa_strlen( const char *s )
-{
-   return strlen(s);
-}
-
-/** Wrapper around strcmp() */
-int
-_mesa_strcmp( const char *s1, const char *s2 )
-{
-   return strcmp(s1, s2);
-}
-
-/** Wrapper around strncmp() */
-int
-_mesa_strncmp( const char *s1, const char *s2, size_t n )
-{
-   return strncmp(s1, s2, n);
-}
-
 /**
- * Implemented using _mesa_malloc() and _mesa_strcpy.
+ * Implemented using malloc() and strcpy.
  * Note that NULL is handled accordingly.
  */
 char *
 _mesa_strdup( const char *s )
 {
    if (s) {
-      size_t l = _mesa_strlen(s);
-      char *s2 = (char *) _mesa_malloc(l + 1);
+      size_t l = strlen(s);
+      char *s2 = (char *) malloc(l + 1);
       if (s2)
-         _mesa_strcpy(s2, s);
+         strcpy(s2, s);
       return s2;
    }
    else {
@@ -901,38 +796,39 @@ _mesa_strdup( const char *s )
    }
 }
 
-/** Wrapper around atoi() */
-int
-_mesa_atoi(const char *s)
+/** Wrapper around strtof() */
+float
+_mesa_strtof( const char *s, char **end )
 {
-   return atoi(s);
+#ifdef _GNU_SOURCE
+   static locale_t loc = NULL;
+   if (!loc) {
+      loc = newlocale(LC_CTYPE_MASK, "C", NULL);
+   }
+   return strtof_l(s, end, loc);
+#elif defined(_ISOC99_SOURCE) || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
+   return strtof(s, end);
+#else
+   return (float)strtod(s, end);
+#endif
 }
 
-/** Wrapper around strtod() */
-double
-_mesa_strtod( const char *s, char **end )
+/** Compute simple checksum/hash for a string */
+unsigned int
+_mesa_str_checksum(const char *str)
 {
-   return strtod(s, end);
+   /* This could probably be much better */
+   unsigned int sum, i;
+   const char *c;
+   sum = i = 1;
+   for (c = str; *c; c++, i++)
+      sum += *c * (i % 100);
+   return sum + i;
 }
+
 
 /*@}*/
 
-
-/**********************************************************************/
-/** \name I/O */
-/*@{*/
-
-/** Wrapper around vsprintf() */
-int
-_mesa_sprintf( char *str, const char *fmt, ... )
-{
-   int r;
-   va_list args;
-   va_start( args, fmt );  
-   r = vsprintf( str, fmt, args );
-   va_end( args );
-   return r;
-}
 
 /** Wrapper around vsnprintf() */
 int
@@ -946,78 +842,135 @@ _mesa_snprintf( char *str, size_t size, const char *fmt, ... )
    return r;
 }
 
-/** Wrapper around printf(), using vsprintf() for the formatting. */
-void
-_mesa_printf( const char *fmtString, ... )
-{
-   char s[MAXSTRING];
-   va_list args;
-   va_start( args, fmtString );  
-   vsnprintf(s, MAXSTRING, fmtString, args);
-   va_end( args );
-   fprintf(stderr, "%s", s);
-}
-
-/** Wrapper around fprintf(), using vsprintf() for the formatting. */
-void
-_mesa_fprintf( FILE *f, const char *fmtString, ... )
-{
-   char s[MAXSTRING];
-   va_list args;
-   va_start( args, fmtString );  
-   vsnprintf(s, MAXSTRING, fmtString, args);
-   va_end( args );
-   fprintf(f, "%s", s);
-}
-
-
-/** Wrapper around vsprintf() */
-int
-_mesa_vsprintf( char *str, const char *fmt, va_list args )
-{
-   return vsprintf( str, fmt, args );
-}
-
-/*@}*/
-
 
 /**********************************************************************/
 /** \name Diagnostics */
 /*@{*/
+
+static void
+output_if_debug(const char *prefixString, const char *outputString,
+                GLboolean newline)
+{
+   static int debug = -1;
+
+   /* Check the MESA_DEBUG environment variable if it hasn't
+    * been checked yet.  We only have to check it once...
+    */
+   if (debug == -1) {
+      char *env = _mesa_getenv("MESA_DEBUG");
+
+      /* In a debug build, we print warning messages *unless*
+       * MESA_DEBUG is 0.  In a non-debug build, we don't
+       * print warning messages *unless* MESA_DEBUG is
+       * set *to any value*.
+       */
+#ifdef DEBUG
+      debug = (env != NULL && atoi(env) == 0) ? 0 : 1;
+#else
+      debug = (env != NULL) ? 1 : 0;
+#endif
+   }
+
+   /* Now only print the string if we're required to do so. */
+   if (debug) {
+      fprintf(stderr, "%s: %s", prefixString, outputString);
+      if (newline)
+         fprintf(stderr, "\n");
+
+#if defined(_WIN32) && !defined(_WIN32_WCE)
+      /* stderr from windows applications without console is not usually 
+       * visible, so communicate with the debugger instead */ 
+      {
+         char buf[4096];
+         _mesa_snprintf(buf, sizeof(buf), "%s: %s%s", prefixString, outputString, newline ? "\n" : "");
+         OutputDebugStringA(buf);
+      }
+#endif
+   }
+}
+
+
+/**
+ * Return string version of GL error code.
+ */
+static const char *
+error_string( GLenum error )
+{
+   switch (error) {
+   case GL_NO_ERROR:
+      return "GL_NO_ERROR";
+   case GL_INVALID_VALUE:
+      return "GL_INVALID_VALUE";
+   case GL_INVALID_ENUM:
+      return "GL_INVALID_ENUM";
+   case GL_INVALID_OPERATION:
+      return "GL_INVALID_OPERATION";
+   case GL_STACK_OVERFLOW:
+      return "GL_STACK_OVERFLOW";
+   case GL_STACK_UNDERFLOW:
+      return "GL_STACK_UNDERFLOW";
+   case GL_OUT_OF_MEMORY:
+      return "GL_OUT_OF_MEMORY";
+   case GL_TABLE_TOO_LARGE:
+      return "GL_TABLE_TOO_LARGE";
+   case GL_INVALID_FRAMEBUFFER_OPERATION_EXT:
+      return "GL_INVALID_FRAMEBUFFER_OPERATION";
+   default:
+      return "unknown";
+   }
+}
+
+
+/**
+ * When a new type of error is recorded, print a message describing
+ * previous errors which were accumulated.
+ */
+static void
+flush_delayed_errors( GLcontext *ctx )
+{
+   char s[MAXSTRING];
+
+   if (ctx->ErrorDebugCount) {
+      _mesa_snprintf(s, MAXSTRING, "%d similar %s errors", 
+                     ctx->ErrorDebugCount,
+                     error_string(ctx->ErrorValue));
+
+      output_if_debug("Mesa", s, GL_TRUE);
+
+      ctx->ErrorDebugCount = 0;
+   }
+}
+
 
 /**
  * Report a warning (a recoverable error condition) to stderr if
  * either DEBUG is defined or the MESA_DEBUG env var is set.
  *
  * \param ctx GL context.
- * \param fmtString printf() alike format string.
+ * \param fmtString printf()-like format string.
  */
 void
 _mesa_warning( GLcontext *ctx, const char *fmtString, ... )
 {
-   GLboolean debug;
    char str[MAXSTRING];
    va_list args;
-   (void) ctx;
    va_start( args, fmtString );  
    (void) vsnprintf( str, MAXSTRING, fmtString, args );
    va_end( args );
-#ifdef DEBUG
-   debug = GL_TRUE; /* always print warning */
-#else
-   debug = _mesa_getenv("MESA_DEBUG") ? GL_TRUE : GL_FALSE;
-#endif
-   if (debug) {
-      fprintf(stderr, "Mesa warning: %s\n", str);
-   }
+   
+   if (ctx)
+      flush_delayed_errors( ctx );
+
+   output_if_debug("Mesa warning", str, GL_TRUE);
 }
 
+
 /**
- * Report an internla implementation problem.
+ * Report an internal implementation problem.
  * Prints the message to stderr via fprintf().
  *
  * \param ctx GL context.
- * \param s problem description string.
+ * \param fmtString problem description string.
  */
 void
 _mesa_problem( const GLcontext *ctx, const char *fmtString, ... )
@@ -1034,8 +987,9 @@ _mesa_problem( const GLcontext *ctx, const char *fmtString, ... )
    fprintf(stderr, "Please report at bugzilla.freedesktop.org\n");
 }
 
+
 /**
- * Record an OpenGL state error.  These usually occur when the users
+ * Record an OpenGL state error.  These usually occur when the user
  * passes invalid parameters to a GL function.
  *
  * If debugging is enabled (either at compile-time via the DEBUG macro, or
@@ -1049,69 +1003,52 @@ _mesa_problem( const GLcontext *ctx, const char *fmtString, ... )
 void
 _mesa_error( GLcontext *ctx, GLenum error, const char *fmtString, ... )
 {
-   const char *debugEnv;
-   GLboolean debug;
+   static GLint debug = -1;
 
-   debugEnv = _mesa_getenv("MESA_DEBUG");
+   /* Check debug environment variable only once:
+    */
+   if (debug == -1) {
+      const char *debugEnv = _mesa_getenv("MESA_DEBUG");
 
 #ifdef DEBUG
-   if (debugEnv && _mesa_strstr(debugEnv, "silent"))
-      debug = GL_FALSE;
-   else
-      debug = GL_TRUE;
+      if (debugEnv && strstr(debugEnv, "silent"))
+         debug = GL_FALSE;
+      else
+         debug = GL_TRUE;
 #else
-   if (debugEnv)
-      debug = GL_TRUE;
-   else
-      debug = GL_FALSE;
+      if (debugEnv)
+         debug = GL_TRUE;
+      else
+         debug = GL_FALSE;
 #endif
+   }
 
-   if (debug) {
-      va_list args;
-      char where[MAXSTRING];
-      const char *errstr;
-
-      va_start( args, fmtString );  
-      vsnprintf( where, MAXSTRING, fmtString, args );
-      va_end( args );
-
-      switch (error) {
-	 case GL_NO_ERROR:
-	    errstr = "GL_NO_ERROR";
-	    break;
-	 case GL_INVALID_VALUE:
-	    errstr = "GL_INVALID_VALUE";
-	    break;
-	 case GL_INVALID_ENUM:
-	    errstr = "GL_INVALID_ENUM";
-	    break;
-	 case GL_INVALID_OPERATION:
-	    errstr = "GL_INVALID_OPERATION";
-	    break;
-	 case GL_STACK_OVERFLOW:
-	    errstr = "GL_STACK_OVERFLOW";
-	    break;
-	 case GL_STACK_UNDERFLOW:
-	    errstr = "GL_STACK_UNDERFLOW";
-	    break;
-	 case GL_OUT_OF_MEMORY:
-	    errstr = "GL_OUT_OF_MEMORY";
-	    break;
-         case GL_TABLE_TOO_LARGE:
-            errstr = "GL_TABLE_TOO_LARGE";
-            break;
-         case GL_INVALID_FRAMEBUFFER_OPERATION_EXT:
-            errstr = "GL_INVALID_FRAMEBUFFER_OPERATION";
-            break;
-	 default:
-	    errstr = "unknown";
-	    break;
+   if (debug) {      
+      if (ctx->ErrorValue == error &&
+          ctx->ErrorDebugFmtString == fmtString) {
+         ctx->ErrorDebugCount++;
       }
-      _mesa_debug(ctx, "User error: %s in %s\n", errstr, where);
+      else {
+         char s[MAXSTRING], s2[MAXSTRING];
+         va_list args;
+
+         flush_delayed_errors( ctx );
+         
+         va_start(args, fmtString);
+         vsnprintf(s, MAXSTRING, fmtString, args);
+         va_end(args);
+
+         _mesa_snprintf(s2, MAXSTRING, "%s in %s", error_string(error), s);
+         output_if_debug("Mesa: User error", s2, GL_TRUE);
+         
+         ctx->ErrorDebugFmtString = fmtString;
+         ctx->ErrorDebugCount = 0;
+      }
    }
 
    _mesa_record_error(ctx, error);
-}  
+}
+
 
 /**
  * Report debug information.  Print error message to stderr via fprintf().
@@ -1129,20 +1066,10 @@ _mesa_debug( const GLcontext *ctx, const char *fmtString, ... )
    va_start(args, fmtString);
    vsnprintf(s, MAXSTRING, fmtString, args);
    va_end(args);
-   fprintf(stderr, "Mesa: %s", s);
+   output_if_debug("Mesa", s, GL_FALSE);
 #endif /* DEBUG */
    (void) ctx;
    (void) fmtString;
 }
 
 /*@}*/
-
-
-/**
- * Wrapper for exit().
- */
-void
-_mesa_exit( int status )
-{
-   exit(status);
-}

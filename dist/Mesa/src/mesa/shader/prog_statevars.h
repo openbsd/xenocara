@@ -104,9 +104,12 @@ typedef enum gl_state_index_ {
    STATE_LOCAL,
 
    STATE_INTERNAL,		/* Mesa additions */
+   STATE_CURRENT_ATTRIB,        /* ctx->Current vertex attrib value */
    STATE_NORMAL_SCALE,
    STATE_TEXRECT_SCALE,
    STATE_FOG_PARAMS_OPTIMIZED,  /* for faster fog calc */
+   STATE_POINT_SIZE_CLAMPED,    /* includes implementation dependent size clamp */
+   STATE_POINT_SIZE_IMPL_CLAMP, /* for implementation clamp only in vs */
    STATE_LIGHT_SPOT_DIR_NORMALIZED,   /* pre-normalized spot dir */
    STATE_LIGHT_POSITION,              /* object vs eye space */
    STATE_LIGHT_POSITION_NORMALIZED,   /* object vs eye space */
@@ -116,6 +119,9 @@ typedef enum gl_state_index_ {
    STATE_PCM_SCALE,             /**< Post color matrix RGBA scale */
    STATE_PCM_BIAS,              /**< Post color matrix RGBA bias */
    STATE_SHADOW_AMBIENT,        /**< ARB_shadow_ambient fail value; token[2] is texture unit index */
+   STATE_FB_SIZE,               /**< (width-1, height-1, 0, 0) */
+   STATE_ROT_MATRIX_0,          /**< ATI_envmap_bumpmap, rot matrix row 0 */
+   STATE_ROT_MATRIX_1,          /**< ATI_envmap_bumpmap, rot matrix row 1 */
    STATE_INTERNAL_DRIVER	/* first available state index for drivers (must be last) */
 } gl_state_index;
 
@@ -130,7 +136,7 @@ extern GLbitfield
 _mesa_program_state_flags(const gl_state_index state[STATE_LENGTH]);
 
 
-extern const char *
+extern char *
 _mesa_program_state_string(const gl_state_index state[STATE_LENGTH]);
 
 

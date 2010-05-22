@@ -24,6 +24,8 @@
 
 
 #include "main/glheader.h"
+#include "main/condrender.h"
+#include "main/image.h"
 #include "main/macros.h"
 #include "s_context.h"
 
@@ -104,7 +106,7 @@ static void
 blit_nearest(GLcontext *ctx,
              GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
              GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-             GLenum buffer)
+             GLbitfield buffer)
 {
    struct gl_renderbuffer *readRb, *drawRb;
 
@@ -196,14 +198,14 @@ blit_nearest(GLcontext *ctx,
    }
 
    /* allocate the src/dst row buffers */
-   srcBuffer = _mesa_malloc(pixelSize * srcWidth);
+   srcBuffer = malloc(pixelSize * srcWidth);
    if (!srcBuffer) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBlitFrameBufferEXT");
       return;
    }
-   dstBuffer = _mesa_malloc(pixelSize * dstWidth);
+   dstBuffer = malloc(pixelSize * dstWidth);
    if (!dstBuffer) {
-      _mesa_free(srcBuffer);
+      free(srcBuffer);
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBlitFrameBufferEXT");
       return;
    }
@@ -233,8 +235,8 @@ blit_nearest(GLcontext *ctx,
       drawRb->PutRow(ctx, drawRb, dstWidth, dstXpos, dstY, dstBuffer, NULL);
    }
 
-   _mesa_free(srcBuffer);
-   _mesa_free(dstBuffer);
+   free(srcBuffer);
+   free(dstBuffer);
 }
 
 
@@ -364,21 +366,21 @@ blit_linear(GLcontext *ctx,
    /* Allocate the src/dst row buffers.
     * Keep two adjacent src rows around for bilinear sampling.
     */
-   srcBuffer0 = _mesa_malloc(pixelSize * srcWidth);
+   srcBuffer0 = malloc(pixelSize * srcWidth);
    if (!srcBuffer0) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBlitFrameBufferEXT");
       return;
    }
-   srcBuffer1 = _mesa_malloc(pixelSize * srcWidth);
+   srcBuffer1 = malloc(pixelSize * srcWidth);
    if (!srcBuffer1) {
-      _mesa_free(srcBuffer0);
+      free(srcBuffer0);
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBlitFrameBufferEXT");
       return;
    }
-   dstBuffer = _mesa_malloc(pixelSize * dstWidth);
+   dstBuffer = malloc(pixelSize * dstWidth);
    if (!dstBuffer) {
-      _mesa_free(srcBuffer0);
-      _mesa_free(srcBuffer1);
+      free(srcBuffer0);
+      free(srcBuffer1);
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBlitFrameBufferEXT");
       return;
    }
@@ -442,9 +444,9 @@ blit_linear(GLcontext *ctx,
       drawRb->PutRow(ctx, drawRb, dstWidth, dstXpos, dstY, dstBuffer, NULL);
    }
 
-   _mesa_free(srcBuffer0);
-   _mesa_free(srcBuffer1);
-   _mesa_free(dstBuffer);
+   free(srcBuffer0);
+   free(srcBuffer1);
+   free(dstBuffer);
 }
 
 
@@ -456,7 +458,7 @@ static void
 simple_blit(GLcontext *ctx,
             GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
             GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-            GLenum buffer)
+            GLbitfield buffer)
 {
    struct gl_renderbuffer *readRb, *drawRb;
    const GLint width = srcX1 - srcX0;
@@ -533,7 +535,7 @@ simple_blit(GLcontext *ctx,
    }
 
    /* allocate the row buffer */
-   rowBuffer = _mesa_malloc(bytesPerRow);
+   rowBuffer = malloc(bytesPerRow);
    if (!rowBuffer) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBlitFrameBufferEXT");
       return;
@@ -546,185 +548,7 @@ simple_blit(GLcontext *ctx,
       dstY += yStep;
    }
 
-   _mesa_free(rowBuffer);
-}
-
-
-/**
- * Clip dst coords against Xmax (or Ymax).
- */
-static INLINE void
-clip_right_or_top(GLint *srcX0, GLint *srcX1,
-                  GLint *dstX0, GLint *dstX1,
-                  GLint maxValue)
-{
-   GLfloat t, bias;
-
-   if (*dstX1 > maxValue) {
-      /* X1 outside right edge */
-      ASSERT(*dstX0 < maxValue); /* X0 should be inside right edge */
-      t = (GLfloat) (maxValue - *dstX0) / (GLfloat) (*dstX1 - *dstX0);
-      /* chop off [t, 1] part */
-      ASSERT(t >= 0.0 && t <= 1.0);
-      *dstX1 = maxValue;
-      bias = (*srcX0 < *srcX1) ? 0.5 : -0.5;
-      *srcX1 = *srcX0 + (GLint) (t * (*srcX1 - *srcX0) + bias);
-   }
-   else if (*dstX0 > maxValue) {
-      /* X0 outside right edge */
-      ASSERT(*dstX1 < maxValue); /* X1 should be inside right edge */
-      t = (GLfloat) (maxValue - *dstX1) / (GLfloat) (*dstX0 - *dstX1);
-      /* chop off [t, 1] part */
-      ASSERT(t >= 0.0 && t <= 1.0);
-      *dstX0 = maxValue;
-      bias = (*srcX0 < *srcX1) ? -0.5 : 0.5;
-      *srcX0 = *srcX1 + (GLint) (t * (*srcX0 - *srcX1) + bias);
-   }
-}
-
-
-/**
- * Clip dst coords against Xmin (or Ymin).
- */
-static INLINE void
-clip_left_or_bottom(GLint *srcX0, GLint *srcX1,
-                    GLint *dstX0, GLint *dstX1,
-                    GLint minValue)
-{
-   GLfloat t, bias;
-
-   if (*dstX0 < minValue) {
-      /* X0 outside left edge */
-      ASSERT(*dstX1 > minValue); /* X1 should be inside left edge */
-      t = (GLfloat) (minValue - *dstX0) / (GLfloat) (*dstX1 - *dstX0);
-      /* chop off [0, t] part */
-      ASSERT(t >= 0.0 && t <= 1.0);
-      *dstX0 = minValue;
-      bias = (*srcX0 < *srcX1) ? 0.5 : -0.5; /* flipped??? */
-      *srcX0 = *srcX0 + (GLint) (t * (*srcX1 - *srcX0) + bias);
-   }
-   else if (*dstX1 < minValue) {
-      /* X1 outside left edge */
-      ASSERT(*dstX0 > minValue); /* X0 should be inside left edge */
-      t = (GLfloat) (minValue - *dstX1) / (GLfloat) (*dstX0 - *dstX1);
-      /* chop off [0, t] part */
-      ASSERT(t >= 0.0 && t <= 1.0);
-      *dstX1 = minValue;
-      bias = (*srcX0 < *srcX1) ? 0.5 : -0.5;
-      *srcX1 = *srcX1 + (GLint) (t * (*srcX0 - *srcX1) + bias);
-   }
-}
-
-
-/**
- * Do clipping of blit src/dest rectangles.
- * The dest rect is clipped against both the buffer bounds and scissor bounds.
- * The src rect is just clipped against the buffer bounds.
- *
- * When either the src or dest rect is clipped, the other is also clipped
- * proportionately!
- *
- * Note that X0 need not be less than X1 (same for Y) for either the source
- * and dest rects.  That makes the clipping a little trickier.
- *
- * \return GL_TRUE if anything is left to draw, GL_FALSE if totally clipped
- */
-static GLboolean
-clip_blit(GLcontext *ctx,
-          GLint *srcX0, GLint *srcY0, GLint *srcX1, GLint *srcY1,
-          GLint *dstX0, GLint *dstY0, GLint *dstX1, GLint *dstY1)
-{
-   const GLint srcXmin = 0;
-   const GLint srcXmax = ctx->ReadBuffer->Width;
-   const GLint srcYmin = 0;
-   const GLint srcYmax = ctx->ReadBuffer->Height;
-
-   /* these include scissor bounds */
-   const GLint dstXmin = ctx->DrawBuffer->_Xmin;
-   const GLint dstXmax = ctx->DrawBuffer->_Xmax;
-   const GLint dstYmin = ctx->DrawBuffer->_Ymin;
-   const GLint dstYmax = ctx->DrawBuffer->_Ymax;
-
-   /*
-   printf("PreClipX:  src: %d .. %d  dst: %d .. %d\n",
-          *srcX0, *srcX1, *dstX0, *dstX1);
-   printf("PreClipY:  src: %d .. %d  dst: %d .. %d\n",
-          *srcY0, *srcY1, *dstY0, *dstY1);
-   */
-
-   /* trivial rejection tests */
-   if (*dstX0 == *dstX1)
-      return GL_FALSE; /* no width */
-   if (*dstX0 <= dstXmin && *dstX1 <= dstXmin)
-      return GL_FALSE; /* totally out (left) of bounds */
-   if (*dstX0 >= dstXmax && *dstX1 >= dstXmax)
-      return GL_FALSE; /* totally out (right) of bounds */
-
-   if (*dstY0 == *dstY1)
-      return GL_FALSE;
-   if (*dstY0 <= dstYmin && *dstY1 <= dstYmin)
-      return GL_FALSE;
-   if (*dstY0 >= dstYmax && *dstY1 >= dstYmax)
-      return GL_FALSE;
-
-   if (*srcX0 == *srcX1)
-      return GL_FALSE;
-   if (*srcX0 <= srcXmin && *srcX1 <= srcXmin)
-      return GL_FALSE;
-   if (*srcX0 >= srcXmax && *srcX1 >= srcXmax)
-      return GL_FALSE;
-
-   if (*srcY0 == *srcY1)
-      return GL_FALSE;
-   if (*srcY0 <= srcYmin && *srcY1 <= srcYmin)
-      return GL_FALSE;
-   if (*srcY0 >= srcYmax && *srcY1 >= srcYmax)
-      return GL_FALSE;
-
-   /*
-    * dest clip
-    */
-   clip_right_or_top(srcX0, srcX1, dstX0, dstX1, dstXmax);
-   clip_right_or_top(srcY0, srcY1, dstY0, dstY1, dstYmax);
-   clip_left_or_bottom(srcX0, srcX1, dstX0, dstX1, dstXmin);
-   clip_left_or_bottom(srcY0, srcY1, dstY0, dstY1, dstYmin);
-
-   /*
-    * src clip (just swap src/dst values from above)
-    */
-   clip_right_or_top(dstX0, dstX1, srcX0, srcX1, srcXmax);
-   clip_right_or_top(dstY0, dstY1, srcY0, srcY1, srcYmax);
-   clip_left_or_bottom(dstX0, dstX1, srcX0, srcX1, srcXmin);
-   clip_left_or_bottom(dstY0, dstY1, srcY0, srcY1, srcYmin);
-
-   /*
-   printf("PostClipX: src: %d .. %d  dst: %d .. %d\n",
-          *srcX0, *srcX1, *dstX0, *dstX1);
-   printf("PostClipY: src: %d .. %d  dst: %d .. %d\n",
-          *srcY0, *srcY1, *dstY0, *dstY1);
-   */
-
-   ASSERT(*dstX0 >= dstXmin);
-   ASSERT(*dstX0 <= dstXmax);
-   ASSERT(*dstX1 >= dstXmin);
-   ASSERT(*dstX1 <= dstXmax);
-
-   ASSERT(*dstY0 >= dstYmin);
-   ASSERT(*dstY0 <= dstYmax);
-   ASSERT(*dstY1 >= dstYmin);
-   ASSERT(*dstY1 <= dstYmax);
-
-   ASSERT(*srcX0 >= srcXmin);
-   ASSERT(*srcX0 <= srcXmax);
-   ASSERT(*srcX1 >= srcXmin);
-   ASSERT(*srcX1 <= srcXmax);
-
-   ASSERT(*srcY0 >= srcYmin);
-   ASSERT(*srcY0 <= srcYmax);
-   ASSERT(*srcY1 >= srcYmin);
-   ASSERT(*srcY1 <= srcYmax);
-
-   return GL_TRUE;
+   free(rowBuffer);
 }
 
 
@@ -737,23 +561,25 @@ _swrast_BlitFramebuffer(GLcontext *ctx,
                         GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                         GLbitfield mask, GLenum filter)
 {
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-   static const GLint buffers[3] = {
+   static const GLbitfield buffers[3] = {
       GL_COLOR_BUFFER_BIT,
       GL_DEPTH_BUFFER_BIT,
       GL_STENCIL_BUFFER_BIT
    };
    GLint i;
 
+   if (!_mesa_check_conditional_render(ctx))
+      return; /* don't clear */
+
    if (!ctx->DrawBuffer->_NumColorDrawBuffers)
       return;
 
-   if (!clip_blit(ctx, &srcX0, &srcY0, &srcX1, &srcY1,
-                  &dstX0, &dstY0, &dstX1, &dstY1)) {
+   if (!_mesa_clip_blit(ctx, &srcX0, &srcY0, &srcX1, &srcY1,
+                        &dstX0, &dstY0, &dstX1, &dstY1)) {
       return;
    }
 
-   RENDER_START(swrast, ctx);
+   swrast_render_start(ctx);
 
    if (srcX1 - srcX0 == dstX1 - dstX0 &&
        srcY1 - srcY0 == dstY1 - dstY0 &&
@@ -789,5 +615,5 @@ _swrast_BlitFramebuffer(GLcontext *ctx,
       }
    }
 
-   RENDER_FINISH(swrast, ctx);
+   swrast_render_finish(ctx);
 }

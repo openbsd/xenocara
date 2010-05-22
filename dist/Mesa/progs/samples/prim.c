@@ -473,7 +473,6 @@ static void Draw(void)
     Viewport(0, 3); LineLoop();
 
     Viewport(1, 0); Bitmap();
-
     Viewport(1, 1); TriangleFan();
     Viewport(1, 2); Triangles();
     Viewport(1, 3); TriangleStrip();

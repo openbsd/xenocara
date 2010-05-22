@@ -25,9 +25,9 @@
 
 #include "main/glheader.h"
 #include "main/context.h"
+#include "main/formats.h"
 #include "main/macros.h"
 #include "main/imports.h"
-#include "main/fbobject.h"
 
 #include "s_depth.h"
 #include "s_context.h"
@@ -259,7 +259,7 @@ depth_test_span16( GLcontext *ctx, GLuint n,
 	 }
 	 break;
       case GL_NEVER:
-         _mesa_bzero(mask, n * sizeof(GLubyte));
+         memset(mask, 0, n * sizeof(GLubyte));
 	 break;
       default:
          _mesa_problem(ctx, "Bad depth func in depth_test_span16");
@@ -488,13 +488,63 @@ depth_test_span32( GLcontext *ctx, GLuint n,
 	 }
 	 break;
       case GL_NEVER:
-         _mesa_bzero(mask, n * sizeof(GLubyte));
+         memset(mask, 0, n * sizeof(GLubyte));
 	 break;
       default:
          _mesa_problem(ctx, "Bad depth func in depth_test_span32");
    }
 
    return passed;
+}
+
+
+
+/**
+ * Clamp fragment Z values to the depth near/far range (glDepthRange()).
+ * This is used when GL_ARB_depth_clamp/GL_DEPTH_CLAMP is turned on.
+ * In that case, vertexes are not clipped against the near/far planes
+ * so rasterization will produce fragment Z values outside the usual
+ * [0,1] range.
+ */
+void
+_swrast_depth_clamp_span( GLcontext *ctx, SWspan *span )
+{
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
+   const GLuint count = span->end;
+   GLint *zValues = (GLint *) span->array->z; /* sign change */
+   GLint min, max;
+   GLfloat min_f, max_f;
+   GLuint i;
+
+   if (ctx->Viewport.Near < ctx->Viewport.Far) {
+      min_f = ctx->Viewport.Near;
+      max_f = ctx->Viewport.Far;
+   } else {
+      min_f = ctx->Viewport.Far;
+      max_f = ctx->Viewport.Near;
+   }
+
+   /* Convert floating point values in [0,1] to device Z coordinates in
+    * [0, DepthMax].
+    * ex: If the Z buffer has 24 bits, DepthMax = 0xffffff.
+    * 
+    * XXX this all falls apart if we have 31 or more bits of Z because
+    * the triangle rasterization code produces unsigned Z values.  Negative
+    * vertex Z values come out as large fragment Z uints.
+    */
+   min = (GLint) (min_f * fb->_DepthMaxF);
+   max = (GLint) (max_f * fb->_DepthMaxF);
+   if (max < 0)
+      max = 0x7fffffff; /* catch over flow for 30-bit z */
+
+   /* Note that we do the comparisons here using signed integers.
+    */
+   for (i = 0; i < count; i++) {
+      if (zValues[i] < min)
+	 zValues[i] = min;
+      if (zValues[i] > max)
+	 zValues[i] = max;
+   }
 }
 
 
@@ -794,7 +844,7 @@ direct_depth_test_pixels16(GLcontext *ctx, GLushort *zStart, GLuint stride,
 	 break;
       case GL_NEVER:
 	 /* depth test never passes */
-         _mesa_bzero(mask, n * sizeof(GLubyte));
+         memset(mask, 0, n * sizeof(GLubyte));
 	 break;
       default:
          _mesa_problem(ctx, "Bad depth func in direct_depth_test_pixels");
@@ -1040,7 +1090,7 @@ direct_depth_test_pixels32(GLcontext *ctx, GLuint *zStart, GLuint stride,
 	 break;
       case GL_NEVER:
 	 /* depth test never passes */
-         _mesa_bzero(mask, n * sizeof(GLubyte));
+         memset(mask, 0, n * sizeof(GLubyte));
 	 break;
       default:
          _mesa_problem(ctx, "Bad depth func in direct_depth_test_pixels");
@@ -1210,7 +1260,8 @@ _swrast_read_depth_span_float( GLcontext *ctx, struct gl_renderbuffer *rb,
 
    if (!rb) {
       /* really only doing this to prevent FP exceptions later */
-      _mesa_bzero(depth, n * sizeof(GLfloat));
+      memset(depth, 0, n * sizeof(GLfloat));
+      return;
    }
 
    ASSERT(rb->_BaseFormat == GL_DEPTH_COMPONENT);
@@ -1218,7 +1269,7 @@ _swrast_read_depth_span_float( GLcontext *ctx, struct gl_renderbuffer *rb,
    if (y < 0 || y >= (GLint) rb->Height ||
        x + n <= 0 || x >= (GLint) rb->Width) {
       /* span is completely outside framebuffer */
-      _mesa_bzero(depth, n * sizeof(GLfloat));
+      memset(depth, 0, n * sizeof(GLfloat));
       return;
    }
 
@@ -1271,17 +1322,22 @@ void
 _swrast_read_depth_span_uint( GLcontext *ctx, struct gl_renderbuffer *rb,
                               GLint n, GLint x, GLint y, GLuint depth[] )
 {
+   GLuint depthBits;
+
    if (!rb) {
       /* really only doing this to prevent FP exceptions later */
-      _mesa_bzero(depth, n * sizeof(GLfloat));
+      memset(depth, 0, n * sizeof(GLuint));
+      return;
    }
+
+   depthBits = _mesa_get_format_bits(rb->Format, GL_DEPTH_BITS);
 
    ASSERT(rb->_BaseFormat == GL_DEPTH_COMPONENT);
 
    if (y < 0 || y >= (GLint) rb->Height ||
        x + n <= 0 || x >= (GLint) rb->Width) {
       /* span is completely outside framebuffer */
-      _mesa_bzero(depth, n * sizeof(GLfloat));
+      memset(depth, 0, n * sizeof(GLfloat));
       return;
    }
 
@@ -1307,8 +1363,8 @@ _swrast_read_depth_span_uint( GLcontext *ctx, struct gl_renderbuffer *rb,
 
    if (rb->DataType == GL_UNSIGNED_INT) {
       rb->GetRow(ctx, rb, n, x, y, depth);
-      if (rb->DepthBits < 32) {
-         GLuint shift = 32 - rb->DepthBits;
+      if (depthBits < 32) {
+         GLuint shift = 32 - depthBits;
          GLint i;
          for (i = 0; i < n; i++) {
             GLuint z = depth[i];
@@ -1320,14 +1376,14 @@ _swrast_read_depth_span_uint( GLcontext *ctx, struct gl_renderbuffer *rb,
       GLushort temp[MAX_WIDTH];
       GLint i;
       rb->GetRow(ctx, rb, n, x, y, temp);
-      if (rb->DepthBits == 16) {
+      if (depthBits == 16) {
          for (i = 0; i < n; i++) {
             GLuint z = temp[i];
             depth[i] = (z << 16) | z;
          }
       }
       else {
-         GLuint shift = 16 - rb->DepthBits;
+         GLuint shift = 16 - depthBits;
          for (i = 0; i < n; i++) {
             GLuint z = temp[i];
             depth[i] = (z << (shift + 16)) | (z << shift); /* XXX lsb bits? */
@@ -1382,7 +1438,7 @@ _swrast_clear_depth_buffer( GLcontext *ctx, struct gl_renderbuffer *rb )
             /* optimized case */
             GLushort *dst = (GLushort *) rb->GetPointer(ctx, rb, x, y);
             GLuint len = width * height * sizeof(GLushort);
-            _mesa_memset(dst, (clearValue & 0xff), len);
+            memset(dst, (clearValue & 0xff), len);
          }
          else {
             /* general case */

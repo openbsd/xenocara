@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright © 2007 Intel Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -66,6 +66,12 @@
 #define PCI_CHIP_Q45_G                  0x2E12
 #define PCI_CHIP_G45_G                  0x2E22
 #define PCI_CHIP_G41_G                  0x2E32
+#define PCI_CHIP_B43_G                  0x2E42
+
+#define PCI_CHIP_ILD_G                  0x0042
+#define PCI_CHIP_ILM_G                  0x0046
+
+#define PCI_CHIP_SANDYBRIDGE		0x0102
 
 #define IS_MOBILE(devid)	(devid == PCI_CHIP_I855_GM || \
 				 devid == PCI_CHIP_I915_GM || \
@@ -73,14 +79,21 @@
 				 devid == PCI_CHIP_I945_GME || \
 				 devid == PCI_CHIP_I965_GM || \
 				 devid == PCI_CHIP_I965_GME || \
-				 devid == PCI_CHIP_GM45_GM || IS_IGD(devid))
+				 devid == PCI_CHIP_GM45_GM || \
+				 IS_IGD(devid) || \
+				 devid == PCI_CHIP_ILM_G)
 
 #define IS_G45(devid)           (devid == PCI_CHIP_IGD_E_G || \
                                  devid == PCI_CHIP_Q45_G || \
                                  devid == PCI_CHIP_G45_G || \
-                                 devid == PCI_CHIP_G41_G)
+                                 devid == PCI_CHIP_G41_G || \
+                                 devid == PCI_CHIP_B43_G)
 #define IS_GM45(devid)          (devid == PCI_CHIP_GM45_GM)
 #define IS_G4X(devid)		(IS_G45(devid) || IS_GM45(devid))
+
+#define IS_ILD(devid)           (devid == PCI_CHIP_ILD_G)
+#define IS_ILM(devid)           (devid == PCI_CHIP_ILM_G)
+#define IS_GEN5(devid)          (IS_ILD(devid) || IS_ILM(devid))
 
 #define IS_915(devid)		(devid == PCI_CHIP_I915_G || \
 				 devid == PCI_CHIP_E7221_G || \
@@ -93,13 +106,20 @@
 				 devid == PCI_CHIP_Q33_G || \
 				 devid == PCI_CHIP_Q35_G || IS_IGD(devid))
 
-#define IS_965(devid)		(devid == PCI_CHIP_I965_G || \
+#define IS_GEN4(devid)		(devid == PCI_CHIP_I965_G || \
 				 devid == PCI_CHIP_I965_Q || \
 				 devid == PCI_CHIP_I965_G_1 || \
 				 devid == PCI_CHIP_I965_GM || \
 				 devid == PCI_CHIP_I965_GME || \
 				 devid == PCI_CHIP_I946_GZ || \
 				 IS_G4X(devid))
+
+#define IS_GEN6(devid)		(devid == PCI_CHIP_SANDYBRIDGE)
+
+#define IS_965(devid)		(IS_GEN4(devid) || \
+				 IS_G4X(devid) || \
+				 IS_GEN5(devid) || \
+				 IS_GEN6(devid))
 
 #define IS_9XX(devid)		(IS_915(devid) || \
 				 IS_945(devid) || \

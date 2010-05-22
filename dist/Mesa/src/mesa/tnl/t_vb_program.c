@@ -1,8 +1,9 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
+ * Version:  7.6
  *
- * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -39,12 +40,21 @@
 #include "shader/prog_statevars.h"
 #include "shader/prog_execute.h"
 #include "swrast/s_context.h"
-#include "swrast/s_texfilter.h"
 
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
 
+
+#ifdef NAN_CHECK
+/** Check for NaNs and very large values */
+static INLINE void
+check_float(float x)
+{
+   assert(!IS_INF_OR_NAN(x));
+   assert(1.0e-15 <= x && x <= 1.0e15);
+}
+#endif
 
 
 /*!
@@ -120,13 +130,16 @@ do_ndc_cliptest(GLcontext *ctx, struct vp_stage_data *store)
    store->ormask = 0;
    store->andmask = CLIP_FRUSTUM_BITS;
 
+   tnl_clip_prepare(ctx);
+
    if (tnl->NeedNdcCoords) {
       VB->NdcPtr =
          _mesa_clip_tab[VB->ClipPtr->size]( VB->ClipPtr,
                                             &store->ndcCoords,
                                             store->clipmask,
                                             &store->ormask,
-                                            &store->andmask );
+                                            &store->andmask,
+					    !ctx->Transform.DepthClamp );
    }
    else {
       VB->NdcPtr = NULL;
@@ -134,7 +147,8 @@ do_ndc_cliptest(GLcontext *ctx, struct vp_stage_data *store)
                                             NULL,
                                             store->clipmask,
                                             &store->ormask,
-                                            &store->andmask );
+                                            &store->andmask,
+					    !ctx->Transform.DepthClamp );
    }
 
    if (store->andmask) {
@@ -176,17 +190,12 @@ static void
 vp_fetch_texel(GLcontext *ctx, const GLfloat texcoord[4], GLfloat lambda,
                GLuint unit, GLfloat color[4])
 {
-   GLchan rgba[4];
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
 
    /* XXX use a float-valued TextureSample routine here!!! */
    swrast->TextureSample[unit](ctx, ctx->Texture.Unit[unit]._Current,
                                1, (const GLfloat (*)[4]) texcoord,
-                               &lambda, &rgba);
-   color[0] = CHAN_TO_FLOAT(rgba[0]);
-   color[1] = CHAN_TO_FLOAT(rgba[1]);
-   color[2] = CHAN_TO_FLOAT(rgba[2]);
-   color[3] = CHAN_TO_FLOAT(rgba[3]);
+                               &lambda,  (GLfloat (*)[4]) color);
 }
 
 
@@ -194,13 +203,14 @@ vp_fetch_texel(GLcontext *ctx, const GLfloat texcoord[4], GLfloat lambda,
  * Called via ctx->Driver.ProgramStringNotify() after a new vertex program
  * string has been parsed.
  */
-void
+GLboolean
 _tnl_program_string(GLcontext *ctx, GLenum target, struct gl_program *program)
 {
    /* No-op.
     * If we had derived anything from the program that was private to this
     * stage we'd recompute/validate it here.
     */
+   return GL_TRUE;
 }
 
 
@@ -211,8 +221,8 @@ static void
 init_machine(GLcontext *ctx, struct gl_program_machine *machine)
 {
    /* Input registers get initialized from the current vertex attribs */
-   MEMCPY(machine->VertAttribs, ctx->Current.Attrib,
-          MAX_VERTEX_PROGRAM_ATTRIBS * 4 * sizeof(GLfloat));
+   memcpy(machine->VertAttribs, ctx->Current.Attrib,
+          MAX_VERTEX_GENERIC_ATTRIBS * 4 * sizeof(GLfloat));
 
    if (ctx->VertexProgram._Current->IsNVProgram) {
       GLuint i;
@@ -319,7 +329,7 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
    /* make list of outputs to save some time below */
    numOutputs = 0;
    for (i = 0; i < VERT_RESULT_MAX; i++) {
-      if (program->Base.OutputsWritten & (1 << i)) {
+      if (program->Base.OutputsWritten & BITFIELD64_BIT(i)) {
          outputs[numOutputs++] = i;
       }
    }
@@ -356,6 +366,12 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 	    const GLuint size = VB->AttribPtr[attr]->size;
 	    const GLuint stride = VB->AttribPtr[attr]->stride;
 	    const GLfloat *data = (GLfloat *) (ptr + stride * i);
+#ifdef NAN_CHECK
+            check_float(data[0]);
+            check_float(data[1]);
+            check_float(data[2]);
+            check_float(data[3]);
+#endif
 	    COPY_CLEAN_4V(machine.VertAttribs[attr], size, data);
 	 }
       }
@@ -366,8 +382,24 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
       /* copy the output registers into the VB->attribs arrays */
       for (j = 0; j < numOutputs; j++) {
          const GLuint attr = outputs[j];
+#ifdef NAN_CHECK
+         check_float(machine.Outputs[attr][0]);
+         check_float(machine.Outputs[attr][1]);
+         check_float(machine.Outputs[attr][2]);
+         check_float(machine.Outputs[attr][3]);
+#endif
          COPY_4V(store->results[attr].data[i], machine.Outputs[attr]);
       }
+
+      /* FOGC is a special case.  Fragment shader expects (f,0,0,1) */
+      if (program->Base.OutputsWritten & BITFIELD64_BIT(VERT_RESULT_FOGC)) {
+         store->results[VERT_RESULT_FOGC].data[i][1] = 0.0;
+         store->results[VERT_RESULT_FOGC].data[i][2] = 0.0;
+         store->results[VERT_RESULT_FOGC].data[i][3] = 1.0;
+      }
+#ifdef NAN_CHECK
+      ASSERT(machine.Outputs[0][3] != 0.0F);
+#endif
 #if 0
       printf("HPOS: %f %f %f %f\n",
              machine.Outputs[0][0], 
@@ -382,14 +414,14 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
    /* Fixup fog and point size results if needed */
    if (program->IsNVProgram) {
       if (ctx->Fog.Enabled &&
-          (program->Base.OutputsWritten & (1 << VERT_RESULT_FOGC)) == 0) {
+          (program->Base.OutputsWritten & BITFIELD64_BIT(VERT_RESULT_FOGC)) == 0) {
          for (i = 0; i < VB->Count; i++) {
             store->results[VERT_RESULT_FOGC].data[i][0] = 1.0;
          }
       }
 
       if (ctx->VertexProgram.PointSizeEnabled &&
-          (program->Base.OutputsWritten & (1 << VERT_RESULT_PSIZ)) == 0) {
+          (program->Base.OutputsWritten & BITFIELD64_BIT(VERT_RESULT_PSIZ)) == 0) {
          for (i = 0; i < VB->Count; i++) {
             store->results[VERT_RESULT_PSIZ].data[i][0] = ctx->Point.Size;
          }
@@ -429,25 +461,20 @@ run_vp( GLcontext *ctx, struct tnl_pipeline_stage *stage )
       VB->ClipPtr->count = VB->Count;
    }
 
-   VB->ColorPtr[0] = &store->results[VERT_RESULT_COL0];
-   VB->ColorPtr[1] = &store->results[VERT_RESULT_BFC0];
-   VB->SecondaryColorPtr[0] = &store->results[VERT_RESULT_COL1];
-   VB->SecondaryColorPtr[1] = &store->results[VERT_RESULT_BFC1];
-   VB->FogCoordPtr = &store->results[VERT_RESULT_FOGC];
-
    VB->AttribPtr[VERT_ATTRIB_COLOR0] = &store->results[VERT_RESULT_COL0];
    VB->AttribPtr[VERT_ATTRIB_COLOR1] = &store->results[VERT_RESULT_COL1];
    VB->AttribPtr[VERT_ATTRIB_FOG] = &store->results[VERT_RESULT_FOGC];
    VB->AttribPtr[_TNL_ATTRIB_POINTSIZE] = &store->results[VERT_RESULT_PSIZ];
+   VB->BackfaceColorPtr = &store->results[VERT_RESULT_BFC0];
+   VB->BackfaceSecondaryColorPtr = &store->results[VERT_RESULT_BFC1];
 
    for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
-      VB->TexCoordPtr[i] = 
       VB->AttribPtr[_TNL_ATTRIB_TEX0 + i]
          = &store->results[VERT_RESULT_TEX0 + i];
    }
 
    for (i = 0; i < ctx->Const.MaxVarying; i++) {
-      if (program->Base.OutputsWritten & (1 << (VERT_RESULT_VAR0 + i))) {
+      if (program->Base.OutputsWritten & BITFIELD64_BIT(VERT_RESULT_VAR0 + i)) {
          /* Note: varying results get put into the generic attributes */
 	 VB->AttribPtr[VERT_ATTRIB_GENERIC0+i]
             = &store->results[VERT_RESULT_VAR0 + i];
@@ -487,7 +514,7 @@ init_vp(GLcontext *ctx, struct tnl_pipeline_stage *stage)
 
    /* a few other misc allocations */
    _mesa_vector4f_alloc( &store->ndcCoords, 0, size, 32 );
-   store->clipmask = (GLubyte *) ALIGN_MALLOC(sizeof(GLubyte)*size, 32 );
+   store->clipmask = (GLubyte *) _mesa_align_malloc(sizeof(GLubyte)*size, 32 );
 
    return GL_TRUE;
 }
@@ -510,7 +537,7 @@ dtr(struct tnl_pipeline_stage *stage)
 
       /* free misc arrays */
       _mesa_vector4f_free( &store->ndcCoords );
-      ALIGN_FREE( store->clipmask );
+      _mesa_align_free( store->clipmask );
 
       FREE( store );
       stage->privatePtr = NULL;

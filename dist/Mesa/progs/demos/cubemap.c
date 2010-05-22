@@ -39,9 +39,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <GL/glew.h>
 #include "GL/glut.h"
 #include "readtex.h"
 
+#ifndef GL_TEXTURE_CUBE_MAP_SEAMLESS
+#define GL_TEXTURE_CUBE_MAP_SEAMLESS 0x884F
+#endif
 
 static GLfloat Xrot = 0, Yrot = 0;
 static GLfloat EyeDist = 10;
@@ -49,8 +53,55 @@ static GLboolean use_vertex_arrays = GL_FALSE;
 static GLboolean anim = GL_TRUE;
 static GLboolean NoClear = GL_FALSE;
 static GLint FrameParity = 0;
+static GLenum FilterIndex = 0;
+static GLint ClampIndex = 0;
+static GLboolean supportFBO = GL_FALSE;
+static GLboolean supportSeamless = GL_FALSE;
+static GLboolean seamless = GL_FALSE;
+static GLuint TexObj = 0;
+static GLint T0 = 0;
+static GLint Frames = 0;
 
-#define eps1 0.99
+
+static struct {
+   GLenum mode;
+   const char *name;
+} ClampModes[] = {
+   { GL_CLAMP_TO_EDGE, "GL_CLAMP_TO_EDGE" },
+   { GL_CLAMP_TO_BORDER, "GL_CLAMP_TO_BORDER" },
+   { GL_CLAMP, "GL_CLAMP" },
+   { GL_REPEAT, "GL_REPEAT" }
+};
+
+#define NUM_CLAMP_MODES (sizeof(ClampModes) / sizeof(ClampModes[0]))
+
+
+static struct {
+   GLenum mag_mode, min_mode;
+   const char *name;
+} FilterModes[] = {
+   { GL_NEAREST, GL_NEAREST, "GL_NEAREST, GL_NEAREST" },
+   { GL_NEAREST, GL_LINEAR, "GL_NEAREST, GL_LINEAR" },
+   { GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST, "GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST" },
+   { GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR, "GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR" },
+   { GL_NEAREST, GL_LINEAR_MIPMAP_NEAREST, "GL_NEAREST, GL_LINEAR_MIPMAP_NEAREST" },
+   { GL_NEAREST, GL_LINEAR_MIPMAP_LINEAR, "GL_NEAREST, GL_LINEAR_MIPMAP_LINEAR" },
+
+   { GL_LINEAR, GL_NEAREST, "GL_LINEAR, GL_NEAREST" },
+   { GL_LINEAR, GL_LINEAR, "GL_LINEAR, GL_LINEAR" },
+   { GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, "GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST" },
+   { GL_LINEAR, GL_NEAREST_MIPMAP_LINEAR, "GL_LINEAR, GL_NEAREST_MIPMAP_LINEAR" },
+   { GL_LINEAR, GL_LINEAR_MIPMAP_NEAREST, "GL_LINEAR, GL_LINEAR_MIPMAP_NEAREST" },
+   { GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR, "GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR" }
+};
+
+#define NUM_FILTER_MODES (sizeof(FilterModes) / sizeof(FilterModes[0]))
+
+
+
+/* The effects of GL_ARB_seamless_cube_map don't show up unless eps1 is 1.0.
+ */
+#define eps1 1.0 /*0.99*/
 #define br   20.0  /* box radius */
 
 static const GLfloat tex_coords[] = {
@@ -158,6 +209,8 @@ static void draw_skybox( void )
 
 static void draw( void )
 {
+   GLenum wrap;
+
    if (NoClear) {
       /* This demonstrates how we can avoid calling glClear.
        * This method only works if every pixel in the window is painted for
@@ -182,6 +235,23 @@ static void draw( void )
       /* ordinary clearing */
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    }
+
+   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER,
+                   FilterModes[FilterIndex].min_mode);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MAG_FILTER,
+                   FilterModes[FilterIndex].mag_mode);
+
+   if (supportSeamless) {
+      if (seamless) {
+	 glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+      } else {
+	 glDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+      }
+   }
+   wrap = ClampModes[ClampIndex].mode;
+   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_S, wrap);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_T, wrap);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_R, wrap);
 
    glPushMatrix(); /*MODELVIEW*/
       glTranslatef( 0.0, 0.0, -EyeDist );
@@ -215,6 +285,20 @@ static void draw( void )
    glPopMatrix();
 
    glutSwapBuffers();
+
+   Frames++;
+
+   {
+      GLint t = glutGet(GLUT_ELAPSED_TIME);
+      if (t - T0 >= 5000) {
+	 GLfloat seconds = (t - T0) / 1000.0;
+	 GLfloat fps = Frames / seconds;
+	 printf("%d frames in %6.3f seconds = %6.3f FPS\n", Frames, seconds, fps);
+	 fflush(stdout);
+	 T0 = t;
+	 Frames = 0;
+      }
+   }
 }
 
 
@@ -256,10 +340,23 @@ static void key(unsigned char k, int x, int y)
          else
             glutIdleFunc(NULL);
          break;
+      case 'f':
+         FilterIndex = (FilterIndex + 1) % NUM_FILTER_MODES;
+         printf("Tex filter: %s\n", FilterModes[FilterIndex].name);
+         break;
+      case 'c':
+         ClampIndex = (ClampIndex + 1) % NUM_CLAMP_MODES;
+         printf("Tex wrap mode: %s\n", ClampModes[ClampIndex].name);
+         break;
       case 'm':
          mode = !mode;
          set_mode(mode);
          break;
+      case 's':
+	 seamless = ! seamless;
+	 printf("Seamless cube map filtering is %sabled\n",
+		(seamless) ? "en" : "dis" );
+	 break;
       case 'v':
          use_vertex_arrays = ! use_vertex_arrays;
          printf( "Vertex arrays are %sabled\n",
@@ -321,7 +418,7 @@ static void reshape(int width, int height)
 static void init_checkers( void )
 {
 #define CUBE_TEX_SIZE 64
-   GLubyte image[CUBE_TEX_SIZE][CUBE_TEX_SIZE][3];
+   GLubyte image[CUBE_TEX_SIZE][CUBE_TEX_SIZE][4];
    static const GLubyte colors[6][3] = {
       { 255,   0,   0 },	/* face 0 - red */
       {   0, 255, 255 },	/* face 1 - cyan */
@@ -343,26 +440,35 @@ static void init_checkers( void )
 
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+   if (!supportFBO)
+      glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
+
+
    /* make colored checkerboard cube faces */
    for (f = 0; f < 6; f++) {
       for (i = 0; i < CUBE_TEX_SIZE; i++) {
          for (j = 0; j < CUBE_TEX_SIZE; j++) {
             if ((i/4 + j/4) & 1) {
-               image[i][j][0] = colors[f][0];
+               image[i][j][0] = colors[f][2];
                image[i][j][1] = colors[f][1];
-               image[i][j][2] = colors[f][2];
+               image[i][j][2] = colors[f][0];
+               image[i][j][3] = 255;
             }
             else {
                image[i][j][0] = 255;
                image[i][j][1] = 255;
                image[i][j][2] = 255;
+               image[i][j][3] = 255;
             }
          }
       }
 
-      glTexImage2D(targets[f], 0, GL_RGB, CUBE_TEX_SIZE, CUBE_TEX_SIZE, 0,
-                   GL_RGB, GL_UNSIGNED_BYTE, image);
+      glTexImage2D(targets[f], 0, GL_RGBA8, CUBE_TEX_SIZE, CUBE_TEX_SIZE, 0,
+                   GL_BGRA, GL_UNSIGNED_BYTE, image);
    }
+
+   if (supportFBO)
+      glGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP_ARB);
 }
 
 
@@ -431,31 +537,39 @@ static void load_envmaps(void)
 
 static void init( GLboolean useImageFiles )
 {
-   GLenum filter;
-
-   /* check for extension */
-   {
-      char *exten = (char *) glGetString(GL_EXTENSIONS);
-      if (!strstr(exten, "GL_ARB_texture_cube_map")) {
-         printf("Sorry, this demo requires GL_ARB_texture_cube_map\n");
-         exit(0);
-      }
+   /* check for extensions */
+   if (!GLEW_ARB_texture_cube_map) {
+      printf("Sorry, this demo requires GL_ARB_texture_cube_map\n");
+      exit(0);
    }
+
+   /* Needed for glGenerateMipmapEXT / auto mipmapping
+    */
+   supportFBO = GLEW_EXT_framebuffer_object;
+
+   if (!supportFBO && !GLEW_SGIS_generate_mipmap) {
+      printf("Sorry, this demo requires GL_EXT_framebuffer_object or "
+	     "GL_SGIS_generate_mipmap\n");
+      exit(0);
+   }
+
+   /* GLEW doesn't know about this extension yet, so use the old GLUT function
+    * to check for availability.
+    */
+   supportSeamless = glutExtensionSupported("GL_ARB_seamless_cube_map");
+
    printf("GL_RENDERER: %s\n", (char *) glGetString(GL_RENDERER));
+
+
+   glGenTextures(1, &TexObj);
+   glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, TexObj);
 
    if (useImageFiles) {
       load_envmaps();
-      filter = GL_LINEAR;
    }
    else {
       init_checkers();
-      filter = GL_NEAREST;
    }
-
-   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER, filter);
-   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MAG_FILTER, filter);
-   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
    glEnable(GL_TEXTURE_CUBE_MAP_ARB);
    glEnable(GL_DEPTH_TEST);
@@ -472,6 +586,8 @@ static void usage(void)
    printf("keys:\n");
    printf("  SPACE - toggle animation\n");
    printf("  CURSOR KEYS - rotation\n");
+   printf("  c - toggle texture clamp/wrap mode\n");
+   printf("  f - toggle texture filter mode\n");
    printf("  m - toggle texgen reflection mode\n");
    printf("  z/Z - change viewing distance\n");
 }
@@ -497,11 +613,11 @@ static void parse_args(int argc, char *argv[])
 
 int main( int argc, char *argv[] )
 {
-   glutInit(&argc, argv);
-   glutInitWindowPosition(0, 0);
    glutInitWindowSize(600, 500);
+   glutInit(&argc, argv);
    glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
    glutCreateWindow("Texture Cube Mapping");
+   glewInit();
    glutReshapeFunc( reshape );
    glutKeyboardFunc( key );
    glutSpecialFunc( specialkey );

@@ -26,10 +26,12 @@
  */
 
 #include <stdlib.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 static int win_width, win_height;
 
+#if 0
 static void
 line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 {
@@ -38,6 +40,7 @@ line(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
 	glVertex2f(x2, y2);
 	glEnd();
 }
+#endif
 
 static void
 line3(GLfloat x1, GLfloat y1, GLfloat z1, GLfloat x2, GLfloat y2, GLfloat z2)
@@ -194,6 +197,7 @@ main(int argc, char *argv[])
 	glutInitWindowSize(win_width, win_height);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutCreateWindow(argv[0]);
+        glewInit();
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(key);
 	glutDisplayFunc(display);

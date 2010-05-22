@@ -43,11 +43,17 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /* Wierd implementation stuff:
  */
-#define VBO_VERT_BUFFER_SIZE (1024*16)	/* dwords == 64k */
+#define VBO_VERT_BUFFER_SIZE (1024*64)	/* bytes */
 #define VBO_MAX_ATTR_CODEGEN 16 
 #define ERROR_ATTRIB 16
 
 
+/** Current vertex program mode */
+enum vp_mode {
+   VP_NONE,   /**< fixed function */
+   VP_NV,     /**< NV vertex program */
+   VP_ARB     /**< ARB vertex program or GLSL vertex shader */
+};
 
 
 struct vbo_exec_eval1_map {
@@ -78,14 +84,15 @@ struct vbo_exec_context
 
    struct {
       struct gl_buffer_object *bufferobj;
-      GLubyte *buffer_map;
 
-      GLuint vertex_size;
+      GLuint vertex_size;       /* in dwords */
 
       struct _mesa_prim prim[VBO_MAX_PRIM];
       GLuint prim_count;
 
-      GLfloat *vbptr;		     /* cursor, points into buffer */
+      GLfloat *buffer_map;
+      GLfloat *buffer_ptr;              /* cursor, points into buffer */
+      GLuint   buffer_used;             /* in bytes */
       GLfloat vertex[VBO_ATTRIB_MAX*4]; /* current vertex */
 
       GLuint vert_count;
@@ -96,13 +103,13 @@ struct vbo_exec_context
       GLubyte active_sz[VBO_ATTRIB_MAX];
 
       GLfloat *attrptr[VBO_ATTRIB_MAX]; 
-      struct gl_client_array arrays[VBO_ATTRIB_MAX];
+      struct gl_client_array arrays[VERT_ATTRIB_MAX];
 
       /* According to program mode, the values above plus current
        * values are squashed down to the 32 attributes passed to the
        * vertex program below:
        */
-      GLuint program_mode;
+      enum vp_mode program_mode;
       GLuint enabled_flags;
       const struct gl_client_array *inputs[VERT_ATTRIB_MAX];
    } vtx;
@@ -115,7 +122,7 @@ struct vbo_exec_context
    } eval;
 
    struct {
-      GLuint program_mode;
+      enum vp_mode program_mode;
       GLuint enabled_flags;
       GLuint array_obj;
 
@@ -131,6 +138,10 @@ struct vbo_exec_context
        */
       const struct gl_client_array *inputs[VERT_ATTRIB_MAX];
    } array;
+
+#ifdef DEBUG
+   GLint flush_call_depth;
+#endif
 };
 
 
@@ -140,6 +151,9 @@ struct vbo_exec_context
 void vbo_exec_init( GLcontext *ctx );
 void vbo_exec_destroy( GLcontext *ctx );
 void vbo_exec_invalidate_state( GLcontext *ctx, GLuint new_state );
+void vbo_exec_FlushVertices_internal( GLcontext *ctx, GLboolean unmap );
+
+void vbo_exec_BeginVertices( GLcontext *ctx );
 void vbo_exec_FlushVertices( GLcontext *ctx, GLuint flags );
 
 
@@ -151,7 +165,26 @@ void vbo_exec_array_destroy( struct vbo_exec_context *exec );
 
 void vbo_exec_vtx_init( struct vbo_exec_context *exec );
 void vbo_exec_vtx_destroy( struct vbo_exec_context *exec );
-void vbo_exec_vtx_flush( struct vbo_exec_context *exec );
+
+#if FEATURE_beginend
+
+void vbo_exec_vtx_flush( struct vbo_exec_context *exec, GLboolean unmap );
+void vbo_exec_vtx_map( struct vbo_exec_context *exec );
+
+#else /* FEATURE_beginend */
+
+static INLINE void
+vbo_exec_vtx_flush( struct vbo_exec_context *exec, GLboolean unmap )
+{
+}
+
+static INLINE void
+vbo_exec_vtx_map( struct vbo_exec_context *exec )
+{
+}
+
+#endif /* FEATURE_beginend */
+
 void vbo_exec_vtx_wrap( struct vbo_exec_context *exec );
 
 void vbo_exec_eval_update( struct vbo_exec_context *exec );

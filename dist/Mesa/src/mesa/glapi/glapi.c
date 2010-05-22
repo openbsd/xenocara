@@ -51,98 +51,17 @@
 
 
 #ifdef HAVE_DIX_CONFIG_H
-
 #include <dix-config.h>
-#define PUBLIC
-
+#include "glapi/mesa.h"
 #else
-
 #include "main/glheader.h"
-
+#include "main/compiler.h"
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#ifdef DEBUG
-#include <assert.h>
-#endif
+#include "glapi/glapi.h"
+#include "glapi/glapitable.h"
 
-#include "glapi.h"
-#include "glapioffsets.h"
-#include "glapitable.h"
-
-
-/***** BEGIN NO-OP DISPATCH *****/
-
-static GLboolean WarnFlag = GL_FALSE;
-static _glapi_warning_func warning_func;
-
-/*
- * Enable/disable printing of warning messages.
- */
-PUBLIC void
-_glapi_noop_enable_warnings(GLboolean enable)
-{
-   WarnFlag = enable;
-}
-
-/*
- * Register a callback function for reporting errors.
- */
-PUBLIC void
-_glapi_set_warning_func( _glapi_warning_func func )
-{
-   warning_func = func;
-}
-
-static GLboolean
-warn(void)
-{
-   if ((WarnFlag || getenv("MESA_DEBUG") || getenv("LIBGL_DEBUG"))
-       && warning_func) {
-      return GL_TRUE;
-   }
-   else {
-      return GL_FALSE;
-   }
-}
-
-
-#define KEYWORD1 static
-#define KEYWORD1_ALT static
-#define KEYWORD2 GLAPIENTRY
-#define NAME(func)  NoOp##func
-
-#define F NULL
-
-#define DISPATCH(func, args, msg)					      \
-   if (warn()) {							      \
-      warning_func(NULL, "GL User Error: called without context: %s", #func); \
-   }
-
-#define RETURN_DISPATCH(func, args, msg)				      \
-   if (warn()) {							      \
-      warning_func(NULL, "GL User Error: called without context: %s", #func); \
-   }									      \
-   return 0
-
-#define DISPATCH_TABLE_NAME __glapi_noop_table
-#define UNUSED_TABLE_NAME __unused_noop_functions
-
-#define TABLE_ENTRY(name) (_glapi_proc) NoOp##name
-
-static GLint NoOpUnused(void)
-{
-   if (warn()) {
-      warning_func(NULL, "GL User Error: calling extension function without a current context\n");
-   }
-   return 0;
-}
-
-#include "glapitemp.h"
-
-/***** END NO-OP DISPATCH *****/
-
+extern _glapi_proc __glapi_noop_table[];
 
 
 /**
@@ -186,6 +105,7 @@ PUBLIC __thread void * _glapi_tls_Context
     __attribute__((tls_model("initial-exec")));
 
 PUBLIC const struct _glapi_table *_glapi_Dispatch = NULL;
+
 PUBLIC const void *_glapi_Context = NULL;
 
 #else
@@ -193,22 +113,15 @@ PUBLIC const void *_glapi_Context = NULL;
 #if defined(THREADS)
 
 static GLboolean ThreadSafe = GL_FALSE;  /**< In thread-safe mode? */
-_glthread_TSD _gl_DispatchTSD;           /**< Per-thread dispatch pointer */
-static _glthread_TSD ContextTSD;         /**< Per-thread context pointer */
 
-#if defined(WIN32_THREADS)
-void FreeTSD(_glthread_TSD *p);
-void FreeAllTSD(void)
-{
-   FreeTSD(&_gl_DispatchTSD);
-   FreeTSD(&ContextTSD);
-}
-#endif /* defined(WIN32_THREADS) */
+_glthread_TSD _gl_DispatchTSD;           /**< Per-thread dispatch pointer */
+
+static _glthread_TSD ContextTSD;         /**< Per-thread context pointer */
 
 #endif /* defined(THREADS) */
 
-PUBLIC struct _glapi_table *_glapi_Dispatch = 
-  (struct _glapi_table *) __glapi_noop_table;
+PUBLIC struct _glapi_table *_glapi_Dispatch = (struct _glapi_table *) __glapi_noop_table;
+
 PUBLIC void *_glapi_Context = NULL;
 
 #endif /* defined(GLX_USE_TLS) */
@@ -216,34 +129,77 @@ PUBLIC void *_glapi_Context = NULL;
 
 
 
+#if defined(THREADS) && !defined(GLX_USE_TLS)
+
+void
+_glapi_init_multithread(void)
+{
+   _glthread_InitTSD(&_gl_DispatchTSD);
+   _glthread_InitTSD(&ContextTSD);
+}
+
+void
+_glapi_destroy_multithread(void)
+{
+#ifdef WIN32_THREADS
+   _glthread_DestroyTSD(&_gl_DispatchTSD);
+   _glthread_DestroyTSD(&ContextTSD);
+#endif
+}
+
+/**
+ * Mutex for multithread check.
+ */
+#ifdef WIN32_THREADS
+/* _glthread_DECLARE_STATIC_MUTEX is broken on windows.  There will be race! */
+#define CHECK_MULTITHREAD_LOCK()
+#define CHECK_MULTITHREAD_UNLOCK()
+#else
+_glthread_DECLARE_STATIC_MUTEX(ThreadCheckMutex);
+#define CHECK_MULTITHREAD_LOCK() _glthread_LOCK_MUTEX(ThreadCheckMutex)
+#define CHECK_MULTITHREAD_UNLOCK() _glthread_UNLOCK_MUTEX(ThreadCheckMutex)
+#endif
 
 /**
  * We should call this periodically from a function such as glXMakeCurrent
  * in order to test if multiple threads are being used.
  */
-void
+PUBLIC void
 _glapi_check_multithread(void)
 {
-#if defined(THREADS) && !defined(GLX_USE_TLS)
-   if (!ThreadSafe) {
-      static unsigned long knownID;
-      static GLboolean firstCall = GL_TRUE;
-      if (firstCall) {
-         knownID = _glthread_GetID();
-         firstCall = GL_FALSE;
-      }
-      else if (knownID != _glthread_GetID()) {
-         ThreadSafe = GL_TRUE;
-         _glapi_set_dispatch(NULL);
-         _glapi_set_context(NULL);
-      }
+   static unsigned long knownID;
+   static GLboolean firstCall = GL_TRUE;
+
+   if (ThreadSafe)
+      return;
+
+   CHECK_MULTITHREAD_LOCK();
+   if (firstCall) {
+      _glapi_init_multithread();
+
+      knownID = _glthread_GetID();
+      firstCall = GL_FALSE;
    }
-   else if (!_glapi_get_dispatch()) {
-      /* make sure that this thread's dispatch pointer isn't null */
+   else if (knownID != _glthread_GetID()) {
+      ThreadSafe = GL_TRUE;
       _glapi_set_dispatch(NULL);
+      _glapi_set_context(NULL);
    }
-#endif
+   CHECK_MULTITHREAD_UNLOCK();
 }
+
+#else
+
+void
+_glapi_init_multithread(void) { }
+
+void
+_glapi_destroy_multithread(void) { }
+
+PUBLIC void
+_glapi_check_multithread(void) { }
+
+#endif
 
 
 
@@ -255,7 +211,6 @@ _glapi_check_multithread(void)
 PUBLIC void
 _glapi_set_context(void *context)
 {
-   (void) __unused_noop_functions; /* silence a warning */
 #if defined(GLX_USE_TLS)
    _glapi_tls_Context = context;
 #elif defined(THREADS)
@@ -279,67 +234,12 @@ _glapi_get_context(void)
 #if defined(GLX_USE_TLS)
    return _glapi_tls_Context;
 #elif defined(THREADS)
-   if (ThreadSafe) {
-      return _glthread_GetTSD(&ContextTSD);
-   }
-   else {
-      return _glapi_Context;
-   }
+   return (ThreadSafe) ? _glthread_GetTSD(&ContextTSD) : _glapi_Context;
 #else
    return _glapi_Context;
 #endif
 }
 
-#ifdef USE_X86_ASM
-
-#if defined( GLX_USE_TLS )
-extern       GLubyte gl_dispatch_functions_start[];
-extern       GLubyte gl_dispatch_functions_end[];
-#else
-extern const GLubyte gl_dispatch_functions_start[];
-#endif
-
-#endif /* USE_X86_ASM */
-
-
-#if defined(USE_X64_64_ASM) && defined(GLX_USE_TLS)
-# define DISPATCH_FUNCTION_SIZE  16
-#elif defined(USE_X86_ASM)
-# if defined(THREADS) && !defined(GLX_USE_TLS)
-#  define DISPATCH_FUNCTION_SIZE  32
-# else
-#  define DISPATCH_FUNCTION_SIZE  16
-# endif
-#endif
-
-#if !defined(DISPATCH_FUNCTION_SIZE) && !defined(XFree86Server) && !defined(XGLServer)
-# define NEED_FUNCTION_POINTER
-#endif
-
-#if defined(PTHREADS) || defined(GLX_USE_TLS)
-/**
- * Perform platform-specific GL API entry-point fixups.
- */
-static void
-init_glapi_relocs( void )
-{
-#if defined(USE_X86_ASM) && defined(GLX_USE_TLS) && !defined(GLX_X86_READONLY_TEXT)
-    extern unsigned long _x86_get_dispatch(void);
-    char run_time_patch[] = {
-       0x65, 0xa1, 0, 0, 0, 0 /* movl %gs:0,%eax */
-    };
-    GLuint *offset = (GLuint *) &run_time_patch[2]; /* 32-bits for x86/32 */
-    const GLubyte * const get_disp = (const GLubyte *) run_time_patch;
-    GLubyte * curr_func = (GLubyte *) gl_dispatch_functions_start;
-
-    *offset = _x86_get_dispatch();
-    while ( curr_func != (GLubyte *) gl_dispatch_functions_end ) {
-	(void) memcpy( curr_func, get_disp, sizeof(run_time_patch));
-	curr_func += DISPATCH_FUNCTION_SIZE;
-    }
-#endif
-}
-#endif /* defined(PTHREADS) || defined(GLX_USE_TLS) */
 
 
 /**
@@ -350,17 +250,15 @@ init_glapi_relocs( void )
 PUBLIC void
 _glapi_set_dispatch(struct _glapi_table *dispatch)
 {
-#if defined(PTHREADS) || defined(GLX_USE_TLS)
-   static pthread_once_t once_control = PTHREAD_ONCE_INIT;
-   pthread_once( & once_control, init_glapi_relocs );
-#endif
+   init_glapi_relocs_once();
 
-   if (!dispatch) {
+   if (dispatch == NULL) {
       /* use the no-op functions */
       dispatch = (struct _glapi_table *) __glapi_noop_table;
    }
 #ifdef DEBUG
    else {
+      _glapi_check_table_not_null(dispatch);
       _glapi_check_table(dispatch);
    }
 #endif
@@ -370,9 +268,9 @@ _glapi_set_dispatch(struct _glapi_table *dispatch)
 #elif defined(THREADS)
    _glthread_SetTSD(&_gl_DispatchTSD, (void *) dispatch);
    _glapi_Dispatch = (ThreadSafe) ? NULL : dispatch;
-#else /*THREADS*/
+#else
    _glapi_Dispatch = dispatch;
-#endif /*THREADS*/
+#endif
 }
 
 
@@ -383,17 +281,15 @@ _glapi_set_dispatch(struct _glapi_table *dispatch)
 PUBLIC struct _glapi_table *
 _glapi_get_dispatch(void)
 {
-   struct _glapi_table * api;
 #if defined(GLX_USE_TLS)
-   api = _glapi_tls_Dispatch;
+   return _glapi_tls_Dispatch;
 #elif defined(THREADS)
-   api = (ThreadSafe)
+   return (ThreadSafe)
      ? (struct _glapi_table *) _glthread_GetTSD(&_gl_DispatchTSD)
      : _glapi_Dispatch;
 #else
-   api = _glapi_Dispatch;
+   return _glapi_Dispatch;
 #endif
-   return api;
 }
 
 
@@ -424,74 +320,14 @@ _glapi_get_dispatch_table_size(void)
  * Intended for debugging purposes.
  */
 void
-_glapi_check_table(const struct _glapi_table *table)
+_glapi_check_table_not_null(const struct _glapi_table *table)
 {
-#ifdef EXTRA_DEBUG
+#if 0 /* enable this for extra DEBUG */
    const GLuint entries = _glapi_get_dispatch_table_size();
    const void **tab = (const void **) table;
    GLuint i;
    for (i = 1; i < entries; i++) {
       assert(tab[i]);
-   }
-
-   /* Do some spot checks to be sure that the dispatch table
-    * slots are assigned correctly.
-    */
-   {
-      GLuint BeginOffset = _glapi_get_proc_offset("glBegin");
-      char *BeginFunc = (char*) &table->Begin;
-      GLuint offset = (BeginFunc - (char *) table) / sizeof(void *);
-      assert(BeginOffset == _gloffset_Begin);
-      assert(BeginOffset == offset);
-   }
-   {
-      GLuint viewportOffset = _glapi_get_proc_offset("glViewport");
-      char *viewportFunc = (char*) &table->Viewport;
-      GLuint offset = (viewportFunc - (char *) table) / sizeof(void *);
-      assert(viewportOffset == _gloffset_Viewport);
-      assert(viewportOffset == offset);
-   }
-   {
-      GLuint VertexPointerOffset = _glapi_get_proc_offset("glVertexPointer");
-      char *VertexPointerFunc = (char*) &table->VertexPointer;
-      GLuint offset = (VertexPointerFunc - (char *) table) / sizeof(void *);
-      assert(VertexPointerOffset == _gloffset_VertexPointer);
-      assert(VertexPointerOffset == offset);
-   }
-   {
-      GLuint ResetMinMaxOffset = _glapi_get_proc_offset("glResetMinmax");
-      char *ResetMinMaxFunc = (char*) &table->ResetMinmax;
-      GLuint offset = (ResetMinMaxFunc - (char *) table) / sizeof(void *);
-      assert(ResetMinMaxOffset == _gloffset_ResetMinmax);
-      assert(ResetMinMaxOffset == offset);
-   }
-   {
-      GLuint blendColorOffset = _glapi_get_proc_offset("glBlendColor");
-      char *blendColorFunc = (char*) &table->BlendColor;
-      GLuint offset = (blendColorFunc - (char *) table) / sizeof(void *);
-      assert(blendColorOffset == _gloffset_BlendColor);
-      assert(blendColorOffset == offset);
-   }
-   {
-      GLuint secondaryColor3fOffset = _glapi_get_proc_offset("glSecondaryColor3fEXT");
-      char *secondaryColor3fFunc = (char*) &table->SecondaryColor3fEXT;
-      GLuint offset = (secondaryColor3fFunc - (char *) table) / sizeof(void *);
-      assert(secondaryColor3fOffset == _gloffset_SecondaryColor3fEXT);
-      assert(secondaryColor3fOffset == offset);
-   }
-   {
-      GLuint pointParameterivOffset = _glapi_get_proc_offset("glPointParameterivNV");
-      char *pointParameterivFunc = (char*) &table->PointParameterivNV;
-      GLuint offset = (pointParameterivFunc - (char *) table) / sizeof(void *);
-      assert(pointParameterivOffset == _gloffset_PointParameterivNV);
-      assert(pointParameterivOffset == offset);
-   }
-   {
-      GLuint setFenceOffset = _glapi_get_proc_offset("glSetFenceNV");
-      char *setFenceFunc = (char*) &table->SetFenceNV;
-      GLuint offset = (setFenceFunc - (char *) table) / sizeof(void *);
-      assert(setFenceOffset == _gloffset_SetFenceNV);
-      assert(setFenceOffset == offset);
    }
 #else
    (void) table;

@@ -26,17 +26,14 @@
  */
 
 #include "main/glheader.h"
+#include "main/condrender.h"
 #include "main/context.h"
 #include "main/imports.h"
-#include "main/state.h"
 #include "main/mtypes.h"
 #include "main/macros.h"
 #include "main/enums.h"
 
 #include "t_context.h"
-#include "t_pipeline.h"
-#include "t_vp_build.h"
-#include "t_vertex.h"
 #include "tnl.h"
 
 
@@ -44,7 +41,7 @@
 static GLubyte *get_space(GLcontext *ctx, GLuint bytes)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   GLubyte *space = _mesa_malloc(bytes);
+   GLubyte *space = malloc(bytes);
    
    tnl->block[tnl->nr_blocks++] = space;
    return space;
@@ -56,7 +53,7 @@ static void free_space(GLcontext *ctx)
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLuint i;
    for (i = 0; i < tnl->nr_blocks; i++)
-      _mesa_free(tnl->block[i]);
+      free(tnl->block[i]);
    tnl->nr_blocks = 0;
 }
 
@@ -88,6 +85,45 @@ static void free_space(GLcontext *ctx)
 } while (0)
 
 
+/**
+ * Convert array of BGRA/GLubyte[4] values to RGBA/float[4]
+ * \param ptr  input/ubyte array
+ * \param fptr  output/float array
+ */
+static void
+convert_bgra_to_float(const struct gl_client_array *input,
+                      const GLubyte *ptr, GLfloat *fptr,
+                      GLuint count )
+{
+   GLuint i;
+   assert(input->Normalized);
+   assert(input->Size == 4);
+   for (i = 0; i < count; i++) {
+      const GLubyte *in = (GLubyte *) ptr;  /* in is in BGRA order */
+      *fptr++ = UBYTE_TO_FLOAT(in[2]);  /* red */
+      *fptr++ = UBYTE_TO_FLOAT(in[1]);  /* green */
+      *fptr++ = UBYTE_TO_FLOAT(in[0]);  /* blue */
+      *fptr++ = UBYTE_TO_FLOAT(in[3]);  /* alpha */
+      ptr += input->StrideB;
+   }
+}
+
+static void
+convert_half_to_float(const struct gl_client_array *input,
+		      const GLubyte *ptr, GLfloat *fptr,
+		      GLuint count, GLuint sz)
+{
+   GLuint i, j;
+
+   for (i = 0; i < count; i++) {
+      GLhalfARB *in = (GLhalfARB *)ptr;
+
+      for (j = 0; j < sz; j++) {
+	 *fptr++ = _mesa_half_to_float(in[j]);
+      }
+      ptr += input->StrideB;
+   }
+}
 
 /* Adjust pointer to point at first requested element, convert to
  * floating point, populate VB->AttribPtr[].
@@ -112,7 +148,13 @@ static void _tnl_import_array( GLcontext *ctx,
 	 CONVERT(GLbyte, BYTE_TO_FLOAT); 
 	 break;
       case GL_UNSIGNED_BYTE: 
-	 CONVERT(GLubyte, UBYTE_TO_FLOAT); 
+         if (input->Format == GL_BGRA) {
+            /* See GL_EXT_vertex_array_bgra */
+            convert_bgra_to_float(input, ptr, fptr, count);
+         }
+         else {
+            CONVERT(GLubyte, UBYTE_TO_FLOAT); 
+         }
 	 break;
       case GL_SHORT: 
 	 CONVERT(GLshort, SHORT_TO_FLOAT); 
@@ -128,6 +170,9 @@ static void _tnl_import_array( GLcontext *ctx,
 	 break;
       case GL_DOUBLE: 
 	 CONVERT(GLdouble, (GLfloat)); 
+	 break;
+      case GL_HALF_FLOAT:
+	 convert_half_to_float(input, ptr, fptr, count, sz);
 	 break;
       default:
 	 assert(0);
@@ -222,22 +267,10 @@ static void bind_inputs( GLcontext *ctx,
     */
    VB->Count = count;
 
-
-   /* Legacy pointers -- remove one day.
-    */
-   VB->ObjPtr = VB->AttribPtr[_TNL_ATTRIB_POS];
-   VB->NormalPtr = VB->AttribPtr[_TNL_ATTRIB_NORMAL];
-   VB->ColorPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR0];
-   VB->ColorPtr[1] = NULL;
-   VB->IndexPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR_INDEX];
-   VB->IndexPtr[1] = NULL;
-   VB->SecondaryColorPtr[0] = VB->AttribPtr[_TNL_ATTRIB_COLOR1];
-   VB->SecondaryColorPtr[1] = NULL;
-   VB->FogCoordPtr = VB->AttribPtr[_TNL_ATTRIB_FOG];
-
-   for (i = 0; i < ctx->Const.MaxTextureCoordUnits; i++) {
-      VB->TexCoordPtr[i] = VB->AttribPtr[_TNL_ATTRIB_TEX0 + i];
-   }
+   /* These should perhaps be part of _TNL_ATTRIB_* */
+   VB->BackfaceColorPtr = NULL;
+   VB->BackfaceIndexPtr = NULL;
+   VB->BackfaceSecondaryColorPtr = NULL;
 
    /* Clipping and drawing code still requires this to be a packed
     * array of ubytes which can be written into.  TODO: Fix and
@@ -287,22 +320,27 @@ static void bind_indices( GLcontext *ctx,
 
    ptr = ADD_POINTERS(ib->obj->Pointer, ib->ptr);
 
-   if (ib->type == GL_UNSIGNED_INT) {
+   if (ib->type == GL_UNSIGNED_INT && VB->Primitive[0].basevertex == 0) {
       VB->Elts = (GLuint *) ptr;
    }
    else {
       GLuint *elts = (GLuint *)get_space(ctx, ib->count * sizeof(GLuint));
       VB->Elts = elts;
 
-      if (ib->type == GL_UNSIGNED_SHORT) {
+      if (ib->type == GL_UNSIGNED_INT) {
+	 const GLuint *in = (GLuint *)ptr;
+	 for (i = 0; i < ib->count; i++)
+	    *elts++ = (GLuint)(*in++) + VB->Primitive[0].basevertex;
+      }
+      else if (ib->type == GL_UNSIGNED_SHORT) {
 	 const GLushort *in = (GLushort *)ptr;
 	 for (i = 0; i < ib->count; i++) 
-	    *elts++ = (GLuint)(*in++);
+	    *elts++ = (GLuint)(*in++) + VB->Primitive[0].basevertex;
       }
       else {
 	 const GLubyte *in = (GLubyte *)ptr;
 	 for (i = 0; i < ib->count; i++) 
-	    *elts++ = (GLuint)(*in++);
+	    *elts++ = (GLuint)(*in++) + VB->Primitive[0].basevertex;
       }
    }
 }
@@ -331,6 +369,20 @@ static void unmap_vbos( GLcontext *ctx,
 }
 
 
+void _tnl_vbo_draw_prims(GLcontext *ctx,
+			 const struct gl_client_array *arrays[],
+			 const struct _mesa_prim *prim,
+			 GLuint nr_prims,
+			 const struct _mesa_index_buffer *ib,
+			 GLboolean index_bounds_valid,
+			 GLuint min_index,
+			 GLuint max_index)
+{
+   if (!index_bounds_valid)
+      vbo_get_minmax_index(ctx, prim, ib, &min_index, &max_index);
+
+   _tnl_draw_prims(ctx, arrays, prim, nr_prims, ib, min_index, max_index);
+}
 
 /* This is the main entrypoint into the slimmed-down software tnl
  * module.  In a regular swtnl driver, this can be plugged straight
@@ -347,16 +399,26 @@ void _tnl_draw_prims( GLcontext *ctx,
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    const GLuint TEST_SPLIT = 0;
    const GLint max = TEST_SPLIT ? 8 : tnl->vb.Size - MAX_CLIPPED_VERTICES;
+   GLint max_basevertex = prim->basevertex;
+   GLuint i;
+
+   /* Mesa core state should have been validated already */
+   assert(ctx->NewState == 0x0);
+
+   if (!_mesa_check_conditional_render(ctx))
+      return; /* don't draw */
+
+   for (i = 1; i < nr_prims; i++)
+      max_basevertex = MAX2(max_basevertex, prim[i].basevertex);
 
    if (0)
    {
-      GLuint i;
-      _mesa_printf("%s %d..%d\n", __FUNCTION__, min_index, max_index);
+      printf("%s %d..%d\n", __FUNCTION__, min_index, max_index);
       for (i = 0; i < nr_prims; i++)
-	 _mesa_printf("prim %d: %s start %d count %d\n", i, 
-		      _mesa_lookup_enum_by_nr(prim[i].mode),
-		      prim[i].start,
-		      prim[i].count);
+	 printf("prim %d: %s start %d count %d\n", i, 
+		_mesa_lookup_enum_by_nr(prim[i].mode),
+		prim[i].start,
+		prim[i].count);
    }
 
    if (min_index) {
@@ -364,10 +426,10 @@ void _tnl_draw_prims( GLcontext *ctx,
        */
       vbo_rebase_prims( ctx, arrays, prim, nr_prims, ib, 
 			min_index, max_index,
-			_tnl_draw_prims );
+			_tnl_vbo_draw_prims );
       return;
    }
-   else if (max_index > max) {
+   else if ((GLint)max_index + max_basevertex > max) {
       /* The software TNL pipeline has a fixed amount of storage for
        * vertices and it is necessary to split incoming drawing commands
        * if they exceed that limit.
@@ -381,8 +443,8 @@ void _tnl_draw_prims( GLcontext *ctx,
        * recursively call back into this function.
        */
       vbo_split_prims( ctx, arrays, prim, nr_prims, ib, 
-		       0, max_index,
-		       _tnl_draw_prims,
+		       0, max_index + prim->basevertex,
+		       _tnl_vbo_draw_prims,
 		       &limits );
    }
    else {
@@ -392,17 +454,34 @@ void _tnl_draw_prims( GLcontext *ctx,
       struct gl_buffer_object *bo[VERT_ATTRIB_MAX + 1];
       GLuint nr_bo = 0;
 
-      /* Binding inputs may imply mapping some vertex buffer objects.
-       * They will need to be unmapped below.
-       */
-      bind_inputs(ctx, arrays, max_index+1, bo, &nr_bo);
-      bind_indices(ctx, ib, bo, &nr_bo);
-      bind_prims(ctx, prim, nr_prims );
+      for (i = 0; i < nr_prims;) {
+	 GLuint this_nr_prims;
 
-      TNL_CONTEXT(ctx)->Driver.RunPipeline(ctx);
+	 /* Our SW TNL pipeline doesn't handle basevertex yet, so bind_indices
+	  * will rebase the elements to the basevertex, and we'll only
+	  * emit strings of prims with the same basevertex in one draw call.
+	  */
+	 for (this_nr_prims = 1; i + this_nr_prims < nr_prims;
+	      this_nr_prims++) {
+	    if (prim[i].basevertex != prim[i + this_nr_prims].basevertex)
+	       break;
+	 }
 
-      unmap_vbos(ctx, bo, nr_bo);
-      free_space(ctx);
+	 /* Binding inputs may imply mapping some vertex buffer objects.
+	  * They will need to be unmapped below.
+	  */
+	 bind_prims(ctx, &prim[i], this_nr_prims);
+	 bind_inputs(ctx, arrays, max_index + prim[i].basevertex + 1,
+		     bo, &nr_bo);
+	 bind_indices(ctx, ib, bo, &nr_bo);
+
+	 TNL_CONTEXT(ctx)->Driver.RunPipeline(ctx);
+
+	 unmap_vbos(ctx, bo, nr_bo);
+	 free_space(ctx);
+
+	 i += this_nr_prims;
+      }
    }
 }
 

@@ -50,6 +50,7 @@
 static void compile_clip_prog( struct brw_context *brw,
 			     struct brw_clip_prog_key *key )
 {
+   struct intel_context *intel = &brw->intel;
    struct brw_clip_compile c;
    const GLuint *program;
    GLuint program_size;
@@ -66,20 +67,29 @@ static void compile_clip_prog( struct brw_context *brw,
 
    c.key = *key;
 
-
    /* Need to locate the two positions present in vertex + header.
     * These are currently hardcoded:
     */
    c.header_position_offset = ATTR_SIZE;
 
-   for (i = 0, delta = REG_SIZE; i < VERT_RESULT_MAX; i++)
-      if (c.key.attrs & (1<<i)) {
+   if (intel->gen == 5)
+       delta = 3 * REG_SIZE;
+   else
+       delta = REG_SIZE;
+
+   for (i = 0; i < VERT_RESULT_MAX; i++)
+      if (c.key.attrs & BITFIELD64_BIT(i)) {
 	 c.offset[i] = delta;
 	 delta += ATTR_SIZE;
       }
 
    c.nr_attrs = brw_count_bits(c.key.attrs);
-   c.nr_regs = (c.nr_attrs + 1) / 2 + 1;  /* are vertices packed, or reg-aligned? */
+   
+   if (intel->gen == 5)
+       c.nr_regs = (c.nr_attrs + 1) / 2 + 3;  /* are vertices packed, or reg-aligned? */
+   else
+       c.nr_regs = (c.nr_attrs + 1) / 2 + 1;  /* are vertices packed, or reg-aligned? */
+
    c.nr_bytes = c.nr_regs * REG_SIZE;
 
    c.prog_data.clip_mode = c.key.clip_mode; /* XXX */
@@ -120,20 +130,22 @@ static void compile_clip_prog( struct brw_context *brw,
    /* Upload
     */
    dri_bo_unreference(brw->clip.prog_bo);
-   brw->clip.prog_bo = brw_upload_cache( &brw->cache,
-					 BRW_CLIP_PROG,
-					 &c.key, sizeof(c.key),
-					 NULL, 0,
-					 program, program_size,
-					 &c.prog_data,
-					 &brw->clip.prog_data );
+   brw->clip.prog_bo = brw_upload_cache_with_auxdata(&brw->cache,
+						     BRW_CLIP_PROG,
+						     &c.key, sizeof(c.key),
+						     NULL, 0,
+						     program, program_size,
+						     &c.prog_data,
+						     sizeof(c.prog_data),
+						     &brw->clip.prog_data);
 }
 
 /* Calculate interpolants for triangle and line rasterization.
  */
 static void upload_clip_prog(struct brw_context *brw)
 {
-   GLcontext *ctx = &brw->intel.ctx;
+   struct intel_context *intel = &brw->intel;
+   GLcontext *ctx = &intel->ctx;
    struct brw_clip_prog_key key;
 
    memset(&key, 0, sizeof(key));
@@ -146,13 +158,19 @@ static void upload_clip_prog(struct brw_context *brw)
    key.attrs = brw->vs.prog_data->outputs_written;
    /* _NEW_LIGHT */
    key.do_flat_shading = (ctx->Light.ShadeModel == GL_FLAT);
+   key.pv_first = (ctx->Light.ProvokingVertex == GL_FIRST_VERTEX_CONVENTION);
    /* _NEW_TRANSFORM */
    key.nr_userclip = brw_count_bits(ctx->Transform.ClipPlanesEnabled);
-   key.clip_mode = BRW_CLIPMODE_NORMAL;
+
+   if (intel->gen == 5)
+       key.clip_mode = BRW_CLIPMODE_KERNEL_CLIP;
+   else
+       key.clip_mode = BRW_CLIPMODE_NORMAL;
 
    /* _NEW_POLYGON */
    if (key.primitive == GL_TRIANGLES) {
-      if (ctx->Polygon.CullFaceMode == GL_FRONT_AND_BACK) 
+      if (ctx->Polygon.CullFlag &&
+	  ctx->Polygon.CullFaceMode == GL_FRONT_AND_BACK)
 	 key.clip_mode = BRW_CLIPMODE_REJECT_ALL;
       else {
 	 GLuint fill_front = CLIP_CULL;

@@ -27,13 +27,16 @@
  * Program runs for 5 seconds then exits, outputing framerate to console
  */
 
+#define EGL_EGLEXT_PROTOTYPES
+
+#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <GL/gl.h>
-#include <GLES/egl.h>
-#include <assert.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 #define MAX_CONFIGS 10
 #define MAX_MODES 100
@@ -271,9 +274,9 @@ draw(void)
 static void
 reshape(int width, int height)
 {
-   glViewport(0, 0, (GLint) width, (GLint) height);
-
    GLfloat h = (GLfloat) height / (GLfloat) width;
+
+   glViewport(0, 0, (GLint) width, (GLint) height);
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -330,6 +333,8 @@ static void run_gears(EGLDisplay dpy, EGLSurface surf, int ttr)
 	double st = current_time();
 	double ct = st;
 	int frames = 0;
+	GLfloat seconds, fps;
+
 	while (ct - st < ttr)
 	{
 		double tt = current_time();
@@ -349,8 +354,8 @@ static void run_gears(EGLDisplay dpy, EGLSurface surf, int ttr)
 		frames++;
 	}
 	
-	GLfloat seconds = ct - st;
-	GLfloat fps = frames / seconds;
+	seconds = ct - st;
+	fps = frames / seconds;
 	printf("%d frames in %3.1f seconds = %6.3f FPS\n", frames, seconds, fps);
 	
 }
@@ -369,7 +374,8 @@ main(int argc, char *argv[])
 	EGLint screenAttribs[10];
 	EGLModeMESA mode[MAX_MODES];
 	EGLScreenMESA screen;
-	EGLint count, chosenMode;
+	EGLint count;
+	EGLint chosenMode = 0;
 	GLboolean printInfo = GL_FALSE;
 	EGLint width = 0, height = 0;
 	
@@ -385,7 +391,7 @@ main(int argc, char *argv[])
 	}
 	
 	/* DBR : Create EGL context/surface etc */
-        d = eglGetDisplay(":0");
+	d = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	assert(d);
 
 	if (!eglInitialize(d, &maj, &min)) {
@@ -412,7 +418,7 @@ main(int argc, char *argv[])
 		eglGetModeAttribMESA(d, mode[i], EGL_WIDTH, &w);
 		eglGetModeAttribMESA(d, mode[i], EGL_HEIGHT, &h);
 		printf("%3d: %d x %d\n", i, w, h);
-		if (w > width && h > height && w <= 1280 && h <= 1024) {
+		if (w > width && h > height) {
 			width = w;
 			height = h;
                         chosenMode = i;
@@ -420,6 +426,7 @@ main(int argc, char *argv[])
 	}
 	printf("eglgears: Using screen mode/size %d: %d x %d\n", chosenMode, width, height);
 
+	eglBindAPI(EGL_OPENGL_API);
 	ctx = eglCreateContext(d, configs[0], EGL_NO_CONTEXT, NULL);
 	if (ctx == EGL_NO_CONTEXT) {
 		printf("eglgears: failed to create context\n");

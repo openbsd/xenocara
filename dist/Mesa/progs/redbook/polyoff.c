@@ -60,7 +60,7 @@ GLboolean doubleBuffer;
 /*  display() draws two spheres, one with a gray, diffuse material,
  *  the other sphere with a magenta material with a specular highlight.
  */
-void display (void)
+static void display (void)
 {
     GLfloat gray[] = { 0.8, 0.8, 0.8, 1.0 };
     GLfloat black[] = { 0.0, 0.0, 0.0, 1.0 };
@@ -108,7 +108,7 @@ void display (void)
  *  create display list with sphere
  *  initialize lighting and depth buffer
  */
-void gfxinit (void)
+static void gfxinit (void)
 {
     GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
@@ -134,7 +134,7 @@ void gfxinit (void)
 }
 
 /*  call when window is resized  */
-void reshape(int width, int height)
+static void reshape(int width, int height)
 {
     glViewport (0, 0, width, height);
     glMatrixMode (GL_PROJECTION);
@@ -153,6 +153,7 @@ static void Benchmark( float xdiff, float ydiff )
    double seconds, fps;
 
    printf("Benchmarking...\n");
+   fflush(stdout);
 
    draws = 0;
    startTime = glutGet(GLUT_ELAPSED_TIME);
@@ -169,12 +170,13 @@ static void Benchmark( float xdiff, float ydiff )
    seconds = (double) (endTime - startTime) / 1000.0;
    fps = draws / seconds;
    printf("Result:  fps: %g\n", fps);
+   fflush(stdout);
 }
 
 
 /*  call when mouse button is pressed  */
 /* ARGSUSED2 */
-void mouse(int button, int state, int x, int y) {
+static void mouse(int button, int state, int x, int y) {
     switch (button) {
 	case GLUT_LEFT_BUTTON:
 	    switch (state) {
@@ -211,7 +213,7 @@ void mouse(int button, int state, int x, int y) {
 }
 
 /* ARGSUSED1 */
-void keyboard (unsigned char key, int x, int y)
+static void keyboard (unsigned char key, int x, int y)
 {
    switch (key) {
       case 't':
@@ -263,22 +265,10 @@ void keyboard (unsigned char key, int x, int y)
       default:
          break;
    }
+   fflush(stdout);
 }
 
-static void
-key(unsigned char k, int x, int y)
-{
-  switch (k) {
-  case 27:  /* Escape */
-    exit(0);
-    break;
-  default:
-    return;
-  }
-  glutPostRedisplay();
-}
-
-GLenum Args(int argc, char **argv)
+static GLenum Args(int argc, char **argv)
 {
     GLint i;
 

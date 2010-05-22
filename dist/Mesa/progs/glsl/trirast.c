@@ -15,10 +15,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
-#include <GL/glext.h>
-#include "extfuncs.h"
 #include "shaderutil.h"
 
 
@@ -85,9 +83,9 @@ Redisplay(void)
    RotateVerts(Zrot, 3, TriVerts, v);
    ComputeBounds(3, v, &xmin, &ymin, &xmax, &ymax);
 
-   glUniform2fv_func(uv0, 1, v[0]);
-   glUniform2fv_func(uv1, 1, v[1]);
-   glUniform2fv_func(uv2, 1, v[2]);
+   glUniform2fv(uv0, 1, v[0]);
+   glUniform2fv(uv1, 1, v[1]);
+   glUniform2fv(uv2, 1, v[2]);
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -132,9 +130,9 @@ Reshape(int width, int height)
 static void
 CleanUp(void)
 {
-   glDeleteShader_func(fragShader);
-   glDeleteShader_func(vertShader);
-   glDeleteProgram_func(program);
+   glDeleteShader(fragShader);
+   glDeleteShader(vertShader);
+   glDeleteProgram(program);
    glutDestroyWindow(win);
 }
 
@@ -181,9 +179,9 @@ Init(void)
       "\n"
       "void main() {\n"
       "   vec2 p = gl_FragCoord.xy; \n"
-      "   if (crs(v1 - v0, p - v0) >= 0 && \n"
-      "       crs(v2 - v1, p - v1) >= 0 && \n"
-      "       crs(v0 - v2, p - v2) >= 0) \n"
+      "   if (crs(v1 - v0, p - v0) >= 0.0 && \n"
+      "       crs(v2 - v1, p - v1) >= 0.0 && \n"
+      "       crs(v0 - v2, p - v2) >= 0.0) \n"
       "      gl_FragColor = vec4(1.0); \n"
       "   else \n"
       "      gl_FragColor = vec4(0.5); \n"
@@ -196,17 +194,15 @@ Init(void)
    if (!ShadersSupported())
       exit(1);
 
-   GetExtensionFuncs();
-
    vertShader = CompileShaderText(GL_VERTEX_SHADER, vertShaderText);
    fragShader = CompileShaderText(GL_FRAGMENT_SHADER, fragShaderText);
    program = LinkShaders(vertShader, fragShader);
 
-   glUseProgram_func(program);
+   glUseProgram(program);
 
-   uv0 = glGetUniformLocation_func(program, "v0");
-   uv1 = glGetUniformLocation_func(program, "v1");
-   uv2 = glGetUniformLocation_func(program, "v2");
+   uv0 = glGetUniformLocation(program, "v0");
+   uv1 = glGetUniformLocation(program, "v1");
+   uv2 = glGetUniformLocation(program, "v2");
    printf("Uniforms: %d %d %d\n", uv0, uv1, uv2);
 
    /*assert(glGetError() == 0);*/
@@ -216,9 +212,9 @@ Init(void)
 
    printf("GL_RENDERER = %s\n",(const char *) glGetString(GL_RENDERER));
 
-   assert(glIsProgram_func(program));
-   assert(glIsShader_func(fragShader));
-   assert(glIsShader_func(vertShader));
+   assert(glIsProgram(program));
+   assert(glIsShader(fragShader));
+   assert(glIsShader(vertShader));
 
    glColor3f(1, 0, 0);
 }
@@ -243,10 +239,10 @@ int
 main(int argc, char *argv[])
 {
    glutInit(&argc, argv);
-   glutInitWindowPosition( 0, 0);
    glutInitWindowSize(WinWidth, WinHeight);
    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
    win = glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc(Reshape);
    glutKeyboardFunc(Key);
    glutDisplayFunc(Redisplay);

@@ -72,11 +72,13 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/context.h"
 #include "main/dlist.h"
 #include "main/enums.h"
+#include "main/eval.h"
 #include "main/macros.h"
+#include "main/api_noop.h"
 #include "main/api_validate.h"
 #include "main/api_arrayelt.h"
 #include "main/vtxfmt.h"
-#include "glapi/dispatch.h"
+#include "main/dispatch.h"
 
 #include "vbo_context.h"
 
@@ -116,23 +118,23 @@ static GLuint _save_copy_vertices( GLcontext *ctx,
    case GL_LINES:
       ovf = nr&1;
       for (i = 0 ; i < ovf ; i++)
-	 _mesa_memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz*sizeof(GLfloat) );
+	 memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz*sizeof(GLfloat) );
       return i;
    case GL_TRIANGLES:
       ovf = nr%3;
       for (i = 0 ; i < ovf ; i++)
-	 _mesa_memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz*sizeof(GLfloat) );
+	 memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz*sizeof(GLfloat) );
       return i;
    case GL_QUADS:
       ovf = nr&3;
       for (i = 0 ; i < ovf ; i++)
-	 _mesa_memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz*sizeof(GLfloat) );
+	 memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz*sizeof(GLfloat) );
       return i;
    case GL_LINE_STRIP:
       if (nr == 0) 
 	 return 0;
       else {
-	 _mesa_memcpy( dst, src+(nr-1)*sz, sz*sizeof(GLfloat) );
+	 memcpy( dst, src+(nr-1)*sz, sz*sizeof(GLfloat) );
 	 return 1;
       }
    case GL_LINE_LOOP:
@@ -141,11 +143,11 @@ static GLuint _save_copy_vertices( GLcontext *ctx,
       if (nr == 0) 
 	 return 0;
       else if (nr == 1) {
-	 _mesa_memcpy( dst, src+0, sz*sizeof(GLfloat) );
+	 memcpy( dst, src+0, sz*sizeof(GLfloat) );
 	 return 1;
       } else {
-	 _mesa_memcpy( dst, src+0, sz*sizeof(GLfloat) );
-	 _mesa_memcpy( dst+sz, src+(nr-1)*sz, sz*sizeof(GLfloat) );
+	 memcpy( dst, src+0, sz*sizeof(GLfloat) );
+	 memcpy( dst+sz, src+(nr-1)*sz, sz*sizeof(GLfloat) );
 	 return 2;
       }
    case GL_TRIANGLE_STRIP:
@@ -156,7 +158,7 @@ static GLuint _save_copy_vertices( GLcontext *ctx,
       default: ovf = 2 + (nr&1); break;
       }
       for (i = 0 ; i < ovf ; i++)
-	 _mesa_memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz*sizeof(GLfloat) );
+	 memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz*sizeof(GLfloat) );
       return i;
    default:
       assert(0);
@@ -241,7 +243,7 @@ static void _save_reset_counters( GLcontext *ctx )
    save->buffer = (save->vertex_store->buffer + 
 		   save->vertex_store->used);
 
-   assert(save->buffer == save->vbptr);
+   assert(save->buffer == save->buffer_ptr);
 
    if (save->vertex_size)
       save->max_vert = ((VBO_SAVE_BUFFER_SIZE - save->vertex_store->used) / 
@@ -268,14 +270,14 @@ static void _save_compile_vertex_list( GLcontext *ctx )
     * being compiled.
     */
    node = (struct vbo_save_vertex_list *)
-      _mesa_alloc_instruction(ctx, save->opcode_vertex_list, sizeof(*node));
+      _mesa_dlist_alloc(ctx, save->opcode_vertex_list, sizeof(*node));
 
    if (!node)
       return;
 
    /* Duplicate our template, increment refcounts to the storage structs:
     */
-   _mesa_memcpy(node->attrsz, save->attrsz, sizeof(node->attrsz)); 
+   memcpy(node->attrsz, save->attrsz, sizeof(node->attrsz));
    node->vertex_size = save->vertex_size;
    node->buffer_offset = (save->buffer - save->vertex_store->buffer) * sizeof(GLfloat); 
    node->count = save->vert_count;
@@ -289,11 +291,36 @@ static void _save_compile_vertex_list( GLcontext *ctx )
    node->vertex_store->refcount++;
    node->prim_store->refcount++;
 
+
+   node->current_size = node->vertex_size - node->attrsz[0];
+   node->current_data = NULL;
+
+   if (node->current_size) {
+      /* If the malloc fails, we just pull the data out of the VBO
+       * later instead.
+       */
+      node->current_data = MALLOC( node->current_size * sizeof(GLfloat) );
+      if (node->current_data) {
+         const char *buffer = (const char *)save->vertex_store->buffer;
+         unsigned attr_offset = node->attrsz[0] * sizeof(GLfloat);
+         unsigned vertex_offset = 0;
+
+         if (node->count)
+            vertex_offset = (node->count-1) * node->vertex_size * sizeof(GLfloat);
+
+         memcpy( node->current_data,
+                 buffer + node->buffer_offset + vertex_offset + attr_offset,
+                 node->current_size * sizeof(GLfloat) );
+      }
+   }
+
+
+
    assert(node->attrsz[VBO_ATTRIB_POS] != 0 ||
 	  node->count == 0);
 
    if (save->dangling_attr_ref)
-      ctx->ListState.CurrentList->flags |= MESA_DLIST_DANGLING_REFS;
+      ctx->ListState.CurrentList->Flags |= DLIST_DANGLING_REFS;
 
    save->vertex_store->used += save->vertex_size * node->count;
    save->prim_store->used += node->prim_count;
@@ -343,7 +370,7 @@ static void _save_compile_vertex_list( GLcontext *ctx )
       /* Allocate and map new store:
        */
       save->vertex_store = alloc_vertex_store( ctx );
-      save->vbptr = map_vertex_store( ctx, save->vertex_store );
+      save->buffer_ptr = map_vertex_store( ctx, save->vertex_store );
    } 
 
    if (save->prim_store->used > VBO_SAVE_PRIM_SIZE - 6) {
@@ -414,9 +441,9 @@ static void _save_wrap_filled_vertex( GLcontext *ctx )
    assert(save->max_vert - save->vert_count > save->copied.nr);
 
    for (i = 0 ; i < save->copied.nr ; i++) {
-      _mesa_memcpy( save->vbptr, data, save->vertex_size * sizeof(GLfloat));
+      memcpy( save->buffer_ptr, data, save->vertex_size * sizeof(GLfloat));
       data += save->vertex_size;
-      save->vbptr += save->vertex_size;
+      save->buffer_ptr += save->vertex_size;
       save->vert_count++;
    }
 }
@@ -550,7 +577,7 @@ static void _save_upgrade_vertex( GLcontext *ctx,
 	 }
       }
 
-      save->vbptr = dest;
+      save->buffer_ptr = dest;
       save->vert_count += save->copied.nr;
    }
 }
@@ -622,9 +649,9 @@ do {								\
       GLuint i;							\
 								\
       for (i = 0; i < save->vertex_size; i++)			\
-	 save->vbptr[i] = save->vertex[i];			\
+	 save->buffer_ptr[i] = save->vertex[i];			\
 								\
-      save->vbptr += save->vertex_size;				\
+      save->buffer_ptr += save->vertex_size;				\
 								\
       if (++save->vert_count >= save->max_vert)			\
 	 _save_wrap_filled_vertex( ctx );			\
@@ -642,19 +669,33 @@ do {								\
  *     -- Flush current buffer
  *     -- Fallback to opcodes for the rest of the begin/end object.
  */
-#define DO_FALLBACK(ctx) 							\
-do {									\
-   struct vbo_save_context *save = &vbo_context(ctx)->save;					\
-									\
-   if (save->vert_count || save->prim_count) 						\
-      _save_compile_vertex_list( ctx );					\
-									\
-   _save_copy_to_current( ctx );					\
-   _save_reset_vertex( ctx );						\
-   _save_reset_counters( ctx );  \
-   _mesa_install_save_vtxfmt( ctx, &ctx->ListState.ListVtxfmt );	\
-   ctx->Driver.SaveNeedFlush = 0;					\
-} while (0)
+static void DO_FALLBACK( GLcontext *ctx )
+{
+   struct vbo_save_context *save = &vbo_context(ctx)->save;
+
+   if (save->vert_count || save->prim_count) {
+      GLint i = save->prim_count - 1;
+
+      /* Close off in-progress primitive.
+       */
+      save->prim[i].count = (save->vert_count - 
+                             save->prim[i].start);
+
+      /* Need to replay this display list with loopback,
+       * unfortunately, otherwise this primitive won't be handled
+       * properly:
+       */
+      save->dangling_attr_ref = 1;
+      
+      _save_compile_vertex_list( ctx );
+   }
+
+   _save_copy_to_current( ctx );
+   _save_reset_vertex( ctx );
+   _save_reset_counters( ctx );
+   _mesa_install_save_vtxfmt( ctx, &ctx->ListState.ListVtxfmt );
+   ctx->Driver.SaveNeedFlush = 0;
+}
 
 static void GLAPIENTRY _save_EvalCoord1f( GLfloat u )
 {
@@ -786,6 +827,33 @@ static void GLAPIENTRY _save_DrawRangeElements(GLenum mode,
    _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glDrawRangeElements" );
 }
 
+static void GLAPIENTRY _save_DrawElementsBaseVertex(GLenum mode,
+						    GLsizei count,
+						    GLenum type,
+						    const GLvoid *indices,
+						    GLint basevertex)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   (void) mode; (void) count; (void) type; (void) indices; (void)basevertex;
+
+   _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glDrawElements" );
+}
+
+static void GLAPIENTRY _save_DrawRangeElementsBaseVertex(GLenum mode,
+							 GLuint start,
+							 GLuint end,
+							 GLsizei count,
+							 GLenum type,
+							 const GLvoid *indices,
+							 GLint basevertex)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   (void) mode; (void) start; (void) end; (void) count; (void) type;
+   (void) indices; (void)basevertex;
+
+   _mesa_compile_error( ctx, GL_INVALID_OPERATION, "glDrawRangeElements" );
+}
+
 static void GLAPIENTRY _save_DrawArrays(GLenum mode, GLint start, GLsizei count)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -867,12 +935,12 @@ static void GLAPIENTRY _save_OBE_DrawElements(GLenum mode, GLsizei count, GLenum
    GET_CURRENT_CONTEXT(ctx);
    GLint i;
 
-   if (!_mesa_validate_DrawElements( ctx, mode, count, type, indices ))
+   if (!_mesa_validate_DrawElements( ctx, mode, count, type, indices, 0 ))
       return;
 
    _ae_map_vbos( ctx );
 
-   if (ctx->Array.ElementArrayBufferObj->Name)
+   if (_mesa_is_bufferobj(ctx->Array.ElementArrayBufferObj))
       indices = ADD_POINTERS(ctx->Array.ElementArrayBufferObj->Pointer, indices);
 
    vbo_save_NotifyBegin( ctx, mode | VBO_SAVE_PRIM_WEAK );
@@ -908,7 +976,7 @@ static void GLAPIENTRY _save_OBE_DrawRangeElements(GLenum mode,
    GET_CURRENT_CONTEXT(ctx);
    if (_mesa_validate_DrawRangeElements( ctx, mode,
 					 start, end,
-					 count, type, indices ))
+					 count, type, indices, 0 ))
       _save_OBE_DrawElements( mode, count, type, indices );
 }
 
@@ -921,7 +989,8 @@ static void _save_vtxfmt_init( GLcontext *ctx )
    struct vbo_save_context *save = &vbo_context(ctx)->save;
    GLvertexformat *vfmt = &save->vtxfmt;
 
-   vfmt->ArrayElement = _ae_loopback_array_elt;	        /* generic helper */
+   _MESA_INIT_ARRAYELT_VTXFMT(vfmt, _ae_);
+
    vfmt->Begin = _save_Begin;
    vfmt->Color3f = _save_Color3f;
    vfmt->Color3fv = _save_Color3fv;
@@ -980,26 +1049,23 @@ static void _save_vtxfmt_init( GLcontext *ctx )
    
    /* This will all require us to fallback to saving the list as opcodes:
     */ 
-   vfmt->CallList = _save_CallList; /* inside begin/end */
-   vfmt->CallLists = _save_CallLists; /* inside begin/end */
-   vfmt->EvalCoord1f = _save_EvalCoord1f;
-   vfmt->EvalCoord1fv = _save_EvalCoord1fv;
-   vfmt->EvalCoord2f = _save_EvalCoord2f;
-   vfmt->EvalCoord2fv = _save_EvalCoord2fv;
-   vfmt->EvalPoint1 = _save_EvalPoint1;
-   vfmt->EvalPoint2 = _save_EvalPoint2;
+   _MESA_INIT_DLIST_VTXFMT(vfmt, _save_); /* inside begin/end */
+
+   _MESA_INIT_EVAL_VTXFMT(vfmt, _save_);
 
    /* These are all errors as we at least know we are in some sort of
     * begin/end pair:
     */
-   vfmt->EvalMesh1 = _save_EvalMesh1;	
-   vfmt->EvalMesh2 = _save_EvalMesh2;
    vfmt->Begin = _save_Begin;
    vfmt->Rectf = _save_Rectf;
    vfmt->DrawArrays = _save_DrawArrays;
    vfmt->DrawElements = _save_DrawElements;
    vfmt->DrawRangeElements = _save_DrawRangeElements;
-
+   vfmt->DrawElementsBaseVertex = _save_DrawElementsBaseVertex;
+   vfmt->DrawRangeElementsBaseVertex = _save_DrawRangeElementsBaseVertex;
+   /* Loops back into vfmt->DrawElements */
+   vfmt->MultiDrawElementsEXT = _mesa_noop_MultiDrawElements;
+   vfmt->MultiDrawElementsBaseVertex = _mesa_noop_MultiDrawElementsBaseVertex;
 }
 
 
@@ -1035,7 +1101,7 @@ void vbo_save_NewList( GLcontext *ctx, GLuint list, GLenum mode )
    if (!save->vertex_store) 
       save->vertex_store = alloc_vertex_store( ctx );
       
-   save->vbptr = map_vertex_store( ctx, save->vertex_store );
+   save->buffer_ptr = map_vertex_store( ctx, save->vertex_store );
    
    _save_reset_vertex( ctx );
    _save_reset_counters( ctx );  
@@ -1076,10 +1142,10 @@ void vbo_save_EndList( GLcontext *ctx )
    assert(save->vertex_size == 0);
 }
  
-void vbo_save_BeginCallList( GLcontext *ctx, struct mesa_display_list *dlist )
+void vbo_save_BeginCallList( GLcontext *ctx, struct gl_display_list *dlist )
 {
    struct vbo_save_context *save = &vbo_context(ctx)->save;
-   save->replay_flags |= dlist->flags;
+   save->replay_flags |= dlist->Flags;
 }
 
 void vbo_save_EndCallList( GLcontext *ctx )
@@ -1105,6 +1171,11 @@ static void vbo_destroy_vertex_list( GLcontext *ctx, void *data )
 
    if ( --node->prim_store->refcount == 0 )
       FREE( node->prim_store );
+
+   if (node->current_data) {
+      FREE(node->current_data);
+      node->current_data = NULL;
+   }
 }
 
 
@@ -1114,16 +1185,16 @@ static void vbo_print_vertex_list( GLcontext *ctx, void *data )
    GLuint i;
    (void) ctx;
 
-   _mesa_debug(NULL, "VBO-VERTEX-LIST, %u vertices %d primitives, %d vertsize\n",
-               node->count,
-	       node->prim_count,
-	       node->vertex_size);
+   printf("VBO-VERTEX-LIST, %u vertices %d primitives, %d vertsize\n",
+	  node->count,
+	  node->prim_count,
+	  node->vertex_size);
 
    for (i = 0 ; i < node->prim_count ; i++) {
       struct _mesa_prim *prim = &node->prim[i];
       _mesa_debug(NULL, "   prim %d: %s%s %d..%d %s %s\n",
 		  i, 
-		  _mesa_lookup_enum_by_nr(prim->mode),
+		  _mesa_lookup_prim_by_nr(prim->mode),
 		  prim->weak ? " (weak)" : "",
 		  prim->start, 
 		  prim->start + prim->count,
@@ -1162,11 +1233,11 @@ void vbo_save_api_init( struct vbo_save_context *save )
    GLuint i;
 
    save->opcode_vertex_list =
-      _mesa_alloc_opcode( ctx,
-			  sizeof(struct vbo_save_vertex_list),
-			  vbo_save_playback_vertex_list,
-			  vbo_destroy_vertex_list,
-			  vbo_print_vertex_list );
+      _mesa_dlist_alloc_opcode( ctx,
+                                sizeof(struct vbo_save_vertex_list),
+                                vbo_save_playback_vertex_list,
+                                vbo_destroy_vertex_list,
+                                vbo_print_vertex_list );
 
    ctx->Driver.NotifySaveBegin = vbo_save_NotifyBegin;
 
@@ -1184,6 +1255,9 @@ void vbo_save_api_init( struct vbo_save_context *save )
    ctx->ListState.ListVtxfmt.DrawArrays = _save_OBE_DrawArrays;
    ctx->ListState.ListVtxfmt.DrawElements = _save_OBE_DrawElements;
    ctx->ListState.ListVtxfmt.DrawRangeElements = _save_OBE_DrawRangeElements;
+   /* loops back into _save_OBE_DrawElements */
+   ctx->ListState.ListVtxfmt.MultiDrawElementsEXT = _mesa_noop_MultiDrawElements;
+   ctx->ListState.ListVtxfmt.MultiDrawElementsBaseVertex = _mesa_noop_MultiDrawElementsBaseVertex;
    _mesa_install_save_vtxfmt( ctx, &ctx->ListState.ListVtxfmt );
 }
 

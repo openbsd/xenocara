@@ -1,8 +1,9 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
+ * Version:  7.7
  *
- * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -33,61 +34,66 @@
 #include "api_arrayelt.h"
 #include "api_loopback.h"
 #include "config.h"
-#include "attrib.h"
-#include "blend.h"
-#include "buffers.h"
+#include "mfeatures.h"
 #if FEATURE_ARB_vertex_buffer_object
 #include "bufferobj.h"
 #endif
 #include "arrayobj.h"
-#include "clip.h"
-#include "colortab.h"
 #include "context.h"
-#include "convolve.h"
-#include "depth.h"
 #include "dlist.h"
-#include "enable.h"
 #include "enums.h"
 #include "eval.h"
-#include "extensions.h"
-#include "feedback.h"
 #include "framebuffer.h"
-#include "get.h"
 #include "glapi/glapi.h"
 #include "hash.h"
-#include "histogram.h"
 #include "image.h"
 #include "light.h"
-#include "lines.h"
 #include "dlist.h"
 #include "macros.h"
-#include "matrix.h"
-#include "pixel.h"
-#include "points.h"
-#include "polygon.h"
 #include "queryobj.h"
-#include "state.h"
-#include "texobj.h"
 #include "teximage.h"
-#include "texstate.h"
 #include "mtypes.h"
 #include "varray.h"
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
 #include "shader/arbprogram.h"
-#include "shader/program.h"
 #endif
 #if FEATURE_NV_vertex_program || FEATURE_NV_fragment_program
 #include "shader/nvprogram.h"
-#include "shader/program.h"
 #endif
 #if FEATURE_ATI_fragment_shader
 #include "shader/atifragshader.h"
 #endif
 
 #include "math/m_matrix.h"
-#include "math/m_xform.h"
 
-#include "glapi/dispatch.h"
+#include "main/dispatch.h"
+
+
+
+/**
+ * Other parts of Mesa (such as the VBO module) can plug into the display
+ * list system.  This structure describes new display list instructions.
+ */
+struct gl_list_instruction
+{
+   GLuint Size;
+   void (*Execute)( GLcontext *ctx, void *data );
+   void (*Destroy)( GLcontext *ctx, void *data );
+   void (*Print)( GLcontext *ctx, void *data );
+};
+
+
+#define MAX_DLIST_EXT_OPCODES 16
+
+/**
+ * Used by device drivers to hook new commands into display lists.
+ */
+struct gl_list_extensions
+{
+   struct gl_list_instruction Opcode[MAX_DLIST_EXT_OPCODES];
+   GLuint NumOpcodes;
+};
+
 
 
 /**
@@ -189,8 +195,13 @@ typedef enum
    OPCODE_CLEAR_DEPTH,
    OPCODE_CLEAR_INDEX,
    OPCODE_CLEAR_STENCIL,
+   OPCODE_CLEAR_BUFFER_IV,
+   OPCODE_CLEAR_BUFFER_UIV,
+   OPCODE_CLEAR_BUFFER_FV,
+   OPCODE_CLEAR_BUFFER_FI,
    OPCODE_CLIP_PLANE,
    OPCODE_COLOR_MASK,
+   OPCODE_COLOR_MASK_INDEXED,
    OPCODE_COLOR_MATERIAL,
    OPCODE_COLOR_TABLE,
    OPCODE_COLOR_TABLE_PARAMETER_FV,
@@ -215,9 +226,11 @@ typedef enum
    OPCODE_DEPTH_MASK,
    OPCODE_DEPTH_RANGE,
    OPCODE_DISABLE,
+   OPCODE_DISABLE_INDEXED,
    OPCODE_DRAW_BUFFER,
    OPCODE_DRAW_PIXELS,
    OPCODE_ENABLE,
+   OPCODE_ENABLE_INDEXED,
    OPCODE_EVALMESH1,
    OPCODE_EVALMESH2,
    OPCODE_FOG,
@@ -320,12 +333,42 @@ typedef enum
    /* GL_ARB_draw_buffers */
    OPCODE_DRAW_BUFFERS_ARB,
    /* GL_ATI_fragment_shader */
+   OPCODE_TEX_BUMP_PARAMETER_ATI,
+   /* GL_ATI_fragment_shader */
    OPCODE_BIND_FRAGMENT_SHADER_ATI,
    OPCODE_SET_FRAGMENT_SHADER_CONSTANTS_ATI,
    /* OpenGL 2.0 */
    OPCODE_STENCIL_FUNC_SEPARATE,
    OPCODE_STENCIL_OP_SEPARATE,
    OPCODE_STENCIL_MASK_SEPARATE,
+
+   /* GL_ARB_shader_objects */
+   OPCODE_USE_PROGRAM,
+   OPCODE_UNIFORM_1F,
+   OPCODE_UNIFORM_2F,
+   OPCODE_UNIFORM_3F,
+   OPCODE_UNIFORM_4F,
+   OPCODE_UNIFORM_1FV,
+   OPCODE_UNIFORM_2FV,
+   OPCODE_UNIFORM_3FV,
+   OPCODE_UNIFORM_4FV,
+   OPCODE_UNIFORM_1I,
+   OPCODE_UNIFORM_2I,
+   OPCODE_UNIFORM_3I,
+   OPCODE_UNIFORM_4I,
+   OPCODE_UNIFORM_1IV,
+   OPCODE_UNIFORM_2IV,
+   OPCODE_UNIFORM_3IV,
+   OPCODE_UNIFORM_4IV,
+   OPCODE_UNIFORM_MATRIX22,
+   OPCODE_UNIFORM_MATRIX33,
+   OPCODE_UNIFORM_MATRIX44,
+   OPCODE_UNIFORM_MATRIX23,
+   OPCODE_UNIFORM_MATRIX32,
+   OPCODE_UNIFORM_MATRIX24,
+   OPCODE_UNIFORM_MATRIX42,
+   OPCODE_UNIFORM_MATRIX34,
+   OPCODE_UNIFORM_MATRIX43,
 
    /* GL_EXT_framebuffer_blit */
    OPCODE_BLIT_FRAMEBUFFER,
@@ -350,6 +393,9 @@ typedef enum
    OPCODE_EVAL_P1,
    OPCODE_EVAL_P2,
 
+   /* GL_EXT_provoking_vertex */
+   OPCODE_PROVOKING_VERTEX,
+
    /* The following three are meta instructions */
    OPCODE_ERROR,                /* raise compiled-in error */
    OPCODE_CONTINUE,
@@ -370,7 +416,7 @@ typedef enum
  * contiguous nodes in memory.
  * Each node is the union of a variety of data types.
  */
-union node
+union gl_dlist_node
 {
    OpCode opcode;
    GLboolean b;
@@ -385,6 +431,9 @@ union node
    GLvoid *data;
    void *next;                  /* If prev node's opcode==OPCODE_CONTINUE */
 };
+
+
+typedef union gl_dlist_node Node;
 
 
 /**
@@ -402,6 +451,10 @@ union node
  */
 static GLuint InstSize[OPCODE_END_OF_LIST + 1];
 
+
+#if FEATURE_dlist
+
+
 void mesa_print_display_list(GLuint list);
 
 
@@ -414,13 +467,13 @@ void mesa_print_display_list(GLuint list);
  * Make an empty display list.  This is used by glGenLists() to
  * reserve display list IDs.
  */
-static struct mesa_display_list *
-make_list(GLuint list, GLuint count)
+static struct gl_display_list *
+make_list(GLuint name, GLuint count)
 {
-   struct mesa_display_list *dlist = CALLOC_STRUCT(mesa_display_list);
-   dlist->id = list;
-   dlist->node = (Node *) _mesa_malloc(sizeof(Node) * count);
-   dlist->node[0].opcode = OPCODE_END_OF_LIST;
+   struct gl_display_list *dlist = CALLOC_STRUCT(gl_display_list);
+   dlist->Name = name;
+   dlist->Head = (Node *) malloc(sizeof(Node) * count);
+   dlist->Head[0].opcode = OPCODE_END_OF_LIST;
    return dlist;
 }
 
@@ -428,13 +481,56 @@ make_list(GLuint list, GLuint count)
 /**
  * Lookup function to just encapsulate casting.
  */
-static INLINE struct mesa_display_list *
+static INLINE struct gl_display_list *
 lookup_list(GLcontext *ctx, GLuint list)
 {
-   return (struct mesa_display_list *)
+   return (struct gl_display_list *)
       _mesa_HashLookup(ctx->Shared->DisplayList, list);
 }
 
+
+/** Is the given opcode an extension code? */
+static INLINE GLboolean
+is_ext_opcode(OpCode opcode)
+{
+   return (opcode >= OPCODE_EXT_0);
+}
+
+
+/** Destroy an extended opcode instruction */
+static GLint
+ext_opcode_destroy(GLcontext *ctx, Node *node)
+{
+   const GLint i = node[0].opcode - OPCODE_EXT_0;
+   GLint step;
+   ctx->ListExt->Opcode[i].Destroy(ctx, &node[1]);
+   step = ctx->ListExt->Opcode[i].Size;
+   return step;
+}
+
+
+/** Execute an extended opcode instruction */
+static GLint
+ext_opcode_execute(GLcontext *ctx, Node *node)
+{
+   const GLint i = node[0].opcode - OPCODE_EXT_0;
+   GLint step;
+   ctx->ListExt->Opcode[i].Execute(ctx, &node[1]);
+   step = ctx->ListExt->Opcode[i].Size;
+   return step;
+}
+
+
+/** Print an extended opcode instruction */
+static GLint
+ext_opcode_print(GLcontext *ctx, Node *node)
+{
+   const GLint i = node[0].opcode - OPCODE_EXT_0;
+   GLint step;
+   ctx->ListExt->Opcode[i].Print(ctx, &node[1]);
+   step = ctx->ListExt->Opcode[i].Size;
+   return step;
+}
 
 
 /**
@@ -442,139 +538,161 @@ lookup_list(GLcontext *ctx, GLuint list)
  * \param dlist - display list pointer
  */
 void
-_mesa_delete_list(GLcontext *ctx, struct mesa_display_list *dlist)
+_mesa_delete_list(GLcontext *ctx, struct gl_display_list *dlist)
 {
    Node *n, *block;
    GLboolean done;
 
-   n = block = dlist->node;
+   n = block = dlist->Head;
 
    done = block ? GL_FALSE : GL_TRUE;
    while (!done) {
+      const OpCode opcode = n[0].opcode;
 
       /* check for extension opcodes first */
-
-      GLint i = (GLint) n[0].opcode - (GLint) OPCODE_EXT_0;
-      if (i >= 0 && i < (GLint) ctx->ListExt.NumOpcodes) {
-         ctx->ListExt.Opcode[i].Destroy(ctx, &n[1]);
-         n += ctx->ListExt.Opcode[i].Size;
+      if (is_ext_opcode(opcode)) {
+         n += ext_opcode_destroy(ctx, n);
       }
       else {
-         switch (n[0].opcode) {
+         switch (opcode) {
             /* for some commands, we need to free malloc'd memory */
          case OPCODE_MAP1:
-            _mesa_free(n[6].data);
+            free(n[6].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_MAP2:
-            _mesa_free(n[10].data);
+            free(n[10].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_DRAW_PIXELS:
-            _mesa_free(n[5].data);
+            free(n[5].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_BITMAP:
-            _mesa_free(n[7].data);
+            free(n[7].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_COLOR_TABLE:
-            _mesa_free(n[6].data);
+            free(n[6].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_COLOR_SUB_TABLE:
-            _mesa_free(n[6].data);
+            free(n[6].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_CONVOLUTION_FILTER_1D:
-            _mesa_free(n[6].data);
+            free(n[6].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_CONVOLUTION_FILTER_2D:
-            _mesa_free(n[7].data);
+            free(n[7].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_POLYGON_STIPPLE:
-            _mesa_free(n[1].data);
+            free(n[1].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_TEX_IMAGE1D:
-            _mesa_free(n[8].data);
+            free(n[8].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_TEX_IMAGE2D:
-            _mesa_free(n[9].data);
+            free(n[9].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_TEX_IMAGE3D:
-            _mesa_free(n[10].data);
+            free(n[10].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_TEX_SUB_IMAGE1D:
-            _mesa_free(n[7].data);
+            free(n[7].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_TEX_SUB_IMAGE2D:
-            _mesa_free(n[9].data);
+            free(n[9].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_TEX_SUB_IMAGE3D:
-            _mesa_free(n[11].data);
+            free(n[11].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_COMPRESSED_TEX_IMAGE_1D:
-            _mesa_free(n[7].data);
+            free(n[7].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_COMPRESSED_TEX_IMAGE_2D:
-            _mesa_free(n[8].data);
+            free(n[8].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_COMPRESSED_TEX_IMAGE_3D:
-            _mesa_free(n[9].data);
+            free(n[9].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_COMPRESSED_TEX_SUB_IMAGE_1D:
-            _mesa_free(n[7].data);
+            free(n[7].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_COMPRESSED_TEX_SUB_IMAGE_2D:
-            _mesa_free(n[9].data);
+            free(n[9].data);
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_COMPRESSED_TEX_SUB_IMAGE_3D:
-            _mesa_free(n[11].data);
+            free(n[11].data);
             n += InstSize[n[0].opcode];
             break;
 #if FEATURE_NV_vertex_program
          case OPCODE_LOAD_PROGRAM_NV:
-            _mesa_free(n[4].data);      /* program string */
+            free(n[4].data);      /* program string */
             n += InstSize[n[0].opcode];
             break;
          case OPCODE_REQUEST_RESIDENT_PROGRAMS_NV:
-            _mesa_free(n[2].data);      /* array of program ids */
+            free(n[2].data);      /* array of program ids */
             n += InstSize[n[0].opcode];
             break;
 #endif
 #if FEATURE_NV_fragment_program
          case OPCODE_PROGRAM_NAMED_PARAMETER_NV:
-            _mesa_free(n[3].data);      /* parameter name */
+            free(n[3].data);      /* parameter name */
             n += InstSize[n[0].opcode];
             break;
 #endif
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
          case OPCODE_PROGRAM_STRING_ARB:
-            _mesa_free(n[4].data);      /* program string */
+            free(n[4].data);      /* program string */
             n += InstSize[n[0].opcode];
             break;
 #endif
+         case OPCODE_UNIFORM_1FV:
+         case OPCODE_UNIFORM_2FV:
+         case OPCODE_UNIFORM_3FV:
+         case OPCODE_UNIFORM_4FV:
+         case OPCODE_UNIFORM_1IV:
+         case OPCODE_UNIFORM_2IV:
+         case OPCODE_UNIFORM_3IV:
+         case OPCODE_UNIFORM_4IV:
+            free(n[3].data);
+            n += InstSize[n[0].opcode];
+            break;
+         case OPCODE_UNIFORM_MATRIX22:
+         case OPCODE_UNIFORM_MATRIX33:
+         case OPCODE_UNIFORM_MATRIX44:
+         case OPCODE_UNIFORM_MATRIX24:
+         case OPCODE_UNIFORM_MATRIX42:
+         case OPCODE_UNIFORM_MATRIX23:
+         case OPCODE_UNIFORM_MATRIX32:
+         case OPCODE_UNIFORM_MATRIX34:
+         case OPCODE_UNIFORM_MATRIX43:
+            free(n[4].data);
+            n += InstSize[n[0].opcode];
+            break;
+
          case OPCODE_CONTINUE:
             n = (Node *) n[1].next;
-            _mesa_free(block);
+            free(block);
             block = n;
             break;
          case OPCODE_END_OF_LIST:
-            _mesa_free(block);
+            free(block);
             done = GL_TRUE;
             break;
          default:
@@ -585,7 +703,7 @@ _mesa_delete_list(GLcontext *ctx, struct mesa_display_list *dlist)
       }
    }
 
-   _mesa_free(dlist);
+   free(dlist);
 }
 
 
@@ -596,7 +714,7 @@ _mesa_delete_list(GLcontext *ctx, struct mesa_display_list *dlist)
 static void
 destroy_list(GLcontext *ctx, GLuint list)
 {
-   struct mesa_display_list *dlist;
+   struct gl_display_list *dlist;
 
    if (list == 0)
       return;
@@ -675,24 +793,48 @@ translate_id(GLsizei n, GLenum type, const GLvoid * list)
 
 /**
  * Wrapper for _mesa_unpack_image() that handles pixel buffer objects.
- * \todo This won't suffice when the PBO is really in VRAM/GPU memory.
+ * If we run out of memory, GL_OUT_OF_MEMORY will be recorded.
  */
 static GLvoid *
-unpack_image(GLuint dimensions, GLsizei width, GLsizei height, GLsizei depth,
+unpack_image(GLcontext *ctx, GLuint dimensions,
+             GLsizei width, GLsizei height, GLsizei depth,
              GLenum format, GLenum type, const GLvoid * pixels,
              const struct gl_pixelstore_attrib *unpack)
 {
-   if (unpack->BufferObj->Name == 0) {
+   if (!_mesa_is_bufferobj(unpack->BufferObj)) {
       /* no PBO */
-      return _mesa_unpack_image(dimensions, width, height, depth, format,
-                                type, pixels, unpack);
+      GLvoid *image = _mesa_unpack_image(dimensions, width, height, depth,
+                                         format, type, pixels, unpack);
+      if (pixels && !image) {
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "display list construction");
+      }
+      return image;
    }
-   else
-      if (_mesa_validate_pbo_access
-          (dimensions, unpack, width, height, depth, format, type, pixels)) {
-      const GLubyte *src = ADD_POINTERS(unpack->BufferObj->Data, pixels);
-      return _mesa_unpack_image(dimensions, width, height, depth, format,
-                                type, src, unpack);
+   else if (_mesa_validate_pbo_access(dimensions, unpack, width, height, depth,
+                                      format, type, pixels)) {
+      const GLubyte *map, *src;
+      GLvoid *image;
+
+      map = (GLubyte *)
+         ctx->Driver.MapBuffer(ctx, GL_PIXEL_UNPACK_BUFFER_EXT,
+                               GL_READ_ONLY_ARB, unpack->BufferObj);
+      if (!map) {
+         /* unable to map src buffer! */
+         _mesa_error(ctx, GL_INVALID_OPERATION, "unable to map PBO");
+         return NULL;
+      }
+
+      src = ADD_POINTERS(map, pixels);
+      image = _mesa_unpack_image(dimensions, width, height, depth,
+                                 format, type, src, unpack);
+
+      ctx->Driver.UnmapBuffer(ctx, GL_PIXEL_UNPACK_BUFFER_EXT,
+                              unpack->BufferObj);
+
+      if (!image) {
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "display list construction");
+      }
+      return image;
    }
    /* bad access! */
    return NULL;
@@ -700,14 +842,13 @@ unpack_image(GLuint dimensions, GLsizei width, GLsizei height, GLsizei depth,
 
 
 /**
- * Allocate space for a display list instruction.
+ * Allocate space for a display list instruction (opcode + payload space).
  * \param opcode  the instruction opcode (OPCODE_* value)
- * \param size   instruction size in bytes, not counting opcode.
- * \return pointer to the usable data area (not including the internal
- *         opcode).
+ * \param bytes   instruction payload size (not counting opcode)
+ * \return pointer to allocated memory (the opcode space)
  */
-void *
-_mesa_alloc_instruction(GLcontext *ctx, GLuint opcode, GLuint bytes)
+static Node *
+dlist_alloc(GLcontext *ctx, OpCode opcode, GLuint bytes)
 {
    const GLuint numNodes = 1 + (bytes + sizeof(Node) - 1) / sizeof(Node);
    Node *n;
@@ -728,7 +869,7 @@ _mesa_alloc_instruction(GLcontext *ctx, GLuint opcode, GLuint bytes)
       Node *newblock;
       n = ctx->ListState.CurrentBlock + ctx->ListState.CurrentPos;
       n[0].opcode = OPCODE_CONTINUE;
-      newblock = (Node *) _mesa_malloc(sizeof(Node) * BLOCK_SIZE);
+      newblock = (Node *) malloc(sizeof(Node) * BLOCK_SIZE);
       if (!newblock) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "Building display list");
          return NULL;
@@ -741,9 +882,30 @@ _mesa_alloc_instruction(GLcontext *ctx, GLuint opcode, GLuint bytes)
    n = ctx->ListState.CurrentBlock + ctx->ListState.CurrentPos;
    ctx->ListState.CurrentPos += numNodes;
 
-   n[0].opcode = (OpCode) opcode;
+   n[0].opcode = opcode;
 
-   return (void *) (n + 1);     /* return ptr to node following opcode */
+   return n;
+}
+
+
+
+/**
+ * Allocate space for a display list instruction.  Used by callers outside
+ * this file for things like VBO vertex data.
+ *
+ * \param opcode  the instruction opcode (OPCODE_* value)
+ * \param bytes   instruction size in bytes, not counting opcode.
+ * \return pointer to the usable data area (not including the internal
+ *         opcode).
+ */
+void *
+_mesa_dlist_alloc(GLcontext *ctx, GLuint opcode, GLuint bytes)
+{
+   Node *n = dlist_alloc(ctx, (OpCode) opcode, bytes);
+   if (n)
+      return n + 1;  /* return pointer to payload area, after opcode */
+   else
+      return NULL;
 }
 
 
@@ -758,35 +920,39 @@ _mesa_alloc_instruction(GLcontext *ctx, GLuint opcode, GLuint bytes)
  * \return  the new opcode number or -1 if error
  */
 GLint
-_mesa_alloc_opcode(GLcontext *ctx,
-                   GLuint size,
-                   void (*execute) (GLcontext *, void *),
-                   void (*destroy) (GLcontext *, void *),
-                   void (*print) (GLcontext *, void *))
+_mesa_dlist_alloc_opcode(GLcontext *ctx,
+                         GLuint size,
+                         void (*execute) (GLcontext *, void *),
+                         void (*destroy) (GLcontext *, void *),
+                         void (*print) (GLcontext *, void *))
 {
-   if (ctx->ListExt.NumOpcodes < MAX_DLIST_EXT_OPCODES) {
-      const GLuint i = ctx->ListExt.NumOpcodes++;
-      ctx->ListExt.Opcode[i].Size =
+   if (ctx->ListExt->NumOpcodes < MAX_DLIST_EXT_OPCODES) {
+      const GLuint i = ctx->ListExt->NumOpcodes++;
+      ctx->ListExt->Opcode[i].Size =
          1 + (size + sizeof(Node) - 1) / sizeof(Node);
-      ctx->ListExt.Opcode[i].Execute = execute;
-      ctx->ListExt.Opcode[i].Destroy = destroy;
-      ctx->ListExt.Opcode[i].Print = print;
+      ctx->ListExt->Opcode[i].Execute = execute;
+      ctx->ListExt->Opcode[i].Destroy = destroy;
+      ctx->ListExt->Opcode[i].Print = print;
       return i + OPCODE_EXT_0;
    }
    return -1;
 }
 
 
-
 /**
- * Allocate display list instruction.  Returns Node ptr to where the opcode
- * is stored.
- *   - nParams is the number of function parameters
- *   - return value a pointer to sizeof(Node) before the actual
- *     usable data area.
+ * Allocate space for a display list instruction.  The space is basically
+ * an array of Nodes where node[0] holds the opcode, node[1] is the first
+ * function parameter, node[2] is the second parameter, etc.
+ *
+ * \param opcode  one of OPCODE_x
+ * \param nparams  number of function parameters
+ * \return  pointer to start of instruction space
  */
-#define ALLOC_INSTRUCTION(CTX, OPCODE, NPARAMS) \
-    ((Node *)_mesa_alloc_instruction(CTX, OPCODE, (NPARAMS)*sizeof(Node)) - 1)
+static INLINE Node *
+alloc_instruction(GLcontext *ctx, OpCode opcode, GLuint nparams)
+{
+   return dlist_alloc(ctx, opcode, nparams * sizeof(Node));
+}
 
 
 
@@ -799,7 +965,7 @@ save_Accum(GLenum op, GLfloat value)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ACCUM, 2);
+   n = alloc_instruction(ctx, OPCODE_ACCUM, 2);
    if (n) {
       n[1].e = op;
       n[2].f = value;
@@ -816,7 +982,7 @@ save_AlphaFunc(GLenum func, GLclampf ref)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ALPHA_FUNC, 2);
+   n = alloc_instruction(ctx, OPCODE_ALPHA_FUNC, 2);
    if (n) {
       n[1].e = func;
       n[2].f = (GLfloat) ref;
@@ -833,7 +999,7 @@ save_BindTexture(GLenum target, GLuint texture)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BIND_TEXTURE, 2);
+   n = alloc_instruction(ctx, OPCODE_BIND_TEXTURE, 2);
    if (n) {
       n[1].e = target;
       n[2].ui = texture;
@@ -850,10 +1016,9 @@ save_Bitmap(GLsizei width, GLsizei height,
             GLfloat xmove, GLfloat ymove, const GLubyte * pixels)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = _mesa_unpack_bitmap(width, height, pixels, &ctx->Unpack);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BITMAP, 7);
+   n = alloc_instruction(ctx, OPCODE_BITMAP, 7);
    if (n) {
       n[1].i = (GLint) width;
       n[2].i = (GLint) height;
@@ -861,10 +1026,7 @@ save_Bitmap(GLsizei width, GLsizei height,
       n[4].f = yorig;
       n[5].f = xmove;
       n[6].f = ymove;
-      n[7].data = image;
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[7].data = _mesa_unpack_bitmap(width, height, pixels, &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_Bitmap(ctx->Exec, (width, height,
@@ -879,7 +1041,7 @@ save_BlendEquation(GLenum mode)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BLEND_EQUATION, 1);
+   n = alloc_instruction(ctx, OPCODE_BLEND_EQUATION, 1);
    if (n) {
       n[1].e = mode;
    }
@@ -895,7 +1057,7 @@ save_BlendEquationSeparateEXT(GLenum modeRGB, GLenum modeA)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BLEND_EQUATION_SEPARATE, 2);
+   n = alloc_instruction(ctx, OPCODE_BLEND_EQUATION_SEPARATE, 2);
    if (n) {
       n[1].e = modeRGB;
       n[2].e = modeA;
@@ -913,7 +1075,7 @@ save_BlendFuncSeparateEXT(GLenum sfactorRGB, GLenum dfactorRGB,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BLEND_FUNC_SEPARATE, 4);
+   n = alloc_instruction(ctx, OPCODE_BLEND_FUNC_SEPARATE, 4);
    if (n) {
       n[1].e = sfactorRGB;
       n[2].e = dfactorRGB;
@@ -940,7 +1102,7 @@ save_BlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BLEND_COLOR, 4);
+   n = alloc_instruction(ctx, OPCODE_BLEND_COLOR, 4);
    if (n) {
       n[1].f = red;
       n[2].f = green;
@@ -952,31 +1114,46 @@ save_BlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
    }
 }
 
+static void invalidate_saved_current_state( GLcontext *ctx )
+{
+   GLint i;
 
-void GLAPIENTRY
-_mesa_save_CallList(GLuint list)
+   for (i = 0; i < VERT_ATTRIB_MAX; i++)
+      ctx->ListState.ActiveAttribSize[i] = 0;
+
+   for (i = 0; i < MAT_ATTRIB_MAX; i++)
+      ctx->ListState.ActiveMaterialSize[i] = 0;
+
+   memset(&ctx->ListState.Current, 0, sizeof ctx->ListState.Current);
+
+   ctx->Driver.CurrentSavePrimitive = PRIM_UNKNOWN;
+}
+
+static void GLAPIENTRY
+save_CallList(GLuint list)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
 
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CALL_LIST, 1);
+   n = alloc_instruction(ctx, OPCODE_CALL_LIST, 1);
    if (n) {
       n[1].ui = list;
    }
 
-   /* After this, we don't know what begin/end state we're in:
+   /* After this, we don't know what state we're in.  Invalidate all
+    * cached information previously gathered:
     */
-   ctx->Driver.CurrentSavePrimitive = PRIM_UNKNOWN;
+   invalidate_saved_current_state( ctx );
 
    if (ctx->ExecuteFlag) {
-      CALL_CallList(ctx->Exec, (list));
+      _mesa_CallList(list);
    }
 }
 
 
-void GLAPIENTRY
-_mesa_save_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
+static void GLAPIENTRY
+save_CallLists(GLsizei num, GLenum type, const GLvoid * lists)
 {
    GET_CURRENT_CONTEXT(ctx);
    GLint i;
@@ -1001,21 +1178,22 @@ _mesa_save_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
       typeErrorFlag = GL_TRUE;
    }
 
-   for (i = 0; i < n; i++) {
+   for (i = 0; i < num; i++) {
       GLint list = translate_id(i, type, lists);
-      Node *n = ALLOC_INSTRUCTION(ctx, OPCODE_CALL_LIST_OFFSET, 2);
+      Node *n = alloc_instruction(ctx, OPCODE_CALL_LIST_OFFSET, 2);
       if (n) {
          n[1].i = list;
          n[2].b = typeErrorFlag;
       }
    }
 
-   /* After this, we don't know what begin/end state we're in:
+   /* After this, we don't know what state we're in.  Invalidate all
+    * cached information previously gathered:
     */
-   ctx->Driver.CurrentSavePrimitive = PRIM_UNKNOWN;
+   invalidate_saved_current_state( ctx );
 
    if (ctx->ExecuteFlag) {
-      CALL_CallLists(ctx->Exec, (n, type, lists));
+      CALL_CallLists(ctx->Exec, (num, type, lists));
    }
 }
 
@@ -1026,7 +1204,7 @@ save_Clear(GLbitfield mask)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CLEAR, 1);
+   n = alloc_instruction(ctx, OPCODE_CLEAR, 1);
    if (n) {
       n[1].bf = mask;
    }
@@ -1037,12 +1215,116 @@ save_Clear(GLbitfield mask)
 
 
 static void GLAPIENTRY
+save_ClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint *value)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_BUFFER_IV, 6);
+   if (n) {
+      n[1].e = buffer;
+      n[2].i = drawbuffer;
+      n[3].i = value[0];
+      if (buffer == GL_COLOR) {
+         n[4].i = value[1];
+         n[5].i = value[2];
+         n[6].i = value[3];
+      }
+      else {
+         n[4].i = 0;
+         n[5].i = 0;
+         n[6].i = 0;
+      }
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_ClearBufferiv(ctx->Exec, (buffer, drawbuffer, value));*/
+   }
+}
+
+
+static void GLAPIENTRY
+save_ClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint *value)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_BUFFER_UIV, 6);
+   if (n) {
+      n[1].e = buffer;
+      n[2].i = drawbuffer;
+      n[3].ui = value[0];
+      if (buffer == GL_COLOR) {
+         n[4].ui = value[1];
+         n[5].ui = value[2];
+         n[6].ui = value[3];
+      }
+      else {
+         n[4].ui = 0;
+         n[5].ui = 0;
+         n[6].ui = 0;
+      }
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_ClearBufferuiv(ctx->Exec, (buffer, drawbuffer, value));*/
+   }
+}
+
+
+static void GLAPIENTRY
+save_ClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *value)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_BUFFER_FV, 6);
+   if (n) {
+      n[1].e = buffer;
+      n[2].i = drawbuffer;
+      n[3].f = value[0];
+      if (buffer == GL_COLOR) {
+         n[4].f = value[1];
+         n[5].f = value[2];
+         n[6].f = value[3];
+      }
+      else {
+         n[4].f = 0.0F;
+         n[5].f = 0.0F;
+         n[6].f = 0.0F;
+      }
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_ClearBufferuiv(ctx->Exec, (buffer, drawbuffer, value));*/
+   }
+}
+
+
+static void GLAPIENTRY
+save_ClearBufferfi(GLenum buffer, GLint drawbuffer,
+                   GLfloat depth, GLint stencil)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_BUFFER_FI, 4);
+   if (n) {
+      n[1].e = buffer;
+      n[2].i = drawbuffer;
+      n[3].f = depth;
+      n[4].i = stencil;
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_ClearBufferfi(ctx->Exec, (buffer, drawbuffer, depth, stencil));*/
+   }
+}
+
+
+static void GLAPIENTRY
 save_ClearAccum(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CLEAR_ACCUM, 4);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_ACCUM, 4);
    if (n) {
       n[1].f = red;
       n[2].f = green;
@@ -1061,7 +1343,7 @@ save_ClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CLEAR_COLOR, 4);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_COLOR, 4);
    if (n) {
       n[1].f = red;
       n[2].f = green;
@@ -1080,7 +1362,7 @@ save_ClearDepth(GLclampd depth)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CLEAR_DEPTH, 1);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_DEPTH, 1);
    if (n) {
       n[1].f = (GLfloat) depth;
    }
@@ -1096,7 +1378,7 @@ save_ClearIndex(GLfloat c)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CLEAR_INDEX, 1);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_INDEX, 1);
    if (n) {
       n[1].f = c;
    }
@@ -1112,7 +1394,7 @@ save_ClearStencil(GLint s)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CLEAR_STENCIL, 1);
+   n = alloc_instruction(ctx, OPCODE_CLEAR_STENCIL, 1);
    if (n) {
       n[1].i = s;
    }
@@ -1128,7 +1410,7 @@ save_ClipPlane(GLenum plane, const GLdouble * equ)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CLIP_PLANE, 5);
+   n = alloc_instruction(ctx, OPCODE_CLIP_PLANE, 5);
    if (n) {
       n[1].e = plane;
       n[2].f = (GLfloat) equ[0];
@@ -1150,7 +1432,7 @@ save_ColorMask(GLboolean red, GLboolean green,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COLOR_MASK, 4);
+   n = alloc_instruction(ctx, OPCODE_COLOR_MASK, 4);
    if (n) {
       n[1].b = red;
       n[2].b = green;
@@ -1164,13 +1446,34 @@ save_ColorMask(GLboolean red, GLboolean green,
 
 
 static void GLAPIENTRY
+save_ColorMaskIndexed(GLuint buf, GLboolean red, GLboolean green,
+                      GLboolean blue, GLboolean alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_COLOR_MASK_INDEXED, 5);
+   if (n) {
+      n[1].ui = buf;
+      n[2].b = red;
+      n[3].b = green;
+      n[4].b = blue;
+      n[5].b = alpha;
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_ColorMaskIndexedEXT(ctx->Exec, (buf, red, green, blue, alpha));*/
+   }
+}
+
+
+static void GLAPIENTRY
 save_ColorMaterial(GLenum face, GLenum mode)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
 
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COLOR_MATERIAL, 2);
+   n = alloc_instruction(ctx, OPCODE_COLOR_MATERIAL, 2);
    if (n) {
       n[1].e = face;
       n[2].e = mode;
@@ -1193,21 +1496,17 @@ save_ColorTable(GLenum target, GLenum internalFormat,
                                   format, type, table));
    }
    else {
-      GLvoid *image = unpack_image(1, width, 1, 1, format, type, table,
-                                   &ctx->Unpack);
       Node *n;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_COLOR_TABLE, 6);
+      n = alloc_instruction(ctx, OPCODE_COLOR_TABLE, 6);
       if (n) {
          n[1].e = target;
          n[2].e = internalFormat;
          n[3].i = width;
          n[4].e = format;
          n[5].e = type;
-         n[6].data = image;
-      }
-      else if (image) {
-         _mesa_free(image);
+         n[6].data = unpack_image(ctx, 1, width, 1, 1, format, type, table,
+                                  &ctx->Unpack);
       }
       if (ctx->ExecuteFlag) {
          CALL_ColorTable(ctx->Exec, (target, internalFormat, width,
@@ -1227,7 +1526,7 @@ save_ColorTableParameterfv(GLenum target, GLenum pname,
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
 
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COLOR_TABLE_PARAMETER_FV, 6);
+   n = alloc_instruction(ctx, OPCODE_COLOR_TABLE_PARAMETER_FV, 6);
    if (n) {
       n[1].e = target;
       n[2].e = pname;
@@ -1256,7 +1555,7 @@ save_ColorTableParameteriv(GLenum target, GLenum pname, const GLint *params)
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
 
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COLOR_TABLE_PARAMETER_IV, 6);
+   n = alloc_instruction(ctx, OPCODE_COLOR_TABLE_PARAMETER_IV, 6);
    if (n) {
       n[1].e = target;
       n[2].e = pname;
@@ -1283,21 +1582,17 @@ save_ColorSubTable(GLenum target, GLsizei start, GLsizei count,
                    GLenum format, GLenum type, const GLvoid * table)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = unpack_image(1, count, 1, 1, format, type, table,
-                                &ctx->Unpack);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COLOR_SUB_TABLE, 6);
+   n = alloc_instruction(ctx, OPCODE_COLOR_SUB_TABLE, 6);
    if (n) {
       n[1].e = target;
       n[2].i = start;
       n[3].i = count;
       n[4].e = format;
       n[5].e = type;
-      n[6].data = image;
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[6].data = unpack_image(ctx, 1, count, 1, 1, format, type, table,
+                               &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_ColorSubTable(ctx->Exec,
@@ -1314,7 +1609,7 @@ save_CopyColorSubTable(GLenum target, GLsizei start,
    Node *n;
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COPY_COLOR_SUB_TABLE, 5);
+   n = alloc_instruction(ctx, OPCODE_COPY_COLOR_SUB_TABLE, 5);
    if (n) {
       n[1].e = target;
       n[2].i = start;
@@ -1336,7 +1631,7 @@ save_CopyColorTable(GLenum target, GLenum internalformat,
    Node *n;
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COPY_COLOR_TABLE, 5);
+   n = alloc_instruction(ctx, OPCODE_COPY_COLOR_TABLE, 5);
    if (n) {
       n[1].e = target;
       n[2].e = internalformat;
@@ -1355,21 +1650,19 @@ save_ConvolutionFilter1D(GLenum target, GLenum internalFormat, GLsizei width,
                          GLenum format, GLenum type, const GLvoid * filter)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = unpack_image(1, width, 1, 1, format, type, filter,
-                                &ctx->Unpack);
    Node *n;
+
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CONVOLUTION_FILTER_1D, 6);
+
+   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_FILTER_1D, 6);
    if (n) {
       n[1].e = target;
       n[2].e = internalFormat;
       n[3].i = width;
       n[4].e = format;
       n[5].e = type;
-      n[6].data = image;
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[6].data = unpack_image(ctx, 1, width, 1, 1, format, type, filter,
+                               &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_ConvolutionFilter1D(ctx->Exec, (target, internalFormat, width,
@@ -1384,11 +1677,11 @@ save_ConvolutionFilter2D(GLenum target, GLenum internalFormat,
                          GLenum type, const GLvoid * filter)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = unpack_image(2, width, height, 1, format, type, filter,
-                                &ctx->Unpack);
    Node *n;
+
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CONVOLUTION_FILTER_2D, 7);
+
+   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_FILTER_2D, 7);
    if (n) {
       n[1].e = target;
       n[2].e = internalFormat;
@@ -1396,10 +1689,8 @@ save_ConvolutionFilter2D(GLenum target, GLenum internalFormat,
       n[4].i = height;
       n[5].e = format;
       n[6].e = type;
-      n[7].data = image;
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[7].data = unpack_image(ctx, 2, width, height, 1, format, type, filter,
+                               &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_ConvolutionFilter2D(ctx->Exec,
@@ -1415,7 +1706,7 @@ save_ConvolutionParameteri(GLenum target, GLenum pname, GLint param)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CONVOLUTION_PARAMETER_I, 3);
+   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_PARAMETER_I, 3);
    if (n) {
       n[1].e = target;
       n[2].e = pname;
@@ -1433,7 +1724,7 @@ save_ConvolutionParameteriv(GLenum target, GLenum pname, const GLint *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CONVOLUTION_PARAMETER_IV, 6);
+   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_PARAMETER_IV, 6);
    if (n) {
       n[1].e = target;
       n[2].e = pname;
@@ -1461,7 +1752,7 @@ save_ConvolutionParameterf(GLenum target, GLenum pname, GLfloat param)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CONVOLUTION_PARAMETER_F, 3);
+   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_PARAMETER_F, 3);
    if (n) {
       n[1].e = target;
       n[2].e = pname;
@@ -1480,7 +1771,7 @@ save_ConvolutionParameterfv(GLenum target, GLenum pname,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CONVOLUTION_PARAMETER_FV, 6);
+   n = alloc_instruction(ctx, OPCODE_CONVOLUTION_PARAMETER_FV, 6);
    if (n) {
       n[1].e = target;
       n[2].e = pname;
@@ -1508,7 +1799,7 @@ save_CopyPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COPY_PIXELS, 5);
+   n = alloc_instruction(ctx, OPCODE_COPY_PIXELS, 5);
    if (n) {
       n[1].i = x;
       n[2].i = y;
@@ -1530,7 +1821,7 @@ save_CopyTexImage1D(GLenum target, GLint level, GLenum internalformat,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COPY_TEX_IMAGE1D, 7);
+   n = alloc_instruction(ctx, OPCODE_COPY_TEX_IMAGE1D, 7);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -1556,7 +1847,7 @@ save_CopyTexImage2D(GLenum target, GLint level,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COPY_TEX_IMAGE2D, 8);
+   n = alloc_instruction(ctx, OPCODE_COPY_TEX_IMAGE2D, 8);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -1582,7 +1873,7 @@ save_CopyTexSubImage1D(GLenum target, GLint level,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COPY_TEX_SUB_IMAGE1D, 6);
+   n = alloc_instruction(ctx, OPCODE_COPY_TEX_SUB_IMAGE1D, 6);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -1606,7 +1897,7 @@ save_CopyTexSubImage2D(GLenum target, GLint level,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COPY_TEX_SUB_IMAGE2D, 8);
+   n = alloc_instruction(ctx, OPCODE_COPY_TEX_SUB_IMAGE2D, 8);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -1632,7 +1923,7 @@ save_CopyTexSubImage3D(GLenum target, GLint level,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COPY_TEX_SUB_IMAGE3D, 9);
+   n = alloc_instruction(ctx, OPCODE_COPY_TEX_SUB_IMAGE3D, 9);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -1658,7 +1949,7 @@ save_CullFace(GLenum mode)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_CULL_FACE, 1);
+   n = alloc_instruction(ctx, OPCODE_CULL_FACE, 1);
    if (n) {
       n[1].e = mode;
    }
@@ -1674,7 +1965,7 @@ save_DepthFunc(GLenum func)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_DEPTH_FUNC, 1);
+   n = alloc_instruction(ctx, OPCODE_DEPTH_FUNC, 1);
    if (n) {
       n[1].e = func;
    }
@@ -1690,7 +1981,7 @@ save_DepthMask(GLboolean mask)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_DEPTH_MASK, 1);
+   n = alloc_instruction(ctx, OPCODE_DEPTH_MASK, 1);
    if (n) {
       n[1].b = mask;
    }
@@ -1706,7 +1997,7 @@ save_DepthRange(GLclampd nearval, GLclampd farval)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_DEPTH_RANGE, 2);
+   n = alloc_instruction(ctx, OPCODE_DEPTH_RANGE, 2);
    if (n) {
       n[1].f = (GLfloat) nearval;
       n[2].f = (GLfloat) farval;
@@ -1723,7 +2014,7 @@ save_Disable(GLenum cap)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_DISABLE, 1);
+   n = alloc_instruction(ctx, OPCODE_DISABLE, 1);
    if (n) {
       n[1].e = cap;
    }
@@ -1734,12 +2025,29 @@ save_Disable(GLenum cap)
 
 
 static void GLAPIENTRY
+save_DisableIndexed(GLuint index, GLenum cap)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_DISABLE_INDEXED, 2);
+   if (n) {
+      n[1].ui = index;
+      n[2].e = cap;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_DisableIndexedEXT(ctx->Exec, (index, cap));
+   }
+}
+
+
+static void GLAPIENTRY
 save_DrawBuffer(GLenum mode)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_DRAW_BUFFER, 1);
+   n = alloc_instruction(ctx, OPCODE_DRAW_BUFFER, 1);
    if (n) {
       n[1].e = mode;
    }
@@ -1754,20 +2062,18 @@ save_DrawPixels(GLsizei width, GLsizei height,
                 GLenum format, GLenum type, const GLvoid * pixels)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = unpack_image(2, width, height, 1, format, type,
-                                pixels, &ctx->Unpack);
    Node *n;
+
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_DRAW_PIXELS, 5);
+
+   n = alloc_instruction(ctx, OPCODE_DRAW_PIXELS, 5);
    if (n) {
       n[1].i = width;
       n[2].i = height;
       n[3].e = format;
       n[4].e = type;
-      n[5].data = image;
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[5].data = unpack_image(ctx, 2, width, height, 1, format, type,
+                               pixels, &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_DrawPixels(ctx->Exec, (width, height, format, type, pixels));
@@ -1782,7 +2088,7 @@ save_Enable(GLenum cap)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ENABLE, 1);
+   n = alloc_instruction(ctx, OPCODE_ENABLE, 1);
    if (n) {
       n[1].e = cap;
    }
@@ -1794,12 +2100,30 @@ save_Enable(GLenum cap)
 
 
 static void GLAPIENTRY
-_mesa_save_EvalMesh1(GLenum mode, GLint i1, GLint i2)
+save_EnableIndexed(GLuint index, GLenum cap)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_EVALMESH1, 3);
+   n = alloc_instruction(ctx, OPCODE_ENABLE_INDEXED, 2);
+   if (n) {
+      n[1].ui = index;
+      n[2].e = cap;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_EnableIndexedEXT(ctx->Exec, (index, cap));
+   }
+}
+
+
+
+static void GLAPIENTRY
+save_EvalMesh1(GLenum mode, GLint i1, GLint i2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_EVALMESH1, 3);
    if (n) {
       n[1].e = mode;
       n[2].i = i1;
@@ -1812,12 +2136,12 @@ _mesa_save_EvalMesh1(GLenum mode, GLint i1, GLint i2)
 
 
 static void GLAPIENTRY
-_mesa_save_EvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
+save_EvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_EVALMESH2, 5);
+   n = alloc_instruction(ctx, OPCODE_EVALMESH2, 5);
    if (n) {
       n[1].e = mode;
       n[2].i = i1;
@@ -1839,7 +2163,7 @@ save_Fogfv(GLenum pname, const GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_FOG, 5);
+   n = alloc_instruction(ctx, OPCODE_FOG, 5);
    if (n) {
       n[1].e = pname;
       n[2].f = params[0];
@@ -1856,7 +2180,10 @@ save_Fogfv(GLenum pname, const GLfloat *params)
 static void GLAPIENTRY
 save_Fogf(GLenum pname, GLfloat param)
 {
-   save_Fogfv(pname, &param);
+   GLfloat parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0.0F;
+   save_Fogfv(pname, parray);
 }
 
 
@@ -1871,6 +2198,9 @@ save_Fogiv(GLenum pname, const GLint *params)
    case GL_FOG_END:
    case GL_FOG_INDEX:
       p[0] = (GLfloat) *params;
+      p[1] = 0.0f;
+      p[2] = 0.0f;
+      p[3] = 0.0f;
       break;
    case GL_FOG_COLOR:
       p[0] = INT_TO_FLOAT(params[0]);
@@ -1880,7 +2210,7 @@ save_Fogiv(GLenum pname, const GLint *params)
       break;
    default:
       /* Error will be caught later in gl_Fogfv */
-      ;
+      ASSIGN_4V(p, 0.0F, 0.0F, 0.0F, 0.0F);
    }
    save_Fogfv(pname, p);
 }
@@ -1889,7 +2219,10 @@ save_Fogiv(GLenum pname, const GLint *params)
 static void GLAPIENTRY
 save_Fogi(GLenum pname, GLint param)
 {
-   save_Fogiv(pname, &param);
+   GLint parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0;
+   save_Fogiv(pname, parray);
 }
 
 
@@ -1899,7 +2232,7 @@ save_FrontFace(GLenum mode)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_FRONT_FACE, 1);
+   n = alloc_instruction(ctx, OPCODE_FRONT_FACE, 1);
    if (n) {
       n[1].e = mode;
    }
@@ -1916,7 +2249,7 @@ save_Frustum(GLdouble left, GLdouble right,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_FRUSTUM, 6);
+   n = alloc_instruction(ctx, OPCODE_FRUSTUM, 6);
    if (n) {
       n[1].f = (GLfloat) left;
       n[2].f = (GLfloat) right;
@@ -1937,7 +2270,7 @@ save_Hint(GLenum target, GLenum mode)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_HINT, 2);
+   n = alloc_instruction(ctx, OPCODE_HINT, 2);
    if (n) {
       n[1].e = target;
       n[2].e = mode;
@@ -1956,7 +2289,7 @@ save_Histogram(GLenum target, GLsizei width, GLenum internalFormat,
    Node *n;
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_HISTOGRAM, 4);
+   n = alloc_instruction(ctx, OPCODE_HISTOGRAM, 4);
    if (n) {
       n[1].e = target;
       n[2].i = width;
@@ -1975,7 +2308,7 @@ save_IndexMask(GLuint mask)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_INDEX_MASK, 1);
+   n = alloc_instruction(ctx, OPCODE_INDEX_MASK, 1);
    if (n) {
       n[1].ui = mask;
    }
@@ -1990,7 +2323,7 @@ save_InitNames(void)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   (void) ALLOC_INSTRUCTION(ctx, OPCODE_INIT_NAMES, 0);
+   (void) alloc_instruction(ctx, OPCODE_INIT_NAMES, 0);
    if (ctx->ExecuteFlag) {
       CALL_InitNames(ctx->Exec, ());
    }
@@ -2003,7 +2336,7 @@ save_Lightfv(GLenum light, GLenum pname, const GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LIGHT, 6);
+   n = alloc_instruction(ctx, OPCODE_LIGHT, 6);
    if (n) {
       GLint i, nParams;
       n[1].e = light;
@@ -2053,9 +2386,12 @@ save_Lightfv(GLenum light, GLenum pname, const GLfloat *params)
 
 
 static void GLAPIENTRY
-save_Lightf(GLenum light, GLenum pname, GLfloat params)
+save_Lightf(GLenum light, GLenum pname, GLfloat param)
 {
-   save_Lightfv(light, pname, &params);
+   GLfloat parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0.0F;
+   save_Lightfv(light, pname, parray);
 }
 
 
@@ -2101,7 +2437,10 @@ save_Lightiv(GLenum light, GLenum pname, const GLint *params)
 static void GLAPIENTRY
 save_Lighti(GLenum light, GLenum pname, GLint param)
 {
-   save_Lightiv(light, pname, &param);
+   GLint parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0;
+   save_Lightiv(light, pname, parray);
 }
 
 
@@ -2111,7 +2450,7 @@ save_LightModelfv(GLenum pname, const GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LIGHT_MODEL, 5);
+   n = alloc_instruction(ctx, OPCODE_LIGHT_MODEL, 5);
    if (n) {
       n[1].e = pname;
       n[2].f = params[0];
@@ -2128,7 +2467,10 @@ save_LightModelfv(GLenum pname, const GLfloat *params)
 static void GLAPIENTRY
 save_LightModelf(GLenum pname, GLfloat param)
 {
-   save_LightModelfv(pname, &param);
+   GLfloat parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0.0F;
+   save_LightModelfv(pname, parray);
 }
 
 
@@ -2147,10 +2489,13 @@ save_LightModeliv(GLenum pname, const GLint *params)
    case GL_LIGHT_MODEL_TWO_SIDE:
    case GL_LIGHT_MODEL_COLOR_CONTROL:
       fparam[0] = (GLfloat) params[0];
+      fparam[1] = 0.0F;
+      fparam[2] = 0.0F;
+      fparam[3] = 0.0F;
       break;
    default:
       /* Error will be caught later in gl_LightModelfv */
-      ;
+      ASSIGN_4V(fparam, 0.0F, 0.0F, 0.0F, 0.0F);
    }
    save_LightModelfv(pname, fparam);
 }
@@ -2159,7 +2504,10 @@ save_LightModeliv(GLenum pname, const GLint *params)
 static void GLAPIENTRY
 save_LightModeli(GLenum pname, GLint param)
 {
-   save_LightModeliv(pname, &param);
+   GLint parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0;
+   save_LightModeliv(pname, parray);
 }
 
 
@@ -2169,7 +2517,7 @@ save_LineStipple(GLint factor, GLushort pattern)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LINE_STIPPLE, 2);
+   n = alloc_instruction(ctx, OPCODE_LINE_STIPPLE, 2);
    if (n) {
       n[1].i = factor;
       n[2].us = pattern;
@@ -2186,7 +2534,7 @@ save_LineWidth(GLfloat width)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LINE_WIDTH, 1);
+   n = alloc_instruction(ctx, OPCODE_LINE_WIDTH, 1);
    if (n) {
       n[1].f = width;
    }
@@ -2202,7 +2550,7 @@ save_ListBase(GLuint base)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LIST_BASE, 1);
+   n = alloc_instruction(ctx, OPCODE_LIST_BASE, 1);
    if (n) {
       n[1].ui = base;
    }
@@ -2217,7 +2565,7 @@ save_LoadIdentity(void)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   (void) ALLOC_INSTRUCTION(ctx, OPCODE_LOAD_IDENTITY, 0);
+   (void) alloc_instruction(ctx, OPCODE_LOAD_IDENTITY, 0);
    if (ctx->ExecuteFlag) {
       CALL_LoadIdentity(ctx->Exec, ());
    }
@@ -2230,7 +2578,7 @@ save_LoadMatrixf(const GLfloat * m)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LOAD_MATRIX, 16);
+   n = alloc_instruction(ctx, OPCODE_LOAD_MATRIX, 16);
    if (n) {
       GLuint i;
       for (i = 0; i < 16; i++) {
@@ -2261,7 +2609,7 @@ save_LoadName(GLuint name)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LOAD_NAME, 1);
+   n = alloc_instruction(ctx, OPCODE_LOAD_NAME, 1);
    if (n) {
       n[1].ui = name;
    }
@@ -2277,7 +2625,7 @@ save_LogicOp(GLenum opcode)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LOGIC_OP, 1);
+   n = alloc_instruction(ctx, OPCODE_LOGIC_OP, 1);
    if (n) {
       n[1].e = opcode;
    }
@@ -2294,7 +2642,7 @@ save_Map1d(GLenum target, GLdouble u1, GLdouble u2, GLint stride,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MAP1, 6);
+   n = alloc_instruction(ctx, OPCODE_MAP1, 6);
    if (n) {
       GLfloat *pnts = _mesa_copy_map_points1d(target, stride, order, points);
       n[1].e = target;
@@ -2316,7 +2664,7 @@ save_Map1f(GLenum target, GLfloat u1, GLfloat u2, GLint stride,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MAP1, 6);
+   n = alloc_instruction(ctx, OPCODE_MAP1, 6);
    if (n) {
       GLfloat *pnts = _mesa_copy_map_points1f(target, stride, order, points);
       n[1].e = target;
@@ -2341,7 +2689,7 @@ save_Map2d(GLenum target,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MAP2, 10);
+   n = alloc_instruction(ctx, OPCODE_MAP2, 10);
    if (n) {
       GLfloat *pnts = _mesa_copy_map_points2d(target, ustride, uorder,
                                               vstride, vorder, points);
@@ -2374,7 +2722,7 @@ save_Map2f(GLenum target,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MAP2, 10);
+   n = alloc_instruction(ctx, OPCODE_MAP2, 10);
    if (n) {
       GLfloat *pnts = _mesa_copy_map_points2f(target, ustride, uorder,
                                               vstride, vorder, points);
@@ -2403,7 +2751,7 @@ save_MapGrid1f(GLint un, GLfloat u1, GLfloat u2)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MAPGRID1, 3);
+   n = alloc_instruction(ctx, OPCODE_MAPGRID1, 3);
    if (n) {
       n[1].i = un;
       n[2].f = u1;
@@ -2429,7 +2777,7 @@ save_MapGrid2f(GLint un, GLfloat u1, GLfloat u2,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MAPGRID2, 6);
+   n = alloc_instruction(ctx, OPCODE_MAPGRID2, 6);
    if (n) {
       n[1].i = un;
       n[2].f = u1;
@@ -2460,7 +2808,7 @@ save_MatrixMode(GLenum mode)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MATRIX_MODE, 1);
+   n = alloc_instruction(ctx, OPCODE_MATRIX_MODE, 1);
    if (n) {
       n[1].e = mode;
    }
@@ -2477,7 +2825,7 @@ save_Minmax(GLenum target, GLenum internalFormat, GLboolean sink)
    Node *n;
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MIN_MAX, 3);
+   n = alloc_instruction(ctx, OPCODE_MIN_MAX, 3);
    if (n) {
       n[1].e = target;
       n[2].e = internalFormat;
@@ -2495,7 +2843,7 @@ save_MultMatrixf(const GLfloat * m)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MULT_MATRIX, 16);
+   n = alloc_instruction(ctx, OPCODE_MULT_MATRIX, 16);
    if (n) {
       GLuint i;
       for (i = 0; i < 16; i++) {
@@ -2521,12 +2869,12 @@ save_MultMatrixd(const GLdouble * m)
 
 
 static void GLAPIENTRY
-save_NewList(GLuint list, GLenum mode)
+save_NewList(GLuint name, GLenum mode)
 {
    GET_CURRENT_CONTEXT(ctx);
    /* It's an error to call this function while building a display list */
    _mesa_error(ctx, GL_INVALID_OPERATION, "glNewList");
-   (void) list;
+   (void) name;
    (void) mode;
 }
 
@@ -2539,7 +2887,7 @@ save_Ortho(GLdouble left, GLdouble right,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ORTHO, 6);
+   n = alloc_instruction(ctx, OPCODE_ORTHO, 6);
    if (n) {
       n[1].f = (GLfloat) left;
       n[2].f = (GLfloat) right;
@@ -2560,12 +2908,12 @@ save_PixelMapfv(GLenum map, GLint mapsize, const GLfloat *values)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PIXEL_MAP, 3);
+   n = alloc_instruction(ctx, OPCODE_PIXEL_MAP, 3);
    if (n) {
       n[1].e = map;
       n[2].i = mapsize;
-      n[3].data = (void *) _mesa_malloc(mapsize * sizeof(GLfloat));
-      MEMCPY(n[3].data, (void *) values, mapsize * sizeof(GLfloat));
+      n[3].data = (void *) malloc(mapsize * sizeof(GLfloat));
+      memcpy(n[3].data, (void *) values, mapsize * sizeof(GLfloat));
    }
    if (ctx->ExecuteFlag) {
       CALL_PixelMapfv(ctx->Exec, (map, mapsize, values));
@@ -2617,7 +2965,7 @@ save_PixelTransferf(GLenum pname, GLfloat param)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PIXEL_TRANSFER, 2);
+   n = alloc_instruction(ctx, OPCODE_PIXEL_TRANSFER, 2);
    if (n) {
       n[1].e = pname;
       n[2].f = param;
@@ -2641,7 +2989,7 @@ save_PixelZoom(GLfloat xfactor, GLfloat yfactor)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PIXEL_ZOOM, 2);
+   n = alloc_instruction(ctx, OPCODE_PIXEL_ZOOM, 2);
    if (n) {
       n[1].f = xfactor;
       n[2].f = yfactor;
@@ -2658,7 +3006,7 @@ save_PointParameterfvEXT(GLenum pname, const GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_POINT_PARAMETERS, 4);
+   n = alloc_instruction(ctx, OPCODE_POINT_PARAMETERS, 4);
    if (n) {
       n[1].e = pname;
       n[2].f = params[0];
@@ -2674,21 +3022,28 @@ save_PointParameterfvEXT(GLenum pname, const GLfloat *params)
 static void GLAPIENTRY
 save_PointParameterfEXT(GLenum pname, GLfloat param)
 {
-   save_PointParameterfvEXT(pname, &param);
+   GLfloat parray[3];
+   parray[0] = param;
+   parray[1] = parray[2] = 0.0F;
+   save_PointParameterfvEXT(pname, parray);
 }
 
 static void GLAPIENTRY
 save_PointParameteriNV(GLenum pname, GLint param)
 {
-   GLfloat p = (GLfloat) param;
-   save_PointParameterfvEXT(pname, &p);
+   GLfloat parray[3];
+   parray[0] = (GLfloat) param;
+   parray[1] = parray[2] = 0.0F;
+   save_PointParameterfvEXT(pname, parray);
 }
 
 static void GLAPIENTRY
 save_PointParameterivNV(GLenum pname, const GLint * param)
 {
-   GLfloat p = (GLfloat) param[0];
-   save_PointParameterfvEXT(pname, &p);
+   GLfloat parray[3];
+   parray[0] = (GLfloat) param[0];
+   parray[1] = parray[2] = 0.0F;
+   save_PointParameterfvEXT(pname, parray);
 }
 
 
@@ -2698,7 +3053,7 @@ save_PointSize(GLfloat size)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_POINT_SIZE, 1);
+   n = alloc_instruction(ctx, OPCODE_POINT_SIZE, 1);
    if (n) {
       n[1].f = size;
    }
@@ -2714,7 +3069,7 @@ save_PolygonMode(GLenum face, GLenum mode)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_POLYGON_MODE, 2);
+   n = alloc_instruction(ctx, OPCODE_POLYGON_MODE, 2);
    if (n) {
       n[1].e = face;
       n[2].e = mode;
@@ -2729,16 +3084,14 @@ static void GLAPIENTRY
 save_PolygonStipple(const GLubyte * pattern)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLvoid *image = unpack_image(2, 32, 32, 1, GL_COLOR_INDEX, GL_BITMAP,
-                                pattern, &ctx->Unpack);
    Node *n;
+
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_POLYGON_STIPPLE, 1);
+
+   n = alloc_instruction(ctx, OPCODE_POLYGON_STIPPLE, 1);
    if (n) {
-      n[1].data = image; 
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[1].data = unpack_image(ctx, 2, 32, 32, 1, GL_COLOR_INDEX, GL_BITMAP,
+                               pattern, &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_PolygonStipple(ctx->Exec, ((GLubyte *) pattern));
@@ -2752,7 +3105,7 @@ save_PolygonOffset(GLfloat factor, GLfloat units)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_POLYGON_OFFSET, 2);
+   n = alloc_instruction(ctx, OPCODE_POLYGON_OFFSET, 2);
    if (n) {
       n[1].f = factor;
       n[2].f = units;
@@ -2777,7 +3130,7 @@ save_PopAttrib(void)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   (void) ALLOC_INSTRUCTION(ctx, OPCODE_POP_ATTRIB, 0);
+   (void) alloc_instruction(ctx, OPCODE_POP_ATTRIB, 0);
    if (ctx->ExecuteFlag) {
       CALL_PopAttrib(ctx->Exec, ());
    }
@@ -2789,7 +3142,7 @@ save_PopMatrix(void)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   (void) ALLOC_INSTRUCTION(ctx, OPCODE_POP_MATRIX, 0);
+   (void) alloc_instruction(ctx, OPCODE_POP_MATRIX, 0);
    if (ctx->ExecuteFlag) {
       CALL_PopMatrix(ctx->Exec, ());
    }
@@ -2801,7 +3154,7 @@ save_PopName(void)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   (void) ALLOC_INSTRUCTION(ctx, OPCODE_POP_NAME, 0);
+   (void) alloc_instruction(ctx, OPCODE_POP_NAME, 0);
    if (ctx->ExecuteFlag) {
       CALL_PopName(ctx->Exec, ());
    }
@@ -2818,7 +3171,7 @@ save_PrioritizeTextures(GLsizei num, const GLuint * textures,
 
    for (i = 0; i < num; i++) {
       Node *n;
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_PRIORITIZE_TEXTURE, 2);
+      n = alloc_instruction(ctx, OPCODE_PRIORITIZE_TEXTURE, 2);
       if (n) {
          n[1].ui = textures[i];
          n[2].f = priorities[i];
@@ -2836,7 +3189,7 @@ save_PushAttrib(GLbitfield mask)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PUSH_ATTRIB, 1);
+   n = alloc_instruction(ctx, OPCODE_PUSH_ATTRIB, 1);
    if (n) {
       n[1].bf = mask;
    }
@@ -2851,7 +3204,7 @@ save_PushMatrix(void)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   (void) ALLOC_INSTRUCTION(ctx, OPCODE_PUSH_MATRIX, 0);
+   (void) alloc_instruction(ctx, OPCODE_PUSH_MATRIX, 0);
    if (ctx->ExecuteFlag) {
       CALL_PushMatrix(ctx->Exec, ());
    }
@@ -2864,7 +3217,7 @@ save_PushName(GLuint name)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PUSH_NAME, 1);
+   n = alloc_instruction(ctx, OPCODE_PUSH_NAME, 1);
    if (n) {
       n[1].ui = name;
    }
@@ -2880,7 +3233,7 @@ save_RasterPos4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_RASTER_POS, 4);
+   n = alloc_instruction(ctx, OPCODE_RASTER_POS, 4);
    if (n) {
       n[1].f = x;
       n[2].f = y;
@@ -3039,7 +3392,7 @@ save_PassThrough(GLfloat token)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PASSTHROUGH, 1);
+   n = alloc_instruction(ctx, OPCODE_PASSTHROUGH, 1);
    if (n) {
       n[1].f = token;
    }
@@ -3055,7 +3408,7 @@ save_ReadBuffer(GLenum mode)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_READ_BUFFER, 1);
+   n = alloc_instruction(ctx, OPCODE_READ_BUFFER, 1);
    if (n) {
       n[1].e = mode;
    }
@@ -3071,7 +3424,7 @@ save_ResetHistogram(GLenum target)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_RESET_HISTOGRAM, 1);
+   n = alloc_instruction(ctx, OPCODE_RESET_HISTOGRAM, 1);
    if (n) {
       n[1].e = target;
    }
@@ -3087,7 +3440,7 @@ save_ResetMinmax(GLenum target)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_RESET_MIN_MAX, 1);
+   n = alloc_instruction(ctx, OPCODE_RESET_MIN_MAX, 1);
    if (n) {
       n[1].e = target;
    }
@@ -3103,7 +3456,7 @@ save_Rotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ROTATE, 4);
+   n = alloc_instruction(ctx, OPCODE_ROTATE, 4);
    if (n) {
       n[1].f = angle;
       n[2].f = x;
@@ -3129,7 +3482,7 @@ save_Scalef(GLfloat x, GLfloat y, GLfloat z)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_SCALE, 3);
+   n = alloc_instruction(ctx, OPCODE_SCALE, 3);
    if (n) {
       n[1].f = x;
       n[2].f = y;
@@ -3154,7 +3507,7 @@ save_Scissor(GLint x, GLint y, GLsizei width, GLsizei height)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_SCISSOR, 4);
+   n = alloc_instruction(ctx, OPCODE_SCISSOR, 4);
    if (n) {
       n[1].i = x;
       n[2].i = y;
@@ -3172,13 +3525,25 @@ save_ShadeModel(GLenum mode)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_SHADE_MODEL, 1);
-   if (n) {
-      n[1].e = mode;
-   }
+   ASSERT_OUTSIDE_SAVE_BEGIN_END(ctx);
+
    if (ctx->ExecuteFlag) {
       CALL_ShadeModel(ctx->Exec, (mode));
+   }
+
+   if (ctx->ListState.Current.ShadeModel == mode)
+      return;
+
+   SAVE_FLUSH_VERTICES(ctx);
+
+   /* Only save the value if we know the statechange will take effect:
+    */
+   if (ctx->Driver.CurrentSavePrimitive == PRIM_OUTSIDE_BEGIN_END)
+      ctx->ListState.Current.ShadeModel = mode;
+
+   n = alloc_instruction(ctx, OPCODE_SHADE_MODEL, 1);
+   if (n) {
+      n[1].e = mode;
    }
 }
 
@@ -3189,7 +3554,7 @@ save_StencilFunc(GLenum func, GLint ref, GLuint mask)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_FUNC, 3);
+   n = alloc_instruction(ctx, OPCODE_STENCIL_FUNC, 3);
    if (n) {
       n[1].e = func;
       n[2].i = ref;
@@ -3207,7 +3572,7 @@ save_StencilMask(GLuint mask)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_MASK, 1);
+   n = alloc_instruction(ctx, OPCODE_STENCIL_MASK, 1);
    if (n) {
       n[1].ui = mask;
    }
@@ -3223,7 +3588,7 @@ save_StencilOp(GLenum fail, GLenum zfail, GLenum zpass)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_OP, 3);
+   n = alloc_instruction(ctx, OPCODE_STENCIL_OP, 3);
    if (n) {
       n[1].e = fail;
       n[2].e = zfail;
@@ -3241,7 +3606,7 @@ save_StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
+   n = alloc_instruction(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
    if (n) {
       n[1].e = face;
       n[2].e = func;
@@ -3262,7 +3627,7 @@ save_StencilFuncSeparateATI(GLenum frontfunc, GLenum backfunc, GLint ref,
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
    /* GL_FRONT */
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
+   n = alloc_instruction(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
    if (n) {
       n[1].e = GL_FRONT;
       n[2].e = frontfunc;
@@ -3270,7 +3635,7 @@ save_StencilFuncSeparateATI(GLenum frontfunc, GLenum backfunc, GLint ref,
       n[4].ui = mask;
    }
    /* GL_BACK */
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
+   n = alloc_instruction(ctx, OPCODE_STENCIL_FUNC_SEPARATE, 4);
    if (n) {
       n[1].e = GL_BACK;
       n[2].e = backfunc;
@@ -3290,7 +3655,7 @@ save_StencilMaskSeparate(GLenum face, GLuint mask)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_MASK_SEPARATE, 2);
+   n = alloc_instruction(ctx, OPCODE_STENCIL_MASK_SEPARATE, 2);
    if (n) {
       n[1].e = face;
       n[2].ui = mask;
@@ -3307,7 +3672,7 @@ save_StencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_STENCIL_OP_SEPARATE, 4);
+   n = alloc_instruction(ctx, OPCODE_STENCIL_OP_SEPARATE, 4);
    if (n) {
       n[1].e = face;
       n[2].e = fail;
@@ -3326,7 +3691,7 @@ save_TexEnvfv(GLenum target, GLenum pname, const GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TEXENV, 6);
+   n = alloc_instruction(ctx, OPCODE_TEXENV, 6);
    if (n) {
       n[1].e = target;
       n[2].e = pname;
@@ -3350,7 +3715,10 @@ save_TexEnvfv(GLenum target, GLenum pname, const GLfloat *params)
 static void GLAPIENTRY
 save_TexEnvf(GLenum target, GLenum pname, GLfloat param)
 {
-   save_TexEnvfv(target, pname, &param);
+   GLfloat parray[4];
+   parray[0] = (GLfloat) param;
+   parray[1] = parray[2] = parray[3] = 0.0F;
+   save_TexEnvfv(target, pname, parray);
 }
 
 
@@ -3359,7 +3727,7 @@ save_TexEnvi(GLenum target, GLenum pname, GLint param)
 {
    GLfloat p[4];
    p[0] = (GLfloat) param;
-   p[1] = p[2] = p[3] = 0.0;
+   p[1] = p[2] = p[3] = 0.0F;
    save_TexEnvfv(target, pname, p);
 }
 
@@ -3388,7 +3756,7 @@ save_TexGenfv(GLenum coord, GLenum pname, const GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TEXGEN, 6);
+   n = alloc_instruction(ctx, OPCODE_TEXGEN, 6);
    if (n) {
       n[1].e = coord;
       n[2].e = pname;
@@ -3418,8 +3786,10 @@ save_TexGeniv(GLenum coord, GLenum pname, const GLint *params)
 static void GLAPIENTRY
 save_TexGend(GLenum coord, GLenum pname, GLdouble param)
 {
-   GLfloat p = (GLfloat) param;
-   save_TexGenfv(coord, pname, &p);
+   GLfloat parray[4];
+   parray[0] = (GLfloat) param;
+   parray[1] = parray[2] = parray[3] = 0.0F;
+   save_TexGenfv(coord, pname, parray);
 }
 
 
@@ -3438,14 +3808,20 @@ save_TexGendv(GLenum coord, GLenum pname, const GLdouble *params)
 static void GLAPIENTRY
 save_TexGenf(GLenum coord, GLenum pname, GLfloat param)
 {
-   save_TexGenfv(coord, pname, &param);
+   GLfloat parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0.0F;
+   save_TexGenfv(coord, pname, parray);
 }
 
 
 static void GLAPIENTRY
 save_TexGeni(GLenum coord, GLenum pname, GLint param)
 {
-   save_TexGeniv(coord, pname, &param);
+   GLint parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0;
+   save_TexGeniv(coord, pname, parray);
 }
 
 
@@ -3455,7 +3831,7 @@ save_TexParameterfv(GLenum target, GLenum pname, const GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TEXPARAMETER, 6);
+   n = alloc_instruction(ctx, OPCODE_TEXPARAMETER, 6);
    if (n) {
       n[1].e = target;
       n[2].e = pname;
@@ -3473,7 +3849,10 @@ save_TexParameterfv(GLenum target, GLenum pname, const GLfloat *params)
 static void GLAPIENTRY
 save_TexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
-   save_TexParameterfv(target, pname, &param);
+   GLfloat parray[4];
+   parray[0] = param;
+   parray[1] = parray[2] = parray[3] = 0.0F;
+   save_TexParameterfv(target, pname, parray);
 }
 
 
@@ -3482,7 +3861,7 @@ save_TexParameteri(GLenum target, GLenum pname, GLint param)
 {
    GLfloat fparam[4];
    fparam[0] = (GLfloat) param;
-   fparam[1] = fparam[2] = fparam[3] = 0.0;
+   fparam[1] = fparam[2] = fparam[3] = 0.0F;
    save_TexParameterfv(target, pname, fparam);
 }
 
@@ -3492,7 +3871,7 @@ save_TexParameteriv(GLenum target, GLenum pname, const GLint *params)
 {
    GLfloat fparam[4];
    fparam[0] = (GLfloat) params[0];
-   fparam[1] = fparam[2] = fparam[3] = 0.0;
+   fparam[1] = fparam[2] = fparam[3] = 0.0F;
    save_TexParameterfv(target, pname, fparam);
 }
 
@@ -3510,11 +3889,9 @@ save_TexImage1D(GLenum target,
                                   border, format, type, pixels));
    }
    else {
-      GLvoid *image = unpack_image(1, width, 1, 1, format, type,
-                                   pixels, &ctx->Unpack);
       Node *n;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_TEX_IMAGE1D, 8);
+      n = alloc_instruction(ctx, OPCODE_TEX_IMAGE1D, 8);
       if (n) {
          n[1].e = target;
          n[2].i = level;
@@ -3523,10 +3900,8 @@ save_TexImage1D(GLenum target,
          n[5].i = border;
          n[6].e = format;
          n[7].e = type;
-         n[8].data = image;
-      }
-      else if (image) {
-         _mesa_free(image);
+         n[8].data = unpack_image(ctx, 1, width, 1, 1, format, type,
+                                  pixels, &ctx->Unpack);
       }
       if (ctx->ExecuteFlag) {
          CALL_TexImage1D(ctx->Exec, (target, level, components, width,
@@ -3549,11 +3924,9 @@ save_TexImage2D(GLenum target,
                                   height, border, format, type, pixels));
    }
    else {
-      GLvoid *image = unpack_image(2, width, height, 1, format, type,
-                                   pixels, &ctx->Unpack);
       Node *n;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_TEX_IMAGE2D, 9);
+      n = alloc_instruction(ctx, OPCODE_TEX_IMAGE2D, 9);
       if (n) {
          n[1].e = target;
          n[2].i = level;
@@ -3563,10 +3936,8 @@ save_TexImage2D(GLenum target,
          n[6].i = border;
          n[7].e = format;
          n[8].e = type;
-         n[9].data = image;
-      }
-      else if (image) {
-         _mesa_free(image);
+         n[9].data = unpack_image(ctx, 2, width, height, 1, format, type,
+                                  pixels, &ctx->Unpack);
       }
       if (ctx->ExecuteFlag) {
          CALL_TexImage2D(ctx->Exec, (target, level, components, width,
@@ -3592,10 +3963,8 @@ save_TexImage3D(GLenum target,
    }
    else {
       Node *n;
-      GLvoid *image = unpack_image(3, width, height, depth, format, type,
-                                   pixels, &ctx->Unpack);
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_TEX_IMAGE3D, 10);
+      n = alloc_instruction(ctx, OPCODE_TEX_IMAGE3D, 10);
       if (n) {
          n[1].e = target;
          n[2].i = level;
@@ -3606,10 +3975,8 @@ save_TexImage3D(GLenum target,
          n[7].i = border;
          n[8].e = format;
          n[9].e = type;
-         n[10].data = image;
-      }
-      else if (image) {
-         _mesa_free(image);
+         n[10].data = unpack_image(ctx, 3, width, height, depth, format, type,
+                                   pixels, &ctx->Unpack);
       }
       if (ctx->ExecuteFlag) {
          CALL_TexImage3D(ctx->Exec, (target, level, internalFormat, width,
@@ -3627,10 +3994,10 @@ save_TexSubImage1D(GLenum target, GLint level, GLint xoffset,
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLvoid *image = unpack_image(1, width, 1, 1, format, type,
-                                pixels, &ctx->Unpack);
+
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TEX_SUB_IMAGE1D, 7);
+
+   n = alloc_instruction(ctx, OPCODE_TEX_SUB_IMAGE1D, 7);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -3638,10 +4005,8 @@ save_TexSubImage1D(GLenum target, GLint level, GLint xoffset,
       n[4].i = (GLint) width;
       n[5].e = format;
       n[6].e = type;
-      n[7].data = image;
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[7].data = unpack_image(ctx, 1, width, 1, 1, format, type,
+                               pixels, &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_TexSubImage1D(ctx->Exec, (target, level, xoffset, width,
@@ -3658,10 +4023,10 @@ save_TexSubImage2D(GLenum target, GLint level,
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLvoid *image = unpack_image(2, width, height, 1, format, type,
-                                pixels, &ctx->Unpack);
+
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TEX_SUB_IMAGE2D, 9);
+
+   n = alloc_instruction(ctx, OPCODE_TEX_SUB_IMAGE2D, 9);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -3671,10 +4036,8 @@ save_TexSubImage2D(GLenum target, GLint level,
       n[6].i = (GLint) height;
       n[7].e = format;
       n[8].e = type;
-      n[9].data = image;
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[9].data = unpack_image(ctx, 2, width, height, 1, format, type,
+                               pixels, &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_TexSubImage2D(ctx->Exec, (target, level, xoffset, yoffset,
@@ -3691,10 +4054,10 @@ save_TexSubImage3D(GLenum target, GLint level,
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLvoid *image = unpack_image(3, width, height, depth, format, type,
-                                pixels, &ctx->Unpack);
+
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TEX_SUB_IMAGE3D, 11);
+
+   n = alloc_instruction(ctx, OPCODE_TEX_SUB_IMAGE3D, 11);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -3706,10 +4069,8 @@ save_TexSubImage3D(GLenum target, GLint level,
       n[8].i = (GLint) depth;
       n[9].e = format;
       n[10].e = type;
-      n[11].data = image;
-   }
-   else if (image) {
-      _mesa_free(image);
+      n[11].data = unpack_image(ctx, 3, width, height, depth, format, type,
+                                pixels, &ctx->Unpack);
    }
    if (ctx->ExecuteFlag) {
       CALL_TexSubImage3D(ctx->Exec, (target, level,
@@ -3726,7 +4087,7 @@ save_Translatef(GLfloat x, GLfloat y, GLfloat z)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TRANSLATE, 3);
+   n = alloc_instruction(ctx, OPCODE_TRANSLATE, 3);
    if (n) {
       n[1].f = x;
       n[2].f = y;
@@ -3752,7 +4113,7 @@ save_Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_VIEWPORT, 4);
+   n = alloc_instruction(ctx, OPCODE_VIEWPORT, 4);
    if (n) {
       n[1].i = x;
       n[2].i = y;
@@ -3771,7 +4132,7 @@ save_WindowPos4fMESA(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_WINDOW_POS, 4);
+   n = alloc_instruction(ctx, OPCODE_WINDOW_POS, 4);
    if (n) {
       n[1].f = x;
       n[2].f = y;
@@ -3932,7 +4293,7 @@ save_ActiveTextureARB(GLenum target)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ACTIVE_TEXTURE, 1);
+   n = alloc_instruction(ctx, OPCODE_ACTIVE_TEXTURE, 1);
    if (n) {
       n[1].e = target;
    }
@@ -3999,13 +4360,13 @@ save_CompressedTexImage1DARB(GLenum target, GLint level,
       GLvoid *image;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
       /* make copy of image */
-      image = _mesa_malloc(imageSize);
+      image = malloc(imageSize);
       if (!image) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexImage1DARB");
          return;
       }
-      MEMCPY(image, data, imageSize);
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_COMPRESSED_TEX_IMAGE_1D, 7);
+      memcpy(image, data, imageSize);
+      n = alloc_instruction(ctx, OPCODE_COMPRESSED_TEX_IMAGE_1D, 7);
       if (n) {
          n[1].e = target;
          n[2].i = level;
@@ -4016,7 +4377,7 @@ save_CompressedTexImage1DARB(GLenum target, GLint level,
          n[7].data = image;
       }
       else if (image) {
-         _mesa_free(image);
+         free(image);
       }
       if (ctx->ExecuteFlag) {
          CALL_CompressedTexImage1DARB(ctx->Exec,
@@ -4045,13 +4406,13 @@ save_CompressedTexImage2DARB(GLenum target, GLint level,
       GLvoid *image;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
       /* make copy of image */
-      image = _mesa_malloc(imageSize);
+      image = malloc(imageSize);
       if (!image) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexImage2DARB");
          return;
       }
-      MEMCPY(image, data, imageSize);
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_COMPRESSED_TEX_IMAGE_2D, 8);
+      memcpy(image, data, imageSize);
+      n = alloc_instruction(ctx, OPCODE_COMPRESSED_TEX_IMAGE_2D, 8);
       if (n) {
          n[1].e = target;
          n[2].i = level;
@@ -4063,7 +4424,7 @@ save_CompressedTexImage2DARB(GLenum target, GLint level,
          n[8].data = image;
       }
       else if (image) {
-         _mesa_free(image);
+         free(image);
       }
       if (ctx->ExecuteFlag) {
          CALL_CompressedTexImage2DARB(ctx->Exec,
@@ -4092,13 +4453,13 @@ save_CompressedTexImage3DARB(GLenum target, GLint level,
       GLvoid *image;
       ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
       /* make copy of image */
-      image = _mesa_malloc(imageSize);
+      image = malloc(imageSize);
       if (!image) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexImage3DARB");
          return;
       }
-      MEMCPY(image, data, imageSize);
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_COMPRESSED_TEX_IMAGE_3D, 9);
+      memcpy(image, data, imageSize);
+      n = alloc_instruction(ctx, OPCODE_COMPRESSED_TEX_IMAGE_3D, 9);
       if (n) {
          n[1].e = target;
          n[2].i = level;
@@ -4111,7 +4472,7 @@ save_CompressedTexImage3DARB(GLenum target, GLint level,
          n[9].data = image;
       }
       else if (image) {
-         _mesa_free(image);
+         free(image);
       }
       if (ctx->ExecuteFlag) {
          CALL_CompressedTexImage3DARB(ctx->Exec,
@@ -4135,13 +4496,13 @@ save_CompressedTexSubImage1DARB(GLenum target, GLint level, GLint xoffset,
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
 
    /* make copy of image */
-   image = _mesa_malloc(imageSize);
+   image = malloc(imageSize);
    if (!image) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexSubImage1DARB");
       return;
    }
-   MEMCPY(image, data, imageSize);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COMPRESSED_TEX_SUB_IMAGE_1D, 7);
+   memcpy(image, data, imageSize);
+   n = alloc_instruction(ctx, OPCODE_COMPRESSED_TEX_SUB_IMAGE_1D, 7);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -4152,7 +4513,7 @@ save_CompressedTexSubImage1DARB(GLenum target, GLint level, GLint xoffset,
       n[7].data = image;
    }
    else if (image) {
-      _mesa_free(image);
+      free(image);
    }
    if (ctx->ExecuteFlag) {
       CALL_CompressedTexSubImage1DARB(ctx->Exec, (target, level, xoffset,
@@ -4175,13 +4536,13 @@ save_CompressedTexSubImage2DARB(GLenum target, GLint level, GLint xoffset,
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
 
    /* make copy of image */
-   image = _mesa_malloc(imageSize);
+   image = malloc(imageSize);
    if (!image) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexSubImage2DARB");
       return;
    }
-   MEMCPY(image, data, imageSize);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COMPRESSED_TEX_SUB_IMAGE_2D, 9);
+   memcpy(image, data, imageSize);
+   n = alloc_instruction(ctx, OPCODE_COMPRESSED_TEX_SUB_IMAGE_2D, 9);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -4194,7 +4555,7 @@ save_CompressedTexSubImage2DARB(GLenum target, GLint level, GLint xoffset,
       n[9].data = image;
    }
    else if (image) {
-      _mesa_free(image);
+      free(image);
    }
    if (ctx->ExecuteFlag) {
       CALL_CompressedTexSubImage2DARB(ctx->Exec,
@@ -4217,13 +4578,13 @@ save_CompressedTexSubImage3DARB(GLenum target, GLint level, GLint xoffset,
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
 
    /* make copy of image */
-   image = _mesa_malloc(imageSize);
+   image = malloc(imageSize);
    if (!image) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glCompressedTexSubImage3DARB");
       return;
    }
-   MEMCPY(image, data, imageSize);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_COMPRESSED_TEX_SUB_IMAGE_3D, 11);
+   memcpy(image, data, imageSize);
+   n = alloc_instruction(ctx, OPCODE_COMPRESSED_TEX_SUB_IMAGE_3D, 11);
    if (n) {
       n[1].e = target;
       n[2].i = level;
@@ -4238,7 +4599,7 @@ save_CompressedTexSubImage3DARB(GLenum target, GLint level, GLint xoffset,
       n[11].data = image;
    }
    else if (image) {
-      _mesa_free(image);
+      free(image);
    }
    if (ctx->ExecuteFlag) {
       CALL_CompressedTexSubImage3DARB(ctx->Exec,
@@ -4256,7 +4617,7 @@ save_SampleCoverageARB(GLclampf value, GLboolean invert)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_SAMPLE_COVERAGE, 2);
+   n = alloc_instruction(ctx, OPCODE_SAMPLE_COVERAGE, 2);
    if (n) {
       n[1].f = value;
       n[2].b = invert;
@@ -4277,7 +4638,7 @@ save_BindProgramNV(GLenum target, GLuint id)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BIND_PROGRAM_NV, 2);
+   n = alloc_instruction(ctx, OPCODE_BIND_PROGRAM_NV, 2);
    if (n) {
       n[1].e = target;
       n[2].ui = id;
@@ -4294,7 +4655,7 @@ save_ProgramEnvParameter4fARB(GLenum target, GLuint index,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_ENV_PARAMETER_ARB, 6);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_ENV_PARAMETER_ARB, 6);
    if (n) {
       n[1].e = target;
       n[2].ui = index;
@@ -4331,7 +4692,7 @@ save_ProgramEnvParameters4fvEXT(GLenum target, GLuint index, GLsizei count,
       const GLfloat * p = params;
 
       for (i = 0 ; i < count ; i++) {
-	 n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_ENV_PARAMETER_ARB, 6);
+	 n = alloc_instruction(ctx, OPCODE_PROGRAM_ENV_PARAMETER_ARB, 6);
 	 if (n) {
 	    n[1].e = target;
 	    n[2].ui = index;
@@ -4379,7 +4740,7 @@ save_ExecuteProgramNV(GLenum target, GLuint id, const GLfloat *params)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_EXECUTE_PROGRAM_NV, 6);
+   n = alloc_instruction(ctx, OPCODE_EXECUTE_PROGRAM_NV, 6);
    if (n) {
       n[1].e = target;
       n[2].ui = id;
@@ -4422,18 +4783,17 @@ save_LoadProgramNV(GLenum target, GLuint id, GLsizei len,
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLubyte *programCopy;
-
-   programCopy = (GLubyte *) _mesa_malloc(len);
-   if (!programCopy) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glLoadProgramNV");
-      return;
-   }
-   _mesa_memcpy(programCopy, program, len);
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_LOAD_PROGRAM_NV, 4);
+
+   n = alloc_instruction(ctx, OPCODE_LOAD_PROGRAM_NV, 4);
    if (n) {
+      GLubyte *programCopy = (GLubyte *) malloc(len);
+      if (!programCopy) {
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glLoadProgramNV");
+         return;
+      }
+      memcpy(programCopy, program, len);
       n[1].e = target;
       n[2].ui = id;
       n[3].i = len;
@@ -4450,15 +4810,17 @@ save_RequestResidentProgramsNV(GLsizei num, const GLuint * ids)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLuint *idCopy = (GLuint *) _mesa_malloc(num * sizeof(GLuint));
-   if (!idCopy) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glRequestResidentProgramsNV");
-      return;
-   }
-   _mesa_memcpy(idCopy, ids, num * sizeof(GLuint));
+
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TRACK_MATRIX_NV, 2);
+
+   n = alloc_instruction(ctx, OPCODE_TRACK_MATRIX_NV, 2);
    if (n) {
+      GLuint *idCopy = (GLuint *) malloc(num * sizeof(GLuint));
+      if (!idCopy) {
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glRequestResidentProgramsNV");
+         return;
+      }
+      memcpy(idCopy, ids, num * sizeof(GLuint));
       n[1].i = num;
       n[2].data = idCopy;
    }
@@ -4475,7 +4837,7 @@ save_TrackMatrixNV(GLenum target, GLuint address,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_TRACK_MATRIX_NV, 4);
+   n = alloc_instruction(ctx, OPCODE_TRACK_MATRIX_NV, 4);
    if (n) {
       n[1].e = target;
       n[2].ui = address;
@@ -4500,7 +4862,7 @@ save_ProgramLocalParameter4fARB(GLenum target, GLuint index,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
    if (n) {
       n[1].e = target;
       n[2].ui = index;
@@ -4522,7 +4884,7 @@ save_ProgramLocalParameter4fvARB(GLenum target, GLuint index,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
    if (n) {
       n[1].e = target;
       n[2].ui = index;
@@ -4550,7 +4912,7 @@ save_ProgramLocalParameters4fvEXT(GLenum target, GLuint index, GLsizei count,
       const GLfloat * p = params;
 
       for (i = 0 ; i < count ; i++) {
-	 n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
+	 n = alloc_instruction(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
 	 if (n) {
 	    n[1].e = target;
 	    n[2].ui = index;
@@ -4577,7 +4939,7 @@ save_ProgramLocalParameter4dARB(GLenum target, GLuint index,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
    if (n) {
       n[1].e = target;
       n[2].ui = index;
@@ -4599,7 +4961,7 @@ save_ProgramLocalParameter4dvARB(GLenum target, GLuint index,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_LOCAL_PARAMETER_ARB, 6);
    if (n) {
       n[1].e = target;
       n[2].ui = index;
@@ -4619,16 +4981,17 @@ save_ProgramNamedParameter4fNV(GLuint id, GLsizei len, const GLubyte * name,
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLubyte *nameCopy = (GLubyte *) _mesa_malloc(len);
-   if (!nameCopy) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glProgramNamedParameter4fNV");
-      return;
-   }
-   _mesa_memcpy(nameCopy, name, len);
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_NAMED_PARAMETER_NV, 6);
+
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_NAMED_PARAMETER_NV, 6);
    if (n) {
+      GLubyte *nameCopy = (GLubyte *) malloc(len);
+      if (!nameCopy) {
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glProgramNamedParameter4fNV");
+         return;
+      }
+      memcpy(nameCopy, name, len);
       n[1].ui = id;
       n[2].i = len;
       n[3].data = nameCopy;
@@ -4680,7 +5043,7 @@ save_ActiveStencilFaceEXT(GLenum face)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ACTIVE_STENCIL_FACE_EXT, 1);
+   n = alloc_instruction(ctx, OPCODE_ACTIVE_STENCIL_FACE_EXT, 1);
    if (n) {
       n[1].e = face;
    }
@@ -4697,7 +5060,7 @@ save_DepthBoundsEXT(GLclampd zmin, GLclampd zmax)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_DEPTH_BOUNDS_EXT, 2);
+   n = alloc_instruction(ctx, OPCODE_DEPTH_BOUNDS_EXT, 2);
    if (n) {
       n[1].f = (GLfloat) zmin;
       n[2].f = (GLfloat) zmax;
@@ -4717,18 +5080,17 @@ save_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   GLubyte *programCopy;
-
-   programCopy = (GLubyte *) _mesa_malloc(len);
-   if (!programCopy) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glProgramStringARB");
-      return;
-   }
-   _mesa_memcpy(programCopy, string, len);
 
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_PROGRAM_STRING_ARB, 4);
+
+   n = alloc_instruction(ctx, OPCODE_PROGRAM_STRING_ARB, 4);
    if (n) {
+      GLubyte *programCopy = (GLubyte *) malloc(len);
+      if (!programCopy) {
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glProgramStringARB");
+         return;
+      }
+      memcpy(programCopy, string, len);
       n[1].e = target;
       n[2].e = format;
       n[3].i = len;
@@ -4742,7 +5104,7 @@ save_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
 #endif /* FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program */
 
 
-#if FEATURE_ARB_occlusion_query
+#if FEATURE_queryobj
 
 static void GLAPIENTRY
 save_BeginQueryARB(GLenum target, GLuint id)
@@ -4750,7 +5112,7 @@ save_BeginQueryARB(GLenum target, GLuint id)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BEGIN_QUERY_ARB, 2);
+   n = alloc_instruction(ctx, OPCODE_BEGIN_QUERY_ARB, 2);
    if (n) {
       n[1].e = target;
       n[2].ui = id;
@@ -4767,7 +5129,7 @@ save_EndQueryARB(GLenum target)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_END_QUERY_ARB, 1);
+   n = alloc_instruction(ctx, OPCODE_END_QUERY_ARB, 1);
    if (n) {
       n[1].e = target;
    }
@@ -4776,7 +5138,7 @@ save_EndQueryARB(GLenum target)
    }
 }
 
-#endif /* FEATURE_ARB_occlusion_query */
+#endif /* FEATURE_queryobj */
 
 
 static void GLAPIENTRY
@@ -4785,7 +5147,7 @@ save_DrawBuffersARB(GLsizei count, const GLenum * buffers)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_DRAW_BUFFERS_ARB, 1 + MAX_DRAW_BUFFERS);
+   n = alloc_instruction(ctx, OPCODE_DRAW_BUFFERS_ARB, 1 + MAX_DRAW_BUFFERS);
    if (n) {
       GLint i;
       n[1].i = count;
@@ -4800,6 +5162,36 @@ save_DrawBuffersARB(GLsizei count, const GLenum * buffers)
    }
 }
 
+static void GLAPIENTRY
+save_TexBumpParameterfvATI(GLenum pname, const GLfloat *param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+
+   n = alloc_instruction(ctx, OPCODE_TEX_BUMP_PARAMETER_ATI, 5);
+   if (n) {
+      n[1].ui = pname;
+      n[2].f = param[0];
+      n[3].f = param[1];
+      n[4].f = param[2];
+      n[5].f = param[3];
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_TexBumpParameterfvATI(ctx->Exec, (pname, param));
+   }
+}
+
+static void GLAPIENTRY
+save_TexBumpParameterivATI(GLenum pname, const GLint *param)
+{
+   GLfloat p[4];
+   p[0] = INT_TO_FLOAT(param[0]);
+   p[1] = INT_TO_FLOAT(param[1]);
+   p[2] = INT_TO_FLOAT(param[2]);
+   p[3] = INT_TO_FLOAT(param[3]);
+   save_TexBumpParameterfvATI(pname, p);
+}
+
 #if FEATURE_ATI_fragment_shader
 static void GLAPIENTRY
 save_BindFragmentShaderATI(GLuint id)
@@ -4807,7 +5199,7 @@ save_BindFragmentShaderATI(GLuint id)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
 
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BIND_FRAGMENT_SHADER_ATI, 1);
+   n = alloc_instruction(ctx, OPCODE_BIND_FRAGMENT_SHADER_ATI, 1);
    if (n) {
       n[1].ui = id;
    }
@@ -4822,7 +5214,7 @@ save_SetFragmentShaderConstantATI(GLuint dst, const GLfloat *value)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
 
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_SET_FRAGMENT_SHADER_CONSTANTS_ATI, 5);
+   n = alloc_instruction(ctx, OPCODE_SET_FRAGMENT_SHADER_CONSTANTS_ATI, 5);
    if (n) {
       n[1].ui = dst;
       n[2].f = value[0];
@@ -4842,13 +5234,13 @@ save_Attr1fNV(GLenum attr, GLfloat x)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ATTR_1F_NV, 2);
+   n = alloc_instruction(ctx, OPCODE_ATTR_1F_NV, 2);
    if (n) {
       n[1].e = attr;
       n[2].f = x;
    }
 
-   ASSERT(attr < MAX_VERTEX_PROGRAM_ATTRIBS);
+   ASSERT(attr < MAX_VERTEX_GENERIC_ATTRIBS);
    ctx->ListState.ActiveAttribSize[attr] = 1;
    ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, 0, 0, 1);
 
@@ -4863,14 +5255,14 @@ save_Attr2fNV(GLenum attr, GLfloat x, GLfloat y)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ATTR_2F_NV, 3);
+   n = alloc_instruction(ctx, OPCODE_ATTR_2F_NV, 3);
    if (n) {
       n[1].e = attr;
       n[2].f = x;
       n[3].f = y;
    }
 
-   ASSERT(attr < MAX_VERTEX_PROGRAM_ATTRIBS);
+   ASSERT(attr < MAX_VERTEX_GENERIC_ATTRIBS);
    ctx->ListState.ActiveAttribSize[attr] = 2;
    ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, 0, 1);
 
@@ -4885,7 +5277,7 @@ save_Attr3fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ATTR_3F_NV, 4);
+   n = alloc_instruction(ctx, OPCODE_ATTR_3F_NV, 4);
    if (n) {
       n[1].e = attr;
       n[2].f = x;
@@ -4893,7 +5285,7 @@ save_Attr3fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
       n[4].f = z;
    }
 
-   ASSERT(attr < MAX_VERTEX_PROGRAM_ATTRIBS);
+   ASSERT(attr < MAX_VERTEX_GENERIC_ATTRIBS);
    ctx->ListState.ActiveAttribSize[attr] = 3;
    ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, 1);
 
@@ -4908,7 +5300,7 @@ save_Attr4fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ATTR_4F_NV, 5);
+   n = alloc_instruction(ctx, OPCODE_ATTR_4F_NV, 5);
    if (n) {
       n[1].e = attr;
       n[2].f = x;
@@ -4917,7 +5309,7 @@ save_Attr4fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
       n[5].f = w;
    }
 
-   ASSERT(attr < MAX_VERTEX_PROGRAM_ATTRIBS);
+   ASSERT(attr < MAX_VERTEX_GENERIC_ATTRIBS);
    ctx->ListState.ActiveAttribSize[attr] = 4;
    ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, w);
 
@@ -4933,13 +5325,13 @@ save_Attr1fARB(GLenum attr, GLfloat x)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ATTR_1F_ARB, 2);
+   n = alloc_instruction(ctx, OPCODE_ATTR_1F_ARB, 2);
    if (n) {
       n[1].e = attr;
       n[2].f = x;
    }
 
-   ASSERT(attr < MAX_VERTEX_ATTRIBS);
+   ASSERT(attr < MAX_VERTEX_GENERIC_ATTRIBS);
    ctx->ListState.ActiveAttribSize[attr] = 1;
    ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, 0, 0, 1);
 
@@ -4954,14 +5346,14 @@ save_Attr2fARB(GLenum attr, GLfloat x, GLfloat y)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ATTR_2F_ARB, 3);
+   n = alloc_instruction(ctx, OPCODE_ATTR_2F_ARB, 3);
    if (n) {
       n[1].e = attr;
       n[2].f = x;
       n[3].f = y;
    }
 
-   ASSERT(attr < MAX_VERTEX_ATTRIBS);
+   ASSERT(attr < MAX_VERTEX_GENERIC_ATTRIBS);
    ctx->ListState.ActiveAttribSize[attr] = 2;
    ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, 0, 1);
 
@@ -4976,7 +5368,7 @@ save_Attr3fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ATTR_3F_ARB, 4);
+   n = alloc_instruction(ctx, OPCODE_ATTR_3F_ARB, 4);
    if (n) {
       n[1].e = attr;
       n[2].f = x;
@@ -4984,7 +5376,7 @@ save_Attr3fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
       n[4].f = z;
    }
 
-   ASSERT(attr < MAX_VERTEX_ATTRIBS);
+   ASSERT(attr < MAX_VERTEX_GENERIC_ATTRIBS);
    ctx->ListState.ActiveAttribSize[attr] = 3;
    ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, 1);
 
@@ -4999,7 +5391,7 @@ save_Attr4fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ATTR_4F_ARB, 5);
+   n = alloc_instruction(ctx, OPCODE_ATTR_4F_ARB, 5);
    if (n) {
       n[1].e = attr;
       n[2].f = x;
@@ -5008,7 +5400,7 @@ save_Attr4fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
       n[5].f = w;
    }
 
-   ASSERT(attr < MAX_VERTEX_ATTRIBS);
+   ASSERT(attr < MAX_VERTEX_GENERIC_ATTRIBS);
    ctx->ListState.ActiveAttribSize[attr] = 4;
    ASSIGN_4V(ctx->ListState.CurrentAttrib[attr], x, y, z, w);
 
@@ -5024,7 +5416,7 @@ save_EvalCoord1f(GLfloat x)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_EVAL_C1, 1);
+   n = alloc_instruction(ctx, OPCODE_EVAL_C1, 1);
    if (n) {
       n[1].f = x;
    }
@@ -5045,7 +5437,7 @@ save_EvalCoord2f(GLfloat x, GLfloat y)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_EVAL_C2, 2);
+   n = alloc_instruction(ctx, OPCODE_EVAL_C2, 2);
    if (n) {
       n[1].f = x;
       n[2].f = y;
@@ -5068,7 +5460,7 @@ save_EvalPoint1(GLint x)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_EVAL_P1, 1);
+   n = alloc_instruction(ctx, OPCODE_EVAL_P1, 1);
    if (n) {
       n[1].i = x;
    }
@@ -5083,7 +5475,7 @@ save_EvalPoint2(GLint x, GLint y)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_EVAL_P2, 2);
+   n = alloc_instruction(ctx, OPCODE_EVAL_P2, 2);
    if (n) {
       n[1].i = x;
       n[2].i = y;
@@ -5111,14 +5503,21 @@ save_EdgeFlag(GLboolean x)
    save_Attr1fNV(VERT_ATTRIB_EDGEFLAG, x ? (GLfloat)1.0 : (GLfloat)0.0);
 }
 
+static INLINE GLboolean compare4fv( const GLfloat *a,
+                                    const GLfloat *b,
+                                    GLuint count )
+{
+   return memcmp( a, b, count * sizeof(GLfloat) ) == 0;
+}
+                              
+
 static void GLAPIENTRY
 save_Materialfv(GLenum face, GLenum pname, const GLfloat * param)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    int args, i;
-
-   SAVE_FLUSH_VERTICES(ctx);
+   GLuint bitmask;
 
    switch (face) {
    case GL_BACK:
@@ -5148,26 +5547,43 @@ save_Materialfv(GLenum face, GLenum pname, const GLfloat * param)
       _mesa_compile_error(ctx, GL_INVALID_ENUM, "material(pname)");
       return;
    }
+   
+   if (ctx->ExecuteFlag) {
+      CALL_Materialfv(ctx->Exec, (face, pname, param));
+   }
 
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_MATERIAL, 6);
+   bitmask = _mesa_material_bitmask(ctx, face, pname, ~0, NULL);
+
+   /* Try to eliminate redundant statechanges.  Because it is legal to
+    * call glMaterial even inside begin/end calls, don't need to worry
+    * about ctx->Driver.CurrentSavePrimitive here.
+    */
+   for (i = 0; i < MAT_ATTRIB_MAX; i++) {
+      if (bitmask & (1 << i)) {
+         if (ctx->ListState.ActiveMaterialSize[i] == args &&
+             compare4fv(ctx->ListState.CurrentMaterial[i], param, args)) {
+            bitmask &= ~(1 << i);
+         }
+         else {
+            ctx->ListState.ActiveMaterialSize[i] = args;
+            COPY_SZ_4V(ctx->ListState.CurrentMaterial[i], args, param);
+         }
+      }
+   }
+
+   /* If this call has effect, return early:
+    */
+   if (bitmask == 0)
+      return;
+
+   SAVE_FLUSH_VERTICES(ctx);
+
+   n = alloc_instruction(ctx, OPCODE_MATERIAL, 6);
    if (n) {
       n[1].e = face;
       n[2].e = pname;
       for (i = 0; i < args; i++)
          n[3 + i].f = param[i];
-   }
-
-   {
-      GLuint bitmask = _mesa_material_bitmask(ctx, face, pname, ~0, NULL);
-      for (i = 0; i < MAT_ATTRIB_MAX; i++)
-         if (bitmask & (1 << i)) {
-            ctx->ListState.ActiveMaterialSize[i] = args;
-            COPY_SZ_4V(ctx->ListState.CurrentMaterial[i], args, param);
-         }
-   }
-
-   if (ctx->ExecuteFlag) {
-      CALL_Materialfv(ctx->Exec, (face, pname, param));
    }
 }
 
@@ -5205,7 +5621,7 @@ save_Begin(GLenum mode)
          return;
 
       SAVE_FLUSH_VERTICES(ctx);
-      n = ALLOC_INSTRUCTION(ctx, OPCODE_BEGIN, 1);
+      n = alloc_instruction(ctx, OPCODE_BEGIN, 1);
       if (n) {
          n[1].e = mode;
       }
@@ -5221,7 +5637,7 @@ save_End(void)
 {
    GET_CURRENT_CONTEXT(ctx);
    SAVE_FLUSH_VERTICES(ctx);
-   (void) ALLOC_INSTRUCTION(ctx, OPCODE_END, 0);
+   (void) alloc_instruction(ctx, OPCODE_END, 0);
    ctx->Driver.CurrentSavePrimitive = PRIM_OUTSIDE_BEGIN_END;
    if (ctx->ExecuteFlag) {
       CALL_End(ctx->Exec, ());
@@ -5234,7 +5650,7 @@ save_Rectf(GLfloat a, GLfloat b, GLfloat c, GLfloat d)
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    SAVE_FLUSH_VERTICES(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_RECTF, 4);
+   n = alloc_instruction(ctx, OPCODE_RECTF, 4);
    if (n) {
       n[1].f = a;
       n[2].f = b;
@@ -5471,7 +5887,7 @@ index_error(void)
 static void GLAPIENTRY
 save_VertexAttrib1fNV(GLuint index, GLfloat x)
 {
-   if (index < MAX_VERTEX_PROGRAM_ATTRIBS)
+   if (index < MAX_NV_VERTEX_PROGRAM_INPUTS)
       save_Attr1fNV(index, x);
    else
       index_error();
@@ -5480,7 +5896,7 @@ save_VertexAttrib1fNV(GLuint index, GLfloat x)
 static void GLAPIENTRY
 save_VertexAttrib1fvNV(GLuint index, const GLfloat * v)
 {
-   if (index < MAX_VERTEX_PROGRAM_ATTRIBS)
+   if (index < MAX_NV_VERTEX_PROGRAM_INPUTS)
       save_Attr1fNV(index, v[0]);
    else
       index_error();
@@ -5489,7 +5905,7 @@ save_VertexAttrib1fvNV(GLuint index, const GLfloat * v)
 static void GLAPIENTRY
 save_VertexAttrib2fNV(GLuint index, GLfloat x, GLfloat y)
 {
-   if (index < MAX_VERTEX_PROGRAM_ATTRIBS)
+   if (index < MAX_NV_VERTEX_PROGRAM_INPUTS)
       save_Attr2fNV(index, x, y);
    else
       index_error();
@@ -5498,7 +5914,7 @@ save_VertexAttrib2fNV(GLuint index, GLfloat x, GLfloat y)
 static void GLAPIENTRY
 save_VertexAttrib2fvNV(GLuint index, const GLfloat * v)
 {
-   if (index < MAX_VERTEX_PROGRAM_ATTRIBS)
+   if (index < MAX_NV_VERTEX_PROGRAM_INPUTS)
       save_Attr2fNV(index, v[0], v[1]);
    else
       index_error();
@@ -5507,7 +5923,7 @@ save_VertexAttrib2fvNV(GLuint index, const GLfloat * v)
 static void GLAPIENTRY
 save_VertexAttrib3fNV(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 {
-   if (index < MAX_VERTEX_PROGRAM_ATTRIBS)
+   if (index < MAX_NV_VERTEX_PROGRAM_INPUTS)
       save_Attr3fNV(index, x, y, z);
    else
       index_error();
@@ -5516,7 +5932,7 @@ save_VertexAttrib3fNV(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 static void GLAPIENTRY
 save_VertexAttrib3fvNV(GLuint index, const GLfloat * v)
 {
-   if (index < MAX_VERTEX_PROGRAM_ATTRIBS)
+   if (index < MAX_NV_VERTEX_PROGRAM_INPUTS)
       save_Attr3fNV(index, v[0], v[1], v[2]);
    else
       index_error();
@@ -5526,7 +5942,7 @@ static void GLAPIENTRY
 save_VertexAttrib4fNV(GLuint index, GLfloat x, GLfloat y,
                       GLfloat z, GLfloat w)
 {
-   if (index < MAX_VERTEX_PROGRAM_ATTRIBS)
+   if (index < MAX_NV_VERTEX_PROGRAM_INPUTS)
       save_Attr4fNV(index, x, y, z, w);
    else
       index_error();
@@ -5535,7 +5951,7 @@ save_VertexAttrib4fNV(GLuint index, GLfloat x, GLfloat y,
 static void GLAPIENTRY
 save_VertexAttrib4fvNV(GLuint index, const GLfloat * v)
 {
-   if (index < MAX_VERTEX_PROGRAM_ATTRIBS)
+   if (index < MAX_NV_VERTEX_PROGRAM_INPUTS)
       save_Attr4fNV(index, v[0], v[1], v[2], v[3]);
    else
       index_error();
@@ -5547,7 +5963,7 @@ save_VertexAttrib4fvNV(GLuint index, const GLfloat * v)
 static void GLAPIENTRY
 save_VertexAttrib1fARB(GLuint index, GLfloat x)
 {
-   if (index < MAX_VERTEX_ATTRIBS)
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       save_Attr1fARB(index, x);
    else
       index_error();
@@ -5556,7 +5972,7 @@ save_VertexAttrib1fARB(GLuint index, GLfloat x)
 static void GLAPIENTRY
 save_VertexAttrib1fvARB(GLuint index, const GLfloat * v)
 {
-   if (index < MAX_VERTEX_ATTRIBS)
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       save_Attr1fARB(index, v[0]);
    else
       index_error();
@@ -5565,7 +5981,7 @@ save_VertexAttrib1fvARB(GLuint index, const GLfloat * v)
 static void GLAPIENTRY
 save_VertexAttrib2fARB(GLuint index, GLfloat x, GLfloat y)
 {
-   if (index < MAX_VERTEX_ATTRIBS)
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       save_Attr2fARB(index, x, y);
    else
       index_error();
@@ -5574,7 +5990,7 @@ save_VertexAttrib2fARB(GLuint index, GLfloat x, GLfloat y)
 static void GLAPIENTRY
 save_VertexAttrib2fvARB(GLuint index, const GLfloat * v)
 {
-   if (index < MAX_VERTEX_ATTRIBS)
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       save_Attr2fARB(index, v[0], v[1]);
    else
       index_error();
@@ -5583,7 +5999,7 @@ save_VertexAttrib2fvARB(GLuint index, const GLfloat * v)
 static void GLAPIENTRY
 save_VertexAttrib3fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 {
-   if (index < MAX_VERTEX_ATTRIBS)
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       save_Attr3fARB(index, x, y, z);
    else
       index_error();
@@ -5592,7 +6008,7 @@ save_VertexAttrib3fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 static void GLAPIENTRY
 save_VertexAttrib3fvARB(GLuint index, const GLfloat * v)
 {
-   if (index < MAX_VERTEX_ATTRIBS)
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       save_Attr3fARB(index, v[0], v[1], v[2]);
    else
       index_error();
@@ -5602,7 +6018,7 @@ static void GLAPIENTRY
 save_VertexAttrib4fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z,
                        GLfloat w)
 {
-   if (index < MAX_VERTEX_ATTRIBS)
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       save_Attr4fARB(index, x, y, z, w);
    else
       index_error();
@@ -5611,7 +6027,7 @@ save_VertexAttrib4fARB(GLuint index, GLfloat x, GLfloat y, GLfloat z,
 static void GLAPIENTRY
 save_VertexAttrib4fvARB(GLuint index, const GLfloat * v)
 {
-   if (index < MAX_VERTEX_ATTRIBS)
+   if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       save_Attr4fARB(index, v[0], v[1], v[2], v[3]);
    else
       index_error();
@@ -5648,7 +6064,7 @@ save_BlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
    ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_BLIT_FRAMEBUFFER, 10);
+   n = alloc_instruction(ctx, OPCODE_BLIT_FRAMEBUFFER, 10);
    if (n) {
       n[1].i = srcX0;
       n[2].i = srcY0;
@@ -5670,6 +6086,512 @@ save_BlitFramebufferEXT(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
 #endif
 
 
+/** GL_EXT_provoking_vertex */
+static void GLAPIENTRY
+save_ProvokingVertexEXT(GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_PROVOKING_VERTEX, 1);
+   if (n) {
+      n[1].e = mode;
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_ProvokingVertexEXT(ctx->Exec, (mode));*/
+      _mesa_ProvokingVertexEXT(mode);
+   }
+}
+
+
+/* aka UseProgram() */
+static void GLAPIENTRY
+save_UseProgramObjectARB(GLhandleARB program)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_USE_PROGRAM, 1);
+   if (n) {
+      n[1].ui = program;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UseProgramObjectARB(ctx->Exec, (program));
+   }
+}
+
+
+static void GLAPIENTRY
+save_Uniform1fARB(GLint location, GLfloat x)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1F, 2);
+   if (n) {
+      n[1].i = location;
+      n[2].f = x;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform1fARB(ctx->Exec, (location, x));
+   }
+}
+
+
+static void GLAPIENTRY
+save_Uniform2fARB(GLint location, GLfloat x, GLfloat y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2F, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].f = x;
+      n[3].f = y;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform2fARB(ctx->Exec, (location, x, y));
+   }
+}
+
+
+static void GLAPIENTRY
+save_Uniform3fARB(GLint location, GLfloat x, GLfloat y, GLfloat z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3F, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].f = x;
+      n[3].f = y;
+      n[4].f = z;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform3fARB(ctx->Exec, (location, x, y, z));
+   }
+}
+
+
+static void GLAPIENTRY
+save_Uniform4fARB(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4F, 5);
+   if (n) {
+      n[1].i = location;
+      n[2].f = x;
+      n[3].f = y;
+      n[4].f = z;
+      n[5].f = w;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform4fARB(ctx->Exec, (location, x, y, z, w));
+   }
+}
+
+
+/** Return copy of memory */
+static void *
+memdup(const void *src, GLsizei bytes)
+{
+   void *b = bytes >= 0 ? malloc(bytes) : NULL;
+   if (b)
+      memcpy(b, src, bytes);
+   return b;
+}
+
+
+static void GLAPIENTRY
+save_Uniform1fvARB(GLint location, GLsizei count, const GLfloat *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1FV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 1 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform1fvARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2fvARB(GLint location, GLsizei count, const GLfloat *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2FV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 2 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform2fvARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3fvARB(GLint location, GLsizei count, const GLfloat *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3FV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 3 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform3fvARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4fvARB(GLint location, GLsizei count, const GLfloat *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4FV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 4 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform4fvARB(ctx->Exec, (location, count, v));
+   }
+}
+
+
+static void GLAPIENTRY
+save_Uniform1iARB(GLint location, GLint x)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1I, 2);
+   if (n) {
+      n[1].i = location;
+      n[2].i = x;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform1iARB(ctx->Exec, (location, x));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2iARB(GLint location, GLint x, GLint y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2I, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = x;
+      n[3].i = y;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform2iARB(ctx->Exec, (location, x, y));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3iARB(GLint location, GLint x, GLint y, GLint z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3I, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = x;
+      n[3].i = y;
+      n[4].i = z;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform3iARB(ctx->Exec, (location, x, y, z));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4iARB(GLint location, GLint x, GLint y, GLint z, GLint w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4I, 5);
+   if (n) {
+      n[1].i = location;
+      n[2].i = x;
+      n[3].i = y;
+      n[4].i = z;
+      n[5].i = w;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform4iARB(ctx->Exec, (location, x, y, z, w));
+   }
+}
+
+
+
+static void GLAPIENTRY
+save_Uniform1ivARB(GLint location, GLsizei count, const GLint *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1IV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 1 * sizeof(GLint));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform1ivARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2ivARB(GLint location, GLsizei count, const GLint *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2IV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 2 * sizeof(GLint));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform2ivARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3ivARB(GLint location, GLsizei count, const GLint *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3IV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 3 * sizeof(GLint));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform3ivARB(ctx->Exec, (location, count, v));
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4ivARB(GLint location, GLsizei count, const GLint *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4IV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 4 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_Uniform4ivARB(ctx->Exec, (location, count, v));
+   }
+}
+
+
+static void GLAPIENTRY
+save_UniformMatrix2fvARB(GLint location, GLsizei count, GLboolean transpose,
+                         const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX22, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 2 * 2 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix2fvARB(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+static void GLAPIENTRY
+save_UniformMatrix3fvARB(GLint location, GLsizei count, GLboolean transpose,
+                         const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX33, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 3 * 3 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix3fvARB(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+static void GLAPIENTRY
+save_UniformMatrix4fvARB(GLint location, GLsizei count, GLboolean transpose,
+                         const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX44, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 4 * 4 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix4fvARB(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+
+static void GLAPIENTRY
+save_UniformMatrix2x3fv(GLint location, GLsizei count, GLboolean transpose,
+                        const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX23, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 2 * 3 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix2x3fv(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+static void GLAPIENTRY
+save_UniformMatrix3x2fv(GLint location, GLsizei count, GLboolean transpose,
+                        const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX32, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 3 * 2 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix3x2fv(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+
+static void GLAPIENTRY
+save_UniformMatrix2x4fv(GLint location, GLsizei count, GLboolean transpose,
+                        const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX24, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 2 * 4 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix2x4fv(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+static void GLAPIENTRY
+save_UniformMatrix4x2fv(GLint location, GLsizei count, GLboolean transpose,
+                        const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX42, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 4 * 2 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix4x2fv(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+
+static void GLAPIENTRY
+save_UniformMatrix3x4fv(GLint location, GLsizei count, GLboolean transpose,
+                        const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX34, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 3 * 4 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix3x4fv(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+static void GLAPIENTRY
+save_UniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose,
+                        const GLfloat *m)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_MATRIX43, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].b = transpose;
+      n[4].data = memdup(m, count * 4 * 3 * sizeof(GLfloat));
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UniformMatrix4x3fv(ctx->Exec, (location, count, transpose, m));
+   }
+}
+
+
+
 /**
  * Save an error-generating command into display list.
  *
@@ -5680,7 +6602,7 @@ static void
 save_error(GLcontext *ctx, GLenum error, const char *s)
 {
    Node *n;
-   n = ALLOC_INSTRUCTION(ctx, OPCODE_ERROR, 2);
+   n = alloc_instruction(ctx, OPCODE_ERROR, 2);
    if (n) {
       n[1].e = error;
       n[2].data = (void *) s;
@@ -5731,7 +6653,7 @@ islist(GLcontext *ctx, GLuint list)
 static void
 execute_list(GLcontext *ctx, GLuint list)
 {
-   struct mesa_display_list *dlist;
+   struct gl_display_list *dlist;
    Node *n;
    GLboolean done;
 
@@ -5752,17 +6674,14 @@ execute_list(GLcontext *ctx, GLuint list)
    if (ctx->Driver.BeginCallList)
       ctx->Driver.BeginCallList(ctx, dlist);
 
-   n = dlist->node;
+   n = dlist->Head;
 
    done = GL_FALSE;
    while (!done) {
-      OpCode opcode = n[0].opcode;
-      int i = (int) n[0].opcode - (int) OPCODE_EXT_0;
+      const OpCode opcode = n[0].opcode;
 
-      if (i >= 0 && i < (GLint) ctx->ListExt.NumOpcodes) {
-         /* this is a driver-extended opcode */
-         ctx->ListExt.Opcode[i].Execute(ctx, &n[1]);
-         n += ctx->ListExt.Opcode[i].Size;
+      if (is_ext_opcode(opcode)) {
+         n += ext_opcode_execute(ctx, n);
       }
       else {
          switch (opcode) {
@@ -5821,6 +6740,39 @@ execute_list(GLcontext *ctx, GLuint list)
          case OPCODE_CLEAR:
             CALL_Clear(ctx->Exec, (n[1].bf));
             break;
+         case OPCODE_CLEAR_BUFFER_IV:
+            {
+               GLint value[4];
+               value[0] = n[3].i;
+               value[1] = n[4].i;
+               value[2] = n[5].i;
+               value[3] = n[6].i;
+               /*CALL_ClearBufferiv(ctx->Exec, (n[1].e, n[2].i, value));*/
+            }
+            break;
+         case OPCODE_CLEAR_BUFFER_UIV:
+            {
+               GLuint value[4];
+               value[0] = n[3].ui;
+               value[1] = n[4].ui;
+               value[2] = n[5].ui;
+               value[3] = n[6].ui;
+               /*CALL_ClearBufferiv(ctx->Exec, (n[1].e, n[2].i, value));*/
+            }
+            break;
+         case OPCODE_CLEAR_BUFFER_FV:
+            {
+               GLfloat value[4];
+               value[0] = n[3].f;
+               value[1] = n[4].f;
+               value[2] = n[5].f;
+               value[3] = n[6].f;
+               /*CALL_ClearBufferfv(ctx->Exec, (n[1].e, n[2].i, value));*/
+            }
+            break;
+         case OPCODE_CLEAR_BUFFER_FI:
+            /*CALL_ClearBufferfi(ctx->Exec, (n[1].e, n[2].i, n[3].f, n[4].i));*/
+            break;
          case OPCODE_CLEAR_COLOR:
             CALL_ClearColor(ctx->Exec, (n[1].f, n[2].f, n[3].f, n[4].f));
             break;
@@ -5848,6 +6800,10 @@ execute_list(GLcontext *ctx, GLuint list)
             break;
          case OPCODE_COLOR_MASK:
             CALL_ColorMask(ctx->Exec, (n[1].b, n[2].b, n[3].b, n[4].b));
+            break;
+         case OPCODE_COLOR_MASK_INDEXED:
+            CALL_ColorMaskIndexedEXT(ctx->Exec, (n[1].ui, n[2].b, n[3].b,
+                                                 n[4].b, n[5].b));
             break;
          case OPCODE_COLOR_MATERIAL:
             CALL_ColorMaterial(ctx->Exec, (n[1].e, n[2].e));
@@ -5991,6 +6947,9 @@ execute_list(GLcontext *ctx, GLuint list)
          case OPCODE_DISABLE:
             CALL_Disable(ctx->Exec, (n[1].e));
             break;
+         case OPCODE_DISABLE_INDEXED:
+            CALL_DisableIndexedEXT(ctx->Exec, (n[1].ui, n[2].e));
+            break;
          case OPCODE_DRAW_BUFFER:
             CALL_DrawBuffer(ctx->Exec, (n[1].e));
             break;
@@ -6005,6 +6964,9 @@ execute_list(GLcontext *ctx, GLuint list)
             break;
          case OPCODE_ENABLE:
             CALL_Enable(ctx->Exec, (n[1].e));
+            break;
+         case OPCODE_ENABLE_INDEXED:
+            CALL_EnableIndexedEXT(ctx->Exec, (n[1].ui, n[2].e));
             break;
          case OPCODE_EVALMESH1:
             CALL_EvalMesh1(ctx->Exec, (n[1].e, n[2].i, n[3].i));
@@ -6233,6 +7195,9 @@ execute_list(GLcontext *ctx, GLuint list)
             break;
          case OPCODE_SHADE_MODEL:
             CALL_ShadeModel(ctx->Exec, (n[1].e));
+            break;
+         case OPCODE_PROVOKING_VERTEX:
+            CALL_ProvokingVertexEXT(ctx->Exec, (n[1].e));
             break;
          case OPCODE_STENCIL_FUNC:
             CALL_StencilFunc(ctx->Exec, (n[1].e, n[2].i, n[3].ui));
@@ -6478,7 +7443,7 @@ execute_list(GLcontext *ctx, GLuint list)
                                                       n[6].f));
             break;
 #endif
-#if FEATURE_ARB_occlusion_query
+#if FEATURE_queryobj
          case OPCODE_BEGIN_QUERY_ARB:
             CALL_BeginQueryARB(ctx->Exec, (n[1].e, n[2].ui));
             break;
@@ -6502,6 +7467,108 @@ execute_list(GLcontext *ctx, GLuint list)
                                                 n[9].i, n[10].e));
 	    break;
 #endif
+
+	 case OPCODE_USE_PROGRAM:
+	    CALL_UseProgramObjectARB(ctx->Exec, (n[1].ui));
+	    break;
+	 case OPCODE_UNIFORM_1F:
+	    CALL_Uniform1fARB(ctx->Exec, (n[1].i, n[2].f));
+	    break;
+	 case OPCODE_UNIFORM_2F:
+	    CALL_Uniform2fARB(ctx->Exec, (n[1].i, n[2].f, n[3].f));
+	    break;
+	 case OPCODE_UNIFORM_3F:
+	    CALL_Uniform3fARB(ctx->Exec, (n[1].i, n[2].f, n[3].f, n[4].f));
+	    break;
+	 case OPCODE_UNIFORM_4F:
+	    CALL_Uniform4fARB(ctx->Exec,
+                              (n[1].i, n[2].f, n[3].f, n[4].f, n[5].f));
+	    break;
+	 case OPCODE_UNIFORM_1FV:
+	    CALL_Uniform1fvARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
+	    break;
+	 case OPCODE_UNIFORM_2FV:
+	    CALL_Uniform2fvARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
+	    break;
+	 case OPCODE_UNIFORM_3FV:
+	    CALL_Uniform3fvARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
+	    break;
+	 case OPCODE_UNIFORM_4FV:
+	    CALL_Uniform4fvARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
+	    break;
+	 case OPCODE_UNIFORM_1I:
+	    CALL_Uniform1iARB(ctx->Exec, (n[1].i, n[2].i));
+	    break;
+	 case OPCODE_UNIFORM_2I:
+	    CALL_Uniform2iARB(ctx->Exec, (n[1].i, n[2].i, n[3].i));
+	    break;
+	 case OPCODE_UNIFORM_3I:
+	    CALL_Uniform3iARB(ctx->Exec, (n[1].i, n[2].i, n[3].i, n[4].i));
+	    break;
+	 case OPCODE_UNIFORM_4I:
+	    CALL_Uniform4iARB(ctx->Exec,
+                              (n[1].i, n[2].i, n[3].i, n[4].i, n[5].i));
+	    break;
+	 case OPCODE_UNIFORM_1IV:
+	    CALL_Uniform1ivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
+	    break;
+	 case OPCODE_UNIFORM_2IV:
+	    CALL_Uniform2ivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
+	    break;
+	 case OPCODE_UNIFORM_3IV:
+	    CALL_Uniform3ivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
+	    break;
+	 case OPCODE_UNIFORM_4IV:
+	    CALL_Uniform4ivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
+	    break;
+
+	 case OPCODE_UNIFORM_MATRIX22:
+	    CALL_UniformMatrix2fvARB(ctx->Exec,
+                                     (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+	 case OPCODE_UNIFORM_MATRIX33:
+	    CALL_UniformMatrix3fvARB(ctx->Exec,
+                                     (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+	 case OPCODE_UNIFORM_MATRIX44:
+	    CALL_UniformMatrix4fvARB(ctx->Exec,
+                                     (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+	 case OPCODE_UNIFORM_MATRIX23:
+	    CALL_UniformMatrix2x3fv(ctx->Exec,
+                                    (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+	 case OPCODE_UNIFORM_MATRIX32:
+	    CALL_UniformMatrix3x2fv(ctx->Exec,
+                                    (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+	 case OPCODE_UNIFORM_MATRIX24:
+	    CALL_UniformMatrix2x4fv(ctx->Exec,
+                                    (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+	 case OPCODE_UNIFORM_MATRIX42:
+	    CALL_UniformMatrix4x2fv(ctx->Exec,
+                                    (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+	 case OPCODE_UNIFORM_MATRIX34:
+	    CALL_UniformMatrix3x4fv(ctx->Exec,
+                                    (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+	 case OPCODE_UNIFORM_MATRIX43:
+	    CALL_UniformMatrix4x3fv(ctx->Exec,
+                                    (n[1].i, n[2].i, n[3].b, n[4].data));
+	    break;
+
+         case OPCODE_TEX_BUMP_PARAMETER_ATI:
+            {
+               GLfloat values[4];
+               GLuint i, pname = n[1].ui;
+
+               for (i = 0; i < 4; i++)
+                  values[i] = n[1 + i].f;
+               CALL_TexBumpParameterfvATI(ctx->Exec, (pname, values));
+            }
+            break;
 #if FEATURE_ATI_fragment_shader
          case OPCODE_BIND_FRAGMENT_SHADER_ATI:
             CALL_BindFragmentShaderATI(ctx->Exec, (n[1].i));
@@ -6618,7 +7685,7 @@ execute_list(GLcontext *ctx, GLuint list)
          default:
             {
                char msg[1000];
-               _mesa_sprintf(msg, "Error in execute_list: opcode=%d",
+               sprintf(msg, "Error in execute_list: opcode=%d",
                              (int) opcode);
                _mesa_problem(ctx, msg);
             }
@@ -6647,7 +7714,7 @@ execute_list(GLcontext *ctx, GLuint list)
 /**
  * Test if a display list number is valid.
  */
-GLboolean GLAPIENTRY
+static GLboolean GLAPIENTRY
 _mesa_IsList(GLuint list)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -6660,7 +7727,7 @@ _mesa_IsList(GLuint list)
 /**
  * Delete a sequence of consecutive display lists.
  */
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_DeleteLists(GLuint list, GLsizei range)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -6682,7 +7749,7 @@ _mesa_DeleteLists(GLuint list, GLsizei range)
  * Return a display list number, n, such that lists n through n+range-1
  * are free.
  */
-GLuint GLAPIENTRY
+static GLuint GLAPIENTRY
 _mesa_GenLists(GLsizei range)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -6722,20 +7789,19 @@ _mesa_GenLists(GLsizei range)
 /**
  * Begin a new display list.
  */
-void GLAPIENTRY
-_mesa_NewList(GLuint list, GLenum mode)
+static void GLAPIENTRY
+_mesa_NewList(GLuint name, GLenum mode)
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLint i;
 
    FLUSH_CURRENT(ctx, 0);       /* must be called before assert */
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(ctx, "glNewList %u %s\n", list,
+      _mesa_debug(ctx, "glNewList %u %s\n", name,
                   _mesa_lookup_enum_by_nr(mode));
 
-   if (list == 0) {
+   if (name == 0) {
       _mesa_error(ctx, GL_INVALID_VALUE, "glNewList");
       return;
    }
@@ -6745,7 +7811,7 @@ _mesa_NewList(GLuint list, GLenum mode)
       return;
    }
 
-   if (ctx->ListState.CurrentListPtr) {
+   if (ctx->ListState.CurrentList) {
       /* already compiling a display list */
       _mesa_error(ctx, GL_INVALID_OPERATION, "glNewList");
       return;
@@ -6754,23 +7820,16 @@ _mesa_NewList(GLuint list, GLenum mode)
    ctx->CompileFlag = GL_TRUE;
    ctx->ExecuteFlag = (mode == GL_COMPILE_AND_EXECUTE);
 
-   /* Allocate new display list */
-   ctx->ListState.CurrentListNum = list;
-   ctx->ListState.CurrentList = make_list(list, BLOCK_SIZE);
-   ctx->ListState.CurrentBlock = ctx->ListState.CurrentList->node;
-   ctx->ListState.CurrentListPtr = ctx->ListState.CurrentBlock;
-   ctx->ListState.CurrentPos = 0;
-
    /* Reset acumulated list state:
     */
-   for (i = 0; i < VERT_ATTRIB_MAX; i++)
-      ctx->ListState.ActiveAttribSize[i] = 0;
+   invalidate_saved_current_state( ctx );
 
-   for (i = 0; i < MAT_ATTRIB_MAX; i++)
-      ctx->ListState.ActiveMaterialSize[i] = 0;
+   /* Allocate new display list */
+   ctx->ListState.CurrentList = make_list(name, BLOCK_SIZE);
+   ctx->ListState.CurrentBlock = ctx->ListState.CurrentList->Head;
+   ctx->ListState.CurrentPos = 0;
 
-   ctx->Driver.CurrentSavePrimitive = PRIM_UNKNOWN;
-   ctx->Driver.NewList(ctx, list, mode);
+   ctx->Driver.NewList(ctx, name, mode);
 
    ctx->CurrentDispatch = ctx->Save;
    _glapi_set_dispatch(ctx->CurrentDispatch);
@@ -6780,7 +7839,7 @@ _mesa_NewList(GLuint list, GLenum mode)
 /**
  * End definition of current display list. 
  */
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_EndList(void)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -6791,7 +7850,7 @@ _mesa_EndList(void)
       _mesa_debug(ctx, "glEndList\n");
 
    /* Check that a list is under construction */
-   if (!ctx->ListState.CurrentListPtr) {
+   if (!ctx->ListState.CurrentList) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glEndList");
       return;
    }
@@ -6801,21 +7860,21 @@ _mesa_EndList(void)
     */
    ctx->Driver.EndList(ctx);
 
-   (void) ALLOC_INSTRUCTION(ctx, OPCODE_END_OF_LIST, 0);
+   (void) alloc_instruction(ctx, OPCODE_END_OF_LIST, 0);
 
    /* Destroy old list, if any */
-   destroy_list(ctx, ctx->ListState.CurrentListNum);
-   /* Install the list */
-   _mesa_HashInsert(ctx->Shared->DisplayList, ctx->ListState.CurrentListNum,
+   destroy_list(ctx, ctx->ListState.CurrentList->Name);
+
+   /* Install the new list */
+   _mesa_HashInsert(ctx->Shared->DisplayList,
+                    ctx->ListState.CurrentList->Name,
                     ctx->ListState.CurrentList);
 
 
    if (MESA_VERBOSE & VERBOSE_DISPLAY_LIST)
-      mesa_print_display_list(ctx->ListState.CurrentListNum);
+      mesa_print_display_list(ctx->ListState.CurrentList->Name);
 
    ctx->ListState.CurrentList = NULL;
-   ctx->ListState.CurrentListNum = 0;
-   ctx->ListState.CurrentListPtr = NULL;
    ctx->ExecuteFlag = GL_TRUE;
    ctx->CompileFlag = GL_FALSE;
 
@@ -6914,7 +7973,7 @@ _mesa_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
 /**
  * Set the offset added to list numbers in glCallLists.
  */
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_ListBase(GLuint base)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -7611,18 +8670,6 @@ exec_MultiDrawArraysEXT(GLenum mode, GLint * first,
    CALL_MultiDrawArraysEXT(ctx->Exec, (mode, first, count, primcount));
 }
 
-/* GL_EXT_multi_draw_arrays */
-static void GLAPIENTRY
-exec_MultiDrawElementsEXT(GLenum mode, const GLsizei * count,
-                          GLenum type, const GLvoid ** indices,
-                          GLsizei primcount)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   FLUSH_VERTICES(ctx, 0);
-   CALL_MultiDrawElementsEXT(ctx->Exec,
-                             (mode, count, type, indices, primcount));
-}
-
 /* GL_IBM_multimode_draw_arrays */
 static void GLAPIENTRY
 exec_MultiModeDrawArraysIBM(const GLenum * mode, const GLint * first,
@@ -7661,7 +8708,7 @@ exec_MultiModeDrawElementsIBM(const GLenum * mode,
  * struct.
  */
 void
-_mesa_init_dlist_table(struct _glapi_table *table)
+_mesa_init_save_table(struct _glapi_table *table)
 {
    _mesa_loopback_init_api_table(table);
 
@@ -7670,8 +8717,8 @@ _mesa_init_dlist_table(struct _glapi_table *table)
    SET_AlphaFunc(table, save_AlphaFunc);
    SET_Bitmap(table, save_Bitmap);
    SET_BlendFunc(table, save_BlendFunc);
-   SET_CallList(table, _mesa_save_CallList);
-   SET_CallLists(table, _mesa_save_CallLists);
+   SET_CallList(table, save_CallList);
+   SET_CallLists(table, save_CallLists);
    SET_Clear(table, save_Clear);
    SET_ClearAccum(table, save_ClearAccum);
    SET_ClearColor(table, save_ClearColor);
@@ -7680,6 +8727,7 @@ _mesa_init_dlist_table(struct _glapi_table *table)
    SET_ClearStencil(table, save_ClearStencil);
    SET_ClipPlane(table, save_ClipPlane);
    SET_ColorMask(table, save_ColorMask);
+   SET_ColorMaskIndexedEXT(table, save_ColorMaskIndexed);
    SET_ColorMaterial(table, save_ColorMaterial);
    SET_CopyPixels(table, save_CopyPixels);
    SET_CullFace(table, save_CullFace);
@@ -7688,12 +8736,14 @@ _mesa_init_dlist_table(struct _glapi_table *table)
    SET_DepthMask(table, save_DepthMask);
    SET_DepthRange(table, save_DepthRange);
    SET_Disable(table, save_Disable);
+   SET_DisableIndexedEXT(table, save_DisableIndexed);
    SET_DrawBuffer(table, save_DrawBuffer);
    SET_DrawPixels(table, save_DrawPixels);
    SET_Enable(table, save_Enable);
+   SET_EnableIndexedEXT(table, save_EnableIndexed);
    SET_EndList(table, _mesa_EndList);
-   SET_EvalMesh1(table, _mesa_save_EvalMesh1);
-   SET_EvalMesh2(table, _mesa_save_EvalMesh2);
+   SET_EvalMesh1(table, save_EvalMesh1);
+   SET_EvalMesh2(table, save_EvalMesh2);
    SET_Finish(table, exec_Finish);
    SET_Flush(table, exec_Flush);
    SET_Fogf(table, save_Fogf);
@@ -7968,7 +9018,6 @@ _mesa_init_dlist_table(struct _glapi_table *table)
 
    /* 148. GL_EXT_multi_draw_arrays */
    SET_MultiDrawArraysEXT(table, exec_MultiDrawArraysEXT);
-   SET_MultiDrawElementsEXT(table, exec_MultiDrawElementsEXT);
 
    /* 149. GL_EXT_fog_coord */
    SET_FogCoordPointerEXT(table, exec_FogCoordPointerEXT);
@@ -8041,6 +9090,10 @@ _mesa_init_dlist_table(struct _glapi_table *table)
    SET_TrackMatrixNV(table, save_TrackMatrixNV);
    SET_VertexAttribPointerNV(table, _mesa_VertexAttribPointerNV);
 #endif
+
+   /* 244. GL_ATI_envmap_bumpmap */
+   SET_TexBumpParameterivATI(table, save_TexBumpParameterivATI);
+   SET_TexBumpParameterfvATI(table, save_TexBumpParameterfvATI);
 
    /* 245. GL_ATI_fragment_shader */
 #if FEATURE_ATI_fragment_shader
@@ -8162,7 +9215,7 @@ _mesa_init_dlist_table(struct _glapi_table *table)
    SET_UnmapBufferARB(table, _mesa_UnmapBufferARB);
 #endif
 
-#if FEATURE_ARB_occlusion_query
+#if FEATURE_queryobj
    SET_BeginQueryARB(table, save_BeginQueryARB);
    SET_EndQueryARB(table, save_EndQueryARB);
    SET_GenQueriesARB(table, _mesa_GenQueriesARB);
@@ -8178,6 +9231,34 @@ _mesa_init_dlist_table(struct _glapi_table *table)
    SET_BlitFramebufferEXT(table, save_BlitFramebufferEXT);
 #endif
 
+   /* GL_ARB_shader_objects */
+   SET_UseProgramObjectARB(table, save_UseProgramObjectARB);
+   SET_Uniform1fARB(table, save_Uniform1fARB);
+   SET_Uniform2fARB(table, save_Uniform2fARB);
+   SET_Uniform3fARB(table, save_Uniform3fARB);
+   SET_Uniform4fARB(table, save_Uniform4fARB);
+   SET_Uniform1fvARB(table, save_Uniform1fvARB);
+   SET_Uniform2fvARB(table, save_Uniform2fvARB);
+   SET_Uniform3fvARB(table, save_Uniform3fvARB);
+   SET_Uniform4fvARB(table, save_Uniform4fvARB);
+   SET_Uniform1iARB(table, save_Uniform1iARB);
+   SET_Uniform2iARB(table, save_Uniform2iARB);
+   SET_Uniform3iARB(table, save_Uniform3iARB);
+   SET_Uniform4iARB(table, save_Uniform4iARB);
+   SET_Uniform1ivARB(table, save_Uniform1ivARB);
+   SET_Uniform2ivARB(table, save_Uniform2ivARB);
+   SET_Uniform3ivARB(table, save_Uniform3ivARB);
+   SET_Uniform4ivARB(table, save_Uniform4ivARB);
+   SET_UniformMatrix2fvARB(table, save_UniformMatrix2fvARB);
+   SET_UniformMatrix3fvARB(table, save_UniformMatrix3fvARB);
+   SET_UniformMatrix4fvARB(table, save_UniformMatrix4fvARB);
+   SET_UniformMatrix2x3fv(table, save_UniformMatrix2x3fv);
+   SET_UniformMatrix3x2fv(table, save_UniformMatrix3x2fv);
+   SET_UniformMatrix2x4fv(table, save_UniformMatrix2x4fv);
+   SET_UniformMatrix4x2fv(table, save_UniformMatrix4x2fv);
+   SET_UniformMatrix3x4fv(table, save_UniformMatrix3x4fv);
+   SET_UniformMatrix4x3fv(table, save_UniformMatrix4x3fv);
+
    /* ARB 30/31/32. GL_ARB_shader_objects, GL_ARB_vertex/fragment_shader */
    SET_BindAttribLocationARB(table, exec_BindAttribLocationARB);
    SET_GetAttribLocationARB(table, exec_GetAttribLocationARB);
@@ -8190,6 +9271,37 @@ _mesa_init_dlist_table(struct _glapi_table *table)
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
    SET_ProgramEnvParameters4fvEXT(table, save_ProgramEnvParameters4fvEXT);
    SET_ProgramLocalParameters4fvEXT(table, save_ProgramLocalParameters4fvEXT);
+#endif
+
+   /* ARB 50. GL_ARB_map_buffer_range */
+#if FEATURE_ARB_map_buffer_range
+   SET_MapBufferRange(table, _mesa_MapBufferRange); /* no dlist save */
+   SET_FlushMappedBufferRange(table, _mesa_FlushMappedBufferRange); /* no dl */
+#endif
+
+   /* ARB 59. GL_ARB_copy_buffer */
+   SET_CopyBufferSubData(table, _mesa_CopyBufferSubData); /* no dlist save */
+
+   /* 364. GL_EXT_provoking_vertex */
+   SET_ProvokingVertexEXT(table, save_ProvokingVertexEXT);
+
+   /* 371. GL_APPLE_object_purgeable */
+#if FEATURE_APPLE_object_purgeable
+   SET_ObjectPurgeableAPPLE(table, _mesa_ObjectPurgeableAPPLE);
+   SET_ObjectUnpurgeableAPPLE(table, _mesa_ObjectUnpurgeableAPPLE);
+#endif
+
+   /* GL 3.0 */
+#if 0
+   SET_ClearBufferiv(table, save_ClearBufferiv);
+   SET_ClearBufferuiv(table, save_ClearBufferuiv);
+   SET_ClearBufferfv(table, save_ClearBufferfv);
+   SET_ClearBufferfi(table, save_ClearBufferfi);
+#else
+   (void) save_ClearBufferiv;
+   (void) save_ClearBufferuiv;
+   (void) save_ClearBufferfv;
+   (void) save_ClearBufferfi;
 #endif
 }
 
@@ -8209,12 +9321,12 @@ enum_string(GLenum k)
 static void GLAPIENTRY
 print_list(GLcontext *ctx, GLuint list)
 {
-   struct mesa_display_list *dlist;
+   struct gl_display_list *dlist;
    Node *n;
    GLboolean done;
 
    if (!islist(ctx, list)) {
-      _mesa_printf("%u is not a display list ID\n", list);
+      printf("%u is not a display list ID\n", list);
       return;
    }
 
@@ -8222,235 +9334,237 @@ print_list(GLcontext *ctx, GLuint list)
    if (!dlist)
       return;
 
-   n = dlist->node;
+   n = dlist->Head;
 
-   _mesa_printf("START-LIST %u, address %p\n", list, (void *) n);
+   printf("START-LIST %u, address %p\n", list, (void *) n);
 
    done = n ? GL_FALSE : GL_TRUE;
    while (!done) {
-      OpCode opcode = n[0].opcode;
-      GLint i = (GLint) n[0].opcode - (GLint) OPCODE_EXT_0;
+      const OpCode opcode = n[0].opcode;
 
-      if (i >= 0 && i < (GLint) ctx->ListExt.NumOpcodes) {
-         /* this is a driver-extended opcode */
-         ctx->ListExt.Opcode[i].Print(ctx, &n[1]);
-         n += ctx->ListExt.Opcode[i].Size;
+      if (is_ext_opcode(opcode)) {
+         n += ext_opcode_print(ctx, n);
       }
       else {
          switch (opcode) {
          case OPCODE_ACCUM:
-            _mesa_printf("Accum %s %g\n", enum_string(n[1].e), n[2].f);
+            printf("Accum %s %g\n", enum_string(n[1].e), n[2].f);
             break;
          case OPCODE_BITMAP:
-            _mesa_printf("Bitmap %d %d %g %g %g %g %p\n", n[1].i, n[2].i,
+            printf("Bitmap %d %d %g %g %g %g %p\n", n[1].i, n[2].i,
                          n[3].f, n[4].f, n[5].f, n[6].f, (void *) n[7].data);
             break;
          case OPCODE_CALL_LIST:
-            _mesa_printf("CallList %d\n", (int) n[1].ui);
+            printf("CallList %d\n", (int) n[1].ui);
             break;
          case OPCODE_CALL_LIST_OFFSET:
-            _mesa_printf("CallList %d + offset %u = %u\n", (int) n[1].ui,
+            printf("CallList %d + offset %u = %u\n", (int) n[1].ui,
                          ctx->List.ListBase, ctx->List.ListBase + n[1].ui);
             break;
          case OPCODE_COLOR_TABLE_PARAMETER_FV:
-            _mesa_printf("ColorTableParameterfv %s %s %f %f %f %f\n",
+            printf("ColorTableParameterfv %s %s %f %f %f %f\n",
                          enum_string(n[1].e), enum_string(n[2].e),
                          n[3].f, n[4].f, n[5].f, n[6].f);
             break;
          case OPCODE_COLOR_TABLE_PARAMETER_IV:
-            _mesa_printf("ColorTableParameteriv %s %s %d %d %d %d\n",
+            printf("ColorTableParameteriv %s %s %d %d %d %d\n",
                          enum_string(n[1].e), enum_string(n[2].e),
                          n[3].i, n[4].i, n[5].i, n[6].i);
             break;
          case OPCODE_DISABLE:
-            _mesa_printf("Disable %s\n", enum_string(n[1].e));
+            printf("Disable %s\n", enum_string(n[1].e));
             break;
          case OPCODE_ENABLE:
-            _mesa_printf("Enable %s\n", enum_string(n[1].e));
+            printf("Enable %s\n", enum_string(n[1].e));
             break;
          case OPCODE_FRUSTUM:
-            _mesa_printf("Frustum %g %g %g %g %g %g\n",
+            printf("Frustum %g %g %g %g %g %g\n",
                          n[1].f, n[2].f, n[3].f, n[4].f, n[5].f, n[6].f);
             break;
          case OPCODE_LINE_STIPPLE:
-            _mesa_printf("LineStipple %d %x\n", n[1].i, (int) n[2].us);
+            printf("LineStipple %d %x\n", n[1].i, (int) n[2].us);
             break;
          case OPCODE_LOAD_IDENTITY:
-            _mesa_printf("LoadIdentity\n");
+            printf("LoadIdentity\n");
             break;
          case OPCODE_LOAD_MATRIX:
-            _mesa_printf("LoadMatrix\n");
-            _mesa_printf("  %8f %8f %8f %8f\n",
+            printf("LoadMatrix\n");
+            printf("  %8f %8f %8f %8f\n",
                          n[1].f, n[5].f, n[9].f, n[13].f);
-            _mesa_printf("  %8f %8f %8f %8f\n",
+            printf("  %8f %8f %8f %8f\n",
                          n[2].f, n[6].f, n[10].f, n[14].f);
-            _mesa_printf("  %8f %8f %8f %8f\n",
+            printf("  %8f %8f %8f %8f\n",
                          n[3].f, n[7].f, n[11].f, n[15].f);
-            _mesa_printf("  %8f %8f %8f %8f\n",
+            printf("  %8f %8f %8f %8f\n",
                          n[4].f, n[8].f, n[12].f, n[16].f);
             break;
          case OPCODE_MULT_MATRIX:
-            _mesa_printf("MultMatrix (or Rotate)\n");
-            _mesa_printf("  %8f %8f %8f %8f\n",
+            printf("MultMatrix (or Rotate)\n");
+            printf("  %8f %8f %8f %8f\n",
                          n[1].f, n[5].f, n[9].f, n[13].f);
-            _mesa_printf("  %8f %8f %8f %8f\n",
+            printf("  %8f %8f %8f %8f\n",
                          n[2].f, n[6].f, n[10].f, n[14].f);
-            _mesa_printf("  %8f %8f %8f %8f\n",
+            printf("  %8f %8f %8f %8f\n",
                          n[3].f, n[7].f, n[11].f, n[15].f);
-            _mesa_printf("  %8f %8f %8f %8f\n",
+            printf("  %8f %8f %8f %8f\n",
                          n[4].f, n[8].f, n[12].f, n[16].f);
             break;
          case OPCODE_ORTHO:
-            _mesa_printf("Ortho %g %g %g %g %g %g\n",
+            printf("Ortho %g %g %g %g %g %g\n",
                          n[1].f, n[2].f, n[3].f, n[4].f, n[5].f, n[6].f);
             break;
          case OPCODE_POP_ATTRIB:
-            _mesa_printf("PopAttrib\n");
+            printf("PopAttrib\n");
             break;
          case OPCODE_POP_MATRIX:
-            _mesa_printf("PopMatrix\n");
+            printf("PopMatrix\n");
             break;
          case OPCODE_POP_NAME:
-            _mesa_printf("PopName\n");
+            printf("PopName\n");
             break;
          case OPCODE_PUSH_ATTRIB:
-            _mesa_printf("PushAttrib %x\n", n[1].bf);
+            printf("PushAttrib %x\n", n[1].bf);
             break;
          case OPCODE_PUSH_MATRIX:
-            _mesa_printf("PushMatrix\n");
+            printf("PushMatrix\n");
             break;
          case OPCODE_PUSH_NAME:
-            _mesa_printf("PushName %d\n", (int) n[1].ui);
+            printf("PushName %d\n", (int) n[1].ui);
             break;
          case OPCODE_RASTER_POS:
-            _mesa_printf("RasterPos %g %g %g %g\n",
+            printf("RasterPos %g %g %g %g\n",
                          n[1].f, n[2].f, n[3].f, n[4].f);
             break;
          case OPCODE_ROTATE:
-            _mesa_printf("Rotate %g %g %g %g\n",
+            printf("Rotate %g %g %g %g\n",
                          n[1].f, n[2].f, n[3].f, n[4].f);
             break;
          case OPCODE_SCALE:
-            _mesa_printf("Scale %g %g %g\n", n[1].f, n[2].f, n[3].f);
+            printf("Scale %g %g %g\n", n[1].f, n[2].f, n[3].f);
             break;
          case OPCODE_TRANSLATE:
-            _mesa_printf("Translate %g %g %g\n", n[1].f, n[2].f, n[3].f);
+            printf("Translate %g %g %g\n", n[1].f, n[2].f, n[3].f);
             break;
          case OPCODE_BIND_TEXTURE:
-            _mesa_printf("BindTexture %s %d\n",
+            printf("BindTexture %s %d\n",
                          _mesa_lookup_enum_by_nr(n[1].ui), n[2].ui);
             break;
          case OPCODE_SHADE_MODEL:
-            _mesa_printf("ShadeModel %s\n", _mesa_lookup_enum_by_nr(n[1].ui));
+            printf("ShadeModel %s\n", _mesa_lookup_enum_by_nr(n[1].ui));
             break;
          case OPCODE_MAP1:
-            _mesa_printf("Map1 %s %.3f %.3f %d %d\n",
+            printf("Map1 %s %.3f %.3f %d %d\n",
                          _mesa_lookup_enum_by_nr(n[1].ui),
                          n[2].f, n[3].f, n[4].i, n[5].i);
             break;
          case OPCODE_MAP2:
-            _mesa_printf("Map2 %s %.3f %.3f %.3f %.3f %d %d %d %d\n",
+            printf("Map2 %s %.3f %.3f %.3f %.3f %d %d %d %d\n",
                          _mesa_lookup_enum_by_nr(n[1].ui),
                          n[2].f, n[3].f, n[4].f, n[5].f,
                          n[6].i, n[7].i, n[8].i, n[9].i);
             break;
          case OPCODE_MAPGRID1:
-            _mesa_printf("MapGrid1 %d %.3f %.3f\n", n[1].i, n[2].f, n[3].f);
+            printf("MapGrid1 %d %.3f %.3f\n", n[1].i, n[2].f, n[3].f);
             break;
          case OPCODE_MAPGRID2:
-            _mesa_printf("MapGrid2 %d %.3f %.3f, %d %.3f %.3f\n",
+            printf("MapGrid2 %d %.3f %.3f, %d %.3f %.3f\n",
                          n[1].i, n[2].f, n[3].f, n[4].i, n[5].f, n[6].f);
             break;
          case OPCODE_EVALMESH1:
-            _mesa_printf("EvalMesh1 %d %d\n", n[1].i, n[2].i);
+            printf("EvalMesh1 %d %d\n", n[1].i, n[2].i);
             break;
          case OPCODE_EVALMESH2:
-            _mesa_printf("EvalMesh2 %d %d %d %d\n",
+            printf("EvalMesh2 %d %d %d %d\n",
                          n[1].i, n[2].i, n[3].i, n[4].i);
             break;
 
          case OPCODE_ATTR_1F_NV:
-            _mesa_printf("ATTR_1F_NV attr %d: %f\n", n[1].i, n[2].f);
+            printf("ATTR_1F_NV attr %d: %f\n", n[1].i, n[2].f);
             break;
          case OPCODE_ATTR_2F_NV:
-            _mesa_printf("ATTR_2F_NV attr %d: %f %f\n",
+            printf("ATTR_2F_NV attr %d: %f %f\n",
                          n[1].i, n[2].f, n[3].f);
             break;
          case OPCODE_ATTR_3F_NV:
-            _mesa_printf("ATTR_3F_NV attr %d: %f %f %f\n",
+            printf("ATTR_3F_NV attr %d: %f %f %f\n",
                          n[1].i, n[2].f, n[3].f, n[4].f);
             break;
          case OPCODE_ATTR_4F_NV:
-            _mesa_printf("ATTR_4F_NV attr %d: %f %f %f %f\n",
+            printf("ATTR_4F_NV attr %d: %f %f %f %f\n",
                          n[1].i, n[2].f, n[3].f, n[4].f, n[5].f);
             break;
          case OPCODE_ATTR_1F_ARB:
-            _mesa_printf("ATTR_1F_ARB attr %d: %f\n", n[1].i, n[2].f);
+            printf("ATTR_1F_ARB attr %d: %f\n", n[1].i, n[2].f);
             break;
          case OPCODE_ATTR_2F_ARB:
-            _mesa_printf("ATTR_2F_ARB attr %d: %f %f\n",
+            printf("ATTR_2F_ARB attr %d: %f %f\n",
                          n[1].i, n[2].f, n[3].f);
             break;
          case OPCODE_ATTR_3F_ARB:
-            _mesa_printf("ATTR_3F_ARB attr %d: %f %f %f\n",
+            printf("ATTR_3F_ARB attr %d: %f %f %f\n",
                          n[1].i, n[2].f, n[3].f, n[4].f);
             break;
          case OPCODE_ATTR_4F_ARB:
-            _mesa_printf("ATTR_4F_ARB attr %d: %f %f %f %f\n",
+            printf("ATTR_4F_ARB attr %d: %f %f %f %f\n",
                          n[1].i, n[2].f, n[3].f, n[4].f, n[5].f);
             break;
 
          case OPCODE_MATERIAL:
-            _mesa_printf("MATERIAL %x %x: %f %f %f %f\n",
+            printf("MATERIAL %x %x: %f %f %f %f\n",
                          n[1].i, n[2].i, n[3].f, n[4].f, n[5].f, n[6].f);
             break;
          case OPCODE_BEGIN:
-            _mesa_printf("BEGIN %x\n", n[1].i);
+            printf("BEGIN %x\n", n[1].i);
             break;
          case OPCODE_END:
-            _mesa_printf("END\n");
+            printf("END\n");
             break;
          case OPCODE_RECTF:
-            _mesa_printf("RECTF %f %f %f %f\n", n[1].f, n[2].f, n[3].f,
+            printf("RECTF %f %f %f %f\n", n[1].f, n[2].f, n[3].f,
                          n[4].f);
             break;
          case OPCODE_EVAL_C1:
-            _mesa_printf("EVAL_C1 %f\n", n[1].f);
+            printf("EVAL_C1 %f\n", n[1].f);
             break;
          case OPCODE_EVAL_C2:
-            _mesa_printf("EVAL_C2 %f %f\n", n[1].f, n[2].f);
+            printf("EVAL_C2 %f %f\n", n[1].f, n[2].f);
             break;
          case OPCODE_EVAL_P1:
-            _mesa_printf("EVAL_P1 %d\n", n[1].i);
+            printf("EVAL_P1 %d\n", n[1].i);
             break;
          case OPCODE_EVAL_P2:
-            _mesa_printf("EVAL_P2 %d %d\n", n[1].i, n[2].i);
+            printf("EVAL_P2 %d %d\n", n[1].i, n[2].i);
+            break;
+
+         case OPCODE_PROVOKING_VERTEX:
+            printf("ProvokingVertex %s\n",
+                         _mesa_lookup_enum_by_nr(n[1].ui));
             break;
 
             /*
              * meta opcodes/commands
              */
          case OPCODE_ERROR:
-            _mesa_printf("Error: %s %s\n",
+            printf("Error: %s %s\n",
                          enum_string(n[1].e), (const char *) n[2].data);
             break;
          case OPCODE_CONTINUE:
-            _mesa_printf("DISPLAY-LIST-CONTINUE\n");
+            printf("DISPLAY-LIST-CONTINUE\n");
             n = (Node *) n[1].next;
             break;
          case OPCODE_END_OF_LIST:
-            _mesa_printf("END-LIST %u\n", list);
+            printf("END-LIST %u\n", list);
             done = GL_TRUE;
             break;
          default:
             if (opcode < 0 || opcode > OPCODE_END_OF_LIST) {
-               _mesa_printf
+               printf
                   ("ERROR IN DISPLAY LIST: opcode = %d, address = %p\n",
                    opcode, (void *) n);
                return;
             }
             else {
-               _mesa_printf("command %d, %u operands\n", opcode,
+               printf("command %d, %u operands\n", opcode,
                             InstSize[opcode]);
             }
          }
@@ -8484,22 +9598,21 @@ mesa_print_display_list(GLuint list)
 void
 _mesa_save_vtxfmt_init(GLvertexformat * vfmt)
 {
-   vfmt->ArrayElement = _ae_loopback_array_elt; /* generic helper */
+   _MESA_INIT_ARRAYELT_VTXFMT(vfmt, _ae_);
+
    vfmt->Begin = save_Begin;
-   vfmt->CallList = _mesa_save_CallList;
-   vfmt->CallLists = _mesa_save_CallLists;
+
+   _MESA_INIT_DLIST_VTXFMT(vfmt, save_);
+
    vfmt->Color3f = save_Color3f;
    vfmt->Color3fv = save_Color3fv;
    vfmt->Color4f = save_Color4f;
    vfmt->Color4fv = save_Color4fv;
    vfmt->EdgeFlag = save_EdgeFlag;
    vfmt->End = save_End;
-   vfmt->EvalCoord1f = save_EvalCoord1f;
-   vfmt->EvalCoord1fv = save_EvalCoord1fv;
-   vfmt->EvalCoord2f = save_EvalCoord2f;
-   vfmt->EvalCoord2fv = save_EvalCoord2fv;
-   vfmt->EvalPoint1 = save_EvalPoint1;
-   vfmt->EvalPoint2 = save_EvalPoint2;
+
+   _MESA_INIT_EVAL_VTXFMT(vfmt, save_);
+
    vfmt->FogCoordfEXT = save_FogCoordfEXT;
    vfmt->FogCoordfvEXT = save_FogCoordfvEXT;
    vfmt->Indexf = save_Indexf;
@@ -8548,8 +9661,6 @@ _mesa_save_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->VertexAttrib4fARB = save_VertexAttrib4fARB;
    vfmt->VertexAttrib4fvARB = save_VertexAttrib4fvARB;
 
-   vfmt->EvalMesh1 = _mesa_save_EvalMesh1;
-   vfmt->EvalMesh2 = _mesa_save_EvalMesh2;
    vfmt->Rectf = save_Rectf;
 
    /* The driver is required to implement these as
@@ -8562,8 +9673,38 @@ _mesa_save_vtxfmt_init(GLvertexformat * vfmt)
    vfmt->DrawArrays = 0;
    vfmt->DrawElements = 0;
    vfmt->DrawRangeElements = 0;
+   vfmt->MultiDrawElemementsEXT = 0;
+   vfmt->DrawElementsBaseVertex = 0;
+   vfmt->DrawRangeElementsBaseVertex = 0;
+   vfmt->MultiDrawElemementsBaseVertex = 0;
 #endif
 }
+
+
+void
+_mesa_install_dlist_vtxfmt(struct _glapi_table *disp,
+                           const GLvertexformat *vfmt)
+{
+   SET_CallList(disp, vfmt->CallList);
+   SET_CallLists(disp, vfmt->CallLists);
+}
+
+
+void _mesa_init_dlist_dispatch(struct _glapi_table *disp)
+{
+   SET_CallList(disp, _mesa_CallList);
+   SET_CallLists(disp, _mesa_CallLists);
+
+   SET_DeleteLists(disp, _mesa_DeleteLists);
+   SET_EndList(disp, _mesa_EndList);
+   SET_GenLists(disp, _mesa_GenLists);
+   SET_IsList(disp, _mesa_IsList);
+   SET_ListBase(disp, _mesa_ListBase);
+   SET_NewList(disp, _mesa_NewList);
+}
+
+
+#endif /* FEATURE_dlist */
 
 
 /**
@@ -8576,21 +9717,32 @@ _mesa_init_display_list(GLcontext *ctx)
 
    /* zero-out the instruction size table, just once */
    if (!tableInitialized) {
-      _mesa_bzero(InstSize, sizeof(InstSize));
+      memset(InstSize, 0, sizeof(InstSize));
       tableInitialized = GL_TRUE;
    }
+
+   /* extension info */
+   ctx->ListExt = CALLOC_STRUCT(gl_list_extensions);
 
    /* Display list */
    ctx->ListState.CallDepth = 0;
    ctx->ExecuteFlag = GL_TRUE;
    ctx->CompileFlag = GL_FALSE;
-   ctx->ListState.CurrentListPtr = NULL;
    ctx->ListState.CurrentBlock = NULL;
-   ctx->ListState.CurrentListNum = 0;
    ctx->ListState.CurrentPos = 0;
 
    /* Display List group */
    ctx->List.ListBase = 0;
 
+#if FEATURE_dlist
    _mesa_save_vtxfmt_init(&ctx->ListState.ListVtxfmt);
+#endif
+}
+
+
+void
+_mesa_free_display_list_data(GLcontext *ctx)
+{
+   free(ctx->ListExt);
+   ctx->ListExt = NULL;
 }

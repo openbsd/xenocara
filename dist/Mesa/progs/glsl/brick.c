@@ -9,10 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
-#include <GL/glext.h>
-#include "extfuncs.h"
 #include "shaderutil.h"
 
 
@@ -26,12 +24,12 @@ static GLuint program;
 
 static struct uniform_info Uniforms[] = {
    /* vert */
-   { "LightPosition",     3, GL_FLOAT, { 0.1, 0.1, 9.0, 0}, -1 },
+   { "LightPosition",     1, GL_FLOAT_VEC3, { 0.1, 0.1, 9.0, 0}, -1 },
    /* frag */
-   { "BrickColor",        3, GL_FLOAT, { 0.8, 0.2, 0.2, 0 }, -1 },
-   { "MortarColor",       3, GL_FLOAT, { 0.6, 0.6, 0.6, 0 }, -1 },
-   { "BrickSize",         2, GL_FLOAT, { 1.0, 0.3, 0, 0 }, -1 },
-   { "BrickPct",          2, GL_FLOAT, { 0.9, 0.8, 0, 0 }, -1 },
+   { "BrickColor",        1, GL_FLOAT_VEC3, { 0.8, 0.2, 0.2, 0 }, -1 },
+   { "MortarColor",       1, GL_FLOAT_VEC3, { 0.6, 0.6, 0.6, 0 }, -1 },
+   { "BrickSize",         1, GL_FLOAT_VEC2, { 1.0, 0.3, 0, 0 }, -1 },
+   { "BrickPct",          1, GL_FLOAT_VEC2, { 0.9, 0.8, 0, 0 }, -1 },
    END_OF_UNIFORMS
 };
 
@@ -82,9 +80,9 @@ Reshape(int width, int height)
 static void
 CleanUp(void)
 {
-   glDeleteShader_func(fragShader);
-   glDeleteShader_func(vertShader);
-   glDeleteProgram_func(program);
+   glDeleteShader(fragShader);
+   glDeleteShader(vertShader);
+   glDeleteProgram(program);
    glutDestroyWindow(win);
 }
 
@@ -144,15 +142,14 @@ Init(void)
    if (!ShadersSupported())
       exit(1);
 
-   GetExtensionFuncs();
-
    vertShader = CompileShaderFile(GL_VERTEX_SHADER, VertProgFile);
    fragShader = CompileShaderFile(GL_FRAGMENT_SHADER, FragProgFile);
    program = LinkShaders(vertShader, fragShader);
 
-   glUseProgram_func(program);
+   glUseProgram(program);
 
-   InitUniforms(program, Uniforms);
+   SetUniformValues(program, Uniforms);
+   PrintUniforms(Uniforms);
 
    assert(glGetError() == 0);
 
@@ -160,9 +157,9 @@ Init(void)
 
    printf("GL_RENDERER = %s\n",(const char *) glGetString(GL_RENDERER));
 
-   assert(glIsProgram_func(program));
-   assert(glIsShader_func(fragShader));
-   assert(glIsShader_func(vertShader));
+   assert(glIsProgram(program));
+   assert(glIsShader(fragShader));
+   assert(glIsShader(vertShader));
 
    glColor3f(1, 0, 0);
 }
@@ -187,10 +184,10 @@ int
 main(int argc, char *argv[])
 {
    glutInit(&argc, argv);
-   glutInitWindowPosition( 0, 0);
    glutInitWindowSize(400, 400);
    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
    win = glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc(Reshape);
    glutKeyboardFunc(Key);
    glutSpecialFunc(SpecialKey);

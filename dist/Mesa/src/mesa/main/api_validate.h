@@ -30,6 +30,12 @@
 
 #include "mtypes.h"
 
+
+extern GLuint
+_mesa_max_buffer_index(GLcontext *ctx, GLuint count, GLenum type,
+                       const void *indices,
+                       struct gl_buffer_object *elementBuf);
+
 extern GLboolean
 _mesa_validate_DrawArrays(GLcontext *ctx,
 			  GLenum mode, GLint start, GLsizei count);
@@ -37,13 +43,13 @@ _mesa_validate_DrawArrays(GLcontext *ctx,
 extern GLboolean
 _mesa_validate_DrawElements(GLcontext *ctx,
 			    GLenum mode, GLsizei count, GLenum type,
-			    const GLvoid *indices);
+			    const GLvoid *indices, GLint basevertex);
 
 extern GLboolean
 _mesa_validate_DrawRangeElements(GLcontext *ctx, GLenum mode,
 				 GLuint start, GLuint end,
 				 GLsizei count, GLenum type,
-				 const GLvoid *indices);
+				 const GLvoid *indices, GLint basevertex);
 
 
 #endif

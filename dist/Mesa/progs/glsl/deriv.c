@@ -13,10 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
-#include <GL/glext.h>
-#include "extfuncs.h"
 #include "shaderutil.h"
 
 
@@ -29,11 +27,15 @@ static GLuint SphereList, RectList, CurList;
 static GLint win = 0;
 static GLboolean anim = GL_TRUE;
 static GLfloat xRot = 0.0f, yRot = 0.0f;
+static GLint WinSize[2];
+static GLint WinSizeUniform = -1;
 
 
 static void
 Redisplay(void)
 {
+   glUniform2iv(WinSizeUniform, 1, WinSize);
+
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
    glPushMatrix();
@@ -57,6 +59,8 @@ Idle(void)
 static void
 Reshape(int width, int height)
 {
+   WinSize[0] = width;
+   WinSize[1] = height;
    glViewport(0, 0, width, height);
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -70,9 +74,9 @@ Reshape(int width, int height)
 static void
 CleanUp(void)
 {
-   glDeleteShader_func(fragShader);
-   glDeleteShader_func(vertShader);
-   glDeleteProgram_func(program);
+   glDeleteShader(fragShader);
+   glDeleteShader(vertShader);
+   glDeleteProgram(program);
    glutDestroyWindow(win);
 }
 
@@ -142,6 +146,7 @@ MakeSphere(void)
    glNewList(SphereList, GL_COMPILE);
    gluSphere(obj, 2.0f, 30, 15);
    glEndList();
+   gluDeleteQuadric(obj);
 }
 
 
@@ -164,8 +169,10 @@ static void
 Init(void)
 {
    static const char *fragShaderText =
+      "uniform ivec2 WinSize; \n"
       "void main() {\n"
-      "   gl_FragColor = abs(dFdy(gl_TexCoord[0])) * 50.0;\n"
+      "   vec2 d = dFdy(gl_TexCoord[0].xy) * vec2(WinSize); \n"
+      "   gl_FragColor =  vec4(d.x, d.y, 0.0, 1.0);\n"
       "  // gl_FragColor = gl_TexCoord[0];\n"
       "}\n";
    static const char *vertShaderText =
@@ -177,13 +184,12 @@ Init(void)
    if (!ShadersSupported())
       exit(1);
 
-   GetExtensionFuncs();
-
    vertShader = CompileShaderText(GL_VERTEX_SHADER, vertShaderText);
    fragShader = CompileShaderText(GL_FRAGMENT_SHADER, fragShaderText);
    program = LinkShaders(vertShader, fragShader);
 
-   glUseProgram_func(program);
+   glUseProgram(program);
+   WinSizeUniform = glGetUniformLocation(program, "WinSize");
 
    /*assert(glGetError() == 0);*/
 
@@ -197,9 +203,9 @@ Init(void)
 
    printf("GL_RENDERER = %s\n",(const char *) glGetString(GL_RENDERER));
 
-   assert(glIsProgram_func(program));
-   assert(glIsShader_func(fragShader));
-   assert(glIsShader_func(vertShader));
+   assert(glIsProgram(program));
+   assert(glIsShader(fragShader));
+   assert(glIsShader(vertShader));
 
    glColor3f(1, 0, 0);
 }
@@ -223,11 +229,13 @@ ParseOptions(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
+   WinSize[0] = WinSize[1] = 200;
+
    glutInit(&argc, argv);
-   glutInitWindowPosition( 0, 0);
-   glutInitWindowSize(200, 200);
+   glutInitWindowSize(WinSize[0], WinSize[1]);
    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
    win = glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc(Reshape);
    glutKeyboardFunc(Key);
    glutSpecialFunc(SpecialKey);

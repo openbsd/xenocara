@@ -26,11 +26,10 @@
 #include "main/glheader.h"
 #include "main/colormac.h"
 #include "main/context.h"
-#include "feedback.h"
-#include "light.h"
+#include "main/feedback.h"
+#include "main/light.h"
 #include "main/macros.h"
-#include "rastpos.h"
-#include "simple_list.h"
+#include "main/simple_list.h"
 #include "main/mtypes.h"
 
 #include "math/m_matrix.h"
@@ -46,11 +45,10 @@
  * \return zero if outside view volume, or one if inside.
  */
 static GLuint
-viewclip_point( const GLfloat v[] )
+viewclip_point_xy( const GLfloat v[] )
 {
    if (   v[0] > v[3] || v[0] < -v[3]
-       || v[1] > v[3] || v[1] < -v[3]
-       || v[2] > v[3] || v[2] < -v[3] ) {
+       || v[1] > v[3] || v[1] < -v[3] ) {
       return 0;
    }
    else {
@@ -121,8 +119,7 @@ shade_rastpos(GLcontext *ctx,
               const GLfloat vertex[4],
               const GLfloat normal[3],
               GLfloat Rcolor[4],
-              GLfloat Rspec[4],
-              GLfloat *Rindex)
+              GLfloat Rspec[4])
 {
    /*const*/ GLfloat (*base)[3] = ctx->Light._BaseColor;
    const struct gl_light *light;
@@ -167,7 +164,7 @@ shade_rastpos(GLcontext *ctx,
 				light->QuadraticAttenuation));
 
 	 if (light->_Flags & LIGHT_SPOT) {
-	    GLfloat PV_dot_dir = - DOT3(VP, light->_NormDirection);
+	    GLfloat PV_dot_dir = - DOT3(VP, light->_NormSpotDirection);
 
 	    if (PV_dot_dir<light->_CosCutoff) {
 	       continue;
@@ -246,28 +243,14 @@ shade_rastpos(GLcontext *ctx,
       ACC_SCALE_SCALAR_3V( specularColor, attenuation, specularContrib );
    }
 
-   if (ctx->Visual.rgbMode) {
-      Rcolor[0] = CLAMP(diffuseColor[0], 0.0F, 1.0F);
-      Rcolor[1] = CLAMP(diffuseColor[1], 0.0F, 1.0F);
-      Rcolor[2] = CLAMP(diffuseColor[2], 0.0F, 1.0F);
-      Rcolor[3] = CLAMP(diffuseColor[3], 0.0F, 1.0F);
-      Rspec[0] = CLAMP(specularColor[0], 0.0F, 1.0F);
-      Rspec[1] = CLAMP(specularColor[1], 0.0F, 1.0F);
-      Rspec[2] = CLAMP(specularColor[2], 0.0F, 1.0F);
-      Rspec[3] = CLAMP(specularColor[3], 0.0F, 1.0F);
-   }
-   else {
-      GLfloat *ind = ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_INDEXES];
-      GLfloat d_a = ind[MAT_INDEX_DIFFUSE] - ind[MAT_INDEX_AMBIENT];
-      GLfloat s_a = ind[MAT_INDEX_SPECULAR] - ind[MAT_INDEX_AMBIENT];
-      GLfloat i = (ind[MAT_INDEX_AMBIENT]
-		   + diffuseCI * (1.0F-specularCI) * d_a
-		   + specularCI * s_a);
-      if (i > ind[MAT_INDEX_SPECULAR]) {
-	 i = ind[MAT_INDEX_SPECULAR];
-      }
-      *Rindex = i;
-   }
+   Rcolor[0] = CLAMP(diffuseColor[0], 0.0F, 1.0F);
+   Rcolor[1] = CLAMP(diffuseColor[1], 0.0F, 1.0F);
+   Rcolor[2] = CLAMP(diffuseColor[2], 0.0F, 1.0F);
+   Rcolor[3] = CLAMP(diffuseColor[3], 0.0F, 1.0F);
+   Rspec[0] = CLAMP(specularColor[0], 0.0F, 1.0F);
+   Rspec[1] = CLAMP(specularColor[1], 0.0F, 1.0F);
+   Rspec[2] = CLAMP(specularColor[2], 0.0F, 1.0F);
+   Rspec[3] = CLAMP(specularColor[3], 0.0F, 1.0F);
 }
 
 
@@ -301,12 +284,12 @@ compute_texgen(GLcontext *ctx, const GLfloat vObj[4], const GLfloat vEye[4],
       mInv = 0.0F;
 
    if (texUnit->TexGenEnabled & S_BIT) {
-      switch (texUnit->GenModeS) {
+      switch (texUnit->GenS.Mode) {
          case GL_OBJECT_LINEAR:
-            texcoord[0] = DOT4(vObj, texUnit->ObjectPlaneS);
+            texcoord[0] = DOT4(vObj, texUnit->GenS.ObjectPlane);
             break;
          case GL_EYE_LINEAR:
-            texcoord[0] = DOT4(vEye, texUnit->EyePlaneS);
+            texcoord[0] = DOT4(vEye, texUnit->GenS.EyePlane);
             break;
          case GL_SPHERE_MAP:
             texcoord[0] = rx * mInv + 0.5F;
@@ -324,12 +307,12 @@ compute_texgen(GLcontext *ctx, const GLfloat vObj[4], const GLfloat vEye[4],
    }
 
    if (texUnit->TexGenEnabled & T_BIT) {
-      switch (texUnit->GenModeT) {
+      switch (texUnit->GenT.Mode) {
          case GL_OBJECT_LINEAR:
-            texcoord[1] = DOT4(vObj, texUnit->ObjectPlaneT);
+            texcoord[1] = DOT4(vObj, texUnit->GenT.ObjectPlane);
             break;
          case GL_EYE_LINEAR:
-            texcoord[1] = DOT4(vEye, texUnit->EyePlaneT);
+            texcoord[1] = DOT4(vEye, texUnit->GenT.EyePlane);
             break;
          case GL_SPHERE_MAP:
             texcoord[1] = ry * mInv + 0.5F;
@@ -347,12 +330,12 @@ compute_texgen(GLcontext *ctx, const GLfloat vObj[4], const GLfloat vEye[4],
    }
 
    if (texUnit->TexGenEnabled & R_BIT) {
-      switch (texUnit->GenModeR) {
+      switch (texUnit->GenR.Mode) {
          case GL_OBJECT_LINEAR:
-            texcoord[2] = DOT4(vObj, texUnit->ObjectPlaneR);
+            texcoord[2] = DOT4(vObj, texUnit->GenR.ObjectPlane);
             break;
          case GL_EYE_LINEAR:
-            texcoord[2] = DOT4(vEye, texUnit->EyePlaneR);
+            texcoord[2] = DOT4(vEye, texUnit->GenR.EyePlane);
             break;
          case GL_REFLECTION_MAP:
             texcoord[2] = rz;
@@ -367,12 +350,12 @@ compute_texgen(GLcontext *ctx, const GLfloat vObj[4], const GLfloat vEye[4],
    }
 
    if (texUnit->TexGenEnabled & Q_BIT) {
-      switch (texUnit->GenModeQ) {
+      switch (texUnit->GenQ.Mode) {
          case GL_OBJECT_LINEAR:
-            texcoord[3] = DOT4(vObj, texUnit->ObjectPlaneQ);
+            texcoord[3] = DOT4(vObj, texUnit->GenQ.ObjectPlane);
             break;
          case GL_EYE_LINEAR:
-            texcoord[3] = DOT4(vEye, texUnit->EyePlaneQ);
+            texcoord[3] = DOT4(vEye, texUnit->GenQ.EyePlane);
             break;
          default:
             _mesa_problem(ctx, "Bad Q texgen in compute_texgen()");
@@ -408,18 +391,18 @@ _tnl_RasterPos(GLcontext *ctx, const GLfloat vObj[4])
       /* apply projection matrix:  clip = Proj * eye */
       TRANSFORM_POINT( clip, ctx->ProjectionMatrixStack.Top->m, eye );
 
-      /* clip to view volume */
-      if (ctx->Transform.RasterPositionUnclipped) {
-         /* GL_IBM_rasterpos_clip: only clip against Z */
+      /* clip to view volume. */
+      if (!ctx->Transform.DepthClamp) {
          if (viewclip_point_z(clip) == 0) {
             ctx->Current.RasterPosValid = GL_FALSE;
             return;
          }
       }
-      else if (viewclip_point(clip) == 0) {
-         /* Normal OpenGL behaviour */
-         ctx->Current.RasterPosValid = GL_FALSE;
-         return;
+      if (!ctx->Transform.RasterPositionUnclipped) {
+         if (viewclip_point_xy(clip) == 0) {
+            ctx->Current.RasterPosValid = GL_FALSE;
+            return;
+         }
       }
 
       /* clip to user clipping planes */
@@ -443,6 +426,12 @@ _tnl_RasterPos(GLcontext *ctx, const GLfloat vObj[4])
                                   / ctx->DrawBuffer->_DepthMaxF;
       ctx->Current.RasterPos[3] = clip[3];
 
+      if (ctx->Transform.DepthClamp) {
+	 ctx->Current.RasterPos[3] = CLAMP(ctx->Current.RasterPos[3],
+					   ctx->Viewport.Near,
+					   ctx->Viewport.Far);
+      }
+
       /* compute raster distance */
       if (ctx->Fog.FogCoordinateSource == GL_FOG_COORDINATE_EXT)
          ctx->Current.RasterDistance = ctx->Current.Attrib[VERT_ATTRIB_FOG][0];
@@ -465,21 +454,14 @@ _tnl_RasterPos(GLcontext *ctx, const GLfloat vObj[4])
          /* lighting */
          shade_rastpos( ctx, vObj, norm,
                         ctx->Current.RasterColor,
-                        ctx->Current.RasterSecondaryColor,
-                        &ctx->Current.RasterIndex );
+                        ctx->Current.RasterSecondaryColor );
       }
       else {
-         /* use current color or index */
-         if (ctx->Visual.rgbMode) {
-            COPY_4FV(ctx->Current.RasterColor,
-                     ctx->Current.Attrib[VERT_ATTRIB_COLOR0]);
-            COPY_4FV(ctx->Current.RasterSecondaryColor,
-                     ctx->Current.Attrib[VERT_ATTRIB_COLOR1]);
-         }
-         else {
-            ctx->Current.RasterIndex
-               = ctx->Current.Attrib[VERT_ATTRIB_COLOR_INDEX][0];
-         }
+         /* use current color */
+	 COPY_4FV(ctx->Current.RasterColor,
+		  ctx->Current.Attrib[VERT_ATTRIB_COLOR0]);
+	 COPY_4FV(ctx->Current.RasterSecondaryColor,
+		  ctx->Current.Attrib[VERT_ATTRIB_COLOR1]);
       }
 
       /* texture coords */

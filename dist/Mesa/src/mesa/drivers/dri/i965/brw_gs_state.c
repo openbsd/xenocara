@@ -34,7 +34,6 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "brw_defines.h"
-#include "main/macros.h"
 
 struct brw_gs_unit_key {
    unsigned int total_grf;
@@ -72,6 +71,7 @@ gs_unit_populate_key(struct brw_context *brw, struct brw_gs_unit_key *key)
 static dri_bo *
 gs_unit_create_from_key(struct brw_context *brw, struct brw_gs_unit_key *key)
 {
+   struct intel_context *intel = &brw->intel;
    struct brw_gs_unit_state gs;
    dri_bo *bo;
 
@@ -93,7 +93,13 @@ gs_unit_create_from_key(struct brw_context *brw, struct brw_gs_unit_key *key)
    gs.thread4.nr_urb_entries = key->nr_urb_entries;
    gs.thread4.urb_entry_allocation_size = key->urb_size - 1;
 
-   gs.thread4.max_threads = 0; /* Hardware requirement */
+   if (key->nr_urb_entries >= 8)
+      gs.thread4.max_threads = 1;
+   else
+      gs.thread4.max_threads = 0;
+
+   if (intel->gen == 5)
+      gs.thread4.rendering_enable = 1;
 
    if (INTEL_DEBUG & DEBUG_STATS)
       gs.thread4.stats_enable = 1;
@@ -101,8 +107,7 @@ gs_unit_create_from_key(struct brw_context *brw, struct brw_gs_unit_key *key)
    bo = brw_upload_cache(&brw->cache, BRW_GS_UNIT,
 			 key, sizeof(*key),
 			 &brw->gs.prog_bo, 1,
-			 &gs, sizeof(gs),
-			 NULL, NULL);
+			 &gs, sizeof(gs));
 
    if (key->prog_active) {
       /* Emit GS program relocation */

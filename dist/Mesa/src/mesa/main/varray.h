@@ -1,18 +1,9 @@
-/**
- * \file varray.h
- * Vertex arrays.
- *
- * \if subset
- * (No-op)
- *
- * \endif
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  4.1
+ * Version:  7.6
  *
- * Copyright (C) 1999-2002  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -138,6 +129,11 @@ extern void GLAPIENTRY
 _mesa_MultiDrawElementsEXT( GLenum mode, const GLsizei *count, GLenum type,
                             const GLvoid **indices, GLsizei primcount );
 
+extern void GLAPIENTRY
+_mesa_MultiDrawElementsBaseVertex( GLenum mode,
+				   const GLsizei *count, GLenum type,
+				   const GLvoid **indices, GLsizei primcount,
+				   const GLint *basevertex);
 
 extern void GLAPIENTRY
 _mesa_MultiModeDrawArraysIBM( const GLenum * mode, const GLint * first,
@@ -156,13 +152,49 @@ _mesa_LockArraysEXT(GLint first, GLsizei count);
 extern void GLAPIENTRY
 _mesa_UnlockArraysEXT( void );
 
+
+extern void GLAPIENTRY
+_mesa_DrawArrays(GLenum mode, GLint first, GLsizei count);
+
+extern void GLAPIENTRY
+_mesa_DrawElements(GLenum mode, GLsizei count, GLenum type,
+                   const GLvoid *indices);
+
+extern void GLAPIENTRY
+_mesa_DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
+                        GLenum type, const GLvoid *indices);
+
+extern void GLAPIENTRY
+_mesa_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type,
+			     const GLvoid *indices, GLint basevertex);
+
+extern void GLAPIENTRY
+_mesa_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end,
+				  GLsizei count, GLenum type,
+				  const GLvoid *indices,
+				  GLint basevertex);
+
+
+extern void
+_mesa_copy_client_array(GLcontext *ctx,
+                        struct gl_client_array *dst,
+                        struct gl_client_array *src);
+
+
+extern void
+_mesa_print_arrays(GLcontext *ctx);
+
 extern void
 _mesa_init_varray( GLcontext * ctx );
+
+extern void 
+_mesa_free_varray_data(GLcontext *ctx);
 
 #else
 
 /** No-op */
 #define _mesa_init_varray( c )  ((void)0)
+#define _mesa_free_varray_data( c )  ((void)0)
 
 #endif
 

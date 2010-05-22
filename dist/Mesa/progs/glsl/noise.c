@@ -8,10 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
-#include <GL/glext.h>
-#include "extfuncs.h"
 #include "shaderutil.h"
 
 
@@ -30,15 +28,15 @@ static const char *FragShaderText =
    "   vec4 p;\n"
    "   p.xy = gl_TexCoord[0].xy;\n"
    "   p.z = Slice;\n"
-   "   p.w = 0;\n"
+   "   p.w = 0.0;\n"
    "   vec4 n = noise4(p * scale);\n"
    "   gl_FragColor = n * Scale + Bias;\n"
    "}\n";
 
 
 static struct uniform_info Uniforms[] = {
-   { "Scale",    4, GL_FLOAT, { 0.5, 0.4, 0.0, 0}, -1 },
-   { "Bias",     4, GL_FLOAT, { 0.5, 0.3, 0.0, 0}, -1 },
+   { "Scale",    1, GL_FLOAT_VEC4, { 0.5, 0.4, 0.0, 0}, -1 },
+   { "Bias",     1, GL_FLOAT_VEC4, { 0.5, 0.3, 0.0, 0}, -1 },
    { "Slice",    1, GL_FLOAT, { 0.5, 0, 0, 0}, -1 },
    END_OF_UNIFORMS
 };
@@ -67,7 +65,7 @@ Redisplay(void)
 {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    
-   glUniform1fv_func(Uniforms[2].location, 1, &Slice);
+   glUniform1fv(Uniforms[2].location, 1, &Slice);
 
    glPushMatrix();
    glRotatef(xRot, 1.0f, 0.0f, 0.0f);
@@ -103,9 +101,9 @@ Reshape(int width, int height)
 static void
 CleanUp(void)
 {
-   glDeleteShader_func(fragShader);
-   glDeleteShader_func(vertShader);
-   glDeleteProgram_func(program);
+   glDeleteShader(fragShader);
+   glDeleteShader(vertShader);
+   glDeleteProgram(program);
    glutDestroyWindow(win);
 }
 
@@ -121,6 +119,7 @@ Key(unsigned char key, int x, int y)
    case 'a':
       Anim = !Anim;
       glutIdleFunc(Anim ? Idle : NULL);
+      break;
    case 's':
       Slice -= step;
       break;
@@ -175,15 +174,14 @@ Init(void)
    if (!ShadersSupported())
       exit(1);
 
-   GetExtensionFuncs();
-
    vertShader = CompileShaderText(GL_VERTEX_SHADER, VertShaderText);
    fragShader = CompileShaderText(GL_FRAGMENT_SHADER, FragShaderText);
    program = LinkShaders(vertShader, fragShader);
 
-   glUseProgram_func(program);
+   glUseProgram(program);
 
-   InitUniforms(program, Uniforms);
+   SetUniformValues(program, Uniforms);
+   PrintUniforms(Uniforms);
 
    assert(glGetError() == 0);
 
@@ -191,9 +189,9 @@ Init(void)
 
    printf("GL_RENDERER = %s\n",(const char *) glGetString(GL_RENDERER));
 
-   assert(glIsProgram_func(program));
-   assert(glIsShader_func(fragShader));
-   assert(glIsShader_func(vertShader));
+   assert(glIsProgram(program));
+   assert(glIsShader(fragShader));
+   assert(glIsShader(vertShader));
 
    glColor3f(1, 0, 0);
 }
@@ -203,10 +201,10 @@ int
 main(int argc, char *argv[])
 {
    glutInit(&argc, argv);
-   glutInitWindowPosition( 0, 0);
    glutInitWindowSize(400, 400);
    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
    win = glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc(Reshape);
    glutKeyboardFunc(Key);
    glutSpecialFunc(SpecialKey);

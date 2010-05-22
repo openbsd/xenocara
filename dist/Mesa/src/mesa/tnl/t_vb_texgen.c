@@ -341,7 +341,7 @@ static void texgen( GLcontext *ctx,
    GLvector4f *in = VB->AttribPtr[VERT_ATTRIB_TEX0 + unit];
    GLvector4f *out = &store->texcoord[unit];
    const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
-   const GLvector4f *obj = VB->ObjPtr;
+   const GLvector4f *obj = VB->AttribPtr[_TNL_ATTRIB_POS];
    const GLvector4f *eye = VB->EyePtr;
    const GLvector4f *normal = VB->AttribPtr[_TNL_ATTRIB_NORMAL];
    const GLfloat *m = store->tmp_m;
@@ -367,16 +367,16 @@ static void texgen( GLcontext *ctx,
 
    if (texUnit->TexGenEnabled & S_BIT) {
       GLuint i;
-      switch (texUnit->GenModeS) {
+      switch (texUnit->GenS.Mode) {
       case GL_OBJECT_LINEAR:
 	 _mesa_dotprod_tab[obj->size]( (GLfloat *)out->data,
 				       sizeof(out->data[0]), obj,
-				       texUnit->ObjectPlaneS );
+				       texUnit->GenS.ObjectPlane );
 	 break;
       case GL_EYE_LINEAR:
 	 _mesa_dotprod_tab[eye->size]( (GLfloat *)out->data,
 				       sizeof(out->data[0]), eye,
-				       texUnit->EyePlaneS );
+				       texUnit->GenS.EyePlane );
 	 break;
       case GL_SPHERE_MAP:
          for (i = 0; i < count; i++)
@@ -400,16 +400,16 @@ static void texgen( GLcontext *ctx,
 
    if (texUnit->TexGenEnabled & T_BIT) {
       GLuint i;
-      switch (texUnit->GenModeT) {
+      switch (texUnit->GenT.Mode) {
       case GL_OBJECT_LINEAR:
 	 _mesa_dotprod_tab[obj->size]( &(out->data[0][1]),
 				       sizeof(out->data[0]), obj,
-				       texUnit->ObjectPlaneT );
+				       texUnit->GenT.ObjectPlane );
 	 break;
       case GL_EYE_LINEAR:
 	 _mesa_dotprod_tab[eye->size]( &(out->data[0][1]),
 				       sizeof(out->data[0]), eye,
-				       texUnit->EyePlaneT );
+				       texUnit->GenT.EyePlane );
 	 break;
       case GL_SPHERE_MAP:
          for (i = 0; i < count; i++)
@@ -433,16 +433,16 @@ static void texgen( GLcontext *ctx,
 
    if (texUnit->TexGenEnabled & R_BIT) {
       GLuint i;
-      switch (texUnit->GenModeR) {
+      switch (texUnit->GenR.Mode) {
       case GL_OBJECT_LINEAR:
 	 _mesa_dotprod_tab[obj->size]( &(out->data[0][2]),
 				       sizeof(out->data[0]), obj,
-				       texUnit->ObjectPlaneR );
+				       texUnit->GenR.ObjectPlane );
 	 break;
       case GL_EYE_LINEAR:
 	 _mesa_dotprod_tab[eye->size]( &(out->data[0][2]),
 				       sizeof(out->data[0]), eye,
-				       texUnit->EyePlaneR );
+				       texUnit->GenR.EyePlane );
 	 break;
       case GL_REFLECTION_MAP_NV:
 	 for (i=0;i<count;i++)
@@ -461,16 +461,16 @@ static void texgen( GLcontext *ctx,
    }
 
    if (texUnit->TexGenEnabled & Q_BIT) {
-      switch (texUnit->GenModeQ) {
+      switch (texUnit->GenQ.Mode) {
       case GL_OBJECT_LINEAR:
 	 _mesa_dotprod_tab[obj->size]( &(out->data[0][3]),
 				       sizeof(out->data[0]), obj,
-				       texUnit->ObjectPlaneQ );
+				       texUnit->GenQ.ObjectPlane );
 	 break;
       case GL_EYE_LINEAR:
 	 _mesa_dotprod_tab[eye->size]( &(out->data[0][3]),
 				       sizeof(out->data[0]), eye,
-				       texUnit->EyePlaneQ );
+				       texUnit->GenQ.EyePlane );
 	 break;
       default:
 	 _mesa_problem(ctx, "Bad Q texgen");
@@ -498,7 +498,6 @@ static GLboolean run_texgen_stage( GLcontext *ctx,
 
 	 store->TexgenFunc[i]( ctx, store, i );
 
-         VB->TexCoordPtr[i] =
          VB->AttribPtr[VERT_ATTRIB_TEX0 + i] = &store->texcoord[i];
       }
    }

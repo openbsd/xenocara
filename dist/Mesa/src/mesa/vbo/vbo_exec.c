@@ -28,9 +28,6 @@
 
 #include "main/api_arrayelt.h"
 #include "main/glheader.h"
-#include "main/imports.h"
-#include "main/context.h"
-#include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/vtxfmt.h"
 
@@ -57,6 +54,7 @@ void vbo_exec_init( GLcontext *ctx )
 
    ctx->Driver.NeedFlush = 0;
    ctx->Driver.CurrentExecPrimitive = PRIM_OUTSIDE_BEGIN_END;
+   ctx->Driver.BeginVertices = vbo_exec_BeginVertices;
    ctx->Driver.FlushVertices = vbo_exec_FlushVertices;
 
    vbo_exec_invalidate_state( ctx, ~0 );

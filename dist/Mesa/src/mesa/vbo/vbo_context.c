@@ -28,24 +28,17 @@
 #include "main/imports.h"
 #include "main/mtypes.h"
 #include "main/api_arrayelt.h"
+#include "main/bufferobj.h"
+#include "math/m_eval.h"
 #include "vbo.h"
 #include "vbo_context.h"
-
-/* Reach out and grab this to use as the default:
- */
-extern void _tnl_draw_prims( GLcontext *ctx,
-			     const struct gl_client_array *arrays[],
-			     const struct _mesa_prim *prims,
-			     GLuint nr_prims,
-			     const struct _mesa_index_buffer *ib,
-			     GLuint min_index,
-			     GLuint max_index );
 
 
 
 #define NR_LEGACY_ATTRIBS 16
 #define NR_GENERIC_ATTRIBS 16
 #define NR_MAT_ATTRIBS 12
+
 
 static GLuint check_size( const GLfloat *attr )
 {
@@ -54,6 +47,7 @@ static GLuint check_size( const GLfloat *attr )
    if (attr[1] != 0.0) return 2;
    return 1;		
 }
+
 
 static void init_legacy_currval(GLcontext *ctx)
 {
@@ -76,8 +70,10 @@ static void init_legacy_currval(GLcontext *ctx)
       cl->StrideB = 0;
       cl->Enabled = 1;
       cl->Type = GL_FLOAT;
+      cl->Format = GL_RGBA;
       cl->Ptr = (const void *)ctx->Current.Attrib[i];
-      cl->BufferObj = ctx->Array.NullBufferObj;
+      _mesa_reference_buffer_object(ctx, &cl->BufferObj,
+                                    ctx->Shared->NullBufferObj);
    }
 }
 
@@ -97,11 +93,13 @@ static void init_generic_currval(GLcontext *ctx)
        */
       cl->Size = 1;
       cl->Type = GL_FLOAT;
+      cl->Format = GL_RGBA;
       cl->Ptr = (const void *)ctx->Current.Attrib[VERT_ATTRIB_GENERIC0 + i];
       cl->Stride = 0;
       cl->StrideB = 0;
       cl->Enabled = 1;
-      cl->BufferObj = ctx->Array.NullBufferObj;
+      _mesa_reference_buffer_object(ctx, &cl->BufferObj,
+                                    ctx->Shared->NullBufferObj);
    }
 }
 
@@ -141,30 +139,15 @@ static void init_mat_currval(GLcontext *ctx)
 
       cl->Ptr = (const void *)ctx->Light.Material.Attrib[i];
       cl->Type = GL_FLOAT;
+      cl->Format = GL_RGBA;
       cl->Stride = 0;
       cl->StrideB = 0;
       cl->Enabled = 1;
-      cl->BufferObj = ctx->Array.NullBufferObj;
+      _mesa_reference_buffer_object(ctx, &cl->BufferObj,
+                                    ctx->Shared->NullBufferObj);
    }
 }
 
-#if 0
-
-static void vbo_exec_current_init( struct vbo_exec_context *exec ) 
-{
-   GLcontext *ctx = exec->ctx;
-   GLint i;
-
-   /* setup the pointers for the typical 16 vertex attributes */
-   for (i = 0; i < VBO_ATTRIB_FIRST_MATERIAL; i++) 
-      exec->vtx.current[i] = ctx->Current.Attrib[i];
-
-   /* setup pointers for the 12 material attributes */
-   for (i = 0; i < MAT_ATTRIB_MAX; i++)
-      exec->vtx.current[VBO_ATTRIB_FIRST_MATERIAL + i] = 
-	 ctx->Light.Material.Attrib[i];
-}
-#endif
 
 GLboolean _vbo_CreateContext( GLcontext *ctx )
 {
@@ -205,14 +188,10 @@ GLboolean _vbo_CreateContext( GLcontext *ctx )
       for (i = 0; i < 4; i++)
 	 vbo->map_vp_none[28+i] = i;	
       
-      for (i = 0; i < VERT_ATTRIB_MAX; i++)
+      for (i = 0; i < Elements(vbo->map_vp_arb); i++)
 	 vbo->map_vp_arb[i] = i;
    }
 
-
-   /* By default: 
-    */
-   vbo->draw_prims = _tnl_draw_prims;
 
    /* Hook our functions into exec and compile dispatch tables.  These
     * will pretty much be permanently installed, which means that the
@@ -223,8 +202,11 @@ GLboolean _vbo_CreateContext( GLcontext *ctx )
    vbo_save_init( ctx );
 #endif
 
+   _math_init_eval();
+
    return GL_TRUE;
 }
+
 
 void _vbo_InvalidateState( GLcontext *ctx, GLuint new_state )
 {
@@ -235,15 +217,33 @@ void _vbo_InvalidateState( GLcontext *ctx, GLuint new_state )
 
 void _vbo_DestroyContext( GLcontext *ctx )
 {
+   struct vbo_context *vbo = vbo_context(ctx);
+
    if (ctx->aelt_context) {
       _ae_destroy_context( ctx );
       ctx->aelt_context = NULL;
    }
 
-   vbo_exec_destroy(ctx);
+   if (vbo) {
+      GLuint i;
+
+      for (i = 0; i < VBO_ATTRIB_MAX; i++) {
+         _mesa_reference_buffer_object(ctx, &vbo->currval[i].BufferObj, NULL);
+      }
+
+      vbo_exec_destroy(ctx);
 #if FEATURE_dlist
-   vbo_save_destroy(ctx);
+      vbo_save_destroy(ctx);
 #endif
-   FREE(vbo_context(ctx));
-   ctx->swtnl_im = NULL;
+      FREE(vbo);
+      ctx->swtnl_im = NULL;
+   }
 }
+
+
+void vbo_set_draw_func(GLcontext *ctx, vbo_draw_func func)
+{
+   struct vbo_context *vbo = vbo_context(ctx);
+   vbo->draw_prims = func;
+}
+

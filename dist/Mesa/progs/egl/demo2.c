@@ -2,35 +2,55 @@
  * Exercise EGL API functions
  */
 
+#define EGL_EGLEXT_PROTOTYPES
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#include <GLES/egl.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES/gl.h>
 
 /*#define FRONTBUFFER*/
 
-static void _subset_Rectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
+static void _subset_Rectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2,
+                          GLfloat r, GLfloat g, GLfloat b)
 {
-   glBegin( GL_QUADS );
-   glVertex2f( x1, y1 );
-   glVertex2f( x2, y1 );
-   glVertex2f( x2, y2 );
-   glVertex2f( x1, y2 );
-   glEnd();
+   GLfloat v[4][2], c[4][4];
+   int i;
+
+   v[0][0] = x1;   v[0][1] = y1;
+   v[1][0] = x2;   v[1][1] = y1;
+   v[2][0] = x2;   v[2][1] = y2;
+   v[3][0] = x1;   v[3][1] = y2;
+
+   for (i = 0; i < 4; i++) {
+      c[i][0] = r;
+      c[i][1] = g;
+      c[i][2] = b;
+      c[i][3] = 1.0;
+   }
+
+   glVertexPointer(2, GL_FLOAT, 0, v);
+   glColorPointer(4, GL_FLOAT, 0, v);
+   glEnableClientState(GL_VERTEX_ARRAY);
+   glEnableClientState(GL_COLOR_ARRAY);
+
+   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+   glDisableClientState(GL_VERTEX_ARRAY);
+   glDisableClientState(GL_COLOR_ARRAY);
 }
 
 
 static void redraw(EGLDisplay dpy, EGLSurface surf, int rot)
 {
-   printf("Redraw event\n");
+   GLfloat r, g, b;
 
-#ifdef FRONTBUFFER
-    glDrawBuffer( GL_FRONT ); 
-#else
-    glDrawBuffer( GL_BACK );
-#endif
+   printf("Redraw event\n");
 
    glClearColor( rand()/(float)RAND_MAX, 
 		 rand()/(float)RAND_MAX, 
@@ -39,13 +59,14 @@ static void redraw(EGLDisplay dpy, EGLSurface surf, int rot)
 
    glClear( GL_COLOR_BUFFER_BIT ); 
 
-   glColor3f( rand()/(float)RAND_MAX, 
-	      rand()/(float)RAND_MAX, 
-	      rand()/(float)RAND_MAX );
+   r = rand()/(float)RAND_MAX;
+   g = rand()/(float)RAND_MAX;
+   b = rand()/(float)RAND_MAX;
+
    glPushMatrix();
    glRotatef(rot, 0, 0, 1);
    glScalef(.5, .5, .5);
-   _subset_Rectf( -1, -1, 1, 1 );
+   _subset_Rectf( -1, -1, 1, 1, r, g, b );
    glPopMatrix();
 
 #ifdef FRONTBUFFER
@@ -90,19 +111,12 @@ main(int argc, char *argv[])
       EGL_HEIGHT, 500,
       EGL_NONE
    };
-   const EGLint screenAttribs[] = {
-      EGL_WIDTH, 1024,
-      EGL_HEIGHT, 768,
-      EGL_NONE
-   };
+   EGLint screenAttribs[32];
    EGLModeMESA mode;
    EGLScreenMESA screen;
    EGLint count;
 
-   /*
    EGLDisplay d = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-   */
-   EGLDisplay d = eglGetDisplay("!fb_dri");
    assert(d);
 
    if (!eglInitialize(d, &maj, &min)) {
@@ -112,6 +126,11 @@ main(int argc, char *argv[])
 
    printf("EGL version = %d.%d\n", maj, min);
    printf("EGL_VENDOR = %s\n", eglQueryString(d, EGL_VENDOR));
+   if (!strstr(eglQueryString(d, EGL_EXTENSIONS),
+               "EGL_MESA_screen_surface")) {
+      printf("EGL_MESA_screen_surface is not supported\n");
+      exit(1);
+   }
 
    eglGetConfigs(d, configs, 10, &numConfigs);
    printf("Got %d EGL configs:\n", numConfigs);
@@ -126,6 +145,7 @@ main(int argc, char *argv[])
    eglGetScreensMESA(d, &screen, 1, &count);
    eglGetModesMESA(d, screen, &mode, 1, &count);
 
+   eglBindAPI(EGL_OPENGL_API);
    ctx = eglCreateContext(d, configs[0], EGL_NO_CONTEXT, NULL);
    if (ctx == EGL_NO_CONTEXT) {
       printf("failed to create context\n");
@@ -146,6 +166,13 @@ main(int argc, char *argv[])
 
    b = eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
+   i = 0;
+   screenAttribs[i++] = EGL_WIDTH;
+   eglGetModeAttribMESA(d, mode, EGL_WIDTH, &screenAttribs[i++]);
+   screenAttribs[i++] = EGL_HEIGHT;
+   eglGetModeAttribMESA(d, mode, EGL_HEIGHT, &screenAttribs[i++]);
+   screenAttribs[i] = EGL_NONE;
+
    screen_surf = eglCreateScreenSurfaceMESA(d, configs[0], screenAttribs);
    if (screen_surf == EGL_NO_SURFACE) {
       printf("failed to create screen surface\n");
@@ -161,7 +188,6 @@ main(int argc, char *argv[])
    }
 
    glViewport(0, 0, 1024, 768);
-   glDrawBuffer( GL_FRONT ); 
 
    glClearColor( 0, 
 		 1.0, 

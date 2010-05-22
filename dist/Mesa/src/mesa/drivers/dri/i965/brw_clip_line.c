@@ -39,13 +39,13 @@
 #include "brw_defines.h"
 #include "brw_context.h"
 #include "brw_eu.h"
-#include "brw_util.h"
 #include "brw_clip.h"
 
 
 
 static void brw_clip_line_alloc_regs( struct brw_clip_compile *c )
 {
+   struct intel_context *intel = &c->func.brw->intel;
    GLuint i = 0,j;
 
    /* Register usage is static, precompute here:
@@ -85,6 +85,10 @@ static void brw_clip_line_alloc_regs( struct brw_clip_compile *c )
       i++;
    }
 
+   if (intel->needs_ff_sync) {
+      c->reg.ff_sync = retype(brw_vec1_grf(i, 0), BRW_REGISTER_TYPE_UD);
+      i++;
+   }
 
    c->first_tmp = i;
    c->last_tmp = i;
@@ -122,6 +126,7 @@ static void brw_clip_line_alloc_regs( struct brw_clip_compile *c )
 static void clip_and_emit_line( struct brw_clip_compile *c )
 {
    struct brw_compile *p = &c->func;
+   struct brw_context *brw = p->brw;
    struct brw_indirect vtx0     = brw_indirect(0, 0);
    struct brw_indirect vtx1      = brw_indirect(1, 0);
    struct brw_indirect newvtx0   = brw_indirect(2, 0);
@@ -130,7 +135,7 @@ static void clip_and_emit_line( struct brw_clip_compile *c )
    struct brw_instruction *plane_loop;
    struct brw_instruction *plane_active;
    struct brw_instruction *is_negative;
-   struct brw_instruction *is_neg2;
+   struct brw_instruction *is_neg2 = NULL;
    struct brw_instruction *not_culled;
    struct brw_reg v1_null_ud = retype(vec1(brw_null_reg()), BRW_REGISTER_TYPE_UD);
 
@@ -148,7 +153,7 @@ static void clip_and_emit_line( struct brw_clip_compile *c )
    brw_clip_init_clipmask(c);
 
    /* -ve rhw workaround */
-   if (!BRW_IS_G4X(p->brw)) {
+   if (brw->has_negative_rhw_bug) {
       brw_set_conditionalmod(p, BRW_CONDITIONAL_NZ);
       brw_AND(p, brw_null_reg(), get_element_ud(c->reg.R0, 2),
               brw_imm_ud(1<<20));
@@ -185,7 +190,7 @@ static void clip_and_emit_line( struct brw_clip_compile *c )
               * Both can be negative on GM965/G965 due to RHW workaround
               * if so, this object should be rejected.
               */
-             if (!BRW_IS_G4X(p->brw)) {
+             if (brw->has_negative_rhw_bug) {
                  brw_CMP(p, vec1(brw_null_reg()), BRW_CONDITIONAL_LE, c->reg.dp0, brw_imm_f(0.0));
                  is_neg2 = brw_IF(p, BRW_EXECUTE_1);
                  {
@@ -210,7 +215,7 @@ static void clip_and_emit_line( struct brw_clip_compile *c )
 
              /* If both are positive, do nothing */
              /* Only on GM965/G965 */
-             if (!BRW_IS_G4X(p->brw)) {
+             if (brw->has_negative_rhw_bug) {
                  brw_CMP(p, vec1(brw_null_reg()), BRW_CONDITIONAL_L, c->reg.dp0, brw_imm_f(0.0));
                  is_neg2 = brw_IF(p, BRW_EXECUTE_1);
              }
@@ -225,7 +230,7 @@ static void clip_and_emit_line( struct brw_clip_compile *c )
                  brw_set_predicate_control(p, BRW_PREDICATE_NONE);
              }
 
-             if (!BRW_IS_G4X(p->brw)) {
+             if (brw->has_negative_rhw_bug) {
                  brw_ENDIF(p, is_neg2);
              }
          }
@@ -263,9 +268,14 @@ static void clip_and_emit_line( struct brw_clip_compile *c )
 void brw_emit_line_clip( struct brw_clip_compile *c )
 {
    brw_clip_line_alloc_regs(c);
+   brw_clip_init_ff_sync(c);
 
-   if (c->key.do_flat_shading)
-      brw_clip_copy_colors(c, 0, 1);
+   if (c->key.do_flat_shading) {
+      if (c->key.pv_first)
+         brw_clip_copy_colors(c, 1, 0);
+      else
+         brw_clip_copy_colors(c, 0, 1);
+   }
                 
    clip_and_emit_line(c);
 }

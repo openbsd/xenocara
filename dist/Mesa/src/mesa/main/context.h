@@ -49,23 +49,23 @@
 #define CONTEXT_H
 
 
-#include "glapi/glapi.h"
 #include "imports.h"
 #include "mtypes.h"
+
+
+struct _glapi_table;
 
 
 /** \name Visual-related functions */
 /*@{*/
  
 extern GLvisual *
-_mesa_create_visual( GLboolean rgbFlag,
-                     GLboolean dbFlag,
+_mesa_create_visual( GLboolean dbFlag,
                      GLboolean stereoFlag,
                      GLint redBits,
                      GLint greenBits,
                      GLint blueBits,
                      GLint alphaBits,
-                     GLint indexBits,
                      GLint depthBits,
                      GLint stencilBits,
                      GLint accumRedBits,
@@ -76,14 +76,12 @@ _mesa_create_visual( GLboolean rgbFlag,
 
 extern GLboolean
 _mesa_initialize_visual( GLvisual *v,
-                         GLboolean rgbFlag,
                          GLboolean dbFlag,
                          GLboolean stereoFlag,
                          GLint redBits,
                          GLint greenBits,
                          GLint blueBits,
                          GLint alphaBits,
-                         GLint indexBits,
                          GLint depthBits,
                          GLint stencilBits,
                          GLint accumRedBits,
@@ -129,6 +127,9 @@ _mesa_copy_context(const GLcontext *src, GLcontext *dst, GLuint mask);
 
 
 extern void
+_mesa_check_init_viewport(GLcontext *ctx, GLuint width, GLuint height);
+
+extern GLboolean
 _mesa_make_current( GLcontext *ctx, GLframebuffer *drawBuffer,
                     GLframebuffer *readBuffer );
 
@@ -149,12 +150,29 @@ extern struct _glapi_table *
 _mesa_get_dispatch(GLcontext *ctx);
 
 
+void
+_mesa_set_mvp_with_dp4( GLcontext *ctx,
+                        GLboolean flag );
+
+
+extern GLboolean
+_mesa_valid_to_render(GLcontext *ctx, const char *where);
+
+
 
 /** \name Miscellaneous */
 /*@{*/
 
 extern void
 _mesa_record_error( GLcontext *ctx, GLenum error );
+
+
+extern void
+_mesa_finish(GLcontext *ctx);
+
+extern void
+_mesa_flush(GLcontext *ctx);
+
 
 extern void GLAPIENTRY
 _mesa_Finish( void );
@@ -163,7 +181,6 @@ extern void GLAPIENTRY
 _mesa_Flush( void );
 
 /*@}*/
-
 
 
 /**

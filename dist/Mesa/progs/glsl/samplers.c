@@ -39,9 +39,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <GL/glew.h>
 #include "GL/glut.h"
-#include "readtex.h"
-#include "extfuncs.h"
 #include "shaderutil.h"
 
 
@@ -211,10 +210,18 @@ InitTextures(void)
       for (y = 0; y < stripeSize; y++) {
          for (x = 0; x < size; x++) {
             GLint k = 4 * ((ypos + y) * size + x);
-            texImage[k + 0] = intensity;
-            texImage[k + 1] = intensity;
-            texImage[k + 2] = 0;
-            texImage[k + 3] = 255;
+            if (x < size / 2) {
+               texImage[k + 0] = intensity;
+               texImage[k + 1] = intensity;
+               texImage[k + 2] = 0;
+               texImage[k + 3] = 255;
+            }
+            else {
+               texImage[k + 0] = 255 - intensity;
+               texImage[k + 1] = 0;
+               texImage[k + 2] = 0;
+               texImage[k + 3] = 255;
+            }
          }
       }
 
@@ -245,14 +252,22 @@ GenFragmentShader(GLint numSamplers)
    int s;
 
    p += sprintf(p, "// Generated fragment shader:\n");
+#ifndef SAMPLERS_ARRAY
    for (s = 0; s < numSamplers; s++) {
       p += sprintf(p, "uniform sampler2D tex%d;\n", s);
    }
+#else
+   p += sprintf(p, "uniform sampler2D tex[%d];\n", numSamplers);
+#endif
    p += sprintf(p, "void main()\n");
    p += sprintf(p, "{\n");
    p += sprintf(p, "   vec4 color = vec4(0.0);\n");
    for (s = 0; s < numSamplers; s++) {
+#ifndef SAMPLERS_ARRAY
       p += sprintf(p, "   color += texture2D(tex%d, gl_TexCoord[0].xy);\n", s);
+#else
+      p += sprintf(p, "   color += texture2D(tex[%d], gl_TexCoord[0].xy);\n", s);
+#endif
    }
    p += sprintf(p, "   gl_FragColor = color;\n");
    p += sprintf(p, "}\n");
@@ -282,7 +297,7 @@ CreateProgram(void)
    assert(vertShader);
    program = LinkShaders(vertShader, fragShader);
 
-   glUseProgram_func(program);
+   glUseProgram(program);
 
    free(fragShaderText);
 
@@ -302,11 +317,15 @@ InitProgram(void)
       char uname[10];
       GLint loc;
 
+#ifndef SAMPLERS_ARRAY
       sprintf(uname, "tex%d", s);
-      loc = glGetUniformLocation_func(Program, uname);
+#else
+      sprintf(uname, "tex[%d]", s);
+#endif
+      loc = glGetUniformLocation(Program, uname);
       assert(loc >= 0);
 
-      glUniform1i_func(loc, s);
+      glUniform1i(loc, s);
    }
 }
 
@@ -320,8 +339,6 @@ InitGL(void)
    }
 
    printf("GL_RENDERER = %s\n", (const char *) glGetString(GL_RENDERER));
-
-   GetExtensionFuncs();
 
    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &NumSamplers);
    if (NumSamplers > MAX_SAMPLERS)
@@ -345,6 +362,7 @@ main(int argc, char *argv[])
    glutInitWindowSize(500, 400);
    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
    glutCreateWindow(Demo);
+   glewInit();
    glutReshapeFunc(Reshape);
    glutKeyboardFunc(key);
    glutSpecialFunc(specialkey);

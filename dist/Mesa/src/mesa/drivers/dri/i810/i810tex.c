@@ -28,13 +28,11 @@
 #include "main/simple_list.h"
 #include "main/enums.h"
 #include "main/texstore.h"
-#include "main/texformat.h"
 #include "main/teximage.h"
 #include "main/texobj.h"
 #include "main/colormac.h"
 #include "main/texobj.h"
 #include "main/mm.h"
-#include "swrast/swrast.h"
 
 #include "texmem.h"
 
@@ -43,7 +41,6 @@
 
 #include "i810context.h"
 #include "i810tex.h"
-#include "i810state.h"
 #include "i810ioctl.h"
 
 
@@ -162,7 +159,7 @@ static void i810SetTexFilter(i810ContextPtr imesa,
 
 
 static void
-i810SetTexBorderColor( i810TextureObjectPtr t, GLubyte color[4] )
+i810SetTexBorderColor( i810TextureObjectPtr t, const GLfloat color[4] )
 {
    /* Need a fallback.
     */
@@ -211,7 +208,7 @@ i810AllocTexObj( GLcontext *ctx, struct gl_texture_object *texObj )
       i810SetTexWrapping( t, texObj->WrapS, texObj->WrapT );
       /*i830SetTexMaxAnisotropy( t, texObj->MaxAnisotropy );*/
       i810SetTexFilter( imesa, t, texObj->MinFilter, texObj->MagFilter, bias );
-      i810SetTexBorderColor( t, texObj->_BorderChan );
+      i810SetTexBorderColor( t, texObj->BorderColor.f );
    }
 
    return t;
@@ -252,7 +249,7 @@ static void i810TexParameter( GLcontext *ctx, GLenum target,
       break;
   
    case GL_TEXTURE_BORDER_COLOR:
-      i810SetTexBorderColor( t, tObj->_BorderChan );
+      i810SetTexBorderColor( t, tObj->BorderColor.f );
       break;
 
    case GL_TEXTURE_BASE_LEVEL:
@@ -440,7 +437,7 @@ static void i810DeleteTexture( GLcontext *ctx, struct gl_texture_object *tObj )
  * The i810 only supports 5 texture modes that are useful to Mesa.  That
  * makes this routine pretty simple.
  */
-static const struct gl_texture_format *
+static gl_format
 i810ChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
 			 GLenum format, GLenum type )
 {
@@ -458,9 +455,9 @@ i810ChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
       if ( ((format == GL_BGRA) && (type == GL_UNSIGNED_SHORT_1_5_5_5_REV))
 	   || ((format == GL_RGBA) && (type == GL_UNSIGNED_SHORT_5_5_5_1))
 	   || (internalFormat == GL_RGB5_A1) ) {
-	 return &_mesa_texformat_argb1555;
+	 return MESA_FORMAT_ARGB1555;
       }
-      return &_mesa_texformat_argb4444;
+      return MESA_FORMAT_ARGB4444;
 
    case 3:
    case GL_RGB:
@@ -472,7 +469,7 @@ i810ChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_RGB10:
    case GL_RGB12:
    case GL_RGB16:
-      return &_mesa_texformat_rgb565;
+      return MESA_FORMAT_RGB565;
 
    case GL_ALPHA:
    case GL_ALPHA4:
@@ -502,21 +499,21 @@ i810ChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_INTENSITY12:
    case GL_INTENSITY16:
    case GL_COMPRESSED_INTENSITY:
-      return &_mesa_texformat_al88;
+      return MESA_FORMAT_AL88;
 
    case GL_YCBCR_MESA:
       if (type == GL_UNSIGNED_SHORT_8_8_MESA ||
 	  type == GL_UNSIGNED_BYTE)
-         return &_mesa_texformat_ycbcr;
+         return MESA_FORMAT_YCBCR;
       else
-         return &_mesa_texformat_ycbcr_rev;
+         return MESA_FORMAT_YCBCR_REV;
 
    default:
       fprintf(stderr, "unexpected texture format in %s\n", __FUNCTION__);
-      return NULL;
+      return MESA_FORMAT_NONE;
    }
 
-   return NULL; /* never get here */
+   return MESA_FORMAT_NONE; /* never get here */
 }
 
 /**

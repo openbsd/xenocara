@@ -3,6 +3,7 @@
 
 
 #include "egltypedefs.h"
+#include "egldisplay.h"
 
 
 /**
@@ -10,108 +11,174 @@
  */
 struct _egl_surface
 {
-   EGLSurface Handle;  /* The public/opaque handle which names this object */
+   /* A surface is a display resource */
+   _EGLResource Resource;
+
+   /* The context that is currently bound to the surface */
+   _EGLContext *CurrentContext;
+
    _EGLConfig *Config;
 
-   /* May need reference counting here */
-   EGLBoolean IsBound;
-   EGLBoolean DeletePending;
-
    EGLint Type; /* one of EGL_WINDOW_BIT, EGL_PIXMAP_BIT or EGL_PBUFFER_BIT */
+
+   /* attributes set by attribute list */
    EGLint Width, Height;
-   EGLint TextureFormat, TextureTarget;
-   EGLint MipmapTexture, MipmapLevel;
-   EGLint SwapInterval;
+   EGLenum TextureFormat;
+   EGLenum TextureTarget;
+   EGLBoolean MipmapTexture;
+   EGLBoolean LargestPbuffer;
+   EGLenum RenderBuffer;
+   EGLenum VGAlphaFormat;
+   EGLenum VGColorspace;
 
-   /* If type == EGL_SCREEN_BIT: */
-   EGLint VisibleRefCount; /* number of screens I'm displayed on */
+   /* attributes set by eglSurfaceAttrib */
+   EGLint MipmapLevel;
+   EGLenum MultisampleResolve;
+   EGLenum SwapBehavior;
 
-#ifdef EGL_VERSION_1_2
-   EGLint SwapBehavior; /* one of EGL_BUFFER_PRESERVED/DESTROYED */
    EGLint HorizontalResolution, VerticalResolution;
    EGLint AspectRatio;
-   EGLint RenderBuffer; /* EGL_BACK_BUFFER or EGL_SINGLE_BUFFER */
-   EGLint AlphaFormat; /* EGL_ALPHA_FORMAT_NONPRE or EGL_ALPHA_FORMAT_PRE */
-   EGLint Colorspace; /* EGL_COLORSPACE_sRGB or EGL_COLORSPACE_LINEAR */
-#endif /* EGL_VERSION_1_2 */
+
+   EGLint SwapInterval;
+
+   /* True if the surface is bound to an OpenGL ES texture */
+   EGLBoolean BoundToTexture;
 };
 
 
+PUBLIC EGLBoolean
+_eglInitSurface(_EGLSurface *surf, _EGLDisplay *dpy, EGLint type,
+                _EGLConfig *config, const EGLint *attrib_list);
+
+
 extern EGLBoolean
-_eglInitSurface(_EGLDriver *drv, EGLDisplay dpy,
-                _EGLSurface *surf, EGLint type, EGLConfig config,
-                const EGLint *attrib_list);
+_eglSwapBuffers(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf);
 
 
-extern void
-_eglSaveSurface(_EGLSurface *surf);
+extern EGLBoolean
+_eglCopyBuffers(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf, EGLNativePixmapType target);
 
 
-extern void
-_eglRemoveSurface(_EGLSurface *surf);
+extern EGLBoolean
+_eglQuerySurface(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf, EGLint attribute, EGLint *value);
 
 
 extern _EGLSurface *
-_eglLookupSurface(EGLSurface surf);
- 
+_eglCreateWindowSurface(_EGLDriver *drv, _EGLDisplay *dpy, _EGLConfig *conf, EGLNativeWindowType window, const EGLint *attrib_list);
+
 
 extern _EGLSurface *
-_eglGetCurrentSurface(EGLint readdraw);
+_eglCreatePixmapSurface(_EGLDriver *drv, _EGLDisplay *dpy, _EGLConfig *conf, EGLNativePixmapType pixmap, const EGLint *attrib_list);
+
+
+extern _EGLSurface *
+_eglCreatePbufferSurface(_EGLDriver *drv, _EGLDisplay *dpy, _EGLConfig *conf, const EGLint *attrib_list);
 
 
 extern EGLBoolean
-_eglSwapBuffers(_EGLDriver *drv, EGLDisplay dpy, EGLSurface draw);
+_eglDestroySurface(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf);
 
 
 extern EGLBoolean
-_eglCopyBuffers(_EGLDriver *drv, EGLDisplay dpy, EGLSurface surface, NativePixmapType target);
+_eglSurfaceAttrib(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf, EGLint attribute, EGLint value);
 
 
 extern EGLBoolean
-_eglQuerySurface(_EGLDriver *drv, EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint *value);
-
-
-extern EGLSurface
-_eglCreateWindowSurface(_EGLDriver *drv, EGLDisplay dpy, EGLConfig config, NativeWindowType window, const EGLint *attrib_list);
-
-
-extern EGLSurface
-_eglCreatePixmapSurface(_EGLDriver *drv, EGLDisplay dpy, EGLConfig config, NativePixmapType pixmap, const EGLint *attrib_list);
-
-
-extern EGLSurface
-_eglCreatePbufferSurface(_EGLDriver *drv, EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list);
+_eglBindTexImage(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf, EGLint buffer);
 
 
 extern EGLBoolean
-_eglDestroySurface(_EGLDriver *drv, EGLDisplay dpy, EGLSurface surface);
+_eglReleaseTexImage(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf, EGLint buffer);
 
 
 extern EGLBoolean
-_eglSurfaceAttrib(_EGLDriver *drv, EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint value);
-
-
-extern EGLBoolean
-_eglBindTexImage(_EGLDriver *drv, EGLDisplay dpy, EGLSurface surface, EGLint buffer);
-
-
-extern EGLBoolean
-_eglReleaseTexImage(_EGLDriver *drv, EGLDisplay dpy, EGLSurface surface, EGLint buffer);
-
-
-extern EGLBoolean
-_eglSwapInterval(_EGLDriver *drv, EGLDisplay dpy, EGLint interval);
+_eglSwapInterval(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surf, EGLint interval);
 
 
 #ifdef EGL_VERSION_1_2
 
-extern EGLSurface
-_eglCreatePbufferFromClientBuffer(_EGLDriver *drv, EGLDisplay dpy,
+extern _EGLSurface *
+_eglCreatePbufferFromClientBuffer(_EGLDriver *drv, _EGLDisplay *dpy,
                                   EGLenum buftype, EGLClientBuffer buffer,
-                                  EGLConfig config, const EGLint *attrib_list);
+                                  _EGLConfig *conf, const EGLint *attrib_list);
 
 #endif /* EGL_VERSION_1_2 */
 
+
+/**
+ * Return true if there is a context bound to the surface.
+ *
+ * The binding is considered a reference to the surface.  Drivers should not
+ * destroy a surface when it is bound.
+ */
+static INLINE EGLBoolean
+_eglIsSurfaceBound(_EGLSurface *surf)
+{
+   return (surf->CurrentContext != NULL);
+}
+
+
+/**
+ * Link a surface to a display and return the handle of the link.
+ * The handle can be passed to client directly.
+ */
+static INLINE EGLSurface
+_eglLinkSurface(_EGLSurface *surf, _EGLDisplay *dpy)
+{
+   _eglLinkResource(&surf->Resource, _EGL_RESOURCE_SURFACE, dpy);
+   return (EGLSurface) surf;
+}
+
+
+/**
+ * Unlink a linked surface from its display.
+ * Accessing an unlinked surface should generate EGL_BAD_SURFACE error.
+ */
+static INLINE void
+_eglUnlinkSurface(_EGLSurface *surf)
+{
+   _eglUnlinkResource(&surf->Resource, _EGL_RESOURCE_SURFACE);
+}
+
+
+/**
+ * Lookup a handle to find the linked surface.
+ * Return NULL if the handle has no corresponding linked surface.
+ */
+static INLINE _EGLSurface *
+_eglLookupSurface(EGLSurface surface, _EGLDisplay *dpy)
+{
+   _EGLSurface *surf = (_EGLSurface *) surface;
+   if (!dpy || !_eglCheckResource((void *) surf, _EGL_RESOURCE_SURFACE, dpy))
+      surf = NULL;
+   return surf;
+}
+
+
+/**
+ * Return the handle of a linked surface, or EGL_NO_SURFACE.
+ */
+static INLINE EGLSurface
+_eglGetSurfaceHandle(_EGLSurface *surf)
+{
+   _EGLResource *res = (_EGLResource *) surf;
+   return (res && _eglIsResourceLinked(res)) ?
+      (EGLSurface) surf : EGL_NO_SURFACE;
+}
+
+
+/**
+ * Return true if the surface is linked to a display.
+ *
+ * The link is considered a reference to the surface (the display is owning the
+ * surface).  Drivers should not destroy a surface when it is linked.
+ */
+static INLINE EGLBoolean
+_eglIsSurfaceLinked(_EGLSurface *surf)
+{
+   _EGLResource *res = (_EGLResource *) surf;
+   return (res && _eglIsResourceLinked(res));
+}
 
 
 #endif /* EGLSURFACE_INCLUDED */

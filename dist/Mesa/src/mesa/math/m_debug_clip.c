@@ -67,7 +67,8 @@ static GLvector4f *ref_cliptest_points4( GLvector4f *clip_vec,
 					 GLvector4f *proj_vec,
 					 GLubyte clipMask[],
 					 GLubyte *orMask,
-					 GLubyte *andMask )
+					 GLubyte *andMask,
+					 GLboolean viewport_z_clip )
 {
    const GLuint stride = clip_vec->stride;
    const GLuint count = clip_vec->count;
@@ -87,8 +88,10 @@ static GLvector4f *ref_cliptest_points4( GLvector4f *clip_vec,
       if (  cx + cw < 0 ) mask |= CLIP_LEFT_BIT;
       if ( -cy + cw < 0 ) mask |= CLIP_TOP_BIT;
       if (  cy + cw < 0 ) mask |= CLIP_BOTTOM_BIT;
-      if ( -cz + cw < 0 ) mask |= CLIP_FAR_BIT;
-      if (  cz + cw < 0 ) mask |= CLIP_NEAR_BIT;
+      if (viewport_z_clip) {
+	 if ( -cz + cw < 0 ) mask |= CLIP_FAR_BIT;
+	 if (  cz + cw < 0 ) mask |= CLIP_NEAR_BIT;
+      }
       clipMask[i] = mask;
       if ( mask ) {
 	 c++;
@@ -122,7 +125,8 @@ static GLvector4f *ref_cliptest_points3( GLvector4f *clip_vec,
 					 GLvector4f *proj_vec,
 					 GLubyte clipMask[],
 					 GLubyte *orMask,
-					 GLubyte *andMask )
+					 GLubyte *andMask,
+                                         GLboolean viewport_z_clip )
 {
    const GLuint stride = clip_vec->stride;
    const GLuint count = clip_vec->count;
@@ -138,8 +142,10 @@ static GLvector4f *ref_cliptest_points3( GLvector4f *clip_vec,
       else if ( cx < -1.0 )	mask |= CLIP_LEFT_BIT;
       if ( cy >  1.0 )		mask |= CLIP_TOP_BIT;
       else if ( cy < -1.0 )	mask |= CLIP_BOTTOM_BIT;
-      if ( cz >  1.0 )		mask |= CLIP_FAR_BIT;
-      else if ( cz < -1.0 )	mask |= CLIP_NEAR_BIT;
+      if (viewport_z_clip) {
+         if ( cz >  1.0 )		mask |= CLIP_FAR_BIT;
+         else if ( cz < -1.0 )	mask |= CLIP_NEAR_BIT;
+      }
       clipMask[i] = mask;
       tmpOrMask |= mask;
       tmpAndMask &= mask;
@@ -154,7 +160,8 @@ static GLvector4f * ref_cliptest_points2( GLvector4f *clip_vec,
 					  GLvector4f *proj_vec,
 					  GLubyte clipMask[],
 					  GLubyte *orMask,
-					  GLubyte *andMask )
+					  GLubyte *andMask,
+                                          GLboolean viewport_z_clip )
 {
    const GLuint stride = clip_vec->stride;
    const GLuint count = clip_vec->count;
@@ -163,6 +170,9 @@ static GLvector4f * ref_cliptest_points2( GLvector4f *clip_vec,
    GLubyte tmpOrMask = *orMask;
    GLubyte tmpAndMask = *andMask;
    GLuint i;
+
+   (void) viewport_z_clip;
+
    for ( i = 0 ; i < count ; i++, STRIDE_F(from, stride) ) {
       const GLfloat cx = from[0], cy = from[1];
       GLubyte mask = 0;
@@ -208,6 +218,7 @@ static int test_cliptest_function( clip_func func, int np,
 #ifdef  RUN_DEBUG_BENCHMARK
    int cycle_i;                /* the counter for the benchmarks we run */
 #endif
+   GLboolean viewport_z_clip = GL_TRUE;
 
    (void) cycles;
 
@@ -247,32 +258,32 @@ static int test_cliptest_function( clip_func func, int np,
    dco = rco = 0;
    dca = rca = CLIP_FRUSTUM_BITS;
 
-   ref_cliptest[psize]( source, ref, rm, &rco, &rca );
+   ref_cliptest[psize]( source, ref, rm, &rco, &rca, viewport_z_clip );
 
    if ( mesa_profile ) {
       BEGIN_RACE( *cycles );
-      func( source, dest, dm, &dco, &dca );
+      func( source, dest, dm, &dco, &dca, viewport_z_clip );
       END_RACE( *cycles );
    }
    else {
-      func( source, dest, dm, &dco, &dca );
+      func( source, dest, dm, &dco, &dca, viewport_z_clip );
    }
 
    if ( dco != rco ) {
-      _mesa_printf( "\n-----------------------------\n" );
-      _mesa_printf( "dco = 0x%02x   rco = 0x%02x\n", dco, rco );
+      printf( "\n-----------------------------\n" );
+      printf( "dco = 0x%02x   rco = 0x%02x\n", dco, rco );
       return 0;
    }
    if ( dca != rca ) {
-      _mesa_printf( "\n-----------------------------\n" );
-      _mesa_printf( "dca = 0x%02x   rca = 0x%02x\n", dca, rca );
+      printf( "\n-----------------------------\n" );
+      printf( "dca = 0x%02x   rca = 0x%02x\n", dca, rca );
       return 0;
    }
    for ( i = 0 ; i < TEST_COUNT ; i++ ) {
       if ( dm[i] != rm[i] ) {
-	 _mesa_printf( "\n-----------------------------\n" );
-	 _mesa_printf( "(i = %i)\n", i );
-	 _mesa_printf( "dm = 0x%02x   rm = 0x%02x\n", dm[i], rm[i] );
+	 printf( "\n-----------------------------\n" );
+	 printf( "(i = %i)\n", i );
+	 printf( "dm = 0x%02x   rm = 0x%02x\n", dm[i], rm[i] );
 	 return 0;
       }
    }
@@ -286,19 +297,19 @@ static int test_cliptest_function( clip_func func, int np,
    for ( i = 0 ; i < TEST_COUNT ; i++ ) {
       for ( j = 0 ; j < 4 ; j++ ) {
          if ( significand_match( d[i][j], r[i][j] ) < REQUIRED_PRECISION ) {
-            _mesa_printf( "\n-----------------------------\n" );
-            _mesa_printf( "(i = %i, j = %i)  dm = 0x%02x   rm = 0x%02x\n",
+            printf( "\n-----------------------------\n" );
+            printf( "(i = %i, j = %i)  dm = 0x%02x   rm = 0x%02x\n",
 		    i, j, dm[i], rm[i] );
-            _mesa_printf( "%f \t %f \t [diff = %e - %i bit missed]\n",
+            printf( "%f \t %f \t [diff = %e - %i bit missed]\n",
 		    d[i][0], r[i][0], r[i][0]-d[i][0],
 		    MAX_PRECISION - significand_match( d[i][0], r[i][0] ) );
-            _mesa_printf( "%f \t %f \t [diff = %e - %i bit missed]\n",
+            printf( "%f \t %f \t [diff = %e - %i bit missed]\n",
 		    d[i][1], r[i][1], r[i][1]-d[i][1],
 		    MAX_PRECISION - significand_match( d[i][1], r[i][1] ) );
-            _mesa_printf( "%f \t %f \t [diff = %e - %i bit missed]\n",
+            printf( "%f \t %f \t [diff = %e - %i bit missed]\n",
 		    d[i][2], r[i][2], r[i][2]-d[i][2],
 		    MAX_PRECISION - significand_match( d[i][2], r[i][2] ) );
-            _mesa_printf( "%f \t %f \t [diff = %e - %i bit missed]\n",
+            printf( "%f \t %f \t [diff = %e - %i bit missed]\n",
 		    d[i][3], r[i][3], r[i][3]-d[i][3],
 		    MAX_PRECISION - significand_match( d[i][3], r[i][3] ) );
             return 0;
@@ -324,19 +335,19 @@ void _math_test_all_cliptest_functions( char *description )
    if ( mesa_profile ) {
       if ( !counter_overhead ) {
 	 INIT_COUNTER();
-	 _mesa_printf( "counter overhead: %ld cycles\n\n", counter_overhead );
+	 printf( "counter overhead: %ld cycles\n\n", counter_overhead );
       }
-      _mesa_printf( "cliptest results after hooking in %s functions:\n", description );
+      printf( "cliptest results after hooking in %s functions:\n", description );
    }
 #endif
 
 #ifdef RUN_DEBUG_BENCHMARK
    if ( mesa_profile ) {
-      _mesa_printf( "\n\t" );
+      printf( "\n\t" );
       for ( psize = 2 ; psize <= 4 ; psize++ ) {
-	 _mesa_printf( " p%d\t", psize );
+	 printf( " p%d\t", psize );
       }
-      _mesa_printf( "\n--------------------------------------------------------\n\t" );
+      printf( "\n--------------------------------------------------------\n\t" );
    }
 #endif
 
@@ -347,23 +358,23 @@ void _math_test_all_cliptest_functions( char *description )
 
 	 if ( test_cliptest_function( func, np, psize, cycles ) == 0 ) {
 	    char buf[100];
-	    _mesa_sprintf( buf, "%s[%d] failed test (%s)",
+	    sprintf( buf, "%s[%d] failed test (%s)",
 		     cnames[np], psize, description );
 	    _mesa_problem( NULL, buf );
 	 }
 #ifdef RUN_DEBUG_BENCHMARK
 	 if ( mesa_profile )
-	    _mesa_printf( " %li\t", benchmark_tab[np][psize-1] );
+	    printf( " %li\t", benchmark_tab[np][psize-1] );
 #endif
       }
 #ifdef RUN_DEBUG_BENCHMARK
       if ( mesa_profile )
-	 _mesa_printf( " | [%s]\n\t", cstrings[np] );
+	 printf( " | [%s]\n\t", cstrings[np] );
 #endif
    }
 #ifdef RUN_DEBUG_BENCHMARK
    if ( mesa_profile )
-      _mesa_printf( "\n" );
+      printf( "\n" );
 #endif
 }
 

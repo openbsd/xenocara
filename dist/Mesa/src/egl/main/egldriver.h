@@ -5,20 +5,35 @@
 #include "egltypedefs.h"
 #include "eglapi.h"
 
-/* should probably use a dynamic-length string, but this will do */
-#define MAX_EXTENSIONS_LEN 1000
+
+/**
+ * Define an inline driver typecast function.
+ *
+ * Note that this macro defines a function and should not be ended with a
+ * semicolon when used.
+ */
+#define _EGL_DRIVER_TYPECAST(drvtype, egltype, code)           \
+   static INLINE struct drvtype *drvtype(const egltype *obj)   \
+   { return (struct drvtype *) code; }
 
 
 /**
- * Optional EGL extensions info.
+ * Define the driver typecast functions for _EGLDriver, _EGLDisplay,
+ * _EGLContext, _EGLSurface, and _EGLConfig.
+ *
+ * Note that this macro defines several functions and should not be ended with
+ * a semicolon when used.
  */
-struct _egl_extensions
-{
-   EGLBoolean MESA_screen_surface;
-   EGLBoolean MESA_copy_context;
+#define _EGL_DRIVER_STANDARD_TYPECASTS(drvname)                            \
+   _EGL_DRIVER_TYPECAST(drvname ## _driver, _EGLDriver, obj)               \
+   /* note that this is not a direct cast */                               \
+   _EGL_DRIVER_TYPECAST(drvname ## _display, _EGLDisplay, obj->DriverData) \
+   _EGL_DRIVER_TYPECAST(drvname ## _context, _EGLContext, obj)             \
+   _EGL_DRIVER_TYPECAST(drvname ## _surface, _EGLSurface, obj)             \
+   _EGL_DRIVER_TYPECAST(drvname ## _config, _EGLConfig, obj)
 
-   char String[MAX_EXTENSIONS_LEN];
-};
+
+typedef _EGLDriver *(*_EGLMain_t)(const char *args);
 
 
 /**
@@ -26,56 +41,59 @@ struct _egl_extensions
  */
 struct _egl_driver
 {
-   EGLBoolean Initialized; /* set by driver after initialized */
+   void *LibHandle; /**< dlopen handle */
+   const char *Path;  /**< path to this driver */
+   const char *Args;  /**< args to load this driver */
 
-   void *LibHandle; /* dlopen handle */
+   const char *Name;  /**< name of this driver */
 
-   _EGLDisplay *Display;
+   /**
+    * Probe a display and return a score.
+    *
+    * Roughly,
+    *  50 means the driver supports the display;
+    *  90 means the driver can accelerate the display;
+    * 100 means a perfect match.
+    */
+   EGLint (*Probe)(_EGLDriver *drv, _EGLDisplay *dpy);
 
-   int ABIversion;
-   int APImajor, APIminor; /* returned through eglInitialize */
-   const char *ClientAPIs;
+   /**
+    * Release the driver resource.
+    *
+    * It is called before dlclose().
+    */
+   void (*Unload)(_EGLDriver *drv);
 
-   _EGLAPI API;
-
-   _EGLExtensions Extensions;
+   _EGLAPI API;  /**< EGL API dispatch table */
 };
 
 
-extern _EGLDriver *_eglMain(_EGLDisplay *dpy);
+PUBLIC _EGLDriver *
+_eglMain(const char *args);
 
 
 extern _EGLDriver *
-_eglChooseDriver(EGLDisplay dpy);
-
-
-extern _EGLDriver *
-_eglOpenDriver(_EGLDisplay *dpy, const char *driverName);
+_eglMatchDriver(_EGLDisplay *dpy);
 
 
 extern EGLBoolean
-_eglCloseDriver(_EGLDriver *drv, EGLDisplay dpy);
-
-
-extern _EGLDriver *
-_eglLookupDriver(EGLDisplay d);
+_eglPreloadDrivers(void);
 
 
 extern void
+_eglUnloadDrivers(void);
+
+
+PUBLIC void
 _eglInitDriverFallbacks(_EGLDriver *drv);
 
 
-extern const char *
-_eglQueryString(_EGLDriver *drv, EGLDisplay dpy, EGLint name);
+PUBLIC void
+_eglSetProbeCache(EGLint key, const void *val);
 
 
-extern EGLBoolean
-_eglWaitGL(_EGLDriver *drv, EGLDisplay dpy);
-
-
-extern EGLBoolean
-_eglWaitNative(_EGLDriver *drv, EGLDisplay dpy, EGLint engine);
-
+PUBLIC const void *
+_eglGetProbeCache(EGLint key);
 
 
 #endif /* EGLDRIVER_INCLUDED */

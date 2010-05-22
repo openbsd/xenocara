@@ -71,9 +71,6 @@
 /** \def COPY_CHAN4
  * Copy a GLchan[4] array */
 
-/** \def CHAN_PRODUCT
- * Scaled product (usually approximated) between two GLchan arguments */
-
 #if CHAN_BITS == 8
 
 #define BYTE_TO_CHAN(b)   ((b) < 0 ? 0 : (GLchan) (b))
@@ -91,8 +88,6 @@
 
 #define COPY_CHAN4(DST, SRC)  COPY_4UBV(DST, SRC)
 
-#define CHAN_PRODUCT(a, b)  ((GLubyte) (((GLint)(a) * ((GLint)(b) + 1)) >> 8))
-
 #elif CHAN_BITS == 16
 
 #define BYTE_TO_CHAN(b)   ((b) < 0 ? 0 : (((GLchan) (b)) * 516))
@@ -109,8 +104,6 @@
 #define UNCLAMPED_FLOAT_TO_CHAN(c, f)  UNCLAMPED_FLOAT_TO_USHORT(c, f)
 
 #define COPY_CHAN4(DST, SRC)  COPY_4V(DST, SRC)
-
-#define CHAN_PRODUCT(a, b) ((GLchan) ((((GLuint) (a)) * ((GLuint) (b))) / 65535))
 
 #elif CHAN_BITS == 32
 
@@ -130,8 +123,6 @@
 
 #define COPY_CHAN4(DST, SRC)  COPY_4V(DST, SRC)
 
-#define CHAN_PRODUCT(a, b)    ((a) * (b))
-
 #else
 
 #error unexpected CHAN_BITS size
@@ -149,9 +140,9 @@
  */
 #define UNCLAMPED_FLOAT_TO_RGB_CHAN(dst, f)	\
 do {						\
-   UNCLAMPED_FLOAT_TO_CHAN(dst[0], f[0]);	\
-   UNCLAMPED_FLOAT_TO_CHAN(dst[1], f[1]);	\
-   UNCLAMPED_FLOAT_TO_CHAN(dst[2], f[2]);	\
+   UNCLAMPED_FLOAT_TO_CHAN((dst)[0], (f)[0]);	\
+   UNCLAMPED_FLOAT_TO_CHAN((dst)[1], (f)[1]);	\
+   UNCLAMPED_FLOAT_TO_CHAN((dst)[2], (f)[2]);	\
 } while (0)
 
 
@@ -165,10 +156,10 @@ do {						\
  */
 #define UNCLAMPED_FLOAT_TO_RGBA_CHAN(dst, f)	\
 do {						\
-   UNCLAMPED_FLOAT_TO_CHAN(dst[0], f[0]);	\
-   UNCLAMPED_FLOAT_TO_CHAN(dst[1], f[1]);	\
-   UNCLAMPED_FLOAT_TO_CHAN(dst[2], f[2]);	\
-   UNCLAMPED_FLOAT_TO_CHAN(dst[3], f[3]);	\
+   UNCLAMPED_FLOAT_TO_CHAN((dst)[0], (f)[0]);	\
+   UNCLAMPED_FLOAT_TO_CHAN((dst)[1], (f)[1]);	\
+   UNCLAMPED_FLOAT_TO_CHAN((dst)[2], (f)[2]);	\
+   UNCLAMPED_FLOAT_TO_CHAN((dst)[3], (f)[3]);	\
 } while (0)
 
 
@@ -218,6 +209,12 @@ do {						\
 
 #define PACK_COLOR_88_REV( L, A )					\
    (((A) << 8) | (L))
+
+#define PACK_COLOR_1616( L, A )						\
+   (((L) << 16) | (A))
+
+#define PACK_COLOR_1616_REV( L, A )					\
+   (((A) << 16) | (L))
 
 #define PACK_COLOR_332( R, G, B )					\
    (((R) & 0xe0) | (((G) & 0xe0) >> 3) | (((B) & 0xc0) >> 6))

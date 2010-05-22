@@ -34,8 +34,6 @@
 #include "brw_context.h"
 #include "brw_wm.h"
 
-#define SATURATE (1<<5)
-
 /* Not quite sure how correct this is - need to understand horiz
  * vs. vertical strides a little better.
  */
@@ -45,6 +43,7 @@ static INLINE struct brw_reg sechalf( struct brw_reg reg )
       reg.nr++;
    return reg;
 }
+
 
 /* Payload R0:
  *
@@ -62,44 +61,50 @@ static INLINE struct brw_reg sechalf( struct brw_reg reg )
  * R1.8 -- ?
  */
 
-
-static void emit_pixel_xy(struct brw_compile *p,
-			  const struct brw_reg *dst,
-			  GLuint mask,
-			  const struct brw_reg *arg0)
+void emit_pixel_xy(struct brw_wm_compile *c,
+		   const struct brw_reg *dst,
+		   GLuint mask)
 {
+   struct brw_compile *p = &c->func;
    struct brw_reg r1 = brw_vec1_grf(1, 0);
    struct brw_reg r1_uw = retype(r1, BRW_REGISTER_TYPE_UW);
+   struct brw_reg dst0_uw, dst1_uw;
 
+   brw_push_insn_state(p);
    brw_set_compression_control(p, BRW_COMPRESSION_NONE);
+
+   if (c->dispatch_width == 16) {
+      dst0_uw = vec16(retype(dst[0], BRW_REGISTER_TYPE_UW));
+      dst1_uw = vec16(retype(dst[1], BRW_REGISTER_TYPE_UW));
+   } else {
+      dst0_uw = vec8(retype(dst[0], BRW_REGISTER_TYPE_UW));
+      dst1_uw = vec8(retype(dst[1], BRW_REGISTER_TYPE_UW));
+   }
 
    /* Calculate pixel centers by adding 1 or 0 to each of the
     * micro-tile coordinates passed in r1.
     */
    if (mask & WRITEMASK_X) {
       brw_ADD(p,
-	      vec16(retype(dst[0], BRW_REGISTER_TYPE_UW)),
+	      dst0_uw,
 	      stride(suboffset(r1_uw, 4), 2, 4, 0),
 	      brw_imm_v(0x10101010));
    }
 
    if (mask & WRITEMASK_Y) {
       brw_ADD(p,
-	      vec16(retype(dst[1], BRW_REGISTER_TYPE_UW)),
+	      dst1_uw,
 	      stride(suboffset(r1_uw,5), 2, 4, 0),
 	      brw_imm_v(0x11001100));
    }
-
-   brw_set_compression_control(p, BRW_COMPRESSION_COMPRESSED);
+   brw_pop_insn_state(p);
 }
 
 
-
-static void emit_delta_xy(struct brw_compile *p,
-			  const struct brw_reg *dst,
-			  GLuint mask,
-			  const struct brw_reg *arg0,
-			  const struct brw_reg *arg1)
+void emit_delta_xy(struct brw_compile *p,
+		   const struct brw_reg *dst,
+		   GLuint mask,
+		   const struct brw_reg *arg0)
 {
    struct brw_reg r1 = brw_vec1_grf(1, 0);
 
@@ -122,10 +127,10 @@ static void emit_delta_xy(struct brw_compile *p,
    }
 }
 
-static void emit_wpos_xy(struct brw_wm_compile *c,
-			 const struct brw_reg *dst,
-			 GLuint mask,
-			 const struct brw_reg *arg0)
+void emit_wpos_xy(struct brw_wm_compile *c,
+		  const struct brw_reg *dst,
+		  GLuint mask,
+		  const struct brw_reg *arg0)
 {
    struct brw_compile *p = &c->func;
 
@@ -133,29 +138,55 @@ static void emit_wpos_xy(struct brw_wm_compile *c,
     * X and Y channels.
     */
    if (mask & WRITEMASK_X) {
-      /* X' = X - origin */
-      brw_ADD(p,
-	      dst[0],
-	      retype(arg0[0], BRW_REGISTER_TYPE_W),
-	      brw_imm_d(0 - c->key.origin_x));
+      if (c->fp->program.PixelCenterInteger) {
+	 /* X' = X */
+	 brw_MOV(p,
+		 dst[0],
+		 retype(arg0[0], BRW_REGISTER_TYPE_W));
+      } else {
+	 /* X' = X + 0.5 */
+	 brw_ADD(p,
+		 dst[0],
+		 retype(arg0[0], BRW_REGISTER_TYPE_W),
+		 brw_imm_f(0.5));
+      }
    }
 
    if (mask & WRITEMASK_Y) {
-      /* Y' = height - (Y - origin_y) = height + origin_y - Y */
-      brw_ADD(p,
-	      dst[1],
-	      negate(retype(arg0[1], BRW_REGISTER_TYPE_W)),
-	      brw_imm_d(c->key.origin_y + c->key.drawable_height - 1));
+      if (c->fp->program.OriginUpperLeft) {
+	 if (c->fp->program.PixelCenterInteger) {
+	    /* Y' = Y */
+	    brw_MOV(p,
+		    dst[1],
+		    retype(arg0[1], BRW_REGISTER_TYPE_W));
+	 } else {
+	    /* Y' = Y + 0.5 */
+	    brw_ADD(p,
+		    dst[1],
+		    retype(arg0[1], BRW_REGISTER_TYPE_W),
+		    brw_imm_f(0.5));
+	 }
+      } else {
+	 float center_offset = c->fp->program.PixelCenterInteger ? 0.0 : 0.5;
+
+	 /* Y' = (height - 1) - Y + center */
+	 brw_ADD(p,
+		 dst[1],
+		 negate(retype(arg0[1], BRW_REGISTER_TYPE_W)),
+		 brw_imm_f(c->key.drawable_height - 1 + center_offset));
+      }
    }
 }
 
 
-static void emit_pixel_w( struct brw_compile *p,
-			  const struct brw_reg *dst,
-			  GLuint mask,
-			  const struct brw_reg *arg0,
-			  const struct brw_reg *deltas)
+void emit_pixel_w(struct brw_wm_compile *c,
+		  const struct brw_reg *dst,
+		  GLuint mask,
+		  const struct brw_reg *arg0,
+		  const struct brw_reg *deltas)
 {
+   struct brw_compile *p = &c->func;
+
    /* Don't need this if all you are doing is interpolating color, for
     * instance.
     */
@@ -169,21 +200,29 @@ static void emit_pixel_w( struct brw_compile *p,
       brw_MAC(p, brw_message_reg(2), suboffset(interp3, 1), deltas[1]);
 
       /* Calc w */
-      brw_math_16( p, dst[3],
-		   BRW_MATH_FUNCTION_INV,
-		   BRW_MATH_SATURATE_NONE,
-		   2, brw_null_reg(),
-		   BRW_MATH_PRECISION_FULL);
+      if (c->dispatch_width == 16) {
+	 brw_math_16(p, dst[3],
+		     BRW_MATH_FUNCTION_INV,
+		     BRW_MATH_SATURATE_NONE,
+		     2, brw_null_reg(),
+		     BRW_MATH_PRECISION_FULL);
+      } else {
+	 brw_math(p, dst[3],
+		  BRW_MATH_FUNCTION_INV,
+		  BRW_MATH_SATURATE_NONE,
+		  2, brw_null_reg(),
+		  BRW_MATH_DATA_VECTOR,
+		  BRW_MATH_PRECISION_FULL);
+      }
    }
 }
 
 
-
-static void emit_linterp( struct brw_compile *p, 
-			 const struct brw_reg *dst,
-			 GLuint mask,
-			 const struct brw_reg *arg0,
-			 const struct brw_reg *deltas )
+void emit_linterp(struct brw_compile *p,
+		  const struct brw_reg *dst,
+		  GLuint mask,
+		  const struct brw_reg *arg0,
+		  const struct brw_reg *deltas)
 {
    struct brw_reg interp[4];
    GLuint nr = arg0[0].nr;
@@ -203,12 +242,12 @@ static void emit_linterp( struct brw_compile *p,
 }
 
 
-static void emit_pinterp( struct brw_compile *p, 
-			  const struct brw_reg *dst,
-			  GLuint mask,
-			  const struct brw_reg *arg0,
-			  const struct brw_reg *deltas,
-			  const struct brw_reg *w)
+void emit_pinterp(struct brw_compile *p,
+		  const struct brw_reg *dst,
+		  GLuint mask,
+		  const struct brw_reg *arg0,
+		  const struct brw_reg *deltas,
+		  const struct brw_reg *w)
 {
    struct brw_reg interp[4];
    GLuint nr = arg0[0].nr;
@@ -233,10 +272,10 @@ static void emit_pinterp( struct brw_compile *p,
 }
 
 
-static void emit_cinterp( struct brw_compile *p, 
-			 const struct brw_reg *dst,
-			 GLuint mask,
-			 const struct brw_reg *arg0 )
+void emit_cinterp(struct brw_compile *p,
+		  const struct brw_reg *dst,
+		  GLuint mask,
+		  const struct brw_reg *arg0)
 {
    struct brw_reg interp[4];
    GLuint nr = arg0[0].nr;
@@ -255,9 +294,9 @@ static void emit_cinterp( struct brw_compile *p,
 }
 
 /* Sets the destination channels to 1.0 or 0.0 according to glFrontFacing. */
-static void emit_frontfacing( struct brw_compile *p,
-			      const struct brw_reg *dst,
-			      GLuint mask )
+void emit_frontfacing(struct brw_compile *p,
+		      const struct brw_reg *dst,
+		      GLuint mask)
 {
    struct brw_reg r1_6ud = retype(brw_vec1_grf(1, 6), BRW_REGISTER_TYPE_UD);
    GLuint i;
@@ -283,13 +322,86 @@ static void emit_frontfacing( struct brw_compile *p,
    brw_set_predicate_control_flag_value(p, 0xff);
 }
 
-static void emit_alu1( struct brw_compile *p, 
-		       struct brw_instruction *(*func)(struct brw_compile *, 
-						       struct brw_reg, 
-						       struct brw_reg),
-		       const struct brw_reg *dst,
-		       GLuint mask,
-		       const struct brw_reg *arg0 )
+/* For OPCODE_DDX and OPCODE_DDY, per channel of output we've got input
+ * looking like:
+ *
+ * arg0: ss0.tl ss0.tr ss0.bl ss0.br ss1.tl ss1.tr ss1.bl ss1.br
+ *
+ * and we're trying to produce:
+ *
+ *           DDX                     DDY
+ * dst: (ss0.tr - ss0.tl)     (ss0.tl - ss0.bl)
+ *      (ss0.tr - ss0.tl)     (ss0.tr - ss0.br)
+ *      (ss0.br - ss0.bl)     (ss0.tl - ss0.bl)
+ *      (ss0.br - ss0.bl)     (ss0.tr - ss0.br)
+ *      (ss1.tr - ss1.tl)     (ss1.tl - ss1.bl)
+ *      (ss1.tr - ss1.tl)     (ss1.tr - ss1.br)
+ *      (ss1.br - ss1.bl)     (ss1.tl - ss1.bl)
+ *      (ss1.br - ss1.bl)     (ss1.tr - ss1.br)
+ *
+ * and add another set of two more subspans if in 16-pixel dispatch mode.
+ *
+ * For DDX, it ends up being easy: width = 2, horiz=0 gets us the same result
+ * for each pair, and vertstride = 2 jumps us 2 elements after processing a
+ * pair. But for DDY, it's harder, as we want to produce the pairs swizzled
+ * between each other.  We could probably do it like ddx and swizzle the right
+ * order later, but bail for now and just produce
+ * ((ss0.tl - ss0.bl)x4 (ss1.tl - ss1.bl)x4)
+ */
+void emit_ddxy(struct brw_compile *p,
+	       const struct brw_reg *dst,
+	       GLuint mask,
+	       GLboolean is_ddx,
+	       const struct brw_reg *arg0)
+{
+   int i;
+   struct brw_reg src0, src1;
+
+   if (mask & SATURATE)
+      brw_set_saturate(p, 1);
+   for (i = 0; i < 4; i++ ) {
+      if (mask & (1<<i)) {
+	 if (is_ddx) {
+	    src0 = brw_reg(arg0[i].file, arg0[i].nr, 1,
+			   BRW_REGISTER_TYPE_F,
+			   BRW_VERTICAL_STRIDE_2,
+			   BRW_WIDTH_2,
+			   BRW_HORIZONTAL_STRIDE_0,
+			   BRW_SWIZZLE_XYZW, WRITEMASK_XYZW);
+	    src1 = brw_reg(arg0[i].file, arg0[i].nr, 0,
+			   BRW_REGISTER_TYPE_F,
+			   BRW_VERTICAL_STRIDE_2,
+			   BRW_WIDTH_2,
+			   BRW_HORIZONTAL_STRIDE_0,
+			   BRW_SWIZZLE_XYZW, WRITEMASK_XYZW);
+	 } else {
+	    src0 = brw_reg(arg0[i].file, arg0[i].nr, 0,
+			   BRW_REGISTER_TYPE_F,
+			   BRW_VERTICAL_STRIDE_4,
+			   BRW_WIDTH_4,
+			   BRW_HORIZONTAL_STRIDE_0,
+			   BRW_SWIZZLE_XYZW, WRITEMASK_XYZW);
+	    src1 = brw_reg(arg0[i].file, arg0[i].nr, 2,
+			   BRW_REGISTER_TYPE_F,
+			   BRW_VERTICAL_STRIDE_4,
+			   BRW_WIDTH_4,
+			   BRW_HORIZONTAL_STRIDE_0,
+			   BRW_SWIZZLE_XYZW, WRITEMASK_XYZW);
+	 }
+	 brw_ADD(p, dst[i], src0, negate(src1));
+      }
+   }
+   if (mask & SATURATE)
+      brw_set_saturate(p, 0);
+}
+
+void emit_alu1(struct brw_compile *p,
+	       struct brw_instruction *(*func)(struct brw_compile *,
+					       struct brw_reg,
+					       struct brw_reg),
+	       const struct brw_reg *dst,
+	       GLuint mask,
+	       const struct brw_reg *arg0)
 {
    GLuint i;
 
@@ -307,15 +419,15 @@ static void emit_alu1( struct brw_compile *p,
 }
 
 
-static void emit_alu2( struct brw_compile *p, 
-		       struct brw_instruction *(*func)(struct brw_compile *, 
-						       struct brw_reg, 
-						       struct brw_reg, 
-						       struct brw_reg),
-		       const struct brw_reg *dst,
-		       GLuint mask,
-		       const struct brw_reg *arg0,
-		       const struct brw_reg *arg1 )
+void emit_alu2(struct brw_compile *p,
+	       struct brw_instruction *(*func)(struct brw_compile *,
+					       struct brw_reg,
+					       struct brw_reg,
+					       struct brw_reg),
+	       const struct brw_reg *dst,
+	       GLuint mask,
+	       const struct brw_reg *arg0,
+	       const struct brw_reg *arg1)
 {
    GLuint i;
 
@@ -333,12 +445,12 @@ static void emit_alu2( struct brw_compile *p,
 }
 
 
-static void emit_mad( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1,
-		      const struct brw_reg *arg2 )
+void emit_mad(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1,
+	      const struct brw_reg *arg2)
 {
    GLuint i;
 
@@ -353,13 +465,12 @@ static void emit_mad( struct brw_compile *p,
    }
 }
 
-
-static void emit_lrp( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1,
-		      const struct brw_reg *arg2 )
+void emit_lrp(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1,
+	      const struct brw_reg *arg2)
 {
    GLuint i;
 
@@ -379,21 +490,24 @@ static void emit_lrp( struct brw_compile *p,
    }
 }
 
-static void emit_sop( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      GLuint cond,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1 )
+void emit_sop(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      GLuint cond,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1)
 {
    GLuint i;
 
    for (i = 0; i < 4; i++) {
       if (mask & (1<<i)) {	
-	 brw_MOV(p, dst[i], brw_imm_f(0));
+	 brw_push_insn_state(p);
 	 brw_CMP(p, brw_null_reg(), cond, arg0[i], arg1[i]);
+	 brw_set_predicate_control(p, BRW_PREDICATE_NONE);
+	 brw_MOV(p, dst[i], brw_imm_f(0));
+	 brw_set_predicate_control(p, BRW_PREDICATE_NORMAL);
 	 brw_MOV(p, dst[i], brw_imm_f(1.0));
-	 brw_set_predicate_control_flag_value(p, 0xff);
+	 brw_pop_insn_state(p);
       }
    }
 }
@@ -452,12 +566,12 @@ static void emit_sne( struct brw_compile *p,
    emit_sop(p, dst, mask, BRW_CONDITIONAL_NEQ, arg0, arg1);
 }
 
-static void emit_cmp( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1,
-		      const struct brw_reg *arg2 )
+void emit_cmp(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1,
+	      const struct brw_reg *arg2)
 {
    GLuint i;
 
@@ -477,11 +591,11 @@ static void emit_cmp( struct brw_compile *p,
    }
 }
 
-static void emit_max( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1 )
+void emit_max(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1)
 {
    GLuint i;
 
@@ -501,11 +615,11 @@ static void emit_max( struct brw_compile *p,
    }
 }
 
-static void emit_min( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1 )
+void emit_min(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1)
 {
    GLuint i;
 
@@ -526,77 +640,83 @@ static void emit_min( struct brw_compile *p,
 }
 
 
-static void emit_dp3( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1 )
+void emit_dp3(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1)
 {
+   int dst_chan = _mesa_ffs(mask & WRITEMASK_XYZW) - 1;
+
    if (!(mask & WRITEMASK_XYZW))
       return; /* Do not emit dead code */
 
-   assert((mask & WRITEMASK_XYZW) == WRITEMASK_X);
+   assert(is_power_of_two(mask & WRITEMASK_XYZW));
 
    brw_MUL(p, brw_null_reg(), arg0[0], arg1[0]);
    brw_MAC(p, brw_null_reg(), arg0[1], arg1[1]);
 
    brw_set_saturate(p, (mask & SATURATE) ? 1 : 0);
-   brw_MAC(p, dst[0], arg0[2], arg1[2]);
+   brw_MAC(p, dst[dst_chan], arg0[2], arg1[2]);
    brw_set_saturate(p, 0);
 }
 
 
-static void emit_dp4( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1 )
+void emit_dp4(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1)
 {
+   int dst_chan = _mesa_ffs(mask & WRITEMASK_XYZW) - 1;
+
    if (!(mask & WRITEMASK_XYZW))
       return; /* Do not emit dead code */
 
-   assert((mask & WRITEMASK_XYZW) == WRITEMASK_X);
+   assert(is_power_of_two(mask & WRITEMASK_XYZW));
 
    brw_MUL(p, brw_null_reg(), arg0[0], arg1[0]);
    brw_MAC(p, brw_null_reg(), arg0[1], arg1[1]);
    brw_MAC(p, brw_null_reg(), arg0[2], arg1[2]);
 
    brw_set_saturate(p, (mask & SATURATE) ? 1 : 0);
-   brw_MAC(p, dst[0], arg0[3], arg1[3]);
+   brw_MAC(p, dst[dst_chan], arg0[3], arg1[3]);
    brw_set_saturate(p, 0);
 }
 
 
-static void emit_dph( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1 )
+void emit_dph(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1)
 {
+   const int dst_chan = _mesa_ffs(mask & WRITEMASK_XYZW) - 1;
+
    if (!(mask & WRITEMASK_XYZW))
       return; /* Do not emit dead code */
 
-   assert((mask & WRITEMASK_XYZW) == WRITEMASK_X);
+   assert(is_power_of_two(mask & WRITEMASK_XYZW));
 
    brw_MUL(p, brw_null_reg(), arg0[0], arg1[0]);
    brw_MAC(p, brw_null_reg(), arg0[1], arg1[1]);
-   brw_MAC(p, dst[0], arg0[2], arg1[2]);
+   brw_MAC(p, dst[dst_chan], arg0[2], arg1[2]);
 
    brw_set_saturate(p, (mask & SATURATE) ? 1 : 0);
-   brw_ADD(p, dst[0], dst[0], arg1[3]);
+   brw_ADD(p, dst[dst_chan], dst[dst_chan], arg1[3]);
    brw_set_saturate(p, 0);
 }
 
 
-static void emit_xpd( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0,
-		      const struct brw_reg *arg1 )
+void emit_xpd(struct brw_compile *p,
+	      const struct brw_reg *dst,
+	      GLuint mask,
+	      const struct brw_reg *arg0,
+	      const struct brw_reg *arg1)
 {
    GLuint i;
 
-   assert(!(mask & WRITEMASK_W) == WRITEMASK_X);
+   assert((mask & WRITEMASK_W) != WRITEMASK_W);
    
    for (i = 0 ; i < 3; i++) {
       if (mask & (1<<i)) {
@@ -613,200 +733,319 @@ static void emit_xpd( struct brw_compile *p,
 }
 
 
-static void emit_math1( struct brw_compile *p, 
-			GLuint function,
-			const struct brw_reg *dst,
-			GLuint mask,
-			const struct brw_reg *arg0 )
+void emit_math1(struct brw_wm_compile *c,
+		GLuint function,
+		const struct brw_reg *dst,
+		GLuint mask,
+		const struct brw_reg *arg0)
 {
+   struct brw_compile *p = &c->func;
+   int dst_chan = _mesa_ffs(mask & WRITEMASK_XYZW) - 1;
+   GLuint saturate = ((mask & SATURATE) ?
+		      BRW_MATH_SATURATE_SATURATE :
+		      BRW_MATH_SATURATE_NONE);
+
    if (!(mask & WRITEMASK_XYZW))
       return; /* Do not emit dead code */
 
-   //assert((mask & WRITEMASK_XYZW) == WRITEMASK_X ||
-   //	  function == BRW_MATH_FUNCTION_SINCOS);
-   
+   assert(is_power_of_two(mask & WRITEMASK_XYZW));
+
+   /* If compressed, this will write message reg 2,3 from arg0.x's 16
+    * channels.
+    */
    brw_MOV(p, brw_message_reg(2), arg0[0]);
 
    /* Send two messages to perform all 16 operations:
     */
-   brw_math_16(p, 
-	       dst[0],
-	       function,
-	       (mask & SATURATE) ? BRW_MATH_SATURATE_SATURATE : BRW_MATH_SATURATE_NONE,
-	       2,
-	       brw_null_reg(),
-	       BRW_MATH_PRECISION_FULL);
-}
-
-
-static void emit_math2( struct brw_compile *p, 
-			GLuint function,
-			const struct brw_reg *dst,
-			GLuint mask,
-			const struct brw_reg *arg0,
-			const struct brw_reg *arg1)
-{
-   if (!(mask & WRITEMASK_XYZW))
-      return; /* Do not emit dead code */
-
-   assert((mask & WRITEMASK_XYZW) == WRITEMASK_X);
-
    brw_push_insn_state(p);
-
    brw_set_compression_control(p, BRW_COMPRESSION_NONE);
-   brw_MOV(p, brw_message_reg(2), arg0[0]);
-   brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
-   brw_MOV(p, brw_message_reg(4), sechalf(arg0[0]));
-
-   brw_set_compression_control(p, BRW_COMPRESSION_NONE);
-   brw_MOV(p, brw_message_reg(3), arg1[0]);
-   brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
-   brw_MOV(p, brw_message_reg(5), sechalf(arg1[0]));
-
-   
-   /* Send two messages to perform all 16 operations:
-    */
-   brw_set_compression_control(p, BRW_COMPRESSION_NONE);
-   brw_math(p, 
-	    dst[0],
+   brw_math(p,
+	    dst[dst_chan],
 	    function,
-	    (mask & SATURATE) ? BRW_MATH_SATURATE_SATURATE : BRW_MATH_SATURATE_NONE,
+	    saturate,
 	    2,
 	    brw_null_reg(),
 	    BRW_MATH_DATA_VECTOR,
 	    BRW_MATH_PRECISION_FULL);
 
-   brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
+   if (c->dispatch_width == 16) {
+      brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
+      brw_math(p,
+	       offset(dst[dst_chan],1),
+	       function,
+	       saturate,
+	       3,
+	       brw_null_reg(),
+	       BRW_MATH_DATA_VECTOR,
+	       BRW_MATH_PRECISION_FULL);
+   }
+   brw_pop_insn_state(p);
+}
+
+
+void emit_math2(struct brw_wm_compile *c,
+		GLuint function,
+		const struct brw_reg *dst,
+		GLuint mask,
+		const struct brw_reg *arg0,
+		const struct brw_reg *arg1)
+{
+   struct brw_compile *p = &c->func;
+   int dst_chan = _mesa_ffs(mask & WRITEMASK_XYZW) - 1;
+   GLuint saturate = ((mask & SATURATE) ?
+		      BRW_MATH_SATURATE_SATURATE :
+		      BRW_MATH_SATURATE_NONE);
+
+   if (!(mask & WRITEMASK_XYZW))
+      return; /* Do not emit dead code */
+
+   assert(is_power_of_two(mask & WRITEMASK_XYZW));
+
+   brw_push_insn_state(p);
+
+   brw_set_compression_control(p, BRW_COMPRESSION_NONE);
+   brw_MOV(p, brw_message_reg(2), arg0[0]);
+   if (c->dispatch_width == 16) {
+      brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
+      brw_MOV(p, brw_message_reg(4), sechalf(arg0[0]));
+   }
+
+   brw_set_compression_control(p, BRW_COMPRESSION_NONE);
+   brw_MOV(p, brw_message_reg(3), arg1[0]);
+   if (c->dispatch_width == 16) {
+      brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
+      brw_MOV(p, brw_message_reg(5), sechalf(arg1[0]));
+   }
+
+   brw_set_compression_control(p, BRW_COMPRESSION_NONE);
    brw_math(p, 
-	    offset(dst[0],1),
+	    dst[dst_chan],
 	    function,
-	    (mask & SATURATE) ? BRW_MATH_SATURATE_SATURATE : BRW_MATH_SATURATE_NONE,
-	    4,
+	    saturate,
+	    2,
 	    brw_null_reg(),
 	    BRW_MATH_DATA_VECTOR,
 	    BRW_MATH_PRECISION_FULL);
-   
+
+   /* Send two messages to perform all 16 operations:
+    */
+   if (c->dispatch_width == 16) {
+      brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
+      brw_math(p,
+	       offset(dst[dst_chan],1),
+	       function,
+	       saturate,
+	       4,
+	       brw_null_reg(),
+	       BRW_MATH_DATA_VECTOR,
+	       BRW_MATH_PRECISION_FULL);
+   }
    brw_pop_insn_state(p);
 }
-		     
 
 
-static void emit_tex( struct brw_wm_compile *c,
-		      const struct brw_wm_instruction *inst,
-		      struct brw_reg *dst,
-		      GLuint dst_flags,
-		      struct brw_reg *arg )
+void emit_tex(struct brw_wm_compile *c,
+	      struct brw_reg *dst,
+	      GLuint dst_flags,
+	      struct brw_reg *arg,
+	      struct brw_reg depth_payload,
+	      GLuint tex_idx,
+	      GLuint sampler,
+	      GLboolean shadow)
 {
    struct brw_compile *p = &c->func;
-   GLuint msgLength, responseLength;
-   GLboolean shadow = (c->key.shadowtex_mask & (1<<inst->tex_unit)) ? 1 : 0;
-   GLuint i, nr;
+   struct intel_context *intel = &p->brw->intel;
+   struct brw_reg dst_retyped;
+   GLuint cur_mrf = 2, response_length;
+   GLuint i, nr_texcoords;
    GLuint emit;
+   GLuint msg_type;
+   GLuint mrf_per_channel;
+   GLuint simd_mode;
+
+   if (c->dispatch_width == 16) {
+      mrf_per_channel = 2;
+      response_length = 8;
+      dst_retyped = retype(vec16(dst[0]), BRW_REGISTER_TYPE_UW);
+      simd_mode = BRW_SAMPLER_SIMD_MODE_SIMD16;
+   } else {
+      mrf_per_channel = 1;
+      response_length = 4;
+      dst_retyped = retype(vec8(dst[0]), BRW_REGISTER_TYPE_UW);
+      simd_mode = BRW_SAMPLER_SIMD_MODE_SIMD8;
+   }
 
    /* How many input regs are there?
     */
-   switch (inst->tex_idx) {
+   switch (tex_idx) {
    case TEXTURE_1D_INDEX:
       emit = WRITEMASK_X;
-      nr = 1;
+      nr_texcoords = 1;
       break;
    case TEXTURE_2D_INDEX:
    case TEXTURE_RECT_INDEX:
       emit = WRITEMASK_XY;
-      nr = 2;
+      nr_texcoords = 2;
+      break;
+   case TEXTURE_3D_INDEX:
+   case TEXTURE_CUBE_INDEX:
+      emit = WRITEMASK_XYZ;
+      nr_texcoords = 3;
       break;
    default:
-      emit = WRITEMASK_XYZ;
-      nr = 3;
-      break;
+      /* unexpected target */
+      abort();
    }
 
-   if (shadow) {
-      nr = 4;
-      emit |= WRITEMASK_W;
-   }
+   /* Pre-Ironlake, the 8-wide sampler always took u,v,r. */
+   if (intel->gen < 5 && c->dispatch_width == 8)
+      nr_texcoords = 3;
 
-   msgLength = 1;
+   /* For shadow comparisons, we have to supply u,v,r. */
+   if (shadow)
+      nr_texcoords = 3;
 
-   for (i = 0; i < nr; i++) {
-      static const GLuint swz[4] = {0,1,2,2};
-      if (emit & (1<<i)) 
-	 brw_MOV(p, brw_message_reg(msgLength+1), arg[swz[i]]);
+   /* Emit the texcoords. */
+   for (i = 0; i < nr_texcoords; i++) {
+      if (emit & (1<<i))
+	 brw_MOV(p, brw_message_reg(cur_mrf), arg[i]);
       else
-	 brw_MOV(p, brw_message_reg(msgLength+1), brw_imm_f(0));
-      msgLength += 2;
+	 brw_MOV(p, brw_message_reg(cur_mrf), brw_imm_f(0));
+      cur_mrf += mrf_per_channel;
    }
 
-   responseLength = 8;		/* always */
+   /* Fill in the shadow comparison reference value. */
+   if (shadow) {
+      if (intel->gen == 5) {
+	 /* Fill in the cube map array index value. */
+	 brw_MOV(p, brw_message_reg(cur_mrf), brw_imm_f(0));
+	 cur_mrf += mrf_per_channel;
+      } else if (c->dispatch_width == 8) {
+	 /* Fill in the LOD bias value. */
+	 brw_MOV(p, brw_message_reg(cur_mrf), brw_imm_f(0));
+	 cur_mrf += mrf_per_channel;
+      }
+      brw_MOV(p, brw_message_reg(cur_mrf), arg[2]);
+      cur_mrf += mrf_per_channel;
+   }
 
-   brw_SAMPLE(p, 
-	      retype(vec16(dst[0]), BRW_REGISTER_TYPE_UW),
+   if (intel->gen == 5) {
+      if (shadow)
+	 msg_type = BRW_SAMPLER_MESSAGE_SAMPLE_COMPARE_GEN5;
+      else
+	 msg_type = BRW_SAMPLER_MESSAGE_SAMPLE_GEN5;
+   } else {
+      /* Note that G45 and older determines shadow compare and dispatch width
+       * from message length for most messages.
+       */
+      if (c->dispatch_width == 16 && shadow)
+	 msg_type = BRW_SAMPLER_MESSAGE_SIMD16_SAMPLE_COMPARE;
+      else
+	 msg_type = BRW_SAMPLER_MESSAGE_SIMD16_SAMPLE;
+   }
+
+   brw_SAMPLE(p,
+	      dst_retyped,
 	      1,
-	      retype(c->payload.depth[0].hw_reg, BRW_REGISTER_TYPE_UW),
-	      inst->tex_unit + MAX_DRAW_BUFFERS, /* surface */
-	      inst->tex_unit,	  /* sampler */
-	      inst->writemask,
-	      (shadow ? 
-	       BRW_SAMPLER_MESSAGE_SIMD16_SAMPLE_COMPARE : 
-	       BRW_SAMPLER_MESSAGE_SIMD16_SAMPLE),
-	      responseLength,
-	      msgLength,
-	      0);	
+	      retype(depth_payload, BRW_REGISTER_TYPE_UW),
+              SURF_INDEX_TEXTURE(sampler),
+	      sampler,
+	      dst_flags & WRITEMASK_XYZW,
+	      msg_type,
+	      response_length,
+	      cur_mrf - 1,
+	      0,
+	      1,
+	      simd_mode);
 }
 
 
-static void emit_txb( struct brw_wm_compile *c,
-		      const struct brw_wm_instruction *inst,
-		      struct brw_reg *dst,
-		      GLuint dst_flags,
-		      struct brw_reg *arg )
+void emit_txb(struct brw_wm_compile *c,
+	      struct brw_reg *dst,
+	      GLuint dst_flags,
+	      struct brw_reg *arg,
+	      struct brw_reg depth_payload,
+	      GLuint tex_idx,
+	      GLuint sampler)
 {
    struct brw_compile *p = &c->func;
+   struct intel_context *intel = &p->brw->intel;
    GLuint msgLength;
+   GLuint msg_type;
+   GLuint mrf_per_channel;
+   GLuint response_length;
+   struct brw_reg dst_retyped;
 
-   /* Shadow ignored for txb.
+   /* The G45 and older chipsets don't support 8-wide dispatch for LOD biased
+    * samples, so we'll use the 16-wide instruction, leave the second halves
+    * undefined, and trust the execution mask to keep the undefined pixels
+    * from mattering.
     */
-   switch (inst->tex_idx) {
+   if (c->dispatch_width == 16 || intel->gen < 5) {
+      if (intel->gen == 5)
+	 msg_type = BRW_SAMPLER_MESSAGE_SAMPLE_BIAS_GEN5;
+      else
+	 msg_type = BRW_SAMPLER_MESSAGE_SIMD16_SAMPLE_BIAS;
+      mrf_per_channel = 2;
+      dst_retyped = retype(vec16(dst[0]), BRW_REGISTER_TYPE_UW);
+      response_length = 8;
+   } else {
+      msg_type = BRW_SAMPLER_MESSAGE_SAMPLE_BIAS_GEN5;
+      mrf_per_channel = 1;
+      dst_retyped = retype(vec8(dst[0]), BRW_REGISTER_TYPE_UW);
+      response_length = 4;
+   }
+
+   /* Shadow ignored for txb. */
+   switch (tex_idx) {
    case TEXTURE_1D_INDEX:
-      brw_MOV(p, brw_message_reg(2), arg[0]);
-      brw_MOV(p, brw_message_reg(4), brw_imm_f(0));
-      brw_MOV(p, brw_message_reg(6), brw_imm_f(0));
+      brw_MOV(p, brw_message_reg(2 + 0 * mrf_per_channel), arg[0]);
+      brw_MOV(p, brw_message_reg(2 + 1 * mrf_per_channel), brw_imm_f(0));
+      brw_MOV(p, brw_message_reg(2 + 2 * mrf_per_channel), brw_imm_f(0));
       break;
    case TEXTURE_2D_INDEX:
    case TEXTURE_RECT_INDEX:
-      brw_MOV(p, brw_message_reg(2), arg[0]);
-      brw_MOV(p, brw_message_reg(4), arg[1]);
-      brw_MOV(p, brw_message_reg(6), brw_imm_f(0));
+      brw_MOV(p, brw_message_reg(2 + 0 * mrf_per_channel), arg[0]);
+      brw_MOV(p, brw_message_reg(2 + 1 * mrf_per_channel), arg[1]);
+      brw_MOV(p, brw_message_reg(2 + 2 * mrf_per_channel), brw_imm_f(0));
+      break;
+   case TEXTURE_3D_INDEX:
+   case TEXTURE_CUBE_INDEX:
+      brw_MOV(p, brw_message_reg(2 + 0 * mrf_per_channel), arg[0]);
+      brw_MOV(p, brw_message_reg(2 + 1 * mrf_per_channel), arg[1]);
+      brw_MOV(p, brw_message_reg(2 + 2 * mrf_per_channel), arg[2]);
       break;
    default:
-      brw_MOV(p, brw_message_reg(2), arg[0]);
-      brw_MOV(p, brw_message_reg(4), arg[1]);
-      brw_MOV(p, brw_message_reg(6), arg[2]);
-      break;
+      /* unexpected target */
+      abort();
    }
 
-   brw_MOV(p, brw_message_reg(8), arg[3]);
-   msgLength = 9;
+   brw_MOV(p, brw_message_reg(2 + 3 * mrf_per_channel), arg[3]);
+   msgLength = 2 + 4 * mrf_per_channel - 1;
 
    brw_SAMPLE(p, 
-	      retype(vec16(dst[0]), BRW_REGISTER_TYPE_UW),
+	      dst_retyped,
 	      1,
-	      retype(c->payload.depth[0].hw_reg, BRW_REGISTER_TYPE_UW),
-	      inst->tex_unit + MAX_DRAW_BUFFERS, /* surface */
-	      inst->tex_unit,	  /* sampler */
-	      inst->writemask,
-	      BRW_SAMPLER_MESSAGE_SIMD16_SAMPLE_BIAS,
-	      8,		/* responseLength */
+	      retype(depth_payload, BRW_REGISTER_TYPE_UW),
+              SURF_INDEX_TEXTURE(sampler),
+	      sampler,
+	      dst_flags & WRITEMASK_XYZW,
+	      msg_type,
+	      response_length,
 	      msgLength,
-	      0);	
+	      0,	
+	      1,
+	      BRW_SAMPLER_SIMD_MODE_SIMD16);	
 }
 
 
-static void emit_lit( struct brw_compile *p, 
-		      const struct brw_reg *dst,
-		      GLuint mask,
-		      const struct brw_reg *arg0 )
+static void emit_lit(struct brw_wm_compile *c,
+		     const struct brw_reg *dst,
+		     GLuint mask,
+		     const struct brw_reg *arg0)
 {
+   struct brw_compile *p = &c->func;
+
    assert((mask & WRITEMASK_XW) == 0);
 
    if (mask & WRITEMASK_Y) {
@@ -816,7 +1055,7 @@ static void emit_lit( struct brw_compile *p,
    }
 
    if (mask & WRITEMASK_Z) {
-      emit_math2(p, BRW_MATH_FUNCTION_POW,
+      emit_math2(c, BRW_MATH_FUNCTION_POW,
 		 &dst[2],
 		 WRITEMASK_X | (mask & SATURATE),
 		 &arg0[1],
@@ -861,6 +1100,20 @@ static void emit_kil( struct brw_wm_compile *c,
    }
 }
 
+/* KIL_NV kills the pixels that are currently executing, not based on a test
+ * of the arguments.
+ */
+static void emit_kil_nv( struct brw_wm_compile *c )
+{
+   struct brw_compile *p = &c->func;
+   struct brw_reg r0uw = retype(brw_vec1_grf(0, 0), BRW_REGISTER_TYPE_UW);
+
+   brw_push_insn_state(p);
+   brw_set_mask_control(p, BRW_MASK_DISABLE);
+   brw_NOT(p, c->emit_mask_reg, brw_mask_reg(1)); /* IMASK */
+   brw_AND(p, r0uw, c->emit_mask_reg, r0uw);
+   brw_pop_insn_state(p);
+}
 
 static void fire_fb_write( struct brw_wm_compile *c,
 			   GLuint base_reg,
@@ -869,7 +1122,13 @@ static void fire_fb_write( struct brw_wm_compile *c,
 			   GLuint eot )
 {
    struct brw_compile *p = &c->func;
-   
+   struct brw_reg dst;
+
+   if (c->dispatch_width == 16)
+      dst = retype(vec16(brw_null_reg()), BRW_REGISTER_TYPE_UW);
+   else
+      dst = retype(vec8(brw_null_reg()), BRW_REGISTER_TYPE_UW);
+
    /* Pass through control information:
     */
 /*  mov (8) m1.0<1>:ud   r1.0<8;8,1>:ud   { Align1 NoMask } */
@@ -886,7 +1145,7 @@ static void fire_fb_write( struct brw_wm_compile *c,
    /* Send framebuffer write message: */
 /*  send (16) null.0<1>:uw m0               r0.0<8;8,1>:uw   0x85a04000:ud    { Align1 EOT } */
    brw_fb_WRITE(p,
-		retype(vec16(brw_null_reg()), BRW_REGISTER_TYPE_UW),
+		dst,
 		base_reg,
 		retype(brw_vec8_grf(0, 0), BRW_REGISTER_TYPE_UW),
 		target,		
@@ -914,15 +1173,19 @@ static void emit_aa( struct brw_wm_compile *c,
 
 /* Post-fragment-program processing.  Send the results to the
  * framebuffer.
+ * \param arg0  the fragment color
+ * \param arg1  the pass-through depth value
+ * \param arg2  the shader-computed depth value
  */
-static void emit_fb_write( struct brw_wm_compile *c,
-			   struct brw_reg *arg0,
-			   struct brw_reg *arg1,
-			   struct brw_reg *arg2,
-			   GLuint target,
-			   GLuint eot)
+void emit_fb_write(struct brw_wm_compile *c,
+		   struct brw_reg *arg0,
+		   struct brw_reg *arg1,
+		   struct brw_reg *arg2,
+		   GLuint target,
+		   GLuint eot)
 {
    struct brw_compile *p = &c->func;
+   struct brw_context *brw = p->brw;
    GLuint nr = 2;
    GLuint channel;
 
@@ -934,30 +1197,37 @@ static void emit_fb_write( struct brw_wm_compile *c,
    /* I don't really understand how this achieves the color interleave
     * (ie RGBARGBA) in the result:  [Do the saturation here]
     */
-   {
-      brw_push_insn_state(p);
-      
-      for (channel = 0; channel < 4; channel++) {
+   brw_push_insn_state(p);
+
+   for (channel = 0; channel < 4; channel++) {
+      if (c->dispatch_width == 16 && brw->has_compr4) {
+	 /* By setting the high bit of the MRF register number, we indicate
+	  * that we want COMPR4 mode - instead of doing the usual destination
+	  * + 1 for the second half we get destination + 4.
+	  */
+	 brw_MOV(p,
+		 brw_message_reg(nr + channel + (1 << 7)),
+		 arg0[channel]);
+      } else {
 	 /*  mov (8) m2.0<1>:ud   r28.0<8;8,1>:ud  { Align1 } */
 	 /*  mov (8) m6.0<1>:ud   r29.0<8;8,1>:ud  { Align1 SecHalf } */
-
 	 brw_set_compression_control(p, BRW_COMPRESSION_NONE);
 	 brw_MOV(p,
 		 brw_message_reg(nr + channel),
 		 arg0[channel]);
-       
-	 brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
-	 brw_MOV(p,
-		 brw_message_reg(nr + channel + 4),
-		 sechalf(arg0[channel]));
-      }
 
-      /* skip over the regs populated above:
-       */
-      nr += 8;
-   
-      brw_pop_insn_state(p);
+	 if (c->dispatch_width == 16) {
+	    brw_set_compression_control(p, BRW_COMPRESSION_2NDHALF);
+	    brw_MOV(p,
+		    brw_message_reg(nr + channel + 4),
+		    sechalf(arg0[channel]));
+	 }
+      }
    }
+   /* skip over the regs populated above:
+    */
+   nr += 8;
+   brw_pop_insn_state(p);
 
    if (c->key.source_depth_to_render_target)
    {
@@ -1021,9 +1291,8 @@ static void emit_fb_write( struct brw_wm_compile *c,
    }
 }
 
-
-/* Post-fragment-program processing.  Send the results to the
- * framebuffer.
+/**
+ * Move a GPR to scratch memory. 
  */
 static void emit_spill( struct brw_wm_compile *c,
 			struct brw_reg reg,
@@ -1042,11 +1311,13 @@ static void emit_spill( struct brw_wm_compile *c,
    */
    brw_dp_WRITE_16(p, 
 		   retype(vec16(brw_vec8_grf(0, 0)), BRW_REGISTER_TYPE_UW),
-		   1, 
 		   slot);
 }
 
 
+/**
+ * Load a GPR from scratch memory. 
+ */
 static void emit_unspill( struct brw_wm_compile *c,
 			  struct brw_reg reg,
 			  GLuint slot )
@@ -1067,13 +1338,13 @@ static void emit_unspill( struct brw_wm_compile *c,
 
    brw_dp_READ_16(p,
 		  retype(vec16(reg), BRW_REGISTER_TYPE_UW),
-		  1, 
 		  slot);
 }
 
 
 /**
- * Retrieve upto 4 GEN4 register pairs for the given wm reg:
+ * Retrieve up to 4 GEN4 register pairs for the given wm reg:
+ * Args with unspill_reg != 0 will be loaded from scratch memory.
  */
 static void get_argument_regs( struct brw_wm_compile *c,
 			       struct brw_wm_ref *arg[],
@@ -1083,13 +1354,12 @@ static void get_argument_regs( struct brw_wm_compile *c,
 
    for (i = 0; i < 4; i++) {
       if (arg[i]) {
-
-	 if (arg[i]->unspill_reg) 
-	    emit_unspill(c, 
+	 if (arg[i]->unspill_reg)
+	    emit_unspill(c,
 			 brw_vec8_grf(arg[i]->unspill_reg, 0),
 			 arg[i]->value->spill_slot);
 
-	 regs[i] = arg[i]->hw_reg;	 
+	 regs[i] = arg[i]->hw_reg;
       }
       else {
 	 regs[i] = brw_null_reg();
@@ -1098,6 +1368,9 @@ static void get_argument_regs( struct brw_wm_compile *c,
 }
 
 
+/**
+ * For values that have a spill_slot!=0, write those regs to scratch memory.
+ */
 static void spill_values( struct brw_wm_compile *c,
 			  struct brw_wm_value *values,
 			  GLuint nr )
@@ -1155,11 +1428,11 @@ void brw_wm_emit( struct brw_wm_compile *c )
 	 /* Generated instructions for calculating triangle interpolants:
 	  */
       case WM_PIXELXY:
-	 emit_pixel_xy(p, dst, dst_flags, args[0]);
+	 emit_pixel_xy(c, dst, dst_flags);
 	 break;
 
       case WM_DELTAXY:
-	 emit_delta_xy(p, dst, dst_flags, args[0], args[1]);
+	 emit_delta_xy(p, dst, dst_flags, args[0]);
 	 break;
 
       case WM_WPOSXY:
@@ -1167,7 +1440,7 @@ void brw_wm_emit( struct brw_wm_compile *c )
 	 break;
 
       case WM_PIXELW:
-	 emit_pixel_w(p, dst, dst_flags, args[0], args[1]);
+	 emit_pixel_w(c, dst, dst_flags, args[0], args[1]);
 	 break;
 
       case WM_LINTERP:
@@ -1204,6 +1477,14 @@ void brw_wm_emit( struct brw_wm_compile *c )
 	 emit_alu1(p, brw_RNDD, dst, dst_flags, args[0]);
 	 break;
 
+      case OPCODE_DDX:
+	 emit_ddxy(p, dst, dst_flags, GL_TRUE, args[0]);
+	 break;
+
+      case OPCODE_DDY:
+	 emit_ddxy(p, dst, dst_flags, GL_FALSE, args[0]);
+	 break;
+
       case OPCODE_DP3:
 	 emit_dp3(p, dst, dst_flags, args[0], args[1]);
 	 break;
@@ -1214,6 +1495,10 @@ void brw_wm_emit( struct brw_wm_compile *c )
 
       case OPCODE_DPH:
 	 emit_dph(p, dst, dst_flags, args[0], args[1]);
+	 break;
+
+      case OPCODE_TRUNC:
+	 emit_alu1(p, brw_RNDZ, dst, dst_flags, args[0]);
 	 break;
 
       case OPCODE_LRP:
@@ -1240,27 +1525,27 @@ void brw_wm_emit( struct brw_wm_compile *c )
 	 /* Higher math functions:
 	  */
       case OPCODE_RCP:
-	 emit_math1(p, BRW_MATH_FUNCTION_INV, dst, dst_flags, args[0]);
+	 emit_math1(c, BRW_MATH_FUNCTION_INV, dst, dst_flags, args[0]);
 	 break;
 
       case OPCODE_RSQ:
-	 emit_math1(p, BRW_MATH_FUNCTION_RSQ, dst, dst_flags, args[0]);
+	 emit_math1(c, BRW_MATH_FUNCTION_RSQ, dst, dst_flags, args[0]);
 	 break;
 
       case OPCODE_SIN:
-	 emit_math1(p, BRW_MATH_FUNCTION_SIN, dst, dst_flags, args[0]);
+	 emit_math1(c, BRW_MATH_FUNCTION_SIN, dst, dst_flags, args[0]);
 	 break;
 
       case OPCODE_COS:
-	 emit_math1(p, BRW_MATH_FUNCTION_COS, dst, dst_flags, args[0]);
+	 emit_math1(c, BRW_MATH_FUNCTION_COS, dst, dst_flags, args[0]);
 	 break;
 
       case OPCODE_EX2:
-	 emit_math1(p, BRW_MATH_FUNCTION_EXP, dst, dst_flags, args[0]);
+	 emit_math1(c, BRW_MATH_FUNCTION_EXP, dst, dst_flags, args[0]);
 	 break;
 
       case OPCODE_LG2:
-	 emit_math1(p, BRW_MATH_FUNCTION_LOG, dst, dst_flags, args[0]);
+	 emit_math1(c, BRW_MATH_FUNCTION_LOG, dst, dst_flags, args[0]);
 	 break;
 
       case OPCODE_SCS:
@@ -1268,13 +1553,13 @@ void brw_wm_emit( struct brw_wm_compile *c )
 	  * fixup for 16-element execution.
 	  */
 	 if (dst_flags & WRITEMASK_X)
-	    emit_math1(p, BRW_MATH_FUNCTION_COS, dst, (dst_flags&SATURATE)|WRITEMASK_X, args[0]);
+	    emit_math1(c, BRW_MATH_FUNCTION_COS, dst, (dst_flags&SATURATE)|WRITEMASK_X, args[0]);
 	 if (dst_flags & WRITEMASK_Y)
-	    emit_math1(p, BRW_MATH_FUNCTION_SIN, dst+1, (dst_flags&SATURATE)|WRITEMASK_X, args[0]);
+	    emit_math1(c, BRW_MATH_FUNCTION_SIN, dst+1, (dst_flags&SATURATE)|WRITEMASK_X, args[0]);
 	 break;
 
       case OPCODE_POW:
-	 emit_math2(p, BRW_MATH_FUNCTION_POW, dst, dst_flags, args[0], args[1]);
+	 emit_math2(c, BRW_MATH_FUNCTION_POW, dst, dst_flags, args[0], args[1]);
 	 break;
 
 	 /* Comparisons:
@@ -1312,28 +1597,35 @@ void brw_wm_emit( struct brw_wm_compile *c )
 	break;
 
       case OPCODE_LIT:
-	 emit_lit(p, dst, dst_flags, args[0]);
+	 emit_lit(c, dst, dst_flags, args[0]);
 	 break;
 
 	 /* Texturing operations:
 	  */
       case OPCODE_TEX:
-	 emit_tex(c, inst, dst, dst_flags, args[0]);
+	 emit_tex(c, dst, dst_flags, args[0], c->payload.depth[0].hw_reg,
+		  inst->tex_idx, inst->tex_unit,
+		  inst->tex_shadow);
 	 break;
 
       case OPCODE_TXB:
-	 emit_txb(c, inst, dst, dst_flags, args[0]);
+	 emit_txb(c, dst, dst_flags, args[0], c->payload.depth[0].hw_reg,
+		  inst->tex_idx, inst->tex_unit);
 	 break;
 
       case OPCODE_KIL:
 	 emit_kil(c, args[0]);
 	 break;
 
+      case OPCODE_KIL_NV:
+	 emit_kil_nv(c);
+	 break;
+
       default:
-	 _mesa_printf("Unsupported opcode %i (%s) in fragment shader\n",
-		      inst->opcode, inst->opcode < MAX_OPCODE ?
-				    _mesa_opcode_string(inst->opcode) :
-				    "unknown");
+	 printf("Unsupported opcode %i (%s) in fragment shader\n",
+		inst->opcode, inst->opcode < MAX_OPCODE ?
+		_mesa_opcode_string(inst->opcode) :
+		"unknown");
       }
       
       for (i = 0; i < 4; i++)
@@ -1341,5 +1633,14 @@ void brw_wm_emit( struct brw_wm_compile *c )
 	   emit_spill(c, 
 		      inst->dst[i]->hw_reg, 
 		      inst->dst[i]->spill_slot);
+   }
+
+   if (INTEL_DEBUG & DEBUG_WM) {
+      int i;
+
+      printf("wm-native:\n");
+      for (i = 0; i < p->nr_insn; i++)
+	 brw_disasm(stderr, &p->store[i]);
+      printf("\n");
    }
 }

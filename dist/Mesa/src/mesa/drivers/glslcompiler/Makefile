@@ -9,11 +9,9 @@ PROGRAM = glslcompiler
 
 OBJECTS = \
 	glslcompiler.o \
-	../../glapi/glapi.o \
-	../../glapi/glthread.o \
-	../../main/dispatch.o \
 	../common/driverfuncs.o \
-	../../libmesa.a
+	../../libmesa.a \
+	../../libglapi.a
 
 INCLUDES = \
 	-I$(TOP)/include \
@@ -37,7 +35,7 @@ glslcompiler: $(OBJECTS)
 
 
 glslcompiler.o: glslcompiler.c
-	$(CC) -c $(CFLAGS) $(INCLUDES) glslcompiler.c -o $@
+	$(CC) -c $(INCLUDES) $(CFLAGS) glslcompiler.c -o $@
 
 
 clean:

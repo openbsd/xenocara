@@ -30,13 +30,11 @@
 #include "main/enums.h"
 #include "main/colormac.h"
 #include "main/mm.h"
-#include "main/texformat.h"
 
 #include "i810screen.h"
 #include "i810_dri.h"
 #include "i810context.h"
 #include "i810tex.h"
-#include "i810state.h"
 #include "i810ioctl.h"
 
 
@@ -92,44 +90,47 @@ static void i810UploadTexLevel( i810ContextPtr imesa,
 {
    const struct gl_texture_image *image = t->image[hwlevel].image;
    int j;
+   GLuint texelBytes;
 
    if (!image || !image->Data)
       return;
 
-   if (image->Width * image->TexFormat->TexelBytes == t->Pitch) {
+   texelBytes = _mesa_get_format_bytes(image->TexFormat);
+
+   if (image->Width * texelBytes == t->Pitch) {
 	 GLubyte *dst = (GLubyte *)(t->BufAddr + t->image[hwlevel].offset);
 	 GLubyte *src = (GLubyte *)image->Data;
 	 
 	 memcpy( dst, src, t->Pitch * image->Height );
    }
-   else switch (image->TexFormat->TexelBytes) {
-   case 1:
-      {
-	 GLubyte *dst = (GLubyte *)(t->BufAddr + t->image[hwlevel].offset);
-	 GLubyte *src = (GLubyte *)image->Data;
+   else {
+      switch (texelBytes) {
+      case 1:
+         {
+            GLubyte *dst = (GLubyte *)(t->BufAddr + t->image[hwlevel].offset);
+            GLubyte *src = (GLubyte *)image->Data;
 
-	 for (j = 0 ; j < image->Height ; j++, dst += t->Pitch) {
-	    __memcpy(dst, src, image->Width );
-	    src += image->Width;
-	 }
+            for (j = 0 ; j < image->Height ; j++, dst += t->Pitch) {
+               __memcpy(dst, src, image->Width );
+               src += image->Width;
+            }
+         }
+         break;
+      case 2:
+         {
+            GLushort *dst = (GLushort *)(t->BufAddr + t->image[hwlevel].offset);
+            GLushort *src = (GLushort *)image->Data;
+
+            for (j = 0 ; j < image->Height ; j++, dst += (t->Pitch/2)) {
+               __memcpy(dst, src, image->Width * 2 );
+               src += image->Width;
+            }
+         }
+         break;
+      default:
+         fprintf(stderr, "%s: Not supported texel size %d\n",
+                 __FUNCTION__, texelBytes);
       }
-      break;
-
-   case 2:
-      {
-	 GLushort *dst = (GLushort *)(t->BufAddr + t->image[hwlevel].offset);
-	 GLushort *src = (GLushort *)image->Data;
-
-	 for (j = 0 ; j < image->Height ; j++, dst += (t->Pitch/2)) {
-	    __memcpy(dst, src, image->Width * 2 );
-	    src += image->Width;
-	 }
-      }
-      break;
-
-   default:
-      fprintf(stderr, "%s: Not supported texel size %d\n",
-	      __FUNCTION__, image->TexFormat->TexelBytes);
    }
 }
 
@@ -154,6 +155,7 @@ int i810UploadTexImagesLocked( i810ContextPtr imesa, i810TextureObjectPtr t )
 	return -1;
       }
       
+      assert(t->base.memBlock);
       ofs = t->base.memBlock->ofs;
       t->BufAddr = imesa->i810Screen->tex.map + ofs;
       t->Setup[I810_TEXREG_MI3] = imesa->i810Screen->textureOffset + ofs;

@@ -54,32 +54,60 @@ extern GLfloat _mesa_ubyte_to_float_color_tab[256];
 #define FLOAT_TO_BYTE(X)    ( (((GLint) (255.0F * (X))) - 1) / 2 )
 
 
-/** Convert GLushort in [0,65536] to GLfloat in [0.0,1.0] */
+/** Convert GLbyte in [-128,127] to GLfloat in [-1.0,1.0], texture/fb data */
+#define BYTE_TO_FLOAT_TEX(B)    ((B) == -128 ? -1.0F : (B) * (1.0F/127.0F))
+
+/** Convert GLfloat in [-1.0,1.0] to GLbyte in [-128,127], texture/fb data */
+#define FLOAT_TO_BYTE_TEX(X)    ( (GLint) (127.0F * (X)) )
+
+
+/** Convert GLushort in [0,65535] to GLfloat in [0.0,1.0] */
 #define USHORT_TO_FLOAT(S)  ((GLfloat) (S) * (1.0F / 65535.0F))
+
+/** Convert GLfloat in [0.0,1.0] to GLushort in [0, 65535] */
+#define FLOAT_TO_USHORT(X)   ((GLuint) ((X) * 65535.0F))
+
 
 /** Convert GLshort in [-32768,32767] to GLfloat in [-1.0,1.0] */
 #define SHORT_TO_FLOAT(S)   ((2.0F * (S) + 1.0F) * (1.0F/65535.0F))
 
-/** Convert GLfloat in [0.0,1.0] to GLshort in [-32768,32767] */
+/** Convert GLfloat in [-1.0,1.0] to GLshort in [-32768,32767] */
 #define FLOAT_TO_SHORT(X)   ( (((GLint) (65535.0F * (X))) - 1) / 2 )
 
 
+/** Convert GLshort in [-32768,32767] to GLfloat in [-1.0,1.0], texture/fb data */
+#define SHORT_TO_FLOAT_TEX(S)    ((S) == -32768 ? -1.0F : (S) * (1.0F/32767.0F))
+
+/** Convert GLfloat in [-1.0,1.0] to GLshort in [-32768,32767], texture/fb data */
+#define FLOAT_TO_SHORT_TEX(X)    ( (GLint) (32767.0F * (X)) )
+
+
 /** Convert GLuint in [0,4294967295] to GLfloat in [0.0,1.0] */
-#define UINT_TO_FLOAT(U)    ((GLfloat) (U) * (1.0F / 4294967295.0F))
+#define UINT_TO_FLOAT(U)    ((GLfloat) ((U) * (1.0F / 4294967295.0)))
 
 /** Convert GLfloat in [0.0,1.0] to GLuint in [0,4294967295] */
 #define FLOAT_TO_UINT(X)    ((GLuint) ((X) * 4294967295.0))
 
 
 /** Convert GLint in [-2147483648,2147483647] to GLfloat in [-1.0,1.0] */
-#define INT_TO_FLOAT(I)     ((2.0F * (I) + 1.0F) * (1.0F/4294967294.0F))
+#define INT_TO_FLOAT(I)     ((GLfloat) ((2.0F * (I) + 1.0F) * (1.0F/4294967294.0)))
 
 /** Convert GLfloat in [-1.0,1.0] to GLint in [-2147483648,2147483647] */
 /* causes overflow:
-#define FLOAT_TO_INT(X)     ( (((GLint) (4294967294.0F * (X))) - 1) / 2 )
+#define FLOAT_TO_INT(X)     ( (((GLint) (4294967294.0 * (X))) - 1) / 2 )
 */
 /* a close approximation: */
 #define FLOAT_TO_INT(X)     ( (GLint) (2147483647.0 * (X)) )
+
+/** Convert GLfloat in [-1.0,1.0] to GLint64 in [-(1<<63),(1 << 63) -1] */
+#define FLOAT_TO_INT64(X)     ( (GLint64) (9223372036854775807.0 * (double)(X)) )
+
+
+/** Convert GLint in [-2147483648,2147483647] to GLfloat in [-1.0,1.0], texture/fb data */
+#define INT_TO_FLOAT_TEX(I)    ((I) == -2147483648 ? -1.0F : (I) * (1.0F/2147483647.0))
+
+/** Convert GLfloat in [-1.0,1.0] to GLint in [-2147483648,2147483647], texture/fb data */
+#define FLOAT_TO_INT_TEX(X)    ( (GLint) (2147483647.0 * (X)) )
 
 
 #define BYTE_TO_UBYTE(b)   ((GLubyte) ((b) < 0 ? 0 : (GLubyte) (b)))
@@ -95,7 +123,7 @@ extern GLfloat _mesa_ubyte_to_float_color_tab[256];
 #define INT_TO_USHORT(i)   ((i) < 0 ? 0 : ((GLushort) ((i) >> 15)))
 #define UINT_TO_USHORT(i)  ((i) < 0 ? 0 : ((GLushort) ((i) >> 16)))
 #define UNCLAMPED_FLOAT_TO_USHORT(us, f)  \
-        us = ( (GLushort) IROUND( CLAMP((f), 0.0, 1.0) * 65535.0F) )
+        us = ( (GLushort) IROUND( CLAMP((f), 0.0F, 1.0F) * 65535.0F) )
 #define CLAMPED_FLOAT_TO_USHORT(us, f)  \
         us = ( (GLushort) IROUND( (f) * 65535.0F) )
 
@@ -174,17 +202,12 @@ do {                                \
 #endif
 
 /**
- * Copy a 4-element float vector (avoid using FPU registers)
- * XXX Could use two 64-bit moves on 64-bit systems
+ * Copy a 4-element float vector
+ * memcpy seems to be most efficient
  */
 #define COPY_4FV( DST, SRC )                  \
 do {                                          \
-   const GLuint *_s = (const GLuint *) (SRC); \
-   GLuint *_d = (GLuint *) (DST);             \
-   _d[0] = _s[0];                             \
-   _d[1] = _s[1];                             \
-   _d[2] = _s[2];                             \
-   _d[3] = _s[3];                             \
+   memcpy(DST, SRC, sizeof(GLfloat) * 4);     \
 } while (0)
 
 /** Copy \p SZ elements into a 4-element vector */
@@ -602,12 +625,6 @@ do {                                    \
 
 /** Clamp X to [MIN,MAX] */
 #define CLAMP( X, MIN, MAX )  ( (X)<(MIN) ? (MIN) : ((X)>(MAX) ? (MAX) : (X)) )
-
-/** Assign X to CLAMP(X, MIN, MAX) */
-#define CLAMP_SELF(x, mn, mx)  \
-   ( (x)<(mn) ? ((x) = (mn)) : ((x)>(mx) ? ((x)=(mx)) : (x)) )
-
-
 
 /** Minimum of two values: */
 #define MIN2( A, B )   ( (A)<(B) ? (A) : (B) )

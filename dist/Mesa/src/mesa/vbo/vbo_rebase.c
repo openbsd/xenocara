@@ -124,9 +124,25 @@ void vbo_rebase_prims( GLcontext *ctx,
    assert(min_index != 0);
 
    if (0)
-      _mesa_printf("%s %d..%d\n", __FUNCTION__, min_index, max_index);
+      printf("%s %d..%d\n", __FUNCTION__, min_index, max_index);
 
-   if (ib) {
+
+   /* XXX this path is disabled for now.
+    * There's rendering corruption in some apps when it's enabled.
+    */
+   if (0 && ib && ctx->Extensions.ARB_draw_elements_base_vertex) {
+      /* If we can just tell the hardware or the TNL to interpret our
+       * indices with a different base, do so.
+       */
+      tmp_prims = (struct _mesa_prim *)malloc(sizeof(*prim) * nr_prims);
+
+      for (i = 0; i < nr_prims; i++) {
+	 tmp_prims[i] = prim[i];
+	 tmp_prims[i].basevertex -= min_index;
+      }
+
+      prim = tmp_prims;
+   } else if (ib) {
       /* Unfortunately need to adjust each index individually.
        */
       GLboolean map_ib = ib->obj->Name && !ib->obj->Pointer;
@@ -161,7 +177,7 @@ void vbo_rebase_prims( GLcontext *ctx,
 				 GL_ELEMENT_ARRAY_BUFFER,
 				 ib->obj);
 
-      tmp_ib.obj = ctx->Array.NullBufferObj;
+      tmp_ib.obj = ctx->Shared->NullBufferObj;
       tmp_ib.ptr = tmp_indices;
       tmp_ib.count = ib->count;
       tmp_ib.type = ib->type;
@@ -171,7 +187,7 @@ void vbo_rebase_prims( GLcontext *ctx,
    else {
       /* Otherwise the primitives need adjustment.
        */
-      tmp_prims = (struct _mesa_prim *)_mesa_malloc(sizeof(*prim) * nr_prims);
+      tmp_prims = (struct _mesa_prim *)malloc(sizeof(*prim) * nr_prims);
 
       for (i = 0; i < nr_prims; i++) {
 	 /* If this fails, it could indicate an application error:
@@ -208,14 +224,15 @@ void vbo_rebase_prims( GLcontext *ctx,
 	 prim, 
 	 nr_prims, 
 	 ib, 
+	 GL_TRUE,
 	 0, 
 	 max_index - min_index );
    
    if (tmp_indices)
-      _mesa_free(tmp_indices);
+      free(tmp_indices);
    
    if (tmp_prims)
-      _mesa_free(tmp_prims);
+      free(tmp_prims);
 }
 
 

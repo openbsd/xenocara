@@ -40,10 +40,11 @@
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/imports.h"
-#include "main/macros.h"
 #include "nvprogram.h"
 #include "nvvertparse.h"
 #include "prog_instruction.h"
+#include "prog_parameter.h"
+#include "prog_print.h"
 #include "program.h"
 
 
@@ -81,7 +82,7 @@ record_error(struct parse_state *parseState, const char *msg, int lineNo)
    _mesa_debug(parseState->ctx,
                "nvfragparse.c(%d): line %d, column %d:%s (%s)\n",
                lineNo, line, column, (char *) lineStr, msg);
-   _mesa_free((void *) lineStr);
+   free((void *) lineStr);
 #else
    (void) lineNo;
 #endif
@@ -110,7 +111,7 @@ do {									\
 #define RETURN_ERROR2(msg1, msg2)					\
 do {									\
    char err[1000];							\
-   _mesa_sprintf(err, "%s %s", msg1, msg2);				\
+   sprintf(err, "%s %s", msg1, msg2);				\
    record_error(parseState, err, __LINE__);				\
    return GL_FALSE;							\
 } while(0)
@@ -231,7 +232,7 @@ Peek_Token(struct parse_state *parseState, GLubyte *token)
       parseState->pos += (-i);
       return GL_FALSE;
    }
-   len = (GLint)_mesa_strlen((const char *) token);
+   len = (GLint) strlen((const char *) token);
    parseState->pos += (i - len);
    return GL_TRUE;
 }
@@ -308,7 +309,7 @@ Parse_TempReg(struct parse_state *parseState, GLint *tempRegNum)
       RETURN_ERROR1("Expected R##");
 
    if (IsDigit(token[1])) {
-      GLint reg = _mesa_atoi((char *) (token + 1));
+      GLint reg = atoi((char *) (token + 1));
       if (reg >= MAX_NV_VERTEX_PROGRAM_TEMPS)
          RETURN_ERROR1("Bad temporary register name");
       *tempRegNum = reg;
@@ -362,7 +363,7 @@ Parse_AbsParamReg(struct parse_state *parseState, GLint *regNum)
 
    if (IsDigit(token[0])) {
       /* a numbered program parameter register */
-      GLint reg = _mesa_atoi((char *) token);
+      GLint reg = atoi((char *) token);
       if (reg >= MAX_NV_VERTEX_PROGRAM_PARAMS)
          RETURN_ERROR1("Bad program parameter number");
       *regNum = reg;
@@ -396,13 +397,13 @@ Parse_ParamReg(struct parse_state *parseState, struct prog_src_register *srcReg)
       /* a numbered program parameter register */
       GLint reg;
       (void) Parse_Token(parseState, token);
-      reg = _mesa_atoi((char *) token);
+      reg = atoi((char *) token);
       if (reg >= MAX_NV_VERTEX_PROGRAM_PARAMS)
          RETURN_ERROR1("Bad program parameter number");
       srcReg->File = PROGRAM_ENV_PARAM;
       srcReg->Index = reg;
    }
-   else if (_mesa_strcmp((const char *) token, "A0") == 0) {
+   else if (strcmp((const char *) token, "A0") == 0) {
       /* address register "A0.x" */
       if (!Parse_AddrReg(parseState))
          RETURN_ERROR;
@@ -422,7 +423,7 @@ Parse_ParamReg(struct parse_state *parseState, struct prog_src_register *srcReg)
             RETURN_ERROR;
 
          if (IsDigit(token[0])) {
-            const GLint k = _mesa_atoi((char *) token);
+            const GLint k = atoi((char *) token);
             if (sign == '-') {
                if (k > 64)
                   RETURN_ERROR1("Bad address offset");
@@ -479,14 +480,14 @@ Parse_AttribReg(struct parse_state *parseState, GLint *tempRegNum)
       RETURN_ERROR1("Only v[0] accessible in vertex state programs");
 
    if (IsDigit(token[0])) {
-      GLint reg = _mesa_atoi((char *) token);
+      GLint reg = atoi((char *) token);
       if (reg >= MAX_NV_VERTEX_PROGRAM_INPUTS)
          RETURN_ERROR1("Bad vertex attribute register name");
       *tempRegNum = reg;
    }
    else {
       for (j = 0; InputRegisters[j]; j++) {
-         if (_mesa_strcmp((const char *) token, InputRegisters[j]) == 0) {
+         if (strcmp((const char *) token, InputRegisters[j]) == 0) {
             *tempRegNum = j;
             break;
          }
@@ -530,7 +531,7 @@ Parse_OutputReg(struct parse_state *parseState, GLint *outputRegNum)
 
    /* try to match an output register name */
    for (j = start; OutputRegisters[j]; j++) {
-      if (_mesa_strcmp((const char *) token, OutputRegisters[j]) == 0) {
+      if (strcmp((const char *) token, OutputRegisters[j]) == 0) {
          *outputRegNum = j;
          break;
       }
@@ -640,12 +641,12 @@ Parse_SwizzleSrcReg(struct parse_state *parseState, struct prog_src_register *sr
       RETURN_ERROR;
    if (token[0] == '-') {
       (void) Parse_String(parseState, "-");
-      srcReg->NegateBase = NEGATE_XYZW;
+      srcReg->Negate = NEGATE_XYZW;
       if (!Peek_Token(parseState, token))
          RETURN_ERROR;
    }
    else {
-      srcReg->NegateBase = NEGATE_NONE;
+      srcReg->Negate = NEGATE_NONE;
    }
 
    /* Src reg can be R<n>, c[n], c[n +/- offset], or a named vertex attrib */
@@ -733,13 +734,13 @@ Parse_ScalarSrcReg(struct parse_state *parseState, struct prog_src_register *src
    if (!Peek_Token(parseState, token))
       RETURN_ERROR;
    if (token[0] == '-') {
-      srcReg->NegateBase = NEGATE_XYZW;
+      srcReg->Negate = NEGATE_XYZW;
       (void) Parse_String(parseState, "-"); /* consume '-' */
       if (!Peek_Token(parseState, token))
          RETURN_ERROR;
    }
    else {
-      srcReg->NegateBase = NEGATE_NONE;
+      srcReg->Negate = NEGATE_NONE;
    }
 
    /* Src reg can be R<n>, c[n], c[n +/- offset], or a named vertex attrib */
@@ -799,7 +800,6 @@ Parse_UnaryOpInstruction(struct parse_state *parseState,
       RETURN_ERROR1("ABS illegal for vertex program 1.0");
 
    inst->Opcode = opcode;
-   inst->StringPos = parseState->curLine - parseState->start;
 
    /* dest reg */
    if (!Parse_MaskedDstReg(parseState, &inst->DstReg))
@@ -832,7 +832,6 @@ Parse_BiOpInstruction(struct parse_state *parseState,
       RETURN_ERROR1("SUB illegal for vertex program 1.0");
 
    inst->Opcode = opcode;
-   inst->StringPos = parseState->curLine - parseState->start;
 
    /* dest reg */
    if (!Parse_MaskedDstReg(parseState, &inst->DstReg))
@@ -880,7 +879,6 @@ Parse_TriOpInstruction(struct parse_state *parseState,
                        enum prog_opcode opcode)
 {
    inst->Opcode = opcode;
-   inst->StringPos = parseState->curLine - parseState->start;
 
    /* dest reg */
    if (!Parse_MaskedDstReg(parseState, &inst->DstReg))
@@ -951,7 +949,6 @@ Parse_ScalarInstruction(struct parse_state *parseState,
       RETURN_ERROR1("RCC illegal for vertex program 1.0");
 
    inst->Opcode = opcode;
-   inst->StringPos = parseState->curLine - parseState->start;
 
    /* dest reg */
    if (!Parse_MaskedDstReg(parseState, &inst->DstReg))
@@ -977,7 +974,6 @@ static GLboolean
 Parse_AddressInstruction(struct parse_state *parseState, struct prog_instruction *inst)
 {
    inst->Opcode = OPCODE_ARL;
-   inst->StringPos = parseState->curLine - parseState->start;
 
    /* Make ARB_vp backends happy */
    inst->DstReg.File = PROGRAM_ADDRESS;
@@ -1010,7 +1006,6 @@ Parse_EndInstruction(struct parse_state *parseState, struct prog_instruction *in
    GLubyte token[100];
 
    inst->Opcode = OPCODE_END;
-   inst->StringPos = parseState->curLine - parseState->start;
 
    /* this should fail! */
    if (Parse_Token(parseState, token))
@@ -1044,7 +1039,6 @@ Parse_PrintInstruction(struct parse_state *parseState, struct prog_instruction *
    GLint idx;
 
    inst->Opcode = OPCODE_PRINT;
-   inst->StringPos = parseState->curLine - parseState->start;
 
    /* The first argument is a literal string 'just like this' */
    if (!Parse_String(parseState, "'"))
@@ -1054,9 +1048,9 @@ Parse_PrintInstruction(struct parse_state *parseState, struct prog_instruction *
    for (len = 0; str[len] != '\''; len++) /* find closing quote */
       ;
    parseState->pos += len + 1;
-   msg = (GLubyte*) _mesa_malloc(len + 1);
+   msg = (GLubyte*) malloc(len + 1);
 
-   _mesa_memcpy(msg, str, len);
+   memcpy(msg, str, len);
    msg[len] = 0;
    inst->Data = msg;
 
@@ -1068,7 +1062,7 @@ Parse_PrintInstruction(struct parse_state *parseState, struct prog_instruction *
          RETURN_ERROR;
 
       srcReg->RelAddr = GL_FALSE;
-      srcReg->NegateBase = NEGATE_NONE;
+      srcReg->Negate = NEGATE_NONE;
       srcReg->Swizzle = SWIZZLE_NOOP;
 
       /* Register can be R<n>, c[n], c[n +/- offset], a named vertex attrib,
@@ -1302,7 +1296,7 @@ _mesa_parse_nv_vertex_program(GLcontext *ctx, GLenum dstTarget,
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glLoadProgramNV");
       return;
    }
-   MEMCPY(programString, str, len);
+   memcpy(programString, str, len);
    programString[len] = 0;
 
    /* Get ready to parse */
@@ -1319,18 +1313,18 @@ _mesa_parse_nv_vertex_program(GLcontext *ctx, GLenum dstTarget,
    _mesa_set_program_error(ctx, -1, NULL);
 
    /* check the program header */
-   if (_mesa_strncmp((const char *) programString, "!!VP1.0", 7) == 0) {
+   if (strncmp((const char *) programString, "!!VP1.0", 7) == 0) {
       target = GL_VERTEX_PROGRAM_NV;
       parseState.pos = programString + 7;
       parseState.isStateProgram = GL_FALSE;
    }
-   else if (_mesa_strncmp((const char *) programString, "!!VP1.1", 7) == 0) {
+   else if (strncmp((const char *) programString, "!!VP1.1", 7) == 0) {
       target = GL_VERTEX_PROGRAM_NV;
       parseState.pos = programString + 7;
       parseState.isStateProgram = GL_FALSE;
       parseState.isVersion1_1 = GL_TRUE;
    }
-   else if (_mesa_strncmp((const char *) programString, "!!VSP1.0", 8) == 0) {
+   else if (strncmp((const char *) programString, "!!VSP1.0", 8) == 0) {
       target = GL_VERTEX_STATE_PROGRAM_NV;
       parseState.pos = programString + 8;
       parseState.isStateProgram = GL_TRUE;
@@ -1351,6 +1345,9 @@ _mesa_parse_nv_vertex_program(GLcontext *ctx, GLenum dstTarget,
 
 
    if (Parse_Program(&parseState, instBuffer)) {
+      gl_state_index state_tokens[STATE_LENGTH] = {0, 0, 0, 0, 0};
+      int i;
+
       /* successful parse! */
 
       if (parseState.isStateProgram) {
@@ -1375,7 +1372,7 @@ _mesa_parse_nv_vertex_program(GLcontext *ctx, GLenum dstTarget,
       newInst = _mesa_alloc_instructions(parseState.numInst);
       if (!newInst) {
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "glLoadProgramNV");
-         _mesa_free(programString);
+         free(programString);
          return;  /* out of memory */
       }
       _mesa_copy_instructions(newInst, instBuffer, parseState.numInst);
@@ -1383,12 +1380,12 @@ _mesa_parse_nv_vertex_program(GLcontext *ctx, GLenum dstTarget,
       /* install the program */
       program->Base.Target = target;
       if (program->Base.String) {
-         _mesa_free(program->Base.String);
+         free(program->Base.String);
       }
       program->Base.String = programString;
       program->Base.Format = GL_PROGRAM_FORMAT_ASCII_ARB;
       if (program->Base.Instructions) {
-         _mesa_free(program->Base.Instructions);
+         free(program->Base.Instructions);
       }
       program->Base.Instructions = newInst;
       program->Base.InputsRead = parseState.inputsRead;
@@ -1400,10 +1397,33 @@ _mesa_parse_nv_vertex_program(GLcontext *ctx, GLenum dstTarget,
       program->IsNVProgram = GL_TRUE;
 
 #ifdef DEBUG_foo
-      _mesa_printf("--- glLoadProgramNV result ---\n");
-      _mesa_print_nv_vertex_program(program);
-      _mesa_printf("------------------------------\n");
+      printf("--- glLoadProgramNV result ---\n");
+      _mesa_fprint_program_opt(stdout, &program->Base, PROG_PRINT_NV, 0);
+      printf("------------------------------\n");
 #endif
+
+      if (program->Base.Parameters)
+	 _mesa_free_parameter_list(program->Base.Parameters);
+
+      program->Base.Parameters = _mesa_new_parameter_list ();
+      program->Base.NumParameters = 0;
+
+      state_tokens[0] = STATE_VERTEX_PROGRAM;
+      state_tokens[1] = STATE_ENV;
+      /* Add refs to all of the potential params, in order.  If we want to not
+       * upload everything, _mesa_layout_parameters is the answer.
+       */
+      for (i = 0; i < MAX_NV_VERTEX_PROGRAM_PARAMS; i++) {
+	 GLint index;
+	 state_tokens[2] = i;
+	 index = _mesa_add_state_reference(program->Base.Parameters,
+					   state_tokens);
+	 assert(index == i);
+      }
+      program->Base.NumParameters = program->Base.Parameters->NumParameters;
+
+      _mesa_setup_nv_temporary_count(ctx, &program->Base);
+      _mesa_emit_nv_temp_initialization(ctx, &program->Base);
    }
    else {
       /* Error! */
@@ -1413,161 +1433,6 @@ _mesa_parse_nv_vertex_program(GLcontext *ctx, GLenum dstTarget,
        * so we reset it here.
        */
       _mesa_set_program_error(ctx, ctx->Program.ErrorPos, NULL);
-   }
-}
-
-
-static void
-PrintSrcReg(const struct prog_src_register *src)
-{
-   static const char comps[5] = "xyzw";
-   if (src->NegateBase)
-      _mesa_printf("-");
-   if (src->RelAddr) {
-      if (src->Index > 0)
-         _mesa_printf("c[A0.x + %d]", src->Index);
-      else if (src->Index < 0)
-         _mesa_printf("c[A0.x - %d]", -src->Index);
-      else
-         _mesa_printf("c[A0.x]");
-   }
-   else if (src->File == PROGRAM_OUTPUT) {
-      _mesa_printf("o[%s]", OutputRegisters[src->Index]);
-   }
-   else if (src->File == PROGRAM_INPUT) {
-      _mesa_printf("v[%s]", InputRegisters[src->Index]);
-   }
-   else if (src->File == PROGRAM_ENV_PARAM) {
-      _mesa_printf("c[%d]", src->Index);
-   }
-   else {
-      ASSERT(src->File == PROGRAM_TEMPORARY);
-      _mesa_printf("R%d", src->Index);
-   }
-
-   if (GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 1) &&
-       GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 2) &&
-       GET_SWZ(src->Swizzle, 0) == GET_SWZ(src->Swizzle, 3)) {
-      _mesa_printf(".%c", comps[GET_SWZ(src->Swizzle, 0)]);
-   }
-   else if (src->Swizzle != SWIZZLE_NOOP) {
-      _mesa_printf(".%c%c%c%c",
-             comps[GET_SWZ(src->Swizzle, 0)],
-             comps[GET_SWZ(src->Swizzle, 1)],
-             comps[GET_SWZ(src->Swizzle, 2)],
-             comps[GET_SWZ(src->Swizzle, 3)]);
-   }
-}
-
-
-static void
-PrintDstReg(const struct prog_dst_register *dst)
-{
-   if (dst->File == PROGRAM_OUTPUT) {
-      _mesa_printf("o[%s]", OutputRegisters[dst->Index]);
-   }
-   else if (dst->File == PROGRAM_INPUT) {
-      _mesa_printf("v[%s]", InputRegisters[dst->Index]);
-   }
-   else if (dst->File == PROGRAM_ENV_PARAM) {
-      _mesa_printf("c[%d]", dst->Index);
-   }
-   else {
-      ASSERT(dst->File == PROGRAM_TEMPORARY);
-      _mesa_printf("R%d", dst->Index);
-   }
-
-   if (dst->WriteMask != 0 && dst->WriteMask != WRITEMASK_XYZW) {
-      _mesa_printf(".");
-      if (dst->WriteMask & WRITEMASK_X)
-         _mesa_printf("x");
-      if (dst->WriteMask & WRITEMASK_Y)
-         _mesa_printf("y");
-      if (dst->WriteMask & WRITEMASK_Z)
-         _mesa_printf("z");
-      if (dst->WriteMask & WRITEMASK_W)
-         _mesa_printf("w");
-   }
-}
-
-
-/**
- * Print a single NVIDIA vertex program instruction.
- */
-void
-_mesa_print_nv_vertex_instruction(const struct prog_instruction *inst)
-{
-   GLuint i, n;
-
-   switch (inst->Opcode) {
-      case OPCODE_MOV:
-      case OPCODE_LIT:
-      case OPCODE_RCP:
-      case OPCODE_RSQ:
-      case OPCODE_EXP:
-      case OPCODE_LOG:
-      case OPCODE_RCC:
-      case OPCODE_ABS:
-      case OPCODE_MUL:
-      case OPCODE_ADD:
-      case OPCODE_DP3:
-      case OPCODE_DP4:
-      case OPCODE_DST:
-      case OPCODE_MIN:
-      case OPCODE_MAX:
-      case OPCODE_SLT:
-      case OPCODE_SGE:
-      case OPCODE_DPH:
-      case OPCODE_SUB:
-      case OPCODE_MAD:
-         _mesa_printf("%s ", _mesa_opcode_string(inst->Opcode));
-         PrintDstReg(&inst->DstReg);
-         _mesa_printf(", ");
-         n = _mesa_num_inst_src_regs(inst->Opcode);
-         for (i = 0; i < n; i++) {
-            PrintSrcReg(&inst->SrcReg[i]);
-            if (i + 1 < n)
-               _mesa_printf(", ");
-         }
-         _mesa_printf(";\n");
-         break;
-      case OPCODE_ARL:
-         _mesa_printf("ARL A0.x, ");
-         PrintSrcReg(&inst->SrcReg[0]);
-         _mesa_printf(";\n");
-         break;
-      case OPCODE_PRINT:
-         _mesa_printf("PRINT '%s'", inst->Data);
-         if (inst->SrcReg[0].File != PROGRAM_UNDEFINED) {
-            _mesa_printf(", ");
-            PrintSrcReg(&inst->SrcReg[0]);
-            _mesa_printf(";\n");
-         }
-         else {
-            _mesa_printf("\n");
-         }
-         break;
-      case OPCODE_END:
-         _mesa_printf("END\n");
-         break;
-      default:
-         _mesa_printf("BAD INSTRUCTION\n");
-   }
-}
-
-
-/**
- * Print (unparse) the given vertex program.  Just for debugging.
- */
-void
-_mesa_print_nv_vertex_program(const struct gl_vertex_program *program)
-{
-   const struct prog_instruction *inst;
-
-   for (inst = program->Base.Instructions; ; inst++) {
-      _mesa_print_nv_vertex_instruction(inst);
-      if (inst->Opcode == OPCODE_END)
-         return;
    }
 }
 

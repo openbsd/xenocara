@@ -8,73 +8,173 @@ TOP = ../..
 include $(TOP)/configs/current
 
 
-LIBS = -L$(TOP)/$(LIB_DIR) -l$(GLUT_LIB) -l$(GLU_LIB) -l$(GL_LIB) $(APP_LIB_DEPS)
+LIBS = -L$(TOP)/$(LIB_DIR) -l $(GLEW_LIB) -l$(GLUT_LIB) -l$(GLU_LIB) -l$(GL_LIB) $(APP_LIB_DEPS)
 
 SOURCES = \
+	clear-fbo-tex.c \
+	clear-fbo.c \
+	clear-scissor.c \
+	clear-undefined.c \
+	clear-repeat.c \
+	clear-random.c \
 	clear.c \
+	createwin.c \
+	dlist-dangling.c \
+	dlist-flat-tri.c \
+	dlist-mat-tri.c \
+	dlist-tri-flat-tri.c \
+	dlist-tri-mat-tri.c \
+	dlist-recursive-call.c \
+	dlist-begin-call-end.c \
+	dlist-edgeflag-dangling.c \
+	dlist-edgeflag.c \
+	dlist-degenerate.c \
+	drawarrays.c \
+	draw2arrays.c \
+	drawelements.c \
+	drawrange.c \
+	flat-clip.c \
+	fs-tri.c \
 	line-clip.c \
 	line-cull.c \
+	line-flat.c \
+	line-smooth.c \
+	line-stipple-wide.c \
 	line-userclip-clip.c \
 	line-userclip-nop-clip.c \
 	line-userclip-nop.c \
 	line-userclip.c \
+	line-wide.c \
 	line.c \
 	lineloop-clip.c \
+	lineloop-elts.c \
 	lineloop.c \
-	point.c \
+	linestrip-clip.c \
+	linestrip-flat-stipple.c \
+	linestrip-stipple-wide.c \
+	linestrip-stipple.c \
+	linestrip.c \
+	long-fixed-func.c \
+	pgon-mode.c \
 	point-clip.c \
 	point-param.c \
+	point-sprite.c \
 	point-wide.c \
+	point-wide-smooth.c \
+	point.c \
 	poly-flat.c \
+	poly-flat-clip.c \
+	poly-flat-unfilled-clip.c \
 	poly-unfilled.c \
 	poly.c \
-	quad-clip.c \
 	quad-clip-all-vertices.c \
 	quad-clip-nearplane.c \
+	quad-clip.c \
 	quad-degenerate.c \
 	quad-flat.c \
 	quad-offset-factor.c \
-	quad-offset-units.c \
 	quad-offset-unfilled.c \
-	quad-unfilled.c \
+	quad-offset-units.c \
 	quad-tex-2d.c \
-	quad-tex-pbo.c \
 	quad-tex-3d.c \
+	quad-tex-alpha.c \
+	quad-tex-pbo.c \
+	quad-tex-sub.c \
+	quad-unfilled-clip.c \
+	quad-unfilled-stipple.c \
+	quad-unfilled.c \
 	quad.c \
 	quads.c \
-	quadstrip.c \
+	quadstrip-clip.c \
+	quadstrip-cont.c \
 	quadstrip-flat.c \
-	dlist-edgeflag.c \
-	dlist-dangling.c \
-	dlist-edgeflag-dangling.c \
-	dlist-degenerate.c \
-	drawrange.c \
-	drawelements.c \
-	drawarrays.c \
+	quadstrip.c \
+	readpixels.c \
+	sub-tex.c \
+	tex-quads.c \
+	tri-alpha.c \
+	tri-alpha-tex.c \
+	tri-array-interleaved.c \
+	tri-blend-color.c \
+	tri-blend-max.c \
+	tri-blend-min.c \
+	tri-blend-revsub.c \
+	tri-blend-sub.c \
 	tri-blend.c \
-	tri-tex-3d.c \
+	tri-clear.c \
 	tri-clip.c \
+	tri-cull-both.c \
 	tri-cull.c \
+	tri-logicop-none.c \
+	tri-logicop-xor.c \
+	tri-dlist.c \
 	tri-edgeflag.c \
+	tri-fbo-tex-mip.c \
+	tri-fbo-tex.c \
+	tri-fbo.c \
 	tri-flat-clip.c \
 	tri-flat.c \
+	tri-fog.c \
+	tri-fp.c \
+	tri-fp-const-imm.c \
+	tri-lit.c \
+	tri-lit-material.c \
+	tri-mask-tri.c \
+	tri-orig.c \
+	tri-point-line-clipped.c \
+	tri-query.c \
+	tri-repeat.c \
+	tri-scissor-tri.c \
+	tri-square.c \
+	tri-stencil.c \
+	tri-stipple.c \
+	tri-multitex-vbo.c \
+	tri-tex.c \
+	tri-tex-3d.c \
+	tri-tri.c \
+	tri-unfilled-fog.c \
+	tri-unfilled-edgeflag.c \
 	tri-unfilled-clip.c \
+	tri-unfilled-point.c \
 	tri-unfilled-smooth.c \
+	tri-unfilled-tri.c \
+	tri-unfilled-tri-lit.c \
+	tri-unfilled-userclip-stip.c \
 	tri-unfilled-userclip.c \
 	tri-unfilled.c \
 	tri-userclip.c \
-	tri-dlist.c \
+	tri-viewport.c \
+	tri-z-9.c \
+	tri-z-eq.c \
+	tri-z.c \
 	tri.c \
+	trifan-flat.c \
+	trifan-flat-clip.c \
+	trifan-flat-unfilled-clip.c \
+	trifan-unfilled.c \
+	trifan.c \
 	tristrip-clip.c \
+	tristrip-flat.c \
 	tristrip.c \
-	vbo-drawrange.c \
-	vbo-drawelements.c \
+	vbo-tri.c \
 	vbo-drawarrays.c \
+	vbo-noninterleaved.c \
+	vbo-drawelements.c \
+	vbo-drawrange.c \
+	vp-array.c \
+	vp-array-hf.c \
+	vp-array-int.c \
 	vp-clip.c \
-	vp-tri.c \
 	vp-line-clip.c \
-	vp-unfilled.c \
-	vp-array.c 
+	vp-tri.c \
+	vp-tri-invariant.c \
+	vp-tri-swap.c \
+	vp-tri-tex.c \
+	vp-tri-imm.c \
+	vp-tri-cb.c \
+	vp-tri-cb-pos.c \
+	vp-tri-cb-tex.c \
+	vp-unfilled.c 
 
 PROGS = $(SOURCES:%.c=%)
 
@@ -89,13 +189,13 @@ UTIL_FILES = readtex.h readtex.c
 .SUFFIXES: .c
 
 .c:
-	$(CC) $(INCLUDES) $(CFLAGS) $(LDFLAGS) $< $(LIBS) -o $@
+	$(APP_CC) $(INCLUDES) $(CFLAGS) $(LDFLAGS) $< $(LIBS) -o $@
 
 .c.o:
-	$(CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
+	$(APP_CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
 
 .S.o:
-	$(CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES)  $< -o $@
+	$(APP_CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES)  $< -o $@
 
 
 ##### TARGETS #####
@@ -105,30 +205,22 @@ default: $(UTIL_FILES) $(PROGS)
 clean:
 	-rm -f $(PROGS)
 	-rm -f *.o
-	-rm -f getproclist.h
-
-
-# auto code generation
-getprocaddress: getprocaddress.c getproclist.h
-
-getproclist.h: $(TOP)/src/mesa/glapi/gl_API.xml getprocaddress.c getprocaddress.py
-	python getprocaddress.py > getproclist.h
 
 
 texrect: texrect.o readtex.o
-	$(CC) $(CFLAGS) $(LDFLAGS) texrect.o readtex.o $(LIBS) -o $@
+	$(APP_CC) $(CFLAGS) $(LDFLAGS) texrect.o readtex.o $(LIBS) -o $@
 
 texrect.o: texrect.c readtex.h
-	$(CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
+	$(APP_CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
 
 invert: invert.o readtex.o
-	$(CC) $(CFLAGS) $(LDFLAGS) invert.o readtex.o $(LIBS) -o $@
+	$(APP_CC) $(CFLAGS) $(LDFLAGS) invert.o readtex.o $(LIBS) -o $@
 
 invert.o: invert.c readtex.h
-	$(CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
+	$(APP_CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
 
 readtex.o: readtex.c
-	$(CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
+	$(APP_CC) -c $(INCLUDES) $(CFLAGS) $(DEFINES) $< -o $@
 
 
 readtex.h: $(TOP)/progs/util/readtex.h
@@ -138,6 +230,11 @@ readtex.c: $(TOP)/progs/util/readtex.c
 	ln -s $(TOP)/progs/util/readtex.c .
 
 
+fs-tri: fs-tri.c extfuncs.h
+
+
+extfuncs.h:  $(TOP)/progs/util/extfuncs.h
+	cp $< .
 
 
 # Emacs tags

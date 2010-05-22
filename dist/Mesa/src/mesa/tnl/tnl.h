@@ -66,7 +66,7 @@ _tnl_allow_vertex_fog( GLcontext *ctx, GLboolean value );
 extern void
 _tnl_allow_pixel_fog( GLcontext *ctx, GLboolean value );
 
-extern void
+extern GLboolean
 _tnl_program_string(GLcontext *ctx, GLenum target, struct gl_program *program);
 
 struct _mesa_prim;
@@ -81,6 +81,18 @@ _tnl_draw_prims( GLcontext *ctx,
 		 GLuint min_index,
 		 GLuint max_index);
 
+void
+_tnl_vbo_draw_prims( GLcontext *ctx,
+		     const struct gl_client_array *arrays[],
+		     const struct _mesa_prim *prim,
+		     GLuint nr_prims,
+		     const struct _mesa_index_buffer *ib,
+		     GLboolean index_bounds_valid,
+		     GLuint min_index,
+		     GLuint max_index);
+
+extern void
+_mesa_load_tracked_matrices(GLcontext *ctx);
 
 extern void
 _tnl_RasterPos(GLcontext *ctx, const GLfloat vObj[4]);

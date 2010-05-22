@@ -1,25 +1,3 @@
-/* $XFree86: xc/lib/GL/dri/dri_util.h,v 1.1 2002/02/22 21:32:52 dawes Exp $ */
-/**
- * \file dri_util.h
- * DRI utility functions definitions.
- *
- * This module acts as glue between GLX and the actual hardware driver.  A DRI
- * driver doesn't really \e have to use any of this - it's optional.  But, some
- * useful stuff is done here that otherwise would have to be duplicated in most
- * drivers.
- * 
- * Basically, these utility functions take care of some of the dirty details of
- * screen initialization, context creation, context binding, DRM setup, etc.
- *
- * These functions are compiled into each DRI driver so libGL.so knows nothing
- * about them.
- *
- * \sa dri_util.c.
- * 
- * \author Kevin E. Martin <kevin@precisioninsight.com>
- * \author Brian Paul <brian@precisioninsight.com>
- */
-
 /*
  * Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
  * All Rights Reserved.
@@ -45,6 +23,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * \file dri_util.h
+ * DRI utility functions definitions.
+ *
+ * This module acts as glue between GLX and the actual hardware driver.  A DRI
+ * driver doesn't really \e have to use any of this - it's optional.  But, some
+ * useful stuff is done here that otherwise would have to be duplicated in most
+ * drivers.
+ * 
+ * Basically, these utility functions take care of some of the dirty details of
+ * screen initialization, context creation, context binding, DRM setup, etc.
+ *
+ * These functions are compiled into each DRI driver so libGL.so knows nothing
+ * about them.
+ *
+ * \sa dri_util.c.
+ * 
+ * \author Kevin E. Martin <kevin@precisioninsight.com>
+ * \author Brian Paul <brian@precisioninsight.com>
+ */
 
 #ifndef _DRI_UTIL_H_
 #define _DRI_UTIL_H_
@@ -61,16 +59,12 @@
 
 typedef struct __DRIswapInfoRec        __DRIswapInfo;
 
-/* Typedefs to avoid rewriting the world. */
-typedef struct __DRIscreenRec	__DRIscreenPrivate;
-typedef struct __DRIdrawableRec	__DRIdrawablePrivate;
-typedef struct __DRIcontextRec	__DRIcontextPrivate;
-
 /**
  * Extensions.
  */
 extern const __DRIlegacyExtension driLegacyExtension;
 extern const __DRIcoreExtension driCoreExtension;
+extern const __DRIdri2Extension driDRI2Extension;
 extern const __DRIextension driReadDrawableExtension;
 extern const __DRIcopySubBufferExtension driCopySubBufferExtension;
 extern const __DRIswapControlExtension driSwapControlExtension;
@@ -301,7 +295,8 @@ struct __DRIdrawableRec {
     unsigned int index;
 
     /**
-     * Pointer to the "drawable has changed ID" stamp in the SAREA.
+     * Pointer to the "drawable has changed ID" stamp in the SAREA (or
+     * to dri2.stamp if DRI2 is being used).
      */
     unsigned int *pStamp;
 
@@ -382,6 +377,11 @@ struct __DRIdrawableRec {
      * GLX_MESA_swap_control.
      */
     unsigned int swap_interval;
+
+    struct {
+	unsigned int stamp;
+	drm_clip_rect_t clipRect;
+    } dri2;
 };
 
 /**
@@ -417,6 +417,16 @@ struct __DRIcontextRec {
      * Pointer to screen on which this context was created.
      */
     __DRIscreen *driScreenPriv;
+
+    /**
+     * The loaders's private context data.  This structure is opaque.
+     */
+    void *loaderPrivate;
+
+    struct {
+	int draw_stamp;
+	int read_stamp;
+    } dri2;
 };
 
 /**
@@ -534,6 +544,7 @@ struct __DRIscreenRec {
 	 * fields will not be valid or initializaed in that case. */
 	int enabled;
 	__DRIdri2LoaderExtension *loader;
+	__DRIimageLookupExtension *image;
     } dri2;
 
     /* The lock actually in use, old sarea or DRI2 */
@@ -553,5 +564,8 @@ driCalculateSwapUsage( __DRIdrawable *dPriv,
 
 extern GLint
 driIntersectArea( drm_clip_rect_t rect1, drm_clip_rect_t rect2 );
+
+extern void
+dri2InvalidateDrawable(__DRIdrawable *drawable);
 
 #endif /* _DRI_UTIL_H_ */

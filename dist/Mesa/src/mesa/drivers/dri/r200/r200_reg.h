@@ -463,8 +463,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define     R200_VSC_UPDATE_USER_COLOR_1_ENABLE    0x00020000
 /* gap */
 #define R200_SE_TCL_VECTOR_INDX_REG                0x2200
+#       define RADEON_VEC_INDX_OCTWORD_STRIDE_SHIFT  16
+#       define RADEON_VEC_INDX_DWORD_COUNT_SHIFT     28
 #define R200_SE_TCL_VECTOR_DATA_REG                0x2204
 #define R200_SE_TCL_SCALAR_INDX_REG                0x2208
+#       define RADEON_SCAL_INDX_DWORD_STRIDE_SHIFT  16
 #define R200_SE_TCL_SCALAR_DATA_REG                0x220c
 /* gap */
 #define R200_SE_TCL_MATRIX_SEL_0                   0x2230
@@ -687,7 +690,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #       define R200_PVS_CNTL_1_PROGRAM_START_SHIFT   0
 #       define R200_PVS_CNTL_1_POS_END_SHIFT         10
 #       define R200_PVS_CNTL_1_PROGRAM_END_SHIFT     20
-/* Addresses are relative the the vertex program parameters area. */
+/* Addresses are relative to the vertex program parameters area. */
 #define R200_VAP_PVS_CNTL_2                 0x22d4
 #       define R200_PVS_CNTL_2_PARAM_OFFSET_SHIFT 0
 #       define R200_PVS_CNTL_2_PARAM_COUNT_SHIFT  16
@@ -935,7 +938,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define     R200_CLAMP_Q_CLAMP_GL                     (6  << 9)
 #define     R200_CLAMP_Q_MIRROR_CLAMP_GL              (7  << 9)
 #define     R200_CLAMP_Q_MASK                         (7  << 9)
-#define     R200_MIN_MIP_LEVEL_MASK                   (0xff << 12)
+#define     R200_MIN_MIP_LEVEL_MASK                   (0x0f << 12)
 #define     R200_MIN_MIP_LEVEL_SHIFT                  12
 #define     R200_TEXCOORD_NONPROJ                     (0  << 16)
 #define     R200_TEXCOORD_CUBIC_ENV                   (1  << 16)
@@ -947,8 +950,13 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define     R200_TEXCOORD_ZERO                        (7  << 16)
 #define     R200_TEXCOORD_MASK                        (7  << 16)
 #define     R200_LOD_BIAS_MASK                        (0xfff80000)
+#define     R200_LOD_BIAS_FIXED_ONE                   (0x08000000)
+#define     R200_LOD_BIAS_CORRECTION                  (0x00600000)
 #define     R200_LOD_BIAS_SHIFT                       19
 #define R200_PP_TXSIZE_0                  0x2c0c /* NPOT only */
+#define R200_PP_TX_WIDTHMASK_SHIFT 0
+#define R200_PP_TX_HEIGHTMASK_SHIFT 16
+
 #define R200_PP_TXPITCH_0                 0x2c10 /* NPOT only */
 #define R200_PP_BORDER_COLOR_0            0x2c14
 #define R200_PP_CUBIC_FACES_0             0x2c18

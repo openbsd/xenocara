@@ -44,6 +44,7 @@ struct cache_item
 struct gl_program_cache
 {
    struct cache_item **items;
+   struct cache_item *last;
    GLuint size, n_items;
 };
 
@@ -83,9 +84,11 @@ rehash(struct gl_program_cache *cache)
    struct cache_item *c, *next;
    GLuint size, i;
 
+   cache->last = NULL;
+
    size = cache->size * 3;
-   items = (struct cache_item**) _mesa_malloc(size * sizeof(*items));
-   _mesa_memset(items, 0, size * sizeof(*items));
+   items = (struct cache_item**) malloc(size * sizeof(*items));
+   memset(items, 0, size * sizeof(*items));
 
    for (i = 0; i < cache->size; i++)
       for (c = cache->items[i]; c; c = next) {
@@ -94,7 +97,7 @@ rehash(struct gl_program_cache *cache)
 	 items[c->hash % size] = c;
       }
 
-   _mesa_free(cache->items);
+   free(cache->items);
    cache->items = items;
    cache->size = size;
 }
@@ -105,13 +108,15 @@ clear_cache(GLcontext *ctx, struct gl_program_cache *cache)
 {
    struct cache_item *c, *next;
    GLuint i;
+   
+   cache->last = NULL;
 
    for (i = 0; i < cache->size; i++) {
       for (c = cache->items[i]; c; c = next) {
 	 next = c->next;
-	 _mesa_free(c->key);
+	 free(c->key);
          _mesa_reference_program(ctx, &c->program, NULL);
-	 _mesa_free(c);
+	 free(c);
       }
       cache->items[i] = NULL;
    }
@@ -129,9 +134,9 @@ _mesa_new_program_cache(void)
    if (cache) {
       cache->size = 17;
       cache->items = (struct cache_item **)
-         _mesa_calloc(cache->size * sizeof(struct cache_item));
+         calloc(1, cache->size * sizeof(struct cache_item));
       if (!cache->items) {
-         _mesa_free(cache);
+         free(cache);
          return NULL;
       }
    }
@@ -143,24 +148,32 @@ void
 _mesa_delete_program_cache(GLcontext *ctx, struct gl_program_cache *cache)
 {
    clear_cache(ctx, cache);
-   _mesa_free(cache->items);
-   _mesa_free(cache);
+   free(cache->items);
+   free(cache);
 }
 
 
 struct gl_program *
-_mesa_search_program_cache(const struct gl_program_cache *cache,
+_mesa_search_program_cache(struct gl_program_cache *cache,
                            const void *key, GLuint keysize)
 {
-   const GLuint hash = hash_key(key, keysize);
-   struct cache_item *c;
-
-   for (c = cache->items[hash % cache->size]; c; c = c->next) {
-      if (c->hash == hash && memcmp(c->key, key, keysize) == 0)
-	 return c->program;
+   if (cache->last && 
+       memcmp(cache->last->key, key, keysize) == 0) {
+      return cache->last->program;
    }
+   else {
+      const GLuint hash = hash_key(key, keysize);
+      struct cache_item *c;
 
-   return NULL;
+      for (c = cache->items[hash % cache->size]; c; c = c->next) {
+         if (c->hash == hash && memcmp(c->key, key, keysize) == 0) {
+            cache->last = c;
+            return c->program;
+         }
+      }
+
+      return NULL;
+   }
 }
 
 
@@ -175,7 +188,7 @@ _mesa_program_cache_insert(GLcontext *ctx,
 
    c->hash = hash;
 
-   c->key = _mesa_malloc(keysize);
+   c->key = malloc(keysize);
    memcpy(c->key, key, keysize);
 
    c->program = program;  /* no refcount change */

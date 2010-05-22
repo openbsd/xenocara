@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#define GL_GLEXT_PROTOTYPES
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 
@@ -140,9 +140,16 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( 50, 50 );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
    glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );
+
+   if (!glutExtensionSupported("GL_NV_vertex_program")) {
+      printf("Sorry, this program requires GL_NV_vertex_program\n");
+      exit(1);
+   }
+
    Test1();
    Test2();
    Test3();

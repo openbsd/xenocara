@@ -11,7 +11,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#define GL_GLEXT_PROTOTYPES
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 
@@ -248,13 +248,11 @@ static void Init2( void )
 
 int main( int argc, char *argv[] )
 {
-   glutInit( &argc, argv );
-   glutInitWindowPosition( 0, 0 );
    glutInitWindowSize( 400, 300 );
-
+   glutInit( &argc, argv );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
-
    glutCreateWindow(argv[0]);
+   glewInit();
 
    Init();
    (void) Init2; /* silence warning */

@@ -38,8 +38,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
-#include <GL/glext.h>
 
 static unsigned data[16];
 
@@ -59,6 +59,7 @@ main( int argc, char ** argv )
    glutInitWindowPosition( 0, 0 );
    glutInitWindowSize( 300, 300 );
    glutCreateWindow( "No S3TC Test" );
+   glewInit();
 
    gl_version = strtod( (const char *) glGetString( GL_VERSION ), NULL );
    if ( ! glutExtensionSupported( "GL_ARB_texture_compression" )

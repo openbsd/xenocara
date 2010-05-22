@@ -31,6 +31,11 @@
 #include "macros.h"
 #include "state.h"
 #include "teximage.h"
+#include "texstate.h"
+#include "main/dispatch.h"
+
+
+#if FEATURE_colortable
 
 
 /**
@@ -179,26 +184,12 @@ store_colortable_entries(GLcontext *ctx, struct gl_color_table *table,
 			 GLfloat bScale, GLfloat bBias,
 			 GLfloat aScale, GLfloat aBias)
 {
-   if (ctx->Unpack.BufferObj->Name) {
-      /* Get/unpack the color table data from a PBO */
-      GLubyte *buf;
-      if (!_mesa_validate_pbo_access(1, &ctx->Unpack, count, 1, 1,
-                                     format, type, data)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glColor[Sub]Table(bad PBO access)");
-         return;
-      }
-      buf = (GLubyte *) ctx->Driver.MapBuffer(ctx, GL_PIXEL_UNPACK_BUFFER_EXT,
-                                              GL_READ_ONLY_ARB,
-                                              ctx->Unpack.BufferObj);
-      if (!buf) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glColor[Sub]Table(PBO mapped)");
-         return;
-      }
-      data = ADD_POINTERS(buf, data);
-   }
-
+   data = _mesa_map_validate_pbo_source(ctx, 
+                                        1, &ctx->Unpack, count, 1, 1,
+                                        format, type, data,
+                                        "glColor[Sub]Table");
+   if (!data)
+      return;
 
    {
       /* convert user-provided data to GLfloat values */
@@ -279,10 +270,7 @@ store_colortable_entries(GLcontext *ctx, struct gl_color_table *table,
       }
    }
 
-   if (ctx->Unpack.BufferObj->Name) {
-      ctx->Driver.UnmapBuffer(ctx, GL_PIXEL_UNPACK_BUFFER_EXT,
-                              ctx->Unpack.BufferObj);
-   }
+   _mesa_unmap_pbo_source(ctx, &ctx->Unpack);
 }
 
 
@@ -295,7 +283,7 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
    static const GLfloat one[4] = { 1.0, 1.0, 1.0, 1.0 };
    static const GLfloat zero[4] = { 0.0, 0.0, 0.0, 0.0 };
    GET_CURRENT_CONTEXT(ctx);
-   struct gl_texture_unit *texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
+   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
    struct gl_texture_object *texObj = NULL;
    struct gl_color_table *table = NULL;
    GLboolean proxy = GL_FALSE;
@@ -419,8 +407,8 @@ _mesa_ColorTable( GLenum target, GLenum internalFormat,
       _mesa_free_colortable_data(table);
 
       if (width > 0) {
-         table->TableF = (GLfloat *) _mesa_malloc(comps * width * sizeof(GLfloat));
-         table->TableUB = (GLubyte *) _mesa_malloc(comps * width * sizeof(GLubyte));
+         table->TableF = (GLfloat *) malloc(comps * width * sizeof(GLfloat));
+         table->TableUB = (GLubyte *) malloc(comps * width * sizeof(GLubyte));
 
 	 if (!table->TableF || !table->TableUB) {
 	    _mesa_error(ctx, GL_OUT_OF_MEMORY, "glColorTable");
@@ -460,7 +448,7 @@ _mesa_ColorSubTable( GLenum target, GLsizei start,
    static const GLfloat one[4] = { 1.0, 1.0, 1.0, 1.0 };
    static const GLfloat zero[4] = { 0.0, 0.0, 0.0, 0.0 };
    GET_CURRENT_CONTEXT(ctx);
-   struct gl_texture_unit *texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
+   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
    struct gl_texture_object *texObj = NULL;
    struct gl_color_table *table = NULL;
    const GLfloat *scale = one, *bias = zero;
@@ -552,37 +540,44 @@ _mesa_ColorSubTable( GLenum target, GLsizei start,
 
 
 
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_CopyColorTable(GLenum target, GLenum internalformat,
                      GLint x, GLint y, GLsizei width)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
-   /* Select buffer to read from */
+   if (!ctx->ReadBuffer->_ColorReadBuffer) {
+      return;      /* no readbuffer - OK */
+   }
+
    ctx->Driver.CopyColorTable( ctx, target, internalformat, x, y, width );
 }
 
 
 
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_CopyColorSubTable(GLenum target, GLsizei start,
                         GLint x, GLint y, GLsizei width)
 {
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
+   if (!ctx->ReadBuffer->_ColorReadBuffer) {
+      return;      /* no readbuffer - OK */
+   }
+
    ctx->Driver.CopyColorSubTable( ctx, target, start, x, y, width );
 }
 
 
 
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_GetColorTable( GLenum target, GLenum format,
                      GLenum type, GLvoid *data )
 {
    GET_CURRENT_CONTEXT(ctx);
-   struct gl_texture_unit *texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
+   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
    struct gl_color_table *table = NULL;
    GLfloat rgba[MAX_COLOR_TABLE_SIZE][4];
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
@@ -689,46 +684,29 @@ _mesa_GetColorTable( GLenum target, GLenum format,
       }
       break;
    case GL_RGBA:
-      _mesa_memcpy(rgba, table->TableF, 4 * table->Size * sizeof(GLfloat));
+      memcpy(rgba, table->TableF, 4 * table->Size * sizeof(GLfloat));
       break;
    default:
       _mesa_problem(ctx, "bad table format in glGetColorTable");
       return;
    }
 
-   if (ctx->Pack.BufferObj->Name) {
-      /* pack color table into PBO */
-      GLubyte *buf;
-      if (!_mesa_validate_pbo_access(1, &ctx->Pack, table->Size, 1, 1,
-                                     format, type, data)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glGetColorTable(invalid PBO access)");
-         return;
-      }
-      buf = (GLubyte *) ctx->Driver.MapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
-                                              GL_WRITE_ONLY_ARB,
-                                              ctx->Pack.BufferObj);
-      if (!buf) {
-         /* buffer is already mapped - that's an error */
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glGetColorTable(PBO is mapped)");
-         return;
-      }
-      data = ADD_POINTERS(buf, data);
-   }
+   data = _mesa_map_validate_pbo_dest(ctx, 
+                                      1, &ctx->Pack, table->Size, 1, 1,
+                                      format, type, data,
+                                      "glGetColorTable");
+   if (!data)
+      return;
 
    _mesa_pack_rgba_span_float(ctx, table->Size, rgba,
                               format, type, data, &ctx->Pack, 0x0);
 
-   if (ctx->Pack.BufferObj->Name) {
-      ctx->Driver.UnmapBuffer(ctx, GL_PIXEL_PACK_BUFFER_EXT,
-                              ctx->Pack.BufferObj);
-   }
+   _mesa_unmap_pbo_dest(ctx, &ctx->Pack);
 }
 
 
 
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_ColorTableParameterfv(GLenum target, GLenum pname, const GLfloat *params)
 {
    GLfloat *scale, *bias;
@@ -773,7 +751,7 @@ _mesa_ColorTableParameterfv(GLenum target, GLenum pname, const GLfloat *params)
 
 
 
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_ColorTableParameteriv(GLenum target, GLenum pname, const GLint *params)
 {
    GLfloat fparams[4];
@@ -796,11 +774,11 @@ _mesa_ColorTableParameteriv(GLenum target, GLenum pname, const GLint *params)
 
 
 
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_GetColorTableParameterfv( GLenum target, GLenum pname, GLfloat *params )
 {
    GET_CURRENT_CONTEXT(ctx);
-   struct gl_texture_unit *texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
+   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
    struct gl_color_table *table = NULL;
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
@@ -923,11 +901,11 @@ _mesa_GetColorTableParameterfv( GLenum target, GLenum pname, GLfloat *params )
 
 
 
-void GLAPIENTRY
+static void GLAPIENTRY
 _mesa_GetColorTableParameteriv( GLenum target, GLenum pname, GLint *params )
 {
    GET_CURRENT_CONTEXT(ctx);
-   struct gl_texture_unit *texUnit = &ctx->Texture.Unit[ctx->Texture.CurrentUnit];
+   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
    struct gl_color_table *table = NULL;
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
@@ -1078,6 +1056,25 @@ _mesa_GetColorTableParameteriv( GLenum target, GLenum pname, GLint *params )
    }
 }
 
+
+void
+_mesa_init_colortable_dispatch(struct _glapi_table *disp)
+{
+   SET_ColorSubTable(disp, _mesa_ColorSubTable);
+   SET_ColorTable(disp, _mesa_ColorTable);
+   SET_ColorTableParameterfv(disp, _mesa_ColorTableParameterfv);
+   SET_ColorTableParameteriv(disp, _mesa_ColorTableParameteriv);
+   SET_CopyColorSubTable(disp, _mesa_CopyColorSubTable);
+   SET_CopyColorTable(disp, _mesa_CopyColorTable);
+   SET_GetColorTable(disp, _mesa_GetColorTable);
+   SET_GetColorTableParameterfv(disp, _mesa_GetColorTableParameterfv);
+   SET_GetColorTableParameteriv(disp, _mesa_GetColorTableParameteriv);
+}
+
+
+#endif /* FEATURE_colortable */
+
+
 /**********************************************************************/
 /*****                      Initialization                        *****/
 /**********************************************************************/
@@ -1098,11 +1095,11 @@ void
 _mesa_free_colortable_data( struct gl_color_table *p )
 {
    if (p->TableF) {
-      _mesa_free(p->TableF);
+      free(p->TableF);
       p->TableF = NULL;
    }
    if (p->TableUB) {
-      _mesa_free(p->TableUB);
+      free(p->TableUB);
       p->TableUB = NULL;
    }
 }

@@ -34,6 +34,8 @@
 #include "brw_context.h"
 #include "brw_state.h"
 #include "intel_batchbuffer.h"
+#include "intel_buffers.h"
+#include "intel_chipset.h"
 
 /* This is used to initialize brw->state.atoms[].  We could use this
  * list directly except for a single atom, brw_constant_buffer, which
@@ -41,7 +43,7 @@
  * current fragment and vertex programs, and so cannot be a static
  * value.
  */
-const struct brw_tracked_state *atoms[] =
+static const struct brw_tracked_state *gen4_atoms[] =
 {
    &brw_check_fallback,
 
@@ -59,11 +61,12 @@ const struct brw_tracked_state *atoms[] =
    &brw_curbe_offsets,
    &brw_recalculate_urb_fence,
 
-
    &brw_cc_vp,
    &brw_cc_unit,
 
-   &brw_wm_surfaces,		/* must do before samplers */
+   &brw_vs_surfaces,		/* must do before unit */
+   &brw_wm_constant_surface,	/* must do before wm surfaces/bind bo */
+   &brw_wm_surfaces,		/* must do before samplers and unit */
    &brw_wm_samplers,
 
    &brw_wm_unit,
@@ -88,54 +91,84 @@ const struct brw_tracked_state *atoms[] =
 
    &brw_line_stipple,
    &brw_aa_line_parameters,
-   /* Ordering of the commands below is documented as fixed.  
-    */
-#if 0
-   &brw_pipelined_state_pointers,
-   &brw_urb_fence,
-   &brw_constant_buffer_state,
-#else
+
    &brw_psp_urb_cbs,
-#endif
 
    &brw_drawing_rect,
    &brw_indices,
+   &brw_index_buffer,
    &brw_vertices,
 
-   NULL,			/* brw_constant_buffer */
+   &brw_constant_buffer
 };
 
+const struct brw_tracked_state *gen6_atoms[] =
+{
+   &brw_check_fallback,
+
+   &brw_wm_input_sizes,
+   &brw_vs_prog,
+   &brw_gs_prog,
+   &brw_wm_prog,
+
+   &gen6_clip_vp,
+   &gen6_sf_vp,
+   &gen6_cc_vp,
+
+   /* Command packets: */
+   &brw_invarient_state,
+
+   &gen6_viewport_state,	/* must do after *_vp stages */
+
+   &gen6_urb,
+   &gen6_blend_state,		/* must do before cc unit */
+   &gen6_color_calc_state,	/* must do before cc unit */
+   &gen6_depth_stencil_state,	/* must do before cc unit */
+   &gen6_cc_state_pointers,
+
+   &brw_vs_surfaces,		/* must do before unit */
+   &brw_wm_constant_surface,	/* must do before wm surfaces/bind bo */
+   &brw_wm_surfaces,		/* must do before samplers and unit */
+
+   &brw_wm_samplers,
+   &gen6_sampler_state,
+
+   &gen6_vs_state,
+   &gen6_gs_state,
+   &gen6_clip_state,
+   &gen6_sf_state,
+   &gen6_wm_state,
+
+   &gen6_scissor_state,
+
+   &brw_state_base_address,
+
+   &gen6_binding_table_pointers,
+
+   &brw_depthbuffer,
+
+   &brw_polygon_stipple,
+   &brw_polygon_stipple_offset,
+
+   &brw_line_stipple,
+   &brw_aa_line_parameters,
+
+   &brw_drawing_rect,
+
+   &brw_indices,
+   &brw_index_buffer,
+   &brw_vertices,
+};
 
 void brw_init_state( struct brw_context *brw )
 {
-   GLuint i;
-
-   brw_init_cache(brw);
-
-   brw->state.atoms = _mesa_malloc(sizeof(atoms));
-   brw->state.nr_atoms = sizeof(atoms)/sizeof(*atoms);
-   _mesa_memcpy(brw->state.atoms, atoms, sizeof(atoms));
-
-   /* Patch in a pointer to the dynamic state atom:
-    */
-   for (i = 0; i < brw->state.nr_atoms; i++)
-      if (brw->state.atoms[i] == NULL)
-	 brw->state.atoms[i] = &brw->curbe.tracked_state;
-
-   _mesa_memcpy(&brw->curbe.tracked_state, 
-		&brw_constant_buffer,
-		sizeof(brw_constant_buffer));
+   brw_init_caches(brw);
 }
 
 
 void brw_destroy_state( struct brw_context *brw )
 {
-   if (brw->state.atoms) {
-      _mesa_free(brw->state.atoms);
-      brw->state.atoms = NULL;
-   }
-
-   brw_destroy_cache(brw);
+   brw_destroy_caches(brw);
    brw_destroy_batch_cache(brw);
 }
 
@@ -168,7 +201,7 @@ static void xor_states( struct brw_state_flags *result,
    result->cache = a->cache ^ b->cache;
 }
 
-static void
+void
 brw_clear_validated_bos(struct brw_context *brw)
 {
    int i;
@@ -218,6 +251,7 @@ static struct dirty_bit_map mesa_bits[] = {
    DEFINE_BIT(_NEW_MULTISAMPLE),
    DEFINE_BIT(_NEW_TRACK_MATRIX),
    DEFINE_BIT(_NEW_PROGRAM),
+   DEFINE_BIT(_NEW_PROGRAM_CONSTANTS),
    {0, 0, 0}
 };
 
@@ -231,10 +265,9 @@ static struct dirty_bit_map brw_bits[] = {
    DEFINE_BIT(BRW_NEW_PRIMITIVE),
    DEFINE_BIT(BRW_NEW_CONTEXT),
    DEFINE_BIT(BRW_NEW_WM_INPUT_DIMENSIONS),
-   DEFINE_BIT(BRW_NEW_INPUT_VARYING),
    DEFINE_BIT(BRW_NEW_PSP),
-   DEFINE_BIT(BRW_NEW_FENCE),
    DEFINE_BIT(BRW_NEW_INDICES),
+   DEFINE_BIT(BRW_NEW_INDEX_BUFFER),
    DEFINE_BIT(BRW_NEW_VERTICES),
    DEFINE_BIT(BRW_NEW_BATCH),
    DEFINE_BIT(BRW_NEW_DEPTH_BUFFER),
@@ -242,6 +275,7 @@ static struct dirty_bit_map brw_bits[] = {
 };
 
 static struct dirty_bit_map cache_bits[] = {
+   DEFINE_BIT(CACHE_NEW_BLEND_STATE),
    DEFINE_BIT(CACHE_NEW_CC_VP),
    DEFINE_BIT(CACHE_NEW_CC_UNIT),
    DEFINE_BIT(CACHE_NEW_WM_PROG),
@@ -301,6 +335,8 @@ void brw_validate_state( struct brw_context *brw )
    struct intel_context *intel = &brw->intel;
    struct brw_state_flags *state = &brw->state.dirty;
    GLuint i;
+   const struct brw_tracked_state **atoms;
+   int num_atoms;
 
    brw_clear_validated_bos(brw);
 
@@ -309,9 +345,18 @@ void brw_validate_state( struct brw_context *brw )
 
    brw_add_validated_bo(brw, intel->batch->buf);
 
+   if (IS_GEN6(intel->intelScreen->deviceID)) {
+      atoms = gen6_atoms;
+      num_atoms = ARRAY_SIZE(gen6_atoms);
+   } else {
+      atoms = gen4_atoms;
+      num_atoms = ARRAY_SIZE(gen4_atoms);
+   }
+
    if (brw->emit_state_always) {
       state->mesa |= ~0;
       state->brw |= ~0;
+      state->cache |= ~0;
    }
 
    if (brw->fragment_program != ctx->FragmentProgram._Current) {
@@ -330,13 +375,13 @@ void brw_validate_state( struct brw_context *brw )
       return;
 
    if (brw->state.dirty.brw & BRW_NEW_CONTEXT)
-      brw_clear_batch_cache_flush(brw);
+      brw_clear_batch_cache(brw);
 
-   brw->intel.Fallback = 0;
+   brw->intel.Fallback = GL_FALSE; /* boolean, not bitfield */
 
    /* do prepare stage for all atoms */
-   for (i = 0; i < Elements(atoms); i++) {
-      const struct brw_tracked_state *atom = brw->state.atoms[i];
+   for (i = 0; i < num_atoms; i++) {
+      const struct brw_tracked_state *atom = atoms[i];
 
       if (brw->intel.Fallback)
          break;
@@ -347,14 +392,40 @@ void brw_validate_state( struct brw_context *brw )
         }
       }
    }
+
+   intel_check_front_buffer_rendering(intel);
+
+   /* Make sure that the textures which are referenced by the current
+    * brw fragment program are actually present/valid.
+    * If this fails, we can experience GPU lock-ups.
+    */
+   {
+      const struct brw_fragment_program *fp;
+      fp = brw_fragment_program_const(brw->fragment_program);
+      if (fp) {
+         assert((fp->tex_units_used & ctx->Texture._EnabledUnits)
+                == fp->tex_units_used);
+      }
+   }
 }
 
 
 void brw_upload_state(struct brw_context *brw)
 {
+   struct intel_context *intel = &brw->intel;
    struct brw_state_flags *state = &brw->state.dirty;
    int i;
    static int dirty_count = 0;
+   const struct brw_tracked_state **atoms;
+   int num_atoms;
+
+   if (IS_GEN6(intel->intelScreen->deviceID)) {
+      atoms = gen6_atoms;
+      num_atoms = ARRAY_SIZE(gen6_atoms);
+   } else {
+      atoms = gen4_atoms;
+      num_atoms = ARRAY_SIZE(gen4_atoms);
+   }
 
    brw_clear_validated_bos(brw);
 
@@ -364,11 +435,11 @@ void brw_upload_state(struct brw_context *brw)
        * state atoms are ordered correctly in the list.
        */
       struct brw_state_flags examined, prev;      
-      _mesa_memset(&examined, 0, sizeof(examined));
+      memset(&examined, 0, sizeof(examined));
       prev = *state;
 
-      for (i = 0; i < brw->state.nr_atoms; i++) {	 
-	 const struct brw_tracked_state *atom = brw->state.atoms[i];
+      for (i = 0; i < num_atoms; i++) {
+	 const struct brw_tracked_state *atom = atoms[i];
 	 struct brw_state_flags generated;
 
 	 assert(atom->dirty.mesa ||
@@ -396,8 +467,8 @@ void brw_upload_state(struct brw_context *brw)
       }
    }
    else {
-      for (i = 0; i < Elements(atoms); i++) {	 
-	 const struct brw_tracked_state *atom = brw->state.atoms[i];
+      for (i = 0; i < num_atoms; i++) {
+	 const struct brw_tracked_state *atom = atoms[i];
 
 	 if (brw->intel.Fallback)
 	    break;

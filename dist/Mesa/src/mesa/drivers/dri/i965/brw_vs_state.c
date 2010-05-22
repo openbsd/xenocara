@@ -44,6 +44,8 @@ struct brw_vs_unit_key {
    unsigned int curbe_offset;
 
    unsigned int nr_urb_entries, urb_size;
+
+   unsigned int nr_surfaces;
 };
 
 static void
@@ -62,6 +64,9 @@ vs_unit_populate_key(struct brw_context *brw, struct brw_vs_unit_key *key)
    key->nr_urb_entries = brw->urb.nr_vs_entries;
    key->urb_size = brw->urb.vsize;
 
+   /* BRW_NEW_NR_VS_SURFACES */
+   key->nr_surfaces = brw->vs.nr_surfaces;
+
    /* BRW_NEW_CURBE_OFFSETS, _NEW_TRANSFORM */
    if (ctx->Transform.ClipPlanesEnabled) {
       /* Note that we read in the userclip planes as well, hence
@@ -77,9 +82,9 @@ vs_unit_populate_key(struct brw_context *brw, struct brw_vs_unit_key *key)
 static dri_bo *
 vs_unit_create_from_key(struct brw_context *brw, struct brw_vs_unit_key *key)
 {
+   struct intel_context *intel = &brw->intel;
    struct brw_vs_unit_state vs;
    dri_bo *bo;
-   int chipset_max_threads;
 
    memset(&vs, 0, sizeof(vs));
 
@@ -92,26 +97,60 @@ vs_unit_create_from_key(struct brw_context *brw, struct brw_vs_unit_key *key)
     * brw_urb_WRITE() results.
     */
    vs.thread1.single_program_flow = 0;
+
+   if (intel->gen == 5)
+      vs.thread1.binding_table_entry_count = 0; /* hardware requirement */
+   else
+      vs.thread1.binding_table_entry_count = key->nr_surfaces;
+
    vs.thread3.urb_entry_read_length = key->urb_entry_read_length;
    vs.thread3.const_urb_entry_read_length = key->curb_entry_read_length;
    vs.thread3.dispatch_grf_start_reg = 1;
    vs.thread3.urb_entry_read_offset = 0;
    vs.thread3.const_urb_entry_read_offset = key->curbe_offset * 2;
 
-   vs.thread4.nr_urb_entries = key->nr_urb_entries;
+   if (intel->gen == 5) {
+      switch (key->nr_urb_entries) {
+      case 8:
+      case 12:
+      case 16:
+      case 32:
+      case 64:
+      case 96:
+      case 128:
+      case 168:
+      case 192:
+      case 224:
+      case 256:
+	 vs.thread4.nr_urb_entries = key->nr_urb_entries >> 2;
+	 break;
+      default:
+	 assert(0);
+      }
+   } else {
+      switch (key->nr_urb_entries) {
+      case 8:
+      case 12:
+      case 16:
+      case 32:
+	 break;
+      case 64:
+	 assert(intel->is_g4x);
+	 break;
+      default:
+	 assert(0);
+      }
+      vs.thread4.nr_urb_entries = key->nr_urb_entries;
+   }
+
    vs.thread4.urb_entry_allocation_size = key->urb_size - 1;
 
-   if (BRW_IS_G4X(brw))
-      chipset_max_threads = 32;
-   else
-      chipset_max_threads = 16;
    vs.thread4.max_threads = CLAMP(key->nr_urb_entries / 2,
-				  1, chipset_max_threads) - 1;
-
-   if (INTEL_DEBUG & DEBUG_SINGLE_THREAD)
-      vs.thread4.max_threads = 0;
+				  1, brw->vs_max_threads) - 1;
 
    /* No samplers for ARB_vp programs:
+    */
+   /* It has to be set to 0 for Ironlake
     */
    vs.vs5.sampler_count = 0;
 
@@ -125,8 +164,7 @@ vs_unit_create_from_key(struct brw_context *brw, struct brw_vs_unit_key *key)
    bo = brw_upload_cache(&brw->cache, BRW_VS_UNIT,
 			 key, sizeof(*key),
 			 &brw->vs.prog_bo, 1,
-			 &vs, sizeof(vs),
-			 NULL, NULL);
+			 &vs, sizeof(vs));
 
    /* Emit VS program relocation */
    dri_bo_emit_reloc(bo,
@@ -158,6 +196,7 @@ const struct brw_tracked_state brw_vs_unit = {
    .dirty = {
       .mesa  = _NEW_TRANSFORM,
       .brw   = (BRW_NEW_CURBE_OFFSETS |
+                BRW_NEW_NR_VS_SURFACES |
 		BRW_NEW_URB_FENCE),
       .cache = CACHE_NEW_VS_PROG
    },

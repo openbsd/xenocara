@@ -51,6 +51,7 @@
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
+#include "drivers/common/meta.h"
 #include "xmesaP.h"
 
 
@@ -106,18 +107,6 @@ finish_or_flush( GLcontext *ctx )
 
 
 static void
-clear_index( GLcontext *ctx, GLuint index )
-{
-   if (ctx->DrawBuffer->Name == 0) {
-      const XMesaContext xmesa = XMESA_CONTEXT(ctx);
-      XMesaBuffer xmbuf = XMESA_BUFFER(ctx->DrawBuffer);
-      xmesa->clearpixel = (unsigned long) index;
-      XMesaSetForeground( xmesa->display, xmbuf->cleargc, (unsigned long) index );
-   }
-}
-
-
-static void
 clear_color( GLcontext *ctx, const GLfloat color[4] )
 {
    if (ctx->DrawBuffer->Name == 0) {
@@ -141,26 +130,6 @@ clear_color( GLcontext *ctx, const GLfloat color[4] )
    }
 }
 
-
-
-/* Set index mask ala glIndexMask */
-static void
-index_mask( GLcontext *ctx, GLuint mask )
-{
-   const XMesaContext xmesa = XMESA_CONTEXT(ctx);
-   XMesaBuffer xmbuf = XMESA_BUFFER(ctx->DrawBuffer);
-   /* not sure this conditional is really needed */
-   if (xmbuf->backxrb && xmbuf->backxrb->pixmap) {
-      unsigned long m;
-      if (mask==0xffffffff) {
-	 m = ((unsigned long)~0L);
-      }
-      else {
-         m = (unsigned long) mask;
-      }
-      XMesaSetPlaneMask( xmesa->display, xmbuf->cleargc, m );
-   }
-}
 
 
 /* Implements glColorMask() */
@@ -231,7 +200,7 @@ clear_8bit_ximage( GLcontext *ctx, struct xmesa_renderbuffer *xrb,
    GLint i;
    for (i = 0; i < height; i++) {
       GLubyte *ptr = PIXEL_ADDR1(xrb, x, y + i);
-      MEMSET( ptr, xmesa->clearpixel, width );
+      memset( ptr, xmesa->clearpixel, width );
    }
 }
 
@@ -293,7 +262,7 @@ clear_24bit_ximage(GLcontext *ctx, struct xmesa_renderbuffer *xrb,
       GLint j;
       for (j = 0; j < height; j++) {
          bgr_t *ptr3 = PIXEL_ADDR3(xrb, x, y + j);
-         MEMSET(ptr3, r, 3 * width);
+         memset(ptr3, r, 3 * width);
       }
    }
    else {
@@ -335,7 +304,7 @@ clear_32bit_ximage(GLcontext *ctx, struct xmesa_renderbuffer *xrb,
       GLuint *ptr4 = (GLuint *) xrb->ximage->data;
       if (pixel == 0) {
          /* common case */
-         _mesa_memset(ptr4, pixel, 4 * n);
+         memset(ptr4, pixel, 4 * n);
       }
       else {
          GLuint i;
@@ -380,7 +349,7 @@ clear_buffers(GLcontext *ctx, GLbitfield buffers)
 {
    if (ctx->DrawBuffer->Name == 0) {
       /* this is a window system framebuffer */
-      const GLuint *colorMask = (GLuint *) &ctx->Color.ColorMask;
+      const GLuint *colorMask = (GLuint *) &ctx->Color.ColorMask[0];
       XMesaBuffer b = XMESA_BUFFER(ctx->DrawBuffer);
       const GLint x = ctx->DrawBuffer->_Xmin;
       const GLint y = ctx->DrawBuffer->_Ymin;
@@ -447,7 +416,7 @@ can_do_DrawPixels_8R8G8B(GLcontext *ctx, GLenum format, GLenum type)
             struct xmesa_renderbuffer *xrb = xmesa_renderbuffer(rb->Wrapped);
             if (xrb &&
                 xrb->pixmap && /* drawing to pixmap or window */
-                xrb->Base.AlphaBits == 0) {
+                _mesa_get_format_bits(xrb->Base.Format, GL_ALPHA_BITS) == 0) {
                return GL_TRUE;
             }
          }
@@ -523,7 +492,7 @@ xmesa_DrawPixels_8R8G8B( GLcontext *ctx,
           * been in the OpenGL bottom-to-top orientation.  X is top-to-bottom
           * so we have to carefully compute the Y coordinates/addresses here.
           */
-         MEMSET(&ximage, 0, sizeof(XMesaImage));
+         memset(&ximage, 0, sizeof(XMesaImage));
          ximage.width = width;
          ximage.height = height;
          ximage.format = ZPixmap;
@@ -581,7 +550,7 @@ can_do_DrawPixels_5R6G5B(GLcontext *ctx, GLenum format, GLenum type)
             struct xmesa_renderbuffer *xrb = xmesa_renderbuffer(rb->Wrapped);
             if (xrb &&
                 xrb->pixmap && /* drawing to pixmap or window */
-                xrb->Base.AlphaBits == 0) {
+                _mesa_get_format_bits(xrb->Base.Format, GL_ALPHA_BITS) == 0) {
                return GL_TRUE;
             }
          }
@@ -657,7 +626,7 @@ xmesa_DrawPixels_5R6G5B( GLcontext *ctx,
           * been in the OpenGL bottom-to-top orientation.  X is top-to-bottom
           * so we have to carefully compute the Y coordinates/addresses here.
           */
-         MEMSET(&ximage, 0, sizeof(XMesaImage));
+         memset(&ximage, 0, sizeof(XMesaImage));
          ximage.width = width;
          ximage.height = height;
          ximage.format = ZPixmap;
@@ -828,7 +797,7 @@ clear_color_HPCR_ximage( GLcontext *ctx, const GLfloat color[4] )
 
    if (color[0] == 0.0 && color[1] == 0.0 && color[2] == 0.0) {
       /* black is black */
-      MEMSET( xmesa->xm_visual->hpcr_clear_ximage_pattern, 0x0 ,
+      memset( xmesa->xm_visual->hpcr_clear_ximage_pattern, 0x0 ,
               sizeof(xmesa->xm_visual->hpcr_clear_ximage_pattern));
    }
    else {
@@ -912,8 +881,9 @@ xmesa_update_state( GLcontext *ctx, GLbitfield new_state )
    /*
     * GL_DITHER, GL_READ/DRAW_BUFFER, buffer binding state, etc. effect
     * renderbuffer span/clear funcs.
+    * Check _NEW_COLOR to detect dither enable/disable.
     */
-   if (new_state & (_NEW_COLOR | _NEW_PIXEL | _NEW_BUFFERS)) {
+   if (new_state & (_NEW_COLOR | _NEW_BUFFERS)) {
       XMesaBuffer xmbuf = XMESA_BUFFER(ctx->DrawBuffer);
       struct xmesa_renderbuffer *front_xrb, *back_xrb;
 
@@ -1017,15 +987,15 @@ test_proxy_teximage(GLcontext *ctx, GLenum target, GLint level,
 /**
  * In SW, we don't really compress GL_COMPRESSED_RGB[A] textures!
  */
-static const struct gl_texture_format *
+static gl_format
 choose_tex_format( GLcontext *ctx, GLint internalFormat,
                    GLenum format, GLenum type )
 {
    switch (internalFormat) {
       case GL_COMPRESSED_RGB_ARB:
-         return &_mesa_texformat_rgb;
+         return MESA_FORMAT_RGB888;
       case GL_COMPRESSED_RGBA_ARB:
-         return &_mesa_texformat_rgba;
+         return MESA_FORMAT_RGBA8888;
       default:
          return _mesa_choose_tex_format(ctx, internalFormat, format, type);
    }
@@ -1141,24 +1111,31 @@ xmesa_init_driver_functions( XMesaVisual xmvisual,
    driver->GetBufferSize = NULL; /* OBSOLETE */
    driver->Flush = finish_or_flush;
    driver->Finish = finish_or_flush;
-   driver->ClearIndex = clear_index;
    driver->ClearColor = clear_color;
-   driver->IndexMask = index_mask;
    driver->ColorMask = color_mask;
    driver->Enable = enable;
-   driver->Clear = clear_buffers;
    driver->Viewport = xmesa_viewport;
+   if (TEST_META_FUNCS) {
+      driver->Clear = _mesa_meta_Clear;
+      driver->CopyPixels = _mesa_meta_CopyPixels;
+      driver->BlitFramebuffer = _mesa_meta_BlitFramebuffer;
+      driver->DrawPixels = _mesa_meta_DrawPixels;
+      driver->Bitmap = _mesa_meta_Bitmap;
+   }
+   else {
+      driver->Clear = clear_buffers;
 #ifndef XFree86Server
-   driver->CopyPixels = xmesa_CopyPixels;
-   if (xmvisual->undithered_pf == PF_8R8G8B &&
-       xmvisual->dithered_pf == PF_8R8G8B &&
-       xmvisual->BitsPerPixel == 32) {
-      driver->DrawPixels = xmesa_DrawPixels_8R8G8B;
-   }
-   else if (xmvisual->undithered_pf == PF_5R6G5B) {
-      driver->DrawPixels = xmesa_DrawPixels_5R6G5B;
-   }
+      driver->CopyPixels = xmesa_CopyPixels;
+      if (xmvisual->undithered_pf == PF_8R8G8B &&
+          xmvisual->dithered_pf == PF_8R8G8B &&
+          xmvisual->BitsPerPixel == 32) {
+         driver->DrawPixels = xmesa_DrawPixels_8R8G8B;
+      }
+      else if (xmvisual->undithered_pf == PF_5R6G5B) {
+         driver->DrawPixels = xmesa_DrawPixels_5R6G5B;
+      }
 #endif
+   }
    driver->TestProxyTexImage = test_proxy_teximage;
 #if ENABLE_EXT_texure_compression_s3tc
    driver->ChooseTextureFormat = choose_tex_format;

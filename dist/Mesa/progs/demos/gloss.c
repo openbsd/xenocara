@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 #include "readtex.h"
@@ -40,6 +41,7 @@
 /* for convolution */
 #define FILTER_SIZE 7
 
+static GLint Win;
 static GLint WinWidth = 500, WinHeight = 500;
 static GLuint CylinderObj = 0;
 static GLuint TeapotObj = 0;
@@ -131,6 +133,7 @@ static void Display( void )
          GLfloat seconds = (t - T0) / 1000.0;
          GLfloat fps = Frames / seconds;
          printf("%d frames in %g seconds = %g FPS\n", Frames, seconds, fps);
+         fflush(stdout);
          T0 = t;
          Frames = 0;
       }
@@ -212,7 +215,11 @@ static void Key( unsigned char key, int x, int y )
       case ' ':
          ToggleAnimate();
          break;
+      case 'n':
+         Idle();
+         break;
       case 27:
+         glutDestroyWindow(Win);
          exit(0);
          break;
    }
@@ -434,10 +441,11 @@ static void Init( int argc, char *argv[] )
 
 int main( int argc, char *argv[] )
 {
-   glutInit( &argc, argv );
    glutInitWindowSize(WinWidth, WinHeight);
+   glutInit( &argc, argv );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
-   glutCreateWindow(argv[0] );
+   Win = glutCreateWindow(argv[0] );
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

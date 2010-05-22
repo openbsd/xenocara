@@ -40,6 +40,7 @@ static void Init(void)
    fprintf(stderr, "GL_RENDERER   = %s\n", (char *) glGetString(GL_RENDERER));
    fprintf(stderr, "GL_VERSION    = %s\n", (char *) glGetString(GL_VERSION));
    fprintf(stderr, "GL_VENDOR     = %s\n", (char *) glGetString(GL_VENDOR));
+   fflush(stderr);
 
    fprintf(stderr, "Press z/Z to translate quad\n");
 
@@ -133,11 +134,11 @@ int main(int argc, char **argv)
     glutInitWindowPosition(0, 0);
     glutInitWindowSize( 250, 250);
 
-    type = GLUT_RGB;
+    type = GLUT_RGB | GLUT_ALPHA;
     type |= (doubleBuffer) ? GLUT_DOUBLE : GLUT_SINGLE;
     glutInitDisplayMode(type);
 
-    if (glutCreateWindow("First Tri") == GL_FALSE) {
+    if (glutCreateWindow(*argv) == GL_FALSE) {
 	exit(1);
     }
 

@@ -137,7 +137,7 @@ static void mgaUploadSubImage( mgaContextPtr mmesa,
     * directly used by the hardware for texturing.
     */
 
-   texelBytes = texImage->TexFormat->TexelBytes;
+   texelBytes = _mesa_get_format_bytes(texImage->TexFormat);
    length = texImage->Width * texImage->Height * texelBytes;
    if ( t->base.heap->heapId == MGA_CARD_HEAP ) {
       unsigned  tex_offset = 0;
@@ -222,6 +222,7 @@ int mgaUploadTexImages( mgaContextPtr mmesa, mgaTextureObjectPtr t )
 	 return -1;
       }
 
+      assert(t->base.memBlock);
       ofs = mmesa->mgaScreen->textureOffset[ heap ]
 	   + t->base.memBlock->ofs;
 

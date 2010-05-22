@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 
@@ -39,6 +40,7 @@ static void Init(void)
    fprintf(stderr, "GL_RENDERER   = %s\n", (char *) glGetString(GL_RENDERER));
    fprintf(stderr, "GL_VERSION    = %s\n", (char *) glGetString(GL_VERSION));
    fprintf(stderr, "GL_VENDOR     = %s\n", (char *) glGetString(GL_VENDOR));
+   fflush(stderr);
 
    glClearColor(0.0, 0.0, 1.0, 0.0);
 
@@ -159,13 +161,15 @@ int main(int argc, char **argv)
 
     glutInitWindowPosition(0, 0); glutInitWindowSize( 250, 250);
 
-    type = GLUT_RGB;
+    type = GLUT_RGB | GLUT_ALPHA;
     type |= (doubleBuffer) ? GLUT_DOUBLE : GLUT_SINGLE;
     glutInitDisplayMode(type);
 
-    if (glutCreateWindow("First Tri") == GL_FALSE) {
+    if (glutCreateWindow(*argv) == GL_FALSE) {
 	exit(1);
     }
+
+    glewInit();
 
     Init();
 

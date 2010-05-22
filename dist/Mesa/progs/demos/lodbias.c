@@ -42,7 +42,8 @@ static GLfloat Xrot = 0, Yrot = -30, Zrot = 0;
 static GLboolean Anim = GL_TRUE;
 static GLint Bias = 0, BiasStepSign = +1; /* ints avoid fp precision problem */
 static GLint BiasMin = -400, BiasMax = 400;
-
+static int win = 0;
+static GLuint TexObj = 0;
 
 
 static void
@@ -172,6 +173,7 @@ static void Key( unsigned char key, int x, int y )
          Bias = 100.0 * (key - '0');
          break;
       case 27:
+         glutDestroyWindow(win);
          exit(0);
          break;
    }
@@ -212,6 +214,9 @@ static void Init( void )
    }
 
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+   glGenTextures(1, &TexObj);
+   glBindTexture(GL_TEXTURE_2D, TexObj);
 
    if (glutExtensionSupported("GL_SGIS_generate_mipmap")) {
       /* test auto mipmap generation */
@@ -277,11 +282,10 @@ static void Init( void )
 
 int main( int argc, char *argv[] )
 {
-   glutInit( &argc, argv );
-   glutInitWindowPosition( 0, 0 );
    glutInitWindowSize( 350, 350 );
+   glutInit( &argc, argv );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
-   glutCreateWindow(argv[0]);
+   win = glutCreateWindow(argv[0]);
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutSpecialFunc( SpecialKey );

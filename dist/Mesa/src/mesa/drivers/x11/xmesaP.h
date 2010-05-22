@@ -212,6 +212,9 @@ struct xmesa_buffer {
    XMesaDisplay *display;
    BufferType type;             /* window, pixmap, pbuffer or glxwindow */
 
+   GLboolean largestPbuffer;    /**< for pbuffers */
+   GLboolean preservedContents; /**< for pbuffers */
+
    struct xmesa_renderbuffer *frontxrb; /* front color renderbuffer */
    struct xmesa_renderbuffer *backxrb;  /* back color renderbuffer */
 
@@ -428,7 +431,7 @@ extern const int xmesa_kernel8[DITH_DY * DITH_DX];
  * If pixelformat==PF_HPCR:
  *
  *      HP Color Recovery dithering               (ad@lms.be 30/08/95)
- *      HP has on it's 8-bit 700-series computers, a feature called
+ *      HP has on its 8-bit 700-series computers, a feature called
  *      'Color Recovery'.  This allows near 24-bit output (so they say).
  *      It is enabled by selecting the 8-bit  TrueColor  visual AND
  *      corresponding  colormap (see tkInitWindow) AND doing some special
@@ -580,5 +583,9 @@ extern void xmesa_register_swrast_functions( GLcontext *ctx );
 #else
 #define ENABLE_EXT_timer_query 0 /* may not have 64-bit GLuint64EXT */
 #endif
+
+
+#define TEST_META_FUNCS 0
+
 
 #endif

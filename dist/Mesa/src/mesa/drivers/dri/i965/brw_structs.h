@@ -33,6 +33,14 @@
 #ifndef BRW_STRUCTS_H
 #define BRW_STRUCTS_H
 
+
+/** Number of general purpose registers (VS, WM, etc) */
+#define BRW_MAX_GRF 128
+
+/** Number of message register file registers */
+#define BRW_MAX_MRF 16
+
+
 /* Command packets:
  */
 struct header 
@@ -434,12 +442,12 @@ struct brw_urb_fence
    {
       GLuint sf_fence:10;  
       GLuint vf_fence:10;  
-      GLuint cs_fence:10;  
-      GLuint pad:2;
+      GLuint cs_fence:11;  
+      GLuint pad:1;
    } bits1;
 };
 
-struct brw_constant_buffer_state /* previously brw_command_streamer */
+struct brw_cs_urb_state
 {
    struct header header;
 
@@ -650,7 +658,105 @@ struct brw_clip_unit_state
    GLfloat viewport_ymax;  
 };
 
+struct gen6_blend_state
+{
+   struct {
+      GLuint dest_blend_factor:5;
+      GLuint source_blend_factor:5;
+      GLuint pad3:1;
+      GLuint blend_func:3;
+      GLuint pad2:1;
+      GLuint ia_dest_blend_factor:5;
+      GLuint ia_source_blend_factor:5;
+      GLuint pad1:1;
+      GLuint ia_blend_func:3;
+      GLuint pad0:1;
+      GLuint ia_blend_enable:1;
+      GLuint blend_enable:1;
+   } blend0;
 
+   struct {
+      GLuint post_blend_clamp_enable:1;
+      GLuint pre_blend_clamp_enable:1;
+      GLuint clamp_range:2;
+      GLuint pad0:4;
+      GLuint x_dither_offset:2;
+      GLuint y_dither_offset:2;
+      GLuint dither_enable:1;
+      GLuint alpha_test_func:3;
+      GLuint alpha_test_enable:1;
+      GLuint pad1:1;
+      GLuint logic_op_func:4;
+      GLuint logic_op_enable:1;
+      GLuint pad2:1;
+      GLuint write_disable_b:1;
+      GLuint write_disable_g:1;
+      GLuint write_disable_r:1;
+      GLuint write_disable_a:1;
+      GLuint pad3:1;
+      GLuint alpha_to_coverage_dither:1;
+      GLuint alpha_to_one:1;
+      GLuint alpha_to_coverage:1;
+   } blend1;
+};
+
+struct gen6_color_calc_state
+{
+   struct {
+      GLuint alpha_test_format:1;
+      GLuint pad0:14;
+      GLuint round_disable:1;
+      GLuint bf_stencil_ref:8;
+      GLuint stencil_ref:8;
+   } cc0;
+
+   union {
+      GLfloat alpha_ref_f;
+      struct {
+	 GLuint ui:8;
+	 GLuint pad0:24;
+      } alpha_ref_fi;
+   } cc1;
+
+   GLfloat constant_r;
+   GLfloat constant_g;
+   GLfloat constant_b;
+   GLfloat constant_a;
+};
+
+struct gen6_depth_stencil_state
+{
+   struct {
+      GLuint pad0:3;
+      GLuint bf_stencil_pass_depth_pass_op:3;
+      GLuint bf_stencil_pass_depth_fail_op:3;
+      GLuint bf_stencil_fail_op:3;
+      GLuint bf_stencil_func:3;
+      GLuint bf_stencil_enable:1;
+      GLuint pad1:2;
+      GLuint stencil_write_enable:1;
+      GLuint stencil_pass_depth_pass_op:3;
+      GLuint stencil_pass_depth_fail_op:3;
+      GLuint stencil_fail_op:3;
+      GLuint stencil_func:3;
+      GLuint stencil_enable:1;
+   } ds0;
+
+   struct {
+      GLuint bf_stencil_write_mask:8;
+      GLuint bf_stencil_test_mask:8;
+      GLuint stencil_write_mask:8;
+      GLuint stencil_test_mask:8;
+   } ds1;
+
+   struct {
+      GLuint pad0:25;
+      GLuint depth_write_enable:1;
+      GLuint depth_test_func:3;
+      GLuint pad1:1;
+      GLuint depth_test_enable:1;
+   } ds2;
+};
 
 struct brw_cc_unit_state
 {
@@ -744,8 +850,6 @@ struct brw_cc_unit_state
    } cc7;
 };
 
-
-
 struct brw_sf_unit_state
 {
    struct thread0 thread0;
@@ -805,6 +909,11 @@ struct brw_sf_unit_state
 
 };
 
+struct gen6_scissor_state
+{
+   GLuint ymin, xmin;
+   GLuint ymax, xmax;
+};
 
 struct brw_gs_unit_state
 {
@@ -815,7 +924,9 @@ struct brw_gs_unit_state
 
    struct
    {
-      GLuint pad0:10;
+      GLuint pad0:8;
+      GLuint rendering_enable:1; /* for Ironlake */
+      GLuint pad4:1;
       GLuint stats_enable:1; 
       GLuint nr_urb_entries:7; 
       GLuint pad1:1;
@@ -923,6 +1034,28 @@ struct brw_wm_unit_state
    
    GLfloat global_depth_offset_constant;  
    GLfloat global_depth_offset_scale;   
+   
+   /* for Ironlake only */
+   struct {
+      GLuint pad0:1;
+      GLuint grf_reg_count_1:3; 
+      GLuint pad1:2;
+      GLuint kernel_start_pointer_1:26;
+   } wm8;       
+
+   struct {
+      GLuint pad0:1;
+      GLuint grf_reg_count_2:3; 
+      GLuint pad1:2;
+      GLuint kernel_start_pointer_2:26;
+   } wm9;       
+
+   struct {
+      GLuint pad0:1;
+      GLuint grf_reg_count_3:3; 
+      GLuint pad1:2;
+      GLuint kernel_start_pointer_3:26;
+   } wm10;       
 };
 
 struct brw_sampler_default_color {
@@ -1011,6 +1144,15 @@ struct brw_sf_viewport
    } scissor;
 };
 
+struct gen6_sf_viewport {
+   GLfloat m00;
+   GLfloat m11;
+   GLfloat m22;
+   GLfloat m30;
+   GLfloat m31;
+   GLfloat m32;
+};
+
 /* Documented in the subsystem/shared-functions/sampler chapter...
  */
 struct brw_surface_state
@@ -1031,10 +1173,10 @@ struct brw_surface_state
       GLuint writedisable_green:1; 
       GLuint writedisable_red:1; 
       GLuint writedisable_alpha:1; 
-      GLuint surface_format:9; 
+      GLuint surface_format:9;     /**< BRW_SURFACEFORMAT_x */
       GLuint data_return_format:1; 
       GLuint pad0:1;
-      GLuint surface_type:3; 
+      GLuint surface_type:3;       /**< BRW_SURFACE_1D/2D/3D/CUBE */
    } ss0;
    
    struct {
@@ -1075,7 +1217,7 @@ struct brw_surface_state
       GLuint y_offset:4;
       GLuint pad0:1;
       GLuint x_offset:7;
-   } ss5;   /* NEW in Integrated Graphics Device */
+   } ss5;   /* New in G4X */
 
 };
 
@@ -1168,7 +1310,7 @@ struct brw_instruction
       GLuint predicate_control:4;
       GLuint predicate_inverse:1;
       GLuint execution_size:3;
-      GLuint destreg__conditonalmod:4; /* destreg - send, conditionalmod - others */
+      GLuint destreg__conditionalmod:4; /* destreg - send, conditionalmod - others */
       GLuint pad0:2;
       GLuint debug_control:1;
       GLuint saturate:1;
@@ -1196,7 +1338,9 @@ struct brw_instruction
 	 GLuint dest_reg_type:3;
 	 GLuint src0_reg_file:2;
 	 GLuint src0_reg_type:3;
-	 GLuint pad:6;
+	 GLuint src1_reg_file:2;        /* 0x00000c00 */
+	 GLuint src1_reg_type:3;        /* 0x00007000 */
+	 GLuint pad:1;
 	 GLint dest_indirect_offset:10;	/* offset against the deref'd address reg */
 	 GLuint dest_subreg_nr:3; /* subnr for the address reg a0.x */
 	 GLuint dest_horiz_stride:2;
@@ -1211,7 +1355,7 @@ struct brw_instruction
 	 GLuint src0_reg_type:3;
 	 GLuint src1_reg_file:2;
 	 GLuint src1_reg_type:3;
-	 GLuint pad0:1;
+	 GLuint pad:1;
 	 GLuint dest_writemask:4;
 	 GLuint dest_subreg_nr:1;
 	 GLuint dest_reg_nr:8;
@@ -1298,6 +1442,14 @@ struct brw_instruction
 	 GLuint pad1:6;
       } ia16;
 
+       struct 
+       {
+           GLuint pad:26;
+           GLuint end_of_thread:1;
+           GLuint pad1:1;
+           GLuint sfid:4;
+       } send_gen5;  /* for Ironlake only */
+
    } bits2;
 
    union
@@ -1308,7 +1460,7 @@ struct brw_instruction
 	 GLuint src1_reg_nr:8;
 	 GLuint src1_abs:1;
 	 GLuint src1_negate:1;
-	 GLuint pad:1;
+	 GLuint src1_address_mode:1;
 	 GLuint src1_horiz_stride:2;
 	 GLuint src1_width:3;
 	 GLuint src1_vert_stride:4;
@@ -1323,7 +1475,7 @@ struct brw_instruction
 	 GLuint src1_reg_nr:8;
 	 GLuint src1_abs:1;
 	 GLuint src1_negate:1;
-	 GLuint pad0:1;
+	 GLuint src1_address_mode:1;
 	 GLuint src1_swz_z:2;
 	 GLuint src1_swz_w:2;
 	 GLuint pad1:1;
@@ -1337,7 +1489,7 @@ struct brw_instruction
 	 GLuint src1_subreg_nr:3;
 	 GLuint src1_abs:1;
 	 GLuint src1_negate:1;
-	 GLuint pad0:1;
+	 GLuint src1_address_mode:1;
 	 GLuint src1_horiz_stride:2;
 	 GLuint src1_width:3;
 	 GLuint src1_vert_stride:4;
@@ -1385,6 +1537,21 @@ struct brw_instruction
       } math;
 
       struct {
+	 GLuint function:4;
+	 GLuint int_type:1;
+	 GLuint precision:1;
+	 GLuint saturate:1;
+	 GLuint data_type:1;
+	 GLuint snapshot:1;
+	 GLuint pad0:10;
+	 GLuint header_present:1;
+	 GLuint response_length:5;
+	 GLuint msg_length:4;
+	 GLuint pad1:2;
+	 GLuint end_of_thread:1;
+      } math_gen5;
+
+      struct {
 	 GLuint binding_table_index:8;
 	 GLuint sampler:4;
 	 GLuint return_format:2; 
@@ -1407,7 +1574,36 @@ struct brw_instruction
          GLuint end_of_thread:1;
       } sampler_g4x;
 
+      struct {
+	 GLuint binding_table_index:8;
+	 GLuint sampler:4;
+	 GLuint msg_type:4;
+	 GLuint simd_mode:2;
+	 GLuint pad0:1;
+	 GLuint header_present:1;
+	 GLuint response_length:5;
+	 GLuint msg_length:4;
+	 GLuint pad1:2;
+	 GLuint end_of_thread:1;
+      } sampler_gen5;
+
       struct brw_urb_immediate urb;
+
+      struct {
+	 GLuint opcode:4;
+	 GLuint offset:6;
+	 GLuint swizzle_control:2; 
+	 GLuint pad:1;
+	 GLuint allocate:1;
+	 GLuint used:1;
+	 GLuint complete:1;
+	 GLuint pad0:3;
+	 GLuint header_present:1;
+	 GLuint response_length:5;
+	 GLuint msg_length:4;
+	 GLuint pad1:2;
+	 GLuint end_of_thread:1;
+      } urb_gen5;
 
       struct {
 	 GLuint binding_table_index:8;
@@ -1423,6 +1619,19 @@ struct brw_instruction
 
       struct {
 	 GLuint binding_table_index:8;
+	 GLuint msg_control:3;  
+	 GLuint msg_type:3;  
+	 GLuint target_cache:2;    
+	 GLuint pad0:3;
+	 GLuint header_present:1;
+	 GLuint response_length:5;
+	 GLuint msg_length:4;
+	 GLuint pad1:2;
+	 GLuint end_of_thread:1;
+      } dp_read_gen5;
+
+      struct {
+	 GLuint binding_table_index:8;
 	 GLuint msg_control:3;
 	 GLuint pixel_scoreboard_clear:1;
 	 GLuint msg_type:3;    
@@ -1435,6 +1644,20 @@ struct brw_instruction
       } dp_write;
 
       struct {
+	 GLuint binding_table_index:8;
+	 GLuint msg_control:3;
+	 GLuint pixel_scoreboard_clear:1;
+	 GLuint msg_type:3;    
+	 GLuint send_commit_msg:1;
+	 GLuint pad0:3;
+	 GLuint header_present:1;
+	 GLuint response_length:5;
+	 GLuint msg_length:4;
+	 GLuint pad1:2;
+	 GLuint end_of_thread:1;
+      } dp_write_gen5;
+
+      struct {
 	 GLuint pad:16;
 	 GLuint response_length:4;
 	 GLuint msg_length:4;
@@ -1443,8 +1666,18 @@ struct brw_instruction
 	 GLuint end_of_thread:1;
       } generic;
 
+      struct {
+	 GLuint pad:19;
+	 GLuint header_present:1;
+	 GLuint response_length:5;
+	 GLuint msg_length:4;
+	 GLuint pad1:2;
+	 GLuint end_of_thread:1;
+      } generic_gen5;
+
       GLint d;
       GLuint ud;
+      float f;
    } bits3;
 };
 

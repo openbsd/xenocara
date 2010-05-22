@@ -35,8 +35,6 @@
 #include "colormac.h"
 #include "context.h"
 #include "enums.h"
-#include "fbobject.h"
-#include "state.h"
 
 
 #define BAD_MASK ~0u
@@ -120,11 +118,9 @@ draw_buffer_enum_to_bitmask(GLenum buffer)
       case GL_AUX0:
          return BUFFER_BIT_AUX0;
       case GL_AUX1:
-         return BUFFER_BIT_AUX1;
       case GL_AUX2:
-         return BUFFER_BIT_AUX2;
       case GL_AUX3:
-         return BUFFER_BIT_AUX3;
+         return 1 << BUFFER_COUNT; /* invalid, but not BAD_MASK */
       case GL_COLOR_ATTACHMENT0_EXT:
          return BUFFER_BIT_COLOR0;
       case GL_COLOR_ATTACHMENT1_EXT:
@@ -177,11 +173,9 @@ read_buffer_enum_to_index(GLenum buffer)
       case GL_AUX0:
          return BUFFER_AUX0;
       case GL_AUX1:
-         return BUFFER_AUX1;
       case GL_AUX2:
-         return BUFFER_AUX2;
       case GL_AUX3:
-         return BUFFER_AUX3;
+         return BUFFER_COUNT; /* invalid, but not -1 */
       case GL_COLOR_ATTACHMENT0_EXT:
          return BUFFER_COLOR0;
       case GL_COLOR_ATTACHMENT1_EXT:
@@ -290,11 +284,10 @@ _mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx);
 
-   if (!ctx->Extensions.ARB_draw_buffers) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "glDrawBuffersARB");
-      return;
-   }
-   if (n < 1 || n > (GLsizei) ctx->Const.MaxDrawBuffers) {
+   /* Turns out n==0 is a valid input that should not produce an error.
+    * The remaining code below correctly handles the n==0 case.
+    */
+   if (n < 0 || n > (GLsizei) ctx->Const.MaxDrawBuffers) {
       _mesa_error(ctx, GL_INVALID_VALUE, "glDrawBuffersARB(n)");
       return;
    }
@@ -336,18 +329,20 @@ _mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
    _mesa_drawbuffers(ctx, n, buffers, destMask);
 
    /*
-    * Call device driver function.
+    * Call device driver function.  Note that n can be equal to 0,
+    * in which case we don't want to reference buffers[0], which
+    * may not be valid.
     */
    if (ctx->Driver.DrawBuffers)
       ctx->Driver.DrawBuffers(ctx, n, buffers);
    else if (ctx->Driver.DrawBuffer)
-      ctx->Driver.DrawBuffer(ctx, buffers[0]);
+      ctx->Driver.DrawBuffer(ctx, n > 0 ? buffers[0] : GL_NONE);
 }
 
 
 /**
  * Helper function to set the GL_DRAW_BUFFER state in the context and
- * current FBO.
+ * current FBO.  Called via glDrawBuffer(), glDrawBuffersARB()
  *
  * All error checking will have been done prior to calling this function
  * so nothing should go wrong at this point.
@@ -365,6 +360,7 @@ _mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
 {
    struct gl_framebuffer *fb = ctx->DrawBuffer;
    GLbitfield mask[MAX_DRAW_BUFFERS];
+   GLboolean newState = GL_FALSE;
 
    if (!destMask) {
       /* compute destMask values now */
@@ -378,34 +374,54 @@ _mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
       destMask = mask;
    }
 
+   /*
+    * If n==1, destMask[0] may have up to four bits set.
+    * Otherwise, destMask[x] can only have one bit set.
+    */
    if (n == 1) {
-      GLuint buf, count = 0;
-      /* init to -1 to help catch errors */
-      fb->_ColorDrawBufferIndexes[0] = -1;
-      for (buf = 0; buf < BUFFER_COUNT; buf++) {
-         if (destMask[0] & (1 << buf)) {
-            fb->_ColorDrawBufferIndexes[count] = buf;
-            count++;
+      GLuint count = 0, destMask0 = destMask[0];
+      while (destMask0) {
+         GLint bufIndex = _mesa_ffs(destMask0) - 1;
+         if (fb->_ColorDrawBufferIndexes[count] != bufIndex) {
+            fb->_ColorDrawBufferIndexes[count] = bufIndex;
+            newState = GL_TRUE;
          }
+         count++;
+         destMask0 &= ~(1 << bufIndex);
       }
       fb->ColorDrawBuffer[0] = buffers[0];
-      fb->_NumColorDrawBuffers = count;
+      if (fb->_NumColorDrawBuffers != count) {
+         fb->_NumColorDrawBuffers = count;
+         newState = GL_TRUE;
+      }
    }
    else {
       GLuint buf, count = 0;
       for (buf = 0; buf < n; buf++ ) {
          if (destMask[buf]) {
-            fb->_ColorDrawBufferIndexes[buf] = _mesa_ffs(destMask[buf]) - 1;
+            GLint bufIndex = _mesa_ffs(destMask[buf]) - 1;
+            /* only one bit should be set in the destMask[buf] field */
+            ASSERT(_mesa_bitcount(destMask[buf]) == 1);
+            if (fb->_ColorDrawBufferIndexes[buf] != bufIndex) {
+               fb->_ColorDrawBufferIndexes[buf] = bufIndex;
+               newState = GL_TRUE;
+            }
             fb->ColorDrawBuffer[buf] = buffers[buf];
             count = buf + 1;
          }
          else {
-            fb->_ColorDrawBufferIndexes[buf] = -1;
+            if (fb->_ColorDrawBufferIndexes[buf] != -1) {
+               fb->_ColorDrawBufferIndexes[buf] = -1;
+               newState = GL_TRUE;
+            }
          }
       }
       /* set remaining outputs to -1 (GL_NONE) */
       while (buf < ctx->Const.MaxDrawBuffers) {
-         fb->_ColorDrawBufferIndexes[buf] = -1;
+         if (fb->_ColorDrawBufferIndexes[buf] != -1) {
+            fb->_ColorDrawBufferIndexes[buf] = -1;
+            newState = GL_TRUE;
+         }
          fb->ColorDrawBuffer[buf] = GL_NONE;
          buf++;
       }
@@ -416,11 +432,15 @@ _mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
       /* also set context drawbuffer state */
       GLuint buf;
       for (buf = 0; buf < ctx->Const.MaxDrawBuffers; buf++) {
-         ctx->Color.DrawBuffer[buf] = fb->ColorDrawBuffer[buf];
+         if (ctx->Color.DrawBuffer[buf] != fb->ColorDrawBuffer[buf]) {
+            ctx->Color.DrawBuffer[buf] = fb->ColorDrawBuffer[buf];
+            newState = GL_TRUE;
+         }
       }
    }
 
-   ctx->NewState |= _NEW_COLOR;
+   if (newState)
+      FLUSH_VERTICES(ctx, _NEW_BUFFERS);
 }
 
 
@@ -446,7 +466,7 @@ _mesa_readbuffer(GLcontext *ctx, GLenum buffer, GLint bufferIndex)
    fb->ColorReadBuffer = buffer;
    fb->_ColorReadBufferIndex = bufferIndex;
 
-   ctx->NewState |= _NEW_PIXEL;
+   ctx->NewState |= _NEW_BUFFERS;
 }
 
 
@@ -495,6 +515,7 @@ _mesa_ReadBuffer(GLenum buffer)
    /* OK, all error checking has been completed now */
 
    _mesa_readbuffer(ctx, buffer, srcBuffer);
+   ctx->NewState |= _NEW_BUFFERS;
 
    /*
     * Call device driver function.

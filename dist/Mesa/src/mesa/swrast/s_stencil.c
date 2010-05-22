@@ -231,8 +231,9 @@ do_stencil_test( GLcontext *ctx, GLuint face, GLuint n, GLstencil stencil[],
    GLubyte fail[MAX_WIDTH];
    GLboolean allfail = GL_FALSE;
    GLuint i;
-   GLstencil r, s;
    const GLuint valueMask = ctx->Stencil.ValueMask[face];
+   const GLstencil r = (GLstencil) (ctx->Stencil.Ref[face] & valueMask);
+   GLstencil s;
 
    ASSERT(n <= MAX_WIDTH);
 
@@ -260,7 +261,6 @@ do_stencil_test( GLcontext *ctx, GLuint face, GLuint n, GLstencil stencil[],
 	 allfail = GL_TRUE;
 	 break;
       case GL_LESS:
-	 r = (GLstencil) (ctx->Stencil.Ref[face] & valueMask);
 	 for (i=0;i<n;i++) {
 	    if (mask[i]) {
 	       s = (GLstencil) (stencil[i] & valueMask);
@@ -279,7 +279,6 @@ do_stencil_test( GLcontext *ctx, GLuint face, GLuint n, GLstencil stencil[],
 	 }
 	 break;
       case GL_LEQUAL:
-	 r = (GLstencil) (ctx->Stencil.Ref[face] & valueMask);
 	 for (i=0;i<n;i++) {
 	    if (mask[i]) {
 	       s = (GLstencil) (stencil[i] & valueMask);
@@ -298,7 +297,6 @@ do_stencil_test( GLcontext *ctx, GLuint face, GLuint n, GLstencil stencil[],
 	 }
 	 break;
       case GL_GREATER:
-	 r = (GLstencil) (ctx->Stencil.Ref[face] & valueMask);
 	 for (i=0;i<n;i++) {
 	    if (mask[i]) {
 	       s = (GLstencil) (stencil[i] & valueMask);
@@ -317,7 +315,6 @@ do_stencil_test( GLcontext *ctx, GLuint face, GLuint n, GLstencil stencil[],
 	 }
 	 break;
       case GL_GEQUAL:
-	 r = (GLstencil) (ctx->Stencil.Ref[face] & valueMask);
 	 for (i=0;i<n;i++) {
 	    if (mask[i]) {
 	       s = (GLstencil) (stencil[i] & valueMask);
@@ -336,7 +333,6 @@ do_stencil_test( GLcontext *ctx, GLuint face, GLuint n, GLstencil stencil[],
 	 }
 	 break;
       case GL_EQUAL:
-	 r = (GLstencil) (ctx->Stencil.Ref[face] & valueMask);
 	 for (i=0;i<n;i++) {
 	    if (mask[i]) {
 	       s = (GLstencil) (stencil[i] & valueMask);
@@ -355,7 +351,6 @@ do_stencil_test( GLcontext *ctx, GLuint face, GLuint n, GLstencil stencil[],
 	 }
 	 break;
       case GL_NOTEQUAL:
-	 r = (GLstencil) (ctx->Stencil.Ref[face] & valueMask);
 	 for (i=0;i<n;i++) {
 	    if (mask[i]) {
 	       s = (GLstencil) (stencil[i] & valueMask);
@@ -480,7 +475,7 @@ stencil_and_ztest_span(GLcontext *ctx, SWspan *span, GLuint face)
       GLubyte passMask[MAX_WIDTH], failMask[MAX_WIDTH], origMask[MAX_WIDTH];
 
       /* save the current mask bits */
-      _mesa_memcpy(origMask, mask, n * sizeof(GLubyte));
+      memcpy(origMask, mask, n * sizeof(GLubyte));
 
       /* apply the depth test */
       _swrast_depth_test_span(ctx, span);
@@ -923,7 +918,7 @@ stencil_and_ztest_pixels( GLcontext *ctx, SWspan *span, GLuint face )
       ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
       _swrast_get_values(ctx, rb, n, x, y, stencil, sizeof(GLubyte));
 
-      _mesa_memcpy(origMask, mask, n * sizeof(GLubyte));          
+      memcpy(origMask, mask, n * sizeof(GLubyte));          
 
       (void) do_stencil_test(ctx, face, n, stencil, mask);
 
@@ -933,7 +928,7 @@ stencil_and_ztest_pixels( GLcontext *ctx, SWspan *span, GLuint face )
       }
       else {
          GLubyte tmpMask[MAX_WIDTH]; 
-         _mesa_memcpy(tmpMask, mask, n * sizeof(GLubyte));
+         memcpy(tmpMask, mask, n * sizeof(GLubyte));
 
          _swrast_depth_test_span(ctx, span);
 
@@ -967,7 +962,7 @@ stencil_and_ztest_pixels( GLcontext *ctx, SWspan *span, GLuint face )
                                     ctx->Stencil.ZPassFunc[face], face, mask);
       }
       else {
-         _mesa_memcpy(origMask, mask, n * sizeof(GLubyte));
+         memcpy(origMask, mask, n * sizeof(GLubyte));
 
          _swrast_depth_test_span(ctx, span);
 
@@ -1186,7 +1181,7 @@ _swrast_clear_stencil_buffer( GLcontext *ctx, struct gl_renderbuffer *rb )
             /* Note: bottom-to-top raster assumed! */
             GLubyte *stencil = (GLubyte *) rb->GetPointer(ctx, rb, x, y);
             GLuint len = width * height * sizeof(GLubyte);
-            _mesa_memset(stencil, clearVal, len);
+            memset(stencil, clearVal, len);
          }
          else {
             /* general case */
@@ -1194,7 +1189,7 @@ _swrast_clear_stencil_buffer( GLcontext *ctx, struct gl_renderbuffer *rb )
             for (i = 0; i < height; i++) {
                GLvoid *stencil = rb->GetPointer(ctx, rb, x, y + i);
                if (rb->DataType == GL_UNSIGNED_BYTE) {
-                  _mesa_memset(stencil, clearVal, width);
+                  memset(stencil, clearVal, width);
                }
                else {
                   _mesa_memset16((short unsigned int*) stencil, clearVal, width);

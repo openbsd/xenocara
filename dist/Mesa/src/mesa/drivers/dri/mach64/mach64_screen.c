@@ -31,8 +31,6 @@
 
 #include "mach64_context.h"
 #include "mach64_ioctl.h"
-#include "mach64_tris.h"
-#include "mach64_vb.h"
 #include "mach64_span.h"
 
 #include "main/context.h"
@@ -67,10 +65,8 @@ static const GLuint __driNConfigOptions = 3;
 static const GLuint __driNConfigOptions = 2;
 #endif
 
-extern const struct dri_extension card_extensions[];
-
 static const __DRIconfig **
-mach64FillInModes( __DRIscreenPrivate *psp,
+mach64FillInModes( __DRIscreen *psp,
 		   unsigned pixel_bits, unsigned depth_bits,
 		   unsigned stencil_bits, GLboolean have_back_buffer )
 {
@@ -93,6 +89,7 @@ mach64FillInModes( __DRIscreenPrivate *psp,
 
     uint8_t depth_bits_array[2];
     uint8_t stencil_bits_array[2];
+    uint8_t msaa_samples_array[1];
 
     depth_bits_array[0] = depth_bits;
     depth_bits_array[1] = depth_bits;
@@ -103,6 +100,8 @@ mach64FillInModes( __DRIscreenPrivate *psp,
      */
     stencil_bits_array[0] = 0;
     stencil_bits_array[1] = (stencil_bits == 0) ? 8 : stencil_bits;
+
+    msaa_samples_array[0] = 0;
 
     depth_buffer_factor = ((depth_bits != 0) || (stencil_bits != 0)) ? 2 : 1;
     back_buffer_factor  = (have_back_buffer) ? 2 : 1;
@@ -119,7 +118,8 @@ mach64FillInModes( __DRIscreenPrivate *psp,
     configs = driCreateConfigs(fb_format, fb_type,
 			       depth_bits_array, stencil_bits_array,
 			       depth_buffer_factor, back_buffer_modes,
-			       back_buffer_factor);
+			       back_buffer_factor,
+                               msaa_samples_array, 1, GL_TRUE);
     if (configs == NULL) {
        fprintf(stderr, "[%s:%u] Error creating FBConfig!\n",
 	       __func__, __LINE__);
@@ -142,7 +142,7 @@ mach64FillInModes( __DRIscreenPrivate *psp,
 /* Create the device specific screen private data struct.
  */
 static mach64ScreenRec *
-mach64CreateScreen( __DRIscreenPrivate *sPriv )
+mach64CreateScreen( __DRIscreen *sPriv )
 {
    mach64ScreenPtr mach64Screen;
    ATIDRIPtr serverInfo = (ATIDRIPtr)sPriv->pDevPriv;
@@ -270,7 +270,7 @@ mach64CreateScreen( __DRIscreenPrivate *sPriv )
 /* Destroy the device specific screen private data struct.
  */
 static void
-mach64DestroyScreen( __DRIscreenPrivate *driScreen )
+mach64DestroyScreen( __DRIscreen *driScreen )
 {
    mach64ScreenRec *mach64Screen = (mach64ScreenRec *) driScreen->private;
 
@@ -297,8 +297,8 @@ mach64DestroyScreen( __DRIscreenPrivate *driScreen )
  * data.
  */
 static GLboolean
-mach64CreateBuffer( __DRIscreenPrivate *driScrnPriv,
-		    __DRIdrawablePrivate *driDrawPriv,
+mach64CreateBuffer( __DRIscreen *driScrnPriv,
+		    __DRIdrawable *driDrawPriv,
 		    const __GLcontextModes *mesaVis,
 		    GLboolean isPixmap )
 {
@@ -312,7 +312,7 @@ mach64CreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
       {
          driRenderbuffer *frontRb
-            = driNewRenderbuffer(GL_RGBA,
+            = driNewRenderbuffer(MESA_FORMAT_ARGB8888,
                                  NULL,
                                  screen->cpp,
                                  screen->frontOffset, screen->frontPitch,
@@ -323,7 +323,7 @@ mach64CreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
       if (mesaVis->doubleBufferMode) {
          driRenderbuffer *backRb
-            = driNewRenderbuffer(GL_RGBA,
+            = driNewRenderbuffer(MESA_FORMAT_ARGB8888,
                                  NULL,
                                  screen->cpp,
                                  screen->backOffset, screen->backPitch,
@@ -334,7 +334,7 @@ mach64CreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
       if (mesaVis->depthBits == 16) {
          driRenderbuffer *depthRb
-            = driNewRenderbuffer(GL_DEPTH_COMPONENT16,
+            = driNewRenderbuffer(MESA_FORMAT_Z16,
                                  NULL, screen->cpp,
                                  screen->depthOffset, screen->depthPitch,
                                  driDrawPriv);
@@ -344,7 +344,7 @@ mach64CreateBuffer( __DRIscreenPrivate *driScrnPriv,
       else if (mesaVis->depthBits == 24) {
          /* XXX I don't think 24-bit Z is supported - so this isn't used */
          driRenderbuffer *depthRb
-            = driNewRenderbuffer(GL_DEPTH_COMPONENT24,
+            = driNewRenderbuffer(MESA_FORMAT_Z24_S8,
                                  NULL,
                                  screen->cpp,
                                  screen->depthOffset, screen->depthPitch,
@@ -368,15 +368,15 @@ mach64CreateBuffer( __DRIscreenPrivate *driScrnPriv,
 
 
 static void
-mach64DestroyBuffer(__DRIdrawablePrivate *driDrawPriv)
+mach64DestroyBuffer(__DRIdrawable *driDrawPriv)
 {
-   _mesa_unreference_framebuffer((GLframebuffer **)(&(driDrawPriv->driverPrivate)));
+   _mesa_reference_framebuffer((GLframebuffer **)(&(driDrawPriv->driverPrivate)), NULL);
 }
 
 
 /* Copy the back color buffer to the front color buffer */
 static void
-mach64SwapBuffers(__DRIdrawablePrivate *dPriv)
+mach64SwapBuffers(__DRIdrawable *dPriv)
 {
    if (dPriv->driContextPriv && dPriv->driContextPriv->driverPrivate) {
       mach64ContextPtr mmesa;
@@ -398,7 +398,7 @@ mach64SwapBuffers(__DRIdrawablePrivate *dPriv)
 /* Initialize the driver specific screen private data.
  */
 static GLboolean
-mach64InitDriver( __DRIscreenPrivate *driScreen )
+mach64InitDriver( __DRIscreen *driScreen )
 {
    driScreen->private = (void *) mach64CreateScreen( driScreen );
 
@@ -418,7 +418,7 @@ mach64InitDriver( __DRIscreenPrivate *driScreen )
  * \return the __GLcontextModes supported by this driver
  */
 static const __DRIconfig **
-mach64InitScreen(__DRIscreenPrivate *psp)
+mach64InitScreen(__DRIscreen *psp)
 {
    static const __DRIversion ddx_expected = { 6, 4, 0 };
    static const __DRIversion dri_expected = { 4, 0, 0 };
@@ -432,18 +432,6 @@ mach64InitScreen(__DRIscreenPrivate *psp)
       return NULL;
    }
    
-   /* Calling driInitExtensions here, with a NULL context pointer,
-    * does not actually enable the extensions.  It just makes sure
-    * that all the dispatch offsets for all the extensions that
-    * *might* be enables are known.  This is needed because the
-    * dispatch offsets need to be known when _mesa_context_create is
-    * called, but we can't enable the extensions until we have a
-    * context pointer.
-    *
-    * Hello chicken.  Hello egg.  How are you two today?
-    */
-   driInitExtensions( NULL, card_extensions, GL_FALSE );
-
    if (!mach64InitDriver(psp))
       return NULL;
 
@@ -467,3 +455,9 @@ const struct __DriverAPIRec driDriverAPI = {
    .SwapBuffersMSC  = NULL
 };
 
+/* This is the table of extensions that the loader will dlsym() for. */
+PUBLIC const __DRIextension *__driDriverExtensions[] = {
+    &driCoreExtension.base,
+    &driLegacyExtension.base,
+    NULL
+};

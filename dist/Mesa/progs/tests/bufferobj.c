@@ -1,28 +1,35 @@
 /*
  * Test GL_ARB_vertex_buffer_object
+ * Also test GL_ARB_vertex_array_object if supported
  *
  * Brian Paul
  * 16 Sep 2003
  */
 
 
-#define GL_GLEXT_PROTOTYPES
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 #define NUM_OBJECTS 10
 
 struct object
 {
-   GLuint BufferID;
+   GLuint ArrayObjectID; /** GL_ARB_vertex_array_object */
+   GLuint VertexBufferID;
+   GLuint ColorBufferID;
    GLuint ElementsBufferID;
    GLuint NumVerts;
    GLuint VertexOffset;
    GLuint ColorOffset;
+   GLuint VertexStride;
+   GLuint ColorStride;
    GLuint NumElements;
+   GLuint MaxElement;
 };
 
 static struct object Objects[NUM_OBJECTS];
@@ -32,6 +39,7 @@ static GLuint Win;
 
 static GLfloat Xrot = 0, Yrot = 0, Zrot = 0;
 static GLboolean Anim = GL_TRUE;
+static GLboolean Have_ARB_vertex_array_object = GL_FALSE;
 
 
 static void CheckError(int line)
@@ -45,33 +53,55 @@ static void CheckError(int line)
 
 static void DrawObject( const struct object *obj )
 {
-   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->BufferID);
-   glVertexPointer(3, GL_FLOAT, 0, (void *) obj->VertexOffset);
-   glEnable(GL_VERTEX_ARRAY);
+   if (Have_ARB_vertex_array_object && obj->ArrayObjectID) {
+      glBindVertexArray(obj->ArrayObjectID);
 
-   /* test push/pop attrib */
-   /* XXX this leads to a segfault with NVIDIA's 53.36 driver */
-#if 0
-   if (1)
-   {
-      glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-      /*glVertexPointer(3, GL_FLOAT, 0, (void *) (obj->VertexOffset + 10000));*/
-      glBindBufferARB(GL_ARRAY_BUFFER_ARB, 999999);
-      glPopClientAttrib();
-   }
-#endif
-   glColorPointer(3, GL_FLOAT, 0, (void *) obj->ColorOffset);
-   glEnable(GL_COLOR_ARRAY);
+      if (obj->NumElements > 0) {
+         /* indexed arrays */
+         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, obj->ElementsBufferID);
+         glDrawRangeElements(GL_LINE_LOOP, 0, obj->MaxElement,
+                             obj->NumElements, GL_UNSIGNED_INT, NULL);
+      }
+      else {
+         /* non-indexed arrays */
+         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+         glDrawArrays(GL_LINE_LOOP, 0, obj->NumVerts);
+      }
 
-   if (obj->NumElements > 0) {
-      /* indexed arrays */
-      glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, obj->ElementsBufferID);
-      glDrawElements(GL_LINE_LOOP, obj->NumElements, GL_UNSIGNED_INT, NULL);
+      glBindVertexArray(0);
    }
    else {
-      /* non-indexed arrays */
-      glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-      glDrawArrays(GL_LINE_LOOP, 0, obj->NumVerts);
+      /* no vertex array objects, must set vertex/color pointers per draw */
+
+      glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->VertexBufferID);
+      glVertexPointer(3, GL_FLOAT, obj->VertexStride, (void *) obj->VertexOffset);
+      glEnableClientState(GL_VERTEX_ARRAY);
+
+      /* test push/pop attrib */
+      /* XXX this leads to a segfault with NVIDIA's 53.36 driver */
+#if 0
+      if (1)
+      {
+         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+         /*glVertexPointer(3, GL_FLOAT, 0, (void *) (obj->VertexOffset + 10000));*/
+         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 999999);
+         glPopClientAttrib();
+      }
+#endif
+      glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->ColorBufferID);
+      glColorPointer(3, GL_FLOAT, obj->ColorStride, (void *) obj->ColorOffset);
+      glEnableClientState(GL_COLOR_ARRAY);
+
+      if (obj->NumElements > 0) {
+         /* indexed arrays */
+         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, obj->ElementsBufferID);
+         glDrawElements(GL_LINE_LOOP, obj->NumElements, GL_UNSIGNED_INT, NULL);
+      }
+      else {
+         /* non-indexed arrays */
+         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+         glDrawArrays(GL_LINE_LOOP, 0, obj->NumVerts);
+      }
    }
 }
 
@@ -90,7 +120,7 @@ static void Display( void )
    glClear( GL_COLOR_BUFFER_BIT );
 
    for (i = 0; i < NumObjects; i++) {
-      float x = 5.0 * ((float) i / (NumObjects-1) - 0.5);
+      float x = 7.0 * ((float) i / (NumObjects-1) - 0.5);
       glPushMatrix();
       glTranslatef(x, 0, 0);
       glRotatef(Xrot, 1, 0, 0);
@@ -123,8 +153,11 @@ static void Reshape( int width, int height )
 static void FreeBuffers(void)
 {
    int i;
-   for (i = 0; i < NUM_OBJECTS; i++)
-      glDeleteBuffersARB(1, &Objects[i].BufferID);
+   for (i = 0; i < NUM_OBJECTS; i++) {
+      glDeleteBuffersARB(1, &Objects[i].VertexBufferID);
+      glDeleteBuffersARB(1, &Objects[i].ColorBufferID);
+      glDeleteBuffersARB(1, &Objects[i].ElementsBufferID);
+   }
 }
 
 
@@ -180,7 +213,31 @@ static void SpecialKey( int key, int x, int y )
 }
 
 
+/**
+ * If GL_ARB_vertex_array_object is supported, create an array object
+ * and set all the per-array state.
+ */
+static void
+CreateVertexArrayObject(struct object *obj)
+{
+   glGenVertexArrays(1, &obj->ArrayObjectID);
+   glBindVertexArray(obj->ArrayObjectID);
 
+   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->VertexBufferID);
+   glVertexPointer(3, GL_FLOAT, obj->VertexStride, (void *) obj->VertexOffset);
+   glEnableClientState(GL_VERTEX_ARRAY);
+
+   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->ColorBufferID);
+   glColorPointer(3, GL_FLOAT, obj->ColorStride, (void *) obj->ColorOffset);
+   glEnableClientState(GL_COLOR_ARRAY);
+
+   glBindVertexArray(0);
+}
+
+
+/*
+ * Non-interleaved position/color data.
+ */
 static void MakeObject1(struct object *obj)
 {
    GLfloat *v, *c;
@@ -191,10 +248,11 @@ static void MakeObject1(struct object *obj)
    for (i = 0; i < 500; i++)
       buffer[i] = i & 0xff;
 
-   obj->BufferID = 0;
-   glGenBuffersARB(1, &obj->BufferID);
-   assert(obj->BufferID != 0);
-   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->BufferID);
+   obj->VertexBufferID = 0;
+   glGenBuffersARB(1, &obj->VertexBufferID);
+   obj->ColorBufferID = obj->VertexBufferID;
+   assert(obj->VertexBufferID != 0);
+   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->VertexBufferID);
    glBufferDataARB(GL_ARRAY_BUFFER_ARB, 500, buffer, GL_STATIC_DRAW_ARB);
 
    for (i = 0; i < 500; i++)
@@ -241,7 +299,10 @@ static void MakeObject1(struct object *obj)
    obj->NumVerts = 4;
    obj->VertexOffset = 0;
    obj->ColorOffset = 3 * sizeof(GLfloat) * obj->NumVerts;
+   obj->VertexStride = 0;
+   obj->ColorStride = 0;
    obj->NumElements = 0;
+   obj->MaxElement = 0;
 
    glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
 
@@ -250,35 +311,56 @@ static void MakeObject1(struct object *obj)
 
    glGetBufferParameterivARB(GL_ARRAY_BUFFER_ARB, GL_BUFFER_MAPPED_ARB, &i);
    assert(!i);
+
+   if (Have_ARB_vertex_array_object) {
+      CreateVertexArrayObject(obj);
+   }
 }
 
 
+/*
+ * Interleaved position/color data.
+ */
 static void MakeObject2(struct object *obj)
 {
-   GLfloat *v, *c;
+   GLfloat *v;
+   int start = 40; /* bytes, to test non-zero array offsets */
 
-   glGenBuffersARB(1, &obj->BufferID);
-   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->BufferID);
+   glGenBuffersARB(1, &obj->VertexBufferID);
+   obj->ColorBufferID = obj->VertexBufferID;
+
+   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->VertexBufferID);
    glBufferDataARB(GL_ARRAY_BUFFER_ARB, 1000, NULL, GL_STATIC_DRAW_ARB);
    v = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
 
-   /* Make triangle */
-   v[0] = -1;  v[1] = -1;  v[2] = 0;
-   v[3] =  1;  v[4] = -1;  v[5] = 0;
-   v[6] =  0;  v[7] =  1;  v[8] = 0;
-   c = v + 9;
-   c[0] = 0;  c[1] = 1;  c[2] = 0;
-   c[3] = 0;  c[4] = 1;  c[5] = 0;
-   c[6] = 1;  c[7] = 1;  c[8] = 0;
+   v += start / sizeof(GLfloat);
+
+   /* Make triangle: interleaved colors, then positions */
+   /*   R            G          B           X           Y            Z  */
+   v[0] = 0;   v[1] = 1;   v[2] = 0;   v[3] = -1;  v[4] = -1;   v[5] = 0;
+   v[6] = 0;   v[7] = 1;   v[8] = 0;   v[9] = 1;   v[10] = -1;  v[11] = 0;
+   v[12] = 1;  v[13] = 1;  v[14] = 0;  v[15] = 0;  v[16] =  1;  v[17] = 0;
+
    obj->NumVerts = 3;
-   obj->VertexOffset = 0;
-   obj->ColorOffset = 3 * sizeof(GLfloat) * obj->NumVerts;
+   obj->VertexOffset = start + 3 * sizeof(GLfloat);
+   obj->ColorOffset = start;
+   obj->VertexStride = 6 * sizeof(GLfloat);
+   obj->ColorStride = 6 * sizeof(GLfloat);
+
    obj->NumElements = 0;
+   obj->MaxElement = 0;
 
    glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+
+   if (Have_ARB_vertex_array_object) {
+      CreateVertexArrayObject(obj);
+   }
 }
 
 
+/*
+ * Use an index buffer and glDrawElements().
+ */
 static void MakeObject3(struct object *obj)
 {
    GLfloat vertexData[1000];
@@ -300,12 +382,16 @@ static void MakeObject3(struct object *obj)
    obj->NumVerts = 4;
    obj->VertexOffset = 0;
    obj->ColorOffset = 3 * sizeof(GLfloat) * obj->NumVerts;
+   obj->VertexStride = 0;
+   obj->ColorStride = 0;
 
    bytes = obj->NumVerts * (3 + 3) * sizeof(GLfloat);
 
    /* Don't use glMap/UnmapBuffer for this object */
-   glGenBuffersARB(1, &obj->BufferID);
-   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->BufferID);
+   glGenBuffersARB(1, &obj->VertexBufferID);
+   obj->ColorBufferID = obj->VertexBufferID;
+
+   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->VertexBufferID);
    glBufferDataARB(GL_ARRAY_BUFFER_ARB, bytes, vertexData, GL_STATIC_DRAW_ARB);
 
    /* Setup a buffer of indices to test the ELEMENTS path */
@@ -319,6 +405,56 @@ static void MakeObject3(struct object *obj)
    i[3] = 3;
    glUnmapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB);
    obj->NumElements = 4;
+   obj->MaxElement = 3;
+
+   if (Have_ARB_vertex_array_object) {
+      CreateVertexArrayObject(obj);
+   }
+}
+
+
+/*
+ * Vertex and color data in different buffers.
+ */
+static void MakeObject4(struct object *obj)
+{
+   static const GLfloat vertexData[] = {
+      0,   -1,  0,
+      0.5,  0,  0,
+      0,    1,  0,
+      -0.5, 0,  0
+   };
+   static const GLfloat colorData[] = {
+      1,    1,   1,
+      1,    1,   0,
+      .5,  .5,   0,
+      1,    1,   0
+   };
+
+   obj->VertexOffset = 0;
+   obj->VertexStride = 0;
+   obj->ColorOffset = 0;
+   obj->ColorStride = 0;
+   obj->NumVerts = 4;
+
+   glGenBuffersARB(1, &obj->VertexBufferID);
+   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->VertexBufferID);
+   glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(vertexData), vertexData,
+                   GL_STATIC_DRAW_ARB);
+
+   glGenBuffersARB(1, &obj->ColorBufferID);
+   glBindBufferARB(GL_ARRAY_BUFFER_ARB, obj->ColorBufferID);
+   glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(colorData), colorData,
+                   GL_STATIC_DRAW_ARB);
+
+   /* Setup a buffer of indices to test the ELEMENTS path */
+   obj->ElementsBufferID = 0;
+   obj->NumElements = 0;
+   obj->MaxElement = 0;
+
+   if (Have_ARB_vertex_array_object) {
+      CreateVertexArrayObject(obj);
+   }
 }
 
 
@@ -330,6 +466,13 @@ static void Init( void )
       exit(0);
    }
    printf("GL_RENDERER = %s\n", (char *) glGetString(GL_RENDERER));
+
+   Have_ARB_vertex_array_object =
+      glutExtensionSupported("GL_ARB_vertex_array_object");
+
+   printf("Using GL_ARB_vertex_array_object: %s\n",
+          (Have_ARB_vertex_array_object ? "yes" : "no"));
+
 
    /* Test buffer object deletion */
    if (1) {
@@ -345,10 +488,12 @@ static void Init( void )
       assert(!glIsBufferARB(id));
    }
 
+   memset(Objects, 0, sizeof(Objects));
    MakeObject1(Objects + 0);
    MakeObject2(Objects + 1);
    MakeObject3(Objects + 2);
-   NumObjects = 3;
+   MakeObject4(Objects + 3);
+   NumObjects = 4;
 }
 
 
@@ -359,6 +504,7 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( 600, 300 );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
    Win = glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutSpecialFunc( SpecialKey );

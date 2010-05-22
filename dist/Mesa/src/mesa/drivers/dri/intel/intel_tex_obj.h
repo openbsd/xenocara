@@ -46,10 +46,6 @@ struct intel_texture_object
     * regions will be copied to this region and the old storage freed.
     */
    struct intel_mipmap_tree *mt;
-
-   GLboolean imageOverride;
-   GLint depthOverride;
-   GLuint pitchOverride;
 };
 
 struct intel_texture_image
@@ -66,6 +62,7 @@ struct intel_texture_image
     * Else there is no image data.
     */
    struct intel_mipmap_tree *mt;
+   GLboolean used_as_render_target;
 };
 
 static INLINE struct intel_texture_object *

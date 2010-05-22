@@ -33,12 +33,9 @@
 #include "main/imports.h"
 #include "main/context.h"
 #include "main/macros.h"
-#include "main/texformat.h"
 
 #include "mach64_context.h"
 #include "mach64_ioctl.h"
-#include "mach64_state.h"
-#include "mach64_vb.h"
 #include "mach64_tris.h"
 #include "mach64_tex.h"
 
@@ -55,7 +52,7 @@ static void mach64SetTexImages( mach64ContextPtr mmesa,
    if ( MACH64_DEBUG & DEBUG_VERBOSE_API )
       fprintf( stderr, "%s( %p )\n", __FUNCTION__, tObj );
 
-   switch (baseImage->TexFormat->MesaFormat) {
+   switch (baseImage->TexFormat) {
    case MESA_FORMAT_ARGB8888:
       t->textureFormat = MACH64_DATATYPE_ARGB8888;
       break;
@@ -89,7 +86,7 @@ static void mach64SetTexImages( mach64ContextPtr mmesa,
 
    totalSize = ( baseImage->Height *
 		 baseImage->Width *
-		 baseImage->TexFormat->TexelBytes );
+		 _mesa_get_format_bytes(baseImage->TexFormat) );
 
    totalSize = (totalSize + 31) & ~31;
 

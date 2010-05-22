@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 static const GLint tests[][8] = {
@@ -144,7 +145,7 @@ static void Init( void )
 {
    const char * const ver_string = (const char * const)
        glGetString( GL_VERSION );
-   float ver = strtof( ver_string, NULL );
+   float ver = strtod( ver_string, NULL );
    GLint tex_units;
    GLint temp[ 256 ];
 
@@ -173,7 +174,7 @@ static void Init( void )
       exit(1);
    }
 
-   printf("\nAll %u squares should be the same color.\n", NUM_TESTS + 1);
+   printf("\nAll %lu squares should be the same color.\n", (unsigned long) NUM_TESTS + 1);
    
    (void) memset( temp, 0x00, sizeof( temp ) );
    glBindTexture( GL_TEXTURE_2D, 1 );
@@ -226,6 +227,7 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( Width, Height );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
    glutCreateWindow( "GL_ARB_texture_env_crossbar test" );
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

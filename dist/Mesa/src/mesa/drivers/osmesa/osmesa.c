@@ -37,6 +37,7 @@
 #include "GL/osmesa.h"
 #include "main/context.h"
 #include "main/extensions.h"
+#include "main/formats.h"
 #include "main/framebuffer.h"
 #include "main/imports.h"
 #include "main/mtypes.h"
@@ -50,6 +51,7 @@
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
 #include "drivers/common/driverfuncs.h"
+#include "drivers/common/meta.h"
 #include "vbo/vbo.h"
 
 
@@ -482,24 +484,6 @@ osmesa_update_state( GLcontext *ctx, GLuint new_state )
 #include "swrast/s_spantemp.h"
 
 
-/* color index */
-#define NAME(PREFIX) PREFIX##_CI
-#define CI_MODE
-#define RB_TYPE GLubyte
-#define SPAN_VARS \
-   const OSMesaContext osmesa = OSMESA_CONTEXT(ctx);
-#define INIT_PIXEL_PTR(P, X, Y) \
-   GLubyte *P = (GLubyte *) osmesa->rowaddr[Y] + (X)
-#define INC_PIXEL_PTR(P) P += 1
-#define STORE_PIXEL(DST, X, Y, VALUE) \
-   *DST = VALUE[0]
-#define FETCH_PIXEL(DST, SRC) \
-   DST = SRC[0]
-#include "swrast/s_spantemp.h"
-
-
-
-
 /**
  * Macros for optimized line/triangle rendering.
  * Only for 8-bit channel, RGBA, BGRA, ARGB formats.
@@ -774,11 +758,7 @@ compute_row_addresses( OSMesaContext osmesa )
       return;
    }
 
-   if (osmesa->format == OSMESA_COLOR_INDEX) {
-      /* CI mode */
-      bytesPerPixel = 1 * sizeof(GLubyte);
-   }
-   else if ((osmesa->format == OSMESA_RGB) || (osmesa->format == OSMESA_BGR)) {
+   if ((osmesa->format == OSMESA_RGB) || (osmesa->format == OSMESA_BGR)) {
       /* RGB mode */
       bytesPerPixel = 3 * bpc;
    }
@@ -816,7 +796,7 @@ compute_row_addresses( OSMesaContext osmesa )
 static void
 osmesa_delete_renderbuffer(struct gl_renderbuffer *rb)
 {
-   _mesa_free(rb);
+   free(rb);
 }
 
 
@@ -838,11 +818,6 @@ osmesa_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
       bpc = 16;
    else
       bpc = 32;
-
-   rb->RedBits =
-   rb->GreenBits =
-   rb->BlueBits =
-   rb->AlphaBits = bpc;
 
    /* Note: we can ignoring internalFormat for "window-system" renderbuffers */
    (void) internalFormat;
@@ -875,7 +850,6 @@ osmesa_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
          rb->PutValues = put_values_RGBA32;
          rb->PutMonoValues = put_mono_values_RGBA32;
       }
-      rb->RedBits = rb->GreenBits = rb->BlueBits = rb->AlphaBits = bpc;
    }
    else if (osmesa->format == OSMESA_BGRA) {
       if (rb->DataType == GL_UNSIGNED_BYTE) {
@@ -905,7 +879,6 @@ osmesa_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
          rb->PutValues = put_values_BGRA32;
          rb->PutMonoValues = put_mono_values_BGRA32;
       }
-      rb->RedBits = rb->GreenBits = rb->BlueBits = rb->AlphaBits = bpc;
    }
    else if (osmesa->format == OSMESA_ARGB) {
       if (rb->DataType == GL_UNSIGNED_BYTE) {
@@ -935,7 +908,6 @@ osmesa_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
          rb->PutValues = put_values_ARGB32;
          rb->PutMonoValues = put_mono_values_ARGB32;
       }
-      rb->RedBits = rb->GreenBits = rb->BlueBits = rb->AlphaBits = bpc;
    }
    else if (osmesa->format == OSMESA_RGB) {
       if (rb->DataType == GL_UNSIGNED_BYTE) {
@@ -965,7 +937,6 @@ osmesa_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
          rb->PutValues = put_values_RGB32;
          rb->PutMonoValues = put_mono_values_RGB32;
       }
-      rb->RedBits = rb->GreenBits = rb->BlueBits = bpc;
    }
    else if (osmesa->format == OSMESA_BGR) {
       if (rb->DataType == GL_UNSIGNED_BYTE) {
@@ -995,7 +966,6 @@ osmesa_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
          rb->PutValues = put_values_BGR32;
          rb->PutMonoValues = put_mono_values_BGR32;
       }
-      rb->RedBits = rb->GreenBits = rb->BlueBits = bpc;
    }
    else if (osmesa->format == OSMESA_RGB_565) {
       ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
@@ -1006,18 +976,6 @@ osmesa_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
       rb->PutMonoRow = put_mono_row_RGB_565;
       rb->PutValues = put_values_RGB_565;
       rb->PutMonoValues = put_mono_values_RGB_565;
-      rb->RedBits = 5;
-      rb->GreenBits = 6;
-      rb->BlueBits = 5;
-   }
-   else if (osmesa->format == OSMESA_COLOR_INDEX) {
-      rb->GetRow = get_row_CI;
-      rb->GetValues = get_values_CI;
-      rb->PutRow = put_row_CI;
-      rb->PutMonoRow = put_mono_row_CI;
-      rb->PutValues = put_values_CI;
-      rb->PutMonoValues = put_mono_values_CI;
-      rb->IndexBits = 8;
    }
    else {
       _mesa_problem(ctx, "bad pixel format in osmesa renderbuffer_storage");
@@ -1045,18 +1003,23 @@ new_osmesa_renderbuffer(GLcontext *ctx, GLenum format, GLenum type)
       rb->Delete = osmesa_delete_renderbuffer;
       rb->AllocStorage = osmesa_renderbuffer_storage;
 
-      if (format == OSMESA_COLOR_INDEX) {
-         rb->InternalFormat = GL_COLOR_INDEX;
-         rb->_ActualFormat = GL_COLOR_INDEX8_EXT;
-         rb->_BaseFormat = GL_COLOR_INDEX;
-         rb->DataType = GL_UNSIGNED_BYTE;
+      rb->InternalFormat = GL_RGBA;
+      switch (type) {
+      case GL_UNSIGNED_BYTE:
+         rb->Format = MESA_FORMAT_RGBA8888;
+         break;
+      case GL_UNSIGNED_SHORT:
+         rb->Format = MESA_FORMAT_SIGNED_RGBA_16;
+         break;
+      case GL_FLOAT:
+         rb->Format = MESA_FORMAT_RGBA_FLOAT32;
+         break;
+      default:
+         assert(0 && "Unexpected type in new_osmesa_renderbuffer()");
+         rb->Format = MESA_FORMAT_RGBA8888;
       }
-      else {
-         rb->InternalFormat = GL_RGBA;
-         rb->_ActualFormat = GL_RGBA;
-         rb->_BaseFormat = GL_RGBA;
-         rb->DataType = type;
-      }
+      rb->_BaseFormat = GL_RGBA;
+      rb->DataType = type;
    }
    return rb;
 }
@@ -1071,7 +1034,7 @@ new_osmesa_renderbuffer(GLcontext *ctx, GLenum format, GLenum type)
  * Create an Off-Screen Mesa rendering context.  The only attribute needed is
  * an RGBA vs Color-Index mode flag.
  *
- * Input:  format - either GL_RGBA or GL_COLOR_INDEX
+ * Input:  format - Must be GL_RGBA
  *         sharelist - specifies another OSMesaContext with which to share
  *                     display lists.  NULL indicates no sharing.
  * Return:  an OSMesaContext or 0 if error
@@ -1079,9 +1042,8 @@ new_osmesa_renderbuffer(GLcontext *ctx, GLenum format, GLenum type)
 GLAPI OSMesaContext GLAPIENTRY
 OSMesaCreateContext( GLenum format, OSMesaContext sharelist )
 {
-   const GLint accumBits = (format == OSMESA_COLOR_INDEX) ? 0 : 16;
    return OSMesaCreateContextExt(format, DEFAULT_SOFTWARE_DEPTH_BITS,
-                                 8, accumBits, sharelist);
+                                 8, 0, sharelist);
 }
 
 
@@ -1098,17 +1060,11 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
    OSMesaContext osmesa;
    struct dd_function_table functions;
    GLint rind, gind, bind, aind;
-   GLint indexBits = 0, redBits = 0, greenBits = 0, blueBits = 0, alphaBits =0;
-   GLboolean rgbmode;
+   GLint redBits = 0, greenBits = 0, blueBits = 0, alphaBits =0;
    GLenum type = CHAN_TYPE;
 
    rind = gind = bind = aind = 0;
-   if (format==OSMESA_COLOR_INDEX) {
-      indexBits = 8;
-      rgbmode = GL_FALSE;
-   }
-   else if (format==OSMESA_RGBA) {
-      indexBits = 0;
+   if (format==OSMESA_RGBA) {
       redBits = CHAN_BITS;
       greenBits = CHAN_BITS;
       blueBits = CHAN_BITS;
@@ -1117,10 +1073,8 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       gind = 1;
       bind = 2;
       aind = 3;
-      rgbmode = GL_TRUE;
    }
    else if (format==OSMESA_BGRA) {
-      indexBits = 0;
       redBits = CHAN_BITS;
       greenBits = CHAN_BITS;
       blueBits = CHAN_BITS;
@@ -1129,10 +1083,8 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       gind = 1;
       rind = 2;
       aind = 3;
-      rgbmode = GL_TRUE;
    }
    else if (format==OSMESA_ARGB) {
-      indexBits = 0;
       redBits = CHAN_BITS;
       greenBits = CHAN_BITS;
       blueBits = CHAN_BITS;
@@ -1141,10 +1093,8 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       rind = 1;
       gind = 2;
       bind = 3;
-      rgbmode = GL_TRUE;
    }
    else if (format==OSMESA_RGB) {
-      indexBits = 0;
       redBits = CHAN_BITS;
       greenBits = CHAN_BITS;
       blueBits = CHAN_BITS;
@@ -1152,10 +1102,8 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       rind = 0;
       gind = 1;
       bind = 2;
-      rgbmode = GL_TRUE;
    }
    else if (format==OSMESA_BGR) {
-      indexBits = 0;
       redBits = CHAN_BITS;
       greenBits = CHAN_BITS;
       blueBits = CHAN_BITS;
@@ -1163,11 +1111,9 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       rind = 2;
       gind = 1;
       bind = 0;
-      rgbmode = GL_TRUE;
    }
 #if CHAN_TYPE == GL_UNSIGNED_BYTE
    else if (format==OSMESA_RGB_565) {
-      indexBits = 0;
       redBits = 5;
       greenBits = 6;
       blueBits = 5;
@@ -1175,7 +1121,6 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       rind = 0; /* not used */
       gind = 0;
       bind = 0;
-      rgbmode = GL_TRUE;
    }
 #endif
    else {
@@ -1184,14 +1129,12 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
 
    osmesa = (OSMesaContext) CALLOC_STRUCT(osmesa_context);
    if (osmesa) {
-      osmesa->gl_visual = _mesa_create_visual( rgbmode,
-                                               GL_FALSE,    /* double buffer */
+      osmesa->gl_visual = _mesa_create_visual( GL_FALSE,    /* double buffer */
                                                GL_FALSE,    /* stereo */
                                                redBits,
                                                greenBits,
                                                blueBits,
                                                alphaBits,
-                                               indexBits,
                                                depthBits,
                                                stencilBits,
                                                accumBits,
@@ -1201,7 +1144,7 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
                                                1            /* num samples */
                                                );
       if (!osmesa->gl_visual) {
-         _mesa_free(osmesa);
+         free(osmesa);
          return NULL;
       }
 
@@ -1218,7 +1161,7 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
                                               : (GLcontext *) NULL,
                                     &functions, (void *) osmesa)) {
          _mesa_destroy_visual( osmesa->gl_visual );
-         _mesa_free(osmesa);
+         free(osmesa);
          return NULL;
       }
 
@@ -1233,15 +1176,13 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       if (!osmesa->gl_buffer) {
          _mesa_destroy_visual( osmesa->gl_visual );
          _mesa_free_context_data( &osmesa->mesa );
-         _mesa_free(osmesa);
+         free(osmesa);
          return NULL;
       }
 
-      /* create front color buffer in user-provided memory (no back buffer) */
-      osmesa->rb = new_osmesa_renderbuffer(&osmesa->mesa, format, type);
-      _mesa_add_renderbuffer(osmesa->gl_buffer, BUFFER_FRONT_LEFT, osmesa->rb);
-      assert(osmesa->rb->RefCount == 2);
-                        
+      /* Create depth/stencil/accum buffers.  We'll create the color
+       * buffer later in OSMesaMakeCurrent().
+       */
       _mesa_add_soft_renderbuffers(osmesa->gl_buffer,
                                    GL_FALSE, /* color */
                                    osmesa->gl_visual->haveDepthBuffer,
@@ -1258,6 +1199,8 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
       osmesa->bInd = bind;
       osmesa->aInd = aind;
 
+      _mesa_meta_init(&osmesa->mesa);
+
       /* Initialize the software rasterizer and helper modules. */
       {
 	 GLcontext *ctx = &osmesa->mesa;
@@ -1270,7 +1213,7 @@ OSMesaCreateContextExt( GLenum format, GLint depthBits, GLint stencilBits,
              !_swsetup_CreateContext( ctx )) {
             _mesa_destroy_visual(osmesa->gl_visual);
             _mesa_free_context_data(ctx);
-            _mesa_free(osmesa);
+            free(osmesa);
             return NULL;
          }
 	
@@ -1304,16 +1247,18 @@ OSMesaDestroyContext( OSMesaContext osmesa )
       if (osmesa->rb)
          _mesa_reference_renderbuffer(&osmesa->rb, NULL);
 
+      _mesa_meta_free( &osmesa->mesa );
+
       _swsetup_DestroyContext( &osmesa->mesa );
       _tnl_DestroyContext( &osmesa->mesa );
       _vbo_DestroyContext( &osmesa->mesa );
       _swrast_DestroyContext( &osmesa->mesa );
 
       _mesa_destroy_visual( osmesa->gl_visual );
-      _mesa_unreference_framebuffer( &osmesa->gl_buffer );
+      _mesa_reference_framebuffer( &osmesa->gl_buffer, NULL );
 
       _mesa_free_context_data( &osmesa->mesa );
-      _mesa_free( osmesa );
+      free( osmesa );
    }
 }
 
@@ -1374,11 +1319,23 @@ OSMesaMakeCurrent( OSMesaContext osmesa, void *buffer, GLenum type,
     */
    _glapi_check_multithread();
 
+
+   /* Create a front/left color buffer which wraps the user-provided buffer.
+    * There is no back color buffer.
+    * If the user tries to use a 8, 16 or 32-bit/channel buffer that
+    * doesn't match what Mesa was compiled for (CHAN_BITS) the
+    * _mesa_add_renderbuffer() function will create a "wrapper" renderbuffer
+    * that converts rendering from CHAN_BITS to the user-requested channel
+    * size.
+    */
+   osmesa->rb = new_osmesa_renderbuffer(&osmesa->mesa, osmesa->format, type);
+   _mesa_add_renderbuffer(osmesa->gl_buffer, BUFFER_FRONT_LEFT, osmesa->rb);
+   assert(osmesa->rb->RefCount == 2);
+
    /* Set renderbuffer fields.  Set width/height = 0 to force 
     * osmesa_renderbuffer_storage() being called by _mesa_resize_framebuffer()
     */
    osmesa->rb->Data = buffer;
-   osmesa->rb->DataType = type;
    osmesa->rb->Width = osmesa->rb->Height = 0;
 
    /* Set the framebuffer's size.  This causes the
@@ -1587,7 +1544,7 @@ OSMesaGetProcAddress( const char *funcName )
 {
    int i;
    for (i = 0; functions[i].Name; i++) {
-      if (_mesa_strcmp(functions[i].Name, funcName) == 0)
+      if (strcmp(functions[i].Name, funcName) == 0)
          return functions[i].Function;
    }
    return _glapi_get_proc_address(funcName);

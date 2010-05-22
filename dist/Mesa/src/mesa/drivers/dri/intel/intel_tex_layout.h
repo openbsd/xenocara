@@ -33,10 +33,12 @@
 #include "main/macros.h"
 
 
-static GLuint minify( GLuint d )
+static INLINE GLuint minify( GLuint d )
 {
    return MAX2(1, d>>1);
 }
 
-extern void i945_miptree_layout_2d( struct intel_context *intel, struct intel_mipmap_tree *mt );
-extern GLuint intel_compressed_alignment(GLenum);
+extern void i945_miptree_layout_2d(struct intel_context *intel,
+				   struct intel_mipmap_tree *mt,
+				   uint32_t tiling, int nr_images);
+extern void intel_get_texture_alignment_unit(GLenum, GLuint *, GLuint *);

@@ -54,6 +54,27 @@ _mesa_bytes_per_pixel( GLenum format, GLenum type );
 extern GLboolean
 _mesa_is_legal_format_and_type( GLcontext *ctx, GLenum format, GLenum type );
 
+extern GLboolean
+_mesa_is_color_format(GLenum format);
+
+extern GLboolean
+_mesa_is_index_format(GLenum format);
+
+extern GLboolean
+_mesa_is_depth_format(GLenum format);
+
+extern GLboolean
+_mesa_is_stencil_format(GLenum format);
+
+extern GLboolean
+_mesa_is_ycbcr_format(GLenum format);
+
+extern GLboolean
+_mesa_is_depthstencil_format(GLenum format);
+
+extern GLboolean
+_mesa_is_dudv_format(GLenum format);
+
 
 extern GLvoid *
 _mesa_image_address( GLuint dimensions,
@@ -112,6 +133,13 @@ _mesa_unpack_bitmap( GLint width, GLint height, const GLubyte *pixels,
 extern void
 _mesa_pack_bitmap( GLint width, GLint height, const GLubyte *source,
                    GLubyte *dest, const struct gl_pixelstore_attrib *packing );
+
+extern void
+_mesa_expand_bitmap(GLsizei width, GLsizei height,
+                    const struct gl_pixelstore_attrib *unpack,
+                    const GLubyte *bitmap,
+                    GLubyte *destBuffer, GLint destStride,
+                    GLubyte onValue);
 
 
 /** \name Pixel processing functions */
@@ -198,6 +226,13 @@ _mesa_unpack_color_span_float( GLcontext *ctx,
                                const struct gl_pixelstore_attrib *srcPacking,
                                GLbitfield transferOps );
 
+extern void
+_mesa_unpack_dudv_span_byte( GLcontext *ctx,
+                             GLuint n, GLenum dstFormat, GLbyte dest[],
+                             GLenum srcFormat, GLenum srcType,
+                             const GLvoid *source,
+                             const struct gl_pixelstore_attrib *srcPacking,
+                             GLbitfield transferOps );
 
 extern void
 _mesa_unpack_index_span( const GLcontext *ctx, GLuint n,
@@ -268,7 +303,7 @@ _mesa_clip_drawpixels(const GLcontext *ctx,
 
 extern GLboolean
 _mesa_clip_readpixels(const GLcontext *ctx,
-                      GLint *destX, GLint *destY,
+                      GLint *srcX, GLint *srcY,
                       GLsizei *width, GLsizei *height,
                       struct gl_pixelstore_attrib *pack);
 
@@ -283,5 +318,11 @@ _mesa_clip_to_region(GLint xmin, GLint ymin,
                      GLint xmax, GLint ymax,
                      GLint *x, GLint *y,
                      GLsizei *width, GLsizei *height );
+
+extern GLboolean
+_mesa_clip_blit(GLcontext *ctx,
+                GLint *srcX0, GLint *srcY0, GLint *srcX1, GLint *srcY1,
+                GLint *dstX0, GLint *dstY0, GLint *dstX1, GLint *dstY1);
+
 
 #endif

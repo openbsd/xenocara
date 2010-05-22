@@ -25,13 +25,12 @@
  * 
  **************************************************************************/
 
-#include "glapi/glapi.h"
-
 #include "i830_context.h"
 #include "i830_reg.h"
 #include "intel_batchbuffer.h"
 #include "intel_regions.h"
 #include "intel_tris.h"
+#include "intel_fbo.h"
 #include "tnl/t_context.h"
 #include "tnl/t_vertex.h"
 
@@ -125,7 +124,7 @@ i830_render_start(struct intel_context *intel)
 
       for (i = 0; i < I830_TEX_UNITS; i++) {
          if (RENDERINPUTS_TEST(index_bitset, _TNL_ATTRIB_TEX(i))) {
-            GLuint sz = VB->TexCoordPtr[i]->size;
+            GLuint sz = VB->AttribPtr[_TNL_ATTRIB_TEX0 + i]->size;
             GLuint emit;
             GLuint mcs = (i830->state.Tex[i][I830_TEXREG_MCS] &
                           ~TEXCOORDTYPE_MASK);
@@ -236,8 +235,8 @@ static GLboolean
 i830_check_vertex_size(struct intel_context *intel, GLuint expected)
 {
    struct i830_context *i830 = i830_context(&intel->ctx);
-   int vft0 = i830->current->Ctx[I830_CTXREG_VF];
-   int vft1 = i830->current->Ctx[I830_CTXREG_VF2];
+   int vft0 = i830->state.Ctx[I830_CTXREG_VF];
+   int vft1 = i830->state.Ctx[I830_CTXREG_VF2];
    int nrtex = (vft0 & VFT0_TEX_COUNT_MASK) >> VFT0_TEX_COUNT_SHIFT;
    int i, sz = 0;
 
@@ -297,7 +296,7 @@ i830_emit_invarient_state(struct intel_context *intel)
 {
    BATCH_LOCALS;
 
-   BEGIN_BATCH(30, IGNORE_CLIPRECTS);
+   BEGIN_BATCH(29);
 
    OUT_BATCH(_3DSTATE_DFLT_DIFFUSE_CMD);
    OUT_BATCH(0);
@@ -349,15 +348,6 @@ i830_emit_invarient_state(struct intel_context *intel)
    OUT_BATCH(_3DSTATE_MAP_COORD_TRANSFORM);
    OUT_BATCH(DISABLE_TEX_TRANSFORM | TEXTURE_SET(3));
 
-   OUT_BATCH(_3DSTATE_RASTER_RULES_CMD |
-             ENABLE_POINT_RASTER_RULE |
-             OGL_POINT_RASTER_RULE |
-             ENABLE_LINE_STRIP_PROVOKE_VRTX |
-             ENABLE_TRI_FAN_PROVOKE_VRTX |
-             ENABLE_TRI_STRIP_PROVOKE_VRTX |
-             LINE_STRIP_PROVOKE_VRTX(1) |
-             TRI_FAN_PROVOKE_VRTX(2) | TRI_STRIP_PROVOKE_VRTX(2));
-
    OUT_BATCH(_3DSTATE_VERTEX_TRANSFORM);
    OUT_BATCH(DISABLE_VIEWPORT_TRANSFORM | DISABLE_PERSPECTIVE_DIVIDE);
 
@@ -374,7 +364,7 @@ i830_emit_invarient_state(struct intel_context *intel)
 
 
 #define emit( intel, state, size )			\
-   intel_batchbuffer_data(intel->batch, state, size, IGNORE_CLIPRECTS )
+   intel_batchbuffer_data(intel->batch, state, size )
 
 static GLuint
 get_dirty(struct i830_hw_state *state)
@@ -391,6 +381,9 @@ get_state_size(struct i830_hw_state *state)
 
    if (dirty & I830_UPLOAD_INVARIENT)
       sz += 40 * sizeof(int);
+
+   if (dirty & I830_UPLOAD_RASTER_RULES)
+      sz += sizeof(state->RasterRules);
 
    if (dirty & I830_UPLOAD_CTX)
       sz += sizeof(state->Ctx);
@@ -419,13 +412,13 @@ static void
 i830_emit_state(struct intel_context *intel)
 {
    struct i830_context *i830 = i830_context(&intel->ctx);
-   struct i830_hw_state *state = i830->current;
+   struct i830_hw_state *state = &i830->state;
    int i, count;
    GLuint dirty;
-   GET_CURRENT_CONTEXT(ctx);
-   BATCH_LOCALS;
    dri_bo *aper_array[3 + I830_TEX_UNITS];
    int aper_count;
+   GET_CURRENT_CONTEXT(ctx);
+   BATCH_LOCALS;
 
    /* We don't hold the lock at this point, so want to make sure that
     * there won't be a buffer wrap between the state emits and the primitive
@@ -434,13 +427,9 @@ i830_emit_state(struct intel_context *intel)
     * It might be better to talk about explicit places where
     * scheduling is allowed, rather than assume that it is whenever a
     * batchbuffer fills up.
-    *
-    * Set the space as LOOP_CLIPRECTS now, since that's what our primitives
-    * will be emitted under.
     */
    intel_batchbuffer_require_space(intel->batch,
-				   get_state_size(state) + INTEL_PRIM_EMIT_SIZE,
-				   LOOP_CLIPRECTS);
+				   get_state_size(state) + INTEL_PRIM_EMIT_SIZE);
    count = 0;
  again:
    aper_count = 0;
@@ -484,6 +473,11 @@ i830_emit_state(struct intel_context *intel)
       i830_emit_invarient_state(intel);
    }
 
+   if (dirty & I830_UPLOAD_RASTER_RULES) {
+      DBG("I830_UPLOAD_RASTER_RULES:\n");
+      emit(intel, state->RasterRules, sizeof(state->RasterRules));
+   }
+
    if (dirty & I830_UPLOAD_CTX) {
       DBG("I830_UPLOAD_CTX:\n");
       emit(intel, state->Ctx, sizeof(state->Ctx));
@@ -491,29 +485,24 @@ i830_emit_state(struct intel_context *intel)
    }
 
    if (dirty & I830_UPLOAD_BUFFERS) {
-      GLuint count = 9; 
+      GLuint count = 15;
 
       DBG("I830_UPLOAD_BUFFERS:\n");
 
       if (state->depth_region)
           count += 3;
 
-      if (intel->constant_cliprect)
-          count += 6;
-
-      BEGIN_BATCH(count, IGNORE_CLIPRECTS);
+      BEGIN_BATCH(count);
       OUT_BATCH(state->Buffer[I830_DESTREG_CBUFADDR0]);
       OUT_BATCH(state->Buffer[I830_DESTREG_CBUFADDR1]);
       OUT_RELOC(state->draw_region->buffer,
-		I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
-                state->draw_region->draw_offset);
+		I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER, 0);
 
       if (state->depth_region) {
          OUT_BATCH(state->Buffer[I830_DESTREG_DBUFADDR0]);
          OUT_BATCH(state->Buffer[I830_DESTREG_DBUFADDR1]);
          OUT_RELOC(state->depth_region->buffer,
-		   I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
-                   state->depth_region->draw_offset);
+		   I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER, 0);
       }
 
       OUT_BATCH(state->Buffer[I830_DESTREG_DV0]);
@@ -523,15 +512,13 @@ i830_emit_state(struct intel_context *intel)
       OUT_BATCH(state->Buffer[I830_DESTREG_SR1]);
       OUT_BATCH(state->Buffer[I830_DESTREG_SR2]);
 
-      if (intel->constant_cliprect) {
-	 assert(state->Buffer[I830_DESTREG_DRAWRECT0] != MI_NOOP);
-	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT0]);
-	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT1]);
-	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT2]);
-	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT3]);
-	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT4]);
-	 OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT5]);
-      }
+      assert(state->Buffer[I830_DESTREG_DRAWRECT0] != MI_NOOP);
+      OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT0]);
+      OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT1]);
+      OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT2]);
+      OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT3]);
+      OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT4]);
+      OUT_BATCH(state->Buffer[I830_DESTREG_DRAWRECT5]);
       ADVANCE_BATCH();
    }
    
@@ -544,18 +531,14 @@ i830_emit_state(struct intel_context *intel)
       if ((dirty & I830_UPLOAD_TEX(i))) {
          DBG("I830_UPLOAD_TEX(%d):\n", i);
 
-         BEGIN_BATCH(I830_TEX_SETUP_SIZE + 1, IGNORE_CLIPRECTS);
+         BEGIN_BATCH(I830_TEX_SETUP_SIZE + 1);
          OUT_BATCH(state->Tex[i][I830_TEXREG_TM0LI]);
 
          if (state->tex_buffer[i]) {
             OUT_RELOC(state->tex_buffer[i],
 		      I915_GEM_DOMAIN_SAMPLER, 0,
-                      state->tex_offset[i] | TM0S0_USE_FENCE);
+                      state->tex_offset[i]);
          }
-	 else if (state == &i830->meta) {
-	    assert(i == 0);
-	    OUT_BATCH(0);
-	 }
 	 else {
 	    OUT_BATCH(state->tex_offset[i]);
 	 }
@@ -590,10 +573,6 @@ i830_destroy_context(struct intel_context *intel)
 
    intel_region_release(&i830->state.draw_region);
    intel_region_release(&i830->state.depth_region);
-   intel_region_release(&i830->meta.draw_region);
-   intel_region_release(&i830->meta.depth_region);
-   intel_region_release(&i830->initial.draw_region);
-   intel_region_release(&i830->initial.depth_region);
 
    for (i = 0; i < I830_TEX_UNITS; i++) {
       if (i830->state.tex_buffer[i] != NULL) {
@@ -605,22 +584,23 @@ i830_destroy_context(struct intel_context *intel)
    _tnl_free_vertices(&intel->ctx);
 }
 
-
-void
-i830_state_draw_region(struct intel_context *intel,
-		       struct i830_hw_state *state,
-		       struct intel_region *color_region,
-		       struct intel_region *depth_region)
+static void
+i830_set_draw_region(struct intel_context *intel,
+                     struct intel_region *color_regions[],
+                     struct intel_region *depth_region,
+		     GLuint num_regions)
 {
    struct i830_context *i830 = i830_context(&intel->ctx);
    GLcontext *ctx = &intel->ctx;
+   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[0];
+   struct intel_renderbuffer *irb = intel_renderbuffer(rb);
    GLuint value;
+   struct i830_hw_state *state = &i830->state;
+   uint32_t draw_x, draw_y;
 
-   ASSERT(state == &i830->state || state == &i830->meta);
-
-   if (state->draw_region != color_region) {
+   if (state->draw_region != color_regions[0]) {
       intel_region_release(&state->draw_region);
-      intel_region_reference(&state->draw_region, color_region);
+      intel_region_reference(&state->draw_region, color_regions[0]);
    }
    if (state->depth_region != depth_region) {
       intel_region_release(&state->depth_region);
@@ -630,34 +610,39 @@ i830_state_draw_region(struct intel_context *intel,
    /*
     * Set stride/cpp values
     */
-   if (color_region) {
-      state->Buffer[I830_DESTREG_CBUFADDR0] = _3DSTATE_BUF_INFO_CMD;
-      state->Buffer[I830_DESTREG_CBUFADDR1] =
-         (BUF_3D_ID_COLOR_BACK |
-          BUF_3D_PITCH(color_region->pitch * color_region->cpp) |
-          BUF_3D_USE_FENCE);
-   }
+   i915_set_buf_info_for_region(&state->Buffer[I830_DESTREG_CBUFADDR0],
+				color_regions[0], BUF_3D_ID_COLOR_BACK);
 
-   if (depth_region) {
-      state->Buffer[I830_DESTREG_DBUFADDR0] = _3DSTATE_BUF_INFO_CMD;
-      state->Buffer[I830_DESTREG_DBUFADDR1] =
-         (BUF_3D_ID_DEPTH |
-          BUF_3D_PITCH(depth_region->pitch * depth_region->cpp) |
-          BUF_3D_USE_FENCE);
-   }
+   i915_set_buf_info_for_region(&state->Buffer[I830_DESTREG_DBUFADDR0],
+				depth_region, BUF_3D_ID_DEPTH);
 
    /*
     * Compute/set I830_DESTREG_DV1 value
     */
    value = (DSTORG_HORT_BIAS(0x8) |     /* .5 */
             DSTORG_VERT_BIAS(0x8) | DEPTH_IS_Z);    /* .5 */
-            
-   if (color_region && color_region->cpp == 4) {
-      value |= DV_PF_8888;
+
+   if (irb != NULL) {
+      switch (irb->Base.Format) {
+      case MESA_FORMAT_ARGB8888:
+      case MESA_FORMAT_XRGB8888:
+	 value |= DV_PF_8888;
+	 break;
+      case MESA_FORMAT_RGB565:
+	 value |= DV_PF_565;
+	 break;
+      case MESA_FORMAT_ARGB1555:
+	 value |= DV_PF_1555;
+	 break;
+      case MESA_FORMAT_ARGB4444:
+	 value |= DV_PF_4444;
+	 break;
+      default:
+	 _mesa_problem(ctx, "Bad renderbuffer format: %d\n",
+		       irb->Base.Format);
+      }
    }
-   else {
-      value |= DV_PF_565;
-   }
+
    if (depth_region && depth_region->cpp == 4) {
       value |= DEPTH_FRMT_24_FIXED_8_OTHER;
    }
@@ -666,59 +651,43 @@ i830_state_draw_region(struct intel_context *intel,
    }
    state->Buffer[I830_DESTREG_DV1] = value;
 
-   if (intel->constant_cliprect) {
-      state->Buffer[I830_DESTREG_DRAWRECT0] = _3DSTATE_DRAWRECT_INFO;
-      state->Buffer[I830_DESTREG_DRAWRECT1] = 0;
-      state->Buffer[I830_DESTREG_DRAWRECT2] = 0; /* xmin, ymin */
-      state->Buffer[I830_DESTREG_DRAWRECT3] =
-	 (ctx->DrawBuffer->Width & 0xffff) |
-	 (ctx->DrawBuffer->Height << 16);
-      state->Buffer[I830_DESTREG_DRAWRECT4] = 0; /* xoff, yoff */
-      state->Buffer[I830_DESTREG_DRAWRECT5] = 0;
+   /* We set up the drawing rectangle to be offset into the color
+    * region's location in the miptree.  If it doesn't match with
+    * depth's offsets, we can't render to it.
+    *
+    * (Well, not actually true -- the hw grew a bit to let depth's
+    * offset get forced to 0,0.  We may want to use that if people are
+    * hitting that case.  Also, some configurations may be supportable
+    * by tweaking the start offset of the buffers around, which we
+    * can't do in general due to tiling)
+    */
+   FALLBACK(intel, I830_FALLBACK_DRAW_OFFSET,
+	    (depth_region && color_regions[0]) &&
+	    (depth_region->draw_x != color_regions[0]->draw_x ||
+	     depth_region->draw_y != color_regions[0]->draw_y));
+
+   if (color_regions[0]) {
+      draw_x = color_regions[0]->draw_x;
+      draw_y = color_regions[0]->draw_y;
+   } else if (depth_region) {
+      draw_x = depth_region->draw_x;
+      draw_y = depth_region->draw_y;
    } else {
-      state->Buffer[I830_DESTREG_DRAWRECT0] = MI_NOOP;
-      state->Buffer[I830_DESTREG_DRAWRECT1] = MI_NOOP;
-      state->Buffer[I830_DESTREG_DRAWRECT2] = MI_NOOP;
-      state->Buffer[I830_DESTREG_DRAWRECT3] = MI_NOOP;
-      state->Buffer[I830_DESTREG_DRAWRECT4] = MI_NOOP;
-      state->Buffer[I830_DESTREG_DRAWRECT5] = MI_NOOP;
+      draw_x = 0;
+      draw_y = 0;
    }
 
+   state->Buffer[I830_DESTREG_DRAWRECT0] = _3DSTATE_DRAWRECT_INFO;
+   state->Buffer[I830_DESTREG_DRAWRECT1] = 0;
+   state->Buffer[I830_DESTREG_DRAWRECT2] = (draw_y << 16) | draw_x;
+   state->Buffer[I830_DESTREG_DRAWRECT3] =
+      ((ctx->DrawBuffer->Width + draw_x) & 0xffff) |
+      ((ctx->DrawBuffer->Height + draw_y) << 16);
+   state->Buffer[I830_DESTREG_DRAWRECT4] = (draw_y << 16) | draw_x;
+   state->Buffer[I830_DESTREG_DRAWRECT5] = MI_NOOP;
+
    I830_STATECHANGE(i830, I830_UPLOAD_BUFFERS);
-
-
 }
-
-
-static void
-i830_set_draw_region(struct intel_context *intel,
-                     struct intel_region *color_regions[],
-                     struct intel_region *depth_region,
-		     GLuint num_regions)
-{
-   struct i830_context *i830 = i830_context(&intel->ctx);
-   i830_state_draw_region(intel, &i830->state, color_regions[0], depth_region);
-}
-
-#if 0
-static void
-i830_update_color_z_regions(intelContextPtr intel,
-                            const intelRegion * colorRegion,
-                            const intelRegion * depthRegion)
-{
-   i830ContextPtr i830 = I830_CONTEXT(intel);
-
-   i830->state.Buffer[I830_DESTREG_CBUFADDR1] =
-      (BUF_3D_ID_COLOR_BACK | BUF_3D_PITCH(colorRegion->pitch) |
-       BUF_3D_USE_FENCE);
-   i830->state.Buffer[I830_DESTREG_CBUFADDR2] = colorRegion->offset;
-
-   i830->state.Buffer[I830_DESTREG_DBUFADDR1] =
-      (BUF_3D_ID_DEPTH | BUF_3D_PITCH(depthRegion->pitch) | BUF_3D_USE_FENCE);
-   i830->state.Buffer[I830_DESTREG_DBUFADDR2] = depthRegion->offset;
-}
-#endif
-
 
 /* This isn't really handled at the moment.
  */
@@ -727,32 +696,20 @@ i830_new_batch(struct intel_context *intel)
 {
    struct i830_context *i830 = i830_context(&intel->ctx);
    i830->state.emitted = 0;
-
-   /* Check that we didn't just wrap our batchbuffer at a bad time. */
-   assert(!intel->no_batch_wrap);
 }
-
-
-
-static GLuint
-i830_flush_cmd(void)
-{
-   return MI_FLUSH | FLUSH_MAP_CACHE;
-}
-
 
 static void 
 i830_assert_not_dirty( struct intel_context *intel )
 {
    struct i830_context *i830 = i830_context(&intel->ctx);
-   struct i830_hw_state *state = i830->current;
-   assert(!get_dirty(state));
+   assert(!get_dirty(&i830->state));
 }
 
 static void
-i830_note_unlock( struct intel_context *intel )
+i830_invalidate_state(struct intel_context *intel, GLuint new_state)
 {
-    /* nothing */
+   if (new_state & _NEW_LIGHT)
+      i830_update_provoking_vertex(&intel->ctx);
 }
 
 void
@@ -765,10 +722,9 @@ i830InitVtbl(struct i830_context *i830)
    i830->intel.vtbl.reduced_primitive_state = i830_reduced_primitive_state;
    i830->intel.vtbl.set_draw_region = i830_set_draw_region;
    i830->intel.vtbl.update_texture_state = i830UpdateTextureState;
-   i830->intel.vtbl.flush_cmd = i830_flush_cmd;
    i830->intel.vtbl.render_start = i830_render_start;
    i830->intel.vtbl.render_prevalidate = i830_render_prevalidate;
    i830->intel.vtbl.assert_not_dirty = i830_assert_not_dirty;
-   i830->intel.vtbl.note_unlock = i830_note_unlock; 
    i830->intel.vtbl.finish_batch = intel_finish_vb;
+   i830->intel.vtbl.invalidate_state = i830_invalidate_state;
 }

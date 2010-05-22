@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 static int Width = 400;
@@ -104,7 +105,7 @@ static const unsigned indicies[12] = {
    1, 4, 2
 };
 
-#define NONE  { NULL, 0, 0, 0 }
+#define NONE  { NULL, 0, 0, 0, sizeof( NULL ) }
 #define V2F   { v,    2, 2 * sizeof( GLfloat ), GL_FLOAT, sizeof( v[0] ) }
 #define V3F   { v,    3, 3 * sizeof( GLfloat ), GL_FLOAT, sizeof( v[0] ) }
 #define V4F   { v,    4, 4 * sizeof( GLfloat ), GL_FLOAT, sizeof( v[0] ) }
@@ -386,6 +387,7 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( Width, Height );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
    glutCreateWindow( "glInterleavedArrays test" );
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

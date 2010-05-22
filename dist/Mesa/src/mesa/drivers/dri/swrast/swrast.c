@@ -33,6 +33,7 @@
 
 #include "main/context.h"
 #include "main/extensions.h"
+#include "main/formats.h"
 #include "main/framebuffer.h"
 #include "main/imports.h"
 #include "main/renderbuffer.h"
@@ -43,74 +44,10 @@
 #include "tnl/t_pipeline.h"
 #include "vbo/vbo.h"
 #include "drivers/common/driverfuncs.h"
+#include "drivers/common/meta.h"
 #include "utils.h"
 
 #include "swrast_priv.h"
-
-
-#define need_GL_VERSION_1_3
-#define need_GL_VERSION_1_4
-#define need_GL_VERSION_1_5
-#define need_GL_VERSION_2_0
-#define need_GL_VERSION_2_1
-
-/* sw extensions for imaging */
-#define need_GL_EXT_blend_color
-#define need_GL_EXT_blend_minmax
-#define need_GL_EXT_convolution
-#define need_GL_EXT_histogram
-#define need_GL_SGI_color_table
-
-/* sw extensions not associated with some GL version */
-#define need_GL_ARB_shader_objects
-#define need_GL_ARB_vertex_program
-#define need_GL_APPLE_vertex_array_object
-#define need_GL_ATI_fragment_shader
-#define need_GL_ATI_separate_stencil
-#define need_GL_EXT_depth_bounds_test
-#define need_GL_EXT_framebuffer_object
-#define need_GL_EXT_framebuffer_blit
-#define need_GL_EXT_gpu_program_parameters
-#define need_GL_EXT_paletted_texture
-#define need_GL_EXT_stencil_two_side
-#define need_GL_IBM_multimode_draw_arrays
-#define need_GL_MESA_resize_buffers
-#define need_GL_NV_vertex_program
-#define need_GL_NV_fragment_program
-
-#include "extension_helper.h"
-
-const struct dri_extension card_extensions[] =
-{
-    { "GL_VERSION_1_3",			GL_VERSION_1_3_functions },
-    { "GL_VERSION_1_4",			GL_VERSION_1_4_functions },
-    { "GL_VERSION_1_5",			GL_VERSION_1_5_functions },
-    { "GL_VERSION_2_0",			GL_VERSION_2_0_functions },
-    { "GL_VERSION_2_1",			GL_VERSION_2_1_functions },
-
-    { "GL_EXT_blend_color",		GL_EXT_blend_color_functions },
-    { "GL_EXT_blend_minmax",		GL_EXT_blend_minmax_functions },
-    { "GL_EXT_convolution",		GL_EXT_convolution_functions },
-    { "GL_EXT_histogram",		GL_EXT_histogram_functions },
-    { "GL_SGI_color_table",		GL_SGI_color_table_functions },
-
-    { "GL_ARB_shader_objects",		GL_ARB_shader_objects_functions },
-    { "GL_ARB_vertex_program",		GL_ARB_vertex_program_functions },
-    { "GL_APPLE_vertex_array_object",	GL_APPLE_vertex_array_object_functions },
-    { "GL_ATI_fragment_shader",		GL_ATI_fragment_shader_functions },
-    { "GL_ATI_separate_stencil",	GL_ATI_separate_stencil_functions },
-    { "GL_EXT_depth_bounds_test",	GL_EXT_depth_bounds_test_functions },
-    { "GL_EXT_framebuffer_object",	GL_EXT_framebuffer_object_functions },
-    { "GL_EXT_framebuffer_blit",	GL_EXT_framebuffer_blit_functions },
-    { "GL_EXT_gpu_program_parameters",	GL_EXT_gpu_program_parameters_functions },
-    { "GL_EXT_paletted_texture",	GL_EXT_paletted_texture_functions },
-    { "GL_EXT_stencil_two_side",	GL_EXT_stencil_two_side_functions },
-    { "GL_IBM_multimode_draw_arrays",	GL_IBM_multimode_draw_arrays_functions },
-    { "GL_MESA_resize_buffers",		GL_MESA_resize_buffers_functions },
-    { "GL_NV_vertex_program",		GL_NV_vertex_program_functions },
-    { "GL_NV_fragment_program",		GL_NV_fragment_program_functions },
-    { NULL,				NULL }
-};
 
 
 /**
@@ -149,6 +86,7 @@ swrastFillInModes(__DRIscreen *psp,
 
     uint8_t depth_bits_array[4];
     uint8_t stencil_bits_array[4];
+    uint8_t msaa_samples_array[1];
 
     depth_bits_array[0] = 0;
     depth_bits_array[1] = 0;
@@ -162,6 +100,8 @@ swrastFillInModes(__DRIscreen *psp,
     stencil_bits_array[1] = (stencil_bits == 0) ? 8 : stencil_bits;
     stencil_bits_array[2] = 0;
     stencil_bits_array[3] = (stencil_bits == 0) ? 8 : stencil_bits;
+
+    msaa_samples_array[0] = 0;
 
     depth_buffer_factor = 4;
     back_buffer_factor = 2;
@@ -192,7 +132,8 @@ swrastFillInModes(__DRIscreen *psp,
     configs = driCreateConfigs(fb_format, fb_type,
 			       depth_bits_array, stencil_bits_array,
 			       depth_buffer_factor, back_buffer_modes,
-			       back_buffer_factor);
+			       back_buffer_factor, msaa_samples_array, 1,
+			       GL_TRUE);
     if (configs == NULL) {
 	fprintf(stderr, "[%s:%u] Error creating FBConfig!\n", __func__,
 		__LINE__);
@@ -208,13 +149,13 @@ driCreateNewScreen(int scrn, const __DRIextension **extensions,
 {
     static const __DRIextension *emptyExtensionList[] = { NULL };
     __DRIscreen *psp;
-    const __DRIconfig **configs8, **configs16, **configs24, **configs32;
+    __DRIconfig **configs8, **configs16, **configs24, **configs32;
 
     (void) data;
 
     TRACE;
 
-    psp = _mesa_calloc(sizeof(*psp));
+    psp = calloc(1, sizeof(*psp));
     if (!psp)
 	return NULL;
 
@@ -230,9 +171,10 @@ driCreateNewScreen(int scrn, const __DRIextension **extensions,
 
     configs16 = driConcatConfigs(configs8, configs16);
     configs24 = driConcatConfigs(configs16, configs24);
-    *driver_configs = driConcatConfigs(configs24, configs32);
+    *driver_configs = (const __DRIconfig **)
+       driConcatConfigs(configs24, configs32);
 
-    driInitExtensions( NULL, card_extensions, GL_FALSE );
+    driInitExtensions( NULL, NULL, GL_FALSE );
 
     return psp;
 }
@@ -242,7 +184,7 @@ static void driDestroyScreen(__DRIscreen *psp)
     TRACE;
 
     if (psp) {
-	_mesa_free(psp);
+	free(psp);
     }
 }
 
@@ -261,34 +203,28 @@ static const __DRIextension **driGetExtensions(__DRIscreen *psp)
 static GLuint
 choose_pixel_format(const GLvisual *v)
 {
-    if (v->rgbMode) {
-	int depth = v->rgbBits;
+    int depth = v->rgbBits;
 
-	if (depth == 32
-	    && v->redMask   == 0xff0000
-	    && v->greenMask == 0x00ff00
-	    && v->blueMask  == 0x0000ff)
-	    return PF_A8R8G8B8;
-	else if (depth == 24
-	    && v->redMask   == 0xff0000
-	    && v->greenMask == 0x00ff00
-	    && v->blueMask  == 0x0000ff)
-	    return PF_X8R8G8B8;
-	else if (depth == 16
-	    && v->redMask   == 0xf800
-	    && v->greenMask == 0x07e0
-	    && v->blueMask  == 0x001f)
-	    return PF_R5G6B5;
-	else if (depth == 8
-	    && v->redMask   == 0x07
-	    && v->greenMask == 0x38
-	    && v->blueMask  == 0xc0)
-	    return PF_R3G3B2;
-    }
-    else {
-	if (v->indexBits == 8)
-	    return PF_CI8;
-    }
+    if (depth == 32
+	&& v->redMask   == 0xff0000
+	&& v->greenMask == 0x00ff00
+	&& v->blueMask  == 0x0000ff)
+	return PF_A8R8G8B8;
+    else if (depth == 24
+	     && v->redMask   == 0xff0000
+	     && v->greenMask == 0x00ff00
+	     && v->blueMask  == 0x0000ff)
+	return PF_X8R8G8B8;
+    else if (depth == 16
+	     && v->redMask   == 0xf800
+	     && v->greenMask == 0x07e0
+	     && v->blueMask  == 0x001f)
+	return PF_R5G6B5;
+    else if (depth == 8
+	     && v->redMask   == 0x07
+	     && v->greenMask == 0x38
+	     && v->blueMask  == 0xc0)
+	return PF_R3G3B2;
 
     _mesa_problem( NULL, "unexpected format in %s", __FUNCTION__ );
     return 0;
@@ -299,8 +235,8 @@ swrast_delete_renderbuffer(struct gl_renderbuffer *rb)
 {
     TRACE;
 
-    _mesa_free(rb->Data);
-    _mesa_free(rb);
+    free(rb->Data);
+    free(rb);
 }
 
 static GLboolean
@@ -330,11 +266,11 @@ swrast_alloc_back_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
 
     TRACE;
 
-    _mesa_free(rb->Data);
+    free(rb->Data);
 
     swrast_alloc_front_storage(ctx, rb, internalFormat, width, height);
 
-    rb->Data = _mesa_malloc(height * xrb->pitch);
+    rb->Data = malloc(height * xrb->pitch);
 
     return GL_TRUE;
 }
@@ -342,7 +278,7 @@ swrast_alloc_back_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
 static struct swrast_renderbuffer *
 swrast_new_renderbuffer(const GLvisual *visual, GLboolean front)
 {
-    struct swrast_renderbuffer *xrb = _mesa_calloc(sizeof *xrb);
+    struct swrast_renderbuffer *xrb = calloc(1, sizeof *xrb);
     GLuint pixel_format;
 
     TRACE;
@@ -366,50 +302,31 @@ swrast_new_renderbuffer(const GLvisual *visual, GLboolean front)
 
     switch (pixel_format) {
     case PF_A8R8G8B8:
+	xrb->Base.Format = MESA_FORMAT_ARGB8888;
 	xrb->Base.InternalFormat = GL_RGBA;
 	xrb->Base._BaseFormat = GL_RGBA;
 	xrb->Base.DataType = GL_UNSIGNED_BYTE;
-	xrb->Base.RedBits   = 8 * sizeof(GLubyte);
-	xrb->Base.GreenBits = 8 * sizeof(GLubyte);
-	xrb->Base.BlueBits  = 8 * sizeof(GLubyte);
-	xrb->Base.AlphaBits = 8 * sizeof(GLubyte);
 	xrb->bpp = 32;
 	break;
     case PF_X8R8G8B8:
+	xrb->Base.Format = MESA_FORMAT_ARGB8888; /* XXX */
 	xrb->Base.InternalFormat = GL_RGB;
 	xrb->Base._BaseFormat = GL_RGB;
 	xrb->Base.DataType = GL_UNSIGNED_BYTE;
-	xrb->Base.RedBits   = 8 * sizeof(GLubyte);
-	xrb->Base.GreenBits = 8 * sizeof(GLubyte);
-	xrb->Base.BlueBits  = 8 * sizeof(GLubyte);
-	xrb->Base.AlphaBits = 0;
 	xrb->bpp = 32;
 	break;
     case PF_R5G6B5:
+	xrb->Base.Format = MESA_FORMAT_RGB565;
 	xrb->Base.InternalFormat = GL_RGB;
 	xrb->Base._BaseFormat = GL_RGB;
 	xrb->Base.DataType = GL_UNSIGNED_BYTE;
-	xrb->Base.RedBits   = 5 * sizeof(GLubyte);
-	xrb->Base.GreenBits = 6 * sizeof(GLubyte);
-	xrb->Base.BlueBits  = 5 * sizeof(GLubyte);
-	xrb->Base.AlphaBits = 0;
 	xrb->bpp = 16;
 	break;
     case PF_R3G3B2:
+	xrb->Base.Format = MESA_FORMAT_RGB332;
 	xrb->Base.InternalFormat = GL_RGB;
 	xrb->Base._BaseFormat = GL_RGB;
 	xrb->Base.DataType = GL_UNSIGNED_BYTE;
-	xrb->Base.RedBits   = 3 * sizeof(GLubyte);
-	xrb->Base.GreenBits = 3 * sizeof(GLubyte);
-	xrb->Base.BlueBits  = 2 * sizeof(GLubyte);
-	xrb->Base.AlphaBits = 0;
-	xrb->bpp = 8;
-	break;
-    case PF_CI8:
-	xrb->Base.InternalFormat = GL_COLOR_INDEX8_EXT;
-	xrb->Base._BaseFormat = GL_COLOR_INDEX;
-	xrb->Base.DataType = GL_UNSIGNED_BYTE;
-	xrb->Base.IndexBits = 8 * sizeof(GLubyte);
 	xrb->bpp = 8;
 	break;
     default:
@@ -428,7 +345,7 @@ driCreateNewDrawable(__DRIscreen *screen,
 
     TRACE;
 
-    buf = _mesa_calloc(sizeof *buf);
+    buf = calloc(1, sizeof *buf);
     if (!buf)
 	return NULL;
 
@@ -436,10 +353,10 @@ driCreateNewDrawable(__DRIscreen *screen,
 
     buf->driScreenPriv = screen;
 
-    buf->row = _mesa_malloc(MAX_WIDTH * 4);
+    buf->row = malloc(MAX_WIDTH * 4);
 
     /* basic framebuffer setup */
-    _mesa_initialize_framebuffer(&buf->Base, &config->modes);
+    _mesa_initialize_window_framebuffer(&buf->Base, &config->modes);
 
     /* add front renderbuffer */
     frontrb = swrast_new_renderbuffer(&config->modes, GL_TRUE);
@@ -471,10 +388,10 @@ driDestroyDrawable(__DRIdrawable *buf)
     if (buf) {
 	struct gl_framebuffer *fb = &buf->Base;
 
-	_mesa_free(buf->row);
+	free(buf->row);
 
 	fb->DeletePending = GL_TRUE;
-	_mesa_unreference_framebuffer(&fb);
+	_mesa_reference_framebuffer(&fb, NULL);
     }
 }
 
@@ -595,7 +512,7 @@ driCreateNewContext(__DRIscreen *screen, const __DRIconfig *config,
 
     TRACE;
 
-    ctx = _mesa_calloc(sizeof *ctx);
+    ctx = calloc(1, sizeof *ctx);
     if (!ctx)
 	return NULL;
 
@@ -610,7 +527,7 @@ driCreateNewContext(__DRIscreen *screen, const __DRIconfig *config,
     if (!_mesa_initialize_context(&ctx->Base, &config->modes,
 				  shared ? &shared->Base : NULL,
 				  &functions, (void *) ctx)) {
-      _mesa_free(ctx);
+      free(ctx);
       return NULL;
     }
 
@@ -639,6 +556,8 @@ driCreateNewContext(__DRIscreen *screen, const __DRIconfig *config,
     _mesa_enable_2_0_extensions(mesaCtx);
     _mesa_enable_2_1_extensions(mesaCtx);
 
+    _mesa_meta_init(mesaCtx);
+
     return ctx;
 }
 
@@ -650,6 +569,7 @@ driDestroyContext(__DRIcontext *ctx)
 
     if (ctx) {
 	mesaCtx = &ctx->Base;
+        _mesa_meta_free(mesaCtx);
 	_swsetup_DestroyContext( mesaCtx );
 	_swrast_DestroyContext( mesaCtx );
 	_tnl_DestroyContext( mesaCtx );

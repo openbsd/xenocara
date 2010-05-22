@@ -34,12 +34,14 @@
 #define I830_FALLBACK_COLORMASK		 0x2000
 #define I830_FALLBACK_STENCIL		 0x4000
 #define I830_FALLBACK_STIPPLE		 0x8000
-#define I830_FALLBACK_LOGICOP		 0x10000
+#define I830_FALLBACK_LOGICOP		 0x20000
+#define I830_FALLBACK_DRAW_OFFSET	 0x200000
 
 #define I830_UPLOAD_CTX              0x1
 #define I830_UPLOAD_BUFFERS          0x2
 #define I830_UPLOAD_STIPPLE          0x4
 #define I830_UPLOAD_INVARIENT        0x8
+#define I830_UPLOAD_RASTER_RULES     0x10
 #define I830_UPLOAD_TEX(i)           (0x10<<(i))
 #define I830_UPLOAD_TEXBLEND(i)      (0x100<<(i))
 #define I830_UPLOAD_TEX_ALL          (0x0f0)
@@ -99,6 +101,11 @@
 
 #define I830_TEXBLEND_SIZE	12      /* (4 args + op) * 2 + COLOR_FACTOR */
 
+enum {
+   I830_RASTER_RULES,
+   I830_RASTER_RULES_SIZE
+};
+
 struct i830_texture_object
 {
    struct intel_texture_object intel;
@@ -112,6 +119,7 @@ struct i830_hw_state
    GLuint Ctx[I830_CTX_SETUP_SIZE];
    GLuint Buffer[I830_DEST_SETUP_SIZE];
    GLuint Stipple[I830_STP_SETUP_SIZE];
+   GLuint RasterRules[I830_RASTER_RULES_SIZE];
    GLuint Tex[I830_TEX_UNITS][I830_TEX_SETUP_SIZE];
    GLuint TexBlend[I830_TEX_UNITS][I830_TEXBLEND_SIZE];
    GLuint TexBlendWordsUsed[I830_TEX_UNITS];
@@ -137,7 +145,7 @@ struct i830_context
    GLuint lodbias_tm0s3[MAX_TEXTURE_UNITS];
      DECLARE_RENDERINPUTS(last_index_bitset);
 
-   struct i830_hw_state meta, initial, state, *current;
+   struct i830_hw_state state;
 };
 
 
@@ -171,7 +179,7 @@ i830_state_draw_region(struct intel_context *intel,
  */
 extern GLboolean
 i830CreateContext(const __GLcontextModes * mesaVis,
-                  __DRIcontextPrivate * driContextPriv,
+                  __DRIcontext * driContextPriv,
                   void *sharedContextPrivate);
 
 /* i830_tex.c, i830_texstate.c
@@ -197,10 +205,7 @@ extern void i830InitStateFuncs(struct dd_function_table *functions);
 extern void i830EmitState(struct i830_context *i830);
 
 extern void i830InitState(struct i830_context *i830);
-
-/* i830_metaops.c
- */
-extern void i830InitMetaFuncs(struct i830_context *i830);
+extern void i830_update_provoking_vertex(GLcontext *ctx);
 
 /*======================================================================
  * Inline conversion functions.  These are better-typed than the

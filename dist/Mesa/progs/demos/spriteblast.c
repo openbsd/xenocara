@@ -21,7 +21,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#define GL_GLEXT_PROTOTYPES
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 /* Some <math.h> files do not define M_PI... */
@@ -209,13 +209,13 @@ redraw(void)
 {
   int i;
 
+  glDepthMask(GL_TRUE);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glPushMatrix();
   glRotatef(15.0, 1.0, 0.0, 0.0);
   glRotatef(angle, 0.0, 1.0, 0.0);
 
-  glDepthMask(GL_FALSE);
 
   /* Draw the floor. */
 /*  glEnable(GL_TEXTURE_2D);*/
@@ -232,7 +232,7 @@ redraw(void)
   glEnd();
 
   /* Allow particles to blend with each other. */
-  glDepthMask(GL_TRUE);
+  glDepthMask(GL_FALSE);
 
   if (blend)
      glEnable(GL_BLEND);
@@ -493,6 +493,8 @@ int
 main(int argc, char **argv)
 {
   int i;
+
+  glutInitWindowSize(600,300);
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
 
@@ -506,9 +508,8 @@ main(int argc, char **argv)
       linearFiltering = 0;
     }
   }
-  glutInitWindowPosition(0, 0);
-  glutInitWindowSize(600,300);
   glutCreateWindow("sprite blast");
+  glewInit();
   glutReshapeFunc(reshape);
   glutDisplayFunc(redraw);
   glutMouseFunc(mouse);

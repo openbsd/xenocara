@@ -27,6 +27,7 @@
 
 
 import string
+import sys
 
 
 GLint = 1
@@ -35,6 +36,7 @@ GLfloat = 3
 GLdouble = 4
 GLboolean = 5
 GLfloatN = 6    # A normalized value, such as a color or depth range
+GLint64 = 7
 
 
 TypeStrings = {
@@ -42,7 +44,8 @@ TypeStrings = {
 	GLenum : "GLenum",
 	GLfloat : "GLfloat",
 	GLdouble : "GLdouble",
-	GLboolean : "GLboolean"
+	GLboolean : "GLboolean",
+	GLint64 : "GLint64"
 }
 
 
@@ -80,7 +83,7 @@ StateVars = [
 	( "GL_AUTO_NORMAL", GLboolean, ["ctx->Eval.AutoNormal"], "", None ),
 	( "GL_AUX_BUFFERS", GLint, ["ctx->DrawBuffer->Visual.numAuxBuffers"],
 	  "", None ),
-	( "GL_BLEND", GLboolean, ["ctx->Color.BlendEnabled"], "", None ),
+	( "GL_BLEND", GLboolean, ["(ctx->Color.BlendEnabled & 1)"], "", None ),
 	( "GL_BLEND_DST", GLenum, ["ctx->Color.BlendDstRGB"], "", None ),
 	( "GL_BLEND_SRC", GLenum, ["ctx->Color.BlendSrcRGB"], "", None ),
 	( "GL_BLEND_SRC_RGB_EXT", GLenum, ["ctx->Color.BlendSrcRGB"], "", None ),
@@ -124,10 +127,10 @@ StateVars = [
 	( "GL_COLOR_MATERIAL_PARAMETER", GLenum,
 	  ["ctx->Light.ColorMaterialMode"], "", None ),
 	( "GL_COLOR_WRITEMASK", GLint,
-	  [ "ctx->Color.ColorMask[RCOMP] ? 1 : 0",
-		"ctx->Color.ColorMask[GCOMP] ? 1 : 0",
-		"ctx->Color.ColorMask[BCOMP] ? 1 : 0",
-		"ctx->Color.ColorMask[ACOMP] ? 1 : 0" ], "", None ),
+	  [ "ctx->Color.ColorMask[0][RCOMP] ? 1 : 0",
+		"ctx->Color.ColorMask[0][GCOMP] ? 1 : 0",
+		"ctx->Color.ColorMask[0][BCOMP] ? 1 : 0",
+		"ctx->Color.ColorMask[0][ACOMP] ? 1 : 0" ], "", None ),
 	( "GL_CULL_FACE", GLboolean, ["ctx->Polygon.CullFlag"], "", None ),
 	( "GL_CULL_FACE_MODE", GLenum, ["ctx->Polygon.CullFaceMode"], "", None ),
 	( "GL_CURRENT_COLOR", GLfloatN,
@@ -152,7 +155,7 @@ StateVars = [
 	( "GL_CURRENT_RASTER_DISTANCE", GLfloat,
 	  ["ctx->Current.RasterDistance"], "", None ),
 	( "GL_CURRENT_RASTER_INDEX", GLfloat,
-	  ["ctx->Current.RasterIndex"], "", None ),
+	  ["1.0"], "", None ),
 	( "GL_CURRENT_RASTER_POSITION", GLfloat,
 	  ["ctx->Current.RasterPos[0]",
 	   "ctx->Current.RasterPos[1]",
@@ -164,19 +167,32 @@ StateVars = [
 	   "ctx->Current.RasterSecondaryColor[2]",
 	   "ctx->Current.RasterSecondaryColor[3]"], "", None ),
 	( "GL_CURRENT_RASTER_TEXTURE_COORDS", GLfloat,
-	  ["ctx->Current.RasterTexCoords[texUnit][0]",
-	   "ctx->Current.RasterTexCoords[texUnit][1]",
-	   "ctx->Current.RasterTexCoords[texUnit][2]",
-	   "ctx->Current.RasterTexCoords[texUnit][3]"],
-	  "const GLuint texUnit = ctx->Texture.CurrentUnit;", None ),
+	  ["ctx->Current.RasterTexCoords[unit][0]",
+	   "ctx->Current.RasterTexCoords[unit][1]",
+	   "ctx->Current.RasterTexCoords[unit][2]",
+	   "ctx->Current.RasterTexCoords[unit][3]"],
+	  """const GLuint unit = ctx->Texture.CurrentUnit;
+         if (unit >= ctx->Const.MaxTextureCoordUnits) {
+            _mesa_error(ctx, GL_INVALID_OPERATION,
+                        "glGet(raster tex coords, unit %u)", unit);
+            return;
+         }""",
+	  None ),
 	( "GL_CURRENT_RASTER_POSITION_VALID", GLboolean,
 	  ["ctx->Current.RasterPosValid"], "", None ),
 	( "GL_CURRENT_TEXTURE_COORDS", GLfloat,
-	  ["ctx->Current.Attrib[VERT_ATTRIB_TEX0 + texUnit][0]",
-	   "ctx->Current.Attrib[VERT_ATTRIB_TEX0 + texUnit][1]",
-	   "ctx->Current.Attrib[VERT_ATTRIB_TEX0 + texUnit][2]",
-	   "ctx->Current.Attrib[VERT_ATTRIB_TEX0 + texUnit][3]"],
-	  "const GLuint texUnit = ctx->Texture.CurrentUnit;", None ),
+	  ["ctx->Current.Attrib[VERT_ATTRIB_TEX0 + unit][0]",
+	   "ctx->Current.Attrib[VERT_ATTRIB_TEX0 + unit][1]",
+	   "ctx->Current.Attrib[VERT_ATTRIB_TEX0 + unit][2]",
+	   "ctx->Current.Attrib[VERT_ATTRIB_TEX0 + unit][3]"],
+	  """const GLuint unit = ctx->Texture.CurrentUnit;
+         if (unit >= ctx->Const.MaxTextureCoordUnits) {
+            _mesa_error(ctx, GL_INVALID_OPERATION,
+                        "glGet(current tex coords, unit %u)", unit);
+            return;
+         }
+         FLUSH_CURRENT(ctx, 0);""",
+	  None ),
 	( "GL_DEPTH_BIAS", GLfloat, ["ctx->Pixel.DepthBias"], "", None ),
 	( "GL_DEPTH_BITS", GLint, ["ctx->DrawBuffer->Visual.depthBits"],
 	  "", None ),
@@ -215,7 +231,7 @@ StateVars = [
 	( "GL_INDEX_BITS", GLint, ["ctx->DrawBuffer->Visual.indexBits"],
 	  "", None ),
 	( "GL_INDEX_CLEAR_VALUE", GLint, ["ctx->Color.ClearIndex"], "", None ),
-	( "GL_INDEX_MODE", GLboolean, ["!ctx->DrawBuffer->Visual.rgbMode"],
+	( "GL_INDEX_MODE", GLboolean, ["GL_FALSE"],
 	  "", None ),
 	( "GL_INDEX_OFFSET", GLint, ["ctx->Pixel.IndexOffset"], "", None ),
 	( "GL_INDEX_SHIFT", GLint, ["ctx->Pixel.IndexShift"], "", None ),
@@ -254,7 +270,7 @@ StateVars = [
 	  ["ctx->Const.MinLineWidth",
 	   "ctx->Const.MaxLineWidth"], "", None ),
 	( "GL_LIST_BASE", GLint, ["ctx->List.ListBase"], "", None ),
-	( "GL_LIST_INDEX", GLint, ["ctx->ListState.CurrentListNum"], "", None ),
+	( "GL_LIST_INDEX", GLint, ["(ctx->ListState.CurrentList ? ctx->ListState.CurrentList->Name : 0)"], "", None ),
 	( "GL_LIST_MODE", GLenum, ["mode"],
 	  """GLenum mode;
          if (!ctx->CompileFlag)
@@ -394,7 +410,7 @@ StateVars = [
 	( "GL_RENDER_MODE", GLenum, ["ctx->RenderMode"], "", None ),
 	( "GL_RESCALE_NORMAL", GLboolean,
 	  ["ctx->Transform.RescaleNormals"], "", None ),
-	( "GL_RGBA_MODE", GLboolean, ["ctx->DrawBuffer->Visual.rgbMode"],
+	( "GL_RGBA_MODE", GLboolean, ["GL_TRUE"],
 	  "", None ),
 	( "GL_SCISSOR_BOX", GLint,
 	  ["ctx->Scissor.X",
@@ -454,9 +470,24 @@ StateVars = [
 	   "matrix[4]", "matrix[5]", "matrix[6]", "matrix[7]",
 	   "matrix[8]", "matrix[9]", "matrix[10]", "matrix[11]",
 	   "matrix[12]", "matrix[13]", "matrix[14]", "matrix[15]" ],
-	  "const GLfloat *matrix = ctx->TextureMatrixStack[ctx->Texture.CurrentUnit].Top->m;", None ),
+	  """const GLfloat *matrix;
+         const GLuint unit = ctx->Texture.CurrentUnit;
+         if (unit >= ctx->Const.MaxTextureCoordUnits) {
+            _mesa_error(ctx, GL_INVALID_OPERATION, "glGet(texture matrix %u)",
+                        unit);
+            return;
+         }
+         matrix = ctx->TextureMatrixStack[unit].Top->m;""",
+	  None ),
 	( "GL_TEXTURE_STACK_DEPTH", GLint,
-	  ["ctx->TextureMatrixStack[ctx->Texture.CurrentUnit].Depth + 1"], "", None ),
+	  ["ctx->TextureMatrixStack[unit].Depth + 1"],
+	  """const GLuint unit = ctx->Texture.CurrentUnit;
+         if (unit >= ctx->Const.MaxTextureCoordUnits) {
+            _mesa_error(ctx, GL_INVALID_OPERATION,
+                        "glGet(texture stack depth, unit %u)", unit);
+            return;
+         }""",
+	  None ),
 	( "GL_UNPACK_ALIGNMENT", GLint, ["ctx->Unpack.Alignment"], "", None ),
 	( "GL_UNPACK_LSB_FIRST", GLboolean, ["ctx->Unpack.LsbFirst"], "", None ),
 	( "GL_UNPACK_ROW_LENGTH", GLint, ["ctx->Unpack.RowLength"], "", None ),
@@ -523,10 +554,10 @@ StateVars = [
 
 	# GL_ARB_texture_compression */
 	( "GL_TEXTURE_COMPRESSION_HINT_ARB", GLint,
-	  ["ctx->Hint.TextureCompression"], "", ["ARB_texture_compression"] ),
+	  ["ctx->Hint.TextureCompression"], "", None ),
 	( "GL_NUM_COMPRESSED_TEXTURE_FORMATS_ARB", GLint,
 	  ["_mesa_get_compressed_formats(ctx, NULL, GL_FALSE)"],
-	  "", ["ARB_texture_compression"] ),
+	  "", None ),
 	( "GL_COMPRESSED_TEXTURE_FORMATS_ARB", GLenum,
 	  [],
 	  """GLint formats[100];
@@ -534,7 +565,7 @@ StateVars = [
          ASSERT(n <= 100);
          for (i = 0; i < n; i++)
             params[i] = CONVERSION(formats[i]);""",
-	  ["ARB_texture_compression"] ),
+	  None ),
 
 	# GL_EXT_compiled_vertex_array
 	( "GL_ARRAY_ELEMENT_LOCK_FIRST_EXT", GLint, ["ctx->Array.LockFirst"],
@@ -681,21 +712,21 @@ StateVars = [
 
 	# GL_ARB_multisample
 	( "GL_MULTISAMPLE_ARB", GLboolean,
-	  ["ctx->Multisample.Enabled"], "", ["ARB_multisample"] ),
+	  ["ctx->Multisample.Enabled"], "", None ),
 	( "GL_SAMPLE_ALPHA_TO_COVERAGE_ARB", GLboolean,
-	  ["ctx->Multisample.SampleAlphaToCoverage"], "", ["ARB_multisample"] ),
+	  ["ctx->Multisample.SampleAlphaToCoverage"], "", None ),
 	( "GL_SAMPLE_ALPHA_TO_ONE_ARB", GLboolean,
-	  ["ctx->Multisample.SampleAlphaToOne"], "", ["ARB_multisample"] ),
+	  ["ctx->Multisample.SampleAlphaToOne"], "", None ),
 	( "GL_SAMPLE_COVERAGE_ARB", GLboolean,
-	  ["ctx->Multisample.SampleCoverage"], "", ["ARB_multisample"] ),
+	  ["ctx->Multisample.SampleCoverage"], "", None ),
 	( "GL_SAMPLE_COVERAGE_VALUE_ARB", GLfloat,
-	  ["ctx->Multisample.SampleCoverageValue"], "", ["ARB_multisample"] ),
+	  ["ctx->Multisample.SampleCoverageValue"], "", None ),
 	( "GL_SAMPLE_COVERAGE_INVERT_ARB", GLboolean,
-	  ["ctx->Multisample.SampleCoverageInvert"], "", ["ARB_multisample"] ),
+	  ["ctx->Multisample.SampleCoverageInvert"], "", None ),
 	( "GL_SAMPLE_BUFFERS_ARB", GLint,
-	  ["ctx->DrawBuffer->Visual.sampleBuffers"], "", ["ARB_multisample"] ),
+	  ["ctx->DrawBuffer->Visual.sampleBuffers"], "", None ),
 	( "GL_SAMPLES_ARB", GLint,
-	  ["ctx->DrawBuffer->Visual.samples"], "", ["ARB_multisample"] ),
+	  ["ctx->DrawBuffer->Visual.samples"], "", None ),
 
 	# GL_IBM_rasterpos_clip
 	( "GL_RASTER_POSITION_UNCLIPPED_IBM", GLboolean,
@@ -815,30 +846,30 @@ StateVars = [
 
 	# GL_ARB_vertex_buffer_object
 	( "GL_ARRAY_BUFFER_BINDING_ARB", GLint,
-	  ["ctx->Array.ArrayBufferObj->Name"], "", ["ARB_vertex_buffer_object"] ),
+	  ["ctx->Array.ArrayBufferObj->Name"], "", None ),
 	( "GL_VERTEX_ARRAY_BUFFER_BINDING_ARB", GLint,
-	  ["ctx->Array.ArrayObj->Vertex.BufferObj->Name"], "", ["ARB_vertex_buffer_object"] ),
+	  ["ctx->Array.ArrayObj->Vertex.BufferObj->Name"], "", None ),
 	( "GL_NORMAL_ARRAY_BUFFER_BINDING_ARB", GLint,
-	  ["ctx->Array.ArrayObj->Normal.BufferObj->Name"], "", ["ARB_vertex_buffer_object"] ),
+	  ["ctx->Array.ArrayObj->Normal.BufferObj->Name"], "", None ),
 	( "GL_COLOR_ARRAY_BUFFER_BINDING_ARB", GLint,
-	  ["ctx->Array.ArrayObj->Color.BufferObj->Name"], "", ["ARB_vertex_buffer_object"] ),
+	  ["ctx->Array.ArrayObj->Color.BufferObj->Name"], "", None ),
 	( "GL_INDEX_ARRAY_BUFFER_BINDING_ARB", GLint,
-	  ["ctx->Array.ArrayObj->Index.BufferObj->Name"], "", ["ARB_vertex_buffer_object"] ),
+	  ["ctx->Array.ArrayObj->Index.BufferObj->Name"], "", None ),
 	( "GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING_ARB", GLint,
 	  ["ctx->Array.ArrayObj->TexCoord[ctx->Array.ActiveTexture].BufferObj->Name"],
-	  "", ["ARB_vertex_buffer_object"] ),
+	  "", None ),
 	( "GL_EDGE_FLAG_ARRAY_BUFFER_BINDING_ARB", GLint,
-	  ["ctx->Array.ArrayObj->EdgeFlag.BufferObj->Name"], "", ["ARB_vertex_buffer_object"] ),
+	  ["ctx->Array.ArrayObj->EdgeFlag.BufferObj->Name"], "", None ),
 	( "GL_SECONDARY_COLOR_ARRAY_BUFFER_BINDING_ARB", GLint,
 	  ["ctx->Array.ArrayObj->SecondaryColor.BufferObj->Name"],
-	  "", ["ARB_vertex_buffer_object"] ),
+	  "", None ),
 	( "GL_FOG_COORDINATE_ARRAY_BUFFER_BINDING_ARB", GLint,
 	  ["ctx->Array.ArrayObj->FogCoord.BufferObj->Name"],
-	  "", ["ARB_vertex_buffer_object"] ),
+	  "", None ),
 	# GL_WEIGHT_ARRAY_BUFFER_BINDING_ARB - not supported
 	( "GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB", GLint,
 	  ["ctx->Array.ElementArrayBufferObj->Name"],
-	  "", ["ARB_vertex_buffer_object"] ),
+	  "", None ),
 
 	# GL_EXT_pixel_buffer_object
 	( "GL_PIXEL_PACK_BUFFER_BINDING_EXT", GLint,
@@ -902,21 +933,15 @@ StateVars = [
 	  ["ctx->Depth.BoundsMin", "ctx->Depth.BoundsMax"],
 	  "", ["EXT_depth_bounds_test"] ),
 
-	# GL_MESA_program_debug
-	( "GL_FRAGMENT_PROGRAM_CALLBACK_MESA", GLboolean,
-	  ["ctx->FragmentProgram.CallbackEnabled"], "", ["MESA_program_debug"] ),
-	( "GL_VERTEX_PROGRAM_CALLBACK_MESA", GLboolean,
-	  ["ctx->VertexProgram.CallbackEnabled"], "", ["MESA_program_debug"] ),
-	( "GL_FRAGMENT_PROGRAM_POSITION_MESA", GLint,
-	  ["ctx->FragmentProgram.CurrentPosition"], "", ["MESA_program_debug"] ),
-	( "GL_VERTEX_PROGRAM_POSITION_MESA", GLint,
-	  ["ctx->VertexProgram.CurrentPosition"], "", ["MESA_program_debug"] ),
+	# GL_ARB_depth_clamp
+	( "GL_DEPTH_CLAMP", GLboolean, ["ctx->Transform.DepthClamp"], "",
+	  ["ARB_depth_clamp"] ),
 
 	# GL_ARB_draw_buffers
 	( "GL_MAX_DRAW_BUFFERS_ARB", GLint,
-	  ["ctx->Const.MaxDrawBuffers"], "", ["ARB_draw_buffers"] ),
+	  ["ctx->Const.MaxDrawBuffers"], "", None ),
 	( "GL_DRAW_BUFFER0_ARB", GLenum,
-	  ["ctx->DrawBuffer->ColorDrawBuffer[0]"], "", ["ARB_draw_buffers"] ),
+	  ["ctx->DrawBuffer->ColorDrawBuffer[0]"], "", None ),
 	( "GL_DRAW_BUFFER1_ARB", GLenum,
 	  ["buffer"],
 	  """GLenum buffer;
@@ -924,7 +949,7 @@ StateVars = [
             _mesa_error(ctx, GL_INVALID_ENUM, "glGet(GL_DRAW_BUFFERx_ARB)");
             return;
          }
-         buffer = ctx->DrawBuffer->ColorDrawBuffer[1];""", ["ARB_draw_buffers"] ),
+         buffer = ctx->DrawBuffer->ColorDrawBuffer[1];""", None ),
 	( "GL_DRAW_BUFFER2_ARB", GLenum,
 	  ["buffer"],
 	  """GLenum buffer;
@@ -932,7 +957,7 @@ StateVars = [
             _mesa_error(ctx, GL_INVALID_ENUM, "glGet(GL_DRAW_BUFFERx_ARB)");
             return;
          }
-         buffer = ctx->DrawBuffer->ColorDrawBuffer[2];""", ["ARB_draw_buffers"] ),
+         buffer = ctx->DrawBuffer->ColorDrawBuffer[2];""", None ),
 	( "GL_DRAW_BUFFER3_ARB", GLenum,
 	  ["buffer"],
 	  """GLenum buffer;
@@ -940,14 +965,14 @@ StateVars = [
             _mesa_error(ctx, GL_INVALID_ENUM, "glGet(GL_DRAW_BUFFERx_ARB)");
             return;
          }
-         buffer = ctx->DrawBuffer->ColorDrawBuffer[3];""", ["ARB_draw_buffers"] ),
+         buffer = ctx->DrawBuffer->ColorDrawBuffer[3];""", None ),
 	# XXX Add more GL_DRAW_BUFFERn_ARB entries as needed in the future
 
 	# GL_OES_read_format
 	( "GL_IMPLEMENTATION_COLOR_READ_TYPE_OES", GLint,
-	  ["ctx->Const.ColorReadType"], "", ["OES_read_format"] ),
+	  ["_mesa_get_color_read_type(ctx)"], "", ["OES_read_format"] ),
 	( "GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES", GLint,
-	  ["ctx->Const.ColorReadFormat"], "", ["OES_read_format"] ),
+	  ["_mesa_get_color_read_format(ctx)"], "", ["OES_read_format"] ),
 
 	# GL_ATI_fragment_shader
 	( "GL_NUM_FRAGMENT_REGISTERS_ATI", GLint, ["6"], "", ["ATI_fragment_shader"] ),
@@ -986,6 +1011,13 @@ StateVars = [
 	( "GL_READ_FRAMEBUFFER_BINDING_EXT", GLint, ["ctx->ReadBuffer->Name"], "",
 	  ["EXT_framebuffer_blit"] ),
 
+	# GL_EXT_provoking_vertex
+	( "GL_PROVOKING_VERTEX_EXT", GLboolean,
+	  ["ctx->Light.ProvokingVertex"], "", ["EXT_provoking_vertex"] ),
+	( "GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION_EXT", GLboolean,
+	  ["ctx->Const.QuadsFollowProvokingVertexConvention"], "",
+	  ["EXT_provoking_vertex"] ),
+
 	# GL_ARB_fragment_shader
 	( "GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB", GLint,
 	  ["ctx->Const.FragmentProgram.MaxUniformComponents"], "",
@@ -1002,15 +1034,51 @@ StateVars = [
 	( "GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS_ARB", GLint,
 	  ["ctx->Const.MaxVertexTextureImageUnits"], "", ["ARB_vertex_shader"] ),
 	( "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_ARB", GLint,
-	  ["MAX_COMBINED_TEXTURE_IMAGE_UNITS"], "", ["ARB_vertex_shader"] ),
+	  ["ctx->Const.MaxCombinedTextureImageUnits"], "", ["ARB_vertex_shader"] ),
 
 	# GL_ARB_shader_objects
 	# Actually, this token isn't part of GL_ARB_shader_objects, but is
 	# close enough for now.
 	( "GL_CURRENT_PROGRAM", GLint,
 	  ["ctx->Shader.CurrentProgram ? ctx->Shader.CurrentProgram->Name : 0"],
-	  "", ["ARB_shader_objects"] )
+	  "", ["ARB_shader_objects"] ),
+
+	# GL_ARB_framebuffer_object
+	( "GL_MAX_SAMPLES", GLint, ["ctx->Const.MaxSamples"], "",
+	  ["ARB_framebuffer_object"] ),
+
+	# GL_APPLE_vertex_array_object
+	( "GL_VERTEX_ARRAY_BINDING_APPLE", GLint, ["ctx->Array.ArrayObj->Name"], "",
+	  ["APPLE_vertex_array_object"] ),
+
+	# GL_ARB_seamless_cube_map
+	( "GL_TEXTURE_CUBE_MAP_SEAMLESS", GLboolean, ["ctx->Texture.CubeMapSeamless"], "",
+	  ["ARB_seamless_cube_map"] ),
+
+	# GL_ARB_sync
+	( "GL_MAX_SERVER_WAIT_TIMEOUT", GLint64, ["ctx->Const.MaxServerWaitTimeout"], "",
+	  ["ARB_sync"] ),
+
+	# GL3
+	( "GL_NUM_EXTENSIONS", GLint, ["_mesa_get_extension_count(ctx)"], "", None ),
+	( "GL_MAJOR_VERSION", GLint, ["ctx->VersionMajor"], "", None ),
+	( "GL_MINOR_VERSION", GLint, ["ctx->VersionMinor"], "", None )
 ]
+
+
+# These are queried via glGetIntegetIndexdvEXT() or glGetIntegeri_v()
+IndexedStateVars = [
+	( "GL_BLEND", GLint, ["((ctx->Color.BlendEnabled >> index) & 1)"],
+	  "ctx->Const.MaxDrawBuffers", ["EXT_draw_buffers2"] ),
+	( "GL_COLOR_WRITEMASK", GLint,
+	  [ "ctx->Color.ColorMask[index][RCOMP] ? 1 : 0",
+		"ctx->Color.ColorMask[index][GCOMP] ? 1 : 0",
+		"ctx->Color.ColorMask[index][BCOMP] ? 1 : 0",
+		"ctx->Color.ColorMask[index][ACOMP] ? 1 : 0" ],
+	  "ctx->Const.MaxDrawBuffers", ["EXT_draw_buffers2"] ),
+	# XXX more to come...
+]
+
 
 
 def ConversionFunc(fromType, toType):
@@ -1019,9 +1087,15 @@ def ConversionFunc(fromType, toType):
 		return ""
 	elif fromType == GLfloat and toType == GLint:
 		return "IROUND"
+	elif fromType == GLfloat and toType == GLint64:
+		return "IROUND64"
 	elif fromType == GLfloatN and toType == GLfloat:
 		return ""
 	elif fromType == GLint and toType == GLfloat: # but not GLfloatN!
+		return "(GLfloat)"
+	elif fromType == GLint and toType == GLint64:
+		return "(GLint64)"
+	elif fromType == GLint64 and toType == GLfloat: # but not GLfloatN!
 		return "(GLfloat)"
 	else:
 		if fromType == GLfloatN:
@@ -1033,25 +1107,44 @@ def ConversionFunc(fromType, toType):
 		return fromStr + "_TO_" + toStr
 
 
-def EmitGetFunction(stateVars, returnType):
+def EmitGetFunction(stateVars, returnType, indexed):
 	"""Emit the code to implement glGetBooleanv, glGetIntegerv or glGetFloatv."""
 	assert (returnType == GLboolean or
 			returnType == GLint or
+			returnType == GLint64 or
 			returnType == GLfloat)
 
 	strType = TypeStrings[returnType]
 	# Capitalize first letter of return type
-	if returnType == GLint:
-		function = "GetIntegerv"
-	elif returnType == GLboolean:
-		function = "GetBooleanv"
-	elif returnType == GLfloat:
-		function = "GetFloatv"
+	if indexed:
+		if returnType == GLint:
+			function = "GetIntegerIndexedv"
+		elif returnType == GLboolean:
+			function = "GetBooleanIndexedv"
+		elif returnType == GLint64:
+			function = "GetInteger64Indexedv"
+		else:
+			function = "Foo"
 	else:
-		abort()
+		if returnType == GLint:
+			function = "GetIntegerv"
+		elif returnType == GLboolean:
+			function = "GetBooleanv"
+		elif returnType == GLfloat:
+			function = "GetFloatv"
+		elif returnType == GLint64:
+			function = "GetInteger64v"
+		else:
+			sys.exit(1)
+
+	if returnType == GLint64:
+		print "#if FEATURE_ARB_sync"
 
 	print "void GLAPIENTRY"
-	print "_mesa_%s( GLenum pname, %s *params )" % (function, strType)
+	if indexed:
+		print "_mesa_%s( GLenum pname, GLuint index, %s *params )" % (function, strType)
+	else:
+		print "_mesa_%s( GLenum pname, %s *params )" % (function, strType)
 	print "{"
 	print "   GET_CURRENT_CONTEXT(ctx);"
 	print "   ASSERT_OUTSIDE_BEGIN_END(ctx);"
@@ -1062,13 +1155,20 @@ def EmitGetFunction(stateVars, returnType):
 	print "   if (ctx->NewState)"
 	print "      _mesa_update_state(ctx);"
 	print ""
-	print "   if (ctx->Driver.%s &&" % function
-	print "       ctx->Driver.%s(ctx, pname, params))" % function
-	print "      return;"
-	print ""
+	if indexed == 0:
+		print "   if (ctx->Driver.%s &&" % function
+		print "       ctx->Driver.%s(ctx, pname, params))" % function
+		print "      return;"
+		print ""
 	print "   switch (pname) {"
 
-	for (name, varType, state, optionalCode, extensions) in stateVars:
+	for state in stateVars:
+		if indexed:
+			(name, varType, state, indexMax, extensions) = state
+			optionalCode = 0
+		else:
+			(name, varType, state, optionalCode, extensions) = state
+			indexMax = 0
 		print "      case " + name + ":"
 		if extensions:
 			if len(extensions) == 1:
@@ -1084,6 +1184,11 @@ def EmitGetFunction(stateVars, returnType):
 				assert len(extensions) == 4
 				print ('         CHECK_EXT4(%s, %s, %s, %s, "%s");' %
 					   (extensions[0], extensions[1], extensions[2], extensions[3], function))
+		if indexMax:
+			print ('         if (index >= %s) {' % indexMax)
+			print ('            _mesa_error(ctx, GL_INVALID_VALUE, "gl%s(index=%%u), index", pname);' % function)
+			print ('         }')
+
 		conversion = ConversionFunc(varType, returnType)
 		if optionalCode:
 			optionalCode = string.replace(optionalCode, "CONVERSION", conversion);	
@@ -1103,6 +1208,8 @@ def EmitGetFunction(stateVars, returnType):
 	print '         _mesa_error(ctx, GL_INVALID_ENUM, "gl%s(pname=0x%%x)", pname);' % function
 	print "   }"
 	print "}"
+	if returnType == GLint64:
+		print "#endif /* FEATURE_ARB_sync */"
 	print ""
 	return
 
@@ -1119,20 +1226,26 @@ def EmitHeader():
 #include "context.h"
 #include "enable.h"
 #include "extensions.h"
-#include "fbobject.h"
 #include "get.h"
 #include "macros.h"
 #include "mtypes.h"
 #include "state.h"
 #include "texcompress.h"
+#include "framebuffer.h"
 
 
 #define FLOAT_TO_BOOLEAN(X)   ( (X) ? GL_TRUE : GL_FALSE )
 
 #define INT_TO_BOOLEAN(I)     ( (I) ? GL_TRUE : GL_FALSE )
 
+#define INT64_TO_BOOLEAN(I)   ( (I) ? GL_TRUE : GL_FALSE )
+#define INT64_TO_INT(I)       ( (GLint)((I > INT_MAX) ? INT_MAX : ((I < INT_MIN) ? INT_MIN : (I))) )
+
 #define BOOLEAN_TO_INT(B)     ( (GLint) (B) )
+#define BOOLEAN_TO_INT64(B)   ( (GLint64) (B) )
 #define BOOLEAN_TO_FLOAT(B)   ( (B) ? 1.0F : 0.0F )
+
+#define ENUM_TO_INT64(E)      ( (GLint64) (E) )
 
 
 /*
@@ -1208,8 +1321,13 @@ _mesa_GetDoublev( GLenum pname, GLdouble *params )
 
 EmitHeader()
 # XXX Maybe sort the StateVars list
-EmitGetFunction(StateVars, GLboolean)
-EmitGetFunction(StateVars, GLfloat)
-EmitGetFunction(StateVars, GLint)
+EmitGetFunction(StateVars, GLboolean, 0)
+EmitGetFunction(StateVars, GLfloat, 0)
+EmitGetFunction(StateVars, GLint, 0)
+EmitGetFunction(StateVars, GLint64, 0)
 EmitGetDoublev()
+
+EmitGetFunction(IndexedStateVars, GLboolean, 1)
+EmitGetFunction(IndexedStateVars, GLint, 1)
+EmitGetFunction(IndexedStateVars, GLint64, 1)
 

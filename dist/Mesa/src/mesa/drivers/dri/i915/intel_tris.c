@@ -52,8 +52,6 @@
 #include "intel_buffers.h"
 #include "intel_reg.h"
 #include "intel_span.h"
-#include "intel_tex.h"
-#include "intel_chipset.h"
 #include "i830_context.h"
 #include "i830_reg.h"
 
@@ -68,7 +66,7 @@ intel_flush_inline_primitive(struct intel_context *intel)
 
    assert(intel->prim.primitive != ~0);
 
-/*    _mesa_printf("/\n"); */
+/*    printf("/\n"); */
 
    if (used < 8)
       goto do_discard;
@@ -90,19 +88,17 @@ intel_flush_inline_primitive(struct intel_context *intel)
 static void intel_start_inline(struct intel_context *intel, uint32_t prim)
 {
    BATCH_LOCALS;
-   uint32_t batch_flags = LOOP_CLIPRECTS;
 
    intel->vtbl.emit_state(intel);
 
    intel->no_batch_wrap = GL_TRUE;
 
-   /*_mesa_printf("%s *", __progname);*/
+   /*printf("%s *", __progname);*/
 
    /* Emit a slot which will be filled with the inline primitive
     * command later.
     */
-   BEGIN_BATCH(2, batch_flags);
-   OUT_BATCH(0);
+   BEGIN_BATCH(1);
 
    assert((intel->batch->dirty_state & (1<<1)) == 0);
 
@@ -114,7 +110,7 @@ static void intel_start_inline(struct intel_context *intel, uint32_t prim)
    ADVANCE_BATCH();
 
    intel->no_batch_wrap = GL_FALSE;
-/*    _mesa_printf(">"); */
+/*    printf(">"); */
 }
 
 static void intel_wrap_inline(struct intel_context *intel)
@@ -136,7 +132,7 @@ static GLuint *intel_extend_inline(struct intel_context *intel, GLuint dwords)
    if (intel_batchbuffer_space(intel->batch) < sz)
       intel_wrap_inline(intel);
 
-/*    _mesa_printf("."); */
+/*    printf("."); */
 
    intel->vtbl.assert_not_dirty(intel);
 
@@ -201,10 +197,10 @@ uint32_t *intel_get_prim_space(struct intel_context *intel, unsigned int count)
 /** Dispatches the accumulated primitive to the batchbuffer. */
 void intel_flush_prim(struct intel_context *intel)
 {
-   BATCH_LOCALS;
    dri_bo *aper_array[2];
    dri_bo *vb_bo;
    unsigned int offset, count;
+   BATCH_LOCALS;
 
    /* Must be called after an intel_start_prim. */
    assert(intel->prim.primitive != ~0);
@@ -221,7 +217,7 @@ void intel_flush_prim(struct intel_context *intel)
    intel->prim.count = 0;
    offset = intel->prim.start_offset;
    intel->prim.start_offset = intel->prim.current_offset;
-   if (!IS_9XX(intel->intelScreen->deviceID))
+   if (intel->gen < 3)
       intel->prim.start_offset = ALIGN(intel->prim.start_offset, 128);
    intel->prim.flush = NULL;
 
@@ -251,11 +247,11 @@ void intel_flush_prim(struct intel_context *intel)
 	  intel->vertex_size * 4);
 #endif
 
-   if (IS_9XX(intel->intelScreen->deviceID)) {
-      BEGIN_BATCH(5, LOOP_CLIPRECTS);
+   if (intel->gen >= 3) {
+      BEGIN_BATCH(5);
       OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_1 |
 		I1_LOAD_S(0) | I1_LOAD_S(1) | 1);
-      assert((offset & !S0_VB_OFFSET_MASK) == 0);
+      assert((offset & ~S0_VB_OFFSET_MASK) == 0);
       OUT_RELOC(vb_bo, I915_GEM_DOMAIN_VERTEX, 0, offset);
       OUT_BATCH((intel->vertex_size << S1_VERTEX_WIDTH_SHIFT) |
 		(intel->vertex_size << S1_VERTEX_PITCH_SHIFT));
@@ -270,11 +266,11 @@ void intel_flush_prim(struct intel_context *intel)
    } else {
       struct i830_context *i830 = i830_context(&intel->ctx);
 
-      BEGIN_BATCH(5, LOOP_CLIPRECTS);
+      BEGIN_BATCH(5);
       OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_1 |
 		I1_LOAD_S(0) | I1_LOAD_S(2) | 1);
       /* S0 */
-      assert((offset & !S0_VB_OFFSET_MASK_830) == 0);
+      assert((offset & ~S0_VB_OFFSET_MASK_830) == 0);
       OUT_RELOC(vb_bo, I915_GEM_DOMAIN_VERTEX, 0,
 		offset | (intel->vertex_size << S0_VB_PITCH_SHIFT_830) |
 		S0_VB_ENABLE_830);
@@ -607,7 +603,6 @@ static struct
 #define DO_POINTS    1
 #define DO_FULL_QUAD 1
 
-#define HAVE_RGBA         1
 #define HAVE_SPEC         1
 #define HAVE_BACK_COLORS  0
 #define HAVE_HW_FLATSHADE 1
@@ -1076,7 +1071,9 @@ intelRunPipeline(GLcontext * ctx)
       intel->NewGLState = 0;
    }
 
+   intel_map_vertex_shader_textures(ctx);
    _tnl_run_pipeline(ctx);
+   intel_unmap_vertex_shader_textures(ctx);
 
    _mesa_unlock_context_textures(ctx);
 }
@@ -1086,6 +1083,7 @@ intelRenderStart(GLcontext * ctx)
 {
    struct intel_context *intel = intel_context(ctx);
 
+   intel_check_front_buffer_rendering(intel);
    intel->vtbl.render_start(intel_context(ctx));
    intel->vtbl.emit_state(intel);
 }
@@ -1178,6 +1176,8 @@ static char *fallbackStrings[] = {
    [17] = "Logic op",
    [18] = "Smooth polygon",
    [19] = "Smooth point",
+   [20] = "point sprite coord origin",
+   [21] = "depth/color drawing offset",
 };
 
 
@@ -1194,12 +1194,16 @@ getFallbackString(GLuint bit)
 
 
 
+/**
+ * Enable/disable a fallback flag.
+ * \param bit  one of INTEL_FALLBACK_x flags.
+ */
 void
-intelFallback(struct intel_context *intel, GLuint bit, GLboolean mode)
+intelFallback(struct intel_context *intel, GLbitfield bit, GLboolean mode)
 {
    GLcontext *ctx = &intel->ctx;
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   GLuint oldfallback = intel->Fallback;
+   const GLbitfield oldfallback = intel->Fallback;
 
    if (mode) {
       intel->Fallback |= bit;
@@ -1243,84 +1247,6 @@ union fi
    GLint i;
 };
 
-
-/**********************************************************************/
-/*             Used only with the metaops callbacks.                  */
-/**********************************************************************/
-static void
-intel_meta_draw_poly(struct intel_context *intel,
-                     GLuint n,
-                     GLfloat xy[][2],
-                     GLfloat z, GLuint color, GLfloat tex[][2])
-{
-   union fi *vb;
-   GLint i;
-   GLboolean was_locked = intel->locked;
-   unsigned int saved_vertex_size = intel->vertex_size;
-
-   if (!was_locked)
-       LOCK_HARDWARE(intel);
-
-   intel->vertex_size = 6;
-
-   /* All 3d primitives should be emitted with LOOP_CLIPRECTS,
-    * otherwise the drawing origin (DR4) might not be set correctly.
-    */
-   intel_set_prim(intel, PRIM3D_TRIFAN);
-   vb = (union fi *) intel_get_prim_space(intel, n);
-
-   for (i = 0; i < n; i++) {
-      vb[0].f = xy[i][0];
-      vb[1].f = xy[i][1];
-      vb[2].f = z;
-      vb[3].i = color;
-      vb[4].f = tex[i][0];
-      vb[5].f = tex[i][1];
-      vb += 6;
-   }
-
-   INTEL_FIREVERTICES(intel);
-
-   intel->vertex_size = saved_vertex_size;
-
-   if (!was_locked)
-       UNLOCK_HARDWARE(intel);
-}
-
-static void
-intel_meta_draw_quad(struct intel_context *intel,
-                     GLfloat x0, GLfloat x1,
-                     GLfloat y0, GLfloat y1,
-                     GLfloat z,
-                     GLuint color,
-                     GLfloat s0, GLfloat s1, GLfloat t0, GLfloat t1)
-{
-   GLfloat xy[4][2];
-   GLfloat tex[4][2];
-
-   xy[0][0] = x0;
-   xy[0][1] = y0;
-   xy[1][0] = x1;
-   xy[1][1] = y0;
-   xy[2][0] = x1;
-   xy[2][1] = y1;
-   xy[3][0] = x0;
-   xy[3][1] = y1;
-
-   tex[0][0] = s0;
-   tex[0][1] = t0;
-   tex[1][0] = s1;
-   tex[1][1] = t0;
-   tex[2][0] = s1;
-   tex[2][1] = t1;
-   tex[3][0] = s0;
-   tex[3][1] = t1;
-
-   intel_meta_draw_poly(intel, 4, xy, z, color, tex);
-}
-
-
-
 /**********************************************************************/
 /*                            Initialization.                         */
 /**********************************************************************/
@@ -1329,7 +1255,6 @@ intel_meta_draw_quad(struct intel_context *intel,
 void
 intelInitTriFuncs(GLcontext * ctx)
 {
-   struct intel_context *intel = intel_context(ctx);
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    static int firsttime = 1;
 
@@ -1346,6 +1271,4 @@ intelInitTriFuncs(GLcontext * ctx)
    tnl->Driver.Render.BuildVertices = _tnl_build_vertices;
    tnl->Driver.Render.CopyPV = _tnl_copy_pv;
    tnl->Driver.Render.Interp = _tnl_interp;
-
-   intel->vtbl.meta_draw_quad = intel_meta_draw_quad;
 }

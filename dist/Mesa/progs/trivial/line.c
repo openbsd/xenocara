@@ -39,6 +39,7 @@ static void Init(void)
    fprintf(stderr, "GL_RENDERER   = %s\n", (char *) glGetString(GL_RENDERER));
    fprintf(stderr, "GL_VERSION    = %s\n", (char *) glGetString(GL_VERSION));
    fprintf(stderr, "GL_VENDOR     = %s\n", (char *) glGetString(GL_VENDOR));
+   fflush(stderr);
 
     glClearColor(0.0, 0.0, 1.0, 0.0);
 }
@@ -61,7 +62,7 @@ static void Key(unsigned char key, int x, int y)
       case 27:
 	exit(1);
       default:
-	return;
+	break;
     }
 
     glutPostRedisplay();
@@ -71,15 +72,20 @@ static void Draw(void)
 {
    glClear(GL_COLOR_BUFFER_BIT); 
 
-   glBegin(GL_LINE_STRIP);
+   glBegin(GL_LINES);
    glColor3f(0,0,.7); 
    glVertex3f( 0.9, -0.9, -30.0);
    glColor3f(.8,0,0); 
    glVertex3f( 0.9,  0.9, -30.0);
+
+   glColor3f(.8,0,0); 
+   glVertex3f( 0.9,  0.9, -30.0);
    glColor3f(0,.9,0); 
    glVertex3f(-0.9,  0.0, -30.0);
-   /* Repeat the first vertex - don't have lineloop support in GS yet
-    */
+
+
+   glColor3f(0,.9,0); 
+   glVertex3f(-0.9,  0.0, -30.0);
    glColor3f(0,0,.7); 
    glVertex3f( 0.9, -0.9, -30.0);
    glEnd();
@@ -126,7 +132,7 @@ int main(int argc, char **argv)
     type |= (doubleBuffer) ? GLUT_DOUBLE : GLUT_SINGLE;
     glutInitDisplayMode(type);
 
-    if (glutCreateWindow("First Tri") == GL_FALSE) {
+    if (glutCreateWindow(*argv) == GL_FALSE) {
 	exit(1);
     }
 

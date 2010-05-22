@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,27 +5,12 @@
 #include "egldisplay.h"
 #include "egldriver.h"
 #include "eglmode.h"
-#include "eglglobals.h"
+#include "eglcurrent.h"
 #include "eglscreen.h"
+#include "eglstring.h"
 
 
 #define MIN2(A, B)  (((A) < (B)) ? (A) : (B))
-
-
-static char *
-my_strdup(const char *s)
-{
-   if (s) {
-      int l = strlen(s);
-      char *s2 = malloc(l + 1);
-      if (s2)
-         strcpy(s2, s);
-      return s2;
-   }
-   else {
-      return NULL;
-   }
-}
 
 
 /**
@@ -34,9 +18,8 @@ my_strdup(const char *s)
  * or null if non-existant.
  */
 _EGLMode *
-_eglLookupMode(EGLDisplay dpy, EGLModeMESA mode)
+_eglLookupMode(EGLModeMESA mode, _EGLDisplay *disp)
 {
-   const _EGLDisplay *disp = _eglLookupDisplay(dpy);
    EGLint scrnum;
 
    /* loop over all screens on the display */
@@ -83,7 +66,7 @@ _eglAddNewMode(_EGLScreen *screen, EGLint width, EGLint height,
       screen->Modes[n].RefreshRate = refreshRate;
       screen->Modes[n].Optimal = EGL_FALSE;
       screen->Modes[n].Interlaced = EGL_FALSE;
-      screen->Modes[n].Name = my_strdup(name);
+      screen->Modes[n].Name = _eglstrdup(name);
       screen->NumModes++;
       return screen->Modes + n;
    }
@@ -272,18 +255,12 @@ _eglCompareModes(const void *a, const void *b)
  * Called via eglChooseModeMESA API function.
  */
 EGLBoolean
-_eglChooseModeMESA(_EGLDriver *drv, EGLDisplay dpy, EGLScreenMESA screen,
+_eglChooseModeMESA(_EGLDriver *drv, _EGLDisplay *dpy, _EGLScreen *scrn,
                    const EGLint *attrib_list, EGLModeMESA *modes,
                    EGLint modes_size, EGLint *num_modes)
 {
-   const _EGLScreen *scrn = _eglLookupScreen(dpy, screen);
    _EGLMode **modeList, min;
    EGLint i, count;
-
-   if (!scrn) {
-      _eglError(EGL_BAD_SCREEN_MESA, "eglChooseModeMESA");
-      return EGL_FALSE;
-   }
 
    if (!_eglParseModeAttribs(&min, attrib_list)) {
       /* error code will have been recorded */
@@ -326,16 +303,9 @@ _eglChooseModeMESA(_EGLDriver *drv, EGLDisplay dpy, EGLScreenMESA screen,
  * Called via eglGetModesMESA() API function.
  */
 EGLBoolean
-_eglGetModesMESA(_EGLDriver *drv, EGLDisplay dpy, EGLScreenMESA screen,
+_eglGetModesMESA(_EGLDriver *drv, _EGLDisplay *dpy, _EGLScreen *scrn,
                  EGLModeMESA *modes, EGLint modes_size, EGLint *num_modes)
 {
-   _EGLScreen *scrn = _eglLookupScreen(dpy, screen);
-
-   if (!scrn) {
-      _eglError(EGL_BAD_SCREEN_MESA, "eglGetModesMESA");
-      return EGL_FALSE;
-   }
-
    if (modes) {
       EGLint i;
       *num_modes = MIN2(scrn->NumModes, modes_size);
@@ -356,16 +326,10 @@ _eglGetModesMESA(_EGLDriver *drv, EGLDisplay dpy, EGLScreenMESA screen,
  * Query an attribute of a mode.
  */
 EGLBoolean
-_eglGetModeAttribMESA(_EGLDriver *drv, EGLDisplay dpy,
-                      EGLModeMESA mode, EGLint attribute, EGLint *value)
+_eglGetModeAttribMESA(_EGLDriver *drv, _EGLDisplay *dpy,
+                      _EGLMode *m, EGLint attribute, EGLint *value)
 {
-   _EGLMode *m = _eglLookupMode(dpy, mode);
    EGLint v;
-
-   if (!m) {
-      _eglError(EGL_BAD_MODE_MESA, "eglGetModeAttribMESA");
-      return EGL_FALSE;
-   }
 
    v = getModeAttrib(m, attribute);
    if (v < 0) {
@@ -382,50 +346,7 @@ _eglGetModeAttribMESA(_EGLDriver *drv, EGLDisplay dpy,
  * This is the default function called by eglQueryModeStringMESA().
  */
 const char *
-_eglQueryModeStringMESA(_EGLDriver *drv, EGLDisplay dpy, EGLModeMESA mode)
+_eglQueryModeStringMESA(_EGLDriver *drv, _EGLDisplay *dpy, _EGLMode *m)
 {
-   _EGLMode *m = _eglLookupMode(dpy, mode);
-   if (!m) {
-      _eglError(EGL_BAD_MODE_MESA, "eglQueryModeStringMESA");
-      return NULL;
-   }
    return m->Name;
 }
-
-
-#if 0
-static int
-_eglRand(int max)
-{
-   return rand() % max;
-}
-
-void
-_eglTestModeModule(void)
-{
-   EGLint count = 30;
-   _EGLMode *modes = (_EGLMode *) malloc(count * sizeof(_EGLMode));
-   _EGLMode **modeList = (_EGLMode **) malloc(count * sizeof(_EGLMode*));
-   EGLint i;
-
-   for (i = 0; i < count; i++) {
-      modes[i].Handle = _eglRand(20);
-      modes[i].Width = 512 + 256 * _eglRand(2);
-      modes[i].Height = 512 + 256 * _eglRand(2);
-      modes[i].RefreshRate = 50 + 5 * _eglRand(3);
-      modes[i].Interlaced = _eglRand(2);
-      modes[i].Optimal = _eglRand(4) == 0;
-      modeList[i] = modes + i;
-   }
-
-   /* sort array of pointers */
-   qsort(modeList, count, sizeof(_EGLMode *), compareModes);
-
-   for (i = 0; i < count; i++) {
-      _EGLMode *m = modeList[i];
-      printf("%2d: %3d  %4d x %4d  @ %3d  opt %d  int %d\n", i,
-             m->Handle, m->Width, m->Height, m->RefreshRate,
-             m->Optimal, m->Interlaced);
-   }
-}
-#endif

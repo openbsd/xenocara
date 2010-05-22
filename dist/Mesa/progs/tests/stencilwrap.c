@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 GLboolean wrapping;
@@ -256,7 +257,7 @@ static void Init( void )
     * part of GL 1.4.
     */
 
-   ver_str = glGetString( GL_VERSION );
+   ver_str = (char *) glGetString( GL_VERSION );
    version = (ver_str == NULL) ? 1.0 : atof( ver_str );
 
    wrapping = (glutExtensionSupported("GL_EXT_stencil_wrap") || (version >= 1.4));
@@ -272,6 +273,7 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( 400, 400 );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_STENCIL );
    glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

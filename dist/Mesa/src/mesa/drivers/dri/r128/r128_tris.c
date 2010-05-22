@@ -158,7 +158,6 @@ static struct {
 #define DO_POINTS    1
 #define DO_FULL_QUAD 1
 
-#define HAVE_RGBA   1
 #define HAVE_SPEC   1
 #define HAVE_BACK_COLORS  0
 #define HAVE_HW_FLATSHADE 1
@@ -216,7 +215,8 @@ do {							\
 
 #define LOCAL_VARS(n)						\
    r128ContextPtr rmesa = R128_CONTEXT(ctx);			\
-   GLuint color[n], spec[n];					\
+   GLuint color[n] = { 0 };					\
+   GLuint spec[n] = { 0 };					\
    GLuint coloroffset = rmesa->coloroffset;			\
    GLuint specoffset = rmesa->specoffset;			\
    GLboolean havespec = (rmesa->specoffset != 0);		\
@@ -426,7 +426,7 @@ r128_fallback_point( r128ContextPtr rmesa,
 #define ANY_RASTER_FLAGS (DD_TRI_LIGHT_TWOSIDE|DD_TRI_OFFSET|DD_TRI_UNFILLED)
 #define _R128_NEW_RENDER_STATE (ANY_FALLBACK_FLAGS | ANY_RASTER_FLAGS)
 
-static void r128ChooseRenderState(GLcontext *ctx)
+void r128ChooseRenderState(GLcontext *ctx)
 {
    r128ContextPtr rmesa = R128_CONTEXT(ctx);
    GLuint flags = ctx->_TriangleCaps;
@@ -650,12 +650,12 @@ static void r128RenderStart( GLcontext *ctx )
    }
 
    if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_TEX(rmesa->tmu_source[0]) )) {
-      if ( VB->TexCoordPtr[rmesa->tmu_source[0]]->size > 2 )
+      if ( VB->AttribPtr[_TNL_ATTRIB_TEX0 + rmesa->tmu_source[0]]->size > 2 )
 	 fallback_projtex = GL_TRUE;
       EMIT_ATTR( _TNL_ATTRIB_TEX0, EMIT_2F, R128_CCE_VC_FRMT_S_T, 8 );
    }
    if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_TEX(rmesa->tmu_source[1]) )) {
-      if ( VB->TexCoordPtr[rmesa->tmu_source[1]]->size > 2 )
+      if ( VB->AttribPtr[_TNL_ATTRIB_TEX0 + rmesa->tmu_source[1]]->size > 2 )
 	 fallback_projtex = GL_TRUE;
       EMIT_ATTR( _TNL_ATTRIB_TEX1, EMIT_2F, R128_CCE_VC_FRMT_S2_T2, 8 );
    }

@@ -27,12 +27,16 @@
  */
 
 #include "glheader.h"
-#include "api_loopback.h"
+#include "api_arrayelt.h"
 #include "context.h"
 #include "imports.h"
 #include "mtypes.h"
-#include "state.h"
 #include "vtxfmt.h"
+#include "eval.h"
+#include "dlist.h"
+
+
+#if FEATURE_beginend
 
 
 /* The neutral vertex format.  This wraps all tnl module functions,
@@ -54,9 +58,12 @@
    ASSERT( tnl->Current );						\
    ASSERT( tnl->SwapCount < NUM_VERTEX_FORMAT_ENTRIES );		\
    ASSERT( tmp_offset >= 0 );						\
-									\
-   /* Save the swapped function's dispatch entry so it can be */	\
-   /* restored later. */						\
+                                                                        \
+   if (tnl->SwapCount == 0)                                             \
+      ctx->Driver.BeginVertices( ctx );                                 \
+                                                                        \
+   /* Save the swapped function's dispatch entry so it can be */        \
+   /* restored later. */                                                \
    tnl->Swapped[tnl->SwapCount].location = & (((_glapi_proc *)ctx->Exec)[tmp_offset]); \
    tnl->Swapped[tnl->SwapCount].function = (_glapi_proc)TAG(FUNC);	\
    tnl->SwapCount++;							\
@@ -79,18 +86,16 @@
 static void
 install_vtxfmt( struct _glapi_table *tab, const GLvertexformat *vfmt )
 {
-   SET_ArrayElement(tab, vfmt->ArrayElement);
+   _mesa_install_arrayelt_vtxfmt(tab, vfmt);
+
    SET_Color3f(tab, vfmt->Color3f);
    SET_Color3fv(tab, vfmt->Color3fv);
    SET_Color4f(tab, vfmt->Color4f);
    SET_Color4fv(tab, vfmt->Color4fv);
    SET_EdgeFlag(tab, vfmt->EdgeFlag);
-   SET_EvalCoord1f(tab, vfmt->EvalCoord1f);
-   SET_EvalCoord1fv(tab, vfmt->EvalCoord1fv);
-   SET_EvalCoord2f(tab, vfmt->EvalCoord2f);
-   SET_EvalCoord2fv(tab, vfmt->EvalCoord2fv);
-   SET_EvalPoint1(tab, vfmt->EvalPoint1);
-   SET_EvalPoint2(tab, vfmt->EvalPoint2);
+
+   _mesa_install_eval_vtxfmt(tab, vfmt);
+
    SET_FogCoordfEXT(tab, vfmt->FogCoordfEXT);
    SET_FogCoordfvEXT(tab, vfmt->FogCoordfvEXT);
    SET_Indexf(tab, vfmt->Indexf);
@@ -122,17 +127,19 @@ install_vtxfmt( struct _glapi_table *tab, const GLvertexformat *vfmt )
    SET_Vertex3fv(tab, vfmt->Vertex3fv);
    SET_Vertex4f(tab, vfmt->Vertex4f);
    SET_Vertex4fv(tab, vfmt->Vertex4fv);
-   SET_CallList(tab, vfmt->CallList);
-   SET_CallLists(tab, vfmt->CallLists);
+
+   _mesa_install_dlist_vtxfmt(tab, vfmt);
+
    SET_Begin(tab, vfmt->Begin);
    SET_End(tab, vfmt->End);
    SET_Rectf(tab, vfmt->Rectf);
    SET_DrawArrays(tab, vfmt->DrawArrays);
    SET_DrawElements(tab, vfmt->DrawElements);
    SET_DrawRangeElements(tab, vfmt->DrawRangeElements);
-   SET_EvalMesh1(tab, vfmt->EvalMesh1);
-   SET_EvalMesh2(tab, vfmt->EvalMesh2);
-   ASSERT(tab->EvalMesh2);
+   SET_MultiDrawElementsEXT(tab, vfmt->MultiDrawElementsEXT);
+   SET_DrawElementsBaseVertex(tab, vfmt->DrawElementsBaseVertex);
+   SET_DrawRangeElementsBaseVertex(tab, vfmt->DrawRangeElementsBaseVertex);
+   SET_MultiDrawElementsBaseVertex(tab, vfmt->MultiDrawElementsBaseVertex);
 
    /* GL_NV_vertex_program */
    SET_VertexAttrib1fNV(tab, vfmt->VertexAttrib1fNV);
@@ -189,3 +196,6 @@ void _mesa_restore_exec_vtxfmt( GLcontext *ctx )
 
    tnl->SwapCount = 0;
 }
+
+
+#endif /* FEATURE_beginend */

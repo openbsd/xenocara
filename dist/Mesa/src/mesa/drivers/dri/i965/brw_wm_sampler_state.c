@@ -66,19 +66,6 @@ static GLuint translate_wrap_mode( GLenum wrap )
    }
 }
 
-
-static GLuint U_FIXED(GLfloat value, GLuint frac_bits)
-{
-   value *= (1<<frac_bits);
-   return value < 0 ? 0 : value;
-}
-
-static GLint S_FIXED(GLfloat value, GLuint frac_bits)
-{
-   return value * (1<<frac_bits);
-}
-
-
 static dri_bo *upload_default_color( struct brw_context *brw,
 				     const GLfloat *color )
 {
@@ -86,8 +73,8 @@ static dri_bo *upload_default_color( struct brw_context *brw,
 
    COPY_4V(sdc.color, color); 
    
-   return brw_cache_data( &brw->cache, BRW_SAMPLER_DEFAULT_COLOR, &sdc,
-			  NULL, 0 );
+   return brw_cache_data(&brw->cache, BRW_SAMPLER_DEFAULT_COLOR,
+			 &sdc, sizeof(sdc), NULL, 0);
 }
 
 
@@ -102,7 +89,10 @@ struct wm_sampler_key {
       float max_aniso;
       GLenum minfilter, magfilter;
       GLenum comparemode, comparefunc;
-      dri_bo *sdc_bo;
+
+      /** If target is cubemap, take context setting.
+       */
+      GLboolean seamless_cube_map;
    } sampler[BRW_MAX_TEX_UNIT];
 };
 
@@ -114,7 +104,7 @@ static void brw_update_sampler_state(struct wm_sampler_entry *key,
 				     dri_bo *sdc_bo,
 				     struct brw_sampler_state *sampler)
 {
-   _mesa_memset(sampler, 0, sizeof(*sampler));
+   memset(sampler, 0, sizeof(*sampler));
 
    switch (key->minfilter) {
    case GL_NEAREST:
@@ -152,7 +142,7 @@ static void brw_update_sampler_state(struct wm_sampler_entry *key,
       sampler->ss0.mag_filter = BRW_MAPFILTER_ANISOTROPIC;
 
       if (key->max_aniso > 2.0) {
-	 sampler->ss3.max_aniso = MAX2((key->max_aniso - 2) / 2,
+	 sampler->ss3.max_aniso = MIN2((key->max_aniso - 2) / 2,
 				       BRW_ANISORATIO_16);
       }
    }
@@ -169,20 +159,33 @@ static void brw_update_sampler_state(struct wm_sampler_entry *key,
       }  
    }
 
-   if (key->tex_target == GL_TEXTURE_CUBE_MAP &&
-       (key->minfilter != GL_NEAREST || key->magfilter != GL_NEAREST)) {
-      /* If we're using anything but nearest sampling for a cube map, we
-       * need to set this wrap mode to avoid GPU lock-ups.
+   sampler->ss1.r_wrap_mode = translate_wrap_mode(key->wrap_r);
+   sampler->ss1.s_wrap_mode = translate_wrap_mode(key->wrap_s);
+   sampler->ss1.t_wrap_mode = translate_wrap_mode(key->wrap_t);
+
+   /* Cube-maps on 965 and later must use the same wrap mode for all 3
+    * coordinate dimensions.  Futher, only CUBE and CLAMP are valid.
+    */
+   if (key->tex_target == GL_TEXTURE_CUBE_MAP) {
+      if (key->seamless_cube_map &&
+	  (key->minfilter != GL_NEAREST || key->magfilter != GL_NEAREST)) {
+	 sampler->ss1.r_wrap_mode = BRW_TEXCOORDMODE_CUBE;
+	 sampler->ss1.s_wrap_mode = BRW_TEXCOORDMODE_CUBE;
+	 sampler->ss1.t_wrap_mode = BRW_TEXCOORDMODE_CUBE;
+      } else {
+	 sampler->ss1.r_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
+	 sampler->ss1.s_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
+	 sampler->ss1.t_wrap_mode = BRW_TEXCOORDMODE_CLAMP;
+      }
+   } else if (key->tex_target == GL_TEXTURE_1D) {
+      /* There's a bug in 1D texture sampling - it actually pays
+       * attention to the wrap_t value, though it should not.
+       * Override the wrap_t value here to GL_REPEAT to keep
+       * any nonexistent border pixels from floating in.
        */
-      sampler->ss1.r_wrap_mode = BRW_TEXCOORDMODE_CUBE;
-      sampler->ss1.s_wrap_mode = BRW_TEXCOORDMODE_CUBE;
-      sampler->ss1.t_wrap_mode = BRW_TEXCOORDMODE_CUBE;
+      sampler->ss1.t_wrap_mode = BRW_TEXCOORDMODE_WRAP;
    }
-   else {
-      sampler->ss1.r_wrap_mode = translate_wrap_mode(key->wrap_r);
-      sampler->ss1.s_wrap_mode = translate_wrap_mode(key->wrap_s);
-      sampler->ss1.t_wrap_mode = translate_wrap_mode(key->wrap_t);
-   }
+
 
    /* Set shadow function: 
     */
@@ -211,11 +214,12 @@ static void brw_update_sampler_state(struct wm_sampler_entry *key,
     */
    sampler->ss0.base_level = U_FIXED(0, 1);
 
-   sampler->ss1.max_lod = U_FIXED(MIN2(MAX2(key->maxlod, 0), 13), 6);
-   sampler->ss1.min_lod = U_FIXED(MIN2(MAX2(key->minlod, 0), 13), 6);
+   sampler->ss1.max_lod = U_FIXED(CLAMP(key->maxlod, 0, 13), 6);
+   sampler->ss1.min_lod = U_FIXED(CLAMP(key->minlod, 0, 13), 6);
    
    sampler->ss2.default_color_pointer = sdc_bo->offset >> 5; /* reloc */
 }
+
 
 /** Sets up the cache key for sampler state for all texture units */
 static void
@@ -225,7 +229,7 @@ brw_wm_sampler_populate_key(struct brw_context *brw,
    GLcontext *ctx = &brw->intel.ctx;
    int unit;
 
-   memset(key, 0, sizeof(*key));
+   key->sampler_count = 0;
 
    for (unit = 0; unit < BRW_MAX_TEX_UNIT; unit++) {
       if (ctx->Texture.Unit[unit]._ReallyEnabled) {
@@ -236,7 +240,12 @@ brw_wm_sampler_populate_key(struct brw_context *brw,
 	 struct gl_texture_image *firstImage =
 	    texObj->Image[0][intelObj->firstLevel];
 
+	 memset(entry, 0, sizeof(*entry));
+
          entry->tex_target = texObj->Target;
+
+	 entry->seamless_cube_map = (texObj->Target == GL_TEXTURE_CUBE_MAP)
+	    ? ctx->Texture.CubeMapSeamless : GL_FALSE;
 
 	 entry->wrap_r = texObj->WrapR;
 	 entry->wrap_s = texObj->WrapS;
@@ -254,10 +263,10 @@ brw_wm_sampler_populate_key(struct brw_context *brw,
 	 dri_bo_unreference(brw->wm.sdc_bo[unit]);
 	 if (firstImage->_BaseFormat == GL_DEPTH_COMPONENT) {
 	    float bordercolor[4] = {
-	       texObj->BorderColor[0],
-	       texObj->BorderColor[0],
-	       texObj->BorderColor[0],
-	       texObj->BorderColor[0]
+	       texObj->BorderColor.f[0],
+	       texObj->BorderColor.f[0],
+	       texObj->BorderColor.f[0],
+	       texObj->BorderColor.f[0]
 	    };
 	    /* GL specs that border color for depth textures is taken from the
 	     * R channel, while the hardware uses A.  Spam R into all the
@@ -266,7 +275,7 @@ brw_wm_sampler_populate_key(struct brw_context *brw,
 	    brw->wm.sdc_bo[unit] = upload_default_color(brw, bordercolor);
 	 } else {
 	    brw->wm.sdc_bo[unit] = upload_default_color(brw,
-							texObj->BorderColor);
+							texObj->BorderColor.f);
 	 }
 	 key->sampler_count = unit + 1;
       }
@@ -281,7 +290,7 @@ static void upload_wm_samplers( struct brw_context *brw )
 {
    GLcontext *ctx = &brw->intel.ctx;
    struct wm_sampler_key key;
-   int i;
+   int i, sampler_key_size;
 
    brw_wm_sampler_populate_key(brw, &key);
 
@@ -295,8 +304,11 @@ static void upload_wm_samplers( struct brw_context *brw )
    if (brw->wm.sampler_count == 0)
       return;
 
+   /* Only include the populated portion of the key in the search. */
+   sampler_key_size = offsetof(struct wm_sampler_key,
+			       sampler[key.sampler_count]);
    brw->wm.sampler_bo = brw_search_cache(&brw->cache, BRW_SAMPLER,
-					 &key, sizeof(key),
+					 &key, sampler_key_size,
 					 brw->wm.sdc_bo, key.sampler_count,
 					 NULL);
 
@@ -316,10 +328,9 @@ static void upload_wm_samplers( struct brw_context *brw )
       }
 
       brw->wm.sampler_bo = brw_upload_cache(&brw->cache, BRW_SAMPLER,
-					    &key, sizeof(key),
+					    &key, sampler_key_size,
 					    brw->wm.sdc_bo, key.sampler_count,
-					    &sampler, sizeof(sampler),
-					    NULL, NULL);
+					    &sampler, sizeof(sampler));
 
       /* Emit SDC relocations */
       for (i = 0; i < BRW_MAX_TEX_UNIT; i++) {

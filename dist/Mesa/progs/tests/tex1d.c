@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "GL/glew.h"
 #include "GL/glut.h"
 
 static GLuint Window = 0;
@@ -38,11 +39,13 @@ static void draw( void )
 
 
 
+/*
 static void idle( void )
 {
    Angle += 2.0;
    glutPostRedisplay();
 }
+*/
 
 
 
@@ -124,6 +127,7 @@ int main( int argc, char *argv[] )
    glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
    Window = glutCreateWindow("Texture Objects");
+   glewInit();
    if (!Window) {
       exit(1);
    }

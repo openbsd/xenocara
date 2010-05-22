@@ -58,44 +58,34 @@
 
 #include "utils.h"
 
-#define need_GL_ARB_multisample
 /* #define need_GL_ARB_point_parameters */
 #define need_GL_ARB_occlusion_query
-#define need_GL_ARB_texture_compression
-#define need_GL_ARB_vertex_buffer_object
 /* #define need_GL_ARB_vertex_program */
 #define need_GL_EXT_blend_equation_separate
 #define need_GL_EXT_blend_func_separate
 #define need_GL_EXT_blend_minmax
 #define need_GL_EXT_fog_coord
-#define need_GL_EXT_multi_draw_arrays
 #define need_GL_EXT_paletted_texture
 /* #define need_GL_EXT_secondary_color */
-#define need_GL_IBM_multimode_draw_arrays
-/* #define need_GL_MESA_program_debug */
 /* #define need_GL_NV_vertex_program */
-#include "extension_helper.h"
+#include "main/remap_helper.h"
 
 
 /**
  * Common extension strings exported by all cards
  */
-const struct dri_extension card_extensions[] =
+static const struct dri_extension card_extensions[] =
 {
-    { "GL_ARB_multisample",                GL_ARB_multisample_functions },
     { "GL_ARB_occlusion_query",            GL_ARB_occlusion_query_functions },
     { "GL_ARB_texture_mirrored_repeat",    NULL },
-    { "GL_ARB_vertex_buffer_object",       GL_ARB_vertex_buffer_object_functions },
 
     { "GL_EXT_blend_func_separate",        GL_EXT_blend_func_separate_functions },
     { "GL_EXT_fog_coord",                  GL_EXT_fog_coord_functions },
-    { "GL_EXT_multi_draw_arrays",          GL_EXT_multi_draw_arrays_functions },
     { "GL_EXT_paletted_texture",           GL_EXT_paletted_texture_functions },
     { "GL_EXT_shared_texture_palette",     NULL },
     { "GL_EXT_stencil_wrap",               NULL },
     { "GL_EXT_texture_env_add",            NULL },
     { "GL_EXT_texture_lod_bias",           NULL },
-    { "GL_IBM_multimode_draw_arrays",      GL_IBM_multimode_draw_arrays_functions },
 
 #ifdef need_GL_ARB_point_parameters
     { "GL_ARB_point_parameters",           GL_ARB_point_parameters_functions },
@@ -111,18 +101,14 @@ const struct dri_extension card_extensions[] =
     { "GL_NV_vertex_program",              GL_NV_vertex_program_functions }
     { "GL_NV_vertex_program1_1",           NULL },
 #endif
-#ifdef need_GL_MESA_program_debug
-    { "GL_MESA_program_debug",             GL_MESA_program_debug_functions },
-#endif
     { NULL,                                NULL }
 };
 
 /**
  * Extension strings exported only by Naplam (e.g., Voodoo4 & Voodoo5) cards.
  */
-const struct dri_extension napalm_extensions[] =
+static const struct dri_extension napalm_extensions[] =
 {
-    { "GL_ARB_texture_compression",        GL_ARB_texture_compression_functions },
     { "GL_ARB_texture_env_combine",        NULL },
     { "GL_EXT_blend_equation_separate",    GL_EXT_blend_equation_separate_functions },
     { "GL_EXT_blend_subtract",             GL_EXT_blend_minmax_functions },
@@ -179,12 +165,12 @@ static const struct dri_debug_control debug_control[] =
 };
 
 GLboolean tdfxCreateContext( const __GLcontextModes *mesaVis,
-			     __DRIcontextPrivate *driContextPriv,
+			     __DRIcontext *driContextPriv,
                              void *sharedContextPrivate )
 {
    tdfxContextPtr fxMesa;
    GLcontext *ctx, *shareCtx;
-   __DRIscreenPrivate *sPriv = driContextPriv->driScreenPriv;
+   __DRIscreen *sPriv = driContextPriv->driScreenPriv;
    tdfxScreenPrivate *fxScreen = (tdfxScreenPrivate *) sPriv->private;
    TDFXSAREAPriv *saPriv = (TDFXSAREAPriv *) ((char *) sPriv->pSAREA +
 					      sizeof(drm_sarea_t));
@@ -318,6 +304,8 @@ GLboolean tdfxCreateContext( const __GLcontextModes *mesaVis,
    ctx->Const.MaxLineWidth = 1.0;
    ctx->Const.MaxLineWidthAA = 1.0;
    ctx->Const.LineWidthGranularity = 1.0;
+
+   ctx->Const.MaxDrawBuffers = 1;
 
    /* Initialize the software rasterizer and helper modules.
     */
@@ -453,7 +441,7 @@ static GLboolean tdfxInitVertexFormats( tdfxContextPtr fxMesa )
  * Initialize the state in an tdfxContextPtr struct.
  */
 static GLboolean
-tdfxInitContext( __DRIdrawablePrivate *driDrawPriv, tdfxContextPtr fxMesa )
+tdfxInitContext( __DRIdrawable *driDrawPriv, tdfxContextPtr fxMesa )
 {
    /* KW: Would be nice to make one of these a member of the other.
     */
@@ -575,7 +563,7 @@ tdfxInitContext( __DRIdrawablePrivate *driDrawPriv, tdfxContextPtr fxMesa )
 
 
 void
-tdfxDestroyContext( __DRIcontextPrivate *driContextPriv )
+tdfxDestroyContext( __DRIcontext *driContextPriv )
 {
    tdfxContextPtr fxMesa = (tdfxContextPtr) driContextPriv->driverPrivate;
 
@@ -619,7 +607,7 @@ tdfxDestroyContext( __DRIcontextPrivate *driContextPriv )
 
 
 GLboolean
-tdfxUnbindContext( __DRIcontextPrivate *driContextPriv )
+tdfxUnbindContext( __DRIcontext *driContextPriv )
 {
    GET_CURRENT_CONTEXT(ctx);
    tdfxContextPtr fxMesa = TDFX_CONTEXT(ctx);
@@ -638,9 +626,9 @@ tdfxUnbindContext( __DRIcontextPrivate *driContextPriv )
 
 
 GLboolean
-tdfxMakeCurrent( __DRIcontextPrivate *driContextPriv,
-                 __DRIdrawablePrivate *driDrawPriv,
-                 __DRIdrawablePrivate *driReadPriv )
+tdfxMakeCurrent( __DRIcontext *driContextPriv,
+                 __DRIdrawable *driDrawPriv,
+                 __DRIdrawable *driReadPriv )
 {
    if ( TDFX_DEBUG & DEBUG_VERBOSE_DRI ) {
       fprintf( stderr, "%s( %p )\n", __FUNCTION__, (void *)driContextPriv );

@@ -202,7 +202,7 @@ static unsigned long t_dst(struct prog_dst_register *dst)
    }
 }
 
-static unsigned long t_src_class(enum register_file file)
+static unsigned long t_src_class(gl_register_file file)
 {
 
    switch(file){
@@ -290,7 +290,7 @@ static unsigned long t_src(struct r200_vertex_program *vp, struct prog_src_regis
 			t_swizzle(GET_SWZ(src->Swizzle, 2)),
 			t_swizzle(GET_SWZ(src->Swizzle, 3)),
 			t_src_class(src->File),
-			src->NegateBase) | (src->RelAddr << 4);
+			src->Negate) | (src->RelAddr << 4);
 }
 
 static unsigned long t_src_scalar(struct r200_vertex_program *vp, struct prog_src_register *src)
@@ -302,7 +302,7 @@ static unsigned long t_src_scalar(struct r200_vertex_program *vp, struct prog_sr
 			t_swizzle(GET_SWZ(src->Swizzle, 0)),
 			t_swizzle(GET_SWZ(src->Swizzle, 0)),
 			t_src_class(src->File),
-			src->NegateBase ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src->RelAddr << 4);
+			src->Negate ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src->RelAddr << 4);
 }
 
 static unsigned long t_opcode(enum prog_opcode opcode)
@@ -423,7 +423,7 @@ static GLboolean r200_translate_vertex_program(GLcontext *ctx, struct r200_verte
       ~(VERT_BIT_POS | VERT_BIT_NORMAL | VERT_BIT_COLOR0 | VERT_BIT_COLOR1 |
       VERT_BIT_FOG | VERT_BIT_TEX0 | VERT_BIT_TEX1 | VERT_BIT_TEX2 |
       VERT_BIT_TEX3 | VERT_BIT_TEX4 | VERT_BIT_TEX5)) != 0) {
-      if (R200_DEBUG & DEBUG_FALLBACKS) {
+      if (R200_DEBUG & RADEON_FALLBACKS) {
 	 fprintf(stderr, "can't handle vert prog inputs 0x%x\n",
 	    mesa_vp->Base.InputsRead);
       }
@@ -436,8 +436,8 @@ static GLboolean r200_translate_vertex_program(GLcontext *ctx, struct r200_verte
       (1 << VERT_RESULT_FOGC) | (1 << VERT_RESULT_TEX0) | (1 << VERT_RESULT_TEX1) |
       (1 << VERT_RESULT_TEX2) | (1 << VERT_RESULT_TEX3) | (1 << VERT_RESULT_TEX4) |
       (1 << VERT_RESULT_TEX5) | (1 << VERT_RESULT_PSIZ))) != 0) {
-      if (R200_DEBUG & DEBUG_FALLBACKS) {
-	 fprintf(stderr, "can't handle vert prog outputs 0x%x\n",
+      if (R200_DEBUG & RADEON_FALLBACKS) {
+	 fprintf(stderr, "can't handle vert prog outputs 0x%llx\n",
 	    mesa_vp->Base.OutputsWritten);
       }
       return GL_FALSE;
@@ -551,7 +551,7 @@ static GLboolean r200_translate_vertex_program(GLcontext *ctx, struct r200_verte
       if (mesa_vp->Base.InputsRead & (1 << i)) {
 	 array_count++;
 	 if (array_count > 12) {
-	    if (R200_DEBUG & DEBUG_FALLBACKS) {
+	    if (R200_DEBUG & RADEON_FALLBACKS) {
 	       fprintf(stderr, "more than 12 attribs used in vert prog\n");
 	    }
 	    return GL_FALSE;
@@ -571,13 +571,13 @@ static GLboolean r200_translate_vertex_program(GLcontext *ctx, struct r200_verte
    }
 
    if (!(mesa_vp->Base.OutputsWritten & (1 << VERT_RESULT_HPOS))) {
-      if (R200_DEBUG & DEBUG_FALLBACKS) {
+      if (R200_DEBUG & RADEON_FALLBACKS) {
 	 fprintf(stderr, "can't handle vert prog without position output\n");
       }
       return GL_FALSE;
    }
    if (free_inputs & 1) {
-      if (R200_DEBUG & DEBUG_FALLBACKS) {
+      if (R200_DEBUG & RADEON_FALLBACKS) {
 	 fprintf(stderr, "can't handle vert prog without position input\n");
       }
       return GL_FALSE;
@@ -700,7 +700,7 @@ static GLboolean r200_translate_vertex_program(GLcontext *ctx, struct r200_verte
 		   t_swizzle(GET_SWZ(src[1].Swizzle, 0)),
 		   SWIZZLE_ZERO,
 		   t_src_class(src[0].File),
-		   src[0].NegateBase) | (src[0].RelAddr << 4);
+		   src[0].Negate) | (src[0].RelAddr << 4);
 	    o_inst->src1 = UNUSED_SRC_0;
 	    o_inst->src2 = UNUSED_SRC_0;
 	 }
@@ -712,12 +712,12 @@ static GLboolean r200_translate_vertex_program(GLcontext *ctx, struct r200_verte
 		   t_swizzle(GET_SWZ(src[0].Swizzle, 0)),
 		   SWIZZLE_ZERO, SWIZZLE_ZERO, SWIZZLE_ZERO,
 		   t_src_class(src[0].File),
-		   src[0].NegateBase ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[0].RelAddr << 4);
+		   src[0].Negate ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[0].RelAddr << 4);
 	    o_inst->src1 = MAKE_VSF_SOURCE(t_src_index(vp, &src[1]),
 		   SWIZZLE_ZERO, SWIZZLE_ZERO,
 		   t_swizzle(GET_SWZ(src[1].Swizzle, 0)), SWIZZLE_ZERO,
 		   t_src_class(src[1].File),
-		   src[1].NegateBase ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[1].RelAddr << 4);
+		   src[1].Negate ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[1].RelAddr << 4);
 	    o_inst->src2 = UNUSED_SRC_1;
 	    o_inst++;
 
@@ -766,11 +766,11 @@ if ((o_inst - vp->instr) == 31) {
 o_inst->src1 = MAKE_VSF_SOURCE(t_src_index(vp, &src[1]),
 			SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X,
 			t_src_class(src[1].File),
-			src[1].NegateBase) | (src[1].RelAddr << 4);
+			src[1].Negate) | (src[1].RelAddr << 4);
 o_inst->src2 = MAKE_VSF_SOURCE(t_src_index(vp, &src[1]),
 			SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y,
 			t_src_class(src[1].File),
-			src[1].NegateBase) | (src[1].RelAddr << 4);
+			src[1].Negate) | (src[1].RelAddr << 4);
 }
 else {
 	 o_inst->src1 = t_src(vp, &src[1]);
@@ -792,7 +792,7 @@ else {
 		t_swizzle(GET_SWZ(src[0].Swizzle, 2)),
 		SWIZZLE_ZERO,
 		t_src_class(src[0].File),
-		src[0].NegateBase) | (src[0].RelAddr << 4);
+		src[0].Negate) | (src[0].RelAddr << 4);
 
 	 o_inst->src1 = MAKE_VSF_SOURCE(t_src_index(vp, &src[1]),
 		t_swizzle(GET_SWZ(src[1].Swizzle, 0)),
@@ -800,7 +800,7 @@ else {
 		t_swizzle(GET_SWZ(src[1].Swizzle, 2)),
 		SWIZZLE_ZERO,
 		t_src_class(src[1].File),
-		src[1].NegateBase) | (src[1].RelAddr << 4);
+		src[1].Negate) | (src[1].RelAddr << 4);
 
 	 o_inst->src2 = UNUSED_SRC_1;
 	 goto next;
@@ -815,7 +815,7 @@ else {
 		t_swizzle(GET_SWZ(src[0].Swizzle, 2)),
 		VSF_IN_COMPONENT_ONE,
 		t_src_class(src[0].File),
-		src[0].NegateBase) | (src[0].RelAddr << 4);
+		src[0].Negate) | (src[0].RelAddr << 4);
 	 o_inst->src1 = t_src(vp, &src[1]);
 	 o_inst->src2 = UNUSED_SRC_1;
 	 goto next;
@@ -831,7 +831,7 @@ else {
 		t_swizzle(GET_SWZ(src[1].Swizzle, 2)),
 		t_swizzle(GET_SWZ(src[1].Swizzle, 3)),
 		t_src_class(src[1].File),
-		(!src[1].NegateBase) ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[1].RelAddr << 4);
+		(!src[1].Negate) ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[1].RelAddr << 4);
 	 o_inst->src2 = UNUSED_SRC_1;
 	 goto next;
 
@@ -846,7 +846,7 @@ else {
 		t_swizzle(GET_SWZ(src[0].Swizzle, 2)),
 		t_swizzle(GET_SWZ(src[0].Swizzle, 3)),
 		t_src_class(src[0].File),
-		(!src[0].NegateBase) ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[0].RelAddr << 4);
+		(!src[0].Negate) ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[0].RelAddr << 4);
 	 o_inst->src2 = UNUSED_SRC_1;
 	 goto next;
 
@@ -874,7 +874,7 @@ else {
 		VSF_IN_COMPONENT_W,
 		VSF_IN_CLASS_TMP,
 		/* Not 100% sure about this */
-		(!src[0].NegateBase) ? VSF_FLAG_ALL : VSF_FLAG_NONE/*VSF_FLAG_ALL*/);
+		(!src[0].Negate) ? VSF_FLAG_ALL : VSF_FLAG_NONE/*VSF_FLAG_ALL*/);
 
 	 o_inst->src2 = UNUSED_SRC_0;
 	 u_temp_i--;
@@ -899,7 +899,7 @@ else {
 		t_swizzle(GET_SWZ(src[0].Swizzle, 0)), // x
 		t_swizzle(GET_SWZ(src[0].Swizzle, 3)), // w
 		t_src_class(src[0].File),
-		src[0].NegateBase) | (src[0].RelAddr << 4);
+		src[0].Negate) | (src[0].RelAddr << 4);
 
 	 o_inst->src1 = MAKE_VSF_SOURCE(t_src_index(vp, &src[1]),
 		t_swizzle(GET_SWZ(src[1].Swizzle, 2)), // z
@@ -907,7 +907,7 @@ else {
 		t_swizzle(GET_SWZ(src[1].Swizzle, 1)), // y
 		t_swizzle(GET_SWZ(src[1].Swizzle, 3)), // w
 		t_src_class(src[1].File),
-		src[1].NegateBase) | (src[1].RelAddr << 4);
+		src[1].Negate) | (src[1].RelAddr << 4);
 
 	 o_inst->src2 = UNUSED_SRC_1;
 	 o_inst++;
@@ -922,7 +922,7 @@ else {
 		t_swizzle(GET_SWZ(src[1].Swizzle, 0)), // x
 		t_swizzle(GET_SWZ(src[1].Swizzle, 3)), // w
 		t_src_class(src[1].File),
-		(!src[1].NegateBase) ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[1].RelAddr << 4);
+		(!src[1].Negate) ? VSF_FLAG_ALL : VSF_FLAG_NONE) | (src[1].RelAddr << 4);
 
 	 o_inst->src1 = MAKE_VSF_SOURCE(t_src_index(vp, &src[0]),
 		t_swizzle(GET_SWZ(src[0].Swizzle, 2)), // z
@@ -930,7 +930,7 @@ else {
 		t_swizzle(GET_SWZ(src[0].Swizzle, 1)), // y
 		t_swizzle(GET_SWZ(src[0].Swizzle, 3)), // w
 		t_src_class(src[0].File),
-		src[0].NegateBase) | (src[0].RelAddr << 4);
+		src[0].Negate) | (src[0].RelAddr << 4);
 
 	 o_inst->src2 = MAKE_VSF_SOURCE(u_temp_i+1,
 		VSF_IN_COMPONENT_X,
@@ -1070,7 +1070,7 @@ else {
 	    mesa_vp->Base.NumTemporaries + u_temp_used;
       }
       if ((mesa_vp->Base.NumTemporaries + u_temp_used) > R200_VSF_MAX_TEMPS) {
-	 if (R200_DEBUG & DEBUG_FALLBACKS) {
+	 if (R200_DEBUG & RADEON_FALLBACKS) {
 	    fprintf(stderr, "Ran out of temps, num temps %d, us %d\n", mesa_vp->Base.NumTemporaries, u_temp_used);
 	 }
 	 return GL_FALSE;
@@ -1078,7 +1078,7 @@ else {
       u_temp_i = R200_VSF_MAX_TEMPS - 1;
       if(o_inst - vp->instr >= R200_VSF_MAX_INST) {
 	 mesa_vp->Base.NumNativeInstructions = 129;
-	 if (R200_DEBUG & DEBUG_FALLBACKS) {
+	 if (R200_DEBUG & RADEON_FALLBACKS) {
 	    fprintf(stderr, "more than 128 native instructions\n");
 	 }
 	 return GL_FALSE;
@@ -1110,9 +1110,9 @@ void r200SetupVertexProg( GLcontext *ctx ) {
    }
    /* could optimize setting up vertex progs away for non-tcl hw */
    fallback = !(vp->native && r200VertexProgUpdateParams(ctx, vp) &&
-      rmesa->r200Screen->drmSupportsVertexProgram);
+      rmesa->radeon.radeonScreen->drmSupportsVertexProgram);
    TCL_FALLBACK(ctx, R200_TCL_FALLBACK_VERTEX_PROGRAM, fallback);
-   if (rmesa->TclFallback) return;
+   if (rmesa->radeon.TclFallback) return;
 
    R200_STATECHANGE( rmesa, vap );
    /* FIXME: fglrx sets R200_VAP_SINGLE_BUF_STATE_ENABLE too. Do we need it?
@@ -1218,7 +1218,7 @@ r200DeleteProgram(GLcontext *ctx, struct gl_program *prog)
    _mesa_delete_program(ctx, prog);
 }
 
-static void
+static GLboolean
 r200ProgramStringNotify(GLcontext *ctx, GLenum target, struct gl_program *prog)
 {
    struct r200_vertex_program *vp = (void *)prog;
@@ -1237,7 +1237,10 @@ r200ProgramStringNotify(GLcontext *ctx, GLenum target, struct gl_program *prog)
       break;
    }
    /* need this for tcl fallbacks */
-   _tnl_program_string(ctx, target, prog);
+   (void) _tnl_program_string(ctx, target, prog);
+
+   /* XXX check if program is legal, within limits */
+   return GL_TRUE;
 }
 
 static GLboolean

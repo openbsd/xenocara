@@ -33,22 +33,16 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "r128_context.h"
-#include "r128_state.h"
 #include "r128_ioctl.h"
-#include "r128_tris.h"
 #include "r128_tex.h"
 #include "r128_texobj.h"
 
-#include "main/context.h"
-#include "main/macros.h"
 #include "main/simple_list.h"
 #include "main/enums.h"
 #include "main/texstore.h"
-#include "main/texformat.h"
 #include "main/teximage.h"
 #include "main/texobj.h"
 #include "main/imports.h"
-#include "main/colormac.h"
 #include "main/texobj.h"
 
 #include "xmlpool.h"
@@ -135,8 +129,13 @@ static void r128SetTexFilter( r128TexObjPtr t, GLenum minf, GLenum magf )
    }
 }
 
-static void r128SetTexBorderColor( r128TexObjPtr t, GLubyte c[4] )
+static void r128SetTexBorderColor( r128TexObjPtr t, const GLfloat color[4] )
 {
+   GLubyte c[4];
+   CLAMPED_FLOAT_TO_UBYTE(c[0], color[0]);
+   CLAMPED_FLOAT_TO_UBYTE(c[1], color[1]);
+   CLAMPED_FLOAT_TO_UBYTE(c[2], color[2]);
+   CLAMPED_FLOAT_TO_UBYTE(c[3], color[3]);
    t->setup.tex_border_color = r128PackColor( 4, c[0], c[1], c[2], c[3] );
 }
 
@@ -165,7 +164,7 @@ static r128TexObjPtr r128AllocTexObj( struct gl_texture_object *texObj )
 
       r128SetTexWrap( t, texObj->WrapS, texObj->WrapT );
       r128SetTexFilter( t, texObj->MinFilter, texObj->MagFilter );
-      r128SetTexBorderColor( t, texObj->_BorderChan );
+      r128SetTexBorderColor( t, texObj->BorderColor.f );
    }
 
    return t;
@@ -173,7 +172,7 @@ static r128TexObjPtr r128AllocTexObj( struct gl_texture_object *texObj )
 
 
 /* Called by the _mesa_store_teximage[123]d() functions. */
-static const struct gl_texture_format *
+static gl_format
 r128ChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
                          GLenum format, GLenum type )
 {
@@ -277,13 +276,13 @@ r128ChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_YCBCR_MESA:
       if (type == GL_UNSIGNED_SHORT_8_8_APPLE ||
           type == GL_UNSIGNED_BYTE)
-         return &_mesa_texformat_ycbcr;
+         return MESA_FORMAT_YCBCR;
       else
-         return &_mesa_texformat_ycbcr_rev;
+         return MESA_FORMAT_YCBCR_REV;
 
    default:
       _mesa_problem( ctx, "unexpected format in %s", __FUNCTION__ );
-      return NULL;
+      return MESA_FORMAT_NONE;
    }
 }
 
@@ -469,7 +468,7 @@ static void r128TexEnv( GLcontext *ctx, GLenum target,
 	  * certain point.  It is better than completely ignoring the LOD
 	  * bias.  Unfortunately there isn't much range in the bias, the
 	  * spec mentions strides that vary between 0.5 and 2.0 but these
-	  * numbers don't seem to relate the the GL LOD bias value at all.
+	  * numbers don't seem to relate to the GL LOD bias value at all.
 	  */
 	 if ( param[0] >= 1.0 ) {
 	    bias = -128;
@@ -531,7 +530,7 @@ static void r128TexParameter( GLcontext *ctx, GLenum target,
 
    case GL_TEXTURE_BORDER_COLOR:
       if ( t->base.bound ) FLUSH_BATCH( rmesa );
-      r128SetTexBorderColor( t, tObj->_BorderChan );
+      r128SetTexBorderColor( t, tObj->BorderColor.f );
       break;
 
    case GL_TEXTURE_BASE_LEVEL:

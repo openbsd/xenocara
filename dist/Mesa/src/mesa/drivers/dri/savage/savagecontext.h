@@ -31,7 +31,6 @@ typedef struct savage_context_t savageContext;
 typedef struct savage_context_t *savageContextPtr;
 typedef struct savage_texture_object_t *savageTextureObjectPtr;
 
-#include <X11/Xlibint.h>
 #include "dri_util.h"
 #include "main/mtypes.h"
 #include "xf86drm.h"
@@ -272,10 +271,10 @@ struct savage_context_t {
     drm_hw_lock_t *driHwLock;
     GLuint driFd;
 
-    __DRIdrawablePrivate *driDrawable;
-    __DRIdrawablePrivate *driReadable;
+    __DRIdrawable *driDrawable;
+    __DRIdrawable *driReadable;
 
-    __DRIscreenPrivate *driScreen;
+    __DRIscreen *driScreen;
     savageScreenPrivate *savageScreen; 
     drm_savage_sarea_t *sarea;
 

@@ -25,8 +25,9 @@
 #ifndef _API_NOOP_H
 #define _API_NOOP_H
 
-#include "mtypes.h"
-#include "context.h"
+#include "main/mtypes.h"
+
+#if FEATURE_beginend
 
 extern void GLAPIENTRY
 _mesa_noop_Rectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
@@ -40,7 +41,20 @@ _mesa_noop_EvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2);
 extern void GLAPIENTRY
 _mesa_noop_Materialfv(GLenum face, GLenum pname, const GLfloat *param);
 
+extern void GLAPIENTRY
+_mesa_noop_MultiDrawElements(GLenum mode, const GLsizei *count, GLenum type,
+			     const GLvoid **indices, GLsizei primcount);
+
+extern void GLAPIENTRY
+_mesa_noop_MultiDrawElementsBaseVertex(GLenum mode, const GLsizei *count,
+				       GLenum type,
+				       const GLvoid **indices,
+				       GLsizei primcount,
+				       const GLint *basevertex);
+
 extern void
 _mesa_noop_vtxfmt_init(GLvertexformat *vfmt);
 
-#endif
+#endif /* FEATURE_beginend */
+
+#endif /* _API_NOOP_H */

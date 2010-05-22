@@ -38,7 +38,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/imports.h"
 
 #include "r200_context.h"
-#include "r200_ioctl.h"
 #include "r200_sanity.h"
 #include "radeon_reg.h"
 #include "r200_reg.h"
@@ -48,11 +47,11 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define MORE_VERBOSE 1
 
 #if MORE_VERBOSE
-#define VERBOSE (R200_DEBUG & DEBUG_VERBOSE)
+#define VERBOSE (R200_DEBUG & RADEON_VERBOSE)
 #define NORMAL  (1)
 #else
 #define VERBOSE 0
-#define NORMAL  (R200_DEBUG & DEBUG_VERBOSE)
+#define NORMAL  (R200_DEBUG & RADEON_VERBOSE)
 #endif
 
 

@@ -4,6 +4,9 @@
 #include "egltypedefs.h"
 
 
+#define EGL_NO_MODE_MESA 0
+
+
 /**
  * Data structure which corresponds to an EGLModeMESA.
  */
@@ -23,32 +26,32 @@ struct _egl_mode
 
 
 extern _EGLMode *
-_eglLookupMode(EGLDisplay dpy, EGLModeMESA mode);
+_eglLookupMode(EGLModeMESA mode, _EGLDisplay *dpy);
 
 
-extern _EGLMode *
+PUBLIC _EGLMode *
 _eglAddNewMode(_EGLScreen *screen, EGLint width, EGLint height,
                EGLint refreshRate, const char *name);
 
 
 extern EGLBoolean
-_eglChooseModeMESA(_EGLDriver *drv, EGLDisplay dpy, EGLScreenMESA screen,
+_eglChooseModeMESA(_EGLDriver *drv, _EGLDisplay *dpy, _EGLScreen *scrn,
                    const EGLint *attrib_list, EGLModeMESA *modes,
                    EGLint modes_size, EGLint *num_modes);
 
 
 extern EGLBoolean
-_eglGetModesMESA(_EGLDriver *drv, EGLDisplay dpy, EGLScreenMESA screen,
+_eglGetModesMESA(_EGLDriver *drv, _EGLDisplay *dpy, _EGLScreen *scrn,
                  EGLModeMESA *modes, EGLint modes_size, EGLint *num_modes);
 
 
 extern EGLBoolean
-_eglGetModeAttribMESA(_EGLDriver *drv, EGLDisplay dpy, EGLModeMESA mode,
+_eglGetModeAttribMESA(_EGLDriver *drv, _EGLDisplay *dpy, _EGLMode *m,
                       EGLint attribute, EGLint *value);
 
 
 extern const char *
-_eglQueryModeStringMESA(_EGLDriver *drv, EGLDisplay dpy, EGLModeMESA mode);
+_eglQueryModeStringMESA(_EGLDriver *drv, _EGLDisplay *dpy, _EGLMode *m);
 
 
 #endif /* EGLMODE_INCLUDED */

@@ -36,10 +36,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/colormac.h"
 #include "main/context.h"
 #include "main/macros.h"
-#include "main/texformat.h"
 
 #include "sis_context.h"
-#include "sis_state.h"
 #include "sis_tex.h"
 #include "sis_tris.h"
 #include "sis_alloc.h"
@@ -456,11 +454,16 @@ sis_set_texobj_parm( GLcontext *ctx, struct gl_texture_object *texObj,
       break;
    }
 
-   current->texture[hw_unit].hwTextureBorderColor = 
-      ((GLuint) texObj->_BorderChan[3] << 24) + 
-      ((GLuint) texObj->_BorderChan[0] << 16) + 
-      ((GLuint) texObj->_BorderChan[1] << 8) + 
-      ((GLuint) texObj->_BorderChan[2]);
+   {
+      GLubyte c[4];
+      CLAMPED_FLOAT_TO_UBYTE(c[0], texObj->BorderColor.f[0]);
+      CLAMPED_FLOAT_TO_UBYTE(c[1], texObj->BorderColor.f[1]);
+      CLAMPED_FLOAT_TO_UBYTE(c[2], texObj->BorderColor.f[2]);
+      CLAMPED_FLOAT_TO_UBYTE(c[3], texObj->BorderColor.f[3]);
+
+      current->texture[hw_unit].hwTextureBorderColor = 
+         PACK_COLOR_8888(c[3], c[0], c[1], c[2]);
+   }
 
    if (current->texture[hw_unit].hwTextureBorderColor !=
        prev->texture[hw_unit].hwTextureBorderColor) 

@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 #include "readtex.h"
@@ -127,7 +128,7 @@ static void Init( void )
 {
    const char * const ver_string = (const char * const)
        glGetString( GL_VERSION );
-   const float ver = strtof( ver_string, NULL );
+   const float ver = strtod( ver_string, NULL );
 
 
    printf("GL_RENDERER = %s\n", (char *) glGetString(GL_RENDERER));
@@ -164,7 +165,7 @@ static void Init( void )
 	  "square should look upside-down.\n");
    
 
-   image = LoadRGBImage( IMAGE_FILE, & img_width, & img_height,
+   image = LoadRGBImage( IMAGE_FILE, (GLint *) & img_width, (GLint *) & img_height,
 			 & img_format );
    if ( image == NULL ) {
       printf( "Could not open image file \"%s\".\n", IMAGE_FILE );
@@ -186,6 +187,7 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( Width, Height );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
    glutCreateWindow( "GL_MESA_pack_invert test" );
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#define GL_GLEXT_PROTOTYPES
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 
@@ -57,6 +57,7 @@ static void Key( unsigned char key, int x, int y )
 
 static void Init( void )
 {
+#if 0
    static const char *prog0 =
       "!!FP1.0\n"
       "MUL   o[COLR], R0, f[WPOS]; \n"
@@ -73,6 +74,7 @@ static void Init( void )
       "MOV   HC, H2; \n"
       "END \n"
       ;
+#endif
 
    /* masked updates, defines, declarations */
    static const char *prog1 =
@@ -216,6 +218,7 @@ int main( int argc, char *argv[] )
    glutInitWindowSize( 250, 250 );
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
    glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

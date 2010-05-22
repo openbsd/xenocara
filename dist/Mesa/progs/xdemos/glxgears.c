@@ -23,10 +23,7 @@
  * This is a port of the infamous "gears" demo to straight GLX (i.e. no GLUT)
  * Port by Brian Paul  23 March 2001
  *
- * Command line options:
- *    -info      print GL implementation information
- *    -stereo    use stereo enabled GLX visual
- *
+ * See usage() below for command line options.
  */
 
 
@@ -38,10 +35,13 @@
 #include <X11/keysym.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <GL/glxext.h>
 
-static int is_glx_extension_supported(Display *dpy, const char *query);
+#ifndef GLX_MESA_swap_control
+#define GLX_MESA_swap_control 1
+typedef int (*PFNGLXGETSWAPINTERVALMESAPROC)(void);
+#endif
 
-static void query_vsync(Display *dpy);
 
 #define BENCHMARK
 
@@ -566,7 +566,7 @@ make_window( Display *dpy, const char *name,
 /**
  * Determine whether or not a GLX extension is supported.
  */
-int
+static int
 is_glx_extension_supported(Display *dpy, const char *query)
 {
    const int scrnum = DefaultScreen(dpy);
@@ -586,37 +586,34 @@ is_glx_extension_supported(Display *dpy, const char *query)
 /**
  * Attempt to determine whether or not the display is synched to vblank.
  */
-void
-query_vsync(Display *dpy)
+static void
+query_vsync(Display *dpy, GLXDrawable drawable)
 {
    int interval = 0;
 
-
-#ifdef GLX_MESA_swap_control
-   if ((interval <= 0)
-       && is_glx_extension_supported(dpy, "GLX_MESA_swap_control")) {
+#if defined(GLX_EXT_swap_control)
+   if (is_glx_extension_supported(dpy, "GLX_EXT_swap_control")) {
+       unsigned int tmp = -1;
+       glXQueryDrawable(dpy, drawable, GLX_SWAP_INTERVAL_EXT, &tmp);
+       interval = tmp;
+   } else
+#endif
+   if (is_glx_extension_supported(dpy, "GLX_MESA_swap_control")) {
       PFNGLXGETSWAPINTERVALMESAPROC pglXGetSwapIntervalMESA =
           (PFNGLXGETSWAPINTERVALMESAPROC)
           glXGetProcAddressARB((const GLubyte *) "glXGetSwapIntervalMESA");
 
       interval = (*pglXGetSwapIntervalMESA)();
+   } else if (is_glx_extension_supported(dpy, "GLX_SGI_swap_control")) {
+      /* The default swap interval with this extension is 1.  Assume that it
+       * is set to the default.
+       *
+       * Many Mesa-based drivers default to 0, but all of these drivers also
+       * export GLX_MESA_swap_control.  In that case, this branch will never
+       * be taken, and the correct result should be reported.
+       */
+      interval = 1;
    }
-#endif
-
-
-#ifdef GLX_SGI_video_sync
-   if ((interval <= 0)
-       && is_glx_extension_supported(dpy, "GLX_SGI_video_sync")) {
-      PFNGLXGETVIDEOSYNCSGIPROC pglXGetVideoSyncSGI =
-          (PFNGLXGETVIDEOSYNCSGIPROC)
-          glXGetProcAddressARB((const GLubyte *) "glXGetVideoSyncSGI");
-      unsigned count;
-
-      if ((*pglXGetVideoSyncSGI)(& count) == 0) {
-         interval = (int) count;
-      }
-   }
-#endif
 
 
    if (interval > 0) {
@@ -759,7 +756,7 @@ main(int argc, char *argv[])
    make_window(dpy, "glxgears", x, y, winWidth, winHeight, &win, &ctx);
    XMapWindow(dpy, win);
    glXMakeCurrent(dpy, win, ctx);
-   query_vsync(dpy);
+   query_vsync(dpy, win);
 
    if (printInfo) {
       printf("GL_RENDERER   = %s\n", (char *) glGetString(GL_RENDERER));
@@ -781,6 +778,7 @@ main(int argc, char *argv[])
    glDeleteLists(gear1, 1);
    glDeleteLists(gear2, 1);
    glDeleteLists(gear3, 1);
+   glXMakeCurrent(dpy, None, NULL);
    glXDestroyContext(dpy, ctx);
    XDestroyWindow(dpy, win);
    XCloseDisplay(dpy);

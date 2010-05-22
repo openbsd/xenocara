@@ -1500,7 +1500,7 @@
 #       define RADEON_ALPHA_ARG_C_T1_ALPHA       (6   << 8)
 #       define RADEON_ALPHA_ARG_C_T2_ALPHA       (7   << 8)
 #       define RADEON_ALPHA_ARG_C_T3_ALPHA       (8   << 8)
-#       define RADEON_DOT_ALPHA_DONT_REPLICATE   (1   << 9)
+#       define RADEON_DOT_ALPHA_DONT_REPLICATE   (1   << 12)
 #       define RADEON_ALPHA_ARG_MASK             0xf
 
 #define RADEON_PP_TFACTOR_0                 0x1c68
@@ -1601,6 +1601,8 @@
 #       define RADEON_STENCIL_VALUE_MASK      (0xff << 16)
 #       define RADEON_STENCIL_WRITEMASK_SHIFT 24
 #       define RADEON_STENCIL_WRITE_MASK      (0xff << 24)
+#define RADEON_RB3D_ZPASS_DATA              0x3290
+#define RADEON_RB3D_ZPASS_ADDR              0x3294
 #define RADEON_RB3D_ZSTENCILCNTL            0x1c2c
 #       define RADEON_DEPTH_FORMAT_MASK          (0xf << 0)
 #       define RADEON_DEPTH_FORMAT_16BIT_INT_Z   (0  <<  0)
@@ -1661,6 +1663,9 @@
 #       define RADEON_FORCE_Z_DIRTY              (1  << 29)
 #       define RADEON_Z_WRITE_ENABLE             (1  << 30)
 #       define RADEON_Z_DECOMPRESSION_ENABLE     (1  << 31)
+
+#define RADEON_RE_STIPPLE_ADDR              0x1cc8
+#define RADEON_RE_STIPPLE_DATA              0x1ccc
 #define RADEON_RE_LINE_PATTERN              0x1cd0
 #       define RADEON_LINE_PATTERN_MASK             0x0000ffff
 #       define RADEON_LINE_REPEAT_COUNT_SHIFT       16
@@ -1954,7 +1959,30 @@
 #define RADEON_SE_ZBIAS_FACTOR              0x1db0
 #define RADEON_SE_ZBIAS_CONSTANT            0x1db4
 
-
+#define RADEON_SE_VTX_FMT                   0x2080
+#       define RADEON_SE_VTX_FMT_XY         0x00000000
+#       define RADEON_SE_VTX_FMT_W0         0x00000001
+#       define RADEON_SE_VTX_FMT_FPCOLOR    0x00000002
+#       define RADEON_SE_VTX_FMT_FPALPHA    0x00000004
+#       define RADEON_SE_VTX_FMT_PKCOLOR    0x00000008
+#       define RADEON_SE_VTX_FMT_FPSPEC     0x00000010
+#       define RADEON_SE_VTX_FMT_FPFOG      0x00000020
+#       define RADEON_SE_VTX_FMT_PKSPEC     0x00000040
+#       define RADEON_SE_VTX_FMT_ST0        0x00000080
+#       define RADEON_SE_VTX_FMT_ST1        0x00000100
+#       define RADEON_SE_VTX_FMT_Q1         0x00000200
+#       define RADEON_SE_VTX_FMT_ST2        0x00000400
+#       define RADEON_SE_VTX_FMT_Q2         0x00000800
+#       define RADEON_SE_VTX_FMT_ST3        0x00001000
+#       define RADEON_SE_VTX_FMT_Q3         0x00002000
+#       define RADEON_SE_VTX_FMT_Q0         0x00004000
+#       define RADEON_SE_VTX_FMT_BLND_WEIGHT_CNT_MASK  0x00038000
+#       define RADEON_SE_VTX_FMT_N0         0x00040000
+#       define RADEON_SE_VTX_FMT_XY1        0x08000000
+#       define RADEON_SE_VTX_FMT_Z1         0x10000000
+#       define RADEON_SE_VTX_FMT_W1         0x20000000
+#       define RADEON_SE_VTX_FMT_N1         0x40000000
+#       define RADEON_SE_VTX_FMT_Z          0x80000000
 
 				/* Registers for CP and Microcode Engine */
 #define RADEON_CP_ME_RAM_ADDR               0x07d4
@@ -2031,6 +2059,9 @@
 #define RADEON_CP_PACKET3_3D_DRAW_INDX              0xC0002A00
 #define RADEON_CP_PACKET3_LOAD_PALETTE              0xC0002C00
 #define RADEON_CP_PACKET3_3D_LOAD_VBPNTR            0xC0002F00
+#define R200_CP_CMD_3D_DRAW_VBUF_2      0xC0003400
+#define R200_CP_CMD_3D_DRAW_IMMD_2      0xC0003500
+#define R200_CP_CMD_3D_DRAW_INDX_2      0xC0003600
 #define RADEON_CP_PACKET3_CNTL_PAINT                0xC0009100
 #define RADEON_CP_PACKET3_CNTL_BITBLT               0xC0009200
 #define RADEON_CP_PACKET3_CNTL_SMALLTEXT            0xC0009300

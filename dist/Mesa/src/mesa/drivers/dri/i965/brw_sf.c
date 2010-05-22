@@ -46,7 +46,6 @@
 static void compile_sf_prog( struct brw_context *brw,
 			     struct brw_sf_prog_key *key )
 {
-   GLcontext *ctx = &brw->intel.ctx;
    struct brw_sf_compile c;
    const GLuint *program;
    GLuint program_size;
@@ -61,7 +60,7 @@ static void compile_sf_prog( struct brw_context *brw,
    c.key = *key;
    c.nr_attrs = brw_count_bits(c.key.attrs);
    c.nr_attr_regs = (c.nr_attrs+1)/2;
-   c.nr_setup_attrs = brw_count_bits(c.key.attrs & DO_SETUP_BITS);
+   c.nr_setup_attrs = brw_count_bits(c.key.attrs);
    c.nr_setup_regs = (c.nr_setup_attrs+1)/2;
 
    c.prog_data.urb_read_length = c.nr_attr_regs;
@@ -69,20 +68,14 @@ static void compile_sf_prog( struct brw_context *brw,
 
    /* Construct map from attribute number to position in the vertex.
     */
-   for (i = idx = 0; i < VERT_RESULT_MAX; i++) 
-      if (c.key.attrs & (1<<i)) {
+   for (i = idx = 0; i < VERT_RESULT_MAX; i++) {
+      if (c.key.attrs & BITFIELD64_BIT(i)) {
 	 c.attr_to_idx[i] = idx;
 	 c.idx_to_attr[idx] = i;
-	 if (i >= VERT_RESULT_TEX0 && i <= VERT_RESULT_TEX7) {
-            c.point_attrs[i].CoordReplace = 
-               ctx->Point.CoordReplace[i - VERT_RESULT_TEX0];
-	 }
-         else {
-            c.point_attrs[i].CoordReplace = GL_FALSE;
-         }
 	 idx++;
       }
-   
+   }
+
    /* Which primitive?  Or all three? 
     */
    switch (key->primitive) {
@@ -117,12 +110,13 @@ static void compile_sf_prog( struct brw_context *brw,
    /* Upload
     */
    dri_bo_unreference(brw->sf.prog_bo);
-   brw->sf.prog_bo = brw_upload_cache( &brw->cache, BRW_SF_PROG,
-				       &c.key, sizeof(c.key),
-				       NULL, 0,
-				       program, program_size,
-				       &c.prog_data,
-				       &brw->sf.prog_data );
+   brw->sf.prog_bo = brw_upload_cache_with_auxdata(&brw->cache, BRW_SF_PROG,
+						   &c.key, sizeof(c.key),
+						   NULL, 0,
+						   program, program_size,
+						   &c.prog_data,
+						   sizeof(c.prog_data),
+						   &brw->sf.prog_data);
 }
 
 /* Calculate interpolants for triangle and line rasterization.
@@ -147,7 +141,7 @@ static void upload_sf_prog(struct brw_context *brw)
        * edgeflag testing here, it is already done in the clip
        * program.
        */
-      if (key.attrs & (1<<VERT_RESULT_EDGE))
+      if (key.attrs & BITFIELD64_BIT(VERT_RESULT_EDGE))
 	 key.primitive = SF_UNFILLED_TRIS;
       else
 	 key.primitive = SF_TRIANGLES;
@@ -161,10 +155,21 @@ static void upload_sf_prog(struct brw_context *brw)
    }
 
    key.do_point_sprite = ctx->Point.PointSprite;
-   key.SpriteOrigin = ctx->Point.SpriteOrigin;
+   if (key.do_point_sprite) {
+      int i;
+
+      for (i = 0; i < 8; i++) {
+	 if (ctx->Point.CoordReplace[i])
+	    key.point_sprite_coord_replace |= (1 << i);
+      }
+   }
+   key.sprite_origin_lower_left = (ctx->Point.SpriteOrigin == GL_LOWER_LEFT);
    /* _NEW_LIGHT */
    key.do_flat_shading = (ctx->Light.ShadeModel == GL_FLAT);
    key.do_twoside_color = (ctx->Light.Enabled && ctx->Light.Model.TwoSide);
+
+   /* _NEW_HINT */
+   key.linear_color = (ctx->Hint.PerspectiveCorrection == GL_FASTEST);
 
    /* _NEW_POLYGON */
    if (key.do_twoside_color) {
@@ -188,7 +193,7 @@ static void upload_sf_prog(struct brw_context *brw)
 
 const struct brw_tracked_state brw_sf_prog = {
    .dirty = {
-      .mesa  = (_NEW_LIGHT|_NEW_POLYGON|_NEW_POINT),
+      .mesa  = (_NEW_HINT | _NEW_LIGHT | _NEW_POLYGON | _NEW_POINT),
       .brw   = (BRW_NEW_REDUCED_PRIMITIVE),
       .cache = CACHE_NEW_VS_PROG
    },

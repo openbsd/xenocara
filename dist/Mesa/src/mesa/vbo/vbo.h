@@ -44,6 +44,7 @@ struct _mesa_prim {
 
    GLuint start;
    GLuint count;
+   GLint basevertex;
 };
 
 /* Would like to call this a "vbo_index_buffer", but this would be
@@ -69,6 +70,7 @@ typedef void (*vbo_draw_func)( GLcontext *ctx,
 			       const struct _mesa_prim *prims,
 			       GLuint nr_prims,
 			       const struct _mesa_index_buffer *ib,
+			       GLboolean index_bounds_valid,
 			       GLuint min_index,
 			       GLuint max_index );
 
@@ -112,9 +114,30 @@ void vbo_rebase_prims( GLcontext *ctx,
 		       GLuint min_index,
 		       GLuint max_index,
 		       vbo_draw_func draw );
-
+void
+vbo_get_minmax_index(GLcontext *ctx, const struct _mesa_prim *prim,
+		     const struct _mesa_index_buffer *ib,
+		     GLuint *min_index, GLuint *max_index);
 
 void vbo_use_buffer_objects(GLcontext *ctx);
 
+
+void vbo_set_draw_func(GLcontext *ctx, vbo_draw_func func);
+
+
+void GLAPIENTRY
+_vbo_Color4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
+
+void GLAPIENTRY
+_vbo_Normal3f(GLfloat x, GLfloat y, GLfloat z);
+
+void GLAPIENTRY
+_vbo_MultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
+
+void GLAPIENTRY
+_vbo_Materialfv(GLenum face, GLenum pname, const GLfloat *params);
+
+void GLAPIENTRY
+_vbo_VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 
 #endif

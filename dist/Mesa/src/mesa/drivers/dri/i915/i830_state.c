@@ -39,6 +39,7 @@
 #include "intel_screen.h"
 #include "intel_batchbuffer.h"
 #include "intel_fbo.h"
+#include "intel_buffers.h"
 
 #include "i830_context.h"
 #include "i830_reg.h"
@@ -446,6 +447,24 @@ i830DepthMask(GLcontext * ctx, GLboolean flag)
       i830->state.Ctx[I830_CTXREG_ENABLES_2] |= DISABLE_DEPTH_WRITE;
 }
 
+/** Called from ctx->Driver.Viewport() */
+static void
+i830Viewport(GLcontext * ctx,
+              GLint x, GLint y, GLsizei width, GLsizei height)
+{
+   intelCalcViewport(ctx);
+
+   intel_viewport(ctx, x, y, width, height);
+}
+
+
+/** Called from ctx->Driver.DepthRange() */
+static void
+i830DepthRange(GLcontext * ctx, GLclampd nearval, GLclampd farval)
+{
+   intelCalcViewport(ctx);
+}
+
 /* =============================================================
  * Polygon stipple
  *
@@ -601,7 +620,7 @@ i830LineWidth(GLcontext * ctx, GLfloat widthf)
    DBG("%s\n", __FUNCTION__);
    
    width = (int) (widthf * 2);
-   CLAMP_SELF(width, 1, 15);
+   width = CLAMP(width, 1, 15);
 
    state5 = i830->state.Ctx[I830_CTXREG_STATE5] & ~FIXED_LINE_WIDTH_MASK;
    state5 |= (ENABLE_FIXED_LINE_WIDTH | FIXED_LINE_WIDTH(width));
@@ -620,7 +639,7 @@ i830PointSize(GLcontext * ctx, GLfloat size)
 
    DBG("%s\n", __FUNCTION__);
    
-   CLAMP_SELF(point_size, 1, 256);
+   point_size = CLAMP(point_size, 1, 256);
    I830_STATECHANGE(i830, I830_UPLOAD_CTX);
    i830->state.Ctx[I830_CTXREG_STATE5] &= ~FIXED_POINT_WIDTH_MASK;
    i830->state.Ctx[I830_CTXREG_STATE5] |= (ENABLE_FIXED_POINT_WIDTH |
@@ -1028,6 +1047,16 @@ i830_init_packets(struct i830_context *i830)
                                          TEXBIND_SET1(TEXCOORDSRC_VTXSET_1) |
                                          TEXBIND_SET0(TEXCOORDSRC_VTXSET_0));
 
+   i830->state.RasterRules[I830_RASTER_RULES] = (_3DSTATE_RASTER_RULES_CMD |
+						 ENABLE_POINT_RASTER_RULE |
+						 OGL_POINT_RASTER_RULE |
+						 ENABLE_LINE_STRIP_PROVOKE_VRTX |
+						 ENABLE_TRI_FAN_PROVOKE_VRTX |
+						 ENABLE_TRI_STRIP_PROVOKE_VRTX |
+						 LINE_STRIP_PROVOKE_VRTX(1) |
+						 TRI_FAN_PROVOKE_VRTX(2) |
+						 TRI_STRIP_PROVOKE_VRTX(2));
+
 
    i830->state.Stipple[I830_STPREG_ST0] = _3DSTATE_STIPPLE;
 
@@ -1039,6 +1068,27 @@ i830_init_packets(struct i830_context *i830)
    i830->state.Buffer[I830_DESTREG_SR2] = 0;
 }
 
+void
+i830_update_provoking_vertex(GLcontext * ctx)
+{
+   struct i830_context *i830 = i830_context(ctx);
+
+   I830_STATECHANGE(i830, I830_UPLOAD_RASTER_RULES);
+   i830->state.RasterRules[I830_RASTER_RULES] &= ~(LINE_STRIP_PROVOKE_VRTX_MASK |
+						   TRI_FAN_PROVOKE_VRTX_MASK |
+						   TRI_STRIP_PROVOKE_VRTX_MASK);
+
+   /* _NEW_LIGHT */
+   if (ctx->Light.ProvokingVertex == GL_LAST_VERTEX_CONVENTION) {
+      i830->state.RasterRules[I830_RASTER_RULES] |= (LINE_STRIP_PROVOKE_VRTX(1) |
+						     TRI_FAN_PROVOKE_VRTX(2) |
+						     TRI_STRIP_PROVOKE_VRTX(2));
+   } else {
+      i830->state.RasterRules[I830_RASTER_RULES] |= (LINE_STRIP_PROVOKE_VRTX(0) |
+						     TRI_FAN_PROVOKE_VRTX(1) |
+						     TRI_STRIP_PROVOKE_VRTX(0));
+    }
+}
 
 void
 i830InitStateFuncs(struct dd_function_table *functions)
@@ -1064,6 +1114,8 @@ i830InitStateFuncs(struct dd_function_table *functions)
    functions->StencilFuncSeparate = i830StencilFuncSeparate;
    functions->StencilMaskSeparate = i830StencilMaskSeparate;
    functions->StencilOpSeparate = i830StencilOpSeparate;
+   functions->DepthRange = i830DepthRange;
+   functions->Viewport = i830Viewport;
 }
 
 void
@@ -1075,11 +1127,9 @@ i830InitState(struct i830_context *i830)
 
    _mesa_init_driver_state(ctx);
 
-   memcpy(&i830->initial, &i830->state, sizeof(i830->state));
-
-   i830->current = &i830->state;
    i830->state.emitted = 0;
    i830->state.active = (I830_UPLOAD_INVARIENT |
+                         I830_UPLOAD_RASTER_RULES |
                          I830_UPLOAD_TEXBLEND(0) |
                          I830_UPLOAD_STIPPLE |
                          I830_UPLOAD_CTX | I830_UPLOAD_BUFFERS);

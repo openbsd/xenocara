@@ -27,24 +27,20 @@
 
 #include "main/glheader.h"
 #include "main/mm.h"
-#include "mgacontext.h"
-#include "mgatex.h"
-#include "mgaregs.h"
-#include "mgatris.h"
-#include "mgaioctl.h"
-
 #include "main/colormac.h"
 #include "main/context.h"
 #include "main/enums.h"
 #include "main/simple_list.h"
 #include "main/imports.h"
 #include "main/macros.h"
-#include "main/texformat.h"
 #include "main/texstore.h"
 #include "main/teximage.h"
 #include "main/texobj.h"
 
-#include "swrast/swrast.h"
+#include "mgacontext.h"
+#include "mgatex.h"
+#include "mgaregs.h"
+#include "mgaioctl.h"
 
 #include "xmlpool.h"
 
@@ -153,14 +149,18 @@ mgaSetTexFilter( mgaTextureObjectPtr t, GLenum minf, GLenum magf )
    t->setup.texfilter |= val;
 }
 
-static void mgaSetTexBorderColor(mgaTextureObjectPtr t, GLubyte color[4])
+static void mgaSetTexBorderColor(mgaTextureObjectPtr t, const GLfloat color[4])
 {
-   t->setup.texbordercol = PACK_COLOR_8888(color[3], color[0], 
-					   color[1], color[2] );
+   GLubyte c[4];
+   CLAMPED_FLOAT_TO_UBYTE(c[0], color[0]);
+   CLAMPED_FLOAT_TO_UBYTE(c[1], color[1]);
+   CLAMPED_FLOAT_TO_UBYTE(c[2], color[2]);
+   CLAMPED_FLOAT_TO_UBYTE(c[3], color[3]);
+   t->setup.texbordercol = PACK_COLOR_8888(c[3], c[0], c[1], c[2] );
 }
 
 
-static const struct gl_texture_format *
+static gl_format
 mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
 		        GLenum format, GLenum type )
 {
@@ -178,15 +178,15 @@ mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
       switch ( type ) {
       case GL_UNSIGNED_INT_10_10_10_2:
       case GL_UNSIGNED_INT_2_10_10_10_REV:
-	 return do32bpt ? &_mesa_texformat_argb8888 : &_mesa_texformat_argb1555;
+	 return do32bpt ? MESA_FORMAT_ARGB8888 : MESA_FORMAT_ARGB1555;
       case GL_UNSIGNED_SHORT_4_4_4_4:
       case GL_UNSIGNED_SHORT_4_4_4_4_REV:
-	 return &_mesa_texformat_argb4444;
+	 return MESA_FORMAT_ARGB4444;
       case GL_UNSIGNED_SHORT_5_5_5_1:
       case GL_UNSIGNED_SHORT_1_5_5_5_REV:
-	 return &_mesa_texformat_argb1555;
+	 return MESA_FORMAT_ARGB1555;
       default:
-         return do32bpt ? &_mesa_texformat_argb8888 : &_mesa_texformat_argb4444;
+         return do32bpt ? MESA_FORMAT_ARGB8888 : MESA_FORMAT_ARGB4444;
       }
 
    case 3:
@@ -195,15 +195,15 @@ mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
       switch ( type ) {
       case GL_UNSIGNED_SHORT_4_4_4_4:
       case GL_UNSIGNED_SHORT_4_4_4_4_REV:
-	 return &_mesa_texformat_argb4444;
+	 return MESA_FORMAT_ARGB4444;
       case GL_UNSIGNED_SHORT_5_5_5_1:
       case GL_UNSIGNED_SHORT_1_5_5_5_REV:
-	 return &_mesa_texformat_argb1555;
+	 return MESA_FORMAT_ARGB1555;
       case GL_UNSIGNED_SHORT_5_6_5:
       case GL_UNSIGNED_SHORT_5_6_5_REV:
-	 return &_mesa_texformat_rgb565;
+	 return MESA_FORMAT_RGB565;
       default:
-         return do32bpt ? &_mesa_texformat_argb8888 : &_mesa_texformat_rgb565;
+         return do32bpt ? MESA_FORMAT_ARGB8888 : MESA_FORMAT_RGB565;
       }
 
    case GL_RGBA8:
@@ -211,25 +211,25 @@ mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_RGBA12:
    case GL_RGBA16:
       return !force16bpt ?
-	  &_mesa_texformat_argb8888 : &_mesa_texformat_argb4444;
+	  MESA_FORMAT_ARGB8888 : MESA_FORMAT_ARGB4444;
 
    case GL_RGBA4:
    case GL_RGBA2:
-      return &_mesa_texformat_argb4444;
+      return MESA_FORMAT_ARGB4444;
 
    case GL_RGB5_A1:
-      return &_mesa_texformat_argb1555;
+      return MESA_FORMAT_ARGB1555;
 
    case GL_RGB8:
    case GL_RGB10:
    case GL_RGB12:
    case GL_RGB16:
-      return !force16bpt ? &_mesa_texformat_argb8888 : &_mesa_texformat_rgb565;
+      return !force16bpt ? MESA_FORMAT_ARGB8888 : MESA_FORMAT_RGB565;
 
    case GL_RGB5:
    case GL_RGB4:
    case GL_R3_G3_B2:
-      return &_mesa_texformat_rgb565;
+      return MESA_FORMAT_RGB565;
 
    case GL_ALPHA:
    case GL_ALPHA4:
@@ -238,7 +238,7 @@ mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_ALPHA16:
    case GL_COMPRESSED_ALPHA:
       /* FIXME: This will report incorrect component sizes... */
-      return MGA_IS_G400(mmesa) ? &_mesa_texformat_al88 : &_mesa_texformat_argb4444;
+      return MGA_IS_G400(mmesa) ? MESA_FORMAT_AL88 : MESA_FORMAT_ARGB4444;
 
    case 1:
    case GL_LUMINANCE:
@@ -248,7 +248,7 @@ mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_LUMINANCE16:
    case GL_COMPRESSED_LUMINANCE:
       /* FIXME: This will report incorrect component sizes... */
-      return MGA_IS_G400(mmesa) ? &_mesa_texformat_al88 : &_mesa_texformat_rgb565;
+      return MGA_IS_G400(mmesa) ? MESA_FORMAT_AL88 : MESA_FORMAT_RGB565;
 
    case 2:
    case GL_LUMINANCE_ALPHA:
@@ -260,7 +260,7 @@ mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_LUMINANCE16_ALPHA16:
    case GL_COMPRESSED_LUMINANCE_ALPHA:
       /* FIXME: This will report incorrect component sizes... */
-      return MGA_IS_G400(mmesa) ? &_mesa_texformat_al88 : &_mesa_texformat_argb4444;
+      return MGA_IS_G400(mmesa) ? MESA_FORMAT_AL88 : MESA_FORMAT_ARGB4444;
 
    case GL_INTENSITY:
    case GL_INTENSITY4:
@@ -269,15 +269,15 @@ mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_INTENSITY16:
    case GL_COMPRESSED_INTENSITY:
       /* FIXME: This will report incorrect component sizes... */
-      return MGA_IS_G400(mmesa) ? &_mesa_texformat_i8 : &_mesa_texformat_argb4444;
+      return MGA_IS_G400(mmesa) ? MESA_FORMAT_I8 : MESA_FORMAT_ARGB4444;
 
    case GL_YCBCR_MESA:
       if (MGA_IS_G400(mmesa) &&
           (type == GL_UNSIGNED_SHORT_8_8_APPLE ||
            type == GL_UNSIGNED_BYTE))
-         return &_mesa_texformat_ycbcr;
+         return MESA_FORMAT_YCBCR;
       else
-         return &_mesa_texformat_ycbcr_rev;
+         return MESA_FORMAT_YCBCR_REV;
 
    case GL_COLOR_INDEX:
    case GL_COLOR_INDEX1_EXT:
@@ -286,14 +286,14 @@ mgaChooseTextureFormat( GLcontext *ctx, GLint internalFormat,
    case GL_COLOR_INDEX8_EXT:
    case GL_COLOR_INDEX12_EXT:
    case GL_COLOR_INDEX16_EXT:
-      return &_mesa_texformat_ci8;
+      return MESA_FORMAT_CI8;
 
    default:
       _mesa_problem( ctx, "unexpected texture format in %s", __FUNCTION__ );
-      return NULL;
+      return MESA_FORMAT_NONE;
    }
 
-   return NULL; /* never get here */
+   return MESA_FORMAT_NONE; /* never get here */
 }
 
 
@@ -329,7 +329,7 @@ mgaAllocTexObj( struct gl_texture_object *tObj )
 
       mgaSetTexWrapping( t, tObj->WrapS, tObj->WrapT );
       mgaSetTexFilter( t, tObj->MinFilter, tObj->MagFilter );
-      mgaSetTexBorderColor( t, tObj->_BorderChan );
+      mgaSetTexBorderColor( t, tObj->BorderColor.f );
    }
 
    return( t );
@@ -458,7 +458,7 @@ mgaTexParameter( GLcontext *ctx, GLenum target,
 
    case GL_TEXTURE_BORDER_COLOR:
       FLUSH_BATCH(mmesa);
-      mgaSetTexBorderColor(t, tObj->_BorderChan);
+      mgaSetTexBorderColor(t, tObj->BorderColor.f);
       break;
 
    case GL_TEXTURE_BASE_LEVEL:

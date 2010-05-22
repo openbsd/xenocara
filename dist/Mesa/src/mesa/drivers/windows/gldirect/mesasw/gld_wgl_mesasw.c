@@ -631,21 +631,6 @@ static void flush(GLcontext* ctx)
 
 //---------------------------------------------------------------------------
 
-
-/*
- * Set the color index used to clear the color buffer.
- */
-static void clear_index(GLcontext* ctx, GLuint index)
-{
-	GLD_context *gldCtx = GLD_GET_CONTEXT(ctx);
-	WMesaContext *Current = GLD_GET_WMESA_DRIVER(gldCtx);
-  Current->clearpixel = index;
-}
-
-
-
-//---------------------------------------------------------------------------
-
 /*
  * Set the color used to clear the color buffer.
  */
@@ -1346,6 +1331,8 @@ static void wmesa_update_state_first_time(
 	struct swrast_device_driver	*swdd = _swrast_GetDeviceDriverReference( ctx );
 	TNLcontext					*tnl = TNL_CONTEXT(ctx);
 	
+        _mesa_init_driver_functions(&ctx->Driver);
+
 	/*
 	* XXX these function pointers could be initialized just once during
 	* context creation since they don't depend on any state changes.
@@ -1362,37 +1349,12 @@ static void wmesa_update_state_first_time(
 
 	ctx->Driver.Viewport				= wmesa_viewport;
 	
-	ctx->Driver.Accum					= _swrast_Accum;
-	ctx->Driver.Bitmap					= _swrast_Bitmap;
 	ctx->Driver.Clear					= clear;
 	
 	ctx->Driver.Flush					= flush;
-	ctx->Driver.ClearIndex				= clear_index;
 	ctx->Driver.ClearColor				= clear_color;
 	ctx->Driver.Enable					= enable;
 	
-	ctx->Driver.CopyPixels				= _swrast_CopyPixels;
-	ctx->Driver.DrawPixels				= _swrast_DrawPixels;
-	ctx->Driver.ReadPixels				= _swrast_ReadPixels;
-	
-	ctx->Driver.ChooseTextureFormat		= _mesa_choose_tex_format;
-	ctx->Driver.TexImage1D				= _mesa_store_teximage1d;
-	ctx->Driver.TexImage2D				= _mesa_store_teximage2d;
-	ctx->Driver.TexImage3D				= _mesa_store_teximage3d;
-	ctx->Driver.TexSubImage1D			= _mesa_store_texsubimage1d;
-	ctx->Driver.TexSubImage2D			= _mesa_store_texsubimage2d;
-	ctx->Driver.TexSubImage3D			= _mesa_store_texsubimage3d;
-	ctx->Driver.TestProxyTexImage		= _mesa_test_proxy_teximage;
-	
-	ctx->Driver.CopyTexImage1D			= _swrast_copy_teximage1d;
-	ctx->Driver.CopyTexImage2D			= _swrast_copy_teximage2d;
-	ctx->Driver.CopyTexSubImage1D		= _swrast_copy_texsubimage1d;
-	ctx->Driver.CopyTexSubImage2D		= _swrast_copy_texsubimage2d;
-	ctx->Driver.CopyTexSubImage3D		= _swrast_copy_texsubimage3d;
-	ctx->Driver.CopyColorTable			= _swrast_CopyColorTable;
-	ctx->Driver.CopyColorSubTable		= _swrast_CopyColorSubTable;
-	ctx->Driver.CopyConvolutionFilter1D	= _swrast_CopyConvolutionFilter1D;
-	ctx->Driver.CopyConvolutionFilter2D	= _swrast_CopyConvolutionFilter2D;
 	
 	// Does not apply for Mesa 5.x
 	//ctx->Driver.BaseCompressedTexFormat	= _mesa_base_compressed_texformat;
@@ -1625,6 +1587,7 @@ BOOL gldInitialiseMesa_MesaSW(
 
 	// Added this to force max texture diminsion to 256. KeithH
 	ctx->Const.MaxTextureLevels = 8;
+	ctx->Const.MaxDrawBuffers = 1;
 
 	_mesa_enable_sw_extensions(ctx);
 	_mesa_enable_imaging_extensions(ctx);

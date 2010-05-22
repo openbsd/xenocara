@@ -15,8 +15,8 @@
 #include <windows.h>
 #endif
 #define GL_GLEXT_LEGACY
+#include <GL/glew.h>
 #include <GL/glut.h>
-#include <GL/glext.h>
 
 GLfloat verts[][4] = {
    { -0.5, -0.5, -2.0, 0.0 },
@@ -38,7 +38,7 @@ GLboolean compiled = GL_TRUE;
 GLboolean doubleBuffer = GL_TRUE;
 
 
-void init( void )
+static void init( void )
 {
    glClearColor( 0.0, 0.0, 0.0, 0.0 );
    glShadeModel( GL_SMOOTH );
@@ -68,7 +68,7 @@ void init( void )
 #endif
 }
 
-void display( void )
+static void display( void )
 {
    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -80,7 +80,7 @@ void display( void )
    }
 }
 
-void keyboard( unsigned char key, int x, int y )
+static void keyboard( unsigned char key, int x, int y )
 {
    switch ( key ) {
       case 27:
@@ -91,7 +91,7 @@ void keyboard( unsigned char key, int x, int y )
    glutPostRedisplay();
 }
 
-GLboolean args( int argc, char **argv )
+static GLboolean args( int argc, char **argv )
 {
     GLint i;
 
@@ -129,6 +129,7 @@ int main( int argc, char **argv )
    glutInitWindowSize( 250, 250 );
    glutInitWindowPosition( 100, 100 );
    glutCreateWindow( "CVA Test" );
+   glewInit();
 
    /* Make sure the server supports GL 1.2 vertex arrays.
     */

@@ -35,14 +35,13 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/context.h"
 #include "main/macros.h"
 #include "main/vtxfmt.h"
-#if FEATURE_dlist
 #include "main/dlist.h"
-#endif
+#include "main/eval.h"
 #include "main/state.h"
 #include "main/light.h"
 #include "main/api_arrayelt.h"
 #include "main/api_noop.h"
-#include "glapi/dispatch.h"
+#include "main/dispatch.h"
 
 #include "vbo_context.h"
 
@@ -51,10 +50,15 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 
+/** ID/name for immediate-mode VBO */
+#define IMM_BUFFER_NAME 0xaabbccdd
+
+
 static void reset_attrfv( struct vbo_exec_context *exec );
 
 
-/* Close off the last primitive, execute the buffer, restart the
+/**
+ * Close off the last primitive, execute the buffer, restart the
  * primitive.  
  */
 static void vbo_exec_wrap_buffers( struct vbo_exec_context *exec )
@@ -62,7 +66,7 @@ static void vbo_exec_wrap_buffers( struct vbo_exec_context *exec )
    if (exec->vtx.prim_count == 0) {
       exec->vtx.copied.nr = 0;
       exec->vtx.vert_count = 0;
-      exec->vtx.vbptr = (GLfloat *)exec->vtx.buffer_map;
+      exec->vtx.buffer_ptr = exec->vtx.buffer_map;
    }
    else {
       GLuint last_begin = exec->vtx.prim[exec->vtx.prim_count-1].begin;
@@ -80,7 +84,7 @@ static void vbo_exec_wrap_buffers( struct vbo_exec_context *exec )
       /* Execute the buffer and save copied vertices.
        */
       if (exec->vtx.vert_count)
-	 vbo_exec_vtx_flush( exec );
+	 vbo_exec_vtx_flush( exec, GL_FALSE );
       else {
 	 exec->vtx.prim_count = 0;
 	 exec->vtx.copied.nr = 0;
@@ -103,7 +107,8 @@ static void vbo_exec_wrap_buffers( struct vbo_exec_context *exec )
 }
 
 
-/* Deal with buffer wrapping where provoked by the vertex buffer
+/**
+ * Deal with buffer wrapping where provoked by the vertex buffer
  * filling up, as opposed to upgrade_vertex().
  */
 void vbo_exec_vtx_wrap( struct vbo_exec_context *exec )
@@ -121,9 +126,9 @@ void vbo_exec_vtx_wrap( struct vbo_exec_context *exec )
    assert(exec->vtx.max_vert - exec->vtx.vert_count > exec->vtx.copied.nr);
 
    for (i = 0 ; i < exec->vtx.copied.nr ; i++) {
-      _mesa_memcpy( exec->vtx.vbptr, data, 
-		    exec->vtx.vertex_size * sizeof(GLfloat));
-      exec->vtx.vbptr += exec->vtx.vertex_size;
+      memcpy( exec->vtx.buffer_ptr, data, 
+	      exec->vtx.vertex_size * sizeof(GLfloat));
+      exec->vtx.buffer_ptr += exec->vtx.vertex_size;
       data += exec->vtx.vertex_size;
       exec->vtx.vert_count++;
    }
@@ -132,7 +137,7 @@ void vbo_exec_vtx_wrap( struct vbo_exec_context *exec )
 }
 
 
-/*
+/**
  * Copy the active vertex's values to the ctx->Current fields.
  */
 static void vbo_exec_copy_to_current( struct vbo_exec_context *exec )
@@ -143,32 +148,36 @@ static void vbo_exec_copy_to_current( struct vbo_exec_context *exec )
 
    for (i = VBO_ATTRIB_POS+1 ; i < VBO_ATTRIB_MAX ; i++) {
       if (exec->vtx.attrsz[i]) {
-	 GLfloat *current = (GLfloat *)vbo->currval[i].Ptr;
-
          /* Note: the exec->vtx.current[i] pointers point into the
           * ctx->Current.Attrib and ctx->Light.Material.Attrib arrays.
           */
-         if (exec->vtx.attrptr[i]) {
+	 GLfloat *current = (GLfloat *)vbo->currval[i].Ptr;
+         GLfloat tmp[4];
 
-	 COPY_CLEAN_4V(current, 
-		       exec->vtx.attrsz[i], 
-		       exec->vtx.attrptr[i]);
+         COPY_CLEAN_4V(tmp, 
+                       exec->vtx.attrsz[i], 
+                       exec->vtx.attrptr[i]);
+         
+         if (memcmp(current, tmp, sizeof(tmp)) != 0)
+         { 
+            memcpy(current, tmp, sizeof(tmp));
+	 
+            /* Given that we explicitly state size here, there is no need
+             * for the COPY_CLEAN above, could just copy 16 bytes and be
+             * done.  The only problem is when Mesa accesses ctx->Current
+             * directly.
+             */
+            vbo->currval[i].Size = exec->vtx.attrsz[i];
 
-	 }
-
-	 /* Given that we explicitly state size here, there is no need
-	  * for the COPY_CLEAN above, could just copy 16 bytes and be
-	  * done.  The only problem is when Mesa accesses ctx->Current
-	  * directly.
-	  */
-	 vbo->currval[i].Size = exec->vtx.attrsz[i];
-
-	 /* This triggers rather too much recalculation of Mesa state
-	  * that doesn't get used (eg light positions).
-	  */
-	 if (i >= VBO_ATTRIB_MAT_FRONT_AMBIENT &&
-	     i <= VBO_ATTRIB_MAT_BACK_INDEXES)
-	    ctx->NewState |= _NEW_LIGHT;
+            /* This triggers rather too much recalculation of Mesa state
+             * that doesn't get used (eg light positions).
+             */
+            if (i >= VBO_ATTRIB_MAT_FRONT_AMBIENT &&
+                i <= VBO_ATTRIB_MAT_BACK_INDEXES)
+               ctx->NewState |= _NEW_LIGHT;
+            
+            ctx->NewState |= _NEW_CURRENT_ATTRIB;
+         }
       }
    }
 
@@ -179,8 +188,6 @@ static void vbo_exec_copy_to_current( struct vbo_exec_context *exec )
       _mesa_update_color_material(ctx, 
 				  ctx->Current.Attrib[VBO_ATTRIB_COLOR0]);
    }
-
-   ctx->Driver.NeedFlush &= ~FLUSH_UPDATE_CURRENT;
 }
 
 
@@ -200,12 +207,11 @@ static void vbo_exec_copy_from_current( struct vbo_exec_context *exec )
 	 break;
       }
    }
-
-   ctx->Driver.NeedFlush |= FLUSH_UPDATE_CURRENT;
 }
 
 
-/* Flush existing data, set new attrib size, replay copied vertices.
+/**
+ * Flush existing data, set new attrib size, replay copied vertices.
  */ 
 static void vbo_exec_wrap_upgrade_vertex( struct vbo_exec_context *exec,
 					  GLuint attr,
@@ -247,9 +253,10 @@ static void vbo_exec_wrap_upgrade_vertex( struct vbo_exec_context *exec,
    exec->vtx.attrsz[attr] = newsz;
 
    exec->vtx.vertex_size += newsz - oldsz;
-   exec->vtx.max_vert = VBO_VERT_BUFFER_SIZE / exec->vtx.vertex_size;
+   exec->vtx.max_vert = ((VBO_VERT_BUFFER_SIZE - exec->vtx.buffer_used) / 
+                         (exec->vtx.vertex_size * sizeof(GLfloat)));
    exec->vtx.vert_count = 0;
-   exec->vtx.vbptr = (GLfloat *)exec->vtx.buffer_map;
+   exec->vtx.buffer_ptr = exec->vtx.buffer_map;
    
 
    /* Recalculate all the attrptr[] values
@@ -275,10 +282,10 @@ static void vbo_exec_wrap_upgrade_vertex( struct vbo_exec_context *exec,
    if (exec->vtx.copied.nr)
    {
       GLfloat *data = exec->vtx.copied.buffer;
-      GLfloat *dest = exec->vtx.vbptr;
+      GLfloat *dest = exec->vtx.buffer_ptr;
       GLuint j;
 
-      assert(exec->vtx.vbptr == (GLfloat *)exec->vtx.buffer_map);
+      assert(exec->vtx.buffer_ptr == exec->vtx.buffer_map);
       
       for (i = 0 ; i < exec->vtx.copied.nr ; i++) {
 	 for (j = 0 ; j < VBO_ATTRIB_MAX ; j++) {
@@ -304,7 +311,7 @@ static void vbo_exec_wrap_upgrade_vertex( struct vbo_exec_context *exec,
 	 }
       }
 
-      exec->vtx.vbptr = dest;
+      exec->vtx.buffer_ptr = dest;
       exec->vtx.vert_count += exec->vtx.copied.nr;
       exec->vtx.copied.nr = 0;
    }
@@ -341,12 +348,10 @@ static void vbo_exec_fixup_vertex( GLcontext *ctx,
     */
    if (attr == 0) 
       exec->ctx->Driver.NeedFlush |= FLUSH_STORED_VERTICES;
-   else 
-      exec->ctx->Driver.NeedFlush |= FLUSH_UPDATE_CURRENT;
 }
 
 
-
+#if FEATURE_beginend
 
 /* 
  */
@@ -369,9 +374,9 @@ do {								\
       GLuint i;							\
 								\
       for (i = 0; i < exec->vtx.vertex_size; i++)		\
-	 exec->vtx.vbptr[i] = exec->vtx.vertex[i];		\
+	 exec->vtx.buffer_ptr[i] = exec->vtx.vertex[i];		\
 								\
-      exec->vtx.vbptr += exec->vtx.vertex_size;			\
+      exec->vtx.buffer_ptr += exec->vtx.vertex_size;			\
       exec->ctx->Driver.NeedFlush |= FLUSH_STORED_VERTICES;	\
 								\
       if (++exec->vtx.vert_count >= exec->vtx.max_vert)		\
@@ -389,8 +394,8 @@ do {								\
 
 
 
-/* Eval
- */
+#if FEATURE_evaluators
+
 static void GLAPIENTRY vbo_exec_EvalCoord1f( GLfloat u )
 {
    GET_CURRENT_CONTEXT( ctx );
@@ -409,13 +414,13 @@ static void GLAPIENTRY vbo_exec_EvalCoord1f( GLfloat u )
    }
 
 
-   _mesa_memcpy( exec->vtx.copied.buffer, exec->vtx.vertex, 
-                 exec->vtx.vertex_size * sizeof(GLfloat));
+   memcpy( exec->vtx.copied.buffer, exec->vtx.vertex, 
+           exec->vtx.vertex_size * sizeof(GLfloat));
 
    vbo_exec_do_EvalCoord1f( exec, u );
 
-   _mesa_memcpy( exec->vtx.vertex, exec->vtx.copied.buffer,
-                 exec->vtx.vertex_size * sizeof(GLfloat));
+   memcpy( exec->vtx.vertex, exec->vtx.copied.buffer,
+           exec->vtx.vertex_size * sizeof(GLfloat));
 }
 
 static void GLAPIENTRY vbo_exec_EvalCoord2f( GLfloat u, GLfloat v )
@@ -439,13 +444,13 @@ static void GLAPIENTRY vbo_exec_EvalCoord2f( GLfloat u, GLfloat v )
 	    vbo_exec_fixup_vertex( ctx, VBO_ATTRIB_NORMAL, 3 );
    }
 
-   _mesa_memcpy( exec->vtx.copied.buffer, exec->vtx.vertex, 
-                 exec->vtx.vertex_size * sizeof(GLfloat));
+   memcpy( exec->vtx.copied.buffer, exec->vtx.vertex, 
+           exec->vtx.vertex_size * sizeof(GLfloat));
 
    vbo_exec_do_EvalCoord2f( exec, u, v );
 
-   _mesa_memcpy( exec->vtx.vertex, exec->vtx.copied.buffer, 
-                 exec->vtx.vertex_size * sizeof(GLfloat));
+   memcpy( exec->vtx.vertex, exec->vtx.copied.buffer, 
+           exec->vtx.vertex_size * sizeof(GLfloat));
 }
 
 static void GLAPIENTRY vbo_exec_EvalCoord1fv( const GLfloat *u )
@@ -482,26 +487,15 @@ static void GLAPIENTRY vbo_exec_EvalPoint2( GLint i, GLint j )
    vbo_exec_EvalCoord2f( u, v );
 }
 
+/* use noop eval mesh */
+#define vbo_exec_EvalMesh1 _mesa_noop_EvalMesh1
+#define vbo_exec_EvalMesh2 _mesa_noop_EvalMesh2
+
+#endif /* FEATURE_evaluators */
+
 
 /**
- * Check if programs/shaders are enabled and valid at glBegin time.
- */
-GLboolean 
-vbo_validate_shaders(GLcontext *ctx)
-{
-   if ((ctx->VertexProgram.Enabled && !ctx->VertexProgram._Enabled) ||
-       (ctx->FragmentProgram.Enabled && !ctx->FragmentProgram._Enabled)) {
-      return GL_FALSE;
-   }
-   if (ctx->Shader.CurrentProgram && !ctx->Shader.CurrentProgram->LinkStatus) {
-      return GL_FALSE;
-   }
-   return GL_TRUE;
-}
-
-
-/* Build a list of primitives on the fly.  Keep
- * ctx->Driver.CurrentExecPrimitive uptodate as well.
+ * Called via glBegin.
  */
 static void GLAPIENTRY vbo_exec_Begin( GLenum mode )
 {
@@ -518,9 +512,7 @@ static void GLAPIENTRY vbo_exec_Begin( GLenum mode )
 	 return;
       }
 
-      if (!vbo_validate_shaders(ctx)) {
-         _mesa_error(ctx, GL_INVALID_OPERATION,
-                     "glBegin (invalid vertex/fragment program)");
+      if (!_mesa_valid_to_render(ctx, "glBegin")) {
          return;
       }
 
@@ -528,7 +520,7 @@ static void GLAPIENTRY vbo_exec_Begin( GLenum mode )
        * begin/end pairs.
        */
       if (exec->vtx.vertex_size && !exec->vtx.attrsz[0]) 
-	 vbo_exec_FlushVertices( ctx, ~0 );
+	 vbo_exec_FlushVertices_internal( ctx, GL_FALSE );
 
       i = exec->vtx.prim_count++;
       exec->vtx.prim[i].mode = mode;
@@ -547,6 +539,10 @@ static void GLAPIENTRY vbo_exec_Begin( GLenum mode )
       
 }
 
+
+/**
+ * Called via glEnd.
+ */
 static void GLAPIENTRY vbo_exec_End( void )
 {
    GET_CURRENT_CONTEXT( ctx ); 
@@ -562,7 +558,7 @@ static void GLAPIENTRY vbo_exec_End( void )
       ctx->Driver.CurrentExecPrimitive = PRIM_OUTSIDE_BEGIN_END;
 
       if (exec->vtx.prim_count == VBO_MAX_PRIM)
-	 vbo_exec_vtx_flush( exec );	
+	 vbo_exec_vtx_flush( exec, GL_FALSE );
    }
    else 
       _mesa_error( ctx, GL_INVALID_OPERATION, "glEnd" );
@@ -573,24 +569,15 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
 {
    GLvertexformat *vfmt = &exec->vtxfmt;
 
-   vfmt->ArrayElement = _ae_loopback_array_elt;	        /* generic helper */
+   _MESA_INIT_ARRAYELT_VTXFMT(vfmt, _ae_);
+
    vfmt->Begin = vbo_exec_Begin;
-#if FEATURE_dlist
-   vfmt->CallList = _mesa_CallList;
-   vfmt->CallLists = _mesa_CallLists;
-#endif
    vfmt->End = vbo_exec_End;
-   vfmt->EvalCoord1f = vbo_exec_EvalCoord1f;
-   vfmt->EvalCoord1fv = vbo_exec_EvalCoord1fv;
-   vfmt->EvalCoord2f = vbo_exec_EvalCoord2f;
-   vfmt->EvalCoord2fv = vbo_exec_EvalCoord2fv;
-   vfmt->EvalPoint1 = vbo_exec_EvalPoint1;
-   vfmt->EvalPoint2 = vbo_exec_EvalPoint2;
+
+   _MESA_INIT_DLIST_VTXFMT(vfmt, _mesa_);
+   _MESA_INIT_EVAL_VTXFMT(vfmt, vbo_exec_);
 
    vfmt->Rectf = _mesa_noop_Rectf;
-   vfmt->EvalMesh1 = _mesa_noop_EvalMesh1;
-   vfmt->EvalMesh2 = _mesa_noop_EvalMesh2;
-
 
    /* from attrib_tmp.h:
     */
@@ -654,6 +641,98 @@ static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
 }
 
 
+#else /* FEATURE_beginend */
+
+
+#define ATTR( A, N, V0, V1, V2, V3 )				\
+do {								\
+   struct vbo_exec_context *exec = &vbo_context(ctx)->exec;	\
+								\
+   /* FLUSH_UPDATE_CURRENT needs to be set manually */		\
+   exec->ctx->Driver.NeedFlush |= FLUSH_UPDATE_CURRENT;		\
+								\
+   if (exec->vtx.active_sz[A] != N)				\
+      vbo_exec_fixup_vertex(ctx, A, N);				\
+								\
+   {								\
+      GLfloat *dest = exec->vtx.attrptr[A];			\
+      if (N>0) dest[0] = V0;					\
+      if (N>1) dest[1] = V1;					\
+      if (N>2) dest[2] = V2;					\
+      if (N>3) dest[3] = V3;					\
+   }								\
+} while (0)
+
+#define ERROR() _mesa_error( ctx, GL_INVALID_ENUM, __FUNCTION__ )
+#define TAG(x) vbo_##x
+
+#include "vbo_attrib_tmp.h"
+
+static void vbo_exec_vtxfmt_init( struct vbo_exec_context *exec )
+{
+   /* silence warnings */
+   (void) vbo_Color3f;
+   (void) vbo_Color3fv;
+   (void) vbo_Color4f;
+   (void) vbo_Color4fv;
+   (void) vbo_FogCoordfEXT;
+   (void) vbo_FogCoordfvEXT;
+   (void) vbo_MultiTexCoord1f;
+   (void) vbo_MultiTexCoord1fv;
+   (void) vbo_MultiTexCoord2f;
+   (void) vbo_MultiTexCoord2fv;
+   (void) vbo_MultiTexCoord3f;
+   (void) vbo_MultiTexCoord3fv;
+   (void) vbo_MultiTexCoord4f;
+   (void) vbo_MultiTexCoord4fv;
+   (void) vbo_Normal3f;
+   (void) vbo_Normal3fv;
+   (void) vbo_SecondaryColor3fEXT;
+   (void) vbo_SecondaryColor3fvEXT;
+   (void) vbo_TexCoord1f;
+   (void) vbo_TexCoord1fv;
+   (void) vbo_TexCoord2f;
+   (void) vbo_TexCoord2fv;
+   (void) vbo_TexCoord3f;
+   (void) vbo_TexCoord3fv;
+   (void) vbo_TexCoord4f;
+   (void) vbo_TexCoord4fv;
+   (void) vbo_Vertex2f;
+   (void) vbo_Vertex2fv;
+   (void) vbo_Vertex3f;
+   (void) vbo_Vertex3fv;
+   (void) vbo_Vertex4f;
+   (void) vbo_Vertex4fv;
+
+   (void) vbo_VertexAttrib1fARB;
+   (void) vbo_VertexAttrib1fvARB;
+   (void) vbo_VertexAttrib2fARB;
+   (void) vbo_VertexAttrib2fvARB;
+   (void) vbo_VertexAttrib3fARB;
+   (void) vbo_VertexAttrib3fvARB;
+   (void) vbo_VertexAttrib4fARB;
+   (void) vbo_VertexAttrib4fvARB;
+
+   (void) vbo_VertexAttrib1fNV;
+   (void) vbo_VertexAttrib1fvNV;
+   (void) vbo_VertexAttrib2fNV;
+   (void) vbo_VertexAttrib2fvNV;
+   (void) vbo_VertexAttrib3fNV;
+   (void) vbo_VertexAttrib3fvNV;
+   (void) vbo_VertexAttrib4fNV;
+   (void) vbo_VertexAttrib4fvNV;
+
+   (void) vbo_Materialfv;
+
+   (void) vbo_EdgeFlag;
+   (void) vbo_Indexf;
+   (void) vbo_Indexfv;
+}
+
+
+#endif /* FEATURE_beginend */
+
+
 /**
  * Tell the VBO module to use a real OpenGL vertex buffer object to
  * store accumulated immediate-mode vertex data.
@@ -666,25 +745,23 @@ void vbo_use_buffer_objects(GLcontext *ctx)
    /* Any buffer name but 0 can be used here since this bufferobj won't
     * go into the bufferobj hashtable.
     */
-   GLuint bufName = 0xaabbccdd;
+   GLuint bufName = IMM_BUFFER_NAME;
    GLenum target = GL_ARRAY_BUFFER_ARB;
-   GLenum access = GL_READ_WRITE_ARB;
    GLenum usage = GL_STREAM_DRAW_ARB;
-   GLsizei size = VBO_VERT_BUFFER_SIZE * sizeof(GLfloat);
+   GLsizei size = VBO_VERT_BUFFER_SIZE;
 
    /* Make sure this func is only used once */
-   assert(exec->vtx.bufferobj == ctx->Array.NullBufferObj);
+   assert(exec->vtx.bufferobj == ctx->Shared->NullBufferObj);
    if (exec->vtx.buffer_map) {
       _mesa_align_free(exec->vtx.buffer_map);
+      exec->vtx.buffer_map = NULL;
+      exec->vtx.buffer_ptr = NULL;
    }
 
    /* Allocate a real buffer object now */
+   _mesa_reference_buffer_object(ctx, &exec->vtx.bufferobj, NULL);
    exec->vtx.bufferobj = ctx->Driver.NewBufferObject(ctx, bufName, target);
    ctx->Driver.BufferData(ctx, target, size, NULL, usage, exec->vtx.bufferobj);
-
-   /* and map it */
-   exec->vtx.buffer_map
-      = ctx->Driver.MapBuffer(ctx, target, access, exec->vtx.bufferobj);
 }
 
 
@@ -696,14 +773,17 @@ void vbo_exec_vtx_init( struct vbo_exec_context *exec )
    GLuint i;
 
    /* Allocate a buffer object.  Will just reuse this object
-    * continuously.
+    * continuously, unless vbo_use_buffer_objects() is called to enable
+    * use of real VBOs.
     */
    _mesa_reference_buffer_object(ctx,
                                  &exec->vtx.bufferobj,
-                                 ctx->Array.NullBufferObj);
+                                 ctx->Shared->NullBufferObj);
 
    ASSERT(!exec->vtx.buffer_map);
-   exec->vtx.buffer_map = ALIGN_MALLOC(VBO_VERT_BUFFER_SIZE * sizeof(GLfloat), 64);
+   exec->vtx.buffer_map = (GLfloat *)_mesa_align_malloc(VBO_VERT_BUFFER_SIZE, 64);
+   exec->vtx.buffer_ptr = exec->vtx.buffer_map;
+
    vbo_exec_vtxfmt_init( exec );
 
    /* Hook our functions into the dispatch table.
@@ -711,15 +791,32 @@ void vbo_exec_vtx_init( struct vbo_exec_context *exec )
    _mesa_install_exec_vtxfmt( exec->ctx, &exec->vtxfmt );
 
    for (i = 0 ; i < VBO_ATTRIB_MAX ; i++) {
+      ASSERT(i < Elements(exec->vtx.attrsz));
       exec->vtx.attrsz[i] = 0;
+      ASSERT(i < Elements(exec->vtx.active_sz));
       exec->vtx.active_sz[i] = 0;
+   }
+   for (i = 0 ; i < VERT_ATTRIB_MAX; i++) {
+      ASSERT(i < Elements(exec->vtx.inputs));
+      ASSERT(i < Elements(exec->vtx.arrays));
       exec->vtx.inputs[i] = &exec->vtx.arrays[i];
    }
    
    {
       struct gl_client_array *arrays = exec->vtx.arrays;
+      unsigned i;
+
       memcpy(arrays,      vbo->legacy_currval,  16 * sizeof(arrays[0]));
       memcpy(arrays + 16, vbo->generic_currval, 16 * sizeof(arrays[0]));
+
+      for (i = 0; i < 16; ++i) {
+         arrays[i     ].BufferObj = NULL;
+         arrays[i + 16].BufferObj = NULL;
+         _mesa_reference_buffer_object(ctx, &arrays[i     ].BufferObj,
+                                       vbo->legacy_currval[i].BufferObj);
+         _mesa_reference_buffer_object(ctx, &arrays[i + 16].BufferObj,
+                                       vbo->generic_currval[i].BufferObj);
+      }
    }
 
    exec->vtx.vertex_size = 0;
@@ -728,38 +825,99 @@ void vbo_exec_vtx_init( struct vbo_exec_context *exec )
 
 void vbo_exec_vtx_destroy( struct vbo_exec_context *exec )
 {
-   if (exec->vtx.bufferobj->Name) {
-      /* using a real VBO for vertex data */
-      GLcontext *ctx = exec->ctx;
-      _mesa_reference_buffer_object(ctx, &exec->vtx.bufferobj, NULL);
-   }
-   else {
-      /* just using malloc'd space for vertex data */
-      if (exec->vtx.buffer_map) {
-         ALIGN_FREE(exec->vtx.buffer_map);
+   /* using a real VBO for vertex data */
+   GLcontext *ctx = exec->ctx;
+   unsigned i;
+
+   /* True VBOs should already be unmapped
+    */
+   if (exec->vtx.buffer_map) {
+      ASSERT(exec->vtx.bufferobj->Name == 0 ||
+             exec->vtx.bufferobj->Name == IMM_BUFFER_NAME);
+      if (exec->vtx.bufferobj->Name == 0) {
+         _mesa_align_free(exec->vtx.buffer_map);
          exec->vtx.buffer_map = NULL;
+         exec->vtx.buffer_ptr = NULL;
       }
    }
+
+   /* Drop any outstanding reference to the vertex buffer
+    */
+   for (i = 0; i < Elements(exec->vtx.arrays); i++) {
+      _mesa_reference_buffer_object(ctx,
+                                    &exec->vtx.arrays[i].BufferObj,
+                                    NULL);
+   }
+
+   /* Free the vertex buffer:
+    */
+   _mesa_reference_buffer_object(ctx, &exec->vtx.bufferobj, NULL);
 }
 
+void vbo_exec_BeginVertices( GLcontext *ctx )
+{
+   struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
+   if (0) printf("%s\n", __FUNCTION__);
+   vbo_exec_vtx_map( exec );
 
-void vbo_exec_FlushVertices( GLcontext *ctx, GLuint flags )
+   assert((exec->ctx->Driver.NeedFlush & FLUSH_UPDATE_CURRENT) == 0);
+   exec->ctx->Driver.NeedFlush |= FLUSH_UPDATE_CURRENT;
+}
+
+void vbo_exec_FlushVertices_internal( GLcontext *ctx, GLboolean unmap )
 {
    struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
 
-   if (exec->ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END)
-      return;
-
-   if (exec->vtx.vert_count) {
-      vbo_exec_vtx_flush( exec );
+   if (exec->vtx.vert_count || unmap) {
+      vbo_exec_vtx_flush( exec, unmap );
    }
 
    if (exec->vtx.vertex_size) {
       vbo_exec_copy_to_current( exec );
       reset_attrfv( exec );
    }
+}
 
-   exec->ctx->Driver.NeedFlush = 0;
+
+/**
+ * \param flags  bitmask of FLUSH_STORED_VERTICES, FLUSH_UPDATE_CURRENT
+ */
+void vbo_exec_FlushVertices( GLcontext *ctx, GLuint flags )
+{
+   struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
+
+#ifdef DEBUG
+   /* debug check: make sure we don't get called recursively */
+   exec->flush_call_depth++;
+   assert(exec->flush_call_depth == 1);
+#endif
+
+   if (0) printf("%s\n", __FUNCTION__);
+
+   if (exec->ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END) {
+      if (0) printf("%s - inside begin/end\n", __FUNCTION__);
+#ifdef DEBUG
+      exec->flush_call_depth--;
+      assert(exec->flush_call_depth == 0);
+#endif
+      return;
+   }
+
+   vbo_exec_FlushVertices_internal( ctx, GL_TRUE );
+
+   /* Need to do this to ensure BeginVertices gets called again:
+    */
+   if (exec->ctx->Driver.NeedFlush & FLUSH_UPDATE_CURRENT) {
+      _mesa_restore_exec_vtxfmt( ctx );
+      exec->ctx->Driver.NeedFlush &= ~FLUSH_UPDATE_CURRENT;
+   }
+
+   exec->ctx->Driver.NeedFlush &= ~flags;
+
+#ifdef DEBUG
+   exec->flush_call_depth--;
+   assert(exec->flush_call_depth == 0);
+#endif
 }
 
 
@@ -775,3 +933,36 @@ static void reset_attrfv( struct vbo_exec_context *exec )
    exec->vtx.vertex_size = 0;
 }
       
+
+void GLAPIENTRY
+_vbo_Color4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+{
+   vbo_Color4f(r, g, b, a);
+}
+
+
+void GLAPIENTRY
+_vbo_Normal3f(GLfloat x, GLfloat y, GLfloat z)
+{
+   vbo_Normal3f(x, y, z);
+}
+
+
+void GLAPIENTRY
+_vbo_MultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
+{
+   vbo_MultiTexCoord4f(target, s, t, r, q);
+}
+
+void GLAPIENTRY
+_vbo_Materialfv(GLenum face, GLenum pname, const GLfloat *params)
+{
+   vbo_Materialfv(face, pname, params);
+}
+
+
+void GLAPIENTRY
+_vbo_VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   vbo_VertexAttrib4fARB(index, x, y, z, w);
+}

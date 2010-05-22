@@ -4,7 +4,7 @@
 # Helper for the getprocaddress.c test.
 
 import sys, getopt, re
-sys.path.append("../../src/mesa/glapi/" )
+sys.path.append("../../src/mesa/glapi/gen" )
 import gl_XML
 import license
 
@@ -52,7 +52,7 @@ static struct name_test_pair functions[] = {"""
 		prev_category = None
 		
 
-		for f in api.functionIterateByOffset():
+		for f in api.functionIterateByCategory():
 			[category, num] = api.get_category_for_name( f.name )
 			if category != prev_category:
 				print '   { "-%s", NULL},' % category
@@ -74,7 +74,7 @@ static struct name_test_pair functions[] = {"""
 
 
 if __name__ == '__main__':
-	file_name = "../../src/mesa/glapi/gl_API.xml"
+	file_name = "../../src/mesa/glapi/gen/gl_API.xml"
     
 	try:
 		(args, trail) = getopt.getopt(sys.argv[1:], "f:")

@@ -91,6 +91,7 @@ typedef enum
    IR_CLAMP,
    IR_MIN,
    IR_MAX,
+   IR_CMP,     /* = (op0 < 0) ? op1 : op2 */
    IR_SEQUAL,  /* Set if args are equal (vector) */
    IR_SNEQUAL, /* Set if args are not equal (vector) */
    IR_SGE,     /* Set if greater or equal (vector) */
@@ -131,6 +132,10 @@ typedef enum
    IR_TEXB,    /* texture lookup with LOD bias */
    IR_TEXP,    /* texture lookup with projection */
 
+   IR_TEX_SH,     /* texture lookup, shadow compare */
+   IR_TEXB_SH,    /* texture lookup with LOD bias, shadow compare */
+   IR_TEXP_SH,    /* texture lookup with projection, shadow compare */
+
    IR_FLOAT,
    IR_I_TO_F,  /* int[4] to float[4] conversion */
    IR_F_TO_I,  /* float[4] to int[4] conversion */
@@ -167,7 +172,7 @@ typedef enum
  */
 struct slang_ir_storage_
 {
-   enum register_file File;  /**< PROGRAM_TEMPORARY, PROGRAM_INPUT, etc */
+   gl_register_file File;  /**< PROGRAM_TEMPORARY, PROGRAM_INPUT, etc */
    GLint Index;    /**< -1 means unallocated */
    GLint Size;     /**< number of floats or ints */
    GLuint Swizzle; /**< Swizzle AND writemask info */
@@ -176,7 +181,7 @@ struct slang_ir_storage_
    GLboolean RelAddr; /* we'll remove this eventually */
 
    GLboolean IsIndirect;
-   enum register_file IndirectFile;
+   gl_register_file IndirectFile;
    GLint IndirectIndex;
    GLuint IndirectSwizzle;
    GLuint TexTarget;  /**< If File==PROGRAM_SAMPLER, one of TEXTURE_x_INDEX */
@@ -208,6 +213,7 @@ typedef struct slang_ir_node_
    struct slang_ir_node_ *List;  /**< For various linked lists */
    struct slang_ir_node_ *Parent;  /**< Pointer to logical parent (ie. loop) */
    slang_label *Label;  /**< Used for branches */
+   const char *Comment; /**< If Opcode == IR_COMMENT */
 } slang_ir_node;
 
 
@@ -231,15 +237,15 @@ _slang_ir_info(slang_ir_opcode opcode);
 
 extern void
 _slang_init_ir_storage(slang_ir_storage *st,
-                       enum register_file file, GLint index, GLint size,
+                       gl_register_file file, GLint index, GLint size,
                        GLuint swizzle);
 
 extern slang_ir_storage *
-_slang_new_ir_storage(enum register_file file, GLint index, GLint size);
+_slang_new_ir_storage(gl_register_file file, GLint index, GLint size);
 
 
 extern slang_ir_storage *
-_slang_new_ir_storage_swz(enum register_file file, GLint index, GLint size,
+_slang_new_ir_storage_swz(gl_register_file file, GLint index, GLint size,
                           GLuint swizzle);
 
 extern slang_ir_storage *
@@ -248,10 +254,10 @@ _slang_new_ir_storage_relative(GLint index, GLint size,
 
 
 extern slang_ir_storage *
-_slang_new_ir_storage_indirect(enum register_file file,
+_slang_new_ir_storage_indirect(gl_register_file file,
                                GLint index,
                                GLint size,
-                               enum register_file indirectFile,
+                               gl_register_file indirectFile,
                                GLint indirectIndex,
                                GLuint indirectSwizzle);
 

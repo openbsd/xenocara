@@ -25,27 +25,22 @@
  * 
  **************************************************************************/
 
-#include <stdlib.h>
 
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/state.h"
-#include "main/api_validate.h"
 #include "main/enums.h"
+#include "tnl/tnl.h"
+#include "vbo/vbo_context.h"
+#include "swrast/swrast.h"
+#include "swrast_setup/swrast_setup.h"
 
 #include "brw_draw.h"
 #include "brw_defines.h"
 #include "brw_context.h"
 #include "brw_state.h"
-#include "brw_fallback.h"
 
 #include "intel_batchbuffer.h"
-#include "intel_buffer_objects.h"
-
-#include "tnl/tnl.h"
-#include "vbo/vbo_context.h"
-#include "swrast/swrast.h"
-#include "swrast_setup/swrast_setup.h"
 
 #define FILE_DEBUG_FLAG DEBUG_BATCH
 
@@ -87,7 +82,7 @@ static GLuint brw_set_prim(struct brw_context *brw, GLenum prim)
    GLcontext *ctx = &brw->intel.ctx;
 
    if (INTEL_DEBUG & DEBUG_PRIMS)
-      _mesa_printf("PRIM: %s\n", _mesa_lookup_enum_by_nr(prim));
+      printf("PRIM: %s\n", _mesa_lookup_enum_by_nr(prim));
    
    /* Slight optimization to avoid the GS program when not needed:
     */
@@ -127,9 +122,10 @@ static void brw_emit_prim(struct brw_context *brw,
 			  uint32_t hw_prim)
 {
    struct brw_3d_primitive prim_packet;
+   struct intel_context *intel = &brw->intel;
 
    if (INTEL_DEBUG & DEBUG_PRIMS)
-      _mesa_printf("PRIM: %s %d %d\n", _mesa_lookup_enum_by_nr(prim->mode), 
+      printf("PRIM: %s %d %d\n", _mesa_lookup_enum_by_nr(prim->mode), 
 		   prim->start, prim->count);
 
    prim_packet.header.opcode = CMD_3D_PRIM;
@@ -140,17 +136,32 @@ static void brw_emit_prim(struct brw_context *brw,
 
    prim_packet.verts_per_instance = trim(prim->mode, prim->count);
    prim_packet.start_vert_location = prim->start;
+   if (prim->indexed)
+      prim_packet.start_vert_location += brw->ib.start_vertex_offset;
    prim_packet.instance_count = 1;
    prim_packet.start_instance_location = 0;
-   prim_packet.base_vert_location = 0;
+   prim_packet.base_vert_location = prim->basevertex;
 
    /* Can't wrap here, since we rely on the validated state. */
-   brw->no_batch_wrap = GL_TRUE;
+   intel->no_batch_wrap = GL_TRUE;
+
+   /* If we're set to always flush, do it before and after the primitive emit.
+    * We want to catch both missed flushes that hurt instruction/state cache
+    * and missed flushes of the render cache as it heads to other parts of
+    * the besides the draw code.
+    */
+   if (intel->always_flush_cache) {
+      intel_batchbuffer_emit_mi_flush(intel->batch);
+   }
    if (prim_packet.verts_per_instance) {
       intel_batchbuffer_data( brw->intel.batch, &prim_packet,
-			      sizeof(prim_packet), LOOP_CLIPRECTS);
+			      sizeof(prim_packet));
    }
-   brw->no_batch_wrap = GL_FALSE;
+   if (intel->always_flush_cache) {
+      intel_batchbuffer_emit_mi_flush(intel->batch);
+   }
+
+   intel->no_batch_wrap = GL_FALSE;
 }
 
 static void brw_merge_inputs( struct brw_context *brw,
@@ -167,21 +178,16 @@ static void brw_merge_inputs( struct brw_context *brw,
 
    for (i = 0; i < VERT_ATTRIB_MAX; i++) {
       brw->vb.inputs[i].glarray = arrays[i];
+      brw->vb.inputs[i].attrib = (gl_vert_attrib) i;
 
       if (arrays[i]->StrideB != 0)
-	 brw->vb.info.varying |= 1 << i;
-
 	 brw->vb.info.sizes[i/16] |= (brw->vb.inputs[i].glarray->Size - 1) <<
 	    ((i%16) * 2);
    }
 
-   /* Raise statechanges if input sizes and varying have changed: 
-    */
+   /* Raise statechanges if input sizes have changed. */
    if (memcmp(brw->vb.info.sizes, old.sizes, sizeof(old.sizes)) != 0)
       brw->state.dirty.brw |= BRW_NEW_INPUT_DIMENSIONS;
-
-   if (brw->vb.info.varying != old.varying)
-      brw->state.dirty.brw |= BRW_NEW_INPUT_VARYING;
 }
 
 /* XXX: could split the primitive list to fallback only on the
@@ -331,12 +337,7 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
     * so can't access it earlier.
     */
 
-   LOCK_HARDWARE(intel);
-
-   if (!intel->constant_cliprect && intel->driDrawable->numClipRects == 0) {
-      UNLOCK_HARDWARE(intel);
-      return GL_TRUE;
-   }
+   intel_prepare_render(intel);
 
    for (i = 0; i < nr_prims; i++) {
       uint32_t hw_prim;
@@ -348,8 +349,7 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
        * an upper bound of how much we might emit in a single
        * brw_try_draw_prims().
        */
-      intel_batchbuffer_require_space(intel->batch, intel->batch->size / 4,
-				      LOOP_CLIPRECTS);
+      intel_batchbuffer_require_space(intel->batch, intel->batch->size / 4);
 
       hw_prim = brw_set_prim(brw, prim[i].mode);
 
@@ -393,8 +393,11 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
       retval = GL_TRUE;
    }
 
+   if (intel->always_flush_batch)
+      intel_batchbuffer_flush(intel->batch);
  out:
-   UNLOCK_HARDWARE(intel);
+
+   brw_state_cache_check_size(brw);
 
    if (warn)
       fprintf(stderr, "i965: Single primitive emit potentially exceeded "
@@ -406,54 +409,31 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
    return retval;
 }
 
-static GLboolean brw_need_rebase( GLcontext *ctx,
-				  const struct gl_client_array *arrays[],
-				  const struct _mesa_index_buffer *ib,
-				  GLuint min_index )
-{
-   if (min_index == 0) 
-      return GL_FALSE;
-
-   if (ib) {
-      if (!vbo_all_varyings_in_vbos(arrays))
-	 return GL_TRUE;
-      else
-	 return GL_FALSE;
-   }
-   else {
-      /* Hmm.  This isn't quite what I wanted.  BRW can actually
-       * handle the mixed case well enough that we shouldn't need to
-       * rebase.  However, it's probably not very common, nor hugely
-       * expensive to do it this way:
-       */
-      if (!vbo_all_varyings_in_vbos(arrays))
-	 return GL_TRUE;
-      else
-	 return GL_FALSE;
-   }
-}
-				  
-
 void brw_draw_prims( GLcontext *ctx,
 		     const struct gl_client_array *arrays[],
 		     const struct _mesa_prim *prim,
 		     GLuint nr_prims,
 		     const struct _mesa_index_buffer *ib,
+		     GLboolean index_bounds_valid,
 		     GLuint min_index,
 		     GLuint max_index )
 {
    GLboolean retval;
 
-   /* Decide if we want to rebase.  If so we end up recursing once
-    * only into this function.
-    */
-   if (brw_need_rebase( ctx, arrays, ib, min_index )) {
-      vbo_rebase_prims( ctx, arrays, 
-			prim, nr_prims, 
-			ib, min_index, max_index, 
-			brw_draw_prims );
-      
-      return;
+   if (!vbo_all_varyings_in_vbos(arrays)) {
+      if (!index_bounds_valid)
+	 vbo_get_minmax_index(ctx, prim, ib, &min_index, &max_index);
+
+      /* Decide if we want to rebase.  If so we end up recursing once
+       * only into this function.
+       */
+      if (min_index != 0) {
+	 vbo_rebase_prims(ctx, arrays,
+			  prim, nr_prims,
+			  ib, min_index, max_index,
+			  brw_draw_prims );
+	 return;
+      }
    }
 
    /* Make a first attempt at drawing:

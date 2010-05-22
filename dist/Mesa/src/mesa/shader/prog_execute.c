@@ -38,7 +38,6 @@
 #include "main/glheader.h"
 #include "main/colormac.h"
 #include "main/context.h"
-#include "program.h"
 #include "prog_execute.h"
 #include "prog_instruction.h"
 #include "prog_parameter.h"
@@ -54,8 +53,18 @@
  * Set x to positive or negative infinity.
  */
 #if defined(USE_IEEE) || defined(_WIN32)
-#define SET_POS_INFINITY(x)  ( *((GLuint *) (void *)&x) = 0x7F800000 )
-#define SET_NEG_INFINITY(x)  ( *((GLuint *) (void *)&x) = 0xFF800000 )
+#define SET_POS_INFINITY(x)                  \
+   do {                                      \
+         fi_type fi;                         \
+         fi.i = 0x7F800000;                  \
+         x = fi.f;                           \
+   } while (0)
+#define SET_NEG_INFINITY(x)                  \
+   do {                                      \
+         fi_type fi;                         \
+         fi.i = 0xFF800000;                  \
+         x = fi.f;                           \
+   } while (0)
 #elif defined(VMS)
 #define SET_POS_INFINITY(x)  x = __MAXFLOAT
 #define SET_NEG_INFINITY(x)  x = -__MAXFLOAT
@@ -186,30 +195,6 @@ get_dst_register_pointer(const struct prog_dst_register *dest,
 
 
 
-#if FEATURE_MESA_program_debug
-static struct gl_program_machine *CurrentMachine = NULL;
-
-/**
- * For GL_MESA_program_debug.
- * Return current value (4*GLfloat) of a program register.
- * Called via ctx->Driver.GetProgramRegister().
- */
-void
-_mesa_get_program_register(GLcontext *ctx, enum register_file file,
-                           GLuint index, GLfloat val[4])
-{
-   if (CurrentMachine) {
-      struct prog_src_register srcReg;
-      const GLfloat *src;
-      srcReg.File = file;
-      srcReg.Index = index;
-      src = get_src_register_pointer(&srcReg, CurrentMachine);
-      COPY_4V(val, src);
-   }
-}
-#endif /* FEATURE_MESA_program_debug */
-
-
 /**
  * Fetch a 4-element float vector from the given source register.
  * Apply swizzling and negating as needed.
@@ -236,24 +221,26 @@ fetch_vector4(const struct prog_src_register *source,
       result[3] = src[GET_SWZ(source->Swizzle, 3)];
    }
 
-   if (source->NegateBase) {
-      result[0] = -result[0];
-      result[1] = -result[1];
-      result[2] = -result[2];
-      result[3] = -result[3];
-   }
    if (source->Abs) {
       result[0] = FABSF(result[0]);
       result[1] = FABSF(result[1]);
       result[2] = FABSF(result[2]);
       result[3] = FABSF(result[3]);
    }
-   if (source->NegateAbs) {
+   if (source->Negate) {
+      ASSERT(source->Negate == NEGATE_XYZW);
       result[0] = -result[0];
       result[1] = -result[1];
       result[2] = -result[2];
       result[3] = -result[3];
    }
+
+#ifdef NAN_CHECK
+   assert(!IS_INF_OR_NAN(result[0]));
+   assert(!IS_INF_OR_NAN(result[0]));
+   assert(!IS_INF_OR_NAN(result[0]));
+   assert(!IS_INF_OR_NAN(result[0]));
+#endif
 }
 
 
@@ -283,7 +270,7 @@ fetch_vector4ui(const struct prog_src_register *source,
       result[3] = src[GET_SWZ(source->Swizzle, 3)];
    }
 
-   /* Note: no NegateBase, Abs, NegateAbs here */
+   /* Note: no Negate or Abs here */
 }
 
 
@@ -323,19 +310,14 @@ fetch_vector4_deriv(GLcontext * ctx,
       result[2] = deriv[GET_SWZ(source->Swizzle, 2)];
       result[3] = deriv[GET_SWZ(source->Swizzle, 3)];
       
-      if (source->NegateBase) {
-         result[0] = -result[0];
-         result[1] = -result[1];
-         result[2] = -result[2];
-         result[3] = -result[3];
-      }
       if (source->Abs) {
          result[0] = FABSF(result[0]);
          result[1] = FABSF(result[1]);
          result[2] = FABSF(result[2]);
          result[3] = FABSF(result[3]);
       }
-      if (source->NegateAbs) {
+      if (source->Negate) {
+         ASSERT(source->Negate == NEGATE_XYZW);
          result[0] = -result[0];
          result[1] = -result[1];
          result[2] = -result[2];
@@ -360,15 +342,21 @@ fetch_vector1(const struct prog_src_register *source,
 
    result[0] = src[GET_SWZ(source->Swizzle, 0)];
 
-   if (source->NegateBase) {
-      result[0] = -result[0];
-   }
    if (source->Abs) {
       result[0] = FABSF(result[0]);
    }
-   if (source->NegateAbs) {
+   if (source->Negate) {
       result[0] = -result[0];
    }
+}
+
+
+static GLuint
+fetch_vector1ui(const struct prog_src_register *source,
+                const struct gl_program_machine *machine)
+{
+   const GLuint *src = (GLuint *) get_src_register_pointer(source, machine);
+   return src[GET_SWZ(source->Swizzle, 0)];
 }
 
 
@@ -516,6 +504,13 @@ store_vector4(const struct prog_instruction *inst,
       }
    }
 
+#ifdef NAN_CHECK
+   assert(!IS_INF_OR_NAN(value[0]));
+   assert(!IS_INF_OR_NAN(value[0]));
+   assert(!IS_INF_OR_NAN(value[0]));
+   assert(!IS_INF_OR_NAN(value[0]));
+#endif
+
    if (writeMask & WRITEMASK_X)
       dst[0] = value[0];
    if (writeMask & WRITEMASK_Y)
@@ -591,13 +586,13 @@ store_vector4ui(const struct prog_instruction *inst,
 
    if (inst->CondUpdate) {
       if (writeMask & WRITEMASK_X)
-         machine->CondCodes[0] = generate_cc(value[0]);
+         machine->CondCodes[0] = generate_cc((float)value[0]);
       if (writeMask & WRITEMASK_Y)
-         machine->CondCodes[1] = generate_cc(value[1]);
+         machine->CondCodes[1] = generate_cc((float)value[1]);
       if (writeMask & WRITEMASK_Z)
-         machine->CondCodes[2] = generate_cc(value[2]);
+         machine->CondCodes[2] = generate_cc((float)value[2]);
       if (writeMask & WRITEMASK_W)
-         machine->CondCodes[3] = generate_cc(value[3]);
+         machine->CondCodes[3] = generate_cc((float)value[3]);
 #if DEBUG_PROG
       printf("CondCodes=(%s,%s,%s,%s) for:\n",
              _mesa_condcode_string(machine->CondCodes[0]),
@@ -633,10 +628,6 @@ _mesa_execute_program(GLcontext * ctx,
       printf("execute program %u --------------------\n", program->Id);
    }
 
-#if FEATURE_MESA_program_debug
-   CurrentMachine = machine;
-#endif
-
    if (program->Target == GL_VERTEX_PROGRAM_ARB) {
       machine->EnvParams = ctx->VertexProgram.Parameters;
    }
@@ -646,15 +637,6 @@ _mesa_execute_program(GLcontext * ctx,
 
    for (pc = 0; pc < numInst; pc++) {
       const struct prog_instruction *inst = program->Instructions + pc;
-
-#if FEATURE_MESA_program_debug
-      if (ctx->FragmentProgram.CallbackEnabled &&
-          ctx->FragmentProgram.Callback) {
-         ctx->FragmentProgram.CurrentPosition = inst->StringPos;
-         ctx->FragmentProgram.Callback(program->Target,
-                                       ctx->FragmentProgram.CallbackData);
-      }
-#endif
 
       if (DEBUG_PROG) {
          _mesa_print_instruction(inst);
@@ -706,13 +688,20 @@ _mesa_execute_program(GLcontext * ctx,
             GLfloat t[4];
             fetch_vector4(&inst->SrcReg[0], machine, t);
             machine->AddressReg[0][0] = IFLOOR(t[0]);
+            if (DEBUG_PROG) {
+               printf("ARL %d\n", machine->AddressReg[0][0]);
+            }
          }
          break;
       case OPCODE_BGNLOOP:
          /* no-op */
+         ASSERT(program->Instructions[inst->BranchTarget].Opcode
+                == OPCODE_ENDLOOP);
          break;
       case OPCODE_ENDLOOP:
          /* subtract 1 here since pc is incremented by for(pc) loop */
+         ASSERT(program->Instructions[inst->BranchTarget].Opcode
+                == OPCODE_BGNLOOP);
          pc = inst->BranchTarget - 1;   /* go to matching BNGLOOP */
          break;
       case OPCODE_BGNSUB:      /* begin subroutine */
@@ -720,12 +709,26 @@ _mesa_execute_program(GLcontext * ctx,
       case OPCODE_ENDSUB:      /* end subroutine */
          break;
       case OPCODE_BRA:         /* branch (conditional) */
-         /* fall-through */
-      case OPCODE_BRK:         /* break out of loop (conditional) */
-         /* fall-through */
-      case OPCODE_CONT:        /* continue loop (conditional) */
          if (eval_condition(machine, inst)) {
             /* take branch */
+            /* Subtract 1 here since we'll do pc++ below */
+            pc = inst->BranchTarget - 1;
+         }
+         break;
+      case OPCODE_BRK:         /* break out of loop (conditional) */
+         ASSERT(program->Instructions[inst->BranchTarget].Opcode
+                == OPCODE_ENDLOOP);
+         if (eval_condition(machine, inst)) {
+            /* break out of loop */
+            /* pc++ at end of for-loop will put us after the ENDLOOP inst */
+            pc = inst->BranchTarget;
+         }
+         break;
+      case OPCODE_CONT:        /* continue loop (conditional) */
+         ASSERT(program->Instructions[inst->BranchTarget].Opcode
+                == OPCODE_ENDLOOP);
+         if (eval_condition(machine, inst)) {
+            /* continue at ENDLOOP */
             /* Subtract 1 here since we'll do pc++ at end of for-loop */
             pc = inst->BranchTarget - 1;
          }
@@ -882,10 +885,14 @@ _mesa_execute_program(GLcontext * ctx,
          break;
       case OPCODE_EX2:         /* Exponential base 2 */
          {
-            GLfloat a[4], result[4];
+            GLfloat a[4], result[4], val;
             fetch_vector1(&inst->SrcReg[0], machine, a);
-            result[0] = result[1] = result[2] = result[3] =
-               (GLfloat) _mesa_pow(2.0, a[0]);
+            val = (GLfloat) _mesa_pow(2.0, a[0]);
+            /*
+            if (IS_INF_OR_NAN(val))
+               val = 1.0e10;
+            */
+            result[0] = result[1] = result[2] = result[3] = val;
             store_vector4(inst, machine, result);
          }
          break;
@@ -914,6 +921,10 @@ _mesa_execute_program(GLcontext * ctx,
       case OPCODE_IF:
          {
             GLboolean cond;
+            ASSERT(program->Instructions[inst->BranchTarget].Opcode
+                   == OPCODE_ELSE ||
+                   program->Instructions[inst->BranchTarget].Opcode
+                   == OPCODE_ENDIF);
             /* eval condition */
             if (inst->SrcReg[0].File != PROGRAM_UNDEFINED) {
                GLfloat a[4];
@@ -933,14 +944,16 @@ _mesa_execute_program(GLcontext * ctx,
             else {
                /* go to the instruction after ELSE or ENDIF */
                assert(inst->BranchTarget >= 0);
-               pc = inst->BranchTarget - 1;
+               pc = inst->BranchTarget;
             }
          }
          break;
       case OPCODE_ELSE:
          /* goto ENDIF */
+         ASSERT(program->Instructions[inst->BranchTarget].Opcode
+                == OPCODE_ENDIF);
          assert(inst->BranchTarget >= 0);
-         pc = inst->BranchTarget - 1;
+         pc = inst->BranchTarget;
          break;
       case OPCODE_ENDIF:
          /* nothing */
@@ -954,6 +967,11 @@ _mesa_execute_program(GLcontext * ctx,
          {
             GLfloat a[4];
             fetch_vector4(&inst->SrcReg[0], machine, a);
+            if (DEBUG_PROG) {
+               printf("KIL if (%g %g %g %g) <= 0.0\n",
+                      a[0], a[1], a[2], a[3]);
+            }
+
             if (a[0] < 0.0F || a[1] < 0.0F || a[2] < 0.0F || a[3] < 0.0F) {
                return GL_FALSE;
             }
@@ -961,12 +979,17 @@ _mesa_execute_program(GLcontext * ctx,
          break;
       case OPCODE_LG2:         /* log base 2 */
          {
-            GLfloat a[4], result[4];
+            GLfloat a[4], result[4], val;
             fetch_vector1(&inst->SrcReg[0], machine, a);
 	    /* The fast LOG2 macro doesn't meet the precision requirements.
 	     */
-            result[0] = result[1] = result[2] = result[3] =
-		(log(a[0]) * 1.442695F);
+            if (a[0] == 0.0F) {
+               val = -FLT_MAX;
+            }
+            else {
+               val = (float)(log(a[0]) * 1.442695F);
+            }
+            result[0] = result[1] = result[2] = result[3] = val;
             store_vector4(inst, machine, result);
          }
          break;
@@ -984,12 +1007,12 @@ _mesa_execute_program(GLcontext * ctx,
             /* XXX we could probably just use pow() here */
             if (a[0] > 0.0F) {
                if (a[1] == 0.0 && a[3] == 0.0)
-                  result[2] = 1.0;
+                  result[2] = 1.0F;
                else
                   result[2] = (GLfloat) _mesa_pow(a[1], a[3]);
             }
             else {
-               result[2] = 0.0;
+               result[2] = 0.0F;
             }
             result[3] = 1.0F;
             store_vector4(inst, machine, result);
@@ -1029,7 +1052,7 @@ _mesa_execute_program(GLcontext * ctx,
 		  /* The fast LOG2 macro doesn't meet the precision
 		   * requirements.
 		   */
-                  q[2] = (log(t[0]) * 1.442695F);
+                  q[2] = (float)(log(t[0]) * 1.442695F);
                }
             }
             else {
@@ -1551,7 +1574,7 @@ _mesa_execute_program(GLcontext * ctx,
                   ASSERT(swz <= 3);
                   result[i] = src[swz];
                }
-               if (source->NegateBase & (1 << i))
+               if (source->Negate & (1 << i))
                   result[i] = -result[i];
             }
             store_vector4(inst, machine, result);
@@ -1577,17 +1600,12 @@ _mesa_execute_program(GLcontext * ctx,
       case OPCODE_TXB:         /* GL_ARB_fragment_program only */
          /* Texel lookup with LOD bias */
          {
-            const GLuint unit = machine->Samplers[inst->TexSrcUnit];
-            const struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
             GLfloat texcoord[4], color[4], lodBias;
 
             fetch_vector4(&inst->SrcReg[0], machine, texcoord);
 
             /* texcoord[3] is the bias to add to lambda */
-            lodBias = texUnit->LodBias + texcoord[3];
-            if (texUnit->_Current) {
-               lodBias += texUnit->_Current->LodBias;
-            }
+            lodBias = texcoord[3];
 
             fetch_texel(ctx, machine, inst, texcoord, lodBias, color);
 
@@ -1661,12 +1679,11 @@ _mesa_execute_program(GLcontext * ctx,
          break;
       case OPCODE_UP2H:        /* unpack two 16-bit floats */
          {
-            GLfloat a[4], result[4];
-            const GLuint *rawBits = (const GLuint *) a;
-            GLhalfNV hx, hy;
-            fetch_vector1(&inst->SrcReg[0], machine, a);
-            hx = rawBits[0] & 0xffff;
-            hy = rawBits[0] >> 16;
+            const GLuint raw = fetch_vector1ui(&inst->SrcReg[0], machine);
+            GLfloat result[4];
+            GLushort hx, hy;
+            hx = raw & 0xffff;
+            hy = raw >> 16;
             result[0] = result[2] = _mesa_half_to_float(hx);
             result[1] = result[3] = _mesa_half_to_float(hy);
             store_vector4(inst, machine, result);
@@ -1674,12 +1691,11 @@ _mesa_execute_program(GLcontext * ctx,
          break;
       case OPCODE_UP2US:       /* unpack two GLushorts */
          {
-            GLfloat a[4], result[4];
-            const GLuint *rawBits = (const GLuint *) a;
+            const GLuint raw = fetch_vector1ui(&inst->SrcReg[0], machine);
+            GLfloat result[4];
             GLushort usx, usy;
-            fetch_vector1(&inst->SrcReg[0], machine, a);
-            usx = rawBits[0] & 0xffff;
-            usy = rawBits[0] >> 16;
+            usx = raw & 0xffff;
+            usy = raw >> 16;
             result[0] = result[2] = usx * (1.0f / 65535.0f);
             result[1] = result[3] = usy * (1.0f / 65535.0f);
             store_vector4(inst, machine, result);
@@ -1687,25 +1703,23 @@ _mesa_execute_program(GLcontext * ctx,
          break;
       case OPCODE_UP4B:        /* unpack four GLbytes */
          {
-            GLfloat a[4], result[4];
-            const GLuint *rawBits = (const GLuint *) a;
-            fetch_vector1(&inst->SrcReg[0], machine, a);
-            result[0] = (((rawBits[0] >> 0) & 0xff) - 128) / 127.0F;
-            result[1] = (((rawBits[0] >> 8) & 0xff) - 128) / 127.0F;
-            result[2] = (((rawBits[0] >> 16) & 0xff) - 128) / 127.0F;
-            result[3] = (((rawBits[0] >> 24) & 0xff) - 128) / 127.0F;
+            const GLuint raw = fetch_vector1ui(&inst->SrcReg[0], machine);
+            GLfloat result[4];
+            result[0] = (((raw >> 0) & 0xff) - 128) / 127.0F;
+            result[1] = (((raw >> 8) & 0xff) - 128) / 127.0F;
+            result[2] = (((raw >> 16) & 0xff) - 128) / 127.0F;
+            result[3] = (((raw >> 24) & 0xff) - 128) / 127.0F;
             store_vector4(inst, machine, result);
          }
          break;
       case OPCODE_UP4UB:       /* unpack four GLubytes */
          {
-            GLfloat a[4], result[4];
-            const GLuint *rawBits = (const GLuint *) a;
-            fetch_vector1(&inst->SrcReg[0], machine, a);
-            result[0] = ((rawBits[0] >> 0) & 0xff) / 255.0F;
-            result[1] = ((rawBits[0] >> 8) & 0xff) / 255.0F;
-            result[2] = ((rawBits[0] >> 16) & 0xff) / 255.0F;
-            result[3] = ((rawBits[0] >> 24) & 0xff) / 255.0F;
+            const GLuint raw = fetch_vector1ui(&inst->SrcReg[0], machine);
+            GLfloat result[4];
+            result[0] = ((raw >> 0) & 0xff) / 255.0F;
+            result[1] = ((raw >> 8) & 0xff) / 255.0F;
+            result[2] = ((raw >> 16) & 0xff) / 255.0F;
+            result[3] = ((raw >> 24) & 0xff) / 255.0F;
             store_vector4(inst, machine, result);
          }
          break;
@@ -1756,11 +1770,11 @@ _mesa_execute_program(GLcontext * ctx,
             if (inst->SrcReg[0].File != -1) {
                GLfloat a[4];
                fetch_vector4(&inst->SrcReg[0], machine, a);
-               _mesa_printf("%s%g, %g, %g, %g\n", (const char *) inst->Data,
+               printf("%s%g, %g, %g, %g\n", (const char *) inst->Data,
                             a[0], a[1], a[2], a[3]);
             }
             else {
-               _mesa_printf("%s\n", (const char *) inst->Data);
+               printf("%s\n", (const char *) inst->Data);
             }
          }
          break;
@@ -1779,10 +1793,6 @@ _mesa_execute_program(GLcontext * ctx,
       }
 
    } /* for pc */
-
-#if FEATURE_MESA_program_debug
-   CurrentMachine = NULL;
-#endif
 
    return GL_TRUE;
 }

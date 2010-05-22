@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
+ * Version:  7.5
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -36,10 +36,8 @@
 #define IMPORTS_H
 
 
-/* XXX some of the stuff in glheader.h should be moved into this file.
- */
+#include "compiler.h"
 #include "glheader.h"
-#include <GL/internal/glcore.h>
 
 
 #ifdef __cplusplus
@@ -48,55 +46,19 @@ extern "C" {
 
 
 /**********************************************************************/
-/** \name General macros */
-/*@{*/
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-
-/** gcc -pedantic warns about long string literals, LONGSTRING silences that */
-#if !defined(__GNUC__) || (__GNUC__ < 2) || \
-    ((__GNUC__ == 2) && (__GNUC_MINOR__ <= 7))
-# define LONGSTRING
-#else
-# define LONGSTRING __extension__
-#endif
-
-/*@}*/
-
-
-/**********************************************************************/
 /** Memory macros */
 /*@{*/
 
 /** Allocate \p BYTES bytes */
-#define MALLOC(BYTES)      _mesa_malloc(BYTES)
+#define MALLOC(BYTES)      malloc(BYTES)
 /** Allocate and zero \p BYTES bytes */
-#define CALLOC(BYTES)      _mesa_calloc(BYTES)
+#define CALLOC(BYTES)      calloc(1, BYTES)
 /** Allocate a structure of type \p T */
-#define MALLOC_STRUCT(T)   (struct T *) _mesa_malloc(sizeof(struct T))
+#define MALLOC_STRUCT(T)   (struct T *) malloc(sizeof(struct T))
 /** Allocate and zero a structure of type \p T */
-#define CALLOC_STRUCT(T)   (struct T *) _mesa_calloc(sizeof(struct T))
+#define CALLOC_STRUCT(T)   (struct T *) calloc(1, sizeof(struct T))
 /** Free memory */
-#define FREE(PTR)          _mesa_free(PTR)
-
-/** Allocate \p BYTES aligned at \p N bytes */
-#define ALIGN_MALLOC(BYTES, N)     _mesa_align_malloc(BYTES, N)
-/** Allocate and zero \p BYTES bytes aligned at \p N bytes */
-#define ALIGN_CALLOC(BYTES, N)     _mesa_align_calloc(BYTES, N)
-/** Allocate a structure of type \p T aligned at \p N bytes */
-#define ALIGN_MALLOC_STRUCT(T, N)  (struct T *) _mesa_align_malloc(sizeof(struct T), N)
-/** Allocate and zero a structure of type \p T aligned at \p N bytes */
-#define ALIGN_CALLOC_STRUCT(T, N)  (struct T *) _mesa_align_calloc(sizeof(struct T), N)
-/** Free aligned memory */
-#define ALIGN_FREE(PTR)            _mesa_align_free(PTR)
-
-/** Copy \p BYTES bytes from \p SRC into \p DST */
-#define MEMCPY( DST, SRC, BYTES)   _mesa_memcpy(DST, SRC, BYTES)
-/** Set \p N bytes in \p DST to \p VAL */
-#define MEMSET( DST, VAL, N )      _mesa_memset(DST, VAL, N)
+#define FREE(PTR)          free(PTR)
 
 /*@}*/
 
@@ -130,46 +92,8 @@ typedef union { GLfloat f; GLint i; } fi_type;
 #define MAX_GLUSHORT	0xffff
 #define MAX_GLUINT	0xffffffff
 
-#ifndef M_PI
-#define M_PI (3.1415926536)
-#endif
-
-#ifndef M_E
-#define M_E (2.7182818284590452354)
-#endif
-
-#ifndef ONE_DIV_LN2
-#define ONE_DIV_LN2 (1.442695040888963456)
-#endif
-
-#ifndef ONE_DIV_SQRT_LN2
-#define ONE_DIV_SQRT_LN2 (1.201122408786449815)
-#endif
-
-#ifndef FLT_MAX_EXP
-#define FLT_MAX_EXP 128
-#endif
-
 /* Degrees to radians conversion: */
 #define DEG2RAD (M_PI/180.0)
-
-
-/***
- *** USE_IEEE: Determine if we're using IEEE floating point
- ***/
-#if defined(__i386__) || defined(__386__) || defined(__sparc__) || \
-    defined(__s390x__) || defined(__powerpc__) || \
-    defined(__x86_64__) || \
-    defined(ia64) || defined(__ia64__) || \
-    defined(__hppa__) || defined(hpux) || \
-    defined(__mips) || defined(_MIPS_ARCH) || \
-    defined(__arm__) || \
-    defined(__sh__) || defined(__m32r__) || \
-    (defined(__sun) && defined(_IEEE_754)) || \
-    (defined(__alpha__) && (defined(__IEEE_FLOAT) || !defined(VMS)))
-#define USE_IEEE
-#define IEEE_ONE 0x3f800000
-#endif
 
 
 /***
@@ -316,17 +240,7 @@ static INLINE int GET_FLOAT_BITS( float x )
 /***
  *** IROUND: return (as an integer) float rounded to nearest integer
  ***/
-#if defined(USE_SPARC_ASM) && defined(__GNUC__) && defined(__sparc__)
-static INLINE int iround(float f)
-{
-   int r;
-   __asm__ ("fstoi %1, %0" : "=f" (r) : "f" (f));
-   return r;
-}
-#define IROUND(x)  iround(x)
-#elif defined(USE_X86_ASM) && defined(__GNUC__) && defined(__i386__) && \
-			(!(defined(__BEOS__) || defined(__HAIKU__))  || \
-			(__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)))
+#if defined(USE_X86_ASM) && defined(__GNUC__) && defined(__i386__)
 static INLINE int iround(float f)
 {
    int r;
@@ -359,6 +273,7 @@ long iround(float f);
 #define IROUND(f)  ((int) (((f) >= 0.0F) ? ((f) + 0.5F) : ((f) - 0.5F)))
 #endif
 
+#define IROUND64(f)  ((GLint64) (((f) >= 0.0F) ? ((f) + 0.5F) : ((f) - 0.5F)))
 
 /***
  *** IROUND_POS: return (as an integer) positive float rounded to nearest int
@@ -472,6 +387,62 @@ _mesa_is_pow_two(int x)
    return !(x & (x - 1));
 }
 
+/**
+ * Round given integer to next higer power of two
+ * If X is zero result is undefined.
+ *
+ * Source for the fallback implementation is
+ * Sean Eron Anderson's webpage "Bit Twiddling Hacks"
+ * http://graphics.stanford.edu/~seander/bithacks.html
+ *
+ * When using builtin function have to do some work
+ * for case when passed values 1 to prevent hiting
+ * undefined result from __builtin_clz. Undefined
+ * results would be different depending on optimization
+ * level used for build.
+ */
+static INLINE int32_t
+_mesa_next_pow_two_32(uint32_t x)
+{
+#if defined(__GNUC__) && \
+	((__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || __GNUC__ >= 4)
+	uint32_t y = (x != 1);
+	return (1 + y) << ((__builtin_clz(x - y) ^ 31) );
+#else
+	x--;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x++;
+	return x;
+#endif
+}
+
+static INLINE int64_t
+_mesa_next_pow_two_64(uint64_t x)
+{
+#if defined(__GNUC__) && \
+	((__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || __GNUC__ >= 4)
+	uint64_t y = (x != 1);
+	if (sizeof(x) == sizeof(long))
+		return (1 + y) << ((__builtin_clzl(x - y) ^ 63));
+	else
+		return (1 + y) << ((__builtin_clzll(x - y) ^ 63));
+#else
+	x--;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x |= x >> 32;
+	x++;
+	return x;
+#endif
+}
+
 
 /***
  *** UNCLAMPED_FLOAT_TO_UBYTE: clamp float to [0,1] and map to ubyte in [0,255]
@@ -509,113 +480,6 @@ _mesa_is_pow_two(int x)
 #endif
 
 
-/***
- *** START_FAST_MATH: Set x86 FPU to faster, 32-bit precision mode (and save
- ***                  original mode to a temporary).
- *** END_FAST_MATH: Restore x86 FPU to original mode.
- ***/
-#if defined(__GNUC__) && defined(__i386__)
-/*
- * Set the x86 FPU control word to guarentee only 32 bits of precision
- * are stored in registers.  Allowing the FPU to store more introduces
- * differences between situations where numbers are pulled out of memory
- * vs. situations where the compiler is able to optimize register usage.
- *
- * In the worst case, we force the compiler to use a memory access to
- * truncate the float, by specifying the 'volatile' keyword.
- */
-/* Hardware default: All exceptions masked, extended double precision,
- * round to nearest (IEEE compliant):
- */
-#define DEFAULT_X86_FPU		0x037f
-/* All exceptions masked, single precision, round to nearest:
- */
-#define FAST_X86_FPU		0x003f
-/* The fldcw instruction will cause any pending FP exceptions to be
- * raised prior to entering the block, and we clear any pending
- * exceptions before exiting the block.  Hence, asm code has free
- * reign over the FPU while in the fast math block.
- */
-#if defined(NO_FAST_MATH)
-#define START_FAST_MATH(x)						\
-do {									\
-   static GLuint mask = DEFAULT_X86_FPU;				\
-   __asm__ ( "fnstcw %0" : "=m" (*&(x)) );				\
-   __asm__ ( "fldcw %0" : : "m" (mask) );				\
-} while (0)
-#else
-#define START_FAST_MATH(x)						\
-do {									\
-   static GLuint mask = FAST_X86_FPU;					\
-   __asm__ ( "fnstcw %0" : "=m" (*&(x)) );				\
-   __asm__ ( "fldcw %0" : : "m" (mask) );				\
-} while (0)
-#endif
-/* Restore original FPU mode, and clear any exceptions that may have
- * occurred in the FAST_MATH block.
- */
-#define END_FAST_MATH(x)						\
-do {									\
-   __asm__ ( "fnclex ; fldcw %0" : : "m" (*&(x)) );			\
-} while (0)
-
-#elif defined(__WATCOMC__) && defined(__386__)
-#define DEFAULT_X86_FPU		0x037f /* See GCC comments above */
-#define FAST_X86_FPU		0x003f /* See GCC comments above */
-void _watcom_start_fast_math(unsigned short *x,unsigned short *mask);
-#pragma aux _watcom_start_fast_math =                                   \
-   "fnstcw  word ptr [eax]"                                             \
-   "fldcw   word ptr [ecx]"                                             \
-   parm [eax] [ecx]                                                     \
-   modify exact [];
-void _watcom_end_fast_math(unsigned short *x);
-#pragma aux _watcom_end_fast_math =                                     \
-   "fnclex"                                                             \
-   "fldcw   word ptr [eax]"                                             \
-   parm [eax]                                                           \
-   modify exact [];
-#if defined(NO_FAST_MATH)
-#define START_FAST_MATH(x)                                              \
-do {                                                                    \
-   static GLushort mask = DEFAULT_X86_FPU;	                            \
-   _watcom_start_fast_math(&x,&mask);                                   \
-} while (0)
-#else
-#define START_FAST_MATH(x)                                              \
-do {                                                                    \
-   static GLushort mask = FAST_X86_FPU;                                 \
-   _watcom_start_fast_math(&x,&mask);                                   \
-} while (0)
-#endif
-#define END_FAST_MATH(x)  _watcom_end_fast_math(&x)
-
-#elif defined(_MSC_VER) && defined(_M_IX86)
-#define DEFAULT_X86_FPU		0x037f /* See GCC comments above */
-#define FAST_X86_FPU		0x003f /* See GCC comments above */
-#if defined(NO_FAST_MATH)
-#define START_FAST_MATH(x) do {\
-	static GLuint mask = DEFAULT_X86_FPU;\
-	__asm fnstcw word ptr [x]\
-	__asm fldcw word ptr [mask]\
-} while(0)
-#else
-#define START_FAST_MATH(x) do {\
-	static GLuint mask = FAST_X86_FPU;\
-	__asm fnstcw word ptr [x]\
-	__asm fldcw word ptr [mask]\
-} while(0)
-#endif
-#define END_FAST_MATH(x) do {\
-	__asm fnclex\
-	__asm fldcw word ptr [x]\
-} while(0)
-
-#else
-#define START_FAST_MATH(x)  x = 0
-#define END_FAST_MATH(x)  (void)(x)
-#endif
-
-
 /**
  * Return 1 if this is a little endian machine, 0 if big endian.
  */
@@ -631,15 +495,6 @@ _mesa_little_endian(void)
 /**********************************************************************
  * Functions
  */
-
-extern void *
-_mesa_malloc( size_t bytes );
-
-extern void *
-_mesa_calloc( size_t bytes );
-
-extern void
-_mesa_free( void *ptr );
 
 extern void *
 _mesa_align_malloc( size_t bytes, unsigned long alignment );
@@ -663,20 +518,8 @@ _mesa_exec_free( void *addr );
 extern void *
 _mesa_realloc( void *oldBuffer, size_t oldSize, size_t newSize );
 
-extern void *
-_mesa_memcpy( void *dest, const void *src, size_t n );
-
-extern void
-_mesa_memset( void *dst, int val, size_t n );
-
 extern void
 _mesa_memset16( unsigned short *dst, unsigned short val, size_t n );
-
-extern void
-_mesa_bzero( void *dst, size_t n );
-
-extern int
-_mesa_memcmp( const void *s1, const void *s2, size_t n );
 
 extern double
 _mesa_sin(double a);
@@ -709,14 +552,10 @@ extern double
 _mesa_pow(double x, double y);
 
 extern int
-_mesa_ffs(int i);
+_mesa_ffs(int32_t i);
 
 extern int
-#ifdef __MINGW32__
-_mesa_ffsll(long i);
-#else
-_mesa_ffsll(long long i);
-#endif
+_mesa_ffsll(int64_t i);
 
 extern unsigned int
 _mesa_bitcount(unsigned int n);
@@ -736,50 +575,16 @@ extern char *
 _mesa_getenv( const char *var );
 
 extern char *
-_mesa_strstr( const char *haystack, const char *needle );
-
-extern char *
-_mesa_strncat( char *dest, const char *src, size_t n );
-
-extern char *
-_mesa_strcpy( char *dest, const char *src );
-
-extern char *
-_mesa_strncpy( char *dest, const char *src, size_t n );
-
-extern size_t
-_mesa_strlen( const char *s );
-
-extern int
-_mesa_strcmp( const char *s1, const char *s2 );
-
-extern int
-_mesa_strncmp( const char *s1, const char *s2, size_t n );
-
-extern char *
 _mesa_strdup( const char *s );
 
-extern int
-_mesa_atoi( const char *s );
+extern float
+_mesa_strtof( const char *s, char **end );
 
-extern double
-_mesa_strtod( const char *s, char **end );
-
-extern int
-_mesa_sprintf( char *str, const char *fmt, ... );
+extern unsigned int
+_mesa_str_checksum(const char *str);
 
 extern int
 _mesa_snprintf( char *str, size_t size, const char *fmt, ... );
-
-extern void
-_mesa_printf( const char *fmtString, ... );
-
-extern void
-_mesa_fprintf( FILE *f, const char *fmtString, ... );
-
-extern int 
-_mesa_vsprintf( char *str, const char *fmt, va_list args );
-
 
 extern void
 _mesa_warning( __GLcontext *gc, const char *fmtString, ... );
@@ -792,10 +597,6 @@ _mesa_error( __GLcontext *ctx, GLenum error, const char *fmtString, ... );
 
 extern void
 _mesa_debug( const __GLcontext *ctx, const char *fmtString, ... );
-
-extern void 
-_mesa_exit( int status );
-
 
 #ifdef __cplusplus
 }

@@ -1,8 +1,9 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.5
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -40,13 +41,12 @@
  */
 /*@{*/
 #define SPAN_RGBA       0x01  /**< interpMask and arrayMask */
-#define SPAN_INDEX      0x02  /**< interpMask and arrayMask */
-#define SPAN_Z          0x04  /**< interpMask and arrayMask */
-#define SPAN_FLAT       0x08  /**< interpMask: flat shading? */
-#define SPAN_XY         0x10  /**< array.x[], y[] valid? */
-#define SPAN_MASK       0x20  /**< was array.mask[] filled in by caller? */
-#define SPAN_LAMBDA     0x40  /**< array.lambda[] valid? */
-#define SPAN_COVERAGE   0x80  /**< array.coverage[] valid? */
+#define SPAN_Z          0x02  /**< interpMask and arrayMask */
+#define SPAN_FLAT       0x04  /**< interpMask: flat shading? */
+#define SPAN_XY         0x08  /**< array.x[], y[] valid? */
+#define SPAN_MASK       0x10  /**< was array.mask[] filled in by caller? */
+#define SPAN_LAMBDA     0x20  /**< array.lambda[] valid? */
+#define SPAN_COVERAGE   0x40  /**< array.coverage[] valid? */
 /*@}*/
 
 
@@ -105,6 +105,9 @@ typedef struct sw_span
 
    /** Number of fragments in the span */
    GLuint end;
+
+   /** for clipping left edge of spans */
+   GLuint leftClip;
 
    /** This flag indicates that mask[] array is effectively filled with ones */
    GLboolean writeAll;
@@ -165,6 +168,7 @@ do {						\
    (S).arrayMask = 0x0;				\
    (S).arrayAttribs = 0x0;			\
    (S).end = 0;					\
+   (S).leftClip = 0;				\
    (S).facing = 0;				\
    (S).array = SWRAST_CONTEXT(ctx)->SpanArrays;	\
 } while (0)
@@ -182,9 +186,6 @@ _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
                        GLfloat dqdx, GLfloat dqdy, GLfloat texW, GLfloat texH,
                        GLfloat s, GLfloat t, GLfloat q, GLfloat invQ);
 
-extern void
-_swrast_write_index_span( GLcontext *ctx, SWspan *span);
-
 
 extern void
 _swrast_write_rgba_span( GLcontext *ctx, SWspan *span);
@@ -193,10 +194,6 @@ _swrast_write_rgba_span( GLcontext *ctx, SWspan *span);
 extern void
 _swrast_read_rgba_span(GLcontext *ctx, struct gl_renderbuffer *rb,
                        GLuint n, GLint x, GLint y, GLenum type, GLvoid *rgba);
-
-extern void
-_swrast_read_index_span( GLcontext *ctx, struct gl_renderbuffer *rb,
-                         GLuint n, GLint x, GLint y, GLuint indx[] );
 
 extern void
 _swrast_get_values(GLcontext *ctx, struct gl_renderbuffer *rb,

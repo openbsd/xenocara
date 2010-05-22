@@ -27,12 +27,9 @@
 
 #include "main/enums.h"
 #include "main/state.h"
+#include "main/bufferobj.h"
 #include "main/context.h"
-#include "main/enable.h"
-#include "main/matrix.h"
 #include "swrast/swrast.h"
-#include "shader/arbprogram.h"
-#include "shader/program.h"
 
 #include "intel_context.h"
 #include "intel_pixel.h"
@@ -84,10 +81,10 @@ intel_check_blit_fragment_ops(GLcontext * ctx, GLboolean src_alpha_is_one)
       return GL_FALSE;
    }
 
-   if (!(ctx->Color.ColorMask[0] &&
-	 ctx->Color.ColorMask[1] &&
-	 ctx->Color.ColorMask[2] &&
-	 ctx->Color.ColorMask[3])) {
+   if (!(ctx->Color.ColorMask[0][0] &&
+	 ctx->Color.ColorMask[0][1] &&
+	 ctx->Color.ColorMask[0][2] &&
+	 ctx->Color.ColorMask[0][3])) {
       DBG("fallback due to color masking\n");
       return GL_FALSE;
    }
@@ -112,7 +109,7 @@ intel_check_blit_fragment_ops(GLcontext * ctx, GLboolean src_alpha_is_one)
       return GL_FALSE;
    }
 
-   if (ctx->Stencil.Enabled) {
+   if (ctx->Stencil._Enabled) {
       DBG("fallback due to image stencil\n");
       return GL_FALSE;
    }
@@ -123,20 +120,6 @@ intel_check_blit_fragment_ops(GLcontext * ctx, GLboolean src_alpha_is_one)
    }
 
    return GL_TRUE;
-}
-
-
-GLboolean
-intel_check_meta_tex_fragment_ops(GLcontext * ctx)
-{
-   if (ctx->NewState)
-      _mesa_update_state(ctx);
-
-   /* Some of _ImageTransferState (scale, bias) could be done with
-    * fragment programs on i915.
-    */
-   return !(ctx->_ImageTransferState || ctx->Fog.Enabled ||     /* not done yet */
-            ctx->Texture._EnabledUnits || ctx->FragmentProgram._Enabled);
 }
 
 /* The intel_region struct doesn't really do enough to capture the
@@ -173,163 +156,6 @@ intel_check_blit_format(struct intel_region * region,
 }
 
 void
-intel_meta_set_passthrough_transform(struct intel_context *intel)
-{
-   GLcontext *ctx = &intel->ctx;
-
-   intel->meta.saved_vp_x = ctx->Viewport.X;
-   intel->meta.saved_vp_y = ctx->Viewport.Y;
-   intel->meta.saved_vp_width = ctx->Viewport.Width;
-   intel->meta.saved_vp_height = ctx->Viewport.Height;
-   intel->meta.saved_matrix_mode = ctx->Transform.MatrixMode;
-
-   _mesa_Viewport(0, 0, ctx->DrawBuffer->Width, ctx->DrawBuffer->Height);
-
-   _mesa_MatrixMode(GL_PROJECTION);
-   _mesa_PushMatrix();
-   _mesa_LoadIdentity();
-   _mesa_Ortho(0, ctx->DrawBuffer->Width, 0, ctx->DrawBuffer->Height, 1, -1);
-
-   _mesa_MatrixMode(GL_MODELVIEW);
-   _mesa_PushMatrix();
-   _mesa_LoadIdentity();
-}
-
-void
-intel_meta_restore_transform(struct intel_context *intel)
-{
-   _mesa_MatrixMode(GL_PROJECTION);
-   _mesa_PopMatrix();
-   _mesa_MatrixMode(GL_MODELVIEW);
-   _mesa_PopMatrix();
-
-   _mesa_MatrixMode(intel->meta.saved_matrix_mode);
-
-   _mesa_Viewport(intel->meta.saved_vp_x, intel->meta.saved_vp_y,
-		  intel->meta.saved_vp_width, intel->meta.saved_vp_height);
-}
-
-/**
- * Set up a vertex program to pass through the position and first texcoord
- * for pixel path.
- */
-void
-intel_meta_set_passthrough_vertex_program(struct intel_context *intel)
-{
-   GLcontext *ctx = &intel->ctx;
-   static const char *vp =
-      "!!ARBvp1.0\n"
-      "TEMP vertexClip;\n"
-      "DP4 vertexClip.x, state.matrix.mvp.row[0], vertex.position;\n"
-      "DP4 vertexClip.y, state.matrix.mvp.row[1], vertex.position;\n"
-      "DP4 vertexClip.z, state.matrix.mvp.row[2], vertex.position;\n"
-      "DP4 vertexClip.w, state.matrix.mvp.row[3], vertex.position;\n"
-      "MOV result.position, vertexClip;\n"
-      "MOV result.texcoord[0], vertex.texcoord[0];\n"
-      "MOV result.color, vertex.color;\n"
-      "END\n";
-
-   assert(intel->meta.saved_vp == NULL);
-
-   _mesa_reference_vertprog(ctx, &intel->meta.saved_vp,
-			    ctx->VertexProgram.Current);
-   if (intel->meta.passthrough_vp == NULL) {
-      GLuint prog_name;
-      _mesa_GenPrograms(1, &prog_name);
-      _mesa_BindProgram(GL_VERTEX_PROGRAM_ARB, prog_name);
-      _mesa_ProgramStringARB(GL_VERTEX_PROGRAM_ARB,
-			     GL_PROGRAM_FORMAT_ASCII_ARB,
-			     strlen(vp), (const GLubyte *)vp);
-      _mesa_reference_vertprog(ctx, &intel->meta.passthrough_vp,
-			       ctx->VertexProgram.Current);
-      _mesa_DeletePrograms(1, &prog_name);
-   }
-
-   FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-   _mesa_reference_vertprog(ctx, &ctx->VertexProgram.Current,
-			    intel->meta.passthrough_vp);
-   ctx->Driver.BindProgram(ctx, GL_VERTEX_PROGRAM_ARB,
-			   &intel->meta.passthrough_vp->Base);
-
-   intel->meta.saved_vp_enable = ctx->VertexProgram.Enabled;
-   _mesa_Enable(GL_VERTEX_PROGRAM_ARB);
-}
-
-/**
- * Restores the previous vertex program after
- * intel_meta_set_passthrough_vertex_program()
- */
-void
-intel_meta_restore_vertex_program(struct intel_context *intel)
-{
-   GLcontext *ctx = &intel->ctx;
-
-   FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-   _mesa_reference_vertprog(ctx, &ctx->VertexProgram.Current,
-			    intel->meta.saved_vp);
-   _mesa_reference_vertprog(ctx, &intel->meta.saved_vp, NULL);
-   ctx->Driver.BindProgram(ctx, GL_VERTEX_PROGRAM_ARB,
-			   &ctx->VertexProgram.Current->Base);
-
-   if (!intel->meta.saved_vp_enable)
-      _mesa_Disable(GL_VERTEX_PROGRAM_ARB);
-}
-
-/**
- * Binds the given program string to GL_FRAGMENT_PROGRAM_ARB, caching the
- * program object.
- */
-void
-intel_meta_set_fragment_program(struct intel_context *intel,
-				struct gl_fragment_program **prog,
-				const char *prog_string)
-{
-   GLcontext *ctx = &intel->ctx;
-   assert(intel->meta.saved_fp == NULL);
-
-   _mesa_reference_fragprog(ctx, &intel->meta.saved_fp,
-			    ctx->FragmentProgram.Current);
-   if (*prog == NULL) {
-      GLuint prog_name;
-      _mesa_GenPrograms(1, &prog_name);
-      _mesa_BindProgram(GL_FRAGMENT_PROGRAM_ARB, prog_name);
-      _mesa_ProgramStringARB(GL_FRAGMENT_PROGRAM_ARB,
-			     GL_PROGRAM_FORMAT_ASCII_ARB,
-			     strlen(prog_string), (const GLubyte *)prog_string);
-      _mesa_reference_fragprog(ctx, prog, ctx->FragmentProgram.Current);
-      /* Note that DeletePrograms unbinds the program on us */
-      _mesa_DeletePrograms(1, &prog_name);
-   }
-
-   FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram.Current, *prog);
-   ctx->Driver.BindProgram(ctx, GL_FRAGMENT_PROGRAM_ARB, &((*prog)->Base));
-
-   intel->meta.saved_fp_enable = ctx->FragmentProgram.Enabled;
-   _mesa_Enable(GL_FRAGMENT_PROGRAM_ARB);
-}
-
-/**
- * Restores the previous fragment program after
- * intel_meta_set_fragment_program()
- */
-void
-intel_meta_restore_fragment_program(struct intel_context *intel)
-{
-   GLcontext *ctx = &intel->ctx;
-
-   FLUSH_VERTICES(ctx, _NEW_PROGRAM);
-   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram.Current,
-			    intel->meta.saved_fp);
-   _mesa_reference_fragprog(ctx, &intel->meta.saved_fp, NULL);
-   ctx->Driver.BindProgram(ctx, GL_FRAGMENT_PROGRAM_ARB,
-			   &ctx->FragmentProgram.Current->Base);
-
-   if (!intel->meta.saved_fp_enable)
-      _mesa_Disable(GL_FRAGMENT_PROGRAM_ARB);
-}
-
-void
 intelInitPixelFuncs(struct dd_function_table *functions)
 {
    functions->Accum = _swrast_Accum;
@@ -337,18 +163,7 @@ intelInitPixelFuncs(struct dd_function_table *functions)
       functions->Bitmap = intelBitmap;
       functions->CopyPixels = intelCopyPixels;
       functions->DrawPixels = intelDrawPixels;
-#ifdef I915
-      functions->ReadPixels = intelReadPixels;
-#endif
    }
-}
-
-void
-intel_free_pixel_state(struct intel_context *intel)
-{
-   GLcontext *ctx = &intel->ctx;
-
-   _mesa_reference_vertprog(ctx, &intel->meta.passthrough_vp, NULL);
-   _mesa_reference_fragprog(ctx, &intel->meta.bitmap_fp, NULL);
+   functions->ReadPixels = intelReadPixels;
 }
 

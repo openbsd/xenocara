@@ -203,10 +203,18 @@ special(int k, int x, int y)
 }
 
 static void
+cleanup(void)
+{
+   glDeleteTextures(1, &t1id);
+   glDeleteTextures(1, &t2id);
+}
+
+static void
 key(unsigned char k, int x, int y)
 {
    switch (k) {
    case 27:
+      cleanup();
       exit(0);
       break;
 
@@ -483,7 +491,6 @@ main(int ac, char **av)
    fprintf(stderr,
 	   "Tunnel V1.5\nWritten by David Bucciarelli (tech.hmw@plus.it)\n");
 
-   glutInitWindowPosition(0, 0);
    glutInitWindowSize(WIDTH, HEIGHT);
    glutInit(&ac, av);
 
@@ -531,5 +538,6 @@ main(int ac, char **av)
 
    glutMainLoop();
 
+   cleanup();
    return 0;
 }

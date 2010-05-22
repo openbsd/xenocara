@@ -38,7 +38,6 @@
 
 #include "main/imports.h"
 #include "main/context.h"
-#include "main/macros.h"
 #include "shader/program.h"
 #include "shader/prog_instruction.h"
 #include "shader/prog_parameter.h"
@@ -62,6 +61,8 @@ typedef struct
 
    GLuint MaxInstructions;  /**< size of prog->Instructions[] buffer */
 
+   GLboolean UnresolvedFunctions;
+
    /* code-gen options */
    GLboolean EmitHighLevelInstructions;
    GLboolean EmitCondCodes;
@@ -79,8 +80,8 @@ new_subroutine(slang_emit_info *emitInfo, GLuint *id)
 
    emitInfo->Subroutines = (struct gl_program **)
       _mesa_realloc(emitInfo->Subroutines,
-                    n * sizeof(struct gl_program),
-                    (n + 1) * sizeof(struct gl_program));
+                    n * sizeof(struct gl_program *),
+                    (n + 1) * sizeof(struct gl_program *));
    emitInfo->Subroutines[n] = ctx->Driver.NewProgram(ctx, emitInfo->prog->Target, 0);
    emitInfo->Subroutines[n]->Parameters = emitInfo->prog->Parameters;
    emitInfo->NumSubroutines++;
@@ -193,6 +194,9 @@ alloc_node_storage(slang_emit_info *emitInfo, slang_ir_node *n,
    if (!n->Store) {
       assert(defaultSize > 0);
       n->Store = _slang_new_ir_storage(PROGRAM_TEMPORARY, -1, defaultSize);
+      if (!n->Store) {
+         return GL_FALSE;
+      }
    }
 
    /* now allocate actual register(s).  I.e. set n->Store->Index >= 0 */
@@ -237,7 +241,7 @@ alloc_local_temp(slang_emit_info *emitInfo, slang_ir_storage *temp, GLint size)
 {
    assert(size >= 1);
    assert(size <= 4);
-   _mesa_bzero(temp, sizeof(*temp));
+   memset(temp, 0, sizeof(*temp));
    temp->Size = size;
    temp->File = PROGRAM_TEMPORARY;
    temp->Index = -1;
@@ -429,6 +433,9 @@ new_instruction(slang_emit_info *emitInfo, gl_inst_opcode opcode)
          _mesa_realloc_instructions(prog->Instructions,
                                     prog->NumInstructions,
                                     emitInfo->MaxInstructions);
+      if (!prog->Instructions) {
+         return NULL;
+      }
    }
 
    inst = prog->Instructions + prog->NumInstructions;
@@ -446,15 +453,17 @@ new_instruction(slang_emit_info *emitInfo, gl_inst_opcode opcode)
 
 static struct prog_instruction *
 emit_arl_load(slang_emit_info *emitInfo,
-              enum register_file file, GLint index, GLuint swizzle)
+              gl_register_file file, GLint index, GLuint swizzle)
 {
    struct prog_instruction *inst = new_instruction(emitInfo, OPCODE_ARL);
-   inst->SrcReg[0].File = file;
-   inst->SrcReg[0].Index = index;
-   inst->SrcReg[0].Swizzle = fix_swizzle(swizzle);
-   inst->DstReg.File = PROGRAM_ADDRESS;
-   inst->DstReg.Index = 0;
-   inst->DstReg.WriteMask = WRITEMASK_X;
+   if (inst) {
+      inst->SrcReg[0].File = file;
+      inst->SrcReg[0].Index = index;
+      inst->SrcReg[0].Swizzle = fix_swizzle(swizzle);
+      inst->DstReg.File = PROGRAM_ADDRESS;
+      inst->DstReg.Index = 0;
+      inst->DstReg.WriteMask = WRITEMASK_X;
+   }
    return inst;
 }
 
@@ -541,6 +550,9 @@ emit_instruction(slang_emit_info *emitInfo,
                                        &srcRelAddr,
                                        NULL,
                                        NULL);
+               if (!inst) {
+                  return NULL;
+               }
 
                src[i] = &newSrc[i];
             }
@@ -742,7 +754,7 @@ instruction_annotation(gl_inst_opcode opcode, char *dstAnnot,
    s = (char *) malloc(len);
    sprintf(s, "%s = %s %s %s %s", dstAnnot,
            srcAnnot0, operator, srcAnnot1, srcAnnot2);
-   assert(_mesa_strlen(s) < len);
+   assert(strlen(s) < len);
 
    free(dstAnnot);
    free(srcAnnot0);
@@ -763,7 +775,9 @@ static struct prog_instruction *
 emit_comment(slang_emit_info *emitInfo, const char *comment)
 {
    struct prog_instruction *inst = new_instruction(emitInfo, OPCODE_NOP);
-   inst_comment(inst, comment);
+   if (inst) {
+      inst_comment(inst, comment);
+   }
    return inst;
 }
 
@@ -790,7 +804,9 @@ emit_arith(slang_emit_info *emitInfo, slang_ir_node *n)
       emit(emitInfo, n->Children[0]->Children[0]);  /* A */
       emit(emitInfo, n->Children[0]->Children[1]);  /* B */
       emit(emitInfo, n->Children[1]);  /* C */
-      alloc_node_storage(emitInfo, n, -1);  /* dest */
+      if (!alloc_node_storage(emitInfo, n, -1)) {  /* dest */
+         return NULL;
+      }
 
       inst = emit_instruction(emitInfo,
                               OPCODE_MAD,
@@ -811,7 +827,9 @@ emit_arith(slang_emit_info *emitInfo, slang_ir_node *n)
       emit(emitInfo, n->Children[0]);  /* A */
       emit(emitInfo, n->Children[1]->Children[0]);  /* B */
       emit(emitInfo, n->Children[1]->Children[1]);  /* C */
-      alloc_node_storage(emitInfo, n, -1);  /* dest */
+      if (!alloc_node_storage(emitInfo, n, -1)) {  /* dest */
+         return NULL;
+      }
 
       inst = emit_instruction(emitInfo,
                               OPCODE_MAD,
@@ -837,7 +855,9 @@ emit_arith(slang_emit_info *emitInfo, slang_ir_node *n)
    }
 
    /* result storage */
-   alloc_node_storage(emitInfo, n, -1);
+   if (!alloc_node_storage(emitInfo, n, -1)) {
+      return NULL;
+   }
 
    inst = emit_instruction(emitInfo,
                            info->InstOpcode,
@@ -872,6 +892,7 @@ emit_compare(slang_emit_info *emitInfo, slang_ir_node *n)
    emit(emitInfo, n->Children[1]);
 
    if (n->Children[0]->Store->Size != n->Children[1]->Store->Size) {
+      /* XXX this error should have been caught in slang_codegen.c */
       slang_info_log_error(emitInfo->log, "invalid operands to == or !=");
       n->Store = NULL;
       return NULL;
@@ -929,6 +950,9 @@ emit_compare(slang_emit_info *emitInfo, slang_ir_node *n)
                               n->Children[0]->Store,
                               n->Children[1]->Store,
                               NULL);
+      if (!inst) {
+         return NULL;
+      }
       inst_comment(inst, "Compare values");
 
       /* Compute val = DOT(temp, temp)  (reduction) */
@@ -938,6 +962,9 @@ emit_compare(slang_emit_info *emitInfo, slang_ir_node *n)
                               &tempStore,
                               &tempStore,
                               NULL);
+      if (!inst) {
+         return NULL;
+      }
       inst->SrcReg[0].Swizzle = inst->SrcReg[1].Swizzle = swizzle; /*override*/
       inst_comment(inst, "Reduce vec to bool");
 
@@ -953,6 +980,9 @@ emit_compare(slang_emit_info *emitInfo, slang_ir_node *n)
                                  n->Store,
                                  &zero,
                                  NULL);
+         if (!inst) {
+            return NULL;
+         }
          inst_comment(inst, "Invert true/false");
       }
    }
@@ -982,6 +1012,9 @@ emit_compare(slang_emit_info *emitInfo, slang_ir_node *n)
                                     &srcStore0,
                                     &srcStore1,
                                     NULL);
+            if (!inst) {
+               return NULL;
+            }
             inst_comment(inst, "Begin struct/array comparison");
          }
          else {
@@ -991,12 +1024,18 @@ emit_compare(slang_emit_info *emitInfo, slang_ir_node *n)
                                     &srcStore0,
                                     &srcStore1,
                                     NULL);
+            if (!inst) {
+               return NULL;
+            }
             /* ADD accTemp, accTemp, sneTemp; # like logical-OR */
             inst = emit_instruction(emitInfo, OPCODE_ADD,
                                     &accTemp, /* dest */
                                     &accTemp,
                                     &sneTemp,
                                     NULL);
+            if (!inst) {
+               return NULL;
+            }
          }
       }
 
@@ -1006,6 +1045,9 @@ emit_compare(slang_emit_info *emitInfo, slang_ir_node *n)
                               &accTemp,
                               &accTemp,
                               NULL);
+      if (!inst) {
+         return NULL;
+      }
       inst_comment(inst, "End struct/array comparison");
 
       if (n->Opcode == IR_EQUAL) {
@@ -1017,6 +1059,9 @@ emit_compare(slang_emit_info *emitInfo, slang_ir_node *n)
                                  n->Store,
                                  &zero,
                                  NULL);
+         if (!inst) {
+            return NULL;
+         }
          inst_comment(inst, "Invert true/false");
       }
 
@@ -1077,6 +1122,8 @@ emit_clamp(slang_emit_info *emitInfo, slang_ir_node *n)
          return inst;
       }
    }
+#else
+   (void) inst;
 #endif
 
    if (!alloc_node_storage(emitInfo, n, n->Children[0]->Store->Size))
@@ -1089,8 +1136,10 @@ emit_clamp(slang_emit_info *emitInfo, slang_ir_node *n)
     * dest for this clamp() is an output reg, we can't use that reg for
     * the intermediate result.  Use a temp register instead.
     */
-   _mesa_bzero(&tmpNode, sizeof(tmpNode));
-   alloc_node_storage(emitInfo, &tmpNode, n->Store->Size);
+   memset(&tmpNode, 0, sizeof(tmpNode));
+   if (!alloc_node_storage(emitInfo, &tmpNode, n->Store->Size)) {
+      return NULL;
+   }
 
    /* tmp = max(ch[0], ch[1]) */
    inst = emit_instruction(emitInfo, OPCODE_MAX,
@@ -1098,6 +1147,9 @@ emit_clamp(slang_emit_info *emitInfo, slang_ir_node *n)
                            n->Children[0]->Store,
                            n->Children[1]->Store,
                            NULL);
+   if (!inst) {
+      return NULL;
+   }
 
    /* n->dest = min(tmp, ch[2]) */
    inst = emit_instruction(emitInfo, OPCODE_MIN,
@@ -1132,7 +1184,9 @@ emit_negation(slang_emit_info *emitInfo, slang_ir_node *n)
                            n->Children[0]->Store,
                            NULL,
                            NULL);
-   inst->SrcReg[0].NegateBase = NEGATE_XYZW;
+   if (inst) {
+      inst->SrcReg[0].Negate = NEGATE_XYZW;
+   }
    return inst;
 }
 
@@ -1188,6 +1242,9 @@ emit_fcall(slang_emit_info *emitInfo, slang_ir_node *n)
        * really just a NOP to attach the label to.
        */
       inst = new_instruction(emitInfo, OPCODE_BGNSUB);
+      if (!inst) {
+         return NULL;
+      }
       inst_comment(inst, n->Label->Name);
    }
 
@@ -1199,10 +1256,16 @@ emit_fcall(slang_emit_info *emitInfo, slang_ir_node *n)
    inst = prev_instruction(emitInfo);
    if (inst && inst->Opcode != OPCODE_RET) {
       inst = new_instruction(emitInfo, OPCODE_RET);
+      if (!inst) {
+         return NULL;
+      }
    }
 
    if (emitInfo->EmitBeginEndSub) {
       inst = new_instruction(emitInfo, OPCODE_ENDSUB);
+      if (!inst) {
+         return NULL;
+      }
       inst_comment(inst, n->Label->Name);
    }
 
@@ -1212,6 +1275,9 @@ emit_fcall(slang_emit_info *emitInfo, slang_ir_node *n)
 
    /* emit the function call */
    inst = new_instruction(emitInfo, OPCODE_CAL);
+   if (!inst) {
+      return NULL;
+   }
    /* The branch target is just the subroutine number (changed later) */
    inst->BranchTarget = subroutineId;
    inst_comment(inst, n->Label->Name);
@@ -1232,7 +1298,9 @@ emit_return(slang_emit_info *emitInfo, slang_ir_node *n)
    assert(n->Opcode == IR_RETURN);
    assert(n->Label);
    inst = new_instruction(emitInfo, OPCODE_RET);
-   inst->DstReg.CondMask = COND_TR;  /* always return */
+   if (inst) {
+      inst->DstReg.CondMask = COND_TR;  /* always return */
+   }
    return inst;
 }
 
@@ -1246,6 +1314,9 @@ emit_kill(slang_emit_info *emitInfo)
     * Note that ARB-KILL depends on sign of vector operand.
     */
    inst = new_instruction(emitInfo, OPCODE_KIL_NV);
+   if (!inst) {
+      return NULL;
+   }
    inst->DstReg.CondMask = COND_TR;  /* always kill */
 
    assert(emitInfo->prog->Target == GL_FRAGMENT_PROGRAM_ARB);
@@ -1261,16 +1332,33 @@ emit_tex(slang_emit_info *emitInfo, slang_ir_node *n)
 {
    struct prog_instruction *inst;
    gl_inst_opcode opcode;
+   GLboolean shadow = GL_FALSE;
 
-   if (n->Opcode == IR_TEX) {
+   switch (n->Opcode) {
+   case IR_TEX:
       opcode = OPCODE_TEX;
-   }
-   else if (n->Opcode == IR_TEXB) {
+      break;
+   case IR_TEX_SH:
+      opcode = OPCODE_TEX;
+      shadow = GL_TRUE;
+      break;
+   case IR_TEXB:
       opcode = OPCODE_TXB;
-   }
-   else {
-      assert(n->Opcode == IR_TEXP);
+      break;
+   case IR_TEXB_SH:
+      opcode = OPCODE_TXB;
+      shadow = GL_TRUE;
+      break;
+   case IR_TEXP:
       opcode = OPCODE_TXP;
+      break;
+   case IR_TEXP_SH:
+      opcode = OPCODE_TXP;
+      shadow = GL_TRUE;
+      break;
+   default:
+      _mesa_problem(NULL, "Bad IR TEX code");
+      return NULL;
    }
 
    if (n->Children[0]->Opcode == IR_ELEMENT) {
@@ -1301,6 +1389,11 @@ emit_tex(slang_emit_info *emitInfo, slang_ir_node *n)
                            n->Children[1]->Store,
                            NULL,
                            NULL);
+   if (!inst) {
+      return NULL;
+   }
+
+   inst->TexShadow = shadow;
 
    /* Store->Index is the uniform/sampler index */
    assert(n->Children[0]->Store->Index >= 0);
@@ -1337,7 +1430,8 @@ emit_copy(slang_emit_info *emitInfo, slang_ir_node *n)
    inst = emit(emitInfo, n->Children[1]);
 
    if (!n->Children[1]->Store || n->Children[1]->Store->Index < 0) {
-      if (!emitInfo->log->text) {
+      if (!emitInfo->log->text && !emitInfo->UnresolvedFunctions) {
+         /* XXX this error should have been caught in slang_codegen.c */
          slang_info_log_error(emitInfo->log, "invalid assignment");
       }
       return NULL;
@@ -1400,6 +1494,9 @@ emit_copy(slang_emit_info *emitInfo, slang_ir_node *n)
                                     &srcStore,
                                     NULL,
                                     NULL);
+            if (!inst) {
+               return NULL;
+            }
             inst_comment(inst, "IR_COPY block");
             srcStore.Index++;
             dstStore.Index++;
@@ -1415,6 +1512,9 @@ emit_copy(slang_emit_info *emitInfo, slang_ir_node *n)
                                  n->Children[1]->Store,
                                  NULL,
                                  NULL);
+         if (!inst) {
+            return NULL;
+         }
          dstAnnot = storage_annotation(n->Children[0], emitInfo->prog);
          srcAnnot = storage_annotation(n->Children[1], emitInfo->prog);
          inst->Comment = instruction_annotation(inst->Opcode, dstAnnot,
@@ -1476,6 +1576,9 @@ emit_cond(slang_emit_info *emitInfo, slang_ir_node *n)
                                  n->Children[0]->Store,
                                  NULL,
                                  NULL);
+         if (!inst) {
+            return NULL;
+         }
          inst->CondUpdate = GL_TRUE;
          inst_comment(inst, "COND expr");
          _slang_free_temp(emitInfo->vt, n->Store);
@@ -1538,6 +1641,9 @@ emit_not(slang_emit_info *emitInfo, slang_ir_node *n)
                            n->Children[0]->Store,
                            &zero,
                            NULL);
+   if (!inst) {
+      return NULL;
+   }
    inst_comment(inst, "NOT");
 
    free_node_storage(emitInfo->vt, n->Children[0]);
@@ -1577,8 +1683,10 @@ emit_if(slang_emit_info *emitInfo, slang_ir_node *n)
    if (emitInfo->EmitHighLevelInstructions) {
       if (emitInfo->EmitCondCodes) {
          /* IF condcode THEN ... */
-         struct prog_instruction *ifInst;
-         ifInst = new_instruction(emitInfo, OPCODE_IF);
+         struct prog_instruction *ifInst = new_instruction(emitInfo, OPCODE_IF);
+         if (!ifInst) {
+            return NULL;
+         }
          ifInst->DstReg.CondMask = COND_NE;  /* if cond is non-zero */
          /* only test the cond code (1 of 4) that was updated by the
           * previous instruction.
@@ -1586,17 +1694,25 @@ emit_if(slang_emit_info *emitInfo, slang_ir_node *n)
          ifInst->DstReg.CondSwizzle = writemask_to_swizzle(condWritemask);
       }
       else {
+         struct prog_instruction *inst;
+
          /* IF src[0] THEN ... */
-         emit_instruction(emitInfo, OPCODE_IF,
-                          NULL, /* dst */
-                          n->Children[0]->Store, /* op0 */
-                          NULL,
-                          NULL);
+         inst = emit_instruction(emitInfo, OPCODE_IF,
+                                 NULL, /* dst */
+                                 n->Children[0]->Store, /* op0 */
+                                 NULL,
+                                 NULL);
+         if (!inst) {
+            return NULL;
+         }
       }
    }
    else {
       /* conditional jump to else, or endif */
       struct prog_instruction *ifInst = new_instruction(emitInfo, OPCODE_BRA);
+      if (!ifInst) {
+         return NULL;
+      }
       ifInst->DstReg.CondMask = COND_EQ;  /* BRA if cond is zero */
       inst_comment(ifInst, "if zero");
       ifInst->DstReg.CondSwizzle = writemask_to_swizzle(condWritemask);
@@ -1609,16 +1725,22 @@ emit_if(slang_emit_info *emitInfo, slang_ir_node *n)
       /* have else body */
       elseInstLoc = prog->NumInstructions;
       if (emitInfo->EmitHighLevelInstructions) {
-         (void) new_instruction(emitInfo, OPCODE_ELSE);
+         struct prog_instruction *inst = new_instruction(emitInfo, OPCODE_ELSE);
+         if (!inst) {
+            return NULL;
+         }
+         prog->Instructions[ifInstLoc].BranchTarget = prog->NumInstructions - 1;
       }
       else {
          /* jump to endif instruction */
-         struct prog_instruction *inst;
-         inst = new_instruction(emitInfo, OPCODE_BRA);
+         struct prog_instruction *inst = new_instruction(emitInfo, OPCODE_BRA);
+         if (!inst) {
+            return NULL;
+         }
          inst_comment(inst, "else");
          inst->DstReg.CondMask = COND_TR;  /* always branch */
+         prog->Instructions[ifInstLoc].BranchTarget = prog->NumInstructions;
       }
-      prog->Instructions[ifInstLoc].BranchTarget = prog->NumInstructions;
       emit(emitInfo, n->Children[2]);
    }
    else {
@@ -1627,11 +1749,20 @@ emit_if(slang_emit_info *emitInfo, slang_ir_node *n)
    }
 
    if (emitInfo->EmitHighLevelInstructions) {
-      (void) new_instruction(emitInfo, OPCODE_ENDIF);
+      struct prog_instruction *inst = new_instruction(emitInfo, OPCODE_ENDIF);
+      if (!inst) {
+         return NULL;
+      }
    }
 
-   if (n->Children[2]) {
-      prog->Instructions[elseInstLoc].BranchTarget = prog->NumInstructions;
+   if (elseInstLoc) {
+      /* point ELSE instruction BranchTarget at ENDIF */
+      if (emitInfo->EmitHighLevelInstructions) {
+         prog->Instructions[elseInstLoc].BranchTarget = prog->NumInstructions - 1;
+      }
+      else {
+         prog->Instructions[elseInstLoc].BranchTarget = prog->NumInstructions;
+      }
    }
    return NULL;
 }
@@ -1648,7 +1779,10 @@ emit_loop(slang_emit_info *emitInfo, slang_ir_node *n)
    /* emit OPCODE_BGNLOOP */
    beginInstLoc = prog->NumInstructions;
    if (emitInfo->EmitHighLevelInstructions) {
-      (void) new_instruction(emitInfo, OPCODE_BGNLOOP);
+      struct prog_instruction *inst = new_instruction(emitInfo, OPCODE_BGNLOOP);
+      if (!inst) {
+         return NULL;
+      }
    }
 
    /* body */
@@ -1666,10 +1800,16 @@ emit_loop(slang_emit_info *emitInfo, slang_ir_node *n)
    if (emitInfo->EmitHighLevelInstructions) {
       /* emit OPCODE_ENDLOOP */
       endInst = new_instruction(emitInfo, OPCODE_ENDLOOP);
+      if (!endInst) {
+         return NULL;
+      }
    }
    else {
       /* emit unconditional BRA-nch */
       endInst = new_instruction(emitInfo, OPCODE_BRA);
+      if (!endInst) {
+         return NULL;
+      }
       endInst->DstReg.CondMask = COND_TR;  /* always true */
    }
    /* ENDLOOP's BranchTarget points to the BGNLOOP inst */
@@ -1682,7 +1822,7 @@ emit_loop(slang_emit_info *emitInfo, slang_ir_node *n)
 
    /* Done emitting loop code.  Now walk over the loop's linked list of
     * BREAK and CONT nodes, filling in their BranchTarget fields (which
-    * will point to the ENDLOOP+1 or BGNLOOP instructions, respectively).
+    * will point to the corresponding ENDLOOP instruction.
     */
    for (ir = n->List; ir; ir = ir->List) {
       struct prog_instruction *inst = prog->Instructions + ir->InstLocation;
@@ -1691,8 +1831,13 @@ emit_loop(slang_emit_info *emitInfo, slang_ir_node *n)
           ir->Opcode == IR_BREAK_IF_TRUE) {
          assert(inst->Opcode == OPCODE_BRK ||
                 inst->Opcode == OPCODE_BRA);
-         /* go to instruction after end of loop */
-         inst->BranchTarget = endInstLoc + 1;
+         /* go to instruction at end of loop */
+         if (emitInfo->EmitHighLevelInstructions) {
+            inst->BranchTarget = endInstLoc;
+         }
+         else {
+            inst->BranchTarget = endInstLoc + 1;
+         }
       }
       else {
          assert(ir->Opcode == IR_CONT ||
@@ -1739,7 +1884,9 @@ emit_cont_break(slang_emit_info *emitInfo, slang_ir_node *n)
    }
    n->InstLocation = emitInfo->prog->NumInstructions;
    inst = new_instruction(emitInfo, opcode);
-   inst->DstReg.CondMask = COND_TR;  /* always true */
+   if (inst) {
+      inst->DstReg.CondMask = COND_TR;  /* always true */
+   }
    return inst;
 }
 
@@ -1775,8 +1922,10 @@ emit_cont_break_if_true(slang_emit_info *emitInfo, slang_ir_node *n)
           */
          const GLuint condWritemask = inst->DstReg.WriteMask;
          inst = new_instruction(emitInfo, opcode);
-         inst->DstReg.CondMask = COND_NE;
-         inst->DstReg.CondSwizzle = writemask_to_swizzle(condWritemask);
+         if (inst) {
+            inst->DstReg.CondMask = COND_NE;
+            inst->DstReg.CondSwizzle = writemask_to_swizzle(condWritemask);
+         }
          return inst;
       }
       else {
@@ -1791,13 +1940,22 @@ emit_cont_break_if_true(slang_emit_info *emitInfo, slang_ir_node *n)
                                  n->Children[0]->Store,
                                  NULL,
                                  NULL);
+         if (!inst) {
+            return NULL;
+         }
          n->InstLocation = emitInfo->prog->NumInstructions;
 
          inst = new_instruction(emitInfo, opcode);
+         if (!inst) {
+            return NULL;
+         }
          inst = new_instruction(emitInfo, OPCODE_ENDIF);
+         if (!inst) {
+            return NULL;
+         }
 
          emitInfo->prog->Instructions[ifInstLoc].BranchTarget
-            = emitInfo->prog->NumInstructions;
+            = emitInfo->prog->NumInstructions - 1;
          return inst;
       }
    }
@@ -1805,8 +1963,10 @@ emit_cont_break_if_true(slang_emit_info *emitInfo, slang_ir_node *n)
       const GLuint condWritemask = inst->DstReg.WriteMask;
       assert(emitInfo->EmitCondCodes);
       inst = new_instruction(emitInfo, OPCODE_BRA);
-      inst->DstReg.CondMask = COND_NE;
-      inst->DstReg.CondSwizzle = writemask_to_swizzle(condWritemask);
+      if (inst) {
+         inst->DstReg.CondMask = COND_NE;
+         inst->DstReg.CondSwizzle = writemask_to_swizzle(condWritemask);
+      }
       return inst;
    }
 }
@@ -1953,6 +2113,9 @@ emit_array_element(slang_emit_info *emitInfo, slang_ir_node *n)
                                  indexStore, /* the index */
                                  &elemSizeStore,
                                  NULL);
+         if (!inst) {
+            return NULL;
+         }
 
          indexStore = indexTemp;
       }
@@ -1979,6 +2142,9 @@ emit_array_element(slang_emit_info *emitInfo, slang_ir_node *n)
                                  indexStore,     /* the index */
                                  &indirectArray, /* indirect array base */
                                  NULL);
+         if (!inst) {
+            return NULL;
+         }
 
          indexStore = indexTemp;
       }
@@ -2136,8 +2302,9 @@ emit_var_ref(slang_emit_info *emitInfo, slang_ir_node *n)
       if (index < 0) {
          /* error */
          char s[100];
+         /* XXX isn't this really an out of memory/resources error? */
          _mesa_snprintf(s, sizeof(s), "Undefined variable '%s'",
-                        (char *) n->Var->a_name);
+		  (char *) n->Var->a_name);
          slang_info_log_error(emitInfo->log, s);
          return NULL;
       }
@@ -2173,6 +2340,14 @@ emit(slang_emit_info *emitInfo, slang_ir_node *n)
 
    if (emitInfo->log->error_flag) {
       return NULL;
+   }
+
+   if (n->Comment) {
+      inst = new_instruction(emitInfo, OPCODE_NOP);
+      if (inst) {
+         inst->Comment = _mesa_strdup(n->Comment);
+      }
+      inst = NULL;
    }
 
    switch (n->Opcode) {
@@ -2257,6 +2432,7 @@ emit(slang_emit_info *emitInfo, slang_ir_node *n)
    case IR_POW:
    /* trinary operators */
    case IR_LRP:
+   case IR_CMP:
       return emit_arith(emitInfo, n);
 
    case IR_EQUAL:
@@ -2268,6 +2444,9 @@ emit(slang_emit_info *emitInfo, slang_ir_node *n)
    case IR_TEX:
    case IR_TEXB:
    case IR_TEXP:
+   case IR_TEX_SH:
+   case IR_TEXB_SH:
+   case IR_TEXP_SH:
       return emit_tex(emitInfo, n);
    case IR_NEG:
       return emit_negation(emitInfo, n);
@@ -2349,7 +2528,7 @@ _slang_resolve_subroutines(slang_emit_info *emitInfo)
    GLuint *subroutineLoc, i, total;
 
    subroutineLoc
-      = (GLuint *) _mesa_malloc(emitInfo->NumSubroutines * sizeof(GLuint));
+      = (GLuint *) malloc(emitInfo->NumSubroutines * sizeof(GLuint));
 
    /* total number of instructions */
    total = mainP->NumInstructions;
@@ -2387,7 +2566,7 @@ _slang_resolve_subroutines(slang_emit_info *emitInfo)
 
    /* free subroutine list */
    if (emitInfo->Subroutines) {
-      _mesa_free(emitInfo->Subroutines);
+      free(emitInfo->Subroutines);
       emitInfo->Subroutines = NULL;
    }
    emitInfo->NumSubroutines = 0;
@@ -2406,7 +2585,7 @@ _slang_resolve_subroutines(slang_emit_info *emitInfo)
       }
    }
 
-   _mesa_free(subroutineLoc);
+   free(subroutineLoc);
 }
 
 
@@ -2469,6 +2648,9 @@ _slang_emit_code(slang_ir_node *n, slang_var_table *vt,
    if (withEnd) {
       struct prog_instruction *inst;
       inst = new_instruction(&emitInfo, OPCODE_END);
+      if (!inst) {
+         return GL_FALSE;
+      }
    }
 
    _slang_resolve_subroutines(&emitInfo);

@@ -88,7 +88,7 @@ void _tnl_register_fastpath( struct tnl_clipspace *vtx,
    fastpath->match_strides = match_strides;
    fastpath->func = vtx->emit;
    fastpath->attr = (struct tnl_attr_type *)
-      _mesa_malloc(vtx->attr_count * sizeof(fastpath->attr[0]));
+      malloc(vtx->attr_count * sizeof(fastpath->attr[0]));
 
    for (i = 0; i < vtx->attr_count; i++) {
       fastpath->attr[i].format = vtx->attr[i].format;
@@ -236,7 +236,7 @@ void _tnl_get_attr( GLcontext *ctx, const void *vin,
       dest[0] = ctx->Point.Size;
    }
    else {
-      _mesa_memcpy( dest, ctx->Current.Attrib[attr], 4*sizeof(GLfloat));
+      memcpy( dest, ctx->Current.Attrib[attr], 4*sizeof(GLfloat));
    }
 }
 
@@ -307,8 +307,8 @@ GLuint _tnl_install_attrs( GLcontext *ctx, const struct tnl_attr_map *map,
       const GLuint format = map[i].format;
       if (format == EMIT_PAD) {
 	 if (DBG)
-	    _mesa_printf("%d: pad %d, offset %d\n", i,  
-			 map[i].offset, offset);  
+	    printf("%d: pad %d, offset %d\n", i,  
+		   map[i].offset, offset);  
 
 	 offset += map[i].offset;
 
@@ -338,9 +338,9 @@ GLuint _tnl_install_attrs( GLcontext *ctx, const struct tnl_attr_map *map,
 
 	 
 	 if (DBG)
-	    _mesa_printf("%d: %s, vp %p, offset %d\n", i,  
-			 _tnl_format_info[format].name, (void *)vp,
-			 vtx->attr[j].vertoffset);   
+	    printf("%d: %s, vp %p, offset %d\n", i,  
+		   _tnl_format_info[format].name, (void *)vp,
+		   vtx->attr[j].vertoffset);   
 
 	 offset += _tnl_format_info[format].attrsize;
 	 j++;
@@ -383,7 +383,7 @@ static void adjust_input_ptrs( GLcontext *ctx, GLint diff)
    struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
    struct tnl_clipspace_attr *a = vtx->attr;
    const GLuint count = vtx->attr_count;
-   int j;
+   GLuint j;
 
    diff -= 1;
    for (j=0; j<count; ++j) {
@@ -494,7 +494,7 @@ void _tnl_init_vertices( GLcontext *ctx,
    if (max_vertex_size > vtx->max_vertex_size) {
       _tnl_free_vertices( ctx );
       vtx->max_vertex_size = max_vertex_size;
-      vtx->vertex_buf = (GLubyte *)ALIGN_CALLOC(vb_size * max_vertex_size, 32 );
+      vtx->vertex_buf = (GLubyte *)_mesa_align_calloc(vb_size * max_vertex_size, 32 );
       invalidate_funcs(vtx);
    }
 
@@ -535,27 +535,30 @@ void _tnl_init_vertices( GLcontext *ctx,
 
 void _tnl_free_vertices( GLcontext *ctx )
 {
-   struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
-   struct tnl_clipspace_fastpath *fp, *tmp;
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
+   if (tnl) {
+      struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
+      struct tnl_clipspace_fastpath *fp, *tmp;
 
-   if (vtx->vertex_buf) {
-      ALIGN_FREE(vtx->vertex_buf);
-      vtx->vertex_buf = NULL;
-   }
-   
-   for (fp = vtx->fastpath ; fp ; fp = tmp) {
-      tmp = fp->next;
-      FREE(fp->attr);
+      if (vtx->vertex_buf) {
+         _mesa_align_free(vtx->vertex_buf);
+         vtx->vertex_buf = NULL;
+      }
 
-      /* KW: At the moment, fp->func is constrained to be allocated by
-       * _mesa_exec_alloc(), as the hardwired fastpaths in
-       * t_vertex_generic.c are handled specially.  It would be nice
-       * to unify them, but this probably won't change until this
-       * module gets another overhaul.
-       */
-      _mesa_exec_free((void *) fp->func);
-      FREE(fp);
+      for (fp = vtx->fastpath ; fp ; fp = tmp) {
+         tmp = fp->next;
+         FREE(fp->attr);
+
+         /* KW: At the moment, fp->func is constrained to be allocated by
+          * _mesa_exec_alloc(), as the hardwired fastpaths in
+          * t_vertex_generic.c are handled specially.  It would be nice
+          * to unify them, but this probably won't change until this
+          * module gets another overhaul.
+          */
+         _mesa_exec_free((void *) fp->func);
+         FREE(fp);
+      }
+
+      vtx->fastpath = NULL;
    }
-   
-   vtx->fastpath = NULL;
 }

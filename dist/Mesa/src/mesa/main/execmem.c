@@ -24,7 +24,7 @@
 
 
 /**
- * \file exemem.c
+ * \file execmem.c
  * Functions for allocating executable memory.
  *
  * \author Keith Whitwell
@@ -80,11 +80,10 @@ init_heap(void)
       exec_heap = mmInit( 0, EXEC_HEAP_SIZE );
    
    if (!exec_mem)
-      exec_mem = (unsigned char *) mmap(0, EXEC_HEAP_SIZE, 
-					PROT_EXEC | PROT_READ | PROT_WRITE, 
-					MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      exec_mem = mmap(NULL, EXEC_HEAP_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE,
+		      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-   return (exec_mem != NULL);
+   return (exec_mem != MAP_FAILED);
 }
 
 
@@ -107,7 +106,7 @@ _mesa_exec_malloc(GLuint size)
    if (block)
       addr = exec_mem + block->ofs;
    else 
-      _mesa_printf("_mesa_exec_malloc failed\n");
+      printf("_mesa_exec_malloc failed\n");
 
 bail:
    _glthread_UNLOCK_MUTEX(exec_mutex);
@@ -141,14 +140,14 @@ _mesa_exec_free(void *addr)
 void *
 _mesa_exec_malloc(GLuint size)
 {
-   return _mesa_malloc( size );
+   return malloc( size );
 }
 
  
 void 
 _mesa_exec_free(void *addr)
 {
-   _mesa_free(addr);
+   free(addr);
 }
 
 

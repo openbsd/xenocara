@@ -6,11 +6,11 @@
  */
 
 
-#define GL_GLEXT_PROTOTYPES
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 static int Win;
@@ -122,27 +122,32 @@ Key( unsigned char key, int x, int y )
 static void
 Init( void )
 {
+   GLboolean ARB_fbo = glutExtensionSupported("GL_ARB_framebuffer_object");
    GLint i;
 
    if (!glutExtensionSupported("GL_EXT_framebuffer_object")) {
       printf("GL_EXT_framebuffer_object not found!\n");
-      /*exit(0);*/
+      exit(0);
    }
    printf("GL_RENDERER = %s\n", (char *) glGetString(GL_RENDERER));
 
    glGenFramebuffersEXT(1, &MyFB);
    assert(MyFB);
    assert(!glIsFramebufferEXT(MyFB));
-   glDeleteFramebuffersEXT(1, &MyFB);
-   assert(!glIsFramebufferEXT(MyFB));
+   if (!ARB_fbo) {
+      glDeleteFramebuffersEXT(1, &MyFB);
+      assert(!glIsFramebufferEXT(MyFB));
+   }
    /* Note, continue to use MyFB below */
 
    glGenRenderbuffersEXT(1, &MyRB);
    assert(MyRB);
    assert(!glIsRenderbufferEXT(MyRB));
-   glDeleteRenderbuffersEXT(1, &MyRB);
-   assert(!glIsRenderbufferEXT(MyRB));
-   MyRB = 42; /* an arbitrary ID */
+   if (!ARB_fbo) {
+      glDeleteRenderbuffersEXT(1, &MyRB);
+      assert(!glIsRenderbufferEXT(MyRB));
+      MyRB = 42; /* an arbitrary ID */
+   }
 
    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, MyFB);
    assert(glIsFramebufferEXT(MyFB));
@@ -197,6 +202,7 @@ main( int argc, char *argv[] )
    glutInitWindowSize(Width, Height);
    glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
    Win = glutCreateWindow(argv[0]);
+   glewInit();
    glutReshapeFunc( Reshape );
    glutKeyboardFunc( Key );
    glutDisplayFunc( Display );

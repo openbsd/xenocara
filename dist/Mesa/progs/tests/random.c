@@ -5,13 +5,13 @@
  * 21 June 2007
  */
 
-#define GL_GLEXT_PROTOTYPES
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <GL/glew.h>
 #include <GL/glut.h>
 
 static int Win;
@@ -257,11 +257,11 @@ RandomPrimitive(void)
    Vcount++;
 
    for (i = 0; i < len; i++) {
+      int k = RandomInt(9);
       Vbuffer[Vcount].v[0] = RandomFloat(-3, 3);
       Vbuffer[Vcount].v[1] = RandomFloat(-3, 3);
       Vbuffer[Vcount].v[2] = RandomFloat(-3, 3);
       Vbuffer[Vcount].v[3] = RandomFloat(-3, 3);
-      int k = RandomInt(9);
       switch (k) {
       case 0:
          glVertex2fv(Vbuffer[Vcount].v);
@@ -445,6 +445,7 @@ main(int argc, char *argv[])
    glutInitWindowSize(Width, Height);
    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
    Win = glutCreateWindow(argv[0]);
+   glewInit();
    ParseArgs(argc, argv);
    glutReshapeFunc(Reshape);
    glutKeyboardFunc(Key);

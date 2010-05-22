@@ -2,7 +2,10 @@
  * Exercise EGL API functions
  */
 
-#include <GLES/egl.h>
+#define EGL_EGLEXT_PROTOTYPES
+
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,14 +34,9 @@ TestScreens(EGLDisplay dpy)
  * Print table of all available configurations.
  */
 static void
-PrintConfigs(EGLDisplay d)
+PrintConfigs(EGLDisplay d, EGLConfig *configs, EGLint numConfigs)
 {
-   EGLConfig *configs;
-   EGLint numConfigs, i;
-
-   eglGetConfigs(d, NULL, 0, &numConfigs);
-   configs = malloc(sizeof(*configs) *numConfigs);
-   eglGetConfigs(d, configs, numConfigs, &numConfigs);
+   EGLint i;
 
    printf("Configurations:\n");
    printf("     bf lv d st colorbuffer dp st   supported \n");
@@ -80,7 +78,6 @@ PrintConfigs(EGLDisplay d)
              red, green, blue, alpha,
              depth, stencil, surfString);
    }
-   free(configs);
 }
 
 
@@ -91,7 +88,8 @@ main(int argc, char *argv[])
    int maj, min;
    EGLContext ctx;
    EGLSurface pbuffer;
-   EGLConfig configs[10];
+   EGLConfig *configs;
+   EGLint numConfigs;
    EGLBoolean b;
    const EGLint pbufAttribs[] = {
       EGL_WIDTH, 500,
@@ -99,10 +97,7 @@ main(int argc, char *argv[])
       EGL_NONE
    };
 
-   /*
    EGLDisplay d = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-   */
-   EGLDisplay d = eglGetDisplay("!fb_dri");
    assert(d);
 
    if (!eglInitialize(d, &maj, &min)) {
@@ -113,8 +108,13 @@ main(int argc, char *argv[])
    printf("EGL version = %d.%d\n", maj, min);
    printf("EGL_VENDOR = %s\n", eglQueryString(d, EGL_VENDOR));
 
-   PrintConfigs(d);
+   eglGetConfigs(d, NULL, 0, &numConfigs);
+   configs = malloc(sizeof(*configs) *numConfigs);
+   eglGetConfigs(d, configs, numConfigs, &numConfigs);
 
+   PrintConfigs(d, configs, numConfigs);
+
+   eglBindAPI(EGL_OPENGL_API);
    ctx = eglCreateContext(d, configs[0], EGL_NO_CONTEXT, NULL);
    if (ctx == EGL_NO_CONTEXT) {
       printf("failed to create context\n");
@@ -126,6 +126,8 @@ main(int argc, char *argv[])
       printf("failed to create pbuffer\n");
       return 0;
    }
+
+   free(configs);
 
    b = eglMakeCurrent(d, pbuffer, pbuffer, ctx);
    if (!b) {
