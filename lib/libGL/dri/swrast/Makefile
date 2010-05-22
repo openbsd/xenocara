@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile,v 1.2 2008/11/05 07:18:25 todd Exp $
+#	$OpenBSD: Makefile,v 1.3 2010/05/22 20:14:15 matthieu Exp $
 
 LIB=	swrast_dri.so
 
-.if ${MACHINE} == "sparc"
+.if ${MACHINE_ARCH} == "sparc"
 PICFLAG = -fPIC
 .endif
 

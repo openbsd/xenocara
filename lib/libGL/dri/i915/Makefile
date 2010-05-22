@@ -1,13 +1,11 @@
-#	$OpenBSD: Makefile,v 1.5 2009/05/17 20:20:23 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.6 2010/05/22 20:14:14 matthieu Exp $
 
 LIB=	i915_dri.so
 
 DRIVER_SOURCES = \
 	i830_context.c \
-	i830_metaops.c \
 	i830_state.c \
 	i830_texblend.c \
-	i830_tex.c \
 	i830_texstate.c \
 	i830_vtbl.c \
 	intel_render.c \
@@ -15,8 +13,8 @@ DRIVER_SOURCES = \
 	intel_buffer_objects.c \
 	intel_batchbuffer.c \
 	intel_clear.c \
+	intel_extensions.c \
 	intel_mipmap_tree.c \
-	i915_tex_layout.c \
 	intel_tex_layout.c \
 	intel_tex_image.c \
 	intel_tex_subimage.c \
@@ -31,14 +29,12 @@ DRIVER_SOURCES = \
 	intel_pixel_read.c \
 	intel_buffers.c \
 	intel_blit.c \
-	intel_swapbuffers.c \
-	i915_tex.c \
+	i915_tex_layout.c \
 	i915_texstate.c \
 	i915_context.c \
 	i915_debug.c \
 	i915_debug_fp.c \
 	i915_fragprog.c \
-	i915_metaops.c \
 	i915_program.c \
 	i915_state.c \
 	i915_vtbl.c \
@@ -47,9 +43,10 @@ DRIVER_SOURCES = \
 	intel_screen.c \
 	intel_span.c \
 	intel_state.c \
+	intel_syncobj.c \
 	intel_tris.c \
-	intel_fbo.c \
-	intel_depthstencil.c
+	intel_fbo.c
+
 
 SRCS= \
 	$(COMMON_SOURCES) \

@@ -1,21 +1,21 @@
-# $OpenBSD: Makefile,v 1.26 2010/05/08 14:15:29 matthieu Exp $
+# $OpenBSD: Makefile,v 1.27 2010/05/22 20:14:14 matthieu Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-SUBDIR=libmesa dri
+SUBDIR=glsl libmesa/shader/slang/library libmesa dri
 .endif
 
 LIB=	GL
 
 MESA=	${.CURDIR}/../../dist/Mesa/src/mesa
 GL=	${.CURDIR}/../../dist/Mesa/src/GL
-GLX=	${.CURDIR}/../../dist/Mesa/src/glx/x11
+GLX=	${.CURDIR}/../../dist/Mesa/src/glx
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 MESA_DRI=	${.CURDIR}/../../dist/Mesa/src/mesa/drivers/dri
 
 MESA_MAJOR=	7
-MESA_MINOR=	4
-MESA_TINY=	2
+MESA_MINOR=	8
+MESA_TINY=	1
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
@@ -69,9 +69,10 @@ INCS= \
 	osmesa.h
 
 GLAPI_SOURCES= \
-	dispatch.c \
 	glapi.c \
+	glapi_dispatch.c \
 	glapi_getproc.c \
+	glapi_nop.c \
 	glthread.c \
 	$(ASM_API)
 
@@ -163,6 +164,7 @@ gl.pc: ${MESA}/gl.pc.in Makefile
 	    -e 's,@GL_PC_REQ_PRIV@,libdrm >= 2.4.3 dri2proto >= 1.99.3 x11 xext xxf86vm xdamage xfixes,' \
 	    -e 's,@GL_PC_LIB_PRIV@,-L${LIBDIR} -lXxf86vm -lXext -lXdamage -lXfixes -lX11 -lXau -lXdmcp,' \
 	    -e 's,@GL_PC_CFLAGS@,-I${INCSDIR},' \
+	    -e 's,@GL_LIB@,GL,' \
 	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
 	< ${MESA}/gl.pc.in > gl.pc
 

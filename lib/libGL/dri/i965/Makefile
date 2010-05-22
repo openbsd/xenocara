@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2009/05/17 20:20:23 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2010/05/22 20:14:14 matthieu Exp $
 
 LIB=	i965_dri.so
 
@@ -10,7 +10,7 @@ DRIVER_SOURCES = \
 	intel_clear.c \
 	intel_context.c \
 	intel_decode.c \
-	intel_depthstencil.c \
+	intel_extensions.c \
 	intel_fbo.c \
 	intel_mipmap_tree.c \
 	intel_regions.c \
@@ -20,8 +20,9 @@ DRIVER_SOURCES = \
 	intel_pixel_bitmap.c \
 	intel_pixel_copy.c \
 	intel_pixel_draw.c \
+	intel_pixel_read.c \
 	intel_state.c \
-	intel_swapbuffers.c \
+	intel_syncobj.c \
 	intel_tex.c \
 	intel_tex_copy.c \
 	intel_tex_format.c \
@@ -39,6 +40,7 @@ DRIVER_SOURCES = \
 	brw_clip_util.c \
 	brw_context.c \
 	brw_curbe.c \
+	brw_disasm.c \
 	brw_draw.c \
 	brw_draw_upload.c \
 	brw_eu.c \
@@ -67,6 +69,7 @@ DRIVER_SOURCES = \
 	brw_vs_constval.c \
 	brw_vs_emit.c \
 	brw_vs_state.c \
+	brw_vs_surface_state.c \
 	brw_vtbl.c \
 	brw_wm.c \
 	brw_wm_debug.c \
@@ -79,7 +82,18 @@ DRIVER_SOURCES = \
 	brw_wm_pass2.c \
 	brw_wm_sampler_state.c \
 	brw_wm_state.c \
-	brw_wm_surface_state.c
+	brw_wm_surface_state.c \
+	gen6_cc.c \
+	gen6_clip_state.c \
+	gen6_depthstencil.c \
+	gen6_gs_state.c \
+	gen6_sampler_state.c \
+	gen6_scissor_state.c \
+	gen6_sf_state.c \
+	gen6_urb.c \
+	gen6_viewport_state.c \
+	gen6_vs_state.c \
+	gen6_wm_state.c
 
 SRCS = \
 	$(COMMON_SOURCES) \

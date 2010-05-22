@@ -1,7 +1,9 @@
-# $OpenBSD: Makefile,v 1.9 2010/02/03 12:44:10 matthieu Exp $
+# $OpenBSD: Makefile,v 1.10 2010/05/22 20:14:15 matthieu Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
+
+SUBDIR = shader/slang/library
 
 CPP=	cpp -notraditional
 
@@ -17,6 +19,7 @@ CPPFLAGS+= \
 	-I${MESA}/shader \
 	-I${MESA}/shader/grammar \
 	-I${MESA}/shader/slang \
+	-I${.OBJDIR}/shader/slang \
 	-I${X11BASE}/include \
 	-I/usr/include/dev/pci/drm \
 	-DGLX_INDIRECT_RENDERING \
@@ -56,8 +59,10 @@ MAIN_SOURCES= \
 	clear.c \
 	clip.c \
 	colortab.c \
+	condrender.c \
 	context.c \
 	convolve.c \
+	cpuinfo.c \
 	debug.c \
 	depth.c \
 	depthstencil.c \
@@ -73,6 +78,7 @@ MAIN_SOURCES= \
 	feedback.c \
 	ffvertex_prog.c \
 	fog.c \
+	formats.c \
 	framebuffer.c \
 	get.c \
 	getstring.c \
@@ -95,18 +101,23 @@ MAIN_SOURCES= \
 	rastpos.c \
 	rbadaptors.c \
 	readpix.c \
+	remap.c \
 	renderbuffer.c \
 	scissor.c \
 	shaders.c \
+	shared.c \
 	state.c \
 	stencil.c \
+	syncobj.c \
 	texcompress.c \
 	texcompress_s3tc.c \
 	texcompress_fxt1.c \
 	texenv.c \
 	texenvprogram.c \
+	texfetch.c \
 	texformat.c \
 	texgen.c \
+	texgetimage.c \
 	teximage.c \
 	texobj.c \
 	texparam.c \
@@ -114,6 +125,8 @@ MAIN_SOURCES= \
 	texstate.c \
 	texstore.c \
 	varray.c \
+	version.c \
+	viewport.c \
 	vtxfmt.c
 
 # math
@@ -137,7 +150,7 @@ SWRAST_SOURCES= \
 	s_bitmap.c \
 	s_blend.c \
 	s_blit.c \
-	s_buffers.c \
+	s_clear.c \
 	s_copypix.c \
 	s_context.c \
 	s_depth.c \
@@ -145,7 +158,6 @@ SWRAST_SOURCES= \
 	s_feedback.c \
 	s_fog.c \
 	s_fragprog.c \
-	s_imaging.c \
 	s_lines.c \
 	s_logic.c \
 	s_masking.c \
@@ -155,7 +167,6 @@ SWRAST_SOURCES= \
 	s_stencil.c \
 	s_texcombine.c \
 	s_texfilter.c \
-	s_texstore.c \
 	s_triangle.c \
 	s_zoom.c
 
@@ -206,21 +217,26 @@ SHADER_SOURCES=	\
 	arbprogparse.c \
 	arbprogram.c \
 	atifragshader.c \
-	grammar_mesa.c \
+	hash_table.c \
+	lex.yy.c \
 	nvfragparse.c \
 	nvprogram.c \
 	nvvertparse.c \
 	program.c \
+	program_parse.tab.c \
+	program_parse_extra.c \
 	prog_cache.c \
-	prog_debug.c \
 	prog_execute.c \
 	prog_instruction.c \
 	prog_noise.c \
+	prog_optimize.c \
 	prog_parameter.c \
+	prog_parameter_layout.c \
 	prog_print.c \
 	prog_statevars.c \
 	prog_uniform.c \
 	programopt.c \
+	symbol_table.c \
 	shader_api.c
 
 # shader/slang
@@ -238,7 +254,6 @@ SLANG_SOURCES= \
 	slang_link.c	\
 	slang_log.c	\
 	slang_mem.c	\
-	slang_preprocess.c	\
 	slang_print.c	\
 	slang_simplify.c	\
 	slang_storage.c	\
@@ -249,7 +264,7 @@ SLANG_SOURCES= \
 .if ${MACHINE_ARCH} == i386
 ASM_C_SOURCES= \
 	common_x86.c \
-	x86.c \
+	x86_xform.c \
 	3dnow.c \
 	sse.c \
 	x86sse.c
@@ -294,7 +309,8 @@ ASM_C_SOURCES= \
 .endif
 
 COMMON_DRIVER_SOURCES = \
-	driverfuncs.c
+	driverfuncs.c		\
+	meta.c
 
 MESA_SOURCES = \
 	$(MAIN_SOURCES)		\
@@ -315,14 +331,14 @@ OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}
 
 LIB=	libmesa
 
-all: ${LIB}_pic.a
+all: _SUBDIRUSE ${LIB}_pic.a
 
 obj: _xenocara_obj
 
 install:
 	@echo "Not installing libmesa"
 
-clean:
+clean: _SUBDIRUSE
 	rm -f ${LIB}_pic.a ${OBJS} $(CLEANFILES)
 
 cleandir:	clean
@@ -409,8 +425,9 @@ x86_xform4.so: matypes.h
 .PATH: ${MESA}/vbo
 .PATH: ${MESA}/drivers/common
 
+
 .include <bsd.xorg.mk>
 
-.if ${MACHINE} == sparc
+.if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
 PICFLAG=-fPIC
 .endif

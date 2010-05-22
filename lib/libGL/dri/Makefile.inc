@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.9 2009/05/17 20:20:23 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.10 2010/05/22 20:14:14 matthieu Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -6,15 +6,27 @@ TOP= ${.CURDIR}/../../../../dist/Mesa
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
-COMMON_SOURCES = \
+COMMON_GALLIUM_SOURCES = \
 	utils.c \
-	texmem.c \
 	vblank.c \
 	dri_util.c \
 	xmlconfig.c \
-	drirenderbuffer.c
 
-CFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS $(INCLUDES) $(DRIVER_DEFINES)
+COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
+	driverfuncs.c \
+	texmem.c \
+	drirenderbuffer.c \
+	dri_metaops.c
+
+CFLAGS+= -g -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS \
+	 $(INCLUDES) $(DRIVER_DEFINES)
+
+.if (${COMPILER_VERSION:L:Mgcc[34]*} != "")
+CFLAGS += -std=c99
+.endif
+
+t:
+	@echo x${COMPILER_VERSION:L:Mgcc[34]*}x
 
 INCLUDES = \
 	-I$(TOP)/src/mesa/drivers/dri/common \
@@ -43,8 +55,13 @@ CPPFLAGS += \
 CPPFLAGS += -DUSE_X86_64_ASM
 .endif
 
-LDADD=	../../libmesa/libmesa_pic.a -L${X11BASE}/lib -lX11 -lexpat -ldrm -lm
-DPADD=	../../libmesa/libmesa_pic.a
+LDADD=	../../libmesa/libmesa_pic.a \
+	../../glsl/pp/libglslpp_pic.a \
+	../../glsl/cl/libglslcl_pic.a \
+	-L${X11BASE}/lib -lX11 -lexpat -ldrm -lm
+DPADD=	../../libmesa/libmesa_pic.a \
+	../../glsl/pp/libglslpp_pic.a \
+	../../glsl/cl/libglslcl_pic.a
 
 .PATH: ${MESA}/drivers/dri/common
 .PATH: ${MESA}/drivers/common
