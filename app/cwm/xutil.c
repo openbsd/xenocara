@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.31 2010/05/22 22:10:31 okan Exp $
+ * $Id: xutil.c,v 1.32 2010/05/22 22:32:08 okan Exp $
  */
 
 #include <sys/param.h>
@@ -155,7 +155,7 @@ int
 xu_getstrprop(Window win, Atom atm, char **text) {
 	XTextProperty	 prop;
 	char		**list;
-	int		 nitems;
+	int		 nitems = 0;
 
 	*text = NULL;
 
