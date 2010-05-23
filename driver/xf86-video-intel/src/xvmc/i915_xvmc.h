@@ -29,7 +29,7 @@
 #define _I915XVMC_H
 
 #include "intel_xvmc.h"
-#include "i915_hwmc.h"
+#include "i830_hwmc.h"
 
 #define I915_SUBPIC_PALETTE_SIZE        16
 #define MAX_SUBCONTEXT_LEN              1024
@@ -43,35 +43,24 @@
 #define PCI_CHIP_Q35_G                  0x29B2
 #define PCI_CHIP_Q33_G                  0x29D2
 
+#define CORRDATA_SIZE			128*GTT_PAGE_SIZE
 /*
  * i915XvMCContext:
  *	Private Context data referenced via the privData
  *      pointer in the XvMCContext structure.
  */
 typedef struct _i915XvMCContext {
-	unsigned int ctxno;
-	unsigned int last_flip;
-	unsigned int dual_prime;	/* Flag to identify when dual prime is in use. */
+	struct intel_xvmc_context comm;
 	unsigned int yStride;
 	unsigned int uvStride;
-	unsigned short ref;
-	unsigned int depth;
-	XvPortID port;		/* Xv Port ID when displaying */
-	int haveXv;		/* Have I initialized the Xv
-				 * connection for this surface? */
-	XvImage *xvImage;	/* Fake Xv Image used for command
-				 * buffer transport to the X server */
-	GC gc;			/* X GC needed for displaying */
-	Drawable draw;		/* Drawable to undisplay from */
-	void *drawHash;
-	int deviceID;
+	unsigned int use_phys_addr;
 
-	intel_xvmc_drm_map_t sis;
-	intel_xvmc_drm_map_t msb;
-	intel_xvmc_drm_map_t ssb;
-	intel_xvmc_drm_map_t psp;
-	intel_xvmc_drm_map_t psc;
-	intel_xvmc_drm_map_t corrdata;
+	drm_intel_bo *sis_bo;
+	drm_intel_bo *msb_bo;
+	drm_intel_bo *ssb_bo;
+	drm_intel_bo *psp_bo;
+	drm_intel_bo *psc_bo;
+	drm_intel_bo *corrdata_bo;
 } i915XvMCContext;
 
 /*
@@ -82,8 +71,6 @@ typedef struct _i915XvMCContext {
  */
 typedef struct _i915XvMCSubpicture {
 	unsigned int srfNo;
-	unsigned int last_render;
-	unsigned int last_flip;
 	unsigned int pitch;
 	unsigned char palette[3][16];
 	intel_xvmc_drm_map_t srf;
@@ -92,24 +79,5 @@ typedef struct _i915XvMCSubpicture {
 
 /* Number of YUV buffers per surface */
 #define I830_MAX_BUFS 2
-
-/*
- * i915XvMCSurface: Private data structure for each XvMCSurface. This
- *  structure is referenced by the privData pointer in the XvMCSurface
- *  structure.
- */
-typedef struct _i915XvMCSurface {
-	unsigned int srfNo;	/* XvMC private surface numbers */
-	unsigned int last_render;
-	unsigned int last_flip;
-	unsigned int yStride;	/* Stride of YUV420 Y component. */
-	unsigned int uvStride;
-	unsigned int width;	/* Dimensions */
-	unsigned int height;
-	intel_xvmc_drm_map_t srf;
-	i915XvMCContext *privContext;
-	i915XvMCSubpicture *privSubPic;	/* Subpicture to be blended when
-					 * displaying. NULL if none. */
-} i915XvMCSurface;
 
 #endif /* _I915XVMC_H */

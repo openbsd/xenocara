@@ -24,9 +24,7 @@ libIntelXvMC_la_SOURCES = intel_xvmc.c \
         xvmc_vld.c                     \
         xvmc_vld.h                     \
         intel_batchbuffer.c            \
-        intel_batchbuffer.h            \
-        dri2.c                         \
-        dri2.h	
+        intel_batchbuffer.h
 
 libIntelXvMC_la_CFLAGS = @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI_CFLAGS@ \
 	@XVMCLIB_CFLAGS@ -I$(top_srcdir)/src -DTRUE=1 -DFALSE=0

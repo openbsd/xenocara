@@ -99,11 +99,10 @@ am__intel_drv_la_SOURCES_DIST = brw_defines.h brw_structs.h common.h \
 	i915_3d.h i915_reg.h i915_video.c i965_video.c i830_uxa.c \
 	i830_render.c i915_render.c i965_render.c drmmode_display.c \
 	i810_dri.c i810_dri.h i830_dri.c i810_hwmc.c i830_dri.h \
-	i830_hwmc.h i830_hwmc.c i915_hwmc.c i915_hwmc.h i965_hwmc.c \
-	i965_hwmc.h
+	i830_hwmc.h i830_hwmc.c i915_hwmc.h i965_hwmc.h
 am__objects_1 = i810_dri.lo i830_dri.lo i810_hwmc.lo
 @DRI_TRUE@am__objects_2 = $(am__objects_1)
-am__objects_3 = i830_hwmc.lo i915_hwmc.lo i965_hwmc.lo
+am__objects_3 = i830_hwmc.lo
 @XVMC_TRUE@am__objects_4 = $(am__objects_3)
 am_intel_drv_la_OBJECTS = i810_accel.lo i810_cursor.lo i810_dga.lo \
 	i810_driver.lo i810_io.lo i810_memory.lo i810_video.lo \
@@ -145,6 +144,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -197,6 +197,7 @@ HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
 HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
 HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -271,7 +272,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -325,9 +325,7 @@ INTEL_DRI_SRCS = \
 INTEL_XVMC_SRCS = \
 	 i830_hwmc.h \
 	 i830_hwmc.c \
-         i915_hwmc.c \
          i915_hwmc.h \
-         i965_hwmc.c \
          i965_hwmc.h
 
 intel_drv_la_SOURCES = brw_defines.h brw_structs.h common.h i2c_vid.h \
@@ -361,9 +359,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -452,10 +450,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_uxa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_3d.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_video.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_video.Plo@am__quote@
 

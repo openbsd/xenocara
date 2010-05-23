@@ -30,24 +30,6 @@
 
 #include <stdint.h>
 
-/* MI_INSTRUCTION */
-#define CMD_MI          0x00
-
-#define OPC_MI_FLUSH                            (0x04)
-
-struct i915_mi_flush {
-	struct {
-		unsigned map_cache_invalidate:1;
-		unsigned pad0:1;
-		unsigned render_cache_flush_inhibit:1;
-		unsigned scene_count:1;
-		unsigned end_scene:1;
-		unsigned pad1:18;
-		unsigned opcode:6;
-		unsigned type:3;
-	} dw0;
-};
-
 /* BLT */
 #define CMD_2D          0x02
 #define OPC_COLOR_BLT                           (0x40)
@@ -84,6 +66,7 @@ struct i915_color_blt {
 
 /* 3D_INSTRUCTION */
 #define CMD_3D          0x03
+#define OPCODE_3D(x)	(CMD_3D << 29 | (x) << 16)
 
 #define OPC_3DMPEG_MACROBLOCK_IPICTURE          (0x01 + (0x1e << 5))
 #define OPC_3DMPEG_SET_ORIGIN                   (0x10 + (0x1e << 5))
@@ -96,9 +79,11 @@ struct i915_color_blt {
 #define OPC_3DSTATE_MAP_STATE                   (0x00 + (0x1d << 8))
 #define OPC_3DSTATE_SAMPLER_STATE               (0x01 + (0x1d << 8))
 #define OPC_3DSTATE_LOAD_STATE_IMMEDIATE_1      (0x04 + (0x1d << 8))
+#define OP_3D_LOAD_STATE_IMMEDIATE_1      	OPCODE_3D(OPC_3DSTATE_LOAD_STATE_IMMEDIATE_1)
 #define OPC_3DSTATE_PIXEL_SHADER_PROGRAM        (0x05 + (0x1d << 8))
 #define OPC_3DSTATE_PIXEL_SHADER_CONSTANTS      (0x06 + (0x1d << 8))
 #define OPC_3DSTATE_LOAD_INDIRECT               (0x07 + (0x1d << 8))
+#define OP_3D_LOAD_INDIRECT               	OPCODE_3D(OPC_3DSTATE_LOAD_INDIRECT)
 
 #define OPC_3DSTATE_MODES_5                     (0x0c)
 #define OPC_3DSTATE_COORD_SET_BINDINGS          (0x16)
@@ -746,6 +731,7 @@ struct i915_3dstate_pixel_shader_constants {
 #define BLOCK_MSB       0x08
 #define BLOCK_PSP       0x10
 #define BLOCK_PSC       0x20
+#define BLOCK_MASK_SHIFT 8
 
 typedef struct _state_ddword {
 	struct {
@@ -758,15 +744,9 @@ typedef struct _state_ddword {
 		unsigned length:9;
 		unsigned pad0:23;
 	} dw1;
-} sis_state, ssb_state, msb_state, psp_state, psc_state;
-
-typedef struct _state_dword {
-	struct {
-		unsigned valid:1;
-		unsigned reset:1;
-		unsigned buffer_address:30;
-	} dw0;
-} dis_state;
+} sis_state, msb_state;
+#define STATE_VALID	0x1
+#define STATE_FORCE	0x2
 
 struct i915_3dstate_load_indirect {
 	struct {
@@ -778,6 +758,8 @@ struct i915_3dstate_load_indirect {
 		unsigned type:3;
 	} dw0;
 };
+
+#define OP_3D_LOAD_INDIRECT_GFX_ADDR (1 << 14)
 
 #define TEXCOORDFMT_2FP       0x00
 #define TEXCOORDFMT_3FP       0x01
@@ -797,40 +779,14 @@ struct s2_dword {
 	unsigned set7_texcoord_fmt:4;
 };
 
-struct s3_dword {
-	unsigned set0_pcd:1;
-	unsigned set0_ws_tcz:1;
-	unsigned set0_ws_tcy:1;
-	unsigned set0_ws_tcx:1;
-	unsigned set1_pcd:1;
-	unsigned set1_ws_tcz:1;
-	unsigned set1_ws_tcy:1;
-	unsigned set1_ws_tcx:1;
-	unsigned set2_pcd:1;
-	unsigned set2_ws_tcz:1;
-	unsigned set2_ws_tcy:1;
-	unsigned set2_ws_tcx:1;
-	unsigned set3_pcd:1;
-	unsigned set3_ws_tcz:1;
-	unsigned set3_ws_tcy:1;
-	unsigned set3_ws_tcx:1;
-	unsigned set4_pcd:1;
-	unsigned set4_ws_tcz:1;
-	unsigned set4_ws_tcy:1;
-	unsigned set4_ws_tcx:1;
-	unsigned set5_pcd:1;
-	unsigned set5_ws_tcz:1;
-	unsigned set5_ws_tcy:1;
-	unsigned set5_ws_tcx:1;
-	unsigned set6_pcd:1;
-	unsigned set6_ws_tcz:1;
-	unsigned set6_ws_tcy:1;
-	unsigned set6_ws_tcx:1;
-	unsigned set7_pcd:1;
-	unsigned set7_ws_tcz:1;
-	unsigned set7_ws_tcy:1;
-	unsigned set7_ws_tcx:1;
-};
+#define S3_SET0_PCD (1 << 0*4)
+#define S3_SET1_PCD (1 << 1*4)
+#define S3_SET2_PCD (1 << 2*4)
+#define S3_SET3_PCD (1 << 3*4)
+#define S3_SET4_PCD (1 << 4*4)
+#define S3_SET5_PCD (1 << 5*4)
+#define S3_SET6_PCD (1 << 6*4)
+#define S3_SET7_PCD (1 << 7*4)
 
 #define VERTEXHAS_XYZ      1
 #define VERTEXHAS_XYZW     2
@@ -882,42 +838,23 @@ struct s5_dword {
 	unsigned color_buffer_component_write_disable:4;
 };
 
-struct s6_dword {
-	unsigned triangle_pv:2;
-	unsigned color_buffer_write:1;
-	unsigned depth_buffer_write:1;
-	unsigned dest_blend_factor:4;
-	unsigned src_blend_factor:4;
-	unsigned color_blend_function:3;
-	unsigned color_buffer_blend:1;
-	unsigned depth_test_function:3;
-	unsigned depth_test_enable:1;
-	unsigned alpha_reference_value:8;
-	unsigned alpha_test_function:3;
-	unsigned alpha_test_enable:1;
-
-};
+#define S6_COLOR_BUFFER_WRITE		(1 << 2)
+#define S6_DST_BLEND_FACTOR_SHIFT	4
+#define S6_SRC_BLEND_FACTOR_SHIFT	8
+#define S6_DEPTH_TEST_ENABLE		(1 << 19)
 
 struct s7_dword {
 	unsigned global_depth_offset_const;
 };
 
-struct i915_3dstate_load_state_immediate_1 {
-	struct {
-		unsigned length:4;
-		unsigned load_s0:1;
-		unsigned load_s1:1;
-		unsigned load_s2:1;
-		unsigned load_s3:1;
-		unsigned load_s4:1;
-		unsigned load_s5:1;
-		unsigned load_s6:1;
-		unsigned load_s7:1;
-		unsigned pad0:4;
-		unsigned opcode:13;
-		unsigned type:3;
-	} dw0;
-};
+#define OP_3D_LOAD_STATE_IMM_LOAD_S0 (1 << 4)
+#define OP_3D_LOAD_STATE_IMM_LOAD_S1 (1 << 5)
+#define OP_3D_LOAD_STATE_IMM_LOAD_S2 (1 << 6)
+#define OP_3D_LOAD_STATE_IMM_LOAD_S3 (1 << 7)
+#define OP_3D_LOAD_STATE_IMM_LOAD_S4 (1 << 8)
+#define OP_3D_LOAD_STATE_IMM_LOAD_S5 (1 << 9)
+#define OP_3D_LOAD_STATE_IMM_LOAD_S6 (1 << 10)
+#define OP_3D_LOAD_STATE_IMM_LOAD_S7 (1 << 11)
 
 struct i915_3dstate_scissor_rectangle {
 	struct {

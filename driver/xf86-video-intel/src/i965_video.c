@@ -980,8 +980,8 @@ void
 I965DisplayVideoTextured(ScrnInfoPtr scrn,
 			 intel_adaptor_private *adaptor_priv, int id,
 			 RegionPtr dstRegion,
-			 short width, short height, int video_pitch,
-			 int x1, int y1, int x2, int y2,
+			 short width, short height,
+			 int video_pitch, int video_pitch2,
 			 short src_w, short src_h,
 			 short drw_w, short drw_h, PixmapPtr pixmap)
 {
@@ -1024,7 +1024,7 @@ I965DisplayVideoTextured(ScrnInfoPtr scrn,
 		src_surf_format = BRW_SURFACEFORMAT_R8_UNORM;
 		src_width[1] = src_width[0] = width;
 		src_height[1] = src_height[0] = height;
-		src_pitch[1] = src_pitch[0] = video_pitch * 2;
+		src_pitch[1] = src_pitch[0] = video_pitch2;
 		src_width[4] = src_width[5] = src_width[2] = src_width[3] =
 		    width / 2;
 		src_height[4] = src_height[5] = src_height[2] = src_height[3] =

@@ -1085,7 +1085,7 @@ I810PutImage(
     if(!REGION_EQUAL(pScrn->pScreen, &pPriv->clip, clipBoxes)) {
 	REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
 	/* draw these */
-	xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey, clipBoxes);
+	xf86XVFillKeyHelperDrawable(pDraw, pPriv->colorKey, clipBoxes);
     }
 
     I810DisplayVideo(pScrn, id, width, height, dstPitch, 

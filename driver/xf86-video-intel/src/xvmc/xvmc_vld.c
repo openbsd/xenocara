@@ -23,8 +23,8 @@
  * Author:
  *    Zou Nan hai <nanhai.zou@intel.com>
  */
-#include "xvmc_vld.h"
-#include "i965_hwmc.h"
+#include "intel_xvmc.h"
+#include "i830_hwmc.h"
 #include "i810_reg.h"
 #include "brw_defines.h"
 #include "brw_structs.h"
@@ -325,9 +325,10 @@ struct surface_state_obj {
 	dri_bo *bo;
 };
 
+#define MAX_SURFACES 12
 struct binding_table_obj {
 	dri_bo *bo;
-	struct surface_state_obj surface_states[I965_MAX_SURFACES];
+	struct surface_state_obj surface_states[MAX_SURFACES];
 };
 
 struct slice_data_obj {
@@ -364,7 +365,7 @@ static int free_object(struct media_state *s)
 	for (i = 0; i < MEDIA_KERNEL_NUM; i++)
 		FREE_ONE_BO(s->vfe_state.interface.kernels[i].bo);
 	FREE_ONE_BO(s->binding_table.bo);
-	for (i = 0; i < I965_MAX_SURFACES; i++)
+	for (i = 0; i < MAX_SURFACES; i++)
 		FREE_ONE_BO(s->binding_table.surface_states[i].bo);
 	FREE_ONE_BO(s->slice_data.bo);
 	FREE_ONE_BO(s->mb_data.bo);
@@ -376,7 +377,7 @@ static int alloc_object(struct media_state *s)
 {
 	int i;
 
-	for (i = 0; i < I965_MAX_SURFACES; i++) {
+	for (i = 0; i < MAX_SURFACES; i++) {
 		s->binding_table.surface_states[i].bo =
 		    drm_intel_bo_alloc(xvmc_driver->bufmgr, "surface_state",
 				       sizeof(struct brw_surface_state),
@@ -461,7 +462,7 @@ static Status interface_descriptor()
 		desc->desc1.const_urb_entry_read_offset = 0;
 		desc->desc1.const_urb_entry_read_len = 30;
 
-		desc->desc3.binding_table_entry_count = I965_MAX_SURFACES - 1;
+		desc->desc3.binding_table_entry_count = MAX_SURFACES - 1;
 		desc->desc3.binding_table_pointer =
 		    media_state.binding_table.bo->offset >> 5;
 
@@ -488,7 +489,7 @@ static Status interface_descriptor()
 	return Success;
 }
 
-static int setup_media_kernels(struct i965_xvmc_context *i965_ctx)
+static int setup_media_kernels(struct intel_xvmc_hw_context *ctx)
 {
 	int i;
 
@@ -496,7 +497,7 @@ static int setup_media_kernels(struct i965_xvmc_context *i965_ctx)
 	       sizeof(media_gen5_kernels) / sizeof(media_gen5_kernels[0]));
 
 	for (i = 0; i < MEDIA_KERNEL_NUM; i++) {
-		if (i965_ctx->is_igdng)
+		if (ctx->i965.is_igdng)
 			media_state.vfe_state.interface.kernels[i].bo =
 			    drm_intel_bo_alloc(xvmc_driver->bufmgr, "kernel",
 					       media_gen5_kernels[i].size,
@@ -513,7 +514,7 @@ static int setup_media_kernels(struct i965_xvmc_context *i965_ctx)
 	for (i = 0; i < MEDIA_KERNEL_NUM; i++) {
 		dri_bo *bo = media_state.vfe_state.interface.kernels[i].bo;
 
-		if (i965_ctx->is_igdng)
+		if (ctx->i965.is_igdng)
 			drm_intel_bo_subdata(bo, 0, media_gen5_kernels[i].size,
 					     media_gen5_kernels[i].bin);
 		else
@@ -528,18 +529,18 @@ out:
 
 static Status binding_tables()
 {
-	unsigned int table[I965_MAX_SURFACES];
+	unsigned int table[MAX_SURFACES];
 	int i;
 
 	if (media_state.binding_table.bo)
 		drm_intel_bo_unreference(media_state.binding_table.bo);
 	media_state.binding_table.bo =
 	    drm_intel_bo_alloc(xvmc_driver->bufmgr, "binding_table",
-			       I965_MAX_SURFACES * 4, 0x1000);
+			       MAX_SURFACES * 4, 0x1000);
 	if (!media_state.binding_table.bo)
 		return BadAlloc;
 
-	for (i = 0; i < I965_MAX_SURFACES; i++) {
+	for (i = 0; i < MAX_SURFACES; i++) {
 		table[i] =
 		    media_state.binding_table.surface_states[i].bo->offset;
 		drm_intel_bo_emit_reloc(media_state.binding_table.bo,
@@ -591,50 +592,37 @@ static Status cs_init(int interface_offset)
 	return Success;
 }
 
+#define STRIDE(w)               (w)
+#define SIZE_YUV420(w, h)       (h * (STRIDE(w) + STRIDE(w >> 1)))
 static Status create_context(Display * display, XvMCContext * context,
 			     int priv_count, CARD32 * priv_data)
 {
-	struct i965_xvmc_context *i965_ctx;
-	i965_ctx = (struct i965_xvmc_context *)priv_data;
-	context->privData = priv_data;
+	struct intel_xvmc_context *intel_ctx;
+	struct intel_xvmc_hw_context *hw_ctx;
+	hw_ctx = (struct intel_xvmc_hw_context *)priv_data;
+
+	intel_ctx = calloc(1, sizeof(struct intel_xvmc_context));
+	if (!intel_ctx)
+		return BadAlloc;
+	intel_ctx->hw = hw_ctx;
+	context->privData = intel_ctx;
+	intel_ctx->surface_bo_size
+		= SIZE_YUV420(context->width, context->height);
 
 	if (alloc_object(&media_state))
 		return BadAlloc;
 
-	if (setup_media_kernels(i965_ctx))
+	if (setup_media_kernels(hw_ctx))
 		return BadAlloc;
 	return Success;
 }
 
 static Status destroy_context(Display * display, XvMCContext * context)
 {
-	struct i965_xvmc_context *i965_ctx;
-	i965_ctx = context->privData;
-	Xfree(i965_ctx);
-	return Success;
-}
-
-#define STRIDE(w)               (w)
-#define SIZE_YUV420(w, h)       (h * (STRIDE(w) + STRIDE(w >> 1)))
-static Status create_surface(Display * display,
-			     XvMCContext * context, XvMCSurface * surface,
-			     int priv_count, CARD32 * priv_data)
-{
-	struct i965_xvmc_surface *priv_surface =
-	    (struct i965_xvmc_surface *)priv_data;
-	size_t size = SIZE_YUV420(priv_surface->w, priv_surface->h);
-	surface->privData = priv_data;
-	priv_surface->bo = drm_intel_bo_alloc(xvmc_driver->bufmgr, "surface",
-					      size, 0x1000);
-
-	return Success;
-}
-
-static Status destroy_surface(Display * display, XvMCSurface * surface)
-{
-	struct i965_xvmc_surface *priv_surface = surface->privData;
-	XSync(display, False);
-	drm_intel_bo_unreference(priv_surface->bo);
+	struct intel_xvmc_context *intel_ctx;
+	intel_ctx = context->privData;
+	Xfree(intel_ctx->hw);
+	free(intel_ctx);
 	return Success;
 }
 
@@ -650,13 +638,6 @@ static Status load_qmatrix(Display * display, XvMCContext * context,
 	drm_intel_bo_subdata(media_state.cs_object.bo, 64, 64,
 			     qmx->non_intra_quantiser_matrix);
 
-	return Success;
-}
-
-static Status get_surface_status(Display * display, XvMCSurface * surface,
-				 int *status)
-{
-	*status = 0;
 	return Success;
 }
 
@@ -748,9 +729,9 @@ static Status setup_media_surface(int index, dri_bo * bo,
 	return Success;
 }
 
-static Status setup_surface(struct i965_xvmc_surface *target,
-			    struct i965_xvmc_surface *past,
-			    struct i965_xvmc_surface *future, int w, int h)
+static Status setup_surface(struct intel_xvmc_surface *target,
+			    struct intel_xvmc_surface *past,
+			    struct intel_xvmc_surface *future, int w, int h)
 {
 	Status ret;
 	ret = setup_media_surface(0, target->bo, 0, w, h, TRUE);
@@ -804,11 +785,10 @@ static Status begin_surface(Display * display, XvMCContext * context,
 			    const XvMCMpegControl * control)
 {
 	struct i965_xvmc_contex *i965_ctx;
-	struct i965_xvmc_surface *priv_target, *priv_past, *priv_future;
-	intel_xvmc_context_ptr intel_ctx;
+	struct intel_xvmc_surface *priv_target, *priv_past, *priv_future;
+	intel_xvmc_context_ptr intel_ctx = context->privData;
 	Status ret;
 
-	intel_ctx = intel_xvmc_find_context(context->context_id);
 	priv_target = target->privData;
 	priv_past = past ? past->privData : NULL;
 	priv_future = future ? future->privData : NULL;
@@ -842,11 +822,11 @@ static Status put_slice(Display * display, XvMCContext * context,
 	return Success;
 }
 
-static void state_base_address(struct i965_xvmc_context *i965_ctx)
+static void state_base_address(struct intel_xvmc_hw_context *ctx)
 {
 	BATCH_LOCALS;
 
-	if (i965_ctx->is_igdng) {
+	if (ctx->i965.is_igdng) {
 		BEGIN_BATCH(8);
 		OUT_BATCH(BRW_STATE_BASE_ADDRESS | 6);
 		OUT_BATCH(0 | BASE_ADDRESS_MODIFY);
@@ -998,11 +978,10 @@ static Status put_slice2(Display * display, XvMCContext * context,
 			 unsigned char *slice, int nbytes, int sliceCode)
 {
 	unsigned int bit_buf;
-	intel_xvmc_context_ptr intel_ctx;
-	struct i965_xvmc_context *i965_ctx;
+	intel_xvmc_context_ptr intel_ctx = context->privData;
+	struct intel_xvmc_hw_context *hw_ctx = intel_ctx->hw;
 	int q_scale_code, mb_row;
 
-	i965_ctx = (struct i965_xvmc_context *)context->privData;
 	mb_row = *(slice - 1) - 1;
 	bit_buf =
 	    (slice[0] << 24) | (slice[1] << 16) | (slice[2] << 8) | (slice[3]);
@@ -1010,10 +989,7 @@ static Status put_slice2(Display * display, XvMCContext * context,
 	q_scale_code = bit_buf >> 27;
 
 	if (media_state.slice_data.bo) {
-		if (xvmc_driver->kernel_exec_fencing)
-			drm_intel_gem_bo_unmap_gtt(media_state.slice_data.bo);
-		else
-			drm_intel_bo_unmap(media_state.slice_data.bo);
+		drm_intel_gem_bo_unmap_gtt(media_state.slice_data.bo);
 
 		drm_intel_bo_unreference(media_state.slice_data.bo);
 	}
@@ -1022,16 +998,12 @@ static Status put_slice2(Display * display, XvMCContext * context,
 						       VLD_MAX_SLICE_SIZE, 64);
 	if (!media_state.slice_data.bo)
 		return BadAlloc;
-	if (xvmc_driver->kernel_exec_fencing)
-		drm_intel_gem_bo_map_gtt(media_state.slice_data.bo);
-	else
-		drm_intel_bo_map(media_state.slice_data.bo, 1);
+	drm_intel_gem_bo_map_gtt(media_state.slice_data.bo);
 
 	memcpy(media_state.slice_data.bo->virtual, slice, nbytes);
 
-	intel_ctx = intel_xvmc_find_context(context->context_id);
 	LOCK_HARDWARE(intel_ctx->hw_context);
-	state_base_address(i965_ctx);
+	state_base_address(hw_ctx);
 	pipeline_select();
 	media_state_pointers(VFE_VLD_MODE);
 	urb_layout();
@@ -1042,21 +1014,6 @@ static Status put_slice2(Display * display, XvMCContext * context,
 	intelFlushBatch(TRUE);
 	UNLOCK_HARDWARE(intel_ctx->hw_context);
 
-	return Success;
-}
-
-static Status put_surface(Display * display, XvMCSurface * surface,
-			  Drawable draw, short srcx, short srcy,
-			  unsigned short srcw, unsigned short srch,
-			  short destx, short desty,
-			  unsigned short destw, unsigned short desth,
-			  int flags, struct intel_xvmc_command *data)
-{
-	struct i965_xvmc_surface *private_surface = surface->privData;
-	uint32_t handle;
-
-	drm_intel_bo_flink(private_surface->bo, &handle);
-	data->handle = handle;
 	return Success;
 }
 
@@ -1072,22 +1029,18 @@ static Status render_surface(Display * display,
 			     XvMCMacroBlockArray * macroblock_array,
 			     XvMCBlockArray * blocks)
 {
-	struct i965_xvmc_surface *priv_target, *priv_past, *priv_future;
+	struct intel_xvmc_surface *priv_target, *priv_past, *priv_future;
 	intel_xvmc_context_ptr intel_ctx;
 	XvMCMacroBlock *mb;
 	Status ret;
 	unsigned short *block_ptr;
 	int i, j;
 	int block_offset = 0;
-	struct i965_xvmc_context *i965_ctx;
+	struct intel_xvmc_hw_context *hw_ctx;
 
-	intel_ctx = intel_xvmc_find_context(context->context_id);
-	if (!intel_ctx) {
-		XVMC_ERR("Can't find intel xvmc context\n");
-		return BadValue;
-	}
+	intel_ctx = context->privData;
 
-	i965_ctx = (struct i965_xvmc_context *)context->privData;
+	hw_ctx = (struct intel_xvmc_hw_context *)context->privData;
 	priv_target = target_surface->privData;
 	priv_past = past_surface ? past_surface->privData : NULL;
 	priv_future = future_surface ? future_surface->privData : NULL;
@@ -1110,10 +1063,7 @@ static Status render_surface(Display * display,
 		return ret;
 
 	if (media_state.mb_data.bo) {
-		if (xvmc_driver->kernel_exec_fencing)
-			drm_intel_gem_bo_unmap_gtt(media_state.mb_data.bo);
-		else
-			drm_intel_bo_unmap(media_state.mb_data.bo);
+		drm_intel_gem_bo_unmap_gtt(media_state.mb_data.bo);
 
 		drm_intel_bo_unreference(media_state.mb_data.bo);
 	}
@@ -1125,10 +1075,7 @@ static Status render_surface(Display * display,
 						    surface_size, 64);
 	if (!media_state.mb_data.bo)
 		return BadAlloc;
-	if (xvmc_driver->kernel_exec_fencing)
-		drm_intel_gem_bo_map_gtt(media_state.mb_data.bo);
-	else
-		drm_intel_bo_map(media_state.mb_data.bo, 1);
+	drm_intel_gem_bo_map_gtt(media_state.mb_data.bo);
 
 	block_ptr = media_state.mb_data.bo->virtual;
 	unsigned short *mb_block_ptr;
@@ -1176,7 +1123,7 @@ static Status render_surface(Display * display,
 	}
 
 	LOCK_HARDWARE(intel_ctx->hw_context);
-	state_base_address(i965_ctx);
+	state_base_address(hw_ctx);
 	flush();
 	pipeline_select();
 	urb_layout();
@@ -1270,13 +1217,9 @@ struct _intel_xvmc_driver xvmc_vld_driver = {
 	.type = XVMC_I965_MPEG2_VLD,
 	.create_context = create_context,
 	.destroy_context = destroy_context,
-	.create_surface = create_surface,
-	.destroy_surface = destroy_surface,
 	.load_qmatrix = load_qmatrix,
-	.get_surface_status = get_surface_status,
 	.begin_surface = begin_surface,
 	.render_surface = render_surface,
-	.put_surface = put_surface,
 	.put_slice = put_slice,
 	.put_slice2 = put_slice2
 };

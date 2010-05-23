@@ -24,12 +24,12 @@
  *    Zou Nan hai <nanhai.zou@intel.com>
  *
  */
-#include "i965_xvmc.h"
+#include "intel_xvmc.h"
 #include "i810_reg.h"
 #include "brw_defines.h"
 #include "brw_structs.h"
 #include "intel_batchbuffer.h"
-#include "i965_hwmc.h"
+#include "i830_hwmc.h"
 #define BATCH_STRUCT(x) intelBatchbufferData(&x, sizeof(x), 0)
 #define URB_SIZE     256	/* XXX */
 
@@ -241,38 +241,15 @@ out:
 
 static Status destroy_context(Display * display, XvMCContext * context)
 {
-	struct i965_xvmc_context *private_context;
-	private_context = context->privData;
-
-	free_object(&media_state);
-	Xfree(private_context);
+	struct intel_xvmc_context *intel_ctx;
+	intel_ctx = context->privData;
+	Xfree(intel_ctx->hw);
+	free(intel_ctx);
 	return Success;
 }
 
 #define STRIDE(w)               (w)
 #define SIZE_YUV420(w, h)       (h * (STRIDE(w) + STRIDE(w >> 1)))
-
-static Status create_surface(Display * display,
-			     XvMCContext * context, XvMCSurface * surface,
-			     int priv_count, CARD32 * priv_data)
-{
-	struct i965_xvmc_surface *priv_surface =
-	    (struct i965_xvmc_surface *)priv_data;
-	size_t size = SIZE_YUV420(priv_surface->w, priv_surface->h);
-	surface->privData = priv_data;
-	priv_surface->bo = drm_intel_bo_alloc(xvmc_driver->bufmgr, "surface",
-					      size, 0x1000);
-	return Success;
-}
-
-static Status destroy_surface(Display * display, XvMCSurface * surface)
-{
-	struct i965_xvmc_surface *priv_surface = surface->privData;
-	XSync(display, False);
-
-	drm_intel_bo_unreference(priv_surface->bo);
-	return Success;
-}
 
 static void flush()
 {
@@ -716,14 +693,14 @@ static Status render_surface(Display * display,
 	int i, j;
 	struct i965_xvmc_context *i965_ctx;
 	XvMCMacroBlock *mb;
-	struct i965_xvmc_surface *priv_target_surface =
+	struct intel_xvmc_surface *priv_target_surface =
 	    target_surface->privData;
-	struct i965_xvmc_surface *priv_past_surface =
+	struct intel_xvmc_surface *priv_past_surface =
 	    past_surface ? past_surface->privData : 0;
-	struct i965_xvmc_surface *priv_future_surface =
+	struct intel_xvmc_surface *priv_future_surface =
 	    future_surface ? future_surface->privData : 0;
 	unsigned short *block_ptr;
-	intel_ctx = intel_xvmc_find_context(context->context_id);
+	intel_ctx = context->privData;
 	i965_ctx = context->privData;
 	if (!intel_ctx) {
 		XVMC_ERR("Can't find intel xvmc context\n");
@@ -731,11 +708,8 @@ static Status render_surface(Display * display,
 	}
 
 	if (media_state.indirect_data.bo) {
-		if (xvmc_driver->kernel_exec_fencing)
-			drm_intel_gem_bo_unmap_gtt(media_state.
-						   indirect_data.bo);
-		else
-			drm_intel_bo_unmap(media_state.indirect_data.bo);
+		drm_intel_gem_bo_unmap_gtt(media_state.
+					   indirect_data.bo);
 
 		drm_intel_bo_unreference(media_state.indirect_data.bo);
 	}
@@ -755,10 +729,7 @@ static Status render_surface(Display * display,
 	interface_descriptor(&media_state);
 	vfe_state(&media_state);
 
-	if (xvmc_driver->kernel_exec_fencing)
-		drm_intel_gem_bo_map_gtt(media_state.indirect_data.bo);
-	else
-		drm_intel_bo_map(media_state.indirect_data.bo, 1);
+	drm_intel_gem_bo_map_gtt(media_state.indirect_data.bo);
 
 	block_ptr = media_state.indirect_data.bo->virtual;
 	for (i = first_macroblock; i < num_macroblocks + first_macroblock; i++) {
@@ -877,38 +848,23 @@ static Status render_surface(Display * display,
 	return Success;
 }
 
-static Status put_surface(Display * display, XvMCSurface * surface,
-			  Drawable draw, short srcx, short srcy,
-			  unsigned short srcw, unsigned short srch,
-			  short destx, short desty,
-			  unsigned short destw, unsigned short desth,
-			  int flags, struct intel_xvmc_command *data)
-{
-	struct i965_xvmc_surface *private_surface = surface->privData;
-	uint32_t handle = 0;
-
-	drm_intel_bo_flink(private_surface->bo, &handle);
-	data->handle = handle;
-
-	return Success;
-}
-
-static Status get_surface_status(Display * display,
-				 XvMCSurface * surface, int *stats)
-{
-	*stats = 0;
-	return 0;
-}
-
 static Status create_context(Display * display, XvMCContext * context,
 			     int priv_count, CARD32 * priv_data)
 {
-	struct i965_xvmc_context *i965_ctx;
-	i965_ctx = (struct i965_xvmc_context *)priv_data;
-	context->privData = i965_ctx;
+	struct intel_xvmc_context *intel_ctx;
+	struct intel_xvmc_hw_context *hw_ctx;
+	hw_ctx = (struct intel_xvmc_hw_context *)priv_data;
 
-	media_state.is_g4x = i965_ctx->is_g4x;
-	media_state.is_965_q = i965_ctx->is_965_q;
+	intel_ctx = calloc(1, sizeof(struct intel_xvmc_context));
+	if (!intel_ctx)
+		return BadAlloc;
+	intel_ctx->hw = hw_ctx;
+	intel_ctx->surface_bo_size
+		= SIZE_YUV420(context->width, context->height);
+	context->privData = intel_ctx;
+
+	media_state.is_g4x = hw_ctx->i965.is_g4x;
+	media_state.is_965_q = hw_ctx->i965.is_965_q;
 
 	if (alloc_object(&media_state))
 		return BadAlloc;
@@ -921,9 +877,5 @@ struct _intel_xvmc_driver i965_xvmc_mc_driver = {
 	.type = XVMC_I965_MPEG2_MC,
 	.create_context = create_context,
 	.destroy_context = destroy_context,
-	.create_surface = create_surface,
-	.destroy_surface = destroy_surface,
 	.render_surface = render_surface,
-	.put_surface = put_surface,
-	.get_surface_status = get_surface_status,
 };

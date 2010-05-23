@@ -58,7 +58,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "GL/glxtokens.h"
 
 #include "i830.h"
-#include "i830_dri.h"
 
 #include "i915_drm.h"
 
@@ -390,10 +389,6 @@ Bool I830DRI2ScreenInit(ScreenPtr screen)
 	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	DRI2InfoRec info;
-	char *p;
-	int i;
-	struct stat sbuf;
-	dev_t d;
 #ifdef USE_DRI2_1_1_0
 	int dri2_major = 1;
 	int dri2_minor = 0;
@@ -411,30 +406,10 @@ Bool I830DRI2ScreenInit(ScreenPtr screen)
 	}
 #endif
 
+	intel->deviceName = drmGetDeviceNameFromFd(intel->drmSubFD);
 	info.fd = intel->drmSubFD;
-
-	/* The whole drmOpen thing is a fiasco and we need to find a way
-	 * back to just using open(2).  For now, however, lets just make
-	 * things worse with even more ad hoc directory walking code to
-	 * discover the device file name. */
-
-	fstat(info.fd, &sbuf);
-	d = sbuf.st_rdev;
-
-	p = intel->deviceName;
-	for (i = 0; i < DRM_MAX_MINOR; i++) {
-		sprintf(p, DRM_DEV_NAME, DRM_DIR_NAME, i);
-		if (stat(p, &sbuf) == 0 && sbuf.st_rdev == d)
-			break;
-	}
-	if (i == DRM_MAX_MINOR) {
-		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-			   "DRI2: failed to open drm device\n");
-		return FALSE;
-	}
-
 	info.driverName = IS_I965G(intel) ? "i965" : "i915";
-	info.deviceName = p;
+	info.deviceName = intel->deviceName;
 
 #if DRI2INFOREC_VERSION >= 3
 	info.version = 3;
@@ -466,4 +441,5 @@ void I830DRI2CloseScreen(ScreenPtr screen)
 
 	DRI2CloseScreen(screen);
 	intel->directRenderingType = DRI_NONE;
+	drmFree(intel->deviceName);
 }

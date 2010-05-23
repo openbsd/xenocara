@@ -74,8 +74,8 @@ void intel_xvmc_dump_render(XvMCContext * context,
 	fprintf(fp, "========== new surface rendering ==========\n");
 	fprintf(fp,
 		"Context (id:%d) (surface_type_id:%d) (width:%d) (height:%d)\n",
-		context->context_id, context->surface_type_id, context->width,
-		context->height);
+		(int)context->context_id, context->surface_type_id,
+		context->width, context->height);
 
 	if (picture_structure == XVMC_FRAME_PICTURE)
 		fprintf(fp, "picture structure: frame picture\n");
@@ -96,13 +96,13 @@ void intel_xvmc_dump_render(XvMCContext * context,
 		fprintf(fp, "picture type: Bad!\n");
 
 	fprintf(fp, "target picture: id (%d) width (%d) height (%d)\n",
-		target->surface_id, target->width, target->height);
+		(int)target->surface_id, target->width, target->height);
 	if (past)
 		fprintf(fp, "past picture: id (%d) width (%d) height (%d)\n",
-			past->surface_id, past->width, past->height);
+			(int)past->surface_id, past->width, past->height);
 	if (future)
 		fprintf(fp, "future picture: id (%d) width (%d) height (%d)\n",
-			future->surface_id, future->width, future->height);
+			(int)future->surface_id, future->width, future->height);
 
 	fprintf(fp, "num macroblocks: %d, first macroblocks %d\n",
 		num_macroblocks, first_macroblock);

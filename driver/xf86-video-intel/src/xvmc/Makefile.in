@@ -63,7 +63,7 @@ am_libIntelXvMC_la_OBJECTS = libIntelXvMC_la-intel_xvmc.lo \
 	libIntelXvMC_la-intel_xvmc_dump.lo \
 	libIntelXvMC_la-i915_xvmc.lo libIntelXvMC_la-i965_xvmc.lo \
 	libIntelXvMC_la-xvmc_vld.lo \
-	libIntelXvMC_la-intel_batchbuffer.lo libIntelXvMC_la-dri2.lo
+	libIntelXvMC_la-intel_batchbuffer.lo
 libIntelXvMC_la_OBJECTS = $(am_libIntelXvMC_la_OBJECTS)
 @XVMC_TRUE@am_libIntelXvMC_la_rpath = -rpath $(libdir)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -95,6 +95,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -147,6 +148,7 @@ HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
 HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
 HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -221,7 +223,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -272,9 +273,7 @@ libIntelXvMC_la_SOURCES = intel_xvmc.c \
         xvmc_vld.c                     \
         xvmc_vld.h                     \
         intel_batchbuffer.c            \
-        intel_batchbuffer.h            \
-        dri2.c                         \
-        dri2.h	
+        intel_batchbuffer.h
 
 libIntelXvMC_la_CFLAGS = @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI_CFLAGS@ \
 	@XVMCLIB_CFLAGS@ -I$(top_srcdir)/src -DTRUE=1 -DFALSE=0
@@ -294,9 +293,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/xvmc/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/xvmc/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/xvmc/Makefile
+	  $(AUTOMAKE) --foreign  src/xvmc/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -353,7 +352,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libI810XvMC_la-I810XvMC.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-dri2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-i915_xvmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-i965_xvmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libIntelXvMC_la-intel_batchbuffer.Plo@am__quote@
@@ -430,13 +428,6 @@ libIntelXvMC_la-intel_batchbuffer.lo: intel_batchbuffer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='intel_batchbuffer.c' object='libIntelXvMC_la-intel_batchbuffer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -c -o libIntelXvMC_la-intel_batchbuffer.lo `test -f 'intel_batchbuffer.c' || echo '$(srcdir)/'`intel_batchbuffer.c
-
-libIntelXvMC_la-dri2.lo: dri2.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -MT libIntelXvMC_la-dri2.lo -MD -MP -MF "$(DEPDIR)/libIntelXvMC_la-dri2.Tpo" -c -o libIntelXvMC_la-dri2.lo `test -f 'dri2.c' || echo '$(srcdir)/'`dri2.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libIntelXvMC_la-dri2.Tpo" "$(DEPDIR)/libIntelXvMC_la-dri2.Plo"; else rm -f "$(DEPDIR)/libIntelXvMC_la-dri2.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dri2.c' object='libIntelXvMC_la-dri2.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libIntelXvMC_la_CFLAGS) $(CFLAGS) -c -o libIntelXvMC_la-dri2.lo `test -f 'dri2.c' || echo '$(srcdir)/'`dri2.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

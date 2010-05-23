@@ -25,7 +25,11 @@
  *
  */
 #include "intel_xvmc.h"
-#include "dri2.h"
+#include <xcb/xcb.h>
+#include <xcb/xcb_aux.h>
+#include <xcb/dri2.h>
+#include <X11/Xlib-xcb.h>
+#include <X11/extensions/dri2tokens.h>
 
 /* global */
 struct _intel_xvmc_driver *xvmc_driver = NULL;
@@ -99,14 +103,6 @@ unsigned int mb_bytes_420[] = {
 	768			/* 111111 */
 };
 
-int DEBUG;
-
-static void intel_xvmc_debug_init(void)
-{
-	if (getenv("INTEL_XVMC_DEBUG"))
-		DEBUG = 1;
-}
-
 void LOCK_HARDWARE(drm_context_t ctx)
 {
 	char __ret = 0;
@@ -124,115 +120,75 @@ void UNLOCK_HARDWARE(drm_context_t ctx)
 	PPTHREAD_MUTEX_UNLOCK();
 }
 
-static intel_xvmc_context_ptr intel_xvmc_new_context(Display * dpy)
+static int
+dri2_connect(Display *display)
 {
-	intel_xvmc_context_ptr ret;
+	xcb_dri2_query_version_cookie_t query_version_cookie;
+	xcb_dri2_query_version_reply_t *query_version_reply;
+	xcb_dri2_connect_cookie_t connect_cookie;
+	xcb_dri2_connect_reply_t *connect_reply;
+	xcb_dri2_authenticate_cookie_t auth_cookie;
+	xcb_dri2_authenticate_reply_t *auth_reply;
+	xcb_screen_t *root;
+	xcb_connection_t *c = XGetXCBConnection(display);
+	drm_magic_t magic;
+	const xcb_query_extension_reply_t *dri2_reply;
+	char *device_name;
+	int len;
 
-	ret = (intel_xvmc_context_ptr) calloc(1, sizeof(intel_xvmc_context_t));
-	if (!ret)
-		return NULL;
+	root = xcb_aux_get_screen(c, DefaultScreen(display));
 
-	if (!xvmc_driver->ctx_list)
-		ret->next = NULL;
-	else
-		ret->next = xvmc_driver->ctx_list;
-	xvmc_driver->ctx_list = ret;
-	xvmc_driver->num_ctx++;
+	dri2_reply = xcb_get_extension_data(c, &xcb_dri2_id);
 
-	return ret;
-
-}
-
-static void intel_xvmc_free_context(XID id)
-{
-	intel_xvmc_context_ptr p = xvmc_driver->ctx_list;
-	intel_xvmc_context_ptr pre = p;
-
-	while (p) {
-		if (p->context && p->context->context_id == id) {
-			if (p == xvmc_driver->ctx_list)
-				xvmc_driver->ctx_list = p->next;
-			else
-				pre->next = p->next;
-			break;
-		}
-		pre = p;
-		p = p->next;
+	if (!dri2_reply) {
+		XVMC_ERR("DRI2 required");
+		return BadValue;
 	}
 
-	if (p) {
-		free(p);
-		xvmc_driver->num_ctx--;
+	/* Query the extension and make our first use of it at the same time. */
+	query_version_cookie = xcb_dri2_query_version(c, 1, 0);
+	connect_cookie = xcb_dri2_connect(c, root->root, DRI2DriverDRI);
+
+	query_version_reply =
+		xcb_dri2_query_version_reply(c, query_version_cookie, NULL);
+	connect_reply = xcb_dri2_connect_reply(c, connect_cookie, NULL);
+
+	if (!query_version_reply) {
+		XVMC_ERR("DRI2 required");
+		return BadValue;
 	}
-}
+	free(query_version_reply);
 
-intel_xvmc_context_ptr intel_xvmc_find_context(XID id)
-{
-	intel_xvmc_context_ptr p = xvmc_driver->ctx_list;
-
-	while (p) {
-		if (p->context && p->context->context_id == id)
-			return p;
-		p = p->next;
+	len = xcb_dri2_connect_device_name_length(connect_reply);
+	device_name = malloc(len + 1);
+	if (!device_name) {
+		XVMC_ERR("malloc failure");
+		return BadAlloc;
 	}
-	return NULL;
-}
-
-static intel_xvmc_surface_ptr intel_xvmc_new_surface(Display * dpy)
-{
-	intel_xvmc_surface_ptr ret;
-
-	ret = (intel_xvmc_surface_ptr) calloc(1, sizeof(intel_xvmc_surface_t));
-	if (!ret)
-		return NULL;
-
-	if (!xvmc_driver->surf_list)
-		ret->next = NULL;
-	else
-		ret->next = xvmc_driver->surf_list;
-	xvmc_driver->surf_list = ret;
-	xvmc_driver->num_surf++;
-
-	ret->image = NULL;
-	ret->gc_init = FALSE;
-
-	return ret;
-
-}
-
-static void intel_xvmc_free_surface(XID id)
-{
-	intel_xvmc_surface_ptr p = xvmc_driver->surf_list;
-	intel_xvmc_surface_ptr pre = p;
-
-	while (p) {
-		if (p->surface && p->surface->surface_id == id) {
-			if (p == xvmc_driver->surf_list)
-				xvmc_driver->surf_list = p->next;
-			else
-				pre->next = p->next;
-			break;
-		}
-		pre = p;
-		p = p->next;
+	strncpy(device_name, xcb_dri2_connect_device_name(connect_reply), len);
+	device_name[len] = 0;
+	xvmc_driver->fd = open(device_name, O_RDWR);
+	free(device_name);
+	free(connect_reply);
+	if (xvmc_driver->fd < 0) {
+		XVMC_ERR("Failed to open drm device: %s\n", strerror(errno));
+		return BadValue;
 	}
 
-	if (p) {
-		free(p);
-		xvmc_driver->num_surf--;
+	if (drmGetMagic(xvmc_driver->fd, &magic)) {
+		XVMC_ERR("Failed to get magic\n");
+		return BadValue;
 	}
-}
 
-intel_xvmc_surface_ptr intel_xvmc_find_surface(XID id)
-{
-	intel_xvmc_surface_ptr p = xvmc_driver->surf_list;
-
-	while (p) {
-		if (p->surface && p->surface->surface_id == id)
-			return p;
-		p = p->next;
+	auth_cookie = xcb_dri2_authenticate(c, root->root, magic);
+	auth_reply = xcb_dri2_authenticate_reply(c, auth_cookie, NULL);
+	if (!auth_reply) {
+		XVMC_ERR("Failed to authenticate magic %d\n", magic);
+		return BadValue;
 	}
-	return NULL;
+	free(auth_reply);
+
+	return Success;
 }
 
 /*
@@ -257,8 +213,7 @@ _X_EXPORT Status XvMCCreateContext(Display * display, XvPortID port,
 {
 	Status ret;
 	CARD32 *priv_data = NULL;
-	struct _intel_xvmc_common *comm;
-	drm_magic_t magic;
+	struct intel_xvmc_hw_context *comm;
 	int major, minor;
 	int error_base;
 	int event_base;
@@ -278,8 +233,6 @@ _X_EXPORT Status XvMCCreateContext(Display * display, XvPortID port,
 		return BadValue;
 	}
 
-	intel_xvmc_debug_init();
-
 	/*
 	   Width, Height, and flags are checked against surface_type_id
 	   and port for validity inside the X server, no need to check
@@ -295,6 +248,7 @@ _X_EXPORT Status XvMCCreateContext(Display * display, XvPortID port,
 		XVMC_ERR("XvMCExtension is not available!");
 		return BadValue;
 	}
+
 	ret = XvMCQueryVersion(display, &major, &minor);
 	if (ret) {
 		XVMC_ERR
@@ -315,9 +269,8 @@ _X_EXPORT Status XvMCCreateContext(Display * display, XvPortID port,
 		XVMC_ERR("Unable to create XvMC Context.");
 		return ret;
 	}
-	XVMC_DBG("new context %d created\n", (int)context->context_id);
 
-	comm = (struct _intel_xvmc_common *)priv_data;
+	comm = (struct intel_xvmc_hw_context *)priv_data;
 
 	if (xvmc_driver == NULL || xvmc_driver->type != comm->type) {
 		switch (comm->type) {
@@ -346,70 +299,16 @@ _X_EXPORT Status XvMCCreateContext(Display * display, XvPortID port,
 
 	XVMC_INFO("decoder type is %s", intel_xvmc_decoder_string(comm->type));
 
-	xvmc_driver->kernel_exec_fencing = comm->kernel_exec_fencing;
-
-	/* assign local ctx info */
-	intel_ctx = intel_xvmc_new_context(display);
-	if (!intel_ctx) {
-		XVMC_ERR("Intel XvMC context create fail\n");
-		return BadAlloc;
-	}
-	intel_ctx->context = context;
-
 	/* check DRI2 */
 	ret = Success;
 	xvmc_driver->fd = -1;
 
-	do {
-		if (!DRI2QueryExtension(display, &event_base, &error_base)) {
-			ret = BadValue;
-			break;
-		}
-
-		if (!DRI2QueryVersion(display, &major, &minor)) {
-			ret = BadValue;
-			break;
-		}
-
-		if (!DRI2Connect(display, RootWindow(display, screen),
-				 &driverName, &deviceName)) {
-			ret = BadValue;
-			break;
-		}
-
-		xvmc_driver->fd = open(deviceName, O_RDWR);
-
-		if (xvmc_driver->fd < 0) {
-			XVMC_ERR("Failed to open drm device: %s\n",
-				 strerror(errno));
-			ret = BadValue;
-			break;
-		}
-
-		if (drmGetMagic(xvmc_driver->fd, &magic)) {
-			XVMC_ERR("Failed to get magic\n");
-			ret = BadValue;
-			break;
-		}
-
-		if (!DRI2Authenticate
-		    (display, RootWindow(display, screen), magic)) {
-			XVMC_ERR("Failed to authenticate magic %d\n", magic);
-			ret = BadValue;
-			break;
-		}
-	} while (0);
-
-	XFree(driverName);
-	XFree(deviceName);
-
+	ret = dri2_connect(display);
 	if (ret != Success) {
 		XFree(priv_data);
 		context->privData = NULL;
-
 		if (xvmc_driver->fd >= 0)
 			close(xvmc_driver->fd);
-
 		xvmc_driver = NULL;
 		return ret;
 	}
@@ -468,8 +367,6 @@ _X_EXPORT Status XvMCDestroyContext(Display * display, XvMCContext * context)
 
 	dri_bufmgr_destroy(xvmc_driver->bufmgr);
 
-	intel_xvmc_free_context(context->context_id);
-
 	ret = _xvmc_destroy_context(display, context);
 	if (ret != Success) {
 		XVMC_ERR("_xvmc_destroy_context fail\n");
@@ -498,6 +395,7 @@ _X_EXPORT Status XvMCCreateSurface(Display * display, XvMCContext * context,
 	int priv_count;
 	CARD32 *priv_data;
 	intel_xvmc_surface_ptr intel_surf = NULL;
+	struct intel_xvmc_context *intel_ctx;
 
 	if (!display || !context)
 		return XvMCBadContext;
@@ -505,10 +403,7 @@ _X_EXPORT Status XvMCCreateSurface(Display * display, XvMCContext * context,
 	if (!surface)
 		return XvMCBadSurface;
 
-	intel_surf = intel_xvmc_new_surface(display);
-	if (!intel_surf)
-		return BadAlloc;
-	intel_surf->surface = surface;
+	intel_ctx = context->privData;
 
 	if ((ret = _xvmc_create_surface(display, context, surface,
 					&priv_count, &priv_data))) {
@@ -516,24 +411,38 @@ _X_EXPORT Status XvMCCreateSurface(Display * display, XvMCContext * context,
 		return ret;
 	}
 
+	XFree(priv_data);
+
+	surface->privData = calloc(1, sizeof(struct intel_xvmc_surface));
+
+	if (!(intel_surf = surface->privData)) {
+		PPTHREAD_MUTEX_UNLOCK();
+		return BadAlloc;
+	}
+
+	intel_surf->bo = drm_intel_bo_alloc(xvmc_driver->bufmgr,
+					      "surface",
+					      intel_ctx->surface_bo_size,
+					      GTT_PAGE_SIZE);
+	if (!intel_surf->bo) {
+		free(intel_surf);
+		return BadAlloc;
+	}
+
+	drm_intel_bo_disable_reuse(intel_surf->bo);
+
+	intel_surf = surface->privData;
+	intel_surf->context = context;
+
 	intel_surf->image = XvCreateImage(display, context->port,
 					  FOURCC_XVMC,
-					  (char *)&intel_surf->data,
+					  (char *) &intel_surf->gem_handle,
 					  surface->width, surface->height);
 	if (!intel_surf->image) {
 		XVMC_ERR("Can't create XvImage for surface\n");
+		free(intel_surf);
 		_xvmc_destroy_surface(display, surface);
-		intel_xvmc_free_surface(surface->surface_id);
 		return BadAlloc;
-	}
-	intel_surf->image->data = (char *)&intel_surf->data;
-
-	ret =
-	    (xvmc_driver->create_surface) (display, context, surface,
-					   priv_count, priv_data);
-	if (ret) {
-		XVMC_ERR("create surface failed\n");
-		return ret;
 	}
 
 	return Success;
@@ -549,16 +458,17 @@ _X_EXPORT Status XvMCDestroySurface(Display * display, XvMCSurface * surface)
 	if (!display || !surface)
 		return XvMCBadSurface;
 
-	intel_surf = intel_xvmc_find_surface(surface->surface_id);
+	intel_surf = surface->privData;
 	if (!intel_surf)
 		return XvMCBadSurface;
 
 	XFree(intel_surf->image);
 	if (intel_surf->gc_init)
 		XFreeGC(display, intel_surf->gc);
-	intel_xvmc_free_surface(surface->surface_id);
 
-	(xvmc_driver->destroy_surface) (display, surface);
+	drm_intel_bo_unreference(intel_surf->bo);
+
+	free(intel_surf);
 
 	_xvmc_destroy_surface(display, surface);
 
@@ -733,17 +643,15 @@ _X_EXPORT Status XvMCPutSurface(Display * display, XvMCSurface * surface,
 {
 	Status ret = Success;
 	XvMCContext *context;
-	intel_xvmc_context_ptr intel_ctx;
 	intel_xvmc_surface_ptr intel_surf;
 
 	if (!display || !surface)
 		return XvMCBadSurface;
 
-	intel_ctx = intel_xvmc_find_context(surface->context_id);
-	intel_surf = intel_xvmc_find_surface(surface->surface_id);
-	if (!intel_ctx || !intel_surf)
+	intel_surf = surface->privData;
+	context = intel_surf->context;
+	if (!context || !intel_surf)
 		return XvMCBadSurface;
-	context = intel_ctx->context;
 
 	if (intel_surf->gc_init == FALSE) {
 		intel_surf->gc = XCreateGC(display, draw, 0, NULL);
@@ -753,14 +661,9 @@ _X_EXPORT Status XvMCPutSurface(Display * display, XvMCSurface * surface,
 		intel_surf->gc = XCreateGC(display, draw, 0, NULL);
 	}
 	intel_surf->last_draw = draw;
-	/* fill intel_surf->data */
-	ret = (xvmc_driver->put_surface) (display, surface, draw, srcx, srcy,
-					  srcw, srch, destx, desty, destw,
-					  desth, flags, &intel_surf->data);
-	if (ret) {
-		XVMC_ERR("put surface fail\n");
-		return ret;
-	}
+
+	drm_intel_bo_flink(intel_surf->bo, &intel_surf->gem_handle);
+
 	ret = XvPutImage(display, context->port, draw, intel_surf->gc,
 			 intel_surf->image, srcx, srcy, srcw, srch, destx,
 			 desty, destw, desth);
@@ -781,10 +684,6 @@ _X_EXPORT Status XvMCSyncSurface(Display * display, XvMCSurface * surface)
 	if (!display || !surface)
 		return XvMCBadSurface;
 
-	do {
-		ret = XvMCGetSurfaceStatus(display, surface, &stat);
-	} while (!ret && (stat & XVMC_RENDERING));
-
 	return ret;
 }
 
@@ -802,6 +701,7 @@ _X_EXPORT Status XvMCFlushSurface(Display * display, XvMCSurface * surface)
 {
 	if (!display || !surface)
 		return XvMCBadSurface;
+
 	return Success;
 }
 
@@ -820,16 +720,10 @@ _X_EXPORT Status XvMCFlushSurface(Display * display, XvMCSurface * surface)
 _X_EXPORT Status XvMCGetSurfaceStatus(Display * display, XvMCSurface * surface,
 				      int *stat)
 {
-	Status ret;
-
 	if (!display || !surface || !stat)
 		return XvMCBadSurface;
 
-	ret = (xvmc_driver->get_surface_status) (display, surface, stat);
-	if (ret) {
-		XVMC_ERR("get surface status fail\n");
-		return ret;
-	}
+	*stat = 0;
 
 	return Success;
 }
@@ -851,21 +745,7 @@ _X_EXPORT Status XvMCHideSurface(Display * display, XvMCSurface * surface)
 	if (!display || !surface)
 		return XvMCBadSurface;
 
-	XvMCSyncSurface(display, surface);
-
-	/*
-	   Get the status of the surface, if it is not currently displayed
-	   we don't need to worry about it.
-	 */
-	if ((ret = XvMCGetSurfaceStatus(display, surface, &stat)) != Success)
-		return ret;
-
-	if (!(stat & XVMC_DISPLAYING))
-		return Success;
-
-	/* FIXME: */
-	XVMC_ERR("XvMCHideSurface not implemented!\n");
-	return BadValue;
+	return Success;
 }
 
 /*

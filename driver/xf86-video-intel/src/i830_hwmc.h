@@ -47,67 +47,29 @@
 #define XVMC_I945_MPEG2_VLD	0x04
 #define XVMC_I965_MPEG2_VLD	0x08
 
-/* supported surface types */
-enum {
-	SURFACE_TYPE_MPEG2_MPML = FOURCC_XVMC,	/* mpeg2 MP@ML */
-	SURFACE_TYPE_MPEG1_MPML,	/* mpeg1 MP@ML */
-	SURFACE_TYPE_MAX
-};
-
-/* common header for context private */
-struct hwmc_buffer {
-	drm_handle_t handle;
-	unsigned long offset;
-	unsigned long size;
-	unsigned long bus_addr;
-};
-
-struct _intel_xvmc_common {
+struct intel_xvmc_hw_context {
 	unsigned int type;
-	struct hwmc_buffer batchbuffer;
-	unsigned int kernel_exec_fencing:1;
+	union {
+		struct {
+			unsigned int use_phys_addr : 1;
+		} i915;
+		struct {
+			unsigned int is_g4x:1;
+			unsigned int is_965_q:1;
+			unsigned int is_igdng:1;
+		} i965;
+	};
 };
 
 /* Intel private XvMC command to DDX driver */
 struct intel_xvmc_command {
-	unsigned int command;
-	unsigned int ctxNo;
-	unsigned int srfNo;
-	unsigned int subPicNo;
-	unsigned int flags;
-	unsigned int real_id;
 	uint32_t handle;
-	unsigned int pad[5];
 };
 
 #ifdef _INTEL_XVMC_SERVER_
 #include <xf86xvmc.h>
 
-struct intel_xvmc_driver {
-	char *name;
-	XF86MCAdaptorPtr adaptor;
-	unsigned int flag;
-	i830_memory *batch;
-	drm_handle_t batch_handle;
-
-	/* more items for xvmv surface manage? */
-	 Bool(*init) (ScrnInfoPtr, XF86VideoAdaptorPtr);
-	void (*fini) (ScrnInfoPtr);
-	void *devPrivate;
-};
-
-extern struct intel_xvmc_driver *xvmc_driver;
-extern struct intel_xvmc_driver i915_xvmc_driver;
-extern struct intel_xvmc_driver i965_xvmc_driver;
-extern struct intel_xvmc_driver vld_xvmc_driver;
-
-extern Bool intel_xvmc_probe(ScrnInfoPtr);
-extern Bool intel_xvmc_driver_init(ScreenPtr, XF86VideoAdaptorPtr);
-extern Bool intel_xvmc_screen_init(ScreenPtr);
-extern void intel_xvmc_finish(ScrnInfoPtr);
-extern int intel_xvmc_put_image_size(ScrnInfoPtr);
-extern Bool intel_xvmc_init_batch(ScrnInfoPtr);
-extern void intel_xvmc_fini_batch(ScrnInfoPtr);
+extern Bool intel_xvmc_adaptor_init(ScreenPtr);
 #endif
 
 #endif

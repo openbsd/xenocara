@@ -2738,7 +2738,8 @@ I830ScreenInit(int scrnIndex, ScreenPtr screen, int argc, char **argv)
 	xf86DPMSInit(screen, xf86DPMSSet, 0);
 
 #ifdef INTEL_XVMC
-	intel->XvMCEnabled = FALSE;
+	if (IS_I965G(intel))
+		intel->XvMCEnabled = TRUE;
 	from = ((intel->directRenderingType == DRI_DRI2) &&
 		xf86GetOptValBool(intel->Options, OPTION_XVMC,
 				  &intel->XvMCEnabled) ? X_CONFIG : X_DEFAULT);
@@ -2807,11 +2808,6 @@ static void i830AdjustFrame(int scrnIndex, int x, int y, int flags)
 static void I830FreeScreen(int scrnIndex, int flags)
 {
 	ScrnInfoPtr scrn = xf86Screens[scrnIndex];
-#ifdef INTEL_XVMC
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-	if (intel && intel->XvMCEnabled)
-		intel_xvmc_finish(xf86Screens[scrnIndex]);
-#endif
 
 	i830_close_drm_master(scrn);
 

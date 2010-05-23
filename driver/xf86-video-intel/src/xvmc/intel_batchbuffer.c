@@ -108,10 +108,7 @@ Bool intelInitBatchBuffer(void)
 		return False;
 	}
 
-	if (xvmc_driver->kernel_exec_fencing)
-		drm_intel_gem_bo_map_gtt(xvmc_driver->batch.buf);
-	else
-		drm_intel_bo_map(xvmc_driver->batch.buf, 1);
+	drm_intel_gem_bo_map_gtt(xvmc_driver->batch.buf);
 
 	xvmc_driver->batch.init_ptr = xvmc_driver->batch.buf->virtual;
 	xvmc_driver->batch.size = BATCH_SIZE;
@@ -122,10 +119,7 @@ Bool intelInitBatchBuffer(void)
 
 void intelFiniBatchBuffer(void)
 {
-	if (xvmc_driver->kernel_exec_fencing)
-		drm_intel_gem_bo_unmap_gtt(xvmc_driver->batch.buf);
-	else
-		drm_intel_bo_unmap(xvmc_driver->batch.buf);
+	drm_intel_gem_bo_unmap_gtt(xvmc_driver->batch.buf);
 
 	drm_intel_bo_unreference(xvmc_driver->batch.buf);
 }
@@ -134,17 +128,11 @@ void intelFlushBatch(Bool refill)
 {
 	i965_end_batch();
 
-	if (xvmc_driver->kernel_exec_fencing)
-		drm_intel_gem_bo_unmap_gtt(xvmc_driver->batch.buf);
-	else
-		drm_intel_bo_unmap(xvmc_driver->batch.buf);
+	drm_intel_gem_bo_unmap_gtt(xvmc_driver->batch.buf);
 
 	drm_intel_bo_exec(xvmc_driver->batch.buf,
 			  xvmc_driver->batch.ptr - xvmc_driver->batch.init_ptr,
 			  0, 0, 0);
-
-	if (xvmc_driver == &i915_xvmc_mc_driver)
-		dri_bo_wait_rendering(xvmc_driver->batch.buf);
 
 	drm_intel_bo_unreference(xvmc_driver->batch.buf);
 	if ((xvmc_driver->batch.buf =
@@ -153,10 +141,7 @@ void intelFlushBatch(Bool refill)
 		fprintf(stderr, "unable to alloc batch buffer\n");
 	}
 
-	if (xvmc_driver->kernel_exec_fencing)
-		drm_intel_gem_bo_map_gtt(xvmc_driver->batch.buf);
-	else
-		drm_intel_bo_map(xvmc_driver->batch.buf, 1);
+	drm_intel_gem_bo_map_gtt(xvmc_driver->batch.buf);
 
 	xvmc_driver->batch.init_ptr = xvmc_driver->batch.buf->virtual;
 	xvmc_driver->batch.size = BATCH_SIZE;

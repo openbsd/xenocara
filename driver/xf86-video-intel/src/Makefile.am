@@ -45,9 +45,7 @@ INTEL_DRI_SRCS = \
 INTEL_XVMC_SRCS = \
 	 i830_hwmc.h \
 	 i830_hwmc.c \
-         i915_hwmc.c \
          i915_hwmc.h \
-         i965_hwmc.c \
          i965_hwmc.h
 
 

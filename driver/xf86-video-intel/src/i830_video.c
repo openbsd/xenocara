@@ -74,7 +74,6 @@
 #ifdef INTEL_XVMC
 #define _INTEL_XVMC_SERVER_
 #include "i830_hwmc.h"
-#include "i915_hwmc.h"
 #endif
 
 #define OFF_DELAY 	250	/* milliseconds */
@@ -95,7 +94,10 @@ static int I830GetPortAttribute(ScrnInfoPtr, Atom, INT32 *, pointer);
 static void I830QueryBestSize(ScrnInfoPtr, Bool,
 			      short, short, short, short, unsigned int *,
 			      unsigned int *, pointer);
-static int I830PutImage(ScrnInfoPtr, short, short, short, short, short, short,
+static int I830PutImageTextured(ScrnInfoPtr, short, short, short, short, short, short,
+			short, short, int, unsigned char *, short, short,
+			Bool, RegionPtr, pointer, DrawablePtr);
+static int I830PutImageOverlay(ScrnInfoPtr, short, short, short, short, short, short,
 			short, short, int, unsigned char *, short, short,
 			Bool, RegionPtr, pointer, DrawablePtr);
 static int I830QueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
@@ -239,7 +241,13 @@ static XF86AttributeRec GammaAttributes[GAMMA_ATTRIBUTES] = {
 	{XvSettable | XvGettable, 0, 0xffffff, "XV_GAMMA5"}
 };
 
+#ifdef INTEL_XVMC
 #define NUM_IMAGES 5
+#define XVMC_IMAGE 1
+#else
+#define NUM_IMAGES 4
+#define XVMC_IMAGE 0
+#endif
 
 static XF86ImageRec Images[NUM_IMAGES] = {
 	XVIMAGE_YUY2,
@@ -543,9 +551,6 @@ void I830InitVideo(ScreenPtr screen)
 	XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
 	XF86VideoAdaptorPtr overlayAdaptor = NULL, texturedAdaptor = NULL;
 	int num_adaptors;
-#ifdef INTEL_XVMC
-	Bool xvmc_status = FALSE;
-#endif
 
 	num_adaptors = xf86XVListGenericAdaptors(scrn, &adaptors);
 	/* Give our adaptor list enough space for the overlay and/or texture video
@@ -602,14 +607,6 @@ void I830InitVideo(ScreenPtr screen)
 	if (overlayAdaptor && !intel->XvPreferOverlay)
 		adaptors[num_adaptors++] = overlayAdaptor;
 
-#ifdef INTEL_XVMC
-	if (intel_xvmc_probe(scrn)) {
-		if (texturedAdaptor)
-			xvmc_status =
-			    intel_xvmc_driver_init(screen, texturedAdaptor);
-	}
-#endif
-
 	if (num_adaptors) {
 		xf86XVScreenInit(screen, adaptors, num_adaptors);
 	} else {
@@ -619,8 +616,8 @@ void I830InitVideo(ScreenPtr screen)
 	}
 
 #ifdef INTEL_XVMC
-	if (xvmc_status)
-		intel_xvmc_screen_init(screen);
+	if (texturedAdaptor)
+		intel_xvmc_adaptor_init(screen);
 #endif
 	xfree(adaptors);
 }
@@ -862,7 +859,8 @@ static XF86VideoAdaptorPtr I830SetupImageVideoOverlay(ScreenPtr screen)
 		       sizeof(XF86AttributeRec) * GAMMA_ATTRIBUTES);
 		att += GAMMA_ATTRIBUTES;
 	}
-	adapt->nImages = NUM_IMAGES;
+	adapt->nImages = NUM_IMAGES - XVMC_IMAGE;
+
 	adapt->pImages = Images;
 	adapt->PutVideo = NULL;
 	adapt->PutStill = NULL;
@@ -872,7 +870,7 @@ static XF86VideoAdaptorPtr I830SetupImageVideoOverlay(ScreenPtr screen)
 	adapt->SetPortAttribute = I830SetPortAttributeOverlay;
 	adapt->GetPortAttribute = I830GetPortAttribute;
 	adapt->QueryBestSize = I830QueryBestSize;
-	adapt->PutImage = I830PutImage;
+	adapt->PutImage = I830PutImageOverlay;
 	adapt->QueryImageAttributes = I830QueryImageAttributes;
 
 	adaptor_priv->textured = FALSE;
@@ -939,6 +937,8 @@ static XF86VideoAdaptorPtr I830SetupImageVideoOverlay(ScreenPtr screen)
 
 static XF86VideoAdaptorPtr I830SetupImageVideoTextured(ScreenPtr screen)
 {
+	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+	intel_screen_private *intel = intel_get_screen_private(scrn);
 	XF86VideoAdaptorPtr adapt;
 	XF86AttributePtr attrs;
 	intel_adaptor_private *adaptor_privs;
@@ -976,7 +976,11 @@ static XF86VideoAdaptorPtr I830SetupImageVideoTextured(ScreenPtr screen)
 	adapt->pAttributes = attrs;
 	memcpy(attrs, TexturedAttributes,
 	       nAttributes * sizeof(XF86AttributeRec));
-	adapt->nImages = NUM_IMAGES;
+	if (IS_I915G(intel) || IS_I915GM(intel))
+		adapt->nImages = NUM_IMAGES - XVMC_IMAGE;
+	else
+		adapt->nImages = NUM_IMAGES;
+
 	adapt->pImages = Images;
 	adapt->PutVideo = NULL;
 	adapt->PutStill = NULL;
@@ -986,7 +990,7 @@ static XF86VideoAdaptorPtr I830SetupImageVideoTextured(ScreenPtr screen)
 	adapt->SetPortAttribute = I830SetPortAttributeTextured;
 	adapt->GetPortAttribute = I830GetPortAttribute;
 	adapt->QueryBestSize = I830QueryBestSize;
-	adapt->PutImage = I830PutImage;
+	adapt->PutImage = I830PutImageTextured;
 	adapt->QueryImageAttributes = I830QueryImageAttributes;
 
 	for (i = 0; i < nports; i++) {
@@ -1409,12 +1413,12 @@ static void i830_memcpy_plane(unsigned char *dst, unsigned char *src,
 
 static void
 I830CopyPlanarData(intel_adaptor_private *adaptor_priv,
-		   unsigned char *buf, int srcPitch,
-		   int srcPitch2, int dstPitch, int srcH, int top, int left,
+		   unsigned char *buf, int srcPitch, int srcPitch2,
+		   int dstPitch, int dstPitch2,
+		   int srcH, int top, int left,
 		   int h, int w, int id)
 {
 	unsigned char *src1, *src2, *src3, *dst_base, *dst1, *dst2, *dst3;
-	int dstPitch2 = dstPitch << 1;
 
 #if 0
 	ErrorF("I830CopyPlanarData: srcPitch %d, srcPitch %d, dstPitch %d\n"
@@ -1974,8 +1978,9 @@ static int xvmc_passthrough(int id)
 static Bool
 ums_overlay_put_image(ScrnInfoPtr scrn, xf86CrtcPtr crtc,
 		   int id, short width, short height,
-		   int dstPitch, int x1, int y1, int x2, int y2, BoxPtr dstBox,
-		   short src_w, short src_h, short drw_w, short drw_h)
+		   int dstPitch, int dstPitch2,
+		   BoxPtr dstBox, short src_w, short src_h, short drw_w,
+		   short drw_h)
 {
     intel_screen_private *intel = intel_get_screen_private(scrn);
     intel_adaptor_private *adaptor_priv = intel->adaptor->pPortPrivates[0].ptr;
@@ -2043,7 +2048,7 @@ ums_overlay_put_image(ScrnInfoPtr scrn, xf86CrtcPtr crtc,
 	/* set UV vertical phase to -0.25 */
 	overlay->UV_VPH = 0x30003000;
 #endif
-	overlay->OSTRIDE = (dstPitch * 2) | (dstPitch << 16);
+	overlay->OSTRIDE = (dstPitch2) | (dstPitch << 16);
 	OVERLAY_DEBUG("UV stride is %d, Y stride is %d\n",
 		      dstPitch, dstPitch * 2);
     } else
@@ -2071,7 +2076,7 @@ ums_overlay_put_image(ScrnInfoPtr scrn, xf86CrtcPtr crtc,
 static Bool
 i830_display_overlay(ScrnInfoPtr scrn, xf86CrtcPtr crtc,
 		     int id, short width, short height,
-		     int dstPitch, int x1, int y1, int x2, int y2,
+		     int dstPitch, int dstPitch2,
 		     BoxPtr dstBox, short src_w, short src_h, short drw_w,
 		     short drw_h)
 {
@@ -2111,7 +2116,7 @@ i830_display_overlay(ScrnInfoPtr scrn, xf86CrtcPtr crtc,
 	}
 
 	return ums_overlay_put_image(scrn, crtc, id, width, height, dstPitch,
-	    x1, y1, x2, y2, dstBox, src_w, src_h, drw_w, drw_h);
+	    dstPitch2, dstBox, src_w, src_h, drw_w, drw_h);
 }
 
 static Bool
@@ -2119,73 +2124,62 @@ i830_clip_video_helper(ScrnInfoPtr scrn,
 		       intel_adaptor_private *adaptor_priv,
 		       xf86CrtcPtr * crtc_ret,
 		       BoxPtr dst,
-		       INT32 * xa,
-		       INT32 * xb,
-		       INT32 * ya,
-		       INT32 * yb, RegionPtr reg, INT32 width, INT32 height)
+		       short src_x, short src_y,
+		       short drw_x, short drw_y,
+		       short src_w, short src_h,
+		       short drw_w, short drw_h,
+		       int id,
+		       int *top, int* left, int* npixels, int *nlines,
+		       RegionPtr reg, INT32 width, INT32 height)
 {
 	Bool ret;
 	RegionRec crtc_region_local;
 	RegionPtr crtc_region = reg;
+	BoxRec crtc_box;
+	INT32 x1, x2, y1, y2;
+	xf86CrtcPtr crtc;
+
+	x1 = src_x;
+	x2 = src_x + src_w;
+	y1 = src_y;
+	y2 = src_y + src_h;
+
+	dst->x1 = drw_x;
+	dst->x2 = drw_x + drw_w;
+	dst->y1 = drw_y;
+	dst->y2 = drw_y + drw_h;
 
 	/*
 	 * For overlay video, compute the relevant CRTC and
 	 * clip video to that
 	 */
-	if (crtc_ret) {
-		BoxRec crtc_box;
-		xf86CrtcPtr crtc = i830_covering_crtc(scrn, dst,
-						      adaptor_priv->desired_crtc,
-						      &crtc_box);
+	crtc = i830_covering_crtc(scrn, dst, adaptor_priv->desired_crtc,
+					      &crtc_box);
 
-		/* For textured video, we don't actually want to clip at all. */
-		if (crtc && !adaptor_priv->textured) {
-			REGION_INIT(screen, &crtc_region_local, &crtc_box, 1);
-			crtc_region = &crtc_region_local;
-			REGION_INTERSECT(screen, crtc_region, crtc_region,
-					 reg);
-		}
-		*crtc_ret = crtc;
+	/* For textured video, we don't actually want to clip at all. */
+	if (crtc && !adaptor_priv->textured) {
+		REGION_INIT(screen, &crtc_region_local, &crtc_box, 1);
+		crtc_region = &crtc_region_local;
+		REGION_INTERSECT(screen, crtc_region, crtc_region,
+				 reg);
 	}
-	ret = xf86XVClipVideoHelper(dst, xa, xb, ya, yb,
+	*crtc_ret = crtc;
+
+	ret = xf86XVClipVideoHelper(dst, &x1, &x2, &y1, &y2,
 				    crtc_region, width, height);
 	if (crtc_region != reg)
 		REGION_UNINIT(screen, &crtc_region_local);
+
+	*top = y1 >> 16;
+	*left = (x1 >> 16) & ~1;
+	*npixels = ((((x2 + 0xffff) >> 16) + 1) & ~1) - *left;
+	if (is_planar_fourcc(id)) {
+		*top &= ~1;
+		*nlines = ((((y2 + 0xffff) >> 16) + 1) & ~1) - *top;
+	} else
+		*nlines = ((y2 + 0xffff) >> 16) - *top;
+
 	return ret;
-}
-
-static void
-i830_fill_colorkey(ScreenPtr screen, uint32_t key, RegionPtr clipboxes)
-{
-	DrawablePtr root = &WindowTable[screen->myNum]->drawable;
-	XID pval[2];
-	BoxPtr pbox = REGION_RECTS(clipboxes);
-	int i, nbox = REGION_NUM_RECTS(clipboxes);
-	xRectangle *rects;
-	GCPtr gc;
-
-	if (!xf86Screens[screen->myNum]->vtSema)
-		return;
-
-	gc = GetScratchGC(root->depth, screen);
-	pval[0] = key;
-	pval[1] = IncludeInferiors;
-	(void)ChangeGC(gc, GCForeground | GCSubwindowMode, pval);
-	ValidateGC(root, gc);
-
-	rects = xalloc(nbox * sizeof(xRectangle));
-
-	for (i = 0; i < nbox; i++, pbox++) {
-		rects[i].x = pbox->x1;
-		rects[i].y = pbox->y1;
-		rects[i].width = pbox->x2 - pbox->x1;
-		rects[i].height = pbox->y2 - pbox->y1;
-	}
-
-	(*gc->ops->PolyFillRect) (root, gc, nbox, rects);
-
-	xfree(rects);
-	FreeScratchGC(gc);
 }
 
 static void
@@ -2241,29 +2235,19 @@ i830_setup_video_buffer(ScrnInfoPtr scrn, intel_adaptor_private *adaptor_priv,
 		adaptor_priv->buf = NULL;
 	}
 
-	if (xvmc_passthrough(id)) {
-		i830_free_video_buffers(adaptor_priv);
-		if (IS_I965G(intel)) {
-			adaptor_priv->buf =
-				drm_intel_bo_gem_create_from_name(intel->bufmgr,
-								  "xvmc surface",
-								  (uintptr_t)buf);
-		}
-	} else {
-		if (adaptor_priv->buf == NULL) {
-			adaptor_priv->buf = drm_intel_bo_alloc(intel->bufmgr,
-							"xv buffer", alloc_size,
-							4096);
-			if (adaptor_priv->buf == NULL)
-				return FALSE;
-		}
+	if (adaptor_priv->buf == NULL) {
+		adaptor_priv->buf = drm_intel_bo_alloc(intel->bufmgr,
+						"xv buffer", alloc_size,
+						4096);
+		if (adaptor_priv->buf == NULL)
+			return FALSE;
 	}
 
 	return TRUE;
 }
 
 static void
-i830_dst_pitch_and_size(ScrnInfoPtr scrn, intel_adaptor_private *adaptor_priv, short width,
+i830_setup_dst_params(ScrnInfoPtr scrn, intel_adaptor_private *adaptor_priv, short width,
 			short height, int *dstPitch, int *dstPitch2, int *size,
 			int id)
 {
@@ -2275,37 +2259,40 @@ i830_dst_pitch_and_size(ScrnInfoPtr scrn, intel_adaptor_private *adaptor_priv, s
 	 */
 	if (adaptor_priv->textured) {
 		pitchAlignMask = 3;
-#ifdef INTEL_XVMC
-		/* for i915 xvmc, hw requires at least 1kb aligned surface */
-		if ((id == FOURCC_XVMC) && IS_I915(intel))
-			pitchAlignMask = 0x3ff;
-#endif
 	} else {
 		if (IS_I965G(intel))
-			pitchAlignMask = 255;
+			/* Actually the alignment is 64 bytes, too. But the
+			 * stride must be at least 512 bytes. Take the easy fix
+			 * and align on 512 bytes unconditionally. */
+			pitchAlignMask = 511;
 		else
 			pitchAlignMask = 63;
 	}
 
+#if INTEL_XVMC
+	/* for i915 xvmc, hw requires 1kb aligned surfaces */
+	if ((id == FOURCC_XVMC) && IS_I915(intel))
+		pitchAlignMask = 0x3ff;
+#endif
+
 	/* Determine the desired destination pitch (representing the chroma's pitch,
 	 * in the planar case.
 	 */
-	switch (id) {
-	case FOURCC_YV12:
-	case FOURCC_I420:
+	if (is_planar_fourcc(id)) {
 		if (adaptor_priv->rotation & (RR_Rotate_90 | RR_Rotate_270)) {
 			*dstPitch =
 			    ((height / 2) + pitchAlignMask) & ~pitchAlignMask;
+			*dstPitch2 =
+			    (height + pitchAlignMask) & ~pitchAlignMask;
 			*size = *dstPitch * width * 3;
 		} else {
 			*dstPitch =
 			    ((width / 2) + pitchAlignMask) & ~pitchAlignMask;
+			*dstPitch2 =
+			    (width + pitchAlignMask) & ~pitchAlignMask;
 			*size = *dstPitch * height * 3;
 		}
-		break;
-	case FOURCC_UYVY:
-	case FOURCC_YUY2:
-
+	} else {
 		if (adaptor_priv->rotation & (RR_Rotate_90 | RR_Rotate_270)) {
 			*dstPitch =
 			    ((height << 1) + pitchAlignMask) & ~pitchAlignMask;
@@ -2315,36 +2302,36 @@ i830_dst_pitch_and_size(ScrnInfoPtr scrn, intel_adaptor_private *adaptor_priv, s
 			    ((width << 1) + pitchAlignMask) & ~pitchAlignMask;
 			*size = *dstPitch * height;
 		}
-		break;
-#ifdef INTEL_XVMC
-	case FOURCC_XVMC:
-		*dstPitch = ((width / 2) + pitchAlignMask) & ~pitchAlignMask;
-		*dstPitch2 = (width + pitchAlignMask) & ~pitchAlignMask;
-		*size = 0;
-		break;
-#endif
-	default:
-		*dstPitch = 0;
-		*size = 0;
-		break;
+		*dstPitch2 = 0;
 	}
 #if 0
 	ErrorF("srcPitch: %d, dstPitch: %d, size: %d\n", srcPitch, *dstPitch,
 	       size);
 #endif
+
+	adaptor_priv->YBufOffset = 0;
+
+	if (adaptor_priv->rotation & (RR_Rotate_90 | RR_Rotate_270)) {
+		adaptor_priv->UBufOffset =
+		    adaptor_priv->YBufOffset + (*dstPitch2 * width);
+		adaptor_priv->VBufOffset =
+		    adaptor_priv->UBufOffset + (*dstPitch * width / 2);
+	} else {
+		adaptor_priv->UBufOffset =
+		    adaptor_priv->YBufOffset + (*dstPitch2 * height);
+		adaptor_priv->VBufOffset =
+		    adaptor_priv->UBufOffset + (*dstPitch * height / 2);
+	}
 }
 
 static Bool
 i830_copy_video_data(ScrnInfoPtr scrn, intel_adaptor_private *adaptor_priv,
 		     short width, short height, int *dstPitch, int *dstPitch2,
-		     INT32 x1, INT32 y1, INT32 x2, INT32 y2,
+		     int top, int left, int npixels, int nlines,
 		     int id, unsigned char *buf)
 {
-#ifdef INTEL_XVMC
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-#endif
 	int srcPitch = 0, srcPitch2 = 0;
-	int top, left, npixels, nlines, size;
+	int size;
 
 	if (is_planar_fourcc(id)) {
 		srcPitch = (width + 0x3) & ~0x3;
@@ -2353,53 +2340,19 @@ i830_copy_video_data(ScrnInfoPtr scrn, intel_adaptor_private *adaptor_priv,
 		srcPitch = width << 1;
 	}
 
-	i830_dst_pitch_and_size(scrn, adaptor_priv, width, height, dstPitch,
+	i830_setup_dst_params(scrn, adaptor_priv, width, height, dstPitch,
 				dstPitch2, &size, id);
 
 	if (!i830_setup_video_buffer(scrn, adaptor_priv, size, id, buf))
 		return FALSE;
 
-	/* fixup pointers */
-#ifdef INTEL_XVMC
-	if (id == FOURCC_XVMC && IS_I915(intel)) {
-		adaptor_priv->YBufOffset = (uint32_t) ((uintptr_t) buf);
-		adaptor_priv->VBufOffset = adaptor_priv->YBufOffset + (*dstPitch2 * height);
-		adaptor_priv->UBufOffset =
-		    adaptor_priv->VBufOffset + (*dstPitch * height / 2);
-	} else {
-#endif
-		adaptor_priv->YBufOffset = 0;
-
-		if (adaptor_priv->rotation & (RR_Rotate_90 | RR_Rotate_270)) {
-			adaptor_priv->UBufOffset =
-			    adaptor_priv->YBufOffset + (*dstPitch * 2 * width);
-			adaptor_priv->VBufOffset =
-			    adaptor_priv->UBufOffset + (*dstPitch * width / 2);
-		} else {
-			adaptor_priv->UBufOffset =
-			    adaptor_priv->YBufOffset + (*dstPitch * 2 * height);
-			adaptor_priv->VBufOffset =
-			    adaptor_priv->UBufOffset + (*dstPitch * height / 2);
-		}
-#ifdef INTEL_XVMC
-	}
-#endif
-
 	/* copy data */
-	top = y1 >> 16;
-	left = (x1 >> 16) & ~1;
-	npixels = ((((x2 + 0xffff) >> 16) + 1) & ~1) - left;
-
 	if (is_planar_fourcc(id)) {
-		if (!xvmc_passthrough(id)) {
-			top &= ~1;
-			nlines = ((((y2 + 0xffff) >> 16) + 1) & ~1) - top;
-			I830CopyPlanarData(adaptor_priv, buf, srcPitch, srcPitch2,
-					   *dstPitch, height, top, left, nlines,
-					   npixels, id);
-		}
+		I830CopyPlanarData(adaptor_priv, buf, srcPitch, srcPitch2,
+				   *dstPitch, *dstPitch2,
+				   height, top, left, nlines,
+				   npixels, id);
 	} else {
-		nlines = ((y2 + 0xffff) >> 16) - top;
 		I830CopyPackedData(adaptor_priv, buf, srcPitch, *dstPitch, top, left,
 				   nlines, npixels);
 	}
@@ -2421,7 +2374,7 @@ i830_copy_video_data(ScrnInfoPtr scrn, intel_adaptor_private *adaptor_priv,
  * compositing.  It's a new argument to the function in the 1.1 server.
  */
 static int
-I830PutImage(ScrnInfoPtr scrn,
+I830PutImageTextured(ScrnInfoPtr scrn,
 	     short src_x, short src_y,
 	     short drw_x, short drw_y,
 	     short src_w, short src_h,
@@ -2433,13 +2386,11 @@ I830PutImage(ScrnInfoPtr scrn,
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	intel_adaptor_private *adaptor_priv = (intel_adaptor_private *) data;
-	ScreenPtr screen = screenInfo.screens[scrn->scrnIndex];
 	PixmapPtr pixmap = get_drawable_pixmap(drawable);
-	INT32 x1, x2, y1, y2;
-	int dstPitch;
-	int dstPitch2 = 0;
+	int dstPitch, dstPitch2;
 	BoxRec dstBox;
 	xf86CrtcPtr crtc;
+	int top, left, npixels, nlines;
 
 #if 0
 	ErrorF("I830PutImage: src: (%d,%d)(%d,%d), dst: (%d,%d)(%d,%d)\n"
@@ -2447,81 +2398,131 @@ I830PutImage(ScrnInfoPtr scrn,
 	       drw_y, drw_w, drw_h, width, height);
 #endif
 
-	if (!adaptor_priv->textured) {
-		/* If dst width and height are less than 1/8th the src size, the
-		 * src/dst scale factor becomes larger than 8 and doesn't fit in
-		 * the scale register. */
-		if (src_w >= (drw_w * 8))
-			drw_w = src_w / 7;
+	if (!i830_clip_video_helper(scrn,
+				    adaptor_priv,
+				    &crtc,
+				    &dstBox,
+				    src_x, src_y, drw_x, drw_y,
+				    src_w, src_h, drw_w, drw_h,
+				    id,
+				    &top, &left, &npixels, &nlines, clipBoxes,
+				    width, height))
+		return Success;
 
-		if (src_h >= (drw_h * 8))
-			drw_h = src_h / 7;
+	if (xvmc_passthrough(id)) {
+		int size;
+		uint32_t *gem_handle = (uint32_t *)buf;
+
+		i830_free_video_buffers(adaptor_priv);
+
+		i830_setup_dst_params(scrn, adaptor_priv, width, height,
+				&dstPitch, &dstPitch2, &size, id);
+
+		if (IS_I915G(intel) || IS_I915GM(intel)) {
+			/* XXX: i915 is not support and needs some
+			 * serious care.  grep for KMS in i915_hwmc.c */
+			return BadAlloc;
+		}
+
+		adaptor_priv->buf =
+			drm_intel_bo_gem_create_from_name(intel->bufmgr,
+							  "xvmc surface",
+							  *gem_handle);
+	} else {
+		if (!i830_copy_video_data(scrn, adaptor_priv, width, height,
+					  &dstPitch, &dstPitch2,
+					  top, left, npixels, nlines, id, buf))
+			return BadAlloc;
 	}
 
-	/* Clip */
-	x1 = src_x;
-	x2 = src_x + src_w;
-	y1 = src_y;
-	y2 = src_y + src_h;
+	if (crtc && adaptor_priv->SyncToVblank != 0) {
+		i830_wait_for_scanline(scrn, pixmap, crtc, clipBoxes);
+	}
 
-	dstBox.x1 = drw_x;
-	dstBox.x2 = drw_x + drw_w;
-	dstBox.y1 = drw_y;
-	dstBox.y2 = drw_y + drw_h;
+	if (IS_I965G(intel)) {
+		I965DisplayVideoTextured(scrn, adaptor_priv, id, clipBoxes,
+					 width, height, dstPitch, dstPitch2,
+					 src_w, src_h,
+					 drw_w, drw_h, pixmap);
+	} else {
+		I915DisplayVideoTextured(scrn, adaptor_priv, id, clipBoxes,
+					 width, height, dstPitch, dstPitch2,
+					 src_w, src_h, drw_w, drw_h,
+					 pixmap);
+	}
+
+	DamageDamageRegion(drawable, clipBoxes);
+
+	return Success;
+}
+
+static int
+I830PutImageOverlay(ScrnInfoPtr scrn,
+	     short src_x, short src_y,
+	     short drw_x, short drw_y,
+	     short src_w, short src_h,
+	     short drw_w, short drw_h,
+	     int id, unsigned char *buf,
+	     short width, short height,
+	     Bool sync, RegionPtr clipBoxes, pointer data,
+	     DrawablePtr drawable)
+{
+	intel_adaptor_private *adaptor_priv = (intel_adaptor_private *) data;
+	int dstPitch, dstPitch2;
+	BoxRec dstBox;
+	xf86CrtcPtr crtc;
+	int top, left, npixels, nlines;
+
+#if 0
+	ErrorF("I830PutImage: src: (%d,%d)(%d,%d), dst: (%d,%d)(%d,%d)\n" "width %d, height %d\n", src_x, src_y, src_w, src_h, drw_x,
+	       drw_y, drw_w, drw_h, width, height);
+#endif
+
+	/* If dst width and height are less than 1/8th the src size, the
+	 * src/dst scale factor becomes larger than 8 and doesn't fit in
+	 * the scale register. */
+	if (src_w >= (drw_w * 8))
+		drw_w = src_w / 7;
+
+	if (src_h >= (drw_h * 8))
+		drw_h = src_h / 7;
 
 	if (!i830_clip_video_helper(scrn,
 				    adaptor_priv,
 				    &crtc,
-				    &dstBox, &x1, &x2, &y1, &y2, clipBoxes,
+				    &dstBox,
+				    src_x, src_y, drw_x, drw_y,
+				    src_w, src_h, drw_w, drw_h,
+				    id,
+				    &top, &left, &npixels, &nlines, clipBoxes,
 				    width, height))
 		return Success;
 
-	if (!adaptor_priv->textured) {
-		/* texture video handles rotation differently. */
-		if (crtc)
-			adaptor_priv->rotation = crtc->rotation;
-		else {
-			xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-				   "Fail to clip video to any crtc!\n");
-			return Success;
-		}
+	/* overlay can't handle rotation natively, store it for the copy func */
+	if (crtc)
+		adaptor_priv->rotation = crtc->rotation;
+	else {
+		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+			   "Fail to clip video to any crtc!\n");
+		return Success;
 	}
 
 	if (!i830_copy_video_data(scrn, adaptor_priv, width, height,
 				  &dstPitch, &dstPitch2,
-				  x1, y1, x2, y2, id, buf))
+				  top, left, npixels, nlines, id, buf))
 		return BadAlloc;
 
-	if (!adaptor_priv->textured) {
-		if (!i830_display_overlay
-		    (scrn, crtc, id, width, height, dstPitch, x1, y1, x2, y2,
-		     &dstBox, src_w, src_h, drw_w, drw_h))
-			return BadAlloc;
+	if (!i830_display_overlay
+	    (scrn, crtc, id, width, height, dstPitch, dstPitch2,
+	     &dstBox, src_w, src_h, drw_w, drw_h))
+		return BadAlloc;
 
-		/* update cliplist */
-		if (!REGION_EQUAL(scrn->screen, &adaptor_priv->clip, clipBoxes)) {
-			REGION_COPY(scrn->screen, &adaptor_priv->clip, clipBoxes);
-			i830_fill_colorkey(screen, adaptor_priv->colorKey, clipBoxes);
-		}
-	} else {
-		if (crtc && adaptor_priv->SyncToVblank != 0) {
-			i830_wait_for_scanline(scrn, pixmap, crtc, clipBoxes);
-		}
-
-		if (IS_I965G(intel)) {
-			I965DisplayVideoTextured(scrn, adaptor_priv, id, clipBoxes,
-						 width, height, dstPitch, x1,
-						 y1, x2, y2, src_w, src_h,
-						 drw_w, drw_h, pixmap);
-		} else {
-			I915DisplayVideoTextured(scrn, adaptor_priv, id, clipBoxes,
-						 width, height, dstPitch,
-						 dstPitch2, x1, y1, x2, y2,
-						 src_w, src_h, drw_w, drw_h,
-						 pixmap);
-		}
-
-		DamageDamageRegion(drawable, clipBoxes);
+	/* update cliplist */
+	if (!REGION_EQUAL(scrn->pScreen, &adaptor_priv->clip, clipBoxes)) {
+		REGION_COPY(scrn->pScreen, &adaptor_priv->clip, clipBoxes);
+		xf86XVFillKeyHelperDrawable(drawable,
+					    adaptor_priv->colorKey,
+					    clipBoxes);
 	}
 
 	adaptor_priv->videoStatus = CLIENT_VIDEO_ON;

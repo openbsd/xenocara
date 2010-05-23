@@ -44,7 +44,7 @@ I915DisplayVideoTextured(ScrnInfoPtr scrn,
 			 intel_adaptor_private *adaptor_priv, int id,
 			 RegionPtr dstRegion,
 			 short width, short height, int video_pitch,
-			 int video_pitch2, int x1, int y1, int x2, int y2,
+			 int video_pitch2,
 			 short src_w, short src_h, short drw_w, short drw_h,
 			 PixmapPtr pixmap)
 {

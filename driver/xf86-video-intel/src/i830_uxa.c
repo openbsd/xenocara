@@ -953,6 +953,8 @@ i830_uxa_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 		priv = xcalloc(1, sizeof (struct intel_pixmap));
 		if (priv == NULL) {
 			fbDestroyPixmap(pixmap);
+			if (errno == EFBIG)
+				return fbCreatePixmap(screen, w, h, depth, usage);
 			return NullPixmap;
 		}
 
