@@ -432,6 +432,11 @@
 #define MGA1064_EV_PIX_PLLC_N	0xb7
 #define MGA1064_EV_PIX_PLLC_P	0xb8
 
+/* Modified PLL for G200 EH */
+#define MGA1064_EH_PIX_PLLC_M   0xb6
+#define MGA1064_EH_PIX_PLLC_N   0xb7
+#define MGA1064_EH_PIX_PLLC_P   0xb8
+
 
 #define MGA1064_DISP_CTL        0x8a
 #define MGA1064_DISP_CTL_DAC1OUTSEL_MASK       0x01

@@ -7670,7 +7670,7 @@ dnl DEALINGS IN THE SOFTWARE.
 # See the "minimum version" comment for each macro you use to see what 
 # version you require.
 m4_defun([XORG_MACROS_VERSION],[
-m4_define([vers_have], [1.6.1])
+m4_define([vers_have], [1.7.0])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,
@@ -7811,6 +7811,31 @@ AC_SUBST([DRIVER_MAN_DIR])
 AC_SUBST([ADMIN_MAN_DIR])
 ]) # XORG_MANPAGE_SECTIONS
 
+# XORG_CHECK_SGML_DOCTOOLS
+# ------------------------
+# Minimum version: 1.7.0
+#
+# Defines the variable XORG_SGML_PATH containing the location of X11/defs.ent
+# provided by xorg-sgml-doctools, if installed.
+AC_DEFUN([XORG_CHECK_SGML_DOCTOOLS],[
+AC_MSG_CHECKING([for X.Org SGML entities])
+XORG_SGML_PATH=
+PKG_CHECK_EXISTS([xorg-sgml-doctools],
+    [XORG_SGML_PATH=`$PKG_CONFIG --variable=sgmlrootdir xorg-sgml-doctools`],
+    [if test x"$cross_compiling" != x"yes" ; then
+        AC_CHECK_FILE([$prefix/share/sgml/X11/defs.ent],
+                      [XORG_SGML_PATH=$prefix/share/sgml])
+     fi])
+
+if test "x$XORG_SGML_PATH" != "x" ; then
+   AC_MSG_RESULT([$XORG_SGML_PATH])
+else
+   AC_MSG_RESULT([no])
+fi
+
+AC_SUBST(XORG_SGML_PATH)
+]) # XORG_CHECK_SGML_DOCTOOLS
+
 # XORG_CHECK_LINUXDOC
 # -------------------
 # Minimum version: 1.0.0
@@ -7820,23 +7845,14 @@ AC_SUBST([ADMIN_MAN_DIR])
 # Whether or not the necessary tools and files are found can be checked
 # with the AM_CONDITIONAL "BUILD_LINUXDOC"
 AC_DEFUN([XORG_CHECK_LINUXDOC],[
-if test x$XORG_SGML_PATH = x ; then
-    XORG_SGML_PATH=$prefix/share/sgml
-fi
-HAVE_DEFS_ENT=
-
-if test x"$cross_compiling" = x"yes" ; then
-  HAVE_DEFS_ENT=no
-else
-  AC_CHECK_FILE([$XORG_SGML_PATH/X11/defs.ent], [HAVE_DEFS_ENT=yes])
-fi
+AC_REQUIRE([XORG_CHECK_SGML_DOCTOOLS])
 
 AC_PATH_PROG(LINUXDOC, linuxdoc)
 AC_PATH_PROG(PS2PDF, ps2pdf)
 
 AC_MSG_CHECKING([whether to build documentation])
 
-if test x$HAVE_DEFS_ENT != x && test x$LINUXDOC != x ; then
+if test x$XORG_SGML_PATH != x && test x$LINUXDOC != x ; then
    BUILDDOC=yes
 else
    BUILDDOC=no
@@ -7878,16 +7894,12 @@ AC_SUBST(MAKE_HTML)
 # indicates whether the necessary tools and files are found and, if set,
 # $(MAKE_XXX) blah.sgml will produce blah.xxx.
 AC_DEFUN([XORG_CHECK_DOCBOOK],[
-if test x$XORG_SGML_PATH = x ; then
-    XORG_SGML_PATH=$prefix/share/sgml
-fi
-HAVE_DEFS_ENT=
+AC_REQUIRE([XORG_CHECK_SGML_DOCTOOLS])
+
 BUILDTXTDOC=no
 BUILDPDFDOC=no
 BUILDPSDOC=no
 BUILDHTMLDOC=no
-
-AC_CHECK_FILE([$XORG_SGML_PATH/X11/defs.ent], [HAVE_DEFS_ENT=yes])
 
 AC_PATH_PROG(DOCBOOKPS, docbook2ps)
 AC_PATH_PROG(DOCBOOKPDF, docbook2pdf)
@@ -7895,7 +7907,7 @@ AC_PATH_PROG(DOCBOOKHTML, docbook2html)
 AC_PATH_PROG(DOCBOOKTXT, docbook2txt)
 
 AC_MSG_CHECKING([whether to build text documentation])
-if test x$HAVE_DEFS_ENT != x && test x$DOCBOOKTXT != x &&
+if test x$XORG_SGML_PATH != x && test x$DOCBOOKTXT != x &&
    test x$BUILD_TXTDOC != xno; then
 	BUILDTXTDOC=yes
 fi
@@ -7903,7 +7915,7 @@ AM_CONDITIONAL(BUILD_TXTDOC, [test x$BUILDTXTDOC = xyes])
 AC_MSG_RESULT([$BUILDTXTDOC])
 
 AC_MSG_CHECKING([whether to build PDF documentation])
-if test x$HAVE_DEFS_ENT != x && test x$DOCBOOKPDF != x &&
+if test x$XORG_SGML_PATH != x && test x$DOCBOOKPDF != x &&
    test x$BUILD_PDFDOC != xno; then
 	BUILDPDFDOC=yes
 fi
@@ -7911,7 +7923,7 @@ AM_CONDITIONAL(BUILD_PDFDOC, [test x$BUILDPDFDOC = xyes])
 AC_MSG_RESULT([$BUILDPDFDOC])
 
 AC_MSG_CHECKING([whether to build PostScript documentation])
-if test x$HAVE_DEFS_ENT != x && test x$DOCBOOKPS != x &&
+if test x$XORG_SGML_PATH != x && test x$DOCBOOKPS != x &&
    test x$BUILD_PSDOC != xno; then
 	BUILDPSDOC=yes
 fi
@@ -7919,7 +7931,7 @@ AM_CONDITIONAL(BUILD_PSDOC, [test x$BUILDPSDOC = xyes])
 AC_MSG_RESULT([$BUILDPSDOC])
 
 AC_MSG_CHECKING([whether to build HTML documentation])
-if test x$HAVE_DEFS_ENT != x && test x$DOCBOOKHTML != x &&
+if test x$XORG_SGML_PATH != x && test x$DOCBOOKHTML != x &&
    test x$BUILD_HTMLDOC != xno; then
 	BUILDHTMLDOC=yes
 fi

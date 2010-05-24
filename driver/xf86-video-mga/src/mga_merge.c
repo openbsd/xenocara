@@ -362,6 +362,7 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
     case PCI_CHIP_MGAG200_SE_B_PCI:
     case PCI_CHIP_MGAG200_WINBOND_PCI:
     case PCI_CHIP_MGAG200_EV_PCI:
+    case PCI_CHIP_MGAG200_EH_PCI:
     case PCI_CHIP_MGAG400:
     case PCI_CHIP_MGAG550:
 	MGAGSetupFuncs(pScrn);
@@ -516,6 +517,7 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
 	case PCI_CHIP_MGAG200_SE_B_PCI:
         case PCI_CHIP_MGAG200_WINBOND_PCI:
         case PCI_CHIP_MGAG200_EV_PCI:
+        case PCI_CHIP_MGAG200_EH_PCI:
 	case PCI_CHIP_MGAG400:
 	case PCI_CHIP_MGAG550:
 	   maxPitch = 4096;

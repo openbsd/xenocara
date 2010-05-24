@@ -133,6 +133,10 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 #define PCI_CHIP_MGAG200_EV_PCI 0x0530
 #endif
 
+#ifndef PCI_CHIP_MGAG200_EH_PCI
+#define PCI_CHIP_MGAG200_EH_PCI 0x0533
+#endif
+
 /*
  * Read/write to the DAC via MMIO 
  */
@@ -474,6 +478,7 @@ typedef struct {
     int is_G200SE:1;
     int is_G200WB:1;
     int is_G200EV:1;
+    int is_G200EH:1;
 
     int KVM;
 
