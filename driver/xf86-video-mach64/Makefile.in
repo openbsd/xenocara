@@ -55,7 +55,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog config.guess \
 	config.sub depcomp install-sh ltmain.sh missing
@@ -117,8 +117,10 @@ BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -144,6 +146,9 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
+HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -188,19 +193,16 @@ STRIP = @STRIP@
 USE_EXA_FALSE = @USE_EXA_FALSE@
 USE_EXA_TRUE = @USE_EXA_TRUE@
 VERSION = @VERSION@
+XEXT_CFLAGS = @XEXT_CFLAGS@
+XEXT_LIBS = @XEXT_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
+XORG_SGML_PATH = @XORG_SGML_PATH@
 XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
 XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
-ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -217,24 +219,31 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 moduledir = @moduledir@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -242,7 +251,7 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 EXTRA_DIST = README.ati README.ati.sgml ChangeLog
-CLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -606,7 +615,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -614,6 +622,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-recursive
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -688,7 +697,7 @@ uninstall-info: uninstall-info-recursive
 .PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -598,6 +598,9 @@ Mach64PrepareTexture(PicturePtr pPict, PixmapPtr pPix)
         if (Mach64TexFormats[i].pictFormat == pPict->format)
             break;
     }
+    if (i == MACH64_NR_TEX_FORMATS)
+        MACH64_FALLBACK(("Unsupported picture format 0x%x\n",
+                        (int)pPict->format));
     texFormat = Mach64TexFormats[i].texFormat;
 
     /* Prepare picture size */
@@ -709,6 +712,9 @@ Mach64PrepareComposite
         if (Mach64TexFormats[i].pictFormat == pDstPicture->format)
             break;
     }
+    if (i == MACH64_NR_TEX_FORMATS)
+        MACH64_FALLBACK(("Unsupported picture format 0x%x\n",
+                        (int)pPict->format));
     dstFormat = Mach64TexFormats[i].dstFormat;
 
     m3d->dp_pix_width = SetBits(dstFormat, DP_DST_PIX_WIDTH) |

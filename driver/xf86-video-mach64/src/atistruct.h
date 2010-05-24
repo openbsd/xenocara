@@ -59,7 +59,9 @@
 #endif
 #include "xf86Cursor.h"
 #include "xf86Pci.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#endif
 
 #include "atipcirename.h"
 
@@ -269,9 +271,9 @@ typedef struct _ATIRec
     CARD8 BusType;
 
 #ifndef AVOID_CPIO
-
-    resRange VGAWonderResources[2];
-
+#ifndef XSERVER_LIBPCIACCESS
+     resRange VGAWonderResources[2];
+#endif
 #endif /* AVOID_CPIO */
 
     /*

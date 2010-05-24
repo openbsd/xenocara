@@ -42,7 +42,7 @@ if USE_EXA
 ATIMISC_EXA_SOURCES = atimach64exa.c
 endif
 
-AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@
+AM_CFLAGS = $(CWARNFLAGS) @XORG_CFLAGS@ @DRI_CFLAGS@
 
 mach64_drv_la_LTLIBRARIES = mach64_drv.la
 mach64_drv_la_LDFLAGS = -module -avoid-version

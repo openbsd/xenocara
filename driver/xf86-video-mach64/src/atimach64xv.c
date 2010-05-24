@@ -31,6 +31,7 @@
 #include "atimach64accel.h"
 #include "atimach64io.h"
 #include "atixv.h"
+#include "atimach64version.h"
 
 #include <X11/extensions/Xv.h>
 #include "fourcc.h"
@@ -1357,6 +1358,9 @@ ATIMach64XVInitialiseAdaptor
     XF86VideoEncodingPtr  enc = &(ATIMach64VideoEncoding[0]);
     XF86OffscreenImagePtr surf0 = &(ATIMach64Surface[0]);
     XF86OffscreenImagePtr surf1 = &(ATIMach64Surface[1]);
+
+    if (xf86NameCmp(pScreenInfo->driverName, MACH64_DRIVER_NAME) != 0)
+	return 0;
 
     if (pppAdaptor)
         *pppAdaptor = NULL;

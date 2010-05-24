@@ -59,6 +59,7 @@ ATIClaimResources
 )
 {
 
+#ifndef XSERVER_LIBPCIACCESS
 #ifndef AVOID_CPIO
 
     resRange Resources[2] = {{0, 0, 0}, _END};
@@ -101,7 +102,7 @@ ATIClaimResources
     }
 
 #endif /* AVOID_CPIO */
-
+#endif
 }
 
 /*

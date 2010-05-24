@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-mach64],
-        6.8.0,
+        6.8.2,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-mach64)
 
@@ -34,14 +34,15 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.2)
+
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
-
-if test "x$GCC" = "xyes"; then
-	CPPFLAGS="$CPPFLAGS -Wall"
-fi
+XORG_CWARNFLAGS
 
 AH_TOP([#include "xorg-server.h"])
 
@@ -72,6 +73,10 @@ XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.2 xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
+                  HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
+                  HAVE_XEXTPROTO_71="no")
+AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
@@ -220,10 +225,11 @@ AC_SUBST([DRIVER_NAME])
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 XORG_CHECK_LINUXDOC
+XORG_CHANGELOG
 
 AC_MSG_NOTICE(
-[Please change the Driver line in xorg.conf from "ati" to "mach64" or install]
-[the ati wrapper as well:]
+[Please change the Driver line in xorg.conf from "ati" to "mach64"]
+[ or install the ati wrapper as well:]
 [    git://anongit.freedesktop.org/git/xorg/driver/xf86-video-ati]
 )
 

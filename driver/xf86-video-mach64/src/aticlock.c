@@ -330,8 +330,6 @@ ATIClockSet
 
             ATIDelay(50000);            /* 50 milliseconds */
 
-            (void)xf86DisableInterrupts();
-
             /* Send all 20 bits of programme word */
             while (Programme >= CLOCK_BIT)
             {
@@ -342,8 +340,6 @@ ATIClockSet
                 ATIDelay(26);           /* 26 microseconds */
                 Programme >>= 1;
             }
-
-            xf86EnableInterrupts();
 
             /* Restore register */
             out8(CLOCK_CNTL, clock_cntl0 | CLOCK_STROBE);

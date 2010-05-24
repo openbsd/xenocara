@@ -1,3 +1,96 @@
+commit 4f08e83e50059df494f5f53cd05eb8809d18656e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:40 2009 +1000
+
+    mach64: change to using ABI version check
+
+commit 64960253ea5dcfb01d92b5b684790f16be5b73be
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:31 2009 +1000
+
+    mach64: update for resources/RAC API removal
+
+commit 965614f27d42106e859000264a6eb89d9fcba67e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 11:43:33 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9caef14defaf892d957875f6d774003a036bad45
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 22:06:40 2009 -0700
+
+    Fill in COPYING file, add SubmittingPatches URL to README
+
+commit d9d787167795862909738892195fcdc751c413ed
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sun May 10 16:56:02 2009 -0700
+
+    Doublecheck pictFormat is a supported format
+    
+    Fixes these warnings from parfait source checker:
+    
+    Error: Read buffer overflow at src/atimach64render.c:601
+    	in function 'Mach64PrepareTexture' [Symbolic analysis]
+           In array dereference of Mach64TexFormats[i] with index 'i'
+           Array size is 6 elements (of 12 bytes each), index >= 0 and index <= 6
+    Error: Read buffer overflow at src/atimach64render.c:712
+    	in function 'Mach64PrepareComposite' [Symbolic analysis]
+           In array dereference of Mach64TexFormats[i] with index 'i'
+           Array size is 6 elements (of 12 bytes each), index >= 0 and index <= 6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 99db87ed49d7eca8de2ff1f7d53b580637ebb916
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 29 17:32:47 2009 -0700
+
+    Version 6.8.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 193744b015e8f2b8c25d90094b7f0b502bc1287b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 29 17:21:53 2009 -0700
+
+    Convert to XORG_CWARNFLAGS & XORG_CHANGELOG
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit d394e0b8269ea0a7d36ee8edb38947df170399c9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:41:43 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit cab7a47477e3878cb9f1fdc5b721fc8e3aaadd5b
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 28 01:09:52 2008 -0200
+
+    Remove xf86{Disable,Enable}Interrupts
+    
+      They were already a noop in most "os-support"s, and are no longer
+    available in the X Server.
+
+commit e993728f7ee618d34163c127231881aec1637ca2
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Oct 3 14:31:13 2008 -0400
+
+    Don't print the resource list on failure.
+    
+    If this ever happens it should be printed from the server at any rate.
+
+commit 46a0254b5a0bffe8c57322b085bcd38f893e4b27
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Sep 9 10:32:48 2008 -0400
+
+    Make sure the screen is a mach64 screen before doing anything in ATIMach64XVInitialiseAdaptor.
+
 commit 89a9ad75f3e50e25275b803617d5e74709ead269
 Author: Yi Zhan <yi.zhan@intel.com>
 Date:   Wed Mar 26 16:13:08 2008 +1000
