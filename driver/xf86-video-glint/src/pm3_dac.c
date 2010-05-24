@@ -445,7 +445,6 @@ Permedia3PreInit(ScrnInfoPtr pScrn)
 	    if (xf86LoadSubModule(pScrn, "int10")) {
 	        xf86Int10InfoPtr pInt;
 
-	        xf86LoaderReqSymLists(GLINTint10Symbols, NULL);
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Initializing int10\n");
 		pInt = xf86InitInt10(pGlint->pEnt->index);
 		xf86FreeInt10(pInt);

@@ -343,7 +343,6 @@ Bool GLINTSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
 void GLINTAdjustFrame(int scrnIndex, int x, int y, int flags);
 
 extern int partprodPermedia[];
-extern const char *GLINTint10Symbols[];
 
 Bool GLINTDGAInit(ScreenPtr pScreen);
 

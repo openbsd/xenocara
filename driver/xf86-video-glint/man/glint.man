@@ -104,7 +104,7 @@ acceleration in general, but disables it for some special cases.  Default: off.
 If you have a card of the same name, turn this on.  Default: off.
 .TP
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Alan Hourihane, Dirk Hohndel, Stefan Dirsch, Michel Dänzer,
 Sven Luther

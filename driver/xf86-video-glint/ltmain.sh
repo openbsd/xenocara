@@ -2127,17 +2127,6 @@ EOF
 	;;
     esac
     for pass in $passes; do
-      # The preopen pass in lib mode reverses $deplibs; put it back here
-      # so that -L comes before libs that need it for instance...
-      if test "$linkmode,$pass" = "lib,link"; then
-	## FIXME: Find the place where the list is rebuilt in the wrong
-	##        order, and fix it there properly
-	tmp_deplibs=
-	for deplib in $deplibs; do
-	  tmp_deplibs="$deplib $tmp_deplibs"
-	done
-	deplibs="$tmp_deplibs"
-      fi
       if test "$linkmode,$pass" = "lib,link" ||
 	 test "$linkmode,$pass" = "prog,scan"; then
 	libs="$deplibs"
