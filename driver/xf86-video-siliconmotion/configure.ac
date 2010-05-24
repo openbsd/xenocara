@@ -22,20 +22,21 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-siliconmotion],
-        1.7.3,
+        1.7.4,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-siliconmotion)
 
-# Require xorg-macros version 1.2 or newer for XORG_CWARNFLAGS and
-# XORG_CHANGELOG macros
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2.1 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2.1)
+# Require xorg-macros 1.4 for XORG_DEFAULT_OPTIONS & XORG_INSTALL
+m4_ifndef([XORG_MACROS_VERSION], 
+          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+XORG_DEFAULT_OPTIONS
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(.)
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AM_MAINTAINER_MODE
 
@@ -64,7 +65,6 @@ PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
 AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
 SAVE_CPPFLAGS="$CPPFLAGS"
@@ -81,7 +81,6 @@ AC_HEADER_STDC
 
 if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
-    XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 AM_CONDITIONAL(XMODES, test "x$XMODES" = xyes)
@@ -90,17 +89,10 @@ if test "x$XMODES" = xyes; then
     AC_DEFINE(HAVE_XMODES, 1, [X server has new mode code])
 fi
 
-XORG_CWARNFLAGS
-XORG_CFLAGS="$CWARNFLAGS $XORG_CFLAGS"
-AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
 
 DRIVER_NAME=siliconmotion
 AC_SUBST([DRIVER_NAME])
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
 AC_OUTPUT([
 	Makefile

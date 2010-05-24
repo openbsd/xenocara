@@ -1,3 +1,135 @@
+commit 2de1f7ae0b4441c1501568358acf2b870bb9dcc6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 27 15:11:35 2010 -0700
+
+    xf86-video-siliconmotion 1.7.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2dd7cd7508b459638a640905f8793ea85f41af82
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 27 15:11:02 2010 -0700
+
+    Require xorg-macros 1.4 for XORG_INSTALL
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6d8a1adec9f780826090fb923c54f16fd7f9ce7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 27 15:08:36 2010 -0700
+
+    Use $(AM_V_GEN) & $(SED) to generate man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7510112f30e33cfb9650ee939564f73ff9633bea
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 11 10:08:07 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3f2aaabcdfe339908338dff42aabc1fef47e8694
+Author: Cedric Cellier <rixed@happyleptic.org>
+Date:   Mon Feb 8 11:44:28 2010 +0100
+
+    Fix lack of precision in video resizing. #26443
+    
+    On some videos the last displayed line was wrong. This can
+    be fixed using LynxEM+ VPR68. Code borrowed from siliconmotion's
+    in-house driver.
+    Also fix a typo.
+    
+    Signed-off-by: Cedric Cellier <rixed@happyleptic.org>
+    Signed-off-by: Francisco Jerez <currojerez@riseup.net>
+
+commit 6bf8f8d7e13ccbb773765c4fcdcaf6d1d2993122
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:50:43 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 6650644b51947c0c13e71b0fa01f795e997ab750
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e8e1d7d22aee2b6aa7caecf910b616a8e39ac061
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 6acfadf1c541626ce445f5d71438c845f196e37f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit 638e15adec65c00cf3be68249c8372befe6a12a1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit dd3ce955349f7545d9aa2aacbb018811d7b9faa3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:22 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit b48c3f38767cdcd71eccfa6a0f4a15501a39f83a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 8a4f000f22bbec70193415372cfb478d6e2164d8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Nov 2 16:03:00 2009 -0500
+
+    Change clockRange to ClockRange, not ClockRanges
+    
+    ClockRanges is a silly type and I want rid of it, and the one extra
+    field it provides that's not in ClockRange, we're not using.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 52f40e7569bbcc9bce8f5d885b0de2868398e8df
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Wed Aug 5 11:09:26 2009 +1000

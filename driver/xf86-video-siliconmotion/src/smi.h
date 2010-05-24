@@ -147,7 +147,7 @@ typedef struct
     int			Bpp;		/* Bytes per pixel */
     int			MCLK;		/* Memory Clock  */
     int			MXCLK;		/* MSOC Clock for local sdram */
-    ClockRanges		clockRange;	/* Allowed pixel clock range */
+    ClockRange		clockRange;	/* Allowed pixel clock range */
     CloseScreenProcPtr	CloseScreen;	/* Pointer used to save wrapped
 					   CloseScreen function */
 

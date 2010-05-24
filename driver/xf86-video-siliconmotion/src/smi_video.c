@@ -1103,7 +1103,7 @@ SMI_PutVideo(
 	vpr00 |= 0x0010000E;
     } else {
 	/*
-	  Bit 21     = 10: Vertical Interpolation                   = enabled
+	  Bit 21     = 1: Vertical Interpolation                   = enabled
 	  Bit 24     = 1: Select Video Window I Source Addr        = 1
 	  1= Video window I source addr = capture port buffer ?
 	*/
@@ -1747,7 +1747,7 @@ SMI_DisplayVideo(
 {
     SMIPtr pSmi = SMIPTR(pScrn);
     CARD32 vpr00;
-    int hstretch, vstretch;
+    uint32_t hstretch, vstretch;
 
     ENTER();
 
@@ -1774,13 +1774,13 @@ SMI_DisplayVideo(
     }
 
     if (drw_w > vid_w) {
-	hstretch = (2560 * vid_w / drw_w + 5) / 10;
+	hstretch = ((uint32_t)(vid_w - 1) << 16) / (drw_w - 1);
     } else {
 	hstretch = 0;
     }
 
     if (drw_h > vid_h) {
-	vstretch = (2560 * vid_h / drw_h + 5) / 10;
+	vstretch = ((uint32_t)(vid_h - 1) << 16) / (drw_h - 1);
 	vpr00 |= 1 << 21;
     } else {
 	vstretch = 0;
@@ -1791,7 +1791,10 @@ SMI_DisplayVideo(
     WRITE_VPR(pSmi, 0x18, (dstBox->x2) | (dstBox->y2 << 16));
     WRITE_VPR(pSmi, 0x1C, offset >> 3);
     WRITE_VPR(pSmi, 0x20, (pitch >> 3) | ((pitch >> 3) << 16));
-    WRITE_VPR(pSmi, 0x24, (hstretch << 8) | vstretch);
+    WRITE_VPR(pSmi, 0x24, (hstretch & 0xff00) | ((vstretch & 0xff00) >> 8));
+    if (pSmi->Chipset == SMI_LYNXEMplus) {	/* This one can store additional precision */
+	WRITE_VPR(pSmi, 0x68, ((hstretch & 0xff) << 8) | (vstretch & 0xff));
+    }
 
     LEAVE();
 }
