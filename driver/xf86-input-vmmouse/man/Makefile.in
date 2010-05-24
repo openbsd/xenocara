@@ -76,10 +76,9 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(drivermandir)"
-appmanDATA_INSTALL = $(INSTALL_DATA)
+am__installdirs = "$(DESTDIR)$(drivermandir)"
 drivermanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appman_DATA) $(driverman_DATA)
+DATA = $(driverman_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -221,9 +220,10 @@ target_alias = @target_alias@
 drivermandir = $(DRIVER_MAN_DIR)
 driverman_PRE = @DRIVER_NAME@.man
 driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
-appmandir = $(APP_MAN_DIR)
-appman_PRE = @DRIVER_NAME@_detect.man
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+
+# appmandir = $(APP_MAN_DIR)
+# appman_PRE = @DRIVER_NAME@_detect.man
+# appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 EXTRA_DIST = @DRIVER_NAME@.man $(appman_PRE)
 CLEANFILES = $(driverman_DATA) $(appman_DATA)
 
@@ -286,23 +286,6 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-appmanDATA: $(appman_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
-	@list='$(appman_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(appmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appmandir)/$$f'"; \
-	  $(appmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appmandir)/$$f"; \
-	done
-
-uninstall-appmanDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(appman_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
-	done
 install-drivermanDATA: $(driverman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(drivermandir)" || $(mkdir_p) "$(DESTDIR)$(drivermandir)"
@@ -358,7 +341,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(drivermandir)"; do \
+	for dir in "$(DESTDIR)$(drivermandir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -404,7 +387,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appmanDATA install-drivermanDATA
+install-data-am: install-drivermanDATA
 
 install-exec-am:
 
@@ -430,19 +413,18 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-appmanDATA uninstall-drivermanDATA \
-	uninstall-info-am
+uninstall-am: uninstall-drivermanDATA uninstall-info-am
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-appmanDATA install-data install-data-am \
-	install-drivermanDATA install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-appmanDATA uninstall-drivermanDATA uninstall-info-am
+	install-data install-data-am install-drivermanDATA \
+	install-exec install-exec-am install-info install-info-am \
+	install-man install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
+	ps ps-am uninstall uninstall-am uninstall-drivermanDATA \
+	uninstall-info-am
 
 
 .man.$(DRIVER_MAN_SUFFIX):
