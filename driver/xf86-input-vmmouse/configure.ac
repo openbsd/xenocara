@@ -22,15 +22,21 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-vmmouse],
-        12.6.5,
+        12.6.9,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-vmmouse)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AM_MAINTAINER_MODE
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+XORG_DEFAULT_OPTIONS
 
 DRIVER_NAME=vmmouse
 AC_SUBST([DRIVER_NAME])
@@ -41,26 +47,9 @@ AM_CONFIG_HEADER([config.h])
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
+AC_PROG_SED
 
 AH_TOP([#include "xorg-server.h"])
-
-#AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
-#
-#AC_ARG_ENABLE(XINPUT, AS_HELP_STRING([--enable-xinput],
-#              [Build XInput support (default: yes)]),
-#              [XINPUT=$enableval],[XINPUT=yes])
-#AM_CONDITIONAL(XINPUT, test "x$XINPUT" = "xyes")
-#if test "x$XINPUT" = "xyes" ; then
-#    AC_DEFINE(XINPUT,1,[Enable XInput support])
-#fi
-#
-#AC_ARG_ENABLE(XKB, AS_HELP_STRING([--enable-xkb],
-#              [Build XKB support (default: yes)]),
-#              [XKB=$enableval],[XKB=yes])
-#AM_CONDITIONAL(XKB, test "x$XKB" = "xyes")
-#if test "x$XKB" = "xyes" ; then
-#    AC_DEFINE(XKB,1,[Enable XKB support])
-#fi
 
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
@@ -69,6 +58,14 @@ AC_ARG_WITH(xorg-module-dir,
             [moduledir="$libdir/xorg/modules"])
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
+
+AC_ARG_WITH(xorg-conf-dir,
+            AC_HELP_STRING([--with-xorg-conf-dir=DIR],
+                           [Default xorg.conf.d directory [[default=from $PKG_CONFIG xorg-server]]]),
+            [XORG_CONF_DIR="$withval"],
+            [XORG_CONF_DIR="`$PKG_CONFIG --variable=sysconfigdir xorg-server`"])
+AC_SUBST(XORG_CONF_DIR)
+AM_CONDITIONAL(HAS_XORG_CONF_DIR, [test "x$XORG_CONF_DIR" != "x" && test "x$XORG_CONF_DIR" != "xno"])
 
 AC_ARG_WITH(hal-bin-dir,
 	    AC_HELP_STRING([--with-hal-bin-dir=DIR],
@@ -96,13 +93,35 @@ AC_ARG_WITH(hal-fdi-dir,
 HAL_FDI_DIR=${halfdidir}
 AC_SUBST(HAL_FDI_DIR)
 
+case $host_os in
+  linux*)
+    if test "x$prefix" = "xNONE" -o "x$prefix" = "x/usr" -o "x$prefix" = "x/usr/local" ; then
+      slashlibdir=/lib
+    else
+      slashlibdir=$prefix/lib
+    fi
+    UDEV_RULES_DIR=$slashlibdir/udev/rules.d
+    ;;
+  *)
+    UDEV_RULES_DIR=no
+    ;;
+esac
+
+AC_ARG_WITH(udev-rules-dir,
+	    AC_HELP_STRING([--with-udev-rules-dir=DIR],
+			   [Default udev rules.d directory
+			    [[default=($prefix)/lib/udev/rules.d on Linux, none otherwise]]]),
+	    [UDEV_RULES_DIR="$withval"],
+	    [])
+AC_SUBST(UDEV_RULES_DIR)
+AM_CONDITIONAL(HAS_UDEV_RULES_DIR, [test "x$UDEV_RULES_DIR" != "xno"])
+
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.1] xproto $REQUIRED_MODULES)
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 PKG_CHECK_EXISTS([xorg-server >= 1.1.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_1_0], 1,
@@ -126,8 +145,5 @@ AC_SUBST([CFLAGS])
 
 # Checks for header files.
 AC_HEADER_STDC
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile shared/Makefile src/Makefile tools/Makefile fdi/Makefile man/Makefile])

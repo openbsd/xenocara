@@ -92,6 +92,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -102,8 +103,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -129,6 +132,11 @@ GREP = @GREP@
 HAL_BIN_DIR = @HAL_BIN_DIR@
 HAL_CALLOUTS_DIR = @HAL_CALLOUTS_DIR@
 HAL_FDI_DIR = @HAL_FDI_DIR@
+HAS_UDEV_RULES_DIR_FALSE = @HAS_UDEV_RULES_DIR_FALSE@
+HAS_UDEV_RULES_DIR_TRUE = @HAS_UDEV_RULES_DIR_TRUE@
+HAS_XORG_CONF_DIR_FALSE = @HAS_XORG_CONF_DIR_FALSE@
+HAS_XORG_CONF_DIR_TRUE = @HAS_XORG_CONF_DIR_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -162,8 +170,10 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+UDEV_RULES_DIR = @UDEV_RULES_DIR@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
+XORG_CONF_DIR = @XORG_CONF_DIR@
 XORG_LIBS = @XORG_LIBS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
@@ -213,7 +223,6 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-INCLUDES = -I$(srcdir)
 noinst_LTLIBRARIES = lib@DRIVER_NAME@.la
 lib@DRIVER_NAME@_la_SOURCES = @DRIVER_NAME@_defs.h \
                               @DRIVER_NAME@_client.c @DRIVER_NAME@_client.h \
@@ -232,9 +241,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  shared/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  shared/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  shared/Makefile
+	  $(AUTOMAKE) --foreign  shared/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

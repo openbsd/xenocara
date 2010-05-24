@@ -16,31 +16,26 @@
 
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
 # 
-# Permission to use, copy, modify, distribute, and sell this software and its
-# documentation for any purpose is hereby granted without fee, provided that
-# the above copyright notice appear in all copies and that both that
-# copyright notice and this permission notice appear in supporting
-# documentation.
-# 
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
-# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-# OTHER DEALINGS IN THE SOFTWARE.
-# 
-# Except as contained in this notice, the name of the copyright holders shall
-# not be used in advertising or otherwise to promote the sale, use or
-# other dealings in this Software without prior written authorization
-# from the copyright holders.
-# 
-
-# man_MANS = @DRIVER_NAME@_detect.1
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -81,9 +76,10 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(drivermandir)"
+am__installdirs = "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(drivermandir)"
+appmanDATA_INSTALL = $(INSTALL_DATA)
 drivermanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(driverman_DATA)
+DATA = $(appman_DATA) $(driverman_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -91,6 +87,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -101,8 +98,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -128,6 +127,11 @@ GREP = @GREP@
 HAL_BIN_DIR = @HAL_BIN_DIR@
 HAL_CALLOUTS_DIR = @HAL_CALLOUTS_DIR@
 HAL_FDI_DIR = @HAL_FDI_DIR@
+HAS_UDEV_RULES_DIR_FALSE = @HAS_UDEV_RULES_DIR_FALSE@
+HAS_UDEV_RULES_DIR_TRUE = @HAS_UDEV_RULES_DIR_TRUE@
+HAS_XORG_CONF_DIR_FALSE = @HAS_XORG_CONF_DIR_FALSE@
+HAS_XORG_CONF_DIR_TRUE = @HAS_XORG_CONF_DIR_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -157,12 +161,14 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
-SED = sed
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+UDEV_RULES_DIR = @UDEV_RULES_DIR@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
+XORG_CONF_DIR = @XORG_CONF_DIR@
 XORG_LIBS = @XORG_LIBS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
@@ -215,8 +221,11 @@ target_alias = @target_alias@
 drivermandir = $(DRIVER_MAN_DIR)
 driverman_PRE = @DRIVER_NAME@.man
 driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
-EXTRA_DIST = @DRIVER_NAME@.man @DRIVER_NAME@_detect.1
-CLEANFILES = $(driverman_DATA)
+appmandir = $(APP_MAN_DIR)
+appman_PRE = @DRIVER_NAME@_detect.man
+appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+EXTRA_DIST = @DRIVER_NAME@.man $(appman_PRE)
+CLEANFILES = $(driverman_DATA) $(appman_DATA)
 
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
@@ -237,7 +246,7 @@ SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(DRIVER_MAN_SUFFIX) .man
+.SUFFIXES: .$(DRIVER_MAN_SUFFIX) .man .$(APP_MAN_SUFFIX)
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -247,9 +256,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  man/Makefile
+	  $(AUTOMAKE) --foreign  man/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -277,6 +286,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-appmanDATA: $(appman_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
+	@list='$(appman_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(appmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appmandir)/$$f'"; \
+	  $(appmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+
+uninstall-appmanDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(appman_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
 install-drivermanDATA: $(driverman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(drivermandir)" || $(mkdir_p) "$(DESTDIR)$(drivermandir)"
@@ -332,7 +358,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(drivermandir)"; do \
+	for dir in "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(drivermandir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -378,7 +404,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-drivermanDATA
+install-data-am: install-appmanDATA install-drivermanDATA
 
 install-exec-am:
 
@@ -404,22 +430,25 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-drivermanDATA uninstall-info-am
+uninstall-am: uninstall-appmanDATA uninstall-drivermanDATA \
+	uninstall-info-am
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-drivermanDATA \
-	install-exec install-exec-am install-info install-info-am \
-	install-man install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
-	ps ps-am uninstall uninstall-am uninstall-drivermanDATA \
-	uninstall-info-am
+	install-appmanDATA install-data install-data-am \
+	install-drivermanDATA install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-appmanDATA uninstall-drivermanDATA uninstall-info-am
 
 
 .man.$(DRIVER_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+.man.$(APP_MAN_SUFFIX):
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

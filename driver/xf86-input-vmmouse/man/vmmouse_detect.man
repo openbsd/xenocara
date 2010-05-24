@@ -18,7 +18,7 @@
 .\"
 .\" That's right, although mdetect itself is under the QPL, this manpage is
 .\" under the GPL.  Enjoy!
-.TH vmmouse_detect 1 "2007-07-19" "Debian GNU/Linux"
+.TH vmmouse_detect __appmansuffix__ __vendorversion__
 .SH NAME
 vmmouse_detect \- VMware mouse device autodetection tool
 .SH SYNOPSIS

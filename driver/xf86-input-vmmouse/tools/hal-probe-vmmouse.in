@@ -26,5 +26,6 @@
 __BIN_PREFIX__/vmmouse_detect
 if [ $? -eq 0 ]; then
    __HAL_BIN_PREFIX__/hal-set-property --direct --udi "$UDI" --key input.x11_driver --string "vmmouse"
+   __HAL_BIN_PREFIX__/hal-set-property --direct --udi "$UDI" --key input.tags --string "vmmouse"
 fi
 

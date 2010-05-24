@@ -35,6 +35,7 @@
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -58,8 +59,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = @DRIVER_NAME@_detect$(EXEEXT)
+@HAS_UDEV_RULES_DIR_TRUE@am__append_1 = $(udev_DATA).in
+@HAS_UDEV_RULES_DIR_TRUE@am__append_2 = $(udev_DATA)
 subdir = tools
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(am__dist_conf_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -67,7 +71,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(calloutsdir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(calloutsdir)" \
+	"$(DESTDIR)$(confdir)" "$(DESTDIR)$(udevdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_@DRIVER_NAME@_detect_OBJECTS = vmmouse_detect.$(OBJEXT)
@@ -89,6 +94,16 @@ LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(@DRIVER_NAME@_detect_SOURCES)
 DIST_SOURCES = $(@DRIVER_NAME@_detect_SOURCES)
+am__dist_conf_DATA_DIST = 50-vmmouse.conf
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+dist_confDATA_INSTALL = $(INSTALL_DATA)
+udevDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_conf_DATA) $(udev_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -98,6 +113,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -108,8 +124,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -135,6 +153,11 @@ GREP = @GREP@
 HAL_BIN_DIR = @HAL_BIN_DIR@
 HAL_CALLOUTS_DIR = @HAL_CALLOUTS_DIR@
 HAL_FDI_DIR = @HAL_FDI_DIR@
+HAS_UDEV_RULES_DIR_FALSE = @HAS_UDEV_RULES_DIR_FALSE@
+HAS_UDEV_RULES_DIR_TRUE = @HAS_UDEV_RULES_DIR_TRUE@
+HAS_XORG_CONF_DIR_FALSE = @HAS_XORG_CONF_DIR_FALSE@
+HAS_XORG_CONF_DIR_TRUE = @HAS_XORG_CONF_DIR_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -168,8 +191,10 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+UDEV_RULES_DIR = @UDEV_RULES_DIR@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
+XORG_CONF_DIR = @XORG_CONF_DIR@
 XORG_LIBS = @XORG_LIBS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
@@ -224,8 +249,12 @@ INCLUDES = -I$(top_srcdir)/shared
 @DRIVER_NAME@_detect_LDADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
 calloutsdir = $(HAL_CALLOUTS_DIR)
 callouts_SCRIPTS = hal-probe-vmmouse
-EXTRA_DIST = hal-probe-vmmouse.in
-CLEANFILES = hal-probe-vmmouse
+EXTRA_DIST = hal-probe-vmmouse.in $(am__append_1)
+CLEANFILES = hal-probe-vmmouse $(am__append_2)
+@HAS_XORG_CONF_DIR_TRUE@confdir = $(XORG_CONF_DIR)
+@HAS_XORG_CONF_DIR_TRUE@dist_conf_DATA = 50-vmmouse.conf
+@HAS_UDEV_RULES_DIR_TRUE@udevdir = $(UDEV_RULES_DIR)
+@HAS_UDEV_RULES_DIR_TRUE@udev_DATA = 69-xorg-vmmouse.rules
 all: all-am
 
 .SUFFIXES:
@@ -239,9 +268,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  tools/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  tools/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  tools/Makefile
+	  $(AUTOMAKE) --foreign  tools/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -348,6 +377,40 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-dist_confDATA: $(dist_conf_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(confdir)" || $(mkdir_p) "$(DESTDIR)$(confdir)"
+	@list='$(dist_conf_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_confDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(confdir)/$$f'"; \
+	  $(dist_confDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(confdir)/$$f"; \
+	done
+
+uninstall-dist_confDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_conf_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(confdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(confdir)/$$f"; \
+	done
+install-udevDATA: $(udev_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(udevdir)" || $(mkdir_p) "$(DESTDIR)$(udevdir)"
+	@list='$(udev_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(udevDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(udevdir)/$$f'"; \
+	  $(udevDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(udevdir)/$$f"; \
+	done
+
+uninstall-udevDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(udev_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(udevdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(udevdir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -426,9 +489,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS) $(SCRIPTS)
+all-am: Makefile $(PROGRAMS) $(SCRIPTS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(calloutsdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(calloutsdir)" "$(DESTDIR)$(confdir)" "$(DESTDIR)$(udevdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -476,7 +539,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-calloutsSCRIPTS
+install-data-am: install-calloutsSCRIPTS install-dist_confDATA \
+	install-udevDATA
 
 install-exec-am: install-binPROGRAMS
 
@@ -505,26 +569,30 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-binPROGRAMS uninstall-calloutsSCRIPTS \
-	uninstall-info-am
+	uninstall-dist_confDATA uninstall-info-am uninstall-udevDATA
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
 	clean-generic clean-libtool ctags distclean distclean-compile \
 	distclean-generic distclean-libtool distclean-tags distdir dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-binPROGRAMS install-calloutsSCRIPTS install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-calloutsSCRIPTS uninstall-info-am
+	install-data-am install-dist_confDATA install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip install-udevDATA installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-binPROGRAMS uninstall-calloutsSCRIPTS \
+	uninstall-dist_confDATA uninstall-info-am uninstall-udevDATA
 
 
-hal-probe-vmmouse:
+hal-probe-vmmouse: hal-probe-vmmouse.in
 	sed -e 's|__BIN_PREFIX__|$(bindir)|g' \
 	    -e 's|__HAL_BIN_PREFIX__|$(HAL_BIN_DIR)|g' \
-	    < $(srcdir)/$@.in > $@
+	    < $< > $@
+
+@HAS_UDEV_RULES_DIR_TRUE@$(udev_DATA): $(udev_DATA).in
+@HAS_UDEV_RULES_DIR_TRUE@	sed -e 's|__BIN_PREFIX__|$(bindir)|g' < $< > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

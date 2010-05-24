@@ -1,25 +1,608 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 01f03ca8fbca96957d6c2718f4279e31cb406c2f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 9 08:30:26 2010 +1000
 
-	* configure.ac:
-	* src/vmmouse.c:
-	* src/vmmouse_proto.h:
-	Unlibcwrap.  Bump server version requirement.  Bump to 12.4.0.
+    Bump for 12.6.9 release.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-2006-03-28  Philip Langdale  <plangdale@vmware.com>
+commit 7b2ff5322b298ed8458c7442a16b8c0a14bcc5dc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 9 07:57:17 2010 +1000
 
-	* configure.ac:
-	* src/vmmouse.c: Bump PATCHLEVEL.
-	* src/vmmouse_proto.h: Use the right #define
-	when detecting a 64bit compilation. This fixes
-	the driver to actually work for 64bit builds.
+    man: move vmmouse_detect back to section 1
+    
+    Was moved to section 4 in commit 36c2cd8ec6d3bf7191a98a04a876e8d7b6f64d5d,
+    "man: build vmmouse_detect man page".
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2006-01-16  Philip Langdale  <plangdale@vmware.com>
+commit 21f53010d204c681e1a82b176841c2d4af8f61d8
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Apr 8 16:18:07 2010 +0200
 
-	* configure.ac:
-	* src/vmmouse.c: Bump PATCHLEVEL.
-	* src/vmmouse_proto.c: push/pop ebx to keep
-	gcc4 happy when compiling with -fPIC.
+    Bump for 12.6.8 release.
 
-2006-01-06  Philip Langdale  <plangdale@vmware.com>
+commit 80f671233e583ae085986bce12057fc45da444aa
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Apr 1 18:35:38 2010 +0200
 
-	* Initial release.
+    Add InputClass support.
+    
+    The InputClass can match the tag "vmmouse". A sample xorg.conf.d snippet is
+    provided to try and make sure the driver will be loaded automatically in a
+    compatible VM also if the X server uses udev instead of HAL.
+    
+    The configure script tries to determine if and where it makes sense to install
+    the udev rule and xorg.conf.d snippet but allows overriding both.
+    
+    Thanks to Timo Aaltonen for the udev rules file and Dan Nicholson and Simon
+    Thum for review and suggestions for improvement.
+
+commit b9c3bc94ee86a72216e9738aaecede80cc1c043c
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Apr 8 16:09:51 2010 +0200
+
+    Improve make rule for hal-probe-vmmouse.
+    
+    Make sure changes to hal-probe-vmmouse.in get picked up automatically and
+    simplify the way it's passed to sed.
+    
+    Thanks to Dan Nicholson for the suggestion.
+
+commit 36c2cd8ec6d3bf7191a98a04a876e8d7b6f64d5d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 26 20:44:23 2010 -0400
+
+    man: build vmmouse_detect man page
+    
+    The generated file was checked-in and was wrong.
+    The file suffix is now computed based on the platform
+    The macro substitution has been restored
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 27813c665b0eed0b3d8b4db5fcb555f20fe60c4a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 20 13:21:12 2010 -0400
+
+    make: remove unrequired INCLUDES = -I$(srcdir)
+    
+    Already covered by DEFAULT_INCLUDES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 40ba06b1389ab68482b3aa3ed69292011c09f9dd
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Thu Mar 18 16:23:27 2010 +0100
+
+    Bump for 12.6.7 release.
+
+commit fae10ac6c613f6de847e152d615e6da421147139
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Feb 26 17:30:08 2010 +0100
+
+    vmmouse: don't hardcode the module version in the source
+    
+    XORG_RELEASE_VERSION gives us that info from configure.ac, let's use it.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit f3ef776415820c7da1728d1fe27dd56dc24e935f
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Feb 10 02:16:43 2010 +0100
+
+    Bump to 12.6.6
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit ae58da22e6f4798498a1e9a0b1b6c6c0f19e2532
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Feb 10 02:15:38 2010 +0100
+
+    Require xorg-macros 1.4 for XORG_INSTALL
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit aca67eca8bbb1368a2f36614b0e78b98947f134f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:15:54 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b3b9f36deb3fb1fcf66e591fcb075fe295e0cf0e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4eb807b3e7271f5116daebea9412c72e2faae4a5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 9bdfaffc1b858737c3fe85bc9b0bb25001f46460
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 20 10:09:24 2009 +1000
+
+    Remove unused bits from configure.ac
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1f8df297b4d57e2da58faf26df378548efa47251
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit c2f77dcc95ecb5e3cfa1235e67b085aa93e4a724
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit db91ec37ea274f69eb5d07c41bef787d5e9537a5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:20 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit bb622c56b522d7b6962770b25bbe4e89ea280f16
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 43e123c2f4fadfdf6e7cf5aa864102d82e40fe4b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Sep 8 22:35:55 2009 -0700
+
+    Symbol was removed from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 989004f300c9fd897837fdee4fd9c1307c6ed6ca
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 16 09:57:27 2009 +1000
+
+    Compile with INPUT ABI 7.
+    
+    Button labels up to 7 are essentially default so we can assume they are the
+    usual ones. Beyond that, they are anyone's guess.
+    Axis labels are X/Y.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2fd8646ff528f4f7c4450dff111b4e9335ae2186
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 29 11:21:19 2009 -0700
+
+    Needed by newer X servers, otherwise the module data is invisible and a dlopen error occurs.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 436582791de540ef85b0b66000f2446d6f8f9802
+Author: Shelley Gong <shelleygong@vmware.com>
+Date:   Wed Jul 29 11:12:24 2009 -0700
+
+    Turn off built-in fallback-to-mouse-driver mechanism. With input
+    hotplug, HAL handles deciding which driver to use and the presence
+    of mouse_drv can't be assumed anymore on modern distros.
+
+commit 370aab66b97a6fdc18f87d584a252f33f575899e
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Fri Jun 5 20:06:40 2009 +0200
+
+    Remove ModuleInfoRec and associated bits.
+    
+    ModuleInfoRec was removed with 2107becb0ce2ffda001be65728c53563496d8d50 from
+    the server. The MouseOpts were only used from the ModuleInfoRec, they're gone
+    now too.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d61609868697825717d2f6a63b2a6177cb13873b
+Author: Shelley Gong <shelleygong@vmware.com>
+Date:   Mon May 11 10:08:56 2009 -0700
+
+    1) Fix bug where motion notify events were being sent with every button event.
+    
+    2) Classify relative vs. absolute packets individually rather than from a
+       global flag.
+    
+    3) Compile with older distros.
+    
+    4) Bump for 12.6.4 Release.
+    
+    Signed-off-by: Philip Langdale <philipl@fido2.homeip.net>
+
+commit d5ae42ec3849672438823b08ad06a69289ae99c5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu May 7 15:53:32 2009 -0700
+
+    Map Solaris/Sun compiler #defines to gcc equivalents
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9719534fa3a184b848ef9e9c3a755703b8708fd2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 15 07:29:44 2009 -0800
+
+    Make --with-hal* configure options match their help output
+
+commit 5e43144376bfa4491f60dc4da34f8bde9da2f900
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:23:49 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit bc324161680b1403e5811b3ac2b9ca679829a5c9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 22 14:19:30 2008 +1000
+
+    Bump for 12.6.3 release
+
+commit 6f855ac348db34726eac68dc114563543ff0eae2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 22 14:53:27 2008 +1000
+
+    Fix make distcheck allowing custom build directories.
+
+commit 7cb41b467a161461627e6abf1ea979b7058d02f0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 22 14:10:38 2008 +1000
+
+    Fix build against master - add xf86OSmouse.h
+
+commit bda45dcf9fbbd42c155c7071d547d0d067429dde
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Nov 14 10:52:26 2008 -0800
+
+    Bump for 12.6.2 release.
+
+commit b29b45a25b3b2db58f81e727d787c337bbd87637
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Nov 14 10:24:36 2008 -0800
+
+    Revert "Narrow down the scope of what systems are checked for the vmmouse device."
+    
+    This reverts commit 93f032b80b841e1b6beeff814e8d9519e485fdef.
+    
+    I'm doing this for now because qemu (with and without kvm) provides
+    an implementation of the vmmouse device and input hotplug works there
+    right now. Later, I'll try and dig up an equivalent id check for them.
+
+commit a5718c9b31d5fb72a88c0e145766efd861e0a3d3
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Nov 13 15:43:31 2008 -0800
+
+    Only turn on absolute mode when we get an actual event; we don't
+    want the driver to throw us into absolute mode just because the
+    device is present but the user has a relative input path configured.
+
+commit aea9dd5694e3b6bdeb704c18dc7930ba412ff259
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Nov 13 15:21:31 2008 -0800
+
+    Don't flush buttons.
+    
+    Apply equivalent of commit 6a03e8bd9699a33dabcdd2bbcf51a001ddfd5534
+    from xf86-input-mouse.
+
+commit 93f032b80b841e1b6beeff814e8d9519e485fdef
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Oct 27 09:32:22 2008 -0700
+
+    Narrow down the scope of what systems are checked for the vmmouse device.
+
+commit c42ef00eaa590139cb872c086787aaa545eac273
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Oct 23 23:35:56 2008 -0700
+
+    Bump for 12.6.1 release.
+
+commit bcdec3d0cd4434770cd841c33c030e0d7203881f
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Oct 23 23:35:28 2008 -0700
+
+    Remove call to iopl(). It's not portable and isn't necessary.
+
+commit ecb2f313292b4d3f516f5d1ae5c7cde45444041c
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Oct 23 22:26:53 2008 -0700
+
+    Bump version number for 12.6.0 release.
+
+commit a9050a9d407f650b86ee28ff00f5717c965b4554
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Oct 23 22:13:56 2008 -0700
+
+    Switch hal-probe-vmmouse to /bin/sh and add Copyright statement.
+
+commit eb03e96c1974a3fbe1c48c56974ff32bc886c8f7
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Thu Oct 23 21:54:44 2008 -0700
+
+    Add HAL integration to support input hot plug.
+    
+     * vmmouse_detect: A simple program that detects whether a vmmouse
+       device is present.
+     * hal-probe-vmmouse: A HAL callout script that uses vmmouse_detect
+       and overrides input.x11_driver.
+     * 11-x11-vmmouse.fdi: fdi descriptor that adds the callout for PS/2
+       mice.
+    
+    Additional 'configure' variables have been added to allow for overriding
+    HAL paths, although this shouldn't usually be necessary.
+
+commit 223afd09500672a7fe8a1ab5fc221001863a8bec
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Oct 21 18:53:03 2008 -0700
+
+    Ignore more stuff in .gitignore
+
+commit 370a0ffa789c1c64d5343153bdb5ddccd502a361
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Oct 21 18:52:02 2008 -0700
+
+    Move shared vmmouse files into a separate static lib so we can
+    share it with the vmmouse detection utility I'm about to add.
+
+commit 4c26f5cffba924daa514134e6c6dfcbc3c391d27
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Oct 17 19:59:26 2008 -0700
+
+    Bump version number for 12.5.2 release.
+
+commit 305fd77bdf4a8b241c3155b068acf4147a2f8077
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Oct 17 19:58:50 2008 -0700
+
+    Change ZAxisMapping default to match main mouse driver.
+
+commit 64760dae6b1184405641b6b46a7967d114f4ab80
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Fri Oct 17 19:41:07 2008 -0700
+
+    Properly set axis range and resolution for Server 1.5+
+
+commit f978146de9c798e7405a7a09c5b4421e9429bf91
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Tue Oct 14 14:19:29 2008 +0200
+
+    Revert "Grab mouse from kernel if possible."
+    
+    This reverts commit 028e7d0001d4948e7b11a68d904c6b307a1ccfb3.
+    
+    The test turned out to be bogus, in fact, the patch had no effect.
+    The used kernel mouse driver doesn't even allow grabbing...
+
+commit 028e7d0001d4948e7b11a68d904c6b307a1ccfb3
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Sep 29 18:30:55 2008 +0200
+
+    Grab mouse from kernel if possible.
+    
+    Avoids mouse event duplication if a mouse driver is sitting on /dev/input/mice
+    on Linux.
+
+commit a5fb5b8cb816ddcdc25a61fa42b560955a4194e3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 19 15:29:38 2008 -0400
+
+    Remove useless call to xf86AddModuleInfo
+
+commit 9e4c44ab08fe8e5ad701750291970e03fc9aaf88
+Author: Jeff Smith <whydoubt@yahoo.com>
+Date:   Sun Jun 15 01:42:14 2008 -0500
+
+    Check for XINPUT ABI 3.
+    
+    Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
+
+commit e72f4fbc61f4a0acf99a4b31f16fdebde9d339f1
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Wed May 21 01:36:53 2008 -0400
+
+    Don't call conversion_proc for older Xservers
+    
+    There was a bug in the Xserver for a while when it didn't call a driver's
+    conversion_proc to convert device space coordinates to screen space. To fix
+    this, vmmouse starting calling that method (since January), but if this is done
+    on older versions of X, the conversion gets done twice.
+    
+    The fix is to add a configure check for the right versions of X and call
+    VMMouseConvertProc() only if we are compiling against an X that has the bug.
+    
+    There's some whitespace cleanup for vmmouse.c too.
+
+commit 08f6ba03b1368e23bda4d51b16e182079fe9c409
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Tue Apr 22 18:53:16 2008 -0400
+
+    Compatibility with older versions of X
+    
+    - Makes the driver compile againt older versions of X (tested upto 4.3).
+    - Bump up the version number in configure.ac and the modinfo section.
+    - A couple of trivial whitespace cleanups.
+
+commit f9629096c1e0ac0e090642cf6a53674842aaf9a8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 20 16:53:05 2008 -0400
+
+    vmmouse 12.5.0
+
+commit a88387f1276d598843ffa0cd3648f8bf34d10680
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:17:40 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit c312189cedf7526d61ced521f275ad5c4a972610
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Tue Jan 22 23:32:12 2008 -0800
+
+    Fix device to screen space coordinate conversion
+    
+    The Xserver no longer calls an input device's conversion_proc to convert x and
+    y coordinates from device to screen space. This fix calls the conversion
+    routine in vmmouse.c before posting the motion event to Xserver.
+    
+    Other drivers also seem to rely on conversion_proc, so the real fix should probably
+    go into Xserver's code (maybe in xserver/hw/xfree86/common/xf86Xinput.c?).
+
+commit ca3eb5abeb187a1e40ff7c36bf87d52efb999be9
+Author: Vinay Bondhugula <vinayb@vmware.com>
+Date:   Sat Jan 19 09:07:16 2008 -0800
+
+    Fix an old sign bug for the relative mode
+    
+    Higher order bits for the X and Y inputs (which could be set in case of a
+    relative mouse) were being zeroed off in VMMouseClient_GetInput. This change
+    fixes it.
+
+commit ca4cc3fed99457add3935f8a063558b51e816d74
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Sep 25 16:18:53 2007 -0700
+
+    Update for 12.4.3 release.
+
+commit 4840be10e99a77d567ee9122f57c6fb6b5208cd9
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Sep 24 12:03:56 2007 -0700
+
+    Add compatibility #define for compilation on pre-X.Org
+    versions of the Xserver.
+
+commit d89b0ffc1b994fb8e19cecbab683478b599fea73
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Sep 24 11:48:39 2007 -0700
+
+    There are problems when running with old X releases with a
+    global symbol collision with the svga driver.
+
+commit b1ca22c8bdaa2450d98d5043b504d4a4fe412128
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Sep 10 21:17:12 2007 -0700
+
+    Guard modinfo section against gcc.
+
+commit b20b4c2388a19885b8d686bbc184d69bed5585d9
+Merge: 0cd80f9 d8e1d4d
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Sep 10 20:46:13 2007 -0700
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-input-vmmouse
+
+commit 0cd80f9869feef92261d0972f3d2d018a3dcfb18
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Sep 10 20:45:58 2007 -0700
+
+    Ready 12.4.2 release.
+    
+    To allow for easier detection of driver version by other VMware tools,
+    we are embedding the version in a .modinfo section so that the Linux
+    kernel 'modinfo' tool can be (ab)used to check it.
+
+commit d8e1d4d1f4eeeb87c573810c0f0d141fe180bb01
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Aug 28 17:39:11 2007 -0700
+
+    Port to new motion history/InitPointerDeviceStruct ABI
+    
+    (Copied from daniels' fix to xf86-input-mouse)
+
+commit 5a4e1fe50b1a38cfc489eff49f5a729bd726cd23
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Mon Jul 9 13:46:33 2007 -0700
+
+    Add copyright statement to man page.
+
+commit e854c0c989b57e3d862c363a9c16ee4db315274f
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Jun 26 14:52:32 2007 -0700
+
+    Update the man page to more closely reflect reality.
+    Problems pointed out by Jason MacIntyre. Thanks!
+
+commit 078666eac54f5672e5e7df2f79c92ac412976cd9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Mar 1 10:36:23 2007 -0800
+
+    renamed: .cvsignore -> .gitignore
+
+commit ceb33299a512f368529dd052f4acab695b172c7f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Mar 1 10:35:12 2007 -0800
+
+    Replace references to XFree86/XF86Config in man page
+
+commit 87d047e6132d5734ab65f0ef18354608dae39ec8
+Author: Philip Langdale <philipl@fido2.homeip.net>
+Date:   Tue Feb 27 18:02:43 2007 -0800
+
+    Under certain circumstances, typically when the kernel PS/2 driver decides
+    to reset the PS/2 device, we can find ourselves in an inconsistent state
+    between the vmmouse driver and the virtual hardware. When this is encountered,
+    we should re-request absolute mode from the hardware to get back in sync.
+
+commit 16e12c2c08a92a7bb9c11d4a359bf9904998e93f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:17:10 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 12.4.0.
+
+commit 6a74d428e2ce1ad07b9dc8b361bd7c2e71dd19d0
+Author: philipl <philipl>
+Date:   Wed Mar 29 02:36:23 2006 +0000
+
+    Bump PATCHLEVEL.
+    Use the right #define when detecting a 64bit compilation. This fixes the
+        driver to actually work for 64bit builds.
+
+commit 1d7b250cbda0b96a494a17fdfb53eb971907a35b
+Author: philipl <philipl>
+Date:   Mon Jan 16 23:54:15 2006 +0000
+
+    Fix for compilation with gcc4 and PIC.
+
+commit ee148a2f8ef97557ec2db501295ed8227699d2bf
+Author: philipl <philipl>
+Date:   Mon Jan 9 19:12:26 2006 +0000
+
+    Initial release of the vmmouse driver for VMware virtual machines.

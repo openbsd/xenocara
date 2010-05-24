@@ -97,14 +97,11 @@
 /*
  * Version constants
  */
-#define VMMOUSE_MAJOR_VERSION 12
-#define VMMOUSE_MINOR_VERSION 6
-#define VMMOUSE_PATCHLEVEL 5
 #define VMMOUSE_DRIVER_VERSION \
-   (VMMOUSE_MAJOR_VERSION * 65536 + VMMOUSE_MINOR_VERSION * 256 + VMMOUSE_PATCHLEVEL)
+   (PACKAGE_VERSION_MAJOR * 65536 + PACKAGE_VERSION_MINOR * 256 + PACKAGE_VERSION_PATCHLEVEL)
 #define VMMOUSE_DRIVER_VERSION_STRING \
-    VMW_STRING(VMMOUSE_MAJOR_VERSION) "." VMW_STRING(VMMOUSE_MINOR_VERSION) \
-    "." VMW_STRING(VMMOUSE_PATCHLEVEL)
+    VMW_STRING(PACKAGE_VERSION_MAJOR) "." VMW_STRING(PACKAGE_VERSION_MINOR) \
+    "." VMW_STRING(PACKAGE_VERSION_PATCHLEVEL)
 
 /*
  * Standard four digit version string expected by VMware Tools installer.
@@ -146,6 +143,7 @@ typedef struct {
    Bool                absoluteRequested;
 } VMMousePrivRec, *VMMousePrivPtr;
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 7
 static const char *reqSymbols[] = {
    "InitPointerDeviceStruct",
    "LoaderSymbol",
@@ -192,6 +190,7 @@ static const char *reqSymbols[] = {
    "Xstrdup",
    NULL
 };
+#endif
 
 InputDriverRec VMMOUSE = {
    1,
@@ -1175,7 +1174,9 @@ VMMousePlug(pointer	module,
 {
    static Bool Initialised = FALSE;
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 7
    xf86LoaderReqSymLists(reqSymbols, NULL);
+#endif
 
    if (!Initialised)
       Initialised = TRUE;
@@ -1213,7 +1214,7 @@ static XF86ModuleVersionInfo VMMouseVersionRec = {
    MODINFOSTRING1,
    MODINFOSTRING2,
    XORG_VERSION_CURRENT,
-   VMMOUSE_MAJOR_VERSION, VMMOUSE_MINOR_VERSION, VMMOUSE_PATCHLEVEL,
+   PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
    ABI_CLASS_XINPUT,
    ABI_XINPUT_VERSION,
    MOD_CLASS_XINPUT,

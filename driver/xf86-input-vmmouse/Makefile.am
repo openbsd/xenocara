@@ -18,5 +18,17 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-AUTOMAKE_OPTIONS = foreign
+# Ensure xorg.conf.d snippets are installed below $(prefix) for distcheck
+DISTCHECK_CONFIGURE_FLAGS = --with-xorg-conf-dir='$${datadir}/X11/xorg.conf.d'
+
 SUBDIRS = shared src man
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL
