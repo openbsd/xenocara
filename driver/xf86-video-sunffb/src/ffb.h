@@ -39,7 +39,7 @@
 #include "ffb_regs.h"
 #include "xf86sbusBus.h"
 #include "ffb_dac.h"
-#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#ifdef HAVE_XEXTPROTO_71
 #include <X11/extensions/dpmsconst.h>
 #else
 #ifndef  DPMS_SERVER

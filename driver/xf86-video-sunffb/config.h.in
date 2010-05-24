@@ -32,6 +32,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* xextproto 7.1 available */
+#undef HAVE_XEXTPROTO_71
+
 /* Name of package */
 #undef PACKAGE
 
@@ -64,9 +67,3 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Enable DRI driver support */
-#undef XF86DRI
-
-/* Enable developmental DRI driver support */
-#undef XF86DRI_DEVEL
