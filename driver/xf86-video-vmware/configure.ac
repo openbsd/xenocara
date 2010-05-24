@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-vmware],
-        10.16.8,
+        11.0.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-vmware)
 
@@ -30,9 +30,15 @@ AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(.)
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AM_MAINTAINER_MODE
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 
 # Checks for programs.
 AC_DISABLE_STATIC
@@ -56,7 +62,7 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.1 xproto fontsproto $REQUIRED_MODULES])
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+PKG_CHECK_MODULES(DRM, [libdrm])
 
 PKG_CHECK_EXISTS([xorg-server >= 1.1.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_1_0], 1,
@@ -69,6 +75,10 @@ PKG_CHECK_EXISTS([xorg-server >= 1.0.99.901],
 PKG_CHECK_EXISTS([xorg-server >= 1.2.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_2_0], 1,
                  [Has version 1.2.0 or greater of the Xserver])])
+
+PKG_CHECK_EXISTS([xorg-server >= 1.7.0],
+                 [AC_DEFINE([HAVE_XORG_SERVER_1_7_0], 1,
+                 [Has version 1.7.0 or greater of the Xserver])])
 
 
 # Checks for libraries.
@@ -93,9 +103,6 @@ AC_SUBST([moduledir])
 
 DRIVER_NAME=vmware
 AC_SUBST([DRIVER_NAME])
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([
 	Makefile

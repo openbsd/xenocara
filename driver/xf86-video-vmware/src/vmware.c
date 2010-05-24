@@ -81,16 +81,13 @@ char rcsId_vmware[] =
 #define VMW_INNERSTRINGIFY(s) #s
 #define VMW_STRING(str) VMW_INNERSTRINGIFY(str)
 
-#define VMWARE_NAME "VMWARE"
-#define VMWARE_DRIVER_NAME "vmware"
-#define VMWARE_MAJOR_VERSION	10
-#define VMWARE_MINOR_VERSION	16
-#define VMWARE_PATCHLEVEL	8
+#define VMWARE_NAME "vmwlegacy"
+#define VMWARE_DRIVER_NAME "vmwlegacy"
 #define VMWARE_DRIVER_VERSION \
-   (VMWARE_MAJOR_VERSION * 65536 + VMWARE_MINOR_VERSION * 256 + VMWARE_PATCHLEVEL)
+   (PACKAGE_VERSION_MAJOR * 65536 + PACKAGE_VERSION_MINOR * 256 + PACKAGE_VERSION_PATCHLEVEL)
 #define VMWARE_DRIVER_VERSION_STRING \
-    VMW_STRING(VMWARE_MAJOR_VERSION) "." VMW_STRING(VMWARE_MINOR_VERSION) \
-    "." VMW_STRING(VMWARE_PATCHLEVEL)
+    VMW_STRING(PACKAGE_VERSION_MAJOR) "." VMW_STRING(PACKAGE_VERSION_MINOR) \
+    "." VMW_STRING(PACKAGE_VERSION_PATCHLEVEL)
 
 static const char VMWAREBuildStr[] = "VMware Guest X Server "
     VMWARE_DRIVER_VERSION_STRING " - build=$Name:  $\n";
@@ -101,7 +98,7 @@ static const char VMWAREBuildStr[] = "VMware Guest X Server "
  * extra zero for the fourth digit.
  */
 #ifdef __GNUC__
-const char vm_svga_version[] __attribute__((section(".modinfo"),unused)) =
+const char vmwlegacy_drv_modinfo[] __attribute__((section(".modinfo"),unused)) =
     "version=" VMWARE_DRIVER_VERSION_STRING ".0";
 #endif
 
@@ -146,6 +143,13 @@ static PciChipsets VMWAREPciChipsets[] = {
     { -1,		       -1,		    RES_UNDEFINED }
 };
 
+#if HAVE_XORG_SERVER_1_7_0
+
+#define xf86LoaderReqSymLists(...) do {} while (0)
+#define LoaderRefSymLists(...) do {} while (0)
+
+#else
+
 static const char *vgahwSymbols[] = {
     "vgaHWGetHWRec",
     "vgaHWGetIOBase",
@@ -178,14 +182,16 @@ static const char *shadowfbSymbols[] = {
     NULL
 };
 
+#endif /* HAVE_XORG_SERVER_1_7_0 */
+
 #ifdef XFree86LOADER
-static XF86ModuleVersionInfo vmwareVersRec = {
-    "vmware",
+static XF86ModuleVersionInfo vmwlegacyVersRec = {
+    VMWARE_DRIVER_NAME,
     MODULEVENDORSTRING,
     MODINFOSTRING1,
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
-    VMWARE_MAJOR_VERSION, VMWARE_MINOR_VERSION, VMWARE_PATCHLEVEL,
+    PACKAGE_VERSION_MAJOR, PACKAGE_VERSION_MINOR, PACKAGE_VERSION_PATCHLEVEL,
     ABI_CLASS_VIDEODRV,
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
@@ -2012,7 +2018,7 @@ VMWAREProbe(DriverPtr drv, int flags)
 #endif
 
 
-_X_EXPORT DriverRec VMWARE = {
+_X_EXPORT DriverRec vmwlegacy = {
     VMWARE_DRIVER_VERSION,
     VMWARE_DRIVER_NAME,
     VMWAREIdentify,
@@ -2034,22 +2040,23 @@ _X_EXPORT DriverRec VMWARE = {
 };
 
 #ifdef XFree86LOADER
-static MODULESETUPPROTO(vmwareSetup);
+static MODULESETUPPROTO(vmwlegacySetup);
 
-_X_EXPORT XF86ModuleData vmwareModuleData = {
-    &vmwareVersRec,
-    vmwareSetup,
+_X_EXPORT XF86ModuleData vmwlegacyModuleData = {
+    &vmwlegacyVersRec,
+    vmwlegacySetup,
     NULL
 };
 
 static pointer
-vmwareSetup(pointer module, pointer opts, int *errmaj, int *errmin)
+vmwlegacySetup(pointer module, pointer opts, int *errmaj, int *errmin)
 {
     static Bool setupDone = FALSE;
 
     if (!setupDone) {
         setupDone = TRUE;
-        xf86AddDriver(&VMWARE, module, VMWARE_DRIVER_FUNC);
+
+        xf86AddDriver(&vmwlegacy, module, VMWARE_DRIVER_FUNC);
 
         LoaderRefSymLists(vgahwSymbols, fbSymbols, ramdacSymbols,
                           shadowfbSymbols, NULL);

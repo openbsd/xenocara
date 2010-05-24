@@ -34,6 +34,12 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+# this is obnoxious:
+# -module lets us name the module exactly how we want
+# -avoid-version prevents gratuitous .0.0.0 version numbers on the end
+# _ladir passes a dummy rpath to libtool so the thing will actually link
+# TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -71,13 +77,23 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(vmware_drv_ladir)"
+am__installdirs = "$(DESTDIR)$(vmware_drv_ladir)" \
+	"$(DESTDIR)$(vmwlegacy_drv_ladir)"
 vmware_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(vmware_drv_la_LTLIBRARIES)
-vmware_drv_la_LIBADD =
-am_vmware_drv_la_OBJECTS = bits2pixels.lo vmware.lo vmwarecurs.lo \
-	vmwarectrl.lo vmwarexinerama.lo vmwarevideo.lo vmwaremodes.lo
+vmwlegacy_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(vmware_drv_la_LTLIBRARIES) \
+	$(vmwlegacy_drv_la_LTLIBRARIES)
+vmware_drv_la_DEPENDENCIES =
+am_vmware_drv_la_OBJECTS = vmware_drv_la-vmwaremodule.lo
 vmware_drv_la_OBJECTS = $(am_vmware_drv_la_OBJECTS)
+vmwlegacy_drv_la_LIBADD =
+am_vmwlegacy_drv_la_OBJECTS = vmwlegacy_drv_la-bits2pixels.lo \
+	vmwlegacy_drv_la-vmware.lo vmwlegacy_drv_la-vmwarecurs.lo \
+	vmwlegacy_drv_la-vmwarectrl.lo \
+	vmwlegacy_drv_la-vmwarexinerama.lo \
+	vmwlegacy_drv_la-vmwarevideo.lo \
+	vmwlegacy_drv_la-vmwaremodes.lo
+vmwlegacy_drv_la_OBJECTS = $(am_vmwlegacy_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -89,8 +105,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(vmware_drv_la_SOURCES)
-DIST_SOURCES = $(vmware_drv_la_SOURCES)
+SOURCES = $(vmware_drv_la_SOURCES) $(vmwlegacy_drv_la_SOURCES)
+DIST_SOURCES = $(vmware_drv_la_SOURCES) $(vmwlegacy_drv_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -100,6 +116,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -110,8 +127,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -122,6 +141,8 @@ DEPDIR = @DEPDIR@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
+DRM_CFLAGS = @DRM_CFLAGS@
+DRM_LIBS = @DRM_LIBS@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -134,6 +155,7 @@ FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -222,38 +244,40 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+vmwlegacy_drv_la_LTLIBRARIES = vmwlegacy_drv.la
+vmwlegacy_drv_la_LDFLAGS = -module -avoid-version
+vmwlegacy_drv_la_CFLAGS = @XORG_CFLAGS@
+vmwlegacy_drv_ladir = @moduledir@/drivers
+vmwlegacy_drv_la_SOURCES = \
+	bits2pixels.c \
+	bits2pixels.h \
+	guest_os.h \
+	includeCheck.h \
+	svga_escape.h \
+	svga_limits.h \
+	svga_modes.h \
+	svga_overlay.h \
+	svga_reg.h \
+	svga_struct.h \
+	vm_basic_types.h \
+	vm_device_version.h \
+	vmware.c \
+	vmwarecurs.c \
+	vmware.h \
+	vmwarectrl.c \
+	vmwarectrl.h \
+	vmwarectrlproto.h \
+	vmwarexinerama.c \
+	vmwarevideo.c \
+	vmwaremodes.c
 
-# this is obnoxious:
-# -module lets us name the module exactly how we want
-# -avoid-version prevents gratuitous .0.0.0 version numbers on the end
-# _ladir passes a dummy rpath to libtool so the thing will actually link
-# TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @XORG_CFLAGS@
 vmware_drv_la_LTLIBRARIES = vmware_drv.la
 vmware_drv_la_LDFLAGS = -module -avoid-version
+vmware_drv_la_CFLAGS = @XORG_CFLAGS@ @DRM_CFLAGS@
+vmware_drv_la_LIBADD = @DRM_LIBS@
 vmware_drv_ladir = @moduledir@/drivers
 vmware_drv_la_SOURCES = \
-         bits2pixels.c \
-         bits2pixels.h \
-         guest_os.h \
-         includeCheck.h \
-	 svga_escape.h \
-         svga_limits.h \
-         svga_modes.h \
-	 svga_overlay.h \
-         svga_reg.h \
-         svga_struct.h \
-         vm_basic_types.h \
-         vm_device_version.h \
-         vmware.c \
-         vmwarecurs.c \
-         vmware.h \
-         vmwarectrl.c \
-         vmwarectrl.h \
-         vmwarectrlproto.h \
-         vmwarexinerama.c \
-         vmwarevideo.c \
-         vmwaremodes.c
+	vmwaremodule.c
 
 all: all-am
 
@@ -268,9 +292,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -315,8 +339,37 @@ clean-vmware_drv_laLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
+install-vmwlegacy_drv_laLTLIBRARIES: $(vmwlegacy_drv_la_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	test -z "$(vmwlegacy_drv_ladir)" || $(mkdir_p) "$(DESTDIR)$(vmwlegacy_drv_ladir)"
+	@list='$(vmwlegacy_drv_la_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    f=$(am__strip_dir) \
+	    echo " $(LIBTOOL) --mode=install $(vmwlegacy_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(vmwlegacy_drv_ladir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(vmwlegacy_drv_laLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(vmwlegacy_drv_ladir)/$$f"; \
+	  else :; fi; \
+	done
+
+uninstall-vmwlegacy_drv_laLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@set -x; list='$(vmwlegacy_drv_la_LTLIBRARIES)'; for p in $$list; do \
+	  p=$(am__strip_dir) \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(vmwlegacy_drv_ladir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(vmwlegacy_drv_ladir)/$$p"; \
+	done
+
+clean-vmwlegacy_drv_laLTLIBRARIES:
+	-test -z "$(vmwlegacy_drv_la_LTLIBRARIES)" || rm -f $(vmwlegacy_drv_la_LTLIBRARIES)
+	@list='$(vmwlegacy_drv_la_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
 vmware_drv.la: $(vmware_drv_la_OBJECTS) $(vmware_drv_la_DEPENDENCIES) 
 	$(LINK) -rpath $(vmware_drv_ladir) $(vmware_drv_la_LDFLAGS) $(vmware_drv_la_OBJECTS) $(vmware_drv_la_LIBADD) $(LIBS)
+vmwlegacy_drv.la: $(vmwlegacy_drv_la_OBJECTS) $(vmwlegacy_drv_la_DEPENDENCIES) 
+	$(LINK) -rpath $(vmwlegacy_drv_ladir) $(vmwlegacy_drv_la_LDFLAGS) $(vmwlegacy_drv_la_OBJECTS) $(vmwlegacy_drv_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -324,13 +377,14 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bits2pixels.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmware.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwarectrl.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwarecurs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwaremodes.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwarevideo.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwarexinerama.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmware_drv_la-vmwaremodule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwlegacy_drv_la-bits2pixels.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwlegacy_drv_la-vmware.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwlegacy_drv_la-vmwarectrl.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwlegacy_drv_la-vmwarecurs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwlegacy_drv_la-vmwaremodes.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwlegacy_drv_la-vmwarevideo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vmwlegacy_drv_la-vmwarexinerama.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -352,6 +406,62 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+vmware_drv_la-vmwaremodule.lo: vmwaremodule.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmware_drv_la_CFLAGS) $(CFLAGS) -MT vmware_drv_la-vmwaremodule.lo -MD -MP -MF "$(DEPDIR)/vmware_drv_la-vmwaremodule.Tpo" -c -o vmware_drv_la-vmwaremodule.lo `test -f 'vmwaremodule.c' || echo '$(srcdir)/'`vmwaremodule.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/vmware_drv_la-vmwaremodule.Tpo" "$(DEPDIR)/vmware_drv_la-vmwaremodule.Plo"; else rm -f "$(DEPDIR)/vmware_drv_la-vmwaremodule.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vmwaremodule.c' object='vmware_drv_la-vmwaremodule.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmware_drv_la_CFLAGS) $(CFLAGS) -c -o vmware_drv_la-vmwaremodule.lo `test -f 'vmwaremodule.c' || echo '$(srcdir)/'`vmwaremodule.c
+
+vmwlegacy_drv_la-bits2pixels.lo: bits2pixels.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -MT vmwlegacy_drv_la-bits2pixels.lo -MD -MP -MF "$(DEPDIR)/vmwlegacy_drv_la-bits2pixels.Tpo" -c -o vmwlegacy_drv_la-bits2pixels.lo `test -f 'bits2pixels.c' || echo '$(srcdir)/'`bits2pixels.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/vmwlegacy_drv_la-bits2pixels.Tpo" "$(DEPDIR)/vmwlegacy_drv_la-bits2pixels.Plo"; else rm -f "$(DEPDIR)/vmwlegacy_drv_la-bits2pixels.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='bits2pixels.c' object='vmwlegacy_drv_la-bits2pixels.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -c -o vmwlegacy_drv_la-bits2pixels.lo `test -f 'bits2pixels.c' || echo '$(srcdir)/'`bits2pixels.c
+
+vmwlegacy_drv_la-vmware.lo: vmware.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -MT vmwlegacy_drv_la-vmware.lo -MD -MP -MF "$(DEPDIR)/vmwlegacy_drv_la-vmware.Tpo" -c -o vmwlegacy_drv_la-vmware.lo `test -f 'vmware.c' || echo '$(srcdir)/'`vmware.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/vmwlegacy_drv_la-vmware.Tpo" "$(DEPDIR)/vmwlegacy_drv_la-vmware.Plo"; else rm -f "$(DEPDIR)/vmwlegacy_drv_la-vmware.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vmware.c' object='vmwlegacy_drv_la-vmware.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -c -o vmwlegacy_drv_la-vmware.lo `test -f 'vmware.c' || echo '$(srcdir)/'`vmware.c
+
+vmwlegacy_drv_la-vmwarecurs.lo: vmwarecurs.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -MT vmwlegacy_drv_la-vmwarecurs.lo -MD -MP -MF "$(DEPDIR)/vmwlegacy_drv_la-vmwarecurs.Tpo" -c -o vmwlegacy_drv_la-vmwarecurs.lo `test -f 'vmwarecurs.c' || echo '$(srcdir)/'`vmwarecurs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/vmwlegacy_drv_la-vmwarecurs.Tpo" "$(DEPDIR)/vmwlegacy_drv_la-vmwarecurs.Plo"; else rm -f "$(DEPDIR)/vmwlegacy_drv_la-vmwarecurs.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vmwarecurs.c' object='vmwlegacy_drv_la-vmwarecurs.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -c -o vmwlegacy_drv_la-vmwarecurs.lo `test -f 'vmwarecurs.c' || echo '$(srcdir)/'`vmwarecurs.c
+
+vmwlegacy_drv_la-vmwarectrl.lo: vmwarectrl.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -MT vmwlegacy_drv_la-vmwarectrl.lo -MD -MP -MF "$(DEPDIR)/vmwlegacy_drv_la-vmwarectrl.Tpo" -c -o vmwlegacy_drv_la-vmwarectrl.lo `test -f 'vmwarectrl.c' || echo '$(srcdir)/'`vmwarectrl.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/vmwlegacy_drv_la-vmwarectrl.Tpo" "$(DEPDIR)/vmwlegacy_drv_la-vmwarectrl.Plo"; else rm -f "$(DEPDIR)/vmwlegacy_drv_la-vmwarectrl.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vmwarectrl.c' object='vmwlegacy_drv_la-vmwarectrl.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -c -o vmwlegacy_drv_la-vmwarectrl.lo `test -f 'vmwarectrl.c' || echo '$(srcdir)/'`vmwarectrl.c
+
+vmwlegacy_drv_la-vmwarexinerama.lo: vmwarexinerama.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -MT vmwlegacy_drv_la-vmwarexinerama.lo -MD -MP -MF "$(DEPDIR)/vmwlegacy_drv_la-vmwarexinerama.Tpo" -c -o vmwlegacy_drv_la-vmwarexinerama.lo `test -f 'vmwarexinerama.c' || echo '$(srcdir)/'`vmwarexinerama.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/vmwlegacy_drv_la-vmwarexinerama.Tpo" "$(DEPDIR)/vmwlegacy_drv_la-vmwarexinerama.Plo"; else rm -f "$(DEPDIR)/vmwlegacy_drv_la-vmwarexinerama.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vmwarexinerama.c' object='vmwlegacy_drv_la-vmwarexinerama.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -c -o vmwlegacy_drv_la-vmwarexinerama.lo `test -f 'vmwarexinerama.c' || echo '$(srcdir)/'`vmwarexinerama.c
+
+vmwlegacy_drv_la-vmwarevideo.lo: vmwarevideo.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -MT vmwlegacy_drv_la-vmwarevideo.lo -MD -MP -MF "$(DEPDIR)/vmwlegacy_drv_la-vmwarevideo.Tpo" -c -o vmwlegacy_drv_la-vmwarevideo.lo `test -f 'vmwarevideo.c' || echo '$(srcdir)/'`vmwarevideo.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/vmwlegacy_drv_la-vmwarevideo.Tpo" "$(DEPDIR)/vmwlegacy_drv_la-vmwarevideo.Plo"; else rm -f "$(DEPDIR)/vmwlegacy_drv_la-vmwarevideo.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vmwarevideo.c' object='vmwlegacy_drv_la-vmwarevideo.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -c -o vmwlegacy_drv_la-vmwarevideo.lo `test -f 'vmwarevideo.c' || echo '$(srcdir)/'`vmwarevideo.c
+
+vmwlegacy_drv_la-vmwaremodes.lo: vmwaremodes.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -MT vmwlegacy_drv_la-vmwaremodes.lo -MD -MP -MF "$(DEPDIR)/vmwlegacy_drv_la-vmwaremodes.Tpo" -c -o vmwlegacy_drv_la-vmwaremodes.lo `test -f 'vmwaremodes.c' || echo '$(srcdir)/'`vmwaremodes.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/vmwlegacy_drv_la-vmwaremodes.Tpo" "$(DEPDIR)/vmwlegacy_drv_la-vmwaremodes.Plo"; else rm -f "$(DEPDIR)/vmwlegacy_drv_la-vmwaremodes.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='vmwaremodes.c' object='vmwlegacy_drv_la-vmwaremodes.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vmwlegacy_drv_la_CFLAGS) $(CFLAGS) -c -o vmwlegacy_drv_la-vmwaremodes.lo `test -f 'vmwaremodes.c' || echo '$(srcdir)/'`vmwaremodes.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -442,7 +552,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
-	for dir in "$(DESTDIR)$(vmware_drv_ladir)"; do \
+	for dir in "$(DESTDIR)$(vmware_drv_ladir)" "$(DESTDIR)$(vmwlegacy_drv_ladir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -472,7 +582,7 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-vmware_drv_laLTLIBRARIES \
-	mostlyclean-am
+	clean-vmwlegacy_drv_laLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -490,7 +600,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-vmware_drv_laLTLIBRARIES
+install-data-am: install-vmware_drv_laLTLIBRARIES \
+	install-vmwlegacy_drv_laLTLIBRARIES
 
 install-exec-am:
 
@@ -518,20 +629,24 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-vmware_drv_laLTLIBRARIES
+uninstall-am: uninstall-info-am uninstall-vmware_drv_laLTLIBRARIES \
+	uninstall-vmwlegacy_drv_laLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-vmware_drv_laLTLIBRARIES ctags distclean \
+	clean-libtool clean-vmware_drv_laLTLIBRARIES \
+	clean-vmwlegacy_drv_laLTLIBRARIES ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
 	install-exec-am install-info install-info-am install-man \
-	install-strip install-vmware_drv_laLTLIBRARIES installcheck \
+	install-strip install-vmware_drv_laLTLIBRARIES \
+	install-vmwlegacy_drv_laLTLIBRARIES installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-vmware_drv_laLTLIBRARIES
+	uninstall-vmware_drv_laLTLIBRARIES \
+	uninstall-vmwlegacy_drv_laLTLIBRARIES
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

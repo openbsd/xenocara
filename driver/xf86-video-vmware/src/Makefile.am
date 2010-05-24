@@ -23,31 +23,40 @@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @XORG_CFLAGS@
+
+vmwlegacy_drv_la_LTLIBRARIES = vmwlegacy_drv.la
+vmwlegacy_drv_la_LDFLAGS = -module -avoid-version
+vmwlegacy_drv_la_CFLAGS = @XORG_CFLAGS@
+vmwlegacy_drv_ladir = @moduledir@/drivers
+
+vmwlegacy_drv_la_SOURCES = \
+	bits2pixels.c \
+	bits2pixels.h \
+	guest_os.h \
+	includeCheck.h \
+	svga_escape.h \
+	svga_limits.h \
+	svga_modes.h \
+	svga_overlay.h \
+	svga_reg.h \
+	svga_struct.h \
+	vm_basic_types.h \
+	vm_device_version.h \
+	vmware.c \
+	vmwarecurs.c \
+	vmware.h \
+	vmwarectrl.c \
+	vmwarectrl.h \
+	vmwarectrlproto.h \
+	vmwarexinerama.c \
+	vmwarevideo.c \
+	vmwaremodes.c
+
 vmware_drv_la_LTLIBRARIES = vmware_drv.la
 vmware_drv_la_LDFLAGS = -module -avoid-version
+vmware_drv_la_CFLAGS = @XORG_CFLAGS@ @DRM_CFLAGS@
+vmware_drv_la_LIBADD = @DRM_LIBS@
 vmware_drv_ladir = @moduledir@/drivers
 
 vmware_drv_la_SOURCES = \
-         bits2pixels.c \
-         bits2pixels.h \
-         guest_os.h \
-         includeCheck.h \
-	 svga_escape.h \
-         svga_limits.h \
-         svga_modes.h \
-	 svga_overlay.h \
-         svga_reg.h \
-         svga_struct.h \
-         vm_basic_types.h \
-         vm_device_version.h \
-         vmware.c \
-         vmwarecurs.c \
-         vmware.h \
-         vmwarectrl.c \
-         vmwarectrl.h \
-         vmwarectrlproto.h \
-         vmwarexinerama.c \
-         vmwarevideo.c \
-         vmwaremodes.c
-
+	vmwaremodule.c

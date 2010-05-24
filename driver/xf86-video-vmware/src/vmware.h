@@ -132,6 +132,7 @@ typedef struct {
     CARD32* vmwareFIFO;
 
     xf86CursorInfoPtr CursorInfoRec;
+    CursorPtr oldCurs;
     struct {
         int bg, fg, x, y;
         int hotX, hotY;
@@ -204,7 +205,7 @@ static __inline ScrnInfoPtr infoFromScreen(ScreenPtr s) {
 /*#define DEBUG_LOGGING*/
 #ifdef DEBUG_LOGGING
 # define VmwareLog(args) ErrorF args
-# define TRACEPOINT VmwareLog((__FUNCTION__ ":" __FILE__ "\n"));
+# define TRACEPOINT VmwareLog(("%s : %s\n", __FUNCTION__, __FILE__));
 #else
 # define VmwareLog(args)
 # define TRACEPOINT
