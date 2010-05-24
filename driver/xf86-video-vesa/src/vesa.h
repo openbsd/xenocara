@@ -64,13 +64,8 @@
 /* Int 10 support */
 #include "xf86int10.h"
 
-/* bank switching */
-#include "mibank.h"
-
 /* Dga definitions */
 #include "dgaproc.h"
-
-
 
 #include "fb.h"
 
@@ -99,7 +94,6 @@ typedef struct _VESARec
     pciVideoPtr pciInfo;
     PCITAG pciTag;
 #endif
-    miBankInfoRec bank;
     int curBank, bankSwitchWindowB;
     CARD16 maxBytesPerScanline;
     unsigned long mapPhys, mapOff, mapSize;	/* video memory */

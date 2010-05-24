@@ -33,7 +33,6 @@
 
 /*
  * TODO:
- * - PanelID might give us useful size hints.
  * - Port to RANDR 1.2 setup to make mode selection slightly better
  * - Port to RANDR 1.2 to drop the old-school DGA junk
  * - VBE/SCI for secondary DDC method?
@@ -95,7 +94,9 @@ VESADisplayPowerManagementSet(ScrnInfoPtr pScrn, int mode,
                 int flags);
 
 /* locally used functions */
+#ifdef HAVE_ISA
 static int VESAFindIsaDevice(GDevPtr dev);
+#endif
 static Bool VESAMapVidMem(ScrnInfoPtr pScrn);
 static void VESAUnmapVidMem(ScrnInfoPtr pScrn);
 static int VESABankSwitch(ScreenPtr pScreen, unsigned int iBank);
@@ -106,10 +107,41 @@ static void RestoreFonts(ScrnInfoPtr pScrn);
 static Bool 
 VESASaveRestore(ScrnInfoPtr pScrn, vbeSaveRestoreFunction function);
 
-static void *VESAWindowLinear(ScreenPtr pScrn, CARD32 row, CARD32 offset,
-			      int mode, CARD32 *size, void *closure);
-static void *VESAWindowWindowed(ScreenPtr pScrn, CARD32 row, CARD32 offset,
-				int mode, CARD32 *size, void *closure);
+static void *
+VESAWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
+		 CARD32 *size, void *closure)
+{
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    VESAPtr pVesa = VESAGetRec(pScrn);
+
+    *size = pVesa->maxBytesPerScanline;
+    return ((CARD8 *)pVesa->base + row * pVesa->maxBytesPerScanline + offset);
+}
+
+static void *
+VESAWindowWindowed(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
+		   CARD32 *size, void *closure)
+{
+    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    VESAPtr pVesa = VESAGetRec(pScrn);
+    VbeModeInfoBlock *data = ((VbeModeInfoData*)(pScrn->currentMode->Private))->data;
+    int window;
+
+    offset += pVesa->maxBytesPerScanline * row;
+    window = offset / (data->WinGranularity * 1024);
+    pVesa->windowAoffset = window * data->WinGranularity * 1024;
+    VESABankSwitch(pScreen, window);
+    *size = data->WinSize * 1024 - (offset - pVesa->windowAoffset);
+
+    return (void *)((unsigned long)pVesa->base +
+		    (offset - pVesa->windowAoffset));
+}
+
+static void
+vesaUpdatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
+{
+    shadowUpdatePacked(pScreen, pBuf);
+}
 
 static Bool VESADGAInit(ScrnInfoPtr pScrn, ScreenPtr pScreen);
 
@@ -553,7 +585,7 @@ VESAValidateModes(ScrnInfoPtr pScrn)
 	mode->status = MODE_OK;
 
     return VBEValidateModes(pScrn, NULL, pScrn->display->modes, 
-			    NULL, NULL, 0, 2048, 1, 0, 2048,
+			    NULL, NULL, 0, 32767, 1, 0, 32767,
 			    pScrn->display->virtualX,
 			    pScrn->display->virtualY,
 			    pVesa->mapSize, LOOKUP_BEST_REFRESH);
@@ -876,7 +908,6 @@ VESAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     VisualPtr visual;
     VbeModeInfoBlock *mode;
     int flags;
-    int init_picture = 0;
 
     if ((pVesa->pVbe = VBEExtendedInit(NULL, pVesa->pEnt->index,
 				       SET_BIOS_SCRATCH
@@ -968,7 +999,6 @@ VESAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 				       pScrn->xDpi, pScrn->yDpi,
 				       pScrn->displayWidth, pScrn->bitsPerPixel))
 			return (FALSE);
-		    init_picture = 1;
 		    break;
 		default:
 		    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -999,16 +1029,15 @@ VESAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     }
 
     /* must be after RGB ordering fixed */
-    if (init_picture)
-	fbPictureInit(pScreen, 0, 0);
+    fbPictureInit(pScreen, 0, 0);
 
     if (pVesa->shadowFB) {
 	if (pVesa->mapPhys == 0xa0000) {	/* Windowed */
-	    pVesa->update = shadowUpdatePackedWeak();
+	    pVesa->update = vesaUpdatePacked;
 	    pVesa->window = VESAWindowWindowed;
 	}
 	else {	/* Linear */
-	    pVesa->update = shadowUpdatePackedWeak();
+	    pVesa->update = vesaUpdatePacked;
 	    pVesa->window = VESAWindowLinear;
 	}
 
@@ -1018,22 +1047,9 @@ VESAScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	pScreen->CreateScreenResources = vesaCreateScreenResources;
     }
     else if (pVesa->mapPhys == 0xa0000) {
-	unsigned int bankShift = 0;
-	while ((unsigned)(64 >> bankShift) != mode->WinGranularity)
-	    bankShift++;
-	pVesa->curBank = -1;
-	pVesa->bank.SetSourceBank =
-	pVesa->bank.SetDestinationBank =
-	pVesa->bank.SetSourceAndDestinationBanks = VESABankSwitch;
-	pVesa->bank.pBankA = pVesa->bank.pBankB = pVesa->base;
-	pVesa->bank.BankSize = (mode->WinSize * 1024) >> bankShift;
-	pVesa->bank.nBankDepth = pScrn->depth;
-	if (!miInitializeBanking(pScreen, pScrn->virtualX, pScrn->virtualY,
-				 pScrn->virtualX, &pVesa->bank)) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Bank switch initialization failed!\n");
-	    return (FALSE);
-	}
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                   "Banked framebuffer requires ShadowFB\n");
+        return FALSE;
     }
 
     VESADGAInit(pScrn, pScreen);
@@ -1103,8 +1119,10 @@ VESACloseScreen(int scrnIndex, ScreenPtr pScreen)
 				 pVesa->savedPal, FALSE, TRUE);
 	VESAUnmapVidMem(pScrn);
     }
-    if (pVesa->shadowFB && pVesa->shadow)
+    if (pVesa->shadowFB && pVesa->shadow) {
+	shadowRemove(pScreen, pScreen->GetScreenPixmap(pScreen));
 	xfree(pVesa->shadow);
+    }
     if (pVesa->pDGAMode) {
 	xfree(pVesa->pDGAMode);
 	pVesa->pDGAMode = NULL;
@@ -1163,14 +1181,13 @@ VESASetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
 	    /* Some cards do not like setting the clock.
 	     * Free it as it will not be any longer useful
 	     */
-	    xf86ErrorF("...Tried again without customized values.\n");
+	    xf86ErrorF(", mode set without customized refresh.\n");
 	    xfree(data->block);
 	    data->block = NULL;
 	    data->mode &= ~(1 << 11);
 	}
 	else {
 	    ErrorF("\n");
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Set VBE Mode failed!\n");
 	    return (FALSE);
 	}
     }
@@ -1290,46 +1307,13 @@ VESAUnmapVidMem(ScrnInfoPtr pScrn)
     pVesa->base = NULL;
 }
 
-static void *
-VESAWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
-		 CARD32 *size, void *closure)
-{
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    VESAPtr pVesa = VESAGetRec(pScrn);
-
-    *size = pVesa->maxBytesPerScanline;
-    return ((CARD8 *)pVesa->base + row * pVesa->maxBytesPerScanline + offset);
-}
-
-static void *
-VESAWindowWindowed(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
-		   CARD32 *size, void *closure)
-{
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
-    VESAPtr pVesa = VESAGetRec(pScrn);
-    VbeModeInfoBlock *data = ((VbeModeInfoData*)(pScrn->currentMode->Private))->data;
-    int window;
-
-    offset += pVesa->maxBytesPerScanline * row;
-    window = offset / (data->WinGranularity * 1024);
-    pVesa->windowAoffset = window * data->WinGranularity * 1024;
-    VESABankSwitch(pScreen, window);
-    *size = data->WinSize * 1024 - (offset - pVesa->windowAoffset);
-
-    return (void *)((unsigned long)pVesa->base +
-		    (offset - pVesa->windowAoffset));
-}
-
+/* This code works, but is very slow for programs that use it intensively */
 static void
 VESALoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 		LOCO *colors, VisualPtr pVisual)
 {
     VESAPtr pVesa = VESAGetRec(pScrn);
     int i, idx;
-
-#if 0
-
-    /* This code works, but is very slow for programs that use it intensively */
     int base;
 
     if (pVesa->pal == NULL)
@@ -1353,28 +1337,6 @@ VESALoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
     if (idx - 1 == indices[i - 1])
 	VBESetGetPaletteData(pVesa->pVbe, TRUE, base, idx - base,
 			      pVesa->pal + base, FALSE, TRUE);
-
-#else
-
-#define VESADACDelay()							    \
-    do {								    \
-	(void)inb(pVesa->ioBase + VGA_IOBASE_COLOR + VGA_IN_STAT_1_OFFSET); \
-	(void)inb(pVesa->ioBase + VGA_IOBASE_COLOR + VGA_IN_STAT_1_OFFSET); \
-    } while (0)
-
-    for (i = 0; i < numColors; i++) {
-	idx = indices[i];
-	outb(pVesa->ioBase + VGA_DAC_WRITE_ADDR, idx);
-	VESADACDelay();
-	outb(pVesa->ioBase + VGA_DAC_DATA, colors[idx].red);
-	VESADACDelay();
-	outb(pVesa->ioBase + VGA_DAC_DATA, colors[idx].green);
-	VESADACDelay();
-	outb(pVesa->ioBase + VGA_DAC_DATA, colors[idx].blue);
-	VESADACDelay();
-    }
-
-#endif
 }
 
 /*
