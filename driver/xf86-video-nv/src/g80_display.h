@@ -22,5 +22,6 @@ void G80CrtcSetCursorPosition(xf86CrtcPtr, int x, int y);
 void G80CrtcSkipModeFixup(xf86CrtcPtr);
 void G80CrtcSetDither(xf86CrtcPtr, Bool dither, Bool update);
 void G80CrtcSetScale(xf86CrtcPtr, DisplayModePtr, enum G80ScaleMode);
+void G80LoadPalette(ScrnInfoPtr, int numColors, int *indices, LOCO *, VisualPtr);
 
 void G80DispCreateCrtcs(ScrnInfoPtr pScrn);

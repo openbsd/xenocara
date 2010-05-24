@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 NVIDIA, Corporation
+ * Copyright (c) 2007,2010 NVIDIA Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -57,7 +57,7 @@
 #include "g80_xaa.h"
 
 #define G80_REG_SIZE (1024 * 1024 * 16)
-#define G80_RESERVED_VIDMEM 0xd000
+#define G80_RESERVED_VIDMEM 0xe000
 
 typedef enum {
     OPTION_HW_CURSOR,
@@ -614,9 +614,20 @@ G80InitHW(ScrnInfoPtr pScrn)
     pNv->reg[0x00706454/4] = 0x00010000;
     pNv->reg[0x00706460/4] = 0x0000502d;
     pNv->reg[0x00706474/4] = 0x00010000;
-    pNv->reg[0x00706480/4] = 0x0019003d;
-    pNv->reg[0x00706484/4] = (pNv->videoRam << 10) - G80_RESERVED_VIDMEM;
-    pNv->reg[0x00706494/4] = 0x00010000;
+    if(pNv->architecture == 0xaa || pNv->architecture == 0xac) {
+        uint64_t base = (uint64_t)pNv->reg[0x00100E10/4] << 12;
+        size_t size = (uint64_t)pNv->reg[0x00100E14/4] << 12;
+        uint64_t limit = base + size - G80_RESERVED_VIDMEM;
+
+        pNv->reg[0x00706480/4] = 0x1a003d;
+        pNv->reg[0x00706484/4] = limit;
+        pNv->reg[0x00706488/4] = base;
+        pNv->reg[0x0070648c/4] = base >> 32 | ((limit >> 8) & 0xff000000);
+    } else {
+        pNv->reg[0x00706480/4] = 0x0019003d;
+        pNv->reg[0x00706484/4] = (pNv->videoRam << 10) - G80_RESERVED_VIDMEM;
+        pNv->reg[0x00706494/4] = 0x00010000;
+    }
     pNv->reg[0x007064a0/4] = 0x0019003d;
     pNv->reg[0x007064a4/4] = bar0_pramin + 0x1100f;
     pNv->reg[0x007064a8/4] = bar0_pramin + 0x11000;
@@ -630,7 +641,7 @@ G80InitHW(ScrnInfoPtr pScrn)
 
     pNv->reg[0x00003224/4] = 0x000f0078;
     pNv->reg[0x0000322c/4] = 0x00000644;
-    pNv->reg[0x00003234/4] = G80_RESERVED_VIDMEM - 0x5001;
+    pNv->reg[0x00003234/4] = G80_RESERVED_VIDMEM - 0x6001;
     pNv->reg[0x00003254/4] = 0x00000001;
     pNv->reg[0x00002210/4] = 0x1c001000;
 
@@ -655,7 +666,7 @@ G80InitHW(ScrnInfoPtr pScrn)
 
     pNv->dmaPut = 0;
     pNv->dmaCurrent = SKIPS;
-    pNv->dmaMax = (G80_RESERVED_VIDMEM - 0x5000) / 4 - 2;
+    pNv->dmaMax = (G80_RESERVED_VIDMEM - 0x6000) / 4 - 2;
     pNv->dmaFree = pNv->dmaMax - pNv->dmaCurrent;
 
     G80DmaStart(pNv, 0, 1);
@@ -724,48 +735,6 @@ G80InitHW(ScrnInfoPtr pScrn)
     }
 
     pNv->currentRop = ~0; /* Set to something invalid */
-}
-
-#define DEPTH_SHIFT(val, w) ((val << (8 - w)) | (val >> ((w << 1) - 8)))
-#define COLOR(c) (unsigned int)(0x3fff * ((c)/255.0))
-static void
-G80LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices, LOCO *colors,
-               VisualPtr pVisual)
-{
-    G80Ptr pNv = G80PTR(pScrn);
-    int i, index;
-    volatile struct {
-        unsigned short red, green, blue, unused;
-    } *lut = (void*)&pNv->mem[pNv->videoRam * 1024 - 0x5000];
-
-    switch(pScrn->depth) {
-        case 15:
-            for(i = 0; i < numColors; i++) {
-                index = indices[i];
-                lut[DEPTH_SHIFT(index, 5)].red = COLOR(colors[index].red);
-                lut[DEPTH_SHIFT(index, 5)].green = COLOR(colors[index].green);
-                lut[DEPTH_SHIFT(index, 5)].blue = COLOR(colors[index].blue);
-            }
-            break;
-        case 16:
-            for(i = 0; i < numColors; i++) {
-                index = indices[i];
-                lut[DEPTH_SHIFT(index, 6)].green = COLOR(colors[index].green);
-                if(index < 32) {
-                    lut[DEPTH_SHIFT(index, 5)].red = COLOR(colors[index].red);
-                    lut[DEPTH_SHIFT(index, 5)].blue = COLOR(colors[index].blue);
-                }
-            }
-            break;
-        default:
-            for(i = 0; i < numColors; i++) {
-                index = indices[i];
-                lut[index].red = COLOR(colors[index].red);
-                lut[index].green = COLOR(colors[index].green);
-                lut[index].blue = COLOR(colors[index].blue);
-            }
-            break;
-    }
 }
 
 static Bool
@@ -866,6 +835,9 @@ G80ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
        Must precede creation of the default colormap */
     miDCInitialize(pScreen, xf86GetPointerScreenFuncs());
 
+    if(!xf86CrtcScreenInit(pScreen))
+        return FALSE;
+
     /* Initialize default colormap */
     if(!miCreateDefColormap(pScreen))
         return FALSE;
@@ -908,9 +880,6 @@ G80ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     pNv->BlockHandler = pScreen->BlockHandler;
     pScreen->BlockHandler = G80BlockHandler;
-
-    if(!xf86CrtcScreenInit(pScreen))
-        return FALSE;
 
     return TRUE;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
+ * Copyright Â© 2002 Keith Packard, member of The XFree86 Project, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -467,9 +467,6 @@ xf86RandR12GetInfo (ScreenPtr pScreen, Rotation *rotations)
     {
 	xf86ProbeOutputModes (scrp, 0, 0);
 	xf86SetScrnInfoModes (scrp);
-#ifdef XFreeXDGA
-	xf86DiDGAReInit (pScreen);
-#endif
     }
 
     for (mode = scrp->modes; ; mode = mode->next)
@@ -808,9 +805,10 @@ xf86RandR12CreateScreenResources (ScreenPtr pScreen)
 	}
 	else
 	{
-	    xf86OutputPtr   output = config->output[config->compat_output];
+	    xf86OutputPtr   output = xf86CompatOutput(pScrn);
 
-	    if (output->conf_monitor &&
+	    if (output &&
+		output->conf_monitor &&
 		(output->conf_monitor->mon_width  > 0 &&
 		 output->conf_monitor->mon_height > 0))
 	    {
@@ -874,7 +872,12 @@ xf86RandR12Init (ScreenPtr pScreen)
 #ifdef PANORAMIX
     /* XXX disable RandR when using Xinerama */
     if (!noPanoramiXExtension)
-	return TRUE;
+    {
+        if (xf86NumScreens == 1)
+            noPanoramiXExtension = TRUE;
+        else
+            return TRUE;
+    }
 #endif
 
     if (xf86RandR12Generation != serverGeneration)
@@ -1528,9 +1531,6 @@ xf86RandR12GetInfo12 (ScreenPtr pScreen, Rotation *rotations)
 	return TRUE;
     xf86ProbeOutputModes (pScrn, 0, 0);
     xf86SetScrnInfoModes (pScrn);
-#ifdef XFreeXDGA
-    xf86DiDGAReInit (pScreen);
-#endif
     return xf86RandR12SetInfo12 (pScreen);
 }
 
@@ -1720,10 +1720,13 @@ xf86RandR12ChangeGamma(int scrnIndex, Gamma gamma)
 {
     CARD16 *points, *red, *green, *blue;
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-    xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
-    RRCrtcPtr crtc = config->output[config->compat_output]->crtc->randr_crtc;
-    int size = max(0, crtc->gammaSize);
+    RRCrtcPtr crtc = xf86CompatRRCrtc(pScrn);
+    int size;
 
+    if (!crtc)
+	return Success;
+
+    size = max(0, crtc->gammaSize);
     if (!size)
 	return Success;
 

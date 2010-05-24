@@ -1,4 +1,5 @@
 /*
+ * Copyright 2010 NVIDIA Corporation
  * Copyright 1996-1997  David J. McKay
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -124,7 +125,7 @@ _X_EXPORT DriverRec NV = {
 #endif
 };
 
-/* Known cards as of 2009/05/15 */
+/* Known cards as of 2010/03/08 */
 
 static SymTabRec NVKnownChipsets[] =
 {
@@ -416,161 +417,121 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE042D, "Quadro FX 360M" },
   { 0x10DE042E, "GeForce 9300M G" },
   { 0x10DE042F, "Quadro NVS 290" },
+  { 0x10DE05E0, "GeForce GTX 295" },
   { 0x10DE05E1, "GeForce GTX 280" },
   { 0x10DE05E2, "GeForce GTX 260" },
+  { 0x10DE05E3, "GeForce GTX 285" },
+  { 0x10DE05E6, "GeForce GTX 275" },
+  { 0x10DE05EB, "GeForce GTX 295" },
+  { 0x10DE05F9, "Quadro CX" },
+  { 0x10DE05FD, "Quadro FX 5800" },
+  { 0x10DE05FE, "Quadro FX 4800" },
+  { 0x10DE05FF, "Quadro FX 3800" },
   { 0x10DE0600, "GeForce 8800 GTS 512" },
+  { 0x10DE0601, "GeForce 9800 GT" },
   { 0x10DE0602, "GeForce 8800 GT" },
   { 0x10DE0604, "GeForce 9800 GX2" },
+  { 0x10DE0605, "GeForce 9800 GT" },
   { 0x10DE0606, "GeForce 8800 GS" },
+  { 0x10DE0607, "GeForce GTS 240" },
+  { 0x10DE0608, "GeForce 9800M GTX" },
   { 0x10DE0609, "GeForce 8800M GTS" },
+  { 0x10DE060A, "GeForce GTX 280M" },
+  { 0x10DE060B, "GeForce 9800M GT" },
   { 0x10DE060C, "GeForce 8800M GTX" },
   { 0x10DE060D, "GeForce 8800 GS" },
   { 0x10DE0610, "GeForce 9600 GSO" },
   { 0x10DE0611, "GeForce 8800 GT" },
   { 0x10DE0612, "GeForce 9800 GTX" },
-  { 0x10DE0613, "GeForce 9800 GTK+" },
+  { 0x10DE0613, "GeForce 9800 GTX+" },
   { 0x10DE0614, "GeForce 9800 GT" },
+  { 0x10DE0615, "GeForce GTS 250" },
+  { 0x10DE0617, "GeForce 9800M GTX" },
+  { 0x10DE0618, "GeForce GTX 260M" },
   { 0x10DE061A, "Quadro FX 3700" },
   { 0x10DE061C, "Quadro FX 3600M" },
+  { 0x10DE061D, "Quadro FX 2800M" },
+  { 0x10DE061E, "Quadro FX 3700M" },
+  { 0x10DE061F, "Quadro FX 3800M" },
   { 0x10DE0622, "GeForce 9600 GT" },
   { 0x10DE0623, "GeForce 9600 GS" },
+  { 0x10DE0625, "GeForce 9600 GSO 512" },
+  { 0x10DE0626, "GeForce GT 130" },
+  { 0x10DE0627, "GeForce GT 140" },
   { 0x10DE0628, "GeForce 9800M GTS" },
   { 0x10DE062A, "GeForce 9700M GTS" },
+  { 0x10DE062B, "GeForce 9800M GS" },
   { 0x10DE062C, "GeForce 9800M GTS" },
+  { 0x10DE0638, "Quadro FX 1800" },
+  { 0x10DE063A, "Quadro FX 2700M" },
   { 0x10DE0640, "GeForce 9500 GT" },
+  { 0x10DE0641, "GeForce 9400 GT" },
+  { 0x10DE0643, "GeForce 9500 GT" },
+  { 0x10DE0644, "GeForce 9500 GS" },
+  { 0x10DE0646, "GeForce GT 120" },
   { 0x10DE0647, "GeForce 9600M GT" },
   { 0x10DE0648, "GeForce 9600M GS" },
   { 0x10DE0649, "GeForce 9600M GT" },
+  { 0x10DE064A, "GeForce 9700M GT" },
   { 0x10DE064B, "GeForce 9500M G" },
+  { 0x10DE064C, "GeForce 9650M GT" },
+  { 0x10DE0652, "GeForce GT 130M" },
+  { 0x10DE0656, "GeForce 9500 GT" },
+  { 0x10DE0658, "Quadro FX 380" },
+  { 0x10DE0659, "Quadro FX 580" },
+  { 0x10DE065A, "Quadro FX 1700M" },
+  { 0x10DE065C, "Quadro FX 770M" },
   { 0x10DE06E0, "GeForce 9300 GE" },
   { 0x10DE06E1, "GeForce 9300 GS" },
   { 0x10DE06E4, "GeForce 8400 GS" },
   { 0x10DE06E5, "GeForce 9300M GS" },
+  { 0x10DE06E6, "GeForce G100" },
   { 0x10DE06E8, "GeForce 9200M GS" },
   { 0x10DE06E9, "GeForce 9300M GS" },
   { 0x10DE06EA, "Quadro NVS 150M" },
   { 0x10DE06EB, "Quadro NVS 160M" },
-  { 0x10DE084B, "GeForce 9300 GE" },
+  { 0x10DE06EC, "GeForce G 105M" },
+  { 0x10DE06EF, "GeForce G 103M" },
+  { 0x10DE06F8, "Quadro NVS 420" },
+  { 0x10DE06F9, "Quadro FX 370 LP" },
+  { 0x10DE06FA, "Quadro NVS 450" },
+  { 0x10DE06FD, "Quadro NVS 295" },
+  { 0x10DE0847, "GeForce 9100" },
+  { 0x10DE0848, "GeForce 8300" },
+  { 0x10DE0849, "GeForce 8200" },
+  { 0x10DE084A, "nForce 730a" },
+  { 0x10DE084B, "GeForce 9200" },
+  { 0x10DE084C, "nForce 980a/780a SLI" },
+  { 0x10DE084D, "nForce 750a SLI" },
+  { 0x10DE084F, "GeForce 8100 / nForce 720a" },
+  { 0x10DE0844, "GeForce 9100M G" },
+  { 0x10DE0845, "GeForce 8200M G" },
+  { 0x10DE0861, "GeForce 9400" },
+  { 0x10DE0862, "GeForce 9400M G" },
+  { 0x10DE0863, "GeForce 9400M" },
+  { 0x10DE086C, "GeForce 9300 / nForce 730i" },
+  { 0x10DE0872, "GeForce G102M" },
+  { 0x10DE0873, "GeForce G102M" },
+  { 0x10DE087A, "GeForce 9400" },
+  { 0x10DE087D, "ION" },
+  { 0x10DE087F, "ION LE" },
+  { 0x10DE0A20, "GeForce GT 220" },
+  { 0x10DE0A23, "GeForce 210" },
+  { 0x10DE0A2A, "GeForce GT 230M" },
+  { 0x10DE0A34, "GeForce GT 240M" },
+  { 0x10DE0A60, "GeForce G210" },
+  { 0x10DE0A62, "GeForce 205" },
+  { 0x10DE0A63, "GeForce 310" },
+  { 0x10DE0A65, "GeForce 210" },
+  { 0x10DE0A66, "GeForce 310" },
+  { 0x10DE0A74, "GeForce G210M" },
+  { 0x10DE0A78, "Quadro FX 380 LP" },
+  { 0x10DE0CA3, "GeForce GT 240" },
+  { 0x10DE0CA8, "GeForce GTS 260M" },
+  { 0x10DE0CA9, "GeForce GTS 250M" },
 
   {-1, NULL}
 };
-
-
-/*
- * List of symbols from other modules that this module references.  This
- * list is used to tell the loader that it is OK for symbols here to be
- * unresolved providing that it hasn't been told that they haven't been
- * told that they are essential via a call to xf86LoaderReqSymbols() or
- * xf86LoaderReqSymLists().  The purpose is this is to avoid warnings about
- * unresolved symbols that are not required.
- */
-
-static const char *vgahwSymbols[] = {
-    "vgaHWUnmapMem",
-    "vgaHWDPMSSet",
-    "vgaHWFreeHWRec",
-    "vgaHWGetHWRec",
-    "vgaHWGetIndex",
-    "vgaHWInit",
-    "vgaHWMapMem",
-    "vgaHWProtect",
-    "vgaHWRestore",
-    "vgaHWSave",
-    "vgaHWSaveScreen",
-    NULL
-};
-
-static const char *fbSymbols[] = {
-    "fbPictureInit",
-    "fbScreenInit",
-    NULL
-};
-
-static const char *xaaSymbols[] = {
-    "XAACopyROP",
-    "XAACreateInfoRec",
-    "XAADestroyInfoRec",
-    "XAAFallbackOps",
-    "XAAInit",
-    "XAAPatternROP",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
-static const char *ddcSymbols[] = {
-    "xf86PrintEDID",
-    "xf86DoEDID_DDC2",
-    "xf86SetDDCproperties",
-    NULL
-};
-
-#ifdef XFree86LOADER
-static const char *vbeSymbols[] = {
-    "VBEInit",
-    "vbeFree",
-    "vbeDoEDID",
-    NULL
-};
-
-static const char *vbeModeSymbols[] = {
-    "VBEExtendedInit",
-    "VBEGetVBEInfo",
-    "VBEGetModePool",
-    "VBEValidateModes",
-    "VBESetModeParameters",
-    "VBEGetVBEMode",
-    "VBESetVBEMode",
-    NULL
-};
-#endif
-
-static const char *i2cSymbols[] = {
-    "xf86CreateI2CBusRec",
-    "xf86I2CBusInit",
-    NULL
-};
-
-static const char *shadowSymbols[] = {
-    "ShadowFBInit",
-    NULL
-};
-
-static const char *fbdevHWSymbols[] = {
-    "fbdevHWInit",
-    "fbdevHWUseBuildinMode",
-
-    "fbdevHWGetVidmem",
-
-    /* colormap */
-    "fbdevHWLoadPaletteWeak",
-
-    /* ScrnInfo hooks */
-    "fbdevHWAdjustFrameWeak",
-    "fbdevHWEnterVT",
-    "fbdevHWLeaveVTWeak",
-    "fbdevHWModeInit",
-    "fbdevHWSave",
-    "fbdevHWSwitchModeWeak",
-    "fbdevHWValidModeWeak",
-
-    "fbdevHWMapMMIO",
-    "fbdevHWMapVidmem",
-
-    NULL
-};
-
-static const char *int10Symbols[] = {
-    "xf86FreeInt10",
-    "xf86InitInt10",
-    NULL
-};
-
 
 #ifdef XFree86LOADER
 
@@ -812,9 +773,16 @@ NVIsG80(int chipType)
         case 0x0650:
         case 0x06e0:
         case 0x06f0:
+        case 0x0840:
+        case 0x0850:
+        case 0x0860:
+        case 0x0870:
+        case 0x0a20:
+        case 0x0a30:
         case 0x0a60:
         case 0x0a70:
         case 0x0ca0:
+        case 0x0cb0:
             return TRUE;
     }
 

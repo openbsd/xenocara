@@ -106,9 +106,13 @@ static Bool G80ReadPortMapping(int scrnIndex, G80Ptr pNv)
         port = (b >> 4) & 0xf;
         or = ffs((b >> 24) & 0xf) - 1;
 
-        if(b & 0x300000)
+        if(b & 0x300000) {
             /* Can't handle this type of output yet */
+            xf86DrvMsg(scrnIndex, X_INFO,
+                       "Ignoring unsupported external output type %d at output "
+                       "%d\n", type, or);
             continue;
+        }
 
         if(type == 0xe) break;
 
@@ -140,7 +144,8 @@ static Bool G80ReadPortMapping(int scrnIndex, G80Ptr pNv)
                 pNv->i2cMap[port].dac = or;
                 break;
             case 1: /* TV */
-                /* Ignore TVs */
+                xf86DrvMsg(scrnIndex, X_INFO,
+                           "Ignoring unsupported TV output %d\n", or);
                 break;
 
             case 2: /* TMDS */
@@ -200,7 +205,15 @@ static Bool G80ReadPortMapping(int scrnIndex, G80Ptr pNv)
 
                 break;
 
+            case 6: /* DisplayPort */
+                xf86DrvMsg(scrnIndex, X_INFO,
+                           "Ignoring unsupported DisplayPort output %d\n", or);
+                break;
+
             default:
+                xf86DrvMsg(scrnIndex, X_INFO,
+                           "Ignoring unsupported output type %d at port %d\n",
+                           type, or);
                 break;
         }
     }

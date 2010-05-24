@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 NVIDIA, Corporation
+ * Copyright (c) 2007,2010 NVIDIA Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -42,6 +42,8 @@ typedef struct G80CrtcPrivRec {
     Bool cursorVisible;
     Bool skipModeFixup;
     Bool dither;
+    /* Look-up table values to be set when the CRTC is enabled */
+    uint16_t lut_r[256], lut_g[256], lut_b[256];
 } G80CrtcPrivRec, *G80CrtcPrivPtr;
 
 static void G80CrtcShowHideCursor(xf86CrtcPtr crtc, Bool show, Bool update);
@@ -488,7 +490,7 @@ G80CrtcBlankScreen(xf86CrtcPtr crtc, Bool blank)
         if(pPriv->cursorVisible)
             G80CrtcShowHideCursor(crtc, TRUE, FALSE);
         C(0x00000840 + headOff, pScrn->depth == 8 ? 0x80000000 : 0xc0000000);
-        C(0x00000844 + headOff, (pNv->videoRam * 1024 - 0x5000) >> 8);
+        C(0x00000844 + headOff, (pNv->videoRam * 1024 - 0x5000 - 0x1000 * pPriv->head) >> 8);
         if(pNv->architecture != 0x50)
             C(0x0000085C + headOff, 1);
         C(0x00000874 + headOff, 1);
@@ -645,6 +647,101 @@ G80CrtcCommit(xf86CrtcPtr crtc)
     C(0x00000080, 0);
 }
 
+static void
+G80CrtcGammaSet(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green, CARD16 *blue,
+                int size)
+{
+    ScrnInfoPtr pScrn = crtc->scrn;
+    G80Ptr pNv = G80PTR(pScrn);
+    G80CrtcPrivPtr pPriv = crtc->driver_private;
+    int i;
+    volatile struct {
+        uint16_t red, green, blue, unused;
+    } *lut = (void*)&pNv->mem[pNv->videoRam * 1024 - 0x5000 - 0x1000 * pPriv->head];
+
+    assert(size == 256);
+
+    for(i = 0; i < size; i++) {
+        pPriv->lut_r[i] = lut[i].red   = red[i] >> 2;
+        pPriv->lut_g[i] = lut[i].green = green[i] >> 2;
+        pPriv->lut_b[i] = lut[i].blue  = blue[i] >> 2;
+    }
+
+    lut[256] = lut[255];
+}
+
+void
+G80LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices, LOCO *colors,
+               VisualPtr pVisual)
+{
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int i, j, index;
+    int p;
+    uint16_t lut_r[256], lut_g[256], lut_b[256];
+
+    for(p = 0; p < xf86_config->num_crtc; p++) {
+        xf86CrtcPtr crtc = xf86_config->crtc[p];
+        G80CrtcPrivPtr pPriv = crtc->driver_private;
+
+        /* Initialize to the old lookup table values. */
+        for(i = 0; i < 256; i++) {
+            lut_r[i] = pPriv->lut_r[i] << 2;
+            lut_g[i] = pPriv->lut_g[i] << 2;
+            lut_b[i] = pPriv->lut_b[i] << 2;
+        }
+
+        switch(pScrn->depth) {
+            case 15:
+                for(i = 0; i < numColors; i++) {
+                    index = indices[i];
+                    for(j = 0; j < 8; j++) {
+                        lut_r[index * 8 + j] =
+                            colors[index].red << 8;
+                        lut_g[index * 8 + j] =
+                            colors[index].green << 8;
+                        lut_b[index * 8 + j] =
+                            colors[index].blue << 8;
+                    }
+                }
+                break;
+            case 16:
+                for(i = 0; i < numColors; i++) {
+                    index = indices[i];
+
+                    if(index <= 31) {
+                        for(j = 0; j < 8; j++) {
+                            lut_r[index * 8 + j] =
+                                colors[index].red << 8;
+                            lut_b[index * 8 + j] =
+                                colors[index].blue << 8;
+                        }
+                    }
+
+                    for(j = 0; j < 4; j++) {
+                        lut_g[index * 4 + j] =
+                            colors[index].green << 8;
+                    }
+                }
+                break;
+            default:
+                for(i = 0; i < numColors; i++) {
+                    index = indices[i];
+                    lut_r[index] = colors[index].red << 8;
+                    lut_g[index] = colors[index].green << 8;
+                    lut_b[index] = colors[index].blue << 8;
+                }
+                break;
+        }
+
+        /* Make the change through RandR */
+#ifdef RANDR_12_INTERFACE
+        RRCrtcGammaSet(crtc->randr_crtc, lut_r, lut_g, lut_b);
+#else
+        crtc->funcs->gamma_set(crtc, lut_r, lut_g, lut_b, 256);
+#endif
+    }
+}
+
 static const xf86CrtcFuncsRec g80_crtc_funcs = {
     .dpms = G80CrtcDPMSSet,
     .save = NULL,
@@ -654,7 +751,7 @@ static const xf86CrtcFuncsRec g80_crtc_funcs = {
     .mode_fixup = G80CrtcModeFixup,
     .prepare = G80CrtcPrepare,
     .mode_set = G80CrtcModeSet,
-    // .gamma_set = G80DispGammaSet,
+    .gamma_set = G80CrtcGammaSet,
     .commit = G80CrtcCommit,
     .shadow_create = NULL,
     .shadow_destroy = NULL,

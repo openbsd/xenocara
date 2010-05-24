@@ -59,8 +59,8 @@ NV40, NV41, NV43, NV44, NV45, C51
 .B GeForce 7XXX
 G70, G71, G72, G73
 .TP 22
-.B GeForce 8XXX, GeForce 9XXX
-G80, G84, G86, G92, G94, G96, G98
+.B GeForce 8XXX, GeForce 9XXX, nForce 7, GeForce G, ION
+G8x, G9x, GT21x, MCP7x
 .TP 22
 .B GeForce GTX
 GT200
@@ -197,7 +197,7 @@ Authors include: David McKay, Jarno Paananen, Chas Inman, Dave Schmenk,
 Mark Vojkovich, Aaron Plattner
 .SH COPYRIGHT
 .LP
-Copyright (c) 2003 - 2008 NVIDIA, Corporation
+Copyright (c) 2003-2008,2010 NVIDIA Corporation
 .LP
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
