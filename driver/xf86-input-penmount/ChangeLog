@@ -1,3 +1,47 @@
+commit 3bc3d1245676f6022fd3db48eb3e7f3b66c7561f
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Mar 3 23:41:39 2010 +0100
+
+    Bump to 1.4.1
+
+commit a6fedb3d2fd0288283602fef14f2a0a460b2afef
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Mar 3 23:48:33 2010 +0100
+
+    Don't use obsolete loader functions
+
+commit 1d6ba7c8c8c7183569f9dc708090f36de8b6bdd6
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Mar 3 23:40:11 2010 +0100
+
+    Janitorial configure.ac/Makefile.am updates
+    
+    Use XORG_DEFAULT_OPTIONS and update ChangeLog rule to work with newer
+    git.  Also set AM_CFLAGS in Makefile.am instead of setting CFLAGS from
+    configure.ac.
+
+commit dab0c2742c034750e3e9673167eb20812b679818
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 17 13:59:43 2009 +1000
+
+    Cope with XINPUT ABI 7.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fedbe483260a4bc8e2cc77e7d6a543ba37170448
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 20:04:51 2009 -0700
+
+    Fill in COPYING file, add SubmittingPatches URL to README
+
+commit b5a8cdbd73939aa62cf3ae08957db67c65e6b51f
+Author: Steve Bian <s@pictorii.com>
+Date:   Sun Jan 18 23:33:52 2009 +1100
+
+    Added InvertX option
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 0536f70861f11192820439d36de951ef106d4e5e
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Feb 19 16:32:32 2009 +1000

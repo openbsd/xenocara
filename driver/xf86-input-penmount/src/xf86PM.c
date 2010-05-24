@@ -84,62 +84,12 @@ static XF86ModuleVersionInfo VersionRec =
 								 * a tool */
 };
 
-
-static const char *reqSymbols[] = {
-	"AddEnabledDevice",
-	"ErrorF",
-	"InitButtonClassDeviceStruct",
-	"InitProximityClassDeviceStruct",
-	"InitValuatorAxisStruct",
-	"InitValuatorClassDeviceStruct",
-	"InitPtrFeedbackClassDeviceStruct",
-	"RemoveEnabledDevice",
-	"Xcalloc",
-	"Xfree",
-	"XisbBlockDuration",
-	"XisbFree",
-	"XisbNew",
-	"XisbRead",
-	"XisbTrace",
-	"screenInfo",
-	"xf86AddInputDriver",
-	"xf86AllocateInput",
-	"xf86CloseSerial",
-	"xf86CollectInputOptions",
-	"xf86ErrorFVerb",
-	"xf86FindOptionValue",
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-	"xf86GetMotionEvents",
-#endif
-	"xf86GetVerbosity",
-	"xf86MotionHistoryAllocate",
-	"xf86NameCmp",
-	"xf86OpenSerial",
-	"xf86OptionListCreate",
-	"xf86OptionListMerge",
-	"xf86OptionListReport",
-	"xf86PostButtonEvent",
-	"xf86PostMotionEvent",
-	"xf86PostProximityEvent",
-	"xf86ProcessCommonOptions",
-	"xf86ScaleAxis",
-	"xf86SetIntOption",
-	"xf86SetStrOption",
-	"xf86XInputSetScreen",
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-	"xf86XInputSetSendCoreEvents",
-#endif
-	NULL
-};
-
-
 static pointer
 PenMountSetupProc(	pointer module,
 			pointer options,
 			int *errmaj,
 			int *errmin )
 {
-	xf86LoaderReqSymLists(reqSymbols, NULL);
 	xf86AddInputDriver(&PENMOUNT, module, 0);
 	return (pointer) 1;
 }
@@ -181,6 +131,9 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 	unsigned char map[] =
 	{0, 1};
 	int min_x, min_y, max_x, max_y;
+	Atom axis_labels[2] = { 0, 0 };
+	Atom btn_label = 0;
+
 	/*
 	 * these have to be here instead of in the SetupProc, because when the
 	 * SetupProc is run at server startup, screenInfo is not setup yet
@@ -191,7 +144,11 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 	/*
 	 * Device reports button press for 1 button.
 	 */
-	if (InitButtonClassDeviceStruct (dev, 1, map) == FALSE)
+	if (InitButtonClassDeviceStruct (dev, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                    &btn_label,
+#endif
+                    map) == FALSE)
 		{
 			ErrorF ("Unable to allocate PenMount ButtonClassDeviceStruct\n");
 			return !Success;
@@ -202,6 +159,9 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 	 * Axes min and max values are reported in raw coordinates.
 	 */
 	if (InitValuatorClassDeviceStruct (dev, 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+					   axis_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
 					   xf86GetMotionEvents,
 #endif
@@ -234,11 +194,19 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 					min_y = 0;
 				}
 
-			InitValuatorAxisStruct (dev, 0, min_x, max_x,
+			InitValuatorAxisStruct (dev, 0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+						axis_labels[0],
+#endif
+						min_x, max_x,
 						9500,
 						0 /* min_res */ ,
 						9500 /* max_res */ );
-			InitValuatorAxisStruct (dev, 1, min_y, max_y,
+			InitValuatorAxisStruct (dev, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+						axis_labels[1],
+#endif
+						min_y, max_y,
 						10500,
 						0 /* min_res */ ,
 						10500 /* max_res */ );
@@ -529,6 +497,7 @@ PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->button_number = xf86SetIntOption( pInfo->options, "ButtonNumber", 1 );
 	priv->swap_xy = xf86SetIntOption( pInfo->options, "SwapXY", 0 );
 	priv->invert_y = xf86SetIntOption( pInfo->options, "InvertY", 0 );
+	priv->invert_x = xf86SetIntOption( pInfo->options, "InvertX", 0 );
 	priv->buffer = NULL;
 	s = xf86FindOptionValue (pInfo->options, "ReportingMode");
 	if ((s) && (xf86NameCmp (s, "raw") == 0))
@@ -847,6 +816,10 @@ DMC9000_ReadInput (InputInfoPtr pInfo)
 		if (priv->invert_y)
 		{
 			y = priv->max_y - y + priv->min_y;
+		}
+		if (priv->invert_x)
+		{
+			x = priv->max_x - x + priv->min_x;
 		}
 		priv->packet[0] = priv->pen_down ? 0x01 : 0x00;
 

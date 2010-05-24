@@ -63,6 +63,7 @@ typedef struct _PenMountPrivateRec
 	int proximity;
 	int swap_xy;
 	int invert_y;
+	int invert_x;
 	XISBuffer *buffer;
 	unsigned char packet[PENMOUNT_PACKET_SIZE];	/* packet being/just read */
 	PenMountState lex_mode;
