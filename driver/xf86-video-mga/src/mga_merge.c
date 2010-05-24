@@ -322,7 +322,7 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
     pMga->Chipset = pMga1->Chipset;
     pMga->ChipRev = pMga1->ChipRev;
 
-#ifdef XF86DRI
+#ifdef MGADRI
     pMga->agpMode = pMga1->agpMode;
 #endif
 

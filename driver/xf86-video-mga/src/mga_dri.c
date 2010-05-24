@@ -457,7 +457,7 @@ static void MGASwapContextShared( ScreenPtr pScreen )
  * this doesn't happen *every time the mouse moves*...
  */
 static void
-MGADRISwapContext( ScreenPtr pScreen, DRISyncType syncType,
+XF86DRISwapContext( ScreenPtr pScreen, DRISyncType syncType,
 		   DRIContextType oldContextType, void *oldContext,
 		   DRIContextType newContextType, void *newContext )
 {
@@ -470,7 +470,7 @@ MGADRISwapContext( ScreenPtr pScreen, DRISyncType syncType,
 }
 
 static void
-MGADRISwapContextShared( ScreenPtr pScreen, DRISyncType syncType,
+XF86DRISwapContextShared( ScreenPtr pScreen, DRISyncType syncType,
 			  DRIContextType oldContextType, void *oldContext,
 			  DRIContextType newContextType, void *newContext )
 {
@@ -526,7 +526,7 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     MGAPtr pMga = MGAPTR(pScrn);
-    MGADRIServerPrivatePtr pMGADRIServer = pMga->DRIServerInfo;
+    XF86DRIServerPrivatePtr pXF86DRIServer = pMga->DRIServerInfo;
     int ret;
     int requested_agp_mode;
     int count;
@@ -548,7 +548,7 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
     }
 
 
-    if ( (pMGADRIServer->drm_version_minor >= 2) && !pMga->useOldDmaInit ) {
+    if ( (pXF86DRIServer->drm_version_minor >= 2) && !pMga->useOldDmaInit ) {
 	drm_mga_dma_bootstrap_t dma_bs;
 
 
@@ -567,10 +567,10 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
 	}
 
 	pMga->agpMode = dma_bs.agp_mode;
-	pMGADRIServer->agp.size = dma_bs.agp_size;
+	pXF86DRIServer->agp.size = dma_bs.agp_size;
 
-	pMGADRIServer->agpTextures.handle = dma_bs.texture_handle;
-	pMGADRIServer->agpTextures.size   = dma_bs.texture_size;
+	pXF86DRIServer->agpTextures.handle = dma_bs.texture_handle;
+	pXF86DRIServer->agpTextures.size   = dma_bs.texture_size;
     }
     else {
 	unsigned long mode;
@@ -579,7 +579,7 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
 
 
 	if ( pMga->forcePciDma ) {
-	    const char * const msg = (pMGADRIServer->drm_version_minor < 2)
+	    const char * const msg = (pXF86DRIServer->drm_version_minor < 2)
 	      ? "DRM version is too old (3.2 or later required)"
 	      : "old DMA init path was requested";
 
@@ -628,28 +628,28 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
 	    }
 	}
 
-	pMGADRIServer->agp.size = pMga->agpSize * 1024 * 1024;
+	pXF86DRIServer->agp.size = pMga->agpSize * 1024 * 1024;
 
-	pMGADRIServer->warp.offset = 0;
-	pMGADRIServer->warp.size = MGA_WARP_UCODE_SIZE;
+	pXF86DRIServer->warp.offset = 0;
+	pXF86DRIServer->warp.size = MGA_WARP_UCODE_SIZE;
 
-	pMGADRIServer->primary.offset = (pMGADRIServer->warp.offset +
-					 pMGADRIServer->warp.size);
-	pMGADRIServer->primary.size = 1024 * 1024;
+	pXF86DRIServer->primary.offset = (pXF86DRIServer->warp.offset +
+					 pXF86DRIServer->warp.size);
+	pXF86DRIServer->primary.size = 1024 * 1024;
 
-	pMGADRIServer->buffers.offset = (pMGADRIServer->primary.offset +
-					 pMGADRIServer->primary.size);
-	pMGADRIServer->buffers.size = MGA_NUM_BUFFERS * MGA_BUFFER_SIZE;
+	pXF86DRIServer->buffers.offset = (pXF86DRIServer->primary.offset +
+					 pXF86DRIServer->primary.size);
+	pXF86DRIServer->buffers.size = MGA_NUM_BUFFERS * MGA_BUFFER_SIZE;
 
 
-	pMGADRIServer->agpTextures.offset = (pMGADRIServer->buffers.offset +
-					     pMGADRIServer->buffers.size);
+	pXF86DRIServer->agpTextures.offset = (pXF86DRIServer->buffers.offset +
+					     pXF86DRIServer->buffers.size);
 
-	pMGADRIServer->agpTextures.size = (pMGADRIServer->agp.size -
-					   pMGADRIServer->agpTextures.offset);
+	pXF86DRIServer->agpTextures.size = (pXF86DRIServer->agp.size -
+					   pXF86DRIServer->agpTextures.offset);
 
-	ret = drmAgpAlloc( pMga->drmFD, pMGADRIServer->agp.size,
-			   0, NULL, &pMGADRIServer->agp.handle );
+	ret = drmAgpAlloc( pMga->drmFD, pXF86DRIServer->agp.size,
+			   0, NULL, &pXF86DRIServer->agp.handle );
 	if ( ret < 0 ) {
 	    xf86DrvMsg( pScreen->myNum, X_ERROR, "[agp] Out of memory (%d)\n", ret );
 	    drmAgpRelease( pMga->drmFD );
@@ -657,12 +657,12 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
 	}
 	xf86DrvMsg( pScreen->myNum, X_INFO,
  		    "[agp] %d kB allocated with handle 0x%08x\n",
-		    pMGADRIServer->agp.size/1024, 
-		    (unsigned int) pMGADRIServer->agp.handle );
+		    pXF86DRIServer->agp.size/1024, 
+		    (unsigned int) pXF86DRIServer->agp.handle );
 
-	if ( drmAgpBind( pMga->drmFD, pMGADRIServer->agp.handle, 0 ) < 0 ) {
+	if ( drmAgpBind( pMga->drmFD, pXF86DRIServer->agp.handle, 0 ) < 0 ) {
 	    xf86DrvMsg( pScreen->myNum, X_ERROR, "[agp] Could not bind memory\n" );
-	    drmAgpFree( pMga->drmFD, pMGADRIServer->agp.handle );
+	    drmAgpFree( pMga->drmFD, pXF86DRIServer->agp.handle );
 	    drmAgpRelease( pMga->drmFD );
 	    return FALSE;
 	}
@@ -670,51 +670,51 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
 	/* WARP microcode space
 	 */
 	if ( drmAddMap( pMga->drmFD,
-			pMGADRIServer->warp.offset,
-			pMGADRIServer->warp.size,
+			pXF86DRIServer->warp.offset,
+			pXF86DRIServer->warp.size,
 			DRM_AGP, DRM_READ_ONLY,
-			&pMGADRIServer->warp.handle ) < 0 ) {
+			&pXF86DRIServer->warp.handle ) < 0 ) {
 	    xf86DrvMsg( pScreen->myNum, X_ERROR,
 			"[agp] Could not add WARP microcode mapping\n" );
 	    return FALSE;
 	}
 	xf86DrvMsg( pScreen->myNum, X_INFO,
  		    "[agp] WARP microcode handle = 0x%08x\n",
-		    (unsigned int) pMGADRIServer->warp.handle );
+		    (unsigned int) pXF86DRIServer->warp.handle );
 
 	/* Primary DMA space
 	 */
 	if ( drmAddMap( pMga->drmFD,
-			pMGADRIServer->primary.offset,
-			pMGADRIServer->primary.size,
+			pXF86DRIServer->primary.offset,
+			pXF86DRIServer->primary.size,
 			DRM_AGP, DRM_READ_ONLY,
-			&pMGADRIServer->primary.handle ) < 0 ) {
+			&pXF86DRIServer->primary.handle ) < 0 ) {
 	    xf86DrvMsg( pScreen->myNum, X_ERROR,
 			"[agp] Could not add primary DMA mapping\n" );
 	    return FALSE;
 	}
 	xf86DrvMsg( pScreen->myNum, X_INFO,
  		    "[agp] Primary DMA handle = 0x%08x\n",
-		    (unsigned int) pMGADRIServer->primary.handle );
+		    (unsigned int) pXF86DRIServer->primary.handle );
 
 	/* DMA buffers
 	 */
 	if ( drmAddMap( pMga->drmFD,
-			pMGADRIServer->buffers.offset,
-			pMGADRIServer->buffers.size,
+			pXF86DRIServer->buffers.offset,
+			pXF86DRIServer->buffers.size,
 			DRM_AGP, 0,
-			&pMGADRIServer->buffers.handle ) < 0 ) {
+			&pXF86DRIServer->buffers.handle ) < 0 ) {
 	    xf86DrvMsg( pScreen->myNum, X_ERROR,
 			"[agp] Could not add DMA buffers mapping\n" );
 	    return FALSE;
 	}
 	xf86DrvMsg( pScreen->myNum, X_INFO,
  		    "[agp] DMA buffers handle = 0x%08x\n",
-		    (unsigned int) pMGADRIServer->buffers.handle );
+		    (unsigned int) pXF86DRIServer->buffers.handle );
 
 	count = drmAddBufs( pMga->drmFD,
 			    MGA_NUM_BUFFERS, MGA_BUFFER_SIZE,
-			    DRM_AGP_BUFFER, pMGADRIServer->buffers.offset );
+			    DRM_AGP_BUFFER, pXF86DRIServer->buffers.offset );
 	if ( count <= 0 ) {
 	    xf86DrvMsg( pScrn->scrnIndex, X_INFO,
 			"[drm] failure adding %d %d byte DMA buffers\n",
@@ -725,16 +725,16 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
 		    "[drm] Added %d %d byte DMA buffers\n",
 		    count, MGA_BUFFER_SIZE );
 
-	i = mylog2(pMGADRIServer->agpTextures.size / MGA_NR_TEX_REGIONS);
+	i = mylog2(pXF86DRIServer->agpTextures.size / MGA_NR_TEX_REGIONS);
 	if(i < MGA_LOG_MIN_TEX_REGION_SIZE)
 	  i = MGA_LOG_MIN_TEX_REGION_SIZE;
-	pMGADRIServer->agpTextures.size = (pMGADRIServer->agpTextures.size >> i) << i;
+	pXF86DRIServer->agpTextures.size = (pXF86DRIServer->agpTextures.size >> i) << i;
 
 	if ( drmAddMap( pMga->drmFD,
-			pMGADRIServer->agpTextures.offset,
-			pMGADRIServer->agpTextures.size,
+			pXF86DRIServer->agpTextures.offset,
+			pXF86DRIServer->agpTextures.size,
 			DRM_AGP, 0,
-			&pMGADRIServer->agpTextures.handle ) < 0 ) {
+			&pXF86DRIServer->agpTextures.handle ) < 0 ) {
 	    xf86DrvMsg( pScreen->myNum, X_ERROR,
 			"[agp] Could not add agpTexture mapping\n" );
 	    return FALSE;
@@ -742,37 +742,37 @@ static Bool MGADRIBootstrapDMA(ScreenPtr pScreen)
 
 	xf86DrvMsg( pScreen->myNum, X_INFO,
  		    "[agp] agpTexture handle = 0x%08x\n",
-		    (unsigned int) pMGADRIServer->agpTextures.handle );
+		    (unsigned int) pXF86DRIServer->agpTextures.handle );
 	xf86DrvMsg( pScreen->myNum, X_INFO,
-		    "[agp] agpTexture size: %d kb\n", pMGADRIServer->agpTextures.size/1024 );
+		    "[agp] agpTexture size: %d kb\n", pXF86DRIServer->agpTextures.size/1024 );
 
-	pMGADRIServer->registers.size = MGAIOMAPSIZE;
+	pXF86DRIServer->registers.size = MGAIOMAPSIZE;
 
 	if ( drmAddMap( pMga->drmFD,
 			(drm_handle_t) MGA_IO_ADDRESS(pMga),
-			pMGADRIServer->registers.size,
+			pXF86DRIServer->registers.size,
 			DRM_REGISTERS, DRM_READ_ONLY,
-			&pMGADRIServer->registers.handle ) < 0 ) {
+			&pXF86DRIServer->registers.handle ) < 0 ) {
 	    xf86DrvMsg( pScreen->myNum, X_ERROR,
 			"[drm] Could not add MMIO registers mapping\n" );
 	    return FALSE;
 	}
 	xf86DrvMsg( pScreen->myNum, X_INFO,
  		    "[drm] Registers handle = 0x%08x\n",
-		    (unsigned int) pMGADRIServer->registers.handle );
+		    (unsigned int) pXF86DRIServer->registers.handle );
 
-	pMGADRIServer->status.size = SAREA_MAX;
+	pXF86DRIServer->status.size = SAREA_MAX;
 
-	if ( drmAddMap( pMga->drmFD, 0, pMGADRIServer->status.size,
+	if ( drmAddMap( pMga->drmFD, 0, pXF86DRIServer->status.size,
 			DRM_SHM, DRM_READ_ONLY | DRM_LOCKED | DRM_KERNEL,
-			&pMGADRIServer->status.handle ) < 0 ) {
+			&pXF86DRIServer->status.handle ) < 0 ) {
 	    xf86DrvMsg( pScreen->myNum, X_ERROR,
 			"[drm] Could not add status page mapping\n" );
 	    return FALSE;
 	}
 	xf86DrvMsg( pScreen->myNum, X_INFO,
  		    "[drm] Status handle = 0x%08x\n",
-		    (unsigned int) pMGADRIServer->status.handle );
+		    (unsigned int) pXF86DRIServer->status.handle );
     }
 
     return TRUE;
@@ -782,7 +782,7 @@ static Bool MGADRIKernelInit( ScreenPtr pScreen )
 {
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    MGAPtr pMga = MGAPTR(pScrn);
-   MGADRIServerPrivatePtr pMGADRIServer = pMga->DRIServerInfo;
+   XF86DRIServerPrivatePtr pXF86DRIServer = pMga->DRIServerInfo;
    drm_mga_init_t init;
    int ret;
 
@@ -801,28 +801,28 @@ static Bool MGADRIKernelInit( ScreenPtr pScreen )
    init.maccess = pMga->MAccess;
 
    init.fb_cpp		= pScrn->bitsPerPixel / 8;
-   init.front_offset	= pMGADRIServer->frontOffset;
-   init.front_pitch	= pMGADRIServer->frontPitch / init.fb_cpp;
-   init.back_offset	= pMGADRIServer->backOffset;
-   init.back_pitch	= pMGADRIServer->backPitch / init.fb_cpp;
+   init.front_offset	= pXF86DRIServer->frontOffset;
+   init.front_pitch	= pXF86DRIServer->frontPitch / init.fb_cpp;
+   init.back_offset	= pXF86DRIServer->backOffset;
+   init.back_pitch	= pXF86DRIServer->backPitch / init.fb_cpp;
 
    init.depth_cpp	= pScrn->bitsPerPixel / 8;
-   init.depth_offset	= pMGADRIServer->depthOffset;
-   init.depth_pitch	= pMGADRIServer->depthPitch / init.depth_cpp;
+   init.depth_offset	= pXF86DRIServer->depthOffset;
+   init.depth_pitch	= pXF86DRIServer->depthPitch / init.depth_cpp;
 
-   init.texture_offset[0] = pMGADRIServer->textureOffset;
-   init.texture_size[0] = pMGADRIServer->textureSize;
+   init.texture_offset[0] = pXF86DRIServer->textureOffset;
+   init.texture_size[0] = pXF86DRIServer->textureSize;
 
-   init.fb_offset = pMGADRIServer->fb.handle;
-   init.mmio_offset = pMGADRIServer->registers.handle;
-   init.status_offset = pMGADRIServer->status.handle;
+   init.fb_offset = pXF86DRIServer->fb.handle;
+   init.mmio_offset = pXF86DRIServer->registers.handle;
+   init.status_offset = pXF86DRIServer->status.handle;
 
-   init.warp_offset = pMGADRIServer->warp.handle;
-   init.primary_offset = pMGADRIServer->primary.handle;
-   init.buffers_offset = pMGADRIServer->buffers.handle;
+   init.warp_offset = pXF86DRIServer->warp.handle;
+   init.primary_offset = pXF86DRIServer->primary.handle;
+   init.buffers_offset = pXF86DRIServer->buffers.handle;
 
-   init.texture_offset[1] = pMGADRIServer->agpTextures.handle;
-   init.texture_size[1] = pMGADRIServer->agpTextures.size;
+   init.texture_offset[1] = pXF86DRIServer->agpTextures.handle;
+   init.texture_size[1] = pXF86DRIServer->agpTextures.size;
 
    ret = drmCommandWrite( pMga->drmFD, DRM_MGA_INIT, &init, sizeof(drm_mga_init_t));
    if ( ret < 0 ) {
@@ -877,18 +877,18 @@ static Bool MGADRIBuffersInit( ScreenPtr pScreen )
 {
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    MGAPtr pMga = MGAPTR(pScrn);
-   MGADRIServerPrivatePtr pMGADRIServer = pMga->DRIServerInfo;
+   XF86DRIServerPrivatePtr pXF86DRIServer = pMga->DRIServerInfo;
 
 
-   pMGADRIServer->drmBuffers = drmMapBufs( pMga->drmFD );
-   if ( !pMGADRIServer->drmBuffers ) {
+   pXF86DRIServer->drmBuffers = drmMapBufs( pMga->drmFD );
+   if ( !pXF86DRIServer->drmBuffers ) {
 	xf86DrvMsg( pScreen->myNum, X_ERROR,
 		    "[drm] Failed to map DMA buffers list\n" );
 	return FALSE;
     }
     xf86DrvMsg( pScreen->myNum, X_INFO,
 		"[drm] Mapped %d DMA buffers\n",
-		pMGADRIServer->drmBuffers->count );
+		pXF86DRIServer->drmBuffers->count );
 
     return TRUE;
 }
@@ -1088,13 +1088,13 @@ static void MGADRIMoveBuffersEXA(WindowPtr pParent, DDXPointRec ptOldOrg,
 }
 #endif
 
-Bool MGADRIScreenInit( ScreenPtr pScreen )
+Bool XF86DRIScreenInit( ScreenPtr pScreen )
 {
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    MGAPtr pMga = MGAPTR(pScrn);
    DRIInfoPtr pDRIInfo;
    MGADRIPtr pMGADRI;
-   MGADRIServerPrivatePtr pMGADRIServer;
+   XF86DRIServerPrivatePtr pXF86DRIServer;
 
    if (!pMga->chip_attribs->dri_capable) {
        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "[drm] Direct rendering only supported with G200/G400/G450/G550.\n");
@@ -1108,7 +1108,7 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
    if ( !xf86LoaderCheckSymbol( "drmAvailable" ) )		return FALSE;
    if ( !xf86LoaderCheckSymbol( "DRIQueryVersion" ) ) {
       xf86DrvMsg( pScreen->myNum, X_ERROR,
-		  "[dri] MGADRIScreenInit failed (libdri.a too old)\n" );
+		  "[dri] XF86DRIScreenInit failed (libdri.a too old)\n" );
       return FALSE;
    }
 
@@ -1118,7 +1118,7 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
       DRIQueryVersion( &major, &minor, &patch );
       if ( major != DRIINFO_MAJOR_VERSION || minor < DRIINFO_MINOR_VERSION ) {
          xf86DrvMsg( pScreen->myNum, X_ERROR,
-		     "[dri] MGADRIScreenInit failed because of a version mismatch.\n"
+		     "[dri] XF86DRIScreenInit failed because of a version mismatch.\n"
 		     "[dri] libdri version = %d.%d.%d but version %d.%d.x is needed.\n"
 		     "[dri] Disabling the DRI.\n",
 		     major, minor, patch,
@@ -1208,9 +1208,9 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
       return FALSE;
    }
 
-   pMGADRIServer = (MGADRIServerPrivatePtr)
-      xcalloc( sizeof(MGADRIServerPrivateRec), 1 );
-   if ( !pMGADRIServer ) {
+   pXF86DRIServer = (XF86DRIServerPrivatePtr)
+      xcalloc( sizeof(XF86DRIServerPrivateRec), 1 );
+   if ( !pXF86DRIServer ) {
       xfree( pMGADRI );
       DRIDestroyInfoRec( pMga->pDRIInfo );
       pMga->pDRIInfo = 0;
@@ -1218,7 +1218,7 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
 		  "[drm] Failed to allocate memory for private record\n" );
       return FALSE;
    }
-   pMga->DRIServerInfo = pMGADRIServer;
+   pMga->DRIServerInfo = pXF86DRIServer;
 
    pDRIInfo->devPrivate = pMGADRI;
    pDRIInfo->devPrivateSize = sizeof(MGADRIRec);
@@ -1228,9 +1228,9 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
    pDRIInfo->DestroyContext = MGADestroyContext;
    if ( xf86IsEntityShared( pScrn->entityList[0] ) 
 		&& pMga->DualHeadEnabled) {
-      pDRIInfo->SwapContext = MGADRISwapContextShared;
+      pDRIInfo->SwapContext = XF86DRISwapContextShared;
    } else {
-      pDRIInfo->SwapContext = MGADRISwapContext;
+      pDRIInfo->SwapContext = XF86DRISwapContext;
    }
 
 #ifdef USE_EXA
@@ -1250,7 +1250,7 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
    pDRIInfo->bufferRequests = DRI_ALL_WINDOWS;
 
    if ( !DRIScreenInit( pScreen, pDRIInfo, &pMga->drmFD ) ) {
-      xfree( pMGADRIServer );
+      xfree( pXF86DRIServer );
       pMga->DRIServerInfo = 0;
       xfree( pDRIInfo->devPrivate );
       pDRIInfo->devPrivate = 0;
@@ -1288,7 +1288,7 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
 	     version->version_minor < 1) {
 	     /* incompatible drm library version */
 	    xf86DrvMsg(pScreen->myNum, X_ERROR,
-		       "[dri] MGADRIScreenInit failed because of a version mismatch.\n"
+		       "[dri] XF86DRIScreenInit failed because of a version mismatch.\n"
 		       "[dri] libdrm.a module version is %d.%d.%d but version 1.1.x is needed.\n"
 		       "[dri] Disabling DRI.\n",
 		       version->version_major,
@@ -1308,7 +1308,7 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
 	      version->version_minor < 0 ) {
             /* incompatible drm version */
             xf86DrvMsg( pScreen->myNum, X_ERROR,
-			"[dri] MGADRIScreenInit failed because of a version mismatch.\n"
+			"[dri] XF86DRIScreenInit failed because of a version mismatch.\n"
 			"[dri] mga.o kernel module version is %d.%d.%d but version 3.0.x is needed.\n"
 			"[dri] Disabling DRI.\n",
 			version->version_major,
@@ -1318,15 +1318,15 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
 	    MGADRICloseScreen( pScreen );		/* FIXME: ??? */
             return FALSE;
          }
-	 pMGADRIServer->drm_version_major = version->version_major;
-	 pMGADRIServer->drm_version_minor = version->version_minor;
+	 pXF86DRIServer->drm_version_major = version->version_major;
+	 pXF86DRIServer->drm_version_minor = version->version_minor;
 
          drmFreeVersion( version );
       }
    }
 
    if ( (pMga->bios.host_interface == MGA_HOST_PCI) &&
-	((pMGADRIServer->drm_version_minor < 2) || pMga->useOldDmaInit) ) {
+	((pXF86DRIServer->drm_version_minor < 2) || pMga->useOldDmaInit) ) {
        /* PCI cards are supported if the DRM version is at least 3.2 and the
 	* user has not explicitly disabled the new DMA init path (i.e., to
 	* support old version of the client-side driver that don't use the
@@ -1351,7 +1351,7 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
        void *scratch_ptr;
        int scratch_int;
 
-       DRIGetDeviceInfo(pScreen, &pMGADRIServer->fb.handle,
+       DRIGetDeviceInfo(pScreen, &pXF86DRIServer->fb.handle,
 			&scratch_int, &scratch_int, 
 			&scratch_int, &scratch_int,
 			&scratch_ptr);
@@ -1371,7 +1371,7 @@ Bool MGADRIFinishScreenInit( ScreenPtr pScreen )
 {
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    MGAPtr pMga = MGAPTR(pScrn);
-   MGADRIServerPrivatePtr pMGADRIServer = pMga->DRIServerInfo;
+   XF86DRIServerPrivatePtr pXF86DRIServer = pMga->DRIServerInfo;
    MGADRIPtr pMGADRI;
    int i;
 
@@ -1411,17 +1411,17 @@ Bool MGADRIFinishScreenInit( ScreenPtr pScreen )
 
    pMGADRI->agpMode		= pMga->agpMode;
 
-   pMGADRI->frontOffset		= pMGADRIServer->frontOffset;
-   pMGADRI->frontPitch		= pMGADRIServer->frontPitch;
-   pMGADRI->backOffset		= pMGADRIServer->backOffset;
-   pMGADRI->backPitch		= pMGADRIServer->backPitch;
-   pMGADRI->depthOffset		= pMGADRIServer->depthOffset;
-   pMGADRI->depthPitch		= pMGADRIServer->depthPitch;
-   pMGADRI->textureOffset	= pMGADRIServer->textureOffset;
-   pMGADRI->textureSize		= pMGADRIServer->textureSize;
+   pMGADRI->frontOffset		= pXF86DRIServer->frontOffset;
+   pMGADRI->frontPitch		= pXF86DRIServer->frontPitch;
+   pMGADRI->backOffset		= pXF86DRIServer->backOffset;
+   pMGADRI->backPitch		= pXF86DRIServer->backPitch;
+   pMGADRI->depthOffset		= pXF86DRIServer->depthOffset;
+   pMGADRI->depthPitch		= pXF86DRIServer->depthPitch;
+   pMGADRI->textureOffset	= pXF86DRIServer->textureOffset;
+   pMGADRI->textureSize		= pXF86DRIServer->textureSize;
 
-   pMGADRI->agpTextureOffset = (unsigned int)pMGADRIServer->agpTextures.handle;
-   pMGADRI->agpTextureSize = (unsigned int)pMGADRIServer->agpTextures.size;
+   pMGADRI->agpTextureOffset = (unsigned int)pXF86DRIServer->agpTextures.handle;
+   pMGADRI->agpTextureSize = (unsigned int)pXF86DRIServer->agpTextures.size;
 
    pMGADRI->sarea_priv_offset = sizeof(XF86DRISAREARec);
 
@@ -1430,20 +1430,20 @@ Bool MGADRIFinishScreenInit( ScreenPtr pScreen )
     * kernel version is high enough to support interrupt based waiting.
     */
 
-   pMGADRI->registers.handle	= pMGADRIServer->registers.handle;
-   pMGADRI->registers.size	= pMGADRIServer->registers.size;
-   pMGADRI->primary.handle	= pMGADRIServer->primary.handle;
-   pMGADRI->primary.size	= pMGADRIServer->primary.size;
+   pMGADRI->registers.handle	= pXF86DRIServer->registers.handle;
+   pMGADRI->registers.size	= pXF86DRIServer->registers.size;
+   pMGADRI->primary.handle	= pXF86DRIServer->primary.handle;
+   pMGADRI->primary.size	= pXF86DRIServer->primary.size;
 
 
    /* These are no longer used by the client-side DRI driver.  They should
     * be removed in the next release (i.e., 6.9 / 7.0).
     */
 
-   pMGADRI->status.handle	= pMGADRIServer->status.handle;
-   pMGADRI->status.size		= pMGADRIServer->status.size;
-   pMGADRI->buffers.handle	= pMGADRIServer->buffers.handle;
-   pMGADRI->buffers.size	= pMGADRIServer->buffers.size;
+   pMGADRI->status.handle	= pXF86DRIServer->status.handle;
+   pMGADRI->status.size		= pXF86DRIServer->status.size;
+   pMGADRI->buffers.handle	= pXF86DRIServer->buffers.handle;
+   pMGADRI->buffers.size	= pXF86DRIServer->buffers.size;
 
    i = mylog2( pMGADRI->textureSize / MGA_NR_TEX_REGIONS );
    if ( i < MGA_LOG_MIN_TEX_REGION_SIZE )
@@ -1452,7 +1452,7 @@ Bool MGADRIFinishScreenInit( ScreenPtr pScreen )
    pMGADRI->logTextureGranularity = i;
    pMGADRI->textureSize = (pMGADRI->textureSize >> i) << i; /* truncate */
 
-   i = mylog2( pMGADRIServer->agpTextures.size / MGA_NR_TEX_REGIONS );
+   i = mylog2( pXF86DRIServer->agpTextures.size / MGA_NR_TEX_REGIONS );
    if ( i < MGA_LOG_MIN_TEX_REGION_SIZE )
       i = MGA_LOG_MIN_TEX_REGION_SIZE;
 
@@ -1466,12 +1466,12 @@ void MGADRICloseScreen( ScreenPtr pScreen )
 {
    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
    MGAPtr pMga = MGAPTR(pScrn);
-   MGADRIServerPrivatePtr pMGADRIServer = pMga->DRIServerInfo;
+   XF86DRIServerPrivatePtr pXF86DRIServer = pMga->DRIServerInfo;
    drm_mga_init_t init;
 
-   if ( pMGADRIServer->drmBuffers ) {
-      drmUnmapBufs( pMGADRIServer->drmBuffers );
-      pMGADRIServer->drmBuffers = NULL;
+   if ( pXF86DRIServer->drmBuffers ) {
+      drmUnmapBufs( pXF86DRIServer->drmBuffers );
+      pXF86DRIServer->drmBuffers = NULL;
    }
 
    if (pMga->irq) {
@@ -1485,10 +1485,10 @@ void MGADRICloseScreen( ScreenPtr pScreen )
    init.func = MGA_CLEANUP_DMA;
    drmCommandWrite( pMga->drmFD, DRM_MGA_INIT, &init, sizeof(drm_mga_init_t) );
 
-   if ( pMGADRIServer->agp.handle != DRM_AGP_NO_HANDLE ) {
-      drmAgpUnbind( pMga->drmFD, pMGADRIServer->agp.handle );
-      drmAgpFree( pMga->drmFD, pMGADRIServer->agp.handle );
-      pMGADRIServer->agp.handle = DRM_AGP_NO_HANDLE;
+   if ( pXF86DRIServer->agp.handle != DRM_AGP_NO_HANDLE ) {
+      drmAgpUnbind( pMga->drmFD, pXF86DRIServer->agp.handle );
+      drmAgpFree( pMga->drmFD, pXF86DRIServer->agp.handle );
+      pXF86DRIServer->agp.handle = DRM_AGP_NO_HANDLE;
       drmAgpRelease( pMga->drmFD );
    }
 

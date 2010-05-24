@@ -24,7 +24,7 @@
 #include "miline.h"
 #include "servermd.h"
 
-#ifdef XF86DRI
+#ifdef MGADRI
 #include "GL/glxtokens.h"
 #endif
 
@@ -32,7 +32,7 @@
 #include "mga_reg.h"
 #include "mga_macros.h"
 
-#ifdef XF86DRI
+#ifdef MGADRI
 #include "mga_dri.h"
 #endif
 
@@ -797,9 +797,9 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 	break;
     }
 
-#ifdef XF86DRI
+#ifdef MGADRI
     if ( pMga->directRenderingEnabled ) {
-       MGADRIServerPrivatePtr pMGADRIServer = pMga->DRIServerInfo;
+       XF86DRIServerPrivatePtr pXF86DRIServer = pMga->DRIServerInfo;
        BoxRec MemBox;
        int cpp = pScrn->bitsPerPixel / 8;
        int widthBytes = pScrn->displayWidth * cpp;
@@ -807,30 +807,30 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 			 & ~MGA_BUFFER_ALIGN);
        int scanlines;
 
-       pMGADRIServer->frontOffset = 0;
-       pMGADRIServer->frontPitch = widthBytes;
+       pXF86DRIServer->frontOffset = 0;
+       pXF86DRIServer->frontPitch = widthBytes;
 
        /* Try for front, back, depth, and two framebuffers worth of
 	* pixmap cache.  Should be enough for a fullscreen background
 	* image plus some leftovers.
 	*/
-       pMGADRIServer->textureSize = pMga->FbMapSize - 5 * bufferSize;
+       pXF86DRIServer->textureSize = pMga->FbMapSize - 5 * bufferSize;
 
        /* If that gives us less than half the available memory, let's
 	* be greedy and grab some more.  Sorry, I care more about 3D
 	* performance than playing nicely, and you'll get around a full
 	* framebuffer's worth of pixmap cache anyway.
 	*/
-       if ( pMGADRIServer->textureSize < (int)pMga->FbMapSize / 2 ) {
-	  pMGADRIServer->textureSize = pMga->FbMapSize - 4 * bufferSize;
+       if ( pXF86DRIServer->textureSize < (int)pMga->FbMapSize / 2 ) {
+	  pXF86DRIServer->textureSize = pMga->FbMapSize - 4 * bufferSize;
        }
 
        /* Check to see if there is more room available after the maximum
 	* scanline for textures.
 	*/
        if ( (int)pMga->FbMapSize - maxlines * widthBytes - bufferSize * 2
-	    > pMGADRIServer->textureSize ) {
-	  pMGADRIServer->textureSize = (pMga->FbMapSize -
+	    > pXF86DRIServer->textureSize ) {
+	  pXF86DRIServer->textureSize = (pMga->FbMapSize -
 					maxlines * widthBytes -
 					bufferSize * 2);
        }
@@ -838,28 +838,28 @@ Bool mgaAccelInit( ScreenPtr pScreen )
        /* Set a minimum usable local texture heap size.  This will fit
 	* two 256x256x32bpp textures.
 	*/
-       if ( pMGADRIServer->textureSize < 512 * 1024 ) {
-	  pMGADRIServer->textureOffset = 0;
-	  pMGADRIServer->textureSize = 0;
+       if ( pXF86DRIServer->textureSize < 512 * 1024 ) {
+	  pXF86DRIServer->textureOffset = 0;
+	  pXF86DRIServer->textureSize = 0;
        }
 
        /* Reserve space for textures */
-       pMGADRIServer->textureOffset = (pMga->FbMapSize -
-				       pMGADRIServer->textureSize +
+       pXF86DRIServer->textureOffset = (pMga->FbMapSize -
+				       pXF86DRIServer->textureSize +
 				       MGA_BUFFER_ALIGN) & ~MGA_BUFFER_ALIGN;
 
        /* Reserve space for the shared depth buffer */
-       pMGADRIServer->depthOffset = (pMGADRIServer->textureOffset -
+       pXF86DRIServer->depthOffset = (pXF86DRIServer->textureOffset -
 				     bufferSize +
 				     MGA_BUFFER_ALIGN) & ~MGA_BUFFER_ALIGN;
-       pMGADRIServer->depthPitch = widthBytes;
+       pXF86DRIServer->depthPitch = widthBytes;
 
        /* Reserve space for the shared back buffer */
-       pMGADRIServer->backOffset = (pMGADRIServer->depthOffset - bufferSize +
+       pXF86DRIServer->backOffset = (pXF86DRIServer->depthOffset - bufferSize +
 				    MGA_BUFFER_ALIGN) & ~MGA_BUFFER_ALIGN;
-       pMGADRIServer->backPitch = widthBytes;
+       pXF86DRIServer->backPitch = widthBytes;
 
-       scanlines = pMGADRIServer->backOffset / widthBytes - 1;
+       scanlines = pXF86DRIServer->backOffset / widthBytes - 1;
        if ( scanlines > maxlines ) scanlines = maxlines;
 
        MemBox.x1 = 0;
@@ -889,17 +889,17 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 
        xf86DrvMsg( pScrn->scrnIndex, X_INFO,
 		   "Reserved back buffer at offset 0x%x\n",
-		   pMGADRIServer->backOffset );
+		   pXF86DRIServer->backOffset );
        xf86DrvMsg( pScrn->scrnIndex, X_INFO,
 		   "Reserved depth buffer at offset 0x%x\n",
-		   pMGADRIServer->depthOffset );
+		   pXF86DRIServer->depthOffset );
        xf86DrvMsg( pScrn->scrnIndex, X_INFO,
 		   "Reserved %d kb for textures at offset 0x%x\n",
-		   pMGADRIServer->textureSize/1024,
-		   pMGADRIServer->textureOffset );
+		   pXF86DRIServer->textureSize/1024,
+		   pXF86DRIServer->textureOffset );
     }
     else
-#endif /* defined(XF86DRI) */
+#endif /* defined(MGADRI) */
     {
        AvailFBArea.x1 = 0;
        AvailFBArea.x2 = pScrn->displayWidth;

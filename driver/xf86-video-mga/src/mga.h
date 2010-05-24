@@ -29,7 +29,7 @@
 #include "xf86DDC.h"
 #include "xf86xv.h"
 
-#ifdef XF86DRI
+#ifdef MGADRI
 #include "xf86drm.h"
 
 #define _XF86DRI_SERVER_
@@ -593,14 +593,14 @@ typedef struct {
     int			expandRemaining;
     int			expandHeight;
     int			expandY;
-#ifdef XF86DRI
+#ifdef MGADRI
     Bool 		directRenderingEnabled;
     DRIInfoPtr 		pDRIInfo;
     int 		drmFD;
     int 		numVisualConfigs;
     __GLXvisualConfig*	pVisualConfigs;
     MGAConfigPrivPtr 	pVisualConfigsPriv;
-    MGADRIServerPrivatePtr DRIServerInfo;
+    XF86DRIServerPrivatePtr DRIServerInfo;
 
     MGARegRec		DRContextRegs;
 
@@ -750,13 +750,13 @@ void MGAPointerMoved(int index, int x, int y);
 void MGAInitVideo(ScreenPtr pScreen);
 void MGAResetVideo(ScrnInfoPtr pScrn);
 
-#ifdef XF86DRI
+#ifdef MGADRI
 
 #define MGA_FRONT	0x1
 #define MGA_BACK	0x2
 #define MGA_DEPTH	0x4
 
-Bool MGADRIScreenInit( ScreenPtr pScreen );
+Bool XF86DRIScreenInit( ScreenPtr pScreen );
 void MGADRICloseScreen( ScreenPtr pScreen );
 Bool MGADRIFinishScreenInit( ScreenPtr pScreen );
 

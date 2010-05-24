@@ -19,7 +19,7 @@
 
 #define RGBEQUAL(c) (!((((c) >> 8) ^ (c)) & 0xffff))
 
-#ifdef XF86DRI
+#ifdef MGADRI
 #define MGA_SYNC_XTAG                 0x275f4200
 
 #define MGABUSYWAIT() do { \
@@ -66,7 +66,7 @@ while(INREG(MGAREG_DWGSYNC) != MGA_SYNC_XTAG) ; \
 	WAITFIFO(1); \
 	OUTREG(MGAREG_CXBNDRY, 0xFFFF0000); }
 
-#ifdef XF86DRI
+#ifdef MGADRI
 #define CHECK_DMA_QUIESCENT(pMGA, pScrn) {	\
    if (!pMGA->haveQuiescense) {			\
       pMGA->GetQuiescence( pScrn );		\

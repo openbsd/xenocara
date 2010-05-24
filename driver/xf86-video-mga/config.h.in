@@ -35,6 +35,12 @@
 /* Have xf86ModeBandwidth */
 #undef HAVE_XF86MODEBANDWIDTH
 
+/* Enable DRI driver support */
+#undef MGADRI
+
+/* Enable developmental DRI driver support */
+#undef MGADRI_DEVEL
+
 /* Name of package */
 #undef PACKAGE
 
@@ -73,9 +79,3 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Enable DRI driver support */
-#undef XF86DRI
-
-/* Enable developmental DRI driver support */
-#undef XF86DRI_DEVEL

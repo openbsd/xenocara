@@ -71,7 +71,7 @@ typedef struct {
 
    int drm_version_major;
    int drm_version_minor;
-} MGADRIServerPrivateRec, *MGADRIServerPrivatePtr;
+} XF86DRIServerPrivateRec, *XF86DRIServerPrivatePtr;
 
 /**
  * Hardware information sent from server to client-side DRI driver.
