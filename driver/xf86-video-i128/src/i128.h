@@ -38,8 +38,8 @@ typedef struct {
     pciVideoPtr		PciInfo;
 #ifndef XSERVER_LIBPCIACCESS
     PCITAG		PciTag;
-#endif
     xf86AccessRec	Access;
+#endif
     int			Chipset;
     int                 ChipRev;
     Bool		Primary;

@@ -31,7 +31,10 @@
 /* All drivers should typically include these */
 #include "xf86.h"
 #include "xf86_OSproc.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#include "xf86RAC.h"
+#endif
 
 #include "compiler.h"
 
@@ -52,7 +55,6 @@
 #include "micmap.h"
 
 #include "xf86DDC.h"
-#include "xf86RAC.h"
 #include "vbe.h"
 
 #include "xaa.h"
@@ -166,87 +168,6 @@ _X_EXPORT XF86ModuleData i128ModuleData = { &i128VersRec, i128Setup, NULL };
 
 #endif
 
-
-/*
- * List of symbols from other modules that this module references.  This
- * list is used to tell the loader that it is OK for symbols here to be
- * unresolved providing that it hasn't been told that they haven't been
- * told that they are essential via a call to xf86LoaderReqSymbols() or
- * xf86LoaderReqSymLists().  The purpose is this is to avoid warnings about
- * unresolved symbols that are not required.  These are provided to the
- * LoaderRefSymLists() function in the module specific Setup() function.
- */
-
-static const char *vgahwSymbols[] = {
-    "vgaHWFreeHWRec",
-    "vgaHWGetHWRec",
-    "vgaHWGetIOBase",  
-    "vgaHWGetIndex",  
-    "vgaHWProtect",
-    "vgaHWRestore",
-    "vgaHWSave",
-    NULL
-};      
-
-static const char *fbSymbols[] = {
-    "fbScreenInit",
-    "fbPictureInit",
-    NULL
-};
-
-static const char *exaSymbols[] = {
-    "exaDriverAlloc",
-    "exaDriverInit",
-    "exaDriverFini",
-    "exaGetPixmapOffset",
-    NULL
-};
-
-static const char *xaaSymbols[] = {
-    "XAACreateInfoRec",
-    "XAADestroyInfoRec",
-    "XAAInit",
-    NULL
-};
-
-static const char *ramdacSymbols[] = {
-    "xf86CreateCursorInfoRec",
-    "xf86DestroyCursorInfoRec",
-    "xf86InitCursor",
-    NULL
-};
-
-static const char *ddcSymbols[] = {
-    "xf86DoEDID_DDC1",
-    "xf86DoEDID_DDC2",
-    "xf86PrintEDID",
-    "xf86SetDDCproperties",
-    NULL
-};
-
-static const char *i2cSymbols[] = {
-    "xf86CreateI2CBusRec",
-    "xf86I2CBusInit",
-    NULL
-};
-
-#ifdef XFree86LOADER
-/* XXX The vbe module isn't currently loaded. */
-static const char *vbeSymbols[] = {
-    "VBEInit",
-    "vbeDoEDID",
-    NULL
-};
-
-/* XXX The int10 module isn't currently loaded. */
-static const char *int10Symbols[] = {
-    "xf86InitInt10",
-    "xf86FreeInt10",
-    NULL
-};
-#endif
-
-
 #ifdef XFree86LOADER
 
 /* Mandatory
@@ -281,22 +202,6 @@ i128Setup(pointer module, pointer opts, int *errmaj, int *errmin)
 	 * Modules that this driver always requires may be loaded here
 	 * by calling LoadSubModule().
 	 */
-
-	/*
-	 * Tell the loader about symbols from other modules that this module
-	 * might refer to.
-	 */
-	LoaderRefSymLists(fbSymbols,
-			  exaSymbols,
-			  xaaSymbols, 
-			  ramdacSymbols,
-			  ddcSymbols,
-			  ddcSymbols,
-			  i2cSymbols,
-			  vbeSymbols,
-			  int10Symbols,
-			  vgahwSymbols,
-			  NULL);
 
 	/*
 	 * The return value must be non-NULL on success even though there
@@ -580,8 +485,6 @@ I128PreInit(ScrnInfoPtr pScrn, int flags)
     if (!xf86LoadSubModule(pScrn, "vgahw"))
         return FALSE;
     
-    xf86LoaderReqSymLists(vgahwSymbols, NULL);
-
     /*
      * Allocate a vgaHWRec
      */
@@ -822,12 +725,14 @@ I128PreInit(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "MMIO registers at 0x%lX\n",
 	       (unsigned long)PCI_REGION_BASE(pI128->PciInfo, 5, REGION_IO));
 
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(pI128->pEnt->index, NULL, ResExclusive)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		"xf86RegisterResources() found resource conflicts\n");
 	I128FreeRec(pScrn);
 	return FALSE;
     }
+#endif
 
     /* HW bpp matches reported bpp */
     pI128->bitsPerPixel = pScrn->bitsPerPixel;
@@ -874,9 +779,7 @@ I128PreInit(ScrnInfoPtr pScrn, int flags)
     /* Load DDC if we have the code to use it */
     /* This gives us DDC1 */
     if (pI128->ddc1Read || pI128->i2cInit) {
-        if (xf86LoadSubModule(pScrn, "ddc")) {
-          xf86LoaderReqSymLists(ddcSymbols, NULL);
-        } else {
+        if (!xf86LoadSubModule(pScrn, "ddc")) {
           /* ddc module not found, we can do without it */
           pI128->ddc1Read = NULL;
 
@@ -887,9 +790,7 @@ I128PreInit(ScrnInfoPtr pScrn, int flags)
     /* - DDC can use I2C bus */
     /* Load I2C if we have the code to use it */
     if (pI128->i2cInit) {
-      if ( xf86LoadSubModule(pScrn, "i2c") ) {
-        xf86LoaderReqSymLists(i2cSymbols,NULL);
-      } else {
+      if (!xf86LoadSubModule(pScrn, "i2c")) {
         /* i2c module not found, we can do without it */
         pI128->i2cInit = NULL;
         pI128->I2C = NULL;
@@ -1194,7 +1095,6 @@ I128PreInit(ScrnInfoPtr pScrn, int flags)
 	I128FreeRec(pScrn);
 	return FALSE;
     }
-    xf86LoaderReqSymLists(fbSymbols, NULL);
 
     /* Load the acceleration engine */
     if (!pI128->NoAccel) {
@@ -1211,12 +1111,12 @@ I128PreInit(ScrnInfoPtr pScrn, int flags)
 		LoaderErrorMsg(NULL, "exa", errmaj, errmin);
                 I128FreeRec(pScrn);
                 return FALSE;
-            } else xf86LoaderReqSymLists(exaSymbols, NULL);
+            }
         } else {
             if (!xf86LoadSubModule(pScrn, "xaa")) {
 	        I128FreeRec(pScrn);
 	        return FALSE;
-	    } else xf86LoaderReqSymLists(xaaSymbols, NULL);
+	    }
         }
     }
 
@@ -1226,7 +1126,6 @@ I128PreInit(ScrnInfoPtr pScrn, int flags)
 	    I128FreeRec(pScrn);
 	    return FALSE;
 	}
-	xf86LoaderReqSymLists(ramdacSymbols, NULL);
     }
 
     I128UnmapMem(pScrn);
@@ -1442,12 +1341,21 @@ I128UnmapMem(ScrnInfoPtr pScrn)
     /*
      * Unmap IO registers to virtual address space
      */ 
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pI128->mem.mw0_ad,
 	pI128->MemorySize*1024);
+#else
+    pci_device_unmap_range(pI128->PciInfo, pI128->mem.mw0_ad,
+	pI128->MemorySize*1024);
+#endif
     pI128->mem.mw0_ad = NULL;
     pI128->MemoryPtr = NULL;
 
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pI128->mem.rbase_g, 64*1024);
+#else
+    pci_device_unmap_range(pI128->PciInfo, pI128->mem.rbase_g, 64*1024);
+#endif
     pI128->mem.rbase_g = NULL;
     pI128->mem.rbase_w = NULL;
     pI128->mem.rbase_a = NULL;

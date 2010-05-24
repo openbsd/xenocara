@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-i128],
-        1.3.1,
+        1.3.3,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-i128)
 
@@ -72,6 +72,9 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
+
+# Required by exa.h
+AC_DEFINE(EXA_DRIVER_KNOWN_MAJOR, 3, [Major version of EXA we can handle])
 
 # Checks for header files.
 AC_HEADER_STDC

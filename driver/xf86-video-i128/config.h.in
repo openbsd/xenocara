@@ -2,6 +2,9 @@
 
 #include "xorg-server.h"
 
+/* Major version of EXA we can handle */
+#undef EXA_DRIVER_KNOWN_MAJOR
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

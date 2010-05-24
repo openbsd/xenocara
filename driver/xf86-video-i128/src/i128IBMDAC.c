@@ -43,8 +43,6 @@ static void I128IBMHideCursor(ScrnInfoPtr pScrn);
 static void I128IBMSetCursorPosition(ScrnInfoPtr pScrn, int x, int y);
 static void I128IBMSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg);
 static void I128IBMLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src);
-static unsigned char *I128IBMRealizeCursor(xf86CursorInfoPtr infoPtr,
-        CursorPtr pCurs);
 static Bool I128IBMUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs);
 
 
@@ -73,86 +71,12 @@ I128IBMHWCursorInit(ScrnInfoPtr pScrn)
    infoPtr->Flags = HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
                     HARDWARE_CURSOR_AND_SOURCE_WITH_MASK |
                     HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_1;
-   infoPtr->RealizeCursor = I128IBMRealizeCursor;
+
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+   infoPtr->Flags |= HARDWARE_CURSOR_NIBBLE_SWAPPED;
+#endif
 
    return(xf86InitCursor(pScreen, infoPtr));
-}
-
-
-/*
- * Convert the cursor from server-format to hardware-format.  The IBMRGB
- * has two planes, plane 0 selects cursor color 0 or 1 and plane 1
- * selects transparent or display cursor.  The bits of these planes
- * are packed together so that one byte has 4 pixels. The organization
- * looks like:
- *             Byte 0x000 - 0x00F    top scan line, left to right
- *                  0x010 - 0x01F
- *                    .       .
- *                  0x3F0 - 0x3FF    bottom scan line
- *
- *             Byte/bit map - D7D6,D5D4,D3D2,D1D0  four pixels, two planes each
- *             Pixel/bit map - P1P0  (plane 1) == 1 maps to cursor color
- *                                   (plane 1) == 0 maps to transparent
- *                                   (plane 0) maps to cursor colors 0 and 1
- */
-
-static unsigned char *
-I128IBMRealizeCursor(xf86CursorInfoPtr infoPtr, CursorPtr pCurs)
-{
-   register int i, j;
-   unsigned char *pServMsk;
-   unsigned char *pServSrc;
-   int   wsrc, h;
-   unsigned char *mem, *dst;
-
-   mem = (unsigned char *)xcalloc(1,1024);  /* 64x64x2 bits */
-   dst = mem;
-
-   if (!mem)
-      return NULL;
-
-   pServSrc = (unsigned char *)pCurs->bits->source;
-   pServMsk = (unsigned char *)pCurs->bits->mask;
-
-   h = pCurs->bits->height;
-   if (h > infoPtr->MaxHeight)
-      h = infoPtr->MaxHeight;
-
-   wsrc = PixmapBytePad(pCurs->bits->width, 1);	/* bytes per line */
-
-   for (i = 0; i < infoPtr->MaxHeight; i++,mem+=16) {
-      for (j = 0; j < infoPtr->MaxWidth / 8; j++) {
-	 register unsigned char mask, source;
-
-	 if (i < h && j < wsrc) {
-	    /*
-	     * mask byte ABCDEFGH and source byte 12345678 map to two byte
-	     * cursor data H8G7F6E5 D4C3B2A1
-	     */
-	    mask = *pServMsk++;
-	    source = *pServSrc++ & mask;
-
-	    /* map 1 byte source and mask into two byte cursor data */
-	    mem[j*2] =     ((mask&0x01) << 7) | ((source&0x01) << 6) |
-		           ((mask&0x02) << 4) | ((source&0x02) << 3) |
-		           ((mask&0x04) << 1) | (source&0x04)        |
-		           ((mask&0x08) >> 2) | ((source&0x08) >> 3) ;
-	    mem[(j*2)+1] = ((mask&0x10) << 3) | ((source&0x10) << 2) |
-		           (mask&0x20)        | ((source&0x20) >> 1) |
-		           ((mask&0x40) >> 3) | ((source&0x40) >> 4) |
-		           ((mask&0x80) >> 6) | ((source&0x80) >> 7) ;
-	 } else {
-	    mem[j*2]     = 0x00;
-	    mem[(j*2)+1] = 0x00;
-	 }
-      }
-      /*
-       * if we still have more bytes on this line (j < wsrc),
-       * we have to ignore the rest of the line.
-       */
-       while (j++ < wsrc) pServMsk++,pServSrc++;
-   }
-   return dst;
 }
 
 

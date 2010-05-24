@@ -65,6 +65,6 @@ Default: false.
 This turns on verbose debug information from the driver.
 Default: off.
 .SH "SEE ALSO"
-__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Robin Cutshaw (driver), Galen Brooks (flatpanel support).

@@ -476,10 +476,14 @@ i128CheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture,
     if (pMaskPicture) return FALSE;
 
     /* when transforms added, be sure to check for linear/nearest */
-    /* if (pSrcPicture->transform) return FALSE; */
+    if (pSrcPicture->transform && pSrcPicture->filter != PictFilterNearest)
+        return FALSE;
 
     /* no support for external alpha */
     if (pSrcPicture->alphaMap || pDstPicture->alphaMap) return FALSE;
+
+    /* driver currently doesn't support repeating */
+    if (pSrcPicture->repeat) return FALSE;
 
     pI128->source = i128MapSourceFormat(pSrcPicture->format);
     if (!pI128->source)
