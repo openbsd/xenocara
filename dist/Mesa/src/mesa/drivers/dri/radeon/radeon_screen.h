@@ -78,7 +78,6 @@ typedef struct radeon_screen {
    int texSize[RADEON_NR_TEX_HEAPS];
    int logTexGranularity[RADEON_NR_TEX_HEAPS];
 
-   radeonRegionRec mmio;
    radeonRegionRec status;
    radeonRegionRec gartTextures;
 

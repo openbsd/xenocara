@@ -917,7 +917,6 @@ radeonCreateScreen( __DRIscreen *sPriv )
 {
    radeonScreenPtr screen;
    RADEONDRIPtr dri_priv = (RADEONDRIPtr)sPriv->pDevPriv;
-   unsigned char *RADEONMMIO = NULL;
    int i;
    int ret;
    uint32_t temp = 0;
@@ -986,26 +985,12 @@ radeonCreateScreen( __DRIscreen *sPriv )
    if (ret == -1)
      return NULL;
 
-   screen->mmio.handle = dri_priv->registerHandle;
-   screen->mmio.size   = dri_priv->registerSize;
-   if ( drmMap( sPriv->fd,
-		screen->mmio.handle,
-		screen->mmio.size,
-		&screen->mmio.map ) ) {
-     FREE( screen );
-     __driUtilMessage("%s: drmMap failed\n", __FUNCTION__ );
-     return NULL;
-   }
-
-   RADEONMMIO = screen->mmio.map;
-
    screen->status.handle = dri_priv->statusHandle;
    screen->status.size   = dri_priv->statusSize;
    if ( drmMap( sPriv->fd,
 		screen->status.handle,
 		screen->status.size,
 		&screen->status.map ) ) {
-     drmUnmap( screen->mmio.map, screen->mmio.size );
      FREE( screen );
      __driUtilMessage("%s: drmMap (2) failed\n", __FUNCTION__ );
      return NULL;
@@ -1020,7 +1005,6 @@ radeonCreateScreen( __DRIscreen *sPriv )
    screen->buffers = drmMapBufs( sPriv->fd );
    if ( !screen->buffers ) {
      drmUnmap( screen->status.map, screen->status.size );
-     drmUnmap( screen->mmio.map, screen->mmio.size );
      FREE( screen );
      __driUtilMessage("%s: drmMapBufs failed\n", __FUNCTION__ );
      return NULL;
@@ -1035,7 +1019,6 @@ radeonCreateScreen( __DRIscreen *sPriv )
 		  (drmAddressPtr)&screen->gartTextures.map ) ) {
        drmUnmapBufs( screen->buffers );
        drmUnmap( screen->status.map, screen->status.size );
-       drmUnmap( screen->mmio.map, screen->mmio.size );
        FREE( screen );
        __driUtilMessage("%s: drmMap failed for GART texture area\n", __FUNCTION__);
        return NULL;
@@ -1090,14 +1073,9 @@ radeonCreateScreen( __DRIscreen *sPriv )
    {
         if (ret)
         {
-            if (screen->chip_family < CHIP_FAMILY_RS600 && !screen->kernel_mm)
-	            screen->fbLocation      = ( INREG( RADEON_MC_FB_LOCATION ) & 0xffff) << 16;
-            else
-            {
                 FREE( screen );
                 fprintf(stderr, "Unable to get fb location need newer drm\n");
                 return NULL;
-            }
         }
         else
         {
@@ -1425,7 +1403,6 @@ radeonDestroyScreen( __DRIscreen *sPriv )
         }
         drmUnmapBufs( screen->buffers );
         drmUnmap( screen->status.map, screen->status.size );
-        drmUnmap( screen->mmio.map, screen->mmio.size );
     }
 
     /* free all option information */

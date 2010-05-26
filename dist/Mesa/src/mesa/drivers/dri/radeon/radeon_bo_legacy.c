@@ -171,25 +171,24 @@ static int legacy_free_handle(struct bo_manager_legacy *bom, uint32_t handle)
 static void legacy_get_current_age(struct bo_manager_legacy *boml)
 {
     drm_radeon_getparam_t gp;
-    unsigned char *RADEONMMIO = NULL;
     int r;
 
+    /* R300 we emit scratch writes in mesa. on r100/r200 we use the IRQ
+     * emit ioctl and thus we need to ask for a different scratch register.
+     */
     if (   IS_R300_CLASS(boml->screen) 
         || IS_R600_CLASS(boml->screen) ) 
     {
-    	gp.param = RADEON_PARAM_LAST_CLEAR;
-    	gp.value = (int *)&boml->current_age;
-    	r = drmCommandWriteRead(boml->base.fd, DRM_RADEON_GETPARAM,
-       	                     &gp, sizeof(gp));
-    	if (r) {
-       	 fprintf(stderr, "%s: drmRadeonGetParam: %d\n", __FUNCTION__, r);
-         exit(1);
-       }
-    } 
-    else {
-        RADEONMMIO = boml->screen->mmio.map;
-        boml->current_age = boml->screen->scratch[3];
-        boml->current_age = INREG(RADEON_GUI_SCRATCH_REG3);
+        gp.param = RADEON_PARAM_LAST_CLEAR;
+    } else {
+	gp.param = RADEON_PARAM_LAST_SWI;
+    }
+    gp.value = (int *)&boml->current_age;
+    r = drmCommandWriteRead(boml->base.fd, DRM_RADEON_GETPARAM,
+ 			 &gp, sizeof(gp));
+    if (r) {
+      fprintf(stderr, "%s: drmRadeonGetParam: %d\n", __FUNCTION__, r);
+      exit(1);
     }
 }
 
