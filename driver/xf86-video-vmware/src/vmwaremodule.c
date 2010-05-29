@@ -151,7 +151,7 @@ vmware_chain_module(pointer opts)
     int vmware_devices;
     int matched;
     char *driver_name;
-    GDevPtr *gdevs;
+    GDevPtr *gdevs = NULL;
     GDevPtr gdev;
     int i;
 
@@ -172,13 +172,14 @@ vmware_chain_module(pointer opts)
 	matched = vmwlegacy_devices;
     }
 
-    for (i = 0; i < vmware_devices; i++) {
-	gdev = gdevs[i];
-	gdev->driver = driver_name;
+    if (gdevs != NULL) {
+	for (i = 0; i < vmware_devices; i++) {
+	    gdev = gdevs[i];
+	    gdev->driver = driver_name;
+	}
+
+	xfree(gdevs);
     }
-
-    xfree(gdevs);
-
     if (!matched)
 	xf86LoadOneModule(driver_name, opts);
 }
