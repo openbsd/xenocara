@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.18 2010/04/24 20:13:07 matthieu Exp $
+# $OpenBSD: Makefile,v 1.19 2010/05/29 17:25:11 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -56,9 +56,6 @@ SUBDIR+= libdrm
 .if ${XENOCARA_BUILD_GL:L} == "yes"
 SUBDIR+= libGL libGLU libGLw
 .endif
-
-# deprecated
-# libXevie libXprintUtil liblbxutil libXprintAppUtil libXTrap libXp
 
 .include <bsd.subdir.mk>
 

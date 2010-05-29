@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2010/04/24 20:11:12 matthieu Exp $
+# $OpenBSD: Makefile,v 1.11 2010/05/29 17:25:11 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -17,9 +17,6 @@ SUBDIR+= xf86driproto dri2proto
 .if ${XENOCARA_BUILD_XCB:L} == "yes"
 SUBDIR+= xcb-proto
 .endif
-
-# deprecated
-# evieproto  printproto trapproto 
 
 .include <bsd.subdir.mk>
 
