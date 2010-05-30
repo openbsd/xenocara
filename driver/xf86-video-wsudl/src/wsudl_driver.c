@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.5 2009/09/27 18:19:28 mglocker Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.6 2010/05/30 21:05:16 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -76,8 +76,10 @@
 
 #include "fb.h"
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
 #include "xf86RAC.h"
+#endif
 
 #include "damage.h"
 
@@ -354,9 +356,10 @@ WsudlPreInit(ScrnInfoPtr pScrn, int flags)
 
 	fPtr->pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
 
+#ifndef XSERVER_LIBPCIACCESS
 	pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;
 	pScrn->racIoFlags = pScrn->racMemFlags;
-
+#endif
 	/* open wsdisplay device */
 	dev = xf86FindOptionValue(fPtr->pEnt->device->options, "device");
 	fPtr->fd = wsudl_open(dev);
