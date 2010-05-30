@@ -169,18 +169,18 @@ APPDEFAULTFILES = \
 
 if USE_XPRINT
 app-defaults/Xedit.ad: 
-	test -d app-defaults || mkdir app-defaults
+	test -d app-defaults || mkdir -p app-defaults
 	cp $(top_srcdir)/app-defaults/Xedit-xprint.ad app-defaults/Xedit.ad
 else
 app-defaults/Xedit.ad:
-	test -d app-defaults || mkdir app-defaults
+	test -d app-defaults || mkdir -p app-defaults
 	cp $(top_srcdir)/app-defaults/Xedit-noxprint.ad app-defaults/Xedit.ad
 endif
 
 SUFFIXES = .ad 
 
 .ad:
-	test -d app-defaults || mkdir app-defaults
+	test -d app-defaults || mkdir -p app-defaults
 	cp $< $@
 
 appdefaultdir = @appdefaultdir@
