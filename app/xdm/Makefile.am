@@ -165,7 +165,7 @@ APPDEFAULTFILES = app-defaults/Chooser
 SUFFIXES += .ad
 
 .ad:
-	[ -d app-defaults ] || mkdir app-defaults
+	[ -d app-defaults ] || mkdir -p app-defaults
 	cp $< $@
 
 appdefault_DATA = $(APPDEFAULTFILES)
