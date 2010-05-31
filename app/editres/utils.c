@@ -58,9 +58,7 @@ static void FreeResources ( WidgetResources * resources );
  */
 
 void
-SetMessage(w, str)
-Widget w;
-char * str;
+SetMessage(Widget w, char *str)
 {
     Arg args[1];
 
@@ -136,8 +134,7 @@ GetAllStrings(char *in, char sep, char ***out, int *num)
  */
 
 void
-AddString(str, add)
-char ** str, *add;
+AddString(char ** str, char *add)
 {
     int len_str, len_add;
     char * ptr;
@@ -158,10 +155,7 @@ char ** str, *add;
  */
 
 WNode *
-FindNode(top_node, ids, number)
-WNode *top_node;
-unsigned long * ids;
-Cardinal number;
+FindNode(WNode *top_node, unsigned long *ids, Cardinal number)
 {
     int i, j;
     WNode *node;
@@ -196,9 +190,7 @@ Cardinal number;
  */
 
 WNode * 
-FindWidgetFromWindow(tree_info, win)
-TreeInfo * tree_info;
-Window win;
+FindWidgetFromWindow(TreeInfo *tree_info, Window win)
 {
     if (tree_info == NULL)
 	return(NULL);
@@ -214,9 +206,7 @@ Window win;
  */
 
 static WNode *
-FindWidgetFromWindowGivenNode(node, win)
-WNode * node;
-Window win;
+FindWidgetFromWindowGivenNode(WNode *node, Window win)
 {
     int i;
     WNode * ret_node;
@@ -241,9 +231,7 @@ Window win;
 
 /* ARGSUSED */
 int
-HandleXErrors(display, error)
-Display * display;
-XErrorEvent * error;
+HandleXErrors(Display *display, XErrorEvent *error)
 {
     if (error->serial != global_serial_num) {
 	(*global_old_error_handler) (display, error);
@@ -271,10 +259,7 @@ XErrorEvent * error;
 /* ARGSUSED */
 
 void
-_DumpTreeToFile(w, tree_ptr, filename)
-Widget w;
-XtPointer tree_ptr;
-XtPointer filename;
+_DumpTreeToFile(Widget w, XtPointer tree_ptr, XtPointer filename)
 {
     TreeInfo * tree_info = (TreeInfo *) tree_ptr;
     FILE * fp; 
@@ -325,11 +310,8 @@ typedef struct _FileDialogInfo {
 } FileDialogInfo;
 
 void
-_PopupFileDialog(w, str, default_value, func, data)
-Widget w;
-String str, default_value;
-XtCallbackProc func;
-XtPointer data;
+_PopupFileDialog(Widget w, String str, String default_value,
+		 XtCallbackProc func, XtPointer data)
 {
     FileDialogInfo * file_info;
     Widget shell, dialog;
@@ -377,10 +359,7 @@ XtPointer data;
  */
 
 void
-PopupCentered(event, w, mode)
-XEvent * event;
-Widget w;
-XtGrabKind mode;
+PopupCentered(XEvent *event, Widget w, XtGrabKind mode)
 {
     Boolean get_from_cursor = FALSE;
     Arg args[3];
@@ -459,9 +438,7 @@ XtGrabKind mode;
 /* ARGSUSED */
 
 void 
-_PopdownFileDialog(w, client_data, junk)
-Widget w;
-XtPointer client_data, junk;
+_PopdownFileDialog(Widget w, XtPointer client_data, XtPointer junk)
 {
     Widget dialog = XtParent(w);
     XPointer file_info_ptr;
@@ -504,9 +481,7 @@ XtPointer client_data, junk;
  */
 
 void
-GetNamesAndClasses(node, names, classes)
-WNode * node;
-char *** names, ***classes;
+GetNamesAndClasses(WNode *node, char ***names, char ***classes)
 {
     int i, total_widgets;
     WNode * temp = node;
@@ -532,8 +507,7 @@ char *** names, ***classes;
  */
 
 char *
-HandleGetResources(event)
-Event * event;
+HandleGetResources(Event *event)
 {
     GetResourcesEvent * get_event = (GetResourcesEvent *) event;
     char buf[BUFSIZ], * errors = NULL;
@@ -575,9 +549,7 @@ Event * event;
  */
 
 void
-CreateResourceBox(node, errors)
-WNode * node;
-char ** errors;
+CreateResourceBox(WNode *node, char **errors)
 {
     WidgetResources * resources = node->resources;
     char ** names, ** cons_names;
@@ -623,9 +595,7 @@ char ** errors;
  */
 
 static WidgetResources * 
-ParseResources(info, error)
-GetResourcesInfo * info;
-char **error;
+ParseResources(GetResourcesInfo *info, char **error)
 {
     WidgetResources * resources;
     WidgetResourceInfo * normal;
@@ -694,8 +664,7 @@ char **error;
  */
 
 static int 
-CompareResourceEntries(e1, e2) 
-const void *e1, *e2;
+CompareResourceEntries(const void *e1, const void *e2)
 {
     return (strcmp(((WidgetResourceInfo *)e1)->name, 
 		   ((WidgetResourceInfo *)e2)->name));
@@ -710,9 +679,7 @@ const void *e1, *e2;
  */
 
 static void
-AddResource(res_info, resource) 
-ResourceInfo * res_info;
-WidgetResourceInfo * resource;
+AddResource(ResourceInfo *res_info, WidgetResourceInfo *resource)
 {
     resource->name = res_info->name;
     res_info->name = NULL;	/* Keeps it from being deallocated. */
@@ -730,8 +697,7 @@ WidgetResourceInfo * resource;
  */
 
 static void
-FreeResources(resources) 
-WidgetResources * resources;
+FreeResources(WidgetResources *resources)
 {
     int i;
 
@@ -765,9 +731,7 @@ WidgetResources * resources;
  */
 
 Boolean
-CheckDatabase(db, names, classes)
-XrmDatabase db;
-XrmQuarkList names, classes;
+CheckDatabase(XrmDatabase db, XrmQuarkList names, XrmQuarkList classes)
 {
     XrmRepresentation junk;
     XrmValue garbage;
@@ -783,9 +747,7 @@ XrmQuarkList names, classes;
  */
 
 XrmQuarkList
-Quarkify(list, ptr)
-char ** list;
-char * ptr;
+Quarkify(char **list, char *ptr)
 {
     int i;
     char ** tlist;
@@ -817,10 +779,8 @@ char * ptr;
  */
 
 void
-ExecuteOverAllNodes(top_node, func, data)
-WNode * top_node;
-void (*func)(WNode *, XtPointer);
-XtPointer data;
+ExecuteOverAllNodes(WNode *top_node, void (*func)(WNode *, XtPointer),
+		    XtPointer data)
 {
     int i;
 
@@ -839,15 +799,13 @@ XtPointer data;
  */
 
 void
-InsertWidgetFromNode(stream, node)
-ProtocolStream * stream;
-WNode * node;
+InsertWidgetFromNode(ProtocolStream *stream, WNode *node)
 {
     WNode *temp;
     unsigned long * widget_list;
     register int i, num_widgets;
 
-    for (temp = node, i = 0; temp != 0; temp = temp->parent, i++) {}
+    for (temp = node, i = 0; temp != NULL; temp = temp->parent, i++) {}
 
     num_widgets = i;
     widget_list = (unsigned long *) 
@@ -858,7 +816,7 @@ WNode * node;
      * Make sure that they are inserted in the list from parent -> child.
      */
 
-    for (i--, temp = node; temp != 0; temp = temp->parent, i--) 
+    for (i--, temp = node; temp != NULL; temp = temp->parent, i--) 
 	widget_list[i] = temp->id;
 	
     _XEditResPut16(stream, num_widgets);	/* insert number of widgets. */
@@ -875,8 +833,7 @@ WNode * node;
  */
 
 char * 
-GetFailureMessage(stream)
-ProtocolStream * stream;
+GetFailureMessage(ProtocolStream *stream)
 {
     char * return_str;
 
@@ -894,8 +851,7 @@ ProtocolStream * stream;
  */
 
 char * 
-ProtocolFailure(stream)
-ProtocolStream * stream;
+ProtocolFailure(ProtocolStream *stream)
 {
     char buf[BUFSIZ];
     unsigned char version;

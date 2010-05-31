@@ -93,11 +93,7 @@ Boolean do_get_values = False;
 
 /* ARGSUSED */
 static void
-EnableGetVal(w, event, params, num_params)
-Widget w;
-XEvent * event;
-String * params;
-Cardinal * num_params;
+EnableGetVal(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
   do_get_values = True;
 }
@@ -116,11 +112,7 @@ Cardinal * num_params;
 
 /* ARGSUSED */
 static void
-SelectAction(w, event, params, num_params)
-Widget w;
-XEvent * event;
-String * params;
-Cardinal * num_params;
+SelectAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     WNode * node;
     int type;
@@ -161,11 +153,7 @@ Cardinal * num_params;
 
 /* ARGSUSED */
 static void
-RelabelAction(w, event, params, num_params)
-Widget w;
-XEvent * event;
-String * params;
-Cardinal * num_params;
+RelabelAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     WNode * node;
     int type;
@@ -195,11 +183,8 @@ Cardinal * num_params;
 /* ARGSUSED */
 
 static void
-PopdownFileDialogAction(w, event, params, num_params)
-Widget w;
-XEvent * event;
-String * params;
-Cardinal * num_params;
+PopdownFileDialogAction(Widget w, XEvent *event,
+			String *params, Cardinal *num_params)
 {
     char buf[BUFSIZ];
     Boolean val;
@@ -239,11 +224,7 @@ Cardinal * num_params;
 
 /* ARGSUSED */
 static void
-ActionQuit(w, event, params, num_params)
-Widget w;
-XEvent * event;
-String * params;
-Cardinal * num_params;
+ActionQuit(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
   if (w==global_toplevel) {
     XtDestroyApplicationContext(XtWidgetToApplicationContext(w));
@@ -273,8 +254,7 @@ static XtActionsRec actions[] = {
 };
 
 void
-SetApplicationActions(app_con)
-XtAppContext app_con;
+SetApplicationActions(XtAppContext app_con)
 {
     XtAppAddActions(app_con, actions, XtNumber(actions));
     
@@ -299,11 +279,8 @@ XtAppContext app_con;
  */
 
 static Boolean
-CheckAndFindEntry(action_name, params, num_params, table, num_table, type)
-String * params, action_name;
-Cardinal num_params, num_table;
-struct ActionValues * table;
-int * type;
+CheckAndFindEntry(String action_name, String *params, Cardinal num_params,
+		  struct ActionValues *table, Cardinal num_table, int *type)
 {
     char buf[BUFSIZ];
     int i;
@@ -345,8 +322,7 @@ int * type;
  */
 
 static WNode *
-FindTreeNodeFromWidget(w)
-Widget w;
+FindTreeNodeFromWidget(Widget w)
 {
     int ret_val;
     XPointer data_return;

@@ -63,9 +63,7 @@ static void SetOnlyMatchingWidgets ( WNode * node, XtPointer info_ptr );
 
 /* ARGSUSED */
 void
-Quit(w, client_data, call_data)
-Widget w;
-XtPointer call_data, client_data;
+Quit(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XtDestroyApplicationContext(XtWidgetToApplicationContext(w));
     exit(0);
@@ -84,9 +82,7 @@ XtPointer call_data, client_data;
 
 /* ARGSUSED */
 void
-SendTree(w, value, call_data)
-Widget w;
-XtPointer value, call_data;
+SendTree(Widget w, XtPointer value, XtPointer call_data)
 {
     if ((Boolean)(long) value)
 	global_client.window = None;
@@ -109,9 +105,7 @@ XtPointer value, call_data;
 
 /* ARGSUSED */
 void
-FindWidget(w, client_data, call_data)
-Widget w;
-XtPointer client_data, call_data;
+FindWidget(Widget w, XtPointer client_data, XtPointer call_data)
 {
 
     _FindWidget(XtParent(w));	/* Use parent since it is a "real"
@@ -128,9 +122,7 @@ XtPointer client_data, call_data;
 
 /* ARGSUSED */
 void
-InitSetValues(w, client_data, call_data)
-Widget w;
-XtPointer call_data, client_data;
+InitSetValues(Widget w, XtPointer client_data, XtPointer call_data)
 {
     if (!XtIsWidget(w))     /* Make sure that we use a "Real" widget here. */
 	w = XtParent(w);
@@ -148,9 +140,7 @@ XtPointer call_data, client_data;
 
 /* ARGSUSED */
 void
-TreeSelect(w, client_data, call_data)
-Widget w;
-XtPointer call_data, client_data;
+TreeSelect(Widget w, XtPointer client_data, XtPointer call_data)
 {
     SelectTypes type = (SelectTypes) (unsigned long) client_data;
 
@@ -167,9 +157,7 @@ XtPointer call_data, client_data;
 
 /* ARGSUSED */
 void
-TreeRelabel(w, client_data, call_data)
-Widget w;
-XtPointer call_data, client_data;
+TreeRelabel(Widget w, XtPointer client_data, XtPointer call_data)
 {
     LabelTypes type = (LabelTypes) (unsigned long) client_data;
 
@@ -186,9 +174,7 @@ XtPointer call_data, client_data;
 
 /* ARGSUSED */
 void 
-PannerCallback(w, closure, report_ptr)
-Widget w;
-XtPointer closure, report_ptr;
+PannerCallback(Widget w, XtPointer closure, XtPointer report_ptr)
 {
     Arg args[2];
     XawPannerReport *report = (XawPannerReport *) report_ptr;
@@ -213,9 +199,7 @@ XtPointer closure, report_ptr;
 
 /* ARGSUSED */
 void 
-PortholeCallback(w, panner_ptr, report_ptr)
-Widget w;
-XtPointer panner_ptr, report_ptr;
+PortholeCallback(Widget w, XtPointer panner_ptr, XtPointer report_ptr)
 {
     Arg args[10];
     Cardinal n = 0;
@@ -241,9 +225,7 @@ XtPointer panner_ptr, report_ptr;
 
 /* ARGSUSED */
 void 
-FlashActiveWidgets(w, junk, garbage)
-Widget w;
-XtPointer junk, garbage;
+FlashActiveWidgets(Widget w, XtPointer junk, XtPointer garbage)
 {
     _FlashActiveWidgets(global_tree_info);
 }
@@ -256,9 +238,7 @@ XtPointer junk, garbage;
 
 /* ARGSUSED */
 void
-GetResourceList(w, junk, garbage)
-Widget w;
-XtPointer junk, garbage;
+GetResourceList(Widget w, XtPointer junk, XtPointer garbage)
 {
     WNode * node;
     ProtocolStream * stream = &(global_client.stream);
@@ -305,9 +285,7 @@ XtPointer junk, garbage;
 
 /* ARGSUSED */
 void 
-DumpTreeToFile(w, junk, garbage)
-Widget w;
-XtPointer junk, garbage;
+DumpTreeToFile(Widget w, XtPointer junk, XtPointer garbage)
 {
     _PopupFileDialog(XtParent(w), "Enter the filename:", "",
 		     _DumpTreeToFile, (XtPointer) global_tree_info);
@@ -332,9 +310,7 @@ XtPointer junk, garbage;
 
 /* ARGSUSED */
 void 
-AnyChosen(w, any_info_ptr, state_ptr)
-Widget w;
-XtPointer any_info_ptr, state_ptr;
+AnyChosen(Widget w, XtPointer any_info_ptr, XtPointer state_ptr)
 {
     AnyInfo * any_info = (AnyInfo *) any_info_ptr;
     Boolean state = (Boolean)(long) state_ptr;
@@ -396,8 +372,7 @@ XtPointer any_info_ptr, state_ptr;
 
 
 static char *
-GetResourceName(res_box)
-ResourceBoxInfo * res_box;
+GetResourceName(ResourceBoxInfo *res_box)
 {
     XawListReturnStruct * list_info;
     char * result;
@@ -430,9 +405,8 @@ ResourceBoxInfo * res_box;
  */
 
 void
-ActivateWidgetsAndSetResourceString(w, node_ptr, call_data)
-Widget w;
-XtPointer node_ptr, call_data;
+ActivateWidgetsAndSetResourceString(Widget w,
+				    XtPointer node_ptr, XtPointer call_data)
 {
     SetResourceString(w, node_ptr, call_data);
     ActivateResourceWidgets(w, node_ptr, call_data);
@@ -449,9 +423,7 @@ XtPointer node_ptr, call_data;
  */
 
 void
-SetResourceString(w, node_ptr, junk)
-Widget w;
-XtPointer node_ptr, junk;
+SetResourceString(Widget w, XtPointer node_ptr, XtPointer junk)
 {
     static char * malloc_string; /* These are both inited to zero. */
     static Cardinal malloc_size;
@@ -532,9 +504,7 @@ XtPointer node_ptr, junk;
 extern Boolean do_get_values;
 
 void
-ResourceListCallback(list, node_ptr, junk)
-Widget list;
-XtPointer node_ptr, junk;
+ResourceListCallback(Widget list, XtPointer node_ptr, XtPointer junk)
 {
     Widget o_list;
     WNode * node = (WNode *) node_ptr;
@@ -568,9 +538,7 @@ XtPointer node_ptr, junk;
 
 /* ARGSUSED */
 void
-PopdownResBox(w, shell_ptr, junk)
-Widget w;
-XtPointer shell_ptr, junk;
+PopdownResBox(Widget w, XtPointer shell_ptr, XtPointer junk)
 {
     Widget shell = (Widget) shell_ptr;
 
@@ -580,9 +548,7 @@ XtPointer shell_ptr, junk;
 
 /* ARGSUSED */
 static void
-_AppendResourceString(w, res_box_ptr, filename_ptr)
-Widget w;
-XtPointer res_box_ptr, filename_ptr;
+_AppendResourceString(Widget w, XtPointer res_box_ptr, XtPointer filename_ptr)
 {
     Arg args[1];
     FILE * fp;
@@ -629,9 +595,7 @@ XtPointer res_box_ptr, filename_ptr;
 
 /* ARGSUSED */
 void
-SaveResource(w, res_box_ptr, junk)
-Widget w;
-XtPointer res_box_ptr, junk;
+SaveResource(Widget w, XtPointer res_box_ptr, XtPointer junk)
 {
     /* 
      * If there is no filename the ask for one, otherwise just save to
@@ -656,9 +620,7 @@ XtPointer res_box_ptr, junk;
 
 /* ARGSUSED */
 static void
-_SetResourcesFile(w, junk, filename_ptr)
-Widget w;
-XtPointer junk, filename_ptr;
+_SetResourcesFile(Widget w, XtPointer junk, XtPointer filename_ptr)
 {
     char *filename = (char *) filename_ptr;
 
@@ -680,9 +642,7 @@ XtPointer junk, filename_ptr;
 
 /* ARGSUSED */
 void
-SetFile(w, junk, garbage)
-Widget w;
-XtPointer junk, garbage;
+SetFile(Widget w, XtPointer junk, XtPointer garbage)
 {
     /* 
      * If there is no filename the ask for one, otherwise just save to
@@ -705,9 +665,7 @@ XtPointer junk, garbage;
 
 /* ARGSUSED */
 void
-ApplyResource(w, node_ptr, junk)
-Widget w;
-XtPointer node_ptr, junk;
+ApplyResource(Widget w, XtPointer node_ptr, XtPointer junk)
 {
     ProtocolStream * stream = &(global_client.stream);
     ApplyResourcesInfo info;
@@ -775,8 +733,7 @@ XtPointer node_ptr, junk;
 
 /* ARGSUSED */
 static void
-ObtainResource(node_ptr)
-XtPointer node_ptr;
+ObtainResource(XtPointer node_ptr)
 {
     ProtocolStream * stream = &(global_client.stream);
     ObtainResourcesInfo info;
@@ -821,9 +778,7 @@ XtPointer node_ptr;
  */
 
 static void
-CreateSetValuesCommand(node, info_ptr)
-WNode * node;
-XtPointer info_ptr;
+CreateSetValuesCommand(WNode *node, XtPointer info_ptr)
 {
     ApplyResourcesInfo * info = (ApplyResourcesInfo *) info_ptr;
     XrmNameList name_quarks;
@@ -855,9 +810,7 @@ XtPointer info_ptr;
 /*****
 
 static void
-CreateGetValuesCommand(node, info_ptr)
-WNode * node;
-XtPointer info_ptr;
+CreateGetValuesCommand(WNode *node, XtPointer info_ptr)
 {
     ApplyResourcesInfo * info = (ApplyResourcesInfo *) info_ptr;
     XrmNameList name_quarks;
@@ -891,9 +844,7 @@ XtPointer info_ptr;
 
 /* ARGSUSED */
 void
-ActivateResourceWidgets(w, node_ptr, junk)
-Widget w;
-XtPointer node_ptr, junk;
+ActivateResourceWidgets(Widget w, XtPointer node_ptr, XtPointer junk)
 {
     WNode * node = (WNode *) node_ptr;	       
     ApplyResourcesInfo info;
@@ -932,9 +883,7 @@ XtPointer node_ptr, junk;
  */
 
 static void
-SetOnlyMatchingWidgets(node, info_ptr)
-WNode * node;
-XtPointer info_ptr;
+SetOnlyMatchingWidgets(WNode *node, XtPointer info_ptr)
 {
     ApplyResourcesInfo * info = (ApplyResourcesInfo *) info_ptr;
     XrmNameList name_quarks;

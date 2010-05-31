@@ -83,9 +83,7 @@ static char * DispatchEvent ( Event * event );
 
 /* ARGSUSED */
 static void
-ClientTimedOut(data, id)
-XtPointer data;
-XtIntervalId * id;
+ClientTimedOut(XtPointer data, XtIntervalId *id)
 {
   char msg[BUFSIZ];
   Widget w = (Widget) data;
@@ -108,9 +106,7 @@ XtIntervalId * id;
  */
 
 Window 
-GetClientWindow(w, x, y)
-Widget w;
-int *x, *y;
+GetClientWindow(Widget w, int *x, int *y)
 {
   int status;
   Cursor cursor;
@@ -187,10 +183,7 @@ int *x, *y;
 
 /* ARGSUSED */
 void
-SetCommand(w, command, msg)
-     Widget w;
-     ResCommand command;
-     char * msg;
+SetCommand(Widget w, ResCommand command, char *msg)
 {
   XClientMessageEvent client_event;
   Display * dpy = XtDisplay(w);
@@ -263,9 +256,7 @@ SetCommand(w, command, msg)
  */
 
 static void
-TellUserAboutMessage(label, command)
-Widget label;
-ResCommand command;
+TellUserAboutMessage(Widget label, ResCommand command)
 {
     char msg[BUFSIZ], *str;
 
@@ -306,12 +297,8 @@ ResCommand command;
 
 /* ARGSUSED */
 static Boolean
-ConvertCommand(w,selection,target,type_ret, value_ret, length_ret, format_ret)
-Widget w;
-Atom * selection, * target, * type_ret;
-XtPointer *value_ret;
-unsigned long * length_ret;
-int * format_ret;
+ConvertCommand(Widget w, Atom *selection, Atom *target, Atom *type_ret,
+	       XtPointer *value_ret, unsigned long *length_ret, int *format_ret)
 {
     if ((*selection != atom_comm) || (*target != atom_command))
 	return(FALSE);
@@ -334,9 +321,7 @@ int * format_ret;
 
 /* ARGSUSED */
 static void
-SelectionDone(w, sel, targ)
-    Widget w;
-    Atom *sel, *targ;
+SelectionDone(Widget w, Atom *sel, Atom *targ)
 {
     /* Keep the toolkit from automaticaly freeing the selection value */
 }
@@ -352,9 +337,7 @@ SelectionDone(w, sel, targ)
  */
 
 static void
-LoseSelection(w, sel)
-Widget w;
-Atom * sel;
+LoseSelection(Widget w, Atom *sel)
 {
     if (global_client.timeout != 0) {
 	XtRemoveTimeOut(global_client.timeout);
@@ -384,12 +367,8 @@ static Boolean reset_protocol_level = True;
 
 /* ARGSUSED */
 static void
-GetClientValue(w, data, selection, type, value, length, format)
-Widget w;
-XtPointer data, value;
-Atom *selection, *type;
-unsigned long *length;
-int * format;
+GetClientValue(Widget w, XtPointer data, Atom *selection, Atom *type,
+	       XtPointer value, unsigned long *length, int *format)
 {
     Event * event;
     ProtocolStream alloc_stream, *stream;
@@ -490,8 +469,7 @@ int * format;
  */
 
 static void
-BuildHeader(client_data)
-CurrentClient * client_data;
+BuildHeader(CurrentClient *client_data)
 {
     unsigned long old_alloc, old_size;
     unsigned char * old_current;
@@ -561,8 +539,7 @@ CurrentClient * client_data;
  */
 
 static Event * 
-BuildEvent(stream)
-ProtocolStream * stream;
+BuildEvent(ProtocolStream *stream)
 {
     int i;
     Event * event = (Event *) XtCalloc(sizeof(Event), 1);
@@ -793,8 +770,7 @@ ProtocolStream * stream;
  */
 
 static void
-FreeEvent(event)
-Event * event;
+FreeEvent(Event *event)
 {
     unsigned int i;
 
@@ -894,8 +870,7 @@ Event * event;
  */
 	
 static char *
-DispatchEvent(event)
-Event * event;
+DispatchEvent(Event *event)
 {
     char * error = NULL;
 
@@ -938,8 +913,7 @@ Event * event;
  */
 
 void
-InternAtoms(dpy)
-Display * dpy;
+InternAtoms(Display * dpy)
 {
     atom_comm = XInternAtom(dpy, EDITRES_COMM_ATOM, False);
     atom_command = XInternAtom(dpy, EDITRES_COMMAND_ATOM, False);
@@ -949,7 +923,7 @@ Display * dpy;
 }
 
 ResIdent
-GetNewIdent()
+GetNewIdent(void)
 {
     static ResIdent ident = 1;
 

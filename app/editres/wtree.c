@@ -56,9 +56,7 @@ static WNode ** CopyActiveNodes ( TreeInfo * tree_info );
 
 /* ARGSUSED */
 void
-BuildVisualTree(tree_parent, event)
-Widget tree_parent;
-Event * event;
+BuildVisualTree(Widget tree_parent, Event *event)
 {
     WNode * top;
     char msg[BUFSIZ];
@@ -102,9 +100,7 @@ Event * event;
  */
 
 void
-AddTreeNode(tree, top) 
-Widget tree;
-WNode * top;
+AddTreeNode(Widget tree, WNode *top)
 {
     int i;
     Arg args[1];
@@ -146,9 +142,7 @@ WNode * top;
 
 /* ARGSUSED */
 void
-TreeToggle(w, node_ptr, state_ptr)
-Widget w;
-XtPointer node_ptr, state_ptr;
+TreeToggle(Widget w, XtPointer node_ptr, XtPointer state_ptr)
 {
     Boolean state = (Boolean)(long) state_ptr;
     WNode * node = (WNode *) node_ptr;
@@ -166,8 +160,7 @@ XtPointer node_ptr, state_ptr;
  */
 
 static void
-AddNodeToActiveList(node)
-WNode * node;
+AddNodeToActiveList(WNode *node)
 {
     TreeInfo * info = node->tree_info;
 
@@ -191,8 +184,7 @@ WNode * node;
  */
 
 static void
-RemoveNodeFromActiveList(node)
-WNode * node;
+RemoveNodeFromActiveList(WNode *node)
 {
     TreeInfo * info = node->tree_info;
     Boolean found_node = FALSE;
@@ -218,8 +210,7 @@ WNode * node;
  */
 
 static Boolean
-IsActiveNode(node)
-WNode * node;
+IsActiveNode(WNode *node)
 {
     TreeInfo * info = node->tree_info;
     int i;
@@ -238,8 +229,7 @@ WNode * node;
  */
     
 TreeInfo *
-CreateTree(event)
-Event * event;
+CreateTree(Event *event)
 {
     SendWidgetTreeEvent * send_event = (SendWidgetTreeEvent *) event;
     int i;
@@ -268,8 +258,7 @@ Event * event;
  */
 
 void
-PrintNodes(top)
-WNode * top;
+PrintNodes(WNode *top)
 {
     int i;
 
@@ -292,9 +281,7 @@ WNode * top;
  */
 
 void
-_TreeRelabel(tree_info, type)
-TreeInfo * tree_info;
-LabelTypes type;
+_TreeRelabel(TreeInfo *tree_info, LabelTypes type)
 {
     WNode * top;
 
@@ -471,9 +458,7 @@ _TreeRelabelNode(WNode *node, LabelTypes type, Boolean recurse)
  */
 
 void
-_TreeActivateNode(node, type)
-WNode * node;
-SelectTypes type;
+_TreeActivateNode(WNode* node, SelectTypes type)
 {
     Arg args[1];
     int i;
@@ -519,10 +504,7 @@ SelectTypes type;
  */
 
 static void
-AddNode(top_node, info, tree_info)
-WNode ** top_node;
-WidgetTreeInfo * info;
-TreeInfo * tree_info;
+AddNode(WNode **top_node, WidgetTreeInfo *info, TreeInfo *tree_info)
 {
     WNode *node, *parent;
     Boolean early_break = FALSE;
@@ -569,10 +551,7 @@ TreeInfo * tree_info;
  */
 
 static void
-FillNode(info, node, tree_info)
-WidgetTreeInfo * info;
-WNode * node;
-TreeInfo * tree_info;
+FillNode(WidgetTreeInfo *info, WNode *node, TreeInfo *tree_info)
 {
     node->class = info->class;
     info->class = NULL;	/* keeps it from deallocating. */
@@ -590,8 +569,7 @@ TreeInfo * tree_info;
  */
 
 static void
-AddChild(parent, child)
-WNode * parent, * child;
+AddChild(WNode *parent, WNode *child)
 {
     if (parent->num_children >= parent->alloc_children) {
 	parent->alloc_children += NUM_INC;
@@ -618,8 +596,7 @@ WNode * parent, * child;
  */
 
 static WNode ** 
-CopyActiveNodes(tree_info)
-TreeInfo * tree_info;
+CopyActiveNodes(TreeInfo *tree_info)
 {
     WNode ** list;
     int i;
@@ -643,8 +620,7 @@ TreeInfo * tree_info;
  */
 
 void
-SetAndCenterTreeNode(node)
-WNode * node;
+SetAndCenterTreeNode(WNode *node)
 {
     Arg args[5];
     Cardinal num_args;
@@ -700,10 +676,7 @@ WNode * node;
  */
 
 void
-PerformTreeToFileDump(node, num_tabs, fp)
-WNode * node;
-int num_tabs;
-FILE * fp;
+PerformTreeToFileDump(WNode *node, int num_tabs, FILE *fp)
 {
     int i;
 

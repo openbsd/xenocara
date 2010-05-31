@@ -49,8 +49,7 @@ in this Software without prior written authorization from The Open Group.
  */
 
 char *
-PrintSetValuesError(event)
-Event * event;
+PrintSetValuesError(Event *event)
 {
     char * errors = NULL;
     WNode * node;
@@ -86,9 +85,7 @@ Event * event;
  */
 
 char *
-GetResourceValueForSetValues(node, size)
-WNode * node;
-unsigned short * size;
+GetResourceValueForSetValues(WNode *node, unsigned short *size)
 {
     Arg args[1];
     char *ptr, *temp;

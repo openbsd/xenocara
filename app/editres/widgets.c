@@ -136,8 +136,7 @@ static XtResource resources[] = {
 #undef Offset
 
 void 
-RebuildMenusAndLabel(toolkit)
-     String toolkit;
+RebuildMenusAndLabel(String toolkit)
 {
   if (strcmp(global_effective_toolkit, toolkit)) {
     CreateCommandMenu(box, toolkit);
@@ -164,8 +163,7 @@ RebuildMenusAndLabel(toolkit)
  */
 
 void 
-BuildWidgetTree(parent)
-Widget parent;
+BuildWidgetTree(Widget parent)
 {
     Widget paned, porthole, panner;
 
@@ -200,8 +198,7 @@ Widget parent;
 
 
 static Widget
-CreateTopArea(parent)
-Widget parent;
+CreateTopArea(Widget parent)
 {
     Widget panner;
 
@@ -260,9 +257,7 @@ static Boolean CM_set_insensitive = True;
 Widget CM_entries[NUM_CM_ENTRIES];
 
 static void
-CreateCommandMenu(parent, toolkit)
-Widget parent;
-String toolkit;
+CreateCommandMenu(Widget parent, String toolkit)
 {
     Arg args[1];
 
@@ -341,9 +336,7 @@ static Boolean TM_set_insensitive = True;
 Widget TM_entries[NUM_TM_ENTRIES];
 
 static void
-CreateTreeCommandMenu(parent, toolkit)
-Widget parent;
-String toolkit;
+CreateTreeCommandMenu(Widget parent, String toolkit)
 {
     int i, number;
     static struct tree_ops_menu tree_menu[] = {
@@ -422,8 +415,7 @@ static Pixmap old_pixmap;
  */
 
 void
-PrepareToLayoutTree(tree)
-Widget tree;
+PrepareToLayoutTree(Widget tree)
 {
     Arg args[1];
 
@@ -445,8 +437,7 @@ Widget tree;
  */
 
 void
-LayoutTree(tree)
-Widget tree;
+LayoutTree(Widget tree)
 {
     Arg args[1];
     
@@ -475,9 +466,7 @@ Widget tree;
  */
 
 void
-CreateResourceBoxWidgets(node, names, cons_names)
-WNode * node;
-char **names, **cons_names;
+CreateResourceBoxWidgets(WNode *node, char **names, char **cons_names)
 {
     Widget pane, box, button, viewport, pane_child;
     ResourceBoxInfo * res_box;
@@ -553,9 +542,7 @@ char **names, **cons_names;
  */
 
 static void
-CreateResourceNameForm(parent, node)
-Widget parent;
-WNode * node;
+CreateResourceNameForm(Widget parent, WNode *node)
 {
     ResourceBoxInfo * res_box = node->resources->res_box;
     AnyInfo *new_info = NULL, *old_info;
@@ -692,8 +679,7 @@ WNode * node;
  */
 
 static void
-SetToggleGroupLeaders(node)
-WNode * node;
+SetToggleGroupLeaders(WNode *node)
 {
     NameInfo *name;
     ResourceBoxInfo * res_box = node->resources->res_box;
@@ -721,9 +707,8 @@ WNode * node;
  */
  
 static void
-MakeBoxLookNice(dot, star, any, single, name, class, endbox)
-Widget dot, star, any, single, name, class;
-int endbox;
+MakeBoxLookNice(Widget dot, Widget star, Widget any, Widget single,
+		Widget name, Widget class, int endbox)
 {
 
 #define MAX_HDIST 3
@@ -834,10 +819,7 @@ int endbox;
 static char* noneList[] = {"None"};
 
 static void
-CreateLists(parent, node, names, cons_names) 
-Widget parent;
-WNode * node;
-char **names, **cons_names;
+CreateLists(Widget parent, WNode *node, char **names, char **cons_names)
 {
     Widget viewport;
     Cardinal num_args;
@@ -894,9 +876,7 @@ char **names, **cons_names;
  */
 
 static void
-CreateValueWidget(parent, node)
-Widget parent;
-WNode * node;
+CreateValueWidget(Widget parent, WNode *node)
 {
     Widget form, label;
     Cardinal num_args;
@@ -938,12 +918,8 @@ WNode * node;
  *	Returns: none.
  */
 
-extern Atom wm_delete_window;
-
 static void
-PopupOnNode(node, shell)
-WNode * node;
-Widget shell;
+PopupOnNode(WNode *node, Widget shell)
 {
     Arg args[3];
     Cardinal num_args;
@@ -1003,9 +979,7 @@ Widget shell;
 
 /* ARGSUSED */
 static void
-FreeClientData(w, ptr, junk)
-Widget w;
-XtPointer ptr, junk;
+FreeClientData(Widget w, XtPointer ptr, XtPointer junk)
 {
     XtFree(ptr);
 }
@@ -1022,9 +996,7 @@ XtPointer ptr, junk;
 
 /* ARGSUSED */
 static void
-FreeResBox(w, ptr, junk)
-Widget w;
-XtPointer ptr, junk;
+FreeResBox(Widget w, XtPointer ptr, XtPointer junk)
 {
     WNode * node = (WNode *) ptr;
     NameInfo *old_name, *name = node->resources->res_box->name_info;

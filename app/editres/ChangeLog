@@ -1,3 +1,77 @@
+commit aebe52fd87925353c687fbd26c5547410d4b96c1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 20:05:21 2009 -0700
+
+    editres 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e919068b70411167e3f239ad32d1fd4ad2a0c10d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 20:05:04 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 086d2257cc5ad59f1e2aa7362a912e4855edc4be
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 20:04:19 2009 -0700
+
+    Fill in AUTHORS & README
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b86d1b71813cfa582aa28356ee6a2196a67ba8d4
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 12 17:32:36 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and all gcc 4.3 and sparse warnings.
+
+commit 82c17cd232a016f0c552f38453774abfb0bf17fe
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Aug 20 10:32:48 2008 -0400
+
+    xaw8 is gone, use xaw7
+
+commit 332e17ae6ebec0dbb7c13d63dd4758cb2979bcdc
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 16 14:20:03 2008 +0200
+
+    $(builddir) is the current directory
+    
+    Apparently automake doesn't always export the builddir variable.
+    This fixes my previous commit.
+
+commit 3b8c583e5a3d8733419cf5517d22b40f31c93e4c
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 20 19:41:13 2008 +0200
+
+    Fix build with builddir != srcdir
+
+commit a0e6c84ab34146b71c1b52b10452987ba1cc869a
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 20:07:29 2008 -0700
+
+    Build fix for file systems that are not case sensitive
+
+commit 724c09e17dde32d5713388d6e9de0ad3fc004870
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:04 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
+commit 4c6a0418e2499f01a1b2ef06bdec77ef208fe15b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Aug 10 16:16:43 2007 -0700
+
+    Change editres_CFLAGS to AM_CFLAGS to make automake-1.10 happier
+    
+    Makefile.am:27: compiling `actions.c' with per-target flags requires `AM_PROG_CC_C_O' in `configure.ac'
+
 commit 960a84a735daedd7b4df009c46d2f8a751335676
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Jan 23 17:00:54 2007 -0800

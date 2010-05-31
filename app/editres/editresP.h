@@ -315,25 +315,33 @@ typedef union _Event {
 /*
  * Global variables. 
  */
+extern int global_effective_protocol_version;
+extern char* global_effective_toolkit;
+extern int global_error_code;
+extern unsigned long global_serial_num;
+extern int (*global_old_error_handler)(Display *, XErrorEvent *);
+extern Boolean global_resource_box_up;
 
-#ifndef THIS_IS_MAIN
-    extern int global_effective_protocol_version;
-    extern char* global_effective_toolkit;
-    extern int global_error_code;
-    extern unsigned long global_serial_num;
-    extern int (*global_old_error_handler)(Display *, XErrorEvent *);
-    extern Boolean global_resource_box_up;
+extern TreeInfo *global_tree_info;
+extern CurrentClient global_client;
+extern ScreenData global_screen_data;
+extern Widget global_tree_parent;
+extern Widget global_paned;	/* named after toolkit */
+extern Widget global_toplevel;
+extern AppResources global_resources;
 
-    extern TreeInfo *global_tree_info;
-    extern CurrentClient global_client;
-    extern ScreenData global_screen_data;
-    extern Widget global_tree_parent;
-    extern Widget global_paned;	/* named after toolkit */
-    extern Widget global_toplevel;
-    extern AppResources global_resources;
+extern String res_labels[NUM_RES_LABELS];
 
-    extern String res_labels[NUM_RES_LABELS];
-#endif
+extern Boolean do_get_values;
+extern Atom wm_delete_window;
+
+/* number of entries in the command menu */
+#define NUM_CM_ENTRIES 8
+extern Widget CM_entries[NUM_CM_ENTRIES];
+
+/* number of entries in the tree menu */
+#define NUM_TM_ENTRIES 16
+extern Widget TM_entries[NUM_TM_ENTRIES];
 
 /*
  * Macros.
@@ -341,14 +349,10 @@ typedef union _Event {
 
 #define streq(a, b)        ( strcmp((a), (b)) == 0 )
 
-/* number of entries in the command menu */
-#define NUM_CM_ENTRIES 8
 /* offset into CM entries for setting insensitive */
 #define CM_OFFSET 1
 /* number of CM entries to make insensitive */
 #define CM_NUM 5
-/* number of entries in the tree menu */
-#define NUM_TM_ENTRIES 16
 #define TM_OFFSET 0
 #define TM_NUM 16
 

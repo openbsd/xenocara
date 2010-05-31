@@ -61,9 +61,7 @@ static void CancelSetValues ( Widget w, XtPointer junk, XtPointer garbage );
 
 /* ARGSUSED */
 void
-PopupSetValues(parent, event)
-Widget parent;
-XEvent * event;
+PopupSetValues(Widget parent, XEvent *event)
 {
     Arg args[1];
 
@@ -107,11 +105,7 @@ XEvent * event;
 
 /* ARGSUSED */
 void 
-ModifySVEntry(w, event, params, num_params)
-Widget w;
-XEvent *event;
-String * params;
-Cardinal * num_params;
+ModifySVEntry(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     Widget new, old;
     char msg[BUFSIZ];
@@ -156,8 +150,7 @@ Cardinal * num_params;
  */
 
 static void
-_SetField(new, old)
-Widget new, old;
+_SetField(Widget new, Widget old)
 {
     Arg args[2];
     Pixel new_border, old_border, old_bg;
@@ -199,9 +192,7 @@ Widget new, old;
  */
 
 static void
-CreateSetValuesPopup(parent, scr_data)
-Widget parent;
-ScreenData * scr_data;
+CreateSetValuesPopup(Widget parent, ScreenData *scr_data)
 {
     Widget form, cancel, do_it, label;
     Widget res_label;
@@ -286,9 +277,7 @@ ScreenData * scr_data;
 
 /* ARGSUSED */
 static void
-DoSetValues(w, junk, garbage)
-Widget w;
-XtPointer junk, garbage;
+DoSetValues(Widget w, XtPointer junk, XtPointer garbage)
 {
     ProtocolStream * stream = &(global_client.stream);
     char *res_name, *res_value;
@@ -328,9 +317,7 @@ XtPointer junk, garbage;
 
 /* ARGSUSED */
 static void
-CancelSetValues(w, junk, garbage)
-Widget w;
-XtPointer junk, garbage;
+CancelSetValues(Widget w, XtPointer junk, XtPointer garbage)
 {
     XtPopdown(XtParent(XtParent(w))); 
 }

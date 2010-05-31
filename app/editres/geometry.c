@@ -58,8 +58,7 @@ static void FlashWidgetsCleanup ( XtPointer info_ptr, XtIntervalId * id );
  */
 
 void 
-_FindWidget(w)
-Widget w;
+_FindWidget(Widget w)
 {
     char msg[BUFSIZ];
     WNode * node;
@@ -96,8 +95,7 @@ Widget w;
  */
 
 void
-DisplayChild(event)
-Event * event;
+DisplayChild(Event *event)
 {
     FindChildEvent * find_event = (FindChildEvent *) event;
     WNode * node;
@@ -129,8 +127,7 @@ Event * event;
  */
 
 void
-_FlashActiveWidgets(tree_info)
-TreeInfo * tree_info;
+_FlashActiveWidgets(TreeInfo *tree_info)
 {
     int i;
     ProtocolStream * stream = &(global_client.stream);
@@ -166,8 +163,7 @@ TreeInfo * tree_info;
  */
 
 char *
-HandleFlashWidget(event)
-Event * event;
+HandleFlashWidget(Event *event)
 {
     GetGeomEvent * geom_event = (GetGeomEvent *) event;
     char * errors = NULL;
@@ -190,10 +186,7 @@ Event * event;
  */
 
 static void
-AddToFlashList(tree_info, geom_info, errors)
-TreeInfo * tree_info;
-GetGeomInfo * geom_info;
-char ** errors;
+AddToFlashList(TreeInfo *tree_info, GetGeomInfo *geom_info, char **errors)
 {
     WNode * node;
     char buf[BUFSIZ];
@@ -235,12 +228,8 @@ char ** errors;
  */
 
 static void
-_AddToFlashList(tree_info, errors, node, x, y, width, height)
-TreeInfo * tree_info;
-char ** errors;
-WNode * node;
-int x, y;
-unsigned int width, height;
+_AddToFlashList(TreeInfo *tree_info, char **errors, WNode *node,
+		int x, int y, unsigned int width, unsigned int height)
 {
     Display * dpy = XtDisplay(tree_info->tree_widget);
     Window window = (Window) node->window;
@@ -304,10 +293,8 @@ unsigned int width, height;
 #define MORE_FLASH_WIDGETS 5
 
 static void
-CreateFlashWidget(tree_info, x, y, width, height)
-TreeInfo * tree_info;
-int x, y;
-unsigned int width, height;
+CreateFlashWidget(TreeInfo *tree_info, int x, int y,
+		  unsigned int width, unsigned int height)
 {
     Widget shell;
     Arg args[3];
@@ -350,8 +337,7 @@ unsigned int width, height;
  */
 
 static void
-FlashWidgets(tree_info)
-TreeInfo * tree_info;
+FlashWidgets(TreeInfo *tree_info)
 {
     int i;
     unsigned long wait, half_flash;
@@ -383,9 +369,7 @@ TreeInfo * tree_info;
 
 /* ARGSUSED */
 static void
-FlashWidgetsOn(info_ptr, id)
-XtPointer info_ptr;
-XtIntervalId * id;
+FlashWidgetsOn(XtPointer info_ptr, XtIntervalId *id)
 {
 
     int i;
@@ -407,9 +391,7 @@ XtIntervalId * id;
 
 /* ARGSUSED */
 static void
-FlashWidgetsOff(info_ptr, id)
-XtPointer info_ptr;
-XtIntervalId * id;
+FlashWidgetsOff(XtPointer info_ptr, XtIntervalId *id)
 {
     int i;
     TreeInfo * tree_info = (TreeInfo *) info_ptr;
@@ -427,9 +409,7 @@ XtIntervalId * id;
 
 /* ARGSUSED */
 static void
-FlashWidgetsCleanup(info_ptr, id)
-XtPointer info_ptr;
-XtIntervalId * id;
+FlashWidgetsCleanup(XtPointer info_ptr, XtIntervalId *id)
 {
     int i;
     TreeInfo * tree_info = (TreeInfo *) info_ptr;

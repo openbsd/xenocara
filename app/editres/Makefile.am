@@ -21,7 +21,7 @@
 
 bin_PROGRAMS = editres
 
-editres_CFLAGS = $(EDITRES_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(EDITRES_CFLAGS)
 editres_LDADD = $(EDITRES_LIBS)
 
 editres_SOURCES =	\
@@ -42,26 +42,22 @@ appman_PRE = \
 
 # App default files  (*.ad)
 
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+
 appdefaultdir = @appdefaultdir@
 
-APPDEFAULTFILES = \
-        Editres-color \
-        Editres
+dist_appdefault_DATA = \
+        app-defaults/Editres-color \
+        app-defaults/Editres
 
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) ChangeLog autogen.sh
+EXTRA_DIST = ChangeLog autogen.sh
 
-SUFFIXES = .ad 
-
-.ad:
-	cp $< $@
-
-appdefault_DATA = $(APPDEFAULTFILES)
-
-CLEANFILES = $(APPDEFAULTFILES)
 MAINTAINERCLEANFILES=ChangeLog
 
+.PHONY: ChangeLog
+
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 
@@ -70,7 +66,7 @@ appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
+CLEANFILES = $(appman_DATA)
 
 SED = sed
 
@@ -91,7 +87,7 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@

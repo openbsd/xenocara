@@ -59,10 +59,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = editres$(EXEEXT)
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing
+DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
+	ChangeLog INSTALL NEWS config.guess config.sub depcomp \
+	install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -73,15 +74,14 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
-	"$(DESTDIR)$(appmandir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
+	"$(DESTDIR)$(appdefaultdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_editres_OBJECTS = editres-actions.$(OBJEXT) editres-comm.$(OBJEXT) \
-	editres-editres.$(OBJEXT) editres-geometry.$(OBJEXT) \
-	editres-handler.$(OBJEXT) editres-setvalues.$(OBJEXT) \
-	editres-svpopup.$(OBJEXT) editres-utils.$(OBJEXT) \
-	editres-widgets.$(OBJEXT) editres-wtree.$(OBJEXT)
+am_editres_OBJECTS = actions.$(OBJEXT) comm.$(OBJEXT) \
+	editres.$(OBJEXT) geometry.$(OBJEXT) handler.$(OBJEXT) \
+	setvalues.$(OBJEXT) svpopup.$(OBJEXT) utils.$(OBJEXT) \
+	widgets.$(OBJEXT) wtree.$(OBJEXT)
 editres_OBJECTS = $(am_editres_OBJECTS)
 am__DEPENDENCIES_1 =
 editres_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -100,9 +100,9 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-appdefaultDATA_INSTALL = $(INSTALL_DATA)
 appmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appdefault_DATA) $(appman_DATA)
+dist_appdefaultDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(appman_DATA) $(dist_appdefault_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -115,7 +115,6 @@ am__remove_distdir = \
 DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
-distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
@@ -133,7 +132,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -144,9 +146,11 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EDITRES_CFLAGS = @EDITRES_CFLAGS@
 EDITRES_LIBS = @EDITRES_LIBS@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -175,14 +179,10 @@ PKG_CONFIG = @PKG_CONFIG@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-TMP_XAW_CFLAGS = @TMP_XAW_CFLAGS@
-TMP_XAW_LIBS = @TMP_XAW_LIBS@
 VERSION = @VERSION@
-XAW_USE_XPRINT_FALSE = @XAW_USE_XPRINT_FALSE@
-XAW_USE_XPRINT_TRUE = @XAW_USE_XPRINT_TRUE@
+XAW_CFLAGS = @XAW_CFLAGS@
+XAW_LIBS = @XAW_LIBS@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__include = @am__include@
@@ -190,8 +190,6 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
-
-# App default files  (*.ad)
 appdefaultdir = @appdefaultdir@
 bindir = @bindir@
 build = @build@
@@ -200,28 +198,36 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+distcleancheck_listfiles = @distcleancheck_listfiles@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-editres_CFLAGS = $(EDITRES_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(EDITRES_CFLAGS)
 editres_LDADD = $(EDITRES_LIBS)
 editres_SOURCES = \
         actions.c \
@@ -239,18 +245,18 @@ editres_SOURCES = \
 appman_PRE = \
         editres.man
 
-APPDEFAULTFILES = \
-        Editres-color \
-        Editres
 
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) ChangeLog autogen.sh \
-	$(appman_PRE)
-SUFFIXES = .ad .$(APP_MAN_SUFFIX) .man
-appdefault_DATA = $(APPDEFAULTFILES)
-CLEANFILES = $(APPDEFAULTFILES) $(appman_DATA)
+# App default files  (*.ad)
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+dist_appdefault_DATA = \
+        app-defaults/Editres-color \
+        app-defaults/Editres
+
+EXTRA_DIST = ChangeLog autogen.sh $(appman_PRE)
 MAINTAINERCLEANFILES = ChangeLog
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
+CLEANFILES = $(appman_DATA)
 SED = sed
 
 # Strings to replace in man pages
@@ -269,11 +275,12 @@ MAN_SUBSTS = \
 	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
 	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .ad .$(APP_MAN_SUFFIX) .man .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -357,16 +364,16 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-actions.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-comm.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-editres.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-geometry.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-handler.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-setvalues.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-svpopup.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-utils.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-widgets.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres-wtree.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/actions.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/comm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/editres.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/geometry.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/handler.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setvalues.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/svpopup.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/widgets.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wtree.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -381,164 +388,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-editres-actions.o: actions.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-actions.o -MD -MP -MF "$(DEPDIR)/editres-actions.Tpo" -c -o editres-actions.o `test -f 'actions.c' || echo '$(srcdir)/'`actions.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-actions.Tpo" "$(DEPDIR)/editres-actions.Po"; else rm -f "$(DEPDIR)/editres-actions.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='actions.c' object='editres-actions.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-actions.o `test -f 'actions.c' || echo '$(srcdir)/'`actions.c
-
-editres-actions.obj: actions.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-actions.obj -MD -MP -MF "$(DEPDIR)/editres-actions.Tpo" -c -o editres-actions.obj `if test -f 'actions.c'; then $(CYGPATH_W) 'actions.c'; else $(CYGPATH_W) '$(srcdir)/actions.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-actions.Tpo" "$(DEPDIR)/editres-actions.Po"; else rm -f "$(DEPDIR)/editres-actions.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='actions.c' object='editres-actions.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-actions.obj `if test -f 'actions.c'; then $(CYGPATH_W) 'actions.c'; else $(CYGPATH_W) '$(srcdir)/actions.c'; fi`
-
-editres-comm.o: comm.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-comm.o -MD -MP -MF "$(DEPDIR)/editres-comm.Tpo" -c -o editres-comm.o `test -f 'comm.c' || echo '$(srcdir)/'`comm.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-comm.Tpo" "$(DEPDIR)/editres-comm.Po"; else rm -f "$(DEPDIR)/editres-comm.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='comm.c' object='editres-comm.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-comm.o `test -f 'comm.c' || echo '$(srcdir)/'`comm.c
-
-editres-comm.obj: comm.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-comm.obj -MD -MP -MF "$(DEPDIR)/editres-comm.Tpo" -c -o editres-comm.obj `if test -f 'comm.c'; then $(CYGPATH_W) 'comm.c'; else $(CYGPATH_W) '$(srcdir)/comm.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-comm.Tpo" "$(DEPDIR)/editres-comm.Po"; else rm -f "$(DEPDIR)/editres-comm.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='comm.c' object='editres-comm.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-comm.obj `if test -f 'comm.c'; then $(CYGPATH_W) 'comm.c'; else $(CYGPATH_W) '$(srcdir)/comm.c'; fi`
-
-editres-editres.o: editres.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-editres.o -MD -MP -MF "$(DEPDIR)/editres-editres.Tpo" -c -o editres-editres.o `test -f 'editres.c' || echo '$(srcdir)/'`editres.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-editres.Tpo" "$(DEPDIR)/editres-editres.Po"; else rm -f "$(DEPDIR)/editres-editres.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='editres.c' object='editres-editres.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-editres.o `test -f 'editres.c' || echo '$(srcdir)/'`editres.c
-
-editres-editres.obj: editres.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-editres.obj -MD -MP -MF "$(DEPDIR)/editres-editres.Tpo" -c -o editres-editres.obj `if test -f 'editres.c'; then $(CYGPATH_W) 'editres.c'; else $(CYGPATH_W) '$(srcdir)/editres.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-editres.Tpo" "$(DEPDIR)/editres-editres.Po"; else rm -f "$(DEPDIR)/editres-editres.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='editres.c' object='editres-editres.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-editres.obj `if test -f 'editres.c'; then $(CYGPATH_W) 'editres.c'; else $(CYGPATH_W) '$(srcdir)/editres.c'; fi`
-
-editres-geometry.o: geometry.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-geometry.o -MD -MP -MF "$(DEPDIR)/editres-geometry.Tpo" -c -o editres-geometry.o `test -f 'geometry.c' || echo '$(srcdir)/'`geometry.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-geometry.Tpo" "$(DEPDIR)/editres-geometry.Po"; else rm -f "$(DEPDIR)/editres-geometry.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='geometry.c' object='editres-geometry.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-geometry.o `test -f 'geometry.c' || echo '$(srcdir)/'`geometry.c
-
-editres-geometry.obj: geometry.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-geometry.obj -MD -MP -MF "$(DEPDIR)/editres-geometry.Tpo" -c -o editres-geometry.obj `if test -f 'geometry.c'; then $(CYGPATH_W) 'geometry.c'; else $(CYGPATH_W) '$(srcdir)/geometry.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-geometry.Tpo" "$(DEPDIR)/editres-geometry.Po"; else rm -f "$(DEPDIR)/editres-geometry.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='geometry.c' object='editres-geometry.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-geometry.obj `if test -f 'geometry.c'; then $(CYGPATH_W) 'geometry.c'; else $(CYGPATH_W) '$(srcdir)/geometry.c'; fi`
-
-editres-handler.o: handler.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-handler.o -MD -MP -MF "$(DEPDIR)/editres-handler.Tpo" -c -o editres-handler.o `test -f 'handler.c' || echo '$(srcdir)/'`handler.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-handler.Tpo" "$(DEPDIR)/editres-handler.Po"; else rm -f "$(DEPDIR)/editres-handler.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='handler.c' object='editres-handler.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-handler.o `test -f 'handler.c' || echo '$(srcdir)/'`handler.c
-
-editres-handler.obj: handler.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-handler.obj -MD -MP -MF "$(DEPDIR)/editres-handler.Tpo" -c -o editres-handler.obj `if test -f 'handler.c'; then $(CYGPATH_W) 'handler.c'; else $(CYGPATH_W) '$(srcdir)/handler.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-handler.Tpo" "$(DEPDIR)/editres-handler.Po"; else rm -f "$(DEPDIR)/editres-handler.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='handler.c' object='editres-handler.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-handler.obj `if test -f 'handler.c'; then $(CYGPATH_W) 'handler.c'; else $(CYGPATH_W) '$(srcdir)/handler.c'; fi`
-
-editres-setvalues.o: setvalues.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-setvalues.o -MD -MP -MF "$(DEPDIR)/editres-setvalues.Tpo" -c -o editres-setvalues.o `test -f 'setvalues.c' || echo '$(srcdir)/'`setvalues.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-setvalues.Tpo" "$(DEPDIR)/editres-setvalues.Po"; else rm -f "$(DEPDIR)/editres-setvalues.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='setvalues.c' object='editres-setvalues.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-setvalues.o `test -f 'setvalues.c' || echo '$(srcdir)/'`setvalues.c
-
-editres-setvalues.obj: setvalues.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-setvalues.obj -MD -MP -MF "$(DEPDIR)/editres-setvalues.Tpo" -c -o editres-setvalues.obj `if test -f 'setvalues.c'; then $(CYGPATH_W) 'setvalues.c'; else $(CYGPATH_W) '$(srcdir)/setvalues.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-setvalues.Tpo" "$(DEPDIR)/editres-setvalues.Po"; else rm -f "$(DEPDIR)/editres-setvalues.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='setvalues.c' object='editres-setvalues.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-setvalues.obj `if test -f 'setvalues.c'; then $(CYGPATH_W) 'setvalues.c'; else $(CYGPATH_W) '$(srcdir)/setvalues.c'; fi`
-
-editres-svpopup.o: svpopup.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-svpopup.o -MD -MP -MF "$(DEPDIR)/editres-svpopup.Tpo" -c -o editres-svpopup.o `test -f 'svpopup.c' || echo '$(srcdir)/'`svpopup.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-svpopup.Tpo" "$(DEPDIR)/editres-svpopup.Po"; else rm -f "$(DEPDIR)/editres-svpopup.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='svpopup.c' object='editres-svpopup.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-svpopup.o `test -f 'svpopup.c' || echo '$(srcdir)/'`svpopup.c
-
-editres-svpopup.obj: svpopup.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-svpopup.obj -MD -MP -MF "$(DEPDIR)/editres-svpopup.Tpo" -c -o editres-svpopup.obj `if test -f 'svpopup.c'; then $(CYGPATH_W) 'svpopup.c'; else $(CYGPATH_W) '$(srcdir)/svpopup.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-svpopup.Tpo" "$(DEPDIR)/editres-svpopup.Po"; else rm -f "$(DEPDIR)/editres-svpopup.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='svpopup.c' object='editres-svpopup.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-svpopup.obj `if test -f 'svpopup.c'; then $(CYGPATH_W) 'svpopup.c'; else $(CYGPATH_W) '$(srcdir)/svpopup.c'; fi`
-
-editres-utils.o: utils.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-utils.o -MD -MP -MF "$(DEPDIR)/editres-utils.Tpo" -c -o editres-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-utils.Tpo" "$(DEPDIR)/editres-utils.Po"; else rm -f "$(DEPDIR)/editres-utils.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='editres-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-editres-utils.obj: utils.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-utils.obj -MD -MP -MF "$(DEPDIR)/editres-utils.Tpo" -c -o editres-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-utils.Tpo" "$(DEPDIR)/editres-utils.Po"; else rm -f "$(DEPDIR)/editres-utils.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='utils.c' object='editres-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-
-editres-widgets.o: widgets.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-widgets.o -MD -MP -MF "$(DEPDIR)/editres-widgets.Tpo" -c -o editres-widgets.o `test -f 'widgets.c' || echo '$(srcdir)/'`widgets.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-widgets.Tpo" "$(DEPDIR)/editres-widgets.Po"; else rm -f "$(DEPDIR)/editres-widgets.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='widgets.c' object='editres-widgets.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-widgets.o `test -f 'widgets.c' || echo '$(srcdir)/'`widgets.c
-
-editres-widgets.obj: widgets.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-widgets.obj -MD -MP -MF "$(DEPDIR)/editres-widgets.Tpo" -c -o editres-widgets.obj `if test -f 'widgets.c'; then $(CYGPATH_W) 'widgets.c'; else $(CYGPATH_W) '$(srcdir)/widgets.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-widgets.Tpo" "$(DEPDIR)/editres-widgets.Po"; else rm -f "$(DEPDIR)/editres-widgets.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='widgets.c' object='editres-widgets.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-widgets.obj `if test -f 'widgets.c'; then $(CYGPATH_W) 'widgets.c'; else $(CYGPATH_W) '$(srcdir)/widgets.c'; fi`
-
-editres-wtree.o: wtree.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-wtree.o -MD -MP -MF "$(DEPDIR)/editres-wtree.Tpo" -c -o editres-wtree.o `test -f 'wtree.c' || echo '$(srcdir)/'`wtree.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-wtree.Tpo" "$(DEPDIR)/editres-wtree.Po"; else rm -f "$(DEPDIR)/editres-wtree.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wtree.c' object='editres-wtree.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-wtree.o `test -f 'wtree.c' || echo '$(srcdir)/'`wtree.c
-
-editres-wtree.obj: wtree.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -MT editres-wtree.obj -MD -MP -MF "$(DEPDIR)/editres-wtree.Tpo" -c -o editres-wtree.obj `if test -f 'wtree.c'; then $(CYGPATH_W) 'wtree.c'; else $(CYGPATH_W) '$(srcdir)/wtree.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/editres-wtree.Tpo" "$(DEPDIR)/editres-wtree.Po"; else rm -f "$(DEPDIR)/editres-wtree.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='wtree.c' object='editres-wtree.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(editres_CFLAGS) $(CFLAGS) -c -o editres-wtree.obj `if test -f 'wtree.c'; then $(CYGPATH_W) 'wtree.c'; else $(CYGPATH_W) '$(srcdir)/wtree.c'; fi`
 uninstall-info-am:
-install-appdefaultDATA: $(appdefault_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  $(appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
-
-uninstall-appdefaultDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
@@ -555,6 +405,23 @@ uninstall-appmanDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+install-dist_appdefaultDATA: $(dist_appdefault_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  $(dist_appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
+	done
+
+uninstall-dist_appdefaultDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -608,6 +475,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkdir_p) $(distdir)/app-defaults
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -738,7 +606,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(appmandir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(appdefaultdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -788,7 +656,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appdefaultDATA install-appmanDATA
+install-data-am: install-appmanDATA install-dist_appdefaultDATA
 
 install-exec-am: install-binPROGRAMS
 
@@ -817,8 +685,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am
+uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-dist_appdefaultDATA uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
@@ -826,21 +694,21 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-appdefaultDATA install-appmanDATA install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am
+	install-appmanDATA install-binPROGRAMS install-data \
+	install-data-am install-dist_appdefaultDATA install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-appmanDATA \
+	uninstall-binPROGRAMS uninstall-dist_appdefaultDATA \
+	uninstall-info-am
 
 
-.ad:
-	cp $< $@
+.PHONY: ChangeLog
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
 

@@ -65,7 +65,7 @@ AppResources global_resources;
 
 static void Syntax ( XtAppContext app_con, char *call );
 
-String fallback_resources[] = { 
+static String fallback_resources[] = { 
     NULL,
 };
 
@@ -87,9 +87,7 @@ static XtResource editres_resources[] = {
 Atom wm_delete_window;
 
 int
-main(argc, argv)
-int argc;
-char **argv;
+main(int argc, char **argv)
 {
     XtAppContext app_con;
 
@@ -140,9 +138,7 @@ char **argv;
  */
 
 static void 
-Syntax(app_con, call)
-XtAppContext app_con;
-char *call;
+Syntax(XtAppContext app_con, char *call)
 {
     XtDestroyApplicationContext(app_con);
     fprintf(stderr, "Usage: %s\n", call);
