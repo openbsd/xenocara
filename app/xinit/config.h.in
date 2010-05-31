@@ -48,6 +48,9 @@
 /* Define to 1 if `vfork' works. */
 #undef HAVE_WORKING_VFORK
 
+/* Prefix to use for launchd identifiers */
+#undef LAUNCHD_ID_PREFIX
+
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
 
@@ -86,9 +89,6 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Define if you have Xorg X server */
-#undef XORG
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t

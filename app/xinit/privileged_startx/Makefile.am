@@ -34,7 +34,7 @@ xinitrc_PROGRAMS = privileged_startx
 privstartx_SCRIPTS = 10-tmpdirs 20-font_cache
 
 AM_CPPFLAGS = -DXINITDIR=\"$(xinitrcdir)\" -DSCRIPTDIR=\"$(privstartxdir)\" -DBINDIR=\"$(bindir)\"
-CPP_FILES_FLAGS = -DXINITDIR="$(xinitrcdir)" -DSCRIPTDIR="$(privstartxdir)" -DBINDIR="$(bindir)"
+CPP_FILES_FLAGS = -DXINITDIR="$(xinitrcdir)" -DSCRIPTDIR="$(privstartxdir)" -DBINDIR="$(bindir)" -DLAUNCHD_ID_PREFIX="$(launchdidprefix)"
 
 if TIGER_LAUNCHD
 CPP_FILES_FLAGS += -DTIGER_LAUNCHD
@@ -55,7 +55,10 @@ BUILT_SOURCES = \
 	privileged_startxServer.h \
 	privileged_startx.h
 
-launchdaemons_PRE = org.x.privileged_startx.plist.cpp
+$(launchdidprefix).privileged_startx.plist.cpp: org.x.privileged_startx.plist.cpp  
+	cp $< $@
+
+launchdaemons_PRE = $(launchdidprefix).privileged_startx.plist.cpp
 launchdaemons_DATA = $(launchdaemons_PRE:plist.cpp=plist)
 
 10-tmpdirs: 10-tmpdirs.cpp Makefile

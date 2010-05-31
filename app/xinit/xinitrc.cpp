@@ -1,6 +1,5 @@
 XCOMM!SHELL_CMD
-XCOMM $Xorg: xinitrc.cpp,v 1.3 2000/08/17 19:54:30 cpqbld Exp $
-XCOMM $OpenBSD: xinitrc.cpp,v 1.4 2008/06/18 20:31:51 matthieu Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.5 2010/05/31 20:23:19 matthieu Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap

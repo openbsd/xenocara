@@ -1,6 +1,5 @@
 /* OS/2 REXX */
-/* $XFree86: xc/programs/xinit/startx.cmd,v 3.3 1996/10/17 15:23:47 dawes Exp $
- * 
+/*
  * This is just a sample implementation of a slightly less primitive 
  * interface than xinit.  It looks for user xinitrc.cmd and xservrc.cmd
  * files, then system xinitrc.cmd and xservrc.cmd files, else lets xinit choose

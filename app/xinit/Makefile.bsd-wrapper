@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2006/11/29 12:16:07 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2010/05/31 20:23:19 matthieu Exp $
 
-CONFIGURE_ARGS= --datadir=/etc
+CONFIGURE_ARGS= --with-xinitdir=/etc/X11/xinit
 
 .include <bsd.xorg.mk>

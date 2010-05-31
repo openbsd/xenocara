@@ -19,12 +19,11 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
-XINITDIR = $(datadir)/X11/xinit
-
 bin_PROGRAMS = xinit
 bin_SCRIPTS = startx
 
-xinit_CFLAGS = $(XINIT_CFLAGS) -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
+AM_CFLAGS = $(CWARNFLAGS) $(XINIT_CFLAGS)
+AM_CPPFLAGS = -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
 xinit_LDADD = $(XINIT_LIBS)
 
 xinit_SOURCES =	\
@@ -58,10 +57,14 @@ CPP_FILES_FLAGS = \
 	-DXINITDIR=$(XINITDIR) $(PROGCPPDEFS) -DLIBDIR=$(libdir) \
 	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS) \
 	-D__libexecdir__="$(libexecdir)" \
-	-D__bindir__="$(bindir)"
+	-D__bindir__="$(bindir)" \
+	-DLAUNCHD_ID_PREFIX="$(launchdidprefix)"
 
 if LAUNCHD
-launchagents_PRE = org.x.startx.plist.cpp
+$(launchdidprefix).startx.plist.cpp: org.x.startx.plist.cpp
+	cp $< $@
+
+launchagents_PRE = $(launchdidprefix).startx.plist.cpp
 launchagents_DATA = $(launchagents_PRE:plist.cpp=plist)
 
 SUBDIRS = privileged_startx
@@ -71,14 +74,18 @@ DIST_SUBDIRS = privileged_startx
 
 xinitrc_DATA = xinitrc
 
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)
 
 EXTRA_DIST = xinitrc.cpp startx.cpp org.x.startx.plist.cpp $(appman_PRE)	\
-		startx.cmd xinitrc.cmd xinit.def ChangeLog autogen.sh
+		startx.cmd xinitrc.cmd xinit.def autogen.sh
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

@@ -87,7 +87,7 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(xinitrcdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xinit_OBJECTS = xinit-xinit.$(OBJEXT)
+am_xinit_OBJECTS = xinit.$(OBJEXT)
 xinit_OBJECTS = $(am_xinit_OBJECTS)
 am__DEPENDENCIES_1 =
 xinit_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -137,6 +137,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 ARCHMANDEFS = @ARCHMANDEFS@
@@ -147,8 +148,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -162,6 +165,7 @@ EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -179,6 +183,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
 MCOOKIE = @MCOOKIE@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
@@ -206,13 +211,18 @@ VERSION = @VERSION@
 WM = @WM@
 XAUTH = @XAUTH@
 XCLOCK = @XCLOCK@
+XCONFIGFILE = @XCONFIGFILE@
+XCONFIGFILEMAN = @XCONFIGFILEMAN@
 XCONSOLE = @XCONSOLE@
 XINIT = @XINIT@
+XINITDIR = @XINITDIR@
 XINIT_CFLAGS = @XINIT_CFLAGS@
 XINIT_LIBS = @XINIT_LIBS@
 XMODMAP = @XMODMAP@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XRDB = @XRDB@
 XSERVER = @XSERVER@
+XSERVERNAME = @XSERVERNAME@
 XTERM = @XTERM@
 ac_ct_CC = @ac_ct_CC@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
@@ -244,6 +254,7 @@ infodir = @infodir@
 install_sh = @install_sh@
 launchagentsdir = @launchagentsdir@
 launchdaemonsdir = @launchdaemonsdir@
+launchdidprefix = @launchdidprefix@
 libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
@@ -259,9 +270,9 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-XINITDIR = $(datadir)/X11/xinit
 bin_SCRIPTS = startx
-xinit_CFLAGS = $(XINIT_CFLAGS) -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
+AM_CFLAGS = $(CWARNFLAGS) $(XINIT_CFLAGS)
+AM_CPPFLAGS = -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
 xinit_LDADD = $(XINIT_LIBS)
 xinit_SOURCES = \
         xinit.c
@@ -290,7 +301,9 @@ MANDEFS = \
 	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
 	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
 	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
-	-D__XSERVERNAME__=Xorg -D__XCONFIGFILE__=xorg.conf \
+	-D__XSERVERNAME__='$(XSERVERNAME)' \
+	-D__XCONFIGFILE__='$(XCONFIGFILE)' \
+	-D__XCONFIGFILEMAN__='$(XCONFIGFILEMAN)' \
 	-D__xinitdir__=$(XINITDIR) \
 	-D__bindir__=$(bindir) \
 	-DSHELL_CMD=$(SHELL_CMD) $(ARCHMANDEFS)
@@ -313,16 +326,18 @@ CPP_FILES_FLAGS = \
 	-DXINITDIR=$(XINITDIR) $(PROGCPPDEFS) -DLIBDIR=$(libdir) \
 	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS) \
 	-D__libexecdir__="$(libexecdir)" \
-	-D__bindir__="$(bindir)"
+	-D__bindir__="$(bindir)" \
+	-DLAUNCHD_ID_PREFIX="$(launchdidprefix)"
 
-@LAUNCHD_TRUE@launchagents_PRE = org.x.startx.plist.cpp
+@LAUNCHD_TRUE@launchagents_PRE = $(launchdidprefix).startx.plist.cpp
 @LAUNCHD_TRUE@launchagents_DATA = $(launchagents_PRE:plist.cpp=plist)
 @LAUNCHD_TRUE@SUBDIRS = privileged_startx
 DIST_SUBDIRS = privileged_startx
 xinitrc_DATA = xinitrc
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)
 EXTRA_DIST = xinitrc.cpp startx.cpp org.x.startx.plist.cpp $(appman_PRE)	\
-		startx.cmd xinitrc.cmd xinit.def ChangeLog autogen.sh
+		startx.cmd xinitrc.cmd xinit.def autogen.sh
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -335,15 +350,15 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu '; \
-	      cd $(srcdir) && $(AUTOMAKE) --gnu  \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
+	      cd $(srcdir) && $(AUTOMAKE) --foreign  \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  Makefile
+	  $(AUTOMAKE) --foreign  Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -431,7 +446,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xinit-xinit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xinit.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -446,20 +461,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xinit-xinit.o: xinit.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xinit_CFLAGS) $(CFLAGS) -MT xinit-xinit.o -MD -MP -MF "$(DEPDIR)/xinit-xinit.Tpo" -c -o xinit-xinit.o `test -f 'xinit.c' || echo '$(srcdir)/'`xinit.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xinit-xinit.Tpo" "$(DEPDIR)/xinit-xinit.Po"; else rm -f "$(DEPDIR)/xinit-xinit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xinit.c' object='xinit-xinit.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xinit_CFLAGS) $(CFLAGS) -c -o xinit-xinit.o `test -f 'xinit.c' || echo '$(srcdir)/'`xinit.c
-
-xinit-xinit.obj: xinit.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xinit_CFLAGS) $(CFLAGS) -MT xinit-xinit.obj -MD -MP -MF "$(DEPDIR)/xinit-xinit.Tpo" -c -o xinit-xinit.obj `if test -f 'xinit.c'; then $(CYGPATH_W) 'xinit.c'; else $(CYGPATH_W) '$(srcdir)/xinit.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xinit-xinit.Tpo" "$(DEPDIR)/xinit-xinit.Po"; else rm -f "$(DEPDIR)/xinit-xinit.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xinit.c' object='xinit-xinit.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xinit_CFLAGS) $(CFLAGS) -c -o xinit-xinit.obj `if test -f 'xinit.c'; then $(CYGPATH_W) 'xinit.c'; else $(CYGPATH_W) '$(srcdir)/xinit.c'; fi`
 uninstall-info-am:
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
@@ -822,6 +823,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -901,17 +903,23 @@ uninstall-info: uninstall-info-recursive
 
 
 .cpp:
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .man.$(APP_MAN_SUFFIX):
-	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
 
-.PHONY: ChangeLog
+@LAUNCHD_TRUE@$(launchdidprefix).startx.plist.cpp: org.x.startx.plist.cpp
+@LAUNCHD_TRUE@	cp $< $@
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

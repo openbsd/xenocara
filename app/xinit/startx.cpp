@@ -1,6 +1,5 @@
 XCOMM!SHELL_CMD
 
-XCOMM $Xorg: startx.cpp,v 1.3 2000/08/17 19:54:29 cpqbld Exp $
 XCOMM
 XCOMM This is just a sample implementation of a slightly less primitive
 XCOMM interface than xinit.  It looks for user .xinitrc and .xserverrc
@@ -11,7 +10,6 @@ XCOMM and pop a clock and serveral xterms.
 XCOMM
 XCOMM Site administrators are STRONGLY urged to write nicer versions.
 XCOMM
-XCOMM $XFree86: xc/programs/xinit/startx.cpp,v 3.16tsi Exp $
 
 unset DBUS_SESSION_BUS_ADDRESS
 unset SESSION_MANAGER
@@ -85,7 +83,7 @@ serverargs=""
 #ifdef __APPLE__
 
 if [ "x$X11_PREFS_DOMAIN" = x ] ; then
-    X11_PREFS_DOMAIN="org.x.X11"
+    export X11_PREFS_DOMAIN=LAUNCHD_ID_PREFIX".X11"
 fi
 
 XCOMM Initialize defaults (this will cut down on "safe" error messages)
@@ -162,13 +160,13 @@ while [ x"$1" != x ]; do
     XCOMM '' required to prevent cpp from treating "/*" as a C comment.
     /''*|\./''*)
 	if [ "$whoseargs" = "client" ]; then
-	    if [ x"$clientargs" = x ]; then
+	    if [ x"$client" = x ] && [ x"$clientargs" = x ]; then
 		client="$1"
 	    else
 		clientargs="$clientargs $1"
 	    fi
 	else
-	    if [ x"$serverargs" = x ]; then
+	    if [ x"$server" = x ] && [ x"$serverargs" = x ]; then
 		server="$1"
 	    else
 		serverargs="$serverargs $1"
@@ -279,8 +277,8 @@ if [ x"$enable_xauth" = x1 ] ; then
     xauth -q -f "$xserverauthfile" << EOF
 add :$dummy . $mcookie
 EOF
-#ifdef __APPLE__
-    serverargs=${serverargs}" -auth '"${xserverauthfile}"'"
+#if defined(__APPLE__) || defined(__CYGWIN__)
+    serverargs=${serverargs}" -auth '"${xserverauthfile//\'/\'\\\'\'}"'"
 #else
     serverargs=${serverargs}" -auth "${xserverauthfile}
 #endif
@@ -313,13 +311,14 @@ else
 fi
 #else
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__CYGWIN__)
 eval XINIT \"$client\" $clientargs -- \"$server\" $display $serverargs
 #else
 XINIT "$client" $clientargs -- "$server" $display $serverargs
 #endif
 
 #endif
+retval=$?
 
 if [ x"$enable_xauth" = x1 ] ; then
     if [ x"$removelist" != x ]; then
@@ -347,3 +346,6 @@ screenrestore
 #if defined(sun)
 kbd_mode -a
 #endif
+
+exit $retval
+

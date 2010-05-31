@@ -1,7 +1,4 @@
 /* $Xorg: xinit.c,v 1.5 2001/02/09 02:05:49 xorgcvs Exp $ */
-/* $XdotOrg: xc/programs/xinit/xinit.c,v 1.4 2005/10/04 01:27:34 ajax Exp $ */
-/* $OpenBSD: xinit.c,v 1.7 2009/05/03 13:17:37 matthieu Exp $ */
-
 /*
 
 Copyright 1986, 1998  The Open Group
@@ -27,7 +24,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xinit/xinit.c,v 3.32 2002/05/31 18:46:13 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -63,7 +59,7 @@ in this Software without prior written authorization from The Open Group.
 
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 #include <vproc.h>
 #endif
 #endif
@@ -103,12 +99,6 @@ char **newenvironlast = NULL;
 # endif
 #endif
 
-/* A/UX setpgid incorrectly removes the controlling terminal.
-   Per Posix, only setsid should do that. */
-#ifdef macII
-#define setpgid setpgrp
-#endif
-
 #ifdef __UNIXOS2__
 #define HAS_EXECVPE
 #endif
@@ -121,36 +111,21 @@ char **newenvironlast = NULL;
 
 const char *bindir = BINDIR;
 const char * const server_names[] = {
-#if defined(ultrix) && defined(mips)
-    "Xdec        Digital color display on DECstation",
-#endif
-#if defined(sun) && !defined(XORG)	/* Sun */
-    "Xsun        Sun BW2, CG2, CG3, CG4, or CG6 on Sun 2, 3, 4, or 386i",
-    "Xsunmono    Sun BW2 on Sun 2, 3, 4, or 386i ",
-    "Xsun24      Sun BW2, CG2, CG3, CG4, CG6, or CG8 on Sun 4",
-#endif
-#ifdef hpux				/* HP */
-    "Xhp         HP monochrome and colors displays on 9000/300 series",
-#endif
-#ifdef ibm				/* IBM */
-    "Xibm        IBM AED, APA, 8514a, megapel, VGA displays on PC/RT",
-#endif
-#ifdef macII				/* MacII */
-    "XmacII      Apple monochrome display on Macintosh II",
-#endif
-#ifdef XFREE86
-    "XFree86     XFree86 displays",
-#endif
-#ifdef XORG
-    "Xorg        Common X server for most displays",
-#endif
 #ifdef __APPLE__
     "Xquartz     Mac OSX Quartz displays.",
+#else
+# ifdef __CYGWIN__
+    "XWin        X Server for the Cygwin environment on Microsoft Windows",
+# else
+    "Xorg        Common X server for most displays",
+# endif
 #endif
     "Xvfb        Virtual frame buffer",
     "Xfake       kdrive-based virtual frame buffer",
     "Xnest       X server nested in a window on another X server",
     "Xephyr      kdrive-based nested X server",
+    "Xvnc        X server accessed over VNC's RFB protocol",
+    "Xdmx        Distributed Multi-head X server",
     NULL};
 
 #ifndef XINITRC
@@ -259,7 +234,7 @@ main(int argc, char *argv[], char *envp[])
 	int start_of_client_args, start_of_server_args;
 	struct sigaction sa;
 #ifdef __APPLE__
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 	vproc_transaction_t vt;
 #endif
 #endif
@@ -299,15 +274,6 @@ main(int argc, char *argv[], char *envp[])
 #endif
 		for (ptr = default_client; *ptr; )
 			*cptr++ = *ptr++;
-#ifdef sun
-		/* 
-		 * If running on a sun, and if WINDOW_PARENT isn't defined, 
-		 * that means SunWindows isn't running, so we should pass 
-		 * the -C flag to xterm so that it sets up a console.
-		 */
-		if ( getenv("WINDOW_PARENT") == NULL )
-		    *cptr++ = "-C";
-#endif /* sun */
 	} else {
 		client_given = 1;
 	}
@@ -441,7 +407,7 @@ main(int argc, char *argv[], char *envp[])
 	signal(SIGUSR1, sigUsr1);
 
 #ifdef __APPLE__
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 	vt = vproc_transaction_begin(NULL);
 #endif
 #endif
@@ -456,7 +422,7 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 #ifdef __APPLE__
-#if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 	vproc_transaction_end(NULL, vt);
 #endif
 #endif

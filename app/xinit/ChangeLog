@@ -1,3 +1,262 @@
+commit eb541d73b35716e1deaccc3c328473e04a5ef024
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Mon Mar 15 15:41:48 2010 -0700
+
+    Update to version 1.2.1 for release.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit 17b65f4420a958c577fd17d91f332465cf9fbfa5
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Mon Mar 15 15:39:06 2010 -0700
+
+    Updates for .gitignore
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit 3d82396b95bff8ed6028e36cf3aed1f1189ba909
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Mar 11 16:09:35 2010 -0800
+
+    darwin: Handle home directories that contain a single-quote (')
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ad11d954cf296f2bfbe25ad483459c8485197dd1
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Mar 11 10:24:11 2010 -0800
+
+    Quiet warning for fts_open
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b61c4977d96fbaabdfb8213d2b9cc2e1416952f1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 9d15780beb5db0d39cc34ef2d9f3157fa5a81e57
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit f60d8d7272efb6da4fd91df9675d9281e4230d9f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit b748221cf9e7df8b0b460f13f4ad0a86ff7f1b6d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 16:23:27 2009 -0400
+
+    Makefile.am: do not include autogen.sh in distribution #24183
+    
+    This is a private build script that should not be distributed
+
+commit 85cd7aa2f632d159af38252639a3020bf9ee18a1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit d243b9943879ec2790d65785805aefdfbb64a378
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Sat Nov 14 14:51:59 2009 +0100
+
+    xinit 1.2.0
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+
+commit 561b6c70648b585e36241c898f0b2dbba3cb2d24
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Oct 27 18:24:31 2009 -0700
+
+    Apple: Export X11_PREFS_DOMAIN for children (quartz-wm)
+
+commit 9b89862981070cf9e381512055a778f451c88905
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:20 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit 82747989c1332290fabec8b9da38aad05282301f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 20:27:17 2009 -0700
+
+    Use platform-specific X server names in man pages for cygwin & darwin
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Tested-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+
+commit c2a5751175b11d3206805468aae1ddecd02c4a98
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Sat Oct 3 11:50:12 2009 +0200
+
+    make XINITDIR configurable at build-time, default is unchanged
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+
+commit 2861f9cf845107870f9d5e9898e5cd4baba8d8f7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 15:28:27 2009 -0700
+
+    Strip RCS/CVS tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 536a3e66159bb4cbd75b861b9b942da5b1885a26
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 15:21:20 2009 -0700
+
+    Man page updates
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 2528d709b51bb1f2e8c32db3242c5af815c9b66f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 15:16:55 2009 -0700
+
+    Drop ancient SunWindows compatibility check
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit adda4c05eceddca7ecb4470d9804a0fa2da8c12c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 15:15:38 2009 -0700
+
+    Drop ancient A/UX compatibility hack
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 817c2d6fe0bea3910d335a0f0ae6d69e358dd9da
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 15:06:23 2009 -0700
+
+    Purge ancient server names from help, add newer server names instead
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3a59c294d30f5c68dc1411a1a7a274948e08d528
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 3 14:51:44 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 98c7700d5bff9e61a7f29d8a611edc8a34961e8e
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Fri Sep 4 00:36:18 2009 -0700
+
+    launchd: Update the DISPLAY envvar to not have a - ... call me paranoid, but I feel safer without it
+    
+    Also added some extra debugging fluff to distingush between two similar statements.
+
+commit 49b50db0cb1ecc5611a242d12b9ca05b961c91ac
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Sep 3 19:02:56 2009 -0700
+
+    launchd: Include LAUNCHD_ID_PREFIX in the socket name for reverse lookup to tell which launchd id owns $DISPLAY
+
+commit 78d181dc74ffb3e67ee0d90780b86e00e03073eb
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Sep 2 10:43:25 2009 -0700
+
+    launchd: Added --with-launchd-id-prefix option to set non-standard launchd id prefix (org.x is still default)
+
+commit 33c3dae16b632ab56b6b361273a48079eb0a41c4
+Author: Andres Salomon <dilinger@queued.net>
+Date:   Wed Feb 11 17:18:05 2009 -0500
+
+    app/xinit: make startx's $? a useful value
+    
+    When startx fails to start X, it's most likely xinit that failed.  xinit
+    returns a proper return code (1), but that gets clobbed in the startx
+    script by clean-up commands.  This patch saves $? from xinit and forces
+    startx to exit with that value.
+    
+    This way, if startx actually fails to start X, $? reflects that.
+    
+    Signed-off-by: Andres Salomon <dilinger@debian.org>
+
+commit 028b0839dc4079c8fe56b38a80be51dc8c89ea17
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Fri Mar 6 17:03:30 2009 +0000
+
+    Cygwin can also have spaces in $HOME
+
+commit c30b10caedf7bdafb9abda914f80c90bfaccaec5
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 21 19:22:31 2009 -0200
+
+    Correct make distcheck for recent git versions.
+
+commit 57f917f8934d441ebb6501c4691a2b59fa217f3f
+Author: Robert Macomber <robert.macomber@bigfishgames.com>
+Date:   Fri Jan 16 01:27:50 2009 +0100
+
+    startx: fix misparsing of initial client and server arguments which begin with / or ./
+    
+    If you invoke startx with a client whose initial command-line arguments
+    begin with / or ./, it uses the last such argument as the base command
+    for the client.  E.g.:
+       startx /usr/bin/xterm /usr/bin/mutt
+    will use /usr/bin/mutt as the client to run instead of /usr/bin/xterm.
+    This is because of the way in which startx parses its arguments.  It's a
+    loop over a case with three clauses; the bug is in the first.  When it's
+    looking at one of startx's args it checks to see if $clientargs is empty
+    in order to see if it should set $client or add the argument to
+    $clientargs.  It should also check to see whether $client is set.
+    
+    There is a similar bug in parsing server args, where it checks to see if
+    $serverargs is empty to decide whether to set $server.
+    
+    Debian bug#511717 (http://bugs.debian.org/511717)
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 7a5086259ca39cc4de6abcda3a3dc5d6c6b380b0
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Dec 18 19:05:08 2008 -0800
+
+    Apple: Use MAC_OS_X_VERSION_MIN_REQUIRED instead of __MAC_OS_X_VERSION_MIN_REQUIRED
+
 commit 46d641fdd020d07a9b4bd0364cf126643342a7e3
 Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
 Date:   Wed Dec 17 15:19:38 2008 -0800
@@ -429,7 +688,7 @@ Date:   Mon Dec 3 19:57:26 2007 -0800
     Added some support for Xquartz on OS-X.
 
 commit e2963ff8acb7e20aab1f8e31a656f4553dda208a
-Merge: a7fda62... 0516336...
+Merge: a7fda62 0516336
 Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
 Date:   Fri Sep 28 22:26:26 2007 +0200
 

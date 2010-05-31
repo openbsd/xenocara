@@ -23,7 +23,9 @@ MANDEFS =  \
 	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
 	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
 	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
-	-D__XSERVERNAME__=Xorg -D__XCONFIGFILE__=xorg.conf \
+	-D__XSERVERNAME__='$(XSERVERNAME)' \
+	-D__XCONFIGFILE__='$(XCONFIGFILE)' \
+	-D__XCONFIGFILEMAN__='$(XCONFIGFILEMAN)' \
 	-D__xinitdir__=$(XINITDIR) \
 	-D__bindir__=$(bindir) \
 	-DSHELL_CMD=$(SHELL_CMD) $(ARCHMANDEFS)
@@ -31,7 +33,7 @@ MANDEFS =  \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
 
 .cpp:
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .man.$(APP_MAN_SUFFIX):
-	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@

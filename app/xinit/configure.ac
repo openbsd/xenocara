@@ -21,9 +21,15 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xinit,[1.1.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xinit)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(xinit,[1.2.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xinit)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 
 AM_CONFIG_HEADER(config.h)
 
@@ -40,6 +46,7 @@ AC_FUNC_FORK
 AC_CHECK_FUNCS([killpg])
 
 m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
+
 
 # Build options
 DEFAULT_XRDB=xrdb
@@ -104,6 +111,11 @@ AC_ARG_WITH(xconsole,
 	[XCONSOLE="$withval"],
 	[XCONSOLE="$DEFAULT_XCONSOLE"])
 
+AC_ARG_WITH(xinitdir,
+	 AS_HELP_STRING([--with-xinitdir=XINITDIR], [Path to xinitdir]),
+	[XINITDIR="$withval"],
+	[XINITDIR="$DEFAULT_XINITDIR"])
+
 AC_ARG_WITH(launchd,            AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
 AC_ARG_WITH(launchagents-dir,   AS_HELP_STRING([--with-launchagents-dir=PATH], [Path to launchd's LaunchAgents directory (default: /Library/LaunchAgents)]),
                                 [ launchagentsdir="${withval}" ],
@@ -111,6 +123,9 @@ AC_ARG_WITH(launchagents-dir,   AS_HELP_STRING([--with-launchagents-dir=PATH], [
 AC_ARG_WITH(launchdaemons-dir,  AS_HELP_STRING([--with-launchdaemons-dir=PATH], [Path to launchd's LaunchDaemonss directory (default: /Library/LaunchDaemons)]),
                                 [ launchdaemonsdir="${withval}" ],
                                 [ launchdaemonsdir="/Library/LaunchDaemons" ])
+AC_ARG_WITH(launchd-id-prefix,  AS_HELP_STRING([--with-launchd-id-prefix=PATH], [Prefix to use for launchd identifiers (default: org.x)]),
+                                [ launchdidprefix="${withval}" ],
+                                [ launchdidprefix="org.x" ])
 
 if test "x$LAUNCHD" = "xauto"; then
 	unset LAUNCHD
@@ -129,8 +144,11 @@ else
         launchagentsdir=""
         launchdaemonsdir=""
 fi
+
+AC_DEFINE_UNQUOTED(LAUNCHD_ID_PREFIX, "$launchdidprefix", [Prefix to use for launchd identifiers])
 AC_SUBST([launchagentsdir])
 AC_SUBST([launchdaemonsdir])
+AC_SUBST([launchdidprefix])
 AM_CONDITIONAL(LAUNCHD, [test "x$LAUNCHD" = "xyes"])
 AM_CONDITIONAL(TIGER_LAUNCHD, [test "x$TIGER_LAUNCHD" = "xyes"])
 
@@ -164,22 +182,34 @@ fi
 AC_SUBST(STARTX_COOKIE_FLAGS)
 
 # Additional substitutions in startx, xinitrc & man pages
+ARCHMANDEFS=""
+SHELL_CMD="/bin/sh"
+XSERVERNAME="Xorg"
+XCONFIGFILE="xorg.conf"
+XCONFIGFILEMAN='${XCONFIGFILE} (__filemansuffix__)'
 case $host_os in
+    cygwin*)
+	XSERVERNAME="XWin"
+	XCONFIGFILE="XWinrc"
+	;;
+    darwin*)
+	XSERVERNAME="Xquartz"
+	XCONFIGFILE="defaults"
+	XCONFIGFILEMAN='defaults (1)'
+	;;
     *solaris*)
 	SHELL_CMD="/bin/ksh"
-	ARCHMANDEFS=""
 	;;
     *sco*)
 	SHELL_CMD="/bin/ksh"
 	ARCHMANDEFS="-D__SCOMAN__"
 	;;
-    *)
-	SHELL_CMD="/bin/sh"
-	ARCHMANDEFS=""
-	;;
 esac
 AC_SUBST(SHELL_CMD)
 AC_SUBST(ARCHMANDEFS)
+AC_SUBST(XSERVERNAME)
+AC_SUBST(XCONFIGFILE)
+AC_SUBST(XCONFIGFILEMAN)
 
 AC_SUBST(XRDB)
 AC_SUBST(XMODMAP)
@@ -192,12 +222,7 @@ AC_SUBST(XINIT)
 AC_SUBST(WM)
 AC_SUBST(XCONSOLE)
 
-# Defines which X servers are listed in help output in xinit.c
-# Cheat, lie, and assume all the world is Xorg for now
-AC_DEFINE(XORG, 1, [Define if you have Xorg X server])
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
+AC_SUBST(XINITDIR)
 
 AC_OUTPUT([Makefile])
 AC_OUTPUT([privileged_startx/Makefile])

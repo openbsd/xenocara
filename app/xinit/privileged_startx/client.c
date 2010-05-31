@@ -45,9 +45,9 @@ int client_main(void) {
     kr = bootstrap_look_up(bootstrap_port, BOOTSTRAP_NAME, &mp);
     if (kr != KERN_SUCCESS) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
-        fprintf(stderr, "bootstrap_look_up(): %s\n", bootstrap_strerror(kr));
+        fprintf(stderr, "privileged_startx: bootstrap_look_up(%s): %s\n", BOOTSTRAP_NAME, bootstrap_strerror(kr));
 #else
-        fprintf(stderr, "bootstrap_look_up(): %ul\n", (unsigned long)kr);
+        fprintf(stderr, "privileged_startx: bootstrap_look_up(%s): %ul\n", BOOTSTRAP_NAME, (unsigned long)kr);
 #endif
         exit(EXIT_FAILURE);
     }
