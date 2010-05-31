@@ -164,7 +164,6 @@ aclocal_DATA = xorg-macros.m4
 dist_pkgdata_DATA = INSTALL
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xorg-macros.pc
-EXTRA_DIST = xorg-macros.pc.in
 all: all-am
 
 .SUFFIXES:

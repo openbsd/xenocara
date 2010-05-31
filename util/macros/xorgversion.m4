@@ -25,22 +25,9 @@ dnl
 
 # XORG_RELEASE_VERSION
 # --------------------
-# Adds --with/without-release-string and changes the PACKAGE and
-# PACKAGE_TARNAME to use "$PACKAGE{_TARNAME}-$RELEASE_VERSION".  If
-# no option is given, PACKAGE and PACKAGE_TARNAME are unchanged.  Also
-# defines PACKAGE_VERSION_{MAJOR,MINOR,PATCHLEVEL} for modules to use.
+# Defines PACKAGE_VERSION_{MAJOR,MINOR,PATCHLEVEL} for modules to use.
  
 AC_DEFUN([XORG_RELEASE_VERSION],[
-	AC_ARG_WITH(release-version,
-			AS_HELP_STRING([--with-release-version=STRING],
-				[Use release version string in package name]),
-			[RELEASE_VERSION="$withval"],
-			[RELEASE_VERSION=""])
-	if test "x$RELEASE_VERSION" != "x"; then
-		PACKAGE="$PACKAGE-$RELEASE_VERSION"
-		PACKAGE_TARNAME="$PACKAGE_TARNAME-$RELEASE_VERSION"
-		AC_MSG_NOTICE([Building with package name set to $PACKAGE])
-	fi
 	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MAJOR],
 		[`echo $PACKAGE_VERSION | cut -d . -f 1`],
 		[Major version of this package])

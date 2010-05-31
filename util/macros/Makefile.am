@@ -32,8 +32,6 @@ install-data-hook:
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xorg-macros.pc
 
-EXTRA_DIST = xorg-macros.pc.in
-
 .PHONY: ChangeLog
 
 ChangeLog:
