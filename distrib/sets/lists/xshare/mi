@@ -2759,6 +2759,8 @@
 ./usr/X11R6/share/doc/damageproto
 ./usr/X11R6/share/doc/damageproto/damageproto.txt
 ./usr/X11R6/share/doc/dri2proto
+./usr/X11R6/share/doc/fixesproto
+./usr/X11R6/share/doc/fixesproto/fixesproto.txt
 ./usr/X11R6/share/doc/fontconfig
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel.pdf
@@ -2949,6 +2951,9 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.pdf
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.txt
+./usr/X11R6/share/doc/inputproto
+./usr/X11R6/share/doc/inputproto/XI2proto.txt
+./usr/X11R6/share/doc/inputproto/XIproto.txt
 ./usr/X11R6/share/doc/libXaw
 ./usr/X11R6/share/doc/libXaw/widgets.html
 ./usr/X11R6/share/doc/libXaw/widgets.index.ps
@@ -2962,6 +2967,8 @@
 ./usr/X11R6/share/doc/randrproto/randrproto.txt
 ./usr/X11R6/share/doc/renderproto
 ./usr/X11R6/share/doc/renderproto/renderproto.txt
+./usr/X11R6/share/doc/xextproto
+./usr/X11R6/share/doc/xextproto/geproto.txt
 ./usr/X11R6/share/doc/xtrans
 ./usr/X11R6/share/mk
 ./usr/X11R6/share/mk/automake.dep
