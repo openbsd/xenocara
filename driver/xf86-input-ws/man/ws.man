@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.5 2009/11/26 16:42:52 matthieu Exp $
+.\"	$OpenBSD: ws.man,v 1.6 2010/06/06 20:38:03 matthieu Exp $
 .\"
 .\" Copyright (c) 2005,2009 Matthieu Herrb
 .\"
@@ -69,7 +69,6 @@ is detected.
 Sets the timeout (in milliseconds) that the driver waits before deciding
 if two buttons where pressed "simultaneously" when 3 button emulation is
 enabled.  Default: 50.
-.TP 4
 .TP 4
 .BI "Option \*qDebugLevel\*q \*q" integer \*q
 This option sets the verbosity level of the driver.
