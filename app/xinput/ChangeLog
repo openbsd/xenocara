@@ -1,3 +1,81 @@
+commit 3778f707cca0b9f023a8a5fc86e26776ef6e1b6c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 4 11:11:03 2010 +1000
+
+    xinput 1.5.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 87ec8d42c7f8e4e0613bcbe59fb2db991e1e4acb
+Author: Kees Cook <kees.cook@canonical.com>
+Date:   Wed Apr 14 21:19:48 2010 -0700
+
+    Atoms from XIGetProperty are 32bits (#27657)
+    
+    A 32bit value must be dereferenced to correctly zero-extend an Atom
+    from XIGetProperty.  On 64bit systems, Atom is 64bits, so the final
+    Atom in a list will read garbage in the upper half of the Atom.
+    
+    X.Org Bug 27657 <http://bugs.freedesktop.org/show_bug.cgi?id=27657>
+    
+    Signed-off-by: Kees Cook <kees.cook@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 79eada1b0a221c10a3300fa0c988879fd9062d99
+Author: Will Thompson <will.thompson@collabora.co.uk>
+Date:   Tue Apr 6 11:26:39 2010 +0100
+
+    Support pointer: and keyboard: prefices for XI2 device names
+    
+    I have a keyboard which is also a mouse, and shows up as two devices
+    with the same name. This patch allows me to reliably refer to the
+    pointer device.
+    
+    Signed-off-by: Will Thompson <will.thompson@collabora.co.uk>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 26c8ad96bed67087f89439ec595e928e7f5c8a9c
+Author: Will Thompson <will.thompson@collabora.co.uk>
+Date:   Thu Apr 1 15:35:34 2010 +0100
+
+    Warn and fail if a device name is ambiguous.
+    
+    The XI1 path bails out if the user specifies a device by name and there
+    is more than one device, but the XI2 path previously just silently chose
+    the first one. This patch makes it fail outright.
+    
+    Signed-off-by: Will Thompson <will.thompson@collabora.co.uk>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 19751d021524ee7237704b6158947c26aad4e8c5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Apr 29 16:03:28 2010 +1000
+
+    test-xi2: Print out the sourceid for enter/leave events.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit de293d5bb46de46aaa6799940824c31de95f905b
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Fri Apr 2 00:30:49 2010 -0500
+
+    man: use automake silent rules
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by:  Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e980a1fa1237089c0d28210fc32210d63113793f
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Fri Apr 2 00:30:48 2010 -0500
+
+    man: Use AC_PROG_SED to find sed
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit f1577913026eead06795c629798a41e9e7d939c1
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Mar 15 11:34:55 2010 +1000
