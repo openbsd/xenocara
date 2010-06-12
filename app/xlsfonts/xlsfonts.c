@@ -32,9 +32,6 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#ifdef BUILD_PRINTSUPPORT
-#include <X11/XprintUtil/xprintutil.h>
-#endif /* BUILD_PRINTSUPPORT */
 #include "dsimple.h"
 
 #define N_START INT_MAX  /* Maximum # of fonts to start with (should
@@ -61,18 +58,11 @@ static int  min_max;
 typedef struct {
   char           *name;
   XFontStruct    *info;
-#ifdef BUILD_PRINTSUPPORT
-  char           *listfonts_modes;
-#endif /* BUILD_PRINTSUPPORT */
 } FontList;
 
 static FontList *font_list = NULL;
 
 /* Local prototypes */
-#ifdef BUILD_PRINTSUPPORT
-static Bool IsListfontsModesChangeSupported(char *mode);
-static int  SetListfontsModes(const char *attrname, Bool enableattr);
-#endif /* BUILD_PRINTSUPPORT */
 static void get_list(char *pattern);
 static int  compare(const void *arg1, const void *arg2);
 static void show_fonts(void);
@@ -92,24 +82,11 @@ void usage(void)
     fprintf (stderr, "    -C                       force columns\n");
     fprintf (stderr, "    -1                       force single column\n");
     fprintf (stderr, "    -u                       keep output unsorted\n");
-#ifdef BUILD_PRINTSUPPORT
-    fprintf (stderr, "    -r resolution            set print resolution\n");
-    fprintf (stderr, "    -b                       list printer builtin fonts\n");
-    fprintf (stderr, "    -B                       do not list printer builtin fonts\n");
-    fprintf (stderr, "    -g                       list glyph fonts\n");
-    fprintf (stderr, "    -G                       do not list glyph fonts\n");
-    fprintf (stderr, "    -x mode                  enable listfont mode\n");
-    fprintf (stderr, "    -X mode                  disable listfont mode\n");
-#endif /* BUILD_PRINTSUPPORT */
     fprintf (stderr, "    -o                       use OpenFont/QueryFont instead of ListFonts\n");
     fprintf (stderr, "    -w width                 maximum width for multiple columns\n");
     fprintf (stderr, "    -n columns               number of columns if multi column\n");
     fprintf (stderr, "    -display displayname     X server to contact\n");
     fprintf (stderr, "    -d displayname           (alias for -display displayname)\n");
-#ifdef BUILD_PRINTSUPPORT
-    fprintf (stderr, "    -printer printername     printer to use\n");
-    fprintf (stderr, "    -p printername           (alias for -p printername)\n");
-#endif /* BUILD_PRINTSUPPORT */
     fprintf (stderr, "\n");
     Close_Display();
     exit(EXIT_FAILURE);
@@ -118,20 +95,11 @@ void usage(void)
 int main(int argc, char **argv)
 {
     int argcnt = 0, i;
-    char *mode;
 
     INIT_NAME;
 
     /* Handle command line arguments, open display */
     Setup_Display_And_Screen(&argc, argv);
-
-#ifdef BUILD_PRINTSUPPORT
-    if (printer_output) {
-        /* XListFonts*()/XLoadFont*() honor xp-listfonts-modes only 
-         * if there is an context _SET_ for this display */
-        XpSetContext(dpy, pcontext);
-    }
-#endif /* BUILD_PRINTSUPPORT */
 
     for (argv++, argc--; argc; argv++, argc--) {
         if (argv[0][0] == '-') {
@@ -173,83 +141,6 @@ int main(int argc, char **argv)
                 case 'u':
                     sort_output = False;
                     break;
-#ifdef BUILD_PRINTSUPPORT
-                case 'r':
-                {
-                    const char        *resname;
-                    XpuResolutionList  rlist;
-                    int                num_rlist;
-                    XpuResolutionRec  *res;
-
-                    if (--argc <= 0) usage ();
-                    argv++;
-                    resname = argv[0];
-                    
-                    if (!printer_output)
-                        Fatal_Error("Option '%c' only supported for printers.", argv[0][i]);
-                    rlist = XpuGetResolutionList(dpy, pcontext, &num_rlist);
-                    if (!rlist)
-                        Fatal_Error("Could not get list of supported resolutions (Server configuration error ?).");
-                    res = XpuFindResolutionByName(rlist, num_rlist, resname);
-                    if (!res)
-                        Fatal_Error("Could not find resolution '%s'.", resname);
-                    XpuSetDocResolution(dpy, pcontext, res);
-                    XpuFreeResolutionList(rlist);
-                }
-                    goto next;
-                case 'b':
-                    mode = "xp-list-internal-printer-fonts";
-                    if (!printer_output)
-                        Fatal_Error("Option '%c' only supported for printers.", argv[0][i]);
-                    if (!IsListfontsModesChangeSupported(mode))
-                        Fatal_Error("Printer does not support changing '%s'.", mode);
-                    SetListfontsModes(mode, True);
-                    break;
-                case 'B':
-                    mode = "xp-list-internal-printer-fonts";
-                    if (!printer_output)
-                        Fatal_Error("Option '%c' only supported for printers.", argv[0][i]);
-                    if (!IsListfontsModesChangeSupported(mode))
-                        Fatal_Error("Printer does not support changing '%s'.", mode);
-                    SetListfontsModes(mode, False);
-                    break;
-                case 'g':
-                    mode = "xp-list-glyph-fonts";
-                    if (!printer_output)
-                        Fatal_Error("Option '%c' only supported for printers.", argv[0][i]);
-                    if (!IsListfontsModesChangeSupported(mode))
-                        Fatal_Error("Printer does not support changing '%s'.", mode);
-                    SetListfontsModes(mode, True);
-                    break;
-                case 'G':
-                    mode = "xp-list-glyph-fonts";
-                    if (!printer_output)
-                        Fatal_Error("Option '%c' only supported for printers.", argv[0][i]);
-                    if (!IsListfontsModesChangeSupported(mode))
-                        Fatal_Error("Printer does not support changing '%s'.", mode);
-                    SetListfontsModes(mode, False);
-                    break;
-                case 'x':
-                    if (--argc <= 0) usage ();
-                    argv++;
-                    mode = argv[0];
-                    if (!printer_output)
-                        Fatal_Error("Option '%c' only supported for printers.", argv[0][i-1]);
-                    if (!IsListfontsModesChangeSupported(mode))
-                        Fatal_Error("Printer does not support changing '%s'.", mode);
-                    SetListfontsModes(mode, True);
-                    goto next;
-                case 'X':
-                    if (--argc <= 0) usage ();
-                    argv++;
-                    mode = argv[0];
-                    if (!printer_output)
-                        Fatal_Error("Option '%c' only supported for printers.", argv[0][i-1]);
-                    if (!IsListfontsModesChangeSupported(mode))
-                        Fatal_Error("Printer does not support changing '%s'.", mode);
-                    SetListfontsModes(mode, False);
-                    goto next;
-#endif /* BUILD_PRINTSUPPORT */
                 default:
                     usage();
                     break;
@@ -272,86 +163,6 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
 }
 
-#ifdef BUILD_PRINTSUPPORT
-/* This should be moved to XprintUtils */
-static 
-Bool IsListfontsModesChangeSupported(char *mode)
-{
-    char *value;
-    Bool  isSupported;
-    
-    value = XpGetOneAttribute(dpy, pcontext, XPPrinterAttr, "xp-listfonts-modes-supported"); 
-    if (!value)
-        return False;
-      
-    isSupported = (strstr(value, mode) != NULL)?(True):(False);
-    XFree(value);
-      
-    return isSupported;
-}
-
-/* XXX: This should be moved to XprintUtils (and should have a Document/Page-level
- * option and should verify that the matching leven supports xp-listfonts-modes
- * changes)*/
-static
-int SetListfontsModes(const char *attrname, Bool enableattr)
-{
-  char *value,
-       *newvalue;
-  
-  value = XpGetOneAttribute(dpy, pcontext, XPDocAttr, "xp-listfonts-modes");
-  if (!value)
-      value = strdup("");
-
-  /* Set attribute */
-  if (enableattr)
-  {
-      /* Return success if |attrname| is already set */
-      if (strstr(value, attrname) != NULL)
-      {
-          XFree(value);
-          return 1; /* success */
-      }
-
-      newvalue = malloc(strlen(value) + strlen(attrname) + 2);
-      if (!newvalue)
-      {
-          XFree(value);
-          Fatal_Error("SetListfontsModes: No memory.");
-      }
-
-      sprintf(newvalue, "%s %s", value, attrname);
-      XpuSetOneAttribute(dpy, pcontext, XPDocAttr, "*xp-listfonts-modes", newvalue, XPAttrMerge);
-
-      free(newvalue);
-      XFree(value);
-      return 1; /* success */
-  }
-  else
-  {
-      char *s, /* copy string "source" */
-           *d; /* copy string "destination" */
-
-      /* Return success if |attrname| not set */
-      d = strstr(value, attrname);
-      if (d == NULL)
-      {
-          XFree(value);
-          return 1; /* success */
-      }
-
-      /* strip |attrname| from |value| */
-      s = d+strlen(attrname);
-      while( (*d++ = *s++) != '\0' )
-          ;
-
-      XpuSetOneAttribute(dpy, pcontext, XPDocAttr, "*xp-listfonts-modes", value, XPAttrMerge);
-
-      XFree(value);
-      return 1; /* success */
-  } 
-}
-#endif /* BUILD_PRINTSUPPORT */
 
 static
 void get_list(char *pattern)
@@ -403,24 +214,6 @@ void get_list(char *pattern)
             font_list[font_cnt].info = info + i;
         else
             font_list[font_cnt].info = NULL;
-
-#ifdef BUILD_PRINTSUPPORT
-        if (printer_output) {
-            char *listfonts_modes;
-
-            listfonts_modes = XpGetOneAttribute(dpy, pcontext, XPDocAttr, "xp-listfonts-modes");
-
-            /* Save status of xp-listfonts-modes */
-            font_list[font_cnt].listfonts_modes = strdup(listfonts_modes?listfonts_modes:"");
-
-            if (listfonts_modes)
-                XFree(listfonts_modes);
-        }
-        else
-        {
-            font_list[font_cnt].listfonts_modes = NULL;
-        }
-#endif /* BUILD_PRINTSUPPORT */
         
         font_cnt++;
     }
@@ -452,13 +245,6 @@ void show_fonts(void)
 
     if (long_list > L_MEDIUM) {
         for (i = 0; i < font_cnt; i++) {
-#ifdef BUILD_PRINTSUPPORT
-            if (printer_output) {
-                /* Restore saved xp-listfonts-modes status */
-                XpuSetOneAttribute(dpy, pcontext, XPDocAttr, "*xp-listfonts-modes", font_list[i].listfonts_modes, XPAttrMerge);
-            }
-#endif /* BUILD_PRINTSUPPORT */
-
             do_query_font (dpy, font_list[i].name);
         }
         return;
@@ -630,15 +416,11 @@ int IgnoreError(Display *disp, XErrorEvent *event)
 
 static char *bounds_metrics_title =
                       "width left  right  asc  desc   attr   keysym\n";
-static char *char_metrics_fmt = 
-"\t0x%02x%02x (%u)\t%4d  %4d  %4d  %4d  %4d  0x%04x  %s\n";
-static char *bounds_metrics_fmt =
-"\t%3s\t\t%4d  %4d  %4d  %4d  %4d  0x%04x\n";
-
 
 #define PrintBounds(_what,_ptr) \
 {   register XCharStruct *p = (_ptr); \
-    printf (bounds_metrics_fmt, (_what), p->width, p->lbearing, \
+    printf ("\t%3s\t\t%4d  %4d  %4d  %4d  %4d  0x%04x\n", \
+          (_what), p->width, p->lbearing, \
           p->rbearing, p->ascent, p->descent, p->attributes); }
 
 
@@ -666,15 +448,8 @@ static char* stringValued [] = { /* values are atoms */
     "RASTERIZER_VERSION",
 
     /* other registered font properties (see the X.org Registry, sec. 15) */
-    
-#ifdef BUILD_PRINTSUPPORT   
-    /* Used by Xprint's Postscript and PDF DDX */
     "_ADOBE_POSTSCRIPT_FONTNAME",
     
-    /* Used by Xprint's PCL DDXs */
-    "PCL_FONT_NAME",
-#endif /* BUILD_PRINTSUPPORT */
-
     /* unregistered font properties */
     "CHARSET_COLLECTIONS",
     "CLASSIFICATION",
@@ -810,7 +585,8 @@ print_character_metrics(register XFontStruct *info)
         n = saven;
         for (i = info->min_char_or_byte2; i <= info->max_char_or_byte2; i++) {
             char *s = XKeysymToString ((KeySym) n);
-            printf (char_metrics_fmt, j, i, n, pc->width, pc->lbearing,
+            printf ("\t0x%02x%02x (%u)\t%4d  %4d  %4d  %4d  %4d  0x%04x  %s\n",
+                    j, i, n, pc->width, pc->lbearing,
                     pc->rbearing, pc->ascent, pc->descent, pc->attributes,
                     s ? s : ".");
             pc++;

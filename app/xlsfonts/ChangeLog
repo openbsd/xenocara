@@ -1,3 +1,161 @@
+commit 922c6ce1384df559116d764598b81c375e9e5790
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jun 12 01:53:46 2010 +0200
+
+    Bump to 1.0.3
+
+commit 94e0301bc885226fa938d97cdea80aa0641852e4
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jun 12 01:53:24 2010 +0200
+
+    Require xorg-macros 1.4 for INSTALL_CMD
+
+commit b8a4fec22f8c625b9fa5f48ebb135a4251fb95cd
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jun 12 01:48:45 2010 +0200
+
+    Use string literals as format strings
+    
+    Allows gcc to check argument types, and avoids warnings:
+    xlsfonts.c:632: warning: format not a string literal, argument types not checked
+
+commit f21fa74b794b301c022519bb319a952642bb55fc
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jun 12 01:44:28 2010 +0200
+
+    Remove _bitmap_error prototype from dsimple.c
+    
+    The function itself was dropped in
+    77c46f5ed8d96106ff117f89932ada0439193cb6.
+
+commit df4fc8e66daef31fb4d6dba92ad2b590043c2c16
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 11 10:08:07 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4942d87b8f285b5c297850243f2321fe52417d89
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit f3b063653c915f8cf14c255ce155f9c3dcd7de5e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 71409ac8501b5199683609752175d6207b909dd1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 509023d3d1915658768c245faeb4291c7082303b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit db151b864af443a00c7ddb45fb950b86c786b62a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit c275d500f99c45730a171f072499824d8bbac52f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 27 16:05:57 2009 -0400
+
+    Makefile.am: do not include autogen.sh in distribution #24183
+    
+    This is a private build script that should not be distributed
+
+commit 945735806c440ca4127e54fe3fd34d53e192a138
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:26 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 77c46f5ed8d96106ff117f89932ada0439193cb6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jun 26 21:19:42 2009 -0700
+
+    Remove unused code from dsimple.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 74003cdc55c5ca091c0804328c3d140b2b38baa4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jun 26 21:08:37 2009 -0700
+
+    Remove unused Xprint support
+    
+    BUILD_PRINTSUPPORT has never been defined in autoconf/automake builds,
+    so it hasn't been built since 6.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 36c17f9c944955968450da73decbbb4def72a115
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 22 15:56:40 2009 -0200
+
+    Correct make distcheck.
+
+commit 1ac29d73633d50b37871f60db95de47fad58cd93
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sun Mar 16 18:27:14 2008 -0300
+
+    Compile warning fixes.
+    
+      Ansify functions in dsimple.c.
+      Protect unused variables around the related ifdef.
+
+commit dae232f6b65e06c44d8f2332a9d10f68115d7c79
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Feb 11 02:14:27 2005 -0500
+
+    Do not spew usage on connection error
+    
+    General philosophy:
+    
+    The user should only be shown a usage message when:
+      * it is asked for with a --help option or the like.
+      * the command line is syntactically invalid.
+
+commit 78779cf48ec892325c4e3a9962f4a96c1c4c4b89
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:08 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
 commit c06da04f53d4f85ff67c73db3a8f24750297f1d7
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Feb 1 13:53:37 2007 -0800

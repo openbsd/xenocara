@@ -24,7 +24,6 @@ manual volume numbers.
   </refnamediv>
 
   <refsynopsisdiv>
-    <!-- video mode -->
     <cmdsynopsis>
       <command>xlsfonts</command>
 
@@ -49,49 +48,6 @@ manual volume numbers.
       <arg><option>-u</option></arg>
 
       <arg><option>-o</option></arg>
-
-      <arg><option>-fn <replaceable>pattern</replaceable></option></arg>     
-    </cmdsynopsis>
-
-    <!-- printer mode -->
-    <cmdsynopsis>
-      <command>xlsfonts</command>
-
-      <arg choice="plain"><option>-printer <replaceable>printername</replaceable></option></arg>
-
-      <arg><option>-l</option></arg>
-
-      <arg><option>-ll</option></arg>
-
-      <arg><option>-lll</option></arg>
-
-      <arg><option>-m</option></arg>
-
-      <arg><option>-C</option></arg>
-
-      <arg><option>-1</option></arg>
-
-      <arg><option>-w <replaceable>width</replaceable></option></arg>
-
-      <arg><option>-n <replaceable>columns</replaceable></option></arg>
-
-      <arg><option>-u</option></arg>
-
-      <arg><option>-o</option></arg>
-
-      <arg><option>-r <replaceable>resolution</replaceable></option></arg>
-
-      <arg><option>-b</option></arg>
-
-      <arg><option>-B</option></arg>
-
-      <arg><option>-g</option></arg>
-
-      <arg><option>-G</option></arg>
-
-      <arg><option>-x <replaceable>mode</replaceable></option></arg>
-
-      <arg><option>-X <replaceable>mode</replaceable></option></arg>
 
       <arg><option>-fn <replaceable>pattern</replaceable></option></arg>     
     </cmdsynopsis>
@@ -126,31 +82,11 @@ manual volume numbers.
       </varlistentry>
 
       <varlistentry>
-        <term><option>-printer <replaceable>printername</replaceable></option>
-        </term>
-        <listitem>
-          <para>
-            This option specifies the Xprint printer to contact.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term><option>-d <replaceable>host:dpy</replaceable></option>
         </term>
         <listitem>
           <para>
             Same as <option>-display <replaceable>host:dpy</replaceable></option>.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-p <replaceable>printername</replaceable></option>
-        </term>
-        <listitem>
-          <para>
-            Same as <option>-printer <replaceable>printername</replaceable></option>.
           </para>
         </listitem>
       </varlistentry>
@@ -269,147 +205,6 @@ manual volume numbers.
       </varlistentry>
 
       <varlistentry>
-        <term><option>-r <replaceable>resolutionname</replaceable></option>
-        </term>
-        <listitem>
-          <para>
-            Set print resolution name (usually values like <literal>300dpi</literal>
-            or <literal>300x600</literal>, see output of <command>xplsprinters</command>).
-            This may alter the output of <command>xlsfonts</command> if there are printer
-            fonts which get enabled/disabled on per-resolution basis by the DDX.
-          </para>
-          <para>
-            (printer mode only)
-          </para>
-        </listitem>
-      </varlistentry>      
-      
-      <varlistentry>
-        <term><option>-b</option>
-        </term>
-        <listitem>
-          <para>
-            List printer builtin fonts.
-            This is the same as <option>-x xp-list-internal-printer-fonts</option>.
-          </para>
-          <para>
-            (printer mode only)
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-B</option>
-        </term>
-        <listitem>
-          <para>
-            Do not list printer builtin fonts.
-            This is the same as <option>-X xp-list-internal-printer-fonts</option>.
-          </para>
-          <para>
-            (printer mode only)
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-g</option>
-        </term>
-        <listitem>
-          <para>
-            List glyph fonts.
-            This is the same as <option>-x xp-list-glyph-fonts</option>.
-          </para>
-          <para>
-            (printer mode only)
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-G</option>
-        </term>
-        <listitem>
-          <para>
-            Do not list glyph fonts.
-            This is the same as <option>-X xp-list-glyph-fonts</option>.
-          </para>
-          <para>
-            (printer mode only)
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-x <replaceable>mode</replaceable></option>
-        </term>
-        <listitem>
-          <para>
-            Enable listfont mode <replaceable>mode</replaceable>.
-          </para>
-          <para>
-            Supported modes are:
-            <variablelist>
-              <varlistentry>
-                <term>xp-listinternal-printer-fonts</term>
-                <listitem>
-                  <para>
-                    If <literal>xp-listinternal-printer-fonts</literal> was set
-                    (via option <option>-b</option> or
-                    <option>-x xp-listinternal-printer-fonts</option> <command>xlsfonts</command>
-                    will include all of the fonts defined as internal printer fonts.
-                  </para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term>xp-list-glyph-fonts</term>
-                <listitem>
-                  <para>
-                    If <literal>xp-list-glyph-fonts</literal> was set (via option <option>-g</option> or
-                    <option>-x xp-list-glyph-fonts</option>) <command>xlsfonts</command> will
-                    include all of the fonts available to the server which have
-                    glyphs associated with them.
-                  </para>
-                </listitem>
-              </varlistentry>
-            </variablelist>
-
-            <para>
-              The default value is implicitly determined by the ddx driver to be the
-              all of the listfonts modes specified in the <literal>xp-listfonts-modes-supported</literal>
-              printer attribute.
-            </para>
-                                
-            <para>
-              The value of <literal>xp-listfonts-modes-supported</literal> and
-              <literal>xp-listfonts-modes</literal> (the defaults) can be looked-up via
-              <citerefentry><refentrytitle>xplsprinters</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry>.
-            </para>
-          </para>
-
-          <para>
-            (printer mode only)
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-X <replaceable>mode</replaceable></option>
-        </term>
-        <listitem>
-          <para>
-            Disable listfont mode <replaceable>mode</replaceable>.
-            See option <option>-x</option> for a list of valid
-            <replaceable>mode</replaceable> values.
-          </para>
-          <para>
-            (printer mode only)
-          </para>
-        </listitem>
-      </varlistentry>      
-
-      <varlistentry>
         <term><option>-fn <replaceable>pattern</replaceable></option>
         </term>
         <listitem>
@@ -426,11 +221,9 @@ manual volume numbers.
     <para>
       <simplelist type="inline">
         <member><citerefentry><refentrytitle>X</refentrytitle><manvolnum>__miscmansuffix__</manvolnum></citerefentry></member>
-        <member><citerefentry><refentrytitle>Xprint</refentrytitle><manvolnum>__miscmansuffix__</manvolnum></citerefentry></member>
         <member><citerefentry><refentrytitle>Xserver</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
         <member><citerefentry><refentrytitle>xset</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
         <member><citerefentry><refentrytitle>xfd</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
-        <member><citerefentry><refentrytitle>xplsprinters</refentrytitle><manvolnum>__appmansuffix__</manvolnum></citerefentry></member>
         <member>X Logical Font Description Conventions</member>
       </simplelist>
     </para>
@@ -449,17 +242,6 @@ manual volume numbers.
 	</listitem>
       </varlistentry>
       
-      <varlistentry>
-        <term><envar>XPSERVERLIST</envar>
-        </term>
-        <listitem>
-	    <para><envar>XPSERVERLIST</envar> must be set for the <option>-printer</option> option
-	    identifying the available Xprint servers.
-            See <citerefentry><refentrytitle>Xprint</refentrytitle><manvolnum>__miscmansuffix__</manvolnum></citerefentry>
-	    for more details.
-	  </para>
-	</listitem>
-      </varlistentry>
     </variablelist>
   </refsect1>
 
