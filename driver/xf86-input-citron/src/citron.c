@@ -1,4 +1,4 @@
-/* $Id: citron.c,v 1.3 2009/05/03 13:37:01 matthieu Exp $
+/* $Id: citron.c,v 1.4 2010/06/13 11:06:15 matthieu Exp $
  * Copyright (c) 1998  Metro Link Incorporated
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -132,6 +132,14 @@
 #endif
 
 #include <string.h>
+
+#include <xf86Module.h>
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+#include <X11/Xatom.h>
+#include <xserver-properties.h>
+#endif
+
 
 #define _citron_C_
 #define PK	0
@@ -1339,6 +1347,19 @@ DeviceInit (DeviceIntPtr dev)
 	cit_PrivatePtr priv = (cit_PrivatePtr) (local->private);
 
 	unsigned char map[] = {0, 1, 2, 3, 4, 5};
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	Atom btn_labels[5];
+	Atom axes_labels[2];
+
+	btn_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_0);
+	btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_1);
+	btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_2);
+	btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_3);
+	btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_4);
+	
+	axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
+	axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
+#endif
 
 	DBG (5, ErrorF("%sDeviceInit called\n", CI_INFO));
 	/* 
@@ -1354,7 +1375,11 @@ DeviceInit (DeviceIntPtr dev)
 	/* 
 	 * Device reports button press for up to 5 buttons.
 	 */
-	if (InitButtonClassDeviceStruct (dev, 5, map) == FALSE)
+	if (InitButtonClassDeviceStruct (dev, 5, 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                btn_labels,
+#endif
+		map) == FALSE)
 	{
 		ErrorF ("%sUnable to allocate Citron touchscreen ButtonClassDeviceStruct\n", CI_ERROR);
 		return !Success;
@@ -1369,6 +1394,9 @@ DeviceInit (DeviceIntPtr dev)
 	 * Device may reports touch pressure on the 3rd axis.
 	 */
 	if (InitValuatorClassDeviceStruct (dev, 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                axes_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                     xf86GetMotionEvents,
 #endif
@@ -1380,12 +1408,18 @@ DeviceInit (DeviceIntPtr dev)
 	else
 	{
 		InitValuatorAxisStruct (dev, 0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+		    axes_labels[0],
+#endif
 								priv->min_x,	/* min val */
 								priv->max_x,	/* max val */
 								CIT_DEF_MAX_X,	/* resolution */
 								CIT_DEF_MIN_X,	/* min_res */
 								CIT_DEF_MAX_X);	/* max_res */
 		InitValuatorAxisStruct (dev, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+		    axes_labels[1],
+#endif
 								priv->min_y, 	/* min val */
 								priv->max_y,	/* max val */
 								CIT_DEF_MAX_Y,	/* resolution */
