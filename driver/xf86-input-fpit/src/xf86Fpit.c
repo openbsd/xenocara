@@ -188,6 +188,9 @@ static void xf86FpitSetUpAxes(DeviceIntPtr dev, FpitPrivatePtr priv)
 	 * screen to fit one meter.
 	 */
 	int quarter_turns;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+        Atom axis_labels[2] = { 0, 0 };
+#endif
 
 	priv->screen_width = screenInfo.screens[priv->screen_no]->width;
 	priv->screen_height = screenInfo.screens[priv->screen_no]->height;
@@ -212,14 +215,30 @@ static void xf86FpitSetUpAxes(DeviceIntPtr dev, FpitPrivatePtr priv)
 	}
 
 	if (priv->fpitTotalOrientation & FPIT_THEN_SWAP_XY) {
-		InitValuatorAxisStruct(dev, 1, priv->fpitMinX, priv->fpitMaxX, 9500, 0 /* min_res */ ,
+		InitValuatorAxisStruct(dev, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+				       axis_labels[1],
+#endif
+				       priv->fpitMinX, priv->fpitMaxX, 9500, 0 /* min_res */ ,
 				       9500 /* max_res */ );
-		InitValuatorAxisStruct(dev, 0, priv->fpitMinY, priv->fpitMaxY, 10500, 0 /* min_res */ ,
+		InitValuatorAxisStruct(dev, 0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+				       axis_labels[0],
+#endif
+				       priv->fpitMinY, priv->fpitMaxY, 10500, 0 /* min_res */ ,
 				       10500 /* max_res */ );
 	} else {
-		InitValuatorAxisStruct(dev, 0, priv->fpitMinX, priv->fpitMaxX, 9500, 0 /* min_res */ ,
+		InitValuatorAxisStruct(dev, 0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+				       axis_labels[0],
+#endif
+				       priv->fpitMinX, priv->fpitMaxX, 9500, 0 /* min_res */ ,
 				       9500 /* max_res */ );
-		InitValuatorAxisStruct(dev, 1, priv->fpitMinY, priv->fpitMaxY, 10500, 0 /* min_res */ ,
+		InitValuatorAxisStruct(dev, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+				       axis_labels[1],
+#endif
+				       priv->fpitMinY, priv->fpitMaxY, 10500, 0 /* min_res */ ,
 				       10500 /* max_res */ );
 	}
 }
@@ -408,6 +427,10 @@ static Bool xf86FpitControl(DeviceIntPtr dev, int mode)
 	unsigned char map[] = {
 		0, 1, 2, 3 /* DMC: changed this so we can use all three buttons */
 	};
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+	Atom btn_labels[3] = { 0 };
+	Atom axis_labels[2] = { 0, 0 };
+#endif
 
 
 	switch (mode) {
@@ -420,7 +443,11 @@ static Bool xf86FpitControl(DeviceIntPtr dev, int mode)
 			/*
 			 * Device reports button press for up to 3 buttons.
 			 */
-			if (InitButtonClassDeviceStruct(dev, 3, map) == FALSE) {
+			if (InitButtonClassDeviceStruct(dev, 3,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+				      btn_labels,
+#endif
+				      map) == FALSE) {
 				ErrorF("Unable to allocate Fpit touchscreen ButtonClassDeviceStruct\n");
 				return !Success;
 			}
@@ -435,6 +462,9 @@ static Bool xf86FpitControl(DeviceIntPtr dev, int mode)
 			}
 	      
 			if (InitValuatorClassDeviceStruct(dev, 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+				      axis_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                                     xf86GetMotionEvents,
 #endif
@@ -559,8 +589,7 @@ static void xf86FpitUninit(InputDriverPtr drv, LocalDevicePtr local, int flags)
 	xf86FpitControl(local->dev, DEVICE_OFF);
 	xfree(priv->fpitDev);
 	xfree(priv);
-	xfree(local->name);
-	xfree(local);
+	local->private = NULL;
 	xf86DeleteInput(local, 0);
 }
 
