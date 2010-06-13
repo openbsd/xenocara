@@ -421,15 +421,17 @@ xf86EloReadInput(LocalDevicePtr	local)
 #endif
 
   DBG(4, ErrorF("Entering ReadInput\n"));
+
   /*
-   * Try to get a packet.
+   * Read bytes until there's no data left. We may have more or less than
+   * one packet worth of data in the OS buffer.
    */
-   while (xf86WaitForInput(local->fd, ELO_MAX_WAIT/100) > 0) {
-       if (xf86EloGetPacket(priv->packet_buf,
+  do {
+       if(xf86EloGetPacket(priv->packet_buf,
 		       &priv->packet_buf_p,
 		       &priv->checksum,
 		       local->fd) != Success)
-	   break;
+	   continue;
 
       /*
        * Process only ELO_TOUCHs here.
@@ -488,6 +490,7 @@ xf86EloReadInput(LocalDevicePtr	local)
                       (state == ELO_PRESS) ? "Press" : ((state == ELO_RELEASE) ? "Release" : "Stream")));
       }
   }
+  while (xf86WaitForInput(local->fd, 0) > 0);  /* don't wait, just check */
 }
 
 
@@ -780,6 +783,10 @@ xf86EloControl(DeviceIntPtr	dev,
   unsigned char		map[] = { 0, 1 };
   unsigned char		req[ELO_PACKET_SIZE];
   unsigned char		reply[ELO_PACKET_SIZE];
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+  Atom btn_label;
+  Atom axis_labels[2] = { 0, 0 };
+#endif
 
   switch(mode) {
 
@@ -797,7 +804,11 @@ xf86EloControl(DeviceIntPtr	dev,
       /*
        * Device reports button press for up to 1 button.
        */
-      if (InitButtonClassDeviceStruct(dev, 1, map) == FALSE) {
+      if (InitButtonClassDeviceStruct(dev, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+				      &btn_label,
+#endif
+				      map) == FALSE) {
 	ErrorF("Unable to allocate Elographics touchscreen ButtonClassDeviceStruct\n");
 	return !Success;
       }
@@ -818,6 +829,9 @@ xf86EloControl(DeviceIntPtr	dev,
        * screen to fit one meter.
        */
       if (InitValuatorClassDeviceStruct(dev, 2,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+					axis_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                   xf86GetMotionEvents,
 #endif
@@ -827,11 +841,19 @@ xf86EloControl(DeviceIntPtr	dev,
       }
       else {
 	/* I will map coordinates myself */
-	InitValuatorAxisStruct(dev, 0, -1, -1,
+	InitValuatorAxisStruct(dev, 0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			       axis_labels[0],
+#endif
+			       -1, -1,
 			       9500,
 			       0     /* min_res */,
 			       9500  /* max_res */);
-	InitValuatorAxisStruct(dev, 1, -1, -1,
+	InitValuatorAxisStruct(dev, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+			       axis_labels[1],
+#endif
+			       -1, -1,
 			       10500,
 			       0     /* min_res */,
 			       10500 /* max_res */);
@@ -885,8 +907,7 @@ xf86EloControl(DeviceIntPtr	dev,
               xf86EloPrintIdent(reply, priv);
           }
           else {
-              ErrorF("Unable to ask Elographics touchscreen identification\n");
-              goto not_success;
+              DBG(2, ErrorF("Unable to ask Elographics touchscreen identification... Maybe it's GeneralTouch touchscreen...\n"));
           }
 
           /*
@@ -898,8 +919,7 @@ xf86EloControl(DeviceIntPtr	dev,
           req[3] = ELO_TOUCH_MODE | ELO_STREAM_MODE | ELO_UNTOUCH_MODE;
           req[4] = ELO_TRACKING_MODE;
           if (xf86EloSendControl(req, local->fd) != Success) {
-              ErrorF("Unable to change Elographics touchscreen operating mode\n");
-              goto not_success;
+              DBG(2, ErrorF("Unable to change Elographics touchscreen operating mode... Maybe it's GeneralTouch touchscreen...\n"));
           }
 
           /*
@@ -910,12 +930,7 @@ xf86EloControl(DeviceIntPtr	dev,
           req[2] = priv->untouch_delay;
           req[3] = priv->report_delay;
           if (xf86EloSendControl(req, local->fd) != Success) {
-              ErrorF("Unable to change Elographics touchscreen reports timings\n");
-
-not_success:
-              SYSCALL(close(local->fd));
-              local->fd = -1;
-              return !Success;
+              DBG(2, ErrorF("Unable to change Elographics touchscreen reports timings... Maybe it's GeneralTouch touchscreen...\n"));
           }
       }
       xf86AddEnabledDevice(local);
@@ -975,14 +990,14 @@ xf86EloAllocate(InputDriverPtr	drv, IDevPtr dev)
   LocalDevicePtr	local;
   EloPrivatePtr		priv;
 
-  priv = xalloc(sizeof(EloPrivateRec));
+  priv = malloc(sizeof(EloPrivateRec));
   if (!priv)
     return NULL;
 
   local = xf86AllocateInput(drv, 0);
 
   if (!local) {
-    xfree(priv);
+    free(priv);
     return NULL;
   }
 
@@ -1029,9 +1044,9 @@ xf86EloUninit(InputDriverPtr	drv,
 {
   EloPrivatePtr		priv = (EloPrivatePtr) local->private;
 
-  xfree(priv->input_dev);
-  xfree(priv);
-
+  free(priv->input_dev);
+  free(priv);
+  local->private = NULL;
   xf86DeleteInput(local, 0);
 }
 
@@ -1040,8 +1055,6 @@ static const char *default_options[] = {
   "StopBits", "1",
   "DataBits", "8",
   "Parity", "None",
-  "Vmin", "10",
-  "Vtime", "1",
   "FlowControl", "None",
   NULL
 };
@@ -1077,9 +1090,9 @@ xf86EloInit(InputDriverPtr	drv,
 	    dev->identifier);
     if (priv) {
       if (priv->input_dev) {
-	xfree(priv->input_dev);
+	free(priv->input_dev);
       }
-      xfree(priv);
+      free(priv);
     }
     return local;
   }

@@ -1,3 +1,111 @@
+commit 607aed76023e71509b260dc23da7c150c1eff825
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jun 9 12:18:14 2010 +1000
+
+    elographics 1.2.4
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ac31d3e2d16f2b037d1c4e42aef76ddbd2fa1d20
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jun 9 12:17:16 2010 +1000
+
+    Remove libcwrappers for malloc and free.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ac5366d6e1f26e6ceef3d062ab7df301d623cf54
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 18 08:42:26 2009 +1000
+
+    Added support for GeneralTouch serial touchscreens.
+    
+    Signed-off-by: Ivan Afonichev <ivan.afonichev@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b9531248d1b5d00b2ba941f576fc160ea5e1444b
+Author: Michael Smith <msmith@cbnco.com>
+Date:   Tue Dec 15 15:01:29 2009 -0500
+
+    xf86EloReadInput(): fix xserver unresponsiveness during touch
+    
+    The fix for bug #14109 ensures all bytes are emptied from the OS buffer
+    by looping until xf86WaitForInput returns 0.  This patch just changes
+    the timeout from 1 millisecond to 0: we don't want the X server to block
+    if there's no more serial data.
+    
+    It also removes the Vmin and Vtime options, which were making the calls
+    to read() block until a complete 10-byte packet buffer could be filled.
+    At 9600 bps, this could pause the X server for up to 9 ms. The code can
+    already handle partial buffers, so all we have to do is get rid of the
+    Vmin.
+    
+    Also, if xf86EloGetPacket() returns !Success, we should continue rather
+    than break so the xf86WaitForInput call can decide whether to exit, in
+    case there's more data in the buffer.
+    
+    Before the fix, glxgears was giving me about 390 FPS normally and down
+    to 140 FPS when dragging an empty area of the touchscreen. Now it's
+    basically unchanged when the touchscreen is in use (390 -> 385 FPS).
+    
+    X.Org Bug 14109 <https://bugs.freedesktop.org/show_bug.cgi?id=14109>
+    
+    Signed-off-by: Michael Smith <msmith@cbnco.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 60927fee86100e803f438036daeb94ba0b8e5db7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 20 09:12:22 2009 +1000
+
+    Remove unused bits from configure.ac
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 36d6b8efe232cc20afb74799f013c03cbb79a68b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 18 15:36:07 2009 +1000
+
+    Reset local->private to NULL to avoid double-frees.  (#23239)
+    
+    X.Org Bug 23239 <http://bugs.freedesktop.org/show_bug.cgi?id=23239>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a18af14b1df5271fbe3100df3fcb3a8811981ddf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 17 14:44:55 2009 +1000
+
+    Cope with XINPUT ABI 7.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c97c9f470636e6caf4374a6930e5fe380f58b8bb
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Feb 2 19:06:55 2009 -0200
+
+    Janitor: make distcheck, .gitignore.
+
+commit 8230f8bb1f51adc038451fc124394ac72279b5ff
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:18:17 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit e98045e8101b13720690352b757cdcc3bc806b02
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Jan 29 17:19:42 2009 +0100
+
+    Fix InputDriverRec allocation and freeing.
+    
+    This caused X server to access free()'d memory on exit path.
+    Thanks to msys.ch for providing a test machine.
+
+commit 6f3ca866c821b8fa49e2278cc1538352a95bb2a9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:12:34 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
 commit 37cd09e99c7f5fa4ce7511b8ed171a3ae130300f
 Author: Peter Hutterer <peter.hutterer@redhat.com>
 Date:   Tue Oct 21 15:33:43 2008 +1030

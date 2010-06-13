@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-elographics],
-        1.2.3,
+        1.2.4,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-elographics)
 
@@ -32,35 +32,18 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_MAINTAINER_MODE
 
-DRIVER_NAME=elographics
-AC_SUBST([DRIVER_NAME])
-
+# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.2)
 AM_CONFIG_HEADER([config.h])
 
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
+XORG_CWARNFLAGS
 
 AH_TOP([#include "xorg-server.h"])
-
-#AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
-#
-#AC_ARG_ENABLE(XINPUT, AS_HELP_STRING([--enable-xinput],
-#              [Build XInput support (default: yes)]),
-#              [XINPUT=$enableval],[XINPUT=yes])
-#AM_CONDITIONAL(XINPUT, test "x$XINPUT" = "xyes")
-#if test "x$XINPUT" = "xyes" ; then
-#    AC_DEFINE(XINPUT,1,[Enable XInput support])
-#fi
-#
-#AC_ARG_ENABLE(XKB, AS_HELP_STRING([--enable-xkb],
-#              [Build XKB support (default: yes)]),
-#              [XKB=$enableval],[XKB=yes])
-#AM_CONDITIONAL(XKB, test "x$XKB" = "xyes")
-#if test "x$XKB" = "xyes" ; then
-#    AC_DEFINE(XKB,1,[Enable XKB support])
-#fi
 
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
@@ -77,16 +60,18 @@ XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, xorg-server xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
-
-CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
-AC_SUBST([CFLAGS])
+XORG_CFLAGS="$CWARNFLAGS $XORG_CFLAGS"
 
 # Checks for libraries.
 
 # Checks for header files.
 AC_HEADER_STDC
 
+DRIVER_NAME=elographics
+AC_SUBST([DRIVER_NAME])
+
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+XORG_CHANGELOG
 
 AC_OUTPUT([Makefile src/Makefile man/Makefile])

@@ -75,7 +75,7 @@ Delay between report packets. Default: 1 (10ms).
 .BI "Option \*qModel\*q \*q" string \*q
 The touchscreen model. Default: unset. Supported models: "Sunit dSeries".
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
 .SH AUTHORS
 Authors include:
  Patrick Lecoanet
