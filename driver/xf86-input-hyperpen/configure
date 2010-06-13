@@ -20746,126 +20746,6 @@ inputdir=${moduledir}/input
 
 # Checks for extensions
 
-	SAVE_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS -I`pkg-config --variable=sdkdir xorg-server`"
-	cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-#include "xorg-server.h"
-#if !defined RANDR
-#error RANDR not defined
-#endif
-
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
-$as_echo "$ac_try_echo") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
-  _EXT_CHECK=yes
-else
-  $as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	_EXT_CHECK=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-	CFLAGS="$SAVE_CFLAGS"
-	{ $as_echo "$as_me:$LINENO: checking if RANDR is defined" >&5
-$as_echo_n "checking if RANDR is defined... " >&6; }
-	{ $as_echo "$as_me:$LINENO: result: $_EXT_CHECK" >&5
-$as_echo "$_EXT_CHECK" >&6; }
-	if test "$_EXT_CHECK" != no; then
-		REQUIRED_MODULES="$REQUIRED_MODULES randrproto"
-	fi
-
-
-	SAVE_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS -I`pkg-config --variable=sdkdir xorg-server`"
-	cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-#include "xorg-server.h"
-#if !defined XINPUT
-#error XINPUT not defined
-#endif
-
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
-$as_echo "$ac_try_echo") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
-  _EXT_CHECK=yes
-else
-  $as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	_EXT_CHECK=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-	CFLAGS="$SAVE_CFLAGS"
-	{ $as_echo "$as_me:$LINENO: checking if XINPUT is defined" >&5
-$as_echo_n "checking if XINPUT is defined... " >&6; }
-	{ $as_echo "$as_me:$LINENO: result: $_EXT_CHECK" >&5
-$as_echo "$_EXT_CHECK" >&6; }
-	if test "$_EXT_CHECK" != no; then
-		REQUIRED_MODULES="$REQUIRED_MODULES inputproto"
-	fi
-
-
-# Checks for pkg-config packages
-
 
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	if test -n "$ac_tool_prefix"; then
@@ -20985,6 +20865,128 @@ $as_echo "no" >&6; }
 	fi
 
 fi
+
+
+	SAVE_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS -I`$PKG_CONFIG --variable=sdkdir xorg-server`"
+	cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include "xorg-server.h"
+#if !defined RANDR
+#error RANDR not defined
+#endif
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  _EXT_CHECK=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	_EXT_CHECK=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+	CFLAGS="$SAVE_CFLAGS"
+	{ $as_echo "$as_me:$LINENO: checking if RANDR is defined" >&5
+$as_echo_n "checking if RANDR is defined... " >&6; }
+	{ $as_echo "$as_me:$LINENO: result: $_EXT_CHECK" >&5
+$as_echo "$_EXT_CHECK" >&6; }
+	if test "$_EXT_CHECK" != no; then
+		REQUIRED_MODULES="$REQUIRED_MODULES randrproto"
+	fi
+
+
+
+	SAVE_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS -I`$PKG_CONFIG --variable=sdkdir xorg-server`"
+	cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include "xorg-server.h"
+#if !defined XINPUT
+#error XINPUT not defined
+#endif
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  _EXT_CHECK=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	_EXT_CHECK=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+	CFLAGS="$SAVE_CFLAGS"
+	{ $as_echo "$as_me:$LINENO: checking if XINPUT is defined" >&5
+$as_echo_n "checking if XINPUT is defined... " >&6; }
+	{ $as_echo "$as_me:$LINENO: result: $_EXT_CHECK" >&5
+$as_echo "$_EXT_CHECK" >&6; }
+	if test "$_EXT_CHECK" != no; then
+		REQUIRED_MODULES="$REQUIRED_MODULES inputproto"
+	fi
+
+
+# Checks for pkg-config packages
 
 pkg_failed=no
 { $as_echo "$as_me:$LINENO: checking for XORG" >&5
