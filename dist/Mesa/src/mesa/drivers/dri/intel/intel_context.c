@@ -610,6 +610,7 @@ intelInitContext(struct intel_context *intel,
    intel->driContext = driContextPriv;
    intel->driFd = sPriv->fd;
 
+   intel->has_xrgb_textures = GL_TRUE;
    if (IS_GEN6(intel->intelScreen->deviceID)) {
       intel->gen = 6;
       intel->needs_ff_sync = GL_TRUE;
@@ -631,6 +632,10 @@ intelInitContext(struct intel_context *intel,
       }
    } else {
       intel->gen = 2;
+      if (intel->intelScreen->deviceID == PCI_CHIP_I830_M ||
+	  intel->intelScreen->deviceID == PCI_CHIP_845_G) {
+	 intel->has_xrgb_textures = GL_FALSE;
+      }
    }
 
    driParseConfigFiles(&intel->optionCache, &intelScreen->optionCache,

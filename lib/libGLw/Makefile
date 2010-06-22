@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile,v 1.12 2010/05/08 14:15:29 matthieu Exp $
+# $OpenBSD: Makefile,v 1.13 2010/06/22 20:04:22 matthieu Exp $
 
 DEBUG?=
 
 LIB= GLw
 
 MESA_MAJOR=	7
-MESA_MINOR=	4
+MESA_MINOR=	8
 MESA_TINY=	2
 
 CPPFLAGS += -I${X11BASE}/include \
