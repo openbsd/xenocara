@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.124 2010/06/14 21:57:15 matthieu Exp $
+ $OpenBSD: MODULES,v 1.125 2010/06/27 18:36:39 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -88,7 +88,7 @@ data/bitmaps		1.1.0	7.5
 data/xkbdata		1.0.1	7.0	deprecated
 
 doc/xorg-docs		1.5	7.3	needs-update
-doc/xorg-sgml-doctools	1.4	7.5+	needs-update
+doc/xorg-sgml-doctools	1.5	7.5+	needs-update
 
 driver/xf86-input-acecad	1.4.0	7.4+
 driver/xf86-input-citron	2.2.2	7.4	needs-release
@@ -113,7 +113,7 @@ driver/xf86-video-geode		2.11.8	7.5+
 driver/xf86-video-glint		1.2.4	7.4+
 driver/xf86-video-i128		1.3.3	7.4+
 driver/xf86-video-i740		1.3.2	7.4+
-driver/xf86-video-intel		2.11.0	7.5+	needs-update
+driver/xf86-video-intel		2.12.0	7.5+	needs-update
 driver/xf86-video-mach64	6.8.2	7.4
 driver/xf86-video-mga		1.4.12	7.5+
 driver/xf86-video-neomagic	1.2.4	7.4+
@@ -195,7 +195,7 @@ lib/libXdamage			1.1.3	7.5+	needs-update
 lib/libXdmcp			1.0.3	7.5
 lib/libXext			1.1.2	7.5+	needs-update
 lib/libXfixes			4.0.5	7.5+	needs-update
-lib/libXfont			1.4.1	7.5
+lib/libXfont			1.4.2	7.5+	needs-update
 lib/libXfontcache		1.0.5	7.5
 lib/libXft			2.1.14	7.5
 lib/libXi			1.3	7.5
@@ -254,7 +254,7 @@ proto/xineramaproto		1.2	7.5
 util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
 util/imake			1.0.3	7.5+
-util/macros			1.8.0	7.5+
+util/macros			1.10.0	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
 xserver				1.8.1	7.5+	needs-update
