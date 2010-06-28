@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.44 2010/04/11 16:51:26 okan Exp $
+ * $Id: group.c,v 1.45 2010/06/28 12:29:04 okan Exp $
  */
 
 #include <sys/param.h>
@@ -188,12 +188,11 @@ group_make_autogroup(struct conf *conf, char *class, int no)
 
 	if ((p = strchr(class, ',')) == NULL) {
 		aw->name = NULL;
-		aw->class = xstrdup(class);
 	} else {
 		*(p++) = '\0';
-		aw->name = xstrdup(class);
-		aw->class = xstrdup(p);
+		aw->name = xstrdup(p);
 	}
+	aw->class = xstrdup(class);
 	aw->num = no;
 
 	TAILQ_INSERT_TAIL(&conf->autogroupq, aw, entry);
