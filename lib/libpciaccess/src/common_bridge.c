@@ -270,8 +270,8 @@ pci_device_get_bridge_buses(struct pci_device * dev, int *primary_bus,
 	return ENODEV;
     }
 
-    if (priv->bridge.pci == NULL) {
-	read_bridge_info(priv);
+    if (!priv->bridge.pci) {
+	return ENODEV;
     }
 
     switch ((dev->device_class >> 8) & 0x0ff) {
@@ -292,17 +292,73 @@ pci_device_get_bridge_buses(struct pci_device * dev, int *primary_bus,
 	break;
 
     case 0x04:
+    if (priv->bridge.pci == NULL)
+        read_bridge_info(priv);
+    if (priv->header_type == 0x01) {
 	*primary_bus = priv->bridge.pci->primary_bus;
 	*secondary_bus = priv->bridge.pci->secondary_bus;
 	*subordinate_bus = priv->bridge.pci->subordinate_bus;
+    } else {
+	*primary_bus = dev->bus;
+	*secondary_bus = -1;
+	*subordinate_bus = -1;
+    }
 	break;
 
     case 0x07:
+    if (priv->bridge.pcmcia == NULL)
+        read_bridge_info(priv);
+    if (priv->header_type == 0x02) {
 	*primary_bus = priv->bridge.pcmcia->primary_bus;
 	*secondary_bus = priv->bridge.pcmcia->card_bus;
 	*subordinate_bus = priv->bridge.pcmcia->subordinate_bus;
+    } else {
+	*primary_bus = dev->bus;
+	*secondary_bus = -1;
+	*subordinate_bus = -1;
+    }
 	break;
     }
 
     return 0;
+}
+
+#define PCI_CLASS_BRIDGE 0x06
+#define PCI_SUBCLASS_BRIDGE_PCI 0x04
+
+struct pci_device *
+pci_device_get_parent_bridge(struct pci_device *dev)
+{
+    struct pci_id_match bridge_match = {
+        PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY,
+        (PCI_CLASS_BRIDGE << 16) | (PCI_SUBCLASS_BRIDGE_PCI << 8),
+        0
+    };
+
+    struct pci_device *bridge;
+    struct pci_device_iterator *iter;
+
+    if (dev == NULL)
+        return NULL;
+
+    iter = pci_id_match_iterator_create(& bridge_match);
+    if (iter == NULL)
+        return NULL;
+
+    while ((bridge = pci_device_next(iter)) != NULL) {
+        if (bridge->domain == dev->domain) {
+            const struct pci_bridge_info *info =
+                pci_device_get_bridge_info(bridge);
+
+            if (info != NULL) {
+                if (info->secondary_bus == dev->bus) {
+                    break;
+                }
+            }
+        }
+    }
+
+    pci_iterator_destroy(iter);
+
+    return bridge;
 }

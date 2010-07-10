@@ -1,0 +1,35 @@
+xorg/lib/libpciaccess - Generic PCI access library
+
+Documentation of the libpciaccess API's can be generated from the
+sources via the doxygen command.    Information about porting Xorg
+drivers to libpciaccess is located at:
+
+	http://www.x.org/wiki/PciReworkHowto
+
+For historical reference, the original proposal for this work is at:
+
+	http://www.x.org/wiki/PciReworkProposal
+
+All questions regarding this software should be directed at the
+Xorg mailing list:
+
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+Please submit bug reports to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/lib/libpciaccess
+
+        http://cgit.freedesktop.org/xorg/lib/libpciaccess
+
+For patch submission instructions, see:
+
+	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage
+

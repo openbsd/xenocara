@@ -62,6 +62,8 @@ pci_system_init( void )
     err = pci_system_openbsd_create();
 #elif defined(__sun)
     err = pci_system_solx_devfs_create();
+#elif defined(__GNU__)
+    err = pci_system_x86_create();
 #endif
 
     return err;
@@ -91,6 +93,7 @@ pci_system_cleanup( void )
 	return;
     }
 
+    pci_io_cleanup();
 
     if ( pci_sys->devices ) {
 	for ( i = 0 ; i < pci_sys->num_devices ; i++ ) {

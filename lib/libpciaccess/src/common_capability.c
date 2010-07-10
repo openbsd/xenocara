@@ -104,14 +104,9 @@ pci_fill_capabilities_generic( struct pci_device * dev )
 	
 	switch ( cap_id ) {
 	case 2: {
-	    struct pci_agp_info * agp_info = calloc( 1, sizeof( struct pci_agp_info ) );
+	    struct pci_agp_info * agp_info;
 	    uint32_t agp_status;
 	    uint8_t agp_ver;
-
-
-	    if ( agp_info == NULL ) {
-		return ENOMEM;
-	    }
 
 
 	    err = pci_device_cfg_read_u8( dev, & agp_ver, cap_offset + 2 );
@@ -122,6 +117,11 @@ pci_fill_capabilities_generic( struct pci_device * dev )
 	    err = pci_device_cfg_read_u32( dev, & agp_status, cap_offset + 4 );
 	    if ( err ) {
 		return err;
+	    }
+
+	    agp_info = calloc( 1, sizeof( struct pci_agp_info ) );
+	    if ( agp_info == NULL ) {
+		return ENOMEM;
 	    }
 
 	    agp_info->config_offset = cap_offset;

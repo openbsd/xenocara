@@ -52,10 +52,20 @@
 #endif /* linux */
 
 #elif defined(__sun)
-#define	LETOH_16(x)	(x)
-#define	HTOLE_16(x)	(x)
-#define	LETOH_32(x)	(x)
-#define	HTOLE_32(x)	(x)
+
+#include <sys/byteorder.h>
+
+#ifdef _BIG_ENDIAN
+# define LETOH_16(x)   BSWAP_16(x)
+# define HTOLE_16(x)   BSWAP_16(x)
+# define LETOH_32(x)   BSWAP_32(x)
+# define HTOLE_32(x)   BSWAP_32(x)
+#else
+# define LETOH_16(x)   (x)
+# define HTOLE_16(x)   (x)
+# define LETOH_32(x)   (x)
+# define HTOLE_32(x)   (x)
+#endif /* Solaris */
 
 #else
 
@@ -98,6 +108,35 @@ pci_device_read_rom( struct pci_device * dev, void * buffer )
     return (pci_sys->methods->read_rom)( dev, buffer );
 }
 
+/**
+ * Probe a PCI (VGA) device to determine if its the boot VGA device
+ *
+ * \param dev    Device whose VGA status to query
+ * \return
+ * Zero if not the boot VGA, 1 if the boot VGA.
+ */
+int
+pci_device_is_boot_vga( struct pci_device * dev )
+{
+	if (!pci_sys->methods->boot_vga)
+		return 0;
+	return pci_sys->methods->boot_vga( dev );
+}
+
+/**
+ * Probe a PCI device to determine if a kernel driver is attached.
+ * 
+ * \param dev Device to query
+ * \return
+ * Zero if no driver attached, 1 if attached kernel drviver
+ */
+int
+pci_device_has_kernel_driver( struct pci_device * dev )
+{
+	if (!pci_sys->methods->has_kernel_driver)
+		return 0;
+	return pci_sys->methods->has_kernel_driver( dev );
+}
 
 /**
  * Probe a PCI device to learn information about the device.

@@ -55,7 +55,7 @@
 typedef gzFile pci_id_file;
 
 static pci_id_file
-pci_id_file_open()
+pci_id_file_open(void)
 {
     pci_id_file result;
 
@@ -189,26 +189,25 @@ insert( uint16_t vendor )
 static void
 populate_vendor( struct pci_id_leaf * vend, int fill_device_data )
 {
-    pci_id_file * f = pci_id_file_open();
+    pci_id_file * f;
     char buf[128];
     unsigned vendor = PCI_MATCH_ANY;
-
-
-    /* If the pci.ids file could not be opened, there's nothing we can do.
-     */
-    if (f == NULL) {
-	return;
-    }
 
 
     /* If the device tree for this vendor is already populated, don't do
      * anything.  This avoids wasted processing and potential memory leaks.
      */
     if (vend->num_devices != 0) {
-	pci_id_file_close( f );
 	return;
     }
 
+    f = pci_id_file_open();
+    
+    /* If the pci.ids file could not be opened, there's nothing we can do.
+     */
+    if (f == NULL) {
+	return;
+    }
 
     while( pci_id_file_gets( buf, sizeof( buf ), f ) != NULL ) {
 	unsigned num_tabs;

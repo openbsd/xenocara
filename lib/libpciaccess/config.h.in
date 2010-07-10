@@ -39,6 +39,9 @@
 /* Use zlib to read gzip compressed pci.ids */
 #undef HAVE_ZLIB
 
+/* Linux ROM read fallback */
+#undef LINUX_ROM
+
 /* Name of package */
 #undef PACKAGE
 
@@ -74,3 +77,9 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES

@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <err.h>
+#include <unistd.h>
 
 #include "pciaccess.h"
 

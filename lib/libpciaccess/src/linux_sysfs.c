@@ -55,46 +55,16 @@
 #include "pciaccess_private.h"
 #include "linux_devmem.h"
 
-static void pci_device_linux_sysfs_enable(struct pci_device *dev);
-
-static int pci_device_linux_sysfs_read_rom( struct pci_device * dev,
-    void * buffer );
-
-static int pci_device_linux_sysfs_probe( struct pci_device * dev );
-
-static int pci_device_linux_sysfs_map_range(struct pci_device *dev,
-    struct pci_device_mapping *map);
-
-static int pci_device_linux_sysfs_unmap_range(struct pci_device *dev,
-    struct pci_device_mapping *map);
-
-static int pci_device_linux_sysfs_read( struct pci_device * dev, void * data,
-    pciaddr_t offset, pciaddr_t size, pciaddr_t * bytes_read );
-
-static int pci_device_linux_sysfs_write( struct pci_device * dev,
-    const void * data, pciaddr_t offset, pciaddr_t size,
-    pciaddr_t * bytes_written );
-
-static const struct pci_system_methods linux_sysfs_methods = {
-    .destroy = NULL,
-    .destroy_device = NULL,
-    .read_rom = pci_device_linux_sysfs_read_rom,
-    .probe = pci_device_linux_sysfs_probe,
-    .map_range = pci_device_linux_sysfs_map_range,
-    .unmap_range = pci_device_linux_sysfs_unmap_range,
-
-    .read = pci_device_linux_sysfs_read,
-    .write = pci_device_linux_sysfs_write,
-
-    .fill_capabilities = pci_fill_capabilities_generic,
-    .enable = pci_device_linux_sysfs_enable,
-};
+static const struct pci_system_methods linux_sysfs_methods;
 
 #define SYS_BUS_PCI "/sys/bus/pci/devices"
 
+static int
+pci_device_linux_sysfs_read( struct pci_device * dev, void * data,
+			     pciaddr_t offset, pciaddr_t size,
+			     pciaddr_t * bytes_read );
 
 static int populate_entries(struct pci_system * pci_sys);
-
 
 /**
  * Attempt to access PCI subsystem using Linux's sysfs interface.
@@ -207,6 +177,10 @@ populate_entries( struct pci_system * p )
 	    err = ENOMEM;
 	}
     }
+
+    for (i = 0; i < n; i++)
+	free(devices[i]);
+    free(devices);
 
     if (err) {
 	free(p->devices);
@@ -322,10 +296,15 @@ pci_device_linux_sysfs_read_rom( struct pci_device * dev, void * buffer )
     
     fd = open( name, O_RDWR );
     if ( fd == -1 ) {
+#ifdef LINUX_ROM
 	/* If reading the ROM using sysfs fails, fall back to the old
 	 * /dev/mem based interface.
+	 * disable this for newer kernels using configure
 	 */
 	return pci_device_linux_devmem_read_rom(dev, buffer);
+#else
+	return errno;
+#endif
     }
 
 
@@ -698,3 +677,188 @@ static void pci_device_linux_sysfs_enable(struct pci_device *dev)
     write( fd, "1", 1 );
     close(fd);
 }
+
+static int pci_device_linux_sysfs_boot_vga(struct pci_device *dev)
+{
+    char name[256];
+    char reply[3];
+    int fd, bytes_read;
+    int ret = 0;
+
+    snprintf( name, 255, "%s/%04x:%02x:%02x.%1u/boot_vga",
+	      SYS_BUS_PCI,
+	      dev->domain,
+	      dev->bus,
+	      dev->dev,
+	      dev->func );
+    
+    fd = open( name, O_RDONLY );
+    if (fd == -1)
+       return 0;
+
+    bytes_read = read(fd, reply, 1);
+    if (bytes_read != 1)
+	goto out;
+    if (reply[0] == '1')
+	ret = 1;
+out:
+    close(fd);
+    return ret;
+}
+
+static int pci_device_linux_sysfs_has_kernel_driver(struct pci_device *dev)
+{
+    char name[256];
+    struct stat dummy;
+    int ret;
+
+    snprintf( name, 255, "%s/%04x:%02x:%02x.%1u/driver",
+	      SYS_BUS_PCI,
+	      dev->domain,
+	      dev->bus,
+	      dev->dev,
+	      dev->func );
+    
+    ret = stat(name, &dummy);
+    if (ret < 0)
+	return 0;
+    return 1;
+}
+
+static struct pci_io_handle *
+pci_device_linux_sysfs_open_device_io(struct pci_io_handle *ret,
+				      struct pci_device *dev, int bar,
+				      pciaddr_t base, pciaddr_t size)
+{
+    char name[PATH_MAX];
+
+    snprintf(name, PATH_MAX, "%s/%04x:%02x:%02x.%1u/resource%d",
+	     SYS_BUS_PCI, dev->domain, dev->bus, dev->dev, dev->func, bar);
+
+    ret->fd = open(name, O_RDWR);
+
+    if (ret->fd < 0)
+	return NULL;
+
+    ret->base = base;
+    ret->size = size;
+
+    return ret;
+}
+
+static struct pci_io_handle *
+pci_device_linux_sysfs_open_legacy_io(struct pci_io_handle *ret,
+				      struct pci_device *dev, pciaddr_t base,
+				      pciaddr_t size)
+{
+    char name[PATH_MAX];
+
+    /* First check if there's a legacy io method for the device */
+    while (dev) {
+	snprintf(name, PATH_MAX, "/sys/class/pci_bus/%04x:%02x/legacy_io",
+		 dev->domain, dev->bus);
+
+	ret->fd = open(name, O_RDWR);
+	if (ret->fd >= 0)
+	    break;
+
+	dev = pci_device_get_parent_bridge(dev);
+    }
+
+    /* If not, /dev/port is the best we can do */
+    if (!dev)
+	ret->fd = open("/dev/port", O_RDWR);
+
+    if (ret->fd < 0)
+	return NULL;
+
+    ret->base = base;
+    ret->size = size;
+
+    return ret;
+}
+
+static void
+pci_device_linux_sysfs_close_io(struct pci_device *dev,
+				struct pci_io_handle *handle)
+{
+    close(handle->fd);
+}
+
+static uint32_t
+pci_device_linux_sysfs_read32(struct pci_io_handle *handle, uint32_t port)
+{
+    uint32_t ret;
+
+    pread(handle->fd, &ret, 4, port + handle->base);
+
+    return ret;
+}
+
+static uint16_t
+pci_device_linux_sysfs_read16(struct pci_io_handle *handle, uint32_t port)
+{
+    uint16_t ret;
+
+    pread(handle->fd, &ret, 2, port + handle->base);
+
+    return ret;
+}
+
+static uint8_t
+pci_device_linux_sysfs_read8(struct pci_io_handle *handle, uint32_t port)
+{
+    uint8_t ret;
+
+    pread(handle->fd, &ret, 1, port + handle->base);
+
+    return ret;
+}
+
+static void
+pci_device_linux_sysfs_write32(struct pci_io_handle *handle, uint32_t port,
+			       uint32_t data)
+{
+    pwrite(handle->fd, &data, 4, port + handle->base);
+}
+
+static void
+pci_device_linux_sysfs_write16(struct pci_io_handle *handle, uint32_t port,
+			       uint16_t data)
+{
+    pwrite(handle->fd, &data, 2, port + handle->base);
+}
+
+static void
+pci_device_linux_sysfs_write8(struct pci_io_handle *handle, uint32_t port,
+			      uint8_t data)
+{
+    pwrite(handle->fd, &data, 1, port + handle->base);
+}
+
+static const struct pci_system_methods linux_sysfs_methods = {
+    .destroy = NULL,
+    .destroy_device = NULL,
+    .read_rom = pci_device_linux_sysfs_read_rom,
+    .probe = pci_device_linux_sysfs_probe,
+    .map_range = pci_device_linux_sysfs_map_range,
+    .unmap_range = pci_device_linux_sysfs_unmap_range,
+
+    .read = pci_device_linux_sysfs_read,
+    .write = pci_device_linux_sysfs_write,
+
+    .fill_capabilities = pci_fill_capabilities_generic,
+    .enable = pci_device_linux_sysfs_enable,
+    .boot_vga = pci_device_linux_sysfs_boot_vga,
+    .has_kernel_driver = pci_device_linux_sysfs_has_kernel_driver,
+
+    .open_device_io = pci_device_linux_sysfs_open_device_io,
+    .open_legacy_io = pci_device_linux_sysfs_open_legacy_io,
+    .close_io = pci_device_linux_sysfs_close_io,
+    .read32 = pci_device_linux_sysfs_read32,
+    .read16 = pci_device_linux_sysfs_read16,
+    .read8 = pci_device_linux_sysfs_read8,
+    .write32 = pci_device_linux_sysfs_write32,
+    .write16 = pci_device_linux_sysfs_write16,
+    .write8 = pci_device_linux_sysfs_write8,
+};

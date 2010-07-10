@@ -1,5 +1,6 @@
 /*
  * (C) Copyright IBM Corporation 2006
+ * Copyright 2007, 2009 Sun Microsystems, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,34 +23,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 /*
- * Copyright 2007 Sun Microsystems, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, and/or sell copies of the Software, and to permit persons
- * to whom the Software is furnished to do so, provided that the above
- * copyright notice(s) and this permission notice appear in all copies of
- * the Software and that both the above copyright notice(s) and this
- * permission notice appear in supporting documentation.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
- * OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
- * INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
- * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * Except as contained in this notice, the name of a copyright holder
- * shall not be used in advertising or otherwise to promote the sale, use
- * or other dealings in this Software without prior written authorization
- * of the copyright holder.
- */
-/*
  * Solaris devfs interfaces
  */
 
@@ -68,6 +41,8 @@
 #include "pciaccess.h"
 #include "pciaccess_private.h"
 
+/* #define DEBUG */
+
 #define	MAX_DEVICES	256
 #define	CELL_NUMS_1275	(sizeof(pci_regspec_t) / sizeof(uint_t))
 
@@ -85,12 +60,13 @@ typedef struct i_devnode {
 
 typedef struct nexus {
     int fd;
-    int domain;
+    int first_bus;
+    int last_bus;
+    char *path;			/* for errors/debugging; fd is all we need */
     struct nexus *next;
 } nexus_t;
 
 static nexus_t *nexus_list = NULL;
-static int num_domains = 0;
 static int xsvc_fd = -1;
 
 /*
@@ -126,9 +102,6 @@ static int xsvc_fd = -1;
 # define U45_SB_DEVID_VID	0x524910b9
 # define U45_SB_CLASS_RID	0x06040000
 #endif
-
-#define	DEBUGON	0
-
 
 static int pci_device_solx_devfs_map_range(struct pci_device *dev,
     struct pci_device_mapping *map);
@@ -174,12 +147,12 @@ static const struct pci_system_methods solx_devfs_methods = {
 };
 
 static nexus_t *
-find_nexus_for_domain( int domain )
+find_nexus_for_bus( int bus )
 {
     nexus_t *nexus;
 
     for (nexus = nexus_list ; nexus != NULL ; nexus = nexus->next) {
-	if (nexus->domain == domain) {
+	if ((bus >= nexus->first_bus) && (bus <= nexus->last_bus)) {
 	    return nexus;
 	}
     }
@@ -212,6 +185,7 @@ pci_system_solx_devfs_destroy( void )
     for (nexus = nexus_list ; nexus != NULL ; nexus = next) {
 	next = nexus->next;
 	close(nexus->fd);
+	free(nexus->path);
 	free(nexus);
     }
     nexus_list = NULL;
@@ -443,7 +417,7 @@ probe_dev(nexus_t *nexus, pcitool_reg_t *prg_p, struct pci_system *pci_sys)
 	    /*
 	     * Domain is peer bus??
 	     */
-	    pci_base->domain = nexus->domain;
+	    pci_base->domain = 0;
 	    pci_base->bus = prg_p->bus_no;
 	    pci_base->dev = prg_p->dev_no;
 	    pci_base->func = func;
@@ -466,12 +440,20 @@ probe_dev(nexus_t *nexus, pcitool_reg_t *prg_p, struct pci_system *pci_sys)
 	    pci_sys->devices[pci_sys->num_devices].header_type
 					= GET_CONFIG_VAL_8(PCI_CONF_HEADER);
 
-#if DEBUGON
-	    fprintf(stderr, "busno = %x, devno = %x, funcno = %x\n",
-		    prg_p->bus_no, prg_p->dev_no, func);
+#ifdef DEBUG
+	    fprintf(stderr,
+		    "nexus = %s, busno = %x, devno = %x, funcno = %x\n",
+		    nexus->path, prg_p->bus_no, prg_p->dev_no, func);
 #endif
 
-	    pci_sys->num_devices++;
+	    if (pci_sys->num_devices < (MAX_DEVICES - 1)) {
+		pci_sys->num_devices++;
+	    } else {
+		(void) fprintf(stderr,
+			       "Maximum number of PCI devices found,"
+			       " discarding additional devices\n");
+	    }
+
 
 	    /*
 	     * Accommodate devices which state their
@@ -500,12 +482,62 @@ probe_nexus_node(di_node_t di_node, di_minor_t minor, void *arg)
     int fd;
     char nexus_path[MAXPATHLEN];
 
+    di_prop_t prop;
+    char *strings;
+    int *ints;
+    int numval;
+    int pci_node = 0;
+    int first_bus = 0, last_bus = PCI_REG_BUS_G(PCI_REG_BUS_M);
+
+#ifdef DEBUG
+    nexus_name = di_devfs_minor_path(minor);
+    fprintf(stderr, "-- device name: %s\n", nexus_name);
+#endif
+
+    for (prop = di_prop_next(di_node, NULL); prop != NULL;
+	 prop = di_prop_next(di_node, prop)) {
+
+	const char *prop_name = di_prop_name(prop);
+
+#ifdef DEBUG
+	fprintf(stderr, "   property: %s\n", prop_name);
+#endif
+
+	if (strcmp(prop_name, "device_type") == 0) {
+	    numval = di_prop_strings(prop, &strings);
+	    if (numval != 1 || strncmp(strings, "pci", 3) != 0) {
+		/* not a PCI node, bail */
+		return (DI_WALK_CONTINUE);
+	    }
+	    pci_node = 1;
+	}
+	else if (strcmp(prop_name, "class-code") == 0) {
+	    /* not a root bus node, bail */
+	    return (DI_WALK_CONTINUE);
+	}
+	else if (strcmp(prop_name, "bus-range") == 0) {
+	    numval = di_prop_ints(prop, &ints);
+	    if (numval == 2) {
+		first_bus = ints[0];
+		last_bus = ints[1];
+	    }
+	}
+    }
+
+#ifdef __x86  /* sparc pci nodes don't have the device_type set */
+    if (pci_node != 1)
+	return (DI_WALK_CONTINUE);
+#endif
+
+    /* we have a PCI root bus node. */
     nexus = calloc(1, sizeof(nexus_t));
     if (nexus == NULL) {
 	(void) fprintf(stderr, "Error allocating memory for nexus: %s\n",
 		       strerror(errno));
-	return DI_WALK_TERMINATE;
+	return (DI_WALK_TERMINATE);
     }
+    nexus->first_bus = first_bus;
+    nexus->last_bus = last_bus;
 
     nexus_name = di_devfs_minor_path(minor);
     if (nexus_name == NULL) {
@@ -518,13 +550,19 @@ probe_nexus_node(di_node_t di_node, di_minor_t minor, void *arg)
     snprintf(nexus_path, sizeof(nexus_path), "/devices%s", nexus_name);
     di_devfs_path_free(nexus_name);
 
+#ifdef DEBUG
+    fprintf(stderr, "nexus = %s, bus-range = %d - %d\n",
+	    nexus_path, first_bus, last_bus);
+#endif
+
     if ((fd = open(nexus_path, O_RDWR)) >= 0) {
 	nexus->fd = fd;
-	nexus->domain = num_domains++;
+	nexus->path = strdup(nexus_path);
 	if ((do_probe(nexus, pci_sys) != 0) && (errno != ENXIO)) {
 	    (void) fprintf(stderr, "Error probing node %s: %s\n",
 			   nexus_path, strerror(errno));
 	    (void) close(fd);
+	    free(nexus->path);
 	    free(nexus);
 	} else {
 	    nexus->next = nexus_list;
@@ -553,9 +591,9 @@ do_probe(nexus_t *nexus, struct pci_system *pci_sys)
     pcitool_reg_t prg;
     uint32_t bus;
     uint8_t dev;
-    uint32_t last_bus = PCI_REG_BUS_M >> PCI_REG_BUS_SHIFT;
+    uint32_t last_bus = nexus->last_bus;
     uint8_t last_dev = PCI_REG_DEV_M >> PCI_REG_DEV_SHIFT;
-    uint8_t first_bus = 0;
+    uint8_t first_bus = nexus->first_bus;
     uint8_t first_dev = 0;
     int rval = 0;
 
@@ -593,9 +631,6 @@ do_probe(nexus_t *nexus, struct pci_system *pci_sys)
 	    rval = 0;
 	}
     }
-    if (pci_sys->num_devices > MAX_DEVICES) {
-	(void) fprintf(stderr, "pci devices reach maximum number\n");
-    }
 
     return (rval);
 }
@@ -606,18 +641,17 @@ find_target_node(di_node_t node, void *arg)
     int *regbuf = NULL;
     int len = 0;
     uint32_t busno, funcno, devno;
-    i_devnode_t *devnode;
-    void *prop = DI_PROP_NIL;
-    int i;
-
-    devnode = (i_devnode_t *)arg;
+    i_devnode_t *devnode = (i_devnode_t *)arg;
 
     /*
      * Test the property functions, only for testing
      */
     /*
+    void *prop = DI_PROP_NIL;
+
     (void) fprintf(stderr, "start of node 0x%x\n", node->nodeid);
     while ((prop = di_prop_hw_next(node, prop)) != DI_PROP_NIL) {
+	int i;
 	(void) fprintf(stderr, "name=%s: ", di_prop_name(prop));
 	len = 0;
 	if (!strcmp(di_prop_name(prop), "reg")) {
@@ -634,7 +668,7 @@ find_target_node(di_node_t node, void *arg)
     len = di_prop_lookup_ints(DDI_DEV_T_ANY, node, "reg", &regbuf);
 
     if (len <= 0) {
-#if DEBUGON
+#ifdef DEBUG
 	fprintf(stderr, "error = %x\n", errno);
 	fprintf(stderr, "can not find assigned-address\n");
 #endif
@@ -664,16 +698,16 @@ pci_device_solx_devfs_probe( struct pci_device * dev )
 {
     uint8_t  config[256];
     int err;
-    di_node_t rnode;
-    i_devnode_t args;
+    di_node_t rnode = DI_NODE_NIL;
+    i_devnode_t args = { 0, 0, 0, DI_NODE_NIL };
     int *regbuf;
     pci_regspec_t *reg;
     int i;
     pciaddr_t bytes;
     int len = 0;
+    uint ent = 0;
 
     err = pci_device_solx_devfs_read( dev, config, 0, 256, & bytes );
-    args.node = DI_NODE_NIL;
 
     if ( bytes >= 64 ) {
 	struct pci_device_private *priv =
@@ -708,7 +742,6 @@ pci_device_solx_devfs_probe( struct pci_device * dev )
 	    args.func = dev->func;
 	    (void) di_walk_node(rnode, DI_WALK_CLDFIRST,
 				(void *)&args, find_target_node);
-	    di_fini(rnode);
 	}
     }
     if (args.node != DI_NODE_NIL) {
@@ -723,7 +756,7 @@ pci_device_solx_devfs_probe( struct pci_device * dev )
     }
 
     if (len <= 0)
-	return (err);
+	goto cleanup;
 
 
     /*
@@ -752,13 +785,21 @@ pci_device_solx_devfs_probe( struct pci_device * dev )
     }
 
     /*
-     * solaris has its own BAR index. To be sure that
-     * Xorg has the same BAR number as solaris. ????
+     * Solaris has its own BAR index.
+     * Linux give two region slot for 64 bit address.
      */
     for (i = 0; i < len; i = i + CELL_NUMS_1275) {
-	int ent = i/CELL_NUMS_1275;
 
 	reg = (pci_regspec_t *)&regbuf[i];
+	ent = reg->pci_phys_hi & 0xff;
+	/*
+	 * G35 broken in BAR0
+	 */
+	ent = (ent - PCI_CONF_BASE0) >> 2;
+	if (ent >= 6) {
+	    fprintf(stderr, "error ent = %d\n", ent);
+	    break;
+	}
 
 	/*
 	 * non relocatable resource is excluded
@@ -772,16 +813,6 @@ pci_device_solx_devfs_probe( struct pci_device * dev )
 	    dev->regions[ent].is_prefetchable = 1;
 	}
 
-	switch (reg->pci_phys_hi & PCI_REG_ADDR_M) {
-	    case PCI_ADDR_IO:
-		dev->regions[ent].is_IO = 1;
-		break;
-	    case PCI_ADDR_MEM32:
-		break;
-	    case PCI_ADDR_MEM64:
-		dev->regions[ent].is_64 = 1;
-		break;
-	}
 
 	/*
 	 * We split the shift count 32 into two 16 to
@@ -791,8 +822,26 @@ pci_device_solx_devfs_probe( struct pci_device * dev )
 	    ((reg->pci_phys_mid << 16) << 16);
 	dev->regions[ent].size = reg->pci_size_low +
 	    ((reg->pci_size_hi << 16) << 16);
+
+	switch (reg->pci_phys_hi & PCI_REG_ADDR_M) {
+	    case PCI_ADDR_IO:
+		dev->regions[ent].is_IO = 1;
+		break;
+	    case PCI_ADDR_MEM32:
+		break;
+	    case PCI_ADDR_MEM64:
+		dev->regions[ent].is_64 = 1;
+		/*
+		 * Skip one slot for 64 bit address
+		 */
+		break;
+	}
     }
 
+  cleanup:
+    if (rnode != DI_NODE_NIL) {
+	di_fini(rnode);
+    }
     return (err);
 }
 
@@ -808,7 +857,7 @@ pci_device_solx_devfs_read_rom( struct pci_device * dev, void * buffer )
 	.size = dev->rom_size,
 	.flags = 0
     };
-    
+
     err = pci_device_solx_devfs_map_range(dev, &prom);
     if (err == 0) {
 	(void) bcopy(prom.memory, buffer, dev->rom_size);
@@ -831,7 +880,7 @@ pci_device_solx_devfs_read( struct pci_device * dev, void * data,
     pcitool_reg_t cfg_prg;
     int err = 0;
     int i = 0;
-    nexus_t *nexus = find_nexus_for_domain(dev->domain);
+    nexus_t *nexus = find_nexus_for_bus(dev->bus);
 
     *bytes_read = 0;
 
@@ -852,7 +901,8 @@ pci_device_solx_devfs_read( struct pci_device * dev, void * data,
 	cfg_prg.offset = offset + i;
 
 	if ((err = ioctl(nexus->fd, PCITOOL_DEVICE_GET_REG, &cfg_prg)) != 0) {
-	    fprintf(stderr, "read bdf<%x,%x,%x,%llx> config space failure\n",
+	    fprintf(stderr, "read bdf<%s,%x,%x,%x,%llx> config space failure\n",
+		    nexus->path,
 		    cfg_prg.bus_no,
 		    cfg_prg.dev_no,
 		    cfg_prg.func_no,
@@ -882,7 +932,7 @@ pci_device_solx_devfs_write( struct pci_device * dev, const void * data,
     pcitool_reg_t cfg_prg;
     int err = 0;
     int cmd;
-    nexus_t *nexus = find_nexus_for_domain(dev->domain);
+    nexus_t *nexus = find_nexus_for_bus(dev->bus);
 
     if ( bytes_written != NULL ) {
 	*bytes_written = 0;

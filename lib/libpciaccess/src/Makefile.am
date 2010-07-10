@@ -21,20 +21,23 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-AM_CFLAGS = @PCIACCESS_CFLAGS@
+AM_CFLAGS = $(CWARNFLAGS) @PCIACCESS_CFLAGS@
 
 lib_LTLIBRARIES = libpciaccess.la
 
 if LINUX
 OS_SUPPORT = linux_sysfs.c linux_devmem.c linux_devmem.h
+VGA_ARBITER = common_vgaarb.c
 endif
 
 if FREEBSD
 OS_SUPPORT = freebsd_pci.c
+VGA_ARBITER = common_vgaarb_stub.c
 endif
 
 if NETBSD
 OS_SUPPORT = netbsd_pci.c
+VGA_ARBITER = common_vgaarb_stub.c
 endif
 
 if OPENBSD
@@ -43,23 +46,31 @@ endif
 
 if SOLARIS
 OS_SUPPORT = solx_devfs.c pci_tools.h
+VGA_ARBITER = common_vgaarb_stub.c
+endif
+
+if GNU
+OS_SUPPORT = x86_pci.c
+VGA_ARBITER = common_vgaarb_stub.c
 endif
 
 libpciaccess_la_SOURCES = common_bridge.c \
 	common_iterator.c \
 	common_init.c \
 	common_interface.c \
+	common_io.c \
 	common_capability.c \
 	common_device_name.c \
 	common_map.c \
 	pciaccess_private.h \
+	$(VGA_ARBITER) \
 	$(OS_SUPPORT)
 
 INCLUDES = -I$(top_srcdir)/include
 
 libpciaccess_la_LIBADD = @PCIACCESS_LIBS@
 
-libpciaccess_la_LDFLAGS = -version-number 0:10:2 -no-undefined
+libpciaccess_la_LDFLAGS = -version-number 0:10:8 -no-undefined
 
 libpciaccessincludedir = $(includedir)
 libpciaccessinclude_HEADERS = \

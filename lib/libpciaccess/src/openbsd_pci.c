@@ -519,3 +519,135 @@ pci_system_openbsd_init_dev_mem(int fd)
 {
 	aperturefd = fd;
 }
+
+int
+pci_device_vgaarb_init(void)
+{
+	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_device_iterator *iter;
+	struct pci_id_match vga_match = {
+		PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY,
+		(PCI_CLASS_DISPLAY << 16) | (PCI_SUBCLASS_DISPLAY_VGA << 8),
+		0x00ffff00
+	};
+	struct pci_vga pv;
+	int err;
+
+	pv.pv_sel.pc_bus = 0;
+	pv.pv_sel.pc_dev = 0;
+	pv.pv_sel.pc_func = 0;
+	err = ioctl(pcifd[0], PCIOCGETVGA, &pv);
+	if (err)
+		return err;
+
+	pci_sys->vga_target = pci_device_find_by_slot(0, pv.pv_sel.pc_bus,
+	    pv.pv_sel.pc_dev, pv.pv_sel.pc_func);
+
+	/* Count the number of VGA devices in domain 0. */
+	iter = pci_id_match_iterator_create(&vga_match);
+	if (iter == NULL)
+		return -1;
+	pci_sys->vga_count = 0;
+	while ((dev = pci_device_next(iter)) != NULL) {
+		if (dev->domain == 0)
+			pci_sys->vga_count++;
+	}
+	pci_iterator_destroy(iter);
+
+	return 0;
+}
+
+void
+pci_device_vgaarb_fini(void)
+{
+	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_vga pv;
+
+	if (dev == NULL)
+		return;
+
+	pv.pv_sel.pc_bus = dev->bus;
+	pv.pv_sel.pc_dev = dev->dev;
+	pv.pv_sel.pc_func = dev->func;
+	pv.pv_lock = PCI_VGA_UNLOCK;
+	ioctl(pcifd[dev->domain], PCIOCSETVGA, &pv);
+}
+
+int
+pci_device_vgaarb_set_target(struct pci_device *dev)
+{
+	pci_sys->vga_target = dev;
+	return 0;
+}
+
+int
+pci_device_vgaarb_lock(void)
+{
+	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_vga pv;
+
+	if (dev == NULL)
+		return -1;
+
+#if 0
+	if (dev->vgaarb_rsrc == 0 || pci_sys->vga_count == 1)
+		return 0;
+#else
+	if (pci_sys->vga_count == 1)
+		return 0;
+#endif
+
+	pv.pv_sel.pc_bus = dev->bus;
+	pv.pv_sel.pc_dev = dev->dev;
+	pv.pv_sel.pc_func = dev->func;
+	pv.pv_lock = PCI_VGA_LOCK;
+	return ioctl(pcifd[dev->domain], PCIOCSETVGA, &pv);
+}
+
+int
+pci_device_vgaarb_unlock(void)
+{
+	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_vga pv;
+
+	if (dev == NULL)
+		return -1;
+
+#if 0
+	if (dev->vgaarb_rsrc == 0 || pci_sys->vga_count == 1)
+		return 0;
+#else
+	if (pci_sys->vga_count == 1)
+		return 0;
+#endif
+
+	pv.pv_sel.pc_bus = dev->bus;
+	pv.pv_sel.pc_dev = dev->dev;
+	pv.pv_sel.pc_func = dev->func;
+	pv.pv_lock = PCI_VGA_UNLOCK;
+	return ioctl(pcifd[dev->domain], PCIOCSETVGA, &pv);
+}
+
+int
+pci_device_vgaarb_get_info(struct pci_device *dev, int *vga_count,
+    int *rsrc_decodes)
+{
+	*vga_count = pci_sys->vga_count;
+
+	if (dev)
+		*rsrc_decodes = dev->vgaarb_rsrc;
+
+	return 0;
+}
+
+int
+pci_device_vgaarb_decodes(int rsrc_decodes)
+{
+	struct pci_device *dev = pci_sys->vga_target;
+
+	if (dev == NULL)
+		return -1;
+
+	dev->vgaarb_rsrc = rsrc_decodes;
+	return 0;
+}

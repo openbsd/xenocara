@@ -66,7 +66,8 @@ subdir = src
 DIST_COMMON = $(libpciaccessinclude_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -84,20 +85,29 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libpciaccess_la_DEPENDENCIES =
 am__libpciaccess_la_SOURCES_DIST = common_bridge.c common_iterator.c \
-	common_init.c common_interface.c common_capability.c \
-	common_device_name.c common_map.c pciaccess_private.h \
-	freebsd_pci.c linux_sysfs.c linux_devmem.c linux_devmem.h \
-	netbsd_pci.c openbsd_pci.c solx_devfs.c pci_tools.h
-@FREEBSD_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_FALSE@@SOLARIS_TRUE@am__objects_1 = solx_devfs.lo
-@FREEBSD_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_TRUE@am__objects_1 = openbsd_pci.lo
-@FREEBSD_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_1 =  \
-@FREEBSD_FALSE@@LINUX_FALSE@@NETBSD_TRUE@	netbsd_pci.lo
-@FREEBSD_FALSE@@LINUX_TRUE@am__objects_1 = linux_sysfs.lo \
-@FREEBSD_FALSE@@LINUX_TRUE@	linux_devmem.lo
-@FREEBSD_TRUE@am__objects_1 = freebsd_pci.lo
+	common_init.c common_interface.c common_io.c \
+	common_capability.c common_device_name.c common_map.c \
+	pciaccess_private.h common_vgaarb_stub.c common_vgaarb.c \
+	freebsd_pci.c x86_pci.c linux_sysfs.c linux_devmem.c \
+	linux_devmem.h netbsd_pci.c openbsd_pci.c solx_devfs.c \
+	pci_tools.h
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@SOLARIS_TRUE@am__objects_1 = common_vgaarb_stub.lo
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_1 =  \
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@	common_vgaarb.lo
+@FREEBSD_FALSE@@GNU_TRUE@am__objects_1 = common_vgaarb_stub.lo
+@FREEBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_FALSE@@SOLARIS_TRUE@am__objects_2 = solx_devfs.lo
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_TRUE@am__objects_2 = openbsd_pci.lo
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_2 = netbsd_pci.lo
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_2 = linux_sysfs.lo \
+@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@	linux_devmem.lo
+@FREEBSD_FALSE@@GNU_TRUE@am__objects_2 = x86_pci.lo
+@FREEBSD_TRUE@am__objects_2 = freebsd_pci.lo
 am_libpciaccess_la_OBJECTS = common_bridge.lo common_iterator.lo \
-	common_init.lo common_interface.lo common_capability.lo \
-	common_device_name.lo common_map.lo $(am__objects_1)
+	common_init.lo common_interface.lo common_io.lo \
+	common_capability.lo common_device_name.lo common_map.lo \
+	$(am__objects_1) $(am__objects_2)
 libpciaccess_la_OBJECTS = $(am_libpciaccess_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_scanpci_OBJECTS = scanpci.$(OBJEXT)
@@ -123,9 +133,14 @@ ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
+ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
+ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+APP_MAN_DIR = @APP_MAN_DIR@
+APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -134,8 +149,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -143,6 +160,8 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
+DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -152,8 +171,14 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
+FILE_MAN_DIR = @FILE_MAN_DIR@
+FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FREEBSD_FALSE = @FREEBSD_FALSE@
 FREEBSD_TRUE = @FREEBSD_TRUE@
+GNU_FALSE = @GNU_FALSE@
+GNU_TRUE = @GNU_TRUE@
+GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -162,6 +187,8 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIB_MAN_DIR = @LIB_MAN_DIR@
+LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_FALSE = @LINUX_FALSE@
 LINUX_TRUE = @LINUX_TRUE@
 LN_S = @LN_S@
@@ -170,6 +197,9 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
+MISC_MAN_DIR = @MISC_MAN_DIR@
+MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NETBSD_FALSE = @NETBSD_FALSE@
 NETBSD_TRUE = @NETBSD_TRUE@
 NMEDIT = @NMEDIT@
@@ -186,6 +216,7 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCIIDS_PATH = @PCIIDS_PATH@
+PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -194,14 +225,10 @@ SOLARIS_FALSE = @SOLARIS_FALSE@
 SOLARIS_TRUE = @SOLARIS_TRUE@
 STRIP = @STRIP@
 VERSION = @VERSION@
-ac_ct_AR = @ac_ct_AR@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
-ac_ct_DSYMUTIL = @ac_ct_DSYMUTIL@
 ac_ct_F77 = @ac_ct_F77@
-ac_ct_NMEDIT = @ac_ct_NMEDIT@
-ac_ct_RANLIB = @ac_ct_RANLIB@
-ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -218,47 +245,62 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = @PCIACCESS_CFLAGS@
+AM_CFLAGS = $(CWARNFLAGS) @PCIACCESS_CFLAGS@
 lib_LTLIBRARIES = libpciaccess.la
 @FREEBSD_TRUE@OS_SUPPORT = freebsd_pci.c
+@GNU_TRUE@OS_SUPPORT = x86_pci.c
 @LINUX_TRUE@OS_SUPPORT = linux_sysfs.c linux_devmem.c linux_devmem.h
 @NETBSD_TRUE@OS_SUPPORT = netbsd_pci.c
 @OPENBSD_TRUE@OS_SUPPORT = openbsd_pci.c
 @SOLARIS_TRUE@OS_SUPPORT = solx_devfs.c pci_tools.h
+@FREEBSD_TRUE@VGA_ARBITER = common_vgaarb_stub.c
+@GNU_TRUE@VGA_ARBITER = common_vgaarb_stub.c
+@LINUX_TRUE@VGA_ARBITER = common_vgaarb.c
+@NETBSD_TRUE@VGA_ARBITER = common_vgaarb_stub.c
+@SOLARIS_TRUE@VGA_ARBITER = common_vgaarb_stub.c
 libpciaccess_la_SOURCES = common_bridge.c \
 	common_iterator.c \
 	common_init.c \
 	common_interface.c \
+	common_io.c \
 	common_capability.c \
 	common_device_name.c \
 	common_map.c \
 	pciaccess_private.h \
+	$(VGA_ARBITER) \
 	$(OS_SUPPORT)
 
 INCLUDES = -I$(top_srcdir)/include
 libpciaccess_la_LIBADD = @PCIACCESS_LIBS@
-libpciaccess_la_LDFLAGS = -version-number 0:10:2 -no-undefined
+libpciaccess_la_LDFLAGS = -version-number 0:10:8 -no-undefined
 libpciaccessincludedir = $(includedir)
 libpciaccessinclude_HEADERS = \
     $(top_srcdir)/include/pciaccess.h
@@ -279,9 +321,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -350,8 +392,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_device_name.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_interface.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_io.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_iterator.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_map.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_vgaarb.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_vgaarb_stub.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freebsd_pci.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux_devmem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux_sysfs.Plo@am__quote@
@@ -359,6 +404,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openbsd_pci.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scanpci.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solx_devfs.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x86_pci.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

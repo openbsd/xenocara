@@ -198,7 +198,7 @@ pci_device_netbsd_write(struct pci_device *dev, const void *data,
 {
 	struct pciio_bdf_cfgreg io;
 
-	if ((offset % 4) == 0 || (size % 4) == 0)
+	if ((offset % 4) != 0 || (size % 4) != 0)
 		return EINVAL;
 
 	io.bus = dev->bus;
