@@ -94,7 +94,9 @@
 #include "xf86_OSproc.h"
 #include "xf86RAC.h"
 #include "xf86RandR12.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 7
 #include "xf86Resources.h"
+#endif
 #include "xf86cmap.h"
 #include "vbe.h"
 
@@ -2886,12 +2888,13 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 	       PCI_DEV_DEV(info->PciInfo),
 	       PCI_DEV_FUNC(info->PciInfo));
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 7
     if (xf86RegisterResources(info->pEnt->index, 0, ResExclusive))
 	goto fail;
-
     xf86SetOperatingState(resVga, info->pEnt->index, ResUnusedOpr);
 
     pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_VIEWPORT | RAC_CURSOR;
+#endif
     pScrn->monitor     = pScrn->confScreen->monitor;
 
    /* Allocate an xf86CrtcConfig */

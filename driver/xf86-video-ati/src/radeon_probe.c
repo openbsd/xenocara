@@ -44,7 +44,9 @@
 #include "atipcirename.h"
 
 #include "xf86.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 7
 #include "xf86Resources.h"
+#endif
 
 #include "radeon_chipset_gen.h"
 
