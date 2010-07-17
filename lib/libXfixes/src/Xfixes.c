@@ -1,5 +1,4 @@
 /*
- * $XFree86: xc/lib/Xfixes/Xfixes.c,v 1.1 2002/11/30 06:21:45 keithp Exp $
  *
  * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -92,6 +91,7 @@ XFixesExtAddDisplay (XFixesExtInfo *extinfo,
 	info->major_version = rep.majorVersion;
 	info->minor_version = rep.minorVersion;
 	UnlockDisplay (dpy);
+	SyncHandle ();
     } else {
 	/* The server doesn't have this extension.
 	 * Use a private Xlib-internal extension to hang the close_display

@@ -1,5 +1,4 @@
 /*
- * $XFree86: xc/lib/Xfixes/SaveSet.c,v 1.1 2002/11/30 18:41:33 keithp Exp $
  *
  * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
  *

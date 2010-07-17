@@ -1,5 +1,4 @@
 .\"
-.\" $XFree86: xc/lib/Xfixes/Xfixes.man,v 1.1 2002/11/30 06:21:45 keithp Exp $
 .\"
 .\" Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
 .\"
@@ -26,7 +25,7 @@
 .ns
 .TP \\$1
 ..
-.TH XFIXES 3 "Version 1.0" "XFree86"
+.TH XFIXES __libmansuffix__ __xorgversion__
 
 .SH NAME
 XFixes \- Augmented versions of core protocol requests
