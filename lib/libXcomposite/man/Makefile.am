@@ -21,8 +21,10 @@ Xcomposite_man_aliases = 			\
 
 Xcomposite_shadowmen = $(Xcomposite_man_aliases:=.@LIB_MAN_SUFFIX@)
 
+if INSTALL_MANPAGES
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
 	      $(Xcomposite_shadowmen)
+endif
 
 EXTRA_DIST  = $(libman_PRE) $(libman_xml)
 

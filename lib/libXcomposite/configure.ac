@@ -21,7 +21,7 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+AC_PREREQ([2.60])
 
 dnl
 dnl Version should match the current XComposite version. XCompositeQueryVersion
@@ -32,14 +32,17 @@ dnl protocol, so Xcomposite version l.n.m corresponds to protocol version l.n
 dnl that 'revision' number appears in Xcomposite.h and has to be manually
 dnl synchronized.
 dnl
-AC_INIT(libXcomposite, 0.4.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXcomposite)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(libXcomposite,
+	0.4.2,
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+	libXcomposite)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+	  [m4_fatal([must install xorg-macros 1.6 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.6)
 AM_CONFIG_HEADER(config.h)
 
 # Check for progs
@@ -47,8 +50,12 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 
 XORG_DEFAULT_OPTIONS
+XORG_WITH_XMLTO(0.0.20)
 
-XORG_WITH_XMLTO
+# Determine if the source for man pages is available
+# It may already be present (tarball) or can be generated using xmlto
+AM_CONDITIONAL([INSTALL_MANPAGES],
+	[test -f "$srcdir/man/Xcomposite.man" || test "x$have_xmlto" = xyes])
 
 # Check compositeext configuration, strip extra digits from package version to
 # find the required protocol version

@@ -1,5 +1,5 @@
 /*
- * $Id: Xcomposite.c,v 1.2 2009/10/31 17:45:46 matthieu Exp $
+ * $Id: Xcomposite.c,v 1.3 2010/07/17 15:07:18 matthieu Exp $
  *
  * Copyright © 2006 Sun Microsystems
  *
@@ -138,6 +138,7 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
 	info->major_version = rep.majorVersion;
 	info->minor_version = rep.minorVersion;
 	UnlockDisplay (dpy);
+	SyncHandle ();
     } else {
 	/* The server doesn't have this extension.
 	 * Use a private Xlib-internal extension to hang the close_display

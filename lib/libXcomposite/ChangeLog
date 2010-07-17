@@ -1,3 +1,169 @@
+commit 01c4691e18b536de6585a0e93e05e2831cf2be34
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 8 17:05:02 2010 -0700
+
+    libXcomposite 0.4.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 657550b7572551225ea2c9c60f42827a5209a205
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 8 16:59:52 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7cc9ace428dabaeeabc8bcb8843ee89bec447a9a
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Apr 9 17:24:57 2010 -0700
+
+    Always call SyncHandle after issuing an X request.
+
+commit e52f8171000f2b67bb1b774ba94acb68a471a91b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 16:50:33 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f361cfd41f36dc60ad9c4832978391f3ce8951e6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:48 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 588e33d6037166da5a02e8ad73438544dca90e1a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 11 10:06:56 2010 -0500
+
+    doc: specify 0.0.20 as the minimum version for xmlto
+    
+    Older versions do not have fop backend.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2002631bd71ba970d77f9b5c8f886c3bf1349e45
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 21 20:03:42 2010 -0500
+
+    man: allow installing prebuilt man pages from tarball
+    
+    The man pages source may be supplied in the tarball or built
+    from git. The makefile needs to take that into consideration
+    and adjust the targets accordingly.
+    
+    This prevents the regular make target to fail when the source
+    is not available and the xmlto is not available.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 213cf861e8a29c6f991828beb6656239206c9947
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jan 18 16:02:41 2010 -0500
+
+    config: replace custom code with reusable macro XORG_WITH_XMLTO
+    
+    XORG_WITH_XMLTO provides additional functions like a configure
+    option which allow platform builders to control the usage of
+    the xmlto program.
+    
+    This is a requirement from platforms that do not have such doc tool.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fa2155fa64cf7b43ee40064cb53b05388885c1dc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 19:15:00 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7c61042d94edc1ecf8276961f28189caffa7b17a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 14 15:52:08 2010 -0500
+
+    COPYING: add missing copyright notices
+    
+    Refer to: Xcomposite.c
+    Copyright © 2006 Sun Microsystems
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 0d78a27bf7c644a6e700290c1861a11ff4a1662b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:03 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 92843f46c21c6fd0c5f82727f0d281dcf6debfe4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit e1d89e11c0f24c6c0d5048e8910091f9b5a997e4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:42 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit b741fca01ebe60a5b73bcebe237efc4aeff3fa0c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 57cce60b16cfd2fb63c2e045817c2c05a2a603dc
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:24 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 90c243accfb2dc3d4d85dd57d8aca518dab98842
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Oct 8 00:28:45 2009 -0700
