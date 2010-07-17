@@ -1,87 +1,1707 @@
-2006-06-06  Donnie Berkholz  <spyderous@gentoo.org>
+commit 75a8a7c51547805358ced39e1a04820e17133264
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 5 14:23:33 2010 +1000
 
-	* src/sis_dri.c:
-	Add missing #include <assert.h>.
+    sis 0.10.3
 
-2006-04-30  Alex Deucher  <agd5f@yahoo.com>
+commit ac05588db7da21d1ff2cb13bba11b66bb5d5c38b
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Jun 29 21:37:50 2010 +0100
 
-	* src/sis300_accel.c: (SiS300AccelInit):
-	* src/sis310_accel.c:
-	* src/sis_accel.c: (SiSAccelInit):
-	- fix minor typo
+    Replace some broken URLs with winishhofer.eu
+    
+    The old one seems to be a casino web site nowadays.
+    
+    Debian bug#517075
+    
+    Reported-by: Nigel Tamplin <fuse@f2s.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit 116d40678dfbb851fd401103f9b7447f4d47eb7c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 14 08:14:30 2010 -0400
 
-	* configure.ac:
-	* src/sis.h:
-	Bump to 0.9.1 for Xv changes.
+    README: keep the text version of README, discard the sgml version
+    
+    The linuxdoc doc tool is deprecated.
+    README files are exclusively text files.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+commit 5f9fd07d54b8bc26c0403e1b46acce23db1365d9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 14 07:58:26 2010 -0400
 
-	* src/sis6326_video.c:
-	* src/sis_video.c: (SISPutImage):
-	* src/sis_video.h:
-	Add a DrawablePtr argument to the XV functions to pave the way for
-	redirected video.
+    README: fix linuxdoc content
+    
+    defs.ent are located under X11 directory
+    ident tag is not a Linuxdoc tag
+    replace docbook email tag with linuxdoc email tag
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit 1bec9268f503e249cf1a20f2597f3f6c78a13af4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 10:56:05 2010 -0400
 
-	* configure.ac:
-	* src/sis.h:
-	Unlibcwrap.  Bump server version requirement.  Bump to 0.9.0.
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2006-04-06  Eric Anholt  <anholt@FreeBSD.org>
+commit 13583aba3e2abafd55fc894070cf5f050bbea4f2
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue May 18 13:11:01 2010 -0400
 
-	* src/sis_driver.c:
-	Don't forget to zero the xf86ModReqInfo before using it.
-	Noticed by Alex Deucher.
+    Remove mibank.h reference
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 47233238a659318cae6b7d0f71ee44b689e249c3
+Author: david@fries.net <david@fries.net>
+Date:   Tue Sep 15 22:32:45 2009 -0500
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    SISVGABlankScreen: only update the hardware if we're changing the state
+    
+    The command `xset s reset` will reset the X server screensaver to
+    reset the timer for the screensaver and dpms.  If the display is
+    already on, it should do nothing as far as the hardware goes.  In the
+    SISVGABlankScreen routine it requires as reset to update the register,
+    but that will disrupt the VGA signal and cause the monitor to resync
+    leaving the screen blank for a couple seconds.  I have a program that
+    wants to keep the screensaver from coming on, but allow normal
+    operation when it isn't running.
+    
+    Debian bug#546838 <http://bugs.debian.org/546838>
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit dff79298ae04cec6233cd043cbf3aeda6db67d42
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Thu May 6 20:15:04 2010 +0300
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Document better the resource access hack
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d33e45dcaee511d5f09ac5f68680e96f3ad60076
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:55:44 2010 -0800
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 2c9baaaa8ace01d94e95ca4ad7216146339940dd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 21:47:35 2009 -0500
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit cbfa94ccb1ee6213342014f3c7063362acb274ff
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
 
-2005-12-01  Adam Jackson  <ajax@freedesktop.org>
+commit a69569c72ea19d4d76c57a8077542fee4aeb501a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
 
-	* configure.ac:
-	Bug #5207: Enable EXA. (Thomas Winischofer)
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
 
-2005-11-20  Adam Jackson  <ajax@freedesktop.org>
+commit 8d766ddd89a4d9d5c02ad186b049cca2d806a3d8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
 
-	* configure.ac:
-	Bump libdrm dep to 2.0.
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit b92482e522d3b8a6526c05bf491d3e768f282714
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:22 2009 -0400
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 8655ebf788bb281f3f566d6335943527155b91a5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 13:04:14 2009 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit ef03b3abab51a5bf81813a524d177370053ddfa0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 8370499d4035ec7a5c8e1f1b04d5a6c404883442
+Author: Matteo Delfino <kendatsuba@gmail.com>
+Date:   Wed Oct 21 10:26:45 2009 -0400
+
+    Fix BIOS read on 650 and 760. (#19070)
+    
+    Signed-off-by: Matteo Delfino <kendatsuba@gmail.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9e50319293b10508bba4e3acef4a2851e7ab1f7a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 30 12:04:29 2009 +1000
+
+    sis: bump for release 0.10.2
+
+commit 8c3eca873717e877048c2bde345c02b1e9099e50
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
+
+    sis: change to using ABI version check
+
+commit 9e1ebb9530bbb71be7fcab9e6f8f9a475be72efe
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:37 2009 +1000
+
+    sis: update for resources/RAC API removal
+
+commit 59ea80738d22c69a2850fd7ff89bd75330cc310b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 11:55:25 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 74553b5ee476a0dd28e136f5a33a546ea0c3ef28
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:19:25 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 933dd8f860883c613acb5bcdf6b66100dbdfa952
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri May 1 16:57:22 2009 -0700
+
+    Correct bounds check of blitClip array access
+    
+    Array is defined as blitClip[NUM_BLIT_PORTS], so invalid indexes
+    are >= NUM_BLIT_PORTS, not just > NUM_BLIT_PORTS
+    
+    [This bug was found by the Parfait bug checking tool.
+     For more information see http://research.sun.com/projects/parfait ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 49c641b638ac36d2a559555c04a3bd2777c8d071
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri May 1 16:52:10 2009 -0700
+
+    Make sisRegs3D4 big enough to hold all values written to it
+    
+    Increase size from 0xff to 0x100 since SiS315Save (sis_dac.c line 752)
+    writes values into sisRegs3D4[0x00..0xff] if ChipType >= XGI_20
+    
+    [This bug was found by the Parfait bug checking tool.
+     For more information see http://research.sun.com/projects/parfait ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5583c2342d873c0998ae73828246356867285460
+Author: Chris Ball <cjb@laptop.org>
+Date:   Fri Feb 27 10:57:35 2009 -0500
+
+    Revert "Build fixes for EXA3"
+    
+    This reverts commit 7adc184e5e0f3df00423ea99b325d24764c1c067.
+    The EXA developers have backed out this ABI bump.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 7adc184e5e0f3df00423ea99b325d24764c1c067
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 12:32:01 2009 -0500
+
+    Build fixes for EXA3
+    
+    * EXA in xserver head now requires -DEXA_DRIVER_KNOWN_MAJOR=3
+    * EXA3 drops the UploadToScratch hook, so guard it for < 3 only.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit e4f6a2fcd5712d0f994d3719b9c6c13f5b02bc7c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:34:01 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 6ab99d8d66ccd77314760edcb6110db924be3dcf
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 14:38:17 2008 +1000
+
+    sis 0.10.1
+
+commit 7ae731c269a13613eed5ee8bef6cb9b6e82b74c6
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Nov 6 23:40:34 2008 +0100
+
+    Fix build on alpha.
+
+commit 31509152757643b32f42fe0a21d3b00137540e40
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Jul 20 04:15:52 2008 +0300
+
+    Remove XFree86-Misc (PassMessage) support
+    
+    The driver used PassMessage/HandleMessage from XFree86-Misc to ... just
+    return BadMatch.  So how about we drop this bit of code, including an
+    additional dependency?
+
+commit 70ccce405b2134e7548a4a3660f9cff9fc306780
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:31:27 2008 -0400
+
+    sis 0.10.0
+
+commit 3aff2a77c9c6bfff543195dc8908e422793a8f37
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:29:30 2008 -0400
+
+    Fix distcheck
+
+commit be77b71c3614e5b926caf3a177f6d5b7ef8d528b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:28:09 2008 -0400
+
+    Death to RCS tags.
+
+commit 6c7f2d4d2d1e89255007033be0f56a8cbe27397f
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Mar 8 23:51:57 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit be954beff0c1e7942845ff4c055e183784dddad9
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Mar 7 17:09:35 2008 +0100
+
+    fixup pciaccess version detect
+
+commit f43247d383de0f4753db019482149ff923d884b0
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Feb 27 14:10:17 2008 +0100
+
+    Require pciaccess >= 0.10.0 for pci_device_map_range()
+
+commit 36ed5521afb524f49bde348775be2bdd78fa0383
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Thu Jan 17 15:49:41 2008 +1000
+
+    fix some thinkos in the pciaccess patch, this now works on real hardware
+
+commit 797e6215ad9039ebbab547581c8ab3c143afb14f
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Jan 16 17:46:06 2008 +1000
+
+    fixup unmap memory
+
+commit 992f586cbf85d9d99059209afc66e62ee5eb80ce
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Jan 16 17:42:44 2008 +1000
+
+    use map domain memory with pciinfo
+
+commit 0e4dc89b7f00d1453d5c81be36c3d5ea39e3caad
+Author: Pete Zaitcev <zaitcev@redhat.com>
+Date:   Wed Jan 16 13:39:01 2008 +1000
+
+    switch vga over to pciaccess
+
+commit 585e03e6878dd257c694517be9ea231a6b3cfb66
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Wed Jan 16 13:34:58 2008 +1000
+
+    switch bios reading over
+
+commit ef98280b03318ae39d9b8ba45b13a9e27f520107
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 17:01:53 2008 +1000
+
+    finish off read/write long conversion
+
+commit e2cb9fa30350ee0c08469ad6ea7f34cecf106e33
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 16:45:49 2008 +1000
+
+    convert all hostbridge read/writes to accessor functions
+
+commit 77641c76963bbfea8914092ee65f116ba6d23967
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 16:14:07 2008 +1000
+
+    fixup type punning
+
+commit 08cfb9c048a33df584354a42093aeaf73db8e4d4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 16:09:04 2008 +1000
+
+    another open/fopen confusion
+
+commit 6753430565085c88f2a26009b75d92fbd1e8d598
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 16:06:47 2008 +1000
+
+    fix thinko between open/fopen
+
+commit 70989db1c4e9465a7dd39f5d06edfc24a67d9ad6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 16:01:09 2008 +1000
+
+    fix warnings in build
+
+commit d94a2efa2ea26c4fbb246ea93e9cc10b97cf3ea3
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jan 8 14:38:04 2008 +1000
+
+    inital SiS pci access patch
+
+commit 14d6555419ca3ab2ab58afe0ba1fc40038a69caa
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Nov 16 12:39:15 2007 +0100
+
+    Bump to 0.9.4.
+
+commit 748df8070893675ad3839fff295bec913be876f2
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:43 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit f269b388cb8853b4eabfe8c42e03baf4caa32ad8
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:55 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit ba3c4d45d6e8f04536e6512103db820f0d21b77a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu Aug 9 03:36:07 2007 +0200
+
+    Get rid of the XFree86Server macro.
+    
+    It's not exported by xserver these days, so don't test it.
+
+commit 391dad44fa305be4cded31cf2f9a4fba7420af99
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu Aug 9 03:35:12 2007 +0200
+
+    Fix xserver version detection.
+    
+    Newer xserver releases report a version of 1.x, which is smaller
+    than 6.8.99.900.
+
+commit 89d2f2118a2409d1bf0239448a4e3d2f6e7a1919
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 12:57:23 2007 +0200
+
+    Define SIS_*_VERSION using PACKAGE_VERSION*
+
+commit 346693719a49cf50ff62cb25b09d433d2d8db9ea
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Feb 27 20:35:35 2007 -0500
+
+    bump Xv image height up from 1080 to 1088 for 315 chips
+    
+    fixes bug 10075
+
+commit be1d494e0921d234918c899c6fe833c5d74b16fd
+Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
+Date:   Mon Dec 18 14:09:45 2006 -0500
+
+    Revert "Convert callers of LookupWindow() to dixLookupWindow()."
+    
+    This reverts commit e3070bc4832d4f1e00f16591cba35776d9a87f2d.
+
+commit e3070bc4832d4f1e00f16591cba35776d9a87f2d
+Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
+Date:   Fri Dec 15 17:46:03 2006 -0500
+
+    Convert callers of LookupWindow() to dixLookupWindow().
+
+commit 07ca144f29e7038a0bd83c31783b134e57471b8b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 30 19:58:16 2006 +0200
+
+    bump to 0.9.3
+
+commit 27299b5af820e91c14529f5c3486d1018e99b6c4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Nov 30 16:10:57 2006 +0200
+
+    include stdlib.h for strtod
+    Calling strtod() without including stdlib.h leads to unspecified results.
+    https://launchpad.net/distros/ubuntu/+source/xserver-xorg-video-sis/+bug/56649
+
+commit 115106f042ff5cdad1675c030f0731f0d4559434
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:43:53 2006 -0400
+
+    Bump to 0.9.2
+
+commit 7a38608cd4cae811d12b7424f19af6d732a52f03
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Tue Jun 6 16:09:54 2006 +0000
+
+    Add missing #include <assert.h>.
+
+commit f16c4ee67f57bea639fb3dfab0cf09c4cd981183
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sun Apr 30 18:17:18 2006 +0000
+
+    - fix minor typo
+
+commit 7e88ed4b04b993a39edf2a19df34e5f3fb4b10f7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:47:22 2006 +0000
+
+    Bump to 0.9.1 for Xv changes.
+
+commit e7f05c6510a08abdc5e67c8d4b1c6041ea992287
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:14:46 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit fe557561f9fd14ac1d44dbb6ecce28e22076ccef
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 21:05:21 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 0.9.0.
+
+commit 1b851e8180dcb4795b82f28cf1e3c15f6d6210a1
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Fri Apr 7 04:15:34 2006 +0000
+
+    Don't forget to zero the xf86ModReqInfo before using it. Noticed by Alex
+        Deucher.
+
+commit 7d9999fa8433a9966b55cf0ee0db9d25ef71f535
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Thu Mar 9 06:06:25 2006 +0000
+
+    Update drivers that support EXA for the new EXA ABI. This consists of
+        moving all the accel and card members into the driver ptr, filling in
+        the exa_major/ exa_minor fields, and always using LoadSubModule so we
+        can check the module version up front. Only tested on ATI.
+
+commit 79bb52873a62dabd02a61ab18b1892cb3772e652
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:02 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit ce0bbcb4672c44c15e2c493ed4ac59caedabce9f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:54 2005 +0000
+
+    Stub COPYING files
+
+commit 6dfa26038c7b35af2a1fd5ee2e8ab7ceb85fd061
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:19 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 2c57a2f4c0308ac555d8cd963c9a2dd6bcf73987
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:37 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 252f54c2307c143b4621ea34cc014cec67c94a8f
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:35 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 1b0b4dbcd85ed63cacef9312f3c669be8877db97
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:10 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit b09bab0ff389770010f86d5f1614c6146403353b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Dec 1 20:29:43 2005 +0000
+
+    Bug #5207: Enable EXA. (Thomas Winischofer)
+
+commit 4fd5c122ea54cad8a1242e1be4aa97b55f556477
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Nov 30 18:51:46 2005 +0000
+
+    Bump libdrm dep to 2.0.
+
+commit 374156d3cf58ce7690cb2465b18dc28365ba54d0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:03 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 82f9c39f69c7c56e060938836205ad6744b7be39
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:10 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 80bfbc8b3336211b724f252db71e865b7b61be7b
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:18 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit d59932a8d9d0d8559cbe9a1631f6a26ccba491f9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:21 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 61a128fb20b54f91680e2e6d2827250eb857a3e5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:20 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 0081e372f6c0990930f8b8d41ef41384af5fc73f
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Wed Nov 9 17:42:58 2005 +0000
+
+    Bug #4998: Add ';' and ',' as valid separators for MetaModes as well.
+
+commit d7a277fadf8686c5c37cb5ce782a73180bbe8ac3
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:54 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit f544e67b005f2b70a27c0f29b782ab11758cf9aa
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Nov 1 12:45:54 2005 +0000
+
+    SiS driver: Fix EDID->ranges conversion
+
+commit c63936bf30c8ce196761a6758ee395e0c65ca679
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Sat Oct 29 10:10:09 2005 +0000
+
+    SiS driver: Fix static build
+
+commit 634177ea66815843928b292316309ad37b0daf4c
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Oct 21 18:40:19 2005 +0000
+
+    Bug #4829: Remove some useless DRI symbol checks.
+
+commit 8c17b504dabc00744342af45865b5ef4ecba3d84
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:04 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit e4d73b86424b72db22bd9e91d43a5e2aad958f18
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:54 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 5d201158177e51f171e196148186106282ee5220
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:35 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit be5a30fa3e3c731d69c4003beb28f22f0335e781
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:05 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 5461be0c1969120b3e5f610bc5d8abc2c00259eb
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Sun Oct 16 18:12:32 2005 +0000
+
+    SiS driver: Fix MIPS linking error
+
+commit a8ebd720f7c56ac9181eab1e68d2d2c5a9ac96da
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Oct 4 20:01:03 2005 +0000
+
+    Check in generated README files
+
+commit 60b23a8cd5eefd77b64c84ab4de478420ae58f07
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon Oct 3 21:22:08 2005 +0000
+
+    - For all drivers that have a <driver>.sgml file, add code in their build
+        system to build the README file at make dist time
+    - in util/macros/xorg-macros.m4, add a new XORG_CHECK_LINUXDOC macro that
+        will check if the required tools and files exist, and if so set a
+        conditional.
+    - util/modular/symlink.sh
+    - Link all the <driver>.sgml to xf86-video-<driver>/README.sgml
+    - Add all the README.<driver> to the list of excluded files
+    - xc/programs/Xserver/hw/xfree86/doc/sgml/SiS.sgml: Various changes to make
+        it spew less warnings when the text file is built.
+
+commit abd9f7422059b9bb6c2a5bcdb8bca9d21882d3de
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Sep 28 23:12:53 2005 +0000
+
+    SiS driver: SiS301 supports 1024x768 in Hivision; exclude 512x384
+
+commit bfb25dcbb943995febcbab411d9f93df6d04c8a4
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Sep 23 16:34:04 2005 +0000
+
+    SiS driver: Fix Xv in MergedFB mode on SiS760 with hybrid memory
+
+commit 27583a4cccbccf5c06b7bdc48b00f638d6c1174f
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Sep 21 23:50:13 2005 +0000
+
+    SiS driver: Fix a possible crash in case EXA killed our allocated areas
+
+commit 0cb78509d1b353512fba4a11fc233ee11eaccd77
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Sep 20 16:38:53 2005 +0000
+
+    SiS driver: Remove debug output
+
+commit 2b7817e6be3b6befd58bd70a3d8d68eca9a73389
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Sep 20 16:34:32 2005 +0000
+
+    SiS driver: Color saturation for newer chipsets
+
+commit 9db2013e9c8f55245ed6d33a2dcf34c7f5be0574
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sun Sep 18 02:32:23 2005 +0000
+
+    Break EXA ABI while we still can. Add coordinates to the UploadToScreen
+        hook so we can upload a subset of a pixmap, and convert the current
+        drivers to respect that. Use this support to directly UploadToScreen in
+        exaGlyphs, providing a 47.4% +/-2.4% decrease in wall time for ls -lR
+        programs/Xserver in an antialiased gnome-terminal on an M6 (n=3, caches
+        hot). I would have bumped major version, only I can't tell what the
+        EXA_VERSION_* is supposed to be doing as opposed to the module version.
+
+commit 6cf261a522aec729c644e4d4999f7d22860e48a6
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Sat Sep 17 23:07:17 2005 +0000
+
+    SiS driver: Improve vertical scaling for TV output on 301C
+
+commit a08a3a729bef52a6ae2f969c6d491372e126332f
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Sep 16 13:46:39 2005 +0000
+
+    SiS driver: Fix dual-pointer issue in dual head mode (really this time)
+        Calculate 4-tap scaler data instead of using tables sisfb: if not
+        loaded, it can't have POSTed cards...
+
+commit 1c03c71b29ea4e6d9e2513fe84e9be9cf8f3c19f
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Sep 16 00:24:24 2005 +0000
+
+    SiS driver: Fixed "double" cursor in dual head mode after mode switch
+
+commit eed6bccec235201b17fab39fbb9be962e26128ec
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Sep 15 21:23:59 2005 +0000
+
+    SiS driver: - Fix (gamma) brightness and add contrast
+    - EXA fixes (Eric Anholt)
+
+commit 08c93fc60cd7ec2aede27558f9e853905b87a28b
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Sep 14 09:12:17 2005 +0000
+
+    Test the right variables for turning on DRI support.
+
+commit f6def46f0bc61e5c16f3022b2c4449214384b6a7
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Sep 7 19:44:14 2005 +0000
+
+    SiS driver: Make remaining TV modes vertically scalable Add 960x540 for
+        1080i
+
+commit 13335937b6a4d3957d684e5a841f3726001a4619
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Sep 5 14:26:16 2005 +0000
+
+    SiS driver: Add support for 576P/625P and 576I/625I YPbPr (HDTV) output Add
+        720x576 and 768x576 for NTSC TV output
+
+commit be4ce634381f347540a241f85b1e6c74eab3ef02
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Sep 2 17:10:36 2005 +0000
+
+    SiS driver: Make YPbPr output vertically scalable; improve horizontal
+        scaling
+
+commit 8f09b03e8d0d282e87164ed735dc38ac1f44288e
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Aug 30 00:12:58 2005 +0000
+
+    SiS driver: Fix TV locking issue
+
+commit ce2c312e8c9b9ebac5107007242942727b7acf2a
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Aug 29 23:27:32 2005 +0000
+
+    SiS driver: HDTV fixes
+
+commit 569f355e7d1a67a83bee2760bfb67e53446ed3bd
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Aug 24 23:15:23 2005 +0000
+
+    SiS driver: Additional EXA fixes
+
+commit bcb0c36df6d1e98a17549fc3e4425dda37d4aeb7
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Aug 24 22:43:27 2005 +0000
+
+    Bugzilla #4090: Introduce getters for pixmap pitch and offset, to
+        simplify/clarify it for driver writers who probably don't want to know
+        what pPixmap->devPrivate.ptr or pPixmap->devKind mean. Converts the sis
+        driver to use them, and bumps the EXA module minor version.
+
+commit 9616898015b61535ddf9422bd6eb6f1206a96028
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Aug 21 15:25:30 2005 +0000
+
+    Build fix for systems with BuildXF86DRI = NO
+
+commit ef1e03be0222b300da441decf7914345d207be25
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:49 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 533aef9ba51cc3db1cf19ce91007b670e5ba6b21
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Aug 16 22:17:01 2005 +0000
+
+    SiS driver: My version number
+
+commit c11eed9f742e1599f7e120c211a3434e45653c88
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Aug 16 22:08:50 2005 +0000
+
+    Hm, might have forgotten the headers
+
+commit 8a7568031b5641c0437ba24ae9a2fa80af95d64b
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Aug 16 22:06:59 2005 +0000
+
+    SiS driver: Fix small glitch in mode switching for 302LV bridge
+
+commit 1b66e83ad6316ce383b60cc91d0a503709e252ed
+Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
+Date:   Mon Aug 15 07:30:05 2005 +0000
+
+    Egbert's 64bit fixes for mixed 32/64bit clients
+
+commit 50de2d7e58f20936af579cfde5e96f4a4b98a4df
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Sun Aug 14 19:46:55 2005 +0000
+
+    - Fix the exa pixmap offset/pitch alignment to deal with non-POT alignment
+        requirements. MGA, notably, uses a multiple of 3 in some cases.
+    - Rename the pixmap offset/pitch alignment fields to more clearly state
+        their meaning.
+
+commit ad62f278ffd4bdd80c862ca9066165bde8183f9b
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Aug 11 12:59:18 2005 +0000
+
+    SiS driver: ARGH.... search/replace stupidity
+
+commit c018df356027d79324aacf7731c398bb2d40676f
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Aug 11 12:57:12 2005 +0000
+
+    SiS driver: Rename BUFSIZ to something else to avoid confusion with stdio's
+        BUFSIZ
+
+commit 102ff29c6aa8765fdc823a1c7a1c82d273f2f7a7
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Aug 8 11:40:36 2005 +0000
+
+    SiS driver: Add some convenience for SiSCtrl
+
+commit bbf8a8e8dbef247b4f8d42c527b83d0b0bad61bf
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Jul 31 17:19:29 2005 +0000
+
+    Post-merge fixups:
+    - Disable building the gamma driver
+    - Fix numerous Imakefiles to get header paths and subdirs right
+    - Symlink client-side GLX lib source from Mesa
+    - Add new shader subdirs to the Mesa core build
+    - Tweak the DDX drivers to not ask for "xf86dri.h"; they don't need it,
+        since they don't generate protocol, and it was breaking the build.
+
+commit 5567e32b617bbaac92286b67f8c504385a34958b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:44 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit abd40577c5af78078c1342242b9e4af4c79329a6
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 27 21:23:29 2005 +0000
+
+    Add xf86driproto to dependencies for drivers with DRI support. Patch from
+        Donnie Berkholz
+
+commit 183bef925915e3e918fcbf12fac17db73bb55bab
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 22:25:09 2005 +0000
+
+    Tue Jul 26 18:24:45 2005 Søren Sandmann <sandmann@redhat.com>
+    Include <X11/X.h> instead of "X.h"
+
+commit c8836bb0f42e38bd896b062fb1abb2663af4f59e
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 22:24:10 2005 +0000
+
+    Build system for sis
+
+commit 5be938441d8c42bd57b68d6759e25b0e25659988
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jul 19 23:31:49 2005 +0000
+
+    SiS driver: Some fixes for multiple cards. Small fix for mode switching on
+        newer machines. Prepare for Dave's PCI cleanup.
+
+commit 1d4febacb8f831d540470622289149088799dd54
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jul 18 21:00:57 2005 +0000
+
+    SiS driver: Fix xv offscreen memory allocation for Xv etc.
+
+commit 73fbbff220d196e173c8da4b81bbe1bf3bf0dccb
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Jul 15 15:35:18 2005 +0000
+
+    SiS driver: Minor fixes
+
+commit e1915b0015c10bfdbf72aa6f1ccbe25a92a628a6
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jul 13 17:17:00 2005 +0000
+
+    SiS driver: Some minor fixes (mainly for XGI)
+
+commit 22885ed4d5f8da3db4a1fe99dd9f9d4f7da1592b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:59 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit fe03307e6ab31ab7e05074da7429ccfa355e83af
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Jul 8 16:32:14 2005 +0000
+
+    SiS driver: Clean up VBFlags mess, part 2
+
+commit e4491adfaec96ba07915b23aa331b1003463f974
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Jul 8 15:31:53 2005 +0000
+
+    SiS driver: Clean up VBFlags mess
+
+commit 9a7d20ffb18915a4f5c6252eac6942932d91bcc7
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Jul 7 00:46:09 2005 +0000
+
+    SiS driver: Distinguish between XGI V3XT A01 and A02 boards
+
+commit 9e4d62bad9627bd40e184a29953a3956939a3f5c
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jul 6 14:58:42 2005 +0000
+
+    Doc update
+
+commit 5d40b107007537d71917767c18b796dfcc6b8138
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jul 6 10:49:01 2005 +0000
+
+    SiS driver: Use a reasonable MaxXFBMem setting if the user didn't supply
+        one. (Closes #2098, #2783)
+
+commit 1f9a85f42971ec674ff805773f340d9bf7f18c90
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jul 5 17:32:05 2005 +0000
+
+    SiS driver: Sanitize log output
+
+commit 8c1c7fe9124b9dd0bc64a37ac02c08fbf359ebe8
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jul 5 14:00:53 2005 +0000
+
+    SiS driver: Another update of the manpage
+
+commit 1fbbaec0415a7ebde1d99ff82f27b524f8487200
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jul 5 13:49:15 2005 +0000
+
+    SiS driver: Remove debug output from previous commit which also fixed the
+        PCI device probing/initialisation for using SiS and XGI cards at the
+        same time.
+
+commit afc2bfcc4fddece54b32f9b837ee1d7d0f89cc76
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jul 5 13:45:40 2005 +0000
+
+    SiS driver: Update driver date
+
+commit 4b4121955fe91c07ce905cab01598ec3b86e5df3
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jul 5 13:43:28 2005 +0000
+
+    SiS driver: Fix for mode-restoring if more than one cards are used. (Don't
+        read/write BIOS scratch area of non-primary cards)
+
+commit 6597121283a951a63f5b65f5a545da2a860c09b9
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jul 5 13:09:54 2005 +0000
+
+    SiS driver: Fixes for XGI Z7 (No Xv, no ARGB cursors, lower dotclock)
+
+commit 66b8354a10ef73a07c3ebb4c5358b6333167a187
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jul 4 17:36:07 2005 +0000
+
+    SiS driver: Sync accel before UploadTo/DownloadFromScreen
+
+commit 286dc28ce8db8f787c1ed67f0ef4b82c74c9ae8d
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jul 4 15:45:11 2005 +0000
+
+    SiS driver: Some further small fixes for XGI
+
+commit f834d1f1af7e2cf511f8a5e7c55587a6af6144f1
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jul 4 14:42:37 2005 +0000
+
+    SiS driver: Fixes for XGI Z7
+
+commit 5fd45266fe40c70406f07b3ac6d84900b9b6679c
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jul 4 12:24:55 2005 +0000
+
+    SiS driver: Update manpage
+
+commit 76ced1d6167c231e5afd743fc67fbc91dcb8c5e5
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jul 4 12:07:07 2005 +0000
+
+    SiS driver: Some small additions/fixes
+
+commit c8abdb74f9ac272d6ea6c6e7c037c55875fda065
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jul 4 10:57:08 2005 +0000
+
+    SiS driver:
+    - Added initial support for XGI chipsets (V3XT, V5, V8, Z7). Z7 and V5 are
+        untested. All features supported (Xv, HWCursor, DPMS, etc.). The binary
+        XGI DRI driver is not supported.
+    - Ported driver to EXA 0.1.0. Known problems still to solve at this time
+        are:
+    EXA's deinitialisation routine "DriverFini()" does not unwrap
+        pScreen->DestroyPixmap (and others), leading to a crash on machines
+        where the SWCursor is being used (SWCursor pixmaps are destroyed after
+        EXA has destroyed the offscreen memory manager).
+    EXA does not work correctly with 24bpp framebuffers. For some reason, all
+        pixmaps handed to the drawing primitives are 32bpp, despite the correct
+        24bpp-flag handed to xf86SetDepthBpp().
+
+commit 1db609b22e77b09a132bbc7e94256a7edfa592b3
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:13 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit 9edddc6e948eda5b3045bceac8f9a741dccfdea6
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jun 29 23:06:12 2005 +0000
+
+    SiS driver: Missing declaration
+
+commit 8e36e074e6bf10ad3c8e4c72f364390cccafb7c4
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jun 29 22:35:58 2005 +0000
+
+    SIS driver: Small fix for non-rectangular MergedFB layouts
+
+commit f13a87835401edd7800615457cf6ed37cf992021
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jun 29 22:11:28 2005 +0000
+
+    SiS driver: Make >=6.9 stuff work with >=6.8.99.13
+
+commit 0b4aa8f28a8490ce6be45577cbfd1ae592327cb3
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jun 27 17:18:06 2005 +0000
+
+    SiS driver: Some further small fixes
+
+commit 705433d3d2bd2cc4ab824a88c1f98132631f8665
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jun 27 15:56:53 2005 +0000
+
+    SiS driver:
+    - Fix 512x384 TV/PAL mode
+    - Major code cleanup
+
+commit c0691e73cf0020e7e1486f8c064205c44ac58fa9
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:56 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 100eac71b853150bb88d7f06fd5fb777f7f78032
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jun 21 11:18:51 2005 +0000
+
+    SiS driver: Add support for 1280x854 panels Fix Xv for 300 series to
+        support a width of 768 (prev. 720)
+
+commit 89d489c67ca63c2397789e227e35e5886721df13
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed May 18 17:47:36 2005 +0000
+
+    Bug #3163: Create new DRIINFO_*_VERSION macros to indicate the version
+        number of the DRIInfoRec, disambiguating it from the XF86DRI protocol
+        version number. Modify DRIQueryVersion to return the libdri version
+        number, which all DDXes were requesting implicitly. Fix the DDXes to
+        check for the DRIINFO version they were compiled against.
+
+commit 0fec79e5d207ae114f5fc60d98841d6a33615bc9
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Apr 21 21:45:36 2005 +0000
+
+    SiS driver:
+    - Favour MMX2 over SSE as memcpy() method when benchmark is impossible
+
+commit 45590c76ac23e6a854c580fbf30fba4cd3d9aae7
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Apr 21 21:30:56 2005 +0000
+
+    SiS driver:
+    - Add SISCTRL extension
+    - Xv interface for SiSCtrl is now deprecated (will be removed soon)
+    - Remove useless GammaPreBrightness feature
+    - Fix LCD+TV mode for dual link panels
+    - Add support for LCD-via-CRT1 for 315PRO
+    - Add "TVBlueWorkAround" option
+    - Various minor fixes
+
+commit 2c42d13b63f6798cf4d01e6e556b02169bacabb4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:29 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 2d51792a3cf3f4f87d596aba78f8dacc5b62254a
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Mar 11 14:39:48 2005 +0000
+
+    SiS driver:
+    - MergedFB/Xinerama: Added support for non-rectangular layouts (no panning
+        into dead areas, mouse restriced to accessible areas)
+    - MergedFB/Xinerama: Added support for RandR. Current window managers are
+        smart enough to update their Xinerama-info on RandR events. This
+        practically allows switching from dual-head operation to single-head
+        operation (by switching to a clone mode and simultaniously resizing the
+        desktop) and vice versa.
+    - MergedFB: Improved "physical alignment compensation" Offset by
+        disallowing panning and mouse movements into dead areas. (However,
+        RandR is disabled if that Offset is used.)
+    - MergedFB: Made identically looking MetaModes work with RandR. (by
+        supplying a fake rate.)
+    - Added "Reflect" feature: Reflect screen in x, y or x+y direction (Uses
+        shadow framebuffer; no accel, no Xv, no HWCursor.)
+    - Added aspect ratio detection for analog (VGA) devices. Produces different
+        default modes for 800x480, 1024x576, 1280x720,
+    1280x768 and 1280x800 depending on the aspect ratio. Options exist to
+        overrule this for each output device.
+    - Fixed FSTN support on SiS55x (for 320x240 xSTN panels)
+    - Workaround for SiS76x memory access latency issues if no local
+        framebuffer memory is present. Driver now allows only one video overlay
+        and assumes a quite restricted memory bandwidth. This chip is really
+        crippled. / If in hybrid mode, the driver only uses the LFB memory
+        (required changes in the video memory layout)
+    - Minor fix for machines with Trumpion Zurac LVDS scalers.
+    - Fixed bug in SaveScreen() causing a sig 11 sometimes.
+    - Added screen blanking for TV output
+    - Added two widescreen modes for PAL/NTSC TV output
+    - Numerous minor fixes and clean-ups.
+    - Numerous whitespace cleanups. Sorry for the noise.
+
+commit 291fc2d3ae3112b8f5d8a3836446da17d496b58c
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Feb 14 19:07:41 2005 +0000
+
+    Build fix for non-gcc compilers
+
+commit 102152c143e1553431fcee8c7c37602fad617e30
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jan 31 23:37:02 2005 +0000
+
+    SiS driver: Fix fast memcpy() for AMD64; fix mode restoring on AMD64
+
+commit a9decf9003afacc661ce7a08e1a534cbc1f2eea6
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jan 25 16:14:01 2005 +0000
+
+    SiS driver: Update manpage
+
+commit 5466b280021e22c24780f4c3e4560c5045c29118
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jan 25 15:00:20 2005 +0000
+
+    Copy/paste error
+
+commit 5a253b1f4f639b8a49d9458e44af63e58c5a7965
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jan 19 16:19:40 2005 +0000
+
+    SiS driver:
+    - Fix off-by-one error in setting up offscreen-images
+    - Fix for retrieval of mode timing from BIOS for LCD
+    - Fix for DGA in MergedFB mode
+    - Code size reduction by more calculations, less tables
+    - ShadowFB uses fast memcpy (correctly) now
+    - Prefer user given modes over default ones
+    - Add ForcePanelRGB option
+
+commit 4f3671640befe65334ebdfa5aef4bc2716f0aa61
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Dec 6 15:58:20 2004 +0000
+
+    SiS driver:
+    - Fix for 1600x1200 LCD panels
+    - Fix DGA in MergedFB mode
+
+commit 6ef9f9d26ae21f074055333d25689272c8299cd7
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Dec 3 15:57:59 2004 +0000
+
+    SiS driver:
+    - Clean up option handling
+    - Add separate gamma correction/brightness for CRT2
+    - Add "offset" for MergedFB mode for allowing non-rectangular desktops
+    - Clean up and fix a off-by-one error in CRTC programming (old series)
+    - Fix low-resolution (xres <= 512) and doublescan user modes for CRT2
+
+commit c1031b87580a7d5d1babfebdf07842635d4b3195
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Nov 25 15:29:37 2004 +0000
+
+    SiS driver: Clarify log in MergedFB mode
+
+commit b41edc0ad1ecd95fc6c0a52d4ab0edb55ae4d323
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Nov 24 01:05:02 2004 +0000
+
+    SiS driver: Renamed options "XvBenchmarkMemcpy" to "BenchmarkMemcpy" and
+        "XvSSECopy" to "UseSSE". Fix crash on machines with two or more
+        physical SiS cards. Enhanced logic to overrule monitor timings. Make
+        driver independent of vgaHW module. Use /dev/port instead of inX/outX
+        on ARM and MIPS (untested yet). Fix SiS301 panel misdetection (due to
+        very old, buggy BIOS). Clean up.
+
+commit 08079cea18f5ba79f6aaf6e7312e50120b1ae648
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Nov 7 17:18:41 2004 +0000
+
+    build fix for static server
+
+commit 128cf1448f44214acf01e20c1e517dfc6fe2959e
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Nov 5 09:28:42 2004 +0000
+
+    SiS driver: Reverse log-verbosity logic at output device detection
+
+commit 39ded003ab27112e3d8152a57fc96a49549e7854
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Nov 4 14:39:56 2004 +0000
+
+    SiS driver: Warning fix
+
+commit 2619e2709b6be7f7340b055f8c99a360f31e250f
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Nov 4 11:50:40 2004 +0000
+
+    SiS driver: Fix compilation on non-x86 platforms (#1780) Separate CPU
+        detection from memcpy() benchmark Initialize FB memory manager
+        regardless of NoAccel
+
+commit 86846ea06b512a352a6215b3559a01bee37dbc2e
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Oct 29 13:16:28 2004 +0000
+
+    SiS driver: Change 6.8.2 conditions to 6.9.0
+
+commit 7c39b4436b874cc1fd401c2387d41d3290963cf1
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Oct 29 10:44:26 2004 +0000
+
+    SiS driver: Fix XvSSEMemcpy option handling for <6.8.2
+
+commit c7737cae58cdbfc9578100c4be8e2411caba1b46
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Oct 29 10:38:47 2004 +0000
+
+    SIS driver: Fix compilation for pre-6.8.2
+
+commit 43f68e100d126c8cc9c78bbacd60e4e9c9452dc3
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Oct 29 10:35:16 2004 +0000
+
+    SiS driver: Fix compilation with -fPIC; implement sane OS check for SSE
+        support.
+
+commit 64bfe79b6af999994063a65199cb971044f2df7e
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Oct 29 00:24:56 2004 +0000
+
+    SiS driver: Fix memcpy() acceleration for AMD Duron CPUs (which do not
+        support SSE; falsely executed an SSE instruction if only mmxext is
+        supported by the CPU)
+    TODO: Fix OS check for SSE instructions. Need to find a way to install a
+        signal handler for SIGILL since that stupid xf86sighandler plainly
+        "return"s and causes an immediate second SIGILL as the "return" returns
+        to the illegal instruction itself.
+
+commit e78fcc7a7c48a725db5c6ff149e1ea1d56aa6e21
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Oct 28 22:14:59 2004 +0000
+
+    SiS driver: Clean up; remove unneccessary register writes in Xv code; add
+        gamma brightness features.
+
+commit b69ddb60c9304eb9ed40ae60a5441ea72378751b
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Oct 27 14:31:45 2004 +0000
+
+    SiS driver: Enhanced memcpy() stuff; added optimized memcpy() for AMD64
+        (AMD64 code is entirely untested yet - anybody?)
+
+commit 19e825ebc821fcb5f08d702f6ec1cb33c091bacf
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Oct 22 00:09:43 2004 +0000
+
+    SiS driver: Another fix for asm memcpy()
+
+commit 0c2896f826eaddf6ff51555d1a51c52fbc4e4b65
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Oct 21 23:49:58 2004 +0000
+
+    SiS driver: Fix for asm memcpy
+
+commit ac38a1285425c7146886c1f26d2d920c7ead4925
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Oct 21 23:41:14 2004 +0000
+
+    SiS driver: Add sis_memcpy.c
+
+commit 5170023bcf698192b2dc92402168c47fff9ef8dc
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Oct 21 23:36:13 2004 +0000
+
+    SiS driver: Add assembler memcpy() routines for Xv
+
+commit f27d162b322707c6d2546b1aacffcec8e1637c4d
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Oct 15 17:47:55 2004 +0000
+
+    SiS driver: MergedFB mode fix/enhancement:
+    - Make merged modes look really different for vidmod ext (by providing a
+        fake dotclock)
+    - Add "+"-notation for clone modes; used instead of "-" if two different
+        modes are to be merged for cloning.
+
+commit 4c5d71a3b62eea258051dfcf7ca1cad2a1978b10
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Oct 13 18:14:07 2004 +0000
+
+    SiS driver: Fix false comment
+
+commit 46d0b00694b350740189ae4dbec35b419868ac4e
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Oct 13 18:08:12 2004 +0000
+
+    SiS driver:
+    - Update driver date
+    - Add support for Panasonic AE700 projector (1280x720 50/60Hz native modes
+        for HDMI/DVI-D (why don't these stupid devices propagate these modes in
+        their EDID?!)
+
+commit e311b3b1c95530fc51d65d8260525b0c561c3b28
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Oct 13 18:00:37 2004 +0000
+
+    SiS driver: Fix VB PRG CLK for actually released pre-released BIOSes for
+        661 series.
+
+commit 5887d36e9d511332404c15e427e85e8723763041
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Sat Oct 2 11:22:29 2004 +0000
+
+    SiS driver: Loosen DDC-check and don't bail out if devices wrongly report
+        being "non-RGB-multicolor" type. (For Panasonic AE500 projector and
+        some DVI-to-VGA adaptors)
+
+commit 1429e451ec91ce01d6969ace30ebe3047ad9cf29
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Sep 22 04:38:03 2004 +0000
+
+    Bug #1252, #1253, #1255, #1256: Various typo fixes from Dave Jones.
+
+commit 1b6d87873247f252c1e656ad3bba44d460c25497
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Aug 20 18:57:06 2004 +0000
+
+    Support for Sis 1280x800 panels (Bug #1139, Thomas Winischhofer).
+
+commit b94ee52295375ff43d5e12469e2aad86c678328b
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Sat Aug 14 15:35:49 2004 +0000
+
+    SiS driver: Additional bytes->pixel conversions for AllocateLinear
+
+commit 55215274191df6baedb199e580e2fadf66ebd0c4
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Sat Aug 14 15:26:51 2004 +0000
+
+    SiS driver:
+    - RENDER acceleration now supports more PictOps (Clear, Src, Dst)
+    - Linear offscreen manager counts in PIXELS, not BYTES - fix video code not
+        to allocate too much
+    - Kill compiler warning for DRI
+
+commit 9d509f63ee3c048a25a7d72790c93f314bc09373
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Aug 12 12:59:25 2004 +0000
+
+    SiS driver: Add 960x600 as built-in mode (1080i, LCD, VGA)
+
+commit 5a5956a8b9ff9ed1c285f152cdb4c0fe4ef117a5
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Aug 11 19:01:33 2004 +0000
+
+    SiS driver: Remove unneeded statement
+
+commit 32f31c8443272db98d82743708d3f22213ec1926
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Aug 11 18:54:36 2004 +0000
+
+    SiS driver: Adapt mode numbers to new BIOS scheme and provide translation
+
+commit 813ad3aea67f8d7816fd2cbddc832908a6b7105d
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Aug 11 00:45:43 2004 +0000
+
+    SiS driver:
+    - Small fix for 1280x720 on larger panels
+    - Small fix for built-in modes on non-standard panels
+
+commit 7266df7537cf2132145605404ebcdc5dad3aa77b
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Aug 10 22:49:42 2004 +0000
+
+    SiS driver: Additional fixes for LCD
+
+commit 1a5d711d1ef175bcda964ee37829b6ca63a3c8d7
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Aug 10 21:57:20 2004 +0000
+
+    SiS driver:
+    - update timing for 1280x800, 1280x720 and 1280x768 panels
+    - allow more modes for LCD (just don't scale them if we can't)
+    - cleanup
+
+commit 079bf141c47ddcf7226807ef1b60670c2e9b843e
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Aug 9 13:55:06 2004 +0000
+
+    SiS driver:
+    - Add support for UMC-made video bridges
+    - Add support for centering screen on non-standard panels
+
+commit 69289fc61ece99106d893de4ccd0137c46043046
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Sat Aug 7 18:05:05 2004 +0000
+
+    SiS driver: Warning fix
+
+commit 169822a2d23e30c2230b0fec9f12d9e7f56eb282
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Aug 6 13:08:21 2004 +0000
+
+    SiS driver:
+    - Clean up version printing
+
+commit b36c10f803e0be73689b6dae08ca3c7d96fac4ec
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Fri Aug 6 08:52:07 2004 +0000
+
+    SiS driver:
+    - enable new RENDER code (despite the X.org version number for now)
+
+commit 4fe1e616a285ad9dddc35c08903e87f2d16f89d1
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Aug 5 15:35:30 2004 +0000
+
+    SiS driver:
+    - warning fixes for SunOS cc
+    - documentation update
+
+commit c22f737fd67ca47b8a51cbe6bfa74ffad1d7ebd8
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Aug 4 15:46:34 2004 +0000
+
+    SiS driver:
+    - Adapt to new RENDER hooks (will be used if X.org version is > 6.7.0.0)
+    - Use drmCommandWrite instead of compat-layer if drmWriteCommend exists
+    - Unify driver after changes for dlloader
+
+commit c7bcee0dc08d56af4b9e42a184686ef1710bfc10
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Jul 30 20:30:54 2004 +0000
+
+    Bug #400 (partial): Driver fixes for the dlloader. When using dlloader, all
+        framebuffer formats except cfb and the overlay modes should work, and
+        r128 and radeon need to be loaded from the ati driver (both issues to
+        be fixed soon). Tested on i740, s3virge, mach64, tdfx, vesa, and vga
+        drivers. elfloader users shouldn't be affected.
+
+commit 725276d251ef0e27307dd1b865c8d3cb7393f104
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jul 26 22:40:56 2004 +0000
+
+    SiS driver: Fix for 650/740 new BIOS data layout
+
+commit 4b2c04c9f18eae06919d0096dfa70ac234a6a61a
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jul 7 21:14:45 2004 +0000
+
+    SiS driver, vacation time edition:
+    - Overrule bogus HSync/VRefresh ranges for LCD and TV
+    - Fix for videobridgeless systems
+
+commit 1d8c6bd12b70f49cbb4944194c14b94d1dc42c05
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Tue Jun 29 10:09:58 2004 +0000
+
+    SiS driver:
+    - Fix detection of non-standard panels
+    - Support Sanyo PLV-Z2 in non-HDCP mode
+    - Rework mode validation (map unsupported modes for TV to modes with same
+        resolution)
+
+commit f112c72223b4964b0f8f2a510e323fee55742d3e
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Wed Jun 23 21:35:45 2004 +0000
+
+    SiS driver:
+    - Use sane HSync/VRefresh ranges for LCD and TV if the user didn't specify
+        any in xorg.conf
+    - Use PAL by default of TV output forced (and TV not detected)
+
+commit a8ea3115164f845246e9b3f935238499b1b62531
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Mon Jun 21 00:38:20 2004 +0000
+
+    SiS driver: Fix LCD support for ECS 90x; Work-around broken BIOS reporting
+        wrong LCD size.
+
+commit 870c22fd4254ee5623dbf82289d1e03edf609bb7
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Jun 17 16:33:26 2004 +0000
+
+    Load glx module automatically if DRI is enabled Make DRI wrapper compile on
+        older versions, too Bump driver version to correct date
+
+commit ff1eae67139b7a815ea3d13847d59d04236b3b10
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Jun 17 14:25:51 2004 +0000
+
+    Add missed DRI change
+
+commit 515b943c4413e15d368ed9b585dbf3cec7c4db5d
+Author: Thomas Winischhofer <thomas@winischhofer.net>
+Date:   Thu Jun 17 13:20:14 2004 +0000
+
+    SiS driver update 2004/06/17
+
+commit dccd124b50c6d6e8dd29278b87c4ae9d14ae678a
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:44:00 2004 +0000
+
+    Merge DRI-trunk-20040613 changes in programs/Xserver/hw/xfree86/drivers,
+        with the following notes:
+    - Savage and Mach64 (= ati/ati*.[ch] changes) DRI not merged due to
+        insecurity.
+    - VIA driver converted to new drmContext and drmHandle names.
+    - Radeon driver merge conflicted in many places, and MergedFB at least
+        could probably use some checking at this point.
+
+commit ad305d6d4414b860c7caf1650d046a71aed7766f
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:27:09 2004 +0000
+
+    DRI trunk-20040613 import
+
+commit 5880d0f36b7f79b650ff56914db769327fb38cc9
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:54 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 2a8d0bc1b050224139cf787946d2e433481b2e17
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:45:40 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 36986a29abd7777a7f5aed82c8a5a277c33c456e
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:36 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit edfb01cf07a716123a4969c2532d64bd7e381472
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:25 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 07d847169b5a54e459b42679e989af5eb6a5973d
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:55 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit a2b4d6323e7e72857ba17d28eece772135635d34
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:24 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit bb935a32bb5c9d0dd01be3b93decfdbcb2e0ab21
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Mon Feb 23 20:35:11 2004 +0000
+
+    Import most of XFree86 4.4RC3. This import excludes files which have the
+        new license. If we want to, later we can import 4.4RC3 again and pick
+        up the files that have the new license, but for now the vendor branch
+        is "pure."
+
+commit 10c83bf291a62e9b14699dc2f158a30fbe2d1b2d
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Jan 29 08:08:37 2004 +0000
+
+    Importing vendor version xf86-012804-2330 on Thu Jan 29 00:06:33 PST 2004
+
+commit 546c4f291a92b5b5b7812196b0a4dc44ce5e7ddb
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Dec 19 20:55:16 2003 +0000
+
+    XFree86 4.3.99.902 (RC 2)
+
+commit ebde9d1780cc6bb9307fa6639246764262738696
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Thu Dec 4 22:03:25 2003 +0000
+
+    XFree86 4.3.99.901 (RC 1)
+
+commit abe805c8c549fc02efebcfbbfa30ef69c4690b89
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:40 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 4a0967d910ff0c18285dd01cc0409a51ace0e6c4
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:39 2003 +0000
+
+    Initial revision
+
+commit 3eb5a12d4f37e6262b7e20a85e4620ed1d01efd8
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit d1473b7bcf205215781d461eb62f8dba0fb78931
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision
+
+commit 727bfe5d006d0e5c0167c2472af9d8ba69c9e109
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 15:54:49 2003 +0000
+
+    R6.6 is the Xorg base-line

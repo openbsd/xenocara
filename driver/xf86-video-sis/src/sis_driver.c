@@ -56,7 +56,6 @@
 #include "shadowfb.h"
 #include "fb.h"
 #include "micmap.h"
-#include "mibank.h"
 #include "mipointer.h"
 #include "mibstore.h"
 #include "edid.h"
@@ -3186,7 +3185,7 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	"Copyright (C) 2001-2005 Thomas Winischhofer <thomas@winischhofer.net> and others\n");
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	"*** See http://www.winischhofer.at/linuxsisvga.shtml\n");
+	"*** See http://www.winischhofer.eu/linuxsisvga.shtml\n");
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	"*** for documentation and updates.\n");
 
@@ -4099,6 +4098,8 @@ SISPreInit(ScrnInfoPtr pScrn, int flags)
 	     case SIS_315H:
 	     case SIS_330:
 	     case SIS_340:
+	     case SIS_650:
+	     case SIS_760:
 	     case XGI_40:     readpci = TRUE;
 			      break;
 	     case XGI_20:     readpci = TRUE;
@@ -8351,10 +8352,11 @@ SISDisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode, int fla
     }
 #endif
 
-    /* Work around a bug in xf86Event.c:
-     * pScrn->DPMSSet is being called without a previous
-     * call to xf86EnableAccess(). So we have no hardware
-     * access here.
+    /* FIXME: in old servers, DPMSSet was supposed to be called without open
+     * the correct PCI bridges before access the hardware. Now we have this
+     * hook wrapped by the vga arbiter which should do all the work, in
+     * kernels that implement it. For this case we might not want this hack
+     * bellow.
      */
     outSISIDXREG(SISSR,0x05,0x86);
     inSISIDXREG(SISSR,0x05,pmreg);

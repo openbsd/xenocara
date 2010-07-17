@@ -1922,11 +1922,17 @@ static void
 SISVGABlankScreen(ScrnInfoPtr pScrn, Bool on)
 {
     SISPtr pSiS = SISPTR(pScrn);
-    UChar  tmp;
+    UChar  tmp, orig;
 
     inSISIDXREG(SISSR, 0x01, tmp);
+    orig = tmp;
     if(on) tmp &= ~0x20;
     else   tmp |= 0x20;
+    /* Only update the hardware if the state changes because the reset will
+     * disrupt the output requiring the screen to resync.
+     */
+    if(orig == tmp)
+        return;
     SiS_SeqReset(pSiS, TRUE);
     outSISIDXREG(SISSR, 0x01, tmp);
     SiS_SeqReset(pSiS, FALSE);

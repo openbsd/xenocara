@@ -1392,7 +1392,7 @@ SiSOptions(ScrnInfoPtr pScrn)
 
 	  if((from == X_DEFAULT) && (!pSiS->enablesisctrl)) {
 	     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		"For information on SiSCtrl, see\n\t\thttp://www.winischhofer.at/linuxsispart1.shtml#sisctrl\n");
+		"For information on SiSCtrl, see\n\t\thttp://www.winischhofer.eu/linuxsispart1.shtml#sisctrl\n");
 	  }
 
 
