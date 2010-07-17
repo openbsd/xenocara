@@ -1,3 +1,129 @@
+commit d3d20437ceee1c225cd189fdeb6378552e206337
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 8 19:23:04 2010 -0700
+
+    libXrender 0.9.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0dcf5c152a6463342897375c71e4f76476d285d2
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Apr 9 17:26:52 2010 -0700
+
+    Always call SyncHandle after issuing an X request.
+
+commit b138debfd03e096a0af998495441ac262733dfc9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:49 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1380d975d1b85decd2b0a6e8a7e629b1bdd1d1ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 14 09:43:56 2010 -0500
+
+    COPYING: add missing copyright notices
+    
+    Refer to: Composite.c
+    Copyright © 2000 SuSE, Inc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fc8b02894452ad93101b35fec41cb1baf72e746a
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Thu Dec 17 08:30:04 2009 +0100
+
+    require autoconf 2.60 because of $(docdir) use
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit f662ae0e47a6f8fe47457a0b38f72f9598f37c96
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:04 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 83a3fd787f3058284d8b903ac190de54ba1f0e6d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit cf8a7c4463eba5ef3c63186ad539c201df3770f9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:26 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit f58f2bf44c35ca82ecd9f022a494af0fbcd0a537
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:43 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 47051786b209039488dfca6b644db3f67ca96426
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 1da8c1bfbb17750e5ba51321961aaf39b8cf98f7
+Author: Tomáš Chvátal <scarabeus@gentoo.org>
+Date:   Sun Nov 29 13:38:42 2009 +0100
+
+    Make libXrender use docdir for documentation placement.
+    
+    Signed-off-by: Tomáš Chvátal <scarabeus@gentoo.org>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit a5ab173b0b19e6acefc897492b21fc6e6c296282
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:26 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 5865c457191da7f7357b7c7cdfb1a6e695e630df
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Oct 1 22:34:19 2009 -0700

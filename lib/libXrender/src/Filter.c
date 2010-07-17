@@ -123,6 +123,7 @@ XRenderQueryFilters (Display *dpy, Drawable drawable)
 	_XEatData (dpy, 4 - (i & 3));
     
     UnlockDisplay (dpy);
+    SyncHandle ();
     return filters;
 }
 
