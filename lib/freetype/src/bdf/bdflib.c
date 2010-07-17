@@ -1,6 +1,6 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009
+ * Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009, 2010
  *   Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -470,6 +470,11 @@
   }
 
 
+  /* An empty string for empty fields. */
+
+  static const char  empty[1] = { 0 };      /* XXX eliminate this */
+
+
   static char *
   _bdf_list_join( _bdf_list_t*    list,
                   int             c,
@@ -494,16 +499,12 @@
       if ( i + 1 < list->used )
         dp[j++] = (char)c;
     }
-    dp[j] = 0;
+    if ( dp != empty )
+      dp[j] = 0;
 
     *alen = j;
     return dp;
   }
-
-
-  /* An empty string for empty fields. */
-
-  static const char  empty[1] = { 0 };      /* XXX eliminate this */
 
 
   static FT_Error
@@ -1867,6 +1868,9 @@
     error = BDF_Err_Invalid_File_Format;
 
   Exit:
+    if ( error && ( p->flags & _BDF_GLYPH ) )
+      FT_FREE( p->glyph_name );
+
     return error;
   }
 
@@ -2077,6 +2081,14 @@
     /* Check for the start of the properties. */
     if ( ft_memcmp( line, "STARTPROPERTIES", 15 ) == 0 )
     {
+      if ( !(p->flags & _BDF_FONT_BBX ) )
+      {
+        /* Missing the FONTBOUNDINGBOX field. */
+        FT_ERROR(( "_bdf_parse_start: " ERRMSG1, lineno, "FONTBOUNDINGBOX" ));
+        error = BDF_Err_Missing_Fontboundingbox_Field;
+        goto Exit;
+      }
+
       error = _bdf_list_split( &p->list, (char *)" +", line, linelen );
       if ( error )
         goto Exit;
@@ -2138,6 +2150,9 @@
         error = BDF_Err_Invalid_File_Format;
         goto Exit;
       }
+
+      /* Allowing multiple `FONT' lines (which is invalid) doesn't hurt... */
+      FT_FREE( p->font->name );
 
       if ( FT_NEW_ARRAY( p->font->name, slen + 1 ) )
         goto Exit;

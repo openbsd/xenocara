@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR glyph loader (body).                                    */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2005, 2007 by                                    */
+/*  Copyright 2002, 2003, 2005, 2007, 2010 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -268,8 +268,8 @@
     {
       PFR_CHECK( 1 );
       count   = PFR_NEXT_BYTE( p );
-      x_count = ( count & 15 );
-      y_count = ( count >> 4 );
+      x_count = count & 15;
+      y_count = count >> 4;
     }
     else
     {
@@ -388,7 +388,7 @@
 
         case 2:                             /* horizontal line to */
           FT_TRACE6(( "- horizontal line to cx.%d", format_low ));
-          if ( format_low > x_count )
+          if ( format_low >= x_count )
             goto Failure;
           pos[0].x   = glyph->x_control[format_low];
           pos[0].y   = pos[3].y;
@@ -398,7 +398,7 @@
 
         case 3:                             /* vertical line to */
           FT_TRACE6(( "- vertical line to cy.%d", format_low ));
-          if ( format_low > y_count )
+          if ( format_low >= y_count )
             goto Failure;
           pos[0].x   = pos[3].x;
           pos[0].y   = glyph->y_control[format_low];
@@ -440,7 +440,7 @@
           case 0:                           /* 8-bit index */
             PFR_CHECK( 1 );
             idx  = PFR_NEXT_BYTE( p );
-            if ( idx > x_count )
+            if ( idx >= x_count )
               goto Failure;
             cur->x = glyph->x_control[idx];
             FT_TRACE7(( " cx#%d", idx ));
@@ -470,7 +470,7 @@
           case 0:                           /* 8-bit index */
             PFR_CHECK( 1 );
             idx  = PFR_NEXT_BYTE( p );
-            if ( idx > y_count )
+            if ( idx >= y_count )
               goto Failure;
             cur->y = glyph->y_control[idx];
             FT_TRACE7(( " cy#%d", idx ));
@@ -597,6 +597,16 @@
     {
       FT_UInt  new_max = ( org_count + count + 3 ) & (FT_UInt)-4;
 
+
+      /* we arbitrarily limit the number of subglyphs */
+      /* to avoid endless recursion                   */
+      if ( new_max > 64 )
+      {
+        error = PFR_Err_Invalid_Table;
+        FT_ERROR(( "pfr_glyph_load_compound:"
+                   " too many compound glyphs components\n" ));
+        goto Exit;
+      }
 
       if ( FT_RENEW_ARRAY( glyph->subs, glyph->max_subs, new_max ) )
         goto Exit;

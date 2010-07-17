@@ -992,6 +992,14 @@
              ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE &&
                cur[0]->encoding_id == TT_APPLE_ID_UNICODE_32    ) )
         {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+          if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+          {
+            FT_ERROR(( "find_unicode_charmap: UCS-4 cmap is found "
+                       "at too late position (%d)\n", cur - first ));
+            continue;
+          }
+#endif
           face->charmap = cur[0];
           return FT_Err_Ok;
         }
@@ -1006,6 +1014,14 @@
     {
       if ( cur[0]->encoding == FT_ENCODING_UNICODE )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "find_unicode_charmap: UCS-2 cmap is found "
+                     "at too late position (%d)\n", cur - first ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return FT_Err_Ok;
       }
@@ -1047,6 +1063,14 @@
       if ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE    &&
            cur[0]->encoding_id == TT_APPLE_ID_VARIANT_SELECTOR &&
            FT_Get_CMap_Format( cur[0] ) == 14                  )
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - first > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "find_unicode_charmap: UVS cmap is found "
+                     "at too late position (%d)\n", cur - first ));
+          continue;
+        }
+#endif
         return cur[0];
     }
 
@@ -1548,11 +1572,25 @@
         goto Exit;
       if ( FT_READ_USHORT( flags ) )
         goto Exit;
-      rlen -= 2;                    /* the flags are part of the resource */
+      FT_TRACE3(( "POST fragment[%d]: offsets=0x%08x, rlen=0x%08x, flags=0x%04x\n",
+                   i, offsets[i], rlen, flags ));
+
+      if ( ( flags >> 8 ) == 0 )        /* Comment, should not be loaded */
+        continue;
+
+      /* the flags are part of the resource, so rlen >= 2.  */
+      /* but some fonts declare rlen = 0 for empty fragment */
+      if ( rlen > 2 )
+        rlen -= 2;
+      else
+        rlen = 0;
+
       if ( ( flags >> 8 ) == type )
         len += rlen;
       else
       {
+        if ( pfb_lenpos + 3 > pfb_len + 2 )
+          goto Exit2;
         pfb_data[pfb_lenpos    ] = (FT_Byte)( len );
         pfb_data[pfb_lenpos + 1] = (FT_Byte)( len >> 8 );
         pfb_data[pfb_lenpos + 2] = (FT_Byte)( len >> 16 );
@@ -1561,6 +1599,8 @@
         if ( ( flags >> 8 ) == 5 )      /* End of font mark */
           break;
 
+        if ( pfb_pos + 6 > pfb_len + 2 )
+          goto Exit2;
         pfb_data[pfb_pos++] = 0x80;
 
         type = flags >> 8;
@@ -1575,12 +1615,18 @@
       }
 
       error = FT_Stream_Read( stream, (FT_Byte *)pfb_data + pfb_pos, rlen );
+      if ( error )
+        goto Exit2;
       pfb_pos += rlen;
     }
 
+    if ( pfb_pos + 2 > pfb_len + 2 )
+      goto Exit2;
     pfb_data[pfb_pos++] = 0x80;
     pfb_data[pfb_pos++] = 3;
 
+    if ( pfb_lenpos + 3 > pfb_len + 2 )
+      goto Exit2;
     pfb_data[pfb_lenpos    ] = (FT_Byte)( len );
     pfb_data[pfb_lenpos + 1] = (FT_Byte)( len >> 8 );
     pfb_data[pfb_lenpos + 2] = (FT_Byte)( len >> 16 );
@@ -2901,6 +2947,15 @@
     {
       if ( cur[0]->encoding == encoding )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - face->charmaps > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "FT_Select_Charmap: requested charmap is found (%d), "
+                     "but in too late position to cache\n",
+                     cur - face->charmaps ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return 0;
       }
@@ -2935,6 +2990,15 @@
     {
       if ( cur[0] == charmap )
       {
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+        if ( cur - face->charmaps > FT_MAX_CHARMAP_CACHEABLE )
+        {
+          FT_ERROR(( "FT_Set_Charmap: requested charmap is found (%d), "
+                     "but in too late position to cache\n",
+                     cur - face->charmaps ));
+          continue;
+        }
+#endif
         face->charmap = cur[0];
         return 0;
       }
@@ -2957,6 +3021,15 @@
 
     FT_ASSERT( i < charmap->face->num_charmaps );
 
+#ifdef FT_MAX_CHARMAP_CACHEABLE
+    if ( i > FT_MAX_CHARMAP_CACHEABLE )
+    {
+      FT_ERROR(( "FT_Get_Charmap_Index: requested charmap is found (%d), "
+                 "but in too late position to cache\n",
+                 i ));
+      return -i;
+    }
+#endif
     return i;
   }
 
@@ -3109,7 +3182,7 @@
     FT_UInt   gindex = 0;
 
 
-    if ( face && face->charmap )
+    if ( face && face->charmap && face->num_glyphs )
     {
       gindex = FT_Get_Char_Index( face, 0 );
       if ( gindex == 0 )
@@ -3134,7 +3207,7 @@
     FT_UInt   gindex = 0;
 
 
-    if ( face && face->charmap )
+    if ( face && face->charmap && face->num_glyphs )
     {
       FT_UInt32  code = (FT_UInt32)charcode;
       FT_CMap    cmap = FT_CMAP( face->charmap );
