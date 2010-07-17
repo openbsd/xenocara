@@ -779,7 +779,11 @@ DUMMYCreateWindow(WindowPtr pWin)
 	return(ret);
 	
     if(dPtr->prop == FALSE) {
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 8
         pWinRoot = WindowTable[DUMMYScrn->pScreen->myNum];
+#else
+        pWinRoot = DUMMYScrn->pScreen->root;
+#endif
         if (! ValidAtom(VFB_PROP))
             VFB_PROP = MakeAtom(VFB_PROP_NAME, strlen(VFB_PROP_NAME), 1);
 

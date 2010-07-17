@@ -1,3 +1,108 @@
+commit 77ae177fd77e90a6eaeebde9df88911256264329
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Jun 4 16:09:34 2010 -0700
+
+    Use new server API to find the root window.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 2503a68673c6012a0bf2abba58aa5060654965f9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 12 15:39:03 2010 -0400
+
+    COPYING: replace stub file with actual Copyright notice
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c4134a6cb6bf3d9364fd2374e79647859dbd57c3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 20:08:52 2010 -0500
+
+    config: move compiler flags from configure.ac to Makefile.am
+    
+    CFLAGS is an automake defined variable that should not be set
+    by the module. It should not be AC_SUBST either, it already is.
+    
+    Use AM_CFLAGS in Makefile.am. This will allow the user to override
+    the flags as they will be in the right order.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3370539eea599ff51a556507ec16a1570b8ed076
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 19:07:22 2010 -0500
+
+    config: remove unrequired '-I$(top_srcdir)/src'
+    
+    The current dir is already included by default in the makefile
+    top_builddir = ..
+    DEFAULT_INCLUDES = -I. -I$(top_builddir)
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ea7cc253b0f4ea97a197ec36b3ac06279b0b95f6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 18:42:52 2010 -0500
+
+    config: remove unused INCLUDES='-I$(top_srcdir)/src'
+    
+    This statement is redundant and not used in the makefile
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bff6fc2f25648df0bbc0ea0723636260df987d34
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 17:45:42 2010 -0500
+
+    config: remove unused variable XORG_INCS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 17f6ec36df36a8999a95fd86e17013b1c44a7a2e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 20:59:46 2009 -0500
+
+    configure.ac: sdkdir usage duplicates the sdk include dir
+    
+    The sdkdir variable provides a duplicate copy of the include/xorg
+    directory. The statement is removed as this was it's only used.
+    In the Makefile, there is now only one instance of the -I sdkdir
+    The sdkdir is provided in XORG_CFLAGS.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 86a7baa4156dc9569b7dde51b3042b7fd8093821
+Author: Michael Olbrich <m.olbrich@pengutronix.de>
+Date:   Thu Dec 10 14:53:50 2009 -0500
+
+    configure.ac: remove wrong include path. #24675
+    
+    Don't use $(prefix)/include as include path. It can break things
+    when cross-compiling with DESTDIR and prefix=/usr
+    
+    Signed-off-by: Michael Olbrich <m.olbrich@pengutronix.de>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 483db0376d08be806c9bd51646f226f9510a4e48
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Dec 1 10:51:30 2009 -0500
+
+    dummy 0.3.3
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 1ea8367691e69b289c2b5ca67d8ace39994347f8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Dec 1 10:36:35 2009 -0500
+
+    Don't try to make an INSTALL file
+    
+    INSTALL_CMD is empty.  This breaks make distcheck.  I don't know why,
+    but I also don't care.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 84b8dac3e6d869aa7e7b012add892fad9c3ce136
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Mon Nov 23 09:25:05 2009 -0500
