@@ -1,3 +1,166 @@
+commit ce440c7d68fa06763f8413859c25ae3a8a22c81b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 3 17:19:30 2010 -0700
+
+    libXext 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 904f71cda5ef818b53171888efb6b0dd0f929565
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Apr 9 17:30:06 2010 -0700
+
+    XAllocID must only be called with the Display lock held.
+    
+    This patch makes XdbeAllocateBackBufferName follow the same XID allocation
+    pattern used in other stubs.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit b403e38d7d0994d223984c11f26f5b8749851522
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Apr 5 19:58:03 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 048e97e3948dd0caf886f3cb789899f63dc9d1bf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:48 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 658574bb531f342947f484f9903e30032afce070
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Feb 5 13:58:33 2010 +0100
+
+    Revert "Don't smash the event_vec if num_events differs between lib and server."
+    
+    That commit created a single ext_handlers[] array to check for
+    non-overlapping extension events, but the event codes need to be
+    per-display, so checking them globally is wrong.
+    
+    This reverts commit 83fdb27df4ddc2fb088ddf2ec65f0db6b7c57287.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Cc: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1ed7492638d6d6fb7c06da64017df6b7877d9780
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 20:36:51 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 83fdb27df4ddc2fb088ddf2ec65f0db6b7c57287
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 26 09:38:31 2009 +1000
+
+    Don't smash the event_vec if num_events differs between lib and server.
+    
+    If the library extension thinks there's more events to an extension than the
+    server actually has, the event_vec for the overlapping range can get
+    overwritten. This depends on the initialization order of the libraries.
+    
+    Reported-by: Nathan Kidd
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 9632775f2195e3448fcc402a3743f3368a8a1c9c
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Nov 30 00:07:22 2009 +0100
+
+    Don't export xgeExtRegister
+    
+    Its only caller is XextAddDisplay()
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit db2a28e540f9eb7cbfeffc771ce7cdf414231aa7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:04 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 6ede21305688873a34fcbd2b0d9f7480679f02ee
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 42aef4da8ab2b75bbfc3c27a430f43847ab5a0f6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 28049a6d210913f8bf4b9d82382076718c9c3f1e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:43 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 49957bedce40cc706bdb71edc3e827212a4d586c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 28d16f8ce9dd6ed681e6bc149878002b093c976f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Nov 2 16:34:14 2009 -0800
+
+    Fix CFLAGS/CPPFLAGS so lint works properly
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9f94bf9de7607c11ab82667a73a4160d705e355c
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Nov 3 14:42:35 2009 -0800
+
+    Make library headers compatible with old server builds
+    
+    Old servers (1.6 and before) included the extension library headers
+    instead of using separate server header files. This patch makes the
+    library headers compatibile with the server by hiding the library
+    definitions from the server build.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit ed7bbe65222286828fa42f3c264ed5c4190fe58c
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Oct 21 20:13:24 2009 -0700
