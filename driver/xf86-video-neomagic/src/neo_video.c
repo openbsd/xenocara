@@ -87,7 +87,6 @@ NEOInitVideo(ScreenPtr pScreen)
     numAdaptors = xf86XVListGenericAdaptors(pScrn, &overlayAdaptors);
 
     if (nPtr->NeoChipset > NM2070 
-	&& !nPtr->noLinear 
 	&& nPtr->NeoMMIOBase2 != NULL){
 	nPtr->video = TRUE;
 	newAdaptor = NEOSetupVideo(pScreen);

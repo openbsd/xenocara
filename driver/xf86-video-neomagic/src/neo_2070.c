@@ -159,7 +159,7 @@ Neo2070AccelInit(ScreenPtr pScreen)
 	return FALSE;
     }
     
-    return (xaaSetupWrapper(pScreen, infoPtr, pScrn->depth, &nPtr->accelSync));
+    return(XAAInit(pScreen, infoPtr));
 
 }
 

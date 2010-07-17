@@ -33,7 +33,6 @@ neomagic_drv_la_SOURCES = \
          neo_2090.c \
          neo_2097.c \
          neo_2200.c \
-         neo_bank.c \
          neo_cursor.c \
          neo_dga.c \
          neo_driver.c \
