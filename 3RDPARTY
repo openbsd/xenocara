@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.80 2010/07/17 14:02:14 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.81 2010/07/18 21:16:55 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -33,7 +33,7 @@ Archive Site:	http://www.fontconfig.org/
 
 Package:	DejaVu Fonts
 Version:	2.30
-Current Vers:	2.30
+Current Vers:	2.31
 Maintainer:	Freedesktop.org
 Archive Site:	http://dejavu-fonts.org/
 
