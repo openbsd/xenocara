@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.3 2009/09/22 22:00:54 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.4 2010/07/18 17:49:46 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -101,8 +101,10 @@
 
 #include "fb.h"
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
 #include "xf86RAC.h"
+#endif
 
 #ifdef XvExtension
 #include "xf86xv.h"
@@ -437,8 +439,10 @@ WildcatFBPreInit(ScrnInfoPtr pScrn, int flags)
 
 	fPtr->pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
 
+#ifndef XSERVER_LIBPCIACCESS
 	pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_CURSOR | RAC_VIEWPORT;
 	pScrn->racIoFlags = pScrn->racMemFlags;
+#endif
 
 	dev = xf86FindOptionValue(fPtr->pEnt->device->options, "device");
 	fPtr->fd = wildcatfb_open(dev);
