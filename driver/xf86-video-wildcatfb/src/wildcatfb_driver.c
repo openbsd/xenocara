@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.4 2010/07/18 17:49:46 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.5 2010/07/18 20:10:12 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -685,7 +685,7 @@ WildcatFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		return FALSE;
 
 	fPtr->shadow = xcalloc(1, pScrn->virtualX * pScrn->virtualY *
-	    pScrn->bitsPerPixel);
+	    pScrn->bitsPerPixel/8);
 		
 	if (!fPtr->shadow) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
