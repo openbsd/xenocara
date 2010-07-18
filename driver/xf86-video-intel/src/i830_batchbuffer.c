@@ -40,72 +40,29 @@
 
 #define DUMP_BATCHBUFFERS NULL /* "/tmp/i915-batchbuffers.dump" */
 
-static int
-intel_nondrm_exec(dri_bo *bo, unsigned int used, void *priv)
+static void intel_end_vertex(intel_screen_private *intel)
 {
-    ScrnInfoPtr scrn = priv;
-    intel_screen_private *intel = intel_get_screen_private(scrn);
+	if (intel->vertex_bo) {
+		if (intel->vertex_used)
+			dri_bo_subdata(intel->vertex_bo, 0, intel->vertex_used*4, intel->vertex_ptr);
 
-    BEGIN_LP_RING(4);
-    OUT_RING(MI_BATCH_BUFFER_START | (2 << 6));
-    OUT_RING(bo->offset);
-    OUT_RING(MI_NOOP);
-    OUT_RING(MI_NOOP);
-    ADVANCE_LP_RING();
-
-    return 0;
+		dri_bo_unreference(intel->vertex_bo);
+		intel->vertex_bo = NULL;
+	}
 }
 
-static int
-intel_nondrm_exec_i830(dri_bo *bo, unsigned int used, void *priv)
+void intel_next_vertex(intel_screen_private *intel)
 {
-    ScrnInfoPtr scrn = priv;
-    intel_screen_private *intel = intel_get_screen_private(scrn);
+	intel_end_vertex(intel);
 
-    BEGIN_LP_RING(4);
-    OUT_RING(MI_BATCH_BUFFER);
-    OUT_RING(bo->offset);
-    OUT_RING(bo->offset + intel->batch_used - 4);
-    OUT_RING(MI_NOOP);
-    ADVANCE_LP_RING();
-
-    return 0;
-}
-
-/**
- * Creates a fence value representing a request to be passed.
- *
- * Stub implementation that should be avoided when DRM functions are available.
- */
-static unsigned int
-intel_nondrm_emit(void *priv)
-{
-    static unsigned int fence = 0;
-
-    /* Match DRM in not using half the range. The fake bufmgr relies on this. */
-    if (++fence >= 0x8000000)
-	fence = 1;
-
-    return fence;
-}
-
-/**
- * Waits on a fence representing a request to be passed.
- *
- * Stub implementation that should be avoided when DRM functions are available.
- */
-static void
-intel_nondrm_wait(unsigned int fence, void *priv)
-{
-    ScrnInfoPtr scrn = priv;
-
-    i830_wait_ring_idle(scrn);
+	intel->vertex_bo =
+		dri_bo_alloc(intel->bufmgr, "vertex", sizeof (intel->vertex_ptr), 4096);
+	intel->vertex_used = 0;
 }
 
 static void intel_next_batch(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
-	int ret;
 
 	/* The 865 has issues with larger-than-page-sized batch buffers. */
 	if (IS_I865G(intel))
@@ -115,12 +72,7 @@ static void intel_next_batch(ScrnInfoPtr scrn)
 		intel->batch_bo =
 		    dri_bo_alloc(intel->bufmgr, "batch", 4096 * 4, 4096);
 
-	ret = dri_bo_map(intel->batch_bo, 1);
-	if (ret != 0)
-		FatalError("Failed to map batchbuffer: %s\n", strerror(-ret));
-
 	intel->batch_used = 0;
-	intel->batch_ptr = intel->batch_bo->virtual;
 
 	/* We don't know when another client has executed, so we have
 	 * to reinitialize our 3D state per batch.
@@ -136,34 +88,54 @@ void intel_batch_init(ScrnInfoPtr scrn)
 	intel->batch_emitting = 0;
 
 	intel_next_batch(scrn);
-
-	if (!intel->have_gem) {
-		if (IS_I830(intel) || IS_845G(intel)) {
-			intel_bufmgr_fake_set_exec_callback(intel->bufmgr,
-			    intel_nondrm_exec_i830, scrn);
-		} else {
-			intel_bufmgr_fake_set_exec_callback(intel->bufmgr,
-			    intel_nondrm_exec, scrn);
-		}
-		intel_bufmgr_fake_set_fence_callback(intel->bufmgr,
-		    intel_nondrm_emit, intel_nondrm_wait, scrn);
-	}
 }
 
 void intel_batch_teardown(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
-	if (intel->batch_ptr != NULL) {
-		dri_bo_unmap(intel->batch_bo);
-		intel->batch_ptr = NULL;
-
+	if (intel->batch_bo != NULL) {
 		dri_bo_unreference(intel->batch_bo);
 		intel->batch_bo = NULL;
+	}
 
+	if (intel->last_batch_bo != NULL) {
 		dri_bo_unreference(intel->last_batch_bo);
 		intel->last_batch_bo = NULL;
 	}
+
+	if (intel->vertex_bo) {
+		dri_bo_unreference(intel->vertex_bo);
+		intel->vertex_bo = NULL;
+	}
+
+	while (!list_is_empty(&intel->batch_pixmaps))
+		list_del(intel->batch_pixmaps.next);
+
+	while (!list_is_empty(&intel->flush_pixmaps))
+		list_del(intel->flush_pixmaps.next);
+
+	while (!list_is_empty(&intel->in_flight)) {
+		struct intel_pixmap *entry;
+
+		entry = list_first_entry(&intel->in_flight,
+					 struct intel_pixmap,
+					 in_flight);
+
+		dri_bo_unreference(entry->bo);
+		list_del(&entry->in_flight);
+		free(entry);
+	}
+}
+
+void intel_batch_do_flush(ScrnInfoPtr scrn)
+{
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+
+	while (!list_is_empty(&intel->flush_pixmaps))
+		list_del(intel->flush_pixmaps.next);
+
+	intel->need_mi_flush = FALSE;
 }
 
 void intel_batch_emit_flush(ScrnInfoPtr scrn)
@@ -182,55 +154,44 @@ void intel_batch_emit_flush(ScrnInfoPtr scrn)
 	OUT_BATCH(MI_FLUSH | flags);
 	ADVANCE_BATCH();
 
-	while (!list_is_empty(&intel->flush_pixmaps)) {
-		struct intel_pixmap *entry;
-
-		entry = list_first_entry(&intel->flush_pixmaps,
-					 struct intel_pixmap,
-					 flush);
-
-		entry->flush_read_domains = entry->flush_write_domain = 0;
-		list_del(&entry->flush);
-	}
-
-	intel->need_mi_flush = FALSE;
+	intel_batch_do_flush(scrn);
 }
 
-void intel_batch_submit(ScrnInfoPtr scrn)
+void intel_batch_submit(ScrnInfoPtr scrn, int flush)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	int ret;
 
 	assert (!intel->in_batch_atomic);
 
+	if (intel->vertex_flush)
+		intel->vertex_flush(intel);
+	intel_end_vertex(intel);
+
+	if (flush)
+		intel_batch_emit_flush(scrn);
+
 	if (intel->batch_used == 0)
 		return;
 
-	/* Emit a padding dword if we aren't going to be quad-word aligned. */
-	if ((intel->batch_used & 4) == 0) {
-		*(uint32_t *) (intel->batch_ptr + intel->batch_used) = MI_NOOP;
-		intel->batch_used += 4;
-	}
-
 	/* Mark the end of the batchbuffer. */
-	*(uint32_t *) (intel->batch_ptr + intel->batch_used) =
-	    MI_BATCH_BUFFER_END;
-	intel->batch_used += 4;
+	OUT_BATCH(MI_BATCH_BUFFER_END);
+	/* Emit a padding dword if we aren't going to be quad-word aligned. */
+	if (intel->batch_used & 1)
+		OUT_BATCH(MI_NOOP);
 
 	if (DUMP_BATCHBUFFERS) {
 	    FILE *file = fopen(DUMP_BATCHBUFFERS, "a");
 	    if (file) {
-		fwrite (intel->batch_ptr, intel->batch_used, 1, file);
+		fwrite (intel->batch_ptr, intel->batch_used*4, 1, file);
 		fclose(file);
 	    }
 	}
 
-	dri_bo_unmap(intel->batch_bo);
-	intel->batch_ptr = NULL;
-
-	ret =
-	    dri_bo_exec(intel->batch_bo, intel->batch_used, NULL, 0,
-			0xffffffff);
+	ret = dri_bo_subdata(intel->batch_bo, 0, intel->batch_used*4, intel->batch_ptr);
+	if (ret == 0)
+		ret = dri_bo_exec(intel->batch_bo, intel->batch_used*4,
+				  NULL, 0, 0xffffffff);
 	if (ret != 0) {
 		static int once;
 
@@ -250,25 +211,14 @@ void intel_batch_submit(ScrnInfoPtr scrn)
 					 struct intel_pixmap,
 					 batch);
 
-		entry->batch_read_domains = entry->batch_write_domain = 0;
+		entry->busy = -1;
+		entry->batch_write = 0;
 		list_del(&entry->batch);
 	}
 
-	/* Mark that we need to flush whatever potential rendering we've done in the
-	 * blockhandler.  We could set this less often, but it's probably not worth
-	 * the work.
-	 */
-	intel->need_mi_flush = !list_is_empty(&intel->flush_pixmaps);
-	while (!list_is_empty(&intel->flush_pixmaps)) {
-		struct intel_pixmap *entry;
-
-		entry = list_first_entry(&intel->flush_pixmaps,
-					 struct intel_pixmap,
-					 flush);
-
-		entry->flush_read_domains = entry->flush_write_domain = 0;
-		list_del(&entry->flush);
-	}
+	intel->need_mi_flush |= !list_is_empty(&intel->flush_pixmaps);
+	while (!list_is_empty(&intel->flush_pixmaps))
+		list_del(intel->flush_pixmaps.next);
 
 	while (!list_is_empty(&intel->in_flight)) {
 		struct intel_pixmap *entry;
@@ -279,7 +229,7 @@ void intel_batch_submit(ScrnInfoPtr scrn)
 
 		dri_bo_unreference(entry->bo);
 		list_del(&entry->in_flight);
-		xfree(entry);
+		free(entry);
 	}
 
 	/* Save a ref to the last batch emitted, which we use for syncing
@@ -306,8 +256,8 @@ void intel_batch_wait_last(ScrnInfoPtr scrn)
 	/* Map it CPU write, which guarantees it's done.  This is a completely
 	 * non performance path, so we don't need anything better.
 	 */
-	drm_intel_bo_map(intel->last_batch_bo, TRUE);
-	drm_intel_bo_unmap(intel->last_batch_bo);
+	drm_intel_gem_bo_map_gtt(intel->last_batch_bo);
+	drm_intel_gem_bo_unmap_gtt(intel->last_batch_bo);
 }
 
 void intel_sync(ScrnInfoPtr scrn)
@@ -320,7 +270,6 @@ void intel_sync(ScrnInfoPtr scrn)
 	if (!scrn->vtSema || !intel->batch_bo || !intel->batch_ptr)
 		return;
 
-	intel_batch_emit_flush(scrn);
-	intel_batch_submit(scrn);
+	intel_batch_submit(scrn, TRUE);
 	intel_batch_wait_last(scrn);
 }

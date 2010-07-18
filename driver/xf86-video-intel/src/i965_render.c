@@ -183,57 +183,12 @@ static Bool i965_get_dest_format(PicturePtr dest_picture, uint32_t * dst_format)
 	return TRUE;
 }
 
-static Bool i965_check_composite_texture(ScrnInfoPtr scrn, PicturePtr picture,
-					 int unit)
-{
-	if (picture->repeatType > RepeatReflect) {
-		intel_debug_fallback(scrn,
-				     "extended repeat (%d) not supported\n",
-				     picture->repeatType);
-		return FALSE;
-	}
-
-	if (picture->filter != PictFilterNearest &&
-	    picture->filter != PictFilterBilinear) {
-		intel_debug_fallback(scrn, "Unsupported filter 0x%x\n",
-				     picture->filter);
-		return FALSE;
-	}
-
-	if (picture->pDrawable) {
-		int w, h, i;
-
-		w = picture->pDrawable->width;
-		h = picture->pDrawable->height;
-		if ((w > 8192) || (h > 8192)) {
-			intel_debug_fallback(scrn,
-					     "Picture w/h too large (%dx%d)\n",
-					     w, h);
-			return FALSE;
-		}
-
-		for (i = 0;
-		     i < sizeof(i965_tex_formats) / sizeof(i965_tex_formats[0]);
-		     i++) {
-			if (i965_tex_formats[i].fmt == picture->format)
-				break;
-		}
-		if (i == sizeof(i965_tex_formats) / sizeof(i965_tex_formats[0]))
-		{
-			intel_debug_fallback(scrn,
-					     "Unsupported picture format "
-					     "0x%x\n",
-					     (int)picture->format);
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
 Bool
-i965_check_composite(int op, PicturePtr source_picture, PicturePtr mask_picture,
-		     PicturePtr dest_picture)
+i965_check_composite(int op,
+		     PicturePtr source_picture,
+		     PicturePtr mask_picture,
+		     PicturePtr dest_picture,
+		     int width, int height)
 {
 	ScrnInfoPtr scrn = xf86Screens[dest_picture->pDrawable->pScreen->myNum];
 	uint32_t tmp1;
@@ -261,24 +216,68 @@ i965_check_composite(int op, PicturePtr source_picture, PicturePtr mask_picture,
 		}
 	}
 
-	if (!i965_check_composite_texture(scrn, source_picture, 0)) {
-		intel_debug_fallback(scrn, "Check Src picture texture\n");
-		return FALSE;
-	}
-	if (mask_picture != NULL
-	    && !i965_check_composite_texture(scrn, mask_picture, 1)) {
-		intel_debug_fallback(scrn, "Check Mask picture texture\n");
-		return FALSE;
-	}
-
 	if (!i965_get_dest_format(dest_picture, &tmp1)) {
 		intel_debug_fallback(scrn, "Get Color buffer format\n");
 		return FALSE;
 	}
 
 	return TRUE;
-
 }
+
+Bool
+i965_check_composite_texture(ScreenPtr screen, PicturePtr picture)
+{
+	if (picture->repeatType > RepeatReflect) {
+		ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+		intel_debug_fallback(scrn,
+				     "extended repeat (%d) not supported\n",
+				     picture->repeatType);
+		return FALSE;
+	}
+
+	if (picture->filter != PictFilterNearest &&
+	    picture->filter != PictFilterBilinear) {
+		ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+		intel_debug_fallback(scrn, "Unsupported filter 0x%x\n",
+				     picture->filter);
+		return FALSE;
+	}
+
+	if (picture->pDrawable) {
+		int w, h, i;
+
+		w = picture->pDrawable->width;
+		h = picture->pDrawable->height;
+		if ((w > 8192) || (h > 8192)) {
+			ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+			intel_debug_fallback(scrn,
+					     "Picture w/h too large (%dx%d)\n",
+					     w, h);
+			return FALSE;
+		}
+
+		for (i = 0;
+		     i < sizeof(i965_tex_formats) / sizeof(i965_tex_formats[0]);
+		     i++) {
+			if (i965_tex_formats[i].fmt == picture->format)
+				break;
+		}
+		if (i == sizeof(i965_tex_formats) / sizeof(i965_tex_formats[0]))
+		{
+			ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+			intel_debug_fallback(scrn,
+					     "Unsupported picture format "
+					     "0x%x\n",
+					     (int)picture->format);
+			return FALSE;
+		}
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
 
 #define BRW_GRF_BLOCKS(nreg)    ((nreg + 15) / 16 - 1)
 
@@ -1143,6 +1142,12 @@ static void i965_emit_composite_state(ScrnInfoPtr scrn)
 	IntelEmitInvarientState(scrn);
 	intel->last_3d = LAST_3D_RENDER;
 
+	/* Mark the destination dirty within this batch */
+	intel_batch_mark_pixmap_domains(intel,
+					i830_get_pixmap_intel(dest),
+					I915_GEM_DOMAIN_RENDER,
+					I915_GEM_DOMAIN_RENDER);
+
 	urb_vs_start = 0;
 	urb_vs_size = URB_VS_ENTRIES * URB_VS_ENTRY_SIZE;
 	urb_gs_start = urb_vs_start + urb_vs_size;
@@ -1167,12 +1172,8 @@ static void i965_emit_composite_state(ScrnInfoPtr scrn)
 	 */
 	ALIGN_BATCH(64);
 
+	assert(intel->in_batch_atomic);
 	{
-		if (IS_IGDNG(intel))
-			ATOMIC_BATCH(14);
-		else
-			ATOMIC_BATCH(12);
-
 		/* Match Mesa driver setup */
 		OUT_BATCH(MI_FLUSH |
 			  MI_STATE_INSTRUCTION_CACHE_FLUSH |
@@ -1215,12 +1216,17 @@ static void i965_emit_composite_state(ScrnInfoPtr scrn)
 		OUT_BATCH(BRW_STATE_SIP | 0);
 		OUT_RELOC(render_state->sip_kernel_bo,
 			  I915_GEM_DOMAIN_INSTRUCTION, 0, 0);
-		ADVANCE_BATCH();
+	}
+
+	if (IS_IGDNG(intel)) {
+		/* Ironlake errata workaround: Before disabling the clipper,
+		 * you have to MI_FLUSH to get the pipeline idle.
+		 */
+		OUT_BATCH(MI_FLUSH);
 	}
 
 	{
 		int pipe_ctrl;
-		ATOMIC_BATCH(26);
 		/* Pipe control */
 
 		if (IS_IGDNG(intel))
@@ -1315,7 +1321,6 @@ static void i965_emit_composite_state(ScrnInfoPtr scrn)
 		OUT_BATCH(BRW_CS_URB_STATE | 0);
 		OUT_BATCH(((URB_CS_ENTRY_SIZE - 1) << 4) |
 			  (URB_CS_ENTRIES << 0));
-		ADVANCE_BATCH();
 	}
 	{
 		/*
@@ -1342,7 +1347,6 @@ static void i965_emit_composite_state(ScrnInfoPtr scrn)
 		}
 
 		if (IS_IGDNG(intel)) {
-			ATOMIC_BATCH(mask ? 9 : 7);
 			/*
 			 * The reason to add this extra vertex element in the header is that
 			 * IGDNG has different vertex header definition and origin method to
@@ -1372,7 +1376,6 @@ static void i965_emit_composite_state(ScrnInfoPtr scrn)
 				  (BRW_VFCOMPONENT_STORE_0 <<
 				   VE1_VFCOMPONENT_3_SHIFT));
 		} else {
-			ATOMIC_BATCH(mask ? 7 : 5);
 			/* Set up our vertex elements, sourced from the single vertex buffer.
 			 * that will be set up later.
 			 */
@@ -1434,8 +1437,6 @@ static void i965_emit_composite_state(ScrnInfoPtr scrn)
 			else
 				OUT_BATCH((BRW_VFCOMPONENT_STORE_SRC << VE1_VFCOMPONENT_0_SHIFT) | (BRW_VFCOMPONENT_STORE_SRC << VE1_VFCOMPONENT_1_SHIFT) | (w_component << VE1_VFCOMPONENT_2_SHIFT) | (BRW_VFCOMPONENT_STORE_1_FLT << VE1_VFCOMPONENT_3_SHIFT) | ((4 + 4 + 4) << VE1_DESTINATION_ELEMENT_OFFSET_SHIFT));	/* VUE offset in dwords */
 		}
-
-		ADVANCE_BATCH();
 	}
 }
 
@@ -1496,6 +1497,22 @@ i965_prepare_composite(int op, PicturePtr source_picture,
 	}
 
 	if (mask_picture) {
+		if (mask_picture->componentAlpha &&
+		    PICT_FORMAT_RGB(mask_picture->format)) {
+			/* Check if it's component alpha that relies on a source alpha and on
+			 * the source value.  We can only get one of those into the single
+			 * source value that we get to blend with.
+			 */
+			if (i965_blend_op[op].src_alpha &&
+			    (i965_blend_op[op].src_blend != BRW_BLENDFACTOR_ZERO)) {
+				intel_debug_fallback(scrn,
+						     "Component alpha not supported "
+						     "with source alpha and source "
+						     "value blending.\n");
+				return FALSE;
+			}
+		}
+
 		composite_op->mask_filter =
 		    sampler_state_filter_from_picture(mask_picture->filter);
 		if (composite_op->mask_filter < 0) {
@@ -1514,6 +1531,12 @@ i965_prepare_composite(int op, PicturePtr source_picture,
 		composite_op->mask_filter = SAMPLER_STATE_FILTER_NEAREST;
 		composite_op->mask_extend = SAMPLER_STATE_EXTEND_NONE;
 	}
+
+	/* Flush any pending writes prior to relocating the textures. */
+	if(i830_uxa_pixmap_is_dirty(source) ||
+	   (mask && i830_uxa_pixmap_is_dirty(mask)))
+		intel_batch_emit_flush(scrn);
+
 
 	/* Set up the surface states. */
 	surface_state_bo = dri_bo_alloc(intel->bufmgr, "surface_state",
@@ -1638,7 +1661,7 @@ i965_prepare_composite(int op, PicturePtr source_picture,
 	}
 
 	if (!i965_composite_check_aperture(scrn)) {
-		intel_batch_submit(scrn);
+		intel_batch_submit(scrn, FALSE);
 		if (!i965_composite_check_aperture(scrn)) {
 			intel_debug_fallback(scrn,
 					     "Couldn't fit render operation "
@@ -1646,10 +1669,6 @@ i965_prepare_composite(int op, PicturePtr source_picture,
 			return FALSE;
 		}
 	}
-
-	if(i830_uxa_pixmap_is_dirty(source) ||
-	   (mask && i830_uxa_pixmap_is_dirty(mask)))
-		intel_batch_emit_flush(scrn);
 
 	intel->needs_render_state_emit = TRUE;
 
@@ -1815,13 +1834,12 @@ i965_composite(PixmapPtr dest, int srcX, int srcY, int maskX, int maskY,
 	drm_intel_bo_subdata(vb_bo, render_state->vb_offset * 4, i * 4, vb);
 
 	if (!i965_composite_check_aperture(scrn))
-		intel_batch_submit(scrn);
+		intel_batch_submit(scrn, FALSE);
 
 	intel_batch_start_atomic(scrn, 200);
 	if (intel->needs_render_state_emit)
 		i965_emit_composite_state(scrn);
 
-	ATOMIC_BATCH(12);
 	OUT_BATCH(MI_FLUSH);
 	/* Set up the pointer to our (single) vertex buffer */
 	OUT_BATCH(BRW_3DSTATE_VERTEX_BUFFERS | 3);
@@ -1846,7 +1864,6 @@ i965_composite(PixmapPtr dest, int srcX, int srcY, int maskX, int maskY,
 	OUT_BATCH(1);		/* single instance */
 	OUT_BATCH(0);		/* start instance location */
 	OUT_BATCH(0);		/* index buffer offset, ignored */
-	ADVANCE_BATCH();
 
 	render_state->vb_offset += i;
 	drm_intel_bo_unreference(vb_bo);

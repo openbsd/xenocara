@@ -46,78 +46,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "i830_ring.h"
 #include "i915_drm.h"
 
-unsigned long intel_get_pixmap_offset(PixmapPtr pixmap)
-{
-	ScreenPtr pScreen = pixmap->drawable.pScreen;
-	ScrnInfoPtr scrn = xf86Screens[pScreen->myNum];
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-
-	return (unsigned long)pixmap->devPrivate.ptr -
-	    (unsigned long)intel->FbBase;
-}
-
 unsigned long intel_get_pixmap_pitch(PixmapPtr pixmap)
 {
 	return (unsigned long)pixmap->devKind;
-}
-
-int
-I830WaitLpRing(ScrnInfoPtr scrn, int n, int timeout_millis)
-{
-   intel_screen_private *intel = intel_get_screen_private(scrn);
-   I830RingBuffer *ring = &intel->ring;
-   int iters = 0;
-   unsigned int start = 0;
-   unsigned int now = 0;
-   int last_head = 0;
-   unsigned int first = 0;
-
-   /* If your system hasn't moved the head pointer in 2 seconds, I'm going to
-    * call it crashed.
-    */
-   if (timeout_millis == 0)
-      timeout_millis = 2000;
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL) {
-      ErrorF("I830WaitLpRing %d\n", n);
-      first = GetTimeInMillis();
-   }
-
-   while (ring->space < n) {
-      ring->head = INREG(LP_RING + RING_HEAD) & I830_HEAD_MASK;
-      ring->space = ring->head - (ring->tail + 8);
-
-      if (ring->space < 0)
-	 ring->space += ring->mem->size;
-
-      iters++;
-      now = GetTimeInMillis();
-      if (start == 0 || now < start || ring->head != last_head) {
-	 if (I810_DEBUG & DEBUG_VERBOSE_ACCEL)
-	    if (now > start)
-	       ErrorF("space: %d wanted %d\n", ring->space, n);
-	 start = now;
-	 last_head = ring->head;
-      } else if (now - start > timeout_millis) {
-	 ErrorF("Error in I830WaitLpRing(), timeout for %d seconds\n",
-		timeout_millis/1000);
-	 ErrorF("space: %d wanted %d\n", ring->space, n);
-	 intel->uxa_driver = NULL;
-	 FatalError("lockup\n");
-      }
-
-      DELAY(10);
-   }
-
-   if (I810_DEBUG & DEBUG_VERBOSE_ACCEL) {
-      now = GetTimeInMillis();
-      if (now - first) {
-	 ErrorF("Elapsed %u ms\n", now - first);
-	 ErrorF("space: %d wanted %d\n", ring->space, n);
-      }
-   }
-
-   return iters;
 }
 
 void i830_debug_flush(ScrnInfoPtr scrn)
@@ -128,7 +59,7 @@ void i830_debug_flush(ScrnInfoPtr scrn)
 		intel_batch_emit_flush(scrn);
 
 	if (intel->debug_flush & DEBUG_FLUSH_BATCHES)
-		intel_batch_submit(scrn);
+		intel_batch_submit(scrn, FALSE);
 }
 
 /* The following function sets up the supported acceleration. Call it

@@ -779,18 +779,12 @@ i965_emit_video_setup(ScrnInfoPtr scrn, drm_intel_bo * bind_bo, int n_src_surf)
 	urb_cs_start = urb_sf_start + urb_sf_size;
 	urb_cs_size = URB_CS_ENTRIES * URB_CS_ENTRY_SIZE;
 
-	ATOMIC_BATCH(2);
 	OUT_BATCH(MI_FLUSH |
 		  MI_STATE_INSTRUCTION_CACHE_FLUSH |
 		  BRW_MI_GLOBAL_SNAPSHOT_RESET);
 	OUT_BATCH(MI_NOOP);
-	ADVANCE_BATCH();
 
 	/* brw_debug (scrn, "before base address modify"); */
-	if (IS_IGDNG(intel))
-		ATOMIC_BATCH(14);
-	else
-		ATOMIC_BATCH(12);
 	/* Match Mesa driver setup */
 	if (IS_G4X(intel) || IS_IGDNG(intel))
 		OUT_BATCH(NEW_PIPELINE_SELECT | PIPELINE_SELECT_3D);
@@ -834,19 +828,12 @@ i965_emit_video_setup(ScrnInfoPtr scrn, drm_intel_bo * bind_bo, int n_src_surf)
 	OUT_RELOC(intel->video.gen4_sip_kernel_bo,
 		  I915_GEM_DOMAIN_INSTRUCTION, 0, 0);
 
-	OUT_BATCH(MI_NOOP);
-	ADVANCE_BATCH();
-
 	/* brw_debug (scrn, "after base address modify"); */
 
 	if (IS_IGDNG(intel))
 		pipe_ctl = BRW_PIPE_CONTROL_NOWRITE;
 	else
 		pipe_ctl = BRW_PIPE_CONTROL_NOWRITE | BRW_PIPE_CONTROL_IS_FLUSH;
-
-	ATOMIC_BATCH(38);
-
-	OUT_BATCH(MI_NOOP);
 
 	/* Pipe control */
 	OUT_BATCH(BRW_PIPE_CONTROL | pipe_ctl | 2);
@@ -971,9 +958,6 @@ i965_emit_video_setup(ScrnInfoPtr scrn, drm_intel_bo * bind_bo, int n_src_surf)
 			   VE1_VFCOMPONENT_3_SHIFT) | (4 <<
 						       VE1_DESTINATION_ELEMENT_OFFSET_SHIFT));
 	}
-
-	OUT_BATCH(MI_NOOP);	/* pad to quadword */
-	ADVANCE_BATCH();
 }
 
 void
@@ -1213,14 +1197,13 @@ I965DisplayVideoTextured(ScrnInfoPtr scrn,
 		if (drm_intel_bufmgr_check_aperture_space(bo_table,
 							  ARRAY_SIZE(bo_table))
 		    < 0) {
-			intel_batch_submit(scrn);
+			intel_batch_submit(scrn, FALSE);
 		}
 
 		intel_batch_start_atomic(scrn, 100);
 
 		i965_emit_video_setup(scrn, bind_bo, n_src_surf);
 
-		ATOMIC_BATCH(12);
 		/* Set up the pointer to our vertex buffer */
 		OUT_BATCH(BRW_3DSTATE_VERTEX_BUFFERS | 3);
 		/* four 32-bit floats per vertex */
@@ -1242,7 +1225,6 @@ I965DisplayVideoTextured(ScrnInfoPtr scrn,
 		OUT_BATCH(0);	/* start instance location */
 		OUT_BATCH(0);	/* index buffer offset, ignored */
 		OUT_BATCH(MI_NOOP);
-		ADVANCE_BATCH();
 
 		intel_batch_end_atomic(scrn);
 

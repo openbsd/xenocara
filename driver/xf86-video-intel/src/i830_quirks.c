@@ -73,7 +73,7 @@ static void i830_dmi_store_##field(void) \
     int ret;\
     f = fopen(DMIID_FILE(field), "r");\
     if (f == NULL) {\
-	xfree(i830_dmi_data[field]); i830_dmi_data[field] = NULL;\
+	free(i830_dmi_data[field]); i830_dmi_data[field] = NULL;\
 	return;\
     }\
     ret = fread(i830_dmi_data[field], 64, 1, f);	\
@@ -104,11 +104,11 @@ static void i830_dmi_scan(void)
     int i;
 
     for (i = 0; i < dmi_data_max; i++) {
-	i830_dmi_data[i] = xcalloc(64, sizeof(char));
+	i830_dmi_data[i] = calloc(64, sizeof(char));
 	if (!i830_dmi_data[i]) {
 	    int j;
 	    for (j = 0; j < i; j++) {
-		xfree(i830_dmi_data[j]);
+		free(i830_dmi_data[j]);
 		i830_dmi_data[i] = NULL;
 	    }
 	    return;
@@ -426,5 +426,5 @@ void i830_fixup_devices(ScrnInfoPtr scrn)
 
     for (i = 0; i < dmi_data_max; i++)
 	if (i830_dmi_data[i])
-	    xfree(i830_dmi_data[i]);
+	    free(i830_dmi_data[i]);
 }

@@ -41,14 +41,6 @@
 #include <X11/X.h>
 #define NEED_EVENTS
 #include <X11/Xproto.h>
-#ifdef MITSHM
-#ifdef HAVE_XEXTPROTO_71
-#include <X11/extensions/shm.h>
-#else
-#define _XSHM_SERVER_
-#include <X11/extensions/shmstr.h>
-#endif
-#endif
 #include "scrnintstr.h"
 #include "pixmapstr.h"
 #include "windowstr.h"
@@ -103,37 +95,13 @@ char uxa_drawable_location(DrawablePtr pDrawable);
 #endif
 
 typedef struct {
-	unsigned char sha1[20];
-} uxa_cached_glyph_t;
-
-typedef struct {
-	/* The identity of the cache, statically configured at initialization */
-	unsigned int format;
-	int glyphWidth;
-	int glyphHeight;
-
-	/* Size of cache; eventually this should be dynamically determined */
-	int size;
-
-	/* Hash table mapping from glyph sha1 to position in the glyph; we use
-	 * open addressing with a hash table size determined based on size and large
-	 * enough so that we always have a good amount of free space, so we can
-	 * use linear probing. (Linear probing is preferrable to double hashing
-	 * here because it allows us to easily remove entries.)
-	 */
-	int *hashEntries;
-	int hashSize;
-
-	uxa_cached_glyph_t *glyphs;
-	int glyphCount;		/* Current number of glyphs */
-
 	PicturePtr picture;	/* Where the glyphs of the cache are stored */
-	int yOffset;		/* y location within the picture where the cache starts */
-	int columns;		/* Number of columns the glyphs are layed out in */
-	int evictionPosition;	/* Next random position to evict a glyph */
+	GlyphPtr *glyphs;
+	uint16_t count;
+	uint16_t evict;
 } uxa_glyph_cache_t;
 
-#define UXA_NUM_GLYPH_CACHES 4
+#define UXA_NUM_GLYPH_CACHE_FORMATS 2
 
 typedef struct {
 	uint32_t color;
@@ -156,10 +124,12 @@ typedef struct {
 	BitmapToRegionProcPtr SavedBitmapToRegion;
 #ifdef RENDER
 	CompositeProcPtr SavedComposite;
+	CompositeRectsProcPtr SavedCompositeRects;
 	TrianglesProcPtr SavedTriangles;
 	GlyphsProcPtr SavedGlyphs;
 	TrapezoidsProcPtr SavedTrapezoids;
 	AddTrapsProcPtr SavedAddTraps;
+	UnrealizeGlyphProcPtr SavedUnrealizeGlyph;
 #endif
 	EnableDisableFBAccessProcPtr SavedEnableDisableFBAccess;
 
@@ -168,7 +138,7 @@ typedef struct {
 	unsigned disableFbCount;
 	unsigned offScreenCounter;
 
-	uxa_glyph_cache_t glyphCaches[UXA_NUM_GLYPH_CACHES];
+	uxa_glyph_cache_t glyphCaches[UXA_NUM_GLYPH_CACHE_FORMATS];
 
 	PicturePtr solid_clear, solid_black, solid_white;
 	uxa_solid_cache_t solid_cache[UXA_NUM_SOLID_CACHE];
@@ -187,11 +157,19 @@ typedef struct {
     (PixmapWidthPaddingInfo[d].padRoundUp+1)))
 #endif
 
+#if HAS_DEVPRIVATEKEYREC
+extern DevPrivateKeyRec uxa_screen_index;
+#else
 extern int uxa_screen_index;
+#endif
+
 static inline uxa_screen_t *uxa_get_screen(ScreenPtr screen)
 {
-	return (uxa_screen_t *) dixLookupPrivate(&screen->devPrivates,
-						 &uxa_screen_index);
+#if HAS_DEVPRIVATEKEYREC
+	return dixGetPrivate(&screen->devPrivates, &uxa_screen_index);
+#else
+	return dixLookupPrivate(&screen->devPrivates, &uxa_screen_index);
+#endif
 }
 
 /** Align an offset to an arbitrary alignment */
@@ -307,11 +285,6 @@ Bool
 uxa_fill_region_tiled(DrawablePtr pDrawable, RegionPtr pRegion, PixmapPtr pTile,
 		      DDXPointPtr pPatOrg, CARD32 planemask, CARD32 alu);
 
-void
-uxa_shm_put_image(DrawablePtr pDrawable, GCPtr pGC, int depth,
-		  unsigned int format, int w, int h, int sx, int sy, int sw,
-		  int sh, int dx, int dy, char *data);
-
 void uxa_paint_window(WindowPtr pWin, RegionPtr pRegion, int what);
 
 void
@@ -319,24 +292,6 @@ uxa_get_image(DrawablePtr pDrawable, int x, int y, int w, int h,
 	      unsigned int format, unsigned long planeMask, char *d);
 
 extern const GCOps uxa_ops;
-
-#ifdef MITSHM
-/* XXX these come from shmint.h, which isn't exported by the server */
-
-#ifdef HAVE_XEXTPROTO_71
-#include "shmint.h"
-#else
-
-void ShmRegisterFuncs(ScreenPtr pScreen, ShmFuncsPtr funcs);
-
-void ShmSetPixmapFormat(ScreenPtr pScreen, int format);
-
-void fbShmPutImage(XSHM_PUT_IMAGE_ARGS);
-#endif
-
-extern ShmFuncs uxa_shm_funcs;
-
-#endif
 
 #ifdef RENDER
 
@@ -417,6 +372,13 @@ uxa_composite_rects(CARD8 op,
 		    PicturePtr pDst, int nrect, uxa_composite_rect_t * rects);
 
 void
+uxa_solid_rects (CARD8		op,
+		 PicturePtr	dst,
+		 xRenderColor  *color,
+		 int		num_rects,
+		 xRectangle    *rects);
+
+void
 uxa_trapezoids(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
 	       PictFormatPtr maskFormat, INT16 xSrc, INT16 ySrc,
 	       int ntrap, xTrapezoid * traps);
@@ -426,8 +388,33 @@ uxa_triangles(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
 	      PictFormatPtr maskFormat, INT16 xSrc, INT16 ySrc,
 	      int ntri, xTriangle * tris);
 
+PicturePtr
+uxa_acquire_solid(ScreenPtr screen, SourcePict *source);
+
+PicturePtr
+uxa_acquire_drawable(ScreenPtr pScreen,
+		     PicturePtr pSrc,
+		     INT16 x, INT16 y,
+		     CARD16 width, CARD16 height,
+		     INT16 * out_x, INT16 * out_y);
+
+PicturePtr
+uxa_acquire_pattern(ScreenPtr pScreen,
+		    PicturePtr pSrc,
+		    pixman_format_code_t format,
+		    INT16 x, INT16 y,
+		    CARD16 width, CARD16 height);
+
+Bool
+uxa_get_rgba_from_pixel(CARD32 pixel,
+			CARD16 * red,
+			CARD16 * green,
+			CARD16 * blue,
+			CARD16 * alpha,
+			CARD32 format);
+
 /* uxa_glyph.c */
-void uxa_glyphs_init(ScreenPtr pScreen);
+Bool uxa_glyphs_init(ScreenPtr pScreen);
 
 void uxa_glyphs_fini(ScreenPtr pScreen);
 
@@ -438,5 +425,9 @@ uxa_glyphs(CARD8 op,
 	   PictFormatPtr maskFormat,
 	   INT16 xSrc,
 	   INT16 ySrc, int nlist, GlyphListPtr list, GlyphPtr * glyphs);
+
+void
+uxa_glyph_unrealize(ScreenPtr pScreen,
+		    GlyphPtr pGlyph);
 
 #endif /* UXAPRIV_H */

@@ -62,7 +62,7 @@ static int create_context(ScrnInfoPtr scrn, XvMCContextPtr pContext,
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	struct intel_xvmc_hw_context *contextRec;
 
-	*priv = xcalloc(1, sizeof(struct intel_xvmc_hw_context));
+	*priv = calloc(1, sizeof(struct intel_xvmc_hw_context));
 	contextRec = (struct intel_xvmc_hw_context *) *priv;
 	if (!contextRec) {
 		*num_priv = 0;
@@ -207,7 +207,7 @@ Bool intel_xvmc_adaptor_init(ScreenPtr pScreen)
 		return FALSE;
 	}
 
-	pAdapt = xcalloc(1, sizeof(XF86MCAdaptorRec));
+	pAdapt = calloc(1, sizeof(XF86MCAdaptorRec));
 	if (!pAdapt) {
 		ErrorF("Allocation error.\n");
 		return FALSE;

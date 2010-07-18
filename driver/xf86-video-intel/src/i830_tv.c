@@ -1570,7 +1570,7 @@ static void
 i830_tv_destroy (xf86OutputPtr output)
 {
     if (output->driver_private)
-	xfree (output->driver_private);
+	free (output->driver_private);
 }
 
 #ifdef RANDR_12_INTERFACE
@@ -1807,16 +1807,16 @@ i830_tv_set_property(xf86OutputPtr output, Atom property,
 	memcpy (&atom, value->data, 4);
 	name = NameForAtom (atom);
 
-	val = xalloc (strlen (name) + 1);
+	val = malloc (strlen (name) + 1);
 	if (!val)
 	    return FALSE;
 	strcpy (val, name);
 	if (!i830_tv_mode_lookup (val))
 	{
-	    xfree (val);
+	    free (val);
 	    return FALSE;
 	}
-	xfree (dev_priv->tv_format);
+	free (dev_priv->tv_format);
 	dev_priv->tv_format = val;
 
 	if (intel->starting || output->crtc == NULL)

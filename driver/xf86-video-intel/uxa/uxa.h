@@ -74,6 +74,17 @@ typedef struct _UxaDriver {
 	 * @{
 	 */
 	/**
+	 * check_solid() checks whether the driver can do a solid fill to this drawable.
+	 * @param pDrawable Destination drawable
+	 * @param alu raster operation
+	 * @param planemask write mask for the fill
+	 *
+	 * The check_solid() call is recommended if prepare_solid() is
+	 * implemented, but is not required.
+	 */
+	Bool(*check_solid) (DrawablePtr pDrawable, int alu, Pixel planemask);
+
+	/**
 	 * prepare_solid() sets up the driver for doing a solid fill.
 	 * @param pPixmap Destination pixmap
 	 * @param alu raster operation
@@ -137,6 +148,10 @@ typedef struct _UxaDriver {
 	/** @name copy
 	 * @{
 	 */
+	/**
+	 * check_copy() checks whether the driver can blit between the two Pictures
+	 */
+	Bool(*check_copy) (PixmapPtr pSrc, PixmapPtr pDst, int alu, Pixel planemask);
 	/**
 	 * prepare_copy() sets up the driver for doing a copy within video
 	 * memory.
@@ -232,6 +247,8 @@ typedef struct _UxaDriver {
 	 * @param pSrcPicture source Picture
 	 * @param pMaskPicture mask picture
 	 * @param pDstPicture destination Picture
+	 * @param width The width of the composite operation
+	 * @param height The height of the composite operation
 	 *
 	 * The check_composite() call checks if the driver could handle
 	 * acceleration of op with the given source, mask, and destination
@@ -249,7 +266,32 @@ typedef struct _UxaDriver {
 	Bool(*check_composite) (int op,
 				PicturePtr pSrcPicture,
 				PicturePtr pMaskPicture,
-				PicturePtr pDstPicture);
+				PicturePtr pDstPicture,
+				int width, int height);
+
+	/**
+	 * check_composite_target() checks to see if the destination of the composite
+	 * operation can be used without midification.
+	 *
+	 * @param pixmap Destination Pixmap
+	 *
+	 * The check_composite_target() call is recommended if prepare_composite() is
+	 * implemented, but is not required.
+	 */
+	Bool(*check_composite_target) (PixmapPtr pixmap);
+
+	/**
+	 * check_composite_texture() checks to see if a source to the composite
+	 * operation can be used without midification.
+	 *
+	 * @param pScreen Screen
+	 * @param pPicture Picture
+	 *
+	 * The check_composite_texture() call is recommended if prepare_composite() is
+	 * implemented, but is not required.
+	 */
+	Bool(*check_composite_texture) (ScreenPtr pScreen,
+					PicturePtr pPicture);
 
 	/**
 	 * prepare_composite() sets up the driver for doing a composite
@@ -516,6 +558,7 @@ typedef struct _UxaDriver {
 uxa_driver_t *uxa_driver_alloc(void);
 
 Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver);
+Bool uxa_resources_init(ScreenPtr screen);
 
 void uxa_driver_fini(ScreenPtr pScreen);
 

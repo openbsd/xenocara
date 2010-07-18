@@ -22160,9 +22160,8 @@ fi
 
 # Checks for extensions
 
-
 	SAVE_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS -I`$PKG_CONFIG --variable=sdkdir xorg-server`"
+	CFLAGS="$CFLAGS -I`pkg-config --variable=sdkdir xorg-server`"
 	cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -22220,9 +22219,8 @@ $as_echo "$_EXT_CHECK" >&6; }
 	fi
 
 
-
 	SAVE_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS -I`$PKG_CONFIG --variable=sdkdir xorg-server`"
+	CFLAGS="$CFLAGS -I`pkg-config --variable=sdkdir xorg-server`"
 	cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -22280,9 +22278,8 @@ $as_echo "$_EXT_CHECK" >&6; }
 	fi
 
 
-
 	SAVE_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS -I`$PKG_CONFIG --variable=sdkdir xorg-server`"
+	CFLAGS="$CFLAGS -I`pkg-config --variable=sdkdir xorg-server`"
 	cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -22340,9 +22337,8 @@ $as_echo "$_EXT_CHECK" >&6; }
 	fi
 
 
-
 	SAVE_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS -I`$PKG_CONFIG --variable=sdkdir xorg-server`"
+	CFLAGS="$CFLAGS -I`pkg-config --variable=sdkdir xorg-server`"
 	cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF

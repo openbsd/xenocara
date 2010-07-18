@@ -557,7 +557,7 @@ void I830InitVideo(ScreenPtr screen)
 	 * adaptors.
 	 */
 	newAdaptors =
-	    xalloc((num_adaptors + 2) * sizeof(XF86VideoAdaptorPtr *));
+	    malloc((num_adaptors + 2) * sizeof(XF86VideoAdaptorPtr *));
 	if (newAdaptors == NULL)
 		return;
 
@@ -574,8 +574,7 @@ void I830InitVideo(ScreenPtr screen)
 	/* Set up textured video if we can do it at this depth and we are on
 	 * supported hardware.
 	 */
-	if (scrn->bitsPerPixel >= 16 && (IS_I9XX(intel) || IS_I965G(intel)) &&
-	    !(!IS_I965G(intel) && scrn->displayWidth > 2048)) {
+	if (scrn->bitsPerPixel >= 16 && (IS_I9XX(intel) || IS_I965G(intel))) {
 		texturedAdaptor = I830SetupImageVideoTextured(screen);
 		if (texturedAdaptor != NULL) {
 			xf86DrvMsg(scrn->scrnIndex, X_INFO,
@@ -619,7 +618,7 @@ void I830InitVideo(ScreenPtr screen)
 	if (texturedAdaptor)
 		intel_xvmc_adaptor_init(screen);
 #endif
-	xfree(adaptors);
+	free(adaptors);
 }
 
 static void
@@ -818,7 +817,7 @@ static XF86VideoAdaptorPtr I830SetupImageVideoOverlay(ScreenPtr screen)
 
 	OVERLAY_DEBUG("I830SetupImageVideoOverlay\n");
 
-	if (!(adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) +
+	if (!(adapt = calloc(1, sizeof(XF86VideoAdaptorRec) +
 			      sizeof(intel_adaptor_private) + sizeof(DevUnion))))
 		return NULL;
 
@@ -950,16 +949,16 @@ static XF86VideoAdaptorPtr I830SetupImageVideoTextured(ScreenPtr screen)
 
 	nAttributes = NUM_TEXTURED_ATTRIBUTES;
 
-	adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec));
-	adaptor_privs = xcalloc(nports, sizeof(intel_adaptor_private));
-	devUnions = xcalloc(nports, sizeof(DevUnion));
-	attrs = xcalloc(nAttributes, sizeof(XF86AttributeRec));
+	adapt = calloc(1, sizeof(XF86VideoAdaptorRec));
+	adaptor_privs = calloc(nports, sizeof(intel_adaptor_private));
+	devUnions = calloc(nports, sizeof(DevUnion));
+	attrs = calloc(nAttributes, sizeof(XF86AttributeRec));
 	if (adapt == NULL || adaptor_privs == NULL || devUnions == NULL ||
 	    attrs == NULL) {
-		xfree(adapt);
-		xfree(adaptor_privs);
-		xfree(devUnions);
-		xfree(attrs);
+		free(adapt);
+		free(adaptor_privs);
+		free(devUnions);
+		free(attrs);
 		return NULL;
 	}
 

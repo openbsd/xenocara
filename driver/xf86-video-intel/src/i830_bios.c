@@ -210,6 +210,8 @@ static void parse_general_features(intel_screen_private *intel, struct bdb_heade
 	if (intel->lvds_use_ssc) {
 		if (IS_I85X(intel))
 			intel->lvds_ssc_freq = general->ssc_freq ? 66 : 48;
+		else if (IS_IGDNG(intel))
+			intel->lvds_ssc_freq = general->ssc_freq ? 100 : 120;
 		else
 			intel->lvds_ssc_freq = general->ssc_freq ? 100 : 96;
 	}
@@ -350,7 +352,7 @@ int i830_bios_init(ScrnInfoPtr scrn)
 			   "libpciaccess reported 0 rom size, guessing %dkB\n",
 			   size / 1024);
 	}
-	bios = xalloc(size);
+	bios = malloc(size);
 	if (bios == NULL)
 		return -1;
 
@@ -359,7 +361,7 @@ int i830_bios_init(ScrnInfoPtr scrn)
 		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
 			   "libpciaccess failed to read %dkB video BIOS: %s\n",
 			   size / 1024, strerror(-ret));
-		xfree(bios);
+		free(bios);
 		return -1;
 	}
 
@@ -367,7 +369,7 @@ int i830_bios_init(ScrnInfoPtr scrn)
 	if (vbt_off >= size) {
 		xf86DrvMsg(scrn->scrnIndex, X_ERROR, "Bad VBT offset: 0x%x\n",
 			   vbt_off);
-		xfree(bios);
+		free(bios);
 		return -1;
 	}
 
@@ -375,7 +377,7 @@ int i830_bios_init(ScrnInfoPtr scrn)
 
 	if (memcmp(vbt->signature, "$VBT", 4) != 0) {
 		xf86DrvMsg(scrn->scrnIndex, X_ERROR, "Bad VBT signature\n");
-		xfree(bios);
+		free(bios);
 		return -1;
 	}
 
@@ -388,7 +390,7 @@ int i830_bios_init(ScrnInfoPtr scrn)
 	parse_driver_feature(intel, bdb);
 	parse_sdvo_mapping(scrn, bdb);
 
-	xfree(bios);
+	free(bios);
 
 	return 0;
 }

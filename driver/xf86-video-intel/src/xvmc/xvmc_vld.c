@@ -354,7 +354,7 @@ static struct media_state {
 
 /* XvMCQMatrix * 2 + idct_table + 8 * kernel offset pointer */
 #define CS_OBJECT_SIZE (32*20 + sizeof(unsigned int) * 8)
-static int free_object(struct media_state *s)
+static void free_object(struct media_state *s)
 {
 	int i;
 #define FREE_ONE_BO(bo) \

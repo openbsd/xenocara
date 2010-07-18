@@ -29,6 +29,8 @@
 #include "config.h"
 #endif
 
+#include <unistd.h>
+
 #include "xf86.h"
 #include "i830.h"
 #include "xf86Modes.h"
@@ -39,9 +41,14 @@ i830_crt_dpms(xf86OutputPtr output, int mode)
 {
     ScrnInfoPtr	    scrn = output->scrn;
     intel_screen_private *intel = intel_get_screen_private(scrn);
-    uint32_t	    temp;
+    uint32_t	    temp, reg;
 
-    temp = INREG(ADPA);
+    if (IS_IGDNG(intel))
+	reg = PCH_ADPA;
+    else
+	reg = ADPA;
+
+    temp = INREG(reg);
     temp &= ~(ADPA_HSYNC_CNTL_DISABLE | ADPA_VSYNC_CNTL_DISABLE);
     temp &= ~ADPA_DAC_ENABLE;
 
@@ -60,7 +67,7 @@ i830_crt_dpms(xf86OutputPtr output, int mode)
 	break;
     }
 
-    OUTREG(ADPA, temp);
+    OUTREG(reg, temp);
 }
 
 static void
@@ -68,8 +75,9 @@ i830_crt_save (xf86OutputPtr output)
 {
     ScrnInfoPtr	scrn = output->scrn;
     intel_screen_private *intel = intel_get_screen_private(scrn);
+    uint32_t reg = IS_IGDNG(intel) ? PCH_ADPA : ADPA;
 
-    intel->saveADPA = INREG(ADPA);
+    intel->saveADPA = INREG(reg);
 }
 
 static void
@@ -77,8 +85,9 @@ i830_crt_restore (xf86OutputPtr output)
 {
     ScrnInfoPtr	scrn = output->scrn;
     intel_screen_private *intel = intel_get_screen_private(scrn);
+    uint32_t reg = IS_IGDNG(intel) ? PCH_ADPA : ADPA;
 
-    OUTREG(ADPA, intel->saveADPA);
+    OUTREG(reg, intel->saveADPA);
 }
 
 static int
@@ -122,16 +131,23 @@ i830_crt_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     I830CrtcPrivatePtr	    i830_crtc = crtc->driver_private;
     int			    dpll_md_reg;
     uint32_t		    adpa, dpll_md;
+    uint32_t		    adpa_reg;
 
     if (i830_crtc->pipe == 0) 
 	dpll_md_reg = DPLL_A_MD;
     else
 	dpll_md_reg = DPLL_B_MD;
+
+    if (IS_IGDNG(intel))
+	adpa_reg = PCH_ADPA;
+    else
+	adpa_reg = ADPA;
+
     /*
      * Disable separate mode multiplier used when cloning SDVO to CRT
      * XXX this needs to be adjusted when we really are cloning
      */
-    if (IS_I965G(intel))
+    if (IS_I965G(intel) && !IS_IGDNG(intel))
     {
 	dpll_md = INREG(dpll_md_reg);
 	OUTREG(dpll_md_reg, dpll_md & ~DPLL_MD_UDI_MULTIPLIER_MASK);
@@ -146,15 +162,55 @@ i830_crt_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     if (i830_crtc->pipe == 0)
     {
 	adpa |= ADPA_PIPE_A_SELECT;
-	OUTREG(BCLRPAT_A, 0);
+	if (!IS_IGDNG(intel))
+	    OUTREG(BCLRPAT_A, 0);
     }
     else
     {
 	adpa |= ADPA_PIPE_B_SELECT;
-	OUTREG(BCLRPAT_B, 0);
+	if (!IS_IGDNG(intel))
+	    OUTREG(BCLRPAT_B, 0);
     }
 
-    OUTREG(ADPA, adpa);
+    OUTREG(adpa_reg, adpa);
+}
+
+static Bool intel_igdng_crt_detect_hotplug(xf86OutputPtr output)
+{
+    ScrnInfoPtr			scrn = output->scrn;
+    intel_screen_private	*intel = intel_get_screen_private(scrn);
+    uint32_t adpa;
+    Bool ret;
+
+    adpa = INREG(PCH_ADPA);
+
+    adpa &= ~ADPA_CRT_HOTPLUG_MASK;
+
+    adpa |= (ADPA_CRT_HOTPLUG_PERIOD_64 |
+	     ADPA_CRT_HOTPLUG_WARMUP_5MS |
+	     ADPA_CRT_HOTPLUG_SAMPLE_2S |
+	     ADPA_CRT_HOTPLUG_VOLTAGE_50 | /* default */
+	     ADPA_CRT_HOTPLUG_VOLREF_325MV);
+    OUTREG(PCH_ADPA, adpa);
+
+    usleep(6000); /* warmup */
+    
+    adpa |= ADPA_CRT_HOTPLUG_FORCE_TRIGGER;
+
+    OUTREG(PCH_ADPA, adpa);
+
+    while (INREG(PCH_ADPA) & ADPA_CRT_HOTPLUG_FORCE_TRIGGER)
+      ;
+
+    /* Check the status to see if both blue and green are on now */
+    adpa = INREG(PCH_ADPA) & ADPA_CRT_HOTPLUG_MONITOR_MASK;
+    if (adpa == ADPA_CRT_HOTPLUG_MONITOR_COLOR ||
+	adpa ==	ADPA_CRT_HOTPLUG_MONITOR_MONO)
+	ret = TRUE;
+    else
+	ret = FALSE;
+
+    return ret;
 }
 
 /**
@@ -175,6 +231,9 @@ i830_crt_detect_hotplug(xf86OutputPtr output)
     int		starttime, curtime;
     int		tries = 1;
     int		try;
+
+    if (IS_IGDNG(intel))
+	return intel_igdng_crt_detect_hotplug(output);
 
     /* On 4 series desktop, CRT detect sequence need to be done twice
      * to get a reliable result. */
@@ -441,7 +500,7 @@ static void
 i830_crt_destroy (xf86OutputPtr output)
 {
     if (output->driver_private)
-	xfree (output->driver_private);
+	free (output->driver_private);
 }
 
 #ifdef RANDR_GET_CRTC_INTERFACE
@@ -459,11 +518,18 @@ i830_crt_get_crtc(xf86OutputPtr output)
 static xf86MonPtr
 i830_get_edid(xf86OutputPtr output, int gpio_reg, char *gpio_str)
 {
+    ScrnInfoPtr	scrn =	    output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     xf86MonPtr		    edid_mon = NULL;
+    uint32_t		    i2c_reg;
 
     /* Set up the DDC bus. */
-    I830I2CInit(output->scrn, &intel_output->pDDCBus, gpio_reg, gpio_str);
+    if (IS_IGDNG(intel))
+	i2c_reg = PCH_GPIOA;
+    else
+	i2c_reg = GPIOA;
+    I830I2CInit(scrn, &intel_output->pDDCBus, i2c_reg, "CRTDDC_A");
 
     edid_mon = xf86OutputGetEDID (output, intel_output->pDDCBus);
 
@@ -471,7 +537,7 @@ i830_get_edid(xf86OutputPtr output, int gpio_reg, char *gpio_str)
 	xf86DestroyI2CBusRec(intel_output->pDDCBus, TRUE, TRUE);
 	intel_output->pDDCBus = NULL;
 	if (edid_mon) {
-	    xfree(edid_mon);
+	    free(edid_mon);
 	    edid_mon = NULL;
 	}
     }

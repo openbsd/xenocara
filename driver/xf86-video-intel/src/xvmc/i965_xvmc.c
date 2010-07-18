@@ -207,7 +207,7 @@ struct media_state {
 };
 struct media_state media_state;
 
-static int free_object(struct media_state *s)
+static void free_object(struct media_state *s)
 {
 	int i;
 #define FREE_ONE_BO(bo) drm_intel_bo_unreference(bo)

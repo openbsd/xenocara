@@ -39,7 +39,11 @@
 #include "dixfontstr.h"
 #include "uxa.h"
 
+#if HAS_DEVPRIVATEKEYREC
+DevPrivateKeyRec uxa_screen_index;
+#else
 int uxa_screen_index;
+#endif
 
 /**
  * uxa_get_drawable_pixmap() returns a backing pixmap for a given drawable.
@@ -388,14 +392,17 @@ static Bool uxa_close_screen(int i, ScreenPtr pScreen)
 #ifdef RENDER
 	if (ps) {
 		ps->Composite = uxa_screen->SavedComposite;
+		ps->CompositeRects = uxa_screen->SavedCompositeRects;
 		ps->Glyphs = uxa_screen->SavedGlyphs;
 		ps->Trapezoids = uxa_screen->SavedTrapezoids;
 		ps->AddTraps = uxa_screen->SavedAddTraps;
 		ps->Triangles = uxa_screen->SavedTriangles;
+
+		ps->UnrealizeGlyph = uxa_screen->SavedUnrealizeGlyph;
 	}
 #endif
 
-	xfree(uxa_screen);
+	free(uxa_screen);
 
 	return (*pScreen->CloseScreen) (i, pScreen);
 }
@@ -406,13 +413,13 @@ static Bool uxa_close_screen(int i, ScreenPtr pScreen)
  * without breaking ABI between UXA and the drivers.  The driver's
  * responsibility is to check beforehand that the UXA module has a matching
  * major number and sufficient minor.  Drivers are responsible for freeing the
- * driver structure using xfree().
+ * driver structure using free().
  *
  * @return a newly allocated, zero-filled driver structure
  */
 uxa_driver_t *uxa_driver_alloc(void)
 {
-	return xcalloc(1, sizeof(uxa_driver_t));
+	return calloc(1, sizeof(uxa_driver_t));
 }
 
 /**
@@ -429,9 +436,6 @@ Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 {
 	uxa_screen_t *uxa_screen;
 	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
-#ifdef RENDER
-	PictureScreenPtr ps;
-#endif
 
 	if (!uxa_driver)
 		return FALSE;
@@ -460,11 +464,11 @@ Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 			   "non-NULL\n", screen->myNum);
 		return FALSE;
 	}
-#ifdef RENDER
-	ps = GetPictureScreenIfSet(screen);
+#if HAS_DIXREGISTERPRIVATEKEY
+	if (!dixRegisterPrivateKey(&uxa_screen_index, PRIVATE_SCREEN, 0))
+	    return FALSE;
 #endif
-
-	uxa_screen = xcalloc(sizeof(uxa_screen_t), 1);
+	uxa_screen = calloc(sizeof(uxa_screen_t), 1);
 
 	if (!uxa_screen) {
 		LogMessage(X_WARNING,
@@ -513,33 +517,32 @@ Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 	scrn->EnableDisableFBAccess = uxa_xorg_enable_disable_fb_access;
 
 #ifdef RENDER
-	if (ps) {
-		uxa_screen->SavedComposite = ps->Composite;
-		ps->Composite = uxa_composite;
+	{
+		PictureScreenPtr ps = GetPictureScreenIfSet(screen);
+		if (ps) {
+			uxa_screen->SavedComposite = ps->Composite;
+			ps->Composite = uxa_composite;
 
-		uxa_screen->SavedGlyphs = ps->Glyphs;
-		ps->Glyphs = uxa_glyphs;
+			uxa_screen->SavedCompositeRects = ps->CompositeRects;
+			ps->CompositeRects = uxa_solid_rects;
 
-		uxa_screen->SavedTriangles = ps->Triangles;
-		ps->Triangles = uxa_triangles;
+			uxa_screen->SavedGlyphs = ps->Glyphs;
+			ps->Glyphs = uxa_glyphs;
 
-		uxa_screen->SavedTrapezoids = ps->Trapezoids;
-		ps->Trapezoids = uxa_trapezoids;
+			uxa_screen->SavedUnrealizeGlyph = ps->UnrealizeGlyph;
+			ps->UnrealizeGlyph = uxa_glyph_unrealize;
 
-		uxa_screen->SavedAddTraps = ps->AddTraps;
-		ps->AddTraps = uxa_check_add_traps;
+			uxa_screen->SavedTriangles = ps->Triangles;
+			ps->Triangles = uxa_triangles;
+
+			uxa_screen->SavedTrapezoids = ps->Trapezoids;
+			ps->Trapezoids = uxa_trapezoids;
+
+			uxa_screen->SavedAddTraps = ps->AddTraps;
+			ps->AddTraps = uxa_check_add_traps;
+		}
 	}
 #endif
-
-#ifdef MITSHM
-	/* Re-register with the MI funcs, which don't allow shared pixmaps.
-	 * Shared pixmaps are almost always a performance loss for us, but this
-	 * still allows for SHM PutImage.
-	 */
-	ShmRegisterFuncs(screen, &uxa_shm_funcs);
-#endif
-
-	uxa_glyphs_init(screen);
 
 	LogMessage(X_INFO,
 		   "UXA(%d): Driver registered support for the following"
@@ -557,6 +560,14 @@ Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 	if (uxa_driver->get_image != NULL) {
 		LogMessage(X_INFO, "        get_image\n");
 	}
+
+	return TRUE;
+}
+
+Bool uxa_resources_init(ScreenPtr screen)
+{
+	if (!uxa_glyphs_init(screen))
+		return FALSE;
 
 	return TRUE;
 }

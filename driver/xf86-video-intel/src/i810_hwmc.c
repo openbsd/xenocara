@@ -230,7 +230,7 @@ void I810InitMC(ScreenPtr pScreen)
  *  Set *num_priv to the number of 32bit words that make up the size of
  *  of the data that priv will point to.
  *
- *  *priv = (long *) xcalloc (elements, sizeof(element))
+ *  *priv = (long *) calloc (elements, sizeof(element))
  *  *num_priv = (elements * sizeof(element)) >> 2;
  *
  **************************************************************************/
@@ -256,7 +256,7 @@ int I810XvMCCreateContext (ScrnInfoPtr pScrn, XvMCContextPtr pContext,
     return BadAlloc;
   }
 
-  *priv = xcalloc(1,sizeof(I810XvMCCreateContextRec));
+  *priv = calloc(1,sizeof(I810XvMCCreateContextRec));
   contextRec = (I810XvMCCreateContextRec *)*priv;
 
   if(!*priv) {
@@ -268,7 +268,7 @@ int I810XvMCCreateContext (ScrnInfoPtr pScrn, XvMCContextPtr pContext,
   if(drmCreateContext(pI810->drmSubFD, &(contextRec->drmcontext) ) < 0) {
     xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
         "I810XvMCCreateContext: Unable to create DRMContext!\n");
-    xfree(*priv);
+    free(*priv);
     return BadAlloc;
   }
 
@@ -295,7 +295,7 @@ int I810XvMCCreateSurface (ScrnInfoPtr pScrn, XvMCSurfacePtr pSurf,
   I810Ptr pI810 = I810PTR(pScrn);
   int i;
 
-  *priv = (long *)xcalloc(2,sizeof(long));
+  *priv = (long *)calloc(2,sizeof(long));
 
   if(!*priv) {
     xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -341,7 +341,7 @@ int I810XvMCCreateSubpicture (ScrnInfoPtr pScrn, XvMCSubpicturePtr pSubp,
   I810Ptr pI810 = I810PTR(pScrn);
   int i;
 
-  *priv = (long *)xcalloc(1,sizeof(long));
+  *priv = (long *)calloc(1,sizeof(long));
 
   if(!*priv) {
     xf86DrvMsg(pScrn->scrnIndex, X_ERROR,

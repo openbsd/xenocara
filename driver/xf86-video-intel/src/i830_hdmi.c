@@ -136,6 +136,22 @@ i830_hdmi_restore(xf86OutputPtr output)
     OUTREG(dev_priv->output_reg, dev_priv->save_SDVO);
 }
 
+static xf86OutputStatus
+igdng_hdmi_detect(xf86OutputPtr output)
+{
+    DisplayModePtr modes;
+    xf86OutputStatus status;
+
+    modes = i830_ddc_get_modes(output);
+
+    if (modes == NULL)
+	status = XF86OutputStatusDisconnected;
+    else
+	status = XF86OutputStatusConnected;
+
+    return status;
+}
+
 /**
  * Uses CRT_HOTPLUG_EN and CRT_HOTPLUG_STAT to detect HDMI connection.
  *
@@ -154,6 +170,9 @@ i830_hdmi_detect(xf86OutputPtr output)
     xf86MonPtr edid_mon;
 
     dev_priv->has_hdmi_sink = FALSE;
+
+    if (IS_IGDNG(intel))
+	return igdng_hdmi_detect(output);
 
     /* For G4X desktop chip, PEG_BAND_GAP_DATA 3:0 must first be written 0xd.
      * Failure to do so will result in spurious interrupts being
@@ -212,7 +231,7 @@ i830_hdmi_detect(xf86OutputPtr output)
 			dev_priv->has_hdmi_sink ? "HDMI" : "DVI",
 			(dev_priv->output_reg == SDVOB) ? 1 : 2);
 
-    xfree(edid_mon);
+    free(edid_mon);
     return status;
 }
 
@@ -223,7 +242,7 @@ i830_hdmi_destroy (xf86OutputPtr output)
 
     if (intel_output != NULL) {
 	xf86DestroyI2CBusRec(intel_output->pDDCBus, FALSE, FALSE);
-	xfree(intel_output);
+	free(intel_output);
     }
 }
 
@@ -332,9 +351,27 @@ i830_hdmi_init(ScrnInfoPtr scrn, int output_reg)
     xf86OutputPtr output;
     I830OutputPrivatePtr intel_output;
     struct i830_hdmi_priv *dev_priv;
+    const char *name;
 
-    output = xf86OutputCreate(scrn, &i830_hdmi_output_funcs,
-			      (output_reg == SDVOB) ? "HDMI-1" : "HDMI-2");
+    switch (output_reg) {
+    case SDVOB:
+	name = "HDMI-1";
+	break;
+    case SDVOC:
+	name = "HDMI-2";
+	break;
+    case HDMIB:
+	name = "HDMI-3";
+	break;
+    case HDMIC:
+	name = "HDMI-4";
+	break;
+    case HDMID:
+	name = "HDMI-5";
+	break;
+    }
+
+    output = xf86OutputCreate(scrn, &i830_hdmi_output_funcs, name);
     if (!output)
 	return;
     intel_output = xnfcalloc(sizeof (I830OutputPrivateRec) +
@@ -359,10 +396,15 @@ i830_hdmi_init(ScrnInfoPtr scrn, int output_reg)
     /* Set up the DDC bus. */
     if (output_reg == SDVOB)
 	I830I2CInit(scrn, &intel_output->pDDCBus, GPIOE, "HDMIDDC_B");
-    else
+    else if (output_reg == SDVOC)
 	I830I2CInit(scrn, &intel_output->pDDCBus, GPIOD, "HDMIDDC_C");
+    else if (output_reg == HDMIB)
+	I830I2CInit(scrn, &intel_output->pDDCBus, PCH_GPIOE, "HDMIB");
+    else if (output_reg == HDMIC)
+	I830I2CInit(scrn, &intel_output->pDDCBus, PCH_GPIOD, "HDMIC");
+    else if (output_reg == HDMID)
+	I830I2CInit(scrn, &intel_output->pDDCBus, PCH_GPIOF, "HDMID");
 
     xf86DrvMsg(scrn->scrnIndex, X_INFO,
-	       "HDMI output %d detected\n",
-	       (output_reg == SDVOB) ? 1 : 2);
+	       "%s output detected\n", output->name);
 }

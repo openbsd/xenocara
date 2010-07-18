@@ -302,7 +302,7 @@ i830_dvo_destroy (xf86OutputPtr output)
 	    xf86DestroyI2CBusRec (intel_output->pI2CBus, TRUE, TRUE);
 	if (intel_output->pDDCBus)
 	    xf86DestroyI2CBusRec (intel_output->pDDCBus, TRUE, TRUE);
-	xfree (intel_output);
+	free (intel_output);
     }
 }
 
@@ -407,7 +407,7 @@ i830_dvo_init(ScrnInfoPtr scrn)
     /* Set up the DDC bus */
     ret = I830I2CInit(scrn, &intel_output->pDDCBus, GPIOD, "DVODDC_D");
     if (!ret) {
-	xfree(intel_output);
+	free(intel_output);
 	return;
     }
 
@@ -482,7 +482,7 @@ i830_dvo_init(ScrnInfoPtr scrn)
 	    if (output == NULL) {
 		xf86DestroyI2CBusRec(pI2CBus, TRUE, TRUE);
 		xf86DestroyI2CBusRec(intel_output->pDDCBus, TRUE, TRUE);
-		xfree(intel_output);
+		free(intel_output);
 		xf86UnloadSubModule(drv->modhandle);
 		return;
 	    }
@@ -517,5 +517,5 @@ i830_dvo_init(ScrnInfoPtr scrn)
     if (pI2CBus != NULL)
 	xf86DestroyI2CBusRec(pI2CBus, TRUE, TRUE);
     xf86DestroyI2CBusRec(intel_output->pDDCBus, TRUE, TRUE);
-    xfree(intel_output);
+    free(intel_output);
 }

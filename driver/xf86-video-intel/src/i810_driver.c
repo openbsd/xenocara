@@ -364,7 +364,7 @@ I810FreeRec(ScrnInfoPtr pScrn)
       return;
    if (!pScrn->driverPrivate)
       return;
-   xfree(pScrn->driverPrivate);
+   free(pScrn->driverPrivate);
    pScrn->driverPrivate = NULL;
 }
 #endif
@@ -618,7 +618,7 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
 
    /* Process the options */
    xf86CollectOptions(pScrn, NULL);
-   if (!(pI810->Options = xalloc(sizeof(I810Options))))
+   if (!(pI810->Options = malloc(sizeof(I810Options))))
       return FALSE;
    memcpy(pI810->Options, I810Options, sizeof(I810Options));
    xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pI810->Options);
@@ -1914,7 +1914,7 @@ I810ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
    pI810 = I810PTR(pScrn);
    hwp = VGAHWPTR(pScrn);
 
-   pI810->LpRing = xcalloc(sizeof(I810RingBuffer),1);
+   pI810->LpRing = calloc(sizeof(I810RingBuffer),1);
    if (!pI810->LpRing) {
      xf86DrvMsg(pScrn->scrnIndex, X_ERROR, 
 		"Could not allocate lpring data structure.\n");
@@ -2326,13 +2326,13 @@ I810CloseScreen(int scrnIndex, ScreenPtr pScreen)
    vgaHWUnmapMem(pScrn);
 
    if (pI810->ScanlineColorExpandBuffers) {
-      xfree(pI810->ScanlineColorExpandBuffers);
+      free(pI810->ScanlineColorExpandBuffers);
       pI810->ScanlineColorExpandBuffers = NULL;
    }
 
    if (infoPtr) {
       if (infoPtr->ScanlineColorExpandBuffers)
-	 xfree(infoPtr->ScanlineColorExpandBuffers);
+	 free(infoPtr->ScanlineColorExpandBuffers);
       XAADestroyInfoRec(infoPtr);
       pI810->AccelInfoRec = NULL;
    }
@@ -2353,7 +2353,7 @@ I810CloseScreen(int scrnIndex, ScreenPtr pScreen)
     */
    xf86GARTCloseScreen(scrnIndex);
 
-   xfree(pI810->LpRing);
+   free(pI810->LpRing);
    pI810->LpRing = NULL;
 
    pScrn->vtSema = FALSE;

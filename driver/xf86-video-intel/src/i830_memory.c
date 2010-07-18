@@ -198,7 +198,7 @@ static Bool i830_bind_memory(ScrnInfoPtr scrn, i830_memory *mem)
 	if (mem == NULL || mem->bound || intel->use_drm_mode)
 		return TRUE;
 
-	if (intel->have_gem && mem->bo != NULL) {
+	if (mem->bo != NULL) {
 
 		if (dri_bo_pin(mem->bo, mem->alignment) != 0) {
 			xf86DrvMsg(scrn->scrnIndex, X_ERROR,
@@ -223,11 +223,6 @@ static Bool i830_bind_memory(ScrnInfoPtr scrn, i830_memory *mem)
 		mem->bound = TRUE;
 	}
 
-	if (mem->tiling != TILE_NONE && !intel->kernel_exec_fencing) {
-		mem->fence_nr = i830_set_tiling(scrn, mem->offset, mem->pitch,
-		    mem->allocated_size, mem->tiling);
-	}
-
 	return TRUE;
 }
 
@@ -237,10 +232,6 @@ static Bool i830_unbind_memory(ScrnInfoPtr scrn, i830_memory *mem)
 
 	if (mem == NULL || !mem->bound)
 		return TRUE;
-
-	if (mem->tiling != TILE_NONE && !intel->use_drm_mode &&
-	    !intel->kernel_exec_fencing)
-		i830_clear_tiling(scrn, mem->fence_nr);
 
 	if (mem->bo != NULL && !intel->use_drm_mode) {
 		if (dri_bo_unpin(mem->bo) == 0) {
@@ -285,8 +276,8 @@ void i830_free_memory(ScrnInfoPtr scrn, i830_memory * mem)
 			if (mem->next)
 				mem->next->prev = mem->prev;
 		}
-		xfree(mem->name);
-		xfree(mem);
+		free(mem->name);
+		free(mem);
 		return;
 	}
 	/* Disconnect from the list of allocations */
@@ -300,8 +291,8 @@ void i830_free_memory(ScrnInfoPtr scrn, i830_memory * mem)
 		mem->key = -1;
 	}
 
-	xfree(mem->name);
-	xfree(mem);
+	free(mem->name);
+	free(mem);
 }
 
 /* Resets the state of the aperture allocator, freeing all memory that had
@@ -341,8 +332,6 @@ void i830_reset_allocations(ScrnInfoPtr scrn)
 	intel->front_buffer = NULL;
 	intel->overlay_regs = NULL;
 	intel->power_context = NULL;
-	intel->ring.mem = NULL;
-	intel->fake_bufmgr_mem = NULL;
 }
 
 /**
@@ -360,25 +349,25 @@ Bool i830_allocator_init(ScrnInfoPtr scrn, unsigned long size)
 	i830_memory *start, *end;
 	struct drm_i915_setparam sp;
 
-	start = xcalloc(1, sizeof(*start));
+	start = calloc(1, sizeof(*start));
 	if (start == NULL)
 		return FALSE;
 	start->name = xstrdup("start marker");
 	if (start->name == NULL) {
-		xfree(start);
+		free(start);
 		return FALSE;
 	}
-	end = xcalloc(1, sizeof(*end));
+	end = calloc(1, sizeof(*end));
 	if (end == NULL) {
-		xfree(start->name);
-		xfree(start);
+		free(start->name);
+		free(start);
 		return FALSE;
 	}
 	end->name = xstrdup("end marker");
 	if (end->name == NULL) {
-		xfree(start->name);
-		xfree(start);
-		xfree(end);
+		free(start->name);
+		free(start);
+		free(end);
 		return FALSE;
 	}
 
@@ -442,8 +431,8 @@ Bool i830_allocator_init(ScrnInfoPtr scrn, unsigned long size)
 
 			ret = drmCommandWrite(intel->drmSubFD,
 			    DRM_I915_SETPARAM, &sp, sizeof(sp));
-			if (ret == 0)
-				intel->kernel_exec_fencing = TRUE;
+			if (ret != 0)
+				ErrorF("no kernel exec fencing, wtf?");
 			init.gtt_start = intel->memory_manager->offset;
 			init.gtt_end = intel->memory_manager->offset +
 			    intel->memory_manager->size;
@@ -451,15 +440,14 @@ Bool i830_allocator_init(ScrnInfoPtr scrn, unsigned long size)
 			/* Tell the kernel to manage it */
 			ret = ioctl(intel->drmSubFD, DRM_IOCTL_I915_GEM_INIT,
 			    &init);
-			if (ret == 0) {
-				intel->have_gem = TRUE;
-				i830_init_bufmgr(scrn);
-			} else {
+			if (ret != 0) {
 				xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 				    "Failed to initialize kernel memory manager\n");
 				i830_free_memory(scrn, intel->memory_manager);
 				intel->memory_manager = NULL;
+				return FALSE;
 			}
+			i830_init_bufmgr(scrn);
 		} else {
 			xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 			    "Failed to allocate space for kernel memory manager\n");
@@ -473,8 +461,8 @@ void i830_allocator_fini(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
-	/* The memory manager is more special */ if
-	(intel->memory_manager) {
+	/* The memory manager is more special */
+	if (intel->memory_manager) {
 		i830_free_memory(scrn, intel->memory_manager);
 		intel->memory_manager = NULL;
 	}
@@ -576,7 +564,7 @@ i830_allocate_aperture(ScrnInfoPtr scrn, const char *name, unsigned long size,
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	i830_memory *mem, *scan;
 
-	mem = xcalloc(1, sizeof(*mem));
+	mem = calloc(1, sizeof(*mem));
 	if (mem == NULL)
 		return NULL;
 
@@ -585,7 +573,7 @@ i830_allocate_aperture(ScrnInfoPtr scrn, const char *name, unsigned long size,
 
 	mem->name = xstrdup(name);
 	if (mem->name == NULL) {
-		xfree(mem);
+		free(mem);
 		return NULL;
 	}
 	/* Only allocate page-sized increments. */
@@ -636,8 +624,8 @@ i830_allocate_aperture(ScrnInfoPtr scrn, const char *name, unsigned long size,
 	    }
 	if (scan->next == NULL) {
 		/* Reached the end of the list, and didn't find space */
-		xfree(mem->name);
-		xfree(mem);
+		free(mem->name);
+		free(mem);
 		return NULL;
 	}
 	/* Insert new allocation into the list */
@@ -709,21 +697,21 @@ static i830_memory *i830_allocate_memory_bo(ScrnInfoPtr scrn, const char *name,
 	size = ALIGN(size, GTT_PAGE_SIZE);
 	align = i830_get_fence_alignment(intel, size);
 
-	mem = xcalloc(1, sizeof(*mem));
+	mem = calloc(1, sizeof(*mem));
 	if (mem == NULL)
 		return NULL;
 
 	mem->name = xstrdup(name);
 	if (mem->name == NULL) {
-		xfree(mem);
+		free(mem);
 		return NULL;
 	}
 
 	mem->bo = dri_bo_alloc(intel->bufmgr, name, size, align);
 
 	if (!mem->bo) {
-		xfree(mem->name);
-		xfree(mem);
+		free(mem->name);
+		free(mem);
 		return NULL;
 	}
 
@@ -767,8 +755,8 @@ static i830_memory *i830_allocate_memory_bo(ScrnInfoPtr scrn, const char *name,
 	if (scrn->vtSema || intel->use_drm_mode) {
 		if (!i830_bind_memory(scrn, mem)) {
 			dri_bo_unreference (mem->bo);
-			xfree(mem->name);
-			xfree(mem);
+			free(mem->name);
+			free(mem);
 			return NULL;
 		}
 	}
@@ -838,7 +826,7 @@ i830_memory *i830_allocate_memory(ScrnInfoPtr scrn, const char *name,
 	 * kernel. Under UMS, we separately reserve space for
 	 *  a few objects (overlays, power context, cursors, etc).
 	 */
-	if (intel->have_gem && (intel->use_drm_mode ||
+	if ((intel->use_drm_mode ||
 	    !(flags & (NEED_PHYSICAL_ADDR|NEED_LIFETIME_FIXED)))) {
 		return i830_allocate_memory_bo(scrn, name, size, pitch,
 		    alignment, flags, tile_format);
@@ -941,31 +929,6 @@ i830_describe_allocations(ScrnInfoPtr scrn, int verbosity, const char *prefix)
 		    "%s0x%08lx:            end of memory manager\n",
 		    prefix, intel->memory_manager->end);
 	}
-}
-
-static Bool i830_allocate_ringbuffer(ScrnInfoPtr scrn)
-{
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-
-	if (intel->have_gem || intel->ring.mem != NULL)
-		return TRUE;
-
-	/* We don't have any mechanism in the DRM yet to alert it that we've
-	 * moved the ringbuffer since init time, so allocate it fixed for its
-	 * lifetime.
-	 */
-	intel->ring.mem = i830_allocate_memory(scrn, "ring buffer",
-	    PRIMARY_RINGBUFFER_SIZE, PITCH_NONE, GTT_PAGE_SIZE,
-	    NEED_LIFETIME_FIXED, TILE_NONE);
-	if (intel->ring.mem == NULL) {
-		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-		    "Failed to allocate Ring Buffer space\n");
-		return FALSE;
-	}
-
-	intel->ring.tail_mask = intel->ring.mem->size - 1;
-	intel->ring.virtual_start = intel->FbBase + intel->ring.mem->offset;
-	return TRUE;
 }
 
 /**
@@ -1247,10 +1210,6 @@ Bool i830_allocate_2d_memory(ScrnInfoPtr scrn)
 			    "\tthe agpgart module loaded.\n");
 			return FALSE;
 		}
-
-		/* Allocate the ring buffer first, so it ends up in stolen mem. */
-		if (!i830_allocate_ringbuffer(scrn))
-			return FALSE;
 	}
 
 	if (intel->fb_compression)
@@ -1262,18 +1221,6 @@ Bool i830_allocate_2d_memory(ScrnInfoPtr scrn)
 			   "Failed to allocate HW cursor space.\n");
 		return FALSE;
 	}
-
-	if (!intel->have_gem) {
-		intel->fake_bufmgr_mem = i830_allocate_memory(scrn,
-		    "fake bufmgr", MB(8), PITCH_NONE, GTT_PAGE_SIZE, 0,
-		    TILE_NONE);
-		if (intel->fake_bufmgr_mem == NULL) {
-			xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-			    "Failed to allocate fake bufmgr space.\n");
-			return FALSE;
-		}
-		i830_init_bufmgr(scrn);
-	    }
 
 	if (!intel->use_drm_mode)
 		i830_allocate_overlay(scrn);
@@ -1680,53 +1627,55 @@ void i830_free_xvmc_buffer(ScrnInfoPtr scrn, i830_memory * buffer)
 
 #endif
 
-static void i830_set_max_gtt_map_size(ScrnInfoPtr scrn)
+static void i830_set_max_bo_size(intel_screen_private *intel,
+				 const struct drm_i915_gem_get_aperture *aperture)
 {
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-	struct drm_i915_gem_get_aperture aperture;
-	int ret;
-
-	/* Default low value in case it gets used during server init. */
-	intel->max_gtt_map_size = 16 * 1024 * 1024;
-
-	if (!intel->have_gem)
-		return;
-
-	ret =
-	    ioctl(intel->drmSubFD, DRM_IOCTL_I915_GEM_GET_APERTURE, &aperture);
-	if (ret == 0) {
-		/* Let objects up get bound up to the size where only 2 would
-		 * fit in the aperture, but then leave slop to account for
-		 * alignment like libdrm does.
+	if (aperture->aper_available_size)
+		/* Large BOs will tend to hit SW fallbacks frequently, and also will
+		 * tend to fail to successfully map when doing SW fallbacks because we
+		 * overcommit address space for BO access, or worse cause aperture
+		 * thrashing.
 		 */
-		intel->max_gtt_map_size =
-		    aperture.aper_available_size * 3 / 4 / 2;
-	}
+		intel->max_bo_size = aperture->aper_available_size / 2;
+	else
+		intel->max_bo_size = 64 * 1024 * 1024;
 }
 
-static void i830_set_max_tiling_size(ScrnInfoPtr scrn)
+static void i830_set_max_gtt_map_size(intel_screen_private *intel,
+				      const struct drm_i915_gem_get_aperture *aperture)
 {
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-	struct drm_i915_gem_get_aperture aperture;
-	int ret;
+	if (aperture->aper_available_size)
+		/* Let objects up get bound up to the size where only 2 would fit in
+		 * the aperture, but then leave slop to account for alignment like
+		 * libdrm does.
+		 */
+		intel->max_gtt_map_size =
+			aperture->aper_available_size * 3 / 4 / 2;
+	else
+		intel->max_gtt_map_size = 16 * 1024 * 1024;
+}
 
-	/* Default low value in case it gets used during server init. */
-	intel->max_tiling_size = 4 * 1024 * 1024;
-
-	ret =
-	    ioctl(intel->drmSubFD, DRM_IOCTL_I915_GEM_GET_APERTURE, &aperture);
-	if (ret == 0) {
+static void i830_set_max_tiling_size(intel_screen_private *intel,
+				     const struct drm_i915_gem_get_aperture *aperture)
+{
+	if (aperture->aper_available_size)
 		/* Let objects be tiled up to the size where only 4 would fit in
 		 * the aperture, presuming worst case alignment.
 		 */
-		intel->max_tiling_size = aperture.aper_available_size / 4;
-		if (!IS_I965G(intel))
-			intel->max_tiling_size /= 2;
-	}
+		intel->max_tiling_size = aperture->aper_available_size / 4;
+	else
+		intel->max_tiling_size = 4 * 1024 * 1024;
 }
 
 void i830_set_gem_max_sizes(ScrnInfoPtr scrn)
 {
-	i830_set_max_gtt_map_size(scrn);
-	i830_set_max_tiling_size(scrn);
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+	struct drm_i915_gem_get_aperture aperture;
+
+	aperture.aper_available_size = 0;
+	ioctl(intel->drmSubFD, DRM_IOCTL_I915_GEM_GET_APERTURE, &aperture);
+
+	i830_set_max_bo_size(intel, &aperture);
+	i830_set_max_gtt_map_size(intel, &aperture);
+	i830_set_max_tiling_size(intel, &aperture);
 }

@@ -1723,7 +1723,7 @@ i830_sdvo_output_setup (xf86OutputPtr output, uint16_t flag)
     }
 
     /* if exist origin name it will be freed in xf86OutputRename() */
-    dev_priv->name = xalloc(strlen(name_prefix) + strlen(name_suffix) + 1);
+    dev_priv->name = malloc(strlen(name_prefix) + strlen(name_suffix) + 1);
     strcpy (dev_priv->name, name_prefix);
     strcat (dev_priv->name, name_suffix);
 
@@ -1740,11 +1740,11 @@ i830_sdvo_output_setup (xf86OutputPtr output, uint16_t flag)
     if (output->randr_output) {
 	int nameLength = strlen(dev_priv->name);
 	RROutputPtr randr_output = output->randr_output;
-	char *name = xalloc(nameLength + 1);
+	char *name = malloc(nameLength + 1);
 
 	if (name) {
 	    if (randr_output->name != (char *) (randr_output + 1))
-		xfree(randr_output->name);
+		free(randr_output->name);
 	    randr_output->name = name;
 	    randr_output->nameLength = nameLength;
 	    memcpy(randr_output->name, dev_priv->name, nameLength);
@@ -1825,10 +1825,10 @@ i830_sdvo_detect(xf86OutputPtr output)
 	/* Check EDID in DVI-I case */
 	edid_mon = xf86OutputGetEDID (output, intel_output->pDDCBus);
 	if (edid_mon && !DIGITAL(edid_mon->features.input_type)) {
-	    xfree(edid_mon);
+	    free(edid_mon);
 	    return XF86OutputStatusDisconnected;
 	}
-	xfree(edid_mon);
+	free(edid_mon);
     }
     return XF86OutputStatusConnected;
 }
@@ -1898,7 +1898,7 @@ i830_sdvo_get_tv_mode(DisplayModePtr *head, int width, int height,
 {
     DisplayModePtr mode;
 
-    mode = xcalloc(1, sizeof(*mode));
+    mode = calloc(1, sizeof(*mode));
     if (mode == NULL)
 	return;
 
@@ -2020,14 +2020,14 @@ i830_sdvo_destroy (xf86OutputPtr output)
 	    RROutputPtr	randr_output = output->randr_output;
 	    if (randr_output->name &&
 		    randr_output->name != (char *) (randr_output + 1))
-		xfree(randr_output->name);
+		free(randr_output->name);
 	}
 
 	if (dev_priv->sdvo_lvds_fixed_mode)
 		xf86DeleteMode(&dev_priv->sdvo_lvds_fixed_mode,
 			dev_priv->sdvo_lvds_fixed_mode);
 
-	xfree (intel_output);
+	free (intel_output);
     }
 }
 

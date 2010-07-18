@@ -38,7 +38,7 @@ void I915EmitInvarientState(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
-	ATOMIC_BATCH(24);
+	assert(intel->in_batch_atomic);
 
 	OUT_BATCH(_3DSTATE_AA_CMD |
 		  AA_LINE_ECAAR_WIDTH_ENABLE |
@@ -85,8 +85,13 @@ void I915EmitInvarientState(ScrnInfoPtr scrn)
 		  ENABLE_STENCIL_WRITE_MASK | STENCIL_WRITE_MASK(0xff) |
 		  ENABLE_STENCIL_TEST_MASK | STENCIL_TEST_MASK(0xff));
 
-	OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_1 | I1_LOAD_S(3) | 0);
+	OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_1 | I1_LOAD_S(3) | I1_LOAD_S(4) | I1_LOAD_S(5) | 2);
 	OUT_BATCH(0x00000000);	/* Disable texture coordinate wrap-shortest */
+	OUT_BATCH((1 << S4_POINT_WIDTH_SHIFT) |
+		  S4_LINE_WIDTH_ONE |
+		  S4_CULLMODE_NONE |
+		  S4_VFMT_XY);
+	OUT_BATCH(0x00000000);	/* Stencil. */
 
 	OUT_BATCH(_3DSTATE_SCISSOR_ENABLE_CMD | DISABLE_SCISSOR_RECT);
 	OUT_BATCH(_3DSTATE_SCISSOR_RECT_0_CMD);
@@ -104,6 +109,4 @@ void I915EmitInvarientState(ScrnInfoPtr scrn)
 	OUT_BATCH(_3DSTATE_BACKFACE_STENCIL_OPS | BFO_ENABLE_STENCIL_TWO_SIDE |
 		  0);
 	OUT_BATCH(MI_NOOP);
-
-	ADVANCE_BATCH();
 }

@@ -48,6 +48,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <poll.h>
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -254,16 +255,12 @@ static Bool I830GetRec(ScrnInfoPtr scrn)
 
 static void I830FreeRec(ScrnInfoPtr scrn)
 {
-	intel_screen_private *intel;
-
 	if (!scrn)
 		return;
 	if (!scrn->driverPrivate)
 		return;
 
-	intel = intel_get_screen_private(scrn);
-
-	xfree(scrn->driverPrivate);
+	free(scrn->driverPrivate);
 	scrn->driverPrivate = NULL;
 }
 
@@ -498,10 +495,6 @@ I830MapMem(ScrnInfoPtr scrn)
     if (err)
 	return FALSE;
 
-   if (intel->ring.mem != NULL) {
-      intel->ring.virtual_start = intel->FbBase + intel->ring.mem->offset;
-   }
-
    return TRUE;
 }
 
@@ -659,7 +652,29 @@ static void I830SetupOutputs(ScrnInfoPtr scrn)
 	if (IS_MOBILE(intel) && !IS_I830(intel))
 	i830_lvds_init(scrn);
 
-	if (IS_I9XX(intel)) {
+	if (IS_IGDNG(intel)) {
+		int found;
+
+		if (INREG(HDMIB) & PORT_DETECTED) {
+			/* check SDVOB */
+			/* found = intel_sdvo_init(dev, HDMIB); */
+			found = 0;
+			if (!found)
+				i830_hdmi_init(scrn, HDMIB);
+		}
+
+		if (INREG(HDMIC) & PORT_DETECTED)
+			i830_hdmi_init(scrn, HDMIC);
+
+		if (INREG(HDMID) & PORT_DETECTED)
+			i830_hdmi_init(scrn, HDMID);
+
+		/* Disable DP by force */
+		OUTREG(PCH_DP_B, INREG(PCH_DP_B) & ~PORT_ENABLE);
+		OUTREG(PCH_DP_C, INREG(PCH_DP_C) & ~PORT_ENABLE);
+		OUTREG(PCH_DP_D, INREG(PCH_DP_D) & ~PORT_ENABLE);
+
+	} else if (IS_I9XX(intel)) {
 		Bool found = FALSE;
 		if ((INREG(SDVOB) & SDVO_DETECTED)) {
 			found = i830_sdvo_init(scrn, SDVOB);
@@ -678,7 +693,7 @@ static void I830SetupOutputs(ScrnInfoPtr scrn)
 	} else {
 		i830_dvo_init(scrn);
 	}
-	if (IS_I9XX(intel) && IS_MOBILE(intel))
+	if (IS_I9XX(intel) && IS_MOBILE(intel) && !IS_IGDNG(intel))
 		i830_tv_init(scrn);
    
 	for (o = 0; o < config->num_output; o++) {
@@ -966,7 +981,7 @@ static Bool i830_kernel_mode_enabled(ScrnInfoPtr scrn)
 	/* Be nice to the user and load fbcon too */
 	if (!ret)
 		(void)xf86LoadKernelModule("fbcon");
-	xfree(busIdString);
+	free(busIdString);
 	if (ret)
 		return FALSE;
 
@@ -1236,7 +1251,7 @@ static Bool I830GetEarlyOptions(ScrnInfoPtr scrn)
 
 	/* Process the options */
 	xf86CollectOptions(scrn, NULL);
-	if (!(intel->Options = xalloc(sizeof(I830Options))))
+	if (!(intel->Options = malloc(sizeof(I830Options))))
 		return FALSE;
 	memcpy(intel->Options, I830Options, sizeof(I830Options));
 	xf86ProcessOptions(scrn->scrnIndex, scrn->options, intel->Options);
@@ -1327,6 +1342,25 @@ static void i830_check_dri_option(ScrnInfoPtr scrn)
 	}
 }
 
+#ifdef notyet
+static void
+drm_vblank_handler(int fd, unsigned int frame, unsigned int tv_sec,
+    unsigned int tv_usec, void *event_data)
+{
+	I830DRI2FrameEventHandler(frame, tv_sec, tv_usec, event_data);
+}
+
+static void
+drm_wakeup_handler(pointer data, int err, pointer p)
+{
+	intel_screen_private *intel = data;
+	fd_set *read_mask = p;
+
+	if (err >= 0 && FD_ISSET(intel->drmSubFD, read_mask))
+	    drmHandleEvent(intel->drmSubFD, &intel->event_context);
+}
+#endif
+
 static Bool i830_user_modesetting_init(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
@@ -1361,6 +1395,14 @@ static Bool i830_user_modesetting_init(ScrnInfoPtr scrn)
 	RestoreHWState(scrn);
 
 	intel->stolen_size = I830DetectMemory(scrn);
+#ifdef notyet
+	intel->event_context.version = DRM_EVENT_CONTEXT_VERSION;
+	intel->event_context.vblank_handler = drm_vblank_handler;
+	AddGeneralSocket(intel->drmSubFD);
+	RegisterBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
+	    drm_wakeup_handler, intel);
+#endif
+
 
 	return TRUE;
 }
@@ -1383,11 +1425,11 @@ static Bool i830_open_drm_master(ScrnInfoPtr scrn)
 		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 			   "[drm] Failed to open DRM device for %s: %s\n",
 			   busid, strerror(errno));
-		xfree(busid);
+		free(busid);
 		return FALSE;
 	}
 
-	xfree(busid);
+	free(busid);
 
 	/* Check that what we opened was a master or a master-capable FD,
 	 * by setting the version of the interface we'll use to talk to it.
@@ -1441,8 +1483,6 @@ static Bool I830DrmModeInit(ScrnInfoPtr scrn)
 		PreInitCleanup(scrn);
 		return FALSE;
 	}
-
-	intel->have_gem = TRUE;
 
 	i830_init_bufmgr(scrn);
 
@@ -1515,7 +1555,6 @@ static Bool I830PreInit(ScrnInfoPtr scrn, int flags)
 	intel->SaveGeneration = -1;
 	intel->pEnt = pEnt;
 	intel->use_drm_mode = drm_mode_setting;
-	intel->kernel_exec_fencing = intel->use_drm_mode;
 
 	if (!I830LoadSyms(scrn))
 		return FALSE;
@@ -1617,6 +1656,30 @@ static Bool I830PreInit(ScrnInfoPtr scrn, int flags)
 	}
 
 	if (!intel->use_drm_mode) {
+   /* console hack, stolen from G80 */
+	   if (IS_IGDNG(intel)) {
+	       if (xf86LoadSubModule(scrn, "int10")) {
+	       intel->int10 = xf86InitInt10(pEnt->index);
+	       if (intel->int10) {
+		       intel->int10->num = 0x10;
+		       intel->int10->ax = 0x4f03;
+		       intel->int10->bx =
+		       intel->int10->cx =
+		       intel->int10->dx = 0;
+		       xf86ExecX86int10(intel->int10);
+		       intel->int10Mode = intel->int10->bx & 0x3fff;
+		       xf86DrvMsg(scrn->scrnIndex, X_PROBED,
+			  "Console VGA mode is 0x%x\n", intel->int10Mode);
+		   } else {
+		       xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+			      "Failed int10 setup, VT switch won't work\n");
+		   }
+	       } else {
+		   xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+		       "Failed to load int10module, ironlake vt switch broken");
+	       }
+	       }
+
 		I830UnmapMMIO(scrn);
 
 		/*  We won't be using the VGA access after the probe. */
@@ -1634,81 +1697,6 @@ static Bool I830PreInit(ScrnInfoPtr scrn, int flags)
 	return TRUE;
 }
 
-/*
- * Reset registers that it doesn't make sense to save/restore to a sane state.
- * This is basically the ring buffer and fence registers.  Restoring these
- * doesn't make sense without restoring GTT mappings.  This is something that
- * whoever gets control next should do.
- */
-static void i830_stop_ring(ScrnInfoPtr scrn, Bool flush)
-{
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-	unsigned long temp;
-
-	DPRINTF(PFX, "ResetState: flush is %s\n", BOOLTOSTRING(flush));
-
-	/* Flush the ring buffer, then disable it. */
-	temp = INREG(LP_RING + RING_LEN);
-	if (temp & RING_VALID) {
-		i830_refresh_ring(scrn);
-		i830_wait_ring_idle(scrn);
-	}
-
-	OUTREG(LP_RING + RING_LEN, 0);
-	OUTREG(LP_RING + RING_HEAD, 0);
-	OUTREG(LP_RING + RING_TAIL, 0);
-	OUTREG(LP_RING + RING_START, 0);
-}
-
-static void i830_start_ring(ScrnInfoPtr scrn)
-{
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-	unsigned int itemp;
-
-	DPRINTF(PFX, "SetRingRegs\n");
-
-	OUTREG(LP_RING + RING_LEN, 0);
-	OUTREG(LP_RING + RING_TAIL, 0);
-	OUTREG(LP_RING + RING_HEAD, 0);
-
-	assert((intel->ring.mem->offset & I830_RING_START_MASK) ==
-	    intel->ring.mem->offset);
-
-	/* Don't care about the old value. Reserved bits must be zero anyway. */
-	itemp = intel->ring.mem->offset;
-	OUTREG(LP_RING + RING_START, itemp);
-
-	if (((intel->ring.mem->size - 4096) & I830_RING_NR_PAGES) !=
-	    intel->ring.mem->size - 4096) {
-		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-		    "I830SetRingRegs: Ring buffer size - 4096 (%lx) violates "
-		    "its mask (%x)\n", intel->ring.mem->size - 4096,
-		    I830_RING_NR_PAGES);
-	}
-	/* Don't care about the old value. Reserved bits must be zero anyway. */
-	itemp = (intel->ring.mem->size - 4096) & I830_RING_NR_PAGES;
-	itemp |= (RING_NO_REPORT | RING_VALID);
-	OUTREG(LP_RING + RING_LEN, itemp);
-	i830_refresh_ring(scrn);
-}
-
-void i830_refresh_ring(ScrnInfoPtr scrn)
-{
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-
-	/* If we're reaching RefreshRing as a result of grabbing the DRI lock
-	 * before we've set up the ringbuffer, don't bother.
-	 */
-	if (intel->ring.mem == NULL)
-		return;
-
-	intel->ring.head = INREG(LP_RING + RING_HEAD) & I830_HEAD_MASK;
-	intel->ring.tail = INREG(LP_RING + RING_TAIL);
-	intel->ring.space = intel->ring.head - (intel->ring.tail + 8);
-	if (intel->ring.space < 0)
-		intel->ring.space += intel->ring.mem->size;
-}
-
 enum pipe {
 	PIPE_A = 0,
 	PIPE_B,
@@ -1716,40 +1704,57 @@ enum pipe {
 
 static Bool i830_pipe_enabled(intel_screen_private *intel, enum pipe pipe)
 {
-	if (pipe == PIPE_A)
-		return (INREG(PIPEACONF) & PIPEACONF_ENABLE);
-	else
-		return (INREG(PIPEBCONF) & PIPEBCONF_ENABLE);
+	uint32_t dpll_reg;
+
+	if (IS_IGDNG(intel)) {
+		dpll_reg = (pipe == PIPE_A) ? PCH_DPLL_A : PCH_DPLL_B;
+	} else {
+		dpll_reg = (pipe == PIPE_A) ? DPLL_A : DPLL_B;
+	}
+
+	return (INREG(dpll_reg) & DPLL_VCO_ENABLE);
 }
 
 static void i830_save_palette(intel_screen_private *intel, enum pipe pipe)
 {
+	uint32_t reg = (pipe == PIPE_A ? PALETTE_A : PALETTE_B);
+	uint32_t *array;
 	int i;
 
 	if (!i830_pipe_enabled(intel, pipe))
 		return;
 
-	for(i= 0; i < 256; i++) {
-		if (pipe == PIPE_A)
-			intel->savePaletteA[i] = INREG(PALETTE_A + (i << 2));
-		else
-			intel->savePaletteB[i] = INREG(PALETTE_B + (i << 2));
-	}
+	if (IS_IGDNG(intel))
+		reg = (pipe == PIPE_A) ? LGC_PALETTE_A : LGC_PALETTE_B;
+
+	if (pipe == PIPE_A)
+		array = intel->savePaletteA;
+	else
+		array = intel->savePaletteB;
+
+	for (i = 0; i < 256; i++)
+		array[i] = INREG(reg + (i << 2));
 }
 
 static void i830_restore_palette(intel_screen_private *intel, enum pipe pipe)
 {
+	uint32_t reg = (pipe == PIPE_A ? PALETTE_A : PALETTE_B);
+	uint32_t *array;
 	int i;
 
 	if (!i830_pipe_enabled(intel, pipe))
 		return;
 
-	for(i= 0; i < 256; i++) {
-		if (pipe == PIPE_A)
-			OUTREG(PALETTE_A + (i << 2), intel->savePaletteA[i]);
-		else
-			OUTREG(PALETTE_B + (i << 2), intel->savePaletteB[i]);
-	}
+	if (IS_IGDNG(intel))
+		reg = (pipe == PIPE_A) ? LGC_PALETTE_A : LGC_PALETTE_B;
+
+	if (pipe == PIPE_A)
+		array = intel->savePaletteA;
+	else
+		array = intel->savePaletteB;
+
+	for (i = 0; i < 256; i++)
+		OUTREG(reg + (i << 2), array[i]);
 }
 
 static Bool SaveHWState(ScrnInfoPtr scrn)
@@ -1759,6 +1764,9 @@ static Bool SaveHWState(ScrnInfoPtr scrn)
 	vgaHWPtr hwp = VGAHWPTR(scrn);
 	vgaRegPtr vgaReg = &hwp->SavedReg;
 	int i;
+
+       if (IS_IGDNG(intel))
+	   return TRUE;
 
 	if (intel->fb_compression) {
 		intel->saveFBC_CFB_BASE = INREG(FBC_CFB_BASE);
@@ -1885,6 +1893,9 @@ static Bool RestoreHWState(ScrnInfoPtr scrn)
 	vgaHWPtr hwp = VGAHWPTR(scrn);
 	vgaRegPtr vgaReg = &hwp->SavedReg;
 	int i;
+
+       if (IS_IGDNG(intel))
+	   return TRUE;
 
 	DPRINTF(PFX, "RestoreHWState\n");
 
@@ -2087,7 +2098,7 @@ static Bool RestoreHWState(ScrnInfoPtr scrn)
 		if (output->funcs->restore)
 			output->funcs->restore(output);
 	}
-    
+
 	i830_restore_palette(intel, PIPE_A);
 	i830_restore_palette(intel, PIPE_B);
 
@@ -2157,16 +2168,10 @@ I830BlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 		/* Emit a flush of the rendering cache, or on the 965 and beyond
 		 * rendering results may not hit the framebuffer until significantly
 		 * later.
-		 *
-		 * XXX Under KMS this is only required because tfp does not have
-		 * the appropriate synchronisation points, so that outstanding updates
-		 * to the pixmap are flushed prior to use as a texture. The framebuffer
-		 * should be handled by the kernel domain management...
 		 */
-		if (intel->need_mi_flush || !list_is_empty(&intel->flush_pixmaps))
-			intel_batch_emit_flush(scrn);
-
-		intel_batch_submit(scrn);
+		intel_batch_submit(scrn,
+				   intel->need_mi_flush ||
+				   !list_is_empty(&intel->flush_pixmaps));
 		drmCommandNone(intel->drmSubFD, DRM_I915_GEM_THROTTLE);
 	}
 
@@ -2304,24 +2309,16 @@ void i830_init_bufmgr(ScrnInfoPtr scrn)
 	if (intel->bufmgr)
 		return;
 
-	if (intel->have_gem) {
+	batch_size = 4096 * 4;
 
-		batch_size = 4096 * 4;
+	/* The 865 has issues with larger-than-page-sized batch buffers. */
+	if (IS_I865G(intel))
+		batch_size = 4096;
 
-		/* The 865 has issues with larger-than-page-sized batch buffers. */
-		if (IS_I865G(intel))
-			batch_size = 4096;
+	intel->bufmgr = intel_bufmgr_gem_init(intel->drmSubFD, batch_size);
+	intel_bufmgr_gem_enable_reuse(intel->bufmgr);
+	drm_intel_bufmgr_gem_enable_fenced_relocs(intel->bufmgr);
 
-		intel->bufmgr = intel_bufmgr_gem_init(intel->drmSubFD, batch_size);
-		intel_bufmgr_gem_enable_reuse(intel->bufmgr);
-		drm_intel_bufmgr_gem_enable_fenced_relocs(intel->bufmgr);
-	} else {
-		assert(intel->FbBase != NULL);
-		intel->bufmgr = intel_bufmgr_fake_init(intel->drmSubFD,
-		    intel->fake_bufmgr_mem->offset, intel->FbBase +
-		        intel->fake_bufmgr_mem->offset,
-		        intel->fake_bufmgr_mem->size, NULL);
-	}
 	list_init(&intel->batch_pixmaps);
 	list_init(&intel->flush_pixmaps);
 	list_init(&intel->in_flight);
@@ -2443,7 +2440,8 @@ I830SwapPipes(ScrnInfoPtr scrn)
 	 *       alone in that case.
 	 * Also make sure the DRM can handle the swap.
 	 */
-	if (I830LVDSPresent(scrn) && !IS_I965GM(intel) && !IS_GM45(intel)) {
+	if (I830LVDSPresent(scrn) && !IS_I965GM(intel) && !IS_GM45(intel) &&
+	    !IS_IGDNG(intel)) {
 		xf86DrvMsg(scrn->scrnIndex, X_INFO, "adjusting plane->pipe "
 		    "mappings to allow for framebuffer compression\n");
 		for (c = 0; c < config->num_crtc; c++) {
@@ -2478,7 +2476,7 @@ i830_disable_render_standby(ScrnInfoPtr scrn)
 static Bool
 I830ScreenInit(int scrnIndex, ScreenPtr screen, int argc, char **argv)
 {
-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];;
+	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
 	vgaHWPtr hwp = NULL;
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	VisualPtr visual;
@@ -2688,11 +2686,12 @@ I830ScreenInit(int scrnIndex, ScreenPtr screen, int argc, char **argv)
 		return FALSE;
 	}
 
-	if (IS_I965G(intel))
+	if (IS_I965G(intel)) {
 		intel->batch_flush_notify = i965_batch_flush_notify;
-	else if (IS_I9XX(intel))
+	} else if (IS_I9XX(intel)) {
+		intel->vertex_flush = i915_vertex_flush;
 		intel->batch_flush_notify = i915_batch_flush_notify;
-	else
+	} else
 		intel->batch_flush_notify = i830_batch_flush_notify;
 
 	miInitializeBackingStore(screen);
@@ -2778,7 +2777,7 @@ I830ScreenInit(int scrnIndex, ScreenPtr screen, int argc, char **argv)
 	intel->closing = FALSE;
 	intel->suspended = FALSE;
 
-	return TRUE;
+	return uxa_resources_init(screen);
 }
 
 static void i830AdjustFrame(int scrnIndex, int x, int y, int flags)
@@ -2826,26 +2825,25 @@ static void I830LeaveVT(int scrnIndex, int flags)
 
 	intel->leaving = TRUE;
 
-	if (intel->devicesTimer)
-		TimerFree(intel->devicesTimer);
-	intel->devicesTimer = NULL;
-
 	i830SetHotkeyControl(scrn, HOTKEY_BIOS_SWITCH);
 
 	xf86RotateFreeShadow(scrn);
 
 	xf86_hide_cursors(scrn);
 
-	intel_sync(scrn);
-
 	if (!intel->use_drm_mode) {
 		RestoreHWState(scrn);
-		/* Evict everything from the bufmgr, as we're about to lose
-		 * ownership of the graphics memory.
-		 */
-		if (!intel->have_gem) {
-			intel_bufmgr_fake_evict_all(intel->bufmgr);
-			i830_stop_ring(scrn, TRUE);
+
+		/* console restore hack */
+		if (IS_IGDNG(intel) && intel->int10 && intel->int10Mode) {
+		    xf86Int10InfoPtr int10 = intel->int10;
+
+		    /* Use int10 to restore the console mode */
+		    int10->num = 0x10;
+		    int10->ax = 0x4f02;
+		    int10->bx = intel->int10Mode | 0x8000;
+		    int10->cx = int10->dx = 0;
+		    xf86ExecX86int10(int10);
 		}
 
 	}
@@ -2854,7 +2852,7 @@ static void I830LeaveVT(int scrnIndex, int flags)
 
 	i830_unbind_all_memory(scrn);
 
-	if (intel->have_gem && !intel->use_drm_mode) {
+	if (!intel->use_drm_mode) {
 		int ret;
 
 		/* Tell the kernel to evict all buffer objects and block GTT
@@ -2925,18 +2923,20 @@ static Bool I830EnterVT(int scrnIndex, int flags)
 		/* Disable pipes */
 		for (i = 0; i < xf86_config->num_crtc; i++) {
 			xf86CrtcPtr crtc = xf86_config->crtc[i];
-			i830_crtc_disable(crtc, TRUE);
+			if (IS_IGDNG(intel))
+			    ironlake_crtc_disable(crtc);
+			else
+			    i830_crtc_disable(crtc, TRUE);
 		}
 		i830WaitForVblank(scrn);
 	}
 
 	intel->leaving = FALSE;
 
-	if (!intel->use_drm_mode)
-		i830_disable_render_standby(scrn);
-
-	if (intel->have_gem && !intel->use_drm_mode) {
+	if (!intel->use_drm_mode) {
 		int ret;
+
+		i830_disable_render_standby(scrn);
 
 		/* Tell the kernel that we're back in control and ready for GTT
 		 * usage.
@@ -2958,11 +2958,6 @@ static Bool I830EnterVT(int scrnIndex, int flags)
 		gen4_render_state_init(scrn);
 
 	if (!intel->use_drm_mode) {
-		/* Re-set up the ring. */
-		if (!intel->have_gem) {
-			i830_stop_ring(scrn, FALSE);
-			i830_start_ring(scrn);
-		}
 		I830InitHWCursor(scrn);
 
 		/* Tell the BIOS that we're in control of mode setting now. */
@@ -3014,10 +3009,6 @@ static Bool I830CloseScreen(int scrnIndex, ScreenPtr screen)
 		I830LeaveVT(scrnIndex, 0);
 	}
 
-	if (intel->devicesTimer)
-		TimerFree(intel->devicesTimer);
-	intel->devicesTimer = NULL;
-
 	if (!intel->use_drm_mode) {
 		DPRINTF(PFX, "\nUnmapping memory\n");
 		I830UnmapMem(scrn);
@@ -3026,7 +3017,7 @@ static Bool I830CloseScreen(int scrnIndex, ScreenPtr screen)
 
 	if (intel->uxa_driver) {
 		uxa_driver_fini(screen);
-		xfree(intel->uxa_driver);
+		free(intel->uxa_driver);
 		intel->uxa_driver = NULL;
 	}
 	if (intel->front_buffer) {

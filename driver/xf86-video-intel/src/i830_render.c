@@ -126,19 +126,18 @@ static struct blendinfo i830_blend_op[] = {
 	{0, 0, BLENDFACTOR_ONE, BLENDFACTOR_ONE},
 };
 
-/* The x8* formats could use MT_32BIT_X* on 855+, but since we implement
- * workarounds for 830/845 anyway, we just rely on those whether the hardware
- * could handle it for us or not.
- */
 static struct formatinfo i830_tex_formats[] = {
-	{PICT_a8r8g8b8, MT_32BIT_ARGB8888},
-	{PICT_x8r8g8b8, MT_32BIT_ARGB8888},
-	{PICT_a8b8g8r8, MT_32BIT_ABGR8888},
-	{PICT_x8b8g8r8, MT_32BIT_ABGR8888},
-	{PICT_r5g6b5, MT_16BIT_RGB565},
-	{PICT_a1r5g5b5, MT_16BIT_ARGB1555},
-	{PICT_x1r5g5b5, MT_16BIT_ARGB1555},
-	{PICT_a8, MT_8BIT_A8},
+	{PICT_a8, MAPSURF_8BIT | MT_8BIT_A8},
+	{PICT_a8r8g8b8, MAPSURF_32BIT | MT_32BIT_ARGB8888},
+	{PICT_a8b8g8r8, MAPSURF_32BIT | MT_32BIT_ABGR8888},
+	{PICT_r5g6b5, MAPSURF_16BIT | MT_16BIT_RGB565},
+	{PICT_a1r5g5b5, MAPSURF_16BIT | MT_16BIT_ARGB1555},
+	{PICT_a4r4g4b4, MAPSURF_16BIT | MT_16BIT_ARGB4444},
+};
+
+static struct formatinfo i855_tex_formats[] = {
+	{PICT_x8r8g8b8, MAPSURF_32BIT | MT_32BIT_XRGB8888},
+	{PICT_x8b8g8r8, MAPSURF_32BIT | MT_32BIT_XBGR8888},
 };
 
 static Bool i830_get_dest_format(PicturePtr dest_picture, uint32_t * dst_format)
@@ -221,61 +220,26 @@ static Bool i830_get_blend_cntl(ScrnInfoPtr scrn, int op, PicturePtr mask,
 	return TRUE;
 }
 
-static Bool i830_check_composite_texture(ScrnInfoPtr scrn, PicturePtr picture,
-					 int unit)
-{
-	if (picture->repeatType > RepeatReflect) {
-		intel_debug_fallback(scrn, "Unsupported picture repeat %d\n",
-			     picture->repeatType);
-		return FALSE;
-	}
-
-	if (picture->filter != PictFilterNearest &&
-	    picture->filter != PictFilterBilinear) {
-		intel_debug_fallback(scrn, "Unsupported filter 0x%x\n",
-				     picture->filter);
-		return FALSE;
-	}
-
-	if (picture->pDrawable) {
-		int w, h, i;
-
-		w = picture->pDrawable->width;
-		h = picture->pDrawable->height;
-		if ((w > 2048) || (h > 2048)) {
-			intel_debug_fallback(scrn,
-					     "Picture w/h too large (%dx%d)\n",
-					     w, h);
-			return FALSE;
-		}
-
-		for (i = 0;
-		     i < sizeof(i830_tex_formats) / sizeof(i830_tex_formats[0]);
-		     i++) {
-			if (i830_tex_formats[i].fmt == picture->format)
-				break;
-		}
-		if (i == sizeof(i830_tex_formats) / sizeof(i830_tex_formats[0]))
-		{
-			intel_debug_fallback(scrn, "Unsupported picture format "
-					     "0x%x\n",
-					     (int)picture->format);
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
-static uint32_t i8xx_get_card_format(PicturePtr picture)
+static uint32_t i8xx_get_card_format(intel_screen_private *intel,
+				     PicturePtr picture)
 {
 	int i;
+
 	for (i = 0; i < sizeof(i830_tex_formats) / sizeof(i830_tex_formats[0]);
 	     i++) {
 		if (i830_tex_formats[i].fmt == picture->format)
 			return i830_tex_formats[i].card_fmt;
 	}
-	FatalError("Unsupported format type %d\n", picture->format);
+
+	if (IS_I85X(intel) || IS_I865G(intel)) {
+		for (i = 0; i < sizeof(i855_tex_formats) / sizeof(i855_tex_formats[0]);
+		     i++) {
+			if (i855_tex_formats[i].fmt == picture->format)
+				return i855_tex_formats[i].card_fmt;
+		}
+	}
+
+	return 0;
 }
 
 static void i830_texture_setup(PicturePtr picture, PixmapPtr pixmap, int unit)
@@ -296,8 +260,6 @@ static void i830_texture_setup(PicturePtr picture, PixmapPtr pixmap, int unit)
 		texcoordtype = TEXCOORDTYPE_CARTESIAN;
 	else
 		texcoordtype = TEXCOORDTYPE_HOMOGENEOUS;
-
-	format = i8xx_get_card_format(picture);
 
 	switch (picture->repeatType) {
 	case RepeatNone:
@@ -331,63 +293,59 @@ static void i830_texture_setup(PicturePtr picture, PixmapPtr pixmap, int unit)
 	}
 	filter |= (MIPFILTER_NONE << TM0S3_MIP_FILTER_SHIFT);
 
-	{
-		if (pixmap->drawable.bitsPerPixel == 8)
-			format |= MAPSURF_8BIT;
-		else if (pixmap->drawable.bitsPerPixel == 16)
-			format |= MAPSURF_16BIT;
-		else
-			format |= MAPSURF_32BIT;
+	if (i830_pixmap_tiled(pixmap)) {
+		tiling_bits = TM0S1_TILED_SURFACE;
+		if (i830_get_pixmap_intel(pixmap)->tiling
+				== I915_TILING_Y)
+			tiling_bits |= TM0S1_TILE_WALK;
+	} else
+		tiling_bits = 0;
 
-		if (i830_pixmap_tiled(pixmap)) {
-			tiling_bits = TM0S1_TILED_SURFACE;
-			if (i830_get_pixmap_intel(pixmap)->tiling
-					== I915_TILING_Y)
-				tiling_bits |= TM0S1_TILE_WALK;
-		} else
-			tiling_bits = 0;
+	format = i8xx_get_card_format(intel, picture);
 
-		ATOMIC_BATCH(10);
-		OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_2 |
-			  LOAD_TEXTURE_MAP(unit) | 4);
-		OUT_RELOC_PIXMAP(pixmap, I915_GEM_DOMAIN_SAMPLER, 0, 0);
-		OUT_BATCH(((pixmap->drawable.height -
-			    1) << TM0S1_HEIGHT_SHIFT) | ((pixmap->drawable.width -
-							  1) <<
-							 TM0S1_WIDTH_SHIFT) |
-			  format | tiling_bits);
-		OUT_BATCH((pitch / 4 - 1) << TM0S2_PITCH_SHIFT | TM0S2_MAP_2D);
-		OUT_BATCH(filter);
-		OUT_BATCH(0);	/* default color */
-		OUT_BATCH(_3DSTATE_MAP_COORD_SET_CMD | TEXCOORD_SET(unit) |
-			  ENABLE_TEXCOORD_PARAMS | TEXCOORDS_ARE_NORMAL |
-			  texcoordtype | ENABLE_ADDR_V_CNTL |
-			  TEXCOORD_ADDR_V_MODE(wrap_mode) |
-			  ENABLE_ADDR_U_CNTL | TEXCOORD_ADDR_U_MODE(wrap_mode));
-		/* map texel stream */
-		OUT_BATCH(_3DSTATE_MAP_COORD_SETBIND_CMD);
-		if (unit == 0)
-			OUT_BATCH(TEXBIND_SET0(TEXCOORDSRC_VTXSET_0) |
-				  TEXBIND_SET1(TEXCOORDSRC_KEEP) |
-				  TEXBIND_SET2(TEXCOORDSRC_KEEP) |
-				  TEXBIND_SET3(TEXCOORDSRC_KEEP));
-		else
-			OUT_BATCH(TEXBIND_SET0(TEXCOORDSRC_VTXSET_0) |
-				  TEXBIND_SET1(TEXCOORDSRC_VTXSET_1) |
-				  TEXBIND_SET2(TEXCOORDSRC_KEEP) |
-				  TEXBIND_SET3(TEXCOORDSRC_KEEP));
-		OUT_BATCH(_3DSTATE_MAP_TEX_STREAM_CMD | (unit << 16) |
-			  DISABLE_TEX_STREAM_BUMP |
-			  ENABLE_TEX_STREAM_COORD_SET |
-			  TEX_STREAM_COORD_SET(unit) |
-			  ENABLE_TEX_STREAM_MAP_IDX | TEX_STREAM_MAP_IDX(unit));
-		ADVANCE_BATCH();
-	}
+	assert(intel->in_batch_atomic);
+
+	OUT_BATCH(_3DSTATE_LOAD_STATE_IMMEDIATE_2 |
+		  LOAD_TEXTURE_MAP(unit) | 4);
+	OUT_RELOC_PIXMAP(pixmap, I915_GEM_DOMAIN_SAMPLER, 0, 0);
+	OUT_BATCH(((pixmap->drawable.height -
+		    1) << TM0S1_HEIGHT_SHIFT) | ((pixmap->drawable.width -
+						  1) <<
+						 TM0S1_WIDTH_SHIFT) |
+		  format | tiling_bits);
+	OUT_BATCH((pitch / 4 - 1) << TM0S2_PITCH_SHIFT | TM0S2_MAP_2D);
+	OUT_BATCH(filter);
+	OUT_BATCH(0);	/* default color */
+	OUT_BATCH(_3DSTATE_MAP_COORD_SET_CMD | TEXCOORD_SET(unit) |
+		  ENABLE_TEXCOORD_PARAMS | TEXCOORDS_ARE_NORMAL |
+		  texcoordtype | ENABLE_ADDR_V_CNTL |
+		  TEXCOORD_ADDR_V_MODE(wrap_mode) |
+		  ENABLE_ADDR_U_CNTL | TEXCOORD_ADDR_U_MODE(wrap_mode));
+	/* map texel stream */
+	OUT_BATCH(_3DSTATE_MAP_COORD_SETBIND_CMD);
+	if (unit == 0)
+		OUT_BATCH(TEXBIND_SET0(TEXCOORDSRC_VTXSET_0) |
+			  TEXBIND_SET1(TEXCOORDSRC_KEEP) |
+			  TEXBIND_SET2(TEXCOORDSRC_KEEP) |
+			  TEXBIND_SET3(TEXCOORDSRC_KEEP));
+	else
+		OUT_BATCH(TEXBIND_SET0(TEXCOORDSRC_VTXSET_0) |
+			  TEXBIND_SET1(TEXCOORDSRC_VTXSET_1) |
+			  TEXBIND_SET2(TEXCOORDSRC_KEEP) |
+			  TEXBIND_SET3(TEXCOORDSRC_KEEP));
+	OUT_BATCH(_3DSTATE_MAP_TEX_STREAM_CMD | (unit << 16) |
+		  DISABLE_TEX_STREAM_BUMP |
+		  ENABLE_TEX_STREAM_COORD_SET |
+		  TEX_STREAM_COORD_SET(unit) |
+		  ENABLE_TEX_STREAM_MAP_IDX | TEX_STREAM_MAP_IDX(unit));
 }
 
 Bool
-i830_check_composite(int op, PicturePtr source_picture, PicturePtr mask_picture,
-		     PicturePtr dest_picture)
+i830_check_composite(int op,
+		     PicturePtr source_picture,
+		     PicturePtr mask_picture,
+		     PicturePtr dest_picture,
+		     int width, int height)
 {
 	ScrnInfoPtr scrn = xf86Screens[dest_picture->pDrawable->pScreen->myNum];
 	uint32_t tmp1;
@@ -414,22 +372,74 @@ i830_check_composite(int op, PicturePtr source_picture, PicturePtr mask_picture,
 		}
 	}
 
-	if (!i830_check_composite_texture(scrn, source_picture, 0)) {
-		intel_debug_fallback(scrn, "Check Src picture texture\n");
-		return FALSE;
-	}
-	if (mask_picture != NULL
-	    && !i830_check_composite_texture(scrn, mask_picture, 1)) {
-		intel_debug_fallback(scrn, "Check Mask picture texture\n");
-		return FALSE;
-	}
-
 	if (!i830_get_dest_format(dest_picture, &tmp1)) {
 		intel_debug_fallback(scrn, "Get Color buffer format\n");
 		return FALSE;
 	}
 
+	if (width > 2048 || height > 2048) {
+		intel_debug_fallback(scrn, "Operation is too large (%d, %d)\n", width, height);
+		return FALSE;
+	}
+
 	return TRUE;
+}
+
+Bool
+i830_check_composite_target(PixmapPtr pixmap)
+{
+	if (pixmap->drawable.width > 2048 || pixmap->drawable.height > 2048)
+		return FALSE;
+
+	if(!intel_check_pitch_3d(pixmap))
+		return FALSE;
+
+	return TRUE;
+}
+
+Bool
+i830_check_composite_texture(ScreenPtr screen, PicturePtr picture)
+{
+	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+
+	if (picture->repeatType > RepeatReflect) {
+		intel_debug_fallback(scrn, "Unsupported picture repeat %d\n",
+			     picture->repeatType);
+		return FALSE;
+	}
+
+	if (picture->filter != PictFilterNearest &&
+	    picture->filter != PictFilterBilinear) {
+		intel_debug_fallback(scrn, "Unsupported filter 0x%x\n",
+				     picture->filter);
+		return FALSE;
+	}
+
+	if (picture->pDrawable) {
+		int w, h;
+
+		w = picture->pDrawable->width;
+		h = picture->pDrawable->height;
+		if ((w > 2048) || (h > 2048)) {
+			intel_debug_fallback(scrn,
+					     "Picture w/h too large (%dx%d)\n",
+					     w, h);
+			return FALSE;
+		}
+
+		/* XXX we can use the xrgb32 types if there the picture covers the clip */
+		if (!i8xx_get_card_format(intel, picture)) {
+			intel_debug_fallback(scrn, "Unsupported picture format "
+					     "0x%x\n",
+					     (int)picture->format);
+			return FALSE;
+		}
+
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 Bool
@@ -456,6 +466,20 @@ i830_prepare_composite(int op, PicturePtr source_picture,
 	if (!intel_check_pitch_3d(source))
 		return FALSE;
 	if (mask) {
+		if (mask_picture->componentAlpha &&
+		    PICT_FORMAT_RGB(mask_picture->format)) {
+			/* Check if it's component alpha that relies on a source alpha and on
+			 * the source value.  We can only get one of those into the single
+			 * source value that we get to blend with.
+			 */
+			if (i830_blend_op[op].src_alpha &&
+			    (i830_blend_op[op].src_blend != BLENDFACTOR_ZERO)) {
+				intel_debug_fallback(scrn, "Component alpha not "
+						     "supported with source alpha and "
+						     "source value blending.\n");
+				return FALSE;
+			}
+		}
 		if (!intel_check_pitch_3d(mask))
 			return FALSE;
 	}
@@ -560,7 +584,7 @@ static void i830_emit_composite_state(ScrnInfoPtr scrn)
 	IntelEmitInvarientState(scrn);
 	intel->last_3d = LAST_3D_RENDER;
 
-	ATOMIC_BATCH(21);
+	assert(intel->in_batch_atomic);
 
 	if (i830_pixmap_tiled(intel->render_dest)) {
 		tiling_bits = BUF_3D_TILED_SURFACE;
@@ -625,8 +649,6 @@ static void i830_emit_composite_state(ScrnInfoPtr scrn)
 			texcoordfmt |= (TEXCOORDFMT_3D << 2);
 	}
 	OUT_BATCH(_3DSTATE_VERTEX_FORMAT_2_CMD | texcoordfmt);
-
-	ADVANCE_BATCH();
 
 	i830_texture_setup(intel->render_source_picture, intel->render_source, 0);
 	if (intel->render_mask) {
@@ -767,8 +789,6 @@ i830_emit_composite_primitive(PixmapPtr dest,
 
 	num_floats = 3 * per_vertex;
 
-	ATOMIC_BATCH(1 + num_floats);
-
 	OUT_BATCH(PRIM3D_INLINE | PRIM3D_RECTLIST | (num_floats - 1));
 	OUT_BATCH_F(dstX + w);
 	OUT_BATCH_F(dstY + h);
@@ -814,8 +834,6 @@ i830_emit_composite_primitive(PixmapPtr dest,
 			OUT_BATCH_F(mask_w[0]);
 		}
 	}
-
-	ADVANCE_BATCH();
 }
 
 /**

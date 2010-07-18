@@ -85,28 +85,87 @@ static void uxa_composite_fallback_pict_desc(PicturePtr pict, char *string,
 		 pict->alphaMap ? " with alpha map" :"");
 }
 
+static const char *
+op_to_string(CARD8 op)
+{
+    switch (op) {
+#define C(x) case PictOp##x: return #x
+	C(Clear);
+	C(Src);
+	C(Dst);
+	C(Over);
+	C(OverReverse);
+	C(In);
+	C(InReverse);
+	C(Out);
+	C(OutReverse);
+	C(Atop);
+	C(AtopReverse);
+	C(Xor);
+	C(Add);
+	C(Saturate);
+
+	/*
+	 * Operators only available in version 0.2
+	 */
+	C(DisjointClear);
+	C(DisjointSrc);
+	C(DisjointDst);
+	C(DisjointOver);
+	C(DisjointOverReverse);
+	C(DisjointIn);
+	C(DisjointInReverse);
+	C(DisjointOut);
+	C(DisjointOutReverse);
+	C(DisjointAtop);
+	C(DisjointAtopReverse);
+	C(DisjointXor);
+
+	C(ConjointClear);
+	C(ConjointSrc);
+	C(ConjointDst);
+	C(ConjointOver);
+	C(ConjointOverReverse);
+	C(ConjointIn);
+	C(ConjointInReverse);
+	C(ConjointOut);
+	C(ConjointOutReverse);
+	C(ConjointAtop);
+	C(ConjointAtopReverse);
+	C(ConjointXor);
+
+	/*
+	 * Operators only available in version 0.11
+	 */
+	C(Multiply);
+	C(Screen);
+	C(Overlay);
+	C(Darken);
+	C(Lighten);
+	C(ColorDodge);
+	C(ColorBurn);
+	C(HardLight);
+	C(SoftLight);
+	C(Difference);
+	C(Exclusion);
+	C(HSLHue);
+	C(HSLSaturation);
+	C(HSLColor);
+	C(HSLLuminosity);
+    default: return "garbage";
+#undef C
+    }
+}
+
 static void
 uxa_print_composite_fallback(const char *func, CARD8 op,
 			     PicturePtr pSrc, PicturePtr pMask, PicturePtr pDst)
 {
 	uxa_screen_t *uxa_screen = uxa_get_screen(pDst->pDrawable->pScreen);
-	char sop[20];
 	char srcdesc[40], maskdesc[40], dstdesc[40];
 
 	if (! uxa_screen->fallback_debug)
 		return;
-
-	switch (op) {
-	case PictOpSrc:
-		sprintf(sop, "Src");
-		break;
-	case PictOpOver:
-		sprintf(sop, "Over");
-		break;
-	default:
-		sprintf(sop, "0x%x", (int)op);
-		break;
-	}
 
 	uxa_composite_fallback_pict_desc(pSrc, srcdesc, 40);
 	uxa_composite_fallback_pict_desc(pMask, maskdesc, 40);
@@ -118,7 +177,7 @@ uxa_print_composite_fallback(const char *func, CARD8 op,
 	       "  mask %s, \n"
 	       "  dst  %s, \n"
 	       "  screen %s\n",
-	       func, sop, srcdesc, maskdesc, dstdesc,
+	       func, op_to_string (op), srcdesc, maskdesc, dstdesc,
 	       uxa_screen->swappedOut ? "swapped out" : "normal");
 }
 
@@ -182,7 +241,7 @@ uxa_get_pixel_from_rgba(CARD32 * pixel,
 	return TRUE;
 }
 
-static Bool
+Bool
 uxa_get_rgba_from_pixel(CARD32 pixel,
 			CARD16 * red,
 			CARD16 * green,
@@ -290,7 +349,12 @@ uxa_try_driver_solid_fill(PicturePtr pSrc,
 	PixmapPtr pSrcPix = NULL, pDstPix;
 	CARD32 pixel;
 
-	pDstPix = uxa_get_drawable_pixmap(pDst->pDrawable);
+	if (uxa_screen->info->check_solid && !uxa_screen->info->check_solid(pDst->pDrawable, GXcopy, FB_ALLONES))
+		return -1;
+
+	pDstPix = uxa_get_offscreen_pixmap(pDst->pDrawable, &dst_off_x, &dst_off_y);
+	if (!pDstPix)
+		return -1;
 
 	xDst += pDst->pDrawable->x;
 	yDst += pDst->pDrawable->y;
@@ -305,16 +369,6 @@ uxa_try_driver_solid_fill(PicturePtr pSrc,
 				      xSrc, ySrc, 0, 0, xDst, yDst,
 				      width, height))
 		return 1;
-
-	uxa_get_drawable_deltas(pDst->pDrawable, pDstPix, &dst_off_x,
-				&dst_off_y);
-
-	REGION_TRANSLATE(pScreen, &region, dst_off_x, dst_off_y);
-
-	if (!uxa_pixmap_is_offscreen(pDstPix)) {
-		REGION_UNINIT(pDst->pDrawable->pScreen, &region);
-		return 0;
-	}
 
 	if (pSrcPix) {
 		if (! uxa_get_color_for_pixmap (pSrcPix, pSrc->format, pDst->format, &pixel)) {
@@ -334,10 +388,12 @@ uxa_try_driver_solid_fill(PicturePtr pSrc,
 	}
 
 	if (!(*uxa_screen->info->prepare_solid)
-	    (pDstPix, GXcopy, 0xffffffff, pixel)) {
+	    (pDstPix, GXcopy, FB_ALLONES, pixel)) {
 		REGION_UNINIT(pDst->pDrawable->pScreen, &region);
 		return -1;
 	}
+
+	REGION_TRANSLATE(pScreen, &region, dst_off_x, dst_off_y);
 
 	nbox = REGION_NUM_RECTS(&region);
 	pbox = REGION_RECTS(&region);
@@ -391,74 +447,84 @@ uxa_picture_for_pixman_format(ScreenPtr pScreen,
 }
 
 static PicturePtr
-uxa_picture_from_pixman_image(ScreenPtr pScreen,
+uxa_picture_from_pixman_image(ScreenPtr screen,
 			      pixman_image_t * image,
 			      pixman_format_code_t format)
 {
-	PicturePtr pPicture;
-	PixmapPtr pPixmap;
+	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
+	PicturePtr picture;
+	PixmapPtr pixmap;
 	int width, height;
 
 	width = pixman_image_get_width(image);
 	height = pixman_image_get_height(image);
 
-	pPicture = uxa_picture_for_pixman_format(pScreen, format,
-						 width, height);
-	if (!pPicture)
+	picture = uxa_picture_for_pixman_format(screen, format,
+						width, height);
+	if (!picture)
 		return 0;
 
-	pPixmap = GetScratchPixmapHeader(pScreen, width, height,
-					 PIXMAN_FORMAT_DEPTH(format),
-					 PIXMAN_FORMAT_BPP(format),
-					 pixman_image_get_stride(image),
-					 pixman_image_get_data(image));
-	if (!pPixmap) {
-		FreePicture(pPicture, 0);
+	if (uxa_screen->info->put_image &&
+	    ((picture->pDrawable->depth << 24) | picture->format) == format &&
+	    uxa_screen->info->put_image((PixmapPtr)picture->pDrawable,
+					0, 0,
+					width, height,
+					(char *)pixman_image_get_data(image),
+					pixman_image_get_stride(image)))
+		return picture;
+
+	pixmap = GetScratchPixmapHeader(screen, width, height,
+					PIXMAN_FORMAT_DEPTH(format),
+					PIXMAN_FORMAT_BPP(format),
+					pixman_image_get_stride(image),
+					pixman_image_get_data(image));
+	if (!pixmap) {
+		FreePicture(picture, 0);
 		return 0;
 	}
 
-	if (((pPicture->pDrawable->depth << 24) | pPicture->format) == format) {
-	    GCPtr pGC;
+	if (((picture->pDrawable->depth << 24) | picture->format) == format) {
+		GCPtr gc;
 
-	    pGC = GetScratchGC(PIXMAN_FORMAT_DEPTH(format), pScreen);
-	    if (!pGC) {
-		FreeScratchPixmapHeader(pPixmap);
-		FreePicture(pPicture, 0);
-		return 0;
-	    }
-	    ValidateGC(pPicture->pDrawable, pGC);
+		gc = GetScratchGC(PIXMAN_FORMAT_DEPTH(format), screen);
+		if (!gc) {
+			FreeScratchPixmapHeader(pixmap);
+			FreePicture(picture, 0);
+			return 0;
+		}
+		ValidateGC(picture->pDrawable, gc);
 
-	    (*pGC->ops->CopyArea) (&pPixmap->drawable, pPicture->pDrawable,
-				   pGC, 0, 0, width, height, 0, 0);
+		(*gc->ops->CopyArea) (&pixmap->drawable, picture->pDrawable,
+				      gc, 0, 0, width, height, 0, 0);
 
-	    FreeScratchGC(pGC);
+		FreeScratchGC(gc);
 	} else {
-	    PicturePtr pSrc;
-	    int error;
+		PicturePtr src;
+		int error;
 
-	    pSrc = CreatePicture(0, &pPixmap->drawable,
-				 PictureMatchFormat(pScreen,
-						    PIXMAN_FORMAT_DEPTH(format),
-						    format),
-				 0, 0, serverClient, &error);
-	    if (!pSrc) {
-		FreeScratchPixmapHeader(pPixmap);
-		FreePicture(pPicture, 0);
-		return 0;
-	    }
-	    ValidatePicture(pSrc);
+		src = CreatePicture(0, &pixmap->drawable,
+				    PictureMatchFormat(screen,
+						       PIXMAN_FORMAT_DEPTH(format),
+						       format),
+				    0, 0, serverClient, &error);
+		if (!src) {
+			FreeScratchPixmapHeader(pixmap);
+			FreePicture(picture, 0);
+			return 0;
+		}
+		ValidatePicture(src);
 
-	    if (uxa_prepare_access(pPicture->pDrawable, UXA_ACCESS_RW)) {
-		fbComposite(PictOpSrc, pSrc, NULL, pPicture,
-			    0, 0, 0, 0, 0, 0, width, height);
-		uxa_finish_access(pPicture->pDrawable);
-	    }
+		if (uxa_prepare_access(picture->pDrawable, UXA_ACCESS_RW)) {
+			fbComposite(PictOpSrc, src, NULL, picture,
+				    0, 0, 0, 0, 0, 0, width, height);
+			uxa_finish_access(picture->pDrawable);
+		}
 
-	    FreePicture(pSrc, 0);
+		FreePicture(src, 0);
 	}
-	FreeScratchPixmapHeader(pPixmap);
+	FreeScratchPixmapHeader(pixmap);
 
-	return pPicture;
+	return picture;
 }
 
 static PicturePtr
@@ -490,6 +556,21 @@ uxa_create_solid(ScreenPtr screen, uint32_t color)
 }
 
 static PicturePtr
+uxa_solid_clear(ScreenPtr screen)
+{
+	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
+	PicturePtr picture;
+
+	if (!uxa_screen->solid_clear) {
+		uxa_screen->solid_clear = uxa_create_solid(screen, 0);
+		if (!uxa_screen->solid_clear)
+			return 0;
+	}
+	picture = uxa_screen->solid_clear;
+	return picture;
+}
+
+PicturePtr
 uxa_acquire_solid(ScreenPtr screen, SourcePict *source)
 {
 	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
@@ -498,12 +579,10 @@ uxa_acquire_solid(ScreenPtr screen, SourcePict *source)
 	int i;
 
 	if ((solid->color >> 24) == 0) {
-		if (!uxa_screen->solid_clear) {
-			uxa_screen->solid_clear = uxa_create_solid(screen, 0);
-			if (!uxa_screen->solid_clear)
-				return 0;
-		}
-		picture = uxa_screen->solid_clear;
+		picture = uxa_solid_clear(screen);
+		if (!picture)
+		    return 0;
+
 		goto DONE;
 	} else if (solid->color == 0xff000000) {
 		if (!uxa_screen->solid_black) {
@@ -548,7 +627,7 @@ DONE:
 	return picture;
 }
 
-static PicturePtr
+PicturePtr
 uxa_acquire_pattern(ScreenPtr pScreen,
 		    PicturePtr pSrc,
 		    pixman_format_code_t format,
@@ -577,158 +656,398 @@ uxa_acquire_pattern(ScreenPtr pScreen,
 	}
 }
 
-static PicturePtr
-uxa_acquire_source(ScreenPtr pScreen,
-		   PicturePtr pPict,
-		   INT16 x, INT16 y,
-		   CARD16 width, CARD16 height, INT16 * out_x, INT16 * out_y)
+static Bool
+transform_is_integer_translation(PictTransformPtr t, int *tx, int *ty)
 {
-	if (pPict->pDrawable) {
-		*out_x = x + pPict->pDrawable->x;
-		*out_y = y + pPict->pDrawable->y;
-		return pPict;
+	if (t == NULL) {
+		*tx = *ty = 0;
+		return TRUE;
 	}
 
-	*out_x = 0;
-	*out_y = 0;
-	return uxa_acquire_pattern(pScreen, pPict,
-				   PICT_a8r8g8b8, x, y, width, height);
+	if (t->matrix[0][0] != IntToxFixed(1) ||
+	    t->matrix[0][1] != 0 ||
+	    t->matrix[1][0] != 0 ||
+	    t->matrix[1][1] != IntToxFixed(1) ||
+	    t->matrix[2][0] != 0 ||
+	    t->matrix[2][1] != 0 ||
+	    t->matrix[2][2] != IntToxFixed(1))
+		return FALSE;
+
+	if (xFixedFrac(t->matrix[0][2]) != 0 ||
+	    xFixedFrac(t->matrix[1][2]) != 0)
+		return FALSE;
+
+	*tx = xFixedToInt(t->matrix[0][2]);
+	*ty = xFixedToInt(t->matrix[1][2]);
+	return TRUE;
 }
 
 static PicturePtr
-uxa_acquire_mask(ScreenPtr pScreen,
-		 PicturePtr pPict,
-		 INT16 x, INT16 y,
-		 INT16 width, INT16 height, INT16 * out_x, INT16 * out_y)
+uxa_render_picture(ScreenPtr screen,
+		   PicturePtr src,
+		   pixman_format_code_t format,
+		   INT16 x, INT16 y,
+		   CARD16 width, CARD16 height)
 {
-	if (pPict->pDrawable) {
-		*out_x = x + pPict->pDrawable->x;
-		*out_y = y + pPict->pDrawable->y;
-		return pPict;
+	PicturePtr picture;
+	int ret = 0;
+
+	/* XXX we need a mechanism for the card to choose the fallback format */
+
+	/* force alpha channel in case source does not entirely cover the extents */
+	if (PIXMAN_FORMAT_A(format) == 0)
+		format = PIXMAN_a8r8g8b8; /* available on all hardware */
+
+	picture = uxa_picture_for_pixman_format(screen, format, width, height);
+	if (!picture)
+		return 0;
+
+	if (uxa_prepare_access(picture->pDrawable, UXA_ACCESS_RW)) {
+		if (uxa_prepare_access(src->pDrawable, UXA_ACCESS_RO)) {
+			ret = 1;
+			fbComposite(PictOpSrc, src, NULL, picture,
+				    x, y, 0, 0, 0, 0, width, height);
+			uxa_finish_access(src->pDrawable);
+		}
+		uxa_finish_access(picture->pDrawable);
 	}
 
-	*out_x = 0;
-	*out_y = 0;
-	return uxa_acquire_pattern(pScreen, pPict,
-				   PICT_a8, x, y, width, height);
+	if (!ret) {
+		FreePicture(picture, 0);
+		return 0;
+	}
+
+	return picture;
 }
 
 static int
-uxa_try_driver_composite_rects(CARD8 op,
-			       PicturePtr pSrc,
-			       PicturePtr pDst,
-			       int nrect, uxa_composite_rect_t * rects)
+drawable_contains (DrawablePtr drawable, int x, int y, int w, int h)
 {
-	uxa_screen_t *uxa_screen = uxa_get_screen(pDst->pDrawable->pScreen);
-	int src_off_x, src_off_y, dst_off_x, dst_off_y;
-	PixmapPtr pSrcPix, pDstPix;
+	if (x < 0 || y < 0)
+		return FALSE;
 
-	if (!uxa_screen->info->prepare_composite || uxa_screen->swappedOut)
-		return -1;
+	if (x + w > drawable->width)
+		return FALSE;
 
-	if (uxa_screen->info->check_composite &&
-	    !(*uxa_screen->info->check_composite) (op, pSrc, NULL, pDst)) {
-		return -1;
-	}
+	if (y + h > drawable->height)
+		return FALSE;
 
-	pDstPix =
-	    uxa_get_offscreen_pixmap(pDst->pDrawable, &dst_off_x, &dst_off_y);
-	if (!pDstPix)
-		return 0;
-
-	pSrcPix =
-	    uxa_get_offscreen_pixmap(pSrc->pDrawable, &src_off_x, &src_off_y);
-	if (!pSrcPix)
-		return 0;
-
-	if (!(*uxa_screen->info->prepare_composite)
-	    (op, pSrc, NULL, pDst, pSrcPix, NULL, pDstPix))
-		return -1;
-
-	while (nrect--) {
-		INT16 xDst = rects->xDst + pDst->pDrawable->x;
-		INT16 yDst = rects->yDst + pDst->pDrawable->y;
-		INT16 xSrc = rects->xSrc + pSrc->pDrawable->x;
-		INT16 ySrc = rects->ySrc + pSrc->pDrawable->y;
-
-		RegionRec region;
-		BoxPtr pbox;
-		int nbox;
-
-		if (!miComputeCompositeRegion(&region, pSrc, NULL, pDst,
-					      xSrc, ySrc, 0, 0, xDst, yDst,
-					      rects->width, rects->height))
-			goto next_rect;
-
-		REGION_TRANSLATE(pScreen, &region, dst_off_x, dst_off_y);
-
-		nbox = REGION_NUM_RECTS(&region);
-		pbox = REGION_RECTS(&region);
-
-		xSrc = xSrc + src_off_x - xDst - dst_off_x;
-		ySrc = ySrc + src_off_y - yDst - dst_off_y;
-
-		while (nbox--) {
-			(*uxa_screen->info->composite) (pDstPix,
-							pbox->x1 + xSrc,
-							pbox->y1 + ySrc,
-							0, 0,
-							pbox->x1,
-							pbox->y1,
-							pbox->x2 - pbox->x1,
-							pbox->y2 - pbox->y1);
-			pbox++;
-		}
-
-next_rect:
-		REGION_UNINIT(pDst->pDrawable->pScreen, &region);
-
-		rects++;
-	}
-	(*uxa_screen->info->done_composite) (pDstPix);
-
-	return 1;
+	return TRUE;
 }
 
-/**
- * Copy a number of rectangles from source to destination in a single
- * operation. This is specialized for building a glyph mask: we don'y
- * have a mask argument because we don't need it for that, and we
- * don't have he special-case fallbacks found in uxa_composite() - if the
- * driver can support it, we use the driver functionality, otherwise we
- * fallback straight to software.
- */
-void
-uxa_composite_rects(CARD8 op,
-		    PicturePtr pSrc,
-		    PicturePtr pDst, int nrect, uxa_composite_rect_t * rects)
+PicturePtr
+uxa_acquire_drawable(ScreenPtr pScreen,
+		     PicturePtr pSrc,
+		     INT16 x, INT16 y,
+		     CARD16 width, CARD16 height,
+		     INT16 * out_x, INT16 * out_y)
 {
-	int n;
-	uxa_composite_rect_t *r;
+	PixmapPtr pPixmap;
+	PicturePtr pDst;
+	int depth, error;
+	int tx, ty;
+	GCPtr pGC;
 
-    /************************************************************/
+	depth = pSrc->pDrawable->depth;
+	if (!transform_is_integer_translation(pSrc->transform, &tx, &ty) ||
+	    !drawable_contains(pSrc->pDrawable, x + tx, y + ty, width, height) ||
+	    depth == 1 ||
+	    pSrc->filter == PictFilterConvolution) {
+		/* XXX extract the sample extents and do the transformation on the GPU */
+		pDst = uxa_render_picture(pScreen, pSrc,
+					  pSrc->format | (BitsPerPixel(pSrc->pDrawable->depth) << 24),
+					  x, y, width, height);
 
-	ValidatePicture(pSrc);
-	ValidatePicture(pDst);
-
-	if (uxa_try_driver_composite_rects(op, pSrc, pDst, nrect, rects) != 1) {
-		uxa_print_composite_fallback("uxa_composite_rects",
-					     op, pSrc, NULL, pDst);
-
-		n = nrect;
-		r = rects;
-		while (n--) {
-			uxa_check_composite(op, pSrc, NULL, pDst,
-					    r->xSrc, r->ySrc,
-					    0, 0,
-					    r->xDst, r->yDst,
-					    r->width, r->height);
-			r++;
+		goto done;
+	} else {
+		if (width == pSrc->pDrawable->width && height == pSrc->pDrawable->height) {
+			*out_x = x + pSrc->pDrawable->x;
+			*out_y = y + pSrc->pDrawable->y;
+			return pSrc;
 		}
 	}
 
-    /************************************************************/
+	pPixmap = pScreen->CreatePixmap(pScreen,
+					width, height, depth,
+					CREATE_PIXMAP_USAGE_SCRATCH);
+	if (!pPixmap)
+		return 0;
 
+	/* Skip the copy if the result remains in memory and not a bo */
+	if (!uxa_pixmap_is_offscreen(pPixmap)) {
+		pScreen->DestroyPixmap(pPixmap);
+		return 0;
+	}
+
+	pGC = GetScratchGC(depth, pScreen);
+	if (!pGC) {
+		pScreen->DestroyPixmap(pPixmap);
+		return 0;
+	}
+
+	ValidateGC(&pPixmap->drawable, pGC);
+	pGC->ops->CopyArea(pSrc->pDrawable, &pPixmap->drawable, pGC,
+			   x + tx, y + ty, width, height, 0, 0);
+	FreeScratchGC(pGC);
+
+	pDst = CreatePicture(0, &pPixmap->drawable,
+			     PictureMatchFormat(pScreen, depth, pSrc->format),
+			     0, 0, serverClient, &error);
+	pScreen->DestroyPixmap(pPixmap);
+	ValidatePicture(pDst);
+
+done:
+	pDst->componentAlpha = pSrc->componentAlpha;
+	*out_x = 0;
+	*out_y = 0;
+	return pDst;
+}
+
+static PicturePtr
+uxa_acquire_picture(ScreenPtr screen,
+		    PicturePtr src,
+		    pixman_format_code_t format,
+		    INT16 x, INT16 y,
+		    CARD16 width, CARD16 height,
+		    INT16 * out_x, INT16 * out_y)
+{
+	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
+
+	if (uxa_screen->info->check_composite_texture &&
+	    uxa_screen->info->check_composite_texture(screen, src)) {
+		if (src->pDrawable) {
+			*out_x = x + src->pDrawable->x;
+			*out_y = y + src->pDrawable->y;
+		} else {
+			*out_x = x;
+			*out_y = y;
+		}
+		return src;
+	}
+
+	if (src->pDrawable) {
+		PicturePtr dst;
+
+		dst = uxa_acquire_drawable(screen, src,
+					   x, y, width, height,
+					   out_x, out_y);
+		if (!dst)
+			return 0;
+
+		if (uxa_screen->info->check_composite_texture &&
+		    !uxa_screen->info->check_composite_texture(screen, dst)) {
+			if (dst != src)
+				FreePicture(dst, 0);
+			return 0;
+		}
+
+		return dst;
+	}
+
+	*out_x = 0;
+	*out_y = 0;
+	return uxa_acquire_pattern(screen, src,
+				   format, x, y, width, height);
+}
+
+static PicturePtr
+uxa_acquire_source(ScreenPtr screen,
+		   PicturePtr pict,
+		   INT16 x, INT16 y,
+		   CARD16 width, CARD16 height,
+		   INT16 * out_x, INT16 * out_y)
+{
+	return uxa_acquire_picture (screen, pict,
+				    PICT_a8r8g8b8,
+				    x, y,
+				    width, height,
+				    out_x, out_y);
+}
+
+static PicturePtr
+uxa_acquire_mask(ScreenPtr screen,
+		 PicturePtr pict,
+		 INT16 x, INT16 y,
+		 INT16 width, INT16 height,
+		 INT16 * out_x, INT16 * out_y)
+{
+	return uxa_acquire_picture (screen, pict,
+				    PICT_a8,
+				    x, y,
+				    width, height,
+				    out_x, out_y);
+}
+
+static Bool
+_pixman_region_init_rectangles(pixman_region16_t *region,
+			       int num_rects,
+			       xRectangle *rects,
+			       int tx, int ty)
+{
+	pixman_box16_t stack_boxes[64], *boxes = stack_boxes;
+	pixman_bool_t ret;
+	int i;
+
+	if (num_rects > sizeof(stack_boxes) / sizeof(stack_boxes[0])) {
+		boxes = malloc(sizeof(pixman_box16_t) * num_rects);
+		if (boxes == NULL)
+			return FALSE;
+	}
+
+	for (i = 0; i < num_rects; i++) {
+		boxes[i].x1 = rects[i].x + tx;
+		boxes[i].y1 = rects[i].y + ty;
+		boxes[i].x2 = rects[i].x + tx + rects[i].width;
+		boxes[i].y2 = rects[i].y + ty + rects[i].height;
+	}
+
+	ret = pixman_region_init_rects(region, boxes, num_rects);
+
+	if (boxes != stack_boxes)
+		free(boxes);
+
+	return ret;
+}
+
+void
+uxa_solid_rects (CARD8		op,
+		 PicturePtr	dst,
+		 xRenderColor  *color,
+		 int		num_rects,
+		 xRectangle    *rects)
+{
+	ScreenPtr screen = dst->pDrawable->pScreen;
+	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
+	PixmapPtr dst_pixmap, src_pixmap = NULL;
+	pixman_region16_t region;
+	pixman_box16_t *boxes, *extents;
+	PicturePtr src;
+	int dst_x, dst_y;
+	int num_boxes;
+
+	if (!pixman_region_not_empty(dst->pCompositeClip))
+		return;
+
+	if (dst->alphaMap)
+		goto fallback;
+
+	dst_pixmap = uxa_get_offscreen_pixmap(dst->pDrawable, &dst_x, &dst_y);
+	if (!dst_pixmap)
+		goto fallback;
+
+	if (!_pixman_region_init_rectangles(&region,
+					    num_rects, rects,
+					    dst->pDrawable->x, dst->pDrawable->y))
+		goto fallback;
+
+	if (!pixman_region_intersect(&region, &region, dst->pCompositeClip)) {
+		pixman_region_fini(&region);
+		return;
+	}
+
+	/* XXX xserver-1.8: CompositeRects is not tracked by Damage, so we must
+	 * manually append the damaged regions ourselves.
+	 */
+	DamageRegionAppend(dst->pDrawable, &region);
+
+	pixman_region_translate(&region, dst_x, dst_y);
+	boxes = pixman_region_rectangles(&region, &num_boxes);
+	extents = pixman_region_extents (&region);
+
+	if (op == PictOpClear)
+		color->red = color->green = color->blue = color->alpha = 0;
+	if (color->alpha >= 0xff00 && op == PictOpOver) {
+		color->alpha = 0xffff;
+		op = PictOpSrc;
+	}
+
+	/* Using GEM, the relocation costs outweigh the advantages of the blitter */
+	if (num_boxes == 1 && (op == PictOpSrc || op == PictOpClear)) {
+		CARD32 pixel;
+
+try_solid:
+		if (uxa_screen->info->check_solid &&
+		    !uxa_screen->info->check_solid(&dst_pixmap->drawable, GXcopy, FB_ALLONES))
+			goto err_region;
+
+		if (!uxa_get_pixel_from_rgba(&pixel,
+					     color->red,
+					     color->green,
+					     color->blue,
+					     color->alpha,
+					     dst->format))
+			goto err_region;
+
+		if (!uxa_screen->info->prepare_solid(dst_pixmap, GXcopy, FB_ALLONES, pixel))
+			goto err_region;
+
+		while (num_boxes--) {
+			uxa_screen->info->solid(dst_pixmap,
+						boxes->x1, boxes->y1,
+						boxes->x2, boxes->y2);
+			boxes++;
+		}
+
+		uxa_screen->info->done_solid(dst_pixmap);
+	} else {
+		int error;
+
+		src = CreateSolidPicture(0, color, &error);
+		if (!src)
+			goto err_region;
+
+		if (!uxa_screen->info->check_composite(op, src, NULL, dst,
+						       extents->x2 - extents->x1,
+						       extents->y2 - extents->y1)) {
+			if (op == PictOpSrc || op == PictOpClear) {
+				FreePicture(src, 0);
+				goto try_solid;
+			}
+
+			goto err_src;
+		}
+
+		if (!uxa_screen->info->check_composite_texture ||
+		    !uxa_screen->info->check_composite_texture(screen, src)) {
+			PicturePtr solid;
+			int src_off_x, src_off_y;
+
+			solid = uxa_acquire_solid(screen, src->pSourcePict);
+			FreePicture(src, 0);
+
+			src = solid;
+			src_pixmap = uxa_get_offscreen_pixmap(src->pDrawable,
+							      &src_off_x, &src_off_y);
+			if (!src_pixmap)
+				goto err_src;
+		}
+
+		if (!uxa_screen->info->prepare_composite(op, src, NULL, dst, src_pixmap, NULL, dst_pixmap))
+			goto err_src;
+
+		while (num_boxes--) {
+			uxa_screen->info->composite(dst_pixmap,
+						    0, 0, 0, 0,
+						    boxes->x1,
+						    boxes->y1,
+						    boxes->x2 - boxes->x1,
+						    boxes->y2 - boxes->y1);
+			boxes++;
+		}
+
+		uxa_screen->info->done_composite(dst_pixmap);
+		FreePicture(src, 0);
+	}
+
+	pixman_region_fini(&region);
+	return;
+
+err_src:
+	FreePicture(src, 0);
+err_region:
+	pixman_region_fini(&region);
+fallback:
+	uxa_screen->SavedCompositeRects(op, dst, color, num_rects, rects);
 }
 
 static int
@@ -736,129 +1055,216 @@ uxa_try_driver_composite(CARD8 op,
 			 PicturePtr pSrc,
 			 PicturePtr pMask,
 			 PicturePtr pDst,
-			 INT16 xSrc,
-			 INT16 ySrc,
-			 INT16 xMask,
-			 INT16 yMask,
-			 INT16 xDst, INT16 yDst, CARD16 width, CARD16 height)
+			 INT16 xSrc, INT16 ySrc,
+			 INT16 xMask, INT16 yMask,
+			 INT16 xDst, INT16 yDst,
+			 CARD16 width, CARD16 height)
 {
-	uxa_screen_t *uxa_screen = uxa_get_screen(pDst->pDrawable->pScreen);
+	ScreenPtr screen = pDst->pDrawable->pScreen;
+	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
 	RegionRec region;
 	BoxPtr pbox;
 	int nbox;
+	int xDst_copy, yDst_copy;
 	int src_off_x, src_off_y, mask_off_x, mask_off_y, dst_off_x, dst_off_y;
 	PixmapPtr pSrcPix, pMaskPix = NULL, pDstPix;
 	PicturePtr localSrc, localMask = NULL;
+	PicturePtr localDst = pDst;
 
-	xDst += pDst->pDrawable->x;
-	yDst += pDst->pDrawable->y;
+	if (uxa_screen->info->check_composite &&
+	    !(*uxa_screen->info->check_composite) (op, pSrc, pMask, pDst, width, height))
+		return -1;
 
-	localSrc = uxa_acquire_source(pDst->pDrawable->pScreen,
-				      pSrc, xSrc, ySrc, width, height,
+	if (uxa_screen->info->check_composite_target &&
+	    !uxa_screen->info->check_composite_target(uxa_get_drawable_pixmap(pDst->pDrawable))) {
+		int depth = pDst->pDrawable->depth;
+		PixmapPtr pixmap;
+		int error;
+		GCPtr gc;
+
+		pixmap = uxa_get_drawable_pixmap(pDst->pDrawable);
+		if (uxa_screen->info->check_copy &&
+		    !uxa_screen->info->check_copy(pixmap, pixmap, GXcopy, FB_ALLONES))
+			return -1;
+
+		pixmap = screen->CreatePixmap(screen,
+					      width, height, depth,
+					      CREATE_PIXMAP_USAGE_SCRATCH);
+		if (!pixmap)
+			return 0;
+
+		gc = GetScratchGC(depth, screen);
+		if (!gc) {
+			screen->DestroyPixmap(pixmap);
+			return 0;
+		}
+
+		ValidateGC(&pixmap->drawable, gc);
+		gc->ops->CopyArea(pDst->pDrawable, &pixmap->drawable, gc,
+				  xDst, yDst, width, height, 0, 0);
+		FreeScratchGC(gc);
+
+		xDst_copy = xDst; xDst = 0;
+		yDst_copy = yDst; yDst = 0;
+
+		localDst = CreatePicture(0, &pixmap->drawable,
+					 PictureMatchFormat(screen, depth, pDst->format),
+					 0, 0, serverClient, &error);
+		screen->DestroyPixmap(pixmap);
+
+		if (!localDst)
+			return 0;
+
+		ValidatePicture(localDst);
+	}
+
+	pDstPix =
+	    uxa_get_offscreen_pixmap(localDst->pDrawable, &dst_off_x, &dst_off_y);
+	if (!pDstPix) {
+		if (localDst != pDst)
+			FreePicture(localDst, 0);
+		return -1;
+	}
+
+	xDst += localDst->pDrawable->x;
+	yDst += localDst->pDrawable->y;
+
+	localSrc = uxa_acquire_source(screen, pSrc,
+				      xSrc, ySrc,
+				      width, height,
 				      &xSrc, &ySrc);
-	if (!localSrc)
+	if (!localSrc) {
+		if (localDst != pDst)
+			FreePicture(localDst, 0);
 		return 0;
+	}
 
 	if (pMask) {
-		localMask = uxa_acquire_mask(pDst->pDrawable->pScreen,
-					     pMask, xMask, yMask, width, height,
+		localMask = uxa_acquire_mask(screen, pMask,
+					     xMask, yMask,
+					     width, height,
 					     &xMask, &yMask);
 		if (!localMask) {
 			if (localSrc != pSrc)
 				FreePicture(localSrc, 0);
+			if (localDst != pDst)
+				FreePicture(localDst, 0);
 
 			return 0;
 		}
 	}
 
-	if (uxa_screen->info->check_composite &&
-	    !(*uxa_screen->info->check_composite) (op, localSrc, localMask,
-						   pDst)) {
-		if (localSrc != pSrc)
-			FreePicture(localSrc, 0);
-		if (localMask && localMask != pMask)
-			FreePicture(localMask, 0);
-
-		return -1;
-	}
-
-	if (!miComputeCompositeRegion(&region, localSrc, localMask, pDst,
+	if (!miComputeCompositeRegion(&region, localSrc, localMask, localDst,
 				      xSrc, ySrc, xMask, yMask, xDst, yDst,
 				      width, height)) {
 		if (localSrc != pSrc)
 			FreePicture(localSrc, 0);
 		if (localMask && localMask != pMask)
 			FreePicture(localMask, 0);
+		if (localDst != pDst)
+			FreePicture(localDst, 0);
 
 		return 1;
 	}
 
-	pDstPix =
-	    uxa_get_offscreen_pixmap(pDst->pDrawable, &dst_off_x, &dst_off_y);
+	if (localSrc->pDrawable) {
+		pSrcPix = uxa_get_offscreen_pixmap(localSrc->pDrawable,
+						   &src_off_x, &src_off_y);
+		if (!pSrcPix) {
+			REGION_UNINIT(screen, &region);
 
-	pSrcPix = uxa_get_offscreen_pixmap(localSrc->pDrawable,
-					   &src_off_x, &src_off_y);
+			if (localSrc != pSrc)
+				FreePicture(localSrc, 0);
+			if (localMask && localMask != pMask)
+				FreePicture(localMask, 0);
+			if (localDst != pDst)
+				FreePicture(localDst, 0);
 
-	if (localMask)
-		pMaskPix = uxa_get_offscreen_pixmap(localMask->pDrawable,
-						    &mask_off_x, &mask_off_y);
-
-	if (!pDstPix || !pSrcPix || (localMask && !pMaskPix)) {
-		REGION_UNINIT(pDst->pDrawable->pScreen, &region);
-
-		if (localSrc != pSrc)
-			FreePicture(localSrc, 0);
-		if (localMask && localMask != pMask)
-			FreePicture(localMask, 0);
-
-		return 0;
+			return 0;
+		}
+	} else {
+		pSrcPix = NULL;
 	}
 
-	REGION_TRANSLATE(pScreen, &region, dst_off_x, dst_off_y);
+	if (localMask) {
+		if (localMask->pDrawable) {
+			pMaskPix = uxa_get_offscreen_pixmap(localMask->pDrawable,
+							    &mask_off_x, &mask_off_y);
+			if (!pMaskPix) {
+				REGION_UNINIT(screen, &region);
+
+				if (localSrc != pSrc)
+					FreePicture(localSrc, 0);
+				if (localMask && localMask != pMask)
+					FreePicture(localMask, 0);
+				if (localDst != pDst)
+					FreePicture(localDst, 0);
+
+				return 0;
+			}
+		} else {
+			pMaskPix = NULL;
+		}
+	}
 
 	if (!(*uxa_screen->info->prepare_composite)
-	    (op, localSrc, localMask, pDst, pSrcPix, pMaskPix, pDstPix)) {
-		REGION_UNINIT(pDst->pDrawable->pScreen, &region);
+	    (op, localSrc, localMask, localDst, pSrcPix, pMaskPix, pDstPix)) {
+		REGION_UNINIT(screen, &region);
 
 		if (localSrc != pSrc)
 			FreePicture(localSrc, 0);
 		if (localMask && localMask != pMask)
 			FreePicture(localMask, 0);
+		if (localDst != pDst)
+			FreePicture(localDst, 0);
 
 		return -1;
 	}
 
-	nbox = REGION_NUM_RECTS(&region);
-	pbox = REGION_RECTS(&region);
-
 	if (pMask) {
-		xMask = xMask + mask_off_x - xDst - dst_off_x;
-		yMask = yMask + mask_off_y - yDst - dst_off_y;
+		xMask = xMask + mask_off_x - xDst;
+		yMask = yMask + mask_off_y - yDst;
 	}
 
-	xSrc = xSrc + src_off_x - xDst - dst_off_x;
-	ySrc = ySrc + src_off_y - yDst - dst_off_y;
+	xSrc = xSrc + src_off_x - xDst;
+	ySrc = ySrc + src_off_y - yDst;
 
+	nbox = REGION_NUM_RECTS(&region);
+	pbox = REGION_RECTS(&region);
 	while (nbox--) {
 		(*uxa_screen->info->composite) (pDstPix,
 						pbox->x1 + xSrc,
 						pbox->y1 + ySrc,
 						pbox->x1 + xMask,
 						pbox->y1 + yMask,
-						pbox->x1,
-						pbox->y1,
+						pbox->x1 + dst_off_x,
+						pbox->y1 + dst_off_y,
 						pbox->x2 - pbox->x1,
 						pbox->y2 - pbox->y1);
 		pbox++;
 	}
 	(*uxa_screen->info->done_composite) (pDstPix);
 
-	REGION_UNINIT(pDst->pDrawable->pScreen, &region);
+	REGION_UNINIT(screen, &region);
 
 	if (localSrc != pSrc)
 		FreePicture(localSrc, 0);
 	if (localMask && localMask != pMask)
 		FreePicture(localMask, 0);
+
+	if (localDst != pDst) {
+		GCPtr gc;
+
+		gc = GetScratchGC(pDst->pDrawable->depth, screen);
+		if (gc) {
+			ValidateGC(pDst->pDrawable, gc);
+			gc->ops->CopyArea(localDst->pDrawable, pDst->pDrawable, gc,
+					  0, 0, width, height, xDst_copy, yDst_copy);
+			FreeScratchGC(gc);
+		}
+
+		FreePicture(localDst, 0);
+	}
 
 	return 1;
 }
@@ -917,36 +1323,100 @@ uxa_try_magic_two_pass_composite_helper(CARD8 op,
 					PicturePtr pSrc,
 					PicturePtr pMask,
 					PicturePtr pDst,
-					INT16 xSrc,
-					INT16 ySrc,
-					INT16 xMask,
-					INT16 yMask,
-					INT16 xDst,
-					INT16 yDst, CARD16 width, CARD16 height)
+					INT16 xSrc, INT16 ySrc,
+					INT16 xMask, INT16 yMask,
+					INT16 xDst, INT16 yDst,
+					CARD16 width, CARD16 height)
 {
-	uxa_screen_t *uxa_screen = uxa_get_screen(pDst->pDrawable->pScreen);
+	ScreenPtr screen = pDst->pDrawable->pScreen;
+	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
+	PicturePtr localDst = pDst;
+	int xDst_copy, yDst_copy;
 
 	assert(op == PictOpOver);
 
 	if (uxa_screen->info->check_composite &&
 	    (!(*uxa_screen->info->check_composite) (PictOpOutReverse, pSrc,
-						    pMask, pDst)
+						    pMask, pDst, width, height)
 	     || !(*uxa_screen->info->check_composite) (PictOpAdd, pSrc, pMask,
-						       pDst))) {
+						       pDst, width, height))) {
 		return -1;
+	}
+
+	if (uxa_screen->info->check_composite_target &&
+	    !uxa_screen->info->check_composite_target(uxa_get_drawable_pixmap(pDst->pDrawable))) {
+		int depth = pDst->pDrawable->depth;
+		PixmapPtr pixmap;
+		int error;
+		GCPtr gc;
+
+		pixmap = uxa_get_drawable_pixmap(pDst->pDrawable);
+		if (uxa_screen->info->check_copy &&
+		    !uxa_screen->info->check_copy(pixmap, pixmap, GXcopy, FB_ALLONES))
+			return -1;
+
+		pixmap = screen->CreatePixmap(screen,
+					      width, height, depth,
+					      CREATE_PIXMAP_USAGE_SCRATCH);
+		if (!pixmap)
+			return 0;
+
+		gc = GetScratchGC(depth, screen);
+		if (!gc) {
+			screen->DestroyPixmap(pixmap);
+			return 0;
+		}
+
+		ValidateGC(&pixmap->drawable, gc);
+		gc->ops->CopyArea(pDst->pDrawable, &pixmap->drawable, gc,
+				  xDst, yDst, width, height, 0, 0);
+		FreeScratchGC(gc);
+
+		xDst_copy = xDst; xDst = 0;
+		yDst_copy = yDst; yDst = 0;
+
+		localDst = CreatePicture(0, &pixmap->drawable,
+					 PictureMatchFormat(screen, depth, pDst->format),
+					 0, 0, serverClient, &error);
+		screen->DestroyPixmap(pixmap);
+
+		if (!localDst)
+			return 0;
+
+		ValidatePicture(localDst);
 	}
 
 	/* Now, we think we should be able to accelerate this operation. First,
 	 * composite the destination to be the destination times the source alpha
 	 * factors.
 	 */
-	uxa_composite(PictOpOutReverse, pSrc, pMask, pDst, xSrc, ySrc, xMask,
-		      yMask, xDst, yDst, width, height);
+	uxa_composite(PictOpOutReverse, pSrc, pMask, localDst,
+		      xSrc, ySrc,
+		      xMask, yMask,
+		      xDst, yDst,
+		      width, height);
 
 	/* Then, add in the source value times the destination alpha factors (1.0).
 	 */
-	uxa_composite(PictOpAdd, pSrc, pMask, pDst, xSrc, ySrc, xMask, yMask,
-		      xDst, yDst, width, height);
+	uxa_composite(PictOpAdd, pSrc, pMask, localDst,
+		      xSrc, ySrc,
+		      xMask, yMask,
+		      xDst, yDst,
+		      width, height);
+
+	if (localDst != pDst) {
+		GCPtr gc;
+
+		gc = GetScratchGC(pDst->pDrawable->depth, screen);
+		if (gc) {
+			ValidateGC(pDst->pDrawable, gc);
+			gc->ops->CopyArea(localDst->pDrawable, pDst->pDrawable, gc,
+					0, 0, width, height, xDst_copy, yDst_copy);
+			FreeScratchGC(gc);
+		}
+
+		FreePicture(localDst, 0);
+	}
 
 	return 1;
 }
@@ -958,42 +1428,28 @@ compatible_formats (CARD8 op, PicturePtr dst, PicturePtr src)
 		if (src->format == dst->format)
 			return 1;
 
-		if (src->format == PICT_a8r8g8b8 && dst->format == PICT_x8r8g8b8)
+		/* Is the destination an alpha-less version of source? */
+		if (dst->format == PICT_FORMAT(PICT_FORMAT_BPP(src->format),
+					       PICT_FORMAT_TYPE(src->format),
+					       0,
+					       PICT_FORMAT_R(src->format),
+					       PICT_FORMAT_G(src->format),
+					       PICT_FORMAT_B(src->format)))
 			return 1;
 
-		if (src->format == PICT_a8b8g8r8 && dst->format == PICT_x8b8g8r8)
-			return 1;
-
-		/* xrgb is promoted to argb during image upload... */
+		/* XXX xrgb is promoted to argb during image upload... */
+#if 0
 		if (dst->format == PICT_a8r8g8b8 && src->format == PICT_x8r8g8b8)
 			return 1;
+#endif
 	} else if (op == PictOpOver) {
-		if (src->alphaMap || dst->alphaMap)
+		if (PICT_FORMAT_A(src->format))
 			return 0;
 
-		if (src->format != dst->format)
-			return 0;
-
-		if (src->format == PICT_x8r8g8b8 || src->format == PICT_x8b8g8r8)
-			return 1;
+		return src->format == dst->format;
 	}
 
 	return 0;
-}
-
-static int
-drawable_contains (DrawablePtr drawable, int x1, int y1, int x2, int y2)
-{
-	if (x1 < 0 || y1 < 0)
-		return FALSE;
-
-	if (x2 > drawable->width)
-		return FALSE;
-
-	if (y2 > drawable->height)
-		return FALSE;
-
-	return TRUE;
 }
 
 void
@@ -1001,56 +1457,84 @@ uxa_composite(CARD8 op,
 	      PicturePtr pSrc,
 	      PicturePtr pMask,
 	      PicturePtr pDst,
-	      INT16 xSrc,
-	      INT16 ySrc,
-	      INT16 xMask,
-	      INT16 yMask, INT16 xDst, INT16 yDst, CARD16 width, CARD16 height)
+	      INT16 xSrc, INT16 ySrc,
+	      INT16 xMask, INT16 yMask,
+	      INT16 xDst, INT16 yDst,
+	      CARD16 width, CARD16 height)
 {
 	uxa_screen_t *uxa_screen = uxa_get_screen(pDst->pDrawable->pScreen);
 	int ret = -1;
 	Bool saveSrcRepeat = pSrc->repeat;
 	Bool saveMaskRepeat = pMask ? pMask->repeat : 0;
 	RegionRec region;
+	int tx, ty;
 
 	if (uxa_screen->swappedOut)
 		goto fallback;
 
+	if (!uxa_drawable_is_offscreen(pDst->pDrawable))
+		goto fallback;
+
+
+	if (pDst->alphaMap || pSrc->alphaMap || (pMask && pMask->alphaMap))
+		goto fallback;
+
+
 	/* Remove repeat in source if useless */
-	if (pSrc->pDrawable && pSrc->repeat && !pSrc->transform &&
+	if (pSrc->pDrawable && pSrc->repeat && pSrc->filter != PictFilterConvolution &&
+	    transform_is_integer_translation(pSrc->transform, &tx, &ty) &&
 	    (pSrc->pDrawable->width > 1 || pSrc->pDrawable->height > 1) &&
-	    xSrc >= 0 && (xSrc + width) <= pSrc->pDrawable->width &&
-	    ySrc >= 0 && (ySrc + height) <= pSrc->pDrawable->height)
+	    drawable_contains(pSrc->pDrawable, xSrc + tx, ySrc + ty, width, height))
 		pSrc->repeat = 0;
 
 	if (!pMask) {
+		if (op == PictOpClear) {
+			PicturePtr clear = uxa_solid_clear(pDst->pDrawable->pScreen);
+			if (clear &&
+			    uxa_try_driver_solid_fill(clear, pDst,
+						      xSrc, ySrc,
+						      xDst, yDst,
+						      width, height) == 1)
+				goto done;
+		}
+
 		if (pSrc->pDrawable == NULL) {
 			if (pSrc->pSourcePict) {
 				SourcePict *source = pSrc->pSourcePict;
 				if (source->type == SourcePictTypeSolidFill) {
-					ret = uxa_try_driver_solid_fill(pSrc, pDst,
-									xSrc, ySrc,
-									xDst, yDst,
-									width, height);
-					if (ret == 1)
-						goto done;
+					if (op == PictOpSrc ||
+					    (op == PictOpOver &&
+					     (source->solidFill.color & 0xff000000) == 0xff000000)) {
+						ret = uxa_try_driver_solid_fill(pSrc, pDst,
+										xSrc, ySrc,
+										xDst, yDst,
+										width, height);
+						if (ret == 1)
+							goto done;
+					}
 				}
 			}
-		} else if (compatible_formats (op, pDst, pSrc)) {
-			if (pSrc->pDrawable->width == 1 &&
-			    pSrc->pDrawable->height == 1 &&
-			    pSrc->repeat) {
-				ret = uxa_try_driver_solid_fill(pSrc, pDst,
-								xSrc, ySrc,
-								xDst, yDst,
-								width, height);
-				if (ret == 1)
-					goto done;
-			} else if (!pSrc->repeat && !pSrc->transform &&
-				   drawable_contains(pSrc->pDrawable, xSrc, ySrc, xSrc + width, ySrc + height)) {
+		} else if (pSrc->pDrawable->width == 1 &&
+			   pSrc->pDrawable->height == 1 &&
+			   pSrc->repeat &&
+			   (op == PictOpSrc || (op == PictOpOver && !PICT_FORMAT_A(pSrc->format)))) {
+			ret = uxa_try_driver_solid_fill(pSrc, pDst,
+							xSrc, ySrc,
+							xDst, yDst,
+							width, height);
+			if (ret == 1)
+				goto done;
+		} else if (compatible_formats (op, pDst, pSrc) &&
+			   pSrc->filter != PictFilterConvolution &&
+			   transform_is_integer_translation(pSrc->transform, &tx, &ty)) {
+			if (!pSrc->repeat &&
+			    drawable_contains(pSrc->pDrawable,
+					     xSrc + tx, ySrc + ty,
+					     width, height)) {
 				xDst += pDst->pDrawable->x;
 				yDst += pDst->pDrawable->y;
-				xSrc += pSrc->pDrawable->x;
-				ySrc += pSrc->pDrawable->y;
+				xSrc += pSrc->pDrawable->x + tx;
+				ySrc += pSrc->pDrawable->y + ty;
 
 				if (!miComputeCompositeRegion
 				    (&region, pSrc, pMask, pDst, xSrc, ySrc,
@@ -1066,16 +1550,14 @@ uxa_composite(CARD8 op,
 				REGION_UNINIT(pDst->pDrawable->pScreen,
 					      &region);
 				goto done;
-			} else if (pSrc->pDrawable->type == DRAWABLE_PIXMAP &&
-				   !pSrc->transform &&
-				   pSrc->repeatType == RepeatNormal) {
+			} else if (pSrc->repeat && pSrc->repeatType == RepeatNormal &&
+				   pSrc->pDrawable->type == DRAWABLE_PIXMAP) {
 				DDXPointRec patOrg;
 
 				/* Let's see if the driver can do the repeat
 				 * in one go
 				 */
-				if (uxa_screen->info->prepare_composite
-				    && !pSrc->alphaMap && !pDst->alphaMap) {
+				if (uxa_screen->info->prepare_composite) {
 					ret = uxa_try_driver_composite(op, pSrc,
 								       pMask, pDst,
 								       xSrc, ySrc,
@@ -1091,8 +1573,8 @@ uxa_composite(CARD8 op,
 				 */
 				xDst += pDst->pDrawable->x;
 				yDst += pDst->pDrawable->y;
-				xSrc += pSrc->pDrawable->x;
-				ySrc += pSrc->pDrawable->y;
+				xSrc += pSrc->pDrawable->x + tx;
+				ySrc += pSrc->pDrawable->y + ty;
 
 				if (!miComputeCompositeRegion
 				    (&region, pSrc, pMask, pDst, xSrc, ySrc,
@@ -1121,15 +1603,14 @@ uxa_composite(CARD8 op,
 	}
 
 	/* Remove repeat in mask if useless */
-	if (pMask && pMask->repeat && !pMask->transform && pMask->pDrawable &&
+	if (pMask && pMask->pDrawable && pMask->repeat &&
+	    pMask->filter != PictFilterConvolution &&
+	    transform_is_integer_translation(pMask->transform, &tx, &ty) &&
 	    (pMask->pDrawable->width > 1 || pMask->pDrawable->height > 1) &&
-	    xMask >= 0 && (xMask + width) <= pMask->pDrawable->width &&
-	    yMask >= 0 && (yMask + height) <= pMask->pDrawable->height)
+	    drawable_contains(pMask->pDrawable, xMask + tx, yMask + ty, width, height))
 		pMask->repeat = 0;
 
-	if (uxa_screen->info->prepare_composite &&
-	    !pSrc->alphaMap && (!pMask || !pMask->alphaMap) && !pDst->alphaMap)
-	{
+	if (uxa_screen->info->prepare_composite) {
 		Bool isSrcSolid;
 
 		ret =
@@ -1142,9 +1623,15 @@ uxa_composite(CARD8 op,
 		/* For generic masks and solid src pictures, mach64 can do
 		 * Over in two passes, similar to the component-alpha case.
 		 */
-		isSrcSolid = pSrc->pDrawable &&
-		    pSrc->pDrawable->width == 1 &&
-		    pSrc->pDrawable->height == 1 && pSrc->repeat;
+
+		isSrcSolid =
+			pSrc->pDrawable ?
+				pSrc->pDrawable->width == 1 &&
+				pSrc->pDrawable->height == 1 &&
+				pSrc->repeat :
+			pSrc->pSourcePict ?
+				pSrc->pSourcePict->type == SourcePictTypeSolidFill :
+			0;
 
 		/* If we couldn't do the Composite in a single pass, and it
 		 * was a component-alpha Over, see if we can do it in two
@@ -1156,13 +1643,13 @@ uxa_composite(CARD8 op,
 			    uxa_try_magic_two_pass_composite_helper(op, pSrc,
 								    pMask, pDst,
 								    xSrc, ySrc,
-								    xMask,
-								    yMask, xDst,
-								    yDst, width,
-								    height);
+								    xMask, yMask,
+								    xDst, yDst,
+								    width, height);
 			if (ret == 1)
 				goto done;
 		}
+
 	}
 
 fallback:
@@ -1232,15 +1719,15 @@ uxa_create_alpha_picture(ScreenPtr pScreen,
  * uxa_check_poly_fill_rect to initialize the contents.
  */
 void
-uxa_trapezoids(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
+uxa_trapezoids(CARD8 op, PicturePtr src, PicturePtr dst,
 	       PictFormatPtr maskFormat, INT16 xSrc, INT16 ySrc,
 	       int ntrap, xTrapezoid * traps)
 {
-	ScreenPtr pScreen = pDst->pDrawable->pScreen;
-	PictureScreenPtr ps = GetPictureScreen(pScreen);
+	ScreenPtr screen = dst->pDrawable->pScreen;
 	BoxRec bounds;
-	Bool direct = op == PictOpAdd && miIsSolidAlpha(pSrc);
+	Bool direct;
 
+	direct = op == PictOpAdd && miIsSolidAlpha(src);
 	if (maskFormat || direct) {
 		miTrapezoidBounds(ntrap, traps, &bounds);
 
@@ -1252,7 +1739,7 @@ uxa_trapezoids(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
 	 * Check for solid alpha add
 	 */
 	if (direct) {
-		DrawablePtr pDraw = pDst->pDrawable;
+		DrawablePtr pDraw = dst->pDrawable;
 		PixmapPtr pixmap = uxa_get_drawable_pixmap(pDraw);
 		int xoff, yoff;
 
@@ -1262,12 +1749,15 @@ uxa_trapezoids(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
 		yoff += pDraw->y;
 
 		if (uxa_prepare_access(pDraw, UXA_ACCESS_RW)) {
+			PictureScreenPtr ps = GetPictureScreen(screen);
+
 			for (; ntrap; ntrap--, traps++)
-				(*ps->RasterizeTrapezoid) (pDst, traps, 0, 0);
+				(*ps->RasterizeTrapezoid) (dst, traps, 0, 0);
 			uxa_finish_access(pDraw);
 		}
 	} else if (maskFormat) {
-		PicturePtr pPicture;
+		PixmapPtr scratch = NULL;
+		PicturePtr mask;
 		INT16 xDst, yDst;
 		INT16 xRel, yRel;
 		int width, height;
@@ -1291,28 +1781,48 @@ uxa_trapezoids(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
 			pixman_rasterize_trapezoid(image,
 						   (pixman_trapezoid_t *) traps,
 						   -bounds.x1, -bounds.y1);
+		if (uxa_drawable_is_offscreen(dst->pDrawable)) {
+			mask = uxa_picture_from_pixman_image(screen, image, format);
+		} else {
+			int error;
 
-		pPicture =
-		    uxa_picture_from_pixman_image(pScreen, image, format);
-		pixman_image_unref(image);
-		if (!pPicture)
+			scratch = GetScratchPixmapHeader(screen, width, height,
+							PIXMAN_FORMAT_DEPTH(format),
+							PIXMAN_FORMAT_BPP(format),
+							pixman_image_get_stride(image),
+							pixman_image_get_data(image));
+			mask = CreatePicture(0, &scratch->drawable,
+					     PictureMatchFormat(screen,
+								PIXMAN_FORMAT_DEPTH(format),
+								format),
+					     0, 0, serverClient, &error);
+		}
+		if (!mask) {
+			if (scratch)
+				FreeScratchPixmapHeader(scratch);
+			pixman_image_unref(image);
 			return;
+		}
 
 		xRel = bounds.x1 + xSrc - xDst;
 		yRel = bounds.y1 + ySrc - yDst;
-		CompositePicture(op, pSrc, pPicture, pDst,
+		CompositePicture(op, src, mask, dst,
 				 xRel, yRel,
 				 0, 0,
 				 bounds.x1, bounds.y1,
 				 width, height);
-		FreePicture(pPicture, 0);
+		FreePicture(mask, 0);
+
+		if (scratch)
+			FreeScratchPixmapHeader(scratch);
+		pixman_image_unref(image);
 	} else {
-		if (pDst->polyEdge == PolyEdgeSharp)
-			maskFormat = PictureMatchFormat(pScreen, 1, PICT_a1);
+		if (dst->polyEdge == PolyEdgeSharp)
+			maskFormat = PictureMatchFormat(screen, 1, PICT_a1);
 		else
-			maskFormat = PictureMatchFormat(pScreen, 8, PICT_a8);
+			maskFormat = PictureMatchFormat(screen, 8, PICT_a8);
 		for (; ntrap; ntrap--, traps++)
-			uxa_trapezoids(op, pSrc, pDst, maskFormat, xSrc, ySrc,
+			uxa_trapezoids(op, src, dst, maskFormat, xSrc, ySrc,
 				       1, traps);
 	}
 }
