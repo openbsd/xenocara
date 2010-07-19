@@ -92,7 +92,9 @@
 				/* X and server generic header files */
 #include "xf86.h"
 #include "xf86_OSproc.h"
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 7
 #include "xf86RAC.h"
+#endif
 #include "xf86RandR12.h"
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 7
 #include "xf86Resources.h"
