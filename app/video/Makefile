@@ -1,13 +1,13 @@
-PROG=	video
-SRCS=	video.c
-MAN=	video.1
+# $OpenBSD: Makefile,v 1.2 2010/07/23 19:46:00 ckuethe Exp $
+.include <bsd.xconf.mk>
 
-CFLAGS+= -I${X11BASE}/include
-LDFLAGS+= -L${X11BASE}/lib
-LDADD+= -lX11 -lXv
-BINDIR=	${X11BASE}/bin
+PROG=	video
+
+CPPFLAGS+= -I${X11BASE}/include
+LDADD+= -L${X11BASE}/lib -lX11 -lXv
 MANDIR=	${X11BASE}/man/cat
 
-.include <bsd.xconf.mk>
-.include <bsd.prog.mk>
+obj: _xenocara_obj
 
+.include <bsd.prog.mk>
+.include <bsd.xorg.mk>
