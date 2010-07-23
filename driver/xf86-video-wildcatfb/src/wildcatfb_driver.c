@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.5 2010/07/18 20:10:12 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.6 2010/07/23 15:20:33 miod Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -863,11 +863,6 @@ WildcatFBLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 	int i, indexMin=256, indexMax=0;
 
 	TRACE_ENTER("LoadPalette");
-
-	cmap.count   = 1;
-	cmap.red   = red;
-	cmap.green = green;
-	cmap.blue  = blue;
 
 	/*
 	 * Change all colors in 2 ioctls
