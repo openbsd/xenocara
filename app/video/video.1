@@ -1,0 +1,317 @@
+.\"
+.\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\"
+.Dd $Mdocdate: July 23 2010 $
+.Dt VIDEO 1
+.Os
+.Sh NAME
+.Nm video
+.Nd record or display images from
+.Xr video 4
+.Sh SYNOPSIS
+.Nm
+.Bk -words
+.Op Fl v
+.Op Fl a Ar adaptor
+.Op Fl e Ar encoding
+.Op Fl f Ar file
+.Op Fl i Ar input
+.Op Fl o Ar output
+.Op Fl O Ar output
+.Op Fl r Ar rate
+.Op Fl s Ar size
+.Ek
+.Sh DESCRIPTION
+.Nm
+is a utility for reading, writing and displaying streams of raw video frames.
+By default frames are read from
+.Ar file
+and displayed via
+.Xr Xv 3 .
+The default
+.Ar file
+is
+.Pa /dev/video .
+If the
+.Fl o
+option is used frames are read from
+.Ar file
+and written to
+.Ar output .
+If the
+.Fl i
+option is used frames are read from
+.Ar input
+and displayed via
+.Xr Xv 3 .
+If the
+.Fl O
+option is used frames are read from
+.Ar file ,
+written to
+.Ar output
+and displayed via
+.Xr Xv 3 .
+The brightness, contrast, gain, hue and saturation controls of
+.Ar file
+can also be adjusted if
+.Ar file
+supports these controls.
+.Pp
+The options are as follows:
+.Bl -tag -width "-a adaptor"
+.It Fl a Ar adaptor
+Index of
+.Xr Xv 3
+adaptor to use.
+The default is 0, the first adaptor reported by
+.Xr X 7 .
+.It Fl e Ar encoding
+Lowercase FOURCC name of video encoding to use.
+Valid arguments are
+.Ql uyvy
+and
+.Ql yuy2 .
+The default is
+.Ql yuy2
+unless
+.Ar file
+is being used and only supports
+.Ql yuyv ,
+in which case
+.Ql yuyv
+will be used by default.
+.It Fl f Ar file
+.Xr video 4
+device from which frames will be read.
+The default is
+.Pa /dev/video .
+.It Fl i Ar input
+File from which frames will be read.
+If
+.Ar input
+is
+.Ql - ,
+frames will be read from standard input.
+.It Fl o Ar ouput
+File to which frames will be written.
+If
+.Ar output
+is
+.Ql - ,
+frames will be written to standard output.
+.It Fl O Ar ouput
+File to which frames will be written.
+If
+.Ar output
+is
+.Ql - ,
+frames will be written to standard output.
+In contrast to
+.Fl o ,
+if this option is used,
+.Nm
+will also display the frames via
+.Xr Xv 3 .
+.It Fl r Ar rate
+Rate in frames per second at which to read.
+Must be an integer greater than 0.
+If the
+.Fl r
+option is not specified, frames will be read as quickly as possible.
+If reading from a
+.Xr video 4
+device, frames will be read as quickly as they are available from
+the device, but will be displayed and/or written to
+.Ar output
+at the rate specified.
+This is done because
+.Xr video 4
+does not yet support setting the device frame rate.
+.It Fl s Ar size
+Size of frames to read.
+The format of
+.Ar size
+is WxH, where W represents width and H represents height, both expressed
+as number of pixels.
+The default is 640x480.
+If
+.Ar size
+does not contain
+.Ql x ,
+.Ar size
+is interpreted as only the width.
+If
+.Ql x
+is the first character of
+.Ar size ,
+the characters following
+.Ql x
+are interpreted as the height.
+If only one of width or height is specified, the other will be calculated
+using a 4:3 width:height ratio.
+For example, if given
+.Ql -s 640
+.Nm
+will use a size of
+.Ql 640x480 .
+When reading from a
+.Xr video 4
+device and displaying the frames on an
+.Xx Xv 3
+display, this option also accepts two special strings,
+.Ql half
+and
+.Ql full.
+If either
+.Ql half
+or
+.Ql full
+are specified,
+.Nm
+will read frames that are no larger than 2/3 the display width and
+2/3 the display height.
+If
+.Ql full
+is specified,
+.Nm
+will stretch the frame to the full size of the display using
+.Xr Xv 3
+scaling.
+If
+.Nm
+is reading frames from a
+.Xr video 4
+device and the frame size does not match a frame size the device supports,
+.Nm
+will use the largest frame size supported by the device that is smaller
+than the specified size.
+.It Fl v
+Verbose mode.
+Multiple instances of this option are allowed.
+Each instance increases the level of informational output printed to
+.Ar stderr .
+.El
+.Pp
+.Nm
+will quit reading frames and exit nicely if it receives any of
+the following signals: SIGHUP, SIGINT, SIGKILL, SIGTERM, SIGPIPE.
+.Pp
+.Nm
+responds to certain key presses while it is displaying frames.
+The keypresses are as follows:
+.Bl -tag -width "aXX"
+.It Ic B
+Increase brightness control of
+.Ar file .
+.It Ic b
+Decrease brghtness control of
+.Ar file .
+.It Ic C
+Increase contrast control of
+.Ar file .
+.It Ic c
+Decrease contrast control of
+.Ar file .
+.It Ic f
+Toggle full-screen display.
+.It Ic G
+Increase gain control of
+.Ar file .
+.It Ic g
+Decrease gain control of
+.Ar file .
+.It Ic H
+Increase hue control of
+.Ar file .
+.It Ic h
+Decrease hue control of
+.Ar file .
+.It Ic p
+Toggle new frame display.
+.It Ic q
+Quit
+.Nm .
+.It Ic r
+Reset all supported controls of
+.Ar file
+to their default value.
+.It Ic O
+Start writing to
+.Ar output .
+Only meaningful when the
+.Fl O
+option is used.
+.It Ic o
+Stop writing to
+.Ar output .
+Only meaningful when the
+.Fl O
+option is used.
+.It Ic S
+Increase saturation control of
+.Ar file .
+.It Ic s
+Decrease saturation control of
+.Ar file .
+.El
+.Sh EXAMPLES
+The following command will read YUY2 encoded, 640 pixel wide and 480 pixel
+high video frames from
+.Ar /dev/video
+and display them using the default
+.Xr Xv 3
+adaptor:
+.Pp
+.Dl "$ video"
+.Pp
+The following command will read YUY2 encoded, 640 pixel wide and 480 pixel
+high video frames from
+.Ar /dev/video
+and write them to
+.Ar video.raw
+at a rate of 15 frames per second:
+.Pp
+.Dl "$ video -r 15 -o video.raw"
+.Pp
+The following command will read YUY2 encoded, 640 pixel wide and 480 pixel
+high video frames from
+.Ar /dev/video ,
+write them to
+.Ar video.raw
+and display them using the default
+.Xr Xv 3
+adaptor at a rate of 15 frames per second:
+.Pp
+.Dl "$ video -r 15 -O video.raw"
+.Pp
+The following command will read YUY2 encoded, 640 pixel wide and 480 pixel
+high video frames from
+.Ar video.raw
+and dsplay them on the default
+.Xr Xv 3
+adaptor at a rate of 15 frames per second:
+.Pp
+.Dl "$ video -r 15 -i video.raw"
+.Pp
+Note that with the first three commands, if
+.Ar /dev/video
+does not support 640x480 pixels sized frames, the largest frame size
+smaller than 640x480 will be used, and if
+.Ar /dev/video
+does not support yuy2 encoding, uyvy will be used.
+.Sh SEE ALSO
+.Xr video 4
