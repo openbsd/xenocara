@@ -31,6 +31,17 @@
 #include "dri_util.h"
 #include "drm_sarea.h"
 #include "utils.h"
+#include "vblank.h"
+#include "xmlpool.h"
+
+PUBLIC const char __dri2ConfigOptions[] =
+   DRI_CONF_BEGIN
+      DRI_CONF_SECTION_PERFORMANCE
+         DRI_CONF_VBLANK_MODE(DRI_CONF_VBLANK_DEF_INTERVAL_1)
+      DRI_CONF_SECTION_END
+   DRI_CONF_END;
+
+static const uint __dri2NConfigOptions = 1;
 
 #ifndef GLX_OML_sync_control
 typedef GLboolean ( * PFNGLXGETMSCRATEOMLPROC) (__DRIdrawable *drawable, int32_t *numerator, int32_t *denominator);
@@ -495,6 +506,41 @@ dri2CreateNewDrawable(__DRIscreen *screen,
     return pdraw;
 }
 
+static int
+dri2ConfigQueryb(__DRIscreen *screen, const char *var, GLboolean *val)
+{
+   if (!driCheckOption(&screen->optionCache, var, DRI_BOOL))
+      return -1;
+
+   *val = driQueryOptionb(&screen->optionCache, var);
+
+   return 0;
+}
+
+static int
+dri2ConfigQueryi(__DRIscreen *screen, const char *var, GLint *val)
+{
+   if (!driCheckOption(&screen->optionCache, var, DRI_INT) &&
+       !driCheckOption(&screen->optionCache, var, DRI_ENUM))
+      return -1;
+
+    *val = driQueryOptioni(&screen->optionCache, var);
+
+    return 0;
+}
+
+static int
+dri2ConfigQueryf(__DRIscreen *screen, const char *var, GLfloat *val)
+{
+   if (!driCheckOption(&screen->optionCache, var, DRI_FLOAT))
+      return -1;
+
+    *val = driQueryOptionf(&screen->optionCache, var);
+
+    return 0;
+}
+
+
 static void dri_get_drawable(__DRIdrawable *pdp)
 {
     pdp->refcount++;
@@ -785,6 +831,7 @@ dri2CreateNewScreen(int scrn, int fd,
     static const __DRIextension *emptyExtensionList[] = { NULL };
     __DRIscreen *psp;
     drmVersionPtr version;
+    driOptionCache options;
 
     if (driDriverAPI.InitScreen2 == NULL)
         return NULL;
@@ -816,6 +863,9 @@ dri2CreateNewScreen(int scrn, int fd,
     }
 
     psp->DriverAPI = driDriverAPI;
+
+    driParseOptionInfo(&options, __dri2ConfigOptions, __dri2NConfigOptions);
+    driParseConfigFiles(&psp->optionCache, &options, psp->myNum, "dri2");
 
     return psp;
 }
@@ -857,6 +907,13 @@ const __DRIdri2Extension driDRI2Extension = {
     dri2CreateNewScreen,
     dri2CreateNewDrawable,
     dri2CreateNewContext,
+};
+
+const __DRI2configQueryExtension dri2ConfigQueryExtension = {
+   { __DRI2_CONFIG_QUERY, __DRI2_CONFIG_QUERY_VERSION },
+   dri2ConfigQueryb,
+   dri2ConfigQueryi,
+   dri2ConfigQueryf,
 };
 
 static int

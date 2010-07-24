@@ -557,6 +557,10 @@ struct __GLXscreenConfigsRec
    const __DRI2flushExtension *f;
 #endif
 
+#ifdef __DRI2_CONFIG_QUERY
+   const __DRI2configQueryExtension *config;
+#endif
+
 #endif
 
     /**

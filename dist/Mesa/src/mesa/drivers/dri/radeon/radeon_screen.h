@@ -104,7 +104,7 @@ typedef struct radeon_screen {
    /* Configuration cache with default values for all contexts */
    driOptionCache optionCache;
 
-   const __DRIextension *extensions[16];
+   const __DRIextension *extensions[17];
 
    int num_gb_pipes;
    int num_z_pipes;
