@@ -31,9 +31,6 @@
 /* All drivers implementing backing store need this */
 #include "mibstore.h"
 
-/* Drivers using the mi banking wrapper need this */
-#include "mibank.h"
-
 /* All drivers using the mi colormap manipulation need this */
 #include "micmap.h"
 

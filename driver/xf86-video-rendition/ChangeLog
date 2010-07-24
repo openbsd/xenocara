@@ -1,3 +1,135 @@
+commit 0bf606d19d9357ffc5ccffe90279453d39c259ac
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 5 14:56:30 2010 +1000
+
+    rendition 4.2.4
+
+commit 5cdbc08be474d592bdc8a6ed4eff1e64d55098e8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 20:02:08 2010 -0400
+
+    README: keep the text version of README, discard the sgml version
+    
+    The linuxdoc doc tool is deprecated.
+    README files are exclusively text files.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a5e5a286ca62f2d6e32c83aba02d58ae8e828a35
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 19:57:01 2010 -0400
+
+    README: fix linuxdoc content
+    
+    defs.ent are located under X11 directory
+    ident tag is not a Linuxdoc tag
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 20f1bf342474973a4bb57551482f12b632fd948e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 10:12:24 2010 -0400
+
+    COPYING: update file with Copyright notices from source code.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 432cefce7e61b8445bbac284f0342c153bdfdcc4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue May 18 13:08:36 2010 -0400
+
+    Remove mibank.h reference
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit e1331ecf64d45de97abc026f0872948b1601570f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:54:42 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1d797c290be858b124e05cf1573db0cfc55db5b3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 957c7dd21e57184a576f301ecafd96819e3d71d2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 674b9fa5f40fd99c9904a21cda8d89699d64863a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit c3769b5a338b006074dae5f2fdac2ede21db6fd9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit db9f696aecc5153e6266e9afb2d2520493c81d7b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 3a8fcd130e54099936a2641d4515adae3426a237
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit f480933cfcc683aba19b679a6d532828eeb2eaa9
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Nov 7 00:34:00 2009 -0500
+
+    Use usleep instead of xf86UDelay
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit db962650a038c48b7113eedfebf011cdc4829946
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 7 11:12:13 2009 -0400
+
+    xf86-video-rendition: Remove unused .cvsignore file #23776
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 2d62a81b452641999207c0576a08d82aee41cf06
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Sep 7 14:42:11 2009 +1000
@@ -122,7 +254,7 @@ Date:   Tue Mar 6 09:14:43 2007 -0800
     Add prototype for renditionGetRec.
 
 commit 6d3e26e8311cf46a8c9ceb81debe5d8e97bf28bf
-Merge: 77647fe... ef00c3e...
+Merge: 77647fe ef00c3e
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Fri Mar 2 20:48:05 2007 -0800
 

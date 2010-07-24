@@ -395,14 +395,14 @@ verite_restore(ScrnInfoPtr pScreenInfo, RenditionRegPtr reg)
     if (pRendition->board.chip == V1000_DEVICE) {
 	/* fixme */
         set_PLL(iob, reg->pclkpll);
-	xf86UDelay(10000);
+	usleep(10000);
     } else { 
 	verite_out32(iob+PCLKPLL,reg->pclkpll);
 	/* 
 	 * Need to wait 200uS for PLL to stabilize --
 	 * let's play it safe with 500 
 	 */
-	xf86UDelay(10000);
+	usleep(10000);
 	/* wait until VBLANK */
 	while ((verite_in32(iob+CRTCSTATUS)&CRTCSTATUS_VERT_MASK) !=
 	       CRTCSTATUS_VERT_ACTIVE);
