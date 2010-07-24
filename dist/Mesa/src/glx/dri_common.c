@@ -106,7 +106,7 @@ driOpenDriver(const char *driverName)
    int len;
 
    /* Attempt to make sure libGL symbols will be visible to the driver */
-   glhandle = dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
+   glhandle = dlopen("libGL.so", RTLD_NOW | RTLD_GLOBAL);
 
    libPaths = NULL;
    if (geteuid() == getuid()) {
