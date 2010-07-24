@@ -764,7 +764,7 @@ dev_get_sizes(struct video *vid)
 	d->sizes[0].w = sizes[0].w;
 	d->sizes[0].h = sizes[0].h;
 	d->nsizes = 1;
-	for (i = 0; i < nsizes; i++) {
+	for (i = 1; i < nsizes; i++) {
 		for (j = 0; j < d->nsizes; j++) {
 			if (sizes[i].w < d->sizes[j].w)
 				break;
@@ -1028,9 +1028,12 @@ choose_size(struct video *vid)
 	}
 	if (vid->mode & M_IN_DEV) {
 		i = 0;
-		while (d->sizes[i].h <= vid->height &&
+		while (i < d->nsizes &&
+		    d->sizes[i].h <= vid->height &&
 		    d->sizes[i].w <= vid->width)
 			i++;
+		if (i >= d->nsizes)
+			i = d->nsizes - 1;
 		if (i > 0 && (d->sizes[i].h > vid->height ||
 		    d->sizes[i].w > vid->width))
 			i--;
