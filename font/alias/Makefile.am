@@ -21,4 +21,12 @@
 
 SUBDIRS = 100dpi 75dpi cyrillic misc
 
-EXTRA_DIST = autogen.sh
+EXTRA_DIST = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

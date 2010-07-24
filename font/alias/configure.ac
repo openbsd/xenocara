@@ -22,22 +22,24 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(font-alias, [1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], font-alias)
+AC_INIT(font-alias, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], font-alias)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
+
 AC_PROG_INSTALL
 
-m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
+XORG_FONTROOTDIR
 
-DEFAULT_TOPFONTDIR=${libdir}/X11/fonts
-AC_ARG_WITH(top-fontdir,
-	AS_HELP_STRING([--with-top-fontdir=<path>], [Path to top level font directory]),
-	[TOPFONTDIR="$withval"],
-	[TOPFONTDIR="$DEFAULT_TOPFONTDIR"])
-AC_SUBST(TOPFONTDIR)
+AC_ARG_WITH(top-fontdir, AC_HELP_STRING([--with-top-fontdir=<pathname>],
+			      [Obsolete: use --with-fontrootdir instead]),
+	[AC_MSG_ERROR([--with-top-fontdir is obsolete, use --with-fontrootdir instead])])
 
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
            100dpi/Makefile
