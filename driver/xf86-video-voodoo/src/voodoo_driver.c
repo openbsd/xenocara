@@ -45,7 +45,6 @@
 #endif
 
 #include "fb.h"
-#include "mibank.h"
 #include "micmap.h"
 #include "mipointer.h"
 #include "xf86.h"
