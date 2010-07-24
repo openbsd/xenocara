@@ -1,48 +1,535 @@
-2006-04-06  Adam Jackson  <ajax@freedesktop.org>
+commit 5013a760db93d08b0bb87b6ad2537b1073cedf36
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 23 14:35:43 2010 -0700
 
-	* configure.ac:
-	* src/ark.h:
-	* src/ark_accel.c:
-	* src/ark_driver.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 0.6.0.
+    xf86-video-ark 0.7.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2006-02-08  Luc Verhaegen  <libv@skynet.be>
+commit 47dd182461728dbe18d7f59be1e3cbbe56b2ca72
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
 
-	* src/ark_driver.c: (ARKPreInit):
-	
-	Remove wrong usage of pScrn->clock.
+    config: add comments for main statements
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 92590886eb667e8a3eb7f3e7bc52d435b51a2cb2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 334926f424f1d1755086fcd3d3dad1a8b3b35f22
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit b58a6440f088930a5458c68c1b9fe3bd80b37a0e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c1846ca9e802338dc0b29ddcdb7e71554d5d63a0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit ea755640844290935e115045b7bf06b219123636
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:30 2010 -0400
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d39d3e0ec1f0cc0304966d9a96c76c00618196af
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit a1df242dcb15a923856779e544c7394135fb8349
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7cf934ad29516215ef81d13acccbee0766f8d729
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 12 10:32:57 2010 -0400
+
+    COPYING: replace stub file with Copyright notice
+    
+    Copyright 2000	Ani Joshi
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b65010bb9a5b835bf8e1dcbf26514c21b59795cd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 20:08:52 2010 -0500
+
+    config: move compiler flags from configure.ac to Makefile.am
+    
+    CFLAGS is an automake defined variable that should not be set
+    by the module. It should not be AC_SUBST either, it already is.
+    
+    Use AM_CFLAGS in Makefile.am. This will allow the user to override
+    the flags as they will be in the right order.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 822e062c023f44ef0bfbe6ecdcc54e8c754fa23c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 19:07:22 2010 -0500
+
+    config: remove unrequired '-I$(top_srcdir)/src'
+    
+    The current dir is already included by default in the makefile
+    top_builddir = ..
+    DEFAULT_INCLUDES = -I. -I$(top_builddir)
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9d3c6bf784b1aaeb6cf5d917fd4bf8ae4ca01f88
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 18:42:52 2010 -0500
+
+    config: remove unused INCLUDES='-I$(top_srcdir)/src'
+    
+    This statement is redundant and not used in the makefile
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9b52c30bd40c1e18e8bb764be7c7178eb07ec3f2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 17:40:15 2010 -0500
+
+    config: remove unused variable XORG_INCS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 85d5e66ddcaa90934ea339b68b11a1bb8d38b710
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 20:59:33 2009 -0500
+
+    configure.ac: sdkdir usage duplicates the sdk include dir
+    
+    The sdkdir variable provides a duplicate copy of the include/xorg
+    directory. The statement is removed as this was it's only used.
+    In the Makefile, there is now only one instance of the -I sdkdir
+    The sdkdir is provided in XORG_CFLAGS.
+    
+    Acked-by: Dan Nicholson <dbn.lists at gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7303c72584b93575dee7f9faf323d1aaee224f9b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Dec 11 08:41:02 2009 -0500
+
+    configure.ac: remove -I$(prefix)/include from INCLUDES
+    
+    Using $prefix for any purpose will yield incorrect results
+    as not all modules uses the same prefix and that modules can use
+    different directory which is configurable.
+    Similar to #24676
+    
+    The main include dir comes from XORG_CFLAGS
+    
+    Reported-By: Michael Olbrich <m.olbrich@pengutronix.de>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d9123009643676a89e0b86d2529ba570a1d29cc8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 75ff90f31d1bcb0a2a5a28db8eabe3ee1cf40827
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit 503f9a5c1b1d86c769b823950eceed1ddb7c04c5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit c4f9f99b70e7c6613c4e170b42cf43a0b3f3ee60
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 078a7d6ae9f7a99f02e235dfbab3231452e55b39
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:58:13 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit fb5fbf603b6d7b8999a24b6150c6ae6156d2437e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 9d2a2c6b8de41c39f59602e04aac68644dadf45e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 7 14:47:47 2009 +1000
+
+    ark: fix make distcheck
+
+commit 93856287f1e753d7df0ebfc51b12b425447138cf
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 7 14:44:22 2009 +1000
+
+    bump release to 0.7.2
+
+commit e521e8240c1acc49a514db123cb67beb669dea81
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:28 2009 +1000
+
+    ark: update for resources/RAC API removal
+
+commit 150d86dd0fff038db660f993d080cc3f7a09f6c5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 10:03:50 2009 +1000
+
+    ark: switch to using pci config instead of active
+
+commit 05ce888200307d9c6f16fbdbf732cbae8b5a3dae
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 14:46:19 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 9acf6f68c98159ea5bb2d29454444ed143e7d6f2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:30:48 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit e686088ac1c4517184bbd676ec16c9bf5d010469
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 15:24:57 2008 +1000
+
+    ark 0.7.1
+
+commit b8dc5d7f4529dfddaa0ddeac68d96de4361b05cb
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 14:02:34 2008 -0400
+
+    Uninclude xf86Version.h
+
+commit 2a5d9ade17e5d084b25bf2afdc42d9d2d2147f49
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 13:17:03 2008 -0400
+
+    ark 0.7.0
+
+commit d6bed919dd458459079ff88a61665a0fb21be7ba
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 13:15:33 2008 -0400
+
+    Death to RCS tags.
+
+commit c87ab37ba6b06d81f024800f776cd20ff5a3a5b1
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Mon Mar 10 10:13:42 2008 +1000
+
+    ark: add basic pciaccess support
+
+commit f09baa348b5d1a499f23e553c67bc0674c7c6512
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:27 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit b62f233658cca6c6f2226fc8614322f8e609cdae
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:43 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit ba3948fcd33f8497cca9c8c72bc777b92d50858d
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 10:18:07 2007 +0200
+
+    Define VERSION* using PACKAGE_VERSION*
+
+commit 1e341ca5f80f603e0d139bf464ba0143249f32cb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:37:02 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 0.6.0.
+
+commit 8a81f9ec9d1faaeb4913596961c39a9b7400e230
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Wed Feb 8 17:50:15 2006 +0000
+
+    ARK: Remove wrong usage of pScrn->clock.
+
+commit 4d52b618aa10ebbb32ad9fc771cb1c1545cbb55c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:59 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 2fcf9c5df5d395d2e2e43949737303b0089bdb99
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:52 2005 +0000
+
+    Stub COPYING files
+
+commit ccd9dc62d76526de1db316e2a548b1b4de199b3a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:16 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 98973a0e64e801cec02f63c10660b9c1a69df68a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:32 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit d1a212a4e9d926a362665d0403ad3600a53b9345
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:07 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 6b41442a3d68b290442b5edb5094e60ef81606d8
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:57 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 54808bc14a348f36cabac2168e18b4cf4244ba34
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:09 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit cccff99ea1f6d2483ba1c9c3ac438a609ca4cdf9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:14 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 6a4e3fb5854ebaaa8a054ca8f28867b925844b25
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:52 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 69326ffc469a8b1c34dec1a8b6a426694bf199ac
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:02 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit e49525d59684b50255d07fe0d88960de891f6e13
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:01 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 78879585f2a82d90b7cd64ee2fce05cac182f066
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:45 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 25a5746b57a841c69c7c03ee217b8596f695b243
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:24 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit ca9eb203e79ce1aaef5ae6fe6bdcb5f11ffe84c5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:42 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 0092febd5aba5c208bee3b86dc4fcb27b2ffe1b6
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Thu Jul 14 00:28:44 2005 +0000
+
+    - Add build system for xf86-video-ati
+    - Add build system for xserver/xorg/hw/xfree86/dri
+    - Add glcore.h to symlink.sh
+    - Symlink.sh: add some more DRI files, symlink glcore.h from
+        extras/Mesa/include/GL/internal to proto/GL
+    - proto/GL/Makefile.am: install glcore.h
+    - xf86-video-ark: s/module-dir/xorg-module-dir/
+
+commit 2a195bccdc39b5e0241c03e0485a8afe1f0d2571
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 13 22:02:27 2005 +0000
+
+    driver/xf86-video-ark/src: Add Makefile.am
+
+commit 9cf05e94f77f859615b4cb35a6fb52b3939836aa
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 13 18:08:41 2005 +0000
+
+    Add accidentally left out PKG_CHECK_MODULES
+
+commit 6a04dd93ad508915ae8f263ab54b80fb9acec4df
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 13 17:39:31 2005 +0000
+
+    Build system for ark video driver
+
+commit 65141896d5bc62e71208eafa5160c21ff7e302f5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:44 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 827e5d59662065d4caff6b1db52a6672217c06c6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:52 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit e0cc898635fe405bc16ce915942e37623180aeb1
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:22 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit bb8ec8f8d979f53c683020b66dddb250e63fca07
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:22:41 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 4c8db25829e320eaf9c85f9a0b6442a931bd4840
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed May 26 16:24:08 2004 +0000
+
+    Fixing setting of physical framebuffer base for several drivers. C&T
+        driver: Fixed setting of minimal clocks for HiQV chipsets. Neomagic
+        driver: improved support for lowres double scan modes.
+
+commit 64396251f02569d0bee87c8f304be3eefc0aa82b
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:25:33 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit c2217e65fc4a33cabd4aa4cb92e34a07b34abe7f
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:16 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit f0de270c61be39965b36630052d7243ed215ade5
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:15 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit cb39868f758e5c1b0b98364ca3b1190480cb3f86
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:46 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 2fd451f8cd43e13a66c914d8fcac0c7e38b62ad8
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:15 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 3362857a4aa10088f9359f7a8a3573dbd62c64b0
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:34 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 1f50873b625d51d350096b6b5fcbdbfa0d9decbe
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 2d3c4eb3ffae9a3839d8a09f59119c4fc13d8bf8
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision
