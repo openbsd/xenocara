@@ -640,7 +640,7 @@ TridentInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     pReg->tridentRegs3C4[Protection] = 0x92;
 
     pReg->tridentRegs3x4[LinearAddReg] = 0;
-    if (pTrident->Linear) {
+    if (LINEAR()) {
 	/* This is used for VLB, when we support it again in 4.0 */
 	if (pTrident->Chipset < CYBER9385)
     	    pReg->tridentRegs3x4[LinearAddReg] |=

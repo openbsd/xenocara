@@ -46,6 +46,13 @@
 #include "xf86Pci.h"
 #include "vbe.h"
 
+/* Banked framebuffer only supported on ISA */
+#ifdef HAVE_ISA
+#define LINEAR() (pTrident->Linear)
+#else
+#define LINEAR() (1)
+#endif
+
 #define PCI_CHIP_2200		0x2200
 
 typedef struct {

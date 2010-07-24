@@ -35,7 +35,9 @@
 
 #include "fb.h"
 
+#ifdef HAVE_ISA
 #include "mibank.h"
+#endif
 #include "micmap.h"
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -71,7 +73,6 @@
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
 #endif
-
 
 #include "xf86xv.h"
 
@@ -1353,7 +1354,7 @@ TRIDENTPreInit(ScrnInfoPtr pScrn, int flags)
 						pTrident->OverrideBskew);
     }
     if (xf86ReturnOptValBool(pTrident->Options, OPTION_SHADOW_FB, FALSE)) {
-        if (!pTrident->Linear) 
+        if (!LINEAR()) 
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Ignoring Option SHADOW_FB"
 		       " in non-Linear Mode\n");
 	else {
@@ -1365,7 +1366,7 @@ TRIDENTPreInit(ScrnInfoPtr pScrn, int flags)
     }
     pTrident->Rotate = 0;
     if ((s = xf86GetOptValString(pTrident->Options, OPTION_ROTATE))) {
-        if (!pTrident->Linear) 
+        if (!LINEAR()) 
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Ignoring Option ROTATE "
 		       "in non-Linear Mode\n");
 	else {
@@ -1415,7 +1416,7 @@ TRIDENTPreInit(ScrnInfoPtr pScrn, int flags)
     /* FIXME ACCELERATION */
     if (!UseMMIO) pTrident->NoAccel = TRUE;
 
-    if (pTrident->Linear) {
+    if (LINEAR()) {
     	if (pTrident->pEnt->device->MemBase != 0) {
 	    /*
 	     * XXX Should check that the config file value matches one of the
@@ -2498,7 +2499,7 @@ TRIDENTMapMem(ScrnInfoPtr pScrn)
     if (pTrident->IOBase == NULL)
 	return FALSE;
 
-    if (pTrident->Linear) {
+    if (LINEAR()) {
         if (pTrident->FbMapSize != 0) {
 #ifndef XSERVER_LIBPCIACCESS
 	    pTrident->FbBase = xf86MapPciMem(pScrn->scrnIndex, 
@@ -2559,7 +2560,7 @@ TRIDENTUnmapMem(ScrnInfoPtr pScrn)
 #endif
     pTrident->IOBase = NULL;
 
-    if (pTrident->Linear) {
+    if (LINEAR()) {
     	if (pTrident->FbMapSize != 0) {
 #ifdef XSERVER_LIBPCIACCESS
 	    pci_device_unmap_range(pTrident->PciInfo, (pointer)pTrident->FbBase, pTrident->FbMapSize);
@@ -2931,7 +2932,8 @@ TRIDENTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     if (!pTrident->ShadowFB)
 	TRIDENTDGAInit(pScreen);
 
-    if (!pTrident->Linear) {
+#ifdef HAVE_ISA
+    if (!LINEAR()) {
 	miBankInfoPtr pBankInfo;
 
 	/* Setup the vga banking variables */
@@ -2965,6 +2967,7 @@ TRIDENTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	    return FALSE;
 	}
     }
+#endif
 
     {
     	BoxRec AvailFBArea;

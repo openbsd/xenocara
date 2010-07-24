@@ -110,7 +110,7 @@ TVGAInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
     pReg->tridentRegs3C4[NewMode1] = 0x80;
 
-    if (pTrident->Linear)
+    if (LINEAR())
     	pReg->tridentRegs3x4[LinearAddReg] = ((pTrident->FbAddress >> 24) << 6)|
 					 ((pTrident->FbAddress >> 20) & 0x0F)|
 					 0x20;
