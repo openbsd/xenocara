@@ -103,7 +103,9 @@
 #include "mibstore.h"
 
 /* All drivers using the mi banking wrapper need this */
+#ifdef HAVE_ISA
 #include "mibank.h"
+#endif
 
 /* All drivers using the mi colormap manipulation need this */
 #include "micmap.h"
@@ -785,10 +787,12 @@ CHIPSAvailableOptions(int chipid, int busid)
 {
     int chip = chipid & 0x0000ffff;
 
+#ifdef HAVE_ISA
     if (busid == BUS_ISA) {
     	if ((chip == CHIPS_CT64200) || (chip == CHIPS_CT64300)) 
 	    return ChipsWingineOptions;
     }
+#endif
     if (busid == BUS_PCI) {
     	if ((chip >= CHIPS_CT65550) && (chip <= CHIPS_CT69030))
 	    return ChipsHiQVOptions;
@@ -1545,6 +1549,13 @@ chipsPreInitHiQV(ScrnInfoPtr pScrn, int flags)
 	cPtr->Flags &= ~ChipsLinearSupport;
 	from = X_CONFIG;
     }
+
+#ifndef HAVE_ISA
+    if (!(cPtr->Flags & ChipsLinearSupport)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Linear framebuffer required\n");
+	return FALSE;
+    }
+#endif
 
     /* linear base */
     if (cPtr->Flags & ChipsLinearSupport) {
@@ -2650,6 +2661,13 @@ chipsPreInitWingine(ScrnInfoPtr pScrn, int flags)
 	from = X_CONFIG;
     }
 
+#ifndef HAVE_ISA
+    if (!(cPtr->Flags & ChipsLinearSupport)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Linear framebuffer required\n");
+	return FALSE;
+    }
+#endif
+
     /* linear base */
     if (useLinear) {
 	unsigned char mask = 0xF8;
@@ -3113,6 +3131,13 @@ chipsPreInit655xx(ScrnInfoPtr pScrn, int flags)
 	from = X_CONFIG;
     }
     
+#ifndef HAVE_ISA
+    if (!(cPtr->Flags & ChipsLinearSupport)) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Linear framebuffer required\n");
+	return FALSE;
+    }
+#endif
+
     /* linear base */
     if (useLinear) {
 	unsigned char mask;
@@ -3725,12 +3750,12 @@ CHIPSEnterVT(int scrnIndex, int flags)
 	&& (cPtr->Flags & ChipsLinearSupport)) 
         CHIPSResetVideo(pScrn); 
 
-    /*xf86UDelay(50000);*/
+    /*usleep(50000);*/
     chipsHWCursorOn(cPtr, pScrn);
     /* cursor settle delay */
-    xf86UDelay(50000);
+    usleep(50000);
     CHIPSAdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);    
-    xf86UDelay(50000);
+    usleep(50000);
     return TRUE;
 }
 
@@ -4123,6 +4148,7 @@ CHIPSScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     cPtr->HWCursorShown = FALSE;
 
+#ifdef HAVE_ISA
     if (!(cPtr->Flags & ChipsLinearSupport)) {
 	miBankInfoPtr pBankInfo;
 
@@ -4202,7 +4228,9 @@ CHIPSScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	/* Initialise cursor functions */
 	miDCInitialize (pScreen, xf86GetPointerScreenFuncs());
 
-    } else {
+    } else
+#endif /* HAVE_ISA */
+    {
     /* !!! Only support linear addressing for now. This might change */
 	/* Setup pointers to free space in video ram */
 #define CHIPSALIGN(size, align) (currentaddr - ((currentaddr - size) & ~align))
@@ -4664,7 +4692,9 @@ chipsDisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode,
     if (!pScrn->vtSema)
 	return;
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 8
     xf86EnableAccess(pScrn);
+#endif
     switch (PowerManagementMode) {
     case DPMSModeOn:
 	/* Screen: On; HSync: On, VSync: On */

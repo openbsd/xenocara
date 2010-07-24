@@ -82,7 +82,7 @@
                             ErrorF("timeout\n"); \
 			    tmp = cPtr->readXR(cPtr, 0x20); \
 			    cPtr->writeXR(cPtr, 0x20, ((tmp & 0xFD) | 0x2)); \
-                            xf86UDelay(10000); \
+                            usleep(10000); \
                             cPtr->writeXR(cPtr, 0x20, (tmp & 0xFD)); \
 			    break; \
                          } \
