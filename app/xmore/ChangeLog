@@ -1,8 +1,61 @@
-commit e7545d949090a3b7b75e3dd562cc367b152dcbb6
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Wed Apr 21 21:59:37 2010 +0200
+commit 999895eddb00cb535802409a46795c363b8d2422
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 23 15:51:09 2010 -0700
 
-    BSD Makefile
+    xmore 1.0.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4772e37779221c32cd9aedf253c5d0097551b63e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 23 14:14:06 2010 -0700
+
+    Remove several unnecessary macros from configure.ac
+    
+    PKG_CHECK_MODULES automatically calls AC_SUBST on the CFLAGS & LIBS
+    variables it sets
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    AM_PROG_CC_C_O is not needed since we are not compiling multiple targets
+    with differing CFLAGS.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d5ee44e818b58ad7b2eba005a024cc60720787d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 23 14:08:38 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    (Copied from commits to other modules by Gaetan Nadon <memsize@videotron.ca>)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0c2c7bb1951b258b61ec0cd9990adfad32814a52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 23 14:04:11 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 4a4187b8ce272e96b760e1e59da980644e99aa0b
 Author: Gaetan Nadon <memsize@videotron.ca>
