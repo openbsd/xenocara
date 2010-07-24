@@ -25,9 +25,6 @@
 /* All Tseng chips _need_ VGA register access, so multihead operation is out of the question */
 #include "vgaHW.h"
 
-/* Drivers using the mi banking wrapper need this */
-#include "mibank.h"
-
 /* All drivers using the mi colormap manipulation need this */
 #include "micmap.h"
 

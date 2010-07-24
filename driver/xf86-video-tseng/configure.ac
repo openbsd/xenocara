@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-tseng],
-        1.2.3,
+        1.2.4,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-video-tseng)
 
@@ -30,18 +30,20 @@ AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(.)
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AM_MAINTAINER_MODE
+
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
-
-if test "x$GCC" = "xyes"; then
-    CFLAGS="$CFLAGS -Wall -pedantic"
-fi
 
 AH_TOP([#include "xorg-server.h"])
 
@@ -59,7 +61,6 @@ XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto fontsproto $REQUIRED_MODULES])
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
 # Checks for libraries.
 SAVE_CPPFLAGS="$CPPFLAGS"
@@ -85,9 +86,6 @@ AC_SUBST([moduledir])
 
 DRIVER_NAME=tseng
 AC_SUBST([DRIVER_NAME])
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([
 	Makefile

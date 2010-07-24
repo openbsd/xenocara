@@ -1522,7 +1522,9 @@ TsengCrtcDPMSSet(ScrnInfoPtr pScrn, int PowerManagementMode, int flags)
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     CARD8 seq1, crtc34;
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 8
     xf86EnableAccess(pScrn);
+#endif
     switch (PowerManagementMode) {
     case DPMSModeOn:
     default:

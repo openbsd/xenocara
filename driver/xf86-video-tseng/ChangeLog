@@ -1,259 +1,582 @@
-2006-04-11  Luc Verhaegen  <libv@skynet.be>
+commit f80842085c790c3acf611d3944939f9515e4bee2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 5 14:16:09 2010 +1000
 
-	* src/tseng_mode.c: (TsengSave), (TsengRestore):
+    bump for release 1.2.4
 
-	Fix dotclock breakage on ET6000.
-	The fish crawled out of the swamp, but still had gills and fins.
-	The internal ramdac still has multiple dotclock registers, and the
-	previous change only fixed up the external ramdacs of ET4000W32ps.
-	(Reported by the other tseng owner: Adam Jackson)
+commit eb4a39b11ece5dc4e34519286b3f406fecf9b5ae
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 12:49:55 2010 -0400
 
-2006-03-08  Luc Verhaegen  <libv@skynet.be>
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-	* src/tseng_mode.c: (STG1703Restore), (CH8398Store),
-	(TsengModeInit):
+commit 9bb1b4995b8825944531d495262a0bb049a45f3e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Apr 8 13:21:52 2010 -0400
 
-	Remove daft dependance on mode->ClockIndex. We used it to tell
-	vgaHWInit to use clock 2, while ClockIndex = -1 is clock 3. So
-	just use clock 3 for the ramdacs and be done with.
+    config: remove redundant compiler flags
+    
+    These are available using --enable-strict-compilation
+    Use same configure option as all x.org modules
+    Only GCC was covered, not SUNCC or INTELCC
+    Introduced in commit 85397a4ef7a3a13f7e2940cb0e5c2fdbfea4c695
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2006-01-31  Luc Verhaegen  <libv@skynet.be>
+commit bd71f657daa44b8e5fc416f6eb48e5bc8216e838
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue May 18 13:13:44 2010 -0400
 
-	* src/tseng.h:
-	* src/tseng_driver.c: (TsengPreInit):
-	* src/tseng_mode.c: (STG1703Mode), (CH8398Mode),
-	(TsengSetupClockRange), (TsengSave), (TsengRestore),
-	(TsengModeInit):
+    Remove mibank.h reference
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-	Remove dual clockranges. ET4000W32p now always uses the dac bus
-	as 16bits wide.
+commit 5bf78ef9a273b4bc56b9a2548e9715333aa885ad
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Thu May 6 20:16:21 2010 +0300
 
-2006-01-29  Luc Verhaegen  <libv@skynet.be>
+    Check xf86EnableAccess only in old servers
+    
+    On new X servers this function is dummy. Similar functionality is now in place
+    using lock/unlock mechanism of the VGA arbitration, triggered inside the
+    server.
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
 
-	* src/tseng_driver.c: (TsengPreInit):
-	* src/tseng_mode.c: (STG1703Detect), (STG1703Restore),
-	(STG1703Clock), (STG1703Mode), (CH8398Detect), (CH8398PrintRegs),
-	(CH8398Store), (CH8398Restore), (CH8398Clock), (CH8398Mode),
-	(TsengRAMDACProbe), (TsengSave), (TsengRestore), (TsengModeInit):
+commit b918f6d35409a2c5e74232b540dffad57f85cf0a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:54:57 2010 -0800
 
-	Fully implement the Chrontel CH8398. This has the exact same
-        24bpp weirdness, so i guess this is an fb issue.
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-2006-01-28  Luc Verhaegen  <libv@skynet.be>
+commit 78d94fb6981e5bb9ff19be9b9362a9b1f3707bb6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
 
-	* src/tseng.h:
-	* src/tseng_driver.c: (TsengGetRec), (TsengFreeRec),
-	(TsengPreInit):
-	* src/tseng_mode.c: (STG1703Detect), (STG1703PrintRegs),
-	(STG1703Store), (STG1703Restore), (STG1703Clock), (STG1703Mode),
-	(TsengRAMDACProbe), (tseng_set_ramdac_bpp), (TsengSave),
-	(TsengRestore), (TsengModeInit):
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-	Fully implement the SGS-Thomson STG-1703. This is working great
-	except for 24bpp, where there seems to be an offset issue. Red is
-	blue, green is red, blue is green. Will dig that one out later on.
-	8bpp and 16bpp (both with 8 and 16bit dac bus) and 32bpp are great.
+commit 96b5eebb07ca02e607c02bd22911e8002882fbcd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:06 2009 -0500
 
-2006-01-28  Luc Verhaegen  <libv@skynet.be>
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
 
-	* src/tseng.h:
-	* src/tseng_mode.c: (tseng_set_ramdac_bpp), (ET6000CalcClock),
-	(TsengSave), (TsengRestore), (TsengModeInit):
-	
-	- Remove pTseng->ModeReg
-	- Split ET6000 bpp, dotclock and ram clock handling from the 
-	  ET4000s ramdac code.
+commit 4d3c8e7e1f1eebcad01418d2a312c8791a1773fb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
 
-2006-01-27  Luc Verhaegen  <libv@skynet.be>
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
 
-	* src/tseng.h:
-	* src/tseng_mode.c: (tseng_set_ramdac_bpp), (tseng_clock_setup),
-	(TsengModeInit):
+commit 7dcae998561f95b79a981433a9b264cfe727918e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
 
-	Clear duplicate PrivFlag.
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
 
-2006-01-26  Luc Verhaegen  <libv@skynet.be>
+commit 9ef01ab3f2420c4fb27f605834fd165c919abdf6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:22 2009 -0400
 
-	* src/tseng.h:
-	* src/tseng_cursor.c: (ET4000CursorRead), (ET4000CursorWrite),
-	(TsengShowCursor), (TsengHideCursor), (TsengSetCursorPosition),
-	(TsengSetCursorColors), (TsengLoadCursorImage),
-	(TsengHWCursorInit), (TsengCursorStore), (TsengCursorRestore):
-	* src/tseng_driver.c: (TsengUnlock), (TsengLock),
-	(TsengPreInitPCI), (et6000_check_videoram), (TsengDetectMem),
-	(TsengProcessHibit), (TsengPreInit), (TsengEnterVT),
-	(TsengLeaveVT), (TsengSaveScreen):
-	* src/tseng_mode.c: (vgaHWReadDacReadAddr), (vgaHWWriteBank),
-	(vgaHWReadBank), (vgaHWWriteSegment), (vgaHWReadSegment),
-	(vgaHWWriteModeControl), (vgaHWHerculesSecondPage), (ET6000IORead),
-	(ET6000IOWrite), (TsengRAMDACProbe), (tseng_set_ramdac_bpp),
-	(TsengAdjustFrame), (TsengSave), (TsengRestore), (TsengModeInit),
-	(TsengCrtcDPMSSet), (TsengHVSyncDPMSSet):
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
 
-	Improve tseng driver transparency.
-	- move all VGA inbs/outbs to vgahw calls, provide our own when 
-	  relevant callbacks are missing.
-	- move ET4000 sprite accesses to ET4000CursorRead/Write.
-	- move ET6000 IO accesses to ET6000IORead/Write.
-	- fix regression with CH8398, introduced with the ramdac cleanup.
+commit b9f6b124cf293cc508590774c0bd3f896326b4ba
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
 
-2006-01-23  Luc Verhaegen  <libv@skynet.be>
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
 
-	* src/Makefile.am:
-	* src/tseng.h:
-	* src/tseng_accel.c: (tseng_terminate_acl),
-	(tseng_recover_timeout), (tseng_init_acl),
-	(TsengSubsequentScanlineCPUToScreenColorExpandFill),
-	(TsengSubsequentColorExpandScanline),
-	(TsengSubsequentColorExpandScanline_8bpp),
-	(TsengSubsequentColorExpandScanline_16bpp),
-	(TsengSubsequentColorExpandScanline_24bpp),
-	(TsengSubsequentColorExpandScanline_32bpp),
-	(TsengSetupForCPUToScreenColorExpandFill),
-	(TsengSubsequentCPUToScreenColorExpandFill),
-	(TsengSetupForScreenToScreenColorExpandFill),
-	(TsengSubsequentScreenToScreenColorExpandFill),
-	(TsengXAAInit_Colexp), (TsengXAAInit):
-	* src/tseng_accel.h:
-	* src/tseng_acl.c:
-	* src/tseng_acl.h:
-	* src/tseng_clock.c:
-	* src/tseng_colexp.c:
-	* src/tseng_dpms.c:
-	* src/tseng_driver.c: (TsengSaveScreen), (TsengSwitchMode):
-	* src/tseng_inline.h:
-	* src/tseng_mode.c: (vgaHWReadDacWriteAddr), (tsengSTG170xDetect),
-	(tsengCH8398Detect), (TsengRAMDACProbe), (tseng_set_ramdac_bpp),
-	(tseng_clock_setup), (TsengcommonCalcClock), (TsengAdjustFrame),
-	(TsengValidMode), (TsengSave), (TsengRestore), (TsengModeInit),
-	(TsengCrtcDPMSSet), (TsengHVSyncDPMSSet):
-	* src/tseng_ramdac.c:
-	
-	Reorganise code:
-	- move tseng_ramdac.c, tseng_clock.c, tseng_dpms.c, and
-	  TsengAdjustFrame, TsengValidMode, TsengSave, TsengRestore,
-	  TsengModeInit from tseng_driver.c into tseng_mode.c.
-	- move tseng_acl.c and tseng_colexp.c into tseng_accel.c
-	- move tseng_acl.h and tseng_inline.g into tseng_accel.h
-	- move all accel functions except for 2 to static, ifdef
-	  out unused ones.
+commit ebd3672b8e4f3ad97fd900304ed955558e2b181a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 7 11:12:13 2009 -0400
 
-2006-01-22  Luc Verhaegen  <libv@skynet.be>
+    xf86-video-tseng: Remove unused .cvsignore file #23776
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-	* .cvsignore:
-	* man/.cvsignore:
-	* src/tseng.h:
-	* src/tseng_clock.c: (tseng_clock_setup):
-	* src/tseng_driver.c: (TsengProcessOptions), (TsengPreInit),
-	(TsengModeInit), (TsengSave), (TsengRestore), (ET4000Probe), (if):
-	* src/tseng_ramdac.c: (vgaHWReadDacWriteAddr),
-	(tsengSTG170xDetect), (tsengCH8398Detect), (TsengRAMDACProbe),
-	(tseng_set_ramdac_bpp):
+commit 5734845c91179a1138d75aaad48102cb077a2b12
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 7 14:52:01 2009 +1000
 
-	Clean up ramdac handling.
-	- Remove all ramdacs except STG1703 and CH8398. Both are in my
-	  possession, both are currently broken and have been for ages,
-	  but both will be fixed. ICS5341 is out there somewhere too,
-	  will be added when i get my hands on it.
-	- Cleanly split up ET4000 handling and ET6000 code, both for
-	  dotclock, memory clocking and ramdac.
-	- Limit driver to either 8, 16, 24 or 32bits.
+    bump version to 1.2.3
 
-2006-01-22  Luc Verhaegen  <libv@skynet.be>
+commit d095c1d51b1a895471ce0b1970ae21ee6499ae51
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
 
-	* src/Makefile.am:
-	* src/tseng.h:
-	* src/tseng_accel.c: (TsengXAAInit):
-	* src/tseng_acl.c: (tseng_init_acl):
-	* src/tseng_bank.c:
-	* src/tseng_colexp.c: (TsengXAAInit_Colexp):
-	* src/tseng_cursor.c: (TsengHWCursorInit):
-	* src/tseng_dga.c: (TsengDGAInit), (Tseng_OpenFramebuffer):
-	* src/tseng_driver.c: (TsengPreInitPCI), (TsengLimitMem),
-	(TsengProcessOptions), (TsengGetFbAddress), (TsengPreInit),
-	(TsengSetupAccelMemory), (TsengScreenInit), (TsengMapMem),
-	(TsengUnmapMem), (TsengModeInit):
+    tseng: change to using ABI version check
 
-	Tseng in the PCI era: Remove banked memory.
+commit 17ebee6804a99af32747b801c5b979ba5248a9d8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:40 2009 +1000
 
-2006-01-22  Luc Verhaegen  <libv@skynet.be>
+    tseng: update for resources/RAC API removal
 
-	* configure.ac:
-	* src/tseng.h:
-	* src/tseng_accel.c: (TsengXAAInit), (Tseng_setup_screencopy):
-	* src/tseng_acl.c: (tseng_recover_timeout), (tseng_init_acl):
-	* src/tseng_acl.h:
-	* src/tseng_clock.c: (tseng_clock_setup),
-	(Tseng_ET4000ClockSelect):
-	* src/tseng_colexp.c: (TsengXAAInit_Colexp),
-	(TsengSubsequentScanlineCPUToScreenColorExpandFill):
-	* src/tseng_cursor.c: (TsengShowCursor), (TsengHideCursor),
-	(TsengSetCursorPosition), (TsengSetCursorColors),
-	(TsengLoadCursorImage):
-	* src/tseng_driver.c: (TsengIdentify), (TsengProbe),
-	(TsengPreInitPCI), (TsengLimitMem), (TsengDetectMem),
-	(TsengProcessOptions), (TsengGetLinFbAddress), (TsengPreInit),
-	(TsengScreenInit), (TsengSaveScreen), (TsengModeInit), (TsengSave):
-	* src/tseng_inline.h:
-	* src/tseng_ramdac.c: (Check_Tseng_Ramdac), (tseng_set_ramdac_bpp):
+commit 25548be8814796925625b11f390dca29b1e47358
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:53:03 2009 -0400
 
-	- -Wall and -pedantic are gccisms (Alan Coopersmith).
-	- Remove ET4000, ET4000W32 and ET4000W32I devices.
-	- Rework handling of remaining devices.
-	- Clean up Probe and PreInit to only handle pci devices.
+    tseng 1.2.2
 
-2006-01-21  Luc Verhaegen  <libv@skynet.be>
+commit 1ce0bf811255b1faa00aa279e8972a1a027849ab
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:23:41 2009 -0400
 
-	* configure.ac:
-	* src/tseng.h:
-	* src/tseng_driver.c: (TsengAssignFPtr), (TsengModeInit),
-	(TsengSave):
-	* src/tseng_ramdac.c: (tseng_set_ramdac_bpp):
-	It's 2006, maybe it's time to inform the tseng driver that humankind
-	survived the millenium bug.
+    Remove useless loader symbol lists.
 
-	First phase of changes:
-	- Fix a glaring problem that's been there since 1998: RegRec arrays
-	  used beyond their boundaries.
-	- Add -Wall and -pedantic to CFLAGS.
-	- Fix VERSION redefinition.
-	
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 7addf8709202634ac45b4c51d910e2798054271c
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 21:05:06 2009 -0800
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Add README with pointers to mailing list, bugzilla & git repos
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 9d4aea1211de81fb27069d087bd4393d27355239
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:37:31 2009 -0800
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Remove xorgconfig & xorgcfg from See Also list in man page
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 7f7e48cf5cf7512b5c1f5f3bf31eeafb201a9ad8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 15:02:32 2008 +1000
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    tseng 1.2.1
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 5de98d43ddca983a43d30a27339427b1e60ded74
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 14:08:37 2008 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Uninclude xf86Version.h
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 6312fd997afc4f739838ce53c19dcccf90900119
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Jul 18 16:24:50 2008 -0300
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Remove dependency on xf1bpp and xf4bpp
+    
+    Not just don't include the header files.
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit 08b489a266d79cb650ec71249708412d5908c017
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 16:10:24 2008 -0400
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    tseng 1.2.0
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 2d495250bc09ab037985ecd5be4229f40b9dca4a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 16:02:54 2008 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Finish making xf1bpp/xf4bpp optional.
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit b3ea57ce98505fdafaacf80faff4ef1216682901
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:49:04 2008 -0400
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    Fix distcheck
+
+commit 2d44541a6a5bb6b62db087b268d723e5a77320e5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:45:12 2008 -0400
+
+    Death to RCS tags.
+
+commit 7ad7c5136ba51e3e9057afb85aaba04b8e465125
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 00:02:49 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 76fb068300fe3b6ff02215802d7c00c0c1db1faa
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Feb 27 14:09:24 2008 +1000
+
+    oops forgot pcirename file
+
+commit ef47398dde445038e5c7303ef54f2002a633da55
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Feb 27 14:05:38 2008 +1000
+
+    blind pciaccess conversion
+
+commit 116da81133b3242c7a4a809fcc320a93fea8671b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 27 13:09:52 2007 -0800
+
+    renamed: .cvsignore -> .gitignore
+
+commit 6e9ae39e789316770780831a264507c92c42c694
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 27 13:09:15 2007 -0800
+
+    Replace XFree86 references in man page
+
+commit 3c7520088ea9d78e453122e28d52274465c25b58
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:47:09 2006 -0400
+
+    Bump to 1.1.1
+
+commit d34146a8daf51385e5b344b3b4e6c68ab6e81974
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Tue Apr 11 21:43:00 2006 +0000
+
+    Tseng: Fix dotclock breakage on ET6000. The fish crawled out of the swamp,
+        but still had gills and fins. The internal ramdac still has multiple
+        dotclock registers, and the previous change only fixed up the external
+        ramdacs of ET4000W32ps. (Reported by the other tseng owner: Adam
+        Jackson)
+
+commit d4bc751fa622616601a7d3213852d7a4f634be0b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 21:43:55 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 3176982fbe4304beb43100db6b8756d2617abcb8
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Wed Mar 8 16:51:00 2006 +0000
+
+    Remove daft dependance on mode->ClockIndex. We used it to tell vgaHWInit to
+        use clock 2, while ClockIndex = -1 is clock 3. So just use clock 3 for
+        the ramdacs and be done with.
+
+commit 9111778901526b8d7f9a5c3977f51746bc4ffbd0
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Tue Jan 31 10:05:33 2006 +0000
+
+    Remove dual clockranges. ET4000W32p now always uses the dac bus as
+    16bits wide.
+
+commit 58d6be9da00da4f6e2fa3cf3d78118012fcca436
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sun Jan 29 20:07:23 2006 +0000
+
+    Fully implement the Chrontel CH8398. This has the exact same 24bpp
+        weirdness, so i guess this is an fb issue.
+
+commit 24564dc891ba42395b5c8db63dd65f9f3fad5417
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sat Jan 28 18:10:03 2006 +0000
+
+    Fully implement the SGS-Thomson STG-1703. This is working great except for
+        24bpp, where there seems to be an offset issue. Red is blue, green is
+        red, blue is green. Will dig that one out later on. 8bpp and 16bpp
+        (both with 8 and 16bit dac bus) and 32bpp are great.
+
+commit 0fa3293187969cacd3368b6c2f13564d7ee63d44
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sat Jan 28 13:38:32 2006 +0000
+
+    - Remove pTseng->ModeReg
+    - Split ET6000 bpp, dotclock and ram clock handling from the ET4000s ramdac
+        code.
+
+commit 9b03a1959d4266fda1cccaf77d9f11e23f81cce1
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Fri Jan 27 10:25:46 2006 +0000
+
+    Tseng: Clear duplicate PrivFlag.
+
+commit 50a68825a098d8c244dcbb88e80e30790c0d1901
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Thu Jan 26 11:25:22 2006 +0000
+
+    Improve tseng driver transparency.
+    - move all VGA inbs/outbs to vgahw calls, provide our own when relevant
+        callbacks are missing.
+    - move ET4000 sprite accesses to ET4000CursorRead/Write.
+    - move ET6000 IO accesses to ET6000IORead/Write.
+    - fix regression with CH8398, introduced with the ramdac cleanup.
+
+commit 8035fb04c5aa448bcd67251de4e0284101969dee
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Mon Jan 23 10:45:43 2006 +0000
+
+    tseng: Reorganise code:
+    - move tseng_ramdac.c, tseng_clock.c, tseng_dpms.c, and TsengAdjustFrame,
+        TsengValidMode, TsengSave, TsengRestore, TsengModeInit from
+        tseng_driver.c into tseng_mode.c.
+    - move tseng_acl.c and tseng_colexp.c into tseng_accel.c
+    - move tseng_acl.h and tseng_inline.g into tseng_accel.h
+    - move all accel functions except for 2 to static, ifdef out unused ones.
+
+commit 9b9458dd325154ae6753db656d7198c3645e5fda
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sun Jan 22 13:12:31 2006 +0000
+
+    tseng: Clean up ramdac handling.
+    - Remove all ramdacs except STG1703 and CH8398. Both are in my possession,
+        both are currently broken and have been for ages, but both will be
+        fixed. ICS5341 is out there somewhere too, will be added when i get my
+        hands on it.
+    - Cleanly split up ET4000 handling and ET6000 code, both for dotclock,
+        memory clocking and ramdac.
+    - Limit driver to either 8, 16, 24 or 32bpp.
+
+commit 500a6368d375482cb14eb5fcf119bcc63a8326af
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sun Jan 22 09:48:15 2006 +0000
+
+    Tseng in the PCI era: Remove banked memory.
+
+commit c2e3645e67580fc465e3b06322d85d14ea5cccc5
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sun Jan 22 08:33:37 2006 +0000
+
+    Further tseng changes.
+    - -Wall and -pedantic are gccisms (Alan Coopersmith).
+    - Remove ET4000, ET4000W32 and ET4000W32I devices.
+    - Rework handling of remaining devices.
+    - Clean up Probe and PreInit to only handle pci devices.
+
+commit 85397a4ef7a3a13f7e2940cb0e5c2fdbfea4c695
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sat Jan 21 11:30:44 2006 +0000
+
+    It's 2006, maybe it's time to inform the tseng driver that humankind
+        survived the millenium bug.
+    First phase of changes:
+    - Fix a glaring problem that's been there since 1998: RegRec arrays used
+        beyond their boundaries.
+    - Add -Wall and -pedantic to CFLAGS.
+    - Fix VERSION redefinition.
+
+commit 9c6c1ba8c71b805cc850e4f2e858b849b321becb
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:04 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit f3af75f8a15fc8642a2445ab0399a1035c6f775c
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:56 2005 +0000
+
+    Stub COPYING files
+
+commit 8ddbdb7acf64c1c191c69ed93d969d55529fcd4b
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:20 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 3a28a2af1aeae52a0ba501e83418a73f0e9b8083
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:40 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit a5e7061284a3d6c235e17527824c151eab4a500c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:36 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 80f07603a74f9cdae8e78630ff1616432a0184ff
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:11 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 167226536dd62c5928791a5531ffb359420789a9
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:05 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 03cd84412f72adb7e107ed1b5cdb5cce42157f40
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:14 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 622f53b0e18d9497798ffa031749787e280cc212
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:21 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 0e89a5ef18103630bf8eedbbf8571b2eba09e931
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:22 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 43c7cf3c3e7aba4c88abfb58fdcf39c1a5f3721c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:56 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit d5715dd298ce195e8e7b6a45ecb40d84227b6dad
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:05 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit d45ce8aebeb350941b1a715da8122ae71448876f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:55 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 498d6aaeac8c2de97c5e4f4f1ded434ad983a534
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:37 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit 37b3af373d7cbbd1e37c4295acaee05ee2e718ae
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:07 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit c8438067e1fca1f43779129e54604fbe68cd8f5c
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:54 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 0060b45acde484363c5066fdbbc24ba9302029cf
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:46 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit c2d898c265670c74f8d0aa43d9a3538692f94060
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 23:51:03 2005 +0000
+
+    Build system for tseng
+
+commit 34821cefd17fa78ca6ef1e42f0e5614c9c1e95eb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:30:06 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 088f5a28df6b82b127e5ca67f8a6b567e61229b7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:59 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 158c29da25a3b31c31a5f962eae4b7d243533fc1
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:32 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 260b04232cc68431633aef0842bac3fdf94880aa
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:43:10 2004 +0000
+
+    Encoding of numerous files changed to UTF-8
+
+commit 9349d469fda7c1bf2ada01ac17e83da4f4b83fd0
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:24:09 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit e43ddda495ed5ff4a39966fa2249125214a8e17e
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed May 26 16:24:09 2004 +0000
+
+    Fixing setting of physical framebuffer base for several drivers. C&T
+        driver: Fixed setting of minimal clocks for HiQV chipsets. Neomagic
+        driver: improved support for lowres double scan modes.
+
+commit 4ba842dddc8c6bb10a626bc01bc11f64a45be9fa
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:52:24 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 9da00669ac5ceb1e8eefbc98689da9e3015bf59a
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:41 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 5a84a3f014543554b43037f9b39479d05c8dee5e
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:28 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 0dc3b939140595cd0fc190a6920a9b204cd9c557
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:55 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 946579498b6b02bdb271e6ead1ee6b7c8f375432
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:28 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 6145158569721959d6adb98eb2a26e8f850088da
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:43 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 795dc7c87de581d0b70926845620186e1a2e1a1f
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit f8465308152c64c6e05ebf814794aec1022046c5
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision
