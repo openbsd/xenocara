@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.6 2009/11/26 21:30:19 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.7 2010/07/25 14:15:49 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -111,9 +111,9 @@ struct USBTDevice {
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
 
-static LocalDevicePtr UsbTabletAllocateStylus(InputDriverPtr);
-static LocalDevicePtr UsbTabletAllocateEraser(InputDriverPtr);
-static LocalDevicePtr UsbTabletAllocate(InputDriverPtr, char *, int);
+static InputInfoPtr UsbTabletAllocateStylus(InputDriverPtr);
+static InputInfoPtr UsbTabletAllocateEraser(InputDriverPtr);
+static InputInfoPtr UsbTabletAllocate(InputDriverPtr, char *, int);
 static InputInfoPtr UsbTabletPreInit(InputDriverPtr, IDevPtr, int);
 static int UsbTabletProc(DeviceIntPtr, int);
 static void UsbTabletReadInput(InputInfoPtr);
