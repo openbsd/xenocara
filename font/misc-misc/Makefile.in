@@ -55,17 +55,20 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-subdir = .
+build_triplet = @build@
+host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS install-sh missing mkinstalldirs
+	ChangeLog INSTALL NEWS config.guess config.sub install-sh \
+	missing
+subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -90,19 +93,45 @@ GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
+ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
+ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
+AMDEP_FALSE = @AMDEP_FALSE@
+AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+APP_MAN_DIR = @APP_MAN_DIR@
+APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BDFTOPCF = @BDFTOPCF@
-BDFTRUNCATE = @BDFTRUNCATE@
+CC = @CC@
+CCDEPMODE = @CCDEPMODE@
+CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+COMPRESS = @COMPRESS@
+COMPRESS_SUFFIX = @COMPRESS_SUFFIX@
+CPP = @CPP@
+CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
+DEPDIR = @DEPDIR@
+DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
+DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
+EXEEXT = @EXEEXT@
+FCCACHE = @FCCACHE@
+FILE_MAN_DIR = @FILE_MAN_DIR@
+FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FONTDIR = @FONTDIR@
+FONTROOTDIR = @FONTROOTDIR@
+GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -139,18 +168,24 @@ JISX0201_FALSE = @JISX0201_FALSE@
 JISX0201_TRUE = @JISX0201_TRUE@
 KOI8_R_FALSE = @KOI8_R_FALSE@
 KOI8_R_TRUE = @KOI8_R_TRUE@
+LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIB_MAN_DIR = @LIB_MAN_DIR@
+LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
 MAPFILES_PATH = @MAPFILES_PATH@
 MAPS_CFLAGS = @MAPS_CFLAGS@
 MAPS_LIBS = @MAPS_LIBS@
+MISC_MAN_DIR = @MISC_MAN_DIR@
+MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKFONTDIR = @MKFONTDIR@
-MKFONTSCALE = @MKFONTSCALE@
+OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -158,34 +193,54 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
+RUN_FCCACHE = @RUN_FCCACHE@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 UCS2ANY = @UCS2ANY@
 VERSION = @VERSION@
-ac_ct_STRIP = @ac_ct_STRIP@
-ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
+ac_ct_CC = @ac_ct_CC@
+am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
+am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
+am__include = @am__include@
 am__leading_dot = @am__leading_dot@
+am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
+build = @build@
 build_alias = @build_alias@
+build_cpu = @build_cpu@
+build_os = @build_os@
+build_vendor = @build_vendor@
 datadir = @datadir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+host = @host@
 host_alias = @host_alias@
+host_cpu = @host_cpu@
+host_os = @host_os@
+host_vendor = @host_vendor@
+htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
+localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
+psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
@@ -275,43 +330,43 @@ EXTRA_FONT_FILES = \
 FONT_FILES = $(BDF2UCS_FONT_FILES) $(EXTRA_FONT_FILES)
 TRUNC_FONT_FILES = $(BDF2UCS_FONT_FILES)
 BDF_FILES = $(FONT_FILES:%=%.bdf)
-PCF_FILES = $(FONT_FILES:%=%.pcf.gz)
+PCF_FILES = $(FONT_FILES:%=%.pcf$(COMPRESS_SUFFIX))
 TRUNC_BDF_FILES = $(TRUNC_FONT_FILES:%=%t.bdf)
-TRUNC_PCF_FILES = $(TRUNC_FONT_FILES:%=%.pcf.gz)
+TRUNC_PCF_FILES = $(TRUNC_FONT_FILES:%=%.pcf$(COMPRESS_SUFFIX))
 @ISO8859_1_TRUE@ISO8859_1_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-1.bdf)
-@ISO8859_1_TRUE@ISO8859_1_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-1.pcf.gz)
+@ISO8859_1_TRUE@ISO8859_1_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-1.pcf$(COMPRESS_SUFFIX))
 @ISO8859_2_TRUE@ISO8859_2_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-2.bdf)
-@ISO8859_2_TRUE@ISO8859_2_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-2.pcf.gz)
+@ISO8859_2_TRUE@ISO8859_2_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-2.pcf$(COMPRESS_SUFFIX))
 @ISO8859_3_TRUE@ISO8859_3_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-3.bdf)
-@ISO8859_3_TRUE@ISO8859_3_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-3.pcf.gz)
+@ISO8859_3_TRUE@ISO8859_3_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-3.pcf$(COMPRESS_SUFFIX))
 @ISO8859_4_TRUE@ISO8859_4_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-4.bdf)
-@ISO8859_4_TRUE@ISO8859_4_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-4.pcf.gz)
+@ISO8859_4_TRUE@ISO8859_4_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-4.pcf$(COMPRESS_SUFFIX))
 @ISO8859_5_TRUE@ISO8859_5_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-5.bdf)
-@ISO8859_5_TRUE@ISO8859_5_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-5.pcf.gz)
+@ISO8859_5_TRUE@ISO8859_5_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-5.pcf$(COMPRESS_SUFFIX))
 @ISO8859_7_TRUE@ISO8859_7_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-7.bdf)
-@ISO8859_7_TRUE@ISO8859_7_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-7.pcf.gz)
+@ISO8859_7_TRUE@ISO8859_7_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-7.pcf$(COMPRESS_SUFFIX))
 @ISO8859_8_TRUE@ISO8859_8_BDF_FILES = $(BDF2UCS_8_FONT_FILES:%=%-ISO8859-8.bdf)
-@ISO8859_8_TRUE@ISO8859_8_PCF_FILES = $(BDF2UCS_8_FONT_FILES:%=%-ISO8859-8.pcf.gz)
+@ISO8859_8_TRUE@ISO8859_8_PCF_FILES = $(BDF2UCS_8_FONT_FILES:%=%-ISO8859-8.pcf$(COMPRESS_SUFFIX))
 @ISO8859_9_TRUE@ISO8859_9_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-9.bdf)
-@ISO8859_9_TRUE@ISO8859_9_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-9.pcf.gz)
+@ISO8859_9_TRUE@ISO8859_9_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-9.pcf$(COMPRESS_SUFFIX))
 @ISO8859_10_TRUE@ISO8859_10_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-10.bdf)
-@ISO8859_10_TRUE@ISO8859_10_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-10.pcf.gz)
+@ISO8859_10_TRUE@ISO8859_10_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-10.pcf$(COMPRESS_SUFFIX))
 @ISO8859_11_TRUE@ISO8859_11_BDF_FILES = $(BDF2UCS_11_FONT_FILES:%=%-ISO8859-11.bdf)
-@ISO8859_11_TRUE@ISO8859_11_PCF_FILES = $(BDF2UCS_11_FONT_FILES:%=%-ISO8859-11.pcf.gz)
+@ISO8859_11_TRUE@ISO8859_11_PCF_FILES = $(BDF2UCS_11_FONT_FILES:%=%-ISO8859-11.pcf$(COMPRESS_SUFFIX))
 @ISO8859_13_TRUE@ISO8859_13_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-13.bdf)
-@ISO8859_13_TRUE@ISO8859_13_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-13.pcf.gz)
+@ISO8859_13_TRUE@ISO8859_13_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-13.pcf$(COMPRESS_SUFFIX))
 @ISO8859_14_TRUE@ISO8859_14_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-14.bdf)
-@ISO8859_14_TRUE@ISO8859_14_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-14.pcf.gz)
+@ISO8859_14_TRUE@ISO8859_14_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-14.pcf$(COMPRESS_SUFFIX))
 @ISO8859_15_TRUE@ISO8859_15_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-15.bdf)
-@ISO8859_15_TRUE@ISO8859_15_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-15.pcf.gz)
+@ISO8859_15_TRUE@ISO8859_15_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-15.pcf$(COMPRESS_SUFFIX))
 @ISO8859_16_TRUE@ISO8859_16_BDF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-16.bdf)
-@ISO8859_16_TRUE@ISO8859_16_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-16.pcf.gz)
+@ISO8859_16_TRUE@ISO8859_16_PCF_FILES = $(BDF2UCS_FONT_FILES:%=%-ISO8859-16.pcf$(COMPRESS_SUFFIX))
 @KOI8_R_TRUE@KOI8_R_BDF_FILES = $(BDF2UCS_KOI8_FONT_FILES:%=%-KOI8-R.bdf)
-@KOI8_R_TRUE@KOI8_R_PCF_FILES = $(BDF2UCS_KOI8_FONT_FILES:%=%-KOI8-R.pcf.gz)
+@KOI8_R_TRUE@KOI8_R_PCF_FILES = $(BDF2UCS_KOI8_FONT_FILES:%=%-KOI8-R.pcf$(COMPRESS_SUFFIX))
 @JISX0201_TRUE@JISX0201_BDF_FILES = $(BDF2UCS_JISX0201_FONT_FILES:%=%-JISX0201.1976-0.bdf)
-@JISX0201_TRUE@JISX0201_PCF_FILES = $(BDF2UCS_JISX0201_FONT_FILES:%=%-JISX0201.1976-0.pcf.gz)
+@JISX0201_TRUE@JISX0201_PCF_FILES = $(BDF2UCS_JISX0201_FONT_FILES:%=%-JISX0201.1976-0.pcf$(COMPRESS_SUFFIX))
 UTIL_DIR = @MAPFILES_PATH@
-SUFFIXES = .bdf .pcf.gz t.bdf \
+SUFFIXES = .bdf .pcf$(COMPRESS_SUFFIX) t.bdf \
 	-ISO8859-1.bdf \
 	-ISO8859-2.bdf \
 	-ISO8859-3.bdf \
@@ -372,11 +427,12 @@ KOEIGHTEEN = 18x18ko.bdf.xaa 18x18ko.bdf.xab 18x18ko.bdf.xac 18x18ko.bdf.xad \
         18x18ko.bdf.xai
 
 CLEANFILES = $(font_DATA) $(TRUNC_BDF_FILES) $(BUILT_BDF_FILES) 18x18ko.bdf
-EXTRA_DIST = $(BDF_FILES) autogen.sh
+EXTRA_DIST = $(BDF_FILES) ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .bdf .pcf.gz t.bdf -ISO8859-1.bdf -ISO8859-2.bdf -ISO8859-3.bdf -ISO8859-4.bdf -ISO8859-5.bdf -ISO8859-7.bdf -ISO8859-8.bdf -ISO8859-9.bdf -ISO8859-10.bdf -ISO8859-11.bdf -ISO8859-13.bdf -ISO8859-14.bdf -ISO8859-15.bdf -ISO8859-16.bdf -KOI8-R.bdf -JISX0201.1976-0.bdf
+.SUFFIXES: .bdf .pcf$(COMPRESS_SUFFIX) t.bdf -ISO8859-1.bdf -ISO8859-2.bdf -ISO8859-3.bdf -ISO8859-4.bdf -ISO8859-5.bdf -ISO8859-7.bdf -ISO8859-8.bdf -ISO8859-9.bdf -ISO8859-10.bdf -ISO8859-11.bdf -ISO8859-13.bdf -ISO8859-14.bdf -ISO8859-15.bdf -ISO8859-16.bdf -KOI8-R.bdf -JISX0201.1976-0.bdf
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -464,6 +520,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -584,6 +643,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-generic mostlyclean-am
@@ -636,93 +696,93 @@ ps-am:
 uninstall-am: uninstall-fontDATA uninstall-info-am
 
 .PHONY: all all-am all-local am--refresh check check-am clean \
-	clean-generic dist dist-all dist-bzip2 dist-gzip dist-shar \
-	dist-tarZ dist-zip distcheck distclean distclean-generic \
-	distcleancheck distdir distuninstallcheck dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-data-hook install-exec install-exec-am \
-	install-fontDATA install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-fontDATA uninstall-info-am
+	clean-generic dist dist-all dist-bzip2 dist-gzip dist-hook \
+	dist-shar dist-tarZ dist-zip distcheck distclean \
+	distclean-generic distcleancheck distdir distuninstallcheck \
+	dvi dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-data-hook install-exec \
+	install-exec-am install-fontDATA install-info install-info-am \
+	install-man install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am uninstall \
+	uninstall-am uninstall-fontDATA uninstall-info-am
 
 
-.bdf.pcf.gz:
+.bdf.pcf$(COMPRESS_SUFFIX):
 	@rm -f $@
-	$(BDFTOPCF) -t $< | gzip > $@
+	$(AM_V_GEN)$(BDFTOPCF) -t $< | $(COMPRESS) > $@
 
 .bdft.bdf:
 	@rm -f $@
-	$(PERL) $(BDFTRUNCATE) 0x3200 < $< > $@
+	$(BDFTRUNCATE) 0x3200 < $< > $@
 
 .bdf-ISO8859-1.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-1 ISO8859-1
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-1 ISO8859-1
 
 .bdf-ISO8859-2.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-2 ISO8859-2
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-2 ISO8859-2
 
 .bdf-ISO8859-3.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-3 ISO8859-3
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-3 ISO8859-3
 
 .bdf-ISO8859-4.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-4 ISO8859-4
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-4 ISO8859-4
 
 .bdf-ISO8859-5.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-5 ISO8859-5
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-5 ISO8859-5
 
 .bdf-ISO8859-7.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-7 ISO8859-7
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-7 ISO8859-7
 
 .bdf-ISO8859-8.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-8 ISO8859-8
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-8 ISO8859-8
 
 .bdf-ISO8859-9.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-9 ISO8859-9
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-9 ISO8859-9
 
 .bdf-ISO8859-10.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-10 ISO8859-10
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-10 ISO8859-10
 
 .bdf-ISO8859-11.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-11 ISO8859-11
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-11 ISO8859-11
 
 .bdf-ISO8859-13.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-13 ISO8859-13
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-13 ISO8859-13
 
 .bdf-ISO8859-14.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-14 ISO8859-14
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-14 ISO8859-14
 
 .bdf-ISO8859-15.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-15 ISO8859-15
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-15 ISO8859-15
 
 .bdf-ISO8859-16.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-16 ISO8859-16
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-ISO8859-16 ISO8859-16
 
 .bdf-KOI8-R.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-KOI8-R KOI8-R
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-KOI8-R KOI8-R
 
 .bdf-JISX0201.1976-0.bdf:
 	@rm -f $@
-	$(UCS2ANY) $< $(UTIL_DIR)/map-JISX0201.1976-0 JISX0201.1976-0
+	$(AM_V_GEN)$(UCS2ANY) $< $(UTIL_DIR)/map-JISX0201.1976-0 JISX0201.1976-0
 
-t.bdf.pcf.gz:
+t.bdf.pcf$(COMPRESS_SUFFIX):
 	@rm -f $@
-	$(BDFTOPCF) -t $< | gzip > $@
+	$(AM_V_GEN)$(BDFTOPCF) -t $< | $(COMPRESS) > $@
 
 18x18ko.bdf: $(KOEIGHTEEN)
 	(cd $(srcdir) ; cat $(KOEIGHTEEN)) > $@
@@ -730,13 +790,19 @@ t.bdf.pcf.gz:
 all-local: $(BUILT_BDF_FILES) $(font_DATA)
 
 install-data-hook:
-	@rm -f $(DESTDIR)$(fontdir)/fonts.scale
-	$(MKFONTSCALE) $(DESTDIR)$(fontdir)
 	@rm -f $(DESTDIR)$(fontdir)/font.dir
 	$(MKFONTDIR) $(DESTDIR)$(fontdir)
+	@RUN_FCCACHE@
 
 distuninstallcheck:
 	@:
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
