@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.8 2010/07/25 14:35:53 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.9 2010/07/25 19:52:23 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -260,7 +260,8 @@ UsbTabletProc(DeviceIntPtr pUSBT, int what)
 		}
 
 		/* open the device to gather informations */
-		UsbTabletOpenDevice(pUSBT);
+		if (!UsbTabletOpenDevice(pUSBT))
+		    return !Success;
 		break;
 
 	case DEVICE_ON:
@@ -493,6 +494,7 @@ UsbTabletOpen(InputInfoPtr pInfo)
 {
 	USBTDevicePtr	priv = (USBTDevicePtr)pInfo->private;
 	USBTCommonPtr	comm = priv->comm;
+	InputInfoPtr	dev;
 	hid_data_t     d;
 	hid_item_t     h;
 	report_desc_t rd;
@@ -501,6 +503,15 @@ UsbTabletOpen(InputInfoPtr pInfo)
 
 	DBG(1, ErrorF("opening %s\n", comm->devName));
 
+	for (dev = comm->devices[0]; dev != NULL; dev = dev->next) {
+	    if (dev->fd != -1 && dev != pInfo) 
+		pInfo->fd = dev->fd;
+	}
+	if (pInfo->fd != -1) {
+	    DBG(1, ErrorF("UsbTabletOpen: shared device already open %x\n",
+			  (unsigned int)pInfo->fd));
+	    return Success;
+	}
 	/* Use this since O_NDELAY is not implemented by libc open wrapper */
 	pInfo->fd = xf86OpenSerial(pInfo->options);
 	if (pInfo->fd == -1) {
@@ -905,7 +916,7 @@ UsbTabletPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
 
 	pInfo->flags |= XI86_POINTER_CAPABLE | XI86_CONFIGURED;
-	
+
 	return pInfo;
 
 PreInit_fail:
