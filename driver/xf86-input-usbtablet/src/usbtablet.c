@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.7 2010/07/25 14:15:49 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.8 2010/07/25 14:35:53 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -117,10 +117,7 @@ static InputInfoPtr UsbTabletAllocate(InputDriverPtr, char *, int);
 static InputInfoPtr UsbTabletPreInit(InputDriverPtr, IDevPtr, int);
 static int UsbTabletProc(DeviceIntPtr, int);
 static void UsbTabletReadInput(InputInfoPtr);
-static int UsbTabletChangeControl(InputInfoPtr, xDeviceCtl *);
-static int UsbTabletSwitchMode(ClientPtr, DeviceIntPtr, int);
 static void UsbTabletClose(InputInfoPtr);
-static void UsbTabletControlProc(DeviceIntPtr, PtrCtrl *);
 static int UsbTabletOpenDevice(DeviceIntPtr);
 static void UsbTabletSendEvents(InputInfoPtr, int, USBTState *);
 static void UsbTabletSendButtons(InputInfoPtr, int, int, int, int, int, int);
@@ -234,13 +231,7 @@ UsbTabletProc(DeviceIntPtr pUSBT, int what)
 				"unable to init Focus class device\n");
 			return !Success;
 		}
-          
-		if (InitPtrFeedbackClassDeviceStruct(pUSBT,
-					UsbTabletControlProc) == FALSE) {
-			xf86Msg(X_ERROR, "unable to init ptr feedback\n");
-			return !Success;
-		}
-	    
+          	    
 		if (InitProximityClassDeviceStruct(pUSBT) == FALSE) {
 			xf86Msg(X_ERROR, 
 				"unable to init proximity class device\n");
@@ -478,18 +469,6 @@ UsbTabletSendEvents(InputInfoPtr pInfo, int invert, USBTState *ds)
 	*ods = *ds;
 }
 
-static int
-UsbTabletChangeControl(InputInfoPtr pInfo, xDeviceCtl *control)
-{
-	return BadMatch;
-}
-
-static int
-UsbTabletSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
-{
-	return BadMatch;
-}
-
 static void
 UsbTabletClose(InputInfoPtr pInfo)
 {
@@ -507,12 +486,6 @@ UsbTabletClose(InputInfoPtr pInfo)
 	}
 	
 	pInfo->fd = -1;
-}
-
-static void
-UsbTabletControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
-{
-	DBG(2, ErrorF("UsbTabletControlProc\n"));
 }
 
 static Bool
@@ -750,8 +723,8 @@ UsbTabletAllocate(InputDriverPtr drv, char *name, int flag)
 	pInfo->name = name;
 	pInfo->device_control = UsbTabletProc;
 	pInfo->read_input = UsbTabletReadInput;
-	pInfo->control_proc = UsbTabletChangeControl;
-	pInfo->switch_mode = UsbTabletSwitchMode;
+	pInfo->control_proc = NULL;
+	pInfo->switch_mode = NULL;
 	pInfo->conversion_proc = NULL;
 	pInfo->reverse_conversion_proc = NULL;
 	pInfo->fd = -1;
