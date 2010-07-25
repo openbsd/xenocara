@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.128 2010/07/24 18:55:17 matthieu Exp $
+ $OpenBSD: MODULES,v 1.129 2010/07/25 19:55:00 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -68,7 +68,7 @@ app/xmag		1.0.3	7.5
 app/xman		1.1.0	7.5
 app/xmessage		1.0.3	7.5+
 app/xmodmap		1.0.4	7.5
-app/xmore		1.0.2	7.5+	needs-update
+app/xmore		1.0.2	7.5+
 app/xpr			1.0.3	7.5
 app/xprop		1.1.0	7.5
 app/xrandr		1.3.3	7.5+	needs-update
@@ -103,10 +103,10 @@ driver/xf86-input-penmount	1.4.1	7.5+
 driver/xf86-input-vmmouse	12.6.9	7.5+
 driver/xf86-input-void		1.3.0	7.4+
 driver/xf86-video-apm		1.2.2	7.4+
-driver/xf86-video-ark		0.7.3	7.5+	needs-update
+driver/xf86-video-ark		0.7.3	7.5+
 driver/xf86-video-ast		0.89.9	7.4+
 driver/xf86-video-ati		6.13.1	7.5+	needs-update
-driver/xf86-video-chips		1.2.3	7.5+	needs-update
+driver/xf86-video-chips		1.2.3	7.5+
 driver/xf86-video-cirrus	1.3.2	7.4	
 driver/xf86-video-dummy		0.3.4	7.5+
 driver/xf86-video-geode		2.11.8	7.5+
@@ -122,13 +122,13 @@ driver/xf86-video-nv		2.1.17	7.5+	deprecated
 driver/xf86-video-openchrome	0.2.904	7.5	needs-update
 driver/xf86-video-r128		6.8.1	7.4
 driver/xf86-video-radeonhd	1.3.0	7.5	needs-update
-driver/xf86-video-rendition	4.2.4	7.5+	needs-update
+driver/xf86-video-rendition	4.2.4	7.5+
 driver/xf86-video-s3		0.6.3	7.4+
 driver/xf86-video-s3virge	1.10.4	7.4+
 driver/xf86-video-savage	2.3.1	7.4+
 driver/xf86-video-siliconmotion	1.7.4	7.4+
 driver/xf86-video-sis		0.10.3	7.5+
-driver/xf86-video-sisusb	0.9.4	7.5+	needs-update
+driver/xf86-video-sisusb	0.9.4	7.5+
 driver/xf86-video-suncg14	1.1.0	7.1
 driver/xf86-video-suncg3	1.1.1	7.4+
 driver/xf86-video-sunffb	1.2.1	7.4+
@@ -136,50 +136,50 @@ driver/xf86-video-sunleo	1.2.0	7.4
 driver/xf86-video-suntcx	1.1.1	7.4+
 driver/xf86-video-tdfx		1.4.3	7.4+
 driver/xf86-video-tga		1.2.1	7.4+
-driver/xf86-video-trident	1.3.4	7.5+	needs-update
-driver/xf86-video-tseng		1.2.4	7.5+	needs-update
+driver/xf86-video-trident	1.3.4	7.5+
+driver/xf86-video-tseng		1.2.4	7.5+
 driver/xf86-video-vesa		2.3.0	7.5+
 driver/xf86-video-vmware	11.0.1	7.5+
-driver/xf86-video-voodoo	1.2.4	7.5+	needs-update
+driver/xf86-video-voodoo	1.2.4	7.5+
 driver/xf86-video-wsfb		0.2.1	7.5
 
-font/encodings 			1.0.3	needs-update
-font/adobe-100dpi		1.0.1	needs-update
-font/adobe-75dpi		1.0.1	needs-update
-font/adobe-utopia-100dpi	1.0.2	needs-update
-font/adobe-utopia-75dpi		1.0.2	needs-update
-font/adobe-utopia-type1		1.0.2	needs-update
-font/alias			1.0.2	needs-update
-font/arabic-misc		1.0.1	needs-update
-font/bh-100dpi			1.0.1	needs-update
-font/bh-75dpi			1.0.1	needs-update
-font/bh-lucidatypewriter-100dpi	1.0.1	needs-update
-font/bh-lucidatypewriter-75dpi	1.0.1	needs-update
-font/bh-ttf			1.0.1	needs-update
-font/bh-type1			1.0.1	needs-update
-font/bitstream-100dpi		1.0.1	needs-update
-font/bitstream-75dpi		1.0.1	needs-update
-font/bitstream-type1		1.0.1	needs-update
-font/cronyx-cyrillic		1.0.1	needs-update
-font/cursor-misc		1.0.1	needs-update
-font/daewoo-misc		1.0.1	needs-update
-font/dec-misc			1.0.1	needs-update
-font/ibm-type1			1.0.1	needs-update
-font/isas-misc			1.0.1	needs-update
-font/jis-misc			1.0.1	needs-update
-font/micro-misc			1.0.1	needs-update
-font/misc-cyrillic		1.0.1	needs-update
-font/misc-ethiopic		1.0.1	needs-update
-font/misc-meltho		1.0.1	needs-update
-font/misc-misc			1.1.0	needs-update
-font/mutt-misc			1.0.1	needs-update
-font/schumacher-misc		1.1.0	needs-update
-font/screen-cyrillic		1.0.2	needs-update
-font/sony-misc			1.0.1	needs-update
-font/sun-misc			1.0.1	needs-update
+font/encodings 			1.0.3
+font/adobe-100dpi		1.0.1
+font/adobe-75dpi		1.0.1
+font/adobe-utopia-100dpi	1.0.2
+font/adobe-utopia-75dpi		1.0.2
+font/adobe-utopia-type1		1.0.2
+font/alias			1.0.2
+font/arabic-misc		1.0.1
+font/bh-100dpi			1.0.1
+font/bh-75dpi			1.0.1
+font/bh-lucidatypewriter-100dpi	1.0.1
+font/bh-lucidatypewriter-75dpi	1.0.1
+font/bh-ttf			1.0.1
+font/bh-type1			1.0.1
+font/bitstream-100dpi		1.0.1
+font/bitstream-75dpi		1.0.1
+font/bitstream-type1		1.0.1
+font/cronyx-cyrillic		1.0.1
+font/cursor-misc		1.0.1
+font/daewoo-misc		1.0.1
+font/dec-misc			1.0.1
+font/ibm-type1			1.0.1
+font/isas-misc			1.0.1
+font/jis-misc			1.0.1
+font/micro-misc			1.0.1
+font/misc-cyrillic		1.0.1
+font/misc-ethiopic		1.0.1
+font/misc-meltho		1.0.1
+font/misc-misc			1.1.0
+font/mutt-misc			1.0.1
+font/schumacher-misc		1.1.0
+font/screen-cyrillic		1.0.2
+font/sony-misc			1.0.1
+font/sun-misc			1.0.1
 font/util			1.1.1
-font/winitzki-cyrillic		1.0.1	needs-update
-font/xfree86-type1		1.0.2	needs-update
+font/winitzki-cyrillic		1.0.1
+font/xfree86-type1		1.0.2
 
 lib/libFS			1.0.2	7.4+
 lib/libICE			1.0.6	7.5
@@ -257,4 +257,4 @@ util/imake			1.0.3	7.5+
 util/macros			1.10.0	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
-xserver				1.8.1	7.5+	needs-update
+xserver				1.8.2	7.5+	needs-update
