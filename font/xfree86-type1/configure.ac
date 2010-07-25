@@ -22,25 +22,23 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(font-xfree86-type1, [1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], font-xfree86-type1)
+AC_INIT(font-xfree86-type1, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], font-xfree86-type1)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 
 AC_PROG_INSTALL
 
-m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
+# Require X.Org's font util macros 1.1 or later
+m4_ifndef([XORG_FONT_MACROS_VERSION],
+	  [m4_fatal([must install X.Org font-util 1.1 or later before running autoconf/autogen])])
+XORG_FONT_MACROS_VERSION(1.1)
 
-DEFAULT_FONTDIR=${libdir}/X11/fonts/Type1
-AC_ARG_WITH(fontdir,
-	AS_HELP_STRING([--with-fontdir=FONTDIR], [Path to install fonts]),
-	[FONTDIR="$withval"],
-	[FONTDIR="$DEFAULT_FONTDIR"])
-AC_SUBST(FONTDIR)
-
-AC_PATH_PROG(MKFONTSCALE, mkfontscale)
-AC_PATH_PROG(MKFONTDIR, mkfontdir)
-AC_PATH_PROG(FCCACHE, fc-cache)
-
-XORG_RELEASE_VERSION
+XORG_FONTDIR([Type1])
+XORG_FONT_SCALED_UTILS
 
 AC_OUTPUT([Makefile])

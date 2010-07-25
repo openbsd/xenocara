@@ -25,19 +25,31 @@ ttffont_DATA = GohaTibebZemen.ttf
 otffontdir = @OTFFONTDIR@
 otffont_DATA = GohaTibebZemen.otf
 
-EXTRA_DIST = $(ttffont_DATA) $(otffont_DATA) license.txt autogen.sh
+# Used by RUN_FCCACHE
+fontdir = $(ttffontdir) $(otffontdir)
+
+EXTRA_DIST = $(ttffont_DATA) $(otffont_DATA) license.txt
 
 install-data-hook:
 	@rm -f $(DESTDIR)$(ttffontdir)/fonts.scale
 	$(MKFONTSCALE) $(DESTDIR)$(ttffontdir)
 	@rm -f $(DESTDIR)$(ttffontdir)/font.dir
 	$(MKFONTDIR) $(DESTDIR)$(ttffontdir)
-	$(FCCACHE) $(DESTDIR)$(ttffontdir)
 	@rm -f $(DESTDIR)$(otffontdir)/fonts.scale
 	$(MKFONTSCALE) $(DESTDIR)$(otffontdir)
 	@rm -f $(DESTDIR)$(otffontdir)/font.dir
 	$(MKFONTDIR) $(DESTDIR)$(otffontdir)
-	$(FCCACHE) $(DESTDIR)$(otffontdir)
+	@RUN_FCCACHE@
 
 distuninstallcheck:
 	@:
+
+EXTRA_DIST += ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
