@@ -196,11 +196,10 @@ extern char *__progname;
 void
 usage(void)
 {
-	fprintf(stderr,
-		"Usage: %s [-v] [-a adaptor] [-e encoding] [-f file]\n"
-		"          [-i input] [-o output] [-O output] [-r rate]\n"
-		"          [-s size]\n",
-		__progname);
+	fprintf(stderr, "usage: %s [-v] "
+	    "[-a adaptor] [-e encoding] [-f file] [-i input] [-O output]\n"
+	    "       %*s [-o output] [-r rate] [-s size]\n", __progname,
+	    (int)strlen(__progname), "");
 }
 
 int

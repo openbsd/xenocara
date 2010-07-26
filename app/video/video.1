@@ -14,7 +14,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: July 23 2010 $
+.Dd $Mdocdate: July 26 2010 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -29,8 +29,8 @@
 .Op Fl e Ar encoding
 .Op Fl f Ar file
 .Op Fl i Ar input
-.Op Fl o Ar output
 .Op Fl O Ar output
+.Op Fl o Ar output
 .Op Fl r Ar rate
 .Op Fl s Ar size
 .Ek
@@ -106,13 +106,6 @@ If
 is
 .Ql - ,
 frames will be read from standard input.
-.It Fl o Ar ouput
-File to which frames will be written.
-If
-.Ar output
-is
-.Ql - ,
-frames will be written to standard output.
 .It Fl O Ar ouput
 File to which frames will be written.
 If
@@ -126,6 +119,13 @@ if this option is used,
 .Nm
 will also display the frames via
 .Xr Xv 3 .
+.It Fl o Ar ouput
+File to which frames will be written.
+If
+.Ar output
+is
+.Ql - ,
+frames will be written to standard output.
 .It Fl r Ar rate
 Rate in frames per second at which to read.
 Must be an integer greater than 0.
