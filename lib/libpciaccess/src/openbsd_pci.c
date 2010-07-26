@@ -560,9 +560,12 @@ pci_device_vgaarb_init(void)
 void
 pci_device_vgaarb_fini(void)
 {
-	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_device *dev;
 	struct pci_vga pv;
 
+	if (pci_sys == NULL)
+		return;
+	dev = pci_sys->vga_target;
 	if (dev == NULL)
 		return;
 
