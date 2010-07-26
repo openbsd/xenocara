@@ -1,3 +1,4 @@
+/*	$OpenBSD: video.c,v 1.4 2010/07/26 23:02:06 jakemsr Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -767,7 +768,7 @@ dev_get_sizes(struct video *vid)
 		for (j = 0; j < d->nsizes; j++) {
 			if (sizes[i].w < d->sizes[j].w)
 				break;
-			if (sizes[i].w == d->sizes[j].h) {
+			if (sizes[i].w == d->sizes[j].w) {
 				if (sizes[i].h < d->sizes[j].h)
 					break;
 			}
