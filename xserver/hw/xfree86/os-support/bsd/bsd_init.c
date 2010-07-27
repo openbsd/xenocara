@@ -279,9 +279,7 @@ xf86OpenConsole()
 		sleep(1);
 	    }
 #endif
-#if defined(FreeBSD)
 acquire_vt:
-#endif
 	    if (!ShareVTs) {
 		    /*
 		     * now get the VT
@@ -298,36 +296,39 @@ acquire_vt:
 		    {
 			xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed\n");
 		    }
-	    }
-	    signal(SIGUSR2, xf86VTRequest);
 
-	    vtmode.mode = VT_PROCESS;
-	    vtmode.relsig = SIGUSR2;
-	    vtmode.acqsig = SIGUSR2;
-	    vtmode.frsig = SIGUSR2;
-	    if (ioctl(xf86Info.consoleFd, VT_SETMODE, &vtmode) < 0) 
-	    {
-	        FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed");
-	    }
-#if !defined(OpenBSD) && !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
-	    if (ioctl(xf86Info.consoleFd, KDENABIO, 0) < 0)
-	    {
-	        FatalError("xf86OpenConsole: KDENABIO failed (%s)",
-		           strerror(errno));
-	    }
+		    signal(SIGUSR2, xf86VTRequest);
+
+		    vtmode.mode = VT_PROCESS;
+		    vtmode.relsig = SIGUSR2;
+		    vtmode.acqsig = SIGUSR2;
+		    vtmode.frsig = SIGUSR2;
+		    if (ioctl(xf86Info.consoleFd, VT_SETMODE, &vtmode) < 0) 
+		    {
+			FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed");
+		    }
+#if !defined(__0penBSD__) && !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
+		    if (ioctl(xf86Info.consoleFd, KDENABIO, 0) < 0)
+		    {
+			FatalError("xf86OpenConsole: KDENABIO failed (%s)",
+				   strerror(errno));
+		    }
 #endif
-	    if (ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS) < 0)
-	    {
-	        FatalError("xf86OpenConsole: KDSETMODE KD_GRAPHICS failed");
-	    }
-   	    break; 
+		    if (ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS) < 0)
+		    {
+			FatalError("xf86OpenConsole: KDSETMODE KD_GRAPHICS failed");
+		    }
+	    } else { /* ShareVTs */
+		    close(xf86Info.consoleFd);
+	    }	
+  	    break; 
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
 #ifdef WSCONS_SUPPORT
 	case WSCONS:
 	    /* Nothing to do */
    	    break; 
 #endif
-	}
+        }
     }
     else 
     {

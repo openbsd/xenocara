@@ -17,9 +17,6 @@ else
 KMOD_SOURCES = $(srcdir)/../shared/kmod_noop.c
 endif
 
-# FIXME: Non-i386/ia64 resource support.
-RES_SOURCES = $(srcdir)/../shared/stdResource.c
-
 if AGP
 AGP_SOURCES = bsd_agp.c
 else
@@ -46,8 +43,7 @@ ARCH_SOURCES = hp300_video.c \
 endif 
 
 if HPPA_VIDEO
-ARCH_SOURCES = hppa_video.c \
-	$(srcdir)/../shared/ioperm_noop.c
+ARCH_SOURCES = hppa_video.c
 endif
 
 if I386_VIDEO

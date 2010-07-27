@@ -147,7 +147,7 @@ add_device(DBusMessage *message, DBusMessage *reply, DBusError *error)
         dbus_message_iter_next(&iter);
     }
 
-    ret = NewInputDeviceRequest(options, &dev);
+    ret = NewInputDeviceRequest(options, NULL, &dev);
     if (ret != Success) {
         DebugF("[config/dbus] NewInputDeviceRequest failed\n");
         goto unwind;
@@ -175,7 +175,7 @@ add_device(DBusMessage *message, DBusMessage *reply, DBusError *error)
 unwind:
     if (ret != Success) {
         if (dev)
-            RemoveDevice(dev);
+            RemoveDevice(dev, TRUE);
 
         err = -ret;
         dbus_message_iter_append_basic(&reply_iter, DBUS_TYPE_INT32, &err);

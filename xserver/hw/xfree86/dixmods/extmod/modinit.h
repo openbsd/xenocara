@@ -7,28 +7,16 @@
 #define INITARGS void
 #endif
 
-#ifdef HAVE_X11_EXTENSIONS_SHAPEPROTO_H
 #include <X11/extensions/shapeproto.h>
-#else
-#define _SHAPE_SERVER_  /* don't want Xlib structures */
-#include <X11/extensions/shapestr.h>
-#endif
 
 #ifdef MULTIBUFFER
 extern void MultibufferExtensionInit(INITARGS);
-#define _MULTIBUF_SERVER_	/* don't want Xlib structures */
-#include <X11/extensions/multibufst.h>
+#include <X11/extensions/multibufproto.h>
 #endif
 
 #ifdef XTEST
 extern void XTestExtensionInit(INITARGS);
-#ifdef HAVE_X11_EXTENSIONS_XTESTPROTO_H
 #include <X11/extensions/xtestproto.h>
-#else
-#define _XTEST_SERVER_
-#include <X11/extensions/XTest.h>
-#include <X11/extensions/xteststr.h>
-#endif
 #endif
 
 #if 1
@@ -42,24 +30,18 @@ extern void ScreenSaverExtensionInit (INITARGS);
 
 #ifdef XF86VIDMODE
 extern void	XFree86VidModeExtensionInit(INITARGS);
-#define _XF86VIDMODE_SERVER_
-#include <X11/extensions/xf86vmstr.h>
+#include <X11/extensions/xf86vmproto.h>
 #endif
 
 #ifdef XFreeXDGA
 extern void XFree86DGAExtensionInit(INITARGS);
 extern void XFree86DGARegister(INITARGS);
-#define _XF86DGA_SERVER_
-#include <X11/extensions/xf86dgastr.h>
+#include <X11/extensions/xf86dgaproto.h>
 #endif
 
 #ifdef DPMSExtension
 extern void DPMSExtensionInit(INITARGS);
-#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
 #include <X11/extensions/dpmsconst.h>
-#else
-#include <X11/extensions/dpmsstr.h>
-#endif
 #endif
 
 #ifdef XV
@@ -77,11 +59,7 @@ extern void ResExtensionInit(INITARGS);
 
 #ifdef SHM
 extern void ShmExtensionInit(INITARGS);
-#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
 #include <X11/extensions/shmproto.h>
-#else
-#include <X11/extensions/shmstr.h>
-#endif
 extern void ShmRegisterFuncs(
     ScreenPtr pScreen,
     ShmFuncsPtr funcs);

@@ -45,17 +45,14 @@ void DarwinUpdateModKeys(int flags);
 void DarwinListenOnOpenFD(int fd);
 
 /*
- * Special ddx events understood by the X server
+ * Subtypes for the ET_XQuartz event type
  */
 enum {
-    kXquartzReloadKeymap      // Reload system keymap
-    = LASTEvent+1,    // (from X.h list of event names)
+    kXquartzReloadKeymap,     // Reload system keymap
     kXquartzActivate,         // restore X drawing and cursor
     kXquartzDeactivate,       // clip X drawing and switch to Aqua cursor
     kXquartzSetRootClip,      // enable or disable drawing to the X screen
     kXquartzQuit,             // kill the X server and release the display
-    kXquartzReadPasteboard,   // copy Mac OS X pasteboard into X cut buffer
-    kXquartzWritePasteboard,  // copy X cut buffer onto Mac OS X pasteboard
     kXquartzBringAllToFront,  // bring all X windows to front
     kXquartzToggleFullscreen, // Enable/Disable fullscreen mode
     kXquartzSetRootless,      // Set rootless mode
@@ -78,7 +75,15 @@ enum {
 /* Send one of the above events to the server thread. */
 void DarwinSendDDXEvent(int type, int argc, ...);
 
-extern int darwin_modifier_mask_list[];
-extern int darwin_modifier_flags;
+/* A mask of the modifiers that are in our X11 keyboard layout:
+ * (Fn for example is just useful for 3button mouse emulation) */
+extern int darwin_all_modifier_mask;
+
+/* A mask of the modifiers that are in our X11 keyboard layout:
+ * (Fn for example is just useful for 3button mouse emulation) */
+extern int darwin_x11_modifier_mask;
+
+/* The current state of the above listed modifiers */
+extern int darwin_all_modifier_flags;
 
 #endif  /* _DARWIN_EVENTS_H */

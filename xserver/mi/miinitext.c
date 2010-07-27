@@ -55,6 +55,18 @@ SOFTWARE.
 
 #ifdef HAVE_DMX_CONFIG_H
 #include <dmx-config.h>
+#undef MULTIBUFFER
+#undef XV
+#undef DBE
+#undef XF86VIDMODE
+#undef XFreeXDGA
+#undef XF86DRI
+#undef SCREENSAVER
+#undef RANDR
+#undef XFIXES
+#undef DAMAGE
+#undef COMPOSITE
+#undef MITSHM
 #endif
 
 #ifdef HAVE_XNEST_CONFIG_H
@@ -134,10 +146,6 @@ extern Bool noXFree86VidModeExtension;
 #ifdef XFIXES
 extern Bool noXFixesExtension;
 #endif
-#ifdef XKB
-/* |noXkbExtension| is defined in xc/programs/Xserver/xkb/xkbInit.c */
-extern Bool noXkbExtension;
-#endif
 #ifdef PANORAMIX
 extern Bool noPanoramiXExtension;
 #endif
@@ -160,27 +168,15 @@ typedef void (*InitExtension)(INITARGS);
 #endif
 
 #ifdef MITSHM
-#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
-#include <X11/extensions/shmproto.h>
-#else
-#define _XSHM_SERVER_
-#include <X11/extensions/shmstr.h>
-#endif
+#include <X11/extensions/shm.h>
 #endif
 #ifdef XTEST
-#ifdef HAVE_X11_EXTENSIONS_XTESTPROTO_H
-#include <X11/extensions/xtestproto.h>
-#else
-#define _XTEST_SERVER_
-#include <X11/extensions/XTest.h>
+#include <X11/extensions/xtestconst.h>
 #endif
-#endif
-#ifdef XKB
 #include <X11/extensions/XKB.h>
-#endif
 #ifdef XCSECURITY
 #include "securitysrv.h"
-#include <X11/extensions/securstr.h>
+#include <X11/extensions/secur.h>
 #endif
 #ifdef XSELINUX
 #include "xselinux.h"
@@ -189,7 +185,7 @@ typedef void (*InitExtension)(INITARGS);
 #include <X11/extensions/panoramiXproto.h>
 #endif
 #ifdef XF86BIGFONT
-#include <X11/extensions/xf86bigfstr.h>
+#include <X11/extensions/xf86bigfproto.h>
 #endif
 #ifdef RES
 #include <X11/extensions/XResproto.h>
@@ -221,9 +217,7 @@ extern void XvExtensionInit(INITARGS);
 extern void XvMCExtensionInit(INITARGS);
 #endif
 extern void SyncExtensionInit(INITARGS);
-#ifdef XKB
 extern void XkbExtensionInit(INITARGS);
-#endif
 extern void XCMiscExtensionInit(INITARGS);
 #ifdef XRECORD
 extern void RecordExtensionInit(INITARGS);
@@ -348,9 +342,7 @@ static ExtensionToggle ExtensionToggleList[] =
     { "XINERAMA", &noPanoramiXExtension },
 #endif
     { "XInputExtension", NULL },
-#ifdef XKB
-    { "XKEYBOARD", &noXkbExtension },
-#endif
+    { "XKEYBOARD", NULL },
 #ifdef XSELINUX
     { "SELinux", &noSELinuxExtension },
 #endif
@@ -367,8 +359,14 @@ Bool EnableDisableExtension(char *name, Bool enable)
 
     for (ext = &ExtensionToggleList[0]; ext->name != NULL; ext++) {
 	if (strcmp(name, ext->name) == 0) {
-	    *ext->disablePtr = !enable;
-	    return TRUE;
+	    if (ext->disablePtr != NULL) {
+		*ext->disablePtr = !enable;
+		return TRUE;
+	    } else {
+		/* Extension is always on, impossible to disable */
+		return enable; /* okay if they wanted to enable,
+				  fail if they tried to disable */
+	    }
 	}
     }
 
@@ -378,12 +376,24 @@ Bool EnableDisableExtension(char *name, Bool enable)
 void EnableDisableExtensionError(char *name, Bool enable)
 {
     ExtensionToggle *ext = &ExtensionToggleList[0];
+    Bool found = FALSE;
 
-    ErrorF("[mi] Extension \"%s\" is not recognized\n", name);
+    for (ext = &ExtensionToggleList[0]; ext->name != NULL; ext++) {
+	if ((strcmp(name, ext->name) == 0) && (ext->disablePtr == NULL)) {
+	    ErrorF("[mi] Extension \"%s\" can not be disabled\n", name);
+	    found = TRUE;
+	    break;
+	}
+    }
+    if (found == FALSE)
+	ErrorF("[mi] Extension \"%s\" is not recognized\n", name);
     ErrorF("[mi] Only the following extensions can be run-time %s:\n",
 	   enable ? "enabled" : "disabled");
-    for (ext = &ExtensionToggleList[0]; ext->name != NULL; ext++)
-	ErrorF("[mi]    %s\n", ext->name);
+    for (ext = &ExtensionToggleList[0]; ext->name != NULL; ext++) {
+	if (ext->disablePtr != NULL) {
+	    ErrorF("[mi]    %s\n", ext->name);
+	}
+    }
 }
 
 #ifndef XFree86LOADER
@@ -424,9 +434,7 @@ InitExtensions(int argc, char *argv[])
     }
 #endif
     SyncExtensionInit();
-#if defined(XKB)
-    if (!noXkbExtension) XkbExtensionInit();
-#endif
+    XkbExtensionInit();
     XCMiscExtensionInit();
 #ifdef XRECORD
     if (!noTestExtensions) RecordExtensionInit(); 
@@ -501,9 +509,7 @@ static ExtensionModule staticExtensions[] = {
 #endif
     { BigReqExtensionInit, "BIG-REQUESTS", NULL, NULL, NULL },
     { SyncExtensionInit, "SYNC", NULL, NULL, NULL },
-#ifdef XKB
-    { XkbExtensionInit, XkbName, &noXkbExtension, NULL, NULL },
-#endif
+    { XkbExtensionInit, XkbName, NULL, NULL, NULL },
     { XCMiscExtensionInit, "XC-MISC", NULL, NULL, NULL },
 #ifdef XCSECURITY
     { SecurityExtensionInit, SECURITY_EXTENSION_NAME, &noSecurityExtension, NULL, NULL },

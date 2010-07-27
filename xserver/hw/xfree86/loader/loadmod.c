@@ -68,8 +68,6 @@
 #include <dirent.h>
 #include <limits.h>
 
-#define TestFree(a) if (a) { xfree (a); a = NULL; }
-
 typedef struct _pattern {
     const char *pattern;
     regex_t rex;
@@ -401,8 +399,11 @@ FindModuleInSubdir(const char *dirpath, const char *module)
     while ((direntry = readdir(dir))) {
         if (direntry->d_name[0] == '.')
             continue;
-        if ((stat(direntry->d_name, &stat_buf) == 0) && S_ISDIR(stat_buf.st_mode)) {
-            snprintf(tmpBuf, PATH_MAX, "%s/%s", dirpath, direntry->d_name);
+        snprintf(tmpBuf, PATH_MAX, "%s%s/", dirpath, direntry->d_name);
+	/* the stat with the appended / fails for normal files,
+	   and works for sub dirs fine, looks a bit strange in strace
+	   but does seem to work */
+        if ((stat(tmpBuf, &stat_buf) == 0) && S_ISDIR(stat_buf.st_mode)) {
             if ((ret = FindModuleInSubdir(tmpBuf, module)))
                 break;
             continue;
@@ -411,21 +412,21 @@ FindModuleInSubdir(const char *dirpath, const char *module)
         snprintf(tmpBuf, PATH_MAX, "lib%s.so", module);
         if (strcmp(direntry->d_name, tmpBuf) == 0) {
             ret = malloc(strlen(tmpBuf) + strlen(dirpath) + 2);
-            sprintf(ret, "%s/%s", dirpath, tmpBuf);
+            sprintf(ret, "%s%s", dirpath, tmpBuf);
             break;
         }
 
         snprintf(tmpBuf, PATH_MAX, "%s_drv.so", module);
         if (strcmp(direntry->d_name, tmpBuf) == 0) {
             ret = malloc(strlen(tmpBuf) + strlen(dirpath) + 2);
-            sprintf(ret, "%s/%s", dirpath, tmpBuf);
+            sprintf(ret, "%s%s", dirpath, tmpBuf);
             break;
         }
 
         snprintf(tmpBuf, PATH_MAX, "%s.so", module);
         if (strcmp(direntry->d_name, tmpBuf) == 0) {
             ret = malloc(strlen(tmpBuf) + strlen(dirpath) + 2);
-            sprintf(ret, "%s/%s", dirpath, tmpBuf);
+            sprintf(ret, "%s%s", dirpath, tmpBuf);
             break;
         }
     }
@@ -469,7 +470,7 @@ FindModule(const char *module, const char *dirname, const char **subdirlist,
     return name;
 }
 
-_X_EXPORT char **
+char **
 LoaderListDirs(const char **subdirlist, const char **patternlist)
 {
     char buf[PATH_MAX + 1];
@@ -563,7 +564,7 @@ LoaderListDirs(const char **subdirlist, const char **patternlist)
     return listing;
 }
 
-_X_EXPORT void
+void
 LoaderFreeDirList(char **list)
 {
     FreeStringList(list);
@@ -745,13 +746,14 @@ AddSibling(ModuleDescPtr head, ModuleDescPtr new)
     return (new);
 }
 
-_X_EXPORT ModuleDescPtr
-LoadSubModule(ModuleDescPtr parent, const char *module,
+pointer
+LoadSubModule(pointer _parent, const char *module,
 	      const char **subdirlist, const char **patternlist,
 	      pointer options, const XF86ModReqInfo * modreq,
 	      int *errmaj, int *errmin)
 {
     ModuleDescPtr submod;
+    ModuleDescPtr parent = (ModuleDescPtr)_parent;
 
     xf86MsgVerb(X_INFO, 3, "Loading sub module \"%s\"\n", module);
 
@@ -794,7 +796,7 @@ NewModuleDesc(const char *name)
     return (mdp);
 }
 
-_X_EXPORT ModuleDescPtr
+ModuleDescPtr
 DuplicateModule(ModuleDescPtr mod, ModuleDescPtr parent)
 {
     ModuleDescPtr ret;
@@ -1019,19 +1021,10 @@ doLoadModule(const char *module, const char *path, const char **subdirlist,
   LoadModule_exit:
     FreePathList(pathlist);
     FreePatterns(patterns);
-    TestFree(found);
-    TestFree(name);
-    TestFree(p);
+    xfree(found);
+    xfree(name);
+    xfree(p);
 
-    /*
-     * If you need to do something to keep the
-     * instruction cache in sync with the main
-     * memory before jumping to that code, you may
-     * do it here.
-     */
-#ifdef __alpha__
-    istream_mem_barrier();
-#endif
     return ret;
 }
 
@@ -1082,9 +1075,9 @@ LoadModule(const char *module, const char *path, const char **subdirlist,
 }
 
 void
-UnloadModule(ModuleDescPtr mod)
+UnloadModule(pointer mod)
 {
-    UnloadModuleOrDriver(mod);
+    UnloadModuleOrDriver((ModuleDescPtr)mod);
 }
 
 static void
@@ -1106,16 +1099,15 @@ UnloadModuleOrDriver(ModuleDescPtr mod)
 	UnloadModuleOrDriver(mod->child);
     if (mod->sib)
 	UnloadModuleOrDriver(mod->sib);
-    TestFree(mod->name);
+    xfree(mod->name);
     xfree(mod);
-#ifdef __alpha__
-    istream_mem_barrier();
-#endif
 }
 
-_X_EXPORT void
-UnloadSubModule(ModuleDescPtr mod)
+void
+UnloadSubModule(pointer _mod)
 {
+    ModuleDescPtr mod = (ModuleDescPtr)_mod;
+
     if (mod == NULL || mod->name == NULL)
 	return;
 
@@ -1130,7 +1122,7 @@ UnloadSubModule(ModuleDescPtr mod)
     if (mod->child)
 	UnloadModuleOrDriver(mod->child);
 
-    TestFree(mod->name);
+    xfree(mod->name);
     xfree(mod);
 }
 
@@ -1161,7 +1153,7 @@ RemoveChild(ModuleDescPtr child)
     return;
 }
 
-_X_EXPORT void
+void
 LoaderErrorMsg(const char *name, const char *modname, int errmaj, int errmin)
 {
     const char *msg;

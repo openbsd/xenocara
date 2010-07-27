@@ -37,7 +37,7 @@
  * most all of the useful functions in this file are declared static and
  * do not appear in the doxygen documentation.
  *
- * Much of the low-level work is done by functions in #dmxextension.c
+ * Much of the low-level work is done by functions in \a dmxextension.c
  *
  * Please see the Client-to-Server DMX Extension to the X Protocol
  * document for details about the protocol.  */
@@ -51,15 +51,13 @@
 #include "misc.h"
 #include "os.h"
 #include "dixstruct.h"
-#define EXTENSION_PROC_ARGS void *
 #include "extnsionst.h"
 #include "opaque.h"
 
 #include "dmxextension.h"
 #include <X11/extensions/dmxproto.h>
-
-#define _DMX_SERVER_
-#include <X11/extensions/dmxext.h>
+#include <X11/extensions/dmx.h>
+#include "protocol-versions.h"
 
 #ifdef PANORAMIX
 #include "panoramiX.h"
@@ -226,9 +224,9 @@ static int ProcDMXQueryVersion(ClientPtr client)
     rep.type           = X_Reply;
     rep.sequenceNumber = client->sequence;
     rep.length         = 0;
-    rep.majorVersion   = DMX_EXTENSION_MAJOR;
-    rep.minorVersion   = DMX_EXTENSION_MINOR;
-    rep.patchVersion   = DMX_EXTENSION_PATCH;
+    rep.majorVersion   = SERVER_DMX_MAJOR_VERSION;
+    rep.minorVersion   = SERVER_DMX_MINOR_VERSION;
+    rep.patchVersion   = SERVER_DMX_PATCH_VERSION;
     if (client->swapped) {
     	swaps(&rep.sequenceNumber, n);
         swapl(&rep.length, n);
@@ -361,10 +359,11 @@ static int ProcDMXGetScreenAttributes(ClientPtr client)
     rep.rootWindowYorigin   = attr.rootWindowYorigin;
                                  
     length                  = attr.displayName ? strlen(attr.displayName) : 0;
-    paddedLength            = (length + 3) & ~3;
+    paddedLength            = pad_to_int32(length);
     rep.type                = X_Reply;
     rep.sequenceNumber      = client->sequence;
-    rep.length              = paddedLength >> 2;
+    rep.length              = bytes_to_int32((sizeof(xDMXGetScreenAttributesReply) - sizeof(xGenericReply))
+                                             + paddedLength);
     rep.displayNameLength   = length;
 
     if (client->swapped) {
@@ -406,7 +405,7 @@ static int ProcDMXChangeScreensAttributes(ClientPtr client)
     
 
     REQUEST_AT_LEAST_SIZE(xDMXChangeScreensAttributesReq);
-    len = client->req_len - (sizeof(xDMXChangeScreensAttributesReq) >> 2);
+    len = client->req_len - bytes_to_int32(sizeof(xDMXChangeScreensAttributesReq));
     if (len < stuff->screenCount + stuff->maskCount)
         return BadLength;
 
@@ -475,8 +474,8 @@ static int ProcDMXAddScreen(ClientPtr client)
     int                    paddedLength;
 
     REQUEST_AT_LEAST_SIZE(xDMXAddScreenReq);
-    paddedLength = (stuff->displayNameLength + 3) & ~3;
-    len          = client->req_len - (sizeof(xDMXAddScreenReq) >> 2);
+    paddedLength = pad_to_int32(stuff->displayNameLength);
+    len          = client->req_len - bytes_to_int32(sizeof(xDMXAddScreenReq));
     if (len != Ones(stuff->valueMask) + paddedLength/4)
         return BadLength;
 
@@ -796,10 +795,10 @@ static int ProcDMXGetInputAttributes(ClientPtr client)
     rep.detached       = attr.detached;
     
     length             = attr.name ? strlen(attr.name) : 0;
-    paddedLength       = (length + 3) & ~3;
+    paddedLength       = pad_to_int32(length);
     rep.type           = X_Reply;
     rep.sequenceNumber = client->sequence;
-    rep.length         = paddedLength >> 2;
+    rep.length         = bytes_to_int32(paddedLength);
     rep.nameLength     = length;
     if (client->swapped) {
     	swaps(&rep.sequenceNumber, n);
@@ -829,7 +828,7 @@ static int ProcDMXAddInput(ClientPtr client)
     int                    id     = -1;
 
     REQUEST_AT_LEAST_SIZE(xDMXAddInputReq);
-    paddedLength = (stuff->displayNameLength + 3) & ~3;
+    paddedLength = pad_to_int32(stuff->displayNameLength);
     len          = client->req_len - (sizeof(xDMXAddInputReq) >> 2);
     if (len != Ones(stuff->valueMask) + paddedLength/4)
         return BadLength;
@@ -998,7 +997,7 @@ static int SProcDMXAddScreen(ClientPtr client)
     REQUEST_AT_LEAST_SIZE(xDMXAddScreenReq);
     swapl(&stuff->displayNameLength, n);
     swapl(&stuff->valueMask, n);
-    paddedLength = (stuff->displayNameLength + 3) & ~3;
+    paddedLength = pad_to_int32(stuff->displayNameLength);
     SwapLongs((CARD32 *)(stuff+1), LengthRestL(stuff) - paddedLength/4);
     return ProcDMXAddScreen(client);
 }
@@ -1078,7 +1077,7 @@ static int SProcDMXAddInput(ClientPtr client)
     REQUEST_AT_LEAST_SIZE(xDMXAddInputReq);
     swapl(&stuff->displayNameLength, n);
     swapl(&stuff->valueMask, n);
-    paddedLength = (stuff->displayNameLength + 3) & ~3;
+    paddedLength = pad_to_int32(stuff->displayNameLength);
     SwapLongs((CARD32 *)(stuff+1), LengthRestL(stuff) - paddedLength/4);
     return ProcDMXAddInput(client);
 }

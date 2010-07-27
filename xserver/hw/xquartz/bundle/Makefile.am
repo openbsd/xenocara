@@ -1,8 +1,12 @@
 include cpprules.in
 
 CPP_FILES_FLAGS = \
-	-DAPPLE_APPLICATION_ID="$(APPLE_APPLICATION_ID)" \
+	-DLAUNCHD_ID_PREFIX="$(LAUNCHD_ID_PREFIX)" \
 	-DAPPLE_APPLICATION_NAME="$(APPLE_APPLICATION_NAME)"
+
+if XQUARTZ_SPARKLE
+CPP_FILES_FLAGS += -DXQUARTZ_SPARKLE
+endif
 
 install-data-hook:
 	$(srcdir)/mk_bundke.sh $(srcdir) $(builddir) $(DESTDIR)$(APPLE_APPLICATIONS_DIR)/$(APPLE_APPLICATION_NAME).app install
@@ -24,6 +28,10 @@ EXTRA_DIST = \
 	Info.plist.cpp \
 	PkgInfo \
 	$(resource_DATA) \
+	Resources/ar.lproj/InfoPlist.strings \
+	Resources/ar.lproj/Localizable.strings \
+	Resources/ar.lproj/main.nib/designable.nib \
+	Resources/ar.lproj/main.nib/keyedobjects.nib \
 	Resources/da.lproj/InfoPlist.strings \
 	Resources/da.lproj/Localizable.strings \
 	Resources/da.lproj/main.nib/keyedobjects.nib \

@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/bsd/ppc_video.c,v 1.6 2003/10/07 23:14:55 herrb Exp $ */
-/* $OpenBSD: arm_video.c,v 1.5 2009/09/06 19:44:26 matthieu Exp $ */
+/* $OpenBSD: arm_video.c,v 1.6 2010/07/27 19:02:33 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -176,7 +176,8 @@ xf86PrivilegedInit(void)
 	if (sysctl(mib, 2, buf, &len, NULL, 0) < 0) {
 		FatalError("Cannot get hw.machine");
 	}
-	if (strcmp(buf, "zaurus") != 0) {
+	if (strcmp(buf, "zaurus") != 0 &&
+	    strcmp(buf, "armish") != 0) {
 		/* Not Zaurus */
 		kmem = open(DEV_MEM, 2);
 		if (kmem == -1) {

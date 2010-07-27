@@ -53,7 +53,8 @@
 #ifdef HAVE_DIX_CONFIG_H
 
 #include <dix-config.h>
-#define PUBLIC
+#include <X11/Xfuncproto.h>
+#define PUBLIC _X_EXPORT
 
 #else
 
@@ -113,10 +114,15 @@ warn(void)
    }
 }
 
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#define possibly_unused __attribute((unused))
+#else
+#define possibly_unused
+#endif
 
 #define KEYWORD1 static
 #define KEYWORD1_ALT static
-#define KEYWORD2 GLAPIENTRY
+#define KEYWORD2 GLAPIENTRY possibly_unused
 #define NAME(func)  NoOp##func
 
 #define F NULL
@@ -242,7 +248,7 @@ str_dup(const char *str)
  * We should call this periodically from a function such as glXMakeCurrent
  * in order to test if multiple threads are being used.
  */
-void
+PUBLIC void
 _glapi_check_multithread(void)
 {
 #if defined(THREADS) && !defined(GLX_USE_TLS)

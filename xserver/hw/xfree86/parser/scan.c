@@ -62,8 +62,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <X11/Xdefs.h>
 #include <X11/Xfuncproto.h>
 
 #if defined(_POSIX_SOURCE)
@@ -90,17 +93,24 @@
 #include "xf86tokens.h"
 
 #define CONFIG_BUF_LEN     1024
+#define CONFIG_MAX_FILES   64
 
 static int StringToToken (char *, xf86ConfigSymTabRec *);
 
-static FILE *configFile = NULL;
+static struct {
+	FILE *file;
+	char *path;
+} configFiles[CONFIG_MAX_FILES];
 static const char **builtinConfig = NULL;
 static int builtinIndex = 0;
 static int configPos = 0;		/* current readers position */
 static int configLineNo = 0;	/* linenumber */
 static char *configBuf, *configRBuf;	/* buffer for lines */
 static char *configPath;		/* path to config file */
+static char *configDirPath;		/* path to config dir */
 static char *configSection = NULL;	/* name of current section being parsed */
+static int numFiles = 0;		/* number of config files */
+static int curFileIndex = 0;		/* index of current config file */
 static int pushToken = LOCK_TOKEN;
 static int eol_seen = 0;		/* private state to handle comments */
 LexRec val;
@@ -155,7 +165,7 @@ xf86strToUL (char *str)
 /*
  * xf86getNextLine --
  *
- *  read from the configFile FILE stream until we encounter a new
+ *  read from the configFiles FILE stream until we encounter a new
  *  line; this is effectively just a big wrapper for fgets(3).
  *
  *  xf86getToken() assumes that we will read up to the next
@@ -180,8 +190,8 @@ xf86getNextLine(void)
 
 	if (configBufLen != CONFIG_BUF_LEN) {
 
-		tmpConfigBuf = xf86confmalloc(CONFIG_BUF_LEN);
-		tmpConfigRBuf = xf86confmalloc(CONFIG_BUF_LEN);
+		tmpConfigBuf = malloc(CONFIG_BUF_LEN);
+		tmpConfigRBuf = malloc(CONFIG_BUF_LEN);
 
 		if (!tmpConfigBuf || !tmpConfigRBuf) {
 
@@ -190,8 +200,8 @@ xf86getNextLine(void)
 			 * and free any partial allocations
 			 */
 
-			xf86conffree(tmpConfigBuf);
-			xf86conffree(tmpConfigRBuf);
+			free(tmpConfigBuf);
+			free(tmpConfigRBuf);
 
 		} else {
 
@@ -202,8 +212,8 @@ xf86getNextLine(void)
 
 			configBufLen = CONFIG_BUF_LEN;
 
-			xf86conffree(configBuf);
-			xf86conffree(configRBuf);
+			free(configBuf);
+			free(configRBuf);
 
 			configBuf = tmpConfigBuf;
 			configRBuf = tmpConfigRBuf;
@@ -213,9 +223,20 @@ xf86getNextLine(void)
 	/* read in another block of chars */
 
 	do {
-		ret = fgets(configBuf + pos, configBufLen - pos - 1, configFile);
+		ret = fgets(configBuf + pos, configBufLen - pos - 1,
+			    configFiles[curFileIndex].file);
 
-		if (!ret) break;
+		if (!ret) {
+			/*
+			 * if the file doesn't end in a newline, add one
+			 * and trigger another read
+			 */
+			if (pos != 0) {
+				strcpy(&configBuf[pos], "\n");
+				ret = configBuf;
+			} else
+				break;
+		}
 
 		/* search for EOL in the new block of chars */
 
@@ -237,8 +258,8 @@ xf86getNextLine(void)
 
 		if (!eolFound) {
 
-			tmpConfigBuf = xf86confrealloc(configBuf, configBufLen + CONFIG_BUF_LEN);
-			tmpConfigRBuf = xf86confrealloc(configRBuf, configBufLen + CONFIG_BUF_LEN);
+			tmpConfigBuf = realloc(configBuf, configBufLen + CONFIG_BUF_LEN);
+			tmpConfigRBuf = realloc(configRBuf, configBufLen + CONFIG_BUF_LEN);
 
 			if (!tmpConfigBuf || !tmpConfigRBuf) {
 
@@ -306,7 +327,7 @@ again:
 		if (!c)
 		{
 			char *ret;
-			if (configFile)
+			if (numFiles > 0)
 				ret = xf86getNextLine();
 			else {
 				if (builtinConfig[builtinIndex] == NULL)
@@ -319,7 +340,17 @@ again:
 			}
 			if (ret == NULL)
 			{
-				return (pushToken = EOF_TOKEN);
+				/*
+				 * if necessary, move to the next file and
+				 * read the first line
+				 */
+				if (curFileIndex + 1 < numFiles) {
+					curFileIndex++;
+					configLineNo = 0;
+					goto again;
+				}
+				else
+					return (pushToken = EOF_TOKEN);
 			}
 			configLineNo++;
 			configPos = 0;
@@ -420,7 +451,7 @@ again:
 			}
 			while ((c != '\"') && (c != '\n') && (c != '\r') && (c != '\0'));
 			configRBuf[i] = '\0';
-			val.str = xf86confmalloc (strlen (configRBuf) + 1);
+			val.str = malloc (strlen (configRBuf) + 1);
 			strcpy (val.str, configRBuf);	/* private copy ! */
 			return (STRING);
 		}
@@ -568,6 +599,8 @@ xf86pathIsSafe(const char *path)
  *    %F    config file environment ($XORGCONFIG) as a relative path
  *    %G    config file environment ($XORGCONFIG) as a safe path
  *    %P    projroot
+ *    %C    sysconfdir
+ *    %D    datadir
  *    %M    major version number
  *    %%    %
  */
@@ -575,8 +608,20 @@ xf86pathIsSafe(const char *path)
 #ifndef XCONFIGFILE
 #define XCONFIGFILE	"xorg.conf"
 #endif
+#ifndef XCONFIGDIR
+#define XCONFIGDIR	"xorg.conf.d"
+#endif
+#ifndef XCONFIGSUFFIX
+#define XCONFIGSUFFIX	".conf"
+#endif
 #ifndef PROJECTROOT
 #define PROJECTROOT	"/usr/X11R6"
+#endif
+#ifndef SYSCONFDIR
+#define SYSCONFDIR	PROJECTROOT "/etc"
+#endif
+#ifndef DATADIR
+#define DATADIR		PROJECTROOT "/share"
 #endif
 #ifndef XCONFENV
 #define XCONFENV	"XORGCONFIG"
@@ -595,7 +640,7 @@ xf86pathIsSafe(const char *path)
 #endif
 
 #define BAIL_OUT		do {									\
-							xf86conffree(result);				\
+							free(result);				\
 							return NULL;						\
 						} while (0)
 
@@ -616,7 +661,8 @@ xf86pathIsSafe(const char *path)
 
 static char *
 DoSubstitution(const char *template, const char *cmdline, const char *projroot,
-				int *cmdlineUsed, int *envUsed, char *XConfigFile)
+				int *cmdlineUsed, int *envUsed,
+				const char *XConfigFile)
 {
 	char *result;
 	int i, l;
@@ -632,7 +678,7 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
 	if (envUsed)
 		*envUsed = 0;
 
-	result = xf86confmalloc(PATH_MAX + 1);
+	result = malloc(PATH_MAX + 1);
 	l = 0;
 	for (i = 0; template[i]; i++) {
 		if (template[i] != '%') {
@@ -669,11 +715,11 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
 				break;
 			case 'H':
 				if (!hostname) {
-					if ((hostname = xf86confmalloc(MAXHOSTNAMELEN + 1))) {
+					if ((hostname = malloc(MAXHOSTNAMELEN + 1))) {
 						if (gethostname(hostname, MAXHOSTNAMELEN) == 0) {
 							hostname[MAXHOSTNAMELEN] = '\0';
 						} else {
-							xf86conffree(hostname);
+							free(hostname);
 							hostname = NULL;
 						}
 					}
@@ -717,6 +763,12 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
 				else
 					BAIL_OUT;
 				break;
+			case 'C':
+				APPEND_STR(SYSCONFDIR);
+				break;
+			case 'D':
+				APPEND_STR(DATADIR);
+				break;
 			case 'M':
 				if (!majorvers[0]) {
 					if (XF86_VERSION_MAJOR < 0 || XF86_VERSION_MAJOR > 99) {
@@ -745,7 +797,164 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
 	return result;
 }
 
-/* 
+/*
+ * Given some searching parameters, locate and open the xorg config file.
+ */
+static char *
+OpenConfigFile(const char *path, const char *cmdline, const char *projroot,
+	       const char *confname)
+{
+	char *filepath = NULL;
+	char *pathcopy;
+	const char *template;
+	int cmdlineUsed = 0;
+	FILE *file = NULL;
+
+	pathcopy = strdup(path);
+	for (template = strtok(pathcopy, ","); template && !file;
+	     template = strtok(NULL, ",")) {
+		filepath = DoSubstitution(template, cmdline, projroot,
+					  &cmdlineUsed, NULL, confname);
+		if (!filepath)
+			continue;
+		if (cmdline && !cmdlineUsed) {
+			free(filepath);
+			filepath = NULL;
+			continue;
+		}
+		file = fopen(filepath, "r");
+		if (!file) {
+			free(filepath);
+			filepath = NULL;
+		}
+	}
+
+	if (file) {
+		configFiles[numFiles].file = file;
+		configFiles[numFiles].path = strdup(filepath);
+		numFiles++;
+	}
+	return filepath;
+}
+
+/*
+ * Match non-hidden files in the xorg config directory with a .conf
+ * suffix. This filter is passed to scandir(3).
+ */
+static int
+ConfigFilter(const struct dirent *de)
+{
+	const char *name = de->d_name;
+	size_t len = strlen(name);
+	size_t suflen = strlen(XCONFIGSUFFIX);
+
+	if (!name || name[0] == '.' || len <= suflen)
+		return 0;
+	if (strcmp(&name[len-suflen], XCONFIGSUFFIX) != 0)
+		return 0;
+	return 1;
+}
+
+static Bool
+AddConfigDirFiles(const char *dirpath, struct dirent **list, int num)
+{
+	int i;
+	Bool openedFile = FALSE;
+	Bool warnOnce = FALSE;
+
+	for (i = 0; i < num; i++) {
+		char *path;
+		FILE *file;
+
+		if (numFiles >= CONFIG_MAX_FILES) {
+			if (!warnOnce) {
+				ErrorF("Maximum number of configuration "
+				       "files opened\n");
+				warnOnce = TRUE;
+			}
+			free(list[i]);
+			continue;
+		}
+
+		path = malloc(PATH_MAX + 1);
+		snprintf(path, PATH_MAX + 1, "%s/%s", dirpath,
+			 list[i]->d_name);
+		free(list[i]);
+		file = fopen(path, "r");
+		if (!file) {
+			free(path);
+			continue;
+		}
+		openedFile = TRUE;
+
+		configFiles[numFiles].file = file;
+		configFiles[numFiles].path = path;
+		numFiles++;
+	}
+
+	return openedFile;
+}
+
+/*
+ * Given some searching parameters, locate and open the xorg config
+ * directory. The directory does not need to contain config files.
+ */
+static char *
+OpenConfigDir(const char *path, const char *cmdline, const char *projroot,
+	      const char *confname)
+{
+	char *dirpath, *pathcopy;
+	const char *template;
+	Bool found = FALSE;
+	int cmdlineUsed = 0;
+
+	pathcopy = strdup(path);
+	for (template = strtok(pathcopy, ","); template && !found;
+	     template = strtok(NULL, ",")) {
+		struct dirent **list = NULL;
+		int num;
+
+		dirpath = DoSubstitution(template, cmdline, projroot,
+					 &cmdlineUsed, NULL, confname);
+		if (!dirpath)
+			continue;
+		if (cmdline && !cmdlineUsed) {
+			free(dirpath);
+			dirpath = NULL;
+			continue;
+		}
+
+		/* match files named *.conf */
+		num = scandir(dirpath, &list, ConfigFilter, alphasort);
+		found = AddConfigDirFiles(dirpath, list, num);
+		if (!found) {
+			free(dirpath);
+			dirpath = NULL;
+			if (list)
+				free(list);
+		}
+	}
+
+	return dirpath;
+}
+
+/*
+ * xf86initConfigFiles -- Setup global variables and buffers.
+ */
+void
+xf86initConfigFiles(void)
+{
+	curFileIndex = 0;
+	configPos = 0;
+	configLineNo = 0;
+	pushToken = LOCK_TOKEN;
+
+	configBuf = malloc(CONFIG_BUF_LEN);
+	configRBuf = malloc(CONFIG_BUF_LEN);
+	configBuf[0] = '\0';	/* sanity ... */
+}
+
+/*
  * xf86openConfigFile --
  *
  * This function take a config file search path (optional), a command-line
@@ -758,7 +967,7 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
  * opened.  When no file is found, the return value is NULL.
  *
  * The escape sequences allowed in the search path are defined above.
- *  
+ *
  */
 
 #ifndef DEFAULT_CONF_PATH
@@ -780,117 +989,90 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
 const char *
 xf86openConfigFile(const char *path, const char *cmdline, const char *projroot)
 {
-	char *pathcopy;
-	const char *template;
-	int cmdlineUsed = 0;
-
-	configFile = NULL;
-	configPos = 0;		/* current readers position */
-	configLineNo = 0;	/* linenumber */
-	pushToken = LOCK_TOKEN;
-
 	if (!path || !path[0])
 		path = DEFAULT_CONF_PATH;
-	pathcopy = xf86confmalloc(strlen(path) + 1);
-	strcpy(pathcopy, path);
 	if (!projroot || !projroot[0])
 		projroot = PROJECTROOT;
 
-	template = strtok(pathcopy, ",");
-
-	/* First, search for a config file. */
-	while (template && !configFile) {
-		if ((configPath = DoSubstitution(template, cmdline, projroot,
-						 &cmdlineUsed, NULL,
-						 XCONFIGFILE))) {
-			if ((configFile = fopen(configPath, "r")) != 0) {
-				if (cmdline && !cmdlineUsed) {
-					fclose(configFile);
-					configFile = NULL;
-				}
-			}
-		}
-		if (configPath && !configFile) {
-			xf86conffree(configPath);
-			configPath = NULL;
-		}
-		template = strtok(NULL, ",");
-	}
-	
-	/* Then search for fallback */
-	if (!configFile) {
-	    strcpy(pathcopy, path);
-	    template = strtok(pathcopy, ",");
-
-	    while (template && !configFile) {
-		if ((configPath = DoSubstitution(template, cmdline, projroot,
-						 &cmdlineUsed, NULL,
-						 XFREE86CFGFILE))) {
-		    if ((configFile = fopen(configPath, "r")) != 0) {
-			if (cmdline && !cmdlineUsed) {
-			    fclose(configFile);
-			    configFile = NULL;
-			}
-		    }
-		}
-		if (configPath && !configFile) {
-		    xf86conffree(configPath);
-		    configPath = NULL;
-		}
-		template = strtok(NULL, ",");
-	    }
-	}
-	
-	xf86conffree(pathcopy);
-	if (!configFile) {
-
-		return NULL;
-	}
-
-	configBuf = xf86confmalloc (CONFIG_BUF_LEN);
-	configRBuf = xf86confmalloc (CONFIG_BUF_LEN);
-	configBuf[0] = '\0';		/* sanity ... */
-
+	/* Search for a config file or a fallback */
+	configPath = OpenConfigFile(path, cmdline, projroot, XCONFIGFILE);
+	if (!configPath)
+		configPath = OpenConfigFile(path, cmdline, projroot,
+					    XFREE86CFGFILE);
 	return configPath;
+}
+
+/*
+ * xf86openConfigDirFiles --
+ *
+ * This function take a config directory search path (optional), a
+ * command-line specified directory name (optional) and the ProjectRoot path
+ * (optional) and locates and opens a config directory based on that
+ * information.  If a command-line name is specified, then this function
+ * fails if it is not found.
+ *
+ * The return value is a pointer to the actual name of the direcoty that was
+ * opened.  When no directory is found, the return value is NULL.
+ *
+ * The escape sequences allowed in the search path are defined above.
+ *
+ */
+const char *
+xf86openConfigDirFiles(const char *path, const char *cmdline,
+		       const char *projroot)
+{
+	if (!path || !path[0])
+		path = DEFAULT_CONF_PATH;
+	if (!projroot || !projroot[0])
+		projroot = PROJECTROOT;
+
+	/* Search for the multiconf directory */
+	configDirPath = OpenConfigDir(path, cmdline, projroot, XCONFIGDIR);
+	return configDirPath;
 }
 
 void
 xf86closeConfigFile (void)
 {
-	xf86conffree (configPath);
+	int i;
+
+	free (configPath);
 	configPath = NULL;
-	xf86conffree (configRBuf);
+	free (configDirPath);
+	configDirPath = NULL;
+	free (configRBuf);
 	configRBuf = NULL;
-	xf86conffree (configBuf);
+	free (configBuf);
 	configBuf = NULL;
 
-	if (configFile) {
-		fclose (configFile);
-		configFile = NULL;
-	} else {
+	if (numFiles == 0) {
 		builtinConfig = NULL;
 		builtinIndex = 0;
 	}
+	for (i = 0; i < numFiles; i++) {
+		fclose(configFiles[i].file);
+		configFiles[i].file = NULL;
+		free(configFiles[i].path);
+		configFiles[i].path = NULL;
+	}
+	numFiles = 0;
 }
 
 void
 xf86setBuiltinConfig(const char *config[])
 {
 	builtinConfig = config;
-	configPath = xf86configStrdup("<builtin configuration>");
-	configBuf = xf86confmalloc (CONFIG_BUF_LEN);
-	configRBuf = xf86confmalloc (CONFIG_BUF_LEN);
-	configBuf[0] = '\0';		/* sanity ... */
-
 }
 
 void
 xf86parseError (char *format,...)
 {
 	va_list ap;
+	char *filename = numFiles ? configFiles[curFileIndex].path :
+			 "<builtin configuration>";
 
 	ErrorF ("Parse error on line %d of section %s in file %s\n\t",
-		 configLineNo, configSection, configPath);
+		 configLineNo, configSection, filename);
 	va_start (ap, format);
 	VErrorF (format, ap);
 	va_end (ap);
@@ -902,8 +1084,10 @@ void
 xf86validationError (char *format,...)
 {
 	va_list ap;
+	char *filename = numFiles ? configFiles[curFileIndex].path :
+			 "<builtin configuration>";
 
-	ErrorF ("Data incomplete in file %s\n\t", configPath);
+	ErrorF ("Data incomplete in file %s\n\t", filename);
 	va_start (ap, format);
 	VErrorF (format, ap);
 	va_end (ap);
@@ -915,8 +1099,8 @@ void
 xf86setSection (char *section)
 {
 	if (configSection)
-		xf86conffree(configSection);
-	configSection = xf86confmalloc(strlen (section) + 1);
+		free(configSection);
+	configSection = malloc(strlen (section) + 1);
 	strcpy (configSection, section);
 }
 
@@ -948,7 +1132,7 @@ StringToToken (char *str, xf86ConfigSymTabRec * tab)
  * Compare two names.  The characters '_', ' ', and '\t' are ignored
  * in the comparison.
  */
-_X_EXPORT int
+int
 xf86nameCompare (const char *s1, const char *s2)
 {
 	char c1, c2;
@@ -1013,7 +1197,7 @@ xf86addComment(char *cur, char *add)
 	endnewline = add[len - 1] == '\n';
 	len +=  1 + iscomment + (!hasnewline) + (!endnewline) + eol_seen;
 
-	if ((str = xf86confrealloc(cur, len + curlen)) == NULL)
+	if ((str = realloc(cur, len + curlen)) == NULL)
 		return (cur);
 
 	cur = str;
@@ -1027,4 +1211,34 @@ xf86addComment(char *cur, char *add)
 		strcat(cur, "\n");
 
 	return (cur);
+}
+
+Bool
+xf86getBoolValue(Bool *val, const char *str)
+{
+	if (!val || !str)
+		return FALSE;
+	if (*str == '\0') {
+		*val = TRUE;
+	} else {
+		if (xf86nameCompare(str, "1") == 0)
+			*val = TRUE;
+		else if (xf86nameCompare(str, "on") == 0)
+			*val = TRUE;
+		else if (xf86nameCompare(str, "true") == 0)
+			*val = TRUE;
+		else if (xf86nameCompare(str, "yes") == 0)
+			*val = TRUE;
+		else if (xf86nameCompare(str, "0") == 0)
+			*val = FALSE;
+		else if (xf86nameCompare(str, "off") == 0)
+			*val = FALSE;
+		else if (xf86nameCompare(str, "false") == 0)
+			*val = FALSE;
+		else if (xf86nameCompare(str, "no") == 0)
+			*val = FALSE;
+		else
+			return FALSE;
+	}
+	return TRUE;
 }

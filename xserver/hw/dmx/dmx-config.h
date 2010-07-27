@@ -32,7 +32,7 @@
  */
 
 /** \file
- * Provide configuration #define's and #undef's to build Xdmx in X.Org's
+ * Provide configuration define's and undef's to build Xdmx in X.Org's
  * modular source tree.
  */
 
@@ -71,18 +71,5 @@
 
 /* Enable the DMX extension */
 #define DMXEXT
-
-/* Disable the extensions that are not currently supported */
-#undef MULTIBUFFER
-#undef XV
-#undef DBE
-#undef XF86VIDMODE
-#undef XFreeXDGA
-#undef XF86DRI
-#undef SCREENSAVER
-#undef RANDR
-#undef XFIXES
-#undef DAMAGE
-#undef COMPOSITE
 
 #endif /* DMX_CONFIG_H */

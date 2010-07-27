@@ -23,7 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
 #endif
-#define NEED_EVENTS
 #include <errno.h>
 #include <linux/input.h>
 #include <X11/X.h>
@@ -49,7 +48,7 @@ typedef struct _kevdev {
     int                            abs[ABS_MAX + 1];
     int                            prevabs[ABS_MAX + 1];
     long                    key[NBITS(KEY_MAX + 1)];
-    
+
     /* supported device info */
     long                    relbits[NBITS(REL_MAX + 1)];
     long                    absbits[NBITS(ABS_MAX + 1)];
@@ -107,12 +106,12 @@ EvdevPtrMotion (KdPointerInfo    *pi, struct input_event *ev)
             int a;
             for (a = 0; a <= ke->max_rel; a++)
             {
-                if (ISBITSET (ke->relbits, a)) 
+                if (ISBITSET (ke->relbits, a))
 		{
                     if (a == 0)
                         KdEnqueuePointerEvent(pi, flags, ke->rel[a], 0, 0);
                     else if (a == 1)
-                        KdEnqueuePointerEvent(pi, flags, 0, ke->rel[a], 0); 
+                        KdEnqueuePointerEvent(pi, flags, 0, ke->rel[a], 0);
                 }
 		ke->rel[a] = 0;
             }
@@ -132,9 +131,9 @@ EvdevPtrMotion (KdPointerInfo    *pi, struct input_event *ev)
             ErrorF ("\n");
             break;
         }
-    
-    if (ev->code == REL_WHEEL) {           
-      for (i = 0; i < abs (ev->value); i++) 
+
+    if (ev->code == REL_WHEEL) {
+      for (i = 0; i < abs (ev->value); i++)
       {
         if (ev->value > 0)
           flags |= KD_BUTTON_4;
@@ -151,7 +150,7 @@ EvdevPtrMotion (KdPointerInfo    *pi, struct input_event *ev)
         KdEnqueuePointerEvent (pi, flags, 0, 0, 0);
       }
     }
-    
+
 }
 
 static void
@@ -165,7 +164,7 @@ EvdevPtrRead (int evdevPort, void *closure)
 
     n = read (evdevPort, &events, NUM_EVENTS * sizeof (struct input_event));
     if (n <= 0) {
-        if (errno == ENODEV) 
+        if (errno == ENODEV)
             DeleteInputDeviceRequest(pi->dixdev);
         return;
     }
@@ -210,7 +209,7 @@ EvdevPtrInit (KdPointerInfo *pi)
         for (i = 0; i < NUM_DEFAULT_EVDEV; i++) {
             fd = open (kdefaultEvdev[i], 2);
             if (fd >= 0) {
-                pi->path = KdSaveString (kdefaultEvdev[i]);
+                pi->path = strdup (kdefaultEvdev[i]);
                 break;
             }
         }
@@ -225,15 +224,17 @@ EvdevPtrInit (KdPointerInfo *pi)
 
     close(fd);
 
-    pi->name = KdSaveString("Evdev mouse");
+    pi->name = strdup("Evdev mouse");
 
     return Success;
 }
 
 static Status
 EvdevPtrEnable (KdPointerInfo *pi)
-{        
+{
     int fd;
+    unsigned long   ev[NBITS(EV_MAX)];
+    Kevdev            *ke;
 
     if (!pi || !pi->path)
         return BadImplementation;
@@ -242,9 +243,9 @@ EvdevPtrEnable (KdPointerInfo *pi)
     if (fd < 0)
         return BadMatch;
 
-    unsigned long   ev[NBITS(EV_MAX)];
-    Kevdev            *ke;
-        
+    if (ioctl (fd, EVIOCGRAB, 1) < 0)
+        perror ("Grabbing evdev mouse device failed");
+
     if (ioctl (fd, EVIOCGBIT(0 /*EV*/, sizeof (ev)), ev) < 0)
     {
         perror ("EVIOCGBIT 0");
@@ -336,6 +337,10 @@ EvdevPtrDisable (KdPointerInfo *pi)
         return;
 
     KdUnregisterFd (pi, ke->fd, TRUE);
+
+    if (ioctl (ke->fd, EVIOCGRAB, 0) < 0)
+        perror ("Ungrabbing evdev mouse device failed");
+
     xfree (ke);
     pi->driverPrivate = 0;
 }
@@ -347,24 +352,17 @@ EvdevPtrFini (KdPointerInfo *pi)
 
 
 /*
- * Evdev keyboard functions 
+ * Evdev keyboard functions
  */
 
 static void
 readMapping (KdKeyboardInfo *ki)
 {
-    int             minScanCode, maxScanCode;
-
     if (!ki)
         return;
 
-    minScanCode = 0;
-    maxScanCode = 193;
-
-    ki->keySyms.mapWidth = 2;
-
-    ki->minScanCode = minScanCode;
-    ki->maxScanCode = maxScanCode;		
+    ki->minScanCode = 0;
+    ki->maxScanCode = 247;
 }
 
 static void
@@ -376,7 +374,7 @@ EvdevKbdRead (int evdevPort, void *closure)
 
     n = read (evdevPort, &events, NUM_EVENTS * sizeof (struct input_event));
     if (n <= 0) {
-        if (errno == ENODEV) 
+        if (errno == ENODEV)
             DeleteInputDeviceRequest(ki->dixdev);
         return;
     }
@@ -397,7 +395,7 @@ static Status
 EvdevKbdInit (KdKeyboardInfo *ki)
 {
     int fd;
-    
+
     if (!ki->path) {
         ErrorF("Couldn't find evdev device path\n");
         return BadValue;
@@ -412,7 +410,7 @@ EvdevKbdInit (KdKeyboardInfo *ki)
 
     close (fd);
 
-    ki->name = KdSaveString("Evdev keyboard");
+    ki->name = strdup("Evdev keyboard");
 
     readMapping(ki);
 
@@ -432,6 +430,9 @@ EvdevKbdEnable (KdKeyboardInfo *ki)
     fd = open(ki->path, O_RDWR);
     if (fd < 0)
         return BadMatch;
+
+    if (ioctl (fd, EVIOCGRAB, 1) < 0)
+        perror ("Grabbing evdev keyboard device failed");
 
     if (ioctl (fd, EVIOCGBIT(0 /*EV*/, sizeof (ev)), ev) < 0) {
         perror ("EVIOCGBIT 0");
@@ -504,6 +505,10 @@ EvdevKbdDisable (KdKeyboardInfo *ki)
         return;
 
     KdUnregisterFd (ki, ke->fd, TRUE);
+
+    if (ioctl (ke->fd, EVIOCGRAB, 0) < 0)
+        perror ("Ungrabbing evdev keyboard device failed");
+
     xfree (ke);
     ki->driverPrivate = 0;
 }

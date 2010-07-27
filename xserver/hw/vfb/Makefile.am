@@ -22,6 +22,7 @@ Xvfb_SOURCES = $(SRCS)
 XVFB_LIBS = \
         @XVFB_LIBS@ \
 	libfbcmap.a \
+	$(MAIN_LIB) \
 	$(XSERVER_LIBS)
 
 Xvfb_LDADD = $(XVFB_LIBS) $(XVFB_SYS_LIBS) $(XSERVER_SYS_LIBS)
@@ -42,10 +43,10 @@ CLEANFILES = $(appman_PRE) $(appman_DATA)
 SUFFIXES += .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	-rm -f $@
-	$(LN_S) $< $@
+	-$(AM_V_at)rm -f $@
+	$(AM_V_at)$(LN_S) $< $@
 
 EXTRA_DIST = Xvfb.man.pre
 
 relink:
-	rm -f Xvfb && $(MAKE) Xvfb
+	$(AM_V_at)rm -f Xvfb$(EXEEXT) && $(MAKE) Xvfb$(EXEEXT)

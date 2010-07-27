@@ -51,16 +51,11 @@
 
 #include <X11/extensions/render.h>
 #include <X11/extensions/renderproto.h>
+#include <X11/extensions/Xfixes.h>
 #include "picture.h"
 #include "picturestr.h"
 #include "mipict.h"
 #include "fbpict.h"
-
-#undef Xmalloc
-#undef Xcalloc
-#undef Xrealloc
-#undef Xfree
-
 
 
 extern int RenderErrBase;

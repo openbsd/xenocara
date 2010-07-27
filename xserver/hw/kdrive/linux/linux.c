@@ -24,7 +24,6 @@
 #include <kdrive-config.h>
 #endif
 #include "kdrive.h"
-#include "klinux.h"
 #include <errno.h>
 #include <signal.h>
 #include <linux/vt.h>
@@ -33,6 +32,22 @@
 #include <sys/ioctl.h>
 #include <X11/keysym.h>
 #include <linux/apm_bios.h>
+
+#ifdef KDRIVE_MOUSE
+extern KdPointerDriver	LinuxMouseDriver;
+extern KdPointerDriver	Ps2MouseDriver;
+extern KdPointerDriver	MsMouseDriver;
+#endif
+#ifdef TSLIB
+extern KdPointerDriver	TsDriver;
+#endif
+#ifdef KDRIVE_EVDEV
+extern KdPointerDriver	LinuxEvdevMouseDriver;
+extern KdKeyboardDriver LinuxEvdevKeyboardDriver;
+#endif
+#ifdef KDRIVE_KBD
+extern KdKeyboardDriver	LinuxKeyboardDriver;
+#endif
 
 static int  vtno;
 int  LinuxConsoleFd;
@@ -80,7 +95,7 @@ LinuxInit (void)
 	vtno = kdVirtualTerminal;
     else
     {
-	if ((fd = open("/dev/tty0",O_WRONLY,0)) < 0) 
+	if ((fd = open("/dev/tty0",O_WRONLY,0)) < 0)
 	{
 	    FatalError(
 		       "LinuxInit: Cannot open /dev/tty0 (%s)\n",
@@ -91,8 +106,8 @@ LinuxInit (void)
 	{
 	    FatalError("xf86OpenConsole: Cannot find a free VT\n");
 	}
+	close(fd);
     }
-    close(fd);
 
     sprintf(vtname,"/dev/tty%d",vtno); /* /dev/tty1-64 */
 
@@ -125,117 +140,13 @@ LinuxInit (void)
     return 1;
 }
 
-Bool
-LinuxFindPci (CARD16 vendor, CARD16 device, CARD32 count, KdCardAttr *attr)
-{
-    FILE    *f;
-    char    line[2048], *l, *end;
-    CARD32  bus, id, addr;
-    int	    n;
-    CARD32  ven_dev;
-    Bool    ret = FALSE;
-    int	    i;
-
-    attr->vendorID = vendor;
-    attr->deviceID = device;
-    ven_dev = (((CARD32) vendor) << 16) | ((CARD32) device);
-    f = fopen ("/proc/bus/pci/devices", "r");
-    if (!f)
-	return FALSE;
-    attr->io = 0;
-    while (fgets (line, sizeof (line)-1, f))
-    {
-	line[sizeof(line)-1] = '\0';
-	l = line;
-	bus = strtoul (l, &end, 16);
-	if (end == l)
-	    continue;
-	l = end;
-	id = strtoul (l, &end, 16);
-	if (end == l)
-	    continue;
-	l = end;
-	if (id != ven_dev)
-	    continue;
-	if (count--)
-	    continue;
-	(void) strtoul (l, &end, 16);	/* IRQ */
-	if (end == l)
-	    continue;
-	l = end;
-	n = 0;
-	for (i = 0; i < 6; i++)
-	{
-	    addr = strtoul (l, &end, 16);
-	    if (end == l)
-		break;
-	    if (addr & 1)
-		attr->io = addr & ~0xf;
-	    else
-	    {
-		if (n == KD_MAX_CARD_ADDRESS)
-		    break;
-		attr->address[n++] = addr & ~0xf;
-	    }
-	    l = end;
-	}
-	while (n > 0)
-	{
-	    if (attr->address[n-1] != 0)
-		break;
-	    n--;
-	}
-	attr->naddr = n;
-	attr->domain = 0; /* XXX */
-	attr->bus = (bus >> 8) & 0xff;
-	attr->slot = (bus >> 3) & 0x1f;
-	attr->func = bus & 0x07;
-	ret = TRUE;
-	break;
-    }
-    fclose (f);
-    return ret;
-}
-
-unsigned char *
-LinuxGetPciCfg(KdCardAttr *attr) 
-{
-    char filename[256];
-    FILE *f;
-    unsigned char *cfg;
-    int r;
-
-    snprintf(filename, 255, "/proc/bus/pci/%02x/%02x.%x",
-             attr->bus >> 8, (attr->bus & 0xff) >> 3, attr->bus & 7);
-/*     fprintf(stderr,"Find card on path %s\n",filename); */
-
-    if (!(f=fopen(filename,"r"))) 
-        return NULL;
-
-    if (!(cfg=xalloc(256))) 
-    {
-        fclose(f);
-        return NULL;
-    }
-
-    if (256 != (r=fread(cfg, 1, 256, f)))
-    {
-        fprintf(stderr,"LinuxGetPciCfg: read %d, expected 256\n",r);
-        free(cfg);
-        cfg=NULL;
-    }
-    fclose(f);
-/*     fprintf(stderr,"LinuxGetPciCfg: success, returning %p\n",cfg); */
-    return cfg;
-}
-
 static void
 LinuxSetSwitchMode (int mode)
 {
     struct sigaction	act;
     struct vt_mode	VT;
-    
-    if (ioctl(LinuxConsoleFd, VT_GETMODE, &VT) < 0) 
+
+    if (ioctl(LinuxConsoleFd, VT_GETMODE, &VT) < 0)
     {
 	FatalError ("LinuxInit: VT_GETMODE failed\n");
     }
@@ -246,7 +157,7 @@ LinuxSetSwitchMode (int mode)
 	sigemptyset (&act.sa_mask);
 	act.sa_flags = 0;
 	sigaction (SIGUSR1, &act, 0);
-    
+
 	VT.mode = mode;
 	VT.relsig = SIGUSR1;
 	VT.acqsig = SIGUSR1;
@@ -257,12 +168,12 @@ LinuxSetSwitchMode (int mode)
 	sigemptyset (&act.sa_mask);
 	act.sa_flags = 0;
 	sigaction (SIGUSR1, &act, 0);
-    
+
 	VT.mode = mode;
 	VT.relsig = 0;
 	VT.acqsig = 0;
     }
-    if (ioctl(LinuxConsoleFd, VT_SETMODE, &VT) < 0) 
+    if (ioctl(LinuxConsoleFd, VT_SETMODE, &VT) < 0)
     {
 	FatalError("LinuxInit: VT_SETMODE failed\n");
     }
@@ -342,7 +253,7 @@ LinuxEnable (void)
      */
     LinuxApmFd = open ("/dev/apm_bios", 2);
     if (LinuxApmFd < 0 && errno == ENOENT)
-	LinuxApmFd = open ("/dev/misc/apm_bios", 2); 
+	LinuxApmFd = open ("/dev/misc/apm_bios", 2);
     if (LinuxApmFd >= 0)
     {
 	LinuxApmRunning = TRUE;
@@ -350,7 +261,7 @@ LinuxEnable (void)
 	RegisterBlockAndWakeupHandlers (LinuxApmBlock, LinuxApmWakeup, 0);
 	AddEnabledDevice (LinuxApmFd);
     }
-	
+
     /*
      * now get the VT
      */
@@ -413,8 +324,8 @@ LinuxFini (void)
 	 * Find a legal VT to switch to, either the one we started from
 	 * or the lowest active one that isn't ours
 	 */
-	if (activeVT < 0 || 
-	    activeVT == vts.v_active || 
+	if (activeVT < 0 ||
+	    activeVT == vts.v_active ||
 	    !(vts.v_state & (1 << activeVT)))
 	{
 	    for (activeVT = 1; activeVT < 16; activeVT++)
@@ -448,17 +359,23 @@ LinuxFini (void)
 }
 
 void
-KdOsAddInputDrivers ()
+KdOsAddInputDrivers (void)
 {
+#ifdef KDRIVE_MOUSE
     KdAddPointerDriver(&LinuxMouseDriver);
     KdAddPointerDriver(&MsMouseDriver);
     KdAddPointerDriver(&Ps2MouseDriver);
+#endif
 #ifdef TSLIB
     KdAddPointerDriver(&TsDriver);
 #endif
+#ifdef KDRIVE_EVDEV
     KdAddPointerDriver(&LinuxEvdevMouseDriver);
-    KdAddKeyboardDriver(&LinuxKeyboardDriver);
     KdAddKeyboardDriver(&LinuxEvdevKeyboardDriver);
+#endif
+#ifdef KDRIVE_KBD
+    KdAddKeyboardDriver(&LinuxKeyboardDriver);
+#endif
 }
 
 static void

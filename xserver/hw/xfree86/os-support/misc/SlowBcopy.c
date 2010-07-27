@@ -24,7 +24,7 @@
 
 static int really_slow_bcopy;
 
-_X_EXPORT void
+void
 xf86SetReallySlowBcopy(void)
 {
 	really_slow_bcopy = 1;
@@ -42,7 +42,7 @@ static void xf86_really_slow_bcopy(unsigned char *src, unsigned char *dst, int l
 #endif
 
 /* The outb() isn't needed on my machine, but who knows ... -- ost */
-_X_EXPORT void
+void
 xf86SlowBcopy(unsigned char *src, unsigned char *dst, int len)
 {
 #if defined(__i386__) || defined(__amd64__)
@@ -59,43 +59,59 @@ xf86SlowBcopy(unsigned char *src, unsigned char *dst, int len)
 
 #ifdef linux
 
+unsigned long _bus_base(void);
+
+#define useSparse() (!_bus_base())
+
 #define SPARSE (7)
 
 #else
+
+#define useSparse() 0
 
 #define SPARSE 0
 
 #endif
 
-_X_EXPORT void
+void
 xf86SlowBCopyFromBus(unsigned char *src, unsigned char *dst, int count)
 {
-    unsigned long addr;
-    long result;
+	if (useSparse())
+	{
+		unsigned long addr;
+		long result;
 
-    addr = (unsigned long) src;
-    while( count ){
-	result = *(volatile int *) addr;
-	result >>= ((addr>>SPARSE) & 3) * 8;
-	*dst++ = (unsigned char) (0xffUL & result);
-	addr += 1<<SPARSE;
-	count--;
-	outb(0x80, 0x00);
-    }
+		addr = (unsigned long) src;
+		while (count) {
+			result = *(volatile int *) addr;
+			result >>= ((addr>>SPARSE) & 3) * 8;
+			*dst++ = (unsigned char) (0xffUL & result);
+			addr += 1<<SPARSE;
+			count--;
+			outb(0x80, 0x00);
+		}
+	}
+	else
+		xf86SlowBcopy(src, dst, count);
 }
-  
-_X_EXPORT void
+
+void
 xf86SlowBCopyToBus(unsigned char *src, unsigned char *dst, int count)
 {
-    unsigned long addr;
+	if (useSparse())
+	{
+		unsigned long addr;
 
-    addr = (unsigned long) dst;
-    while(count) {
-	*(volatile unsigned int *) addr = (unsigned short)(*src) * 0x01010101;
-	src++;
-	addr += 1<<SPARSE;
-	count--;
-	outb(0x80, 0x00);
-    }
+		addr = (unsigned long) dst;
+		while (count) {
+			*(volatile unsigned int *) addr = (unsigned short)(*src) * 0x01010101;
+			src++;
+			addr += 1<<SPARSE;
+			count--;
+			outb(0x80, 0x00);
+		}
+	}
+	else
+		xf86SlowBcopy(src, dst, count);
 }
 #endif

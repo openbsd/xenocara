@@ -54,6 +54,10 @@ extern Bool			g_fClipboardStarted;
 #endif
 extern Bool			g_fSoftwareCursor;
 
+#if defined(XWIN_MULTIWINDOW)
+extern HICON                    g_hIconX;
+extern HICON                    g_hSmallIconX;
+#endif
 
 /*
  * Local function prototypes
@@ -112,8 +116,8 @@ winDrawURLWindow (LPARAM lParam)
     crText = RGB(0,0,128+64);
   SetTextColor (draw->hDC, crText);
   
-  /* Create underlined font 14 high, standard dialog font */
-  font = CreateFont (-14, 0, 0, 0, FW_NORMAL, FALSE, TRUE, FALSE,
+  /* Create font 8 high, standard dialog font */
+  font = CreateFont (-8, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
 		     0, 0, 0, 0, 0, "MS Sans Serif");
   if (!font)
     {
@@ -146,7 +150,7 @@ winURLWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       SetCursor (cursor);
     return TRUE;
   }
-  origCB = (WNDPROC)GetWindowLong (hwnd, GWL_USERDATA);
+  origCB = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
   /* Otherwise fall through to original WndProc */
   if (origCB)
     return CallWindowProc (origCB, hwnd, msg, wParam, lParam);
@@ -163,50 +167,90 @@ static void
 winOverrideURLButton (HWND hwnd, int id)
 {
   WNDPROC origCB;
-  origCB = (WNDPROC)SetWindowLong (GetDlgItem (hwnd, id),
-				   GWL_WNDPROC, (LONG)winURLWndProc);
-  SetWindowLong (GetDlgItem (hwnd, id), GWL_USERDATA, (LONG)origCB);
+  origCB = (WNDPROC)SetWindowLongPtr(GetDlgItem (hwnd, id),
+                                     GWLP_WNDPROC, (LONG_PTR)winURLWndProc);
+  SetWindowLongPtr(GetDlgItem (hwnd, id), GWLP_USERDATA, (LONG_PTR)origCB);
 }
 
 static void
 winUnoverrideURLButton (HWND hwnd, int id)
 {
   WNDPROC origCB;
-  origCB = (WNDPROC)SetWindowLong (GetDlgItem (hwnd, id),
-				   GWL_USERDATA, 0);
+  origCB = (WNDPROC)SetWindowLongPtr(GetDlgItem (hwnd, id),
+                                     GWLP_USERDATA, 0);
   if (origCB)
-    SetWindowLong (GetDlgItem (hwnd, id), GWL_WNDPROC, (LONG)origCB);
+    SetWindowLongPtr(GetDlgItem (hwnd, id), GWLP_WNDPROC, (LONG_PTR)origCB);
 }
 
 
 /*
  * Center a dialog window in the desktop window
+ * and set small and large icons to X icons.
  */
 
 static void
-winCenterDialog (HWND hwndDlg)
+winInitDialog (HWND hwndDlg)
 {
   HWND hwndDesk; 
-  RECT rc, rcDlg, rcDesk; 
+  RECT rc, rcDlg, rcDesk;
+  HICON hIcon, hIconSmall;
  
   hwndDesk = GetParent (hwndDlg);
   if (!hwndDesk || IsIconic (hwndDesk))
     hwndDesk = GetDesktopWindow (); 
   
-  GetWindowRect (hwndDesk, &rcDesk); 
-  GetWindowRect (hwndDlg, &rcDlg); 
-  CopyRect (&rc, &rcDesk); 
-  
-  OffsetRect (&rcDlg, -rcDlg.left, -rcDlg.top); 
-  OffsetRect (&rc, -rc.left, -rc.top); 
-  OffsetRect (&rc, -rcDlg.right, -rcDlg.bottom); 
-  
-  SetWindowPos (hwndDlg, 
-		HWND_TOP, 
-		rcDesk.left + (rc.right / 2), 
-		rcDesk.top + (rc.bottom / 2), 
+  /* Remove minimize and maximize buttons */
+  SetWindowLongPtr(hwndDlg, GWL_STYLE,
+                   GetWindowLongPtr(hwndDlg, GWL_STYLE)
+                   & ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX));
+
+  /* Set Window not to show in the task bar */
+  SetWindowLongPtr(hwndDlg, GWL_EXSTYLE,
+                   GetWindowLongPtr(hwndDlg, GWL_EXSTYLE) & ~WS_EX_APPWINDOW );
+
+  /* Center dialog window in the screen. Not done for multi-monitor systems, where
+   * it is likely to end up split across the screens. In that case, it appears
+   * near the Tray icon.
+   */
+  if (GetSystemMetrics(SM_CMONITORS)>1) {
+    /* Still need to refresh the frame change. */
+    SetWindowPos (hwndDlg, HWND_TOPMOST, 0,0,0,0,
+		SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+  } else {
+    GetWindowRect (hwndDesk, &rcDesk);
+    GetWindowRect (hwndDlg, &rcDlg);
+    CopyRect (&rc, &rcDesk);
+
+    OffsetRect (&rcDlg, -rcDlg.left, -rcDlg.top);
+    OffsetRect (&rc, -rc.left, -rc.top);
+    OffsetRect (&rc, -rcDlg.right, -rcDlg.bottom);
+
+    SetWindowPos (hwndDlg,
+		HWND_TOPMOST,
+		rcDesk.left + (rc.right / 2),
+		rcDesk.top + (rc.bottom / 2),
 		0, 0,
-		SWP_NOSIZE | SWP_NOZORDER); 
+		SWP_NOSIZE | SWP_FRAMECHANGED);
+  }
+
+#ifdef XWIN_MULTIWINDOW
+  if (g_hIconX) hIcon=g_hIconX;
+  else
+#endif
+  hIcon = LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN));
+
+#ifdef XWIN_MULTIWINDOW
+  if (g_hSmallIconX) hIconSmall=g_hSmallIconX;
+  else
+#endif
+  hIconSmall = LoadImage (g_hInstance,
+                        MAKEINTRESOURCE(IDI_XWIN), IMAGE_ICON,
+                        GetSystemMetrics(SM_CXSMICON),
+                        GetSystemMetrics(SM_CYSMICON),
+                        LR_SHARED);
+
+  PostMessage (hwndDlg, WM_SETICON, ICON_BIG, (LPARAM) hIcon);
+  PostMessage (hwndDlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSmall);
 }
 
 
@@ -220,7 +264,7 @@ winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
   int i;
   int liveClients = 0;
 
-  /* Count up running clinets (clients[0] is serverClient) */
+  /* Count up running clients (clients[0] is serverClient) */
   for (i = 1; i < currentMaxClients; i++)
     if (clients[i] != NullClient)	
       liveClients++;
@@ -238,8 +282,9 @@ winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
   if (liveClients < 0)
     liveClients = 0;      
 
-  /* Don't show the exit confirmation dialog if SilentExit is enabled */
-  if (pref.fSilentExit && liveClients <= 0)
+  /* Don't show the exit confirmation dialog if SilentExit & no clients,
+     or ForceExit, is enabled */
+  if ((pref.fSilentExit && liveClients <= 0) || pref.fForceExit)
     {
       if (g_hDlgExit != NULL)
 	{
@@ -271,15 +316,6 @@ winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
 				  winExitDlgProc,
 				  (int) pScreenPriv);
 
-  /* Drop minimize and maximize buttons */
-  SetWindowLong (g_hDlgExit, GWL_STYLE,
-		 GetWindowLong (g_hDlgExit, GWL_STYLE)
-		 & ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX));
-  SetWindowLong (g_hDlgExit, GWL_EXSTYLE,
-		 GetWindowLong (g_hDlgExit, GWL_EXSTYLE) & ~WS_EX_APPWINDOW );
-  SetWindowPos (g_hDlgExit, HWND_TOPMOST, 0, 0, 0, 0,
-		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE); 
- 
   /* Show the dialog box */
   ShowWindow (g_hDlgExit, SW_SHOW);
   
@@ -288,10 +324,10 @@ winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
   
   /* Set focus to the Cancel button */
   PostMessage (g_hDlgExit, WM_NEXTDLGCTL,
-	       (int) GetDlgItem (g_hDlgExit, IDCANCEL), TRUE);
+	       GetDlgItem (g_hDlgExit, IDCANCEL), TRUE);
 }
 
-#define CONNECTED_CLIENTS_FORMAT	"There are currently %d clients connected."
+#define CONNECTED_CLIENTS_FORMAT	"There %s currently %d client%s connected."
 
 
 /*
@@ -314,18 +350,13 @@ winExitDlgProc (HWND hDialog, UINT message,
 	/* Store pointers to private structures for future use */
 	s_pScreenPriv = (winPrivScreenPtr) lParam;
 	
-	winCenterDialog (hDialog);
-	
-	/* Set icon to standard app icon */
-	PostMessage (hDialog,
-		     WM_SETICON,
-		     ICON_SMALL,
-		     (LPARAM) LoadIcon (g_hInstance,
-					MAKEINTRESOURCE(IDI_XWIN)));
+	winInitDialog (hDialog);
 
 	/* Format the connected clients string */
 	pszConnectedClients = Xprintf (CONNECTED_CLIENTS_FORMAT,
-            s_pScreenPriv->iConnectedClients);
+           (s_pScreenPriv->iConnectedClients == 1) ? "is" : "are",
+            s_pScreenPriv->iConnectedClients,
+           (s_pScreenPriv->iConnectedClients == 1) ? "" : "s");
 	if (!pszConnectedClients)
 	    return TRUE;
      
@@ -413,17 +444,6 @@ winDisplayDepthChangeDialog (winPrivScreenPtr pScreenPriv)
 					 pScreenPriv->hwndScreen,
 					 winChangeDepthDlgProc,
 					 (int) pScreenPriv);
- 
-  /* Drop minimize and maximize buttons */
-  SetWindowLong (g_hDlgDepthChange, GWL_STYLE,
-		 GetWindowLong (g_hDlgDepthChange, GWL_STYLE)
-		 & ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX));
-  SetWindowLong (g_hDlgDepthChange, GWL_EXSTYLE,
-		 GetWindowLong (g_hDlgDepthChange, GWL_EXSTYLE)
-		 & ~WS_EX_APPWINDOW );
-  SetWindowPos (g_hDlgDepthChange, 0, 0, 0, 0, 0,
-		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER | SWP_NOSIZE); 
-
   /* Show the dialog box */
   ShowWindow (g_hDlgDepthChange, SW_SHOW);
   
@@ -480,13 +500,7 @@ winChangeDepthDlgProc (HWND hwndDialog, UINT message,
 	      s_pScreenPriv->dwLastWindowsBitsPixel);
 #endif
       
-      winCenterDialog( hwndDialog );
-
-      /* Set icon to standard app icon */
-      PostMessage (hwndDialog,
-		   WM_SETICON,
-		   ICON_SMALL,
-		   (LPARAM) LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN)));
+      winInitDialog( hwndDialog );
 
       return TRUE;
 
@@ -572,15 +586,6 @@ winDisplayAboutDialog (winPrivScreenPtr pScreenPriv)
 				   winAboutDlgProc,
 				   (int) pScreenPriv);
  
-  /* Drop minimize and maximize buttons */
-  SetWindowLong (g_hDlgAbout, GWL_STYLE,
-		 GetWindowLong (g_hDlgAbout, GWL_STYLE)
-		 & ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX));
-  SetWindowLong (g_hDlgAbout, GWL_EXSTYLE,
-		 GetWindowLong (g_hDlgAbout, GWL_EXSTYLE) & ~WS_EX_APPWINDOW);
-  SetWindowPos (g_hDlgAbout, 0, 0, 0, 0, 0,
-		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE); 
-
   /* Show the dialog box */
   ShowWindow (g_hDlgAbout, SW_SHOW);
 
@@ -589,7 +594,7 @@ winDisplayAboutDialog (winPrivScreenPtr pScreenPriv)
   
   /* Set focus to the OK button */
   PostMessage (g_hDlgAbout, WM_NEXTDLGCTL,
-	       (int) GetDlgItem (g_hDlgAbout, IDOK), TRUE);
+	       GetDlgItem (g_hDlgAbout, IDOK), TRUE);
 }
 
 
@@ -622,13 +627,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
       s_pScreenInfo = s_pScreenPriv->pScreenInfo;
       s_pScreen = s_pScreenInfo->pScreen;
 
-      winCenterDialog (hwndDialog);
-
-      /* Set icon to standard app icon */
-      PostMessage (hwndDialog,
-		   WM_SETICON,
-		   ICON_SMALL,
-		   (LPARAM) LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN)));
+      winInitDialog (hwndDialog);
 
       /* Override the URL buttons */
       winOverrideURLButton (hwndDialog, ID_ABOUT_CHANGELOG);
@@ -676,7 +675,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 
 	case ID_ABOUT_CHANGELOG:
 	  {
-	    int			iReturn;
+	    HINSTANCE iReturn;
 #ifdef __CYGWIN__
 	    const char *	pszCygPath = "/usr/X11R6/share/doc/"
 	      "xorg-x11-xwin/changelog.html";
@@ -689,12 +688,12 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 		    "devel/server/changelog.html";
 #endif
 	    
-	    iReturn = (int) ShellExecute (NULL,
-					  "open",
-					  pszWinPath,
-					  NULL,
-					  NULL,
-					  SW_MAXIMIZE);
+	    iReturn = ShellExecute (NULL,
+                                    "open",
+                                    pszWinPath,
+                                    NULL,
+                                    NULL,
+                                    SW_MAXIMIZE);
 	    if (iReturn < 32)
 	      {
 		ErrorF ("winAboutDlgProc - WM_COMMAND - ID_ABOUT_CHANGELOG - "
@@ -706,15 +705,15 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 
 	case ID_ABOUT_WEBSITE:
 	  {
-	    const char *	pszPath = "http://x.cygwin.com/";
+	    const char *	pszPath = __VENDORDWEBSUPPORT__;
 	    int			iReturn;
 	    
-	    iReturn = (int) ShellExecute (NULL,
-					  "open",
-					  pszPath,
-					  NULL,
-					  NULL,
-					  SW_MAXIMIZE);
+	    iReturn = ShellExecute (NULL,
+                                    "open",
+                                    pszPath,
+                                    NULL,
+                                    NULL,
+                                    SW_MAXIMIZE);
 	    if (iReturn < 32)
 	      {
 		ErrorF ("winAboutDlgProc - WM_COMMAND - ID_ABOUT_WEBSITE - "
@@ -729,12 +728,12 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 	    const char *	pszPath = "http://x.cygwin.com/docs/ug/";
 	    int			iReturn;
 	    
-	    iReturn = (int) ShellExecute (NULL,
-					  "open",
-					  pszPath,
-					  NULL,
-					  NULL,
-					  SW_MAXIMIZE);
+	    iReturn = ShellExecute (NULL,
+                                    "open",
+                                    pszPath,
+                                    NULL,
+                                    NULL,
+                                    SW_MAXIMIZE);
 	    if (iReturn < 32)
 	      {
 		ErrorF ("winAboutDlgProc - WM_COMMAND - ID_ABOUT_UG - "
@@ -749,12 +748,12 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 	    const char *	pszPath = "http://x.cygwin.com/docs/faq/";
 	    int			iReturn;
 	    
-	    iReturn = (int) ShellExecute (NULL,
-					  "open",
-					  pszPath,
-					  NULL,
-					  NULL,
-					  SW_MAXIMIZE);
+	    iReturn = ShellExecute (NULL,
+                                    "open",
+                                    pszPath,
+                                    NULL,
+                                    NULL,
+                                    SW_MAXIMIZE);
 	    if (iReturn < 32)
 	      {
 		ErrorF ("winAboutDlgProc - WM_COMMAND - ID_ABOUT_FAQ - "

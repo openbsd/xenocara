@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.28 2009/09/11 06:17:29 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.29 2010/07/27 19:02:24 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -25,17 +25,20 @@ GLX_OPTION=	--disable-glx
 .endif
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-DRI_OPTION=	--enable-dri --enable-dri2 --with-dri-driver-path=${X11BASE}/lib/modules/dri
+DRI_OPTION=	--enable-dri --enable-dri2 \
+		--with-dri-driver-path=${X11BASE}/lib/modules/dri
 .else
 DRI_OPTION=	--disable-dri --disable-dri2
 .endif
 
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
+		--with-fontrootdir=${LIBDIR}/X11/fonts \
 		--with-xkb-path=/etc/X11/xkb \
 		--with-xkb-output=/var/db/xkb \
 		--with-module-dir=${LIBDIR}/modules ${GLX_OPTION} \
 		--enable-install-setuid --enable-privsep \
 		--disable-dmx ${NO_XORG_OPTION} ${NO_XF86_UTIL_OPTION} \
+		--disable-unit-tests --disable-xace \
 		${DRI_OPTION}
 
 .include <bsd.xorg.mk>

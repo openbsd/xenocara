@@ -30,13 +30,13 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdio.h>
 #include <math.h>
-#define NEED_EVENTS 1
 #include <X11/X.h>
 #include <X11/Xproto.h>
 #include <X11/keysym.h>
 #include "misc.h"
 #include "inputstr.h"
 #include "exevents.h"
+#include "eventstr.h"
 #include <xkbsrv.h>
 #include "xkb.h"
 #include <ctype.h>
@@ -75,12 +75,6 @@ XkbSetExtension(DeviceIntPtr device, ProcessInputProc proc)
     WRAP_PROCESS_INPUT_PROC(device, xkbPrivPtr, proc, xkbUnwrapProc);
 }
 
-extern	void	ProcessOtherEvent(
-    xEvent *		/* xE */,
-    DeviceIntPtr 	/* dev */,
-    int 		/* count */
-);
-
 /***====================================================================***/
 
 static XkbAction
@@ -92,41 +86,6 @@ static XkbAction	fake;
 	fake.type = XkbSA_NoAction;
 	return fake;
     }
-    if (XkbDisableLockActions) {
-	switch (act->type) {
-	    case XkbSA_LockMods:
-		fake.mods.type  = XkbSA_SetMods;
-		fake.mods.flags = 0;
-		fake.mods.mask  = act->mods.mask;
-		return fake;
-	    case XkbSA_LatchMods:
-		fake.mods.type  = XkbSA_SetMods;
-		fake.mods.flags = 0;
-		fake.mods.mask  = act->mods.mask;
-		return fake;
-	    case XkbSA_ISOLock:
-		if (act->iso.flags&XkbSA_ISODfltIsGroup) {
-		     fake.group.type = XkbSA_SetGroup;
-		     fake.group.flags = act->iso.flags&XkbSA_GroupAbsolute;
-		     XkbSASetGroup(&fake.group,XkbSAGroup(&act->iso));
-		}
-		else {
-		     fake.mods.type  = XkbSA_SetMods;
-		     fake.mods.flags = 0;
-		     fake.mods.mask  = act->iso.mask;
-		}
-		return fake;
-	    case XkbSA_LockGroup:
-	    case XkbSA_LatchGroup:
-		/* We want everything from the latch/lock action except the
-		 * type should be changed to set.
-		 */
-		fake = *act;
-		fake.group.type = XkbSA_SetGroup;
-		return fake;
-	}
-    }
-    else 
     if (xkb->ctrls->enabled_ctrls&XkbStickyKeysMask) {
 	if (act->any.type==XkbSA_SetMods) {
 	    fake.mods.type = XkbSA_LatchMods;
@@ -165,30 +124,11 @@ static XkbAction 	fake;
     }
     pActs= XkbKeyActionsPtr(xkb,key);
     col= 0;
-    effectiveGroup= xkbState->group;
-    if (effectiveGroup!=XkbGroup1Index) {
-	if (XkbKeyNumGroups(xkb,key)>(unsigned)1) {
-	    if (effectiveGroup>=XkbKeyNumGroups(xkb,key)) {
-		unsigned gi= XkbKeyGroupInfo(xkb,key);
-		switch (XkbOutOfRangeGroupAction(gi)) {
-		    default:
-		    case XkbWrapIntoRange:
-			effectiveGroup %= XkbKeyNumGroups(xkb,key);
-			break;
-		    case XkbClampIntoRange:
-			effectiveGroup = XkbKeyNumGroups(xkb,key)-1;
-			break;
-		    case XkbRedirectIntoRange:
-			effectiveGroup= XkbOutOfRangeGroupInfo(gi);
-			if (effectiveGroup>=XkbKeyNumGroups(xkb,key))
-			    effectiveGroup= 0;
-			break;
-		}
-	    }
-	}
-	else effectiveGroup= XkbGroup1Index;
-	col+= (effectiveGroup*XkbKeyGroupsWidth(xkb,key));
-    }
+
+    effectiveGroup = XkbGetEffectiveGroup(xkbi, xkbState, key);
+    if (effectiveGroup != XkbGroup1Index)
+        col += (effectiveGroup * XkbKeyGroupsWidth(xkb, key));
+
     type= XkbKeyKeyType(xkb,key,effectiveGroup);
     if (type->map!=NULL) {
 	register unsigned		i,mods;
@@ -539,7 +479,7 @@ int		dx,dy;
 	dx= xkbi->mouseKeysDX;
 	dy= xkbi->mouseKeysDY;
     }
-    XkbDDXFakePointerMotion(xkbi->mouseKeysFlags,dx,dy);
+    XkbDDXFakePointerMotion(xkbi->device, xkbi->mouseKeysFlags,dx,dy);
     return xkbi->desc->ctrls->mk_interval;
 }
 
@@ -567,7 +507,7 @@ Bool	accel;
 	accel= ((pAction->ptr.flags&XkbSA_NoAcceleration)==0);
 	x= XkbPtrActionX(&pAction->ptr);
 	y= XkbPtrActionY(&pAction->ptr);
-	XkbDDXFakePointerMotion(pAction->ptr.flags,x,y);
+	XkbDDXFakePointerMotion(xkbi->device, pAction->ptr.flags,x,y);
 	AccessXCancelRepeatKey(xkbi,keycode);
 	xkbi->mouseKeysAccel= accel&&
 		(xkbi->desc->ctrls->enabled_ctrls&XkbMouseKeysAccelMask);
@@ -663,7 +603,7 @@ _XkbFilterPointerBtn(	XkbSrvInfoPtr	xkbi,
 		    }
 		    if (XkbComputeControlsNotify(xkbi->device,
 						&old,xkbi->desc->ctrls,
-						&cn,False)) {
+						&cn,FALSE)) {
 			cn.keycode = keycode;
                         /* XXX: what about DeviceKeyPress? */
 			cn.eventType = KeyPress;
@@ -728,7 +668,7 @@ XkbEventCauseRec	cause;
 	    XkbSrvLedInfoPtr	sli;
 
 	    ctrls->enabled_ctrls|= change;
-	    if (XkbComputeControlsNotify(kbd,&old,ctrls,&cn,False)) {
+	    if (XkbComputeControlsNotify(kbd,&old,ctrls,&cn,FALSE)) {
 		cn.keycode = keycode;
                 /* XXX: what about DeviceKeyPress? */
 		cn.eventType = KeyPress;
@@ -742,10 +682,10 @@ XkbEventCauseRec	cause;
 	    /* If sticky keys were disabled, clear all locks and latches */
 	    if ((old.enabled_ctrls&XkbStickyKeysMask)&&
 		(!(ctrls->enabled_ctrls&XkbStickyKeysMask))) {
-		XkbClearAllLatchesAndLocks(kbd,xkbi,False,&cause);
+		XkbClearAllLatchesAndLocks(kbd,xkbi,FALSE,&cause);
     	    }
 	    sli= XkbFindSrvLedInfo(kbd,XkbDfltXIClass,XkbDfltXIId,0);
-	    XkbUpdateIndicators(kbd,sli->usesControls,True,NULL,&cause);
+	    XkbUpdateIndicators(kbd,sli->usesControls,TRUE,NULL,&cause);
 	    if (XkbAX_NeedFeedback(ctrls,XkbAX_FeatureFBMask))
 		XkbDDXAccessXBeep(kbd,_BEEP_FEATURE_ON,change);
 	}
@@ -757,7 +697,7 @@ XkbEventCauseRec	cause;
 	    XkbSrvLedInfoPtr	sli;
 
 	    ctrls->enabled_ctrls&= ~change;
-	    if (XkbComputeControlsNotify(kbd,&old,ctrls,&cn,False)) {
+	    if (XkbComputeControlsNotify(kbd,&old,ctrls,&cn,FALSE)) {
 		cn.keycode = keycode;
 		cn.eventType = KeyRelease;
 		cn.requestMajor = 0;
@@ -769,10 +709,10 @@ XkbEventCauseRec	cause;
 	    /* If sticky keys were disabled, clear all locks and latches */
 	    if ((old.enabled_ctrls&XkbStickyKeysMask)&&
 		(!(ctrls->enabled_ctrls&XkbStickyKeysMask))) {
-		XkbClearAllLatchesAndLocks(kbd,xkbi,False,&cause);
+		XkbClearAllLatchesAndLocks(kbd,xkbi,FALSE,&cause);
     	    }
 	    sli= XkbFindSrvLedInfo(kbd,XkbDfltXIClass,XkbDfltXIId,0);
-	    XkbUpdateIndicators(kbd,sli->usesControls,True,NULL,&cause);
+	    XkbUpdateIndicators(kbd,sli->usesControls,TRUE,NULL,&cause);
 	    if (XkbAX_NeedFeedback(ctrls,XkbAX_FeatureFBMask))
 		XkbDDXAccessXBeep(kbd,_BEEP_FEATURE_OFF,change);
 	}
@@ -840,11 +780,10 @@ _XkbFilterRedirectKey(	XkbSrvInfoPtr	xkbi,
 			unsigned	keycode,
 			XkbAction *	pAction)
 {
-unsigned	realMods = 0;
-xEvent 		ev;
+DeviceEvent	ev;
 int		x,y;
 XkbStateRec	old;
-unsigned	mods,mask,oldCoreState = 0,oldCorePrevState = 0;
+unsigned	mods,mask;
 xkbDeviceInfoPtr xkbPrivPtr = XKBDEVICEINFO(xkbi->device);
 ProcessInputProc backupproc;
 
@@ -855,10 +794,12 @@ ProcessInputProc backupproc;
     if ((filter->keycode!=0)&&(filter->keycode!=keycode))
 	return 1;
 
-    GetSpritePosition(inputInfo.pointer, &x,&y);
-    ev.u.keyButtonPointer.time = GetTimeInMillis();
-    ev.u.keyButtonPointer.rootX = x;
-    ev.u.keyButtonPointer.rootY = y;
+    GetSpritePosition(xkbi->device, &x,&y);
+    ev.header = ET_Internal;
+    ev.length = sizeof(DeviceEvent);
+    ev.time = GetTimeInMillis();
+    ev.root_x = x;
+    ev.root_y = y;
 
     if (filter->keycode==0) {		/* initial press */
 	if ((pAction->redirect.new_key<xkbi->desc->min_key_code)||
@@ -872,9 +813,8 @@ ProcessInputProc backupproc;
 	filter->filter = _XkbFilterRedirectKey;
 	filter->upAction = *pAction;
 
-        /* XXX: what about DeviceKeyPress */
-	ev.u.u.type = KeyPress;
-	ev.u.u.detail = pAction->redirect.new_key;
+        ev.type = ET_KeyPress;
+        ev.detail.key = pAction->redirect.new_key;
 
         mask= XkbSARedirectVModsMask(&pAction->redirect);
         mods= XkbSARedirectVMods(&pAction->redirect);
@@ -885,8 +825,6 @@ ProcessInputProc backupproc;
 
 	if ( mask || mods ) {
 	    old= xkbi->state;
-	    oldCoreState= xkbi->device->key->state;
-	    oldCorePrevState= xkbi->device->key->prev_state;
 	    xkbi->state.base_mods&= ~mask;
 	    xkbi->state.base_mods|= (mods&mask);
 	    xkbi->state.latched_mods&= ~mask;
@@ -894,29 +832,20 @@ ProcessInputProc backupproc;
 	    xkbi->state.locked_mods&= ~mask;
 	    xkbi->state.locked_mods|= (mods&mask);
 	    XkbComputeDerivedState(xkbi);
-	    xkbi->device->key->state= xkbi->device->key->prev_state= 
-							xkbi->state.mods;
 	}
 
-	realMods = xkbi->device->key->modifierMap[ev.u.u.detail];
-	xkbi->device->key->modifierMap[ev.u.u.detail] = 0;
 	UNWRAP_PROCESS_INPUT_PROC(xkbi->device,xkbPrivPtr, backupproc);
-	xkbi->device->public.processInputProc(&ev,xkbi->device,1);
+	xkbi->device->public.processInputProc((InternalEvent*)&ev, xkbi->device);
 	COND_WRAP_PROCESS_INPUT_PROC(xkbi->device, xkbPrivPtr,
 				     backupproc,xkbUnwrapProc);
-	xkbi->device->key->modifierMap[ev.u.u.detail] = realMods;
 	
-	if ( mask || mods ) {
-	    xkbi->device->key->state= oldCoreState;
-	    xkbi->device->key->prev_state= oldCorePrevState;
+	if ( mask || mods )
 	    xkbi->state= old;
-	}
     }
     else if (filter->keycode==keycode) {
 
-        /* XXX: what about DeviceKeyRelease */
-	ev.u.u.type = KeyRelease;
-	ev.u.u.detail = filter->upAction.redirect.new_key;
+        ev.type = ET_KeyRelease;
+        ev.detail.key = filter->upAction.redirect.new_key;
 
         mask= XkbSARedirectVModsMask(&filter->upAction.redirect);
         mods= XkbSARedirectVMods(&filter->upAction.redirect);
@@ -927,8 +856,6 @@ ProcessInputProc backupproc;
 
 	if ( mask || mods ) {
 	    old= xkbi->state;
-	    oldCoreState= xkbi->device->key->state;
-	    oldCorePrevState= xkbi->device->key->prev_state;
 	    xkbi->state.base_mods&= ~mask;
 	    xkbi->state.base_mods|= (mods&mask);
 	    xkbi->state.latched_mods&= ~mask;
@@ -936,23 +863,15 @@ ProcessInputProc backupproc;
 	    xkbi->state.locked_mods&= ~mask;
 	    xkbi->state.locked_mods|= (mods&mask);
 	    XkbComputeDerivedState(xkbi);
-	    xkbi->device->key->state= xkbi->device->key->prev_state= 
-							xkbi->state.mods;
 	}
 
-	realMods = xkbi->device->key->modifierMap[ev.u.u.detail];
-	xkbi->device->key->modifierMap[ev.u.u.detail] = 0;
 	UNWRAP_PROCESS_INPUT_PROC(xkbi->device,xkbPrivPtr, backupproc);
-	xkbi->device->public.processInputProc(&ev,xkbi->device,1);
+	xkbi->device->public.processInputProc((InternalEvent*)&ev, xkbi->device);
 	COND_WRAP_PROCESS_INPUT_PROC(xkbi->device, xkbPrivPtr,
 				     backupproc,xkbUnwrapProc);
-	xkbi->device->key->modifierMap[ev.u.u.detail] = realMods;
 
-	if ( mask || mods ) {
-	    xkbi->device->key->state= oldCoreState;
-	    xkbi->device->key->prev_state= oldCorePrevState;
+	if ( mask || mods )
 	    xkbi->state= old;
-	}
 
 	filter->keycode= 0;
 	filter->active= 0;
@@ -1027,7 +946,7 @@ int		button;
     if (filter->keycode==0) {		/* initial press */
 	_XkbLookupButtonDevice(&dev, pAction->devbtn.device, serverClient,
 			       DixUnknownAccess, &button);
-	if (!dev || !dev->public.on || dev == inputInfo.pointer)
+	if (!dev || !dev->public.on)
 	    return 1;
 
 	button= pAction->devbtn.button;
@@ -1045,7 +964,7 @@ int		button;
 		if ((pAction->devbtn.flags&XkbSA_LockNoLock)||
 		    BitIsOn(dev->button->down, button))
 		    return 0;
-		XkbDDXFakeDeviceButton(dev,True,button);
+		XkbDDXFakeDeviceButton(dev,TRUE,button);
 		filter->upAction.type= XkbSA_NoAction;
 		break;
 	    case XkbSA_DeviceBtn:
@@ -1053,12 +972,12 @@ int		button;
 		    int nClicks,i;
 		    nClicks= pAction->btn.count;
 		    for (i=0;i<nClicks;i++) {
-			XkbDDXFakeDeviceButton(dev,True,button);
-			XkbDDXFakeDeviceButton(dev,False,button);
+			XkbDDXFakeDeviceButton(dev,TRUE,button);
+			XkbDDXFakeDeviceButton(dev,FALSE,button);
 		    }
 		    filter->upAction.type= XkbSA_NoAction;
 		}
-		else XkbDDXFakeDeviceButton(dev,True,button);
+		else XkbDDXFakeDeviceButton(dev,TRUE,button);
 		break;
 	}
     }
@@ -1068,7 +987,7 @@ int		button;
 	filter->active= 0;
 	_XkbLookupButtonDevice(&dev, filter->upAction.devbtn.device,
 			       serverClient, DixUnknownAccess, &button);
-	if (!dev || !dev->public.on || dev == inputInfo.pointer)
+	if (!dev || !dev->public.on)
 	    return 1;
 
 	button= filter->upAction.btn.button;
@@ -1077,10 +996,10 @@ int		button;
 		if ((filter->upAction.devbtn.flags&XkbSA_LockNoUnlock)||
 		    !BitIsOn(dev->button->down, button))
 		    return 0;
-		XkbDDXFakeDeviceButton(dev,False,button);
+		XkbDDXFakeDeviceButton(dev,FALSE,button);
 		break;
 	    case XkbSA_DeviceBtn:
-		XkbDDXFakeDeviceButton(dev,False,button);
+		XkbDDXFakeDeviceButton(dev,FALSE,button);
 		break;
 	}
 	filter->active = 0;
@@ -1097,7 +1016,7 @@ register int	i;
 
     if (xkbi->szFilters==0) {
 	xkbi->szFilters = 4;
-	xkbi->filters = _XkbTypedCalloc(xkbi->szFilters,XkbFilterRec);
+	xkbi->filters = xcalloc(xkbi->szFilters, sizeof(XkbFilterRec));
 	/* 6/21/93 (ef) -- XXX! deal with allocation failure */
     }
     for (i=0;i<xkbi->szFilters;i++) {
@@ -1107,9 +1026,8 @@ register int	i;
 	}
     }
     xkbi->szFilters*=2;
-    xkbi->filters= _XkbTypedRealloc(xkbi->filters,
-                                    xkbi->szFilters,
-                                    XkbFilterRec);
+    xkbi->filters= xrealloc(xkbi->filters,
+                            xkbi->szFilters * sizeof(XkbFilterRec));
     /* 6/21/93 (ef) -- XXX! deal with allocation failure */
     bzero(&xkbi->filters[xkbi->szFilters/2],
             (xkbi->szFilters/2)*sizeof(XkbFilterRec));
@@ -1131,15 +1049,13 @@ register int	i,send;
 }
 
 void
-XkbHandleActions(DeviceIntPtr dev,DeviceIntPtr kbd,xEvent *xE,int count)
+XkbHandleActions(DeviceIntPtr dev, DeviceIntPtr kbd, DeviceEvent* event)
 {
 int		key,bit,i;
-CARD8		realMods = 0;
 XkbSrvInfoPtr	xkbi;
 KeyClassPtr	keyc;
 int		changed,sendEvent;
 Bool		genStateNotify;
-XkbStateRec	oldState;
 XkbAction	act;
 XkbFilterPtr	filter;
 Bool		keyEvent;
@@ -1150,24 +1066,22 @@ xkbDeviceInfoPtr xkbPrivPtr = XKBDEVICEINFO(dev);
 
     keyc= kbd->key;
     xkbi= keyc->xkbInfo;
-    key= xE->u.u.detail;
+    key= event->detail.key;
     /* The state may change, so if we're not in the middle of sending a state
      * notify, prepare for it */
     if ((xkbi->flags&_XkbStateNotifyInProgress)==0) {
-	oldState= xkbi->state;
+	xkbi->prev_state = xkbi->state;
 	xkbi->flags|= _XkbStateNotifyInProgress;
-	genStateNotify= True;
+	genStateNotify= TRUE;
     }
-    else genStateNotify= False;
+    else genStateNotify= FALSE;
 
     xkbi->clearMods = xkbi->setMods = 0;
     xkbi->groupChange = 0;
 
     sendEvent = 1;
-    keyEvent= ((xE->u.u.type==KeyPress)||(xE->u.u.type==DeviceKeyPress)||
-		(xE->u.u.type==KeyRelease)||(xE->u.u.type==DeviceKeyRelease));
-    pressEvent= (xE->u.u.type==KeyPress)||(xE->u.u.type==DeviceKeyPress)||
-		 (xE->u.u.type==ButtonPress)||(xE->u.u.type==DeviceButtonPress);
+    keyEvent= ((event->type == ET_KeyPress) || (event->type == ET_KeyRelease));
+    pressEvent= ((event->type == ET_KeyPress)|| (event->type == ET_ButtonPress));
 
     if (pressEvent) {
 	if (keyEvent)	
@@ -1272,45 +1186,38 @@ xkbDeviceInfoPtr xkbPrivPtr = XKBDEVICEINFO(dev);
 
     if (sendEvent) {
         DeviceIntPtr tmpdev;
-	if (keyEvent) {
-	    realMods = keyc->modifierMap[key];
-	    keyc->modifierMap[key] = 0;
+	if (keyEvent)
             tmpdev = dev;
-        } else
+        else
             tmpdev = GetPairedDevice(dev);
 
         UNWRAP_PROCESS_INPUT_PROC(tmpdev,xkbPrivPtr, backupproc);
-        dev->public.processInputProc(xE,tmpdev,count);
+        dev->public.processInputProc((InternalEvent*)event, tmpdev);
         COND_WRAP_PROCESS_INPUT_PROC(tmpdev, xkbPrivPtr,
                                      backupproc,xkbUnwrapProc);
-        if (keyEvent)
-	    keyc->modifierMap[key] = realMods;
     }
     else if (keyEvent) {
-	FixKeyState(xE,dev);
+	FixKeyState(event, dev);
     }
 
-    xkbi->prev_state= oldState;
     XkbComputeDerivedState(xkbi);
-    keyc->prev_state= keyc->state;
-    keyc->state= XkbStateFieldFromRec(&xkbi->state);
-    changed = XkbStateChangedFlags(&oldState,&xkbi->state);
+    changed = XkbStateChangedFlags(&xkbi->prev_state,&xkbi->state);
     if (genStateNotify) {
 	if (changed) {
 	    xkbStateNotify	sn;
 	    sn.keycode= key;
-	    sn.eventType= xE->u.u.type;
+	    sn.eventType= event->type;
 	    sn.requestMajor = sn.requestMinor = 0;
 	    sn.changed= changed;
 	    XkbSendStateNotify(dev,&sn);
 	}
 	xkbi->flags&= ~_XkbStateNotifyInProgress;
     }
-    changed= XkbIndicatorsToUpdate(dev,changed,False);
+    changed= XkbIndicatorsToUpdate(dev,changed,FALSE);
     if (changed) {
 	XkbEventCauseRec	cause;
-	XkbSetCauseKey(&cause,key,xE->u.u.type);
-	XkbUpdateIndicators(dev,changed,False,NULL,&cause);
+	XkbSetCauseKey(&cause, key, event->type);
+	XkbUpdateIndicators(dev,changed,FALSE,NULL,&cause);
     }
     return;
 }
@@ -1401,9 +1308,9 @@ xkbStateNotify	sn;
 	sn.requestMinor= 	cause->mnr;
 	sn.changed= XkbStateChangedFlags(&os,&xkbi->state);
 	XkbSendStateNotify(dev,&sn);
-	changed= XkbIndicatorsToUpdate(dev,sn.changed,False);
+	changed= XkbIndicatorsToUpdate(dev,sn.changed,FALSE);
 	if (changed) {
-	    XkbUpdateIndicators(dev,changed,True,NULL,cause);
+	    XkbUpdateIndicators(dev,changed,TRUE,NULL,cause);
 	}
     }
     return;

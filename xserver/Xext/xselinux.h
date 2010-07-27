@@ -1,6 +1,6 @@
 /************************************************************
 
-Author: Eamon Walsh <ewalsh@epoch.ncsc.mil>
+Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
@@ -20,12 +20,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _XSELINUX_H
 #define _XSELINUX_H
 
-#include "dixaccess.h"
-
 /* Extension info */
 #define SELINUX_EXTENSION_NAME		"SELinux"
 #define SELINUX_MAJOR_VERSION		1
-#define SELINUX_MINOR_VERSION		0
+#define SELINUX_MINOR_VERSION		1
 #define SELinuxNumberEvents		0
 #define SELinuxNumberErrors		0
 
@@ -35,9 +33,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define X_SELinuxGetDeviceCreateContext		2
 #define X_SELinuxSetDeviceContext		3
 #define X_SELinuxGetDeviceContext		4
-#define X_SELinuxSetWindowCreateContext		5
-#define X_SELinuxGetWindowCreateContext		6
-#define X_SELinuxGetWindowContext		7
+#define X_SELinuxSetDrawableCreateContext	5
+#define X_SELinuxGetDrawableCreateContext	6
+#define X_SELinuxGetDrawableContext		7
 #define X_SELinuxSetPropertyCreateContext	8
 #define X_SELinuxGetPropertyCreateContext	9
 #define X_SELinuxSetPropertyUseContext		10
@@ -137,23 +135,5 @@ typedef struct {
     CARD32  pad5;
     CARD32  pad6;
 } SELinuxListItemsReply;
-
-
-/* Private Flask definitions */
-#define SECCLASS_X_DRAWABLE		1
-#define SECCLASS_X_SCREEN		2
-#define SECCLASS_X_GC			3
-#define SECCLASS_X_FONT			4
-#define SECCLASS_X_COLORMAP		5
-#define SECCLASS_X_PROPERTY		6
-#define SECCLASS_X_SELECTION		7
-#define SECCLASS_X_CURSOR		8
-#define SECCLASS_X_CLIENT		9
-#define SECCLASS_X_DEVICE		10
-#define SECCLASS_X_SERVER		11
-#define SECCLASS_X_EXTENSION		12
-#define SECCLASS_X_EVENT		13
-#define SECCLASS_X_FAKEEVENT		14
-#define SECCLASS_X_RESOURCE		15
 
 #endif /* _XSELINUX_H */

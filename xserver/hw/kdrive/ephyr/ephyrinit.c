@@ -40,17 +40,18 @@ extern Bool noGlxVisualInit;
 #endif
 extern Bool   ephyrNoXV;
 
+#ifdef KDRIVE_EVDEV
+extern KdPointerDriver	LinuxEvdevMouseDriver;
+extern KdKeyboardDriver LinuxEvdevKeyboardDriver;
+#endif
+
 void processScreenArg (char *screen_size, char *parent_id) ;
 
 void
 InitCard (char *name)
 {
-    KdCardAttr	attr;
-
     EPHYR_DBG("mark");
-
-
-    KdCardInfoAdd (&ephyrFuncs, &attr, 0);
+    KdCardInfoAdd (&ephyrFuncs, 0);
 }
 
 void
@@ -66,11 +67,11 @@ InitInput (int argc, char **argv)
   KdPointerInfo *pi;
 
   KdAddKeyboardDriver(&EphyrKeyboardDriver);
-#ifdef linux
+#ifdef KDRIVE_EVDEV
   KdAddKeyboardDriver(&LinuxEvdevKeyboardDriver);
 #endif
   KdAddPointerDriver(&EphyrMouseDriver);
-#ifdef linux
+#ifdef KDRIVE_EVDEV
   KdAddPointerDriver(&LinuxEvdevMouseDriver);
 #endif
 
@@ -94,6 +95,18 @@ InitInput (int argc, char **argv)
 }
 
 void
+CloseInput (void)
+{
+}
+
+#ifdef DDXBEFORERESET
+void
+ddxBeforeReset (void)
+{
+}
+#endif
+
+void
 ddxUseMsg (void)
 {
   KdUseMsg();
@@ -110,6 +123,7 @@ ddxUseMsg (void)
 #endif
   ErrorF("-noxv                do not use XV\n");
   ErrorF("-name [name]         define the name in the WM_CLASS property\n");
+  ErrorF("-title [title]       set the window title in the WM_NAME property\n");
   ErrorF("\n");
 
   exit(1);
@@ -256,10 +270,44 @@ ddxProcessArgument (int argc, char **argv, int i)
            return 0;
          }
    }
+  else if (!strcmp (argv[i], "-title"))
+   {
+       if (i+1 < argc && argv[i+1][0] != '-')
+         {
+           hostx_set_title(argv[i+1]);
+           return 2;
+         }
+       else
+         {
+           UseMsg();
+           return 0;
+         }
+   }
   else if (argv[i][0] == ':')
     {
       hostx_set_display_name(argv[i]);
     }
+  /* Xnest compatibility */
+  else if (!strcmp(argv[i], "-display"))
+  {
+      hostx_set_display_name(argv[i+1]);
+      return 2;
+  }
+  else if (!strcmp(argv[i], "-sync") ||
+	   !strcmp(argv[i], "-full") ||
+	   !strcmp(argv[i], "-sss") ||
+	   !strcmp(argv[i], "-install"))
+  {
+      return 1;
+  }
+  else if (!strcmp(argv[i], "-bw") ||
+	   !strcmp(argv[i], "-class") ||
+	   !strcmp(argv[i], "-geometry") ||
+	   !strcmp(argv[i], "-scrns"))
+  {
+      return 2;
+  }
+  /* end Xnest compat */
 
   return KdProcessArgument (argc, argv, i);
 }

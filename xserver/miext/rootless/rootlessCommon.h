@@ -36,6 +36,7 @@
 #ifndef _ROOTLESSCOMMON_H
 #define _ROOTLESSCOMMON_H
 
+#include "misc.h"
 #include "rootless.h"
 #include "fb.h"
 
@@ -119,12 +120,6 @@ typedef struct _RootlessScreenRec {
     unsigned int redisplay_expired :1;
     unsigned int colormap_changed :1;
 } RootlessScreenRec, *RootlessScreenPtr;
-
-
-#undef MIN
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-#undef MAX
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
 
 // "Definition of the Porting Layer for the X11 Sample Server" says
 // unwrap and rewrap of screen functions is unnecessary, but
@@ -273,9 +268,6 @@ Bool RootlessResolveColormap (ScreenPtr pScreen, int first_color,
 void RootlessFlushWindowColormap (WindowPtr pWin);
 void RootlessFlushScreenColormaps (ScreenPtr pScreen);
 
-// xp_error
-int RootlessColormapCallback(void *data, int first_color, int n_colors, uint32_t *colors);
-
 // Move a window to its proper location on the screen.
 void RootlessRepositionWindow(WindowPtr pWin);
 
@@ -290,5 +282,6 @@ void RootlessUpdateRooted (Bool state);
 void RootlessEnableRoot (ScreenPtr pScreen);
 void RootlessDisableRoot (ScreenPtr pScreen);
 
+void RootlessSetPixmapOfAncestors(WindowPtr pWin);
 
 #endif /* _ROOTLESSCOMMON_H */

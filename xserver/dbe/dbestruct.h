@@ -37,16 +37,10 @@
 /* INCLUDES */
 
 #define NEED_DBE_PROTOCOL
-#ifdef HAVE_X11_EXTENSIONS_DBEPROTO_H
 #include <X11/extensions/dbeproto.h>
-#else
-#include <X11/extensions/Xdbeproto.h>
-#endif
 #include "windowstr.h"
 #include "privates.h"
 
-
-#ifdef HAVE_X11_EXTENSIONS_DBEPROTO_H
 typedef struct
 {
     VisualID    visual;    /* one visual ID that supports double-buffering */
@@ -61,7 +55,6 @@ typedef struct
     XdbeVisualInfo      *visinfo;       /* list of visuals & depths for scrn */
 }
 XdbeScreenVisualInfo;
-#endif
 
 /* DEFINES */
 
@@ -95,7 +88,7 @@ XdbeScreenVisualInfo;
 /* Marker for free elements in the buffer ID array. */
 #define DBE_FREE_ID_ELEMENT	0
 
-extern void DbeExtensionInit (void);
+extern _X_EXPORT void DbeExtensionInit (void);
 
 /* TYPEDEFS */
 

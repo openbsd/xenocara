@@ -90,6 +90,7 @@
 #include "globals.h"
 #include "cursorstr.h"
 #include "dixevents.h"          /* For GetSpriteCursor() */
+#include "inputstr.h"           /* for inputInfo.pointer */
 
 #if DMX_CURSOR_DEBUG
 #define DMXDBG0(f)               dmxLog(dmxDebug,f)
@@ -194,8 +195,8 @@ miPointerScreenFuncRec dmxPointerCursorFuncs =
     dmxCursorOffScreen,
     dmxCrossScreen,
     dmxWarpCursor,
-    dmxeqEnqueue,        /*XXX incompatible type/function! */
-    dmxeqSwitchScreen
+    NULL,
+    NULL,
 };
 
 
@@ -338,7 +339,7 @@ static void dmxComputeScreenOrigins(void)
 }
 
 /** Recompute origin information in the #dmxScreens list.  This is
- * either called from #dmxInitOrigins() or from #dmxReconfig(). */
+ * called from #dmxInitOrigins. */
 void dmxReInitOrigins(void)
 {
     int        i;
@@ -463,7 +464,7 @@ static int dmxDoesOverlap(DMXScreenInfo *a, DMXScreenInfo *b)
     return 0;
 }
 
-/** Used with #dmxInterateOverlap to print out a list of screens which
+/** Used with \a dmxInterateOverlap to print out a list of screens which
  * overlap each other. */
 static void *dmxPrintOverlap(DMXScreenInfo *dmxScreen, void *closure)
 {

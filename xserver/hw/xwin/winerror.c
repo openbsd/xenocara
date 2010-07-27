@@ -33,16 +33,17 @@
 #endif
 #ifdef XVENDORNAME
 #define VENDOR_STRING XVENDORNAME
-#define VERSION_STRING XORG_RELEASE
 #define VENDOR_CONTACT BUILDERADDR
 #endif
 
+#include <../xfree86/common/xorgVersion.h>
 #include "win.h"
 
 /* References to external symbols */
 extern char *		g_pszCommandLine;
-extern char *		g_pszLogFile;
+extern const char *	g_pszLogFile;
 extern Bool		g_fSilentFatalError;
+extern Bool		g_fLogInited;
 
 
 #ifdef DDXOSVERRORF
@@ -80,7 +81,6 @@ OsVendorVErrorF (const char *pszFormat, va_list va_args)
  *
  * Attempt to do last-ditch, safe, important cleanup here.
  */
-#ifdef DDXOSFATALERROR
 void
 OsVendorFatalError (void)
 {
@@ -88,12 +88,17 @@ OsVendorFatalError (void)
   if (g_fSilentFatalError)
     return;
 
+  if (!g_fLogInited) {
+    g_fLogInited = TRUE;
+    g_pszLogFile = LogInit (g_pszLogFile, NULL);
+  }
+  LogClose ();
+
   winMessageBoxF (
           "A fatal error has occurred and " PROJECT_NAME " will now exit.\n" \
 		  "Please open %s for more information.\n",
 		  MB_ICONERROR, (g_pszLogFile?g_pszLogFile:"the logfile"));
 }
-#endif
 
 
 /*
@@ -117,13 +122,17 @@ winMessageBoxF (const char *pszError, UINT uType, ...)
 #define MESSAGEBOXF \
 	"%s\n" \
 	"Vendor: %s\n" \
-	"Release: %s\n" \
+	"Release: %d.%d.%d.%d (%d)\n" \
 	"Contact: %s\n" \
+	"%s\n\n" \
 	"XWin was started with the following command-line:\n\n" \
 	"%s\n"
 
   pszMsgBox = Xprintf (MESSAGEBOXF,
-	   pszErrorF, VENDOR_STRING, VERSION_STRING, VENDOR_CONTACT,
+	   pszErrorF, VENDOR_STRING,
+		       XORG_VERSION_MAJOR, XORG_VERSION_MINOR, XORG_VERSION_PATCH, XORG_VERSION_SNAP, XORG_VERSION_CURRENT,
+		       VENDOR_CONTACT,
+		       BUILDERSTRING,
 	   g_pszCommandLine);
   if (!pszMsgBox)
     goto winMessageBoxF_Cleanup;

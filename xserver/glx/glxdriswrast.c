@@ -55,6 +55,13 @@
 #include "dispatch.h"
 #include "extension_string.h"
 
+/* RTLD_LOCAL is not defined on Cygwin */
+#ifdef __CYGWIN__
+#ifndef RTLD_LOCAL
+#define RTLD_LOCAL 0
+#endif
+#endif
+
 typedef struct __GLXDRIscreen   __GLXDRIscreen;
 typedef struct __GLXDRIcontext  __GLXDRIcontext;
 typedef struct __GLXDRIdrawable __GLXDRIdrawable;
@@ -101,7 +108,7 @@ __glXDRIdrawableDestroy(__GLXdrawable *drawable)
 }
 
 static GLboolean
-__glXDRIdrawableSwapBuffers(__GLXdrawable *drawable)
+__glXDRIdrawableSwapBuffers(ClientPtr client, __GLXdrawable *drawable)
 {
     __GLXDRIdrawable *private = (__GLXDRIdrawable *) drawable;
     const __DRIcoreExtension *core = private->screen->core;
@@ -294,10 +301,12 @@ glxChangeGC(GCPtr gc, BITS32 mask, CARD32 val)
 }
 
 static __GLXdrawable *
-__glXDRIscreenCreateDrawable(__GLXscreen *screen,
+__glXDRIscreenCreateDrawable(ClientPtr client,
+			     __GLXscreen *screen,
 			     DrawablePtr pDraw,
-			     int type,
 			     XID drawId,
+			     int type,
+			     XID glxDrawId,
 			     __GLXconfig *glxConfig)
 {
     __GLXDRIscreen *driScreen = (__GLXDRIscreen *) screen;
@@ -312,7 +321,7 @@ __glXDRIscreenCreateDrawable(__GLXscreen *screen,
 
     private->screen = driScreen;
     if (!__glXDrawableInit(&private->base, screen,
-			   pDraw, type, drawId, glxConfig)) {
+			   pDraw, type, glxDrawId, glxConfig)) {
         xfree(private);
 	return NULL;
     }
@@ -492,7 +501,8 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
 					   screen);
 
     if (screen->driScreen == NULL) {
-	LogMessage(X_ERROR, "AIGLX error: Calling driver entry point failed");
+	LogMessage(X_ERROR,
+		   "AIGLX error: Calling driver entry point failed\n");
 	goto handle_error;
     }
 
@@ -501,6 +511,9 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
     screen->base.fbconfigs = glxConvertConfigs(screen->core, driConfigs);
 
     __glXScreenInit(&screen->base, pScreen);
+
+    screen->base.GLXmajor = 1;
+    screen->base.GLXminor = 4;
 
     LogMessage(X_INFO,
 	       "AIGLX: Loaded and initialized %s\n", filename);
@@ -518,7 +531,7 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
     return NULL;
 }
 
-__GLXprovider __glXDRISWRastProvider = {
+_X_EXPORT __GLXprovider __glXDRISWRastProvider = {
     __glXDRIscreenProbe,
     "DRISWRAST",
     NULL

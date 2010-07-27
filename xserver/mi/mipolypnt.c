@@ -55,7 +55,7 @@ SOFTWARE.
 #include "windowstr.h"
 #include "mi.h"
 
-_X_EXPORT void
+void
 miPolyPoint(
     DrawablePtr		pDrawable,
     GCPtr		pGC,
@@ -72,6 +72,9 @@ miPolyPoint(
     int			*pwidthInit, *pwidth;
     int			i;
     xPoint 		*ppt;
+
+    if(!(pwidthInit = xalloc(npt * sizeof(int))))
+	return;
 
     /* make pointlist origin relative */
     if (mode == CoordModePrevious)
@@ -107,8 +110,6 @@ miPolyPoint(
 	DoChangeGC(pGC, GCFillStyle, &fsNew, 0);
 	ValidateGC(pDrawable, pGC);
     }
-    if(!(pwidthInit = (int *)xalloc(npt * sizeof(int))))
-	return;
     pwidth = pwidthInit;
     for(i = 0; i < npt; i++)
 	*pwidth++ = 1;

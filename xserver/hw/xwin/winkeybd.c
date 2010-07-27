@@ -40,25 +40,13 @@
 #include "winconfig.h"
 #include "winmsg.h"
 
-#ifdef XKB
-#ifndef XKB_IN_SERVER
-#define XKB_IN_SERVER
-#endif
-#include <xkbsrv.h>
-#endif
+#include "xkbsrv.h"
 
 static Bool g_winKeyState[NUM_KEYCODES];
-
-/* Stored to get internal mode key states.  Must be read-only.  */
-static unsigned short const *g_winInternalModeKeyStatesPtr = NULL;
-
 
 /*
  * Local prototypes
  */
-
-static void
-winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap);
 
 static void
 winKeybdBell (int iPercent, DeviceIntPtr pDeviceInt,
@@ -82,10 +70,31 @@ winTranslateKey (WPARAM wParam, LPARAM lParam, int *piScanCode)
 {
   int		iKeyFixup = g_iKeyMap[wParam * WIN_KEYMAP_COLS + 1];
   int		iKeyFixupEx = g_iKeyMap[wParam * WIN_KEYMAP_COLS + 2];
-  int		iParamScanCode = LOBYTE (HIWORD (lParam));
+  int		iParam = HIWORD (lParam);
+  int		iParamScanCode = LOBYTE (iParam);
+
+/* WM_ key messages faked by Vista speech recognition (WSR) don't have a
+ * scan code.
+ *
+ * Vocola 3 (Rick Mohr's supplement to WSR) uses
+ * System.Windows.Forms.SendKeys.SendWait(), which appears always to give a
+ * scan code of 1
+ */
+  if (iParamScanCode <= 1)
+    {
+      if (VK_PRIOR <= wParam && wParam <= VK_DOWN)
+        /* Trigger special case table to translate to extended
+         * keycode, otherwise if num_lock is on, we can get keypad
+         * numbers instead of navigation keys. */
+        iParam |= KF_EXTENDED;
+      else
+        iParamScanCode = MapVirtualKeyEx(wParam,
+                         /*MAPVK_VK_TO_VSC*/0,
+                         GetKeyboardLayout(0));
+    }
 
   /* Branch on special extended, special non-extended, or normal key */
-  if ((HIWORD (lParam) & KF_EXTENDED) && iKeyFixupEx)
+  if ((iParam & KF_EXTENDED) && iKeyFixupEx)
     *piScanCode = iKeyFixupEx;
   else if (iKeyFixup)
     *piScanCode = iKeyFixup;
@@ -104,89 +113,6 @@ winTranslateKey (WPARAM wParam, LPARAM lParam, int *piScanCode)
         *piScanCode = iParamScanCode;
         break;
     }
-}
-
-
-/*
- * We call this function from winKeybdProc when we are
- * initializing the keyboard.
- */
-
-static void
-winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap)
-{
-  int			i;
-  KeySym		*pMap = map;
-  KeySym		*pKeySym;
-
-  /*
-   * Initialize all key states to up... which may not be true
-   * but it is close enough.
-   */
-  ZeroMemory (g_winKeyState, sizeof (g_winKeyState[0]) * NUM_KEYCODES);
-
-  /* MAP_LENGTH is defined in Xserver/include/input.h to be 256 */
-  for (i = 0; i < MAP_LENGTH; i++)
-    pModMap[i] = NoSymbol;  /* make sure it is restored */
-
-  /* Loop through all valid entries in the key symbol table */
-  for (pKeySym = pMap, i = MIN_KEYCODE;
-       i < (MIN_KEYCODE + NUM_KEYCODES);
-       i++, pKeySym += GLYPHS_PER_KEY)
-    {
-      switch (*pKeySym)
-	{
-	case XK_Shift_L:
-	case XK_Shift_R:
-	  pModMap[i] = ShiftMask;
-	  break;
-
-	case XK_Control_L:
-	case XK_Control_R:
-	  pModMap[i] = ControlMask;
-	  break;
-
-	case XK_Caps_Lock:
-	  pModMap[i] = LockMask;
-	  break;
-
-	case XK_Alt_L:
-	case XK_Alt_R:
-	  pModMap[i] = AltMask;
-	  break;
-
-	case XK_Num_Lock:
-	  pModMap[i] = NumLockMask;
-	  break;
-
-	case XK_Scroll_Lock:
-	  pModMap[i] = ScrollLockMask;
-	  break;
-
-#if 0
-	case XK_Super_L:
-	case XK_Super_R:
-	  pModMap[i] = Mod4Mask;
-	  break;
-#else
-	/* Hirigana/Katakana toggle */
-	case XK_Kana_Lock:
-	case XK_Kana_Shift:
-	  pModMap[i] = KanaMask;
-	  break;
-#endif
-
-	/* alternate toggle for multinational support */
-	case XK_Mode_switch:
-	  pModMap[i] = AltLangMask;
-	  break;
-	}
-    }
-
-  pKeySyms->map        = (KeySym *) pMap;
-  pKeySyms->mapWidth   = GLYPHS_PER_KEY;
-  pKeySyms->minKeyCode = MIN_KEYCODE;
-  pKeySyms->maxKeyCode = MAX_KEYCODE;
 }
 
 
@@ -209,7 +135,6 @@ winKeybdBell (int iPercent, DeviceIntPtr pDeviceInt,
 static void
 winKeybdCtrl (DeviceIntPtr pDevice, KeybdCtrl *pCtrl)
 {
-  g_winInternalModeKeyStatesPtr = &(pDevice->key->state);
 }
 
 
@@ -221,93 +146,56 @@ winKeybdCtrl (DeviceIntPtr pDevice, KeybdCtrl *pCtrl)
 int
 winKeybdProc (DeviceIntPtr pDeviceInt, int iState)
 {
-  KeySymsRec		keySyms;
-  CARD8 		modMap[MAP_LENGTH];
   DevicePtr		pDevice = (DevicePtr) pDeviceInt;
-#ifdef XKB
-  XkbComponentNamesRec names;
   XkbSrvInfoPtr       xkbi;
   XkbControlsPtr      ctrl;
-#endif
 
   switch (iState)
     {
     case DEVICE_INIT:
       winConfigKeyboard (pDeviceInt);
 
-      winGetKeyMappings (&keySyms, modMap);
-
-#ifdef XKB
       /* FIXME: Maybe we should use winGetKbdLeds () here? */
       defaultKeyboardControl.leds = g_winInfo.keyboard.leds;
-#else
-      defaultKeyboardControl.leds = g_winInfo.keyboard.leds;
-#endif
 
-#ifdef XKB
-      if (g_winInfo.xkb.disable) 
-	{
-#endif
-	  InitKeyboardDeviceStruct (pDevice,
-				    &keySyms,
-				    modMap,
-				    winKeybdBell,
-				    winKeybdCtrl);
-#ifdef XKB
-	} 
-      else 
-	{
+      winErrorFVerb(2, "Rules = \"%s\" Model = \"%s\" Layout = \"%s\""
+                    " Variant = \"%s\" Options = \"%s\"\n",
+                    g_winInfo.xkb.rules ? g_winInfo.xkb.rules : "none",
+                    g_winInfo.xkb.model ? g_winInfo.xkb.model : "none",
+                    g_winInfo.xkb.layout ? g_winInfo.xkb.layout : "none",
+                    g_winInfo.xkb.variant ? g_winInfo.xkb.variant : "none",
+                    g_winInfo.xkb.options ? g_winInfo.xkb.options : "none");
 
-          names.keymap = g_winInfo.xkb.keymap;
-          names.keycodes = g_winInfo.xkb.keycodes;
-          names.types = g_winInfo.xkb.types;
-          names.compat = g_winInfo.xkb.compat;
-          names.symbols = g_winInfo.xkb.symbols;
-          names.geometry = g_winInfo.xkb.geometry;
+      InitKeyboardDeviceStruct (pDeviceInt,
+                                &g_winInfo.xkb,
+                                winKeybdBell,
+                                winKeybdCtrl);
 
-	  winErrorFVerb(2, "Rules = \"%s\" Model = \"%s\" Layout = \"%s\""
-		 " Variant = \"%s\" Options = \"%s\"\n",
-		 g_winInfo.xkb.rules, g_winInfo.xkb.model,
-		 g_winInfo.xkb.layout, g_winInfo.xkb.variant,
-		 g_winInfo.xkb.options);
-          
-	  XkbSetRulesDflts (g_winInfo.xkb.rules, g_winInfo.xkb.model, 
-			    g_winInfo.xkb.layout, g_winInfo.xkb.variant, 
-			    g_winInfo.xkb.options);
-	  XkbInitKeyboardDeviceStruct (pDeviceInt, &names, &keySyms,
-				       modMap, winKeybdBell, winKeybdCtrl);
-	}
-#endif
-
-#ifdef XKB
-      if (!g_winInfo.xkb.disable)
-        {  
-          xkbi = pDeviceInt->key->xkbInfo;
-          if (xkbi != NULL)
-            {  
-              ctrl = xkbi->desc->ctrls;
-              ctrl->repeat_delay = g_winInfo.keyboard.delay;
-              ctrl->repeat_interval = 1000/g_winInfo.keyboard.rate;
-            }
-          else
-            {  
-              winErrorFVerb (1, "winKeybdProc - Error initializing keyboard AutoRepeat (No XKB)\n");
-            }
+      xkbi = pDeviceInt->key->xkbInfo;
+      if ((xkbi != NULL) && (xkbi->desc != NULL))
+        {
+          ctrl = xkbi->desc->ctrls;
+          ctrl->repeat_delay = g_winInfo.keyboard.delay;
+          ctrl->repeat_interval = 1000/g_winInfo.keyboard.rate;
         }
-#endif
+      else
+        {
+          winErrorFVerb (1, "winKeybdProc - Error initializing keyboard AutoRepeat\n");
+        }
 
-      g_winInternalModeKeyStatesPtr = &(pDeviceInt->key->state);
       break;
       
     case DEVICE_ON: 
       pDevice->on = TRUE;
-      g_winInternalModeKeyStatesPtr = &(pDeviceInt->key->state);
+
+      // immediately copy the state of this keyboard device to the VCK
+      // (which otherwise happens lazily after the first keypress)
+      CopyKeyClass(pDeviceInt, inputInfo.keyboard);
       break;
 
     case DEVICE_CLOSE:
     case DEVICE_OFF: 
       pDevice->on = FALSE;
-      g_winInternalModeKeyStatesPtr = NULL;
       break;
     }
 
@@ -362,14 +250,14 @@ winInitializeModeKeyStates (void)
  */
 
 void
-winRestoreModeKeyStates ()
+winRestoreModeKeyStates (void)
 {
   DWORD			dwKeyState;
   BOOL			processEvents = TRUE;
   unsigned short	internalKeyStates;
 
   /* X server is being initialized */
-  if (!g_winInternalModeKeyStatesPtr)
+  if (!inputInfo.keyboard)
     return;
 
   /* Only process events if the rootwindow is mapped. The keyboard events
@@ -382,7 +270,9 @@ winRestoreModeKeyStates ()
     mieqProcessInputEvents ();
   
   /* Read the mode key states of our X server */
-  internalKeyStates = *g_winInternalModeKeyStatesPtr;
+  /* (stored in the virtual core keyboard) */
+  internalKeyStates = XkbStateFieldFromRec(&inputInfo.keyboard->key->xkbInfo->state);
+  winDebug("winRestoreModeKeyStates: state %d\n", internalKeyStates);
 
   /* 
    * NOTE: The C XOR operator, ^, will not work here because it is
@@ -548,7 +438,7 @@ winIsFakeCtrl_L (UINT message, WPARAM wParam, LPARAM lParam)
  */
 
 void
-winKeybdReleaseKeys ()
+winKeybdReleaseKeys (void)
 {
   int				i;
 
@@ -580,7 +470,8 @@ winKeybdReleaseKeys ()
 void
 winSendKeyEvent (DWORD dwKey, Bool fDown)
 {
-  xEvent			xCurrentEvent;
+  EventListPtr events;
+  int i, nevents;
 
   /*
    * When alt-tabing between screens we can get phantom key up messages
@@ -590,14 +481,17 @@ winSendKeyEvent (DWORD dwKey, Bool fDown)
 
   /* Update the keyState map */
   g_winKeyState[dwKey] = fDown;
-  
-  ZeroMemory (&xCurrentEvent, sizeof (xCurrentEvent));
 
-  xCurrentEvent.u.u.type = fDown ? KeyPress : KeyRelease;
-  xCurrentEvent.u.keyButtonPointer.time =
-    g_c32LastInputEventTime = GetTickCount ();
-  xCurrentEvent.u.u.detail = dwKey + MIN_KEYCODE;
-  mieqEnqueue (&xCurrentEvent);
+  GetEventList(&events);
+  nevents = GetKeyboardEvents(events, g_pwinKeyboard, fDown ? KeyPress : KeyRelease, dwKey + MIN_KEYCODE);
+
+  for (i = 0; i < nevents; i++)
+    mieqEnqueue(g_pwinKeyboard, events[i].event);
+
+#if CYGDEBUG
+  ErrorF("winSendKeyEvent: dwKey: %d, fDown: %d, nEvents %d\n",
+          dwKey, fDown, nevents);
+#endif
 }
 
 BOOL winCheckKeyPressed(WPARAM wParam, LPARAM lParam)

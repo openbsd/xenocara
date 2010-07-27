@@ -8,14 +8,14 @@ INCLUDES = 			\
 	-I$(top_srcdir)/exa
 
 if XV
-LIBXEPHYR_HOSTXV=libxephyr-hostxv.a
+LIBXEPHYR_HOSTXV=libxephyr-hostxv.la
 endif
 
 if DRI
-LIBXEPHYR_HOSTDRI=libxephyr-hostdri.a
+LIBXEPHYR_HOSTDRI=libxephyr-hostdri.la
 endif
 
-noinst_LIBRARIES = libxephyr-hostx.a $(LIBXEPHYR_HOSTXV) $(LIBXEPHYR_HOSTDRI) libxephyr.a
+noinst_LTLIBRARIES = libxephyr-hostx.la $(LIBXEPHYR_HOSTXV) $(LIBXEPHYR_HOSTDRI) libxephyr.la
 
 bin_PROGRAMS = Xephyr
 
@@ -47,24 +47,24 @@ XEPHYR_SRCS =			\
 	ephyr_draw.c		\
 	os.c
 
-libxephyr_hostx_a_SOURCES = $(HOSTX_SRCS)
+libxephyr_hostx_la_SOURCES = $(HOSTX_SRCS)
 
 if XV
-libxephyr_hostxv_a_SOURCES = $(HOSTVIDEO_SRCS)
+libxephyr_hostxv_la_SOURCES = $(HOSTVIDEO_SRCS)
 endif
 
 if DRI
-libxephyr_hostdri_a_SOURCES = $(HOSTDRI_SRCS)
+libxephyr_hostdri_la_SOURCES = $(HOSTDRI_SRCS)
 endif
 
-libxephyr_a_SOURCES = $(XEPHYR_SRCS)
+libxephyr_la_SOURCES = $(XEPHYR_SRCS)
 
 Xephyr_SOURCES = \
 	ephyrinit.c
 
 Xephyr_LDADD = 						\
-	libxephyr.a					\
-	libxephyr-hostx.a				\
+	libxephyr.la					\
+	libxephyr-hostx.la				\
 	$(LIBXEPHYR_HOSTXV)				\
 	$(LIBXEPHYR_HOSTDRI)				\
 	$(top_builddir)/exa/libexa.la			\
@@ -72,8 +72,8 @@ Xephyr_LDADD = 						\
 	@XEPHYR_LIBS@
 
 Xephyr_DEPENDENCIES =	\
-	libxephyr.a					\
-	libxephyr-hostx.a				\
+	libxephyr.la					\
+	libxephyr-hostx.la				\
 	$(LIBXEPHYR_HOSTXV)				\
 	$(LIBXEPHYR_HOSTDRI)				\
 	@KDRIVE_LOCAL_LIBS@
@@ -81,7 +81,7 @@ Xephyr_DEPENDENCIES =	\
 Xephyr_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 
 relink:
-	rm -f $(bin_PROGRAMS) && make $(bin_PROGRAMS)
+	$(AM_V_at)rm -f $(bin_PROGRAMS) && $(MAKE) $(bin_PROGRAMS)
 
 MAN_SRCS = Xephyr.man.pre
 
@@ -89,8 +89,8 @@ appmandir = $(APP_MAN_DIR)
 appman_DATA = Xephyr.$(APP_MAN_SUFFIX)
 
 Xephyr.$(APP_MAN_SUFFIX): Xephyr.man
-	-rm -f Xephyr.$(APP_MAN_SUFFIX)
-	$(LN_S) Xephyr.man Xephyr.$(APP_MAN_SUFFIX)
+	-$(AM_V_at)rm -f Xephyr.$(APP_MAN_SUFFIX)
+	$(AM_V_at)$(LN_S) Xephyr.man Xephyr.$(APP_MAN_SUFFIX)
 
 include $(top_srcdir)/cpprules.in
 

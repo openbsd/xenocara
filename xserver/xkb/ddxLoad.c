@@ -28,13 +28,10 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#ifdef HAVE_XKB_CONFIG_H
 #include <xkb-config.h>
-#endif
 
 #include <stdio.h>
 #include <ctype.h>
-#define	NEED_EVENTS 1
 #include <X11/X.h>
 #include <X11/Xos.h>
 #include <X11/Xproto.h>
@@ -159,10 +156,9 @@ OutputDirectory(
     size_t size)
 {
 #ifndef WIN32
-    if (getuid() == 0 && (strlen(XKM_OUTPUT_DIR) < size))
+    /* Can we write an xkm and then open it too? */
+    if (access(XKM_OUTPUT_DIR, W_OK | X_OK) == 0 && (strlen(XKM_OUTPUT_DIR) < size))
     {
-	/* if server running as root it *may* be able to write */
-	/* FIXME: check whether directory is writable at all */
 	(void) strcpy (outdir, XKM_OUTPUT_DIR);
     } else
 #else
@@ -178,7 +174,7 @@ OutputDirectory(
     }
 }
 
-static Bool    	
+static Bool
 XkbDDXCompileKeymapByNames(	XkbDescPtr		xkb,
 				XkbComponentNamesPtr	names,
 				unsigned		want,
@@ -205,7 +201,6 @@ XkbDDXCompileKeymapByNames(	XkbDescPtr		xkb,
 
     snprintf(keymap, sizeof(keymap), "server-%s", display);
 
-    XkbEnsureSafeMapName(keymap);
     OutputDirectory(xkm_output_dir, sizeof(xkm_output_dir));
 
 #ifdef WIN32
@@ -271,7 +266,7 @@ XkbDDXCompileKeymapByNames(	XkbDescPtr		xkb,
 	    }
             if (buf != NULL)
                 xfree (buf);
-	    return True;
+	    return TRUE;
 	}
 	else
 	    LogMessage(X_ERROR, "Error compiling keymap (%s)\n", keymap);
@@ -291,7 +286,7 @@ XkbDDXCompileKeymapByNames(	XkbDescPtr		xkb,
 	nameRtrn[0]= '\0';
     if (buf != NULL)
         xfree (buf);
-    return False;
+    return FALSE;
 }
 
 static FILE *
@@ -391,41 +386,74 @@ Bool		complete;
 XkbRF_RulesPtr	rules;
 
     if (!rules_name)
-	return False;
+	return FALSE;
 
     if (strlen(XkbBaseDirectory) + strlen(rules_name) + 8 > PATH_MAX) {
         LogMessage(X_ERROR, "XKB: Rules name is too long\n");
-        return False;
+        return FALSE;
     }
     snprintf(buf,sizeof(buf),"%s/rules/%s", XkbBaseDirectory, rules_name);
 
     file = fopen(buf, "r");
     if (!file) {
         LogMessage(X_ERROR, "XKB: Couldn't open rules file %s\n", buf);
-	return False;
+	return FALSE;
     }
 
-    rules = XkbRF_Create(0, 0);
+    rules = XkbRF_Create();
     if (!rules) {
         LogMessage(X_ERROR, "XKB: Couldn't create rules struct\n");
 	fclose(file);
-	return False;
+	return FALSE;
     }
 
     if (!XkbRF_LoadRules(file, rules)) {
         LogMessage(X_ERROR, "XKB: Couldn't parse rules file %s\n", rules_name);
 	fclose(file);
-	XkbRF_Free(rules,True);
-	return False;
+	XkbRF_Free(rules,TRUE);
+	return FALSE;
     }
 
     memset(names, 0, sizeof(*names));
     complete = XkbRF_GetComponents(rules,defs,names);
     fclose(file);
-    XkbRF_Free(rules, True);
+    XkbRF_Free(rules, TRUE);
 
     if (!complete)
         LogMessage(X_ERROR, "XKB: Rules returned no components\n");
 
     return complete;
+}
+
+XkbDescPtr
+XkbCompileKeymap(DeviceIntPtr dev, XkbRMLVOSet *rmlvo)
+{
+    XkbComponentNamesRec kccgst;
+    XkbRF_VarDefsRec mlvo;
+    XkbDescPtr xkb;
+    char name[PATH_MAX];
+
+    if (!dev || !rmlvo) {
+        LogMessage(X_ERROR, "XKB: No device or RMLVO specified\n");
+        return NULL;
+    }
+
+    mlvo.model = rmlvo->model;
+    mlvo.layout = rmlvo->layout;
+    mlvo.variant = rmlvo->variant;
+    mlvo.options = rmlvo->options;
+
+    /* XDNFR already logs for us. */
+    if (!XkbDDXNamesFromRules(dev, rmlvo->rules, &mlvo, &kccgst))
+        return NULL;
+
+    /* XDLKBN too, but it might return 0 as well as allocating. */
+    if (!XkbDDXLoadKeymapByNames(dev, &kccgst, XkmAllIndicesMask, 0, &xkb, name,
+                                 PATH_MAX)) {
+        if (xkb)
+            XkbFreeKeyboard(xkb, 0, TRUE);
+        return NULL;
+    }
+
+    return xkb;
 }

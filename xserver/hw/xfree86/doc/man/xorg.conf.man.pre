@@ -1,29 +1,36 @@
-.\" $XdotOrg: xserver/xorg/hw/xfree86/doc/man/xorg.conf.man.pre,v 1.7 2006/05/26 00:12:18 reed Exp $
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH __xconfigfile__ __filemansuffix__ __vendorversion__
 .SH NAME
-__xconfigfile__ \- configuration File for __xservername__ X server
+__xconfigfile__ and __xconfigdir__ \- configuration files for
+__xservername__ X server
 .SH INTRODUCTION
 .B __xservername__
 supports several mechanisms for supplying/obtaining configuration and
 run-time parameters: command line options, environment variables, the
-__xconfigfile__ configuration file, auto-detection, and fallback defaults.
-When the same information is supplied in more than one way, the highest
-precedence mechanism is used.  The list of mechanisms is ordered from
-highest precedence to lowest.  Note that not all parameters can be
-supplied via all methods.  The available command line options and
-environment variables (and some defaults) are described in the Xserver(__appmansuffix__)
-and __xservername__(__appmansuffix__) manual pages.  Most configuration file parameters, with
-their defaults, are described below.  Driver and module specific
-configuration parameters are described in the relevant driver or module
-manual page.
+__xconfigfile__ and __xconfigdir__ configuration files, auto-detection,
+and fallback defaults. When the same information is supplied in more
+than one way, the highest precedence mechanism is used. The list of
+mechanisms is ordered from highest precedence to lowest. Note that not
+all parameters can be supplied via all methods. The available command
+line options and environment variables (and some defaults) are
+described in the Xserver(__appmansuffix__) and
+__xservername__(__appmansuffix__) manual pages. Most configuration file
+parameters, with their defaults, are described below. Driver and module
+specific configuration parameters are described in the relevant driver
+or module manual page.
 .SH DESCRIPTION
 .B __xservername__
 uses a configuration file called
 .I __xconfigfile__
+and files ending in the suffix
+.I .conf
+from the directory
+.I __xconfigdir__
 for its initial setup.
-This configuration file is searched for in the following places when the
+The
+.I __xconfigfile__
+configuration file is searched for in the following places when the
 server is started as a normal user:
 .PP
 .RS 4
@@ -94,9 +101,61 @@ directory), and
 is the machine's hostname as reported by
 .BR gethostname (__libmansuffix__).
 .PP
+Additional configuration files are searched for in the following
+directories when the server is started as a normal user:
+.PP
+.RS 4
+.nf
+.IR /etc/X11/ <cmdline>
+.IR __sysconfdir__/X11/ <cmdline>
+.I /etc/X11/__xconfigdir__
+.I __sysconfdir__/X11/__xconfigdir__
+.fi
+.RE
+.PP
+where
+.I <cmdline>
+is a relative path (with no \(lq..\(rq components) specified with the
+.B \-configdir
+command line option.
+.PP
+When the __xservername__ server is started by the \(lqroot\(rq user, the
+config directory search locations are as follows:
+.PP
+.RS 4
+.nf
+<cmdline>
+.IR /etc/X11/ <cmdline>
+.IR __sysconfdir__/X11/ <cmdline>
+.I /etc/X11/__xconfigdir__
+.I __sysconfdir__/X11/__xconfigdir__
+.fi
+.RE
+.PP
+where
+.I <cmdline>
+is the path specified with the
+.B \-configdir
+command line option (which may be absolute or relative).
+.PP
+Finally, configuration files will also be searched for in directories
+reserved for system use. These are to separate configuration files from
+the vendor or 3rd party packages from those of local administration.
+These files are found in the following directories:
+.PP
+.RS 4
+.nf
+.I /usr/share/X11/__xconfigdir__
+.I __datadir__/X11/__xconfigdir__
+.fi
+.RE
+.PP
 The
 .I __xconfigfile__
-file is composed of a number of sections which may be present in any order.
+and
+.I __xconfigdir__
+files are composed of a number of sections which may be present in any order,
+or omitted to use default configuration values.
 Each section has the form:
 .PP
 .RS 4
@@ -117,6 +176,7 @@ The section names are:
 .BR "Module         " "Dynamic module loading"
 .BR "Extensions     " "Extension enabling"
 .BR "InputDevice    " "Input device description"
+.BR "InputClass     " "Input class description"
 .BR "Device         " "Graphics device description"
 .BR "VideoAdaptor   " "Xv video adaptor description"
 .BR "Monitor        " "Monitor description"
@@ -147,21 +207,21 @@ section is no longer recognised.
 .PP
 The
 .B ServerLayout
-sections are at the highest level.  
-They bind together the input and output devices that will be used in a session.  
+sections are at the highest level.
+They bind together the input and output devices that will be used in a session.
 The input devices are described in the
 .B InputDevice
-sections.  
+sections.
 Output devices usually consist of multiple independent components (e.g.,
-a graphics board and a monitor).  
+a graphics board and a monitor).
 These multiple components are bound together in the
 .B Screen
 sections, and it is these that are referenced by the
 .B ServerLayout
-section.  
+section.
 Each
 .B Screen
-section binds together a graphics board and a monitor.  
+section binds together a graphics board and a monitor.
 The graphics boards are described in the
 .B Device
 sections, and the monitors are described in the
@@ -169,15 +229,15 @@ sections, and the monitors are described in the
 sections.
 .PP
 Config file keywords are case\-insensitive, and \(lq_\(rq characters are
-ignored.  
+ignored.
 Most strings (including
 .B Option
 names) are also case-insensitive, and insensitive to white space and
 \(lq_\(rq characters.
 .PP
-Each config file entry usually takes up a single line in the file.  They 
-consist of a keyword, which is possibly followed by one or more arguments, 
-with the number and types of the arguments depending on the keyword.  
+Each config file entry usually takes up a single line in the file.  They
+consist of a keyword, which is possibly followed by one or more arguments,
+with the number and types of the arguments depending on the keyword.
 The argument types are:
 .PP
 .RS 4
@@ -356,25 +416,12 @@ font path elements (which can be set inside a catalogue directory):
 .PP
 .RS 4
 .nf
-.I __projectroot__/lib/X11/fonts/misc/
-.I __projectroot__/lib/X11/fonts/TTF/
-.I __projectroot__/lib/X11/fonts/Type1/
-.I __projectroot__/lib/X11/fonts/75dpi/
-.I __projectroot__/lib/X11/fonts/100dpi/
-.fi
-.RE
-.PP
-The recommended font path contains the following font path elements:
-.PP
-.RS 4
-.nf
-.I __projectroot__/lib/X11/fonts/local/
-.I __projectroot__/lib/X11/fonts/misc/
-.I __projectroot__/lib/X11/fonts/75dpi/:unscaled
-.I __projectroot__/lib/X11/fonts/100dpi/:unscaled
-.I __projectroot__/lib/X11/fonts/Type1/
-.I __projectroot__/lib/X11/fonts/75dpi/
-.I __projectroot__/lib/X11/fonts/100dpi/
+.I __datadir__/fonts/X11/misc/
+.I __datadir__/fonts/X11/TTF/
+.I __datadir__/fonts/X11/OTF/
+.I __datadir__/fonts/X11/Type1/
+.I __datadir__/fonts/X11/100dpi/
+.I __datadir__/fonts/X11/75dpi/
 .fi
 .RE
 .PP
@@ -389,7 +436,11 @@ searches for loadable modules loading in the order specified.
 Multiple
 .B ModulePath
 entries may be specified, and they will be concatenated to build the
-module search path used by the server.
+module search path used by the server.  The default module path is
+.PP
+.RS 11
+__modulepath__
+.RE
 .\" The LogFile keyword is not currently implemented
 .ig
 .TP 7
@@ -406,17 +457,26 @@ where
 .I <n>
 is the display number for the __xservername__ server.
 ..
+.TP 7
+.BI "XkbDir \*q" path \*q
+sets the base directory for keyboard layout files.  The
+.B \-xkbdir
+command line option can be used to override this.  The default directory is
+.PP
+.RS 11
+__xkbdir__
+.RE
 .SH "SERVERFLAGS SECTION"
 In addition to options specific to this section (described below), the
 .B ServerFlags
 section is used to specify some global
-__xservername__ server options.  
+__xservername__ server options.
 All of the entries in this section are
 .BR Options ,
 although for compatibility purposes some of the old style entries are
-still recognised.  
-Those old style entries are not documented here, and using them is 
-discouraged.  
+still recognised.
+Those old style entries are not documented here, and using them is
+discouraged.
 The
 .B ServerFlags
 section is optional, as are the entries that may be specified in it.
@@ -449,6 +509,15 @@ The default behaviour is for the __xservername__ server to exit cleanly, but sti
 core file.
 In general you never want to use this option unless you are debugging an __xservername__
 server problem and know how to deal with the consequences.
+.TP 7
+.BI "Option \*qUseSIGIO\*q  \*q" boolean \*q
+This controls whether the __xservername__ server requests that events from
+input devices be reported via a SIGIO signal handler (also known as SIGPOLL
+on some platforms), or only reported via the standard select(3) loop.
+The default behaviour is platform specific.   In general you do not want to
+use this option unless you are debugging the __xservername__ server, or
+working around a specific bug until it is fixed, and understand the
+consequences.
 .TP 7
 .BI "Option \*qDontVTSwitch\*q  \*q" boolean \*q
 This disallows the use of the
@@ -492,8 +561,12 @@ extension) to connect from another host.
 Default: off.
 .TP 7
 .BI "Option \*qAllowMouseOpenFail\*q  \*q" boolean \*q
-This allows the server to start up even if the mouse device can't be
-opened/initialised.
+This tells the mousedrv(__drivermansuffix__) and vmmouse(__drivermansuffix__)
+drivers to not report failure if the mouse device can't be opened/initialised.
+It has no effect on the evdev(__drivermansuffix__) or other drivers.
+The previous functionality of allowing the server to start up even if
+the mouse device can't be opened/initialised is now handled by the
+AllowEmptyInput option.
 Default: false.
 .TP 7
 .BI "Option \*qVTSysReq\*q  \*q" boolean \*q
@@ -507,30 +580,6 @@ This prevents the __xservername__ server trapping the
 keys used for the default VT switch sequence, which means that clients can
 access them.
 Default: off.
-.TP 7
-.BI "Option \*qXkbDisable\*q \*q" boolean \*q
-disable/enable the XKEYBOARD extension.
-The \-kb command line option overrides this config file option.
-Default: XKB is enabled.
-.\" The following four options are "undocumented".
-.ig
-.TP 7
-.BI "Option \*qPciProbe1\*q"
-Use PCI probe method 1.
-Default: set.
-.TP 7
-.BI "Option \*qPciProbe2\*q"
-Use PCI probe method 2.
-Default: not set.
-.TP 7
-.BI "Option \*qPciForceConfig1\*q"
-Force the use PCI config type 1.
-Default: not set.
-.TP 7
-.BI "Option \*qPciForceConfig2\*q"
-Force the use PCI config type 2. 
-Default: not set.
-..
 .TP 7
 .BI "Option \*qBlankTime\*q  \*q" time \*q
 sets the inactivity timeout for the
@@ -551,7 +600,7 @@ phase of DPMS mode.
 .I time
 is in minutes, and the value can be changed at run\-time with
 .BR xset(__appmansuffix__).
-Default: 20 minutes.
+Default: 10 minutes.
 This is only suitable for VESA DPMS compatible monitors, and may not be
 supported by all video drivers.
 It is only enabled for screens that have the
@@ -565,7 +614,7 @@ phase of DPMS mode.
 .I time
 is in minutes, and the value can be changed at run\-time with
 .BR xset(__appmansuffix__).
-Default: 30 minutes.
+Default: 10 minutes.
 This is only suitable for VESA DPMS compatible monitors, and may not be
 supported by all video drivers.
 It is only enabled for screens that have the
@@ -579,7 +628,7 @@ phase of DPMS mode.
 .I time
 is in minutes, and the value can be changed at run\-time with
 .BR xset(__appmansuffix__).
-Default: 40 minutes. 
+Default: 10 minutes.
 This is only suitable for VESA DPMS compatible monitors, and may not be
 supported by all video drivers.
 It is only enabled for screens that have the
@@ -599,13 +648,6 @@ Specify that the machine is a Japanese PC\-98 machine.
 This should not be enabled for anything other than the Japanese\-specific
 PC\-98 architecture.
 Default: auto\-detected.
-.\" Doubt this should be documented.
-.ig
-.TP 7
-.BI "Option \*qEstimateSizesAggressively\*q  \*q" value \*q
-This option affects the way that bus resource sizes are estimated.
-Default: 0.
-..
 .TP 7
 .BI "Option \*qNoPM\*q  \*q" boolean \*q
 Disables something to do with power management events.
@@ -615,28 +657,11 @@ Default: PM enabled on platforms that support it.
 enable or disable XINERAMA extension.
 Default is disabled.
 .TP 7
-.BI "Option \*qHandleSpecialKeys\*q \*q" when \*q
-This option controls when the server uses the builtin handler to process
-special key combinations (such as
-.BR Ctrl+Alt+Backspace ).
-Normally the XKEYBOARD extension keymaps will provide mappings for each of
-the special key combinations, so the builtin handler is not needed unless
-the XKEYBOARD extension is disabled.
-The value of
-.I when
-can be
-.BR Always ,
-.BR Never ,
-or
-.BR WhenNeeded .
-Default: Use the builtin handler only if needed.
-The server will scan the keymap for a mapping to the
-.B Terminate
-action and, if found, use XKEYBOARD for processing actions, otherwise
-the builtin handler will be used.
-.TP 7
 .BI "Option \*qAIGLX\*q \*q" boolean \*q
 enable or disable AIGLX. AIGLX is enabled by default.
+.TP 7
+.BI "Option \*qDRI2\*q \*q" boolean \*q
+enable or disable DRI2. DRI2 is disabled by default.
 .TP 7
 .BI "Option \*qGlxVisuals\*q \*q" string \*q
 This option controls how many GLX visuals the GLX modules sets up.
@@ -687,8 +712,8 @@ The
 .B Module
 section is used to specify which __xservername__ server modules should be loaded.
 This section is ignored when the __xservername__ server is built in static form.
-The types of modules normally loaded in this section are __xservername__ server
-extension modules, and font rasteriser modules.
+The type of modules normally loaded in this section are __xservername__ server
+extension modules.
 Most other module types are loaded automatically when they are needed via
 other mechanisms.
 The
@@ -710,10 +735,10 @@ The standard name is case\-sensitive, and does not include the \(lqlib\(rq
 prefix, or the \(lq.a\(rq, \(lq.o\(rq, or \(lq.so\(rq suffixes.
 .PP
 .RS 7
-Example: the FreeType font rasteriser can be loaded with the following entry:
+Example: the DRI extension module can be loaded with the following entry:
 .PP
 .RS 4
-.B "Load \*qfreetype\*q"
+.B "Load \*qdri\*q"
 .RE
 .RE
 .TP 7
@@ -723,7 +748,7 @@ This instructs the server to not load the module called
 Some modules are loaded by default in the server, and this overrides that
 default. If a
 .B Load
-instruction is given for the same module, it overrides the 
+instruction is given for the same module, it overrides the
 .B Disable
 instruction and the module is loaded. The module name given should be the
 module's standard name, not the module file name. As with the
@@ -753,23 +778,23 @@ disabled by using the following entry:
 .PP
 Modules are searched for in each directory specified in the
 .B ModulePath
-search path, and in the drivers, input, extensions, fonts, and
-internal subdirectories of each of those directories.
+search path, and in the drivers, extensions, input, internal, and
+multimedia subdirectories of each of those directories.
 In addition to this, operating system specific subdirectories of all
 the above are searched first if they exist.
 .PP
-To see what font and extension modules are available, check the contents
-of the following directories:
+To see what extension modules are available, check the extensions
+subdirectory under:
 .PP
 .RS 4
 .nf
-__projectroot__/lib/modules/fonts
-__projectroot__/lib/modules/extensions
+__modulepath__
 .fi
 .RE
 .PP
-The \(lqextmod\(rq, \(lqdbe\(rq, \(lqglx\(rq, and \(lqdri\(rq extension
-modules are loaded automatically, unless disabled with \*qDisable\*q entries.
+The \(lqextmod\(rq, \(lqdbe\(rq, \(lqdri\(rq, \(lqdri2\(rq, \(lqglx\(rq,
+and \(lqrecord\(rq extension modules are loaded automatically, if they
+are present, unless disabled with \*qDisable\*q entries.
 It is recommended
 that at very least the \(lqextmod\(rq extension module be loaded.
 If it isn't, some commonly used server extensions (like the SHAPE
@@ -804,10 +829,28 @@ Example: the MIT-SHM extension can be disabled with the following entry:
 The config file may have multiple
 .B InputDevice
 sections.
-There will normally be at least two: one for the core (primary) keyboard,
-and one of the core pointer.
+Recent X servers employ input hotplugging to add input devices, with the HAL
+backend being the default backend for X servers since 1.4. It is usually not
+necessary to provide
+.B InputDevice
+sections in the xorg.conf if hotplugging is enabled.
+.PP
+If hotplugging is disabled, there will normally
+be at least two: one for the core (primary) keyboard
+and one for the core pointer.
 If either of these two is missing, a default configuration for the missing
-ones will be used.
+ones will be used. In the absence of an explicitly specified core input
+device, the first
+.B InputDevice
+marked as
+.B CorePointer
+(or
+.BR CoreKeyboard )
+is used.
+If there is no match there, the first
+.B InputDevice
+that uses the \(lqmouse\(rq (or \(lqkbd\(rq) driver is used.
+The final fallback is to use built\-in default configurations.
 Currently the default configuration may not work as expected on all platforms.
 .PP
 .B InputDevice
@@ -859,20 +902,9 @@ The most commonly used input drivers are
 on Linux systems, and
 .BR kbd (__drivermansuffix__)
 and
-.BR mouse (__drivermansuffix__)
+.BR mousedrv (__drivermansuffix__)
 on other platforms.
 .PP
-In the absence of an explicitly specified core input device, the first
-.B InputDevice
-marked as
-.B CorePointer
-(or
-.BR CoreKeyboard )
-is used.
-If there is no match there, the first
-.B InputDevice
-that uses the \(lqmouse\(rq (or \(lqkbd\(rq) driver is used.
-The final fallback is to use built\-in default configurations.
 .PP
 .B InputDevice
 sections recognise some driver\-independent
@@ -881,48 +913,221 @@ which are described here.
 See the individual input driver manual pages for a description of the
 device\-specific options.
 .TP 7
+.BI "Option \*qAutoServerLayout\*q  \*q" boolean \*q
+Always add the device to the ServerLayout section used by this instance of
+the server. This affects implied layouts as well as explicit layouts
+specified in the configuration and/or on the command line.
+.TP 7
 .BI "Option \*qCorePointer\*q"
-When this is set, the input device is installed as the core (primary)
-pointer device.
-There must be exactly one core pointer.
-If this option is not set here, or in the
-.B ServerLayout
-section, or from the
-.B \-pointer
-command line option, then the first input device that is capable of
-being used as a core pointer will be selected as the core pointer.
-This option is implicitly set when the obsolete
-.B Pointer
-section is used.
+Deprecated, use
+.B SendCoreEvents
+instead.
 .TP 7
 .BI "Option \*qCoreKeyboard\*q"
-When this is set, the input device is to be installed as the core
-(primary) keyboard device.
-There must be exactly one core keyboard.
-If this option is not set here, in the
-.B ServerLayout
-section, or from the
-.B \-keyboard
-command line option, then the first input device that is capable of
-being used as a core keyboard will be selected as the core keyboard.
-This option is implicitly set when the obsolete
-.B Keyboard
-section is used.
+Deprecated, use
+.B SendCoreEvents
+instead.
 .TP 7
 .BI "Option \*qAlwaysCore\*q  \*q" boolean \*q
+.B
+Deprecated, use
+.B SendCoreEvents
+instead.
 .TP 7
 .BI "Option \*qSendCoreEvents\*q  \*q" boolean \*q
 Both of these options are equivalent, and when enabled cause the
-input device to always report core events.
-This can be used, for example, to allow an additional pointer device to
-generate core pointer events (like moving the cursor, etc).
-.TP 4
-.BI "Option \*qHistorySize\*q  \*q" number \*q
-Sets the motion history size.
-Default: 0.
+input device to report core events through the master device. They are
+enabled by default.  Any device configured to send core events will be
+attached to the virtual core pointer or keyboard and control the cursor by
+default. Devices with
+.B SendCoreEvents
+disabled will be \*qfloating\*q and only accessible by clients employing the
+X Input extension. This option controls the startup behavior only, a device
+may be reattached or set floating at runtime.
 .TP 7
 .BI "Option \*qSendDragEvents\*q  \*q" boolean \*q
-???
+Send core events while dragging. Enabled by default.
+.PP
+For pointing devices, the following options control how the pointer
+is accelerated or decelerated with respect to physical device motion. Most of
+these can be adjusted at runtime, see the xinput(1) man page for details. Only
+the most important acceleration options are discussed here.
+.TP 7
+.BI "Option \*qAccelerationProfile\*q  \*q" integer \*q
+Select the profile. In layman's terms, the profile constitutes the "feeling" of
+the acceleration. More formally, it defines how the transfer function (actual
+acceleration as a function of current device velocity and acceleration controls)
+is constructed. This is mainly a matter of personal preference.
+.PP
+.RS 6
+.nf
+.B  " 0      classic (mostly compatible)"
+.B  "-1      none (only constant deceleration is applied)"
+.B  " 1      device-dependent"
+.B  " 2      polynomial (polynomial function)"
+.B  " 3      smooth linear (soft knee, then linear)"
+.B  " 4      simple (normal when slow, otherwise accelerated)"
+.B  " 5      power (power function)"
+.B  " 6      linear (more speed, more acceleration)"
+.B  " 7      limited (like linear, but maxes out at threshold)"
+.fi
+.RE
+.TP 7
+.BI "Option \*qConstantDeceleration\*q  \*q" real \*q
+Makes the pointer go
+.B deceleration
+times slower than normal. Most useful for high-resolution devices.
+.TP 7
+.BI "Option \*qAdaptiveDeceleration\*q  \*q" real \*q
+Allows to actually decelerate the pointer when going slow. At most, it will be
+.B adaptive deceleration
+times slower. Enables precise pointer placement without sacrificing speed.
+.TP 7
+.BI "Option \*qAccelerationScheme\*q  \*q" string \*q
+Selects the scheme, which is the underlying algorithm.
+.PP
+.RS 7
+.nf
+.B  "predictable   default algorithm (behaving more predictable)"
+.B  "lightweight   old acceleration code (as specified in the X protocol spec)"
+.B  "none          no acceleration or deceleration"
+.fi
+.RE
+.TP 7
+.BI "Option \*qAccelerationNumerator\*q  \*q" integer \*q
+.TP 7
+.BI "Option \*qAccelerationDenominator\*q  \*q" integer \*q
+Set numerator and denominator of the acceleration factor. The acceleration
+factor is a rational which, together with threshold, can be used to tweak
+profiles to suit the users needs. The
+.B simple
+and
+.B limited
+profiles use it directly (i.e. they accelerate by the factor), for other
+profiles it should hold that a higher acceleration factor leads to a faster
+pointer. Typically, 1 is unaccelerated and values up to 5 are sensible.
+.TP 7
+.BI "Option \*qAccelerationThreshold\*q  \*q" integer \*q
+Set the threshold, which is roughly the velocity (usually device units per 10
+ms) required for acceleration to become effective. The precise effect varies
+with the profile however.
+
+.SH "INPUTCLASS SECTION"
+The config file may have multiple
+.B InputClass
+sections.
+These sections are optional and are used to provide configuration for a
+class of input devices as they are automatically added. An input device can
+match more than one
+.B InputClass
+section. Each class can override settings from a previous class, so it is
+best to arrange the sections with the most generic matches first.
+.PP
+.B InputClass
+sections have the following format:
+.PP
+.RS 4
+.nf
+.B  "Section \*qInputClass\*q"
+.BI "    Identifier  \*q" name \*q
+.I  "    entries"
+.I  "    ..."
+.I  "    options"
+.I  "    ..."
+.B  "EndSection"
+.fi
+.RE
+.PP
+The
+.B Identifier
+entry is required in all
+.B InputClass
+sections.
+All other entries are optional.
+.PP
+The
+.B Identifier
+entry specifies the unique name for this input class.
+The
+.B Driver
+entry specifies the name of the driver to use for this input device.
+After all classes have been examined, the
+.RI \*q inputdriver \*q
+module from the first
+.B Driver
+entry will be enabled when using the loadable server.
+.PP
+When an input device is automatically added, its characteristics are
+checked against all
+.B InputClass
+sections. Each section can contain optional entries to narrow the match
+of the class. If none of the optional entries appear, the
+.B InputClass
+section is generic and will match any input device. If more than one of
+these entries appear, they all must match for the configuration to apply.
+The allowed matching entries are shown below.
+.PP
+.TP 7
+.BI "MatchProduct  \*q" matchproduct \*q
+This entry can be used to check if the substring
+.RI \*q matchproduct \*q
+occurs in the device's product name. Multiple substrings can be matched by
+separating arguments with a '|' character.
+.TP 7
+.BI "MatchVendor  \*q" matchvendor \*q
+This entry can be used to check if the substring
+.RI \*q matchvendor \*q
+occurs in the device's vendor name. Multiple substrings can be matched by
+separating arguments with a '|' character.
+.TP 7
+.BI "MatchDevicePath \*q" matchdevice \*q
+This entry can be used to check if the device file matches the
+.RI \*q matchdevice \*q
+pathname pattern. Multiple patterns can be matched by separating arguments
+with a '|' character.
+.TP 7
+.BI "MatchTag \*q" matchtag \*q
+This entry can be used to check if tags assigned by the config backend
+matches the
+.RI \*q matchtag \*q
+pattern.  Multiple patterns can be matched by separating arguments
+with a '|' character. A match is found if at least one of the tags given in
+.RI \*q matchtag \*q
+matches at least one of the tags assigned by the backend.
+.TP 7
+.BI "MatchIsKeyboard     \*q" bool \*q
+.TP 7
+.BI "MatchIsPointer      \*q" bool \*q
+.TP 7
+.BI "MatchIsJoystick     \*q" bool \*q
+.TP 7
+.BI "MatchIsTablet       \*q" bool \*q
+.TP 7
+.BI "MatchIsTouchpad     \*q" bool \*q
+.TP 7
+.BI "MatchIsTouchscreen  \*q" bool \*q
+Match device types. These entries take a boolean argument similar to
+.B Option
+entries.
+.PP
+When an input device has been matched to the
+.B InputClass
+section, any
+.B Option
+entries are applied to the device. One
+.B InputClass
+specific
+.B Option
+is recognized. See the
+.B InputDevice
+section above for a description of the remaining
+.B Option
+entries.
+.TP 7
+.BI "Option \*qIgnore\*q \*q" boolean \*q
+This optional entry specifies that the device should be ignored entirely,
+and not added to the server. This can be useful when the device is handled
+by another program and no X events should be generated.
 .SH "DEVICE SECTION"
 The config file may have multiple
 .B Device
@@ -1177,7 +1382,7 @@ following format:
 
 .B Option \*qMonitor-outputname\*q \*qmonitorsection\*q
 
-(for example, 
+(for example,
 .B Option \*qMonitor-VGA\*q \*qVGA monitor\*q
 for a VGA output)
 .PP
@@ -1409,10 +1614,9 @@ This option controls whether the video card should drive the sync signal
 on the green color pin.  Not all cards support this option, and most
 monitors do not require it.  The default is off.
 .TP 7
-.BI "Option " "\*qTargetRefresh\*q  " \*qrate\*q
-This optional entry specifies the vertical refresh rate that the server
-should aim for when selecting video modes.  Without this option, the
-default is to prefer modes with higher refresh rates.
+.BI "Option " "\*qPrimary\*q  " \*qbool\*q
+This optional entry specifies that the monitor should be treated as the primary
+monitor. (RandR 1.2-supporting drivers only)
 .TP 7
 .BI "Option " "\*qPreferredMode\*q  " \*qstring\*q
 This optional entry specifies a mode to be marked as the preferred initial mode
@@ -2129,7 +2333,7 @@ section for a dual headed configuration with two mice:
 .RE
 .SH "DRI SECTION"
 This optional section is used to provide some information for the
-Direct Rendering Infrastructure.  
+Direct Rendering Infrastructure.
 Details about the format of this section
 can be found in the README.DRI document, which is also available on-line at
 .IR <http://dri.freedesktop.org/> .
@@ -2143,7 +2347,7 @@ sections may be present, and they may contain an
 .B Identifier
 entry and multiple
 .B Option
-flags.  
+flags.
 The data therein is not used in this release.
 .PP
 .SH "SEE ALSO"
@@ -2201,25 +2405,16 @@ Display drivers:
 .PP
 Input drivers:
 .BR acecad (__drivermansuffix__),
-.BR calcomp (__drivermansuffix__),
 .BR citron (__drivermansuffix__),
-.BR dmc (__drivermansuffix__),
-.BR dynapro (__drivermansuffix__),
 .BR elographics (__drivermansuffix__),
 .BR evdev (__drivermansuffix__),
 .BR fpit (__drivermansuffix__),
-.BR js_x (__drivermansuffix__),
 .BR joystick (__drivermansuffix__),
 .BR kbd (__drivermansuffix__),
-.BR magictouch (__drivermansuffix__),
-.BR microtouch (__drivermansuffix__),
 .BR mousedrv (__drivermansuffix__),
 .BR mutouch (__drivermansuffix__),
-.BR palmax (__drivermansuffix__),
 .BR penmount (__drivermansuffix__),
 .BR synaptics (__drivermansuffix__),
-.BR tek4957 (__drivermansuffix__),
-.BR ur98 (__drivermansuffix__),
 .BR vmmouse (__drivermansuffix__),
 .BR void (__drivermansuffix__),
 .BR wacom (__drivermansuffix__).

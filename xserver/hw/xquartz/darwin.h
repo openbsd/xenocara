@@ -36,22 +36,7 @@
 
 #include "threadSafety.h"
 
-typedef struct {
-    void                *framebuffer;
-    int                 x;
-    int                 y;
-    int                 width;
-    int                 height;
-    int                 pitch;
-    int                 depth;
-    int                 visuals;
-    int                 bitsPerRGB;
-    int                 bitsPerPixel;
-    int                 preferredCVC;
-    Pixel               redMask;
-    Pixel               greenMask;
-    Pixel               blueMask;
-} DarwinFramebufferRec, *DarwinFramebufferPtr;
+#include "darwinfb.h"
 
 // From darwin.c
 void DarwinPrintBanner(void);
@@ -85,9 +70,7 @@ extern int              darwinFakeMouse3Mask;
 extern unsigned int     darwinAppKitModMask;
 extern unsigned int     windowItemModMask;
 extern int              darwinSyncKeymap;
-extern unsigned int     darwinDesiredWidth, darwinDesiredHeight;
 extern int              darwinDesiredDepth;
-extern int              darwinDesiredRefresh;
 
 // location of X11's (0,0) point in global screen coordinates
 extern int              darwinMainScreenX;

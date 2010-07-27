@@ -55,26 +55,6 @@
 #define GL_GLEXT_PROTOTYPES /* we want prototypes */
 #include <GL/gl.h>
 #include <GL/glxproto.h>
-#include <GL/glxint.h>
-
-/* For glxscreens.h */
-typedef struct __GLXdrawable __GLXdrawable;
-typedef struct __GLXcontext __GLXcontext;
-
-#include "glxscreens.h"
-#include "glxdrawable.h"
-#include "glxcontext.h"
-
-
-#define GLX_SERVER_MAJOR_VERSION 1
-#define GLX_SERVER_MINOR_VERSION 2
-
-#ifndef True
-#define True 1
-#endif
-#ifndef False
-#define False 0
-#endif
 
 /*
 ** GLX resources.
@@ -84,6 +64,19 @@ typedef XID GLXPixmap;
 typedef XID GLXDrawable;
 
 typedef struct __GLXclientStateRec __GLXclientState;
+typedef struct __GLXdrawable __GLXdrawable;
+typedef struct __GLXcontext __GLXcontext;
+
+#include "glxscreens.h"
+#include "glxdrawable.h"
+#include "glxcontext.h"
+
+#ifndef True
+#define True 1
+#endif
+#ifndef False
+#define False 0
+#endif
 
 extern __GLXscreen *glxGetScreen(ScreenPtr pScreen);
 extern __GLXclientState *glxGetClient(ClientPtr pClient);
@@ -93,10 +86,7 @@ extern __GLXclientState *glxGetClient(ClientPtr pClient);
 void GlxExtensionInit(void);
 
 void GlxSetVisualConfigs(int nconfigs, 
-                         __GLXvisualConfig *configs, void **privates);
-
-struct _glapi_table;
-void GlxSetRenderTables (struct _glapi_table *table);
+                         void *configs, void **privates);
 
 void __glXScreenInitVisuals(__GLXscreen *screen);
 
@@ -255,5 +245,10 @@ extern int __glXImageSize(GLenum format, GLenum type,
     GLenum target, GLsizei w, GLsizei h, GLsizei d,
     GLint imageHeight, GLint rowLength, GLint skipImages, GLint skipRows,
     GLint alignment);
+
+extern unsigned glxMajorVersion;
+extern unsigned glxMinorVersion;
+
+extern int __glXEventBase;
 
 #endif /* !__GLX_server_h__ */

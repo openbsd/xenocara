@@ -64,6 +64,10 @@
 #include "Configint.h"
 #include <string.h>
 
+
+/* Needed for auto server layout */
+extern int xf86CheckBoolOption(void* optlist, const char *name, int deflt);
+
 extern LexRec val;
 
 static xf86ConfigSymTabRec LayoutTab[] =
@@ -116,10 +120,10 @@ xf86parseLayoutSection (void)
 			{
 				XF86ConfInactivePtr iptr;
 
-				iptr = xf86confcalloc (1, sizeof (XF86ConfInactiveRec));
+				iptr = calloc (1, sizeof (XF86ConfInactiveRec));
 				iptr->list.next = NULL;
 				if (xf86getSubToken (&(ptr->lay_comment)) != STRING) {
-					xf86conffree (iptr);
+					free (iptr);
 					Error (INACTIVE_MSG, NULL);
 				}
 				iptr->inactive_device_str = val.str;
@@ -132,7 +136,7 @@ xf86parseLayoutSection (void)
 				XF86ConfAdjacencyPtr aptr;
 				int absKeyword = 0;
 
-				aptr = xf86confcalloc (1, sizeof (XF86ConfAdjacencyRec));
+				aptr = calloc (1, sizeof (XF86ConfAdjacencyRec));
 				aptr->list.next = NULL;
 				aptr->adj_scrnum = -1;
 				aptr->adj_where = CONF_ADJ_OBSOLETE;
@@ -145,7 +149,7 @@ xf86parseLayoutSection (void)
 					xf86unGetToken (token);
 				token = xf86getSubToken(&(ptr->lay_comment));
 				if (token != STRING) {
-					xf86conffree(aptr);
+					free(aptr);
 					Error (SCREEN_MSG, NULL);
 				}
 				aptr->adj_screen_str = val.str;
@@ -173,7 +177,7 @@ xf86parseLayoutSection (void)
 					absKeyword = 1;
 					break;
 				case EOF_TOKEN:
-					xf86conffree(aptr);
+					free(aptr);
 					Error (UNEXPECTED_EOF_MSG, NULL);
 					break;
 				default:
@@ -194,13 +198,13 @@ xf86parseLayoutSection (void)
 						aptr->adj_x = val.num;
 						token = xf86getSubToken(&(ptr->lay_comment));
 						if (token != NUMBER) {
-							xf86conffree(aptr);
+							free(aptr);
 							Error(INVALID_SCR_MSG, NULL);
 						}
 						aptr->adj_y = val.num;
 					} else {
 						if (absKeyword) {
-							xf86conffree(aptr);
+							free(aptr);
 							Error(INVALID_SCR_MSG, NULL);
 						} else
 							xf86unGetToken (token);
@@ -213,7 +217,7 @@ xf86parseLayoutSection (void)
 				case CONF_ADJ_RELATIVE:
 					token = xf86getSubToken(&(ptr->lay_comment));
 					if (token != STRING) {
-						xf86conffree(aptr);
+						free(aptr);
 						Error(INVALID_SCR_MSG, NULL);
 					}
 					aptr->adj_refscreen = val.str;
@@ -221,13 +225,13 @@ xf86parseLayoutSection (void)
 					{
 						token = xf86getSubToken(&(ptr->lay_comment));
 						if (token != NUMBER) {
-							xf86conffree(aptr);
+							free(aptr);
 							Error(INVALID_SCR_MSG, NULL);
 						}
 						aptr->adj_x = val.num;
 						token = xf86getSubToken(&(ptr->lay_comment));
 						if (token != NUMBER) {
-							xf86conffree(aptr);
+							free(aptr);
 							Error(INVALID_SCR_MSG, NULL);
 						}
 						aptr->adj_y = val.num;
@@ -239,21 +243,21 @@ xf86parseLayoutSection (void)
 
 					/* bottom */
 					if (xf86getSubToken (&(ptr->lay_comment)) != STRING) {
-						xf86conffree(aptr);
+						free(aptr);
 						Error (SCREEN_MSG, NULL);
 					}
 					aptr->adj_bottom_str = val.str;
 
 					/* left */
 					if (xf86getSubToken (&(ptr->lay_comment)) != STRING) {
-						xf86conffree(aptr);
+						free(aptr);
 						Error (SCREEN_MSG, NULL);
 					}
 					aptr->adj_left_str = val.str;
 
 					/* right */
 					if (xf86getSubToken (&(ptr->lay_comment)) != STRING) {
-						xf86conffree(aptr);
+						free(aptr);
 						Error (SCREEN_MSG, NULL);
 					}
 					aptr->adj_right_str = val.str;
@@ -267,11 +271,11 @@ xf86parseLayoutSection (void)
 			{
 				XF86ConfInputrefPtr iptr;
 
-				iptr = xf86confcalloc (1, sizeof (XF86ConfInputrefRec));
+				iptr = calloc (1, sizeof (XF86ConfInputrefRec));
 				iptr->list.next = NULL;
 				iptr->iref_option_lst = NULL;
 				if (xf86getSubToken (&(ptr->lay_comment)) != STRING) {
-					xf86conffree(iptr);
+					free(iptr);
 					Error (INPUTDEV_MSG, NULL);
 				}
 				iptr->iref_inputdev_str = val.str;
@@ -397,7 +401,7 @@ xf86freeAdjacencyList (XF86ConfAdjacencyPtr ptr)
 
 		prev = ptr;
 		ptr = ptr->list.next;
-		xf86conffree (prev);
+		free (prev);
 	}
 
 }
@@ -413,7 +417,7 @@ xf86freeInputrefList (XF86ConfInputrefPtr ptr)
 		xf86optionListFree (ptr->iref_option_lst);
 		prev = ptr;
 		ptr = ptr->list.next;
-		xf86conffree (prev);
+		free (prev);
 	}
 
 }
@@ -431,22 +435,62 @@ xf86freeLayoutList (XF86ConfLayoutPtr ptr)
 		xf86freeInputrefList (ptr->lay_input_lst);
 		prev = ptr;
 		ptr = ptr->list.next;
-		xf86conffree (prev);
+		free (prev);
 	}
 }
 
-#define CheckScreen(str, ptr)\
-if (str[0] != '\0') \
-{ \
-screen = xf86findScreen (str, p->conf_screen_lst); \
-if (!screen) \
-{ \
-	xf86validationError (UNDEFINED_SCREEN_MSG, \
-				   str, layout->lay_identifier); \
-	return (FALSE); \
-} \
-else \
-	ptr = screen; \
+int
+xf86layoutAddInputDevices(XF86ConfigPtr config, XF86ConfLayoutPtr layout)
+{
+    int count = 0;
+    XF86ConfInputPtr input = config->conf_input_lst;
+    XF86ConfInputrefPtr inptr;
+
+    /* add all AutoServerLayout devices to the server layout */
+    while (input)
+    {
+	if (xf86CheckBoolOption(input->inp_option_lst, "AutoServerLayout", FALSE))
+	{
+	    XF86ConfInputrefPtr iref = layout->lay_input_lst;
+
+	    /* avoid duplicates if referenced but lists AutoServerLayout too */
+	    while (iref)
+	    {
+		if (strcmp(iref->iref_inputdev_str, input->inp_identifier) == 0)
+		    break;
+		iref = iref->list.next;
+	    }
+
+	    if (!iref)
+	    {
+		XF86ConfInputrefPtr iptr;
+		iptr = calloc(1, sizeof(XF86ConfInputrefRec));
+		iptr->iref_inputdev_str = input->inp_identifier;
+		layout->lay_input_lst = (XF86ConfInputrefPtr)
+		    xf86addListItem((glp)layout->lay_input_lst, (glp)iptr);
+		count++;
+	    }
+	}
+	input = input->list.next;
+    }
+
+    inptr = layout->lay_input_lst;
+    while (inptr)
+    {
+	input = xf86findInput (inptr->iref_inputdev_str,
+		config->conf_input_lst);
+	if (!input)
+	{
+	    xf86validationError (UNDEFINED_INPUT_MSG,
+		    inptr->iref_inputdev_str, layout->lay_identifier);
+	    return -1;
+	}
+	else
+	    inptr->iref_inputdev = input;
+	inptr = inptr->list.next;
+    }
+
+    return count;
 }
 
 int
@@ -455,10 +499,8 @@ xf86validateLayout (XF86ConfigPtr p)
 	XF86ConfLayoutPtr layout = p->conf_layout_lst;
 	XF86ConfAdjacencyPtr adj;
 	XF86ConfInactivePtr iptr;
-	XF86ConfInputrefPtr inptr;
 	XF86ConfScreenPtr screen;
 	XF86ConfDevicePtr device;
-	XF86ConfInputPtr input;
 
 	while (layout)
 	{
@@ -475,13 +517,6 @@ xf86validateLayout (XF86ConfigPtr p)
 			}
 			else
 				adj->adj_screen = screen;
-
-#if 0
-			CheckScreen (adj->adj_top_str, adj->adj_top);
-			CheckScreen (adj->adj_bottom_str, adj->adj_bottom);
-			CheckScreen (adj->adj_left_str, adj->adj_left);
-			CheckScreen (adj->adj_right_str, adj->adj_right);
-#endif
 
 			adj = adj->list.next;
 		}
@@ -500,21 +535,10 @@ xf86validateLayout (XF86ConfigPtr p)
 				iptr->inactive_device = device;
 			iptr = iptr->list.next;
 		}
-		inptr = layout->lay_input_lst;
-		while (inptr)
-		{
-			input = xf86findInput (inptr->iref_inputdev_str,
-									p->conf_input_lst);
-			if (!input)
-			{
-				xf86validationError (UNDEFINED_INPUT_MSG,
-						inptr->iref_inputdev_str, layout->lay_identifier);
-				return (FALSE);
-			}
-			else
-				inptr->iref_inputdev = input;
-			inptr = inptr->list.next;
-		}
+
+		if (xf86layoutAddInputDevices(p, layout) == -1)
+		    return FALSE;
+
 		layout = layout->list.next;
 	}
 	return (TRUE);

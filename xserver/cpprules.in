@@ -2,8 +2,6 @@
 # Rules for generating files using the C pre-processor
 # (Replaces CppFileTarget from Imake)
 
-SED = sed
-
 SUFFIXES = .pre .man .man.pre
 
 # Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
@@ -36,11 +34,16 @@ MANDEFS = \
 	-D__adminmansuffix__=$(ADMIN_MAN_SUFFIX) \
 	-D__mandir__=$(mandir) \
 	-D__projectroot__=$(prefix) \
-	-D__xconfigfile__=$(__XCONFIGFILE__) -D__xconfigdir__=$(XCONFIGDIR) \
+	-D__sysconfdir__=$(sysconfdir) \
+	-D__datadir__=$(datadir) \
+	-D__xconfigfile__=$(__XCONFIGFILE__) \
+	-D__xconfigdir__=$(__XCONFIGDIR__) \
+	-D__xkbdir__=$(XKB_BASE_DIRECTORY) \
+	-D__modulepath__="$(DEFAULT_MODULE_PATH)" \
 	-D__xlogfile__=$(XLOGFILE) -D__xservername__=$(XSERVERNAME) 
 
 .pre:
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
 .man.pre.man:
-	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@

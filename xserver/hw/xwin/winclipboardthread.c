@@ -1,5 +1,6 @@
 /*
  *Copyright (C) 2003-2004 Harold L Hunt II All Rights Reserved.
+ *Copyright (C) Colin Harrison 2005-2008
  *
  *Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -20,12 +21,13 @@
  *CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  *WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- *Except as contained in this notice, the name of Harold L Hunt II
- *shall not be used in advertising or otherwise to promote the sale, use
- *or other dealings in this Software without prior written authorization
- *from Harold L Hunt II.
+ *Except as contained in this notice, the name of the copyright holder(s)
+ *and author(s) shall not be used in advertising or otherwise to promote
+ *the sale, use or other dealings in this Software without prior written
+ *authorization from the copyright holder(s) and author(s).
  *
  * Authors:	Harold L Hunt II
+ *              Colin Harrison
  */
 
 #ifdef HAVE_XWIN_CONFIG_H
@@ -36,14 +38,7 @@
 #ifdef __CYGWIN__
 #include <errno.h>
 #endif
-#include "X11/Xauth.h"
-
-
-/*
- * Constants
- */
-
-#define AUTH_NAME	"MIT-MAGIC-COOKIE-1"
+#include "misc.h"
 
 
 /*
@@ -52,10 +47,6 @@
 
 extern Bool		g_fUnicodeClipboard;
 extern unsigned long	serverGeneration;
-#if defined(XCSECURITY)
-extern unsigned int	g_uiAuthDataLen;
-extern char		*g_pAuthData;
-#endif
 extern Bool		g_fClipboardStarted;
 extern HWND		g_hwndClipboard;
 extern void		*g_pClipboardDisplay;
@@ -128,8 +119,7 @@ winClipboardProc (void *pvNotUsed)
   /* See if X supports the current locale */
   if (XSupportsLocale () == False)
     {
-      ErrorF ("winClipboardProc - Locale not supported by X.  Exiting.\n");
-      pthread_exit (NULL);
+      ErrorF ("winClipboardProc - Warning: Locale not supported by X.\n");
     }
 
   /* Set jump point for Error exits */
@@ -151,13 +141,8 @@ winClipboardProc (void *pvNotUsed)
       pthread_exit (NULL);
     }
 
-#if defined(XCSECURITY)
   /* Use our generated cookie for authentication */
-  XSetAuthorization (AUTH_NAME,
-		     strlen (AUTH_NAME),
-		     g_pAuthData,
-		     g_uiAuthDataLen);
-#endif
+  winSetAuthorization();
 
   /* Set error handler */
   XSetErrorHandler (winClipboardErrorHandler);
@@ -231,15 +216,6 @@ winClipboardProc (void *pvNotUsed)
   iMaxDescriptor = iConnectionNumber + 1;
 #endif
 
-  /* Select event types to watch */
-  if (XSelectInput (pDisplay,
-		    DefaultRootWindow (pDisplay),
-		    SubstructureNotifyMask |
-		    StructureNotifyMask |
-		    PropertyChangeMask) == BadWindow)
-    ErrorF ("winClipboardProc - XSelectInput generated BadWindow "
-	    "on RootWindow\n\n");
-
   /* Create atoms */
   atomClipboard = XInternAtom (pDisplay, "CLIPBOARD", False);
   atomClipboardManager = XInternAtom (pDisplay, "CLIPBOARD_MANAGER", False);
@@ -258,6 +234,13 @@ winClipboardProc (void *pvNotUsed)
       pthread_exit (NULL);
     }
 
+  /* Select event types to watch */
+  if (XSelectInput (pDisplay,
+		    iWindow,
+		    PropertyChangeMask) == BadWindow)
+    ErrorF ("winClipboardProc - XSelectInput generated BadWindow "
+	    "on messaging window\n");
+
   /* Save the window in the screen privates */
   g_iClipboardWindow = iWindow;
 
@@ -273,7 +256,8 @@ winClipboardProc (void *pvNotUsed)
       /* PRIMARY */
       iReturn = XSetSelectionOwner (pDisplay, XA_PRIMARY,
 				    iWindow, CurrentTime);
-      if (iReturn == BadAtom || iReturn == BadWindow)
+      if (iReturn == BadAtom || iReturn == BadWindow ||
+	  XGetSelectionOwner (pDisplay, XA_PRIMARY) != iWindow)
 	{
 	  ErrorF ("winClipboardProc - Could not set PRIMARY owner\n");
 	  pthread_exit (NULL);
@@ -282,7 +266,8 @@ winClipboardProc (void *pvNotUsed)
       /* CLIPBOARD */
       iReturn = XSetSelectionOwner (pDisplay, atomClipboard,
 				    iWindow, CurrentTime);
-      if (iReturn == BadAtom || iReturn == BadWindow)
+      if (iReturn == BadAtom || iReturn == BadWindow ||
+	  XGetSelectionOwner (pDisplay, atomClipboard) != iWindow)
 	{
 	  ErrorF ("winClipboardProc - Could not set CLIPBOARD owner\n");
 	  pthread_exit (NULL);
@@ -468,7 +453,7 @@ winClipboardErrorHandler (Display *pDisplay, XErrorEvent *pErr)
 static int
 winClipboardIOErrorHandler (Display *pDisplay)
 {
-  ErrorF ("\nwinClipboardIOErrorHandler!\n\n");
+  ErrorF ("winClipboardIOErrorHandler!\n\n");
 
   /* Restart at the main entry point */
   longjmp (g_jmpEntry, WIN_JMP_ERROR_IO);

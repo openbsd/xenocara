@@ -62,7 +62,6 @@ typedef struct QuartzAudioRec {
     UInt32 curFrame;
     UInt32 remainingFrames;
     UInt32 totalFrames;
-    UInt32 bytesPerFrame;
     double sampleRate;
     UInt32 fadeLength;
 
@@ -117,9 +116,9 @@ static void QuartzFillBuffer(
     unsigned int bufferFrameCount;
     float multiplier, v;
     int i;
-
+    
     buffer = (float *)audiobuffer->mData;
-    bufferFrameCount = audiobuffer->mDataByteSize / data->bytesPerFrame;
+    bufferFrameCount = audiobuffer->mDataByteSize / (sizeof(float) * audiobuffer->mNumberChannels);
 
     frameCount = min(bufferFrameCount, data->remainingFrames);
 
@@ -141,7 +140,7 @@ static void QuartzFillBuffer(
         data->prevFrame = 0;
 
         // adjust for space eaten by prev fade
-        buffer += audiobuffer->mNumberChannels*frame;
+        b += audiobuffer->mNumberChannels*frame;
         bufferFrameCount -= frame;
         frameCount = min(bufferFrameCount, data->remainingFrames);
     }
@@ -204,6 +203,8 @@ QuartzAudioIOProc(
     if (wasPlaying  &&  !data->playing) {
         OSStatus err;
         err = AudioDeviceStop(inDevice, QuartzAudioIOProc);
+        if(err != noErr)
+            fprintf(stderr, "Error stopping audio device: %ld\n", (long int)err);
     }
     pthread_mutex_unlock(&data->lock);
     return 0;
@@ -211,14 +212,20 @@ QuartzAudioIOProc(
 
 
 /*
- * QuartzCoreAudioBell
- *  Play a tone using the CoreAudio API
+ * DDXRingBell
+ * Play a tone using the CoreAudio API
  */
-static void QuartzCoreAudioBell(
+void DDXRingBell(
     int volume,         // volume is % of max
     int pitch,          // pitch is Hz
     int duration )      // duration is milliseconds
 {
+    if (quartzUseSysBeep) {
+        if (volume)
+            NSBeep();
+        return;
+    }
+        
     if (quartzAudioDevice == kAudioDeviceUnknown) return;
 
     pthread_mutex_lock(&data.lock);
@@ -239,47 +246,13 @@ static void QuartzCoreAudioBell(
         OSStatus status;
         status = AudioDeviceStart(quartzAudioDevice, QuartzAudioIOProc);
         if (status) {
-            ErrorF("QuartzAudioBell: AudioDeviceStart returned %ld\n", (long)status);
+            ErrorF("DDXRingBell: AudioDeviceStart returned %ld\n", (long)status);
         } else {
             data.playing = TRUE;
         }
     }
     pthread_mutex_unlock(&data.lock);
 }
-
-
-/*
- * QuartzBell
- *  Ring the bell
- */
-void QuartzBell(
-    int volume,             // volume in percent of max
-    DeviceIntPtr pDevice,
-    pointer ctrl,
-    int class )
-{
-    int pitch;              // pitch in Hz
-    int duration;           // duration in milliseconds
-
-    if (class == BellFeedbackClass) {
-        pitch = ((BellCtrl*)ctrl)->pitch;
-        duration = ((BellCtrl*)ctrl)->duration;
-    } else if (class == KbdFeedbackClass) {
-        pitch = ((KeybdCtrl*)ctrl)->bell_pitch;
-        duration = ((KeybdCtrl*)ctrl)->bell_duration;    
-    } else {
-        ErrorF("QuartzBell: bad bell class %d\n", class);
-        return;
-    }
-
-    if (quartzUseSysBeep) {
-        if (volume)
-            NSBeep();
-    } else {
-        QuartzCoreAudioBell(volume, pitch, duration);
-    }
-}
-
 
 /*
  * QuartzAudioInit
@@ -290,16 +263,17 @@ void QuartzAudioInit(void)
     UInt32 propertySize;
     OSStatus status;
     AudioDeviceID outputDevice;
-    AudioStreamBasicDescription outputStreamDescription;
     double sampleRate;
-
+    AudioObjectPropertyAddress devicePropertyAddress = { kAudioHardwarePropertyDefaultOutputDevice, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+    AudioObjectPropertyAddress sampleRatePropertyAddress = { kAudioDevicePropertyNominalSampleRate, kAudioDevicePropertyScopeOutput, kAudioObjectPropertyElementMaster };
+    
     // Get the default output device
     propertySize = sizeof(outputDevice);
-    status = AudioHardwareGetProperty(
-                    kAudioHardwarePropertyDefaultOutputDevice, 
-                    &propertySize, &outputDevice);
+    status = AudioObjectGetPropertyData(kAudioObjectSystemObject, &devicePropertyAddress,
+                                        0, NULL,
+                                        &propertySize, &outputDevice);
     if (status) {
-        ErrorF("QuartzAudioInit: AudioHardwareGetProperty returned %ld\n",
+        ErrorF("QuartzAudioInit: AudioObjectGetPropertyData(output device) returned %ld\n",
                (long)status);
         return;
     }
@@ -309,23 +283,22 @@ void QuartzAudioInit(void)
     }
 
     // Get the basic device description
-    propertySize = sizeof(outputStreamDescription);
-    status = AudioDeviceGetProperty(outputDevice, 0, FALSE, 
-                                    kAudioDevicePropertyStreamFormat, 
-                                    &propertySize, &outputStreamDescription);
+    sampleRate = 0.;
+    propertySize = sizeof(sampleRate);
+    status = AudioObjectGetPropertyData(outputDevice, &sampleRatePropertyAddress,
+                                        0, NULL,
+                                        &propertySize, &sampleRate);
     if (status) {
-        ErrorF("QuartzAudioInit: GetProperty(stream format) returned %ld\n",
+        ErrorF("QuartzAudioInit: AudioObjectGetPropertyData(sample rate) returned %ld\n",
                (long)status);
         return;
     }
-    sampleRate = outputStreamDescription.mSampleRate;
 
     // Fill in the playback data
     data.frequency = 0;
     data.amplitude = 0;
     data.curFrame = 0;
     data.remainingFrames = 0; 
-    data.bytesPerFrame = outputStreamDescription.mBytesPerFrame;
     data.sampleRate = sampleRate;
     // data.bufferByteCount = bufferByteCount;
     data.playing = FALSE;
@@ -339,8 +312,10 @@ void QuartzAudioInit(void)
 
     // Prepare for playback
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+    {
     AudioDeviceIOProcID sInputIOProcID = NULL;
     status = AudioDeviceCreateIOProcID( outputDevice, QuartzAudioIOProc, &data, &sInputIOProcID );
+    }
 #else
     status = AudioDeviceAddIOProc(outputDevice, QuartzAudioIOProc, &data);
 #endif

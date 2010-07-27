@@ -129,6 +129,9 @@ xf86CursorCloseScreen(int i, ScreenPtr pScreen)
     if (ScreenPriv->isUp && pScrn->vtSema)
 	xf86SetCursor(pScreen, NullCursor, ScreenPriv->x, ScreenPriv->y);
 
+    if (ScreenPriv->CurrentCursor)
+	FreeCursor(ScreenPriv->CurrentCursor, None);
+
     pScreen->CloseScreen = ScreenPriv->CloseScreen;
     pScreen->QueryBestSize = ScreenPriv->QueryBestSize;
     pScreen->RecolorCursor = ScreenPriv->RecolorCursor;
@@ -303,20 +306,26 @@ xf86CursorSetCursor(DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCurs,
 
     if (pCurs == NullCursor) {	/* means we're supposed to remove the cursor */
         if (ScreenPriv->SWCursor ||
-            !(pDev == inputInfo.pointer || !pDev->isMaster && pDev->u.master == inputInfo.pointer))
+            !(GetMaster(pDev, MASTER_POINTER) == inputInfo.pointer))
                 (*ScreenPriv->spriteFuncs->SetCursor)(pDev, pScreen, NullCursor, x, y);
         else if (ScreenPriv->isUp) {
             xf86SetCursor(pScreen, NullCursor, x, y);
             ScreenPriv->isUp = FALSE;
         }
+	if (ScreenPriv->CurrentCursor)
+	    FreeCursor(ScreenPriv->CurrentCursor, None);
+        ScreenPriv->CurrentCursor = NullCursor;
         return;
     }
 
     /* only update for VCP, otherwise we get cursor jumps when removing a
        sprite. The second cursor is never HW rendered anyway. */
     if (pDev == inputInfo.pointer ||
-        (!pDev->isMaster && pDev->u.master == inputInfo.pointer))
+        (!IsMaster(pDev) && pDev->u.master == inputInfo.pointer))
     {
+	pCurs->refcnt++;
+	if (ScreenPriv->CurrentCursor)
+	    FreeCursor(ScreenPriv->CurrentCursor, None);
 	ScreenPriv->CurrentCursor = pCurs;
 	ScreenPriv->x = x;
 	ScreenPriv->y = y;
@@ -380,7 +389,7 @@ xf86CursorMoveCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
     /* only update coordinate state for first sprite, otherwise we get jumps
        when removing a sprite. The second sprite is never HW rendered anyway */
     if (pDev == inputInfo.pointer ||
-	(!pDev->isMaster && pDev->u.master == inputInfo.pointer))
+	(!IsMaster(pDev) && pDev->u.master == inputInfo.pointer))
     {
 	ScreenPriv->x = x;
 	ScreenPriv->y = y;

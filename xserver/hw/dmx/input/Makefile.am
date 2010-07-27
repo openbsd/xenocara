@@ -41,8 +41,6 @@ DMXSRCS = dmxinputinit.c \
 	  dmxxinput.c \
           dmxmotion.c \
           dmxmotion.h \
-          dmxeq.c \
-          dmxeq.h \
           dmxmap.c \
           dmxmap.h
 
@@ -58,12 +56,10 @@ libdmxinput_a_SOURCES = ChkNotMaskEv.c \
 
 if GLX
 GLX_DEFS = @GL_CFLAGS@
-GLX_INCS = -I@MESA_SOURCE@/include
 endif	    
 
 AM_CFLAGS = $(DIX_CFLAGS) \
             -I$(top_srcdir)/hw/dmx \
-            $(GLX_INCS) \
             -DHAVE_DMX_CONFIG_H \
             $(GLX_DEFS) \
             @DMXMODULES_CFLAGS@

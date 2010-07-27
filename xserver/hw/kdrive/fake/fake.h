@@ -38,7 +38,6 @@ typedef struct _fakePriv {
 typedef struct _fakeScrPriv {
     Rotation	randr;
     Bool	shadow;
-    PixmapPtr	pShadow;
 } FakeScrPriv;
 
 extern KdCardFuncs  fakeFuncs;
@@ -86,10 +85,10 @@ void
 fakeCardFini (KdCardInfo *card);
 
 void
-fakeGetColors (ScreenPtr pScreen, int fb, int n, xColorItem *pdefs);
+fakeGetColors (ScreenPtr pScreen, int n, xColorItem *pdefs);
 
 void
-fakePutColors (ScreenPtr pScreen, int fb, int n, xColorItem *pdefs);
+fakePutColors (ScreenPtr pScreen, int n, xColorItem *pdefs);
 
 Bool
 fakeMapFramebuffer (KdScreenInfo *screen);

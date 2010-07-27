@@ -22,7 +22,6 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#define NEED_REPLIES
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
 #endif
@@ -54,8 +53,6 @@ int DoSwapInterval(__GLXclientState *cl, GLbyte *pc, int do_swap)
 
     cx = __glXLookupContextByTag(cl, tag);
 
-    LogMessage(X_ERROR, "%s: cx = %p, GLX screen = %p\n", __func__,
-	       cx, (cx == NULL) ? NULL : cx->pGlxScreen);
     if ((cx == NULL) || (cx->pGlxScreen == NULL)) {
 	client->errorValue = tag;
 	return __glXError(GLXBadContext);
@@ -69,13 +66,16 @@ int DoSwapInterval(__GLXclientState *cl, GLbyte *pc, int do_swap)
 
     if (cx->drawPriv == NULL) {
 	client->errorValue = tag;
-	return __glXError(GLXBadDrawable);
+	return BadValue;
     }
     
     pc += __GLX_VENDPRIV_HDR_SIZE;
     interval = (do_swap)
       ? bswap_32(*(int *)(pc + 0))
       :          *(int *)(pc + 0);
+
+    if (interval <= 0)
+	return BadValue;
 
     (void) (*cx->pGlxScreen->swapInterval)(cx->drawPriv, interval);
     return Success;

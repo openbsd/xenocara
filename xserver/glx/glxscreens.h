@@ -134,10 +134,12 @@ struct __GLXscreen {
 				    __GLXconfig *modes,
 				    __GLXcontext *shareContext);
 
-    __GLXdrawable *(*createDrawable)(__GLXscreen *context,
+    __GLXdrawable *(*createDrawable)(ClientPtr client,
+				     __GLXscreen *context,
 				     DrawablePtr pDraw,
-				     int type,
 				     XID drawId,
+				     int type,
+				     XID glxDrawId,
 				     __GLXconfig *modes);
     int            (*swapInterval)  (__GLXdrawable *drawable,
 				     int interval);
@@ -160,6 +162,17 @@ struct __GLXscreen {
     char *GLXvendor;
     char *GLXversion;
     char *GLXextensions;
+
+    /**
+     * \name GLX version supported by this screen.
+     *
+     * Since the GLX version advertised by the server is for the whole server,
+     * the GLX protocol code uses the minimum version supported on all screens.
+     */
+    /*@{*/
+    unsigned GLXmajor;
+    unsigned GLXminor;
+    /*@}*/
 
     Bool (*CloseScreen)(int index, ScreenPtr pScreen);
 };

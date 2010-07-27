@@ -61,12 +61,6 @@
 #include "mipointer.h"
 #include "micmap.h"
 
-#undef Xmalloc
-#undef Xcalloc
-#undef Xrealloc
-#undef Xfree
-
-
 extern Bool dmxCloseScreen(int idx, ScreenPtr pScreen);
 static Bool dmxSaveScreen(ScreenPtr pScreen, int what);
 
@@ -74,7 +68,7 @@ static unsigned long dmxGeneration;
 static unsigned long *dmxCursorGeneration;
 
 static int dmxGCPrivateKeyIndex;
-DevPrivateKey dmxGCPrivateKey = &dmxGCPrivateKey; /**< Private index for GCs       */
+DevPrivateKey dmxGCPrivateKey = &dmxGCPrivateKeyIndex; /**< Private index for GCs       */
 static int dmxWinPrivateKeyIndex;
 DevPrivateKey dmxWinPrivateKey = &dmxWinPrivateKeyIndex; /**< Private index for Windows   */
 static int dmxPixPrivateKeyIndex;
@@ -288,6 +282,10 @@ Bool dmxScreenInit(int idx, ScreenPtr pScreen, int argc, char *argv[])
     (void)dmxPictureInit(pScreen, 0, 0);
 #endif
 
+    /* Not yet... */
+    pScreen->GetWindowPixmap = NULL;
+    pScreen->SetWindowPixmap = NULL;
+
     if (dmxShadowFB && !shadowInit(pScreen, dmxShadowUpdateProc, NULL))
 	return FALSE;
 
@@ -390,8 +388,11 @@ void dmxBECloseScreen(ScreenPtr pScreen)
     } else {
 	/* Free the default drawables */
 	for (i = 0; i < dmxScreen->beNumPixmapFormats; i++) {
-	    XFreePixmap(dmxScreen->beDisplay, dmxScreen->scrnDefDrawables[i]);
-	    dmxScreen->scrnDefDrawables[i] = (Drawable)0;
+	    if (dmxScreen->scrnDefDrawables[i]) {
+		XFreePixmap(dmxScreen->beDisplay,
+			    dmxScreen->scrnDefDrawables[i]);
+		dmxScreen->scrnDefDrawables[i] = (Drawable)0;
+	    }
 	}
     }
 

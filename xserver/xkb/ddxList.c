@@ -30,7 +30,6 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdio.h>
 #include <ctype.h>
-#define	NEED_EVENTS 1
 #include <X11/X.h>
 #include <X11/Xos.h>
 #include <X11/Xproto.h>
@@ -62,7 +61,7 @@ extern int Win32System(const char *cmdline);
 /***====================================================================***/
 
 static char *componentDirs[_XkbListNumComponents] = {
-	"keymap", "keycodes", "types", "compat", "symbols", "geometry"
+	"keycodes", "types", "compat", "symbols", "geometry"
 };
 
 /***====================================================================***/
@@ -98,7 +97,7 @@ char *		tmp;
     if ((list->szPool-list->nPool)<wlen) {
 	if (wlen>1024)	list->szPool+= XkbPaddedSize(wlen*2);
 	else		list->szPool+= 1024;
-	list->pool= _XkbTypedRealloc(list->pool,list->szPool,char);
+	list->pool= xrealloc(list->pool, list->szPool * sizeof(char));
 	if (!list->pool)
 	    return BadAlloc;
     }
@@ -149,7 +148,7 @@ char	tmpname[PATH_MAX];
     }
 
     in= NULL;
-    haveDir= True;
+    haveDir= TRUE;
 #ifdef WIN32
     strcpy(tmpname, Win32TempDir());
     strcat(tmpname, "\\xkb_XXXXXX");
@@ -161,7 +160,7 @@ char	tmpname[PATH_MAX];
 	    in= fopen(buf,"r");
 	}
 	if (!in) {
-	    haveDir= False;
+	    haveDir= FALSE;
 	    buf = Xprintf(
 		"'%s/xkbcomp' '-R%s/%s' -w %ld -l -vlfhpR '%s'" W32_tmparg,
                 XkbBinDirectory,XkbBaseDirectory,componentDirs[what],(long)
@@ -176,7 +175,7 @@ char	tmpname[PATH_MAX];
 	    in= fopen(buf,"r");
 	}
 	if (!in) {
-	    haveDir= False;
+	    haveDir= FALSE;
 	    buf = Xprintf(
 		"xkbcomp -R%s -w %ld -l -vlfhpR '%s'" W32_tmparg,
                 componentDirs[what],(long)
@@ -281,9 +280,7 @@ XkbDDXList(DeviceIntPtr	dev,XkbSrvListInfoPtr list,ClientPtr client)
 {
 Status	status;
 
-    status= XkbDDXListComponent(dev,_XkbListKeymaps,list,client);
-    if (status==Success)
-	status= XkbDDXListComponent(dev,_XkbListKeycodes,list,client);
+    status= XkbDDXListComponent(dev,_XkbListKeycodes,list,client);
     if (status==Success)
 	status= XkbDDXListComponent(dev,_XkbListTypes,list,client);
     if (status==Success)

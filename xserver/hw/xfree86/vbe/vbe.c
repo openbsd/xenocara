@@ -18,12 +18,7 @@
 #include "xf86.h"
 #include "vbe.h"
 #include <X11/Xarch.h>
-#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
 #include <X11/extensions/dpmsconst.h>
-#else
-#define DPMS_SERVER
-#include <X11/extensions/dpms.h>
-#endif
 
 #define VERSION(x) VBE_VERSION_MAJOR(x),VBE_VERSION_MINOR(x)
 

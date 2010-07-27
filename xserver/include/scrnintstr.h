@@ -399,6 +399,15 @@ typedef    void (* PostChangeSaveUnderProcPtr)(
 	WindowPtr /*pLayerWin*/,
 	WindowPtr /*firstChild*/);
 
+typedef    void (* ConfigNotifyProcPtr)(
+	WindowPtr /*pWin*/,
+	int /*x*/,
+	int /*y*/,
+	int /*w*/,
+	int /*h*/,
+	int /*bw*/,
+	WindowPtr /*pSib*/);
+
 typedef    void (* MoveWindowProcPtr)(
 	WindowPtr /*pWin*/,
 	int /*x*/,
@@ -581,6 +590,7 @@ typedef struct _Screen {
     MarkOverlappedWindowsProcPtr MarkOverlappedWindows;
     ChangeSaveUnderProcPtr	ChangeSaveUnder;
     PostChangeSaveUnderProcPtr	PostChangeSaveUnder;
+    ConfigNotifyProcPtr		ConfigNotify;
     MoveWindowProcPtr		MoveWindow;
     ResizeWindowProcPtr		ResizeWindow;
     GetLayerWindowProcPtr	GetLayerWindow;
@@ -611,9 +621,9 @@ typedef struct _ScreenInfo {
     int		unused;
 } ScreenInfo;
 
-extern ScreenInfo screenInfo;
+extern _X_EXPORT ScreenInfo screenInfo;
 
-extern void InitOutput(
+extern _X_EXPORT void InitOutput(
     ScreenInfo 	* /*pScreenInfo*/,
     int     	/*argc*/,
     char    	** /*argv*/);

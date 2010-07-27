@@ -76,28 +76,15 @@
 #include "mi.h"
 #include "mipointer.h"
 
-#ifdef XF86BIGFONT
-#define _XF86BIGFONT_SERVER_
-#include <X11/extensions/xf86bigfont.h>
-#endif
+#include "xkbsrv.h"
+#include "xkbstr.h"
 
 #ifdef DPMSExtension
-#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
 #include <X11/extensions/dpmsconst.h>
-#else
-#define DPMS_SERVER
-#include <X11/extensions/dpms.h>
-#endif
 #include "dpmsproc.h"
 #endif
 
 /*
- * The first of many hacks to get VT switching to work under
- * Solaris 2.1 for x86. The basic problem is that Solaris is supposed
- * to be SVR4. It is for the most part, except where the video interface
- * is concerned.  These hacks work around those problems.
- * See the comments for Linux, and SCO.
- *
  * This is a toggling variable:
  *  FALSE = No VT switching keys have been pressed last time around
  *  TRUE  = Possible VT switch Pending
@@ -106,7 +93,7 @@
  * This has been generalised to work with Linux and *BSD+syscons (DHD)
  */
 
-_X_EXPORT Bool VTSwitchEnabled = TRUE;	/* Allows run-time disabling for
+Bool VTSwitchEnabled = TRUE;		/* Allows run-time disabling for
                                          *BSD and for avoiding VT
                                          switches when using the DRI
                                          automatic full screen mode.*/
@@ -146,7 +133,7 @@ LegalModifier(unsigned int key, DeviceIntPtr pDev)
  *      time in milliseconds since there last was any input.
  */
 int
-TimeSinceLastInputEvent()
+TimeSinceLastInputEvent(void)
 {
   if (xf86Info.lastEventTime == 0) {
     xf86Info.lastEventTime = GetTimeInMillis();
@@ -158,8 +145,8 @@ TimeSinceLastInputEvent()
  * SetTimeSinceLastInputEvent --
  *      Set the lastEventTime to now.
  */
-_X_EXPORT void
-SetTimeSinceLastInputEvent()
+void
+SetTimeSinceLastInputEvent(void)
 {
   xf86Info.lastEventTime = GetTimeInMillis();
 }
@@ -171,7 +158,7 @@ SetTimeSinceLastInputEvent()
  *      and keyboard.
  */
 void
-ProcessInputEvents ()
+ProcessInputEvents (void)
 {
   int x, y;
 
@@ -189,9 +176,7 @@ ProcessInputEvents ()
 void
 xf86ProcessActionEvent(ActionEvent action, void *arg)
 {
-#ifdef DEBUG
-    ErrorF("ProcessActionEvent(%d,%x)\n", (int) action, arg);
-#endif
+    DebugF("ProcessActionEvent(%d,%x)\n", (int) action, arg);
     switch (action) {
     case ACTION_TERMINATE:
 	if (!xf86Info.dontZap) {
@@ -209,41 +194,40 @@ xf86ProcessActionEvent(ActionEvent action, void *arg)
 	if (!xf86Info.dontZoom)
 	    xf86ZoomViewport(xf86Info.currentScreen, -1);
 	break;
-#if !defined(__SOL8__) && \
-    (!defined(sun) || defined(__i386__)) && defined(VT_ACTIVATE)
     case ACTION_SWITCHSCREEN:
 	if (VTSwitchEnabled && !xf86Info.dontVTSwitch && arg) {
 	    int vtno = *((int *) arg);
-#if defined(__SCO__) || defined(__UNIXWARE__)
-	    vtno--;
-#endif
-	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, vtno) < 0)
-		ErrorF("Failed to switch consoles (%s)\n", strerror(errno));
+
+	    if (vtno != xf86Info.vtno) {
+		if (!xf86VTActivate(vtno)) {
+		    ErrorF("Failed to switch from vt%02d to vt%02d: %s\n",
+			   xf86Info.vtno, vtno, strerror(errno));
+		}
+	    }
 	}
 	break;
     case ACTION_SWITCHSCREEN_NEXT:
 	if (VTSwitchEnabled && !xf86Info.dontVTSwitch) {
-/* Shouldn't this be true for (sun) && (i386) && (SVR4) ? */
-#if defined(__SCO__) || defined(__UNIXWARE__)
-	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno) < 0)
-#else
-	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno + 1) < 0)
-#endif
-#if defined (__SCO__) || (defined(sun) && defined (__i386__) && defined (SVR4)) || defined(__UNIXWARE__)
-		if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, 0) < 0)
-#else
-		if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, 1) < 0)
-#endif
-		    ErrorF("Failed to switch consoles (%s)\n", strerror(errno));
+	    if (!xf86VTActivate(xf86Info.vtno + 1)) {
+		/* If first try failed, assume this is the last VT and
+		 * try wrapping around to the first vt.
+		 */
+		if (!xf86VTActivate(1)) {
+		    ErrorF("Failed to switch from vt%02d to next vt: %s\n",
+			   xf86Info.vtno, strerror(errno));
+		}
+	    }
 	}
 	break;
     case ACTION_SWITCHSCREEN_PREV:
 	if (VTSwitchEnabled && !xf86Info.dontVTSwitch && xf86Info.vtno > 0) {
-	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno - 1) < 0)
-		ErrorF("Failed to switch consoles (%s)\n", strerror(errno));
+	    if (!xf86VTActivate(xf86Info.vtno - 1)) {
+		/* Don't know what the maximum VT is, so can't wrap around */
+		ErrorF("Failed to switch from vt%02d to previous vt: %s\n",
+		       xf86Info.vtno, strerror(errno));
+	    }
 	}
 	break;
-#endif
     default:
 	break;
     }
@@ -272,13 +256,14 @@ xf86Wakeup(pointer blockData, int err, pointer pReadmask)
 		    (FD_ISSET(pInfo->fd, &devicesWithInput) != 0)) {
 		    int sigstate = xf86BlockSIGIO();
 
-		    pInfo->read_input(pInfo);
-		    xf86UnblockSIGIO(sigstate);
 		    /*
 		     * Remove the descriptior from the set because more than one
 		     * device may share the same file descriptor.
 		     */
 		    FD_CLR(pInfo->fd, &devicesWithInput);
+
+		    pInfo->read_input(pInfo);
+		    xf86UnblockSIGIO(sigstate);
 		}
 		pInfo = pInfo->next;
 	    }
@@ -305,16 +290,13 @@ xf86Wakeup(pointer blockData, int err, pointer pReadmask)
  *    signal handler for the SIGIO signal.
  */
 static void
-xf86SigioReadInput(int fd,
-		   void *closure)
+xf86SigioReadInput(int fd, void *closure)
 {
     int errno_save = errno;
-    int sigstate = xf86BlockSIGIO();
-    InputInfoPtr pInfo = (InputInfoPtr) closure;
+    InputInfoPtr pInfo = closure;
 
     pInfo->read_input(pInfo);
 
-    xf86UnblockSIGIO(sigstate);
     errno = errno_save;
 }
 
@@ -322,7 +304,7 @@ xf86SigioReadInput(int fd,
  * xf86AddEnabledDevice --
  *
  */
-_X_EXPORT void
+void
 xf86AddEnabledDevice(InputInfoPtr pInfo)
 {
     if (!xf86InstallSIGIOHandler (pInfo->fd, xf86SigioReadInput, pInfo)) {
@@ -334,7 +316,7 @@ xf86AddEnabledDevice(InputInfoPtr pInfo)
  * xf86RemoveEnabledDevice --
  *
  */
-_X_EXPORT void
+void
 xf86RemoveEnabledDevice(InputInfoPtr pInfo)
 {
     if (!xf86RemoveSIGIOHandler (pInfo->fd)) {
@@ -344,7 +326,7 @@ xf86RemoveEnabledDevice(InputInfoPtr pInfo)
 
 static int *xf86SignalIntercept = NULL;
 
-_X_EXPORT void
+void
 xf86InterceptSignals(int *signo)
 {
     if ((xf86SignalIntercept = signo))
@@ -353,70 +335,55 @@ xf86InterceptSignals(int *signo)
 
 static void (*xf86SigIllHandler)(void) = NULL;
 
-_X_EXPORT void
+void
 xf86InterceptSigIll(void (*sigillhandler)(void))
 {
     xf86SigIllHandler = sigillhandler;
 }
 
 /*
- * xf86SigHandler --
+ * xf86SigWrapper --
  *    Catch unexpected signals and exit or continue cleanly.
  */
-void
-xf86SigHandler(int signo)
+int
+xf86SigWrapper(int signo)
 {
   if ((signo == SIGILL) && xf86SigIllHandler) {
     (*xf86SigIllHandler)();
-    /* Re-arm handler just in case we unexpectedly return here */
-    (void) signal(signo, xf86SigHandler);
-    return;
+    return 0; /* continue */
   }
 
   if (xf86SignalIntercept && (*xf86SignalIntercept < 0)) {
     *xf86SignalIntercept = signo;
-    /* Re-arm handler just in case */
-    (void) signal(signo, xf86SigHandler);
-    return;
+    return 0; /* continue */
   }
 
-  signal(signo,SIG_IGN);
   xf86Info.caughtSignal = TRUE;
-#ifdef XF86BIGFONT
-  XF86BigfontCleanup();
-#endif
-
-  xorg_backtrace();
-
-  FatalError("Caught signal %d.  Server aborting\n", signo);
+  return 1; /* abort */
 }
 
 /*
  * xf86PrintBacktrace --
  *    Print a stack backtrace for debugging purposes.
  */
-_X_EXPORT void
+void
 xf86PrintBacktrace(void)
 {
     xorg_backtrace();
 }
 
 #define KeyPressed(k) (keyc->postdown[k >> 3] & (1 << (k & 7)))
-#define ModifierDown(k) ((keyc->state & (k)) == (k))
 
 static void
 xf86ReleaseKeys(DeviceIntPtr pDev)
 {
-    KeyClassPtr keyc = NULL;
-    KeySym *map = NULL;
-    xEvent ke;
-    int i = 0, j = 0, nevents = 0;
+    KeyClassPtr keyc;
+    int i, j, nevents, sigstate;
 
     if (!pDev || !pDev->key)
         return;
 
     keyc = pDev->key;
-    map = keyc->curKeySyms.map;
 
     /*
      * Hmm... here is the biggest hack of every time !
@@ -429,36 +396,15 @@ xf86ReleaseKeys(DeviceIntPtr pDev)
      * are reenabled.
      */
 
-    for (i = keyc->curKeySyms.minKeyCode, map = keyc->curKeySyms.map;
-         i < keyc->curKeySyms.maxKeyCode;
-         i++, map += keyc->curKeySyms.mapWidth) {
+    for (i = keyc->xkbInfo->desc->min_key_code;
+         i < keyc->xkbInfo->desc->max_key_code;
+         i++) {
         if (KeyPressed(i)) {
-            switch (*map) {
-            /* Don't release the lock keys */
-            case XK_Caps_Lock:
-            case XK_Shift_Lock:
-            case XK_Num_Lock:
-            case XK_Scroll_Lock:
-            case XK_Kana_Lock:
-                break;
-            default:
-                if (pDev == inputInfo.keyboard) {
-                    ke.u.keyButtonPointer.time = GetTimeInMillis();
-                    ke.u.keyButtonPointer.rootX = 0;
-                    ke.u.keyButtonPointer.rootY = 0;
-                    ke.u.u.type = KeyRelease;
-                    ke.u.u.detail = i;
-                    (*pDev->public.processInputProc) (&ke, pDev, 1);
-                }
-                else {
-		    int sigstate = xf86BlockSIGIO ();
-                    nevents = GetKeyboardEvents(xf86Events, pDev, KeyRelease, i);
-                    for (j = 0; j < nevents; j++)
-                        mieqEnqueue(pDev, (xf86Events + j)->event);
-		    xf86UnblockSIGIO(sigstate);
-                }
-                break;
-            }
+            sigstate = xf86BlockSIGIO ();
+            nevents = GetKeyboardEvents(xf86Events, pDev, KeyRelease, i);
+            for (j = 0; j < nevents; j++)
+                mieqEnqueue(pDev, (InternalEvent*)(xf86Events + j)->event);
+            xf86UnblockSIGIO(sigstate);
         }
     }
 }
@@ -468,15 +414,13 @@ xf86ReleaseKeys(DeviceIntPtr pDev)
  *      Handle requests for switching the vt.
  */
 static void
-xf86VTSwitch()
+xf86VTSwitch(void)
 {
   int i, prevSIGIO;
   InputInfoPtr pInfo;
   IHPtr ih;
 
-#ifdef DEBUG
-  ErrorF("xf86VTSwitch()\n");
-#endif
+  DebugF("xf86VTSwitch()\n");
 
 #ifdef XFreeXDGA
   if(!DGAVTSwitch())
@@ -489,10 +433,8 @@ xf86VTSwitch()
    */
   if (xf86Screens[0]->vtSema) {
 
-#ifdef DEBUG
-    ErrorF("xf86VTSwitch: Leaving, xf86Exiting is %s\n",
+    DebugF("xf86VTSwitch: Leaving, xf86Exiting is %s\n",
 	   BOOLTOSTRING((dispatchException & DE_TERMINATE) ? TRUE : FALSE));
-#endif
 #ifdef DPMSExtension
     if (DPMSPowerLevel != DPMSModeOn)
 	DPMSSet(serverClient, DPMSModeOn);
@@ -507,29 +449,27 @@ xf86VTSwitch()
      * Keep the order: Disable Device > LeaveVT
      *                        EnterVT > EnableDevice
      */
-    pInfo = xf86InputDevs;
-    while (pInfo) {
-      if (pInfo->dev)
-          DisableDevice(pInfo->dev);
-      pInfo = pInfo->next;
+    for (ih = InputHandlers; ih; ih = ih->next)
+      xf86DisableInputHandler(ih);
+    for (pInfo = xf86InputDevs; pInfo; pInfo = pInfo->next) {
+      if (pInfo->dev) {
+          xf86ReleaseKeys(pInfo->dev);
+          ProcessInputEvents();
+          DisableDevice(pInfo->dev, TRUE);
+      }
     }
     xf86EnterServerState(SETUP);
     for (i = 0; i < xf86NumScreens; i++)
 	xf86Screens[i]->LeaveVT(i, 0);
 
-    for (ih = InputHandlers; ih; ih = ih->next)
-      xf86DisableInputHandler(ih);
     xf86AccessLeave();      /* We need this here, otherwise */
-    xf86AccessLeaveState(); /* console won't be restored    */
 
     if (!xf86VTSwitchAway()) {
       /*
        * switch failed
        */
 
-#ifdef DEBUG
-      ErrorF("xf86VTSwitch: Leave failed\n");
-#endif
+      DebugF("xf86VTSwitch: Leave failed\n");
       prevSIGIO = xf86BlockSIGIO();
       xf86AccessEnter();
       xf86EnterServerState(SETUP);
@@ -548,14 +488,10 @@ xf86VTSwitch()
 
       pInfo = xf86InputDevs;
       while (pInfo) {
-        if (pInfo->dev) {
-            xf86ReleaseKeys(pInfo->dev);
-            EnableDevice(pInfo->dev);
-        }
+        if (pInfo->dev)
+            EnableDevice(pInfo->dev, TRUE);
 	pInfo = pInfo->next;
       }
-      /* XXX HACK */
-      xf86ReleaseKeys(inputInfo.keyboard);
       for (ih = InputHandlers; ih; ih = ih->next)
         xf86EnableInputHandler(ih);
 
@@ -574,17 +510,13 @@ xf86VTSwitch()
  	     * trap calls when switched away.
  	     */
 	    xf86Screens[i]->vtSema = FALSE;
-	    xf86Screens[i]->access = NULL;
-	    xf86Screens[i]->busAccess = NULL;
 	}
 	if (xorgHWAccess)
 	    xf86DisableIO();
     }
   } else {
 
-#ifdef DEBUG
-    ErrorF("xf86VTSwitch: Entering\n");
-#endif
+    DebugF("xf86VTSwitch: Entering\n");
     if (!xf86VTSwitchTo()) return;
 
     prevSIGIO = xf86BlockSIGIO();
@@ -612,14 +544,10 @@ xf86VTSwitch()
 
     pInfo = xf86InputDevs;
     while (pInfo) {
-      if (pInfo->dev) {
-          xf86ReleaseKeys(pInfo->dev);
-          EnableDevice(pInfo->dev);
-      }
+      if (pInfo->dev)
+          EnableDevice(pInfo->dev, TRUE);
       pInfo = pInfo->next;
     }
-    /* XXX HACK */
-    xf86ReleaseKeys(inputInfo.keyboard);
 
     for (ih = InputHandlers; ih; ih = ih->next)
       xf86EnableInputHandler(ih);
@@ -654,7 +582,7 @@ addInputHandler(int fd, InputHandlerProc proc, pointer data)
     return ih;
 }
 
-_X_EXPORT pointer
+pointer
 xf86AddInputHandler(int fd, InputHandlerProc proc, pointer data)
 {
     IHPtr ih = addInputHandler(fd, proc, data);
@@ -664,7 +592,7 @@ xf86AddInputHandler(int fd, InputHandlerProc proc, pointer data)
     return ih;
 }
 
-_X_EXPORT pointer
+pointer
 xf86AddGeneralHandler(int fd, InputHandlerProc proc, pointer data)
 {
     IHPtr ih = addInputHandler(fd, proc, data);
@@ -691,7 +619,7 @@ removeInputHandler(IHPtr ih)
     xfree(ih);
 }
 
-_X_EXPORT int
+int
 xf86RemoveInputHandler(pointer handler)
 {
     IHPtr ih;
@@ -710,7 +638,7 @@ xf86RemoveInputHandler(pointer handler)
     return fd;
 }
 
-_X_EXPORT int
+int
 xf86RemoveGeneralHandler(pointer handler)
 {
     IHPtr ih;
@@ -729,7 +657,7 @@ xf86RemoveGeneralHandler(pointer handler)
     return fd;
 }
 
-_X_EXPORT void
+void
 xf86DisableInputHandler(pointer handler)
 {
     IHPtr ih;
@@ -743,7 +671,7 @@ xf86DisableInputHandler(pointer handler)
 	RemoveEnabledDevice(ih->fd);
 }
 
-_X_EXPORT void
+void
 xf86DisableGeneralHandler(pointer handler)
 {
     IHPtr ih;
@@ -757,7 +685,7 @@ xf86DisableGeneralHandler(pointer handler)
 	RemoveGeneralSocket(ih->fd);
 }
 
-_X_EXPORT void
+void
 xf86EnableInputHandler(pointer handler)
 {
     IHPtr ih;
@@ -771,7 +699,7 @@ xf86EnableInputHandler(pointer handler)
 	AddEnabledDevice(ih->fd);
 }
 
-_X_EXPORT void
+void
 xf86EnableGeneralHandler(pointer handler)
 {
     IHPtr ih;
@@ -788,7 +716,7 @@ xf86EnableGeneralHandler(pointer handler)
 /*
  * As used currently by the DRI, the return value is ignored.
  */
-_X_EXPORT Bool
+Bool
 xf86EnableVTSwitch(Bool new)
 {
     static Bool def = TRUE;
@@ -807,23 +735,6 @@ xf86EnableVTSwitch(Bool new)
 }
 
 void
-xf86ReloadInputDevs(int sig)
-{
-  InputInfoPtr pInfo;
-
-  signal(sig, (void(*)(int))xf86ReloadInputDevs);
-
-  pInfo = xf86InputDevs;
-  while (pInfo) {
-    DisableDevice(pInfo->dev);
-    EnableDevice(pInfo->dev);
-    pInfo = pInfo->next;
-  }
-
-  return;
-}
-
-_X_EXPORT void
 DDXRingBell(int volume, int pitch, int duration) {
     xf86OSRingBell(volume, pitch, duration);
 }

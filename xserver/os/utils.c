@@ -56,6 +56,11 @@ OR PERFORMANCE OF THIS SOFTWARE.
 #ifdef __CYGWIN__
 #include <stdlib.h>
 #include <signal.h>
+/*
+   Sigh... We really need a prototype for this to know it is stdcall,
+   but #include-ing <windows.h> here is not a good idea...
+*/
+__stdcall unsigned long GetTickCount(void);
 #endif
 
 #if defined(WIN32) && !defined(__CYGWIN__)
@@ -113,85 +118,82 @@ OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "dixstruct.h"
 
-#ifdef XKB
-#include <xkbsrv.h>
-#endif
+#include "xkbsrv.h"
 
 #ifdef RENDER
 #include "picture.h"
 #endif
 
-_X_EXPORT Bool noTestExtensions;
+Bool noTestExtensions;
 #ifdef COMPOSITE
-_X_EXPORT Bool noCompositeExtension = FALSE;
+Bool noCompositeExtension = FALSE;
 #endif
 
 #ifdef DAMAGE
-_X_EXPORT Bool noDamageExtension = FALSE;
+Bool noDamageExtension = FALSE;
 #endif
 #ifdef DBE
-_X_EXPORT Bool noDbeExtension = FALSE;
+Bool noDbeExtension = FALSE;
 #endif
 #ifdef DPMSExtension
-_X_EXPORT Bool noDPMSExtension = FALSE;
+Bool noDPMSExtension = FALSE;
 #endif
 #ifdef GLXEXT
-_X_EXPORT Bool noGlxExtension = FALSE;
-_X_EXPORT Bool noGlxVisualInit = FALSE;
+Bool noGlxExtension = FALSE;
+Bool noGlxVisualInit = FALSE;
 #endif
 #ifdef SCREENSAVER
-_X_EXPORT Bool noScreenSaverExtension = FALSE;
+Bool noScreenSaverExtension = FALSE;
 #endif
 #ifdef MITSHM
-_X_EXPORT Bool noMITShmExtension = FALSE;
+Bool noMITShmExtension = FALSE;
 #endif
 #ifdef MULTIBUFFER
-_X_EXPORT Bool noMultibufferExtension = FALSE;
+Bool noMultibufferExtension = FALSE;
 #endif
 #ifdef RANDR
-_X_EXPORT Bool noRRExtension = FALSE;
+Bool noRRExtension = FALSE;
 #endif
 #ifdef RENDER
-_X_EXPORT Bool noRenderExtension = FALSE;
+Bool noRenderExtension = FALSE;
 #endif
 #ifdef XCSECURITY
-_X_EXPORT Bool noSecurityExtension = FALSE;
+Bool noSecurityExtension = FALSE;
 #endif
 #ifdef RES
-_X_EXPORT Bool noResExtension = FALSE;
+Bool noResExtension = FALSE;
 #endif
 #ifdef XF86BIGFONT
-_X_EXPORT Bool noXFree86BigfontExtension = FALSE;
+Bool noXFree86BigfontExtension = FALSE;
 #endif
 #ifdef XFreeXDGA
-_X_EXPORT Bool noXFree86DGAExtension = FALSE;
+Bool noXFree86DGAExtension = FALSE;
 #endif
 #ifdef XF86DRI
-_X_EXPORT Bool noXFree86DRIExtension = FALSE;
+Bool noXFree86DRIExtension = FALSE;
 #endif
 #ifdef XF86VIDMODE
-_X_EXPORT Bool noXFree86VidModeExtension = FALSE;
+Bool noXFree86VidModeExtension = FALSE;
 #endif
 #ifdef XFIXES
-_X_EXPORT Bool noXFixesExtension = FALSE;
+Bool noXFixesExtension = FALSE;
 #endif
-/* |noXkbExtension| is defined in xc/programs/Xserver/xkb/xkbInit.c */
 #ifdef PANORAMIX
 /* Xinerama is disabled by default unless enabled via +xinerama */
-_X_EXPORT Bool noPanoramiXExtension = TRUE;
+Bool noPanoramiXExtension = TRUE;
 #endif
 #ifdef XSELINUX
-_X_EXPORT Bool noSELinuxExtension = FALSE;
-_X_EXPORT int selinuxEnforcingState = SELINUX_MODE_DEFAULT;
+Bool noSELinuxExtension = FALSE;
+int selinuxEnforcingState = SELINUX_MODE_DEFAULT;
 #endif
 #ifdef XV
-_X_EXPORT Bool noXvExtension = FALSE;
+Bool noXvExtension = FALSE;
 #endif
 #ifdef DRI2
-_X_EXPORT Bool noDRI2Extension = FALSE;
+Bool noDRI2Extension = FALSE;
 #endif
 
-_X_EXPORT Bool noGEExtension = FALSE;
+Bool noGEExtension = FALSE;
 
 #define X_INCLUDE_NETDB_H
 #include <X11/Xos_r.h>
@@ -213,9 +215,7 @@ int auditTrailLevel = 1;
 static char *dev_tty_from_init = NULL;	/* since we need to parse it anyway */
 
 OsSigHandlerPtr
-OsSignal(sig, handler)
-    int sig;
-    OsSigHandlerPtr handler;
+OsSignal(int sig, OsSigHandlerPtr handler)
 {
     struct sigaction act, oact;
 
@@ -418,8 +418,7 @@ ChownLock(uid_t uid, gid_t gid)
 
 /* Force connections to close on SIGHUP from init */
 
-/*ARGSUSED*/
-SIGVAL
+void
 AutoResetServer (int sig)
 {
     int olderrno = errno;
@@ -431,8 +430,7 @@ AutoResetServer (int sig)
 
 /* Force connections to close and then exit on SIGTERM, SIGINT */
 
-/*ARGSUSED*/
-_X_EXPORT SIGVAL
+void
 GiveUp(int sig)
 {
     int olderrno = errno;
@@ -442,14 +440,14 @@ GiveUp(int sig)
     errno = olderrno;
 }
 
-#if defined WIN32 && defined __MINGW32__
-_X_EXPORT CARD32
+#if (defined WIN32 && defined __MINGW32__) || defined(__CYGWIN__)
+CARD32
 GetTimeInMillis (void)
 {
   return GetTickCount ();
 }
 #else
-_X_EXPORT CARD32
+CARD32
 GetTimeInMillis(void)
 {
     struct timeval tv;
@@ -465,7 +463,7 @@ GetTimeInMillis(void)
 }
 #endif
 
-_X_EXPORT void
+void
 AdjustWaitForDelay (pointer waitTime, unsigned long newdelay)
 {
     static struct timeval   delay_val;
@@ -492,7 +490,7 @@ AdjustWaitForDelay (pointer waitTime, unsigned long newdelay)
 void UseMsg(void)
 {
     ErrorF("use: X [:<display>] [option]\n");
-    ErrorF("-a #                   mouse acceleration (pixels)\n");
+    ErrorF("-a #                   default pointer acceleration (factor)\n");
     ErrorF("-ac                    disable access control restrictions\n");
     ErrorF("-audit int             set audit trail level\n");	
     ErrorF("-auth file             select authorization file\n");	
@@ -502,10 +500,10 @@ void UseMsg(void)
     ErrorF("-c                     turns off key-click\n");
     ErrorF("c #                    key-click volume (0-100)\n");
     ErrorF("-cc int                default color visual class\n");
+    ErrorF("-nocursor              disable the cursor\n");
     ErrorF("-core                  generate core dump on fatal error\n");
     ErrorF("-dpi int               screen resolution in dots per inch\n");
 #ifdef DPMSExtension
-    ErrorF("dpms                   enables VESA DPMS monitor control\n");
     ErrorF("-dpms                  disables VESA DPMS monitor control\n");
 #endif
     ErrorF("-deferglyphs [none|all|16] defer loading of [no|all|16-bit] glyphs\n");
@@ -524,9 +522,7 @@ void UseMsg(void)
 #ifdef RLIMIT_STACK
     ErrorF("-ls int                limit stack space to N Kb\n");
 #endif
-#ifdef SERVER_LOCK
     ErrorF("-nolock                disable the locking mechanism\n");
-#endif
 #ifndef NOLOGOHACK
     ErrorF("-logo                  enable logo in screen saver\n");
     ErrorF("nologo                 disable logo in screen saver\n");
@@ -548,7 +544,7 @@ void UseMsg(void)
     ErrorF("-retard		   start with black background and no cursor\n");
 #endif
     ErrorF("-s #                   screen-saver timeout (minutes)\n");
-    ErrorF("-t #                   mouse threshold (pixels)\n");
+    ErrorF("-t #                   default pointer threshold (pixels/t)\n");
     ErrorF("-terminate             terminate at server reset\n");
     ErrorF("-to #                  connection time out\n");
     ErrorF("-tst                   disable testing extensions\n");
@@ -557,7 +553,6 @@ void UseMsg(void)
     ErrorF("-v                     screen-saver without video blanking\n");
     ErrorF("-wm                    WhenMapped default backing-store\n");
     ErrorF("-wr                    create root window with white background\n");
-    ErrorF("-x string              loads named extension at init time \n");
     ErrorF("-maxbigreqsize         set maximal bigrequest size \n");
 #ifdef PANORAMIX
     ErrorF("+xinerama              Enable XINERAMA extension\n");
@@ -570,9 +565,7 @@ void UseMsg(void)
 #ifdef XDMCP
     XdmcpUseMsg();
 #endif
-#ifdef XKB
     XkbUseMsg();
-#endif
     ddxUseMsg();
 }
 
@@ -688,7 +681,11 @@ ProcessCommandLine(int argc, char *argv[])
 #endif
 	    CoreDump = TRUE;
 	}
-	else if ( strcmp( argv[i], "-dpi") == 0)
+        else if ( strcmp( argv[i], "-nocursor") == 0)
+        {
+            EnableCursor = FALSE;
+        }
+        else if ( strcmp( argv[i], "-dpi") == 0)
 	{
 	    if(++i < argc)
 	        monitorResolution = atoi(argv[i]);
@@ -697,7 +694,7 @@ ProcessCommandLine(int argc, char *argv[])
 	}
 #ifdef DPMSExtension
 	else if ( strcmp( argv[i], "dpms") == 0)
-	    DPMSEnabledSwitch = TRUE;
+	    /* ignored for compatibility */ ;
 	else if ( strcmp( argv[i], "-dpms") == 0)
 	    DPMSDisabledSwitch = TRUE;
 #endif
@@ -741,13 +738,11 @@ ProcessCommandLine(int argc, char *argv[])
 	    UseMsg();
 	    exit(0);
 	}
-#ifdef XKB
         else if ( (skip=XkbProcessArguments(argc,argv,i))!=0 ) {
 	    if (skip>0)
 		 i+= skip-1;
 	    else UseMsg();
 	}
-#endif
 #ifdef RLIMIT_DATA
 	else if ( strcmp( argv[i], "-ld") == 0)
 	{
@@ -783,7 +778,6 @@ ProcessCommandLine(int argc, char *argv[])
 		UseMsg();
 	}
 #endif
-#ifdef SERVER_LOCK
 	else if ( strcmp ( argv[i], "-nolock") == 0)
 	{
 #if !defined(WIN32) && !defined(__CYGWIN__)
@@ -793,7 +787,6 @@ ProcessCommandLine(int argc, char *argv[])
 #endif
 	    nolock = TRUE;
 	}
-#endif
 #ifndef NOLOGOHACK
 	else if ( strcmp( argv[i], "-logo") == 0)
 	{
@@ -915,14 +908,6 @@ ProcessCommandLine(int argc, char *argv[])
 	    PanoramiXExtensionDisabledHack = TRUE;
 	}
 #endif
-	else if ( strcmp( argv[i], "-x") == 0)
-	{
-	    if(++i >= argc)
-		UseMsg();
-	    /* For U**x, which doesn't support dynamic loading, there's nothing
-	     * to do when we see a -x.  Either the extension is linked in or
-	     * it isn't */
-	}
 	else if ( strcmp( argv[i], "-I") == 0)
 	{
 	    /* ignore all remaining arguments */
@@ -1074,9 +1059,7 @@ set_font_authorizations(char **authorizations, int *authlen, pointer client)
 #endif /* TCPCONN */
 }
 
-#ifndef INTERNAL_MALLOC
-
-_X_EXPORT void * 
+void *
 Xalloc(unsigned long amount)
 {
     void *ptr;
@@ -1095,7 +1078,7 @@ Xalloc(unsigned long amount)
  * "no failure" realloc
  *****************/
 
-_X_EXPORT void *
+void *
 XNFalloc(unsigned long amount)
 {
     void *ptr;
@@ -1114,7 +1097,7 @@ XNFalloc(unsigned long amount)
  * Xcalloc
  *****************/
 
-_X_EXPORT void *
+void *
 Xcalloc(unsigned long amount)
 {
     void *ret;
@@ -1129,7 +1112,7 @@ Xcalloc(unsigned long amount)
  * XNFcalloc
  *****************/
 
-_X_EXPORT void *
+void *
 XNFcalloc(unsigned long amount)
 {
     void *ret;
@@ -1146,7 +1129,7 @@ XNFcalloc(unsigned long amount)
  * Xrealloc
  *****************/
 
-_X_EXPORT void *
+void *
 Xrealloc(pointer ptr, unsigned long amount)
 {
     if ((long)amount <= 0)
@@ -1169,7 +1152,7 @@ Xrealloc(pointer ptr, unsigned long amount)
  * "no failure" realloc
  *****************/
 
-_X_EXPORT void *
+void *
 XNFrealloc(pointer ptr, unsigned long amount)
 {
     if ((ptr = Xrealloc(ptr, amount)) == NULL)
@@ -1185,13 +1168,12 @@ XNFrealloc(pointer ptr, unsigned long amount)
  *    calls free 
  *****************/    
 
-_X_EXPORT void
+void
 Xfree(pointer ptr)
 {
     if (ptr)
 	free(ptr); 
 }
-#endif /* !INTERNAL_MALLOC */
 
 
 char *
@@ -1211,7 +1193,7 @@ Xstrdup(const char *s)
 }
 
 
-_X_EXPORT char *
+char *
 XNFstrdup(const char *s)
 {
     char *sd;
@@ -1356,6 +1338,20 @@ OsReleaseSignals (void)
 #endif
 }
 
+/*
+ * Pending signals may interfere with core dumping. Provide a
+ * mechanism to block signals when aborting.
+ */
+
+void
+OsAbort (void)
+{
+#ifndef __APPLE__
+    OsBlockSignals();
+#endif
+    abort();
+}
+
 #if !defined(WIN32)
 /*
  * "safer" versions of system(3), popen(3) and pclose(3) which give up
@@ -1439,7 +1435,7 @@ Popen(char *command, char *type)
     if ((*type != 'r' && *type != 'w') || type[1])
 	return NULL;
 
-    if ((cur = (struct pid *)xalloc(sizeof(struct pid))) == NULL)
+    if ((cur = xalloc(sizeof(struct pid))) == NULL)
 	return NULL;
 
     if (pipe(pdes) < 0) {
@@ -1525,7 +1521,7 @@ Fopen(char *file, char *type)
     if ((*type != 'r' && *type != 'w') || type[1])
 	return NULL;
 
-    if ((cur = (struct pid *)xalloc(sizeof(struct pid))) == NULL)
+    if ((cur = xalloc(sizeof(struct pid))) == NULL)
 	return NULL;
 
     if (pipe(pdes) < 0) {
@@ -1644,7 +1640,7 @@ Pclose(pointer iop)
     return pid == -1 ? -1 : pstat;
 }
 
-int 
+int
 Fclose(pointer iop)
 {
 #ifdef HAS_SAVED_IDS_AND_SETEUID
@@ -1910,6 +1906,46 @@ CheckUserAuthorization(void)
 	pam_end(pamh, PAM_SUCCESS);
     }
 #endif
+}
+
+/*
+ * Tokenize a string into a NULL terminated array of strings. Always returns
+ * an allocated array unless an error occurs.
+ */
+char**
+xstrtokenize(const char *str, const char *separators)
+{
+    char **list, **nlist;
+    char *tok, *tmp;
+    unsigned num = 0, n;
+
+    if (!str)
+        return NULL;
+    list = calloc(1, sizeof(*list));
+    if (!list)
+        return NULL;
+    tmp = strdup(str);
+    if (!tmp)
+        goto error;
+    for (tok = strtok(tmp, separators); tok; tok = strtok(NULL, separators)) {
+        nlist = realloc(list, (num + 2) * sizeof(*list));
+        if (!nlist)
+            goto error;
+        list = nlist;
+        list[num] = strdup(tok);
+        if (!list[num])
+            goto error;
+        list[++num] = NULL;
+    }
+    free(tmp);
+    return list;
+
+error:
+    free(tmp);
+    for (n = 0; n < num; n++)
+        free(list[n]);
+    free(list);
+    return NULL;
 }
 
 #ifdef __SCO__

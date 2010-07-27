@@ -71,12 +71,12 @@ void InitInput(int argc, char **argv)
     
     for (i = 0, dmxInput = &dmxInputs[0]; i < dmxNumInputs; i++, dmxInput++)
         dmxInputInit(dmxInput);
-    if (!dmxeqInitialized()) {
-        dmxLog(dmxWarning, "Use keyboard/mouse pair with the first -input\n");
-        dmxLog(dmxFatal,   "At least one core keyboard/mouse pair required\n");
-    }
 
     mieqInit();
+}
+
+void CloseInput(void)
+{
 }
 
 /** Called from dix/dispatch.c in Dispatch() whenever input events
@@ -92,7 +92,7 @@ void ProcessInputEvents(void)
             dmxInput->processInputEvents(dmxInput);
 }
 
-/** This routine is called from #dmxwindow.c whenever the layout of
+/** This routine is called from \a dmxwindow.c whenever the layout of
  * windows on the display might have changed.  This information is used
  * by input drivers (currently only the console driver) that provide
  * information about window layout to the user. */
@@ -107,7 +107,8 @@ void dmxUpdateWindowInfo(DMXUpdateType type, WindowPtr pWindow)
 }
 
 int
-NewInputDeviceRequest (InputOption *options, DeviceIntPtr *pdev)
+NewInputDeviceRequest (InputOption *options, InputAttributes *attrs,
+                       DeviceIntPtr *pdev)
 {
     return BadRequest;
 }

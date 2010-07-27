@@ -42,12 +42,6 @@
 #include "winmsg.h"
 #include "inputstr.h"
 
-#ifdef XKB
-extern BOOL winCheckKeyPressed(WPARAM wParam, LPARAM lParam);
-#endif
-extern void winFixShiftKeys (int iScanCode);
-
-
 /*
  * Global variables
  */
@@ -723,9 +717,13 @@ winWindowProc (HWND hwnd, UINT message,
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
 
+      /* We can't do anything without g_pwinPointer */
+      if (g_pwinPointer == NULL)
+        break;
+
       /* Has the mouse pointer crossed screens? */
-      if (s_pScreen != miPointerGetScreen(inputInfo.pointer))
-	miPointerSetScreen (inputInfo.pointer, s_pScreenInfo->dwScreen,
+      if (s_pScreen != miPointerGetScreen(g_pwinPointer))
+	miPointerSetScreen (g_pwinPointer, s_pScreenInfo->dwScreen,
 			       GET_X_LPARAM(lParam)-s_pScreenInfo->dwXOffset,
 			       GET_Y_LPARAM(lParam)-s_pScreenInfo->dwYOffset);
 
@@ -764,9 +762,8 @@ winWindowProc (HWND hwnd, UINT message,
 	}
       
       /* Deliver absolute cursor position to X Server */
-      miPointerAbsoluteCursor (GET_X_LPARAM(lParam)-s_pScreenInfo->dwXOffset,
-			       GET_Y_LPARAM(lParam)-s_pScreenInfo->dwYOffset,
-			       g_c32LastInputEventTime = GetTickCount ());
+      winEnqueueMotion(GET_X_LPARAM(lParam)-s_pScreenInfo->dwXOffset,
+		       GET_Y_LPARAM(lParam)-s_pScreenInfo->dwYOffset);
       return 0;
 
     case WM_NCMOUSEMOVE:
@@ -929,8 +926,7 @@ winWindowProc (HWND hwnd, UINT message,
 	    point.y -= GetSystemMetrics (SM_YVIRTUALSCREEN);
 	    
 	    /* Deliver absolute cursor position to X Server */
-	    miPointerAbsoluteCursor (point.x, point.y,
-				     g_c32LastInputEventTime = GetTickCount());
+	    winEnqueueMotion(point.x , point.y);
 
 	    /* Check if a button was released but we didn't see it */
 	    GetCursorPos (&point);
@@ -1033,12 +1029,10 @@ winWindowProc (HWND hwnd, UINT message,
       if ((wParam == VK_LWIN || wParam == VK_RWIN) && !g_fKeyboardHookLL)
 	break;
 
-#ifdef XKB
       /* 
        * Discard presses generated from Windows auto-repeat
-       * ago: Only discard them if XKB is not disabled 
        */
-      if (!g_winInfo.xkb.disable && (lParam & (1<<30)))
+      if (lParam & (1<<30))
       {
         switch (wParam)
         {
@@ -1054,7 +1048,6 @@ winWindowProc (HWND hwnd, UINT message,
             return 0;
         }
       } 
-#endif 
       
       /* Discard fake Ctrl_L presses that precede AltGR on non-US keyboards */
       if (winIsFakeCtrl_L (message, wParam, lParam))

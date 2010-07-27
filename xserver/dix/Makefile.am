@@ -1,8 +1,9 @@
-noinst_LTLIBRARIES = libdix.la
+noinst_LTLIBRARIES = libdix.la libmain.la
 
-AM_CFLAGS = $(DIX_CFLAGS) \
-	-DVENDOR_NAME=\""@VENDOR_NAME@"\" \
-	-DVENDOR_RELEASE="@VENDOR_RELEASE@"
+AM_CFLAGS = $(DIX_CFLAGS)
+
+libmain_la_SOURCES =    \
+	main.c
 
 libdix_la_SOURCES = 	\
 	atom.c		\
@@ -17,6 +18,7 @@ libdix_la_SOURCES = 	\
 	enterleave.c	\
 	enterleave.h	\
 	events.c	\
+	eventconvert.c  \
 	extension.c	\
 	ffs.c		\
 	gc.c		\
@@ -25,7 +27,7 @@ libdix_la_SOURCES = 	\
 	glyphcurs.c	\
 	grabs.c		\
 	initatoms.c	\
-	main.c		\
+	inpututils.c	\
 	pixmap.c	\
 	privates.c	\
 	property.c	\
@@ -49,20 +51,23 @@ if XSERVER_DTRACE
 BUILT_SOURCES = Xserver-dtrace.h
 
 Xserver-dtrace.h: $(srcdir)/Xserver.d
-	$(DTRACE) -C -h -o $@ -s $(srcdir)/Xserver.d \
+	$(AM_V_GEN)$(DTRACE) -C -h -o $@ -s $(srcdir)/Xserver.d \
 		|| cp Xserver-dtrace.h.in $@
 
+endif
+
+if SPECIAL_DTRACE_OBJECTS
 # Generate dtrace object code for probes in libdix
 dtrace-dix.o: $(top_srcdir)/dix/Xserver.d $(am_libdix_la_OBJECTS)
-	$(DTRACE) -G -C -o $@ -s $(top_srcdir)/dix/Xserver.d .libs/*.o
+	$(AM_V_GEN)$(DTRACE) -G -C -o $@ -s $(top_srcdir)/dix/Xserver.d $(am_libdix_la_OBJECTS:%.lo=.libs/%.o)
 
 noinst_PROGRAMS = dix.O
 
 dix.O: dtrace-dix.o $(am_libdix_la_OBJECTS)
-	ld -r -o $@ .libs/*.o
+	$(AM_V_GEN)ld -r -o $@ $(am_libdix_la_OBJECTS:%.lo=.libs/%.o)
 endif
 
 dix.c:
 	touch $@
 
-CLEANFILES = dix.c
+CLEANFILES = dix.c Xserver-dtrace.h

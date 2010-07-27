@@ -9,7 +9,7 @@
  * Copyright © 2002 MontaVista Software Inc.
  * Copyright © 2005 OpenedHand Ltd.
  * Copyright © 2006 Nokia Corporation
- * 
+ *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
  * the above copyright notice appear in all copies and that both that
@@ -35,7 +35,6 @@
 #include <kdrive-config.h>
 #endif
 
-#define NEED_EVENTS
 #include <X11/X.h>
 #include <X11/Xproto.h>
 #include <X11/Xpoll.h>
@@ -77,7 +76,7 @@ TsRead (int fd, void *closure)
         if (event.pressure) {
             flags = KD_BUTTON_1;
 
-            /* 
+            /*
              * Here we test for the touch screen driver actually being on the
              * touch screen, if it is we send absolute coordinates. If not,
              * then we send delta's so that we can track the entire vga screen.
@@ -115,7 +114,7 @@ TslibEnable (KdPointerInfo *pi)
     private->raw_event_hook = NULL;
     private->raw_event_closure = NULL;
     if (!pi->path) {
-        pi->path = "/dev/input/touchscreen0";
+        pi->path = strdup("/dev/input/touchscreen0");
         ErrorF("[tslib/TslibEnable] no device path given, trying %s\n", pi->path);
     }
     private->tsDev = ts_open(pi->path, 0);
@@ -128,7 +127,7 @@ TslibEnable (KdPointerInfo *pi)
     }
 
     KdRegisterFd(private->fd, TsRead, pi);
-  
+
     return Success;
 }
 
@@ -152,15 +151,11 @@ TslibDisable (KdPointerInfo *pi)
 static Status
 TslibInit (KdPointerInfo *pi)
 {
-    int		        fd = 0, i = 0;
-    DIR                 *inputdir = NULL;
-    struct dirent       *inputent = NULL;
-    struct tsdev        *tsDev = NULL;
     struct TslibPrivate *private = NULL;
 
     if (!pi || !pi->dixdev)
         return !Success;
-    
+
     pi->driverPrivate = (struct TslibPrivate *)
                         xcalloc(sizeof(struct TslibPrivate), 1);
     if (!pi->driverPrivate)
@@ -170,7 +165,7 @@ TslibInit (KdPointerInfo *pi)
     /* hacktastic */
     private->phys_screen = 0;
     pi->nAxes = 3;
-    pi->name = KdSaveString("Touchscreen");
+    pi->name = strdup("Touchscreen");
     pi->inputClass = KD_TOUCHSCREEN;
 
     return Success;
@@ -180,10 +175,8 @@ TslibInit (KdPointerInfo *pi)
 static void
 TslibFini (KdPointerInfo *pi)
 {
-    if (pi->driverPrivate) {
-        xfree(pi->driverPrivate);
-        pi->driverPrivate = NULL;
-    }
+    xfree(pi->driverPrivate);
+    pi->driverPrivate = NULL;
 }
 
 

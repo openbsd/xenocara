@@ -163,7 +163,7 @@ xf86freeInputList (XF86ConfInputPtr ptr)
 
 		prev = ptr;
 		ptr = ptr->list.next;
-		xf86conffree (prev);
+		free (prev);
 	}
 }
 
@@ -171,13 +171,6 @@ int
 xf86validateInput (XF86ConfigPtr p)
 {
 	XF86ConfInputPtr input = p->conf_input_lst;
-
-#if 0 /* Enable this later */
-	if (!input) {
-		xf86validationError ("At least one InputDevice section is required.");
-		return (FALSE);
-	}
-#endif
 
 	while (input) {
 		if (!input->inp_driver) {

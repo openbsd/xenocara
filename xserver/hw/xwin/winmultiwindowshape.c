@@ -44,7 +44,6 @@ void
 winSetShapeMultiWindow (WindowPtr pWin)
 {
   ScreenPtr		pScreen = pWin->drawable.pScreen;
-  winWindowPriv(pWin);
   winScreenPriv(pScreen);
 
 #if CYGMULTIWINDOW_DEBUG
@@ -72,6 +71,9 @@ winUpdateRgnMultiWindow (WindowPtr pWin)
 {
   SetWindowRgn (winGetWindowPriv(pWin)->hWnd,
 		winGetWindowPriv(pWin)->hRgn, TRUE);
+
+  /* The system now owns the region specified by the region handle and will delete it when it is no longer needed. */
+  winGetWindowPriv(pWin)->hRgn = NULL;
 }
 
 

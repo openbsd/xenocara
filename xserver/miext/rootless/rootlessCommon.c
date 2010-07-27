@@ -109,8 +109,8 @@ RootlessResolveColormap (ScreenPtr pScreen, int first_color,
   map = RootlessGetColormap (pScreen);
   if (map == NULL || map->class != PseudoColor) return FALSE;
 
-  last = MIN (map->pVisual->ColormapEntries, first_color + n_colors);
-  for (i = MAX (0, first_color); i < last; i++) {
+  last = min (map->pVisual->ColormapEntries, first_color + n_colors);
+  for (i = max (0, first_color); i < last; i++) {
     Entry *ent = map->red + i;
     uint16_t red, green, blue;
 
@@ -146,6 +146,7 @@ void RootlessStartDrawing(WindowPtr pWindow)
     ScreenPtr pScreen = pWindow->drawable.pScreen;
     WindowPtr top = TopLevelParent(pWindow);
     RootlessWindowRec *winRec;
+    PixmapPtr curPixmap;
 
     if (top == NULL)
         return;
@@ -172,7 +173,7 @@ void RootlessStartDrawing(WindowPtr pWindow)
         winRec->is_drawing = TRUE;
     }
 
-    PixmapPtr curPixmap = pScreen->GetWindowPixmap(pWindow);
+    curPixmap = pScreen->GetWindowPixmap(pWindow);
     if (curPixmap == winRec->pixmap)
     {
         RL_DEBUG_MSG("Window %p already has winRec->pixmap %p; not pushing\n", pWindow, winRec->pixmap);

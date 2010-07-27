@@ -60,8 +60,8 @@ host_triplet = @host@
 subdir = hw/dmx/doc
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
+	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -71,7 +71,8 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h
+	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -90,12 +91,13 @@ ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
-APPLE_APPLICATION_ID = @APPLE_APPLICATION_ID@
 APPLE_APPLICATION_NAME = @APPLE_APPLICATION_NAME@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
+ARM_BACKTRACE_CFLAGS = @ARM_BACKTRACE_CFLAGS@
 ARM_VIDEO_FALSE = @ARM_VIDEO_FALSE@
 ARM_VIDEO_TRUE = @ARM_VIDEO_TRUE@
 AS = @AS@
@@ -123,6 +125,7 @@ CCAS = @CCAS@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
@@ -132,8 +135,11 @@ CONFIG_HAL_FALSE = @CONFIG_HAL_FALSE@
 CONFIG_HAL_TRUE = @CONFIG_HAL_TRUE@
 CONFIG_NEED_DBUS_FALSE = @CONFIG_NEED_DBUS_FALSE@
 CONFIG_NEED_DBUS_TRUE = @CONFIG_NEED_DBUS_TRUE@
+CONFIG_UDEV_FALSE = @CONFIG_UDEV_FALSE@
+CONFIG_UDEV_TRUE = @CONFIG_UDEV_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -147,6 +153,7 @@ DBUS_LIBS = @DBUS_LIBS@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
 DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
+DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = @DEFS@
@@ -156,7 +163,9 @@ DGA_FALSE = @DGA_FALSE@
 DGA_LIBS = @DGA_LIBS@
 DGA_TRUE = @DGA_TRUE@
 DIX_CFLAGS = @DIX_CFLAGS@
+DIX_LIB = @DIX_LIB@
 DLLTOOL = @DLLTOOL@
+DLOPEN_LIBS = @DLOPEN_LIBS@
 DMXEXAMPLES_DEP_CFLAGS = @DMXEXAMPLES_DEP_CFLAGS@
 DMXEXAMPLES_DEP_LIBS = @DMXEXAMPLES_DEP_LIBS@
 DMXMODULES_CFLAGS = @DMXMODULES_CFLAGS@
@@ -172,6 +181,7 @@ DMX_BUILD_USB_TRUE = @DMX_BUILD_USB_TRUE@
 DMX_FALSE = @DMX_FALSE@
 DMX_TRUE = @DMX_TRUE@
 DOLT_BASH = @DOLT_BASH@
+DOXYGEN = @DOXYGEN@
 DPMSExtension_FALSE = @DPMSExtension_FALSE@
 DPMSExtension_TRUE = @DPMSExtension_TRUE@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
@@ -184,8 +194,10 @@ DRIPROTO_CFLAGS = @DRIPROTO_CFLAGS@
 DRIPROTO_LIBS = @DRIPROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DRI_CFLAGS = @DRI_CFLAGS@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_FALSE = @DRI_FALSE@
+DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
@@ -201,8 +213,17 @@ FBDEVHW_TRUE = @FBDEVHW_TRUE@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+FONT100DPIDIR = @FONT100DPIDIR@
+FONT75DPIDIR = @FONT75DPIDIR@
+FONTMISCDIR = @FONTMISCDIR@
+FONTOTFDIR = @FONTOTFDIR@
+FONTROOTDIR = @FONTROOTDIR@
+FONTTTFDIR = @FONTTTFDIR@
+FONTTYPE1DIR = @FONTTYPE1DIR@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
+GLIB_CFLAGS = @GLIB_CFLAGS@
+GLIB_LIBS = @GLIB_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_FALSE = @GLX_FALSE@
@@ -212,18 +233,17 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
-HAVE_AGL_FRAMEWORK_FALSE = @HAVE_AGL_FRAMEWORK_FALSE@
-HAVE_AGL_FRAMEWORK_TRUE = @HAVE_AGL_FRAMEWORK_TRUE@
 HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
 HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
-HAVE_XPLUGIN_FALSE = @HAVE_XPLUGIN_FALSE@
-HAVE_XPLUGIN_TRUE = @HAVE_XPLUGIN_TRUE@
+HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
+HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
 HPPA_VIDEO_TRUE = @HPPA_VIDEO_TRUE@
 I386_VIDEO_FALSE = @I386_VIDEO_FALSE@
 I386_VIDEO_TRUE = @I386_VIDEO_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIBXF86CONFIG_FALSE = @INSTALL_LIBXF86CONFIG_FALSE@
 INSTALL_LIBXF86CONFIG_TRUE = @INSTALL_LIBXF86CONFIG_TRUE@
@@ -232,6 +252,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_SETUID_FALSE = @INSTALL_SETUID_FALSE@
 INSTALL_SETUID_TRUE = @INSTALL_SETUID_TRUE@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+INT10MODULE_FALSE = @INT10MODULE_FALSE@
+INT10MODULE_TRUE = @INT10MODULE_TRUE@
 INT10_STUB_FALSE = @INT10_STUB_FALSE@
 INT10_STUB_TRUE = @INT10_STUB_TRUE@
 INT10_VM86_FALSE = @INT10_VM86_FALSE@
@@ -244,20 +266,23 @@ KDRIVELINUX_FALSE = @KDRIVELINUX_FALSE@
 KDRIVELINUX_TRUE = @KDRIVELINUX_TRUE@
 KDRIVEOPENBSD_FALSE = @KDRIVEOPENBSD_FALSE@
 KDRIVEOPENBSD_TRUE = @KDRIVEOPENBSD_TRUE@
-KDRIVEVESA_FALSE = @KDRIVEVESA_FALSE@
-KDRIVEVESA_TRUE = @KDRIVEVESA_TRUE@
 KDRIVEWSCONS_FALSE = @KDRIVEWSCONS_FALSE@
 KDRIVEWSCONS_TRUE = @KDRIVEWSCONS_TRUE@
 KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
+KDRIVE_EVDEV_FALSE = @KDRIVE_EVDEV_FALSE@
+KDRIVE_EVDEV_TRUE = @KDRIVE_EVDEV_TRUE@
 KDRIVE_FALSE = @KDRIVE_FALSE@
-KDRIVE_HW_FALSE = @KDRIVE_HW_FALSE@
-KDRIVE_HW_TRUE = @KDRIVE_HW_TRUE@
 KDRIVE_INCS = @KDRIVE_INCS@
+KDRIVE_KBD_FALSE = @KDRIVE_KBD_FALSE@
+KDRIVE_KBD_TRUE = @KDRIVE_KBD_TRUE@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MOUSE_FALSE = @KDRIVE_MOUSE_FALSE@
+KDRIVE_MOUSE_TRUE = @KDRIVE_MOUSE_TRUE@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
+LAUNCHD_ID_PREFIX = @LAUNCHD_ID_PREFIX@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -286,12 +311,12 @@ LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
+MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
 MAKE_HTML = @MAKE_HTML@
 MAKE_PDF = @MAKE_PDF@
 MAKE_PS = @MAKE_PS@
 MAKE_TEXT = @MAKE_TEXT@
-MESA_SOURCE = @MESA_SOURCE@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
@@ -310,6 +335,9 @@ OBJCFLAGS = @OBJCFLAGS@
 OBJCLINK = @OBJCLINK@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
+OS_LIB = @OS_LIB@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -338,34 +366,51 @@ SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
 SECURE_RPC_FALSE = @SECURE_RPC_FALSE@
 SECURE_RPC_TRUE = @SECURE_RPC_TRUE@
 SED = @SED@
+SELINUX_CFLAGS = @SELINUX_CFLAGS@
+SELINUX_LIBS = @SELINUX_LIBS@
 SERVER_MISC_CONFIG_PATH = @SERVER_MISC_CONFIG_PATH@
 SET_MAKE = @SET_MAKE@
 SGI_VIDEO_FALSE = @SGI_VIDEO_FALSE@
 SGI_VIDEO_TRUE = @SGI_VIDEO_TRUE@
+SHA1_CFLAGS = @SHA1_CFLAGS@
+SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_ASM_INLINE_FALSE = @SOLARIS_ASM_INLINE_FALSE@
 SOLARIS_ASM_INLINE_TRUE = @SOLARIS_ASM_INLINE_TRUE@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
-SOLARIS_USL_CONSOLE_FALSE = @SOLARIS_USL_CONSOLE_FALSE@
-SOLARIS_USL_CONSOLE_TRUE = @SOLARIS_USL_CONSOLE_TRUE@
+SOLARIS_VT_FALSE = @SOLARIS_VT_FALSE@
+SOLARIS_VT_TRUE = @SOLARIS_VT_TRUE@
 SPARC64_VIDEO_FALSE = @SPARC64_VIDEO_FALSE@
 SPARC64_VIDEO_TRUE = @SPARC64_VIDEO_TRUE@
+SPECIAL_DTRACE_OBJECTS_FALSE = @SPECIAL_DTRACE_OBJECTS_FALSE@
+SPECIAL_DTRACE_OBJECTS_TRUE = @SPECIAL_DTRACE_OBJECTS_TRUE@
 STANDALONE_XPBPROXY_FALSE = @STANDALONE_XPBPROXY_FALSE@
 STANDALONE_XPBPROXY_TRUE = @STANDALONE_XPBPROXY_TRUE@
 STRIP = @STRIP@
+SYSCONFDIR = @SYSCONFDIR@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_FALSE = @TSLIB_FALSE@
 TSLIB_LIBS = @TSLIB_LIBS@
 TSLIB_TRUE = @TSLIB_TRUE@
+UDEV_CFLAGS = @UDEV_CFLAGS@
+UDEV_LIBS = @UDEV_LIBS@
+UNITTESTS_FALSE = @UNITTESTS_FALSE@
+UNITTESTS_TRUE = @UNITTESTS_TRUE@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
-VENDOR_MAN_VERSION = @VENDOR_MAN_VERSION@
-VENDOR_NAME = @VENDOR_NAME@
+VBE_FALSE = @VBE_FALSE@
+VBE_TRUE = @VBE_TRUE@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
-VENDOR_RELEASE = @VENDOR_RELEASE@
 VERSION = @VERSION@
+VGAHW_FALSE = @VGAHW_FALSE@
+VGAHW_TRUE = @VGAHW_TRUE@
+WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
+WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
+WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XAA_FALSE = @XAA_FALSE@
+XAA_TRUE = @XAA_TRUE@
 XACE_FALSE = @XACE_FALSE@
 XACE_TRUE = @XACE_TRUE@
 XCALIBRATE_FALSE = @XCALIBRATE_FALSE@
@@ -390,6 +435,7 @@ XEPHYR_LIBS = @XEPHYR_LIBS@
 XEPHYR_TRUE = @XEPHYR_TRUE@
 XF86BIGFONT_FALSE = @XF86BIGFONT_FALSE@
 XF86BIGFONT_TRUE = @XF86BIGFONT_TRUE@
+XF86CONFIGDIR = @XF86CONFIGDIR@
 XF86CONFIGFILE = @XF86CONFIGFILE@
 XF86UTILS_FALSE = @XF86UTILS_FALSE@
 XF86UTILS_TRUE = @XF86UTILS_TRUE@
@@ -432,15 +478,14 @@ XORG_TRUE = @XORG_TRUE@
 XPBPROXY_CFLAGS = @XPBPROXY_CFLAGS@
 XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
+XQUARTZ_SPARKLE_FALSE = @XQUARTZ_SPARKLE_FALSE@
+XQUARTZ_SPARKLE_TRUE = @XQUARTZ_SPARKLE_TRUE@
 XQUARTZ_TRUE = @XQUARTZ_TRUE@
 XREGISTRY_FALSE = @XREGISTRY_FALSE@
 XREGISTRY_TRUE = @XREGISTRY_TRUE@
 XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
 XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
-XSDLSERVER_FALSE = @XSDLSERVER_FALSE@
-XSDLSERVER_TRUE = @XSDLSERVER_TRUE@
-XSDL_INCS = @XSDL_INCS@
-XSDL_LIBS = @XSDL_LIBS@
 XSELINUX_FALSE = @XSELINUX_FALSE@
 XSELINUX_TRUE = @XSELINUX_TRUE@
 XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
@@ -488,10 +533,10 @@ X_PRIVSEP_FALSE = @X_PRIVSEP_FALSE@
 X_PRIVSEP_TRUE = @X_PRIVSEP_TRUE@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
+__XCONFIGDIR__ = @__XCONFIGDIR__@
 __XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
-abi_font = @abi_font@
 abi_videodrv = @abi_videodrv@
 abi_xinput = @abi_xinput@
 ac_ct_CC = @ac_ct_CC@
@@ -546,7 +591,9 @@ psdir = @psdir@
 sbindir = @sbindir@
 sdkdir = @sdkdir@
 sharedstatedir = @sharedstatedir@
+symbol_visibility = @symbol_visibility@
 sysconfdir = @sysconfdir@
+sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
 SGML_FILES = dmx.sgml scaled.sgml
 @BUILD_LINUXDOC_TRUE@TXT_FILES = $(SGML_FILES:%.sgml=%.txt)
@@ -556,6 +603,7 @@ SGML_FILES = dmx.sgml scaled.sgml
 @BUILD_LINUXDOC_TRUE@SUFFIXES = .sgml .txt .html .ps .pdf
 @BUILD_LINUXDOC_TRUE@noinst_DATA = $(TXT_FILES) $(PS_FILES) $(PDF_FILES) $(HTML_FILES)
 @BUILD_LINUXDOC_TRUE@CLEANFILES = $(TXT_FILES) $(PS_FILES) $(PDF_FILES) $(HTML_FILES)
+@HAVE_DOXYGEN_TRUE@DOXYGEN_SRC = doxygen.head doxygen.foot doxygen.css doxygen.conf
 EXTRA_DIST = \
 	$(SGML_FILES) \
 	DMXSpec.txt \
@@ -569,123 +617,116 @@ EXTRA_DIST = \
 	html/annotated.html \
 	html/ChkNotMaskEv_8c.html \
 	html/ChkNotMaskEv_8h.html \
-	html/ChkNotMaskEv_8h-source.html \
+	html/ChkNotMaskEv_8h_source.html \
 	html/classes.html \
 	html/dmx_8h.html \
-	html/dmx_8h-source.html \
+	html/dmx_8h_source.html \
 	html/dmxarg_8c.html \
 	html/dmxarg_8h.html \
-	html/dmxarg_8h-source.html \
+	html/dmxarg_8h_source.html \
 	html/dmxbackend_8c.html \
 	html/dmxbackend_8h.html \
-	html/dmxbackend_8h-source.html \
+	html/dmxbackend_8h_source.html \
 	html/dmxcb_8c.html \
 	html/dmxcb_8h.html \
-	html/dmxcb_8h-source.html \
+	html/dmxcb_8h_source.html \
 	html/dmxclient_8h.html \
-	html/dmxclient_8h-source.html \
+	html/dmxclient_8h_source.html \
 	html/dmxcmap_8c.html \
 	html/dmxcmap_8h.html \
-	html/dmxcmap_8h-source.html \
+	html/dmxcmap_8h_source.html \
 	html/dmxcommon_8c.html \
 	html/dmxcommon_8h.html \
-	html/dmxcommon_8h-source.html \
+	html/dmxcommon_8h_source.html \
 	html/dmxcompat_8c.html \
 	html/dmxcompat_8h.html \
-	html/dmxcompat_8h-source.html \
+	html/dmxcompat_8h_source.html \
 	html/dmxconfig_8c.html \
 	html/dmxconfig_8h.html \
-	html/dmxconfig_8h-source.html \
+	html/dmxconfig_8h_source.html \
 	html/dmxconsole_8c.html \
 	html/dmxconsole_8h.html \
-	html/dmxconsole_8h-source.html \
+	html/dmxconsole_8h_source.html \
 	html/dmxcursor_8c.html \
 	html/dmxcursor_8h.html \
-	html/dmxcursor_8h-source.html \
+	html/dmxcursor_8h_source.html \
 	html/dmxdetach_8c.html \
 	html/dmxdpms_8c.html \
 	html/dmxdpms_8h.html \
-	html/dmxdpms_8h-source.html \
+	html/dmxdpms_8h_source.html \
 	html/dmxdummy_8c.html \
 	html/dmxdummy_8h.html \
-	html/dmxdummy_8h-source.html \
-	html/dmxeq_8c.html \
-	html/dmxeq_8h.html \
-	html/dmxeq_8h-source.html \
+	html/dmxdummy_8h_source.html \
 	html/dmxevents_8c.html \
 	html/dmxevents_8h.html \
-	html/dmxevents_8h-source.html \
-	html/dmxext_8h.html \
-	html/dmxext_8h-source.html \
+	html/dmxevents_8h_source.html \
 	html/dmxextension_8c.html \
 	html/dmxextension_8h.html \
-	html/dmxextension_8h-source.html \
+	html/dmxextension_8h_source.html \
 	html/dmxfont_8c.html \
 	html/dmxfont_8h.html \
-	html/dmxfont_8h-source.html \
+	html/dmxfont_8h_source.html \
 	html/dmxgc_8c.html \
 	html/dmxgc_8h.html \
-	html/dmxgc_8h-source.html \
+	html/dmxgc_8h_source.html \
 	html/dmxgcops_8c.html \
 	html/dmxgcops_8h.html \
-	html/dmxgcops_8h-source.html \
-	html/dmx__glxvisuals_8h-source.html \
+	html/dmxgcops_8h_source.html \
+	html/dmx__glxvisuals_8h_source.html \
 	html/dmxinit_8c.html \
 	html/dmxinit_8h.html \
-	html/dmxinit_8h-source.html \
+	html/dmxinit_8h_source.html \
 	html/dmxinput_8c.html \
 	html/dmxinput_8h.html \
-	html/dmxinput_8h-source.html \
+	html/dmxinput_8h_source.html \
 	html/dmxinputinit_8c.html \
 	html/dmxinputinit_8h.html \
-	html/dmxinputinit_8h-source.html \
+	html/dmxinputinit_8h_source.html \
 	html/dmxlog_8c.html \
 	html/dmxlog_8h.html \
-	html/dmxlog_8h-source.html \
+	html/dmxlog_8h_source.html \
 	html/dmxmap_8c.html \
 	html/dmxmap_8h.html \
-	html/dmxmap_8h-source.html \
+	html/dmxmap_8h_source.html \
 	html/dmxmotion_8c.html \
 	html/dmxmotion_8h.html \
-	html/dmxmotion_8h-source.html \
+	html/dmxmotion_8h_source.html \
 	html/dmxparse_8c.html \
 	html/dmxparse_8h.html \
-	html/dmxparse_8h-source.html \
+	html/dmxparse_8h_source.html \
 	html/dmxpict_8c.html \
 	html/dmxpict_8h.html \
-	html/dmxpict_8h-source.html \
+	html/dmxpict_8h_source.html \
 	html/dmxpixmap_8c.html \
 	html/dmxpixmap_8h.html \
-	html/dmxpixmap_8h-source.html \
+	html/dmxpixmap_8h_source.html \
 	html/dmxprint_8c.html \
 	html/dmxprint_8h.html \
-	html/dmxprint_8h-source.html \
+	html/dmxprint_8h_source.html \
 	html/dmxprop_8c.html \
 	html/dmxprop_8h.html \
-	html/dmxprop_8h-source.html \
-	html/dmxproto_8h.html \
-	html/dmxproto_8h-source.html \
+	html/dmxprop_8h_source.html \
 	html/dmxscrinit_8c.html \
 	html/dmxscrinit_8h.html \
-	html/dmxscrinit_8h-source.html \
+	html/dmxscrinit_8h_source.html \
 	html/dmxshadow_8c.html \
 	html/dmxshadow_8h.html \
-	html/dmxshadow_8h-source.html \
+	html/dmxshadow_8h_source.html \
 	html/dmxsigio_8c.html \
 	html/dmxsigio_8h.html \
-	html/dmxsigio_8h-source.html \
+	html/dmxsigio_8h_source.html \
 	html/dmxstat_8c.html \
 	html/dmxstat_8h.html \
-	html/dmxstat_8h-source.html \
+	html/dmxstat_8h_source.html \
 	html/dmxsync_8c.html \
 	html/dmxsync_8h.html \
-	html/dmxsync_8h-source.html \
+	html/dmxsync_8h_source.html \
 	html/dmxvisual_8c.html \
 	html/dmxvisual_8h.html \
-	html/dmxvisual_8h-source.html \
+	html/dmxvisual_8h_source.html \
 	html/dmxwindow_8c.html \
 	html/dmxwindow_8h.html \
-	html/dmxwindow_8h-source.html \
+	html/dmxwindow_8h_source.html \
 	html/dmxxinput_8c.html \
 	html/doxygen.css \
 	html/doxygen.png \
@@ -712,18 +753,16 @@ EXTRA_DIST = \
 	html/globals_type.html \
 	html/globals_vars.html \
 	html/index.html \
-	html/lib_2dmx_2dmx_8c.html \
 	html/lnx-keyboard_8c.html \
 	html/lnx-keyboard_8h.html \
-	html/lnx-keyboard_8h-source.html \
+	html/lnx-keyboard_8h_source.html \
 	html/lnx-ms_8c.html \
 	html/lnx-ms_8h.html \
-	html/lnx-ms_8h-source.html \
+	html/lnx-ms_8h_source.html \
 	html/lnx-ps2_8c.html \
 	html/lnx-ps2_8h.html \
-	html/lnx-ps2_8h-source.html \
+	html/lnx-ps2_8h_source.html \
 	html/main.html \
-	html/programs_2Xserver_2Xext_2dmx_8c.html \
 	html/struct__dmxArg.html \
 	html/struct__dmxColormapPriv.html \
 	html/structDMXConfigCmdStruct.html \
@@ -743,76 +782,40 @@ EXTRA_DIST = \
 	html/struct__DMXConfigVirtual.html \
 	html/struct__DMXConfigWall.html \
 	html/struct__dmxCursorPriv.html \
-	html/structDMXDesktopAttributes.html \
 	html/structDMXDesktopAttributesRec.html \
 	html/struct__DMXEventMap.html \
 	html/struct__dmxFontPriv.html \
 	html/struct__dmxGCPriv.html \
 	html/structdmxGlxVisualPrivate.html \
 	html/struct__dmxGlyphPriv.html \
-	html/structDMXInputAttributes.html \
 	html/structDMXInputAttributesRec.html \
 	html/struct__DMXInputInfo.html \
 	html/struct__DMXLocalInitInfo.html \
 	html/struct__DMXLocalInputInfo.html \
 	html/struct__dmxPictPriv.html \
 	html/struct__dmxPixPriv.html \
-	html/structDMXScreenAttributes.html \
 	html/structDMXScreenAttributesRec.html \
 	html/struct__DMXScreenInfo.html \
 	html/struct__DMXStatAvg.html \
 	html/struct__DMXStatInfo.html \
-	html/structDMXWindowAttributes.html \
 	html/structDMXWindowAttributesRec.html \
 	html/struct__dmxWinPriv.html \
-	html/struct__Event.html \
-	html/struct__EventQueue.html \
 	html/struct__myPrivate.html \
-	html/structxDMXAddInputReply.html \
-	html/structxDMXAddInputReq.html \
-	html/structxDMXAddScreenReply.html \
-	html/structxDMXAddScreenReq.html \
-	html/structxDMXChangeDesktopAttributesReply.html \
-	html/structxDMXChangeDesktopAttributesReq.html \
-	html/structxDMXChangeScreensAttributesReply.html \
-	html/structxDMXChangeScreensAttributesReq.html \
-	html/structxDMXForceWindowCreationReply.html \
-	html/structxDMXForceWindowCreationReq.html \
-	html/structxDMXGetDesktopAttributesReply.html \
-	html/structxDMXGetDesktopAttributesReq.html \
-	html/structxDMXGetInputAttributesReply.html \
-	html/structxDMXGetInputAttributesReq.html \
-	html/structxDMXGetInputCountReply.html \
-	html/structxDMXGetInputCountReq.html \
-	html/structxDMXGetScreenAttributesReply.html \
-	html/structxDMXGetScreenAttributesReq.html \
-	html/structxDMXGetScreenCountReply.html \
-	html/structxDMXGetScreenCountReq.html \
-	html/structxDMXGetWindowAttributesReply.html \
-	html/structxDMXGetWindowAttributesReq.html \
-	html/structxDMXQueryVersionReply.html \
-	html/structxDMXQueryVersionReq.html \
-	html/structxDMXRemoveInputReply.html \
-	html/structxDMXRemoveInputReq.html \
-	html/structxDMXRemoveScreenReply.html \
-	html/structxDMXRemoveScreenReq.html \
-	html/structxDMXSyncReply.html \
-	html/structxDMXSyncReq.html \
 	html/tree.html \
 	html/usb-common_8c.html \
 	html/usb-common_8h.html \
-	html/usb-common_8h-source.html \
+	html/usb-common_8h_source.html \
 	html/usb-keyboard_8c.html \
 	html/usb-keyboard_8h.html \
-	html/usb-keyboard_8h-source.html \
+	html/usb-keyboard_8h_source.html \
 	html/usb-mouse_8c.html \
 	html/usb-mouse_8h.html \
-	html/usb-mouse_8h-source.html \
+	html/usb-mouse_8h_source.html \
 	html/usb-other_8c.html \
 	html/usb-other_8h.html \
-	html/usb-other_8h-source.html \
+	html/usb-other_8h_source.html \
 	html/usb-private_8h.html \
-	html/usb-private_8h-source.html
+	html/usb-private_8h_source.html
 
 all: all-am
 
@@ -894,7 +897,8 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(DATA)
+@HAVE_DOXYGEN_FALSE@all-local:
+all-am: Makefile $(DATA) all-local
 installdirs:
 install: install-am
 install-exec: install-exec-am
@@ -921,6 +925,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@HAVE_DOXYGEN_FALSE@maintainer-clean-local:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -951,7 +956,8 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 	-rm -f Makefile
-maintainer-clean-am: distclean-am maintainer-clean-generic
+maintainer-clean-am: distclean-am maintainer-clean-generic \
+	maintainer-clean-local
 
 mostlyclean: mostlyclean-am
 
@@ -967,32 +973,52 @@ ps-am:
 
 uninstall-am: uninstall-info-am
 
-.PHONY: all all-am check check-am clean clean-generic clean-libtool \
-	distclean distclean-generic distclean-libtool distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
+.PHONY: all all-am all-local check check-am clean clean-generic \
+	clean-libtool distclean distclean-generic distclean-libtool \
+	distdir dvi dvi-am html html-am info info-am install \
+	install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic \
+	maintainer-clean-local mostlyclean mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am
 
 
 @BUILD_LINUXDOC_TRUE@.sgml.txt:
 @BUILD_LINUXDOC_TRUE@	@rm -f $@
-@BUILD_LINUXDOC_TRUE@	$(MAKE_TEXT) $<
+@BUILD_LINUXDOC_TRUE@	$(AM_V_GEN)$(MAKE_TEXT) $<
 
 @BUILD_LINUXDOC_TRUE@.sgml.ps:
 @BUILD_LINUXDOC_TRUE@	@rm -f $@
-@BUILD_LINUXDOC_TRUE@	$(MAKE_PS) $<
+@BUILD_LINUXDOC_TRUE@	$(AM_V_GEN)$(MAKE_PS) $<
 
 @BUILD_LINUXDOC_TRUE@.ps.pdf:
 @BUILD_LINUXDOC_TRUE@	@rm -f $@
-@BUILD_LINUXDOC_TRUE@	$(MAKE_PDF) $<
+@BUILD_LINUXDOC_TRUE@	$(AM_V_GEN)$(MAKE_PDF) $<
 
 @BUILD_LINUXDOC_TRUE@.sgml.html:
 @BUILD_LINUXDOC_TRUE@	@rm -f $@
-@BUILD_LINUXDOC_TRUE@	$(MAKE_HTML) $<
+@BUILD_LINUXDOC_TRUE@	$(AM_V_GEN)$(MAKE_HTML) $<
+
+@HAVE_DOXYGEN_TRUE@all-local: html/annotated.html
+
+@HAVE_DOXYGEN_TRUE@dist-local: html/annotated.html
+
+@HAVE_DOXYGEN_TRUE@html/annotated.html: $(DOXYGEN_SRC)
+@HAVE_DOXYGEN_TRUE@	$(DOXYGEN) $(srcdir)/doxygen.conf
+
+@HAVE_DOXYGEN_TRUE@maintainer-clean-local:
+@HAVE_DOXYGEN_TRUE@	rm -rf html/
+
+$(builddir)/doxygen.head:
+	$(LN_S) $(srcdir)/doxygen.head $@
+
+$(builddir)/doxygen.foot:
+	$(LN_S) $(srcdir)/doxygen.foot $@
+
+$(builddir)doxygen.css:
+	$(LN_S) $(srcdir)/doxygen.css $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -26,13 +26,17 @@
  * prior written authorization.
  */
 
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
+#endif
+
 #include <launch.h>
 #include <stdio.h>
 #include <errno.h>
 
 #include "launchd_fd.h"
 
-int launchd_display_fd() {
+int launchd_display_fd(void) {
     launch_data_t sockets_dict, checkin_request, checkin_response;
     launch_data_t listening_fd_array, listening_fd;
 
@@ -65,10 +69,13 @@ int launchd_display_fd() {
         return ERROR_FD;
     }
     
-    listening_fd_array = launch_data_dict_lookup(sockets_dict, ":0");
+    listening_fd_array = launch_data_dict_lookup(sockets_dict, LAUNCHD_ID_PREFIX":0");
     if (NULL == listening_fd_array) {
-        fprintf(stderr,"launchd check-in: No known sockets found to answer requests on!\n");
-        return ERROR_FD;
+        listening_fd_array = launch_data_dict_lookup(sockets_dict, ":0");
+        if (NULL == listening_fd_array) {
+            fprintf(stderr,"launchd check-in: No known sockets found to answer requests on! \"%s:0\" and \":0\" failed.\n", LAUNCHD_ID_PREFIX);
+            return ERROR_FD;
+        }
     }
     
     if (launch_data_array_get_count(listening_fd_array)!=1) {

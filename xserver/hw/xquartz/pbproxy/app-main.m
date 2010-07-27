@@ -34,10 +34,14 @@
 #include <unistd.h> /*for getpid*/
 #include <Cocoa/Cocoa.h>
 
-static const char *app_prefs_domain = "org.x.X11";
+static const char *app_prefs_domain = 	LAUNCHD_ID_PREFIX".xpbproxy";
 CFStringRef app_prefs_domain_cfstr;
 
+/* Stubs */
 char *display = NULL;
+BOOL serverInitComplete = YES;
+pthread_mutex_t serverInitCompleteMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t serverInitCompleteCond = PTHREAD_COND_INITIALIZER;
 
 static void signal_handler (int sig) {
     switch(sig) {
@@ -50,6 +54,9 @@ static void signal_handler (int sig) {
 }
 
 int main (int argc, const char *argv[]) {
+    const char *s;
+    int i;
+
 #ifdef DEBUG
     printf("pid: %u\n", getpid());
 #endif
@@ -66,7 +73,7 @@ int main (int argc, const char *argv[]) {
             printf("usage: xpbproxy OPTIONS\n"
                    "Pasteboard proxying for X11.\n\n"
                    "--prefs-domain <domain>   Change the domain used for reading preferences\n"
-                   "                          (default: org.x.X11)\n");
+                   "                          (default: %s)\n", app_prefs_domain);
             return 0;
         } else {
             fprintf(stderr, "usage: xpbproxy OPTIONS...\n"
@@ -77,16 +84,10 @@ int main (int argc, const char *argv[]) {
     
     app_prefs_domain_cfstr = CFStringCreateWithCString(NULL, app_prefs_domain, kCFStringEncodingUTF8);
     
-    if(!xpbproxy_init())
-        return EXIT_FAILURE;
-    
     signal (SIGINT, signal_handler);
     signal (SIGTERM, signal_handler);
     signal (SIGHUP, signal_handler);
     signal (SIGPIPE, SIG_IGN);
 
-    [NSApplication sharedApplication];
-    [NSApp run];
-    
-    return EXIT_SUCCESS;
+    return xpbproxy_run();
 }

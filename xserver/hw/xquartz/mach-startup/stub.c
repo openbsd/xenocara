@@ -40,14 +40,10 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-static char *server_bootstrap_name = "org.x.X11";
-
-/* The launchd startup is only designed for the primary X11.app that is
- * org.x.X11... server_bootstrap_name might be differnet if we were triggered to
- * start by another X11.app.
- */
-#define kX11AppBundleId "org.x.X11"
+#define kX11AppBundleId LAUNCHD_ID_PREFIX".X11"
 #define kX11AppBundlePath "/Contents/MacOS/X11"
+
+static char *server_bootstrap_name = kX11AppBundleId;
 
 #include <mach/mach.h>
 #include <mach/mach_error.h>
@@ -73,13 +69,11 @@ static char x11_path[PATH_MAX + 1];
 
 static pid_t x11app_pid = 0;
 
-static void set_x11_path() {
+static void set_x11_path(void) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 
     CFURLRef appURL = NULL;
-    CFBundleRef bundle = NULL;
     OSStatus osstatus = LSFindApplicationForInfo(kLSUnknownCreator, CFSTR(kX11AppBundleId), nil, nil, &appURL);
-    UInt32 ver;
 
     switch (osstatus) {
         case noErr:
@@ -89,29 +83,9 @@ static void set_x11_path() {
                 exit(1);
             }
 
-            bundle = CFBundleCreate(NULL, appURL);
-            if(!bundle) {
-                fprintf(stderr, "Xquartz: Null value returned from CFBundleCreate().\n");
-                exit(2);                
-            }
-
             if (!CFURLGetFileSystemRepresentation(appURL, true, (unsigned char *)x11_path, sizeof(x11_path))) {
                 fprintf(stderr, "Xquartz: Error resolving URL for %s\n", kX11AppBundleId);
                 exit(3);
-            }
-
-            ver = CFBundleGetVersionNumber(bundle);
-            if(ver < 0x02308000) {
-                CFStringRef versionStr = CFBundleGetValueForInfoDictionaryKey(bundle, kCFBundleVersionKey);
-                const char * versionCStr = "Unknown";
-
-                if(versionStr) 
-                    versionCStr = CFStringGetCStringPtr(versionStr, kCFStringEncodingMacRoman);
-
-                fprintf(stderr, "Xquartz: Could not find a new enough X11.app LSFindApplicationForInfo() returned\n");
-                fprintf(stderr, "         X11.app = %s\n", x11_path);
-                fprintf(stderr, "         Version = %s (%x), Expected Version > 2.3.0\n", versionCStr, (unsigned)ver);
-                exit(9);
             }
 
             strlcat(x11_path, kX11AppBundlePath, sizeof(x11_path));
@@ -166,15 +140,17 @@ static void send_fd_handoff(int connected_fd, int launchd_fd) {
     char databuf[] = "display";
     struct iovec iov[1];
     
-    iov[0].iov_base = databuf;
-    iov[0].iov_len  = sizeof(databuf);
-
     union {
         struct cmsghdr hdr;
         char bytes[CMSG_SPACE(sizeof(int))];
     } buf;
     
     struct msghdr msg;
+    struct cmsghdr *cmsg;
+
+    iov[0].iov_base = databuf;
+    iov[0].iov_len  = sizeof(databuf);
+
     msg.msg_iov = iov;
     msg.msg_iovlen = 1;
     msg.msg_control = buf.bytes;
@@ -183,7 +159,7 @@ static void send_fd_handoff(int connected_fd, int launchd_fd) {
     msg.msg_namelen = 0;
     msg.msg_flags = 0;
 
-    struct cmsghdr *cmsg = CMSG_FIRSTHDR (&msg);
+    cmsg = CMSG_FIRSTHDR (&msg);
     cmsg->cmsg_level = SOL_SOCKET;
     cmsg->cmsg_type = SCM_RIGHTS;
     cmsg->cmsg_len = CMSG_LEN(sizeof(int));
@@ -222,7 +198,7 @@ int main(int argc, char **argv, char **envp) {
     sig_t handler;
 
     if(argc == 2 && !strcmp(argv[1], "-version")) {
-        fprintf(stderr, "X.org Release 7.3\n");
+        fprintf(stderr, "X.org Release 7.5\n");
         fprintf(stderr, "X.Org X Server %s\n", XSERVER_VERSION);
         fprintf(stderr, "Build Date: %s\n", BUILD_DATE);
         return EXIT_SUCCESS;
@@ -249,10 +225,13 @@ int main(int argc, char **argv, char **envp) {
 
     kr = bootstrap_look_up(bootstrap_port, server_bootstrap_name, &mp);
     if(kr != KERN_SUCCESS) {
+        pid_t child;
+
+        fprintf(stderr, "Xquartz: Unable to locate waiting server: %s\n", server_bootstrap_name);
         set_x11_path();
 
         /* This forking is ugly and will be cleaned up later */
-        pid_t child = fork();
+        child = fork();
         if(child == -1) {
             fprintf(stderr, "Xquartz: Could not fork: %s\n", strerror(errno));
             return EXIT_FAILURE;
@@ -321,12 +300,12 @@ int main(int argc, char **argv, char **envp) {
     /* We have fixed-size string lengths due to limitations in IPC,
      * so we need to copy our argv and envp.
      */
-    newargv = (string_array_t)alloca(argc * sizeof(string_t));
-    newenvp = (string_array_t)alloca(envpc * sizeof(string_t));
-    
+    newargv = (string_array_t)malloc(argc * sizeof(string_t));
+    newenvp = (string_array_t)malloc(envpc * sizeof(string_t));
+
     if(!newargv || !newenvp) {
         fprintf(stderr, "Xquartz: Memory allocation failure\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
     
     for(i=0; i < argc; i++) {
@@ -337,6 +316,10 @@ int main(int argc, char **argv, char **envp) {
     }
 
     kr = start_x11_server(mp, newargv, argc, newenvp, envpc);
+
+    free(newargv);
+    free(newenvp);
+
     if (kr != KERN_SUCCESS) {
         fprintf(stderr, "Xquartz: start_x11_server: %s\n", mach_error_string(kr));
         return EXIT_FAILURE;

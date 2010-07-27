@@ -28,9 +28,7 @@
 void
 InitCard (char *name)
 {
-    KdCardAttr	attr;
-
-    KdCardInfoAdd (&fakeFuncs, &attr, 0);
+    KdCardInfoAdd (&fakeFuncs, 0);
 }
 
 void
@@ -59,6 +57,18 @@ InitInput (int argc, char **argv)
 
     KdInitInput ();
 }
+
+void
+CloseInput (void)
+{
+}
+
+#ifdef DDXBEFORERESET
+void
+ddxBeforeReset (void)
+{
+}
+#endif
 
 void
 ddxUseMsg (void)

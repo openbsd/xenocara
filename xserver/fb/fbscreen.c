@@ -228,7 +228,11 @@ fbFinishScreenInit(ScreenPtr	pScreen,
     rootdepth = 0;
     if (!fbInitVisuals (&visuals, &depths, &nvisuals, &ndepths, &rootdepth,
 			&defaultVisual,((unsigned long)1<<(imagebpp-1)), 8))
+    {
+	xfree (visuals);
+	xfree (depths);
 	return FALSE;
+    }
     if (! miScreenInit(pScreen, pbits, xsize, ysize, dpix, dpiy, width,
 			rootdepth, ndepths, depths,
 			defaultVisual, nvisuals, visuals))
@@ -241,14 +245,6 @@ fbFinishScreenInit(ScreenPtr	pScreen,
 	pScreen->ModifyPixmapHeader = fb24_32ModifyPixmapHeader;
 	pScreen->CreateScreenResources = fb24_32CreateScreenResources;
     }
-#endif
-#if 0
-    /* leave backing store initialization to the enclosing code so
-     * it can choose the correct order of wrappers
-     */
-    /* init backing store here so we can overwrite CloseScreen without stepping
-     * on the backing store wrapped version */
-    fbInitializeBackingStore (pScreen);
 #endif
     return TRUE;
 }

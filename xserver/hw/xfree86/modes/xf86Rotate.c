@@ -40,12 +40,7 @@
 #include "xf86Modes.h"
 #include "xf86RandR12.h"
 #include "X11/extensions/render.h"
-#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
-#include <X11/extensions/dpmsconst.h>
-#else
-#define DPMS_SERVER
-#include "X11/extensions/dpms.h"
-#endif
+#include "X11/extensions/dpmsconst.h"
 #include "X11/Xatom.h"
 
 /* borrowed from composite extension, move to Render and publish? */
@@ -273,13 +268,9 @@ xf86RotateBlockHandler(int screenNum, pointer blockData,
     rotation_active = xf86RotateRedisplay(pScreen);
     pScreen->BlockHandler = xf86_config->BlockHandler;
     (*pScreen->BlockHandler) (screenNum, blockData, pTimeout, pReadmask);
-    if (rotation_active) {
-	/* Re-wrap if rotation is still happening */
-	xf86_config->BlockHandler = pScreen->BlockHandler;
-	pScreen->BlockHandler = xf86RotateBlockHandler;
-    } else {
-	xf86_config->BlockHandler = NULL;
-    }
+    /* cannot avoid re-wrapping until all wrapping is audited */
+    xf86_config->BlockHandler = pScreen->BlockHandler;
+    pScreen->BlockHandler = xf86RotateBlockHandler;
 }
 
 void
@@ -320,7 +311,7 @@ xf86RotateDestroy (xf86CrtcPtr crtc)
     }
 }
 
-_X_EXPORT void
+void
 xf86RotateFreeShadow(ScrnInfoPtr pScrn)
 {
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
@@ -338,7 +329,7 @@ xf86RotateFreeShadow(ScrnInfoPtr pScrn)
    }
 }
 
-_X_EXPORT void
+void
 xf86RotateCloseScreen (ScreenPtr screen)
 {
     ScrnInfoPtr		scrn = xf86Screens[screen->myNum];
@@ -378,7 +369,7 @@ xf86CrtcFitsScreen (xf86CrtcPtr crtc, struct pict_f_transform *crtc_to_fb)
 	    0 <= b.y1 && b.y2 <= pScrn->virtualY);
 }
 
-_X_EXPORT Bool
+Bool
 xf86CrtcRotate (xf86CrtcPtr crtc)
 {
     ScrnInfoPtr		pScrn = crtc->scrn;

@@ -32,7 +32,6 @@
 
 #include "xpr.h"
 
-#define NEED_EVENTS
 #include   <X11/X.h>
 #include   <X11/Xmd.h>
 #include   <X11/Xproto.h>
@@ -40,6 +39,7 @@
 #include   "windowstr.h"
 #include   "pixmapstr.h"
 #include   "inputstr.h"
+#include   "eventstr.h"
 #include   "mi.h"
 #include   "scrnintstr.h"
 #include   "mipointer.h"
@@ -56,36 +56,26 @@
 #include "rootlessWindow.h"
 #include "xprEvent.h"
 
-static void xprEventHandler(int screenNum, xEventPtr xe, DeviceIntPtr dev, int nevents) {
-    int i;
-    
+Bool QuartzModeEventHandler(int screenNum, XQuartzEvent *e, DeviceIntPtr dev) {
     TA_SERVER();
     
-    DEBUG_LOG("DarwinEventHandler(%d, %p, %p, %d)\n", screenNum, xe, dev, nevents);
-    for (i=0; i<nevents; i++) {
-        switch(xe[i].u.u.type) {
-                
-            case kXquartzWindowState:
-                DEBUG_LOG("kXquartzWindowState\n");
-                RootlessNativeWindowStateChanged(xprGetXWindow(xe[i].u.clientMessage.u.l.longs0),
-                                                 xe[i].u.clientMessage.u.l.longs1);
-                break;
-                
-            case kXquartzWindowMoved:
-                DEBUG_LOG("kXquartzWindowMoved\n");
-                RootlessNativeWindowMoved(xprGetXWindow(xe[i].u.clientMessage.u.l.longs0));
-                break;
-                
-            case kXquartzBringAllToFront:
-                DEBUG_LOG("kXquartzBringAllToFront\n");
-                RootlessOrderAllWindows();
-                break;
-        }
+    switch(e->subtype) {
+        case kXquartzWindowState:
+            DEBUG_LOG("kXquartzWindowState\n");
+            RootlessNativeWindowStateChanged(xprGetXWindow(e->data[0]),
+                                             e->data[1]);
+            return TRUE;
+            
+        case kXquartzWindowMoved:
+            DEBUG_LOG("kXquartzWindowMoved\n");
+            RootlessNativeWindowMoved(xprGetXWindow(e->data[0]));
+            return TRUE;
+            
+        case kXquartzBringAllToFront:
+            DEBUG_LOG("kXquartzBringAllToFront\n");
+            RootlessOrderAllWindows();
+            return TRUE;
+        default:
+            return FALSE;
     }
-}
-
-void QuartzModeEQInit(void) {
-    mieqSetHandler(kXquartzWindowState, xprEventHandler);
-    mieqSetHandler(kXquartzWindowMoved, xprEventHandler);
-    mieqSetHandler(kXquartzBringAllToFront, xprEventHandler);
 }

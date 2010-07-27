@@ -1,6 +1,7 @@
 /*
 
 Copyright 1993, 1998  The Open Group
+Copyright (C) Colin Harrison 2005-2008
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
@@ -31,9 +32,9 @@ from The Open Group.
 #endif
 #ifdef XVENDORNAME
 #define VENDOR_STRING XVENDORNAME
-#define VERSION_STRING XORG_RELEASE
 #define VENDOR_CONTACT BUILDERADDR
 #endif
+#include <../xfree86/common/xorgVersion.h>
 #include "win.h"
 #include "winconfig.h"
 #include "winprefs.h"
@@ -52,11 +53,12 @@ extern Bool			g_fUnicodeClipboard;
 extern Bool			g_fClipboard;
 #endif
 extern int			g_iLogVerbose;
-extern char *			g_pszLogFile;
+extern const char *		g_pszLogFile;
 #ifdef RELOCATE_PROJECTROOT
 extern Bool			g_fLogFileChanged;
 #endif
 extern Bool			g_fXdmcpEnabled;
+extern Bool			g_fAuthEnabled;
 extern char *			g_pszCommandLine;
 extern Bool			g_fKeyboardHookLL;
 extern Bool			g_fNoHelpMessageBox;                     
@@ -887,7 +889,19 @@ ddxProcessArgument (int argc, char *argv[], int i)
    */
   if (IS_OPTION ("-clipboard"))
     {
+      /* Now the default, we still accept the arg for backwards compatibility */
       g_fClipboard = TRUE;
+
+      /* Indicate that we have processed this argument */
+      return 1;
+    }
+
+  /*
+   * Look for the '-noclipboard' argument
+   */
+  if (IS_OPTION ("-noclipboard"))
+    {
+      g_fClipboard = FALSE;
 
       /* Indicate that we have processed this argument */
       return 1;
@@ -1289,6 +1303,15 @@ ddxProcessArgument (int argc, char *argv[], int i)
     }
 
   /*
+   * Look for the '-auth' argument
+   */
+  if (IS_OPTION ("-auth"))
+    {
+      g_fAuthEnabled = TRUE;
+      return 0; /* Let DIX parse this again */
+    }
+
+  /*
    * Look for the '-indirect' or '-broadcast' arguments
    */
   if (IS_OPTION ("-indirect")
@@ -1307,6 +1330,24 @@ ddxProcessArgument (int argc, char *argv[], int i)
       CHECK_ARGS (1);
 #ifdef XWIN_XF86CONFIG
       g_cmdline.configFile = argv[++i];
+#else
+      winMessageBoxF ("The %s option is not supported in this "
+		      "release.\n"
+		      "Ignoring this option and continuing.\n",
+		      MB_ICONINFORMATION,
+		      argv[i]);
+#endif
+      return 2;
+    }
+
+  /*
+   * Look for the '-configdir' argument
+   */
+  if (IS_OPTION ("-configdir"))
+    {
+      CHECK_ARGS (1);
+#ifdef XWIN_XF86CONFIG
+      g_cmdline.configDir = argv[++i];
 #else
       winMessageBoxF ("The %s option is not supported in this "
 		      "release.\n"
@@ -1369,16 +1410,6 @@ ddxProcessArgument (int argc, char *argv[], int i)
     }
 #endif
 
-#ifdef XKB
-  /*
-   * Look for the '-kb' argument
-   */
-  if (IS_OPTION ("-kb"))
-    {
-      g_cmdline.noXkbExtension = TRUE;  
-      return 0; /* Let DIX parse this again */
-    }
-
   if (IS_OPTION ("-xkbrules"))
     {
       CHECK_ARGS (1);
@@ -1409,7 +1440,6 @@ ddxProcessArgument (int argc, char *argv[], int i)
       g_cmdline.xkbOptions = argv[++i];
       return 2;
     }
-#endif
 
   if (IS_OPTION ("-keyhook"))
     {
@@ -1459,13 +1489,13 @@ winLogCommandLine (int argc, char *argv[])
   for (i = 0, iCurrLen = 0; i < argc; ++i)
     if (argv[i])
       {
-	/* Add a character for lines that overflow */
+	/* Adds two characters for lines that overflow */
 	if ((strlen (argv[i]) < CHARS_PER_LINE
 	    && iCurrLen + strlen (argv[i]) > CHARS_PER_LINE)
 	    || strlen (argv[i]) > CHARS_PER_LINE)
 	  {
 	    iCurrLen = 0;
-	    ++iSize;
+	    iSize += 2;
 	  }
 	
 	/* Add space for item and trailing space */
@@ -1495,7 +1525,7 @@ winLogCommandLine (int argc, char *argv[])
 	iCurrLen = 0;
 	
 	/* Add line break if it fits */
-	strncat (g_pszCommandLine, "\n", iSize - strlen (g_pszCommandLine));
+	strncat (g_pszCommandLine, "\n ", iSize - strlen (g_pszCommandLine));
       }
       
       strncat (g_pszCommandLine, argv[i], iSize - strlen (g_pszCommandLine));
@@ -1525,8 +1555,9 @@ winLogVersionInfo (void)
 
   ErrorF ("Welcome to the XWin X Server\n");
   ErrorF ("Vendor: %s\n", VENDOR_STRING);
-  ErrorF ("Release: %s\n\n", VERSION_STRING);
-  ErrorF ("Contact: %s\n\n", VENDOR_CONTACT);
+  ErrorF ("Release: %d.%d.%d.%d (%d)\n", XORG_VERSION_MAJOR, XORG_VERSION_MINOR, XORG_VERSION_PATCH, XORG_VERSION_SNAP, XORG_VERSION_CURRENT);
+  ErrorF ("%s\n\n", BUILDERSTRING);
+  ErrorF ("Contact: %s\n", VENDOR_CONTACT);
 }
 
 /*

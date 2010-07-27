@@ -24,8 +24,6 @@ in this Software without prior written authorization from The Open Group.
 
 ********************************************************/
 
-#define NEED_REPLIES
-#define NEED_EVENTS
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
 #endif
@@ -43,8 +41,9 @@ in this Software without prior written authorization from The Open Group.
 #include "resource.h"
 #include "opaque.h"
 #include "sleepuntil.h"
-#define _MULTIBUF_SERVER_	/* don't want Xlib structures */
-#include <X11/extensions/multibufst.h>
+#include "inputstr.h"
+#include <X11/extensions/multibufconst.h>
+#include <X11/extensions/multibufproto.h>
 
 #include <stdio.h>
 #if !defined(WIN32)
@@ -58,6 +57,251 @@ in this Software without prior written authorization from The Open Group.
 #define bClient(b)   (clients[CLIENT_ID(b->pPixmap->drawable.id)])
 
 #define ValidEventMasks (ExposureMask|MultibufferClobberNotifyMask|MultibufferUpdateNotifyMask)
+
+/* The _Multibuffer and _Multibuffers structures below refer to each other,
+ * so we need this forward declaration
+ */
+typedef struct _Multibuffers	*MultibuffersPtr;
+
+/*
+ * per-Multibuffer data
+ */
+typedef struct _Multibuffer {
+    MultibuffersPtr pMultibuffers;  /* associated window data */
+    Mask	    eventMask;	    /* MultibufferClobberNotifyMask|ExposureMask|MultibufferUpdateNotifyMask */
+    Mask	    otherEventMask; /* mask of all other clients event masks */
+    OtherClients    *otherClients;  /* other clients that want events */
+    int		    number;	    /* index of this buffer into array */
+    int		    side;	    /* always Mono */
+    int		    clobber;	    /* Unclobbered, PartiallyClobbered, FullClobbered */
+    PixmapPtr	    pPixmap;	    /* associated pixmap */
+} MultibufferRec, *MultibufferPtr;
+
+/*
+ * per-window data
+ */
+
+typedef struct _Multibuffers {
+    WindowPtr	pWindow;		/* associated window */
+    int		numMultibuffer;		/* count of buffers */
+    int		refcnt;			/* ref count for delete */
+    int		displayedMultibuffer;	/* currently active buffer */
+    int		updateAction;		/* Undefined, Background, Untouched, Copied */
+    int		updateHint;		/* Frequent, Intermittent, Static */
+    int		windowMode;		/* always Mono */
+
+    TimeStamp	lastUpdate;		/* time of last update */
+
+    unsigned short	width, height;	/* last known window size */
+    short		x, y;		/* for static gravity */
+
+    MultibufferPtr	buffers;        /* array of numMultibuffer buffers */
+} MultibuffersRec;
+
+/*
+ * per-screen data
+ */
+typedef struct _MultibufferScreen {
+    PositionWindowProcPtr PositionWindow;		/* pWin, x,y */
+} MultibufferScreenRec, *MultibufferScreenPtr;
+
+/*
+ * per display-image-buffers request data.
+ */
+
+typedef struct _DisplayRequest {
+    struct _DisplayRequest	*next;
+    TimeStamp			activateTime;
+    ClientPtr			pClient;
+    XID				id;
+} DisplayRequestRec, *DisplayRequestPtr;
+
+#define DestroyWindowMask		(1L<<0)
+#define PositionWindowMask		(1L<<1)
+#define PostValidateTreeMask		(1L<<2)
+#define ClipNotifyMask			(1L<<3)
+#define WindowExposuresMask		(1L<<4)
+#define CopyWindowMask			(1L<<5)
+#define ClearToBackgroundMask		(1L<<6)
+#define ChangeWindowAttributesMask	(1L<<7)
+
+extern int		MultibufferScreenIndex;
+extern int		MultibufferWindowIndex;
+
+extern RESTYPE		MultibufferDrawableResType;
+
+extern void		MultibufferUpdate(	/* pMbuffer, time */
+				MultibufferPtr /* pMultibuffer */,
+				CARD32 /* time */
+				);
+extern void		MultibufferExpose(	/* pMbuffer, pRegion */
+				MultibufferPtr /* pMultibuffer */,
+				RegionPtr /* pRegion */
+				);
+extern void		MultibufferClobber(	/* pMbuffer */
+				MultibufferPtr /* pMultibuffer */
+				);
+
+typedef struct _mbufWindow	*mbufWindowPtr;
+
+void DestroyImageBuffers (WindowPtr	pWin);
+
+/*
+ * per-buffer data
+ */
+
+#define MB_DISPLAYED_BUFFER(pMBWindow) \
+    ((pMBWindow)->buffers + (pMBWindow)->displayedMultibuffer)
+
+typedef struct _mbufBuffer {
+    mbufWindowPtr   pMBWindow;	    /* associated window data */
+    Mask	    eventMask;	    /* client event mask */
+    Mask	    otherEventMask; /* union of other clients' event masks */
+    OtherClientsPtr otherClients;   /* other clients that want events */
+    int		    number;	    /* index of this buffer into array */
+    int		    side;	    /* stero side: always Mono */
+    int		    clobber;	    /* clober state */
+    DrawablePtr	    pDrawable;	    /* associated drawable */
+} mbufBufferRec, *mbufBufferPtr;
+
+
+/*
+ * per-window data
+ */
+
+#define MB_WINDOW_PRIV(pWin) \
+    ((mbufWindowPtr)((pWin)->devPrivates[MultibufferWindowIndex].ptr))
+
+typedef struct _mbufWindow {
+    WindowPtr	pWindow;		/* associated window */
+    int		numMultibuffer;		/* count of buffers */
+    mbufBufferPtr buffers;		/* array of (numMultibuffer) buffers */
+    int		displayedMultibuffer;	/* currently active buffer */
+    int		updateAction;		/* Undefined, Background,
+					   Untouched, Copied */
+    int		updateHint;		/* Frequent, Intermittent, Static */
+    int		windowMode;		/* always Mono */
+    TimeStamp	lastUpdate;		/* time of last update */
+    short		x, y;		/* for static gravity */
+    unsigned short	width, height;	/* last known window size */
+    DevUnion		devPrivate;
+} mbufWindowRec;
+
+
+/*
+ * per-screen data
+ */
+
+#define MB_SCREEN_PRIV(pScreen) \
+    ((mbufScreenPtr)((pScreen)->devPrivates[MultibufferScreenIndex].ptr))
+
+typedef struct _mbufScreen {
+    long mbufWindowCount;		/* count of multibuffered windows */
+
+    /* Wrap pScreen->DestroyWindow */
+    DestroyWindowProcPtr DestroyWindow;
+    long funcsWrapped;			/* flags which functions are wrapped */
+
+    /* Initialized by device-dependent section */
+    int  nInfo;				/* number of buffer info rec's */
+    xMbufBufferInfo *pInfo;		/* buffer info (for Normal buffers) */
+
+    int  (* CreateImageBuffers)(
+		WindowPtr		/* pWin */,
+		int			/* nbuf */,
+		XID *			/* ids */,
+		int			/* action */,
+		int			/* hint */
+		);
+    void (* DestroyImageBuffers)(
+		WindowPtr		/* pWin */
+		);
+    void (* DisplayImageBuffers)(
+		ScreenPtr		/* pScreen */,
+		mbufBufferPtr *		/* ppMBBuffer */,
+		mbufWindowPtr *		/* ppMBWindow */,
+		int			/* nbuf */
+		);
+    void (* ClearImageBufferArea)(
+		mbufBufferPtr		/* pMBBuffer */,
+		short			/* x */,
+		short			/* y */,
+		unsigned short		/* width */,
+		unsigned short		/* height */,
+		Bool			/* exposures */
+		);
+    Bool (* ChangeMBufferAttributes)(	/* pMBWindow, vmask */
+		/* FIXME */
+		);
+    Bool (* ChangeBufferAttributes)(	/* pMBBuffer, vmask */
+		/* FIXME */
+		);
+    void (* DeleteBufferDrawable)(
+		DrawablePtr		/* pDrawable */
+		);
+    void (* WrapScreenFuncs)(
+		ScreenPtr		/* pScreen */
+		);
+    void (* ResetProc)(
+		ScreenPtr		/* pScreen */
+		);
+    DevUnion	devPrivate;
+} mbufScreenRec, *mbufScreenPtr;
+
+
+/* Privates to mbufScreenRec */
+
+#ifdef _MULTIBUF_PIXMAP_
+#define MB_SCREEN_PRIV_PIXMAP(pScreen) \
+    ((mbufPixmapPrivPtr) MB_SCREEN_PRIV((pScreen))->devPrivate.ptr)
+
+typedef struct _mbufPixmapPriv
+{
+    /* Pointers to wrapped functions */
+    PositionWindowProcPtr PositionWindow;		/* pWin, x,y */
+    long funcsWrapped;			/* flags which functions are wrapped */
+} mbufPixmapPrivRec, *mbufPixmapPrivPtr;
+#endif /* _MULTIBUF_PIXMAP_ */
+
+
+#ifdef _MULTIBUF_BUFFER_
+
+extern int frameWindowPrivateIndex;
+
+#define MB_SCREEN_PRIV_BUFFER(pScreen) \
+    ((mbufBufferPrivPtr) MB_SCREEN_PRIV((pScreen))->devPrivate.ptr)
+
+typedef struct _mbufBufferPriv
+{
+    DevUnion	*frameBuffer;	/* Array of screen framebuffers */
+    DevUnion	selectPlane;	/* Plane(s) that select displayed buffer */
+
+    /*
+     * Note: subtractRgn and unionRgn may overlap. subtractRgn is a union
+     * of all the old clipLists of the windows that are displaying
+     * the backbuffer. unionRgn is the union of all the new clipLists
+     * of the same windows.
+     */
+
+    RegionRec	backBuffer;	/* Area of screen displaying back buffer */
+    RegionRec   subtractRgn;	/* Regions lost to backBuffer   */
+    RegionRec   unionRgn;	/* Regions gained by backBuffer */
+    Bool	rgnChanged;	/* TRUE if "backBuffer" needs to be updated */
+
+    void (* CopyBufferBits)();	/* pMBWindow, srcBufferNum, dstBufferNum */
+    void (* DrawSelectPlane)();	/* pScreen, selectPlane, pRegion, bufferNum */
+
+    /* Pointers to wrapped functions */
+    PostValidateTreeProcPtr	PostValidateTree; /* pParent, pChild, kind */
+    ClipNotifyProcPtr		ClipNotify;       /* pWin, dx, dy */
+    WindowExposuresProcPtr	WindowExposures;  /* pWin, pRegion */
+    CopyWindowProcPtr		CopyWindow;       /* pWin, oldPt, pOldRegion */
+    ClearToBackgroundProcPtr	ClearToBackground; /* pWin, x,y,w,h, sendExpose */
+    ChangeWindowAttributesProcPtr ChangeWindowAttributes; /* pWin, vmask */
+    long funcsWrapped;			/* flags which functions are wrapped */
+    unsigned  inClearToBackground:1;	/* used by WindowExposure */
+} mbufBufferPrivRec, *mbufBufferPrivPtr;
+#endif /* _MULTIBUF_BUFFER_ */
 
 static int		MultibufferEventBase;
 static int		MultibufferErrorBase;
@@ -205,7 +449,7 @@ MultibufferExtensionInit()
     for (i = 0; i < screenInfo.numScreens; i++)
     {
 	pScreen = screenInfo.screens[i];
-	if (!(pMultibufferScreen = (MultibufferScreenPtr) xalloc (sizeof (MultibufferScreenRec))))
+	if (!(pMultibufferScreen = xalloc (sizeof (MultibufferScreenRec))))
 	{
 	    for (j = 0; j < i; j++)
 		xfree (dixLookupPrivate(&screenInfo.screens[j]->devPrivates, MultibufferScreenPrivKey));
@@ -223,10 +467,15 @@ MultibufferExtensionInit()
      * create the resource types
      */
     MultibufferDrawableResType =
-	CreateNewResourceType(MultibufferDrawableDelete)|RC_DRAWABLE;
-    MultibufferResType = CreateNewResourceType(MultibufferDelete);
-    MultibuffersResType = CreateNewResourceType(MultibuffersDelete);
-    OtherClientResType = CreateNewResourceType(OtherClientDelete);
+	CreateNewResourceType(MultibufferDrawableDelete, "MultibufferDrawable");
+    if (MultiBufferDrawableResType)
+	MultibufferDrawableResType |= RC_DRAWABLE;
+    MultibufferResType = CreateNewResourceType(MultibufferDelete,
+					       "MultibufferBuffer");
+    MultibuffersResType = CreateNewResourceType(MultibuffersDelete,
+						"MultibufferWindow");
+    OtherClientResType = CreateNewResourceType(OtherClientDelete,
+					       "MultibufferOtherClient");
     if (MultibufferDrawableResType && MultibufferResType &&
 	MultibuffersResType && 	OtherClientResType &&
 	(extEntry = AddExtension(MULTIBUFFER_PROTOCOL_NAME,
@@ -350,8 +599,7 @@ CreateImageBuffers (pWin, nbuf, ids, action, hint)
     xRectangle		clearRect;
 
     DestroyImageBuffers(pWin);
-    pMultibuffers = (MultibuffersPtr) xalloc (sizeof (MultibuffersRec) +
-					      nbuf * sizeof (MultibufferRec));
+    pMultibuffers = xalloc (sizeof (MultibuffersRec) + nbuf * sizeof (MultibufferRec));
     if (!pMultibuffers)
 	return BadAlloc;
     pMultibuffers->pWindow = pWin;
@@ -433,7 +681,7 @@ ProcCreateImageBuffers (client)
     int				len, nbuf, i, err, rc;
 
     REQUEST_AT_LEAST_SIZE (xMbufCreateImageBuffersReq);
-    len = stuff->length - (sizeof(xMbufCreateImageBuffersReq) >> 2);
+    len = stuff->length - bytes_to_int32(sizeof(xMbufCreateImageBuffersReq));
     if (len == 0)
 	return BadLength;
     rc = dixLookupWindow(&pWin, stuff->window, client, DixUnknownAccess);
@@ -498,16 +746,17 @@ ProcDisplayImageBuffers (client)
     int		    i, j;
     CARD32	    minDelay;
     TimeStamp	    activateTime, bufferTime;
+    int		    rc;
     
 
     REQUEST_AT_LEAST_SIZE (xMbufDisplayImageBuffersReq);
-    nbuf = stuff->length - (sizeof (xMbufDisplayImageBuffersReq) >> 2);
+    nbuf = stuff->length - bytes_to_int32(sizeof (xMbufDisplayImageBuffersReq));
     if (!nbuf)
 	return Success;
     minDelay = stuff->minDelay;
     ids = (XID *) &stuff[1];
-    ppMultibuffers = (MultibuffersPtr *) xalloc(nbuf * sizeof (MultibuffersPtr));
-    pMultibuffer = (MultibufferPtr *) xalloc(nbuf * sizeof (MultibufferPtr));
+    ppMultibuffers = xalloc(nbuf * sizeof (MultibuffersPtr));
+    pMultibuffer = xalloc(nbuf * sizeof (MultibufferPtr));
     if (!ppMultibuffers || !pMultibuffer)
     {
 	if (ppMultibuffers) xfree(ppMultibuffers);
@@ -519,9 +768,9 @@ ProcDisplayImageBuffers (client)
     activateTime.milliseconds = 0;
     for (i = 0; i < nbuf; i++)
     {
-	pMultibuffer[i] = (MultibufferPtr) LookupIDByType (ids[i], 
-MultibufferResType);
-	if (!pMultibuffer[i])
+	rc = dixLookupResourceByType(&pMultibuffer[i], ids[i],
+		MultibufferResType, client, DixUseAccess);
+	if (rc != Success)
 	{
 	    xfree(ppMultibuffers);
 	    xfree(pMultibuffer);
@@ -592,10 +841,11 @@ ProcSetMBufferAttributes (client)
     rc = dixLookupWindow(&pWin, stuff->window, client, DixUnknownAccess);
     if (rc != Success)
 	return rc;
-    pMultibuffers = (MultibuffersPtr)LookupIDByType (pWin->drawable.id, MultibuffersResType);
-    if (!pMultibuffers)
+    rc = dixLookupResourceByType(&pMultibuffers, pWin->drawable.id,
+	    MultibufferResType, client, DixSetAttrAccess);
+    if (rc != Success)
 	return BadMatch;
-    len = stuff->length - (sizeof (xMbufSetMBufferAttributesReq) >> 2);
+    len = stuff->length - bytes_to_int32(sizeof (xMbufSetMBufferAttributesReq));
     vmask = stuff->valueMask;
     if (len != Ones (vmask))
 	return BadLength;
@@ -644,10 +894,11 @@ ProcGetMBufferAttributes (client)
     rc = dixLookupWindow(&pWin, stuff->window, client, DixUnknownAccess);
     if (rc != Success)
 	return rc;
-    pMultibuffers = (MultibuffersPtr)LookupIDByType (pWin->drawable.id, MultibuffersResType);
-    if (!pMultibuffers)
+    rc = dixLookupResourceByType(&pMultibuffers, pWin->drawable.id,
+	    MultibufferResType, client, DixGetAttrAccess);
+    if (rc != Success)
 	return BadAccess;
-    ids = (XID *) xalloc (pMultibuffers->numMultibuffer * sizeof (XID));
+    ids = xalloc (pMultibuffers->numMultibuffer * sizeof (XID));
     if (!ids)
 	return BadAlloc;
     for (i = 0; i < pMultibuffers->numMultibuffer; i++)
@@ -685,12 +936,15 @@ ProcSetBufferAttributes (client)
     XID		*vlist;
     Mask	eventMask;
     int		result;
+    int		rc;
 
     REQUEST_AT_LEAST_SIZE (xMbufSetBufferAttributesReq);
-    pMultibuffer = (MultibufferPtr) LookupIDByType (stuff->buffer, MultibufferResType);
-    if (!pMultibuffer)
+
+    rc = dixLookupResourceByType(&pMultibuffer, stuff->buffer,
+	    MultibufferResType, client, DixSetAttrAccess);
+    if (rc != Success)
 	return MultibufferErrorBase + MultibufferBadBuffer;
-    len = stuff->length - (sizeof (xMbufSetBufferAttributesReq) >> 2);
+    len = stuff->length - bytes_to_int32(sizeof (xMbufSetBufferAttributesReq));
     vmask = stuff->valueMask;
     if (len != Ones (vmask))
 	return BadLength;
@@ -725,10 +979,12 @@ ProcGetBufferAttributes (client)
     xMbufGetBufferAttributesReply	rep;
     OtherClientsPtr		other;
     int				n;
+    int				rc;
 
     REQUEST_SIZE_MATCH (xMbufGetBufferAttributesReq);
-    pMultibuffer = (MultibufferPtr) LookupIDByType (stuff->buffer, MultibufferResType);
-    if (!pMultibuffer)
+    rc = dixLookupResourceByType(&pMultibuffer, stuff->buffer,
+	    MultibufferResType, client, DixGetAttrAccess);
+    if (rc != Success)
 	return MultibufferErrorBase + MultibufferBadBuffer;
     rep.type = X_Reply;
     rep.sequenceNumber = client->sequence;
@@ -784,14 +1040,13 @@ ProcGetBufferInfo (client)
 	pDepth = &pScreen->allowedDepths[i];
 	nInfo += pDepth->numVids;
     }
-    pInfo = (xMbufBufferInfo *)
-		xalloc (nInfo * sizeof (xMbufBufferInfo));
+    pInfo = xalloc (nInfo * sizeof (xMbufBufferInfo));
     if (!pInfo)
 	return BadAlloc;
 
     rep.type = X_Reply;
     rep.sequenceNumber = client->sequence;
-    rep.length = nInfo * (sizeof (xMbufBufferInfo) >> 2);
+    rep.length = nInfo * bytes_to_int32(sizeof (xMbufBufferInfo));
     rep.normalInfo = nInfo;
     rep.stereoInfo = 0;
     if (client->swapped)
@@ -836,10 +1091,12 @@ ProcClearImageBufferArea (client)
     int width, height;
     DrawablePtr pDrawable;
     ScreenPtr pScreen;
+    int rc;
 
     REQUEST_SIZE_MATCH (xMbufClearImageBufferAreaReq);
-    pMultibuffer = (MultibufferPtr) LookupIDByType (stuff->buffer, MultibufferResType);
-    if (!pMultibuffer)
+    rc = dixLookupResourceByType(&pMultibuffer, stuff->buffer,
+	    MultibufferResType, client, DixWriteAccess);
+    if (rc != Success)
 	return MultibufferErrorBase + MultibufferBadBuffer;
     if ((stuff->exposures != xTrue) && (stuff->exposures != xFalse))
     {
@@ -1108,6 +1365,34 @@ SClobberNotifyEvent (from, to)
     to->state = from->state;
 }
 
+RegionPtr CreateUnclippedWinSize(WindowPtr pWin);
+
+RegionPtr
+CreateUnclippedWinSize (WindowPtr pWin)
+{
+    RegionPtr	pRgn;
+    BoxRec	box;
+
+    box.x1 = pWin->drawable.x;
+    box.y1 = pWin->drawable.y;
+    box.x2 = pWin->drawable.x + (int) pWin->drawable.width;
+    box.y2 = pWin->drawable.y + (int) pWin->drawable.height;
+    pRgn = REGION_CREATE(pWin->drawable.pScreen, &box, 1);
+    if (wBoundingShape (pWin) || wClipShape (pWin)) {
+	ScreenPtr pScreen;
+        pScreen = pWin->drawable.pScreen;
+
+	REGION_TRANSLATE(pScreen, pRgn, - pWin->drawable.x,
+			 - pWin->drawable.y);
+	if (wBoundingShape (pWin))
+	    REGION_INTERSECT(pScreen, pRgn, pRgn, wBoundingShape (pWin));
+	if (wClipShape (pWin))
+	    REGION_INTERSECT(pScreen, pRgn, pRgn, wClipShape (pWin));
+	REGION_TRANSLATE(pScreen, pRgn, pWin->drawable.x, pWin->drawable.y);
+    }
+    return pRgn;
+}
+
 static void
 PerformDisplayRequest (ppMultibuffers, pMultibuffer, nbuf)
     MultibufferPtr	    *pMultibuffer;
@@ -1229,42 +1514,6 @@ GetBufferPointer (pWin, i)
     return (DrawablePtr) pMultibuffers->buffers[i].pPixmap;
 }
 
-int
-DisplayImageBuffers (ids, nbuf)
-    XID	    *ids;
-    int	    nbuf;
-{
-    MultibufferPtr  *pMultibuffer;
-    MultibuffersPtr *pMultibuffers;
-    int		    i, j;
-
-    pMultibuffer = (MultibufferPtr *) xalloc (nbuf * sizeof *pMultibuffer +
-				   nbuf * sizeof *pMultibuffers);
-    if (!pMultibuffer)
-	return BadAlloc;
-    pMultibuffers = (MultibuffersPtr *) (pMultibuffer + nbuf);
-    for (i = 0; i < nbuf; i++)
-    {
-	pMultibuffer[i] = (MultibufferPtr) LookupIDByType (ids[i], MultibufferResType);
-	if (!pMultibuffer[i])
-	{
-	    xfree (pMultibuffer);
-	    return MultibufferErrorBase + MultibufferBadBuffer;
-	}
-	pMultibuffers[i] = pMultibuffer[i]->pMultibuffers;
-	for (j = 0; j < i; j++)
-	    if (pMultibuffers[i] == pMultibuffers[j])
-	    {
-		xfree (pMultibuffer);
-		return BadMatch;
-	    }
-    }
-    PerformDisplayRequest (pMultibuffers, pMultibuffer, nbuf);
-    xfree (pMultibuffer);
-    return Success;
-}
-
-
 static Bool
 QueueDisplayRequest (client, activateTime)
     ClientPtr	    client;
@@ -1364,7 +1613,7 @@ MultibufferExpose (pMultibuffer, pRegion)
 	numRects = REGION_NUM_RECTS(pRegion);
 	pBox = REGION_RECTS(pRegion);
 
-	pEvent = (xEvent *) xalloc(numRects * sizeof(xEvent));
+	pEvent = xalloc(numRects * sizeof(xEvent));
 	if (pEvent) {
 	    pe = pEvent;
 
@@ -1718,7 +1967,7 @@ EventSelectForMultibuffer (pMultibuffer, client, mask)
 	}
 	if (!other)
 	{ /* new client that never selected events on this buffer before */
-	    other = (OtherClients *) xalloc (sizeof (OtherClients));
+	    other = xalloc (sizeof (OtherClients));
 	    if (!other)
 		return BadAlloc;
 	    other->mask = mask;

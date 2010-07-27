@@ -115,14 +115,10 @@ xf86MatchSbusInstances(const char *driverName, int sbusDevId,
 		p = xf86Entities[num];
 		p->driver = drvp;
 		p->chipset = -1;
-		p->busType = BUS_SBUS;
+		p->bus.type = BUS_SBUS;
 		xf86AddDevToEntity(num, devList[0]);
 		p->active = TRUE;
 		p->inUse = FALSE;
-		/* Here we initialize the access structure */
-		p->access = xnfcalloc(1,sizeof(EntityAccessRec));
-		p->access->fallback = &AccessNULL;
-		p->access->pAccess = &AccessNULL;
 		retEntities = xalloc(sizeof(int));
 		retEntities[0] = num;
 		*foundEntities = retEntities;
@@ -193,16 +189,4 @@ sparcPromNode2Pathname(sbusPromNodePtr pnode)
 void
 sparcPromClose(void)
 {
-}
-
-char *
-sparcDriverName(void)
-{
-
-	switch (sbusInfo.devId) {
-	case SBUS_DEVICE_FFB:
-		return "sunffb";
-	default:
-		return NULL;
-	}
 }

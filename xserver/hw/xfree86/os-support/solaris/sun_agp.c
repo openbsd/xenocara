@@ -9,32 +9,24 @@
 /* Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, and/or sell copies of the Software, and to permit persons
- * to whom the Software is furnished to do so, provided that the above
- * copyright notice(s) and this permission notice appear in all copies of
- * the Software and that both the above copyright notice(s) and this
- * permission notice appear in supporting documentation.
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
- * OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
- * INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
- * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
  *
- * Except as contained in this notice, the name of a copyright holder
- * shall not be used in advertising or otherwise to promote the sale, use
- * or other dealings in this Software without prior written authorization
- * of the copyright holder.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
-
-#pragma ident	"@(#)sun_agp.c	1.1	05/04/04 SMI"
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
@@ -49,11 +41,8 @@
 #include <sys/ioccom.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include "agpgart.h"
+#include <sys/agpgart.h>
 
-#ifndef	AGP_DEVICE
-#define	AGP_DEVICE		"/dev/agpgart"
-#endif
 /* AGP page size is independent of the host page size. */
 #ifndef	AGP_PAGE_SIZE
 #define	AGP_PAGE_SIZE		4096
@@ -66,7 +55,7 @@ static Bool initDone = FALSE;
  * Close /dev/agpgart.  This frees all associated memory allocated during
  * this server generation.
  */
-_X_EXPORT Bool
+Bool
 xf86GARTCloseScreen(int screenNum)
 {
 	if (gartFd != -1) {
@@ -110,14 +99,14 @@ GARTInit(int screenNum)
 	return TRUE;
 }
 
-_X_EXPORT Bool
+Bool
 xf86AgpGARTSupported(void)
 {
 	return (GARTInit(-1));
 
 }
 
-_X_EXPORT AgpInfoPtr
+AgpInfoPtr
 xf86GetAGPInfo(int screenNum)
 {
 	agp_info_t agpinf;
@@ -150,7 +139,7 @@ xf86GetAGPInfo(int screenNum)
 	return info;
 }
 
-_X_EXPORT Bool
+Bool
 xf86AcquireGART(int screenNum)
 {
 
@@ -171,7 +160,7 @@ xf86AcquireGART(int screenNum)
 	return TRUE;
 }
 
-_X_EXPORT Bool
+Bool
 xf86ReleaseGART(int screenNum)
 {
 
@@ -200,7 +189,7 @@ xf86ReleaseGART(int screenNum)
 	return FALSE;
 }
 
-_X_EXPORT int
+int
 xf86AllocateGARTMemory(int screenNum, unsigned long size, int type,
 			unsigned long *physical)
 {
@@ -238,7 +227,7 @@ xf86AllocateGARTMemory(int screenNum, unsigned long size, int type,
 	return alloc.agpa_key;
 }
 
-_X_EXPORT Bool
+Bool
 xf86DeallocateGARTMemory(int screenNum, int key)
 {
 	if (!GARTInit(screenNum) || (acquiredScreen != screenNum))
@@ -255,7 +244,7 @@ xf86DeallocateGARTMemory(int screenNum, int key)
 }
 
 /* Bind GART memory with "key" at "offset" */
-_X_EXPORT Bool
+Bool
 xf86BindGARTMemory(int screenNum, int key, unsigned long offset)
 {
 	agp_bind_t bind;
@@ -291,7 +280,7 @@ xf86BindGARTMemory(int screenNum, int key, unsigned long offset)
 }
 
 /* Unbind GART memory with "key" */
-_X_EXPORT Bool
+Bool
 xf86UnbindGARTMemory(int screenNum, int key)
 {
 	agp_unbind_t unbind;
@@ -317,7 +306,7 @@ xf86UnbindGARTMemory(int screenNum, int key)
 
 
 /* XXX Interface may change. */
-_X_EXPORT Bool
+Bool
 xf86EnableAGP(int screenNum, CARD32 mode)
 {
 	agp_setup_t setup;

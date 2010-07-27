@@ -10,10 +10,6 @@ if XFAKESERVER
 XFAKE_SUBDIRS = fake
 endif
 
-if XSDLSERVER
-XSDL_SUBDIRS = sdl
-endif
-
 if XEPHYR
 XEPHYR_SUBDIRS = ephyr
 endif
@@ -27,7 +23,6 @@ OPENBSD_SUBDIRS = openbsd
 endif
 
 SERVER_SUBDIRS = 		\
-	$(XSDL_SUBDIRS)		\
 	$(FBDEV_SUBDIRS)	\
 	$(WSCONS_SUBDIRS)	\
 	$(XEPHYR_SUBDIRS)       \
@@ -39,7 +34,7 @@ SUBDIRS =			\
 	$(OPENBSD_SUBDIRS)	\
 	$(SERVER_SUBDIRS)
 
-DIST_SUBDIRS = fbdev sdl ephyr src linux fake openbsd wscons
+DIST_SUBDIRS = fbdev ephyr src linux fake openbsd wscons
 
 relink:
-	@for i in $(SERVER_SUBDIRS) ; do make -C $$i relink ; done
+	$(AM_V_at)for i in $(SERVER_SUBDIRS) ; do $(MAKE) -C $$i relink || exit 1 ; done

@@ -42,6 +42,7 @@
 #include "glxserver.h"
 #include "glxutil.h"
 #include "glxext.h"
+#include "protocol-versions.h"
 
 static int glxScreenPrivateKeyIndex;
 static DevPrivateKey glxScreenPrivateKey = &glxScreenPrivateKeyIndex;
@@ -162,7 +163,8 @@ static const char GLServerExtensions[] =
 ** supported across all screens in a multi-screen system.
 */
 static char GLXServerVendorName[] = "SGI";
-static char GLXServerVersion[] = "1.2";
+unsigned glxMajorVersion = SERVER_GLX_MAJOR_VERSION;
+unsigned glxMinorVersion = SERVER_GLX_MINOR_VERSION;
 static char GLXServerExtensions[] =
 			"GLX_ARB_multisample "
 			"GLX_EXT_visual_info "
@@ -177,7 +179,9 @@ static char GLXServerExtensions[] =
                         "GLX_SGIX_swap_barrier "
 #endif
 			"GLX_SGIX_fbconfig "
+			"GLX_SGIX_pbuffer "
 			"GLX_MESA_copy_sub_buffer "
+                        "GLX_INTEL_swap_event"
 			;
 
 /*
@@ -223,8 +227,8 @@ glxGetScreen(ScreenPtr pScreen)
     return dixLookupPrivate(&pScreen->devPrivates, glxScreenPrivateKey);
 }
 
-void GlxSetVisualConfigs(int nconfigs, 
-                         __GLXvisualConfig *configs, void **privates)
+_X_EXPORT void GlxSetVisualConfigs(int nconfigs,
+                         void *configs, void **privates)
 {
     /* We keep this stub around for the DDX drivers that still
      * call it. */
@@ -248,10 +252,7 @@ GLint glxConvertToXVisualType(int visualType)
 static VisualPtr
 AddScreenVisuals(ScreenPtr pScreen, int count, int d)
 {
-    XID		*installedCmaps, *vids, vid;
-    int		 numInstalledCmaps, numVisuals, i, j;
-    VisualPtr	 visuals;
-    ColormapPtr	 installedCmap;
+    int		 i;
     DepthPtr	 depth;
 
     depth = NULL;
@@ -264,54 +265,8 @@ AddScreenVisuals(ScreenPtr pScreen, int count, int d)
     if (depth == NULL)
 	return NULL;
 
-    /* Find the installed colormaps */
-    installedCmaps = xalloc (pScreen->maxInstalledCmaps * sizeof (XID));
-    if (!installedCmaps)
-	return NULL;
-
-    numInstalledCmaps = pScreen->ListInstalledColormaps(pScreen, installedCmaps);
-
-    /* realloc the visual array to fit the new one in place */
-    numVisuals = pScreen->numVisuals;
-    visuals = xrealloc(pScreen->visuals, (numVisuals + count) * sizeof(VisualRec));
-    if (!visuals) {
-	xfree(installedCmaps);
-	return NULL;
-    }
-
-    vids = xrealloc(depth->vids, (depth->numVids + count) * sizeof(XID));
-    if (vids == NULL) {
-	xfree(installedCmaps);
-	xfree(visuals);
-	return NULL;
-    }
-
-    /*
-     * Fix up any existing installed colormaps -- we'll assume that
-     * the only ones created so far have been installed.  If this
-     * isn't true, we'll have to walk the resource database looking
-     * for all colormaps.
-     */
-    for (i = 0; i < numInstalledCmaps; i++) {
-	installedCmap = LookupIDByType (installedCmaps[i], RT_COLORMAP);
-	if (!installedCmap)
-	    continue;
-	j = installedCmap->pVisual - pScreen->visuals;
-	installedCmap->pVisual = &visuals[j];
-    }
-
-    xfree(installedCmaps);
-
-    for (i = 0; i < count; i++) {
-	vid = FakeClientID(0);
-	visuals[pScreen->numVisuals + i].vid = vid;
-	vids[depth->numVids + i] = vid;
-    }
-
-    pScreen->visuals = visuals;
-    pScreen->numVisuals += count;
-    depth->vids = vids;
-    depth->numVids += count;
+    if (ResizeVisualArray(pScreen, count, depth) == FALSE)
+        return NULL;
 
     /* Return a pointer to the first of the added visuals. */ 
     return pScreen->visuals + pScreen->numVisuals - count;
@@ -400,8 +355,16 @@ void __glXScreenInit(__GLXscreen *pGlxScreen, ScreenPtr pScreen)
     pGlxScreen->pScreen       = pScreen;
     pGlxScreen->GLextensions  = xstrdup(GLServerExtensions);
     pGlxScreen->GLXvendor     = xstrdup(GLXServerVendorName);
-    pGlxScreen->GLXversion    = xstrdup(GLXServerVersion);
     pGlxScreen->GLXextensions = xstrdup(GLXServerExtensions);
+
+    /* All GLX providers must support all of the functionality required for at
+     * least GLX 1.2.  If the provider supports a higher version, the GLXminor
+     * version can be changed in the provider's screen-probe routine.  For
+     * most providers, the screen-probe routine is the caller of this
+     * function.
+     */
+    pGlxScreen->GLXmajor      = 1;
+    pGlxScreen->GLXminor      = 2;
 
     pGlxScreen->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = glxCloseScreen;
@@ -474,7 +437,6 @@ void __glXScreenInit(__GLXscreen *pGlxScreen, ScreenPtr pScreen)
 void __glXScreenDestroy(__GLXscreen *screen)
 {
     xfree(screen->GLXvendor);
-    xfree(screen->GLXversion);
     xfree(screen->GLXextensions);
     xfree(screen->GLextensions);
 }

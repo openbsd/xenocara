@@ -45,7 +45,6 @@
 #include "xf86Parser.h"
 #include "xf86tokens.h"
 #include "Configint.h"
-#include "vbe.h"
 #include "xf86DDC.h"
 #if defined(__sparc__) && !defined(__OpenBSD__)
 #include "xf86Bus.h"
@@ -103,8 +102,8 @@ void DoShowOptions (void) {
 			strcat (pSymbol, "ModuleData");
 			initData = LoaderSymbol (pSymbol);
 			if (initData) {
-				OptionInfoPtr p;
 				XF86ModuleVersionInfo *vers = initData->vers;
+				OptionInfoPtr p;
 				ErrorF ("Driver[%d]:%s[%s] {\n",
 					i,xf86DriverList[i]->driverName,vers->vendor
 				);

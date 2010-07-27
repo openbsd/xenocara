@@ -1,4 +1,3 @@
-XCOMM $XdotOrg$
 XCOMM
 XCOMM Copyright (c) 1994-1998 by The XFree86 Project, Inc.
 XCOMM
@@ -29,29 +28,25 @@ XCOMM $XConsortium: XF86Conf.cpp /main/22 1996/10/23 11:43:51 kaleb $
 
 XCOMM **********************************************************************
 XCOMM This is a sample configuration file only, intended to illustrate
-XCOMM what a config file might look like.  Refer to the XF86Config(4/5)
-XCOMM man page for details about the format of this file. This man page
-XCOMM is installed as MANPAGE 
+XCOMM what a config file might look like.  Refer to the __xconfigfile__(__filemansuffix__)
+XCOMM man page for details about the format of this file. 
 XCOMM **********************************************************************
 
-XCOMM The ordering of sections is not important in version 4.0 and later.
+XCOMM The ordering of sections is not important in XFree86 4.0 and later,
+XCOMM nor in any Xorg release.
 
 XCOMM **********************************************************************
-XCOMM Files section.  This allows default font and rgb paths to be set
+XCOMM Files section.  This allows default font and module paths to be set
 XCOMM **********************************************************************
 
 Section "Files"
 
 XCOMM Multiple FontPath entries are allowed (which are concatenated together),
 XCOMM as well as specifying multiple comma-separated entries in one FontPath
-XCOMM command (or a combination of both methods)
+XCOMM command (or a combination of both methods).
+XCOMM The default path is shown here.
 
-    FontPath	LOCALFONTPATH
-    FontPath	MISCFONTPATH
-    FontPath	T1FONTPATH
-    FontPath	TRUETYPEFONTPATH
-    FontPath	DPI75FONTPATH
-    FontPath	DPI100FONTPATH
+XCOMM    FontPath	DEFAULTFONTPATH
 
 XCOMM ModulePath can be used to set a search path for the X server modules.
 XCOMM The default path is shown here.
@@ -78,11 +73,6 @@ XCOMM initialisation of the XFree86-DGA extension within that module.
 	Option	"omit xfree86-dga"
     EndSubSection
 
-XCOMM This loads the Type1 and FreeType font modules
-
-    Load	"type1"
-    Load	"freetype"
-
 EndSection
 
 
@@ -98,18 +88,18 @@ XCOMM provide a better stack trace in the core dump to aid in debugging
 
 XCOMM    Option	"NoTrapSignals"
 
-XCOMM Uncomment this to disable the <Crtl><Alt><Fn> VT switch sequence
+XCOMM Uncomment this to disable the <Ctrl><Alt><Fn> VT switch sequence
 XCOMM (where n is 1 through 12).  This allows clients to receive these key
 XCOMM events.
 
 XCOMM    Option	"DontVTSwitch"
 
-XCOMM Uncomment this to disable the <Crtl><Alt><BS> server abort sequence
+XCOMM Uncomment this to disable the <Ctrl><Alt><BS> server abort sequence
 XCOMM This allows clients to receive this key event.
 
-XCOMM    Option	"DontZap"
+XCOMM    Option	"DontZap"	"false"
 
-XCOMM Uncomment this to disable the <Crtl><Alt><KP_+>/<KP_-> mode switching
+XCOMM Uncomment this to disable the <Ctrl><Alt><KP_+>/<KP_-> mode switching
 XCOMM sequences.  This allows clients to receive these key events.
 
 XCOMM    Option	"DontZoom"
@@ -125,36 +115,18 @@ XCOMM Uncomment this to enable the use of a non-local xvidtune client.
 
 XCOMM    Option	"AllowNonLocalXvidtune"
 
-XCOMM Uncomment this to disable dynamically modifying the input device
-XCOMM (mouse and keyboard) settings.
-
-XCOMM    Option	"DisableModInDev"
-
-XCOMM Uncomment this to enable the use of a non-local client to
-XCOMM change the keyboard or mouse settings (currently only xset).
-
-XCOMM    Option	"AllowNonLocalModInDev"
-
 XCOMM Set the basic blanking screen saver timeout.
 
-    Option	"blank time"	"10"	# 10 minutes
+    Option	"BlankTime"	"10"	# 10 minutes
 
 XCOMM Set the DPMS timeouts.  These are set here because they are global
 XCOMM rather than screen-specific.  These settings alone don't enable DPMS.
 XCOMM It is enabled per-screen (or per-monitor), and even then only when
 XCOMM the driver supports it.
 
-    Option	"standby time"	"20"
-    Option	"suspend time"	"30"
-    Option	"off time"	"60"
-
-XCOMM On some platform the server needs to estimate the sizes of PCI
-XCOMM memory and pio ranges. This is done by assuming that PCI ranges
-XCOMM don't overlap. Some broken BIOSes tend to set ranges of inactive
-XCOMM devices wrong. Here one can adjust how aggressive the assumptions
-XCOMM should be. Default is 0.
-
-XCOMM Option   "EstimateSizesAggresively" "0"
+    Option	"StandbyTime"	"10"	# 10 minutes
+    Option	"SuspendTime"	"10"	# 10 minutes
+    Option	"OffTime"	"10"	# 10 minutes
 
 EndSection
 
@@ -179,10 +151,6 @@ XCOMM this.
 XCOMM Specifiy which keyboard LEDs can be user-controlled (eg, with xset(1)).
 
 XCOMM    Option	"Xleds"	"1 2 3"
-
-XCOMM To disable the XKEYBOARD extension, uncomment XkbDisable.
-
-XCOMM    Option	"XkbDisable"
 
 XCOMM To customise the XKB settings to suit your keyboard, modify the
 XCOMM lines below (which are the defaults).  For example, for a European
@@ -218,7 +186,7 @@ XCOMM    Option	"XkbOptions"	"ctrl:swapcaps"
 XCOMM These are the default XKB settings for xorg
 XCOMM
 XCOMM    Option	"XkbRules"	"xorg"
-XCOMM    Option	"XkbModel"	"pc101"
+XCOMM    Option	"XkbModel"	"pc105"
 XCOMM    Option	"XkbLayout"	"us"
 XCOMM    Option	"XkbVariant"	""
 XCOMM    Option	"XkbOptions"	""
@@ -408,14 +376,14 @@ Section "Device"
 
 XCOMM The Identifier must be present.
 
-    Identifier	"Generic VGA"
+    Identifier	"Generic VESA"
 
 XCOMM The Driver line must be present.  When using run-time loadable driver
 XCOMM modules, this line instructs the server to load the specified driver
 XCOMM module.  Even when not using loadable driver modules, this line
 XCOMM indicates which driver should interpret the information in this section.
 
-    Driver	"vga"
+    Driver	"vesa"
 
 XCOMM The chipset line is optional in most cases.  It can be used to override
 XCOMM the driver's chipset detection, and should not normally be specified.
@@ -479,7 +447,7 @@ Section "Screen"
 XCOMM The Identifier, Device and Monitor lines must be present
 
     Identifier	"Screen 1"
-    Device	"Generic VGA"
+    Device	"Generic VESA"
     Monitor	"Generic Monitor"
 
 XCOMM The favoured Depth and/or Bpp may be specified here

@@ -1,5 +1,7 @@
-AM_CPPFLAGS=-F/System/Library/Frameworks/ApplicationServices.framework/Frameworks
-AM_CFLAGS=$(XPBPROXY_CFLAGS)
+AM_CPPFLAGS=-F/System/Library/Frameworks/ApplicationServices.framework/Frameworks \
+	-DLAUNCHD_ID_PREFIX=\"$(LAUNCHD_ID_PREFIX)\"
+
+AM_CFLAGS=$(XPBPROXY_CFLAGS) 
 
 noinst_LTLIBRARIES = libxpbproxy.la
 libxpbproxy_la_SOURCES = \
@@ -15,6 +17,9 @@ if STANDALONE_XPBPROXY
 bin_PROGRAMS = xpbproxy
 xpbproxy_SOURCES = app-main.m
 xpbproxy_LDADD = libxpbproxy.la
+xpbproxy_LDFLAGS = -Wl,-framework,Cocoa
+
+AM_CPPFLAGS += -DSTANDALONE_XPBPROXY
 
 endif
 

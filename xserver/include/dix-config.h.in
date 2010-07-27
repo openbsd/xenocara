@@ -124,6 +124,12 @@
 /* Have Quartz */
 #undef XQUARTZ
 
+/* Support application updating through sparkle. */
+#undef XQUARTZ_SPARKLE
+
+/* Prefix to use for launchd identifiers */
+#undef LAUNCHD_ID_PREFIX
+
 /* Build a standalone xpbproxy */
 #undef STANDALONE_XPBPROXY
 
@@ -154,11 +160,20 @@
 /* Define to 1 if you have the <rpcsvc/dbm.h> header file. */
 #undef HAVE_RPCSVC_DBM_H
 
-/* Define to 1 if you have the `SHA1Init' function. */
-#undef HAVE_SHA1INIT
+/* Define to use libc SHA1 functions */
+#undef HAVE_SHA1_IN_LIBC
 
-/* Define to use libmd SHA1 functions instead of OpenSSL libcrypto */
+/* Define to use CommonCrypto SHA1 functions */
+#undef HAVE_SHA1_IN_COMMONCRYPTO
+
+/* Define to use libmd SHA1 functions */
 #undef HAVE_SHA1_IN_LIBMD
+
+/* Define to use libgcrypt SHA1 functions */
+#undef HAVE_SHA1_IN_LIBGCRYPT
+
+/* Define to use libsha1 for SHA1 */
+#undef HAVE_SHA1_IN_LIBSHA1
 
 /* Define to 1 if you have the `shmctl64' function. */
 #undef HAVE_SHMCTL64
@@ -216,23 +231,8 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to 1 if you have the <X11/extensions/dbeproto.h> header file. */
-#undef HAVE_X11_EXTENSIONS_DBEPROTO_H
-
-/* Define to 1 if you have the <X11/extensions/dpmsconst.h> header file. */
-#undef HAVE_X11_EXTENSIONS_DPMSCONST_H
-
-/* Define to 1 if you have the <X11/extensions/shapeproto.h> header file. */
-#undef HAVE_X11_EXTENSIONS_SHAPEPROTO_H
-
-/* Define to 1 if you have the <X11/extensions/shmproto.h> header file. */
-#undef HAVE_X11_EXTENSIONS_SHMPROTO_H
-
-/* Define to 1 if you have the <X11/extensions/syncproto.h> header file. */
-#undef HAVE_X11_EXTENSIONS_SYNCPROTO_H
-
-/* Define to 1 if you have the <X11/extensions/xtestproto.h> header file. */
-#undef HAVE_X11_EXTENSIONS_XTESTPROTO_H
+/* Define to 1 if you have the <fnmatch.h> header file. */
+#undef HAVE_FNMATCH_H
 
 /* Have /dev/urandom */
 #undef HAVE_URANDOM
@@ -336,15 +336,6 @@
 /* Support Xinerama extension */
 #undef XINERAMA
 
-/* Build XKB */
-#undef XKB
-
-/* Enable XKB per default */
-#undef XKB_DFLT_DISABLED
-
-/* Build XKB server */
-#undef XKB_IN_SERVER
-
 /* Vendor release */
 #undef XORG_RELEASE
 
@@ -408,6 +399,9 @@
 /* Support D-Bus */
 #undef HAVE_DBUS
 
+/* Use libudev for input hotplug */
+#undef CONFIG_UDEV
+
 /* Use D-Bus for input hotplug */
 #undef CONFIG_NEED_DBUS
 
@@ -419,9 +413,6 @@
 
 /* Use only built-in fonts */
 #undef BUILTIN_FONTS
-
-/* Use an empty root cursor */
-#undef NULL_ROOT_CURSOR
 
 /* Have a monotonic clock from clock_gettime() */
 #undef MONOTONIC_CLOCK
@@ -457,7 +448,5 @@
 #ifdef __APPLE__
 #include "dix-config-apple-verbatim.h"
 #endif
-
-#undef HAVE_AVC_NETLINK_ACQUIRE_FD
 
 #endif /* _DIX_CONFIG_H_ */

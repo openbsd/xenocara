@@ -23,7 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
 #endif
-#define NEED_EVENTS
 #include <errno.h>
 #include <termios.h>
 #include <X11/X.h>
@@ -113,7 +112,7 @@ MouseFlush (Kbufio *b, char *buf, int size)
     CARD32  done = now + 100;
     int	    c;
     int	    n = 0;
-    
+
     while ((c = MouseReadByte (b, done - now)) != -1)
     {
 	if (buf)
@@ -171,7 +170,7 @@ static Bool
 MouseWriteByte (int fd, unsigned char c, int timeout)
 {
     int	ret;
-    
+
 #ifdef DEBUG_BYTES
     ErrorF ("\tput %02x\n", c);
 #endif
@@ -235,7 +234,7 @@ typedef struct _kmouse {
     int			invalid;/* total invalid bytes for this protocol */
     unsigned long	state;	/* private per protocol, init to prot->state */
 } Kmouse;
-    
+
 static int mouseValid (KdPointerInfo *pi, unsigned char *ev, int ne)
 {
     Kmouse		*km = pi->driverPrivate;
@@ -272,16 +271,16 @@ static Bool MouseReasonable (KdPointerInfo *pi, unsigned long flags, int dx, int
 {
     Kmouse		*km = pi->driverPrivate;
 
-    if (km->stage == MouseWorking) 
+    if (km->stage == MouseWorking)
 	return TRUE;
-    if (dx < -50 || dx > 50) 
+    if (dx < -50 || dx > 50)
     {
 #ifdef DEBUG
 	ErrorF ("Large X %d\n", dx);
 #endif
 	return FALSE;
     }
-    if (dy < -50 || dy > 50) 
+    if (dy < -50 || dy > 50)
     {
 #ifdef DEBUG
 	ErrorF ("Large Y %d\n", dy);
@@ -300,7 +299,7 @@ static Bool ps2Parse (KdPointerInfo *pi, unsigned char *ev, int ne)
     int		    dx, dy, dz;
     unsigned long   flags;
     unsigned long   flagsrelease = 0;
-    
+
     flags = KD_MOUSE_DELTA;
     if (ev[0] & 4)
 	flags |= KD_BUTTON_2;
@@ -308,7 +307,7 @@ static Bool ps2Parse (KdPointerInfo *pi, unsigned char *ev, int ne)
 	flags |= KD_BUTTON_3;
     if (ev[0] & 1)
 	flags |= KD_BUTTON_1;
-    
+
     if (ne > 3)
     {
 	dz = (int) (signed char) ev[3];
@@ -323,7 +322,7 @@ static Bool ps2Parse (KdPointerInfo *pi, unsigned char *ev, int ne)
 	    flagsrelease = KD_BUTTON_5;
 	}
     }
-	
+
     dx = ev[1];
     if (ev[0] & 0x10)
 	dx -= 256;
@@ -408,14 +407,14 @@ static const KmouseProt exps2Prot = {
 #define PSM_4DMOUSE_ID          6
 #define PSM_4DPLUS_ID           8
 
-static unsigned char	ps2_init[] = { 
+static unsigned char	ps2_init[] = {
     PSMC_ENABLE_DEV,
     0,
 };
 
 #define NINIT_PS2   1
 
-static unsigned char    wheel_3button_init[] = { 
+static unsigned char    wheel_3button_init[] = {
     PSMC_SET_SAMPLING_RATE, 200,
     PSMC_SET_SAMPLING_RATE, 100,
     PSMC_SET_SAMPLING_RATE,  80,
@@ -432,7 +431,7 @@ static unsigned char    wheel_5button_init[] = {
     PSMC_SET_SAMPLING_RATE, 200,
     PSMC_SET_SAMPLING_RATE, 200,
     PSMC_SET_SAMPLING_RATE,  80,
-    PSMC_SEND_DEV_ID, 
+    PSMC_SEND_DEV_ID,
     0
 };
 
@@ -440,8 +439,8 @@ static unsigned char    wheel_5button_init[] = {
 
 static unsigned char	intelli_init[] = {
     PSMC_SET_SAMPLING_RATE, 200,
-    PSMC_SET_SAMPLING_RATE, 100, 
-    PSMC_SET_SAMPLING_RATE,  80, 
+    PSMC_SET_SAMPLING_RATE, 100,
+    PSMC_SET_SAMPLING_RATE,  80,
     0
 };
 
@@ -454,7 +453,7 @@ ps2SkipInit (KdPointerInfo *pi, int ninit, Bool ret_next)
     int	    c = -1;
     int	    skipping;
     Bool    waiting;
-    
+
     skipping = 0;
     waiting = FALSE;
     while (ninit || ret_next)
@@ -487,7 +486,7 @@ ps2Init (KdPointerInfo *pi)
     int		    id;
     unsigned char   *init;
     int		    ninit;
-    
+
     /* Send Intellimouse initialization sequence */
     MouseWriteBytes (km->iob.fd, intelli_init, strlen ((char *) intelli_init), 100);
     /*
@@ -531,7 +530,7 @@ static Bool busParse (KdPointerInfo *pi, unsigned char *ev, int ne)
     Kmouse	    *km = pi->driverPrivate;
     int		    dx, dy;
     unsigned long   flags;
-    
+
     flags = KD_MOUSE_DELTA;
     dx = (signed char) ev[1];
     dy = -(signed char) ev[2];
@@ -637,14 +636,14 @@ static Bool logiParse (KdPointerInfo *pi, unsigned char *ev, int ne)
     unsigned long   flags;
 
     flags = KD_MOUSE_DELTA;
-    
+
     if (ne == 3)
     {
 	if (ev[0] & 0x20)
 	    flags |= KD_BUTTON_1;
 	if (ev[0] & 0x10)
 	    flags |= KD_BUTTON_3;
-    
+
 	dx = (signed char)(((ev[0] & 0x03) << 6) | (ev[1] & 0x3F));
 	dy = (signed char)(((ev[0] & 0x0C) << 4) | (ev[2] & 0x3F));
 	flags |= km->state & KD_BUTTON_2;
@@ -687,7 +686,7 @@ static Bool mscParse (KdPointerInfo *pi, unsigned char *ev, int ne)
     unsigned long   flags;
 
     flags = KD_MOUSE_DELTA;
-    
+
     if (!(ev[0] & 0x4))
 	flags |= KD_BUTTON_1;
     if (!(ev[0] & 0x2))
@@ -872,7 +871,7 @@ MouseRead (int mousePort, void *closure)
 		    switch (km->stage)
 		    {
 		    case MouseBroken:
-#ifdef DEBUG			
+#ifdef DEBUG
 			ErrorF ("Mouse protocol %s seems OK\n",
 				km->prot->name);
 #endif
@@ -940,12 +939,12 @@ MouseInit (KdPointerInfo *pi)
 
     if (!pi)
         return BadImplementation;
-    
+
     if (!pi->path || strcmp(pi->path, "auto") == 0) {
         for (i = 0; i < NUM_DEFAULT_MOUSE; i++) {
             fd = open (kdefaultMouse[i], 2);
             if (fd >= 0) {
-                pi->path = KdSaveString (kdefaultMouse[i]);
+                pi->path = strdup (kdefaultMouse[i]);
                 break;
             }
         }
@@ -953,7 +952,7 @@ MouseInit (KdPointerInfo *pi)
     else {
         fd = open (pi->path, 2);
     }
-	    
+
     if (fd < 0)
         return BadMatch;
 
@@ -962,7 +961,11 @@ MouseInit (KdPointerInfo *pi)
     km = (Kmouse *) xalloc (sizeof (Kmouse));
     if (km) {
         km->iob.avail = km->iob.used = 0;
-        MouseFirstProtocol(km, "exps/2");
+        MouseFirstProtocol(km, pi->protocol ? pi->protocol : "exps/2");
+        /* MouseFirstProtocol sets state to MouseBroken for later protocol
+         * checks. Skip these checks if a protocol was supplied */
+        if (pi->protocol)
+                km->state = MouseWorking;
         km->i_prot = 0;
         km->tty = isatty (fd);
         km->iob.fd = -1;
@@ -1005,7 +1008,7 @@ MouseDisable (KdPointerInfo *pi)
     Kmouse *km;
     if (!pi || !pi->driverPrivate)
         return;
-    
+
     km = pi->driverPrivate;
     KdUnregisterFd (pi, km->iob.fd, TRUE);
 }

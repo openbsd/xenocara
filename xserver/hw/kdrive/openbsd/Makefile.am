@@ -6,16 +6,11 @@ INCLUDES = \
 
 AM_CFLAGS = -DHAVE_DIX_CONFIG_H
 
-noinst_LIBRARIES =libopenbsd.a
+noinst_LTLIBRARIES =libopenbsd.la
 
-if KDRIVE_HW
-KDRIVE_HW_SOURCES = \
+libopenbsd_la_SOURCES = \
 	openbsd.c
-endif
 
-libopenbsd_a_SOURCES = \
-	kopenbsd.h \
-	$(KDRIVE_HW_SOURCES)
+libopenbsd_la_SOURCES += \
+	kopenbsd.h 
 
-libopenbsd_a_DEPENDENCIES = \
-	openbsd.c

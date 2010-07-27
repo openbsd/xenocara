@@ -36,19 +36,17 @@
 #include <stddef.h> /* For NULL */
 #include <limits.h> /* For CHAR_BIT */
 #include <assert.h>
-#ifdef __APPLE__
-//#include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#ifdef __APPLE__
+#include <Xplugin.h>
 #include "mi.h"
 #include "pixmapstr.h"
 #include "windowstr.h"
-#include <Xplugin.h>
 //#include <X11/extensions/applewm.h>
 extern int darwinMainScreenX, darwinMainScreenY;
+extern Bool no_configure_window;
 #endif
 #include "fb.h"
-
-#define AppleWMNumWindowLevels 5
 
 #include "rootlessCommon.h"
 #include "rootlessWindow.h"
@@ -63,8 +61,6 @@ extern int darwinMainScreenX, darwinMainScreenY;
 #define SCREEN_TO_GLOBAL_Y 0
 #endif
 
-#define MAKE_WINDOW_ID(x)		((xp_window_id)((size_t)(x)))
-
 #define DEFINE_ATOM_HELPER(func,atom_name)                      \
   static Atom func (void) {                                       \
     static unsigned int generation = 0;                             \
@@ -76,40 +72,15 @@ extern int darwinMainScreenX, darwinMainScreenY;
     return atom;                                                \
   }
 
-DEFINE_ATOM_HELPER (xa_native_screen_origin, "_NATIVE_SCREEN_ORIGIN")
 DEFINE_ATOM_HELPER (xa_native_window_id, "_NATIVE_WINDOW_ID")
-DEFINE_ATOM_HELPER (xa_apple_no_order_in, "_APPLE_NO_ORDER_IN")
 
-static Bool no_configure_window;
 static Bool windows_hidden;
 // TODO - abstract xp functions
 
-static inline int
-configure_window (xp_window_id id, unsigned int mask,
-                  const xp_window_changes *values)
-{
-  if (!no_configure_window)
-    return xp_configure_window (id, mask, values);
-  else
-    return XP_Success;
-}
+#ifdef __APPLE__
 
-/*static inline unsigned long
-current_time_in_seconds (void)
-{
-  unsigned long t = 0;
-
-  t += currentTime.milliseconds / 1000;
-  t += currentTime.months * 4294967;
-
-  return t;
-  } */
-
-static inline Bool
-rootlessHasRoot (ScreenPtr pScreen)
-{
-  return WINREC (WindowTable[pScreen->myNum]) != NULL;
-}
+// XXX: identical to x_cvt_vptr_to_uint ?
+#define MAKE_WINDOW_ID(x)		((xp_window_id)((size_t)(x)))
 
 void
 RootlessNativeWindowStateChanged (WindowPtr pWin, unsigned int state)
@@ -147,7 +118,7 @@ void RootlessNativeWindowMoved (WindowPtr pWin) {
     mask = CWX | CWY;
     
     /* pretend we're the owner of the window! */
-    err = dixLookupClient(&pClient, pWin->drawable.id, NullClient, DixUnknownAccess);
+    err = dixLookupClient(&pClient, pWin->drawable.id, serverClient, DixUnknownAccess);
     if(err != Success) {
         ErrorF("RootlessNativeWindowMoved(): Failed to lookup window: 0x%x\n", (unsigned int)pWin->drawable.id);
         return;
@@ -161,25 +132,7 @@ void RootlessNativeWindowMoved (WindowPtr pWin) {
     no_configure_window = FALSE;
 }
 
-/* Updates the _NATIVE_SCREEN_ORIGIN property on the given root window. */
-static void
-set_screen_origin (WindowPtr pWin)
-{
-  long data[2];
-
-  if (!IsRoot (pWin))
-    return;
-
-  /* FIXME: move this to an extension? */
-
-  data[0] = (dixScreenOrigins[pWin->drawable.pScreen->myNum].x
-	     + darwinMainScreenX);
-  data[1] = (dixScreenOrigins[pWin->drawable.pScreen->myNum].y
-	     + darwinMainScreenY);
-
-  dixChangeWindowProperty(serverClient, pWin, xa_native_screen_origin(),
-			  XA_INTEGER, 32, PropModeReplace, 2, data, TRUE);
-}
+#endif /* __APPLE__ */
 
 /*
  * RootlessCreateWindow
@@ -445,13 +398,6 @@ RootlessInitializeFrame(WindowPtr pWin, RootlessWindowRec *winRec)
 #endif
 }
 
-
-Bool
-RootlessColormapCallback (void *data, int first_color, int n_colors, uint32_t *colors)
-{
-    return (RootlessResolveColormap (data, first_color, n_colors, colors) ? XP_Success : XP_BadMatch);
-}
-
 /*
  * RootlessEnsureFrame
  *  Make sure the given window is framed. If the window doesn't have a
@@ -486,6 +432,7 @@ RootlessEnsureFrame(WindowPtr pWin)
     winRec->is_reorder_pending = FALSE;
     winRec->pixmap = NULL;
     winRec->wid = NULL;
+    winRec->level = 0;
 
     SETWINREC(pWin, winRec);
 
@@ -1031,7 +978,7 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
                 copy_rect.y2 = oldY2;
             }
             else
-                abort();
+                OsAbort();
 
             Bpp = winRec->win->drawable.bitsPerPixel / 8;
             copy_rect_width = copy_rect.x2 - copy_rect.x1;
@@ -1489,19 +1436,15 @@ void
 RootlessFlushWindowColormap (WindowPtr pWin)
 {
   RootlessWindowRec *winRec = WINREC (pWin);
-  xp_window_changes wc;
+  ScreenPtr pScreen = pWin->drawable.pScreen;
 
   if (winRec == NULL)
     return;
 
   RootlessStopDrawing (pWin, FALSE);
 
-  /* This is how we tell xp that the colormap may have changed. */
-
-  wc.colormap = RootlessColormapCallback;
-  wc.colormap_data = pWin->drawable.pScreen;
-
-  configure_window (MAKE_WINDOW_ID(winRec->wid), XP_COLORMAP, &wc);
+  if (SCREENREC(pScreen)->imp->UpdateColormap)
+    SCREENREC(pScreen)->imp->UpdateColormap(winRec->wid, pScreen);
 }
 
 /*
@@ -1610,10 +1553,6 @@ RootlessDisableRoot (ScreenPtr pScreen)
 	return;
            
     RootlessDestroyFrame (pRoot, winRec);
-    /* 
-     * gstaplin: I fixed the usage of this DeleteProperty so that it would compile.
-     * QUESTION: Where is this xa_native_window_id set?
-     */
     DeleteProperty (serverClient, pRoot, xa_native_window_id ());
 }
 
@@ -1624,7 +1563,6 @@ RootlessHideAllWindows (void)
     ScreenPtr pScreen;
     WindowPtr pWin;
     RootlessWindowRec *winRec;
-    xp_window_changes wc;
     
     if (windows_hidden)
         return;
@@ -1648,9 +1586,8 @@ RootlessHideAllWindows (void)
             winRec = WINREC (pWin);
             if (winRec != NULL)
             {
-                wc.stack_mode = XP_UNMAPPED;
-                wc.sibling = 0;
-                configure_window (MAKE_WINDOW_ID(winRec->wid), XP_STACKING, &wc);
+              if (SCREENREC(pScreen)->imp->HideWindow)
+                SCREENREC(pScreen)->imp->HideWindow(winRec->wid);
             }
         }
     }
@@ -1691,3 +1628,29 @@ RootlessShowAllWindows (void)
         RootlessScreenExpose (pScreen);
     }
 }
+
+/*
+ * SetPixmapOfAncestors
+ *  Set the Pixmaps on all ParentRelative windows up the ancestor chain.
+ */
+void
+RootlessSetPixmapOfAncestors(WindowPtr pWin)
+{
+    ScreenPtr pScreen = pWin->drawable.pScreen;
+    WindowPtr topWin = TopLevelParent(pWin);
+    RootlessWindowRec *topWinRec = WINREC(topWin);
+    
+    while (pWin->backgroundState == ParentRelative) {
+        if (pWin == topWin) {
+            // disallow ParentRelative background state on top level
+            XID pixel = 0;
+            ChangeWindowAttributes(pWin, CWBackPixel, &pixel, serverClient);
+            RL_DEBUG_MSG("Cleared ParentRelative on 0x%x.\n", pWin);
+            break;
+        }
+        
+        pWin = pWin->parent;
+        pScreen->SetWindowPixmap(pWin, topWinRec->pixmap);
+    }
+}
+

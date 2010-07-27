@@ -31,6 +31,10 @@
 
 #include "capabilities.h"
 
+#define Cursor X_Cursor
+#include "os.h"
+#undef Cursor
+
 static void handleBufferModes(struct glCapabilitiesConfig *c, GLint bufferModes) {
     if(bufferModes & kCGLStereoscopicBit) {
 	c->stereo = true;
@@ -103,7 +107,7 @@ static void handleStencilModes(struct glCapabilitiesConfig *c, GLint smodes) {
 }
 
 static int handleColorAndAccumulation(struct glColorBufCapabilities *c, 
-				       GLint cmodes) {
+				       GLint cmodes, int forAccum) {
     int offset = 0;
         
     /*1*/
@@ -204,8 +208,9 @@ static int handleColorAndAccumulation(struct glColorBufCapabilities *c,
 	++offset;
     }
 
-#if 0
-    /* 
+    if(forAccum) {
+//#if 0
+    /* FIXME
      * Disable this path, because some part of libGL, X, or Xplugin 
      * doesn't work with sizes greater than 8.
      * When this is enabled and visuals are chosen using depths
@@ -274,7 +279,8 @@ static int handleColorAndAccumulation(struct glColorBufCapabilities *c,
 	c[offset].a = 16;
 	++offset;
     }
-#endif
+    }
+//#endif
 
     /* FIXME should we handle the floating point color modes, and if so, how? */
       
@@ -284,14 +290,14 @@ static int handleColorAndAccumulation(struct glColorBufCapabilities *c,
 
 static void handleColorModes(struct glCapabilitiesConfig *c, GLint cmodes) {
     c->total_color_buffers = handleColorAndAccumulation(c->color_buffers,
-							cmodes);
+							cmodes, 0);
     
     assert(c->total_color_buffers < GLCAPS_COLOR_BUFFERS);
 }
 
 static void handleAccumulationModes(struct glCapabilitiesConfig *c, GLint cmodes) {
     c->total_accum_buffers = handleColorAndAccumulation(c->accum_buffers,
-							cmodes);
+							cmodes, 1);
     assert(c->total_accum_buffers < GLCAPS_COLOR_BUFFERS);
 }
 
@@ -425,7 +431,7 @@ static CGLError handleRendererDescriptions(CGLRendererInfoObj info, GLint r,
 
     handleAccumulationModes(c, flags);
     
-    return 0;
+    return kCGLNoError;
 }
 
 static void initCapabilities(struct glCapabilities *cap) {
@@ -491,56 +497,35 @@ void freeGlCapabilities(struct glCapabilities *cap) {
     cap->configurations = NULL;    
 }
 
-enum { MAX_DISPLAYS = 3 };
-
 /*Return true if an error occured. */
 bool getGlCapabilities(struct glCapabilities *cap) {
-    CGDirectDisplayID dspys[MAX_DISPLAYS];
-    CGDisplayErr err;
-    CGOpenGLDisplayMask displayMask;
-    CGDisplayCount i, displayCount = 0;
+	CGLRendererInfoObj info;
+    CGLError err;
+	GLint numRenderers = 0, r;
 
     initCapabilities(cap);
-    
-    err = CGGetActiveDisplayList(MAX_DISPLAYS, dspys, &displayCount);
+
+	err = CGLQueryRendererInfo((GLuint)-1, &info, &numRenderers);
     if(err) {
-	fprintf(stderr, "CGGetActiveDisplayList error: %s\n", CGLErrorString(err));
-	return true;
-    }
- 
-    for(i = 0; i < displayCount; ++i) {
-        displayMask = CGDisplayIDToOpenGLDisplayMask(dspys[i]);
-       
-	CGLRendererInfoObj info;
-	GLint numRenderers = 0, r, renderCount = 0;
-	    
-	err = CGLQueryRendererInfo(displayMask, &info, &numRenderers);
-
-        if(err) {
 	    fprintf(stderr, "CGLQueryRendererInfo error: %s\n", CGLErrorString(err));
-	    fprintf(stderr, "trying to continue...\n");
-	    continue;
+        return err;
 	}
-			
-	CGLDescribeRenderer(info, 0, kCGLRPRendererCount, &renderCount);
 
-	for(r = 0; r < renderCount; ++r) {
-	    CGLError derr;
+	for(r = 0; r < numRenderers; r++) {
 	    struct glCapabilitiesConfig tmpconf, *conf;
 
 	    initConfig(&tmpconf);
 
-	    derr = handleRendererDescriptions(info, r, &tmpconf);
-	    if(derr) {
-		fprintf(stderr, "error: %s\n", CGLErrorString(derr));
-		fprintf(stderr, "trying to continue...\n");
-		continue;
+	    err = handleRendererDescriptions(info, r, &tmpconf);
+	    if(err) {
+            fprintf(stderr, "handleRendererDescriptions returned error: %s\n", CGLErrorString(err));
+            fprintf(stderr, "trying to continue...\n");
+            continue;
 	    }
 
 	    conf = malloc(sizeof(*conf));
 	    if(NULL == conf) {
-		perror("malloc");
-		abort();
+                FatalError("Unable to allocate memory for OpenGL capabilities\n");
 	    }
 
 	    /* Copy the struct. */
@@ -551,9 +536,8 @@ bool getGlCapabilities(struct glCapabilities *cap) {
 	    cap->configurations = conf;
 	}
 
-    	CGLDestroyRendererInfo(info);
-    }
-    
+    CGLDestroyRendererInfo(info);
+
     /* No error occured.  We are done. */
-    return false;
+    return kCGLNoError;
 }

@@ -35,15 +35,8 @@
 #include "xf86.h"
 #include "xf86Priv.h"
 #include "xf86_OSlib.h"
-#include "lnx.h"
 
 #include <sys/stat.h>
-
-#ifdef USE_DEV_FB
-extern char *getenv(const char *);
-#include <linux/fb.h>
-char *fb_dev_name;
-#endif
 
 static Bool KeepTty = FALSE;
 static int VTnum = -1;
@@ -80,9 +73,11 @@ saveVtPerms(void)
 static void
 restoreVtPerms(void)
 {
-    /* Set the terminal permissions back to before we started. */
-    chown("/dev/tty0", vtPermSave[0], vtPermSave[1]);
-    chown(vtname, vtPermSave[2], vtPermSave[3]);
+    if (geteuid() == 0) {
+	 /* Set the terminal permissions back to before we started. */
+	 (void)chown("/dev/tty0", vtPermSave[0], vtPermSave[1]);
+	 (void)chown(vtname, vtPermSave[2], vtPermSave[3]);
+    }
 }
 
 static void *console_handler;
@@ -100,10 +95,6 @@ xf86OpenConsole(void)
     struct vt_mode VT;
     struct vt_stat vts;
     MessageType from = X_PROBED;
-#ifdef USE_DEV_FB
-    struct fb_var_screeninfo var;
-    int fbfd;
-#endif
     char *tty0[] = { "/dev/tty0", "/dev/vc/0", NULL };
     char *vcs[] = { "/dev/vc/%d", "/dev/tty%d", NULL };
 
@@ -150,22 +141,6 @@ xf86OpenConsole(void)
 	    close(fd);
 	}
 
-#ifdef USE_DEV_FB
-        if (!ShareVTs)
-        {
-	    fb_dev_name=getenv("FRAMEBUFFER");
-	    if (!fb_dev_name)
-	        fb_dev_name="/dev/fb0current";
-	
-	    if ((fbfd = open(fb_dev_name, O_RDONLY)) < 0)
-	        FatalError("xf86OpenConsole: Cannot open %s (%s)\n",
-		           fb_dev_name, strerror(errno));
-
-	    if (ioctl(fbfd, FBIOGET_VSCREENINFO, &var) < 0)
-	        FatalError("xf86OpenConsole: Unable to get screen info %s\n",
-		           strerror(errno));
-        }
-#endif
 	xf86Msg(from, "using VT number %d\n\n", xf86Info.vtno);
 
 	if (!KeepTty) {
@@ -210,20 +185,22 @@ xf86OpenConsole(void)
 	        xf86Msg(X_WARNING,
 		        "xf86OpenConsole: Could not save ownership of VT\n");
 
-	    /* change ownership of the vt */
-	    if (chown(vtname, getuid(), getgid()) < 0)
-	        xf86Msg(X_WARNING,"xf86OpenConsole: chown %s failed: %s\n",
-		        vtname, strerror(errno));
+	    if (geteuid() == 0) {
+		    /* change ownership of the vt */
+		    if (chown(vtname, getuid(), getgid()) < 0)
+			    xf86Msg(X_WARNING,"xf86OpenConsole: chown %s failed: %s\n",
+				    vtname, strerror(errno));
 
-	    /*
-	     * the current VT device we're running on is not "console", we want
-	     * to grab all consoles too
-	     *
-	     * Why is this needed??
-	     */
-	    if (chown("/dev/tty0", getuid(), getgid()) < 0)
-	        xf86Msg(X_WARNING,"xf86OpenConsole: chown /dev/tty0 failed: %s\n",
-                    strerror(errno));
+		    /*
+		     * the current VT device we're running on is not
+		     * "console", we want to grab all consoles too
+		     *
+		     * Why is this needed??
+		     */
+		    if (chown("/dev/tty0", getuid(), getgid()) < 0)
+			    xf86Msg(X_WARNING,"xf86OpenConsole: chown /dev/tty0 failed: %s\n",
+				    strerror(errno));
+	    }
         }
 
 	/*
@@ -252,9 +229,6 @@ xf86OpenConsole(void)
         {
             struct termios nTty;
 
-#if defined(DO_OS_FONTRESTORE)
-	    lnx_savefont();
-#endif
 	    /*
 	     * now get the VT.  This _must_ succeed, or else fail completely.
 	     */
@@ -308,19 +282,7 @@ xf86OpenConsole(void)
 
 	    /* we really should have a InitOSInputDevices() function instead
 	     * of Init?$#*&Device(). So I just place it here */
-	
-#ifdef USE_DEV_FB
-	    /* copy info to new console */
-	    var.yoffset=0;
-	    var.xoffset=0;
-	    if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &var))
-	        FatalError("Unable to set screen info\n");
-	    close(fbfd);
-#endif
-        } else { /* ShareVTs */
-            close(xf86Info.consoleFd);
         }
-	signal(SIGUSR2, xf86ReloadInputDevs);
     } else { 	/* serverGeneration != 1 */
         if (!ShareVTs && VTSwitch)
         {
@@ -330,38 +292,28 @@ xf86OpenConsole(void)
 	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno) < 0)
 	        xf86Msg(X_WARNING, "xf86OpenConsole: VT_ACTIVATE failed %s\n",
 		        strerror(errno));
-        }
 
 	    if (ioctl(xf86Info.consoleFd, VT_WAITACTIVE, xf86Info.vtno) < 0)
 	        xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed %s\n",
 		        strerror(errno));
+        }
     }
-    return;
 }
 
 void
-xf86CloseConsole()
+xf86CloseConsole(void)
 {
     struct vt_mode   VT;
-#if defined(DO_OS_FONTRESTORE)
-    struct vt_stat vts;
-    int vtno = -1;
-#endif
 
-    if (ShareVTs) return;
+    if (ShareVTs) {
+        close(xf86Info.consoleFd);
+        return;
+    }
 
     if (console_handler) {
 	xf86RemoveGeneralHandler(console_handler);
 	console_handler = NULL;
     };
-
-#if defined(DO_OS_FONTRESTORE)
-    if (ioctl(xf86Info.consoleFd, VT_GETSTATE, &vts) < 0)
-	xf86Msg(X_WARNING, "xf86CloseConsole: VT_GETSTATE failed: %s\n",
-		strerror(errno));
-    else
-	vtno = vts.v_active;
-#endif
 
     /* Back to text mode ... */
     if (ioctl(xf86Info.consoleFd, KDSETMODE, KD_TEXT) < 0)
@@ -397,18 +349,10 @@ xf86CloseConsole()
 			strerror(errno));
 	    activeVT = -1;
         }
-
-#if defined(DO_OS_FONTRESTORE)
-        if (xf86Info.vtno == vtno)	/* check if we are active */
-	    lnx_restorefont();
-        lnx_freefontdata();
-#endif
     }
     close(xf86Info.consoleFd);	/* make the vt-manager happy */
 
     restoreVtPerms();		/* restore the permissions */
-
-    return;
 }
 
 int
@@ -447,12 +391,11 @@ xf86ProcessArgument(int argc, char *argv[], int i)
 }
 
 void
-xf86UseMsg()
+xf86UseMsg(void)
 {
 	ErrorF("vtXX                   use the specified VT number\n");
 	ErrorF("-keeptty               ");
 	ErrorF("don't detach controlling tty (for debugging only)\n");
-        ErrorF("-novtswitch            don't immediately switch to new VT\n");
-        ErrorF("-sharevts              share VTs with another X server\n");
-	return;
+	ErrorF("-novtswitch            don't immediately switch to new VT\n");
+	ErrorF("-sharevts              share VTs with another X server\n");
 }

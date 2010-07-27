@@ -24,7 +24,6 @@ THE SOFTWARE.
 #ifdef HAVE_CONFIG_H
 #include <kdrive-config.h>
 #endif
-#define NEED_EVENTS
 #include <errno.h>
 #include <termios.h>
 #include <X11/X.h>
@@ -84,7 +83,7 @@ MsRead (int port, void *closure)
 		flags |= KD_BUTTON_1;
 	    if (b[0] & 0x10)
 		flags |= KD_BUTTON_3;
-	    
+
 	    dx = (char)(((b[0] & 0x03) << 6) | (b[1] & 0x3F));
 	    dy = (char)(((b[0] & 0x0C) << 4) | (b[2] & 0x3F));
             n -= 3;
@@ -101,11 +100,11 @@ MsInit (KdPointerInfo *pi)
         return BadImplementation;
 
     if (!pi->path || strcmp(pi->path, "auto"))
-        pi->path = KdSaveString("/dev/mouse");
+        pi->path = strdup("/dev/mouse");
     if (!pi->name)
-        pi->name = KdSaveString("Microsoft protocol mouse");
-    
-    return Success; 
+        pi->name = strdup("Microsoft protocol mouse");
+
+    return Success;
 }
 
 static Status

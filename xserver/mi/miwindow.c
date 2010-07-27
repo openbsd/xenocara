@@ -1,3 +1,4 @@
+
 /***********************************************************
 
 Copyright 1987, 1998  The Open Group
@@ -57,7 +58,7 @@ SOFTWARE.
 #include "pixmapstr.h"
 #include "mivalidate.h"
 
-_X_EXPORT void
+void
 miClearToBackground(WindowPtr pWin,
                     int x, int y, int w, int h,
                     Bool generateExposures)
@@ -245,7 +246,7 @@ miHandleValidateExposures(WindowPtr pWin)
 	    (*WindowExposures)(pChild, &val->after.exposed, NullRegion);
 	    REGION_UNINIT(pScreen, &val->after.exposed);
 	    xfree(val);
-	    pChild->valdata = (ValidatePtr)NULL;
+	    pChild->valdata = NULL;
 	    if (pChild->firstChild)
 	    {
 		pChild = pChild->firstChild;
@@ -305,10 +306,10 @@ miMoveWindow(WindowPtr pWin, int x, int y, WindowPtr pNextSib, VTKind kind)
     {
 	if (pLayerWin == pWin)
 	    anyMarked |= (*pScreen->MarkOverlappedWindows)
-				(pWin, windowToValidate, (WindowPtr *)NULL);
+				(pWin, windowToValidate, NULL);
 	else
 	    anyMarked |= (*pScreen->MarkOverlappedWindows)
-				(pWin, pLayerWin, (WindowPtr *)NULL);
+				(pWin, pLayerWin, NULL);
 
 
 	if (anyMarked)
@@ -500,10 +501,10 @@ miSlideAndSizeWindow(WindowPtr pWin,
 
 	if (pLayerWin == pWin)
 	    anyMarked |= (*pScreen->MarkOverlappedWindows)(pWin, pFirstChange,
-						(WindowPtr *)NULL);
+						NULL);
 	else
 	    anyMarked |= (*pScreen->MarkOverlappedWindows)(pWin, pLayerWin,
-						(WindowPtr *)NULL);
+						NULL);
 
 	if (pWin->valdata)
 	{
@@ -729,7 +730,7 @@ miSetShape(WindowPtr pWin)
     if (WasViewable)
     {
 	anyMarked |= (*pScreen->MarkOverlappedWindows)(pWin, pWin,
-						(WindowPtr *)NULL);
+						NULL);
 
 
 	if (anyMarked)
@@ -816,7 +817,7 @@ miMarkUnrealizedWindow(WindowPtr pChild, WindowPtr pWin, Bool fromConfigure)
     }
 }
 
-_X_EXPORT void
+void
 miSegregateChildren(WindowPtr pWin, RegionPtr pReg, int depth)
 {
     ScreenPtr pScreen;

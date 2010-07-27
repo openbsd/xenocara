@@ -14,6 +14,11 @@
 
 @SET_MAKE@
 
+#							-*- Makefile -*-
+# Rules for generating files using the C pre-processor
+# (Replaces CppFileTarget from Imake)
+
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -37,13 +42,13 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = XWin$(EXEEXT)
-subdir = hw/xwin
-DIST_COMMON = README $(dist_man1_MANS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in ChangeLog winprefslex.c winprefsyacc.c \
+DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(top_srcdir)/cpprules.in winprefslex.c winprefsyacc.c \
 	winprefsyacc.h
+subdir = hw/xwin
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
+	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -53,9 +58,11 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/xorg-config.h \
 	$(top_builddir)/include/xkb-config.h \
 	$(top_builddir)/include/xwin-config.h \
-	$(top_builddir)/include/kdrive-config.h
+	$(top_builddir)/include/kdrive-config.h \
+	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
+	"$(DESTDIR)$(filemandir)" "$(DESTDIR)$(xwinconfigdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
@@ -67,10 +74,11 @@ am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
 	winscrinit.c winshaddd.c winshadddnl.c winshadgdi.c \
 	wintrayicon.c winvalargs.c winwakeup.c winwindow.c \
 	winwndproc.c ddraw.h winclipboard.h winconfig.h win.h \
-	winkeybd.h winkeymap.h winkeynames.h winlayouts.h \
-	winmessages.h winmsg.h winms.h winmultiwindowclass.h \
-	winprefs.h winpriv.h winresource.h winwindow.h \
-	$(top_srcdir)/mi/miinitext.c $(top_srcdir)/fb/fbcmap.c \
+	winkeybd.h winkeynames.h winlayouts.h winmessages.h winmsg.h \
+	winms.h winmultiwindowclass.h winprefs.h winpriv.h \
+	winresource.h winwindow.h XWin.rc \
+	$(top_srcdir)/Xext/dpmsstubs.c $(top_srcdir)/Xi/stubs.c \
+	$(top_srcdir)/mi/miinitext.c $(top_srcdir)/fb/fbcmap_mi.c \
 	winclipboardinit.c winclipboardtextconv.c winclipboardthread.c \
 	winclipboardunicode.c winclipboardwndproc.c \
 	winclipboardwrappers.c winclipboardxevents.c winpriv.c \
@@ -119,15 +127,16 @@ am__objects_9 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	winscrinit.$(OBJEXT) winshaddd.$(OBJEXT) winshadddnl.$(OBJEXT) \
 	winshadgdi.$(OBJEXT) wintrayicon.$(OBJEXT) \
 	winvalargs.$(OBJEXT) winwakeup.$(OBJEXT) winwindow.$(OBJEXT) \
-	winwndproc.$(OBJEXT) miinitext.$(OBJEXT) fbcmap.$(OBJEXT) \
+	winwndproc.$(OBJEXT) XWin.$(OBJEXT) dpmsstubs.$(OBJEXT) \
+	stubs.$(OBJEXT) miinitext.$(OBJEXT) fbcmap_mi.$(OBJEXT) \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
 	$(am__objects_7) $(am__objects_8)
 am_XWin_OBJECTS = $(am__objects_9)
 XWin_OBJECTS = $(am_XWin_OBJECTS)
-am__DEPENDENCIES_1 =
-am__DEPENDENCIES_2 = $(top_builddir)/fb/libfb.la $(am__DEPENDENCIES_1)
-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
+@XWIN_MULTIWINDOWEXTWM_TRUE@am__DEPENDENCIES_1 = $(top_builddir)/miext/rootless/librootless.la
+am__DEPENDENCIES_2 =
+DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
@@ -142,9 +151,16 @@ LTYACCCOMPILE = $(LIBTOOL) --mode=compile $(YACC) $(YFLAGS) \
 	$(AM_YFLAGS)
 SOURCES = $(XWin_SOURCES)
 DIST_SOURCES = $(am__XWin_SOURCES_DIST)
-man1dir = $(mandir)/man1
-NROFF = nroff
-MANS = $(dist_man1_MANS)
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+appmanDATA_INSTALL = $(INSTALL_DATA)
+filemanDATA_INSTALL = $(INSTALL_DATA)
+xwinconfigDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(appman_DATA) $(fileman_DATA) $(xwinconfig_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -161,12 +177,13 @@ ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
-APPLE_APPLICATION_ID = @APPLE_APPLICATION_ID@
 APPLE_APPLICATION_NAME = @APPLE_APPLICATION_NAME@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
+ARM_BACKTRACE_CFLAGS = @ARM_BACKTRACE_CFLAGS@
 ARM_VIDEO_FALSE = @ARM_VIDEO_FALSE@
 ARM_VIDEO_TRUE = @ARM_VIDEO_TRUE@
 AS = @AS@
@@ -194,6 +211,7 @@ CCAS = @CCAS@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
@@ -203,8 +221,11 @@ CONFIG_HAL_FALSE = @CONFIG_HAL_FALSE@
 CONFIG_HAL_TRUE = @CONFIG_HAL_TRUE@
 CONFIG_NEED_DBUS_FALSE = @CONFIG_NEED_DBUS_FALSE@
 CONFIG_NEED_DBUS_TRUE = @CONFIG_NEED_DBUS_TRUE@
+CONFIG_UDEV_FALSE = @CONFIG_UDEV_FALSE@
+CONFIG_UDEV_TRUE = @CONFIG_UDEV_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -218,6 +239,7 @@ DBUS_LIBS = @DBUS_LIBS@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
 DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
+DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
 DEFS = $(DEFS_CLIPBOARD) \
@@ -235,7 +257,9 @@ DGA_FALSE = @DGA_FALSE@
 DGA_LIBS = @DGA_LIBS@
 DGA_TRUE = @DGA_TRUE@
 DIX_CFLAGS = @DIX_CFLAGS@
+DIX_LIB = @DIX_LIB@
 DLLTOOL = @DLLTOOL@
+DLOPEN_LIBS = @DLOPEN_LIBS@
 DMXEXAMPLES_DEP_CFLAGS = @DMXEXAMPLES_DEP_CFLAGS@
 DMXEXAMPLES_DEP_LIBS = @DMXEXAMPLES_DEP_LIBS@
 DMXMODULES_CFLAGS = @DMXMODULES_CFLAGS@
@@ -251,6 +275,7 @@ DMX_BUILD_USB_TRUE = @DMX_BUILD_USB_TRUE@
 DMX_FALSE = @DMX_FALSE@
 DMX_TRUE = @DMX_TRUE@
 DOLT_BASH = @DOLT_BASH@
+DOXYGEN = @DOXYGEN@
 DPMSExtension_FALSE = @DPMSExtension_FALSE@
 DPMSExtension_TRUE = @DPMSExtension_TRUE@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
@@ -263,8 +288,10 @@ DRIPROTO_CFLAGS = @DRIPROTO_CFLAGS@
 DRIPROTO_LIBS = @DRIPROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
+DRI_CFLAGS = @DRI_CFLAGS@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_FALSE = @DRI_FALSE@
+DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
@@ -280,8 +307,17 @@ FBDEVHW_TRUE = @FBDEVHW_TRUE@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+FONT100DPIDIR = @FONT100DPIDIR@
+FONT75DPIDIR = @FONT75DPIDIR@
+FONTMISCDIR = @FONTMISCDIR@
+FONTOTFDIR = @FONTOTFDIR@
+FONTROOTDIR = @FONTROOTDIR@
+FONTTTFDIR = @FONTTTFDIR@
+FONTTYPE1DIR = @FONTTYPE1DIR@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
+GLIB_CFLAGS = @GLIB_CFLAGS@
+GLIB_LIBS = @GLIB_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_FALSE = @GLX_FALSE@
@@ -291,18 +327,17 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
-HAVE_AGL_FRAMEWORK_FALSE = @HAVE_AGL_FRAMEWORK_FALSE@
-HAVE_AGL_FRAMEWORK_TRUE = @HAVE_AGL_FRAMEWORK_TRUE@
 HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
 HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
-HAVE_XPLUGIN_FALSE = @HAVE_XPLUGIN_FALSE@
-HAVE_XPLUGIN_TRUE = @HAVE_XPLUGIN_TRUE@
+HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
+HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
 HPPA_VIDEO_TRUE = @HPPA_VIDEO_TRUE@
 I386_VIDEO_FALSE = @I386_VIDEO_FALSE@
 I386_VIDEO_TRUE = @I386_VIDEO_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIBXF86CONFIG_FALSE = @INSTALL_LIBXF86CONFIG_FALSE@
 INSTALL_LIBXF86CONFIG_TRUE = @INSTALL_LIBXF86CONFIG_TRUE@
@@ -311,6 +346,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_SETUID_FALSE = @INSTALL_SETUID_FALSE@
 INSTALL_SETUID_TRUE = @INSTALL_SETUID_TRUE@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+INT10MODULE_FALSE = @INT10MODULE_FALSE@
+INT10MODULE_TRUE = @INT10MODULE_TRUE@
 INT10_STUB_FALSE = @INT10_STUB_FALSE@
 INT10_STUB_TRUE = @INT10_STUB_TRUE@
 INT10_VM86_FALSE = @INT10_VM86_FALSE@
@@ -323,20 +360,23 @@ KDRIVELINUX_FALSE = @KDRIVELINUX_FALSE@
 KDRIVELINUX_TRUE = @KDRIVELINUX_TRUE@
 KDRIVEOPENBSD_FALSE = @KDRIVEOPENBSD_FALSE@
 KDRIVEOPENBSD_TRUE = @KDRIVEOPENBSD_TRUE@
-KDRIVEVESA_FALSE = @KDRIVEVESA_FALSE@
-KDRIVEVESA_TRUE = @KDRIVEVESA_TRUE@
 KDRIVEWSCONS_FALSE = @KDRIVEWSCONS_FALSE@
 KDRIVEWSCONS_TRUE = @KDRIVEWSCONS_TRUE@
 KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
+KDRIVE_EVDEV_FALSE = @KDRIVE_EVDEV_FALSE@
+KDRIVE_EVDEV_TRUE = @KDRIVE_EVDEV_TRUE@
 KDRIVE_FALSE = @KDRIVE_FALSE@
-KDRIVE_HW_FALSE = @KDRIVE_HW_FALSE@
-KDRIVE_HW_TRUE = @KDRIVE_HW_TRUE@
 KDRIVE_INCS = @KDRIVE_INCS@
+KDRIVE_KBD_FALSE = @KDRIVE_KBD_FALSE@
+KDRIVE_KBD_TRUE = @KDRIVE_KBD_TRUE@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MOUSE_FALSE = @KDRIVE_MOUSE_FALSE@
+KDRIVE_MOUSE_TRUE = @KDRIVE_MOUSE_TRUE@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
+LAUNCHD_ID_PREFIX = @LAUNCHD_ID_PREFIX@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -365,12 +405,12 @@ LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
+MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
 MAKE_HTML = @MAKE_HTML@
 MAKE_PDF = @MAKE_PDF@
 MAKE_PS = @MAKE_PS@
 MAKE_TEXT = @MAKE_TEXT@
-MESA_SOURCE = @MESA_SOURCE@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
@@ -389,6 +429,9 @@ OBJCFLAGS = @OBJCFLAGS@
 OBJCLINK = @OBJCLINK@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
+OPENSSL_LIBS = @OPENSSL_LIBS@
+OS_LIB = @OS_LIB@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -417,34 +460,51 @@ SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
 SECURE_RPC_FALSE = @SECURE_RPC_FALSE@
 SECURE_RPC_TRUE = @SECURE_RPC_TRUE@
 SED = @SED@
+SELINUX_CFLAGS = @SELINUX_CFLAGS@
+SELINUX_LIBS = @SELINUX_LIBS@
 SERVER_MISC_CONFIG_PATH = @SERVER_MISC_CONFIG_PATH@
 SET_MAKE = @SET_MAKE@
 SGI_VIDEO_FALSE = @SGI_VIDEO_FALSE@
 SGI_VIDEO_TRUE = @SGI_VIDEO_TRUE@
+SHA1_CFLAGS = @SHA1_CFLAGS@
+SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
 SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_ASM_INLINE_FALSE = @SOLARIS_ASM_INLINE_FALSE@
 SOLARIS_ASM_INLINE_TRUE = @SOLARIS_ASM_INLINE_TRUE@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
-SOLARIS_USL_CONSOLE_FALSE = @SOLARIS_USL_CONSOLE_FALSE@
-SOLARIS_USL_CONSOLE_TRUE = @SOLARIS_USL_CONSOLE_TRUE@
+SOLARIS_VT_FALSE = @SOLARIS_VT_FALSE@
+SOLARIS_VT_TRUE = @SOLARIS_VT_TRUE@
 SPARC64_VIDEO_FALSE = @SPARC64_VIDEO_FALSE@
 SPARC64_VIDEO_TRUE = @SPARC64_VIDEO_TRUE@
+SPECIAL_DTRACE_OBJECTS_FALSE = @SPECIAL_DTRACE_OBJECTS_FALSE@
+SPECIAL_DTRACE_OBJECTS_TRUE = @SPECIAL_DTRACE_OBJECTS_TRUE@
 STANDALONE_XPBPROXY_FALSE = @STANDALONE_XPBPROXY_FALSE@
 STANDALONE_XPBPROXY_TRUE = @STANDALONE_XPBPROXY_TRUE@
 STRIP = @STRIP@
+SYSCONFDIR = @SYSCONFDIR@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_FALSE = @TSLIB_FALSE@
 TSLIB_LIBS = @TSLIB_LIBS@
 TSLIB_TRUE = @TSLIB_TRUE@
+UDEV_CFLAGS = @UDEV_CFLAGS@
+UDEV_LIBS = @UDEV_LIBS@
+UNITTESTS_FALSE = @UNITTESTS_FALSE@
+UNITTESTS_TRUE = @UNITTESTS_TRUE@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
-VENDOR_MAN_VERSION = @VENDOR_MAN_VERSION@
-VENDOR_NAME = @VENDOR_NAME@
+VBE_FALSE = @VBE_FALSE@
+VBE_TRUE = @VBE_TRUE@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
-VENDOR_RELEASE = @VENDOR_RELEASE@
 VERSION = @VERSION@
+VGAHW_FALSE = @VGAHW_FALSE@
+VGAHW_TRUE = @VGAHW_TRUE@
+WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
+WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
+WINDRES = @WINDRES@
 X11EXAMPLES_DEP_CFLAGS = @X11EXAMPLES_DEP_CFLAGS@
 X11EXAMPLES_DEP_LIBS = @X11EXAMPLES_DEP_LIBS@
+XAA_FALSE = @XAA_FALSE@
+XAA_TRUE = @XAA_TRUE@
 XACE_FALSE = @XACE_FALSE@
 XACE_TRUE = @XACE_TRUE@
 XCALIBRATE_FALSE = @XCALIBRATE_FALSE@
@@ -469,6 +529,7 @@ XEPHYR_LIBS = @XEPHYR_LIBS@
 XEPHYR_TRUE = @XEPHYR_TRUE@
 XF86BIGFONT_FALSE = @XF86BIGFONT_FALSE@
 XF86BIGFONT_TRUE = @XF86BIGFONT_TRUE@
+XF86CONFIGDIR = @XF86CONFIGDIR@
 XF86CONFIGFILE = @XF86CONFIGFILE@
 XF86UTILS_FALSE = @XF86UTILS_FALSE@
 XF86UTILS_TRUE = @XF86UTILS_TRUE@
@@ -511,15 +572,14 @@ XORG_TRUE = @XORG_TRUE@
 XPBPROXY_CFLAGS = @XPBPROXY_CFLAGS@
 XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
+XQUARTZ_SPARKLE_FALSE = @XQUARTZ_SPARKLE_FALSE@
+XQUARTZ_SPARKLE_TRUE = @XQUARTZ_SPARKLE_TRUE@
 XQUARTZ_TRUE = @XQUARTZ_TRUE@
 XREGISTRY_FALSE = @XREGISTRY_FALSE@
 XREGISTRY_TRUE = @XREGISTRY_TRUE@
 XRESEXAMPLES_DEP_CFLAGS = @XRESEXAMPLES_DEP_CFLAGS@
 XRESEXAMPLES_DEP_LIBS = @XRESEXAMPLES_DEP_LIBS@
-XSDLSERVER_FALSE = @XSDLSERVER_FALSE@
-XSDLSERVER_TRUE = @XSDLSERVER_TRUE@
-XSDL_INCS = @XSDL_INCS@
-XSDL_LIBS = @XSDL_LIBS@
 XSELINUX_FALSE = @XSELINUX_FALSE@
 XSELINUX_TRUE = @XSELINUX_TRUE@
 XSERVERCFLAGS_CFLAGS = @XSERVERCFLAGS_CFLAGS@
@@ -547,10 +607,7 @@ XWIN_CLIPBOARD_TRUE = @XWIN_CLIPBOARD_TRUE@
 XWIN_FALSE = @XWIN_FALSE@
 XWIN_GLX_WINDOWS_FALSE = @XWIN_GLX_WINDOWS_FALSE@
 XWIN_GLX_WINDOWS_TRUE = @XWIN_GLX_WINDOWS_TRUE@
-XWIN_LIBS = \
-	$(top_builddir)/fb/libfb.la \
-	$(XSERVER_LIBS)
-
+XWIN_LIBS = @XWIN_LIBS@
 XWIN_MULTIWINDOWEXTWM_FALSE = @XWIN_MULTIWINDOWEXTWM_FALSE@
 XWIN_MULTIWINDOWEXTWM_TRUE = @XWIN_MULTIWINDOWEXTWM_TRUE@
 XWIN_MULTIWINDOW_FALSE = @XWIN_MULTIWINDOW_FALSE@
@@ -570,10 +627,10 @@ X_PRIVSEP_FALSE = @X_PRIVSEP_FALSE@
 X_PRIVSEP_TRUE = @X_PRIVSEP_TRUE@
 YACC = @YACC@
 YFLAGS = @YFLAGS@
+__XCONFIGDIR__ = @__XCONFIGDIR__@
 __XCONFIGFILE__ = @__XCONFIGFILE__@
 abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
-abi_font = @abi_font@
 abi_videodrv = @abi_videodrv@
 abi_xinput = @abi_xinput@
 ac_ct_CC = @ac_ct_CC@
@@ -628,7 +685,9 @@ psdir = @psdir@
 sbindir = @sbindir@
 sdkdir = @sdkdir@
 sharedstatedir = @sharedstatedir@
+symbol_visibility = @symbol_visibility@
 sysconfdir = @sysconfdir@
+sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
 @XWIN_CLIPBOARD_TRUE@SRCS_CLIPBOARD = \
 @XWIN_CLIPBOARD_TRUE@	winclipboardinit.c \
@@ -658,6 +717,7 @@ target_alias = @target_alias@
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwindowswm.c
 
 @XWIN_MULTIWINDOWEXTWM_TRUE@DEFS_MULTIWINDOWEXTWM = -DXWIN_MULTIWINDOWEXTWM
+@XWIN_MULTIWINDOWEXTWM_TRUE@MULTIWINDOWEXTWM_LIBS = $(top_builddir)/miext/rootless/librootless.la
 @XWIN_NATIVEGDI_TRUE@SRCS_NATIVEGDI = \
 @XWIN_NATIVEGDI_TRUE@	winclip.c \
 @XWIN_NATIVEGDI_TRUE@	winfillsp.c \
@@ -722,7 +782,6 @@ SRCS = InitInput.c \
 	winconfig.h \
 	win.h \
 	winkeybd.h \
-	winkeymap.h \
 	winkeynames.h \
 	winlayouts.h \
 	winmessages.h \
@@ -733,8 +792,11 @@ SRCS = InitInput.c \
 	winpriv.h \
 	winresource.h \
 	winwindow.h \
+	XWin.rc \
+	$(top_srcdir)/Xext/dpmsstubs.c \
+	$(top_srcdir)/Xi/stubs.c \
 	$(top_srcdir)/mi/miinitext.c \
-	$(top_srcdir)/fb/fbcmap.c \
+	$(top_srcdir)/fb/fbcmap_mi.c \
 	$(SRCS_CLIPBOARD) \
 	$(SRCS_GLX_WINDOWS) \
 	$(SRCS_MULTIWINDOW) \
@@ -745,30 +807,74 @@ SRCS = InitInput.c \
 	$(SRCS_XV)
 
 XWin_SOURCES = $(SRCS)
-INCLUDES = -I$(top_srcdir)/miext/rootless \
-           -I$(top_srcdir)/miext/rootless/safeAlpha
-
+INCLUDES = -I$(top_srcdir)/miext/rootless
 XWin_DEPENDENCIES = $(XWIN_LIBS)
-XWin_LDADD = $(XWIN_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
+XWin_LDADD = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
 XWin_LDFLAGS = -mwindows -static
 BUILT_SOURCES = winprefsyacc.h winprefsyacc.c winprefslex.c
-CLEANFILES = $(BUILT_SOURCES)
+CLEANFILES = $(BUILT_SOURCES) $(appman_DATA) $(fileman_DATA) XWin.man XWinrc.man
 AM_YFLAGS = -d
 AM_LFLAGS = -i
 AM_CFLAGS = -DHAVE_XWIN_CONFIG_H $(DIX_CFLAGS) \
-            $(XWINMODULES_CFLAGS)
+            $(XWINMODULES_CFLAGS) \
+            -DXFree86Server
 
-dist_man1_MANS = XWin.man XWinrc.man
 GLX_EXTRAS = \
-	glx/ChangeLog \
 	glx/glwindows.h \
 	glx/glwrap.c \
 	glx/indirect.c
 
+MAN_SRCS = XWin.man.pre XWinrc.man.pre
+appmandir = $(APP_MAN_DIR)
+appman_DATA = XWin.$(APP_MAN_SUFFIX)
+filemandir = $(FILE_MAN_DIR)
+fileman_DATA = XWinrc.$(FILE_MAN_SUFFIX)
+EXTRAMANDEFS = -D__logdir__=$(logdir) -D__sysconfdir__=$(sysconfdir) -D__datadir__=$(datadir)
+xwinconfigdir = $(sysconfdir)/X11
+xwinconfig_DATA = system.XWinrc
+SUFFIXES = .pre .man .man.pre
+
+# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
+# to cpp, because that trick does not work on all ANSI C preprocessors.
+# Delete line numbers from the cpp output (-P is not portable, I guess).
+# Allow XCOMM to be preceded by whitespace and provide a means of generating
+# output lines with trailing backslashes.
+# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
+CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
+                       -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
+                       -e '/^[         ]*XCOMM$$/s/XCOMM/\#/' \
+                       -e '/^[         ]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
+                       -e '/^[         ]*XHASH/s/XHASH/\#/' \
+                       -e '/\@\@$$/s/\@\@$$/\\/'
+
+
+# Strings to replace in man pages
+XORGRELSTRING = @PACKAGE_STRING@
+XORGMANNAME = X Version 11
+XSERVERNAME = Xorg
+MANDEFS = \
+        -D__vendorversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
+        -D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
+	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
+	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
+	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
+	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
+	-D__drivermansuffix__=$(DRIVER_MAN_SUFFIX) \
+	-D__adminmansuffix__=$(ADMIN_MAN_SUFFIX) \
+	-D__mandir__=$(mandir) \
+	-D__projectroot__=$(prefix) \
+	-D__sysconfdir__=$(sysconfdir) \
+	-D__datadir__=$(datadir) \
+	-D__xconfigfile__=$(__XCONFIGFILE__) \
+	-D__xconfigdir__=$(__XCONFIGDIR__) \
+	-D__xkbdir__=$(XKB_BASE_DIRECTORY) \
+	-D__modulepath__="$(DEFAULT_MODULE_PATH)" \
+	-D__xlogfile__=$(XLOGFILE) -D__xservername__=$(XSERVERNAME) 
+
 EXTRA_DIST = \
 	$(GLX_EXTRAS) \
-	_usr_X11R6_lib_X11_system.XWinrc \
-	X-boxed.ico \
+	$(MAN_SRCS) \
+	$(xwinconfig_DATA) \
 	X.ico \
 	XWin.rc \
 	xlaunch/config.cc \
@@ -796,8 +902,8 @@ all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .l .lo .o .obj .y
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+.SUFFIXES: .pre .man .man.pre .c .l .lo .o .obj .rc .y
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/cpprules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -866,8 +972,10 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/InitInput.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/InitOutput.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbcmap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dpmsstubs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbcmap_mi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miinitext.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stubs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winallpriv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winauth.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winblock.Po@am__quote@
@@ -951,6 +1059,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
+dpmsstubs.o: $(top_srcdir)/Xext/dpmsstubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dpmsstubs.o -MD -MP -MF "$(DEPDIR)/dpmsstubs.Tpo" -c -o dpmsstubs.o `test -f '$(top_srcdir)/Xext/dpmsstubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/dpmsstubs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/dpmsstubs.Tpo" "$(DEPDIR)/dpmsstubs.Po"; else rm -f "$(DEPDIR)/dpmsstubs.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/Xext/dpmsstubs.c' object='dpmsstubs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dpmsstubs.o `test -f '$(top_srcdir)/Xext/dpmsstubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/dpmsstubs.c
+
+dpmsstubs.obj: $(top_srcdir)/Xext/dpmsstubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dpmsstubs.obj -MD -MP -MF "$(DEPDIR)/dpmsstubs.Tpo" -c -o dpmsstubs.obj `if test -f '$(top_srcdir)/Xext/dpmsstubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/dpmsstubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/dpmsstubs.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/dpmsstubs.Tpo" "$(DEPDIR)/dpmsstubs.Po"; else rm -f "$(DEPDIR)/dpmsstubs.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/Xext/dpmsstubs.c' object='dpmsstubs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dpmsstubs.obj `if test -f '$(top_srcdir)/Xext/dpmsstubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/dpmsstubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/dpmsstubs.c'; fi`
+
+stubs.o: $(top_srcdir)/Xi/stubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT stubs.o -MD -MP -MF "$(DEPDIR)/stubs.Tpo" -c -o stubs.o `test -f '$(top_srcdir)/Xi/stubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xi/stubs.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/stubs.Tpo" "$(DEPDIR)/stubs.Po"; else rm -f "$(DEPDIR)/stubs.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/Xi/stubs.c' object='stubs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o stubs.o `test -f '$(top_srcdir)/Xi/stubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xi/stubs.c
+
+stubs.obj: $(top_srcdir)/Xi/stubs.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT stubs.obj -MD -MP -MF "$(DEPDIR)/stubs.Tpo" -c -o stubs.obj `if test -f '$(top_srcdir)/Xi/stubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xi/stubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xi/stubs.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/stubs.Tpo" "$(DEPDIR)/stubs.Po"; else rm -f "$(DEPDIR)/stubs.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/Xi/stubs.c' object='stubs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o stubs.obj `if test -f '$(top_srcdir)/Xi/stubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xi/stubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xi/stubs.c'; fi`
+
 miinitext.o: $(top_srcdir)/mi/miinitext.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT miinitext.o -MD -MP -MF "$(DEPDIR)/miinitext.Tpo" -c -o miinitext.o `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/miinitext.Tpo" "$(DEPDIR)/miinitext.Po"; else rm -f "$(DEPDIR)/miinitext.Tpo"; exit 1; fi
@@ -965,19 +1101,19 @@ miinitext.obj: $(top_srcdir)/mi/miinitext.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o miinitext.obj `if test -f '$(top_srcdir)/mi/miinitext.c'; then $(CYGPATH_W) '$(top_srcdir)/mi/miinitext.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/mi/miinitext.c'; fi`
 
-fbcmap.o: $(top_srcdir)/fb/fbcmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap.o -MD -MP -MF "$(DEPDIR)/fbcmap.Tpo" -c -o fbcmap.o `test -f '$(top_srcdir)/fb/fbcmap.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fbcmap.Tpo" "$(DEPDIR)/fbcmap.Po"; else rm -f "$(DEPDIR)/fbcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap.c' object='fbcmap.o' libtool=no @AMDEPBACKSLASH@
+fbcmap_mi.o: $(top_srcdir)/fb/fbcmap_mi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap_mi.o -MD -MP -MF "$(DEPDIR)/fbcmap_mi.Tpo" -c -o fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fbcmap_mi.Tpo" "$(DEPDIR)/fbcmap_mi.Po"; else rm -f "$(DEPDIR)/fbcmap_mi.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap_mi.c' object='fbcmap_mi.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap.o `test -f '$(top_srcdir)/fb/fbcmap.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
 
-fbcmap.obj: $(top_srcdir)/fb/fbcmap.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap.obj -MD -MP -MF "$(DEPDIR)/fbcmap.Tpo" -c -o fbcmap.obj `if test -f '$(top_srcdir)/fb/fbcmap.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fbcmap.Tpo" "$(DEPDIR)/fbcmap.Po"; else rm -f "$(DEPDIR)/fbcmap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap.c' object='fbcmap.obj' libtool=no @AMDEPBACKSLASH@
+fbcmap_mi.obj: $(top_srcdir)/fb/fbcmap_mi.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap_mi.obj -MD -MP -MF "$(DEPDIR)/fbcmap_mi.Tpo" -c -o fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/fbcmap_mi.Tpo" "$(DEPDIR)/fbcmap_mi.Po"; else rm -f "$(DEPDIR)/fbcmap_mi.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/fb/fbcmap_mi.c' object='fbcmap_mi.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap.obj `if test -f '$(top_srcdir)/fb/fbcmap.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`
 
 .l.c:
 	$(LEXCOMPILE) $<
@@ -1014,50 +1150,56 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-man1: $(man1_MANS) $(man_MANS)
+install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(man1dir)" || $(mkdir_p) "$(DESTDIR)$(man1dir)"
-	@list='$(man1_MANS) $(dist_man1_MANS) $(nodist_man1_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.1*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
-	  else file=$$i; fi; \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  case "$$ext" in \
-	    1*) ;; \
-	    *) ext='1' ;; \
-	  esac; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man1dir)/$$inst'"; \
-	  $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man1dir)/$$inst"; \
+	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
+	@list='$(appman_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(appmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appmandir)/$$f'"; \
+	  $(appmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appmandir)/$$f"; \
 	done
-uninstall-man1:
+
+uninstall-appmanDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(man1_MANS) $(dist_man1_MANS) $(nodist_man1_MANS)'; \
-	l2='$(man_MANS) $(dist_man_MANS) $(nodist_man_MANS)'; \
-	for i in $$l2; do \
-	  case "$$i" in \
-	    *.1*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  case "$$ext" in \
-	    1*) ;; \
-	    *) ext='1' ;; \
-	  esac; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed -e 's/^.*\///'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " rm -f '$(DESTDIR)$(man1dir)/$$inst'"; \
-	  rm -f "$(DESTDIR)$(man1dir)/$$inst"; \
+	@list='$(appman_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+install-filemanDATA: $(fileman_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(filemandir)" || $(mkdir_p) "$(DESTDIR)$(filemandir)"
+	@list='$(fileman_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(filemanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(filemandir)/$$f'"; \
+	  $(filemanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(filemandir)/$$f"; \
+	done
+
+uninstall-filemanDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(fileman_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(filemandir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(filemandir)/$$f"; \
+	done
+install-xwinconfigDATA: $(xwinconfig_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(xwinconfigdir)" || $(mkdir_p) "$(DESTDIR)$(xwinconfigdir)"
+	@list='$(xwinconfig_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(xwinconfigDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(xwinconfigdir)/$$f'"; \
+	  $(xwinconfigDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(xwinconfigdir)/$$f"; \
+	done
+
+uninstall-xwinconfigDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(xwinconfig_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(xwinconfigdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(xwinconfigdir)/$$f"; \
 	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
@@ -1109,7 +1251,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/glx $(distdir)/xlaunch $(distdir)/xlaunch/resources $(distdir)/xlaunch/window
+	$(mkdir_p) $(distdir)/../.. $(distdir)/glx $(distdir)/xlaunch $(distdir)/xlaunch/resources $(distdir)/xlaunch/window
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -1139,9 +1281,9 @@ distdir: $(DISTFILES)
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(PROGRAMS) $(MANS)
+all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(filemandir)" "$(DESTDIR)$(xwinconfigdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -1194,13 +1336,16 @@ info: info-am
 
 info-am:
 
-install-data-am: install-man
+install-data-am: install-appmanDATA install-filemanDATA \
+	install-xwinconfigDATA
 
 install-exec-am: install-binPROGRAMS
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 
 install-info: install-info-am
 
-install-man: install-man1
+install-man:
 
 installcheck-am:
 
@@ -1222,29 +1367,51 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am uninstall-man
-
-uninstall-man: uninstall-man1
+uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-filemanDATA uninstall-info-am \
+	uninstall-xwinconfigDATA
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
 	clean-generic clean-libtool ctags distclean distclean-compile \
 	distclean-generic distclean-libtool distclean-tags distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-man1 install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-info-am \
-	uninstall-man uninstall-man1
+	install-appmanDATA install-binPROGRAMS install-data \
+	install-data-am install-exec install-exec-am install-exec-hook \
+	install-filemanDATA install-info install-info-am install-man \
+	install-strip install-xwinconfigDATA installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-appmanDATA \
+	uninstall-binPROGRAMS uninstall-filemanDATA uninstall-info-am \
+	uninstall-xwinconfigDATA
 
+
+.rc.o:
+	$(AM_V_GEN)$(WINDRES) --use-temp-file -i $< --input-format=rc -o $@ -O coff -I $(top_builddir)/include
 
 winprefsyacc.h: winprefsyacc.c
 winprefslex.c: winprefslex.l winprefsyacc.c winprefsyacc.h
 
+XWin.$(APP_MAN_SUFFIX): XWin.man
+	-$(AM_V_at)rm -f XWin.$(APP_MAN_SUFFIX)
+	$(AM_V_at)$(LN_S) XWin.man XWin.$(APP_MAN_SUFFIX)
+
+XWinrc.$(FILE_MAN_SUFFIX): XWinrc.man
+	-$(AM_V_at)rm -f XWinrc.$(FILE_MAN_SUFFIX)
+	$(AM_V_at)$(LN_S) XWinrc.man XWinrc.$(FILE_MAN_SUFFIX)
+
+.pre:
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+
+.man.pre.man:
+	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
+
+install-exec-hook:
+	(cd $(DESTDIR)$(bindir) && rm -f X && $(LN_S) XWin$(EXEEXT) X)
+
 relink:
-	rm -f XWin && $(MAKE) XWin
+	$(AM_V_at)rm -f XWin$(EXEEXT) && $(MAKE) XWin$(EXEEXT)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

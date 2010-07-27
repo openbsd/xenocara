@@ -41,9 +41,9 @@
 #include "darwinEvents.h"
 #include "quartzKeyboard.h"
 #include "quartz.h"
-#define _APPLEWM_SERVER_
-#include "X11/extensions/applewm.h"
+#include <X11/extensions/applewmconst.h>
 #include "micmap.h"
+#include "exglobals.h"
 
 #include <mach/mach.h>
 #include <unistd.h>
@@ -52,7 +52,7 @@
 #include <Xplugin.h>
 
 // pbproxy/pbproxy.h
-extern BOOL xpbproxy_init (void);
+extern int xpbproxy_run (void);
 
 #define DEFAULTS_FILE X11LIBDIR"/X11/xserver/Xquartz.plist"
 
@@ -60,12 +60,8 @@ extern BOOL xpbproxy_init (void);
 #define XSERVER_VERSION "?"
 #endif
 
-#define ProximityIn    0
-#define ProximityOut   1
-
 /* Stuck modifier / button state... force release when we context switch */
 static NSEventType keyState[NUM_KEYCODES];
-static int modifierFlagsMask;
 
 int X11EnableKeyEquivalents = TRUE, quartzFullscreenMenu = FALSE;
 int quartzHasRoot = FALSE, quartzEnableRootless = TRUE;
@@ -79,6 +75,12 @@ static KeyboardLayoutRef last_key_layout;
 #endif
 
 extern int darwinFakeButtons;
+
+/* Store the mouse location while in the background, and update X11's pointer
+ * location when we become the foreground application
+ */
+static NSPoint bgMouseLocation;
+static BOOL bgMouseLocationUpdated = FALSE;
 
 X11Application *X11App;
 
@@ -182,26 +184,17 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
 }
 
 - (void) activateX:(OSX_BOOL)state {
-    /* Create a TSM document that supports full Unicode input, and
-     have it activated while X is active */
-    static TSMDocumentID x11_document;
     size_t i;
     DEBUG_LOG("state=%d, _x_active=%d, \n", state, _x_active)
     if (state) {
-        DarwinSendDDXEvent(kXquartzActivate, 0);
-
-        if (!_x_active) {
-            if (x11_document == 0) {
-                OSType types[1];
-                types[0] = kUnicodeDocument;
-                NewTSMDocument (1, types, &x11_document, 0);
-            }
-
-            if (x11_document != 0)	ActivateTSMDocument (x11_document);
+        if(bgMouseLocationUpdated) {
+            DarwinSendPointerEvents(darwinPointer, MotionNotify, 0, bgMouseLocation.x, bgMouseLocation.y, 0.0, 0.0, 0.0);
+            bgMouseLocationUpdated = FALSE;
         }
+        DarwinSendDDXEvent(kXquartzActivate, 0);
     } else {
 
-        if(darwin_modifier_flags)
+        if(darwin_all_modifier_flags)
             DarwinUpdateModKeys(0);
         for(i=0; i < NUM_KEYCODES; i++) {
             if(keyState[i] == NSKeyDown) {
@@ -211,9 +204,6 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
         }
         
         DarwinSendDDXEvent(kXquartzDeactivate, 0);
-
-        if (_x_active && x11_document != 0)
-            DeactivateTSMDocument (x11_document);
     }
 
     _x_active = state;
@@ -253,23 +243,26 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
             if(!for_appkit) {
                 NSPoint NSlocation = [e locationInWindow];
                 NSWindow *window = [e window];
-                
+                NSRect NSframe, NSvisibleFrame;
+                CGRect CGframe, CGvisibleFrame;
+                CGPoint CGlocation;
+
                 if (window != nil)	{
                     NSRect frame = [window frame];
                     NSlocation.x += frame.origin.x;
                     NSlocation.y += frame.origin.y;
                 }
 
-                NSRect NSframe = [[NSScreen mainScreen] frame];
-                NSRect NSvisibleFrame = [[NSScreen mainScreen] visibleFrame];
+                NSframe = [[NSScreen mainScreen] frame];
+                NSvisibleFrame = [[NSScreen mainScreen] visibleFrame];
                 
-                CGRect CGframe = CGRectMake(NSframe.origin.x, NSframe.origin.y,
+                CGframe = CGRectMake(NSframe.origin.x, NSframe.origin.y,
                                             NSframe.size.width, NSframe.size.height);
-                CGRect CGvisibleFrame = CGRectMake(NSvisibleFrame.origin.x,
+                CGvisibleFrame = CGRectMake(NSvisibleFrame.origin.x,
                                                    NSvisibleFrame.origin.y,
                                                    NSvisibleFrame.size.width,
                                                    NSvisibleFrame.size.height);
-                CGPoint CGlocation = CGPointMake(NSlocation.x, NSlocation.y);
+                CGlocation = CGPointMake(NSlocation.x, NSlocation.y);
                 
                 if(CGRectContainsPoint(CGframe, CGlocation) &&
                    !CGRectContainsPoint(CGvisibleFrame, CGlocation))
@@ -344,6 +337,7 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
                 case NSApplicationActivatedEventType:
                     for_x = NO;
                     if ([self modalWindow] == nil) {
+                        BOOL switch_on_activate, ok;
                         for_appkit = NO;
                         
                         /* FIXME: hack to avoid having to pass the event to appkit,
@@ -354,12 +348,11 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
                         
                         /* Get the Spaces preference for SwitchOnActivate */
                         (void)CFPreferencesAppSynchronize(CFSTR(".GlobalPreferences"));
-                        BOOL switch_on_activate, ok;
                         switch_on_activate = CFPreferencesGetAppBooleanValue(CFSTR("AppleSpacesSwitchOnActivate"), CFSTR(".GlobalPreferences"), &ok);
                         if(!ok)
                             switch_on_activate = YES;
                         
-                        if ([e data2] & 0x10 && switch_on_activate)
+                        if ([e data2] & 0x10 && switch_on_activate) // 0x10 is set when we use cmd-tab or the dock icon
                             DarwinSendDDXEvent(kXquartzBringAllToFront, 0);
                     }
                     break;
@@ -418,6 +411,9 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
         SetSystemUIMode(kUIModeAllHidden, quartzFullscreenMenu ? kUIOptionAutoShowMenuBar : 0); // kUIModeAllSuppressed or kUIOptionAutoShowMenuBar can be used to allow "mouse-activation"
 }
 
+- (void) launch_client:(NSString *)cmd {
+    (void)[_controller application:self openFile:cmd];
+}
 
 /* user preferences */
 
@@ -486,7 +482,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
 	return out;
 }
 
-- (CFPropertyListRef) prefs_get:(NSString *)key {
+- (CFPropertyListRef) prefs_get_copy:(NSString *)key {
     CFPropertyListRef value;
 	
     value = CFPreferencesCopyAppValue ((CFStringRef) key, app_prefs_domain_cfstr);
@@ -547,7 +543,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   CFPropertyListRef value;
   int ret;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL && CFGetTypeID (value) == CFNumberGetTypeID ())
     CFNumberGetValue (value, kCFNumberIntType, &ret);
@@ -565,7 +561,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   CFPropertyListRef value;
   const char *ret = NULL;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL && CFGetTypeID (value) == CFStringGetTypeID ()) {
     NSString *s = (NSString *) value;
@@ -578,11 +574,29 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   return ret != NULL ? ret : def;
 }
 
+- (NSURL *) prefs_copy_url:(NSString *)key default:(NSURL *)def {
+    CFPropertyListRef value;
+    NSURL *ret = NULL;
+    
+    value = [self prefs_get_copy:key];
+    
+    if (value != NULL && CFGetTypeID (value) == CFStringGetTypeID ()) {
+        NSString *s = (NSString *) value;
+
+        ret = [NSURL URLWithString:s];
+        [ret retain];
+    }
+    
+    if (value != NULL) CFRelease (value);
+    
+    return ret != NULL ? ret : def;
+}
+
 - (float) prefs_get_float:(NSString *)key default:(float)def {
   CFPropertyListRef value;
   float ret = def;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL
       && CFGetTypeID (value) == CFNumberGetTypeID ()
@@ -600,7 +614,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   CFPropertyListRef value;
   int ret = def;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL) {
     if (CFGetTypeID (value) == CFNumberGetTypeID ())
@@ -624,7 +638,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   NSArray *ret = nil;
   CFPropertyListRef value;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL) {
     if (CFGetTypeID (value) == CFArrayGetTypeID ())
@@ -698,10 +712,13 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
                                            default:quartzEnableRootless];
     quartzFullscreenMenu = [self prefs_get_boolean:@PREFS_FULLSCREEN_MENU
                                            default:quartzFullscreenMenu];
-    quartzFullscreenDisableHotkeys = ![self prefs_get_boolean:
-                            @PREFS_FULLSCREEN_HOTKEYS default:!quartzFullscreenDisableHotkeys];
+    quartzFullscreenDisableHotkeys = ![self prefs_get_boolean:@PREFS_FULLSCREEN_HOTKEYS
+                                                      default:!quartzFullscreenDisableHotkeys];
     darwinFakeButtons = [self prefs_get_boolean:@PREFS_FAKEBUTTONS
                                         default:darwinFakeButtons];
+    quartzOptionSendsAlt = [self prefs_get_boolean:@PREFS_OPTION_SENDS_ALT
+                                           default:quartzOptionSendsAlt];
+
     if (darwinFakeButtons) {
         const char *fake2, *fake3;
 
@@ -739,12 +756,24 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
     
     noTestExtensions = ![self prefs_get_boolean:@PREFS_TEST_EXTENSIONS
                                         default:FALSE];
+
+#if XQUARTZ_SPARKLE
+    NSURL *url =  [self prefs_copy_url:@PREFS_UPDATE_FEED default:nil];
+    if(url) {
+        [[SUUpdater sharedUpdater] setFeedURL:url];
+        [url release];
+    }
+#endif
 }
 
 /* This will end up at the end of the responder chain. */
 - (void) copy:sender {
   DarwinSendDDXEvent(kXquartzPasteboardNotify, 1,
 			     AppleWMCopyToPasteboard);
+}
+
+- (X11Controller *) controller {
+    return _controller;
 }
 
 - (OSX_BOOL) x_active {
@@ -834,6 +863,16 @@ void X11ApplicationShowHideMenubar (int state) {
     [n release];
 }
 
+void X11ApplicationLaunchClient (const char *cmd) {
+    NSString *string;
+    
+    string = [[NSString alloc] initWithUTF8String:cmd];
+	
+    message_kit_thread (@selector (launch_client:), string);
+	
+    [string release];
+}
+
 static void check_xinitrc (void) {
     char *tem, buf[1024];
     NSString *msg;
@@ -872,9 +911,28 @@ environment the next time you start X11?", @"Startup xinitrc dialog");
     [X11App prefs_synchronize];
 }
 
+static inline pthread_t create_thread(void *func, void *arg) {
+    pthread_attr_t attr;
+    pthread_t tid;
+    
+    pthread_attr_init(&attr);
+    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&tid, &attr, func, arg);
+    pthread_attr_destroy(&attr);
+    
+    return tid;
+}
+
+static void *xpbproxy_x_thread(void *args) {
+    xpbproxy_run();
+
+    fprintf(stderr, "xpbproxy thread is terminating unexpectedly.\n");
+    return NULL;
+}
+
 void X11ApplicationMain (int argc, char **argv, char **envp) {
     NSAutoreleasePool *pool;
-    int *p;
 
 #ifdef DEBUG
     while (access ("/tmp/x11-block", F_OK) == 0) sleep (1);
@@ -914,15 +972,10 @@ void X11ApplicationMain (int argc, char **argv, char **envp) {
         fprintf(stderr, "X11ApplicationMain: Unable to determine KLGetCurrentKeyboardLayout() at startup.\n");
 #endif
 
-    memset(keyInfo.keyMap, 0, sizeof(keyInfo.keyMap));
-    if (!QuartzReadSystemKeymap(&keyInfo)) {
+    if (!QuartsResyncKeymap(FALSE)) {
         fprintf(stderr, "X11ApplicationMain: Could not build a valid keymap.\n");
     }
 
-    for(p=darwin_modifier_mask_list, modifierFlagsMask=0; *p; p++) {
-        modifierFlagsMask |= *p;
-    }
-    
     /* Tell the server thread that it can proceed */
     QuartzInitServer(argc, argv, envp);
     
@@ -931,9 +984,15 @@ void X11ApplicationMain (int argc, char **argv, char **envp) {
      */
     check_xinitrc();
     
-    if(!xpbproxy_init())
-        fprintf(stderr, "Error initializing xpbproxy\n");
-           
+    create_thread(xpbproxy_x_thread, NULL);
+
+#if XQUARTZ_SPARKLE
+    [[X11App controller] setup_sparkle];
+    [[SUUpdater sharedUpdater] resetUpdateCycle];
+//    [[SUUpdater sharedUpdater] checkForUpdates:X11App];
+#endif
+
+    [pool release];
     [NSApp run];
     /* not reached */
 }
@@ -953,33 +1012,61 @@ static inline int ensure_flag(int flags, int device_independent, int device_depe
 #endif
 
 - (void) sendX11NSEvent:(NSEvent *)e {
-    NSRect screen;
-    NSPoint location;
-    NSWindow *window;
+    NSPoint location = NSZeroPoint, tilt = NSZeroPoint;
     int ev_button, ev_type;
-    float pointer_x, pointer_y, pressure, tilt_x, tilt_y;
+    float pressure = 0.0;
     DeviceIntPtr pDev;
     int modifierFlags;
+    BOOL isMouseOrTabletEvent, isTabletEvent;
 
-    /* convert location to be relative to top-left of primary display */
-    location = [e locationInWindow];
-    window = [e window];
-    screen = [[[NSScreen screens] objectAtIndex:0] frame];
+    isMouseOrTabletEvent =  [e type] == NSLeftMouseDown    ||  [e type] == NSOtherMouseDown    ||  [e type] == NSRightMouseDown    ||
+                            [e type] == NSLeftMouseUp      ||  [e type] == NSOtherMouseUp      ||  [e type] == NSRightMouseUp      ||
+                            [e type] == NSLeftMouseDragged ||  [e type] == NSOtherMouseDragged ||  [e type] == NSRightMouseDragged ||
+                            [e type] == NSMouseMoved       ||  [e type] == NSTabletPoint       ||  [e type] == NSScrollWheel;
 
-    if (window != nil)	{
-        NSRect frame = [window frame];
-        pointer_x = location.x + frame.origin.x;
-        pointer_y = (screen.origin.y + screen.size.height)
-                    - (location.y + frame.origin.y);
-    } else {
-        pointer_x = location.x;
-        pointer_y = (screen.origin.y + screen.size.height) - location.y;
+    isTabletEvent = ([e type] == NSTabletPoint) ||
+                    (isMouseOrTabletEvent && ([e subtype] == NSTabletPointEventSubtype || [e subtype] == NSTabletProximityEventSubtype));
+
+    if(isMouseOrTabletEvent) {
+        static NSPoint lastpt;
+        NSWindow *window = [e window];
+        NSRect screen = [[[NSScreen screens] objectAtIndex:0] frame];
+	    BOOL hasUntrustedPointerDelta;
+        
+        // NSEvents for tablets are not consistent wrt deltaXY between events, so we cannot rely on that
+        // Thus tablets will be subject to the warp-pointer bug worked around by the delta, but tablets
+        // are not normally used in cases where that bug would present itself, so this is a fair tradeoff
+        // <rdar://problem/7111003> deltaX and deltaY are incorrect for NSMouseMoved, NSTabletPointEventSubtype
+        // http://xquartz.macosforge.org/trac/ticket/288
+        hasUntrustedPointerDelta = isTabletEvent;
+        
+        // The deltaXY for middle click events also appear erroneous after fast user switching
+        // <rdar://problem/7979468> deltaX and deltaY are incorrect for NSOtherMouseDown and NSOtherMouseUp after FUS
+        // http://xquartz.macosforge.org/trac/ticket/389
+        hasUntrustedPointerDelta = hasUntrustedPointerDelta || [e type] == NSOtherMouseDown || [e type] == NSOtherMouseUp;
+
+        // The deltaXY for scroll events correspond to the scroll delta, not the pointer delta
+        // <rdar://problem/7989690> deltaXY for wheel events are being sent as mouse movement
+        hasUntrustedPointerDelta = hasUntrustedPointerDelta || [e type] == NSScrollWheel;
+        
+        if (window != nil)	{
+            NSRect frame = [window frame];
+            location = [e locationInWindow];
+            location.x += frame.origin.x;
+            location.y += frame.origin.y;
+            lastpt = location;
+        } else if(hasUntrustedPointerDelta) {
+            location = [e locationInWindow];
+            lastpt = location;
+        } else {
+            location.x = lastpt.x + [e deltaX];
+            location.y = lastpt.y - [e deltaY];
+            lastpt = [e locationInWindow];
+        }
+        
+        /* Convert coordinate system */
+        location.y = (screen.origin.y + screen.size.height) - location.y;
     }
-
-    /* Setup our valuators.  These will range from 0 to 1 */
-    pressure = 0;
-    tilt_x = 0;
-    tilt_y = 0;
     
     modifierFlags = [e modifierFlags];
     
@@ -993,14 +1080,14 @@ static inline int ensure_flag(int flags, int device_independent, int device_depe
     modifierFlags = ensure_flag(modifierFlags, NX_ALTERNATEMASK, NX_DEVICELALTKEYMASK   | NX_DEVICERALTKEYMASK,     NX_DEVICELALTKEYMASK);
 #endif
 
-    modifierFlags &= modifierFlagsMask;
+    modifierFlags &= darwin_all_modifier_mask;
 
     /* We don't receive modifier key events while out of focus, and 3button
      * emulation mucks this up, so we need to check our modifier flag state
      * on every event... ugg
      */
     
-    if(darwin_modifier_flags != modifierFlags)
+    if(darwin_all_modifier_flags != modifierFlags)
         DarwinUpdateModKeys(modifierFlags);
     
 	switch ([e type]) {
@@ -1042,46 +1129,54 @@ static inline int ensure_flag(int flags, int device_independent, int device_depe
                  * NSTabletProximityEventSubtype will come from NSTabletPoint
                  * rather than NSMouseMoved.
                 pressure = [e pressure];
-                tilt_x   = [e tilt].x;
-                tilt_y   = [e tilt].y;
+                tilt     = [e tilt];
                 pDev = darwinTabletCurrent;                
                  */
 
-                DarwinSendProximityEvents([e isEnteringProximity]?ProximityIn:ProximityOut,
-                                          pointer_x, pointer_y);
+                DarwinSendProximityEvents([e isEnteringProximity] ? ProximityIn : ProximityOut,
+                                          location.x, location.y);
             }
 
 			if ([e type] == NSTabletPoint || [e subtype] == NSTabletPointEventSubtype) {
                 pressure = [e pressure];
-                tilt_x   = [e tilt].x;
-                tilt_y   = [e tilt].y;
+                tilt     = [e tilt];
                 
                 pDev = darwinTabletCurrent;
             }
 
+            if(!quartzServerVisible && noTestExtensions) {
+#if defined(XPLUGIN_VERSION) && XPLUGIN_VERSION > 0
 /* Older libXplugin (Tiger/"Stock" Leopard) aren't thread safe, so we can't call xp_find_window from the Appkit thread */
-#ifdef XPLUGIN_VERSION
-#if XPLUGIN_VERSION > 0
-            if(!quartzServerVisible) {
-                xp_window_id wid;
+                xp_window_id wid = 0;
+                xp_error e;
 
                 /* Sigh. Need to check that we're really over one of
                  * our windows. (We need to receive pointer events while
                  * not in the foreground, but we don't want to receive them
                  * when another window is over us or we might show a tooltip)
                  */
-                
-                wid = 0;
-                
-                if (xp_find_window(pointer_x, pointer_y, 0, &wid) == XP_Success &&
-                    wid == 0)
-                    return;        
+
+                e = xp_find_window(location.x, location.y, 0, &wid);
+
+                if (e != XP_Success || (e == XP_Success && wid == 0))
+#endif
+                {
+                    bgMouseLocation = location;
+                    bgMouseLocationUpdated = TRUE;
+                    return;
+                }
             }
-#endif
-#endif
             
-            DarwinSendPointerEvents(pDev, ev_type, ev_button, pointer_x, pointer_y,
-                                    pressure, tilt_x, tilt_y);
+            if(bgMouseLocationUpdated) {
+                if(!(ev_type == MotionNotify && ev_button == 0)) {
+                    DarwinSendPointerEvents(pDev, MotionNotify, 0, location.x,
+                                            location.y, pressure, tilt.x, tilt.y);
+                }
+                bgMouseLocationUpdated = FALSE;
+            }
+
+            DarwinSendPointerEvents(pDev, ev_type, ev_button, location.x, location.y,
+                                    pressure, tilt.x, tilt.y);
             
             break;
             
@@ -1100,16 +1195,37 @@ static inline int ensure_flag(int flags, int device_independent, int device_depe
                     break;
             }
             
-			DarwinSendProximityEvents([e isEnteringProximity]?ProximityIn:ProximityOut,
-                                      pointer_x, pointer_y);
+			DarwinSendProximityEvents([e isEnteringProximity] ? ProximityIn : ProximityOut,
+                                      location.x, location.y);
             break;
             
 		case NSScrollWheel:
-			DarwinSendScrollEvents([e deltaX], [e deltaY], pointer_x, pointer_y,
-                                   pressure, tilt_x, tilt_y);
+#if !defined(XPLUGIN_VERSION) || XPLUGIN_VERSION == 0
+            /* If we're in the background, we need to send a MotionNotify event
+             * first, since we aren't getting them on background mouse motion
+             */
+            if(!quartzServerVisible && noTestExtensions) {
+                bgMouseLocationUpdated = FALSE;
+                DarwinSendPointerEvents(darwinPointer, MotionNotify, 0, location.x,
+                                        location.y, pressure, tilt.x, tilt.y);
+            }
+#endif
+			DarwinSendScrollEvents([e deltaX], [e deltaY], location.x, location.y,
+                                   pressure, tilt.x, tilt.y);
             break;
             
         case NSKeyDown: case NSKeyUp:
+            {
+                /* XKB clobbers our keymap at startup, so we need to force it on the first keypress.
+                 * TODO: Make this less of a kludge.
+                 */
+                static int force_resync_keymap = YES;
+                if(force_resync_keymap) {
+                    DarwinSendDDXEvent(kXquartzReloadKeymap, 0);
+                    force_resync_keymap = NO;
+                }
+            }
+
             if(darwinSyncKeymap) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
                 TISInputSourceRef key_layout = TISCopyCurrentKeyboardLayoutInputSource();
@@ -1127,17 +1243,10 @@ static inline int ensure_flag(int flags, int device_independent, int device_depe
                 if(key_layout != last_key_layout) {
                     last_key_layout = key_layout;
 #endif
-
                     /* Update keyInfo */
-                    pthread_mutex_lock(&keyInfo_mutex);
-                    memset(keyInfo.keyMap, 0, sizeof(keyInfo.keyMap));
-                    if (!QuartzReadSystemKeymap(&keyInfo)) {
+                    if (!QuartsResyncKeymap(TRUE)) {
                         fprintf(stderr, "sendX11NSEvent: Could not build a valid keymap.\n");
                     }
-                    pthread_mutex_unlock(&keyInfo_mutex);
-                    
-                    /* Tell server thread to deal with new keyInfo */
-                    DarwinSendDDXEvent(kXquartzReloadKeymap, 0);
                 }
             }
 

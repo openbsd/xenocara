@@ -59,7 +59,9 @@
 
 #include <X11/Xos.h>                /* For gettimeofday */
 #include "dixstruct.h"
+#ifdef PANORAMIX
 #include "panoramiXsrv.h"
+#endif
 
 #include <signal.h>             /* For SIGQUIT */
 
@@ -843,6 +845,12 @@ void AbortDDX(void)
         dmxScreen->beDisplay = NULL;
     }
 }
+
+#ifdef DDXBEFORERESET
+void ddxBeforeReset(void)
+{
+}
+#endif
 
 /** This function is called in Xserver/dix/main.c from \a main() when
  * dispatchException & DE_TERMINATE (which is the only way to exit the

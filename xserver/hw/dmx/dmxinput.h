@@ -78,7 +78,7 @@ typedef enum {
     DMX_ACTIVESIGIO             /**< Device is currently using SIGIO. */
 } dmxSigioState;
 
-/** DMXInputInfo is typedef'd in #dmx.h so that all routines can have
+/** DMXInputInfo is typedef'd in \a dmx.h so that all routines can have
  * access to the global pointers.  However, the elements are only
  * available to input-related routines. */
 struct _DMXInputInfo {
@@ -140,8 +140,6 @@ extern void dmxInputLogDevices(void);
 extern void dmxUpdateWindowInfo(DMXUpdateType type, WindowPtr pWindow);
 
 /* These functions are defined in input/dmxeq.c */
-extern Bool dmxeqInitialized(void);
-extern void dmxeqEnqueue(DeviceIntPtr pDev, xEvent *e);
 extern void dmxeqSwitchScreen(DeviceIntPtr pDev, ScreenPtr pScreen, Bool fromDIX);
 
 /* This type is used in input/dmxevents.c.  Also, these functions are

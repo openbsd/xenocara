@@ -34,6 +34,7 @@ SRCS_MULTIWINDOWEXTWM = \
 	winwin32rootlesswndproc.c \
 	winwindowswm.c
 DEFS_MULTIWINDOWEXTWM = -DXWIN_MULTIWINDOWEXTWM
+MULTIWINDOWEXTWM_LIBS = $(top_builddir)/miext/rootless/librootless.la
 endif
 
 if XWIN_NATIVEGDI
@@ -108,7 +109,6 @@ SRCS =	InitInput.c \
 	winconfig.h \
 	win.h \
 	winkeybd.h \
-	winkeymap.h \
 	winkeynames.h \
 	winlayouts.h \
 	winmessages.h \
@@ -119,8 +119,11 @@ SRCS =	InitInput.c \
 	winpriv.h \
 	winresource.h \
 	winwindow.h \
+	XWin.rc \
+	$(top_srcdir)/Xext/dpmsstubs.c \
+	$(top_srcdir)/Xi/stubs.c \
 	$(top_srcdir)/mi/miinitext.c \
-	$(top_srcdir)/fb/fbcmap.c \
+	$(top_srcdir)/fb/fbcmap_mi.c \
 	$(SRCS_CLIPBOARD) \
 	$(SRCS_GLX_WINDOWS) \
 	$(SRCS_MULTIWINDOW) \
@@ -141,15 +144,13 @@ SRCS =	InitInput.c \
 
 XWin_SOURCES = $(SRCS)
 
-INCLUDES = -I$(top_srcdir)/miext/rootless \
-           -I$(top_srcdir)/miext/rootless/safeAlpha
-
-XWIN_LIBS = \
-	$(top_builddir)/fb/libfb.la \
-	$(XSERVER_LIBS)
+INCLUDES = -I$(top_srcdir)/miext/rootless
 
 XWin_DEPENDENCIES = $(XWIN_LIBS)
-XWin_LDADD = $(XWIN_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
+XWin_LDADD = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
+
+.rc.o:
+	$(AM_V_GEN)$(WINDRES) --use-temp-file -i $< --input-format=rc -o $@ -O coff -I $(top_builddir)/include
 
 XWin_LDFLAGS = -mwindows -static
 
@@ -157,25 +158,49 @@ winprefsyacc.h: winprefsyacc.c
 winprefslex.c: winprefslex.l winprefsyacc.c winprefsyacc.h
 
 BUILT_SOURCES = winprefsyacc.h winprefsyacc.c winprefslex.c
-CLEANFILES = $(BUILT_SOURCES)
+CLEANFILES = $(BUILT_SOURCES) $(appman_DATA) $(fileman_DATA) XWin.man XWinrc.man
 
 AM_YFLAGS = -d
 AM_LFLAGS = -i
 AM_CFLAGS = -DHAVE_XWIN_CONFIG_H $(DIX_CFLAGS) \
-            $(XWINMODULES_CFLAGS)
-
-dist_man1_MANS = XWin.man XWinrc.man
+            $(XWINMODULES_CFLAGS) \
+            -DXFree86Server
 
 GLX_EXTRAS = \
-	glx/ChangeLog \
 	glx/glwindows.h \
 	glx/glwrap.c \
 	glx/indirect.c
 
+MAN_SRCS = XWin.man.pre XWinrc.man.pre
+
+appmandir = $(APP_MAN_DIR)
+appman_DATA = XWin.$(APP_MAN_SUFFIX)
+
+filemandir = $(FILE_MAN_DIR)
+fileman_DATA = XWinrc.$(FILE_MAN_SUFFIX)
+
+XWin.$(APP_MAN_SUFFIX): XWin.man
+	-$(AM_V_at)rm -f XWin.$(APP_MAN_SUFFIX)
+	$(AM_V_at)$(LN_S) XWin.man XWin.$(APP_MAN_SUFFIX)
+
+XWinrc.$(FILE_MAN_SUFFIX): XWinrc.man
+	-$(AM_V_at)rm -f XWinrc.$(FILE_MAN_SUFFIX)
+	$(AM_V_at)$(LN_S) XWinrc.man XWinrc.$(FILE_MAN_SUFFIX)
+
+EXTRAMANDEFS = -D__logdir__=$(logdir) -D__sysconfdir__=$(sysconfdir) -D__datadir__=$(datadir)
+
+xwinconfigdir = $(sysconfdir)/X11
+xwinconfig_DATA = system.XWinrc
+
+include $(top_srcdir)/cpprules.in
+
+install-exec-hook:
+	(cd $(DESTDIR)$(bindir) && rm -f X && $(LN_S) XWin$(EXEEXT) X)
+
 EXTRA_DIST = \
 	$(GLX_EXTRAS) \
-	_usr_X11R6_lib_X11_system.XWinrc \
-	X-boxed.ico \
+	$(MAN_SRCS) \
+	$(xwinconfig_DATA) \
 	X.ico \
 	XWin.rc \
 	xlaunch/config.cc \
@@ -200,4 +225,4 @@ EXTRA_DIST = \
 	xlaunch/window/wizard.h
 
 relink:
-	rm -f XWin && $(MAKE) XWin
+	$(AM_V_at)rm -f XWin$(EXEEXT) && $(MAKE) XWin$(EXEEXT)

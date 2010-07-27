@@ -42,12 +42,7 @@ SOFTWARE.
 #include <X11/extensions/Xvproto.h>
 #include "xvdix.h"
 #ifdef MITSHM
-#ifdef HAVE_X11_EXTENSIONS_SHMPROTO_H
 #include <X11/extensions/shmproto.h>
-#else
-#define _XSHM_SERVER_
-#include <X11/extensions/shmstr.h>
-#endif
 #endif
 
 #include "xvdisp.h"
@@ -427,12 +422,12 @@ ProcXvQueryAdaptors(ClientPtr client)
   pa = pxvs->pAdaptors;
   while (na--)
     {
-      totalSize += (strlen(pa->name) + 3) & ~3;
+      totalSize += pad_to_int32(strlen(pa->name));
       totalSize += pa->nFormats * sz_xvFormat;
       pa++;
     }
 
-  rep.length = totalSize >> 2;
+  rep.length = bytes_to_int32(totalSize);
 
   _WriteQueryAdaptorsReply(client, &rep);
 
@@ -483,11 +478,7 @@ ProcXvQueryEncodings(ClientPtr client)
   REQUEST(xvQueryEncodingsReq);
   REQUEST_SIZE_MATCH(xvQueryEncodingsReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -506,11 +497,11 @@ ProcXvQueryEncodings(ClientPtr client)
   totalSize = ne * sz_xvEncodingInfo;
   while (ne--)
     {
-      totalSize += (strlen(pe->name) + 3) & ~3;
+      totalSize += pad_to_int32(strlen(pe->name));
       pe++;
     }
 
-  rep.length = totalSize >> 2;
+  rep.length = bytes_to_int32(totalSize);
 
   _WriteQueryEncodingsReply(client, &rep);
 
@@ -544,12 +535,7 @@ ProcXvPutVideo(ClientPtr client)
   REQUEST_SIZE_MATCH(xvPutVideoReq);
 
   VALIDATE_DRAWABLE_AND_GC(stuff->drawable, pDraw, DixWriteAccess);
-
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -564,17 +550,15 @@ ProcXvPutVideo(ClientPtr client)
       return (BadMatch);
     }
 
-  status = XVCALL(diMatchPort)(pPort, pDraw);
+  status = XvdiMatchPort(pPort, pDraw);
   if (status != Success)
     {
       return status;
     }
 
-  return XVCALL(diPutVideo)(client, pDraw, pPort, pGC,
-			    stuff->vid_x, stuff->vid_y,
-			    stuff->vid_w, stuff->vid_h,
-			    stuff->drw_x, stuff->drw_y,
-			    stuff->drw_w, stuff->drw_h);
+  return XvdiPutVideo(client, pDraw, pPort, pGC, stuff->vid_x, stuff->vid_y,
+		      stuff->vid_w, stuff->vid_h, stuff->drw_x, stuff->drw_y,
+		      stuff->drw_w, stuff->drw_h);
 }
 
 static int
@@ -589,12 +573,7 @@ ProcXvPutStill(ClientPtr client)
   REQUEST_SIZE_MATCH(xvPutStillReq);
 
   VALIDATE_DRAWABLE_AND_GC(stuff->drawable, pDraw, DixWriteAccess);
-
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -609,17 +588,15 @@ ProcXvPutStill(ClientPtr client)
       return (BadMatch);
     }
 
-  status = XVCALL(diMatchPort)(pPort, pDraw);
+  status = XvdiMatchPort(pPort, pDraw);
   if (status != Success)
     {
       return status;
     }
 
-  return XVCALL(diPutStill)(client, pDraw, pPort, pGC,
-			    stuff->vid_x, stuff->vid_y,
-			    stuff->vid_w, stuff->vid_h,
-			    stuff->drw_x, stuff->drw_y,
-			    stuff->drw_w, stuff->drw_h);
+  return XvdiPutStill(client, pDraw, pPort, pGC, stuff->vid_x, stuff->vid_y,
+		      stuff->vid_w, stuff->vid_h, stuff->drw_x, stuff->drw_y,
+		      stuff->drw_w, stuff->drw_h);
 }
 
 static int
@@ -634,12 +611,7 @@ ProcXvGetVideo(ClientPtr client)
   REQUEST_SIZE_MATCH(xvGetVideoReq);
 
   VALIDATE_DRAWABLE_AND_GC(stuff->drawable, pDraw, DixReadAccess);
-
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -654,17 +626,15 @@ ProcXvGetVideo(ClientPtr client)
       return (BadMatch);
     }
 
-  status = XVCALL(diMatchPort)(pPort, pDraw);
+  status = XvdiMatchPort(pPort, pDraw);
   if (status != Success)
     {
       return status;
     }
 
-  return XVCALL(diGetVideo)(client, pDraw, pPort, pGC,
-			    stuff->vid_x, stuff->vid_y,
-			    stuff->vid_w, stuff->vid_h,
-			    stuff->drw_x, stuff->drw_y,
-			    stuff->drw_w, stuff->drw_h);
+  return XvdiGetVideo(client, pDraw, pPort, pGC, stuff->vid_x, stuff->vid_y,
+		      stuff->vid_w, stuff->vid_h, stuff->drw_x, stuff->drw_y,
+		      stuff->drw_w, stuff->drw_h);
 }
 
 static int
@@ -679,12 +649,7 @@ ProcXvGetStill(ClientPtr client)
   REQUEST_SIZE_MATCH(xvGetStillReq);
 
   VALIDATE_DRAWABLE_AND_GC(stuff->drawable, pDraw, DixReadAccess);
-
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -699,17 +664,15 @@ ProcXvGetStill(ClientPtr client)
       return (BadMatch);
     }
 
-  status = XVCALL(diMatchPort)(pPort, pDraw);
+  status = XvdiMatchPort(pPort, pDraw);
   if (status != Success)
     {
       return status;
     }
 
-  return XVCALL(diGetStill)(client, pDraw, pPort, pGC,
-			    stuff->vid_x, stuff->vid_y,
-			    stuff->vid_w, stuff->vid_h,
-			    stuff->drw_x, stuff->drw_y,
-			    stuff->drw_w, stuff->drw_h);
+  return XvdiGetStill(client, pDraw, pPort, pGC, stuff->vid_x, stuff->vid_y,
+		      stuff->vid_w, stuff->vid_h, stuff->drw_x, stuff->drw_y,
+		      stuff->drw_w, stuff->drw_h);
 }
 
 static int
@@ -724,7 +687,7 @@ ProcXvSelectVideoNotify(ClientPtr client)
   if (rc != Success)
     return rc;
 
-  return XVCALL(diSelectVideoNotify)(client, pDraw, stuff->onoff);
+  return XvdiSelectVideoNotify(client, pDraw, stuff->onoff);
 }
 
 static int
@@ -735,11 +698,7 @@ ProcXvSelectPortNotify(ClientPtr client)
   REQUEST(xvSelectPortNotifyReq);
   REQUEST_SIZE_MATCH(xvSelectPortNotifyReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -747,7 +706,7 @@ ProcXvSelectPortNotify(ClientPtr client)
       return (status);
     }
 
-  return XVCALL(diSelectPortNotify)(client, pPort, stuff->onoff);
+  return XvdiSelectPortNotify(client, pPort, stuff->onoff);
 }
 
 static int
@@ -759,11 +718,7 @@ ProcXvGrabPort(ClientPtr client)
   REQUEST(xvGrabPortReq);
   REQUEST_SIZE_MATCH(xvGrabPortReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -771,7 +726,7 @@ ProcXvGrabPort(ClientPtr client)
       return (status);
     }
 
-  status = XVCALL(diGrabPort)(client, pPort, stuff->time, &result);
+  status = XvdiGrabPort(client, pPort, stuff->time, &result);
 
   if (status != Success)
     {
@@ -796,11 +751,7 @@ ProcXvUngrabPort(ClientPtr client)
   REQUEST(xvGrabPortReq);
   REQUEST_SIZE_MATCH(xvGrabPortReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -808,7 +759,7 @@ ProcXvUngrabPort(ClientPtr client)
       return (status);
     }
 
-  return XVCALL(diUngrabPort)(client, pPort, stuff->time);
+  return XvdiUngrabPort(client, pPort, stuff->time);
 }
 
 static int
@@ -820,11 +771,7 @@ ProcXvStopVideo(ClientPtr client)
   REQUEST(xvStopVideoReq);
   REQUEST_SIZE_MATCH(xvStopVideoReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -836,7 +783,7 @@ ProcXvStopVideo(ClientPtr client)
   if (rc != Success)
     return rc;
 
-  return XVCALL(diStopVideo)(client, pPort, pDraw);
+  return XvdiStopVideo(client, pPort, pDraw);
 }
 
 static int
@@ -847,11 +794,7 @@ ProcXvSetPortAttribute(ClientPtr client)
   REQUEST(xvSetPortAttributeReq);
   REQUEST_SIZE_MATCH(xvSetPortAttributeReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixSetAttrAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -865,8 +808,7 @@ ProcXvSetPortAttribute(ClientPtr client)
       return(BadAtom);
     }
 
-  status = XVCALL(diSetPortAttribute)(client, pPort, 
-				    stuff->attribute, stuff->value);
+  status = XvdiSetPortAttribute(client, pPort, stuff->attribute, stuff->value);
 
   if (status == BadMatch) 
       client->errorValue = stuff->attribute;
@@ -886,11 +828,7 @@ ProcXvGetPortAttribute(ClientPtr client)
   REQUEST(xvGetPortAttributeReq);
   REQUEST_SIZE_MATCH(xvGetPortAttributeReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixGetAttrAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -904,7 +842,7 @@ ProcXvGetPortAttribute(ClientPtr client)
       return(BadAtom);
     }
 
-  status = XVCALL(diGetPortAttribute)(client, pPort, stuff->attribute, &value);
+  status = XvdiGetPortAttribute(client, pPort, stuff->attribute, &value);
   if (status != Success)
     {
       client->errorValue = stuff->attribute;
@@ -931,11 +869,7 @@ ProcXvQueryBestSize(ClientPtr client)
   REQUEST(xvQueryBestSizeReq);
   REQUEST_SIZE_MATCH(xvQueryBestSizeReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -972,11 +906,7 @@ ProcXvQueryPortAttributes(ClientPtr client)
   REQUEST(xvQueryPortAttributesReq);
   REQUEST_SIZE_MATCH(xvQueryPortAttributesReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixGetAttrAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -992,7 +922,7 @@ ProcXvQueryPortAttributes(ClientPtr client)
   for(i = 0, pAtt = pPort->pAdaptor->pAttributes; 
       i < pPort->pAdaptor->nAttributes; i++, pAtt++) 
   {    
-      rep.text_size += (strlen(pAtt->name) + 1 + 3) & ~3L;
+      rep.text_size += pad_to_int32(strlen(pAtt->name) + 1);
   }
 
   rep.length = (pPort->pAdaptor->nAttributes * sz_xvAttributeInfo)
@@ -1008,7 +938,7 @@ ProcXvQueryPortAttributes(ClientPtr client)
       Info.flags = pAtt->flags;
       Info.min = pAtt->min_value;
       Info.max = pAtt->max_value;
-      Info.size = (size + 3) & ~3L;
+      Info.size = pad_to_int32(size);
 
       _WriteAttributeInfo(client, &Info);
 
@@ -1032,12 +962,7 @@ ProcXvPutImage(ClientPtr client)
   REQUEST_AT_LEAST_SIZE(xvPutImageReq);
 
   VALIDATE_DRAWABLE_AND_GC(stuff->drawable, pDraw, DixWriteAccess);
-
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -1052,7 +977,7 @@ ProcXvPutImage(ClientPtr client)
       return (BadMatch);
     }
 
-  status = XVCALL(diMatchPort)(pPort, pDraw);
+  status = XvdiMatchPort(pPort, pDraw);
   if (status != Success)
     {
       return status;
@@ -1073,7 +998,7 @@ ProcXvPutImage(ClientPtr client)
   size = (*pPort->pAdaptor->ddQueryImageAttributes)(client, 
 			pPort, pImage, &width, &height, NULL, NULL);
   size += sizeof(xvPutImageReq);
-  size = (size + 3) >> 2;
+  size = bytes_to_int32(size);
   
   if((width < stuff->width) || (height < stuff->height))
      return BadValue;
@@ -1081,13 +1006,11 @@ ProcXvPutImage(ClientPtr client)
   if(client->req_len < size)
      return BadLength;
 
-  return XVCALL(diPutImage)(client, pDraw, pPort, pGC, 
-			    stuff->src_x, stuff->src_y,
-			    stuff->src_w, stuff->src_h,
-			    stuff->drw_x, stuff->drw_y,
-			    stuff->drw_w, stuff->drw_h,
-			    pImage, (unsigned char*)(&stuff[1]), FALSE,
-			    stuff->width, stuff->height);
+  return XvdiPutImage(client, pDraw, pPort, pGC, stuff->src_x, stuff->src_y,
+		      stuff->src_w, stuff->src_h, stuff->drw_x, stuff->drw_y,
+		      stuff->drw_w, stuff->drw_h, pImage,
+		      (unsigned char*)(&stuff[1]), FALSE,
+		      stuff->width, stuff->height);
 }
 
 #ifdef MITSHM
@@ -1120,12 +1043,7 @@ ProcXvShmPutImage(ClientPtr client)
   REQUEST_SIZE_MATCH(xvShmPutImageReq);
 
   VALIDATE_DRAWABLE_AND_GC(stuff->drawable, pDraw, DixWriteAccess);
-
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   if ((status = _AllocatePort(stuff->port, pPort)) != Success)
     {
@@ -1140,7 +1058,7 @@ ProcXvShmPutImage(ClientPtr client)
       return (BadMatch);
     }
 
-  status = XVCALL(diMatchPort)(pPort, pDraw);
+  status = XvdiMatchPort(pPort, pDraw);
   if (status != Success)
     {
       return status;
@@ -1156,11 +1074,10 @@ ProcXvShmPutImage(ClientPtr client)
   if(!pImage)
      return BadMatch;
 
-  if(!(shmdesc = (ShmDescPtr)LookupIDByType(stuff->shmseg, ShmSegType))) 
-    {
-      client->errorValue = stuff->shmseg;
-      return BadShmSegCode;  
-    }	
+  status = dixLookupResourceByType((pointer *)&shmdesc, stuff->shmseg,
+				   ShmSegType, serverClient, DixReadAccess);
+  if (status != Success)
+      return (status == BadValue) ? BadShmSegCode : status;
  
   width = stuff->width;
   height = stuff->height;
@@ -1172,13 +1089,11 @@ ProcXvShmPutImage(ClientPtr client)
   if((width < stuff->width) || (height < stuff->height))
      return BadValue;
      
-  status = XVCALL(diPutImage)(client, pDraw, pPort, pGC, 
-			    stuff->src_x, stuff->src_y,
-			    stuff->src_w, stuff->src_h,
-			    stuff->drw_x, stuff->drw_y,
-			    stuff->drw_w, stuff->drw_h, pImage,
-			    (unsigned char *)shmdesc->addr + stuff->offset, 
-			    stuff->send_event, stuff->width, stuff->height);
+  status = XvdiPutImage(client, pDraw, pPort, pGC, stuff->src_x, stuff->src_y,
+			stuff->src_w, stuff->src_h, stuff->drw_x, stuff->drw_y,
+			stuff->drw_w, stuff->drw_h, pImage,
+			(unsigned char *)shmdesc->addr + stuff->offset, 
+			stuff->send_event, stuff->width, stuff->height);
 
   if((status == Success) && stuff->send_event) {
         xShmCompletionEvent ev;
@@ -1223,11 +1138,7 @@ ProcXvQueryImageAttributes(ClientPtr client)
 
   REQUEST_SIZE_MATCH(xvQueryImageAttributesReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
   
   for(i = 0; i < pPort->pAdaptor->nImages; i++) {
       if(pPort->pAdaptor->pImages[i].id == stuff->id) {
@@ -1286,16 +1197,12 @@ ProcXvListImageFormats(ClientPtr client)
 
   REQUEST_SIZE_MATCH(xvListImageFormatsReq);
 
-  if(!(pPort = LOOKUP_PORT(stuff->port, client) ))
-    {
-      client->errorValue = stuff->port;
-      return (_XvBadPort);
-    }
+  VALIDATE_XV_PORT(stuff->port, pPort, DixReadAccess);
 
   rep.type = X_Reply;
   rep.sequenceNumber = client->sequence;
   rep.num_formats = pPort->pAdaptor->nImages;
-  rep.length = pPort->pAdaptor->nImages * sz_xvImageFormatInfo >> 2;
+  rep.length = bytes_to_int32(pPort->pAdaptor->nImages * sz_xvImageFormatInfo);
 
   _WriteListImageFormatsReply(client, &rep);
 
@@ -1696,18 +1603,20 @@ SProcXvDispatch(ClientPtr client)
 static int
 XineramaXvStopVideo(ClientPtr client)
 {
-   int result = Success, i;
+   int result, i;
    PanoramiXRes *draw, *port;
    REQUEST(xvStopVideoReq);
    REQUEST_SIZE_MATCH(xvStopVideoReq);
 
-   if(!(draw = (PanoramiXRes *)SecurityLookupIDByClass(
-                client, stuff->drawable, XRC_DRAWABLE, DixWriteAccess)))
-        return BadDrawable;
+   result = dixLookupResourceByClass((pointer *)&draw, stuff->drawable,
+				     XRC_DRAWABLE, client, DixWriteAccess);
+   if (result != Success)
+       return (result == BadValue) ? BadDrawable : result;
 
-   if(!(port = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->port, XvXRTPort, DixReadAccess)))
-        return _XvBadPort;
+   result = dixLookupResourceByType((pointer *)&port, stuff->port,
+				    XvXRTPort, client, DixReadAccess);
+   if (result != Success)
+       return (result == BadValue) ? _XvBadPort : result;
 
    FOR_NSCREENS_BACKWARD(i) {
 	if(port->info[i].id) {
@@ -1725,13 +1634,14 @@ XineramaXvSetPortAttribute(ClientPtr client)
 {
     REQUEST(xvSetPortAttributeReq);
     PanoramiXRes *port;
-    int result = Success, i;
+    int result, i;
 
     REQUEST_SIZE_MATCH(xvSetPortAttributeReq);
 
-    if(!(port = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->port, XvXRTPort, DixReadAccess)))
-        return _XvBadPort;
+    result = dixLookupResourceByType((pointer *)&port, stuff->port,
+				     XvXRTPort, client, DixReadAccess);
+    if (result != Success)
+	return (result == BadValue) ? _XvBadPort : result;
 
     FOR_NSCREENS_BACKWARD(i) {
 	if(port->info[i].id) {
@@ -1750,21 +1660,24 @@ XineramaXvShmPutImage(ClientPtr client)
     PanoramiXRes *draw, *gc, *port;
     Bool send_event = stuff->send_event;
     Bool isRoot;
-    int result = Success, i, x, y;
+    int result, i, x, y;
 
     REQUEST_SIZE_MATCH(xvShmPutImageReq);
 
-    if(!(draw = (PanoramiXRes *)SecurityLookupIDByClass(
-                client, stuff->drawable, XRC_DRAWABLE, DixWriteAccess)))
-        return BadDrawable;
+    result = dixLookupResourceByClass((pointer *)&draw, stuff->drawable,
+				      XRC_DRAWABLE, client, DixWriteAccess);
+    if (result != Success)
+	return (result == BadValue) ? BadDrawable : result;
 
-    if(!(gc = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->gc, XRT_GC, DixReadAccess)))
-        return BadGC;    
+    result = dixLookupResourceByType((pointer *)&gc, stuff->gc,
+				     XRT_GC, client, DixReadAccess);
+    if (result != Success)
+        return (result == BadValue) ? BadGC : result;
 
-    if(!(port = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->port, XvXRTPort, DixReadAccess)))
-        return _XvBadPort;
+    result = dixLookupResourceByType((pointer *)&port, stuff->port,
+				     XvXRTPort, client, DixReadAccess);
+    if (result != Success)
+	return (result == BadValue) ? _XvBadPort : result;
  
     isRoot = (draw->type == XRT_WINDOW) && draw->u.win.root;
 
@@ -1799,21 +1712,24 @@ XineramaXvPutImage(ClientPtr client)
     REQUEST(xvPutImageReq);
     PanoramiXRes *draw, *gc, *port;
     Bool isRoot;
-    int result = Success, i, x, y;
+    int result, i, x, y;
 
     REQUEST_AT_LEAST_SIZE(xvPutImageReq);
 
-    if(!(draw = (PanoramiXRes *)SecurityLookupIDByClass(
-                client, stuff->drawable, XRC_DRAWABLE, DixWriteAccess)))
-        return BadDrawable;
+    result = dixLookupResourceByClass((pointer *)&draw, stuff->drawable,
+				      XRC_DRAWABLE, client, DixWriteAccess);
+    if (result != Success)
+	return (result == BadValue) ? BadDrawable : result;
 
-    if(!(gc = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->gc, XRT_GC, DixReadAccess)))
-        return BadGC;    
+    result = dixLookupResourceByType((pointer *)&gc, stuff->gc,
+				     XRT_GC, client, DixReadAccess);
+    if (result != Success)
+        return (result == BadValue) ? BadGC : result;
 
-    if(!(port = (PanoramiXRes *)SecurityLookupIDByType(
-		client, stuff->port, XvXRTPort, DixReadAccess)))
-	return _XvBadPort;
+    result = dixLookupResourceByType((pointer *)&port, stuff->port,
+				     XvXRTPort, client, DixReadAccess);
+    if (result != Success)
+	return (result == BadValue) ? _XvBadPort : result;
  
     isRoot = (draw->type == XRT_WINDOW) && draw->u.win.root;
 
@@ -1844,21 +1760,24 @@ XineramaXvPutVideo(ClientPtr client)
     REQUEST(xvPutImageReq);
     PanoramiXRes *draw, *gc, *port;
     Bool isRoot;
-    int result = Success, i, x, y;
+    int result, i, x, y;
 
     REQUEST_AT_LEAST_SIZE(xvPutVideoReq);
 
-    if(!(draw = (PanoramiXRes *)SecurityLookupIDByClass(
-                client, stuff->drawable, XRC_DRAWABLE, DixWriteAccess)))
-        return BadDrawable;
+    result = dixLookupResourceByClass((pointer *)&draw, stuff->drawable,
+				      XRC_DRAWABLE, client, DixWriteAccess);
+    if (result != Success)
+	return (result == BadValue) ? BadDrawable : result;
 
-    if(!(gc = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->gc, XRT_GC, DixReadAccess)))
-        return BadGC;
+    result = dixLookupResourceByType((pointer *)&gc, stuff->gc,
+				     XRT_GC, client, DixReadAccess);
+    if (result != Success)
+        return (result == BadValue) ? BadGC : result;
 
-    if(!(port = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->port, XvXRTPort, DixReadAccess)))
-        return _XvBadPort;
+    result = dixLookupResourceByType((pointer *)&port, stuff->port,
+				     XvXRTPort, client, DixReadAccess);
+    if (result != Success)
+	return (result == BadValue) ? _XvBadPort : result;
 
     isRoot = (draw->type == XRT_WINDOW) && draw->u.win.root;
 
@@ -1889,21 +1808,24 @@ XineramaXvPutStill(ClientPtr client)
     REQUEST(xvPutImageReq);
     PanoramiXRes *draw, *gc, *port;
     Bool isRoot;
-    int result = Success, i, x, y;
+    int result, i, x, y;
 
     REQUEST_AT_LEAST_SIZE(xvPutImageReq);
 
-    if(!(draw = (PanoramiXRes *)SecurityLookupIDByClass(
-                client, stuff->drawable, XRC_DRAWABLE, DixWriteAccess)))
-        return BadDrawable;
+    result = dixLookupResourceByClass((pointer *)&draw, stuff->drawable,
+				      XRC_DRAWABLE, client, DixWriteAccess);
+    if (result != Success)
+	return (result == BadValue) ? BadDrawable : result;
 
-    if(!(gc = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->gc, XRT_GC, DixReadAccess)))
-        return BadGC;
+    result = dixLookupResourceByType((pointer *)&gc, stuff->gc,
+				     XRT_GC, client, DixReadAccess);
+    if (result != Success)
+        return (result == BadValue) ? BadGC : result;
 
-    if(!(port = (PanoramiXRes *)SecurityLookupIDByType(
-                client, stuff->port, XvXRTPort, DixReadAccess)))
-        return _XvBadPort;
+    result = dixLookupResourceByType((pointer *)&port, stuff->port,
+				     XvXRTPort, client, DixReadAccess);
+    if (result != Success)
+	return (result == BadValue) ? _XvBadPort : result;
 
     isRoot = (draw->type == XRT_WINDOW) && draw->u.win.root;
 
@@ -1941,10 +1863,10 @@ void XineramifyXv(void)
    XvAdaptorPtr MatchingAdaptors[MAXSCREENS];
    int i, j, k, l;
 
-   XvXRTPort = CreateNewResourceType(XineramaDeleteResource);
+   XvXRTPort = CreateNewResourceType(XineramaDeleteResource, "XvXRTPort");
 
-   if(!xvsp0) return;
-   
+   if (!xvsp0 || !XvXRTPort) return;
+
    for(i = 0; i < xvsp0->nAdaptors; i++) {
       refAdapt = xvsp0->pAdaptors + i;
 
@@ -1990,7 +1912,7 @@ void XineramifyXv(void)
 	    if((pAdapt->type & XvImageMask) && (pAdapt->nImages > 0)) {
 	      hasOverlay = FALSE;
               for(l = 0; l < pAdapt->nAttributes; l++) {
-	         if(!strcmp(pAdapt->name, "XV_COLORKEY")) {
+	         if(!strcmp(pAdapt->pAttributes[l].name, "XV_COLORKEY")) {
 		   hasOverlay = TRUE;
 		   break;
 		 }

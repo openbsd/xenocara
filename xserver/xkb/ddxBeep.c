@@ -29,7 +29,6 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #endif
 
 #include <stdio.h>
-#define	NEED_EVENTS 1
 #include <X11/X.h>
 #include <X11/Xproto.h>
 #include <X11/keysym.h>
@@ -90,7 +89,7 @@ static  char 	doesPitch = 1;
 #define	STICKY_UNLOCK	"AX_StickyUnlock"
 #define	BOUNCE_REJECT	"AX_BounceKeyReject"
 
-#define	MAKE_ATOM(a)	MakeAtom(a,sizeof(a)-1,True)
+#define	MAKE_ATOM(a)	MakeAtom(a,sizeof(a)-1,TRUE)
 
 static void
 _XkbDDXBeepInitAtoms(void)

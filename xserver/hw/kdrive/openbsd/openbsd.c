@@ -1,4 +1,4 @@
-/* $OpenBSD: openbsd.c,v 1.4 2007/12/23 14:28:10 matthieu Exp $ */
+/* $OpenBSD: openbsd.c,v 1.5 2010/07/27 19:02:30 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -29,7 +29,6 @@
 #include <dev/wscons/wsconsio.h>
 
 #include "kdrive.h"
-#include "kopenbsd.h"
 
 int WsconsConsoleFd;
 int OpenBSDApmFd = -1;
@@ -52,28 +51,6 @@ OpenBSDInit(void)
 	return 1;
 }
 
-Bool
-OpenBSDFindPci(CARD16 vendor, CARD16 device, CARD32 count, KdCardAttr *attr)
-{
-	DBG(("OpenBSDFindPci %04hx %04hx\n", vendor, device));
-	/* Find a PCI device matching vendor/device */
-	/* return KdCardAttr */
-	/* XXX */
-	attr->bus = 0;
-	attr->slot = 0;
-	attr->func = 0;
-	
-	return TRUE;
-}
-
-unsigned char *
-OpenBSDGetPciCfg(KdCardAttr *attr)
-{
-	/* Get Config registers for card at attr */
-	DBG(("OpenBSDGetPciCfg %d:%d:%d\n", 
-		attr->bus, attr->slot, attr->func));
-	return NULL;
-}
 
 static void
 OpenBSDEnable(void)
