@@ -22,13 +22,13 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-mouse],
-        1.4.0,
+        1.5.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-mouse)
 
-# Require xorg-macros version >= 1.2.0 for XORG_CWARNFLAGS & XORG_CHANGELOG
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
+# Require xorg-macros version >= 1.3.0 for XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
@@ -45,7 +45,7 @@ AM_CONFIG_HEADER([config.h])
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
-XORG_CWARNFLAGS
+XORG_DEFAULT_OPTIONS
 
 AH_TOP([#include "xorg-server.h"])
 
@@ -62,8 +62,8 @@ XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.5.99.901] xproto $REQUIRED_MODULES)
+sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
 
 # Checks for libraries.
 
@@ -89,11 +89,6 @@ AC_SUBST([OS_MOUSE_NAME])
 
 dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
-
 XORG_CHECK_LINUXDOC
 
 AC_OUTPUT([Makefile src/Makefile man/Makefile])

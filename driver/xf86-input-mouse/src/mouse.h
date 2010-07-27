@@ -7,7 +7,4 @@
 
 #include "xf86OSmouse.h"
 
-_X_EXPORT const char * xf86MouseProtocolIDToName(MouseProtocolID id);
-MouseProtocolID xf86MouseProtocolNameToID(const char *name);
-
 #endif

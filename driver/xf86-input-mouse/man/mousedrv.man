@@ -155,7 +155,8 @@ press/release events as specified for the
 .B XAxisMapping
 and
 .B YAxisMapping
-settings.  Default: 4.
+settings.  If set to 0, no button is required and any motion of the device
+is converted into wheel events.  Default: 4.
 .TP 7
 .BI "Option \*qEmulateWheelInertia\*q \*q" integer \*q
 Specifies how far (in pixels) the pointer must move to generate button

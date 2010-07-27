@@ -1,3 +1,201 @@
+commit 2b6dc8ccfe85356d309e3191cf5b942c6d4e0cd5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 6 12:09:46 2009 +1000
+
+    mouse 1.5.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6bae95035db026b7f3189a21942ce7953a6e3437
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 6 12:07:45 2009 +1000
+
+    Require macros 1.3 for XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 622cf1834725c3348cfdc41c12e39b327011c836
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Sep 12 20:18:06 2009 -0700
+
+    Fix crashes due to MouseBlockHandler/MouseWakeupHandler with invalid devices
+    
+    Don't install the handlers if devices failed to open/initalize.
+    Remove the handlers when disabling Emulate3Soft mode, since otherwise
+    they'll be left around when device is closed & device structs are freed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit bc7933171e08215ba28bc06c80ee1bc1febc0522
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 9 11:48:58 2009 +1000
+
+    mouse 1.4.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 04a29c8c8ebc6fbc6f5b67026b659a2ffdd6540b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 7 11:12:13 2009 -0400
+
+    xf86-input-mouse: Remove unused .cvsignore file #23776
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fa997144458527856b71fa162a105a46af8e688a
+Author: Donald Kayser <xorg@kayser.net>
+Date:   Thu Sep 3 09:22:30 2009 +1000
+
+    signed/unsigned fixes for delta x,y movement
+    
+    Changed the cast of (char) to (signed char) while computing delta x
+    and delta y mouse movements. The C standard does not define compiler
+    behavior, and currently with PPC builds, the (char) cast is unsigned.
+    To guarantee that the compiler will generate signed values, the cast
+    has been changed
+    
+    Signed-off-by: Donald Kayser <xorg@kayser.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f292f23baf4db048917a2acd4def9fab4293bc85
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Aug 20 13:49:52 2009 -0700
+
+    sun_mouse: Don't try calling ioctls if mouse fd wasn't opened
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f93c927178a352eec00b3323eb935cc6f27243b0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Aug 20 13:29:25 2009 -0700
+
+    Remove check for OS/2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1be9e3cf0c491cddfb5985b6b3cc65581313f98f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Aug 20 13:26:40 2009 -0700
+
+    sun_mouse: Check if streams module is already on the stack before pushing it
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit bf95ccf496d6674a83c44d559e3eef8729c69449
+Author: Dima Kogan <dkogan@secretsauce.net>
+Date:   Sun Aug 16 22:27:28 2009 -0700
+
+    Restrict wheel emulation to a single axis at a time.
+    
+    Wheel emulation works for both horizontal and vertical axes. Thus, if a
+    device doesn't move in perfect straight line, scroll events build up on the
+    respective other axis.
+    
+    In some clients, scroll wheel events have specific meanings other than
+    scrolling (e.g. mplayer). In these clients, erroneous scrolling events come
+    at a high cost.
+    
+    Thus, if a scroll wheel event is generated for one axis, reset the inertia
+    of the other axis to 0, avoiding the buildup of these erroneous scrolling
+    events.
+    
+    Signed-off-by: Dima Kogan <dkogan@secretsauce.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2d43329d778d7bfae5d9c99611ad49efa56716a6
+Author: Dima Kogan <dkogan@secretsauce.net>
+Date:   Sun Aug 16 21:33:43 2009 -0700
+
+    Allow 0 as wheel emulation button for unconditional scrolling (#20529)
+    
+    If wheel emulation is on and the emulation button is 0, then any x/y motion
+    of the device is converted into wheel events. The device becomes a
+    scrolling-only device.
+    
+    Signed-off-by: Dima Kogan <dkogan@dkogan@cds.caltech.edu>
+    Signed-off-by: Dima Kogan <dkogan@secretsauce.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0996fd2e3dcac813ad450884e8c117bc4d49b89a
+Merge: 66bdf8d 8a3f6f7
+Author: Charlie <root@netbsd.(none)>
+Date:   Thu Jul 9 10:05:46 2009 +0200
+
+    Merge branch 'master' of ssh://mbalmer@git.freedesktop.org/git/xorg/driver/xf86-input-mouse
+
+commit 66bdf8d3f289a3ada44c37f3ceb00fc728975cac
+Author: Charlie <root@netbsd.(none)>
+Date:   Thu Jul 9 08:09:54 2009 +0200
+
+    Conditionally declare some variables that are only used conditionally.
+    
+    Reviewed-by: Matthieu Herrn <matthieu@openbsd.org>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8a3f6f75218080b3e7657cb104c6f8e025f358ef
+Author: Charlie <root@netbsd.(none)>
+Date:   Thu Jul 9 08:09:54 2009 +0200
+
+    Conditionally declare some variables that are only used conditionally.
+
+commit 2ddc4e9b2882914a56508613fe069c7335c64cc7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 18 16:11:47 2009 +1000
+
+    Protect against ABI_XINPUT_VERSION 7.
+    
+    Missing the actual button and axis labeling, this can be added at a later
+    point in time.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 91bf15dd2af4bf9a83e317b8821bcbbfdba02338
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 29 10:07:19 2009 +1000
+
+    Remove ModuleInfoRec and associated bits.
+    
+    ModuleInfoRec was removed with 2107becb0ce2ffda001be65728c53563496d8d50 from
+    the server. The MouseOpts were only used from the ModuleInfoRec, they're
+    gone now too.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b698a24ab233ec5da2ebd36b5f6f199219de6d44
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 25 08:37:01 2009 +1000
+
+    Remove xf86MouseProtocolIDToName and xf86MouseProtocolNameToID.
+    
+    Both were only used from the xf86-misc extension which is gone from the
+    server as of 1.6.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6887ca0de8314b6029d5df63777b29c46eeb9442
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 25 08:45:10 2009 +1000
+
+    Require xorg-server 1.5.99.901 or higher.
+    
+    1.6 is the first server release that has the xf86OSmouse.h and related code
+    removed. This code has moved into the mouse driver and attempts of using a
+    mouse driver that provides xf86OSmouse.h with a pre-1.6 xserver may fail.
+    
+    See also:
+    http://lists.freedesktop.org/archives/xorg/2009-March/044501.html
+    
+    Reported-by: Jeremy C. Reed <reed@reedmedia.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit abc65bec5c88acd0a8699920e18473cfa007169f
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Feb 4 20:48:33 2009 -0200
+
+    Janitor: use $PKG_CONFIG and update .gitignore.
+    
+    Signed-off-by: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+
 commit 5058dc340278f2498dd1b4db129dc6dd6b0e0964
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Jan 9 18:38:57 2009 -0800

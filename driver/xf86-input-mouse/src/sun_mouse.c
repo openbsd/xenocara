@@ -23,7 +23,7 @@
  * dealings in this Software without prior written authorization from the
  * XFree86 Project.
  */
-/* Copyright 2004-2005 Sun Microsystems, Inc.  All rights reserved.
+/* Copyright 2004-2005, 2008-2009 Sun Microsystems, Inc.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -204,60 +204,66 @@ vuidPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
     xf86CollectInputOptions(pInfo, NULL, NULL);
     xf86ProcessCommonOptions(pInfo, pInfo->options);
 
+    pVuidMse->buffer = (unsigned char *)&pVuidMse->event;
+    pVuidMse->strmod = xf86SetStrOption(pInfo->options, "StreamsModule", NULL);
+
     /* Check if the device can be opened. */
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd == -1) {
-	if (xf86GetAllowMouseOpenFail())
+	if (xf86GetAllowMouseOpenFail()) {
 	    xf86Msg(X_WARNING, "%s: cannot open input device\n", pInfo->name);
-	else {
+	} else {
 	    xf86Msg(X_ERROR, "%s: cannot open input device\n", pInfo->name);
-	    xfree(pVuidMse);
-	    xfree(pMse);
-	    return FALSE;
-	}
-    }
-
-    pVuidMse->buffer = (unsigned char *)&pVuidMse->event;
-
-    pVuidMse->strmod = xf86SetStrOption(pInfo->options, "StreamsModule", NULL);
-    if (pVuidMse->strmod) {
-	SYSCALL(i = ioctl(pInfo->fd, I_PUSH, pVuidMse->strmod));
- 	if (i < 0) {
-	    xf86Msg(X_ERROR,
-		    "%s: cannot push module '%s' onto mouse device: %s\n",
-		    pInfo->name, pVuidMse->strmod, strerror(errno));
-	    xf86CloseSerial(pInfo->fd);
-	    pInfo->fd = -1;
 	    xfree(pVuidMse->strmod);
 	    xfree(pVuidMse);
 	    xfree(pMse);
 	    return FALSE;
 	}
-    }
+    } else {
+	if (pVuidMse->strmod) {
+	    /* Check to see if module is already pushed */
+	    SYSCALL(i = ioctl(pInfo->fd, I_FIND, pVuidMse->strmod));
 
-    buttons = xf86SetIntOption(pInfo->options, "Buttons", 0);
-    if (buttons == 0) {
-	SYSCALL(i = ioctl(pInfo->fd, MSIOBUTTONS, &buttons));
-	if (i == 0) {
-	    pInfo->conf_idev->commonOptions =
-		xf86ReplaceIntOption(pInfo->conf_idev->commonOptions, 
-				     "Buttons", buttons);
-	    xf86Msg(X_INFO, "%s: Setting Buttons option to \"%d\"\n",
-		    pInfo->name, buttons);
+	    if (i == 0) { /* Not already pushed */
+		SYSCALL(i = ioctl(pInfo->fd, I_PUSH, pVuidMse->strmod));
+		if (i < 0) {
+		    xf86Msg(X_ERROR,
+			"%s: cannot push module '%s' onto mouse device: %s\n",
+			pInfo->name, pVuidMse->strmod, strerror(errno));
+		    xf86CloseSerial(pInfo->fd);
+		    pInfo->fd = -1;
+		    xfree(pVuidMse->strmod);
+		    xfree(pVuidMse);
+		    xfree(pMse);
+		    return FALSE;
+		}
+	    }
 	}
-    }
 
-    if (pVuidMse->strmod) { 
-	SYSCALL(i = ioctl(pInfo->fd, I_POP, pVuidMse->strmod));
-	if (i == -1) {
-	    xf86Msg(X_WARNING,
-		    "%s: cannot pop module '%s' off mouse device: %s\n",
-		    pInfo->name, pVuidMse->strmod, strerror(errno));
+	buttons = xf86SetIntOption(pInfo->options, "Buttons", 0);
+	if (buttons == 0) {
+	    SYSCALL(i = ioctl(pInfo->fd, MSIOBUTTONS, &buttons));
+	    if (i == 0) {
+		pInfo->conf_idev->commonOptions =
+		    xf86ReplaceIntOption(pInfo->conf_idev->commonOptions,
+					 "Buttons", buttons);
+		xf86Msg(X_INFO, "%s: Setting Buttons option to \"%d\"\n",
+			pInfo->name, buttons);
+	    }
 	}
-    }
 
-    xf86CloseSerial(pInfo->fd);
-    pInfo->fd = -1;
+	if (pVuidMse->strmod) {
+	    SYSCALL(i = ioctl(pInfo->fd, I_POP, pVuidMse->strmod));
+	    if (i == -1) {
+		xf86Msg(X_WARNING,
+			"%s: cannot pop module '%s' off mouse device: %s\n",
+			pInfo->name, pVuidMse->strmod, strerror(errno));
+	    }
+	}
+
+	xf86CloseSerial(pInfo->fd);
+	pInfo->fd = -1;
+    }
 
     /* Process common mouse options (like Emulate3Buttons, etc). */
     pMse->CommonOptions(pInfo);
@@ -531,15 +537,21 @@ vuidMouseProc(DeviceIntPtr pPointer, int what)
 	    int fmt = VUID_FIRM_EVENT;
 	    
 	    if (pVuidMse->strmod) {
-		SYSCALL(i = ioctl(pInfo->fd, I_PUSH, pVuidMse->strmod));
-		if (i < 0) {
-		    xf86Msg(X_WARNING,
-			"%s: cannot push module '%s' onto mouse device: %s\n",
-			pInfo->name, pVuidMse->strmod, strerror(errno));
-		    xfree(pVuidMse->strmod);
-		    pVuidMse->strmod = NULL;
+		/* Check to see if module is already pushed */
+		SYSCALL(i = ioctl(pInfo->fd, I_FIND, pVuidMse->strmod));
+
+		if (i == 0) { /* Not already pushed */
+		    SYSCALL(i = ioctl(pInfo->fd, I_PUSH, pVuidMse->strmod));
+		    if (i < 0) {
+			xf86Msg(X_WARNING, "%s: cannot push module '%s' "
+				"onto mouse device: %s\n", pInfo->name,
+				pVuidMse->strmod, strerror(errno));
+			xfree(pVuidMse->strmod);
+			pVuidMse->strmod = NULL;
+		    }
 		}
 	    }
+
 	    SYSCALL(i = ioctl(pInfo->fd, VUIDSFORMAT, &fmt));
 	    if (i < 0) {
 		xf86Msg(X_WARNING,

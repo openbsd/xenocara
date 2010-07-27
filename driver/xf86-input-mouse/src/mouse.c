@@ -123,8 +123,6 @@ typedef struct _DragLockRec {
 } DragLockRec, *DragLockPtr;
 
 
-
-static const OptionInfoRec *MouseAvailableOptions(void *unused);
 static InputInfoPtr MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags);
 #if 0
 static void MouseUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
@@ -170,91 +168,6 @@ _X_EXPORT InputDriverRec MOUSE = {
 	/*MouseUnInit,*/NULL,
 	NULL,
 	0
-};
-
-typedef enum {
-    OPTION_ALWAYS_CORE,
-    OPTION_SEND_CORE_EVENTS,
-    OPTION_CORE_POINTER,
-    OPTION_SEND_DRAG_EVENTS,
-    OPTION_HISTORY_SIZE,
-    OPTION_DEVICE,
-    OPTION_PROTOCOL,
-    OPTION_BUTTONS,
-    OPTION_EMULATE_3_BUTTONS,
-    OPTION_EMULATE_3_TIMEOUT,
-    OPTION_CHORD_MIDDLE,
-    OPTION_FLIP_XY,
-    OPTION_INV_X,
-    OPTION_INV_Y,
-    OPTION_ANGLE_OFFSET,
-    OPTION_Z_AXIS_MAPPING,
-    OPTION_SAMPLE_RATE,
-    OPTION_RESOLUTION,
-    OPTION_EMULATE_WHEEL,
-    OPTION_EMU_WHEEL_BUTTON,
-    OPTION_EMU_WHEEL_INERTIA,
-    OPTION_EMU_WHEEL_TIMEOUT,
-    OPTION_X_AXIS_MAPPING,
-    OPTION_Y_AXIS_MAPPING,
-    OPTION_AUTO_SOFT,
-    OPTION_CLEAR_DTR,
-    OPTION_CLEAR_RTS,
-    OPTION_BAUD_RATE,
-    OPTION_DATA_BITS,
-    OPTION_STOP_BITS,
-    OPTION_PARITY,
-    OPTION_FLOW_CONTROL,
-    OPTION_VTIME,
-    OPTION_VMIN,
-    OPTION_DRAGLOCKBUTTONS,
-    OPTION_DOUBLECLICK_BUTTONS,
-    OPTION_BUTTON_MAPPING,
-    OPTION_SENSITIVITY
-} MouseOpts;
-
-static const OptionInfoRec mouseOptions[] = {
-    { OPTION_ALWAYS_CORE,	"AlwaysCore",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_SEND_CORE_EVENTS,	"SendCoreEvents", OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_CORE_POINTER,	"CorePointer",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_SEND_DRAG_EVENTS,	"SendDragEvents", OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_HISTORY_SIZE,	"HistorySize",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_DEVICE,		"Device",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_PROTOCOL,		"Protocol",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_BUTTONS,		"Buttons",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_EMULATE_3_BUTTONS,	"Emulate3Buttons",OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_EMULATE_3_TIMEOUT,	"Emulate3Timeout",OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_CHORD_MIDDLE,	"ChordMiddle",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_FLIP_XY,		"FlipXY",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_INV_X,		"InvX",		  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_INV_Y,		"InvY",		  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_ANGLE_OFFSET,	"AngleOffset",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_Z_AXIS_MAPPING,	"ZAxisMapping",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_SAMPLE_RATE,	"SampleRate",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_RESOLUTION,	"Resolution",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_EMULATE_WHEEL,	"EmulateWheel",	  OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_EMU_WHEEL_BUTTON,	"EmulateWheelButton", OPTV_INTEGER, {0}, FALSE },
-    { OPTION_EMU_WHEEL_INERTIA,	"EmulateWheelInertia", OPTV_INTEGER, {0}, FALSE },
-    { OPTION_EMU_WHEEL_TIMEOUT,	"EmulateWheelTimeout", OPTV_INTEGER, {0}, FALSE },
-    { OPTION_X_AXIS_MAPPING,	"XAxisMapping",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_Y_AXIS_MAPPING,	"YAxisMapping",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_AUTO_SOFT,		"AutoSoft",	  OPTV_BOOLEAN, {0}, FALSE },
-    /* serial options */
-    { OPTION_CLEAR_DTR,		"ClearDTR",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_CLEAR_RTS,		"ClearRTS",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_BAUD_RATE,		"BaudRate",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_DATA_BITS,		"DataBits",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_STOP_BITS,		"StopBits",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_PARITY,		"Parity",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_FLOW_CONTROL,	"FlowControl",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_VTIME,		"VTime",	  OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_VMIN,		"VMin",		  OPTV_INTEGER,	{0}, FALSE },
-    /* end serial options */
-    { OPTION_DRAGLOCKBUTTONS,	"DragLockButtons",OPTV_STRING,	{0}, FALSE },
-    { OPTION_DOUBLECLICK_BUTTONS,"DoubleClickButtons", OPTV_STRING, {0}, FALSE },
-    { OPTION_BUTTON_MAPPING,   "ButtonMapping",   OPTV_STRING,  {0}, FALSE },
-    { OPTION_SENSITIVITY,      "Sensitivity",     OPTV_REAL,    {0}, FALSE },
-    { -1,			NULL,		  OPTV_NONE,	{0}, FALSE }
 };
 
 #define RETRY_COUNT 4
@@ -374,13 +287,6 @@ static MouseProtocolRec mouseProtocols[] = {
 };
 
 static unsigned char proto[PROT_NUMPROTOS][8];
-
-/*ARGSUSED*/
-static const OptionInfoRec *
-MouseAvailableOptions(void *unused)
-{
-    return (mouseOptions);
-}
 
 /* Process options common to all mouse types. */
 static void
@@ -869,18 +775,6 @@ ProtocolIDToName(MouseProtocolID id)
     }
 }
 
-_X_EXPORT const char *
-xf86MouseProtocolIDToName(MouseProtocolID id)
-{
-	return ProtocolIDToName(id);
-}
-
-MouseProtocolID
-xf86MouseProtocolNameToID(const char *name)
-{
-    return ProtocolNameToID(name);
-}
-
 static int
 ProtocolIDToClass(MouseProtocolID id)
 {
@@ -1116,10 +1010,6 @@ MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     xf86CollectInputOptions(pInfo, pProto->defaults, NULL);
     xf86ProcessCommonOptions(pInfo, pInfo->options);
 
-    /* XXX should handle this OS dependency elsewhere. */
-#ifndef __OS2ELF__
-    /* OS/2 has a mouse handled by the OS - it cannot fail here */
-
     /* Check if the device can be opened. */
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd == -1) {
@@ -1135,7 +1025,6 @@ MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
     }
     xf86CloseSerial(pInfo->fd);
-#endif
     pInfo->fd = -1;
 
     if (!(mPriv = (pointer) xcalloc(sizeof(mousePrivRec), 1)))
@@ -1423,8 +1312,8 @@ MouseReadInput(InputInfoPtr pInfo)
         	buttons = (pMse->lastButtons & 2)
 			| ((int)(pBuf[0] & 0x20) >> 3)
 			| ((int)(pBuf[0] & 0x10) >> 4);
-	    dx = (char)(((pBuf[0] & 0x03) << 6) | (pBuf[1] & 0x3F));
-	    dy = (char)(((pBuf[0] & 0x0C) << 4) | (pBuf[2] & 0x3F));
+	    dx = (signed char)(((pBuf[0] & 0x03) << 6) | (pBuf[1] & 0x3F));
+	    dy = (signed char)(((pBuf[0] & 0x0C) << 4) | (pBuf[2] & 0x3F));
 	    break;
 
 	case PROT_GLIDE:	/* ALPS GlidePoint */
@@ -1433,15 +1322,15 @@ MouseReadInput(InputInfoPtr pInfo)
 	    buttons =  (pMse->lastButtons & (8 + 2))
 		     | ((int)(pBuf[0] & 0x20) >> 3)
 		     | ((int)(pBuf[0] & 0x10) >> 4);
-	    dx = (char)(((pBuf[0] & 0x03) << 6) | (pBuf[1] & 0x3F));
-	    dy = (char)(((pBuf[0] & 0x0C) << 4) | (pBuf[2] & 0x3F));
+	    dx = (signed char)(((pBuf[0] & 0x03) << 6) | (pBuf[1] & 0x3F));
+	    dy = (signed char)(((pBuf[0] & 0x0C) << 4) | (pBuf[2] & 0x3F));
 	    break;
 
 	case PROT_MSC:		/* Mouse Systems Corp */
 	case PROT_SUNMOUSE:
 	    buttons = (~pBuf[0]) & 0x07;
-	    dx =    (char)(pBuf[1]) + (char)(pBuf[3]);
-	    dy = - ((char)(pBuf[2]) + (char)(pBuf[4]));
+	    dx =    (signed char)(pBuf[1]) + (char)(pBuf[3]);
+	    dy = - ((signed char)(pBuf[2]) + (char)(pBuf[4]));
 	    break;
       
 	case PROT_MMHIT:	/* MM_HitTablet */
@@ -1469,8 +1358,8 @@ MouseReadInput(InputInfoPtr pInfo)
 
 	case PROT_BM:		/* BusMouse */
 	    buttons = (~pBuf[0]) & 0x07;
-	    dx =   (char)pBuf[1];
-	    dy = - (char)pBuf[2];
+	    dx =   (signed char)pBuf[1];
+	    dy = - (signed char)pBuf[2];
 	    break;
 
 	case PROT_PS2:		/* PS/2 mouse */
@@ -1634,8 +1523,8 @@ MouseReadInput(InputInfoPtr pInfo)
             buttons = ((int)(pBuf[0] & 0x20) >> 3)
                       | ((int)(pBuf[0] & 0x10) >> 4)
                       | ((int)(pBuf[3] & 0x10) >> 3);
-            dx = (char)(((pBuf[0] & 0x03) << 6) | (pBuf[1] & 0x3F));
-            dy = (char)(((pBuf[0] & 0x0C) << 4) | (pBuf[2] & 0x3F));
+            dx = (signed char)(((pBuf[0] & 0x03) << 6) | (pBuf[1] &  0x3F));
+            dy = (signed char)(((pBuf[0] & 0x0C) << 4) | (pBuf[2] &  0x3F));
 	    dz = (pBuf[3] & 0x08) ? ((int)(pBuf[3] & 0x0F) - 0x10) : 
                                     ((int)(pBuf[3] & 0x0F));
 	    break;
@@ -1711,7 +1600,11 @@ MouseProc(DeviceIntPtr device, int what)
     mousePrivPtr mPriv;
     unsigned char map[MSE_MAXBUTTONS + 1];
     int i;
-    
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+    Atom btn_labels[MSE_MAXBUTTONS] = {0};
+    Atom axes_labels[2] = { 0, 0 };
+#endif
+
     pInfo = device->public.devicePrivate;
     pMse = pInfo->private;
     pMse->device = device;
@@ -1727,8 +1620,13 @@ MouseProc(DeviceIntPtr device, int what)
 	for (i = 0; i < MSE_MAXBUTTONS; i++)
 	    map[i + 1] = i + 1;
 
+        /* FIXME: we should probably set the labels here */
+
 	InitPointerDeviceStruct((DevicePtr)device, map,
 				min(pMse->buttons, MSE_MAXBUTTONS),
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                                btn_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 				miPointerGetMotionEvents,
 #elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
@@ -1740,13 +1638,24 @@ MouseProc(DeviceIntPtr device, int what)
 #else
                                 GetMotionHistorySize(), 2
 #endif
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                                , axes_labels
+#endif
                                 );
 
 	/* X valuator */
-	xf86InitValuatorAxisStruct(device, 0, -1, -1, 1, 0, 1);
+	xf86InitValuatorAxisStruct(device, 0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                axes_labels[0],
+#endif
+                -1, -1, 1, 0, 1);
 	xf86InitValuatorDefaults(device, 0);
 	/* Y valuator */
-	xf86InitValuatorAxisStruct(device, 1, -1, -1, 1, 0, 1);
+	xf86InitValuatorAxisStruct(device, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                axes_labels[1],
+#endif
+                -1, -1, 1, 0, 1);
 	xf86InitValuatorDefaults(device, 1);
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 	xf86MotionHistoryAllocate(pInfo);
@@ -1794,6 +1703,11 @@ MouseProc(DeviceIntPtr device, int what)
 		    }
 		    xf86FlushInput(pInfo->fd);
 		    xf86AddEnabledDevice(pInfo);
+		    if (pMse->emulate3Buttons || pMse->emulate3ButtonsSoft) {
+			RegisterBlockAndWakeupHandlers (MouseBlockHandler,
+							MouseWakeupHandler,
+							(pointer) pInfo);
+		    }
 		}
 	    }
 	}
@@ -1804,11 +1718,6 @@ MouseProc(DeviceIntPtr device, int what)
 	pMse->wheelButtonExpires = GetTimeInMillis ();
 	device->public.on = TRUE;
 	FlushButtons(pMse);
-	if (pMse->emulate3Buttons || pMse->emulate3ButtonsSoft)
-	{
-	    RegisterBlockAndWakeupHandlers (MouseBlockHandler, MouseWakeupHandler,
-					    (pointer) pInfo);
-	}
 	break;
 	    
     case DEVICE_OFF:
@@ -1823,7 +1732,8 @@ MouseProc(DeviceIntPtr device, int what)
 	    pInfo->fd = -1;
 	    if (pMse->emulate3Buttons || pMse->emulate3ButtonsSoft)
 	    {
-		RemoveBlockAndWakeupHandlers (MouseBlockHandler, MouseWakeupHandler,
+		RemoveBlockAndWakeupHandlers (MouseBlockHandler,
+					      MouseWakeupHandler,
 					      (pointer) pInfo);
 	    }
 	}
@@ -2070,7 +1980,10 @@ Emulate3ButtonsSoft(InputInfoPtr pInfo)
 	buttonTimer(pInfo);
 
     xf86Msg(X_INFO,"3rd Button detected: disabling emulate3Button\n");
-    
+
+    RemoveBlockAndWakeupHandlers (MouseBlockHandler, MouseWakeupHandler,
+				  (pointer) pInfo);
+
     return FALSE;
 }
 
@@ -2157,7 +2070,10 @@ MouseDoPostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy)
 
     if (pMse->emulateWheel) {
 	/* Emulate wheel button handling */
-	wheelButtonMask = 1 << (pMse->wheelButton - 1);
+	if(pMse->wheelButton == 0)
+	    wheelButtonMask = 0;
+	else
+	    wheelButtonMask = 1 << (pMse->wheelButton - 1);
 
 	if (change & wheelButtonMask) {
 	    if (buttons & wheelButtonMask) {
@@ -2179,9 +2095,10 @@ MouseDoPostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy)
 	} else
 	    ms = pMse->wheelButtonExpires - GetTimeInMillis ();
 
-	/* Intercept wheel emulation. */
-	if (buttons & wheelButtonMask) {
-	    if (ms <= 0) {
+	/* Intercept wheel emulation if the necessary button is depressed or
+           if no button is necessary */
+	if ((buttons & wheelButtonMask) || wheelButtonMask==0) {
+	    if (ms <= 0 || wheelButtonMask==0) {
 		/* Y axis movement */
 		if (pMse->negativeY != MSE_NOAXISMAP) {
 		    pMse->wheelYDistance += dy;
@@ -2196,6 +2113,7 @@ MouseDoPostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy)
 		    while (abs(pMse->wheelYDistance) > pMse->wheelInertia) {
 			pMse->wheelYDistance -= emuWheelDelta;
 
+			pMse->wheelXDistance = 0;
 			/*
 			 * Synthesize the press and release, but not when
 			 * the button to be synthesized is already pressed
@@ -2223,6 +2141,7 @@ MouseDoPostEvent(InputInfoPtr pInfo, int buttons, int dx, int dy)
 		    while (abs(pMse->wheelXDistance) > pMse->wheelInertia) {
 			pMse->wheelXDistance -= emuWheelDelta;
 
+			pMse->wheelYDistance = 0;
 			/*
 			 * Synthesize the press and release, but not when
 			 * the button to be synthesized is already pressed
@@ -3763,15 +3682,6 @@ collectData(MouseDevPtr pMse, unsigned char u)
 
 /**************** end of autoprobe stuff *****************/
 
-
-
-ModuleInfoRec MouseInfo = {
-    1,
-    "MOUSE",
-    NULL,
-    0,
-    MouseAvailableOptions,
-};
 
 static void
 xf86MouseUnplug(pointer	p)
