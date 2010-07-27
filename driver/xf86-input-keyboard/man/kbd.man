@@ -27,6 +27,11 @@ The
 driver functions as a keyboard input device, and may be used as the
 X server's core keyboard.
 .SH CONFIGURATION DETAILS
+.PP
+Depending on the X server version in use, input device options may be set
+in either a __xconfigfile__ file, or in the configuration files read by the
+Hardware Abstraction Layer (HAL) daemon, hald(1).
+.PP
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.  This
 section only covers configuration details specific to this driver.
@@ -49,14 +54,6 @@ Standard, Xqueue.
 .RS 7
 Not all protocols are supported on all platforms.  Default: "Standard".
 .RE
-.TP 7
-.BI "Option \*qAutoRepeat\*q \*q" "delay rate" \*q
-sets the auto repeat behaviour for the keyboard.  This is not implemented
-on all platforms.
-.I delay
-is the time in milliseconds before a key starts repeating.
-.I rate
-is the number of times a key repeats per second.  Default: "500 30".
 .TP 7
 .BI "Option \*qXLeds\*q \*q" ledlist \*q
 makes the keyboard LEDs specified in
@@ -86,7 +83,7 @@ but "pc98" for the Japanese PC-98 platforms.
 .BI "Option \*qXkbLayout\*q \*q" layoutname \*q
 specifies the XKB keyboard layout name.  This is usually the country or
 language type of the keyboard.  Default: "us" for most platforms, but
-"nec/jp" for the Japanese PC-98 platforms.
+"jp" for the Japanese PC-98 platforms.
 .TP 7
 .BI "Option \*qXkbVariant\*q \*q" variants \*q
 specifies the XKB keyboard variant components.  These can be used to
@@ -136,4 +133,6 @@ EndSection
 .fi
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), 
-xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__).
+Xserver(__appmansuffix__), X(__miscmansuffix__).
+
+hal(__miscmansuffix__), hald(__adminmansuffix__), fdi(__filemansuffix__).

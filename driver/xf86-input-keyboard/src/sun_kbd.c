@@ -22,7 +22,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* Copyright 2004-2007 Sun Microsystems, Inc.  All rights reserved.
+/* Copyright 2004-2009 Sun Microsystems, Inc.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -63,6 +63,12 @@
 #include <sys/stropts.h>
 #include <sys/vuid_event.h>
 #include <sys/kbd.h>
+#include <sys/note.h>	/* needed before including older versions of hid.h */
+#include <sys/usb/clients/hid/hid.h>
+
+static int KbdOn(InputInfoPtr pInfo, int what);
+static Bool OpenKeyboard(InputInfoPtr pInfo);
+static void CloseKeyboard(InputInfoPtr pInfo);
 
 static void
 sunKbdSetLeds(InputInfoPtr pInfo, int leds)
@@ -105,6 +111,7 @@ KbdInit(InputInfoPtr pInfo, int what)
     int	ktype, klayout, i;
     const char *ktype_name;
 
+    priv->kbdActive	= FALSE;
     priv->otranslation 	= -1;
     priv->odirect 	= -1;
 
@@ -114,15 +121,11 @@ KbdInit(InputInfoPtr pInfo, int what)
 	priv->strmod 		= NULL;
     }
 
-    if (priv->strmod) {
-	SYSCALL(i = ioctl(pInfo->fd, I_PUSH, priv->strmod));
-	if (i < 0) {
-	    xf86Msg(X_ERROR,
-		    "%s: cannot push module '%s' onto keyboard device: %s\n",
-		    pInfo->name, priv->strmod, strerror(errno));
-	}
+    i = KbdOn(pInfo, DEVICE_INIT);
+    if (i != Success) {
+	return i;
     }
-    
+
     SYSCALL(i = ioctl(pInfo->fd, KIOCTYPE, &ktype));
     if (i < 0) {
 	xf86Msg(X_ERROR, "%s: Unable to determine keyboard type: %s\n", 
@@ -155,7 +158,6 @@ KbdInit(InputInfoPtr pInfo, int what)
     xf86Msg(X_PROBED, "%s: Keyboard layout: %d\n", pInfo->name, klayout);
 
     priv->ktype 	= ktype;
-    priv->oleds 	= sunKbdGetLeds(pInfo);
 
     return Success;
 }
@@ -168,8 +170,41 @@ KbdOn(InputInfoPtr pInfo, int what)
     sunKbdPrivPtr priv = (sunKbdPrivPtr) pKbd->private;
 
     int	ktrans, kdirect, i;
+    int io_get_direct = KIOCGDIRECT;
+    int io_set_direct = KIOCSDIRECT;
 
-    SYSCALL(i = ioctl(pInfo->fd, KIOCGDIRECT, &kdirect));
+    if (priv->kbdActive) {
+	return Success;
+    }
+
+    if (pInfo->fd == -1) {
+	if (!OpenKeyboard(pInfo)) {
+	    return BadImplementation;
+	}
+    }
+
+    if (priv->strmod) {
+	/* Check to see if module is already pushed */
+	SYSCALL(i = ioctl(pInfo->fd, I_FIND, priv->strmod));
+
+	if (i == 0) { /* Not already pushed */
+	    SYSCALL(i = ioctl(pInfo->fd, I_PUSH, priv->strmod));
+	    if (i < 0) {
+		xf86Msg(X_ERROR, "%s: cannot push module '%s' onto "
+			"keyboard device: %s\n",
+			pInfo->name, priv->strmod, strerror(errno));
+	    }
+	}
+
+#ifdef HIDIOCKMSDIRECT
+	if (strcmp(priv->strmod, "usbkbm") == 0) {
+	    io_get_direct = HIDIOCKMGDIRECT;
+	    io_set_direct = HIDIOCKMSDIRECT;
+	}
+#endif
+    }
+
+    SYSCALL(i = ioctl(pInfo->fd, io_get_direct, &kdirect));
     if (i < 0) {
 	xf86Msg(X_ERROR, 
 		"%s: Unable to determine keyboard direct setting: %s\n", 
@@ -180,7 +215,7 @@ KbdOn(InputInfoPtr pInfo, int what)
     priv->odirect = kdirect;
     kdirect = 1;
 
-    SYSCALL(i = ioctl(pInfo->fd, KIOCSDIRECT, &kdirect));
+    SYSCALL(i = ioctl(pInfo->fd, io_set_direct, &kdirect));
     if (i < 0) {
 	xf86Msg(X_ERROR, "%s: Failed turning keyboard direct mode on: %s\n",
 			pInfo->name, strerror(errno));
@@ -207,6 +242,13 @@ KbdOn(InputInfoPtr pInfo, int what)
 	return BadImplementation;
     }
 
+    priv->oleds	= sunKbdGetLeds(pInfo);
+
+    /* Allocate here so we don't alloc in ReadInput which may be called
+       from SIGIO handler. */
+    priv->remove_timer = TimerSet(priv->remove_timer, 0, 0, NULL, NULL);
+
+    priv->kbdActive = TRUE;
     return Success;
 }
 
@@ -217,6 +259,21 @@ KbdOff(InputInfoPtr pInfo, int what)
     sunKbdPrivPtr priv = (sunKbdPrivPtr) pKbd->private;
 
     int i;
+    int io_set_direct, kdirect;
+
+    if (priv->remove_timer) {
+	TimerFree(priv->remove_timer);
+	priv->remove_timer = NULL;
+    }
+
+    if (!priv->kbdActive) {
+	return Success;
+    }
+
+    if (pInfo->fd == -1) {
+	priv->kbdActive = FALSE;
+	return Success;
+    }
 
     /* restore original state */
 
@@ -236,8 +293,18 @@ KbdOff(InputInfoPtr pInfo, int what)
 	priv->otranslation = -1;
     }
 
-    if (priv->odirect != -1) {
-        SYSCALL(i = ioctl(pInfo->fd, KIOCSDIRECT, &priv->odirect));
+    io_set_direct = KIOCSDIRECT;
+    kdirect = priv->odirect;
+
+#ifdef HIDIOCKMSDIRECT
+    if ((priv->strmod != NULL) && (strcmp(priv->strmod, "usbkbm") == 0)) {
+	io_set_direct = HIDIOCKMSDIRECT;
+	kdirect = 0;
+    }
+#endif
+
+    if (kdirect != -1) {
+	SYSCALL(i = ioctl(pInfo->fd, io_set_direct, &kdirect));
 	if (i < 0) {
 	    xf86Msg(X_ERROR,
 		    "%s: Unable to restore keyboard direct setting: %s\n",
@@ -254,9 +321,9 @@ KbdOff(InputInfoPtr pInfo, int what)
 		    "%s: cannot pop module '%s' off keyboard device: %s\n",
 		    pInfo->name, priv->strmod, strerror(errno));
 	}
-	priv->strmod = NULL;
     }
 
+    CloseKeyboard(pInfo);
     return Success;
 }
 
@@ -264,9 +331,6 @@ KbdOff(InputInfoPtr pInfo, int what)
 static void
 SoundKbdBell(InputInfoPtr pInfo, int loudness, int pitch, int duration)
 {
-    KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
-    sunKbdPrivPtr priv = (sunKbdPrivPtr) pKbd->private;
-
     int	kbdCmd, i;
 #ifdef KIOCMKTONE
     int cycles;
@@ -357,19 +421,71 @@ SetKbdRepeat(InputInfoPtr pInfo, char rad)
 }
 
 static void
+CloseKeyboard(InputInfoPtr pInfo)
+{
+    KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
+    sunKbdPrivPtr priv = (sunKbdPrivPtr) pKbd->private;
+
+    close(pInfo->fd);
+    pInfo->fd = -1;
+    priv->kbdActive = FALSE;
+}
+
+/* Called from OsTimer callback, since removing a device from the device
+   list or changing pInfo->fd while xf86Wakeup is looping through the list
+   causes server crashes */
+static CARD32
+RemoveKeyboard(OsTimerPtr timer, CARD32 time, pointer arg)
+{
+    InputInfoPtr pInfo = (InputInfoPtr) arg;
+
+    CloseKeyboard(pInfo);
+    xf86DisableDevice(pInfo->dev, TRUE);
+
+    return 0;  /* All done, don't set to run again */
+}
+
+static void
 ReadInput(InputInfoPtr pInfo)
 {
     KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
+    sunKbdPrivPtr priv = (sunKbdPrivPtr) pKbd->private;
     Firm_event event[64];
     int        nBytes, i;
 
-    /* I certainly hope its not possible to read partial events */
-
-    if ((nBytes = read(pInfo->fd, (char *)event, sizeof(event))) > 0)
-    {
-        for (i = 0; i < (nBytes / sizeof(Firm_event)); i++) {
-	    pKbd->PostEvent(pInfo, event[i].id & 0xFF,
-			    event[i].value == VKEY_DOWN ? TRUE : FALSE);
+    while (TRUE) {
+	/* I certainly hope it's not possible to read partial events */
+	nBytes = read(pInfo->fd, (char *)event, sizeof(event));
+	if (nBytes > 0) {
+	    for (i = 0; i < (nBytes / sizeof(Firm_event)); i++) {
+		pKbd->PostEvent(pInfo, event[i].id & 0xFF,
+				event[i].value == VKEY_DOWN ? TRUE : FALSE);
+	    }
+	} else if (nBytes == -1) {
+	    switch (errno) {
+		case EAGAIN: /* Nothing to read now */
+		    return;
+		case EINTR:  /* Interrupted, try again */
+		    break;
+		case ENODEV: /* May happen when USB kbd is unplugged */
+		    /* We use X_NONE here because it doesn't alloc since we
+		       may be called from SIGIO handler */
+		    xf86MsgVerb(X_NONE, 0,
+				"%s: Device no longer present - removing.\n",
+				pInfo->name);
+		    xf86RemoveEnabledDevice(pInfo);
+		    priv->remove_timer = TimerSet(priv->remove_timer, 0, 1,
+						  RemoveKeyboard, pInfo);
+		    return;
+		default:     /* All other errors */
+		    /* We use X_NONE here because it doesn't alloc since we
+		       may be called from SIGIO handler */
+		    xf86MsgVerb(X_NONE, 0, "%s: Read error: %s\n", pInfo->name,
+				strerror(errno));
+		    return;
+	    }
+	} else { /* nBytes == 0, so nothing more to read */
+	    return;
 	}
     }
 }
@@ -423,8 +539,6 @@ xf86OSKbdPreInit(InputInfoPtr pInfo)
     pKbd->KbdGetMapping = KbdGetMapping;
 
     pKbd->RemapScanCode = NULL;
-    pKbd->GetSpecialKey = NULL;
-    pKbd->SpecialKey    = NULL;
 
     pKbd->OpenKeyboard = OpenKeyboard;
 

@@ -57,17 +57,6 @@ SetKbdLeds(InputInfoPtr pInfo, int leds)
 {
     int real_leds = 0;
 
-#if defined (__sparc__)
-    KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
-    if (pKbd->sunKbd) {
-  	if (leds & 0x08) real_leds |= XLED1;
-  	if (leds & 0x04) real_leds |= XLED3;
-  	if (leds & 0x02) real_leds |= XLED4;
-  	if (leds & 0x01) real_leds |= XLED2;
-        leds = real_leds;
-        real_leds = 0;
-    }
-#endif /* defined (__sparc__) */
 #ifdef LED_CAP
     if (leds & XLED1)  real_leds |= LED_CAP;
     if (leds & XLED2)  real_leds |= LED_NUM;
@@ -84,7 +73,8 @@ SetKbdLeds(InputInfoPtr pInfo, int leds)
 static int
 GetKbdLeds(InputInfoPtr pInfo)
 {
-    int real_leds, leds = 0;
+    char real_leds;
+    int leds = 0;
 
     ioctl(pInfo->fd, KDGETLED, &real_leds);
 
@@ -93,151 +83,6 @@ GetKbdLeds(InputInfoPtr pInfo)
     if (real_leds & LED_SCR) leds |= XLED3;
 
     return(leds);
-}
-
-static int
-KDKBDREP_ioctl_ok(int rate, int delay) {
-#if defined(KDKBDREP) && !defined(__sparc__)
-     /* This ioctl is defined in <linux/kd.h> but is not
-	implemented anywhere - must be in some m68k patches. */
-   struct kbd_repeat kbdrep_s;
-
-   /* don't change, just test */
-   kbdrep_s.LNX_KBD_PERIOD_NAME = -1;
-   kbdrep_s.delay = -1;
-   if (ioctl( xf86Info.consoleFd, KDKBDREP, &kbdrep_s )) {
-       return 0;
-   }
-
-   /* do the change */
-   if (rate == 0)				/* switch repeat off */
-     kbdrep_s.LNX_KBD_PERIOD_NAME = 0;
-   else
-     kbdrep_s.LNX_KBD_PERIOD_NAME = 10000 / rate; /* convert cps to msec */
-   if (kbdrep_s.LNX_KBD_PERIOD_NAME < 1)
-     kbdrep_s.LNX_KBD_PERIOD_NAME = 1;
-   kbdrep_s.delay = delay;
-   if (kbdrep_s.delay < 1)
-     kbdrep_s.delay = 1;
-   
-   if (ioctl( xf86Info.consoleFd, KDKBDREP, &kbdrep_s )) {
-       return 0;
-   }
-
-   return 1;			/* success! */
-#else /* no KDKBDREP */
-   return 0;
-#endif /* KDKBDREP */
-}
-
-static int
-KIOCSRATE_ioctl_ok(int rate, int delay) {
-#ifdef KIOCSRATE
-   struct kbd_rate kbdrate_s;
-   int fd;
-
-   fd = open("/dev/kbd", O_RDONLY);
-   if (fd == -1) 
-     return 0;   
-
-   kbdrate_s.rate = (rate + 5) / 10;  /* must be integer, so round up */
-   kbdrate_s.delay = delay * HZ / 1000;  /* convert ms to Hz */
-   if (kbdrate_s.rate > 50)
-     kbdrate_s.rate = 50;
-
-   if (ioctl( fd, KIOCSRATE, &kbdrate_s )) {
-       return 0;
-   }
-
-   close( fd );
-
-   return 1;
-#else /* no KIOCSRATE */
-   return 0;
-#endif /* KIOCSRATE */
-}
-
-#undef rate
-
-static void
-SetKbdRepeat(InputInfoPtr pInfo, char rad)
-{
-  KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
-  int i;
-  int timeout;
-  int         value = 0x7f;    /* Maximum delay with slowest rate */
-
-#ifdef __sparc__
-  int         rate  = 500;     /* Default rate */
-  int         delay = 200;     /* Default delay */
-#else
-  int         rate  = 300;     /* Default rate */
-  int         delay = 250;     /* Default delay */
-#endif
-
-  static int valid_rates[] = { 300, 267, 240, 218, 200, 185, 171, 160, 150,
-			       133, 120, 109, 100, 92, 86, 80, 75, 67,
-			       60, 55, 50, 46, 43, 40, 37, 33, 30, 27,
-			       25, 23, 21, 20 };
-#define RATE_COUNT (sizeof( valid_rates ) / sizeof( int ))
-
-  static int valid_delays[] = { 250, 500, 750, 1000 };
-#define DELAY_COUNT (sizeof( valid_delays ) / sizeof( int ))
-
-  if (pKbd->rate >= 0) 
-    rate = pKbd->rate * 10;
-  if (pKbd->delay >= 0)
-    delay = pKbd->delay;
-
-  if(KDKBDREP_ioctl_ok(rate, delay)) 	/* m68k? */
-    return;
-
-  if(KIOCSRATE_ioctl_ok(rate, delay))	/* sparc? */
-    return;
-
-  if (xf86IsPc98())
-    return;
-
-#if defined(__alpha__) || defined (__i386__) || defined(__ia64__)
-
-  if (!xorgHWAccess) {
-      if (xf86EnableIO())
-	  xorgHWAccess = TRUE;
-      else 
-	  return;
-  }
-      
-  /* The ioport way */
-
-  for (i = 0; i < RATE_COUNT; i++)
-    if (rate >= valid_rates[i]) {
-      value &= 0x60;
-      value |= i;
-      break;
-    }
-
-  for (i = 0; i < DELAY_COUNT; i++)
-    if (delay <= valid_delays[i]) {
-      value &= 0x1f;
-      value |= i << 5;
-      break;
-    }
-
-  timeout = KBC_TIMEOUT;
-  while (((inb(0x64) & 2) == 2) && --timeout)
-       usleep(1000); /* wait */
-
-  if (timeout == 0)
-      return;
-
-  outb(0x60, 0xf3);             /* set typematic rate */
-  while (((inb(0x64) & 2) == 2) && --timeout)
-       usleep(1000); /* wait */
-
-  usleep(10000);
-  outb(0x60, value);
-
-#endif /* __alpha__ || __i386__ || __ia64__ */
 }
 
 typedef struct {
@@ -301,83 +146,6 @@ KbdOff(InputInfoPtr pInfo, int what)
     }
     return Success;
 }
-
-static int
-GetSpecialKey(InputInfoPtr pInfo, int scanCode)
-{
-  KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
-  int specialkey = scanCode;
-
-#if defined (__sparc__)
-  if (pKbd->sunKbd) {
-      switch (scanCode) {
-          case 0x2b: specialkey = KEY_BackSpace; break;
-          case 0x47: specialkey = KEY_KP_Minus; break;
-          case 0x7d: specialkey = KEY_KP_Plus; break;
-          /* XXX needs cases for KEY_KP_Divide and KEY_KP_Multiply */
-          case 0x05: specialkey = KEY_F1; break;
-          case 0x06: specialkey = KEY_F2; break;
-          case 0x08: specialkey = KEY_F3; break;
-          case 0x0a: specialkey = KEY_F4; break;
-          case 0x0c: specialkey = KEY_F5; break;
-          case 0x0e: specialkey = KEY_F6; break;
-          case 0x10: specialkey = KEY_F7; break;
-          case 0x11: specialkey = KEY_F8; break;
-          case 0x12: specialkey = KEY_F9; break;
-          case 0x07: specialkey = KEY_F10; break;
-          case 0x09: specialkey = KEY_F11; break;
-          case 0x0b: specialkey = KEY_F12; break;
-          default: specialkey = 0; break;
-      }
-      return specialkey;
-  }
-#endif
-
-  if (pKbd->CustomKeycodes) {
-      specialkey = pKbd->specialMap->map[scanCode];
-  }
-  return specialkey;
-}
-
-#define ModifierSet(k) ((modifiers & (k)) == (k))
-
-static
-Bool SpecialKey(InputInfoPtr pInfo, int key, Bool down, int modifiers)
-{
-  KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
-
-  if(!pKbd->vtSwitchSupported)
-      return FALSE;
-
-  if ((ModifierSet(ControlMask | AltMask)) ||
-      (ModifierSet(ControlMask | AltLangMask))) {
-      if (VTSwitchEnabled && !xf86Info.vtSysreq && !xf86Info.dontVTSwitch) {
-          switch (key) {
-             case KEY_F1:
-             case KEY_F2:
-             case KEY_F3:
-             case KEY_F4:
-             case KEY_F5:
-             case KEY_F6:
-             case KEY_F7:
-             case KEY_F8:
-             case KEY_F9:
-             case KEY_F10:
-                  if (down) {
-                    ioctl(xf86Info.consoleFd, VT_ACTIVATE, key - KEY_F1 + 1);
-                    return TRUE;
-                  }
-             case KEY_F11:
-             case KEY_F12:
-                  if (down) {
-                    ioctl(xf86Info.consoleFd, VT_ACTIVATE, key - KEY_F11 + 11);
-                    return TRUE;
-                  }
-         }
-      }
-  }
-    return FALSE;
-} 
 
 static void
 stdReadInput(InputInfoPtr pInfo)
@@ -453,12 +221,9 @@ xf86OSKbdPreInit(InputInfoPtr pInfo)
     pKbd->Bell          = SoundBell;
     pKbd->SetLeds       = SetKbdLeds;
     pKbd->GetLeds       = GetKbdLeds;
-    pKbd->SetKbdRepeat  = SetKbdRepeat;
     pKbd->KbdGetMapping = KbdGetMapping;
-    pKbd->SpecialKey    = SpecialKey;
 
     pKbd->RemapScanCode = NULL;
-    pKbd->GetSpecialKey = GetSpecialKey;
 
     pKbd->OpenKeyboard = OpenKeyboard;
     pKbd->vtSwitchSupported = FALSE;

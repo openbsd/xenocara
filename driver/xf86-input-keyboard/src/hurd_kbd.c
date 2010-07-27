@@ -164,9 +164,7 @@ xf86OSKbdPreInit(InputInfoPtr pInfo)
     pKbd->GetLeds       = GetKbdLeds;
     pKbd->SetKbdRepeat  = SetKbdRepeat;
     pKbd->KbdGetMapping = KbdGetMapping;
-    pKbd->SpecialKey    = NULL;
     pKbd->RemapScanCode = ATScancode;
-    pKbd->GetSpecialKey = NULL;
     pKbd->OpenKeyboard  = OpenKeyboard;
     pKbd->vtSwitchSupported = FALSE;
     pKbd->CustomKeycodes = FALSE;

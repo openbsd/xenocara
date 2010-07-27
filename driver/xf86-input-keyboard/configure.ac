@@ -22,14 +22,13 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-keyboard],
-        1.3.2,
+        1.4.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-keyboard)
 
-# Require xorg-macros version 1.2 or newer for XORG_CWARNFLAGS and
-# XORG_CHANGELOG macros
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2.1 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2.1)
+# Require xorg-macros version 1.3 or newer for XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
@@ -112,7 +111,7 @@ XORG_DRIVER_CHECK_EXT(XKB, kbproto)
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.2.99.0] xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 
-XORG_CWARNFLAGS
+XORG_DEFAULT_OPTIONS
 XORG_CFLAGS="$CWARNFLAGS $XORG_CFLAGS"
 AC_SUBST([XORG_CFLAGS])
 
@@ -120,9 +119,5 @@ AC_SUBST([XORG_CFLAGS])
 
 # Checks for header files.
 AC_HEADER_STDC
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
 AC_OUTPUT([Makefile src/Makefile man/Makefile])

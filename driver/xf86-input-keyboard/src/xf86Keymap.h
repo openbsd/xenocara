@@ -173,8 +173,7 @@ static KeySym map[NUM_KEYCODES * GLYPHS_PER_KEY] = {
     !defined(linux) && \
     !defined(CSRG_BASED) && \
     !defined(__CYGWIN__) && \
-    !defined(__SOL8__) && \
-    (!defined(sun) || defined(i386))
+    !defined(sun)
 
 static KeySym map84[NUM_KEYCODES * GLYPHS_PER_KEY] = {
     /* 0x00 */  NoSymbol,       NoSymbol,	NoSymbol,	NoSymbol,

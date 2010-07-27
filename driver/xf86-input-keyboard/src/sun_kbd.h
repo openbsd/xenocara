@@ -36,6 +36,7 @@ typedef struct {
     int 		odirect;	/* Original "direct" mode setting */
     int			oleds;		/* Original LED state */
     const char *	strmod;		/* Streams module pushed on kbd device */
+    OsTimerPtr		remove_timer;	/* Callback for removal on ENODEV */
 } sunKbdPrivRec, *sunKbdPrivPtr;
 
 /* sun_kbdMap.c */

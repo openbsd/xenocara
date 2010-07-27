@@ -36,9 +36,16 @@
 
 /* Map the Solaris keycodes to the "XFree86" keycodes. */
 
-/* Additional Sun Japanese Keyboard Keys not defined in common/atKeynames.h */
+/* Additional Sun Japanese Keyboard Keys not defined in atKeynames.h */
 #define KEY_Kanji	0x82
 #define KEY_Execute	0x83
+
+/* Override atKeynames.h values with unique keycodes, so we can distinguish
+   KEY_F15 from KEY_HKTG & KEY_KP_DEC from KEY_BSlash2 */
+#undef KEY_HKTG
+#define KEY_HKTG         /* Hirugana/Katakana tog 0xC8  */  200 /* was 112 */
+#undef KEY_BSlash2
+#define KEY_BSlash2      /* \           _         0xCB  */  203 /* was 115 */
 
 static unsigned char sunmap[256] = {
 #if defined(i386) || defined(__i386) || defined(__i386__) || defined(__x86)
@@ -571,7 +578,6 @@ KbdGetMapping (InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
 {
     KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
     sunKbdPrivPtr priv = (sunKbdPrivPtr) pKbd->private;
-    const unsigned char *keymap;
     int i;
     KeySym        *k;
     

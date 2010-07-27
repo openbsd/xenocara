@@ -43,9 +43,6 @@ typedef	int	(*GetLedsProc)(InputInfoPtr pInfo);
 typedef	void	(*SetKbdRepeatProc)(InputInfoPtr pInfo, char rad);
 typedef	void	(*KbdGetMappingProc)(InputInfoPtr pInfo,
                                      KeySymsPtr pKeySyms, CARD8* pModMap);
-typedef	int	(*GetSpecialKeyProc)(InputInfoPtr pInfo, int scanCode);
-typedef	Bool	(*SpecialKeyProc)(InputInfoPtr pInfo,
-                                     int key, Bool down, int modifiers);
 typedef	int	(*RemapScanCodeProc)(InputInfoPtr pInfo, int *scanCode);
 typedef	Bool	(*OpenKeyboardProc)(InputInfoPtr pInfo);
 typedef	void	(*PostEventProc)(InputInfoPtr pInfo,
@@ -66,24 +63,18 @@ typedef struct {
     SetKbdRepeatProc	SetKbdRepeat;
     KbdGetMappingProc	KbdGetMapping;
     RemapScanCodeProc	RemapScanCode;
-    GetSpecialKeyProc	GetSpecialKey;
-    SpecialKeyProc	SpecialKey;
 
     OpenKeyboardProc	OpenKeyboard;
     PostEventProc	PostEvent;
 
-    int			rate;
-    int			delay;
     int			bell_pitch;
     int			bell_duration;
-    Bool		autoRepeat;
     unsigned long	leds;
     unsigned long	xledsMask;
     unsigned long	keyLeds;
     int			scanPrefix;
     Bool		vtSwitchSupported;
     Bool		CustomKeycodes;
-    Bool		noXkb;
     Bool		isConsole;
     TransMapPtr         scancodeMap;
     TransMapPtr         specialMap;
@@ -93,8 +84,6 @@ typedef struct {
     int			kbdType;
     int			consType;
     int			wsKbdType;
-    Bool		sunKbd;
-    Bool		Panix106;
 
 } KbdDevRec, *KbdDevPtr;
 

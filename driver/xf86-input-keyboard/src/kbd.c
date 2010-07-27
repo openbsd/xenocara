@@ -27,28 +27,19 @@
 #include "atKeynames.h"
 #include "xf86Privstr.h"
 
-#ifdef XINPUT
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "extnsionst.h"
 #include "extinit.h"
-#else
 #include "inputstr.h"
-#endif
 
 #include "xf86Xinput.h"
 #include "xf86_OSproc.h"
 #include "xf86OSKbd.h"
 #include "compiler.h"
 
-#ifdef XKB
-#include <X11/extensions/XKB.h>
-#include <X11/extensions/XKBstr.h>
-#include <X11/extensions/XKBsrv.h>
-#endif
-
-extern int XkbDfltRepeatDelay;
-extern int XkbDfltRepeatInterval;
+#include "xkbstr.h"
+#include "xkbsrv.h"
 
 #define CAPSFLAG	1
 #define NUMFLAG		2
@@ -56,11 +47,11 @@ extern int XkbDfltRepeatInterval;
 #define MODEFLAG	8
 #define COMPOSEFLAG	16
 /* Used to know when the first DEVICE_ON after a DEVICE_INIT is called */
-#define INITFLAG	(1 << 31)
+#define INITFLAG	(1U << 31)
 
 static InputInfoPtr KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
 static int KbdProc(DeviceIntPtr device, int what);
-static int KbdCtrl(DeviceIntPtr device, KeybdCtrl *ctrl);
+static void KbdCtrl(DeviceIntPtr device, KeybdCtrl *ctrl);
 static void KbdBell(int percent, DeviceIntPtr dev, pointer ctrl, int unused);
 static void PostKbdEvent(InputInfoPtr pInfo, unsigned int key, Bool down);
 
@@ -96,19 +87,11 @@ typedef enum {
     OPTION_PROTOCOL,
     OPTION_AUTOREPEAT,
     OPTION_XLEDS,
-    OPTION_XKB_DISABLE,
-    OPTION_XKB_KEYMAP,
-    OPTION_XKB_KEYCODES,
-    OPTION_XKB_TYPES,
-    OPTION_XKB_COMPAT,
-    OPTION_XKB_SYMBOLS,
-    OPTION_XKB_GEOMETRY,
     OPTION_XKB_RULES,
     OPTION_XKB_MODEL,
     OPTION_XKB_LAYOUT,
     OPTION_XKB_VARIANT,
     OPTION_XKB_OPTIONS,
-    OPTION_PANIX106,
     OPTION_CUSTOM_KEYCODES
 } KeyboardOpts;
 
@@ -121,19 +104,11 @@ static const OptionInfoRec KeyboardOptions[] = {
     { OPTION_PROTOCOL,		"Protocol",	  OPTV_STRING,	{0}, FALSE },
     { OPTION_AUTOREPEAT,	"AutoRepeat",	  OPTV_STRING,	{0}, FALSE },
     { OPTION_XLEDS,		"XLeds",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_DISABLE,	"XkbDisable",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_XKB_KEYMAP,	"XkbKeymap",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_KEYCODES,	"XkbKeycodes",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_TYPES,		"XkbTypes",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_COMPAT,	"XkbCompat",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_SYMBOLS,	"XkbSymbols",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_GEOMETRY,	"XkbGeometry",	  OPTV_STRING,	{0}, FALSE },
     { OPTION_XKB_RULES,		"XkbRules",	  OPTV_STRING,	{0}, FALSE },
     { OPTION_XKB_MODEL,		"XkbModel",	  OPTV_STRING,	{0}, FALSE },
     { OPTION_XKB_LAYOUT,	"XkbLayout",	  OPTV_STRING,	{0}, FALSE },
     { OPTION_XKB_VARIANT,	"XkbVariant",	  OPTV_STRING,	{0}, FALSE },
     { OPTION_XKB_OPTIONS,	"XkbOptions",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_PANIX106,		"Panix106",	  OPTV_BOOLEAN,	{0}, FALSE },
     { OPTION_CUSTOM_KEYCODES,   "CustomKeycodes", OPTV_BOOLEAN,	{0}, FALSE },
     { -1,			NULL,		  OPTV_NONE,	{0}, FALSE }
 };
@@ -145,14 +120,11 @@ static const char *kbdDefaults[] = {
     "Protocol",		"standard",
 #endif
     "AutoRepeat",	"500 30",
-    "XkbRules",		__XKBDEFRULES__,
+    "XkbRules",		"xorg",
     "XkbModel",		"pc105",
-    "Panix106",		"off",
     "CustomKeycodes",	"off",
     NULL
 };
-
-static const char *kbdLayout = "us";
 
 static const char *kbd98Defaults[] = {
 #ifdef XQUEUE
@@ -163,34 +135,16 @@ static const char *kbd98Defaults[] = {
     "AutoRepeat",	"500 30",
     "XkbRules",		"xfree98",
     "XkbModel",		"pc98",
-    "XkbLayout",	"nec/jp",
-    "Panix106",		"off",
+    "XkbLayout",	"jp",
     "CustomKeycodes",	"off",
     NULL
 };
 
-const char *xkbSymbols[] = {
-	"XkbDfltRepeatDelay",
-	"XkbDfltRepeatInterval",
-	NULL,
-};
-
-#ifdef XKB
 static char *xkb_rules;
 static char *xkb_model;
 static char *xkb_layout;
 static char *xkb_variant;
 static char *xkb_options;
-
-static XkbComponentNamesRec xkbnames;
-#endif /* XKB */
-
-/*ARGSUSED*/
-static const OptionInfoRec *
-KeyboardAvailableOptions(void *unused)
-{
-    return (KeyboardOptions);
-}
 
 static void
 SetXkbOption(InputInfoPtr pInfo, char *name, char **option)
@@ -207,39 +161,6 @@ SetXkbOption(InputInfoPtr pInfo, char *name, char **option)
        }
     }
 }
-
-
-#define ModifierIsSet(k) ((modifiers & (k)) == (k))
-
-static Bool
-CommonSpecialKey(int key, Bool down, int modifiers)
-{
-  if ((!ModifierIsSet(ShiftMask)) &&
-      (((ModifierIsSet(ControlMask | AltMask)) ||
-        (ModifierIsSet(ControlMask | AltLangMask))))) {
-      switch (key) {
-	
-      case KEY_BackSpace:
-	xf86ProcessActionEvent(ACTION_TERMINATE, NULL);
-	break;
-
-	/*
-	 * The idea here is to pass the scancode down to a list of
-	 * registered routines. There should be some standard conventions
-	 * for processing certain keys.
-	 */
-      case KEY_KP_Minus:   /* Keypad - */
-	if (down) xf86ProcessActionEvent(ACTION_PREV_MODE, NULL);
-	break;
-	
-      case KEY_KP_Plus:   /* Keypad + */
-	if (down) xf86ProcessActionEvent(ACTION_NEXT_MODE, NULL);
-	break;
-      }
-  }
-  return FALSE;
-}
-
 
 static InputInfoPtr
 KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
@@ -270,7 +191,7 @@ KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pInfo->fd = -1;
     pInfo->dev = NULL;
     pInfo->private_flags = 0;
-    pInfo->always_core_feedback = 0;
+    pInfo->always_core_feedback = NULL;
     pInfo->conf_idev = dev;
 
     if (!xf86IsPc98())
@@ -285,32 +206,11 @@ KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pInfo->private = pKbd;
     pKbd->PostEvent = PostKbdEvent;
 
-    xf86LoaderReqSymLists(xkbSymbols, NULL);
-
     if (!xf86OSKbdPreInit(pInfo))
         return pInfo;
 
     if (!pKbd->OpenKeyboard(pInfo)) {
         return pInfo;
-    }
-
-    if (xf86findOption(pInfo->options, "XkbLayout") == NULL) {
-	xf86Msg(X_INFO, "%s: adding default layout %s\n",
-		pInfo->name, kbdLayout);
-        xf86addNewOption(pInfo->options, "XkbLayout", kbdLayout);
-    }
-
-    if ((s = xf86SetStrOption(pInfo->options, "AutoRepeat", NULL))) {
-        int delay, rate;
-        if (sscanf(s, "%d %d", &delay, &rate) != 2) {
-            xf86Msg(X_ERROR, "\"%s\" is not a valid AutoRepeat value", s);
-        } else {
-            pKbd->delay = delay;
-	    XkbDfltRepeatDelay = delay;
-            pKbd->rate = rate;
-	    XkbDfltRepeatInterval = 1000/rate;
-        }
-        xfree(s);
     }
 
     if ((s = xf86SetStrOption(pInfo->options, "XLeds", NULL))) {
@@ -329,49 +229,11 @@ KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
         xfree(s);
     }
 
-#ifdef XKB
-
-/* XkbDisable must be a server flag but for compatibility we check it here */
-
-  if (xf86FindOption(pInfo->options, "XkbDisable"))
-      xf86Msg(X_WARNING,
-             "%s: XKB can't be disabled here. Use \"ServerFlags\" section.\n",
-              pInfo->name);
-
-  pKbd->noXkb = noXkbExtension;
-  if (pKbd->noXkb) {
-      xf86Msg(X_CONFIG, "XKB: disabled\n");
-  } else {
-      SetXkbOption(pInfo, "XkbKeymap", &xkbnames.keymap);
-      if (xkbnames.keymap) {
-          xf86Msg(X_CONFIG, "%s: XkbKeymap overrides all other XKB settings\n",
-                  pInfo->name);
-      } else {
-          SetXkbOption(pInfo, "XkbRules", &xkb_rules);
-          SetXkbOption(pInfo, "XkbModel", &xkb_model);
-          SetXkbOption(pInfo, "XkbLayout", &xkb_layout);
-          SetXkbOption(pInfo, "XkbVariant", &xkb_variant);
-          SetXkbOption(pInfo, "XkbOptions", &xkb_options);
-
-          SetXkbOption(pInfo, "XkbKeycodes", &xkbnames.keycodes);
-          SetXkbOption(pInfo, "XkbTypes", &xkbnames.types);
-          SetXkbOption(pInfo, "XkbCompat", &xkbnames.compat);
-          SetXkbOption(pInfo, "XkbSymbols", &xkbnames.symbols);
-          SetXkbOption(pInfo, "XkbGeometry", &xkbnames.geometry);
-      }
-  }
-
-  if ((xkb_model && !strcmp(xkb_model, "sun")) ||
-      (xkb_rules && !strcmp(xkb_rules, "sun")))
-       pKbd->sunKbd = TRUE;
-#endif
-
-#if defined(SVR4) && defined(i386)
-  if ((pKbd->Panix106 =
-      xf86SetBoolOption(pInfo->options, "Panix106", FALSE))) {
-      xf86Msg(X_CONFIG, "%s: PANIX106: enabled\n", pInfo->name);
-  }
-#endif
+    SetXkbOption(pInfo, "XkbRules", &xkb_rules);
+    SetXkbOption(pInfo, "XkbModel", &xkb_model);
+    SetXkbOption(pInfo, "XkbLayout", &xkb_layout);
+    SetXkbOption(pInfo, "XkbVariant", &xkb_variant);
+    SetXkbOption(pInfo, "XkbOptions", &xkb_options);
 
   pKbd->CustomKeycodes = FALSE;
   from = X_DEFAULT; 
@@ -402,7 +264,7 @@ static void
 UpdateLeds(InputInfoPtr pInfo)
 {
     KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
-    int leds = 0;
+    unsigned long leds = 0;
 
     if (pKbd->keyLeds & CAPSFLAG)    leds |= XLED1;
     if (pKbd->keyLeds & NUMFLAG)     leds |= XLED2;
@@ -414,10 +276,10 @@ UpdateLeds(InputInfoPtr pInfo)
     pKbd->SetLeds(pInfo, pKbd->leds);
 }
 
-static int
+static void
 KbdCtrl( DeviceIntPtr device, KeybdCtrl *ctrl)
 {
-   int leds;
+   unsigned long leds;
    InputInfoPtr pInfo = (InputInfoPtr) device->public.devicePrivate;
    KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
 
@@ -442,25 +304,13 @@ KbdCtrl( DeviceIntPtr device, KeybdCtrl *ctrl)
        pKbd->keyLeds &= ~COMPOSEFLAG;
    }
    leds = ctrl->leds & ~(XCAPS | XNUM | XSCR); /* ??? */
-#ifdef XKB
-   if (pKbd->noXkb) {
-#endif
-       pKbd->leds = (leds & pKbd->xledsMask) | (pKbd->leds & ~pKbd->xledsMask);
-#ifdef XKB
-  } else {
-       pKbd->leds = leds;
-  }
-#endif
+   pKbd->leds = leds;
   pKbd->SetLeds(pInfo, pKbd->leds);
-  pKbd->autoRepeat = ctrl->autoRepeat;
-
-  return (Success);
 }
 
 static void
 InitKBD(InputInfoPtr pInfo, Bool init)
 {
-  char            rad;
   xEvent          kevent;
   KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 1
@@ -513,16 +363,8 @@ InitKBD(InputInfoPtr pInfo, Bool init)
       pKbd->keyLeds = pKbd->GetLeds(pInfo);
       UpdateLeds(pInfo);
       pKbd->keyLeds |= INITFLAG;
-      if( pKbd->delay <= 375) rad = 0x00;
-      else if (pKbd->delay <= 625) rad = 0x20;
-      else if (pKbd->delay <= 875) rad = 0x40;
-      else                         rad = 0x60;
-      if      (pKbd->rate <=  2)   rad |= 0x1F;
-      else if (pKbd->rate >= 30)   rad |= 0x00;
-      else                         rad |= ((58 / pKbd->rate) - 2);
-      pKbd->SetKbdRepeat(pInfo, rad);
   } else {
-      int leds = pKbd->keyLeds;
+      unsigned long leds = pKbd->keyLeds;
 
       pKbd->keyLeds = pKbd->GetLeds(pInfo);
       UpdateLeds(pInfo);
@@ -551,37 +393,44 @@ KbdProc(DeviceIntPtr device, int what)
 
   switch (what) {
      case DEVICE_INIT:
-        ret = pKbd->KbdInit(pInfo, what);
-	if (ret != Success)
-	    return ret;
+         ret = pKbd->KbdInit(pInfo, what);
+         if (ret != Success)
+             return ret;
 
-        pKbd->KbdGetMapping(pInfo, &keySyms, modMap);
+         pKbd->KbdGetMapping(pInfo, &keySyms, modMap);
 
-        device->public.on = FALSE;
-#ifdef XKB
-        if (pKbd->noXkb) {
-#endif
-            InitKeyboardDeviceStruct((DevicePtr) device,
-                             &keySyms,
-                             modMap,
-                             KbdBell,
-                             (KbdCtrlProcPtr)KbdCtrl);
-#ifdef XKB
-        } else {
-            if (xkbnames.keymap)
-                xkb_rules = NULL;
-            XkbSetRulesDflts(xkb_rules, xkb_model, xkb_layout,
-                             xkb_variant, xkb_options);
-            XkbInitKeyboardDeviceStruct(device,
-                                        &xkbnames,
-                                        &keySyms,
-                                        modMap,
-                                        KbdBell,
-                                        (KbdCtrlProcPtr)KbdCtrl);
-    }
-#endif
-    InitKBD(pInfo, TRUE);
-    break;
+         device->public.on = FALSE;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 5
+         {
+             XkbRMLVOSet rmlvo;
+             rmlvo.rules = xkb_rules;
+             rmlvo.model = xkb_model;
+             rmlvo.layout = xkb_layout;
+             rmlvo.variant = xkb_variant;
+             rmlvo.options = xkb_options;
+
+             if (!InitKeyboardDeviceStruct(device, &rmlvo, KbdBell, KbdCtrl))
+             {
+                 xf86Msg(X_ERROR, "%s: Keyboard initialization failed. This "
+                         "could be a missing or incorrect setup of "
+                         "xkeyboard-config.\n", device->name);
+
+                 return BadValue;
+             }
+         }
+#else
+         {
+             XkbComponentNamesRec xkbnames;
+             memset(&xkbnames, 0, sizeof(xkbnames));
+             XkbSetRulesDflts(xkb_rules, xkb_model, xkb_layout,
+                              xkb_variant, xkb_options);
+             XkbInitKeyboardDeviceStruct(device, &xkbnames, &keySyms,
+                                         modMap, KbdBell,
+                                         (KbdCtrlProcPtr)KbdCtrl);
+         }
+#endif /* XINPUT ABI 5*/
+         InitKBD(pInfo, TRUE);
+         break;
   case DEVICE_ON:
     if (device->public.on)
 	break;
@@ -626,14 +475,6 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
   KbdDevPtr    pKbd = (KbdDevPtr) pInfo->private;
   DeviceIntPtr device = pInfo->dev;
   KeyClassRec  *keyc = device->key;
-  KbdFeedbackClassRec *kbdfeed = device->kbdfeed;
-  int          specialkey = 0;
-
-  Bool        UsePrefix = FALSE;
-  KeySym      *keysym;
-  int         keycode;
-  unsigned long changeLock = 0;
-  static int  lockkeys = 0;
 
 #ifdef DEBUG
   ErrorF("kbd driver rec scancode: 0x02%x %s\n", scanCode, down?"down":"up");
@@ -642,21 +483,6 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
   /* Disable any keyboard processing while in suspend */
   if (xf86inSuspend)
       return;
-
-#ifndef __OpenBSD__
-  if (pKbd->sunKbd) {
-     /*
-      * XXX XXX XXX:
-      *
-      * I really don't know what's wrong here, but passing the real
-      * scanCode offsets by one from XKB's point of view.
-      *
-      * (ecd@skynet.be, 980405)
-      */
-      scanCode--;
-      goto sunKeyboards;
-  }
-#endif
 
   /*
    * First do some special scancode remapping ...
@@ -673,202 +499,25 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
   }
 
   /*
-   * and now get some special keysequences
-   */
-
-  specialkey = scanCode;
-
-  if (pKbd->GetSpecialKey != NULL) {
-     specialkey = pKbd->GetSpecialKey(pInfo, scanCode);
-  } else {
-     if (pKbd->specialMap != NULL) {
-         TransMapPtr map = pKbd->specialMap; 
-         if (scanCode >= map->begin && scanCode < map->end)
-             specialkey = map->map[scanCode - map->begin];
-     }
-  }
-
-#ifndef TERMINATE_FALLBACK
-#define TERMINATE_FALLBACK 0
-#endif
-#ifdef XKB
-  if (noXkbExtension
-#if TERMINATE_FALLBACK
-      || specialkey == KEY_BackSpace
-#endif
-     )
-#endif
-  {    
-      if (CommonSpecialKey(specialkey, down, keyc->state))
-	  return;
-      if (pKbd->SpecialKey != NULL)
-	  if (pKbd->SpecialKey(pInfo, specialkey, down, keyc->state))
-	      return;
-  }
-  
-#ifndef __sparc64__
-  /*
    * PC keyboards generate separate key codes for
    * Alt+Print and Control+Pause but in the X keyboard model
    * they need to get the same key code as the base key on the same
    * physical keyboard key.
    */
+
   if (!xf86IsPc98()) {
-    if (ModifierDown(AltMask) && (scanCode == KEY_SysReqest))
+    int state;
+
+    state = XkbStateFieldFromRec(&keyc->xkbInfo->state);
+
+    if (((state & AltMask) == AltMask) && (scanCode == KEY_SysReqest))
       scanCode = KEY_Print;
     else if (scanCode == KEY_Break)
       scanCode = KEY_Pause;
   }
-#endif
 
-sunKeyboards:
-  /*
-   * Now map the scancodes to real X-keycodes ...
-   */
-  keycode = scanCode + MIN_KEYCODE;
-  keysym = (keyc->curKeySyms.map +
-	    keyc->curKeySyms.mapWidth * 
-	    (keycode - keyc->curKeySyms.minKeyCode));
-
-#ifdef XKB
-  if (pKbd->noXkb) {
-#endif
-  /*
-   * Filter autorepeated caps/num/scroll lock keycodes.
-   */
-  if( down ) {
-    switch( keysym[0] ) {
-        case XK_Caps_Lock :
-          if (lockkeys & CAPSFLAG)
-              return;
-	  else
-	      lockkeys |= CAPSFLAG;
-          break;
-
-        case XK_Num_Lock :
-          if (lockkeys & NUMFLAG)
-              return;
-	  else
-	      lockkeys |= NUMFLAG;
-          break;
-
-        case XK_Scroll_Lock :
-          if (lockkeys & SCROLLFLAG)
-              return;
-	  else
-	      lockkeys |= SCROLLFLAG;
-          break;
-    }
-    if (keysym[1] == XF86XK_ModeLock)
-    {
-      if (lockkeys & MODEFLAG)
-          return;
-      else
-          lockkeys |= MODEFLAG;
-    }
-  }
-  else {
-    switch( keysym[0] ) {
-        case XK_Caps_Lock :
-            lockkeys &= ~CAPSFLAG;
-            break;
-
-        case XK_Num_Lock :
-            lockkeys &= ~NUMFLAG;
-            break;
-
-        case XK_Scroll_Lock :
-            lockkeys &= ~SCROLLFLAG;
-            break;
-    }
-    if (keysym[1] == XF86XK_ModeLock)
-      lockkeys &= ~MODEFLAG;
-  }
-
-  /*
-   * LockKey special handling:
-   * ignore releases, toggle on & off on presses.
-   * Don't deal with the Caps_Lock keysym directly, but check the lock modifier
-   */
-
-   if (keyc->modifierMap[keycode] & LockMask)
-       changeLock = CAPSFLAG;
-   if (keysym[0] == XK_Num_Lock)
-       changeLock = NUMFLAG;
-   if (keysym[0] == XK_Scroll_Lock)
-       changeLock = SCROLLFLAG;
-   if (keysym[1] == XF86XK_ModeLock)
-       changeLock = MODEFLAG;
-
-   if (changeLock) {
-      if (!down)
-          return;
-
-      pKbd->keyLeds &= ~changeLock;
-
-      if (KeyPressed(keycode)) {
-	  down = !down;
-      } else {
-          pKbd->keyLeds |= changeLock;
-      }
-      UpdateLeds(pInfo);
-  }
-
-  if (!pKbd->CustomKeycodes) {
-    /*
-     * normal, non-keypad keys
-     */
-    if (scanCode < KEY_KP_7 || scanCode > KEY_KP_Decimal) {
-#if !defined(CSRG_BASED) && \
-    !defined(__GNU__) && \
-     defined(KB_84)
-      /*
-       * magic ALT_L key on AT84 keyboards for multilingual support
-       */
-      if (pKbd->kbdType == KB_84 &&
-	  ModifierDown(AltMask) &&
-	  keysym[2] != NoSymbol)
-	{
-	  UsePrefix = TRUE;
-	}
-#endif /* !CSRG_BASED && ... */
-    }
-  }
-#ifdef XKB
-  }
-#endif
-
-  /*
-   * check for an autorepeat-event
-   */
-  if (down && KeyPressed(keycode)) {
-      int num = keycode >> 3;
-      int bit = 1 << (keycode & 7);
-
-      if ((pKbd->autoRepeat != AutoRepeatModeOn) ||
-	  keyc->modifierMap[keycode] ||
-	  !(kbdfeed->ctrl.autoRepeats[num] & bit))
-	  return;
-  }
-
-   if (UsePrefix) {
-      xf86PostKeyboardEvent(device,
-              keyc->modifierKeyMap[keyc->maxKeysPerModifier*7], TRUE);
-      xf86PostKeyboardEvent(device, keycode, down);
-      xf86PostKeyboardEvent(device,
-              keyc->modifierKeyMap[keyc->maxKeysPerModifier*7], FALSE);
-   } else {
-      xf86PostKeyboardEvent(device, keycode, down);
-   }
+  xf86PostKeyboardEvent(device, scanCode + MIN_KEYCODE, down);
 }
-
-ModuleInfoRec KbdInfo = {
-    1,
-    "KBD",
-    NULL,
-    0,
-    KeyboardAvailableOptions,
-};
 
 static void
 xf86KbdUnplug(pointer	p)
@@ -881,11 +530,6 @@ xf86KbdPlug(pointer	module,
 	    int		*errmaj,
 	    int		*errmin)
 {
-    static Bool Initialised = FALSE;
-
-    if (!Initialised)
-	Initialised = TRUE;
-
     xf86AddInputDriver(&KBD, module, 0);
 
     return module;
