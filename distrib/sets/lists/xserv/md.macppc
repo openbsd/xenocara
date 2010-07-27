@@ -115,9 +115,7 @@
 ./usr/X11R6/include/xorg/xf86PciInfo.h
 ./usr/X11R6/include/xorg/xf86Priv.h
 ./usr/X11R6/include/xorg/xf86Privstr.h
-./usr/X11R6/include/xorg/xf86RAC.h
 ./usr/X11R6/include/xorg/xf86RamDac.h
-./usr/X11R6/include/xorg/xf86Resources.h
 ./usr/X11R6/include/xorg/xf86Xinput.h
 ./usr/X11R6/include/xorg/xf86_OSlib.h
 ./usr/X11R6/include/xorg/xf86_OSproc.h
@@ -160,6 +158,8 @@
 ./usr/X11R6/lib/modules/extensions/libextmod.so
 ./usr/X11R6/lib/modules/extensions/libglx.la
 ./usr/X11R6/lib/modules/extensions/libglx.so
+./usr/X11R6/lib/modules/extensions/librecord.la
+./usr/X11R6/lib/modules/extensions/librecord.so
 ./usr/X11R6/lib/modules/input/acecad_drv.la
 ./usr/X11R6/lib/modules/input/acecad_drv.so
 ./usr/X11R6/lib/modules/input/citron_drv.la
@@ -259,6 +259,7 @@
 ./usr/X11R6/man/man4/wsudl.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man7/Xprint.7
+./usr/X11R6/share/aclocal/xorg-macros.m4
 ./usr/X11R6/share/aclocal/xorg-server.m4
 ./var/db/xkb
 ./var/db/xkb/README.compiled

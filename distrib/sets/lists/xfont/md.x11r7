@@ -465,7 +465,6 @@
 ./usr/X11R6/lib/X11/fonts/100dpi/courR24.pcf.gz
 ./usr/X11R6/lib/X11/fonts/100dpi/fonts.alias
 ./usr/X11R6/lib/X11/fonts/100dpi/fonts.dir
-./usr/X11R6/lib/X11/fonts/100dpi/fonts.scale
 ./usr/X11R6/lib/X11/fonts/100dpi/helvB08-ISO8859-1.pcf.gz
 ./usr/X11R6/lib/X11/fonts/100dpi/helvB08-ISO8859-10.pcf.gz
 ./usr/X11R6/lib/X11/fonts/100dpi/helvB08-ISO8859-13.pcf.gz
@@ -2363,7 +2362,6 @@
 ./usr/X11R6/lib/X11/fonts/75dpi/courR24.pcf.gz
 ./usr/X11R6/lib/X11/fonts/75dpi/fonts.alias
 ./usr/X11R6/lib/X11/fonts/75dpi/fonts.dir
-./usr/X11R6/lib/X11/fonts/75dpi/fonts.scale
 ./usr/X11R6/lib/X11/fonts/75dpi/helvB08-ISO8859-1.pcf.gz
 ./usr/X11R6/lib/X11/fonts/75dpi/helvB08-ISO8859-10.pcf.gz
 ./usr/X11R6/lib/X11/fonts/75dpi/helvB08-ISO8859-13.pcf.gz
@@ -3980,7 +3978,6 @@
 ./usr/X11R6/lib/X11/fonts/cyrillic/crox6to.pcf.gz
 ./usr/X11R6/lib/X11/fonts/cyrillic/fonts.alias
 ./usr/X11R6/lib/X11/fonts/cyrillic/fonts.dir
-./usr/X11R6/lib/X11/fonts/cyrillic/fonts.scale
 ./usr/X11R6/lib/X11/fonts/cyrillic/koi10x16b.pcf.gz
 ./usr/X11R6/lib/X11/fonts/cyrillic/koi10x20.pcf.gz
 ./usr/X11R6/lib/X11/fonts/cyrillic/koi12x24.pcf.gz
@@ -4452,7 +4449,6 @@
 ./usr/X11R6/lib/X11/fonts/misc/decsess.pcf.gz
 ./usr/X11R6/lib/X11/fonts/misc/fonts.alias
 ./usr/X11R6/lib/X11/fonts/misc/fonts.dir
-./usr/X11R6/lib/X11/fonts/misc/fonts.scale
 ./usr/X11R6/lib/X11/fonts/misc/gb16fs.pcf.gz
 ./usr/X11R6/lib/X11/fonts/misc/gb16st.pcf.gz
 ./usr/X11R6/lib/X11/fonts/misc/gb24st.pcf.gz

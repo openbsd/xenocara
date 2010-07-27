@@ -3,5 +3,6 @@
 ./usr/X11R6/man/man1/Xephyr.1
 ./usr/X11R6/man/man3/XFree86-DGA.3
 ./usr/X11R6/man/man7/Xprint.7
+./usr/X11R6/share/aclocal/xorg-macros.m4
 ./var/db/xkb
 ./var/log

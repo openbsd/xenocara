@@ -454,6 +454,7 @@
 ./usr/X11R6/bin/sxpm
 ./usr/X11R6/bin/twm
 ./usr/X11R6/bin/uxterm
+./usr/X11R6/bin/video
 ./usr/X11R6/bin/viewres
 ./usr/X11R6/bin/x11perf
 ./usr/X11R6/bin/xauth

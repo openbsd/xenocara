@@ -112,9 +112,7 @@
 ./usr/X11R6/include/xorg/xf86PciInfo.h
 ./usr/X11R6/include/xorg/xf86Priv.h
 ./usr/X11R6/include/xorg/xf86Privstr.h
-./usr/X11R6/include/xorg/xf86RAC.h
 ./usr/X11R6/include/xorg/xf86RamDac.h
-./usr/X11R6/include/xorg/xf86Resources.h
 ./usr/X11R6/include/xorg/xf86Xinput.h
 ./usr/X11R6/include/xorg/xf86_OSlib.h
 ./usr/X11R6/include/xorg/xf86_OSproc.h
@@ -132,7 +130,6 @@
 ./usr/X11R6/include/xorg/xorgVersion.h
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
-./usr/X11R6/lib/X11/Options
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
@@ -253,6 +250,7 @@
 ./usr/X11R6/man/man4/wsfb.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man7/Xprint.7
+./usr/X11R6/share/aclocal/xorg-macros.m4
 ./usr/X11R6/share/aclocal/xorg-server.m4
 ./var/db/xkb
 ./var/db/xkb/README.compiled

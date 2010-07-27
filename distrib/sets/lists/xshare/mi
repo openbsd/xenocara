@@ -913,6 +913,7 @@
 ./usr/X11R6/man/cat1/resize.0
 ./usr/X11R6/man/cat1/ssh-askpass.0
 ./usr/X11R6/man/cat1/uxterm.0
+./usr/X11R6/man/cat1/video.0
 ./usr/X11R6/man/cat1/xidle.0
 ./usr/X11R6/man/cat1/xpmroot.0
 ./usr/X11R6/man/cat1/xsystrace.0
@@ -2751,7 +2752,6 @@
 ./usr/X11R6/share/X11/rgb.txt
 ./usr/X11R6/share/aclocal
 ./usr/X11R6/share/aclocal/fontutil.m4
-./usr/X11R6/share/aclocal/xorg-macros.m4
 ./usr/X11R6/share/aclocal/xtrans.m4
 ./usr/X11R6/share/doc
 ./usr/X11R6/share/doc/compositeproto
