@@ -122,6 +122,7 @@ static const char *kbdDefaults[] = {
     "AutoRepeat",	"500 30",
     "XkbRules",		"xorg",
     "XkbModel",		"pc105",
+    "XkbLayout",	"us",
     "CustomKeycodes",	"off",
     NULL
 };

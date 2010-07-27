@@ -22,6 +22,7 @@
 #include "xf86.h"
 #include "xf86Priv.h"
 #include "xf86_OSlib.h"
+#include "xf86Parser.h"
 
 #include "xf86Xinput.h"
 #include "xf86OSKbd.h"
@@ -58,6 +59,8 @@ struct nameint kbdopt[] = {
 
 extern void KbdGetMapping(InputInfoPtr pInfo, KeySymsPtr pKeySyms,
                           CARD8 *pModMap);
+
+extern int priv_open_device(const char *dev);
 
 extern Bool VTSwitchEnabled;
 
@@ -496,8 +499,6 @@ OpenKeyboard(InputInfoPtr pInfo)
      * XkbLayout has been specified.  Do this even if the protocol is
      * not wskbd.
      */
-    if (xf86findOption(pInfo->options, "XkbLayout") != NULL)
-        return TRUE;
 
     if (ioctl(pInfo->fd, WSKBDIO_GETENCODING, &wsenc) == -1) {
 	/* Ignore the error, we just use the defaults */
@@ -505,9 +506,11 @@ OpenKeyboard(InputInfoPtr pInfo)
 		pInfo->name, strerror(errno));
 	return TRUE;
     }
-    if (KB_ENCODING(wsenc) == KB_USER)
-	/* Don't try to set XkbLayout */
+    if (KB_ENCODING(wsenc) == KB_USER) {
+	/* Ignore wscons "user" layout */
+	xf86Msg(X_INFO, "%s: ignoring \"user\" wscons layout", pInfo->name);
 	return TRUE;
+    }
 
     for (i = 0; kbdenc[i].val; i++)
 	if(KB_ENCODING(wsenc) == kbdenc[i].val) {
