@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.129 2010/07/25 19:55:00 matthieu Exp $
+ $OpenBSD: MODULES,v 1.130 2010/07/27 21:59:03 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -96,8 +96,8 @@ driver/xf86-input-elographics	1.2.4	7.5+
 driver/xf86-input-fpit		1.3.0	7.4+	needs-release
 driver/xf86-input-hyperpen	1.3.0	7.4+	needs-release
 driver/xf86-input-joystick	1.5.0	7.5
-driver/xf86-input-keyboard	1.4.0	7.5	needs-update
-driver/xf86-input-mouse		1.5.0	7.5	needs-update
+driver/xf86-input-keyboard	1.4.0	7.5
+driver/xf86-input-mouse		1.5.0	7.5
 driver/xf86-input-mutouch	1.2.1	7.4+	needs-release
 driver/xf86-input-penmount	1.4.1	7.5+
 driver/xf86-input-vmmouse	12.6.9	7.5+
@@ -257,4 +257,4 @@ util/imake			1.0.3	7.5+
 util/macros			1.10.0	7.5+	needs-update
 util/makedepend			1.0.2	7.5
 
-xserver				1.8.2	7.5+	needs-update
+xserver				1.8.2	7.5+
