@@ -508,7 +508,7 @@ OpenKeyboard(InputInfoPtr pInfo)
     }
     if (KB_ENCODING(wsenc) == KB_USER) {
 	/* Ignore wscons "user" layout */
-	xf86Msg(X_INFO, "%s: ignoring \"user\" wscons layout", pInfo->name);
+	xf86Msg(X_INFO, "%s: ignoring \"user\" wscons layout\n", pInfo->name);
 	return TRUE;
     }
 
