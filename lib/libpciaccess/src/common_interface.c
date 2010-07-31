@@ -317,8 +317,8 @@ pci_device_map_range(struct pci_device *dev, pciaddr_t base,
         *addr =  mappings[devp->num_mappings].memory;
         devp->num_mappings++;
     } else {
-        mappings = realloc(devp->mappings,
-                           (sizeof(devp->mappings[0]) * devp->num_mappings));
+        mappings = realloc(mappings,
+                           (sizeof(mappings[0]) * devp->num_mappings));
     }
 
     devp->mappings = mappings;

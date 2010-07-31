@@ -83,7 +83,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(libpciaccessincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libpciaccess_la_DEPENDENCIES =
+am__DEPENDENCIES_1 =
+libpciaccess_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__libpciaccess_la_SOURCES_DIST = common_bridge.c common_iterator.c \
 	common_init.c common_interface.c common_io.c \
 	common_capability.c common_device_name.c common_map.c \
@@ -112,8 +113,7 @@ libpciaccess_la_OBJECTS = $(am_libpciaccess_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_scanpci_OBJECTS = scanpci.$(OBJEXT)
 scanpci_OBJECTS = $(am_scanpci_OBJECTS)
-@SOLARIS_FALSE@scanpci_DEPENDENCIES = libpciaccess.la
-@SOLARIS_TRUE@scanpci_DEPENDENCIES = libpciaccess.la
+scanpci_DEPENDENCIES = libpciaccess.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -299,15 +299,14 @@ libpciaccess_la_SOURCES = common_bridge.c \
 	$(OS_SUPPORT)
 
 INCLUDES = -I$(top_srcdir)/include
-libpciaccess_la_LIBADD = @PCIACCESS_LIBS@
+libpciaccess_la_LIBADD = $(PCIACCESS_LIBS)
 libpciaccess_la_LDFLAGS = -version-number 0:10:8 -no-undefined
 libpciaccessincludedir = $(includedir)
 libpciaccessinclude_HEADERS = \
     $(top_srcdir)/include/pciaccess.h
 
 scanpci_SOURCES = scanpci.c
-@SOLARIS_FALSE@scanpci_LDADD = libpciaccess.la
-@SOLARIS_TRUE@scanpci_LDADD = libpciaccess.la -ldevinfo
+scanpci_LDADD = libpciaccess.la
 all: all-am
 
 .SUFFIXES:
