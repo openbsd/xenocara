@@ -32,6 +32,7 @@ sessreg \- manage utmp/wtmp entries for non-init clients
 .B sessreg
 [-w \fIwtmp-file\fP]
 [-u \fIutmp-file\fP]
+[-L \fIlastlog-file\fP]
 [-l \fIline-name\fP]
 [-h \fIhost-name\fP]
 [-s \fIslot-number\fP]
@@ -42,7 +43,7 @@ sessreg \- manage utmp/wtmp entries for non-init clients
 \fIuser-name\fP
 .SH DESCRIPTION
 .PP
-\fISessreg\fP is a simple program for managing utmp/wtmp
+\fISessreg\fP is a simple program for managing utmp/wtmp and lastlog
 entries for xdm sessions.
 .PP
 System V has a better interface to utmp than BSD; it
@@ -93,6 +94,11 @@ The special name "none" disables writing records to the wtmp file.
 This specifies an alternate utmp file, instead of 
 .BR __utmp_file__ .
 The special name "none" disables writing records to the utmp file.
+.IP "\fB-L\fP \fIlastlog-file\fP"
+This specifies an alternate lastlog file, instead of
+.BR __lastlog_file__ ,
+if the platform supports lastlog files.
+The special name "none" disables writing records to the lastlog file.
 .IP "\fB-l\fP \fIline-name\fP"
 This describes the "line" name of the entry.  For terminal sessions,
 this is the final pathname segment of the terminal device filename
@@ -123,6 +129,7 @@ This session should be added to utmp/wtmp.
 This session should be deleted from utmp/wtmp.  One of -a/-d must
 be specified.
 .SH "SEE ALSO"
-xdm(__appmansuffix__)
+.BR xdm (__appmansuffix__),
+.BR __utmp_manpage__ (__filemansuffix__)
 .SH AUTHOR
 Keith Packard, MIT X Consortium

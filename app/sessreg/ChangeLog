@@ -1,3 +1,52 @@
+commit eb6ef63fb284cc91c04dcb68fda2ad8ca6fe0e1a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 11:11:42 2009 -0700
+
+    sessreg 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 46646524a74c1834de103a2f469142ab50f6bfd6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 11:03:01 2009 -0700
+
+    Document -L option for lastlog files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit a594e318996d0e8c02018eef1837135b382076c5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 10:50:51 2009 -0700
+
+    Add utmp/utmpx man page to See Also section of man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit be736ebbfc5510997ae227e903a5b9d66ba0ee1a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 12 10:44:07 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ebc9f3d2483623dcb2ccca7f12cc2769173eb4a9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:19 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3ba14d85abede72a40c5ba8fe18d1a2e1625d19e
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 19 15:47:29 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and all gcc 4.3 and sparse warnings.
+
 commit 3db21d655b0a2988ae0fd47e360d29bb8763cd03
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Jun 11 14:46:29 2008 -0700

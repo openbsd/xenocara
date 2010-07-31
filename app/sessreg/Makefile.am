@@ -20,7 +20,7 @@
 
 bin_PROGRAMS = sessreg
 
-AM_CFLAGS = $(SESSREG_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(SESSREG_CFLAGS)
 
 sessreg_SOURCES =	\
 	sessreg.h	\
@@ -57,13 +57,14 @@ MAN_SUBSTS = -f filenames.sed \
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 sessreg.$(APP_MAN_SUFFIX): filenames.sed
 
 filenames.sed: filenames.sed.c
-	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	    $(CPPFLAGS) $(srcdir)/filenames.sed.c | grep 's|__' > $@
+	$(AM_V_GEN)$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	    $(AM_CPPFLAGS) $(CPPFLAGS) $(srcdir)/filenames.sed.c | \
+	    grep 's|__' > $@
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -78,6 +79,6 @@ MAINTAINERCLEANFILES=ChangeLog
 .PHONY: ChangeLog
 
 ChangeLog:
-	git-log > ChangeLog
+	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog

@@ -66,6 +66,7 @@
  *
  * usage: sessreg [ -w <wtmp-file> ] [ -u <utmp-file> ]
  *		  [ -l <line> ]
+ *		  [ -L <lastlog-file> ]		      / #ifndef NO_LASTLOG
  *		  [ -h <host-name> ]				/ BSD only
  *		  [ -s <slot-number> ] [ -x Xservers-file ]	/ BSD only
  *		  [ -t <ttys-file> ]				/ BSD only
@@ -96,28 +97,28 @@ static void set_utmpx (struct utmpx *u, const char *line, const char *user,
 		       const char *host, Time_t date, int addp);
 #endif
 
-int	wflag, uflag, lflag;
-char	*wtmp_file, *utmp_file, *line;
+static int wflag, uflag, lflag;
+static char *wtmp_file, *utmp_file, *line;
 #ifdef USE_UTMPX
 static char *wtmpx_file = NULL, *utmpx_file = NULL;
 #endif
-int	utmp_none, wtmp_none;
+static int utmp_none, wtmp_none;
 /*
  * BSD specific variables.  To make life much easier for Xstartup/Xreset
  * maintainers, these arguments are accepted but ignored for sysV
  */
-int	hflag, sflag, xflag, tflag;
-char	*host_name = NULL;
-int	slot_number;
-char	*xservers_file, *ttys_file;
-char	*user_name;
-int	aflag, dflag;
+static int hflag, sflag, xflag, tflag;
+static char *host_name = NULL;
+static int slot_number;
+static char *xservers_file, *ttys_file;
+static char *user_name;
+static int aflag, dflag;
 #ifndef NO_LASTLOG
-char	*llog_file;
-int	llog_none, Lflag;
+static char *llog_file;
+static int llog_none, Lflag;
 #endif
 
-char	*program_name;
+static char *program_name;
 
 #ifndef SYSV
 static int findslot (char *line_name, char *host_name, int addp, int slot);
@@ -239,7 +240,7 @@ main (int argc, char **argv)
 		}
 	}
 	usage (!(user_name = *argv++));
-	usage (*argv != 0);
+	usage (*argv != NULL);
 	/*
 	 * complain if neither aflag nor dflag are set,
 	 * or if both are set.
