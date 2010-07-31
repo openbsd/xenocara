@@ -19,9 +19,6 @@
 .\" TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 .\" PERFORMANCE OF THIS SOFTWARE.
 .\"
-.\"
-.\" $XFree86: xc/programs/xrandr/xrandr.man,v 1.6 2003/06/12 14:12:39 eich Exp $
-.\"
 .TH XRANDR __appmansuffix__ __vendorversion__
 .SH NAME
 xrandr \- primitive command line interface to RandR extension
@@ -77,6 +74,7 @@ xrandr \- primitive command line interface to RandR extension
 [\-\-off]
 [\-\-crtc \fIcrtc\fP]
 [\-\-gamma \fIred\fP:\fIgreen\fP:\fIblue\fP]
+[\-\-brightness \fIbrightness\fP]
 
 .br
 .B RandR version 1.0 and version 1.1 options
@@ -104,7 +102,9 @@ Print out a summary of the usage and exit.
 Print out the RandR version reported by the X server and exit.
 .IP \-\-verbose
 Causes xrandr to be more verbose. When used with \-q (or without other
-options), xrandr will display more information about the server state. When
+options), xrandr will display more information about the server state. Please
+note that the gamma and brightness informations are only approximations of the
+complete color profile stored in the server. When
 used along with options that reconfigure the system, progress will be
 reported while executing the configuration changes.
 .IP "\-q, \-\-query"
@@ -150,22 +150,40 @@ size with \fI--fb\fP simultaneously.
 .IP "\-\-transform \fIa\fP,\fIb\fP,\fIc\fP,\fId\fP,\fIe\fP,\fIf\fP,\fIg\fP,\fIh\fP,\fIi\fP"
 Specifies a transformation matrix to apply on the output. Automatically a bilinear filter is selected.
 The mathematical form corresponds to:
-.RS 
-.RS 
+.RS
+.RS
 a b c
 .br
 d e f
 .br
 g h i
 .RE
-The transformation matrix multiplied by a coordinate vector of a pixel of the
-output (extended to 3 values) gives the approximate coordinate vector of a pixel
-in the graphic buffer. Typically, \fIa\fP and
+The transformation is based on homogeneous coordinates. The matrix multiplied
+by the coordinate vector of a pixel of the output gives the transformed
+coordinate vector of a pixel in the graphic buffer.  More precisely, the vector
+.RI "(x y)"
+of the output pixel is extended to 3 values
+.RI "(x y w),"
+with 1 as the w coordinate and multiplied against the matrix. The final device
+coordinates of the pixel are then calculated with the so-called homogenic
+division by the transformed w coordinate.  In other words, the device
+coordinates
+.RI "(x' y')"
+of the transformed pixel are:
+.RS
+x' = (ax + by + c) / w'   and
+.br
+y' = (dx + ey + f) / w'   ,
+.br
+with  w' = (gx + hy + i)  .
+.RE
+Typically, \fIa\fP and
 \fIe\fP corresponds to the scaling on the X and Y axes, \fIc\fP and \fIf\fP
-corresponds to the tranlastion on those axes, and \fIg\fP, \fIh\fP, and \fIi\fP
-are respectively 0, 0 and 1. It also allows to express a rotation of an angle T
-with:
-.RS 
+corresponds to the translation on those axes, and \fIg\fP, \fIh\fP, and \fIi\fP
+are respectively 0, 0 and 1. The matrix can also be used to express more
+complex transformations such as keystone correction, or rotation.  For a
+rotation of an angle T, this formula can be used:
+.RS
 cos T  -sin T   0
 .br
 sin T   cos T   0
@@ -268,8 +286,13 @@ for some reason, this option can override the normal selection.
 .IP "\-\-gamma \fIred\fP:\fIgreen\fP:\fIblue\fP"
 Set the specified floating point values as gamma correction on the crtc 
 currently attached to this output. Note that you cannot get two different values
-for cloned outputs and that switching an output to another crtc doesn't change
+for cloned outputs (i.e.: which share the same crtc) and that switching an output to another crtc doesn't change
 the crtc gamma corrections at all.
+.IP "\-\-brightness \fIbrightness\fP"
+Multiply the gamma values on the crtc currently attached to the output to
+specified floating value. Useful for overly bright or overly dim outputs.
+However, this is a software only modification, if your hardware has support to
+actually change the brightness, you will probably prefer to use \fBxbacklight\fR.
 .PP
 .SH "RandR version 1.1 options"
 These options are available for X servers supporting RandR version 1.1 or
@@ -313,8 +336,14 @@ big VGA screen display the surrounding of the mouse at normal size.
 .RS 
 xrandr --fb 3200x2000 --output LVDS --scale 2.5x2.5 --output VGA --pos 0x0 --panning 3200x2000+0+0/3200x2000+0+0/64/64/64/64
 .RE
+.PP
+Displays the VGA output in trapezoid shape so that it is keystone corrected
+when the projector is slightly above the screen:
+.RS 
+xrandr --fb 1024x768 --output VGA --transform 1.24,0.16,-124,0,1.24,0,0,0.000316,1
+.RE
 .SH "SEE ALSO"
-Xrandr(3), cvt(1)
+Xrandr(3), cvt(1), xkeystone(1), xbacklight(1)
 .SH AUTHORS
 Keith Packard,
 Open Source Technology Center, Intel Corporation.

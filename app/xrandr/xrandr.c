@@ -39,10 +39,6 @@
 
 #include "config.h"
 
-#if RANDR_MAJOR > 1 || (RANDR_MAJOR == 1 && RANDR_MINOR >= 2)
-#define HAS_RANDR_1_2 1
-#endif
-
 static char	*program_name;
 static Display	*dpy;
 static Window	root;
@@ -111,15 +107,10 @@ usage(void)
     fprintf(stderr, "  --verbose\n");
     fprintf(stderr, "  --dryrun\n");
     fprintf(stderr, "  --nograb\n");
-#if HAS_RANDR_1_2
     fprintf(stderr, "  --prop or --properties\n");
     fprintf(stderr, "  --fb <width>x<height>\n");
     fprintf(stderr, "  --fbmm <width>x<height>\n");
     fprintf(stderr, "  --dpi <dpi>/<output>\n");
-#if 0
-    fprintf(stderr, "  --clone\n");
-    fprintf(stderr, "  --extend\n");
-#endif
     fprintf(stderr, "  --output <output>\n");
     fprintf(stderr, "      --auto\n");
     fprintf(stderr, "      --mode <mode>\n");
@@ -149,7 +140,6 @@ usage(void)
     fprintf(stderr, "  --rmmode <name>\n");
     fprintf(stderr, "  --addmode <output> <name>\n");
     fprintf(stderr, "  --delmode <output> <name>\n");
-#endif
 
     exit(1);
     /*NOTREACHED*/
@@ -177,6 +167,12 @@ warning (const char *format, ...)
     fprintf (stderr, "%s: ", program_name);
     vfprintf (stderr, format, ap);
     va_end (ap);
+}
+
+/* Because fmin requires C99 suppport */
+static inline double dmin (double x, double y)
+{
+    return x < y ? x : y;
 }
 
 static char *
@@ -209,13 +205,12 @@ reflection_name (Rotation rotation)
     return "invalid reflection";
 }
 
-#if HAS_RANDR_1_2
-typedef enum _policy {
-    clone, extend
-} policy_t;
-
 typedef enum _relation {
-    left_of, right_of, above, below, same_as,
+    relation_left_of,
+    relation_right_of,
+    relation_above,
+    relation_below,
+    relation_same_as,
 } relation_t;
 
 typedef struct {
@@ -332,6 +327,8 @@ struct _output {
 	float green;
 	float blue;
     } gamma;
+
+    float	    brightness;
 
     Bool	    primary;
 
@@ -635,6 +632,7 @@ add_output (void)
 	fatal ("out of memory\n");
     output->next = NULL;
     output->found = False;
+    output->brightness = 1.0;
     *outputs_tail = output;
     outputs_tail = &output->next;
     return output;
@@ -945,6 +943,96 @@ output_is_primary(output_t *output)
     return False;
 }
 
+/* Returns the index of the last value in an array < 0xffff */
+static int
+find_last_non_clamped(CARD16 array[], int size) {
+    int i;
+    for (i = size - 1; i > 0; i--) {
+        if (array[i] < 0xffff)
+	    return i;
+    }
+    return 0;
+}
+
+static void
+set_gamma_info(output_t *output)
+{
+    XRRCrtcGamma *gamma;
+    double i1, v1, i2, v2;
+    int size, middle, last_best, last_red, last_green, last_blue;
+    CARD16 *best_array;
+
+    if (!output->crtc_info)
+	return;
+
+    size = XRRGetCrtcGammaSize(dpy, output->crtc_info->crtc.xid);
+    if (!size) {
+	warning("Failed to get size of gamma for output %s\n", output->output.string);
+	return;
+    }
+
+    gamma = XRRGetCrtcGamma(dpy, output->crtc_info->crtc.xid);
+    if (!gamma) {
+	warning("Failed to get gamma for output %s\n", output->output.string);
+	return;
+    }
+
+    /*
+     * Here is a bit tricky because gamma is a whole curve for each
+     * color.  So, typically, we need to represent 3 * 256 values as 3 + 1
+     * values.  Therefore, we approximate the gamma curve (v) by supposing
+     * it always follows the way we set it: a power function (i^g)
+     * multiplied by a brightness (b).
+     * v = i^g * b
+     * so g = (ln(v) - ln(b))/ln(i)
+     * and b can be found using two points (v1,i1) and (v2, i2):
+     * b = e^((ln(v2)*ln(i1) - ln(v1)*ln(i2))/ln(i1/i2))
+     * For the best resolution, we select i2 at the highest place not
+     * clamped and i1 at i2/2. Note that if i2 = 1 (as in most normal
+     * cases), then b = v2.
+     */
+    last_red = find_last_non_clamped(gamma->red, size);
+    last_green = find_last_non_clamped(gamma->green, size);
+    last_blue = find_last_non_clamped(gamma->blue, size);
+    best_array = gamma->red;
+    last_best = last_red;
+    if (last_green > last_best) {
+	last_best = last_green;
+	best_array = gamma->green;
+    }
+    if (last_blue > last_best) {
+	last_best = last_blue;
+	best_array = gamma->blue;
+    }
+    if (last_best == 0)
+	last_best = 1;
+
+    middle = last_best / 2;
+    i1 = (double)(middle + 1) / size;
+    v1 = (double)(best_array[middle]) / 65535;
+    i2 = (double)(last_best + 1) / size;
+    v2 = (double)(best_array[last_best]) / 65535;
+    if (v2 < 0.0001) { /* The screen is black */
+	output->brightness = 0;
+	output->gamma.red = 1;
+	output->gamma.green = 1;
+	output->gamma.blue = 1;
+    } else {
+	if ((last_best + 1) == size)
+	    output->brightness = v2;
+	else
+	    output->brightness = exp((log(v2)*log(i1) - log(v1)*log(i2))/log(i1/i2));
+	output->gamma.red = log((double)(gamma->red[last_red / 2]) / output->brightness
+				/ 65535) / log((double)((last_red / 2) + 1) / size);
+	output->gamma.green = log((double)(gamma->green[last_green / 2]) / output->brightness
+				  / 65535) / log((double)((last_green / 2) + 1) / size);
+	output->gamma.blue = log((double)(gamma->blue[last_blue / 2]) / output->brightness
+				 / 65535) / log((double)((last_blue / 2) + 1) / size);
+    }
+
+    XRRFreeGamma(gamma);
+}
+
 static void
 set_output_info (output_t *output, RROutput xid, XRROutputInfo *output_info)
 {
@@ -1057,6 +1145,10 @@ set_output_info (output_t *output, RROutput xid, XRROutputInfo *output_info)
 	       rotation_name (output->rotation),
 	       reflection_name (output->rotation));
 
+    /* set gamma */
+    if (!(output->changes & changes_gamma))
+	    set_gamma_info(output);
+
     /* set transformation */
     if (!(output->changes & changes_transform))
     {
@@ -1099,9 +1191,7 @@ get_crtcs (void)
     for (c = 0; c < res->ncrtc; c++)
     {
 	XRRCrtcInfo *crtc_info = XRRGetCrtcInfo (dpy, res, res->crtcs[c]);
-#if RANDR_MAJOR > 1 || RANDR_MINOR >= 3
 	XRRCrtcTransformAttributes  *attr;
-#endif
 	XRRPanning  *panning_info = NULL;
 
 	if (has_1_3) {
@@ -1127,7 +1217,6 @@ get_crtcs (void)
 	    crtcs[c].y = 0;
 	    crtcs[c].rotation = RR_Rotate_0;
 	}
-#if RANDR_MAJOR > 1 || RANDR_MINOR >= 3
 	if (XRRGetCrtcTransform (dpy, res->crtcs[c], &attr) && attr) {
 	    set_transform (&crtcs[c].current_transform,
 			   &attr->currentTransform,
@@ -1137,7 +1226,6 @@ get_crtcs (void)
 	    XFree (attr);
 	}
 	else
-#endif
 	{
 	    init_transform (&crtcs[c].current_transform);
 	}
@@ -1226,24 +1314,30 @@ set_gamma(void)
 	    continue;
 	}
 
+	if(output->gamma.red == 0.0 && output->gamma.green == 0.0 && output->gamma.blue == 0.0)
+	    output->gamma.red = output->gamma.green = output->gamma.blue = 1.0;
+
 	for (i = 0; i < size; i++) {
-	    if (output->gamma.red == 1.0)
-		gamma->red[i] = i << 8;
+	    if (output->gamma.red == 1.0 && output->brightness == 1.0)
+		gamma->red[i] = (i << 8) + i;
 	    else
-		gamma->red[i] = (CARD16)(pow((double)i/(double)(size - 1),
-			    (double)output->gamma.red) * (double)(size - 1) * 256);
+		gamma->red[i] = dmin(pow((double)i/(double)(size - 1),
+					 output->gamma.red) * output->brightness,
+				     1.0) * 65535.0;
 
-	    if (output->gamma.green == 1.0)
-		gamma->green[i] = i << 8;
+	    if (output->gamma.green == 1.0 && output->brightness == 1.0)
+		gamma->green[i] = (i << 8) + i;
 	    else
-		gamma->green[i] = (CARD16)(pow((double)i/(double)(size - 1),
-			    (double)output->gamma.green) * (double)(size - 1) * 256);
+		gamma->green[i] = dmin(pow((double)i/(double)(size - 1),
+					   output->gamma.green) * output->brightness,
+				       1.0) * 65535.0;
 
-	    if (output->gamma.blue == 1.0)
-		gamma->blue[i] = i << 8;
+	    if (output->gamma.blue == 1.0 && output->brightness == 1.0)
+		gamma->blue[i] = (i << 8) + i;
 	    else
-		gamma->blue[i] = (CARD16)(pow((double)i/(double)(size - 1),
-			    (double)output->gamma.blue) * (double)(size - 1) * 256);
+		gamma->blue[i] = dmin(pow((double)i/(double)(size - 1),
+					  output->gamma.blue) * output->brightness,
+				      1.0) * 65535.0;
 	}
 
 	XRRSetCrtcGamma(dpy, crtc->crtc.xid, gamma);
@@ -1769,23 +1863,23 @@ set_positions (void)
 	    }
 	    
 	    switch (output->relation) {
-	    case left_of:
+	    case relation_left_of:
 		output->y = relation->y;
 		output->x = relation->x - mode_width (output->mode_info, output->rotation);
 		break;
-	    case right_of:
+	    case relation_right_of:
 		output->y = relation->y;
 		output->x = relation->x + mode_width (relation->mode_info, relation->rotation);
 		break;
-	    case above:
+	    case relation_above:
 		output->x = relation->x;
 		output->y = relation->y - mode_height (output->mode_info, output->rotation);
 		break;
-	    case below:
+	    case relation_below:
 		output->x = relation->x;
 		output->y = relation->y + mode_height (relation->mode_info, relation->rotation);
 		break;
-	    case same_as:
+	    case relation_same_as:
 		output->x = relation->x;
 		output->y = relation->y;
 	    }
@@ -1886,7 +1980,6 @@ set_screen_size (void)
     }
 }
     
-#endif
 
 static void
 disable_outputs (output_t *outputs)
@@ -2022,7 +2115,7 @@ check_strtol(char *s)
     return result;
 }
 
-static int
+static double
 check_strtod(char *s)
 {
     char *endptr;
@@ -2042,7 +2135,8 @@ main (int argc, char **argv)
     short		*rates;
     Status	status = RRSetConfigFailed;
     int		rot = -1;
-    int		query = 0;
+    int		query = False;
+    int		action_requested = False;
     Rotation	rotation, current_rotation, rotations;
     XEvent	event;
     XRRScreenChangeNotifyEvent *sce;    
@@ -2060,9 +2154,7 @@ main (int argc, char **argv)
     int		width = 0, height = 0;
     Bool    	have_pixel_size = False;
     int		ret = 0;
-#if HAS_RANDR_1_2
     output_t	*output = NULL;
-    policy_t	policy = clone;
     Bool    	setit_1_2 = False;
     Bool    	query_1_2 = False;
     Bool	modeit = False;
@@ -2070,10 +2162,8 @@ main (int argc, char **argv)
     Bool	query_1 = False;
     int		major, minor;
     Bool	current = False;
-#endif
 
     program_name = argv[0];
-    if (argc == 1) query = True;
     for (i = 1; i < argc; i++) {
 	if (!strcmp ("-display", argv[i]) || !strcmp ("-d", argv[i])) {
 	    if (++i>=argc) usage ();
@@ -2082,6 +2172,7 @@ main (int argc, char **argv)
 	}
 	if (!strcmp("-help", argv[i])) {
 	    usage();
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--verbose", argv[i])) {
@@ -2099,8 +2190,6 @@ main (int argc, char **argv)
 	}
 	if (!strcmp("--current", argv[i])) {
 	    current = True;
-	    /* if --current was the only arg, then query */
-	    if (argc == 2) query = True;
 	    continue;
 	}
 
@@ -2113,6 +2202,7 @@ main (int argc, char **argv)
                 if (size < 0) usage();
             }
 	    setit = True;
+	    action_requested = True;
 	    continue;
 	}
 
@@ -2123,30 +2213,32 @@ main (int argc, char **argv)
 	    if (++i>=argc) usage ();
 	    rate = check_strtod(argv[i]);
 	    setit = True;
-#if HAS_RANDR_1_2
 	    if (output)
 	    {
 		output->refresh = rate;
 		output->changes |= changes_refresh;
 		setit_1_2 = True;
 	    }
-#endif
+	    action_requested = True;
 	    continue;
 	}
 
 	if (!strcmp ("-v", argv[i]) || !strcmp ("--version", argv[i])) {
 	    version = True;
+	    action_requested = True;
 	    continue;
 	}
 
 	if (!strcmp ("-x", argv[i])) {
 	    reflection |= RR_Reflect_X;
 	    setit = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("-y", argv[i])) {
 	    reflection |= RR_Reflect_Y;
 	    setit = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--screen", argv[i])) {
@@ -2171,9 +2263,9 @@ main (int argc, char **argv)
 	    }
 	    rot = dirind;
 	    setit = True;
+	    action_requested = True;
 	    continue;
 	}
-#if HAS_RANDR_1_2
 	if (!strcmp ("--prop", argv[i]) ||
 	    !strcmp ("--props", argv[i]) ||
 	    !strcmp ("--madprops", argv[i]) ||
@@ -2181,6 +2273,7 @@ main (int argc, char **argv)
 	{
 	    query_1_2 = True;
 	    properties = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--output", argv[i])) {
@@ -2193,6 +2286,7 @@ main (int argc, char **argv)
 	    }
 	    
 	    setit_1_2 = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--crtc", argv[i])) {
@@ -2253,7 +2347,7 @@ main (int argc, char **argv)
 	if (!strcmp ("--left-of", argv[i])) {
 	    if (++i>=argc) usage ();
 	    if (!output) usage();
-	    output->relation = left_of;
+	    output->relation = relation_left_of;
 	    output->relative_to = argv[i];
 	    output->changes |= changes_relation;
 	    continue;
@@ -2261,7 +2355,7 @@ main (int argc, char **argv)
 	if (!strcmp ("--right-of", argv[i])) {
 	    if (++i>=argc) usage ();
 	    if (!output) usage();
-	    output->relation = right_of;
+	    output->relation = relation_right_of;
 	    output->relative_to = argv[i];
 	    output->changes |= changes_relation;
 	    continue;
@@ -2269,7 +2363,7 @@ main (int argc, char **argv)
 	if (!strcmp ("--above", argv[i])) {
 	    if (++i>=argc) usage ();
 	    if (!output) usage();
-	    output->relation = above;
+	    output->relation = relation_above;
 	    output->relative_to = argv[i];
 	    output->changes |= changes_relation;
 	    continue;
@@ -2277,7 +2371,7 @@ main (int argc, char **argv)
 	if (!strcmp ("--below", argv[i])) {
 	    if (++i>=argc) usage ();
 	    if (!output) usage();
-	    output->relation = below;
+	    output->relation = relation_below;
 	    output->relative_to = argv[i];
 	    output->changes |= changes_relation;
 	    continue;
@@ -2285,7 +2379,7 @@ main (int argc, char **argv)
 	if (!strcmp ("--same-as", argv[i])) {
 	    if (++i>=argc) usage ();
 	    if (!output) usage();
-	    output->relation = same_as;
+	    output->relation = relation_same_as;
 	    output->relative_to = argv[i];
 	    output->changes |= changes_relation;
 	    continue;
@@ -2330,6 +2424,15 @@ main (int argc, char **argv)
 	    setit_1_2 = True;
 	    continue;
 	}
+	if (!strcmp ("--brightness", argv[i])) {
+	    if (!output) usage();
+	    if (++i>=argc) usage();
+	    if (sscanf(argv[i], "%f", &output->brightness) != 1)
+		usage ();
+	    output->changes |= changes_gamma;
+	    setit_1_2 = True;
+	    continue;
+	}
 	if (!strcmp ("--primary", argv[i])) {
 	    if (!output) usage();
 	    output->changes |= changes_primary;
@@ -2360,6 +2463,7 @@ main (int argc, char **argv)
 	if (!strcmp ("--scale", argv[i]))
 	{
 	    double  sx, sy;
+	    if (!output) usage();
 	    if (++i>=argc) usage();
 	    if (sscanf (argv[i], "%lfx%lf", &sx, &sy) != 2)
 		usage ();
@@ -2379,6 +2483,7 @@ main (int argc, char **argv)
 	if (!strcmp ("--transform", argv[i])) {
 	    double  transform[3][3];
 	    int	    k, l;
+	    if (!output) usage();
 	    if (++i>=argc) usage ();
 	    init_transform (&output->transform);
 	    if (strcmp (argv[i], "none") != 0)
@@ -2414,6 +2519,7 @@ main (int argc, char **argv)
 			&fb_width, &fb_height) != 2)
 		usage ();
 	    setit_1_2 = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--fbmm", argv[i])) {
@@ -2422,6 +2528,7 @@ main (int argc, char **argv)
 			&fb_width_mm, &fb_height_mm) != 2)
 		usage ();
 	    setit_1_2 = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--dpi", argv[i])) {
@@ -2434,16 +2541,7 @@ main (int argc, char **argv)
 		dpi_output = argv[i];
 	    }
 	    setit_1_2 = True;
-	    continue;
-	}
-	if (!strcmp ("--clone", argv[i])) {
-	    policy = clone;
-	    setit_1_2 = True;
-	    continue;
-	}
-	if (!strcmp ("--extend", argv[i])) {
-	    policy = extend;
-	    setit_1_2 = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--auto", argv[i])) {
@@ -2455,6 +2553,7 @@ main (int argc, char **argv)
 	    else
 		automatic = True;
 	    setit_1_2 = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--q12", argv[i]))
@@ -2505,6 +2604,7 @@ main (int argc, char **argv)
 	    m->action = umode_create;
 	    umodes = m;
 	    modeit = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--rmmode", argv[i]))
@@ -2517,6 +2617,7 @@ main (int argc, char **argv)
 	    m->next = umodes;
 	    umodes = m;
 	    modeit = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--addmode", argv[i]))
@@ -2531,6 +2632,7 @@ main (int argc, char **argv)
 	    m->next = umodes;
 	    umodes = m;
 	    modeit = True;
+	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("--delmode", argv[i]))
@@ -2545,11 +2647,13 @@ main (int argc, char **argv)
 	    m->next = umodes;
 	    umodes = m;
 	    modeit = True;
+	    action_requested = True;
 	    continue;
 	}
-#endif
 	usage();
     }
+    if (!action_requested)
+	    query = True;
     if (verbose) 
     {
 	query = True;
@@ -2575,7 +2679,6 @@ main (int argc, char **argv)
 
     root = RootWindow (dpy, screen);
 
-#if HAS_RANDR_1_2
     if (!XRRQueryVersion (dpy, &major, &minor))
     {
 	fprintf (stderr, "RandR extension missing\n");
@@ -2910,6 +3013,11 @@ main (int argc, char **argv)
 		printf ("\tIdentifier: 0x%x\n", (int)output->output.xid);
 		printf ("\tTimestamp:  %d\n", (int)output_info->timestamp);
 		printf ("\tSubpixel:   %s\n", order[output_info->subpixel_order]);
+	        if (output->gamma.red != 0.0 && output->gamma.green != 0.0 && output->gamma.blue != 0.0) {
+		    printf ("\tGamma:      %#.2g:%#.2g:%#.2g\n",
+			    output->gamma.red, output->gamma.green, output->gamma.blue);
+		    printf ("\tBrightness: %#.2g\n", output->brightness);
+		}
 		printf ("\tClones:    ");
 		for (j = 0; j < output_info->nclone; j++)
 		{
@@ -3127,7 +3235,6 @@ main (int argc, char **argv)
 	}
 	exit (0);
     }
-#endif
     
     sc = XRRGetScreenInfo (dpy, root);
 

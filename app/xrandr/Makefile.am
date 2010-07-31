@@ -30,7 +30,7 @@ xkeystone: keystone.5c
 clean-local:
 	rm -f xkeystone
 
-AM_CFLAGS = $(XRANDR_CFLAGS)
+AM_CFLAGS = $(XRANDR_CFLAGS) $(CWARNFLAGS)
 xrandr_LDADD = $(XRANDR_LIBS)
 
 xrandr_SOURCES =	\
@@ -44,6 +44,7 @@ appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 EXTRA_DIST = $(appman_PRE) xrandr_test.pl keystone.5c
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = $(appman_DATA)
 
 SED = sed
@@ -70,13 +71,14 @@ SUFFIXES = .$(APP_MAN_SUFFIX) .man
 .man.$(APP_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 
