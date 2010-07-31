@@ -1,3 +1,185 @@
+commit 6da66cd144e309a6f79f4f6c315fe6ef0f3d5b19
+Merge: 859a3fb fd058da
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Apr 3 18:47:26 2010 +0200
+
+    Merge remote branch 'origin/master' into obsd
+
+commit fd058da6c1931fa824dd8c07e9130054176fedd7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 26 17:50:23 2010 -0400
+
+    xprint: remove conditional code regarding xprint
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a69c6665e3ad30cfc86acbb7e2c75a0b7b6efa57
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 26 17:49:09 2010 -0400
+
+    config: remove xprint option
+    
+    xprint/xaw8 are obsolete and have been removed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 859a3fb6f3ea901c0dd4f54d87072967d80534e1
+Merge: 6c4981c a666197
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Feb 14 16:13:16 2010 +0100
+
+    Merge remote branch 'origin/master' into obsd
+
+commit a6661974f8bfc0761e5f4e3a1970448e49ef6032
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 11 10:08:07 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6c4981c33fc5f21b29bafabab5b0c9c2ce1aeb81
+Merge: e1ec00b 068dd4c
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jan 2 17:26:04 2010 +0100
+
+    Merge remote branch 'origin/master' into obsd
+
+commit 068dd4ce2ecb8d0225a60c736df8cc102e6edf01
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 21 08:34:37 2009 +1000
+
+    Remove two unused variables.
+    
+    xset.c: In function ‘query’:
+    xset.c:1388: warning: unused variable ‘ind’
+    xset.c:1387: warning: unused variable ‘state’
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9caf24453cc4c2443bda9042a68a953b75ed46f1
+Author: Simon Thum <simon.thum@gmx.de>
+Date:   Sun Oct 18 17:49:41 2009 +0200
+
+    xset: update info about pointer acceleration
+    
+    Also, try to avoid confusion in the description of
+    what acceleration means.
+    
+    Signed-off-by: Simon Thum <simon.thum@gmx.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e1ec00b7c68717e44e774ff7b9c1413a8394a855
+Merge: 992cbbe ee1e2d0
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Dec 20 00:47:30 2009 +0100
+
+    Merge remote branch 'origin/master' into obsd
+
+commit ee1e2d02454a8e4c36bbda295f6bae639180b9d8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 992cbbe3d1559db0fd49f19a820f31f9e6d746c2
+Merge: 274520f c4d0fea
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Nov 1 17:33:53 2009 +0100
+
+    Merge remote branch 'origin/master' into obsd
+
+commit 66b43cf00484f8c03bbfc1dafe38a9d9eaf6476b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit dbe65fac2a67e5408d683db889995cfe4857b8dc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 26ac8d55dc2562a377d02fe6e227f576228b23e0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 66e958486043099d813006fc684d5a1d238b1414
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit c4d0feaff96cec160b1d81977525bbc5e5406352
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:21 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit 274520f3d6b3a60b9437cb763f3552fbbbd6ed0f
+Merge: 80a70cb c40fd8f
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Oct 14 23:34:01 2009 +0200
+
+    Merge remote branch 'origin/master' into obsd
+
+commit c40fd8f7d4b6ffa068fa692134218d8fb3f2a40e
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Oct 13 11:35:08 2009 -0700
+
+    Added --without-{xf86misc,xprint,fontcache} configure time options
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit 80a70cbadb09f92c6af7bd1c9126568481762c68
+Merge: 74c47be 434c62e
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Sep 25 21:44:10 2009 +0200
+
+    Merge remote branch 'origin/master' into obsd
+
 commit 434c62e22aeed94b7b84ec613ba066ac6aa7c14b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Sep 21 15:48:57 2009 -0700
@@ -13,6 +195,13 @@ Date:   Mon Sep 21 15:42:08 2009 -0700
     Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 74c47be1613e7231de1a256d433890e9d6f53303
+Merge: 7ba43f4 3341f13
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jul 5 14:41:57 2009 +0200
+
+    Merge commit 'origin/master' into obsd
 
 commit 3341f135515f6f2e5b0c40f5ec0a8fb59d4cb1ed
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -47,6 +236,13 @@ Date:   Tue Jun 16 13:14:47 2009 -0700
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
+commit 7ba43f4e7e157897f7d86f8dab632a343839a985
+Merge: 529e4ae 8ce473c
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri May 1 18:36:17 2009 +0200
+
+    Merge commit 'origin/master' into obsd
+
 commit 8ce473c45da07eb82537509a4d14ccb50262bfa7
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Apr 29 13:57:47 2009 -0700
@@ -70,11 +266,24 @@ Date:   Tue Apr 28 16:11:56 2009 +0200
     Debian bug#525255 <http://bugs.debian.org/525255>
     Reported-by: "A. Costa" <agcosta@gis.net>
 
+commit 529e4ae959c7fa82357c2cd1528fc5f9d64fd1e2
+Merge: b9d5d73 3d11462
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Feb 4 22:19:56 2009 +0100
+
+    Merge commit 'origin/master' into obsd
+
 commit 3d1146293d84cecaff18aa44b95539910e24ef11
 Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
 Date:   Mon Jan 26 18:03:23 2009 -0200
 
     Correct make distcheck and most sparse warnings.
+
+commit b9d5d7323cf5f71b81120335bf54a8d51ba279ed
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Mar 8 19:24:15 2008 +0100
+
+    BSD Makefile
 
 commit 9f79fc8957d595cc9f7131ee5230b5bb3aae0679
 Author: Adam Jackson <ajax@redhat.com>
@@ -115,7 +324,7 @@ Date:   Thu Nov 15 00:04:34 2007 +0200
     the docs.
 
 commit 6d56c1f8d25ce84c797c3b72070073bc44d1a7ac
-Merge: c4f7c40... 3decc85...
+Merge: c4f7c40 3decc85
 Author: James Cloos <cloos@jhcloos.com>
 Date:   Mon Sep 3 06:02:50 2007 -0400
 

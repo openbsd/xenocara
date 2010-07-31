@@ -188,13 +188,16 @@ xset led named "Scroll Lock"
 .TP 8
 .B mouse
 The \fBm\fP option controls the mouse parameters; it may be
-abbreviated to 'm'.
-The parameters for the mouse are `acceleration' and `threshold'.
-The acceleration can be specified as an integer, or as a simple
-fraction.
-The mouse, or whatever pointer the machine is connected to,
-will go `acceleration' times as fast when it travels more than `threshold'
-pixels in a short time.  This way, the mouse can be used for precise
+abbreviated to 'm'. Of course, it applies to most pointing devices, not just
+mice. The parameters for the pointing device are `acceleration' and
+`threshold'. The acceleration can be specified as an integer, or as a simple
+fraction. Threshold is just an integer. The setting is applied to all connected
+pointing devices. xinput(1) should be used if you need device-specific settings.
+.PP
+By default the pointer (the on-screen representation of the pointing device)
+will go `acceleration' times as fast when the device travels more than
+`threshold' mickeys (i.e. would-be pixels) in 10 ms, including a small
+transition range. This way, the pointing device can be used for precise
 alignment when it is moved slowly, yet it can be set to travel across
 the screen in a flick of the wrist when desired.  One or both
 parameters for the 
@@ -203,13 +206,20 @@ option can be omitted, but if only one is
 given, it will be interpreted as the acceleration.
 If no parameters or the flag 'default' is used, the system defaults will
 be set.
-
+.PP
 If the `threshold' parameter is provided and 0, the `acceleration'
 parameter will be used in the exponent of a more natural and continuous
 formula, giving precise control for slow motion but big reach for fast
 motion, and a progressive transition for motions in between.
-Recommended `acceleration' value in this case is 3/2 to 2, but not
+Recommended `acceleration' value in this case is 3/2 to 3, but not
 limited to that range.
+.PP
+In the X.org X Server 1.6 and above, the behaviour described so far is linked
+to the default profile. There are other profiles (i.e. functions determining
+pointer acceleration from device velocity) and additional settings, so the
+above description may not apply to non-default cases. In the X.org Server 1.7,
+these are available as input device properties (see xinput).
+
 .PP
 .TP 8
 .B p
@@ -280,7 +290,7 @@ These settings will be reset to default values when you log out.
 Note that not all X implementations are guaranteed to honor all of these
 options.
 .SH "SEE ALSO"
-X(__miscmansuffix__), Xserver(1), xmodmap(1), xrdb(1), xsetroot(1)
+X(__miscmansuffix__), Xserver(1), xmodmap(1), xrdb(1), xsetroot(1), xinput(1)
 .SH AUTHOR
 Bob Scheifler, MIT Laboratory for Computer Science
 .br

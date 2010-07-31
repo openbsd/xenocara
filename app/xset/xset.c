@@ -50,10 +50,6 @@ in this Software without prior written authorization from The Open Group.
 # define XF86MISC
 #endif
 
-#if defined(HAVE_X11_EXTENSIONS_PRINT_H)
-# define BUILD_PRINTSUPPORT
-#endif
-
 #if defined(HAVE_X11_EXTENSIONS_FONTCACHE_H) && defined(HAVE_X11_EXTENSIONS_FONTCACHEP_H)
 # define FONTCACHE
 #endif
@@ -107,9 +103,6 @@ in this Software without prior written authorization from The Open Group.
 
 static Status set_font_cache(Display *, long, long, long);
 static void query_cache_status(Display *dpy);
-#endif
-#ifdef BUILD_PRINTSUPPORT
-# include <X11/extensions/Print.h>
 #endif
 
 #define ON 1
@@ -376,19 +369,6 @@ main(int argc, char *argv[])
 	    } else {
 		fprintf(stderr,
 			"server does not have extension for fc option\n");
-	    }
-	}
-#endif
-#ifdef BUILD_PRINTSUPPORT
-	else if (strcmp(arg, "rehashprinterlist") == 0) {
-	    /* rehash list of printers */
-	    short dummy;
-
-	    if (XpQueryVersion(dpy, &dummy, &dummy)) {
-		XpRehashPrinterList(dpy);
-	    } else {
-		fprintf(stderr,
-			"server does not have extension for rehashprinterlist option\n");
 	    }
 	}
 #endif
@@ -1384,9 +1364,6 @@ query(Display *dpy)
 
 	    if (XGetAtomNames(dpy, iatoms, j, iatomnames)) {
 		for (i = 0; i < j; i++) {
-		    Bool state;
-		    int ind;
-
 		    if (XkbGetNamedIndicator(dpy, iatoms[i], &inds[i],
 					     &istates[i], NULL, NULL)) {
 			int namelen = strlen(iatomnames[i]);
@@ -1684,11 +1661,6 @@ usage(char *fmt, ...)
     fprintf(stderr, "\t    balance value spcecified in percent (10 - 90)\n");
     fprintf(stderr, "    Show font cache statistics:\n");
     fprintf(stderr, "\t fc s\n");
-#endif
-#ifdef BUILD_PRINTSUPPORT
-    fprintf(stderr, "    To control Xprint features:\n");
-    fprintf(stderr,
-	"\t rehashprinterlist      Recomputes the list of available printers\n");
 #endif
     fprintf(stderr, "    To set the font path:\n");
     fprintf(stderr, "\t fp= path[,path...]\n");

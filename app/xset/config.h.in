@@ -42,9 +42,6 @@
 /* Define to 1 if you have the <X11/extensions/MITMisc.h> header file. */
 #undef HAVE_X11_EXTENSIONS_MITMISC_H
 
-/* Define to 1 if you have the <X11/extensions/Print.h> header file. */
-#undef HAVE_X11_EXTENSIONS_PRINT_H
-
 /* Define to 1 if you have the <X11/extensions/xf86misc.h> header file. */
 #undef HAVE_X11_EXTENSIONS_XF86MISC_H
 

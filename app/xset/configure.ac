@@ -21,19 +21,20 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xset,[1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xset)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(xset,[1.2.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xset)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
 AC_PROG_INSTALL
 
-XORG_DEFAULT_OPTIONS
 
 # Checks for system functions
 AC_CHECK_FUNCS([usleep])
@@ -56,28 +57,34 @@ PKG_CHECK_MODULES(SET_XKB, x11,
 	AC_CHECK_HEADERS([X11/XKBlib.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
-PKG_CHECK_MODULES(SET_XF86MISC, xxf86misc, 
-	[SAVE_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS $SET_XF86MISC_CFLAGS $SET_X11_CFLAGS"
-	AC_CHECK_HEADERS([X11/extensions/xf86misc.h X11/extensions/xf86mscstr.h],,,
-			  [#include <X11/Xlib.h>
+AC_ARG_WITH(xf86misc, AC_HELP_STRING([--without-xf86misc],[Disable xf86misc support.]), 
+                [USE_XF86MISC="$withval"], [USE_XF86MISC="yes"])
+if test "x$USE_XF86MISC" != "xno" ; then
+	PKG_CHECK_MODULES(SET_XF86MISC, xxf86misc, 
+		[SAVE_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS $SET_XF86MISC_CFLAGS $SET_X11_CFLAGS"
+		AC_CHECK_HEADERS([X11/extensions/xf86misc.h X11/extensions/xf86mscstr.h],,,
+				  [#include <X11/Xlib.h>
 #include <X11/Xproto.h>])
-	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+		CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+else
+        echo "without xf86misc"
+fi
 
-PKG_CHECK_MODULES(SET_FONTCACHE, xfontcache,
-	[SAVE_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS $SET_FONTCACHE_CFLAGS $SET_X11_CFLAGS"
-	AC_CHECK_HEADERS([X11/extensions/fontcache.h X11/extensions/fontcacheP.h],,,[#include <X11/Xlib.h>])
-	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+AC_ARG_WITH(fontcache, AC_HELP_STRING([--without-fontcache],[Disable fontcache support.]),
+                [USE_XFONTCACHE="$withval"], [USE_XFONTCACHE="yes"])
+if test "x$USE_XFONTCACHE" != "xno" ; then
+	PKG_CHECK_MODULES(SET_FONTCACHE, xfontcache,
+		[SAVE_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS $SET_FONTCACHE_CFLAGS $SET_X11_CFLAGS"
+		AC_CHECK_HEADERS([X11/extensions/fontcache.h X11/extensions/fontcacheP.h],,,[#include <X11/Xlib.h>])
+		CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
+else
+	echo "without fontcache"
+fi
 
-PKG_CHECK_MODULES(SET_XPRINT, xp, 
-	[SAVE_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS $SET_XPRINT_CFLAGS $SET_X11_CFLAGS"
-	AC_CHECK_HEADERS([X11/extensions/Print.h],,,[#include <X11/Xlib.h>])
-	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
-
-XSET_CFLAGS="$CWARNFLAGS $XSET_CFLAGS $SET_XEXT_CFLAGS $SET_XKB_CFLAGS $SET_XF86MISC_CFLAGS $SET_FONTCACHE_CFLAGS $SET_XPRINT_CFLAGS"
-XSET_LIBS="$XSET_LIBS $SET_XEXT_LIBS $SET_XKB_LIBS $SET_XF86MISC_LIBS $SET_FONTCACHE_LIBS $SET_XPRINT_LIBS"
+XSET_CFLAGS="$XSET_CFLAGS $SET_XEXT_CFLAGS $SET_XKB_CFLAGS $SET_XF86MISC_CFLAGS $SET_FONTCACHE_CFLAGS"
+XSET_LIBS="$XSET_LIBS $SET_XEXT_LIBS $SET_XKB_LIBS $SET_XF86MISC_LIBS $SET_FONTCACHE_LIBS"
 
 AC_SUBST(XSET_CFLAGS)
 AC_SUBST(XSET_LIBS)
