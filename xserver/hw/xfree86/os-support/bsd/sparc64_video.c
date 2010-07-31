@@ -48,6 +48,8 @@ static void sparc64UnmapVidMem(int, pointer, unsigned long);
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
+	xf86OpenConsole();
+
 	pVidMem->linearSupported = TRUE;
 	pVidMem->mapMem = sparc64MapVidMem;
 	pVidMem->unmapMem = sparc64UnmapVidMem;

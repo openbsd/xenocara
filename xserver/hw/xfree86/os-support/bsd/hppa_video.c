@@ -1,4 +1,4 @@
-/* $OpenBSD: hppa_video.c,v 1.2 2009/12/18 22:47:56 matthieu Exp $ */
+/* $OpenBSD: hppa_video.c,v 1.3 2010/07/31 17:47:50 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -51,6 +51,8 @@ static void hppaUnmapVidMem(int, pointer, unsigned long);
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
+	xf86OpenConsole();
+
 	pVidMem->linearSupported = TRUE;
 	pVidMem->mapMem = hppaMapVidMem;
 	pVidMem->unmapMem = hppaUnmapVidMem;

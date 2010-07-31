@@ -62,6 +62,8 @@ void xf86DisableIO(void);
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
+	xf86OpenConsole();
+
 	pVidMem->linearSupported = TRUE;
 	pVidMem->mapMem = ppcMapVidMem;
 	pVidMem->unmapMem = ppcUnmapVidMem;

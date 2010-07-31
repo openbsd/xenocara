@@ -170,11 +170,9 @@ xf86OpenConsole()
     vtmode_t vtmode;
 #endif
     
-#ifdef X_PRIVSEP
     if (xf86Info.consoleFd != -1) {
 	    return;
     }
-#endif
     if (serverGeneration == 1)
     {
 	/* check if we are run with euid==0 */
