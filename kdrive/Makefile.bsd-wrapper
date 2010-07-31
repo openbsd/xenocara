@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2009/10/03 09:58:38 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2010/07/31 07:40:58 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -10,6 +10,7 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-dri-driver-path=${LIBDIR}/modules/dri \
 		--enable-dri \
 		--disable-xorg \
+		--disable-xace \
 		--enable-kdrive \
 		--disable-dmx \
 		--disable-xnest \
