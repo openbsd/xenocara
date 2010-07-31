@@ -1,3 +1,105 @@
+commit 7f1e17aed0027e4040a1fcc96e6319fca36af233
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 3 17:32:57 2010 -0700
+
+    sessreg 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8808c476319fce3e254e3a7df3205ba4205cb13b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 3 14:12:28 2010 -0500
+
+    Add AC_USE_SYSTEM_EXTENSIONS providing needed WTMPX_FILE define
+    
+    The WTMPX_FILE is only defined under __USE_GNU conditional
+    compilation. Autoconf provides AC_USE_SYSTEM_EXTENSIONS
+    to enable platform extensions.
+    
+    It must be expanded before any other macros that uses the compiler.
+    To reduce the risk of being misplaced, the statements have been
+    grouped (mostly) as per the GNU standard layout.This macro
+    requires Autoconf level 2.60 or later.
+    
+    The compilation failed under a GNU-Linux OS.
+    
+    Tested-by (on darwin): Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9792646873ac0e597cc65ef4a056444fd8f9a7fd
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sat Jan 16 18:33:53 2010 +0000
+
+    Allow sessreg to be built without <utmp.h>.
+    
+    As of 9.0, FreeBSD will only support <utmpx.h>.  It only implements the
+    POSIX interface with minor extensions.  There is no need to write to
+    wtmp and lastlog separately, because this is already done by
+    pututxline().  Add additional checks to configure.ac to search for the
+    presence of utmpxname() and updwtmpx().
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9ca078f8ffc5ab0c4d0f58be26e885a7ad0b8f39
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Jan 11 21:04:28 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1b12b1dac6fcb0d1665f3272a899d78c76fd2969
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 8 13:30:45 2010 -0500
+
+    COPYING: add missing copyright notice
+    
+    Refer to sessreg.h file.
+    Copyright 2005 Sun Microsystems, Inc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 067fef75045931b4b5766ee7e55300d16e6dcc9a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:52 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 94be0a4794dd9e9d9e7f23737c6ccd2d50985b5d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:07 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 88252d8bdccbf5dd3ee077345ccd1569fb4f10e6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:38 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 9ea98936be23de9a2d9e27c5f5af93b0eea276d9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:14 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit eb6ef63fb284cc91c04dcb68fda2ad8ca6fe0e1a
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Oct 12 11:11:42 2009 -0700

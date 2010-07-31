@@ -20,26 +20,35 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(sessreg, [1.0.5],
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT(sessreg, [1.0.6],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	sessreg)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+AC_CANONICAL_HOST
+AC_USE_SYSTEM_EXTENSIONS
+AC_SYS_LARGEFILE
+
+# Initialize Automake
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-AM_CONFIG_HEADER(config.h)
-
-# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+	  [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+XORG_DEFAULT_OPTIONS
+XORG_WITH_LINT
 
+# Checks for programs.
 AC_PROG_CC
+AC_PROG_CC_C99
 AC_PROG_INSTALL
 
-XORG_DEFAULT_OPTIONS
-
-AC_CHECK_HEADERS([lastlog.h utmpx.h sys/param.h])
+# Checks for header files.
+AC_CHECK_HEADERS([lastlog.h utmp.h utmpx.h sys/param.h])
 AC_CHECK_MEMBER([struct utmpx.ut_syslen],
 		HAVE_SYSLEN=1,
 		HAVE_SYSLEN=0,
@@ -47,13 +56,11 @@ AC_CHECK_MEMBER([struct utmpx.ut_syslen],
 AC_DEFINE_UNQUOTED(HAVE_UTMPX_UT_SYSLEN,$HAVE_SYSLEN,
 		   [utmpx structure includes ut_syslen field])
 
-AC_SYS_LARGEFILE
+# Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_FUNCS([updwtmpx utmpxname])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(SESSREG, xproto)
 AC_SUBST(SESSREG_CFLAGS)
-
-# Allow checking code with lint, sparse, etc.
-XORG_WITH_LINT
 
 AC_OUTPUT([Makefile])

@@ -28,29 +28,23 @@
 /* Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, and/or sell copies of the Software, and to permit persons
- * to whom the Software is furnished to do so, provided that the above
- * copyright notice(s) and this permission notice appear in all copies of
- * the Software and that both the above copyright notice(s) and this
- * permission notice appear in supporting documentation.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
- * OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
- * INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
- * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- * 
- * Except as contained in this notice, the name of a copyright holder
- * shall not be used in advertising or otherwise to promote the sale, use
- * or other dealings in this Software without prior written authorization
- * of the copyright holder.
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 /*
@@ -81,7 +75,6 @@
 # include	<X11/Xfuncs.h>
 # include	<stdio.h>
 # include	<stdlib.h>
-# include	<utmp.h>
 
 #if defined(__SVR4) || defined(SVR4) || defined(linux) || defined(__GLIBC__)
 # define SYSV
@@ -90,7 +83,10 @@
 #include <time.h>
 #define Time_t time_t
 
-static void set_utmp (struct utmp *u, char *line, char *user, char *host, Time_t date, int addp);
+#ifdef USE_UTMP
+static void set_utmp (struct utmp *u, char *line, char *user, char *host,
+		      Time_t date, int addp);
+#endif
 
 #ifdef USE_UTMPX
 static void set_utmpx (struct utmpx *u, const char *line, const char *user,
@@ -100,7 +96,12 @@ static void set_utmpx (struct utmpx *u, const char *line, const char *user,
 static int wflag, uflag, lflag;
 static char *wtmp_file, *utmp_file, *line;
 #ifdef USE_UTMPX
-static char *wtmpx_file = NULL, *utmpx_file = NULL;
+#ifdef HAVE_UPDWTMPX
+static char *wtmpx_file = NULL;
+#endif
+#ifdef HAVE_UTMPXNAME
+static char *utmpx_file = NULL;
+#endif
 #endif
 static int utmp_none, wtmp_none;
 /*
@@ -109,7 +110,9 @@ static int utmp_none, wtmp_none;
  */
 static int hflag, sflag, xflag, tflag;
 static char *host_name = NULL;
+#ifdef USE_UTMP
 static int slot_number;
+#endif
 static char *xservers_file, *ttys_file;
 static char *user_name;
 static int aflag, dflag;
@@ -181,7 +184,7 @@ sysnerr (int x, const char *s)
 int
 main (int argc, char **argv)
 {
-#ifndef SYSV
+#if defined(USE_UTMP) && !defined(SYSV)
 	int		utmp;
 #endif
 	char		*line_tmp;
@@ -189,7 +192,9 @@ main (int argc, char **argv)
 	int		wtmp;
 #endif	
 	Time_t		current_time;
+#ifdef USE_UTMP
 	struct utmp	utmp_entry;
+#endif
 #ifdef USE_UTMPX
 	struct utmpx	utmpx_entry;
 #endif
@@ -224,7 +229,9 @@ main (int argc, char **argv)
 			host_name = getstring (&argv, &hflag);
 			break;
 		case 's':
+#ifdef USE_UTMP
 			slot_number = atoi (getstring (&argv, &sflag));
+#endif
 			break;
 		case 'x':
 			xservers_file = getstring (&argv, &xflag);
@@ -250,14 +257,14 @@ main (int argc, char **argv)
 	/* set up default file names */
 	if (!wflag) {
 		wtmp_file = WTMP_FILE;
-#ifdef USE_UTMPX
+#if defined(USE_UTMPX) && defined(HAVE_UPDWTMPX)
 		wtmpx_file = WTMPX_FILE;
 #endif
 	}
 #ifndef NO_UTMP
 	if (!uflag) {
 		utmp_file = UTMP_FILE;
-#ifdef USE_UTMPX
+#if defined(USE_UTMPX) && defined(HAVE_UTMPXNAME)
 		utmpx_file = UTMPX_FILE;
 #endif
 	}
@@ -268,7 +275,7 @@ main (int argc, char **argv)
 	if (!Lflag)
 		llog_file = LLOG_FILE;
 #endif
-#if !defined(SYSV) && !defined(linux) && !defined(__QNX__)
+#if defined(USE_UTMP) && !defined(SYSV) && !defined(linux) && !defined(__QNX__)
 	if (!tflag)
 		ttys_file = TTYS_FILE;
 	if (!sflag && !utmp_none) {
@@ -287,34 +294,42 @@ main (int argc, char **argv)
 			line = line_tmp;
 	}
 	time (&current_time);
+#ifdef USE_UTMP
 	set_utmp (&utmp_entry, line, user_name, host_name, current_time, aflag);
+#endif
 
 #ifdef USE_UTMPX
 	/* need to set utmpxname() before calling set_utmpx() for
 	   UtmpxIdOpen to work */
+# ifdef HAVE_UTMPXNAME
 	if (utmpx_file != NULL) {
 	        utmpxname (utmpx_file);
 	}
+# endif
 	set_utmpx (&utmpx_entry, line, user_name,
 		   host_name, current_time, aflag);
 #endif	
 
 	if (!utmp_none) {
 #ifdef USE_UTMPX
-	    if (utmpx_file != NULL) {
+# ifdef HAVE_UTMPX_NAME
+	    if (utmpx_file != NULL)
+# endif
+	    {
 		setutxent ();
 		(void) getutxid (&utmpx_entry);
 		pututxline (&utmpx_entry);
 		endutxent ();
 	    }
 #endif
-#ifdef SYSV
+#ifdef USE_UTMP
+# ifdef SYSV
 		utmpname (utmp_file);
 		setutent ();
 		(void) getutid (&utmp_entry);
 		pututline (&utmp_entry);
 		endutent ();
-#else
+# else
 		utmp = open (utmp_file, O_RDWR);
 		if (utmp != -1) {
 			syserr ((int) lseek (utmp, (long) slot_number * sizeof (struct utmp), 0), "lseek");
@@ -322,13 +337,16 @@ main (int argc, char **argv)
 				        == sizeof (utmp_entry), "write utmp entry");
 			close (utmp);
 		}
-#endif
+# endif
+#endif /* USE_UTMP */
 	}
 	if (!wtmp_none) {
 #ifdef USE_UTMPX
+# ifdef HAVE_UPDWTMPX
 		if (wtmpx_file != NULL) {
 			updwtmpx(wtmpx_file, &utmpx_entry);
 		}
+# endif
 #else
 		wtmp = open (wtmp_file, O_WRONLY|O_APPEND);
 		if (wtmp != -1) {
@@ -371,6 +389,7 @@ main (int argc, char **argv)
  * fill in the appropriate records of the utmp entry
  */
 
+#ifdef USE_UTMP
 static void
 set_utmp (struct utmp *u, char *line, char *user, char *host, Time_t date, int addp)
 {
@@ -417,6 +436,7 @@ set_utmp (struct utmp *u, char *line, char *user, char *host, Time_t date, int a
 #endif
 	u->ut_time = date;
 }
+#endif /* USE_UTMP */
 
 #ifdef USE_UTMPX
 static int
@@ -424,6 +444,8 @@ UtmpxIdOpen( char *utmpId )
 {
 	struct utmpx *u;	/* pointer to entry in utmp file           */
 	int    status = 1;	/* return code                             */
+
+	setutxent();
  
 	while ( (u = getutxent()) != NULL ) {
 		
@@ -435,7 +457,7 @@ UtmpxIdOpen( char *utmpId )
 		}
 	}
  
-	endutent();
+	endutxent();
 	return (status);
 }
 
@@ -454,14 +476,16 @@ set_utmpx (struct utmpx *u, const char *line, const char *user,
                         (void) strncpy (u->ut_line, line, sizeof (u->ut_line));
 
 		strncpy(u->ut_host, line, sizeof(u->ut_host));
+#if HAVE_UTMPX_UT_SYSLEN
 		u->ut_syslen = strlen(line); 
+#endif
 	}
         else
                 bzero (u->ut_line, sizeof (u->ut_line));
         if (addp && user)
-                (void) strncpy (u->ut_name, user, sizeof (u->ut_name));
+                (void) strncpy (u->ut_user, user, sizeof (u->ut_user));
         else
-                bzero (u->ut_name, sizeof (u->ut_name));
+                bzero (u->ut_user, sizeof (u->ut_user));
 
         if (line) {
                 int     i;
@@ -520,7 +544,7 @@ set_utmpx (struct utmpx *u, const char *line, const char *user,
 }
 #endif /* USE_UTMPX */
 
-#ifndef SYSV
+#if defined(USE_UTMP) && !defined(SYSV)
 /*
  * compute the slot-number for an X display.  This is computed
  * by counting the lines in /etc/ttys and adding the line-number
