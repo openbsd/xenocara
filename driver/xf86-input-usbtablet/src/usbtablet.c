@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.10 2010/07/25 19:53:35 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.11 2010/08/01 19:21:01 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -504,8 +504,11 @@ UsbTabletOpen(InputInfoPtr pInfo)
 	DBG(1, ErrorF("opening %s\n", comm->devName));
 
 	for (dev = comm->devices[0]; dev != NULL; dev = dev->next) {
-	    if (dev->fd != -1 && dev != pInfo)
+	    if (dev->fd != -1 && dev != pInfo 
+		&& strcmp(dev->type_name, XI_TABLET) == 0) {
 		pInfo->fd = dev->fd;
+		break;
+	    }
 	}
 	if (pInfo->fd != -1) {
 	    DBG(1, ErrorF("UsbTabletOpen: shared device already open %x\n",
