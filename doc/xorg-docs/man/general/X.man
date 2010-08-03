@@ -87,7 +87,6 @@ a terminal emulator, \fIxterm\fP;
 a window manager, \fItwm\fP; 
 a display manager, \fIxdm\fP;
 a console redirect program, \fIxconsole\fP;
-a mail interface, \fIxmh\fP;
 a bitmap editor, \fIbitmap\fP;
 resource listing/manipulation tools, \fIappres\fP, \fIeditres\fP;
 access control programs, \fIxauth\fP, \fIxhost\fP, and \fIiceauth\fP;
@@ -102,19 +101,12 @@ screen image manipulation utilities, \fIxwd\fP, \fIxwud\fP, and \fIxmag\fP;
 a performance measurement utility, \fIx11perf\fP;
 a font compiler, \fIbdftopcf\fP;
 a font server and related utilities, \fIxfs\fP, \fIfsinfo\fP, \fIfslsfonts\fP, \fIfstobdf\fP;
-a display server and related utilities, \fIXserver\fP, \fIrgb\fP, \fImkfontdir\fP;
-a print server and related utilities, \fIXprt\fP, \fIxplsprinters\fP, and \fIxprehashprinterlist\fP;
-remote execution utilities, \fIrstart\fP and \fIxon\fP;
+a display server and related utilities, \fIXserver\fP, \fImkfontdir\fP;
 a clipboard manager, \fIxclipboard\fP;
 keyboard description compiler and related utilities, \fIxkbcomp\fP, \fIsetxkbmap\fP
 \fIxkbprint\fP, \fIxkbbell\fP, \fIxkbevd\fP, \fIxkbvleds\fP, and \fIxkbwatch\fP;
 a utility to terminate clients, \fIxkill\fP; 
-an optimized X protocol proxy, \fIlbxproxy\fP;
 a firewall security proxy, \fIxfwp\fP;
-a proxy manager to control them, \fIproxymngr\fP;
-a utility to find proxies, \fIxfindproxy\fP;
-web browser plug-ins, \fIlibxrx.so\fP and \fIlibxrxnest.so\fP;
-an RX MIME-type helper program, \fIxrx\fP;
 and a utility to cause part or all of the screen to be redrawn, \fIxrefresh\fP. 
 .PP
 Many other utilities, window managers, games, toolkits, etc. are included
@@ -1240,15 +1232,10 @@ the appropriate instance name can be placed before the asterisk:
 .BR fstobdf (1),
 .BR iceauth (1),
 .BR imake (1),
-.BR lbxproxy (1),
-.BR kbd_mode (1),
 .BR makedepend (1),
 .BR mkfontdir (1),
 .BR oclock (1),
-.BR proxymngr (1),
-.BR rgb (1), 
 .BR resize (1),
-.BR rstart (1),
 .BR smproxy (1),
 .BR twm (1),
 .BR x11perf (1),
@@ -1261,7 +1248,6 @@ the appropriate instance name can be placed before the asterisk:
 .BR xdm (1),
 .BR xdpyinfo (1),
 .BR xfd (1),
-.BR xfindproxy (1),
 .BR xfs (1),
 .BR xfwp (1),
 .BR xhost (1),
@@ -1278,14 +1264,10 @@ the appropriate instance name can be placed before the asterisk:
 .BR xlsclients (1),
 .BR xlsfonts (1),
 .BR xmag (1),
-.BR xmh (1),
 .BR xmodmap (1),
-.BR xon (1),
-.BR xplsprinters (1),
 .BR xprop (1),
 .BR xrdb (1),
 .BR xrefresh (1),
-.BR xrx (1),
 .BR xset (1),
 .BR xsetroot (1),
 .BR xsm (1),
@@ -1296,15 +1278,10 @@ the appropriate instance name can be placed before the asterisk:
 .BR xwud (1).
 .\" servers
 .BR Xserver (1),
-.BR Xdec (1),
 .BR Xdmx (1),
-.BR XmacII (1),
-.BR Xsun (1),
 .BR Xnest (1),
 .BR Xvfb (1),
 .BR Xorg (1),
-.BR XDarwin (1),
-.BR Xprt (1).
 .\" specifications
 .I "Xlib \- C Language X Interface\fR,\fP"
 and
