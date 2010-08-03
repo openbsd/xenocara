@@ -1,4 +1,4 @@
-.\" $OpenBSD: usbtablet.man,v 1.1.1.1 2009/11/22 19:10:59 matthieu Exp $
+.\" $OpenBSD: usbtablet.man,v 1.2 2010/08/03 21:22:32 matthieu Exp $
 .\"
 .\" Copyright (c) 1999-2004 Matthieu Herrb and Lennart Augustsson
 .\"
@@ -90,7 +90,6 @@ tablet to the width of your screen.
 Scaling factor between tablet coordinates and X screen coordinates. If
 you don't specify it, it will be calculated to match the height of your
 tablet to the height of your screen.
-.TP 4
 .TP 4
 .B Option \fI"DebugLevel"\fP \fInumber \fP
 sets the level of debugging info reported.
