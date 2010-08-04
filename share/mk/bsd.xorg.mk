@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.34 2010/05/08 10:32:12 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.35 2010/08/04 22:50:51 espie Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -52,9 +52,12 @@ CONFIG_SITE=	${XSRCDIR}/etc/config.site
 
 _SRCDIR?=	${.CURDIR}
 
+XENOCARA_PATH?=	/bin:/sbin:/usr/bin:/usr/sbin:/usr/X11R6/bin
+
 CONFIGURE_ENV=	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
 		CONFIG_SITE=$(CONFIG_SITE) \
 		CFLAGS="$(CFLAGS:C/ *$//)" \
+		PATH=$(XENOCARA_PATH) \
 		MAKE="${MAKE}"
 
 AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
