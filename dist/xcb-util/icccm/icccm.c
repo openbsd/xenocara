@@ -58,8 +58,10 @@ xcb_get_text_property_reply(xcb_connection_t *c,
 {
   xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, e);
 
-  if(!reply || reply->type == XCB_NONE)
+  if(!reply || reply->type == XCB_NONE) {
+    free(reply);
     return 0;
+  }
 
   prop->_reply = reply;
   prop->encoding = prop->_reply->type;
@@ -242,7 +244,7 @@ uint8_t
 xcb_get_wm_class_from_reply(xcb_get_wm_class_reply_t *prop,
                             xcb_get_property_reply_t *reply)
 {
-  int name_len;
+  int name_len, len;
 
   if(!reply || reply->type != STRING || reply->format != 8)
     return 0;
@@ -250,8 +252,17 @@ xcb_get_wm_class_from_reply(xcb_get_wm_class_reply_t *prop,
   prop->_reply = reply;
   prop->instance_name = (char *) xcb_get_property_value(prop->_reply);
 
+  len = xcb_get_property_value_length(prop->_reply);
+  /* Ensure there's a C end-of-string at the end of the property.
+     Truncate the property if necessary (the spec says there's already
+     a 0 in the last position, so this only hurts invalid props). */
+  if(len < reply->length * 4)
+    prop->instance_name[len] = 0;
+  else
+    prop->instance_name[len-1] = 0;
+
   name_len = strlen(prop->instance_name);
-  if(name_len == xcb_get_property_value_length(prop->_reply))
+  if(name_len == len)
     name_len--;
 
   prop->class_name = prop->instance_name + name_len + 1;
