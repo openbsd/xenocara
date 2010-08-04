@@ -499,6 +499,8 @@ OpenKeyboard(InputInfoPtr pInfo)
      * XkbLayout has been specified.  Do this even if the protocol is
      * not wskbd.
      */
+    if (xf86findOption(pInfo->options, "XkbLayout") != NULL)
+        return TRUE;
 
     if (ioctl(pInfo->fd, WSKBDIO_GETENCODING, &wsenc) == -1) {
 	/* Ignore the error, we just use the defaults */
