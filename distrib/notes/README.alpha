@@ -3,36 +3,13 @@ Post-installation instructions for X.Org on OpenBSD/alpha
 
 OpenBSD uses the X.Org X server on alpha. 
 
-Currently, TGA video hardware as well as a few VGA cards are
-supported.
+Currently, only TGA video cards are supported.
 
 The wsfb driver supports the TGA as a dumb framebuffer at 8 or 24 bits
 per pixel, depending on the card model. 
 A default /etc/X11/xorg.conf is installed that uses this driver. So
 you can just use 'startx' or xdm to start X without further
 configuration. 
-
-VGA cards support is available only on BWX based machines.
-The following cards have been successfully tested:
-
-* 3DFX Interactive Banshee
-* 3DLabs Permedia 2 (8, 15, 16 and 24 bits depth) 
-* ATI Rage Pro (works with 'Option "NoAccel"')
-* ATI Rage 128
-* Cirrus Logic CL5430 (works with 'Option "NoAccel"')
-* Cirrus Logic GD5446 (8, 16 and 24 bits depth)
-* Matrox MGA 2064 (8, 16 and 24 bits depth)
-
-Make sure your system has support for X enabled:
-
-You must have 'option APERTURE' in your kernel configuration and
-uncomment the line that says:  
-
-	machdep.allowaperture=1
-
-in /etc/sysctl.conf.  See xf86(4) for more details about security
-issues related to this.  After changing this variable in sysctl.conf,
-you will need to reboot for the change to take effect. 
 
 See the tga(4) manual page for instructions on setting
 the resolution of a TGA card.
@@ -48,4 +25,4 @@ Start either xdm(1) or startx(1).
 
 problem_blurb
 
-$OpenBSD: README.alpha,v 1.2 2008/08/31 07:33:29 matthieu Exp $
+$OpenBSD: README.alpha,v 1.3 2010/08/05 06:34:19 matthieu Exp $

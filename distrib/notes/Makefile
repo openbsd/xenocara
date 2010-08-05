@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2010/05/08 14:15:29 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2010/08/05 06:34:19 matthieu Exp $
 
 FILE= README.${MACHINE}
 
@@ -15,8 +15,7 @@ install: ${FILE}.generated
 	if [ -d ${DESTDIR}/var/db/pkg/${set}-${OSREV} ]; then \
 		${INSTALL_DATA} DESCR.${set} \
 			${DESTDIR}/var/db/pkg/${set}-${OSREV}/+DESCR; \
-		${INSTALL} ${INSTALL_COPY} -o root -g wheel -m 755 \
-			DEINSTALL \
+		${INSTALL_DATA} DEINSTALL \
 			${DESTDIR}/var/db/pkg/${set}-${OSREV}/+DEINSTALL; \
 	fi
 .endfor

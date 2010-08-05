@@ -7,9 +7,8 @@ Currently, the X server is supported on the Lemote Yeelong and EMTEC
 Gdium Liberty netbooks with a smfb(4) frame buffer. The wsfb driver
 provides an unaccelerated frame buffer for use with the X server. 
 
-The default /etc/X11/xorg.conf which is installed, provides a ready-to-run
-configuration. Due to the current lack of dynamic object lazy binding on
-OpenBSD/loongson, A few modules modules need to be force loaded. 
+No xorg.conf is needed in this configuration, unless you want to 
+change default options.
 
 To start xdm, the X display manager, activate the xdm_flags option in
 /etc/rc.conf. You will need to disable the console getty in /etc/ttys.
@@ -18,4 +17,4 @@ Alternatively, you can log in at the console and run `startx'.
 
 problem_blurb
 
-$OpenBSD: README.loongson,v 1.2 2010/02/13 09:15:16 matthieu Exp $
+$OpenBSD: README.loongson,v 1.3 2010/08/05 06:34:19 matthieu Exp $

@@ -7,9 +7,8 @@ Currently, the X server is only supported on SGI O2 workstations with a gbe(4)
 frame buffer. The wsfb driver provides an unaccelerated frame buffer for use 
 with the X server.
 
-The default /etc/X11/xorg.conf which is installed, provides a ready-to-run
-configuration. Due to the current lack of dynamic object lazy binding on
-OpenBSD/sgi, a few modules need to be force loaded.
+No xorg.conf is needed in this configuration, unless you want to 
+change default options.
 
 To start xdm, the X display manager, activate the xdm_flags option in
 /etc/rc.conf. You will need to disable the console getty in /etc/ttys.
@@ -18,4 +17,4 @@ Alternatively, you can log in at the console and run `startx'.
 
 problem_blurb
 
-$OpenBSD: README.sgi,v 1.4 2010/01/31 22:11:35 matthieu Exp $
+$OpenBSD: README.sgi,v 1.5 2010/08/05 06:34:19 matthieu Exp $
