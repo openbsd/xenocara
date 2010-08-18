@@ -507,7 +507,7 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
     if (i < (nmatches - 1)) {
 #if defined(__i386__) || defined(__amd64__) || defined(__hurd__)
 	matches[i++] = xnfstrdup("vesa");
-#elif defined(__sparc__) && !defined(sun)
+#elif defined(__sparc__) && defined(__linux__)
 	matches[i++] = xnfstrdup("sunffb");
 #endif
     }
