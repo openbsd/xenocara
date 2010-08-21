@@ -1034,7 +1034,7 @@ dnl DEALINGS IN THE SOFTWARE.
 # See the "minimum version" comment for each macro you use to see what 
 # version you require.
 m4_defun([XORG_MACROS_VERSION],[
-m4_define([vers_have], [1.8.0])
+m4_define([vers_have], [1.10.0])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,
@@ -1213,13 +1213,20 @@ PKG_CHECK_EXISTS([xorg-sgml-doctools m4_ifval([$1],[>= $1])],
          fi])
     ])
 
+# Define variables STYLESHEET_SRCDIR and XSL_STYLESHEET containing
+# the path and the name of the doc stylesheet
 if test "x$XORG_SGML_PATH" != "x" ; then
    AC_MSG_RESULT([$XORG_SGML_PATH])
+   STYLESHEET_SRCDIR=$XORG_SGML_PATH/X11
+   XSL_STYLESHEET=$STYLESHEET_SRCDIR/xorg.xsl
 else
    AC_MSG_RESULT([no])
 fi
 
 AC_SUBST(XORG_SGML_PATH)
+AC_SUBST(STYLESHEET_SRCDIR)
+AC_SUBST(XSL_STYLESHEET)
+AM_CONDITIONAL([HAVE_STYLESHEETS], [test "x$XSL_STYLESHEET" != "x"])
 ]) # XORG_CHECK_SGML_DOCTOOLS
 
 # XORG_CHECK_LINUXDOC
@@ -1352,6 +1359,10 @@ AC_SUBST(MAKE_HTML)
 # --with-xmlto:	'yes' user instructs the module to use xmlto
 #		'no' user instructs the module not to use xmlto
 #
+# Added in version 1.10.0
+# HAVE_XMLTO_TEXT: used in makefiles to conditionally generate text documentation
+#                  xmlto for text output requires either lynx, links, or w3m browsers
+#
 # If the user sets the value of XMLTO, AC_PATH_PROG skips testing the path.
 #
 AC_DEFUN([XORG_WITH_XMLTO],[
@@ -1383,6 +1394,8 @@ elif test "x$use_xmlto" = x"no" ; then
 else
    AC_MSG_ERROR([--with-xmlto expects 'yes' or 'no'])
 fi
+
+# Test for a minimum version of xmlto, if provided.
 m4_ifval([$1],
 [if test "$have_xmlto" = yes; then
     # scrape the xmlto version
@@ -1397,6 +1410,17 @@ m4_ifval([$1],
             AC_MSG_ERROR([xmlto version $xmlto_version found, but $1 needed])
         fi])
 fi])
+
+# Test for the ability of xmlto to generate a text target
+have_xmlto_text=no
+cat > conftest.xml << "EOF"
+EOF
+AS_IF([test "$have_xmlto" = yes],
+      [AS_IF([$XMLTO --skip-validation txt conftest.xml >/dev/null 2>&1],
+             [have_xmlto_text=yes],
+             [AC_MSG_WARN([xmlto cannot generate text format, this format skipped])])])
+rm -f conftest.xml
+AM_CONDITIONAL([HAVE_XMLTO_TEXT], [test $have_xmlto_text = yes])
 AM_CONDITIONAL([HAVE_XMLTO], [test "$have_xmlto" = yes])
 ]) # XORG_WITH_XMLTO
 
@@ -1549,6 +1573,12 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test "$have_doxygen" = yes])
 # --with-groff:	 'yes' user instructs the module to use groff
 #		 'no' user instructs the module not to use groff
 #
+# Added in version 1.9.0:
+# HAVE_GROFF_HTML: groff has dependencies to output HTML format:
+#		   pnmcut pnmcrop pnmtopng pnmtops from the netpbm package.
+#		   psselect from the psutils package.
+#		   the ghostcript package. Refer to the grohtml man pages
+#
 # If the user sets the value of GROFF, AC_PATH_PROG skips testing the path.
 #
 # OS and distros often splits groff in a basic and full package, the former
@@ -1588,6 +1618,7 @@ elif test "x$use_groff" = x"no" ; then
 else
    AC_MSG_ERROR([--with-groff expects 'yes' or 'no'])
 fi
+
 # We have groff, test for the presence of the macro packages
 if test "x$have_groff" = x"yes"; then
     AC_MSG_CHECKING([for ${GROFF} -ms macros])
@@ -1605,9 +1636,25 @@ if test "x$have_groff" = x"yes"; then
     fi
     AC_MSG_RESULT([$groff_mm_works])
 fi
+
+# We have groff, test for HTML dependencies, one command per package
+if test "x$have_groff" = x"yes"; then
+   AC_PATH_PROGS(GS_PATH, [gs gswin32c])
+   AC_PATH_PROG(PNMTOPNG_PATH, [pnmtopng])
+   AC_PATH_PROG(PSSELECT_PATH, [psselect])
+   if test "x$GS_PATH" != "x" -a "x$PNMTOPNG_PATH" != "x" -a "x$PSSELECT_PATH" != "x"; then
+      have_groff_html=yes
+   else
+      have_groff_html=no
+      AC_MSG_WARN([grohtml dependencies not found - HTML Documentation skipped. Refer to grohtml man pages])
+   fi
+fi
+
+# Set Automake conditionals for Makefiles
 AM_CONDITIONAL([HAVE_GROFF], [test "$have_groff" = yes])
 AM_CONDITIONAL([HAVE_GROFF_MS], [test "$groff_ms_works" = yes])
 AM_CONDITIONAL([HAVE_GROFF_MM], [test "$groff_mm_works" = yes])
+AM_CONDITIONAL([HAVE_GROFF_HTML], [test "$have_groff_html" = yes])
 ]) # XORG_WITH_GROFF
 
 # XORG_WITH_FOP
