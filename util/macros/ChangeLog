@@ -1,3 +1,63 @@
+commit fbe66aedcf2165e43388894d3b2ee2f38e889f93
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 24 17:36:33 2010 -0400
+
+    Version bump: 1.10.0
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4eed3443945a9d1443ec688efd835f46ed9adfc9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 25 14:52:25 2010 -0400
+
+    XORG_CHECK_SGML_DOCTOOLS: add interface for xorg stylesheet
+    
+    Add STYLESHEET_SRCDIR for directory location
+    and XSL_STLESHEET for the name of the xorg style sheet
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 01ef7c69d91259e5904f26b6b4630243d548232a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 24 18:12:45 2010 -0400
+
+    XORG_WITH_XMLTO: add HAVE_XMLTO_TEXT for text output format
+    
+    The xmlto program has dependencies when converting docbook XML
+    to text format. It requires either lynx, links or w3m
+    text web browsers.
+    
+    Users want to skip the text format to avoid having to install these.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fe878c0ce0b9093c13714ec6662b0c99a9a2d1d4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 18 21:54:27 2010 -0400
+
+    Version bump: 1.9.0
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d4d18c07d7aa1005ad3d48dfdb19f245df2ebae0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 18 20:32:13 2010 -0400
+
+    XORG_WITH_GROFF: add HAVE_GROFF_HTML Automake conditional
+    
+    Groff uses grohtml to generate html output format. This program, in turn,
+    uses a number of pnm* commands from the netpbm package, psselect
+    from the psutils package and the ghostscript package.
+    
+    These are independently installed, so they could be missing.
+    A check is made to ensure those dependencies are installed.
+    If not, the makefile can use the conditional to supress the target.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit f0590edffe21ac6b7a11eab7caf6c8aad7c8bc07
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Thu May 27 09:27:54 2010 -0400
