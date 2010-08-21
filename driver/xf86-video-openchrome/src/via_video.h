@@ -44,6 +44,10 @@
 
 #define VIDEO_BPP 2
 
+
+#define V1_COMMAND_FIRE               0x80000000  /* V1 commands fire */
+#define V3_COMMAND_FIRE               0x40000000  /* V3 commands fire */
+
 typedef struct
 {
     CARD32 interruptflag;	       /* 200 */
@@ -89,7 +93,7 @@ typedef struct
     CARD32 video3_ctl;		       /* 2a0 */
     CARD32 video3_addr0;	       /* 2a4 */
     CARD32 video3_addr1;	       /* 2a8 */
-    CARD32 video3_stribe;	       /* 2ac */
+    CARD32 video3_stride;	       /* 2ac */
     CARD32 video3_hvstart;	       /* 2b0 */
     CARD32 video3_size;		       /* 2b4 */
     CARD32 v3alpha_fetch;	       /* 2b8 */

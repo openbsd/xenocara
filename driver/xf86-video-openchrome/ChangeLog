@@ -1,3 +1,19 @@
+2010-03-07  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix segfaults with EXA and XV (Ticket #359)
+        Tested on K8M890 and VN800
+
+	* src/via_video.c: (viaReputImage), (viaPutImage):
+
+2010-02-10  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix bug with suspend and VT switch on VX800 and 64bit systems
+
+	* src/via_driver.h:
+	* src/via_video.c: (viaResetVideo), (viaSaveVideo),
+	(viaRestoreVideo), (viaExitVideo):
+	* src/via_video.h:
+
 2009-09-26  Bartosz Kosiorek  <gang65@poczta.onet.pl>
 
 	Save/restore ECK Clock Synthesizer

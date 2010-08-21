@@ -418,10 +418,10 @@ typedef struct _VIA {
     Bool                PrintVGARegs;
     Bool                PrintTVRegs;
     Bool                I2CScan;
+#endif /* HAVE_DEBUG */
     
     Bool                UseLegacyModeSwitch ;
     video_via_regs*     VideoRegs ;
-#endif /* HAVE_DEBUG */
 } VIARec, *VIAPtr;
 
 #define VIAPTR(p) ((VIAPtr)((p)->driverPrivate))

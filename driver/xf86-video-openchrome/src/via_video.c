@@ -466,8 +466,8 @@ viaResetVideo(ScrnInfoPtr pScrn)
 
     viaVidEng->video1_ctl = 0;
     viaVidEng->video3_ctl = 0;
-    viaVidEng->compose = 0x80000000;
-    viaVidEng->compose = 0x40000000;
+    viaVidEng->compose = V1_COMMAND_FIRE;
+    viaVidEng->compose = V3_COMMAND_FIRE;
     viaVidEng->color_key = 0x821;
     viaVidEng->snd_color_key = 0x821;
 
@@ -479,16 +479,16 @@ viaSaveVideo(ScrnInfoPtr pScrn)
     VIAPtr pVia = VIAPTR(pScrn);
     vmmtr viaVidEng = (vmmtr) pVia->VidMapBase;
     
+    DBG_DD(ErrorF(" via_video.c : viaSaveVideo : \n"));
     /* Save video registers */
-    /* TODO: Identify which registers should be saved and restored */
     memcpy(pVia->VideoRegs, (void*)viaVidEng, sizeof(video_via_regs));
 
     pVia->dwV1 = ((vmmtr) viaVidEng)->video1_ctl;
     pVia->dwV3 = ((vmmtr) viaVidEng)->video3_ctl;
     viaVidEng->video1_ctl = 0;
     viaVidEng->video3_ctl = 0;
-    viaVidEng->compose = 0x80000000;
-    viaVidEng->compose = 0x40000000;
+    viaVidEng->compose = V1_COMMAND_FIRE;
+    viaVidEng->compose = V3_COMMAND_FIRE;
 }
 
 void
@@ -496,16 +496,65 @@ viaRestoreVideo(ScrnInfoPtr pScrn)
 {
     VIAPtr pVia = VIAPTR(pScrn);
     vmmtr viaVidEng = (vmmtr) pVia->VidMapBase;
-    
-    /* Restore video registers */
-    /* TODO: Identify which registers should be saved and restored */
-    memcpy((void*)viaVidEng, pVia->VideoRegs, sizeof(video_via_regs));
+    video_via_regs  *localVidEng = pVia->VideoRegs;
 
+    
+    DBG_DD(ErrorF(" via_video.c : viaRestoreVideo : \n"));
+    /* Restore video registers */
+    /* flush restored video engines' setting to VidMapBase */
+    
+    viaVidEng->alphawin_hvstart = localVidEng->alphawin_hvstart;
+    viaVidEng->alphawin_size   = localVidEng->alphawin_size;
+    viaVidEng->alphawin_ctl    = localVidEng->alphawin_ctl;
+    viaVidEng->alphafb_stride  = localVidEng->alphafb_stride;
+    viaVidEng->color_key       = localVidEng->color_key;
+    viaVidEng->alphafb_addr    = localVidEng->alphafb_addr;
+    viaVidEng->chroma_low      = localVidEng->chroma_low;
+    viaVidEng->chroma_up       = localVidEng->chroma_up;
+
+    if (pVia->ChipId != PCI_CHIP_VT3314)
+    {
+        /*VT3314 only has V3*/
+        viaVidEng->video1_ctl      = localVidEng->video1_ctl;
+        viaVidEng->video1_fetch    = localVidEng->video1_fetch;
+        viaVidEng->video1y_addr1   = localVidEng->video1y_addr1;
+        viaVidEng->video1_stride   = localVidEng->video1_stride;
+        viaVidEng->video1_hvstart  = localVidEng->video1_hvstart;
+        viaVidEng->video1_size     = localVidEng->video1_size;
+        viaVidEng->video1y_addr2   = localVidEng->video1y_addr2;
+        viaVidEng->video1_zoom     = localVidEng->video1_zoom;
+        viaVidEng->video1_mictl    = localVidEng->video1_mictl;
+        viaVidEng->video1y_addr0   = localVidEng->video1y_addr0;
+        viaVidEng->video1_fifo     = localVidEng->video1_fifo;
+        viaVidEng->video1y_addr3   = localVidEng->video1y_addr3;
+        viaVidEng->v1_source_w_h   = localVidEng->v1_source_w_h ;
+        viaVidEng->video1_CSC1     = localVidEng->video1_CSC1;
+        viaVidEng->video1_CSC2     = localVidEng->video1_CSC2;
+    }
+    viaVidEng->snd_color_key   = localVidEng->snd_color_key;
+    viaVidEng->v3alpha_prefifo = localVidEng->v3alpha_prefifo;
+    viaVidEng->v3alpha_fifo    = localVidEng->v3alpha_fifo;
+    viaVidEng->video3_CSC2     = localVidEng->video3_CSC2;
+    viaVidEng->video3_CSC2     = localVidEng->video3_CSC2;
+    viaVidEng->v3_source_width = localVidEng->v3_source_width;
+    viaVidEng->video3_ctl      = localVidEng->video3_ctl;
+    viaVidEng->video3_addr0    = localVidEng->video3_addr0;
+    viaVidEng->video3_addr1    = localVidEng->video3_addr1;
+    viaVidEng->video3_stride   = localVidEng->video3_stride;
+    viaVidEng->video3_hvstart  = localVidEng->video3_hvstart;
+    viaVidEng->video3_size     = localVidEng->video3_size;
+    viaVidEng->v3alpha_fetch   = localVidEng->v3alpha_fetch;
+    viaVidEng->video3_zoom     = localVidEng->video3_zoom;
+    viaVidEng->video3_mictl    = localVidEng->video3_mictl;
+    viaVidEng->video3_CSC1     = localVidEng->video3_CSC1;
+    viaVidEng->video3_CSC2     = localVidEng->video3_CSC2;    
+    viaVidEng->compose         = localVidEng->compose;
+    
     viaVidEng->video1_ctl = pVia->dwV1;
     viaVidEng->video3_ctl = pVia->dwV3;
-    viaVidEng->compose = 0x80000000;
-    viaVidEng->compose = 0x40000000;
-
+    if (pVia->ChipId != PCI_CHIP_VT3314)
+        viaVidEng->compose = V1_COMMAND_FIRE;
+    viaVidEng->compose = V3_COMMAND_FIRE;
 }
 
 void
@@ -524,8 +573,8 @@ viaExitVideo(ScrnInfoPtr pScrn)
 
     viaVidEng->video1_ctl = 0;
     viaVidEng->video3_ctl = 0;
-    viaVidEng->compose = 0x80000000;
-    viaVidEng->compose = 0x40000000;
+    viaVidEng->compose = V1_COMMAND_FIRE;
+    viaVidEng->compose = V3_COMMAND_FIRE;
 
     /*
      * Free all adaptor info allocated in viaInitVideo.
@@ -664,105 +713,6 @@ RegionsEqual(RegionPtr A, RegionPtr B)
     return TRUE;
 }
 
-static void
-viaVideoFillPixmap(ScrnInfoPtr pScrn,
-        char *base,
-        unsigned long pitch,
-        int depth,
-        int x, int y, int w, int h,
-        unsigned long color)
-{
-    int i;
-
-    ErrorF("pitch %lu, depth %d, x %d, y %d, w %d, h %d, color 0x%08lx\n",
-            pitch, depth, x, y, w, h, color);
-
-    depth = (depth + 7) >> 3;
-
-    base += y*pitch + x*depth;
-
-    switch(depth) {
-        case 4:
-        while(h--) {
-            register CARD32 *p = (CARD32 *)base;
-            for (i=0; i<w; ++i) {
-                *p++ = color;
-            }
-            base += pitch;
-        }
-        break;
-        case 2: {
-            register CARD16 col = color & 0x0000FFFF;
-            while(h--) {
-                register CARD16 *p = (CARD16 *)base;
-                for (i=0; i<w; ++i) {
-                    *p++ = col;
-                }
-                base += pitch;
-            }
-            break;
-        }
-        case 1: {
-            register CARD8 col = color & 0xFF;
-            while(h--) {
-                register CARD8 *p = (CARD8 *)base;
-                for (i=0; i<w; ++i) {
-                    *p++ = col;
-                }
-                base += pitch;
-            }
-            break;
-        }
-        default:
-        break;
-    }
-}
-    
-
-
-static int
-viaPaintColorkey(ScrnInfoPtr pScrn, viaPortPrivPtr pPriv, RegionPtr clipBoxes,
-    DrawablePtr pDraw)
-{
-
-    if (pDraw->type == DRAWABLE_WINDOW) {
-
-        VIAPtr pVia = VIAPTR(pScrn);
-        PixmapPtr pPix = (pScrn->pScreen->GetWindowPixmap)((WindowPtr) pDraw);
-        unsigned long pitch = pPix->devKind;
-        long offset = (long) pPix->devPrivate.ptr - (long) pVia->FBBase;
-        int x,y;
-        BoxPtr pBox;
-        int nBox;
-
-        REGION_TRANSLATE(pScrn->pScreen, clipBoxes, - pPix->screen_x,
-            - pPix->screen_y);
-
-        nBox = REGION_NUM_RECTS(clipBoxes);
-        pBox = REGION_RECTS(clipBoxes);
-
-        while(nBox--) {
-            if (pVia->NoAccel || offset < 0 ||
-                offset > pScrn->videoRam*1024) {
-                viaVideoFillPixmap(pScrn, pPix->devPrivate.ptr, pitch,
-                    pDraw->bitsPerPixel, pBox->x1, pBox->y1,
-                    pBox->x2 - pBox->x1, pBox->y2 - pBox->y1,
-                    pPriv->colorKey);
-            } else {
-                viaAccelFillPixmap(pScrn, offset, pitch,
-                    pDraw->bitsPerPixel, pBox->x1, pBox->y1,
-                    pBox->x2 - pBox->x1, pBox->y2 - pBox->y1,
-                    pPriv->colorKey);
-            }
-            pBox++;
-        }
-
-        DamageDamageRegion(pPix, clipBoxes);
-    }
-
-    return 0;
-}
-
 
 /*
  * This one gets called, for example, on panning.
@@ -783,10 +733,15 @@ viaReputImage(ScrnInfoPtr pScrn,
         REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
         if (pPriv->autoPaint) {
             if (pDraw->type == DRAWABLE_WINDOW) {
-                viaPaintColorkey(pScrn, pPriv, clipBoxes, pDraw);
+                /* TODO Replace xf86XVFillKeyHelper with xf86XVFillKeyHelperDrawable
+                   Currently resizing problem exist in VLC Media Player
+                   Example of implementation:
+                xf86XVFillKeyHelperDrawable(pDraw, pPriv->colorKey, clipBoxes);
+                DamageDamageRegion(pDraw, clipBoxes); */
+                
+                xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey, clipBoxes);
             } else {
-                xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey,
-                    clipBoxes);
+                xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey, clipBoxes);
             }
         }
     }
@@ -1296,7 +1251,7 @@ viaPutImage(ScrnInfoPtr pScrn,
     unsigned long retCode;
 
 # ifdef XV_DEBUG
-    ErrorF(" via_video.c : viaPutImage : called\n");
+    ErrorF(" via_video.c : viaPutImage : called,  Screen[%d]\n", pScrn->scrnIndex);
     ErrorF(" via_video.c : FourCC=0x%x width=%d height=%d sync=%d\n", id,
             width, height, sync);
     ErrorF
@@ -1405,12 +1360,11 @@ viaPutImage(ScrnInfoPtr pScrn,
 
             lpUpdateOverlay->dwFlags = DDOVER_KEYDEST;
 
-            if (pScrn->bitsPerPixel == 8)
-            lpUpdateOverlay->dwColorSpaceLowValue =
-            pPriv->colorKey & 0xff;
-            else
-            lpUpdateOverlay->dwColorSpaceLowValue = pPriv->colorKey;
-
+            if (pScrn->bitsPerPixel == 8) {
+                lpUpdateOverlay->dwColorSpaceLowValue = pPriv->colorKey & 0xff;
+            } else {
+                lpUpdateOverlay->dwColorSpaceLowValue = pPriv->colorKey;
+            }
             /* If use extend FIFO mode */
             if (pScrn->currentMode->HDisplay > 1024) {
                 dwUseExtendedFIFO = 1;
@@ -1458,12 +1412,19 @@ viaPutImage(ScrnInfoPtr pScrn,
                 REGION_COPY(pScrn->pScreen, &pPriv->clip, clipBoxes);
                 if (pPriv->autoPaint) {
                     if (pDraw->type == DRAWABLE_WINDOW) {
-                        viaPaintColorkey(pScrn, pPriv, clipBoxes, pDraw);
+                        /* TODO Replace xf86XVFillKeyHelper with xf86XVFillKeyHelperDrawable
+                           Currently resizing problem exists in VLC Media Player
+                           Example of implementation:
+                        xf86XVFillKeyHelperDrawable(pDraw, pPriv->colorKey, clipBoxes);
+                        DamageDamageRegion(pDraw, clipBoxes);
+                        */
+                        xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey, clipBoxes);
                     } else {
-                        xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey,
-                            clipBoxes);
+                        xf86XVFillKeyHelper(pScrn->pScreen, pPriv->colorKey, clipBoxes);
                     }
                 }
+            } else {
+                DBG_DD(ErrorF(" via_video.c : // No need to draw Colorkey!! \n"));
             }
             /*
              *  Update video overlay
