@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.3 2009/10/31 17:44:36 matthieu Exp $
+dnl  $Id: configure.ac,v 1.4 2010/08/21 16:11:03 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
@@ -23,16 +23,18 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(libXau, 1.0.5, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],libXau)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT(libXau, 1.0.6, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],libXau)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
-# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG, XORG_WITH_LINT
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.4)
+XORG_DEFAULT_OPTIONS
 
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -40,12 +42,9 @@ AC_PROG_LN_S
 AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 AC_PROG_MAKE_SET
-XORG_CWARNFLAGS
+AC_PROG_SED
 
 PKG_CHECK_MODULES(XAU, xproto)
-XAU_CFLAGS="$CWARNFLAGS $XAU_CFLAGS"
-AC_SUBST(XAU_CFLAGS)
-AC_SUBST(XAU_LIBS)
 
 AC_ARG_ENABLE(xthreads,
               AC_HELP_STRING([--disable-xthreads],
@@ -76,9 +75,6 @@ XORG_WITH_LINT
 XORG_LINT_LIBRARY([Xau])
 LINT_FLAGS="${LINT_FLAGS} ${XAU_CFLAGS}"
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
 AC_OUTPUT([Makefile
            xau.pc])

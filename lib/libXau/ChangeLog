@@ -1,3 +1,163 @@
+commit a01b74fad039e68cf296bd5e83c6f538181e529a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Jul 19 17:17:54 2010 +0100
+
+    Bump to 1.0.6
+
+commit ad12e7a68f69fdc960170c0248f07df68f0fc476
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Jul 19 17:18:34 2010 +0100
+
+    Require xorg-macros 1.4 for XORG_INSTALL
+
+commit f8f0ec4955e51a2a420724f9bc2287d5a725cb39
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Jul 19 17:16:13 2010 +0100
+
+    Kill cvs keyword
+
+commit 7d42fad5cec59cb0696087bed9745ffd5a999f68
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Sat May 29 21:11:14 2010 +0200
+
+    Xau.man: Add missing const attributes
+    
+    Reported by Tom Fogal in
+      http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=583599
+
+commit f93ffa718135d9d85f04935325016b8766f05ea3
+Author: Brice Goglin <Brice.Goglin@ens-lyon.org>
+Date:   Sat May 29 21:04:24 2010 +0200
+
+    Xau.man: Fix XauGetAuthByAddr() prototype
+    
+    Add missing name_length and name parameters.
+    
+    Reported by Tom Fogal in
+      http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=583599
+
+commit c0bc3fb7ac4f719b96257e29eaa60c2d5ed11705
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed May 26 21:59:15 2010 -0700
+
+    Use AC_PROG_SED to find sed to use for man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ff907e90a2fe95bb234049a7a11e8e3b10d54533
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed May 26 21:57:12 2010 -0700
+
+    Use $(AM_V_GEN) to silence man page generation
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58aef8ebf89cc8d6d4d67dc7572752db0c44b6c3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 30 09:05:41 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8db2a151b92fe3a408d847c868d7823a0217b73d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 30 09:05:05 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4039c624286061122e3350f9194dba27118ab904
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 16 10:37:21 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 243b553ace945da0263bb32464dfdc45e0c70c88
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:03 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit eed5cf87f68c665503d0dae90baf8549bb61358e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 31fe929d3ea43cd8fbe2853157682677704883ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit f6ae36d4bf43cd601c3c1339100684169bbaeeb3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:42 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 6e702152714be9538e1ae1b3533843f972ceb1e9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 550725b423ec0364f0a32ed6935140617e366cf8
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:23 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 825435514bd91d0d903247c46249a87d6fe8ae09
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Aug 28 14:34:32 2009 +1000
