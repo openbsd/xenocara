@@ -48,7 +48,6 @@
 #endif
 
 #include <stdio.h>
-#define NEED_EVENTS
 #include <X11/X.h>
 #include <X11/Xproto.h>
 
@@ -70,6 +69,7 @@
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <xserver-properties.h>
+#include "exevents.h"
 #endif
 
 #include "xisb.h"

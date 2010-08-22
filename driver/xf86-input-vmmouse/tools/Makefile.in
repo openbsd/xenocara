@@ -59,8 +59,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = @DRIVER_NAME@_detect$(EXEEXT)
-@HAS_UDEV_RULES_DIR_TRUE@am__append_1 = $(udev_DATA).in
-@HAS_UDEV_RULES_DIR_TRUE@am__append_2 = $(udev_DATA)
+@HAS_UDEV_RULES_DIR_TRUE@am__append_1 = $(udev_DATA)
 subdir = tools
 DIST_COMMON = $(am__dist_conf_DATA_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -174,6 +173,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -196,6 +196,7 @@ VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_CONF_DIR = @XORG_CONF_DIR@
 XORG_LIBS = @XORG_LIBS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
@@ -244,13 +245,13 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-INCLUDES = -I$(top_srcdir)/shared
+AM_CPPFLAGS = -I$(top_srcdir)/shared $(XORG_CFLAGS)
 @DRIVER_NAME@_detect_SOURCES = vmmouse_detect.c
 @DRIVER_NAME@_detect_LDADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
 calloutsdir = $(HAL_CALLOUTS_DIR)
 callouts_SCRIPTS = hal-probe-vmmouse
-EXTRA_DIST = hal-probe-vmmouse.in $(am__append_1)
-CLEANFILES = hal-probe-vmmouse $(am__append_2)
+EXTRA_DIST = $(udev_DATA).in hal-probe-vmmouse.in
+CLEANFILES = hal-probe-vmmouse $(am__append_1)
 @HAS_XORG_CONF_DIR_TRUE@confdir = $(XORG_CONF_DIR)
 @HAS_XORG_CONF_DIR_TRUE@dist_conf_DATA = 50-vmmouse.conf
 @HAS_UDEV_RULES_DIR_TRUE@udevdir = $(UDEV_RULES_DIR)
@@ -587,7 +588,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-calloutsSCRIPTS \
 
 
 hal-probe-vmmouse: hal-probe-vmmouse.in
-	sed -e 's|__BIN_PREFIX__|$(bindir)|g' \
+	$(AM_V_GEN)$(SED) -e 's|__BIN_PREFIX__|$(bindir)|g' \
 	    -e 's|__HAL_BIN_PREFIX__|$(HAL_BIN_DIR)|g' \
 	    < $< > $@
 

@@ -23,5 +23,5 @@ lib@DRIVER_NAME@_la_SOURCES = @DRIVER_NAME@_defs.h \
                               @DRIVER_NAME@_client.c @DRIVER_NAME@_client.h \
                               @DRIVER_NAME@_proto.c @DRIVER_NAME@_proto.h
 
-
+AM_CPPFLAGS = $(XORG_CFLAGS)
                                

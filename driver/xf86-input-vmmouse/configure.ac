@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-vmmouse],
-        12.6.9,
+        12.6.10,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-vmmouse)
 
@@ -137,9 +137,6 @@ PKG_CHECK_EXISTS([xorg-server > 1.4.0.90],
 PKG_CHECK_EXISTS([xorg-server >= 1.6.0],
 		 [AC_DEFINE([NO_MOUSE_MODULE], 1,
 			    [Do not include built-in mouse module fallback])])
-
-CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
-AC_SUBST([CFLAGS])
 
 # Checks for libraries.
 

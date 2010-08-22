@@ -1,3 +1,74 @@
+commit 61608b87c01ce87bd29869c1554a2ade5998782c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 9 20:45:53 2010 -0700
+
+    Improve Solaris compatibility of hal-probe-vmmouse generation rule
+    
+    Use $(SED) from AC_PROG_SED to ensure a good version of sed is found
+    Use explicit input file name instead of $< to workaround Solaris make
+    issue with $< in explicit rules.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7700bed84f6632913a6590cc9cc9d10b815a08c
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 07:14:14 2010 -0300
+
+    Purge macro NEED_EVENTS
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e3bf19d2637cb034e31611ef184348f12677e81
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 12 10:09:48 2010 -0400
+
+    COPYING: update and refactor Copyright notices
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 833698b3b9857fda176c91a0dbb128275a174624
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Apr 25 19:36:19 2010 -0400
+
+    config: git ignore recently added 69-xorg-vmmouse.rules
+    
+    Was added in 1d1c0514158abb66388ee4eb44764d201203a863
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1d1c0514158abb66388ee4eb44764d201203a863
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Mon Apr 19 15:29:41 2010 +0100
+
+    Only match against event[0-9] in udev rules
+    
+    It looks like the udev rule was matched against two devices which caused
+    the driver to be loaded twice. We shouldn't match against the other
+    device because it will very seldom send bogus events. Some of the bug
+    this caused was buttons getting stuck.
+
+commit b22d830a4e1c609a709e71c306a3b3a8ff8a6078
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Apr 17 01:39:23 2010 +0200
+
+    Don't clobber CFLAGS
+    
+    CFLAGS is a user variable, don't set it from configure.
+
+commit 1cba87aab183eb3846757a0ee0828e3eb119a6e6
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Apr 17 01:30:15 2010 +0200
+
+    Include exevents.h for XIGetKnownProperty
+    
+    Fixes this compiler warning:
+    vmmouse.c: In function ‘VMMouseDeviceControl’:
+    vmmouse.c:734: warning: implicit declaration of function ‘XIGetKnownProperty’
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
 commit 01f03ca8fbca96957d6c2718f4279e31cb406c2f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Apr 9 08:30:26 2010 +1000

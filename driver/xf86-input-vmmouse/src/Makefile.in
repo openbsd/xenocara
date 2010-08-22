@@ -161,6 +161,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -183,6 +184,7 @@ VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_CONF_DIR = @XORG_CONF_DIR@
 XORG_LIBS = @XORG_LIBS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
@@ -235,7 +237,7 @@ target_alias = @target_alias@
 @DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
 @DRIVER_NAME@_drv_la_LIBADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
 @DRIVER_NAME@_drv_ladir = @inputdir@
-INCLUDES = -I$(top_srcdir)/shared
+AM_CPPFLAGS = -I$(top_srcdir)/shared $(XORG_CFLAGS)
 @DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c xf86OSmouse.h
 all: all-am
 

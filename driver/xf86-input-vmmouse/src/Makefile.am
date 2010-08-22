@@ -23,7 +23,7 @@
 @DRIVER_NAME@_drv_la_LIBADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
 @DRIVER_NAME@_drv_ladir = @inputdir@
 
-INCLUDES = -I$(top_srcdir)/shared
+AM_CPPFLAGS = -I$(top_srcdir)/shared $(XORG_CFLAGS)
 
 @DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c xf86OSmouse.h
                                
