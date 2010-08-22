@@ -173,7 +173,7 @@ G80DacDestroy(xf86OutputPtr output)
 {
     G80OutputDestroy(output);
 
-    xfree(output->driver_private);
+    free(output->driver_private);
     output->driver_private = NULL;
 }
 

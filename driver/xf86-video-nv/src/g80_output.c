@@ -291,7 +291,7 @@ G80I2CInit(ScrnInfoPtr pScrn, const char *name, const int port)
     if(xf86I2CBusInit(i2c)) {
         return i2c;
     } else {
-        xfree(i2c);
+        free(i2c);
         return NULL;
     }
 }
@@ -481,19 +481,22 @@ G80CreateOutputs(ScrnInfoPtr pScrn)
 
     if(pNv->lvds.present) {
         xf86OutputPtr lvds = G80CreateSor(pScrn, pNv->lvds.or, LVDS);
-        G80OutputPrivPtr pPriv = lvds->driver_private;
 
-        pPriv->scale = G80_SCALE_ASPECT;
+        if (lvds) {
+            G80OutputPrivPtr pPriv = lvds->driver_private;
 
-        if(pNv->lvds.i2cPort != -1) {
-            char i2cName[16];
+            pPriv->scale = G80_SCALE_ASPECT;
 
-            snprintf(i2cName, sizeof(i2cName), "I2C%i (LVDS)", pNv->lvds.i2cPort);
-            pPriv->i2c = G80I2CInit(pScrn, i2cName, pNv->lvds.i2cPort);
-            if(!pPriv->i2c) {
-                xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                           "Failed to initialize I2C for port %i (LVDS)!\n",
-                           pNv->lvds.i2cPort);
+            if(pNv->lvds.i2cPort != -1) {
+                char i2cName[16];
+
+                snprintf(i2cName, sizeof(i2cName), "I2C%i (LVDS)", pNv->lvds.i2cPort);
+                pPriv->i2c = G80I2CInit(pScrn, i2cName, pNv->lvds.i2cPort);
+                if(!pPriv->i2c) {
+                    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                               "Failed to initialize I2C for port %i (LVDS)!\n",
+                               pNv->lvds.i2cPort);
+                }
             }
         }
     }

@@ -315,7 +315,7 @@ void NVInitVideo (ScreenPtr pScreen)
         if(overlayAdaptor) size++;
         if(blitAdaptor)    size++;
 
-        if((newAdaptors = xalloc(size * sizeof(XF86VideoAdaptorPtr*)))) {
+        if((newAdaptors = malloc(size * sizeof(XF86VideoAdaptorPtr*)))) {
             if(num_adaptors) {
                  memcpy(newAdaptors, adaptors,
                         num_adaptors * sizeof(XF86VideoAdaptorPtr));
@@ -336,7 +336,7 @@ void NVInitVideo (ScreenPtr pScreen)
         xf86XVScreenInit(pScreen, adaptors, num_adaptors);
 
     if (newAdaptors)
-	xfree(newAdaptors);    
+	free(newAdaptors);    
 }
 
 
@@ -349,7 +349,7 @@ NVSetupBlitVideo (ScreenPtr pScreen)
     NVPortPrivPtr       pPriv;
     int         i;
 
-    if (!(adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) +
+    if (!(adapt = calloc(1, sizeof(XF86VideoAdaptorRec) +
                              sizeof(NVPortPrivRec) +
                              (sizeof(DevUnion) * NUM_BLIT_PORTS))))
     {
@@ -411,7 +411,7 @@ NVSetupOverlayVideo (ScreenPtr pScreen)
     XF86VideoAdaptorPtr adapt;
     NVPortPrivPtr       pPriv;
     
-    if (!(adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) + 
+    if (!(adapt = calloc(1, sizeof(XF86VideoAdaptorRec) +
                              sizeof(NVPortPrivRec) + 
                              sizeof(DevUnion))))
     {

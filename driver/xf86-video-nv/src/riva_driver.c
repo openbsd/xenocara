@@ -121,7 +121,7 @@ RivaFreeRec(ScrnInfoPtr pScrn)
 {
     if (pScrn->driverPrivate == NULL)
         return;
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -261,11 +261,11 @@ RivaCloseScreen(int scrnIndex, ScreenPtr pScreen)
     if (pRiva->CursorInfoRec)
         xf86DestroyCursorInfoRec(pRiva->CursorInfoRec);
     if (pRiva->ShadowPtr)
-        xfree(pRiva->ShadowPtr);
+        free(pRiva->ShadowPtr);
     if (pRiva->DGAModes)
-        xfree(pRiva->DGAModes);
+        free(pRiva->DGAModes);
     if ( pRiva->expandBuffer )
-        xfree(pRiva->expandBuffer);
+        free(pRiva->expandBuffer);
 
     pScrn->vtSema = FALSE;
     pScreen->CloseScreen = pRiva->CloseScreen;
@@ -345,7 +345,7 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
             return FALSE;
 
         i = pEnt->index;
-        xfree(pEnt);
+        free(pEnt);
 
         rivaProbeDDC(pScrn, i);
         return TRUE;
@@ -492,7 +492,7 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
     xf86CollectOptions(pScrn, NULL);
 
     /* Process the options */
-    if (!(pRiva->Options = xalloc(sizeof(RivaOptions))))
+    if (!(pRiva->Options = malloc(sizeof(RivaOptions))))
 	return FALSE;
     memcpy(pRiva->Options, RivaOptions, sizeof(RivaOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pRiva->Options);
@@ -1103,7 +1103,7 @@ RivaScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     if(pRiva->ShadowFB) {
  	pRiva->ShadowPitch = BitmapBytePad(pScrn->bitsPerPixel * width);
-        pRiva->ShadowPtr = xalloc(pRiva->ShadowPitch * height);
+        pRiva->ShadowPtr = malloc(pRiva->ShadowPitch * height);
 	displayWidth = pRiva->ShadowPitch / (pScrn->bitsPerPixel >> 3);
         FBStart = pRiva->ShadowPtr;
     } else {

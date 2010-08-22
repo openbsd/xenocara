@@ -23,7 +23,7 @@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @XMODES_CFLAGS@ @XORG_CFLAGS@
+AM_CFLAGS = @XORG_CFLAGS@
 nv_drv_la_LTLIBRARIES = nv_drv.la
 nv_drv_la_LDFLAGS = -module -avoid-version
 nv_drv_ladir = @moduledir@/drivers
@@ -82,24 +82,3 @@ g80_sources = \
          g80_xaa.c \
          g80_xaa.h
 
-xmode_sources = \
-         @parser_dir@/xf86Parser.h \
-         @parser_dir@/xf86Optrec.h \
-         @modes_dir@/xf86Modes.h \
-         @modes_dir@/xf86Modes.c \
-         @modes_dir@/xf86cvt.c \
-         @modes_dir@/xf86Crtc.h \
-         @modes_dir@/xf86Crtc.c \
-         @modes_dir@/xf86Cursors.c \
-         @modes_dir@/xf86EdidModes.c \
-         @modes_dir@/xf86gtf.c \
-         @modes_dir@/xf86RandR12.c \
-         @modes_dir@/xf86RandR12.h \
-         @modes_dir@/xf86Rename.h \
-         @modes_dir@/xf86Rotate.c \
-         @modes_dir@/xf86DiDGA.c
-
-if BUILD_XMODES
-EXTRA_nv_drv_la_SOURCES = local_xf86Rename.h
-nodist_nv_drv_la_SOURCES = $(xmode_sources)
-endif

@@ -668,11 +668,11 @@ NVCommonSetup(ScrnInfoPtr pScrn)
               (!monitorA->features.input_type && !pNv->FlatPanel))
            {
                if(monitorB) { 
-                  xfree(monitorB);
+                  free(monitorB);
                   monitorB = NULL;
                }
            } else {
-              xfree(monitorA);
+              free(monitorA);
               monitorA = NULL;
            }
        }
@@ -681,7 +681,7 @@ NVCommonSetup(ScrnInfoPtr pScrn)
            if((monitorB->features.input_type && !pNv->FlatPanel) ||
               (!monitorB->features.input_type && pNv->FlatPanel)) 
            {
-              xfree(monitorB);
+              free(monitorB);
            } else {
               monitorA = monitorB;
            }

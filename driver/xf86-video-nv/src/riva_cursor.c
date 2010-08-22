@@ -72,13 +72,13 @@ RivaTransformCursor (RivaPtr pRiva)
     int i, dwords;
 
     dwords = (32 * 32) >> 1;
-    if(!(tmp = Xcalloc(dwords * 4))) return;
+    if(!(tmp = calloc(1, dwords * 4))) return;
     RivaConvertCursor1555(pRiva, pRiva->curImage, (CARD16*)tmp);
 
     for(i = 0; i < dwords; i++)
         pRiva->riva.CURSOR[i] = tmp[i];
 
-    xfree(tmp);
+    free(tmp);
 }
 
 static void

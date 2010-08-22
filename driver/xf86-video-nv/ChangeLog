@@ -1,3 +1,297 @@
+commit 41de275248cf02db8cf0d4ab5df7596b23ea573d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jul 30 14:14:59 2010 -0700
+
+    nv 2.1.18
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 470c5c662f25d4e27b7d8d25974498aaaae1bf2c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jul 19 17:01:59 2010 -0700
+
+    Remove RANDR_12_INTERFACE checking, always defined.
+    
+    RANDR_12_INTERFACE is defined in xserver/randr/randstr.h since version 1.2.
+    This driver only configures against xserver 1.3 or higher.
+    
+    Reported-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit fb82b1725ffdbea78557ea03e0004eef7ef346c1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 91d89916d47b76882769d5f977e75f4043202ba3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c2efd50238a529f4e58627dbf0cb516088395f9d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7e6c5ff1692cf3c6697c6cb6c9c8d437724ce7f5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ead1ae34120260d4efb2d80d8aee63d790807189
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 976120265bf1a38975b957eed2f2ced2fa463954
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:57 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 91a354748c18c0368932df6ab1f9ebab17780338
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 67b7e53a3a745fc84e3aacda883c17758d4c7927
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d35946f7f5b586f6fae91231f88d112867edd20b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e81a04c16ab8683a118bcf9c47426ddee3ca6637
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit 90ee9cbb11ebe7f087b023fe1f6f0cfe1e94d5fd
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jul 19 15:52:06 2010 -0700
+
+    Add a missing " }," pointed out by Johannes Obermayr.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit fd341048bac3d7181bcb37b51e59118babf9885c
+Merge: 6d2431a a2dc32c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jul 19 11:34:39 2010 -0700
+
+    Merge branch 'master' of git://soprano/~aaron/xf86-video-nv
+
+commit 6d2431a37ffd7a976e9046424a6c1f3c47ded2df
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jul 17 10:52:50 2010 -0700
+
+    The /compat code is no longer required.
+    
+    This was used at one point in time to backport the modes code from server
+    1.3 to server 1.2. When the tarball was created, whatever modes code
+    was on the developer disk was included.
+    
+    The server 1.2 as shipped in the tarball on the web does not contain the
+    modes code. It was added just after and found in git branch server-1.2-branch.
+    
+    The modes code was initially included in version 2.0.95 and still compiles
+    with server 1.2. As of version 2.1.9 it no longer compiles.
+    Subsequent versions are not backward compatible and probably not meant to be.
+    
+    The XRandR wiki points to articles saying that XRandR 1.2 first appeared in
+    server 1.3 and nv 2.0.95. Given that modes code in current server version
+    does not compile with server 1.2, and that the modes code is included in
+    version 1.3 and up, might as well stop including this modes code in the driver.
+    
+    This patch makes the driver requiring server 1.3 or later.
+    
+    This will solve the issue where "make dist" fails "out of the box"
+    and requires manual fix-up on the build machine which is documented
+    in the compat/README file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit a2dc32c5c900cbeb3fd2f99d38b64004f0ac7876
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jul 19 11:27:52 2010 -0700
+
+    Add PCI table entries for the GeForce 315
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit c383cc20dd81fa692c73968107c125787051c14d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jul 14 07:52:42 2010 -0700
+
+    Unlike for lspci and the kernel, X bus IDs are decimal instead of hex.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit b9f1251a989c5bf69f47746a3ca4021db4798a03
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jul 9 12:53:28 2010 -0700
+
+    Bring NVKnownChipsets up to date.
+    
+    Based on a suggestion from Renzo <rfabriek@nerdshack.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 0f220eb6934edc9a1d2d7d8c11573cdc8a9280e3
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jun 2 16:06:40 2010 -0700
+
+    Fix the kernel driver error reporting to be a little more verbose.
+    
+    Commit 3e9f7704122e0685ce83f7d3d3630e8a07293671 added printouts when the driver
+    detects that a kernel module is attached to the given PCI device.  However, it
+    uses ErrorF and doesn't print any identifying information about *which* device
+    has the problem or even which driver is complaining.  Fix it to use xf86DrvMsg
+    and print the driver name and PCI device and bus IDs.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 4e1efd5222ffb8328b12f63e4d8083298b44dd17
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jun 2 15:39:35 2010 -0700
+
+    Depend on libpciaccess >= 0.10.7.
+    
+    This is the first version to contain pci_device_has_kernel_driver.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 78ffecce368868f7b363e7f520d163e2e4330adc
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jun 2 15:29:57 2010 -0700
+
+    Revert "Refuse to bind to a device which has kernel modesetting active."
+    
+    It was superseded by 3e9f7704122e0685ce83f7d3d3630e8a07293671, which depends on
+    libpciaccess and not libdrm.  This is better, because the server already depends
+    on the former, while the latter is optional.
+    
+    This reverts commit 17ab5dbea69e690cbf78c25040db518471e0887f.
+    
+    Conflicts:
+    
+    	src/nv_driver.c
+
+commit 133f7c4d51b3c7d7e1e7af80056947d3a7ec2097
+Author: Ben Skeggs <bskeggs@redhat.com>
+Date:   Fri Aug 28 09:43:16 2009 +1000
+
+    nv: refuse to load if there's a kernel driver bound to the device already
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 6a86c607b68e016390553ec91cd2e39b65364a9a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 09:50:31 2010 -0400
+
+    COPYING: update file with Copyright notices from source code.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4fff9d3f0a27de68bd3190a98558a3de1b7a85d2
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Tue May 25 13:32:18 2010 +0300
+
+    Don't use libcwrappers for calloc and free
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+
+commit 17ab5dbea69e690cbf78c25040db518471e0887f
+Author: Marcin Slusarz <marcin.slusarz@gmail.com>
+Date:   Fri Apr 16 10:19:19 2010 -0700
+
+    Refuse to bind to a device which has kernel modesetting active.
+    
+    Touching directly the hardware while kernel modesetting is active
+    breaks console output.
+    
+    Patch almost entrirely based on VESA patch by
+    Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+    
+    Signed-off-by: Marcin Slusarz <marcin.slusarz@gmail.com>
+    Tested-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 250a3a7cee1a4bbfc432ab6da5b986e889207526
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Mar 10 18:31:08 2010 -0800
+
+    Update MCP6x supported products.
+    
+    Use the official names for 10DE:053B and 10DE:053E.  Add some additional
+    product IDs and update the documentation.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 347625b8e187c4ab696cd1dad95e49c31ced12f6
+Author: Markus Strobl <markus.strobl@gmx.at>
+Date:   Wed Mar 10 18:26:33 2010 -0800
+
+    Bug #19817: Add support for GeForce 7025 and 7050.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit e6b046329480a26ecebadf4314673db3f107f83e
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Mar 8 16:49:24 2010 -0800
+
+    Bug #24787: Don't crash if LVDS initialization fails
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
 commit 71321d0ddecf1ab5327c754353d31db5d1f3c6bf
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Mon Mar 8 13:34:20 2010 -0800

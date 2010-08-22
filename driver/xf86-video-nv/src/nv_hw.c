@@ -890,7 +890,8 @@ void NVCalcStateExt (
         case NV_ARCH_30:
         default:
             if(((pNv->Chipset & 0xfff0) == 0x0240) ||
-               ((pNv->Chipset & 0xfff0) == 0x03D0))
+               ((pNv->Chipset & 0xfff0) == 0x03D0) ||
+               ((pNv->Chipset & 0xfff0) == 0x0530))
             {
                 state->arbitration0 = 128; 
                 state->arbitration1 = 0x0480; 
@@ -1226,6 +1227,7 @@ void NVLoadStateExt (
               case 0x01D0:
               case 0x0240:
               case 0x03D0:
+              case 0x0530:
                  pNv->PMC[0x1700/4] = pNv->PFB[0x020C/4];
                  pNv->PMC[0x1704/4] = 0;
                  pNv->PMC[0x1708/4] = 0;
@@ -1316,7 +1318,8 @@ void NVLoadStateExt (
                    pNv->PGRAPH[(0x0900/4) + i] = pNv->PFB[(0x0600/4) + i];
                    if(((pNv->Chipset & 0xfff0) != 0x0160) &&
                       ((pNv->Chipset & 0xfff0) != 0x0220) &&
-                      ((pNv->Chipset & 0xfff0) != 0x0240))
+                      ((pNv->Chipset & 0xfff0) != 0x0240) &&
+                      ((pNv->Chipset & 0xfff0) != 0x0530))
                    {
                       pNv->PGRAPH[(0x6900/4) + i] = pNv->PFB[(0x0600/4) + i];
                    }

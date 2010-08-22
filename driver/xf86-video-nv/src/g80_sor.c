@@ -169,7 +169,7 @@ G80SorDestroy(xf86OutputPtr output)
 
     xf86DeleteMode(&pPriv->nativeMode, pPriv->nativeMode);
 
-    xfree(output->driver_private);
+    free(output->driver_private);
     output->driver_private = NULL;
 }
 
@@ -265,7 +265,6 @@ G80SorGetLVDSModes(xf86OutputPtr output)
     return xf86DuplicateMode(pPriv->nativeMode);
 }
 
-#ifdef RANDR_12_INTERFACE
 #define MAKE_ATOM(a) MakeAtom((a), sizeof(a) - 1, TRUE);
 
 struct property {
@@ -407,7 +406,6 @@ G80SorSetProperty(xf86OutputPtr output, Atom prop, RRPropertyValuePtr val)
 
     return TRUE;
 }
-#endif // RANDR_12_INTERFACE
 
 static const xf86OutputFuncsRec G80SorTMDSOutputFuncs = {
     .dpms = G80SorDPMSSet,
@@ -420,10 +418,8 @@ static const xf86OutputFuncsRec G80SorTMDSOutputFuncs = {
     .mode_set = G80SorModeSet,
     .detect = G80SorDetect,
     .get_modes = G80OutputGetDDCModes,
-#ifdef RANDR_12_INTERFACE
     .create_resources = G80SorCreateResources,
     .set_property = G80SorSetProperty,
-#endif
     .destroy = G80SorDestroy,
 };
 
@@ -438,10 +434,8 @@ static const xf86OutputFuncsRec G80SorLVDSOutputFuncs = {
     .mode_set = G80SorModeSet,
     .detect = G80SorLVDSDetect,
     .get_modes = G80SorGetLVDSModes,
-#ifdef RANDR_12_INTERFACE
     .create_resources = G80SorCreateResources,
     .set_property = G80SorSetProperty,
-#endif
     .destroy = G80SorDestroy,
 };
 
@@ -505,7 +499,7 @@ G80CreateSor(ScrnInfoPtr pScrn, ORNum or, PanelType panelType)
         if(!pPriv->nativeMode) {
             xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
                        "Failed to find LVDS native mode\n");
-            xfree(pPriv);
+            free(pPriv);
             return NULL;
         }
 

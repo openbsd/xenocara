@@ -80,7 +80,7 @@ static Bool
 G80GetRec(ScrnInfoPtr pScrn)
 {
     if(pScrn->driverPrivate == NULL)
-        pScrn->driverPrivate = xcalloc(sizeof(G80Rec), 1);
+        pScrn->driverPrivate = calloc(sizeof(G80Rec), 1);
 
     return (pScrn->driverPrivate != NULL);
 }
@@ -88,7 +88,7 @@ G80GetRec(ScrnInfoPtr pScrn)
 static void
 G80FreeRec(ScrnInfoPtr pScrn)
 {
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -263,7 +263,7 @@ G80PreInit(ScrnInfoPtr pScrn, int flags)
 
     /* Process options */
     xf86CollectOptions(pScrn, NULL);
-    if(!(pNv->Options = xalloc(sizeof(G80Options)))) goto fail;
+    if(!(pNv->Options = malloc(sizeof(G80Options)))) goto fail;
     memcpy(pNv->Options, G80Options, sizeof(G80Options));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pNv->Options);
 

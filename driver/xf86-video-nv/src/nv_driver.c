@@ -125,7 +125,7 @@ _X_EXPORT DriverRec NV = {
 #endif
 };
 
-/* Known cards as of 2010/03/08 */
+/* Known cards as of 2010/07/19 */
 
 static SymTabRec NVKnownChipsets[] =
 {
@@ -380,6 +380,12 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE03D2, "GeForce 6100 nForce 400" },
   { 0x10DE03D5, "GeForce 6100 nForce 420" },
 
+  { 0x10DE0531, "GeForce 7150M / nForce 630M" },
+  { 0x10DE0533, "GeForce 7000M / nForce 610M" },
+  { 0x10DE053A, "GeForce 7050 PV / nForce 630a" },
+  { 0x10DE053B, "GeForce 7050 PV / nForce 630a" },
+  { 0x10DE053E, "GeForce 7025 / nForce 630a" },
+
 /*************** G8x ***************/
   { 0x10DE0191, "GeForce 8800 GTX" },
   { 0x10DE0193, "GeForce 8800 GTS" },
@@ -392,6 +398,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0403, "GeForce 8600 GS" },
   { 0x10DE0404, "GeForce 8400 GS" },
   { 0x10DE0405, "GeForce 9500M GS" },
+  { 0x10DE0406, "GeForce 8300 GS" },
   { 0x10DE0407, "GeForce 8600M GT" },
   { 0x10DE0408, "GeForce 9650M GS" },
   { 0x10DE0409, "GeForce 8700M GT" },
@@ -401,6 +408,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE040D, "Quadro FX 1600M" },
   { 0x10DE040E, "Quadro FX 570" },
   { 0x10DE040F, "Quadro FX 1700" },
+  { 0x10DE0410, "GeForce GT 330" },
   { 0x10DE0420, "GeForce 8400 SE" },
   { 0x10DE0421, "GeForce 8500 GT" },
   { 0x10DE0422, "GeForce 8400 GS" },
@@ -422,7 +430,10 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE05E2, "GeForce GTX 260" },
   { 0x10DE05E3, "GeForce GTX 285" },
   { 0x10DE05E6, "GeForce GTX 275" },
+  { 0x10DE05EA, "GeForce GTX 260" },
   { 0x10DE05EB, "GeForce GTX 295" },
+  { 0x10DE05ED, "Quadroplex 2200 D2" },
+  { 0x10DE05F8, "Quadroplex 2200 S4" },
   { 0x10DE05F9, "Quadro CX" },
   { 0x10DE05FD, "Quadro FX 5800" },
   { 0x10DE05FE, "Quadro FX 4800" },
@@ -430,6 +441,7 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE0600, "GeForce 8800 GTS 512" },
   { 0x10DE0601, "GeForce 9800 GT" },
   { 0x10DE0602, "GeForce 8800 GT" },
+  { 0x10DE0603, "GeForce GT 230" },
   { 0x10DE0604, "GeForce 9800 GX2" },
   { 0x10DE0605, "GeForce 9800 GT" },
   { 0x10DE0606, "GeForce 8800 GS" },
@@ -440,15 +452,18 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE060B, "GeForce 9800M GT" },
   { 0x10DE060C, "GeForce 8800M GTX" },
   { 0x10DE060D, "GeForce 8800 GS" },
+  { 0x10DE060F, "GeForce GTX 285M" },
   { 0x10DE0610, "GeForce 9600 GSO" },
   { 0x10DE0611, "GeForce 8800 GT" },
-  { 0x10DE0612, "GeForce 9800 GTX" },
+  { 0x10DE0612, "GeForce 9800 GTX/9800 GTX+" },
   { 0x10DE0613, "GeForce 9800 GTX+" },
   { 0x10DE0614, "GeForce 9800 GT" },
   { 0x10DE0615, "GeForce GTS 250" },
   { 0x10DE0617, "GeForce 9800M GTX" },
   { 0x10DE0618, "GeForce GTX 260M" },
+  { 0x10DE0619, "Quadro FX 4700 X2" },
   { 0x10DE061A, "Quadro FX 3700" },
+  { 0x10DE061B, "Quadro VX 200" },
   { 0x10DE061C, "Quadro FX 3600M" },
   { 0x10DE061D, "Quadro FX 2800M" },
   { 0x10DE061E, "Quadro FX 3700M" },
@@ -462,12 +477,19 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE062A, "GeForce 9700M GTS" },
   { 0x10DE062B, "GeForce 9800M GS" },
   { 0x10DE062C, "GeForce 9800M GTS" },
+  { 0x10DE062D, "GeForce 9600 GT" },
+  { 0x10DE062E, "GeForce 9600 GT" },
+  { 0x10DE0631, "GeForce GTS 160M" },
+  { 0x10DE0632, "GeForce GTS 150M" },
+  { 0x10DE0635, "GeForce 9600 GSO" },
+  { 0x10DE0637, "GeForce 9600 GT" },
   { 0x10DE0638, "Quadro FX 1800" },
   { 0x10DE063A, "Quadro FX 2700M" },
   { 0x10DE0640, "GeForce 9500 GT" },
   { 0x10DE0641, "GeForce 9400 GT" },
   { 0x10DE0643, "GeForce 9500 GT" },
   { 0x10DE0644, "GeForce 9500 GS" },
+  { 0x10DE0645, "GeForce 9500 GS" },
   { 0x10DE0646, "GeForce GT 120" },
   { 0x10DE0647, "GeForce 9600M GT" },
   { 0x10DE0648, "GeForce 9600M GS" },
@@ -475,27 +497,39 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE064A, "GeForce 9700M GT" },
   { 0x10DE064B, "GeForce 9500M G" },
   { 0x10DE064C, "GeForce 9650M GT" },
+  { 0x10DE0651, "GeForce G 110M" },
   { 0x10DE0652, "GeForce GT 130M" },
-  { 0x10DE0656, "GeForce 9500 GT" },
+  { 0x10DE0653, "GeForce GT 120M" },
+  { 0x10DE0654, "GeForce GT 220M" },
+  { 0x10DE0656, "GeForce 9650 S" },
   { 0x10DE0658, "Quadro FX 380" },
   { 0x10DE0659, "Quadro FX 580" },
   { 0x10DE065A, "Quadro FX 1700M" },
+  { 0x10DE065B, "GeForce 9400 GT" },
   { 0x10DE065C, "Quadro FX 770M" },
   { 0x10DE06E0, "GeForce 9300 GE" },
   { 0x10DE06E1, "GeForce 9300 GS" },
+  { 0x10DE06E2, "GeForce 8400" },
+  { 0x10DE06E3, "GeForce 8400 SE" },
   { 0x10DE06E4, "GeForce 8400 GS" },
   { 0x10DE06E5, "GeForce 9300M GS" },
   { 0x10DE06E6, "GeForce G100" },
+  { 0x10DE06E7, "GeForce 9300 SE" },
   { 0x10DE06E8, "GeForce 9200M GS" },
   { 0x10DE06E9, "GeForce 9300M GS" },
   { 0x10DE06EA, "Quadro NVS 150M" },
   { 0x10DE06EB, "Quadro NVS 160M" },
   { 0x10DE06EC, "GeForce G 105M" },
   { 0x10DE06EF, "GeForce G 103M" },
+  { 0x10DE06F1, "GeForce G105M" },
   { 0x10DE06F8, "Quadro NVS 420" },
   { 0x10DE06F9, "Quadro FX 370 LP" },
   { 0x10DE06FA, "Quadro NVS 450" },
+  { 0x10DE06FB, "Quadro FX 370M" },
   { 0x10DE06FD, "Quadro NVS 295" },
+  { 0x10DE0844, "GeForce 9100M G" },
+  { 0x10DE0845, "GeForce 8200M G" },
+  { 0x10DE0846, "GeForce 9200" },
   { 0x10DE0847, "GeForce 9100" },
   { 0x10DE0848, "GeForce 8300" },
   { 0x10DE0849, "GeForce 8200" },
@@ -504,31 +538,75 @@ static SymTabRec NVKnownChipsets[] =
   { 0x10DE084C, "nForce 980a/780a SLI" },
   { 0x10DE084D, "nForce 750a SLI" },
   { 0x10DE084F, "GeForce 8100 / nForce 720a" },
-  { 0x10DE0844, "GeForce 9100M G" },
-  { 0x10DE0845, "GeForce 8200M G" },
+  { 0x10DE0860, "GeForce 9400" },
   { 0x10DE0861, "GeForce 9400" },
   { 0x10DE0862, "GeForce 9400M G" },
   { 0x10DE0863, "GeForce 9400M" },
+  { 0x10DE0864, "GeForce 9300" },
+  { 0x10DE0865, "ION" },
+  { 0x10DE0866, "GeForce 9400M G" },
+  { 0x10DE0867, "GeForce 9400" },
+  { 0x10DE0868, "nForce 760i SLI" },
+  { 0x10DE086A, "GeForce 9400" },
   { 0x10DE086C, "GeForce 9300 / nForce 730i" },
+  { 0x10DE086D, "GeForce 9200" },
+  { 0x10DE086E, "GeForce 9100M G" },
+  { 0x10DE086F, "GeForce 8200M G" },
+  { 0x10DE0870, "GeForce 9400M" },
+  { 0x10DE0871, "GeForce 9200" },
   { 0x10DE0872, "GeForce G102M" },
   { 0x10DE0873, "GeForce G102M" },
+  { 0x10DE0874, "ION" },
+  { 0x10DE0876, "ION" },
   { 0x10DE087A, "GeForce 9400" },
   { 0x10DE087D, "ION" },
+  { 0x10DE087E, "ION LE" },
   { 0x10DE087F, "ION LE" },
   { 0x10DE0A20, "GeForce GT 220" },
+  { 0x10DE0A22, "GeForce 315" },
   { 0x10DE0A23, "GeForce 210" },
+  { 0x10DE0A28, "GeForce GT 230M" },
+  { 0x10DE0A29, "GeForce GT 330M" },
   { 0x10DE0A2A, "GeForce GT 230M" },
+  { 0x10DE0A2B, "GeForce GT 330M" },
+  { 0x10DE0A2C, "NVS 5100M" },
+  { 0x10DE0A2D, "GeForce GT 320M" },
   { 0x10DE0A34, "GeForce GT 240M" },
+  { 0x10DE0A35, "GeForce GT 325M" },
+  { 0x10DE0A3C, "Quadro FX 880M" },
   { 0x10DE0A60, "GeForce G210" },
   { 0x10DE0A62, "GeForce 205" },
   { 0x10DE0A63, "GeForce 310" },
+  { 0x10DE0A64, "ION" },
   { 0x10DE0A65, "GeForce 210" },
   { 0x10DE0A66, "GeForce 310" },
+  { 0x10DE0A67, "GeForce 315" },
+  { 0x10DE0A68, "GeForce G105M" },
+  { 0x10DE0A69, "GeForce G105M" },
+  { 0x10DE0A6A, "NVS 2100M" },
+  { 0x10DE0A6C, "NVS 3100M" },
+  { 0x10DE0A6E, "GeForce 305M" },
+  { 0x10DE0A6F, "ION" },
+  { 0x10DE0A70, "GeForce 310M" },
+  { 0x10DE0A71, "GeForce 305M" },
+  { 0x10DE0A72, "GeForce 310M" },
+  { 0x10DE0A73, "GeForce 305M" },
   { 0x10DE0A74, "GeForce G210M" },
+  { 0x10DE0A75, "GeForce 310M" },
   { 0x10DE0A78, "Quadro FX 380 LP" },
+  { 0x10DE0A7C, "Quadro FX 380M" },
+  { 0x10DE0CA0, "GeForce GT 330" },
+  { 0x10DE0CA2, "GeForce GT 320" },
   { 0x10DE0CA3, "GeForce GT 240" },
+  { 0x10DE0CA4, "GeForce GT 340" },
+  { 0x10DE0CA7, "GeForce GT 330" },
   { 0x10DE0CA8, "GeForce GTS 260M" },
   { 0x10DE0CA9, "GeForce GTS 250M" },
+  { 0x10DE0CAC, "GeForce 315" },
+  { 0x10DE0CAF, "GeForce GT 335M" },
+  { 0x10DE0CB0, "GeForce GTS 350M" },
+  { 0x10DE0CB1, "GeForce GTS 360M" },
+  { 0x10DE0CBC, "Quadro FX 1800M" },
 
   {-1, NULL}
 };
@@ -618,7 +696,7 @@ NVFreeRec(ScrnInfoPtr pScrn)
 {
     if (pScrn->driverPrivate == NULL)
         return;
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -817,6 +895,7 @@ NVIsSupported(CARD32 id)
     case 0x0340:
     case 0x0390:
     case 0x03D0:
+    case 0x0530:
         return TRUE;
     }
 
@@ -833,17 +912,26 @@ NVPciProbe(DriverPtr drv, int entity, struct pci_device *dev, intptr_t data)
                       NVGetPCIXpressChip(dev) : dev->vendor_id << 16 | dev->device_id;
     const char *name = xf86TokenToString(NVKnownChipsets, id);
 
+    if (pci_device_has_kernel_driver(dev)) {
+        xf86DrvMsg(0, X_ERROR,
+                   NV_NAME ": The PCI device 0x%x (%s) at %2.2d@%2.2d:%2.2d:%1.1d has a kernel module claiming it.\n",
+                   id, name, dev->bus, dev->domain, dev->dev, dev->func);
+        xf86DrvMsg(0, X_ERROR,
+                   NV_NAME ": This driver cannot operate until it has been unloaded.\n");
+        return FALSE;
+    }
+
     if(dev->vendor_id == PCI_VENDOR_NVIDIA && !name &&
        !NVIsSupported(id) && !NVIsG80(id)) {
         /* See if pci.ids knows what the heck this thing is */
         name = pci_device_get_device_name(dev);
         if(name)
             xf86DrvMsg(0, X_WARNING,
-                       NV_NAME ": Ignoring unsupported device 0x%x (%s) at %2.2x@%2.2x:%2.2x:%1.1x\n",
+                       NV_NAME ": Ignoring unsupported device 0x%x (%s) at %2.2d@%2.2d:%2.2d:%1.1d\n",
                        id, name, dev->bus, dev->domain, dev->dev, dev->func);
         else
             xf86DrvMsg(0, X_WARNING,
-                       NV_NAME ": Ignoring unsupported device 0x%x at %2.2x@%2.2x:%2.2x:%1.1x\n",
+                       NV_NAME ": Ignoring unsupported device 0x%x at %2.2d@%2.2d:%2.2d:%1.1d\n",
                        id, dev->bus, dev->domain, dev->dev, dev->func);
         return FALSE;
     }
@@ -854,7 +942,7 @@ NVPciProbe(DriverPtr drv, int entity, struct pci_device *dev, intptr_t data)
         name = "Unknown GPU";
 
     xf86DrvMsg(0, X_PROBED,
-               NV_NAME ": Found NVIDIA %s at %2.2x@%2.2x:%2.2x:%1.1x\n",
+               NV_NAME ": Found NVIDIA %s at %2.2d@%2.2d:%2.2d:%1.1d\n",
                name, dev->bus, dev->domain, dev->dev, dev->func);
 
     if(NVIsG80(id))
@@ -954,8 +1042,8 @@ NVProbe(DriverPtr drv, int flags)
 	}    
     }
 
-    xfree(devSections);
-    xfree(usedChips);
+    free(devSections);
+    free(usedChips);
 
     return foundScreen;
 }
@@ -1137,13 +1225,13 @@ NVCloseScreen(int scrnIndex, ScreenPtr pScreen)
     if (pNv->CursorInfoRec)
         xf86DestroyCursorInfoRec(pNv->CursorInfoRec);
     if (pNv->ShadowPtr)
-        xfree(pNv->ShadowPtr);
+        free(pNv->ShadowPtr);
     if (pNv->DGAModes)
-        xfree(pNv->DGAModes);
+        free(pNv->DGAModes);
     if (pNv->overlayAdaptor)
-	xfree(pNv->overlayAdaptor);
+	free(pNv->overlayAdaptor);
     if (pNv->blitAdaptor)
-        xfree(pNv->blitAdaptor);
+        free(pNv->blitAdaptor);
 
     pScrn->vtSema = FALSE;
     pScreen->CloseScreen = pNv->CloseScreen;
@@ -1266,7 +1354,7 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
             return FALSE;
 
         i = pEnt->index;
-        xfree(pEnt);
+        free(pEnt);
 
         nvProbeDDC(pScrn, i);
         return TRUE;
@@ -1463,7 +1551,7 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     xf86CollectOptions(pScrn, NULL);
 
     /* Process the options */
-    if (!(pNv->Options = xalloc(sizeof(NVOptions))))
+    if (!(pNv->Options = malloc(sizeof(NVOptions))))
 	return FALSE;
     memcpy(pNv->Options, NVOptions, sizeof(NVOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pNv->Options);
@@ -1741,6 +1829,7 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     case 0x0290:   /* GeForce 7900 */
     case 0x0390:   /* GeForce 7600 */
     case 0x0240:   /* GeForce 6100 */
+    case 0x0530:   /* GeForce 7050, 7025 */
     case 0x03D0:
          pNv->Architecture =  NV_ARCH_40;
          break;
@@ -2398,7 +2487,7 @@ NVScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     if(pNv->ShadowFB) {
  	pNv->ShadowPitch = BitmapBytePad(pScrn->bitsPerPixel * width);
-        pNv->ShadowPtr = xalloc(pNv->ShadowPitch * shadowHeight);
+        pNv->ShadowPtr = malloc(pNv->ShadowPitch * shadowHeight);
 	displayWidth = pNv->ShadowPitch / (pScrn->bitsPerPixel >> 3);
         FBStart = pNv->ShadowPtr;
     } else {
