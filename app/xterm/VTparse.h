@@ -1,7 +1,7 @@
-/* $XTermId: VTparse.h,v 1.51 2010/04/09 22:29:17 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.52 2010/06/15 10:58:13 tom Exp $ */
 
 /*
- * Copyright 2002-2008,2009 by Thomas E. Dickey
+ * Copyright 2002-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.52 2010/04/14 09:51:45 tom Exp $ */
+/* $XTermId: main.h,v 1.54 2010/06/20 20:22:32 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -87,8 +87,16 @@
 #define DEFFACENAME		NULL
 #endif
 
+#ifndef DEFFACENAME_AUTO
+#define DEFFACENAME_AUTO	"mono"
+#endif
+
 #ifndef DEFFACESIZE
 #define DEFFACESIZE		"14.0"
+#endif
+
+#ifndef DEFFACESIZE
+#define DEFFACESIZE_AUTO	"8.0"
 #endif
 
 #ifndef DEF_ALLOW_COLOR

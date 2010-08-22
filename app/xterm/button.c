@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.375 2010/04/18 17:48:58 tom Exp $ */
+/* $XTermId: button.c,v 1.377 2010/06/04 09:27:07 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -797,7 +797,7 @@ ReadLineMovePoint(TScreen * screen, int col, int ldelta)
 	line[count++] = ANSI_ESC;
 	line[count++] = '[';	/* XXX maybe sometimes O is better? */
     }
-    line[count++] = CharOf(col > 0 ? 'C' : 'D');
+    line[count] = CharOf(col > 0 ? 'C' : 'D');
     if (col < 0)
 	col = -col;
     while (col--)
@@ -1185,7 +1185,7 @@ xtermUtf8ToTextList(XtermWidget xw,
 	    for (i = 0; i < *text_list_count; ++i) {
 		data = (Char *) (*text_list)[i];
 		size = strlen((*text_list)[i]) + 1;
-		data = UTF8toLatin1(screen, data, size, &size);
+		(void) UTF8toLatin1(screen, data, size, &size);
 		new_size += size + 1;
 	    }
 	    new_text_list =
@@ -3395,9 +3395,11 @@ AppendStrToSelectionBuffer(TScreen * screen, Char * text, size_t len)
 	    }
 	    screen->selection_size = k;
 	}
-	memcpy(screen->selection_data + screen->selection_length, text, len);
-	screen->selection_length += len;
-	screen->selection_data[screen->selection_length] = 0;
+	if (screen->selection_data != 0) {
+	    memcpy(screen->selection_data + screen->selection_length, text, len);
+	    screen->selection_length += len;
+	    screen->selection_data[screen->selection_length] = 0;
+	}
     }
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: error.h,v 1.22 2009/08/09 17:23:31 tom Exp $ */
+/* $XTermId: error.h,v 1.23 2010/05/21 21:03:27 tom Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -51,7 +51,6 @@
 #define	ERROR_INIT	36	/* spawn: can't initialize window */
 #define	ERROR_TIOCKSET	46	/* spawn: ioctl() failed on TIOCKSET */
 #define	ERROR_TIOCKSETC	47	/* spawn: ioctl() failed on TIOCKSETC */
-#define	ERROR_SPREALLOC 48	/* spawn: realloc of ttydev failed */
 #define	ERROR_LUMALLOC  49	/* luit: command-line malloc failed */
 
 /* charproc.c */

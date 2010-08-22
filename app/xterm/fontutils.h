@@ -1,8 +1,8 @@
-/* $XTermId: fontutils.h,v 1.80 2010/04/16 21:23:13 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.81 2010/06/15 10:58:13 tom Exp $ */
 
 /************************************************************
 
-Copyright 1998-2008,2009 by Thomas E. Dickey
+Copyright 1998-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 

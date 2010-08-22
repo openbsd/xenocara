@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.42 2010/03/12 00:53:05 Matthieu.Herrb Exp $ */
+/* $XTermId: xtermcap.c,v 1.44 2010/06/13 17:46:27 tom Exp $ */
 
 /*
  * Copyright 2007-2009,2010 by Thomas E. Dickey
@@ -263,7 +263,7 @@ keyIsDistinct(XtermWidget xw, int which)
 	    char *fkey;
 
 	    loadTermcapStrings(screen);
-	    if ((fkey = screen->tcap_fkeys[which]) != NO_STRING) {
+	    if (screen->tcap_fkeys[which] != NO_STRING) {
 		for (k = 0; k < XtNumber(table); k++) {
 		    if (table[k].code == table[which].code
 			&& table[k].param == 0) {
@@ -588,7 +588,7 @@ set_termcap(XtermWidget xw, const char *name)
 
     TRACE(("set_termcap(%s)\n", NonNull(name)));
     if (IsEmpty(name)) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	const char *temp;
 	char *value;
@@ -607,7 +607,7 @@ set_termcap(XtermWidget xw, const char *name)
 	}
     }
     if (!success)
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 }
 
 void

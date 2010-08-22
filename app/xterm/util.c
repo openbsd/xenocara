@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.534 2010/04/18 17:06:44 tom Exp $ */
+/* $XTermId: util.c,v 1.538 2010/06/15 08:17:36 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -703,7 +703,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
     }
 
     if (AddToVisible(xw)
-	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
+	&& ((ld = getLineData(screen, screen->cur_row))) != 0) {
 	if (screen->cursor_state)
 	    HideCursor();
 
@@ -733,12 +733,11 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 #if OPT_ISO_COLORS
 	if (screen->colorAttrMode) {
 	    fg = MapToColorMode(xw->cur_foreground, screen, flags);
-	} else
-#endif
-	{
+	} else {
 	    fg = xw->cur_foreground;
 	}
 	checkVeryBoldColors(test, fg);
+#endif
 
 	/* make sure that the correct GC is current */
 	currentGC = updatedXtermGC(xw, flags, fg_bg, False);
@@ -2218,6 +2217,11 @@ getXftColor(XtermWidget xw, Pixel pixel)
 
 #define XFT_FONT(name) screen->name.font
 
+#if OPT_ISO_COLORS
+#define UseBoldFont(screen) (!(screen)->colorBDMode || ((screen)->veryBoldColors & BOLD))
+#else
+#define UseBoldFont(screen) 1
+#endif
 /*
  * fontconfig/Xft combination prior to 2.2 has a problem with
  * CJK truetype 'double-width' (bi-width/monospace) fonts leading
@@ -2263,9 +2267,7 @@ xtermXftDrawString(XtermWidget xw,
 	} else
 #endif
 	    if ((flags & BOLDATTR(screen))
-#if OPT_ISO_COLORS
-		&& !screen->colorBDMode
-#endif
+		&& UseBoldFont(screen)
 		&& XFT_FONT(renderWideBold[fontnum])) {
 	    wfont = XFT_FONT(renderWideBold[fontnum]);
 	} else {
@@ -2685,7 +2687,7 @@ drawXtermText(XtermWidget xw,
 	    XFontStruct *fs = screen->double_fonts[inx].fs;
 
 #if OPT_RENDERFONT
-	    if (!xw->misc.render_font || IsIconWin(screen, WhichVWin(screen)))
+	    if (!UsingRenderFont(xw))
 #endif
 	    {
 		XRectangle rect, *rp = &rect;
@@ -2805,9 +2807,7 @@ drawXtermText(XtermWidget xw,
 	} else
 #endif
 	    if ((flags & BOLDATTR(screen))
-#if OPT_ISO_COLORS
-		&& !screen->colorBDMode
-#endif
+		&& UseBoldFont(screen)
 		&& XFT_FONT(renderFontBold[fontnum])) {
 	    font = XFT_FONT(renderFontBold[fontnum]);
 	} else {
@@ -3525,8 +3525,8 @@ resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
 
 #if OPT_ISO_COLORS
 /*
- * Extract the foreground-color index from a one-byte color pair.  If we've got
- * BOLD or UNDERLINE color-mode active, those will be used.
+ * Extract the foreground-color index from a color pair.
+ * If we've got BOLD or UNDERLINE color-mode active, those will be used.
  */
 unsigned
 extract_fg(XtermWidget xw, unsigned color, unsigned flags)
@@ -3541,7 +3541,7 @@ extract_fg(XtermWidget xw, unsigned color, unsigned flags)
 }
 
 /*
- * Extract the background-color index from a one-byte color pair.
+ * Extract the background-color index from a color pair.
  * If we've got INVERSE color-mode active, that will be used.
  */
 unsigned

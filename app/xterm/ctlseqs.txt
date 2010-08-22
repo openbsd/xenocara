@@ -103,13 +103,13 @@ ENQ       Return Terminal Status (Ctrl-E).  Default response is an empty
           string, but may be overridden by a resource answerbackString.
 FF        Form Feed or New Page (NP) (Ctrl-L) same as LF
 LF        Line Feed or New Line (NL) (Ctrl-J)
+SI        Shift In (Ctrl-O) -> Switch to Standard Character Set: invokes
+          the G0 character set (the default).
 SO        Shift Out (Ctrl-N) -> Switch to Alternate Character Set:
           invokes the G1 character set.
 SP        Space.
 TAB       Horizontal Tab (HT) (Ctrl-I)
 VT        Vertical Tab (Ctrl-K) same as LF
-SI        Shift In (Ctrl-O) -> Switch to Standard Character Set: invokes
-          the G0 character set (the default).
 
 Controls beginning with ESC (other than those where ESC is part of a
 7-bit equivalent to 8-bit C1 controls), ordered by the final charac-

@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.169 2010/04/21 00:19:04 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.173 2010/06/15 22:47:34 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -300,8 +300,8 @@ ScrollBarDrawThumb(Widget scrollWidget)
 	totalHeight = thumbHeight + screen->savedlines;
 
 	XawScrollbarSetThumb(scrollWidget,
-			     ((float) thumbTop) / totalHeight,
-			     ((float) thumbHeight) / totalHeight);
+			     ((float) thumbTop) / (float) totalHeight,
+			     ((float) thumbHeight) / (float) totalHeight);
     }
 }
 
@@ -433,12 +433,12 @@ ScrollBarOn(XtermWidget xw, Bool init)
 						   -ScrollBarBorder(xw),
 						   5);
 	    if (screen->scrollWidget == NULL) {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	}
     } else if (!screen->scrollWidget || !XtIsRealized((Widget) xw)) {
-	Bell(XkbBI_MinorError, 0);
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 
 	ResizeScrollBar(xw);
@@ -491,7 +491,7 @@ ScrollBarOff(XtermWidget xw)
 	    Redraw();
 	}
     } else {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     }
 }
 
@@ -504,7 +504,7 @@ ToggleScrollBar(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     if (IsIcon(screen)) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	TRACE(("ToggleScrollBar{{\n"));
 	if (screen->fullVwin.sb_info.width) {
@@ -536,7 +536,8 @@ ScrollTextTo(
 	 * screen->savedlines : Number of offscreen text lines,
 	 * MaxRows(screen)    : Number of onscreen  text lines,
 	 */
-	thumbTop = (int) (*topPercent * (screen->savedlines + MaxRows(screen)));
+	thumbTop = (int) (*topPercent
+			  * (float) (screen->savedlines + MaxRows(screen)));
 	newTopLine = thumbTop - screen->savedlines;
 	WindowScroll(xw, newTopLine, True);
     }
@@ -617,7 +618,7 @@ static long
 params_to_pixels(TScreen * screen, String * params, Cardinal n)
 {
     int mult = 1;
-    char *s;
+    const char *s;
     int modifier;
 
     switch (n > 2 ? 2 : n) {
@@ -734,7 +735,9 @@ have_xkb(Display * dpy)
 			    modStr = XGetAtomName(xkb->dpy,
 						  xkb->names->vmods[n]);
 			    if (modStr != 0) {
-				XkbVirtualModsToReal(xkb, 1 << n, &mask);
+				XkbVirtualModsToReal(xkb,
+						     (unsigned) (1 << n),
+						     &mask);
 				TRACE(("  name[%d] %s (%#x)\n", n, modStr, mask));
 			    }
 			}
@@ -756,7 +759,7 @@ getXkbLED(Display * dpy, const char *name, Boolean * result)
     Bool state;
 
     if (have_xkb(dpy)) {
-	my_atom = XInternAtom(dpy, name, True);
+	my_atom = XInternAtom(dpy, name, False);
 	if ((my_atom != None) &&
 	    XkbGetNamedIndicator(dpy, my_atom, NULL, &state, NULL, NULL)) {
 	    *result = (Boolean) state;
@@ -777,7 +780,7 @@ showXkbLED(Display * dpy, const char *name, Bool enable)
     Boolean result = False;
 
     if (have_xkb(dpy)) {
-	my_atom = XInternAtom(dpy, name, True);
+	my_atom = XInternAtom(dpy, name, False);
 	if ((my_atom != None) &&
 	    XkbGetNamedIndicator(dpy, my_atom, NULL, NULL, NULL, NULL) &&
 	    XkbSetNamedIndicator(dpy, my_atom, True, enable, False, NULL)) {
@@ -789,6 +792,11 @@ showXkbLED(Display * dpy, const char *name, Bool enable)
 }
 #endif
 
+/*
+ * xlsatoms agrees with this list.  However Num/Caps lock are generally
+ * unusable due to special treatment in X.  They are used here for
+ * completeness.
+ */
 static const char *led_table[] =
 {
     "Num Lock",
@@ -861,6 +869,9 @@ xtermClearLEDs(TScreen * screen)
     XKeyboardControl values;
 
     TRACE(("xtermClearLEDs\n"));
+#ifdef HAVE_XKBQUERYEXTENSION
+    ShowScrollLock(screen, False);
+#endif
     memset(&values, 0, sizeof(values));
     XChangeKeyboardControl(dpy, KBLedMode, &values);
 }

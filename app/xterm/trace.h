@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.52 2010/04/05 00:11:01 tom Exp $ */
+/* $XTermId: trace.h,v 1.54 2010/06/15 22:40:51 tom Exp $ */
 
 /*
  * 
@@ -50,11 +50,16 @@ extern	void	Trace ( const char *, ... )
 #undef  TRACE
 #define TRACE(p) Trace p
 
+extern	void	TraceClose (void);
+
+#undef  TRACE_CLOSE
+#define TRACE_CLOSE TraceClose
+
 #if OPT_TRACE > 1
 #define TRACE2(p) Trace p
 #endif
 
-extern	char *	visibleChars (Char * /* buf */, unsigned /* len */);
+extern	char *	visibleChars (const Char * /* buf */, unsigned /* len */);
 extern	char *	visibleIChar (IChar *, unsigned);
 extern	char *	visibleIChars (IChar * /* buf */, unsigned /* len */);
 extern	const char * visibleChrsetName(unsigned /* chrset */);

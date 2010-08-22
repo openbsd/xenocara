@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.625 2010/04/18 17:10:42 tom Exp $ */
+/* $XTermId: xterm.h,v 1.628 2010/06/20 21:34:48 tom Exp $ */
 
 /************************************************************
 
@@ -882,7 +882,7 @@ extern unsigned xtermParamToState (XtermWidget /* xw */, unsigned /* param */);
 extern unsigned xtermStateToParam (XtermWidget /* xw */, unsigned /* state */);
 extern Bool xtermDeleteIsDEL (XtermWidget /* xw */);
 extern void Input (XtermWidget /* xw */, XKeyEvent */* event */, Bool /* eightbit */);
-extern void StringInput (XtermWidget /* xw */, Char * /* string */, size_t  /* nbytes */);
+extern void StringInput (XtermWidget /* xw */, const Char * /* string */, size_t  /* nbytes */);
 
 #if OPT_NUM_LOCK
 extern void VTInitModifiers(XtermWidget /* xw */);
@@ -954,7 +954,7 @@ extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */,
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
 extern int xtermResetIds(TScreen *  /* screen */);
-extern void Bell (int  /* which */, int  /* percent */);
+extern void Bell (XtermWidget /* xw */, int  /* which */, int  /* percent */);
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
 extern void ChangeXprop (char * /* name */);
@@ -1026,11 +1026,11 @@ extern Bool xtermEnvUTF8(void);
 #endif
 
 #ifdef ALLOWLOGGING
-extern void StartLog (TScreen * /* screen */);
-extern void CloseLog (TScreen * /* screen */);
-extern void FlushLog (TScreen * /* screen */);
+extern void StartLog (XtermWidget /* xw */);
+extern void CloseLog (XtermWidget /* xw */);
+extern void FlushLog (XtermWidget /* xw */);
 #else
-#define FlushLog(screen) /*nothing*/
+#define FlushLog(xw) /*nothing*/
 #endif
 
 /* print.c */
@@ -1051,10 +1051,10 @@ extern void xtermPrintEverything (XtermWidget /* xw */, PrinterFlags * /* p */);
 #endif
 
 extern Bool decodeUtf8 (PtyData * /* data */);
-extern int readPtyData (TScreen * /* screen */, PtySelect * /* select_mask */, PtyData * /* data */);
-extern void fillPtyData (TScreen * /* screen */, PtyData * /* data */, char * /* value */, int  /* length */);
+extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
+extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, int  /* length */);
 extern void initPtyData (PtyData ** /* data */);
-extern void trimPtyData (TScreen * /* screen */, PtyData * /* data */);
+extern void trimPtyData (XtermWidget /* xw */, PtyData * /* data */);
 
 #ifdef NO_LEAKS
 extern void noleaks_ptydata ( void );

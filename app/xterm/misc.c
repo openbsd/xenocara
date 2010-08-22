@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.493 2010/04/18 17:51:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.503 2010/06/20 21:33:49 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -127,7 +127,7 @@ static char *
 Readlink(const char *filename)
 {
     char *buf = NULL;
-    unsigned size = 100;
+    size_t size = 100;
     int n;
 
     for (;;) {
@@ -373,19 +373,23 @@ xevents(void)
     /*
      * process timeouts, relying on the fact that XtAppProcessEvent
      * will process the timeout and return without blockng on the
-     * XEvent queue.  Other sources i.e. the pty are handled elsewhere
+     * XEvent queue.  Other sources i.e., the pty are handled elsewhere
      * with select().
      */
-    while ((input_mask = XtAppPending(app_con)) & XtIMTimer)
-	XtAppProcessEvent(app_con, XtIMTimer);
+    while ((input_mask = XtAppPending(app_con)) != 0) {
+	if (input_mask & XtIMTimer)
+	    XtAppProcessEvent(app_con, (XtInputMask) XtIMTimer);
 #if OPT_SESSION_MGT
-    /*
-     * Session management events are alternative input events. Deal with
-     * them in the same way.
-     */
-    while ((input_mask = XtAppPending(app_con)) & XtIMAlternateInput)
-	XtAppProcessEvent(app_con, XtIMAlternateInput);
+	/*
+	 * Session management events are alternative input events. Deal with
+	 * them in the same way.
+	 */
+	else if (input_mask & XtIMAlternateInput)
+	    XtAppProcessEvent(app_con, (XtInputMask) XtIMAlternateInput);
 #endif
+	else
+	    break;
+    }
 
     /*
      * If there's no XEvents, don't wait around...
@@ -445,6 +449,7 @@ xevents(void)
 		case Expose:
 		case NoExpose:
 		case PropertyNotify:
+		case ClientMessage:
 		    break;
 		default:
 		    xtermShowPointer(xw, True);
@@ -454,7 +459,7 @@ xevents(void)
 
 	    XtDispatchEvent(&event);
 	}
-    } while ((input_mask = XtAppPending(app_con)) & XtIMXEvent);
+    } while (XtAppPending(app_con) & XtIMXEvent);
 }
 
 static Cursor
@@ -562,7 +567,7 @@ HandleStringEvent(Widget w GCC_UNUSED,
 	    StringInput(term, hexval, (size_t) 1);
 	}
     } else {
-	StringInput(term, (Char *) * params, strlen(*params));
+	StringInput(term, (const Char *) *params, strlen(*params));
     }
 }
 
@@ -592,8 +597,8 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
      */
     child_exe = Readlink(PROCFS_ROOT "/self/exe");
     if (!child_exe) {
-	if (strncmp(ProgramName, "./", 2)
-	    && strncmp(ProgramName, "../", 3)) {
+	if (strncmp(ProgramName, "./", (size_t) 2)
+	    && strncmp(ProgramName, "../", (size_t) 3)) {
 	    child_exe = xtermFindShell(ProgramName, True);
 	} else {
 	    fprintf(stderr, "Cannot exec-xterm given %s\n", ProgramName);
@@ -675,14 +680,14 @@ HandleInterpret(Widget w GCC_UNUSED,
 		Cardinal *param_count)
 {
     if (*param_count == 1) {
-	char *value = params[0];
+	const char *value = params[0];
 	int need = (int) strlen(value);
 	int used = (int) (VTbuffer->next - VTbuffer->buffer);
 	int have = (int) (VTbuffer->last - VTbuffer->buffer);
 
 	if (have - used + need < BUF_SIZE) {
 
-	    fillPtyData(TScreenOf(term), VTbuffer, value, (int) strlen(value));
+	    fillPtyData(term, VTbuffer, value, (int) strlen(value));
 
 	    TRACE(("Interpret %s\n", value));
 	    VTbuffer->update++;
@@ -771,7 +776,7 @@ HandleFocusChange(Widget w GCC_UNUSED,
 			    : FOCUS));
 	}
 	if (screen->grabbedKbd && (event->mode == NotifyUngrab)) {
-	    Bell(XkbBI_Info, 100);
+	    Bell(xw, XkbBI_Info, 100);
 	    ReverseVideo(xw);
 	    screen->grabbedKbd = False;
 	    update_securekbd();
@@ -857,9 +862,8 @@ xtermBell(XtermWidget xw, int which, int percent)
 }
 
 void
-Bell(int which, int percent)
+Bell(XtermWidget xw, int which, int percent)
 {
-    XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
     struct timeval curtime;
     long now_msecs;
@@ -1099,7 +1103,11 @@ dabbrev_expand(TScreen * screen)
 		    screen->dabbrev_working = True;
 		    /* we are in the middle of dabbrev process */
 		}
+	    } else {
+		return result;
 	    }
+	} else {
+	    return result;
 	}
 	if (!screen->dabbrev_working) {
 	    if (lastexpansion != 0) {
@@ -1108,8 +1116,10 @@ dabbrev_expand(TScreen * screen)
 	    }
 	    return result;
 	}
-    } else {
     }
+
+    if (dabbrev_hint == 0)
+	return result;
 
     hint_len = strlen(dabbrev_hint);
     for (;;) {
@@ -1168,7 +1178,7 @@ HandleDabbrevExpand(Widget w,
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
 	if (!dabbrev_expand(screen))
-	    Bell(XkbBI_TerminalBell, 0);
+	    Bell(xw, XkbBI_TerminalBell, 0);
     }
 }
 #endif /* OPT_DABBREV */
@@ -1595,23 +1605,25 @@ xtermResetIds(TScreen * screen)
 static SIGNAL_T
 logpipe(int sig GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
 #ifdef SYSV
     (void) signal(SIGPIPE, SIG_IGN);
 #endif /* SYSV */
     if (screen->logging)
-	CloseLog(screen);
+	CloseLog(xw);
 }
 #endif /* ALLOWLOGFILEEXEC */
 
 void
-StartLog(TScreen * screen)
+StartLog(XtermWidget xw)
 {
     static char *log_default;
 #ifdef ALLOWLOGFILEEXEC
     char *cp;
 #endif /* ALLOWLOGFILEEXEC */
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->logging || (screen->inhibit & I_LOG))
 	return;
@@ -1717,8 +1729,8 @@ StartLog(TScreen * screen)
 	screen->logfd = p[1];
 	signal(SIGPIPE, logpipe);
 #else
-	Bell(XkbBI_Info, 0);
-	Bell(XkbBI_Info, 0);
+	Bell(xw, XkbBI_Info, 0);
+	Bell(xw, XkbBI_Info, 0);
 	return;
 #endif
     } else {
@@ -1735,19 +1747,23 @@ StartLog(TScreen * screen)
 }
 
 void
-CloseLog(TScreen * screen)
+CloseLog(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (!screen->logging || (screen->inhibit & I_LOG))
 	return;
-    FlushLog(screen);
+    FlushLog(xw);
     close(screen->logfd);
     screen->logging = False;
     update_logging();
 }
 
 void
-FlushLog(TScreen * screen)
+FlushLog(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->logging && !(screen->inhibit & I_LOG)) {
 	Char *cp;
 	int i;
@@ -1921,7 +1937,7 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
 static int
 AllocateAnsiColor(XtermWidget xw,
 		  ColorRes * res,
-		  char *spec)
+		  const char *spec)
 {
     int result;
     XColor def;
@@ -1988,7 +2004,7 @@ xtermGetColorRes(XtermWidget xw, ColorRes * res)
 #endif
 
 static int
-ChangeOneAnsiColor(XtermWidget xw, int color, char *name)
+ChangeOneAnsiColor(XtermWidget xw, int color, const char *name)
 {
     int code;
 
@@ -2190,7 +2206,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 		screen->base64_final = final;
 
 		/* terminator will be written in this call */
-		xtermGetSelection((Widget) xw, 0, select_args, n, NULL);
+		xtermGetSelection((Widget) xw, (Time) 0, select_args, n, NULL);
 	    }
 	} else {
 	    if (AllowWindowOps(xw, ewSetSelection)) {
@@ -2494,7 +2510,7 @@ ResetColorsRequest(XtermWidget xw,
 		   int code)
 {
     Bool result = False;
-    char *thisName;
+    const char *thisName;
     ScrnColors newColors;
     int ndx;
 
@@ -2577,13 +2593,13 @@ QueryFontRequest(XtermWidget xw, char *buf, int final)
 	Bool success = True;
 	int num;
 	char *base = buf + 1;
-	char *name = 0;
+	const char *name = 0;
 	char temp[10];
 
 	num = ParseShiftedFont(xw, buf, &buf);
 	if (num < 0
 	    || num > fontMenu_lastBuiltin) {
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	    success = False;
 	} else {
 #if OPT_RENDERFONT
@@ -2641,7 +2657,7 @@ ChangeFontRequest(XtermWidget xw, char *buf)
 
 	    if (num < 0
 		|| num > fontMenu_lastBuiltin) {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 		success = False;
 	    } else {
 		/*
@@ -2688,7 +2704,7 @@ ChangeFontRequest(XtermWidget xw, char *buf)
 		SetVTFont(xw, num, True, &fonts);
 	    }
 	} else {
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	}
 	free(name);
     }
@@ -2899,8 +2915,8 @@ do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
 	    break;
 	}
 #endif
-	Bell(XkbBI_Info, 0);
-	Bell(XkbBI_Info, 0);
+	Bell(xw, XkbBI_Info, 0);
+	Bell(xw, XkbBI_Info, 0);
 	break;
 #endif /* ALLOWLOGGING */
 
@@ -3474,11 +3490,11 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	/* If the attribute isn't going to change, then don't bother... */
 
 	if (resource.sameName) {
-	    char *buf;
+	    char *buf = 0;
 	    XtSetArg(args[0], my_attr, &buf);
 	    XtGetValues(top, args, 1);
 	    TRACE(("...comparing{%s}\n", buf));
-	    if (strcmp(name, buf) == 0)
+	    if (buf != 0 && strcmp(name, buf) == 0)
 		changed = False;
 	}
 #endif /* OPT_SAME_NAME */
@@ -3709,7 +3725,6 @@ SysReasonMsg(int code)
 	{ ERROR_INIT,		"spawn: can't initialize window" },
 	{ ERROR_TIOCKSET,	"spawn: ioctl() failed on TIOCKSET" },
 	{ ERROR_TIOCKSETC,	"spawn: ioctl() failed on TIOCKSETC" },
-	{ ERROR_SPREALLOC,	"spawn: realloc of ttydev failed" },
 	{ ERROR_LUMALLOC,	"luit: command-line malloc failed" },
 	{ ERROR_SELECT,		"in_put: select() failed" },
 	{ ERROR_VINIT,		"VTInit: can't initialize window" },
@@ -3785,7 +3800,7 @@ Cleanup(int code)
 	if (resource.sessionMgt) {
 	    XtVaSetValues(toplevel,
 			  XtNjoinSession, False,
-			  (XtPointer *) 0);
+			  NULL);
 	}
 #endif
     }
@@ -4032,22 +4047,27 @@ set_tek_visibility(Bool on)
     TRACE(("set_tek_visibility(%d)\n", on));
 
     if (on) {
-	if (!TEK4014_SHOWN(term) && (tekWidget || TekInit())) {
-	    Widget tekParent = SHELL_OF(tekWidget);
-	    XtRealizeWidget(tekParent);
-	    XtMapWidget(XtParent(tekWidget));
+	if (!TEK4014_SHOWN(term)) {
+	    if (tekWidget == 0) {
+		TekInit();	/* will exit on failure */
+	    }
+	    if (tekWidget != 0) {
+		Widget tekParent = SHELL_OF(tekWidget);
+		XtRealizeWidget(tekParent);
+		XtMapWidget(XtParent(tekWidget));
 #if OPT_TOOLBAR
-	    /* we need both of these during initialization */
-	    XtMapWidget(tekParent);
-	    XtMapWidget(tekWidget);
+		/* we need both of these during initialization */
+		XtMapWidget(tekParent);
+		XtMapWidget(tekWidget);
 #endif
-	    XtOverrideTranslations(tekParent,
-				   XtParseTranslationTable
-				   ("<Message>WM_PROTOCOLS: DeleteWindow()"));
-	    (void) XSetWMProtocols(XtDisplay(tekParent),
-				   XtWindow(tekParent),
-				   &wm_delete_window, 1);
-	    TEK4014_SHOWN(term) = True;
+		XtOverrideTranslations(tekParent,
+				       XtParseTranslationTable
+				       ("<Message>WM_PROTOCOLS: DeleteWindow()"));
+		(void) XSetWMProtocols(XtDisplay(tekParent),
+				       XtWindow(tekParent),
+				       &wm_delete_window, 1);
+		TEK4014_SHOWN(term) = True;
+	    }
 	}
     } else {
 	if (TEK4014_SHOWN(term) && tekWidget) {
@@ -4068,8 +4088,10 @@ set_tek_visibility(Bool on)
 void
 end_tek_mode(void)
 {
-    if (TEK4014_ACTIVE(term)) {
-	FlushLog(TScreenOf(term));
+    XtermWidget xw = term;
+
+    if (TEK4014_ACTIVE(xw)) {
+	FlushLog(xw);
 	longjmp(Tekend, 1);
     }
     return;
@@ -4078,9 +4100,11 @@ end_tek_mode(void)
 void
 end_vt_mode(void)
 {
-    if (!TEK4014_ACTIVE(term)) {
-	FlushLog(TScreenOf(term));
-	TEK4014_ACTIVE(term) = True;
+    XtermWidget xw = term;
+
+    if (!TEK4014_ACTIVE(xw)) {
+	FlushLog(xw);
+	TEK4014_ACTIVE(xw) = True;
 	longjmp(VTend, 1);
     }
     return;
@@ -4146,9 +4170,11 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
     static XrmOptionDescRec *res_array = 0;
 
 #ifdef NO_LEAKS
-    if (descs == 0 && res_array != 0) {
-	free(res_array);
-	res_array = 0;
+    if (descs == 0) {
+	if (res_array != 0) {
+	    free(res_array);
+	    res_array = 0;
+	}
     } else
 #endif
     if (res_array == 0) {
@@ -4156,9 +4182,11 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
 
 	/* make a sorted index to 'resources' */
 	res_array = TypeCallocN(XrmOptionDescRec, res_count);
-	for (j = 0; j < res_count; j++)
-	    res_array[j] = descs[j];
-	qsort(res_array, (size_t) res_count, sizeof(*res_array), cmp_resources);
+	if (res_array != 0) {
+	    for (j = 0; j < res_count; j++)
+		res_array[j] = descs[j];
+	    qsort(res_array, (size_t) res_count, sizeof(*res_array), cmp_resources);
+	}
     }
     return res_array;
 }
@@ -4210,9 +4238,9 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 #if OPT_TRACE
 	for (j = 0; j < opt_count; j++) {
 	    if (!strncmp(opt_array[j].opt, "-/+", 3)) {
-		char *name = opt_array[j].opt + 3;
+		const char *name = opt_array[j].opt + 3;
 		for (k = 0; k < numDescs; ++k) {
-		    char *value = res_array[k].value;
+		    const char *value = res_array[k].value;
 		    if (res_array[k].option[0] == '-') {
 			code = -1;
 		    } else if (res_array[k].option[0] == '+') {
@@ -4335,9 +4363,11 @@ xtermEnvUTF8(void)
 char *
 xtermVersion(void)
 {
+    static char vendor_version[] = __vendorversion__;
     static char *result;
+
     if (result == 0) {
-	char *vendor = __vendorversion__;
+	char *vendor = vendor_version;
 	char first[BUFSIZ];
 	char second[BUFSIZ];
 

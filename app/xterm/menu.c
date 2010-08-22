@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.262 2010/04/17 15:52:49 tom Exp $ */
+/* $XTermId: menu.c,v 1.267 2010/06/20 21:09:10 tom Exp $ */
 
 /*
  *
@@ -597,24 +597,25 @@ domenu(Widget w,
        String * params,		/* mainMenu, vtMenu, or tekMenu */
        Cardinal *param_count)	/* 0 or 1 */
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     MenuIndex me;
     Bool created = False;
     Widget mw;
 
     if (*param_count != 1) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 	return False;
     }
 
     if ((me = indexOfMenu(params[0])) == noMenu) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 	return False;
     }
 
     if ((mw = obtain_menu(w, me)) == 0
 	|| sizeof_menu(w, me) == 0) {
-	mw = create_menu(w, term, me);
+	mw = create_menu(w, xw, me);
 	created = (mw != 0);
     }
     if (mw == 0)
@@ -642,7 +643,7 @@ domenu(Widget w,
 				   False);
 	    }
 #endif
-	    if (!xtermHasPrinter(term)) {
+	    if (!xtermHasPrinter(xw)) {
 		SetItemSensitivity(mainMenuEntries[mainMenu_print].widget,
 				   False);
 		SetItemSensitivity(mainMenuEntries[mainMenu_print_redir].widget,
@@ -742,7 +743,7 @@ domenu(Widget w,
 #endif
 #if OPT_DEC_CHRSET
 	    update_font_doublesize();
-	    if (TScreenOf(term)->cache_doublesize == 0)
+	    if (TScreenOf(xw)->cache_doublesize == 0)
 		SetItemSensitivity(
 				      fontMenuEntries[fontMenu_font_doublesize].widget,
 				      False);
@@ -763,7 +764,7 @@ domenu(Widget w,
 	    enable_allow_xxx_ops(!(screen->allowSendEvents));
 #endif
 	}
-	FindFontSelection(term, NULL, True);
+	FindFontSelection(xw, NULL, True);
 	SetItemSensitivity(
 			      fontMenuEntries[fontMenu_fontsel].widget,
 			      (screen->menu_font_names[fontMenu_fontsel]
@@ -843,20 +844,21 @@ do_securekbd(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     Time now = CurrentTime;	/* XXX - wrong */
 
     if (screen->grabbedKbd) {
 	XUngrabKeyboard(screen->display, now);
-	ReverseVideo(term);
+	ReverseVideo(xw);
 	screen->grabbedKbd = False;
     } else {
 	if (XGrabKeyboard(screen->display, XtWindow(CURRENT_EMU()),
 			  True, GrabModeAsync, GrabModeAsync, now)
 	    != GrabSuccess) {
-	    Bell(XkbBI_MinorError, 100);
+	    Bell(xw, XkbBI_MinorError, 100);
 	} else {
-	    ReverseVideo(term);
+	    ReverseVideo(xw);
 	    screen->grabbedKbd = True;
 	}
     }
@@ -936,12 +938,13 @@ do_logging(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->logging) {
-	CloseLog(screen);
+	CloseLog(xw);
     } else {
-	StartLog(screen);
+	StartLog(xw);
     }
     /* update_logging done by CloseLog and StartLog */
 }
@@ -1335,16 +1338,17 @@ do_marginbell(Widget gw GCC_UNUSED,
 static void
 handle_tekshow(Widget gw GCC_UNUSED, Bool allowswitch)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("Show tek-window\n"));
-    if (!TEK4014_SHOWN(term)) {	/* not showing, turn on */
+    if (!TEK4014_SHOWN(xw)) {	/* not showing, turn on */
 	set_tek_visibility(True);
     } else if (screen->Vshow || allowswitch) {	/* is showing, turn off */
 	set_tek_visibility(False);
 	end_tek_mode();		/* WARNING: this does a longjmp */
     } else
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 }
 
 /* ARGSUSED */
@@ -1469,16 +1473,17 @@ do_vtfont(Widget gw GCC_UNUSED,
 	  XtPointer closure,
 	  XtPointer data GCC_UNUSED)
 {
+    XtermWidget xw = term;
     char *entryname = (char *) closure;
     int i;
 
     for (i = 0; i < NMENUFONTS; i++) {
 	if (strcmp(entryname, fontMenuEntries[i].name) == 0) {
-	    SetVTFont(term, i, True, NULL);
+	    SetVTFont(xw, i, True, NULL);
 	    return;
 	}
     }
-    Bell(XkbBI_MinorError, 0);
+    Bell(xw, XkbBI_MinorError, 0);
 }
 
 #if OPT_DEC_CHRSET
@@ -1487,8 +1492,10 @@ do_font_doublesize(Widget gw GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
-    if (TScreenOf(term)->cache_doublesize != 0)
-	ToggleFlag(TScreenOf(term)->font_doublesize);
+    XtermWidget xw = term;
+
+    if (TScreenOf(xw)->cache_doublesize != 0)
+	ToggleFlag(TScreenOf(xw)->font_doublesize);
     update_font_doublesize();
     Redraw();
 }
@@ -1533,13 +1540,15 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = (XtermWidget) term;
+    TScreen *screen = TScreenOf(xw);
     int fontnum = screen->menu_font_number;
-    String name = TScreenOf(term)->MenuFontName(fontnum);
+    String name = TScreenOf(xw)->MenuFontName(fontnum);
 
-    ToggleFlag(term->misc.render_font);
+    DefaultRenderFont(xw);
+    ToggleFlag(xw->misc.render_font);
     update_font_renderfont();
-    xtermLoadFont(term, xtermFontName(name), True, fontnum);
+    xtermLoadFont(xw, xtermFontName(name), True, fontnum);
     ScrnRefresh(term, 0, 0,
 		MaxRows(screen),
 		MaxCols(screen), True);
@@ -1651,18 +1660,19 @@ do_tekcopy(Widget gw,
 static void
 handle_vtshow(Widget gw GCC_UNUSED, Bool allowswitch)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("Show vt-window\n"));
     if (!screen->Vshow) {	/* not showing, turn on */
 	set_vt_visibility(True);
-    } else if (TEK4014_SHOWN(term) || allowswitch) {	/* is showing, turn off */
+    } else if (TEK4014_SHOWN(xw) || allowswitch) {	/* is showing, turn off */
 	set_vt_visibility(False);
-	if (!TEK4014_ACTIVE(term) && tekRefreshList)
+	if (!TEK4014_ACTIVE(xw) && tekRefreshList)
 	    TekRefresh(tekWidget);
 	end_vt_mode();		/* WARNING: this does a longjmp... */
     } else
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 }
 
 static void
@@ -1712,6 +1722,7 @@ handle_toggle(void (*proc) PROTO_XT_CALLBACK_ARGS,
 	      XtPointer closure,
 	      XtPointer data)
 {
+    XtermWidget xw = term;
     int dir = -2;
 
     switch (nparams) {
@@ -1730,7 +1741,7 @@ handle_toggle(void (*proc) PROTO_XT_CALLBACK_ARGS,
 
     switch (dir) {
     case -2:
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 	break;
 
     case -1:
@@ -1741,14 +1752,14 @@ handle_toggle(void (*proc) PROTO_XT_CALLBACK_ARGS,
 	if (var)
 	    (*proc) (w, closure, data);
 	else
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	break;
 
     case 1:
 	if (!var)
 	    (*proc) (w, closure, data);
 	else
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	break;
     }
     return;
@@ -1884,7 +1895,7 @@ HandleSendSignal(Widget w,
 	/* one could allow numeric values, but that would be a security hole */
     }
 
-    Bell(XkbBI_MinorError, 0);
+    Bell(term, XkbBI_MinorError, 0);
 }
 
 /* ARGSUSED */
@@ -2023,10 +2034,12 @@ HandleScrollbar(Widget w,
 		String * params,
 		Cardinal *param_count)
 {
-    if (IsIcon(TScreenOf(term))) {
-	Bell(XkbBI_MinorError, 0);
+    XtermWidget xw = term;
+
+    if (IsIcon(TScreenOf(xw))) {
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
-	handle_vt_toggle(do_scrollbar, TScreenOf(term)->fullVwin.sb_info.width,
+	handle_vt_toggle(do_scrollbar, TScreenOf(xw)->fullVwin.sb_info.width,
 			 params, *param_count, w);
     }
 }
@@ -2292,7 +2305,11 @@ HandleRenderFont(Widget w,
 		 String * params,
 		 Cardinal *param_count)
 {
-    handle_vt_toggle(do_font_renderfont, term->misc.render_font,
+    XtermWidget xw = (XtermWidget) term;
+
+    DefaultRenderFont(xw);
+
+    handle_vt_toggle(do_font_renderfont, xw->misc.render_font,
 		     params, *param_count, w);
 }
 #endif
@@ -2326,23 +2343,25 @@ HandleSetTerminalType(Widget w,
 		      String * params,
 		      Cardinal *param_count)
 {
+    XtermWidget xw = term;
+
     if (*param_count == 1) {
 	switch (params[0][0]) {
 	case 'v':
 	case 'V':
-	    if (TEK4014_ACTIVE(term))
+	    if (TEK4014_ACTIVE(xw))
 		do_vtmode(w, (XtPointer) 0, (XtPointer) 0);
 	    break;
 	case 't':
 	case 'T':
-	    if (!TEK4014_ACTIVE(term))
+	    if (!TEK4014_ACTIVE(xw))
 		do_tekmode(w, (XtPointer) 0, (XtPointer) 0);
 	    break;
 	default:
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	}
     } else {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     }
 }
 
@@ -2352,23 +2371,25 @@ HandleVisibility(Widget w,
 		 String * params,
 		 Cardinal *param_count)
 {
+    XtermWidget xw = term;
+
     if (*param_count == 2) {
 	switch (params[0][0]) {
 	case 'v':
 	case 'V':
-	    handle_tek_toggle(do_vtonoff, (int) TScreenOf(term)->Vshow,
+	    handle_tek_toggle(do_vtonoff, (int) TScreenOf(xw)->Vshow,
 			      params + 1, (*param_count) - 1, w);
 	    break;
 	case 't':
 	case 'T':
-	    handle_tek_toggle(do_tekonoff, (int) TEK4014_SHOWN(term),
+	    handle_tek_toggle(do_tekonoff, (int) TEK4014_SHOWN(xw),
 			      params + 1, (*param_count) - 1, w);
 	    break;
 	default:
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	}
     } else {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     }
 }
 
@@ -2379,6 +2400,7 @@ HandleSetTekText(Widget w,
 		 String * params,
 		 Cardinal *param_count)
 {
+    XtermWidget xw = term;
     void (*proc) PROTO_XT_CALLBACK_ARGS = 0;
 
     switch (*param_count) {
@@ -2405,7 +2427,7 @@ HandleSetTekText(Widget w,
     if (proc)
 	(*proc) (w, (XtPointer) 0, (XtPointer) 0);
     else
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 }
 
 /* ARGSUSED */
@@ -2610,7 +2632,7 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
     }
 #if OPT_TEK4014
     else {			/* tek4014 */
-	button_height = SetupShell(menus, tek_shell, mainMenu, -1);
+	(void) SetupShell(menus, tek_shell, mainMenu, -1);
 	button_height = SetupShell(menus, tek_shell, tekMenu, mainMenu);
     }
 #endif
@@ -2750,20 +2772,22 @@ show_toolbar(Widget w)
 void
 ShowToolbar(Bool enable)
 {
+    XtermWidget xw = term;
+
     TRACE(("ShowToolbar(%d)\n", enable));
 
-    if (IsIcon(TScreenOf(term))) {
-	Bell(XkbBI_MinorError, 0);
+    if (IsIcon(TScreenOf(xw))) {
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	if (enable) {
 	    if (InitWidgetMenu(toplevel))
-		show_toolbar((Widget) term);
+		show_toolbar((Widget) xw);
 #if OPT_TEK4014
 	    if (InitWidgetMenu(tekshellwidget))
 		show_toolbar((Widget) tekWidget);
 #endif
 	} else {
-	    hide_toolbar((Widget) term);
+	    hide_toolbar((Widget) xw);
 #if OPT_TEK4014
 	    hide_toolbar((Widget) tekWidget);
 #endif
@@ -2779,8 +2803,10 @@ HandleToolbar(Widget w,
 	      String * params GCC_UNUSED,
 	      Cardinal *param_count GCC_UNUSED)
 {
-    if (IsIcon(TScreenOf(term))) {
-	Bell(XkbBI_MinorError, 0);
+    XtermWidget xw = term;
+
+    if (IsIcon(TScreenOf(xw))) {
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	handle_vt_toggle(do_toolbar, resource.toolBar,
 			 params, *param_count, w);
@@ -2793,13 +2819,15 @@ do_toolbar(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
+    XtermWidget xw = term;
+
     /*
      * Toggle toolbars for both vt100 and tek windows, since they share the
      * menu which contains the checkbox indicating whether the toolbar is
      * active.
      */
-    if (IsIcon(TScreenOf(term))) {
-	Bell(XkbBI_MinorError, 0);
+    if (IsIcon(TScreenOf(xw))) {
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	ShowToolbar(ToggleFlag(resource.toolBar));
     }
@@ -3226,7 +3254,7 @@ update_font_renderfont(void)
     UpdateCheckbox("update_font_renderfont",
 		   fontMenuEntries,
 		   fontMenu_render_font,
-		   term->misc.render_font);
+		   (term->misc.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
 		       !IsEmpty(term->misc.face_name));
 }

@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.111 2010/04/18 16:35:02 tom Exp $ */
+/* $XTermId: resize.c,v 1.114 2010/05/23 16:04:32 tom Exp $ */
 
 /*
  * Copyright 2003-2009,2010 by Thomas E. Dickey
@@ -380,10 +380,11 @@ main(int argc, char **argv ENVP_ARG)
 	if (tmpbuf == 0) {
 	    fprintf(stderr, "%s: Cannot query size\n", myname);
 	    onintr(0);
+	} else {
+	    sprintf(tmpbuf, setsize[emu], argv[0], argv[1]);
+	    IGNORE_RC(write(tty, tmpbuf, strlen(tmpbuf)));
+	    free(tmpbuf);
 	}
-	sprintf(tmpbuf, setsize[emu], argv[0], argv[1]);
-	IGNORE_RC(write(tty, tmpbuf, strlen(tmpbuf)));
-	free(tmpbuf);
     }
     IGNORE_RC(write(tty, getsize[emu], strlen(getsize[emu])));
     readstring(ttyfp, buf, size[emu]);
@@ -410,8 +411,8 @@ main(int argc, char **argv ENVP_ARG)
 	    fprintf(stderr, "%s: Can't get window size\r\n", myname);
 	    onintr(0);
 	}
-	TTYSIZE_ROWS(ts) = rows;
-	TTYSIZE_COLS(ts) = cols;
+	TTYSIZE_ROWS(ts) = (ttySize_t) rows;
+	TTYSIZE_COLS(ts) = (ttySize_t) cols;
 	SET_TTYSIZE(tty, ts);
     } else if (ioctl(tty, TIOCGWINSZ, &ts) != -1) {
 	/* we don't have any way of directly finding out
@@ -419,11 +420,11 @@ main(int argc, char **argv ENVP_ARG)
 	   our best by computing the font height and width from the "old"
 	   window-size values, and multiplying by these ratios... */
 	if (TTYSIZE_COLS(ts) != 0)
-	    ts.ws_xpixel = cols * (ts.ws_xpixel / TTYSIZE_COLS(ts));
+	    ts.ws_xpixel = (ttySize_t) (cols * (ts.ws_xpixel / TTYSIZE_COLS(ts)));
 	if (TTYSIZE_ROWS(ts) != 0)
-	    ts.ws_ypixel = rows * (ts.ws_ypixel / TTYSIZE_ROWS(ts));
-	TTYSIZE_ROWS(ts) = rows;
-	TTYSIZE_COLS(ts) = cols;
+	    ts.ws_ypixel = (ttySize_t) (rows * (ts.ws_ypixel / TTYSIZE_ROWS(ts)));
+	TTYSIZE_ROWS(ts) = (ttySize_t) rows;
+	TTYSIZE_COLS(ts) = (ttySize_t) cols;
 	SET_TTYSIZE(tty, ts);
     }
 #endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */

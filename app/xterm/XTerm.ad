@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.92 2010/01/04 22:16:17 tom Exp $
+! $XTermId: XTerm.ad,v 1.93 2010/06/15 10:55:59 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
@@ -220,6 +220,12 @@
 ! Set a border for the menus to make them simpler to distinguish against the
 ! vt100 widget:
 *SimpleMenu*borderWidth: 2
+
+! xterm can switch at runtime between bitmap (default) and TrueType fonts.
+! The "faceSize" resource controls the size of the latter.  However, it was
+! originally given with a size that makes the two types of fonts different
+! sizes.  Uncomment this line to use the same size as "fixed".
+!*faceSize: 8
 
 ! Here is a pattern that is useful for double-clicking on a URL:
 !*charClass: 33:48,35:48,37-38:48,43-47:48,58:48,61:48,63-64:48,95:48,126:48

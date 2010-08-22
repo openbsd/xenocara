@@ -1,4 +1,4 @@
-/* $XTermId: vms.c,v 1.11 2009/11/28 14:58:09 tom Exp $ */
+/* $XTermId: vms.c,v 1.12 2010/06/13 17:46:27 tom Exp $ */
 
 /*  vms.c
  *
@@ -547,7 +547,7 @@ static void send_xoff(void)
 
 static void send_bell(void)
 {
-   Bell();
+   Bell(term);
 }
 
 /*

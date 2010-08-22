@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.324 2010/04/18 17:50:52 tom Exp $ */
+/* $XTermId: input.c,v 1.326 2010/06/15 22:41:09 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -187,7 +187,7 @@ AdjustAfterInput(XtermWidget xw)
 	if (screen->bellArmed >= 0) {
 	    if (screen->bellArmed == screen->cur_row) {
 		if (screen->cur_col >= col) {
-		    Bell(XkbBI_MarginBell, 0);
+		    Bell(xw, XkbBI_MarginBell, 0);
 		    screen->bellArmed = -1;
 		}
 	    } else {
@@ -1225,7 +1225,7 @@ Input(XtermWidget xw,
 	    if (modifyOtherKey(&reply, input_char, modify_parm, keyboard->format_keys)) {
 		unparseseq(xw, &reply);
 	    } else {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	} else
 #endif /* OPT_MOD_FKEYS */
@@ -1338,7 +1338,7 @@ Input(XtermWidget xw,
 }
 
 void
-StringInput(XtermWidget xw, Char * string, size_t nbytes)
+StringInput(XtermWidget xw, const Char * string, size_t nbytes)
 {
     TRACE(("InputString (%s,%lu)\n",
 	   visibleChars(string, (unsigned) nbytes),

@@ -1,11 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.47 2006/02/13 01:15:00 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.50 2010/05/23 16:04:32 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.20 2006/02/13 01:15:00 dickey Exp $
- */
-
-/*
- * Copyright 2000-2005,2006 by Thomas E. Dickey
+ * Copyright 2000-2006,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -307,5 +303,7 @@ extern int ptioctl(int fd, int func, void* data);
 #define TTYSIZE_COLS(data) data.ws_col
 #define TTYSIZE_ROWS(data) data.ws_row
 #endif
+
+typedef unsigned short ttySize_t;
 
 #endif	/* included_xterm_io_h */

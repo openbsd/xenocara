@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.340 2010/04/18 16:48:46 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.344 2010/06/15 08:18:58 tom Exp $ */
 
 /************************************************************
 
@@ -168,7 +168,7 @@ setupPackedFonts(XtermWidget xw)
 
 #if OPT_RENDERFONT
 #define MIXED(name) screen->name[fontnum].map.mixed
-    if (xw->misc.render_font) {
+    if (xw->misc.render_font == True) {
 	int fontnum = screen->menu_font_number;
 
 	screen->allow_packing = (Boolean) (MIXED(renderFontNorm)
@@ -749,7 +749,7 @@ xtermOpenFont(XtermWidget xw,
 	if ((result->fs = XLoadQueryFont(screen->display, name)) != 0) {
 	    code = True;
 	    if (EmptyFont(result->fs)) {
-		result = xtermCloseFont(xw, result);
+		(void) xtermCloseFont(xw, result);
 		code = False;
 	    } else {
 		result->fn = x_strdup(name);
@@ -1804,7 +1804,7 @@ xtermComputeFontInfo(XtermWidget xw,
      * font-loading for fixed-fonts still goes on whether or not this chunk
      * overrides it.
      */
-    if (xw->misc.render_font && !IsIconWin(screen, win)) {
+    if (UsingRenderFont(xw)) {
 	char *face_name = getFaceName(xw, False);
 	int fontnum = screen->menu_font_number;
 	XftFont *norm = screen->renderFontNorm[fontnum].font;
@@ -2030,7 +2030,7 @@ xtermComputeFontInfo(XtermWidget xw,
     /*
      * Are we handling a bitmap font?
      */
-    if (!xw->misc.render_font || IsIconWin(screen, win))
+    if (!UsingRenderFont(xw))
 #endif /* OPT_RENDERFONT */
     {
 	if (is_double_width_font(font) && !(screen->fnt_prop)) {
@@ -2382,10 +2382,9 @@ xtermDrawBoxChar(XtermWidget xw,
 	unsigned n;
 	for (n = 1; n < 32; n++) {
 	    if (dec2ucs(n) == ch
-		&& !IsXtermMissingChar(screen, n,
-				       ((flags & BOLD)
-					? &screen->fnts[fBold]
-					: &screen->fnts[fNorm]))) {
+		&& !((flags & BOLD)
+		     ? IsXtermMissingChar(screen, n, &screen->fnts[fBold])
+		     : IsXtermMissingChar(screen, n, &screen->fnts[fNorm]))) {
 		TRACE(("...use xterm-style linedrawing\n"));
 		ch = n;
 		break;
@@ -2838,7 +2837,7 @@ HandleLargerFont(Widget w GCC_UNUSED,
 	    if (m >= 0) {
 		SetVTFont(xw, m, True, NULL);
 	    } else {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	}
     }
@@ -2863,7 +2862,7 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 	    if (m >= 0) {
 		SetVTFont(xw, m, True, NULL);
 	    } else {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	}
     }
@@ -2955,13 +2954,13 @@ HandleSetFont(Widget w GCC_UNUSED,
 		maxparams = 2;
 		break;
 	    default:
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 		return;
 	    }
 	    fontnum = result;
 
 	    if (*param_count > maxparams) {	/* see if extra args given */
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 		return;
 	    }
 	    switch (*param_count) {	/* assign 'em */
@@ -2999,7 +2998,7 @@ SetVTFont(XtermWidget xw,
 	   (fonts && fonts->f_b) ? fonts->f_b : "<null>"));
 
     if (IsIcon(screen)) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else if (which >= 0 && which < NMENUFONTS) {
 	VTFontNames myfonts;
 
@@ -3053,11 +3052,11 @@ SetVTFont(XtermWidget xw,
 		xtermLoadFont(xw,
 			      xtermFontName(screen->MenuFontName(oldFont)),
 			      doresize, oldFont);
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	}
     } else {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     }
     return;
 }

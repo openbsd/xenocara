@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.933 2010/05/02 01:07:19 tom Exp $
+  $XTermId: xterm.log.html,v 1.957 2010/06/28 09:25:58 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,9 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_261">Patch #261 - 2010/6/28</A>
+<LI><A HREF="#xterm_260">Patch #260 - 2010/6/20</A>
+<LI><A HREF="#xterm_259">Patch #259 - 2010/6/5</A>
 <LI><A HREF="#xterm_258">Patch #258 - 2010/5/1</A>
 <LI><A HREF="#xterm_257">Patch #257 - 2010/4/22</A>
 <LI><A HREF="#xterm_256">Patch #256 - 2010/3/6</A>
@@ -316,6 +319,98 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_261">Patch #261 - 2010/6/28</A></H1>
+<ul>
+	<li>fix regression in <code>renderFont</code> logic, from
+	    <a href="#xterm_260">patch #260</a> changes
+	    (report by Joseph Quinsey).
+</ul>
+
+<H1><A NAME="xterm_260">Patch #260 - 2010/6/20</A></H1>
+<ul>
+	<li>modify <code>plink.sh</code> to work around problem linking to
+	    recent PCRE libraries.
+
+	<li>extend <code>renderFont</code> resource to allow deferred switch
+	    to TrueType fonts without affecting existing resource settings
+	    (Debian #585620).
+
+	<li>modify configure macro CF_X_TOOLKIT to work around omission of
+	    ICE library from ".pc" file (report by Miroslav Lichvar).
+
+	<li>change configure script default for <code>--enable-broken-st</code>
+	    i.e., the <code>brokenStringTerm</code> feature)
+	    to normally enable it.
+	    If the corresponding resource is enabled,
+	    this feature eliminates an apparent freeze of xterm
+	    when sending mis-encoded data to the screen (Debian #584801).
+
+	<li>document in manpage some actions which were overlooked:
+	    <ul>
+            <li>readline-button
+            <li>scroll-lock
+            <li>set-8-bit-control
+	    </ul>
+
+	<li>undo a change to limit-check in <code>ScrnRefresh</code>
+	    in <a href="#xterm_257">patch #257</a>,
+	    which broke <code>fastScroll</code> feature
+	    (Debian #584841).
+
+	<li>modify handling of
+	    <code>brokenLinuxOSC</code> and
+	    <code>brokenStringTerm</code>
+	    to also sound the bell.
+
+	<li>add control/D and control/Q to controls which will cause early
+	    exit from control string per <code>brokenStringTerm</code>
+	    resource.
+
+	<li>improve documentation of <code>brokenStringTerm</code> resource
+	    in manpage.
+</ul>
+
+<H1><A NAME="xterm_259">Patch #259 - 2010/6/5</A></H1>
+<ul>
+	<li>modify configure check for
+	    <a href="http://invisible-island.net/luit/">luit</a> to include new
+	    aliases for the program
+	    (<code>xterm-filter</code> and
+	    <code>bluit</code>).
+
+	<li>add workaround in <code>xtermClearLEDs()</code> to account for
+	    Xkb's override, making vttest's LED demo reset the scroll
+	    lock.
+
+	<li>filter out client-message events when deciding whether to hide
+	    cursor, e.g., when using SCIM
+	    (patch/report by anonymous user).
+
+	<li>improve description of <code>-bd</code> option in manpage
+	    (report by Guy Daniel Clotilde).
+
+	<li>modify configure checks for PCRE and other libraries to use
+	    <code>pkg-config</code>, if available.
+
+	<li>amend change from <a href="#xterm_252">patch #252</a>, to take
+	    <code>veryColorColors</code> resource into account when checking
+	    <code>colorBDMode</code> resource for TrueType fonts
+	    (report by anonymous user).
+
+	<li>add <code>vttests/query-fonts.pl</code> script for
+	    demonstrating the <code>OSC&nbsp;50</code> font query.
+
+	<li>improve manpage discussion of Scroll Lock feature.
+
+	<li>improve configure macros CF_GCC_VERSION and CF_GCC_WARNINGS.
+
+	<li>fix warnings for "clang --analyze".
+
+	<li>change default for <code>allowScrollLock</code> resource to
+	    <code>false</code>, noting that the supposedly unused key has
+	    been useful for various rebindings (Debian #580946).
+</ul>
 
 <H1><A NAME="xterm_258">Patch #258 - 2010/5/1</A></H1>
 <ul>

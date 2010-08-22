@@ -1,4 +1,4 @@
-MANIFEST for xterm-258, version xterm-258
+MANIFEST for xterm-260, version xterm-260
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -144,6 +144,7 @@ vttests/dynamic.sh              script to illustrate the dynamic colors control 
 vttests/dynamic2.sh             complete example of dynamic colors
 vttests/fonts.sh                script to demonstrate font-switching sequences
 vttests/paste64.pl              script to test base64-selection option
+vttests/query-fonts.pl          script to demo/test font-querying
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing
 vttests/tcapquery.pl            script to test tcap-query option

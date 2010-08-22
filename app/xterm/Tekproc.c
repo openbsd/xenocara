@@ -1,61 +1,57 @@
-/* $XTermId: Tekproc.c,v 1.176 2010/04/18 16:22:54 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.182 2010/06/20 21:34:37 tom Exp $ */
 
 /*
- * Warning, there be crufty dragons here.
- */
-
-/*
-
-Copyright 2001-2008,2009 by Thomas E. Dickey
-
-                        All Rights Reserved
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Except as contained in this notice, the name(s) of the above copyright
-holders shall not be used in advertising or otherwise to promote the
-sale, use or other dealings in this Software without prior written
-authorization.
-
-Copyright 1988  The Open Group
-
-Permission to use, copy, modify, distribute, and sell this software and its
-documentation for any purpose is hereby granted without fee, provided that
-the above copyright notice appear in all copies and that both that
-copyright notice and this permission notice appear in supporting
-documentation.
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
-AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Except as contained in this notice, the name of The Open Group shall not be
-used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from The Open Group.
-
+ *
+ * Copyright 2001-2009,2010 by Thomas E. Dickey
+ *
+ *                         All Rights Reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ *
+ * Copyright 1988  The Open Group
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation.
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of The Open Group shall not be
+ * used in advertising or otherwise to promote the sale, use or other dealings
+ * in this Software without prior written authorization from The Open Group.
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -103,6 +99,7 @@ in this Software without prior written authorization from The Open Group.
 
 #endif /* OPT_TOOLBAR */
 
+#include <assert.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <signal.h>
@@ -413,7 +410,8 @@ TekPtyData(void)
 static void
 Tekparse(TekWidget tw)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     TekScreen *tekscr = TekScreenOf(tw);
     int x, y;
     IChar c = 0;
@@ -457,7 +455,7 @@ Tekparse(TekWidget tw)
 	    TRACE(("case: special return to vt102 mode\n"));
 	    Tparsestate = curstate;
 	    TekRecord->ptr[-1] = ANSI_NAK;	/* remove from recording */
-	    FlushLog(TScreenOf(term));
+	    FlushLog(xw);
 	    return;
 
 	case CASE_SPT_STATE:
@@ -486,7 +484,7 @@ Tekparse(TekWidget tw)
 	    if (tekscr->TekGIN)
 		TekGINoff(tw);
 	    if (!tekRefreshList)
-		Bell(XkbBI_TerminalBell, 0);
+		Bell(xw, XkbBI_TerminalBell, 0);
 	    Tparsestate = curstate;	/* clear bypass condition */
 	    break;
 
@@ -707,7 +705,6 @@ Tekparse(TekWidget tw)
 	case CASE_PRINT:
 	    TRACE(("case: printable character\n"));
 	    ch = c;
-	    c = (IChar) tekscr->cur.fontsize;
 	    x = (int) (tekscr->cur_X * TekScale(tekscr))
 		+ screen->border;
 	    y = (int) ((TEKHEIGHT + TEKTOPPAD - tekscr->cur_Y) * TekScale(tekscr))
@@ -764,7 +761,7 @@ Tekparse(TekWidget tw)
 		buf2[len] = 0;
 		if (!nested++) {
 		    if (c2 == ANSI_BEL)
-			do_osc(term, buf2, len, ANSI_BEL);
+			do_osc(xw, buf2, len, ANSI_BEL);
 		}
 		--nested;
 	    }
@@ -781,8 +778,9 @@ static PtySelect Tselect_mask;
 static IChar
 Tinput(TekWidget tw)
 {
+    XtermWidget xw = term;
     TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
     TekLink *tek;
 
     if (Tpushback > Tpushb)
@@ -820,7 +818,7 @@ Tinput(TekWidget tw)
 			  &Tselect_mask, NULL, NULL,
 			  &crocktimeout);
 #endif
-	    if (readPtyData(screen, &Tselect_mask, VTbuffer)) {
+	    if (readPtyData(xw, &Tselect_mask, VTbuffer)) {
 		break;
 	    }
 	    if (Ttoggled && curstate == Talptable) {
@@ -871,13 +869,15 @@ Tinput(TekWidget tw)
     tek = TekRecord;
     if (tek->count >= TEK_LINK_BLOCK_SIZE
 	|| tek->fontsize != tekscr->cur.fontsize) {
-	if ((TekRecord = tek->next = CastMalloc(TekLink)) == 0)
+	if ((TekRecord = tek->next = CastMalloc(TekLink)) == 0) {
 	    Panic("Tinput: malloc error (%d)\n", errno);
-	tek = tek->next;
-	tek->next = (TekLink *) 0;
-	tek->fontsize = (unsigned short) tekscr->cur.fontsize;
-	tek->count = 0;
-	tek->ptr = tek->data;
+	} else {
+	    tek = tek->next;
+	    tek->next = (TekLink *) 0;
+	    tek->fontsize = (unsigned short) tekscr->cur.fontsize;
+	    tek->count = 0;
+	    tek->ptr = tek->data;
+	}
     }
     tek->count++;
 
@@ -900,8 +900,9 @@ TekConfigure(Widget w)
 {
     TekWidget tw = getTekWidget(w);
     if (tw != 0) {
+	XtermWidget xw = term;
 	TekScreen *tekscr = TekScreenOf(tw);
-	TScreen *screen = TScreenOf(term);
+	TScreen *screen = TScreenOf(xw);
 	int border = 2 * screen->border;
 	double d;
 
@@ -961,8 +962,9 @@ void
 TekRefresh(TekWidget tw)
 {
     if (tw != 0) {
+	XtermWidget xw = term;
+	TScreen *screen = TScreenOf(xw);
 	TekScreen *tekscr = TekScreenOf(tw);
-	TScreen *screen = TScreenOf(term);
 	static Cursor wait_cursor = None;
 
 	if (wait_cursor == None)
@@ -1156,8 +1158,9 @@ TCursorDown(TekWidget tw)
 static void
 AddToDraw(TekWidget tw, int x1, int y1, int x2, int y2)
 {
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(term);
     XSegment *lp;
 
     TRACE(("AddToDraw (%d,%d) (%d,%d)\n", x1, y1, x2, y2));
@@ -1227,8 +1230,9 @@ TekGINoff(TekWidget tw)
 void
 TekEnqMouse(TekWidget tw, int c)	/* character pressed */
 {
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(term);
     int mousex, mousey, rootx, rooty;
     unsigned int mask;		/* XQueryPointer */
     Window root, subw;
@@ -1258,8 +1262,9 @@ TekEnq(TekWidget tw,
        int x,
        int y)
 {
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(term);
     Char cplot[7];
     int len = 5;
     int adj = (status != 0) ? 0 : 1;
@@ -1286,13 +1291,16 @@ TekEnq(TekWidget tw,
 void
 TekRun(void)
 {
+    XtermWidget xw = term;
+
+    assert(xw != 0);
     if (tekWidget == 0) {
 	TekInit();
     }
     if (tekWidget != 0) {
 	TRACE(("TekRun ...\n"));
 
-	if (!TEK4014_SHOWN(term)) {
+	if (!TEK4014_SHOWN(xw)) {
 	    set_tek_visibility(True);
 	}
 	update_vttekmode();
@@ -1308,10 +1316,10 @@ TekRun(void)
 	    TCursorToggle(tekWidget, TOGGLE);
 	    Ttoggled = True;
 	}
-	TEK4014_ACTIVE(term) = False;
+	TEK4014_ACTIVE(xw) = False;
     } else {
-	TEK4014_ACTIVE(term) = False;
-	if (VWindow(TScreenOf(term)) == 0) {
+	TEK4014_ACTIVE(xw) = False;
+	if (VWindow(TScreenOf(xw)) == 0) {
 	    Exit(ERROR_TINIT);
 	}
     }
@@ -1387,9 +1395,10 @@ TekRealize(Widget gw,
 	   XtValueMask * valuemaskp,
 	   XSetWindowAttributes * values)
 {
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     TekWidget tw = (TekWidget) gw;
     TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(term);
     int i;
     TekLink *tek;
     double d;
@@ -1408,7 +1417,7 @@ TekRealize(Widget gw,
     tekscr->whichTwin = &tekscr->fullTwin;
 #endif /* NO_ACTIVE_ICON */
 
-    BorderPixel(tw) = BorderPixel(term);
+    BorderPixel(tw) = BorderPixel(xw);
 
     tekscr->arrow = make_colored_cursor(XC_left_ptr,
 					T_COLOR(screen, MOUSE_FG),
@@ -1429,10 +1438,10 @@ TekRealize(Widget gw,
     if (!TekPtyData())
 	return;
 
-    if (term->misc.T_geometry == NULL) {
+    if (xw->misc.T_geometry == NULL) {
 	int defwidth, defheight;
 
-	if (term->misc.tekSmall) {
+	if (xw->misc.tekSmall) {
 	    defwidth = TEKMINWIDTH;
 	    defheight = TEKMINHEIGHT;
 	} else {
@@ -1440,7 +1449,7 @@ TekRealize(Widget gw,
 	    defheight = TEKDEFHEIGHT;
 	}
 	sprintf(Tdefault, "=%dx%d", defwidth + border, defheight + border);
-	term->misc.T_geometry = Tdefault;
+	xw->misc.T_geometry = Tdefault;
     }
 
     winX = 1;
@@ -1448,8 +1457,8 @@ TekRealize(Widget gw,
     width = (unsigned) (TEKDEFWIDTH + border);
     height = (unsigned) (TEKDEFHEIGHT + border);
 
-    TRACE(("parsing T_geometry %s\n", NonNull(term->misc.T_geometry)));
-    pr = XParseGeometry(term->misc.T_geometry,
+    TRACE(("parsing T_geometry %s\n", NonNull(xw->misc.T_geometry)));
+    pr = XParseGeometry(xw->misc.T_geometry,
 			&winX,
 			&winY,
 			&width,
@@ -1457,10 +1466,10 @@ TekRealize(Widget gw,
     TRACE(("... position %d,%d size %dx%d\n", winY, winX, height, width));
     if ((pr & XValue) && (pr & XNegative))
 	winX += DisplayWidth(XtDisplay(tw), DefaultScreen(XtDisplay(tw)))
-	    - (int) width - (BorderWidth(SHELL_OF(term)) * 2);
+	    - (int) width - (BorderWidth(SHELL_OF(xw)) * 2);
     if ((pr & YValue) && (pr & YNegative))
 	winY += DisplayHeight(XtDisplay(tw), DefaultScreen(XtDisplay(tw)))
-	    - (int) height - (BorderWidth(SHELL_OF(term)) * 2);
+	    - (int) height - (BorderWidth(SHELL_OF(xw)) * 2);
 
     /* set up size hints */
     tw->hints.min_width = TEKMINWIDTH + border;
@@ -1657,6 +1666,7 @@ void
 TekSetFontSize(TekWidget tw, Bool fromMenu, int newitem)
 {
     if (tw != 0) {
+	XtermWidget xw = term;
 	TekScreen *tekscr = TekScreenOf(tw);
 	int oldsize = tekscr->cur.fontsize;
 	int newsize = MI2FS(newitem);
@@ -1664,7 +1674,7 @@ TekSetFontSize(TekWidget tw, Bool fromMenu, int newitem)
 
 	TRACE(("TekSetFontSize(%d) size %d ->%d\n", newitem, oldsize, newsize));
 	if (newsize < 0 || newsize >= TEKNUMFONTS) {
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	} else if (oldsize != newsize) {
 	    if (!Ttoggled)
 		TCursorToggle(tw, TOGGLE);
@@ -1753,7 +1763,8 @@ ChangeTekColors(TekWidget tw, TScreen * screen, ScrnColors * pNew)
 void
 TekReverseVideo(TekWidget tw)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     TekScreen *tekscr = TekScreenOf(tw);
     int i;
     Pixel tmp;
@@ -1804,12 +1815,13 @@ TekBackground(TekWidget tw, TScreen * screen)
 void
 TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
 {
+    XtermWidget xw = term;
     TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
     int c, x, y;
     unsigned int cellwidth, cellheight;
 
-    if (!TEK4014_SHOWN(term))
+    if (!TEK4014_SHOWN(xw))
 	return;
 
     TRACE(("TCursorToggle %s\n", (toggle == TOGGLE) ? "toggle" : "clear"));
@@ -1866,8 +1878,9 @@ void
 TekCopy(TekWidget tw)
 {
     if (tw != 0) {
+	XtermWidget xw = term;
 	TekScreen *tekscr = TekScreenOf(tw);
-	TScreen *screen = TScreenOf(term);
+	TScreen *screen = TScreenOf(xw);
 
 	TekLink *Tp;
 	char buf[32];
@@ -1877,12 +1890,12 @@ TekCopy(TekWidget tw)
 	timestamp_filename(buf, "COPY");
 	if (access(buf, F_OK) >= 0
 	    && access(buf, W_OK) < 0) {
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	    return;
 	}
 #ifndef VMS
 	if (access(".", W_OK) < 0) {	/* can't write in directory */
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	    return;
 	}
 #endif
@@ -1910,7 +1923,9 @@ HandleGINInput(Widget w,
 	       String * param_list,
 	       Cardinal *nparamsp)
 {
+    XtermWidget xw = term;
     TekWidget tw = getTekWidget(w);
+
     if (tw != 0) {
 	TekScreen *tekscr = TekScreenOf(tw);
 
@@ -1925,13 +1940,13 @@ HandleGINInput(Widget w,
 	    case 'R':
 		break;
 	    default:
-		Bell(XkbBI_MinorError, 0);	/* let them know they goofed */
+		Bell(xw, XkbBI_MinorError, 0);	/* let them know they goofed */
 		c = 'l';	/* provide a default */
 	    }
 	    TekEnqMouse(tw, c | 0x80);
 	    TekGINoff(tw);
 	} else {
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	}
     }
 }

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.112 2010/04/15 21:45:37 tom Exp $ */
+/* $XTermId: trace.c,v 1.115 2010/06/15 22:40:28 tom Exp $ */
 
 /*
  * 
@@ -68,21 +68,22 @@ extern "C" {
 #endif
 const char *trace_who = "parent";
 
+static FILE *trace_fp;
+
 void
 Trace(const char *fmt,...)
 {
-    static FILE *fp;
     static const char *trace_out;
     va_list ap;
 
-    if (fp != 0
+    if (trace_fp != 0
 	&& trace_who != trace_out) {
-	fclose(fp);
-	fp = 0;
+	fclose(trace_fp);
+	trace_fp = 0;
     }
     trace_out = trace_who;
 
-    if (!fp) {
+    if (!trace_fp) {
 	char name[BUFSIZ];
 #if 0				/* usually I do not want unique names */
 	int unique;
@@ -91,36 +92,41 @@ Trace(const char *fmt,...)
 		sprintf(name, "Trace-%s.out-%d", trace_who, unique);
 	    else
 		sprintf(name, "Trace-%s.out", trace_who);
-	    if ((fp = fopen(name, "r")) == 0) {
+	    if ((trace_fp = fopen(name, "r")) == 0) {
 		break;
 	    }
-	    fclose(fp);
+	    fclose(trace_fp);
 	}
 #else
 	sprintf(name, "Trace-%s.out", trace_who);
 #endif
-	fp = fopen(name, "w");
-	if (fp != 0) {
-	    fprintf(fp, "%s\n", xtermVersion());
+	trace_fp = fopen(name, "w");
+	if (trace_fp != 0) {
+	    fprintf(trace_fp, "%s\n", xtermVersion());
 	    TraceIds(NULL, 0);
 	}
     }
-    if (!fp)
+    if (!trace_fp)
 	abort();
 
     va_start(ap, fmt);
-    if (fmt != 0) {
-	vfprintf(fp, fmt, ap);
-	(void) fflush(fp);
-    } else {
-	(void) fclose(fp);
+    vfprintf(trace_fp, fmt, ap);
+    (void) fflush(trace_fp);
+    va_end(ap);
+}
+
+void
+TraceClose(void)
+{
+    if (trace_fp != 0) {
+	(void) fclose(trace_fp);
 	(void) fflush(stdout);
 	(void) fflush(stderr);
 	(void) visibleChars(NULL, 0);
 	(void) visibleIChars(NULL, 0);
 	(void) visibleIChar(NULL, 0);
+	trace_fp = 0;
     }
-    va_end(ap);
 }
 
 void
@@ -193,7 +199,7 @@ visibleChrsetName(unsigned chrset)
 #endif
 
 char *
-visibleChars(Char * buf, unsigned len)
+visibleChars(const Char * buf, unsigned len)
 {
     static char *result;
     static unsigned used;
@@ -206,12 +212,14 @@ visibleChars(Char * buf, unsigned len)
 	    used = limit;
 	    result = XtRealloc(result, used);
 	}
-	dst = result;
-	*dst = '\0';
-	while (len--) {
-	    unsigned value = *buf++;
-	    formatAscii(dst, value);
-	    dst += strlen(dst);
+	if (result != 0) {
+	    dst = result;
+	    *dst = '\0';
+	    while (len--) {
+		unsigned value = *buf++;
+		formatAscii(dst, value);
+		dst += strlen(dst);
+	    }
 	}
     } else if (result != 0) {
 	free(result);
@@ -235,17 +243,19 @@ visibleIChars(IChar * buf, unsigned len)
 	    used = limit;
 	    result = XtRealloc(result, used);
 	}
-	dst = result;
-	*dst = '\0';
-	while (len--) {
-	    unsigned value = *buf++;
+	if (result != 0) {
+	    dst = result;
+	    *dst = '\0';
+	    while (len--) {
+		unsigned value = *buf++;
 #if OPT_WIDE_CHARS
-	    if (value > 255)
-		sprintf(dst, "\\u+%04X", value);
-	    else
+		if (value > 255)
+		    sprintf(dst, "\\u+%04X", value);
+		else
 #endif
-		formatAscii(dst, value);
-	    dst += strlen(dst);
+		    formatAscii(dst, value);
+		dst += strlen(dst);
+	    }
 	}
     } else if (result != 0) {
 	free(result);
@@ -269,16 +279,18 @@ visibleIChar(IChar * buf, unsigned len)
 	    used = limit;
 	    result = XtRealloc(result, used);
 	}
-	dst = result;
-	while (len--) {
-	    unsigned value = *buf++;
+	if (result != 0) {
+	    dst = result;
+	    while (len--) {
+		unsigned value = *buf++;
 #if OPT_WIDE_CHARS
-	    if (value > 255)
-		sprintf(dst, "\\u+%04X", value);
-	    else
+		if (value > 255)
+		    sprintf(dst, "\\u+%04X", value);
+		else
 #endif
-		formatAscii(dst, value);
-	    dst += strlen(dst);
+		    formatAscii(dst, value);
+		dst += strlen(dst);
+	    }
 	}
     } else if (result != 0) {
 	free(result);

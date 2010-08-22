@@ -1,8 +1,8 @@
-/* $XTermId: VTPrsTbl.c,v 1.57 2010/04/10 00:19:56 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.58 2010/06/15 10:58:13 tom Exp $ */
 
 /*
  *
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

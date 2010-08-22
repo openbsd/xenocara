@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.262 2010/04/21 00:16:24 tom Exp $
+dnl $XTermId: configure.in,v 1.266 2010/06/15 22:30:01 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -462,9 +462,9 @@ fi
 
 AC_MSG_CHECKING(if you want to allow broken string-terminators)
 CF_ARG_ENABLE(broken-st,
-	[  --enable-broken-st      allow broken string-terminators],
-	[enable_broken_st=yes],
-	[enable_broken_st=no])
+	[  --disable-broken-st     disallow broken string-terminators],
+	[enable_broken_st=no],
+	[enable_broken_st=yes])
 AC_MSG_RESULT($enable_broken_st)
 test "$enable_broken_st" = no && AC_DEFINE(OPT_BROKEN_ST,0)
 
@@ -818,7 +818,7 @@ CF_ARG_ENABLE(luit,
 AC_MSG_RESULT($enable_luit)
 if test "$enable_luit" = yes ; then
 	AC_DEFINE(OPT_LUIT_PROG,1)
-	CF_PATH_PROG(LUIT,luit)
+	CF_PATH_PROG(LUIT,xterm-filter,bluit luit)
 fi
 
 AC_MSG_CHECKING(if you want wide-character support)
@@ -988,6 +988,13 @@ done
 
 CF_MAKE_TAGS
 CF_DISABLE_RPATH_HACK
+
+# Force plink.sh to not trim pcre's libraries, which have the same symbol
+# names as the system regexp.
+if test "$with_pcre" != no
+then
+	LIBS=`echo "$LIBS" | sed -e 's/-lpcre/-kpcre/g'`
+fi
 
 ###	output Makefile and xtermcfg.h
 AC_OUTPUT(Makefile)

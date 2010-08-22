@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.263 2010/01/01 22:26:10 tom Exp $ */
+/* $XTermId: os2main.c,v 1.265 2010/06/20 21:27:07 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -1349,7 +1349,7 @@ main(int argc, char **argv ENVP_ARG)
     initPtyData(&VTbuffer);
 #ifdef ALLOWLOGGING
     if (term->misc.log_on) {
-	StartLog(screen);
+	StartLog(term);
     }
 #endif
 
@@ -1764,12 +1764,7 @@ spawnXTerm(XtermWidget xw)
 	     */
 #ifdef EMXNOTBOGUS
 	    if ((ptr = ttyname(ttyfd)) != 0) {
-		/* it may be bigger */
-		ttydev = TypeRealloc(char, strlen(ptr) + 1, ttydev);
-		if (ttydev == NULL) {
-		    SysError(ERROR_SPREALLOC);
-		}
-		(void) strcpy(ttydev, ptr);
+		ttydev = x_strdup(ptr);
 	    }
 #else
 	    ptr = ttydev;
@@ -1975,12 +1970,13 @@ spawnXTerm(XtermWidget xw)
 SIGNAL_T
 Exit(int n)
 {
-    TScreen *screen = TScreenOf(term);
-    int pty = TScreenOf(term)->respond;
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
+    int pty = TScreenOf(xw)->respond;
     close(pty);			/* close explicitly to avoid race with slave side */
 #ifdef ALLOWLOGGING
     if (screen->logging)
-	CloseLog(screen);
+	CloseLog(xw);
 #endif
     if (am_slave < 0) {
 	/* restore ownership of tty and pty */
@@ -1995,14 +1991,14 @@ Exit(int n)
     close(screen->respond);	/* close explicitly to avoid race with slave side */
 #ifdef ALLOWLOGGING
     if (screen->logging)
-	CloseLog(screen);
+	CloseLog(xw);
 #endif
 
 #ifdef NO_LEAKS
     if (n == 0) {
 	TRACE(("Freeing memory leaks\n"));
-	if (term != 0) {
-	    Display *dpy = TScreenOf(term)->display;
+	if (xw != 0) {
+	    Display *dpy = TScreenOf(xw)->display;
 
 	    if (toplevel) {
 		XtDestroyWidget(toplevel);

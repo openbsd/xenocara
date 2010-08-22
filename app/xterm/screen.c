@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.418 2010/04/28 23:49:28 tom Exp $ */
+/* $XTermId: screen.c,v 1.423 2010/06/14 00:00:58 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -421,15 +421,13 @@ Reallocate(XtermWidget xw,
 	   Char ** sbufaddr,
 	   unsigned nrow,
 	   unsigned ncol,
-	   unsigned oldrow,
-	   unsigned oldcol)
+	   unsigned oldrow)
 {
     TScreen *screen = TScreenOf(xw);
     ScrnBuf oldBufHead;
     ScrnBuf newBufHead;
     Char *newBufData;
     unsigned minrows;
-    unsigned mincols;
     Char *oldBufData;
     int move_down = 0, move_up = 0;
 
@@ -439,7 +437,7 @@ Reallocate(XtermWidget xw,
 
     oldBufData = *sbufaddr;
 
-    TRACE(("Reallocate %dx%d -> %dx%d\n", oldrow, oldcol, nrow, ncol));
+    TRACE(("Reallocate %dx%d -> %dx%d\n", oldrow, MaxCols(screen), nrow, ncol));
 
     /*
      * realloc sbuf, the pointers to all the lines.
@@ -482,7 +480,6 @@ Reallocate(XtermWidget xw,
     *sbufaddr = newBufData;
 
     minrows = (oldrow < nrow) ? oldrow : nrow;
-    mincols = (oldcol < ncol) ? oldcol : ncol;
     if (GravityIsSouthWest(xw)) {
 	if (nrow > oldrow) {
 	    /* move data down to bottom of expanded screen */
@@ -590,7 +587,6 @@ void
 ChangeToWide(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
-    int savelines = screen->scrollWidget ? screen->savelines : 0;
 
     if (screen->wide_chars)
 	return;
@@ -599,8 +595,12 @@ ChangeToWide(XtermWidget xw)
     if (xtermLoadWideFonts(xw, True)) {
 	int whichBuf = screen->whichBuf;
 
+#if !OPT_FIFO_LINES || !OPT_SAVE_LINES
+	int savelines = screen->scrollWidget ? screen->savelines : 0;
+
 	if (savelines < 0)
 	    savelines = 0;
+#endif
 
 	/*
 	 * If we're displaying the alternate screen, switch the pointers back
@@ -669,7 +669,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 
 	ld = getLineData(screen, row);
 
-	UIntSet(flags, TERM_COLOR_FLAGS(xw));
+	flags = (int) ((unsigned) flags | TERM_COLOR_FLAGS(xw));
 
 	for (n = 0; n < len; ++n)
 	    ld->charData[(unsigned) col + n] = (CharData) ' ';
@@ -744,9 +744,6 @@ ScrnWriteText(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
     LineData *ld;
-#if OPT_ISO_COLORS
-    CellColor *fb = 0;
-#endif
     Char *attrs;
     int avail = MaxCols(screen) - screen->cur_col;
     IChar *chars;
@@ -773,10 +770,6 @@ ScrnWriteText(XtermWidget xw,
 
     chars = ld->charData + screen->cur_col;
     attrs = ld->attribs + screen->cur_col;
-
-    if_OPT_ISO_COLORS(screen, {
-	fb = ld->color + screen->cur_col;
-    });
 
 #if OPT_WIDE_CHARS
     starcol1 = *chars;
@@ -854,7 +847,7 @@ ScrnWriteText(XtermWidget xw,
     if_OPT_ISO_COLORS(screen, {
 	unsigned j;
 	for (j = 0; j < real_width; ++j)
-	    fb[j] = (CellColor) cur_fg_bg;
+	    ld->color[screen->cur_col + (int) j] = (CellColor) cur_fg_bg;
     });
 
     if_OPT_WIDE_CHARS(screen, {
@@ -1147,7 +1140,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     int last = MaxCols(screen);
     int row = screen->cur_row;
     int col = screen->cur_col;
-    int j, nbytes;
+    int j;
     LineData *ld;
 
     if (last <= (col + (int) n)) {
@@ -1155,7 +1148,6 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	    return;
 	n = (unsigned) (last - col);
     }
-    nbytes = (last - (col + (int) n));
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
@@ -1208,7 +1200,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
     int last = MaxCols(screen);
     int row = screen->cur_row;
     int col = screen->cur_col;
-    int j, nbytes;
+    int j;
     LineData *ld;
 
     if (last <= (col + (int) n)) {
@@ -1216,7 +1208,6 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    return;
 	n = (unsigned) (last - col);
     }
-    nbytes = (last - (col + (int) n));
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
@@ -1293,7 +1284,7 @@ ScrnRefresh(XtermWidget xw,
     for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
 	CellColor *fb = 0;
-#define ColorOf(col) fb[col]
+#define ColorOf(col) (CellColor) (fb ? fb[col] : 0)
 #endif
 #if OPT_WIDE_CHARS
 	int wideness = 0;
@@ -1324,13 +1315,16 @@ ScrnRefresh(XtermWidget xw,
 	else
 	    lastind = row - scrollamt;
 
+	if (lastind < 0 || lastind > screen->max_row)
+	    continue;
+
 	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",
 		row, lastind, ROW2INX(screen, lastind)));
 
 	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0
 	    || ld->charData == 0
 	    || ld->attribs == 0) {
-	    continue;
+	    break;
 	}
 	if (maxcol >= (int) ld->lineSize) {
 	    maxcol = ld->lineSize - 1;
@@ -1339,8 +1333,6 @@ ScrnRefresh(XtermWidget xw,
 
 	chars = ld->charData;
 	attrs = ld->attribs;
-	assert(chars != 0);
-	assert(attrs != 0);
 
 	if_OPT_WIDE_CHARS(screen, {
 	    /* This fixes an infinite recursion bug, that leads
@@ -1765,8 +1757,7 @@ ScreenResize(XtermWidget xw,
 				  &screen->editBuf_data[!screen->whichBuf],
 				  (unsigned) rows,
 				  (unsigned) cols,
-				  (unsigned) MaxRows(screen),
-				  (unsigned) MaxCols(screen));
+				  (unsigned) MaxRows(screen));
 	    }
 
 	    /*
@@ -1777,8 +1768,6 @@ ScreenResize(XtermWidget xw,
 	    if (GravityIsSouthWest(xw)
 		&& delta_rows
 		&& screen->saveBuf_index != 0) {
-
-		move_down_by = delta_rows;
 
 		if (delta_rows < 0) {
 		    unsigned move_up = (unsigned) (-delta_rows);
@@ -1791,7 +1780,6 @@ ScreenResize(XtermWidget xw,
 		    if (amount < 0) {
 			/* move line-data from visible-buffer to save-buffer */
 			saveEditBufLines(screen, dst, (unsigned) -amount);
-			move_up = (unsigned) -amount;
 			move_down_by = amount;
 		    } else {
 			move_down_by = 0;
@@ -1832,8 +1820,7 @@ ScreenResize(XtermWidget xw,
 				      &screen->saveBuf_data,
 				      (unsigned) savelines,
 				      (unsigned) cols,
-				      (unsigned) savelines,
-				      (unsigned) MaxCols(screen));
+				      (unsigned) savelines);
 		    TRACE_SCRNBUF("reallocSAVE",
 				  screen,
 				  screen->saveBuf_index,
@@ -1846,8 +1833,7 @@ ScreenResize(XtermWidget xw,
 				      &screen->editBuf_data[screen->whichBuf],
 				      (unsigned) rows,
 				      (unsigned) cols,
-				      (unsigned) MaxRows(screen),
-				      (unsigned) MaxCols(screen));
+				      (unsigned) MaxRows(screen));
 		    TRACE_SCRNBUF("reallocEDIT",
 				  screen,
 				  screen->editBuf_index[screen->whichBuf],
@@ -1874,8 +1860,7 @@ ScreenResize(XtermWidget xw,
 				      &screen->editBuf_data[screen->whichBuf],
 				      (unsigned) rows,
 				      (unsigned) cols,
-				      (unsigned) MaxRows(screen),
-				      (unsigned) MaxCols(screen));
+				      (unsigned) MaxRows(screen));
 
 		    dst = screen->editBuf_index[screen->whichBuf];
 		    TRACE_SCRNBUF("reallocEDIT", screen, dst, rows);
@@ -1951,16 +1936,14 @@ ScreenResize(XtermWidget xw,
 				  &screen->saveBuf_data,
 				  (unsigned) savelines,
 				  (unsigned) cols,
-				  (unsigned) savelines,
-				  (unsigned) MaxCols(screen));
+				  (unsigned) savelines);
 #endif
 		(void) Reallocate(xw,
 				  &screen->editBuf_index[screen->whichBuf],
 				  &screen->editBuf_data[screen->whichBuf],
 				  (unsigned) rows,
 				  (unsigned) cols,
-				  (unsigned) MaxRows(screen),
-				  (unsigned) MaxCols(screen));
+				  (unsigned) MaxRows(screen));
 	    }
 #else /* !OPT_SAVE_LINES */
 	    if (screen->whichBuf
@@ -1977,15 +1960,13 @@ ScreenResize(XtermWidget xw,
 				  &screen->editBuf_data[1],
 				  (unsigned) rows,
 				  (unsigned) cols,
-				  (unsigned) MaxRows(screen),
-				  (unsigned) MaxCols(screen));
+				  (unsigned) MaxRows(screen));
 	    move_down_by = Reallocate(xw,
 				      &screen->saveBuf_index,
 				      &screen->saveBuf_data,
 				      (unsigned) (rows + savelines),
 				      (unsigned) cols,
-				      (unsigned) (MaxRows(screen) + savelines),
-				      (unsigned) MaxCols(screen));
+				      (unsigned) (MaxRows(screen) + savelines));
 #endif /* OPT_SAVE_LINES */
 	    screen->visbuf = VisBuf(screen);
 	}
@@ -2043,9 +2024,13 @@ ScreenResize(XtermWidget xw,
 	    MaxRows(screen) * screen->iconVwin.f_height;
 
 	changes.width = screen->iconVwin.fullwidth =
-	    (Dimension) (screen->iconVwin.width + 2 * xw->misc.icon_border_width);
+	    (Dimension) ((unsigned) screen->iconVwin.width
+			 + 2 * xw->misc.icon_border_width);
+
 	changes.height = screen->iconVwin.fullheight =
-	    (Dimension) (screen->iconVwin.height + 2 * xw->misc.icon_border_width);
+	    (Dimension) ((unsigned) screen->iconVwin.height
+			 + 2 * xw->misc.icon_border_width);
+
 	changes.border_width = (int) xw->misc.icon_border_width;
 
 	TRACE(("resizing icon window %dx%d\n", changes.height, changes.width));
@@ -2056,11 +2041,11 @@ ScreenResize(XtermWidget xw,
 
 #ifdef TTYSIZE_STRUCT
     /* Set tty's idea of window size */
-    TTYSIZE_ROWS(ts) = rows;
-    TTYSIZE_COLS(ts) = cols;
+    TTYSIZE_ROWS(ts) = (ttySize_t) rows;
+    TTYSIZE_COLS(ts) = (ttySize_t) cols;
 #ifdef USE_STRUCT_WINSIZE
-    ts.ws_xpixel = width;
-    ts.ws_ypixel = height;
+    ts.ws_xpixel = (ttySize_t) width;
+    ts.ws_ypixel = (ttySize_t) height;
 #endif
     code = SET_TTYSIZE(screen->respond, ts);
     TRACE(("return %d from SET_TTYSIZE %dx%d\n", code, rows, cols));

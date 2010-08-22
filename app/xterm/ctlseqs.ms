@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.213 2010/04/18 14:52:50 Emanuele.Giaquinta Exp $
+.\" $XTermId: ctlseqs.ms,v 1.214 2010/06/13 16:58:12 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -396,6 +396,10 @@ Form Feed or New Page (NP) (Ctrl-L) same as LF
 .IP \\*(Lf
 Line Feed or New Line (NL) (Ctrl-J)
 .
+.IP \\*(Si
+Shift In (Ctrl-O) \(-> Switch to Standard Character Set: invokes the
+G0 character set (the default).
+.
 .IP \\*(So
 Shift Out (Ctrl-N) \(-> Switch to Alternate Character Set: invokes the
 G1 character set.
@@ -408,10 +412,6 @@ Horizontal Tab (HT) (Ctrl-I)
 .
 .IP \\*(Vt
 Vertical Tab (Ctrl-K) same as LF
-.
-.IP \\*(Si
-Shift In (Ctrl-O) \(-> Switch to Standard Character Set: invokes the
-G0 character set (the default).
 .Ed
 .\"
 .\"

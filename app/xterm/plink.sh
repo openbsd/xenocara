@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.5 2005/05/03 00:38:24 tom Exp $
+# $XTermId: plink.sh,v 1.6 2010/06/15 22:32:19 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -39,6 +39,10 @@ do
 	OPT="$1"
 	shift
 	case $OPT in
+	-k*)
+		OPT=`echo "$OPT" | sed -e 's/^-k/-l/'`
+		LINKIT="$LINKIT $OPT"
+		;;
 	-l*)
 		echo "testing if $OPT is needed"
 		if ( eval $LINKIT $* >/dev/null 2>/dev/null )

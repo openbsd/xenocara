@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.96 2010/04/18 17:51:56 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.98 2010/06/20 21:41:15 tom Exp $ */
 
 /************************************************************
 
@@ -171,13 +171,14 @@ decodeUtf8(PtyData * data)
 #endif
 
 int
-readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
+readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData * data)
 {
+    TScreen *screen = TScreenOf(xw);
     int size = 0;
 
 #ifdef VMS
     if (*select_mask & pty_mask) {
-	trimPtyData(screen, data);
+	trimPtyData(xw, data);
 	if (read_queue.flink != 0) {
 	    size = tt_read(data->next);
 	    if (size == 0) {
@@ -190,7 +191,7 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
 #else /* !VMS */
     if (FD_ISSET(screen->respond, select_mask)) {
 	int save_err;
-	trimPtyData(screen, data);
+	trimPtyData(xw, data);
 
 	size = (int) read(screen->respond, (char *) data->last, (size_t) FRG_SIZE);
 	save_err = errno;
@@ -353,11 +354,11 @@ fakePtyData(PtyData * result, Char * next, Char * last)
  * e.g., a continuation-read.
  */
 void
-trimPtyData(TScreen * screen GCC_UNUSED, PtyData * data)
+trimPtyData(XtermWidget xw GCC_UNUSED, PtyData * data)
 {
     int i;
 
-    FlushLog(screen);
+    FlushLog(xw);
 
     if (data->next != data->buffer) {
 	int n = (int) (data->last - data->next);
@@ -377,13 +378,13 @@ trimPtyData(TScreen * screen GCC_UNUSED, PtyData * data)
  * and nextPtyData() will return that.
  */
 void
-fillPtyData(TScreen * screen, PtyData * data, char *value, int length)
+fillPtyData(XtermWidget xw, PtyData * data, const char *value, int length)
 {
     int size;
     int n;
 
     /* remove the used portion of the buffer */
-    trimPtyData(screen, data);
+    trimPtyData(xw, data);
 
     VTbuffer->last += length;
     size = (int) (VTbuffer->last - VTbuffer->next);

@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.122 2010/04/14 10:56:29 tom Exp $
+-- $XTermId: INSTALL,v 1.123 2010/06/14 08:57:22 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2009,2010 by Thomas E. Dickey
 --
@@ -104,6 +104,19 @@ The options (in alphabetic order):
 	positions 0-31.  Many applications use the line-drawing characters,
 	e.g., to make boxes.  When xterm loads a font, it checks if those
 	characters are present, and draws its own if they are missing.
+
+  --disable-broken-st     disallow broken string-terminators],
+
+	Do not compile-in code that works around a bug in some ISDN routers
+	(and possibly other applications written by the same people):  they
+	send an unterminated control string in their banner text, making xterm
+	freeze.
+
+	The workaround tells xterm to stop processing the control string when
+	it receives one of the whitespace control characters such as newline.
+	That was the behavior before patch #171.
+
+	See also --enable-broken-osc
 
   --disable-c1-print      disallow -k8 option for printable 128-159],
 
@@ -343,15 +356,6 @@ The options (in alphabetic order):
 	palette control strings without checking.  The result makes xterm
 	appear to freeze.  This workaround makes xterm ignore the strings,
 	and is compiled-in by default for Linux.
-
-  --enable-broken-st      allow broken string-terminators],
-
-	Compile-in code that works around a bug in some ISDN routers (and
-	possibly other applications written by the same people):  they send an
-	unterminated control string in their banner text, making xterm freeze.
-	The workaround tells xterm to stop processing the control string when
-	it receives one of the whitespace control characters such as newline.
-	That was the behavior before patch #171.
 
   --enable-dabbrev        enable dynamic-abbreviation support
 
