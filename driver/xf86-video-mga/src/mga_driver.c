@@ -2433,7 +2433,7 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
 	   break;
 	case PCI_CHIP_MGAG200_SE_A_PCI:
 	   if (pScrn->videoRam < 2048){
-	       maxPitch = 1024;
+               maxPitch = 1280;
 	   }
 	   break;
 	case PCI_CHIP_MGAG200:
@@ -2461,11 +2461,6 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
 	if (linePitches)
 	   xfree(linePitches);
     }
-
-    /* Some X compute displayWidth from inferred virtual without
-       checking pitch limit. */
-    if(pMga->Chipset == PCI_CHIP_MGAG200_SE_A_PCI && pScrn->videoRam < 2048)
-        pScrn->displayWidth = 1024;
 
     if (i < 1 && pMga->FBDev) {
 	fbdevHWUseBuildinMode(pScrn);
@@ -4332,7 +4327,7 @@ MGAValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 	if (mode->VDisplay > 1200)
 	    return MODE_VIRTUAL_Y;
 	if (pMga->reg_1e24 == 0x01 &&
-	    xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 256)
+	    xf86ModeBandwidth(mode, pScrn->bitsPerPixel) > 244)
 	    return MODE_BANDWIDTH;
     } else if (pMga->is_G200WB){
         if (mode->Flags & V_DBLSCAN)
