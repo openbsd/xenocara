@@ -1,3 +1,153 @@
+commit 97d0572191368f47854c795e524610e529787c85
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 13 22:00:11 2010 -0700
+
+    libXvMC 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9d2e636fa0fe21bfa483c18fa7ca63368a05ef35
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 13 22:01:39 2010 -0700
+
+    Remove unnecessary statements from configure.ac
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4d78d748cbf4a393ef12222c44b5f7adb2d3539f
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Mon Jul 12 20:04:46 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e003c948a51af2d89a23fb697ec44aab970ce853
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 07:06:17 2010 -0300
+
+    Purge macro NEED_REPLIES
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bea7d18c45b8d09c27a7e8c181b6efd27c4a36d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:49 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 92e902daab4eeb0acddd4e0def2d6009459e3220
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 14 10:06:05 2010 -0500
+
+    COPYING: replace stub with actual copyright notices
+    
+    Refer to: XvMCWrapper.c
+    Copyright (c) 2004 The Unichrome project.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 52c17bfbe2a50c9117ad92843f34e94be4f09c5e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Dec 11 12:54:03 2009 -0800
+
+    Bug 25592: Use $(docdir) for XvMC_API.txt install path
+    
+    Bumps minimum autoconf version required to 2.60 for $(docdir)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit c53bfd6679f842a5a061904740d86932bbbda6c6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:04 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit a75f52662c22048dc80a9f8d310364c458da470c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 9c441d4a5438caa37dd413ab2acbb4a117125e44
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:26 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 3a75ec2dda5f065e4d3eca15653c652690f4aa38
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:43 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 5eccd90ff407b9f780b4a0d6d1e48e0891f56594
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 276759b34432cea1f6c7eda995d65140b72169c0
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:26 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit efaafb5e74c7484f7e1c0f6f0fc34d75a0f7c14d
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Tue Oct 20 14:42:03 2009 -0700
+
+    Include XvMClib.h
+    
+    This fixes compilation breakage after 9190399907610486001f3676945958dbab4b837a in videoproto
+    
+    Found by tinderbox
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 4c41a40c3e4344c67cda020fbc2eb479ba06fc9e
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Oct 6 13:20:36 2009 -0700

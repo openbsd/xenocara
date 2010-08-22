@@ -20,26 +20,27 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+AC_PREREQ([2.60])
 
-AC_INIT(libXvMC, 1.0.5, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXvMC)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT([libXvMC],
+	[1.0.6],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+	[libXvMC])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS, XORG_WITH_LINT
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 AM_CONFIG_HEADER(config.h)
 
 # Check for progs
-AC_PROG_CC
 AC_PROG_LIBTOOL
-XORG_DEFAULT_OPTIONS
 
 # Check for dependencies
 PKG_CHECK_MODULES(XVMC, x11 xext xv xextproto videoproto)
-AC_SUBST(XVMC_CFLAGS)
-AC_SUBST(XVMC_LIBS)
 
 AC_CHECK_FUNC([shmat], AC_DEFINE(HAS_SHM,1,[Has shm*() functions]))
 		  
