@@ -1,3 +1,148 @@
+commit c29d24b2ca598011b84387006f03a9360910707f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jul 23 21:02:33 2010 -0400
+
+    config: add AM_PROG_CC_C_O for per-target compilation flags
+    
+    The use of per-target compilation flags with C sources requires
+    that the macro AM_PROG_CC_C_O be called from configure.ac
+    
+    If the C compiler does not accept the -c and -o options simultaneously,
+    define NO_MINUS_C_MINUS_O. This macro actually tests both the compiler
+    found by AC_PROG_CC, and, if different, the first cc in the path.
+    The test fails if one fails. This macro was created for GNU Make
+    to choose the default C compilation rule.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dfbef04f1ff9430a01ca0ca682be32a8606e9e13
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 0dbd97fe7d411549aa343c25dab9c70087532727
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dfaa0b6391ebc32f4e81d8add053eabea44d0881
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:42 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dd0bb4ac5730331070eac2c39880718eeff3760b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f07d572611ba072c5952fea526e7178202d36685
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 79956ca804b4ca6227f878cf794edafefa00d25a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:58 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit cee7a37a38f83cd5300a19f17493e43eb532e619
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8adb672ac3f754d02e377745c16f64151b50522a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d867b84e425cdf66542eebaabd8adb95b8121960
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 190a6b7e032e37e33dda42482038b8fd1fd9d8af
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:30 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit e647511e4b9b924b0617171c56b3bb485674b3ff
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Jul 13 11:57:15 2010 +0100
+
+    Don't crash the server on Xorg -configure
+
+commit 0bd99bb142093c0072147ec3bb665864b4cadef5
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 07:18:11 2010 -0300
+
+    Purge macros NEED_EVENTS and NEED_REPLIES
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f307f77a34f3a6777f74458819f6a3519c2c3f2b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 13:10:55 2010 -0400
+
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 423d8a069a2d86068a8f22926a73bc965670315d
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Mon Mar 29 10:19:04 2010 +0200
+
+    Fix some issues pointed out by compiler warnings.
+    
+    * vmware_chain_module() doesn't return any values.
+    * Remove an unused local variable.
+
 commit cc77a36048863640fb1fa9f82b5b0dbf41326872
 Author: Jakob Bornecrantz <jakob@vmware.com>
 Date:   Thu Mar 18 15:30:36 2010 +0100

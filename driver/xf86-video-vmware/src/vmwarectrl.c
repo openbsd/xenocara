@@ -37,8 +37,6 @@
 #include "config.h"
 #endif
 
-#define NEED_REPLIES
-#define NEED_EVENTS
 #include "dixstruct.h"
 #include "extnsionst.h"
 #include <X11/X.h>
