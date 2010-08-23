@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.83 2010/08/21 08:26:09 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.84 2010/08/23 06:21:12 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -8,7 +8,7 @@ Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm 
-Version:	258
+Version:	261
 Current Vers:	261
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
@@ -87,8 +87,3 @@ Comment:	developed and maintained in Xenocara
 Package:	xf86-input-ws
 Maintainer:	matthieu@openbsd.org
 Comment:	developed and maintained in Xenocara
-
-Package:	xf86-input-gunze
-Maintainer:	Alessandro Rubini <rubini@linux.it>
-Archive Site:	http://www.linux.it/~rubini/software/gunzets/gunzets.html
-Comment:	unmaintained
