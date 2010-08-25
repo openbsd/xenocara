@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.12 2010/08/02 18:45:02 matthieu Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.13 2010/08/25 17:44:27 todd Exp $
 
 # Shared libs?
 .if ${MACHINE_ARCH} == "m88k" || ${MACHINE} == "vax"
@@ -14,9 +14,5 @@ XENOCARA_BUILD_DRI?=${XENOCARA_HAVE_SHARED_LIBS:L}
 # Build XCB
 XENOCARA_BUILD_XCB?=${XENOCARA_HAVE_SHARED_LIBS}
 
-# Build pixmain?
-.if ${MACHINE_ARCH} == "m68k"
-XENOCARA_BUILD_PIXMAN?=no
-.else
+# Build pixman?
 XENOCARA_BUILD_PIXMAN?=yes
-.endif

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2010/05/11 18:51:21 espie Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2010/08/25 17:44:26 todd Exp $
 
 .include <bsd.own.mk>
 
@@ -10,6 +10,11 @@ CONFIGURE_ARGS += --disable-sse2
 
 .if ${MACHINE_ARCH} == arm
 CONFIGURE_ARGS +=  --disable-arm-simd --disable-arm-neon
+.endif
+
+.if ${MACHINE_ARCH} == m68k
+CFLAGS += -fno-regmove
+CONFIGURE_ARGS += --cache-file=/dev/null
 .endif
 
 .include <bsd.xorg.mk>

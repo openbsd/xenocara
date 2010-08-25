@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.1 2010/05/22 20:14:15 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.2 2010/08/25 17:44:24 todd Exp $
 
 
 .if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
@@ -10,7 +10,9 @@ OBJS = ${C_SOURCES:.c=.so}
 CPPFLAGS = \
 	 -I${.CURDIR} ${LIBRARY_INCLUDES}
 
+.if defined(LIB)
 all: ${LIB}_pic.a
+.endif
 
 ${LIB}_pic.a:	${OBJS} $(DPADD)
 	@rm -f ${LIB}_pic.a
