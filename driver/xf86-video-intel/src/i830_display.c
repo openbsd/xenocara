@@ -2309,7 +2309,6 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 
 	switch (intel_output->type) {
 	case I830_OUTPUT_LVDS:
-	    ErrorF("is lvds\n");
 	    is_lvds = TRUE;
 	    lvds_bits = intel_output->lvds_bits;
 	    break;
@@ -2328,7 +2327,6 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	    is_tv = TRUE;
 	    break;
 	case I830_OUTPUT_ANALOG:
-	    ErrorF("is crt\n");
 	    is_crt = TRUE;
 	    break;
 	}
