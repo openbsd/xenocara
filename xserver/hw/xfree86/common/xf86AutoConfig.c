@@ -468,7 +468,7 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
 	}
     }
 #endif
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if defined(__sparc__)
     {
 	char *sbusDriver = sparcDriverName();
 	if (sbusDriver)

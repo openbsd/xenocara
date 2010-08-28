@@ -190,3 +190,14 @@ void
 sparcPromClose(void)
 {
 }
+
+char *
+sparcDriverName(void)
+{
+	switch (sbusInfo.devId) {
+	case SBUS_DEVICE_FFB:
+		return "sunffb";
+	default:
+		return NULL;
+	}
+}
