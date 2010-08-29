@@ -62,15 +62,6 @@ AC_ARG_WITH(xorg-module-dir,
 # Obtain compiler/linker options for the driver dependencies
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto $REQUIRED_MODULES])
 
-# Checks for libraries.
-
-# Check for xf1bpp & xf4bpp (removed in xorg-server 1.6 & later)
-SAVE_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-AC_CHECK_HEADER(xf1bpp.h,[AC_DEFINE(HAVE_XF1BPP, 1, [Have 1bpp support])],[])
-AC_CHECK_HEADER(xf4bpp.h,[AC_DEFINE(HAVE_XF4BPP, 1, [Have 4bpp support])],[])
-CPPFLAGS="$SAVE_CPPFLAGS"
-
 AC_SUBST([moduledir])
 
 DRIVER_NAME=wsudl
