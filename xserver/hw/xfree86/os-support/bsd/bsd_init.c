@@ -37,6 +37,7 @@
 
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 #ifdef X_PRIVSEP
 #include "os.h"
 #include <pwd.h>
@@ -640,16 +641,33 @@ xf86OpenWScons()
     int mode = WSDISPLAYIO_MODE_MAPPED;
     int i;
     char ttyname[16];
+    int mib[2];
+    size_t len;
+    dev_t dev;
 
-    /* XXX Is this ok? */
-    for (i = 0; i < 8; i++) {
-#if defined(__NetBSD__)
-	sprintf(ttyname, "/dev/ttyE%d", i);
-#elif defined(__OpenBSD__)
-	sprintf(ttyname, "/dev/ttyC%x", i);
+#ifdef KERN_CONSDEV
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_CONSDEV;
+    if (sysctl(mib, 2, &dev, &len, NULL, 0) != -1) {
+	snprintf(ttyname, sizeof(ttyname), "/dev/%s", devname(dev, S_IFCHR));
+	if ((fd = open(ttyname, 2)) != -1) {
+	    if (ioctl(fd, WSDISPLAYIO_GTYPE, &i) == -1) {
+	        close(fd);
+		fd = -1;
+	    }
+	}
+    }
 #endif
-	if ((fd = open(ttyname, 2)) != -1)
-	    break;
+    if (fd == -1) {
+	for (i = 0; i < 8; i++) {
+#if defined(__NetBSD__)
+	    sprintf(ttyname, "/dev/ttyE%d", i);
+#elif defined(__OpenBSD__)
+	    sprintf(ttyname, "/dev/ttyC%x", i);
+#endif
+	    if ((fd = open(ttyname, 2)) != -1)
+		break;
+        }
     }
     if (fd != -1) {
 	if (ioctl(fd, WSDISPLAYIO_SMODE, &mode) < 0) {
