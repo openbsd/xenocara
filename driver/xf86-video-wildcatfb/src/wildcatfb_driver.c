@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.7 2010/08/29 14:43:17 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.8 2010/08/29 15:20:40 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -83,6 +83,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/time.h>

@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.6 2010/05/30 21:05:16 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.7 2010/08/29 15:20:40 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -56,6 +56,7 @@
 #include "config.h"
 #endif
 
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/time.h>

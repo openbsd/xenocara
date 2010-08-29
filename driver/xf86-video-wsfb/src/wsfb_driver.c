@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.22 2010/07/18 20:10:12 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.23 2010/08/29 15:20:40 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -42,6 +42,8 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/time.h>
