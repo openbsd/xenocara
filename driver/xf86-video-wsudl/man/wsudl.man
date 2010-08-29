@@ -1,4 +1,4 @@
-.\" $OpenBSD: wsudl.man,v 1.1.1.1 2009/09/22 14:12:23 mglocker Exp $
+.\" $OpenBSD: wsudl.man,v 1.2 2010/08/29 15:05:55 matthieu Exp $
 .\"
 .\" Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
 .\"
@@ -60,7 +60,7 @@ driver picks up the currently used video mode from the framebuffer
 driver and uses it.
 Video modes specifications in the configuration file are ignored.
 .SH "SEE ALSO"
-XFree86(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1),
+__xservername__(1), __xconfigfile__(__filemansuffix__), xorgconfig(1), Xserver(1),
 X(__miscmansuffix__), wsdisplay(__drivermansuffix__)
 .SH AUTHORS
 This driver has been written by Marcus Glocker, based on the wsfb driver
