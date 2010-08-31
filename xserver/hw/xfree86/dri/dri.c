@@ -375,7 +375,6 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
     pDRIPriv->createDummyCtxPriv = pDRIInfo->createDummyCtxPriv;
 
     pDRIPriv->grabbedDRILock = FALSE;
-    pDRIPriv->drmSIGIOHandlerInstalled = FALSE;
     *pDRMFD = pDRIPriv->drmFD;
 
     if (pDRIEntPriv->sAreaGrabbed || pDRIInfo->allocSarea) {
@@ -566,24 +565,6 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
 	/* fall through */
 
     case DRI_SERVER_SWAP:
-        /* For swap methods of DRI_SERVER_SWAP and DRI_HIDE_X_CONTEXT
-         * setup signal handler for receiving swap requests from kernel
-	 */
-	if (!(pDRIPriv->drmSIGIOHandlerInstalled =
-	      drmInstallSIGIOHandler(pDRIPriv->drmFD, DRISwapContext))) {
-	    DRIDrvMsg(pScreen->myNum, X_ERROR,
-		      "[drm] failed to setup DRM signal handler\n");
-	    if (pDRIPriv->hiddenContextStore)
-		xfree(pDRIPriv->hiddenContextStore);
-	    if (pDRIPriv->partial3DContextStore)
-		xfree(pDRIPriv->partial3DContextStore);
-	    DRIDestroyContextPriv(pDRIContextPriv);
-	    return FALSE;
-	} else {
-	    DRIDrvMsg(pScreen->myNum, X_INFO,
-		      "[drm] installed DRM signal handler\n");
-	}
-
     default:
 	break;
     }
@@ -688,13 +669,6 @@ DRICloseScreen(ScreenPtr pScreen)
 	    }
 	    
 	    pDRIPriv->wrapped = FALSE;
-	}
-
-	if (pDRIPriv->drmSIGIOHandlerInstalled) {
-	    if (!drmRemoveSIGIOHandler(pDRIPriv->drmFD)) {
-		DRIDrvMsg(pScreen->myNum, X_ERROR,
-			  "[drm] failed to remove DRM signal handler\n");
-	    }
 	}
 
         if (pDRIPriv->dummyCtxPriv && pDRIPriv->createDummyCtx) {
@@ -875,8 +849,7 @@ DRIGetClientDriverName(ScreenPtr pScreen,
 
    DRICreateContextPriv always creates a kernel drm_context_t and then calls
    DRICreateContextPrivFromHandle to create a DRIContextPriv structure for
-   DRI tracking.  For the SIGIO handler, the drm_context_t is associated with
-   DRIContextPrivPtr.  Any special flags are stored in the DRIContextPriv
+   DRI tracking. Any special flags are stored in the DRIContextPriv
    area and are passed to the kernel (if necessary).
 
    DRICreateContextPriv returns a pointer to newly allocated
@@ -2433,72 +2406,4 @@ DRICreatePCIBusID(const struct pci_device * dev)
 	dev->dev, dev->func);
 
     return busID;
-}
-
-static void drmSIGIOHandler(int interrupt, void *closure)
-{
-    unsigned long key;
-    void          *value;
-    ssize_t       count;
-    drm_ctx_t     ctx;
-    typedef void  (*_drmCallback)(int, void *, void *);
-    char          buf[256];
-    drm_context_t    old;
-    drm_context_t    new;
-    void          *oldctx;
-    void          *newctx;
-    char          *pt;
-    drmHashEntry  *entry;
-    void *hash_table;
-
-    hash_table = drmGetHashTable();
-
-    if (!hash_table) return;
-    if (drmHashFirst(hash_table, &key, &value)) {
-	entry = value;
-	do {
-#if 0
-	    fprintf(stderr, "Trying %d\n", entry->fd);
-#endif
-	    if ((count = read(entry->fd, buf, sizeof(buf) - 1)) > 0) {
-		buf[count] = '\0';
-#if 0
-		fprintf(stderr, "Got %s\n", buf);
-#endif
-
-		for (pt = buf; *pt != ' '; ++pt); /* Find first space */
-		++pt;
-		old    = strtol(pt, &pt, 0);
-		new    = strtol(pt, NULL, 0);
-		oldctx = drmGetContextTag(entry->fd, old);
-		newctx = drmGetContextTag(entry->fd, new);
-#if 0
-		fprintf(stderr, "%d %d %p %p\n", old, new, oldctx, newctx);
-#endif
-		((_drmCallback)entry->f)(entry->fd, oldctx, newctx);
-		ctx.handle = new;
-		ioctl(entry->fd, DRM_IOCTL_NEW_CTX, &ctx);
-	    }
-	} while (drmHashNext(hash_table, &key, &value));
-    }
-}
-
-
-int drmInstallSIGIOHandler(int fd, void (*f)(int, void *, void *))
-{
-    drmHashEntry     *entry;
-
-    entry     = drmGetEntry(fd);
-    entry->f  = f;
-
-    return xf86InstallSIGIOHandler(fd, drmSIGIOHandler, 0);
-}
-
-int drmRemoveSIGIOHandler(int fd)
-{
-    drmHashEntry     *entry = drmGetEntry(fd);
-
-    entry->f = NULL;
-
-    return xf86RemoveSIGIOHandler(fd);
 }
