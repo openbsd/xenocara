@@ -60,16 +60,6 @@
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg
-./usr/X11R6/include/xorg/compositeext.h
-./usr/X11R6/include/xorg/events.h
-./usr/X11R6/include/xorg/fbpict.h
-./usr/X11R6/include/xorg/list.h
-./usr/X11R6/include/xorg/mioverlay.h
-./usr/X11R6/include/xorg/panoramiX.h
-./usr/X11R6/include/xorg/panoramiXsrv.h
-./usr/X11R6/include/xorg/vidmodeproc.h
-./usr/X11R6/include/xorg/xf86VGAarbiter.h
-./usr/X11R6/include/xorg/xfixes.h
 ./usr/X11R6/lib/libFS.so.9.0
 ./usr/X11R6/lib/libGL.a
 ./usr/X11R6/lib/libGL.so.10.0
@@ -85,9 +75,8 @@
 ./usr/X11R6/lib/libX11-xcb.a
 ./usr/X11R6/lib/libX11-xcb.la
 ./usr/X11R6/lib/libX11-xcb.so.1.0
-./usr/X11R6/lib/libX11.so.13.0
+./usr/X11R6/lib/libX11.so.14.0
 ./usr/X11R6/lib/libXRes.so.4.0
-./usr/X11R6/lib/libXTrap.so.10.0
 ./usr/X11R6/lib/libXau.so.9.0
 ./usr/X11R6/lib/libXaw.so.14.0
 ./usr/X11R6/lib/libXaw7.so.14.0
@@ -95,7 +84,6 @@
 ./usr/X11R6/lib/libXcursor.so.4.0
 ./usr/X11R6/lib/libXdamage.so.3.1
 ./usr/X11R6/lib/libXdmcp.so.10.0
-./usr/X11R6/lib/libXevie.so.2.0
 ./usr/X11R6/lib/libXext.so.11.0
 ./usr/X11R6/lib/libXfixes.so.5.0
 ./usr/X11R6/lib/libXfont.so.9.0
@@ -123,9 +111,8 @@
 ./usr/X11R6/lib/libdrm_pic.a
 ./usr/X11R6/lib/libfontconfig.so.7.0
 ./usr/X11R6/lib/libfontenc.so.3.0
-./usr/X11R6/lib/libfreetype.so.17.1
+./usr/X11R6/lib/libfreetype.so.17.2
 ./usr/X11R6/lib/libfreetype_pic.a
-./usr/X11R6/lib/liblbxutil.so.1.0
 ./usr/X11R6/lib/libpciaccess.so.1.0
 ./usr/X11R6/lib/libpixman-1.so.16.6
 ./usr/X11R6/lib/libpthread-stubs.a
@@ -222,7 +209,7 @@
 ./usr/X11R6/lib/libxcb-xvmc.so.0.0
 ./usr/X11R6/lib/libxcb-xvmc_pic.a
 ./usr/X11R6/lib/libxcb.a
-./usr/X11R6/lib/libxcb.so.2.1
+./usr/X11R6/lib/libxcb.so.2.2
 ./usr/X11R6/lib/libxcb_pic.a
 ./usr/X11R6/lib/libxkbfile.so.5.0
 ./usr/X11R6/lib/libxkbui.so.4.0

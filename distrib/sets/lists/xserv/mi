@@ -6,4 +6,5 @@
 ./usr/X11R6/lib/modules/input
 ./usr/X11R6/lib/modules/linux
 ./usr/X11R6/lib/modules/multimedia
+./usr/X11R6/share/aclocal/xorg-macros.m4
 ./var/db

@@ -111,7 +111,7 @@
 ./usr/X11R6/lib/libX11-xcb.a
 ./usr/X11R6/lib/libX11-xcb.la
 ./usr/X11R6/lib/libX11-xcb.so.1.0
-./usr/X11R6/lib/libX11.so.13.0
+./usr/X11R6/lib/libX11.so.14.0
 ./usr/X11R6/lib/libXRes.so.4.0
 ./usr/X11R6/lib/libXau.so.9.0
 ./usr/X11R6/lib/libXaw.so.14.0
@@ -147,7 +147,7 @@
 ./usr/X11R6/lib/libdrm_pic.a
 ./usr/X11R6/lib/libfontconfig.so.7.0
 ./usr/X11R6/lib/libfontenc.so.3.0
-./usr/X11R6/lib/libfreetype.so.17.1
+./usr/X11R6/lib/libfreetype.so.17.2
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/libpciaccess.so.1.0
 ./usr/X11R6/lib/libpixman-1.so.16.6
@@ -245,7 +245,7 @@
 ./usr/X11R6/lib/libxcb-xvmc.so.0.0
 ./usr/X11R6/lib/libxcb-xvmc_pic.a
 ./usr/X11R6/lib/libxcb.a
-./usr/X11R6/lib/libxcb.so.2.1
+./usr/X11R6/lib/libxcb.so.2.2
 ./usr/X11R6/lib/libxcb_pic.a
 ./usr/X11R6/lib/libxkbfile.so.5.0
 ./usr/X11R6/lib/libxkbui.so.4.0

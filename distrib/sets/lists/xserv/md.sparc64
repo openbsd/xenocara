@@ -262,7 +262,6 @@
 ./usr/X11R6/man/man4/wsfb.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man7/Xprint.7
-./usr/X11R6/share/aclocal/xorg-macros.m4
 ./usr/X11R6/share/aclocal/xorg-server.m4
 ./var/db/xkb
 ./var/db/xkb/README.compiled
