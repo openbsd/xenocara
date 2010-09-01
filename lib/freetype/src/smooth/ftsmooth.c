@@ -196,13 +196,6 @@
 
 #endif
 
-    if ( pitch > 0xFFFF || height > 0xFFFF )
-    {
-      FT_ERROR(( "ft_smooth_render_generic: glyph too large: %d x %d\n",
-                 width, height ));
-      return Smooth_Err_Raster_Overflow;
-    }
-
 #if FT_UINT_MAX > 0xFFFFU
 
     /* Required check is ( pitch * height < FT_ULONG_MAX ),     */

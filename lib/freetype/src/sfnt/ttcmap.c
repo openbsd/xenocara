@@ -2689,7 +2689,7 @@
                     FT_Memory  memory )
   {
     FT_UInt32 old_max = cmap->max_results;
-    FT_Error  error   = 0;
+    FT_Error  error   = SFNT_Err_Ok;
 
 
     if ( num_results > cmap->max_results )
@@ -2787,7 +2787,8 @@
         }
 
         /* and the non-default table (these glyphs are specified here) */
-        if ( nondefOff != 0 ) {
+        if ( nondefOff != 0 )
+        {
           FT_Byte*  ndp         = table + nondefOff;
           FT_ULong  numMappings = TT_NEXT_ULONG( ndp );
           FT_ULong  i, lastUni = 0;
@@ -3375,7 +3376,7 @@
     clazz[i] = NULL;
 
     *output_class = clazz;
-    return FT_Err_Ok;
+    return SFNT_Err_Ok;
   }
 
 #endif /*FT_CONFIG_OPTION_PIC*/

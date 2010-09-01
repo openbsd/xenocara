@@ -23,6 +23,7 @@
 #include "pfrsbit.h"
 #include FT_OUTLINE_H
 #include FT_INTERNAL_DEBUG_H
+#include FT_TRUETYPE_IDS_H 
 
 #include "pfrerror.h"
 
@@ -252,11 +253,11 @@
 
 
         charmap.face        = pfrface;
-        charmap.platform_id = 3;
-        charmap.encoding_id = 1;
+        charmap.platform_id = TT_PLATFORM_MICROSOFT;
+        charmap.encoding_id = TT_MS_ID_UNICODE_CS;
         charmap.encoding    = FT_ENCODING_UNICODE;
 
-        FT_CMap_New( &pfr_cmap_class_rec, NULL, &charmap, NULL );
+        error = FT_CMap_New( &pfr_cmap_class_rec, NULL, &charmap, NULL );
 
 #if 0
         /* Select default charmap */
