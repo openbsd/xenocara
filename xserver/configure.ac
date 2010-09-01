@@ -439,6 +439,10 @@ case $host_os in
 	AC_DEFINE(CSRG_BASED, 1, [System is BSD-like])
 	AC_DEFINE(PCVT_SUPPORT, 1, [System has PC console])
 	AC_DEFINE(WSCONS_SUPPORT, 1, [System has wscons console])
+	# Disable use of SIGIO by default; it breaks multi-card
+	# configurations.  We don't want to run thousands of lines of
+	# potentially signal-unsafe code for no particular benefit.
+	USE_SIGIO_BY_DEFAULT="no"
 	KDRIVE_HW=yes
 	;;
   *linux*)
