@@ -1,5 +1,7 @@
 SUBDIRS=specs
 
+SUBDIRS=specs
+
 xextdir = $(includedir)/X11/extensions
 xext_HEADERS = \
 	dpmsconst.h \
