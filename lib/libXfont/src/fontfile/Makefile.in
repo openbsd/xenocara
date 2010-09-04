@@ -82,6 +82,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -111,17 +112,23 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
+ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+FOP = @FOP@
 FREETYPE_CFLAGS = @FREETYPE_CFLAGS@
 FREETYPE_LIBS = @FREETYPE_LIBS@
 FREETYPE_REQUIRES = @FREETYPE_REQUIRES@
 GREP = @GREP@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
 HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -134,9 +141,11 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
+MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
+MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-MAKE_DEVEL_DOCS_FALSE = @MAKE_DEVEL_DOCS_FALSE@
-MAKE_DEVEL_DOCS_TRUE = @MAKE_DEVEL_DOCS_TRUE@
+MAN_SUBSTS = @MAN_SUBSTS@
 MATH_LIBS = @MATH_LIBS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
@@ -176,6 +185,7 @@ XFONT_PCFFORMAT_TRUE = @XFONT_PCFFORMAT_TRUE@
 XFONT_SNFFORMAT_FALSE = @XFONT_SNFFORMAT_FALSE@
 XFONT_SNFFORMAT_TRUE = @XFONT_SNFFORMAT_TRUE@
 XMLTO = @XMLTO@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 X_BZIP2_FONT_COMPRESSION_FALSE = @X_BZIP2_FONT_COMPRESSION_FALSE@
 X_BZIP2_FONT_COMPRESSION_TRUE = @X_BZIP2_FONT_COMPRESSION_TRUE@
 X_GZIP_FONT_COMPRESSION = @X_GZIP_FONT_COMPRESSION@
@@ -200,7 +210,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -243,7 +252,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -268,9 +277,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
 clean-noinstLTLIBRARIES:
