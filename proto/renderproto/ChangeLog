@@ -1,3 +1,124 @@
+commit 89289190032cb7f17a392ef0fe8237bdb54edcf6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 10 10:10:48 2010 -0400
+
+    Make recursive alpha maps undefined
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 6122aa1ed38adbdf65e3ac11cff60bf075e85c0d
+Author: Sami Farin <safari-ml-freedesktop-bugzilla-kv7oy2vp4mc4jvudr6vccb7oetrzzqe7fwnhahno@u.safari.iki.fi>
+Date:   Wed Sep 26 11:31:00 2007 -0700
+
+    Bug 12578 - renderproto-0.9.3: render.h does not compile
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=12578
+
+commit e44c308a0a268de2be2110c38a0a29d5b4101d10
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue May 11 10:45:09 2010 -0400
+
+    Clarify alpha-map loop prevention (#23581)
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 724feb119aa1906f6a7a2f62fccb1b76bb56857c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:31 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2c7bf7d8481706d208bdebf93568cb478762f080
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Thu Dec 17 08:41:27 2009 +0100
+
+    Use $(docdir) for renderproto.txt install path
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 958987e56a304ff96cb1b4904c3b9b61015f985c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:48 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 8dd4c99017d64f66e7540501e165fc8738af7a7c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:13:30 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit 9dca7ab976c7f003f18c839a4fd9b095e1d4fcd9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:27 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit f3bdf8ad3179fd2e7e75bf7c6a8aa5023a2ac356
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:29 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit 149cf98b2b9fb52c47742846509b2c08141c43b8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 253a7fb4c4a88437ca31285bf6448d73013d0d74
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 13:55:25 2009 -0500
+
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    Works in conjunction with autogen.sh --enable-maintainer-mode
+
+commit 3396f4ca2df61e330dbcabd8e584e103f86449e5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:47 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 2a336d0528e2f88a940d003edc6655a1d65e6bd7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 24 11:42:17 2009 +1000
+
+    Update date/version on Render protocol spec to match last update (0.11)
+    
+    533e22db3088bb75e58b6d977ec82a13c4680b54 added blend modes and the bump to
+    0.11.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit d889aa6c766e2691e1a6a8189c730661023e4de4
 Author: Fredrik Höglund <fredrik@kde.org>
 Date:   Wed Jul 15 00:16:32 2009 +0200

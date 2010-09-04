@@ -6,17 +6,17 @@ render_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = renderproto.pc
 
-renderdocdir = $(datadir)/doc/$(PACKAGE)
-renderdoc_DATA = renderproto.txt
+dist_doc_DATA = renderproto.txt
 
-EXTRA_DIST = renderproto.pc.in $(renderdoc_DATA)
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
