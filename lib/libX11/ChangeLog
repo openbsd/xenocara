@@ -1,3 +1,756 @@
+commit 8e3877aa50f3092c8fdfd916b072720439bc818b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Aug 11 16:24:28 2010 -0700
+
+    libX11 1.3.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b17b61421e81dd8acc0e410c37b76e674c2ddf7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 29 11:11:21 2010 -0400
+
+    nls: Switch one of the interrobang sequences to gnaborretni
+    
+    Since gnaborretni is primarily used in LTR locales, the ? part of the
+    sequence reflects the position of the bulge in the ?.  When scanning an
+    inverted interrobang left-to-right, you see the bulge first, so the
+    compose sequence ?! is used; upright interrobang shows the bulge
+    last, so it's !?.
+    
+    This is a change in behaviour, but I was unable to come up with anything
+    better.  ??!! or !!?? would match the patterns for ﾂｿ and ﾂ｡, but they
+    would delay evaluation of them; "ﾂｿQuﾃｩ?" wouldn't show the ﾂｿ until you hit
+    Q.  Likewise ?!?! and !?!? would delay showing the interrobang itself.
+    ~!? and ~?! were considered but are arguably less intuitive.
+    
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit f70527f05677aaf6a493ba42d2d95f738aaebafa)
+
+commit 0f70c845ad336a235e2f2f5d966b421d9a9d653d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jul 20 12:34:48 2010 +0100
+
+    NLS: Add \o/ Compose sequence
+    
+    Unicode is even more pointlessly awesome! Add a binding for Compose-\o/
+    to U+1F64C PERSON RAISING BOTH HANDS IN CELEBRATION.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit 554da76ece85d0fc0cada45a86860e69c2107e9a)
+
+commit 5c99e5b7f26e209de3430397784db443051d6eff
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Tue Jun 29 18:32:42 2010 +0200
+
+    Make Compose-comma map to ogonek for I and U in UTF-8 locales.
+    
+    With the preceding patch, it makes the UTF-8 compose map consistent with
+    the ISO 8859-4 and -13 maps.
+    (cherry picked from commit 241a990afcf9c967c587ad6fd245df21b68b1ad9)
+
+commit ce7e5309bd227c14f6569fbccd8523e992c2bf07
+Author: Juliusz Chroboczek <jch@pps.jussieu.fr>
+Date:   Tue Jun 29 18:20:18 2010 +0200
+
+    Make Compose-comma map to Ogonek for A and E in UTF-8 locales.
+    
+    This makes the UTF-8 compose file consistent with the ISO 8859-2 compose file
+    as far as Polish is concerned.  We only sacrifice one pair of characters,
+    e-cedilla, which is not used in any language.
+    (cherry picked from commit af55e582f485a668c2bf43129be972bc65f03c60)
+
+commit 54a963608d23d35cd9233b2223f880ac3671f10b
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Aug 6 15:51:56 2010 -0700
+
+    Fix use-after-free in _XReply on X errors.
+    
+    _XReply would always call dequeue_pending_request on errors.  When it
+    got an error for the current request, it would call dequeue, then break
+    out of the loop; then, if it had an error in the event queue, it would
+    compare it with the sequence number of the now-freed pending request.
+    _XReply already stored that sequence number in dpy->last_request_read
+    before freeing it, so look at that instead.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=29412
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Josh Triplett <josh@joshtriplett.org>
+    (cherry picked from commit 4b8ff7db39f2fe7ef12968d462aaf3f9054b6c18)
+
+commit 8da90e33865340fe954bcb6b99dfcb1b7617ab10
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jul 24 22:13:07 2010 +0200
+
+    Compose.man: default user compose file is .XCompose, not .Xcompose
+    
+    The path was correct in the DESCRIPTION section, but not in FILES.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit 8e603413586ff42b1351688f6f99318cbe243bca)
+
+commit 2cce273a4ac89662e9f00a6a8317c84b0c8c391d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Jul 12 16:52:12 2010 -0700
+
+    launchd: Explicitly search /sbin
+    
+    Previously, launchd wasn't found if /sbin wasn't in the user's PATH.
+    https://bugs.freedesktop.org/show_bug.cgi?id=29028
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit a151346a2b7810e988f1de4b1e00b37672dc587a)
+
+commit 2b82daa88538022cfb49d8ceab22650e8062cacc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 24 13:13:11 2010 -0700
+
+    Define FILE_MAN_DIR_SUFFIX so XCompose shadow page has correct path
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit d6ba13009fc9ef876a104b907ffef73c6e405d4b)
+
+commit c1e35695d9d3b22b63db762ad0a1f040a72e958a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Jun 4 13:57:45 2010 +0200
+
+    Hide _XSeqSyncFunction
+    
+    Commit a6d974dc59f2722b36e2df9d4f07aeee4f83ce43 made _XSeqSyncFunction
+    non-static, but we don't need to export it.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    (cherry picked from commit abcd1b67c8135ad652833e5a60d818837c39fce1)
+
+commit fb19eb767a32fd4ff74021c51bc6f60eb8bdff74
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 3 15:21:40 2010 -0700
+
+    libX11 1.3.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f3db40ca5108a919244f3fff7466d01a14b3ce2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 3 13:08:17 2010 -0700
+
+    Workaround bug in groff flag processing that breaks distcheck
+    
+    At least with the groff 1.19.2 package I have installed, groff passes
+    on the -I flags for the include path to grohtml, which if they come
+    after the -P-I... flag we pass to grohtml to specify the image file
+    name pattern cause it to override that flag and put the images in
+    the wrong place, breaking "make distcheck" - changing the flag order
+    works around this.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bdb31a1fb707cebccc9efbbf68cb55c10fa4ea3e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 3 11:25:33 2010 -0700
+
+    Fix typo that made configure always report "none" for man page suffix
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6bb7d2d21d6b58019fb37b724b59c9744f30b9ce
+Author: Paul Bender <pebender@gmail.com>
+Date:   Thu Jun 3 11:20:26 2010 -0700
+
+    Bug 22591 - configure does not obey the --enable-*-transport options
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=22591
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7f35946d673bb00f2768e025b6e1017422b2174
+Author: Paul Bender <pebender@gmail.com>
+Date:   Thu Jun 3 11:17:45 2010 -0700
+
+    Bug 22590 - libX11 1.2.1 has broken abstract namespace support
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=22590
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b2487d07f7b355f230a56e32c763acd08862735c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 3 11:06:15 2010 -0700
+
+    Bug 22584 - libX11 does not cross compile
+    
+    Adaptation of patch submitted by Paul Bender in attachment 27301 to
+    https://bugs.freedesktop.org/show_bug.cgi?id=22584
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 4378219ff8c1418418c70086085358b69d574e74
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 1 18:55:48 2010 -0700
+
+    Clarify requirements in XRestackWindows man page
+    
+    The required common parent window is not specified in the arguments,
+    just implied as the parent of the first window in the list.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f09c5299a381e2729e800a0ac43f1c0e371f65f6
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 12 16:42:18 2010 -0700
+
+    xcb: Add TCP fallback
+    
+    If we fail to connect to a UNIX socket and the transport isn't specified,
+    fallback on TCP.  This matches behavior with the xtrans codepath and the
+    Xlib spec.
+    
+    http://lists.x.org/archives/xorg-devel/2010-April/007915.html
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+
+commit fd82552d5c0ce1931f29006a0c36f5e03cf8577e
+Merge: aae2a4a... 933aee1...
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon May 10 16:51:24 2010 -0700
+
+    Merge branch 'xlib-xcb-thread-fixes'
+
+commit aae2a4a7aab26de3fa715d6ecd0a0e0926b37fc9
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Apr 23 21:50:29 2010 -0700
+
+    Don't append the screen number when using a launchd socket
+    
+    ssh gets confused by this.  XQuartz is the only DDX using this
+    functionality, and it doesn't support different screens, so
+    let's just not include this until most ssh know how to handle
+    this.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit adcd0ec209abf832a769d52db660fb37eaad6e0c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Apr 23 16:33:44 2010 -0700
+
+    Remove launchd logic from _XConnectXCB as it's handled in XCB
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d232b259c36fdde1f4179822809fec1480867dc5
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Feb 2 17:01:28 2010 -0800
+
+    Fix various build warnings
+    
+    imLcIm.c: In function '_XimCachedFileName':
+    imLcIm.c:361: warning: format '%03x' expects type 'unsigned int', but argument 8 has type 'long unsigned int'
+    imLcIm.c:364: warning: format '%03x' expects type 'unsigned int', but argument 8 has type 'long unsigned int'
+    
+    imRm.c: In function '_XimDefaultArea':
+    imRm.c:597: warning: cast from pointer to integer of different size
+    imRm.c: In function '_XimDefaultColormap':
+    imRm.c:626: warning: cast from pointer to integer of different size
+    
+    lcFile.c:224: warning: no previous prototype for 'xlocaledir'
+    
+    lcUTF8.c: In function 'iconv_cstombs':
+    lcUTF8.c:1841: warning: assignment discards qualifiers from pointer target type
+    lcUTF8.c:1869: warning: pointer targets in passing argument 1 of 'wctomb' differ in signedness
+    lcUTF8.c:1873: warning: pointer targets in passing argument 1 of 'wctomb' differ in signedness
+    lcUTF8.c: In function 'iconv_mbstocs':
+    lcUTF8.c:1935: warning: pointer targets in passing argument 2 of 'mbtowc' differ in signedness
+    lcUTF8.c: In function 'iconv_mbtocs':
+    lcUTF8.c:2031: warning: pointer targets in passing argument 2 of 'mbtowc' differ in signedness
+    lcUTF8.c: In function 'iconv_mbstostr':
+    lcUTF8.c:2121: warning: pointer targets in passing argument 2 of 'mbtowc' differ in signedness
+    lcUTF8.c: In function 'iconv_strtombs':
+    lcUTF8.c:2180: warning: pointer targets in passing argument 1 of 'wctomb' differ in signedness
+    lcUTF8.c: In function '_XlcAddGB18030LocaleConverters':
+    lcUTF8.c:2367: warning: passing argument 5 of '_XlcSetConverter' from incompatible pointer type
+    lcUTF8.c:2368: warning: passing argument 5 of '_XlcSetConverter' from incompatible pointer type
+    lcUTF8.c:2373: warning: passing argument 5 of '_XlcSetConverter' from incompatible pointer type
+    lcUTF8.c:2374: warning: passing argument 5 of '_XlcSetConverter' from incompatible pointer type
+    lcUTF8.c:2375: warning: passing argument 5 of '_XlcSetConverter' from incompatible pointer type
+    lcUTF8.c:2376: warning: passing argument 5 of '_XlcSetConverter' from incompatible pointer type
+    lcUTF8.c:2377: warning: passing argument 5 of '_XlcSetConverter' from incompatible pointer type
+    
+    XlibInt.c: In function '_XGetHostname':
+    XlibInt.c:3441: warning: implicit declaration of function 'gethostname'
+    XlibInt.c:3441: warning: nested extern declaration of 'gethostname'
+    
+    ConnDis.c: In function '_XDisconnectDisplay':
+    ConnDis.c:540: warning: old-style function definition
+    ConnDis.c: In function '_XSendClientPrefix':
+    ConnDis.c:554: warning: old-style function definition
+    ConnDis.c: In function 'XSetAuthorization':
+    ConnDis.c:677: warning: old-style function definition
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3e11c73187acb2e2be9a812840bbbea947527ccb
+Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+Date:   Fri Apr 23 00:01:54 2010 +0200
+
+    Allow X11 users to compose anarchism
+    
+    I can easily compose the hammer and sickle (the symbol representative
+    of communism) by pressing the key sequence:
+    
+      <Compose> <C> <C> <C> <P> -> 笘ｭ
+    
+    But i can't easily make the circled A (the symbol representative of
+    anarchism).
+    
+    I'd like to be able to use <Compose> <O> <A> (this is a
+    currently unused key sequence) to generate the symbol:  竰ｶ
+    
+    Debian bug#555938 <http://bugs.debian.org/555938>
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 933aee1d5c53b0cc7d608011a29188b594c8d70b
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Apr 16 20:18:28 2010 -0700
+
+    Fix Xlib/XCB for multi-threaded applications (with caveats).
+    
+    Rather than trying to group all response processing in one monolithic
+    process_responses function, let _XEventsQueued, _XReadEvents, and
+    _XReply each do their own thing with a minimum of code that can all be
+    reasoned about independently.
+    
+    Tested with `ico -threads 20`, which seems to be able to make many
+    icosahedrons dance at once quite nicely now.
+    
+    Caveats:
+    
+    - Anything that was not thread-safe in Xlib before XCB probably still
+      isn't. XListFontsWithInfo, for instance.
+    
+    - If one thread is waiting for events and another thread tries to read a
+      reply, both will hang until an event arrives. Previously, if this
+      happened it might work sometimes, but otherwise would trigger either
+      an assertion failure or a permanent hang.
+    
+    - Versions of libxcb up to and including 1.6 have a bug that can cause
+      xcb_wait_for_event or xcb_wait_for_reply to hang if they run
+      concurrently with xcb_writev or other writers. So you'll want that fix
+      as well.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+    Reviewed-by: Josh Triplett <josh@freedesktop.org>
+
+commit aab43278ae619eb57d2dd9c7396f460f078588fc
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Apr 16 22:24:16 2010 -0700
+
+    Use InternalLockDisplay on code paths called from LockDisplay.
+    
+    It's easier to reason about the code when we can't re-enter the
+    Xlib-private sync-handlers while they're already running.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+    Reviewed-by: Josh Triplett <josh@freedesktop.org>
+
+commit 660b7d05f4ca4ab4661c9fe7ce655a4909b4e556
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Apr 16 19:45:11 2010 -0700
+
+    Fix _XSend to enqueue the right range of pending requests.
+    
+    _XSend was off-by-one on both ends. It should not re-enqueue the last
+    request that was already flushed, but it should enqueue the last request
+    currently being flushed.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+    Reviewed-by: Josh Triplett <josh@freedesktop.org>
+
+commit f2735889908d6e5a7f8dbee42f00c54a52665191
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Apr 16 19:45:11 2010 -0700
+
+    Pending requests are always added in-order.
+    
+    Replace insert_pending_request, which did an in-order search of the
+    queue to find the right insertion point, with a simpler
+    append_pending_request, and use that in _XSend as well.
+    
+    Includes assertions to check that the list of pending requests is in
+    order by sequence number and does not have duplicates.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+    Reviewed-by: Josh Triplett <josh@freedesktop.org>
+
+commit d9cf5885b0f97942fbbd2a7cc50118132ece50f6
+Author: Markus Duft <markus.duft@salomon.at>
+Date:   Fri Apr 16 08:39:34 2010 -0700
+
+    Bug 26839: Fix build problem on Interix (POSIX layer on Windows)
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=26839
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3f5f1b90936d23e9894e3261b2d77fb7b32a51a
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 15 14:24:21 2010 -0700
+
+    Stop returning an int from _XIDHandler and _XSeqSyncFunction
+    
+    _XIDHandler and _XSeqSyncFunction originally ran from dpy->synchandler, and
+    thus had to return an int.  Now, they only run from _XPrivSyncHandler or
+    LockDisplay, neither of which needs to check their return value since they
+    always returned 0.  Make them both void.
+    
+    Signed-off-by: Josh Triplett <josh@freedesktop.org>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit a6d974dc59f2722b36e2df9d4f07aeee4f83ce43
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Thu Apr 15 13:05:08 2010 -0700
+
+    Move XID and sync handling from SyncHandle to LockDisplay to fix races.
+    
+    XID and sync handling happened via _XPrivSyncHandler, assigned to
+    dpy->synchandler and called from SyncHandle.  _XPrivSyncHandler thus ran
+    without the Display lock, so manipulating the Display caused races, and
+    these races led to assertions in multithreaded code (demonstrated via
+    ico).
+    
+    In the XTHREADS case, after you've called XInitThreads, we can hook
+    LockDisplay and UnlockDisplay.  Use that to run _XIDHandler and
+    _XSeqSyncHandler from LockDisplay rather than SyncHandle; we then know
+    that we hold the lock, and thus we can avoid races.  We think it makes
+    sense to do these both from LockDisplay rather than UnlockDisplay, so
+    that you know you have valid sync and a valid XID before you start
+    setting up the request you locked to prepare.
+    
+    In the !XTHREADS case, or if you haven't called XInitThreads, you don't
+    get to use Xlib from multiple threads, so we can use the logic we have
+    now (with synchandler and savedsynchandler) without any concern about
+    races.
+    
+    This approach gets a bit exciting when the XID and sequence sync
+    handlers drop and re-acquire the Display lock. Reacquisition will re-run
+    the handlers, but they return immediately unless they have work to do,
+    so they can't recurse more than once.  In the worst case, if both of
+    them have work to do, we can nest the Display lock three deep.  In the
+    case of the _XIDHandler, we drop the lock to call xcb_generate_id, which
+    takes the socket back if it needs to request more XIDs, and taking the
+    socket back will reacquire the lock; we take care to avoid letting
+    _XIDHandler run again and re-enter XCB from the return_socket callback
+    (which causes Very Bad Things, and is Not Allowed).
+    
+    Tested with ico (with 1 and 20 threads), and with several test programs
+    for XID and sequence sync.  Tested with and without XInitThreads(), and
+    with and without XCB.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=23192
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Josh Triplett <josh@freedesktop.org>
+
+commit b089b53b697c2851db2985d32af3b29f1da5e31e
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Wed Apr 14 12:59:11 2010 -0700
+
+    Honest. Extensions get to filter async errors too.
+    
+    Under some circumstances, errors are picked up by calling
+    xcb_poll_for_reply, rather than xcb_poll_for_event, because Xlib issued
+    the requests with the XCB_REQUEST_CHECKED flag. That happens when either
+    an async handler is queued at the time the requests are flushed, or when
+    XSetEventQueueOwner has been used to prevent Xlib from processing XCB's
+    event queue.
+    
+    This bugfix extends 405132dab64bf2375f8e57d02b1b53da2311933a to cover
+    those cases.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=26545
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit a15c31274650e391bc6de5d0951eb4464c228139
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Wed Apr 14 12:10:34 2010 -0700
+
+    _XError already runs async handlers; only call them directly for replies.
+    
+    The previous behavior probably would have triggered bug reports someday.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 405132dab64bf2375f8e57d02b1b53da2311933a
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Apr 13 12:12:36 2010 -0700
+
+    Extensions get to filter async errors too.
+    
+    Apparently I misread XlibInt.c:_XReply and thought that handlers set
+    with XESetError should be consulted only for the sequence number that
+    _XReply is currently looking for. In fact, the error handlers are also
+    consulted when an error arrives for a request that was not expected to
+    have a reply.
+    
+    However, in an odd twist, the error handlers are *not* consulted outside
+    of _XReply--that is, when looking for events, or waiting to be able to
+    flush the output queue. So this patch takes some small pains to preserve
+    that behavior, though it seems likely to have been unintentional.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=26545
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit d3eab4a38f3e53ef21eb3b6fa66ead7afecf6227
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Apr 13 12:49:59 2010 -0700
+
+    Prefer the xcb_generic_error_t we already have over casting to xEvent.
+    
+    Just a minor cleanup.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 75ea8c37935ccc911557d16a303ba595b8ab106b
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Apr 12 11:30:20 2010 -0700
+
+    Run the user's synchandler as well as any internal synchandlers.
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=27595
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit c3f3e4a9e531d010312c97e753d6e543e607094d
+Author: Kusanagi Kouichi <slash@ac.auone-net.jp>
+Date:   Fri Feb 12 17:16:10 2010 +0900
+
+    Fix manual typos.
+    
+    Signed-off-by: Kusanagi Kouichi <slash@ac.auone-net.jp>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 75c6c5595408caba9ef8233839d77021d02f86f2
+Author: Dirk Wallenstein <dirkwallenstein@t-online.de>
+Date:   Fri Feb 5 20:42:46 2010 +0100
+
+    man: Correct the XkbAllAccessXEventsMask mask name
+    
+    This mask has probably been renamed but not been updated in the manuals.
+    
+    Signed-off-by: Dirk Wallenstein <dirkwallenstein@t-online.de>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9262aceaff24c954cab8c252690032bc2ec25e7d
+Author: Dirk Wallenstein <dirkwallenstein@t-online.de>
+Date:   Fri Feb 5 20:42:45 2010 +0100
+
+    man: Add missing geometry component flag
+    
+    Signed-off-by: Dirk Wallenstein <dirkwallenstein@t-online.de>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50cf134465f6fd263f37acecac94518468ef1c6d
+Author: Dirk Wallenstein <halsmit@t-online.de>
+Date:   Tue Feb 2 21:24:32 2010 +0100
+
+    man: Return value of XkbGetState is Status and not Bool
+    
+    Signed-off-by: Dirk Wallenstein <halsmit@t-online.de>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a93ae2bb5292a97fdd27ed818bc81248b37f641
+Author: Dirk Wallenstein <halsmit@t-online.de>
+Date:   Tue Feb 2 21:24:30 2010 +0100
+
+    man: Fix return value specification of XkbKeyActionEntry
+    
+    The XkbKeyActionEntry macro expands to a pointer.
+    
+    Signed-off-by: Dirk Wallenstein <halsmit@t-online.de>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9884d4a05a5661ec343ea8a2aa0562b6419e086
+Author: Dirk Wallenstein <halsmit@t-online.de>
+Date:   Tue Feb 2 21:24:29 2010 +0100
+
+    man: Redirect users from XKeycodeToKeysym to XkbKeycodeToKeysym #25732
+    
+    XKeycodeToKeysym keeps compatibility with pre-XKB and thus only sees 2
+    groups with 2 levels each. It wraps the index into the next group.
+    This behavior confuses the unaware user, and therefore this will add a
+    reference to XkbKeycodeToKeysym in the corresponding man paragraph.
+    
+    Another bug had that issue, too. #5349
+    
+    Signed-off-by: Dirk Wallenstein <halsmit@t-online.de>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6474cdf97cd648afaeaa872155f3fa21cfb43f80
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 8 19:59:55 2010 -0700
+
+    Fix typo in new fi_FI.UTF-8 that was reported by "make check"
+    
+    Unrecognized pattern in Compose on line #154:
+      <dead_diaeresis> <space>                " "ﾂｨ"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 91bd5e7af2d3a9526aefb73dc10f417896f0e4dd
+Author: Marko Myllynen <myllynen@redhat.com>
+Date:   Thu Apr 8 19:52:42 2010 -0700
+
+    Bug 27465 - Rewritten fi_FI.UTF-8 Compose file
+    
+    I've rewritten the fi_FI.UTF-8 Compose file so that it
+    
+    - includes en_US.UTF-8/Compose for base compose definitions (and thus gets any
+    possible additions to en_US.UTF-8/Compose automatically included)
+    - overrides any en_US.UTF-8/Compose definitions with fi_FI.UTF-8/Compose
+    definitions (thus making it safe to include en_US.UTF-8/Compose)
+    - lists all the definitions specified in the SFS 5966 standard (thus making it
+    easy to verify that the implementation is valid and complete)
+    - adds a header about the file itself as required by the standard
+    
+    The rewritten version is ~320 lines compared to over 5000 lines of the previous
+    version.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=27465
+
+commit f6a4fd0c7615684d08e848245849dea4017a5214
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Apr 1 21:46:12 2010 -0400
+
+    config: update and relocate AC_DEFINE_DIR macro
+    
+    Remove deprecated acinclude.m4 macro container file
+    Use separate macro files as per autoconf recommendation
+    Use the latest macro from GNU (ax) which replaces
+    the non-gnu version (ac)
+    This preserves the Autoconf macro AC namespace.
+    
+    Also moved out of acinclude.m4 is the DOLT macro
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 61d5231db418cec51bd718633c3bba39b18689d6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:48 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 69fc76a0321c6b25cc4286173c53435c69ab8e0e
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Wed Mar 17 23:53:16 2010 -0300
+
+    No need for req->firstKeyCode to be set twice.
+    
+    There is no reason to set req->firstKeyCode twice when a client, wishful
+    for changing keyboard mappings, calls XChangeKeyboardMapping. This patch
+    fixes the mistake by making no functional changes to libX11 whatsoever.
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b5797597f83ee62228abfb88f026ef92163e07a5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 16 10:37:21 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 052c4d7995b0e52a038933beb85cd544571c6b7e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 16 14:28:21 2010 -0500
+
+    specs: change install cmd due to automake 1.11
+    
+    specData_INSTALL is defined in 1.9 and 1.10 but not 1.11
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7277a18cda9f5a6807d11cf4ceb9449b1c302c18
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 9 17:27:08 2010 -0500
+
+    doc: use $(mkdir_p) rather than $(MKDIR_P) due to automake 1.9.6
+    
+    $(MKDIR_P) is not defined in automake 1.9.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e66eda95b520727969d721416d4ea49b54ef2b03
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 2 16:29:26 2010 -0500
+
+    specs: install html images in $docdir with html files
+    
+    The images required by the html files have been omitted.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 137d1ff6be99d040e77c8c4c52029c5bdf1f4808
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jan 31 14:16:20 2010 -0500
+
+    doc: use new macros to control doc generation
+    
+    Namely XORG_WITH_GROFF for the groff generation tool
+    XORG_WITH_PS2PDF for the conversion of PS docs to PDF
+    XORG_ENABLE_SPECS for the generation of specs
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9ca583c5d6fcf9cd8151ee7b019630b141d32fab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jan 26 19:41:08 2010 -0500
+
+    doc: clean-up generated html images
+    
+    Generate images in /images as is the convention
+    Provide a base file name for images rather than process ID
+    Remove images directory when running make clean
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit eb289b34bfc9978eef724e0f268975938334c06c
+Author: Kristian Hﾃｸgsberg <krh@bitplanet.net>
+Date:   Thu Jan 21 13:39:17 2010 -0500
+
+    XErrorDB: Add new DRI2 request names
+
+commit 6babf2123d05adb9349394c49cc2d81d1f66cf9e
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jan 16 22:47:03 2010 +0000
+
+    man: Fix typo in Makefile
+    
+    Missing line continuation was preventing the XCompose alias from being
+    generated.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
 commit 68530599e61cf9fef3fcc91650e7cef21837fce7
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Sat Jan 16 11:41:32 2010 -0800

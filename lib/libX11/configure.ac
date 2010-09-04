@@ -3,32 +3,38 @@
 
 AC_PREREQ(2.60)
 AC_INIT([libX11],
-        1.3.3,
+        [1.3.5],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         libX11)
 AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-
 AM_MAINTAINER_MODE
-
 AM_CONFIG_HEADER([src/config.h])
 AC_CONFIG_HEADER([include/X11/XlibConf.h])
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.4)
+          [m4_fatal([must install xorg-macros 1.6 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.6)
 
 # Set common system defines for POSIX extensions, such as _GNU_SOURCE
 # Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
 # to avoid autoconf errors.
 AC_USE_SYSTEM_EXTENSIONS
 XORG_DEFAULT_OPTIONS
+XORG_ENABLE_SPECS
+XORG_WITH_GROFF
+XORG_WITH_PS2PDF
 
 # Checks for programs.
 AC_PROG_LIBTOOL
 DOLT
 AC_PROG_CC
+PKG_PROG_PKG_CONFIG
 
 if test x"$CC_FOR_BUILD" = x; then
 	if test x"$cross_compiling" = xyes; then
@@ -38,6 +44,27 @@ if test x"$CC_FOR_BUILD" = x; then
 	fi
 fi
 AC_SUBST([CC_FOR_BUILD])
+
+if test x"$CPPFLAGS_FOR_BUILD" = x; then
+	if test ! x"$cross_compiling" = xyes; then
+		CPPFLAGS_FOR_BUILD=${CPPFLAGS}
+	fi
+fi
+AC_SUBST(CPPFLAGS_FOR_BUILD)
+
+if test x"$CFLAGS_FOR_BUILD" = x; then
+	if test ! x"$cross_compiling" = xyes; then
+		CFLAGS_FOR_BUILD=${CFLAGS}
+	fi
+fi
+AC_SUBST(CFLAGS_FOR_BUILD)
+
+if test x"$LDFLAGS_FOR_BUILD" = x; then
+	if test ! x"$cross_compiling" = xyes; then
+		LDFLAGS_FOR_BUILD=${LDFLAGS}
+	fi
+fi
+AC_SUBST(LDFLAGS_FOR_BUILD)
 
 XORG_PROG_RAWCPP
 
@@ -107,18 +134,64 @@ XTRANS_SECURE_RPC_FLAGS
 
 # Preferred order to try transports for local connections
 AC_MSG_CHECKING([what order to try transports in for local connections])
+DEFAULT_LOCAL_TRANS=""
 case $host_os in
 	solaris*)
 		# On Solaris 2.6 through 9, named pipes (LOCAL_TRANS) were
 		# faster than Unix domain sockets, but on Solaris 10 & later,
 		# Unix domain sockets are faster now.
-		DEFAULT_LOCAL_TRANS="UNIX_TRANS,LOCAL_TRANS,TCP_TRANS"
+		if test "$UNIXCONN" = "yes" ; then
+			if test ! "x$DEFAULT_LOCAL_TRANS" = "x" ; then
+				DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS},"
+			fi
+			DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS}UNIX_TRANS"
+		fi
+		if test "$LOCALCONN" = "yes" ; then
+			if test ! "x$DEFAULT_LOCAL_TRANS" = "x" ; then
+				DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS},"
+			fi
+			DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS}LOCAL_TRANS"
+		fi
+		if test "$TCPCONN" = "yes" ; then
+			if test ! "x$DEFAULT_LOCAL_TRANS" = "x" ; then
+				DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS},"
+			fi
+			DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS}TCP_TRANS"
+		fi
+		;;
+	linux*)
+		# LOCAL_TRANS is used for abstract sockets.
+		if test "$UNIXCONN" = "yes" ; then
+			if test ! "x$DEFAULT_LOCAL_TRANS" = "x" ; then
+				DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS},"
+			fi
+			DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS}LOCAL_TRANS,UNIX_TRANS"
+		fi
+		if test "$TCPCONN" = "yes" ; then
+			if test ! "x$DEFAULT_LOCAL_TRANS" = "x" ; then
+				DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS},"
+			fi
+			DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS}TCP_TRANS"
+		fi
 		;;
 	*)
-		if test "$LOCALCONN" = "yes"; then
-			DEFAULT_LOCAL_TRANS="LOCAL_TRANS,UNIX_TRANS,TCP_TRANS"
-		else
-			DEFAULT_LOCAL_TRANS="UNIX_TRANS,TCP_TRANS"
+		if test "$LOCALCONN" = "yes" ; then
+			if test ! "x$DEFAULT_LOCAL_TRANS" = "x" ; then
+				DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS},"
+			fi
+			DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS}LOCAL_TRANS"
+		fi
+		if test "$UNIXCONN" = "yes" ; then
+			if test ! "x$DEFAULT_LOCAL_TRANS" = "x" ; then
+				DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS},"
+			fi
+			DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS}UNIX_TRANS"
+		fi
+		if test "$TCPCONN" = "yes" ; then
+			if test ! "x$DEFAULT_LOCAL_TRANS" = "x" ; then
+				DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS},"
+			fi
+			DEFAULT_LOCAL_TRANS="${DEFAULT_LOCAL_TRANS}TCP_TRANS"
 		fi
 		;;
 esac
@@ -215,7 +288,7 @@ AM_CONDITIONAL(OS2, test x$os2 = xtrue)
 AC_ARG_WITH(launchd, AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
 if test "x$LAUNCHD" = xauto; then
 	unset LAUNCHD
-	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
+	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no], [$PATH$PATH_SEPARATOR/sbin])
 fi
 
 if test "x$LAUNCHD" = xyes ; then
@@ -282,7 +355,7 @@ AC_CHECK_FUNC(poll, [AC_DEFINE(USE_POLL, 1, [poll() function is available])], )
 # Find keysymdef.h
 #
 AC_MSG_CHECKING([keysymdef.h])
-dir=`pkg-config --variable=includedir xproto`
+dir=`$PKG_CONFIG --variable=includedir xproto`
 KEYSYMDEF="$dir/X11/keysymdef.h"
 if test -f "$KEYSYMDEF"; then
         AC_MSG_RESULT([$KEYSYMDEF])
@@ -382,13 +455,11 @@ AC_DEFINE_DIR(X11_DATADIR, X11_DATADIR, [Location of libX11 data])
 AC_SUBST(X11_DATADIR)
 
 X11_LIBDIR="${libdir}/X11"
-AC_DEFINE_DIR(X11_LIBDIR, X11_LIBDIR, [Location of libX11 library data])
+AX_DEFINE_DIR(X11_LIBDIR, X11_LIBDIR, [Location of libX11 library data])
 AC_SUBST(X11_LIBDIR)
 
 PKG_CHECK_MODULES(X11, [$X11_REQUIRES])
-X11_CFLAGS="$CWARNFLAGS $X11_CFLAGS $XTHREAD_CFLAGS"
-AC_SUBST(X11_CFLAGS)
-AC_SUBST(X11_LIBS)
+X11_CFLAGS="$X11_CFLAGS $XTHREAD_CFLAGS"
 
 #
 # Yes, it would be nice to put the locale data in
@@ -420,45 +491,6 @@ XERRORDB="${X11_DATADIR}/XErrorDB"
 AC_DEFINE_DIR(XERRORDB, XERRORDB, [Location of error message database])
 
 XORG_CHECK_MALLOC_ZERO
-
-# Specification documents are currently provided in troff format
-AC_ARG_VAR([GROFF], [Path to a groff executable that supports -ms])
-AC_PATH_PROGS([GROFF], [groff], [none], [$PATH:/usr/gnu/bin])
-
-AC_ARG_VAR([PS2PDF], [Path to a ps2pdf executable])
-AC_PATH_PROGS([PS2PDF], [ps2pdf], [none], [$PATH:/usr/gnu/bin])
-
-if test "x${GROFF}" != xnone ; then
-    AC_MSG_CHECKING([whether ${GROFF} -ms works])
-    if ${GROFF} -ms -I. /dev/null >/dev/null 2>&1 ; then
-        groff_ms_works=yes
-    else
-        groff_ms_works=no
-        GROFF=none
-    fi
-    AC_MSG_RESULT([${groff_ms_works}])
-fi
-
-AC_MSG_CHECKING([whether to build specifications])
-AC_ARG_ENABLE(specs, AC_HELP_STRING([--enable-specs],
-                                   [Enable building of specification docs]),
-              [build_specs="${enableval}"], [build_specs="auto"])
-
-if test "x${build_specs}" = xauto; then
-    if test "x${GROFF}" = xnone ; then
-        build_specs=no
-    else
-        build_specs=yes
-    fi
-fi
-AC_MSG_RESULT([${build_specs}])
-if test "x${build_specs}" = xyes && test "x${GROFF}" = xnone ; then
-    AC_MSG_ERROR([can't build documentation without groff])
-fi
-
-AM_CONDITIONAL(BUILD_SPECS, [test x$build_specs = xyes])
-AM_CONDITIONAL(HAVE_PS2PDF, [test x$PS2PDF != xnone])
-
 
 AC_OUTPUT([Makefile
            include/Makefile
@@ -547,7 +579,7 @@ AC_OUTPUT([Makefile
 	   x11.pc
 	   x11-xcb.pc])
 
-man_pages_suffix=$LIBMAN_SUFFIX
+man_pages_suffix=$LIB_MAN_SUFFIX
 if test -z "$man_pages_suffix"; then
     man_pages_suffix=none
 fi
@@ -567,4 +599,5 @@ echo " XKB support:                             "$XKB
 echo " XLOCALEDIR environment variable support: "$ENABLE_XLOCALEDIR
 echo " Manual pages suffix:                     "$man_pages_suffix
 echo " Compose table cache enabled:             "$COMPOSECACHE
+echo " Functional specs building enabled:       "$build_specs
 echo ""
