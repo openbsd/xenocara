@@ -60,7 +60,6 @@ _xiQueryVersion(Display * dpy, int *major, int *minor, XExtDisplayInfo *info)
         if (!info || !info->data) {
             *major = 0;
             *minor = 0;
-            UnlockDisplay(dpy);
             return BadRequest;
         }
 

@@ -38,7 +38,7 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/xi.pc.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog NEWS \
+	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
 	config.guess config.sub depcomp install-sh ltmain.sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -124,14 +124,12 @@ FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
-HAVE_ASCIIDOC_FALSE = @HAVE_ASCIIDOC_FALSE@
-HAVE_ASCIIDOC_TRUE = @HAVE_ASCIIDOC_TRUE@
 HAVE_DOCTOOLS_FALSE = @HAVE_DOCTOOLS_FALSE@
 HAVE_DOCTOOLS_TRUE = @HAVE_DOCTOOLS_TRUE@
-HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
-HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
+INSTALL_MANPAGES_FALSE = @INSTALL_MANPAGES_FALSE@
+INSTALL_MANPAGES_TRUE = @INSTALL_MANPAGES_TRUE@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
@@ -148,6 +146,7 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -170,6 +169,7 @@ XI_CFLAGS = @XI_CFLAGS@
 XI_LIBS = @XI_LIBS@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
 XMLTO = @XMLTO@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
@@ -668,12 +668,15 @@ uninstall-info: uninstall-info-recursive
 	uninstall-pkgconfigDATA
 
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

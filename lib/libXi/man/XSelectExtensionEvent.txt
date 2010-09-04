@@ -20,10 +20,10 @@ SYNOPSIS
 
    XGetSelectedExtensionEvents( Display *display,
                                 Window w,
-                                int this_client_event_count_return,
-                                XEventClass *this_client_event_list_return,
-                                int all_clients_event_count_return,
-                                XEventClass *all_clients_event_list_return);
+                                int *this_client_event_count_return,
+                                XEventClass **this_client_event_list_return,
+                                int *all_clients_event_count_return,
+                                XEventClass **all_clients_event_list_return);
 
    display
           Specifies the connection to the X server.

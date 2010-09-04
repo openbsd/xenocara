@@ -2,16 +2,15 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
 
-AC_INIT(libXi, 1.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXi)
-AM_INIT_AUTOMAKE([dist-bzip2 foreign])
+AC_INIT(libXi, 1.3.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXi)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.5 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.5)
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
 XORG_DEFAULT_OPTIONS
-XORG_WITH_XMLTO
-XORG_WITH_ASCIIDOC
 AM_CONFIG_HEADER(src/config.h)
 
 # Check for progs
@@ -27,10 +26,25 @@ AC_SUBST(XI_LIBS)
 
 # Check for xmlto and asciidoc for man page conversion
 # (only needed by people building tarballs)
-AM_CONDITIONAL([HAVE_DOCTOOLS], [test "x$XMLTO" != "x" && test "x$ASCIIDOC" != "x"])
-if test "x$XMLTO" = "x" || test "x$ASCIIDOC" = "x"; then
+AC_ARG_VAR([XMLTO], [Path to xmlto command])
+AC_PATH_PROG([XMLTO], [xmlto])
+AC_ARG_VAR([ASCIIDOC], [Path to asciidoc command])
+AC_PATH_PROG([ASCIIDOC], [asciidoc])
+if test "x$XMLTO" != "x" && test "x$ASCIIDOC" != "x"; then
+	have_doctools=yes
+else
+	have_doctools=no
+fi
+AM_CONDITIONAL([HAVE_DOCTOOLS], [test $have_doctools = yes])
+if test $have_doctools = no; then
 	AC_MSG_WARN([xmlto or asciidoc not found - cannot create man pages without it])
 fi
+
+# Determine if the source for man pages is available
+# It may already be present (tarball) or can be generated using doctools
+AM_CONDITIONAL([INSTALL_MANPAGES],
+	[test -f "$srcdir/man/XAllowDeviceEvents.man" || \
+	  test $have_doctools = yes])
 
 XORG_CHECK_MALLOC_ZERO
 

@@ -173,6 +173,63 @@ static char *XInputErrorList[] = {
     "BadClass, invalid event class",	/* BadClass */
 };
 
+/* Get the version supported by the server to know which number of
+* events are support. Otherwise, a wrong number of events may smash
+* the Xlib-internal event processing vector.
+*
+* Since the extension hasn't been initialized yet, we need to
+* manually get the opcode, then the version.
+*/
+static int
+_XiFindEventsSupported(Display *dpy)
+{
+    XExtCodes codes;
+    XExtensionVersion *extversion = NULL;
+    int nevents = 0;
+
+    if (!XQueryExtension(dpy, INAME, &codes.major_opcode,
+                         &codes.first_event, &codes.first_error))
+        goto out;
+
+    LockDisplay(dpy);
+    extversion = _XiGetExtensionVersionRequest(dpy, INAME, codes.major_opcode);
+    UnlockDisplay(dpy);
+    SyncHandle();
+
+    if (!extversion || !extversion->present)
+        goto out;
+
+    if (extversion->major_version >= 2)
+        nevents = IEVENTS; /* number is fixed, XI2 adds GenericEvents only */
+    else if (extversion->major_version <= 0)
+    {
+        printf("XInput_find_display: invalid extension version %d.%d\n",
+                extversion->major_version, extversion->minor_version);
+        goto out;
+    }
+    else
+    {
+        switch(extversion->minor_version)
+        {
+            case XI_Add_DeviceProperties_Minor:
+                nevents = XI_DevicePropertyNotify + 1;
+                break;
+            case  XI_Add_DevicePresenceNotify_Minor:
+                nevents = XI_DevicePresenceNotify + 1;
+                break;
+            default:
+                nevents = XI_DeviceButtonstateNotify + 1;
+                break;
+        }
+    }
+
+out:
+    if (extversion)
+        XFree(extversion);
+    return nevents;
+}
+
+
 _X_HIDDEN
 XExtDisplayInfo *XInput_find_display (Display *dpy)
 {
@@ -180,12 +237,17 @@ XExtDisplayInfo *XInput_find_display (Display *dpy)
     if (!xinput_info) { if (!(xinput_info = XextCreateExtension())) return NULL; }
     if (!(dpyinfo = XextFindDisplay (xinput_info, dpy)))
     {
+      int nevents = _XiFindEventsSupported(dpy);
+
       dpyinfo = XextAddDisplay (xinput_info, dpy,
                                 xinput_extension_name,
                                 &xinput_extension_hooks,
-                                IEVENTS, NULL);
-      XESetWireToEventCookie(dpy, dpyinfo->codes->major_opcode, XInputWireToCookie);
-      XESetCopyEventCookie(dpy, dpyinfo->codes->major_opcode, XInputCopyCookie);
+                                nevents, NULL);
+      if (dpyinfo->codes) /* NULL if XI doesn't exist on the server */
+      {
+          XESetWireToEventCookie(dpy, dpyinfo->codes->major_opcode, XInputWireToCookie);
+          XESetCopyEventCookie(dpy, dpyinfo->codes->major_opcode, XInputCopyCookie);
+      }
     }
     return dpyinfo;
 }

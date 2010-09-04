@@ -150,6 +150,7 @@ XIChangeProperty(Display* dpy, int deviceid, Atom property, Atom type,
 
     default:
 	/* BadValue will be generated */ ;
+        len = 0;
     }
 
     /* we use data instead of Data32 and friends to avoid Xlib's braindead

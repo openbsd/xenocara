@@ -114,7 +114,7 @@ libman_ref = \
 
 libman_pre = $(libman_txt:.txt=.man) $(libman_ref)
 
-if HAVE_DOCTOOLS
+if INSTALL_MANPAGES
 nodist_libman_DATA = $(libman_pre:.man=.$(LIB_MAN_SUFFIX))
 endif
 
@@ -122,6 +122,7 @@ EXTRA_DIST = $(libman_txt) $(libman_pre)
 CLEANFILES = $(nodist_libman_DATA) *.libmansuffix
 MAINTAINERCLEANFILES = $(libman_pre) *.xml
 
+if HAVE_DOCTOOLS
 # prerequisites for the side effect pages
 XGetDeviceDontPropagateList.man: XChangeDeviceDontPropagateList.man
 XChangeDeviceControl.man: XGetDeviceControl.man
@@ -151,6 +152,7 @@ XIDeleteProperty.man: XIChangeProperty.man
 XIUngrabEnter.man XIGrabFocusIn.man XIUngrabFocusIn.man: XIGrabEnter.man
 XIGetSelectedEvents.man: XISelectEvents.man
 XIFreeDeviceInfo.man: XIQueryDevice.man
+endif
 
 # Strings to replace in man pages
 XORGRELSTRING = $(PACKAGE_STRING)

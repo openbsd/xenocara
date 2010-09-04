@@ -14,6 +14,7 @@ extern XExtDisplayInfo *XInput_find_display(Display *);
 extern int _XiCheckExtInit(Display *, int, XExtDisplayInfo *);
 
 extern XExtensionVersion *_XiGetExtensionVersion(Display *, _Xconst char *, XExtDisplayInfo *);
+extern XExtensionVersion* _XiGetExtensionVersionRequest(Display *dpy, _Xconst char *name, int xi_opcode);
 extern Status _xiQueryVersion(Display *dpy, int*, int*, XExtDisplayInfo *);
 
 extern Status _XiEventToWire(
