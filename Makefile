@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.38 2010/08/25 17:42:18 todd Exp $
+# $OpenBSD: Makefile,v 1.39 2010/09/04 10:41:57 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -96,8 +96,7 @@ release-clean:
 release-install:
 	@${MAKE} install
 .if ${MACHINE} == alpha || ${MACHINE} == hp300 || \
-    ${MACHINE} == mac68k || ${MACHINE} == macppc || \
-    ${MACHINE} == zaurus
+    ${MACHINE} == mac68k || ${MACHINE} == zaurus
 	@if [ -f $(DESTDIR)/etc/X11/xorg.conf ]; then \
 	 echo "Not overwriting existing" $(DESTDIR)/etc/X11/xorg.conf; \
 	else set -x; \

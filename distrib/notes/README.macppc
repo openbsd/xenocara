@@ -3,6 +3,27 @@ Post-installation instructions for X.Org on OpenBSD/macppc
 
 OpenBSD uses the X.Org X server on macppc. 
 
+Accelerated drivers
+-------------------
+
+For many users of X.Org's servers, an xorg.conf file is not needed,
+simply start X, and it will automatically detect and use your
+hardware.  If your hardware is not properly autodetected or supported
+or not supported as you wish, you will have to create a configuration
+file.
+
+The 'r128 and 'ati' drivers are currently known to work on the
+machines with ATI Rage 128 or Radeon cards. The 'nv' driver works for
+machines with nVidia cards, although some modes may experience
+problems.
+
+You need to set machdep.allowaperture to 2 in /etc/sysctl.conf in
+order to be able to use the X.Org accelerated drivers.
+
+
+Unaccelerated, framebuffer driver 
+---------------------------------
+
 The wsfb driver uses whatever graphics mode the console is set to 
 (by Mac OS) as a dumb unaccelerated framebuffer in 8 bits per pixel. 
 A default /etc/X11/xorg.conf is installed that uses this driver.
@@ -11,112 +32,6 @@ configuration.
 
 To use xdm from rc.conf, it is necessary to disable /dev/ttyC0 in
 /etc/ttys, change the 'status' of /dev/ttyC0 to 'off'.
-
-Accelerated drivers
--------------------
-
-The 'ati' driver is currently known to work on the machines with ATI
-Rage 128 or Radeon cards. The 'nv' driver works for machines with
-nVidia cards, although some modes may experience problems.
-
-Use Xorg -configure to build a /etc/X11/xorg.conf file before starting 
-the server for the first time. Or you can use the sample configuration
-file appended below as a starting point. 
-
-You need to set machdep.allowaperture to 2 in /etc/sysctl.conf in
-order to be able to use the X.Org accelerated drivers.
-
--- Cut Here for a sample /etc/X11/xorg.conf to use with the ati driver ---
-Section "ServerLayout"
-	Identifier     "Sample Config"
-	Screen      0  "Screen0" 0 0
-	InputDevice    "Mouse0" "CorePointer"
-	InputDevice    "Keyboard0" "CoreKeyboard"
-EndSection
-
-Section "Files"
-	FontPath     "/usr/X11R6/lib/X11/fonts/misc/"
-	FontPath     "/usr/X11R6/lib/X11/fonts/TTF/"
-	FontPath     "/usr/X11R6/lib/X11/fonts/OTF"
-	FontPath     "/usr/X11R6/lib/X11/fonts/Type1/"
-	FontPath     "/usr/X11R6/lib/X11/fonts/75dpi/"
-EndSection
-
-Section "InputDevice"
-	Identifier  "Keyboard0"
-	Driver      "keyboard"
-	Option	    "Protocol"	"standard"
-	Option	    "XkbRules"	"xorg"
-	Option	    "XkbModel"	"macintosh"
-	Option	    "XkbLayout"	"us"
-EndSection
-
-Section "InputDevice"
-	Identifier  "Mouse0"
-	Driver      "mouse"
-	Option      "Protocol"	"wsmouse"
-	Option      "Device"	"/dev/wsmouse"
-	Option      "ZAxisMapping"	"4 5"
-EndSection
-
-Section "Monitor"
-	Identifier   "Monitor"
-	VendorName   "Generic"
-	ModelName    "TwentyOneInches"
-# Adjust those to your monitor or it will be destroyed !!
-	HorizSync    31.5-90
-	VertRefresh  50-100
-# 	This mode line can be used on the Ti PBG4
-#	Modeline "1152x768" 64.995 1152 1213 1349 1472  768 771 777 806 -HSync -VSync
-# 	This mode line can be used on the ibook 600
-#        ModeLine "1024x768" 75.00 1024 1048 1184 1328 768 771 777 806
-EndSection
-
-Section "Device"
-	Identifier  "Card0"
-	Driver      "ati"
-	VendorName  "ATI"
-	BoardName   "Rage 128 Pro PF"
-	BusID       "PCI:0:16:0"
-# 	These options are required for use on the Ti PBG4.
-#	Option      "PanelWidth"  "1152"
-#	Option      "PanelHeight" "768"
-#	This option enable quirks for specified Mac model, details in Radeon(4)
-#	Option      "MacModel" "ibook"
-
-EndSection
-
-# Use the following "Device" section instead for wsfb
-#
-# Section "Device"
-#	Identifier "Card0"
-#	Driver	   "wsfb"
-#       Option	   "device" "/dev/ttyC0"
-# EndSection
-
-Section "Screen"
-	Identifier "Screen0"
-	Device     "Card0"
-	Monitor    "Monitor"
-# Perhaps change this to DefaultDepth 24 for ati 
-	DefaultDepth 8
-	SubSection "Display"
-		Depth     8
-# For PBG4 uncomment
-#		Modes     "1152x768" "1024x768"
-	EndSubSection
-	SubSection "Display"
-		Depth     16
-# For PBG4 uncomment
-#		Modes     "1152x768" "1024x768"
-	EndSubSection
-	SubSection "Display"
-		Depth     24
-# For PBG4 uncomment
-#		Modes     "1152x768" "1024x768"
-	EndSubSection
-EndSection
---- Cut Here ---
 
 Mousekeys (Or how to deal with a One Button Mouse)
 --------------------------------------------------
@@ -168,4 +83,4 @@ button 2 and mouse button 3 respectively.
 
 problem_blurb
 
-$OpenBSD: README.macppc,v 1.6 2009/09/15 19:04:12 matthieu Exp $
+$OpenBSD: README.macppc,v 1.7 2010/09/04 10:41:57 matthieu Exp $
