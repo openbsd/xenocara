@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([libxcb],
-        1.6,
+        1.7,
         [xcb@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([xcb.pc.in])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -155,7 +155,7 @@ XCB_EXTENSION(XvMC, "yes")
 AC_ARG_WITH(launchd, AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
 if test "x$LAUNCHD" = xauto; then
 	unset LAUNCHD
-	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
+	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no], [$PATH$PATH_SEPARATOR/sbin])
 fi
 
 if test "x$LAUNCHD" = xyes ; then
@@ -211,6 +211,31 @@ echo "  Configuration"
 echo "    XDM support.........: ${have_xdmcp}"
 echo "    Build unit tests....: ${HAVE_CHECK}"
 echo "    XCB buffer size.....: ${xcb_queue_buffer_size}"
+echo ""
+echo "  X11 extensions"
+echo "    Composite...........: ${BUILD_COMPOSITE}"
+echo "    Damage..............: ${BUILD_DAMAGE}"
+echo "    Dpms................: ${BUILD_DPMS}"
+echo "    Dri2................: ${BUILD_DRI2}"
+echo "    Glx.................: ${BUILD_GLX}"
+echo "    Randr...............: ${BUILD_RANDR}"
+echo "    Record..............: ${BUILD_RECORD}"
+echo "    Render..............: ${BUILD_RENDER}"
+echo "    Resource............: ${BUILD_RESOURCE}"
+echo "    Screensaver.........: ${BUILD_SCREENSAVER}"
+echo "    selinux.............: ${BUILD_SELINUX}"
+echo "    Shape...............: ${BUILD_SHAPE}"
+echo "    Shm.................: ${BUILD_SHM}"
+echo "    Sync................: ${BUILD_SYNC}"
+echo "    Xevie...............: ${BUILD_XEVIE}"
+echo "    Xfixes..............: ${BUILD_XFIXES}"
+echo "    Xfree86-dri.........: ${BUILD_XFREE86_DRI}"
+echo "    xinerama............: ${BUILD_XINERAMA}"
+echo "    xinput..............: ${BUILD_XINPUT}"
+echo "    xprint..............: ${BUILD_XPRINT}"
+echo "    xtest...............: ${BUILD_XTEST}"
+echo "    xv..................: ${BUILD_XV}"
+echo "    xvmc................: ${BUILD_XVMC}"
 echo ""
 echo "  Used CFLAGS:"
 echo "    CPPFLAGS............: ${CPPFLAGS}"

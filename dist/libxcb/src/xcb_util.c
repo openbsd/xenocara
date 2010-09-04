@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <limits.h>
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -63,11 +64,19 @@ static int _xcb_parse_display(const char *name, char **host, char **protocol,
 {
     int len, display, screen;
     char *slash, *colon, *dot, *end;
+
     if(!name || !*name)
         name = getenv("DISPLAY");
     if(!name)
         return 0;
+
+#ifdef HAVE_LAUNCHD
+    if(strncmp(name, "/tmp/launch", 11) == 0)
+        slash = NULL;
+    else
+#endif
     slash = strrchr(name, '/');
+
     if (slash) {
         len = slash - name;
         if (protocol) {
@@ -129,7 +138,7 @@ int xcb_parse_display(const char *name, char **host, int *displayp,
     return _xcb_parse_display(name, host, NULL, displayp, screenp);
 }
 
-static int _xcb_open_tcp(char *host, char *protocol, const unsigned short port);
+static int _xcb_open_tcp(const char *host, char *protocol, const unsigned short port);
 static int _xcb_open_unix(char *protocol, const char *file);
 #ifdef DNETCONN
 static int _xcb_open_decnet(const char *host, char *protocol, const unsigned short port);
@@ -138,16 +147,24 @@ static int _xcb_open_decnet(const char *host, char *protocol, const unsigned sho
 static int _xcb_open_abstract(char *protocol, const char *file, size_t filelen);
 #endif
 
-static int _xcb_open(char *host, char *protocol, const int display)
+static int _xcb_open(const char *host, char *protocol, const int display)
 {
-#ifdef HAVE_ABSTRACT_SOCKETS
     int fd;
-#endif
-    static const char base[] = "/tmp/.X11-unix/X";
-    char file[sizeof(base) + 20];
-    int filelen;
+    static const char unix_base[] = "/tmp/.X11-unix/X";
+    const char *base = unix_base;
+    size_t filelen;
+    char *file = NULL;
+    int actual_filelen;
 
-    if(*host)
+#ifdef HAVE_LAUNCHD
+        if(strncmp(host, "/tmp/launch", 11) == 0) {
+		base = host;
+		host = "";
+		protocol = NULL;
+        }
+#endif
+
+    if(*host || protocol)
     {
 #ifdef DNETCONN
         /* DECnet displays have two colons, so _xcb_parse_display will have
@@ -171,19 +188,38 @@ static int _xcb_open(char *host, char *protocol, const int display)
             }
     }
 
-    /* display specifies Unix socket */
-    filelen = snprintf(file, sizeof(file), "%s%d", base, display);
-    if(filelen < 0)
+    filelen = strlen(base) + 1 + sizeof(display) * 3 + 1;
+    file = malloc(filelen);
+    if(file == NULL)
         return -1;
+
+    /* display specifies Unix socket */
+#ifdef HAVE_LAUNCHD
+    if(strncmp(base, "/tmp/launch", 11) == 0)
+        actual_filelen = snprintf(file, filelen, "%s:%d", base, display);
+    else
+#endif
+        actual_filelen = snprintf(file, filelen, "%s%d", base, display);
+    if(actual_filelen < 0)
+    {
+        free(file);
+        return -1;
+    }
     /* snprintf may truncate the file */
-    filelen = MIN(filelen, sizeof(file) - 1);
+    filelen = MIN(actual_filelen, filelen - 1);
 #ifdef HAVE_ABSTRACT_SOCKETS
     fd = _xcb_open_abstract(protocol, file, filelen);
     if (fd >= 0 || (errno != ENOENT && errno != ECONNREFUSED))
+    {
+        free(file);
         return fd;
+    }
 
 #endif
-    return  _xcb_open_unix(protocol, file);
+    fd = _xcb_open_unix(protocol, file);
+    free(file);
+
+    return fd;
 }
 
 static int _xcb_socket(int family, int type, int proto)
@@ -242,7 +278,7 @@ static int _xcb_open_decnet(const char *host, const char *protocol, const unsign
 }
 #endif
 
-static int _xcb_open_tcp(char *host, char *protocol, const unsigned short port)
+static int _xcb_open_tcp(const char *host, char *protocol, const unsigned short port)
 {
     int fd = -1;
     struct addrinfo hints;
@@ -250,8 +286,15 @@ static int _xcb_open_tcp(char *host, char *protocol, const unsigned short port)
     struct addrinfo *results, *addr;
     char *bracket;
 
-    if (protocol && strcmp("tcp",protocol))
+    if (protocol && strcmp("tcp",protocol) && strcmp("inet",protocol)
+#ifdef AF_INET6
+	         && strcmp("inet6",protocol)
+#endif
+	)
         return -1;
+	
+    if (*host == '\0')
+	host = "localhost";
 
     memset(&hints, 0, sizeof(hints));
 #ifdef AI_ADDRCONFIG
@@ -362,13 +405,6 @@ xcb_connection_t *xcb_connect_to_display_with_auth_info(const char *displayname,
 
     int parsed = _xcb_parse_display(displayname, &host, &protocol, &display, screenp);
     
-#ifdef HAVE_LAUNCHD
-    if(!displayname)
-        displayname = getenv("DISPLAY");
-    if(displayname && strlen(displayname)>11 && !strncmp(displayname, "/tmp/launch", 11))
-        fd = _xcb_open_unix(NULL, displayname);
-    else
-#endif
     if(!parsed) {
         c = (xcb_connection_t *) &error_connection;
         goto out;
