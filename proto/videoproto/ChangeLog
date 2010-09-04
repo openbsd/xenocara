@@ -1,3 +1,111 @@
+commit 56a94402e9252879771ba42ee76990f132b56fca
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:31 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 72a31b1b758c42faef518081a1a1c436c26add4f
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Thu Dec 17 08:42:27 2009 +0100
+
+    require autoconf 2.60 because of $(docdir) use
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 38602c56dcf24bf7dbddfbac89a35c15e3d3f885
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:48 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 35734855fd913c7b743280346fc19471a39d88d4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:13:30 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit 86b3515e9ea8dc6252db0ed31642ef314656c9bf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:27 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit ad23568d0d5d0c1cdfc54bfdb752e398ab881639
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:29 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit 40310f285cdac70865ff342f874e2bd21d36ef8d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 69311c693daf6797646bce9b1c62bba54fed9343
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 13:55:25 2009 -0500
+
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    Works in conjunction with autogen.sh --enable-maintainer-mode
+
+commit a9fc831a64cab7c70aecee4f0f86ac01360e3d8f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:47 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 9190399907610486001f3676945958dbab4b837a
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Mon Oct 19 23:59:20 2009 +0200
+
+    vldXvMC.h: stop uselessly including XvMClib.h.
+    
+    Protocol header depending on client library header?
+    
+    Only clients which depend on this header but which did not bother to
+    include it directly will run into trouble, but the fix is trivial,
+    general and backwards compatible.
+    
+    Signed-off-by: Luc Verhaegen <libv@skynet.be>
+
+commit 56ea4c0c10bb23ae4b115b13c0052d1e808d2e75
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Oct 10 16:35:12 2009 -0700
+
+    Move xv-protocol-v2.txt from xorg-docs to videoproto
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
 commit 20dc47bfb9e6627e8335c870a808fdab72e82061
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Aug 27 11:59:40 2009 +1000
