@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.9 2010/03/23 20:27:42 matthieu Exp $
+.\" $OpenBSD: xtsscale.1,v 1.10 2010/09/14 06:20:55 jasper Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\" Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -24,7 +24,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: March 23 2010 $
+.Dd $Mdocdate: September 14 2010 $
 .Dt XTSSCALE 1
 .Os
 .Sh NAME
@@ -49,7 +49,7 @@ defines the name or numerical identifier of the X Input extension device
 to calibrate.
 Use
 .Pp
-.Dl # xinput --list
+.Dl $ xinput --list
 .Pp
 to figure out the actual name for the X configuration.
 .Ar device
@@ -62,7 +62,7 @@ will use all heads in multi-head configurations, which is probably
 not what is expected.
 Use
 .Pp
-.Dl # xrandr
+.Dl $ xrandr
 .Pp
 to figure out the names of the outputs.
 .It Fl v
@@ -103,6 +103,7 @@ that is not the first device. (
 .Sh SEE ALSO
 .Xr xinput 1 ,
 .Xr xrandr 1 ,
+.Xr uhts 4 ,
 .Xr uts 4 ,
 .Xr wscons 4 ,
 .Xr ws 4 ,
