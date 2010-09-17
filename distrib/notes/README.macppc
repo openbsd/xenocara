@@ -24,11 +24,10 @@ order to be able to use the X.Org accelerated drivers.
 Unaccelerated, framebuffer driver 
 ---------------------------------
 
-The wsfb driver uses whatever graphics mode the console is set to 
-(by Mac OS) as a dumb unaccelerated framebuffer in 8 bits per pixel. 
-A default /etc/X11/xorg.conf is installed that uses this driver.
-So you can just use 'startx' or xdm to start X without further 
-configuration. 
+The wsfb driver uses whatever graphics mode the console is set to
+(by Mac OS) as a dumb unaccelerated framebuffer in 8 bits per pixel.
+You should be able to use 'startx' or xdm to start X without further
+configuration.
 
 To use xdm from rc.conf, it is necessary to disable /dev/ttyC0 in
 /etc/ttys, change the 'status' of /dev/ttyC0 to 'off'.
@@ -83,4 +82,4 @@ button 2 and mouse button 3 respectively.
 
 problem_blurb
 
-$OpenBSD: README.macppc,v 1.7 2010/09/04 10:41:57 matthieu Exp $
+$OpenBSD: README.macppc,v 1.8 2010/09/17 08:09:13 ajacoutot Exp $
