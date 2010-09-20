@@ -32,16 +32,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 # Checks for pkg-config packages
-XAW_CHECK_XPRINT_SUPPORT(XAW)
-
-PKG_CHECK_MODULES(ADDITIONAL, freetype2 fontconfig xft)
-
-XFD_CFLAGS="$XAW_CFLAGS $ADDITIONAL_CFLAGS"
-XFD_LIBS="$XAW_LIBS $ADDITIONAL_LIBS"
-
-AC_SUBST(XFD_CFLAGS)
-AC_SUBST(XFD_LIBS)
-
+PKG_CHECK_MODULES(XFD, xaw7 freetype2 fontconfig xft xrender xmu)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 appdefaultdir=$(pkg-config --variable=appdefaultdir xt)

@@ -63,10 +63,7 @@ AC_CHECK_FUNC([putenv], [],
    AC_DEFINE(NOPUTENV,1,[Define to 1 if you DO NOT have the `putenv' function.]))
 
 # Checks for pkg-config packages
-XAW_CHECK_XPRINT_SUPPORT(XSM)
-
-AC_SUBST(XSM_CFLAGS)
-AC_SUBST(XSM_LIBS)
+PKG_CHECK_MODULES(XSM, x11 xt ice sm xaw7)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 appdefaultdir=$(pkg-config --variable=appdefaultdir xt)

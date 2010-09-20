@@ -37,10 +37,7 @@ AC_PROG_INSTALL
 AC_CHECK_LIB([kstat], [kstat_open])
 
 # Checks for pkg-config packages
-XAW_CHECK_XPRINT_SUPPORT(XLOAD)
-
-AC_SUBST(XLOAD_CFLAGS)
-AC_SUBST(XLOAD_LIBS)
+PKG_CHECK_MODULES(XLOAD, xaw7 xmu xt x11)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
