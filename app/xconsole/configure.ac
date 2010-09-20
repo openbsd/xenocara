@@ -32,9 +32,7 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 # Checks for pkg-config packages
-XAW_CHECK_XPRINT_SUPPORT(XCONSOLE)
-AC_SUBST(XCONSOLE_CFLAGS)
-AC_SUBST(XCONSOLE_LIBS)
+PKG_CHECK_MODULES(XCONSOLE, xaw7 xmu xt x11)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
