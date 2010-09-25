@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.47 2010/09/25 19:58:08 okan Exp $
+ * $Id: group.c,v 1.48 2010/09/25 20:01:27 okan Exp $
  */
 
 #include <sys/param.h>
@@ -426,6 +426,7 @@ group_autogroup(struct client_ctx *cc)
 
 	if (cc->app_class == NULL || cc->app_name == NULL)
 		return;
+
 	if (xu_getprop(cc->win, _NET_WM_DESKTOP, XA_CARDINAL,
 	    1, (unsigned char **)&grpno) > 0) {
 		if (*grpno == 0xffffffff)
