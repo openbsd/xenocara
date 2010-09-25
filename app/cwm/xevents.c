@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.49 2009/12/15 04:10:42 okan Exp $
+ * $Id: xevents.c,v 1.50 2010/09/25 20:04:55 okan Exp $
  */
 
 /*
@@ -76,6 +76,7 @@ xev_handle_maprequest(XEvent *ee)
 	XMapRequestEvent	*e = &ee->xmaprequest;
 	struct client_ctx	*cc = NULL, *old_cc;
 	XWindowAttributes	 xattr;
+	struct winmatch		*wm;
 
 	if ((old_cc = client_current()) != NULL)
 		client_ptrsave(old_cc);
@@ -83,6 +84,11 @@ xev_handle_maprequest(XEvent *ee)
 	if ((cc = client_find(e->window)) == NULL) {
 		XGetWindowAttributes(X_Dpy, e->window, &xattr);
 		cc = client_new(e->window, screen_fromroot(xattr.root), 1);
+	}
+
+	TAILQ_FOREACH(wm, &Conf.ignoreq, entry) {
+		if (strncasecmp(wm->title, cc->name, strlen(wm->title)) == 0)
+			return;
 	}
 
 	client_ptrwarp(cc);
