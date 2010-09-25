@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.46 2010/07/30 12:28:19 okan Exp $
+ * $Id: group.c,v 1.47 2010/09/25 19:58:08 okan Exp $
  */
 
 #include <sys/param.h>
@@ -179,19 +179,19 @@ group_init(struct screen_ctx *sc)
 }
 
 void
-group_make_autogroup(struct conf *conf, char *class, int no)
+group_make_autogroup(struct conf *conf, char *val, int no)
 {
 	struct autogroupwin	*aw;
 	char			*p;
 
 	aw = xcalloc(1, sizeof(*aw));
 
-	if ((p = strchr(class, ',')) == NULL) {
+	if ((p = strchr(val, ',')) == NULL) {
 		aw->name = NULL;
-		aw->class = xstrdup(class);
+		aw->class = xstrdup(val);
 	} else {
 		*(p++) = '\0';
-		aw->name = xstrdup(class);
+		aw->name = xstrdup(val);
 		aw->class = xstrdup(p);
 	}
 	aw->num = no;
