@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.5 2010/09/13 01:35:50 jakemsr Exp $	*/
+/*	$OpenBSD: video.c,v 1.6 2010/09/26 23:47:17 jakemsr Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -96,7 +96,11 @@ struct dev_ctrls {
 	{ "hue",	0, V4L2_CID_HUE,	0, 0, 0, 0, 0 },
 #define CTRL_GAIN	4
 	{ "gain",	0, V4L2_CID_GAIN, 	0, 0, 0, 0, 0 },
-#define CTRL_LAST	5
+#define CTRL_GAMMA	5
+	{ "gamma",	0, V4L2_CID_GAMMA, 	0, 0, 0, 0, 0 },
+#define CTRL_SHARPNESS	6
+	{ "sharpness",	0, V4L2_CID_SHARPNESS, 	0, 0, 0, 0, 0 },
+#define CTRL_LAST       7
 	{ NULL, 0, 0, 0, 0, 0, 0, 0 }
 };
 
@@ -538,6 +542,14 @@ display_event(struct video *vid)
 				warnx("got KeyPress event");
 			XLookupString(&x->event.xkey, &str, 1, NULL, NULL);
 			switch (str) {
+			case 'A':
+				if (vid->mode & M_IN_DEV)
+					dev_set_ctrl(vid, CTRL_SHARPNESS, 1);
+				break;
+			case 'a':
+				if (vid->mode & M_IN_DEV)
+					dev_set_ctrl(vid, CTRL_SHARPNESS, -1);
+				break;
 			case 'B':
 				if (vid->mode & M_IN_DEV)
 					dev_set_ctrl(vid, CTRL_BRIGHTNESS, 1);
@@ -582,6 +594,14 @@ display_event(struct video *vid)
 				if (wout && vid->verbose > 0)
 					fprintf(stderr, "stopping output\n");
 				wout = 0;
+				break;
+			case 'M':
+				if (vid->mode & M_IN_DEV)
+					dev_set_ctrl(vid, CTRL_GAMMA, 1);
+				break;
+			case 'm':
+				if (vid->mode & M_IN_DEV)
+					dev_set_ctrl(vid, CTRL_GAMMA, -1);
 				break;
 			case 'p':
 				hold = !hold;
