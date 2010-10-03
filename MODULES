@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.135 2010/09/19 16:37:47 matthieu Exp $
+ $OpenBSD: MODULES,v 1.136 2010/10/03 09:23:28 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -18,25 +18,25 @@ app/luit		1.0.5	7.5+	needs-update
 app/mkcomposecache	1.2.1	7.5	needs-import
 app/mkfontdir		1.0.5	7.5
 app/mkfontscale		1.0.7	7.5
-app/oclock		1.0.1	7.0
+app/oclock		1.0.2	7.6	needs-update
 app/rgb			1.0.3	7.4
 app/scripts		1.0.1	7.0
 app/sessreg		1.0.6	7.5
-app/setxkbmap		1.1.0	7.4+
+app/setxkbmap		1.2.0	7.6	needs-update
 app/showfont		1.0.2	7.4
 app/smproxy		1.0.3	7.5
 app/twm			1.0.4	7.4
 app/viewres		1.0.2	7.5+
-app/x11perf		1.5.1	7.5
-app/xauth		1.0.4	7.5
+app/x11perf		1.5.2	7.6	needs-update
+app/xauth		1.0.5	7.6	needs-update
 app/xbacklight		1.1.1	7.5
 app/xbiff		1.0.2	7.5+
 app/xcalc		1.0.3	7.5+
 app/xclipboard		1.1.0	7.5
-app/xclock		1.0.4	7.5
-app/xcmsdb		1.0.2	7.5
+app/xclock		1.0.5	7.6	needs-update
+app/xcmsdb		1.0.3	7.6	needs-update
 app/xcompmgr		1.1.5	7.5+
-app/xconsole		1.0.3	7.3
+app/xconsole		1.0.4	7.6	needs-update
 app/xdm			1.1.10	7.5+	needs-update
 app/xdpyinfo		1.1.0	7.5
 app/xdriinfo		1.0.3	7.5
@@ -67,7 +67,7 @@ app/xlsfonts		1.0.3	7.5+
 app/xmag		1.0.3	7.5
 app/xman		1.1.0	7.5
 app/xmessage		1.0.3	7.5+
-app/xmodmap		1.0.4	7.5
+app/xmodmap		1.0.5	7.6	needs-update
 app/xmore		1.0.2	7.5+
 app/xpr			1.0.3	7.5
 app/xprop		1.1.0	7.5
@@ -76,7 +76,7 @@ app/xrdb		1.0.6	7.5
 app/xrefresh		1.0.3	7.5
 app/xset		1.2.0	7.6
 app/xsetroot		1.0.3	7.5
-app/xsm			1.0.1	7.0
+app/xsm			1.0.2	7.6	needs-update
 app/xstdcmap		1.0.1	7.0
 app/xvidtune		1.0.2	7.5+
 app/xvinfo		1.1.0	7.5
@@ -113,7 +113,7 @@ driver/xf86-video-geode		2.11.9	7.6	needs-update
 driver/xf86-video-glint		1.2.5	7.6	needs-update
 driver/xf86-video-i128		1.3.4	7.6	needs-update
 driver/xf86-video-i740		1.3.2	7.4+
-driver/xf86-video-intel		2.12.0	7.5+	needs-update
+driver/xf86-video-intel		2.13.0	7.6	needs-update
 driver/xf86-video-mach64	6.8.2	7.4
 driver/xf86-video-mga		1.4.13	7.6
 driver/xf86-video-neomagic	1.2.5	7.5+
@@ -184,7 +184,7 @@ font/xfree86-type1		1.0.2
 lib/libFS			1.0.2	7.4+
 lib/libICE			1.0.6	7.5
 lib/libSM			1.1.1	7.4+
-lib/libX11			1.3.5	7.6
+lib/libX11			1.3.6	7.6	needs-update
 lib/libXRes			1.0.4	7.5
 lib/libXScrnSaver		1.2.0	7.4+
 lib/libXau			1.0.6	7.6
@@ -254,7 +254,7 @@ proto/xineramaproto		1.2	7.5
 util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
 util/imake			1.0.3	7.6
-util/macros			1.10.0	7.6
+util/macros			1.10.1	7.6	needs-update
 util/makedepend			1.0.2	7.5
 
 xserver				1.9.0	7.6	needs-update
