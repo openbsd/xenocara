@@ -26,10 +26,8 @@ AC_SUBST(XI_LIBS)
 
 # Check for xmlto and asciidoc for man page conversion
 # (only needed by people building tarballs)
-AC_ARG_VAR([XMLTO], [Path to xmlto command])
-AC_PATH_PROG([XMLTO], [xmlto])
-AC_ARG_VAR([ASCIIDOC], [Path to asciidoc command])
-AC_PATH_PROG([ASCIIDOC], [asciidoc])
+XORG_WITH_XMLTO
+XORG_WITH_ASCIIDOC
 if test "x$XMLTO" != "x" && test "x$ASCIIDOC" != "x"; then
 	have_doctools=yes
 else
