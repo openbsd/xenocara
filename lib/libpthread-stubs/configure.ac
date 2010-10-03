@@ -1,5 +1,5 @@
 AC_INIT([libpthread-stubs],
-        0.1,
+        0.3,
         [xcb@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([pthread-stubs.pc.in])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -31,7 +31,7 @@ fi
 
 
 PKG_CONFIG_LIBS=
-AC_CHECK_FUNCS([pthread_self pthread_mutex_init pthread_mutex_destroy pthread_mutex_lock pthread_mutex_unlock pthread_cond_init pthread_cond_destroy pthread_cond_wait pthread_cond_signal pthread_cond_broadcast pthread_equal],
+AC_CHECK_FUNCS([pthread_self pthread_mutex_init pthread_mutex_destroy pthread_mutex_lock pthread_mutex_unlock pthread_cond_init pthread_cond_destroy pthread_condattr_init pthread_condattr_destroy pthread_cond_wait pthread_cond_timedwait pthread_cond_signal pthread_cond_broadcast pthread_equal pthread_exit pthread_once pthread_key_create pthread_set_specific pthread_get_specific],
 	       [], [PKG_CONFIG_LIBS='-L${libdir} -lpthread-stubs'])
 AC_SUBST([PKG_CONFIG_LIBS])
 AM_CONDITIONAL(BUILD_LIB, test "x$PKG_CONFIG_LIBS" != x)
