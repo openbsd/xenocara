@@ -53,13 +53,16 @@ AC_PREREQ([2.57])
 #
 
 m4_define([pixman_major], 0)
-m4_define([pixman_minor], 16)
-m4_define([pixman_micro], 6)
+m4_define([pixman_minor], 18)
+m4_define([pixman_micro], 4)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
-AC_INIT(pixman, pixman_version, "sandmann@daimi.au.dk", pixman)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(pixman, pixman_version, "pixman@lists.freedesktop.org", pixman)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
+
+# Suppress verbose compile lines
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AM_CONFIG_HEADER(config.h)
 
@@ -68,10 +71,13 @@ AC_CANONICAL_HOST
 test_CFLAGS=${CFLAGS+set} # We may override autoconf default CFLAGS.
 
 AC_PROG_CC
+AM_PROG_AS
 AC_PROG_LIBTOOL
 AC_CHECK_FUNCS([getisax])
 AC_C_BIGENDIAN
 AC_C_INLINE
+
+AC_CHECK_SIZEOF(long)
 
 # Checks for Sun Studio compilers
 AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
@@ -186,8 +192,8 @@ AC_MSG_CHECKING(whether to use MMX intrinsics)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$MMX_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
-#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 3))
-error "Need GCC >= 3.3 for MMX intrinsics"
+#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
+error "Need GCC >= 3.4 for MMX intrinsics"
 #endif
 #include <mmintrin.h>
 int main () {
@@ -247,7 +253,7 @@ AC_COMPILE_IFELSE([
 #include <xmmintrin.h>
 #include <emmintrin.h>
 int main () {
-    __m128i a, b, c;
+    __m128i a = _mm_set1_epi32 (0), b = _mm_set1_epi32 (0), c;
 	c = _mm_xor_si128 (a, b);
     return 0;
 }], have_sse2_intrinsics=yes)
@@ -355,19 +361,23 @@ AC_SUBST(VMX_CFLAGS)
 
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
-dnl ===========================================================================
-dnl Check for ARM SIMD instructions
-ARM_SIMD_CFLAGS="-mcpu=arm1136j-s"
-
+dnl ==========================================================================
+dnl Check if assembler is gas compatible and supports ARM SIMD instructions
 have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$ARM_SIMD_CFLAGS $CFLAGS"
-AC_COMPILE_IFELSE([
-int main () {
-    asm("uqadd8 r1, r1, r2");
-    return 0;
-}], have_arm_simd=yes)
+CFLAGS="-x assembler-with-cpp $CFLAGS"
+AC_COMPILE_IFELSE([[
+.text
+.arch armv6
+.object_arch armv4
+.arm
+.altmacro
+#ifndef __ARM_EABI__
+#error EABI is required (to be sure that calling conventions are compatible)
+#endif
+pld [r0]
+uqadd8 r0, r0, r0]], have_arm_simd=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(arm-simd,
@@ -380,34 +390,35 @@ if test $enable_arm_simd = no ; then
 fi
 
 if test $have_arm_simd = yes ; then
-   AC_DEFINE(USE_ARM_SIMD, 1, [use ARM SIMD compiler intrinsics])
-else
-   ARM_SIMD_CFLAGS=
+   AC_DEFINE(USE_ARM_SIMD, 1, [use ARM SIMD assembly optimizations])
 fi
+
+AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
 
 AC_MSG_RESULT($have_arm_simd)
 if test $enable_arm_simd = yes && test $have_arm_simd = no ; then
    AC_MSG_ERROR([ARM SIMD intrinsics not detected])
 fi
 
-AC_SUBST(ARM_SIMD_CFLAGS)
-
-AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
-
 dnl ==========================================================================
-dnl Check for ARM NEON instructions
-ARM_NEON_CFLAGS="-mfpu=neon -mcpu=cortex-a8"
-
+dnl Check if assembler is gas compatible and supports NEON instructions
 have_arm_neon=no
-AC_MSG_CHECKING(whether to use ARM NEON)
+AC_MSG_CHECKING(whether to use ARM NEON assembler)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$ARM_NEON_CFLAGS $CFLAGS"
-AC_COMPILE_IFELSE([
-#include <arm_neon.h>
-int main () {
-    uint8x8_t neon_test=vmov_n_u8(0);
-    return 0;
-}], have_arm_neon=yes)
+CFLAGS="-x assembler-with-cpp $CFLAGS"
+AC_COMPILE_IFELSE([[
+.text
+.fpu neon
+.arch armv7a
+.object_arch armv4
+.eabi_attribute 10, 0
+.arm
+.altmacro
+#ifndef __ARM_EABI__
+#error EABI is required (to be sure that calling conventions are compatible)
+#endif
+pld [r0]
+vmovn.u16 d0, q0]], have_arm_neon=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(arm-neon,
@@ -420,12 +431,8 @@ if test $enable_arm_neon = no ; then
 fi
 
 if test $have_arm_neon = yes ; then
-   AC_DEFINE(USE_ARM_NEON, 1, [use ARM NEON compiler intrinsics])
-else
-   ARM_NEON_CFLAGS=
+   AC_DEFINE(USE_ARM_NEON, 1, [use ARM NEON assembly optimizations])
 fi
-
-AC_SUBST(ARM_NEON_CFLAGS)
 
 AM_CONDITIONAL(USE_ARM_NEON, test $have_arm_neon = yes)
 
@@ -509,6 +516,150 @@ AC_CHECK_FUNC(posix_memalign, have_posix_memalign=yes, have_posix_memalign=no)
 if test x$have_posix_memalign = xyes; then
    AC_DEFINE(HAVE_POSIX_MEMALIGN, 1, [Whether we have posix_memalign()])
 fi
+
+dnl =====================================
+dnl Thread local storage
+
+support_for__thread=no
+
+AC_MSG_CHECKING(for __thread)
+AC_COMPILE_IFELSE([
+#ifdef __MINGW32__
+#error MinGW has broken __thread support
+#endif
+__thread int x ;
+int main () { return 0; }
+], support_for__thread=yes)
+
+if test $support_for__thread = yes; then 
+   AC_DEFINE([TOOLCHAIN_SUPPORTS__THREAD],[],[Whether the tool chain supports __thread])
+fi
+
+AC_MSG_RESULT($support_for__thread)
+
+dnl posix tls
+
+if test $support_for__thread = no; then
+
+support_for_pthread_stubs_setspecific=no
+   
+AC_MSG_CHECKING(for pthread_setspecific in libpthread_stubs)
+
+save_LDFLAGS=$LDFLAGS
+save_CFLAGS=$CFLAGS
+
+PKG_CHECK_MODULES(STUBS, pthread-stubs)
+
+CFLAGS="${STUBS_CFLAGS}"
+LDFLAGS="${STUBS_LIBS}"
+
+AC_LINK_IFELSE([
+#include <pthread.h>
+
+#include <stdlib.h>
+#include <pthread.h>
+
+static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+static pthread_key_t key;
+
+static void
+make_key (void)
+{
+    pthread_key_create (&key, NULL);
+}
+
+int
+main ()
+{
+    void *value = NULL;
+    
+    if (pthread_once (&once_control, make_key) != 0)
+    {
+	value = NULL;
+    }
+    else
+    {
+	value = pthread_getspecific (key);
+	if (!value)
+	{
+	    value = malloc (100);
+	    pthread_setspecific (key, value);
+	}
+    }
+}
+], support_for_pthread_stubs_setspecific=yes);
+
+CFLAGS=$save_CFLAGS
+LDFLAGS=$save_LDFLAGS
+
+if test $support_for_pthread_stubs_setspecific = yes; then
+   PTHREAD_LDFLAGS="${STUBS_LIBS}"
+   PTHREAD_CFLAGS="${STUBS_CFLAGS}"
+   AC_DEFINE([HAVE_PTHREAD_SETSPECIFIC], [], [Whether pthread_setspecific() is supported])
+fi
+
+AC_MSG_RESULT($support_for_pthread_stubs_setspecific);
+
+fi
+
+if test $support_for_pthread_stubs_setspecific = no; then
+
+AC_MSG_CHECKING(for pthread_setspecific)
+
+save_LDFLAGS=$LDFLAGS
+
+LDFLAGS="-pthread"
+
+AC_LINK_IFELSE([
+#include <pthread.h>
+
+#include <stdlib.h>
+#include <pthread.h>
+
+static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+static pthread_key_t key;
+
+static void
+make_key (void)
+{
+    pthread_key_create (&key, NULL);
+}
+
+int
+main ()
+{
+    void *value = NULL;
+    
+    if (pthread_once (&once_control, make_key) != 0)
+    {
+	value = NULL;
+    }
+    else
+    {
+	value = pthread_getspecific (key);
+	if (!value)
+	{
+	    value = malloc (100);
+	    pthread_setspecific (key, value);
+	}
+    }
+}
+], support_for_pthread_setspecific=yes);
+
+LDFLAGS=$save_LDFLAGS
+
+if test $support_for_pthread_setspecific = yes; then
+   PTHREAD_LDFLAGS="-pthread"
+   AC_DEFINE([HAVE_PTHREAD_SETSPECIFIC], [], [Whether pthread_setspecific() is supported])
+fi
+
+AC_MSG_RESULT($support_for_pthread_setspecific);
+
+fi
+
+AC_SUBST(TOOLCHAIN_SUPPORTS__THREAD)
+AC_SUBST(HAVE_PTHREAD_SETSPECIFIC)
+AC_SUBST(PTHREAD_LDFLAGS)
 
 AC_OUTPUT([pixman-1.pc
            pixman-1-uninstalled.pc

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <config.h>
-#include "pixman.h"
 #include "pixman-private.h"
+#include "pixman.h"
 
 #define FALSE 0
 #define TRUE 1
@@ -137,8 +137,8 @@ main ()
     pixman_image_t *src, *dest;
     int src_x, src_y, dest_x, dest_y;
     int i, j;
-    int width = get_rand (500);
-    int height = get_rand (500);
+    int width = get_rand (499) + 1;
+    int height = get_rand (499) + 1;
 
     src = make_image (width, height, TRUE, &src_x, &src_y);
     dest = make_image (width, height, FALSE, &dest_x, &dest_y);

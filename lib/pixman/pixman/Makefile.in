@@ -87,41 +87,35 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libpixman_1_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3) \
 	$(am__DEPENDENCIES_4) $(am__DEPENDENCIES_5)
-am_libpixman_1_la_OBJECTS = libpixman_1_la-pixman-access.lo \
-	libpixman_1_la-pixman-access-accessors.lo \
-	libpixman_1_la-pixman-cpu.lo \
-	libpixman_1_la-pixman-gradient-walker.lo \
-	libpixman_1_la-pixman-region16.lo \
-	libpixman_1_la-pixman-region32.lo \
-	libpixman_1_la-pixman-image.lo \
-	libpixman_1_la-pixman-implementation.lo \
-	libpixman_1_la-pixman-combine32.lo \
-	libpixman_1_la-pixman-combine64.lo \
-	libpixman_1_la-pixman-general.lo libpixman_1_la-pixman.lo \
-	libpixman_1_la-pixman-fast-path.lo \
-	libpixman_1_la-pixman-solid-fill.lo \
-	libpixman_1_la-pixman-conical-gradient.lo \
-	libpixman_1_la-pixman-linear-gradient.lo \
-	libpixman_1_la-pixman-radial-gradient.lo \
-	libpixman_1_la-pixman-bits-image.lo \
-	libpixman_1_la-pixman-utils.lo libpixman_1_la-pixman-edge.lo \
-	libpixman_1_la-pixman-edge-accessors.lo \
-	libpixman_1_la-pixman-trap.lo libpixman_1_la-pixman-timer.lo \
-	libpixman_1_la-pixman-matrix.lo
+am_libpixman_1_la_OBJECTS = pixman-access.lo \
+	pixman-access-accessors.lo pixman-cpu.lo \
+	pixman-gradient-walker.lo pixman-region16.lo \
+	pixman-region32.lo pixman-image.lo pixman-implementation.lo \
+	pixman-combine32.lo pixman-combine64.lo pixman-general.lo \
+	pixman.lo pixman-fast-path.lo pixman-solid-fill.lo \
+	pixman-conical-gradient.lo pixman-linear-gradient.lo \
+	pixman-radial-gradient.lo pixman-bits-image.lo pixman-utils.lo \
+	pixman-edge.lo pixman-edge-accessors.lo pixman-trap.lo \
+	pixman-timer.lo pixman-matrix.lo
 libpixman_1_la_OBJECTS = $(am_libpixman_1_la_OBJECTS)
 am__DEPENDENCIES_6 =
 @USE_ARM_NEON_TRUE@libpixman_arm_neon_la_DEPENDENCIES =  \
 @USE_ARM_NEON_TRUE@	$(am__DEPENDENCIES_6)
-am__libpixman_arm_neon_la_SOURCES_DIST = pixman-arm-neon.c
+am__libpixman_arm_neon_la_SOURCES_DIST = pixman-arm-neon.c \
+	pixman-arm-common.h pixman-arm-neon-asm.S \
+	pixman-arm-neon-asm.h
 @USE_ARM_NEON_TRUE@am_libpixman_arm_neon_la_OBJECTS =  \
-@USE_ARM_NEON_TRUE@	libpixman_arm_neon_la-pixman-arm-neon.lo
+@USE_ARM_NEON_TRUE@	libpixman_arm_neon_la-pixman-arm-neon.lo \
+@USE_ARM_NEON_TRUE@	pixman-arm-neon-asm.lo
 libpixman_arm_neon_la_OBJECTS = $(am_libpixman_arm_neon_la_OBJECTS)
 @USE_ARM_NEON_TRUE@am_libpixman_arm_neon_la_rpath =
 @USE_ARM_SIMD_TRUE@libpixman_arm_simd_la_DEPENDENCIES =  \
 @USE_ARM_SIMD_TRUE@	$(am__DEPENDENCIES_6)
-am__libpixman_arm_simd_la_SOURCES_DIST = pixman-arm-simd.c
+am__libpixman_arm_simd_la_SOURCES_DIST = pixman-arm-simd.c \
+	pixman-arm-common.h pixman-arm-simd-asm.S
 @USE_ARM_SIMD_TRUE@am_libpixman_arm_simd_la_OBJECTS =  \
-@USE_ARM_SIMD_TRUE@	libpixman_arm_simd_la-pixman-arm-simd.lo
+@USE_ARM_SIMD_TRUE@	libpixman_arm_simd_la-pixman-arm-simd.lo \
+@USE_ARM_SIMD_TRUE@	pixman-arm-simd-asm.lo
 libpixman_arm_simd_la_OBJECTS = $(am_libpixman_arm_simd_la_OBJECTS)
 @USE_ARM_SIMD_TRUE@am_libpixman_arm_simd_la_rpath =
 @USE_MMX_TRUE@libpixman_mmx_la_DEPENDENCIES = $(am__DEPENDENCIES_6)
@@ -145,6 +139,9 @@ libpixman_vmx_la_OBJECTS = $(am_libpixman_vmx_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
+CCASCOMPILE = $(CCAS) $(AM_CCASFLAGS) $(CCASFLAGS)
+LTCCASCOMPILE = $(LIBTOOL) --mode=compile $(CCAS) $(AM_CCASFLAGS) \
+	$(CCASFLAGS)
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
@@ -172,13 +169,13 @@ AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
 AR = @AR@
-ARM_NEON_CFLAGS = @ARM_NEON_CFLAGS@
-ARM_SIMD_CFLAGS = @ARM_SIMD_CFLAGS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CC = @CC@
+CCAS = @CCAS@
+CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
@@ -206,6 +203,7 @@ GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
 HAVE_GTK_FALSE = @HAVE_GTK_FALSE@
 HAVE_GTK_TRUE = @HAVE_GTK_TRUE@
+HAVE_PTHREAD_SETSPECIFIC = @HAVE_PTHREAD_SETSPECIFIC@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -235,6 +233,7 @@ PIXMAN_VERSION_MAJOR = @PIXMAN_VERSION_MAJOR@
 PIXMAN_VERSION_MICRO = @PIXMAN_VERSION_MICRO@
 PIXMAN_VERSION_MINOR = @PIXMAN_VERSION_MINOR@
 PKG_CONFIG = @PKG_CONFIG@
+PTHREAD_LDFLAGS = @PTHREAD_LDFLAGS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -242,6 +241,9 @@ SHELL = @SHELL@
 SSE2_CFLAGS = @SSE2_CFLAGS@
 SSE2_LDFLAGS = @SSE2_LDFLAGS@
 STRIP = @STRIP@
+STUBS_CFLAGS = @STUBS_CFLAGS@
+STUBS_LIBS = @STUBS_LIBS@
+TOOLCHAIN_SUPPORTS__THREAD = @TOOLCHAIN_SUPPORTS__THREAD@
 USE_ARM_NEON_FALSE = @USE_ARM_NEON_FALSE@
 USE_ARM_NEON_TRUE = @USE_ARM_NEON_TRUE@
 USE_ARM_SIMD_FALSE = @USE_ARM_SIMD_FALSE@
@@ -305,10 +307,10 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LTLIBRARIES = libpixman-1.la
 libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO) \
-	-no-undefined $(am__append_2) $(am__append_7)
+	-no-undefined @PTHREAD_LDFLAGS@ $(am__append_2) \
+	$(am__append_7)
 libpixman_1_la_LIBADD = @DEP_LIBS@ -lm $(am__append_3) $(am__append_5) \
 	$(am__append_8) $(am__append_10) $(am__append_12)
-libpixman_1_la_CFLAGS = -DPIXMAN_DISABLE_DEPRECATED
 libpixman_1_la_SOURCES = \
 	pixman.h				\
 	pixman-accessor.h			\
@@ -356,32 +358,42 @@ CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine32.h pixman-com
 
 @USE_MMX_TRUE@libpixman_mmx_la_CFLAGS = $(DEP_CFLAGS) $(MMX_CFLAGS)
 @USE_MMX_TRUE@libpixman_mmx_la_LIBADD = $(DEP_LIBS)
+@USE_MMX_TRUE@ASM_CFLAGS_mmx = $(MMX_CFLAGS)
 @USE_VMX_TRUE@libpixman_vmx_la_SOURCES = \
 @USE_VMX_TRUE@	pixman-vmx.c \
 @USE_VMX_TRUE@	pixman-combine32.h
 
 @USE_VMX_TRUE@libpixman_vmx_la_CFLAGS = $(DEP_CFLAGS) $(VMX_CFLAGS)
 @USE_VMX_TRUE@libpixman_vmx_la_LIBADD = $(DEP_LIBS)
+@USE_VMX_TRUE@ASM_CFLAGS_vmx = $(VMX_CFLAGS)
 @USE_SSE2_TRUE@libpixman_sse2_la_SOURCES = \
 @USE_SSE2_TRUE@	pixman-sse2.c
 
 @USE_SSE2_TRUE@libpixman_sse2_la_CFLAGS = $(DEP_CFLAGS) $(SSE2_CFLAGS)
 @USE_SSE2_TRUE@libpixman_sse2_la_LIBADD = $(DEP_LIBS)
+@USE_SSE2_TRUE@ASM_CFLAGS_sse2 = $(SSE2_CFLAGS)
 @USE_ARM_SIMD_TRUE@libpixman_arm_simd_la_SOURCES = \
-@USE_ARM_SIMD_TRUE@	pixman-arm-simd.c
+@USE_ARM_SIMD_TRUE@	pixman-arm-simd.c	\
+@USE_ARM_SIMD_TRUE@	pixman-arm-common.h	\
+@USE_ARM_SIMD_TRUE@	pixman-arm-simd-asm.S
 
-@USE_ARM_SIMD_TRUE@libpixman_arm_simd_la_CFLAGS = $(DEP_CFLAGS) $(ARM_SIMD_CFLAGS)
+@USE_ARM_SIMD_TRUE@libpixman_arm_simd_la_CFLAGS = $(DEP_CFLAGS)
 @USE_ARM_SIMD_TRUE@libpixman_arm_simd_la_LIBADD = $(DEP_LIBS)
+@USE_ARM_SIMD_TRUE@ASM_CFLAGS_arm_simd = 
 @USE_ARM_NEON_TRUE@libpixman_arm_neon_la_SOURCES = \
-@USE_ARM_NEON_TRUE@        pixman-arm-neon.c
+@USE_ARM_NEON_TRUE@        pixman-arm-neon.c	\
+@USE_ARM_NEON_TRUE@        pixman-arm-common.h	\
+@USE_ARM_NEON_TRUE@        pixman-arm-neon-asm.S	\
+@USE_ARM_NEON_TRUE@        pixman-arm-neon-asm.h
 
-@USE_ARM_NEON_TRUE@libpixman_arm_neon_la_CFLAGS = $(DEP_CFLAGS) $(ARM_NEON_CFLAGS)
+@USE_ARM_NEON_TRUE@libpixman_arm_neon_la_CFLAGS = $(DEP_CFLAGS)
 @USE_ARM_NEON_TRUE@libpixman_arm_neon_la_LIBADD = $(DEP_LIBS)
+@USE_ARM_NEON_TRUE@ASM_CFLAGS_arm_neon = 
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .S .c .lo .o .obj .s
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -391,9 +403,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  pixman/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  pixman/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  pixman/Makefile
+	  $(AUTOMAKE) --foreign  pixman/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -468,35 +480,44 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-access-accessors.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-access.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-bits-image.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-combine32.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-combine64.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-conical-gradient.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-cpu.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-edge-accessors.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-edge.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-fast-path.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-general.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-gradient-walker.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-image.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-implementation.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-linear-gradient.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-matrix.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-radial-gradient.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-region16.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-region32.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-solid-fill.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-timer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-trap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman-utils.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_1_la-pixman.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_arm_neon_la-pixman-arm-neon.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_arm_simd_la-pixman-arm-simd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_mmx_la-pixman-mmx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_sse2_la-pixman-sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_vmx_la-pixman-vmx.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-access-accessors.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-access.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-bits-image.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-combine32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-combine64.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-conical-gradient.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-cpu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-edge-accessors.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-edge.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-fast-path.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-general.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-gradient-walker.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-image.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-implementation.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-linear-gradient.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-matrix.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-radial-gradient.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-region16.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-region32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-solid-fill.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-timer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-trap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-utils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman.Plo@am__quote@
+
+.S.o:
+	$(CCASCOMPILE) -c $<
+
+.S.obj:
+	$(CCASCOMPILE) -c `$(CYGPATH_W) '$<'`
+
+.S.lo:
+	$(LTCCASCOMPILE) -c -o $@ $<
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -518,174 +539,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-libpixman_1_la-pixman-access.lo: pixman-access.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-access.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-access.Tpo" -c -o libpixman_1_la-pixman-access.lo `test -f 'pixman-access.c' || echo '$(srcdir)/'`pixman-access.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-access.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-access.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-access.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-access.c' object='libpixman_1_la-pixman-access.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-access.lo `test -f 'pixman-access.c' || echo '$(srcdir)/'`pixman-access.c
-
-libpixman_1_la-pixman-access-accessors.lo: pixman-access-accessors.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-access-accessors.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-access-accessors.Tpo" -c -o libpixman_1_la-pixman-access-accessors.lo `test -f 'pixman-access-accessors.c' || echo '$(srcdir)/'`pixman-access-accessors.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-access-accessors.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-access-accessors.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-access-accessors.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-access-accessors.c' object='libpixman_1_la-pixman-access-accessors.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-access-accessors.lo `test -f 'pixman-access-accessors.c' || echo '$(srcdir)/'`pixman-access-accessors.c
-
-libpixman_1_la-pixman-cpu.lo: pixman-cpu.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-cpu.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-cpu.Tpo" -c -o libpixman_1_la-pixman-cpu.lo `test -f 'pixman-cpu.c' || echo '$(srcdir)/'`pixman-cpu.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-cpu.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-cpu.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-cpu.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-cpu.c' object='libpixman_1_la-pixman-cpu.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-cpu.lo `test -f 'pixman-cpu.c' || echo '$(srcdir)/'`pixman-cpu.c
-
-libpixman_1_la-pixman-gradient-walker.lo: pixman-gradient-walker.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-gradient-walker.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-gradient-walker.Tpo" -c -o libpixman_1_la-pixman-gradient-walker.lo `test -f 'pixman-gradient-walker.c' || echo '$(srcdir)/'`pixman-gradient-walker.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-gradient-walker.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-gradient-walker.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-gradient-walker.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-gradient-walker.c' object='libpixman_1_la-pixman-gradient-walker.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-gradient-walker.lo `test -f 'pixman-gradient-walker.c' || echo '$(srcdir)/'`pixman-gradient-walker.c
-
-libpixman_1_la-pixman-region16.lo: pixman-region16.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-region16.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-region16.Tpo" -c -o libpixman_1_la-pixman-region16.lo `test -f 'pixman-region16.c' || echo '$(srcdir)/'`pixman-region16.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-region16.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-region16.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-region16.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-region16.c' object='libpixman_1_la-pixman-region16.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-region16.lo `test -f 'pixman-region16.c' || echo '$(srcdir)/'`pixman-region16.c
-
-libpixman_1_la-pixman-region32.lo: pixman-region32.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-region32.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-region32.Tpo" -c -o libpixman_1_la-pixman-region32.lo `test -f 'pixman-region32.c' || echo '$(srcdir)/'`pixman-region32.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-region32.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-region32.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-region32.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-region32.c' object='libpixman_1_la-pixman-region32.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-region32.lo `test -f 'pixman-region32.c' || echo '$(srcdir)/'`pixman-region32.c
-
-libpixman_1_la-pixman-image.lo: pixman-image.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-image.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-image.Tpo" -c -o libpixman_1_la-pixman-image.lo `test -f 'pixman-image.c' || echo '$(srcdir)/'`pixman-image.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-image.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-image.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-image.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-image.c' object='libpixman_1_la-pixman-image.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-image.lo `test -f 'pixman-image.c' || echo '$(srcdir)/'`pixman-image.c
-
-libpixman_1_la-pixman-implementation.lo: pixman-implementation.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-implementation.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-implementation.Tpo" -c -o libpixman_1_la-pixman-implementation.lo `test -f 'pixman-implementation.c' || echo '$(srcdir)/'`pixman-implementation.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-implementation.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-implementation.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-implementation.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-implementation.c' object='libpixman_1_la-pixman-implementation.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-implementation.lo `test -f 'pixman-implementation.c' || echo '$(srcdir)/'`pixman-implementation.c
-
-libpixman_1_la-pixman-combine32.lo: pixman-combine32.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-combine32.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-combine32.Tpo" -c -o libpixman_1_la-pixman-combine32.lo `test -f 'pixman-combine32.c' || echo '$(srcdir)/'`pixman-combine32.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-combine32.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-combine32.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-combine32.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-combine32.c' object='libpixman_1_la-pixman-combine32.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-combine32.lo `test -f 'pixman-combine32.c' || echo '$(srcdir)/'`pixman-combine32.c
-
-libpixman_1_la-pixman-combine64.lo: pixman-combine64.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-combine64.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-combine64.Tpo" -c -o libpixman_1_la-pixman-combine64.lo `test -f 'pixman-combine64.c' || echo '$(srcdir)/'`pixman-combine64.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-combine64.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-combine64.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-combine64.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-combine64.c' object='libpixman_1_la-pixman-combine64.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-combine64.lo `test -f 'pixman-combine64.c' || echo '$(srcdir)/'`pixman-combine64.c
-
-libpixman_1_la-pixman-general.lo: pixman-general.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-general.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-general.Tpo" -c -o libpixman_1_la-pixman-general.lo `test -f 'pixman-general.c' || echo '$(srcdir)/'`pixman-general.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-general.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-general.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-general.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-general.c' object='libpixman_1_la-pixman-general.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-general.lo `test -f 'pixman-general.c' || echo '$(srcdir)/'`pixman-general.c
-
-libpixman_1_la-pixman.lo: pixman.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman.Tpo" -c -o libpixman_1_la-pixman.lo `test -f 'pixman.c' || echo '$(srcdir)/'`pixman.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman.Tpo" "$(DEPDIR)/libpixman_1_la-pixman.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman.c' object='libpixman_1_la-pixman.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman.lo `test -f 'pixman.c' || echo '$(srcdir)/'`pixman.c
-
-libpixman_1_la-pixman-fast-path.lo: pixman-fast-path.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-fast-path.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-fast-path.Tpo" -c -o libpixman_1_la-pixman-fast-path.lo `test -f 'pixman-fast-path.c' || echo '$(srcdir)/'`pixman-fast-path.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-fast-path.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-fast-path.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-fast-path.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-fast-path.c' object='libpixman_1_la-pixman-fast-path.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-fast-path.lo `test -f 'pixman-fast-path.c' || echo '$(srcdir)/'`pixman-fast-path.c
-
-libpixman_1_la-pixman-solid-fill.lo: pixman-solid-fill.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-solid-fill.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-solid-fill.Tpo" -c -o libpixman_1_la-pixman-solid-fill.lo `test -f 'pixman-solid-fill.c' || echo '$(srcdir)/'`pixman-solid-fill.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-solid-fill.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-solid-fill.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-solid-fill.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-solid-fill.c' object='libpixman_1_la-pixman-solid-fill.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-solid-fill.lo `test -f 'pixman-solid-fill.c' || echo '$(srcdir)/'`pixman-solid-fill.c
-
-libpixman_1_la-pixman-conical-gradient.lo: pixman-conical-gradient.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-conical-gradient.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-conical-gradient.Tpo" -c -o libpixman_1_la-pixman-conical-gradient.lo `test -f 'pixman-conical-gradient.c' || echo '$(srcdir)/'`pixman-conical-gradient.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-conical-gradient.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-conical-gradient.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-conical-gradient.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-conical-gradient.c' object='libpixman_1_la-pixman-conical-gradient.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-conical-gradient.lo `test -f 'pixman-conical-gradient.c' || echo '$(srcdir)/'`pixman-conical-gradient.c
-
-libpixman_1_la-pixman-linear-gradient.lo: pixman-linear-gradient.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-linear-gradient.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-linear-gradient.Tpo" -c -o libpixman_1_la-pixman-linear-gradient.lo `test -f 'pixman-linear-gradient.c' || echo '$(srcdir)/'`pixman-linear-gradient.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-linear-gradient.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-linear-gradient.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-linear-gradient.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-linear-gradient.c' object='libpixman_1_la-pixman-linear-gradient.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-linear-gradient.lo `test -f 'pixman-linear-gradient.c' || echo '$(srcdir)/'`pixman-linear-gradient.c
-
-libpixman_1_la-pixman-radial-gradient.lo: pixman-radial-gradient.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-radial-gradient.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-radial-gradient.Tpo" -c -o libpixman_1_la-pixman-radial-gradient.lo `test -f 'pixman-radial-gradient.c' || echo '$(srcdir)/'`pixman-radial-gradient.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-radial-gradient.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-radial-gradient.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-radial-gradient.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-radial-gradient.c' object='libpixman_1_la-pixman-radial-gradient.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-radial-gradient.lo `test -f 'pixman-radial-gradient.c' || echo '$(srcdir)/'`pixman-radial-gradient.c
-
-libpixman_1_la-pixman-bits-image.lo: pixman-bits-image.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-bits-image.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-bits-image.Tpo" -c -o libpixman_1_la-pixman-bits-image.lo `test -f 'pixman-bits-image.c' || echo '$(srcdir)/'`pixman-bits-image.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-bits-image.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-bits-image.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-bits-image.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-bits-image.c' object='libpixman_1_la-pixman-bits-image.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-bits-image.lo `test -f 'pixman-bits-image.c' || echo '$(srcdir)/'`pixman-bits-image.c
-
-libpixman_1_la-pixman-utils.lo: pixman-utils.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-utils.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-utils.Tpo" -c -o libpixman_1_la-pixman-utils.lo `test -f 'pixman-utils.c' || echo '$(srcdir)/'`pixman-utils.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-utils.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-utils.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-utils.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-utils.c' object='libpixman_1_la-pixman-utils.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-utils.lo `test -f 'pixman-utils.c' || echo '$(srcdir)/'`pixman-utils.c
-
-libpixman_1_la-pixman-edge.lo: pixman-edge.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-edge.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-edge.Tpo" -c -o libpixman_1_la-pixman-edge.lo `test -f 'pixman-edge.c' || echo '$(srcdir)/'`pixman-edge.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-edge.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-edge.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-edge.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-edge.c' object='libpixman_1_la-pixman-edge.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-edge.lo `test -f 'pixman-edge.c' || echo '$(srcdir)/'`pixman-edge.c
-
-libpixman_1_la-pixman-edge-accessors.lo: pixman-edge-accessors.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-edge-accessors.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-edge-accessors.Tpo" -c -o libpixman_1_la-pixman-edge-accessors.lo `test -f 'pixman-edge-accessors.c' || echo '$(srcdir)/'`pixman-edge-accessors.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-edge-accessors.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-edge-accessors.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-edge-accessors.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-edge-accessors.c' object='libpixman_1_la-pixman-edge-accessors.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-edge-accessors.lo `test -f 'pixman-edge-accessors.c' || echo '$(srcdir)/'`pixman-edge-accessors.c
-
-libpixman_1_la-pixman-trap.lo: pixman-trap.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-trap.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-trap.Tpo" -c -o libpixman_1_la-pixman-trap.lo `test -f 'pixman-trap.c' || echo '$(srcdir)/'`pixman-trap.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-trap.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-trap.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-trap.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-trap.c' object='libpixman_1_la-pixman-trap.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-trap.lo `test -f 'pixman-trap.c' || echo '$(srcdir)/'`pixman-trap.c
-
-libpixman_1_la-pixman-timer.lo: pixman-timer.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-timer.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-timer.Tpo" -c -o libpixman_1_la-pixman-timer.lo `test -f 'pixman-timer.c' || echo '$(srcdir)/'`pixman-timer.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-timer.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-timer.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-timer.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-timer.c' object='libpixman_1_la-pixman-timer.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-timer.lo `test -f 'pixman-timer.c' || echo '$(srcdir)/'`pixman-timer.c
-
-libpixman_1_la-pixman-matrix.lo: pixman-matrix.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -MT libpixman_1_la-pixman-matrix.lo -MD -MP -MF "$(DEPDIR)/libpixman_1_la-pixman-matrix.Tpo" -c -o libpixman_1_la-pixman-matrix.lo `test -f 'pixman-matrix.c' || echo '$(srcdir)/'`pixman-matrix.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libpixman_1_la-pixman-matrix.Tpo" "$(DEPDIR)/libpixman_1_la-pixman-matrix.Plo"; else rm -f "$(DEPDIR)/libpixman_1_la-pixman-matrix.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pixman-matrix.c' object='libpixman_1_la-pixman-matrix.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_1_la_CFLAGS) $(CFLAGS) -c -o libpixman_1_la-pixman-matrix.lo `test -f 'pixman-matrix.c' || echo '$(srcdir)/'`pixman-matrix.c
 
 libpixman_arm_neon_la-pixman-arm-neon.lo: pixman-arm-neon.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_arm_neon_la_CFLAGS) $(CFLAGS) -MT libpixman_arm_neon_la-pixman-arm-neon.lo -MD -MP -MF "$(DEPDIR)/libpixman_arm_neon_la-pixman-arm-neon.Tpo" -c -o libpixman_arm_neon_la-pixman-arm-neon.lo `test -f 'pixman-arm-neon.c' || echo '$(srcdir)/'`pixman-arm-neon.c; \
@@ -935,6 +788,9 @@ pixman-combine64.c : pixman-combine.c.template pixman-combine64.h make-combine.p
 	$(PERL) $(srcdir)/make-combine.pl 16 < $(srcdir)/pixman-combine.c.template > $@ || ($(RM) $@; exit 1)
 pixman-combine64.h : pixman-combine.h.template make-combine.pl
 	$(PERL) $(srcdir)/make-combine.pl 16 < $(srcdir)/pixman-combine.h.template > $@ || ($(RM) $@; exit 1)
+
+.c.s : $(libpixmaninclude_HEADERS) $(BUILT_SOURCES)
+	$(CC) $(CFLAGS) $(ASM_CFLAGS_$(@:pixman-%.s=%)) $(ASM_CFLAGS_$(@:pixman-arm-%.s=arm_%)) -DHAVE_CONFIG_H -I$(srcdir) -I$(builddir) -I$(top_builddir) -S -o $@ $<
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

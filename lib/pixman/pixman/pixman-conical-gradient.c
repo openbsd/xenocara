@@ -23,7 +23,11 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
+
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <stdlib.h>
 #include <math.h>
 #include "pixman-private.h"
@@ -49,7 +53,7 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
     double rx = x + 0.5;
     double ry = y + 0.5;
     double rz = 1.;
-    double a = conical->angle / (180. * 65536);
+    double a = (conical->angle * M_PI) / (180. * 65536);
 
     _pixman_gradient_walker_init (&walker, gradient, source->common.repeat);
 
