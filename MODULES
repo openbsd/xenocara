@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.136 2010/10/03 09:23:28 matthieu Exp $
+ $OpenBSD: MODULES,v 1.137 2010/10/05 19:59:52 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -38,7 +38,7 @@ app/xcmsdb		1.0.3	7.6	needs-update
 app/xcompmgr		1.1.5	7.5+
 app/xconsole		1.0.4	7.6	needs-update
 app/xdm			1.1.10	7.5+	needs-update
-app/xdpyinfo		1.1.0	7.5
+app/xdpyinfo		1.2.0	7.6	needs-update
 app/xdriinfo		1.0.3	7.5
 app/xedit		1.1.2	7.4
 app/xev			1.0.4	7.5
@@ -144,47 +144,47 @@ driver/xf86-video-voodoo	1.2.4	7.5+
 driver/xf86-video-wsfb		0.2.1	7.5
 
 font/encodings 			1.0.3
-font/adobe-100dpi		1.0.1
-font/adobe-75dpi		1.0.1
-font/adobe-utopia-100dpi	1.0.2
-font/adobe-utopia-75dpi		1.0.2
-font/adobe-utopia-type1		1.0.2
-font/alias			1.0.2
-font/arabic-misc		1.0.1
-font/bh-100dpi			1.0.1
-font/bh-75dpi			1.0.1
-font/bh-lucidatypewriter-100dpi	1.0.1
-font/bh-lucidatypewriter-75dpi	1.0.1
-font/bh-ttf			1.0.1
-font/bh-type1			1.0.1
-font/bitstream-100dpi		1.0.1
-font/bitstream-75dpi		1.0.1
-font/bitstream-type1		1.0.1
-font/cronyx-cyrillic		1.0.1
-font/cursor-misc		1.0.1
-font/daewoo-misc		1.0.1
-font/dec-misc			1.0.1
-font/ibm-type1			1.0.1
-font/isas-misc			1.0.1
-font/jis-misc			1.0.1
-font/micro-misc			1.0.1
-font/misc-cyrillic		1.0.1
-font/misc-ethiopic		1.0.1
-font/misc-meltho		1.0.1
-font/misc-misc			1.1.0
-font/mutt-misc			1.0.1
-font/schumacher-misc		1.1.0
-font/screen-cyrillic		1.0.2
-font/sony-misc			1.0.1
-font/sun-misc			1.0.1
-font/util			1.1.1
-font/winitzki-cyrillic		1.0.1
-font/xfree86-type1		1.0.2
+font/adobe-100dpi		1.0.2	needs-update
+font/adobe-75dpi		1.0.2	needs-update
+font/adobe-utopia-100dpi	1.0.3	needs-update
+font/adobe-utopia-75dpi		1.0.3	needs-update
+font/adobe-utopia-type1		1.0.3	needs-update
+font/alias			1.0.3	needs-update
+font/arabic-misc		1.0.2	needs-update
+font/bh-100dpi			1.0.2	needs-update
+font/bh-75dpi			1.0.2	needs-update
+font/bh-lucidatypewriter-100dpi	1.0.2	needs-update
+font/bh-lucidatypewriter-75dpi	1.0.2	needs-update
+font/bh-ttf			1.0.2	needs-update
+font/bh-type1			1.0.2	needs-update
+font/bitstream-100dpi		1.0.2	needs-update
+font/bitstream-75dpi		1.0.2	needs-update
+font/bitstream-type1		1.0.2	needs-update
+font/cronyx-cyrillic		1.0.2	needs-update
+font/cursor-misc		1.0.2	needs-update
+font/daewoo-misc		1.0.2	needs-update
+font/dec-misc			1.0.2	needs-update
+font/ibm-type1			1.0.2	needs-update
+font/isas-misc			1.0.2	needs-update
+font/jis-misc			1.0.2	needs-update
+font/micro-misc			1.0.2	needs-update
+font/misc-cyrillic		1.0.2	needs-update
+font/misc-ethiopic		1.0.2	needs-update
+font/misc-meltho		1.0.2	needs-update
+font/misc-misc			1.1.1	needs-update
+font/mutt-misc			1.0.2	needs-update
+font/schumacher-misc		1.1.1	needs-update
+font/screen-cyrillic		1.0.3	needs-update
+font/sony-misc			1.0.2	needs-update
+font/sun-misc			1.0.2	needs-update
+font/util			1.1.1	needs-update
+font/winitzki-cyrillic		1.0.2	needs-update
+font/xfree86-type1		1.0.3	needs-update
 
 lib/libFS			1.0.2	7.4+
 lib/libICE			1.0.6	7.5
 lib/libSM			1.1.1	7.4+
-lib/libX11			1.3.6	7.6	needs-update
+lib/libX11			1.3.6	7.6
 lib/libXRes			1.0.4	7.5
 lib/libXScrnSaver		1.2.0	7.4+
 lib/libXau			1.0.6	7.6
@@ -214,12 +214,12 @@ lib/libXxf86vm			1.1.0	7.5
 lib/libdmx			1.1.0	7.5
 lib/libfontenc			1.0.5	7.5
 lib/libpciaccess		0.12.0	7.5+
-lib/libpthread-stubs		0.3	7.5+	needs-update
+lib/libpthread-stubs		0.3	7.5+
 lib/libxcb			1.7	7.6
 lib/libxkbfile			1.0.6	7.5
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.5	7.5
-lib/pixman			0.18.4	7.5+	needs-update
+lib/pixman			0.18.4	7.5+
 lib/xcb-util			0.3.6	7.4+
 
 proto/bigreqsproto		1.1.0	7.4+
