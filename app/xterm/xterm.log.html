@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.957 2010/06/28 09:25:58 tom Exp $
+  $XTermId: xterm.log.html,v 1.965 2010/08/30 00:19:46 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_262">Patch #262 - 2010/8/30</A>
 <LI><A HREF="#xterm_261">Patch #261 - 2010/6/28</A>
 <LI><A HREF="#xterm_260">Patch #260 - 2010/6/20</A>
 <LI><A HREF="#xterm_259">Patch #259 - 2010/6/5</A>
@@ -319,6 +320,31 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_262">Patch #262 - 2010/8/30</A></H1>
+<ul>
+	<li>fix a case where changing the cursor color via escape sequences
+	    did not immediately update the screen (report by Andreas Wagner).
+
+	<li>implement ANSI and DEC request-mode control sequences.  The
+	    latter includes the xterm-specific private modes such as the
+	    mouse mode.  The feature is ifdef'd with the rectangle operations
+	    since its decoding overlaps that feature.
+
+	<li>correct typo in ctlseqs.ms for response of OSC 21 (patch by
+	    Kevin Schoedel).
+
+	<li>improve discussion of mouse tracking in ctlseqs.ms
+
+	<li>increase an array limit used in reporting mouse events (report
+	    by Ryan Johnson).
+
+	<li>add extended mouse-coordinates mode, allowing up to 2015x2015
+	    windows, using UTF-8 encoding (patch by Ryan Johnson).
+
+	<li>modify manpage hyphens to conform with
+	    <a href="http://lintian.debian.org/tags/hyphen-used-as-minus-sign.html">Debian</a>.
+</ul>
 
 <H1><A NAME="xterm_261">Patch #261 - 2010/6/28</A></H1>
 <ul>

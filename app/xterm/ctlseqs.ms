@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.214 2010/06/13 16:58:12 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.221 2010/08/26 08:26:09 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -78,6 +78,13 @@
 .de Ed
 .nr PD .3v
 .nr VS 12
+..
+.de bP
+.IP \(bu 4
+..
+.de lP
+.sp
+.LP
 ..
 .ds CH \" as nothing
 .ds LH Xterm Control Sequences
@@ -338,7 +345,8 @@ End of Guarded Area (\*(Eg is 0x97)
 .IP \\*(Es\\*(XX
 Start of String (\*(SS is 0x98)
 .IP \\*(Es\\*Z
-Return Terminal ID (DECID is 0x9a).  Obsolete form of \*(Cs\*c (DA).
+Return Terminal ID (DECID is 0x9a).
+Obsolete form of \*(Cs\*c (DA).
 .IP \\*(Es\\*([[
 Control Sequence Introducer (\*(Cs is 0x9b)
 .IP \\*(Es\\*(bS
@@ -366,7 +374,8 @@ since the only way X provides for this will affect all windows.
 There are additional control sequences to provide
 \fIxterm-\fPdependent functions, such as the scrollbar or window size.
 Where the function is specified by DEC or ISO 6429, the code assigned
-to it is given in parentheses.  The escape codes to designate and invoke
+to it is given in parentheses.
+The escape codes to designate and invoke
 character sets are specified by ISO 2022; see that document for a
 discussion of character sets.
 .
@@ -522,7 +531,8 @@ enabled by the \fBhpLowerleftBugCompat\fP resource).
 Full Reset (RIS)
 .
 .IP \\*(Es\\*l
-Memory Lock (per HP terminals).  Locks memory above the cursor.
+Memory Lock (per HP terminals).
+Locks memory above the cursor.
 .
 .IP \\*(Es\\*m
 Memory Unlock (per HP terminals)
@@ -588,11 +598,12 @@ for invalid requests.
 .
 .IP \\*(Dc\\*+\\*p\\*(Pt\\*s\\*(ST
 Set Termcap/Terminfo Data (xterm, experimental).
-The string following the "p" is a name to use for retrieving data from 
-the terminal database.  The data will be used for the "tcap" keyboard
+The string following the "p" is a name to use for retrieving data from
+the terminal database.
+The data will be used for the "tcap" keyboard
 configuration's function- and special-keys, as well as by the
 Request Termcap/Terminfo String control.
-
+.
 .IP \\*(Dc\\*+\\*q\\*(Pt\\*s\\*(ST
 Request Termcap/Terminfo String (xterm, experimental).
 The string following the "q" is a list of names
@@ -809,6 +820,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*4 \(-> Send FocusIn/FocusOut events.
+  \*(Ps = \*1\*0\*0\*5 \(-> Enable Extended Mouse Mode.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret "meta" key, sets eighth bit.
@@ -901,6 +913,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*4 \(-> Don't send FocusIn/FocusOut events.
+  \*(Ps = \*1\*0\*0\*5 \(-> Disable Extended Mouse Mode.
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret "meta" key
@@ -1073,6 +1086,30 @@ which is \*1.
 .IP \\*(Cs\\*!\\*p
 Soft terminal reset (DECSTR)
 .
+.IP \\*(Cs\\*(Ps\\*$\\*p
+Request ANSI mode (DECRQM).
+For VT300 and up, reply is
+.br
+  \*(Cs\*(Ps\*;\*(Pm\*$\*p
+.br
+where \*(Ps is the mode number as in RM,
+and \*(Pm is the mode value:
+.br
+  0 - not recognized
+  1 - set
+  2 - reset
+  3 - permanently set
+  4 - permanently reset
+.
+.IP \\*(Cs\\*?\\*(Ps\\*$\\*p
+Request DEC private mode (DECRQM).
+For VT300 and up, reply is
+.br
+  \*(Cs\*?\*(Ps\*;\*(Pm\*$\*p
+.br
+where \*(Ps is the mode number as in DECSET,
+\*(Pm is the mode value as in the ANSI DECRQM.
+.
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*(c"\\*p
 Set conformance level (DECSCL)
 Valid values for the first parameter:
@@ -1114,11 +1151,12 @@ Valid values for the parameter:
 Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM)
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*r
-Restore DEC Private Mode Values.  The value of \*(Ps previously saved is
-restored.  \*(Ps values are the same as for DECSET.
+Restore DEC Private Mode Values.
+The value of \*(Ps previously saved is restored.
+\*(Ps values are the same as for DECSET.
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*r
-Change Attributes in Rectangular Area (DECCARA).
+Change Attributes in Rectangular Area (DECCARA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   \*(Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7
 .
@@ -1126,7 +1164,8 @@ Change Attributes in Rectangular Area (DECCARA).
 Save cursor (ANSI.SYS)
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
-Save DEC Private Mode Values.  \*(Ps values are the same as for DECSET.
+Save DEC Private Mode Values.
+\*(Ps values are the same as for DECSET.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*t
 Window manipulation (from \fIdtterm\fP, as well as extensions).
@@ -1156,7 +1195,7 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps = \*2\*0 \(-> Report \fIxterm\fP window's icon label as
 \*(Os\*s\*L\*s\fIlabel\fP\*s\*(ST
   \*(Ps = \*2\*1 \(-> Report \fIxterm\fP window's title as
-\*(Os\*s\*L\*s\fIlabel\fP\*s\*(ST
+\*(Os\*s\*l\*s\fIlabel\fP\*s\*(ST
   \*(Ps = \*2\*2\*s\*;\*s\*0 \(-> Save \fIxterm\fP icon and window title on stack.
   \*(Ps = \*2\*2\*s\*;\*s\*1 \(-> Save \fIxterm\fP icon title on stack.
   \*(Ps = \*2\*2\*s\*;\*s\*2 \(-> Save \fIxterm\fP window title on stack.
@@ -1166,9 +1205,9 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP)
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*t
-Reverse Attributes in Rectangular Area (DECRARA).
+Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
-  \*(Ps denotes the attributes to reverse. 1, 4, 5, 7
+  \*(Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7
 .
 .IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*t
 Set one or more features of the title modes.
@@ -1195,14 +1234,14 @@ Set margin-bell volume (DECSMBV, VT520)
   \*(Ps = \*0, \*5, \*6, \*7, or \*8 \(-> high
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Pp\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pp\\*$\\*v
-Copy Rectangular Area (DECCRA)
+Copy Rectangular Area (DECCRA, VT400 and up)
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   \*(Pp denotes the source page.
   \*(Pt\*;\*(Pl denotes the target location.
   \*(Pp denotes the target page.
 .
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*(qu\\*w
-Enable Filter Rectangle (DECEFR)
+Enable Filter Rectangle (DECEFR), VT420 and up.
 .br
 Parameters are [top;left;bottom;right].
 .br
@@ -1235,7 +1274,7 @@ Select Attribute Change Extent (DECSACE).
   \*(Ps = \*2 \(-> rectangle (exact).
 .
 .IP \\*(Cs\\*(Pc\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*x
-Fill Rectangular Area (DECFRA).
+Fill Rectangular Area (DECFRA), VT420 and up.
   \*(Pc is the character to use.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
 .
@@ -1255,7 +1294,7 @@ Valid values for the second parameter:
   \*(Pu = \*2 \(-> character cells
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*z
-Erase Rectangular Area (DECERA).
+Erase Rectangular Area (DECERA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*(qu\\*{
@@ -1270,7 +1309,7 @@ Valid values for the first (and any additional parameters) are:
   \*(Ps = \*4 \(-> do not report button up transitions
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*{
-Selective Erase Rectangular Area (DECSERA).
+Selective Erase Rectangular Area (DECSERA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*(qu\\*|
@@ -1280,7 +1319,8 @@ Valid values for the parameter are:
   \*(Ps = \*0, 1 or omitted \(-> transmit a single DECLRP locator report
 .sp
 If Locator Reporting has been enabled by a DECELR, xterm will respond
-with a DECLRP Locator Report.  This report is also generated on button
+with a DECLRP Locator Report.
+This report is also generated on button
 up and down events if they have been enabled with a DECSLE, or when
 the locator is detected outside of a filter rectangle, if filter rectangles
 have been enabled with a DECEFR.
@@ -1332,7 +1372,8 @@ and window title.
   \*(Ps = \*0 \(-> Change Icon Name and Window Title to \*(Pt
   \*(Ps = \*1 \(-> Change Icon Name to \*(Pt
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt
-  \*(Ps = \*3 \(-> Set X property on top-level window. \*(Pt should be in the form
+  \*(Ps = \*3 \(-> Set X property on top-level window.
+\*(Pt should be in the form
 "\fIprop=value\fP", or just "\fIprop\fP" to delete the property
   \*(Ps = \*4 ; \fIc ; spec\fP \(-> Change Color Number \fIc\fP to
 the color specified by \fIspec\fP,
@@ -1395,12 +1436,14 @@ compile-time option)
   \*(Ps = \*5\*0 \(-> Set Font to \*(Pt
 These controls may be disabled using the \fIallowFontOps\fP resource.
 If \*(Pt begins with a "#", index in the font menu, relative (if the
-next character is a plus or minus sign) or absolute.  A number is
+next character is a plus or minus sign) or absolute.
+A number is
 expected but not required after the sign (the default is the current
 entry for relative, zero for absolute indexing).
 .br
 The same rule (plus or minus sign, optional number) is used when
-querying the font.  The remainder of \*(Pt is ignored.
+querying the font.
+The remainder of \*(Pt is ignored.
 .br
 A font can be specified after a "#" index expression,
 by adding a space and then the font specifier.
@@ -1464,7 +1507,7 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
 .
 .St
-.LP
+.lP
 .B
 Privacy Message
 .IP \\*(PM\\*(Pt\\*s\\*(ST
@@ -1491,7 +1534,7 @@ keycode 115 = Meta_L
 clear mod3
 add mod3 = Meta_L
 .DE
-.LP
+.lP
 The \fBmetaSendsEscape\fP resource
 (and \fBaltSendsEscape\fP if \fBaltIsNotMeta\fP is set)
 can be used to control the way the \fIMeta\fP modifier applies to ordinary
@@ -1502,7 +1545,7 @@ prefix a key with the \*(Es character.
 .IP
 -
 shift the key from codes 0-127 to 128-255 by adding 128.
-.LP
+.lP
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fBaltIsNotMeta\fP is set:
@@ -1540,13 +1583,13 @@ with a PC-style keyboard, so PC-style function keys result.
 Sun keyboards are similar to PC keyboards.
 Both have cursor and scrolling operations printed on the keypad,
 which duplicate the smaller cursor and scrolling keypads.
-.LP
+.lP
 X does not predefine NumLock (used for VT220 keyboards) or Alt (used as
 an extension for the Sun/PC keyboards) as modifiers.
 These keys are recognized as modifiers when enabled
 by the \fBnumLock\fP resource,
 or by the DECSET \*1\*0\*3\*5 control sequence.
-.LP
+.lP
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the \fBDECCKM\fP escape sequence.
 .TS
@@ -1575,11 +1618,11 @@ Home	\*(Cs\*H	\*(S3\*H
 End	\*(Cs\*F	\*(S3\*F
 _
 .TE
-.LP
+.lP
 The application keypad transmits the following escape sequences depending on the
 mode specified via the \fBDECPNM\fP and \fBDECPAM\fP escape sequences.
 Use the NumLock key to override the application mode.
-.LP
+.lP
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are supported by
 the program.
 .TS
@@ -1635,7 +1678,7 @@ F11	\*(Cs\*2\*3\*(c~
 F12	\*(Cs\*2\*4\*(c~
 _
 .TE
-.LP
+.lP
 Older versions of \fIxterm\fP implement different escape sequences for F1 through F4.
 These can be activated by setting the \fBoldXtermFKeys\fP resource.
 However, since they do not correspond to any hardware terminal, they have been deprecated.
@@ -1674,7 +1717,7 @@ _
 .TE
 For example, shift-F5 would be sent as
 \*(Cs\*1\*5\*;\*2\*(c~
-.LP
+.lP
 If the \fBalwaysUseMods\fP resource is set, the Meta modifier also is
 recognized, making parameters 9 through 16.
 .SH
@@ -1683,7 +1726,7 @@ VT220-Style Function Keys
 However, \fIxterm\fP is most useful as a DEC VT102 or VT220 emulator.
 Set the \fBsunKeyboard\fP resource to true to force a Sun/PC keyboard
 to act like a VT220 keyboard.
-
+.lP
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:
 .TS
@@ -1811,8 +1854,9 @@ Sun-Style Function Keys
 The \fIxterm\fP program provides support for Sun keyboards more directly, by
 a menu toggle that causes it to send Sun-style function key codes rather than VT220.
 Note, however, that the \fIsun\fP and \fIVT100\fP emulations are not really
-compatible.  For example, their wrap-margin behavior differs.
-.LP
+compatible.
+For example, their wrap-margin behavior differs.
+.lP
 Only function keys are altered; keypad and cursor keys are the same.
 The emulation responds identically.
 See the xterm-sun terminfo entry for details.
@@ -1833,7 +1877,7 @@ When the alternate screen buffer is active,
 you cannot scroll back to view saved lines.
 \fBXterm\fP provides control sequences and menu entries
 for switching between the two.
-
+.lP
 Most full-screen applications use terminfo or termcap to obtain
 strings used to start/stop full-screen mode,
 i.e., \fIsmcup\fP and \fIrmcup\fP for terminfo,
@@ -1879,23 +1923,23 @@ This is no longer the case.
 However, there are many applications which still assume that titles are
 set using ISO-8859-1.
 So that is the default behavior.
-.LP
+.lP
 If \fIxterm\fP is running with UTF-8 encoding,
 it is possible to use window- and icon-labels encoded using UTF-8.
 That is because the underlying X libraries (and many, but not all)
 window managers support this feature.
-.LP
+.lP
 The \fButf8Title\fP X resource setting tells \fIxterm\fP to disable
 a reconversion of the title string back to ISO-8859-1,
 allowing the title strings to be interpreted as UTF-8.
 The same feature can be enabled using the title mode control sequence
-described in this summary. 
-.LP
+described in this summary.
+.lP
 Separate from the ability to set the titles,
 \fIxterm\fP provides the ability to query the titles,
 returning them either in ISO-8859-1 or UTF-8.
 This choice is available only while \fIxterm\fP is using UTF-8 encoding.
-.LP
+.lP
 Finally, the characters sent to, or returned by a title control
 are less constrained than the rest of the control sequences.
 To make them more manageable (and constrained), for use in shell scripts,
@@ -1908,10 +1952,11 @@ Mouse Tracking
 .ds RH Mouse Tracking
 .LP
 The VT widget can be set to send the mouse position and other
-information on button presses.  These modes are typically used by
+information on button presses.
+These modes are typically used by
 editors and other full-screen applications that want to make use of
 the mouse.
-
+.lP
 There are six mutually exclusive modes.
 One is DEC Locator mode, enabled by the
 DECELR \*(Cs\*(Ps\*s\*;\*(Ps\*s\*s\*(qu\*s\*z
@@ -1923,7 +1968,7 @@ DECSET \*(Cs\*?\*(Pm\*s\*h
 or
 DECRST \*(Cs\*?\*(Pm\*s\*l
 control sequence.
-
+.lP
 Manifest constants for the parameter values
 are defined in \fBxcharmouse.h\fP as follows:
 .
@@ -1935,35 +1980,42 @@ are defined in \fBxcharmouse.h\fP as follows:
 #define SET_ANY_EVENT_MOUSE         1003
 
 #define SET_FOCUS_EVENT_MOUSE       1004
+
+#define SET_EXT_MODE_MOUSE          1005
 .DE
 .LP
 The motion reporting modes are strictly \fIxterm\fP extensions, and are not
 part of any standard, though they are analogous to the DEC VT200 DECELR
 locator reports.
-
+.lP
 Parameters (such as pointer position and button number) for all mouse
 tracking escape sequences generated by \fIxterm\fP
 encode numeric parameters in a single character as
 \fIvalue\fP+32.
 For example, \*! specifies the value 1.
 The upper left character position on the terminal is denoted as 1,1.
-
+.lP
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.
 It is enabled by specifying parameter 9 to DECSET.
 On button press, \fIxterm\fP sends
 \*(Cs\*M\*(Cb\*(Cx\*(Cy (6 characters).
+.bP
 \*(Cb is button\-1.
+.bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse when the
 button was pressed.
-
+.lP
 Normal tracking mode sends an escape sequence on both button press and
-release.  Modifier key (shift, ctrl, meta) information is also sent.
+release.
+Modifier key (shift, ctrl, meta) information is also sent.
 It is enabled by specifying parameter 1000 to DECSET.
 On button press or release, \fIxterm\fP sends
 \*(Cs\*M\*(Cb\*(Cx\*(Cy.
+.bP
 The low two bits of \*(Cb encode button information:
 0=MB1 pressed, 1=MB2 pressed, 2=MB3 pressed, 3=release.
+.bP
 The next three bits encode the modifiers which were down when the button was
 pressed and are added together:  4=Shift, 8=Meta, 16=Control.
 Note however that the shift and control bits are normally unavailable
@@ -1971,15 +2023,16 @@ because \fIxterm\fP uses the control modifier with mouse for popup menus,
 and the shift modifier is used in the default translations for button events.
 The \fIMeta\fP modifier recognized by \fIxterm\fP is the \fImod1\fP mask,
 and is not necessarily the "Meta" key (see \fIxmodmap\fP).
+.bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.
-
+.lP
 Wheel mice may return buttons 4 and 5.
 Those buttons are represented by the same event codes
 as buttons 1 and 2 respectively,
 except that 64 is added to the event code.
 Release events for the wheel buttons are not reported.
-
+.lP
 Mouse highlight tracking notifies a program of a button press, receives a
 range of lines from the program, highlights the region covered by
 the mouse within that range until button release, and then sends the
@@ -1987,8 +2040,10 @@ program the release coordinates.
 It is enabled by specifying parameter 1001 to DECSET.
 Highlighting is performed only for button 1, though other button events
 can be received.
+.sp
 \fBWarning:\fP use of this mode requires a cooperating program or it will
 hang \fIxterm.\fP
+.sp
 On button press, the same information as for normal tracking is
 generated; \fIxterm\fP then waits for the program to send mouse
 tracking information.
@@ -1998,27 +2053,45 @@ received from the pty:\fP
 The parameters are \fIfunc, startx, starty, firstrow,\fP and \fIlastrow.\fP
 \fIfunc\fP is non-zero to initiate highlight tracking and zero to abort.
 \fIstartx\fP and \fIstarty\fP give the starting x and y location for
-the highlighted region.  The ending location tracks the mouse, but
+the highlighted region.
+The ending location tracks the mouse, but
 will never be above row \fIfirstrow\fP and will always be above row
-\fIlastrow.\fP  (The top of the screen is row 1.)
+\fIlastrow.\fP
+(The top of the screen is row 1.)
 When the button is released, \fIxterm\fP reports the ending position
-one of two ways: if the start and end coordinates are valid text
-locations: \*(Cs\*t\*(Cx\*(Cy.  If either coordinate is past
-the end of the line:
+one of two ways:
+.bP
+if the start and end coordinates are the same locations:
+.br
+\*(Cs\*t\*(Cx\*(Cy.
+.bP
+otherwise:
+.br
 \*(Cs\*T\*(Cx\*(Cy\*(Cx\*(Cy\*(Cx\*(Cy.
+.br
 The parameters are \fIstartx, starty, endx, endy, mousex,\fP and \fImousey.\fP
+.RS
+.IP \- 5
 \fIstartx, starty, endx, \fPand\fI endy\fP give the starting and
-ending character positions of the region.  \fImousex\fP and \fImousey\fP
+ending character positions of the region.
+.IP \- 5
+\fImousex\fP and \fImousey\fP
 give the location of the mouse at button up, which may not be over a
 character.
-
+.RE
+.lP
 Button-event tracking is essentially the same as normal tracking, but
-\fIxterm\fP also reports button-motion events.  Motion events
+\fIxterm\fP also reports button-motion events.
+Motion events
 are reported only if the mouse pointer has moved to a different character
-cell.  It is enabled by specifying parameter 1002 to DECSET.
+cell.
+It is enabled by specifying parameter 1002 to DECSET.
 On button press or release, \fIxterm\fP sends the same codes used by normal
-tracking mode.  On button-motion events, \fIxterm\fP adds 32 to the event code
+tracking mode.
+.bP
+On button-motion events, \fIxterm\fP adds 32 to the event code
 (the third character, \*(Cb).
+.bP
 The other bits of the event code specify button and modifier keys as in normal mode.
 For example, motion into cell x,y with button 1
 down is reported as \*(Cs\*M\*@\*(Cx\*(Cy.
@@ -2026,16 +2099,29 @@ down is reported as \*(Cs\*M\*@\*(Cx\*(Cy.
 Similarly, motion with button 3
 down is reported as \*(Cs\*M\*(cB\*(Cx\*(Cy.
 ( \*(cB = 32 + 2 (button 3) + 32 (motion indicator) ).
-
+.lP
 Any-event mode is the same as button-event mode, except that all motion
 events are reported, even if no mouse button is down.
 It is enabled by specifying 1003 to DECSET.
-
+.lP
 FocusIn/FocusOut can be combined with any of the mouse events since
 it uses a different protocol.
 When set, it causes \fIxterm\fP to send
 \*(Cs\*I when the terminal gains focus, and
 \*(Cs\*O when it loses focus.
+.lP
+Extended mouse mode enables UTF-8 encoding for \*(Cx and \*(Cy under
+all tracking modes, expanding the maximum encodable position from 223 to 2015.
+For positions less than 95, the resulting output is identical under both modes.
+Under extended mouse mode, positions greater than 95
+generate "extra" bytes which will confuse applications which do not treat
+their input as a UTF-8 stream.
+.lP
+NOTE: Under normal mouse mode, positions outside (160,94) result in
+byte pairs which can be interpreted as a single UTF-8 character;
+applications
+which do treat their input as UTF-8 will almost certainly be confused
+unless extended mouse mode is active.
 .
 .br
 .ds RH Tektronix 4014 Mode

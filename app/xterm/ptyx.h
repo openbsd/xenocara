@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.670 2010/06/15 08:34:38 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.671 2010/08/19 09:30:01 Ryan.Johnson Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1377,6 +1377,7 @@ typedef enum {
 	DP_X_MARGIN,
 	DP_X_MORE,
 	DP_X_MOUSE,
+	DP_X_EXT_MOUSE,
 	DP_X_REVWRAP,
 	DP_X_X10MSE,
 #if OPT_BLINK_CURS
@@ -1583,6 +1584,7 @@ typedef struct {
 	long		event_mask;
 	unsigned	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
+	unsigned	ext_mode_mouse; /* support large terminals      */
 	Boolean		send_focus_pos; /* user wants focus in/out info */
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64

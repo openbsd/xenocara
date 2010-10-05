@@ -199,7 +199,6 @@ DCS + p Pt ST
           the terminal database.  The data will be used for the "tcap"
           keyboard configuration's function- and special-keys, as well
           as by the Request Termcap/Terminfo String control.
-
 DCS + q Pt ST
           Request Termcap/Terminfo String (xterm, experimental).  The
           string following the "q" is a list of names encoded in hexa-
@@ -352,6 +351,7 @@ CSI ? Pm h
             Ps = 1 0 0 2  -> Use Cell Motion Mouse Tracking.
             Ps = 1 0 0 3  -> Use All Motion Mouse Tracking.
             Ps = 1 0 0 4  -> Send FocusIn/FocusOut events.
+            Ps = 1 0 0 5  -> Enable Extended Mouse Mode.
             Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
             Ps = 1 0 3 4  -> Interpret "meta" key, sets eighth bit.
@@ -438,6 +438,7 @@ CSI ? Pm l
             Ps = 1 0 0 2  -> Don't use Cell Motion Mouse Tracking.
             Ps = 1 0 0 3  -> Don't use All Motion Mouse Tracking.
             Ps = 1 0 0 4  -> Don't send FocusIn/FocusOut events.
+            Ps = 1 0 0 5  -> Disable Extended Mouse Mode.
             Ps = 1 0 1 0  -> Don't scroll to bottom on tty output
           (rxvt).
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).
@@ -589,6 +590,20 @@ CSI > Ps p
             Ps = 2  -> always hide the pointer If no parameter is given,
           xterm uses the default, which is 1 .
 CSI ! p   Soft terminal reset (DECSTR)
+CSI Ps$ p Request ANSI mode (DECRQM).  For VT300 and up, reply is
+            CSI Ps; Pm$ p
+          where Ps is the mode number as in RM, and Pm is the mode
+          value:
+            0 - not recognized
+            1 - set
+            2 - reset
+            3 - permanently set
+            4 - permanently reset
+CSI ? Ps$ p
+          Request DEC private mode (DECRQM).  For VT300 and up, reply is
+            CSI ? Ps; Pm$ p
+          where Ps is the mode number as in DECSET, Pm is the mode value
+          as in the ANSI DECRQM.
 CSI Ps ; Ps " p
           Set conformance level (DECSCL) Valid values for the first
           parameter:
@@ -627,7 +642,7 @@ CSI ? Pm r
           Restore DEC Private Mode Values.  The value of Ps previously
           saved is restored.  Ps values are the same as for DECSET.
 CSI Pt; Pl; Pb; Pr; Ps$ r
-          Change Attributes in Rectangular Area (DECCARA).
+          Change Attributes in Rectangular Area (DECCARA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7
 CSI s     Save cursor (ANSI.SYS)
@@ -666,7 +681,7 @@ CSI Ps ; Ps ; Ps t
           CSI  9  ;  height ;  width t
             Ps = 2 0  -> Report xterm window's icon label as OSC  L
           label ST
-            Ps = 2 1  -> Report xterm window's title as OSC  L  label ST
+            Ps = 2 1  -> Report xterm window's title as OSC  l  label ST
             Ps = 2 2  ;  0  -> Save xterm icon and window title on
           stack.
             Ps = 2 2  ;  1  -> Save xterm icon title on stack.
@@ -677,9 +692,10 @@ CSI Ps ; Ps ; Ps t
             Ps = 2 3  ;  2  -> Restore xterm window title from stack.
             Ps >= 2 4  -> Resize to Ps lines (DECSLPP)
 CSI Pt; Pl; Pb; Pr; Ps$ t
-          Reverse Attributes in Rectangular Area (DECRARA).
+          Reverse Attributes in Rectangular Area (DECRARA), VT400 and
+          up.
             Pt; Pl; Pb; Pr denotes the rectangle.
-            Ps denotes the attributes to reverse. 1, 4, 5, 7
+            Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7
 CSI > Ps; Ps t
           Set one or more features of the title modes.  Each parameter
           enables a single feature.
@@ -700,13 +716,13 @@ CSI Ps SP u
             Ps = 2 , 3  or 4  -> low
             Ps = 0 , 5 , 6 , 7 , or 8  -> high
 CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
-          Copy Rectangular Area (DECCRA)
+          Copy Rectangular Area (DECCRA, VT400 and up)
             Pt; Pl; Pb; Pr denotes the rectangle.
             Pp denotes the source page.
             Pt; Pl denotes the target location.
             Pp denotes the target page.
 CSI Pt ; Pl ; Pb ; Pr ' w
-          Enable Filter Rectangle (DECEFR)
+          Enable Filter Rectangle (DECEFR), VT420 and up.
           Parameters are [top;left;bottom;right].
           Defines the coordinates of a filter rectangle and activates
           it.  Anytime the locator is detected outside of the filter
@@ -732,7 +748,7 @@ CSI Ps x  Select Attribute Change Extent (DECSACE).
             Ps = 1  -> from start to end position, wrapped
             Ps = 2  -> rectangle (exact).
 CSI Pc; Pt; Pl; Pb; Pr$ x
-          Fill Rectangular Area (DECFRA).
+          Fill Rectangular Area (DECFRA), VT420 and up.
             Pc is the character to use.
             Pt; Pl; Pb; Pr denotes the rectangle.
 CSI Ps ; Pu ' z
@@ -748,7 +764,7 @@ CSI Ps ; Pu ' z
             Pu = 1  -> device physical pixels
             Pu = 2  -> character cells
 CSI Pt; Pl; Pb; Pr$ z
-          Erase Rectangular Area (DECERA).
+          Erase Rectangular Area (DECERA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
 CSI Pm ' {
           Select Locator Events (DECSLE)
@@ -761,7 +777,7 @@ CSI Pm ' {
             Ps = 3  -> report button up transitions
             Ps = 4  -> do not report button up transitions
 CSI Pt; Pl; Pb; Pr$ {
-          Selective Erase Rectangular Area (DECSERA).
+          Selective Erase Rectangular Area (DECSERA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
 CSI Ps ' |
           Request Locator Position (DECRQLP)
@@ -815,7 +831,7 @@ OSC Ps ; Pt BEL
             Ps = 0  -> Change Icon Name and Window Title to Pt
             Ps = 1  -> Change Icon Name to Pt
             Ps = 2  -> Change Window Title to Pt
-            Ps = 3  -> Set X property on top-level window. Pt should be
+            Ps = 3  -> Set X property on top-level window.  Pt should be
           in the form "prop=value", or just "prop" to delete the prop-
           erty
             Ps = 4  ; c ; spec -> Change Color Number c to the color
@@ -932,6 +948,7 @@ OSC Ps ; Pt BEL
             Ps = 1 1 7  -> Reset highlight color.
             Ps = 1 1 8  -> Reset Tektronix cursor color.
 
+
 Privacy Message
 PM Pt ST  xterm implements no PM  functions; Pt is ignored.  Pt need not
           be printable characters.
@@ -951,11 +968,13 @@ have "real" alt and meta keys.  Here is an example:
              clear mod3
              add mod3 = Meta_L
 
+
 The metaSendsEscape resource (and altSendsEscape if altIsNotMeta is set)
 can be used to control the way the Meta modifier applies to ordinary
 keys unless the modifyOtherKeys resource is set:
           - prefix a key with the ESC  character.
           - shift the key from codes 0-127 to 128-255 by adding 128.
+
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes altIsNotMeta is set:
@@ -988,10 +1007,12 @@ this with a PC-style keyboard, so PC-style function keys result.  Sun
 keyboards are similar to PC keyboards.  Both have cursor and scrolling
 operations printed on the keypad, which duplicate the smaller cursor and
 scrolling keypads.
+
 X does not predefine NumLock (used for VT220 keyboards) or Alt (used as
 an extension for the Sun/PC keyboards) as modifiers.  These keys are
 recognized as modifiers when enabled by the numLock resource, or by the
 DECSET 1 0 3 5  control sequence.
+
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the DECCKM escape sequence.
 
@@ -1013,9 +1034,11 @@ also controlled by the DECCKM escape sequence:
                     End        CSI F      SS3 F
                     ----------------------------------
 
+
 The application keypad transmits the following escape sequences depend-
 ing on the mode specified via the DECPNM and DECPAM escape sequences.
 Use the NumLock key to override the application mode.
+
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are
 supported by the program.
 
@@ -1066,6 +1089,7 @@ pose keys.
                        F12        CSI 2 4 ~
                        ---------------------------
 
+
 Older versions of xterm implement different escape sequences for F1
 through F4.  These can be activated by setting the oldXtermFKeys
 resource.  However, since they do not correspond to any hardware termi-
@@ -1096,6 +1120,7 @@ appended before the final character of the control sequence.
                     ---------------------------------
 
 For example, shift-F5 would be sent as CSI 1 5 ; 2 ~
+
 If the alwaysUseMods resource is set, the Meta modifier also is recog-
 nized, making parameters 9 through 16.
 
@@ -1214,6 +1239,7 @@ The xterm program provides support for Sun keyboards more directly, by a
 menu toggle that causes it to send Sun-style function key codes rather
 than VT220.  Note, however, that the sun and VT100 emulations are not
 really compatible.  For example, their wrap-margin behavior differs.
+
 Only function keys are altered; keypad and cursor keys are the same.
 The emulation responds identically.  See the xterm-sun terminfo entry
 for details.
@@ -1261,16 +1287,20 @@ to be the case (and was documented) that window titles had to be
 ISO-8859-1.  This is no longer the case.  However, there are many appli-
 cations which still assume that titles are set using ISO-8859-1.  So
 that is the default behavior.
+
 If xterm is running with UTF-8 encoding, it is possible to use window-
 and icon-labels encoded using UTF-8.  That is because the underlying X
 libraries (and many, but not all) window managers support this feature.
+
 The utf8Title X resource setting tells xterm to disable a reconversion
 of the title string back to ISO-8859-1, allowing the title strings to be
 interpreted as UTF-8.  The same feature can be enabled using the title
 mode control sequence described in this summary.
+
 Separate from the ability to set the titles, xterm provides the ability
 to query the titles, returning them either in ISO-8859-1 or UTF-8.  This
 choice is available only while xterm is using UTF-8 encoding.
+
 Finally, the characters sent to, or returned by a title control are less
 constrained than the rest of the control sequences.  To make them more
 manageable (and constrained), for use in shell scripts, xterm has an
@@ -1300,6 +1330,8 @@ as follows:
 
                 #define SET_FOCUS_EVENT_MOUSE       1004
 
+                #define SET_EXT_MODE_MOUSE          1005
+
 The motion reporting modes are strictly xterm extensions, and are not
 part of any standard, though they are analogous to the DEC VT200 DECELR
 locator reports.
@@ -1312,22 +1344,26 @@ in a single character as value+32.  For example, !  specifies the value
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.  It is enabled by
 specifying parameter 9 to DECSET.  On button press, xterm sends CSI M
-CbCxCy (6 characters).  Cb is button-1.  Cx and Cy are the x and y coor-
-dinates of the mouse when the button was pressed.
+CbCxCy (6 characters).
+o   Cb is button-1.
+o   Cx and Cy are the x and y coordinates of the mouse when the button
+    was pressed.
 
 Normal tracking mode sends an escape sequence on both button press and
 release.  Modifier key (shift, ctrl, meta) information is also sent.  It
 is enabled by specifying parameter 1000 to DECSET.  On button press or
-release, xterm sends CSI M CbCxCy.  The low two bits of Cb encode button
-information: 0=MB1 pressed, 1=MB2 pressed, 2=MB3 pressed, 3=release.
-The next three bits encode the modifiers which were down when the button
-was pressed and are added together:  4=Shift, 8=Meta, 16=Control.  Note
-however that the shift and control bits are normally unavailable because
-xterm uses the control modifier with mouse for popup menus, and the
-shift modifier is used in the default translations for button events.
-The Meta modifier recognized by xterm is the mod1 mask, and is not nec-
-essarily the "Meta" key (see xmodmap).  Cx and Cy are the x and y coor-
-dinates of the mouse event, encoded as in X10 mode.
+release, xterm sends CSI M CbCxCy.
+o   The low two bits of Cb encode button information: 0=MB1 pressed,
+    1=MB2 pressed, 2=MB3 pressed, 3=release.
+o   The next three bits encode the modifiers which were down when the
+    button was pressed and are added together:  4=Shift, 8=Meta, 16=Con-
+    trol.  Note however that the shift and control bits are normally
+    unavailable because xterm uses the control modifier with mouse for
+    popup menus, and the shift modifier is used in the default transla-
+    tions for button events.  The Meta modifier recognized by xterm is
+    the mod1 mask, and is not necessarily the "Meta" key (see xmodmap).
+o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
+    in X10 mode.
 
 Wheel mice may return buttons 4 and 5.  Those buttons are represented by
 the same event codes as buttons 1 and 2 respectively, except that 64 is
@@ -1339,36 +1375,45 @@ a range of lines from the program, highlights the region covered by the
 mouse within that range until button release, and then sends the program
 the release coordinates.  It is enabled by specifying parameter 1001 to
 DECSET.  Highlighting is performed only for button 1, though other but-
-ton events can be received.  Warning: use of this mode requires a coop-
-erating program or it will hang xterm.  On button press, the same infor-
-mation as for normal tracking is generated; xterm then waits for the
-program to send mouse tracking information.  All X events are ignored
-until the proper escape sequence is received from the pty: CSI Ps ; Ps ;
-Ps ; Ps ; Ps T .  The parameters are func, startx, starty, firstrow, and
-lastrow.  func is non-zero to initiate highlight tracking and zero to
-abort.  startx and starty give the starting x and y location for the
-highlighted region.  The ending location tracks the mouse, but will
-never be above row firstrow and will always be above row lastrow.  (The
-top of the screen is row 1.)  When the button is released, xterm reports
-the ending position one of two ways: if the start and end coordinates
-are valid text locations: CSI t CxCy.  If either coordinate is past the
-end of the line: CSI T CxCyCxCyCxCy.  The parameters are startx, starty,
-endx, endy, mousex, and mousey.  startx, starty, endx, and endy give the
-starting and ending character positions of the region.  mousex and
-mousey give the location of the mouse at button up, which may not be
-over a character.
+ton events can be received.
+
+Warning: use of this mode requires a cooperating program or it will hang
+xterm.
+
+On button press, the same information as for normal tracking is gener-
+ated; xterm then waits for the program to send mouse tracking informa-
+tion.  All X events are ignored until the proper escape sequence is
+received from the pty: CSI Ps ; Ps ; Ps ; Ps ; Ps T .  The parameters
+are func, startx, starty, firstrow, and lastrow.  func is non-zero to
+initiate highlight tracking and zero to abort.  startx and starty give
+the starting x and y location for the highlighted region.  The ending
+location tracks the mouse, but will never be above row firstrow and will
+always be above row lastrow.  (The top of the screen is row 1.)  When
+the button is released, xterm reports the ending position one of two
+ways:
+o   if the start and end coordinates are the same locations:
+    CSI t CxCy.
+o   otherwise:
+    CSI T CxCyCxCyCxCy.
+    The parameters are startx, starty, endx, endy, mousex, and mousey.
+    -    startx, starty, endx, and endy give the starting and ending
+         character positions of the region.
+    -    mousex and mousey give the location of the mouse at button up,
+         which may not be over a character.
 
 Button-event tracking is essentially the same as normal tracking, but
 xterm also reports button-motion events.  Motion events are reported
 only if the mouse pointer has moved to a different character cell.  It
 is enabled by specifying parameter 1002 to DECSET.  On button press or
-release, xterm sends the same codes used by normal tracking mode.  On
-button-motion events, xterm adds 32 to the event code (the third charac-
-ter, Cb).  The other bits of the event code specify button and modifier
-keys as in normal mode.  For example, motion into cell x,y with button 1
-down is reported as CSI M @ CxCy.  ( @  = 32 + 0 (button 1) + 32 (motion
-indicator) ).  Similarly, motion with button 3 down is reported as CSI M
-B CxCy.  ( B  = 32 + 2 (button 3) + 32 (motion indicator) ).
+release, xterm sends the same codes used by normal tracking mode.
+o   On button-motion events, xterm adds 32 to the event code (the third
+    character, Cb).
+o   The other bits of the event code specify button and modifier keys as
+    in normal mode.  For example, motion into cell x,y with button 1
+    down is reported as CSI M @ CxCy.  ( @  = 32 + 0 (button 1) + 32
+    (motion indicator) ).  Similarly, motion with button 3 down is
+    reported as CSI M B CxCy.  ( B  = 32 + 2 (button 3) + 32 (motion
+    indicator) ).
 
 Any-event mode is the same as button-event mode, except that all motion
 events are reported, even if no mouse button is down.  It is enabled by
@@ -1377,6 +1422,18 @@ specifying 1003 to DECSET.
 FocusIn/FocusOut can be combined with any of the mouse events since it
 uses a different protocol.  When set, it causes xterm to send CSI I
 when the terminal gains focus, and CSI O  when it loses focus.
+
+Extended mouse mode enables UTF-8 encoding for Cx and Cy under all
+tracking modes, expanding the maximum encodable position from 223 to
+2015.  For positions less than 95, the resulting output is identical
+under both modes.  Under extended mouse mode, positions greater than 95
+generate "extra" bytes which will confuse applications which do not
+treat their input as a UTF-8 stream.
+
+NOTE: Under normal mouse mode, positions outside (160,94) result in byte
+pairs which can be interpreted as a single UTF-8 character; applications
+which do treat their input as UTF-8 will almost certainly be confused
+unless extended mouse mode is active.
 
 Tektronix 4014 Mode
 Most of these sequences are standard Tektronix 4014 control sequences.

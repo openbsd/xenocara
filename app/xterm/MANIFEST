@@ -1,4 +1,4 @@
-MANIFEST for xterm-260, version xterm-260
+MANIFEST for xterm-262, version xterm-262
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -36,7 +36,6 @@ config.guess                    configure script: guess the system type
 config.sub                      configure script: validate system type
 configure                       generated
 configure.in                    template for generating configure script
-configure                       Configuration script for UNIX
 ctlseqs.ms                      documentation: Xterm Control Sequences
 ctlseqs.txt                     generated rendition of ctlseqs.ms
 cursor.c                        VT100 low-level cursor movement

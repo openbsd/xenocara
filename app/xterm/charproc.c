@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1071 2010/06/28 09:03:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1076 2010/08/29 22:51:09 tom Exp $ */
 
 /*
 
@@ -1223,6 +1223,7 @@ which_table(Const PARSE_T * table)
 #if OPT_DEC_RECTOPS
     else WHICH_TABLE (csi_dollar_table);
     else WHICH_TABLE (csi_star_table);
+    else WHICH_TABLE (csi_dec_dollar_table);
 #endif
 #if OPT_WIDE_CHARS
     else WHICH_TABLE (esc_pct_table);
@@ -2934,15 +2935,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 #if OPT_DEC_RECTOPS
 	case CASE_CSI_DOLLAR_STATE:
+	    TRACE(("CASE_CSI_DOLLAR_STATE\n"));
 	    /* csi dollar ($) */
-	    if (screen->vtXX_level >= 4)
+	    if (screen->vtXX_level >= 3)
 		sp->parsestate = csi_dollar_table;
 	    else
 		sp->parsestate = eigtable;
 	    break;
 
 	case CASE_CSI_STAR_STATE:
-	    /* csi dollar (*) */
+	    TRACE(("CASE_CSI_STAR_STATE\n"));
+	    /* csi star (*) */
 	    if (screen->vtXX_level >= 4)
 		sp->parsestate = csi_star_table;
 	    else
@@ -2950,34 +2953,42 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECCRA:
-	    TRACE(("CASE_DECCRA - Copy rectangular area\n"));
-	    xtermParseRect(xw, nparam, param, &myRect);
-	    ScrnCopyRectangle(xw, &myRect, nparam - 5, param + 5);
+	    if (screen->vtXX_level >= 4) {
+		TRACE(("CASE_DECCRA - Copy rectangular area\n"));
+		xtermParseRect(xw, nparam, param, &myRect);
+		ScrnCopyRectangle(xw, &myRect, nparam - 5, param + 5);
+	    }
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECERA:
-	    TRACE(("CASE_DECERA - Erase rectangular area\n"));
-	    xtermParseRect(xw, nparam, param, &myRect);
-	    ScrnFillRectangle(xw, &myRect, ' ', 0, True);
+	    if (screen->vtXX_level >= 4) {
+		TRACE(("CASE_DECERA - Erase rectangular area\n"));
+		xtermParseRect(xw, nparam, param, &myRect);
+		ScrnFillRectangle(xw, &myRect, ' ', 0, True);
+	    }
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECFRA:
-	    TRACE(("CASE_DECFRA - Fill rectangular area\n"));
-	    if (nparam > 0
-		&& ((param[0] >= 32 && param[0] <= 126)
-		    || (param[0] >= 160 && param[0] <= 255))) {
-		xtermParseRect(xw, nparam - 1, param + 1, &myRect);
-		ScrnFillRectangle(xw, &myRect, param[0], xw->flags, True);
+	    if (screen->vtXX_level >= 4) {
+		TRACE(("CASE_DECFRA - Fill rectangular area\n"));
+		if (nparam > 0
+		    && ((param[0] >= 32 && param[0] <= 126)
+			|| (param[0] >= 160 && param[0] <= 255))) {
+		    xtermParseRect(xw, nparam - 1, param + 1, &myRect);
+		    ScrnFillRectangle(xw, &myRect, param[0], xw->flags, True);
+		}
 	    }
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECSERA:
-	    TRACE(("CASE_DECSERA - Selective erase rectangular area\n"));
-	    xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
-	    ScrnWipeRectangle(xw, &myRect);
+	    if (screen->vtXX_level >= 4) {
+		TRACE(("CASE_DECSERA - Selective erase rectangular area\n"));
+		xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
+		ScrnWipeRectangle(xw, &myRect);
+	    }
 	    ResetState(sp);
 	    break;
 
@@ -2988,17 +2999,39 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECCARA:
-	    TRACE(("CASE_DECCARA - Change attributes in rectangular area\n"));
-	    xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
-	    ScrnMarkRectangle(xw, &myRect, False, nparam - 4, param + 4);
+	    if (screen->vtXX_level >= 4) {
+		TRACE(("CASE_DECCARA - Change attributes in rectangular area\n"));
+		xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
+		ScrnMarkRectangle(xw, &myRect, False, nparam - 4, param + 4);
+	    }
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECRARA:
-	    TRACE(("CASE_DECRARA - Reverse attributes in rectangular area\n"));
-	    xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
-	    ScrnMarkRectangle(xw, &myRect, True, nparam - 4, param + 4);
+	    if (screen->vtXX_level >= 4) {
+		TRACE(("CASE_DECRARA - Reverse attributes in rectangular area\n"));
+		xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
+		ScrnMarkRectangle(xw, &myRect, True, nparam - 4, param + 4);
+	    }
 	    ResetState(sp);
+	    break;
+
+	case CASE_RQM:
+	    TRACE(("CASE_RQM\n"));
+	    do_rpm(xw, nparam, param);
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECRQM:
+	    TRACE(("CASE_DECRQM\n"));
+	    do_decrpm(xw, nparam, param);
+	    ResetState(sp);
+	    break;
+
+	case CASE_CSI_DEC_DOLLAR_STATE:
+	    TRACE(("CASE_CSI_DEC_DOLLAR_STATE\n"));
+	    /* csi ? dollar ($) */
+	    sp->parsestate = csi_dec_dollar_table;
 	    break;
 #else
 	case CASE_CSI_DOLLAR_STATE:
@@ -3008,6 +3041,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_CSI_STAR_STATE:
 	    /* csi dollar (*) */
+	    sp->parsestate = eigtable;
+	    break;
+
+	case CASE_CSI_DEC_DOLLAR_STATE:
+	    /* csi ? dollar ($) */
 	    sp->parsestate = eigtable;
 	    break;
 #endif /* OPT_DEC_RECTOPS */
@@ -4322,6 +4360,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    set_bool_mode(screen->send_focus_pos);
 	    break;
 #endif
+	case SET_EXT_MODE_MOUSE:
+	    set_bool_mode(screen->ext_mode_mouse);
+	    break;
 	case 1010:		/* rxvt */
 	    set_bool_mode(screen->scrollttyoutput);
 	    update_scrollttyoutput();
@@ -4331,7 +4372,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    update_scrollkey();
 	    break;
 	case 1034:
-	    set_bool_mode(TScreenOf(xw)->input_eight_bits);
+	    set_bool_mode(screen->input_eight_bits);
 	    update_alt_esc();
 	    break;
 #if OPT_NUM_LOCK
@@ -4524,6 +4565,9 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_X_FOCUS, screen->send_focus_pos);
 	    break;
 #endif
+	case SET_EXT_MODE_MOUSE:
+	    DoSM(DP_X_EXT_MOUSE, screen->ext_mode_mouse);
+	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
 		CursorSave(xw);
@@ -4692,6 +4736,9 @@ restoremodes(XtermWidget xw)
 	    DoRM(DP_X_FOCUS, screen->send_focus_pos);
 	    break;
 #endif
+	case SET_EXT_MODE_MOUSE:
+	    DoRM(DP_X_EXT_MOUSE, screen->ext_mode_mouse);
+	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
 		CursorRestore(xw);
@@ -5205,13 +5252,14 @@ unparseputs(XtermWidget xw, const char *s)
 void
 unparseputc(XtermWidget xw, int c)
 {
-    IChar *buf = TScreenOf(xw)->unparse_bfr;
+    TScreen *screen = TScreenOf(xw);
+    IChar *buf = screen->unparse_bfr;
     unsigned len;
 
-    if ((TScreenOf(xw)->unparse_len + 2) >= sizeof(TScreenOf(xw)->unparse_bfr))
+    if ((screen->unparse_len + 2) >= sizeof(screen->unparse_bfr))
 	unparse_end(xw);
 
-    len = TScreenOf(xw)->unparse_len;
+    len = screen->unparse_len;
 
 #if OPT_TCAP_QUERY
     /*
@@ -5220,7 +5268,7 @@ unparseputc(XtermWidget xw, int c)
      * printable ASCII (counting tab, carriage return, etc).  For now,
      * just use hexadecimal for the whole thing.
      */
-    if (TScreenOf(xw)->tc_query_code >= 0) {
+    if (screen->tc_query_code >= 0) {
 	char tmp[3];
 	sprintf(tmp, "%02X", c & 0xFF);
 	buf[len++] = CharOf(tmp[0]);
@@ -5231,7 +5279,7 @@ unparseputc(XtermWidget xw, int c)
 	buf[len++] = '\n';
     }
 
-    TScreenOf(xw)->unparse_len = len;
+    screen->unparse_len = len;
 
     /* If send/receive mode is reset, we echo characters locally */
     if ((xw->keyboard.flags & MODE_SRM) == 0) {
@@ -7551,8 +7599,8 @@ VTSetValues(Widget cur,
     if (!fonts_redone
 	&& (T_COLOR(TScreenOf(curvt), TEXT_CURSOR) !=
 	    T_COLOR(TScreenOf(newvt), TEXT_CURSOR))) {
-	set_cursor_gcs(newvt);
-	refresh_needed = True;
+	if (set_cursor_gcs(newvt))
+	    refresh_needed = True;
     }
     if (curvt->misc.re_verse != newvt->misc.re_verse) {
 	newvt->flags ^= REVERSE_VIDEO;
@@ -8232,6 +8280,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
 	screen->send_focus_pos = OFF;
+	screen->ext_mode_mouse = OFF;
 	screen->waitingForTrackInfo = False;
 	screen->eventMode = NORMAL;
 
@@ -8625,7 +8674,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     return;
 }
 
-void
+Bool
 set_cursor_gcs(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
@@ -8634,7 +8683,7 @@ set_cursor_gcs(XtermWidget xw)
     Pixel cc = T_COLOR(screen, TEXT_CURSOR);
     Pixel fg = T_COLOR(screen, TEXT_FG);
     Pixel bg = T_COLOR(screen, TEXT_BG);
-    Boolean changed = False;
+    Bool changed = False;
 
     /*
      * Let's see, there are three things that have "color":
@@ -8693,6 +8742,7 @@ set_cursor_gcs(XtermWidget xw)
     if (changed) {
 	TRACE(("...set_cursor_gcs - done\n"));
     }
+    return changed;
 }
 
 #ifdef NO_LEAKS

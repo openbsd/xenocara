@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.377 2010/06/04 09:27:07 tom Exp $ */
+/* $XTermId: button.c,v 1.381 2010/08/23 23:25:57 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -163,6 +163,40 @@ static void TrackText(XtermWidget xw, const CELL * first, const CELL * last);
 static void _OwnSelection(XtermWidget xw, String * selections, Cardinal count);
 static void do_select_end(XtermWidget xw, XEvent * event, String * params,
 			  Cardinal *num_params, Bool use_cursor_loc);
+
+#define MOUSE_LIMIT (255 - 32)
+
+/* Send SET_EXT_SIZE_MOUSE to enable offsets up to EXT_MOUSE_LIMIT */
+#define EXT_MOUSE_LIMIT (2047 - 32)
+#define EXT_MOUSE_START (127 - 32)
+
+static unsigned
+EmitMousePosition(TScreen * screen, Char line[], unsigned count, int value)
+{
+    int mouse_limit = (screen->ext_mode_mouse
+		       ? EXT_MOUSE_LIMIT
+		       : MOUSE_LIMIT);
+
+    /* Add pointer position to key sequence
+
+     * In extended mode we encode large positions as two-byte UTF-8 
+     *
+     * NOTE: historically, it was possible to emit 256, which became
+     * zero by truncation to 8 bits. While this was arguably a bug,
+     * it's also somewhat useful as a past-end marker. We preserve
+     * this behavior for both normal and extended mouse modes.
+     */
+    if (value == mouse_limit) {
+	line[count++] = CharOf(0);
+    } else if (!screen->ext_mode_mouse || value < EXT_MOUSE_START) {
+	line[count++] = CharOf(' ' + value + 1);
+    } else {
+	value += ' ' + 1;
+	line[count++] = CharOf(0xC0 + (value >> 6));
+	line[count++] = CharOf(0x80 + (value & 0x3F));
+    }
+    return count;
+}
 
 Bool
 SendMousePosition(XtermWidget xw, XEvent * event)
@@ -2167,7 +2201,7 @@ EndExtend(XtermWidget xw,
     CELL cell;
     unsigned count;
     TScreen *screen = TScreenOf(xw);
-    Char line[9];
+    Char line[20];
 
     if (use_cursor_loc) {
 	cell = screen->cursorp;
@@ -2190,17 +2224,17 @@ EndExtend(XtermWidget xw,
 		&& isSameCELL(&cell, &(screen->endSel))) {
 		/* Use short-form emacs select */
 		line[count++] = 't';
-		line[count++] = CharOf(' ' + screen->endSel.col + 1);
-		line[count++] = CharOf(' ' + screen->endSel.row + 1);
+		count = EmitMousePosition(screen, line, count, screen->endSel.col);
+		count = EmitMousePosition(screen, line, count, screen->endSel.row);
 	    } else {
 		/* long-form, specify everything */
 		line[count++] = 'T';
-		line[count++] = CharOf(' ' + screen->startSel.col + 1);
-		line[count++] = CharOf(' ' + screen->startSel.row + 1);
-		line[count++] = CharOf(' ' + screen->endSel.col + 1);
-		line[count++] = CharOf(' ' + screen->endSel.row + 1);
-		line[count++] = CharOf(' ' + cell.col + 1);
-		line[count++] = CharOf(' ' + cell.row + 1);
+		count = EmitMousePosition(screen, line, count, screen->startSel.col);
+		count = EmitMousePosition(screen, line, count, screen->startSel.row);
+		count = EmitMousePosition(screen, line, count, screen->endSel.col);
+		count = EmitMousePosition(screen, line, count, screen->endSel.row);
+		count = EmitMousePosition(screen, line, count, cell.col);
+		count = EmitMousePosition(screen, line, count, cell.row);
 	    }
 	    v_write(screen->respond, line, count);
 	    TrackText(xw, &zeroCELL, &zeroCELL);
@@ -3991,14 +4025,13 @@ BtnCode(XButtonEvent * event, int button)
     return CharOf(result);
 }
 
-#define MOUSE_LIMIT (255 - 32)
-
 static void
 EditorButton(XtermWidget xw, XButtonEvent * event)
 {
     TScreen *screen = TScreenOf(xw);
     int pty = screen->respond;
-    Char line[6];
+    int mouse_limit = screen->ext_mode_mouse ? EXT_MOUSE_LIMIT : MOUSE_LIMIT;
+    Char line[10];
     int row, col;
     int button;
     unsigned count = 0;
@@ -4018,15 +4051,17 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	row = 0;
     else if (row > screen->max_row)
 	row = screen->max_row;
-    else if (row > MOUSE_LIMIT)
-	row = MOUSE_LIMIT;
 
     if (col < 0)
 	col = 0;
     else if (col > screen->max_col)
 	col = screen->max_col;
-    else if (col > MOUSE_LIMIT)
-	col = MOUSE_LIMIT;
+
+    /* Limit to representable mouse dimensions */
+    if (row > mouse_limit)
+	row = mouse_limit;
+    if (col > mouse_limit)
+	col = mouse_limit;
 
     /* Build key sequence starting with \E[M */
     if (screen->control_eight_bits) {
@@ -4086,12 +4121,11 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	screen->mouse_row = row;
 	screen->mouse_col = col;
 
-	/* Add pointer position to key sequence */
-	line[count++] = CharOf(' ' + col + 1);
-	line[count++] = CharOf(' ' + row + 1);
+	TRACE(("mouse at %d,%d button+mask = %#x\n", row, col, line[count - 1]));
 
-	TRACE(("mouse at %d,%d button+mask = %#x\n", row, col,
-	       (screen->control_eight_bits) ? line[2] : line[3]));
+	/* Add pointer position to key sequence */
+	count = EmitMousePosition(screen, line, count, col);
+	count = EmitMousePosition(screen, line, count, row);
 
 	/* Transmit key sequence to process running under xterm */
 	v_write(pty, line, count);
