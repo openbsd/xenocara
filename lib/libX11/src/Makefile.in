@@ -301,7 +301,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 #
 # Building ks_tables.h requires the makekeys utility
 #
-KEYSYMDEF = @KEYSYMDEF@
+KEYSYMDEFS = @KEYSYMDEFS@
 LAUNCHD = @LAUNCHD@
 LDFLAGS = @LDFLAGS@
 LDFLAGS_FOR_BUILD = @LDFLAGS_FOR_BUILD@
@@ -537,7 +537,7 @@ libX11_la_SOURCES = AllCells.c AllowEv.c AllPlanes.c AutoRep.c \
 	Xresinternal.h Xrm.c XrmI.h $(am__append_1) $(am__append_2) \
 	$(am__append_3) $(am__append_4) $(am__append_6)
 x11datadir = @X11_DATADIR@
-x11data_DATA = XKeysymDB XErrorDB
+x11data_DATA = XErrorDB
 EXTRA_DIST = \
 	$(x11data_DATA) \
 	os2Stubs.c \
@@ -1288,8 +1288,8 @@ preprocess: $(patsubst %.c,%.ii,$(libX11_la_SOURCES))
 @MAKE_LINT_LIB_TRUE@$(LINTLIB): $(libX11_la_SOURCES)
 @MAKE_LINT_LIB_TRUE@	$(AM_V_GEN)$(LINT) -y -oX11 -x $(ALL_LINT_FLAGS) $(lintlib_src)
 
-ks_tables.h: $(KEYSYMDEF) $(top_builddir)/src/util/makekeys$(EXEEXT)
-	$(top_builddir)/src/util/makekeys < $(KEYSYMDEF) > ks_tables_h
+ks_tables.h: $(KEYSYMDEFS) $(top_builddir)/src/util/makekeys$(EXEEXT)
+	$(top_builddir)/src/util/makekeys $(KEYSYMDEFS) > ks_tables_h
 	mv ks_tables_h $@
 
 $(top_builddir)/src/util/makekeys$(EXEEXT): force

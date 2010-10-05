@@ -1,3 +1,81 @@
+commit 7f5a8fac9ca8b4e90b1feea43cd562265837ed4c
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Sep 20 16:04:42 2010 +1000
+
+    libX11 1.3.6
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 6838a5beeb6c6c614e371fe7df5fa7804065e55e
+Author: Jens Petersen <petersen@redhat.com>
+Date:   Mon Aug 23 18:08:10 2010 -0700
+
+    Bug 29773: aliases for nb_NO.utf8 and nn_NO.utf8
+    
+    <https://bugs.freedesktop.org/show_bug.cgi?id=29773>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e90ec71b870ac15f52e41162e61974d16b63d3a2
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 9 18:13:13 2010 +0100
+
+    XStringToKeysym: Cope with 0x1234cafe-style input
+    
+    If we get input in the style of 0xdeadbeef, just return that exact
+    keysym.  Introduces a dependency on strtoul, which I'm told is OK on all
+    the systems we care about.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit b3ff091678e900128f209b9d64bfac36228a355b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jul 8 16:49:51 2010 +0100
+
+    XStringToKeysym: Check strdup() return value
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 50b4b07073bd46cbef3627c160a240bd2a2b99d5
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 15 18:49:43 2010 +0100
+
+    Delete now-redundant XKeysymDB
+    
+    Since XStringToKeysym now supports all the vendor keysyms, just delete
+    our XKeysymDB, which was incomplete at best, misleading at worst, and
+    always an annoyance.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a32370c0854c8ad6f526dd997f14dbe3f466d4db
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 15 18:48:48 2010 +0100
+
+    makekeys: Scan vendor keysyms as well as core
+    
+    Since we can't really live without vendor keysyms, scan them all in to
+    generate ks_tables.h, rather than only doing the core ones, and leaving
+    the vendor syms to be manually synchronised with XKeysymDB.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77cb2bda308b39dc0a8267f18d92e7b4bf178aa1
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 15 18:47:37 2010 +0100
+
+    XStringToKeysym: Special case for XF86 keysyms
+    
+    Some XFree86 keysyms were in XKeysymDB as XF86_foo, despite really being
+    XF86foo.  So, if we get to the bottom of XStringToKeysym and haven't
+    found our XF86_foo, try it again as XF86foo.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8e3877aa50f3092c8fdfd916b072720439bc818b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Aug 11 16:24:28 2010 -0700
@@ -217,7 +295,7 @@ Date:   Wed May 12 16:42:18 2010 -0700
     Reviewed-by: Jamey Sharp <jamey@minilop.net>
 
 commit fd82552d5c0ce1931f29006a0c36f5e03cf8577e
-Merge: aae2a4a... 933aee1...
+Merge: aae2a4a 933aee1
 Author: Jamey Sharp <jamey@minilop.net>
 Date:   Mon May 10 16:51:24 2010 -0700
 
@@ -2913,7 +2991,7 @@ Date:   Tue Jun 10 20:07:30 2008 +0300
     Add some Khmer digraphs to all locales with a Compose.pre.
 
 commit e54cffb649b1622c17457e470cfab8cc56d38c97
-Merge: 19802cc... 721b574...
+Merge: 19802cc 721b574
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Tue Jun 10 20:04:30 2008 +0300
 
@@ -2932,7 +3010,7 @@ Date:   Wed May 28 17:31:59 2008 +0930
     Require xproto 7.0.13 and libxcb 1.1.90 (for GenericEvents)
 
 commit e9195db7257e418f83707233baeeb84b225caf4f
-Merge: c34f76f... a7f8556...
+Merge: c34f76f a7f8556
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu May 22 12:14:28 2008 +0930
 
@@ -2968,7 +3046,7 @@ Date:   Mon May 12 21:46:24 2008 +0930
     Build with xcb as transport layer highly recommended.
 
 commit c9b2ff1e6a607463993afa4a8d085857d97cc2f3
-Merge: 17d7dcb... 9129057...
+Merge: 17d7dcb 9129057
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon May 12 17:58:37 2008 +0930
 
@@ -3175,7 +3253,7 @@ Date:   Sat Dec 22 21:45:23 2007 +0100
     X.Org bug#13786 <http://bugs.freedesktop.org/show_bug.cgi?id=13786>
 
 commit 32115c563b87d2f37e3f9de70fbd0f4d9e424aea
-Merge: 8f0bd3f... e8d4cef...
+Merge: 8f0bd3f e8d4cef
 Author: James Cloos <cloos@jhcloos.com>
 Date:   Fri Dec 14 22:43:47 2007 -0500
 
@@ -3206,14 +3284,14 @@ Date:   Mon Dec 10 23:00:44 2007 -0800
     Added launchd support.
 
 commit 17d7dcbfced4a9417b33507bd3fd9b7dd8268242
-Merge: 5dfefd3... 13ac804...
+Merge: 5dfefd3 13ac804
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu Dec 6 14:08:29 2007 +1030
 
     Merge branch 'master' into xge
 
 commit 5dfefd3829d3ba7e41d5db0ad28e9dfee92fadd5
-Merge: a68a1cd... eff33ae...
+Merge: a68a1cd eff33ae
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu Dec 6 13:57:09 2007 +1030
 
@@ -3269,7 +3347,7 @@ Date:   Tue Dec 4 17:25:39 2007 -0500
     2] https://bugs.freedesktop.org/show_bug.cgi?id=5129
 
 commit 02e04059c89e175f51647e3b031344f743286b34
-Merge: 1254c57... b57129e...
+Merge: 1254c57 b57129e
 Author: James Cloos <cloos@jhcloos.com>
 Date:   Tue Dec 4 06:55:04 2007 -0500
 
@@ -3447,7 +3525,7 @@ Date:   Tue Jan 2 08:40:00 2007 -0800
     X.Org Bugzilla #9516 <https://bugs.freedesktop.org/show_bug.cgi?id=9516>
 
 commit d8fe979fc929833e8c754aed32641786d5a0622b
-Merge: 21ca953... 4ec1723...
+Merge: 21ca953 4ec1723
 Author: James Cloos <cloos@jhcloos.com>
 Date:   Mon Aug 20 15:34:50 2007 -0400
 
@@ -4067,7 +4145,7 @@ Date:   Sat Dec 16 00:45:19 2006 +0200
     Since XlibConf.h is built by configure, don't distribute it.
 
 commit dd1705ced2cac6b4b6b21e79272fcf9bed4bf376
-Merge: 129bbb9... 769b985...
+Merge: 129bbb9 769b985
 Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
 Date:   Thu Dec 14 14:23:20 2006 -0600
 
@@ -4307,7 +4385,7 @@ Date:   Sat Oct 7 21:00:36 2006 -0700
     Release libX11 1.1 RC1 (1.0.99.1).
 
 commit bf237409c5fce32c557d298f62f44d456c2b5bc8
-Merge: ba47719... 2d426d1...
+Merge: ba47719 2d426d1
 Author: Jamey Sharp <jamey@minilop.net>
 Date:   Sat Oct 7 21:07:16 2006 -0700
 
@@ -4744,7 +4822,7 @@ Date:   Sat Jun 3 13:51:51 2006 +0300
     (cherry picked from e3acee88cfcc4ef0fa8a7db39763a5ebe2e985cb commit)
 
 commit c336eb6b80a6f91da1d0b3d28634a2cfde324670
-Merge: 33556ca... ad9ebbd...
+Merge: 33556ca ad9ebbd
 Author: Donnie Berkholz <donnie@comet.(none)>
 Date:   Thu Jun 22 14:25:35 2006 -0700
 
@@ -4757,14 +4835,14 @@ Date:   Thu Jun 22 17:20:59 2006 +0300
     Bump to 1.0.99.0 to avoid confusion.
 
 commit efedfd68e31bcee2d21ac340be8dc9e1825ec890
-Merge: e3acee8... 4b8eb5d...
+Merge: e3acee8 4b8eb5d
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Jun 22 16:53:45 2006 +0300
 
     Merge branch 'master' of git+ssh://git.freedesktop.org/srv/git.freedesktop.org/git/xorg/lib/libX11
 
 commit 4b8eb5d4a1da73a94b5a6ab12e34784aae4c79c5
-Merge: 5169d0e... eff50c9...
+Merge: 5169d0e eff50c9
 Author: Matthieu Herrb <matthieu@deville.herrb.com>
 Date:   Tue Jun 20 21:05:15 2006 +0200
 
@@ -5097,7 +5175,7 @@ Date:   Wed May 10 14:51:37 2006 +0300
     Fix typo (be_BG.UTF-8 rather than bg_BG.UTF-8) in locale.alias.pre.
 
 commit 9cac8c9824874ca7d835f001a4efa910b7fdd822
-Merge: 19b8840... e514bc8...
+Merge: 19b8840 e514bc8
 Author: Daniel Stone <daniels@preemptive.fooishbar.org>
 Date:   Wed May 10 14:50:37 2006 +0300
 
@@ -5190,7 +5268,7 @@ Date:   Fri Mar 17 15:58:39 2006 +0200
     Properly clip bounds when only one point is defining an outline.
 
 commit e876efb8aa410f2f5c87aaaa7042f847c4ff96f7
-Merge: be266b2... f71ea0b...
+Merge: be266b2 f71ea0b
 Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
 Date:   Sat Mar 11 15:40:35 2006 +0100
 
