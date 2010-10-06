@@ -80,10 +80,14 @@ previously specified options, use the \fI-option\fP flag with an empty
 argument first.
 .TP 8
 .B \-print
-With this option the \fBsetxkbmap\fP just prints component names in a format
+With this option \fBsetxkbmap\fP just prints component names in a format
 acceptable by \fBxkbcomp\fP (an XKB keymap compiler) and exits. The option
 can be used for tests instead of a verbose option and in cases when one needs
 to run both the \fBsetxkbmap\fP and the \fBxkbcomp\fP in chain (see below).
+.TP 8
+.B \-query
+With this option \fBsetxkbmap\fP just prints the current rules, model,
+layout, variant, and options, then exits.
 .TP 8
 .B \-rules \fIfile\fP
 Specifies the name of the rules file used to resolve the requested layout

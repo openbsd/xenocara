@@ -48,7 +48,7 @@
 #define	DFLT_XKB_CONFIG_ROOT "/usr/share/X11/xkb"
 #endif
 #ifndef DFLT_XKB_RULES_FILE
-#define	DFLT_XKB_RULES_FILE __XKBDEFRULES__
+#define	DFLT_XKB_RULES_FILE "xorg"
 #endif
 #ifndef DFLT_XKB_LAYOUT
 #define	DFLT_XKB_LAYOUT "us"
@@ -85,6 +85,7 @@
 
 /***====================================================================***/
 static Bool print = False;
+static Bool query = False;
 static Bool synch = False;
 static int verbose = 5;
 
@@ -240,6 +241,7 @@ usage(int argc, char **argv)
     MSG("-model <name>       Specifies model used to choose component names\n");
     MSG("-option <name>      Adds an option used to choose component names\n");
     MSG("-print              Print a complete xkb_keymap description and exit\n");
+    MSG("-query              Print the current layout settings and exit\n");
     MSG("-rules <name>       Name of rules file to use\n");
     MSG("-symbols <name>     Specifies symbols component name\n");
     MSG("-synch              Synchronize request w/X server\n");
@@ -254,6 +256,8 @@ dumpNames(Bool wantRules, Bool wantCNames)
 {
     if (wantRules)
     {
+        if (svValue[RULES_NDX])
+            MSG1("rules:      %s\n", svValue[RULES_NDX]);
         if (svValue[MODEL_NDX])
             MSG1("model:      %s\n", svValue[MODEL_NDX]);
         if (svValue[LAYOUT_NDX])
@@ -430,6 +434,8 @@ parseArgs(int argc, char **argv)
         }
         else if (streq(argv[i], "-print"))
             print = True;
+        else if (streq(argv[i], "-query"))
+            query = True;
         else if (streq(argv[i], "-rules"))
             ok = setOptString(&i, argc, argv, RULES_NDX, FROM_CMD_LINE);
         else if (streq(argv[i], "-symbols"))
@@ -547,7 +553,7 @@ getDisplay(int argc, char **argv)
 /***====================================================================***/
 
 /**
- * Retrieve xkb values from th the XKB_RULES_NAMES property and store their
+ * Retrieve xkb values from the XKB_RULES_NAMES property and store their
  * contents in svValues.
  * If the property cannot be read, the built-in defaults are used.
  *
@@ -977,7 +983,7 @@ applyComponentNames(void)
         dumpNames(False, True);
     }
     /* Upload the new description to the server. */
-    if (dpy && !print)
+    if (dpy && !print && !query)
     {
         XkbComponentNamesRec cmdNames;
         cmdNames.types = svValue[TYPES_NDX];
@@ -1007,6 +1013,10 @@ applyComponentNames(void)
     if (print)
     {
         printKeymap();
+    }
+    if (query)
+    {
+	dumpNames(True, False);
     }
     return True;
 }

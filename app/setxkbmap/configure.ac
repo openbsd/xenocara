@@ -21,21 +21,22 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(setxkbmap,[1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],setxkbmap)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([setxkbmap],
+	[1.2.0],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+	[setxkbmap])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	  [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 
 AM_CONFIG_HEADER(config.h)
 
-AC_PROG_CC
-AC_PROG_INSTALL
-
-XORG_CWARNFLAGS
+XORG_DEFAULT_OPTIONS
 
 AC_ARG_WITH(xkb-config-root,
         AC_HELP_STRING([--with-xkb-config-root=<paths>],
@@ -46,15 +47,8 @@ AC_SUBST([XKBCONFIGROOT])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(SETXKBMAP, xkbfile x11)
-SETXKBMAP_CFLAGS="$CWARNFLAGS $SETXKBMAP_CFLAGS"
-AC_SUBST(SETXKBMAP_CFLAGS)
-AC_SUBST(SETXKBMAP_LIBS)
 
 # Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
 AC_OUTPUT([Makefile])
