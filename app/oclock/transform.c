@@ -47,7 +47,7 @@ TranslatePoints(TPoint *points, int n_points,
 
 	xpoints = (XPoint *) malloc ((unsigned)n_points * sizeof (*xpoints));
 	if (!xpoints)
-		return 0;
+		return NULL;
 	for (i = 0; i < n_points; i++) {
 		xpoints[i].x = Xx(points[i].x + xoff, points[i].y + yoff, t);
 		xpoints[i].y = Xy(points[i].x + xoff, points[i].y + yoff, t);
@@ -60,15 +60,8 @@ TranslatePoints(TPoint *points, int n_points,
 }
 
 void
-TFillPolygon (dpy, d, gc, t, points, n_points, shape, mode)
-register Display	*dpy;
-Drawable		d;
-GC			gc;
-Transform		*t;
-TPoint			*points;
-int			n_points;
-int			shape;
-int			mode;
+TFillPolygon (register Display *dpy, Drawable d, GC gc, Transform *t,
+	      TPoint *points, int n_points, int shape, int mode)
 {
 	XPoint	*xpoints;
 
@@ -81,13 +74,9 @@ int			mode;
 }
 
 void
-TDrawArc (dpy, d, gc, t, x, y, width, height, angle1, angle2)
-	register Display	*dpy;
-	Drawable		d;
-	GC			gc;
-	Transform		*t;
-	double			x, y, width, height;
-	int			angle1, angle2;
+TDrawArc (register Display *dpy, Drawable d, GC gc, Transform *t,
+	  double x, double y, double width, double height,
+	  int angle1, int angle2)
 {
 	int	xx, xy, xw, xh;
 
@@ -107,13 +96,9 @@ TDrawArc (dpy, d, gc, t, x, y, width, height, angle1, angle2)
 }
 
 void
-TFillArc (dpy, d, gc, t, x, y, width, height, angle1, angle2)
-	register Display	*dpy;
-	Drawable		d;
-	GC			gc;
-	Transform		*t;
-	double			x, y, width, height;
-	int			angle1, angle2;
+TFillArc (register Display *dpy, Drawable d, GC gc, Transform *t,
+	  double x, double y, double width, double height,
+	  int angle1, int angle2)
 {
 	int	xx, xy, xw, xh;
 
@@ -133,10 +118,8 @@ TFillArc (dpy, d, gc, t, x, y, width, height, angle1, angle2)
 }
 
 void
-SetTransform (t, xx1, xx2, xy1, xy2, tx1, tx2, ty1, ty2)
-Transform	*t;
-int		xx1, xx2, xy1, xy2;
-double		tx1, tx2, ty1, ty2;
+SetTransform (Transform *t, int xx1, int xx2, int xy1, int xy2,
+	      double tx1, double tx2, double ty1, double ty2)
 {
 	t->mx = ((double) xx2 - xx1) / (tx2 - tx1);
 	t->bx = ((double) xx1) - t->mx * tx1;

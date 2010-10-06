@@ -54,24 +54,20 @@ static XtActionsRec actions[] = {
 
 static Atom wm_delete_window;
 
-static void die(w, client_data, call_data)
-    Widget	w;
-    XtPointer	client_data, call_data;
+static void die(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XCloseDisplay(XtDisplay(w));
     exit(0);
 }
 
-static void save(w, client_data, call_data)
-    Widget w;
-    XtPointer client_data, call_data;
+static void save(Widget w, XtPointer client_data, XtPointer call_data)
 {
     return;	/* stateless */
 }
 
 /* Exit with message describing command line format */
 
-static void usage()
+static void usage(void)
 {
     fprintf(stderr,
 "usage: oclock\n");
@@ -153,11 +149,7 @@ main(int argc, char *argv[])
     exit(0);
 }
 
-static void quit(w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+static void quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     Arg arg;
 
