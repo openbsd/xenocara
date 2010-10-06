@@ -162,6 +162,9 @@ parse_displayname (char *displayname,
 
     if (!host) return False;
 
+    if(strncmp (host, "/tmp/launch", 11) == 0) {
+        family = FamilyLocal;
+    }
 
     /*
      * get the display number; we know that there is something after the

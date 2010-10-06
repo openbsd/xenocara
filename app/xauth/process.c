@@ -485,9 +485,6 @@ get_displayname_auth(char *displayname, AuthList **authl)
     if (cp && strncmp (cp, "/unix:", 6) == 0)
       prelen = (cp - displayname);
     
-    if (strncmp (displayname, "/tmp/launch", 11) == 0)
-        displayname = strrchr(displayname, '/') + 1;
-
     if (!parse_displayname (displayname + ((prelen > 0) ? prelen + 1 : 0),
 			    &family, &host, &dpynum, &scrnum, &rest)) {
 	return False;
@@ -769,7 +766,7 @@ auth_initialize(char *authfilename)
 	    return -1;
 	}				/* else ignore it */
 	fprintf (stderr, 
-		 "%s:  creating new authority file %s\n",
+		 "%s:  file %s does not exist\n",
 		 ProgramName, authfilename);
     } else {
 	xauth_existed = True;
