@@ -1,4 +1,3 @@
-/* $Xorg: do_text.c,v 1.4 2000/08/17 19:54:10 cpqbld Exp $ */
 /*****************************************************************************
 Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
@@ -21,7 +20,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************************/
-/* $XFree86: xc/programs/x11perf/do_text.c,v 1.7 2001/01/17 23:45:12 dawes Exp $ */
 
 #include "x11perf.h"
 #include <stdio.h>

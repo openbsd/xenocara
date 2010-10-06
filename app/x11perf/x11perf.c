@@ -1,5 +1,3 @@
-/* $Xorg: x11perf.c,v 1.4 2000/08/17 19:54:10 cpqbld Exp $ */
-/* $XdotOrg: app/x11perf/x11perf.c,v 1.3 2005/07/26 18:55:42 alanc Exp $ */
 /****************************************************************************
 Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
@@ -22,7 +20,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ****************************************************************************/
-/* $XFree86: xc/programs/x11perf/x11perf.c,v 3.6 2001/11/03 21:59:20 dawes Exp $ */
 
 #include <stdio.h>
 #include <ctype.h>
@@ -43,6 +40,7 @@ SOFTWARE.
 
 /* Only for working on ``fake'' servers, for hardware that doesn't exist */
 static Bool     drawToFakeServer = False;
+static Bool     falsePrecision  = False;
 static Pixmap   tileToQuery     = None;
 static char *displayName;
 int	abortTest;
@@ -252,8 +250,10 @@ RoundTo3Digits(double d)
 {
     /* It's kind of silly to print out things like ``193658.4/sec'' so just
        junk all but 3 most significant digits. */
-
     double exponent, sign;
+
+    if (falsePrecision)
+        return d;
 
     exponent = 1.0;
     /* the code below won't work if d should happen to be non-positive. */
@@ -977,10 +977,12 @@ main(int argc, char *argv[])
 	    foundOne = True;
 	} else if (strcmp (argv[i], "-sync") == 0) {
 	    synchronous = True;
-	} else if (strcmp(argv[i], "-pack") == 0) {
+	} else if (strcmp (argv[i], "-pack") == 0) {
 	    xparms.pack = True;
 	} else if (strcmp (argv[i], "-draw") == 0) {
 	    drawToFakeServer = True;
+        } else if (strcmp (argv[i], "-falseprecision") == 0) {
+            falsePrecision = True;
 	} else if (strcmp (argv[i], "-repeat") == 0) {
 	    i++;
 	    if (argc <= i)

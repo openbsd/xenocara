@@ -1,12 +1,31 @@
-This is a stub file.  This package has not yet had its complete licensing
-information compiled.  Please see the individual source files for details on
-your rights to use and modify this software.
+Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
-Please submit updated COPYING files to the Xorg bugzilla:
+                        All Rights Reserved
 
-https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of Digital not be
+used in advertising or publicity pertaining to distribution of the
+software without specific, written prior permission.
 
-All licensing questions regarding this software should be directed at the
-Xorg mailing list:
+DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+SOFTWARE.
 
-http://lists.freedesktop.org/mailman/listinfo/xorg
+****************************************************************************
+
+Copyright (c) 1993 by Hewlett-Packard Company
+
+Permission to use, copy, modify, and  distribute  this  software and its
+documentation  for  any  purpose  and  without  fee is  hereby  granted,
+provided that the above  copyright  notice appear in all copies and that
+both  the  copyright  notice  and  this  permission   notice  appear  in
+supporting  documentation, and that the name of  Hewlett-Packard  not be
+used in  advertising  or publicity  pertaining  to  distribution  of the
+software without specific, written prior permission.

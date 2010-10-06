@@ -19,7 +19,6 @@ XCOMM
 XCOMM Mark Moraes, University of Toronto <moraes@csri.toronto.edu>
 XCOMM Joel McCormack, DEC Western Research Lab <joel@decwrl.dec.com>
 XCOMM
-XCOMM $Xorg: x11pcomp.cpp,v 1.3 2000/08/17 19:54:10 cpqbld Exp $
 
 PATH=LIBPATH:.:$PATH
 export PATH

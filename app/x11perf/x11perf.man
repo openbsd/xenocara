@@ -1,4 +1,3 @@
-.\" $Xorg: x11perf.man,v 1.4 2001/02/09 02:05:38 xorgcvs Exp $
 .\" Copyright 1988, 1989 Digital Equipment Corporation.
 .\" Copyright 1989, 1994, 1998  The Open Group
 .\" 
@@ -24,7 +23,6 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/x11perf/x11perf.man,v 1.8 2001/12/14 20:01:14 dawes Exp $
 .\"
 .TH X11PERF 1 __xorgversion__
 .SH NAME
@@ -1003,7 +1001,7 @@ Circulate unmapped window to top.
 .SH X DEFAULTS
 There are no X defaults used by this program.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xbench(1), x11perfcomp(1)
+X(__miscmansuffix__), x11perfcomp(1)
 .SH AUTHORS
 Joel McCormack
 .br
