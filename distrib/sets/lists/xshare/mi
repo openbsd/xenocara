@@ -2572,7 +2572,6 @@
 ./usr/X11R6/man/man7/XProjectTeam.7
 ./usr/X11R6/man/man7/security.7
 ./usr/X11R6/share/X11/XErrorDB
-./usr/X11R6/share/X11/XKeysymDB
 ./usr/X11R6/share/X11/doc
 ./usr/X11R6/share/X11/doc/MAINTAINERS
 ./usr/X11R6/share/X11/locale

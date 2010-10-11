@@ -113,9 +113,9 @@
 ./usr/X11R6/lib/libfreetype.so.17.2
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/libpciaccess.so.1.0
-./usr/X11R6/lib/libpixman-1.so.16.6
+./usr/X11R6/lib/libpixman-1.so.18.4
 ./usr/X11R6/lib/libpthread-stubs.a
-./usr/X11R6/lib/libpthread-stubs.so.0.0
+./usr/X11R6/lib/libpthread-stubs.so.1.0
 ./usr/X11R6/lib/libpthread-stubs_pic.a
 ./usr/X11R6/lib/libxcb-atom.a
 ./usr/X11R6/lib/libxcb-atom.so.1.0
