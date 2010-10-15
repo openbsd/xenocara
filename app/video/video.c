@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.7 2010/10/15 09:27:26 jakemsr Exp $	*/
+/*	$OpenBSD: video.c,v 1.8 2010/10/15 14:21:20 jakemsr Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -1496,6 +1496,7 @@ main(int argc, char *argv[])
 	x->cur_adap = -1;
 	vid.dev.fd = vid.iofile_fd = -1;
 	vid.mode = M_IN_DEV | M_OUT_XV;
+	vid.enc = -1;
 	wout = 1;
 
 	while ((ch = getopt(argc, argv, "va:e:f:i:O:o:r:s:")) != -1) {
