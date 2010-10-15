@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.6 2010/09/26 23:47:17 jakemsr Exp $	*/
+/*	$OpenBSD: video.c,v 1.7 2010/10/15 09:27:26 jakemsr Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -195,7 +195,7 @@ void got_shutdown(int);
 int find_enc(char *);
 void usage(void);
 
-volatile sig_atomic_t play, shutdown, hold, wout;
+static volatile sig_atomic_t play, shutdown, hold, wout;
 extern char *__progname;
 
 void
