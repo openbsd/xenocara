@@ -1,4 +1,4 @@
-.\"	$OpenBSD: video.1,v 1.5 2010/09/26 23:58:18 schwarze Exp $
+.\"	$OpenBSD: video.1,v 1.6 2010/10/15 14:24:23 jakemsr Exp $
 .\"
 .\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: September 26 2010 $
+.Dd $Mdocdate: October 15 2010 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -92,9 +92,9 @@ The default is
 unless
 .Ar file
 is being used and only supports
-.Ql yuyv ,
+.Ql uyvy ,
 in which case
-.Ql yuyv
+.Ql uyvy
 will be used by default.
 .It Fl f Ar file
 .Xr video 4
@@ -108,7 +108,7 @@ If
 is
 .Ql - ,
 frames will be read from standard input.
-.It Fl O Ar ouput
+.It Fl O Ar output
 File to which frames will be written.
 If
 .Ar output
@@ -121,7 +121,7 @@ if this option is used,
 .Nm
 will also display the frames via
 .Xr Xv 3 .
-.It Fl o Ar ouput
+.It Fl o Ar output
 File to which frames will be written.
 If
 .Ar output
