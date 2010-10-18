@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.137 2010/10/05 19:59:52 matthieu Exp $
+ $OpenBSD: MODULES,v 1.138 2010/10/18 19:08:58 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -14,27 +14,27 @@ app/fstobdf		1.0.3 	7.4
 app/iceauth		1.0.3	7.5
 app/ico			1.0.2	7.3
 app/listres		1.0.2	7.5+
-app/luit		1.0.5	7.5+	needs-update
+app/luit		1.1.0	7.6	needs-update
 app/mkcomposecache	1.2.1	7.5	needs-import
 app/mkfontdir		1.0.5	7.5
 app/mkfontscale		1.0.7	7.5
-app/oclock		1.0.2	7.6	needs-update
-app/rgb			1.0.3	7.4
+app/oclock		1.0.2	7.6
+app/rgb			1.0.4	7.6	needs-update
 app/scripts		1.0.1	7.0
 app/sessreg		1.0.6	7.5
-app/setxkbmap		1.2.0	7.6	needs-update
+app/setxkbmap		1.2.0	7.6
 app/showfont		1.0.2	7.4
 app/smproxy		1.0.3	7.5
 app/twm			1.0.4	7.4
 app/viewres		1.0.2	7.5+
-app/x11perf		1.5.2	7.6	needs-update
-app/xauth		1.0.5	7.6	needs-update
+app/x11perf		1.5.2	7.6
+app/xauth		1.0.5	7.6
 app/xbacklight		1.1.1	7.5
 app/xbiff		1.0.2	7.5+
 app/xcalc		1.0.3	7.5+
 app/xclipboard		1.1.0	7.5
-app/xclock		1.0.5	7.6	needs-update
-app/xcmsdb		1.0.3	7.6	needs-update
+app/xclock		1.0.5	7.6
+app/xcmsdb		1.0.3	7.6
 app/xcompmgr		1.1.5	7.5+
 app/xconsole		1.0.4	7.6	needs-update
 app/xdm			1.1.10	7.5+	needs-update
