@@ -20,6 +20,8 @@
 ./usr/X11R6/include/X11/dri/xf86dristr.h
 ./usr/X11R6/include/X11/extensions/dri2proto.h
 ./usr/X11R6/include/X11/extensions/dri2tokens.h
+./usr/X11R6/include/pixman-1/pixman-version.h
+./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xcb/bigreq.h
 ./usr/X11R6/include/xcb/composite.h
 ./usr/X11R6/include/xcb/damage.h
@@ -150,6 +152,8 @@
 ./usr/X11R6/lib/libfreetype.so.17.2
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/libpciaccess.so.1.0
+./usr/X11R6/lib/libpixman-1.a
+./usr/X11R6/lib/libpixman-1.la
 ./usr/X11R6/lib/libpixman-1.so.18.4
 ./usr/X11R6/lib/libpthread-stubs.a
 ./usr/X11R6/lib/libpthread-stubs.so.1.0
@@ -255,6 +259,7 @@
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
+./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/pkgconfig/pthread-stubs.pc
 ./usr/X11R6/lib/pkgconfig/x11-xcb.pc
 ./usr/X11R6/lib/pkgconfig/xcb-atom.pc

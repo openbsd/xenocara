@@ -1,4 +1,6 @@
 ./usr/X11R6/bin/ucs2any
+./usr/X11R6/include/pixman-1/pixman-version.h
+./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xorg/compositeext.h
 ./usr/X11R6/include/xorg/events.h
 ./usr/X11R6/include/xorg/fbpict.h
@@ -17,6 +19,9 @@
 ./usr/X11R6/include/xorg/xfixes.h
 ./usr/X11R6/include/xorg/xkbrules.h
 ./usr/X11R6/include/xorg/xserver-properties.h
+./usr/X11R6/lib/libpixman-1.a
+./usr/X11R6/lib/libpixman-1.la
+./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man/man1/bdftruncate.1
 ./usr/X11R6/man/man1/dga.1

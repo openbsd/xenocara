@@ -548,9 +548,6 @@
 ./usr/X11R6/include/freetype2/freetype/ftpfr.h
 ./usr/X11R6/include/freetype2/freetype/ftwinfnt.h
 ./usr/X11R6/include/ft2build.h
-./usr/X11R6/include/pixman-1
-./usr/X11R6/include/pixman-1/pixman-version.h
-./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xcb
 ./usr/X11R6/lib
 ./usr/X11R6/lib/X11
@@ -656,13 +653,10 @@
 ./usr/X11R6/lib/libfreetype.a
 ./usr/X11R6/lib/libpciaccess.a
 ./usr/X11R6/lib/libpciaccess.la
-./usr/X11R6/lib/libpixman-1.a
-./usr/X11R6/lib/libpixman-1.la
 ./usr/X11R6/lib/libxkbfile.a
 ./usr/X11R6/lib/libxkbfile.la
 ./usr/X11R6/lib/libxkbui.a
 ./usr/X11R6/lib/libxkbui.la
-./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/xorg
 ./usr/X11R6/man
 ./usr/X11R6/man/cat1
@@ -1206,3 +1200,4 @@
 ./var
 ./var/cache
 ./var/cache/fontconfig
+./usr/X11R6/include/pixman-1
