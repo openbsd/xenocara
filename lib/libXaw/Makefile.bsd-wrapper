@@ -1,8 +1,8 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2010/04/23 19:37:47 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2010/10/22 19:58:35 matthieu Exp $
 
 SHARED_LIBS= Xaw7 14.0
 
-CONFIGURE_ARGS= --disable-xaw6
+CONFIGURE_ARGS= --disable-xaw6 --disable-docs
 
 afterinstall:
 	-rm -f $(DESTDIR)$(LIBDIR)/libXaw.a
