@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.81 2010/06/15 10:58:13 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.82 2010/10/11 08:13:54 tom Exp $ */
 
 /************************************************************
 
@@ -105,7 +105,7 @@ extern void xtermCloseXft(TScreen * /* screen */, XTermXftFonts * /* pub */);
 #endif
 
 #if OPT_SHIFT_FONTS
-extern char *getFaceName(XtermWidget /* xw */, Bool /* wideName */);
+extern String getFaceName(XtermWidget /* xw */, Bool /* wideName */);
 extern void HandleLargerFont PROTO_XT_ACTIONS_ARGS;
 extern void HandleSmallerFont PROTO_XT_ACTIONS_ARGS;
 extern void setFaceName(XtermWidget /* xw */, const char * /*value */);

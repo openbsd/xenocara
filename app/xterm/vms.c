@@ -1,4 +1,4 @@
-/* $XTermId: vms.c,v 1.12 2010/06/13 17:46:27 tom Exp $ */
+/* $XTermId: vms.c,v 1.13 2010/10/11 08:05:35 tom Exp $ */
 
 /*  vms.c
  *
@@ -88,7 +88,6 @@ int tt_new_output=False;      /* Cleared by flushlog(), set whenever something n
    goes to the screen through tt_write */
 
 int trnlnm(char *in,int id,char *out);
-int tt_write(char *tt_write_buf,int size);
 void spawn (void);
 
 static void tt_echo_ast(TT_BUF_STRUCT *buff_addr);
@@ -391,7 +390,7 @@ static void tt_echo_ast(TT_BUF_STRUCT *buff_addr)
 
  */
 
-int tt_write(char *tt_write_buf, int size)
+int tt_write(const char *tt_write_buf, int size)
 {
   int status;
   TT_BUF_STRUCT *echoBuff;

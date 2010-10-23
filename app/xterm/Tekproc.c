@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.182 2010/06/20 21:34:37 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.184 2010/10/14 08:07:03 tom Exp $ */
 
 /*
  *
@@ -108,6 +108,7 @@
 #include <data.h>
 #include <error.h>
 #include <menu.h>
+#include <xstrings.h>
 
 #define DefaultGCID XGContextFromGC(DefaultGC(XtDisplay(tw), DefaultScreen(XtDisplay(tw))))
 
@@ -1360,15 +1361,18 @@ static unsigned char *dashes[TEKNUMLINES] =
  */
 
 static void
-TekInitialize(Widget request GCC_UNUSED,
-	      Widget wnew GCC_UNUSED,
+TekInitialize(Widget wrequest,
+	      Widget new_arg,
 	      ArgList args GCC_UNUSED,
 	      Cardinal *num_args GCC_UNUSED)
 {
+    TekWidget request = (TekWidget) wrequest;
+    TekWidget wnew = (TekWidget) new_arg;
     Widget tekparent = SHELL_OF(wnew);
 #ifndef NO_ACTIVE_ICON
     TekScreen *screen = TekScreenOf((TekWidget) wnew);
 #endif
+    int n;
 
     TRACE(("TekInitialize\n"));
 
@@ -1381,13 +1385,23 @@ TekInitialize(Widget request GCC_UNUSED,
 		      HandleLeaveWindow, (Opaque) 0);
     XtAddEventHandler(tekparent, FocusChangeMask, False,
 		      HandleFocusChange, (Opaque) 0);
-    XtAddEventHandler(wnew, PropertyChangeMask, False,
+    XtAddEventHandler(new_arg, PropertyChangeMask, False,
 		      HandleBellPropertyChange, (Opaque) 0);
 
 #ifndef NO_ACTIVE_ICON
     screen->whichTwin = &(screen->fullTwin);
 #endif /* NO_ACTIVE_ICON */
 
+    for (n = 0; n < TEKNUMFONTS; ++n) {
+	wnew->tek.Tfont[n] = request->tek.Tfont[n];
+    }
+
+    init_Sres(tek.initial_font);
+    init_Sres(tek.gin_terminator_str);
+#if OPT_TOOLBAR
+    init_Ires(tek.tb_info.menu_height);
+    wnew->tek.tb_info.menu_bar = request->tek.tb_info.menu_bar;
+#endif
 }
 
 static void

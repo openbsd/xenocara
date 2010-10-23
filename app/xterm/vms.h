@@ -37,3 +37,5 @@ static struct	    items {
 	int		buffer;
 	int		return_addr;
 } itemlist[MAXITEMLIST];
+
+int tt_write(const char *tt_write_buf,int size);

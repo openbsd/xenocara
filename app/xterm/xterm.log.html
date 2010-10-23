@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.965 2010/08/30 00:19:46 tom Exp $
+  $XTermId: xterm.log.html,v 1.977 2010/10/14 08:53:32 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_264">Patch #264 - 2010/10/14</A>
+<LI><A HREF="#xterm_263">Patch #263 - 2010/10/13</A>
 <LI><A HREF="#xterm_262">Patch #262 - 2010/8/30</A>
 <LI><A HREF="#xterm_261">Patch #261 - 2010/6/28</A>
 <LI><A HREF="#xterm_260">Patch #260 - 2010/6/20</A>
@@ -320,6 +322,56 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_264">Patch #264 - 2010/10/14</A></H1>
+<ul>
+	<li>replace a null-pointer check with check for empty string in
+	    <code>xtermOpenFont</code>,
+	    to eliminate a warning message from
+	    <a href="#xterm_263">patch #263</a> changes.
+
+	<li>build-fix for <a href="#xterm_263">patch #263</a> when toolbar
+	    is not configured
+	    (patch by Chris Clayton)
+	    (reports by Robby Workman,
+	    David Wood).
+</ul>
+
+<H1><A NAME="xterm_263">Patch #263 - 2010/10/13</A></H1>
+<ul>
+	<li>corrected initialization of "misc" resource values, to ensure that
+	    xterm has allocated a copy of strings which may not have been
+	    malloc'd by the X library (Debian #600129).
+
+	<li>modify handling of any-event/any-button mouse protocol; it
+	    now is active with any combination of key-modifiers.
+
+	<li>add debugging feature <code>showWrapMarks</code>, which marks
+	    lines which xterm knows are wrapped, showing where a double-click
+	    will select past the end of a line.
+
+	<li>build-fix to address change in include-guards for
+	    <code>Xlib.h</code>
+	    in ongoing Xorg edits (patch by Jeremy Huddleston).
+
+	<li>improve <code>pointerMode</code> by continuing to watch for motion
+	    events after mouse tracking is disabled if the pointer is hidden
+	    (Debian #594856).
+
+	<li>further extend initialization for active-icon font to check if
+	    the font was not loaded succesfully,
+	    to retry with <code>font1</code>,
+	    or as even (if TrueType fonts are used) to use a TrueType font.
+	    The retries are to help with cases as in
+	    <a href="#xterm_241">patch #241</a> where the bitmap fonts are
+	    not available.
+
+	<li>fix special case of active-icon used when TrueType font is
+	    specified for the xterm window,
+	    from <a href="#xterm_261">patch #261</a> change.
+	    In that case, the default font's size was used for layout of the
+	    active icon's window (Debian #591265).
+</ul>
 
 <H1><A NAME="xterm_262">Patch #262 - 2010/8/30</A></H1>
 <ul>

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.423 2010/06/14 00:00:58 tom Exp $ */
+/* $XTermId: screen.c,v 1.426 2010/10/11 00:46:05 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1237,10 +1237,36 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    }
 	});
 	LineClrWrapped(ld);
+	if (screen->show_wrap_marks) {
+	    ShowWrapMarks(xw, row, ld);
+	}
     }
     ClearCells(xw, 0, n, row, (last - (int) n));
 
 #undef MemMove
+}
+
+/*
+ * This is useful for debugging both xterm and applications that may manipulate
+ * its line-wrapping state.
+ */
+void
+ShowWrapMarks(XtermWidget xw, int row, LineData * ld)
+{
+    TScreen *screen = TScreenOf(xw);
+    Boolean set = LineTstWrapped(ld);
+    CgsEnum cgsId = set ? gcVTcursFilled : gcVTcursReverse;
+    VTwin *currentWin = WhichVWin(screen);
+    int y = row * FontHeight(screen) + screen->border;
+    int x = LineCursorX(screen, ld, screen->max_col + 1);
+
+    TRACE2(("ShowWrapMarks %d:%s\n", row, BtoS(set)));
+
+    XFillRectangle(screen->display, VWindow(screen),
+		   getCgsGC(xw, currentWin, cgsId),
+		   x, y,
+		   (unsigned) screen->border,
+		   (unsigned) FontHeight(screen));
 }
 
 /*
@@ -1326,6 +1352,11 @@ ScrnRefresh(XtermWidget xw,
 	    || ld->attribs == 0) {
 	    break;
 	}
+
+	if (screen->show_wrap_marks) {
+	    ShowWrapMarks(xw, lastind, ld);
+	}
+
 	if (maxcol >= (int) ld->lineSize) {
 	    maxcol = ld->lineSize - 1;
 	    hi_col = maxcol;
@@ -1656,6 +1687,9 @@ ClearBufRows(XtermWidget xw,
 		SetLineDblCS(ld, CSET_SWL);
 	    });
 	    LineClrWrapped(ld);
+	    if (screen->show_wrap_marks) {
+		ShowWrapMarks(xw, row, ld);
+	    }
 	    ClearCells(xw, 0, len, row, 0);
 	}
     }

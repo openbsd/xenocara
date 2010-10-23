@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.671 2010/08/19 09:30:01 Ryan.Johnson Exp $ */
+/* $XTermId: ptyx.h,v 1.675 2010/10/11 08:25:53 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1584,7 +1584,7 @@ typedef struct {
 	long		event_mask;
 	unsigned	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
-	unsigned	ext_mode_mouse; /* support large terminals      */
+	Boolean		ext_mode_mouse; /* support large terminals      */
 	Boolean		send_focus_pos; /* user wants focus in/out info */
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
@@ -1698,7 +1698,9 @@ typedef struct {
 	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
 #ifndef NO_ACTIVE_ICON
-	XTermFonts	fnt_icon;	/* icon font */
+	XTermFonts	fnt_icon;	/* icon font			*/
+	String		icon_fontname;	/* name of icon font		*/
+	int		icon_fontnum;	/* number to use for icon font	*/
 #endif /* NO_ACTIVE_ICON */
 	int		enbolden;	/* overstrike for bold font	*/
 	XPoint		*box;		/* draw unselected cursor	*/
@@ -1880,6 +1882,7 @@ typedef struct {
 	Boolean		cutNewline;	/* whether or not line cut has \n */
 	Boolean		cutToBeginningOfLine;  /* line cuts to BOL? */
 	Boolean		highlight_selection; /* controls appearance of selection */
+	Boolean		show_wrap_marks; /* show lines which are wrapped */
 	Boolean		trim_selection; /* controls trimming of selection */
 	Boolean		i18nSelections;
 	Boolean		brokenSelections;
@@ -2129,11 +2132,11 @@ typedef struct
 } TKeyboard;
 
 typedef struct {
-    char *f_n;			/* the normal font */
-    char *f_b;			/* the bold font */
+    String f_n;			/* the normal font */
+    String f_b;			/* the bold font */
 #if OPT_WIDE_CHARS
-    char *f_w;			/* the normal wide font */
-    char *f_wb;			/* the bold wide font */
+    String f_w;			/* the normal wide font */
+    String f_wb;		/* the bold wide font */
 #endif
 } VTFontNames;
 

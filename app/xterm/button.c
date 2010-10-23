@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.381 2010/08/23 23:25:57 tom Exp $ */
+/* $XTermId: button.c,v 1.389 2010/10/13 09:37:08 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -115,7 +115,10 @@ button.c	Handles button events in the terminal emulator.
 #define AllModifiers (ShiftMask | LockMask | ControlMask | Mod1Mask | \
 		      Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask)
 
-#define KeyModifiers (event->xbutton.state & OurModifiers)
+#define BtnModifiers(event) (event->state & OurModifiers)
+#define KeyModifiers(event) (event->xbutton.state & OurModifiers)
+
+#define IsBtnEvent(event) ((event)->type == ButtonPress || (event)->type == ButtonRelease)
 
 #define KeyState(x) (((int) ((x) & (ShiftMask|ControlMask))) \
 			  + (((x) & Mod1Mask) ? 2 : 0))
@@ -130,8 +133,8 @@ static const CELL zeroCELL =
 {0, 0};
 
 #if OPT_DEC_LOCATOR
-static Bool SendLocatorPosition(XtermWidget xw, XEvent * event);
-static void CheckLocatorPosition(XtermWidget xw, XEvent * event);
+static Bool SendLocatorPosition(XtermWidget xw, XButtonEvent * event);
+static void CheckLocatorPosition(XtermWidget xw, XButtonEvent * event);
 #endif /* OPT_DEC_LOCATOR */
 
 /* Multi-click handling */
@@ -202,65 +205,75 @@ Bool
 SendMousePosition(XtermWidget xw, XEvent * event)
 {
     TScreen *screen = TScreenOf(xw);
-
-    /* If send_mouse_pos mode isn't on, we shouldn't be here */
-    if (screen->send_mouse_pos == MOUSE_OFF)
-	return False;
-
-#if OPT_DEC_LOCATOR
-    if (screen->send_mouse_pos == DEC_LOCATOR) {
-	return (SendLocatorPosition(xw, event));
-    }
-#endif /* OPT_DEC_LOCATOR */
-
-    /* Make sure the event is an appropriate type */
-    if ((screen->send_mouse_pos != BTN_EVENT_MOUSE)
-	&& (screen->send_mouse_pos != ANY_EVENT_MOUSE)
-	&& event->type != ButtonPress
-	&& event->type != ButtonRelease)
-	return False;
+    XButtonEvent *my_event = (XButtonEvent *) event;
+    Bool result = False;
 
     switch (screen->send_mouse_pos) {
-    case X10_MOUSE:		/* X10 compatibility sequences */
-
-	if (KeyModifiers == 0) {
-	    if (event->type == ButtonPress)
-		EditorButton(xw, (XButtonEvent *) event);
-	    return True;
-	}
+    case MOUSE_OFF:
+	/* If send_mouse_pos mode isn't on, we shouldn't be here */
 	return False;
 
-    case VT200_HIGHLIGHT_MOUSE:	/* DEC vt200 hilite tracking */
-	if (event->type == ButtonPress &&
-	    KeyModifiers == 0 &&
-	    event->xbutton.button == Button1) {
-	    TrackDown(xw, (XButtonEvent *) event);
-	    return True;
-	}
-	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
-	    EditorButton(xw, (XButtonEvent *) event);
-	    return True;
-	}
-	return False;
-
-    case VT200_MOUSE:		/* DEC vt200 compatible */
-
-	/* xterm extension for motion reporting. June 1998 */
-	/* EditorButton() will distinguish between the modes */
     case BTN_EVENT_MOUSE:
     case ANY_EVENT_MOUSE:
-	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
-	    if (event->type == MotionNotify) {
-		((XButtonEvent *) event)->button = 0;
-	    }
-	    EditorButton(xw, (XButtonEvent *) event);
-	    return True;
+	/* xterm extension for motion reporting. June 1998 */
+	/* EditorButton() will distinguish between the modes */
+	switch (event->type) {
+	case MotionNotify:
+	    my_event->button = 0;
+	    /* FALLTHRU */
+	case ButtonPress:
+	    /* FALLTHRU */
+	case ButtonRelease:
+	    EditorButton(xw, my_event);
+	    result = True;
+	    break;
 	}
-	return False;
+	break;
 
     default:
-	return False;
+	/* Make sure the event is an appropriate type */
+	if (IsBtnEvent(event)) {
+
+	    switch (screen->send_mouse_pos) {
+	    case X10_MOUSE:	/* X10 compatibility sequences */
+
+		if (BtnModifiers(my_event) == 0) {
+		    if (my_event->type == ButtonPress)
+			EditorButton(xw, my_event);
+		    result = True;
+		}
+		break;
+
+	    case VT200_HIGHLIGHT_MOUSE:	/* DEC vt200 hilite tracking */
+		if (my_event->type == ButtonPress &&
+		    BtnModifiers(my_event) == 0 &&
+		    my_event->button == Button1) {
+		    TrackDown(xw, my_event);
+		    result = True;
+		} else if (BtnModifiers(my_event) == 0
+			   || BtnModifiers(my_event) == ControlMask) {
+		    EditorButton(xw, my_event);
+		    result = True;
+		}
+		break;
+
+	    case VT200_MOUSE:	/* DEC vt200 compatible */
+		if (BtnModifiers(my_event) == 0
+		    || BtnModifiers(my_event) == ControlMask) {
+		    EditorButton(xw, my_event);
+		    result = True;
+		}
+		break;
+
+#if OPT_DEC_LOCATOR
+	    case DEC_LOCATOR:
+		result = SendLocatorPosition(xw, my_event);
+		break;
+#endif /* OPT_DEC_LOCATOR */
+	    }
+	}
     }
+    return result;
 }
 
 #if OPT_DEC_LOCATOR
@@ -291,7 +304,7 @@ SendMousePosition(XtermWidget xw, XEvent * event)
     }
 
 static Bool
-SendLocatorPosition(XtermWidget xw, XEvent * event)
+SendLocatorPosition(XtermWidget xw, XButtonEvent * event)
 {
     ANSI reply;
     TScreen *screen = TScreenOf(xw);
@@ -301,10 +314,10 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     unsigned state;
 
     /* Make sure the event is an appropriate type */
-    if ((event->type != ButtonPress &&
-	 event->type != ButtonRelease &&
+    if ((!IsBtnEvent(event) &&
+
 	 !screen->loc_filter) ||
-	(KeyModifiers != 0 && KeyModifiers != ControlMask))
+	(BtnModifiers(event) != 0 && BtnModifiers(event) != ControlMask))
 	return (False);
 
     if ((event->type == ButtonPress &&
@@ -319,9 +332,9 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     }
 
     /* get button # */
-    button = (int) event->xbutton.button - 1;
+    button = (int) event->button - 1;
 
-    LocatorCoords(row, col, event->xbutton.x, event->xbutton.y, oor);
+    LocatorCoords(row, col, event->x, event->y, oor);
 
     /*
      * DECterm mouse:
@@ -377,7 +390,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
      * Also, mask should be the state after the button press/release,
      * X provides the state not including the button press/release.
      */
-    state = (event->xbutton.state
+    state = (event->state
 	     & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8;
     /* update mask to "after" state */
     state ^= ((unsigned) (1 << button));
@@ -613,7 +626,7 @@ InitLocatorFilter(XtermWidget xw)
 }
 
 static void
-CheckLocatorPosition(XtermWidget xw, XEvent * event)
+CheckLocatorPosition(XtermWidget xw, XButtonEvent * event)
 {
     ANSI reply;
     TScreen *screen = TScreenOf(xw);
@@ -621,7 +634,7 @@ CheckLocatorPosition(XtermWidget xw, XEvent * event)
     Bool oor;
     int state;
 
-    LocatorCoords(row, col, event->xbutton.x, event->xbutton.y, oor);
+    LocatorCoords(row, col, event->x, event->y, oor);
 
     /*
      * Send report if the pointer left the filter rectangle, if
@@ -643,7 +656,7 @@ CheckLocatorPosition(XtermWidget xw, XEvent * event)
 	    reply.a_nparam = 1;
 	    reply.a_param[0] = 0;	/* Event - 0 = locator unavailable */
 	} else {
-	    ButtonState(state, event->xbutton.state);
+	    ButtonState(state, event->state);
 
 	    reply.a_nparam = 4;
 	    reply.a_param[0] = 10;	/* Event - 10 = locator outside filter */
@@ -666,13 +679,13 @@ CheckLocatorPosition(XtermWidget xw, XEvent * event)
 
 #if OPT_READLINE
 static int
-isClick1_clean(TScreen * screen, XEvent * event)
+isClick1_clean(TScreen * screen, XButtonEvent * event)
 {
     int delta;
 
-    if (!(event->type == ButtonPress || event->type == ButtonRelease)
+    if (!IsBtnEvent(event)
     /* Disable on Shift-Click-1, including the application-mouse modes */
-	|| (KeyModifiers & ShiftMask)
+	|| (BtnModifiers(event) & ShiftMask)
 	|| (screen->send_mouse_pos != MOUSE_OFF)	/* Kinda duplicate... */
 	||ExtendingSelection)	/* Was moved */
 	return 0;
@@ -683,25 +696,25 @@ isClick1_clean(TScreen * screen, XEvent * event)
     if (lastButtonDownTime == (Time) 0) {
 	/* first time or once in a blue moon */
 	delta = screen->multiClickTime + 1;
-    } else if (event->xbutton.time > lastButtonDownTime) {
+    } else if (event->time > lastButtonDownTime) {
 	/* most of the time */
-	delta = (int) (event->xbutton.time - lastButtonDownTime);
+	delta = (int) (event->time - lastButtonDownTime);
     } else {
 	/* time has rolled over since lastButtonUpTime */
-	delta = (int) ((((Time) ~ 0) - lastButtonDownTime) + event->xbutton.time);
+	delta = (int) ((((Time) ~ 0) - lastButtonDownTime) + event->time);
     }
 
     return delta <= screen->multiClickTime;
 }
 
 static int
-isDoubleClick3(TScreen * screen, XEvent * event)
+isDoubleClick3(TScreen * screen, XButtonEvent * event)
 {
     int delta;
 
     if (event->type != ButtonRelease
-	|| (KeyModifiers & ShiftMask)
-	|| event->xbutton.button != Button3) {
+	|| (BtnModifiers(event) & ShiftMask)
+	|| event->button != Button3) {
 	lastButton3UpTime = 0;	/* Disable the cached info */
 	return 0;
     }
@@ -709,27 +722,27 @@ isDoubleClick3(TScreen * screen, XEvent * event)
     if (lastButton3DoubleDownTime == (Time) 0) {
 	/* No previous click or once in a blue moon */
 	delta = screen->multiClickTime + 1;
-    } else if (event->xbutton.time > lastButton3DoubleDownTime) {
+    } else if (event->time > lastButton3DoubleDownTime) {
 	/* most of the time */
-	delta = (int) (event->xbutton.time - lastButton3DoubleDownTime);
+	delta = (int) (event->time - lastButton3DoubleDownTime);
     } else {
 	/* time has rolled over since lastButton3DoubleDownTime */
-	delta = (int) ((((Time) ~ 0) - lastButton3DoubleDownTime) + event->xbutton.time);
+	delta = (int) ((((Time) ~ 0) - lastButton3DoubleDownTime) + event->time);
     }
     if (delta <= screen->multiClickTime) {
 	/* Double click */
 	CELL cell;
 
 	/* Cannot check ExtendingSelection, since mouse-3 always sets it */
-	PointToCELL(screen, event->xbutton.y, event->xbutton.x, &cell);
+	PointToCELL(screen, event->y, event->x, &cell);
 	if (isSameCELL(&cell, &lastButton3)) {
 	    lastButton3DoubleDownTime = 0;	/* Disable the third click */
 	    return 1;
 	}
     }
     /* Not a double click, memorize for future check. */
-    lastButton3UpTime = event->xbutton.time;
-    PointToCELL(screen, event->xbutton.y, event->xbutton.x, &lastButton3);
+    lastButton3UpTime = event->time;
+    PointToCELL(screen, event->y, event->x, &lastButton3);
     return 0;
 }
 
@@ -739,7 +752,7 @@ CheckSecondPress3(TScreen * screen, XEvent * event)
     int delta;
 
     if (event->type != ButtonPress
-	|| (KeyModifiers & ShiftMask)
+	|| (KeyModifiers(event) & ShiftMask)
 	|| event->xbutton.button != Button3) {
 	lastButton3DoubleDownTime = 0;	/* Disable the cached info */
 	return 0;
@@ -848,9 +861,32 @@ ReadLineDelete(TScreen * screen, CELL * cell1, CELL * cell2)
     if (del <= 0)		/* Just in case... */
 	return 0;
     while (del--)
-	v_write(screen->respond, (Char *) "\177", 1);
+	v_write(screen->respond, (const Char *) "\177", 1);
     return 1;
 }
+
+static void
+readlineExtend(TScreen * screen, XEvent * event)
+{
+    int ldelta1, ldelta2;
+
+    if (IsBtnEvent(event)) {
+	XButtonEvent *my_event = (XButtonEvent *) event;
+	if (isClick1_clean(screen, my_event)
+	    && SCREEN_FLAG(screen, click1_moves)
+	    && rowOnCurrentLine(screen, eventRow(screen, event), &ldelta1)) {
+	    ReadLineMovePoint(screen, eventColBetween(screen, event), ldelta1);
+	}
+	if (isDoubleClick3(screen, my_event)
+	    && SCREEN_FLAG(screen, dclick3_deletes)
+	    && rowOnCurrentLine(screen, screen->startSel.row, &ldelta1)
+	    && rowOnCurrentLine(screen, screen->endSel.row, &ldelta2)) {
+	    ReadLineMovePoint(screen, screen->endSel.col, ldelta2);
+	    ReadLineDelete(screen, &screen->startSel, &(screen->endSel));
+	}
+    }
+}
+
 #endif /* OPT_READLINE */
 
 /* ^XM-G<line+' '><col+' '> */
@@ -867,7 +903,7 @@ DiredButton(Widget w,
 	Char Line[6];
 	unsigned line, col;
 
-	if ((event->type == ButtonPress || event->type == ButtonRelease)
+	if (IsBtnEvent(event)
 	    && (event->xbutton.y >= screen->border)
 	    && (event->xbutton.x >= OriginX(screen))) {
 	    line = (unsigned) ((event->xbutton.y - screen->border)
@@ -898,7 +934,7 @@ ReadLineButton(Widget w,
 	Char Line[6];
 	int line, col, ldelta = 0;
 
-	if (!(event->type == ButtonPress || event->type == ButtonRelease)
+	if (!IsBtnEvent(event)
 	    || (screen->send_mouse_pos != MOUSE_OFF) || ExtendingSelection)
 	    goto finish;
 	if (event->type == ButtonRelease) {
@@ -956,7 +992,7 @@ ViButton(Widget w,
 	Char Line[6];
 	int line;
 
-	if (event->type == ButtonPress || event->type == ButtonRelease) {
+	if (IsBtnEvent(event)) {
 
 	    line = screen->cur_row -
 		((event->xbutton.y - screen->border) / FontHeight(screen));
@@ -1036,9 +1072,6 @@ do_select_end(XtermWidget xw,
 	      Cardinal *num_params,
 	      Bool use_cursor_loc)
 {
-#if OPT_READLINE
-    int ldelta1, ldelta2;
-#endif
     TScreen *screen = TScreenOf(xw);
 
     screen->selection_time = event->xbutton.time;
@@ -1050,18 +1083,7 @@ do_select_end(XtermWidget xw,
     case RIGHTEXTENSION:
 	EndExtend(xw, event, params, *num_params, use_cursor_loc);
 #if OPT_READLINE
-	if (isClick1_clean(screen, event)
-	    && SCREEN_FLAG(screen, click1_moves)
-	    && rowOnCurrentLine(screen, eventRow(screen, event), &ldelta1)) {
-	    ReadLineMovePoint(screen, eventColBetween(screen, event), ldelta1);
-	}
-	if (isDoubleClick3(screen, event)
-	    && SCREEN_FLAG(screen, dclick3_deletes)
-	    && rowOnCurrentLine(screen, screen->startSel.row, &ldelta1)
-	    && rowOnCurrentLine(screen, screen->endSel.row, &ldelta2)) {
-	    ReadLineMovePoint(screen, screen->endSel.col, ldelta2);
-	    ReadLineDelete(screen, &screen->startSel, &(screen->endSel));
-	}
+	readlineExtend(screen, event);
 #endif /* OPT_READLINE */
 	break;
     }
@@ -1090,6 +1112,58 @@ HandleKeyboardSelectEnd(Widget w,
 
     if ((xw = getXtermWidget(w)) != 0) {
 	do_select_end(xw, event, params, num_params, True);
+    }
+}
+
+/*
+ * Like "select-end" (optionally copies the selection to the given targets),
+ * but also sets the modes so that releasing the mouse button or moving the
+ * mouse does not alter the selection.
+ */
+static void
+do_select_stop(XtermWidget xw,
+	       XEvent * event,	/* must be XButtonEvent */
+	       String * params,	/* selections */
+	       Cardinal *num_params,
+	       Bool use_cursor_loc)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    screen->selection_time = event->xbutton.time;
+    switch (screen->eventMode) {
+    case NORMAL:
+	(void) SendMousePosition(xw, event);
+	break;
+    case LEFTEXTENSION:
+    case RIGHTEXTENSION:
+	EndExtend(xw, event, params, *num_params, use_cursor_loc);
+	break;
+    }
+}
+
+void
+HandleSelectStop(Widget w,
+		 XEvent * event,	/* must be XButtonEvent */
+		 String * params,	/* selections */
+		 Cardinal *num_params)
+{
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	do_select_stop(xw, event, params, num_params, False);
+    }
+}
+
+void
+HandleKeyboardSelectStop(Widget w,
+			 XEvent * event,	/* must be XButtonEvent */
+			 String * params,	/* selections */
+			 Cardinal *num_params)
+{
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	do_select_stop(xw, event, params, num_params, True);
     }
 }
 
@@ -1136,7 +1210,7 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned long len, unsigned long *resul
 
     Cardinal offset = 0;
 
-    Char *p;
+    const Char *p;
 
     if (len != 0) {
 	PtyData data;
@@ -1172,7 +1246,7 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned long len, unsigned long *resul
 	     * whatever the user wants).
 	     */
 	    if (fails) {
-		for (p = (Char *) screen->default_string; *p != '\0'; ++p) {
+		for (p = (const Char *) screen->default_string; *p != '\0'; ++p) {
 		    AddChar(&buffer, &used, offset, *p);
 		}
 	    }
@@ -1292,7 +1366,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 	TScreen *screen = TScreenOf(xw);
 
 	if (!IsEmpty(value)) {
-	    String copied = x_strdup(value);
+	    char *copied = x_strdup(value);
 	    if (copied != 0) {
 		Atom *result = 0;
 		Cardinal count = 1;
@@ -1715,7 +1789,7 @@ base64_flush(TScreen * screen)
     }
     if (screen->base64_pad & 3)
 	tty_vwrite(screen->respond,
-		   (Char *) "===",
+		   (const Char *) "===",
 		   (unsigned) (4 - (screen->base64_pad & 3)));
     screen->base64_count = 0;
     screen->base64_accu = 0;
@@ -1772,7 +1846,7 @@ _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 #if OPT_READLINE
     if (SCREEN_FLAG(screen, paste_quotes)) {
 	while (length--) {
-	    tty_vwrite(screen->respond, (Char *) "\026", 1);	/* Control-V */
+	    tty_vwrite(screen->respond, (const Char *) "\026", 1);	/* Control-V */
 	    tty_vwrite(screen->respond, lag++, 1);
 	}
     } else
@@ -1830,11 +1904,11 @@ _WriteSelectionData(TScreen * screen, Char * line, size_t length)
 
 #if OPT_READLINE
 static void
-_WriteKey(TScreen * screen, Char * in)
+_WriteKey(TScreen * screen, const Char * in)
 {
     Char line[16];
     unsigned count = 0;
-    size_t length = strlen((char *) in);
+    size_t length = strlen((const char *) in);
 
     if (screen->control_eight_bits) {
 	line[count++] = ANSI_CSI;
@@ -1950,7 +2024,7 @@ SelectionReceived(Widget w,
 #endif
 #if OPT_READLINE
 	if (SCREEN_FLAG(screen, paste_brackets)) {
-	    _WriteKey(screen, (Char *) "200");
+	    _WriteKey(screen, (const Char *) "200");
 	}
 #endif
 	for (i = 0; i < text_list_count; i++) {
@@ -1964,7 +2038,7 @@ SelectionReceived(Widget w,
 #endif
 #if OPT_READLINE
 	if (SCREEN_FLAG(screen, paste_brackets)) {
-	    _WriteKey(screen, (Char *) "201");
+	    _WriteKey(screen, (const Char *) "201");
 	}
 #endif
 	XFreeStringList(text_list);
@@ -2005,9 +2079,9 @@ HandleInsertSelection(Widget w,
 #if OPT_READLINE
 	    int ldelta;
 	    TScreen *screen = TScreenOf(xw);
-	    if ((event->type == ButtonPress || event->type == ButtonRelease)
+	    if (IsBtnEvent(event)
 	    /* Disable on Shift-mouse, including the application-mouse modes */
-		&& !(KeyModifiers & ShiftMask)
+		&& !(KeyModifiers(event) & ShiftMask)
 		&& (screen->send_mouse_pos == MOUSE_OFF)
 		&& SCREEN_FLAG(screen, paste_moves)
 		&& rowOnCurrentLine(screen, eventRow(screen, event), &ldelta))
@@ -2131,7 +2205,7 @@ TrackDown(XtermWidget xw, XButtonEvent * event)
 	StartSelect(xw, &cell);
     } else {
 	screen->waitingForTrackInfo = True;
-	EditorButton(xw, (XButtonEvent *) event);
+	EditorButton(xw, event);
     }
 }
 
@@ -2295,7 +2369,7 @@ do_start_extend(XtermWidget xw,
     screen->firstValidRow = 0;
     screen->lastValidRow = screen->max_row;
 #if OPT_READLINE
-    if ((KeyModifiers & ShiftMask)
+    if ((KeyModifiers(event) & ShiftMask)
 	|| event->xbutton.button != Button3
 	|| !(SCREEN_FLAG(screen, dclick3_deletes)))
 #endif
@@ -2311,7 +2385,7 @@ do_start_extend(XtermWidget xw,
 
     if (screen->numberOfClicks == 1
 	|| (SCREEN_FLAG(screen, dclick3_deletes)	/* Dclick special */
-	    &&!(KeyModifiers & ShiftMask))) {
+	    &&!(KeyModifiers(event) & ShiftMask))) {
 	/* Save existing selection so we can reestablish it if the guy
 	   extends past the other end of the selection */
 	screen->saveStartR = screen->startExt = screen->startRaw;

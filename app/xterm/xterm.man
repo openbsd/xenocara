@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.466 2010/07/16 00:39:54 tom Exp $
+.\" $XTermId: xterm.man,v 1.467 2010/10/11 00:36:08 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -3189,6 +3189,12 @@ otherwise the default is \*(``false.\*(''
 Tells \fIxterm\fP whether to display a box outlining places where
 a character has been used that the font does not represent.
 The default is \*(``false.\*(''
+.TP 8
+.B "showWrapMarks (\fPclass\fB ShowWrapMarks)"
+For debugging \fIxterm\fP and applications that may manipulate the
+wrapped-line flag by writing text at the right margin,
+show a mark on the right inner-border of the window.
+The mark shows which lines have the flag set.
 .TP 8
 .B "signalInhibit (\fPclass\fB SignalInhibit)"
 Specifies whether or not the entries in the \*(``Main Options\*('' menu for sending

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.344 2010/06/15 08:18:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.350 2010/10/14 09:27:25 tom Exp $ */
 
 /************************************************************
 
@@ -537,7 +537,7 @@ xtermSpecialFont(TScreen * screen, unsigned atts, unsigned chrset)
  * to use it).
  */
 static Bool
-same_font_name(char *pattern, char *match)
+same_font_name(const char *pattern, const char *match)
 {
     Bool result = False;
 
@@ -577,7 +577,7 @@ same_font_name(char *pattern, char *match)
  * offset.
  */
 static int
-got_bold_font(Display * dpy, XFontStruct * fs, char *requested)
+got_bold_font(Display * dpy, XFontStruct * fs, String requested)
 {
     char actual[MAX_FONTNAME];
     int got;
@@ -707,7 +707,7 @@ xtermFontName(const char *normal)
 {
     static VTFontNames data;
     if (data.f_n)
-	free(data.f_n);
+	free((void *) data.f_n);
     memset(&data, 0, sizeof(data));
     data.f_n = x_strdup(normal);
     return &data;
@@ -717,7 +717,7 @@ static void
 cache_menu_font_name(TScreen * screen, int fontnum, int which, const char *name)
 {
     if (name != 0) {
-	char *last = screen->menu_font_names[fontnum][which];
+	char *last = (char *) screen->menu_font_names[fontnum][which];
 	if (last != 0) {
 	    if (strcmp(last, name)) {
 		free(last);
@@ -745,7 +745,7 @@ xtermOpenFont(XtermWidget xw,
     Bool code = False;
     TScreen *screen = TScreenOf(xw);
 
-    if (name != 0) {
+    if (!IsEmpty(name)) {
 	if ((result->fs = XLoadQueryFont(screen->display, name)) != 0) {
 	    code = True;
 	    if (EmptyFont(result->fs)) {
@@ -761,7 +761,7 @@ xtermOpenFont(XtermWidget xw,
 #endif
 		) {
 		TRACE(("OOPS: cannot load font %s\n", name));
-		fprintf(stderr, "%s: cannot load font %s\n", ProgramName, name);
+		fprintf(stderr, "%s: cannot load font '%s'\n", ProgramName, name);
 #if OPT_RENDERFONT
 		/*
 		 * Do a sanity check in case someone's mixed up xterm with
@@ -774,7 +774,7 @@ xtermOpenFont(XtermWidget xw,
 		}
 #endif
 	    } else {
-		TRACE(("xtermOpenFont: cannot load font %s\n", name));
+		TRACE(("xtermOpenFont: cannot load font '%s'\n", name));
 	    }
 	    if (force) {
 		code = xtermOpenFont(xw, DEFFONT, result, fwAlways, True);
@@ -932,7 +932,7 @@ xtermLoadFont(XtermWidget xw,
 		myfonts.f_b = bold_font_name(fp, -1);
 		xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwAlways, False);
 	    }
-	    TRACE(("...derived bold %s\n", NonNull(myfonts.f_b)));
+	    TRACE(("...derived bold '%s'\n", NonNull(myfonts.f_b)));
 	}
 	if (fp == 0 || fnts[fBold].fs == 0) {
 	    xtermCopyFontInfo(&fnts[fBold], &fnts[fNorm]);
@@ -949,7 +949,7 @@ xtermLoadFont(XtermWidget xw,
     } else if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], warn[fBold], False)) {
 	xtermCopyFontInfo(&fnts[fBold], &fnts[fNorm]);
 	warn[fBold] = fwAlways;
-	TRACE(("...cannot load bold font %s\n", NonNull(myfonts.f_b)));
+	TRACE(("...cannot load bold font '%s'\n", NonNull(myfonts.f_b)));
     } else {
 	cache_menu_font_name(screen, fontnum, fBold, myfonts.f_b);
     }
@@ -1234,7 +1234,7 @@ xtermLoadFont(XtermWidget xw,
  */
 typedef struct {
     VTFontNames default_font;
-    char *menu_font_names[fontMenu_lastBuiltin + 1][fMAX];
+    String menu_font_names[fontMenu_lastBuiltin + 1][fMAX];
 } SubResourceRec;
 
 #define MERGE_SUBFONT(src,dst,name) \
@@ -1421,13 +1421,16 @@ HandleLoadVTFonts(Widget w,
 
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
-	char buf[80];
-	char *myName = (char *) ((*param_count > 0) ? params[0] : empty);
-	char *convert = (char *) ((*param_count > 1) ? params[1] : myName);
-	char *myClass = (char *) MyStackAlloc(strlen(convert), buf);
+	char name_buf[80];
+	char class_buf[80];
+	String name = (String) ((*param_count > 0) ? params[0] : empty);
+	char *myName = (char *) MyStackAlloc(strlen(name), name_buf);
+	String convert = (String) ((*param_count > 1) ? params[1] : myName);
+	char *myClass = (char *) MyStackAlloc(strlen(convert), class_buf);
 	int n;
 
 	TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
+	strcpy(myName, name);
 	strcpy(myClass, convert);
 	if (*param_count == 1)
 	    myClass[0] = x_toupper(myClass[0]);
@@ -1449,7 +1452,8 @@ HandleLoadVTFonts(Widget w,
 		       : NULL));
 	}
 
-	MyStackFree(myClass, buf);
+	MyStackFree(myName, name_buf);
+	MyStackFree(myClass, class_buf);
     }
 }
 #endif /* OPT_LOAD_VTFONTS */
@@ -1743,15 +1747,15 @@ xtermCloseXft(TScreen * screen, XTermXftFonts * pub)
  * Get the faceName/faceDoublesize resource setting.  Strip off "xft:", which
  * is not recognized by XftParseName().
  */
-char *
+String
 getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
 {
 #if OPT_RENDERWIDE
-    char *result = (wideName
-		    ? xw->misc.face_wide_name
-		    : xw->misc.face_name);
+    String result = (wideName
+		     ? xw->misc.face_wide_name
+		     : xw->misc.face_name);
 #else
-    char *result = xw->misc.face_name;
+    String result = xw->misc.face_name;
 #endif
     if (!IsEmpty(result) && !strncmp(result, "xft:", (size_t) 4))
 	result += 4;
@@ -1795,6 +1799,9 @@ xtermComputeFontInfo(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
 
     int i, j, width, height;
+#if OPT_RENDERFONT
+    int fontnum = screen->menu_font_number;
+#endif
 
 #if OPT_RENDERFONT
     /*
@@ -1804,9 +1811,8 @@ xtermComputeFontInfo(XtermWidget xw,
      * font-loading for fixed-fonts still goes on whether or not this chunk
      * overrides it.
      */
-    if (UsingRenderFont(xw)) {
-	char *face_name = getFaceName(xw, False);
-	int fontnum = screen->menu_font_number;
+    if (UsingRenderFont(xw) && fontnum >= 0) {
+	String face_name = getFaceName(xw, False);
 	XftFont *norm = screen->renderFontNorm[fontnum].font;
 	XftFont *bold = screen->renderFontBold[fontnum].font;
 	XftFont *ital = screen->renderFontItal[fontnum].font;
@@ -1820,8 +1826,8 @@ xtermComputeFontInfo(XtermWidget xw,
 	    XftPattern *pat;
 	    double face_size = xw->misc.face_size[fontnum];
 
-	    TRACE(("xtermComputeFontInfo norm(face %s, size %f)\n",
-		   face_name,
+	    TRACE(("xtermComputeFontInfo font %d: norm(face %s, size %f)\n",
+		   fontnum, face_name,
 		   xw->misc.face_size[fontnum]));
 
 	    if (face_size <= 0.0) {
@@ -2030,7 +2036,7 @@ xtermComputeFontInfo(XtermWidget xw,
     /*
      * Are we handling a bitmap font?
      */
-    if (!UsingRenderFont(xw))
+    else
 #endif /* OPT_RENDERFONT */
     {
 	if (is_double_width_font(font) && !(screen->fnt_prop)) {

@@ -1,4 +1,6 @@
-/* $XFree86: xc/programs/xterm/xutf8.h,v 1.1 2001/06/18 19:09:28 dickey Exp $ */
+/*
+ * $XTermId: xutf8.h,v 1.4 2010/10/10 14:10:12 Jeremy.Huddleston Exp $
+ */
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -21,9 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef _XLIB_H_
-#error Please include <X11/Xlib.h> before "xutf8.h"
-#endif
+#include <X11/Xlib.h>
 
 #ifndef X_HAVE_UTF8_STRING
 

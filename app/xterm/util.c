@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.539 2010/08/29 22:49:16 tom Exp $ */
+/* $XTermId: util.c,v 1.541 2010/10/11 00:32:28 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1343,6 +1343,9 @@ ClearRight(XtermWidget xw, int n)
 
     /* with the right part cleared, we can't be wrapping */
     LineClrWrapped(ld);
+    if (screen->show_wrap_marks) {
+	ShowWrapMarks(xw, screen->cur_row, ld);
+    }
     screen->do_wrap = False;
 }
 
@@ -1625,6 +1628,15 @@ vertical_copy_area(XtermWidget xw,
 		  (unsigned) Width(screen),
 		  (unsigned) (nlines * FontHeight(screen)),
 		  src_x, src_y - amount * FontHeight(screen));
+	if (screen->show_wrap_marks) {
+	    LineData *ld;
+	    int row;
+	    for (row = firstline; row < firstline + nlines; ++row) {
+		if ((ld = getLineData(screen, row)) != 0) {
+		    ShowWrapMarks(xw, row, ld);
+		}
+	    }
+	}
     }
 }
 

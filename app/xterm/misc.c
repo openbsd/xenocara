@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.507 2010/08/30 08:26:45 tom Exp $ */
+/* $XTermId: misc.c,v 1.510 2010/10/11 08:33:33 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -425,7 +425,30 @@ xevents(void)
 		   && event.xany.type == MotionNotify
 		   && event.xcrossing.window == XtWindow(xw)) {
 	    SendMousePosition(xw, &event);
+	    xtermShowPointer(xw, True);
 	    continue;
+	}
+
+	/*
+	 * If the event is interesting (and not a keyboard event), turn the
+	 * mouse pointer back on.
+	 */
+	if (screen->hide_pointer) {
+	    switch (event.xany.type) {
+	    case KeyPress:
+	    case KeyRelease:
+	    case ButtonPress:
+	    case ButtonRelease:
+		/* also these... */
+	    case Expose:
+	    case NoExpose:
+	    case PropertyNotify:
+	    case ClientMessage:
+		break;
+	    default:
+		xtermShowPointer(xw, True);
+		break;
+	    }
 	}
 
 	if (!event.xany.send_event ||
@@ -434,28 +457,6 @@ xevents(void)
 	     (event.xany.type != KeyRelease) &&
 	     (event.xany.type != ButtonPress) &&
 	     (event.xany.type != ButtonRelease))) {
-
-	    /*
-	     * If the event is interesting (and not a keyboard event), turn the
-	     * mouse pointer back on.
-	     */
-	    if (screen->hide_pointer) {
-		switch (event.xany.type) {
-		case KeyPress:
-		case KeyRelease:
-		case ButtonPress:
-		case ButtonRelease:
-		    /* also these... */
-		case Expose:
-		case NoExpose:
-		case PropertyNotify:
-		case ClientMessage:
-		    break;
-		default:
-		    xtermShowPointer(xw, True);
-		    break;
-		}
-	    }
 
 	    XtDispatchEvent(&event);
 	}
@@ -2551,7 +2552,7 @@ ResetColorsRequest(XtermWidget xw,
  * the corresponding menu font entry.
  */
 static int
-ParseShiftedFont(XtermWidget xw, char *source, char **target)
+ParseShiftedFont(XtermWidget xw, String source, String * target)
 {
     TScreen *screen = TScreenOf(xw);
     int num = screen->menu_font_number;
@@ -2586,13 +2587,13 @@ ParseShiftedFont(XtermWidget xw, char *source, char **target)
 }
 
 static void
-QueryFontRequest(XtermWidget xw, char *buf, int final)
+QueryFontRequest(XtermWidget xw, String buf, int final)
 {
     if (AllowFontOps(xw, efGetFont)) {
 	TScreen *screen = TScreenOf(xw);
 	Bool success = True;
 	int num;
-	char *base = buf + 1;
+	String base = buf + 1;
 	const char *name = 0;
 	char temp[10];
 
@@ -2636,7 +2637,7 @@ QueryFontRequest(XtermWidget xw, char *buf, int final)
 }
 
 static void
-ChangeFontRequest(XtermWidget xw, char *buf)
+ChangeFontRequest(XtermWidget xw, String buf)
 {
     if (AllowFontOps(xw, efSetFont)) {
 	TScreen *screen = TScreenOf(xw);
@@ -3450,11 +3451,11 @@ do_rpm(XtermWidget xw, int nparams, int *params)
 	    result = MdFlag(xw->flags, LINEFEED);
 	    break;
 	}
-	reply.a_param[count++] = params[0];
-	reply.a_param[count++] = result;
+	reply.a_param[count++] = (ParmType) params[0];
+	reply.a_param[count++] = (ParmType) result;
     }
     reply.a_type = ANSI_CSI;
-    reply.a_nparam = count;
+    reply.a_nparam = (ParmType) count;
     reply.a_inters = '$';
     reply.a_final = 'y';
     unparseseq(xw, &reply);
@@ -3680,12 +3681,12 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif /* OPT_READLINE */
 	}
-	reply.a_param[count++] = params[0];
-	reply.a_param[count++] = result;
+	reply.a_param[count++] = (ParmType) params[0];
+	reply.a_param[count++] = (ParmType) result;
     }
     reply.a_type = ANSI_CSI;
     reply.a_pintro = '?';
-    reply.a_nparam = count;
+    reply.a_nparam = (ParmType) count;
     reply.a_inters = '$';
     reply.a_final = 'y';
     unparseseq(xw, &reply);

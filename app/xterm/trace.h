@@ -1,11 +1,11 @@
-/* $XTermId: trace.h,v 1.54 2010/06/15 22:40:51 tom Exp $ */
+/* $XTermId: trace.h,v 1.55 2010/10/13 22:26:57 tom Exp $ */
 
 /*
- * 
+ *
  * Copyright 1997-2009,2010 by Thomas E. Dickey
- * 
+ *
  *                         All Rights Reserved
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -29,7 +29,7 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- * 
+ *
  */
 
 /*
@@ -119,5 +119,42 @@ extern	int	TraceResizeRequest(const char * /* fn */, int  /* ln */, Widget  /* w
 			    (gotwide), (gothigh))
 
 #endif
+
+/*
+ * The whole wnew->screen struct is zeroed in VTInitialize.  Use these macros
+ * where applicable for copying the pieces from the request widget into the
+ * new widget.  We do not have to use them for wnew->misc, but the associated
+ * traces are very useful for debugging.
+ */
+#if OPT_TRACE
+#define init_Bres(name) \
+	TRACE(("init " #name " = %s\n", \
+		BtoS(wnew->name = request->name)))
+#define init_Dres2(name,i) \
+	TRACE(("init " #name "[%d] = %f\n", i, \
+		wnew->name[i] = request->name[i]))
+#define init_Ires(name) \
+	TRACE(("init " #name " = %d\n", \
+		wnew->name = request->name))
+#define init_Sres(name) \
+	TRACE(("init " #name " = \"%s\"\n", \
+		(wnew->name = x_strtrim(request->name)) != NULL \
+			? wnew->name : "<null>"))
+#define init_Sres2(name,i) \
+	TRACE(("init " #name "[%d] = \"%s\"\n", i, \
+		(wnew->name(i) = x_strtrim(request->name(i))) != NULL \
+			? wnew->name(i) : "<null>"))
+#define init_Tres(offset) \
+	TRACE(("init screen.Tcolors[" #offset "] = %#lx\n", \
+		fill_Tres(wnew, request, offset)))
+#else
+#define init_Bres(name)    wnew->name = request->name
+#define init_Dres2(name,i) wnew->name[i] = request->name[i]
+#define init_Ires(name)    wnew->name = request->name
+#define init_Sres(name)    wnew->name = x_strtrim(request->name)
+#define init_Sres2(name,i) wnew->name(i) = x_strtrim(request->name(i))
+#define init_Tres(offset)  fill_Tres(wnew, request, offset)
+#endif
+
 
 #endif	/* included_trace_h */
