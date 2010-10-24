@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.138 2010/10/18 19:08:58 matthieu Exp $
+ $OpenBSD: MODULES,v 1.139 2010/10/24 17:25:06 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -6,7 +6,7 @@
 app/appres		1.0.2	7.5
 app/bdftopcf		1.0.2	7.5
 app/beforelight		1.0.2	7.2RC4
-app/bitmap		1.0.4	7.5
+app/bitmap		1.0.5	7.6	needs-update
 app/editres		1.0.4	7.5
 app/fonttosfnt		1.0.4	7.4
 app/fslsfonts		1.0.2	7.4
@@ -24,7 +24,7 @@ app/scripts		1.0.1	7.0
 app/sessreg		1.0.6	7.5
 app/setxkbmap		1.2.0	7.6
 app/showfont		1.0.2	7.4
-app/smproxy		1.0.3	7.5
+app/smproxy		1.0.4	7.6	needs-update
 app/twm			1.0.4	7.4
 app/viewres		1.0.2	7.5+
 app/x11perf		1.5.2	7.6
@@ -44,7 +44,7 @@ app/xedit		1.1.2	7.4
 app/xev			1.0.4	7.5
 app/xeyes		1.1.0	7.5+
 app/xf86dga		1.0.2	7.2RC1
-app/xfd			1.0.1	7.0
+app/xfd			1.1.0	7.6	needs-update
 app/xfontsel		1.0.2	7.2+
 app/xfs			1.1.0	7.4+
 app/xfsinfo		1.0.2	7.4
@@ -177,7 +177,7 @@ font/schumacher-misc		1.1.1	needs-update
 font/screen-cyrillic		1.0.3	needs-update
 font/sony-misc			1.0.2	needs-update
 font/sun-misc			1.0.2	needs-update
-font/util			1.1.1	needs-update
+font/util			1.2.0	needs-update
 font/winitzki-cyrillic		1.0.2	needs-update
 font/xfree86-type1		1.0.3	needs-update
 
@@ -212,7 +212,7 @@ lib/libXxf86dga			1.1.1	7.5
 lib/libXxf86misc		1.0.2	7.5
 lib/libXxf86vm			1.1.0	7.5
 lib/libdmx			1.1.0	7.5
-lib/libfontenc			1.0.5	7.5
+lib/libfontenc			1.1.0	7.6	needs-update
 lib/libpciaccess		0.12.0	7.5+
 lib/libpthread-stubs		0.3	7.5+
 lib/libxcb			1.7	7.6
@@ -257,4 +257,4 @@ util/imake			1.0.3	7.6
 util/macros			1.10.1	7.6	needs-update
 util/makedepend			1.0.2	7.5
 
-xserver				1.9.0	7.6	needs-update
+xserver				1.9.1	7.6	needs-update
