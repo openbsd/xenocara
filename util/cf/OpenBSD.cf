@@ -244,8 +244,8 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
 /*
  * Documentation formatting
  */
-#define NeqnCmd			neqn -Tlatin1
-#define NroffCmd		nroff -Tlatin1
+#define NeqnCmd			neqn -Tascii
+#define NroffCmd		nroff -Tascii
 #define	EqnCmd 			eqn -Tps
 #define HasGroff		YES
 
