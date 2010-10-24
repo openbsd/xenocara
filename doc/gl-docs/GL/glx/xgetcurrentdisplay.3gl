@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 59497 2 xgetcurrentdisplay.gl
-.TH GLXGETCURRENTDISPLAY
+.TH GLXGETCURRENTDISPLAY 3
 .SH NAME
 glXGetCurrentDisplay
 \- get display for current context

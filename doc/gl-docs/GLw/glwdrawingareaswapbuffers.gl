@@ -10,7 +10,7 @@
 .\" **      Maynard, MA.  All Rights Reserved.
 .\" **
 .\" **
-.TH GLwDrawingAreaSwapBuffers 3X "" "" "" ""
+.TH GLwDrawingAreaSwapBuffers 3X "" "" ""
 .SH NAME
 \fBGLwDrawingAreaSwapBuffers \(em Swap buffers in a GLwDrawingArea.\fP
 .iX "GLwDrawingAreaSwapBuffers"

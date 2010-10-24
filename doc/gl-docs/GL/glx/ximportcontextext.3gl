@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 38402 4 ximportcontextext.gl
-.TH GLXIMPORTCONTEXTEXT
+.TH GLXIMPORTCONTEXTEXT 3
 .SH NAME
 glXImportContextEXT
 \- import another process's indirect rendering context.

@@ -10,7 +10,7 @@
 .\" **      Maynard, MA.  All Rights Reserved.
 .\" **
 .\" **
-.TH GLwCreateMDrawingArea 3X "" "" "" ""
+.TH GLwCreateMDrawingArea 3X "" "" ""
 .SH NAME
 \fBGLwCreateMDrawingArea \(em Create a Motif/OpenGL Drawing Widget.\fP
 .iX "GLwCreateMDrawingArea"

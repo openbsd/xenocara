@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 60987 10 xgetconfig.gl
-.TH GLXGETCONFIG
+.TH GLXGETCONFIG 3
 .SH NAME
 glXGetConfig
 \- return information about GLX visuals

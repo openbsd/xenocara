@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 37853 3 xfreecontextext.gl
-.TH GLXFREECONTEXTEXT
+.TH GLXFREECONTEXTEXT 3
 .SH NAME
 glXFreeContextEXT
 \- free client-side memory for imported context

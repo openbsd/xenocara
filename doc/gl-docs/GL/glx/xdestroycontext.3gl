@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 5532 2 xdestroycontext.gl
-.TH GLXDESTROYCONTEXT
+.TH GLXDESTROYCONTEXT 3
 .SH NAME
 glXDestroyContext
 \- destroy a GLX context

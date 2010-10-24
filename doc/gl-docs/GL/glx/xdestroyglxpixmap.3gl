@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 2275 2 xdestroyglxpixmap.gl
-.TH GLXDESTROYGLXPIXMAP
+.TH GLXDESTROYGLXPIXMAP 3
 .SH NAME
 glXDestroyGLXPixmap
 \- destroy a GLX pixmap

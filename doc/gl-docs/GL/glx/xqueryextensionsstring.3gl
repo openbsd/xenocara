@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 26309 3 xqueryextensionsstring.gl
-.TH GLXQUERYEXTENSIONSSTRING
+.TH GLXQUERYEXTENSIONSSTRING 3
 .SH NAME
 glXQueryExtensionsString
 \- return list of supported extensions

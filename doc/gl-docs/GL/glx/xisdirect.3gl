@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 12384 2 xisdirect.gl
-.TH GLXISDIRECT
+.TH GLXISDIRECT 3
 .SH NAME
 glXIsDirect
 \- indicate whether direct rendering is enabled

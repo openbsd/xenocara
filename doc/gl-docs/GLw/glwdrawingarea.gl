@@ -10,7 +10,7 @@
 .\" **      Maynard, MA.  All Rights Reserved.
 .\" **
 .\" **
-.TH GLwDrawingArea 3X "" "" "" ""
+.TH GLwDrawingArea 3X "" "" ""
 .SH NAME
 \fBGLwDrawingArea, GLwMDrawingArea \(em OpenGL drawing widgets.\fP
 .iX "GLwDrawingArea" "GLwMDrawingArea"

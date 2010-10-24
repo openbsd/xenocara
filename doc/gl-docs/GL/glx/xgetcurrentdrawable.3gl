@@ -5,7 +5,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 49921 2 xgetcurrentdrawable.gl
-.TH GLXGETCURRENTDRAWABLE
+.TH GLXGETCURRENTDRAWABLE 3
 .SH NAME
 glXGetCurrentDrawable
 \- return the current drawable

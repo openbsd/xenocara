@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 25267 2 xqueryextension.gl
-.TH GLXQUERYEXTENSION
+.TH GLXQUERYEXTENSION 3
 .SH NAME
 glXQueryExtension
 \- indicate whether the GLX extension is supported

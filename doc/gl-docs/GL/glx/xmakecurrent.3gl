@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 28564 7 xmakecurrent.gl
-.TH GLXMAKECURRENT
+.TH GLXMAKECURRENT 3
 .SH NAME
 glXMakeCurrent
 \- attach a GLX context to a window or a GLX pixmap

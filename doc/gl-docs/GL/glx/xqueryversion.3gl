@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 36423 3 xqueryversion.gl
-.TH GLXQUERYVERSION
+.TH GLXQUERYVERSION 3
 .SH NAME
 glXQueryVersion
 \- return the version numbers of the GLX extension

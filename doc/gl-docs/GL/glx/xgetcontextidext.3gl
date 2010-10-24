@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 25633 3 xgetcontextidext.gl
-.TH GLXGETCONTEXTIDEXT
+.TH GLXGETCONTEXTIDEXT 3
 .SH NAME
 glXGetContextIDEXT
 \- get the XID for a context.

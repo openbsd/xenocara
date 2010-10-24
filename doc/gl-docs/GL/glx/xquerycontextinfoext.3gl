@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 51469 3 xquerycontextinfoext.gl
-.TH GLXQUERYCONTEXTINFOEXT
+.TH GLXQUERYCONTEXTINFOEXT 3
 .SH NAME
 glXQueryContextInfoEXT
 \- query context information

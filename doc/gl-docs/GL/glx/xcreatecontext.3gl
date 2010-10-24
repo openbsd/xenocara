@@ -6,7 +6,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 16965 8 xcreatecontext.gl
-.TH GLXCREATECONTEXT
+.TH GLXCREATECONTEXT 3
 .SH NAME
 glXCreateContext
 \- create a new GLX rendering context

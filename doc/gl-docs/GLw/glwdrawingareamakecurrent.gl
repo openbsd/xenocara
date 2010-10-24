@@ -10,7 +10,7 @@
 .\" **      Maynard, MA.  All Rights Reserved.
 .\" **
 .\" **
-.TH GLwDrawingAreaMakeCurrent 3X "" "" "" ""
+.TH GLwDrawingAreaMakeCurrent 3X "" "" ""
 .SH NAME
 \fBGLwDrawingAreaMakeCurrent \(em Make the current GLwDrawingArea current.\fP
 .iX "GLwDrawingAreaMakeCurrent"

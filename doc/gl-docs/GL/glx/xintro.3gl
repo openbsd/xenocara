@@ -7,7 +7,7 @@
 .ds Dp Feb 16 02:56
 .ds Dm  Feb 10 17:2
 .ds Xs 32008 15 xintro.gl
-.TH GLXINTRO
+.TH GLXINTRO 3
 .SH NAME
 glXIntro
 \- Introduction to OpenGL in the X window system
