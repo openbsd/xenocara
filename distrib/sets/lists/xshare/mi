@@ -3024,10 +3024,6 @@
 ./usr/X11R6/share/doc/inputproto/XI2proto.txt
 ./usr/X11R6/share/doc/inputproto/XIproto.txt
 ./usr/X11R6/share/doc/libXaw
-./usr/X11R6/share/doc/libXaw/widgets.html
-./usr/X11R6/share/doc/libXaw/widgets.index.ps
-./usr/X11R6/share/doc/libXaw/widgets.ps
-./usr/X11R6/share/doc/libXaw/widgets.txt
 ./usr/X11R6/share/doc/libXrender
 ./usr/X11R6/share/doc/libXrender/libXrender.txt
 ./usr/X11R6/share/doc/libXvMC
