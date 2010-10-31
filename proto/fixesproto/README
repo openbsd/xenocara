@@ -1,5 +1,10 @@
-This package contains header files and documentation for the XFIXES
-extension.  Library and server implementations are separate.
+				X Fixes Extension
+
+The extension makes changes to many areas of the protocol to resolve
+issues raised by application interaction with core protocol mechanisms
+that cannot be adequately worked around on the client side of the wire.
+
+Extension name: XFIXES
 
 All questions regarding this software should be directed at the
 Xorg mailing list:

@@ -1,3 +1,119 @@
+commit 29324d36b3aa6697268c9b51522afcafc2244361
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 21:01:26 2010 -0700
+
+    fixesproto 4.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d3dc092d123139bdb0db40fde42fc9a9f4ee6a9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 20:59:41 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 66c8619be99d10de5969371ff6ccf08088bffdff
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:30 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f7cd767d6f1d1f42da3c4e50ea414fe9716ac240
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:29:22 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ef0cad8cf54d1a672983ffac213cdca99fa9151e
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Thu Dec 17 08:35:10 2009 +0100
+
+    Use $(docdir) for fixesproto.txt install path
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 8b518027c4243101a7da00b3a9419d63ece1c782
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:48 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 36ed341de07d5c4df48116c3fcdbb6b9a432e5fe
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 16:10:15 2009 -0500
+
+    INSTALL file is missing or incorrect #24206
+    
+    The file is copied from util-macros.
+    The copy in git is removed.
+
+commit 8c866c15f1898105d7ee09ad3d8ed38213e76338
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:10:10 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit 7f1bfe8c784db325ae532f54823ef07767e0a5ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 20:28:56 2009 -0500
+
+    NEWS: remove empty file #24206
+
+commit e7f981e0994f748faada122f8592359e8cb42c85
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:26 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 2beee4825c0f1605988808c3bf9cd1347f6e3c02
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:28 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit a76d9bcc9d07aa64cfcb31624702efb444ae5109
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 3907b71be026b126565e3859239032c6f437185d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:46 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 88cd481b5349fe4962ac609c8711a17d4323e42a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Oct 6 12:13:58 2009 +1000
