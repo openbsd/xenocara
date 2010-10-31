@@ -1,3 +1,67 @@
+commit ce32345589050b17b23b18157f95f060f4c776a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 20:43:53 2010 -0700
+
+    Version bump: 1.11.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eb7ebbbbb2a6196322cf7e48f60a11f2f65f7534
+Author: Dan Nicholson <dbn.lists@gmail.com>
+Date:   Fri Oct 22 19:12:46 2010 -0700
+
+    docs: Take optional argument to control defaults
+    
+    The typical default of enabling documentation if the correct tool is
+    found is usually the right thing to do. However, some packages such as
+    Xlib have huge amounts of documentation that few people would need in
+    every output format. Allow packages to specify the default for each tool
+    by passing an argument to the macro.
+    
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 119f35b24d446a8f7b1da4a3eaa6d6e3ad982d69
+Author: Dan Nicholson <dbn.lists@gmail.com>
+Date:   Sat Oct 9 17:41:10 2010 -0700
+
+    docs: Use m4 to handle optional macro defaults
+    
+    Handling the optional documentation parameters with m4 allows the help
+    string to correctly represent the default.
+    
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aeebb46766dada64de246fd9fe72e3c523c4e70e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 23 15:00:20 2010 -0400
+
+    Version bump: 1.10.1
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1905f89998cb26410872150679501fde506a03c7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 3 22:47:02 2010 -0700
+
+    Sun's copyrights are now owned by Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 808d547902fad81901db94e6344838350d0eeb52
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Aug 14 15:43:38 2010 -0400
+
+    XORG_MANPAGE_SECTIONS: add substitution for apploaddir
+    
+    This represents the location of the app-defaults directory
+    Used in app/bitmap/man for example.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit fbe66aedcf2165e43388894d3b2ee2f38e889f93
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Thu Jun 24 17:36:33 2010 -0400
