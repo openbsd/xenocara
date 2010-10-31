@@ -68,7 +68,7 @@ static void print_catalogue_info(FSServer *svr);
 static void print_extension_info(FSServer *svr);
 static void print_alternate_info(FSServer *svr);
 
-char       *progname;
+static char *progname;
 
 static void
 usage(void)
@@ -100,12 +100,16 @@ main(int argc, char *argv[])
 
     if (!svr) {
 	if (FSServerName(servername) == NULL) {
-	    fprintf(stderr, "%s: no font server defined\n", progname);
+	    if ((svr = FSOpenServer("unix/:-1")) == NULL) {
+		fprintf(stderr, "%s: no font server defined\n", progname);
+		exit(1);
+	    }
+	}
+	if (!svr) {
+	    fprintf(stderr, "%s:  unable to open server \"%s\"\n",
+		    progname, FSServerName(servername));
 	    exit(1);
 	}
-	fprintf(stderr, "%s:  unable to open server \"%s\"\n",
-		progname, FSServerName(servername));
-	exit(1);
     }
     print_server_info(svr);
     FSCloseServer(svr);
