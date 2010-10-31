@@ -48,12 +48,9 @@ in this Software without prior written authorization from The Open Group.
 /*    TORTIOUS ACTION, ARISING OUT OF OR IN  CONNECTION  WITH  THE  USE    */
 /*    OR PERFORMANCE OF THIS SOFTWARE.                                     */
 /*********************************************************************(*****/
-/* $XFree86: xc/programs/twm/gc.c,v 1.5 2001/01/17 23:45:06 dawes Exp $ */
 
 
 /**********************************************************************
- *
- * $Xorg: gc.c,v 1.4 2001/02/09 02:05:36 xorgcvs Exp $
  *
  * Open the fonts and create the GCs
  *

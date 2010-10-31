@@ -48,12 +48,9 @@ in this Software without prior written authorization from The Open Group.
 /**    TORTIOUS ACTION, ARISING OUT OF OR IN  CONNECTION  WITH  THE  USE    **/
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
-/* $XFree86: xc/programs/twm/menus.h,v 1.5 2001/08/27 21:11:40 dawes Exp $ */
 
 
 /***********************************************************************
- *
- * $Xorg: menus.h,v 1.4 2001/02/09 02:05:37 xorgcvs Exp $
  *
  * twm menus include file
  *

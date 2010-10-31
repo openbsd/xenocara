@@ -48,12 +48,9 @@ in this Software without prior written authorization from The Open Group.
 /**    TORTIOUS ACTION, ARISING OUT OF OR IN  CONNECTION  WITH  THE  USE    **/
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
-/* $XFree86: xc/programs/twm/list.c,v 1.8 2002/09/24 21:00:27 tsi Exp $ */
 
 
 /**********************************************************************
- *
- * $Xorg: list.c,v 1.4 2001/02/09 02:05:36 xorgcvs Exp $
  *
  * TWM code to deal with the name lists for the NoTitle list and
  * the AutoRaise list

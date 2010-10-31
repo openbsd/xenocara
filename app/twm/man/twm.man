@@ -1,4 +1,3 @@
-.\" $Xorg: twm.man,v 1.4 2001/02/09 02:05:37 xorgcvs Exp $
 .\" Copyright 1993, 1994, 1998  The Open Group
 .\" Portions copyright 1988 Evans & Sutherland Computer Corporation.
 .\" Portions copyright 1989 Hewlett-Packard Company
@@ -24,8 +23,6 @@
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
-.\"
-.\" $XFree86: xc/programs/twm/twm.man,v 1.9 2001/12/14 20:01:10 dawes Exp $
 .\"
 .de EX		\"Begin example
 .ne 5

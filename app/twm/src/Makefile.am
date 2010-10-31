@@ -71,14 +71,14 @@ MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 gram.h: gram.c
 
 deftwmrc.c:  system.twmrc
-	rm -f $@
-	echo '/* ' >>$@
-	echo ' * This file is generated automatically from the default' >>$@
-	echo ' * twm bindings file system.twmrc by the twm Imakefile.' >>$@
-	echo ' */' >>$@
-	echo '' >>$@
-	echo 'unsigned char *defTwmrc[] = {' >>$@
-	sed -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@
+	$(AM_V_GEN)rm -f $@ ; \
+	echo '/* ' >>$@ ; \
+	echo ' * This file is generated automatically from the default' >>$@ ; \
+	echo ' * twm bindings file system.twmrc by the twm Makefile.' >>$@ ; \
+	echo ' */' >>$@ ; \
+	echo '' >>$@ ; \
+	echo 'unsigned char *defTwmrc[] = {' >>$@ ; \
+	sed -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@ ; \
 	echo '    (unsigned char *) 0 };' >>$@
 
-EXTRA_DIST = system.twmrc deftwmrc.sed siconify.bm
+EXTRA_DIST = deftwmrc.sed siconify.bm

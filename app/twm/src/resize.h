@@ -48,12 +48,9 @@ in this Software without prior written authorization from The Open Group.
 /**    TORTIOUS ACTION, ARISING OUT OF OR IN  CONNECTION  WITH  THE  USE    **/
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
-/* $XFree86: xc/programs/twm/resize.h,v 1.4 2001/01/17 23:45:08 dawes Exp $ */
 
 
 /**********************************************************************
- *
- * $Xorg: resize.h,v 1.4 2001/02/09 02:05:37 xorgcvs Exp $
  *
  * resize function externs
  *

@@ -49,6 +49,5 @@ in this Software without prior written authorization from The Open Group.
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
 
-/* $Xorg: version.c,v 1.4 2001/02/09 02:05:37 xorgcvs Exp $ */
 char *Version = XVENDORNAME", "XORG_RELEASE;
 

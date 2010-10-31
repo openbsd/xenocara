@@ -53,15 +53,12 @@ in this Software without prior written authorization from The Open Group.
 
 /***********************************************************************
  *
- * $Xorg: twm.c,v 1.5 2001/02/09 02:05:37 xorgcvs Exp $
- *
  * twm - "Tom's Window Manager"
  *
  * 27-Oct-1987 Thomas E. LaStrange    File created
  * 10-Oct-1990 David M. Sternlicht    Storing saved colors on root
  * 19-Feb-2005 Julien Lafon           Handle print screens for unified Xserver
  ***********************************************************************/
-/* $XFree86: xc/programs/twm/twm.c,v 3.13 2003/04/21 08:15:10 herrb Exp $ */
 
 #include <stdio.h>
 #include <signal.h>

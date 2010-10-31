@@ -20,28 +20,30 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(twm,[1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],twm)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([twm], [1.0.5],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [twm])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
-AC_PROG_CC
-AC_PROG_INSTALL
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
+
 AC_PROG_YACC
+AC_PATH_PROG([YACC_INST], $YACC)
+AC_CHECK_FILE([$srcdir/gram.c], [],
+              [test -z "$YACC_INST" && AC_MSG_ERROR([yacc not found - unable to compile gram.y])])
 AC_PROG_LEX
 
-AC_CHECK_FUNC([mkstemp], 
-   AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the `mkstemp' function.]))
+AC_CHECK_FUNCS([mkstemp])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(TWM, x11 xext xt xmu ice sm)
-AC_SUBST(TWM_CFLAGS)
-AC_SUBST(TWM_LIBS)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
 	   src/Makefile

@@ -48,12 +48,9 @@ in this Software without prior written authorization from The Open Group.
 /**    TORTIOUS ACTION, ARISING OUT OF OR IN  CONNECTION  WITH  THE  USE    **/
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
-/* $XFree86: xc/programs/twm/util.h,v 1.6 2001/01/17 23:45:08 dawes Exp $ */
 
 
 /***********************************************************************
- *
- * $Xorg: util.h,v 1.4 2001/02/09 02:05:37 xorgcvs Exp $
  *
  * utility routines header file
  *

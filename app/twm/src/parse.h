@@ -1,5 +1,3 @@
-/* $XdotOrg: $ */
-/* $XFree86: xc/programs/twm/parse.h,v 1.10 2001/09/30 17:58:19 herrb Exp $ */
 /*****************************************************************************/
 /*
 
@@ -53,8 +51,6 @@ in this Software without prior written authorization from The Open Group.
 
 
 /**********************************************************************
- *
- * $Xorg: parse.h,v 1.4 2001/02/09 02:05:37 xorgcvs Exp $
  *
  * .twmrc parsing externs
  *

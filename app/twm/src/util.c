@@ -48,12 +48,9 @@ in this Software without prior written authorization from The Open Group.
 /**    TORTIOUS ACTION, ARISING OUT OF OR IN  CONNECTION  WITH  THE  USE    **/
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
-/* $XFree86: xc/programs/twm/util.c,v 1.12 2002/09/19 13:22:05 tsi Exp $ */
 
 
 /***********************************************************************
- *
- * $Xorg: util.c,v 1.5 2001/02/09 02:05:37 xorgcvs Exp $
  *
  * utility routines for twm
  *

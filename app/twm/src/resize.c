@@ -52,15 +52,11 @@ in this Software without prior written authorization from The Open Group.
 
 /***********************************************************************
  *
- * $Xorg: resize.c,v 1.5 2001/02/09 02:05:37 xorgcvs Exp $
- *
  * window resizing borrowed from the "wm" window manager
  *
  * 11-Dec-87 Thomas E. LaStrange                File created
  *
  ***********************************************************************/
-
-/* $XFree86: xc/programs/twm/resize.c,v 1.7 2001/01/17 23:45:07 dawes Exp $ */
 
 #include <stdio.h>
 #include "twm.h"

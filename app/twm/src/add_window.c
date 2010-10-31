@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/twm/add_window.c,v 1.11 2002/04/04 14:05:58 eich Exp $ */
 /*****************************************************************************/
 /*
 
@@ -52,8 +51,6 @@ in this Software without prior written authorization from The Open Group.
 
 
 /**********************************************************************
- *
- * $Xorg: add_window.c,v 1.5 2001/02/09 02:05:36 xorgcvs Exp $
  *
  * Add a new window, put the titlbar and other stuff around
  * the window

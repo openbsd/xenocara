@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/twm/menus.c,v 1.18tsi Exp $ */
 /*****************************************************************************/
 /*
 
@@ -52,8 +51,6 @@ in this Software without prior written authorization from The Open Group.
 
 
 /***********************************************************************
- *
- * $Xorg: menus.c,v 1.6 2001/02/09 02:05:36 xorgcvs Exp $
  *
  * twm menu code
  *

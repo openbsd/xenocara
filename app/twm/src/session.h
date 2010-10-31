@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/twm/session.h,v 1.1 1999/02/20 14:55:52 hohndel Exp $ */
 /*
  * Copyright (C) 1998 The XFree86 Project, Inc.  All Rights Reserved.
  *

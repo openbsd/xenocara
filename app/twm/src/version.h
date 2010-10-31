@@ -51,8 +51,6 @@ in this Software without prior written authorization from The Open Group.
 
 /**********************************************************************
  *
- * $Xorg: version.h,v 1.4 2001/02/09 02:05:37 xorgcvs Exp $
- *
  * TWM version externs
  *
  *  8-Apr-88 Tom LaStrange        Initial Version.
