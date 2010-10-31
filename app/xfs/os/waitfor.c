@@ -67,10 +67,12 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 long        LastReapTime;
+int         xfd_ffs(fd_mask);
+
 
 /* like ffs, but uses fd_mask instead of int as argument, so it works
    when fd_mask is longer than an int, such as common 64-bit platforms */
-static inline int
+int
 xfd_ffs(fd_mask mask)
 {
     int i;
@@ -195,7 +197,7 @@ WaitForSomething(int *pClientsReady)
 	for (i = 0; i < howmany(XFD_SETSIZE, NFDBITS); i++) {
 	    while (clientsReadable.fds_bits[i]) {
 		curclient = xfd_ffs(clientsReadable.fds_bits[i]) - 1;
-		conn = ConnectionTranslation[curclient + (i << 5)];
+		conn = ConnectionTranslation[curclient + (i * (sizeof(fd_mask) * 8))];
 		clientsReadable.fds_bits[i] &= ~(((fd_mask)1L) << curclient);
 		client = clients[conn];
 		if (!client)

@@ -86,6 +86,7 @@ static ConnectionInputPtr FreeInputs = (ConnectionInputPtr) NULL;
 static ConnectionOutputPtr FreeOutputs = (ConnectionOutputPtr) NULL;
 static OsCommPtr AvailableInput = (OsCommPtr) NULL;
 
+extern int xfd_ffs(fd_mask);
 static ConnectionInputPtr AllocateInputBuffer(void);
 static ConnectionOutputPtr AllocateOutputBuffer(void);
 
@@ -524,9 +525,9 @@ FlushAllOutput(void)
 	mask = OutputPending.fds_bits[base];
 	OutputPending.fds_bits[base] = 0;
 	while (mask) {
-	    index = ffs(mask) - 1;
+	    index = xfd_ffs(mask) - 1;
 	    mask &= ~lowbit(mask);
-	    if ((index = ConnectionTranslation[(base << 5) + index]) == 0)
+	    if ((index = ConnectionTranslation[(base * (sizeof(fd_mask) * 8)) + index]) == 0)
 		continue;
 	    client = clients[index];
 	    if (client->clientGone == CLIENT_GONE)

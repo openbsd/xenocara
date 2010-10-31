@@ -122,6 +122,7 @@ int	       	*ListenTransFds = NULL;
 int		ListenTransCount;
 
 
+extern int  xfd_ffs (fd_mask);
 static void error_conn_max(XtransConnInfo trans_conn);
 static void close_fd(OsCommPtr oc);
 
@@ -316,7 +317,7 @@ MakeNewConnections(void)
 	XtransConnInfo trans_conn, new_trans_conn;
 	int status;
 
-	curconn = ffs(readyconnections) - 1;
+	curconn = xfd_ffs(readyconnections) - 1;
 	readyconnections &= ~(1 << curconn);
 
 	if ((trans_conn = lookup_trans_conn (curconn)) == NULL)
@@ -454,7 +455,7 @@ CheckConnections(void)
     XFD_COPYSET(&AllClients, &mask);
     for (i = 0; i < howmany(XFD_SETSIZE, NFDBITS); i++) {
 	while (mask.fds_bits[i]) {
-	    curclient = ffs(mask.fds_bits[i]) - 1 + (i << 5);
+	    curclient = xfd_ffs(mask.fds_bits[i]) - 1 + (i * (sizeof(fd_mask) * 8));
 	    FD_ZERO(&tmask);
 	    FD_SET(curclient, &tmask);
 	    r = Select(curclient + 1, &tmask, NULL, NULL, &notime);

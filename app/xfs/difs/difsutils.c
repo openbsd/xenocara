@@ -193,7 +193,7 @@ void
 CopyISOLatin1Lowered(char *d, char *s, int length)
 {
     register int i;
-    unsigned char *dest = d, *source = s;
+    unsigned char *dest = (unsigned char *)d, *source = (unsigned char *)s;
 
     for (i = 0; i < length; i++, source++, dest++) {
 	if ((*source >= XK_A) && (*source <= XK_Z))

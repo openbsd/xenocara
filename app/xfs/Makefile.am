@@ -19,7 +19,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
-configdir = $(sysconfdir)/X11/fs
+SUBDIRS=config doc man
 
 bin_PROGRAMS = xfs
 
@@ -29,6 +29,8 @@ AM_CPPFLAGS = $(XFS_CFLAGS) -I$(top_srcdir)/include -DXFSPIDDIR=\"/var/run\" \
 	$(FONT_FLAGS) -D_BSD_SOURCE -DFONT_t -DTRANS_SERVER -DTRANS_REOPEN
 
 AM_CFLAGS = $(CWARNFLAGS)
+
+ACLOCAL_AMFLAGS = -I m4
 
 LDADD = $(XFS_LIBS)
 
@@ -90,77 +92,18 @@ xfs_SOURCES = \
 	include/swaprep.h \
 	include/swapreq.h
 
-appman_PRE = \
-        xfs.man
+EXTRA_DIST = xfs.def
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-FSERRORS = /var/log/xfs.log
+.PHONY: ChangeLog INSTALL
 
-FONTDIR = $(libdir)/X11/fonts
-
-# Strings to replace in config.cpp
-CPP_FILES_FLAGS = $(MANDEFS) \
-	-DDEFAULTFONTPATH="$(FONTPATH)" -DFSERRORS="$(FSERRORS)"
-
-config_DATA = config
-
-EXTRA_DIST = xfs.def config.cpp
-CLEANFILES = config
-
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
-
-SED = sed
-
-# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
-# to cpp, because that trick does not work on all ANSI C preprocessors.
-# Delete line numbers from the cpp output (-P is not portable, I guess).
-# Allow XCOMM to be preceded by whitespace and provide a means of generating
-# output lines with trailing backslashes.
-# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
-
-CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^[ 	]*XCOMM$$/s/XCOMM/\#/' \
-                       -e '/^[ 	]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
-                       -e '/^[ 	]*XHASH/s/XHASH/\#/' \
-                       -e '/XSLASHGLOB/s/XSLASHGLOB/\/\*/' \
-                       -e '/\@\@$$/s/\@\@$$/\\/'
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MANDEFS =  \
-	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
-	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
-	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
-	-D__adminmansuffix__=$(ADMIN_MAN_SUFFIX) \
-	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
-	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
-	-D__configfiledesc__="$(CONFIG_FILE_DESC)" \
-	-D__configfilepath__="$(CONFIG_FILE_PATH)"
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
-
-.cpp:
-	$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
-
-.man.$(APP_MAN_SUFFIX):
-	$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
-
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
-
-.PHONY: ChangeLog
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -169,31 +112,3 @@ ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(xfs_SOURCES)
 endif LINT
-
-# Developer documentation - not installed on system
-EXTRA_DIST += doc/xfs-design.xml doc/xfs-design.css doc/xfs-design.xsl
-
-if MAKE_DEVEL_DOCS
-if HAVE_XMLTO
-noinst_DATA = doc/xfs-design/index.html doc/xfs-design.pdf doc/xfs-design.txt
-CLEANFILES += $(noinst_DATA)
-
-doc/xfs-design/index.html: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl doc/xfs-design/xfs-design.css
-	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc/xfs-design xhtml $(srcdir)/doc/xfs-design.xml
-
-doc/xfs-design/xfs-design.css: $(srcdir)/doc/xfs-design.css
-	-rm -f doc/xfs-design/xfs-design.css
-	$(MKDIR_P) doc/xfs-design
-	cp -pf $(srcdir)/doc/xfs-design.css doc/xfs-design/xfs-design.css
-
-clean-local:
-	-rm -rf doc/xfs-design
-
-doc/xfs-design.pdf: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl
-	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc pdf $(srcdir)/doc/xfs-design.xml
-
-doc/xfs-design.txt: $(srcdir)/doc/xfs-design.xml $(srcdir)/doc/xfs-design.xsl
-	$(XMLTO) -m $(srcdir)/doc/xfs-design.xsl -o doc txt $(srcdir)/doc/xfs-design.xml
-
-endif HAVE_XMLTO
-endif MAKE_DEVEL_DOCS

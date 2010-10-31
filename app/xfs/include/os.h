@@ -73,10 +73,6 @@ extern int  ListenPort;
 extern Bool UseSyslog;
 extern Bool CloneSelf;
 extern char ErrorFile[];
-#ifdef FONTCACHE
-#include <X11/extensions/fontcacheP.h>
-extern FontCacheSettings cacheSettings;
-#endif
 
 struct _osComm;	/* FIXME: osCommPtr */
 

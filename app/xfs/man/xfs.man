@@ -1,34 +1,34 @@
 .\"
 .\" Copyright 1991, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included in
 .\" all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 .\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL 
-.\" THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-.\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
-.\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+.\" THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+.\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+.\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.\" 
-.\" Except as contained in this notice, the name of The Open Group shall not 
-.\" be used in advertising or otherwise to promote the sale, use or other 
-.\" dealing in this Software without prior written authorization from the 
+.\"
+.\" Except as contained in this notice, the name of The Open Group shall not
+.\" be used in advertising or otherwise to promote the sale, use or other
+.\" dealing in this Software without prior written authorization from the
 .\" The Open Group.
 .\" Copyright 1991 Network Computing Devices
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and
 .\" its documentation for any purpose is hereby granted without fee, provided
 .\" that the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
-.\" documentation, and that the name of Network Computing Devices 
+.\" documentation, and that the name of Network Computing Devices
 .\" not be used in advertising or
 .\" publicity pertaining to distribution of the software without specific,
 .\" written prior permission.  Network Computing Devices make
@@ -100,7 +100,7 @@ default).
 When running as a daemon,
 .B xfs
 will attempt to create a file in which it stores its process ID, and will
-delete that file upon exit; 
+delete that file upon exit;
 .TP
 .B \-droppriv
 instructs
@@ -294,38 +294,38 @@ the following font path:
 .fi
 .SS "Example Configuration File"
 .nf
-XCOMM
-XCOMM sample font server configuration file
-XCOMM
+ #
+ # sample font server configuration file
+ #
 
-XCOMM allow a max of 10 clients to connect to this font server.
-client\-limit = 10
+ # allow a max of 10 clients to connect to this font server.
+ client\-limit = 10
 
-XCOMM When a font server reaches the above limit, start up a new one.
-clone\-self = on
+ # When a font server reaches the above limit, start up a new one.
+ clone\-self = on
 
-XCOMM Identify alternate font servers for clients to use.
-alternate\-servers = hansen:7101,hansen:7102
+ # Identify alternate font servers for clients to use.
+ alternate\-servers = hansen:7101,hansen:7102
 
-XCOMM Look for fonts in the following directories.  The first is a set of
-XCOMM TrueType outlines, the second is a set of misc bitmaps (such as terminal
-XCOMM and cursor fonts), and the last is a set of 100dpi bitmaps.
-XCOMM
-catalogue = /usr/share/X11/fonts/TTF,
-            /usr/share/X11/fonts/misc,
-            /usr/share/X11/fonts/100dpi/
+ # Look for fonts in the following directories.  The first is a set of
+ # TrueType outlines, the second is a set of misc bitmaps (such as terminal
+ # and cursor fonts), and the last is a set of 100dpi bitmaps.
+ #
+ catalogue = /usr/share/X11/fonts/TTF,
+             /usr/share/X11/fonts/misc,
+             /usr/share/X11/fonts/100dpi/
 
-XCOMM in 12 points, decipoints
-default\-point\-size = 120
+ # in 12 points, decipoints
+ default\-point\-size = 120
 
-XCOMM 100 x 100 and 75 x 75
-default\-resolutions = 100,100,75,75
+ # 100 x 100 and 75 x 75
+ default\-resolutions = 100,100,75,75
 
-XCOMM Specify our log filename.
-error\-file = /var/log/xfs.log
+ # Specify our log filename.
+ error\-file = /var/log/xfs.log
 
-XCOMM Direct diagnostics to our own log file instead of using syslog.
-use\-syslog = off
+ # Direct diagnostics to our own log file instead of using syslog.
+ use\-syslog = off
 .fi
 .SH "OUTPUT FILES"
 When operating in daemon mode,
