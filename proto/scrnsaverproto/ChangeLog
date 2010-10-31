@@ -1,3 +1,116 @@
+commit b4899c5d6090efdf292f5686cc23ed90e3729e4b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 23:27:16 2010 -0700
+
+    ScrnSaverProto 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2db9df02a69046bc2ee3d87432c91d996a733ecc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Aug 3 15:32:12 2010 -0400
+
+    config: Require xorg-macros minimum of 1.10 for XORG_CHECK_SGML_DOCTOOLS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a8462405a2d2536867cc63587a49e5d130ea44ea
+Author: Matt Dew <matt@osource.org>
+Date:   Sat Jul 31 12:23:10 2010 -0400
+
+    specs: replace troff source with docbook-xml source
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 689268bf3fcd25015d07be8652fde6924a59b7d9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:25:52 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5056835765a4a2103fbc6977740874762f5d5737
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:31 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d7616943beb59d29349c16670340f677e340852c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:48 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit b758d8d966ccfdda4bdcbe24f679945dbfc2fff9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:13:30 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit 72b6b958cb793feca0fad07276a9cc29c9d818f5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:27 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 5d3c1539a272ce6bd5a11f16f8bc7ab9bce8f1e5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:29 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit fd7a1f1a3ed7d7907f94b38e6a9a8c4a3b3d9bbb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 180c9ee3be0bac7952351c89b0d219e672c1010c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 13:55:25 2009 -0500
+
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    Works in conjunction with autogen.sh --enable-maintainer-mode
+
+commit 48110b9fd22f9cefc0cbe4902eabde995f398dd3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:47 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit bcc25e87ba8e93c306b3cd00317a6f550c73f5cf
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Aug 25 18:34:56 2009 +1000

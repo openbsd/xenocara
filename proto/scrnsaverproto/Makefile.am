@@ -1,3 +1,5 @@
+SUBDIRS=specs
+
 scrnsaverdir = $(includedir)/X11/extensions
 scrnsaver_HEADERS = \
 	saver.h \
@@ -6,14 +8,15 @@ scrnsaver_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = scrnsaverproto.pc
 
-EXTRA_DIST = scrnsaverproto.pc.in
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
