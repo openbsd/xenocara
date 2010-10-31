@@ -1,4 +1,3 @@
-.\" $Xorg: xsetroot.man,v 1.4 2001/02/09 02:05:59 xorgcvs Exp $
 .\" Copyright 1988, 1998  The Open Group
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,8 +22,6 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xsetroot/xsetroot.man,v 1.7 2001/01/27 18:21:23 dawes Exp $
-.\"
 .TH XSETROOT 1 __xorgversion__
 .SH NAME
 xsetroot \- root window parameter setting utility for X
@@ -33,6 +30,7 @@ xsetroot \- root window parameter setting utility for X
 [-help] [-def] [-display \fIdisplay\fP]
 [-cursor \fIcursorfile maskfile\fP]
 [-cursor_name \fIcursorname\fP]
+[-xcf \fIcursorfile\fP \fIcursorsize\fP]
 [-bitmap \fIfilename\fP]
 [-mod \fIx y\fP] [-gray] [-grey] [-fg \fIcolor\fP] [-bg \fIcolor\fP] [-rv]
 [-solid \fIcolor\fP] [-name \fIstring\fP]
@@ -74,6 +72,9 @@ get used to the way masks work.
 This lets you change the pointer cursor to one of the standard
 cursors from the cursor font.  Refer to appendix B of the X protocol for
 the names (except that the XC_ prefix is elided for this option).
+.IP "\fB-xcf\fP \fIcursorfile\fP \fIcursorsize\fP"
+This lets you change the pointer cursor to one loaded from an Xcursor file
+as defined by libXcursor, at the specified size.
 .IP "\fB-bitmap\fP \fIfilename\fP"
 Use the bitmap specified in the file to set the window pattern.  You can
 make your own bitmap files (little pictures) using the
@@ -107,6 +108,6 @@ This option is unused since you can't iconify the background.
 .IP "\fB-display\fP \fIdisplay\fP"
 Specifies the server to connect to; see \fIX(__miscmansuffix__)\fP.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xset(1), xrdb(1)
+X(__miscmansuffix__), xset(1), xrdb(1), Xcursor(__libmansuffix__)
 .SH AUTHOR
 Mark Lillibridge, MIT Project Athena
