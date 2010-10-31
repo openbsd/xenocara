@@ -2679,7 +2679,8 @@ main (int argc, char **argv)
 
     root = RootWindow (dpy, screen);
 
-    if (!XRRQueryVersion (dpy, &major, &minor))
+    if (!XRRQueryExtension (dpy, &event_base, &error_base) ||
+        !XRRQueryVersion (dpy, &major, &minor))
     {
 	fprintf (stderr, "RandR extension missing\n");
 	exit (1);
@@ -3371,8 +3372,6 @@ main (int argc, char **argv)
     if (setit && !dryrun) status = XRRSetScreenConfigAndRate (dpy, sc,
 						   root,
 						   (SizeID) size, (Rotation) (rotation | reflection), rate, CurrentTime);
-
-    XRRQueryExtension(dpy, &event_base, &error_base);
 
     if (setit && !dryrun && status == RRSetConfigFailed) {
 	printf ("Failed to change the screen configuration!\n");

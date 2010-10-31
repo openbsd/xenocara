@@ -225,7 +225,7 @@ pixel size will be set.
 .IP "\-\-newmode \fIname\fP \fImode\fP"
 New modelines can be added to the server and then associated with outputs.
 This option does the former. The \fImode\fP is specified using the ModeLine
-syntax for xorg.conf: hdisp hsyncstart hsyncend htotal vdisp vsyncstart
+syntax for xorg.conf: clock hdisp hsyncstart hsyncend htotal vdisp vsyncstart
 vsyncend vtotal \fIflags\fP. \fIflags\fP can be zero or more of +HSync,
 -HSync, +VSync, -VSync, Interlace, DoubleScan, CSync, +CSync, -CSync. Several
 tools permit to compute the usual modeline from a height, width, and refresh

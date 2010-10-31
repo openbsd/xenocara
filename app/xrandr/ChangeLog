@@ -1,3 +1,75 @@
+commit 2b67c3d80d1e7736cf4fe9f093ab604dc02ad7be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 11:28:41 2010 -0700
+
+    xrandr 1.3.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 46c3cb9103ecd6f73a2908bb93004658069639c5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 11:26:40 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 52016812038732a3aabc6dfb63ded9d07de703ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 11:25:53 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b74ff83949432b8abb9453415426a515e45eb20
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 30 11:24:14 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c7b90939f0ffcad17a5cc6cf1e28f7b027feeba5
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Oct 12 21:20:18 2010 +0200
+
+    Call QueryExtension before any other RandR function (bug#30806)
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 051f912f1c009a2c318214e6b3e86fa5f576d0ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 22 19:39:27 2010 -0700
+
+    Bug 29348 - dot clock parameter missing from --newmode in man page
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=29348
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
 commit a06506ca5df0a69e0ca27845855187ff62b78a9d
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Mon Jul 19 18:07:56 2010 +0100
