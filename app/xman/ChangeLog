@@ -1,3 +1,144 @@
+commit bee5d67ab054decda85e2ba2fc70cf8a53b74fcd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 17:31:47 2010 -0700
+
+    xman 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 689cb1e03b0feb46bf198a468e4cc5c91ff59aa6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 17:29:22 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 98f366e764334a853b291b84856996e3dfad8959
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 17:28:38 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d75f5d9e4c2c1f819dfc4e523ad88a2a0b0e251
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 30 17:28:03 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd30b754d17685ad971294ce31e34de5fede5a25
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 8 12:00:53 2010 -0400
+
+    config: update direct dependencies for xman
+    
+    Depends on xproto through the inclusion of X.h.
+    Depends on Xaw through the inclusion of List.h
+    Depends on Xmu through the inclusion of Xmu/Misc.h
+    Depends on Xt through the inclusion of Intrinsic.h
+    
+    PKG_CHECK_MODULES calls AC_SUBST for CFLAGS and LIBS
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 96224f67f30830c2b49045313dfa746d155c56bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 6 15:08:24 2010 -0700
+
+    Fill in COPYING file with copyright notices from source code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 522ee7a23d31a0a0e359922d1194214db215bb6f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 10 17:28:55 2010 -0500
+
+    make: remove version.h from xman_SOURCES
+    
+    Commit cac7f814053ddbc8ec14666cfe85adc34344220f
+    removed the file from git.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b36ab48574afae17c7701bc55a3a0d6a971c3ced
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:48 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9b52967330f1c6466a5b8729ad36a0a96b3dcd62
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 05e1d899bc5df593b2fff79753aa7a53a8cc18aa
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 8cdd724d38f63ca07b75e106db3d087c53f67eed
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 350724e6ee4a77586fcd8f026305a72cb3a9d3ca
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit cac7f814053ddbc8ec14666cfe85adc34344220f
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 27 22:45:12 2009 +0100
+
+    Fix version display.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
 commit b82eb1279acc60f9ebb93730ac002dfde2118a4b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 16 14:10:04 2009 -0700

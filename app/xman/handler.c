@@ -35,6 +35,9 @@ from the X Consortium.
  * Author:    Chris D. Peterson, MIT Project Athena
  * Created:   October 29, 1987
  */
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -44,6 +47,12 @@ from the X Consortium.
 #include "printdialog.h"
 #include "print.h"
 #endif /* INCLUDE_XPRINT_SUPPORT */
+
+#ifdef RELEASE_VERSION
+#define XMAN_VERSION "Xman Version " PACKAGE_VERSION " - X11R" RELEASE_VERSION
+#else
+#define XMAN_VERSION "Xman Version " PACKAGE_VERSION
+#endif
 
 static void PutUpManpage(ManpageGlobals * man_globals, FILE * file);
 static void ToggleBothShownState(ManpageGlobals * man_globals);

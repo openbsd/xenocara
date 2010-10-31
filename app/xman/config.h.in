@@ -75,6 +75,9 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
+/* Release version string if set */
+#undef RELEASE_VERSION
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 

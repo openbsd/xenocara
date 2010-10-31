@@ -70,7 +70,6 @@ from the X Consortium.
 
 #include "ScrollByL.h"
 
-#include "version.h"
 #include "defs.h"
 
 /* Turn a NULL pointer string into an empty string */
