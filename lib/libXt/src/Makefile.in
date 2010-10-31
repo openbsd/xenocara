@@ -39,7 +39,7 @@ host_triplet = @host@
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -148,6 +148,7 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -161,8 +162,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
-RAWCPP = @RAWCPP@
-RAWCPPFLAGS = @RAWCPPFLAGS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -171,6 +170,7 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XFILESEARCHPATHDEFAULT = @XFILESEARCHPATHDEFAULT@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
 XT_CFLAGS = @XT_CFLAGS@
 XT_LIBS = @XT_LIBS@
@@ -645,12 +645,12 @@ all-local: $(BUILT_FILES)
 $(BUILT_HEADER): $(BUILT_SOURCE)
 
 $(BUILT_SOURCE):
-	$(top_builddir)/util/makestrs -i $(top_srcdir) $(STRINGSABIOPTIONS) < $(STRING_LIST) > StringDefs.c
-	mkdir -p $(top_builddir)/src
-	mkdir -p $(top_builddir)/include/X11
-	cp StringDefs.h $(top_builddir)/include/X11
-	cp Shell.h $(top_builddir)/include/X11
-	rm StringDefs.h Shell.h
+	$(AM_V_GEN)$(top_builddir)/util/makestrs -i $(top_srcdir) $(STRINGSABIOPTIONS) < $(STRING_LIST) > StringDefs.c
+	$(AM_V_at)mkdir -p $(top_builddir)/src
+	$(AM_V_at)mkdir -p $(top_builddir)/include/X11
+	$(AM_V_at)cp StringDefs.h $(top_builddir)/include/X11
+	$(AM_V_at)cp Shell.h $(top_builddir)/include/X11
+	$(AM_V_at)rm StringDefs.h Shell.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

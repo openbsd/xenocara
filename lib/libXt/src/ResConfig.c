@@ -1,4 +1,3 @@
-/* $Xorg: ResConfig.c,v 1.5 2001/02/09 02:03:56 xorgcvs Exp $ */
 /*
 
 Copyright 1987, 1988, 1998  The Open Group
@@ -52,7 +51,6 @@ dealings in this Software without prior written authorization from the IBM
 Corporation.
 
 ******************************************************************/
-/* $XFree86: xc/lib/Xt/ResConfig.c,v 3.7 2001/08/22 22:52:19 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

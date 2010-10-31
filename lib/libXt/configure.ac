@@ -21,18 +21,20 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+AC_PREREQ([2.60])
 
 dnl
 dnl
-AC_INIT(libXt, 1.0.8, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXt)
+AC_INIT([libXt], [1.0.9],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXt])
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 AM_CONFIG_HEADER(config.h)
 
@@ -123,9 +125,6 @@ esac
 
 XT_CFLAGS="$XT_CFLAGS $OS_CFLAGS"
 
-# Man page processing requirements
-XORG_PROG_RAWCPP
-
 XORG_CHECK_MALLOC_ZERO
 
 AC_OUTPUT([Makefile
@@ -133,4 +132,5 @@ AC_OUTPUT([Makefile
 	   util/Makefile
 	   include/Makefile
 	   man/Makefile
+	   specs/Makefile
            xt.pc])

@@ -41,7 +41,7 @@ noinst_PROGRAMS = makestrs$(EXEEXT)
 subdir = util
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -132,6 +132,7 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -145,9 +146,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
-RAWCPP = @RAWCPP@
-RAWCPPFLAGS = @RAWCPPFLAGS@
-SED = sed
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRINGSABIOPTIONS = @STRINGSABIOPTIONS@
@@ -155,6 +154,7 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XFILESEARCHPATHDEFAULT = @XFILESEARCHPATHDEFAULT@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
 XT_CFLAGS = @XT_CFLAGS@
 XT_LIBS = @XT_LIBS@
@@ -214,14 +214,7 @@ makestrs_SOURCES = makestrs.c
 appmandir = $(APP_MAN_DIR)
 appman_PRE = makestrs.man
 noinst_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-CLEANFILES = $(appman_DATA) $(noinst_DATA)
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-XORGMANNAME = X Version 11
-MAN_SUBSTS = \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|'
-
+CLEANFILES = $(noinst_DATA)
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: all-am
 
@@ -488,6 +481,7 @@ uninstall-am: uninstall-info-am
 	uninstall-info-am
 
 
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(APP_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -1,5 +1,3 @@
-/* $XdotOrg: $ */
-
 /*
 
 Copyright (c) 1991, 1998 The Open Group
@@ -25,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/config/util/makestrs.c,v 3.6 2001/07/25 15:04:41 dawes Exp $ */
 
 /* Constructs string definitions */
 

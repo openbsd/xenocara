@@ -1,5 +1,5 @@
 # ===========================================================================
-#          http://www.nongnu.org/autoconf-archive/ax_define_dir.html
+#       http://www.gnu.org/software/autoconf-archive/ax_define_dir.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -16,7 +16,7 @@
 #
 #   Example:
 #
-#      AX_DEFINE_DIR([DATADIR], [datadir], [Where data are placed to.])
+#     AX_DEFINE_DIR([DATADIR], [datadir], [Where data are placed to.])
 #
 # LICENSE
 #
@@ -27,7 +27,10 @@
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice
-#   and this notice are preserved.
+#   and this notice are preserved. This file is offered as-is, without any
+#   warranty.
+
+#serial 6
 
 AU_ALIAS([AC_DEFINE_DIR], [AX_DEFINE_DIR])
 AC_DEFUN([AX_DEFINE_DIR], [
