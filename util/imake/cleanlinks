@@ -7,7 +7,6 @@
 #
 # Author: David Dawes <dawes@xfree86.org>
 #
-# $XFree86: xc/config/util/cleanlinks.sh,v 1.2 2003/04/15 03:05:16 dawes Exp $
 
 find . -type l -print |
 (

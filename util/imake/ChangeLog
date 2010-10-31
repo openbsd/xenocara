@@ -1,3 +1,123 @@
+commit bf237073d39629599cb77bf0144f862c175bb640
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 19:10:35 2010 -0700
+
+    imake 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 29c3c8f2fc3859b1c8e1dd1f2327ab51c40fca21
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 30 19:08:31 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3a3c6e584a1fee04a6bc4c11581c283d5fa8c603
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 19:04:22 2010 -0700
+
+    Use autoconf standard HAVE_MKSTEMP instead of HAS_MKSTEMP
+    
+    We no longer need to maintain compatibility with the monolith
+    Imakefile -D flags in the sources.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6587b17a6aef0404853ad5113158fddf4a90219
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 18:59:39 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC, AC_PROG_SED, & AC_PROG_INSTALL are provided by
+     XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bdf937d11774595eefc2ded78dcdf52dfe420443
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 18:57:15 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca3374aee64c71c810159839c9b54c84b2bced24
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Tue Apr 27 20:18:10 2010 -0500
+
+    Nuke RCS tags
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01a05f973d52edc461c1100a939a70ea0ce9b048
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Tue Apr 27 20:38:15 2010 -0500
+
+    mkdirhier: use mkdir -p
+    
+    The '-p' option to mkdir(1) is required by SUSv2/Unix98, so we should be
+    able to rely on it on all systems we support.  Some parts need to be
+    left in place in order to not alter some of its ancient, shall we say,
+    quirks.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 098bf61eb89c3d93d2ed814d3e39e6412f6fcf9e
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Tue Apr 27 19:18:27 2010 -0500
+
+    Use standard .gitignore with custom section for imake
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Gaetan Nadon <gaetan.nadon@videotron.ca>
+
+commit 04da52fb5c4721c0218dbe6537c9ad0f7bd2ab04
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Tue Apr 27 19:14:35 2010 -0500
+
+    Use AC_PROG_SED to find sed
+    
+    AC_PROG_SED sets SED as the path to a fully-functional 'sed' (which may
+    also be called 'gsed' if GNU sed is installed alongside a proprietary
+    version).
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1127a5cb3166f4d5d0564732b3842fe81bf3e701
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Tue Apr 27 19:06:32 2010 -0500
+
+    Allow for EXEEXT in appman_DATA rule
+    
+    As a result of commit 22578c3718e41da72c66ce6a4186ec7315d6e3ad:
+    
+    make[1]: *** No rule to make target `imake.exe.1', needed by `all-am'.
+    make[1]: *** No rule to make target `revpath.exe.1', needed by `all-am'.
+    
+    On PE/COFF platforms EXEEXT is set to ".exe" and is appended by automake
+    to all *_PROGRAMS.  For portability this must be accounted for in any
+    custom rules which refer to any *_PROGRAMS.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 48145e04d24b1c575a22bac69c3c3033f72322fc
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 15 19:52:20 2010 -0700
@@ -107,7 +227,7 @@ Date:   Mon Jun 22 18:15:26 2009 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit eb8e41c3b3f280c34947579a5ee9fa511aee9acf
-Merge: e215b32... 9653950...
+Merge: e215b32 9653950
 Author: Jeremy C. Reed <reed@tx.reedmedia.net>
 Date:   Thu Feb 14 23:27:42 2008 -0600
 

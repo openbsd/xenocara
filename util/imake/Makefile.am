@@ -125,30 +125,13 @@ appman_PRE = \
 	mkhtmlindex.man
 
 # Only need to install man pages for programs/scripts being installed
-appman_needed_for = $(bin_PROGRAMS) $(bin_SCRIPTS)
-appman_DATA = $(appman_needed_for:%=%.@APP_MAN_SUFFIX@)
+appman_DATA = $(bin_PROGRAMS:%$(EXEEXT)=%.@APP_MAN_SUFFIX@) $(bin_SCRIPTS:%=%.@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
 CLEANFILES += $(appman_DATA)
 
-SED = sed
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' \
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
+MAN_SUBSTS += \
 	-e 's|__cpp__|$(RAWCPP)|g'
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man

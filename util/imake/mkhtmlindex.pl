@@ -1,7 +1,5 @@
 #!/usr/bin/perl
 #
-# $XFree86: xc/config/util/mkhtmlindex.pl,v 1.2 2001/03/15 19:02:31 dawes Exp $
-#
 # Copyright © 2000,2001 by VA Linux Systems, Inc.
 #
 # Generate index files for HTML man pages.

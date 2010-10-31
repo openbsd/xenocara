@@ -1,4 +1,3 @@
-.\" $XFree86$
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH MERGELIB 1 __xorgversion__

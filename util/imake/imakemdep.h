@@ -1,5 +1,3 @@
-/* $Xorg: imakemdep.h,v 1.6 2001/02/09 02:03:16 xorgcvs Exp $ */
-/* $XdotOrg: xc/config/imake/imakemdep.h,v 1.9 2005/03/02 11:20:29 gisburn Exp $ */
 /*
 
 Copyright (c) 1993, 1994, 1998  The Open Group
@@ -25,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/config/imake/imakemdep.h,v 3.71 2003/06/12 14:12:26 eich Exp $ */
 
 
 /*
