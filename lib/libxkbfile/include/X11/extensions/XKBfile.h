@@ -1,9 +1,7 @@
-/* $XFree86: xc/lib/xkbfile/XKBfile.h,v 3.6 2003/10/24 16:33:09 tsi Exp $ */
 
 #ifndef _XKBFILE_H_
 #define	_XKBFILE_H_ 1
 
-/* $Xorg: XKBfile.h,v 1.3 2000/08/17 19:46:43 cpqbld Exp $ */
 /************************************************************
  Copyright (c) 1994 by Silicon Graphics Computer Systems, Inc.
 
