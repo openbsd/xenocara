@@ -63,6 +63,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -99,6 +100,7 @@ FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
 ICONDIR = @ICONDIR@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -119,6 +121,9 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
+MAN_SUBSTS = @MAN_SUBSTS@ -e 's|__XCURSORPATH__|$(XCURSORPATH_LIST)|g'
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -141,6 +146,7 @@ XCURSORPATH = @XCURSORPATH@
 XCURSORPATH_LIST = @XCURSORPATH_LIST@
 XCURSOR_CFLAGS = @XCURSOR_CFLAGS@
 XCURSOR_LIBS = @XCURSOR_LIBS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
@@ -161,7 +167,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -190,63 +195,48 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 libmandir = $(LIB_MAN_DIR)
-libman_PRE = Xcursor.man
-libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
-	$(Xcursor_shadows:=.@LIB_MAN_SUFFIX@)
-EXTRA_DIST = $(libman_PRE)
-CLEANFILES = $(libman_DATA) shadows.DONE
-SUFFIXES = .$(LIB_MAN_SUFFIX) .man
+libman_PRE = \
+	Xcursor.man			\
+	$(Xcursor_shadows:=.man)
 
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-MAN_SUBSTS = \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)"|' \
-	-e 's|__XCURSORPATH__|$(XCURSORPATH_LIST)|g' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
-
-# Generate man page shadow files
-LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
-BUILT_SOURCES = shadows.DONE
 Xcursor_shadows = \
-	XcursorImageCreate \
-	XcursorImageDestroy \
-	XcursorImagesCreate \
-	XcursorImagesDestroy \
-	XcursorCursorsCreate \
-	XcursorCursorsDestroy \
-	XcursorXcFileLoadImage \
-	XcursorXcFileLoadImages \
-	XcursorXcFileLoadAllImages \
-	XcursorXcFileLoad \
-	XcursorXcFileSave \
-	XcursorFilenameLoadImage \
-	XcursorFilenameLoadImages \
-	XcursorFilenameLoadAllImages \
-	XcursorFilenameLoad \
-	XcursorFilenameSaveImages \
-	XcursorFilenameSave \
-	XcursorLibraryLoadImage \
-	XcursorLibraryLoadImages \
-	XcursorFilenameLoadCursor \
-	XcursorLibraryLoadCursor \
-	XcursorLibraryLoadCursors \
-	XcursorShapeLoadImage \
-	XcursorShapeLoadImages \
-	XcursorShapeLoadCursor \
-	XcursorShapeLoadCursors \
-	XcursorSupportsARGB \
-	XcursorSetDefaultSize \
-	XcursorGetDefaultSize \
-	XcursorSetTheme \
+	XcursorImageCreate		\
+	XcursorImageDestroy		\
+	XcursorImagesCreate		\
+	XcursorImagesDestroy		\
+	XcursorCursorsCreate		\
+	XcursorCursorsDestroy		\
+	XcursorXcFileLoadImage		\
+	XcursorXcFileLoadImages		\
+	XcursorXcFileLoadAllImages	\
+	XcursorXcFileLoad		\
+	XcursorXcFileSave		\
+	XcursorFilenameLoadImage	\
+	XcursorFilenameLoadImages	\
+	XcursorFilenameLoadAllImages	\
+	XcursorFilenameLoad		\
+	XcursorFilenameSaveImages	\
+	XcursorFilenameSave		\
+	XcursorLibraryLoadImage		\
+	XcursorLibraryLoadImages	\
+	XcursorFilenameLoadCursor	\
+	XcursorLibraryLoadCursor	\
+	XcursorLibraryLoadCursors	\
+	XcursorShapeLoadImage		\
+	XcursorShapeLoadImages		\
+	XcursorShapeLoadCursor		\
+	XcursorShapeLoadCursors		\
+	XcursorSupportsARGB		\
+	XcursorSetDefaultSize		\
+	XcursorGetDefaultSize		\
+	XcursorSetTheme			\
 	XcursorGetTheme
 
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
+EXTRA_DIST = $(libman_PRE)
+CLEANFILES = $(libman_DATA)
+SUFFIXES = .$(LIB_MAN_SUFFIX) .man
+all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .$(LIB_MAN_SUFFIX) .man
@@ -259,9 +249,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  man/Makefile
+	  $(AUTOMAKE) --foreign  man/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -341,15 +331,13 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(DATA) all-local
+check: check-am
+all-am: Makefile $(DATA)
 installdirs:
 	for dir in "$(DESTDIR)$(libmandir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -374,7 +362,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -421,29 +408,19 @@ ps-am:
 
 uninstall-am: uninstall-info-am uninstall-libmanDATA
 
-.PHONY: all all-am all-local check check-am clean clean-generic \
-	clean-libtool distclean distclean-generic distclean-libtool \
-	distdir dvi dvi-am html html-am info info-am install \
-	install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am \
-	install-libmanDATA install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-info-am uninstall-libmanDATA
+.PHONY: all all-am check check-am clean clean-generic clean-libtool \
+	distclean distclean-generic distclean-libtool distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-exec install-exec-am \
+	install-info install-info-am install-libmanDATA install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	uninstall uninstall-am uninstall-info-am uninstall-libmanDATA
 
-
-all-local: $(libman_DATA)
 
 .man.$(LIB_MAN_SUFFIX):
-	-rm -f $@
-	sed $(MAN_SUBSTS) < $< > $@
-
-shadows.DONE:
-	-rm -f $(Xcursor_shadows:=.@LIB_MAN_SUFFIX@)
-	(for i in $(Xcursor_shadows:=.@LIB_MAN_SUFFIX@) ; do \
-	 echo .so man$(LIB_MAN_DIR_SUFFIX)/Xcursor.$(LIB_MAN_SUFFIX) > $$i; \
-	 done)
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

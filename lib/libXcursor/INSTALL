@@ -23,9 +23,9 @@ debugging `configure').
 
    It can also use an optional file (typically called `config.cache'
 and enabled with `--cache-file=config.cache' or simply `-C') that saves
-the results of its tests to speed up reconfiguring.  (Caching is
+the results of its tests to speed up reconfiguring.  Caching is
 disabled by default to prevent problems with accidental use of stale
-cache files.)
+cache files.
 
    If you need to do unusual things to compile the package, please try
 to figure out how `configure' could check whether to do them, and mail
@@ -35,20 +35,17 @@ some point `config.cache' contains results you don't want to keep, you
 may remove or edit it.
 
    The file `configure.ac' (or `configure.in') is used to create
-`configure' by a program called `autoconf'.  You only need
-`configure.ac' if you want to change it or regenerate `configure' using
-a newer version of `autoconf'.
+`configure' by a program called `autoconf'.  You need `configure.ac' if
+you want to change it or regenerate `configure' using a newer version
+of `autoconf'.
 
 The simplest way to compile this package is:
 
   1. `cd' to the directory containing the package's source code and type
-     `./configure' to configure the package for your system.  If you're
-     using `csh' on an old version of System V, you might need to type
-     `sh ./configure' instead to prevent `csh' from trying to execute
-     `configure' itself.
+     `./configure' to configure the package for your system.
 
-     Running `configure' takes awhile.  While running, it prints some
-     messages telling which features it is checking for.
+     Running `configure' might take a while.  While running, it prints
+     some messages telling which features it is checking for.
 
   2. Type `make' to compile the package.
 
@@ -67,6 +64,9 @@ The simplest way to compile this package is:
      all sorts of other programs in order to regenerate files that came
      with the distribution.
 
+  6. Often, you can also type `make uninstall' to remove the installed
+     files again.
+
 Compilers and Options
 =====================
 
@@ -78,7 +78,7 @@ details on some of the pertinent environment variables.
 by setting variables in the command line or in the environment.  Here
 is an example:
 
-     ./configure CC=c89 CFLAGS=-O2 LIBS=-lposix
+     ./configure CC=c99 CFLAGS=-g LIBS=-lposix
 
    *Note Defining Variables::, for more details.
 
@@ -136,6 +136,28 @@ package recognizes.
 find the X include and library files automatically, but if it doesn't,
 you can use the `configure' options `--x-includes=DIR' and
 `--x-libraries=DIR' to specify their locations.
+
+Particular systems
+==================
+
+   On HP-UX, the default C compiler is not ANSI C compatible.  If GNU
+CC is not installed, it is recommended to use the following options in
+order to use an ANSI C compiler:
+
+     ./configure CC="cc -Ae"
+
+and if that doesn't work, install pre-built binaries of GCC for HP-UX.
+
+   On OSF/1 a.k.a. Tru64, some versions of the default C compiler cannot
+parse its `<wchar.h>' header file.  The option `-nodtk' can be used as
+a workaround.  If GNU CC is not installed, it is therefore recommended
+to try
+
+     ./configure CC="cc"
+
+and if that doesn't work, try
+
+     ./configure CC="cc -nodtk"
 
 Specifying the System Type
 ==========================
@@ -204,7 +226,14 @@ configuration-related scripts to be executed by `/bin/bash'.
 
 `--help'
 `-h'
-     Print a summary of the options to `configure', and exit.
+     Print a summary of all of the options to `configure', and exit.
+
+`--help=short'
+`--help=recursive'
+     Print a summary of the options unique to this package's
+     `configure', and exit.  The `short' variant lists options used
+     only in the top level, while the `recursive' variant lists options
+     also present in any nested packages.
 
 `--version'
 `-V'
@@ -230,6 +259,16 @@ configuration-related scripts to be executed by `/bin/bash'.
 `--srcdir=DIR'
      Look for the package's source code in directory DIR.  Usually
      `configure' can determine that directory automatically.
+
+`--prefix=DIR'
+     Use DIR as the installation prefix.  *Note Installation Names::
+     for more details, including other options available for fine-tuning
+     the installation locations.
+
+`--no-create'
+`-n'
+     Run the configure checks, but stop before creating any output
+     files.
 
 `configure' also accepts some other, not widely useful, options.  Run
 `configure --help' for more details.

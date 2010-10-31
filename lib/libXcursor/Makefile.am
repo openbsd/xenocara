@@ -26,19 +26,20 @@ AM_CFLAGS = $(XRENDER_CFLAGS) $(XFIXES_CFLAGS) $(X_CFLAGS)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xcursor.pc
 
-EXTRA_DIST = xcursor.pc.in
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 if LINT
 lint:
 	(cd src && $(MAKE) $(MFLAGS) lint)
 endif LINT
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

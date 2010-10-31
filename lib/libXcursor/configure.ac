@@ -21,27 +21,29 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+AC_PREREQ([2.60])
 dnl
 dnl This is the package version number, not the shared library
 dnl version.  This same version number must appear in Xcursor.h
 dnl Yes, it is a pain to synchronize version numbers.  Unfortunately, it's
 dnl not possible to extract the version number here from Xcursor.h
 dnl
-AC_INIT([libXcursor],1.1.10,[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],[libXcursor])
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT([libXcursor], [1.1.11],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],[libXcursor])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
 
-# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG, XORG_WITH_LINT
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
-XORG_CWARNFLAGS
 
 AC_ARG_WITH(icondir,
         AC_HELP_STRING([--with-icondir=<path>],
@@ -68,13 +70,6 @@ AC_SUBST([XCURSORPATH_LIST])
 # Check for X
 PKG_CHECK_MODULES(XCURSOR, xrender >= 0.8.2 xfixes x11 fixesproto)
 AC_DEFINE(HAVE_XFIXES, 1, [Define to 1 if you have Xfixes])
-XCURSOR_CFLAGS="$CWARNFLAGS $XCURSOR_CFLAGS"
-AC_SUBST(XCURSOR_CFLAGS)
-AC_SUBST(XCURSOR_LIBS)
-
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
 dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
