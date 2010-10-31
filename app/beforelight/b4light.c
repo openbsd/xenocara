@@ -32,7 +32,9 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
+#ifdef NOTDEF
 #include <X11/Xaw/Label.h>
+#endif
 #include <X11/Xaw/Cardinals.h>
 #include <X11/extensions/scrnsaver.h>
 #include <X11/Xcms.h>
@@ -289,7 +291,7 @@ main(int argc, char *argv[])
     XID			    kill_id;
     Atom		    kill_type;
     int			    i;
-    int			    (*oldHandler)();
+    int			    (*oldHandler)(Display*, XErrorEvent*);
     Window 		    r;
     int			    x, y;
     unsigned int	    w, h, b, d;
@@ -348,9 +350,9 @@ main(int argc, char *argv[])
     AllocateColors();
     blank_pix = XCreatePixmap (display, root, 1, 1, 1);
     XScreenSaverRegister (display, screen, (XID) blank_pix, XA_PIXMAP);
-    bit_0_gc = XCreateGC (display, blank_pix, 0, 0);
+    bit_0_gc = XCreateGC (display, blank_pix, 0, NULL);
     XSetForeground (display, bit_0_gc, 0);
-    bit_1_gc = XCreateGC (display, blank_pix, 0, 0);
+    bit_1_gc = XCreateGC (display, blank_pix, 0, NULL);
     XSetForeground (display, bit_1_gc, ~0);
     XFillRectangle (display, blank_pix, bit_0_gc, 0, 0, 1, 1);
     info = XScreenSaverAllocInfo ();
@@ -364,14 +366,14 @@ main(int argc, char *argv[])
     mask |= CWCursor;
     XScreenSaverSetAttributes (display, root, 0, 0,
 	DisplayWidth (display, screen), DisplayHeight(display, screen), 0,
-	CopyFromParent, CopyFromParent, CopyFromParent, mask, &attr);
+	CopyFromParent, CopyFromParent, (Visual *)CopyFromParent, mask, &attr);
     XSync (display, False);
-    gc = XCreateGC (display, root, 0, 0);
-    black_gc = XCreateGC (display, root, 0, 0);
+    gc = XCreateGC (display, root, 0, NULL);
+    black_gc = XCreateGC (display, root, 0, NULL);
     XSetForeground (display, black_gc, black_pixel);
     if (filled)
     {
-    	erase_gc = XCreateGC (display, root, 0, 0);
+    	erase_gc = XCreateGC (display, root, 0, NULL);
     	XSetBackground (display, erase_gc, 0);
     	XSetFunction (display, erase_gc, GXxor);
     	XSetGraphicsExposures (display, erase_gc, False);
