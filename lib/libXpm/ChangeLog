@@ -1,3 +1,338 @@
+commit 22a434d061af224536baee6c6110b603c5c96b2c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 17:29:25 2010 -0700
+
+    libXpm 3.5.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c11f1bd18303139f070e1873382632ee80cd9878
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 20 08:30:56 2010 -0400
+
+    config: remove obsolete FILES file from the Imakefile days
+    
+    It lists the files contained in the original
+    BULL Research Koala Project.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0ea6c432a068fc4edf90c614e68a4f4be94edd14
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 17 12:51:15 2010 -0400
+
+    doc: move doc files to the newly created doc dir.
+    
+    As per guidelines for all xorg modules.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7a3e69cfb079c7345f3d9b1217f373a706ba544c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 17:14:39 2010 -0400
+
+    config: provide a Makefile for the include directory
+    
+    Reduce some complexity in the src makefile as it should not
+    handle sibling directories.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e50f645f4cc5bb1db0e025fc6e39c6e84a894c13
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 14:56:32 2010 -0400
+
+    libXpm make: remove redundant -I.
+    
+    It is always included by Automake
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8dee37ff3bb908d597d53f2b335fc2111643cce7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 24 19:39:54 2010 -0400
+
+    sxpm make: no need to use a per target LDADD
+    
+    There is only one program in this makefile.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 34abbaaacddf1018d1805bc4890226ab200a50fb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 11:45:58 2010 -0400
+
+    sxpm make: remove redundant $(XMP_LIBS) linker flags
+    
+    SXPM_LIBS contains the complete list of dependencies.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b818f5cf7f7d8240db2a94ebcc28603730760e48
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 10:21:08 2010 -0400
+
+    src make: remove -I$(top_builddir)/include
+    
+    This directory does not exist, only object code is created
+    in "builddir".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 78bca7e85b930593fefe85cc51b5e24f98de31d0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 21:56:21 2010 -0400
+
+    config: fix warnings, m4 quoting and layout
+    
+    Fix some m4 quoting
+    Fix some autoconf warnings
+    Regroup statements per section
+    Add comments
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8e47c819490331c01959332e067f06a382d9a14a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:35:47 2010 -0400
+
+    config: AC_OUTPUT with parms is deprecated, use AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c6915d034fa3f72a9724816d2e3f5e8432ef9321
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:33:40 2010 -0400
+
+    config: AC_HELP_STRING is deprecated, use AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e2fdf80a7f9feedacf67e46a8e577b2e6d415a5f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:29:42 2010 -0400
+
+    config: remove unrequired AC_SUBST(XPM_CFLAGS)
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 937d8c8cf82bd57e82152af3768bdbfc5de4316a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:28:43 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0ed9cb4546d0c65f08a9511736400c0f7fba982f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:28:08 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e99bce47294eab031fc733d695e3c9589b52aff8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:25:00 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements at the top.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0b5e15c685d295262bf2307d65bee3a0b28e74f5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:15:08 2010 -0400
+
+    sxpm: use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use the appropriate platform version of sed
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 262bb7e9426150f6c7b553d184c51d3884d04adf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:11:43 2010 -0400
+
+    cxpm: use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit acd4856aac05a884376736196154842959803aa6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:03:13 2010 -0400
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8
+    The LT_AC_PROG_SED macro was never released by libtool.
+    Neither man makefile actually used $SED anyway.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d1bd1fbc6d7f7b4817aca4fecd8ccfe80a1c2f03
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 14 20:02:30 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3b20344bf3c5ae7a8291041d4887dc8f23644d40
+Author: Colin Harrison <colin.harrison@virgin.net>
+Date:   Thu Oct 7 13:49:17 2010 +0200
+
+    Missing end comment in libXpm/src/parse.c
+    
+    CVS tag removal chopped too much out in this case...
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit f8f0a68247b920052df0796a39ebcdc2e4161d05
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:30:03 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d026662cce0808cf402e0d50932d90984a2ea1bb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Apr 1 21:11:35 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d4a7b15b3ed9e7cf94dbf64f929ae954bada9f60
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Apr 1 21:07:54 2010 -0400
+
+    config: update and relocate AX_DEFINE_DIR macro
+    
+    Remove deprecated acinclude.m4 macro container file
+    Use separate macro files as per autoconf recommendation
+    Use the latest version of the macro from GNU
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e0920779d1227338e61aaab16458b9daad508c36
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:49 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 34ebac912c6f1223a274ab2e4f0c12928d357ddd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 14 09:36:38 2010 -0500
+
+    COPYING: add missing copyright notices
+    
+    Refer to: amigax.c, cxpm.c
+    Copyright (C) 1998 Arnaud LE HORS
+    Copyright (C) 19896 Lorens Younes
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dca7a9ccbdd4c85d84668c3a4bc14b0049f0c893
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:04 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit af0d92b686c65f7ffb5556b74fd937b01719c535
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 8bda9cdb6344c6cdf87237cb84c16c54a3ae84d8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 089237b624722b141a9ba6888584ebcc5247b227
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:43 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 37e75b28f4d30a66e16cfe192a0612a335aa8d46
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 68ae0e442ad57534c25566284ad049299a982d00
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:25 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 130b2fb0ea716143c63ba30856eecb351bc2af2a
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 9 10:32:08 2009 -0700
