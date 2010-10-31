@@ -81,8 +81,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libXcomposite_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+libXcomposite_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_libXcomposite_la_OBJECTS = Xcomposite.lo
 libXcomposite_la_OBJECTS = $(am_libXcomposite_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -147,6 +146,8 @@ FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
 HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -188,6 +189,8 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XCOMPOSITE_CFLAGS = @XCOMPOSITE_CFLAGS@
 XCOMPOSITE_LIBS = @XCOMPOSITE_LIBS@
+XFIXES_CFLAGS = @XFIXES_CFLAGS@
+XFIXES_LIBS = @XFIXES_LIBS@
 XMLTO = @XMLTO@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
@@ -237,14 +240,14 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = $(CWARNFLAGS) $(XCOMPOSITE_CFLAGS) $(X_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XCOMPOSITE_CFLAGS) $(XFIXES_CFLAGS)
 AM_CPPFLAGS = -I$(top_srcdir)/include
 lib_LTLIBRARIES = libXcomposite.la
 libXcomposite_la_SOURCES = \
 	xcompositeint.h	\
 	Xcomposite.c
 
-libXcomposite_la_LIBADD = $(XCOMPOSITE_LIBS) $(X_LIBS) $(XCOMPOSITE_LIBS)
+libXcomposite_la_LIBADD = $(XCOMPOSITE_LIBS)
 libXcomposite_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 libXcompositeincludedir = $(includedir)/X11/extensions
 libXcompositeinclude_HEADERS = $(top_srcdir)/include/X11/extensions/Xcomposite.h 

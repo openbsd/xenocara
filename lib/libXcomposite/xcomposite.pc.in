@@ -4,9 +4,9 @@ libdir=@libdir@
 includedir=@includedir@
 
 Name: Xcomposite
-Description: X Composite  Library
+Description: X Composite Extension Library
 Version: @PACKAGE_VERSION@
-Requires: xproto compositeproto >= @COMPOSITEEXT_VERSION@ xfixes
-Requires.private: x11 xfixes xext
+Requires: xproto compositeproto >= @COMPOSITEEXT_VERSION@
+Requires.private: x11 xfixes
 Cflags: -I${includedir}
 Libs: -L${libdir} -lXcomposite

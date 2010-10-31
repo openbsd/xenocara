@@ -45,8 +45,6 @@
 #ifndef _XCOMPOSITEINT_H_
 #define _XCOMPOSITEINT_H_
 
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <stdio.h>
 #include <X11/Xlib.h>
 #include <X11/Xlibint.h>

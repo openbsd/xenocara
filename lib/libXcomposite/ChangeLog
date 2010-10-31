@@ -1,3 +1,77 @@
+commit 8898782b98457292057d249ab9e40cfc2fed7d8d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Oct 27 22:40:32 2010 -0700
+
+    libXcomposite 0.4.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 206af895a90d5582a8078c86a33a0ba5888b7e27
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 15 10:41:17 2010 -0400
+
+    man: list files to install only once
+    
+    Newer versions of autoconf detect that error.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 542ff68e43a33a5c1849f9a88d2d5cc6d0827d04
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Aug 14 20:12:57 2010 -0400
+
+    man: store shadow man pages in git rather than generating them
+    
+    Simplify the build process and the makefile.
+    
+    Local fix in CVS for bug 5628 is not required
+    as the problem has been fixed in
+    util-macros d9062e4077ebfd0985baf8418f3d0f111b9ddbba
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 976db8a67a3e0462d0a675e2bfb2fe715e715bae
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Aug 14 19:58:14 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dc0afc177521014462baa966359b45d7a40a0c63
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 06:52:10 2010 -0300
+
+    Purge macros NEED_EVENTS and NEED_REPLIES
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 219e4de3666e3a7dda42c64ab1539a4cc5adbee4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 30 22:49:26 2010 -0700
+
+    Remove unneeded dependencies from configure.ac & xcomposite.pc
+    
+    We only need Xfixes headers for the XserverRegion definition, don't
+    need to link against it directly or require clients link against it,
+    so only use CFLAGS from it in the Makefile, and only list it in
+    Requires.private in the .pc file.
+    
+    Don't need libXext at all - no headers or functions from it are used.
+    
+    Also clean up some extra appearances of *_CFLAGS & *_LIBS that aren't needed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 01c4691e18b536de6585a0e93e05e2831cf2be34
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jun 8 17:05:02 2010 -0700

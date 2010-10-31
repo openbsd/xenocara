@@ -1,12 +1,11 @@
 libmandir = $(LIB_MAN_DIR)
 
-LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
-
 libman_xml = Xcomposite.xml
 
-libman_PRE = $(libman_xml:xml=man)
+libman_PRE = $(libman_xml:xml=man)		\
+	     $(Xcomposite_shadows:=.man)
 
-Xcomposite_man_aliases = 			\
+Xcomposite_shadows =	 			\
 	XCompositeQueryExtension		\
 	XCompositeQueryVersion			\
 	XCompositeVersion			\
@@ -19,45 +18,21 @@ Xcomposite_man_aliases = 			\
 	XCompositeGetOverlayWindow		\
 	XCompositeReleaseOverlayWindow
 
-Xcomposite_shadowmen = $(Xcomposite_man_aliases:=.@LIB_MAN_SUFFIX@)
-
 if INSTALL_MANPAGES
-libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
-	      $(Xcomposite_shadowmen)
+libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
 endif
 
 EXTRA_DIST  = $(libman_PRE) $(libman_xml)
 
 CLEANFILES  = $(libman_DATA)
 
-MAINTAINERCLEANFILES = $(libman_PRE)
-
-# Generate man page shadow files (Replaces InstallManPageAliases from Imake)
-$(Xcomposite_shadowmen):
-	$(AM_V_GEN) echo .so man$(LIB_MAN_DIR_SUFFIX)/Xcomposite.$(LIB_MAN_SUFFIX) > $@
-
-# Substitute system-specific values in man pages
-
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|"__vendorversion__"|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
+MAINTAINERCLEANFILES = $(libman_xml:xml=man)
 
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man .xml
 
-Xcomposite.$(LIB_MAN_SUFFIX): Xcomposite.man
-	$(AM_V_GEN)sed $(MAN_SUBSTS) < ${srcdir}/Xcomposite.man > Xcomposite.${LIB_MAN_SUFFIX}
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
+.man.$(LIB_MAN_SUFFIX):
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Generate nroff sources from DocBook/xml
 
@@ -69,5 +44,5 @@ if HAVE_XMLTO
 else
 .xml.man:
 	@echo "WARNING: configure did not find xmlto, cannot create $@ without it"
+	cp ${srcdir}/$@ .
 endif
-
