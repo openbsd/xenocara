@@ -1,5 +1,3 @@
-! $Xorg: Xmag.ad,v 1.3 2000/08/17 19:54:54 cpqbld Exp $
-! $XFree86$
 *Font: fixed
 *pane2*orientation: horizontal
 *pane2*showGrip: False

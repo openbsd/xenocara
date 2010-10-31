@@ -1,4 +1,3 @@
-/* $Xorg: ScaleP.h,v 1.4 2001/02/09 02:05:55 xorgcvs Exp $ */
 /*
 
 Copyright 1989, 1998  The Open Group

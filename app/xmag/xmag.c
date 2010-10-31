@@ -1,4 +1,3 @@
-/* $Xorg: xmag.c,v 1.4 2001/02/09 02:05:55 xorgcvs Exp $ */
 /*
 
 Copyright 1991, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xmag.c,v 1.13 2003/05/27 22:27:07 tsi Exp $ */
 
 #include "config.h"
 
