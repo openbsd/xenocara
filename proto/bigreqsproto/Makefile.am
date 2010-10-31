@@ -1,3 +1,5 @@
+SUBDIRS=specs
+
 bigreqsdir = $(includedir)/X11/extensions
 bigreqs_HEADERS = \
 	bigreqsproto.h \
@@ -6,14 +8,15 @@ bigreqs_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = bigreqsproto.pc
 
-EXTRA_DIST = bigreqsproto.pc.in
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

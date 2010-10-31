@@ -1,3 +1,116 @@
+commit 59730aba859c0b586b7e63e79c07b7741719845d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 20:21:07 2010 -0700
+
+    bigreqsproto 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7f5f73576dbfeba63be400d16ec9e815962fea7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 20:19:29 2010 -0700
+
+    Cleanup bigreq.xml a bit
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3145dbb0c713a24e58f642a2acdafb5b1f63d948
+Author: Matt Dew <matt@osource.org>
+Date:   Mon Jun 28 08:09:05 2010 -0400
+
+    specs: convert bigreq.ms from xorg-docs module to DocBook XML
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 18e93e57afeed6ea9872e7aab90da47f334690e1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:25:52 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b77888df9f01a9332d3cd15c413e5caa7fa18d80
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:30 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1c9119c86437a58df4890b5ebf79bfdab40f0997
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:47 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit c3e90c94335ee9f835ec2546782547f0aaa46934
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:13:29 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit 104cb17755f7529a8f4410abad84398c0a4fd839
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:26 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 862e353a49eaa17dd60882b5941d4beff969860c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:28 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit 07c29532215f8a210aa871fde3c8f5907f325ca2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit fb8a4e291007c3cc25f3dda7a9e69bb6f1a8cc15
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 13:55:24 2009 -0500
+
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    Works in conjunction with autogen.sh --enable-maintainer-mode
+
+commit c242da1467928c1e43b2ae0b12876aa4487aac23
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:46 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit e19e245ff8e5ddedbcc5853786ca55b56f8ab40c
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Aug 11 10:28:21 2009 +1000
