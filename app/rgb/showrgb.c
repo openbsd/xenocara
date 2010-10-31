@@ -115,8 +115,7 @@ dumprgb (char *filename)
 
 #else /* USE_RGB_TXT */
 static void
-dumprgb (filename)
-    char *filename;
+dumprgb (char *filename)
 {
     FILE *rgb;
     char *path;

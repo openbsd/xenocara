@@ -1,4 +1,5 @@
-# Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+#
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -20,41 +21,21 @@
 # DEALINGS IN THE SOFTWARE.
 #
 
-SUBDIRS=man
-bin_PROGRAMS = showrgb
-
-showrgb_SOURCES =  showrgb.c
-
+appmandir = $(APP_MAN_DIR)
+appman_PRE = rgb.man showrgb.man
+appman_DATA = showrgb.$(APP_MAN_SUFFIX)
 if RGB_DB
-bin_PROGRAMS += rgb
-
-rgb_SOURCES = rgb.c
-
-$(RGB_DB_FILES): rgb rgb.txt
-	-rm -f $(RGB_DB_FILES)
-	./rgb rgb < $(srcdir)/rgb.txt
+appman_DATA += rgb.$(APP_MAN_SUFFIX)
 endif
 
-rgbdir = $(db_dir)
-rgb_DATA = $(db_file).txt $(RGB_DB_FILES)
-RGB_DB_DEFINES = -DRGB_DB=\"$(db_dir)/$(db_file)\"
-AM_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES) $(CWARNFLAGS)
+EXTRA_DIST = $(appman_PRE)
+CLEANFILES = $(appman_DATA)
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
+MAN_SUBSTS += 	-e 's|__RGB_DB__|$(db_dir)/$(db_file)|g' \
+		-e 's|__RGB_DB_DIR__|$(db_dir)|g' \
+		-e 's|__RGB_DB_TYPE__|$(RGB_DB_TYPE)|g' \
+		-e 's|__RGB_DB_FILES__|$(RGB_DB_FILES)|g'
 
-EXTRA_DIST= \
-	rgb.txt \
-	others/README \
-	others/old-rgb.txt \
-	others/raveling.txt \
-	others/thomas.txt
-
-MAINTAINERCLEANFILES = ChangeLog INSTALL
-
-.PHONY: ChangeLog INSTALL
-
-INSTALL:
-	$(INSTALL_CMD)
-
-ChangeLog:
-	$(CHANGELOG_CMD)
-
-dist-hook: ChangeLog INSTALL
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
+.man.$(APP_MAN_SUFFIX):
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
