@@ -34,6 +34,155 @@ Date:   Thu Dec 6 05:30:43 2007 -0500
     
     Signed-off-by: James Cloos <cloos@jhcloos.com>
 
+commit b8f740b195888cf530e4982ba3e9a3760b40f3bc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 11:06:48 2010 -0700
+
+    xprop 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1640fcc34a9883898b07789949e3a3af9d398c15
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 11:04:08 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 509973583996c7bd279ea9276731fb00dd104861
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 11:03:24 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa09594696443397b723e441050012cada351210
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 30 11:02:43 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4488937f380d775290e84b720007a736d4390c25
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:50 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 64045bdb44d0e026a76ce1ebb00671e622b74ae6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 7 22:10:50 2010 -0500
+
+    COPYING: replace stub with copyright notices
+    
+    Refer to xprop.c clientwin.h
+    Copyright 1990, 1998  The Open Group
+    Copyright (c) 2000  The XFree86 Project, Inc.
+    Copyright 2007 Kim woelders
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bff28ee6ca1fa714797d5e675616e71ff6f2c9db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 418f388067aa8650bf88410a7f82894225c1d77d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 8cb541fa176d88415b5b7032f19cedd389697a22
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 6d322cf0d7799e63291665cb8a708f2b22e99ec2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit d32aaf2131358fe3f8a0a6f376568f5109279660
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:21 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit eb64005382abf6262c913a46e6186e019a179d59
+Author: Yang Zhao <yang@yangman.ca>
+Date:   Tue Oct 20 19:50:28 2009 -0400
+
+    Print UTF8_STRING type as UTF-8 when locale supports it
+    
+    Introduces 'u' format character, which behaves like 's', but leaves
+    UTF-8 encoding intact.
+    
+    Property value is checked for UTF-8 validity according to RFC 3629.
+    If invalid, an error string is printed, followed by the string formatted
+    using 's'. ie:
+    
+      PROP(UTF8_STRING) = <Invalid UTF-8 string: Forbidden value> "\374\233"
+    
+    Signed-off-by: Yang Zhao <yang@yangman.ca>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
 commit 9ccda86dae06375750685977a81f4fb1cabf3d00
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Aug 10 14:52:27 2007 -0700

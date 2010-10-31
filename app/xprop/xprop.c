@@ -1,4 +1,3 @@
-/* $Xorg: xprop.c,v 1.6 2001/02/09 02:05:56 xorgcvs Exp $ */
 /*
 
 Copyright 1990, 1998  The Open Group
@@ -27,7 +26,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xprop/xprop.c,v 1.15 2003/09/24 02:43:38 dawes Exp $ */
 
 #include "config.h"
 
@@ -409,6 +407,7 @@ static propertyRec windowPropTable[] = {
     {"RECTANGLE",	XA_RECTANGLE,	 "16iicc",    RECTANGLE_DFORMAT },
     {"RGB_COLOR_MAP",	XA_RGB_COLOR_MAP,"32xcccccccxx",RGB_COLOR_MAP_DFORMAT},
     {"STRING",		XA_STRING,	 "8s",	      0 },
+    {"UTF8_STRING",		0,	 "8u",	      0 },
     {"WINDOW",		XA_WINDOW,	 "32x",	      ": window id # $0+\n" },
     {"VISUALID",	XA_VISUALID,	 "32x",	      ": visual id # $0\n" },
     {"WM_COLORMAP_WINDOWS",	0,	 "32x",       ": window id # $0+\n"},
@@ -683,7 +682,7 @@ _put_char (char c)
 }
 
 static void
-_format_char (char c)
+_format_char (char c, int unicode)
 {
     switch (c) {
       case '\\':
@@ -701,17 +700,21 @@ _format_char (char c)
 	break;
       default:
 	if (!c_isprint(c)) {
-	    _put_char('\\');
-	    snprintf(_buf_ptr, _buf_len, "%03o", (unsigned char) c);
-	    _buf_ptr += 3;
-	    _buf_len -= 3;
+	    if (unicode && (c & 0x80)) {
+		_put_char(c);
+	    } else {
+		_put_char('\\');
+		snprintf(_buf_ptr, _buf_len, "%03o", (unsigned char) c);
+		_buf_ptr += 3;
+		_buf_len -= 3;
+	    }
 	} else
 	  _put_char(c);
     }
 }
 
 static const char *
-Format_String (const char *string)
+Format_String (const char *string, int unicode)
 {
     char c;
 
@@ -720,7 +723,7 @@ Format_String (const char *string)
     _put_char('\"');
 
     while ((c = string++[0]))
-	_format_char(c);
+	_format_char(c, unicode);
 
     *_buf_ptr++ = '"';
     *_buf_ptr++ = '\0';
@@ -738,7 +741,7 @@ Format_Len_String (const char *string, int len)
     memcpy(data, string, len);
     data[len] = '\0';
 
-    result = Format_String(data);
+    result = Format_String(data, 0);
     free(data);
 
     return result;
@@ -905,6 +908,129 @@ Format_Len_Text (const char *string, int len, Atom encoding)
 }
 
 /*
+ * Validate a string as UTF-8 encoded according to RFC 3629
+ *
+ * Simply, a unicode code point (up to 21-bits long) is encoded as follows:
+ *
+ *    Char. number range  |        UTF-8 octet sequence
+ *       (hexadecimal)    |              (binary)
+ *    --------------------+---------------------------------------------
+ *    0000 0000-0000 007F | 0xxxxxxx
+ *    0000 0080-0000 07FF | 110xxxxx 10xxxxxx
+ *    0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
+ *    0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+ *
+ * Validation is done left-to-right, and an error condition, if any, refers to
+ * only the left-most problem in the string.
+ *
+ * Return values:
+ *   UTF8_VALID: Valid UTF-8 encoded string
+ *   UTF8_OVERLONG: Using more bytes than needed for a code point
+ *   UTF8_SHORT_TAIL: Not enough bytes in a multi-byte sequence
+ *   UTF8_LONG_TAIL: Too many bytes in a multi-byte sequence
+ *   UTF8_FORBIDDEN_VALUE: Forbidden prefix or code point outside 0x10FFFF
+ */
+#define UTF8_VALID 0
+#define UTF8_FORBIDDEN_VALUE 1
+#define UTF8_OVERLONG 2
+#define UTF8_SHORT_TAIL 3
+#define UTF8_LONG_TAIL 4
+static int
+is_valid_utf8 (const char *string, int len)
+{
+    unsigned long codepoint;
+    int rem, i;
+    unsigned char c;
+
+    rem = 0;
+    for (i = 0; i < len; i++) {
+	c = (unsigned char) string[i];
+
+	/* Order of type check:
+	 *   - Single byte code point
+	 *   - Non-starting byte of multi-byte sequence
+	 *   - Start of 2-byte sequence
+	 *   - Start of 3-byte sequence
+	 *   - Start of 4-byte sequence
+	 */
+	if (!(c & 0x80)) {
+	    if (rem > 0) return UTF8_SHORT_TAIL;
+	    rem = 0;
+	    codepoint = c;
+	} else if ((c & 0xC0) == 0x80) {
+	    if (rem == 0) return UTF8_LONG_TAIL;
+	    rem--;
+	    codepoint |= (c & 0x3F) << (rem * 6);
+	    if (codepoint == 0) return UTF8_OVERLONG;
+	} else if ((c & 0xE0) == 0xC0) {
+	    if (rem > 0) return UTF8_SHORT_TAIL;
+	    rem = 1;
+	    codepoint = (c & 0x1F) << 6;
+	    if (codepoint == 0) return UTF8_OVERLONG;
+	} else if ((c & 0xF0) == 0xE0) {
+	    if (rem > 0) return UTF8_SHORT_TAIL;
+	    rem = 2;
+	    codepoint = (c & 0x0F) << 12;
+	} else if ((c & 0xF8) == 0xF0) {
+	    if (rem > 0) return UTF8_SHORT_TAIL;
+	    rem = 3;
+	    codepoint = (c & 0x07) << 18;
+	    if (codepoint > 0x10FFFF) return UTF8_FORBIDDEN_VALUE;
+	} else
+	    return UTF8_FORBIDDEN_VALUE;
+    }
+
+    return UTF8_VALID;
+}
+
+static const char *
+Format_Len_Unicode (const char *string, int len)
+{
+    char *data;
+    const char *result, *error;
+    int len2;
+
+    int validity = is_valid_utf8(string, len);
+
+    if (validity != UTF8_VALID) {
+	switch (validity) {
+	  case UTF8_FORBIDDEN_VALUE:
+	    error = "<Invalid UTF-8 string: Forbidden value> "; break;
+	  case UTF8_OVERLONG:
+	    error = "<Invalid UTF-8 string: Overlong encoding> "; break;
+	  case UTF8_SHORT_TAIL:
+	    error = "<Invalid UTF-8 string: Tail too short> "; break;
+	  case UTF8_LONG_TAIL:
+	    error = "<Invalid UTF-8 string: Tail too long> "; break;
+	}
+
+	result = Format_Len_String(string, len);
+	len2 = strlen(result);
+	data = (char *) Malloc(len2+1);
+	memcpy(data, result, len2+1);
+
+	memcpy(_formatting_buffer, error, strlen(error)+1);
+	strcat(_formatting_buffer, data);
+	free(data);
+
+	return _formatting_buffer;
+    }
+
+    if (!is_utf8_locale())
+	return Format_Len_String(string, len);
+
+    data = (char *) Malloc(len+1);
+
+    memcpy(data, string, len);
+    data[len] = '\0';
+
+    result = Format_String(data, 1);
+    free(data);
+
+    return result;
+}
+
+/*
  *
  * The Format Manager: a group of routines to manage "formats"
  *
@@ -956,6 +1082,8 @@ Format_Thunk (thunk t, char format_char)
     switch (format_char) {
       case 's':
 	return Format_Len_String(t.extra_value, (int)t.value);
+      case 'u':
+	return Format_Len_Unicode(t.extra_value, (int)t.value);
       case 't':
 	return Format_Len_Text(t.extra_value, (int)t.value, t.extra_encoding);
       case 'x':
@@ -1252,7 +1380,7 @@ Break_Down_Property (const char *pointer, int length, Atom type, const char *for
 
     while (length >= size/8) {
 	format_char = Get_Format_Char(format, i);
-	if (format_char == 's')
+	if (format_char == 's' || format_char == 'u')
 	    t.value = Extract_Len_String(&pointer,&length,size,&t.extra_value);
 	else if (format_char == 't') {
 	    t.extra_encoding = type;

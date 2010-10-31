@@ -1,4 +1,3 @@
-.\" $Xorg: xprop.man,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $
 .\" Copyright 1988, 1998  The Open Group
 .\" Copyright \(co 2000  The XFree86 Project, Inc.
 .\" 
@@ -23,8 +22,6 @@
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
-.\"
-.\" $XFree86: xc/programs/xprop/xprop.man,v 1.8 2001/01/27 18:21:21 dawes Exp $
 .\"
 .TH XPROP 1 __vendorversion__
 .SH NAME
@@ -233,6 +230,14 @@ represent an internationalized text string. This format character is only
 usable with a field size of 8. The string is assumed to be in an ICCCM
 compliant encoding and is converted to the current locale encoding before
 being output.
+.TP
+u
+This field and the next ones until either a 0 or the end of the property
+represent an UTF-8 encoded unicode string. This format character is only
+usable with a field size of 8. If the string is found to be an invalid
+character, the type of encoding violation is printed instead, followed by
+the string formatted using 's'. When in an environment not capable of
+displaying UTF-8 encoded string, behaviour is identical to 's'.
 .TP
 x
 The field is a hex number (like 'c' but displayed in hex - most useful
