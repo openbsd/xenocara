@@ -19,8 +19,6 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
 */
-/* $XdotOrg: xc/programs/mkfontscale/mkfontscale.c,v 1.2 2004/04/23 19:54:36 eich Exp $ */
-/* $XFree86: xc/programs/mkfontscale/mkfontscale.c,v 1.21 2003/12/10 02:58:07 dawes Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>

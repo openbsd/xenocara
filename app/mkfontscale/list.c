@@ -19,7 +19,6 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
 */
-/* $XFree86: xc/programs/mkfontscale/list.c,v 1.5 2003/07/04 16:24:30 eich Exp $ */
 
 #include <stdlib.h>
 #include <stdio.h>
