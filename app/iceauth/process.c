@@ -1,6 +1,4 @@
 /*
- * $Xorg: process.c,v 1.5 2001/02/09 02:05:31 xorgcvs Exp $
- * $XdotOrg: $
  * 
 Copyright 1989, 1998  The Open Group
 
@@ -27,8 +25,6 @@ in this Software without prior written authorization from The Open Group.
  * Original Author of "xauth" : Jim Fulton, MIT X Consortium
  * Modified into "iceauth"    : Ralph Mor, X Consortium
  */
-
-/* $XFree86: xc/programs/iceauth/process.c,v 3.7 2001/12/14 20:00:49 dawes Exp $ */
 
 #include "iceauth.h"
 #include <ctype.h>
