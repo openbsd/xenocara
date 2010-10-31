@@ -34,7 +34,6 @@ AM_CFLAGS = \
 	$(DPY_XCOMPOSITE_CFLAGS) \
 	$(DPY_XINERAMA_CFLAGS) \
 	$(DPY_DMX_CFLAGS) \
-	$(DPY_XPRINT_CFLAGS) \
 	$(DPY_XTST_CFLAGS)
 
 xdpyinfo_LDADD = \
@@ -49,7 +48,6 @@ xdpyinfo_LDADD = \
 	$(DPY_XCOMPOSITE_LIBS) \
 	$(DPY_XINERAMA_LIBS) \
 	$(DPY_DMX_LIBS) \
-	$(DPY_XPRINT_LIBS) \
 	$(DPY_XTST_LIBS)
 
 xdpyinfo_SOURCES =	\
@@ -63,36 +61,21 @@ appmandir = $(APP_MAN_DIR)
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-EXTRA_DIST = $(appman_PRE) ChangeLog
+EXTRA_DIST = $(appman_PRE) 
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = $(appman_DATA)
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 
-SED = sed
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):

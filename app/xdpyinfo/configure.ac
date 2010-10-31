@@ -21,26 +21,22 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xdpyinfo, [1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xdpyinfo)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([xdpyinfo], [1.2.0],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xdpyinfo])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 AM_CONFIG_HEADER(config.h)
 
-AC_PROG_CC
-AC_PROG_INSTALL
-
-XORG_DEFAULT_OPTIONS
-
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XDPYINFO, xext x11 xtst)
-AC_SUBST(XDPYINFO_CFLAGS)
-AC_SUBST(XDPYINFO_LIBS)
 
 # This is used below to allow <X11/Xlib.h> to be found
 PKG_CHECK_MODULES(DPY_X11, x11)
@@ -132,18 +128,6 @@ if test "x$USE_DMX" != "xno" ; then
 		CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 else
 	echo "without dmx"
-fi
-
-AC_ARG_WITH(xprint, AC_HELP_STRING([--without-xprint],[Disable xprint support.]), 
-		[USE_XPRINT="$withval"], [USE_XPRINT="yes"])
-if test "x$USE_XPRINT" != "xno" ; then
-	PKG_CHECK_MODULES(DPY_XPRINT, xp, 
-		[SAVE_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS $DPY_XPRINT_CFLAGS $DPY_X11_CFLAGS"
-		AC_CHECK_HEADERS([X11/extensions/Print.h],,,[#include <X11/Xlib.h>])
-		CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
-else
-	echo "without xprint"
 fi
 
 PKG_CHECK_MODULES(DPY_XTST, xtst, 

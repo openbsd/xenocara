@@ -80,10 +80,6 @@ in this Software without prior written authorization from The Open Group.
 #  define DMX
 # endif
 
-# if HAVE_X11_EXTENSIONS_PRINT_H
-#  define INCLUDE_XPRINT_SUPPORT
-# endif
-
 #endif
 
 #include <X11/Xlib.h>
@@ -140,9 +136,6 @@ in this Software without prior written authorization from The Open Group.
 #ifdef DMX
 #include <X11/extensions/dmxext.h>
 #endif
-#ifdef INCLUDE_XPRINT_SUPPORT
-#include <X11/extensions/Print.h>
-#endif /* INCLUDE_XPRINT_SUPPORT */
 #include <X11/Xos.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -433,33 +426,6 @@ Bool hasExtension(Display *dpy, char *extname)
   return i != num_extensions;
 }
 
-#ifdef INCLUDE_XPRINT_SUPPORT
-/* xc/programs/twm/twm.c has a copy of |IsPrintScreen()|, please
- * keep both versions in sync... */
-static
-Bool IsPrintScreen(Screen *s)
-{
-    Display *dpy = XDisplayOfScreen(s);
-    int      i;
-
-    /* Check whether this is a screen of a print DDX */
-    if (hasExtension(dpy, XP_PRINTNAME)) {
-        Screen **pscreens;
-        int      pscrcount;
-
-        pscreens = XpQueryScreens(dpy, &pscrcount);
-        for( i = 0 ; (i < pscrcount) && pscreens ; i++ ) {
-            if (s == pscreens[i]) {
-                XFree(pscreens);
-                return True;
-            }
-        }
-        XFree(pscreens);                      
-    }
-    return False;
-}
-#endif /* INCLUDE_XPRINT_SUPPORT */
-
 static void
 print_screen_info(Display *dpy, int scr)
 {
@@ -473,7 +439,6 @@ print_screen_info(Display *dpy, int scr)
     double xres, yres;
     int ndepths = 0, *depths = NULL;
     unsigned int width, height;
-    Bool isPrintScreen = False; /* Initialise this if |INCLUDE_XPRINT_SUPPORT| is not set */
 
     /*
      * there are 2.54 centimeters to an inch; so there are 25.4 millimeters.
@@ -490,27 +455,11 @@ print_screen_info(Display *dpy, int scr)
 
     printf ("\n");
     printf ("screen #%d:\n", scr);
-
-#ifdef INCLUDE_XPRINT_SUPPORT
-    /* Check whether this is a screen of a print DDX */
-    isPrintScreen = IsPrintScreen(s);
-    printf ("  print screen:    %s\n", isPrintScreen?"yes":"no");
-#endif /* INCLUDE_XPRINT_SUPPORT */
-
-    if (isPrintScreen) {
-        /* Print resolution is set on a per-printer basis (per-document
-         * or per-page), the screen itself has no "default" resolution */
-        printf ("  maximum dimensions:    %dx%d pixels\n",
-	        XDisplayWidth (dpy, scr),  XDisplayHeight (dpy, scr));
-    }
-    else
-    {
-        printf ("  dimensions:    %dx%d pixels (%dx%d millimeters)\n",
-	        XDisplayWidth (dpy, scr),  XDisplayHeight (dpy, scr),
-	        XDisplayWidthMM(dpy, scr), XDisplayHeightMM (dpy, scr));
-        printf ("  resolution:    %dx%d dots per inch\n", 
-	        (int) (xres + 0.5), (int) (yres + 0.5));
-    }
+    printf ("  dimensions:    %dx%d pixels (%dx%d millimeters)\n",
+	    XDisplayWidth (dpy, scr),  XDisplayHeight (dpy, scr),
+	    XDisplayWidthMM(dpy, scr), XDisplayHeightMM (dpy, scr));
+    printf ("  resolution:    %dx%d dots per inch\n", 
+	    (int) (xres + 0.5), (int) (yres + 0.5));
     depths = XListDepths (dpy, scr, &ndepths);
     if (!depths) ndepths = 0;
     printf ("  depths (%d):    ", ndepths);
@@ -1350,103 +1299,6 @@ static int print_dmx_info(Display *dpy, char *extname)
 
 #endif /* DMX */
 
-#ifdef INCLUDE_XPRINT_SUPPORT
-static
-void print_xprint_attrpool(const char *name, const char *attrpool)
-{
-  int         c;
-  const char *s = attrpool;
-  
-  printf("    %s:\n      ", name);
-  
-  while( (c = *s++) != '\0' )
-  {
-    if (c == '\n') {
-      printf("\n      ");
-    }
-    else
-    {
-      fputc(c, stdout);
-    }
-  }
-  fputc('\n', stdout);
-}
-
-static int
-print_xprint_info(Display *dpy, char *extname)
-{  
-
-  short           majorrev,
-                  minorrev;
-  int             xp_event_base,
-                  xp_error_base;
-  XPPrinterList   printerlist;
-  Screen        **pscreens;
-  int             plcount,
-                  pscrcount,
-                  i;
-
-  if (XpQueryVersion(dpy, &majorrev, &minorrev) == False) {
-    return 0;
-  }
-  
-  print_standard_extension_info(dpy, extname, majorrev, minorrev);
-
-  if (XpQueryExtension(dpy, &xp_event_base, &xp_error_base) == False) {
-    printf("  XpQueryExtension() failed.\n");
-    return 0;
-  }
-  
-  /* Print event info */
-  printf("  xp_event_base=%d, xp_error_base=%d\n", xp_event_base, xp_error_base);
-  
-  /* Print info which screens support the Xprint extension */
-  printf("  Print screens = {");
-  pscreens = XpQueryScreens(dpy, &pscrcount);
-  for( i = 0 ; i < pscrcount ; i++ ) {
-    printf("%s%d", ((i > 0)?(", "):("")), (int)XScreenNumberOfScreen(pscreens[i]));
-  }
-  XFree(pscreens);
-  printf("}\n");
-
-  /* Enumerate the list of printers */
-  printerlist = XpGetPrinterList(dpy, NULL, &plcount);
-  /* Print number of printers, then each printer name and description */
-  printf("  Found %d printers on this server.\n", plcount);
-  for( i = 0 ; i < plcount ; i++) {
-    printf("  printer %d: name='%s', descr='%s'\n",
-           i, NULLSTR(printerlist[i].name), NULLSTR(printerlist[i].desc));
-  }
-  
-  /* Enumerate the list of printers with details */
-  for( i = 0 ; i < plcount ; i++) {
-    char       *printername = printerlist[i].name;
-    XPContext   pcontext;
-    char       *s;
-    
-    printf("  Attributes of printer '%s':\n", NULLSTR(printername));
-
-    pcontext = XpCreateContext(dpy, printername);
-    if (pcontext == None) {
-      printf("    Error: Could not open printer.\n");
-      continue;
-    }
-
-    s=XpGetAttributes(dpy, pcontext, XPJobAttr);     print_xprint_attrpool("XPJobAttr",     s);  XFree(s);
-    s=XpGetAttributes(dpy, pcontext, XPDocAttr);     print_xprint_attrpool("XPDocAttr",     s);  XFree(s);
-    s=XpGetAttributes(dpy, pcontext, XPPageAttr);    print_xprint_attrpool("XPPageAttr",    s);  XFree(s);
-    s=XpGetAttributes(dpy, pcontext, XPPrinterAttr); print_xprint_attrpool("XPPrinterAttr", s);  XFree(s);
-    s=XpGetAttributes(dpy, pcontext, XPServerAttr);  print_xprint_attrpool("XPServerAttr",  s);  XFree(s);
-
-    XpDestroyContext(dpy, pcontext);
-  }
-  
-  XpFreePrinterList(printerlist);
-
-  return 1;
-}
-#endif /* INCLUDE_XPRINT_SUPPORT */
-
 /* utilities to manage the list of recognized extensions */
 
 
@@ -1500,9 +1352,6 @@ static ExtensionPrintInfo known_extensions[] =
 #ifdef DMX
     {"DMX", print_dmx_info, False},
 #endif
-#ifdef INCLUDE_XPRINT_SUPPORT
-    {XP_PRINTNAME, print_xprint_info, False},
-#endif /* INCLUDE_XPRINT_SUPPORT */
     /* add new extensions here */
 };
 

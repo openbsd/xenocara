@@ -33,9 +33,6 @@
 /* Define to 1 if you have the <X11/extensions/multibuf.h> header file. */
 #undef HAVE_X11_EXTENSIONS_MULTIBUF_H
 
-/* Define to 1 if you have the <X11/extensions/Print.h> header file. */
-#undef HAVE_X11_EXTENSIONS_PRINT_H
-
 /* Define to 1 if you have the <X11/extensions/record.h> header file. */
 #undef HAVE_X11_EXTENSIONS_RECORD_H
 
