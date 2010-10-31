@@ -1,9 +1,28 @@
-/* $Xorg: xhost.c,v 1.4 2001/02/09 02:05:46 xorgcvs Exp $ */
-/* $XdotOrg: app/xhost/xhost.c,v 1.4 2005/06/18 08:03:35 alanc Exp $ */
+/*
+ * Copyright (c) 2004, Oracle and/or its affiliates. All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
 /*
 
 Copyright 1985, 1986, 1987, 1998  The Open Group
-Copyright 2004 Sun Microsystems, Inc.
 
 All rights reserved.
 
@@ -35,7 +54,6 @@ of the copyright holder.
 X Window System is a trademark of The Open Group.
 
 */
-/* $XFree86: xc/programs/xhost/xhost.c,v 3.26 2003/07/27 14:05:45 herrb Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

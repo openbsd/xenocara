@@ -1,8 +1,25 @@
-.\" $Xorg: xhost.man,v 1.4 2001/02/09 02:05:46 xorgcvs Exp $
-.\" $XdotOrg$
+.\" Copyright (c) 2004, Oracle and/or its affiliates. All rights reserved.
+.\"
+.\" Permission is hereby granted, free of charge, to any person obtaining a
+.\" copy of this software and associated documentation files (the "Software"),
+.\" to deal in the Software without restriction, including without limitation
+.\" the rights to use, copy, modify, merge, publish, distribute, sublicense,
+.\" and/or sell copies of the Software, and to permit persons to whom the
+.\" Software is furnished to do so, subject to the following conditions:
+.\"
+.\" The above copyright notice and this permission notice (including the next
+.\" paragraph) shall be included in all copies or substantial portions of the
+.\" Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+.\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+.\" THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+.\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+.\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+.\" DEALINGS IN THE SOFTWARE.
 .\"
 .\" Copyright 1988, 1998  The Open Group
-.\" Copyright 2004 Sun Microsystems, Inc.
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining a
 .\" copy of this software and associated documentation files (the
@@ -30,8 +47,6 @@
 .\" of the copyright holder.
 .\" 
 .\" X Window System is a trademark of The Open Group.
-.\"
-.\" $XFree86: xc/programs/xhost/xhost.man,v 1.8tsi Exp $
 .\"
 .TH XHOST 1 __xorgversion__
 .SH NAME
@@ -122,6 +137,11 @@ string representing a given value, separated by a colon.  For example,
 with a value of \fIalmas\fP.   For more information on the available forms
 of server interpreted addresses, see the \fIXsecurity\fP(__miscmansuffix__)
 manual page.
+.PP
+The initial access control list for display number \fBn\fP
+may be set by the file \fI/etc/X\fBn\fI.hosts\fR, where
+\fBn\fP is the display number of the server.  See \fIXserver\fP(1)
+for details.
 .SH DIAGNOSTICS
 For each name added to the access control list,
 a line of the form "\fIname\fP being added to access control list"
@@ -129,8 +149,6 @@ is printed.
 For each name removed from the access control list,
 a line of the form "\fIname\fP being removed from access control list"
 is printed.
-.SH FILES
-/etc/X*.hosts
 .SH "SEE ALSO"
 X(__miscmansuffix__), Xsecurity(__miscmansuffix__), Xserver(1), xdm(1), xauth(1), getaddrinfo(3)
 .SH ENVIRONMENT
