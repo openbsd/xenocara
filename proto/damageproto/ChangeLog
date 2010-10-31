@@ -1,3 +1,113 @@
+commit 7756ab88c9687bf8eeb7c1d423b2ad7a8d9c2aff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 20:34:38 2010 -0700
+
+    damageproto 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e4e9437e5a9d13a7accbf77ed498e327d51ac2e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:30 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    remove autogen.sh which is not required in any GNU package
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fe38c4d7b57d698de7bb8c4445b1c079386c8c7e
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Thu Dec 17 08:34:02 2009 +0100
+
+    Use $(docdir) for damageproto.txt install path
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit c11bd672411d513321c1997abf5428fc758e3bad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:47 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit da5f148ee88df8d67d7ff088965d7137cb4452c8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 15:11:52 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    INSTALL file now copied from util-macros.
+    The copy in git is removed.
+
+commit 7cc105ddc97f6ec1386956431399e09414491292
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 15:09:23 2009 -0500
+
+    Revert "NEWS: remove empty file #24206"
+    
+    This reverts commit 2fa701f45f0aa12bbaeeb8adbb82389b09ec57a2.
+    The NEWS file was not empty
+
+commit 6198e1baa4e3223c8d77d925188797e18ec5ff0c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:10:10 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit 2fa701f45f0aa12bbaeeb8adbb82389b09ec57a2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 20:28:15 2009 -0500
+
+    NEWS: remove empty file #24206
+
+commit 537c02b4bd06f49120877710992f819a6558451a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:26 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit e7efe628fd2227b2bebe5b1c0ba89e1830a09a77
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:28 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit a3845453d5e6a049a8044c540a60288961ad2a9c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit ec1193509601c57a2da090463dcfb416432f6fa1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:46 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 1950869c1640590b2ce7a96e2a97746b308093f8
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Aug 27 15:43:27 2009 +1000
