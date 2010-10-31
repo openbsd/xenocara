@@ -1,32 +1,32 @@
- $OpenBSD: MODULES,v 1.141 2010/10/31 09:34:57 matthieu Exp $
+ $OpenBSD: MODULES,v 1.142 2010/10/31 21:24:18 matthieu Exp $
 #
 # X.Org maintained modules
 #
 
-app/appres		1.0.2	7.5
-app/bdftopcf		1.0.3	7.6	needs-update
-app/beforelight		1.0.4	7.6	needs-update
-app/bitmap		1.0.5	7.6	needs-update
-app/editres		1.0.5	7.6	needs-update
+app/appres		1.0.3	7.6
+app/bdftopcf		1.0.3	7.6
+app/beforelight		1.0.4	7.6
+app/bitmap		1.0.5	7.6
+app/editres		1.0.5	7.6
 app/fonttosfnt		1.0.4	7.4
-app/fslsfonts		1.0.3	7.6	needs-update
-app/fstobdf		1.0.4 	7.6	needs-update
-app/iceauth		1.0.4	7.6	needs-update
-app/ico			1.0.3	7.6	needs-update
+app/fslsfonts		1.0.3	7.6
+app/fstobdf		1.0.4 	7.6
+app/iceauth		1.0.4	7.6
+app/ico			1.0.3	7.6
 app/listres		1.0.2	7.5+
 app/luit		1.1.0	7.6	needs-update
 app/mkcomposecache	1.2.1	7.5	needs-import
 app/mkfontdir		1.0.5	7.5
-app/mkfontscale		1.0.8	7.6	needs-update
+app/mkfontscale		1.0.8	7.6
 app/oclock		1.0.2	7.6
-app/rgb			1.0.4	7.6	needs-update
+app/rgb			1.0.4	7.6
 app/scripts		1.0.1	7.0
 app/sessreg		1.0.6	7.5
 app/setxkbmap		1.2.0	7.6
-app/showfont		1.0.3	7.6	needs-update
-app/smproxy		1.0.4	7.6	needs-update
-app/twm			1.0.5	7.6	needs-update
-app/viewres		1.0.3	7.6	needs-update
+app/showfont		1.0.3	7.6
+app/smproxy		1.0.4	7.6
+app/twm			1.0.5	7.6
+app/viewres		1.0.3	7.6
 app/x11perf		1.5.2	7.6
 app/xauth		1.0.5	7.6
 app/xbacklight		1.1.1	7.5
@@ -36,47 +36,47 @@ app/xclipboard		1.1.0	7.5
 app/xclock		1.0.5	7.6
 app/xcmsdb		1.0.3	7.6
 app/xcompmgr		1.1.5	7.5+
-app/xconsole		1.0.4	7.6	needs-update
+app/xconsole		1.0.4	7.6
 app/xdm			1.1.10	7.5+	needs-update
-app/xdpyinfo		1.2.0	7.6	needs-update
+app/xdpyinfo		1.2.0	7.6
 app/xdriinfo		1.0.3	7.5
-app/xedit		1.2.0	7.6	needs-update
-app/xev			1.1.0	7.6	needs-update
+app/xedit		1.2.0	7.6
+app/xev			1.1.0	7.6
 app/xeyes		1.1.0	7.5+
 app/xf86dga		1.0.2	7.2RC1
-app/xfd			1.1.0	7.6	needs-update
+app/xfd			1.1.0	7.6
 app/xfontsel		1.0.2	7.2+
-app/xfs			1.1.1	7.6	needs-update
-app/xfsinfo		1.0.3	7.6	needs-update
+app/xfs			1.1.1	7.6
+app/xfsinfo		1.0.3	7.6
 app/xfwp		1.0.1	7.0
 app/xgamma		1.0.3	7.5
-app/xgc			1.0.3	7.6	needs-update
-app/xhost		1.0.4	7.6	needs-update
+app/xgc			1.0.3	7.6
+app/xhost		1.0.4	7.6
 app/xinit		1.3.0	7.6	needs-update
 app/xinput		1.5.2	7.5+
 app/xkbcomp		1.2.0	7.6	needs-update
-app/xkbevd		1.1.1	7.6	needs-update
+app/xkbevd		1.1.1	7.6
 app/xkbprint		1.0.2	7.5+
-app/xkbutils		1.0.3	7.6	needs-update
+app/xkbutils		1.0.3	7.6
 app/xkill		1.0.2	7.5
 app/xload		1.0.2	7.3
-app/xlogo		1.0.3	7.6	needs-update
+app/xlogo		1.0.3	7.6
 app/xlsatoms		1.1.0	7.5+	needs-update
 app/xlsclients		1.1.0	7.5+	needs-update
 app/xlsfonts		1.0.3	7.5+
-app/xmag		1.0.4	7.6	needs-update
-app/xman		1.1.1	7.6	needs-update
+app/xmag		1.0.4	7.6
+app/xman		1.1.1	7.6
 app/xmessage		1.0.3	7.5+
-app/xmodmap		1.0.5	7.6	needs-update
+app/xmodmap		1.0.5	7.6
 app/xmore		1.0.2	7.5+
 app/xpr			1.0.3	7.5
-app/xprop		1.2.0	7.6	needs-update
-app/xrandr		1.3.4	7.6	needs-update
+app/xprop		1.2.0	7.6
+app/xrandr		1.3.4	7.6
 app/xrdb		1.0.6	7.5
 app/xrefresh		1.0.3	7.5
 app/xset		1.2.0	7.6
-app/xsetroot		1.1.0	7.6	needs-update
-app/xsm			1.0.2	7.6	needs-update
+app/xsetroot		1.1.0	7.6
+app/xsm			1.0.2	7.6
 app/xstdcmap		1.0.1	7.0
 app/xvidtune		1.0.2	7.5+
 app/xvinfo		1.1.0	7.5
@@ -143,118 +143,118 @@ driver/xf86-video-vmware	11.0.2	7.6
 driver/xf86-video-voodoo	1.2.4	7.5+
 driver/xf86-video-wsfb		0.2.1	7.5
 
-font/encodings 			1.0.4	needs-update
-font/adobe-100dpi		1.0.2	needs-update
-font/adobe-75dpi		1.0.2	needs-update
-font/adobe-utopia-100dpi	1.0.3	needs-update
-font/adobe-utopia-75dpi		1.0.3	needs-update
-font/adobe-utopia-type1		1.0.3	needs-update
-font/alias			1.0.3	needs-update
-font/arabic-misc		1.0.2	needs-update
-font/bh-100dpi			1.0.2	needs-update
-font/bh-75dpi			1.0.2	needs-update
-font/bh-lucidatypewriter-100dpi	1.0.2	needs-update
-font/bh-lucidatypewriter-75dpi	1.0.2	needs-update
-font/bh-ttf			1.0.2	needs-update
-font/bh-type1			1.0.2	needs-update
-font/bitstream-100dpi		1.0.2	needs-update
-font/bitstream-75dpi		1.0.2	needs-update
-font/bitstream-type1		1.0.2	needs-update
-font/cronyx-cyrillic		1.0.2	needs-update
-font/cursor-misc		1.0.2	needs-update
-font/daewoo-misc		1.0.2	needs-update
-font/dec-misc			1.0.2	needs-update
-font/ibm-type1			1.0.2	needs-update
-font/isas-misc			1.0.2	needs-update
-font/jis-misc			1.0.2	needs-update
-font/micro-misc			1.0.2	needs-update
-font/misc-cyrillic		1.0.2	needs-update
-font/misc-ethiopic		1.0.2	needs-update
-font/misc-meltho		1.0.2	needs-update
-font/misc-misc			1.1.1	needs-update
-font/mutt-misc			1.0.2	needs-update
-font/schumacher-misc		1.1.1	needs-update
-font/screen-cyrillic		1.0.3	needs-update
-font/sony-misc			1.0.2	needs-update
-font/sun-misc			1.0.2	needs-update
-font/util			1.2.0	needs-update
-font/winitzki-cyrillic		1.0.2	needs-update
-font/xfree86-type1		1.0.3	needs-update
+font/encodings 			1.0.4
+font/adobe-100dpi		1.0.2
+font/adobe-75dpi		1.0.2
+font/adobe-utopia-100dpi	1.0.3
+font/adobe-utopia-75dpi		1.0.3
+font/adobe-utopia-type1		1.0.3
+font/alias			1.0.3
+font/arabic-misc		1.0.2
+font/bh-100dpi			1.0.2
+font/bh-75dpi			1.0.2
+font/bh-lucidatypewriter-100dpi	1.0.2
+font/bh-lucidatypewriter-75dpi	1.0.2
+font/bh-ttf			1.0.2
+font/bh-type1			1.0.2
+font/bitstream-100dpi		1.0.2
+font/bitstream-75dpi		1.0.2
+font/bitstream-type1		1.0.2
+font/cronyx-cyrillic		1.0.2
+font/cursor-misc		1.0.2
+font/daewoo-misc		1.0.2
+font/dec-misc			1.0.2
+font/ibm-type1			1.0.2
+font/isas-misc			1.0.2
+font/jis-misc			1.0.2
+font/micro-misc			1.0.2
+font/misc-cyrillic		1.0.2
+font/misc-ethiopic		1.0.2
+font/misc-meltho		1.0.2
+font/misc-misc			1.1.1
+font/mutt-misc			1.0.2
+font/schumacher-misc		1.1.1
+font/screen-cyrillic		1.0.3
+font/sony-misc			1.0.2
+font/sun-misc			1.0.2
+font/util			1.2.0
+font/winitzki-cyrillic		1.0.2
+font/xfree86-type1		1.0.3
 
-lib/libFS			1.0.3	7.6	needs-update
+lib/libFS			1.0.3	7.6
 lib/libICE			1.0.6	7.5
-lib/libSM			1.2.0	7.6	needs-update
+lib/libSM			1.2.0	7.6
 lib/libX11			1.3.6	7.6
-lib/libXRes			1.0.5	7.6	needs-update
-lib/libXScrnSaver		1.2.1	7.6	needs-update
+lib/libXRes			1.0.5	7.6
+lib/libXScrnSaver		1.2.1	7.6
 lib/libXau			1.0.6	7.6
-lib/libXaw			1.0.8	7.6	needs-update
-lib/libXcomposite		0.4.3	7.6	needs-update
-lib/libXcursor			1.1.11	7.6	needs-update
+lib/libXaw			1.0.8	7.6
+lib/libXcomposite		0.4.3	7.6
+lib/libXcursor			1.1.11	7.6
 lib/libXdamage			1.1.3	7.5+
 lib/libXdmcp			1.1.0	7.6	needs-udpate
-lib/libXext			1.2.0	7.6	needs-update
+lib/libXext			1.2.0	7.6	needa-update
 lib/libXfixes			4.0.5	7.5+
-lib/libXfont			1.4.3	7.6	needs-update
+lib/libXfont			1.4.3	7.6
 lib/libXfontcache		1.0.5	7.5
 lib/libXft			2.2.0	7.6	needs-update
 lib/libXi			1.3.2	7.6
-lib/libXinerama			1.1.1	7.6	needs-update
-lib/libXmu			1.1.0	7.6	needs-update
-lib/libXpm			3.5.9	7.6	needs-update
-lib/libXrandr			1.3.1	7.6	needs-update
+lib/libXinerama			1.1.1	7.6
+lib/libXmu			1.1.0	7.6
+lib/libXpm			3.5.9	7.6
+lib/libXrandr			1.3.1	7.6
 lib/libXrender			0.9.6	7.5+
-lib/libXt			1.0.9	7.6	needs-update
-lib/libXtst			1.2.0	7.6	needs-update
-lib/libXv			1.0.6	7.6	needs-update
+lib/libXt			1.0.9	7.6
+lib/libXtst			1.2.0	7.6
+lib/libXv			1.0.6	7.6
 lib/libXvMC			1.0.6	7.6
-lib/libXxf86dga			1.1.2	7.6	needs-update
+lib/libXxf86dga			1.1.2	7.6
 lib/libXxf86misc		1.0.2	7.5
-lib/libXxf86vm			1.1.1	7.6	needs-update
-lib/libdmx			1.1.1	7.6	needs-update
-lib/libfontenc			1.1.0	7.6	needs-update
+lib/libXxf86vm			1.1.1	7.6
+lib/libdmx			1.1.1	7.6
+lib/libfontenc			1.1.0	7.6
 lib/libpciaccess		0.12.0	7.5+
 lib/libpthread-stubs		0.3	7.5+
 lib/libxcb			1.7	7.6
-lib/libxkbfile			1.0.7	7.6	needs-update
+lib/libxkbfile			1.0.7	7.6
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.5	7.5
 lib/pixman			0.20.0	7.6	needs-update
 lib/xcb-util			0.3.6	7.4+
 
-proto/bigreqsproto		1.1.1	7.6	needs-update
-proto/compositeproto		0.4.2	7.6	needs-update
-proto/damageproto		1.2.1	7.6	needs-update
+proto/bigreqsproto		1.1.1	7.6
+proto/compositeproto		0.4.2	7.6
+proto/damageproto		1.2.1	7.6
 proto/dri2proto			2.3	7.5+
 proto/dmxproto			2.3	7.5
-proto/fixesproto		4.1.2	7.6	needs-update
+proto/fixesproto		4.1.2	7.6
 proto/fontcacheproto		0.1.3	7.5
-proto/fontsproto		2.1.1	7.6	needs-update
+proto/fontsproto		2.1.1	7.6
 proto/glproto			1.4.12	7.6
 proto/inputproto		2.0	7.5
 proto/kbproto			1.0.5	7.6
 proto/pmproto			1.0.3	7.5	deprecated
-proto/randrproto		1.3.2	7.6	needs-update
-proto/recordproto		1.14	7.6	needs-update
+proto/randrproto		1.3.2	7.6
+proto/recordproto		1.14.1	7.6
 proto/renderproto		0.11.1	7.6
 proto/resourceproto		1.1.0	7.4+
-proto/scrnsaverproto		1.2.1	7.6	needs-update
+proto/scrnsaverproto		1.2.1	7.6
 proto/videoproto		2.3.1	7.6
 proto/x11proto			7.0.18	7.6
 proto/xcb-proto			1.6	7.5+
-proto/xcmiscproto		1.2.1	7.6	needs-update
+proto/xcmiscproto		1.2.1	7.6
 proto/xextproto			7.1.2	7.6
 proto/xf86bigfontproto		1.2.0	7.4+
 proto/xf86dgaproto		2.1	7.5
 proto/xf86driproto		2.1.0	7.4+
 proto/xf86miscproto		0.9.3	7.5
-proto/xf86vidmodeproto		2.3	7.
+proto/xf86vidmodeproto		2.3	7.6
 proto/xineramaproto		1.2	7.5
 
 util/cf				1.0.3	7.5
 util/gccmakedep			1.0.2
-util/imake			1.0.4	7.6	needs-update
-util/macros			1.11.0	7.6	needs-update
-util/makedepend			1.0.3	7.6	needs-update
+util/imake			1.0.4	7.6
+util/macros			1.11.0	7.6
+util/makedepend			1.0.3	7.6
 
 xserver				1.9.1	7.6	needs-update
