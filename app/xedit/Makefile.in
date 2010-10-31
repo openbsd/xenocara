@@ -64,16 +64,8 @@ noinst_PROGRAMS = lisp/lsp$(EXEEXT) lisp/re/tests$(EXEEXT)
 @NEED_UNSETENV_TRUE@am__append_1 = lisp/env.c
 @NEED_REALPATH_TRUE@am__append_2 = realpath.c
 @NEED_STRCASECMP_TRUE@am__append_3 = strcasecmp.c
-@USE_XPRINT_TRUE@am__append_4 = -DINCLUDE_XPRINT_SUPPORT
-@USE_XPRINT_TRUE@am__append_5 = \
-@USE_XPRINT_TRUE@        print.c \
-@USE_XPRINT_TRUE@        printdialog.c \
-@USE_XPRINT_TRUE@        printdialog.h \
-@USE_XPRINT_TRUE@        printdialogprivates.h \
-@USE_XPRINT_TRUE@        print.h
-
-@NEED_REALPATH_TRUE@am__append_6 = realpath.c
-@NEED_STRCASECMP_TRUE@am__append_7 = strcasecmp.c
+@NEED_REALPATH_TRUE@am__append_4 = realpath.c
+@NEED_STRCASECMP_TRUE@am__append_5 = strcasecmp.c
 DIST_COMMON = README $(am__configure_deps) $(dist_lisp_DATA) \
 	$(dist_progmodes_DATA) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
@@ -144,18 +136,14 @@ am_lisp_re_tests_OBJECTS = lisp_re_tests-tests.$(OBJEXT)
 lisp_re_tests_OBJECTS = $(am_lisp_re_tests_OBJECTS)
 am__xedit_SOURCES_DIST = commands.c hash.c hook.c ispell.c lisp.c \
 	options.c tags.c util.c util.h xedit.c xedit.h realpath.c \
-	strcasecmp.c print.c printdialog.c printdialog.h \
-	printdialogprivates.h print.h
+	strcasecmp.c
 @NEED_REALPATH_TRUE@am__objects_4 = xedit-realpath.$(OBJEXT)
 @NEED_STRCASECMP_TRUE@am__objects_5 = xedit-strcasecmp.$(OBJEXT)
-@USE_XPRINT_TRUE@am__objects_6 = xedit-print.$(OBJEXT) \
-@USE_XPRINT_TRUE@	xedit-printdialog.$(OBJEXT)
 am_xedit_OBJECTS = xedit-commands.$(OBJEXT) xedit-hash.$(OBJEXT) \
 	xedit-hook.$(OBJEXT) xedit-ispell.$(OBJEXT) \
 	xedit-lisp.$(OBJEXT) xedit-options.$(OBJEXT) \
 	xedit-tags.$(OBJEXT) xedit-util.$(OBJEXT) \
-	xedit-xedit.$(OBJEXT) $(am__objects_4) $(am__objects_5) \
-	$(am__objects_6)
+	xedit-xedit.$(OBJEXT) $(am__objects_4) $(am__objects_5)
 xedit_OBJECTS = $(am_xedit_OBJECTS)
 am__DEPENDENCIES_1 =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -201,6 +189,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APPDEFS_CFLAGS = @APPDEFS_CFLAGS@
 APPDEFS_LIBS = @APPDEFS_LIBS@
 APP_MAN_DIR = @APP_MAN_DIR@
@@ -212,7 +201,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -221,9 +213,12 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -239,6 +234,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NEED_REALPATH_FALSE = @NEED_REALPATH_FALSE@
@@ -259,12 +255,12 @@ PKGDEPS_CFLAGS = @PKGDEPS_CFLAGS@
 PKGDEPS_LIBS = @PKGDEPS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-USE_XPRINT_FALSE = @USE_XPRINT_FALSE@
-USE_XPRINT_TRUE = @USE_XPRINT_TRUE@
 VERSION = @VERSION@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -314,7 +310,7 @@ noinst_LIBRARIES = liblisp.a libre.a libmp.a
 #
 #    libmp.a
 #
-libmp_a_CFLAGS = 
+libmp_a_CFLAGS = $(CWARNFLAGS)
 libmp_a_SOURCES = \
 	lisp/mp/mp.c	\
 	lisp/mp/mp.h	\
@@ -325,7 +321,7 @@ libmp_a_SOURCES = \
 #
 #    liblisp.a
 #
-liblisp_a_CFLAGS = -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"$(LISPDIR)\" $(PKGDEPS_CFLAGS)
+liblisp_a_CFLAGS = $(CWARNFLAGS) -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"$(LISPDIR)\" $(PKGDEPS_CFLAGS)
 liblisp_a_SOURCES = lisp/bytecode.c lisp/bytecode.h lisp/core.c \
 	lisp/core.h lisp/debugger.c lisp/debugger.h lisp/format.c \
 	lisp/format.h lisp/hash.c lisp/hash.h lisp/helper.c \
@@ -341,7 +337,7 @@ liblisp_a_SOURCES = lisp/bytecode.c lisp/bytecode.h lisp/core.c \
 #
 #     libre.a
 #
-libre_a_CFLAGS = 
+libre_a_CFLAGS = $(CWARNFLAGS)
 libre_a_SOURCES = \
 	lisp/re/re.c \
 	lisp/re/rec.c \
@@ -354,33 +350,30 @@ libre_a_SOURCES = \
 #     xedit
 #   
 xedit_DEPENDENCIES = liblisp.a libmp.a libre.a
-xedit_CFLAGS = $(PKGDEPS_CFLAGS) -I$(top_srcdir)/lisp/re -D_BSD_SOURCE \
-	-DXEDIT $(am__append_4)
+xedit_CFLAGS = $(CWARNFLAGS) $(PKGDEPS_CFLAGS) -I$(top_srcdir)/lisp/re -D_BSD_SOURCE -DXEDIT
 xedit_LDADD = -L. -lre -llisp -lmp $(PKGDEPS_LIBS) -lm
 xedit_SOURCES = commands.c hash.c hook.c ispell.c lisp.c options.c \
 	tags.c util.c util.h xedit.c xedit.h $(am__append_2) \
-	$(am__append_3) $(am__append_5)
+	$(am__append_3)
 
 # lisp/lsp
 lisp_lsp_DEPENDENCIES = liblisp.a libre.a libmp.a
-lisp_lsp_CFLAGS = -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"@LISPDIR@\" -D_BSD_SOURCE
+lisp_lsp_CFLAGS = $(CWARNFLAGS) -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"@LISPDIR@\" -D_BSD_SOURCE
 lisp_lsp_LDADD = -L. -llisp -lre -lmp -lm
-lisp_lsp_SOURCES = hash.c lisp/lsp.c $(am__append_6) $(am__append_7)
+lisp_lsp_SOURCES = hash.c lisp/lsp.c $(am__append_4) $(am__append_5)
 
 # re/tests
 lisp_re_tests_DEPENDENCIES = libre.a
-lisp_re_tests_CFLAGS = -I$(top_srcdir)/lisp/re -D_BSD_SOURCE
+lisp_re_tests_CFLAGS = $(CWARNFLAGS) -I$(top_srcdir)/lisp/re -D_BSD_SOURCE
 lisp_re_tests_LDADD = -L. -lre
 lisp_re_tests_SOURCES = lisp/re/tests.c
 
-# App default files  (*.ad)
-APPDEFAULTFILES = \
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+appdefault_DATA = \
         app-defaults/Xedit-color \
 	app-defaults/Xedit
 
-SUFFIXES = .ad .$(APP_MAN_SUFFIX) .man
-appdefault_DATA = $(APPDEFAULTFILES)
-CLEANFILES = $(APPDEFAULTFILES) app-defaults/Xedit.ad $(appman_DATA)
 lispdir = $(LISPDIR)
 dist_lisp_DATA = ${srcdir}/lisp/modules/lisp.lsp \
 	${srcdir}/lisp/modules/xedit.lsp \
@@ -407,56 +400,39 @@ dist_progmodes_DATA = \
 	${srcdir}/lisp/modules/progmodes/xrdb.lsp
 
 appman_PRE = xedit.man
-EXTRA_DIST = app-defaults/Xedit-color.ad app-defaults/Xedit-xprint.ad \
-	app-defaults/Xedit-noxprint.ad app-defaults/Xedit-sample \
-	lisp/README lisp/TODO lisp/compile.c lisp/env.c lisp/mathimp.c \
-	lisp/modules/psql.c lisp/modules/x11.c lisp/modules/xaw.c \
-	lisp/modules/xt.c lisp/re/README lisp/re/tests.txt \
-	lisp/test/hello.lsp lisp/test/list.lsp lisp/test/math.lsp \
-	lisp/test/psql-1.lsp lisp/test/psql-2.lsp lisp/test/psql-3.lsp \
-	lisp/test/regex.lsp lisp/test/stream.lsp lisp/test/widgets.lsp \
-	$(appman_PRE) ChangeLog
+EXTRA_DIST = app-defaults/Xedit-color app-defaults/Xedit \
+	app-defaults/Xedit-sample lisp/README lisp/TODO lisp/compile.c \
+	lisp/env.c lisp/mathimp.c lisp/modules/psql.c \
+	lisp/modules/x11.c lisp/modules/xaw.c lisp/modules/xt.c \
+	lisp/re/README lisp/re/tests.txt lisp/test/hello.lsp \
+	lisp/test/list.lsp lisp/test/math.lsp lisp/test/psql-1.lsp \
+	lisp/test/psql-2.lsp lisp/test/psql-3.lsp lisp/test/regex.lsp \
+	lisp/test/stream.lsp lisp/test/widgets.lsp $(appman_PRE)
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-SED = sed
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-XORGMANNAME = X Version 11
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+CLEANFILES = $(appman_DATA)
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .ad .$(APP_MAN_SUFFIX) .man .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu '; \
-	      cd $(srcdir) && $(AUTOMAKE) --gnu  \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
+	      cd $(srcdir) && $(AUTOMAKE) --foreign  \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  Makefile
+	  $(AUTOMAKE) --foreign  Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -593,8 +569,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xedit-ispell.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xedit-lisp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xedit-options.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xedit-print.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xedit-printdialog.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xedit-realpath.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xedit-strcasecmp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xedit-tags.Po@am__quote@
@@ -1216,34 +1190,6 @@ xedit-strcasecmp.obj: strcasecmp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='strcasecmp.c' object='xedit-strcasecmp.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -c -o xedit-strcasecmp.obj `if test -f 'strcasecmp.c'; then $(CYGPATH_W) 'strcasecmp.c'; else $(CYGPATH_W) '$(srcdir)/strcasecmp.c'; fi`
-
-xedit-print.o: print.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -MT xedit-print.o -MD -MP -MF "$(DEPDIR)/xedit-print.Tpo" -c -o xedit-print.o `test -f 'print.c' || echo '$(srcdir)/'`print.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xedit-print.Tpo" "$(DEPDIR)/xedit-print.Po"; else rm -f "$(DEPDIR)/xedit-print.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='print.c' object='xedit-print.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -c -o xedit-print.o `test -f 'print.c' || echo '$(srcdir)/'`print.c
-
-xedit-print.obj: print.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -MT xedit-print.obj -MD -MP -MF "$(DEPDIR)/xedit-print.Tpo" -c -o xedit-print.obj `if test -f 'print.c'; then $(CYGPATH_W) 'print.c'; else $(CYGPATH_W) '$(srcdir)/print.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xedit-print.Tpo" "$(DEPDIR)/xedit-print.Po"; else rm -f "$(DEPDIR)/xedit-print.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='print.c' object='xedit-print.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -c -o xedit-print.obj `if test -f 'print.c'; then $(CYGPATH_W) 'print.c'; else $(CYGPATH_W) '$(srcdir)/print.c'; fi`
-
-xedit-printdialog.o: printdialog.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -MT xedit-printdialog.o -MD -MP -MF "$(DEPDIR)/xedit-printdialog.Tpo" -c -o xedit-printdialog.o `test -f 'printdialog.c' || echo '$(srcdir)/'`printdialog.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xedit-printdialog.Tpo" "$(DEPDIR)/xedit-printdialog.Po"; else rm -f "$(DEPDIR)/xedit-printdialog.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printdialog.c' object='xedit-printdialog.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -c -o xedit-printdialog.o `test -f 'printdialog.c' || echo '$(srcdir)/'`printdialog.c
-
-xedit-printdialog.obj: printdialog.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -MT xedit-printdialog.obj -MD -MP -MF "$(DEPDIR)/xedit-printdialog.Tpo" -c -o xedit-printdialog.obj `if test -f 'printdialog.c'; then $(CYGPATH_W) 'printdialog.c'; else $(CYGPATH_W) '$(srcdir)/printdialog.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xedit-printdialog.Tpo" "$(DEPDIR)/xedit-printdialog.Po"; else rm -f "$(DEPDIR)/xedit-printdialog.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printdialog.c' object='xedit-printdialog.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xedit_CFLAGS) $(CFLAGS) -c -o xedit-printdialog.obj `if test -f 'printdialog.c'; then $(CYGPATH_W) 'printdialog.c'; else $(CYGPATH_W) '$(srcdir)/printdialog.c'; fi`
 uninstall-info-am:
 install-appdefaultDATA: $(appdefault_DATA)
 	@$(NORMAL_INSTALL)
@@ -1602,26 +1548,19 @@ uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
 	uninstall-dist_progmodesDATA uninstall-info-am
 
 
-@USE_XPRINT_TRUE@app-defaults/Xedit.ad: 
-@USE_XPRINT_TRUE@	test -d app-defaults || mkdir -p app-defaults
-@USE_XPRINT_TRUE@	cp $(top_srcdir)/app-defaults/Xedit-xprint.ad app-defaults/Xedit.ad
-@USE_XPRINT_FALSE@app-defaults/Xedit.ad:
-@USE_XPRINT_FALSE@	test -d app-defaults || mkdir -p app-defaults
-@USE_XPRINT_FALSE@	cp $(top_srcdir)/app-defaults/Xedit-noxprint.ad app-defaults/Xedit.ad
-
-.ad:
-	test -d app-defaults || mkdir -p app-defaults
-	cp $< $@
-
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

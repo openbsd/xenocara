@@ -1,3 +1,250 @@
+commit 3fc23c464e814cad0fcf318dfa06afb90006917c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 15:29:20 2010 -0700
+
+    xedit 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 503b075a868e8f88eb9816a1ce859e75e7341ca9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 15:27:51 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3a39e6188f7ff4baec52d4bd2efc4f029b696c9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 30 15:26:40 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee574a68128653e184389f66cfc5ca686f258455
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 1 17:51:53 2010 -0700
+
+    Xmu functions are called directly, so include it in PKG_CHECK_MODULES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1da695772d64d4919a91c085d96ce1bd528d048e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 30 23:25:03 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b67fdbae96217bda5eecbff3706ff12a25ed2934
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 25 20:04:31 2010 -0400
+
+    xprint: remove conditionally defined related C code
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@freedestop.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 47b6e661024970b8f3b53d9f7930b9ec77ccdbdc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 25 19:55:11 2010 -0400
+
+    xprint: remove xprint related C code
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4f452ccf18993f3a68c6f30719fc6ed4e7fe9b13
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 25 19:37:54 2010 -0400
+
+    xprint: remove Xedit-xprint resource file
+    
+    Remove configuration regarding xprint support
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 40b17bb87cb89a1b851e1d39e03431ecbc9c155e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 25 19:30:50 2010 -0400
+
+    config: remove dependency on xaw8
+    
+    Remove configure option --enable-xprint
+    Remove AM conditional USE_XPRINT
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 553e84525830c551d423d837f7b317df10d69e3f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:48 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7adc430f7e76a04cd0f2abfa6ea46a3035d8e2ab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:53 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 8a56edb05d0881354ec0f5c849495e7604cf5ca7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit b495f585017d7d441bc2a7b117d400f2ee082a9c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:24 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 7014a702382d55464aefdbd61405a1c49b30cf26
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:38 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 64a4c3d43b8521c51d9ef77ce6987b274937818d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit b5980a1f03ebbc97267682fa912f145728867364
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 26 20:14:44 2009 -0200
+
+    Set text properties after loading all command line files.
+    
+      This is more of a workaround for a problem where the first file
+    will end up using the "text properties" of the last file with a
+    syntax highlight definition.
+      A more proper correction could be to actually display the last
+    file loaded (and removed the duplicated code in xedit.c:main()).
+
+commit bb19bb3d1dd5bb9c0070f867324f740894c76887
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 12 20:33:01 2009 -0200
+
+    Correct problems in make distcheck.
+
+commit e7d66545e71cdd223761ce14416cbebccbd6dd75
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Dec 2 02:25:41 2008 -0200
+
+    Use new XORG_CWARNFLAGS and XORG_CHANGELOG macros.
+    
+      Also correct a possible uninitialized variable.
+
+commit 99faa7b727a5441b0dfeed72f43571a85ff0a079
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Dec 2 02:05:42 2008 -0200
+
+    Properly read symbol name in tags interface.
+    
+      If the symbol is not in a full text "Piece", XawTextSourceRead() will
+    return an XawTextBlock that points to an incomplete buffer, and a new
+    call must be made to read the remaining data.
+
+commit 2c5007e4aa838b0faf1020d90661adfe0a9b6275
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Dec 2 01:27:52 2008 -0200
+
+    Don't put EOF in the unget buffer.
+
+commit e79879904eea8495b28d7895ce126269a9ef300f
+Author: A Costa <agcosta@gis.net>
+Date:   Thu Apr 28 01:47:05 2005 -0400
+
+    Man page typo fixes
+    
+    Debian bug#306707 <http://bugs.debian.org/306707>
+
+commit ab754905b2878ba76e309963138bf47c2ae8df2a
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Nov 12 01:25:22 2008 -0200
+
+    Add missing check for symbolic links.
+    
+      It was properly checking when using <tab-completion>+<enter>, but not
+    when using <tab-completion>+<click-on-filename>, what would allow loading
+    the same file with different names (but save would be done to the
+    real file, and not overwrite the link).
+
+commit cfc78a1c2452362a5e7c88ed239c9d7ef0240a4d
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Tue Nov 11 10:52:18 2008 +0100
+
+    reorganize app default files
+
+commit 9d4a9520409fdb50987be6f4ca2c8afd5b53c994
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Nov 10 01:47:46 2008 -0200
+
+    Don't highlight quotes in nested syntax tables for "auto" mode.
+    
+      To properly do it, it should also match the pattern for the macro name,
+    to know if it is a plain text one or not, otherwise, it will get confused
+    with usage of the characters (') and (`).
+
+commit 0ab2815743d89b1cd283abaf4d2cb77fed4a2df4
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Sun Nov 9 14:24:10 2008 +0100
+
+    avoid race condition for parallel jobs
+
+commit 01ba3d66731e679d07f7083306a712bbfed16b38
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Fri Nov 7 16:41:36 2008 -0200
+
+    Xedit version 1.1.2.
+    
+      Also update to use ``git log'' instead of ``git-log'', to match
+    newer versions of git.
+
 commit 0d133999449ce7c5db19d46680430ab16e81e4fd
 Author: Peter Breitenlohner <peb@mppmu.mpg.de>
 Date:   Thu Nov 6 21:19:56 2008 +0100
@@ -20,7 +267,7 @@ Date:   Wed Oct 8 19:21:28 2008 -0300
     and a zero sized one created.
 
 commit d96491aad5542f052b722b94d86f0ce7661ae98b
-Merge: cc7cb04... f1efec7...
+Merge: cc7cb04 f1efec7
 Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
 Date:   Fri Sep 26 17:47:32 2008 -0300
 

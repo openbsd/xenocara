@@ -85,19 +85,20 @@
       ;; allow nesting
       (syntoken "[" :nospec t :property *prop-separator* :begin :quoted)
       (syntoken "]" :nospec t :property *prop-separator* :switch -1)
-      (synaugment :shared :variables))
+      (synaugment :shared :comments :variables))
     (syntoken ")" :nospec t :property *prop-macro* :switch -1)
-    (synaugment :shared :variables :comments))
+    (synaugment :shared :quotes :variables :comments))
 
   (syntable :shared nil nil
     (syntoken "[a-zA-Z0-9_]+\\(" :property *prop-macro* :begin :macro)
     ;; variable assignment
-    (syntoken "[a-zA-Z0-9_-]+=" :property *prop-keyword*)
+    (syntoken "[a-zA-Z0-9_-]+=" :property *prop-keyword*))
+
+  (syntable :quotes nil nil
     (syntoken "\"" :nospec t :begin :string :contained t)
     (syntoken "'" :nospec t :begin :constant :contained t)
     (syntoken "`" :nospec t :begin :escape :contained t)
-    (syntoken "\\\"" :nospec t :begin :quoted-string :contained t)
-  )
+    (syntoken "\\\"" :nospec t :begin :quoted-string :contained t))
 
   (syntable :variables nil nil
     (syntoken "\\$[a-zA-Z0-9_-]+" :property *prop-variable*)
@@ -107,4 +108,4 @@
   (syntable :comments nil nil
     (syntoken "(#.*|\\<dnl($|\\>.*))" :property *prop-comment*))
 
-  (synaugment :shared :variables))
+  (synaugment :shared :quotes :variables))

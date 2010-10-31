@@ -21,29 +21,25 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xedit,[1.1.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xedit)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([xedit], [1.2.0],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xedit])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
+
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 AM_CONFIG_HEADER(config.h)
 
-AC_PROG_CC
 AM_PROG_CC_C_O
-AC_PROG_INSTALL
 AC_PROG_RANLIB
 PKG_PROG_PKG_CONFIG
 
-AC_ARG_ENABLE(xprint,
-	      AS_HELP_STRING([--enable-xprint],
-			     [Compile with xprint support (default: disabled)]),
-	      [enable_xprint=$enableval], [enable_xprint=no])
-AM_CONDITIONAL(USE_XPRINT, test x$enable_xprint = xyes)
-if test x$enable_xprint = xyes; then
-   PKG_CHECK_MODULES(PKGDEPS, xprintutil xp xaw8)
-else
-   PKG_CHECK_MODULES(PKGDEPS, xaw7)
-fi
+PKG_CHECK_MODULES(PKGDEPS, xaw7 xmu xt x11)
 
 AC_ARG_WITH(lispdir, AS_HELP_STRING([--with-lispdir=PATH],
 	    [Directory to install lisp files (default: $libdir/X11/xedit/lisp)]),
@@ -59,14 +55,13 @@ AM_CONDITIONAL(NEED_STRCASECMP, test x$have_strcasecmp = xyes)
 AC_CHECK_FUNC(unsetenv, [], [have_unsetenv=yes])
 AM_CONDITIONAL(NEED_UNSETENV, test x$have_unsetenv = xyes)
 
-AC_SUBST(PKGDEPS_CFLAGS)
-AC_SUBST(PKGDEPS_LIBS)
-
 PKG_CHECK_MODULES(APPDEFS, xt)
-appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
+xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
+AC_ARG_WITH(appdefaultdir,
+	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	  [specify directory for app-defaults files (default is autodetected)]),
+	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])

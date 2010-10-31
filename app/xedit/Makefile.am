@@ -27,7 +27,7 @@ noinst_PROGRAMS = lisp/lsp lisp/re/tests
 #    libmp.a
 #
 
-libmp_a_CFLAGS =
+libmp_a_CFLAGS = $(CWARNFLAGS)
 libmp_a_SOURCES = \
 	lisp/mp/mp.c	\
 	lisp/mp/mp.h	\
@@ -38,7 +38,7 @@ libmp_a_SOURCES = \
 #    liblisp.a
 #
 
-liblisp_a_CFLAGS = -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"$(LISPDIR)\" $(PKGDEPS_CFLAGS)
+liblisp_a_CFLAGS = $(CWARNFLAGS) -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"$(LISPDIR)\" $(PKGDEPS_CFLAGS)
 liblisp_a_SOURCES = \
 	lisp/bytecode.c \
 	lisp/bytecode.h \
@@ -91,7 +91,7 @@ endif
 #     libre.a
 #
 
-libre_a_CFLAGS = 
+libre_a_CFLAGS = $(CWARNFLAGS)
 libre_a_SOURCES = \
 	lisp/re/re.c \
 	lisp/re/rec.c \
@@ -103,7 +103,7 @@ libre_a_SOURCES = \
 #     xedit
 #   
 xedit_DEPENDENCIES = liblisp.a libmp.a libre.a
-xedit_CFLAGS = $(PKGDEPS_CFLAGS) -I$(top_srcdir)/lisp/re -D_BSD_SOURCE -DXEDIT
+xedit_CFLAGS = $(CWARNFLAGS) $(PKGDEPS_CFLAGS) -I$(top_srcdir)/lisp/re -D_BSD_SOURCE -DXEDIT
 xedit_LDADD = -L. -lre -llisp -lmp $(PKGDEPS_LIBS) -lm
 
 xedit_SOURCES =	\
@@ -127,20 +127,9 @@ if NEED_STRCASECMP
 xedit_SOURCES += strcasecmp.c
 endif
 
-if USE_XPRINT
-xedit_CFLAGS += -DINCLUDE_XPRINT_SUPPORT
-
-xedit_SOURCES += \
-        print.c \
-        printdialog.c \
-        printdialog.h \
-        printdialogprivates.h \
-        print.h
-endif
-
 # lisp/lsp
 lisp_lsp_DEPENDENCIES = liblisp.a libre.a libmp.a
-lisp_lsp_CFLAGS = -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"@LISPDIR@\" -D_BSD_SOURCE
+lisp_lsp_CFLAGS = $(CWARNFLAGS) -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"@LISPDIR@\" -D_BSD_SOURCE
 lisp_lsp_LDADD = -L. -llisp -lre -lmp -lm
 lisp_lsp_SOURCES = \
 	hash.c \
@@ -156,37 +145,19 @@ endif
 
 # re/tests
 lisp_re_tests_DEPENDENCIES = libre.a
-lisp_re_tests_CFLAGS = -I$(top_srcdir)/lisp/re -D_BSD_SOURCE
+lisp_re_tests_CFLAGS = $(CWARNFLAGS) -I$(top_srcdir)/lisp/re -D_BSD_SOURCE
 lisp_re_tests_LDADD = -L. -lre
 lisp_re_tests_SOURCES = lisp/re/tests.c
 
 
-# App default files  (*.ad)
+# App default files
 
-APPDEFAULTFILES = \
-        app-defaults/Xedit-color \
-	app-defaults/Xedit
-
-if USE_XPRINT
-app-defaults/Xedit.ad: 
-	test -d app-defaults || mkdir -p app-defaults
-	cp $(top_srcdir)/app-defaults/Xedit-xprint.ad app-defaults/Xedit.ad
-else
-app-defaults/Xedit.ad:
-	test -d app-defaults || mkdir -p app-defaults
-	cp $(top_srcdir)/app-defaults/Xedit-noxprint.ad app-defaults/Xedit.ad
-endif
-
-SUFFIXES = .ad 
-
-.ad:
-	test -d app-defaults || mkdir -p app-defaults
-	cp $< $@
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
 appdefaultdir = @appdefaultdir@
-appdefault_DATA = $(APPDEFAULTFILES)
-
-CLEANFILES = $(APPDEFAULTFILES) app-defaults/Xedit.ad
+appdefault_DATA = \
+        app-defaults/Xedit-color \
+	app-defaults/Xedit
 
 lispdir = $(LISPDIR)
 dist_lisp_DATA = ${srcdir}/lisp/modules/lisp.lsp \
@@ -216,9 +187,8 @@ dist_progmodes_DATA = \
 appman_PRE = xedit.man
 
 EXTRA_DIST = \
-	app-defaults/Xedit-color.ad \
-	app-defaults/Xedit-xprint.ad \
-	app-defaults/Xedit-noxprint.ad \
+	app-defaults/Xedit-color \
+	app-defaults/Xedit \
 	app-defaults/Xedit-sample \
 	lisp/README \
 	lisp/TODO \
@@ -246,38 +216,22 @@ appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+CLEANFILES = $(appman_DATA)
 
-SED = sed
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
-
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

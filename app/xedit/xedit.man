@@ -299,7 +299,7 @@ the file being edited is changed.
 .B autoReplace (\fPClass \fBReplace)
 This resource is useful to automatically correct common misspelling errors, but
 can also be used to create simple macros. The format is
-\fI{non-blanks}{blanks}[{string}]\fP. Fields are separeted by newlines.
+\fI{non-blanks}{blanks}[{string}]\fP. Fields are separated by newlines.
 Example of use:
 \"
 .br
@@ -316,7 +316,7 @@ by \fIsome long string with
 when you type that words.
 .TP 8
 .B ispell.dictionaries (\fPClass \fBispell.Dictionary)
-Specifies a list of dictionary names, separeted by spaces, available to the
+Specifies a list of dictionary names, separated by spaces, available to the
 ispell program. The default value is \fI"american americamed+ english"\fP.
 .TP 8
 .B ispell.dictionary (\fPClass \fBispell.Dictionary)

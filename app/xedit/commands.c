@@ -29,10 +29,6 @@
 #include <X11/Xfuncs.h>
 #include <X11/Xos.h>
 #include "xedit.h"
-#ifdef INCLUDE_XPRINT_SUPPORT
-#include "printdialog.h"
-#include "print.h"
-#endif /* INCLUDE_XPRINT_SUPPORT */
 #ifdef CRAY
 #include <unistd.h>
 #endif
@@ -53,12 +49,6 @@
 #define Error(x) { printf x ; exit(EXIT_FAILURE); }
 #define Assertion(expr, msg) { if (!(expr)) { Error msg } }
 #define Log(x)   { if (True) printf x; }
-
-#ifdef INCLUDE_XPRINT_SUPPORT
-static Widget printdialog_shell = NULL;
-static Widget printdialog       = NULL;
-static char   printJobNameBuffer[PATH_MAX+256];
-#endif /* INCLUDE_XPRINT_SUPPORT */
 
 void ResetSourceChanged(xedit_flist_item*);
 static void ResetDC(Widget, XtPointer, XtPointer);
@@ -523,110 +513,6 @@ ReallyDoLoad(char *name, char *filename)
     return (True);
 }
 
-#ifdef INCLUDE_XPRINT_SUPPORT
-static void
-printshellDestroyXtProc(Widget w, XtPointer client_data, XtPointer callData)
-{
-    XawPrintDialogClosePrinterConnection(printdialog, False);
-}
-
-static void
-printOKXtProc(Widget w, XtPointer client_data, XtPointer callData)
-{
-    XawPrintDialogCallbackStruct *pdcs = (XawPrintDialogCallbackStruct *)callData;
-    Cardinal                      n;
-    Arg                           args[2];
-    Widget                        textsource;
-
-    Log(("printOKXtProc: OK.\n"));
-    
-    /* Get TextSource object */
-    n = 0;
-    XtSetArg(args[n], XtNtextSource, &textsource); n++;
-    XtGetValues(textwindow, args, n);
-    
-    Assertion(textsource != NULL, (("printOKXtProc: textsource == NULL.\n")));
-   
-    /* ||printJobNameBuffer| must live as long the print job prints
-     * because it is used for the job title AND the page headers... */
-    sprintf(printJobNameBuffer, "Xedit print job");
-
-    DoPrintTextSource("Xedit",
-                      textsource, topwindow,
-                      pdcs->pdpy, pdcs->pcontext, pdcs->colorspace,
-                      printshellDestroyXtProc,
-                      printJobNameBuffer,
-                      pdcs->printToFile?pdcs->printToFileName:NULL);
-
-    XtPopdown(printdialog_shell);
-}
-
-static void
-printCancelXtProc(Widget w, XtPointer client_data, XtPointer callData)
-{
-    Log(("printCancelXtProc: cancel.\n"));
-    XtPopdown(printdialog_shell);
-    
-    Log(("destroying print dialog shell...\n"));
-    XtDestroyWidget(printdialog_shell);
-    printdialog_shell = NULL;
-    printdialog       = NULL;
-    Log(("... done\n"));
-}
-
-
-/*ARGSUSED*/
-void
-PrintFile(Widget w, XEvent *event, String *params, Cardinal *num_params)
-{
-    DoPrint(w, NULL, NULL);
-}
-
-/*ARGSUSED*/
-void
-DoPrint(Widget w, XtPointer client_data, XtPointer call_data)
-{
-  Dimension   width, height;
-  Position    x, y;
-  Widget      parent = topwindow;
-  Log(("print!\n"));
-  
-  if (!printdialog) {
-    int n;
-    Arg args[20];
-
-    n = 0;
-    XtSetArg(args[n], XtNallowShellResize, True); n++;
-    printdialog_shell = XtCreatePopupShell("printdialogshell",
-                                           transientShellWidgetClass,
-                                           topwindow, args, n);
-    n = 0;
-    printdialog = XtCreateManagedWidget("printdialog", printDialogWidgetClass,
-                                        printdialog_shell, args, n);
-    XtAddCallback(printdialog, XawNOkCallback,     printOKXtProc,     NULL);
-    XtAddCallback(printdialog, XawNCancelCallback, printCancelXtProc, NULL);
-
-    XtRealizeWidget(printdialog_shell);
-  }
-
-  /* Center dialog */
-  XtVaGetValues(printdialog_shell,
-      XtNwidth,  &width,
-      XtNheight, &height,
-      NULL);
-
-  x = (Position)(XWidthOfScreen( XtScreen(parent)) - width)  / 2;
-  y = (Position)(XHeightOfScreen(XtScreen(parent)) - height) / 3;
-
-  XtVaSetValues(printdialog_shell,
-      XtNx, x,
-      XtNy, y,
-      NULL);
-        
-  XtPopup(printdialog_shell, XtGrabNonexclusive);
-}
-#endif /* INCLUDE_XPRINT_SUPPORT */
-
 /*	Function Name: SourceChanged
  *	Description: A callback routine called when the source has changed.
  *	Arguments: w - the text source that has changed.
@@ -734,6 +620,7 @@ FindFile(Widget w, XEvent *event, String *params, Cardinal *num_params)
     XawTextPosition end = XawTextSourceScan(XawTextGetSource(filenamewindow),
 					    0, XawstAll, XawsdRight, 1, True);
 
+    slash = NULL;
     if (!line_edit) {
 	string = GetString(filenamewindow);
 	if (string)
@@ -741,7 +628,6 @@ FindFile(Widget w, XEvent *event, String *params, Cardinal *num_params)
     }
     else {
 	string = "";
-	slash = NULL;
 	line_edit = False;
     }
 
@@ -1189,7 +1075,7 @@ DirWindowCB(Widget w, XtPointer user_data, XtPointer call_data)
 	    Feep();
     }
     else {
-	(void)ReallyDoLoad(path, path);
+	(void)ReallyDoLoad(path, ResolveName(path));
 	SwitchDirWindow(False);
 	XtSetKeyboardFocus(topwindow, textwindow);
     }

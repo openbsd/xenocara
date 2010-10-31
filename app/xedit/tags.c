@@ -116,7 +116,7 @@ TagsAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
     char		buffer[1024];
     XawTextPosition	position, left, right;
     XawTextBlock	block;
-    int			length;
+    int			length, bytes;
     Widget		source;
 
     source = XawTextGetSource(w);
@@ -128,14 +128,20 @@ TagsAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	position = XawTextGetInsertionPoint(w);
 	XawTextGetSelectionPos(w, &left, &right);
 	if (right > left) {
-	    XawTextSourceRead(source, left, &block, right - left);
-	    length = block.length + 1;
-	    if (length >= sizeof(buffer))
-		length = sizeof(buffer);
-	    XmuSnprintf(buffer, length, "%s", block.ptr);
+	    length = 0;
+	    do {
+		bytes = right - left;
+		left = XawTextSourceRead(source, left, &block, bytes);
+		if (block.length < bytes)
+		    bytes = block.length;
+		if (length + bytes + 1 >= sizeof(buffer))
+		    bytes = sizeof(buffer) - length - 1;
+		XmuSnprintf(buffer + length, bytes + 1, "%s", block.ptr);
+		length += bytes;
+	    } while (left < right);
 	    item->tags->textwindow = w;
 	    item->tags->position = position;
-	    FindTagFirst(item->tags, buffer, length - 1);
+	    FindTagFirst(item->tags, buffer, length);
 	}
 	else
 	    FindTagNext(item->tags, w, position);

@@ -107,13 +107,15 @@ LispUnget(int ch)
 {
     LispUngetInfo *unget = lisp__data.unget[lisp__data.iunget];
 
-    if (unget->offset == sizeof(unget->buffer)) {
-	LispWarning("character %c lost at LispUnget()", unget->buffer[0]);
-	memmove(unget->buffer, unget->buffer + 1, unget->offset - 1);
-	unget->buffer[unget->offset - 1] = ch;
+    if ((ch & 0xff) == ch) {
+	if (unget->offset == sizeof(unget->buffer)) {
+	    LispWarning("character %c lost at LispUnget()", unget->buffer[0]);
+	    memmove(unget->buffer, unget->buffer + 1, unget->offset - 1);
+	    unget->buffer[unget->offset - 1] = ch;
+	}
+	else
+	    unget->buffer[unget->offset++] = ch;
     }
-    else
-	unget->buffer[unget->offset++] = ch;
 
     return (ch);
 }

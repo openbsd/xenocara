@@ -143,16 +143,10 @@ void QuitAction(Widget, XEvent*, String*, Cardinal*);
 void DoSave(Widget, XtPointer, XtPointer);
 void SaveFile(Widget, XEvent*, String*, Cardinal*);
 void DoLoad(Widget, XtPointer, XtPointer);
-#ifdef INCLUDE_XPRINT_SUPPORT
-void DoPrint(Widget, XtPointer, XtPointer);
-#endif /* INCLUDE_XPRINT_SUPPORT */
 void CancelFindFile(Widget, XEvent*, String*, Cardinal*);
 void FindFile(Widget, XEvent*, String*, Cardinal*);
 void LoadFile(Widget, XEvent*, String*, Cardinal*);
 Bool LoadFileInTextwindow(char *name, char *resolved_name);
-#ifdef INCLUDE_XPRINT_SUPPORT
-void PrintFile(Widget, XEvent*, String*, Cardinal*);
-#endif /* INCLUDE_XPRINT_SUPPORT */
 void FileCompletion(Widget, XEvent*, String*, Cardinal*);
 void KillFile(Widget, XEvent*, String*, Cardinal*);
 void DirWindowCB(Widget, XtPointer, XtPointer);
