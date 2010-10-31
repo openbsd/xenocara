@@ -1,3 +1,5 @@
+SUBDIRS=specs
+
 xcmiscdir = $(includedir)/X11/extensions
 xcmisc_HEADERS = \
 	xcmiscproto.h \
@@ -6,14 +8,15 @@ xcmisc_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xcmiscproto.pc
 
-EXTRA_DIST = xcmiscproto.pc.in
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
