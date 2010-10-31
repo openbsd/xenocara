@@ -1,4 +1,3 @@
-/* $Xorg: props.c,v 1.4 2001/02/09 02:05:30 xorgcvs Exp $ */
 /*
  
 Copyright 1990, 1991, 1998  The Open Group
@@ -43,7 +42,6 @@ in this Software without prior written authorization from The Open Group.
  * ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
  * THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/fstobdf/props.c,v 1.5 2001/01/17 23:44:54 dawes Exp $ */
 
 #include	<stdio.h>
 #include	<string.h>

@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/fstobdf/fstobdf.h,v 1.2 2001/08/27 17:41:01 dawes Exp $ */
 /*
  * Copyright (C) 1998 The XFree86 Project, Inc.  All Rights Reserved.
  *
