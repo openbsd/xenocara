@@ -1,4 +1,3 @@
-/* $Xorg: smproxy.c,v 1.6 2001/02/09 02:05:35 xorgcvs Exp $ */
 /******************************************************************************
 
 Copyright 1994, 1998  The Open Group
@@ -25,7 +24,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author:  Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/programs/smproxy/smproxy.c,v 3.8 2001/10/28 03:34:25 tsi Exp $ */
 
 #include "smproxy.h"
 #include <unistd.h>
