@@ -1,4 +1,3 @@
-/* $XFree86: xc/lib/Xxf86dga/XF86DGA2.c,v 1.23 2003/05/05 20:42:30 tsi Exp $ */
 /*
 
 Copyright (c) 1995  Jon Tombs
@@ -15,8 +14,6 @@ Copyright (c) 1995,1996  The XFree86 Project, Inc
 #include <os2.h>
 #endif
 
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xxf86dga.h>
 #include <X11/extensions/xf86dgaproto.h>

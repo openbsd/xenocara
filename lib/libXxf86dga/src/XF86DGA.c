@@ -58,9 +58,6 @@ Copyright (c) 1995,1996  The XFree86 Project, Inc
 #undef _SC_PAGESIZE
 #endif
 
-
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xxf86dga.h>
 #include <X11/extensions/xf86dgaproto.h>
