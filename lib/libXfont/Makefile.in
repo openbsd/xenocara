@@ -58,7 +58,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = doc/fontlib.pdf doc/fontlib.ps
 DIST_COMMON = README $(am__configure_deps) $(libXfontinclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(srcdir)/xfont.pc.in \
@@ -94,7 +93,7 @@ am__installdirs = "$(DESTDIR)$(pkgconfigdir)" \
 	"$(DESTDIR)$(libXfontincludedir)" \
 	"$(DESTDIR)$(libXfontincludedir)"
 pkgconfigDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(noinst_DATA) $(pkgconfig_DATA)
+DATA = $(pkgconfig_DATA)
 libXfontincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 nodist_libXfontincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(libXfontinclude_HEADERS) $(nodist_libXfontinclude_HEADERS)
@@ -162,7 +161,11 @@ FREETYPE_REQUIRES = @FREETYPE_REQUIRES@
 GREP = @GREP@
 HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
 HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
+HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
+HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
 HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -201,6 +204,7 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 VERSION = @VERSION@
 XFONT_BDFFORMAT_FALSE = @XFONT_BDFFORMAT_FALSE@
 XFONT_BDFFORMAT_TRUE = @XFONT_BDFFORMAT_TRUE@
@@ -222,6 +226,8 @@ XFONT_SNFFORMAT_FALSE = @XFONT_SNFFORMAT_FALSE@
 XFONT_SNFFORMAT_TRUE = @XFONT_SNFFORMAT_TRUE@
 XMLTO = @XMLTO@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
+XORG_SGML_PATH = @XORG_SGML_PATH@
+XSL_STYLESHEET = @XSL_STYLESHEET@
 X_BZIP2_FONT_COMPRESSION_FALSE = @X_BZIP2_FONT_COMPRESSION_FALSE@
 X_BZIP2_FONT_COMPRESSION_TRUE = @X_BZIP2_FONT_COMPRESSION_TRUE@
 X_GZIP_FONT_COMPRESSION = @X_GZIP_FONT_COMPRESSION@
@@ -274,7 +280,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = src
+SUBDIRS = doc src
 libXfontincludedir = $(includedir)/X11/fonts
 libXfontinclude_HEADERS = \
 	include/X11/fonts/bdfint.h   \
@@ -298,15 +304,6 @@ nodist_libXfontinclude_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xfont.pc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-
-# Developer documentation - not installed on system
-EXTRA_DIST = doc/fontlib.xml doc/fontlib.xsl doc/fontlib.css
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@noinst_DATA =  \
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	doc/fontlib.txt \
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	doc/fontlib.html \
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(srcdir)/doc/fontlib.css \
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1)
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@CLEANFILES = doc/fontlib.txt doc/fontlib.html doc/fontlib.pdf doc/fontlib.ps
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -570,7 +567,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/doc $(distdir)/include/X11/fonts $(distdir)/src/FreeType
+	$(mkdir_p) $(distdir)/. $(distdir)/include/X11/fonts $(distdir)/src/FreeType
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -737,7 +734,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -831,18 +827,6 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
-
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@doc/fontlib.txt: $(srcdir)/doc/fontlib.xml $(srcdir)/doc/fontlib.xsl
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) -m $(srcdir)/doc/fontlib.xsl -o doc txt $(srcdir)/doc/fontlib.xml
-
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@doc/fontlib.html: $(srcdir)/doc/fontlib.xml $(srcdir)/doc/fontlib.xsl
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) -m $(srcdir)/doc/fontlib.xsl -o doc xhtml-nochunks $(srcdir)/doc/fontlib.xml
-
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@doc/fontlib.pdf: $(srcdir)/doc/fontlib.xml $(srcdir)/doc/fontlib.xsl
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) --with-fop -m $(srcdir)/doc/fontlib.xsl -o doc pdf $(srcdir)/doc/fontlib.xml
-
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@doc/fontlib.ps: $(srcdir)/doc/fontlib.xml $(srcdir)/doc/fontlib.xsl
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) --with-fop -m $(srcdir)/doc/fontlib.xsl -o doc ps $(srcdir)/doc/fontlib.xml
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -1,3 +1,107 @@
+commit 12157fbebc35c2d039df2df4fc5ac2b299eeec03
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 28 20:43:27 2010 -0700
+
+    libXfont 1.4.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f29f1d68d7eca96e45ba3758686be07993d82e03
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:30:02 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6628b4d82426cf9ac240da363cd8a8252e6f71ef
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Sep 27 12:31:50 2010 -0700
+
+    FreeType: Cleanup MUMBLE and fix printing of XLFD in debug spew.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c482a2c104aa5cd1a265c2ca310a308dcc418fe7
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Wed Apr 14 05:58:28 2010 -0500
+
+    Revert "Bug #6247: Fix build on Cygwin"
+    
+    libtool requires the '-no-undefined' flag in order to create shared
+    libraries on PE/COFF platforms (Cygwin/MinGW); on other platforms this
+    flag has no effect.
+    
+    The problem with libXfont is that PE weak symbols do not behave exactly
+    as they do on ELF platforms.  Since PE binaries (both executables and
+    libraries) must have all symbols resolved at link time, there is no way
+    for the real symbols in xserver to "displace" those in libXfont at
+    runtime, so the result is that libXfont uses its stubs, which do
+    nothing, and xserver ends up unable to find its fonts.
+    
+    Solving this will require either significant changes to libXfont or some
+    major improvement to the toolchain to handle this case.  Until that
+    happens, removing '-no-undefined' will result in a static-only library
+    on these platforms, which is the only currently working solution.
+    
+    http://sourceware.org/bugzilla/show_bug.cgi?id=11306
+    http://cygwin.com/ml/cygwin/2010-04/msg00281.html
+    
+    This reverts commit 69c4ae1e3e14a58bc2eb9b9b8820dc7183b82a67.
+    
+    Conflicts:
+    
+    	ChangeLog
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+commit 455ec66e82e3c4bedd9e789d2ab33030b8e64ffa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 8 00:19:36 2010 -0700
+
+    Fix builds with Sun compilers
+    
+    Sun compilers use #pragma weak in the *.c files to declare weak symbols,
+    so should have weak defined to empty, but not define NO_WEAK_SYMBOLS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0386fa77367a305deea3cc27f8a3865cc3c467c0
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Jul 10 10:08:21 2010 -0700
+
+    darwin: Fix build regression introduced by previous patch
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8f75706901da0141590d46f0f898e5678feac953
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Mon Jun 28 17:56:07 2010 +0100
+
+    Build fix for platforms which don't have weak linkage
+    
+    Since we fix this by removing the serverGeneration symbol, assuming
+    an external definition will be provided, this means on Windows libXfont
+    can only be built as a static library (since PE shared libraries cannot
+    contain undefined symbols).  This produces a libXfont which might only
+    be useful to the xserver, but the only other users we might care about
+    are xfs, which is obsolete, and bdftopcf, which fortunately doesn't
+    pull in any objects which reference serverGeneration from libXfont.
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Colin Harrison <colin.harrison@virgin.net>
+
+commit 5c49c956e9c85d89f6b2e719eb9b6fbde62c2f72
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 28 13:18:22 2010 -0400
+
+    doc: use xorg-docs xorg.css stylesheet
+    
+    Use latest DocBook XML util-macros infrastructure
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 27270de56f7da5e047784434f3b29fa672f97ffd
 Author: Tiago Vignatti <tiago.vignatti@nokia.com>
 Date:   Thu Jun 10 16:29:37 2010 +0300
