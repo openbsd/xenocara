@@ -647,6 +647,35 @@ fi
 rmdir .tst 2>/dev/null
 AC_SUBST([am__leading_dot])])
 
+# Add --enable-maintainer-mode option to configure.         -*- Autoconf -*-
+# From Jim Meyering
+
+# Copyright (C) 1996, 1998, 2000, 2001, 2002, 2003, 2004, 2005
+# Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# serial 4
+
+AC_DEFUN([AM_MAINTAINER_MODE],
+[AC_MSG_CHECKING([whether to enable maintainer-specific portions of Makefiles])
+  dnl maintainer-mode is disabled by default
+  AC_ARG_ENABLE(maintainer-mode,
+[  --enable-maintainer-mode  enable make rules and dependencies not useful
+			  (and sometimes confusing) to the casual installer],
+      USE_MAINTAINER_MODE=$enableval,
+      USE_MAINTAINER_MODE=no)
+  AC_MSG_RESULT([$USE_MAINTAINER_MODE])
+  AM_CONDITIONAL(MAINTAINER_MODE, [test $USE_MAINTAINER_MODE = yes])
+  MAINT=$MAINTAINER_MODE_TRUE
+  AC_SUBST(MAINT)dnl
+]
+)
+
+AU_DEFUN([jm_MAINTAINER_MODE], [AM_MAINTAINER_MODE])
+
 # Check to see how 'make' treats includes.	            -*- Autoconf -*-
 
 # Copyright (C) 2001, 2002, 2003, 2005  Free Software Foundation, Inc.
@@ -956,7 +985,30 @@ AC_SUBST([am__untar])
 
 dnl fontutil.m4.  Generated from fontutil.m4.in by configure.
 dnl
-dnl This file comes from X.Org's font-util 1.1.1
+dnl This file comes from X.Org's font-util 1.2.0
+dnl
+dnl Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
+dnl
+dnl Permission is hereby granted, free of charge, to any person obtaining a
+dnl copy of this software and associated documentation files (the "Software"),
+dnl to deal in the Software without restriction, including without limitation
+dnl the rights to use, copy, modify, merge, publish, distribute, sublicense,
+dnl and/or sell copies of the Software, and to permit persons to whom the
+dnl Software is furnished to do so, subject to the following conditions:
+dnl
+dnl The above copyright notice and this permission notice (including the next
+dnl paragraph) shall be included in all copies or substantial portions of the
+dnl Software.
+dnl
+dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+dnl IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+dnl FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+dnl THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+dnl LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+dnl FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+dnl DEALINGS IN THE SOFTWARE.
+dnl
+dnl --------------------------------------------------------------------
 dnl
 dnl Copyright 2005 Red Hat, Inc
 dnl
@@ -981,35 +1033,6 @@ dnl Except as contained in this notice, the name of the copyright holders shall
 dnl not be used in advertising or otherwise to promote the sale, use or
 dnl other dealings in this Software without prior written authorization
 dnl from the copyright holders.
-dnl
-dnl --------------------------------------------------------------------
-dnl
-dnl Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
-dnl
-dnl Permission is hereby granted, free of charge, to any person obtaining a
-dnl copy of this software and associated documentation files (the
-dnl "Software"), to deal in the Software without restriction, including
-dnl without limitation the rights to use, copy, modify, merge, publish,
-dnl distribute, and/or sell copies of the Software, and to permit persons
-dnl to whom the Software is furnished to do so, provided that the above
-dnl copyright notice(s) and this permission notice appear in all copies of
-dnl the Software and that both the above copyright notice(s) and this
-dnl permission notice appear in supporting documentation.
-dnl
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
-dnl OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-dnl HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
-dnl INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
-dnl FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
-dnl NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
-dnl WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-dnl
-dnl Except as contained in this notice, the name of a copyright holder
-dnl shall not be used in advertising or otherwise to promote the sale, use
-dnl or other dealings in this Software without prior written authorization
-dnl of the copyright holder.
 
 # XORG_FONT_MACROS_VERSION(required-version)
 # ------------------------------------------
@@ -1027,7 +1050,7 @@ dnl of the copyright holder.
 # See the "minimum version" comment for each macro you use to see what
 # version you require.
 m4_defun([XORG_FONT_MACROS_VERSION],[
-m4_define([vers_have], [1.1.1])
+m4_define([vers_have], [1.2.0])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,
@@ -1076,7 +1099,7 @@ AC_DEFUN([XORG_FONT_CHECK_ENCODING],[
 	AC_ARG_ENABLE(m4_tolower($1),
 		AS_HELP_STRING(m4_join([-], [--disable], m4_tolower($1)),
 				[Build $1 fonts (default: yes)]),
-		[AS_TR_SH($1)=$enableval], [AS_TR_SH($1)=yes])
+		[AS_TR_SH($1)=$enableval])
 	AC_MSG_CHECKING([whether to build $1 fonts])
 	AC_MSG_RESULT($[AS_TR_SH($1)])
 	AM_CONDITIONAL(AS_TR_SH($1), [test "x$AS_TR_SH($1)" = xyes])
@@ -1085,9 +1108,19 @@ AC_DEFUN([XORG_FONT_CHECK_ENCODING],[
 # XORG_FONT_CHECK_ENCODING_LIST(encoding1 encoding2....)
 # -----------------------------------------------------
 # Minimum version: 1.1.0
-# Call XORG_FONT_CHECK_ENCODING for multiple encodings at once
+# Call XORG_FONT_CHECK_ENCODING for multiple encodings at once.
+# Add a shorthand --enable/disable-all-encodings option.
 
 AC_DEFUN([XORG_FONT_CHECK_ENCODING_LIST],[
+	AC_ARG_ENABLE([all-encodings],
+		AS_HELP_STRING([--disable-all-encodings],
+				[Disable building of all font encodings]),
+		[m4_foreach_w([enc], [$1], [
+			AS_TR_SH(enc)=$enableval
+		])],
+		[m4_foreach_w([enc], [$1], [
+			AS_TR_SH(enc)=yes
+		])])
 	m4_foreach_w([enc], [$1], [XORG_FONT_CHECK_ENCODING(enc)])
 ]) # XORG_FONT_CHECK_ENCODING_LIST
 
@@ -1100,7 +1133,7 @@ AC_DEFUN([XORG_FONT_CHECK_ENCODING_LIST],[
 
 AC_DEFUN([XORG_FONT_REQUIRED_PROG],[
 	AC_PATH_PROG($1, $2)
-	if test x"$1" = x; then
+	if test x"$$1" = x; then
 		AC_MSG_ERROR([$2 is required to build $PACKAGE_NAME.])
 	fi
 ])
@@ -1218,6 +1251,40 @@ AC_DEFUN([XORG_FONT_UCS2ANY],[
 
 
 
+# XORG_FONT_FC_CONFDIR()
+# --------------------
+# Minimum version: 1.2.0
+#
+# Sets FC_CONFDIR to the fontconfig config directory
+# (which should be --with-confdir=... when building fontconfig)
+# found from:
+#	--with-fc-confdir=...
+#	pkg-config --variable=confdir fontconfig
+#	${sysconfdir}/fonts
+
+AC_DEFUN([XORG_FONT_FC_CONFDIR],[
+	dnl Ensure $PKG_CONFIG is set first
+	AC_REQUIRE([PKG_PROG_PKG_CONFIG])
+
+	AC_MSG_CHECKING([for fontconfig's configuration directory])
+	AC_ARG_WITH(fc-confdir,
+		    AS_HELP_STRING([--with-fc-confdir=DIR],
+			   [Path to fontconfig's configuration directory]),
+		    [FC_CONFDIR="$withval"])
+	# if --with-fc-confdir was not specified
+	if test "x${FC_CONFDIR}" = "x"; then
+		FC_CONFDIR=`$PKG_CONFIG --variable=confdir fontconfig`
+	fi
+	# ...and if pkg-config didn't find confdir in fontconfig.pc...
+	if test "x${FC_CONFDIR}" = "x"; then
+		FC_CONFDIR="${sysconfdir}/fonts"
+	fi
+	AC_SUBST(FC_CONFDIR)
+	AC_MSG_RESULT([${FC_CONFDIR}])
+])
+
+
+
 # XORG_FONTROOTDIR()
 # --------------------
 # Minimum version: 1.1.0
@@ -1281,7 +1348,7 @@ AC_DEFUN([XORG_FONTDIR],[XORG_FONTSUBDIR([FONTDIR], [fontdir], [$1])])
 
 dnl xorg-macros.m4.  Generated from xorg-macros.m4.in xorgversion.m4 by configure.
 dnl
-dnl Copyright 2005-2006 Sun Microsystems, Inc.  All rights reserved.
+dnl Copyright (c) 2005, 2006, Oracle and/or its affiliates. All rights reserved.
 dnl 
 dnl Permission is hereby granted, free of charge, to any person obtaining a
 dnl copy of this software and associated documentation files (the "Software"),
@@ -1318,7 +1385,7 @@ dnl DEALINGS IN THE SOFTWARE.
 # See the "minimum version" comment for each macro you use to see what 
 # version you require.
 m4_defun([XORG_MACROS_VERSION],[
-m4_define([vers_have], [1.8.0])
+m4_define([vers_have], [1.11.0])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,
@@ -1469,6 +1536,7 @@ MAN_SUBSTS="\
 	-e 's|__xservername__|Xorg|g' \
 	-e 's|__xconfigfile__|xorg.conf|g' \
 	-e 's|__projectroot__|\$(prefix)|g' \
+	-e 's|__apploaddir__|\$(appdefaultdir)|g' \
 	-e 's|__appmansuffix__|\$(APP_MAN_SUFFIX)|g' \
 	-e 's|__drivermansuffix__|\$(DRIVER_MAN_SUFFIX)|g' \
 	-e 's|__adminmansuffix__|\$(ADMIN_MAN_SUFFIX)|g' \
@@ -1497,13 +1565,20 @@ PKG_CHECK_EXISTS([xorg-sgml-doctools m4_ifval([$1],[>= $1])],
          fi])
     ])
 
+# Define variables STYLESHEET_SRCDIR and XSL_STYLESHEET containing
+# the path and the name of the doc stylesheet
 if test "x$XORG_SGML_PATH" != "x" ; then
    AC_MSG_RESULT([$XORG_SGML_PATH])
+   STYLESHEET_SRCDIR=$XORG_SGML_PATH/X11
+   XSL_STYLESHEET=$STYLESHEET_SRCDIR/xorg.xsl
 else
    AC_MSG_RESULT([no])
 fi
 
 AC_SUBST(XORG_SGML_PATH)
+AC_SUBST(STYLESHEET_SRCDIR)
+AC_SUBST(XSL_STYLESHEET)
+AM_CONDITIONAL([HAVE_STYLESHEETS], [test "x$XSL_STYLESHEET" != "x"])
 ]) # XORG_CHECK_SGML_DOCTOOLS
 
 # XORG_CHECK_LINUXDOC
@@ -1619,15 +1694,17 @@ AC_SUBST(MAKE_PDF)
 AC_SUBST(MAKE_HTML)
 ]) # XORG_CHECK_DOCBOOK
 
-# XORG_WITH_XMLTO([MIN-VERSION])
+# XORG_WITH_XMLTO([MIN-VERSION], [DEFAULT])
 # ----------------
 # Minimum version: 1.5.0
+# Minimum version for optional DEFAULT argument: 1.11.0
 #
 # Documentation tools are not always available on all platforms and sometimes
 # not at the appropriate level. This macro enables a module to test for the
 # presence of the tool and obtain it's path in separate variables. Coupled with
 # the --with-xmlto option, it allows maximum flexibilty in making decisions
-# as whether or not to use the xmlto package.
+# as whether or not to use the xmlto package. When DEFAULT is not specified,
+# --with-xmlto assumes 'auto'.
 #
 # Interface to module:
 # HAVE_XMLTO: 	used in makefiles to conditionally generate documentation
@@ -1636,14 +1713,20 @@ AC_SUBST(MAKE_HTML)
 # --with-xmlto:	'yes' user instructs the module to use xmlto
 #		'no' user instructs the module not to use xmlto
 #
+# Added in version 1.10.0
+# HAVE_XMLTO_TEXT: used in makefiles to conditionally generate text documentation
+#                  xmlto for text output requires either lynx, links, or w3m browsers
+#
 # If the user sets the value of XMLTO, AC_PATH_PROG skips testing the path.
 #
 AC_DEFUN([XORG_WITH_XMLTO],[
 AC_ARG_VAR([XMLTO], [Path to xmlto command])
+m4_define([_defopt], m4_default([$2], [auto]))
 AC_ARG_WITH(xmlto,
 	AS_HELP_STRING([--with-xmlto],
-	   [Use xmlto to regenerate documentation (default: yes, if installed)]),
-	   [use_xmlto=$withval], [use_xmlto=auto])
+	   [Use xmlto to regenerate documentation (default: ]_defopt[)]),
+	   [use_xmlto=$withval], [use_xmlto=]_defopt)
+m4_undefine([_defopt])
 
 if test "x$use_xmlto" = x"auto"; then
    AC_PATH_PROG([XMLTO], [xmlto])
@@ -1667,6 +1750,8 @@ elif test "x$use_xmlto" = x"no" ; then
 else
    AC_MSG_ERROR([--with-xmlto expects 'yes' or 'no'])
 fi
+
+# Test for a minimum version of xmlto, if provided.
 m4_ifval([$1],
 [if test "$have_xmlto" = yes; then
     # scrape the xmlto version
@@ -1681,18 +1766,31 @@ m4_ifval([$1],
             AC_MSG_ERROR([xmlto version $xmlto_version found, but $1 needed])
         fi])
 fi])
+
+# Test for the ability of xmlto to generate a text target
+have_xmlto_text=no
+cat > conftest.xml << "EOF"
+EOF
+AS_IF([test "$have_xmlto" = yes],
+      [AS_IF([$XMLTO --skip-validation txt conftest.xml >/dev/null 2>&1],
+             [have_xmlto_text=yes],
+             [AC_MSG_WARN([xmlto cannot generate text format, this format skipped])])])
+rm -f conftest.xml
+AM_CONDITIONAL([HAVE_XMLTO_TEXT], [test $have_xmlto_text = yes])
 AM_CONDITIONAL([HAVE_XMLTO], [test "$have_xmlto" = yes])
 ]) # XORG_WITH_XMLTO
 
-# XORG_WITH_ASCIIDOC([MIN-VERSION])
+# XORG_WITH_ASCIIDOC([MIN-VERSION], [DEFAULT])
 # ----------------
 # Minimum version: 1.5.0
+# Minimum version for optional DEFAULT argument: 1.11.0
 #
 # Documentation tools are not always available on all platforms and sometimes
 # not at the appropriate level. This macro enables a module to test for the
 # presence of the tool and obtain it's path in separate variables. Coupled with
 # the --with-asciidoc option, it allows maximum flexibilty in making decisions
-# as whether or not to use the asciidoc package.
+# as whether or not to use the asciidoc package. When DEFAULT is not specified,
+# --with-asciidoc assumes 'auto'.
 #
 # Interface to module:
 # HAVE_ASCIIDOC: used in makefiles to conditionally generate documentation
@@ -1705,10 +1803,12 @@ AM_CONDITIONAL([HAVE_XMLTO], [test "$have_xmlto" = yes])
 #
 AC_DEFUN([XORG_WITH_ASCIIDOC],[
 AC_ARG_VAR([ASCIIDOC], [Path to asciidoc command])
+m4_define([_defopt], m4_default([$2], [auto]))
 AC_ARG_WITH(asciidoc,
 	AS_HELP_STRING([--with-asciidoc],
-	   [Use asciidoc to regenerate documentation (default: yes, if installed)]),
-	   [use_asciidoc=$withval], [use_asciidoc=auto])
+	   [Use asciidoc to regenerate documentation (default: ]_defopt[)]),
+	   [use_asciidoc=$withval], [use_asciidoc=]_defopt)
+m4_undefine([_defopt])
 
 if test "x$use_asciidoc" = x"auto"; then
    AC_PATH_PROG([ASCIIDOC], [asciidoc])
@@ -1749,15 +1849,17 @@ fi])
 AM_CONDITIONAL([HAVE_ASCIIDOC], [test "$have_asciidoc" = yes])
 ]) # XORG_WITH_ASCIIDOC
 
-# XORG_WITH_DOXYGEN([MIN-VERSION])
+# XORG_WITH_DOXYGEN([MIN-VERSION], [DEFAULT])
 # --------------------------------
 # Minimum version: 1.5.0
+# Minimum version for optional DEFAULT argument: 1.11.0
 #
 # Documentation tools are not always available on all platforms and sometimes
 # not at the appropriate level. This macro enables a module to test for the
 # presence of the tool and obtain it's path in separate variables. Coupled with
 # the --with-doxygen option, it allows maximum flexibilty in making decisions
-# as whether or not to use the doxygen package.
+# as whether or not to use the doxygen package. When DEFAULT is not specified,
+# --with-doxygen assumes 'auto'.
 #
 # Interface to module:
 # HAVE_DOXYGEN: used in makefiles to conditionally generate documentation
@@ -1770,10 +1872,12 @@ AM_CONDITIONAL([HAVE_ASCIIDOC], [test "$have_asciidoc" = yes])
 #
 AC_DEFUN([XORG_WITH_DOXYGEN],[
 AC_ARG_VAR([DOXYGEN], [Path to doxygen command])
+m4_define([_defopt], m4_default([$2], [auto]))
 AC_ARG_WITH(doxygen,
 	AS_HELP_STRING([--with-doxygen],
-	   [Use doxygen to regenerate documentation (default: yes, if installed)]),
-	   [use_doxygen=$withval], [use_doxygen=auto])
+	   [Use doxygen to regenerate documentation (default: ]_defopt[)]),
+	   [use_doxygen=$withval], [use_doxygen=]_defopt)
+m4_undefine([_defopt])
 
 if test "x$use_doxygen" = x"auto"; then
    AC_PATH_PROG([DOXYGEN], [doxygen])
@@ -1814,15 +1918,17 @@ fi])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "$have_doxygen" = yes])
 ]) # XORG_WITH_DOXYGEN
 
-# XORG_WITH_GROFF
+# XORG_WITH_GROFF([DEFAULT])
 # ----------------
 # Minimum version: 1.6.0
+# Minimum version for optional DEFAULT argument: 1.11.0
 #
 # Documentation tools are not always available on all platforms and sometimes
 # not at the appropriate level. This macro enables a module to test for the
 # presence of the tool and obtain it's path in separate variables. Coupled with
 # the --with-groff option, it allows maximum flexibilty in making decisions
-# as whether or not to use the groff package.
+# as whether or not to use the groff package. When DEFAULT is not specified,
+# --with-groff assumes 'auto'.
 #
 # Interface to module:
 # HAVE_GROFF:	 used in makefiles to conditionally generate documentation
@@ -1832,6 +1938,12 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test "$have_doxygen" = yes])
 #		 returns the path set by the user in the environment
 # --with-groff:	 'yes' user instructs the module to use groff
 #		 'no' user instructs the module not to use groff
+#
+# Added in version 1.9.0:
+# HAVE_GROFF_HTML: groff has dependencies to output HTML format:
+#		   pnmcut pnmcrop pnmtopng pnmtops from the netpbm package.
+#		   psselect from the psutils package.
+#		   the ghostcript package. Refer to the grohtml man pages
 #
 # If the user sets the value of GROFF, AC_PATH_PROG skips testing the path.
 #
@@ -1845,10 +1957,12 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test "$have_doxygen" = yes])
 #
 AC_DEFUN([XORG_WITH_GROFF],[
 AC_ARG_VAR([GROFF], [Path to groff command])
+m4_define([_defopt], m4_default([$1], [auto]))
 AC_ARG_WITH(groff,
 	AS_HELP_STRING([--with-groff],
-	   [Use groff to regenerate documentation (default: yes, if installed)]),
-	   [use_groff=$withval], [use_groff=auto])
+	   [Use groff to regenerate documentation (default: ]_defopt[)]),
+	   [use_groff=$withval], [use_groff=]_defopt)
+m4_undefine([_defopt])
 
 if test "x$use_groff" = x"auto"; then
    AC_PATH_PROG([GROFF], [groff])
@@ -1872,6 +1986,7 @@ elif test "x$use_groff" = x"no" ; then
 else
    AC_MSG_ERROR([--with-groff expects 'yes' or 'no'])
 fi
+
 # We have groff, test for the presence of the macro packages
 if test "x$have_groff" = x"yes"; then
     AC_MSG_CHECKING([for ${GROFF} -ms macros])
@@ -1889,20 +2004,38 @@ if test "x$have_groff" = x"yes"; then
     fi
     AC_MSG_RESULT([$groff_mm_works])
 fi
+
+# We have groff, test for HTML dependencies, one command per package
+if test "x$have_groff" = x"yes"; then
+   AC_PATH_PROGS(GS_PATH, [gs gswin32c])
+   AC_PATH_PROG(PNMTOPNG_PATH, [pnmtopng])
+   AC_PATH_PROG(PSSELECT_PATH, [psselect])
+   if test "x$GS_PATH" != "x" -a "x$PNMTOPNG_PATH" != "x" -a "x$PSSELECT_PATH" != "x"; then
+      have_groff_html=yes
+   else
+      have_groff_html=no
+      AC_MSG_WARN([grohtml dependencies not found - HTML Documentation skipped. Refer to grohtml man pages])
+   fi
+fi
+
+# Set Automake conditionals for Makefiles
 AM_CONDITIONAL([HAVE_GROFF], [test "$have_groff" = yes])
 AM_CONDITIONAL([HAVE_GROFF_MS], [test "$groff_ms_works" = yes])
 AM_CONDITIONAL([HAVE_GROFF_MM], [test "$groff_mm_works" = yes])
+AM_CONDITIONAL([HAVE_GROFF_HTML], [test "$have_groff_html" = yes])
 ]) # XORG_WITH_GROFF
 
-# XORG_WITH_FOP
+# XORG_WITH_FOP([DEFAULT])
 # ----------------
 # Minimum version: 1.6.0
+# Minimum version for optional DEFAULT argument: 1.11.0
 #
 # Documentation tools are not always available on all platforms and sometimes
 # not at the appropriate level. This macro enables a module to test for the
 # presence of the tool and obtain it's path in separate variables. Coupled with
 # the --with-fop option, it allows maximum flexibilty in making decisions
-# as whether or not to use the fop package.
+# as whether or not to use the fop package. When DEFAULT is not specified,
+# --with-fop assumes 'auto'.
 #
 # Interface to module:
 # HAVE_FOP: 	used in makefiles to conditionally generate documentation
@@ -1915,10 +2048,12 @@ AM_CONDITIONAL([HAVE_GROFF_MM], [test "$groff_mm_works" = yes])
 #
 AC_DEFUN([XORG_WITH_FOP],[
 AC_ARG_VAR([FOP], [Path to fop command])
+m4_define([_defopt], m4_default([$1], [auto]))
 AC_ARG_WITH(fop,
 	AS_HELP_STRING([--with-fop],
-	   [Use fop to regenerate documentation (default: yes, if installed)]),
-	   [use_fop=$withval], [use_fop=auto])
+	   [Use fop to regenerate documentation (default: ]_defopt[)]),
+	   [use_fop=$withval], [use_fop=]_defopt)
+m4_undefine([_defopt])
 
 if test "x$use_fop" = x"auto"; then
    AC_PATH_PROG([FOP], [fop])
@@ -1945,15 +2080,17 @@ fi
 AM_CONDITIONAL([HAVE_FOP], [test "$have_fop" = yes])
 ]) # XORG_WITH_FOP
 
-# XORG_WITH_PS2PDF
+# XORG_WITH_PS2PDF([DEFAULT])
 # ----------------
 # Minimum version: 1.6.0
+# Minimum version for optional DEFAULT argument: 1.11.0
 #
 # Documentation tools are not always available on all platforms and sometimes
 # not at the appropriate level. This macro enables a module to test for the
 # presence of the tool and obtain it's path in separate variables. Coupled with
 # the --with-ps2pdf option, it allows maximum flexibilty in making decisions
-# as whether or not to use the ps2pdf package.
+# as whether or not to use the ps2pdf package. When DEFAULT is not specified,
+# --with-ps2pdf assumes 'auto'.
 #
 # Interface to module:
 # HAVE_PS2PDF: 	used in makefiles to conditionally generate documentation
@@ -1966,10 +2103,12 @@ AM_CONDITIONAL([HAVE_FOP], [test "$have_fop" = yes])
 #
 AC_DEFUN([XORG_WITH_PS2PDF],[
 AC_ARG_VAR([PS2PDF], [Path to ps2pdf command])
+m4_define([_defopt], m4_default([$1], [auto]))
 AC_ARG_WITH(ps2pdf,
 	AS_HELP_STRING([--with-ps2pdf],
-	   [Use ps2pdf to regenerate documentation (default: yes, if installed)]),
-	   [use_ps2pdf=$withval], [use_ps2pdf=auto])
+	   [Use ps2pdf to regenerate documentation (default: ]_defopt[)]),
+	   [use_ps2pdf=$withval], [use_ps2pdf=]_defopt)
+m4_undefine([_defopt])
 
 if test "x$use_ps2pdf" = x"auto"; then
    AC_PATH_PROG([PS2PDF], [ps2pdf])
@@ -2020,14 +2159,12 @@ AM_CONDITIONAL([HAVE_PS2PDF], [test "$have_ps2pdf" = yes])
 # parm1:	specify the default value, yes or no.
 #
 AC_DEFUN([XORG_ENABLE_DOCS],[
-default=$1
-if test "x$default" = x ; then
-  default="yes"
-fi
+m4_define([default], m4_default([$1], [yes]))
 AC_ARG_ENABLE(docs,
 	AS_HELP_STRING([--enable-docs],
-	   [Enable building the documentation (default: yes)]),
-	   [build_docs=$enableval], [build_docs=$default])
+	   [Enable building the documentation (default: ]default[)]),
+	   [build_docs=$enableval], [build_docs=]default)
+m4_undefine([default])
 AM_CONDITIONAL(ENABLE_DOCS, [test x$build_docs = xyes])
 AC_MSG_CHECKING([whether to build documentation])
 AC_MSG_RESULT([$build_docs])
@@ -2055,14 +2192,12 @@ AC_MSG_RESULT([$build_docs])
 # parm1:		specify the default value, yes or no.
 #
 AC_DEFUN([XORG_ENABLE_DEVEL_DOCS],[
-devel_default=$1
-if test "x$devel_default" = x ; then
-  devel_default="yes"
-fi
+m4_define([devel_default], m4_default([$1], [yes]))
 AC_ARG_ENABLE(devel-docs,
 	AS_HELP_STRING([--enable-devel-docs],
-	   [Enable building the developer documentation (default: yes)]),
-	   [build_devel_docs=$enableval], [build_devel_docs=$devel_default])
+	   [Enable building the developer documentation (default: ]devel_default[)]),
+	   [build_devel_docs=$enableval], [build_devel_docs=]devel_default)
+m4_undefine([devel_default])
 AM_CONDITIONAL(ENABLE_DEVEL_DOCS, [test x$build_devel_docs = xyes])
 AC_MSG_CHECKING([whether to build developer documentation])
 AC_MSG_RESULT([$build_devel_docs])
@@ -2090,14 +2225,12 @@ AC_MSG_RESULT([$build_devel_docs])
 # parm1:		specify the default value, yes or no.
 #
 AC_DEFUN([XORG_ENABLE_SPECS],[
-spec_default=$1
-if test "x$spec_default" = x ; then
-  spec_default="yes"
-fi
+m4_define([spec_default], m4_default([$1], [yes]))
 AC_ARG_ENABLE(specs,
 	AS_HELP_STRING([--enable-specs],
-	   [Enable building the specs (default: yes)]),
-	   [build_specs=$enableval], [build_specs=$spec_default])
+	   [Enable building the specs (default: ]spec_default[)]),
+	   [build_specs=$enableval], [build_specs=]spec_default)
+m4_undefine([spec_default])
 AM_CONDITIONAL(ENABLE_SPECS, [test x$build_specs = xyes])
 AC_MSG_CHECKING([whether to build functional specifications])
 AC_MSG_RESULT([$build_specs])

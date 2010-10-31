@@ -1,3 +1,100 @@
+commit 22a939832df60c2c0e9767ab26b4c82433aa1555
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 20:54:06 2010 -0700
+
+    encodings 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 44e5e3221239b3deae20a3220a62c26870da956c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d47c71268417e255091d1a5585296be558b98c51
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:56 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8101ff3418c04df3d0d6e82ce107ea2bdfb6c999
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:57 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2bbe5d04111249f877cd152daebdd6140bffa1db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 27 10:46:07 2010 -0400
+
+    config: remove from ChangeLog from EXTRA_DIST
+    
+    Automake always distribute ChangeLog
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 45bc91ff4fc6d104286a1dd8a925a360c5380b12
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 15:11:25 2009 -0500
+
+    Makefile.am: add INSTALL target and clean ChangeLog DIST targets
+    
+    Add INSTALL target to generate file with INSTALL_CMD #24206
+    ChangeLog is not required in EXTRA_DIST  #24432
+
+commit e23f044d40a064aaf9436a5afb85083e4dfa39be
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 15:03:12 2009 -0500
+
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    Works in conjunction with autogen.sh --enable-maintainer-mode
+
+commit f385c3c4d077f33b93e9b426b70d86ab63eead62
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 14:23:51 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 74eec8241bca833c4f9c20338ca74bc732f74e93
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 13:38:51 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 37d2a7c362a330d6aaa4d348a5db81da844ef7a8
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Sat Oct 10 17:56:53 2009 -0700
