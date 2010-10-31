@@ -21,8 +21,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86: xc/lib/Xv/Xv.c,v 1.17 2003/04/28 16:56:27 dawes Exp $ */
-/* $XdotOrg: xc/lib/Xv/Xv.c,v 1.2 2004/04/23 18:43:55 eich Exp $ */
 /*
 ** File: 
 **

@@ -21,7 +21,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86: xc/lib/Xv/Xvlibint.h,v 1.5 2001/07/25 15:04:53 dawes Exp $ */
 
 #ifndef XVLIBINT_H
 #define XVLIBINT_H
@@ -40,8 +39,6 @@ SOFTWARE.
 **     - version 1.4 upgrade
 **
 */
-
-#define NEED_REPLIES
 
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xvproto.h>
