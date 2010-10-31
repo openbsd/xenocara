@@ -1,5 +1,3 @@
-/* $XFree86: xc/lib/Xaw/OS.c,v 1.1 1998/12/06 10:44:34 dawes Exp $ */
-
 /* Some OS-dependent utility code */
 
 #ifdef HAVE_CONFIG_H

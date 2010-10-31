@@ -147,6 +147,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -154,8 +155,6 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BUILD_DOCS_FALSE = @BUILD_DOCS_FALSE@
-BUILD_DOCS_TRUE = @BUILD_DOCS_TRUE@
 BUILD_XAW6_FALSE = @BUILD_XAW6_FALSE@
 BUILD_XAW6_TRUE = @BUILD_XAW6_TRUE@
 BUILD_XAW7_FALSE = @BUILD_XAW7_FALSE@
@@ -182,13 +181,24 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_SPECS_FALSE = @ENABLE_SPECS_FALSE@
+ENABLE_SPECS_TRUE = @ENABLE_SPECS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+FOP = @FOP@
 GREP = @GREP@
-GROFF = @GROFF@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
+HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
+HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
+HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
+HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -206,6 +216,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -229,11 +240,16 @@ SHARED_LIBS_FALSE = @SHARED_LIBS_FALSE@
 SHARED_LIBS_TRUE = @SHARED_LIBS_TRUE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 VERSION = @VERSION@
 XAW6_CFLAGS = @XAW6_CFLAGS@
 XAW6_LIBS = @XAW6_LIBS@
 XAW7_CFLAGS = @XAW7_CFLAGS@
 XAW7_LIBS = @XAW7_LIBS@
+XMLTO = @XMLTO@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
+XORG_SGML_PATH = @XORG_SGML_PATH@
+XSL_STYLESHEET = @XSL_STYLESHEET@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
@@ -254,7 +270,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -365,6 +380,13 @@ COMMON_CFLAGS = \
 
 @BUILD_XAW7_TRUE@libXaw7_la_LDFLAGS = -version-info 7:0:0 -no-undefined
 @BUILD_XAW7_TRUE@libXaw7_la_LIBADD = $(XAW7_LIBS)
+
+#uninstall-local::
+#if PLATFORM_DARWIN
+#	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
+#else
+#	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.14.0
+#endif
 EXTRA_DIST = sharedlib.c
 all: all-am
 
@@ -379,9 +401,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -1271,6 +1293,9 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@BUILD_XAW6_FALSE@uninstall-local:
+@PLATFORM_WIN32_TRUE@uninstall-local:
+@SHARED_LIBS_FALSE@uninstall-local:
 @BUILD_XAW6_FALSE@@BUILD_XAW7_FALSE@install-exec-hook:
 @PLATFORM_WIN32_TRUE@install-exec-hook:
 @SHARED_LIBS_FALSE@install-exec-hook:
@@ -1325,7 +1350,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
+uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
+	uninstall-local
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libLTLIBRARIES clean-libtool ctags distclean \
@@ -1338,7 +1364,7 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-libLTLIBRARIES
+	uninstall-libLTLIBRARIES uninstall-local
 
 
 @BUILD_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
@@ -1346,6 +1372,10 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 @BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.6.@LIBEXT@ libXaw.6.@LIBEXT@)
 @BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
 @BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.@LIBEXT@.6 libXaw.@LIBEXT@.6)
+
+@BUILD_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@uninstall-local::
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
 
 @BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
 @BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
