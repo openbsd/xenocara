@@ -264,7 +264,7 @@ inc_path(const char *file, const char *include, int type)
 		if ((type == INCLUDEDOT) ||
 		    (type == INCLUDENEXTDOT) ||
 		    (*include == '/')) {
-			if (stat(include, &st) == 0)
+			if (stat(include, &st) == 0 && !S_ISDIR(st.st_mode))
 				return newinclude(include, include);
 			if (show_where_not)
 				warning1("\tnot in %s\n", include);
@@ -286,7 +286,7 @@ inc_path(const char *file, const char *include, int type)
 				strcpy(path + (p-file) + 1, include);
 			}
 			remove_dotdot(path);
-			if (stat(path, &st) == 0)
+			if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode))
 				return newinclude(path, include);
 			if (show_where_not)
 				warning1("\tnot in %s\n", path);
@@ -304,7 +304,7 @@ inc_path(const char *file, const char *include, int type)
 	for (; *pp; pp++) {
 		sprintf(path, "%s/%s", *pp, include);
 		remove_dotdot(path);
-		if (stat(path, &st) == 0) {
+		if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode)) {
 			includedirsnext = pp + 1;
 			return newinclude(path, include);
 		}

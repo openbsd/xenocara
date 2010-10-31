@@ -1,3 +1,57 @@
+commit e67389ecc0c425bcfec0a3184ee48919e0e2c61a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 22:45:35 2010 -0700
+
+    makedepend 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bf25a6cb4888e5cf6827cd51cb7ee282cfb6cf47
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 22:39:51 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7963cc382a3a351410b1342a9783df3af8516944
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 58bd34e6c3662ef06e9ef0dd78d69f003df42bdc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 14 21:14:44 2010 -0700
+
+    Convert testcase from bug 28045 into automake "make check" test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8522c314da7537169996476fe5ba411f720a09fe
+Author: Martin Pärtel <lagitus@mbnet.fi>
+Date:   Fri May 14 21:00:15 2010 -0700
+
+    Bug 28045 - makedepend fails on directory named like an include file
+    
+    <https://bugs.freedesktop.org/show_bug.cgi?id=28045>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c976a7fc7c21772c00de9e61178cf467c6a10b57
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Sat Oct 10 22:08:09 2009 -0700

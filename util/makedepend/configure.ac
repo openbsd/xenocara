@@ -1,12 +1,13 @@
-AC_PREREQ([2.57])
-AC_INIT([makedepend], [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_PREREQ([2.60])
+AC_INIT([makedepend], [1.0.3],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_CONFIG_HEADER(makedepend-config.h)
+AM_CONFIG_HEADER([makedepend-config.h])
 
-# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS, XORG_WITH_LINT
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	[m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+	  [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 
 dnl Checks for programs.
 AC_PROG_CC
