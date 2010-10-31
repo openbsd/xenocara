@@ -31,8 +31,6 @@
 #include <X11/Xos.h>
 #include <X11/Xaw/XawInit.h>
 #include "LEDP.h"
-#include <X11/Xmu/Converters.h>
-#include <X11/Xmu/Drawing.h>
 #include <stdio.h>
 #include <ctype.h>
 /* needed for abs() */
