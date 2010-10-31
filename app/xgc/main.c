@@ -1,4 +1,3 @@
-/* $XConsortium: main.c,v 1.22 94/04/17 20:45:30 rws Exp $ */
 /*
 
 Copyright (c) 1991  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xgc/main.c,v 1.6tsi Exp $ */
 
 /* xgc
 **

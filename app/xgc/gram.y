@@ -1,7 +1,6 @@
 /*
 ** grammar for xgc syntax
 */
-/* $XFree86: xc/programs/xgc/gram.y,v 1.3 2000/02/17 14:00:36 dawes Exp $ */
 
 %{
 #define YYDEBUG 1

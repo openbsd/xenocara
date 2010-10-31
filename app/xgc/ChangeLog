@@ -1,3 +1,175 @@
+commit 76ba19a5b0f1ec9515ac802c3c3efaad87f3079f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 16:09:30 2010 -0700
+
+    xgc 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 66718aca54618f65abbe99ace710d3d4899d2f62
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 16:08:20 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3425a0f5319a0602a809f7ece099b1d8235cadd0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 16:05:45 2010 -0700
+
+    Purge CVS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 28dc5acd02f7e20354f3dc7c6aae0b7e685d24db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 30 16:04:37 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 370e37a3a02ef8100c048c1a39af325662009970
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 16:03:39 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ebd3e2400d05f779c0be6f1db352fe0e55a2c435
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jul 18 09:38:40 2010 -0400
+
+    config: allow to build tarball when yacc is missingmaster
+    Autoconf does not handle this scenario as well as Automake does.
+    If gram.c is already there, do not abort the configuration
+    if yacc is missing as it is not needed.
+    
+    If both xkbparse.c and yacc are missing, abort configuration.
+    Yacc is a required tool to build the package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 79eee2354907010045d64c05b3a008cffda2c952
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 1 18:07:39 2010 -0700
+
+    Call snprintf directly, instead of via XmuSnprintf
+    
+    We could add an autoconf check to fix the old #ifdef HAS_SNPRINTF test
+    here, but all platforms we support today have a native snprintf anyway.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2dd98f64c53a6353716982d2e69c3c493a6b9f78
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 30 23:25:03 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use XORG_DEFAULT_OPTIONS provided $(SED)
+    Use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e1d1a9f5b65691338e7a6d41dbbf05bc7073740a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 4 14:03:55 2010 -0400
+
+    config: add check for yacc to insure it is installed #27973
+    
+    Unlike other macros AC_PROG_YACC sets the YACC variable to "yacc"
+    as a last resort, even if no programs have been found. Improve error
+    checking by issuing an error message if yacc is not found. The module
+    cannot build anyway.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 301f7d91b74bd1ef625ba1d82e877294ed283210
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 22:12:21 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b788ecebe37fffc96856481a6e239123214540e9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:48 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3f4012aecec63dee6858797d0c893472877ac027
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit bb9d4ca9f616c24fcda388749a9ec7fbe7ea6f55
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 6daab486099dc404bf0b88546fd3091855c01c89
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit bd327d662f16987b11bbcfbda5451008da300d5e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit abdc601cdbdfaf106bb94e9052e14acee5eca04b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit e3247097e61ddd8432921f8d52b73f09f6bf23c4
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Nov 10 22:55:23 2009 -0800

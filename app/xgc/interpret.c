@@ -3,7 +3,6 @@
 **
 ** interprets and executes lines in the Xgc syntax.
 */
-/* $XFree86: xc/programs/xgc/interpret.c,v 1.4 2002/01/07 20:38:30 dawes Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>

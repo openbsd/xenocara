@@ -1,4 +1,3 @@
-
 dnl  Copyright 2005 Red Hat, Inc.
 dnl 
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
@@ -21,29 +20,27 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xgc, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xgc)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([xgc], [1.0.3],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xgc])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
 
-# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 AC_PROG_LEX
 AC_PROG_YACC
-AC_PROG_CC
-AC_PROG_INSTALL
+AC_PATH_PROG([YACC_INST], $YACC)
+AC_CHECK_FILE([$srcdir/gram.c], [],
+              [test -z "$YACC_INST" && AC_MSG_ERROR([yacc not found - unable to compile gram.y])])
 
-PKG_CHECK_MODULES(XGC, xaw7)
-AC_SUBST(XGC_CFLAGS)
-AC_SUBST(XGC_LIBS)
-
-PKG_CHECK_MODULES(APPDEFS, xt)
-xt_appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
+PKG_CHECK_MODULES(XGC, xaw7 xt)
+xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
 	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
 	  [specify directory for app-defaults files (default is autodetected)]),

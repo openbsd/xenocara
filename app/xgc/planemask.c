@@ -7,7 +7,6 @@
 **       functions to create more than one of these planemask choice things
 **       will fail in a big way.
 */
-/* $XFree86: xc/programs/xgc/planemask.c,v 1.3 2000/02/17 14:00:37 dawes Exp $ */
 
 #include <X11/Xos.h>
 #include <stdio.h>

@@ -3,7 +3,6 @@
 **
 ** xgc.h
 */
-/* $XFree86: xc/programs/xgc/xgc.h,v 1.5 2003/05/07 21:17:06 herrb Exp $ */
 
 #include "constants.h"
 
@@ -60,11 +59,6 @@ typedef struct {
   int size;
   WidgetList widgets;
 } ChoiceDesc;
-
-#ifndef HAS_SNPRINTF
-#include <X11/Xmu/SysUtil.h>
-#define snprintf XmuSnprintf
-#endif
 
 /************/
 
