@@ -1,4 +1,3 @@
-/* $XConsortium: xev.c,v 1.15 94/04/17 20:45:20 keith Exp $ */
 /*
 
 Copyright (c) 1988  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xev/xev.c,v 1.13 2003/10/24 20:38:17 tsi Exp $ */
 
 /*
  * Author:  Jim Fulton, MIT X Consortium
@@ -690,6 +688,7 @@ usage (void)
 "    -bw pixels                          border width in pixels",
 "    -bs {NotUseful,WhenMapped,Always}   backingstore attribute",
 "    -id windowid                        use existing window",
+"    -root                               use root window",
 "    -s                                  set save-unders attribute",
 "    -name string                        window name",
 "    -rv                                 reverse video",
@@ -739,6 +738,7 @@ main (int argc, char **argv)
     int done;
     char *name = "Event Tester";
     Bool reverse = False;
+    Bool use_root = False;
     unsigned long back, fore;
     XIM xim;
     XIMStyles *xim_styles;
@@ -793,8 +793,17 @@ main (int argc, char **argv)
 		if (++i >= argc) usage ();
 		name = argv[i];
 		continue;
-	      case 'r':			/* -rv */
-		reverse = True;
+	      case 'r':
+		switch (arg[2]) {
+		  case 'o':		/* -root */
+		    use_root = True;
+		    continue;
+		  case 'v':		/* -rv */
+		    reverse = True;
+		    continue;
+		  default:
+		    usage ();
+		}
 		continue;
 	      case 's':			/* -s */
 		attr.save_under = True;
@@ -864,6 +873,9 @@ main (int argc, char **argv)
 			   SubstructureNotifyMask | SubstructureRedirectMask |
 			   FocusChangeMask | PropertyChangeMask |
 			   ColormapChangeMask | OwnerGrabButtonMask;
+
+    if (use_root)
+	w = RootWindow(dpy, screen);
 
     if (w) {
 	XGetWindowAttributes(dpy, w, &wattr);
