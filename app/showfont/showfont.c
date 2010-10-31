@@ -1,4 +1,3 @@
-/* $XConsortium: showfont.c,v 1.13 94/04/17 20:44:07 gildea Exp $ */
 /*
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
@@ -49,7 +48,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/showfont/showfont.c,v 1.3 2000/02/18 12:20:17 tsi Exp $ */
 
 #include	<stdio.h>
 #include	<stdlib.h>
@@ -68,23 +66,23 @@ from the X Consortium.
 	:(nbytes) == 8 ? ((((bits)+63)>>3)&~7)  /* pad to 8 bytes */ \
 	: 0)
 
-int         byteorder = MSBFirst; /* -LSB or -MSB */
-int         bitorder = MSBFirst; /* -lsb or -msb */
-int         bitmap_pad = 0;	/* -bitmap_pad: ImageRect bitmap format */
-int         scan_pad = 8;	/* -pad: ScanlinePad */
-int         scan_unit = 8;	/* -unit: ScanlineUnit */
-int         first_ch = 0;	/* -start: first character*/
-int         end_ch = ~0;	/* -end: end character */
-const char *ProgramName;
-Bool	    no_props = False;	/* -noprops: don't show font properties */
-Bool        extents_only = False; /* -extents_only */
+static int	   byteorder = MSBFirst; /* -LSB or -MSB */
+static int	   bitorder = MSBFirst; /* -lsb or -msb */
+static int	   bitmap_pad = 0;	/* -bitmap_pad: ImageRect bitmap format */
+static int	   scan_pad = 8;	/* -pad: ScanlinePad */
+static int	   scan_unit = 8;	/* -unit: ScanlineUnit */
+static int	   first_ch = 0;	/* -start: first character*/
+static int	   end_ch = ~0;	/* -end: end character */
+static const char *ProgramName;
+static Bool	   no_props = False;	/* -noprops: don't show font properties */
+static Bool	   extents_only = False; /* -extents_only */
 
-FSServer   *svr;
+static FSServer	  *svr;
 
 /* set from bitmap_pad to ImageRectMin, ImageMaxWidth, or ImageMax */
-int	    bitmap_format;	
+static int	   bitmap_format;	
 
-static      FSBitmapFormat
+static FSBitmapFormat
 make_format(void)
 {
     FSBitmapFormat format;
