@@ -40,7 +40,6 @@ X Consortium.
 
 <!-- edited for DP edits and code consistency w/ core protocol/xlib 4/2/96 -->
 <!-- Converted from xorg-docs/specs/Xext/xtestlib.ms 6/6/07 -->
-<!-- $Xorg: xtestlib.ms,v 1.3 2000/08/17 19:42:37 cpqbld Exp $ -->
  <refentryinfo>
   <productname>__vendorversion__</productname>
   <pubdate>6 June 2007</pubdate>

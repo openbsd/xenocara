@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# Copyright (c) 2007, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -59,10 +59,12 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@HAVE_XMLTO_TRUE@am__append_1 = x.tmp
-@HAVE_XMLTO_TRUE@am__append_2 = x.stamp
-subdir = man
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+@ENABLE_SPECS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = xorg.css
+subdir = specs
+DIST_COMMON = $(am__dist_doc_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -72,15 +74,17 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
+am__dist_doc_DATA_DIST = xtestlib.xml recordlib.xml
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libmandir)"
-libmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(libman_DATA)
+am__installdirs = "$(DESTDIR)$(docdir)" "$(DESTDIR)$(docdir)"
+dist_docDATA_INSTALL = $(INSTALL_DATA)
+docDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_doc_DATA) $(doc_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -234,32 +238,20 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-libmandir = $(LIB_MAN_DIR)
-libman_xml = XTest.xml
-libman_PRE = \
-	XTestQueryExtension.man \
-	XTestCompareCursorWithWindow.man \
-	XTestCompareCurrentCursorWithWindow.man \
-	XTestFakeKeyEvent.man \
-	XTestFakeButtonEvent.man \
-	XTestFakeMotionEvent.man \
-	XTestFakeRelativeMotionEvent.man \
-	XTestGrabControl.man \
-	XTestSetGContextOfGC.man \
-	XTestSetVisualIDOfVisual.man \
-	XTestDiscard.man
-
-EXTRA_DIST = $(libman_PRE) $(libman_xml) x.stamp
-CLEANFILES = $(libman_DATA) $(am__append_1)
-MAINTAINERCLEANFILES = $(libman_PRE) $(am__append_2)
-@INSTALL_MANPAGES_TRUE@libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-SUFFIXES = .$(LIB_MAN_SUFFIX) .man
+@ENABLE_SPECS_TRUE@doc_sources = xtestlib.xml recordlib.xml
+@ENABLE_SPECS_TRUE@dist_doc_DATA = $(doc_sources)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@doc_DATA =  \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(doc_sources:.xml=.html) \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1) \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2) \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_3)
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FLAGS = -m $(XSL_STYLESHEET)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@CLEANFILES = $(doc_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@SUFFIXES = .xml .ps .pdf .txt .html
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(LIB_MAN_SUFFIX) .man
+.SUFFIXES: .xml .ps .pdf .txt .html
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -269,9 +261,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  specs/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  man/Makefile
+	  $(AUTOMAKE) --foreign  specs/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -299,22 +291,39 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-libmanDATA: $(libman_DATA)
+install-dist_docDATA: $(dist_doc_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(libmandir)" || $(mkdir_p) "$(DESTDIR)$(libmandir)"
-	@list='$(libman_DATA)'; for p in $$list; do \
+	test -z "$(docdir)" || $(mkdir_p) "$(DESTDIR)$(docdir)"
+	@list='$(dist_doc_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(libmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(libmandir)/$$f'"; \
-	  $(libmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(libmandir)/$$f"; \
+	  echo " $(dist_docDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(docdir)/$$f'"; \
+	  $(dist_docDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(docdir)/$$f"; \
 	done
 
-uninstall-libmanDATA:
+uninstall-dist_docDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(libman_DATA)'; for p in $$list; do \
+	@list='$(dist_doc_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(libmandir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(libmandir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(docdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(docdir)/$$f"; \
+	done
+install-docDATA: $(doc_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(docdir)" || $(mkdir_p) "$(DESTDIR)$(docdir)"
+	@list='$(doc_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(docDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(docdir)/$$f'"; \
+	  $(docDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(docdir)/$$f"; \
+	done
+
+uninstall-docDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(doc_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(docdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(docdir)/$$f"; \
 	done
 tags: TAGS
 TAGS:
@@ -354,7 +363,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(libmandir)"; do \
+	for dir in "$(DESTDIR)$(docdir)" "$(DESTDIR)$(docdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -382,7 +391,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -401,7 +409,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-libmanDATA
+install-data-am: install-dist_docDATA install-docDATA
 
 install-exec-am:
 
@@ -427,40 +435,34 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libmanDATA
+uninstall-am: uninstall-dist_docDATA uninstall-docDATA \
+	uninstall-info-am
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-libmanDATA install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-info-am uninstall-libmanDATA
+	install-data install-data-am install-dist_docDATA \
+	install-docDATA install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dist_docDATA uninstall-docDATA uninstall-info-am
 
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@xorg.css: $(STYLESHEET_SRCDIR)/xorg.css
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)cp -pf $(STYLESHEET_SRCDIR)/xorg.css $@
 
-.man.$(LIB_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@.xml.txt:
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
 
-# This is ugly, but handling of tools with multiple outputs in make is a
-# huge PITA. The commands below are taken from the automake manual:
-# http://www.gnu.org/software/automake/manual/automake.html#Multiple-Outputs
-@HAVE_XMLTO_TRUE@x.stamp: $(libman_xml)
-@HAVE_XMLTO_TRUE@	@rm -f x.tmp
-@HAVE_XMLTO_TRUE@	@touch x.tmp
-@HAVE_XMLTO_TRUE@	$(XMLTO) man $^
-@HAVE_XMLTO_TRUE@	@for man in $(libman_PRE); do \
-@HAVE_XMLTO_TRUE@	  out=`echo $$man | sed 's/\.man/.__libmansuffix__/'`; \
-@HAVE_XMLTO_TRUE@	  echo mv -f $$out $$man; \
-@HAVE_XMLTO_TRUE@	  mv -f $$out $$man || exit 1; \
-@HAVE_XMLTO_TRUE@	done
-@HAVE_XMLTO_TRUE@	@mv -f x.tmp $@
-@HAVE_XMLTO_TRUE@$(libman_PRE): x.stamp
-@HAVE_XMLTO_TRUE@	@if test -f $@; then :; else \
-@HAVE_XMLTO_TRUE@	  rm -f $<; \
-@HAVE_XMLTO_TRUE@	  $(MAKE) $(AM_MAKEFLAGS) $<; \
-@HAVE_XMLTO_TRUE@	fi
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@.xml.html:
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
+
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@.xml.pdf:
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
+
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@.xml.ps:
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop ps $<
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

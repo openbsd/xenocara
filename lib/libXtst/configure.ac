@@ -21,31 +21,35 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+AC_PREREQ([2.60])
 
-AC_INIT(libXtst, 1.1.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXtst)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT([libXtst], [1.2.0],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXtst])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+# Require xorg-macros minimum of 1.10 for DocBook XML documentation
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.10 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.10)
+XORG_DEFAULT_OPTIONS
+XORG_ENABLE_SPECS
+XORG_WITH_XMLTO(0.0.20)
+XORG_WITH_FOP
+XORG_CHECK_SGML_DOCTOOLS(1.5)
 AM_CONFIG_HEADER(config.h)
 
 # Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
-XORG_DEFAULT_OPTIONS
-
-# Check for xmlto for man page conversion 
-# (only needed by people building tarballs)
-XORG_WITH_XMLTO
 
 # Check for dependencies
 PKG_CHECK_MODULES(XTST, x11 [xext >= 1.0.99.4] xi [recordproto >= 1.13.99.1] [xextproto >= 7.0.99.3] inputproto)
-XTST_CFLAGS="$CWARNFLAGS $XTST_CFLAGS"
-AC_SUBST(XTST_CFLAGS)
-AC_SUBST(XTST_LIBS)
+
+# Determine if the source for man pages is available
+# It may already be present (tarball) or can be generated using xmlto
+AM_CONDITIONAL([INSTALL_MANPAGES],
+	[test -f "$srcdir/man/XTestQueryExtension.man" || test "x$have_xmlto" = xyes])
 
 dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
@@ -55,4 +59,5 @@ LINT_FLAGS="${LINT_FLAGS} ${XTST_CFLAGS}"
 AC_OUTPUT([Makefile
 	   man/Makefile
 	   src/Makefile
-           xtst.pc])
+	   specs/Makefile
+	   xtst.pc])

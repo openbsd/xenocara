@@ -1,6 +1,4 @@
 /*
-$Xorg: XRecord.c,v 1.4 2001/02/09 02:04:00 xorgcvs Exp $
-
 XRecord.c - client-side library for RECORD extension
 
 Copyright 1995, 1998  The Open Group
@@ -50,12 +48,9 @@ from The Open Group.
 /*
  * By Stephen Gildea, X Consortium, and Martha Zimet, NCD.
  */
-/* $XFree86: xc/lib/Xtst/XRecord.c,v 1.6 2002/10/16 00:37:33 dawes Exp $ */
 
 #include <stdio.h>
 #include <assert.h>
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>

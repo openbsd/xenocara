@@ -84,6 +84,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -113,15 +114,27 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_SPECS_FALSE = @ENABLE_SPECS_FALSE@
+ENABLE_SPECS_TRUE = @ENABLE_SPECS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+FOP = @FOP@
 GREP = @GREP@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
+HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
+HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
 HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
+INSTALL_MANPAGES_FALSE = @INSTALL_MANPAGES_FALSE@
+INSTALL_MANPAGES_TRUE = @INSTALL_MANPAGES_TRUE@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
@@ -144,6 +157,7 @@ MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MAKE_LINT_LIB_FALSE = @MAKE_LINT_LIB_FALSE@
 MAKE_LINT_LIB_TRUE = @MAKE_LINT_LIB_TRUE@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -161,8 +175,12 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 VERSION = @VERSION@
 XMLTO = @XMLTO@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
+XORG_SGML_PATH = @XORG_SGML_PATH@
+XSL_STYLESHEET = @XSL_STYLESHEET@
 XTST_CFLAGS = @XTST_CFLAGS@
 XTST_LIBS = @XTST_LIBS@
 ac_ct_CC = @ac_ct_CC@
@@ -185,7 +203,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -220,9 +237,10 @@ libXtst_la_SOURCES = \
 
 libXtst_la_LIBADD = @XTST_LIBS@
 AM_CFLAGS = \
-          -I$(top_srcdir)/include \
-          -I$(top_srcdir)/include/X11/extensions\
-          @XTST_CFLAGS@
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/include/X11/extensions \
+	$(XTST_CFLAGS) \
+	$(CWARNFLAGS)
 
 libXtst_la_LDFLAGS = -version-number 6:1:0 -no-undefined
 libXtstincludedir = $(includedir)/X11/extensions
@@ -245,9 +263,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

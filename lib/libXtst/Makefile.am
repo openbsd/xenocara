@@ -19,20 +19,22 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
-SUBDIRS = src man
+SUBDIRS = src man specs
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xtst.pc
 
-EXTRA_DIST = xtst.pc.in ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 
 if LINT
 lint:

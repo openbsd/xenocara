@@ -6,10 +6,11 @@ libXtst_la_SOURCES = \
 
 libXtst_la_LIBADD = @XTST_LIBS@
 
-AM_CFLAGS=\
-          -I$(top_srcdir)/include \
-          -I$(top_srcdir)/include/X11/extensions\
-          @XTST_CFLAGS@
+AM_CFLAGS = \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/include/X11/extensions \
+	$(XTST_CFLAGS) \
+	$(CWARNFLAGS)
 
 libXtst_la_LDFLAGS = -version-number 6:1:0 -no-undefined
 

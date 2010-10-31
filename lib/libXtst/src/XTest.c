@@ -1,4 +1,3 @@
-/* $Xorg: XTest.c,v 1.5 2001/02/09 02:04:00 xorgcvs Exp $ */
 /*
 Copyright 1990, 1991 by UniSoft Group Limited
 */
@@ -30,9 +29,7 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/lib/Xtst/XTest.c,v 1.5 2001/12/14 19:56:40 dawes Exp $ */
 
-#define NEED_REPLIES
 #include <X11/Xlibint.h>
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/xtestproto.h>
@@ -268,12 +265,10 @@ send_axes(
     req->length += ((n_axes + 5) / 6) * (SIZEOF(xEvent) >> 2);
     ev.type = XI_DeviceValuator + (long)info->data;
     ev.deviceid = dev->device_id;
-    ev.num_valuators = n_axes;
     ev.first_valuator = first_axis;
     while (n_axes > 0) {
-	n = n_axes;
-	if (n > 6)
-	    n = 6;
+	n = n_axes > 6 ? 6 : n_axes;
+	ev.num_valuators = n;
 	switch (n) {
 	case 6:
 	    ev.valuator5 = *(axes+5);
