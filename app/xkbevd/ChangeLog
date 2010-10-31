@@ -1,3 +1,128 @@
+commit 14e12f714eead3f0185ab7996d6a1a38897c25cc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 10:06:46 2010 -0700
+
+    xkbevd 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aeecae39e02786202e7a2567b8a73f12a1b0bc55
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Sep 23 20:40:35 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63777386ce5be4f7f66ed36f5972cfc9238a6f90
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Sep 23 20:10:43 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 668a4e9b00e559c554a14a268fecc17683ce1f47
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c8a5caedff1fd2ac6c542f4542009ff6eb3c2076
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jul 18 10:07:41 2010 -0400
+
+    config: allow to build tarball when yacc is missing
+    
+    Autoconf does not handle this scenario as well as Automake does.
+    If cfgparse.c is already there, do not abort the configuration
+    if yacc is missing as it is not needed.
+    
+    If both cfgparse.c and yacc are missing, abort configuration.
+    Yacc is a required tool to build the package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit cb6b4bc515442fa5e910e45c030e1382ae44468c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 4 13:07:23 2010 -0400
+
+    config: add check for yacc to insure it is installed #27973
+    
+    Unlike other macros AC_PROG_YACC sets the YACC variable to "yacc"
+    as a last resort, even if no programs have been found. Improve error
+    checking by issuing an error message if yacc is not found. The module
+    cannot build anyway.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 737bfb709a910795a827491459427b09e971643c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 7 21:54:30 2010 -0500
+
+    COPYING: replace stub with actual copyright notice
+    
+    Refer to xkbevd.c
+    Copyright (c) 1995 by Silicon Graphics Computer Systems
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0358d3085622cb6af2639e0add7f69b3fdde1154
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit dc54248582dda953e6c0d8e9f357f644ef691319
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit c3ad5b8624255e32a391ffb463fea3f1b08f6410
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 8b0b5f5bc1ed1903e4eb18730250cb55066302d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 9e80c1a80d0c741d31cf0e66c483a2d78700b2d3
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 16 18:30:52 2009 -0700
