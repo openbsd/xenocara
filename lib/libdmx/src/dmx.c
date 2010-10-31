@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /*
  * Copyright 2002-2004 Red Hat Inc., Durham, North Carolina.
  *
@@ -39,7 +38,6 @@
  * can be included in client applications by linking with the libdmx.a
  * library. */
 
-#define NEED_REPLIES
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xext.h>
 #define EXTENSION_PROC_ARGS void *

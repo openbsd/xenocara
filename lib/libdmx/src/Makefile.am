@@ -11,7 +11,8 @@ AM_CFLAGS = -I$(top_srcdir)/include \
             -I$(top_srcdir)/include/X11 \
             -I$(top_srcdir)/include/X11/extensions \
             $(DMX_CFLAGS) \
-            $(MALLOC_ZERO_CFLAGS)
+            $(MALLOC_ZERO_CFLAGS) \
+            $(CWARNFLAGS)
 
 libdmxincludedir = $(includedir)/X11/extensions
 libdmxinclude_HEADERS = $(top_srcdir)/include/X11/extensions/dmxext.h
