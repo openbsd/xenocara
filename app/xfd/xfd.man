@@ -45,7 +45,9 @@ character with the number given in the \fB\-start\fP option will be used.
 .PP
 The characters are displayed in a grid of boxes, each large enough to hold 
 any single character in the font.  Each character glyph is drawn using
-the PolyText16 request (used by the \fIXlib\fP routine \fBXDrawString16\fP).
+the PolyText16 request (used by the \fIXlib\fP routine \fBXDrawString16\fP)
+or the XftDrawString32 routine, depending on whether the \fB\-fn\fP or 
+\fB\-fa\fP option was given.
 If the \fB\-box\fP option is given, a rectangle will be drawn around each
 character, showing where an ImageText16 request (used by the \fIXlib\fP
 routine \fBXDrawImageString16\fP) would cause background color to be displayed.
@@ -66,9 +68,9 @@ Individual character metrics (index, width, bearings, ascent and descent) can
 be displayed at the top of the window by clicking on the desired character.
 .PP
 The font name displayed at the top of the window is the full name of the 
-font, as determined by the server.  See \fIxlsfonts\fP for ways to generate
-lists of fonts, as well as more detailed summaries of their metrics and
-properties.
+font, as determined by the server.  See \fIxlsfonts\fP and \fIfc-list\fP
+for ways to generate lists of fonts, as well as more detailed summaries of 
+their metrics and properties.
 .SH "OPTIONS"
 .PP
 .I xfd
@@ -188,7 +190,8 @@ character does not exist.  The default is "no such character
 0x%02x%02x (%u,%u) (%#o,%#o)".  The arguments that will come after the
 format string are the same as for the \fBselectFormat\fP resource.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xlsfonts(1), xrdb(1), xfontsel(1), fontconfig(3),
+X(__miscmansuffix__), xlsfonts(1), xrdb(1), xfontsel(1), fc-list(1),
+fonts.conf(__filemansuffix__),
 .I "X Logical Font Description Conventions"
 .SH "BUGS"
 The program should skip over pages full of non-existent characters.

@@ -28,6 +28,10 @@ in this Software without prior written authorization from The Open Group.
  */
 /* $XFree86: xc/programs/xfd/xfd.c,v 1.8 2003/02/20 02:56:40 dawes Exp $ */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Xos.h>
@@ -40,13 +44,19 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xaw/Command.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef USE_GETTEXT
+# include <X11/Xlocale.h>
+# include <libintl.h>
+#else
+# define gettext(a) (a)
+#endif
 #include "grid.h"
 #ifdef XRENDER
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrender.h>
 #endif
 
-char *ProgramName;
+static char *ProgramName;
 
 static XrmOptionDescRec xfd_options[] = {
 {"-fn",		"*grid.font",	XrmoptionSepArg,	(caddr_t) NULL },
@@ -90,7 +100,7 @@ static XtActionsRec xfd_actions[] = {
 
 static Atom wm_delete_window;
 
-Widget quitButton, prev16Button, prevButton, nextButton, next16Button;
+static Widget quitButton, prev16Button, prevButton, nextButton, next16Button;
 
 
 #define DEF_SELECT_FORMAT "character 0x%04x%02x (%u,%u) (%#o,%#o)"
@@ -127,26 +137,31 @@ static XtResource Resources[] = {
 static void
 usage(void)
 {
-    fprintf (stderr, "usage:  %s [-options ...] -fn font\n", ProgramName);
+    fprintf (stderr, gettext("usage:  %s [-options ...] "), ProgramName);
+    fprintf (stderr, "-fn ");
+    fprintf (stderr, gettext("font\n\n"));
 #ifdef XRENDER
-    fprintf (stderr, "        %s [-options ...] -fa font\n", ProgramName);
+    fprintf (stderr, gettext("        %s [-options ...] "), ProgramName);
+    fprintf (stderr, "-fa ");
+    fprintf (stderr, gettext("font\n\n"));
 #endif
-    fprintf (stderr, "where options include:\n");
-    fprintf (stderr,
-	"    -display dpy           X server to contact\n");
-    fprintf (stderr, 
-	"    -geometry geom         size and location of window\n");
-    fprintf (stderr, 
-	"    -start num             first character to show\n");
-    fprintf (stderr, 
-	"    -box                   show a box around each character\n");
-    fprintf (stderr, 
-	"    -center                center each character inside its grid\n");
-    fprintf (stderr, 
-	"    -rows number           number of rows in grid\n");
-    fprintf (stderr, 
-	"    -columns number        number of columns in grid\n");
-    fprintf (stderr, "\n");
+    fprintf (stderr, gettext("where options include:\n"));
+    fprintf (stderr, "    -display ");
+    fprintf (stderr, gettext("display       X server to contact\n"));
+    fprintf (stderr, "    -geometry ");
+    fprintf (stderr, gettext("geometry     size and location of window\n"));
+    fprintf (stderr, "    -bc ");
+    fprintf (stderr, gettext("color              color for ImageText boxes\n"));
+    fprintf (stderr, "    -start ");
+    fprintf (stderr, gettext("number          first character to show\n"));
+    fprintf (stderr, "    -box                   ");
+    fprintf (stderr, gettext("show a box around each character\n"));
+    fprintf (stderr, "    -center                ");
+    fprintf (stderr, gettext("center each character inside its grid\n"));
+    fprintf (stderr, "    -rows ");
+    fprintf (stderr, gettext("number           number of rows in grid\n"));
+    fprintf (stderr, "    -columns ");
+    fprintf (stderr, gettext("number        number of columns in grid\n"));
     exit (1);
 }
 
@@ -170,13 +185,33 @@ main(int argc, char *argv[])
     XftFont *xft;
 #endif
     char *fontname;
+    char *domaindir;
     long minn, maxn;
+
+    XtSetLanguageProc(NULL, NULL, NULL);
 
     ProgramName = argv[0];
 
     toplevel = XtAppInitialize (&xtcontext, "Xfd",
 				xfd_options, XtNumber(xfd_options),
 				&argc, argv, NULL, NULL, 0);
+
+#ifdef USE_GETTEXT
+    textdomain("xfd");
+
+    /* mainly for debugging */
+    if ((domaindir = getenv ("TEXTDOMAINDIR")) == NULL) {
+	domaindir = LOCALEDIR;
+    }
+    bindtextdomain ("xfd", domaindir);
+#endif
+
+    Resources[0].default_addr = gettext(DEF_SELECT_FORMAT);
+    Resources[1].default_addr = gettext(DEF_METRICS_FORMAT);
+    Resources[2].default_addr = gettext(DEF_RANGE_FORMAT);
+    Resources[3].default_addr = gettext(DEF_START_FORMAT);
+    Resources[4].default_addr = gettext(DEF_NOCHAR_FORMAT);
+
     if (argc != 1) usage ();
     XtAppAddActions (xtcontext, xfd_actions, XtNumber (xfd_actions));
     XtOverrideTranslations
@@ -256,7 +291,7 @@ main(int argc, char *argv[])
 	FcPatternGetString (xft->pattern, FC_STYLE, 0, &style);
 	size = 0;
 	FcPatternGetDouble (xft->pattern, FC_SIZE, 0, &size);
-	p = FcPatternBuild (0,
+	p = FcPatternBuild (NULL,
 			    FC_FAMILY, FcTypeString, family,
 			    FC_STYLE, FcTypeString, style,
 			    FC_SIZE, FcTypeDouble, size,
@@ -271,10 +306,11 @@ main(int argc, char *argv[])
 	XtSetArg (av[i], XtNfont, &fs); i++;
 	XtGetValues (fontGrid, av, i);
 	if (!fs || fontConversionFailed) {
-	    fprintf (stderr, "%s:  no font to display\n", ProgramName);
+	    fprintf (stderr, gettext("%s:  no font to display\n"), ProgramName);
 	    exit (1);
 	}
 	fontname = get_font_name (XtDisplay(toplevel), fs);
+	if (!fontname) fontname = gettext("unknown font!");
     }
     i = 0;
     XtSetArg (av[i], XtNlabel, fontname); i++;

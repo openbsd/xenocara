@@ -16,7 +16,7 @@
 *next16.Label: +16
 
 *select.Label: Select a character
-*metrics.Label: 
+*metrics.Label:
 *select.Justify: center
 *metrics.Justify: center
 *range.Justify: left

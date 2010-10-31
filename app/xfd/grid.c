@@ -101,7 +101,7 @@ static XtResource resources[] = {
     {XtNforeground, XtCForeground, XtRXftColor, sizeof(XftColor),
         Offset(fg_color), XtRString, XtDefaultForeground},
     {XtNface, XtCFace, XtRXftFont, sizeof (XftFont *),
-	Offset (text_face), XtRString, 0},
+	Offset (text_face), XtRString, NULL},
 #endif
 };
 
@@ -249,7 +249,7 @@ GridLastChar (Widget w)
 
 #define CI_GET_CHAR_INFO_1D(fs,col,cs) \
 { \
-    cs = 0; \
+    cs = NULL; \
     if (col >= fs->min_char_or_byte2 && col <= fs->max_char_or_byte2) { \
 	if (fs->per_char == NULL) { \
 	    cs = &fs->min_bounds; \
@@ -257,7 +257,7 @@ GridLastChar (Widget w)
 	    cs = &fs->per_char[(col - fs->min_char_or_byte2)]; \
 	} \
 	if (CI_NONEXISTCHAR(cs)) \
-	    cs = 0; \
+	    cs = NULL; \
     } \
 }
 
@@ -267,7 +267,7 @@ GridLastChar (Widget w)
  */
 #define CI_GET_CHAR_INFO_2D(fs,row,col,cs) \
 { \
-    cs = 0; \
+    cs = NULL; \
     if (row >= fs->min_byte1 && row <= fs->max_byte1 && \
 	col >= fs->min_char_or_byte2 && col <= fs->max_char_or_byte2) { \
 	if (fs->per_char == NULL) { \
@@ -279,7 +279,7 @@ GridLastChar (Widget w)
 			       (col - fs->min_char_or_byte2)]; \
         } \
 	if (CI_NONEXISTCHAR(cs)) \
-	    cs = 0; \
+	    cs = NULL; \
     } \
 }
 
@@ -311,7 +311,7 @@ GridHasChar (Widget w, long ch)
 	    unsigned int	c = (ch & 0xff);
 	    CI_GET_CHAR_INFO_2D (fs, r, c, cs);
 	}
-	return cs != 0;
+	return cs != NULL;
     }
 }
 
@@ -382,7 +382,7 @@ get_gc(FontGridWidget fgw, Pixel fore)
 
 
 #ifdef XRENDER
-XtConvertArgRec xftColorConvertArgs[] = {
+static XtConvertArgRec xftColorConvertArgs[] = {
     {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.screen),
      sizeof(Screen *)},
     {XtWidgetBaseOffset, (XtPointer)XtOffsetOf(WidgetRec, core.colormap),
@@ -534,8 +534,8 @@ XmuCvtStringToXftFont(Display *dpy,
 
     screen = *((Screen **) args[0].addr);
     name = (char *) fromVal->addr;
-    
-    font = 0;
+
+    font = NULL;
     if (name)
     {
 	font = XftFontOpenName (dpy,
