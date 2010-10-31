@@ -1,5 +1,3 @@
-/* $Xorg: StrToCurs.c,v 1.4 2001/02/09 02:03:53 xorgcvs Exp $ */
-
 /*
 
 Copyright 1987, 1988, 1998  The Open Group
@@ -49,8 +47,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-
-/* $XFree86: xc/lib/Xmu/StrToCurs.c,v 1.11 2002/09/19 13:21:58 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

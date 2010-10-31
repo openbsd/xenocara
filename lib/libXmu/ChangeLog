@@ -1,3 +1,339 @@
+commit 5d9b0896bfdfe60656a2d806a06e17c7adf335b5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 16:52:54 2010 -0700
+
+    libXmu 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 28f4666ad88ab736f52c1cb16674226f14bc2a15
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 28 12:24:30 2010 -0700
+
+    Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC is handled by XORG_DEFAULT_OPTIONS
+    AC_SUBST of *_LIBS & *_CFLAGS are handled by PKG_CHECK_MODULES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1ab19053c75b44be9c49700b1190dd5d8da152ce
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:30:03 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 75a065b9b8145bac20d9080cb5237a25bb3ad190
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Aug 3 13:23:32 2010 -0400
+
+    specs: xsl stylesheet requires abs path to images
+    
+    Using abs_builddir requires automake 1.10 or later.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b56c3e61038c7cdb49bdb40455c2b3a12ae35d3c
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 07:00:53 2010 -0300
+
+    Purge macro NEED_EVENTS
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e721c444a8268db0406e26d65e0a4746c477750f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 25 15:06:39 2010 -0400
+
+    config: use HAVE_XMLTO_TEXT from XORG_WITH_XMLTO
+    
+    Skip text format when XMLTO dependencies for text format
+    are missing (lynx, links or w3m)
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 449bc79585f324c5695f379def1e57fe9fcec2e6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 25 15:02:59 2010 -0400
+
+    config: use HAVE_STYLESHEET now defined in XORG_CHECK_SGML_DOCTOOLS
+    
+    Also use STYLESHEET_SRCDIR XSL_STYLESHEET
+    
+    This requires version 1.10 of util-macros
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 167c191895d956831f76ece5f2bdbef8cea4ed45
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 25 14:10:58 2010 -0400
+
+    config: move docs ignore from toplevel .gitignore to /doc
+    
+    Also add missing *.css
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2d8fa1b7905bbbc37f42f651ed1f881359ac6a09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 23 08:02:08 2010 -0700
+
+    Add xorg.css to CLEANFILES to pass make distcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7e752f3842fddff907901cccb45dde77c297d20
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 15 22:06:15 2010 -0700
+
+    Use shared stylesheets from xorg-sgml-doctools instead of a private copy
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ffef5f4ee489a7f2d228601ee351bc2445436304
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 19 22:34:50 2010 -0700
+
+    Add some cross-reference links and an index to the docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a198dd15c7963f7b9be094370761cac368d9292
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 9 15:48:58 2010 -0700
+
+    Xmu.xml: Compilers that can't handle void are now ancient history
+    
+    Plus a bonus it's -> its typo fix
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dc02453cde3047bce48a8ca23c27c807642b1670
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 9 11:30:17 2010 -0700
+
+    Use _X_ATTRIBUTE_PRINTF from Xfuncproto.h in Xmu headers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit eb8ed42cc7f40d8dd506aeebb759dd99dac1552e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 9 11:25:12 2010 -0700
+
+    Document which functions are in libXmu vs. libXmuu
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bde1baeddb216b7ab6322646d9bdf3bb629c4c25
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 9 11:04:17 2010 -0700
+
+    Add XmuNCopyISOLatin1Lowered & XmuNCopyISOLatin1Uppered to doc/Xmu.xml
+    
+    Also add notes to the originals warning about buffer overflow
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6b98e89515ba0ee755bdc9c4783b84b464d2a10c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 9 10:50:23 2010 -0700
+
+    Update docs to match headers
+    
+    - caddr_t is now XPointer
+    - a number of char * arguments are now unsigned char * or constified
+    - XmuLookup* functions are in Lookup.h, so split into new section
+    
+    There are still a bunch of headers with undocumented functions/#defines:
+     - CvtCache.h
+     - EditresP.h
+     - ExtAgent.h
+     - Misc.h
+     - WhitePoint.h
+     - Xmu.h
+     - some of the functions in Converters.h
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13409196c36151e4b5212ae08e6cfda6d7c93696
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 9 10:23:08 2010 -0700
+
+    Add XmuSnprintf to doc/Xmu.xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a4a87ddfa4948c3f5c210ab7a472b65569ae0e64
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 8 21:20:58 2010 -0700
+
+    Show X logo as a figure for XmuDrawLogo
+    
+    Because we can.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e22a1fb7c2bae8d5b393b95b253c865c9eed309
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 8 16:51:41 2010 -0700
+
+    Fix distcheck (forgot to mark Xmu.xml as dist_*)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f38c2c057ebca8ca4afc2cb8fb835702bdba4fc6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 8 16:25:49 2010 -0700
+
+    Correct some minor typos in original document
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 70596fce92bd58d46e19de63b6c3faca38cbc181
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 8 16:19:49 2010 -0700
+
+    Convert Xmu.ms to DocBook/xml
+    
+    Bumps xorg-macros requirement to 1.6 for XORG_ENABLE_DOCS & friends
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 868ed2d97150aed414a7fd8f5dc317b8f38b05fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 7 15:51:32 2010 -0700
+
+    Move doc/Xmu.ms from xorg-docs module
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af962b3bed9d3c42cf81946a5732f0d37d1843e8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed May 26 17:01:57 2010 -0400
+
+    config: add WhitePoint.h to the include headers
+    
+    This file was added in commit 8c5b2278580193578cdd0da8c8e948e74f8a3f26
+    because it was missing from the tarball. It was added to
+    EXTRA_DIST so it never got installed in $includedir.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bae14e85d90a4ea040cb1b25ba89c98a0ebe1670
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Apr 5 20:10:35 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a6210dd05cfe92d0af2e23358851c3a38c2aaca6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:49 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1de26ffbdec68f8ca6aa2448869a323bcceda26d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 27 16:19:35 2010 -0400
+
+    config: remove execute permission on source C file
+    
+    Introduced in 85f77401635dfa57d40de89aa2c9f39a344a8d3b
+    "Fix build problems on WIN32 platforms"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d2702478f3d36fb3053b9796657310750e5e5738
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:04 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 8d5e9bd04c8cc90a262223f8a16c4ac7c0c66c2d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 80650c71c06b87e8a5ff0122c1f2bf7798ab2e96
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 1dba944c770fcc4b276641e0ae01e2e4371dc101
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:43 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 854456de21a1e722edd5e03ba8467107401fd7b6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit ab323caeb2b763abc8986fe71531dedb62ec9720
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:25 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit c2c76abe51878f55e22c44c747f1243e56a4344b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Sep 23 17:53:41 2009 -0700
