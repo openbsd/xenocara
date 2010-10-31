@@ -79,9 +79,14 @@ ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
+ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
+ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+APP_MAN_DIR = @APP_MAN_DIR@
+APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
@@ -101,6 +106,8 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
+DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -111,9 +118,13 @@ ENCODINGSDIR = @ENCODINGSDIR@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
+FILE_MAN_DIR = @FILE_MAN_DIR@
+FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FONTENC_CFLAGS = @FONTENC_CFLAGS@
 FONTENC_LIBS = @FONTENC_LIBS@
+FONTROOTDIR = @FONTROOTDIR@
 GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -122,6 +133,8 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIB_MAN_DIR = @LIB_MAN_DIR@
+LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINT = @LINT@
 LINT_FALSE = @LINT_FALSE@
 LINT_FLAGS = @LINT_FLAGS@
@@ -132,6 +145,9 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
+MISC_MAN_DIR = @MISC_MAN_DIR@
+MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -148,6 +164,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
@@ -168,7 +185,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -202,12 +218,13 @@ libfontenc_la_SOURCES = \
          fontenc.c \
 	 fontencI.h
 
-AM_CFLAGS = @FONTENC_CFLAGS@
+AM_CFLAGS = \
+	$(FONTENC_CFLAGS) \
+	$(CWARNFLAGS)
+
 FONTENCDIR = @ENCODINGSDIR@
 FONTENCDEFS = -DFONT_ENCODINGS_DIRECTORY=\"$(FONTENCDIR)/encodings.dir\"
-INCLUDES = -I$(top_srcdir)/include \
-	   -DFONTENC_NO_LIBFONT $(FONTENCDEFS)
-
+INCLUDES = -I$(top_srcdir)/include $(FONTENCDEFS)
 libfontenc_la_LIBADD = @FONTENC_LIBS@
 libfontenc_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 libfontencincludedir = $(includedir)/X11/fonts
@@ -230,9 +247,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
