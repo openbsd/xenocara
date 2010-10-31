@@ -30,6 +30,8 @@ fontdir = $(ttffontdir) $(otffontdir)
 
 EXTRA_DIST = $(ttffont_DATA) $(otffont_DATA) license.txt
 
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+
 install-data-hook:
 	@rm -f $(DESTDIR)$(ttffontdir)/fonts.scale
 	$(MKFONTSCALE) $(DESTDIR)$(ttffontdir)
@@ -44,12 +46,13 @@ install-data-hook:
 distuninstallcheck:
 	@:
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

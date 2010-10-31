@@ -100,6 +100,8 @@ CLEANFILES = $(font_DATA)
 
 EXTRA_DIST = $(BDF_FILES) COPYRIGHT
 
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+
 install-data-hook:
 	@rm -f $(DESTDIR)$(fontdir)/font.dir
 	$(MKFONTDIR) $(DESTDIR)$(fontdir)
@@ -108,12 +110,13 @@ install-data-hook:
 distuninstallcheck:
 	@:
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

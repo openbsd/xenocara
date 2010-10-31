@@ -328,6 +328,8 @@ CLEANFILES = $(font_DATA) $(TRUNC_BDF_FILES) $(BUILT_BDF_FILES) 18x18ko.bdf
 
 EXTRA_DIST = $(BDF_FILES)
 
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+
 all-local: $(BUILT_BDF_FILES) $(font_DATA)
 
 install-data-hook:
@@ -338,12 +340,13 @@ install-data-hook:
 distuninstallcheck:
 	@:
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

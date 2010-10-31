@@ -22,7 +22,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(font-xfree86-type1, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], font-xfree86-type1)
+AC_INIT([font-xfree86-type1], [1.0.3],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [font-xfree86-type1])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 # Require xorg-macros: XORG_DEFAULT_OPTIONS

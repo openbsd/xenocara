@@ -46,7 +46,9 @@ FONT_FILES = \
 fontdir = @FONTDIR@
 font_DATA = $(FONT_FILES)
 
-EXTRA_DIST = $(FONT_FILES) license.txt README
+EXTRA_DIST = $(FONT_FILES) license.txt
+
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 install-data-hook:
 	@rm -f $(DESTDIR)$(fontdir)/fonts.scale
@@ -58,12 +60,13 @@ install-data-hook:
 distuninstallcheck:
 	@:
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

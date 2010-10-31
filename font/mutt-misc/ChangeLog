@@ -1,3 +1,68 @@
+commit 330b5045360e1bd36074f95f15824fd15c6e5d3d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 5 00:23:34 2010 -0700
+
+    font-mutt-misc 1.0.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 752e5b08628314fcf37af89aebd8b54fed264695
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Jan 1 14:44:27 2010 +0000
+
+    ClearlyU: fix off-by-one error in U+FFE1 through U+FFE6 range
+    
+    The range U+FFE1 (￡, fullwidth pound sign) through U+FFE6 (￦,
+    fullwidth won sign) is shifted by one position, pound being at position
+    U+FFE0.
+    
+    Debian bug#252045 <http://bugs.debian.org/252045>
+    
+    Reported-by: Adrian 'Dagurashibanipal' von Bidder <avbidder@fortytwo.ch>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit ef4cf49d2df8c2bcfb02a0d5a08439630e7c86e4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 14:23:52 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 9b334bca7137aaa8b4b28b39b93af4543bb8661b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 18 20:49:07 2009 -0400
+
+    Makefile.am: add INSTALL target and clean ChangeLog DIST targets
+    
+    Add INSTALL target to generate file with INSTALL_CMD #24206
+    ChangeLog is not required in EXTRA_DIST  #24432
+    ChangeLog is not required in MAINTAINERCLEANFILES #24432
+
+commit 8b268725fc6cecdeb9203452686de60d3d6a1524
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 18 20:34:34 2009 -0400
+
+    INSTALL, NEWS, README COPYING or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    COPYING may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 8f1bccfc475ca87d12c33c8636ccee3f3ca59eb7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 13:38:51 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 1aef40ca21e1e6d5945adb4f3aeafa66a1fa4070
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Sat Oct 10 17:45:42 2009 -0700

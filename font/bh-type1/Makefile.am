@@ -50,6 +50,8 @@ font_DATA = $(FONT_FILES)
 
 EXTRA_DIST = $(FONT_FILES) COPYRIGHT.BH
 
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+
 install-data-hook:
 	@rm -f $(DESTDIR)$(fontdir)/fonts.scale
 	$(MKFONTSCALE) $(DESTDIR)$(fontdir)
@@ -60,12 +62,13 @@ install-data-hook:
 distuninstallcheck:
 	@:
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
