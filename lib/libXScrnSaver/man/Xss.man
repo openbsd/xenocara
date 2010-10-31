@@ -1,7 +1,4 @@
 .\"
-.\" $XFree86: xc/lib/Xss/Xss.man,v 1.1 2003/10/26 19:00:24 herrb Exp $
-.\" $XdotOrg: lib/XScrnSaver/man/Xss.man,v 1.2 2004/04/23 18:43:51 eich Exp $
-.\"
 .\" Copyright (C) 2003 The XFree86 Project, Inc.  All Rights Reserved.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining

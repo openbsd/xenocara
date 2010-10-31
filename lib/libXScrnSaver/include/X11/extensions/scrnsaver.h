@@ -25,7 +25,6 @@ in this Software without prior written authorization from the X Consortium.
  *
  * Author:  Keith Packard, MIT X Consortium
  */
-/* $XFree86$ */
 
 #ifndef _SCRNSAVER_H_
 #define _SCRNSAVER_H_
