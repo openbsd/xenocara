@@ -1,3 +1,5 @@
+SUBDIRS=specs
+
 recorddir = $(includedir)/X11/extensions
 record_HEADERS = \
 	recordconst.h \
@@ -7,14 +9,15 @@ record_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = recordproto.pc
 
-EXTRA_DIST = recordproto.pc.in
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
