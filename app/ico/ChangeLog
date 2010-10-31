@@ -1,3 +1,163 @@
+commit 849d04b09a12e51fb4e17269e2e3a61ce205a014
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 13:11:36 2010 -0700
+
+    ico 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9ac61910d314a548176a96565f29d986cae7f8b0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 13:10:33 2010 -0700
+
+    Purge CVS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4a3421c6cb3e8571c07156e6756fd3d537978b42
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 13:09:38 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1a36145e7a8d11b4d80688c942427cfc48c63272
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 13:09:06 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e579cb7be71750e1d1fba0eaed58bc3bd428024
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 30 13:07:01 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dc14f85015ed4f8ad1dd9456f3daa59d1b0edddf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 11 10:08:06 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1decffa0f6fad067770c5b4de5a112993951f099
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:52 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit dbb254953e81d445e62ead7fddad9ebcbb068cb7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:07 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit ae203a1bfd75964cc6b0ce95b702ec7e97eafc91
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:24 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit e641baa6ffa24aec30fd773606b61b4895dbadd9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:38 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit bf4388c86ae8a7ce8e6471f272d299d353ce77a5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:14 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit ea16526cf2fa968a47715cee48d60d3a0e925094
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:17 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5ca33a50e4a643b8ed7a525e39ecec9b34f1900a
+Author: Jens Stroebel <dr-xorg@bcsoft.de>
+Date:   Wed Jan 14 06:23:35 2009 -0800
+
+    Correcting a typo in configure.ac preventing the Xorg headers from being found
+    
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 874f71ca6bb7134d1b9172a28bda6146dd2c608e
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Jan 12 18:20:06 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and all gcc 4.3 and sparse warnings.
+      Note that "ico" appears to be broken, and only work with the
+    -r option, that causes it to not use XThreads, and only draw in
+    the root screen (with "-threads 1" option, the default, it
+    still use XThreads).
+
+commit c0227e77a62a422332edda6c8d8113fb4980ac7d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Oct 11 21:19:00 2008 -0700
+
+    Make sure each thread sees its expose event.
+    
+    Having a thread call XNextEvent may cause other threads to miss their
+    initial expose event, blocking them for a long time. Use the existing
+    predicate function and XIfEvent to wait for precisely the right expose event.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
 commit 11308c41fe4c1bf99a6654fca294f3e098075a33
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Jul 20 16:28:38 2007 -0700

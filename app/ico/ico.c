@@ -1,5 +1,3 @@
-/* $XConsortium: ico.c,v 1.47 94/04/17 20:45:15 gildea Exp $ */
-/* $XdotOrg: $ */
 /***********************************************************
 
 Copyright (c) 1987  X Consortium
@@ -47,7 +45,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86: xc/programs/ico/ico.c,v 1.9tsi Exp $ */
 
 /******************************************************************************
  * Description
@@ -108,7 +105,7 @@ SOFTWARE.
 #include "polyinfo.h"	/* define format of one polyhedron */
 
 /* Now include all the files which define the actual polyhedra */
-Polyinfo polygons[] = {
+static Polyinfo polygons[] = {
 #include "allobjs.h"
 };
 #define NumberPolygons sizeof(polygons)/sizeof(polygons[0])
@@ -164,25 +161,25 @@ struct closure {
 
 /* The display is shared and writable, but Xlib locks it as necessary */
 
-Display *dpy;
+static Display *dpy;
 
 /* This atom will be used to catch the ICCCM "delete window" message. It will
  * be allocated once and used in read-only mode by threads, so it can be a
  * global variable */
 
-Atom wm_delete_window;
+static Atom wm_delete_window;
 
 /*
  * variables that are not set except maybe in initialization before
  * any additional threads are created
  */
 
-char *Primaries[] = {
+static char *Primaries[] = {
     "red", "green", "blue", "yellow", "cyan", "magenta"
 };
 #define NumberPrimaries 6
 
-const char *help_message[] = {
+static const char *help_message[] = {
 "where options include:",
 "-display host:dpy           X server to use",
 "    -geometry geom          geometry of window to use",
@@ -214,40 +211,40 @@ const char *help_message[] = {
 #endif
 NULL};
 
-const char *ProgramName;	/* argv[0] */
+static const char *ProgramName;	/* argv[0] */
 
 /*
  * variables set by command-line options
  */
-const char *geom = NULL;	/* -geometry: window geometry */
-int useRoot = 0;		/* -r */
-int dash = 0;			/* -d: dashed line pattern */
-char **colornames;		/* -colors (points into argv) */
+static const char *geom = NULL;	/* -geometry: window geometry */
+static int useRoot = 0;		/* -r */
+static int dash = 0;		/* -d: dashed line pattern */
+static char **colornames;	/* -colors (points into argv) */
 #ifdef MULTIBUFFER
-int update_action = MultibufferUpdateActionBackground;
+static int update_action = MultibufferUpdateActionBackground;
 #endif
-int linewidth = 0;		/* -lw */
-int multibufext = 0;		/* -dbl: use Multi-Buffering extension */
-int dblbuf = 0;			/* -dbl or -softdbl: double buffering */
-int numcolors = 0;		/* -p: number of primary colors to use */
-const char *background_colorname = NULL; /* -bg */
-int doedges = 1;		/* -noedges turns this off */
-int dofaces = 0;		/* -faces */
-int invert = 0;			/* -i */
-const char *ico_geom = NULL;	/* -size: size of object in window */
-const char *delta_geom = NULL;	/* -delta: amount by which to move object */
-Polyinfo *poly;			/* -obj: the poly to draw */
-int dsync = 0;			/* -dsync */
-int xsync = 0;			/* -sync */
-int msleepcount = 0;		/* -sleep value in milliseconds*/
+static int linewidth = 0;	/* -lw */
+static int multibufext = 0;	/* -dbl: use Multi-Buffering extension */
+static int dblbuf = 0;		/* -dbl or -softdbl: double buffering */
+static int numcolors = 0;	/* -p: number of primary colors to use */
+static const char *background_colorname = NULL; /* -bg */
+static int doedges = 1;		/* -noedges turns this off */
+static int dofaces = 0;		/* -faces */
+static int invert = 0;		/* -i */
+static const char *ico_geom = NULL;	/* -size: size of object in window */
+static const char *delta_geom = NULL;	/* -delta: amount by which to move object */
+static Polyinfo *poly;		/* -obj: the poly to draw */
+static int dsync = 0;		/* -dsync */
+static int xsync = 0;		/* -sync */
+static int msleepcount = 0;	/* -sleep value in milliseconds*/
 #ifdef MULTITHREAD
-int thread_count;
+static int thread_count;
 #ifdef XMUTEX_INITIALIZER
-xmutex_rec count_mutex = XMUTEX_INITIALIZER;
+static xmutex_rec count_mutex = XMUTEX_INITIALIZER;
 #else
-xmutex_rec count_mutex;
+static xmutex_rec count_mutex;
 #endif
-xcondition_rec count_cond;	/* Xthreads doesn't define an equivalent to
+static xcondition_rec count_cond;/* Xthreads doesn't define an equivalent to
 				 * PTHREAD_COND_INITIALIZER, so we must call
 				 * xcondition_init later */
 #endif
@@ -920,7 +917,7 @@ do_ico_window(void *ptr)
 		printf("thread %x waiting for Expose\n", xthread_self());
 #endif
 		for (;;) {
-		    XNextEvent(dpy, &xev);
+		    XIfEvent(dpy, &xev, predicate, (XPointer) closure->draw_window);
 		    if (xev.type == Expose)
 			break;
 		}
@@ -1151,9 +1148,7 @@ findpoly(const char *name)
 	icoFatal("can't find object %s", name);
 }
 
-int main(argc, argv)
-    int argc;
-    char **argv;
+int main(int argc, char **argv)
 {
 	const char *display = NULL;
 #ifdef MULTIBUFFER
