@@ -1,3 +1,105 @@
+commit 75b7c5feed818291c8ba8ac1ee5b6a6ee4b61851
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 23:12:30 2010 -0700
+
+    randrproto 1.3.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ecbca5e882907e9b948d5fc09b7dacc288eae6d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:31 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 68f8fbe50792e0525ba767d854b18db4acda07ff
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Thu Dec 17 08:36:49 2009 +0100
+
+    Use $(docdir) for randrproto.txt install path
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit cfec02addb9475f5247c69454ccea87d0914cce1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:48 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 61f1a0417839a19654cb54a5e77c8569b05691bc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:13:30 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit e9aa167bcbd86a55f41ce85f7908a3a529f64181
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:27 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit b0efbc5f88db9805fcc603a939544dae715877d5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:29 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit 2c4b4950e7ef98d83a93672cdc55e4c86fdcf296
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 1b53cedb70a020ef99740bd8239f8a8304e53c33
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 13:55:25 2009 -0500
+
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    Works in conjunction with autogen.sh --enable-maintainer-mode
+
+commit e860c1bc4bc0e33560d4c34cadd206c7b6350c73
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:47 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 8289b93b9a21809c3ea88637c6dfad09849f46b5
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Oct 5 20:50:22 2009 -0700
+
+    New properties claimed to be in version 1.4 instead of 1.3.1
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
 commit 240bb6051dccd072c95c8569a62b1222213ef396
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 5 20:04:11 2009 -0700
