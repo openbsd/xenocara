@@ -1,11 +1,5 @@
-.\" $XdotOrg: lib/Xxf86vm/man/XF86VM.man,v 1.2 2004/04/23 19:23:08 eich Exp $
-.\" $TOG: XF86VM.man /main/6 1997/07/19 10:30:39 kaleb $
-.\"
-.\"
-.\"
 .\"
 .\" Copyright (c) 1996  Joe Moss, The XFree86 Project
-.\" $XFree86: xc/programs/Xserver/hw/xfree86/doc/man/XF86VM.man,v 3.14 2003/10/02 13:29:56 eich Exp $
 .\" 
 .de ZN
 .ie t \fB\^\\$1\^\fR\\$2

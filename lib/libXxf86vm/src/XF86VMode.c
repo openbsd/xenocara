@@ -30,8 +30,6 @@ from Kaleb S. KEITHLEY.
 
 /* THIS IS NOT AN X CONSORTIUM STANDARD */
 
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <X11/Xlibint.h>
 #include <X11/extensions/xf86vmproto.h>
 #include <X11/extensions/xf86vmode.h>
