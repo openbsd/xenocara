@@ -1,3 +1,132 @@
+commit 65538c8269ac6d29affa47ef54fa7f606174257a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 31 11:50:55 2010 -0700
+
+    appres 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9fe02e07bc234b7f11f45142d4eac5aa0d20180a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 31 11:46:29 2010 -0700
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM sttaements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 86071577ed5f809b7b415b5a706dbd5d84de277c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 31 11:43:28 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 108950ed5f2c3774e8ebdb2bb2fe74ff071c56ef
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 31 11:42:21 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 60497f02ed0adc3fbda4457f93f50e0fdba44af2
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:48 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c58c7269e6dc3c7f78d76ef7a1606331dcf05b5a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 30 23:25:03 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e6ef21fbc81183828c14e89f686a5e21dcde5156
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:52 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit db1d9daa9c8527f1cbcab941c72f7b923343b188
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:08:40 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit e427b7282cb07885b9be98ee238c544bfc9e40b0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:24 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit ccc0bb4529524b9570621af2be47d524eb65fd78
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:37 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 89f99df94a4b2fd2836b639e9df162a8c7afe5e5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:33:38 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 05aaa3eb156ac0fc2eb0cb449d7c3b903614f857
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 27 15:22:36 2009 -0400
+
+    Makefile.am: do not include autogen.sh in distribution #24183
+    
+    This is a private build script that should not be distributed
+
 commit a42a18d12a23c763acabea045b22a9efbac3e569
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Sep 21 18:10:39 2009 -0700
