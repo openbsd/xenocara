@@ -25,8 +25,6 @@
 #ifndef _XRANDRINT_H_
 #define _XRANDRINT_H_
 
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <X11/Xlibint.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/Xext.h>

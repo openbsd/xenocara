@@ -11,7 +11,11 @@ libXrandr_la_SOURCES = 	\
 	XrrScreen.c
 
 libXrandr_la_LIBADD = @RANDR_LIBS@
-AM_CFLAGS = @RANDR_CFLAGS@ @MALLOC_ZERO_CFLAGS@
+
+AM_CFLAGS = \
+	$(RANDR_CFLAGS) \
+	$(MALLOC_ZERO_CFLAGS) \
+	$(CWARNFLAGS)
 
 INCLUDES = -I$(top_srcdir)/include/X11/extensions
 

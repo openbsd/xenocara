@@ -1,7 +1,4 @@
 .\"
-.\" $XFree86: xc/lib/Xrandr/Xrandr.man,v 1.7 2003/08/04 10:32:21 eich Exp $
-.\" $XdotOrg: xc/lib/Xrandr/Xrandr.man,v 1.2 2004/04/23 18:43:47 eich Exp $
-.\"
 .\" Copyright 2002 Hewlett-Packard Company.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that

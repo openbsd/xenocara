@@ -272,7 +272,7 @@ XRRGetOutputProperty (Display *dpy, RROutput output,
     {
 	UnlockDisplay (dpy);
 	SyncHandle ();
-	return 1;
+	return ((xError *)&rep)->errorCode;
     }
 
     *prop = (unsigned char *) NULL;
