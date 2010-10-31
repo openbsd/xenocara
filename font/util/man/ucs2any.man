@@ -38,7 +38,7 @@ is the name of an ISO 10646-1 encoded BDF file.
 is the name of a character set table like those at
 .BR <ftp://ftp.unicode.org/Public/MAPPINGS/> .
 These files can also typically be found installed in the
-.I /usr/X11R6/lib/X11/fonts/util/
+.I __mapfilesdir__
 directory.
 .TP
 .I registry-encoding
