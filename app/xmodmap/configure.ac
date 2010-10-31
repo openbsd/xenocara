@@ -21,30 +21,30 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xmodmap,[1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xmodmap)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([xmodmap],
+	[1.0.5],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+	[xmodmap])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 AM_CONFIG_HEADER(config.h)
-
-AC_PROG_CC
-AC_PROG_INSTALL
-
-XORG_DEFAULT_OPTIONS
 
 AC_CHECK_FUNCS([strncasecmp])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XMODMAP, x11)
-AC_SUBST(XMODMAP_CFLAGS)
-AC_SUBST(XMODMAP_LIBS)
 
 dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([Makefile
+                 man/Makefile])
+AC_OUTPUT

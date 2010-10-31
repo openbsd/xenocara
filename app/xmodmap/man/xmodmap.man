@@ -1,6 +1,27 @@
 .\" $Xorg: xmodmap.man,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $
+.\"
+.\" Copyright (c) 1987, 2010, Oracle and/or its affiliates. All rights reserved.
+.\"
+.\" Permission is hereby granted, free of charge, to any person obtaining a
+.\" copy of this software and associated documentation files (the "Software"),
+.\" to deal in the Software without restriction, including without limitation
+.\" the rights to use, copy, modify, merge, publish, distribute, sublicense,
+.\" and/or sell copies of the Software, and to permit persons to whom the
+.\" Software is furnished to do so, subject to the following conditions:
+.\"
+.\" The above copyright notice and this permission notice (including the next
+.\" paragraph) shall be included in all copies or substantial portions of the
+.\" Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+.\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+.\" THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+.\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+.\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+.\" DEALINGS IN THE SOFTWARE.
+.\"
 .\" Copyright 1988, 1989, 1990, 1998  The Open Group
-.\" Copyright 1987 Sun Microsystems, Inc.
 .\" 
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
@@ -119,6 +140,12 @@ program reads a list of expressions and parses them all before attempting
 to execute any of them.  This makes it possible to refer to keysyms that are
 being redefined in a natural way without having to worry as much about name
 conflicts.
+.PP
+The list of keysym names may be found in the header file
+\fI<X11/keysymdef.h>\fP (without the \fIXK_\fP prefix),
+supplemented by the keysym database \fI __X11datadir__/XKeysymDB\fP.
+Keysyms matching Unicode characters may be specified as "U0020" to "U007E"
+and "U00A0" to "U10FFFF" for all possible Unicode characters.
 .TP 8
 .B keycode \fINUMBER\fP = \fIKEYSYMNAME ...\fP
 The list of keysyms is assigned to the indicated keycode 
@@ -138,10 +165,7 @@ The list of keysyms may be specified in decimal, hex or octal.
 .TP 8
 .B keysym \fIKEYSYMNAME\fP = \fIKEYSYMNAME ...\fP
 The \fIKEYSYMNAME\fP on the left hand side is translated into matching keycodes
-used to perform the corresponding set of \fBkeycode\fP expressions.
-The list of keysym names may be
-found in the header file \fI<X11/keysymdef.h>\fP (without the \fIXK_\fP prefix)
-or the keysym database \fI __X11datadir__/XKeysymDB\fP.  Note that
+used to perform the corresponding set of \fBkeycode\fP expressions.  Note that
 if the same keysym is bound to multiple keys, the expression is executed
 for each matching keycode.
 .TP 8
@@ -180,7 +204,8 @@ code of 1, button 2 generates a 2, etc.).
 .TP 8
 .B pointer = \fINUMBER ...\fP
 This sets the pointer map to contain the indicated button codes.  The list
-always starts with the first physical button.
+always starts with the first physical button.  Setting a button code to 0
+disables events from that button.
 .PP
 Lines that begin with an exclamation point (!) are taken as comments.
 .PP
@@ -289,7 +314,9 @@ add Lock = Caps_Lock
 .B DISPLAY
 to get default host and display number.
 .SH SEE ALSO
-X(__miscmansuffix__), xev(1), \fIXlib\fP documentation on key and pointer events
+X(__miscmansuffix__), xev(__appmansuffix__), setxkbmap(__appmansuffix__),
+XStringToKeysym(__libmansuffix__),
+\fIXlib\fP documentation on key and pointer events
 .SH BUGS
 .PP
 Every time a \fBkeycode\fP expression is evaluated, the server generates

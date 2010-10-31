@@ -1,3 +1,186 @@
+commit 3fe64746bb6c3ede67c9967ebd216a8a39cdb2ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 24 11:53:40 2010 -0700
+
+    xmodmap 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6919f5958acc59d0b1936cc49900ea781bf2355
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 24 11:52:18 2010 -0700
+
+    man page: Add setxkbmap & XStringToKeysym to the See Also list
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 663b798d1464be003b9659bbd00112d8b63f6f6f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 24 11:43:33 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7ff4acd4c8cf2d97d321276d2616d199f81c7e16
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 22189c5be96e864b60f9c4cb8a0d9c3f142e849a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 21 18:12:09 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d1091f9fee901b5cdc589aa544c0a5616bf99d9d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 14 00:45:57 2010 -0700
+
+    Attempt to further improve keysym name info in man page
+    
+    - Move it to the top of the grammar section since it applies to
+      multiple commands, not just the keysym KEYSYMNAME = KEYSYMNAME command
+    - Note that XKeysymDB supplements keysymdef.h, doesn't stand in place
+      of it.
+    - Add note about automatic mapping of Unicode characters to keysyms
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ffadc2376ede14285e2df8c43230d0d4ecca354f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Aug 20 10:53:44 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Use the appropriate platform version of sed
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5b493fd2d6edfca06113b09e6cbd6d6f1776399a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:08:54 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit bca4e6fdbe0e4f43c1c57dd9434c42741061407a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Dec 6 14:00:34 2009 +0100
+
+    Fix XKeysymDB path in manpage again
+    
+    commit 4da097462b0b899e1790fd5a5f5e8ec811623c3d "Bug 21675 xmodmap
+    manpage states the wrong path to XKeysymDB" made it use the right path,
+    but had trailing whitespace in Makefile.am so the manpage ended up with
+    "/usr/share/X11 /XKeysymDB".
+
+commit 584cc13735613f7788e033707ff756937a787bfa
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 27388cde37b85a4efe1e19715de4b574e350b81e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 817f5345cf42ba4c903c62b5ff814e9c9e3fed3f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 775727681868d51ba82b7da429ca91f3af3783a0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit ea18aba03dc1a8f14d63b43e1ce960f3cda2d7ea
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 16:14:12 2009 -0400
+
+    Makefile.am: do not include autogen.sh in distribution #24183
+    
+    This is a private build script that should not be distributed
+
+commit 719ab352112d53c113b45ed691e39c4411b8f653
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 10:16:12 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 3a95c2e779ab94ad76a35f5800d2b72b5b73da45
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Sat Nov 7 15:11:33 2009 -0800
+
+    Add note to man page about mapping pointer buttons to 0 to disable
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 95af7f0fa995ef1dd3a770c48ee3442f6279e936
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:21 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 3f5223b0bc87b0b55d91ba8f1a8cedce0e25f974
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Oct 5 20:41:49 2009 -0700
