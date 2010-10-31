@@ -1,14 +1,14 @@
 .\" Copyright 1993, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,7 +16,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -66,7 +66,7 @@ defining clipping regions, cursor shapes, icon shapes, and tile and
 stipple patterns.
 .PP
 The \fIbmtoa\fP and \fIatobm\fP filters convert \fIbitmap\fP files (FILE
-FORMAT) to and from ASCII strings.  They are most commonly used to 
+FORMAT) to and from ASCII strings.  They are most commonly used to
 quickly print out bitmaps and to generate versions for including in text.
 .SH COMMAND LINE OPTIONS
 \fIBitmap\fP supports the standard X Toolkit command line arguments
@@ -82,7 +82,7 @@ Specifies the width of squares in pixels.
 Specifies the height of squares in pixels.
 .TP 4
 .B \-gt\fI dimension\fP
-Grid tolerance.  If the square dimensions fall below the specified 
+Grid tolerance.  If the square dimensions fall below the specified
 value, grid will be automatically turned off.
 .TP 4
 .B \-grid, +grid
@@ -98,9 +98,9 @@ Turns on or off dashing for the frame and grid lines.
 Turns on or off stippling of highlighted squares.
 .TP 4
 .B \-proportional, +proportional
-Turns proportional mode on or off.  If proportional mode is on, 
+Turns proportional mode on or off.  If proportional mode is on,
 square width is equal to square height.  If proportional mode is
-off,\fI bitmap\fP will use the smaller square dimension, if they 
+off,\fI bitmap\fP will use the smaller square dimension, if they
 were initially different.
 .TP 4
 .B \-dashes\fI filename\fP
@@ -116,12 +116,12 @@ Specifies the color used for highlighting.
 Specifies the color used for the frame and grid lines.
 .TP 4
 .B filename
-Specifies the bitmap to be initially loaded into the program.  
+Specifies the bitmap to be initially loaded into the program.
 If the file does not exist,\fI bitmap\fP will assume it is a new file.
 .TP 4
 .B basename
-Specifies the basename to be used in the C code output file.  
-If it is different than the basename in the working file,\fI bitmap\fP 
+Specifies the basename to be used in the C code output file.
+If it is different than the basename in the working file,\fI bitmap\fP
 will change it when saving the file.
 .PP
 \fIBmtoa\fP accepts the following option:
@@ -152,7 +152,7 @@ are allowed.  By default, no hotspot information is included.
 .B \-yhot \fInumber\fP
 This option specifies the Y coordinate of the hotspot.  Only positive values
 are allowed.  By default, no hotspot information is included.
-.SH USAGE 
+.SH USAGE
 \fIBitmap\fP displays grid in which each square represents a single
 bit in the picture being edited.  Actual size of the bitmap image, as
 it would appear normally and inverted, can be obtained by pressing\fB
@@ -215,12 +215,12 @@ will be set to the background color.  Pressing C inside the bitmap
 window has the same effect.
 .TP 4
 .B Set
-This command sets all bits in the bitmap image.  The grid squares 
+This command sets all bits in the bitmap image.  The grid squares
 will be set to the foreground color.  Pressing S inside the bitmap
 window has the same effect.
 .TP 4
 .B Invert
-This command inverts all bits in the bitmap image.  The grid squares 
+This command inverts all bits in the bitmap image.  The grid squares
 will be inverted appropriately.  Pressing I inside the bitmap window
 has the same effect.
 .TP 4
@@ -235,7 +235,7 @@ Shift-MouseButton1\fP and dragging out a rectangle in the grid window.
 Pressing\fB Shift-MouseButton2\fP will mark the entire grid area.
 .TP 4
 .B Unmark
-This command will cause the marked area to vanish.  The same effect can 
+This command will cause the marked area to vanish.  The same effect can
 be achieved by pressing\fB Shift-MouseButton3\fP.
 .TP 4
 .B Copy
@@ -257,74 +257,74 @@ except that the marked area will be moved instead of copied.
 .TP 4
 .B Flip Horizontally
 This command will flip the bitmap image with respect to the horizontal axes.
-If a marked area of the grid is highlighted, it will operate only 
+If a marked area of the grid is highlighted, it will operate only
 inside the marked area.  Pressing H inside the bitmap window has the
 same effect.
 .TP 4
 .B Up
 This command moves the bitmap image one pixel up.
-If a marked area of the grid is highlighted, it will operate only 
+If a marked area of the grid is highlighted, it will operate only
 inside the marked area.  Pressing UpArrow inside the bitmap window has the
 same effect.
 .TP 4
 .B Flip Vertically
 This command will flip the bitmap image with respect to the vertical axes.
-If a marked area of the grid is highlighted, it will operate only 
+If a marked area of the grid is highlighted, it will operate only
 inside the marked area.  Pressing V inside the bitmap window has the
 same effect.
 .TP 4
 .B Left
 This command moves the bitmap image one pixel to the left.
-If a marked area of the grid is highlighted, it will operate only 
+If a marked area of the grid is highlighted, it will operate only
 inside the marked area.  Pressing LeftArrow inside the bitmap window has
 the same effect.
 .TP 4
 .B Fold
-This command will fold the bitmap image so that the opposite corners 
+This command will fold the bitmap image so that the opposite corners
 become adjacent.  This is useful when creating bitmap images for
 tiling.  Pressing F inside the bitmap window has the same effect.
 .TP 4
 .B Right
 This command moves the bitmap image one pixel to the right.
-If a marked area of the grid is highlighted, it will operate only 
+If a marked area of the grid is highlighted, it will operate only
 inside the marked area.  Pressing RightArrow inside the bitmap window
 has the same effect.
 .TP 4
 .B Rotate Left
-This command rotates the bitmap image 90 degrees to the left (counter 
+This command rotates the bitmap image 90 degrees to the left (counter
 clockwise.)
-If a marked area of the grid is highlighted, it will operate only 
+If a marked area of the grid is highlighted, it will operate only
 inside the marked area.  Pressing L inside the bitmap window has the
 same effect.
 .TP 4
 .B Down
 This command moves the bitmap image one pixel down.
-If a marked area of the grid is highlighted, it will operate only 
+If a marked area of the grid is highlighted, it will operate only
 inside the marked area.  Pressing DownArrow inside the bitmap window
 has the same effect.
 .TP 4
 .B Rotate Right
 This command rotates the bitmap image 90 degrees to the right (clockwise.)
-If a marked area of the grid is highlighted, it will operate only 
+If a marked area of the grid is highlighted, it will operate only
 inside the marked area.  Pressing R inside the bitmap window has the
 same effect.
 .TP 4
 .B Point
 This command will change the grid squares underneath the mouse pointer if
-a mouse button is being pressed down.  If you drag the mouse button 
+a mouse button is being pressed down.  If you drag the mouse button
 continuously, the line may not be continuous, depending on the speed of your
 system and frequency of mouse motion events.
 .TP 4
 .B Curve
 This command will change the grid squares underneath the mouse pointer if
-a mouse button is being pressed down.  If you drag the mouse button 
+a mouse button is being pressed down.  If you drag the mouse button
 continuously, it will make sure that the line is continuous.  If your system
 is slow or\fI bitmap\fP receives very few mouse motion events, it might
 behave quite strangely.
 .TP 4
 .B Line
 This command will change the gird squares in a line between two squares.
-Once you press a mouse button in the grid window,\fI bitmap\fP will 
+Once you press a mouse button in the grid window,\fI bitmap\fP will
 highlight the line from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the
 mouse button you will cause the change to take effect, and the highlighted
@@ -332,7 +332,7 @@ line will disappear.
 .TP 4
 .B Rectangle
 This command will change the gird squares in a rectangle between two squares.
-Once you press a mouse button in the grid window,\fI bitmap\fP will 
+Once you press a mouse button in the grid window,\fI bitmap\fP will
 highlight the rectangle from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the
 mouse button you will cause the change to take effect, and the highlighted
@@ -344,7 +344,7 @@ rectangle will be filled rather than outlined.
 .TP 4
 .B Circle
 This command will change the gird squares in a circle between two squares.
-Once you press a mouse button in the grid window,\fI bitmap\fP will 
+Once you press a mouse button in the grid window,\fI bitmap\fP will
 highlight the circle from the square where the mouse button was initially
 pressed to the square where the mouse pointer is located.  By releasing the
 mouse button you will cause the change to take effect, and the highlighted
@@ -355,21 +355,21 @@ This command is identical to\fB Circle\fP, except at the end the
 circle will be filled rather than outlined.
 .TP 4
 .B Flood Fill
-This command will flood fill the connected area underneath the mouse 
-pointer when you click on the desired square.  Diagonally adjacent 
+This command will flood fill the connected area underneath the mouse
+pointer when you click on the desired square.  Diagonally adjacent
 squares are not considered to be connected.
 .TP 4
 .B Set Hot Spot
-This command designates one square in the grid as the hot spot if this 
-bitmap image is to be used for defining a cursor.  Pressing a mouse button 
+This command designates one square in the grid as the hot spot if this
+bitmap image is to be used for defining a cursor.  Pressing a mouse button
 in the desired square will cause a diamond shape to be displayed.
 .TP 4
 .B Clear Hot Spot
 This command removes any designated hot spot from the bitmap image.
 .TP 4
 .B Undo
-This command will undo the last executed command.  It has depth one, 
-that is, pressing\fB Undo\fP after\fB Undo\fP will undo itself.  
+This command will undo the last executed command.  It has depth one,
+that is, pressing\fB Undo\fP after\fB Undo\fP will undo itself.
 .SH FILE MENU
 The File menu commands can be accessed by pressing the File button and
 selecting the appropriate menu entry, or by pressing Ctrl key with
@@ -407,17 +407,17 @@ This command is used to resize the editing area to the new number of
 pixels.  The size should be entered in the WIDTHxHEIGHT format.  The
 information in the image being edited will not be lost unless the new
 size is smaller that the current image size. The editor was not
-designed to edit huge files.  
+designed to edit huge files.
 .TP 4
 .B Rescale
 This command is used to rescale the editing area to the new width and
-height.  The size should be entered in the WIDTHxHEIGHT format.  It will 
+height.  The size should be entered in the WIDTHxHEIGHT format.  It will
 not do antialiasing and information will be lost if you rescale to the
 smaller sizes.  Feel free to add you own algorithms for better rescaling.
 .TP 4
 .B Filename
 This command is used to change the filename without changing the basename
-nor saving the file.  If you specify \- for a filename, the output will 
+nor saving the file.  If you specify \- for a filename, the output will
 be piped to stdout.
 .TP 4
 .B Basename
@@ -435,20 +435,20 @@ another key.  These commands deal with editing facilities such as
 grid, axes, zooming, cut and paste, etc.
 .TP 4
 .B Image
-This command will display the image being edited and its inverse in its 
+This command will display the image being edited and its inverse in its
 actual size in a separate window.  The window can be moved away to continue
 with editing.  Pressing the left mouse button in the image window will
 cause it to disappear from the screen.
 .TP 4
 .B Grid
 This command controls the grid in the editing area.  If the grid spacing
-is below the value specified by gridTolerance resource (8 by default), 
+is below the value specified by gridTolerance resource (8 by default),
 the grid will be automatically turned off.  It can be enforced by explicitly
 activating this command.
 .TP 4
 .B Dashed
 This command controls the stipple for drawing the grid lines.  The stipple
-specified by dashes resource can be turned on or off by activating this 
+specified by dashes resource can be turned on or off by activating this
 command.
 .TP 4
 .B Axes
@@ -463,25 +463,25 @@ bitmap image.  The stipple specified by stipple resource can be turned on
 or off by activating this command.
 .TP 4
 .B Proportional
-This command controls the proportional mode.  If the proportional mode 
+This command controls the proportional mode.  If the proportional mode
 is on, width and height of all image squares are forced to be equal,
 regardless of the proportions of the bitmap window.
 .TP 4
 .B Zoom
-This command controls the zoom mode.  If there is a marked area of the 
+This command controls the zoom mode.  If there is a marked area of the
 image already displayed, bitmap will automatically zoom into it.  Otherwise,
-user will have to highlight an area to be edited in the zoom mode and 
+user will have to highlight an area to be edited in the zoom mode and
 bitmap will automatically switch into it.  One can use all the editing
 commands and other utilities in the zoom mode.  When you zoom out, undo
 command will undo the whole zoom session.
 .TP 4
 .B Cut
 This commands cuts the contents of the highlighted image area into the
-internal cut and paste buffer.  
+internal cut and paste buffer.
 .TP 4
 .B Copy
 This command copies the contents of the highlighted image area into the
-internal cut and paste buffer. 
+internal cut and paste buffer.
 .TP 4
 .B Paste
 This command will check if there are any other bitmap applications with
@@ -511,8 +511,8 @@ Below is the widget structure of the \fIbitmap\fP
 application.  Indentation indicates hierarchical structure.  The
 widget class name is given first, followed by the widget instance
 name.  All widgets except the bitmap widget are from the standard
-Athena widget set.  
-.sp 
+Athena widget set.
+.sp
 .nf
 	Bitmap bitmap
 		TransientShell image
@@ -593,7 +593,7 @@ Athena widget set.
 					Command undo
 .fi
 .SH COLORS
-If you would like bitmap to be viewable in color, include the following 
+If you would like bitmap to be viewable in color, include the following
 in the #ifdef COLOR section of the file you read with xrdb:
 .sp 1
 *customization:                 \-color
@@ -611,7 +611,7 @@ is not designed to edit large images, although it may be used in that
 purpose as well.  It can be freely incorporated with other
 applications and used as a standard editing tool.  The following are
 the resources provided by the bitmap widget.
-.sp 
+.sp
 .nf
 Bitmap Widget
 

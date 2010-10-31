@@ -19,13 +19,11 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS=man
 bin_PROGRAMS = bitmap bmtoa atobm
-
-# bitmap
 
 bitmap_CFLAGS = $(CWARNFLAGS) $(BITMAP_CFLAGS)
 bitmap_LDADD = $(BITMAP_LIBS) -lm
-
 bitmap_SOURCES = \
          BitEdit.c \
          CutPaste.c \
@@ -39,52 +37,17 @@ bitmap_SOURCES = \
          Dialog.h \
          Requests.h
 
-# bmtoa
-
 bmtoa_CFLAGS = $(CWARNFLAGS) $(BMTOA_CFLAGS)
 bmtoa_LDADD = $(BMTOA_LIBS)
-bmtoa_SOURCES = \
-         bmtoa.c
-
-# atobm
+bmtoa_SOURCES = bmtoa.c
 
 atobm_CFLAGS = $(CWARNFLAGS) $(ATOBM_CFLAGS)
 atobm_LDADD = $(ATOBM_LDADD)
-atobm_SOURCES = \
-         atobm.c
+atobm_SOURCES = atobm.c
 
-# mans
-
-appman_PRE = \
-             bitmap.man
-
-
-# App default files  (*.ad)
-
-DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
-
-appdefaultdir = @appdefaultdir@
-
-dist_appdefault_DATA = \
-	app-defaults/Bitmap-color \
-	app-defaults/Bitmap-nocase \
-	app-defaults/Bitmap
-
-
-EXTRA_DIST = bitmap.icon ChangeLog autogen.sh
-MAINTAINERCLEANFILES=ChangeLog
-
-.PHONY: ChangeLog
-
-ChangeLog:
-	$(CHANGELOG_CMD)
-
-dist-hook: ChangeLog
-
-# bitmaps
+EXTRA_DIST = autogen.sh
 
 bitmapdir = $(includedir)/X11/bitmaps
-
 dist_bitmap_DATA =	\
 	Dashes		\
 	Down		\
@@ -100,46 +63,23 @@ dist_bitmap_DATA =	\
 	Term		\
 	Up
 
-APP_MAN_DIR_SUFFIX = $(APP_MAN_DIR:@mandir@/man%=%)
+# App default files  (*.ad)
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
-appmandir = $(APP_MAN_DIR)
+appdefaultdir = @appdefaultdir@
+dist_appdefault_DATA = \
+	app-defaults/Bitmap-color \
+	app-defaults/Bitmap-nocase \
+	app-defaults/Bitmap
 
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@) \
-	      $(man_shadows:=.@APP_MAN_SUFFIX@)
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-BUILT_SOURCES = shadows.DONE
+.PHONY: ChangeLog INSTALL
 
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES = $(appman_DATA) $(BUILT_SOURCES)
+INSTALL:
+	$(INSTALL_CMD)
 
-SED = sed
+ChangeLog:
+	$(CHANGELOG_CMD)
 
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-.man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
-
-man_shadows = atobm bmtoa
-
-shadows.DONE:
-	-rm -f $(man_shadows:=.@APP_MAN_SUFFIX@)
-	(for i in $(man_shadows:=.@APP_MAN_SUFFIX@) ; do \
-	 echo .so man$(APP_MAN_DIR_SUFFIX)/bitmap.$(APP_MAN_SUFFIX) > $$i; \
-	 done)
+dist-hook: ChangeLog INSTALL

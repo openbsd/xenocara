@@ -21,14 +21,17 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(bitmap,[1.0.4], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],bitmap)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([bitmap], [1.0.5],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [bitmap])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 AM_CONFIG_HEADER(config.h)
 
@@ -36,37 +39,21 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 
-XORG_DEFAULT_OPTIONS
-
 AC_CHECK_FUNC([mkstemp], 
    AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the "mkstemp" function.]))
 
-# bmtoa checks for packages
+# Obtain compiler/linker options from depedencies
 PKG_CHECK_MODULES(BMTOA, x11 xmu)
-AC_SUBST(BMTOA_CFLAGS)
-AC_SUBST(BMTOA_LIBS)
-
-# atobm checks for packages
 PKG_CHECK_MODULES(ATOBM, x11)
-AC_SUBST(ATOBM_CFLAGS)
-AC_SUBST(ATOBM_LIBS)
-
-# bitmap checks for packages
-PKG_CHECK_MODULES(BITMAP, xaw7)
-PKG_CHECK_MODULES(XBITMAPS, xbitmaps)
-
-BITMAP_CFLAGS="$BITMAP_CFLAGS $XBITMAPS_CFLAGS"
-BITMAP_LIBS="$BITMAP_LIBS $XBITMAPS_LIBS"
-
-AC_SUBST(BITMAP_CFLAGS)
-AC_SUBST(BITMAP_LIBS)
+PKG_CHECK_MODULES(BITMAP, xbitmaps xaw7 xmu)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
-xt_appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
+xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
 	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
 	  [specify directory for app-defaults files (default is autodetected)]),
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
-AC_OUTPUT([Makefile])
+AC_OUTPUT([Makefile
+           man/Makefile])

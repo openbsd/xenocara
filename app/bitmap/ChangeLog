@@ -1,3 +1,179 @@
+commit 99be515efe95cb3eb4bcb29b2bc194f416b31758
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 7 20:04:23 2010 -0700
+
+    bitmap 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit de28fe485f07bb9f5a326fb9fed87a3aa8a8f1b5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 824fa229593040c2d8a795dadc359aa313fd182d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 9 20:26:12 2010 -0400
+
+    Remove unused file bitmap.icon
+    
+    The file originally came with the the rest of the source in 2003
+    Two years later it was added to EXTRA_DIST without explanantion
+    It has never been installed and is not present in Debian distro
+    It's not used during configuration and not used by the build.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3216eaa1b5bbb7ce5038caf9fbf22ae248eba1b6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 9 17:37:04 2010 -0400
+
+    man: remove whitespace as per git diff --check
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 18cf79ac73c59829603cd56a04ab3b79a4a6a3c3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 9 17:24:30 2010 -0400
+
+    make: reshuffle lines and shorten the makefile
+    
+    The previous patch did some aesthetic damage to it.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7c55725e4eaf2296d4ea047a155d0ec7bc4976fd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 9 16:30:19 2010 -0400
+
+    config: simplify building of shadow man pages
+    
+    Store the shadow files in git as any other man page.
+    Move man pages to man dir and use the common makefile
+    
+    Local fix for bug 5628 in commit
+    d8f719a352cd4d4ace60566b73a077175940a351
+    is not required as the problem has been fixed in
+    util-macros d9062e4077ebfd0985baf8418f3d0f111b9ddbba
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 85b1eda6ac104850add5a98fc4caca7f59d7cb19
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 8 10:15:51 2010 -0400
+
+    config: merge BITMAP dependencies into one statement
+    
+    PKG_CHECK_MODULES will merge -I and lib directives.
+    It will also AC_SUBST BITMAP_CFLAGS and BITMAP_LIBS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d4de9e32fd109562a31609b338843b396c848995
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 1 16:05:01 2010 -0700
+
+    bitmap calls Xmu functions directly so should include in PKG_CHECK_MODULES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5eb2fe08c0210ae110ae75ac52ed6a8db298c178
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 30 23:25:03 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8aa8f77d4570a0a5030ec825bc8785ac03079267
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:47 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5fae54a562f9dcb4b9c5e5a21c604e9a2ef924b7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:52 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 7077c21c0803ac7ff56edba75bfa4e18949e0ae7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:07 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit dbbb35c25e8e0159b09a6756a143ac43720fe41a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:24 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit b14f17671753e5c9c393fd1e972da93d8d94a366
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:37 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 8218cc8ac7e6763c068ad0cbae81c07de899ca62
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:14 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 05b524c70ec06d18ca1d305c98bcd480e2482eb2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 27 16:09:14 2009 -0400
+
+    Makefile.am: do not include autogen.sh in distribution #24183
+    
+    This is a private build script that should not be distributed
+
 commit 7c4c903a1612528e09858554c6fdaab05d2ba095
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Sep 22 19:49:57 2009 -0700
