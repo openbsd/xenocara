@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.2 2009/10/31 17:40:00 matthieu Exp $
+dnl  $Id: configure.ac,v 1.3 2010/10/31 10:24:17 matthieu Exp $
 dnl 
 dnl  Copyright © 2003 Keith Packard, Noah Levitt
 dnl 
@@ -23,7 +23,7 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+AC_PREREQ([2.60])
 
 dnl
 dnl Version should match the current XRes version. XResQueryVersion
@@ -32,14 +32,16 @@ dnl try to keep these the same.  Note that the library has an extra
 dnl digit in the version number to track changes which don't affect the
 dnl protocol, so XRes version l.n.m corresponds to protocol version l.n
 dnl
-AC_INIT(libXres, 1.0.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXres)
+AC_INIT([libXres], [1.0.5],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXres])
 AC_CONFIG_AUX_DIR(.)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_MAINTAINER_MODE
 
-# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+	  [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 
 AM_CONFIG_HEADER(config.h)
 
@@ -55,9 +57,6 @@ XORG_DEFAULT_OPTIONS
 # find the required protocol version
 RES_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 PKG_CHECK_MODULES(XRES, x11 xext xextproto [resourceproto >= $RES_VERSION])
-XRES_CFLAGS="$CWARNFLAGS $XRES_CFLAGS"
-AC_SUBST(XRES_CFLAGS)
-AC_SUBST(XRES_LIBS)
 
 XORG_CHECK_MALLOC_ZERO
 

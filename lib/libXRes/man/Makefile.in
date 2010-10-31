@@ -15,30 +15,27 @@
 @SET_MAKE@
 
 #
-# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
-# 
-# Permission to use, copy, modify, distribute, and sell this software and its
-# documentation for any purpose is hereby granted without fee, provided that
-# the above copyright notice appear in all copies and that both that
-# copyright notice and this permission notice appear in supporting
-# documentation.
-# 
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-# IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR
-# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-# OTHER DEALINGS IN THE SOFTWARE.
-# 
-# Except as contained in this notice, the name of the copyright holders shall
-# not be used in advertising or otherwise to promote the sale, use or
-# other dealings in this Software without prior written authorization
-# from the copyright holders.
-# 
+# Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -89,6 +86,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -124,6 +122,7 @@ FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -136,8 +135,12 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
+MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
+MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -151,12 +154,13 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
-SED = sed
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XRES_CFLAGS = @XRES_CFLAGS@
 XRES_LIBS = @XRES_LIBS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
@@ -180,7 +184,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -209,41 +212,26 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 libmandir = $(LIB_MAN_DIR)
-LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
-libman_PRE = XRes.man
-EXTRA_DIST = $(libman_PRE)
-CLEANFILES = $(libman_DATA) $(BUILT_SOURCES)
-libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@) \
-	      $(XRes_shadowmen)
+libman_PRE = \
+	XRes.man			\
+	$(XRes_shadows:=.man)
 
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-XORGMANNAME = X Version 11
-MAN_SUBSTS = \
-	-e 's/__vendorversion__/"$(XORGRELSTRING)" "$(XORGMANNAME)"/' \
-	-e 's/__xservername__/Xorg/g' \
-	-e 's/__xconfigfile__/xorg.conf/g' \
-	-e 's/__miscmansuffix__/$(MISC_MAN_SUFFIX)/g' \
-	-e 's/__libmansuffix__/$(LIB_MAN_SUFFIX)/g' \
-	-e 's/__filemansuffix__/$(FILE_MAN_SUFFIX)/g'
-
-SUFFIXES = .$(LIB_MAN_SUFFIX) .man
-
-# Generate man page shadow files (Replaces InstallManPageAliases from Imake)
 XRes_shadows = \
-    XResQueryExtension                      \
-    XResQueryVersion                        \
-    XResQueryClients                        \
-    XResQueryClientResources                \
-    XResQueryClientPixmapBytes
+	XResQueryExtension		\
+	XResQueryVersion		\
+	XResQueryClients		\
+	XResQueryClientResources	\
+	XResQueryClientPixmapBytes
 
-XRes_shadowmen = $(XRes_shadows:=.@LIB_MAN_SUFFIX@)
+EXTRA_DIST = $(libman_PRE)
+CLEANFILES = $(libman_DATA)
+libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
+SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .$(LIB_MAN_SUFFIX) .man
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -252,9 +240,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  man/Makefile
+	  $(AUTOMAKE) --foreign  man/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -268,9 +256,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
 mostlyclean-libtool:
@@ -422,11 +410,9 @@ uninstall-am: uninstall-info-am uninstall-libmanDATA
 	uninstall uninstall-am uninstall-info-am uninstall-libmanDATA
 
 
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(LIB_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
-$(XRes_shadowmen):
-	$(AM_V_GEN) echo .so man$(LIB_MAN_DIR_SUFFIX)/XRes.$(LIB_MAN_SUFFIX) > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

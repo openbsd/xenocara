@@ -1,10 +1,7 @@
 /*
    Copyright (c) 2002  XFree86 Inc
 */
-/* $XFree86: xc/lib/XRes/XRes.c,v 1.3 2002/03/10 22:06:53 mvojkovi Exp $ */
 
-#define NEED_EVENTS
-#define NEED_REPLIES
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

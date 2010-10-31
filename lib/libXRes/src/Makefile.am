@@ -5,7 +5,10 @@ libXRes_la_SOURCES =    \
 
 libXRes_la_LIBADD = @XRES_LIBS@
 
-AM_CFLAGS = $(CWARNFLAGS) @XRES_CFLAGS@ @MALLOC_ZERO_CFLAGS@
+AM_CFLAGS = \
+	$(CWARNFLAGS) \
+	$(XRES_CFLAGS) \
+	$(MALLOC_ZERO_CFLAGS)
 
 INCLUDES = -I$(top_srcdir)/include
 
