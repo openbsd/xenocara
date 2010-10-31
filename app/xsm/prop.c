@@ -30,8 +30,6 @@ in this Software without prior written authorization from The Open Group.
 #include "prop.h"
 #include <X11/Xaw/List.h>
 
-extern Widget clientListWidget;
-
 
 void
 FreePropValues(List *propValues)

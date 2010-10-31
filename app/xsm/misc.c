@@ -42,7 +42,6 @@ putenv(char *s)
 {
     char *v;
     int varlen, idx;
-    extern char **environ;
     char **newenv;
     static int virgin = 1; /* true while "environ" is a virgin */
 

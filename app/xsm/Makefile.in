@@ -59,11 +59,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xsm$(EXEEXT)
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	compile config.guess config.sub depcomp install-sh missing \
-	mkinstalldirs
+DIST_COMMON = README $(am__configure_deps) $(dist_appdefault_DATA) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
+	ChangeLog INSTALL NEWS config.guess config.sub depcomp \
+	install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -71,20 +71,19 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" \
-	"$(DESTDIR)$(appmandir)" "$(DESTDIR)$(systeminitdir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" \
+	"$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(systeminitdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_xsm_OBJECTS = xsm-auth.$(OBJEXT) xsm-choose.$(OBJEXT) \
-	xsm-info.$(OBJEXT) xsm-list.$(OBJEXT) xsm-lock.$(OBJEXT) \
-	xsm-log.$(OBJEXT) xsm-mainwin.$(OBJEXT) xsm-misc.$(OBJEXT) \
-	xsm-popup.$(OBJEXT) xsm-printhex.$(OBJEXT) xsm-prop.$(OBJEXT) \
-	xsm-remote.$(OBJEXT) xsm-restart.$(OBJEXT) xsm-save.$(OBJEXT) \
-	xsm-saveutil.$(OBJEXT) xsm-signals.$(OBJEXT) xsm-xsm.$(OBJEXT) \
-	xsm-xtwatch.$(OBJEXT)
+am_xsm_OBJECTS = auth.$(OBJEXT) choose.$(OBJEXT) info.$(OBJEXT) \
+	list.$(OBJEXT) lock.$(OBJEXT) log.$(OBJEXT) mainwin.$(OBJEXT) \
+	misc.$(OBJEXT) popup.$(OBJEXT) printhex.$(OBJEXT) \
+	prop.$(OBJEXT) remote.$(OBJEXT) restart.$(OBJEXT) \
+	save.$(OBJEXT) saveutil.$(OBJEXT) signals.$(OBJEXT) \
+	xsm.$(OBJEXT) xtwatch.$(OBJEXT)
 xsm_OBJECTS = $(am_xsm_OBJECTS)
 am__DEPENDENCIES_1 =
 xsm_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -103,10 +102,10 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-appdefaultDATA_INSTALL = $(INSTALL_DATA)
 appmanDATA_INSTALL = $(INSTALL_DATA)
+dist_appdefaultDATA_INSTALL = $(INSTALL_DATA)
 systeminitDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appdefault_DATA) $(appman_DATA) $(systeminit_DATA)
+DATA = $(appman_DATA) $(dist_appdefault_DATA) $(systeminit_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -126,8 +125,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
-APPDEFS_CFLAGS = @APPDEFS_CFLAGS@
-APPDEFS_LIBS = @APPDEFS_LIBS@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AUTOCONF = @AUTOCONF@
@@ -137,7 +135,10 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
+CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -146,9 +147,12 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
+EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+GREP = @GREP@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -163,19 +167,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 OBJEXT = @OBJEXT@
@@ -188,7 +180,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RSH = @RSH@
-SED = sed
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -204,8 +196,6 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
-
-# App default files  (*.ad)
 appdefaultdir = @appdefaultdir@
 bindir = @bindir@
 build = @build@
@@ -243,7 +233,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SYSTEM_INIT_DIR = $(datadir)/X11/xsm
-xsm_CFLAGS = $(XSM_CFLAGS) -DRSHCMD=\"@RSH@\" \
+AM_CFLAGS = $(XSM_CFLAGS) $(CWARNFLAGS) -DRSHCMD=\"@RSH@\" \
 	-DSYSTEM_INIT_FILE=\"$(SYSTEM_INIT_DIR)/system.xsm\"
 
 xsm_LDADD = $(XSM_LIBS)
@@ -284,46 +274,44 @@ xsm_SOURCES = \
 appman_PRE = \
         xsm.man
 
-APPDEFAULTFILES = \
-        XSm
 
-SUFFIXES = .ad .$(APP_MAN_SUFFIX) .man
-appdefault_DATA = $(APPDEFAULTFILES)
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+dist_appdefault_DATA = \
+        app-defaults/XSm
+
 
 # system init file
 systeminitdir = $(SYSTEM_INIT_DIR)
 systeminit_DATA = system.xsm
 
 #
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) globals.c system.xsm \
-	$(appman_PRE)
-CLEANFILES = $(APPDEFAULTFILES) $(appman_DATA)
+EXTRA_DIST = system.xsm $(appman_PRE)
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-XORGMANNAME = X Version 11
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+CLEANFILES = $(appman_DATA)
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .ad .$(APP_MAN_SUFFIX) .man .c .o .obj
+.SUFFIXES: .$(APP_MAN_SUFFIX) .man .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu '; \
-	      cd $(srcdir) && $(AUTOMAKE) --gnu  \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
+	      cd $(srcdir) && $(AUTOMAKE) --foreign  \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  Makefile
+	  $(AUTOMAKE) --foreign  Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -392,24 +380,24 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-auth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-choose.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-info.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-list.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-lock.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-log.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-mainwin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-misc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-popup.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-printhex.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-prop.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-remote.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-restart.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-save.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-saveutil.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-signals.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-xsm.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm-xtwatch.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/choose.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/info.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/list.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mainwin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/misc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/popup.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/printhex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/prop.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/remote.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/restart.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/save.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/saveutil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signals.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xsm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xtwatch.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -424,276 +412,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-xsm-auth.o: auth.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-auth.o -MD -MP -MF "$(DEPDIR)/xsm-auth.Tpo" -c -o xsm-auth.o `test -f 'auth.c' || echo '$(srcdir)/'`auth.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-auth.Tpo" "$(DEPDIR)/xsm-auth.Po"; else rm -f "$(DEPDIR)/xsm-auth.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='auth.c' object='xsm-auth.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-auth.o `test -f 'auth.c' || echo '$(srcdir)/'`auth.c
-
-xsm-auth.obj: auth.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-auth.obj -MD -MP -MF "$(DEPDIR)/xsm-auth.Tpo" -c -o xsm-auth.obj `if test -f 'auth.c'; then $(CYGPATH_W) 'auth.c'; else $(CYGPATH_W) '$(srcdir)/auth.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-auth.Tpo" "$(DEPDIR)/xsm-auth.Po"; else rm -f "$(DEPDIR)/xsm-auth.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='auth.c' object='xsm-auth.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-auth.obj `if test -f 'auth.c'; then $(CYGPATH_W) 'auth.c'; else $(CYGPATH_W) '$(srcdir)/auth.c'; fi`
-
-xsm-choose.o: choose.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-choose.o -MD -MP -MF "$(DEPDIR)/xsm-choose.Tpo" -c -o xsm-choose.o `test -f 'choose.c' || echo '$(srcdir)/'`choose.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-choose.Tpo" "$(DEPDIR)/xsm-choose.Po"; else rm -f "$(DEPDIR)/xsm-choose.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='choose.c' object='xsm-choose.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-choose.o `test -f 'choose.c' || echo '$(srcdir)/'`choose.c
-
-xsm-choose.obj: choose.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-choose.obj -MD -MP -MF "$(DEPDIR)/xsm-choose.Tpo" -c -o xsm-choose.obj `if test -f 'choose.c'; then $(CYGPATH_W) 'choose.c'; else $(CYGPATH_W) '$(srcdir)/choose.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-choose.Tpo" "$(DEPDIR)/xsm-choose.Po"; else rm -f "$(DEPDIR)/xsm-choose.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='choose.c' object='xsm-choose.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-choose.obj `if test -f 'choose.c'; then $(CYGPATH_W) 'choose.c'; else $(CYGPATH_W) '$(srcdir)/choose.c'; fi`
-
-xsm-info.o: info.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-info.o -MD -MP -MF "$(DEPDIR)/xsm-info.Tpo" -c -o xsm-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-info.Tpo" "$(DEPDIR)/xsm-info.Po"; else rm -f "$(DEPDIR)/xsm-info.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='xsm-info.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-info.o `test -f 'info.c' || echo '$(srcdir)/'`info.c
-
-xsm-info.obj: info.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-info.obj -MD -MP -MF "$(DEPDIR)/xsm-info.Tpo" -c -o xsm-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-info.Tpo" "$(DEPDIR)/xsm-info.Po"; else rm -f "$(DEPDIR)/xsm-info.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='info.c' object='xsm-info.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-info.obj `if test -f 'info.c'; then $(CYGPATH_W) 'info.c'; else $(CYGPATH_W) '$(srcdir)/info.c'; fi`
-
-xsm-list.o: list.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-list.o -MD -MP -MF "$(DEPDIR)/xsm-list.Tpo" -c -o xsm-list.o `test -f 'list.c' || echo '$(srcdir)/'`list.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-list.Tpo" "$(DEPDIR)/xsm-list.Po"; else rm -f "$(DEPDIR)/xsm-list.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='list.c' object='xsm-list.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-list.o `test -f 'list.c' || echo '$(srcdir)/'`list.c
-
-xsm-list.obj: list.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-list.obj -MD -MP -MF "$(DEPDIR)/xsm-list.Tpo" -c -o xsm-list.obj `if test -f 'list.c'; then $(CYGPATH_W) 'list.c'; else $(CYGPATH_W) '$(srcdir)/list.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-list.Tpo" "$(DEPDIR)/xsm-list.Po"; else rm -f "$(DEPDIR)/xsm-list.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='list.c' object='xsm-list.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-list.obj `if test -f 'list.c'; then $(CYGPATH_W) 'list.c'; else $(CYGPATH_W) '$(srcdir)/list.c'; fi`
-
-xsm-lock.o: lock.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-lock.o -MD -MP -MF "$(DEPDIR)/xsm-lock.Tpo" -c -o xsm-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-lock.Tpo" "$(DEPDIR)/xsm-lock.Po"; else rm -f "$(DEPDIR)/xsm-lock.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='xsm-lock.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-lock.o `test -f 'lock.c' || echo '$(srcdir)/'`lock.c
-
-xsm-lock.obj: lock.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-lock.obj -MD -MP -MF "$(DEPDIR)/xsm-lock.Tpo" -c -o xsm-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-lock.Tpo" "$(DEPDIR)/xsm-lock.Po"; else rm -f "$(DEPDIR)/xsm-lock.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='lock.c' object='xsm-lock.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-lock.obj `if test -f 'lock.c'; then $(CYGPATH_W) 'lock.c'; else $(CYGPATH_W) '$(srcdir)/lock.c'; fi`
-
-xsm-log.o: log.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-log.o -MD -MP -MF "$(DEPDIR)/xsm-log.Tpo" -c -o xsm-log.o `test -f 'log.c' || echo '$(srcdir)/'`log.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-log.Tpo" "$(DEPDIR)/xsm-log.Po"; else rm -f "$(DEPDIR)/xsm-log.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='log.c' object='xsm-log.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-log.o `test -f 'log.c' || echo '$(srcdir)/'`log.c
-
-xsm-log.obj: log.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-log.obj -MD -MP -MF "$(DEPDIR)/xsm-log.Tpo" -c -o xsm-log.obj `if test -f 'log.c'; then $(CYGPATH_W) 'log.c'; else $(CYGPATH_W) '$(srcdir)/log.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-log.Tpo" "$(DEPDIR)/xsm-log.Po"; else rm -f "$(DEPDIR)/xsm-log.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='log.c' object='xsm-log.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-log.obj `if test -f 'log.c'; then $(CYGPATH_W) 'log.c'; else $(CYGPATH_W) '$(srcdir)/log.c'; fi`
-
-xsm-mainwin.o: mainwin.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-mainwin.o -MD -MP -MF "$(DEPDIR)/xsm-mainwin.Tpo" -c -o xsm-mainwin.o `test -f 'mainwin.c' || echo '$(srcdir)/'`mainwin.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-mainwin.Tpo" "$(DEPDIR)/xsm-mainwin.Po"; else rm -f "$(DEPDIR)/xsm-mainwin.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mainwin.c' object='xsm-mainwin.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-mainwin.o `test -f 'mainwin.c' || echo '$(srcdir)/'`mainwin.c
-
-xsm-mainwin.obj: mainwin.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-mainwin.obj -MD -MP -MF "$(DEPDIR)/xsm-mainwin.Tpo" -c -o xsm-mainwin.obj `if test -f 'mainwin.c'; then $(CYGPATH_W) 'mainwin.c'; else $(CYGPATH_W) '$(srcdir)/mainwin.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-mainwin.Tpo" "$(DEPDIR)/xsm-mainwin.Po"; else rm -f "$(DEPDIR)/xsm-mainwin.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mainwin.c' object='xsm-mainwin.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-mainwin.obj `if test -f 'mainwin.c'; then $(CYGPATH_W) 'mainwin.c'; else $(CYGPATH_W) '$(srcdir)/mainwin.c'; fi`
-
-xsm-misc.o: misc.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-misc.o -MD -MP -MF "$(DEPDIR)/xsm-misc.Tpo" -c -o xsm-misc.o `test -f 'misc.c' || echo '$(srcdir)/'`misc.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-misc.Tpo" "$(DEPDIR)/xsm-misc.Po"; else rm -f "$(DEPDIR)/xsm-misc.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='misc.c' object='xsm-misc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-misc.o `test -f 'misc.c' || echo '$(srcdir)/'`misc.c
-
-xsm-misc.obj: misc.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-misc.obj -MD -MP -MF "$(DEPDIR)/xsm-misc.Tpo" -c -o xsm-misc.obj `if test -f 'misc.c'; then $(CYGPATH_W) 'misc.c'; else $(CYGPATH_W) '$(srcdir)/misc.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-misc.Tpo" "$(DEPDIR)/xsm-misc.Po"; else rm -f "$(DEPDIR)/xsm-misc.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='misc.c' object='xsm-misc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-misc.obj `if test -f 'misc.c'; then $(CYGPATH_W) 'misc.c'; else $(CYGPATH_W) '$(srcdir)/misc.c'; fi`
-
-xsm-popup.o: popup.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-popup.o -MD -MP -MF "$(DEPDIR)/xsm-popup.Tpo" -c -o xsm-popup.o `test -f 'popup.c' || echo '$(srcdir)/'`popup.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-popup.Tpo" "$(DEPDIR)/xsm-popup.Po"; else rm -f "$(DEPDIR)/xsm-popup.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='popup.c' object='xsm-popup.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-popup.o `test -f 'popup.c' || echo '$(srcdir)/'`popup.c
-
-xsm-popup.obj: popup.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-popup.obj -MD -MP -MF "$(DEPDIR)/xsm-popup.Tpo" -c -o xsm-popup.obj `if test -f 'popup.c'; then $(CYGPATH_W) 'popup.c'; else $(CYGPATH_W) '$(srcdir)/popup.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-popup.Tpo" "$(DEPDIR)/xsm-popup.Po"; else rm -f "$(DEPDIR)/xsm-popup.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='popup.c' object='xsm-popup.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-popup.obj `if test -f 'popup.c'; then $(CYGPATH_W) 'popup.c'; else $(CYGPATH_W) '$(srcdir)/popup.c'; fi`
-
-xsm-printhex.o: printhex.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-printhex.o -MD -MP -MF "$(DEPDIR)/xsm-printhex.Tpo" -c -o xsm-printhex.o `test -f 'printhex.c' || echo '$(srcdir)/'`printhex.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-printhex.Tpo" "$(DEPDIR)/xsm-printhex.Po"; else rm -f "$(DEPDIR)/xsm-printhex.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printhex.c' object='xsm-printhex.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-printhex.o `test -f 'printhex.c' || echo '$(srcdir)/'`printhex.c
-
-xsm-printhex.obj: printhex.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-printhex.obj -MD -MP -MF "$(DEPDIR)/xsm-printhex.Tpo" -c -o xsm-printhex.obj `if test -f 'printhex.c'; then $(CYGPATH_W) 'printhex.c'; else $(CYGPATH_W) '$(srcdir)/printhex.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-printhex.Tpo" "$(DEPDIR)/xsm-printhex.Po"; else rm -f "$(DEPDIR)/xsm-printhex.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='printhex.c' object='xsm-printhex.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-printhex.obj `if test -f 'printhex.c'; then $(CYGPATH_W) 'printhex.c'; else $(CYGPATH_W) '$(srcdir)/printhex.c'; fi`
-
-xsm-prop.o: prop.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-prop.o -MD -MP -MF "$(DEPDIR)/xsm-prop.Tpo" -c -o xsm-prop.o `test -f 'prop.c' || echo '$(srcdir)/'`prop.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-prop.Tpo" "$(DEPDIR)/xsm-prop.Po"; else rm -f "$(DEPDIR)/xsm-prop.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='prop.c' object='xsm-prop.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-prop.o `test -f 'prop.c' || echo '$(srcdir)/'`prop.c
-
-xsm-prop.obj: prop.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-prop.obj -MD -MP -MF "$(DEPDIR)/xsm-prop.Tpo" -c -o xsm-prop.obj `if test -f 'prop.c'; then $(CYGPATH_W) 'prop.c'; else $(CYGPATH_W) '$(srcdir)/prop.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-prop.Tpo" "$(DEPDIR)/xsm-prop.Po"; else rm -f "$(DEPDIR)/xsm-prop.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='prop.c' object='xsm-prop.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-prop.obj `if test -f 'prop.c'; then $(CYGPATH_W) 'prop.c'; else $(CYGPATH_W) '$(srcdir)/prop.c'; fi`
-
-xsm-remote.o: remote.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-remote.o -MD -MP -MF "$(DEPDIR)/xsm-remote.Tpo" -c -o xsm-remote.o `test -f 'remote.c' || echo '$(srcdir)/'`remote.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-remote.Tpo" "$(DEPDIR)/xsm-remote.Po"; else rm -f "$(DEPDIR)/xsm-remote.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='remote.c' object='xsm-remote.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-remote.o `test -f 'remote.c' || echo '$(srcdir)/'`remote.c
-
-xsm-remote.obj: remote.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-remote.obj -MD -MP -MF "$(DEPDIR)/xsm-remote.Tpo" -c -o xsm-remote.obj `if test -f 'remote.c'; then $(CYGPATH_W) 'remote.c'; else $(CYGPATH_W) '$(srcdir)/remote.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-remote.Tpo" "$(DEPDIR)/xsm-remote.Po"; else rm -f "$(DEPDIR)/xsm-remote.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='remote.c' object='xsm-remote.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-remote.obj `if test -f 'remote.c'; then $(CYGPATH_W) 'remote.c'; else $(CYGPATH_W) '$(srcdir)/remote.c'; fi`
-
-xsm-restart.o: restart.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-restart.o -MD -MP -MF "$(DEPDIR)/xsm-restart.Tpo" -c -o xsm-restart.o `test -f 'restart.c' || echo '$(srcdir)/'`restart.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-restart.Tpo" "$(DEPDIR)/xsm-restart.Po"; else rm -f "$(DEPDIR)/xsm-restart.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='restart.c' object='xsm-restart.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-restart.o `test -f 'restart.c' || echo '$(srcdir)/'`restart.c
-
-xsm-restart.obj: restart.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-restart.obj -MD -MP -MF "$(DEPDIR)/xsm-restart.Tpo" -c -o xsm-restart.obj `if test -f 'restart.c'; then $(CYGPATH_W) 'restart.c'; else $(CYGPATH_W) '$(srcdir)/restart.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-restart.Tpo" "$(DEPDIR)/xsm-restart.Po"; else rm -f "$(DEPDIR)/xsm-restart.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='restart.c' object='xsm-restart.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-restart.obj `if test -f 'restart.c'; then $(CYGPATH_W) 'restart.c'; else $(CYGPATH_W) '$(srcdir)/restart.c'; fi`
-
-xsm-save.o: save.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-save.o -MD -MP -MF "$(DEPDIR)/xsm-save.Tpo" -c -o xsm-save.o `test -f 'save.c' || echo '$(srcdir)/'`save.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-save.Tpo" "$(DEPDIR)/xsm-save.Po"; else rm -f "$(DEPDIR)/xsm-save.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='save.c' object='xsm-save.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-save.o `test -f 'save.c' || echo '$(srcdir)/'`save.c
-
-xsm-save.obj: save.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-save.obj -MD -MP -MF "$(DEPDIR)/xsm-save.Tpo" -c -o xsm-save.obj `if test -f 'save.c'; then $(CYGPATH_W) 'save.c'; else $(CYGPATH_W) '$(srcdir)/save.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-save.Tpo" "$(DEPDIR)/xsm-save.Po"; else rm -f "$(DEPDIR)/xsm-save.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='save.c' object='xsm-save.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-save.obj `if test -f 'save.c'; then $(CYGPATH_W) 'save.c'; else $(CYGPATH_W) '$(srcdir)/save.c'; fi`
-
-xsm-saveutil.o: saveutil.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-saveutil.o -MD -MP -MF "$(DEPDIR)/xsm-saveutil.Tpo" -c -o xsm-saveutil.o `test -f 'saveutil.c' || echo '$(srcdir)/'`saveutil.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-saveutil.Tpo" "$(DEPDIR)/xsm-saveutil.Po"; else rm -f "$(DEPDIR)/xsm-saveutil.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='saveutil.c' object='xsm-saveutil.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-saveutil.o `test -f 'saveutil.c' || echo '$(srcdir)/'`saveutil.c
-
-xsm-saveutil.obj: saveutil.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-saveutil.obj -MD -MP -MF "$(DEPDIR)/xsm-saveutil.Tpo" -c -o xsm-saveutil.obj `if test -f 'saveutil.c'; then $(CYGPATH_W) 'saveutil.c'; else $(CYGPATH_W) '$(srcdir)/saveutil.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-saveutil.Tpo" "$(DEPDIR)/xsm-saveutil.Po"; else rm -f "$(DEPDIR)/xsm-saveutil.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='saveutil.c' object='xsm-saveutil.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-saveutil.obj `if test -f 'saveutil.c'; then $(CYGPATH_W) 'saveutil.c'; else $(CYGPATH_W) '$(srcdir)/saveutil.c'; fi`
-
-xsm-signals.o: signals.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-signals.o -MD -MP -MF "$(DEPDIR)/xsm-signals.Tpo" -c -o xsm-signals.o `test -f 'signals.c' || echo '$(srcdir)/'`signals.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-signals.Tpo" "$(DEPDIR)/xsm-signals.Po"; else rm -f "$(DEPDIR)/xsm-signals.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='signals.c' object='xsm-signals.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-signals.o `test -f 'signals.c' || echo '$(srcdir)/'`signals.c
-
-xsm-signals.obj: signals.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-signals.obj -MD -MP -MF "$(DEPDIR)/xsm-signals.Tpo" -c -o xsm-signals.obj `if test -f 'signals.c'; then $(CYGPATH_W) 'signals.c'; else $(CYGPATH_W) '$(srcdir)/signals.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-signals.Tpo" "$(DEPDIR)/xsm-signals.Po"; else rm -f "$(DEPDIR)/xsm-signals.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='signals.c' object='xsm-signals.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-signals.obj `if test -f 'signals.c'; then $(CYGPATH_W) 'signals.c'; else $(CYGPATH_W) '$(srcdir)/signals.c'; fi`
-
-xsm-xsm.o: xsm.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-xsm.o -MD -MP -MF "$(DEPDIR)/xsm-xsm.Tpo" -c -o xsm-xsm.o `test -f 'xsm.c' || echo '$(srcdir)/'`xsm.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-xsm.Tpo" "$(DEPDIR)/xsm-xsm.Po"; else rm -f "$(DEPDIR)/xsm-xsm.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xsm.c' object='xsm-xsm.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-xsm.o `test -f 'xsm.c' || echo '$(srcdir)/'`xsm.c
-
-xsm-xsm.obj: xsm.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-xsm.obj -MD -MP -MF "$(DEPDIR)/xsm-xsm.Tpo" -c -o xsm-xsm.obj `if test -f 'xsm.c'; then $(CYGPATH_W) 'xsm.c'; else $(CYGPATH_W) '$(srcdir)/xsm.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-xsm.Tpo" "$(DEPDIR)/xsm-xsm.Po"; else rm -f "$(DEPDIR)/xsm-xsm.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xsm.c' object='xsm-xsm.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-xsm.obj `if test -f 'xsm.c'; then $(CYGPATH_W) 'xsm.c'; else $(CYGPATH_W) '$(srcdir)/xsm.c'; fi`
-
-xsm-xtwatch.o: xtwatch.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-xtwatch.o -MD -MP -MF "$(DEPDIR)/xsm-xtwatch.Tpo" -c -o xsm-xtwatch.o `test -f 'xtwatch.c' || echo '$(srcdir)/'`xtwatch.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-xtwatch.Tpo" "$(DEPDIR)/xsm-xtwatch.Po"; else rm -f "$(DEPDIR)/xsm-xtwatch.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xtwatch.c' object='xsm-xtwatch.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-xtwatch.o `test -f 'xtwatch.c' || echo '$(srcdir)/'`xtwatch.c
-
-xsm-xtwatch.obj: xtwatch.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -MT xsm-xtwatch.obj -MD -MP -MF "$(DEPDIR)/xsm-xtwatch.Tpo" -c -o xsm-xtwatch.obj `if test -f 'xtwatch.c'; then $(CYGPATH_W) 'xtwatch.c'; else $(CYGPATH_W) '$(srcdir)/xtwatch.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xsm-xtwatch.Tpo" "$(DEPDIR)/xsm-xtwatch.Po"; else rm -f "$(DEPDIR)/xsm-xtwatch.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xtwatch.c' object='xsm-xtwatch.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xsm_CFLAGS) $(CFLAGS) -c -o xsm-xtwatch.obj `if test -f 'xtwatch.c'; then $(CYGPATH_W) 'xtwatch.c'; else $(CYGPATH_W) '$(srcdir)/xtwatch.c'; fi`
 uninstall-info-am:
-install-appdefaultDATA: $(appdefault_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  $(appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
-
-uninstall-appdefaultDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(appdefault_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
-	done
 install-appmanDATA: $(appman_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
@@ -710,6 +429,23 @@ uninstall-appmanDATA:
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
+	done
+install-dist_appdefaultDATA: $(dist_appdefault_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(appdefaultdir)" || $(mkdir_p) "$(DESTDIR)$(appdefaultdir)"
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_appdefaultDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  $(dist_appdefaultDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appdefaultdir)/$$f"; \
+	done
+
+uninstall-dist_appdefaultDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_appdefault_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(appdefaultdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(appdefaultdir)/$$f"; \
 	done
 install-systeminitDATA: $(systeminit_DATA)
 	@$(NORMAL_INSTALL)
@@ -780,6 +516,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkdir_p) $(distdir)/app-defaults
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -806,6 +543,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -907,7 +647,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(systeminitdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(appdefaultdir)" "$(DESTDIR)$(systeminitdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -935,6 +675,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -956,7 +697,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appdefaultDATA install-appmanDATA \
+install-data-am: install-appmanDATA install-dist_appdefaultDATA \
 	install-systeminitDATA
 
 install-exec-am: install-binPROGRAMS
@@ -986,32 +727,41 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-appdefaultDATA uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-info-am \
+uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-dist_appdefaultDATA uninstall-info-am \
 	uninstall-systeminitDATA
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-binPROGRAMS clean-generic ctags dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-gzip dist-hook dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-tags distcleancheck distdir distuninstallcheck dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-appdefaultDATA install-appmanDATA install-binPROGRAMS \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-man install-strip \
-	install-systeminitDATA installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags uninstall uninstall-am uninstall-appdefaultDATA \
-	uninstall-appmanDATA uninstall-binPROGRAMS uninstall-info-am \
+	install-appmanDATA install-binPROGRAMS install-data \
+	install-data-am install-dist_appdefaultDATA install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-strip install-systeminitDATA installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-dist_appdefaultDATA uninstall-info-am \
 	uninstall-systeminitDATA
 
 
-.ad:
-	cp $< $@
-
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

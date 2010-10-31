@@ -98,15 +98,13 @@ in this Software without prior written authorization from The Open Group.
 
 #include <stddef.h>
 
+#include "xsm.h"
+
 int checkpoint_from_signal = 0;
 
-extern XtSignalId sig_term_id, sig_usr1_id;
-extern Bool wantShutdown;
-
 
-SIGVAL (*Signal (sig, handler))()
-    int sig;
-    SIGVAL (*handler)();
+static SIGVAL
+Signal(int sig, SIGVAL (*handler)(int))
 {
 #ifndef X_NOT_POSIX
     struct sigaction sigact, osigact;
@@ -114,15 +112,20 @@ SIGVAL (*Signal (sig, handler))()
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     sigaction(sig, &sigact, &osigact);
+#  if defined(SIGNALRETURNSINT)
     return osigact.sa_handler;
+#  endif
 #else
-    return signal(sig, handler);
+#  if defined(SIGNALRETURNSINT)
+    return
+#  endif
+    signal(sig, handler);
 #endif
 }
 
 
 void
-sig_child_handler (XtPointer closure, XtSignalId id)
+sig_child_handler (int sig)
 
 {
     int pid, olderrno = errno;
@@ -231,10 +234,7 @@ register_signals (XtAppContext appContext)
 
 
 int
-execute_system_command (s)
-
-char *s;
-
+execute_system_command (char *s)
 {
     int stat;
 

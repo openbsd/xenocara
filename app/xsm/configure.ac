@@ -21,55 +21,41 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xsm,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xsm)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([xsm], [1.0.2],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xsm])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
 AM_CONFIG_HEADER(config.h)
 
-AC_PROG_CC
-AC_PROG_INSTALL
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
-RSH=
-if [[ -z $RSH ]] ; then
-   AC_PATH_PROG(RSH,rsh)
-fi
-if [[ -z $RSH ]] ; then
-   AC_PATH_PROG(RSH,rcmd)
-fi
-if [[ -z $RSH ]] ; then
-   AC_PATH_PROG(RSH,remsh)
-fi
-if [[ -z $RSH ]] ; then
-   AC_MSG_ERROR(No rsh like program found)
-fi
-
-#if !defined(RshCmd)
-#if SystemV
-#ifdef HPArchitecture
-#define RshCmd remsh
-#else
-#define RshCmd rcmd
-#endif
-#else
-#define RshCmd rsh
-#endif
-#endif
+AC_ARG_WITH(rsh, AS_HELP_STRING([--with-rsh=PATH],
+	    [Rsh command to use (default: $bindir/ssh)]),
+	    [ rsh="$withval"],
+	    [ rsh=${bindir}/ssh ])
+RSH=$rsh
+AC_SUBST(RSH)
 
 AC_CHECK_FUNC([mkstemp], 
-   AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the `mkstemp' function.]))
+   AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the 'mkstemp' function.]))
 AC_CHECK_FUNC([putenv], [],
-   AC_DEFINE(NOPUTENV,1,[Define to 1 if you DO NOT have the `putenv' function.]))
+   AC_DEFINE(NOPUTENV,1,[Define to 1 if you DO NOT have the 'putenv' function.]))
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XSM, x11 xt ice sm xaw7)
 
-PKG_CHECK_MODULES(APPDEFS, xt)
-appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
+xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
+AC_ARG_WITH(appdefaultdir,
+	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	  [specify directory for app-defaults files (default is autodetected)]),
+	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile])

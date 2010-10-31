@@ -41,4 +41,10 @@ extern void ClientInfoXtProc(Widget w, XtPointer client_data,
 			     XtPointer callData);
 extern void create_client_info_popup(void);
 
+extern Widget clientInfoPopup;
+extern Widget clientPropPopup;
+extern Widget clientListWidget;
+extern Widget manualRestartLabel;
+extern Widget manualRestartCommands;
+
 #endif

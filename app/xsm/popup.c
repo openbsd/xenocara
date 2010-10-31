@@ -88,7 +88,7 @@ PopupPopup(Widget parent, Widget popup, Bool transient, Bool first_time,
 	}
 	else
 	{
-	    sprintf (geom, "+%d+%d", popup_x, popup_y);
+	    snprintf (geom, sizeof(geom), "+%d+%d", popup_x, popup_y);
 
 	    XtVaSetValues (popup,
 	        XtNgeometry, geom,
@@ -160,7 +160,7 @@ PopupPopup(Widget parent, Widget popup, Bool transient, Bool first_time,
 
 		XtUnrealizeWidget (popup);
 
-		sprintf (geom, "+%d+%d", popup_x, popup_y);
+		snprintf (geom, sizeof(geom), "+%d+%d", popup_x, popup_y);
 
 		XtVaSetValues (popup,
 	            XtNgeometry, geom,

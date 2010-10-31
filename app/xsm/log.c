@@ -35,10 +35,10 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xaw/Command.h>
 #include <X11/Xaw/AsciiText.h>
 
-Widget logPopup;
-Widget   logForm;
-Widget	   logText;
-Widget	   logOkButton;
+static Widget logPopup;
+static Widget   logForm;
+static Widget	   logText;
+static Widget	   logOkButton;
 
 
 
@@ -146,5 +146,5 @@ create_log_popup(void)
 	XtNright, XawChainLeft,
         NULL);
 
-    XtAddCallback (logOkButton, XtNcallback, logOkXtProc, 0);
+    XtAddCallback (logOkButton, XtNcallback, logOkXtProc, NULL);
 }

@@ -28,10 +28,9 @@ in this Software without prior written authorization from The Open Group.
 #include "xsm.h"
 #include "log.h"
 #include "saveutil.h"
+#include "info.h"
 
-char 		 session_save_file[PATH_MAX];
-
-extern Widget manualRestartCommands;
+static char 		 session_save_file[PATH_MAX];
 
 
 void
@@ -47,9 +46,8 @@ set_session_save_file_name(char *session_name)
 	    p = ".";
     }
 
-    strcpy (session_save_file, p);
-    strcat (session_save_file, "/.XSM-");
-    strcat (session_save_file, session_name);
+    snprintf (session_save_file, sizeof(session_save_file),
+	      "%s/.XSM-%s", p, session_name);
 }
 
 
@@ -314,8 +312,8 @@ WriteSave(char *sm_id)
     {
 	char msg[256];
 
-	sprintf (msg, "%s: Error creating session save file %s", 
-	    Argv[0], session_save_file);
+	snprintf (msg, sizeof(msg), "%s: Error creating session save file %s", 
+		  Argv[0], session_save_file);
 	add_log_text (msg);
 	perror (msg);
     }
@@ -426,7 +424,7 @@ DeleteSession(char *session_name)
 	    dir = ".";
     }
 
-    sprintf (filename, "%s/.XSM-%s", dir, session_name);
+    snprintf (filename, sizeof(filename), "%s/.XSM-%s", dir, session_name);
 
     f = fopen(filename, "r");
     if(!f) {
@@ -510,7 +508,7 @@ DeleteSession(char *session_name)
     if (buf)
 	free (buf);
 
-    return ((unlink (filename) == -1) ? 0 : 1);
+    return ((remove (filename) == -1) ? 0 : 1);
 }
 
 

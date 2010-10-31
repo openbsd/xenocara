@@ -41,42 +41,36 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xaw/AsciiText.h>
 
 
-Widget savePopup;
-Widget   saveForm;
-Widget	   saveMessageLabel;
-Widget	   saveName;
-Widget	   saveTypeLabel;
-Widget	   saveTypeGlobal;
-Widget	   saveTypeLocal;
-Widget	   saveTypeBoth;
-Widget	   interactStyleLabel;
-Widget	   interactStyleNone;
-Widget	   interactStyleErrors;
-Widget	   interactStyleAny;
-Widget	   saveOkButton;
-Widget     helpSaveButton;
-Widget	   saveCancelButton;
-Widget helpPopup;
-Widget   helpForm;
-Widget     helpSaveText;
-Widget     helpSaveOkButton;
-Widget nameInUsePopup;
-Widget   nameInUseForm;
-Widget	   nameInUseLabel;
-Widget     nameInUseOverwriteButton;
-Widget	   nameInUseCancelButton;
-Widget badSavePopup;
-Widget   badSaveForm;
-Widget	   badSaveLabel;
-Widget     badSaveOkButton;
-Widget	   badSaveCancelButton;
-Widget     badSaveListWidget;
-
-extern Widget clientInfoPopup;
-extern Widget clientPropPopup;
-extern Widget nameSessionPopup;
-
-extern int checkpoint_from_signal;
+static Widget savePopup;
+static Widget   saveForm;
+static Widget	   saveMessageLabel;
+static Widget	   saveName;
+static Widget	   saveTypeLabel;
+static Widget	   saveTypeGlobal;
+static Widget	   saveTypeLocal;
+static Widget	   saveTypeBoth;
+static Widget	   interactStyleLabel;
+static Widget	   interactStyleNone;
+static Widget	   interactStyleErrors;
+static Widget	   interactStyleAny;
+static Widget	   saveOkButton;
+static Widget     helpSaveButton;
+static Widget	   saveCancelButton;
+static Widget helpPopup;
+static Widget   helpForm;
+static Widget     helpSaveText;
+static Widget     helpSaveOkButton;
+static Widget nameInUsePopup;
+static Widget   nameInUseForm;
+static Widget	   nameInUseLabel;
+static Widget     nameInUseOverwriteButton;
+static Widget	   nameInUseCancelButton;
+static Widget badSavePopup;
+static Widget   badSaveForm;
+static Widget	   badSaveLabel;
+static Widget     badSaveOkButton;
+static Widget	   badSaveCancelButton;
+static Widget     badSaveListWidget;
 
 static int saveTypeData[] = {
 	SmSaveLocal,
@@ -147,7 +141,7 @@ MakeCurrentSession(String new_name, Bool name_changed)
 
     LockSession (session_name, True);
 
-    sprintf (title, "xsm: %s", session_name);
+    snprintf (title, sizeof(title), "xsm: %s", session_name);
 
     XtVaSetValues (topLevel,
 	XtNtitle, title,
@@ -413,7 +407,7 @@ SaveOkXtProc(Widget w, XtPointer client_data, XtPointer callData)
 	    {
 		name_locked = True;
 
-		sprintf (label, "Another session by the name '%s' is active.\nChoose another name for the session.", name);
+		snprintf (label, sizeof(label), "Another session by the name '%s' is active.\nChoose another name for the session.", name);
 
 		XtUnmanageChild (nameInUseOverwriteButton);
 
@@ -959,8 +953,8 @@ create_save_popup(void)
         XtNvertDistance, 20,
 	XtNresizable, True,
         NULL);
-    
-    XtAddCallback (saveOkButton, XtNcallback, SaveOkXtProc, 0);
+
+    XtAddCallback (saveOkButton, XtNcallback, SaveOkXtProc, NULL);
 
 
     helpSaveButton = XtVaCreateManagedWidget (
@@ -970,7 +964,7 @@ create_save_popup(void)
         XtNvertDistance, 20,
 	NULL);
 
-    XtAddCallback (helpSaveButton, XtNcallback, HelpSaveXtProc, 0);
+    XtAddCallback (helpSaveButton, XtNcallback, HelpSaveXtProc, NULL);
 
 
     saveCancelButton = XtVaCreateManagedWidget (
@@ -980,7 +974,7 @@ create_save_popup(void)
         XtNvertDistance, 20,
         NULL);
 
-    XtAddCallback (saveCancelButton, XtNcallback, SaveCancelXtProc, 0);
+    XtAddCallback (saveCancelButton, XtNcallback, SaveCancelXtProc, NULL);
 
     XtSetKeyboardFocus (saveForm, saveName);
 
@@ -1027,7 +1021,7 @@ create_save_popup(void)
         NULL);
     
     XtAddCallback (nameInUseOverwriteButton, XtNcallback,
-	NameInUseOverwriteXtProc, 0);
+	NameInUseOverwriteXtProc, NULL);
 
 
     nameInUseCancelButton = XtVaCreateManagedWidget (
@@ -1040,7 +1034,7 @@ create_save_popup(void)
         NULL);
     
     XtAddCallback (nameInUseCancelButton, XtNcallback,
-	NameInUseCancelXtProc, 0);
+	NameInUseCancelXtProc, NULL);
 
 
     /*
@@ -1074,7 +1068,7 @@ create_save_popup(void)
         NULL);
     
     XtAddCallback (helpSaveOkButton, XtNcallback,
-	HelpSaveOkXtProc, 0);
+	HelpSaveOkXtProc, NULL);
 
 
     /*
@@ -1111,7 +1105,7 @@ create_save_popup(void)
 	XtNbottom, XawChainBottom,
 	NULL);
 
-    XtAddCallback (badSaveListWidget, XtNcallback, BadSaveListXtProc, 0);
+    XtAddCallback (badSaveListWidget, XtNcallback, BadSaveListXtProc, NULL);
 
     badSaveOkButton = XtVaCreateManagedWidget (
 	"badSaveOkButton", commandWidgetClass, badSaveForm,
@@ -1120,8 +1114,8 @@ create_save_popup(void)
 	XtNtop, XawChainBottom,
 	XtNbottom, XawChainBottom,
         NULL);
-    
-    XtAddCallback (badSaveOkButton, XtNcallback, BadSaveOkXtProc, 0);
+
+    XtAddCallback (badSaveOkButton, XtNcallback, BadSaveOkXtProc, NULL);
 
 
     badSaveCancelButton = XtVaCreateManagedWidget (
@@ -1131,8 +1125,8 @@ create_save_popup(void)
 	XtNtop, XawChainBottom,
 	XtNbottom, XawChainBottom,
         NULL);
-    
-    XtAddCallback (badSaveCancelButton, XtNcallback, BadSaveCancelXtProc, 0);
+
+    XtAddCallback (badSaveCancelButton, XtNcallback, BadSaveCancelXtProc, NULL);
 
     XtInstallAllAccelerators (badSaveForm, badSaveForm);
 }

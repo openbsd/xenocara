@@ -59,16 +59,16 @@ static Pixel save_message_background;
 static int delete_session_phase = 0;
 static int break_lock_phase = 0;
 
-Widget chooseSessionPopup;
-Widget chooseSessionForm;
-Widget chooseSessionLabel;
-Widget chooseSessionListWidget;
-Widget chooseSessionMessageLabel;
-Widget chooseSessionLoadButton;
-Widget chooseSessionDeleteButton;
-Widget chooseSessionBreakLockButton;
-Widget chooseSessionFailSafeButton;
-Widget chooseSessionCancelButton;
+static Widget chooseSessionPopup;
+static Widget chooseSessionForm;
+static Widget chooseSessionLabel;
+static Widget chooseSessionListWidget;
+static Widget chooseSessionMessageLabel;
+static Widget chooseSessionLoadButton;
+static Widget chooseSessionDeleteButton;
+static Widget chooseSessionBreakLockButton;
+static Widget chooseSessionFailSafeButton;
+static Widget chooseSessionCancelButton;
 
 
 
@@ -736,7 +736,7 @@ create_choose_session_popup(void)
         NULL);
 
     XtAddCallback (chooseSessionLoadButton, XtNcallback,
-	ChooseSessionLoadXtProc, 0);
+	ChooseSessionLoadXtProc, NULL);
 
     chooseSessionDeleteButton = XtVaCreateManagedWidget (
 	"chooseSessionDeleteButton", commandWidgetClass, chooseSessionForm,
@@ -745,7 +745,7 @@ create_choose_session_popup(void)
         NULL);
 
     XtAddCallback (chooseSessionDeleteButton, XtNcallback,
-	ChooseSessionDeleteXtProc, 0);
+	ChooseSessionDeleteXtProc, NULL);
 
     chooseSessionBreakLockButton = XtVaCreateManagedWidget (
 	"chooseSessionBreakLockButton",
@@ -755,7 +755,7 @@ create_choose_session_popup(void)
         NULL);
 
     XtAddCallback (chooseSessionBreakLockButton, XtNcallback,
-	ChooseSessionBreakLockXtProc, 0);
+	ChooseSessionBreakLockXtProc, NULL);
 
     chooseSessionFailSafeButton = XtVaCreateManagedWidget (
 	"chooseSessionFailSafeButton", commandWidgetClass, chooseSessionForm,
@@ -764,7 +764,7 @@ create_choose_session_popup(void)
         NULL);
 
     XtAddCallback (chooseSessionFailSafeButton, XtNcallback,
-	ChooseSessionFailSafeXtProc, 0);
+	ChooseSessionFailSafeXtProc, NULL);
 
 
     chooseSessionCancelButton = XtVaCreateManagedWidget (
@@ -774,7 +774,7 @@ create_choose_session_popup(void)
         NULL);
 
     XtAddCallback (chooseSessionCancelButton, XtNcallback,
-	ChooseSessionCancelXtProc, 0);
+	ChooseSessionCancelXtProc, NULL);
 
     XtAppAddActions (appContext, choose_actions, XtNumber (choose_actions));
 

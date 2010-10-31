@@ -24,7 +24,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 ******************************************************************************/
 
-#include <stdio.h>
+#include "xsm.h"
 
 static char *hex_table[] = {		/* for printing hex digits */
     "00", "01", "02", "03", "04", "05", "06", "07", 
@@ -63,12 +63,7 @@ static char *hex_table[] = {		/* for printing hex digits */
 
 
 void
-fprintfhex (fp, len, cp)
-
-register FILE 	*fp;
-unsigned int 	len;
-char 		*cp;
-
+fprintfhex(register FILE *fp, unsigned int len, char *cp)
 {
     unsigned char *ucp = (unsigned char *) cp;
 

@@ -34,7 +34,6 @@ in this Software without prior written authorization from The Open Group.
  */
 
 #include "xsm.h"
-#include "globals.c"
 #include "xtwatch.h"
 #include "prop.h"
 #include "choose.h"
@@ -51,8 +50,71 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xatom.h>
 #include <X11/Xaw/List.h>
 
-Atom wmStateAtom;
-Atom wmDeleteAtom;
+int		Argc;
+char		**Argv;
+
+List		*RunningList;
+List		*PendingList;
+List		*RestartAnywayList;
+List		*RestartImmedList;
+
+List		*WaitForSaveDoneList;
+static List	*InitialSaveList;
+List		*FailedSaveList;
+List		*WaitForInteractList;
+List		*WaitForPhase2List;
+
+Bool		wantShutdown = False;
+Bool		shutdownInProgress = False;
+Bool		phase2InProgress = False;
+Bool		saveInProgress = False;
+Bool		shutdownCancelled = False;
+
+Bool		verbose = False;
+
+char		*sm_id = NULL;
+
+char		*networkIds = NULL;
+char		*session_name = NULL;
+
+IceAuthDataEntry *authDataEntries = NULL;
+int		numTransports = 0;
+
+Bool		client_info_visible = False;
+Bool		client_prop_visible = False;
+Bool		client_log_visible = False;
+
+String 		*clientListNames = NULL;
+ClientRec	**clientListRecs = NULL;
+int		numClientListNames = 0;
+
+int		current_client_selected;
+
+int		sessionNameCount = 0;
+String		*sessionNamesShort = NULL;
+String		*sessionNamesLong = NULL;
+Bool		*sessionsLocked = NULL;
+
+int		num_clients_in_last_session = -1;
+
+char		**non_session_aware_clients = NULL;
+int		non_session_aware_count = 0;
+
+char		*display_env = NULL, *non_local_display_env = NULL;
+char		*session_env = NULL, *non_local_session_env = NULL;
+char		*audio_env = NULL;
+
+Bool		need_to_name_session = False;
+
+Bool		remote_allowed;
+
+XtAppContext	appContext;
+Widget		topLevel;
+
+XtSignalId	sig_term_id, sig_usr1_id;
+
+static Atom wmStateAtom;
+static Atom wmDeleteAtom;
 static char *cmd_line_display = NULL;
 
 /*
@@ -88,20 +150,6 @@ static void MyIoErrorHandler(IceConn ice_conn);
 static void InstallIOErrorHandler(void);
 static void CloseListeners(void);
 
-/*
- * Extern declarations
- */
-
-extern Widget clientInfoPopup;
-extern Widget clientPropPopup;
-extern Widget clientInfoButton;
-extern Widget logButton;
-extern Widget checkPointButton;
-extern Widget shutdownButton;
-extern Widget clientListWidget;
-extern Widget savePopup;
-
-extern int checkpoint_from_signal;
 
 static IceListenObj *listenObjs;
 
@@ -358,7 +406,8 @@ SetWM_DELETE_WINDOW(Widget widget, String delAction)
 {
     char translation[64];
 
-    sprintf (translation, "<Message>WM_PROTOCOLS: %s", delAction);
+    snprintf (translation, sizeof(translation),
+	      "<Message>WM_PROTOCOLS: %s", delAction);
     XtOverrideTranslations (widget, XtParseTranslationTable (translation));
 
     XSetWMProtocols (XtDisplay(widget), XtWindow (widget),
@@ -388,7 +437,7 @@ GetEnvironment(void)
 	 * display environment we give it has the SM's hostname.
 	 */
 
-	if ((temp = strchr (p, '/')) == 0)
+	if ((temp = strchr (p, '/')) == NULL)
 	    temp = p;
 	else
 	    temp++;
@@ -495,7 +544,7 @@ StartSession(char *name, Bool use_default)
      * Set the main window's title to the session name.
      */
 
-    sprintf (title, "xsm: %s", name);
+    snprintf (title, sizeof(title), "xsm: %s", name);
 
     XtVaSetValues (topLevel,
 	XtNtitle, title,		/* session name */

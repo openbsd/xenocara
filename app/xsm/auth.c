@@ -95,13 +95,11 @@ unique_filename(char *path, char *prefix, int *pFd)
     char tempFile[PATH_MAX];
     char *tmp;
 
-    sprintf (tempFile, "%s/%sXXXXXX", path, prefix);
+    snprintf (tempFile, sizeof(tempFile), "%s/%sXXXXXX", path, prefix);
     tmp = (char *) mktemp (tempFile);
     if (tmp)
     {
-	char *ptr = (char *) malloc (strlen (tmp) + 1);
-	strcpy (ptr, tmp);
-	return (ptr);
+	return strdup(tmp);
     }
     else
 	return (NULL);
@@ -110,11 +108,10 @@ unique_filename(char *path, char *prefix, int *pFd)
     char tempFile[PATH_MAX];
     char *ptr;
 
-    sprintf (tempFile, "%s/%sXXXXXX", path, prefix);
-    ptr = (char *)malloc(strlen(tempFile) + 1);
+    snprintf (tempFile, sizeof(tempFile), "%s/%sXXXXXX", path, prefix);
+    ptr = strdup(tempFile);
     if (ptr != NULL) 
     {
-	strcpy(ptr, tempFile);
 	*pFd =  mkstemp(ptr);
     }
     return ptr;
@@ -216,10 +213,10 @@ SetAuthentication(int count, IceListenObj *listenObjs,
 
     umask (original_umask);
 
-    sprintf (command, "iceauth source %s", addAuthFile);
+    snprintf (command, sizeof(command), "iceauth source %s", addAuthFile);
     execute_system_command (command);
 
-    unlink (addAuthFile);
+    remove (addAuthFile);
 
     return (1);
 
@@ -233,12 +230,12 @@ SetAuthentication(int count, IceListenObj *listenObjs,
 
     if (addAuthFile)
     {
-	unlink (addAuthFile);
+	remove (addAuthFile);
 	free (addAuthFile);
     }
     if (remAuthFile)
     {
-	unlink (remAuthFile);
+	remove (remAuthFile);
 	free (remAuthFile);
     }
 
@@ -267,10 +264,10 @@ FreeAuthenticationData(int count, IceAuthDataEntry *authDataEntries)
 
     XtFree ((char *) authDataEntries);
 
-    sprintf (command, "iceauth source %s", remAuthFile);
+    snprintf (command, sizeof(command), "iceauth source %s", remAuthFile);
     execute_system_command (command);
 
-    unlink (remAuthFile);
+    remove (remAuthFile);
 
     free (addAuthFile);
     free (remAuthFile);

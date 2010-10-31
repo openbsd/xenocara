@@ -43,8 +43,8 @@ Widget   clientInfoButton;
 Widget   logButton;
 Widget   checkPointButton;
 Widget   shutdownButton;
-Widget     shutdownMenu;
-Widget       shutdownSave;
+static Widget     shutdownMenu;
+static Widget       shutdownSave;
 Widget       shutdownDontSave;
 
 
@@ -80,7 +80,7 @@ create_main_window (void)
 	XtNjustify, XtJustifyLeft,
 	NULL);
 
-    XtAddCallback (clientInfoButton, XtNcallback, ClientInfoXtProc, 0);
+    XtAddCallback (clientInfoButton, XtNcallback, ClientInfoXtProc, NULL);
 
     logButton = XtVaCreateManagedWidget (
 	"logButton", commandWidgetClass, mainWindow,
@@ -90,7 +90,7 @@ create_main_window (void)
 	XtNjustify, XtJustifyLeft,
 	NULL);
 
-    XtAddCallback (logButton, XtNcallback, DisplayLogXtProc, 0);
+    XtAddCallback (logButton, XtNcallback, DisplayLogXtProc, NULL);
 
     checkPointButton = XtVaCreateManagedWidget (
 	"checkPointButton", commandWidgetClass, mainWindow,
@@ -100,7 +100,7 @@ create_main_window (void)
 	XtNjustify, XtJustifyLeft,
 	NULL);
 
-    XtAddCallback (checkPointButton, XtNcallback, CheckPointXtProc, 0);
+    XtAddCallback (checkPointButton, XtNcallback, CheckPointXtProc, NULL);
 
     shutdownButton = XtVaCreateManagedWidget (
 	"shutdownButton", menuButtonWidgetClass, mainWindow,
@@ -123,8 +123,8 @@ create_main_window (void)
 	"shutdownDontSave", smeBSBObjectClass, shutdownMenu,
 	NULL);
 
-    XtAddCallback (shutdownSave, XtNcallback, ShutdownSaveXtProc, 0);
-    XtAddCallback (shutdownDontSave, XtNcallback, ShutdownDontSaveXtProc, 0);
+    XtAddCallback (shutdownSave, XtNcallback, ShutdownSaveXtProc, NULL);
+    XtAddCallback (shutdownDontSave, XtNcallback, ShutdownDontSaveXtProc, NULL);
 
     XtAppAddActions (appContext, actions, XtNumber (actions));
 }

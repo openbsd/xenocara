@@ -27,7 +27,7 @@ in this Software without prior written authorization from The Open Group.
 #include "xsm.h"
 
 List *
-ListInit()
+ListInit(void)
 {
 	List *l;
 
@@ -40,24 +40,21 @@ ListInit()
 }
 
 List *
-ListFirst(l)
-List *l;
+ListFirst(List *l)
 {
 	if(l->next->thing) return l->next;
 	else return NULL;
 }
 
 List *
-ListNext(l)
-List *l;
+ListNext(List *l)
 {
 	if(l->next->thing) return l->next;
 	else return NULL;
 }
 
 void
-ListFreeAll(l)
-List *l;
+ListFreeAll(List *l)
 {
 	char *thing;
 	List *next;
@@ -72,8 +69,7 @@ List *l;
 }
 
 void
-ListFreeAllButHead(l)
-List *l;
+ListFreeAllButHead(List *l)
 {
 	List *p, *next;
 
@@ -91,9 +87,7 @@ List *l;
 }
 
 List *
-ListAddFirst(l, v)
-List *l;
-char *v;
+ListAddFirst(List *l, char *v)
 {
 	List *e;
 
@@ -110,9 +104,7 @@ char *v;
 }
 
 List *
-ListAddLast(l, v)
-List *l;
-char *v;
+ListAddLast(List *l, char *v)
 {
 	List *e;
 
@@ -129,8 +121,7 @@ char *v;
 }
 
 void
-ListFreeOne(e)
-List *e;
+ListFreeOne(List *e)
 {
 	e->next->prev = e->prev;
 	e->prev->next = e->next;
@@ -139,9 +130,7 @@ List *e;
 
 
 Status
-ListSearchAndFreeOne(l,thing)
-List *l;
-char *thing;
+ListSearchAndFreeOne(List *l, char *thing)
 {
     	List *p;
 
@@ -157,8 +146,7 @@ char *thing;
 
 
 int
-ListCount(l)
-List *l;
+ListCount(List *l)
 {
 	int i;
 	List *e;

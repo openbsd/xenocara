@@ -70,6 +70,8 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
 
+#include <X11/ICE/ICEutil.h>
+
 #include <X11/SM/SMlib.h>
 
 #include "list.h"
@@ -122,6 +124,8 @@ typedef struct _PropValue {
 } PropValue;
 
 
+extern char		**environ;
+
 extern int		Argc;
 extern char		**Argv;
 
@@ -139,6 +143,9 @@ extern char		*sm_id;
 
 extern char		*networkIds;
 extern char		*session_name;
+
+extern IceAuthDataEntry *authDataEntries;
+extern int		numTransports;
 
 extern List		*RunningList;
 extern List		*PendingList;
@@ -177,6 +184,13 @@ extern int		non_session_aware_count;
 extern XtAppContext	appContext;
 extern Widget		topLevel;
 extern Widget		mainWindow;
+extern Widget		clientInfoButton;
+extern Widget		logButton;
+extern Widget		checkPointButton;
+extern Widget		shutdownButton;
+extern Widget		shutdownDontSave;
+
+extern XtSignalId	sig_term_id, sig_usr1_id;
 
 extern void fprintfhex(FILE *fp, unsigned int len, char *cp);
 extern Status StartSession(char *name, Bool use_default);
@@ -185,6 +199,7 @@ extern void SetWM_DELETE_WINDOW(Widget widget, String delAction);
 extern void SetAllSensitive(Bool on);
 extern void FreeClient(ClientRec *client, Bool freeProps);
 extern void CloseDownClient(ClientRec *client);
+
 
 /* misc.c */
 extern int strbw(char *a, char *b);
@@ -210,11 +225,15 @@ extern void remote_start(char *restart_protocol, char *restart_machine,
 			 char *non_local_session_env );
 
 /* signals.c */
-extern void sig_child_handler(void);
-extern void sig_term_handler(void);
-extern void sig_usr1_handler(void);
+extern void sig_child_handler(int sig);
+extern void sig_term_handler(int sig);
+extern void sig_usr1_handler(int sig);
+extern void xt_sig_term_handler(XtPointer closure, XtSignalId *id);
+extern void xt_sig_usr1_handler(XtPointer closure, XtSignalId *id);
 extern void register_signals(XtAppContext);
 extern int execute_system_command(char *s);
+
+extern int checkpoint_from_signal;
 
 #ifdef XKB
 #include <X11/extensions/XKBbells.h>

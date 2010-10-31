@@ -31,14 +31,14 @@ in this Software without prior written authorization from The Open Group.
 #include <sys/types.h>
 
 
-static char *
+static const char *
 GetPath(void)
 {
-    char *path = (char *) getenv ("SM_SAVE_DIR");
+    const char *path = getenv ("SM_SAVE_DIR");
 
     if (!path)
     {
-	path = (char *) getenv ("HOME");
+	path = getenv ("HOME");
 	if (!path)
 	    path = ".";
     }
@@ -48,9 +48,9 @@ GetPath(void)
 
 
 Status
-LockSession(char *session_name, Bool write_id)
+LockSession(const char *session_name, Bool write_id)
 {
-    char *path;
+    const char *path;
     char lock_file[PATH_MAX];
     char temp_lock_file[PATH_MAX];
     Status status;
@@ -59,10 +59,13 @@ LockSession(char *session_name, Bool write_id)
     path = GetPath ();
 
 #ifndef __UNIXOS2__
-    sprintf (lock_file, "%s/.XSMlock-%s", path, session_name);
-    sprintf (temp_lock_file, "%s/.XSMtlock-%s", path, session_name);
+    snprintf (lock_file, sizeof(lock_file), "%s/.XSMlock-%s",
+	      path, session_name);
+    snprintf (temp_lock_file, sizeof(temp_lock_file), "%s/.XSMtlock-%s",
+	      path, session_name);
 #else
-    sprintf (temp_lock_file, "%s/%s.slk", path, session_name);
+    snprintf (temp_lock_file, sizeof(temp_lock_file), "%s/%s.slk",
+	      path, session_name);
 #endif
 
     if ((fd = creat (temp_lock_file, 0444)) < 0)
@@ -84,7 +87,7 @@ LockSession(char *session_name, Bool write_id)
     if (link (temp_lock_file, lock_file) < 0)
 	status = 0;
 
-    if (unlink (temp_lock_file) < 0)
+    if (remove (temp_lock_file) < 0)
 	status = 0;
 #else
     status = 0;
@@ -95,23 +98,24 @@ LockSession(char *session_name, Bool write_id)
 
 
 void
-UnlockSession(char *session_name)
+UnlockSession(const char *session_name)
 {
-    char *path;
+    const char *path;
     char lock_file[PATH_MAX];
 
     path = GetPath ();
 
-    sprintf (lock_file, "%s/.XSMlock-%s", path, session_name);
+    snprintf (lock_file, sizeof(lock_file), "%s/.XSMlock-%s",
+	      path, session_name);
 
-    unlink (lock_file);
+    remove (lock_file);
 }
 
 
 char *
-GetLockId(char *session_name)
+GetLockId(const char *session_name)
 {
-    char *path;
+    const char *path;
     FILE *fp;
     char lock_file[PATH_MAX];
     char buf[256];
@@ -119,7 +123,8 @@ GetLockId(char *session_name)
 
     path = GetPath ();
 
-    sprintf (lock_file, "%s/.XSMlock-%s", path, session_name);
+    snprintf (lock_file, sizeof(lock_file), "%s/.XSMlock-%s",
+	      path, session_name);
 
     if ((fp = fopen (lock_file, "r")) == NULL)
     {
@@ -137,7 +142,7 @@ GetLockId(char *session_name)
 
 
 Bool
-CheckSessionLocked(char *session_name, Bool get_id, char **id_ret)
+CheckSessionLocked(const char *session_name, Bool get_id, char **id_ret)
 {
     if (get_id)
 	*id_ret = GetLockId (session_name);
@@ -151,7 +156,7 @@ CheckSessionLocked(char *session_name, Bool get_id, char **id_ret)
 
 
 void
-UnableToLockSession(char *session_name)
+UnableToLockSession(const char *session_name)
 {
     /*
      * We should popup a dialog here giving error.

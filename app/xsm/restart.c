@@ -30,8 +30,6 @@ in this Software without prior written authorization from The Open Group.
 #include "restart.h"
 #include "saveutil.h"
 
-extern char **environ;
-
 
 /*
  * Until XSMP provides a better way to know which clients are "managers",
@@ -247,7 +245,7 @@ Restart(int flag)
 		 * The client is being restarted on the local machine.
 		 */
 
-		sprintf (logtext, "Restarting locally : ");
+		snprintf (logtext, sizeof(logtext), "Restarting locally : ");
 		for (pp = args; *pp; pp++)
 		{
 		    strcat (logtext, *pp);
@@ -259,8 +257,8 @@ Restart(int flag)
 
 		switch(fork()) {
 		case -1:
-		    sprintf (logtext,
-			"%s: Can't fork() %s", Argv[0], program);
+		    snprintf (logtext, sizeof(logtext),
+			      "%s: Can't fork() %s", Argv[0], program);
 		    add_log_text (logtext);
 		    perror (logtext);
 		    break;
@@ -268,8 +266,8 @@ Restart(int flag)
 		    chdir(cwd);
 		    if(env) environ = env;
 		    execvp(program, args);
-		    sprintf (logtext, "%s: Can't execvp() %s",
-			Argv[0], program);
+		    snprintf (logtext, sizeof(logtext),
+			      "%s: Can't execvp() %s", Argv[0], program);
 		    perror (logtext);
 		    /*
 		     * TODO : We would like to send this log information to the
@@ -296,8 +294,8 @@ Restart(int flag)
 		 * The client is being restarted on a remote machine.
 		 */
 
-		sprintf (logtext, "Restarting remotely on %s : ",
-		    restart_machine);
+		snprintf (logtext, sizeof(logtext),
+			  "Restarting remotely on %s : ", restart_machine);
 		for (pp = args; *pp; pp++)
 		{
 		    strcat (logtext, *pp);
@@ -447,7 +445,8 @@ Clone(ClientRec *client, Bool useSavedState)
 
 	    switch(fork()) {
 	    case -1:
-		sprintf (msg, "%s: Can't fork() %s", Argv[0], program);
+		snprintf (msg, sizeof(msg),
+			  "%s: Can't fork() %s", Argv[0], program);
 		add_log_text (msg);
 		perror (msg);
 		break;
@@ -455,7 +454,8 @@ Clone(ClientRec *client, Bool useSavedState)
 		chdir(cwd);
 		if(env) environ = env;
 		execvp(program, args);
-		sprintf (msg, "%s: Can't execvp() %s", Argv[0], program);
+		snprintf (msg, sizeof(msg),
+			  "%s: Can't execvp() %s", Argv[0], program);
 		perror (msg);
 		/*
 		 * TODO : We would like to send this log information to the
@@ -528,7 +528,7 @@ StartDefaultApps (void)
     home = (char *) getenv ("HOME");
     if (!home)
 	home = ".";
-    sprintf (filename, "%s/.xsmstartup", home);
+    snprintf (filename, sizeof(filename), "%s/.xsmstartup", home);
 
     f = fopen (filename, "r");
 
@@ -556,7 +556,7 @@ StartDefaultApps (void)
 	if ((p = strchr (buf, '\n')))
 	    *p = '\0';
 
-	sprintf (logtext, "Starting locally : %s\n", buf);
+	snprintf (logtext, sizeof(logtext), "Starting locally : %s\n", buf);
 	add_log_text (logtext);
 
 	len = strlen (buf);
@@ -589,7 +589,7 @@ StartNonSessionAwareApps(void)
 	 * byte for this.
 	 */
 
-	sprintf (logtext, "Restarting locally : %s\n",
+	snprintf (logtext, sizeof(logtext), "Restarting locally : %s\n",
 	    non_session_aware_clients[i]);
 	add_log_text (logtext);
 
