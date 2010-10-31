@@ -1,3 +1,131 @@
+commit d358d6290af3d9cedb7b6d7e16058370e4779508
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 20:27:55 2010 -0700
+
+    compositeproto 0.4.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6eece824c1cb40bdfc1007b26ce765803d110712
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 20:26:29 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68ff97cd30c709439c088bfea2c33a4f9632ed38
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:30 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    autogen.sh is also not required in any GNU package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1a48a0d70e00fd11521e436864a8ec0705e58285
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:34:49 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e827d7b875a6b16e9e7208af3407cb96cd1e91ed
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:36:08 2010 -0800
+
+    Purge CVS/RCS $Id: ChangeLog,v 1.3 2010/10/31 09:44:35 matthieu Exp $ tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 843e916e15b117c1142ab78d35b9ea722bdc7a0b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:47:44 2009 -0500
+
+    COPYING: add Copyright from SUN Microsystems
+    
+    The COPYING file contains all Copyright notices from source code.
+    Refer to composite.h.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fdf8d73a27cd0cadae5a14e7a88870121ae113aa
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Thu Dec 17 08:32:20 2009 +0100
+
+    Use $(docdir) for compositeproto.txt install path
+    
+    Signed-off-by: Rémi Cardona <remi@gentoo.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 5ecb066e04595d300a0faad0f95c859a709ff857
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:47 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 330cbabbbf73b310b237e6745185f338d7d33998
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Nov 18 19:00:34 2009 -0500
+
+    INSTALL: file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+
+commit 260cc8eadd89b3fc9f59e505e34dcb5bc09018bd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 20:25:50 2009 -0500
+
+    NEWS: remove empty file #24206
+
+commit 55f6f1eec2a0baca0f6c7738cc2e54e7098b3652
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:26 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit ad60112eb2eacb50954bf9cd461b9e90d6f64a63
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:28 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit 8a7c2c629635510a0728d5ab086b0f4b600b0e49
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 00dc749894784dc6f1b749903ef872572f678c3c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:46 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 39612a7153ac3e800c5dbb11a7f760c53797bf73
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 2 18:59:54 2009 -0700

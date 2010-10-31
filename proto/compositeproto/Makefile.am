@@ -1,6 +1,4 @@
 # 
-#  $Id: Makefile.am,v 1.2 2010/04/24 19:49:04 matthieu Exp $
-# 
 #  Copyright © 2003 Keith Packard, Noah Levitt
 # 
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -29,17 +27,17 @@ composite_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = compositeproto.pc
 
-compositedocdir = $(datadir)/doc/$(PACKAGE)
-compositedoc_DATA = compositeproto.txt
+dist_doc_DATA = compositeproto.txt
 
-EXTRA_DIST = autogen.sh compositeproto.pc.in $(compositedoc_DATA)
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
