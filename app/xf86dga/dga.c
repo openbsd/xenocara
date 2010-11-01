@@ -1,26 +1,16 @@
 /* $XFree86: xc/programs/xf86dga/dga.c,v 3.19 2001/10/28 03:34:32 tsi Exp $ */
 
-#include <X11/Xos.h>
-#include <X11/Intrinsic.h>
-#include <X11/Shell.h>
-#include <X11/StringDefs.h>
-#include <X11/Xatom.h>
-#include <X11/Xaw/Form.h>
-#include <X11/Xaw/Scrollbar.h>
-#include <X11/Xaw/Label.h>
-#include <X11/Xaw/Command.h>
-#include <X11/Xaw/AsciiText.h>
-#include <X11/Xaw/Box.h>
-#include <X11/Xaw/Toggle.h>
-#include <X11/Xmu/StdSel.h>
-#include <X11/Xmd.h>
-#include <X11/extensions/xf86dga.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/extensions/Xxf86dga.h>
+#include <sys/time.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
-
+#include <unistd.h>
 
 
 #define MINMAJOR 0
@@ -32,7 +22,7 @@ GetTimeInMillis(void)
 {
     struct timeval  tp;
 
-    gettimeofday(&tp, 0);
+    gettimeofday(&tp, NULL);
     return(tp.tv_sec * 1000) + (tp.tv_usec / 1000);
 }
 
