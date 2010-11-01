@@ -87,15 +87,15 @@ if [ "x$X11_PREFS_DOMAIN" = x ] ; then
 fi
 
 XCOMM Initialize defaults (this will cut down on "safe" error messages)
-if ! defaults read $X11_PREFS_DOMAIN cache_fonts >& /dev/null ; then
+if ! defaults read $X11_PREFS_DOMAIN cache_fonts > /dev/null 2>&1 ; then
     defaults write $X11_PREFS_DOMAIN cache_fonts -bool true
 fi
 
-if ! defaults read $X11_PREFS_DOMAIN no_auth >& /dev/null ; then
+if ! defaults read $X11_PREFS_DOMAIN no_auth > /dev/null 2>&1 ; then
     defaults write $X11_PREFS_DOMAIN no_auth -bool false
 fi
 
-if ! defaults read $X11_PREFS_DOMAIN nolisten_tcp >& /dev/null ; then
+if ! defaults read $X11_PREFS_DOMAIN nolisten_tcp > /dev/null 2>&1 ; then
     defaults write $X11_PREFS_DOMAIN nolisten_tcp -bool true
 fi
 
@@ -126,14 +126,17 @@ if [ x`defaults read $X11_PREFS_DOMAIN nolisten_tcp` = x1 ] ; then
     defaultserverargs="$defaultserverargs -nolisten tcp"
 fi
 
-if defaults read $X11_PREFS_DOMAIN dpi >& /dev/null ; then
+if defaults read $X11_PREFS_DOMAIN dpi > /dev/null 2>&1 ; then
     defaultserverargs="$defaultserverargs -dpi `defaults read $X11_PREFS_DOMAIN dpi`"
 fi
 
-for ((d=0; ; d++)) ; do
-    [[ -e /tmp/.X$d-lock ]] || break
+d=0
+while true ; do
+    [ -e /tmp/.X$d-lock ] || break
+    d=$(($d + 1))
 done
 defaultdisplay=":$d"
+unset d
 
 #else
 enable_xauth=1
@@ -278,7 +281,8 @@ if [ x"$enable_xauth" = x1 ] ; then
 add :$dummy . $mcookie
 EOF
 #if defined(__APPLE__) || defined(__CYGWIN__)
-    serverargs=${serverargs}" -auth '"${xserverauthfile//\'/\'\\\'\'}"'"
+    xserverauthfilequoted=$(echo ${xserverauthfile} | sed "s/'/'\\\\''/g")
+    serverargs=${serverargs}" -auth '"${xserverauthfilequoted}"'"
 #else
     serverargs=${serverargs}" -auth "${xserverauthfile}
 #endif

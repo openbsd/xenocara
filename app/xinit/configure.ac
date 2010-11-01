@@ -20,30 +20,22 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xinit,[1.2.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xinit)
+AC_PREREQ([2.60])
+AC_INIT([xinit], [1.3.0],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xinit])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for AC_PROG_SED in XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 AM_CONFIG_HEADER(config.h)
 
-AC_PROG_CC
-AM_PROG_CC_C_O
 XORG_PROG_RAWCPP
-AC_PROG_INSTALL
-AC_PATH_PROG(SED,sed)
 AC_CANONICAL_HOST
-
-AC_TYPE_SIGNAL
-AC_FUNC_FORK
-
-AC_CHECK_FUNCS([killpg])
 
 m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
 
@@ -129,7 +121,7 @@ AC_ARG_WITH(launchd-id-prefix,  AS_HELP_STRING([--with-launchd-id-prefix=PATH], 
 
 if test "x$LAUNCHD" = "xauto"; then
 	unset LAUNCHD
-	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
+	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no], [$PATH$PATH_SEPARATOR/sbin])
 fi
 
 TIGER_LAUNCHD=no

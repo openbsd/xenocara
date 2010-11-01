@@ -70,8 +70,8 @@ bin_PROGRAMS = xinit$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure $(top_srcdir)/cpprules.in AUTHORS \
-	COPYING ChangeLog INSTALL NEWS compile config.guess config.sub \
-	depcomp install-sh missing
+	COPYING ChangeLog INSTALL NEWS config.guess config.sub depcomp \
+	install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -337,7 +337,7 @@ xinitrc_DATA = xinitrc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)
 EXTRA_DIST = xinitrc.cpp startx.cpp org.x.startx.plist.cpp $(appman_PRE)	\
-		startx.cmd xinitrc.cmd xinit.def autogen.sh
+		autogen.sh
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

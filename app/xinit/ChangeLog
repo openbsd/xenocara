@@ -1,3 +1,240 @@
+commit cc92823c61f9f4d31a25d107017198d1e16d4fcf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 16:44:22 2010 -0700
+
+    xinit 1.3.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b5ff96271ebf30422f0a4af487ba9b35ce9c2e80
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Sep 23 20:26:42 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC, AC_PROG_SED, & AC_PROG_INSTALL are provided by
+    XORG_DEFAULT_OPTIONS 1.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4afe755b28f48390b16d16434cd14a756ef464ce
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d15d988eaf63d4f840d09ba12caade6bea5f7618
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Jul 12 16:55:03 2010 -0700
+
+    launchd: Explicitly search /sbin
+    
+    Previously, launchd wasn't found if /sbin wasn't in the user's PATH.
+    https://bugs.freedesktop.org/show_bug.cgi?id=29028
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 908273df8c0a7a13ff20e4ed4b7b470521f12ce2
+Author: David Shao <davshao@gmail.com>
+Date:   Fri May 21 12:44:53 2010 -0700
+
+    DragonFly BSD: includes for PRIO_PROCESS and setpriority() in xinit.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8464a8ab360b72f6817b19ce99b12f0793fbee74
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon May 3 00:25:30 2010 -0700
+
+    darwin: Make __APPLE__ path in startx POSIX compliant
+    
+    http://xquartz.macosforge.org/trac/ticket/399
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit e4548fe62d58d7cb891dc142c400c22031d471fb
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Sun Apr 25 03:21:43 2010 +0700
+
+    Remove OS/2 leftovers
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c82295911409c611c097ef2e1269a78d54314304
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Apr 15 11:40:33 2010 -0700
+
+    Enable support for an xinitrc.d directory
+    
+    This was already done on darwin and Gentoo.  Now others can benefit.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+
+commit 7f9d31e6342ffe5f2903fb2f4e5d3a1e4e5ed1df
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:29 2010 +0700
+
+    Rationalize errors output
+    
+    Implement Errorx/Fatalx in addition to existing Error/Fatal, replace
+    all fprintf(stderr)/exit with Fatal, all fprintf(stderr) with Error.
+    
+    Additionally harmonize capitalization and punctuation of error messages.
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3676185a3e3bf1e57362ed4978825d9d6d53592c
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:28 2010 +0700
+
+    Fix comment indentation
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0f6753d2de16826300a04232e54fbd3aa54c406
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:27 2010 +0700
+
+    Use signals from Unix98 and drop pre-POSIX compatibility
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 15cf3d560ab5b6847d8891208080ac964c1682fb
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:26 2010 +0700
+
+    Use sigaction(2) instead of signal(2) to handle SIGUSR1 and SIGALRM
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa009dcc191e1d70937e5fb4dd8ae8d9c151a607
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:25 2010 +0700
+
+    sys/wait.h is in Unix98
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a13649f91f3856040f53c47d14a2cccff943c702
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:24 2010 +0700
+
+    setpriority and PRIO_PROCESS are in Unix98
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 598cb2f5e433014b02eec6270a73bcb95cd7b15a
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:23 2010 +0700
+
+    SIGTT{IN,OU} is in Unix98
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce5aa4e7a30bff3207695b9ce8cbdcd56ff7b36c
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:22 2010 +0700
+
+    SIGCHLD is in Unix98
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d12f1f2dd625f507cf8a504854dad0a9efd86259
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:21 2010 +0700
+
+    killpg(2) is in Unix98
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 36e3f13a32c8ced264d666f1091db7e1bb523e86
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:20 2010 +0700
+
+    waitpid(2) is in Unix98
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63ba277c694104b3f01d0a1adee7903631607694
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:19 2010 +0700
+
+    Use EXIT_{SUCCESS, FAILURE} from C90 instead of homegrown equivalents
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a63c31f74e1c11509b561ab9687138f5c960df0f
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:18 2010 +0700
+
+    Stop converting functions' return types to void
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5dea0c1caaeb0d7f1280fd28c80c3c1bc10c34d0
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:17 2010 +0700
+
+    Simplify environment juggling by using fork() instead of vfork()
+    
+    xinit used to copy process environment in order to give client correct DISPLAY
+    and WINDOWPATH variables. It was not possible to do it in client process because
+    it was vforked, not forked.
+    
+    As vfork() usage was not entirely correct (manpage specifies that behaviour is
+    undefined if there are any memory modifications between vfork and exec), switch
+    to fork(), move setting environment variables to client process and and drop all
+    the manual mucking with environment.
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2df4ba3b0ef40cefcac2774e042dad0d2df17424
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Apr 14 03:03:16 2010 +0700
+
+    Fix whitespace
+    
+    File was indented with mix of 8-space and tab symbols and inconsistently
+    formatted. Apply more-or-less consistent formatting and reindent everything to
+    4-space.
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ffa7f2402ae06371aa09a513798a4400b5727c0
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Wed Mar 31 18:15:03 2010 +0700
+
+    Nuke OS/2 and LynxOS support remnants.
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit eb541d73b35716e1deaccc3c328473e04a5ef024
 Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
 Date:   Mon Mar 15 15:41:48 2010 -0700

@@ -78,7 +78,7 @@ MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)
 
 EXTRA_DIST = xinitrc.cpp startx.cpp org.x.startx.plist.cpp $(appman_PRE)	\
-		startx.cmd xinitrc.cmd xinit.def autogen.sh
+		autogen.sh
 
 .PHONY: ChangeLog INSTALL
 

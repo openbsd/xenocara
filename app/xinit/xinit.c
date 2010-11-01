@@ -36,23 +36,8 @@ in this Software without prior written authorization from The Open Group.
 #include <ctype.h>
 #include <stdint.h>
 
-#ifdef X_POSIX_C_SOURCE
-#define _POSIX_C_SOURCE X_POSIX_C_SOURCE
 #include <signal.h>
-#undef _POSIX_C_SOURCE
-#else
-#if defined(X_NOT_POSIX) || defined(_POSIX_SOURCE)
-#include <signal.h>
-#else
-#define _POSIX_SOURCE
-#include <signal.h>
-#undef _POSIX_SOURCE
-#endif
-#endif
-
-#ifndef SYSV
 #include <sys/wait.h>
-#endif
 #include <errno.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -64,49 +49,16 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #endif
 
-#if !defined(SIGCHLD) && defined(SIGCLD)
-#define SIGCHLD SIGCLD
-#endif
-#ifdef __UNIXOS2__
-#define INCL_DOSMODULEMGR
-#include <os2.h>
-#define setpgid(a,b)
-#define setuid(a)
-#define setgid(a)
-#define SHELL "cmd.exe"
-#define XINITRC "xinitrc.cmd"
-#define XSERVERRC "xservrc.cmd"
-char **envsave;	/* to circumvent an UNIXOS2 problem */
-#define environ envsave
-#endif
+/* For PRIO_PROCESS and setpriority() */
+#if defined(__DragonFly__) || defined(__OpenBSD__)
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif /* __DragonFly__ || __OpenBSD__ */
 
 #include <stdlib.h>
-extern char **environ;
-char **newenviron = NULL;
-char **newenvironlast = NULL;
 
 #ifndef SHELL
 #define SHELL "sh"
-#endif
-
-#ifndef HAVE_WORKING_VFORK
-# ifndef vfork
-#  define vfork() fork()
-# endif
-#else
-# ifdef HAVE_VFORK_H
-#  include <vfork.h>
-# endif
-#endif
-
-#ifdef __UNIXOS2__
-#define HAS_EXECVPE
-#endif
-
-#ifdef HAS_EXECVPE
-#define Execvpe(path, argv, envp) execvpe(path, argv, envp)
-#else
-#define Execvpe(path, argv, envp) execvp(path, argv)
 #endif
 
 const char *bindir = BINDIR;
@@ -138,347 +90,277 @@ char xinitrcbuf[256];
 #endif
 char xserverrcbuf[256];
 
-#define	TRUE		1
-#define	FALSE		0
-#define	OK_EXIT		0
-#define	ERR_EXIT	1
+#define TRUE 1
+#define FALSE 0
 
 static char *default_server = "X";
-static char *default_display = ":0";		/* choose most efficient */
+static char *default_display = ":0";        /* choose most efficient */
 static char *default_client[] = {"xterm", "-geometry", "+1+1", "-n", "login", NULL};
 static char *serverargv[100];
 static char *clientargv[100];
-static char **server = serverargv + 2;		/* make sure room for sh .xserverrc args */
-static char **client = clientargv + 2;		/* make sure room for sh .xinitrc args */
+static char **server = serverargv + 2;        /* make sure room for sh .xserverrc args */
+static char **client = clientargv + 2;        /* make sure room for sh .xinitrc args */
 static char *displayNum = NULL;
 static char *program = NULL;
-static Display *xd = NULL;			/* server connection */
-#ifndef SYSV
-#if defined(__CYGWIN__) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(CSRG_BASED) || defined(__UNIXOS2__) || defined(Lynx) || defined(__APPLE__)
+static Display *xd = NULL;            /* server connection */
 int status;
-#else
-union wait	status;
-#endif
-#endif /* SYSV */
 int serverpid = -1;
 int clientpid = -1;
 volatile int gotSignal = 0;
 
-static void Execute ( char **vec, char **envp );
-static Bool waitforserver ( void );
-static Bool processTimeout ( int timeout, char *string );
-static int startServer ( char *server[] );
-static int startClient ( char *client[] );
-static int ignorexio ( Display *dpy );
-static void shutdown ( void );
-static void set_environment ( void );
-static void Fatal(char *msg);
-static void Error ( char *fmt, ... );
+static void Execute(char **vec);
+static Bool waitforserver(void);
+static Bool processTimeout(int timeout, char *string);
+static int startServer(char *server[]);
+static int startClient(char *client[]);
+static int ignorexio(Display *dpy);
+static void shutdown(void);
+static void set_environment(void);
 
-#ifdef RETSIGTYPE /* autoconf AC_TYPE_SIGNAL */
-# define SIGVAL RETSIGTYPE
-#endif /* RETSIGTYPE */
+static void Fatal(const char *fmt, ...);
+static void Error(const char *fmt, ...);
+static void Fatalx(const char *fmt, ...);
+static void Errorx(const char *fmt, ...);
 
-static SIGVAL 
+static void
 sigCatch(int sig)
 {
-	/* On system with POSIX signals, just interrupt the system call */
-	gotSignal = sig;
+    /* On system with POSIX signals, just interrupt the system call */
+    gotSignal = sig;
 }
 
-static SIGVAL 
-sigAlarm(int sig)
+static void
+sigIgnore(int sig)
 {
-#if defined(SYSV) || defined(SVR4) || defined(linux) || defined(__UNIXOS2__) || defined(__APPLE__)
-	signal (sig, sigAlarm);
-#endif
 }
 
-static SIGVAL
-sigUsr1(int sig)
+static void
+Execute(char **vec)		/* has room from up above */
 {
-#if defined(SYSV) || defined(SVR4) || defined(linux) || defined(__UNIXOS2__) || defined(__APPLE__)
-	signal (sig, sigUsr1);
-#endif
-}
-
-static void 
-Execute(char **vec,		/* has room from up above */
-	char **envp)
-{
-    Execvpe (vec[0], vec, envp);
-#ifndef __UNIXOS2__
-    if (access (vec[0], R_OK) == 0) {
+    execvp(vec[0], vec);
+    if (access(vec[0], R_OK) == 0) {
 	vec--;				/* back it up to stuff shell in */
 	vec[0] = SHELL;
-	Execvpe (vec[0], vec, envp);
+	execvp(vec[0], vec);
     }
-#endif
     return;
 }
 
-#ifndef __UNIXOS2__
 int
 main(int argc, char *argv[])
-#else
-int
-main(int argc, char *argv[], char *envp[])
-#endif
 {
-	register char **sptr = server;
-	register char **cptr = client;
-	register char **ptr;
-	int pid;
-	int client_given = 0, server_given = 0;
-	int client_args_given = 0, server_args_given = 0;
-	int start_of_client_args, start_of_server_args;
-	struct sigaction sa;
+    register char **sptr = server;
+    register char **cptr = client;
+    register char **ptr;
+    int pid;
+    int client_given = 0, server_given = 0;
+    int client_args_given = 0, server_args_given = 0;
+    int start_of_client_args, start_of_server_args;
+    struct sigaction sa, si;
 #ifdef __APPLE__
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-	vproc_transaction_t vt;
+    vproc_transaction_t vt;
 #endif
 #endif
 
-#ifdef __UNIXOS2__
-	envsave = envp;	/* circumvent an EMX problem */
+    program = *argv++;
+    argc--;
+    /*
+     * copy the client args.
+     */
+    if (argc == 0 ||
+        (**argv != '/' && **argv != '.')) {
+        for (ptr = default_client; *ptr; )
+            *cptr++ = *ptr++;
+    } else {
+        client_given = 1;
+    }
+    start_of_client_args = (cptr - client);
+    while (argc && strcmp(*argv, "--")) {
+        client_args_given++;
+        *cptr++ = *argv++;
+        argc--;
+    }
+    *cptr = NULL;
+    if (argc) {
+        argv++;
+        argc--;
+    }
 
-	/* Check whether the system will run at all */
-	if (_emx_rev < 50) {
-		APIRET rc;
-		HMODULE hmod;
-		char name[CCHMAXPATH];
-		char fail[9];
-		fputs ("This program requires emx.dll revision 50 (0.9c) "
-			"or later.\n", stderr);
-		rc = DosLoadModule (fail, sizeof (fail), "emx", &hmod);
-		if (rc == 0) {
-			rc = DosQueryModuleName (hmod, sizeof (name), name);
-			if (rc == 0)
-				fprintf (stderr, "Please delete or update `%s'.\n", name);
-			DosFreeModule (hmod);
-		}
-		exit (2);
-	}
-#endif
-	program = *argv++;
-	argc--;
-	/*
-	 * copy the client args.
-	 */
-	if (argc == 0 ||
-#ifndef __UNIXOS2__
-	    (**argv != '/' && **argv != '.')) {
-#else
-	    (**argv != '/' && **argv != '\\' && **argv != '.' &&
-	     !(isalpha(**argv) && (*argv)[1]==':'))) {
-#endif
-		for (ptr = default_client; *ptr; )
-			*cptr++ = *ptr++;
-	} else {
-		client_given = 1;
-	}
-	start_of_client_args = (cptr - client);
-	while (argc && strcmp(*argv, "--")) {
-		client_args_given++;
-		*cptr++ = *argv++;
-		argc--;
-	}
-	*cptr = NULL;
-	if (argc) {
-		argv++;
-		argc--;
-	}
+    /*
+     * Copy the server args.
+     */
+    if (argc == 0 ||
+        (**argv != '/' && **argv != '.')) {
+        *sptr++ = default_server;
+    } else {
+        server_given = 1;
+        *sptr++ = *argv++;
+        argc--;
+    }
+    if (argc > 0 && (argv[0][0] == ':' && isdigit(argv[0][1])))
+        displayNum = *argv;
+    else
+        displayNum = *sptr++ = default_display;
 
-	/*
-	 * Copy the server args.
-	 */
-	if (argc == 0 ||
-#ifndef __UNIXOS2__
-	    (**argv != '/' && **argv != '.')) {
-		*sptr++ = default_server;
-#else
-	    (**argv != '/' && **argv != '\\' && **argv != '.' &&
-	     !(isalpha(**argv) && (*argv)[1]==':'))) {
-		*sptr = getenv("XSERVER");
-		if (!*sptr) {
-			Error("No XSERVER environment variable set");
-			exit(1);
-		}
-		*sptr++;
-#endif
-	} else {
-		server_given = 1;
-		*sptr++ = *argv++;
-		argc--;
-	}
-	if (argc > 0 && (argv[0][0] == ':' && isdigit(argv[0][1])))
-		displayNum = *argv;
-	else
-		displayNum = *sptr++ = default_display;
+    start_of_server_args = (sptr - server);
+    while (--argc >= 0) {
+        server_args_given++;
+        *sptr++ = *argv++;
+    }
+    *sptr = NULL;
 
-	start_of_server_args = (sptr - server);
-	while (--argc >= 0) {
-		server_args_given++;
-		*sptr++ = *argv++;
-	}
-	*sptr = NULL;
+    /*
+     * if no client arguments given, check for a startup file and copy
+     * that into the argument list
+     */
+    if (!client_given) {
+        char *cp;
+        Bool required = False;
 
-	/*
-	 * if no client arguments given, check for a startup file and copy
-	 * that into the argument list
-	 */
-	if (!client_given) {
-	    char *cp;
-	    Bool required = False;
+        xinitrcbuf[0] = '\0';
+        if ((cp = getenv("XINITRC")) != NULL) {
+            snprintf(xinitrcbuf, sizeof(xinitrcbuf), "%s", cp);
+            required = True;
+        } else if ((cp = getenv("HOME")) != NULL) {
+            snprintf(xinitrcbuf, sizeof(xinitrcbuf),
+                     "%s/%s", cp, XINITRC);
+        }
+        if (xinitrcbuf[0]) {
+            if (access(xinitrcbuf, F_OK) == 0) {
+                client += start_of_client_args - 1;
+                client[0] = xinitrcbuf;
+            } else if (required) {
+                Error("warning, no client init file \"%s\"", xinitrcbuf);
+            }
+        }
+    }
 
-	    xinitrcbuf[0] = '\0';
-	    if ((cp = getenv ("XINITRC")) != NULL) {
-		(void) snprintf (xinitrcbuf, sizeof(xinitrcbuf), "%s", cp);
-		required = True;
-	    } else if ((cp = getenv ("HOME")) != NULL) {
-		(void) snprintf (xinitrcbuf, sizeof(xinitrcbuf),
-				 "%s/%s", cp, XINITRC);
-	    }
-	    if (xinitrcbuf[0]) {
-		if (access (xinitrcbuf, F_OK) == 0) {
-		    client += start_of_client_args - 1;
-		    client[0] = xinitrcbuf;
-		} else if (required) {
-		    fprintf (stderr,
-			     "%s:  warning, no client init file \"%s\"\n",
-			     program, xinitrcbuf);
-		}
-	    }
-	}
+    /*
+     * if no server arguments given, check for a startup file and copy
+     * that into the argument list
+     */
+    if (!server_given) {
+        char *cp;
+        Bool required = False;
 
-	/*
-	 * if no server arguments given, check for a startup file and copy
-	 * that into the argument list
-	 */
-	if (!server_given) {
-	    char *cp;
-	    Bool required = False;
+        xserverrcbuf[0] = '\0';
+        if ((cp = getenv("XSERVERRC")) != NULL) {
+            snprintf(xserverrcbuf, sizeof(xserverrcbuf), "%s", cp);
+            required = True;
+        } else if ((cp = getenv("HOME")) != NULL) {
+            snprintf(xserverrcbuf, sizeof(xserverrcbuf),
+                     "%s/%s", cp, XSERVERRC);
+        }
+        if (xserverrcbuf[0]) {
+            if (access(xserverrcbuf, F_OK) == 0) {
+                server += start_of_server_args - 1;
+                server[0] = xserverrcbuf;
+            } else if (required) {
+                Error("warning, no server init file \"%s\"", xserverrcbuf);
+            }
+        }
+    }
 
-	    xserverrcbuf[0] = '\0';
-	    if ((cp = getenv ("XSERVERRC")) != NULL) {
-		(void) snprintf (xserverrcbuf, sizeof(xserverrcbuf), "%s", cp);
-		required = True;
-	    } else if ((cp = getenv ("HOME")) != NULL) {
-		(void) snprintf (xserverrcbuf, sizeof(xserverrcbuf),
-				 "%s/%s", cp, XSERVERRC);
-	    }
-	    if (xserverrcbuf[0]) {
-		if (access (xserverrcbuf, F_OK) == 0) {
-		    server += start_of_server_args - 1;
-		    server[0] = xserverrcbuf;
-		} else if (required) {
-		    fprintf (stderr,
-			     "%s:  warning, no server init file \"%s\"\n",
-			     program, xserverrcbuf);
-		}
-	    }
-	}
+    /*
+     * Start the server and client.
+     */
+    signal(SIGCHLD, SIG_DFL);    /* Insurance */
 
-	/*
-	 * put the display name into the environment
-	 */
-	set_environment ();
+    /* Let those signal interrupt the wait() call in the main loop */
+    memset(&sa, 0, sizeof sa);
+    sa.sa_handler = sigCatch;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;    /* do not set SA_RESTART */
 
-	/*
-	 * Start the server and client.
-	 */
-#ifdef SIGCHLD
-	signal(SIGCHLD, SIG_DFL);	/* Insurance */
-#endif
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
+    sigaction(SIGPIPE, &sa, NULL);
 
-	/* Let those signal interrupt the wait() call in the main loop */
-	memset(&sa, 0, sizeof sa);
-	sa.sa_handler = sigCatch;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = 0;	/* do not set SA_RESTART */
-	
-	sigaction(SIGTERM, &sa, NULL);
-	sigaction(SIGQUIT, &sa, NULL);
-	sigaction(SIGINT, &sa, NULL);
-	sigaction(SIGHUP, &sa, NULL);
-	sigaction(SIGPIPE, &sa, NULL);
+    memset(&si, 0, sizeof(si));
+    si.sa_handler = sigIgnore;
+    sigemptyset(&si.sa_mask);
+    si.sa_flags = SA_RESTART;
 
-	signal(SIGALRM, sigAlarm);
-	signal(SIGUSR1, sigUsr1);
+    sigaction(SIGALRM, &si, NULL);
+    sigaction(SIGUSR1, &si, NULL);
 
 #ifdef __APPLE__
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-	vt = vproc_transaction_begin(NULL);
+    vt = vproc_transaction_begin(NULL);
 #endif
 #endif
 
-	if (startServer(server) > 0
-	 && startClient(client) > 0) {
-		pid = -1;
-		while (pid != clientpid && pid != serverpid
-		       && gotSignal == 0
-			)
-			pid = wait(NULL);
-	}
+    if (startServer(server) > 0
+        && startClient(client) > 0) {
+        pid = -1;
+        while (pid != clientpid && pid != serverpid
+               && gotSignal == 0
+            )
+            pid = wait(NULL);
+    }
 
 #ifdef __APPLE__
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-	vproc_transaction_end(NULL, vt);
+    vproc_transaction_end(NULL, vt);
 #endif
 #endif
 
-	signal(SIGTERM, SIG_IGN);
-	signal(SIGQUIT, SIG_IGN);
-	signal(SIGINT, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
-	signal(SIGPIPE, SIG_IGN);
+    signal(SIGTERM, SIG_IGN);
+    signal(SIGQUIT, SIG_IGN);
+    signal(SIGINT, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 
-	shutdown();
+    shutdown();
 
-	if (gotSignal != 0) {
-		Error("unexpected signal %d.\n", gotSignal);
-		exit(ERR_EXIT);
-	}
+    if (gotSignal != 0) {
+        Errorx("unexpected signal %d", gotSignal);
+        exit(EXIT_FAILURE);
+    }
 
-	if (serverpid < 0 )
-		Fatal("Server error.\n");
-	if (clientpid < 0)
-		Fatal("Client error.\n");
-	exit(OK_EXIT);
+    if (serverpid < 0)
+        Fatalx("server error");
+    if (clientpid < 0)
+        Fatalx("client error");
+    exit(EXIT_SUCCESS);
 }
 
 
 /*
- *	waitforserver - wait for X server to start up
+ *    waitforserver - wait for X server to start up
  */
 static Bool
 waitforserver(void)
 {
-	int	ncycles	 = 120;		/* # of cycles to wait */
-	int	cycles;			/* Wait cycle count */
+    int    ncycles     = 120;        /* # of cycles to wait */
+    int    cycles;            /* Wait cycle count */
 
 #ifdef __APPLE__
-	/* For Apple, we don't get signaled by the server when it's ready, so we just
-	 * want to sleep now since we're going to sleep later anyways and this allows us
-	 * to avoid the awkard, "why is there an error message in the log" questions
-	 * from users.
-         */
+    /* For Apple, we don't get signaled by the server when it's ready, so we just
+     * want to sleep now since we're going to sleep later anyways and this allows us
+     * to avoid the awkard, "why is there an error message in the log" questions
+     * from users.
+     */
 
-	sleep(2);
+    sleep(2);
 #endif
 
-	for (cycles = 0; cycles < ncycles; cycles++) {
-		if ((xd = XOpenDisplay(displayNum))) {
-			return(TRUE);
-		}
-		else {
-		    if (!processTimeout (1, "X server to begin accepting connections")) 
-		      break;
-		}
-	}
+    for (cycles = 0; cycles < ncycles; cycles++) {
+        if ((xd = XOpenDisplay(displayNum))) {
+            return(TRUE);
+        }
+        else {
+            if (!processTimeout(1, "X server to begin accepting connections"))
+              break;
+        }
+    }
 
-	fprintf (stderr, "giving up.\r\n");
-	return(FALSE);
+    Errorx("giving up");
+
+    return(FALSE);
 }
 
 /*
@@ -487,391 +369,327 @@ waitforserver(void)
 static Bool
 processTimeout(int timeout, char *string)
 {
-	int	i = 0, pidfound = -1;
-	static char	*laststring;
+    int    i = 0, pidfound = -1;
+    static char    *laststring;
 
-	for (;;) {
-#if defined(SYSV) || defined(__UNIXOS2__)
-		alarm(1);
-		if ((pidfound = wait(NULL)) == serverpid)
-			break;
-		alarm(0);
-#else /* SYSV */
-#if defined(SVR4) || defined(_POSIX_SOURCE) || defined(Lynx) || defined(__APPLE__)
-		if ((pidfound = waitpid(serverpid, &status, WNOHANG)) == serverpid)
-			break;
-#else
-		if ((pidfound = wait3(&status, WNOHANG, NULL)) == serverpid)
-			break;
-#endif
-#endif /* SYSV */
-		if (timeout) {
-			if (i == 0 && string != laststring)
-				fprintf(stderr, "\r\nwaiting for %s ", string);
-			else
-				fprintf(stderr, ".");
-			fflush(stderr);
-		}
-		if (timeout)
-			sleep (1);
-		if (++i > timeout)
-			break;
-	}
-	if ( i > 0 ) fputc( '\n', stderr );     /* tidy up after message */
-	laststring = string;
-	return( serverpid != pidfound );
+    for (;;) {
+        if ((pidfound = waitpid(serverpid, &status, WNOHANG)) == serverpid)
+            break;
+        if (timeout) {
+            if (i == 0 && string != laststring)
+                fprintf(stderr, "\r\nwaiting for %s ", string);
+            else
+                fprintf(stderr, ".");
+            fflush(stderr);
+        }
+        if (timeout)
+            sleep(1);
+        if (++i > timeout)
+            break;
+    }
+    if (i > 0) fputc('\n', stderr);     /* tidy up after message */
+    laststring = string;
+    return (serverpid != pidfound);
 }
 
 static int
 startServer(char *server[])
 {
-	sigset_t mask, old;
-#ifdef __UNIXOS2__
-	sigset_t pendings;
-#endif
+    sigset_t mask, old;
+    const char * const *cpp;
 
-	sigemptyset(&mask);
-	sigaddset(&mask, SIGUSR1);
-	sigprocmask(SIG_BLOCK, &mask, &old);
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGUSR1);
+    sigprocmask(SIG_BLOCK, &mask, &old);
 
-	serverpid = fork(); 
+    serverpid = fork();
 
-	switch(serverpid) {
-	case 0:
-		/* Unblock */
-		sigprocmask(SIG_SETMASK, &old, NULL);
+    switch(serverpid) {
+    case 0:
+        /* Unblock */
+        sigprocmask(SIG_SETMASK, &old, NULL);
 
-		/*
-		 * don't hang on read/write to control tty
-		 */
-#ifdef SIGTTIN
-		(void) signal(SIGTTIN, SIG_IGN);
-#endif
-#ifdef SIGTTOU
-		(void) signal(SIGTTOU, SIG_IGN);
-#endif
-		/*
-		 * ignore SIGUSR1 in child.  The server
-		 * will notice this and send SIGUSR1 back
-		 * at xinit when ready to accept connections
-		 */
-		(void) signal(SIGUSR1, SIG_IGN);
-		/*
-		 * prevent server from getting sighup from vhangup()
-		 * if client is xterm -L
-		 */
-#ifndef __UNIXOS2__
-		setpgid(0,getpid());
-#endif
-		Execute (server, environ);
-		Error ("no server \"%s\" in PATH\n", server[0]);
-		{
-		    const char * const *cpp;
+        /*
+         * don't hang on read/write to control tty
+         */
+        signal(SIGTTIN, SIG_IGN);
+        signal(SIGTTOU, SIG_IGN);
+        /*
+         * ignore SIGUSR1 in child.  The server
+         * will notice this and send SIGUSR1 back
+         * at xinit when ready to accept connections
+         */
+        signal(SIGUSR1, SIG_IGN);
+        /*
+         * prevent server from getting sighup from vhangup()
+         * if client is xterm -L
+         */
+        setpgid(0,getpid());
+        Execute(server);
 
-		    fprintf (stderr,
-"\nUse the -- option, or make sure that %s is in your path and\n",
-			     bindir);
-		    fprintf (stderr,
-"that \"%s\" is a program or a link to the right type of server\n",
-			     server[0]);
-		    fprintf (stderr,
-"for your display.  Possible server names include:\n\n");
-		    for (cpp = server_names; *cpp; cpp++) {
-			fprintf (stderr, "    %s\n", *cpp);
-		    }
-		    fprintf (stderr, "\n");
-		}
-		exit (ERR_EXIT);
+        Error("unable to run server \"%s\"", server[0]);
 
-		break;
-	case -1:
-		break;
-	default:
-		/*
-		 * don't nice server
-		 */
-#ifdef PRIO_PROCESS
-		setpriority( PRIO_PROCESS, serverpid, -1 );
-#endif
+        fprintf(stderr, "Use the -- option, or make sure that %s is in your path and\n", bindir);
+        fprintf(stderr, "that \"%s\" is a program or a link to the right type of server\n", server[0]);
+        fprintf(stderr, "for your display.  Possible server names include:\n\n");
+        for (cpp = server_names; *cpp; cpp++)
+            fprintf(stderr, "    %s\n", *cpp);
+        fprintf(stderr, "\n");
 
-		errno = 0;
-		if (! processTimeout(0, "")) {
-			serverpid = -1;
-			break;
-		}
-		/*
-		 * kludge to avoid race with TCP, giving server time to
-		 * set his socket options before we try to open it,
-		 * either use the 15 second timeout, or await SIGUSR1.
-		 *
-		 * If your machine is substantially slower than 15 seconds,
-		 * you can easily adjust this value.
-		 */
-		alarm (15);
+        exit(EXIT_FAILURE);
 
-#ifdef __UNIXOS2__
-		/*
-		 * fg2003/05/06: work around a problem in EMX: sigsuspend()
-		 * does not deliver pending signals when called but when
-		 * returning; so if SIGUSR1 has already been sent by the
-		 * server, we would still have to await SIGALRM
-		 */
-		sigemptyset(&pendings);
-		sigpending(&pendings);
-		if (!sigismember(&pendings, SIGUSR1))
-#endif /* __UNIXOS2__ */
-		sigsuspend(&old);
-		alarm (0);
-		sigprocmask(SIG_SETMASK, &old, NULL);
+        break;
+    case -1:
+        break;
+    default:
+        /*
+         * don't nice server
+         */
+        setpriority(PRIO_PROCESS, serverpid, -1);
 
-		if (waitforserver() == 0) {
-			Error("unable to connect to X server\r\n");
-			shutdown();
-			serverpid = -1;
-		}
-		break;
-	}
+        errno = 0;
+        if(! processTimeout(0, "")) {
+            serverpid = -1;
+            break;
+        }
+        /*
+         * kludge to avoid race with TCP, giving server time to
+         * set his socket options before we try to open it,
+         * either use the 15 second timeout, or await SIGUSR1.
+         *
+         * If your machine is substantially slower than 15 seconds,
+         * you can easily adjust this value.
+         */
+        alarm(15);
 
-	return(serverpid);
+        sigsuspend(&old);
+        alarm(0);
+        sigprocmask(SIG_SETMASK, &old, NULL);
+
+        if (waitforserver() == 0) {
+            Error("unable to connect to X server");
+            shutdown();
+            serverpid = -1;
+        }
+        break;
+    }
+
+    return(serverpid);
 }
 
 static void
 setWindowPath(void)
 {
-	/* setting WINDOWPATH for clients */
-	Atom prop;
-	Atom actualtype;
-	int actualformat;
-	unsigned long nitems;
-	unsigned long bytes_after;
-	unsigned char *buf;
-	const char *windowpath;
-	char *newwindowpath;
-	unsigned long num;
-	char nums[10];
-	int numn;
-	size_t len;
-	prop = XInternAtom(xd, "XFree86_VT", False);
-	if (prop == None) {
-#ifdef DEBUG
-		fprintf(stderr, "no XFree86_VT atom\n");
-#endif
-		return;
-	}
-	if (XGetWindowProperty(xd, DefaultRootWindow(xd), prop, 0, 1, 
-		False, AnyPropertyType, &actualtype, &actualformat, 
-		&nitems, &bytes_after, &buf)) {
-#ifdef DEBUG
-		fprintf(stderr, "no XFree86_VT property\n");
-#endif
-		return;
-	}
-	if (nitems != 1) {
-#ifdef DEBUG
-		fprintf(stderr, "%lu items in XFree86_VT property!\n", nitems);
-#endif
-		XFree(buf);
-		return;
-	}
-	switch (actualtype) {
-	case XA_CARDINAL:
-	case XA_INTEGER:
-	case XA_WINDOW:
-		switch (actualformat) {
-		case  8:
-			num = (*(uint8_t  *)(void *)buf);
-			break;
-		case 16:
-			num = (*(uint16_t *)(void *)buf);
-			break;
-		case 32:
-			num = (*(uint32_t *)(void *)buf);
-			break;
-		default:
-#ifdef DEBUG
-			fprintf(stderr, "format %d in XFree86_VT property!\n", actualformat);
-#endif
-			XFree(buf);
-			return;
-		}
-		break;
-	default:
-#ifdef DEBUG	    
-		fprintf(stderr, "type %lx in XFree86_VT property!\n", actualtype);
-#endif
-		XFree(buf);
-		return;
-	}
-	XFree(buf);
-	windowpath = getenv("WINDOWPATH");
-	numn = snprintf(nums, sizeof(nums), "%lu", num);
-	if (!windowpath) {
-		len = 10 + 1 + numn + 1;
-		newwindowpath = malloc(len);
-		if (newwindowpath == NULL) 
-		    return;
-		snprintf(newwindowpath, len, "WINDOWPATH=%s", nums);
-	} else {
-		len = 10 + 1 + strlen(windowpath) + 1 + numn + 1;
-		newwindowpath = malloc(len);
-		if (newwindowpath == NULL)
-		    return;
-		snprintf(newwindowpath, len, "WINDOWPATH=%s:%s", 
-			 windowpath, nums);
-	}
-	*newenvironlast++ = newwindowpath;
-	*newenvironlast = NULL;
+    /* setting WINDOWPATH for clients */
+    Atom prop;
+    Atom actualtype;
+    int actualformat;
+    unsigned long nitems;
+    unsigned long bytes_after;
+    unsigned char *buf;
+    const char *windowpath;
+    char *newwindowpath;
+    unsigned long num;
+    char nums[10];
+    int numn;
+    size_t len;
+    prop = XInternAtom(xd, "XFree86_VT", False);
+    if (prop == None) {
+        Errorx("Unable to intern XFree86_VT atom");
+        return;
+    }
+    if (XGetWindowProperty(xd, DefaultRootWindow(xd), prop, 0, 1,
+        False, AnyPropertyType, &actualtype, &actualformat,
+        &nitems, &bytes_after, &buf)) {
+        Errorx("No XFree86_VT property detected on X server, WINDOWPATH won't be set");
+        return;
+    }
+    if (nitems != 1) {
+        Errorx("XFree86_VT property unexpectedly has %lu items instead of 1", nitems);
+        XFree(buf);
+        return;
+    }
+    switch (actualtype) {
+    case XA_CARDINAL:
+    case XA_INTEGER:
+    case XA_WINDOW:
+        switch (actualformat) {
+        case  8:
+            num = (*(uint8_t  *)(void *)buf);
+            break;
+        case 16:
+            num = (*(uint16_t *)(void *)buf);
+            break;
+        case 32:
+            num = (*(uint32_t *)(void *)buf);
+            break;
+        default:
+            Errorx("XFree86_VT property has unexpected format %d", actualformat);
+            XFree(buf);
+            return;
+        }
+        break;
+    default:
+        Errorx("XFree86_VT property has unexpected type %lx", actualtype);
+        XFree(buf);
+        return;
+    }
+    XFree(buf);
+    windowpath = getenv("WINDOWPATH");
+    numn = snprintf(nums, sizeof(nums), "%lu", num);
+    if (!windowpath) {
+        len = numn + 1;
+        newwindowpath = malloc(len);
+        if (newwindowpath == NULL)
+            return;
+        snprintf(newwindowpath, len, "%s", nums);
+    } else {
+        len = strlen(windowpath) + 1 + numn + 1;
+        newwindowpath = malloc(len);
+        if (newwindowpath == NULL)
+            return;
+        snprintf(newwindowpath, len, "%s:%s",
+                 windowpath, nums);
+    }
+    if (setenv("WINDOWPATH", newwindowpath, TRUE) == -1)
+        Error("unable to set WINDOWPATH");
+
+
+    free(newwindowpath);
 }
 
 static int
 startClient(char *client[])
 {
-	setWindowPath();
-	if ((clientpid = vfork()) == 0) {
-		if (setuid(getuid()) == -1) {
-			Error("cannot change uid: %s\n", strerror(errno));
-			_exit(ERR_EXIT);
-		}
-		setpgid(0, getpid());
-		environ = newenviron;
-#ifdef __UNIXOS2__
-#undef environ
-		environ = newenviron;
-		client[0] = (char*)__XOS2RedirRoot(client[0]);
-#endif
-		Execute (client,newenviron);
-		Error ("no program named \"%s\" in PATH\r\n", client[0]);
-		fprintf (stderr,
-"\nSpecify a program on the command line or make sure that %s\r\n", bindir);
-		fprintf (stderr,
-"is in your path.\r\n");
-		fprintf (stderr, "\n");
-		_exit (ERR_EXIT);
-	}
-	return (clientpid);
-}
+    clientpid = fork();
+    if (clientpid == 0) {
+        set_environment();
+        setWindowPath();
 
-#ifndef HAVE_KILLPG
-#define killpg(pgrp, sig) kill(-(pgrp), sig)
-#endif
+        if (setuid(getuid()) == -1) {
+            Error("cannot change uid");
+            _exit(EXIT_FAILURE);
+        }
+        setpgid(0, getpid());
+        Execute(client);
+        Error("Unable to run program \"%s\"", client[0]);
+
+        fprintf(stderr, "Specify a program on the command line or make sure that %s\n", bindir);
+        fprintf(stderr, "is in your path.\n\n");
+
+        _exit(EXIT_FAILURE);
+    } else {
+        return clientpid;
+    }
+}
 
 static jmp_buf close_env;
 
-static int 
+static int
 ignorexio(Display *dpy)
 {
-    fprintf (stderr, "%s:  connection to X server lost.\r\n", program);
-    longjmp (close_env, 1);
+    Errorx("connection to X server lost");
+    longjmp(close_env, 1);
     /*NOTREACHED*/
     return 0;
 }
 
-static void 
+static void
 shutdown(void)
 {
-	/* have kept display opened, so close it now */
-	if (clientpid > 0) {
-		XSetIOErrorHandler (ignorexio);
-		if (! setjmp(close_env)) {
-		    XCloseDisplay(xd);
-		}
+    /* have kept display opened, so close it now */
+    if (clientpid > 0) {
+        XSetIOErrorHandler(ignorexio);
+        if (! setjmp(close_env)) {
+            XCloseDisplay(xd);
+        }
 
-		/* HUP all local clients to allow them to clean up */
-		errno = 0;
-		if ((killpg(clientpid, SIGHUP) != 0) &&
-		    (errno != ESRCH))
-			Error("can't send HUP to process group %d\r\n",
-				clientpid);
-	}
+        /* HUP all local clients to allow them to clean up */
+        if (killpg(clientpid, SIGHUP) < 0 && errno != ESRCH)
+            Error("can't send HUP to process group %d", clientpid);
+    }
 
-	if (serverpid < 0)
-		return;
-	errno = 0;
-	if (killpg(serverpid, SIGTERM) < 0) {
-		if (errno == EPERM)
-			Fatal("Can't kill X server\r\n");
-		if (errno == ESRCH)
-			return;
-	}
-	if (! processTimeout(10, "X server to shut down")) {
-	    fprintf (stderr, "\r\n");
-	    return;
-	}
+    if (serverpid < 0)
+        return;
 
-	fprintf(stderr, 
-	"\r\n%s:  X server slow to shut down, sending KILL signal.\r\n",
-		program);
-	fflush(stderr);
-	errno = 0;
-	if (killpg(serverpid, SIGKILL) < 0) {
-		if (errno == ESRCH)
-			return;
-	}
-	if (processTimeout(3, "server to die")) {
-		fprintf (stderr, "\r\n");
-		Fatal("Can't kill server\r\n");
-	}
-	fprintf (stderr, "\r\n");
-	return;
+    if (killpg(serverpid, SIGTERM) < 0) {
+        if (errno == ESRCH)
+            return;
+        Fatal("can't kill X server");
+    }
+
+    if (!processTimeout(10, "X server to shut down"))
+        return;
+
+    Errorx("X server slow to shut down, senging KILL signal");
+
+    if (killpg(serverpid, SIGKILL) < 0) {
+        if (errno == ESRCH)
+            return;
+        Error("can't SIGKILL X server");
+    }
+
+    if (processTimeout(3, "server to die"))
+        Fatalx("X server refuses to die");
 }
 
-
-/*
- * make a new copy of environment that has room for DISPLAY
- */
-
-static void 
+static void
 set_environment(void)
 {
-    int nenvvars;
-    char **newPtr, **oldPtr;
-    static char displaybuf[512];
-
-    /* count number of environment variables */
-    for (oldPtr = environ; *oldPtr; oldPtr++) ;
-
-    nenvvars = (oldPtr - environ);
-    newenviron = (char **) malloc ((nenvvars + 3) * sizeof(char **));
-    if (!newenviron) {
-	fprintf (stderr,
-		 "%s:  unable to allocate %d pointers for environment\n",
-		 program, nenvvars + 3);
-	exit (1);
-    }
-
-    /* put DISPLAY=displayname as first element */
-    snprintf (displaybuf, sizeof(displaybuf), "DISPLAY=%s", displayNum);
-    newPtr = newenviron;
-    *newPtr++ = displaybuf;
-
-    /* copy pointers to other variables */
-    for (oldPtr = environ; *oldPtr; oldPtr++) {
-	if (strncmp (*oldPtr, "DISPLAY=", 8) != 0
-	 && strncmp (*oldPtr, "WINDOWPATH=", 11) != 0) {
-	    *newPtr++ = *oldPtr;
-	}
-    }
-    *newPtr = NULL;
-    newenvironlast=newPtr;
-    return;
+    if (setenv("DISPLAY", displayNum, TRUE) == -1)
+        Fatal("unable to set DISPLAY");
 }
 
 static void
-Fatal(char *msg)
+verror(const char *fmt, va_list ap)
 {
-	Error(msg);
-	exit(ERR_EXIT);
+    fprintf(stderr, "%s: ", program);
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, ": %s\n", strerror(errno));
 }
 
 static void
-Error(char *fmt, ...)
+verrorx(const char *fmt, va_list ap)
 {
-        va_list ap;
+    fprintf(stderr, "%s: ", program);
+    vfprintf(stderr, fmt, ap);
+    fprintf(stderr, "\n");
+}
 
-	va_start(ap, fmt);
-	fprintf(stderr, "%s:  ", program);
-	if (errno > 0)
-	  fprintf (stderr, "%s (errno %d):  ", strerror(errno), errno);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
+static void
+Fatal(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    verror(fmt, ap);
+    va_end(ap);
+    exit(EXIT_FAILURE);
+}
+
+static void
+Fatalx(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    verrorx(fmt, ap);
+    va_end(ap);
+    exit(EXIT_FAILURE);
+}
+
+static void
+Error(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    verror(fmt, ap);
+    va_end(ap);
+}
+
+static void
+Errorx(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    verrorx(fmt, ap);
+    va_end(ap);
 }
