@@ -1,4 +1,3 @@
-/* $Xorg: xinit.c,v 1.5 2001/02/09 02:05:49 xorgcvs Exp $ */
 /*
 
 Copyright 1986, 1998  The Open Group
