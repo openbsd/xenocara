@@ -249,10 +249,6 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 
 	/* Deduct the maxmimum size of a video overlay */
 	size -= 0x200000;	
-	
-	/* Deduct the probable size of a shadow buffer */
-	size -= pScrni->virtualX *
-	(pScrni->virtualY * (pScrni->bitsPerPixel >> 3));
 
 	/* Align the size to a K boundary */	
 	size &= ~1023;
@@ -287,7 +283,11 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " Cursor: 0x%x bytes\n",
 	    LX_CURSOR_HW_WIDTH * 4 * LX_CURSOR_HW_HEIGHT);
 
-    if (pGeode->pExa->offScreenBase)
+    if (pGeode->exaBfrSz)
+	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " ExaBfrSz: 0x%x bytes\n",
+	    pGeode->exaBfrSz);
+
+    if (pGeode->pExa && pGeode->pExa->offScreenBase)
 	xf86DrvMsg(pScrni->scrnIndex, X_INFO, " EXA: 0x%x bytes\n",
 	    (unsigned int)(pGeode->pExa->memorySize -
 		pGeode->pExa->offScreenBase));

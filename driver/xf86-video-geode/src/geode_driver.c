@@ -58,7 +58,6 @@
 
 /* Machine independent stuff */
 #include "mipointer.h"
-#include "mibank.h"
 #include "micmap.h"
 /* All drivers implementing backing store need this */
 #include "mibstore.h"

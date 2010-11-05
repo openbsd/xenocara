@@ -193,7 +193,7 @@ set_Redcloud_92xx_mode_params(int mode)
     CS92xx_MODE *pMode = &FPModeParams[mode];
     unsigned long temp_data = 0;
     unsigned long base_data;
-    Q_WORD msrValue;
+    QQ_WORD msrValue;
 
     /* on a Redcloud, we need to set up the DF pad select MSR */
     if (gfx_msr_read(RC_ID_DF, GX2_VP_MSR_PAD_SELECT, &msrValue) == FOUND) {

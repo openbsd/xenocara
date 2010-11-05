@@ -1184,7 +1184,7 @@ Z4lSetPortAttribute(ScrnInfoPtr pScrni, Atom attribute, INT32 value,
     XF86AttributePtr attr;
     struct v4l2_control ctrl;
     int i, nattrs, attrId, val;
-    char *name = NameForAtom(attribute);
+    const char *name = NameForAtom(attribute);
     int old_fd = pPriv->fd;
 
     DBLOG(1, "Z4lSetPortAttribute(%#lx,%d) '%s'\n", (unsigned long)attribute,
@@ -1245,7 +1245,7 @@ Z4lGetPortAttribute(ScrnInfoPtr pScrni, Atom attribute, INT32 * value,
     XF86AttributePtr attr;
     struct v4l2_control ctrl;
     int i, nattrs, attrId, val;
-    char *name = NameForAtom(attribute);
+    const char *name = NameForAtom(attribute);
     int old_fd = pPriv->fd;
 
     DBLOG(1, "Z4lGetPortAttribute(%#lx) '%s'\n",

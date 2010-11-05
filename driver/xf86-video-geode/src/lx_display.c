@@ -339,8 +339,16 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
 
     assert(size == 256);
 
+    /* We need the Gamma Correction for video - fading operation,
+     * the values address should be plused for every cycle.
+     * Special for Screensaver Operation.
+     */
+
     for (i = 0; i < 256; i++) {
-	unsigned int val = (*red << 8) | *green | (*blue >> 8);
+        (*red) &= 0xff00;
+        (*green) &= 0xff00;
+        (*blue) &= 0xff00;
+        unsigned int val = (*(red++) << 8) | *(green++) | (*(blue++) >> 8);
 
 	df_set_video_palette_entry(i, val);
     }
@@ -355,20 +363,48 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
     WRITE_VID32(DF_DISPLAY_CONFIG, dcfg);
 }
 
+    /* Allocates shadow memory, and allocating a new space for Rotatation.
+     * The size is measured in bytes, and the offset from the beginning
+     * of card space is returned.
+     */
+
+static Bool
+LXAllocShadow(ScrnInfoPtr pScrni, int size)
+{
+    GeodeRec *pGeode = GEODEPTR(pScrni);
+
+    if (pGeode->shadowArea) {
+	if (pGeode->shadowArea->size != size) {
+		exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
+		pGeode->shadowArea = NULL;
+	}
+    }
+
+    if (pGeode->shadowArea == NULL) {
+	pGeode->shadowArea =
+		exaOffscreenAlloc(pScrni->pScreen, size, 4, TRUE,
+		NULL, NULL);
+
+	if (pGeode->shadowArea == NULL)
+		return FALSE;
+    }
+
+    pScrni->fbOffset = pGeode->shadowArea->offset;
+    return TRUE;
+}
+
 static void *
 lx_crtc_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
 {
     ScrnInfoPtr pScrni = crtc->scrn;
     GeodePtr pGeode = GEODEPTR(pScrni);
-    LXCrtcPrivatePtr lx_crtc = crtc->driver_private;
     unsigned int rpitch, size;
 
     rpitch = pScrni->displayWidth * (pScrni->bitsPerPixel / 8);
     size = rpitch * height;
 
-    lx_crtc->rotate_mem = GeodeAllocOffscreen(pGeode, size, 4);
-
-    if (lx_crtc->rotate_mem == NULL) {
+    /* Allocate shadow memory */
+    if (LXAllocShadow(pScrni, size) == FALSE) {
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
 	    "Couldn't allocate the shadow memory for rotation\n");
 	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
@@ -378,8 +414,8 @@ lx_crtc_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
 	return NULL;
     }
 
-    memset(pGeode->FBBase + lx_crtc->rotate_mem->offset, 0, size);
-    return pGeode->FBBase + lx_crtc->rotate_mem->offset;
+    memset(pGeode->FBBase + pGeode->shadowArea->offset, 0, size);
+    return pGeode->FBBase + pGeode->shadowArea->offset;
 }
 
 static PixmapPtr
@@ -409,15 +445,17 @@ lx_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rpixmap, void *data)
 {
     ScrnInfoPtr pScrni = crtc->scrn;
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    LXCrtcPrivatePtr lx_crtc = crtc->driver_private;
 
     if (rpixmap)
 	FreeScratchPixmapHeader(rpixmap);
 
+    /* Free shadow memory */
     if (data) {
 	gp_wait_until_idle();
-	GeodeFreeOffscreen(pGeode, lx_crtc->rotate_mem);
-	lx_crtc->rotate_mem = NULL;
+	if (pGeode->shadowArea != NULL) {
+	exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
+	pGeode->shadowArea = NULL;
+	}
     }
 }
 

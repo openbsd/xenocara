@@ -210,6 +210,8 @@ typedef struct _geodeRec
     int Pitch;			       /* display FB pitch */
     int displaySize;		       /* The size of the visibile area */
 
+    ExaOffscreenArea *shadowArea;
+
     /* Framebuffer memory */
 
     unsigned char *FBBase;

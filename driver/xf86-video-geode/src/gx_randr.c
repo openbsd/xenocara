@@ -28,7 +28,6 @@
 
 #include "xf86.h"
 #include "os.h"
-#include "mibank.h"
 #include "globals.h"
 #include "xf86.h"
 #include "xf86Priv.h"
@@ -56,7 +55,11 @@ typedef struct _GXRandRInfo
     Rotation supported_rotations;      /* driver supported */
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
+#if HAS_DEVPRIVATEKEYREC
+static DevPrivateKeyRec GXRandRIndex;
+#else
 static int GXRandRIndex;
+#endif
 
 #define OLD_VIDEODRV_INTERFACE (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
 
@@ -161,7 +164,11 @@ GXRandRSetMode(ScreenPtr pScreen,
     int oldHeight = pScreen->height;
     int oldmmWidth = pScreen->mmWidth;
     int oldmmHeight = pScreen->mmHeight;
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 8
     WindowPtr pRoot = WindowTable[pScreen->myNum];
+#else
+    WindowPtr pRoot = pScreen->root;
+#endif
     DisplayModePtr currentMode = NULL;
     Bool ret = TRUE;
     PixmapPtr pspix = NULL;
@@ -333,6 +340,10 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
     }
 #if OLD_VIDEODRV_INTERFACE
     GXRandRIndex = AllocateScreenPrivateIndex();
+#endif
+#if HAS_DIXREGISTERPRIVATEKEY
+    if (!dixRegisterPrivateKey(&GXRandRIndex, PRIVATE_SCREEN, 0))
+	return FALSE;
 #endif
 
     pRandr = xcalloc(sizeof(XF86RandRInfoRec), 1);

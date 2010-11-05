@@ -981,7 +981,14 @@ df_set_video_palette_entry(unsigned long index, unsigned long palette)
     dcfg = READ_VID32(DF_DISPLAY_CONFIG);
     misc = READ_VID32(DF_VID_MISC);
 
-    dcfg |= DF_DCFG_GV_PAL_BYP;
+    /* Ensure that the Graphic data passes through the Gamma
+     * Correction RAM
+     */
+    dcfg &= ~DF_DCFG_GV_PAL_BYP;
+
+    /* The graphics and video data are passed through gamma
+     * correction RAM
+     */
     misc &= ~DF_GAMMA_BYPASS_BOTH;
 
     WRITE_VID32(DF_DISPLAY_CONFIG, dcfg);

@@ -119,7 +119,7 @@ LXCopyFromSys(GeodeRec * pGeode, unsigned char *src, unsigned int dst,
 {
 
     gp_declare_blt(0);
-    gp_set_bpp(16);
+    gp_set_bpp((srcPitch / w) << 3);
 
     gp_set_raster_operation(0xCC);
     gp_set_strides(dstPitch, srcPitch);

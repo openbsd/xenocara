@@ -66,6 +66,13 @@ because it utilizes the new common DDC probing libraries from X.Org.
 
 = FAQ =
 
+Q: Why doesn't screen rotation work?
+
+A: Make sure that a sufficient amount of video RAM is reserved in the BIOS,
+   otherwise rotation will fail and this error message appear in Xorg.log:
+      Couldn't allocate the shadow memory for rotation
+      You need XX bytes, but only YY bytes are available
+
 Q: Why doesn't this GEODE driver work at WXGA (wide screen) resolutions?
 
 A: Make sure that TFT Panel support is disabled in the BIOS settings, 
@@ -110,27 +117,24 @@ EndSection
 
 The following options may be added to the section:
 
-== GX ==
+== Common options ==
 
-SWCursor: Enable software cursors (essentially disabling HW cursor support)
-NoCompression: Disable video bandwidth compression
+FBSize: Specify the size of the video space (in bytes)
 NoAccel: Disable hardware assisted acceleration
-AccelMethod: "XAA" (default) or "EXA"
-Rotate: Select a orientation to start with - LEFT, INVERT, CCW
+NoCompression: Disable video bandwidth compression
 NoPanel: Disable panel support
+Rotate: Select a orientation to start with - LEFT, INVERT, CCW
+SWCursor: Enable software cursors (essentially disabling HW cursor support)
+
+== GX-specific options ==
+
+AccelMethod: "XAA" (default) or "EXA"
+PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
 OSMImageBuffers: Set the number of image buffers (XAA only)
 OSMColorExpBuffers: Set the number of color expansion buffers (XAA only)
-FBSize: Specify the size of the video space (in bytes)
-PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
 
-== LX ==
+== LX-specific options ==
 
-SWCursor: Enable software cursors (essentially disabling HW cursor support)
-NoCompression: Disable video bandwidth compression
-NoAccel: Disable hardware assisted acceleration
-Rotate: Select a orientation to start with - LEFT, INVERT, CCW
-NoPanel: Disable panel support
 ExaScratch: Specify the amount of extra EXA scratch buffer (in bytes)
-FBSize: Specify the size of the video space (in bytes)
 
 = EOF =

@@ -1,0 +1,23 @@
+Geode 2.11.9 (2010-08-23)
+=========================
+We are pleased to announce this maintenance release of xf86-video-geode.
+It features a plethora of bug fixes, a few documentation updates and one
+performance enhancement.
+
+This release also marks the return of AMD to the development team. 
+
+Noticeable changes compared to 2.11.8
+-------------------------------------
+ * Fixes all known rendering bugs, most notably those pertaining to the
+   GNOME and KDE desktop environments, to video player applications and
+   to the Chrome and Firefox browsers.
+
+ * Dramatically improves the performance:
+                      Before         After
+    -aa10text         4660/sec       53300/sec
+    -aa24text         2740/sec       16200/sec
+
+ * Validates resolutions rather than resorts to virtual screen sizes.
+   Adds a new screen resolution at 106.50MHz to those we know about.
+
+ * Clarifies the copyrights of each file and updates COPYING to match.
