@@ -343,7 +343,6 @@ _X_EXPORT InputDriverRec VOID = {
     xf86VoidInit,		/* pre-init */
     xf86VoidUninit,		/* un-init */
     NULL,			/* module */
-    0				/* ref count */
 };
 
 /*
