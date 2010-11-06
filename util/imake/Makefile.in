@@ -299,7 +299,7 @@ appman_PRE = \
 
 
 # Only need to install man pages for programs/scripts being installed
-appman_DATA = $(bin_PROGRAMS:%$(EXEEXT)=%.@APP_MAN_SUFFIX@) $(bin_SCRIPTS:%=%.@APP_MAN_SUFFIX@)
+appman_DATA = $(bin_PROGRAMS:%=%.@APP_MAN_SUFFIX@) $(bin_SCRIPTS:%=%.@APP_MAN_SUFFIX@)
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 MAINTAINERCLEANFILES = ChangeLog
 all: config.h

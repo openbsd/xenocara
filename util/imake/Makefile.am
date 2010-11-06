@@ -125,7 +125,7 @@ appman_PRE = \
 	mkhtmlindex.man
 
 # Only need to install man pages for programs/scripts being installed
-appman_DATA = $(bin_PROGRAMS:%$(EXEEXT)=%.@APP_MAN_SUFFIX@) $(bin_SCRIPTS:%=%.@APP_MAN_SUFFIX@)
+appman_DATA = $(bin_PROGRAMS:%=%.@APP_MAN_SUFFIX@) $(bin_SCRIPTS:%=%.@APP_MAN_SUFFIX@)
 
 EXTRA_DIST += $(appman_PRE)
 CLEANFILES += $(appman_DATA)
