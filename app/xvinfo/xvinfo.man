@@ -1,6 +1,3 @@
-.\" $XdotOrg: $
-.\" $XFree86: xc/programs/xvinfo/xvinfo.man,v 1.2 2001/01/24 00:06:51 dawes Exp $
-.\"
 .TH xvinfo __appmansuffix__ __vendorversion__
 .SH NAME
 xvinfo - Print out X-Video extension adaptor information
