@@ -401,7 +401,10 @@
 ./etc/X11/xkb/types/pc
 ./etc/X11/xsm
 ./etc/fonts
+./etc/fonts/conf
 ./etc/fonts/conf.d
+./etc/fonts/conf/conf.avail
+./etc/fonts/conf/conf.d
 ./usr
 ./usr/X11R6
 ./usr/X11R6/README

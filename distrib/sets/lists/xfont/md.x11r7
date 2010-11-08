@@ -1,3 +1,5 @@
+./etc/fonts/conf/conf.avail/42-luxi-mono.conf
+./etc/fonts/conf/conf.d/42-luxi-mono.conf
 ./usr/X11R6/lib/X11/fonts/100dpi
 ./usr/X11R6/lib/X11/fonts/100dpi/UTBI__10-ISO8859-1.pcf.gz
 ./usr/X11R6/lib/X11/fonts/100dpi/UTBI__10-ISO8859-10.pcf.gz
