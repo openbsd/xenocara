@@ -1,3 +1,48 @@
+commit 13d9a0906acca18a268b8898addc1a192c5a2b12
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 11 13:56:22 2010 +1000
+
+    xinput 1.5.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 84798d18421535f47a00f4bc43787432f6725032
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 11 13:46:54 2010 +1000
+
+    Print an error if mode is neither ABSOLUTE nor RELATIVE.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 6a794ab3ceb6d3527c0a87f610bc1d6cf26971ba
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Jul 1 18:36:42 2010 -0400
+
+    xinput: Split XI2 valuators and print index of events
+    
+    XI2 events support bitmask selected valuators. When printing masked
+    events, we need to also print the index of the valuator value. This
+    change prints each valuator on its own line, prefixed by its index
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a5c9b0ffb969f71ec73a6c65f5135f5aa7805a38
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jun 9 15:52:31 2010 +1000
+
+    list: only check the last bit in the device mode.
+    
+    This works around a bug in X servers 1.7.x, 1.8.0 and 1.8.1 where the device
+    mode could sometimes be binary OR'd with the OutOfProximity flag. The result
+    was a value of 0b10 for relative and 0b11 for Absolute, both of which were
+    interpreted as relative by this code.
+    
+    Affected is only the XIQueryDevice call, not the XListInputDevices call.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 3778f707cca0b9f023a8a5fc86e26776ef6e1b6c
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Jun 4 11:11:03 2010 +1000
