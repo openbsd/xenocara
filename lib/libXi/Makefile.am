@@ -1,11 +1,9 @@
-SUBDIRS = src man
+SUBDIRS = src man doc specs
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xi.pc
 
-EXTRA_DIST = xi.pc.in ChangeLog
-
-CLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL
 

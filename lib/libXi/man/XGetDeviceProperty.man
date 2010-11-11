@@ -2,12 +2,12 @@
 .\"     Title: xgetdeviceproperty
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 08/04/2010
+.\"      Date: 11/03/2010
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XGETDEVICEPROPERTY" "libmansuffix" "08/04/2010" "[FIXME: source]" "[FIXME: manual]"
+.TH "XGETDEVICEPROPERTY" "libmansuffix" "11/03/2010" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -33,7 +33,6 @@ int XGetDeviceProperty( Display *display,
                         long offset,
                         long length,
                         Bool delete,
-                        Bool pending,
                         Atom req_type,
                         Atom *actual_type_return,
                         int *actual_format_return,
@@ -140,12 +139,6 @@ num_values
 offset
        Specifies the offset in the specified property (in
        32\-bit quantities) where the data is to be retrieved\&.
-.fi
-.sp
-.nf
-pending
-       Specifies whether to retrieve the pending state of the
-       property or the current state\&.
 .fi
 .sp
 .nf

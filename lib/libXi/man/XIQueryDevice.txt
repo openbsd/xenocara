@@ -11,9 +11,9 @@ SYNOPSIS
 
    #include <X11/extensions/XInput2.h>
 
-   XIDeviceInfo* XIQueryPointer( Display *display,
-                                 int deviceid,
-                                 int *ndevices_return);
+   XIDeviceInfo* XIQueryDevice( Display *display,
+                                int deviceid,
+                                int *ndevices_return);
 
    XIFreeDeviceInfo( XIDeviceInfo *info);
 

@@ -1,16 +1,21 @@
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+AC_PREREQ([2.60])
 
-AC_INIT(libXi, 1.3.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXi)
+AC_INIT(libXi, 1.4.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXi)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
+# Require xorg-macros minimum of 1.10 for DocBook XML documentation
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+          [m4_fatal([must install xorg-macros 1.10 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.10)
 XORG_DEFAULT_OPTIONS
+XORG_ENABLE_SPECS
+XORG_WITH_XMLTO(0.0.20)
+XORG_WITH_FOP
+XORG_CHECK_SGML_DOCTOOLS(1.5)
+XORG_WITH_ASCIIDOC(8.4.5)
 AM_CONFIG_HEADER(src/config.h)
 
 # Check for progs
@@ -20,15 +25,10 @@ AC_PROG_SED
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.2.99.1] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 1.9.99.902])
-XI_CFLAGS="$CWARNFLAGS $XI_CFLAGS"
-AC_SUBST(XI_CFLAGS)
-AC_SUBST(XI_LIBS)
 
 # Check for xmlto and asciidoc for man page conversion
 # (only needed by people building tarballs)
-XORG_WITH_XMLTO
-XORG_WITH_ASCIIDOC
-if test "x$XMLTO" != "x" && test "x$ASCIIDOC" != "x"; then
+if test "$have_xmlto" = yes && test "$have_asciidoc" = yes; then
 	have_doctools=yes
 else
 	have_doctools=no
@@ -47,7 +47,9 @@ AM_CONDITIONAL([INSTALL_MANPAGES],
 XORG_CHECK_MALLOC_ZERO
 
 AC_OUTPUT([Makefile
-	   src/Makefile
-	   man/Makefile
+           src/Makefile
+           man/Makefile
+           doc/Makefile
+           specs/Makefile
            xi.pc])
 

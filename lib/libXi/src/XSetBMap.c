@@ -56,7 +56,6 @@ SOFTWARE.
 #include <X11/extensions/XInput.h>
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
-#define NEED_REPLIES
 
 /* returns either  DeviceMappingSuccess or DeviceMappingBusy  */
 

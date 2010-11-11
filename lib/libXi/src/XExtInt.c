@@ -50,8 +50,6 @@ SOFTWARE.
  *
  */
 
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <stdio.h>
 #include <stdint.h>
 #include <X11/extensions/XI.h>
@@ -1640,7 +1638,7 @@ wireToRawEvent(xXIRawEvent *in, XGenericEventCookie *cookie)
         out->valuators.values[i] = values->integral;
         out->valuators.values[i] += ((double)values->frac / (1 << 16) / (1 << 16));
         out->raw_values[i] = (values + bits)->integral;
-        out->valuators.values[i] += ((double)(values + bits)->frac / (1 << 16) / (1 << 16));
+        out->raw_values[i] += ((double)(values + bits)->frac / (1 << 16) / (1 << 16));
         values++;
     }
 

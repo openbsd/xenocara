@@ -68,7 +68,8 @@ AM_CFLAGS = -I$(top_srcdir)/include \
             -I$(top_srcdir)/include/X11 \
             -I$(top_srcdir)/include/X11/extensions \
             $(XI_CFLAGS) \
-            $(MALLOC_ZERO_CFLAGS)
+            $(MALLOC_ZERO_CFLAGS) \
+            $(CWARNFLAGS)
 
 
 libXi_la_LDFLAGS = -version-number 6:1:0 -no-undefined

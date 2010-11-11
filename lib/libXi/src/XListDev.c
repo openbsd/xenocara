@@ -51,8 +51,6 @@ SOFTWARE.
  *
  */
 
-#define NEED_REPLIES
-#define NEED_EVENTS
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include <X11/Xlibint.h>

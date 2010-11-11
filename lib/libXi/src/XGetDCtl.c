@@ -84,19 +84,15 @@ XGetDeviceControl(
     req->deviceid = dev->device_id;
     req->control = control;
 
-    if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
-	UnlockDisplay(dpy);
-	SyncHandle();
-	return (XDeviceControl *) NULL;
-    }
+    if (!_XReply(dpy, (xReply *) & rep, 0, xFalse))
+	goto out;
+
     if (rep.length > 0) {
 	nbytes = (long)rep.length << 2;
 	d = (xDeviceState *) Xmalloc((unsigned)nbytes);
 	if (!d) {
 	    _XEatData(dpy, (unsigned long)nbytes);
-	    UnlockDisplay(dpy);
-	    SyncHandle();
-	    return (XDeviceControl *) NULL;
+	    goto out;
 	}
 	sav = d;
 	_XRead(dpy, (char *)d, nbytes);
@@ -138,11 +134,9 @@ XGetDeviceControl(
 	}
 
 	Device = (XDeviceControl *) Xmalloc((unsigned)size);
-	if (!Device) {
-	    UnlockDisplay(dpy);
-	    SyncHandle();
-	    return (XDeviceControl *) NULL;
-	}
+	if (!Device)
+	    goto out;
+
 	Sav = Device;
 
 	d = sav;
@@ -228,8 +222,9 @@ XGetDeviceControl(
 	default:
 	    break;
 	}
-	XFree(sav);
     }
+out:
+    XFree(sav);
 
     UnlockDisplay(dpy);
     SyncHandle();

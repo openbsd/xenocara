@@ -19,7 +19,6 @@ SYNOPSIS
                            long offset,
                            long length,
                            Bool delete,
-                           Bool pending,
                            Atom req_type,
                            Atom *actual_type_return,
                            int *actual_format_return,
@@ -95,10 +94,6 @@ SYNOPSIS
    offset
           Specifies the offset in the specified property (in
           32-bit quantities) where the data is to be retrieved.
-
-   pending
-          Specifies whether to retrieve the pending state of the
-          property or the current state.
 
    property
           Specifies the property to modify or query.

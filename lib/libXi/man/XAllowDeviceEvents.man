@@ -2,12 +2,12 @@
 .\"     Title: xallowdeviceevents
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 08/04/2010
+.\"      Date: 10/20/2010
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XALLOWDEVICEEVENTS" "libmansuffix" "08/04/2010" "[FIXME: source]" "[FIXME: manual]"
+.TH "XALLOWDEVICEEVENTS" "libmansuffix" "10/20/2010" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -55,173 +55,81 @@ time
 .fi
 .SH "DESCRIPTION"
 .sp
-.if n \{\
-.RS 4
-.\}
-.nf
-The XAllowDeviceEvents function releases some queued events if
-the client has caused a device to freeze\&. It has no effect if
-the specified time is earlier than the last\-grab time of the
-most recent active grab for the client and device, or if the
-specified time is later than the current X server time\&.
-.fi
-.if n \{\
-.RE
-.\}
+The XAllowDeviceEvents function releases some queued events if the client has caused a device to freeze\&. It has no effect if the specified time is earlier than the last\-grab time of the most recent active grab for the client and device, or if the specified time is later than the current X server time\&.
 .sp
-.if n \{\
-.RS 4
-.\}
-.nf
-The following describes the processing that occurs depending on
-what constant you pass to the event_mode argument\&.
-.fi
-.if n \{\
-.RE
-.\}
+The following describes the processing that occurs depending on what constant you pass to the event_mode argument\&.
 .sp
-.if n \{\
 .RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
 .\}
-.nf
-AsyncThisDevice If the specified device is frozen by the
-client, event processing for that device continues as usual\&. If
-the device is frozen multiple times by the client on behalf of
-multiple separate grabs, AsyncThisDevice thaws for
-all\&.AsyncThisDevice has no effect if the specified device is
-not frozen by the client, but the device need not be grabbed by
-the client\&.
-.fi
-.if n \{\
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+AsyncThisDevice \- If the specified device is frozen by the client, event processing for that device continues as usual\&. If the device is frozen multiple times by the client on behalf of multiple separate grabs, AsyncThisDevice thaws for all\&.AsyncThisDevice has no effect if the specified device is not frozen by the client, but the device need not be grabbed by the client\&.
 .RE
-.\}
 .sp
-.if n \{\
 .RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
 .\}
-.nf
-SyncThisDevice If the specified device is frozen and actively
-grabbed by the client, event processing for that device
-continues normally until the next key or button event is
-reported to the client\&. At this time, the specified device
-again appears to freeze\&. However, if the reported event causes
-the grab to be released, the specified device does not freeze\&.
-SyncThisDevice has no effect if the specified device is not
-frozen by the client or is not grabbed by the client\&.
-.fi
-.if n \{\
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+SyncThisDevice \- If the specified device is frozen and actively grabbed by the client, event processing for that device continues normally until the next key or button event is reported to the client\&. At this time, the specified device again appears to freeze\&. However, if the reported event causes the grab to be released, the specified device does not freeze\&. SyncThisDevice has no effect if the specified device is not frozen by the client or is not grabbed by the client\&.
 .RE
-.\}
 .sp
-.if n \{\
 .RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
 .\}
-.nf
-ReplayThisDevice If the specified device is actively grabbed by
-the client and is frozen as the result of an event having been
-sent to the client (either from the activation of a
-GrabDeviceButton or from a previous AllowDeviceEvents with mode
-SyncThisDevice, but not from a GrabDevice), the grab is
-released and that event is completely reprocessed\&. This time,
-however, the request ignores any passive grabs at or above
-(toward the root) that the grab\-window of the grab just
-released\&. The request has no effect if the specified device is
-not grabbed by the client or if it is not frozen as the result
-of an event\&.
-.fi
-.if n \{\
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ReplayThisDevice \- If the specified device is actively grabbed by the client and is frozen as the result of an event having been sent to the client (either from the activation of a GrabDeviceButton or from a previous AllowDeviceEvents with mode SyncThisDevice, but not from a GrabDevice), the grab is released and that event is completely reprocessed\&. This time, however, the request ignores any passive grabs at or above (toward the root) that the grab\-window of the grab just released\&. The request has no effect if the specified device is not grabbed by the client or if it is not frozen as the result of an event\&.
 .RE
-.\}
 .sp
-.if n \{\
 .RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
 .\}
-.nf
-AsyncOtherDevices If the remaining devices are frozen by the
-client, event processing for them continues as usual\&. If the
-other devices are frozen multiple times by the client on behalf
-of multiple grabs, AsyncOtherDevices "thaws" for all\&.
-AsyncOtherDevices has no effect if the devices are not frozen
-by the client\&.
-.fi
-.if n \{\
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+AsyncOtherDevices \- If the remaining devices are frozen by the client, event processing for them continues as usual\&. If the other devices are frozen multiple times by the client on behalf of multiple grabs, AsyncOtherDevices "thaws" for all\&. AsyncOtherDevices has no effect if the devices are not frozen by the client\&.
 .RE
-.\}
 .sp
-.if n \{\
 .RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
 .\}
-.nf
-SyncAll If all devices are frozen by the client, event
-processing (for all devices) continues normally until the next
-button or key event is reported to the client for a grabbed
-device, at which time all devices again appear to freeze\&.
-However, if the reported event causes the grab to be released,
-then the devices do not freeze\&. If any device is still grabbed,
-then a subsequent event for it will still cause all devices to
-freeze\&. SyncAll has no effect unless all devices are frozen by
-the client\&. If any device is frozen twice by the client on
-behalf of two separate grabs, SyncAll thaws for both\&. A
-subsequent freeze for SyncAll will only freeze each device
-once\&.
-.fi
-.if n \{\
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+SyncAll \- If all devices are frozen by the client, event processing (for all devices) continues normally until the next button or key event is reported to the client for a grabbed device, at which time all devices again appear to freeze\&. However, if the reported event causes the grab to be released, then the devices do not freeze\&. If any device is still grabbed, then a subsequent event for it will still cause all devices to freeze\&. SyncAll has no effect unless all devices are frozen by the client\&. If any device is frozen twice by the client on behalf of two separate grabs, SyncAll thaws for both\&. A subsequent freeze for SyncAll will only freeze each device once\&.
 .RE
-.\}
 .sp
-.if n \{\
 .RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
 .\}
-.nf
-AsyncAll If all devices are frozen by the client, event
-processing for all devices continues normally\&. If any device is
-frozen multiple times by the client on behalf of multiple
-separate grabs, AsyncAll thaws for all\&. AsyncAll has no effect
-unless all devices are frozen by the client\&.
-.fi
-.if n \{\
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+AsyncAll \- If all devices are frozen by the client, event processing for all devices continues normally\&. If any device is frozen multiple times by the client on behalf of multiple separate grabs, AsyncAll thaws for all\&. AsyncAll has no effect unless all devices are frozen by the client\&.
 .RE
-.\}
 .sp
-.if n \{\
-.RS 4
-.\}
-.nf
-AsyncThisDevice, SyncThisDevice, and ReplayThisDevice have no
-effect on the processing of events from the remaining
-devices\&.AsyncOtherDevices has no effect on the processing of
-events from the specified device\&. When the event_mode is
-SyncAll or AsyncAll, the device parameter is ignored\&.
-.fi
-.if n \{\
-.RE
-.\}
+AsyncThisDevice, SyncThisDevice, and ReplayThisDevice have no effect on the processing of events from the remaining devices\&.AsyncOtherDevices has no effect on the processing of events from the specified device\&. When the event_mode is SyncAll or AsyncAll, the device parameter is ignored\&.
 .sp
-.if n \{\
-.RS 4
-.\}
-.nf
-It is possible for several grabs of different devices by the
-same or different clients to be active simultaneously\&. If a
-device is frozen on behalf of any grab, no event processing is
-performed for the device\&. It is possible for a single device to
-be frozen because of several grabs\&. In this case, the freeze
-must be released on behalf of each grab before events can again
-be processed\&.
-.fi
-.if n \{\
-.RE
-.\}
+It is possible for several grabs of different devices by the same or different clients to be active simultaneously\&. If a device is frozen on behalf of any grab, no event processing is performed for the device\&. It is possible for a single device to be frozen because of several grabs\&. In this case, the freeze must be released on behalf of each grab before events can again be processed\&.
 .sp
-.if n \{\
-.RS 4
-.\}
-.nf
 XAllowDeviceEvents can generate a BadDevice or BadValue error\&.
-.fi
-.if n \{\
-.RE
-.\}
 .SH "DIAGNOSTICS"
 .sp
 .if n \{\

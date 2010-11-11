@@ -83,20 +83,16 @@ XGetFeedbackControl(
     req->ReqType = X_GetFeedbackControl;
     req->deviceid = dev->device_id;
 
-    if (!_XReply(dpy, (xReply *) & rep, 0, xFalse)) {
-	UnlockDisplay(dpy);
-	SyncHandle();
-	return (XFeedbackState *) NULL;
-    }
+    if (!_XReply(dpy, (xReply *) & rep, 0, xFalse))
+	goto out;
+
     if (rep.length > 0) {
 	*num_feedbacks = rep.num_feedbacks;
 	nbytes = (long)rep.length << 2;
 	f = (xFeedbackState *) Xmalloc((unsigned)nbytes);
 	if (!f) {
 	    _XEatData(dpy, (unsigned long)nbytes);
-	    UnlockDisplay(dpy);
-	    SyncHandle();
-	    return (XFeedbackState *) NULL;
+	    goto out;
 	}
 	sav = f;
 	_XRead(dpy, (char *)f, nbytes);
@@ -134,11 +130,9 @@ XGetFeedbackControl(
 	}
 
 	Feedback = (XFeedbackState *) Xmalloc((unsigned)size);
-	if (!Feedback) {
-	    UnlockDisplay(dpy);
-	    SyncHandle();
-	    return (XFeedbackState *) NULL;
-	}
+	if (!Feedback)
+	    goto out;
+
 	Sav = Feedback;
 
 	f = sav;
@@ -253,8 +247,9 @@ XGetFeedbackControl(
 	    f = (xFeedbackState *) ((char *)f + f->length);
 	    Feedback = (XFeedbackState *) ((char *)Feedback + Feedback->length);
 	}
-	XFree((char *)sav);
     }
+out:
+    XFree((char *)sav);
 
     UnlockDisplay(dpy);
     SyncHandle();

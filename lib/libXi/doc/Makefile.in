@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -59,11 +59,12 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-
-# Generate man pages and shadow pages from .txt and then from DocBook XML
-@HAVE_DOCTOOLS_TRUE@am__append_1 = .txt .xml
-subdir = man
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+@ENABLE_SPECS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = xorg.css
+subdir = doc
+DIST_COMMON = $(am__dist_spec_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -73,15 +74,17 @@ CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
+am__dist_spec_DATA_DIST = porting.xml
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libmandir)"
-libmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(libman_DATA)
+am__installdirs = "$(DESTDIR)$(specdir)" "$(DESTDIR)$(specdir)"
+dist_specDATA_INSTALL = $(INSTALL_DATA)
+specDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_spec_DATA) $(spec_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -161,10 +164,7 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-# Unable to use __libmansuffix__ as underscores are lost in txt --> xml conversion
-MAN_SUBSTS = @MAN_SUBSTS@ -e 's/libmansuffix/$(LIB_MAN_SUFFIX)/g'
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -239,109 +239,21 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-libmandir = $(LIB_MAN_DIR)
-
-# Source files for X Input v2 man pages
-XI2_txt = \
-	XIChangeHierarchy.txt			\
-	XIDefineCursor.txt			\
-	XIGrabButton.txt			\
-	XIGrabDevice.txt			\
-	XIGrabEnter.txt				\
-	XIQueryDevice.txt			\
-	XIQueryPointer.txt			\
-	XIQueryVersion.txt			\
-	XISelectEvents.txt			\
-	XISetClientPointer.txt			\
-	XISetFocus.txt				\
-	XIWarpPointer.txt			\
-	XIListProperties.txt			\
-	XIChangeProperty.txt
-
-
-# Source files for X Input v1 man pages
-libman_txt = \
-	XAllowDeviceEvents.txt			\
-	XChangeDeviceDontPropagateList.txt	\
-	XChangeKeyboardDevice.txt		\
-	XChangePointerDevice.txt		\
-	XDeviceBell.txt				\
-	XGetDeviceControl.txt			\
-	XGetDeviceKeyMapping.txt		\
-	XGetDeviceModifierMapping.txt		\
-	XGetDeviceMotionEvents.txt		\
-	XGetDeviceProperty.txt			\
-	XGetExtensionVersion.txt		\
-	XGetFeedbackControl.txt			\
-	XGrabDeviceButton.txt			\
-	XGrabDeviceKey.txt			\
-	XGrabDevice.txt				\
-	XListDeviceProperties.txt		\
-	XListInputDevices.txt			\
-	XOpenDevice.txt				\
-	XQueryDeviceState.txt			\
-	XSelectExtensionEvent.txt		\
-	XSendExtensionEvent.txt			\
-	XSetDeviceButtonMapping.txt		\
-	XSetDeviceFocus.txt			\
-	XSetDeviceMode.txt			\
-	XSetDeviceValuators.txt			\
-	$(XI2_txt)
-
-
-# Name of DocBook XML files generated from .txt files by asciidoc
-libman_xml = $(libman_txt:.txt=.xml)
-
-# Shadow man pages are simply links to a main man page.
-# They are created by the xmlto command when generating man pages from DocBook
-# The shadow man page contains a gtroff .so request to include the main man page
-XI2_shadows = \
-	XIUndefineCursor.man			\
-	XIUngrabButton.man			\
-	XIGrabKeycode.man			\
-	XIUngrabKeycode.man			\
-	XIUngrabDevice.man			\
-	XIUngrabEnter.man			\
-	XIGrabFocusIn.man			\
-	XIUngrabFocusIn.man			\
-	XIGetClientPointer.man			\
-	XIGetFocus.man				\
-	XIGetSelectedEvents.man			\
-	XIDeleteProperty.man			\
-	XIGetProperty.man			\
-	XIFreeDeviceInfo.man
-
-libman_shadows = \
-	XGetDeviceDontPropagateList.man		\
-	XChangeDeviceControl.man		\
-	XChangeDeviceKeyMapping.man		\
-	XSetDeviceModifierMapping.man		\
-	XChangeFeedbackControl.man		\
-	XUngrabDeviceButton.man			\
-	XUngrabDeviceKey.man			\
-	XUngrabDevice.man			\
-	XDeviceTimeCoord.man			\
-	XFreeDeviceList.man			\
-	XCloseDevice.man			\
-	XGetSelectedExtensionEvents.man		\
-	XGetDeviceButtonMapping.man		\
-	XGetDeviceFocus.man			\
-	XChangeDeviceProperty.man		\
-	XDeleteDeviceProperty.man		\
-	$(XI2_shadows)
-
-
-# Name of man page files generated from DocBook XML files by xmlto
-libman_PRE = $(libman_txt:.txt=.man) $(libman_shadows)
-@INSTALL_MANPAGES_TRUE@libman_DATA = $(libman_PRE:.man=.$(LIB_MAN_SUFFIX))
-EXTRA_DIST = $(libman_txt) $(libman_PRE)
-CLEANFILES = $(libman_DATA) *.libmansuffix
-MAINTAINERCLEANFILES = $(libman_PRE) *.xml
-SUFFIXES = .man .$(LIB_MAN_SUFFIX) $(am__append_1)
+@ENABLE_SPECS_TRUE@specdir = $(docdir)/$(subdir)
+@ENABLE_SPECS_TRUE@doc_sources = porting.xml
+@ENABLE_SPECS_TRUE@dist_spec_DATA = $(doc_sources)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@spec_DATA =  \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(doc_sources:.xml=.html) \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1) \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2) \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_3)
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FLAGS = -m $(XSL_STYLESHEET)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@CLEANFILES = $(spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@SUFFIXES = .xml .ps .pdf .txt .html
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .man .$(LIB_MAN_SUFFIX) .txt .xml
+.SUFFIXES: .xml .ps .pdf .txt .html
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -351,9 +263,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  doc/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  man/Makefile
+	  $(AUTOMAKE) --foreign  doc/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -381,22 +293,39 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-libmanDATA: $(libman_DATA)
+install-dist_specDATA: $(dist_spec_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(libmandir)" || $(mkdir_p) "$(DESTDIR)$(libmandir)"
-	@list='$(libman_DATA)'; for p in $$list; do \
+	test -z "$(specdir)" || $(mkdir_p) "$(DESTDIR)$(specdir)"
+	@list='$(dist_spec_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(libmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(libmandir)/$$f'"; \
-	  $(libmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(libmandir)/$$f"; \
+	  echo " $(dist_specDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(specdir)/$$f'"; \
+	  $(dist_specDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(specdir)/$$f"; \
 	done
 
-uninstall-libmanDATA:
+uninstall-dist_specDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(libman_DATA)'; for p in $$list; do \
+	@list='$(dist_spec_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(libmandir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(libmandir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(specdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(specdir)/$$f"; \
+	done
+install-specDATA: $(spec_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(specdir)" || $(mkdir_p) "$(DESTDIR)$(specdir)"
+	@list='$(spec_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(specDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(specdir)/$$f'"; \
+	  $(specDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(specdir)/$$f"; \
+	done
+
+uninstall-specDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(spec_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(specdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(specdir)/$$f"; \
 	done
 tags: TAGS
 TAGS:
@@ -436,7 +365,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(libmandir)"; do \
+	for dir in "$(DESTDIR)$(specdir)" "$(DESTDIR)$(specdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -464,7 +393,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -483,7 +411,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-libmanDATA
+install-data-am: install-dist_specDATA install-specDATA
 
 install-exec-am:
 
@@ -509,63 +437,34 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libmanDATA
+uninstall-am: uninstall-dist_specDATA uninstall-info-am \
+	uninstall-specDATA
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-exec install-exec-am \
-	install-info install-info-am install-libmanDATA install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-info-am uninstall-libmanDATA
+	install-data install-data-am install-dist_specDATA \
+	install-exec install-exec-am install-info install-info-am \
+	install-man install-specDATA install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dist_specDATA uninstall-info-am uninstall-specDATA
 
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@xorg.css: $(STYLESHEET_SRCDIR)/xorg.css
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)cp -pf $(STYLESHEET_SRCDIR)/xorg.css $@
 
-# Dependencies for X Input v1 shadow pages
-@HAVE_DOCTOOLS_TRUE@XGetDeviceDontPropagateList.man: XChangeDeviceDontPropagateList.man
-@HAVE_DOCTOOLS_TRUE@XChangeDeviceControl.man: XGetDeviceControl.man
-@HAVE_DOCTOOLS_TRUE@XChangeDeviceKeyMapping.man: XGetDeviceKeyMapping.man
-@HAVE_DOCTOOLS_TRUE@XSetDeviceModifierMapping.man: XGetDeviceModifierMapping.man
-@HAVE_DOCTOOLS_TRUE@XDeviceTimeCoord.man: XGetDeviceMotionEvents.man
-@HAVE_DOCTOOLS_TRUE@XChangeFeedbackControl.man: XGetFeedbackControl.man
-@HAVE_DOCTOOLS_TRUE@XUngrabDeviceButton.man: XGrabDeviceButton.man
-@HAVE_DOCTOOLS_TRUE@XUngrabDeviceKey.man: XGrabDeviceKey.man
-@HAVE_DOCTOOLS_TRUE@XUngrabDevice.man: XGrabDevice.man
-@HAVE_DOCTOOLS_TRUE@XFreeDeviceList.man: XListInputDevices.man
-@HAVE_DOCTOOLS_TRUE@XCloseDevice.man: XOpenDevice.man
-@HAVE_DOCTOOLS_TRUE@XGetSelectedExtensionEvents.man: XSelectExtensionEvent.man
-@HAVE_DOCTOOLS_TRUE@XGetDeviceButtonMapping.man: XSetDeviceButtonMapping.man
-@HAVE_DOCTOOLS_TRUE@XGetDeviceFocus.man: XSetDeviceFocus.man
-@HAVE_DOCTOOLS_TRUE@XChangeDeviceProperty.man: XGetDeviceProperty.man
-@HAVE_DOCTOOLS_TRUE@XDeleteDeviceProperty.man: XGetDeviceProperty.man
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.txt: %.xml $(dist_spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
 
-# Dependencies for X Input v2 shadow pages
-@HAVE_DOCTOOLS_TRUE@XIUndefineCursor.man: XIDefineCursor.man
-@HAVE_DOCTOOLS_TRUE@XIUngrabButton.man XIGrabKeycode.man XIUngrabKeycode.man: XIGrabButton.man
-@HAVE_DOCTOOLS_TRUE@XIGetClientPointer.man: XISetClientPointer.man
-@HAVE_DOCTOOLS_TRUE@XIGetFocus.man: XISetFocus.man
-@HAVE_DOCTOOLS_TRUE@XIUngrabDevice.man: XIGrabDevice.man
-@HAVE_DOCTOOLS_TRUE@XIGetProperty.man: XIChangeProperty.man
-@HAVE_DOCTOOLS_TRUE@XIDeleteProperty.man: XIChangeProperty.man
-@HAVE_DOCTOOLS_TRUE@XIUngrabEnter.man XIGrabFocusIn.man XIUngrabFocusIn.man: XIGrabEnter.man
-@HAVE_DOCTOOLS_TRUE@XIGetSelectedEvents.man: XISelectEvents.man
-@HAVE_DOCTOOLS_TRUE@XIFreeDeviceInfo.man: XIQueryDevice.man
-.man.$(LIB_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-@HAVE_DOCTOOLS_TRUE@.txt.xml:
-@HAVE_DOCTOOLS_TRUE@	$(AM_V_GEN)$(ASCIIDOC) -b docbook -d manpage -o $@ $<
-@HAVE_DOCTOOLS_TRUE@.xml.man:
-@HAVE_DOCTOOLS_TRUE@	$(AM_V_GEN)$(XMLTO) man $<
-@HAVE_DOCTOOLS_TRUE@	$(AM_V_GEN)mv -f $(@:.man=.libmansuffix) $@
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.html: %.xml $(dist_spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
 
-# Invoke asciidoc/xmlto main man page generation for shadow pages
-@HAVE_DOCTOOLS_TRUE@$(libman_shadows):
-@HAVE_DOCTOOLS_TRUE@	@if test ! -f $(@:.man=.libmansuffix); then \
-@HAVE_DOCTOOLS_TRUE@	  $(AM_V_GEN)rm -f $<; \
-@HAVE_DOCTOOLS_TRUE@	  $(AM_V_GEN)$(MAKE) $(AM_MAKEFLAGS) $< || exit 1; \
-@HAVE_DOCTOOLS_TRUE@	fi
-@HAVE_DOCTOOLS_TRUE@	$(AM_V_GEN)mv -f $(@:.man=.libmansuffix) $@
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.pdf: %.xml $(dist_spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
+
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.ps: %.xml $(dist_spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop ps $<
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
