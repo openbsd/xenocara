@@ -1,3 +1,138 @@
+commit 3ddeb5328e1a5413e4800fb396ebab429153d1a1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Oct 27 23:06:51 2010 -0700
+
+    libXext 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 67e6f3d5d56a70c6f8288e9af141916c29307e2d
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:30:02 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e246505ef46f2850abf07ef50fa16865d15c53e1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 16 17:47:02 2010 -0400
+
+    man: list files to install only once
+    
+    Newer versions of autoconf detect that error.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3593a22f82bc6aaf6fef47cacfbe4daa35438ee1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 16 14:13:54 2010 -0400
+
+    man: store shadow man pages in git rather than generating them
+    
+    Simplify the build process and the makefile.
+    
+    Local fix in CVS for bug 5628 is not required
+    as the problem has been fixed in
+    util-macros d9062e4077ebfd0985baf8418f3d0f111b9ddbba
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ef3d8a5b240335623d5f4d554ea4694829fc8eaf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 16 13:47:46 2010 -0400
+
+    man: whitespace management
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 05fd8155ef8cf32606bf6966caa3a9c689d1149d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 16 13:41:24 2010 -0400
+
+    man: use "shadows" terminology to refer to linking man pages
+    
+    To be consistent with other libraries
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 076820b006853d7c36f37fcdd9c2391b83f37ed8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Aug 5 19:32:34 2010 -0400
+
+    man: using the C preprocessor is not required for man pages.
+    
+    There were no special symbols needing cpp.
+    Everything can be handled by the default MAN_SUBSTS in util-macros.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 34500310c8c4ec3a55078837bae15d644fbf24d0
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 06:54:24 2010 -0300
+
+    Purge macros NEED_EVENTS and NEED_REPLIES
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 23643bd1ce181650fff32a8192c816dfc31989d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 27 14:21:24 2010 -0400
+
+    specs: add dbelib and synclib. Remove trailing spaces
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7a945c21ebe87cd0b3e91159f83059f55ed40006
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 26 14:29:04 2010 -0400
+
+    doc: replace groff input format with docbook xml format
+    
+    Initial version of docbook xml.
+    dbelib abd synclib are missing and will be added later.
+    Requires util-macros 1.10
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0860348104536fc3a6e7daa44079b7a58cbfe4e5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 17 16:21:22 2010 -0400
+
+    specs: translate, format, process, install and distribute.
+    
+    Makefile copied from libXtst
+    Remains to do are the Tex files.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 675ca9abbc38f088b177a67501ab5eff1c9dcff5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 11 18:47:23 2010 -0700
+
+    Move specs for several extension API's from xorg-docs module
+    
+    Not formatted, translated or processed yet, just moved & added to EXTRA_DIST
+    Only moved those that had separate library/API docs from the protocol specs.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72cc123fbf3b5186771529cd5d9d9af46470b1af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 11 18:25:30 2010 -0700
+
+    Remove headers for functions found in liblbxutil
+    
+    As reported in https://bugs.freedesktop.org/show_bug.cgi?id=25880
+    they were already added to liblbxutil, but I missed removing them
+    from here, where they're not used.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ce440c7d68fa06763f8413859c25ae3a8a22c81b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jun 3 17:19:30 2010 -0700
@@ -418,7 +553,7 @@ Date:   Tue May 13 11:23:59 2008 +0930
     Xge: replace copyright with standard template from xserver, whitespace fixes.
 
 commit 7e0b3b9029d3d12c9edf961c1d9db4cdbf021f1d
-Merge: c4b0ae9... 9884a41...
+Merge: c4b0ae9 9884a41
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon May 12 18:04:09 2008 +0930
 
@@ -452,7 +587,7 @@ Date:   Thu Dec 6 15:51:16 2007 -0500
     Add missing PHONY line for automatic ChangeLog generation
 
 commit c4b0ae960d63f461d6e9efd64f70084f06a674b3
-Merge: d1c9350... 249daf0...
+Merge: d1c9350 249daf0
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu Dec 6 14:23:02 2007 +1030
 
@@ -556,7 +691,7 @@ Date:   Tue Oct 24 17:22:34 2006 -0700
     Man page spelling/typo fixes
 
 commit 0bf51bc7ba7c0b6f2540503491b9ec104c1c22d1
-Merge: ee11d4d... a82d7b9...
+Merge: ee11d4d a82d7b9
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Oct 24 17:14:45 2006 -0700
 

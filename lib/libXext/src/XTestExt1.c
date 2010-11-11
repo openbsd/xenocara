@@ -1,4 +1,3 @@
-/* $Xorg: XTestExt1.c,v 1.4 2001/02/09 02:03:49 xorgcvs Exp $ */
 /*
  *	File:  xtestext1lib.c
  *
@@ -51,14 +50,10 @@ Telephone and Telegraph Company or of the Regents of the
 University of California.
 
 */
-/* $XFree86: xc/lib/Xext/XTestExt1.c,v 1.3 2001/01/17 19:42:46 dawes Exp $ */
 
 /******************************************************************************
  * include files
  *****************************************************************************/
-
-#define NEED_REPLIES
-#define NEED_EVENTS
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
