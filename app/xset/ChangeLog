@@ -1,9 +1,123 @@
-commit 6da66cd144e309a6f79f4f6c315fe6ef0f3d5b19
-Merge: 859a3fb fd058da
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Apr 3 18:47:26 2010 +0200
+commit 8a3ad532fc8e00ea5066355a783cb270315596fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 10 20:02:19 2010 -0800
 
-    Merge remote branch 'origin/master' into obsd
+    xset 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d75ab3dcae8bcb022e87fd73c9f798421d040c46
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 9 18:16:27 2010 -0800
+
+    Strip trailing whitespace
+    
+    Generated via: perl -i -p -e 's{\s+$}{\n}' *
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 33580bb84fb5ca6d1a49c1f1ac7b785fe4f92d11
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 9 18:13:51 2010 -0800
+
+    Restore man page copyright accidentally removed in ce3f6a73c2beef
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d807d97e8387a38b6a9324912b9c65662949038
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 9 17:13:41 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM sttaements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit edeb291f81424ec04798618379ad252c122377ec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 9 17:11:42 2010 -0800
+
+    config: AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b4a8121b1cb2c0dc643460ee7c9363dc0d83a38
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 17:09:45 2010 -0800
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce3f6a73c2beef0c486575f7797d92b44a718973
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:50 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 41743c6fbea9f58dff4e9fe200837fe718eefc9d
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Tue Aug 10 12:46:14 2010 -0400
+
+    Spelling fix in help docs.
+    
+    Reviewed-by: Robert Hooker <sarvatt@ubuntu.com>
+    Signed-off-by: Bryce Harrington <bryce@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5948a0e2095c4e032dd93e22a65077ff81288666
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Fri Aug 6 00:26:48 2010 -0500
+
+    Use silent rules
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d36afd69f0c5129b6b50c9062257560342d81ebd
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Fri Aug 6 00:26:47 2010 -0500
+
+    Use AC_PROG_SED and MAN_SUBSTS in macros-1.8
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0ac4f20a863d69b99193da26d468397827c672a1
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Fri Aug 6 00:26:46 2010 -0500
+
+    Remove unused variable warning with !XF86MISC
+    
+    xset.c: In function 'query':
+    xset.c:1317: warning: unused variable 'dummy'
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c963b0cb393630962e9094e849b291c539b655ca
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 6 13:10:36 2010 +1000
+
+    xset 1.2.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit fd058da6c1931fa824dd8c07e9130054176fedd7
 Author: Gaetan Nadon <memsize@videotron.ca>
@@ -23,13 +137,6 @@ Date:   Fri Mar 26 17:49:09 2010 -0400
     
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-commit 859a3fb6f3ea901c0dd4f54d87072967d80534e1
-Merge: 6c4981c a666197
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Feb 14 16:13:16 2010 +0100
-
-    Merge remote branch 'origin/master' into obsd
-
 commit a6661974f8bfc0761e5f4e3a1970448e49ef6032
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Thu Feb 11 10:08:07 2010 -0500
@@ -40,13 +147,6 @@ Date:   Thu Feb 11 10:08:07 2010 -0500
     rather than being merged with other packages compiler flags.
     
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
-
-commit 6c4981c33fc5f21b29bafabab5b0c9c2ce1aeb81
-Merge: e1ec00b 068dd4c
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Jan 2 17:26:04 2010 +0100
-
-    Merge remote branch 'origin/master' into obsd
 
 commit 068dd4ce2ecb8d0225a60c736df8cc102e6edf01
 Author: Peter Hutterer <peter.hutterer@who-t.net>
@@ -73,13 +173,6 @@ Date:   Sun Oct 18 17:49:41 2009 +0200
     Signed-off-by: Simon Thum <simon.thum@gmx.de>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit e1ec00b7c68717e44e774ff7b9c1413a8394a855
-Merge: 992cbbe ee1e2d0
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Dec 20 00:47:30 2009 +0100
-
-    Merge remote branch 'origin/master' into obsd
-
 commit ee1e2d02454a8e4c36bbda295f6bae639180b9d8
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Thu Nov 26 09:19:54 2009 -0500
@@ -88,13 +181,6 @@ Date:   Thu Nov 26 09:19:54 2009 -0500
     
     Now that the INSTALL file is generated.
     Allows running make maintainer-clean.
-
-commit 992cbbe3d1559db0fd49f19a820f31f9e6d746c2
-Merge: 274520f c4d0fea
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Nov 1 17:33:53 2009 +0100
-
-    Merge remote branch 'origin/master' into obsd
 
 commit 66b43cf00484f8c03bbfc1dafe38a9d9eaf6476b
 Author: Gaetan Nadon <memsize@videotron.ca>
@@ -158,13 +244,6 @@ Date:   Wed Oct 21 12:47:21 2009 -0700
     
     Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
 
-commit 274520f3d6b3a60b9437cb763f3552fbbbd6ed0f
-Merge: 80a70cb c40fd8f
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Wed Oct 14 23:34:01 2009 +0200
-
-    Merge remote branch 'origin/master' into obsd
-
 commit c40fd8f7d4b6ffa068fa692134218d8fb3f2a40e
 Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
 Date:   Tue Oct 13 11:35:08 2009 -0700
@@ -172,13 +251,6 @@ Date:   Tue Oct 13 11:35:08 2009 -0700
     Added --without-{xf86misc,xprint,fontcache} configure time options
     
     Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
-
-commit 80a70cbadb09f92c6af7bd1c9126568481762c68
-Merge: 74c47be 434c62e
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Fri Sep 25 21:44:10 2009 +0200
-
-    Merge remote branch 'origin/master' into obsd
 
 commit 434c62e22aeed94b7b84ec613ba066ac6aa7c14b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -195,13 +267,6 @@ Date:   Mon Sep 21 15:42:08 2009 -0700
     Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
-
-commit 74c47be1613e7231de1a256d433890e9d6f53303
-Merge: 7ba43f4 3341f13
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Jul 5 14:41:57 2009 +0200
-
-    Merge commit 'origin/master' into obsd
 
 commit 3341f135515f6f2e5b0c40f5ec0a8fb59d4cb1ed
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -236,13 +301,6 @@ Date:   Tue Jun 16 13:14:47 2009 -0700
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
-commit 7ba43f4e7e157897f7d86f8dab632a343839a985
-Merge: 529e4ae 8ce473c
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Fri May 1 18:36:17 2009 +0200
-
-    Merge commit 'origin/master' into obsd
-
 commit 8ce473c45da07eb82537509a4d14ccb50262bfa7
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Apr 29 13:57:47 2009 -0700
@@ -266,24 +324,11 @@ Date:   Tue Apr 28 16:11:56 2009 +0200
     Debian bug#525255 <http://bugs.debian.org/525255>
     Reported-by: "A. Costa" <agcosta@gis.net>
 
-commit 529e4ae959c7fa82357c2cd1528fc5f9d64fd1e2
-Merge: b9d5d73 3d11462
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Wed Feb 4 22:19:56 2009 +0100
-
-    Merge commit 'origin/master' into obsd
-
 commit 3d1146293d84cecaff18aa44b95539910e24ef11
 Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
 Date:   Mon Jan 26 18:03:23 2009 -0200
 
     Correct make distcheck and most sparse warnings.
-
-commit b9d5d7323cf5f71b81120335bf54a8d51ba279ed
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Mar 8 19:24:15 2008 +0100
-
-    BSD Makefile
 
 commit 9f79fc8957d595cc9f7131ee5230b5bb3aae0679
 Author: Adam Jackson <ajax@redhat.com>

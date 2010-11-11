@@ -14,9 +14,9 @@
 
 @SET_MAKE@
 
-# 
+#
 #  Copyright 2005  Red Hat, Inc.
-# 
+#
 #  Permission to use, copy, modify, distribute, and sell this software and its
 #  documentation for any purpose is hereby granted without fee, provided that
 #  the above copyright notice appear in all copies and that both that
@@ -26,7 +26,7 @@
 #  specific, written prior permission.  Red Hat makes no
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
-# 
+#
 #  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 #  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -158,19 +158,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 OBJEXT = @OBJEXT@
@@ -182,7 +170,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
-SED = sed
+SED = @SED@
 SET_FONTCACHE_CFLAGS = @SET_FONTCACHE_CFLAGS@
 SET_FONTCACHE_LIBS = @SET_FONTCACHE_LIBS@
 SET_MAKE = @SET_MAKE@
@@ -253,7 +241,7 @@ appman_PRE = \
 
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-EXTRA_DIST = $(appman_PRE) 
+EXTRA_DIST = $(appman_PRE)
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = $(appman_DATA)
 
@@ -673,7 +661,7 @@ ChangeLog:
 dist-hook: ChangeLog INSTALL
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

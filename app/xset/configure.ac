@@ -1,5 +1,5 @@
 dnl  Copyright 2005 Red Hat, Inc.
-dnl 
+dnl
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
 dnl  documentation for any purpose is hereby granted without fee, provided that
 dnl  the above copyright notice appear in all copies and that both that
@@ -9,7 +9,7 @@ dnl  advertising or publicity pertaining to distribution of the software without
 dnl  specific, written prior permission.  Red Hat makes no
 dnl  representations about the suitability of this software for any purpose.  It
 dnl  is provided "as is" without express or implied warranty.
-dnl 
+dnl
 dnl  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 dnl  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 dnl  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -20,21 +20,22 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xset,[1.2.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xset)
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT([xset], [1.2.1],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xset])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
+# Require xorg-macros: XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
-AM_CONFIG_HEADER(config.h)
-
-AC_PROG_CC
-AC_PROG_INSTALL
-
 
 # Checks for system functions
 AC_CHECK_FUNCS([usleep])
@@ -51,16 +52,16 @@ PKG_CHECK_MODULES(SET_XEXT, xext,
 	AC_CHECK_HEADERS([X11/extensions/dpms.h X11/extensions/MITMisc.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
-PKG_CHECK_MODULES(SET_XKB, x11, 
+PKG_CHECK_MODULES(SET_XKB, x11,
 	[SAVE_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $SET_XKB_CFLAGS $SET_X11_CFLAGS"
 	AC_CHECK_HEADERS([X11/XKBlib.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
-AC_ARG_WITH(xf86misc, AC_HELP_STRING([--without-xf86misc],[Disable xf86misc support.]), 
+AC_ARG_WITH(xf86misc, AC_HELP_STRING([--without-xf86misc],[Disable xf86misc support.]),
                 [USE_XF86MISC="$withval"], [USE_XF86MISC="yes"])
 if test "x$USE_XF86MISC" != "xno" ; then
-	PKG_CHECK_MODULES(SET_XF86MISC, xxf86misc, 
+	PKG_CHECK_MODULES(SET_XF86MISC, xxf86misc,
 		[SAVE_CPPFLAGS="$CPPFLAGS"
 		CPPFLAGS="$CPPFLAGS $SET_XF86MISC_CFLAGS $SET_X11_CFLAGS"
 		AC_CHECK_HEADERS([X11/extensions/xf86misc.h X11/extensions/xf86mscstr.h],,,

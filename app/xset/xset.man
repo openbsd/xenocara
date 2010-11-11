@@ -1,15 +1,14 @@
-.\" $Xorg: xset.man,v 1.4 2001/02/09 02:05:59 xorgcvs Exp $
 .\" Copyright 1988, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,14 +16,12 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
-.\" 
-.\" $XFree86: xc/programs/xset/xset.man,v 3.14 2001/12/14 20:02:22 dawes Exp $
-.\" 
+.\"
 .TH XSET 1 __xorgversion__
 .SH NAME
 xset - user preference utility for X
@@ -40,27 +37,27 @@ xset - user preference utility for X
 .br
 [+dpms] [-dpms]
 .br
-	[dpms \fIstandby\fP [\fI suspend\fP [\fI off\fP]]] 
+	[dpms \fIstandby\fP [\fI suspend\fP [\fI off\fP]]]
 	[dpms force {standby|suspend|off|on}]
 .br
-[fp=\fIpathlist\fP] 
-[-fp=\fIpathlist\fP] 
-[+fp=\fIpathlist\fP] 
-[fp-\fIpathlist\fP] 
-[fp+\fIpathlist\fP] 
+[fp=\fIpathlist\fP]
+[-fp=\fIpathlist\fP]
+[+fp=\fIpathlist\fP]
+[fp-\fIpathlist\fP]
+[fp+\fIpathlist\fP]
 .br
 [fp default] [fp rehash]
 .br
 [-led [\fIinteger\fP|named \fIindicator\fP]]
 [led [\fIinteger\fP|named \fIindicator\fP]]
-.br 
+.br
 [led {on|off}]
 .br
 [mouse [\fIaccel_mult\fP[/\fIaccel_div\fP] [\fIthreshold\fP]]] [mouse default]
 .br
 [p \fIpixel\fP \fIcolor\fP]
 .br
-[-r [keycode]]  [r [keycode]] 
+[-r [keycode]]  [r [keycode]]
 [r {on|off}] [r rate \fIdelay\fP [\fIrate\fP]]
 .br
 [s [\fIlength\fP [\fIperiod\fP]]] [s {blank|noblank}]
@@ -163,8 +160,8 @@ font path.  They must be followed by a comma-separated list of entries.
 .PP
 .TP 8
 .B "\+fp \fRor\fP fp\+"
-This \fB\+fp\fP and \fBfp\+\fP options prepend and append elements to the 
-current font path, respectively.  They must be followed by a comma-separated 
+This \fB\+fp\fP and \fBfp\+\fP options prepend and append elements to the
+current font path, respectively.  They must be followed by a comma-separated
 list of entries.
 .PP
 .TP 8
@@ -200,7 +197,7 @@ will go `acceleration' times as fast when the device travels more than
 transition range. This way, the pointing device can be used for precise
 alignment when it is moved slowly, yet it can be set to travel across
 the screen in a flick of the wrist when desired.  One or both
-parameters for the 
+parameters for the
 .B m
 option can be omitted, but if only one is
 given, it will be interpreted as the acceleration.
@@ -243,14 +240,14 @@ if it makes sense for the particular keycode.  Keycodes below 8 are
 not typically valid for this command.  Example: "\fBxset\ -r\ 10\fP" will
 disable autorepeat for the "1" key on the top row of an IBM PC keyboard.
 
-If the server supports the XFree86-Misc extension, or the XKB extension, 
+If the server supports the XFree86-Misc extension, or the XKB extension,
 then a parameter
 of 'rate' is accepted and should be followed by zero, one or two numeric
 values. The first specifies the delay before autorepeat starts and
 the second specifies the repeat rate.  In the case that the server
 supports the XKB extension, the delay is the number of milliseconds
 before autorepeat starts, and the rate is the number of repeats
-per second.  If the rate or delay is not given, it will be set 
+per second.  If the rate or delay is not given, it will be set
 to the default value.
 .PP
 .TP 8
