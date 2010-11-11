@@ -18,8 +18,6 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The XFree86 Project.
 .\"
-.\" $XFree86: xc/programs/xgamma/xgamma.man,v 1.6 2001/01/24 00:06:45 dawes Exp $
-.\"
 .TH xgamma 1 __vendorversion__
 .SH NAME
 xgamma - Alter a monitor's gamma correction through the X server

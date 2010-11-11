@@ -1,3 +1,110 @@
+commit 61701510136abb205116555a835f98a3c2f40183
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 8 23:48:04 2010 -0800
+
+    xgamma 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a3dc77313922babd364a8550312ec00ba262826
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 8 00:13:50 2010 -0800
+
+    Purge CVS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97387d8350fccd1de0b2dec2bf6886e82f054527
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 8 00:12:15 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM sttaements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 69ee0754e697737d002d8f7008d5dc94fd66041e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 8 00:10:49 2010 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4361837a352b40332ab84b6716a69413716720dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 8 00:10:09 2010 -0800
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 06d2420091d23a95eba8de84f24e042238facbe5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 8 00:09:32 2010 -0800
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6b903fc93f1a2bd9a06ba541c2b99289938fc43a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 48440e1241fef815aecc104d341e7b14c648eac5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit a2340ac1eff4e101867629827758781a0037d570
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit d2f13e6ffe55ac118e689c12dc1cb484690b73f2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit a5a77b47fdf30d77513c60d54c8d04da0cd59686
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Oct 13 16:45:58 2009 -0700
