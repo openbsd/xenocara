@@ -461,10 +461,10 @@ print_property_xi2(Display *dpy, int deviceid, Atom property)
                     break;
                 case XA_ATOM:
                     {
-                        Atom a = *(Atom*)ptr;
-                        printf("\"%s\" (%d)",
+                        Atom a = *(uint32_t*)ptr;
+                        printf("\"%s\" (%ld)",
                                 (a) ? XGetAtomName(dpy, a) : "None",
-                                (int)a);
+                                a);
                         break;
                     }
                     break;

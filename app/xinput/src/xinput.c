@@ -232,10 +232,42 @@ find_device_info(Display	*display,
 }
 
 #ifdef HAVE_XI2
+Bool is_pointer(int use)
+{
+    return use == XIMasterPointer || use == XISlavePointer;
+}
+
+Bool is_keyboard(int use)
+{
+    return use == XIMasterKeyboard || use == XISlaveKeyboard;
+}
+
+Bool device_matches(XIDeviceInfo *info, char *name)
+{
+    if (strcmp(info->name, name) == 0) {
+        return True;
+    }
+
+    if (strncmp(name, "pointer:", strlen("pointer:")) == 0 &&
+        strcmp(info->name, name + strlen("pointer:")) == 0 &&
+        is_pointer(info->use)) {
+        return True;
+    }
+
+    if (strncmp(name, "keyboard:", strlen("keyboard:")) == 0 &&
+        strcmp(info->name, name + strlen("keyboard:")) == 0 &&
+        is_keyboard(info->use)) {
+        return True;
+    }
+
+    return False;
+}
+
 XIDeviceInfo*
 xi2_find_device_info(Display *display, char *name)
 {
     XIDeviceInfo *info;
+    XIDeviceInfo *found = NULL;
     int ndevices;
     Bool is_id = True;
     int i, id = -1;
@@ -254,15 +286,22 @@ xi2_find_device_info(Display *display, char *name)
     info = XIQueryDevice(display, XIAllDevices, &ndevices);
     for(i = 0; i < ndevices; i++)
     {
-        if ((is_id && info[i].deviceid == id) ||
-                (!is_id && strcmp(info[i].name, name) == 0))
-        {
-            return &info[i];
+        if (is_id ? info[i].deviceid == id : device_matches (&info[i], name)) {
+            if (found) {
+                fprintf(stderr,
+                        "Warning: There are multiple devices matching '%s'.\n"
+                        "To ensure the correct one is selected, please use "
+                        "the device ID, or prefix the\ndevice name with "
+                        "'pointer:' or 'keyboard:' as appropriate.\n\n", name);
+                XIFreeDeviceInfo(info);
+                return NULL;
+            } else {
+                found = &info[i];
+            }
         }
     }
 
-    XIFreeDeviceInfo(info);
-    return NULL;
+    return found;
 }
 #endif
 

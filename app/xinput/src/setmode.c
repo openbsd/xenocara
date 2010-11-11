@@ -49,8 +49,11 @@ set_mode(Display	*display,
 
     if (strcmp(argv[1], "ABSOLUTE") == 0) {
 	mode = Absolute;
-    } else {
+    } else if (strcmp(argv[1], "RELATIVE") == 0) {
 	mode = Relative;
+    } else {
+	fprintf(stderr, "Invalid mode, use ABSOLUTE or RELATIVE.\n");
+	return EXIT_FAILURE;
     }
 
     device = XOpenDevice(display, info->id);

@@ -65,13 +65,12 @@ static void print_deviceevent(XIDeviceEvent* event)
     printf("    group: locked %#x latched %#x base %#x effective: %#x\n",
             event->group.locked, event->group.latched,
             event->group.base, event->group.effective);
-    printf("    valuators:");
+    printf("    valuators:\n");
 
     val = event->valuators.values;
     for (i = 0; i < event->valuators.mask_len * 8; i++)
         if (XIMaskIsSet(event->valuators.mask, i))
-            printf(" %.2f", *val++);
-    printf("\n");
+            printf("        %i: %.2f\n", i, *val++);
 
     printf("    windows: root 0x%lx event 0x%lx child 0x%ld\n",
             event->root, event->event, event->child);
@@ -153,7 +152,7 @@ static void print_enterleave(XILeaveEvent* event)
     char *mode, *detail;
     int i;
 
-    printf("    device: %d\n", event->deviceid);
+    printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
     printf("    windows: root 0x%lx event 0x%lx child 0x%ld\n",
             event->root, event->event, event->child);
     switch(event->mode)
