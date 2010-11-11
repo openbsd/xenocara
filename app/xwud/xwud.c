@@ -1,4 +1,3 @@
-/* $Xorg: xwud.c,v 1.5 2001/02/09 02:06:04 xorgcvs Exp $ */
 /*
 
 Copyright 1985, 1986, 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xwud/xwud.c,v 3.10tsi Exp $ */
 
 /* xwud - marginally useful raster image undumper */
 
