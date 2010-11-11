@@ -20,20 +20,22 @@ dnl  USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(mkfontdir, [1.0.5], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], mkfontdir)
-AM_INIT_AUTOMAKE([dist-bzip2 foreign])
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT([mkfontdir], [1.0.6],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [mkfontdir])
+AC_CONFIG_SRCDIR([Makefile.am])
+
+# Initialize Automake
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+	  [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AC_PROG_INSTALL
-
-AC_PATH_PROG(SED, sed)
 AC_SUBST([bindir])
 
 AC_OUTPUT([Makefile])
