@@ -1,4 +1,3 @@
-/* $Xorg: xkill.c,v 1.5 2001/02/09 02:05:54 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xkill/xkill.c,v 1.5 2001/04/01 14:00:22 tsi Exp $ */
 
 /*
  * xkill - simple program for destroying unwanted clients
@@ -75,22 +73,18 @@ Exit(int code)
 static void
 usage(void)
 {
-    static char *options[] = {
-"where options include:",
-"    -display displayname    X server to contact",
-"    -id resource            resource whose client is to be killed",
-"    -frame                  don't ignore window manager frames",
-"    -button number          specific button to be pressed to select window",
-"    -all                    kill all clients with top level windows",
-"",
-NULL};
+    const char *options =
+"where options include:\n"
+"    -display displayname    X server to contact\n"
+"    -id resource            resource whose client is to be killed\n"
+"    -frame                  don't ignore window manager frames\n"
+"    -button number          specific button to be pressed to select window\n"
+"    -all                    kill all clients with top level windows\n"
+"\n";
     char **cpp;
 
-    fprintf (stderr, "usage:  %s [-option ...]\n",
-	     ProgramName);
-    for (cpp = options; *cpp; cpp++) {
-	fprintf (stderr, "%s\n", *cpp);
-    }
+    fprintf (stderr, "usage:  %s [-option ...]\n%s",
+	     ProgramName, options);
     Exit (1);
 }
 
