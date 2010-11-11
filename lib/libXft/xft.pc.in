@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: Xft
 Description: X FreeType library
 Version: @VERSION@
-Requires: xproto, xrender, fontconfig, freetype2
+Requires: xproto
 Requires.private: xrender, fontconfig, freetype2
 Cflags: -I${includedir}
 Libs: -L${libdir} -lXft

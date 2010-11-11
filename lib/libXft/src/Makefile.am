@@ -24,7 +24,7 @@ libXft_la_SOURCES = xftint.h \
 libXft_la_LIBADD = @FONTCONFIG_LIBS@ @FREETYPE_LIBS@ @XRENDER_LIBS@
 
 # -version-number requires libtool >= 1.5
-libXft_la_LDFLAGS = -version-number 2:1:13 -no-undefined
+libXft_la_LDFLAGS = -version-number $(XFT_LT_VERSION) -no-undefined
 
 libXftincludedir = $(includedir)/X11/Xft
 libXftinclude_HEADERS = \

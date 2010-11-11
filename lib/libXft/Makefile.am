@@ -21,19 +21,17 @@
 
 SUBDIRS = man src
 
-bin_SCRIPTS = xft-config
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xft.pc
 
-CLEANFILES = xft-config
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-EXTRA_DIST = xft-config.in xft.pc.in ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+.PHONY: ChangeLog INSTALL
 
-.PHONY: ChangeLog
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

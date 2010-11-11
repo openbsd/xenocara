@@ -1,3 +1,202 @@
+commit b9d4a2b5be71ca883f5a876500edb0a1a9add0cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 16:21:18 2010 -0700
+
+    libXft 2.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8751e341bcc29952b4603e18767ab994653c6b01
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 21 22:00:33 2010 -0700
+
+    xft.pc.in: Requires.private entries should not be duplicated in Requires
+    
+    Users of libXft don't need to link with fontconfig, freetype and
+    Xrender directly if they don't use them.
+    
+    This may cause issues for users of pkg-config versions older than 0.22.
+    Please upgrade to the 2007 version of pkg-config before trying to build
+    the 2010 version of libXft.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ca575f9c9cbb11b122e676424a93da3eb0284be5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 17 20:42:41 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Use the appropriate platform version of sed
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6d220e32c1e336292cac125515f04bcbdb65322d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Mar 31 10:03:03 2010 -0400
+
+    man: build man pages the standard way
+    
+    Using macro substitution.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f2bd643475a555949558ff6f889c575da33c28a4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 30 14:01:31 2010 -0400
+
+    config: remove deprecated xft-config script and man page
+    
+    This was put in place early 2000 when pkg-config was not used.
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a33850fe1af31cf672e448a3c86ac5afb9fee06c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 30 09:44:47 2010 -0400
+
+    config: remove the xft-config.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b443002c146569077394675c9e784b173d48c6e6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 16:50:34 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 26dc5b0f626615156ca8a317f428ebc7c2d50498
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:48 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 78ed756a343c37acb38cc230d03c334845553ab6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 8 11:13:11 2009 -0500
+
+    Xft.h.in: remove comments which prevents Xft.h generation #25104
+    
+    With automake prior to 2.62, commnents placed beside a #undef line
+    prevent that statement to be substituted by config.status.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Tested-by: Adrian Bunk <bunk@stusta.de>
+
+commit ad762b61d79e1848ef0751d0b970f4f7660a886e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:04 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit f6bab0a9abbaf4c2381c790372c830e0c8d78df4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit cf899b63a331b908a2d4027354ce0d7c13528638
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit f0f9ad0cb2d66d35f522fa9ec19974500b3955ab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:43 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 80e41cb93d0100a767aa8d630240440090937712
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit cf6372a5dd9dd4086ed243d3f6c7e5fe693594b0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 21 21:45:46 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 6f756640698b8f7bbada91999b4e30a0851bb6f4
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:25 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit 906259ecc70dd4d0ef91f4582bd2a035d094831e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Oct 13 10:31:58 2009 -0700
+
+    Set libtool version-number automatically from package version
+    
+    Since we've forgotten to manually update in most libXft releases so far,
+    might as well just automate it.
+    
+    Reported by: Paulo Ricardo Zanoni <pzanoni@mandriva.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
 commit fc248fb44413d11fed288793d0d8c2af76aeeb40
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 9 16:45:25 2009 -0700

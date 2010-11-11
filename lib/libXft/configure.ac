@@ -21,28 +21,31 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+AC_PREREQ([2.60])
 
 dnl
 dnl This is the package version number, not the shared library
 dnl version.  This version number will be substituted into Xft.h
 dnl Please bump the minor library number at each release as well.
 dnl
-AC_INIT(libXft, 2.1.14, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXft)
+AC_INIT([libXft], [2.2.0],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXft])
 AC_CONFIG_AUX_DIR(.)
 
-AM_INIT_AUTOMAKE([dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 AM_CONFIG_HEADER(config.h)
 
 # checks for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
-XORG_DEFAULT_OPTIONS
+AC_PROG_SED
 
 # Set library version for Xft.h from package version set in AC_INIT
 # copied from PACKAGE_VERSION_* settings in XORG_VERSION
@@ -56,6 +59,9 @@ AC_DEFINE_UNQUOTED([XFT_MINOR],
 AC_DEFINE_UNQUOTED([XFT_REVISION],
                 [`echo $PACKAGE_VERSION | cut -d . -f 3 | cut -d - -f 1`],
                 [Micro revision of Xft])
+
+XFT_LT_VERSION=`echo $PACKAGE_VERSION | tr '.' ':'`
+AC_SUBST([XFT_LT_VERSION])
 
 #
 # Check for Xrender
@@ -145,8 +151,5 @@ fi
 
 AC_OUTPUT([Makefile
 	   xft.pc
-	   xft-config
 	   src/Makefile
-	   man/Makefile
-	   man/xft-config.1
-	   man/Xft.3])
+	   man/Makefile])
