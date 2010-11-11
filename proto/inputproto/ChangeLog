@@ -1,3 +1,163 @@
+commit 56ffb564712257e0f998170e83071a6ee85aa231
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 11 14:10:26 2010 +1000
+
+    inputproto 2.0.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 52e92f280c4e065d6a3f040493a0b46d2c8bee1d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 2 15:53:52 2010 +1000
+
+    Typo fix: GrabTypeFocusIn -> GrabtypeFocusIn
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3dc8e70f761f7da338c632a5acb0176bef515b33
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 6 09:52:33 2010 +1000
+
+    Spell out event types for XIDeviceEvent.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 993ca70d7ecfb88037edfd77bccfcb671aea4c7b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 11 17:02:55 2010 +1000
+
+    Define the error cases for XSetDeviceMode better.
+    
+    Take the error codes as described in the man page for XSetDeviceMode. This
+    is more likely to be what clients expect, especially since the protocol spec
+    doesn't actually define when BadMode is to be reported.
+    
+    This behaviour is the same as specified in the XSetDeviceMode man page.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+
+commit 617c4a2db48e98d06f728fa6b8caa18fbbfb66fc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Nov 23 10:21:17 2009 +1000
+
+    XI2proto.txt: fix up some request names.
+    
+    Leftovers from previous versions of the spec before the requests were
+    renamed.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b2e8bd74f0922e742ab41e9ccc202c0fdd9e152f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:25:52 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5e22edcb54a29393ffb72e4014010835d1ceab69
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:31 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 33bab5091b5c16133d88269744f5305dfd4e4fcb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 17:46:57 2010 -0400
+
+    config: install and distribute XI2proto.txt XIproto.txt
+    
+    It will now be installed in $docdir in addition
+    to being distributed in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0746aed42e50d7ac10fd1545cf6b89a8bc809884
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Dec 21 19:00:00 2009 -0500
+
+    Add Red Had Copyright in the COPYING file.
+    
+    Refer to XI2.h and XI2proto.h
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e0ec5c81eef67a2b98396189b22b439953b616c0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:48 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 30c2e875941b1dcce06821fb0c5af6a15ca98d4e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:13:30 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit 7ddcd9b428797e37c3d362b27975b157647aceeb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:26 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit ee09bc24cebbb18c2a2ed81336ab4ead600d2e94
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:28 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit 2ee03af19d17c973072bbacaf7ab44a8fd8b64b1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit bf66af595c9b43e4086401a11c5a7b269857f039
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 13:55:25 2009 -0500
+
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    Works in conjunction with autogen.sh --enable-maintainer-mode
+
+commit 9ad88d954d544db29972144f5a778bb05d9b19ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:47 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 34a9ab1151fb7b35a371cc98a34a20993816f78a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Oct 2 11:38:12 2009 +1000
