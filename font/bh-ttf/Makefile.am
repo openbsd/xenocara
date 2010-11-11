@@ -36,9 +36,8 @@ FONT_FILES = \
 fontdir = @FONTDIR@
 font_DATA = $(FONT_FILES)
 
-fontconfigdir = $(sysconfdir)/fonts/conf
-actualconfigdir = $(fontconfigdir)/conf.d
-availconfigdir = $(fontconfigdir)/conf.avail
+actualconfigdir = $(FC_CONFDIR)/conf.d
+availconfigdir = $(FC_CONFDIR)/conf.avail
 dist_availconfig_DATA = 42-luxi-mono.conf
 
 EXTRA_DIST = $(FONT_FILES) COPYRIGHT.BH

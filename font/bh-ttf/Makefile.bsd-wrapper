@@ -1,3 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2006/11/26 17:37:04 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2010/11/11 10:57:47 matthieu Exp $
+
+CONFIGURE_ARGS += --with-fc-confdir=/etc/fonts
 
 .include <bsd.xorg.mk>

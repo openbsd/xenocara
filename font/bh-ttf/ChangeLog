@@ -1,3 +1,34 @@
+commit 65a15b8dfe79e1941c85a96aaa48b8ec1369a9e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 10 21:24:40 2010 -0800
+
+    font-bh-ttf 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f6484b0a4834ffa2d7f69c61b12fc8dcbfaacd6
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 6 17:08:56 2010 -0700
+
+    Use XORG_FONT_FC_CONFDIR from font-util 1.2 to find fontconfig's confdir
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c388c46660827782879a539c8d239e01060cb52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 5 16:30:51 2010 -0700
+
+    Correct installation path for fontconfig files
+    
+    Should be /etc/fonts/{conf.d,conf.avail},
+    not /etc/fonts/conf/{conf.d,conf.avail}
+    
+    Reported-by: Frédéric L. W. Meunier <fredlwm@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
 commit 1421e1089749ddcbe5e72fa70cfc153cb107e9ae
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 4 23:43:59 2010 -0700
