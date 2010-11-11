@@ -1,4 +1,3 @@
-/* $Xorg: list.h,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /** ------------------------------------------------------------------------
 	This file contains routines for manipulating generic lists.
 	Lists are implemented with a "harness".  In other words, each
@@ -34,7 +33,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
     -------------------------------------------------------------------- **/
-/* $XFree86$ */
 
 #ifndef LIST_DEF
 #define LIST_DEF
