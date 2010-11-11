@@ -1,3 +1,111 @@
+commit 1c67a45b6d9974469e3cbfc6da06e88d8b11ded2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 8 23:02:10 2010 -0800
+
+    xdriinfo 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eda29cff30b4d86a6ae202d9ec7b9e53053038d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 8 00:01:53 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM sttaements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dcdb41471ddb985fe837f12ddea33ddd59e7499e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 23:59:52 2010 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    AC_TYPE_SIGNAL was not used in xdriinfo
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc5faefb86c79aea188ebb0cd1d1c5b2f9ac54fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 23:58:42 2010 -0800
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 672494b0974d6d0b04cdf1d1003d996e48623fee
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 7 23:58:05 2010 -0800
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 60771e4bf3f70d28c8b4b1833655261c853e35d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:53 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 154841cf9c1aa8abb1e010f8b16fd71736a1f750
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 22dd0b3f6fce230a58a7552d56b5f582ef5e8abe
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:38 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 7b698f1a4e5706db509d3db63fa94f5648e7a690
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 87def102d6aa06ac730791426c61a7af00772ffb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 27 15:33:12 2009 -0400
+
+    Makefile.am: do not include autogen.sh in distribution #24183
+    
+    This is a private build script that should not be distributed
+
 commit a5041bd0be9d1b54f4e6683c141745f5ed0d6294
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 16 16:20:33 2009 -0700
