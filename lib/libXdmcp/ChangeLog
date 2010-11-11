@@ -1,3 +1,278 @@
+commit 7db29ff43eb3cdcbfe77c35ecc78c7ca3ddba595
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 15:13:16 2010 -0700
+
+    libXdmcp 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fef4451fa3c55dcf81e7eee7ca001c57e301a150
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Oct 27 23:01:49 2010 -0700
+
+    Remove AC_PROG_CC & AC_PROG_INSTALL that XORG_DEFAULT_OPTIONS already call
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 21c9f93bb5200dda0bfdd05b928c19829f23d646
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Aug 3 15:28:51 2010 -0400
+
+    config: require xorg-macros minimum of 1.10 for XORG_CHECK_SGML_DOCTOOLS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit adaf75c9aac6ca77b26379cc5e451728d9f1a78b
+Author: Matt Dew <matt@osource.org>
+Date:   Sun Aug 1 14:23:18 2010 -0400
+
+    specs: replace troff source with docbook-xml source
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 39993ef6f48cb3f9ee0cb0cd4dcef0d643cda698
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 7 19:21:42 2010 -0700
+
+    Replace comments pointing to non-public X Consortium defect reports
+    
+    Restored the original comments suggested by Paul Shearer of Sequent in the
+    patches he submitted with these fixes in the original X Consortium defect
+    reports from 1995, since modern readers can't refer to the referenced
+    bug reports in that old/closed bug db.
+    
+    7328 Xdmcp: memory leak in XdmcpReadARRAYofARRAY8 when read fails
+    7329 Xdmcp: XdmcpReadARRAY and XdmcpDisposeARRAY routines may free twice
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ea0e0d0e3d45eb5e71542af835194514a6f8801c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 7 19:03:54 2010 -0700
+
+    Fix order of CPPFLAGS passed to lint/compile steps
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 996d92d2710f9dc740351f4d9cbe14af64569689
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Fri May 7 20:22:20 2010 +0000
+
+    Get rid of Xalloc/Xrealloc/Xfree from X server or Xlib
+    
+    alloc/realloc/free calls are encapsulated in libXdmcp, so
+    there is no need to wrap allocation functions even under Windows
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a51e57425e1b4062a459a19b1860c9c9721d9ea
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Fri May 7 20:06:52 2010 +0000
+
+    Nuke RCS tags
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 710d4a4298772cf06c22cce336622b33487b8b44
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Fri May 7 20:03:46 2010 +0000
+
+    Reshuffle functions to decrease amount of boilerplate
+    
+    It it a PitA to do anything with lot of nearly idenical code scattered
+    around in 30 files each containing 5-line function
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1b22d07fc1268e7c5343cccd562ab69a101baf91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 6 15:38:01 2010 -0700
+
+    Use stdint.h instead of limits.h for UINT*_MAX definitions
+    
+    While Solaris allows either one, C99 only requires them in stdint.h
+    and some platforms don't include them via limits.h
+    
+    Corrects tinderbox reported errors on Fedora 11 build machine:
+    
+    http://tinderbox.x.org/builds/2010-05-06-0019/logs/libXdmcp/#build
+    
+    AA32.c: In function 'XdmcpAllocARRAY32':
+    AA32.c:47: error: 'UINT8_MAX' undeclared (first use in this function)
+    
+    AA8.c: In function 'XdmcpAllocARRAY8':
+    AA8.c:47: error: 'UINT16_MAX' undeclared (first use in this function)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    
+    Compiles clean on GNU/Linux AMD64
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 30e388a8284ed100893983178acb6b4e3ff2b815
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 29 20:19:38 2010 -0700
+
+    Deal with lint warnings about implicit narrowing conversions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit 110078a137915f486a13e0445ee9ba5e1558c081
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 29 19:57:46 2010 -0700
+
+    unifdef Lynx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit 5ea80e308026357aeee8b56230e85cb4d2e87631
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 29 19:56:37 2010 -0700
+
+    XdmcpARRAY8Equal: Use memcmp instead of rolling our own
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit 27b1aa82a3f0db7d20a303ba093d1ec52de39bff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 29 19:51:25 2010 -0700
+
+    Constify function prototypes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit 482b19329fac5e311fe0423e58f3e8c573b66114
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 16:50:34 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1c220fc14083ed8e1214329138d6ca548dad6dcc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:48 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7367f2efae9561d87cabaa6e1740355b0aeda86f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 20 11:22:59 2010 -0400
+
+    make: remove unrequired -I${top_builddir}/include
+    
+    The -I${top_srcdir}/include in AM_CFLAGS is the correct one.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2110b60cf122a624011ade8883af07b88bb2c2bb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 16 10:37:21 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7c1d4d862240a0b01eefbccf6b85e7a365e60ada
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:04 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 3c0e64988dad80afe5633c62c29ab3d1c54d2d23
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit a4a69387d7d0783326fbbd2b7b202498325d5f96
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 748ea77263a40080e665adc742a7a9791b4293c0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:43 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 1ac333abaae4940467d2101d1080be9e46d90c78
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:19 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit c362c31e583215855458bc5cbb9ed1020157b1ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 27 16:28:37 2009 -0400
+
+    Makefile.am: do not include autogen.sh in distribution #24183
+    
+    This is a private build script that should not be distributed
+
+commit d0f3336872147e925666aaf73b6c0c11aedc63c3
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:24 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 3a7e0bb1cec5975e9fcbddc6569e7ac1aea550e5
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Aug 28 15:32:31 2009 +1000

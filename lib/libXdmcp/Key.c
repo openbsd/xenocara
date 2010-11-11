@@ -1,7 +1,4 @@
 /*
- * $Xorg: DA16.c,v 1.4 2001/02/09 02:03:48 xorgcvs Exp $
- *
- * 
 Copyright 1989, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,11 +20,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
- * *
+ *
  * Author:  Keith Packard, MIT X Consortium
  */
-
-/* $XFree86: xc/lib/Xdmcp/DA16.c,v 1.5 2001/01/17 19:42:43 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -37,10 +32,71 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xmd.h>
 #include <X11/Xdmcp.h>
 
-void
-XdmcpDisposeARRAY16 (ARRAY16Ptr array)
+static void
+getbits (long data, unsigned char *dst)
 {
-    if (array->data != NULL) Xfree (array->data);
-    array->length = 0;
-    array->data = NULL;
+    dst[0] = (data      ) & 0xff;
+    dst[1] = (data >>  8) & 0xff;
+    dst[2] = (data >> 16) & 0xff;
+    dst[3] = (data >> 24) & 0xff;
+}
+
+#define Time_t time_t
+
+#include <stdlib.h>
+
+#if defined(HAVE_LRAND48) && defined(HAVE_SRAND48)
+#define srandom srand48
+#define random lrand48
+#endif
+#ifdef WIN32
+#include <process.h>
+#define srandom srand
+#define random rand
+#define getpid(x) _getpid(x)
+#endif
+
+void
+XdmcpGenerateKey (XdmAuthKeyPtr key)
+{
+    long    lowbits, highbits;
+
+    srandom ((int)getpid() ^ time((Time_t *)0));
+    lowbits = random ();
+    highbits = random ();
+    getbits (lowbits, key->data);
+    getbits (highbits, key->data + 4);
+}
+
+int
+XdmcpCompareKeys (const XdmAuthKeyPtr a, const XdmAuthKeyPtr b)
+{
+    int	i;
+
+    for (i = 0; i < 8; i++)
+	if (a->data[i] != b->data[i])
+	    return FALSE;
+    return TRUE;
+}
+
+void
+XdmcpIncrementKey (XdmAuthKeyPtr key)
+{
+    int	i;
+
+    i = 7;
+    while (++key->data[i] == 0)
+	if (--i < 0)
+	    break;
+}
+
+void
+XdmcpDecrementKey (XdmAuthKeyPtr key)
+{
+    int	i;
+
+    i = 7;
+    while (key->data[i]-- == 0)
+	if (--i < 0)
+	    break;
 }
