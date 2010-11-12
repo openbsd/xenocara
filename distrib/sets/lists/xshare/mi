@@ -367,9 +367,6 @@
 ./usr/X11R6/include/X11/extensions/ge.h
 ./usr/X11R6/include/X11/extensions/geproto.h
 ./usr/X11R6/include/X11/extensions/lbx.h
-./usr/X11R6/include/X11/extensions/lbxbuf.h
-./usr/X11R6/include/X11/extensions/lbxbufstr.h
-./usr/X11R6/include/X11/extensions/lbximage.h
 ./usr/X11R6/include/X11/extensions/lbxproto.h
 ./usr/X11R6/include/X11/extensions/mitmiscconst.h
 ./usr/X11R6/include/X11/extensions/mitmiscproto.h
@@ -987,7 +984,6 @@
 ./usr/X11R6/man/man1/xeyes.1
 ./usr/X11R6/man/man1/xfd.1
 ./usr/X11R6/man/man1/xfontsel.1
-./usr/X11R6/man/man1/xft-config.1
 ./usr/X11R6/man/man1/xfwp.1
 ./usr/X11R6/man/man1/xgamma.1
 ./usr/X11R6/man/man1/xgc.1
@@ -3085,7 +3081,12 @@
 ./usr/X11R6/share/doc/libXaw/Viewport.xml
 ./usr/X11R6/share/doc/libXaw/libXaw.xml
 ./usr/X11R6/share/doc/libXdmcp
+./usr/X11R6/share/doc/libXdmcp/xdmcp.xml
 ./usr/X11R6/share/doc/libXext
+./usr/X11R6/share/doc/libXext/dbelib.xml
+./usr/X11R6/share/doc/libXext/dpmslib.xml
+./usr/X11R6/share/doc/libXext/shapelib.xml
+./usr/X11R6/share/doc/libXext/synclib.xml
 ./usr/X11R6/share/doc/libXmu
 ./usr/X11R6/share/doc/libXrender
 ./usr/X11R6/share/doc/libXrender/libXrender.txt

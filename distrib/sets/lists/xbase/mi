@@ -401,10 +401,7 @@
 ./etc/X11/xkb/types/pc
 ./etc/X11/xsm
 ./etc/fonts
-./etc/fonts/conf
 ./etc/fonts/conf.d
-./etc/fonts/conf/conf.avail
-./etc/fonts/conf/conf.d
 ./usr
 ./usr/X11R6
 ./usr/X11R6/README
@@ -481,7 +478,6 @@
 ./usr/X11R6/bin/xfd
 ./usr/X11R6/bin/xfontsel
 ./usr/X11R6/bin/xfsinfo
-./usr/X11R6/bin/xft-config
 ./usr/X11R6/bin/xfwp
 ./usr/X11R6/bin/xgamma
 ./usr/X11R6/bin/xgc
