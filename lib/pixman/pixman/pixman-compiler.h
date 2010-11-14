@@ -50,17 +50,22 @@
 /* 'inline' is available only in C++ in MSVC */
 #   define inline __inline
 #   define force_inline __forceinline
+#   define noinline __declspec(noinline)
 #elif defined __GNUC__ || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
 #   define inline __inline__
 #   define force_inline __inline__ __attribute__ ((__always_inline__))
+#   define noinline __attribute__((noinline))
 #else
 #   ifndef force_inline
 #      define force_inline inline
 #   endif
+#   ifndef noinline
+#      define noinline
+#   endif
 #endif
 
 /* GCC visibility */
-#if defined(__GNUC__) && __GNUC__ >= 4
+#if defined(__GNUC__) && __GNUC__ >= 4 && !defined(_WIN32)
 #   define PIXMAN_EXPORT __attribute__ ((visibility("default")))
 /* Sun Studio 8 visibility */
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
@@ -70,29 +75,24 @@
 #endif
 
 /* TLS */
-#if defined(TOOLCHAIN_SUPPORTS__THREAD)
+#if defined(PIXMAN_NO_TLS)
+
+#   define PIXMAN_DEFINE_THREAD_LOCAL(type, name)			\
+    static type name
+#   define PIXMAN_GET_THREAD_LOCAL(name)				\
+    (&name)
+
+#elif defined(TOOLCHAIN_SUPPORTS__THREAD)
 
 #   define PIXMAN_DEFINE_THREAD_LOCAL(type, name)			\
     static __thread type name
 #   define PIXMAN_GET_THREAD_LOCAL(name)				\
     (&name)
 
-#elif defined(__MINGW32__) && !defined(__WIN64)
+#elif defined(__MINGW32__)
 
-/* We can't include <windows.h> as it causes carious clashes with
- * identifiers in pixman, sigh. So just declare the functions we need
- * here.
- */
-extern __stdcall long InterlockedCompareExchange(long volatile *, long, long);
-#define InterlockedCompareExchangePointer(d,e,c)			\
-    (void *)InterlockedCompareExchange((long volatile *)(d),(long)(e),(long)(c))
-extern __stdcall int TlsAlloc (void);
-extern __stdcall void *TlsGetValue (unsigned);
-extern __stdcall int TlsSetValue (unsigned, void *);
-extern __stdcall void *CreateMutexA(void *, int, char *);
-extern __stdcall int CloseHandle(void *);
-extern __stdcall unsigned WaitForSingleObject (void *, unsigned);
-extern __stdcall int ReleaseMutex (void *);
+#   define _NO_W32_PSEUDO_MODIFIERS
+#   include <windows.h>
 
 #   define PIXMAN_DEFINE_THREAD_LOCAL(type, name)			\
     static volatile int tls_ ## name ## _initialized = 0;		\
@@ -191,13 +191,14 @@ extern __stdcall int ReleaseMutex (void *);
 		value = tls_ ## name ## _alloc ();			\
 	}								\
 	return value;							\
-    }
+    }									\
+    extern int no_such_variable						
 
 #   define PIXMAN_GET_THREAD_LOCAL(name)				\
     tls_ ## name ## _get ()
 
 #else
 
-#    error "Unknown thread local support for this system"
+#    error "Unknown thread local support for this system. Pixman will not work with multiple threads. Define PIXMAN_NO_TLS to acknowledge and accept this limitation and compile pixman without thread-safety support."
 
 #endif

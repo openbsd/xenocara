@@ -220,6 +220,7 @@ MMX_CFLAGS = @MMX_CFLAGS@
 MMX_LDFLAGS = @MMX_LDFLAGS@
 NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
+OPENMP_CFLAGS = @OPENMP_CFLAGS@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -234,6 +235,7 @@ PIXMAN_VERSION_MICRO = @PIXMAN_VERSION_MICRO@
 PIXMAN_VERSION_MINOR = @PIXMAN_VERSION_MINOR@
 PKG_CONFIG = @PKG_CONFIG@
 PTHREAD_LDFLAGS = @PTHREAD_LDFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -309,8 +311,9 @@ lib_LTLIBRARIES = libpixman-1.la
 libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO) \
 	-no-undefined @PTHREAD_LDFLAGS@ $(am__append_2) \
 	$(am__append_7)
-libpixman_1_la_LIBADD = @DEP_LIBS@ -lm $(am__append_3) $(am__append_5) \
-	$(am__append_8) $(am__append_10) $(am__append_12)
+libpixman_1_la_LIBADD = @PTHREAD_LIBS@ @DEP_LIBS@ -lm $(am__append_3) \
+	$(am__append_5) $(am__append_8) $(am__append_10) \
+	$(am__append_12)
 libpixman_1_la_SOURCES = \
 	pixman.h				\
 	pixman-accessor.h			\
@@ -331,6 +334,7 @@ libpixman_1_la_SOURCES = \
 	pixman-general.c			\
 	pixman.c				\
 	pixman-fast-path.c			\
+	pixman-fast-path.h			\
 	pixman-solid-fill.c			\
 	pixman-conical-gradient.c		\
 	pixman-linear-gradient.c		\
@@ -344,7 +348,7 @@ libpixman_1_la_SOURCES = \
 	pixman-timer.c				\
 	pixman-matrix.c
 
-libpixmanincludedir = $(includedir)/pixman-1/
+libpixmanincludedir = $(includedir)/pixman-1
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = $(am__append_1) $(am__append_4) $(am__append_6) \
 	$(am__append_9) $(am__append_11)

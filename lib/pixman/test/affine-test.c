@@ -1,8 +1,8 @@
 /*
- * Test program, which can detect some problems with nearest neighbour
- * and bilinear scaling in pixman. Testing is done by running lots
- * of random SRC and OVER compositing operations a8r8g8b8, x8a8r8g8b8
- * and r5g6b5 color formats.
+ * Test program, which can detect some problems with affine transformations
+ * in pixman. Testing is done by running lots of random SRC and OVER
+ * compositing operations a8r8g8b8, x8a8r8g8b8, r5g6b5 and a8 color formats
+ * with random scaled, rotated and translated transforms.
  *
  * Script 'fuzzer-find-diff.pl' can be used to narrow down the problem in
  * the case of test failure.
@@ -98,6 +98,8 @@ test_composite (int      testnum,
     image_endian_swap (src_img, src_bpp * 8);
     image_endian_swap (dst_img, dst_bpp * 8);
 
+    pixman_transform_init_identity (&transform);
+    
     if (lcg_rand_n (8) > 0)
     {
 	scale_x = -32768 * 3 + lcg_rand_N (65536 * 5);
@@ -106,9 +108,18 @@ test_composite (int      testnum,
 	translate_y = lcg_rand_N (65536);
 	pixman_transform_init_scale (&transform, scale_x, scale_y);
 	pixman_transform_translate (&transform, NULL, translate_x, translate_y);
-	pixman_image_set_transform (src_img, &transform);
     }
 
+    if (lcg_rand_n (4) > 0)
+    {
+	int c = lcg_rand_N (2 * 65536) - 65536;
+	int s = lcg_rand_N (2 * 65536) - 65536;
+	
+	pixman_transform_rotate (&transform, NULL, c, s);
+    }
+
+    pixman_image_set_transform (src_img, &transform);
+    
     switch (lcg_rand_n (4))
     {
     case 0:
@@ -219,7 +230,7 @@ test_composite (int      testnum,
     if (verbose)
     {
 	int j;
-	
+
 	for (i = 0; i < dst_height; i++)
 	{
 	    for (j = 0; j < dst_stride; j++)
@@ -245,6 +256,6 @@ main (int argc, const char *argv[])
 {
     pixman_disable_out_of_bounds_workaround ();
 
-    return fuzzer_test_main("scaling", 8000000, 0x7F1AB59F,
-			    test_composite, argc, argv);
+    return fuzzer_test_main ("affine", 8000000, 0x46EC3C6A,
+			     test_composite, argc, argv);
 }

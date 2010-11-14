@@ -1,4 +1,19 @@
 #include "utils.h"
+#include <signal.h>
+
+#ifdef HAVE_GETTIMEOFDAY
+#include <sys/time.h>
+#else
+#include <time.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef HAVE_SYS_MMAN_H
+#include <sys/mman.h>
+#endif
 
 /* Random number seed
  */
@@ -192,10 +207,102 @@ image_endian_swap (pixman_image_t *img, int bpp)
     }
 }
 
+#define N_LEADING_PROTECTED	10
+#define N_TRAILING_PROTECTED	10
+
+typedef struct
+{
+    void *addr;
+    uint32_t len;
+    uint8_t *trailing;
+    int n_bytes;
+} info_t;
+
+#if defined(HAVE_MPROTECT) && defined(HAVE_GETPAGESIZE) && defined(HAVE_SYS_MMAN_H)
+
+/* This is apparently necessary on at least OS X */
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
+void *
+fence_malloc (uint32_t len)
+{
+    unsigned long page_size = getpagesize();
+    unsigned long page_mask = page_size - 1;
+    uint32_t n_payload_bytes = (len + page_mask) & ~page_mask;
+    uint32_t n_bytes =
+	(page_size * (N_LEADING_PROTECTED + N_TRAILING_PROTECTED + 2) +
+	 n_payload_bytes) & ~page_mask;
+    uint8_t *initial_page;
+    uint8_t *leading_protected;
+    uint8_t *trailing_protected;
+    uint8_t *payload;
+    uint8_t *addr;
+
+    addr = mmap (NULL, n_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+		 -1, 0);
+
+    if (addr == MAP_FAILED)
+    {
+	printf ("mmap failed on %u %u\n", len, n_bytes);
+	return NULL;
+    }
+
+    initial_page = (uint8_t *)(((unsigned long)addr + page_mask) & ~page_mask);
+    leading_protected = initial_page + page_size;
+    payload = leading_protected + N_LEADING_PROTECTED * page_size;
+    trailing_protected = payload + n_payload_bytes;
+
+    ((info_t *)initial_page)->addr = addr;
+    ((info_t *)initial_page)->len = len;
+    ((info_t *)initial_page)->trailing = trailing_protected;
+    ((info_t *)initial_page)->n_bytes = n_bytes;
+
+    if ((mprotect (leading_protected, N_LEADING_PROTECTED * page_size,
+		  PROT_NONE) == -1) ||
+	(mprotect (trailing_protected, N_TRAILING_PROTECTED * page_size,
+		  PROT_NONE) == -1))
+    {
+	munmap (addr, n_bytes);
+	return NULL;
+    }
+
+    return payload;
+}
+
+void
+fence_free (void *data)
+{
+    uint32_t page_size = getpagesize();
+    uint8_t *payload = data;
+    uint8_t *leading_protected = payload - N_LEADING_PROTECTED * page_size;
+    uint8_t *initial_page = leading_protected - page_size;
+    info_t *info = (info_t *)initial_page;
+
+    munmap (info->addr, info->n_bytes);
+}
+
+#else
+
+void *
+fence_malloc (uint32_t len)
+{
+    return malloc (len);
+}
+
+void
+fence_free (void *data)
+{
+    free (data);
+}
+
+#endif
+
 uint8_t *
 make_random_bytes (int n_bytes)
 {
-    uint8_t *bytes = malloc (n_bytes);
+    uint8_t *bytes = fence_malloc (n_bytes);
     int i;
 
     if (!bytes)
@@ -205,4 +312,174 @@ make_random_bytes (int n_bytes)
 	bytes[i] = lcg_rand () & 0xff;
 
     return bytes;
+}
+
+/*
+ * A function, which can be used as a core part of the test programs,
+ * intended to detect various problems with the help of fuzzing input
+ * to pixman API (according to some templates, aka "smart" fuzzing).
+ * Some general information about such testing can be found here:
+ * http://en.wikipedia.org/wiki/Fuzz_testing
+ *
+ * It may help detecting:
+ *  - crashes on bad handling of valid or reasonably invalid input to
+ *    pixman API.
+ *  - deviations from the behavior of older pixman releases.
+ *  - deviations from the behavior of the same pixman release, but
+ *    configured in a different way (for example with SIMD optimizations
+ *    disabled), or running on a different OS or hardware.
+ *
+ * The test is performed by calling a callback function a huge number
+ * of times. The callback function is expected to run some snippet of
+ * pixman code with pseudorandom variations to the data feeded to
+ * pixman API. A result of running each callback function should be
+ * some deterministic value which depends on test number (test number
+ * can be used as a seed for PRNG). When 'verbose' argument is nonzero,
+ * callback function is expected to print to stdout some information
+ * about what it does.
+ *
+ * Return values from many small tests are accumulated together and
+ * used as final checksum, which can be compared to some expected
+ * value. Running the tests not individually, but in a batch helps
+ * to reduce process start overhead and also allows to parallelize
+ * testing and utilize multiple CPU cores.
+ *
+ * The resulting executable can be run without any arguments. In
+ * this case it runs a batch of tests starting from 1 and up to
+ * 'default_number_of_iterations'. The resulting checksum is
+ * compared with 'expected_checksum' and FAIL or PASS verdict
+ * depends on the result of this comparison.
+ *
+ * If the executable is run with 2 numbers provided as command line
+ * arguments, they specify the starting and ending numbers for a test
+ * batch.
+ *
+ * If the executable is run with only one number provided as a command
+ * line argument, then this number is used to call the callback function
+ * once, and also with verbose flag set.
+ */
+int
+fuzzer_test_main (const char *test_name,
+		  int         default_number_of_iterations,
+		  uint32_t    expected_checksum,
+		  uint32_t    (*test_function)(int testnum, int verbose),
+		  int         argc,
+		  const char *argv[])
+{
+    int i, n1 = 1, n2 = 0;
+    uint32_t checksum = 0;
+    int verbose = getenv ("VERBOSE") != NULL;
+
+    if (argc >= 3)
+    {
+	n1 = atoi (argv[1]);
+	n2 = atoi (argv[2]);
+	if (n2 < n1)
+	{
+	    printf ("invalid test range\n");
+	    return 1;
+	}
+    }
+    else if (argc >= 2)
+    {
+	n2 = atoi (argv[1]);
+	checksum = test_function (n2, 1);
+	printf ("%d: checksum=%08X\n", n2, checksum);
+	return 0;
+    }
+    else
+    {
+	n1 = 1;
+	n2 = default_number_of_iterations;
+    }
+
+#ifdef USE_OPENMP
+    #pragma omp parallel for reduction(+:checksum) default(none) \
+					shared(n1, n2, test_function, verbose)
+#endif
+    for (i = n1; i <= n2; i++)
+    {
+	uint32_t crc = test_function (i, 0);
+	if (verbose)
+	    printf ("%d: %08X\n", i, crc);
+	checksum += crc;
+    }
+
+    if (n1 == 1 && n2 == default_number_of_iterations)
+    {
+	if (checksum == expected_checksum)
+	{
+	    printf ("%s test passed (checksum=%08X)\n",
+		    test_name, checksum);
+	}
+	else
+	{
+	    printf ("%s test failed! (checksum=%08X, expected %08X)\n",
+		    test_name, checksum, expected_checksum);
+	    return 1;
+	}
+    }
+    else
+    {
+	printf ("%d-%d: checksum=%08X\n", n1, n2, checksum);
+    }
+
+    return 0;
+}
+
+/* Try to obtain current time in seconds */
+double
+gettime (void)
+{
+#ifdef HAVE_GETTIMEOFDAY
+    struct timeval tv;
+
+    gettimeofday (&tv, NULL);
+    return (double)((int64_t)tv.tv_sec * 1000000 + tv.tv_usec) / 1000000.;
+#else
+    return (double)clock() / (double)CLOCKS_PER_SEC;
+#endif
+}
+
+static const char *global_msg;
+
+static void
+on_alarm (int signo)
+{
+    printf ("%s\n", global_msg);
+    exit (1);
+}
+
+void
+fail_after (int seconds, const char *msg)
+{
+#ifdef HAVE_SIGACTION
+#ifdef HAVE_ALARM
+    struct sigaction action;
+
+    global_msg = msg;
+
+    memset (&action, 0, sizeof (action));
+    action.sa_handler = on_alarm;
+
+    alarm (seconds);
+
+    sigaction (SIGALRM, &action, NULL);
+#endif
+#endif
+}
+
+void *
+aligned_malloc (size_t align, size_t size)
+{
+    void *result;
+
+#ifdef HAVE_POSIX_MEMALIGN
+    if (posix_memalign (&result, align, size) != 0)
+      result = NULL;
+#else
+    result = malloc (size);
+#endif
+
+    return result;
 }

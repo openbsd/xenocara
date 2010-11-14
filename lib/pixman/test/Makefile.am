@@ -1,24 +1,34 @@
+AM_CFLAGS = @OPENMP_CFLAGS@
+AM_LDFLAGS = @OPENMP_CFLAGS@
+
 TEST_LDADD = $(top_builddir)/pixman/libpixman-1.la
 INCLUDES = -I$(top_srcdir)/pixman -I$(top_builddir)/pixman
 
 TESTPROGRAMS =			\
 	a1-trap-test		\
 	region-test		\
+	region-translate-test	\
 	fetch-test		\
 	oob-test		\
 	window-test		\
+	gradient-crash-test	\
 	trap-crasher		\
+	alpha-loop		\
+	scaling-crash-test	\
 	alphamap		\
 	blitters-test		\
 	scaling-test		\
+	affine-test		\
 	composite
 
 a1_trap_test_LDADD = $(TEST_LDADD)
 fetch_test_LDADD = $(TEST_LDADD)
-composite_LDADD = $(TEST_LDADD)
+gradient_crash_test_LDADD = $(TEST_LDADD)
 trap_crasher_LDADD = $(TEST_LDADD)
 oob_test_LDADD = $(TEST_LDADD)
 window_test_LDADD = $(TEST_LDADD)
+scaling_crash_test_LDADD = $(TEST_LDADD)
+region_translate_test_LDADD = $(TEST_LDADD)
 
 region_test_LDADD = $(TEST_LDADD)
 region_test_SOURCES = region-test.c utils.c utils.h
@@ -29,8 +39,17 @@ blitters_test_SOURCES = blitters-test.c utils.c utils.h
 scaling_test_LDADD = $(TEST_LDADD)
 scaling_test_SOURCES = scaling-test.c utils.c utils.h
 
+affine_test_LDADD = $(TEST_LDADD)
+affine_test_SOURCES = affine-test.c utils.c utils.h
+
 alphamap_LDADD = $(TEST_LDADD)
 alphamap_SOURCES = alphamap.c utils.c utils.h
+
+alpha_loop_LDADD = $(TEST_LDADD)
+alpha_loop_SOURCES = alpha-loop.c utils.c utils.h
+
+composite_LDADD = $(TEST_LDADD)
+composite_SOURCES = composite.c utils.c utils.h
 
 # GTK using test programs
 
@@ -47,8 +66,7 @@ TESTPROGRAMS_GTK =		\
 	alpha-test		\
 	screen-test		\
 	convolution-test	\
-	trap-test		\
-	alphamap
+	trap-test
 
 INCLUDES += $(GTK_CFLAGS)
 
@@ -78,7 +96,14 @@ convolution_test_SOURCES = convolution-test.c $(GTK_UTILS)
 
 endif
 
-noinst_PROGRAMS = $(TESTPROGRAMS) $(TESTPROGRAMS_GTK)
+# Benchmarks
+
+BENCHMARKS =			\
+	lowlevel-blt-bench
+
+lowlevel_blt_bench_SOURCES = lowlevel-blt-bench.c utils.c utils.h
+lowlevel_blt_bench_LDADD = $(TEST_LDADD)
+
+noinst_PROGRAMS = $(TESTPROGRAMS) $(TESTPROGRAMS_GTK) $(BENCHMARKS)
 
 TESTS = $(TESTPROGRAMS)
-
