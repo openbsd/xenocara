@@ -3087,6 +3087,7 @@
 ./usr/X11R6/share/doc/libXext/dpmslib.xml
 ./usr/X11R6/share/doc/libXext/shapelib.xml
 ./usr/X11R6/share/doc/libXext/synclib.xml
+./usr/X11R6/share/doc/libXi
 ./usr/X11R6/share/doc/libXmu
 ./usr/X11R6/share/doc/libXrender
 ./usr/X11R6/share/doc/libXrender/libXrender.txt
