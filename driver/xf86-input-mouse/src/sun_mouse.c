@@ -1,4 +1,27 @@
 /*
+ * Copyright (c) 2004-2005, 2008-2010, Oracle and/or its affiliates.
+ * All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+/*
  * Copyright 1999-2001 The XFree86 Project, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,33 +45,6 @@
  * not be used in advertising or otherwise to promote the sale, use or other
  * dealings in this Software without prior written authorization from the
  * XFree86 Project.
- */
-/* Copyright 2004-2005, 2008-2009 Sun Microsystems, Inc.  All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, and/or sell copies of the Software, and to permit persons
- * to whom the Software is furnished to do so, provided that the above
- * copyright notice(s) and this permission notice appear in all copies of
- * the Software and that both the above copyright notice(s) and this
- * permission notice appear in supporting documentation.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
- * OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
- * INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
- * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- * 
- * Except as contained in this notice, the name of a copyright holder
- * shall not be used in advertising or otherwise to promote the sale, use
- * or other dealings in this Software without prior written authorization
- * of the copyright holder.
  */
 
 #ifdef HAVE_XORG_CONFIG_H
@@ -107,6 +103,7 @@ typedef struct _VuidMseRec {
 #ifdef HAVE_ABSOLUTE_MOUSE_SCALING
     Ms_screen_resolution	 absres;
 #endif
+    OsTimerPtr		remove_timer;   /* Callback for removal on ENODEV */
 } VuidMseRec, *VuidMsePtr;
 
 static VuidMsePtr	vuidMouseList = NULL;
@@ -119,7 +116,13 @@ static void vuidMouseSendScreenSize(ScreenPtr pScreen, VuidMsePtr pVuidMse);
 static void vuidMouseAdjustFrame(int index, int x, int y, int flags);
 
 static int vuidMouseGeneration = 0;
+
+#if HAS_DEVPRIVATEKEYREC
+static DevPrivateKeyRec vuidMouseScreenIndex;
+#else
 static int vuidMouseScreenIndex;
+#endif /* HAS_DEVPRIVATEKEYREC */
+
 #define vuidMouseGetScreenPrivate(s) ( \
     dixLookupPrivate(&(s)->devPrivates, &vuidMouseScreenIndex))
 #define vuidMouseSetScreenPrivate(s,p) \
@@ -138,6 +141,18 @@ VuidMsePtr getVuidMsePriv(InputInfoPtr pInfo)
     return m;
 }
 
+/* Called from OsTimer callback, since removing a device from the device
+   list or changing pInfo->fd while xf86Wakeup is looping through the list
+   causes server crashes */
+static CARD32
+vuidRemoveMouse(OsTimerPtr timer, CARD32 time, pointer arg)
+{
+    InputInfoPtr pInfo = (InputInfoPtr) arg;
+
+    xf86DisableDevice(pInfo->dev, TRUE);
+
+    return 0;  /* All done, don't set to run again */
+}
 
 /*
  * Initialize and enable the mouse wheel, if present.
@@ -334,19 +349,40 @@ vuidReadInput(InputInfoPtr pInfo)
     pMse = pInfo->private;
     pVuidMse = getVuidMsePriv(pInfo);
     buttons = pMse->lastButtons;
-    XisbBlockDuration(pMse->buffer, -1);
     pBuf = pVuidMse->buffer;
     n = 0;
 
     do {
-	while (n < sizeof(Firm_event) && (c = XisbRead(pMse->buffer)) >= 0) {
-	    pBuf[n++] = (unsigned char)c;
-	}
+	n = read(pInfo->fd, pBuf, sizeof(Firm_event));
 
-	if (n == 0)
-	    return;
-
-	if (n != sizeof(Firm_event)) {
+	if (n == 0) {
+	    break;
+	} else if (n == -1) {
+	    switch (errno) {
+		case EAGAIN: /* Nothing to read now */
+		    n = 0;   /* End loop, go on to flush events & return */
+		    continue;
+		case EINTR:  /* Interrupted, try again */
+		    continue;
+		case ENODEV: /* May happen when USB mouse is unplugged */
+		    /* We use X_NONE here because it doesn't alloc since we
+		       may be called from SIGIO handler */
+		    xf86MsgVerb(X_NONE, 0,
+				"%s: Device no longer present - removing.\n",
+				pInfo->name);
+		    xf86RemoveEnabledDevice(pInfo);
+		    pVuidMse->remove_timer =
+			TimerSet(pVuidMse->remove_timer, 0, 1,
+				 vuidRemoveMouse, pInfo);
+		    return;
+		default:     /* All other errors */
+		    /* We use X_NONE here because it doesn't alloc since we
+		       may be called from SIGIO handler */
+		    xf86MsgVerb(X_NONE, 0, "%s: Read error: %s\n", pInfo->name,
+				strerror(errno));
+		    return;
+	    }
+	} else if (n != sizeof(Firm_event)) {
 	    xf86Msg(X_WARNING, "%s: incomplete packet, size %d\n",
 			pInfo->name, n);
 	}
@@ -416,11 +452,6 @@ vuidReadInput(InputInfoPtr pInfo)
 	}
 #endif
 
-	n = 0;
-	if ((c = XisbRead(pMse->buffer)) >= 0) {
-	    /* Another packet.  Handle it right away. */
-	    pBuf[n++] = c;
-	}
     } while (n != 0);
 
     if (absXset || absYset) {
@@ -437,6 +468,9 @@ static void vuidMouseSendScreenSize(ScreenPtr pScreen, VuidMsePtr pVuidMse)
     InputInfoPtr pInfo = pVuidMse->pInfo;
     ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
     int result;
+
+    if (!pScr->currentMode)
+	return;
 
     if ((pVuidMse->absres.width != pScr->currentMode->HDisplay) || 
 	(pVuidMse->absres.height != pScr->currentMode->VDisplay))
@@ -517,6 +551,12 @@ vuidMouseProc(DeviceIntPtr pPointer, int what)
 
     case DEVICE_INIT:
 #ifdef HAVE_ABSOLUTE_MOUSE_SCALING
+
+#if HAS_DEVPRIVATEKEYREC
+	if (!dixRegisterPrivateKey(&vuidMouseScreenIndex, PRIVATE_SCREEN, 0))
+		return BadAlloc;
+#endif  /* HAS_DEVPRIVATEKEYREC */
+
 	if (vuidMouseGeneration != serverGeneration) {
 		for (i = 0; i < screenInfo.numScreens; i++) {
 		    ScreenPtr pScreen = screenInfo.screens[i];
@@ -563,6 +603,13 @@ vuidMouseProc(DeviceIntPtr pPointer, int what)
 	    vuidMouseSendScreenSize(screenInfo.screens[0], pVuidMse);
 #endif	    
 	    xf86FlushInput(pInfo->fd);
+
+	    /* Allocate here so we don't alloc in ReadInput which may be called
+	       from SIGIO handler. */
+	    if (pVuidMse->remove_timer == NULL) {
+		pVuidMse->remove_timer = TimerSet(pVuidMse->remove_timer,
+						  0, 0, NULL, NULL);
+	    }
 	}
 	break;
 
@@ -577,6 +624,10 @@ vuidMouseProc(DeviceIntPtr pPointer, int what)
 		      pInfo->name, pVuidMse->strmod, strerror(errno));
 		}
 	    }
+	}
+	if (pVuidMse->remove_timer) {
+	    TimerFree(pVuidMse->remove_timer);
+	    pVuidMse->remove_timer = NULL;
 	}
 	ret = pVuidMse->wrapped_device_control(pPointer, what);
 	break;

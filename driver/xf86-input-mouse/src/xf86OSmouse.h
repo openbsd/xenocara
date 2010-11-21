@@ -215,9 +215,6 @@ typedef struct _MouseDevRec {
     int			oldBaudRate;
     int			sampleRate;
     int			lastButtons;
-    int			threshold;	/* acceleration */
-    int			num;
-    int			den;
     int			buttons;	/* # of buttons */
     int			emulateState;	/* automata state for 2 button mode */
     Bool		emulate3Buttons;

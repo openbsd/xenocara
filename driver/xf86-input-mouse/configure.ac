@@ -20,55 +20,42 @@
 #
 # Process this file with autoconf to produce a configure script
 
-AC_PREREQ(2.57)
+# Initialize Autoconf
+AC_PREREQ([2.60])
 AC_INIT([xf86-input-mouse],
-        1.5.0,
+        [1.6.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
-        xf86-input-mouse)
-
-# Require xorg-macros version >= 1.3.0 for XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
-
+        [xf86-input-mouse])
 AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(.)
-AM_INIT_AUTOMAKE([dist-bzip2])
 
+# Initialize Automake
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-DRIVER_NAME=mouse
-AC_SUBST([DRIVER_NAME])
-
-AM_CONFIG_HEADER([config.h])
-
-# Checks for programs.
+# Initialize libtool
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
-AC_PROG_CC
+
+# Initialize X.Org macros
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
+XORG_WITH_LINT
 
-AH_TOP([#include "xorg-server.h"])
+# Obtain compiler/linker options from server and required extensions
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.5.99.901] xproto inputproto)
 
+# Define a configure option for an alternate input module directory
 AC_ARG_WITH(xorg-module-dir,
-            AC_HELP_STRING([--with-xorg-module-dir=DIR],
+            AS_HELP_STRING([--with-xorg-module-dir=DIR],
                            [Default xorg module directory [[default=$libdir/xorg/modules]]]),
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
-
-# Checks for extensions
-XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
-XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
-
-# Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.5.99.901] xproto $REQUIRED_MODULES)
-sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
-
-# Checks for libraries.
-
-# Checks for header files.
-AC_HEADER_STDC
 
 # Work out which OS mouse driver we need to build
 case $host_os in
@@ -87,8 +74,10 @@ case $host_os in
 esac
 AC_SUBST([OS_MOUSE_NAME])
 
-dnl Allow checking code with lint, sparse, etc.
-XORG_WITH_LINT
-XORG_CHECK_LINUXDOC
+DRIVER_NAME=mouse
+AC_SUBST([DRIVER_NAME])
 
-AC_OUTPUT([Makefile src/Makefile man/Makefile])
+AC_CONFIG_FILES([Makefile
+                 src/Makefile
+                 man/Makefile])
+AC_OUTPUT
