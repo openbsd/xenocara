@@ -1,4 +1,3 @@
-/* $XConsortium: xeyes.c,v 1.16 94/04/17 20:45:23 rws Exp $ */
 /*
 
 Copyright (c) 1991  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xeyes/xeyes.c,v 1.3 2000/02/17 14:00:35 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -38,8 +36,8 @@ from the X Consortium.
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 #include "Eyes.h"
-#include <stdio.h> 
-#include <stdlib.h> 
+#include <stdio.h>
+#include <stdlib.h>
 #include "eyes.bit"
 #include "eyesmask.bit"
 
@@ -49,18 +47,15 @@ static void
 usage(void)
 {
     fprintf(stderr,
-"usage: xeyes\n");
-    fprintf (stderr, 
-"       [-geometry [{width}][x{height}][{+-}{xoff}[{+-}{yoff}]]] [-display [{host}]:[{vs}]]\n");
-    fprintf(stderr,
-"       [-fg {color}] [-bg {color}] [-bd {color}] [-bw {pixels}]");
-    fprintf(stderr, " [-shape | +shape]");
-    fprintf(stderr, "\n");
-    fprintf(stderr,
-"       [-outline {color}] [-center {color}] [-backing {backing-store}] [-distance]\n");
+	    "usage: xeyes\n"
+	    "       [-display [{host}]:[{vs}]]\n"
+	    "       [-geometry [{width}][x{height}][{+-}{xoff}[{+-}{yoff}]]]\n"
+	    "       [-fg {color}] [-bg {color}] [-bd {color}] [-bw {pixels}]\n"
+	    "       [-shape | +shape] [-outline {color}] [-center {color}]\n"
+	    "       [-backing {backing-store}] [-distance]\n");
 #ifdef XRENDER
     fprintf(stderr,
-"       [-render | +render]\n");
+	    "       [-render | +render]\n");
 #endif
     exit(1);
 }
@@ -87,7 +82,7 @@ static Atom wm_delete_window;
 static void
 quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
-    if (event->type == ClientMessage && 
+    if (event->type == ClientMessage &&
 	event->xclient.data.l[0] != wm_delete_window) {
 	XBell(XtDisplay(w), 0);
     } else {
@@ -107,10 +102,10 @@ main(int argc, char **argv)
     Widget toplevel;
     Arg arg[2];
     Cardinal i;
-    
+
     XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
-    toplevel = XtAppInitialize(&app_context, "XEyes", 
+    toplevel = XtAppInitialize(&app_context, "XEyes",
 			       options, XtNumber(options), &argc, argv,
 			       NULL, arg, (Cardinal) 0);
     if (argc != 1) usage();
@@ -120,14 +115,14 @@ main(int argc, char **argv)
     XtAppAddActions(app_context, actions, XtNumber(actions));
     XtOverrideTranslations
 	(toplevel, XtParseTranslationTable ("<Message>WM_PROTOCOLS: quit()"));
-    
+
     i = 0;
-    XtSetArg (arg[i], XtNiconPixmap, 
+    XtSetArg (arg[i], XtNiconPixmap,
 	      XCreateBitmapFromData (XtDisplay(toplevel),
 				     XtScreen(toplevel)->root,
 				     (char *)eyes_bits, eyes_width, eyes_height));
     i++;
-    XtSetArg (arg[i], XtNiconMask, 
+    XtSetArg (arg[i], XtNiconMask,
 	      XCreateBitmapFromData (XtDisplay(toplevel),
 				     XtScreen(toplevel)->root,
 				     (char *)eyesmask_bits,

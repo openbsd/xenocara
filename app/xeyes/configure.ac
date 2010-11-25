@@ -1,6 +1,6 @@
 
 dnl  Copyright 2005 Red Hat, Inc.
-dnl 
+dnl
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
 dnl  documentation for any purpose is hereby granted without fee, provided that
 dnl  the above copyright notice appear in all copies and that both that
@@ -10,7 +10,7 @@ dnl  advertising or publicity pertaining to distribution of the software without
 dnl  specific, written prior permission.  Red Hat makes no
 dnl  representations about the suitability of this software for any purpose.  It
 dnl  is provided "as is" without express or implied warranty.
-dnl 
+dnl
 dnl  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 dnl  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 dnl  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -21,35 +21,30 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xeyes,[1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xeyes)
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT([xeyes], [1.1.1],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xeyes])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-AM_CONFIG_HEADER(config.h)
-
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
-
-AC_PROG_CC
-AC_PROG_INSTALL
-
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XEYES, x11 xt xext xmu)
-XEYES_CFLAGS="$CWARNFLAGS $XEYES_CFLAGS"
-AC_SUBST(XEYES_CFLAGS)
-AC_SUBST(XEYES_LIBS)
 
 dnl Optional dependencies
 AC_ARG_WITH(xrender, AC_HELP_STRING([--with-xrender],[Use Xrender for rendering (Default is YES)]),use_xrender="$withval",use_xrender="try")
 if test x$use_xrender != xno ; then
 	PKG_CHECK_MODULES(XRENDER, [xrender >= 0.4])
-	XEYES_CFLAGS="$XEYES_CFLAGS $XRENDER_CFLAGS"
-	XEYES_LIBS="$XEYES_LIBS $XRENDER_LIBS"
 	AC_DEFINE([XRENDER],1,[Define to use X Render Extension])
 fi
 

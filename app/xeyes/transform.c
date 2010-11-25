@@ -1,7 +1,6 @@
 /*
  * transformed coordinate system objects for X
  */
-/* $XFree86: xc/programs/xeyes/transform.c,v 1.3 2000/02/17 14:00:35 dawes Exp $ */
 
 # include	<X11/Xos.h>
 # include	<stdlib.h>

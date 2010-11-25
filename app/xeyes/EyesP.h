@@ -1,6 +1,3 @@
-/*
-* $XConsortium: EyesP.h,v 1.9 90/12/01 13:04:43 rws Exp $
-*/
 
 #ifndef _EyesP_h
 #define _EyesP_h

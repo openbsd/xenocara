@@ -1,5 +1,3 @@
-/* $XConsortium: Eyes.c,v 1.28 94/04/17 20:45:22 eswu Exp $ */
-/* $XFree86: xc/programs/xeyes/Eyes.c,v 1.3 2001/07/25 15:05:21 dawes Exp $ */
 /*
 
 Copyright (c) 1991  X Consortium
