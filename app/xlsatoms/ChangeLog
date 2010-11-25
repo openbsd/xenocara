@@ -1,3 +1,87 @@
+commit 79b7392f981798941b9fba368c2bf0aeeb7a9ade
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 3 16:30:16 2010 -0700
+
+    xlsatoms 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e7bbf02cda54f13307acedfa9c795ac73caf177
+Author: Peter Harris <pharris@opentext.com>
+Date:   Thu Nov 12 15:23:11 2009 -0500
+
+    Convert xlsatoms to XCB
+    
+    This dramatically improves latency, at the cost of a small amount of
+    bandwidth.
+    
+    (Theoretically. In practice, it actually saves bandwidth by reducing the
+    number of IP headers, Ethernet frames, PPP headers, ATM frames...)
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+    Reviewed-By: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c8a5d66d5d330ede649a2b3bef85dd45ea0c983f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 59349aa469bc21173842ea2857f59d3583fb614f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 977c06ded7e8cb030cb4f2eb57ad30b0c3ad1b5f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 03c48c956ca1e86da6f3607b4f988a83950a212e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 1b6da9070e153ae812a925dc38e5a5de6b3a4a4f
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:21 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit f2cc7491570242830ab55c7a736b9f157e3d4e3f
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Oct 12 21:17:15 2009 -0700

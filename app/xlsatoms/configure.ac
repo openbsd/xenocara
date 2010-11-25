@@ -22,8 +22,10 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xlsatoms, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xlsatoms)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(xlsatoms, [1.1.0],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+	xlsatoms)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
 # Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
@@ -39,7 +41,7 @@ AC_PROG_INSTALL
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XLSATOMS, x11 xmuu)
+PKG_CHECK_MODULES(XLSATOMS, xcb)
 AC_SUBST(XLSATOMS_CFLAGS)
 AC_SUBST(XLSATOMS_LIBS)
 

@@ -1,7 +1,7 @@
 /*
- * $Xorg: xlsatoms.c,v 1.4 2001/02/09 02:05:54 xorgcvs Exp $
  *
 Copyright 1989, 1998  The Open Group
+Copyright 2009 Open Text Corporation
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
@@ -24,23 +24,26 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
  *
  * Author:  Jim Fulton, MIT X Consortium
+ * Author:  Peter Harris, Open Text Corporation
  */
-/* $XFree86: xc/programs/xlsatoms/xlsatoms.c,v 1.5 2001/04/01 14:00:23 tsi Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <X11/Xos.h>
-#include <X11/Xlib.h>
-#include <X11/Xproto.h>
-#include <X11/Xmu/Error.h>
+#include <string.h>
+#include <xcb/xcb.h>
+#include <xcb/xproto.h>
+
+#define ATOMS_PER_BATCH 100 /* This number can be tuned 
+				higher for fewer round-trips
+				lower for less bandwidth wasted */
 
 static char *ProgramName;
+static char *DisplayString;
 
-static void do_name ( Display *dpy, char *format, char *name );
+static void do_name ( xcb_connection_t *c, char *format, char *name );
 static int parse_range ( char *range, long *lowp, long *highp );
-static void do_range ( Display *dpy, char *format, char *range );
-static int catcher ( Display *dpy, XErrorEvent *err );
-static void list_atoms ( Display *dpy, char *format, int mask, 
+static void do_range ( xcb_connection_t *c, char *format, char *range );
+static void list_atoms ( xcb_connection_t *c, char *format, int mask, 
 			 long low, long high );
 
 static void 
@@ -67,7 +70,7 @@ main(int argc, char *argv[])
     char *format = "%lu\t%s";
     int i, doit;
     int didit = 0;
-    Display *dpy = NULL;
+    xcb_connection_t *c = NULL;
 
     ProgramName = argv[0];
 
@@ -88,14 +91,14 @@ main(int argc, char *argv[])
 		  case 'r':			/* -range num-[num] */
 		    if (++i >= argc) usage ();
 		    if (doit) {
-			do_range (dpy, format, argv[i]);
+			do_range (c, format, argv[i]);
 			didit = 1;
 		    }
 		    continue;
 		  case 'n':			/* -name string */
 		    if (++i >= argc) usage ();
 		    if (doit) {
-			do_name (dpy, format, argv[i]);
+			do_name (c, format, argv[i]);
 			didit = 1;
 		    }
 		    continue;
@@ -104,33 +107,42 @@ main(int argc, char *argv[])
 	    usage ();
 	}
 	if (!doit) {
-	    dpy = XOpenDisplay (displayname);
-	    if (!dpy) {
+	    DisplayString = displayname;
+	    if (!DisplayString)
+		DisplayString = getenv("DISPLAY");
+	    if (!DisplayString)
+		DisplayString = "";
+	    c = xcb_connect(displayname, NULL);
+	    if (!c || xcb_connection_has_error(c)) {
 		fprintf (stderr, "%s:  unable to open display \"%s\"\n",
-			 ProgramName, XDisplayName (displayname));
+			 ProgramName, DisplayString);
 		exit (1);
 	    }
 	} else
 	    if (!didit)		/* no options, default is list all */
-		list_atoms(dpy, format, 0, 0, 0);
+		list_atoms(c, format, 0, 0, 0);
     }
 
-    XCloseDisplay (dpy);
+    xcb_disconnect(c);
     exit (0);
 }
 
 static void
-do_name(Display *dpy, char *format, char *name)
+do_name(xcb_connection_t *c, char *format, char *name)
 {
-    Atom a = XInternAtom (dpy, name, True);
+    xcb_intern_atom_reply_t *a = xcb_intern_atom_reply(c, 
+	xcb_intern_atom_unchecked(c, 1, strlen(name), name), NULL);
 
-    if (a != None) {
-	printf (format, (unsigned long) a, name);
+    if (a && a->atom != XCB_NONE) {
+	printf (format, (unsigned long) a->atom, name);
 	putchar ('\n');
     } else {
 	fprintf (stderr, "%s:  no atom named \"%s\" on server \"%s\"\n",
-		 ProgramName, name, DisplayString(dpy));
+		 ProgramName, name, DisplayString);
     }
+
+    if (a)
+	free(a);
 }
 
 
@@ -173,62 +185,85 @@ parse_range(char *range, long *lowp, long *highp)
 }
 
 static void
-do_range(Display *dpy, char *format, char *range)
+do_range(xcb_connection_t *c, char *format, char *range)
 {
     int mask;
     long low, high;
 
     mask = parse_range (range, &low, &high);
-    list_atoms (dpy, format, mask, low, high);
+    list_atoms (c, format, mask, low, high);
 }
 
-
-static int 
-catcher(Display *dpy, XErrorEvent *err)
+static int
+say_batch(xcb_connection_t *c, char *format, xcb_get_atom_name_cookie_t *cookie, long low, long count)
 {
-    if (err->request_code != X_GetAtomName) {
-	XmuPrintDefaultErrorMessage (dpy, err, stderr);
+    xcb_generic_error_t *e;
+    char atom_name[1024];
+    long i;
+    int done = 0;
+
+    for (i = 0; i < count; i++)
+	cookie[i] = xcb_get_atom_name(c, i + low);
+
+    for (i = 0; i < count; i++) {
+	xcb_get_atom_name_reply_t *r;
+	r = xcb_get_atom_name_reply(c, cookie[i], &e);
+	if (r) {
+	    /* We could just use %.*s in 'format', but we want to be compatible
+	       with legacy command line usage */
+	    snprintf(atom_name, sizeof(atom_name), "%.*s",
+		r->name_len, xcb_get_atom_name_name(r));
+
+	    printf (format, i + low, atom_name);
+	    putchar ('\n');
+	    free(r);
+	}
+	if (e) {
+	    done = 1;
+	    free(e);
+	}
     }
-    return 0;
+
+    return done;
 }
 
 static void
-list_atoms(Display *dpy, char *format, int mask, long low, long high)
+list_atoms(xcb_connection_t *c, char *format, int mask, long low, long high)
 {
-    XErrorHandler oldhandler = XSetErrorHandler (catcher);
+    xcb_get_atom_name_cookie_t *cookie_jar;
+    int done = 0;
 
     switch (mask) {
       case RangeHigh:
 	low = 1;
 	/* fall through */
       case (RangeLow | RangeHigh):
-	for (; low <= high; low++) {
-	    char *s = XGetAtomName (dpy, (Atom)low);
-	    if (s) {
-		printf (format, low, s);
-		putchar ('\n');
-		XFree (s);
-	    }
+	cookie_jar = malloc((high - low + 1) * sizeof(xcb_get_atom_name_cookie_t));
+        if (!cookie_jar) {
+	    fprintf(stderr, "Out of memory allocating space for %ld atom requests\n", high - low);
+	    return;
 	}
+
+	say_batch(c, format, cookie_jar, low, high - low + 1);
+	free(cookie_jar);
 	break;
 
       default:
 	low = 1;
 	/* fall through */
       case RangeLow:
-	for (; ; low++) {
-	    char *s = XGetAtomName (dpy, (Atom)low);
-	    if (s) {
-		printf (format, low, s);
-		putchar ('\n');
-		XFree (s);
-	    } else {
-		break;
-	    }
+	cookie_jar = malloc(ATOMS_PER_BATCH * sizeof(xcb_get_atom_name_cookie_t));
+        if (!cookie_jar) {
+	    fprintf(stderr, "Out of memory allocating space for %ld atom requests\n", (long) ATOMS_PER_BATCH);
+	    return;
 	}
+	while (!done) {
+	    done = say_batch(c, format, cookie_jar, low, ATOMS_PER_BATCH);
+	    low += ATOMS_PER_BATCH;
+	}
+	free(cookie_jar);
 	break;
     }
 
-    XSetErrorHandler (oldhandler);
     return;
 }
