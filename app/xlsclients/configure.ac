@@ -22,8 +22,10 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT(xlsclients, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xlsclients)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_INIT(xlsclients, [1.1.0],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+	xlsclients)
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
 # Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
@@ -36,10 +38,17 @@ AM_CONFIG_HEADER(config.h)
 AC_PROG_CC
 AC_PROG_INSTALL
 
+# Check for functional strnlen
+AC_USE_SYSTEM_EXTENSIONS
+AC_FUNC_STRNLEN
+if test "x$ac_cv_func_strnlen_working" = xyes; then
+  AC_DEFINE(HAVE_STRNLEN, 1, [Define to 1 if you have a working strnlen function.])
+fi
+
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XLSCLIENTS, x11 xmuu)
+PKG_CHECK_MODULES(XLSCLIENTS, xcb xcb-atom)
 AC_SUBST(XLSCLIENTS_CFLAGS)
 AC_SUBST(XLSCLIENTS_LIBS)
 

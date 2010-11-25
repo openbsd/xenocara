@@ -1,6 +1,9 @@
 xlsclients is a utility for listing information about the client
 applications running on a X11 server.
 
+Version 1.1 and later of xlsclients use (and require) libxcb instead
+of libX11, for more efficient communication with the X server.
+
 All questions regarding this software should be directed at the
 Xorg mailing list:
 
