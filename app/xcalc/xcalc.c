@@ -1,4 +1,3 @@
-/* $XConsortium: xcalc.c,v 1.16 94/04/17 20:43:31 converse Exp $ */
 /*
 
 Copyright (c) 1989  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86$ */
 
 /*
  * xcalc.c  -  a hand calculator for the X Window system
@@ -234,7 +232,7 @@ static void create_display(Widget parent)
 
 static void create_keypad(Widget parent)
 {
-    static char	*Keyboard[] = {
+    static const char	*Keyboard[] = {
 	"button1", "button2", "button3", "button4", "button5",
 	"button6", "button7", "button8", "button9", "button10",
 	"button11","button12","button13","button14","button15",

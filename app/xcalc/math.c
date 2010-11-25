@@ -1,8 +1,4 @@
-/* $XConsortium: math.c,v 1.17 91/07/25 17:51:34 rws Exp $
- * $MIT: contrib/programs/xcalc/math.c,v 3.2 1999/12/14 18:53:00 gjcoram Exp$
- * $XFree86: xc/programs/xcalc/math.c,v 1.5tsi Exp $ 
- * $XdotOrg: xc/programs/xcalc/math.c,v 1.3 2004/05/23 20:03:49 alanc Exp $
- *
+/*
  *  math.c  -  mathematics functions for a hand calculator under X
  *
  *  Author:    John H. Bradley, University of Pennsylvania

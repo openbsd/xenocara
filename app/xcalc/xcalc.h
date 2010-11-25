@@ -1,4 +1,3 @@
-/* $XConsortium: xcalc.h,v 1.4 94/04/17 20:43:32 converse Exp $ */
 /*
 
 Copyright (c) 1989  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86$ */
 
 /*
  * xcalc.h - symbolic constants for xcalc
