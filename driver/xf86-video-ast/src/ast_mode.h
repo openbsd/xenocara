@@ -50,6 +50,10 @@
 #define VCLK162        		0x0F
 /* #define VCLK193_25     		0x10 */
 #define VCLK154     		0x10
+#define VCLK83_5    		0x11
+#define VCLK106_5   		0x12
+#define VCLK146_25  		0x13
+#define VCLK148_5   		0x14
 
 /* Flags Definition */
 #define Charx8Dot               0x00000001

@@ -152,6 +152,12 @@ static void ASTSetClippingRectangle(ScrnInfoPtr pScrn,
 static void ASTDisableClipping(ScrnInfoPtr pScrn); 
 static void ASTSetHWClipping(ScrnInfoPtr pScrn, int delta_y);
 
+static void AIPSubsequentSolidTwoPointLine(ScrnInfoPtr pScrn,
+                                           int x1, int y1, int x2, int y2, int flags);                                       
+static void AIPSubsequentDashedTwoPointLine(ScrnInfoPtr pScrn,
+                                            int x1, int y1, int x2, int y2,
+                                            int flags, int phase);
+
 Bool
 ASTAccelInit(ScreenPtr pScreen)
 {
@@ -189,17 +195,33 @@ ASTAccelInit(ScreenPtr pScreen)
     /* Solid Lines */
     if (pAST->ENGCaps & ENG_CAP_SolidLine)
     {    
-        infoPtr->SetupForSolidLine = ASTSetupForSolidLine;
+        if (pAST->jChipType == AST2300)
+    	{
+            infoPtr->SubsequentSolidTwoPointLine = AIPSubsequentSolidTwoPointLine;
+        }
+        else
+    	{
+            infoPtr->SubsequentSolidTwoPointLine = ASTSubsequentSolidTwoPointLine;
+        }
+
+        infoPtr->SetupForSolidLine = ASTSetupForSolidLine;            
         infoPtr->SubsequentSolidHorVertLine = ASTSubsequentSolidHorVertLine;    
-        infoPtr->SubsequentSolidTwoPointLine = ASTSubsequentSolidTwoPointLine;
         infoPtr->SolidLineFlags = NO_PLANEMASK;
     }
 
     /* Dashed Lines */
     if (pAST->ENGCaps & ENG_CAP_DashedLine)
-    {        
-        infoPtr->SetupForDashedLine = ASTSetupForDashedLine;
-        infoPtr->SubsequentDashedTwoPointLine = ASTSubsequentDashedTwoPointLine;
+    {
+        if (pAST->jChipType == AST2300)
+        {
+            infoPtr->SubsequentDashedTwoPointLine = AIPSubsequentDashedTwoPointLine;
+        }
+        else
+        {
+            infoPtr->SubsequentDashedTwoPointLine = ASTSubsequentDashedTwoPointLine;
+        }        
+
+        infoPtr->SetupForDashedLine = ASTSetupForDashedLine;        
         infoPtr->DashPatternMaxLength = 64;
         infoPtr->DashedLineFlags = NO_PLANEMASK |
 			           LINE_PATTERN_MSBFIRST_LSBJUSTIFIED;
@@ -1524,6 +1546,143 @@ ASTDisableClipping(ScrnInfoPtr pScrn)
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ASTDisableClipping\n");
 */    
     pAST->EnableClip = FALSE;
+}
+
+static void AIPSubsequentSolidTwoPointLine(ScrnInfoPtr pScrn,
+                                           int x1, int y1, int x2, int y2, int flags)
+{
+ 
+    ASTRecPtr 	pAST = ASTPTR(pScrn);
+    PKT_SC 	*pSingleCMD;
+    ULONG 	dstbase, ulCommand;
+    ULONG	miny, maxy;         
+/*
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ASTSubsequentSolidTwoPointLine\n");
+*/    
+
+    /* Modify Reg. Value */
+    ulCommand = (pAST->ulCMDReg & (~CMD_MASK)) | CMD_LINEDRAW | CMD_NORMAL_LINE;
+    if(flags & OMIT_LAST)
+        ulCommand |= CMD_NOT_DRAW_LAST_PIXEL;
+    else
+        ulCommand &= ~CMD_NOT_DRAW_LAST_PIXEL;
+    if (pAST->EnableClip)
+        ulCommand |= CMD_ENABLE_CLIP;
+    else
+        ulCommand &= ~CMD_ENABLE_CLIP;        
+    dstbase = 0;
+    miny = (y1 > y2) ? y2 : y1;
+    maxy = (y1 > y2) ? y1 : y2;
+    if(maxy >= pScrn->virtualY) {
+        dstbase = pAST->VideoModeInfo.ScreenPitch * miny;
+        y1 -= miny;
+        y2 -= miny;
+    }
+
+    if (!pAST->MMIO2D)                    
+    {                  
+        /* Write to CMDQ */    
+        pSingleCMD = (PKT_SC *) pjRequestCMDQ(pAST, PKT_SINGLE_LENGTH*5);
+
+        ASTSetupDSTBase(pSingleCMD, dstbase);
+        pSingleCMD++;    
+        AIPSetupLineXY(pSingleCMD, x1, y1);
+        pSingleCMD++;
+        AIPSetupLineXY2(pSingleCMD, x2, y2);
+        pSingleCMD++;
+        AIPSetupLineNumber(pSingleCMD, 0);
+        pSingleCMD++;                     
+        ASTSetupCMDReg(pSingleCMD, ulCommand);        
+              
+        /* Update Write Pointer */
+        mUpdateWritePointer;                
+
+        /* Patch KDE pass abnormal point, ycchen@052507 */
+        vWaitEngIdle(pScrn, pAST);
+        
+    }
+    else
+    {                  
+        ASTSetupDSTBase_MMIO(dstbase);
+        AIPSetupLineXY_MMIO(x1, y1);
+        AIPSetupLineXY2_MMIO(x2, y2);
+        AIPSetupLineNumber_MMIO(0);
+        ASTSetupCMDReg_MMIO(ulCommand);        
+             
+        vWaitEngIdle(pScrn, pAST);
+      
+    }
+
+                
+} /* end of AIPSubsequentSolidTwoPointLine */
+
+static void
+AIPSubsequentDashedTwoPointLine(ScrnInfoPtr pScrn,
+                                int x1, int y1, int x2, int y2,
+                                int flags, int phase)
+{
+ 
+    ASTRecPtr 	pAST = ASTPTR(pScrn);
+    PKT_SC 	*pSingleCMD;
+    ULONG 	dstbase, ulCommand; 
+    ULONG	miny, maxy;  
+/*
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ASTSubsequentDashedTwoPointLine\n");
+*/   
+
+    /* Modify Reg. Value */
+    ulCommand = pAST->ulCMDReg | CMD_NORMAL_LINE;
+    if(flags & OMIT_LAST)
+        ulCommand |= CMD_NOT_DRAW_LAST_PIXEL;
+    else
+        ulCommand &= ~CMD_NOT_DRAW_LAST_PIXEL;
+    if (pAST->EnableClip)
+        ulCommand |= CMD_ENABLE_CLIP;
+    else
+        ulCommand &= ~CMD_ENABLE_CLIP;        
+    dstbase = 0;        
+    miny = (y1 > y2) ? y2 : y1;
+    maxy = (y1 > y2) ? y1 : y2;
+    if(maxy >= pScrn->virtualY) {
+        dstbase = pAST->VideoModeInfo.ScreenPitch * miny;
+        y1 -= miny;
+        y2 -= miny;
+    }
+
+    if (!pAST->MMIO2D)                    
+    {                  
+        /* Write to CMDQ */    
+        pSingleCMD = (PKT_SC *) pjRequestCMDQ(pAST, PKT_SINGLE_LENGTH*5);
+
+        ASTSetupDSTBase(pSingleCMD, dstbase);
+        pSingleCMD++;    
+        AIPSetupLineXY(pSingleCMD, x1, y1);
+        pSingleCMD++;
+        AIPSetupLineXY2(pSingleCMD, x2, y2);
+        pSingleCMD++;
+        AIPSetupLineNumber(pSingleCMD, 0);
+        pSingleCMD++;                     
+        ASTSetupCMDReg(pSingleCMD, ulCommand);        
+              
+        /* Update Write Pointer */
+        mUpdateWritePointer;
+
+        /* Patch KDE pass abnormal point, ycchen@052507 */
+        vWaitEngIdle(pScrn, pAST);
+              
+    }
+    else
+    {                  
+        ASTSetupDSTBase_MMIO(dstbase);
+        AIPSetupLineXY_MMIO(x1, y1);
+        AIPSetupLineXY2_MMIO(x2, y2);
+        AIPSetupLineNumber_MMIO(0);
+        ASTSetupCMDReg_MMIO(ulCommand);
+       
+        vWaitEngIdle(pScrn, pAST);
+      
+    }
+                	
 }
 
 #endif	/* end of Accel_2D */

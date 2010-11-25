@@ -50,7 +50,8 @@ typedef enum _CHIP_ID {
     AST2100,
     AST1100,
     AST2200,
-    AST2150
+    AST2150,
+    AST2300
 } CHIP_ID;
 
 /* AST REC Info */

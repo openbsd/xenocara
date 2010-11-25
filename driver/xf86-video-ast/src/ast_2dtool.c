@@ -55,10 +55,12 @@
 #include "ast.h"
 
 #ifdef	Accel_2D
+typedef Bool (*PFN_bENABLE_CMDQ)(ScrnInfoPtr , ASTRecPtr);
 
 /* Prototype type declaration */
 Bool bInitCMDQInfo(ScrnInfoPtr pScrn, ASTRecPtr pAST);
 Bool bEnableCMDQ(ScrnInfoPtr pScrn, ASTRecPtr pAST);
+Bool bEnableCMDQ2300(ScrnInfoPtr pScrn, ASTRecPtr pAST);
 Bool bEnable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST);
 void vDisable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST);
 void vWaitEngIdle(ScrnInfoPtr pScrn, ASTRecPtr pAST);    
@@ -185,16 +187,86 @@ bEnableCMDQ(ScrnInfoPtr pScrn, ASTRecPtr pAST)
 }
 
 Bool
+bEnableCMDQ2300(ScrnInfoPtr pScrn, ASTRecPtr pAST)
+{
+    ULONG ulVMCmdQBasePort = 0, ulNewModeData;
+
+    vWaitEngIdle(pScrn, pAST);  
+
+    /* set DBG Select Info */
+    if (pAST->DBGSelect)
+    {
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0x804C) = (ULONG) (pAST->DBGSelect);             	
+    }
+    
+    /* set CMDQ base */
+    switch (pAST->CMDQInfo.ulCMDQType)
+    {
+    case VM_CMD_QUEUE:
+        /* enable new CMDQ mode */
+        ulNewModeData = 0xc00000f0;
+        /* set CMDQ Size */
+        switch (pAST->CMDQInfo.ulCMDQSize)
+        {
+        case CMD_QUEUE_SIZE_256K:
+            ulNewModeData |= 0x00000000;   
+            break;
+        	
+        case CMD_QUEUE_SIZE_512K:
+            ulNewModeData |= 0x00000004;   
+            break;
+      
+        case CMD_QUEUE_SIZE_1M:
+            ulNewModeData |= 0x00000008;       
+            break;
+            
+        case CMD_QUEUE_SIZE_2M:
+            ulNewModeData |= 0x0000000C;       
+            break;        
+            
+        default:
+            return(FALSE);
+            break;
+        }     
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0x8060) = ulNewModeData;
+
+        /* Set CMDQ Base */   
+        ulVMCmdQBasePort  = (pAST->CMDQInfo.ulCMDQOffsetAddr - 0) >> 3;                                 
+        *(ULONG *) (pAST->CMDQInfo.pjCmdQBasePort) = ulVMCmdQBasePort;         
+        pAST->CMDQInfo.ulWritePointer = *(ULONG *) (pAST->CMDQInfo.pjWritePort) << 3;                 
+        break;
+        
+    case VM_CMD_MMIO:
+        /* enable new CMDQ mode */
+        ulNewModeData = 0xc00000f2;
+        *(ULONG *) (pAST->MMIOVirtualAddr + 0x8060) = ulNewModeData;
+        break;
+        
+    default:
+        return (FALSE);
+        break;
+    }
+
+    return (TRUE);
+    	
+} /* bEnableCMDQ2300 */
+
+Bool
 bEnable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST)
 {
     ULONG ulData;
-    	
+    PFN_bENABLE_CMDQ pfnEnableCMDQ = bEnableCMDQ;
+    
+    if (pAST->jChipType == AST2300)
+        pfnEnableCMDQ = bEnableCMDQ2300;
+        	
     switch (pAST->jChipType)
     {
     case AST2100:
     case AST1100:
     case AST2200:
-    case AST2150:    
+    case AST2150:
+    case AST2300:            
        *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = 0x1e6e0000;
        *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;        
        
@@ -211,7 +283,7 @@ bEnable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST)
     	return (FALSE);
     }
         
-    if (!bEnableCMDQ(pScrn, pAST))
+    if (!pfnEnableCMDQ(pScrn, pAST))
     {
         vDisable2D(pScrn, pAST);  	
     	return (FALSE);

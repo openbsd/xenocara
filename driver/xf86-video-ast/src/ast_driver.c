@@ -543,8 +543,10 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    bASTRegInit(pScrn);
 
    /* Get Chip Type */
-   if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x10)
-       GetChipType(pScrn);
+   if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x20)
+       pAST->jChipType = AST2300;   
+   else if (PCI_DEV_REVISION(pAST->PciInfo) >= 0x10)
+       GetChipType(pScrn);       
    else
        pAST->jChipType = AST2000;
 
@@ -587,7 +589,7 @@ ASTPreInit(ScrnInfoPtr pScrn, int flags)
    clockRanges->doubleScanAllowed = FALSE;
    
    /* Add for AST2100, ycchen@061807 */
-   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200))
+   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300))
        i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
 			 pScrn->display->modes, clockRanges,
 			 0, 320, 1920, 8 * pScrn->bitsPerPixel,
@@ -855,7 +857,8 @@ ASTSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
    vDisable2D(pScrn, pAST);
 #endif
    
-   ASTRestore(pScrn);
+   /* Fixed display abnormal on the of the screen if run xvidtune, ycchen@122909 */
+   /* ASTRestore(pScrn); */
    
    return ASTModeInit(pScrn, mode);
 
@@ -960,10 +963,24 @@ ASTValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
    }
 
    /* Add for AST2100, ycchen@061807 */
-   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200))
+   if ( (pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300) )	
    {
        if ( (mode->CrtcHDisplay == 1920) && (mode->CrtcVDisplay == 1200) )
            return MODE_OK;
+       if ( (mode->CrtcHDisplay == 1920) && (mode->CrtcVDisplay == 1080) )
+           return MODE_OK;
+   }
+   
+   if ((pAST->jChipType == AST1100) || (pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2150) || (pAST->jChipType == AST2300))
+   {
+               
+       if ( (mode->CrtcHDisplay == 1680) && (mode->CrtcVDisplay == 1050) )
+           return MODE_OK;
+       if ( (mode->CrtcHDisplay == 1440) && (mode->CrtcVDisplay == 900) )
+           return MODE_OK;
+       if ( (mode->CrtcHDisplay == 1280) && (mode->CrtcVDisplay == 800) )
+           return MODE_OK;
+           
    }
    
    switch (mode->CrtcHDisplay)

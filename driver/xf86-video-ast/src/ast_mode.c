@@ -151,7 +151,7 @@ VBIOS_ENHTABLE_STRUCT  Res800x600Table[] = {
     {1056, 800, 16, 80, 625, 600, 1, 3, VCLK49_5,	/* 75Hz */ 
       (SyncPP | Charx8Dot), 75, 4, 0x30 },  	  			
     {1048, 800, 32, 64, 631, 600, 1, 3, VCLK56_25,	/* 85Hz */ 
-      (SyncPP | Charx8Dot), 85, 5, 0x30 },  
+      (SyncPP | Charx8Dot), 84, 5, 0x30 },  
     {1048, 800, 32, 64, 631, 600, 1, 3, VCLK56_25,	/* end */ 
       (SyncPP | Charx8Dot), 0xFF, 5, 0x30 },           
 };
@@ -195,6 +195,37 @@ VBIOS_ENHTABLE_STRUCT  Res1920x1200Table[] = {
       (SyncNP | Charx8Dot), 0xFF, 1, 0x34 },   		
 };
 
+/* 16:10 */
+VBIOS_ENHTABLE_STRUCT  Res1280x800Table[] = {
+    {1680, 1280, 72,128,  831,  800, 3, 6, VCLK83_5,	/* 60Hz */
+      (SyncPN | Charx8Dot | LineCompareOff), 60, 1, 0x35 }, 
+    {1680, 1280, 72,128,  831,  800, 3, 6, VCLK83_5,	/* 60Hz */
+      (SyncPN | Charx8Dot | LineCompareOff), 0xFF, 1, 0x35 },   		
+        		
+};
+
+VBIOS_ENHTABLE_STRUCT  Res1440x900Table[] = {
+    {1904, 1440, 80,152,  934,  900, 3, 6, VCLK106_5,	/* 60Hz */
+      (SyncPN | Charx8Dot | LineCompareOff), 60, 1, 0x36 },
+    {1904, 1440, 80,152,  934,  900, 3, 6, VCLK106_5,	/* 60Hz */
+      (SyncPN | Charx8Dot | LineCompareOff), 0xFF, 1, 0x36 },   		         		
+};
+
+VBIOS_ENHTABLE_STRUCT  Res1680x1050Table[] = {
+    {2240, 1680,104,176, 1089, 1050, 3, 6, VCLK146_25,	/* 60Hz */
+      (SyncPN | Charx8Dot | LineCompareOff), 60, 1, 0x37 },
+    {2240, 1680,104,176, 1089, 1050, 3, 6, VCLK146_25,	/* 60Hz */
+      (SyncPN | Charx8Dot | LineCompareOff), 0xFF, 1, 0x37 },   		         		
+};
+
+/* HDTV */
+VBIOS_ENHTABLE_STRUCT  Res1920x1080Table[] = {
+    {2200, 1920, 88, 44, 1125, 1080, 4, 5, VCLK148_5,	/* 60Hz */
+      (SyncNP | Charx8Dot | LineCompareOff), 60, 1, 0x38 },
+    {2200, 1920, 88, 44, 1125, 1080, 4, 5, VCLK148_5,	/* 60Hz */
+      (SyncNP | Charx8Dot | LineCompareOff), 0xFF, 1, 0x38 },   		         		
+};
+
 VBIOS_DCLK_INFO DCLKTable [] = {
     {0x2C, 0xE7, 0x03},					/* 00: VCLK25_175	*/		
     {0x95, 0x62, 0x03},				        /* 01: VCLK28_322	*/
@@ -212,7 +243,11 @@ VBIOS_DCLK_INFO DCLKTable [] = {
     {0x85, 0x24, 0x00},                        	        /* 0D: VCLK135         	*/
     {0x67, 0x22, 0x00},                        	        /* 0E: VCLK157_5       	*/
     {0x6A, 0x22, 0x00},				        /* 0F: VCLK162         	*/
-    {0x4d, 0x4c, 0x80},				        /* 10: VCLK193_25      	*/    
+    {0x4d, 0x4c, 0x80},				        /* 10: VCLK154      	*/
+    {0xa7, 0x78, 0x80},					/* 11: VCLK83.5         */
+    {0x28, 0x49, 0x80},					/* 12: VCLK106.5        */           
+    {0x37, 0x49, 0x80},					/* 13: VCLK146.25       */           
+    {0x1f, 0x45, 0x80},					/* 14: VCLK148.5        */                                      
 };
 
 VBIOS_DAC_INFO DAC_TEXT[] = {
@@ -404,12 +439,12 @@ Bool bGetAST1000VGAModeInfo(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_
          break;   
     case 16:
          pVGAModeInfo->pStdTableEntry = (PVBIOS_STDTABLE_STRUCT) &StdTable[HiCModeIndex];
-	 ulColorIndex = HiCModeIndex-1;                
+	 ulColorIndex = HiCModeIndex;                
          break;
     case 24:         
     case 32:
          pVGAModeInfo->pStdTableEntry = (PVBIOS_STDTABLE_STRUCT) &StdTable[TrueCModeIndex]; 
-	 ulColorIndex = TrueCModeIndex-1;                
+	 ulColorIndex = TrueCModeIndex;                
 	 break;    
     default:
          return (FALSE);
@@ -418,24 +453,37 @@ Bool bGetAST1000VGAModeInfo(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_
     switch (mode->CrtcHDisplay)
     {
     case 640:
-         pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res640x480Table[ulRefreshRateIndex];
-         break;
+	 pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res640x480Table[ulRefreshRateIndex];
+	 break;
     case 800:
-         pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res800x600Table[ulRefreshRateIndex];
-         break;         
+	 pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res800x600Table[ulRefreshRateIndex];
+	 break;
     case 1024:
-         pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1024x768Table[ulRefreshRateIndex];
-         break;
+	 pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1024x768Table[ulRefreshRateIndex];
+	 break;
     case 1280:
-         pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1280x1024Table[ulRefreshRateIndex];
-         break;
+         if (mode->CrtcVDisplay == 800)
+             pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1280x800Table[ulRefreshRateIndex];         
+         else
+             pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1280x1024Table[ulRefreshRateIndex];    
+	 break;
+    case 1440:
+         pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1440x900Table[ulRefreshRateIndex];
+         break;         	 
     case 1600:
-         pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1600x1200Table[ulRefreshRateIndex];
+	 pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1600x1200Table[ulRefreshRateIndex];
+	 break;
+    case 1680:
+         pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1680x1050Table[ulRefreshRateIndex];
          break;
     case 1920:
-         pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1920x1200Table[ulRefreshRateIndex];
-         break;        default:
-         return (FALSE);     
+         if (mode->CrtcVDisplay == 1080)
+             pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1920x1080Table[ulRefreshRateIndex];         
+         else
+             pVGAModeInfo->pEnhTableEntry = (PVBIOS_ENHTABLE_STRUCT) &Res1920x1200Table[ulRefreshRateIndex];
+         break;       
+    default:
+	 return (FALSE);
     }
 
     /* Get Proper Mode Index */
@@ -453,8 +501,8 @@ Bool bGetAST1000VGAModeInfo(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_
     }
 
     /* Update mode CRTC info */
-    ulHBorder = (pVGAModeInfo->pEnhTableEntry->Flags & HBorder) ? 1:0;    
-    ulVBorder = (pVGAModeInfo->pEnhTableEntry->Flags & VBorder) ? 1:0;    
+    ulHBorder = (pVGAModeInfo->pEnhTableEntry->Flags & HBorder) ? 8:0;    
+    ulVBorder = (pVGAModeInfo->pEnhTableEntry->Flags & VBorder) ? 8:0;    
     
     mode->CrtcHTotal      = (int) pVGAModeInfo->pEnhTableEntry->HT;
     mode->CrtcHBlankStart = (int) (pVGAModeInfo->pEnhTableEntry->HDE + ulHBorder);
@@ -569,10 +617,10 @@ vSetCRTCReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO pVGAModeInf
     if (usTemp & 0x20) jReg05 |= 0x80;			/* HBE D[5] */
     if (usTemp & 0x40) jRegAD |= 0x01;			/* HBE D[6] */    
     SetIndexRegMask(CRTC_PORT,0x03, 0xE0, (UCHAR) (usTemp & 0x1F));
-    usTemp = (mode->CrtcHSyncStart >> 3 ) + 2;
+    usTemp = (mode->CrtcHSyncStart >> 3 ) - 1;
     if (usTemp & 0x100) jRegAC |= 0x40;			/* HRS D[5] */    
     SetIndexRegMask(CRTC_PORT,0x04, 0x00, (UCHAR) (usTemp)); 
-    usTemp = ((mode->CrtcHSyncEnd >> 3 ) + 2) & 0x3F;
+    usTemp = ((mode->CrtcHSyncEnd >> 3 ) - 1) & 0x3F;
     if (usTemp & 0x20) jRegAD |= 0x04;			/* HRE D[5] */    
     SetIndexRegMask(CRTC_PORT,0x05, 0x60, (UCHAR) ((usTemp & 0x1F) | jReg05));
  
@@ -682,7 +730,12 @@ void vSetExtReg(ScrnInfoPtr pScrn, DisplayModePtr mode, PVBIOS_MODE_INFO pVGAMod
     SetIndexRegMask(CRTC_PORT,0xA8, 0xFD, (UCHAR) jRegA8);                                
 
     /* Set Threshold */
-    if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST1100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2150) ) 
+    if (pAST->jChipType == AST2300)
+    {
+        SetIndexReg(CRTC_PORT,0xA7, 0x6F);
+        SetIndexReg(CRTC_PORT,0xA6, 0x3F);    	    	
+    }	    
+    else if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST1100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2150) ) 
     {
         SetIndexReg(CRTC_PORT,0xA7, 0x3F);
         SetIndexReg(CRTC_PORT,0xA6, 0x2F);    	

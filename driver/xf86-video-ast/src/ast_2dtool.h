@@ -83,6 +83,8 @@ typedef struct  _PKT_SC
 #define MASK_LINE_WIDTH   			0x7FF        
 #define MASK_LINE_K1				0x3FFFFF           
 #define MASK_LINE_K2				0x3FFFFF
+#define MASK_AIPLINE_X        			0xFFF   
+#define MASK_AIPLINE_Y         			0xFFF
 
 #define MAX_PATReg_Size				256
 
@@ -113,6 +115,8 @@ typedef struct  _PKT_SC
 #define MMIOREG_LINE_K2         (pAST->MMIOVirtualAddr + 0x8028)  
 #define MMIOREG_LINE_STYLE1     (pAST->MMIOVirtualAddr + 0x802C)  
 #define MMIOREG_LINE_STYLE2     (pAST->MMIOVirtualAddr + 0x8030)  
+#define MMIOREG_LINE_XY2        (pAST->MMIOVirtualAddr + 0x8014)
+#define MMIOREG_LINE_NUMBER     (pAST->MMIOVirtualAddr + 0x8018)  
 
 /* CMDQ Reg */
 #define CMDQREG_SRC_BASE	(0x00 << 24)                       
@@ -140,12 +144,15 @@ typedef struct  _PKT_SC
 #define CMDQREG_LINE_K2         (0x0A << 24)
 #define CMDQREG_LINE_STYLE1     (0x0B << 24) 
 #define CMDQREG_LINE_STYLE2     (0x0C << 24)
+#define CMDQREG_LINE_XY2        (0x05 << 24)
+#define CMDQREG_LINE_NUMBER     (0x06 << 24)    
 
 /* CMD Reg. Definition */
 #define   CMD_BITBLT                 		0x00000000
 #define   CMD_LINEDRAW               		0x00000001
 #define   CMD_COLOREXP               		0x00000002
 #define   CMD_ENHCOLOREXP            		0x00000003
+#define   CMD_TRANSPARENTBLT           		0x00000004
 #define   CMD_MASK            	        	0x00000007
 					
 #define   CMD_DISABLE_CLIP           		0x00000000   
@@ -171,6 +178,9 @@ typedef struct  _PKT_SC
 
 #define   CMD_Y_INC				0x00000000	
 #define   CMD_Y_DEC				0x00100000
+
+#define   CMD_NT_LINE				0x00000000
+#define	  CMD_NORMAL_LINE			0x00400000
 
 #define   CMD_DRAW_LAST_PIXEL           	0x00000000
 #define   CMD_NOT_DRAW_LAST_PIXEL       	0x00800000
@@ -359,6 +369,30 @@ typedef struct {
           *(ULONG *)(MMIOREG_LINE_STYLE2) = (ULONG)(pat); \
         } while (*(volatile ULONG *)(MMIOREG_LINE_STYLE2) != (ULONG)(pat)); \
       }     
+
+/* AIP Line CMD */
+#define AIPSetupLineXY_MMIO(x, y) \
+      { \
+        ULONG linexy; \
+        linexy = (ULONG)(((x & MASK_AIPLINE_X) << 16) + (y & MASK_AIPLINE_Y)); \
+        do { \
+           *(ULONG *)(MMIOREG_LINE_XY) = linexy; \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_XY) != linexy); \
+      }
+#define AIPSetupLineXY2_MMIO(x, y) \
+      { \
+        ULONG linexy; \
+        linexy = (ULONG)(((x & MASK_AIPLINE_X) << 16) + (y & MASK_AIPLINE_Y)); \
+        do { \
+           *(ULONG *)(MMIOREG_LINE_XY2) = linexy; \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_XY2) != linexy); \
+      }
+#define AIPSetupLineNumber_MMIO(no) \
+      { \
+        do { \
+           *(ULONG *)(MMIOREG_LINE_NUMBER) = (ULONG) no; \
+        } while (*(volatile ULONG *)(MMIOREG_LINE_NUMBER) != (ULONG) no); \
+      }
                                 
 /* CMDQ Mode Macro */ 
 #define mUpdateWritePointer *(ULONG *) (pAST->CMDQInfo.pjWritePort) = (pAST->CMDQInfo.ulWritePointer >>3)
@@ -481,4 +515,21 @@ typedef struct {
       { \
         addr->PKT_SC_dwHeader  = (ULONG) (PKT_NULL_CMD); 			\
         addr->PKT_SC_dwData[0] = (ULONG) 0;					\
+      }
+
+/* AIP Line CMD */
+#define AIPSetupLineXY(addr, x, y) \
+      { \
+        addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_XY); 	\
+        addr->PKT_SC_dwData[0] = (ULONG)(((x & MASK_AIPLINE_X) << 16) + (y & MASK_AIPLINE_Y));					\
+      }
+#define AIPSetupLineXY2(addr, x, y) \
+      { \
+        addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_XY2); 	\
+        addr->PKT_SC_dwData[0] = (ULONG)(((x & MASK_AIPLINE_X) << 16) + (y & MASK_AIPLINE_Y));					\
+      }
+#define AIPSetupLineNumber(addr, no) \
+      { \
+        addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_NUMBER); 	\
+        addr->PKT_SC_dwData[0] = (ULONG)(no);					\
       }

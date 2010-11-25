@@ -219,7 +219,7 @@ GetMaxDCLK(ScrnInfoPtr pScrn)
    
    /* Get Bandwidth */
    /* Modify DARM utilization to 60% for AST1100/2100 16bits DRAM, ycchen@032508 */
-   if ( ((pAST->jChipType == AST2100) || (pAST->jChipType == AST1100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2150)) && (ulDRAMBusWidth == 16) )
+   if ( ((pAST->jChipType == AST2100) || (pAST->jChipType == AST1100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2150) || (pAST->jChipType == AST2300)) && (ulDRAMBusWidth == 16) )
        DRAMEfficiency = 600;     
    ulDRAMBandwidth = ulMCLK * ulDRAMBusWidth * 2 / 8;
    ActualDRAMBandwidth = ulDRAMBandwidth * DRAMEfficiency / 1000;
@@ -235,7 +235,7 @@ GetMaxDCLK(ScrnInfoPtr pScrn)
        ulDCLK = ActualDRAMBandwidth / ((pScrn->bitsPerPixel+1) / 8);	   
 
    /* Add for AST2100, ycchen@061807 */
-   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200))
+   if ((pAST->jChipType == AST2100) || (pAST->jChipType == AST2200) || (pAST->jChipType == AST2300))
    {
        if (ulDCLK > 200) ulDCLK = 200;
    }
@@ -451,18 +451,18 @@ GetVGA2EDID(ScrnInfoPtr pScrn, unsigned char *pEDIDBuffer)
     /* SCU settings */
     *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = 0x1e6e0000;
     *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;
-    xf86UDelay(10000);
+    usleep(10000);
 
     *(ULONG *) (pAST->MMIOVirtualAddr + 0x12000) = 0x1688A8A8;    
     ulData = *(ULONG *) (pAST->MMIOVirtualAddr + 0x12004);
     ulData &= 0xfffffffb;
     *(ULONG *) (pAST->MMIOVirtualAddr + 0x12004) = ulData;    
-    xf86UDelay(10000);
+    usleep(10000);
     
     /* I2C settings */
     *(ULONG *) (pAST->MMIOVirtualAddr + 0xF004) = I2C_BASE;
     *(ULONG *) (pAST->MMIOVirtualAddr + 0xF000) = 0x1;
-    xf86UDelay(10000);
+    usleep(10000);
     
     /* I2C Start */
     *(ULONG *) (ulI2CBase + 0x00) = 0x0;
@@ -537,7 +537,17 @@ Bool bIsVGAEnabled(ScrnInfoPtr pScrn)
 
     ch = GetReg(pAST->RelocateIO+0x43);
 
-    return (ch & 0x01);	
+    if (ch)
+    {
+    	
+        vASTOpenKey(pScrn);
+        
+        GetIndexRegMask(CRTC_PORT, 0xB6, 0xFF, ch);  
+        
+        return (ch & 0x04);
+    }
+
+    return (0);	
 }	
 
 void vEnableVGA(ScrnInfoPtr pScrn)
@@ -553,8 +563,15 @@ void vEnableVGA(ScrnInfoPtr pScrn)
 
 UCHAR ExtRegInfo[] = {
     0x0F,
-    0x07,
+    0x04,
     0x1C,
+    0xFF
+};
+
+UCHAR ExtRegInfo_AST2300[] = {
+    0x0F,
+    0x04,
+    0x1D,
     0xFF
 };
 
@@ -572,7 +589,11 @@ void vSetDefExtReg(ScrnInfoPtr pScrn)
     }
 
     /* Set Ext. Reg */
-    pjExtRegInfo = ExtRegInfo;    
+    if (pAST->jChipType == AST2300)
+        pjExtRegInfo = ExtRegInfo_AST2300;            
+    else
+        pjExtRegInfo = ExtRegInfo;
+
     jIndex = 0xA0;
     while (*(UCHAR *) (pjExtRegInfo) != 0xFF)
     {
@@ -580,6 +601,10 @@ void vSetDefExtReg(ScrnInfoPtr pScrn)
         jIndex++;
         pjExtRegInfo++;
     }
+
+    /* disable standard IO/MEM decode if secondary */
+    if (!xf86IsPrimaryPci(pAST->PciInfo))
+        SetIndexRegMask(CRTC_PORT,0xA1, 0xFF, 0x03);    	
 
     /* Set Ext. Default */
     SetIndexRegMask(CRTC_PORT,0x8C, 0x00, 0x01);    	
@@ -782,7 +807,7 @@ void vInitDRAMReg(ScrnInfoPtr pScrn)
             if (pjDRAMRegInfo->Index == 0xFF00)			/* Delay function */
             {
             	for (i=0; i<15; i++)				
-        	    xf86UDelay(pjDRAMRegInfo->Data);
+                    usleep(pjDRAMRegInfo->Data);
             }
             else if ( (pjDRAMRegInfo->Index == 0x0004) && (pAST->jChipType != AST2000) )
             {
