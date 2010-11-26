@@ -35,10 +35,10 @@
 #define KB_OVRENC \
 	{ KB_UK,	"gb" }, \
 	{ KB_SV,	"se" }, \
-	{ KB_SG,	"ch(de)" }, \
-	{ KB_SF,	"ch(fr)" }, \
+	{ KB_SG,	"ch" }, \
+	{ KB_SF,	"ch" }, \
 	{ KB_LA,	"latam" }, \
-	{ KB_CF,	"ca(fr)" }
+	{ KB_CF,	"ca" }
 
 struct nameint {
   int val;
@@ -46,8 +46,13 @@ struct nameint {
 } kbdenc[] = { KB_OVRENC, KB_ENCTAB, { 0 } };
 
 struct nameint kbdvar[] = {
-	{ KB_NODEAD, "nodeadkeys" },
-	{ KB_DVORAK, "dvorak" },
+	{ KB_NODEAD | KB_SG,	"de_nodeadkeys" },
+	{ KB_NODEAD | KB_SF,	"fr_nodeadkeys" },
+	{ KB_SF,		"fr" },
+	{ KB_DVORAK | KB_CF,	"fr-dvorak" },
+	{ KB_CF,		"fr-legacy" },
+	{ KB_NODEAD,	"nodeadkeys" },
+	{ KB_DVORAK,	"dvorak" },
 	{ 0 }
 };
 
@@ -524,7 +529,8 @@ OpenKeyboard(InputInfoPtr pInfo)
         }
     if (xf86findOption(pInfo->options, "XkbVariant") == NULL)
         for (i = 0; kbdvar[i].val; i++)
-            if (KB_VARIANT(wsenc) == kbdvar[i].val) {
+            if (wsenc == kbdvar[i].val ||
+		KB_VARIANT(wsenc) == kbdvar[i].val) {
 		xf86Msg(X_PROBED, "%s: using wscons variant %s\n",
 			pInfo->name, kbdvar[i].name);
                 xf86addNewOption(pInfo->options, "XkbVariant", kbdvar[i].name);
