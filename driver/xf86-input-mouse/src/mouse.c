@@ -253,7 +253,6 @@ static MouseProtocolRec mouseProtocols[] = {
     { "IntelliMouse",		MSE_SERIAL,	msDefaults,	PROT_IMSERIAL },
     { "ThinkingMouse",		MSE_SERIAL,	msDefaults,	PROT_THINKING },
     { "AceCad",			MSE_SERIAL,	acecadDefaults,	PROT_ACECAD },
-    { "SunMouse",		MSE_SERIAL,	mlDefaults,	PROT_SUNMOUSE },
     { "ValuMouseScroll",	MSE_SERIAL,	msDefaults,	PROT_VALUMOUSESCROLL },
 
     /* Standard PS/2 */
@@ -281,8 +280,6 @@ static MouseProtocolRec mouseProtocols[] = {
     /* end of list */
     { NULL,			MSE_NONE,	NULL,		PROT_UNKNOWN }
 };
-
-static unsigned char proto[PROT_NUMPROTOS][8];
 
 /* Process options common to all mouse types. */
 static void
@@ -1268,14 +1265,6 @@ MouseReadInput(InputInfoPtr pInfo)
 	    for (j = 0; j < pBufP; j++)
 		pBuf[j] = pBuf[j+1];
 	    pMse->inSync = 0;
-
-	    /* If SunMouse gets a 5 byte packet, switch to MouseSystems */
-	    if (!baddata && pMse->protocolID == PROT_SUNMOUSE &&
-		(u & pMse->protoPara[5]) == pMse->protoPara[6]) {
-		    pMse->protocolID = PROT_MSC;
-		    memcpy(pMse->protoPara, proto[pMse->protocolID],
-			sizeof(pMse->protoPara));
-	    }
 	    continue;
 	}
 	/* Tell auto probe that we were successful */
@@ -1323,7 +1312,6 @@ MouseReadInput(InputInfoPtr pInfo)
 	    break;
 
 	case PROT_MSC:		/* Mouse Systems Corp */
-	case PROT_SUNMOUSE:
 	    buttons = (~pBuf[0]) & 0x07;
 	    dx =    (signed char)(pBuf[1]) + (char)(pBuf[3]);
 	    dy = - ((signed char)(pBuf[2]) + (char)(pBuf[4]));
@@ -2428,7 +2416,6 @@ static unsigned char proto[PROT_NUMPROTOS][8] = {
   {  0xf8, 0x80, 0x00, 0x00,  5,   0x00, 0xff, MPF_NONE },  /* BusMouse */
   {  0xf8, 0x80, 0x00, 0x00,  5,   0x00, 0xff, MPF_NONE },  /* Auto (dummy) */
   {  0xf8, 0x80, 0x00, 0x00,  8,   0x00, 0xff, MPF_NONE },  /* SysMouse */
-  {  0xf8, 0x88, 0x00, 0x00,  3,   0xf8, 0x80, MPF_SAFE },  /* SunMouse */
 };
 
 
@@ -2727,7 +2714,6 @@ initMouseHW(InputInfoPtr pInfo)
 	    break;
 
 	case PROT_MSC:		/* MouseSystems Corp */
-	case PROT_SUNMOUSE:
 	    usleep(100000);
 	    xf86FlushInput(pInfo->fd);
 	    break;
