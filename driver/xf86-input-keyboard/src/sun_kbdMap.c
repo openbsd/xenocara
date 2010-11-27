@@ -25,6 +25,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include <X11/Xfuncproto.h>
 #include <X11/Sunkeysym.h>
 #include "atKeynames.h"
@@ -39,6 +40,17 @@
 /* Additional Sun Japanese Keyboard Keys not defined in atKeynames.h */
 #define KEY_Kanji	0x82
 #define KEY_Execute	0x83
+
+/*
+ * Additional Korean 106 Keyboard Keys not defined in atKeynames.h
+ * These are exactly same USB usage id with Kana(0x90) and Eisu(0x91) keys
+ * in Mac Japanese keyboard. From /usr/X11/lib/X11/xkb/keycodes/xfree86, these
+ * are 209 and 210. So these should be 0xc9(209-8=201) and 0xca(210-8=202).
+ *   <EISU> =   210;          // Alphanumeric mode on macintosh
+ *   <KANA> =   209;          // Kana mode on macintosh
+ */
+#define KEY_Hangul            0xC9    /* Also Kana in Mac Japanaese kbd */
+#define KEY_Hangul_Hanja      0xCA    /* Also Eisu in Mac Japanaese kbd */
 
 /* Override atKeynames.h values with unique keycodes, so we can distinguish
    KEY_F15 from KEY_HKTG & KEY_KP_DEC from KEY_BSlash2 */
@@ -475,8 +487,8 @@ static unsigned char usbmap[256] = {
 	/* 141 */ KEY_NOTUSED,
 	/* 142 */ KEY_NOTUSED,
 	/* 143 */ KEY_NOTUSED,
-	/* 144 */ KEY_NOTUSED,
-	/* 145 */ KEY_NOTUSED,
+	/* 144 */ KEY_Hangul,		/* Korean 106 Kbd: Hangul */
+	/* 145 */ KEY_Hangul_Hanja,	/* Korean 106 Kbd: Hanja */
 	/* 146 */ KEY_NOTUSED,
 	/* 147 */ KEY_NOTUSED,
 	/* 148 */ KEY_NOTUSED,

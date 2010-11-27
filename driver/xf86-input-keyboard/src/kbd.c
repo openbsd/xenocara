@@ -18,8 +18,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-  
-#define NEED_EVENTS
+#include <xorg-server.h>
+
 #include <X11/X.h>
 #include <X11/Xproto.h>
 
@@ -65,8 +65,7 @@ _X_EXPORT InputDriverRec KBD = {
 	NULL,
 	KbdPreInit,
 	NULL,
-	NULL,
-	0
+	NULL
 };
 
 _X_EXPORT InputDriverRec KEYBOARD = {
@@ -75,42 +74,7 @@ _X_EXPORT InputDriverRec KEYBOARD = {
 	NULL,
 	KbdPreInit,
 	NULL,
-	NULL,
-	0
-};
-
-typedef enum {
-    OPTION_ALWAYS_CORE,
-    OPTION_SEND_CORE_EVENTS,
-    OPTION_CORE_KEYBOARD,
-    OPTION_DEVICE,
-    OPTION_PROTOCOL,
-    OPTION_AUTOREPEAT,
-    OPTION_XLEDS,
-    OPTION_XKB_RULES,
-    OPTION_XKB_MODEL,
-    OPTION_XKB_LAYOUT,
-    OPTION_XKB_VARIANT,
-    OPTION_XKB_OPTIONS,
-    OPTION_CUSTOM_KEYCODES
-} KeyboardOpts;
-
-/* These aren't actually used ... */
-static const OptionInfoRec KeyboardOptions[] = {
-    { OPTION_ALWAYS_CORE,	"AlwaysCore",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_SEND_CORE_EVENTS,	"SendCoreEvents", OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_CORE_KEYBOARD,	"CoreKeyboard",	  OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_DEVICE,		"Device",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_PROTOCOL,		"Protocol",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_AUTOREPEAT,	"AutoRepeat",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XLEDS,		"XLeds",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_RULES,		"XkbRules",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_MODEL,		"XkbModel",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_LAYOUT,	"XkbLayout",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_VARIANT,	"XkbVariant",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_XKB_OPTIONS,	"XkbOptions",	  OPTV_STRING,	{0}, FALSE },
-    { OPTION_CUSTOM_KEYCODES,   "CustomKeycodes", OPTV_BOOLEAN,	{0}, FALSE },
-    { -1,			NULL,		  OPTV_NONE,	{0}, FALSE }
+	NULL
 };
 
 static const char *kbdDefaults[] = {
@@ -119,7 +83,6 @@ static const char *kbdDefaults[] = {
 #else
     "Protocol",		"standard",
 #endif
-    "AutoRepeat",	"500 30",
     "XkbRules",		"xorg",
     "XkbModel",		"pc105",
     "CustomKeycodes",	"off",
@@ -132,7 +95,6 @@ static const char *kbd98Defaults[] = {
 #else
     "Protocol",		"standard",
 #endif
-    "AutoRepeat",	"500 30",
     "XkbRules",		"xfree98",
     "XkbModel",		"pc98",
     "XkbLayout",	"jp",
@@ -153,7 +115,7 @@ SetXkbOption(InputInfoPtr pInfo, char *name, char **option)
 
    if ((s = xf86SetStrOption(pInfo->options, name, NULL))) {
        if (!s[0]) {
-           xfree(s);
+           free(s);
            *option = NULL;
        } else {
            *option = s;
@@ -200,7 +162,7 @@ KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
         xf86CollectInputOptions(pInfo, kbd98Defaults, NULL);
     xf86ProcessCommonOptions(pInfo, pInfo->options); 
 
-    if (!(pKbd = xcalloc(sizeof(KbdDevRec), 1)))
+    if (!(pKbd = calloc(sizeof(KbdDevRec), 1)))
         return pInfo;
 
     pInfo->private = pKbd;
@@ -226,7 +188,7 @@ KbdPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     	    }
     	    l = strtok(NULL, " \t\n");
         }
-        xfree(s);
+        free(s);
     }
 
     SetXkbOption(pInfo, "XkbRules", &xkb_rules);

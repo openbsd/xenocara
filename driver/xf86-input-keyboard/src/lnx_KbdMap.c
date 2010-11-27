@@ -1,5 +1,3 @@
-/* $XFree86$ */
-
 /*
  * Slightly modified xf86KbdLnx.c which is
  *
@@ -10,6 +8,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include <X11/X.h>
 #include <X11/Xmd.h>
 #include "input.h"
@@ -523,12 +522,12 @@ readKernelMapping(InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
   /*
    * Find the Mapping for the special server functions
    */
-  pKbd->specialMap = (TransMapPtr) xcalloc(NUM_CUSTOMKEYS, 1);
+  pKbd->specialMap = (TransMapPtr) calloc(NUM_CUSTOMKEYS, 1);
   if (pKbd->specialMap != NULL) {
       pKbd->specialMap->end = NUM_CUSTOMKEYS;
-      pKbd->specialMap->map = (unsigned char*) xcalloc(NUM_CUSTOMKEYS, 1);
+      pKbd->specialMap->map = (unsigned char*) calloc(NUM_CUSTOMKEYS, 1);
       if (pKbd->specialMap == NULL) {
-      	  xfree(pKbd->specialMap);
+	  free(pKbd->specialMap);
       	  pKbd->specialMap = NULL;
       }
   }

@@ -31,7 +31,6 @@
  * For Scancodes see notes in atKeynames.h  !!!!
  *
  */
-/* $XConsortium: xf86Keymap.h /main/14 1996/02/21 17:38:47 kaleb $ */
 
 #include "xorg-server.h"
 

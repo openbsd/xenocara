@@ -1,3 +1,453 @@
+commit 90f69d7b859caff9f51b6fe20580582a91ed6d0d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 09:15:11 2010 -0700
+
+    xf86-input-keyboard 1.5.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53f3eb734fe4dfccbce602b3dd19ee06e0850c44
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 09:13:47 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 251c5d6dcc09c46be67274853e79026cc3d10fd4
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Mon Oct 18 11:38:48 2010 -0400
+
+    Code cleanup, structure initialization.
+    
+    The InputDriverRec data structure in xserver/hw/xfree86/common/xf86Xinput.h
+    no longer contains an integer refCount member.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 25d1e340eec73b010c4a5b1160aa0fa762a41cd0
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Mon Oct 18 11:38:28 2010 -0400
+
+    Deprecated code cleanup.
+    
+    Replace calls to deprecated functions with calls to standard dynamic
+    memory functions in driver code.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ed3458c0b534a15777b7305cd594e1f9181c80b8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 18 14:37:44 2010 +1000
+
+    Don't set AutoRepeat if we're not actually using it.
+    
+    Autorepeat was removed from the driver with version 1.4.0. So there is not
+    much point in setting this option anymore.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3a8bae0fd2275a6dc62a88072b2a3a651840326c
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:50 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 66b222493b3af6b7fc200d8a296317e9f3e1820a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 14 01:11:53 2010 -0700
+
+    Revert "Close device fd when called with DEVICE_CLOSE"
+    
+    This reverts commit f8e219828db920c4cd7a2645a6194de029dc9bb5.
+    (Sorry, failed to finish rebase operation to remove before pushing.
+     As noted on xorg-devel, this patch was originally made for 1.3.2
+     and needs to be reworked to reflect later upstream changes.)
+
+commit 2aaef2754215d1a9f1073ad32f2ba498ce12188a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 13 11:25:34 2010 +1000
+
+    Remove unused keyboardOptions.
+    
+    These have been unused since May 2009 when the struct that used them was
+    removed from the driver. See fe8d1f70fc7edce4f030766159aebae8f8a89ffc.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 425c1280439fe37497a33c47b5a8432e59cbfb76
+Author: Osamu Sayama <osamu.sayama@oracle.com>
+Date:   Wed Aug 11 19:00:23 2010 -0700
+
+    sun_kbd: Add mappings for Hangul and Hanja keys on Korean keyboard
+    
+    Fixes Sun bug 6897086:
+      Hangul and Hanja keys on Korean PC 105 keyboard are not recognized
+      http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6897086
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f8e219828db920c4cd7a2645a6194de029dc9bb5
+Author: Aaron Zang <aaron.zang@sun.com>
+Date:   Wed Aug 11 18:55:59 2010 -0700
+
+    Close device fd when called with DEVICE_CLOSE
+    
+    Fixes Solaris bug 6886424:
+     VT - keyboard and mouse do not work when switching to vt7
+     http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6886424
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfb1b7a319eab8e13542cfc00b8407121eabb4d5
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 07:12:02 2010 -0300
+
+    Purge macro NEED_EVENTS
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c05b48f976d89519a327c791a9a2bd7149ad581
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 16 16:00:01 2010 -0400
+
+    config: restore inputdir automake variable
+    
+    All input drivers use this variable to set the installation
+    path of the input module. For this driver, it was changed
+    in commit 708ecbf8557d9e676e3bb07c1f83170f6d9f7cd7.
+    One way or another is fine, but breaking a pattern is error prone.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2fb99e01f44f7c1dad3fedb0422f2ae39cbd5e49
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 11 13:57:13 2010 -0400
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b58f64eb53b5d9a2e116d23c0aee6f1c9079cfa7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 11 11:53:46 2010 -0400
+
+    config: use AC_PROG_SED now supplied by XORG_MANPAGE_SECTIONS
+    
+    It depends on util-macros 1.8
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 53d1fdd3a716ebcee0e75e0097106ff25db38498
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu May 27 22:01:55 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 652bf3657b116af2d012116b15d01a8bb23e7850
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed May 12 10:59:49 2010 -0400
+
+    config: fix warnings, m4 quoting and layout
+    
+    Fix some m4 quoting
+    Fix some autoconf warnings
+    remove AC_PROG_CC as it overrides AC_PROG_C_C99 from XORG_DEFAULT_OPTIONS
+    Regroup statements per section
+    Add comments
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 613b44eb0878adf05a9bb4af01c84766ab5828d2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed May 12 10:55:11 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0aa1afb5b1e52c7e945b3a010372362c3157533b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 17:36:14 2010 -0400
+
+    config: move inputproto check to PKG_CHECK_MODULES
+    
+    The XORG_DRIVER_CHECK_EXT macro conditionally adds inputproto
+    to PKG_CHECK_MODULES if this extension is defined in xorg-server.h.
+    It allows a module to use ifdef XINPUT if the extension is available.
+    In this module, the extension is required and not optional.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9a93f9c5ad7c3ddf226dfdc987e60c580b6e0912
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 17:35:37 2010 -0400
+
+    config: remove extension check for unused RANDR extension
+    
+    The randr protocol is not used, no randr*.h are included.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2b491ed2339047f906e3008c085411da851b87cd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 17:14:44 2010 -0400
+
+    config: remove extension check for non-existing XKB extension
+    
+    This extension name does not exist in xorg-server.h and
+    cannot be used in XORG_DRIVER_CHECK_EXT.
+    Further more, headers from kbproto are not used.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0ac76bf1a0d5e6b34a89682f1b20f62575ef2389
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 15:54:08 2010 -0400
+
+    config: Upgrade X.Org macros to 1.4 for INSTALL file copying
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1cb8dd780e18283d3dffaff076dd63452573a198
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 15:51:19 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b89c71e7e956d35f2989d419b1076e8bd6f90e34
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 15:50:34 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements at the top.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 367c39341e2bf063c0d5f25aa1b51a897281ad57
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 15:47:14 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit db1e92685155f25dbff3aaac6b7045ad68fe441a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Apr 10 10:16:06 2010 -0400
+
+    config: LNX_KBD_PERIOD_NAME not used since autorepeat was removed
+    
+    In commit ae630aef17185dd8d2c23d0eb1b3287fa6e26268,
+    the autorepeat feature was removed which was the only
+    user of LNX_KBD_PERIOD_NAME.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit cee8a4241c86a00b90b74428473680cb022a8b7f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 11:40:06 2010 -0400
+
+    Remove unused SCO driver files
+    
+    The SCO driver has never been enabled since the original commit
+    95e5d2521fc39a661e13b313e5aa2514ddac9a5e.
+    The configure.ac file never sets the IS_SCO variable.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6b7655d6ea0115ea6edabd26aa0bcf0241ab0740
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat May 8 13:37:07 2010 -0400
+
+    Missing #ifdef for PCCONS
+    
+    PCCONS support is not always present and should be condiontally compiled.
+    Refer to xserver definition of PCCONS_SUPPORT
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d307dc016485f2811d2d722285a3a6c8a7f8cf12
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat May 8 10:41:19 2010 -0400
+
+    config: remove AH_TOP autoheader statement
+    
+    The generated config.h does not need to include xorg-server.h
+    for the content it provides.
+    Add #include <xorg-server.h> in .[hc] files as needed.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2dc73fa6308b2ea01b82744a44f8c5c11bfca538
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Mar 13 12:04:24 2010 +0100
+
+    man: the old xkb options are gone
+    
+    The kbd manpage mentions the existence of other, undocumented xkb
+    options (those allowing to set keycodes/types/compat/symbols/geometry).
+    These options are gone as of commit 62e663e (Switch to new XKB API).
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit daf147d10f9eb93c08c4ba0dfe4d61e87a41ddf3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 11 10:08:07 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5e1dacfd0ce3298f8c3d7660af0f8ca995b867b2
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:58:07 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit f6e6a09a14b43e01bd378ea0870a474b84b86594
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4f09bebe936dcad41a53d46d8c8e96337dd3edc4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Dec 16 18:14:59 2009 -0800
+
+    Silence sed substitutions in make output
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit cb635080a484f8e87ed1df5360112ec5e2ad7e88
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 25d30641812834919ec3d3ac8a13f225876b1979
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit c1ff277ae557a2d8967f7dd4b8a8af0031670076
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit b3da011aab766d62e39cc43a7aaf80d9fd20c840
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 08:48:14 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    Pre-req for generating INSTALL file
+
+commit 5fa8e062b246971f478a0da5308fd8ac9743b606
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:20 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 42f1e73f04ceb10533361df8f2d5e82076c8b121
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit c66f4f9fcc7450f2c1378f6117bda4442d2af8ae
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 7 10:53:14 2009 +1000
+
+    keyboard 1.4.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 0c75afb4895b60aa08209ccfee9dfad4e4495f4d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Oct 6 17:02:33 2009 +1000

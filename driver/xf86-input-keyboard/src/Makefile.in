@@ -59,8 +59,7 @@ host_triplet = @host@
 @BSD_TRUE@am__append_1 = $(BSD_SRCS)
 @SOLARIS_TRUE@am__append_2 = $(SOLARIS_SRCS)
 @LINUX_TRUE@am__append_3 = $(LINUX_SRCS)
-@SCO_TRUE@am__append_4 = $(SCO_SRCS)
-@HURD_TRUE@am__append_5 = $(HURD_SRCS)
+@HURD_TRUE@am__append_4 = $(HURD_SRCS)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -83,19 +82,17 @@ kbd_drv_la_LIBADD =
 am__kbd_drv_la_SOURCES_DIST = kbd.c xf86OSKbd.h xf86Keymap.h \
 	atKeynames.h bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c \
 	sun_kbd.c sun_kbd.h sun_kbdMap.c lnx_KbdMap.c lnx_kbd.c \
-	lnx_kbd.h sco_KbdMap.c sco_kbd.c sco_kbd.h hurd_kbd.c
+	lnx_kbd.h hurd_kbd.c
 am__objects_1 = bsd_KbdMap.lo bsd_kbd.lo at_scancode.lo
 @BSD_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = sun_kbd.lo sun_kbdMap.lo
 @SOLARIS_TRUE@am__objects_4 = $(am__objects_3)
 am__objects_5 = lnx_KbdMap.lo lnx_kbd.lo at_scancode.lo
 @LINUX_TRUE@am__objects_6 = $(am__objects_5)
-am__objects_7 = sco_KbdMap.lo sco_kbd.lo
-@SCO_TRUE@am__objects_8 = $(am__objects_7)
-am__objects_9 = hurd_kbd.lo at_scancode.lo
-@HURD_TRUE@am__objects_10 = $(am__objects_9)
+am__objects_7 = hurd_kbd.lo at_scancode.lo
+@HURD_TRUE@am__objects_8 = $(am__objects_7)
 am_kbd_drv_la_OBJECTS = kbd.lo $(am__objects_2) $(am__objects_4) \
-	$(am__objects_6) $(am__objects_8) $(am__objects_10)
+	$(am__objects_6) $(am__objects_8)
 kbd_drv_la_OBJECTS = $(am_kbd_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -179,6 +176,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -192,8 +190,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
-SCO_FALSE = @SCO_FALSE@
-SCO_TRUE = @SCO_TRUE@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -203,6 +199,7 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
@@ -234,6 +231,7 @@ host_vendor = @host_vendor@
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
+inputdir = @inputdir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
@@ -241,7 +239,6 @@ localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
-moduledir = @moduledir@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
 prefix = @prefix@
@@ -251,19 +248,18 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = @XORG_CFLAGS@
+AM_CFLAGS = $(XORG_CFLAGS) $(CWARNFLAGS)
 kbd_drv_la_LTLIBRARIES = kbd_drv.la
 kbd_drv_la_LDFLAGS = -avoid-version -module
 kbd_drv_la_SOURCES = kbd.c xf86OSKbd.h xf86Keymap.h atKeynames.h \
 	$(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_5)
-kbd_drv_ladir = @moduledir@/input
+	$(am__append_4)
+kbd_drv_ladir = @inputdir@
 BSD_SRCS = bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c
 HURD_SRCS = hurd_kbd.c at_scancode.c
 LINUX_SRCS = lnx_KbdMap.c lnx_kbd.c lnx_kbd.h at_scancode.c
-SCO_SRCS = sco_KbdMap.c sco_kbd.c sco_kbd.h
 SOLARIS_SRCS = sun_kbd.c sun_kbd.h sun_kbdMap.c
-EXTRA_DIST = $(BSD_SRCS) $(HURD_SRCS) $(LINUX_SRCS) $(SCO_SRCS) $(SOLARIS_SRCS)
+EXTRA_DIST = $(BSD_SRCS) $(HURD_SRCS) $(LINUX_SRCS) $(SOLARIS_SRCS)
 all: all-am
 
 .SUFFIXES:
@@ -277,9 +273,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -340,8 +336,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kbd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_KbdMap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_kbd.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sco_KbdMap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sco_kbd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sun_kbd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sun_kbdMap.Plo@am__quote@
 

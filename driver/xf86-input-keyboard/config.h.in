@@ -1,7 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include "xorg-server.h"
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -31,9 +29,6 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* Name of the period field in struct kbd_repeat */
-#undef LNX_KBD_PERIOD_NAME
 
 /* Name of package */
 #undef PACKAGE
