@@ -1,11 +1,14 @@
-# $OpenBSD: Makefile,v 1.4 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2010/11/27 14:25:47 matthieu Exp $
 .include <bsd.xconf.mk>
 
 PROG=	xidle
 
 CPPFLAGS+= -I${X11BASE}/include
 CFLAGS+= -Wall
-LDADD+=	-L${X11BASE}/lib -lXss -lXext -lX11 -lXau -lXdmcp
+.if ${XENOCARA_BUILD_XCB:L} != "no"
+LIBXCB=	-lxcb
+.endif
+LDADD+=	-L${X11BASE}/lib -lXss -lXext -lX11 ${LIBXCB} -lXau -lXdmcp
 
 MANDIR=	${X11BASE}/man/cat
 

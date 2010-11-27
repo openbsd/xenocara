@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.9 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.10 2010/11/27 14:25:47 matthieu Exp $
 .include <bsd.xconf.mk>
 
 PROG=	xsystrace
@@ -9,7 +9,10 @@ SUBDIR=		pixmaps
 .endif
 
 CPPFLAGS+=	-I${X11BASE}/include
-LDADD+=		-L${X11BASE}/lib -lXaw -lXt -lSM -lICE -lXmu -lXpm -lX11 -lXext -lXau -lXdmcp
+.if ${XENOCARA_BUILD_XCB:L} != "no"
+LIBXCB=		-lxcb
+.endif
+LDADD+=		-L${X11BASE}/lib -lXaw -lXt -lSM -lICE -lXmu -lXpm -lX11 ${LIBXCB} -lXext -lXau -lXdmcp
 
 SRCS=		main.c interface.c callbacks.c policy.c
 

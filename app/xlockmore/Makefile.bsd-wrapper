@@ -1,10 +1,17 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2010/08/05 06:44:21 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2010/11/27 14:25:47 matthieu Exp $
+
+.include <bsd.xconf.mk>
+
+.if ${XENOCARA_BUILD_XCB:L} != "no"
+LIBXCB=		-lxcb
+.endif
 
 config.status:
 	AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 	AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
 	ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
 	CFLAGS="${CFLAGS}" \
+	LIBXCB="${LIBXCB}" \
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
 		sh ${.CURDIR}/configure --prefix=${X11BASE} \
 		--enable-appdefaultdir=/etc/X11/app-defaults \

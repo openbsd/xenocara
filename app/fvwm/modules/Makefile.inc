@@ -1,16 +1,19 @@
 # -*- makefile -*- 
-# $OpenBSD: Makefile.inc,v 1.5 2007/04/09 18:59:57 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.6 2010/11/27 14:25:47 matthieu Exp $
 
 .ifndef FVWM_MAKEFILE_INC
 FVWM_MAKEFILE_INC = done
-.include <bsd.own.mk>
+.include <bsd.xconf.mk>
 
 X11BASE?=	/usr/X11R6
 
 CFLAGS+=	-I${X11BASE}/include -I${.CURDIR}/../.. -I${.CURDIR}/../../libs
 LDADD+=		-L${X11BASE}/lib
 
-XLIB=		-lX11 -lXau -lXdmcp
+.if ${XENOCARA_BUILD_XCB:L} != "no"
+LIBXCB=		-lxcb
+.endif
+XLIB=		-lX11 ${LIBXCB} -lXau -lXdmcp
 
 FVWMLIBDIR=	${X11BASE}/lib/X11/fvwm
 MANDIR=		${X11BASE}/man/cat

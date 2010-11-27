@@ -1,10 +1,15 @@
-# $OpenBSD: Makefile,v 1.3 2010/09/25 02:58:00 jakemsr Exp $
+# $OpenBSD: Makefile,v 1.4 2010/11/27 14:25:47 matthieu Exp $
 .include <bsd.xconf.mk>
 
 PROG=	video
 
 CPPFLAGS+= -I${X11BASE}/include
-LDADD+= -L${X11BASE}/lib -lXv -lXext -lX11 -lXau -lXdmcp
+
+.if ${XENOCARA_BUILD_XCB:L} != "no"
+LIBXCB=	-lxcb
+.endif
+
+LDADD+= -L${X11BASE}/lib -lXv -lXext -lX11 ${LIBXCB} -lXau -lXdmcp
 MANDIR=	${X11BASE}/man/cat
 
 obj: _xenocara_obj
