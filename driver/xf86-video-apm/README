@@ -1,113 +1,148 @@
-$XFree86: xc/programs/Xserver/hw/xfree86/drivers/apm/README,v 1.5 2000/02/11 22:35:55 dawes Exp $
+  Information for Alliance Promotion chipset users
+  Loic Grenie ( <mailto:grenie@math.jussieu.fr>), Henrik
+  Harmsen ( <mailto:Henrik.Harmsen@erv.ericsson.se>)
+  6 March 2000
+  ____________________________________________________________
 
-Note 1: This driver is work in progress. It might not work at all.
-Want to help? Docs are at 
-ftp://beta.xfree86.org/pub/xf86/devel/Documentation/apm
-
-This is the Alliance Promotion driver for XFree86 4.0+. It currently only
-supports the AT3D, AT25 chipsets (found on various Voodoo-Rush cards) and AT24.
-There is incomplete support for the 6422. The 6422 chips are supported in the
-XFree86 3.3.x series.
-
-What has worked on my computer :
-    - XAA for 8/16/24/32 bpp
-    - DGA and DGA2
-    - DPMS
-    - glide2x
-    - using as a module
-    - shadow framebuffer
-    - AT3D
-    - AT24
-    - AP6422 (although with problems, including locks)
-    - multi card setup (with and without Xinerama)
-    - Xv images, even with (slightly modified) glide2x ; note that there is
-      still a little problem with vertical offset.
-
-There is some support for PC-98 with the help of Isao Ohishi
-(ohishi@aero.rim.or.jp). It's still under development. I hope that 8bpp
-works correctly.
-
-What has not worked :
-    - I2C (I'm not sure my card, Hercules 128/3D, has proper cabling)
-
-What is untested :
-
-What should be done :
-    - overlays (with the video engine, everything should be overlayable
-      with everything)
-    - (why not) 3210 support
+  Table of Contents
 
 
-       Loïc Grenié
+  1. Support chipsets
+  2. Acceleration
+  3. DGA
+  4. Video
+  5. Shadow framebuffer
+  6. Configuration
+  7. glide2x
+  8. Questions
 
-Authors:
------------------------------------------------------------------------
-Kent Hamilton    Initial creation.
-Henrik Harmsen   Lots of additions and fixes.  <hch@cd.chalmers.se>
-Loic Grenie      Conversion to 4.0.            <grenie@lami.univ-evry.fr>
-		 Additions and fixes.
+
+  ______________________________________________________________________
+
+  1.  Support chipsets
+
+  The apm driver in the SVGA server is for Alliance Promotion graphics
+  chipsets. The following chipsets are supported:
 
 
-History:
------------------------------------------------------------------------
-Created by Kent Hamilton for Xfree86 from source from Alliance
+  o  6422
 
-Modified 1997-06 by Henrik Harmsen
-  - Added support for AT3D
-  - Acceleration added for 8,16,32bpp: (for AT3D and AT24)
-    - Filled rectangles
-    - Screen-screen bitblts
-    - Host-screen color expansion bitblts for text
-  - DPMS support
-  - Enabled hardware cursor code (also in 8bpp)
-  - Set to programmable VCLK clock
-  - Set MCLK to 57.3 MHz on AT3D.
-  - Various bugfixes and cleanups
+     Old chipset. The driver is still very unstable and has computer
+     crashes. You should use XFree86 3.3.x for this chipset.
 
-Modified 1997-07-06 by Henrik Harmsen
-  - Fixed bug that made the HW cursor screw up on VT switches
-  - Probably fixed bug that screwed up the screen when using
-    screen-screen bitblts. This forced me to put an ApmSync() at 
-    the end of ApmSubsequentScreenToScreenCopy() which makes
-    me unhappy... But: Better it works than not...
 
-Modified 1997-10-19 by Henrik Harmsen
-  - HW line drawing.
-  - HW clipping.
-  - Added support for ROP's.
-  - Text acceleration now lots faster and support for accelerated
-    proportional text. (Uses SCANLINE_PAD_DWORD + clipping).
-  - Combined write for many register writes gives good 
-    general speedup. (write x+y as a single 32 bit entity, rather
-    obvious, really...:-)
-  - Now waits for correct number of free slots in FIFO before
-    issuing writes to the card.
-    This seems to have eliminated the last instances of dropped
-    interrupts from serial IO and no more lost packets in PPP :-)
-  - Converted cursor support to use XAA interface.
-  - Fixed ApmSync(). Finally removed call to ApmSync at end of
-    ApmSubsequentScreenToScreenCopy() :-)
+  o  AT24
 
-Modified 1998-03-29 by Henrik Harmsen
-  - Added DGA support.
-  - Added accel support for AP6422. Fixed AT24 accel support.
-  - Fixed clock register calculation for AP6422 and AT24.
-  - DPMS support for AT24 & AP6422.
-  - 2% faster text accel for AT24/AT3D :-)
+     As found in Diamond Stealth Video 2500. Quite similar to AT3D.
 
-Modified 1998-12-18 by Loic Grenie
-  - Converted to Xfree86 4.0 driver interface. (Only support for 
-    AT25/AT3D chips).
+  o  AT25, AT3D
 
-Modified 1999-03-14 by Henrik Harmsen
-  - Various fixes to bring it up to 3.9Pd.
-  - Added preliminary (completely untested) support for dynamic 
-    loading.
+     AT3D is found in Hercules Stingray 128/3D. Most other Voodoo Rush
+     based cards use the AT25 which is identical except it doesn't have
+     the 3D stuff in it.
 
-Modified 1999-07-07 by Loïc Grenié
-  - Converted to new RAC. Support for DGA and DGA2, I2C, Rush extension.
 
-Modified 2000-02-10 by Loïc Grenié
-  - Bug fixes
-  - AP6422 (bugged !)
-  - Xv driver
+  2.  Acceleration
+
+  The apm driver uses the XAA in the SVGA server. It has support for the
+  following acceleration:
+
+
+  o  Bitblts (rectangle copy operation)
+
+  o  Lines (solid, single pixel)
+
+  o  Filled rectangles
+
+  o  CPU->Screen image transfers.
+
+  o  CPU->Screen colour expansion (text accel).
+
+  o  Screen->Screen colour expansion (cached text accel).
+
+  o  Mono 8x8 pattern fill. Not for 6422.
+
+  o  Colour 8x8 pattern fill (in 8bpp). Not for 6422.
+
+  o  Hardware cursor.
+
+  o  Pixmap caching.
+
+  All in 8, 16 and 32 bpp modes. In 24bpp mode only Bitblts and Filled
+  rectangles is supported. Also VESA DPMS power save mode is fully
+  supported with "standby", "suspend" and "off" modes (set with with the
+  "xset dpms" command).
+
+
+  3.  DGA
+
+  Full DGA 2.0 support with framebuffer access and drawing acceleration.
+
+
+  4.  Video
+
+  It has limited hardware support for video decoding on the AT24 and
+  AT25/3D. It can also display an image in YUV colours inside the
+  desktop. There are some more exotic formats such as YUV 4.1.1, YUV
+  4.0.0 and RGB 8,16.32bpp.
+
+
+  5.  Shadow framebuffer
+
+  There is a mode, called shadow framebuffer, where the graphics are
+  used to display the images. All rendering is done in memory in a so-
+  called shadow framebuffer. This mode is useful if you need lots of
+  reading in the video memory and to use it you will have to put
+
+    Option "ShadowFB"
+
+
+
+  in your xorg.conf file.
+
+
+  6.  Configuration
+
+  You can turn off hardware cursor by inserting the following line in
+  the Device section of the xorg.conf file:
+
+    Option "SWcursor"
+
+
+
+  Or turn off hardware acceleration:
+
+    Option "noaccel"
+
+
+
+  Or turn off MMIO
+
+
+    Option "nolinear"
+
+
+
+  Do not specify either the amount of video RAM or which chipset in the
+  config file. It is better to let the driver probe for this. Also don't
+  put any "clocks" line in the device section since these chips have a
+  fully programmable clock that can almost take any modeline you throw
+  at it. It might though fail at some specific clock values but in that
+  case you should just try a slightly different clock and it should
+  work.
+
+
+  7.  glide2x
+
+  There is support for the XF86Rush extension for use with the glide2x
+  library.
+
+
+  8.  Questions
+
+  Any questions regarding this driver should be sent to Loic Grenie. It
+  should be possible to add support for the 3210 chipset if someone
+  needs it.
+
+
+

@@ -24,6 +24,9 @@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
+
+AM_CFLAGS = $(XORG_CFLAGS) $(PCIACCESS_CFLAGS)
+
 apm_drv_la_LTLIBRARIES = apm_drv.la
 apm_drv_la_LDFLAGS = -module -avoid-version
 apm_drv_ladir = @moduledir@/drivers
@@ -38,11 +41,6 @@ apm_drv_la_SOURCES = \
          apm_regs.h \
 	 apm_pcirename.h
 	
-if XF86RUSH
-apm_drv_la_SOURCES += apm_rush.c
-endif
-
 EXTRA_DIST = \
          apm_funcs.c \
-         apm_video.c \
-	 apm_rush.c
+         apm_video.c

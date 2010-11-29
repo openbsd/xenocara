@@ -89,13 +89,6 @@ static PciChipsets ApmPciChipsets[] = {
     { -1,			-1,		RES_UNDEFINED }
 };
 
-#ifdef HAVE_ISA
-static IsaChipsets ApmIsaChipsets[] = {
-    { PCI_CHIP_AP6422,	RES_EXCLUSIVE_VGA},
-    {-1,		RES_UNDEFINED}
-};
-#endif
-
 typedef enum {
     OPTION_SET_MCLK,
     OPTION_SW_CURSOR,
@@ -236,57 +229,6 @@ ApmAvailableOptions(int chipid, int busid)
     return ApmOptions;
 }
 
-#ifdef HAVE_ISA
-static int
-ApmFindIsaDevice(GDevPtr dev)
-{
-    char	save = rdinx(0x3C4, 0x10);
-    int		i;
-    int		apmChip = -1;
-
-    /*
-     * Start by probing the VGA chipset.
-     */
-    outw(0x3C4, 0x1210);
-    if (rdinx(0x3C4, 0x11) == 'P' && rdinx(0x3C4, 0x12) == 'r' &&
-	rdinx(0x3C4, 0x13) == 'o') {
-	char	id_ap6420[] = "6420";
-	char	id_ap6422[] = "6422";
-	char	id_at24[]   = "6424";
-	char	id_at3d[]   = "AT3D";
-	char	idstring[]  = "    ";
-
-	/*
-	 * Must be an Alliance !!!
-	 */
-	for (i = 0; i < 4; i++)
-	    idstring[i] = rdinx(0x3C4, 0x14 + i);
-	if (!memcmp(id_ap6420, idstring, 4) ||
-	    !memcmp(id_ap6422, idstring, 4))
-	    apmChip = AP6422;
-	else if (!memcmp(id_at24, idstring, 4))
-	    apmChip = AT24;
-	else if (!memcmp(id_at3d, idstring, 4))
-	    apmChip = AT3D;
-	if (apmChip >= 0) {
-	    int	apm_xbase;
-
-	    apm_xbase = (rdinx(0x3C4, 0x1F) << 8) | rdinx(0x3C4, 0x1E);
-
-	    if (!(wrinx(0x3C4, 0x1D, 0xCA >> 2), inb(apm_xbase + 2))) {
-		/*
-		 * TODO Not PCI
-		 */
-	    }
-
-	}
-    }
-    wrinx(0x3C4, 0x10, save);
-
-    return apmChip;
-}
-#endif
-
 static void
 ApmAssignFPtr(ScrnInfoPtr pScrn)
 {
@@ -357,28 +299,6 @@ ApmProbe(DriverPtr drv, int flags)
 	}
     }
 
-#ifdef HAVE_ISA
-    /* Check for non-PCI cards */
-    numUsed = xf86MatchIsaInstances(APM_NAME, ApmChipsets,
-			ApmIsaChipsets, drv, ApmFindIsaDevice, DevSections,
-			numDevSections, &usedChips);
-    if (numUsed > 0) {
-	if (flags & PROBE_DETECT)
-	    foundScreen = TRUE;
-	else for (i = 0; i < numUsed; i++) {
-	    ScrnInfoPtr pScrn = NULL;
-	    if ((pScrn = xf86ConfigIsaEntity(pScrn, 0, usedChips[i],
-					     ApmIsaChipsets, NULL, NULL, NULL,
-					     NULL, NULL))) {
-	    /*
-	     * Fill in what we can of the ScrnInfoRec
-	     */
-	    ApmAssignFPtr(pScrn);
-	    foundScreen = TRUE;
-	    }
-	}
-    }
-#endif
 
     xfree(DevSections);
     return foundScreen;
@@ -1072,18 +992,6 @@ ApmPreInit(ScrnInfoPtr pScrn, int flags)
 
     /* Load bpp-specific modules */
     switch (pScrn->bitsPerPixel) {
-#ifdef HAVE_XF1BPP
-    case 1:
-	mod = "xf1bpp";
-	req = "xf1bppScreenInit";
-	break;
-#endif
-#ifdef HAVE_XF4BPP
-    case 4:
-	mod = "xf4bpp";
-	req = "xf4bppScreenInit";
-	break;
-#endif
     case 8:
     case 16:
     case 24:
@@ -1899,22 +1807,6 @@ ApmScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     miSetPixmapDepths();
 
     switch (pScrn->bitsPerPixel) {
-#ifdef HAVE_XF1BPP
-    case 1:
-	ret = xf1bppScreenInit(pScreen, FbBase,
-			pScrn->virtualX, pScrn->virtualY,
-			pScrn->xDpi, pScrn->yDpi,
-			pScrn->displayWidth);
-	break;
-#endif
-#ifdef HAVE_XF4BPP
-    case 4:
-	ret = xf4bppScreenInit(pScreen, FbBase,
-			pScrn->virtualX, pScrn->virtualY,
-			pScrn->xDpi, pScrn->yDpi,
-			pScrn->displayWidth);
-	break;
-#endif
     case 8:
     case 16:
     case 24:

@@ -34,6 +34,12 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+# this is obnoxious:
+# -module lets us name the module exactly how we want
+# -avoid-version prevents gratuitous .0.0.0 version numbers on the end
+# _ladir passes a dummy rpath to libtool so the thing will actually link
+# TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -56,7 +62,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@XF86RUSH_TRUE@am__append_1 = apm_rush.c
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -76,12 +81,8 @@ am__installdirs = "$(DESTDIR)$(apm_drv_ladir)"
 apm_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(apm_drv_la_LTLIBRARIES)
 apm_drv_la_LIBADD =
-am__apm_drv_la_SOURCES_DIST = apm_accel.c apm_cursor.c apm_dga.c \
-	apm_driver.c apm.h apm_i2c.c apm_regs.h apm_pcirename.h \
-	apm_rush.c
-@XF86RUSH_TRUE@am__objects_1 = apm_rush.lo
 am_apm_drv_la_OBJECTS = apm_accel.lo apm_cursor.lo apm_dga.lo \
-	apm_driver.lo apm_i2c.lo $(am__objects_1)
+	apm_driver.lo apm_i2c.lo
 apm_drv_la_OBJECTS = $(am_apm_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -95,7 +96,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(apm_drv_la_SOURCES)
-DIST_SOURCES = $(am__apm_drv_la_SOURCES_DIST)
+DIST_SOURCES = $(apm_drv_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -105,6 +106,7 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
@@ -112,15 +114,13 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
-BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
-BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
-BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
@@ -145,7 +145,7 @@ FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
 HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
 HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
-INCLUDES = @INCLUDES@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -156,17 +156,13 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINUXDOC = @LINUXDOC@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-MAKE_HTML = @MAKE_HTML@
-MAKE_PDF = @MAKE_PDF@
-MAKE_PS = @MAKE_PS@
-MAKE_TEXT = @MAKE_TEXT@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -181,7 +177,6 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
-PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -190,12 +185,9 @@ STRIP = @STRIP@
 VERSION = @VERSION@
 XEXT_CFLAGS = @XEXT_CFLAGS@
 XEXT_LIBS = @XEXT_LIBS@
-XF86RUSH_CFLAGS = @XF86RUSH_CFLAGS@
-XF86RUSH_FALSE = @XF86RUSH_FALSE@
-XF86RUSH_LIBS = @XF86RUSH_LIBS@
-XF86RUSH_TRUE = @XF86RUSH_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
@@ -244,21 +236,23 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-
-# this is obnoxious:
-# -module lets us name the module exactly how we want
-# -avoid-version prevents gratuitous .0.0.0 version numbers on the end
-# _ladir passes a dummy rpath to libtool so the thing will actually link
-# TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
+AM_CFLAGS = $(XORG_CFLAGS) $(PCIACCESS_CFLAGS)
 apm_drv_la_LTLIBRARIES = apm_drv.la
 apm_drv_la_LDFLAGS = -module -avoid-version
 apm_drv_ladir = @moduledir@/drivers
-apm_drv_la_SOURCES = apm_accel.c apm_cursor.c apm_dga.c apm_driver.c \
-	apm.h apm_i2c.c apm_regs.h apm_pcirename.h $(am__append_1)
+apm_drv_la_SOURCES = \
+         apm_accel.c \
+         apm_cursor.c \
+         apm_dga.c \
+         apm_driver.c \
+         apm.h \
+         apm_i2c.c \
+         apm_regs.h \
+	 apm_pcirename.h
+
 EXTRA_DIST = \
          apm_funcs.c \
-         apm_video.c \
-	 apm_rush.c
+         apm_video.c
 
 all: all-am
 
@@ -273,9 +267,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -334,7 +328,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apm_dga.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apm_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apm_i2c.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apm_rush.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
