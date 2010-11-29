@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.1 2009/10/11 17:30:42 tom Exp $
+-- $XTermId: THANKS,v 1.2 2010/10/24 17:46:47 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -10,6 +10,7 @@ For some insight, see
 
 Here's a list from xterm.log.html of people who have contributed changes.
 
+Adam M Costello
 Adam Sulmicki
 Alan Coopersmith
 Alex Hornung
@@ -17,6 +18,7 @@ Alexander Pohoyda
 Alexander V Lukyanov
 Andrea Odetti
 Andreas Jaeger
+Andreas Schwab
 Andrew Sumner
 Andrew Tipton
 Anton Kovalenko
@@ -30,6 +32,8 @@ Bram Moolenaar
 Branden Robinson
 Bruno Haible
 Caetano Jimenez Carezzato
+Chris Adams
+Chris Clayton
 Christian Biere
 Christian Weisgerber
 Chuck Blake
@@ -44,6 +48,7 @@ David Mathog
 David Wood
 David Yeo
 Denis Zaitsev
+Dennis Preiser
 Dennis Schneider
 Dr Werner Fink
 Ed Schouten
@@ -72,9 +77,11 @@ Jeff Chua
 Jeff Uphoff
 Jens Schweikhardt
 Jeremy Buhler
+Jeremy Huddleston
 Jeroen Ruigrok
 Jess Thrysoee
 Jim Paris
+Jochen Voss
 Joe Allen
 Joe Peterson
 Johnny Billquist
@@ -86,6 +93,7 @@ Kean Johnston
 Keith Packard
 Ken Martin
 Kevin Buhr
+Kevin Schoedel
 Kiyokazu Suto
 Larry Riedel
 Lee Olsen
@@ -100,6 +108,7 @@ Matthias Scheler
 Matthieu Herrb
 Matthieu Lagouge
 Max Mikhanosha
+Michael Riepe
 Michael Rohleder
 Michael Schroeder
 Mike Castle
@@ -127,6 +136,7 @@ Robert Brady
 Robert Earl
 Robin Cutshaw
 Ross Paterson
+Ryan Johnson
 Scott Sewall
 Semen A Ustimenko
 Sergei Laskavy

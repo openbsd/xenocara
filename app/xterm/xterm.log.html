@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.977 2010/10/14 08:53:32 tom Exp $
+  $XTermId: xterm.log.html,v 1.995 2010/11/21 23:40:00 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,9 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_267">Patch #267 - 2010/11/20</A>
+<LI><A HREF="#xterm_266">Patch #266 - 2010/10/24</A>
+<LI><A HREF="#xterm_265">Patch #265 - 2010/10/22</A>
 <LI><A HREF="#xterm_264">Patch #264 - 2010/10/14</A>
 <LI><A HREF="#xterm_263">Patch #263 - 2010/10/13</A>
 <LI><A HREF="#xterm_262">Patch #262 - 2010/8/30</A>
@@ -322,6 +325,61 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_267">Patch #267 - 2010/11/20</A></H1>
+<ul>
+	<li>minor formatting changes to ctlseqs.ms to simplify a script which
+	    extracts the feature information.  See the results in
+<a href="http://invisible-island.net/xterm/xterm.faq.html#compare_versions">Comparing versions, by counting controls</a> in the xterm FAQ.
+
+	<li>add <code>docs-clean</code> makefile rule.
+
+	<li>add <code>copy-selection</code> action (request by 
+	    Timo Juhani Lindfors, Debian #588785).
+
+	<li>trim leading/trailing blanks from string used for "Selection"
+	    font-menu data.
+
+	<li>trim leading/trailing blanks from color resource values.
+
+	<li>configure script improvements:
+	<ul>
+	<li>add workaround for removal of X11 dependency from Xt's package
+	    file (report by Robert Hooker).
+
+	<li>add workaround for removal of fontconfig dependency from Xft's
+	    package file (report by Jeremy Huddleston).
+
+	<li>add workaround for removal of Xmu dependency from Xaw's package
+	    file (report by Jeremy Huddleston).
+
+	<li>improve workaround in <code>CF_X_TOOLKIT</code> macro,
+	    checking for other
+	    possible packages where Xt's dependencies may be given.
+
+	<li>prefer <code>${name:=value}</code> to <code>${name-value}</code>,
+	    since recent bash changes break legacy support for that feature.
+	</ul>
+</ul>
+
+<H1><A NAME="xterm_266">Patch #266 - 2010/10/24</A></H1>
+<ul>
+	<li>add rpm and dpkg scripts, for testing.
+
+	<li>more fixes for Debian #600707 (report by  Cyril Brulebois).
+</ul>
+
+<H1><A NAME="xterm_265">Patch #265 - 2010/10/22</A></H1>
+<ul>
+	<li>fix a regression in fontname logic from 
+	    <a href="#xterm_263">patch #263</a> changes
+	    (Debian #600707, reported by Vincent Lefevre).
+
+	<li>revert modification of any-event/any-button protocol from
+	    <a href="#xterm_263">patch #263</a> changes.
+	    It interferes with selection using a
+	    shifted mouse button (reports by Neil Bird, Bram Moolenaar).
+</ul>
 
 <H1><A NAME="xterm_264">Patch #264 - 2010/10/14</A></H1>
 <ul>

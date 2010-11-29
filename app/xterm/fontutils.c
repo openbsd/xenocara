@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.350 2010/10/14 09:27:25 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.353 2010/10/23 00:27:22 tom Exp $ */
 
 /************************************************************
 
@@ -235,7 +235,7 @@ check_fontname(const char *name)
 {
     Boolean result = True;
 
-    if (name == 0) {
+    if (IsEmpty(name)) {
 	TRACE(("fontname missing\n"));
 	result = False;
     } else if (strlen(name) >= MAX_FONTNAME - 1) {
@@ -911,7 +911,7 @@ xtermLoadFont(XtermWidget xw,
     TRACE(("xtermLoadFont #%d "name" %s%s\n", \
     	   fontnum, \
 	   (warn[index] == fwResource) ? "*" : " ", \
-	   NonNull(myfonts.field)));
+	   NonNull(myfonts.field)))
     DbgResource("normal", f_n, fNorm);
     DbgResource("bold  ", f_b, fBold);
 #if OPT_WIDE_CHARS
@@ -1238,7 +1238,7 @@ typedef struct {
 } SubResourceRec;
 
 #define MERGE_SUBFONT(src,dst,name) \
-	if (dst.name == 0) { \
+	if (IsEmpty(dst.name)) { \
 	    TRACE(("MERGE_SUBFONT " #dst "." #name " merge %s\n", NonNull(src.name))); \
 	    dst.name = src.name; \
 	} else { \
@@ -1249,7 +1249,7 @@ typedef struct {
 	TRACE(("COPY_MENU_FONTS " #src " to " #dst "\n")); \
 	for (n = fontMenu_default; n <= fontMenu_lastBuiltin; ++n) { \
 	    for (m = 0; m < fMAX; ++m) { \
-		dst.menu_font_names[n][m] = src.menu_font_names[n][m]; \
+		dst.menu_font_names[n][m] = x_strdup(src.menu_font_names[n][m]); \
 	    } \
 	}
 
@@ -1294,7 +1294,7 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	COPY_MENU_FONTS(xw->screen, original);
     }
 
-    if (myName == 0 || *myName == 0) {
+    if (IsEmpty(myName)) {
 	TRACE(("xtermLoadVTFonts restoring original\n"));
 	xw->misc.default_font = original.default_font;
 	COPY_MENU_FONTS(original, xw->screen);
@@ -1329,11 +1329,11 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	     */
 	    xw->misc.default_font = subresourceRec.default_font;
 	    COPY_MENU_FONTS(subresourceRec, xw->screen);
-	    screen->MenuFontName(fontMenu_default) = xw->misc.default_font.f_n;
-	    screen->menu_font_names[0][fBold] = xw->misc.default_font.f_b;
+	    screen->MenuFontName(fontMenu_default) = x_strdup(xw->misc.default_font.f_n);
+	    screen->menu_font_names[0][fBold] = x_strdup(xw->misc.default_font.f_b);
 #if OPT_WIDE_CHARS
-	    screen->menu_font_names[0][fWide] = xw->misc.default_font.f_w;
-	    screen->menu_font_names[0][fWBold] = xw->misc.default_font.f_wb;
+	    screen->menu_font_names[0][fWide] = x_strdup(xw->misc.default_font.f_w);
+	    screen->menu_font_names[0][fWBold] = x_strdup(xw->misc.default_font.f_wb);
 #endif
 	} else {
 	    TRACE(("...no resources found\n"));
@@ -3019,7 +3019,7 @@ SetVTFont(XtermWidget xw,
 
 #define USE_CACHED(field, name) \
 	    if (myfonts.field == 0) { \
-		myfonts.field = screen->menu_font_names[which][name]; \
+		myfonts.field = x_strdup(screen->menu_font_names[which][name]); \
 		TRACE(("set myfonts." #field " from menu_font_names[%d][" #name "] %s\n", \
 		       which, NonNull(myfonts.field))); \
 	    } else { \

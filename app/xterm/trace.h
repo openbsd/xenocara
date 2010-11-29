@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.55 2010/10/13 22:26:57 tom Exp $ */
+/* $XTermId: trace.h,v 1.56 2010/11/11 01:10:52 tom Exp $ */
 
 /*
  *
@@ -42,11 +42,8 @@
 
 #if OPT_TRACE
 
-extern	void	Trace ( const char *, ... )
-#ifdef GCC_PRINTF
-	__attribute__ ((format(printf,1,2)))
-#endif
-	;
+extern	void	Trace ( const char *, ... ) GCC_PRINTFLIKE(1,2);
+
 #undef  TRACE
 #define TRACE(p) Trace p
 

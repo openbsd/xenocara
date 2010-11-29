@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.266 2010/06/15 22:30:01 tom Exp $
+dnl $XTermId: configure.in,v 1.267 2010/11/09 01:00:48 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -551,7 +551,7 @@ CF_ARG_DISABLE(freetype,
 	[enable_freetype=yes])
 AC_MSG_RESULT($enable_freetype)
 if test "$enable_freetype" = yes ; then
-	CF_X_FREETYPE
+	CF_X_FONTCONFIG
 else
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
 fi

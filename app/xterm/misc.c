@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.510 2010/10/11 08:33:33 tom Exp $ */
+/* $XTermId: misc.c,v 1.511 2010/11/10 00:56:29 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1991,7 +1991,7 @@ xtermGetColorRes(XtermWidget xw, ColorRes * res)
 		res->value = TScreenOf(xw)->Tcolors[TEXT_FG].value;
 		res->mode = -True;
 		fprintf(stderr,
-			"%s: Cannot allocate color %s\n",
+			"%s: Cannot allocate color \"%s\"\n",
 			xterm_name,
 			NonNull(res->resource));
 	    }

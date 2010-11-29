@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1086 2010/10/13 23:04:01 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1091 2010/11/11 11:41:26 tom Exp $ */
 
 /*
 
@@ -277,6 +277,7 @@ static XtActionsRec actionsList[] = {
     { "allow-send-events",	HandleAllowSends },
     { "bell",			HandleBell },
     { "clear-saved-lines",	HandleClearSavedLines },
+    { "copy-selection",		HandleCopySelection },
     { "create-menu",		HandleCreateMenu },
     { "delete-is-del",		HandleDeleteIsDEL },
     { "dired-button",		DiredButton },
@@ -300,16 +301,10 @@ static XtActionsRec actionsList[] = {
     { "select-cursor-end",	HandleKeyboardSelectEnd },
     { "select-cursor-extend",   HandleKeyboardSelectExtend },
     { "select-cursor-start",	HandleKeyboardSelectStart },
-#if 0
-    { "select-cursor-stop",	HandleKeyboardSelectStop },
-#endif
     { "select-end",		HandleSelectEnd },
     { "select-extend",		HandleSelectExtend },
     { "select-set",		HandleSelectSet },
     { "select-start",		HandleSelectStart },
-#if 0
-    { "select-stop",		HandleSelectStop },
-#endif
     { "send-signal",		HandleSendSignal },
     { "set-8-bit-control",	Handle8BitControl },
     { "set-allow132",		HandleAllow132 },
@@ -6383,13 +6378,13 @@ VTInitialize(Widget wrequest,
 #define DefaultFontNames TScreenOf(wnew)->menu_font_names[fontMenu_default]
     init_Sres(misc.default_font.f_n);
     init_Sres(misc.default_font.f_b);
-    DefaultFontNames[fNorm] = wnew->misc.default_font.f_n;
-    DefaultFontNames[fBold] = wnew->misc.default_font.f_b;
+    DefaultFontNames[fNorm] = x_strdup(wnew->misc.default_font.f_n);
+    DefaultFontNames[fBold] = x_strdup(wnew->misc.default_font.f_b);
 #if OPT_WIDE_CHARS
     init_Sres(misc.default_font.f_w);
     init_Sres(misc.default_font.f_wb);
-    DefaultFontNames[fWide] = wnew->misc.default_font.f_w;
-    DefaultFontNames[fWBold] = wnew->misc.default_font.f_wb;
+    DefaultFontNames[fWide] = x_strdup(wnew->misc.default_font.f_w);
+    DefaultFontNames[fWBold] = x_strdup(wnew->misc.default_font.f_wb);
 #endif
     TScreenOf(wnew)->MenuFontName(fontMenu_fontescape) = NULL;
     TScreenOf(wnew)->MenuFontName(fontMenu_fontsel) = NULL;
@@ -6458,13 +6453,17 @@ VTInitialize(Widget wrequest,
 	 * can be overridden to make these true resources.
 	 */
 	if (i >= MIN_ANSI_COLORS && i < NUM_ANSI_COLORS) {
-	    TScreenOf(wnew)->Acolors[i].resource
-		= ((char *) fake_resources[i - MIN_ANSI_COLORS].default_addr);
+	    TScreenOf(wnew)->Acolors[i].resource =
+		x_strtrim(fake_resources[i - MIN_ANSI_COLORS].default_addr);
 	    if (TScreenOf(wnew)->Acolors[i].resource == 0)
 		TScreenOf(wnew)->Acolors[i].resource = XtDefaultForeground;
 	} else
 #endif /* OPT_COLOR_RES2 */
+	{
 	    TScreenOf(wnew)->Acolors[i] = TScreenOf(request)->Acolors[i];
+	    TScreenOf(wnew)->Acolors[i].resource =
+		x_strtrim(TScreenOf(wnew)->Acolors[i].resource);
+	}
 
 #if OPT_COLOR_RES
 	TRACE(("Acolors[%d] = %s\n", i, TScreenOf(wnew)->Acolors[i].resource));
@@ -8424,7 +8423,7 @@ set_character_class(char *s)
     int base;			/* 8, 10, 16 (octal, decimal, hex) */
     int numbers;		/* count of numbers per range */
     int digits;			/* count of digits in a number */
-    static const char *errfmt = "%s:  %s in range string \"%s\" (position %d)\n";
+    static const char errfmt[] = "%s:  %s in range string \"%s\" (position %d)\n";
 
     if (!s || !s[0])
 	return -1;
@@ -8641,17 +8640,17 @@ DoSetSelectedFont(Widget w,
 	    memcpy(val, value, (size_t) len);
 	    val[len] = '\0';
 	    used = x_strtrim(val);
-	    TRACE(("DoSetSelectedFont(%s)\n", val));
+	    TRACE(("DoSetSelectedFont(%s)\n", used));
 	    /* Do some sanity checking to avoid sending a long selection
 	       back to the server in an OpenFont that is unlikely to succeed.
 	       XLFD allows up to 255 characters and no control characters;
 	       we are a little more liberal here. */
 	    if (len < 1000
-		&& !strchr(val, '\n')
-		&& (test = x_strdup(val)) != 0) {
+		&& !strchr(used, '\n')
+		&& (test = x_strdup(used)) != 0) {
 		TScreenOf(xw)->MenuFontName(fontMenu_fontsel) = test;
 		if (!xtermLoadFont(term,
-				   xtermFontName(val),
+				   xtermFontName(used),
 				   True,
 				   fontMenu_fontsel)) {
 		    failed = True;
@@ -8668,8 +8667,7 @@ DoSetSelectedFont(Widget w,
 				     oldFont);
 		Bell(xw, XkbBI_MinorError, 0);
 	    }
-	    if (used != val)
-		free(used);
+	    free(used);
 	    free(val);
 	}
     }

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.389 2010/10/13 09:37:08 tom Exp $ */
+/* $XTermId: button.c,v 1.391 2010/11/11 11:50:13 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -180,9 +180,10 @@ EmitMousePosition(TScreen * screen, Char line[], unsigned count, int value)
 		       ? EXT_MOUSE_LIMIT
 		       : MOUSE_LIMIT);
 
-    /* Add pointer position to key sequence
-
-     * In extended mode we encode large positions as two-byte UTF-8 
+    /*
+     * Add pointer position to key sequence
+     *
+     * In extended mode we encode large positions as two-byte UTF-8.
      *
      * NOTE: historically, it was possible to emit 256, which became
      * zero by truncation to 8 bits. While this was arguably a bug,
@@ -211,29 +212,30 @@ SendMousePosition(XtermWidget xw, XEvent * event)
     switch (screen->send_mouse_pos) {
     case MOUSE_OFF:
 	/* If send_mouse_pos mode isn't on, we shouldn't be here */
-	return False;
+	break;
 
     case BTN_EVENT_MOUSE:
     case ANY_EVENT_MOUSE:
-	/* xterm extension for motion reporting. June 1998 */
-	/* EditorButton() will distinguish between the modes */
-	switch (event->type) {
-	case MotionNotify:
-	    my_event->button = 0;
-	    /* FALLTHRU */
-	case ButtonPress:
-	    /* FALLTHRU */
-	case ButtonRelease:
-	    EditorButton(xw, my_event);
-	    result = True;
-	    break;
+	if (KeyModifiers(event) == 0 || KeyModifiers(event) == ControlMask) {
+	    /* xterm extension for motion reporting. June 1998 */
+	    /* EditorButton() will distinguish between the modes */
+	    switch (event->type) {
+	    case MotionNotify:
+		my_event->button = 0;
+		/* FALLTHRU */
+	    case ButtonPress:
+		/* FALLTHRU */
+	    case ButtonRelease:
+		EditorButton(xw, my_event);
+		result = True;
+		break;
+	    }
 	}
 	break;
 
     default:
 	/* Make sure the event is an appropriate type */
 	if (IsBtnEvent(event)) {
-
 	    switch (screen->send_mouse_pos) {
 	    case X10_MOUSE:	/* X10 compatibility sequences */
 
@@ -315,7 +317,6 @@ SendLocatorPosition(XtermWidget xw, XButtonEvent * event)
 
     /* Make sure the event is an appropriate type */
     if ((!IsBtnEvent(event) &&
-
 	 !screen->loc_filter) ||
 	(BtnModifiers(event) != 0 && BtnModifiers(event) != ControlMask))
 	return (False);
@@ -1116,54 +1117,18 @@ HandleKeyboardSelectEnd(Widget w,
 }
 
 /*
- * Like "select-end" (optionally copies the selection to the given targets),
- * but also sets the modes so that releasing the mouse button or moving the
- * mouse does not alter the selection.
+ * Copy the selection data to the given target(s).
  */
-static void
-do_select_stop(XtermWidget xw,
-	       XEvent * event,	/* must be XButtonEvent */
-	       String * params,	/* selections */
-	       Cardinal *num_params,
-	       Bool use_cursor_loc)
-{
-    TScreen *screen = TScreenOf(xw);
-
-    screen->selection_time = event->xbutton.time;
-    switch (screen->eventMode) {
-    case NORMAL:
-	(void) SendMousePosition(xw, event);
-	break;
-    case LEFTEXTENSION:
-    case RIGHTEXTENSION:
-	EndExtend(xw, event, params, *num_params, use_cursor_loc);
-	break;
-    }
-}
-
 void
-HandleSelectStop(Widget w,
-		 XEvent * event,	/* must be XButtonEvent */
-		 String * params,	/* selections */
-		 Cardinal *num_params)
+HandleCopySelection(Widget w,
+		    XEvent * event,
+		    String * params,	/* list of targets */
+		    Cardinal *num_params)
 {
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
-	do_select_stop(xw, event, params, num_params, False);
-    }
-}
-
-void
-HandleKeyboardSelectStop(Widget w,
-			 XEvent * event,	/* must be XButtonEvent */
-			 String * params,	/* selections */
-			 Cardinal *num_params)
-{
-    XtermWidget xw;
-
-    if ((xw = getXtermWidget(w)) != 0) {
-	do_select_stop(xw, event, params, num_params, True);
+	SelectSet(xw, event, params, *num_params);
     }
 }
 
