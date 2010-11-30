@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2010/11/27 14:25:47 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2010/11/30 20:05:41 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -14,6 +14,7 @@ config.status:
 	LIBXCB="${LIBXCB}" \
 	PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" \
 		sh ${.CURDIR}/configure --prefix=${X11BASE} \
+		--datarootdir=${X11BASE} \
 		--enable-appdefaultdir=/etc/X11/app-defaults \
 		--enable-syslog --without-motif --without-ttf \
 		--without-gtk2 --without-gtk --without-esound \
