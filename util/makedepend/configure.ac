@@ -2,6 +2,7 @@ AC_PREREQ([2.60])
 AC_INIT([makedepend], [1.0.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_MAINTAINER_MODE
 AM_CONFIG_HEADER([makedepend-config.h])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
