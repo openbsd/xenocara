@@ -398,7 +398,7 @@ static void kbdUSBGetMap(DevicePtr pDev, KeySymsPtr pKeySyms, CARD8 *pModMap)
     KeySym        *k, *mapCopy;
     int           i;
 
-    mapCopy = xalloc(sizeof(map));
+    mapCopy = malloc(sizeof(map));
     memcpy(mapCopy, map, sizeof(map));
 
     /* compute the modifier map */
@@ -439,6 +439,6 @@ void kbdUSBGetInfo(DevicePtr pDev, DMXLocalInitInfoPtr info)
     kbdUSBGetMap(pDev, &info->keySyms, info->modMap);
     info->focusClass       = 1;
     info->kbdFeedbackClass = 1;
-    info->names.keycodes   = xstrdup("powerpcps2");
+    info->names.keycodes   = strdup("powerpcps2");
     info->force            = 1;
 }

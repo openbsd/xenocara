@@ -368,7 +368,7 @@ pointer kbdLinuxCreatePrivate(DeviceIntPtr pKeyboard)
 /** Destroy a private structure. */
 void kbdLinuxDestroyPrivate(pointer priv)
 {
-    if (priv) free(priv);
+    free(priv);
 }
 
 /** Ring the bell.
@@ -938,7 +938,7 @@ static void kbdLinuxGetMap(DevicePtr pDev, KeySymsPtr pKeySyms, CARD8 *pModMap)
     int           i;
 
 #if 00/*BP*/
-    mapCopy = xalloc(sizeof(map));
+    mapCopy = malloc(sizeof(map));
     memcpy(mapCopy, map, sizeof(map));
 #else
     ErrorF("kbdLinuxGetMap() is broken/no-op'd\n");

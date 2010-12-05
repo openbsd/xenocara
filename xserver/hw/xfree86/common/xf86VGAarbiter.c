@@ -62,10 +62,10 @@ static miPointerSpriteFuncRec VGAarbiterSpriteFuncs = {
     VGAarbiterDeviceCursorInitialize, VGAarbiterDeviceCursorCleanup
 };
 
-static int VGAarbiterKeyIndex;
-static DevPrivateKey VGAarbiterScreenKey = &VGAarbiterKeyIndex;
-static int VGAarbiterGCIndex;
-static DevPrivateKey VGAarbiterGCKey = &VGAarbiterGCIndex;
+static DevPrivateKeyRec VGAarbiterScreenKeyRec;
+#define VGAarbiterScreenKey (&VGAarbiterScreenKeyRec)
+static DevPrivateKeyRec VGAarbiterGCKeyRec;
+#define VGAarbiterGCKey (&VGAarbiterGCKeyRec)
 
 static int vga_no_arb = 0;
 void
@@ -151,9 +151,7 @@ xf86VGAarbiterWrapFunctions(void)
     ScrnInfoPtr pScrn;
     VGAarbiterScreenPtr pScreenPriv;
     miPointerScreenPtr PointPriv;
-#ifdef RENDER
     PictureScreenPtr    ps;
-#endif
     ScreenPtr pScreen;
     int vga_count, i;
 
@@ -173,16 +171,17 @@ xf86VGAarbiterWrapFunctions(void)
 
     for (i = 0; i < xf86NumScreens; i++) {
         pScreen = xf86Screens[i]->pScreen;
-#ifdef RENDER
         ps = GetPictureScreenIfSet(pScreen);
-#endif
         pScrn = xf86Screens[pScreen->myNum];
         PointPriv = dixLookupPrivate(&pScreen->devPrivates, miPointerScreenKey);
 
-        if (!dixRequestPrivate(VGAarbiterGCKey, sizeof(VGAarbiterGCRec)))
+        if (!dixRegisterPrivateKey(&VGAarbiterGCKeyRec, PRIVATE_GC, sizeof(VGAarbiterGCRec)))
             return FALSE;
 
-        if (!(pScreenPriv = xalloc(sizeof(VGAarbiterScreenRec))))
+	if (!dixRegisterPrivateKey(&VGAarbiterScreenKeyRec, PRIVATE_SCREEN, 0))
+	    return FALSE;
+
+        if (!(pScreenPriv = malloc(sizeof(VGAarbiterScreenRec))))
             return FALSE;
 
         dixSetPrivate(&pScreen->devPrivates, VGAarbiterScreenKey, pScreenPriv);
@@ -204,11 +203,9 @@ xf86VGAarbiterWrapFunctions(void)
         WRAP_SCREEN(UnrealizeCursor, VGAarbiterUnrealizeCursor);
         WRAP_SCREEN(RecolorCursor, VGAarbiterRecolorCursor);
         WRAP_SCREEN(SetCursorPosition, VGAarbiterSetCursorPosition);
-#ifdef RENDER
         WRAP_PICT(Composite,VGAarbiterComposite);
         WRAP_PICT(Glyphs,VGAarbiterGlyphs);
         WRAP_PICT(CompositeRects,VGAarbiterCompositeRects);
-#endif
         WRAP_SCREEN_INFO(AdjustFrame, VGAarbiterAdjustFrame);
         WRAP_SCREEN_INFO(SwitchMode, VGAarbiterSwitchMode);
         WRAP_SCREEN_INFO(EnterVT, VGAarbiterEnterVT);
@@ -230,9 +227,7 @@ VGAarbiterCloseScreen (int i, ScreenPtr pScreen)
         &pScreen->devPrivates, VGAarbiterScreenKey);
     miPointerScreenPtr PointPriv = (miPointerScreenPtr)dixLookupPrivate(
         &pScreen->devPrivates, miPointerScreenKey);
-#ifdef RENDER
     PictureScreenPtr    ps = GetPictureScreenIfSet(pScreen);
-#endif
 
     UNWRAP_SCREEN(CreateGC);
     UNWRAP_SCREEN(CloseScreen);
@@ -248,11 +243,9 @@ VGAarbiterCloseScreen (int i, ScreenPtr pScreen)
     UNWRAP_SCREEN(UnrealizeCursor);
     UNWRAP_SCREEN(RecolorCursor);
     UNWRAP_SCREEN(SetCursorPosition);
-#ifdef RENDER
     UNWRAP_PICT(Composite);
     UNWRAP_PICT(Glyphs);
     UNWRAP_PICT(CompositeRects);
-#endif
     UNWRAP_SCREEN_INFO(AdjustFrame);
     UNWRAP_SCREEN_INFO(SwitchMode);
     UNWRAP_SCREEN_INFO(EnterVT);
@@ -260,7 +253,7 @@ VGAarbiterCloseScreen (int i, ScreenPtr pScreen)
     UNWRAP_SCREEN_INFO(FreeScreen);
     UNWRAP_SPRITE;
 
-    xfree ((pointer) pScreenPriv);
+    free((pointer) pScreenPriv);
     xf86VGAarbiterLock(xf86Screens[i]);
     val = (*pScreen->CloseScreen) (i, pScreen);
     xf86VGAarbiterUnlock(xf86Screens[i]);
@@ -530,12 +523,16 @@ static Bool
 VGAarbiterEnterVT(int index, int flags)
 {
     Bool val;
+    ScrnInfoPtr pScrn = xf86Screens[index];
     ScreenPtr pScreen = screenInfo.screens[index];
     VGAarbiterScreenPtr pScreenPriv = (VGAarbiterScreenPtr)dixLookupPrivate(
         &pScreen->devPrivates, VGAarbiterScreenKey);
 
     VGAGet();
-    val = (*pScreenPriv->EnterVT)(index, flags);
+    pScrn->EnterVT = pScreenPriv->EnterVT;
+    val = (*pScrn->EnterVT)(index, flags);
+    pScreenPriv->EnterVT = pScrn->EnterVT;
+    pScrn->EnterVT = VGAarbiterEnterVT;
     VGAPut();
     return val;
 }
@@ -543,12 +540,16 @@ VGAarbiterEnterVT(int index, int flags)
 static void
 VGAarbiterLeaveVT(int index, int flags)
 {
+    ScrnInfoPtr pScrn = xf86Screens[index];
     ScreenPtr pScreen = screenInfo.screens[index];
     VGAarbiterScreenPtr pScreenPriv = (VGAarbiterScreenPtr)dixLookupPrivate(
         &pScreen->devPrivates, VGAarbiterScreenKey);
 
     VGAGet();
+    pScrn->LeaveVT = pScreenPriv->LeaveVT;
     (*pScreenPriv->LeaveVT)(index, flags);
+    pScreenPriv->LeaveVT = pScrn->LeaveVT;
+    pScrn->LeaveVT = VGAarbiterLeaveVT;
     VGAPut();
 }
 
@@ -1048,7 +1049,6 @@ VGAarbiterDeviceCursorCleanup(DeviceIntPtr pDev, ScreenPtr pScreen)
     SPRITE_EPILOG;
 }
 
-#ifdef RENDER
 static void
 VGAarbiterComposite(CARD8 op, PicturePtr pSrc, PicturePtr pMask,
          PicturePtr pDst, INT16 xSrc, INT16 ySrc, INT16 xMask,
@@ -1097,7 +1097,6 @@ VGAarbiterCompositeRects(CARD8 op, PicturePtr pDst, xRenderColor *color, int nRe
     VGAPut();
     PICTURE_EPILOGUE (CompositeRects, VGAarbiterCompositeRects);
 }
-#endif
 #else
 /* dummy functions */
 void xf86VGAarbiterInit(void) {}

@@ -55,10 +55,10 @@ RROldModeAdd (RROutputPtr output, RRScreenSizePtr size, int refresh)
 	}
     
     if (output->numModes)
-	modes = xrealloc (output->modes, 
+	modes = realloc(output->modes,
 			  (output->numModes + 1) * sizeof (RRModePtr));
     else
-	modes = xalloc (sizeof (RRModePtr));
+	modes = malloc(sizeof (RRModePtr));
     if (!modes)
     {
 	RRModeDestroy (mode);
@@ -99,9 +99,7 @@ RRScanOldConfig (ScreenPtr pScreen, Rotation rotations)
 	    return;
 	RROutputSetCrtcs (output, &crtc, 1);
 	RROutputSetConnection (output, RR_Connected);
-#ifdef RENDER
 	RROutputSetSubpixelOrder (output, PictureGetSubpixelOrder (pScreen));
-#endif
     }
 
     output = pScrPriv->outputs[0];
@@ -136,7 +134,7 @@ RRScanOldConfig (ScreenPtr pScreen, Rotation rotations)
 		    newMode = mode;
 		}
 	    }
-	    xfree (size->pRates);
+	    free(size->pRates);
 	}
 	else
 	{
@@ -146,7 +144,7 @@ RRScanOldConfig (ScreenPtr pScreen, Rotation rotations)
 	}
     }
     if (pScrPriv->nSizes)
-	xfree (pScrPriv->pSizes);
+	free(pScrPriv->pSizes);
     pScrPriv->pSizes = NULL;
     pScrPriv->nSizes = 0;
 	    
@@ -281,7 +279,7 @@ RRRegisterSize (ScreenPtr	    pScreen,
     for (i = 0; i < pScrPriv->nSizes; i++)
 	if (RRScreenSizeMatches (&tmp, &pScrPriv->pSizes[i]))
 	    return &pScrPriv->pSizes[i];
-    pNew = xrealloc (pScrPriv->pSizes,
+    pNew = realloc(pScrPriv->pSizes,
 		     (pScrPriv->nSizes + 1) * sizeof (RRScreenSize));
     if (!pNew)
 	return 0;
@@ -305,7 +303,7 @@ Bool RRRegisterRate (ScreenPtr		pScreen,
 	if (pSize->pRates[i].rate == rate)
 	    return TRUE;
 
-    pNew = xrealloc (pSize->pRates,
+    pNew = realloc(pSize->pRates,
 		     (pSize->nRates + 1) * sizeof (RRScreenRate));
     if (!pNew)
 	return FALSE;

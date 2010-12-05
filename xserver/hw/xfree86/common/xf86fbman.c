@@ -42,7 +42,7 @@
 #define DEBUG
 */
 
-static int xf86FBManagerKeyIndex;
+static DevPrivateKeyRec xf86FBManagerKeyRec;
 static DevPrivateKey xf86FBManagerKey;
 
 Bool xf86RegisterOffscreenManager(
@@ -50,7 +50,11 @@ Bool xf86RegisterOffscreenManager(
     FBManagerFuncsPtr funcs
 ){
 
-   xf86FBManagerKey = &xf86FBManagerKeyIndex;
+   xf86FBManagerKey = &xf86FBManagerKeyRec;
+
+   if (!dixRegisterPrivateKey(&xf86FBManagerKeyRec, PRIVATE_SCREEN, 0))
+       return FALSE;
+
    dixSetPrivate(&pScreen->devPrivates, xf86FBManagerKey, funcs);
 
    return TRUE;
@@ -60,8 +64,9 @@ Bool xf86RegisterOffscreenManager(
 Bool
 xf86FBManagerRunning(ScreenPtr pScreen)
 {
-    if(xf86FBManagerKey == NULL) 
+    if (xf86FBManagerKey == NULL)
 	return FALSE;
+
     if(!dixLookupPrivate(&pScreen->devPrivates, xf86FBManagerKey))
 	return FALSE;
 
@@ -270,8 +275,8 @@ xf86PurgeUnlockedOffscreenAreas(ScreenPtr pScreen)
 
 \************************************************************/ 
 
-static int xf86FBScreenKeyIndex;
-static DevPrivateKey xf86FBScreenKey = &xf86FBScreenKeyIndex;
+static DevPrivateKeyRec xf86FBScreenKeyRec;
+#define xf86FBScreenKey (&xf86FBScreenKeyRec)
 
 typedef struct _FBLink {
   FBArea area;
@@ -323,10 +328,10 @@ localRegisterFreeBoxCallback(
 
    offman = (FBManagerPtr)dixLookupPrivate(&pScreen->devPrivates,
 					   xf86FBScreenKey);
-   newCallbacks = xrealloc( offman->FreeBoxesUpdateCallback, 
+   newCallbacks = realloc( offman->FreeBoxesUpdateCallback,
 		sizeof(FreeBoxCallbackProcPtr) * (offman->NumCallbacks + 1));
 
-   newPrivates = xrealloc(offman->devPrivates,
+   newPrivates = realloc(offman->devPrivates,
 			  sizeof(DevUnion) * (offman->NumCallbacks + 1));
 
    if(!newCallbacks || !newPrivates)
@@ -363,8 +368,8 @@ AllocateArea(
 
    if(granularity <= 1) granularity = 0;
 
-   boxp = REGION_RECTS(offman->FreeBoxes);
-   num = REGION_NUM_RECTS(offman->FreeBoxes);
+   boxp = RegionRects(offman->FreeBoxes);
+   num = RegionNumRects(offman->FreeBoxes);
 
    /* look through the free boxes */
    for(i = 0; i < num; i++, boxp++) {
@@ -375,7 +380,7 @@ AllocateArea(
 	if(((boxp->y2 - boxp->y1) < h) || ((boxp->x2 - x) < w))
 	   continue;
 
-	link = xalloc(sizeof(FBLink));
+	link = malloc(sizeof(FBLink));
 	if(!link) return NULL;
 
         area = &(link->area);
@@ -407,9 +412,9 @@ AllocateArea(
 
 	   /* bye, bye */
 	   (*link->area.RemoveAreaCallback)(&link->area);
-	   REGION_INIT(pScreen, &NewReg, &(link->area.box), 1); 
-	   REGION_UNION(pScreen, offman->FreeBoxes, offman->FreeBoxes, &NewReg);
-	   REGION_UNINIT(pScreen, &NewReg); 
+	   RegionInit(&NewReg, &(link->area.box), 1);
+	   RegionUnion(offman->FreeBoxes, offman->FreeBoxes, &NewReg);
+	   RegionUninit(&NewReg);
 
            area = &(link->area);
 	   break;
@@ -427,9 +432,9 @@ AllocateArea(
 	area->RemoveAreaCallback = removeCB;
 	area->devPrivate.ptr = privData;
 
-        REGION_INIT(pScreen, &NewReg, &(area->box), 1);
-	REGION_SUBTRACT(pScreen, offman->FreeBoxes, offman->FreeBoxes, &NewReg);
-	REGION_UNINIT(pScreen, &NewReg);
+        RegionInit(&NewReg, &(area->box), 1);
+	RegionSubtract(offman->FreeBoxes, offman->FreeBoxes, &NewReg);
+	RegionUninit(&NewReg);
    }
 
    return area;
@@ -477,15 +482,15 @@ localFreeOffscreenArea(FBAreaPtr area)
    }
 
    /* put the area back into the pool */
-   REGION_INIT(pScreen, &FreedRegion, &(pLink->area.box), 1); 
-   REGION_UNION(pScreen, offman->FreeBoxes, offman->FreeBoxes, &FreedRegion);
-   REGION_UNINIT(pScreen, &FreedRegion); 
+   RegionInit(&FreedRegion, &(pLink->area.box), 1);
+   RegionUnion(offman->FreeBoxes, offman->FreeBoxes, &FreedRegion);
+   RegionUninit(&FreedRegion);
 
    if(pLinkPrev)
 	pLinkPrev->next = pLink->next;
    else offman->UsedAreas = pLink->next;
 
-   xfree(pLink); 
+   free(pLink);
    offman->NumUsedAreas--;
 
    SendCallFreeBoxCallbacks(offman);
@@ -536,12 +541,12 @@ localResizeOffscreenArea(
 	   (resize->box.x2 == OrigArea.x2))
 		return TRUE;
 
-	REGION_INIT(pScreen, &FreedReg, &OrigArea, 1); 
-	REGION_INIT(pScreen, &NewReg, &(resize->box), 1); 
-	REGION_SUBTRACT(pScreen, &FreedReg, &FreedReg, &NewReg);
-	REGION_UNION(pScreen, offman->FreeBoxes, offman->FreeBoxes, &FreedReg);
-	REGION_UNINIT(pScreen, &FreedReg); 
-	REGION_UNINIT(pScreen, &NewReg); 
+	RegionInit(&FreedReg, &OrigArea, 1);
+	RegionInit(&NewReg, &(resize->box), 1);
+	RegionSubtract(&FreedReg, &FreedReg, &NewReg);
+	RegionUnion(offman->FreeBoxes, offman->FreeBoxes, &FreedReg);
+	RegionUninit(&FreedReg);
+	RegionUninit(&NewReg);
 
 	SendCallFreeBoxCallbacks(offman);
 
@@ -551,8 +556,8 @@ localResizeOffscreenArea(
 
    /* otherwise we remove the old region */
 
-   REGION_INIT(pScreen, &FreedReg, &OrigArea, 1); 
-   REGION_UNION(pScreen, offman->FreeBoxes, offman->FreeBoxes, &FreedReg);
+   RegionInit(&FreedReg, &OrigArea, 1);
+   RegionUnion(offman->FreeBoxes, offman->FreeBoxes, &FreedReg);
   
    /* remove the old link */
    if(pLinkPrev)
@@ -583,14 +588,14 @@ localResizeOffscreenArea(
         pLink->next = offman->UsedAreas;
         offman->UsedAreas = pLink;
 
-	xfree(newLink);
+	free(newLink);
 
 	/* AllocateArea added one but we really only exchanged one */
 	offman->NumUsedAreas--;  
    } else {
       /* reinstate the old region */
-      REGION_SUBTRACT(pScreen, offman->FreeBoxes, offman->FreeBoxes, &FreedReg);
-      REGION_UNINIT(pScreen, &FreedReg); 
+      RegionSubtract(offman->FreeBoxes, offman->FreeBoxes, &FreedReg);
+      RegionUninit(&FreedReg);
 
       pLink->next = offman->UsedAreas;
       offman->UsedAreas = pLink;
@@ -598,7 +603,7 @@ localResizeOffscreenArea(
    }
 
 
-   REGION_UNINIT(pScreen, &FreedReg); 
+   RegionUninit(&FreedReg);
 
    SendCallFreeBoxCallbacks(offman);
 
@@ -636,47 +641,47 @@ localQueryLargestOffscreenArea(
 	if(offman->NumUsedAreas) {
 	    FBLinkPtr pLink;
 	    RegionRec tmpRegion;
-	    newRegion = REGION_CREATE(pScreen, NULL, 1);
-	    REGION_COPY(pScreen, newRegion, offman->InitialBoxes);
+	    newRegion = RegionCreate(NULL, 1);
+	    RegionCopy(newRegion, offman->InitialBoxes);
 	    pLink = offman->UsedAreas;
 
 	    while(pLink) {
 		if(!pLink->area.RemoveAreaCallback) {
-		    REGION_INIT(pScreen, &tmpRegion, &(pLink->area.box), 1);
-		    REGION_SUBTRACT(pScreen, newRegion, newRegion, &tmpRegion);
-		    REGION_UNINIT(pScreen, &tmpRegion);
+		    RegionInit(&tmpRegion, &(pLink->area.box), 1);
+		    RegionSubtract(newRegion, newRegion, &tmpRegion);
+		    RegionUninit(&tmpRegion);
 		}
 		pLink = pLink->next;
 	    }
 
-	    nbox = REGION_NUM_RECTS(newRegion);
-	    pbox = REGION_RECTS(newRegion);
+	    nbox = RegionNumRects(newRegion);
+	    pbox = RegionRects(newRegion);
 	    break;
 	}
     case 1:
 	if(offman->NumUsedAreas) {
 	    FBLinkPtr pLink;
 	    RegionRec tmpRegion;
-	    newRegion = REGION_CREATE(pScreen, NULL, 1);
-	    REGION_COPY(pScreen, newRegion, offman->FreeBoxes);
+	    newRegion = RegionCreate(NULL, 1);
+	    RegionCopy(newRegion, offman->FreeBoxes);
 	    pLink = offman->UsedAreas;
 
 	    while(pLink) {
 		if(pLink->area.RemoveAreaCallback) {
-		    REGION_INIT(pScreen, &tmpRegion, &(pLink->area.box), 1);
-		    REGION_APPEND(pScreen, newRegion, &tmpRegion);
-		    REGION_UNINIT(pScreen, &tmpRegion);
+		    RegionInit(&tmpRegion, &(pLink->area.box), 1);
+		    RegionAppend(newRegion, &tmpRegion);
+		    RegionUninit(&tmpRegion);
 		}
 		pLink = pLink->next;
 	    }
 
-	    nbox = REGION_NUM_RECTS(newRegion);
-	    pbox = REGION_RECTS(newRegion);
+	    nbox = RegionNumRects(newRegion);
+	    pbox = RegionRects(newRegion);
 	    break;
 	}
     default:
-	nbox = REGION_NUM_RECTS(offman->FreeBoxes);
-	pbox = REGION_RECTS(offman->FreeBoxes);
+	nbox = RegionNumRects(offman->FreeBoxes);
+	pbox = RegionRects(offman->FreeBoxes);
 	break;
     }
 
@@ -719,7 +724,7 @@ localQueryLargestOffscreenArea(
     }
 
     if(newRegion)
-	REGION_DESTROY(pScreen, newRegion);
+	RegionDestroy(newRegion);
 
     return TRUE;
 }
@@ -741,9 +746,9 @@ localPurgeUnlockedOffscreenAreas(ScreenPtr pScreen)
 	if(pLink->area.RemoveAreaCallback) {
 	    (*pLink->area.RemoveAreaCallback)(&pLink->area);
 
-	    REGION_INIT(pScreen, &FreedRegion, &(pLink->area.box), 1); 
-	    REGION_APPEND(pScreen, offman->FreeBoxes, &FreedRegion);
-	    REGION_UNINIT(pScreen, &FreedRegion); 
+	    RegionInit(&FreedRegion, &(pLink->area.box), 1);
+	    RegionAppend(offman->FreeBoxes, &FreedRegion);
+	    RegionUninit(&FreedRegion);
 
 	    if(pPrev)
 	      pPrev->next = pLink->next;
@@ -751,7 +756,7 @@ localPurgeUnlockedOffscreenAreas(ScreenPtr pScreen)
 
 	    tmp = pLink;
 	    pLink = pLink->next;
-  	    xfree(tmp); 
+            free(tmp);
 	    offman->NumUsedAreas--;
 	    anyUsed = TRUE;
 	} else {
@@ -761,7 +766,7 @@ localPurgeUnlockedOffscreenAreas(ScreenPtr pScreen)
    }
 
    if(anyUsed) {
-	REGION_VALIDATE(pScreen, offman->FreeBoxes, &anyUsed);
+	RegionValidate(offman->FreeBoxes, &anyUsed);
 	SendCallFreeBoxCallbacks(offman);
    }
 
@@ -799,7 +804,7 @@ LinearRemoveCBWrapper(FBAreaPtr area)
         pLinkPrev->next = pLink->next;
    else offman->LinearAreas = pLink->next;
 
-   xfree(pLink);
+   free(pLink);
 }
 
 static void
@@ -854,7 +859,7 @@ AllocateLinear(
 
    /* break left */
    if (offset > linear->linear.offset) {
-      newlink = xalloc(sizeof(FBLinearLink));
+      newlink = malloc(sizeof(FBLinearLink));
       if (!newlink)
 	 return NULL;
       newlink->area = NULL;
@@ -869,7 +874,7 @@ AllocateLinear(
 
    /* break right */
    if (size < linear->linear.size) {
-      newlink = xalloc(sizeof(FBLinearLink));
+      newlink = malloc(sizeof(FBLinearLink));
       if (!newlink)
 	 return NULL;
       newlink->area = NULL;
@@ -920,17 +925,17 @@ localAllocateOffscreenLinear(
 
    DebugF("NOPE, ALLOCATING AREA\n");
 
-   if(!(link = xalloc(sizeof(FBLinearLink))))
+   if(!(link = malloc(sizeof(FBLinearLink))))
      return NULL;
 
    /* No linear available, so try and pinch some from the XY areas */
-   extents = REGION_EXTENTS(pScreen, offman->InitialBoxes);
+   extents = RegionExtents(offman->InitialBoxes);
    pitch = extents->x2 - extents->x1;
 
    if (gran > 1) {
         if (gran > pitch) {
             /* we can't match the specified alignment with XY allocations */
-            xfree(link);
+            free(link);
             return NULL;
         }
 
@@ -970,7 +975,7 @@ localAllocateOffscreenLinear(
 	linear->RemoveLinearCallback = removeCB;
 	linear->devPrivate.ptr = privData;
    } else 
-	xfree(link);
+	free(link);
 
    DumpDebug(offman->LinearAreas);
 
@@ -1002,7 +1007,7 @@ localFreeOffscreenLinear(FBLinearPtr linear)
    	if(pLinkPrev)
 	    pLinkPrev->next = pLink->next;
    	else offman->LinearAreas = pLink->next;
-   	xfree(pLink); 
+        free(pLink);
 	DumpDebug(offman->LinearAreas);
 	return;
    }
@@ -1055,7 +1060,7 @@ localResizeOffscreenLinear(FBLinearPtr resize, int length)
 	BoxPtr extents;
 	int pitch, w, h;
 
-	extents = REGION_EXTENTS(pScreen, offman->InitialBoxes);
+	extents = RegionExtents(offman->InitialBoxes);
 	pitch = extents->x2 - extents->x1;
 
 	if(length < pitch) { /* special case */
@@ -1121,7 +1126,7 @@ localQueryLargestOffscreenLinear(
 
 	    offman = (FBManagerPtr)dixLookupPrivate(&pScreen->devPrivates,
 						    xf86FBScreenKey);
-	    extents = REGION_EXTENTS(pScreen, offman->InitialBoxes);
+	    extents = RegionExtents(offman->InitialBoxes);
 	    if((extents->x2 - extents->x1) == w)
 	    	*size = w * h;
 	    return TRUE;
@@ -1161,22 +1166,22 @@ xf86FBCloseScreen (int i, ScreenPtr pScreen)
    while(pLink) {
 	tmp = pLink;
 	pLink = pLink->next;
-	xfree(tmp);
+	free(tmp);
    }
 
    pLinearLink = offman->LinearAreas;
    while(pLinearLink) {
 	tmp2 = pLinearLink;
 	pLinearLink = pLinearLink->next;
-	xfree(tmp2);
+	free(tmp2);
    }
 
-   REGION_DESTROY(pScreen, offman->InitialBoxes);
-   REGION_DESTROY(pScreen, offman->FreeBoxes);
+   RegionDestroy(offman->InitialBoxes);
+   RegionDestroy(offman->FreeBoxes);
 
-   xfree(offman->FreeBoxesUpdateCallback);
-   xfree(offman->devPrivates);
-   xfree(offman);
+   free(offman->FreeBoxesUpdateCallback);
+   free(offman->devPrivates);
+   free(offman);
    dixSetPrivate(&pScreen->devPrivates, xf86FBScreenKey, NULL);
 
    return (*pScreen->CloseScreen) (i, pScreen);
@@ -1206,15 +1211,15 @@ xf86InitFBManager(
    if (FullBox->y2 < FullBox->y1) return FALSE;
    if (FullBox->x2 < FullBox->x1) return FALSE;
 
-   REGION_INIT(pScreen, &ScreenRegion, &ScreenBox, 1); 
-   REGION_INIT(pScreen, &FullRegion, FullBox, 1); 
+   RegionInit(&ScreenRegion, &ScreenBox, 1);
+   RegionInit(&FullRegion, FullBox, 1);
 
-   REGION_SUBTRACT(pScreen, &FullRegion, &FullRegion, &ScreenRegion);
+   RegionSubtract(&FullRegion, &FullRegion, &ScreenRegion);
 
    ret = xf86InitFBManagerRegion(pScreen, &FullRegion);
 
-   REGION_UNINIT(pScreen, &ScreenRegion);
-   REGION_UNINIT(pScreen, &FullRegion);
+   RegionUninit(&ScreenRegion);
+   RegionUninit(&FullRegion);
     
    return ret;
 }
@@ -1249,17 +1254,17 @@ xf86InitFBManagerArea(
     }
 
     /* Factor out virtual resolution */
-    pRegion = RECTS_TO_REGION(pScreen, nRect, Rect, 0);
+    pRegion = RegionFromRects(nRect, Rect, 0);
     if (pRegion) {
-	if (!REGION_NAR(pRegion)) {
+	if (!RegionNar(pRegion)) {
 	    Rect[2].x = Rect[2].y = 0;
 	    Rect[2].width = pScrn->virtualX;
 	    Rect[2].height = pScrn->virtualY;
 
-	    pScreenRegion = RECTS_TO_REGION(pScreen, 1, &Rect[2], 0);
+	    pScreenRegion = RegionFromRects(1, &Rect[2], 0);
 	    if (pScreenRegion) {
-		if (!REGION_NAR(pScreenRegion)) {
-		    REGION_SUBTRACT(pScreen, pRegion, pRegion, pScreenRegion);
+		if (!RegionNar(pScreenRegion)) {
+		    RegionSubtract(pRegion, pRegion, pScreenRegion);
 
 		    ret = xf86InitFBManagerRegion(pScreen, pRegion);
 
@@ -1301,11 +1306,11 @@ xf86InitFBManagerArea(
 		    }
 		}
 
-		REGION_DESTROY(pScreen, pScreenRegion);
+		RegionDestroy(pScreenRegion);
 	    }
 	}
 
-	REGION_DESTROY(pScreen, pRegion);
+	RegionDestroy(pRegion);
     }
 
     return ret;
@@ -1318,13 +1323,16 @@ xf86InitFBManagerRegion(
 ){
    FBManagerPtr offman;
 
-   if(REGION_NIL(FullRegion))
+   if(RegionNil(FullRegion))
 	return FALSE;
+
+   if (!dixRegisterPrivateKey(&xf86FBScreenKeyRec, PRIVATE_SCREEN, 0))
+       return FALSE;
 
    if(!xf86RegisterOffscreenManager(pScreen, &xf86FBManFuncs))
 	return FALSE;
 
-   offman = xalloc(sizeof(FBManager));
+   offman = malloc(sizeof(FBManager));
    if(!offman) return FALSE;
 
    dixSetPrivate(&pScreen->devPrivates, xf86FBScreenKey, offman);
@@ -1332,11 +1340,11 @@ xf86InitFBManagerRegion(
    offman->CloseScreen = pScreen->CloseScreen;
    pScreen->CloseScreen = xf86FBCloseScreen;
 
-   offman->InitialBoxes = REGION_CREATE(pScreen, NULL, 1);
-   offman->FreeBoxes = REGION_CREATE(pScreen, NULL, 1);
+   offman->InitialBoxes = RegionCreate(NULL, 1);
+   offman->FreeBoxes = RegionCreate(NULL, 1);
 
-   REGION_COPY(pScreen, offman->InitialBoxes, FullRegion);
-   REGION_COPY(pScreen, offman->FreeBoxes, FullRegion);
+   RegionCopy(offman->InitialBoxes, FullRegion);
+   RegionCopy(offman->FreeBoxes, FullRegion);
 
    offman->pScreen = pScreen;
    offman->UsedAreas = NULL;
@@ -1368,7 +1376,7 @@ xf86InitFBManagerLinear(
 
    offman = (FBManagerPtr)dixLookupPrivate(&pScreen->devPrivates,
 					   xf86FBScreenKey);
-   offman->LinearAreas = xalloc(sizeof(FBLinearLink));
+   offman->LinearAreas = malloc(sizeof(FBLinearLink));
    if (!offman->LinearAreas)
 	return FALSE;
 
@@ -1415,7 +1423,7 @@ xf86AllocateLinearOffscreenArea (
 
    offman = (FBManagerPtr)dixLookupPrivate(&pScreen->devPrivates,
 					   xf86FBScreenKey);
-   extents = REGION_EXTENTS(pScreen, offman->InitialBoxes);
+   extents = RegionExtents(offman->InitialBoxes);
    w = extents->x2 - extents->x1;
 
    if (gran > 1) {

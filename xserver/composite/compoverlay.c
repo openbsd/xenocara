@@ -62,7 +62,7 @@ compFreeOverlayClient (CompOverlayClientPtr pOcToDel)
     {
 	if (pOc == pOcToDel) {
 	    *pPrev = pOc->pNext;
-	    xfree (pOc);
+	    free(pOc);
 	    break;
 	}
     }
@@ -97,7 +97,7 @@ compCreateOverlayClient (ScreenPtr pScreen, ClientPtr pClient)
     CompScreenPtr    cs = GetCompScreen(pScreen);
     CompOverlayClientPtr pOc;
 
-    pOc = (CompOverlayClientPtr) xalloc(sizeof(CompOverlayClientRec));
+    pOc = (CompOverlayClientPtr) malloc(sizeof(CompOverlayClientRec));
     if (pOc == NULL)
 	return NULL;
 
@@ -124,7 +124,7 @@ Bool
 compCreateOverlayWindow (ScreenPtr pScreen)
 {
     CompScreenPtr   cs = GetCompScreen(pScreen);
-    WindowPtr	    pRoot = WindowTable[pScreen->myNum];
+    WindowPtr	    pRoot = pScreen->root;
     WindowPtr	    pWin;
     XID		    attrs[] = { None, TRUE }; /* backPixmap, overrideRedirect */
     int		    result;

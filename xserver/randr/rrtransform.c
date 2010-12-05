@@ -37,8 +37,7 @@ RRTransformInit (RRTransformPtr transform)
 void
 RRTransformFini (RRTransformPtr transform)
 {
-    if (transform->params)
-	xfree (transform->params);
+    free(transform->params);
 }
 
 Bool
@@ -75,15 +74,14 @@ RRTransformSetFilter (RRTransformPtr	dst,
 
     if (nparams)
     {
-	new_params = xalloc (nparams * sizeof (xFixed));
+	new_params = malloc(nparams * sizeof (xFixed));
 	if (!new_params)
 	    return FALSE;
 	memcpy (new_params, params, nparams * sizeof (xFixed));
     }
     else
 	new_params = NULL;
-    if (dst->params)
-	xfree (dst->params);
+    free(dst->params);
     dst->filter = filter;
     dst->params = new_params;
     dst->nparams = nparams;
@@ -185,21 +183,21 @@ RRTransformCompute (int			    x,
 	    break;
 	case RR_Rotate_90:
 	    f_rot_cos = 0;	    f_rot_sin = 1;
-	    f_rot_dx  = height-1;   f_rot_dy  = 0;
+	    f_rot_dx  = height;	    f_rot_dy  = 0;
 	    rot_cos = F ( 0);	    rot_sin = F ( 1);
-	    rot_dx =  F (height-1); rot_dy  = F (0);
+	    rot_dx =  F ( height);  rot_dy  = F (0);
 	    break;
 	case RR_Rotate_180:
 	    f_rot_cos = -1;	    f_rot_sin = 0;
-	    f_rot_dx  = width - 1;  f_rot_dy  = height - 1;
+	    f_rot_dx  = width;	    f_rot_dy  = height;
 	    rot_cos = F (-1);	    rot_sin = F ( 0);
-	    rot_dx  = F (width-1);  rot_dy  = F ( height-1);
+	    rot_dx  = F (width);   rot_dy  = F ( height);
 	    break;
 	case RR_Rotate_270:
 	    f_rot_cos = 0;	    f_rot_sin = -1;
-	    f_rot_dx  = 0;	    f_rot_dy  = width-1;
+	    f_rot_dx  = 0;	    f_rot_dy  = width;
 	    rot_cos = F ( 0);	    rot_sin = F (-1);
-	    rot_dx  = F ( 0);	    rot_dy  = F ( width-1);
+	    rot_dx  = F ( 0);	    rot_dy  = F ( width);
 	    break;
 	}
 	
@@ -222,11 +220,11 @@ RRTransformCompute (int			    x,
 	    f_scale_x = -1;
 	    scale_x = F(-1);
 	    if (rotation & (RR_Rotate_0|RR_Rotate_180)) {
-		f_scale_dx = width-1;
-		scale_dx = F(width-1);
+		f_scale_dx = width;
+		scale_dx = F(width);
 	    } else {
-		f_scale_dx = height-1;
-		scale_dx = F(height-1);
+		f_scale_dx = height;
+		scale_dx = F(height);
 	    }
 	}
 	if (rotation & RR_Reflect_Y)
@@ -234,11 +232,11 @@ RRTransformCompute (int			    x,
 	    f_scale_y = -1;
 	    scale_y = F(-1);
 	    if (rotation & (RR_Rotate_0|RR_Rotate_180)) {
-		f_scale_dy = height-1;
-		scale_dy = F(height-1);
+		f_scale_dy = height;
+		scale_dy = F(height);
 	    } else {
-		f_scale_dy = width-1;
-		scale_dy = F(width-1);
+		f_scale_dy = width;
+		scale_dy = F(width);
 	    }
 	}
 	

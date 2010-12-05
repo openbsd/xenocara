@@ -42,8 +42,8 @@ typedef struct _ExaXorgScreenPrivRec {
     OptionInfoPtr		 options;
 } ExaXorgScreenPrivRec, *ExaXorgScreenPrivPtr;
 
-static int exaXorgScreenPrivateKeyIndex;
-static DevPrivateKey exaXorgScreenPrivateKey = &exaXorgScreenPrivateKeyIndex;
+static DevPrivateKeyRec exaXorgScreenPrivateKeyRec;
+#define exaXorgScreenPrivateKey (&exaXorgScreenPrivateKeyRec)
 
 typedef enum {
     EXAOPT_MIGRATION_HEURISTIC,
@@ -79,8 +79,8 @@ exaXorgCloseScreen (int i, ScreenPtr pScreen)
 
     pScrn->EnableDisableFBAccess = pScreenPriv->SavedEnableDisableFBAccess;
 
-    xfree (pScreenPriv->options);
-    xfree (pScreenPriv);
+    free(pScreenPriv->options);
+    free(pScreenPriv);
 
     return pScreen->CloseScreen (i, pScreen);
 }
@@ -114,7 +114,10 @@ exaDDXDriverInit(ScreenPtr pScreen)
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     ExaXorgScreenPrivPtr pScreenPriv;
 
-    pScreenPriv = xcalloc (1, sizeof(ExaXorgScreenPrivRec));
+    if (!dixRegisterPrivateKey(&exaXorgScreenPrivateKeyRec, PRIVATE_SCREEN, 0))
+	return;
+
+    pScreenPriv = calloc(1, sizeof(ExaXorgScreenPrivRec));
     if (pScreenPriv == NULL)
 	return;
 

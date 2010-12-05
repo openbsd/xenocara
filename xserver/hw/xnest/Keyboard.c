@@ -136,7 +136,7 @@ xnestKeyboardProc(DeviceIntPtr pDev, int onoff)
 				     max_keycode - min_keycode + 1,
 				     &mapWidth);
 	len = (max_keycode - min_keycode + 1) * mapWidth;
-	keymap = (KeySym *)xalloc(len * sizeof(KeySym));
+	keymap = (KeySym *)malloc(len * sizeof(KeySym));
 	for(i = 0; i < len; ++i)
 	  keymap[i] = keymap64[i];
 	XFree(keymap64);
@@ -168,7 +168,7 @@ xnestKeyboardProc(DeviceIntPtr pDev, int onoff)
 			       xnestBell, xnestChangeKeyboardControl);
       XkbDDXChangeControls(pDev, xkb->ctrls, xkb->ctrls);
       XkbFreeKeyboard(xkb, 0, False);
-      xfree(keymap);
+      free(keymap);
       break;
     case DEVICE_ON: 
       xnestEventMask |= XNEST_KEYBOARD_EVENT_MASK;
@@ -193,7 +193,7 @@ XkbError:
 
   InitKeyboardDeviceStruct(pDev, NULL,
                            xnestBell, xnestChangeKeyboardControl);
-  xfree(keymap);
+  free(keymap);
   return Success;
 }
 
@@ -231,13 +231,7 @@ xnestUpdateModifierState(unsigned int state)
 
       for (key = 0; key < MAP_LENGTH; key++)
 	if (keyc->xkbInfo->desc->map->modmap[key] & mask) {
-	  int bit;
-	  BYTE *kptr;
-
-	  kptr = &keyc->down[key >> 3];
-	  bit = 1 << (key & 7);
-
-	  if (*kptr & bit)
+	  if (key_is_down(pDev, key, KEY_PROCESSED))
 	    xnestQueueKeyEvent(KeyRelease, key);
 
 	  if (--count == 0)

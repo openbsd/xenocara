@@ -82,6 +82,16 @@ typedef struct _Depth {
     VisualID		*vids;    /* block of visual ids for this depth */
   } DepthRec;
 
+typedef struct _ScreenSaverStuff {
+    WindowPtr pWindow;
+    XID       wid;
+    char      blanked;
+    Bool      (*ExternalScreenSaver)(
+	ScreenPtr	/*pScreen*/,
+	int		/*xstate*/,
+	Bool		/*force*/);
+} ScreenSaverStuffRec;
+
 
 /*
  *  There is a typedef for each screen function pointer so that code that
@@ -120,11 +130,6 @@ typedef    void (* GetSpansProcPtr)(
 	int* /*pwidth*/,
 	int /*nspans*/,
 	char * /*pdstStart*/);
-
-typedef    void (* PointerNonInterestBoxProcPtr)(
-        DeviceIntPtr /*pDev*/,
-	ScreenPtr /*pScreen*/,
-	BoxPtr /*pBox*/);
 
 typedef    void (* SourceValidateProcPtr)(
 	DrawablePtr /*pDrawable*/,
@@ -172,14 +177,6 @@ typedef    void (* WindowExposuresProcPtr)(
 	WindowPtr /*pWindow*/,
 	RegionPtr /*prgn*/,
 	RegionPtr /*other_exposed*/);
-
-typedef    void (* PaintWindowProcPtr)(
-	WindowPtr /*pWindow*/,
-	RegionPtr /*pRegion*/,
-	int /*what*/);
-
-typedef PaintWindowProcPtr PaintWindowBackgroundProcPtr;
-typedef PaintWindowProcPtr PaintWindowBorderProcPtr;
 
 typedef    void (* CopyWindowProcPtr)(
 	WindowPtr /*pWindow*/,
@@ -399,7 +396,7 @@ typedef    void (* PostChangeSaveUnderProcPtr)(
 	WindowPtr /*pLayerWin*/,
 	WindowPtr /*firstChild*/);
 
-typedef    void (* ConfigNotifyProcPtr)(
+typedef    int (* ConfigNotifyProcPtr)(
 	WindowPtr /*pWin*/,
 	int /*x*/,
 	int /*y*/,
@@ -436,7 +433,8 @@ typedef    void (* ReparentWindowProcPtr)(
     WindowPtr /*pPriorParent*/);
 
 typedef    void (* SetShapeProcPtr)(
-	WindowPtr /*pWin*/);
+        WindowPtr /*pWin*/,
+        int /* kind */);
 
 typedef    void (* ChangeBorderWidthProcPtr)(
 	WindowPtr /*pWin*/,
@@ -458,7 +456,7 @@ typedef    void (* DeviceCursorCleanupProcPtr)(
 typedef struct _Screen {
     int			myNum;	/* index of this instance in Screens[] */
     ATOM		id;
-    short		width, height;
+    short		x, y, width, height;
     short		mmWidth, mmHeight;
     short		numDepths;
     unsigned char      	rootDepth;
@@ -468,7 +466,6 @@ typedef struct _Screen {
     short		minInstalledCmaps, maxInstalledCmaps;
     char                backingStoreSupport, saveUnderSupport;
     unsigned long	whitePixel, blackPixel;
-    unsigned long	rgf;	/* array of flags; she's -- HUNGARIAN */
     GCPtr		GCperDepth[MAXFORMATS+1];
 			/* next field is a stipple to use as default in
 			   a GC.  we don't build default tiles of all depths
@@ -481,6 +478,8 @@ typedef struct _Screen {
     pointer		devPrivate;
     short       	numVisuals;
     VisualPtr		visuals;
+    WindowPtr		root;
+    ScreenSaverStuffRec screensaver;
 
     /* Random screen procedures */
 
@@ -489,7 +488,6 @@ typedef struct _Screen {
     SaveScreenProcPtr		SaveScreen;
     GetImageProcPtr		GetImage;
     GetSpansProcPtr		GetSpans;
-    PointerNonInterestBoxProcPtr PointerNonInterestBox;
     SourceValidateProcPtr	SourceValidate;
 
     /* Window Procedures */
@@ -503,8 +501,6 @@ typedef struct _Screen {
     ValidateTreeProcPtr		ValidateTree;
     PostValidateTreeProcPtr	PostValidateTree;
     WindowExposuresProcPtr	WindowExposures;
-    PaintWindowBackgroundProcPtr PaintWindowBackground; /** unused */
-    PaintWindowBorderProcPtr	PaintWindowBorder; /** unused */
     CopyWindowProcPtr		CopyWindow;
     ClearToBackgroundProcPtr	ClearToBackground;
     ClipNotifyProcPtr		ClipNotify;
@@ -607,6 +603,10 @@ typedef struct _Screen {
     DeviceCursorCleanupProcPtr    DeviceCursorCleanup;
 } ScreenRec;
 
+static inline RegionPtr BitmapToRegion(ScreenPtr _pScreen, PixmapPtr pPix) {
+    return (*(_pScreen)->BitmapToRegion)(pPix); /* no mi version?! */
+}
+
 typedef struct _ScreenInfo {
     int		imageByteOrder;
     int		bitmapScanlineUnit;
@@ -615,10 +615,8 @@ typedef struct _ScreenInfo {
     int		numPixmapFormats;
     PixmapFormatRec
 		formats[MAXFORMATS];
-    int		arraySize;
     int		numScreens;
     ScreenPtr	screens[MAXSCREENS];
-    int		unused;
 } ScreenInfo;
 
 extern _X_EXPORT ScreenInfo screenInfo;

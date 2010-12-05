@@ -53,9 +53,7 @@
 #include "dmxgc.h"
 #include "dmxfont.h"
 #include "dmxcmap.h"
-#ifdef RENDER
 #include "dmxpict.h"
-#endif
 #include "dmxinput.h"
 #include "dmxsync.h"
 #include "dmxscrinit.h"
@@ -299,7 +297,7 @@ void dmxFlushPendingSyncs(void)
 void dmxUpdateScreenResources(ScreenPtr pScreen, int x, int y, int w, int h)
 {
     DMXScreenInfo *dmxScreen = &dmxScreens[pScreen->myNum];
-    WindowPtr      pRoot     = WindowTable[pScreen->myNum];
+    WindowPtr      pRoot     = pScreen->root;
     WindowPtr      pChild;
     Bool           anyMarked = FALSE;
 
@@ -352,7 +350,7 @@ void dmxUpdateScreenResources(ScreenPtr pScreen, int x, int y, int w, int h)
 	 * clipList to be broken since it will be recalculated in
 	 * ValidateTree()
 	 */
-	REGION_BREAK(pScreen, &pRoot->clipList);
+	RegionBreak(&pRoot->clipList);
     } else {
 	/* Otherwise, we just set it directly since there are no
 	 * windows visible on this screen
@@ -404,7 +402,7 @@ static void dmxConfigureScreenWindow(int idx,
 static void dmxConfigureRootWindow(int idx, int x, int y, int w, int h)
 {
     DMXScreenInfo *dmxScreen = &dmxScreens[idx];
-    WindowPtr      pRoot     = WindowTable[idx];
+    WindowPtr      pRoot     = screenInfo.screens[idx]->root;
 
     /* NOTE: Either this function or the ones that it calls must handle
      * the case where w == 0 || h == 0.  Currently, the functions that
@@ -439,7 +437,7 @@ static void dmxSetRootWindowOrigin(int idx, int x, int y)
 {
     DMXScreenInfo *dmxScreen = &dmxScreens[idx];
     ScreenPtr      pScreen   = screenInfo.screens[idx];
-    WindowPtr      pRoot     = WindowTable[idx];
+    WindowPtr      pRoot     = pScreen->root;
     WindowPtr      pChild;
     int            xoff;
     int            yoff;
@@ -449,18 +447,18 @@ static void dmxSetRootWindowOrigin(int idx, int x, int y)
     dmxScreen->rootYOrigin = y;
 
     /* Compute offsets here in case <x,y> has been changed above */
-    xoff = x - dixScreenOrigins[idx].x;
-    yoff = y - dixScreenOrigins[idx].y;
+    xoff = x - pScreen->x;
+    yoff = y - pScreen->y;
 
-    /* Adjust the root window's position in dixScreenOrigins */
-    dixScreenOrigins[idx].x = dmxScreen->rootXOrigin;
-    dixScreenOrigins[idx].y = dmxScreen->rootYOrigin;
+    /* Adjust the root window's position */
+    pScreen->x = dmxScreen->rootXOrigin;
+    pScreen->y = dmxScreen->rootYOrigin;
 
     /* Recalculate the Xinerama regions and data structs */
     XineramaReinitData(pScreen);
 
     /* Adjust each of the root window's children */
-    if (!idx) ReinitializeRootWindow(WindowTable[0], xoff, yoff);
+    if (!idx) ReinitializeRootWindow(screenInfo.screens[0]->root, xoff, yoff);
     pChild = pRoot->firstChild;
     while (pChild) {
 	/* Adjust child window's position */
@@ -636,7 +634,7 @@ int dmxConfigureDesktop(DMXDesktopAttributesPtr attribs)
 	int   i;
 	for (i = 0; i < dmxNumScreens; i++) {
 	    ScreenPtr  pScreen = screenInfo.screens[i];
-	    WindowPtr  pChild  = WindowTable[i]->firstChild;
+	    WindowPtr  pChild  = pScreen->root->firstChild;
 	    while (pChild) {
 		/* Adjust child window's position */
 		pScreen->MoveWindow(pChild,
@@ -896,13 +894,11 @@ static void dmxBECreateResources(pointer value, XID id, RESTYPE type,
 	if (pCmap->pScreen->myNum == scrnNum)
 	    (void)dmxBECreateColormap((ColormapPtr)value);
 #if 0
-#ifdef RENDER
     /* TODO: Recreate Picture and GlyphSet resources */
     } else if ((type & TypeMask) == (PictureType & TypeMask)) {
 	/* Picture resources are created when windows are created */
     } else if ((type & TypeMask) == (GlyphSetType & TypeMask)) {
 	dmxBEFreeGlyphSet(pScreen, (GlyphSetPtr)value);
-#endif
 #endif
     } else {
 	/* Other resource types??? */
@@ -918,7 +914,7 @@ static void dmxBECreateResources(pointer value, XID id, RESTYPE type,
 static void dmxBECreateWindowTree(int idx)
 {
     DMXScreenInfo *dmxScreen = &dmxScreens[idx];
-    WindowPtr      pRoot     = WindowTable[idx];
+    WindowPtr      pRoot     = screenInfo.screens[idx]->root;
     dmxWinPrivPtr  pWinPriv  = DMX_GET_WINDOW_PRIV(pRoot);
     WindowPtr      pWin;
 
@@ -986,7 +982,7 @@ static void dmxBECreateWindowTree(int idx)
 static void dmxForceExposures(int idx)
 {
     ScreenPtr      pScreen   = screenInfo.screens[idx];
-    WindowPtr  pRoot     = WindowTable[idx];
+    WindowPtr  pRoot     = pScreen->root;
     Bool       anyMarked = FALSE;
     WindowPtr  pChild;
 
@@ -998,7 +994,7 @@ static void dmxForceExposures(int idx)
 	 * clipList to be broken since it will be recalculated in
 	 * ValidateTree()
 	 */
-	REGION_BREAK(pScreen, &pRoot->clipList);
+	RegionBreak(&pRoot->clipList);
 	pScreen->ValidateTree(pRoot, NULL, VTBroken);
 	pScreen->HandleExposures(pRoot);
 	if (pScreen->PostValidateTree)
@@ -1057,7 +1053,6 @@ static Bool dmxCompareScreens(DMXScreenInfo *new, DMXScreenInfo *old)
     return TRUE;
 }
 
-#ifdef RENDER
 /** Restore Render's picture */
 static void dmxBERestoreRenderPict(pointer value, XID id, pointer n)
 {
@@ -1164,7 +1159,6 @@ static void dmxBERestoreRenderGlyph(pointer value, XID id, pointer n)
     free(gids);
     free(glyphs);    
 }
-#endif
 
 /** Reattach previously detached back-end screen. */
 int dmxAttachScreen(int idx, DMXScreenAttributesPtr attr)
@@ -1284,7 +1278,6 @@ int dmxAttachScreen(int idx, DMXScreenAttributesPtr attr)
     /* Create window hierarchy (top down) */
     dmxBECreateWindowTree(idx);
 
-#ifdef RENDER
     /* Restore the picture state for RENDER */
     for (i = currentMaxClients; --i >= 0; )
 	if (clients[i])
@@ -1296,7 +1289,6 @@ int dmxAttachScreen(int idx, DMXScreenAttributesPtr attr)
 	if (clients[i])
 	    FindClientResourcesByType(clients[i],GlyphSetType, 
 				      dmxBERestoreRenderGlyph,(pointer)idx);
-#endif
 
     /* Refresh screen by generating exposure events for all windows */
     dmxForceExposures(idx);
@@ -1482,7 +1474,6 @@ static void dmxBEDestroyResources(pointer value, XID id, RESTYPE type,
 	ColormapPtr  pCmap = value;
 	if (pCmap->pScreen->myNum == scrnNum)
 	    dmxBEFreeColormap((ColormapPtr)value);
-#ifdef RENDER
     } else if ((type & TypeMask) == (PictureType & TypeMask)) {
 	PicturePtr  pPict = value;
 	if (pPict->pDrawable->pScreen->myNum == scrnNum) {
@@ -1496,7 +1487,6 @@ static void dmxBEDestroyResources(pointer value, XID id, RESTYPE type,
 	}
     } else if ((type & TypeMask) == (GlyphSetType & TypeMask)) {
 	dmxBEFreeGlyphSet(pScreen, (GlyphSetPtr)value);
-#endif
     } else {
 	/* Other resource types??? */
     }
@@ -1520,7 +1510,7 @@ static void dmxBEDestroyScratchGCs(int scrnNum)
  *  destroy a window as well as all of it's children. */
 static void dmxBEDestroyWindowTree(int idx)
 {
-    WindowPtr  pWin   = WindowTable[idx];
+    WindowPtr  pWin   = screenInfo.screens[idx]->root;
     WindowPtr  pChild = pWin;
 
     while (1) {

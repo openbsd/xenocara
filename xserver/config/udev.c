@@ -28,6 +28,7 @@
 #endif
 
 #include <libudev.h>
+#include <ctype.h>
 
 #include "input.h"
 #include "inputstr.h"
@@ -37,6 +38,17 @@
 
 #define UDEV_XKB_PROP_KEY "xkb"
 
+#define LOG_PROPERTY(path, prop, val)                                   \
+    LogMessageVerb(X_INFO, 10,                                          \
+                   "config/udev: getting property %s on %s "            \
+                   "returned \"%s\"\n",                                 \
+                   (prop), (path), (val) ? (val) : "(null)")
+#define LOG_SYSATTR(path, attr, val)                                    \
+    LogMessageVerb(X_INFO, 10,                                          \
+                   "config/udev: getting attribute %s on %s "           \
+                   "returned \"%s\"\n",                                 \
+                   (attr), (path), (val) ? (val) : "(null)")
+
 static struct udev_monitor *udev_monitor;
 
 static void
@@ -45,6 +57,7 @@ device_added(struct udev_device *udev_device)
     const char *path, *name = NULL;
     char *config_info = NULL;
     const char *syspath;
+    const char *tags_prop;
     const char *key, *value, *tmp;
     InputOption *options = NULL, *tmpo;
     InputAttributes attrs = {};
@@ -60,23 +73,45 @@ device_added(struct udev_device *udev_device)
     if (!path || !syspath)
         return;
 
-    if (!udev_device_get_property_value(udev_device, "ID_INPUT"))
+    if (!udev_device_get_property_value(udev_device, "ID_INPUT")) {
+        LogMessageVerb(X_INFO, 10,
+                       "config/udev: ignoring device %s without "
+                       "property ID_INPUT set\n",
+                       path);
         return;
+    }
 
-    options = xcalloc(sizeof(*options), 1);
+    options = calloc(sizeof(*options), 1);
     if (!options)
         return;
 
-    options->key = xstrdup("_source");
-    options->value = xstrdup("server/udev");
+    options->key = strdup("_source");
+    options->value = strdup("server/udev");
     if (!options->key || !options->value)
         goto unwind;
 
     parent = udev_device_get_parent(udev_device);
     if (parent) {
+        const char *ppath = udev_device_get_devnode(parent);
+        const char *product = udev_device_get_property_value(parent, "PRODUCT");
+        unsigned int usb_vendor, usb_model;
+
         name = udev_device_get_sysattr_value(parent, "name");
-        if (!name)
+        LOG_SYSATTR(ppath, "name", name);
+        if (!name) {
             name = udev_device_get_property_value(parent, "NAME");
+            LOG_PROPERTY(ppath, "NAME", name);
+        }
+
+        attrs.pnp_id = udev_device_get_sysattr_value(parent, "id");
+        LOG_SYSATTR(ppath, "id", attrs.pnp_id);
+
+        /* construct USB ID in lowercase hex - "0000:ffff" */
+        if (product && sscanf(product, "%*x/%4x/%4x/%*x", &usb_vendor, &usb_model) == 2) {
+            attrs.usb_id = Xprintf("%04x:%04x", usb_vendor, usb_model);
+            if (attrs.usb_id)
+                LOG_PROPERTY(path, "PRODUCT", product);
+        }
     }
     if (!name)
         name = "(unnamed)";
@@ -87,7 +122,10 @@ device_added(struct udev_device *udev_device)
     add_option(&options, "path", path);
     add_option(&options, "device", path);
     attrs.device = path;
-    attrs.tags = xstrtokenize(udev_device_get_property_value(udev_device, "ID_INPUT.tags"), ",");
+
+    tags_prop = udev_device_get_property_value(udev_device, "ID_INPUT.tags");
+    LOG_PROPERTY(path, "ID_INPUT.tags", tags_prop);
+    attrs.tags = xstrtokenize(tags_prop, ",");
 
     config_info = Xprintf("udev:%s", syspath);
     if (!config_info)
@@ -107,6 +145,7 @@ device_added(struct udev_device *udev_device)
         value = udev_list_entry_get_value(entry);
         if (!strncasecmp(key, UDEV_XKB_PROP_KEY,
                                 sizeof(UDEV_XKB_PROP_KEY) - 1)) {
+            LOG_PROPERTY(path, key, value);
             tmp = key + sizeof(UDEV_XKB_PROP_KEY) - 1;
             if (!strcasecmp(tmp, "rules"))
                 add_option(&options, "xkb_rules", value);
@@ -119,21 +158,29 @@ device_added(struct udev_device *udev_device)
             else if (!strcasecmp(tmp, "options"))
                 add_option(&options, "xkb_options", value);
         } else if (!strcmp(key, "ID_VENDOR")) {
+            LOG_PROPERTY(path, key, value);
             attrs.vendor = value;
         } else if (!strcmp(key, "ID_INPUT_KEY")) {
+            LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_KEYBOARD;
         } else if (!strcmp(key, "ID_INPUT_MOUSE")) {
+            LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_POINTER;
         } else if (!strcmp(key, "ID_INPUT_JOYSTICK")) {
+            LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_JOYSTICK;
         } else if (!strcmp(key, "ID_INPUT_TABLET")) {
+            LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_TABLET;
         } else if (!strcmp(key, "ID_INPUT_TOUCHPAD")) {
+            LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_TOUCHPAD;
         } else if (!strcmp(key, "ID_INPUT_TOUCHSCREEN")) {
+            LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_TOUCHSCREEN;
         }
     }
+
     LogMessage(X_INFO, "config/udev: Adding input device %s (%s)\n",
                name, path);
     rc = NewInputDeviceRequest(options, &attrs, &dev);
@@ -141,26 +188,27 @@ device_added(struct udev_device *udev_device)
         goto unwind;
 
     for (; dev; dev = dev->next) {
-        xfree(dev->config_info);
-        dev->config_info = xstrdup(config_info);
+        free(dev->config_info);
+        dev->config_info = strdup(config_info);
     }
 
  unwind:
-    xfree(config_info);
+    free(config_info);
     while (!dev && (tmpo = options)) {
         options = tmpo->next;
-        xfree(tmpo->key);
-        xfree(tmpo->value);
-        xfree(tmpo);
+        free(tmpo->key);
+        free(tmpo->value);
+        free(tmpo);
     }
 
+    free(attrs.usb_id);
     if (attrs.tags) {
         char **tag = attrs.tags;
         while (*tag) {
-            xfree(*tag);
+            free(*tag);
             tag++;
         }
-        xfree(attrs.tags);
+        free(attrs.tags);
     }
 
     return;
@@ -178,7 +226,7 @@ device_removed(struct udev_device *device)
 
     remove_devices("udev", value);
 
-    xfree(value);
+    free(value);
 }
 
 static void

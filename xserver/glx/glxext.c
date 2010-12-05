@@ -65,8 +65,8 @@ RESTYPE __glXSwapBarrierRes;
 */
 xGLXSingleReply __glXReply;
 
-static int glxClientPrivateKeyIndex;
-static DevPrivateKey glxClientPrivateKey = &glxClientPrivateKeyIndex;
+static DevPrivateKeyRec glxClientPrivateKeyRec;
+#define glxClientPrivateKey (&glxClientPrivateKeyRec)
 
 /*
 ** Client that called into GLX dispatch.
@@ -124,7 +124,7 @@ static int glxBlockClients;
 */
 static Bool DrawableGone(__GLXdrawable *glxPriv, XID xid)
 {
-    __GLXcontext *c;
+    __GLXcontext *c, *next;
 
     /* If this drawable was created using glx 1.3 drawable
      * constructors, we added it as a glx drawable resource under both
@@ -137,7 +137,8 @@ static Bool DrawableGone(__GLXdrawable *glxPriv, XID xid)
 	    FreeResourceByType(glxPriv->drawId, __glXDrawableRes, TRUE);
     }
 
-    for (c = glxAllContexts; c; c = c->next) {
+    for (c = glxAllContexts; c; c = next) {
+	next = c->next;
 	if (c->isCurrent && (c->drawPriv == glxPriv || c->readPriv == glxPriv)) {
 	    int i;
 
@@ -160,15 +161,13 @@ static Bool DrawableGone(__GLXdrawable *glxPriv, XID xid)
 		    }
 		}
 	    }
-
-	    if (!c->idExists) {
-		__glXFreeContext(c);
-	    }
 	}
 	if (c->drawPriv == glxPriv)
 	    c->drawPriv = NULL;
 	if (c->readPriv == glxPriv)
 	    c->readPriv = NULL;
+	if (!c->idExists && !c->isCurrent)
+	    __glXFreeContext(c);
     }
 
     glxPriv->destroy(glxPriv);
@@ -205,8 +204,8 @@ GLboolean __glXFreeContext(__GLXcontext *cx)
 {
     if (cx->idExists || cx->isCurrent) return GL_FALSE;
     
-    if (cx->feedbackBuf) xfree(cx->feedbackBuf);
-    if (cx->selectBuf) xfree(cx->selectBuf);
+    free(cx->feedbackBuf);
+    free(cx->selectBuf);
     if (cx == __glXLastContext) {
 	__glXFlushContextCache();
     }
@@ -323,10 +322,10 @@ glxClientCallback (CallbackListPtr	*list,
 	    }
 	}
 
-	if (cl->returnBuf) xfree(cl->returnBuf);
-	if (cl->largeCmdBuf) xfree(cl->largeCmdBuf);
-	if (cl->currentContexts) xfree(cl->currentContexts);
-	if (cl->GLClientextensions) xfree(cl->GLClientextensions);
+	free(cl->returnBuf);
+	free(cl->largeCmdBuf);
+	free(cl->currentContexts);
+	free(cl->GLClientextensions);
 	break;
 
     default:
@@ -364,7 +363,7 @@ void GlxExtensionInit(void)
     if (!__glXContextRes || !__glXDrawableRes || !__glXSwapBarrierRes)
 	return;
 
-    if (!dixRequestPrivate(glxClientPrivateKey, sizeof (__GLXclientState)))
+    if (!dixRegisterPrivateKey(&glxClientPrivateKeyRec, PRIVATE_CLIENT, sizeof (__GLXclientState)))
 	return;
     if (!AddCallback (&ClientStateCallback, glxClientCallback, 0))
 	return;
@@ -583,7 +582,7 @@ static int __glXDispatch(ClientPtr client)
 	ResetCurrentRequest(client);
 	client->sequence--;
 	IgnoreClient(client);
-	return(client->noClientException);
+	return Success;
     }
 
     /*

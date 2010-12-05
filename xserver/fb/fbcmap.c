@@ -36,25 +36,26 @@
 #error "You should be compiling fbcmap_mi.c instead of fbcmap.c!"
 #endif
 
+static DevPrivateKeyRec cmapScrPrivateKeyRec;
+#define cmapScrPrivateKey (&cmapScrPrivateKeyRec)
 
-
-ColormapPtr FbInstalledMaps[MAXSCREENS];
+#define GetInstalledColormap(s) ((ColormapPtr) dixLookupPrivate(&(s)->devPrivates, cmapScrPrivateKey))
+#define SetInstalledColormap(s,c) (dixSetPrivate(&(s)->devPrivates, cmapScrPrivateKey, c))
 
 int
 fbListInstalledColormaps(ScreenPtr pScreen, Colormap *pmaps)
 {
     /* By the time we are processing requests, we can guarantee that there
      * is always a colormap installed */
-    *pmaps = FbInstalledMaps[pScreen->myNum]->mid;
-    return (1);
+    *pmaps = GetInstalledColormap(pScreen)->mid;
+    return 1;
 }
 
 
 void
 fbInstallColormap(ColormapPtr pmap)
 {
-    int index = pmap->pScreen->myNum;
-    ColormapPtr oldpmap = FbInstalledMaps[index];
+    ColormapPtr oldpmap = GetInstalledColormap(pmap->pScreen);
 
     if(pmap != oldpmap)
     {
@@ -63,7 +64,7 @@ fbInstallColormap(ColormapPtr pmap)
 	if(oldpmap != (ColormapPtr)None)
 	    WalkTree(pmap->pScreen, TellLostMap, (char *)&oldpmap->mid);
 	/* Install pmap */
-	FbInstalledMaps[index] = pmap;
+	SetInstalledColormap(pmap->pScreen, pmap);
 	WalkTree(pmap->pScreen, TellGainedMap, (char *)&pmap->mid);
     }
 }
@@ -71,8 +72,7 @@ fbInstallColormap(ColormapPtr pmap)
 void
 fbUninstallColormap(ColormapPtr pmap)
 {
-    int index = pmap->pScreen->myNum;
-    ColormapPtr curpmap = FbInstalledMaps[index];
+    ColormapPtr curpmap = GetInstalledColormap(pmap->pScreen);
 
     if(pmap == curpmap)
     {
@@ -388,7 +388,7 @@ fbSetVisualTypesAndMasks (int depth, int visuals, int bitsPerRGB,
 {
     fbVisualsPtr   new, *prev, v;
 
-    new = (fbVisualsPtr) xalloc (sizeof *new);
+    new = (fbVisualsPtr) malloc(sizeof *new);
     if (!new)
 	return FALSE;
     if (!redMask || !greenMask || !blueMask)
@@ -485,12 +485,12 @@ fbInitVisuals (VisualPtr    *visualp,
 	ndepth++;
 	nvisual += visuals->count;
     }
-    depth = (DepthPtr) xalloc (ndepth * sizeof (DepthRec));
-    visual = (VisualPtr) xalloc (nvisual * sizeof (VisualRec));
+    depth = (DepthPtr) malloc(ndepth * sizeof (DepthRec));
+    visual = (VisualPtr) malloc(nvisual * sizeof (VisualRec));
     if (!depth || !visual)
     {
-	xfree (depth);
-	xfree (visual);
+	free(depth);
+	free(visual);
 	return FALSE;
     }
     *depthp = depth;
@@ -506,7 +506,7 @@ fbInitVisuals (VisualPtr    *visualp,
 	vid = NULL;
 	if (nvtype)
 	{
-	    vid = (VisualID *) xalloc (nvtype * sizeof (VisualID));
+	    vid = (VisualID *) malloc(nvtype * sizeof (VisualID));
 	    if (!vid)
 		return FALSE;
 	}
@@ -547,7 +547,7 @@ fbInitVisuals (VisualPtr    *visualp,
 	    vid++;
 	    visual++;
 	}
-	xfree (visuals);
+	free(visuals);
     }
     fbVisuals = NULL;
     visual = *visualp;

@@ -215,6 +215,8 @@ typedef struct _InputAttributes {
     char                *product;
     char                *vendor;
     char                *device;
+    char                *pnp_id;
+    char                *usb_id;
     char                **tags; /* null-terminated */
     uint32_t            flags;
 } InputAttributes;
@@ -226,14 +228,19 @@ typedef struct _InputAttributes {
 #define ATTR_TOUCHPAD (1<<4)
 #define ATTR_TOUCHSCREEN (1<<5)
 
-/* Key has been run through all input processing and events sent to clients. */
+/* Key/Button has been run through all input processing and events sent to clients. */
 #define KEY_PROCESSED 1
-/* Key has not been fully processed, no events have been sent. */
+#define BUTTON_PROCESSED 1
+/* Key/Button has not been fully processed, no events have been sent. */
 #define KEY_POSTED 2
+#define BUTTON_POSTED 2
 
 extern void set_key_down(DeviceIntPtr pDev, int key_code, int type);
 extern void set_key_up(DeviceIntPtr pDev, int key_code, int type);
 extern int key_is_down(DeviceIntPtr pDev, int key_code, int type);
+extern void set_button_down(DeviceIntPtr pDev, int button, int type);
+extern void set_button_up(DeviceIntPtr pDev, int button, int type);
+extern int button_is_down(DeviceIntPtr pDev, int button, int type);
 
 extern void InitCoreDevices(void);
 extern void InitXTestDevices(void);
@@ -432,6 +439,12 @@ extern void CreateClassesChangedEvent(EventListPtr event,
                                       DeviceIntPtr master,
                                       DeviceIntPtr slave,
                                       int type);
+extern EventListPtr UpdateFromMaster(
+    EventListPtr events,
+    DeviceIntPtr pDev,
+    int type,
+    int *num_events);
+
 extern _X_EXPORT int GetPointerEvents(
     EventListPtr events,
     DeviceIntPtr pDev,
@@ -518,6 +531,8 @@ extern int AllocXTestDevice(ClientPtr client,
 extern BOOL IsXTestDevice(DeviceIntPtr dev, DeviceIntPtr master);
 extern DeviceIntPtr GetXTestDevice(DeviceIntPtr master);
 extern void SendDevicePresenceEvent(int deviceid, int type);
+extern _X_EXPORT InputAttributes *DuplicateInputAttributes(InputAttributes *attrs);
+extern _X_EXPORT void FreeInputAttributes(InputAttributes *attrs);
 
 /* misc event helpers */
 extern Mask GetEventFilter(DeviceIntPtr dev, xEvent *event);

@@ -85,7 +85,7 @@ xf86SbusProbe(void)
     char fbDevName[32];
     sbusDevicePtr psdp, *psdpp;
 
-    xf86SbusInfo = xalloc(sizeof(psdp));
+    xf86SbusInfo = malloc(sizeof(psdp));
     *xf86SbusInfo = NULL;
     for (i = 0; i < 32; i++) {
 	sprintf(fbDevName, "/dev/fb%d", i);
@@ -210,7 +210,7 @@ xf86SbusProbe(void)
 	    promPath = sparcPromNode2Pathname (&psdp->node);
 	    if (promPath) {
 		xf86ErrorF(" at %s", promPath);
-		xfree(promPath);
+		free(promPath);
 	    }
 	} else
 	    xf86Msg(X_PROBED, "SBUS: %s", psdp->descr);
@@ -397,7 +397,7 @@ xf86MatchSbusInstances(const char *driverName, int sbusDevId,
      * allow the config file to override this.
      */
     if (allocatedInstances <= 0) {
-	xfree(instances);
+	free(instances);
 	return 0;
     }
 
@@ -419,7 +419,7 @@ xf86MatchSbusInstances(const char *driverName, int sbusDevId,
 		pGDev->chipID = pGDev->chipRev = -1;
 	    }
 	}
-	xfree(instances);
+	free(instances);
 	if (useProm)
 	    sparcPromClose();
 	return actualcards;
@@ -478,8 +478,7 @@ xf86MatchSbusInstances(const char *driverName, int sbusDevId,
 	    instances[i].claimed = TRUE;
 	    instances[i].dev = dev;
 	}
-	if (promPath)
-	    xfree(promPath);
+	free(promPath);
     }
 
     DebugF("%s instances found: %d\n", driverName, numClaimedInstances);
@@ -506,7 +505,7 @@ xf86MatchSbusInstances(const char *driverName, int sbusDevId,
 	    = xf86ClaimSbusSlot(psdp, drvp, instances[i].dev,instances[i].dev->active ?
 				TRUE : FALSE);
     }
-    xfree(instances);
+    free(instances);
     if (numFound > 0) {
 	*foundEntities = retEntities;
     }
@@ -531,7 +530,7 @@ xf86GetSbusInfoForEntity(int entityIndex)
 
     for (psdpp = xf86SbusInfo; *psdpp != NULL; psdpp++) {
 	if (p->bus.id.sbus.fbNum == (*psdpp)->fbNum)
-	    return (*psdpp);
+	    return *psdpp;
     }
     return NULL;
 }
@@ -607,7 +606,7 @@ xf86SbusCmapLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
     int i, index;
     sbusCmapPtr cmap;
     struct fbcmap fbcmap;
-    unsigned char *data = xalloc(numColors*3);
+    unsigned char *data = malloc(numColors*3);
                              
     cmap = SBUSCMAPPTR(pScrn->pScreen);
     if (!cmap) return;
@@ -628,7 +627,7 @@ xf86SbusCmapLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 	fbcmap.blue[fbcmap.count++] = colors[index].blue;
     }
     ioctl (cmap->psdp->fd, FBIOPUTCMAP, &fbcmap);
-    xfree(data);
+    free(data);
 }
 
 static Bool
@@ -647,7 +646,7 @@ xf86SbusCmapCloseScreen(int i, ScreenPtr pScreen)
 	ioctl (cmap->psdp->fd, FBIOPUTCMAP, &fbcmap);
     }
     pScreen->CloseScreen = cmap->CloseScreen;
-    xfree (cmap);
+    free(cmap);
     return (*pScreen->CloseScreen) (i, pScreen);
 }    
 

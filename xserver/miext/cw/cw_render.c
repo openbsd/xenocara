@@ -30,8 +30,6 @@
 #include "windowstr.h"
 #include "cw.h"
 
-#ifdef RENDER
-
 #define cwPsDecl(pScreen)	\
     PictureScreenPtr	ps = GetPictureScreen (pScreen);	\
     cwScreenPtr		pCwScreen = getCwScreen (pScreen)
@@ -75,7 +73,7 @@ cwCreatePicturePrivate (PicturePtr pPicture)
     int		    error;
     cwPicturePtr    pPicturePrivate;
 
-    pPicturePrivate = xalloc (sizeof (cwPictureRec));
+    pPicturePrivate = malloc(sizeof (cwPictureRec));
     if (!pPicturePrivate)
 	return NULL;
     
@@ -85,7 +83,7 @@ cwCreatePicturePrivate (PicturePtr pPicture)
 						      &error);
     if (!pPicturePrivate->pBackingPicture)
     {
-	xfree (pPicturePrivate);
+	free(pPicturePrivate);
 	return NULL;
     }
 
@@ -109,7 +107,7 @@ cwDestroyPicturePrivate (PicturePtr pPicture)
     {
 	if (pPicturePrivate->pBackingPicture)
 	    FreePicture (pPicturePrivate->pBackingPicture, 0);
-	xfree (pPicturePrivate);
+	free(pPicturePrivate);
 	setCwPicture(pPicture, NULL);
     }
 }
@@ -469,4 +467,3 @@ cwFiniRender (ScreenPtr pScreen)
     cwPsUnwrap(TriFan);
 }
 
-#endif /* RENDER */

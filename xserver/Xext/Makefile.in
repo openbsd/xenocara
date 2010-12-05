@@ -49,9 +49,8 @@ host_triplet = @host@
 @XSELINUX_TRUE@am__append_10 = $(SELINUX_LIBS)
 @XCSECURITY_TRUE@am__append_11 = $(XCSECURITY_SRCS)
 @XCALIBRATE_TRUE@am__append_12 = $(XCALIBRATE_SRCS)
-@MULTIBUFFER_TRUE@am__append_13 = $(MULTIBUFFER_SRCS)
-@XF86BIGFONT_TRUE@am__append_14 = $(BIGFONT_SRCS)
-@DPMSExtension_TRUE@am__append_15 = $(DPMS_SRCS)
+@XF86BIGFONT_TRUE@am__append_13 = $(BIGFONT_SRCS)
+@DPMSExtension_TRUE@am__append_14 = $(DPMS_SRCS)
 subdir = Xext
 DIST_COMMON = $(am__sdk_HEADERS_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -82,8 +81,7 @@ am__libXext_la_SOURCES_DIST = bigreq.c geext.c shape.c sleepuntil.c \
 	security.c securitysrv.h xcalibrate.c xf86bigfont.c \
 	xf86bigfontsrv.h xvmain.c xvdisp.c xvmc.c xvdix.h xvmcext.h \
 	xvdisp.h xres.c saver.c xselinux_ext.c xselinux_hooks.c \
-	xselinux_label.c xselinux.h xselinuxint.h mbuf.c dpms.c \
-	dpmsproc.h
+	xselinux_label.c xselinux.h xselinuxint.h dpms.c dpmsproc.h
 am__objects_1 = shm.lo
 @MITSHM_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = panoramiX.lo panoramiXprocs.lo panoramiXSwap.lo
@@ -108,13 +106,11 @@ am__objects_18 = saver.lo
 @SCREENSAVER_TRUE@am__objects_19 = $(am__objects_18)
 am__objects_20 = xselinux_ext.lo xselinux_hooks.lo xselinux_label.lo
 @XSELINUX_TRUE@am__objects_21 = $(am__objects_20)
-am__objects_22 = mbuf.lo
-@MULTIBUFFER_TRUE@am__objects_23 = $(am__objects_22)
-am__objects_24 = dpms.lo
-@DPMSExtension_TRUE@am__objects_25 = $(am__objects_24)
-am__objects_26 = $(am__objects_15) $(am__objects_17) $(am__objects_19) \
-	$(am__objects_21) $(am__objects_23) $(am__objects_25)
-am_libXext_la_OBJECTS = $(am__objects_13) $(am__objects_26)
+am__objects_22 = dpms.lo
+@DPMSExtension_TRUE@am__objects_23 = $(am__objects_22)
+am__objects_24 = $(am__objects_15) $(am__objects_17) $(am__objects_19) \
+	$(am__objects_21) $(am__objects_23)
+am_libXext_la_OBJECTS = $(am__objects_13) $(am__objects_24)
 libXext_la_OBJECTS = $(am_libXext_la_OBJECTS)
 @XORG_FALSE@am_libXext_la_rpath =
 @XORG_TRUE@am_libXext_la_rpath =
@@ -132,8 +128,8 @@ libXextbuiltin_la_OBJECTS = $(am_libXextbuiltin_la_OBJECTS)
 am__libXextmodule_la_SOURCES_DIST = xvmain.c xvdisp.c xvmc.c xvdix.h \
 	xvmcext.h xvdisp.h xres.c saver.c xselinux_ext.c \
 	xselinux_hooks.c xselinux_label.c xselinux.h xselinuxint.h \
-	mbuf.c dpms.c dpmsproc.h
-@XORG_TRUE@am_libXextmodule_la_OBJECTS = $(am__objects_26)
+	dpms.c dpmsproc.h
+@XORG_TRUE@am_libXextmodule_la_OBJECTS = $(am__objects_24)
 libXextmodule_la_OBJECTS = $(am_libXextmodule_la_OBJECTS)
 @XORG_TRUE@am_libXextmodule_la_rpath =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
@@ -200,10 +196,6 @@ BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
 BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
-BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
-BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
-BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
-BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 BUILD_TIME = @BUILD_TIME@
 CC = @CC@
 CCAS = @CCAS@
@@ -291,6 +283,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
+ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
@@ -305,6 +299,7 @@ FONTOTFDIR = @FONTOTFDIR@
 FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
+FOP = @FOP@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
 GLIB_CFLAGS = @GLIB_CFLAGS@
@@ -322,10 +317,14 @@ HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
 HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
 HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
-HAVE_PS2PDF_FALSE = @HAVE_PS2PDF_FALSE@
-HAVE_PS2PDF_TRUE = @HAVE_PS2PDF_TRUE@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
 HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
 HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
+HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
+HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -381,10 +380,11 @@ LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINUXDOC = @LINUXDOC@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
 LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
@@ -402,17 +402,11 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
-MAKE_HTML = @MAKE_HTML@
-MAKE_PDF = @MAKE_PDF@
-MAKE_PS = @MAKE_PS@
-MAKE_TEXT = @MAKE_TEXT@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
-MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
@@ -439,20 +433,23 @@ PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
-PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RECORD_FALSE = @RECORD_FALSE@
 RECORD_TRUE = @RECORD_TRUE@
+RELEASE_DATE = @RELEASE_DATE@
 RES_FALSE = @RES_FALSE@
 RES_TRUE = @RES_TRUE@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SECURE_RPC_FALSE = @SECURE_RPC_FALSE@
 SECURE_RPC_TRUE = @SECURE_RPC_TRUE@
 SED = @SED@
@@ -544,6 +541,7 @@ XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
 XKM_OUTPUT_DIR = @XKM_OUTPUT_DIR@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
+XMLTO = @XMLTO@
 XNESTMODULES_CFLAGS = @XNESTMODULES_CFLAGS@
 XNESTMODULES_LIBS = @XNESTMODULES_LIBS@
 XNEST_FALSE = @XNEST_FALSE@
@@ -707,11 +705,11 @@ AM_CFLAGS = $(DIX_CFLAGS)
 BUILTIN_SRCS = bigreq.c geext.c shape.c sleepuntil.c sleepuntil.h \
 	sync.c syncsrv.h xcmisc.c xtest.c $(am__append_1) \
 	$(am__append_5) $(am__append_7) $(am__append_11) \
-	$(am__append_12) $(am__append_14)
+	$(am__append_12) $(am__append_13)
 
 # Sources always included in libXextmodule.la & libXext.la. That's right, zero.
 MODULE_SRCS = $(am__append_2) $(am__append_3) $(am__append_4) \
-	$(am__append_9) $(am__append_13) $(am__append_15)
+	$(am__append_9) $(am__append_14)
 MODULE_LIBS = $(am__append_10)
 
 # Optional sources included if extension enabled by configure.ac rules
@@ -744,10 +742,6 @@ XCSECURITY_SRCS = security.c securitysrv.h
 XCALIBRATE_SRCS = xcalibrate.c
 # XCalibrate needs tslib
 
-# Multi-buffering extension
-MULTIBUFFER_SRCS = mbuf.c
-EXTRA_MULTIBUFFER_SRCS = mbufbf.c mbufpx.c
-
 # XF86 Big Font extension
 BIGFONT_SRCS = xf86bigfont.c xf86bigfontsrv.h
 
@@ -770,9 +764,6 @@ EXTRA_DIST = \
 	$(XSELINUX_SRCS) \
 	$(XCALIBRATE_SRCS) \
 	$(XINERAMA_SRCS) \
-	$(MULTIBUFFER_SRCS) \
-	$(EXTRA_MULTIBUFFER_SRCS) \
-	$(FONTCACHE_SRCS) \
 	$(BIGFONT_SRCS) \
 	$(DPMS_SRCS) \
         $(GE_SRCS)
@@ -835,7 +826,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bigreq.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dpms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/geext.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mbuf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/panoramiX.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/panoramiXSwap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/panoramiXprocs.Plo@am__quote@

@@ -139,6 +139,9 @@
 /* Support PC98 */
 #undef SUPPORT_PC98
 
+/* Build with libdrm support */
+#undef WITH_LIBDRM
+
 /* Use X server privilege separation */
 #undef X_PRIVSEP
 

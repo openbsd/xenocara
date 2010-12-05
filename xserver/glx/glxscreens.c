@@ -44,8 +44,8 @@
 #include "glxext.h"
 #include "protocol-versions.h"
 
-static int glxScreenPrivateKeyIndex;
-static DevPrivateKey glxScreenPrivateKey = &glxScreenPrivateKeyIndex;
+static DevPrivateKeyRec glxScreenPrivateKeyRec;
+#define glxScreenPrivateKey (&glxScreenPrivateKeyRec)
 
 const char GLServerVersion[] = "1.4";
 static const char GLServerExtensions[] = 
@@ -352,10 +352,13 @@ void __glXScreenInit(__GLXscreen *pGlxScreen, ScreenPtr pScreen)
     __GLXconfig *config;
     int i;
 
+    if (!dixRegisterPrivateKey(&glxScreenPrivateKeyRec, PRIVATE_SCREEN, 0))
+	return;
+
     pGlxScreen->pScreen       = pScreen;
-    pGlxScreen->GLextensions  = xstrdup(GLServerExtensions);
-    pGlxScreen->GLXvendor     = xstrdup(GLXServerVendorName);
-    pGlxScreen->GLXextensions = xstrdup(GLXServerExtensions);
+    pGlxScreen->GLextensions  = strdup(GLServerExtensions);
+    pGlxScreen->GLXvendor     = strdup(GLXServerVendorName);
+    pGlxScreen->GLXextensions = strdup(GLXServerExtensions);
 
     /* All GLX providers must support all of the functionality required for at
      * least GLX 1.2.  If the provider supports a higher version, the GLXminor
@@ -378,7 +381,7 @@ void __glXScreenInit(__GLXscreen *pGlxScreen, ScreenPtr pScreen)
     pGlxScreen->numFBConfigs = i;
 
     pGlxScreen->visuals =
-	xcalloc(pGlxScreen->numFBConfigs, sizeof (__GLXconfig *));
+	calloc(pGlxScreen->numFBConfigs, sizeof (__GLXconfig *));
 
     /* First, try to choose featureful FBconfigs for the existing X visuals.
      * Note that if multiple X visuals end up with the same FBconfig being
@@ -436,7 +439,7 @@ void __glXScreenInit(__GLXscreen *pGlxScreen, ScreenPtr pScreen)
 
 void __glXScreenDestroy(__GLXscreen *screen)
 {
-    xfree(screen->GLXvendor);
-    xfree(screen->GLXextensions);
-    xfree(screen->GLextensions);
+    free(screen->GLXvendor);
+    free(screen->GLXextensions);
+    free(screen->GLextensions);
 }

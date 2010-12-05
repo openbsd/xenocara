@@ -47,7 +47,7 @@
 #include "vidmodeproc.h"
 #include "xf86cmap.h"
 
-static int VidModeKeyIndex;
+static DevPrivateKeyRec VidModeKeyRec;
 static DevPrivateKey VidModeKey;
 static int VidModeCount = 0;
 static Bool VidModeClose(int i, ScreenPtr pScreen);
@@ -67,15 +67,17 @@ VidModeExtensionInit(ScreenPtr pScreen)
 	return FALSE;
     }
 
-    VidModeKey = &VidModeKeyIndex;
+    VidModeKey = &VidModeKeyRec;
 
-    if (!dixSetPrivate(&pScreen->devPrivates, VidModeKey,
-		       xcalloc(sizeof(VidModeRec), 1))) {
-	DebugF("xcalloc failed\n");
+    if (!dixRegisterPrivateKey(&VidModeKeyRec, PRIVATE_SCREEN, 0))
 	return FALSE;
-    }
 
-    pVidMode = VMPTR(pScreen);
+    pVidMode = calloc(sizeof(VidModeRec), 1);
+    if (!pVidMode)
+	return FALSE;
+
+    dixSetPrivate(&pScreen->devPrivates, VidModeKey, pVidMode);
+
     pVidMode->Flags = 0;
     pVidMode->Next = NULL;
     pVidMode->CloseScreen = pScreen->CloseScreen;
@@ -103,7 +105,7 @@ VidModeClose(int i, ScreenPtr pScreen)
     pScreen->CloseScreen = pVidMode->CloseScreen;
 
     if (--VidModeCount == 0) {
-	xfree(dixLookupPrivate(&pScreen->devPrivates, VidModeKey));
+	free(dixLookupPrivate(&pScreen->devPrivates, VidModeKey));
 	dixSetPrivate(&pScreen->devPrivates, VidModeKey, NULL);
 	VidModeKey = NULL;
     }
@@ -527,7 +529,7 @@ VidModeCreateMode(void)
 {
     DisplayModePtr mode;
   
-    mode = xalloc(sizeof(DisplayModeRec));
+    mode = malloc(sizeof(DisplayModeRec));
     if (mode != NULL) {
 	mode->name          = "";
 	mode->VScan         = 1;    /* divides refresh rate. default = 1 */

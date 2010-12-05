@@ -54,13 +54,11 @@ xcalibrate_event_hook (int x, int y, int pressure, void *closure)
   xXCalibrateRawTouchscreenEvent	ev;
 
   ev.type = XCalibrateEventBase + X_XCalibrateRawTouchscreen;
-  ev.sequenceNumber = pClient->sequence;
   ev.x = x;
   ev.y = y;
   ev.pressure = pressure;
 
-  if (!pClient->clientGone)
-    WriteEventsToClient (pClient, 1, (xEvent *) &ev);
+  WriteEventsToClient (pClient, 1, (xEvent *) &ev);
 }
 
 static int
@@ -90,7 +88,7 @@ ProcXCalibrateQueryVersion (ClientPtr client)
     swaps(&rep.minorVersion, n);
   }
   WriteToClient(client, sizeof (xXCalibrateQueryVersionReply), (char *)&rep);
-  return (client->noClientException);
+  return Success;
 }
 
 static int
@@ -160,7 +158,7 @@ ProcXCalibrateSetRawMode (ClientPtr client)
       swaps (&rep.status, n);
     }
   WriteToClient(client, sizeof (rep), (char *) &rep);
-  return (client->noClientException);
+  return Success;
 }
 
 static int
@@ -200,7 +198,7 @@ ProcXCalibrateScreenToCoord (ClientPtr client)
       swaps (&rep.y, n);
     }
   WriteToClient(client, sizeof (rep), (char *) &rep);
-  return (client->noClientException);
+  return Success;
 }
 
 static int

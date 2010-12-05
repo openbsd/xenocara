@@ -58,14 +58,8 @@
 
 #include <stdio.h>
 
-static int miDbeWindowPrivPrivKeyIndex;
-static DevPrivateKey miDbeWindowPrivPrivKey = &miDbeWindowPrivPrivKeyIndex;
-static RESTYPE	dbeDrawableResType;
-static RESTYPE	dbeWindowPrivResType;
-static int dbeScreenPrivKeyIndex;
-static DevPrivateKey dbeScreenPrivKey = &dbeScreenPrivKeyIndex;
-static int dbeWindowPrivKeyIndex;
-static DevPrivateKey dbeWindowPrivKey = &dbeWindowPrivKeyIndex;
+static DevPrivateKeyRec miDbeWindowPrivPrivKeyRec;
+#define miDbeWindowPrivPrivKey (&miDbeWindowPrivPrivKeyRec)
 
 
 /******************************************************************************
@@ -100,9 +94,9 @@ miDbeGetVisualInfo(ScreenPtr pScreen, XdbeScreenVisualInfo *pScrVisInfo)
     }
 
     /* Allocate an array of XdbeVisualInfo items. */
-    if (!(visInfo = (XdbeVisualInfo *)xalloc(count * sizeof(XdbeVisualInfo))))
+    if (!(visInfo = (XdbeVisualInfo *)malloc(count * sizeof(XdbeVisualInfo))))
     {
-        return(FALSE); /* memory alloc failure */
+        return FALSE; /* memory alloc failure */
     }
 
     for (i = 0, k = 0; i < pScreen->numDepths; i++)
@@ -131,7 +125,7 @@ miDbeGetVisualInfo(ScreenPtr pScreen, XdbeScreenVisualInfo *pScrVisInfo)
     pScrVisInfo->count   = count;
     pScrVisInfo->visinfo = visInfo;
 
-    return(TRUE); /* success */
+    return TRUE; /* success */
 
 } /* miDbeGetVisualInfo() */
 
@@ -181,7 +175,7 @@ miDbeAllocBackBufferName(WindowPtr pWin, XID bufId, int swapAction)
                                      pDbeWindowPriv->height,
                                      pWin->drawable.depth, 0)))
         {
-            return(BadAlloc);
+            return BadAlloc;
         }
 
         /* Get a back pixmap. */
@@ -191,7 +185,7 @@ miDbeAllocBackBufferName(WindowPtr pWin, XID bufId, int swapAction)
                                      pWin->drawable.depth, 0)))
         {
             (*pScreen->DestroyPixmap)(pDbeWindowPrivPriv->pFrontBuffer); 
-            return(BadAlloc);
+            return BadAlloc;
         }
 
 	/* Security creation/labeling check. */
@@ -207,12 +201,6 @@ miDbeAllocBackBufferName(WindowPtr pWin, XID bufId, int swapAction)
             FreeResource(bufId, RT_NONE);
             return (rc == Success) ? BadAlloc : rc;
         }
-
-
-        /* Attach the priv priv to the priv. */
-	dixSetPrivate(&pDbeWindowPriv->devPrivates, miDbeWindowPrivPrivKey,
-		      pDbeWindowPrivPriv);
-
 
         /* Clear the back buffer. */
         pGC = GetScratchGC(pWin->drawable.depth, pWin->drawable.pScreen);
@@ -241,12 +229,12 @@ miDbeAllocBackBufferName(WindowPtr pWin, XID bufId, int swapAction)
         if (!AddResource(bufId, dbeDrawableResType,
                          (pointer)pDbeWindowPrivPriv->pBackBuffer))
         {
-            return(BadAlloc);
+            return BadAlloc;
         }
 
     }
 
-    return(Success);
+    return Success;
 
 } /* miDbeAllocBackBufferName() */
 
@@ -415,7 +403,7 @@ miDbeSwapBuffers(ClientPtr client, int *pNumWindows, DbeSwapInfoPtr swapInfo)
 
     FreeScratchGC(pGC);
 
-    return(Success);
+    return Success;
 
 } /* miSwapBuffers() */
 
@@ -577,13 +565,13 @@ miDbePositionWindow(WindowPtr pWin, int x, int y)
      
     if (!(pDbeWindowPriv = DBE_WINDOW_PRIV(pWin)))
     {
-	return(ret);
+	return ret;
     }
 
     if (pDbeWindowPriv->width  == pWin->drawable.width &&
         pDbeWindowPriv->height == pWin->drawable.height)
     {
-	return(ret);
+	return ret;
     }
 
     width  = pWin->drawable.width;
@@ -684,7 +672,7 @@ miDbePositionWindow(WindowPtr pWin, int x, int y)
         }
 
         FreeScratchGC(pGC);
-        return(FALSE);
+        return FALSE;
     }
 
     else
@@ -743,7 +731,7 @@ miDbePositionWindow(WindowPtr pWin, int x, int y)
         FreeScratchGC(pGC);
     }
 
-    return(ret);
+    return ret;
 
 } /* miDbePositionWindow() */
 
@@ -787,17 +775,9 @@ miDbeResetProc(ScreenPtr pScreen)
 Bool
 miDbeInit(ScreenPtr pScreen, DbeScreenPrivPtr pDbeScreenPriv)
 {
-    /* Copy resource types created by DIX */
-    dbeDrawableResType   = pDbeScreenPriv->dbeDrawableResType;
-    dbeWindowPrivResType = pDbeScreenPriv->dbeWindowPrivResType;
-
-    /* Copy private indices created by DIX */
-    dbeScreenPrivKey = pDbeScreenPriv->dbeScreenPrivKey;
-    dbeWindowPrivKey = pDbeScreenPriv->dbeWindowPrivKey;
-
-    if (!dixRequestPrivate(miDbeWindowPrivPrivKey,
-			   sizeof(MiDbeWindowPrivPrivRec)))
-        return(FALSE);
+    if (!dixRegisterPrivateKey(&miDbeWindowPrivPrivKeyRec, PRIVATE_DBE_WINDOW,
+			       sizeof(MiDbeWindowPrivPrivRec)))
+        return FALSE;
 
     /* Wrap functions. */
     pDbeScreenPriv->PositionWindow = pScreen->PositionWindow;
@@ -812,6 +792,6 @@ miDbeInit(ScreenPtr pScreen, DbeScreenPrivPtr pDbeScreenPriv)
     pDbeScreenPriv->ResetProc             = miDbeResetProc;
     pDbeScreenPriv->WinPrivDelete         = miDbeWinPrivDelete;
 
-    return(TRUE);
+    return TRUE;
 
 } /* miDbeInit() */

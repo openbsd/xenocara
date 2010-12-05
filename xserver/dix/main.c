@@ -161,9 +161,7 @@ int main(int argc, char *argv[], char *envp[])
 	ScreenSaverBlanking = defaultScreenSaverBlanking;
 	ScreenSaverAllowExposures = defaultScreenSaverAllowExposures;
 #ifdef DPMSExtension
-	DPMSStandbyTime = DEFAULT_SCREEN_SAVER_TIME;
-	DPMSSuspendTime = DEFAULT_SCREEN_SAVER_TIME;
-	DPMSOffTime = DEFAULT_SCREEN_SAVER_TIME;
+	DPMSStandbyTime = DPMSSuspendTime = DPMSOffTime = ScreenSaverTime;
 	DPMSEnabled = TRUE;
 	DPMSPowerLevel = 0;
 #endif
@@ -176,7 +174,7 @@ int main(int argc, char *argv[], char *envp[])
 	    InitProcVectors();
 	    for (i=1; i<MAXCLIENTS; i++)
 		clients[i] = NullClient;
-	    serverClient = xalloc(sizeof(ClientRec));
+	    serverClient = calloc(sizeof(ClientRec), 1);
 	    if (!serverClient)
 		FatalError("couldn't create server client");
 	    InitClient(serverClient, 0, (pointer)NULL);
@@ -186,19 +184,25 @@ int main(int argc, char *argv[], char *envp[])
 	clients[0] = serverClient;
 	currentMaxClients = 1;
 
+	/* Initialize privates before first allocation */
+	dixResetPrivates();
+
+	/* Initialize server client devPrivates, to be reallocated as
+	 * more client privates are registered
+	 */
+	if (!dixAllocatePrivates(&serverClient->devPrivates, PRIVATE_CLIENT))
+	    FatalError("failed to create server client privates");
+
 	if (!InitClientResources(serverClient))      /* for root resources */
 	    FatalError("couldn't init server resources");
 
 	SetInputCheck(&alwaysCheckForInput[0], &alwaysCheckForInput[1]);
-	screenInfo.arraySize = MAXSCREENS;
 	screenInfo.numScreens = 0;
 
 	InitAtoms();
 	InitEvents();
 	InitSelections();
 	InitGlyphCaching();
-	if (!dixResetPrivates())
-	    FatalError("couldn't init private data storage");
 	dixResetRegistry();
 	ResetFontPrivateIndex();
 	InitCallbackManager();
@@ -207,6 +211,7 @@ int main(int argc, char *argv[], char *envp[])
 	if (screenInfo.numScreens < 1)
 	    FatalError("no screens found");
 	InitExtensions(argc, argv);
+
 	for (i = 0; i < screenInfo.numScreens; i++)
 	{
 	    ScreenPtr pScreen = screenInfo.screens[i];
@@ -252,7 +257,7 @@ int main(int argc, char *argv[], char *envp[])
 #endif
 
 	for (i = 0; i < screenInfo.numScreens; i++)
-	    InitRootWindow(WindowTable[i]);
+	    InitRootWindow(screenInfo.screens[i]->root);
 
         InitCoreDevices();
 	InitInput(argc, argv);
@@ -306,7 +311,8 @@ int main(int argc, char *argv[], char *envp[])
 
         CloseInput();
 
-        memset(WindowTable, 0, sizeof(WindowTable));
+	for (i = 0; i < screenInfo.numScreens; i++)
+	    screenInfo.screens[i]->root = NullWindow;
 	CloseDownDevices();
 	CloseDownEvents();
 
@@ -316,16 +322,17 @@ int main(int argc, char *argv[], char *envp[])
 	    FreeGCperDepth(i);
 	    FreeDefaultStipple(i);
 	    (* screenInfo.screens[i]->CloseScreen)(i, screenInfo.screens[i]);
-	    dixFreePrivates(screenInfo.screens[i]->devPrivates);
-	    xfree(screenInfo.screens[i]);
+	    dixFreePrivates(screenInfo.screens[i]->devPrivates, PRIVATE_SCREEN);
+	    free(screenInfo.screens[i]);
 	    screenInfo.numScreens = i;
 	}
+
+	dixFreePrivates(serverClient->devPrivates, PRIVATE_CLIENT);
+	serverClient->devPrivates = NULL;
+
 	FreeFonts();
 
 	FreeAuditTimer();
-
-	dixFreePrivates(serverClient->devPrivates);
-	serverClient->devPrivates = NULL;
 
 	if (dispatchException & DE_TERMINATE)
 	{
@@ -340,9 +347,9 @@ int main(int argc, char *argv[], char *envp[])
 	    break;
 	}
 
-	xfree(ConnectionInfo);
+	free(ConnectionInfo);
 	ConnectionInfo = NULL;
     }
-    return(0);
+    return 0;
 }
 

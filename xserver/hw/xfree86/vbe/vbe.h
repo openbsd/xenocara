@@ -65,7 +65,7 @@ typedef struct vbeControllerInfoBlock {
 #pragma pack(0)
 #endif
 
-#ifndef __GNUC__
+#if !( defined(__GNUC__) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)) )
 #define __attribute__(a)
 #endif
 
@@ -282,7 +282,7 @@ extern _X_EXPORT int VBESetGetDACPaletteFormat(vbeInfoPtr pVbe, int bits);
  */
 extern _X_EXPORT CARD32 *VBESetGetPaletteData(vbeInfoPtr pVbe, Bool set, int first, int num,
 			     CARD32 *data, Bool secondary, Bool wait_retrace);
-#define VBEFreePaletteData(data)	xfree(data)
+#define VBEFreePaletteData(data)	free(data)
 
 /*
  * INT A
@@ -295,7 +295,7 @@ typedef struct _VBEpmi {
 } VBEpmi;
 
 extern _X_EXPORT VBEpmi *VBEGetVBEpmi(vbeInfoPtr pVbe);
-#define VESAFreeVBEpmi(pmi)	xfree(pmi)
+#define VESAFreeVBEpmi(pmi)	free(pmi)
 
 /* high level helper functions */
 

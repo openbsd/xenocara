@@ -76,8 +76,8 @@ XAACopyPlane1toNColorExpand(
     DDXPointPtr   pptSrc )
 {
     XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_GC(pGC);
-    BoxPtr pbox = REGION_RECTS(rgnDst);
-    int numrects = REGION_NUM_RECTS(rgnDst);
+    BoxPtr pbox = RegionRects(rgnDst);
+    int numrects = RegionNumRects(rgnDst);
     unsigned char *src = ((PixmapPtr)pSrc)->devPrivate.ptr;
     int srcwidth = ((PixmapPtr)pSrc)->devKind; 
     
@@ -101,8 +101,8 @@ XAACopyPlaneNtoNColorExpand(
     DDXPointPtr   pptSrc 
 ){
     XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_GC(pGC);
-    BoxPtr pbox = REGION_RECTS(rgnDst);
-    int numrects = REGION_NUM_RECTS(rgnDst);
+    BoxPtr pbox = RegionRects(rgnDst);
+    int numrects = RegionNumRects(rgnDst);
     unsigned char *src = ((PixmapPtr)pSrc)->devPrivate.ptr;
     unsigned char *data, *srcPtr, *dataPtr;
     int srcwidth = ((PixmapPtr)pSrc)->devKind; 
@@ -131,7 +131,7 @@ XAACopyPlaneNtoNColorExpand(
 	h = height = pbox->y2 - pbox->y1;
 	pitch = BitmapBytePad(width);
 
-	if(!(data = xcalloc(height, pitch)))
+	if(!(data = calloc(height, pitch)))
 	   goto ALLOC_FAILED;
 
 	dataPtr = data;
@@ -151,7 +151,7 @@ XAACopyPlaneNtoNColorExpand(
 		pbox->x1, pbox->y1, width, height, data, pitch, 0, 
 		pGC->fgPixel, pGC->bgPixel, pGC->alu, pGC->planemask);
 	
-	xfree(data);
+	free(data);
 
 ALLOC_FAILED:
 
@@ -168,14 +168,14 @@ XAAPushPixelsSolidColorExpansion(
     int xOrg, int yOrg )
 {
    XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_GC(pGC);
-   int MaxBoxes = REGION_NUM_RECTS(pGC->pCompositeClip);
+   int MaxBoxes = RegionNumRects(pGC->pCompositeClip);
    BoxPtr	pbox, pClipBoxes;
    int		nboxes, srcx, srcy;
    xRectangle TheRect;
    unsigned char *src = pBitMap->devPrivate.ptr;
    int srcwidth = pBitMap->devKind;
 
-   if(!REGION_NUM_RECTS(pGC->pCompositeClip))
+   if(!RegionNumRects(pGC->pCompositeClip))
 	return;
 
    TheRect.x = xOrg;
@@ -184,7 +184,7 @@ XAAPushPixelsSolidColorExpansion(
    TheRect.height = dy; 
 
    if(MaxBoxes > (infoRec->PreAllocSize/sizeof(BoxRec))) {
-	pClipBoxes = xalloc(MaxBoxes * sizeof(BoxRec));
+	pClipBoxes = malloc(MaxBoxes * sizeof(BoxRec));
 	if(!pClipBoxes) return;	
    } else pClipBoxes = (BoxPtr)infoRec->PreAllocMem;
 
@@ -203,6 +203,6 @@ XAAPushPixelsSolidColorExpansion(
    }
 
     if(pClipBoxes != (BoxPtr)infoRec->PreAllocMem)
-	xfree(pClipBoxes);
+	free(pClipBoxes);
 }
 

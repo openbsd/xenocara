@@ -363,6 +363,9 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Define to 1 if you have the <sys/utsname.h> header file. */
+#undef HAVE_SYS_UTSNAME_H
+
 /* Define to 1 if you have the <sys/vm86.h> header file. */
 #undef HAVE_SYS_VM86_H
 
@@ -413,9 +416,6 @@
 
 /* Have monotonic clock from clock_gettime() */
 #undef MONOTONIC_CLOCK
-
-/* Build Multibuffer extension */
-#undef MULTIBUFFER
 
 /* Do not have 'strcasecmp'. */
 #undef NEED_STRCASECMP
@@ -586,6 +586,9 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Building with libdrm support */
+#undef WITH_LIBDRM
 
 /* Building vgahw module */
 #undef WITH_VGAHW

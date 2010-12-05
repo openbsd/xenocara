@@ -52,6 +52,7 @@ in this Software without prior written authorization from The Open Group.
 #include "darwin.h"
 #include "quartz.h"
 #include "quartzKeyboard.h"
+#include "quartzRandR.h"
 #include "darwinEvents.h"
 
 #include <sys/types.h>
@@ -238,19 +239,19 @@ static void DarwinEventHandler(int screenNum, InternalEvent *ie, DeviceIntPtr de
             
         case kXquartzToggleFullscreen:
             DEBUG_LOG("kXquartzToggleFullscreen\n");
-            if (quartzEnableRootless) 
-                QuartzSetFullscreen(!quartzHasRoot);
-            else if (quartzHasRoot)
-                QuartzHide();
-            else
-                QuartzShow();
+            if(XQuartzIsRootless)
+                ErrorF("Ignoring kXquartzToggleFullscreen because of rootless mode.");
+            else 
+                QuartzRandRToggleFullscreen();
             break;
             
         case kXquartzSetRootless:
             DEBUG_LOG("kXquartzSetRootless\n");
-            QuartzSetRootless(e->data[0]);
-            if (!quartzEnableRootless && !quartzHasRoot)
-                QuartzHide();
+            if(e->data[0]) {
+                QuartzRandRSetFakeRootless();
+            } else {
+                QuartzRandRSetFakeFullscreen(FALSE);
+            }
             break;
             
         case kXquartzSetRootClip:
@@ -276,7 +277,12 @@ static void DarwinEventHandler(int screenNum, InternalEvent *ie, DeviceIntPtr de
             break;
             
         case kXquartzDisplayChanged:
+            DEBUG_LOG("kXquartzDisplayChanged\n");
             QuartzUpdateScreens();
+#ifdef RANDR
+            /* Update our RandR info */
+            QuartzRandRUpdateFakeModes(TRUE);
+#endif
             break;
             
         default:
@@ -377,8 +383,8 @@ static void DarwinPrepareValuators(DeviceIntPtr pDev, int *valuators, ScreenPtr 
                                    float pointer_x, float pointer_y, 
                                    float pressure, float tilt_x, float tilt_y) {
     /* Fix offset between darwin and X screens */
-    pointer_x -= darwinMainScreenX + dixScreenOrigins[screen->myNum].x;
-    pointer_y -= darwinMainScreenY + dixScreenOrigins[screen->myNum].y;
+    pointer_x -= darwinMainScreenX + screen->x;
+    pointer_y -= darwinMainScreenY + screen->y;
 
     if(pointer_x < 0.0)
         pointer_x = 0.0;

@@ -131,8 +131,8 @@ exaCreatePixmap_classic(ScreenPtr pScreen, int w, int h, int depth,
     box.y1 = 0;
     box.x2 = w;
     box.y2 = h;
-    REGION_INIT(pScreen, &pExaPixmap->validSys, &box, 0);
-    REGION_INIT(pScreen, &pExaPixmap->validFB, &box, 0);
+    RegionInit(&pExaPixmap->validSys, &box, 0);
+    RegionInit(&pExaPixmap->validFB, &box, 0);
 
     exaSetAccelBlock(pExaScr, pExaPixmap,
                      w, h, bpp);
@@ -148,7 +148,7 @@ Bool
 exaModifyPixmapHeader_classic(PixmapPtr pPixmap, int width, int height, int depth,
 		      int bitsPerPixel, int devKind, pointer pPixData)
 {
-    ScreenPtr pScreen = pPixmap->drawable.pScreen;
+    ScreenPtr pScreen;
     ExaScreenPrivPtr pExaScr;
     ExaPixmapPrivPtr pExaPixmap;
     Bool ret;
@@ -156,6 +156,7 @@ exaModifyPixmapHeader_classic(PixmapPtr pPixmap, int width, int height, int dept
     if (!pPixmap)
         return FALSE;
 
+    pScreen = pPixmap->drawable.pScreen;
     pExaScr = ExaGetScreenPriv(pScreen);
     pExaPixmap = ExaGetPixmapPriv(pPixmap);
 
@@ -220,9 +221,7 @@ exaDestroyPixmap_classic (PixmapPtr pPixmap)
     {
 	ExaPixmapPriv (pPixmap);
 
-	/* During a fallback we must finish access, but we don't know the index. */
-	if (pExaScr->fallback_counter)
-	    exaFinishAccess(&pPixmap->drawable, -1);
+	exaDestroyPixmap(pPixmap);
 
 	if (pExaPixmap->area)
 	{
@@ -236,8 +235,8 @@ exaDestroyPixmap_classic (PixmapPtr pPixmap)
 	    pPixmap->devPrivate.ptr = pExaPixmap->sys_ptr;
 	    pPixmap->devKind = pExaPixmap->sys_pitch;
 	}
-	REGION_UNINIT(pPixmap->drawable.pScreen, &pExaPixmap->validSys);
-	REGION_UNINIT(pPixmap->drawable.pScreen, &pExaPixmap->validFB);
+	RegionUninit(&pExaPixmap->validSys);
+	RegionUninit(&pExaPixmap->validFB);
     }
 
     swap(pExaScr, pScreen, DestroyPixmap);

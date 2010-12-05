@@ -27,7 +27,6 @@
 #include <dix-config.h>
 #endif
 
-#define DBUS_API_SUBJECT_TO_CHANGE
 #include <dbus/dbus.h>
 #include <string.h>
 
@@ -81,14 +80,14 @@ add_device(DBusMessage *message, DBusMessage *reply, DBusError *error)
         MALFORMED_MESSAGE();
     }
 
-    options = xcalloc(sizeof(*options), 1);
+    options = calloc(sizeof(*options), 1);
     if (!options) {
         ErrorF("[config/dbus] couldn't allocate option\n");
         return BadAlloc;
     }
 
-    options->key = xstrdup("_source");
-    options->value = xstrdup("client/dbus");
+    options->key = strdup("_source");
+    options->value = strdup("client/dbus");
     if (!options->key || !options->value) {
         ErrorF("[config/dbus] couldn't allocate first key/value pair\n");
         ret = BadAlloc;
@@ -97,7 +96,7 @@ add_device(DBusMessage *message, DBusMessage *reply, DBusError *error)
 
     /* signature should be [ss][ss]... */
     while (dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_ARRAY) {
-        tmpo = xcalloc(sizeof(*tmpo), 1);
+        tmpo = calloc(sizeof(*tmpo), 1);
         if (!tmpo) {
             ErrorF("[config/dbus] couldn't allocate option\n");
             ret = BadAlloc;
@@ -121,7 +120,7 @@ add_device(DBusMessage *message, DBusMessage *reply, DBusError *error)
                    tmp);
             MALFORMED_MESSAGE();
         }
-        options->key = xstrdup(tmp);
+        options->key = strdup(tmp);
         if (!options->key) {
             ErrorF("[config/dbus] couldn't duplicate key!\n");
             ret = BadAlloc;
@@ -137,7 +136,7 @@ add_device(DBusMessage *message, DBusMessage *reply, DBusError *error)
         dbus_message_iter_get_basic(&subiter, &tmp);
         if (!tmp)
             MALFORMED_MESSAGE();
-        options->value = xstrdup(tmp);
+        options->value = strdup(tmp);
         if (!options->value) {
             ErrorF("[config/dbus] couldn't duplicate option!\n");
             ret = BadAlloc;
@@ -184,11 +183,9 @@ unwind:
     while (options) {
         tmpo = options;
         options = options->next;
-        if (tmpo->key)
-            xfree(tmpo->key);
-        if (tmpo->value)
-            xfree(tmpo->value);
-        xfree(tmpo);
+        free(tmpo->key);
+        free(tmpo->value);
+        free(tmpo);
     }
 
     return ret;

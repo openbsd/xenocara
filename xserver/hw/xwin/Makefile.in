@@ -75,13 +75,13 @@ am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
 	wintrayicon.c winvalargs.c winwakeup.c winwindow.c \
 	winwndproc.c ddraw.h winclipboard.h winconfig.h win.h \
 	winkeybd.h winkeynames.h winlayouts.h winmessages.h winmsg.h \
-	winms.h winmultiwindowclass.h winprefs.h winpriv.h \
-	winresource.h winwindow.h XWin.rc \
-	$(top_srcdir)/Xext/dpmsstubs.c $(top_srcdir)/Xi/stubs.c \
-	$(top_srcdir)/mi/miinitext.c $(top_srcdir)/fb/fbcmap_mi.c \
-	winclipboardinit.c winclipboardtextconv.c winclipboardthread.c \
+	winms.h winmultiwindowclass.h winprefs.h winresource.h \
+	winwindow.h XWin.rc $(top_srcdir)/Xext/dpmsstubs.c \
+	$(top_srcdir)/Xi/stubs.c $(top_srcdir)/mi/miinitext.c \
+	$(top_srcdir)/fb/fbcmap_mi.c winclipboardinit.c \
+	winclipboardtextconv.c winclipboardthread.c \
 	winclipboardunicode.c winclipboardwndproc.c \
-	winclipboardwrappers.c winclipboardxevents.c winpriv.c \
+	winclipboardwrappers.c winclipboardxevents.c \
 	winmultiwindowshape.c winmultiwindowwindow.c \
 	winmultiwindowwm.c winmultiwindowwndproc.c winwin32rootless.c \
 	winwin32rootlesswindow.c winwin32rootlesswndproc.c \
@@ -95,26 +95,25 @@ am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
 @XWIN_CLIPBOARD_TRUE@	winclipboardwndproc.$(OBJEXT) \
 @XWIN_CLIPBOARD_TRUE@	winclipboardwrappers.$(OBJEXT) \
 @XWIN_CLIPBOARD_TRUE@	winclipboardxevents.$(OBJEXT)
-@XWIN_GLX_WINDOWS_TRUE@am__objects_2 = winpriv.$(OBJEXT)
-@XWIN_MULTIWINDOW_TRUE@am__objects_3 = winmultiwindowshape.$(OBJEXT) \
+@XWIN_MULTIWINDOW_TRUE@am__objects_2 = winmultiwindowshape.$(OBJEXT) \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowwindow.$(OBJEXT) \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowwm.$(OBJEXT) \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowwndproc.$(OBJEXT)
-@XWIN_MULTIWINDOWEXTWM_TRUE@am__objects_4 =  \
+@XWIN_MULTIWINDOWEXTWM_TRUE@am__objects_3 =  \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootless.$(OBJEXT) \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswindow.$(OBJEXT) \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswndproc.$(OBJEXT) \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwindowswm.$(OBJEXT)
-@XWIN_NATIVEGDI_TRUE@am__objects_5 = winclip.$(OBJEXT) \
+@XWIN_NATIVEGDI_TRUE@am__objects_4 = winclip.$(OBJEXT) \
 @XWIN_NATIVEGDI_TRUE@	winfillsp.$(OBJEXT) winfont.$(OBJEXT) \
 @XWIN_NATIVEGDI_TRUE@	wingc.$(OBJEXT) wingetsp.$(OBJEXT) \
 @XWIN_NATIVEGDI_TRUE@	winnativegdi.$(OBJEXT) \
 @XWIN_NATIVEGDI_TRUE@	winpixmap.$(OBJEXT) winpolyline.$(OBJEXT) \
 @XWIN_NATIVEGDI_TRUE@	winrop.$(OBJEXT) winsetsp.$(OBJEXT)
-@XWIN_PRIMARYFB_TRUE@am__objects_6 = winpfbdd.$(OBJEXT)
-@XWIN_RANDR_TRUE@am__objects_7 = winrandr.$(OBJEXT)
-@XWIN_XV_TRUE@am__objects_8 = winvideo.$(OBJEXT)
-am__objects_9 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
+@XWIN_PRIMARYFB_TRUE@am__objects_5 = winpfbdd.$(OBJEXT)
+@XWIN_RANDR_TRUE@am__objects_6 = winrandr.$(OBJEXT)
+@XWIN_XV_TRUE@am__objects_7 = winvideo.$(OBJEXT)
+am__objects_8 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	winallpriv.$(OBJEXT) winauth.$(OBJEXT) winblock.$(OBJEXT) \
 	wincmap.$(OBJEXT) winconfig.$(OBJEXT) wincreatewnd.$(OBJEXT) \
 	wincursor.$(OBJEXT) windialogs.$(OBJEXT) winengine.$(OBJEXT) \
@@ -131,11 +130,12 @@ am__objects_9 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	stubs.$(OBJEXT) miinitext.$(OBJEXT) fbcmap_mi.$(OBJEXT) \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	$(am__objects_7) $(am__objects_8)
-am_XWin_OBJECTS = $(am__objects_9)
+	$(am__objects_7)
+am_XWin_OBJECTS = $(am__objects_8)
 XWin_OBJECTS = $(am_XWin_OBJECTS)
 @XWIN_MULTIWINDOWEXTWM_TRUE@am__DEPENDENCIES_1 = $(top_builddir)/miext/rootless/librootless.la
-am__DEPENDENCIES_2 =
+@XWIN_GLX_WINDOWS_TRUE@am__DEPENDENCIES_2 = $(top_builddir)/hw/xwin/glx/libXwinGLX.la
+am__DEPENDENCIES_3 =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -151,6 +151,12 @@ LTYACCCOMPILE = $(LIBTOOL) --mode=compile $(YACC) $(YFLAGS) \
 	$(AM_YFLAGS)
 SOURCES = $(XWin_SOURCES)
 DIST_SOURCES = $(am__XWin_SOURCES_DIST)
+RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
+	html-recursive info-recursive install-data-recursive \
+	install-exec-recursive install-info-recursive \
+	install-recursive installcheck-recursive installdirs-recursive \
+	pdf-recursive ps-recursive uninstall-info-recursive \
+	uninstall-recursive
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -201,10 +207,6 @@ BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
 BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
-BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
-BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
-BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
-BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 BUILD_TIME = @BUILD_TIME@
 CC = @CC@
 CCAS = @CCAS@
@@ -300,6 +302,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
+ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
@@ -314,6 +318,7 @@ FONTOTFDIR = @FONTOTFDIR@
 FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
+FOP = @FOP@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
 GLIB_CFLAGS = @GLIB_CFLAGS@
@@ -331,10 +336,14 @@ HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
 HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
 HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
-HAVE_PS2PDF_FALSE = @HAVE_PS2PDF_FALSE@
-HAVE_PS2PDF_TRUE = @HAVE_PS2PDF_TRUE@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
 HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
 HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
+HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
+HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -390,10 +399,11 @@ LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINUXDOC = @LINUXDOC@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
 LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
@@ -411,17 +421,11 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
-MAKE_HTML = @MAKE_HTML@
-MAKE_PDF = @MAKE_PDF@
-MAKE_PS = @MAKE_PS@
-MAKE_TEXT = @MAKE_TEXT@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
-MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
@@ -448,20 +452,23 @@ PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
-PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RECORD_FALSE = @RECORD_FALSE@
 RECORD_TRUE = @RECORD_TRUE@
+RELEASE_DATE = @RELEASE_DATE@
 RES_FALSE = @RES_FALSE@
 RES_TRUE = @RES_TRUE@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SECURE_RPC_FALSE = @SECURE_RPC_FALSE@
 SECURE_RPC_TRUE = @SECURE_RPC_TRUE@
 SED = @SED@
@@ -553,6 +560,7 @@ XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
 XKM_OUTPUT_DIR = @XKM_OUTPUT_DIR@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
+XMLTO = @XMLTO@
 XNESTMODULES_CFLAGS = @XNESTMODULES_CFLAGS@
 XNESTMODULES_LIBS = @XNESTMODULES_LIBS@
 XNEST_FALSE = @XNEST_FALSE@
@@ -708,10 +716,10 @@ target_alias = @target_alias@
 @XWIN_CLIPBOARD_TRUE@	winclipboardxevents.c
 
 @XWIN_CLIPBOARD_TRUE@DEFS_CLIPBOARD = -DXWIN_CLIPBOARD
-@XWIN_GLX_WINDOWS_TRUE@SRCS_GLX_WINDOWS = \
-@XWIN_GLX_WINDOWS_TRUE@	winpriv.c
-
+@XWIN_GLX_WINDOWS_TRUE@GLX_DIR = glx
 @XWIN_GLX_WINDOWS_TRUE@DEFS_GLX_WINDOWS = -DXWIN_GLX_WINDOWS
+@XWIN_GLX_WINDOWS_TRUE@XWIN_GLX_LIBS = $(top_builddir)/hw/xwin/glx/libXwinGLX.la
+@XWIN_GLX_WINDOWS_TRUE@XWIN_GLX_LINK_FLAGS = -lopengl32
 @XWIN_MULTIWINDOW_TRUE@SRCS_MULTIWINDOW = \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowshape.c \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowwindow.c \
@@ -798,7 +806,6 @@ SRCS = InitInput.c \
 	winms.h \
 	winmultiwindowclass.h \
 	winprefs.h \
-	winpriv.h \
 	winresource.h \
 	winwindow.h \
 	XWin.rc \
@@ -807,7 +814,6 @@ SRCS = InitInput.c \
 	$(top_srcdir)/mi/miinitext.c \
 	$(top_srcdir)/fb/fbcmap_mi.c \
 	$(SRCS_CLIPBOARD) \
-	$(SRCS_GLX_WINDOWS) \
 	$(SRCS_MULTIWINDOW) \
 	$(SRCS_MULTIWINDOWEXTWM) \
 	$(SRCS_NATIVEGDI) \
@@ -817,8 +823,8 @@ SRCS = InitInput.c \
 
 XWin_SOURCES = $(SRCS)
 INCLUDES = -I$(top_srcdir)/miext/rootless
-XWin_DEPENDENCIES = $(XWIN_LIBS)
-XWin_LDADD = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
+XWin_DEPENDENCIES = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS)
+XWin_LDADD = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_GLX_LINK_FLAGS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
 XWin_LDFLAGS = -mwindows -static
 BUILT_SOURCES = winprefsyacc.h winprefsyacc.c winprefslex.c
 CLEANFILES = $(BUILT_SOURCES) $(appman_DATA) $(fileman_DATA) XWin.man XWinrc.man
@@ -826,12 +832,8 @@ AM_YFLAGS = -d
 AM_LFLAGS = -i
 AM_CFLAGS = -DHAVE_XWIN_CONFIG_H $(DIX_CFLAGS) \
             $(XWINMODULES_CFLAGS) \
-            -DXFree86Server
-
-GLX_EXTRAS = \
-	glx/glwindows.h \
-	glx/glwrap.c \
-	glx/indirect.c
+            -DXFree86Server \
+            -I$(top_srcdir)
 
 MAN_SRCS = XWin.man.pre XWinrc.man.pre
 appmandir = $(APP_MAN_DIR)
@@ -881,7 +883,6 @@ MANDEFS = \
 	-D__xlogfile__=$(XLOGFILE) -D__xservername__=$(XSERVERNAME) 
 
 EXTRA_DIST = \
-	$(GLX_EXTRAS) \
 	$(MAN_SRCS) \
 	$(xwinconfig_DATA) \
 	X.ico \
@@ -907,8 +908,10 @@ EXTRA_DIST = \
 	xlaunch/window/wizard.cc \
 	xlaunch/window/wizard.h
 
+SUBDIRS = $(GLX_DIR) .
+DIST_SUBDIRS = glx .
 all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
 .SUFFIXES: .pre .man .man.pre .c .l .lo .o .obj .rc .y
@@ -1026,7 +1029,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefslex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefsyacc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winpriv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprocarg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winrandr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winregistry.Po@am__quote@
@@ -1211,6 +1213,77 @@ uninstall-xwinconfigDATA:
 	  rm -f "$(DESTDIR)$(xwinconfigdir)/$$f"; \
 	done
 
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+$(RECURSIVE_TARGETS):
+	@failcom='exit 1'; \
+	for f in x $$MAKEFLAGS; do \
+	  case $$f in \
+	    *=* | --[!k]*);; \
+	    *k*) failcom='fail=yes';; \
+	  esac; \
+	done; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@failcom='exit 1'; \
+	for f in x $$MAKEFLAGS; do \
+	  case $$f in \
+	    *=* | --[!k]*);; \
+	    *k*) failcom='fail=yes';; \
+	  esac; \
+	done; \
+	dot_seen=no; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	rev=''; for subdir in $$list; do \
+	  if test "$$subdir" = "."; then :; else \
+	    rev="$$subdir $$rev"; \
+	  fi; \
+	done; \
+	rev="$$rev ."; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+ctags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) ctags); \
+	done
+
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
@@ -1221,10 +1294,23 @@ ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	mkid -fID $$unique
 tags: TAGS
 
-TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	here=`pwd`; \
+	if ($(ETAGS) --etags-include --version) >/dev/null 2>&1; then \
+	  include_option=--etags-include; \
+	  empty_fix=.; \
+	else \
+	  include_option=--include; \
+	  empty_fix=; \
+	fi; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test ! -f $$subdir/TAGS || \
+	      tags="$$tags $$include_option=$$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
 	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
 	unique=`for i in $$list; do \
 	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
@@ -1237,7 +1323,7 @@ TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 	    $$tags $$unique; \
 	fi
 ctags: CTAGS
-CTAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
+CTAGS: ctags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
 		$(TAGS_FILES) $(LISP)
 	tags=; \
 	here=`pwd`; \
@@ -1260,7 +1346,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/../.. $(distdir)/glx $(distdir)/xlaunch $(distdir)/xlaunch/resources $(distdir)/xlaunch/window
+	$(mkdir_p) $(distdir)/../.. $(distdir)/xlaunch $(distdir)/xlaunch/resources $(distdir)/xlaunch/window
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -1287,24 +1373,40 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	list='$(DIST_SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d "$(distdir)/$$subdir" \
+	    || $(mkdir_p) "$(distdir)/$$subdir" \
+	    || exit 1; \
+	    distdir=`$(am__cd) $(distdir) && pwd`; \
+	    top_distdir=`$(am__cd) $(top_distdir) && pwd`; \
+	    (cd $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$$top_distdir" \
+	        distdir="$$distdir/$$subdir" \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
 check-am: all-am
 check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
+	$(MAKE) $(AM_MAKEFLAGS) check-recursive
 all-am: Makefile $(PROGRAMS) $(DATA)
-installdirs:
+installdirs: installdirs-recursive
+installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(filemandir)" "$(DESTDIR)$(xwinconfigdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
-install-exec: install-exec-am
-install-data: install-data-am
-uninstall: uninstall-am
+	$(MAKE) $(AM_MAKEFLAGS) install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
-installcheck: installcheck-am
+installcheck: installcheck-recursive
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
@@ -1325,23 +1427,23 @@ maintainer-clean-generic:
 	-rm -f winprefsyacc.c
 	-rm -f winprefsyacc.h
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
-clean: clean-am
+clean: clean-recursive
 
 clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
-distclean: distclean-am
+distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
 
-dvi: dvi-am
+dvi: dvi-recursive
 
 dvi-am:
 
-html: html-am
+html: html-recursive
 
-info: info-am
+info: info-recursive
 
 info-am:
 
@@ -1352,27 +1454,27 @@ install-exec-am: install-binPROGRAMS
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 
-install-info: install-info-am
+install-info: install-info-recursive
 
 install-man:
 
 installcheck-am:
 
-maintainer-clean: maintainer-clean-am
+maintainer-clean: maintainer-clean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
-mostlyclean: mostlyclean-am
+mostlyclean: mostlyclean-recursive
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool
 
-pdf: pdf-am
+pdf: pdf-recursive
 
 pdf-am:
 
-ps: ps-am
+ps: ps-recursive
 
 ps-am:
 
@@ -1380,19 +1482,25 @@ uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
 	uninstall-filemanDATA uninstall-info-am \
 	uninstall-xwinconfigDATA
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic clean-libtool ctags distclean distclean-compile \
-	distclean-generic distclean-libtool distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-appmanDATA install-binPROGRAMS install-data \
-	install-data-am install-exec install-exec-am install-exec-hook \
-	install-filemanDATA install-info install-info-am install-man \
-	install-strip install-xwinconfigDATA installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-appmanDATA \
-	uninstall-binPROGRAMS uninstall-filemanDATA uninstall-info-am \
+uninstall-info: uninstall-info-recursive
+
+.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
+	clean clean-binPROGRAMS clean-generic clean-libtool \
+	clean-recursive ctags ctags-recursive distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-recursive distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-appmanDATA \
+	install-binPROGRAMS install-data install-data-am install-exec \
+	install-exec-am install-exec-hook install-filemanDATA \
+	install-info install-info-am install-man install-strip \
+	install-xwinconfigDATA installcheck installcheck-am \
+	installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
+	tags tags-recursive uninstall uninstall-am \
+	uninstall-appmanDATA uninstall-binPROGRAMS \
+	uninstall-filemanDATA uninstall-info-am \
 	uninstall-xwinconfigDATA
 
 

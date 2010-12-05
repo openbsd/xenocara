@@ -124,7 +124,7 @@ ProcWindowsWMQueryVersion(register ClientPtr client)
       swapl(&rep.length, n);
     }
   WriteToClient(client, sizeof(xWindowsWMQueryVersionReply), (char *)&rep);
-  return (client->noClientException);
+  return Success;
 }
 
 
@@ -164,7 +164,7 @@ WMFreeClient (pointer data, XID id)
 	}
       updateEventMask (pHead);
     }
-  xfree ((pointer) pEvent);
+  free((pointer) pEvent);
   return 1;
 }
 
@@ -179,9 +179,9 @@ WMFreeEvents (pointer data, XID id)
     {
       pNext = pCur->next;
       FreeResource (pCur->clientResource, ClientType);
-      xfree ((pointer) pCur);
+      free((pointer) pCur);
     }
-  xfree ((pointer) pHead);
+  free((pointer) pHead);
   eventMask = 0;
   return 1;
 }
@@ -212,7 +212,7 @@ ProcWindowsWMSelectInput (register ClientPtr client)
 	}
       
       /* build the entry */
-      pNewEvent = (WMEventPtr) xalloc (sizeof (WMEventRec));
+      pNewEvent = (WMEventPtr) malloc(sizeof (WMEventRec));
       if (!pNewEvent)
 	return BadAlloc;
       pNewEvent->next = 0;
@@ -234,7 +234,7 @@ ProcWindowsWMSelectInput (register ClientPtr client)
        */
       if (!pHead)
 	{
-	  pHead = (WMEventPtr *) xalloc (sizeof (WMEventPtr));
+	  pHead = (WMEventPtr *) malloc(sizeof (WMEventPtr));
 	  if (!pHead ||
 	      !AddResource (eventResource, eventResourceType, (pointer)pHead))
 	    {
@@ -266,7 +266,7 @@ ProcWindowsWMSelectInput (register ClientPtr client)
 		pNewEvent->next = pEvent->next;
 	      else
 		*pHead = pEvent->next;
-	      xfree (pEvent);
+	      free(pEvent);
 	      updateEventMask (pHead);
 	    }
 	}
@@ -304,8 +304,7 @@ winWindowsWMSendEvent (int type, unsigned int mask, int which, int arg,
 #if CYGMULTIWINDOW_DEBUG
       ErrorF ("winWindowsWMSendEvent - x%08x\n", (int) client);
 #endif
-      if ((pEvent->mask & mask) == 0
-	  || client == serverClient || client->clientGone)
+      if ((pEvent->mask & mask) == 0)
 	{
 	  continue;
 	}
@@ -320,7 +319,6 @@ winWindowsWMSendEvent (int type, unsigned int mask, int which, int arg,
       se.y = y;
       se.w = w;
       se.h = h;
-      se.sequenceNumber = client->sequence;
       se.time = currentTime.milliseconds;
       WriteEventsToClient (client, 1, (xEvent *) &se);
     }
@@ -335,7 +333,7 @@ ProcWindowsWMDisableUpdate (register ClientPtr client)
 
   //winDisableUpdate();
 
-  return (client->noClientException);
+  return Success;
 }
 
 static int
@@ -345,7 +343,7 @@ ProcWindowsWMReenableUpdate (register ClientPtr client)
 
   //winEnableUpdate(); 
 
-  return (client->noClientException);
+  return Success;
 }
 
 
@@ -358,7 +356,7 @@ ProcWindowsWMSetFrontProcess (register ClientPtr client)
   
   //QuartzMessageMainThread(kWindowsSetFrontProcess, NULL, 0);
   
-  return (client->noClientException);
+  return Success;
 }
 
 
@@ -414,7 +412,7 @@ ProcWindowsWMFrameGetRect (register ClientPtr client)
 #endif
 
   WriteToClient(client, sizeof(xWindowsWMFrameGetRectReply), (char *)&rep);
-  return (client->noClientException);
+  return Success;
 }
 
 
@@ -427,7 +425,6 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
   RECT rcNew;
   int nCmdShow, rc;
   RegionRec newShape;
-  ScreenPtr pScreen;
 
   REQUEST_SIZE_MATCH (xWindowsWMFrameDrawReq);
 
@@ -493,21 +490,20 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
 
   if (wBoundingShape(pWin) != NULL)
     {
-      pScreen = pWin->drawable.pScreen;
       /* wBoundingShape is relative to *inner* origin of window.
 	 Translate by borderWidth to get the outside-relative position. */
       
-      REGION_NULL(pScreen, &newShape);
-      REGION_COPY(pScreen, &newShape, wBoundingShape(pWin));
-      REGION_TRANSLATE(pScreen, &newShape, pWin->borderWidth, pWin->borderWidth);
+      RegionNull(&newShape);
+      RegionCopy(&newShape, wBoundingShape(pWin));
+      RegionTranslate(&newShape, pWin->borderWidth, pWin->borderWidth);
       winMWExtWMReshapeFrame (pRLWinPriv, &newShape);
-      REGION_UNINIT(pScreen, &newShape);
+      RegionUninit(&newShape);
     }
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("ProcWindowsWMFrameDraw - done\n");
 #endif
 
-  return (client->noClientException);
+  return Success;
 }
 
 static int
@@ -566,7 +562,7 @@ ProcWindowsWMFrameSetTitle(
   ErrorF ("ProcWindowsWMFrameSetTitle - done\n");
 #endif
 
-  return (client->noClientException);
+  return Success;
 }
 
 

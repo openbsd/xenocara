@@ -641,9 +641,11 @@ xf86OpenWScons()
     int mode = WSDISPLAYIO_MODE_MAPPED;
     int i;
     char ttyname[16];
+#ifdef WSCONS_SUPPORT
     int mib[2];
     size_t len;
     dev_t dev;
+#endif
 
 #ifdef KERN_CONSDEV
     mib[0] = CTL_KERN;
@@ -758,13 +760,13 @@ xf86ProcessArgument(int argc, char *argv[], int i)
 	if (!strcmp(argv[i], "-keeptty"))
 	{
 		KeepTty = TRUE;
-		return(1);
+		return 1;
 	}
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
 	if (!strcmp(argv[i], "-sharevts"))
 	{	
 		ShareVTs = TRUE;
-		return(1);
+		return 1;
 	}
 	if ((argv[i][0] == 'v') && (argv[i][1] == 't'))
 	{
@@ -773,12 +775,12 @@ xf86ProcessArgument(int argc, char *argv[], int i)
 		{
 			UseMsg();
 			VTnum = -1;
-			return(0);
+			return 0;
 		}
-		return(1);
+		return 1;
 	}
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
-	return(0);
+	return 0;
 }
 
 void

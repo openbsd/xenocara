@@ -53,7 +53,7 @@ typedef void (*ReplySwapPtr) (
 extern _X_EXPORT void ReplyNotSwappd (
 		ClientPtr	/* pClient */,
 		int		/* size */,
-		void *		/* pbuf */);
+		void *		/* pbuf */) _X_NORETURN;
 
 typedef enum {ClientStateInitial,
 	      ClientStateAuthenticating,
@@ -85,7 +85,6 @@ typedef struct _Window *SaveSetElt;
 #define SaveSetAssignMap(ss,m)
 #endif
 
-/* The unused_ members are ABI spacing.  Please reuse them. */
 typedef struct _Client {
     int         index;
     Mask        clientAsMask;
@@ -99,9 +98,9 @@ typedef struct _Client {
     int         clientGone;
     int         noClientException;	/* this client died or needs to be
 					 * killed */
+    int         ignoreCount;		/* count for Attend/IgnoreClient */
     SaveSetElt	*saveSet;
     int         numSaved;
-    void	*unused_screenPrivate[16];
     int         (**requestVector) (
 		ClientPtr /* pClient */);
     CARD32	req_len;		/* length of current request */
@@ -116,8 +115,6 @@ typedef struct _Client {
     KeyCode		minKC,maxKC;
 
     unsigned long replyBytesRemaining;
-    void *unused_appgroup;
-    void *unused_fontResFunc;
     int	    smart_priority;
     long    smart_start_tick;
     long    smart_stop_tick;

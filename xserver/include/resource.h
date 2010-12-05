@@ -157,6 +157,9 @@ typedef Bool (*FindComplexResType)(
 extern _X_EXPORT RESTYPE CreateNewResourceType(
     DeleteType /*deleteFunc*/, char * /*name*/);
 
+extern _X_EXPORT void SetResourceTypeErrorValue(
+    RESTYPE /*type*/, int /*errorValue*/);
+
 extern _X_EXPORT RESTYPE CreateNewResourceClass(void);
 
 extern _X_EXPORT Bool InitClientResources(
@@ -251,35 +254,29 @@ extern _X_EXPORT RESTYPE TypeMask;
  * Please use the noted replacements instead.
  */
 
-#ifdef __GNUC__
-#define X_DEPRECATED __attribute__((deprecated))
-#else
-#define X_DEPRECATED
-#endif
-
 /* replaced by dixLookupResourceByType */
 extern _X_EXPORT pointer SecurityLookupIDByType(
     ClientPtr client,
     XID id,
     RESTYPE rtype,
-    Mask access_mode) X_DEPRECATED;
+    Mask access_mode) _X_DEPRECATED;
 
 /* replaced by dixLookupResourceByClass */
 extern _X_EXPORT pointer SecurityLookupIDByClass(
     ClientPtr client,
     XID id,
     RESTYPE classes,
-    Mask access_mode) X_DEPRECATED;
+    Mask access_mode) _X_DEPRECATED;
 
 /* replaced by dixLookupResourceByType */
 extern _X_EXPORT pointer LookupIDByType(
     XID id,
-    RESTYPE rtype) X_DEPRECATED;
+    RESTYPE rtype) _X_DEPRECATED;
 
 /* replaced by dixLookupResourceByClass */
 extern _X_EXPORT pointer LookupIDByClass(
     XID id,
-    RESTYPE classes) X_DEPRECATED;
+    RESTYPE classes) _X_DEPRECATED;
 
 #endif /* RESOURCE_H */
 

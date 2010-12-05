@@ -96,8 +96,7 @@ extern _X_EXPORT int ImageText(ClientPtr /*client*/,
 
 extern _X_EXPORT int SetFontPath(ClientPtr /*client*/,
 		       int /*npaths*/,
-		       unsigned char * /*paths*/,
-		       int * /*error*/);
+		       unsigned char * /*paths*/);
 
 extern _X_EXPORT int SetDefaultFontPath(char * /*path*/);
 
@@ -142,10 +141,7 @@ extern _X_EXPORT void InitGlyphCaching(void);
 
 extern _X_EXPORT void SetGlyphCachingMode(int /*newmode*/);
 
-/*
- * libXfont/src/builtins/builtin.h
- */
-extern _X_EXPORT void BuiltinRegisterFpeFunctions(void);
+extern _X_EXPORT void register_fpe_functions(void);
 
 /*
  * libXfont stubs.

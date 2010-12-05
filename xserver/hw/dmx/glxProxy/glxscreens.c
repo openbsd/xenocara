@@ -135,7 +135,7 @@ static void CalcServerVersionAndExtensions( void )
    /*
     * read extensions strings of all back-end servers
     */
-   be_extensions = (char **)Xalloc( __glXNumActiveScreens * sizeof(char *) );
+   be_extensions = (char **)malloc( __glXNumActiveScreens * sizeof(char *) );
    if (!be_extensions)
       return;
 
@@ -158,7 +158,7 @@ static void CalcServerVersionAndExtensions( void )
       length = (int)reply.length;
       numbytes = (int)reply.n;
       slop = numbytes * __GLX_SIZE_INT8 & 3;
-      be_extensions[s] = (char *)Xalloc(numbytes);
+      be_extensions[s] = (char *)malloc(numbytes);
       if (!be_extensions[s]) {
 	 /* Throw data on the floor */
 	 _XEatData(dpy, length);
@@ -204,9 +204,9 @@ static void CalcServerVersionAndExtensions( void )
     * release temporary storage
     */
    for (s=0; s<__glXNumActiveScreens; s++) {
-      if (be_extensions[s]) Xfree(be_extensions[s]); 
+      free(be_extensions[s]);
    }
-   Xfree( be_extensions );
+   free( be_extensions );
 
    if (dmxGLXSwapGroupSupport) {
        if (!denied_extensions ||
@@ -244,7 +244,7 @@ void __glXScreenInit(GLint numscreens)
       // find the set of FBConfigs that are present on all back-end
       // servers - only those configs will be supported
        */
-      __glXFBConfigs = (__GLXFBConfig **)Xalloc( dmxScreen0->numFBConfigs * 
+      __glXFBConfigs = (__GLXFBConfig **)malloc( dmxScreen0->numFBConfigs *
 	                      (numscreens+1) * sizeof(__GLXFBConfig *) );
       __glXNumFBConfigs = 0;
    
@@ -254,7 +254,6 @@ void __glXScreenInit(GLint numscreens)
 	 if (numscreens > 1) {
 	    for (s=1; s<numscreens; s++) {
 	       DMXScreenInfo *dmxScreen = &dmxScreens[s];
-	       __GLXscreenInfo *glxScreen = &__glXActiveScreens[s];
 	  
 	       cfg = FindMatchingFBConfig( &dmxScreen0->fbconfigs[c],
 		                           dmxScreen->fbconfigs, 
@@ -282,7 +281,7 @@ void __glXScreenInit(GLint numscreens)
 	       __glXFBConfigs[ __glXNumFBConfigs * (numscreens+1) + 1 ] = 
 	               &dmxScreen0->fbconfigs[c];
 
-	       proxy_cfg = Xalloc( sizeof(__GLXFBConfig) );
+	       proxy_cfg = malloc( sizeof(__GLXFBConfig) );
 	       memcpy( proxy_cfg, cfg, sizeof(__GLXFBConfig) );
 	       proxy_cfg->id =  FakeClientID(0);
 	       /* visual will be associated later in __glXGetFBConfigs */
@@ -328,7 +327,7 @@ char *__glXGetServerString( unsigned int name )
 	 break;
    }
 
-   return( ret );
+   return ret;
 
 }
 
@@ -339,10 +338,10 @@ __GLXFBConfig *glxLookupFBConfig( GLXFBConfigID id )
 
    for (i=0, j=0; i<__glXNumFBConfigs; i++,j+=(__glXNumActiveScreens+1) ) {
       if ( __glXFBConfigs[j]->id == id) 
-	 return( __glXFBConfigs[j] );
+	 return __glXFBConfigs[j];
    }
 
-   return(NULL);
+   return NULL;
 }
 
 __GLXFBConfig *glxLookupFBConfigByVID( VisualID vid )
@@ -351,10 +350,10 @@ __GLXFBConfig *glxLookupFBConfigByVID( VisualID vid )
 
    for (i=0, j=0; i<__glXNumFBConfigs; i++,j+=(__glXNumActiveScreens+1) ) {
       if ( __glXFBConfigs[j]->associatedVisualId == vid) 
-	 return( __glXFBConfigs[j] );
+	 return __glXFBConfigs[j];
    }
 
-   return(NULL);
+   return NULL;
 }
 
 __GLXFBConfig *glxLookupBackEndFBConfig( GLXFBConfigID id, int screen )
@@ -364,10 +363,10 @@ __GLXFBConfig *glxLookupBackEndFBConfig( GLXFBConfigID id, int screen )
 
    for (i=0, j=0; i<__glXNumFBConfigs; i++,j+=(__glXNumActiveScreens+1) ) {
       if ( __glXFBConfigs[j]->id == id) 
-	 return( __glXFBConfigs[j+screen+1] );
+	 return __glXFBConfigs[j+screen+1];
    }
 
-   return(NULL);
+   return NULL;
 
 }
 

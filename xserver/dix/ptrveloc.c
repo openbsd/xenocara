@@ -83,8 +83,6 @@ GetAccelerationProfile(DeviceVelocityPtr vel, int profile_num);
 /* some int which is not a profile number */
 #define PROFILE_UNINITIALIZE (-100)
 
-/* number of properties for predictable acceleration */
-#define NPROPS_PREDICTABLE_ACCEL 4
 
 /**
  * Init struct so it should match the average case
@@ -113,7 +111,7 @@ InitVelocityData(DeviceVelocityPtr vel)
  */
 void
 FreeVelocityData(DeviceVelocityPtr vel){
-    xfree(vel->tracker);
+    free(vel->tracker);
     SetAccelerationProfile(vel, PROFILE_UNINITIALIZE);
 }
 
@@ -129,7 +127,7 @@ AccelerationDefaultCleanup(DeviceIntPtr dev)
             && dev->valuator->accelScheme.accelData != NULL){
         dev->valuator->accelScheme.AccelSchemeProc = NULL;
         FreeVelocityData(dev->valuator->accelScheme.accelData);
-        xfree(dev->valuator->accelScheme.accelData);
+        free(dev->valuator->accelScheme.accelData);
         dev->valuator->accelScheme.accelData = NULL;
         DeletePredictableAccelerationProperties(dev);
     }
@@ -323,26 +321,18 @@ AccelInitScaleProperty(DeviceIntPtr dev, DeviceVelocityPtr vel)
     return XIRegisterPropertyHandler(dev, AccelSetScaleProperty, NULL, NULL);
 }
 
-static int AccelPropHandlerPrivateKeyIndex;
-DevPrivateKey AccelPropHandlerPrivateKey = &AccelPropHandlerPrivateKeyIndex;
-
 BOOL
 InitializePredictableAccelerationProperties(DeviceIntPtr dev)
 {
     DeviceVelocityPtr  vel = GetDevicePredictableAccelData(dev);
-    long *prop_handlers;
 
     if(!vel)
 	return FALSE;
-    prop_handlers = xalloc(NPROPS_PREDICTABLE_ACCEL * sizeof(long));
 
-    prop_handlers[0] = AccelInitProfileProperty(dev, vel);
-    prop_handlers[1] = AccelInitDecelProperty(dev, vel);
-    prop_handlers[2] = AccelInitAdaptDecelProperty(dev, vel);
-    prop_handlers[3] = AccelInitScaleProperty(dev, vel);
-
-    dixSetPrivate(&dev->devPrivates, AccelPropHandlerPrivateKey,
-                  prop_handlers);
+    vel->prop_handlers[0] = AccelInitProfileProperty(dev, vel);
+    vel->prop_handlers[1] = AccelInitDecelProperty(dev, vel);
+    vel->prop_handlers[2] = AccelInitAdaptDecelProperty(dev, vel);
+    vel->prop_handlers[3] = AccelInitScaleProperty(dev, vel);
 
     return TRUE;
 }
@@ -350,8 +340,8 @@ InitializePredictableAccelerationProperties(DeviceIntPtr dev)
 BOOL
 DeletePredictableAccelerationProperties(DeviceIntPtr dev)
 {
+    DeviceVelocityPtr  vel;
     Atom prop;
-    long *prop_handlers;
     int i;
 
     prop = XIGetKnownProperty(ACCEL_PROP_VELOCITY_SCALING);
@@ -363,13 +353,10 @@ DeletePredictableAccelerationProperties(DeviceIntPtr dev)
     prop = XIGetKnownProperty(ACCEL_PROP_PROFILE_NUMBER);
     XIDeleteDeviceProperty(dev, prop, FALSE);
 
-    prop_handlers = dixLookupPrivate(&dev->devPrivates,
-                                     AccelPropHandlerPrivateKey);
-    dixSetPrivate(&dev->devPrivates, AccelPropHandlerPrivateKey, NULL);
-
-    for (i = 0; prop_handlers && i < NPROPS_PREDICTABLE_ACCEL; i++)
-        XIUnregisterPropertyHandler(dev, prop_handlers[i]);
-    xfree(prop_handlers);
+    vel = GetDevicePredictableAccelData(dev);
+    for (i = 0; vel && i < NPROPS_PREDICTABLE_ACCEL; i++)
+	if (vel->prop_handlers[i])
+	    XIUnregisterPropertyHandler(dev, vel->prop_handlers[i]);
 
     return TRUE;
 }
@@ -385,8 +372,8 @@ InitTrackers(DeviceVelocityPtr vel, int ntracker)
 	ErrorF("(dix ptracc) invalid number of trackers\n");
 	return;
     }
-    xfree(vel->tracker);
-    vel->tracker = (MotionTrackerPtr)xalloc(ntracker * sizeof(MotionTracker));
+    free(vel->tracker);
+    vel->tracker = (MotionTrackerPtr)malloc(ntracker * sizeof(MotionTracker));
     memset(vel->tracker, 0, ntracker * sizeof(MotionTracker));
     vel->num_tracker = ntracker;
 }
@@ -507,7 +494,7 @@ CalcTracker(DeviceVelocityPtr vel, int offset, int cur_t){
                       + vel->tracker[index].dy * vel->tracker[index].dy);
     int dtime = cur_t - vel->tracker[index].time;
     if(dtime > 0)
-	return (dist / dtime);
+	return dist / dtime;
     else
 	return 0;/* synonymous for NaN, since we're not C99 */
 }
@@ -967,7 +954,7 @@ SetAccelerationProfile(
 
     if(vel->profile_private != NULL){
         /* Here one could free old profile-private data */
-        xfree(vel->profile_private);
+        free(vel->profile_private);
         vel->profile_private = NULL;
     }
     /* Here one could init profile-private data */

@@ -92,7 +92,7 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
 	     int Len)
 {
 
-	return (0);
+	return 0;
 }
 
 #ifdef X_PRIVSEP

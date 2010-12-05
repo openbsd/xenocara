@@ -41,11 +41,7 @@
 #include "mi.h"
 #include "migc.h"
 #include "mibstore.h"
-#ifdef RENDER
 #include "picturestr.h"
-#else
-#include "picture.h"
-#endif
 
 #ifdef FB_ACCESS_WRAPPER
 
@@ -607,8 +603,12 @@ extern _X_EXPORT void fbSetBits (FbStip *bits, int stride, FbStip data);
     }							    \
 }
 
-extern _X_EXPORT DevPrivateKey fbGetGCPrivateKey(void);
-extern _X_EXPORT DevPrivateKey fbGetWinPrivateKey(void);
+extern _X_EXPORT DevPrivateKey
+fbGetGCPrivateKey (void);
+
+extern _X_EXPORT DevPrivateKey
+fbGetWinPrivateKey (void);
+
 extern _X_EXPORT const GCOps	fbGCOps;
 extern _X_EXPORT const GCFuncs	fbGCFuncs;
 
@@ -643,7 +643,8 @@ typedef void (*FinishWrapProcPtr)(DrawablePtr pDraw);
 
 
 #ifdef FB_SCREEN_PRIVATE
-extern _X_EXPORT DevPrivateKey fbGetScreenPrivateKey(void);
+extern _X_EXPORT DevPrivateKey
+fbGetScreenPrivateKey(void);
 
 /* private field of a screen */
 typedef struct {
@@ -656,7 +657,7 @@ typedef struct {
 } FbScreenPrivRec, *FbScreenPrivPtr;
 
 #define fbGetScreenPrivate(pScreen) ((FbScreenPrivPtr) \
-	dixLookupPrivate(&(pScreen)->devPrivates, fbGetScreenPrivateKey()))
+				     dixLookupPrivate(&(pScreen)->devPrivates, fbGetScreenPrivateKey()))
 #endif
 
 /* private field of GC */
@@ -671,7 +672,7 @@ typedef struct {
 } FbGCPrivRec, *FbGCPrivPtr;
 
 #define fbGetGCPrivate(pGC)	((FbGCPrivPtr)\
-	dixLookupPrivate(&(pGC)->devPrivates, fbGetGCPrivateKey()))
+				 dixLookupPrivate(&(pGC)->devPrivates, fbGetGCPrivateKey()))
 
 #define fbGetCompositeClip(pGC) ((pGC)->pCompositeClip)
 #define fbGetExpose(pGC)	((pGC)->fExpose)
@@ -680,7 +681,7 @@ typedef struct {
 
 #define fbGetScreenPixmap(s)	((PixmapPtr) (s)->devPrivate)
 #define fbGetWindowPixmap(pWin)	((PixmapPtr)\
-    dixLookupPrivate(&((WindowPtr)(pWin))->devPrivates, fbGetWinPrivateKey()))
+				 dixLookupPrivate(&((WindowPtr)(pWin))->devPrivates, fbGetWinPrivateKey()))
 
 #ifdef ROOTLESS
 #define __fbPixDrawableX(pPix)	((pPix)->drawable.x)
@@ -743,8 +744,7 @@ typedef struct {
  */
 
 #define fbWindowEnabled(pWin) \
-    REGION_NOTEMPTY((pWin)->drawable.pScreen, \
-		    &WindowTable[(pWin)->drawable.pScreen->myNum]->borderClip)
+    RegionNotEmpty(&(pWin)->drawable.pScreen->root->borderClip)
 
 #define fbDrawableEnabled(pDrawable) \
     ((pDrawable)->type == DRAWABLE_PIXMAP ? \
@@ -834,8 +834,6 @@ fb24_32ModifyPixmapHeader (PixmapPtr   pPixmap,
 /*
  * fballpriv.c
  */
-extern _X_EXPORT DevPrivateKey fbGetWinPrivateKey(void);
-
 extern _X_EXPORT Bool
 fbAllocatePrivates(ScreenPtr pScreen, DevPrivateKey *pGCIndex);
     

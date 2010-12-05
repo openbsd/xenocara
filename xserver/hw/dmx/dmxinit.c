@@ -53,9 +53,7 @@
 #include "dmxcb.h"
 #include "dmxprop.h"
 #include "dmxstat.h"
-#ifdef RENDER
 #include "dmxpict.h"
-#endif
 
 #include <X11/Xos.h>                /* For gettimeofday */
 #include "dixstruct.h"
@@ -406,7 +404,7 @@ Bool dmxGetVisualInfo(DMXScreenInfo *dmxScreen)
         dmxLogVisual(dmxScreen, &dmxScreen->beVisuals[i],
                      (i == dmxScreen->beDefVisualIndex));
 
-    return (dmxScreen->beDefVisualIndex >= 0);
+    return dmxScreen->beDefVisualIndex >= 0;
 }
 
 void dmxGetColormaps(DMXScreenInfo *dmxScreen)
@@ -414,7 +412,7 @@ void dmxGetColormaps(DMXScreenInfo *dmxScreen)
     int i;
 
     dmxScreen->beNumDefColormaps = dmxScreen->beNumVisuals;
-    dmxScreen->beDefColormaps = xalloc(dmxScreen->beNumDefColormaps *
+    dmxScreen->beDefColormaps = malloc(dmxScreen->beNumDefColormaps *
 				       sizeof(*dmxScreen->beDefColormaps));
 
     for (i = 0; i < dmxScreen->beNumDefColormaps; i++)
@@ -608,8 +606,8 @@ void InitOutput(ScreenInfo *pScreenInfo, int argc, char *argv[])
             dmxScreens[i].stat = NULL;
         }
         for (i = 0; i < dmxNumInputs; i++) dmxInputFree(&dmxInputs[i]);
-        if (dmxScreens) free(dmxScreens);
-        if (dmxInputs)  free(dmxInputs);
+        free(dmxScreens);
+        free(dmxInputs);
         dmxScreens    = NULL;
         dmxInputs     = NULL;
         dmxNumScreens = 0;
@@ -740,7 +738,7 @@ void InitOutput(ScreenInfo *pScreenInfo, int argc, char *argv[])
 		nconfigs = dmxScreen->numGlxVisuals;
 	    }
 
-	    configprivs = xalloc(nconfigs * sizeof(dmxGlxVisualPrivate*));
+	    configprivs = malloc(nconfigs * sizeof(dmxGlxVisualPrivate*));
 
 	    if (configs != NULL && configprivs != NULL) {
 
@@ -750,7 +748,7 @@ void InitOutput(ScreenInfo *pScreenInfo, int argc, char *argv[])
 		for (i = 0; i < nconfigs; i++) {
 
 		    configprivs[i] = (dmxGlxVisualPrivate *)
-			xalloc(sizeof(dmxGlxVisualPrivate));
+			malloc(sizeof(dmxGlxVisualPrivate));
 		    configprivs[i]->x_visual_depth = 0;
 		    configprivs[i]->x_visual_class = 0;
 
@@ -795,11 +793,9 @@ void InitOutput(ScreenInfo *pScreenInfo, int argc, char *argv[])
      */
     dmxInitFonts();
 
-#ifdef RENDER
     /* Initialize the render extension */
     if (!noRenderExtension)
 	dmxInitRender();
-#endif
 
     /* Initialized things that need timer hooks */
     dmxStatInit();
@@ -820,11 +816,11 @@ static void dmxSetDefaultFontPath(char *fp)
 	int len;
 
 	len = strlen(dmxFontPath);
-	dmxFontPath = xrealloc(dmxFontPath, len+fplen+1);
+	dmxFontPath = realloc(dmxFontPath, len+fplen+1);
 	dmxFontPath[len] = ',';
 	strncpy(&dmxFontPath[len+1], fp, fplen);
     } else {
-	dmxFontPath = xalloc(fplen);
+	dmxFontPath = malloc(fplen);
 	strncpy(dmxFontPath, fp, fplen);
     }
 

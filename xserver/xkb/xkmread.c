@@ -58,7 +58,7 @@ char *new;
    
    if (str==NULL)
 	return NULL;
-   new= xcalloc(strlen(str)+1,sizeof(char));
+   new= calloc(strlen(str)+1,sizeof(char));
    if (new)
 	strcpy(new,str);
    return new;
@@ -74,13 +74,13 @@ int	newCount= *newCountRtrn;
     if (oldPtr==NULL) {
 	if (newCount==0)
 	    return NULL;
-	oldPtr= xcalloc(newCount,elemSize);
+	oldPtr= calloc(newCount,elemSize);
     }
     else if (oldCount<newCount) {
-	oldPtr= xrealloc(oldPtr,newCount*elemSize);
+	oldPtr= realloc(oldPtr,newCount*elemSize);
 	if (oldPtr!=NULL) {
 	    char *tmp= (char *)oldPtr;
-	    bzero(&tmp[oldCount*elemSize],(newCount-oldCount)*elemSize);
+	    memset(&tmp[oldCount*elemSize], 0, (newCount-oldCount)*elemSize);
 	}
     }
     else if (newCount<oldCount) {
@@ -725,8 +725,8 @@ int			nRead=0;
 	    return -1;
 	}
 	nRead+= tmp*SIZEOF(xkmKeySymMapDesc);
-	bzero((char *)typeName,XkbNumKbdGroups*sizeof(Atom));
-	bzero((char *)type,XkbNumKbdGroups*sizeof(XkbKeyTypePtr));
+	memset((char *)typeName, 0, XkbNumKbdGroups*sizeof(Atom));
+	memset((char *)type, 0, XkbNumKbdGroups*sizeof(XkbKeyTypePtr));
 	if (wireMap.flags&XkmKeyHasTypes) {
 	    register int g;
 	    for (g=0;g<XkbNumKbdGroups;g++) {

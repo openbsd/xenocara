@@ -29,14 +29,11 @@
 
 static unsigned char	DamageReqCode;
 static int		DamageEventBase;
-static int		DamageErrorBase;
 static RESTYPE		DamageExtType;
 static RESTYPE		DamageExtWinType;
 
-static int DamageClientPrivateKeyIndex;
-static DevPrivateKey DamageClientPrivateKey = &DamageClientPrivateKeyIndex;
-
-#define prScreen	screenInfo.screens[0]
+static DevPrivateKeyRec DamageClientPrivateKeyRec;
+#define DamageClientPrivateKey (&DamageClientPrivateKeyRec)
 
 static void
 DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
@@ -50,8 +47,7 @@ DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
     UpdateCurrentTimeIf ();
     ev.type = DamageEventBase + XDamageNotify;
     ev.level = pDamageExt->level;
-    ev.sequenceNumber = pClient->sequence;
-    ev.drawable = pDrawable->id;
+    ev.drawable = pDamageExt->drawable;
     ev.damage = pDamageExt->id;
     ev.timestamp = currentTime.milliseconds;
     ev.geometry.x = pDrawable->x;
@@ -69,8 +65,7 @@ DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
 	    ev.area.y = pBoxes[i].y1;
 	    ev.area.width = pBoxes[i].x2 - pBoxes[i].x1;
 	    ev.area.height = pBoxes[i].y2 - pBoxes[i].y1;
-	    if (!pClient->clientGone)
-		WriteEventsToClient (pClient, 1, (xEvent *) &ev);
+	    WriteEventsToClient (pClient, 1, (xEvent *) &ev);
 	}
     }
     else
@@ -79,8 +74,7 @@ DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
 	ev.area.y = 0;
 	ev.area.width = pDrawable->width;
 	ev.area.height = pDrawable->height;
-	if (!pClient->clientGone)
-	    WriteEventsToClient (pClient, 1, (xEvent *) &ev);
+	WriteEventsToClient (pClient, 1, (xEvent *) &ev);
     }
     /* Composite extension marks clients with manual Subwindows as critical */
     if (pDamageClient->critical > 0)
@@ -98,10 +92,10 @@ DamageExtReport (DamagePtr pDamage, RegionPtr pRegion, void *closure)
     switch (pDamageExt->level) {
     case DamageReportRawRegion:
     case DamageReportDeltaRegion:
-	DamageExtNotify (pDamageExt, REGION_RECTS(pRegion), REGION_NUM_RECTS(pRegion));
+	DamageExtNotify (pDamageExt, RegionRects(pRegion), RegionNumRects(pRegion));
 	break;
     case DamageReportBoundingBox:
-	DamageExtNotify (pDamageExt, REGION_EXTENTS(prScreen, pRegion), 1);
+	DamageExtNotify (pDamageExt, RegionExtents(pRegion), 1);
 	break;
     case DamageReportNonEmpty:
 	DamageExtNotify (pDamageExt, NullBox, 0);
@@ -162,7 +156,7 @@ ProcDamageQueryVersion(ClientPtr client)
 	swapl(&rep.minorVersion, n);
     }
     WriteToClient(client, sizeof(xDamageQueryVersionReply), (char *)&rep);
-    return(client->noClientException);
+    return Success;
 }
 
 static int
@@ -201,10 +195,11 @@ ProcDamageCreate (ClientPtr client)
 	return BadValue;
     }
     
-    pDamageExt = xalloc (sizeof (DamageExtRec));
+    pDamageExt = malloc(sizeof (DamageExtRec));
     if (!pDamageExt)
 	return BadAlloc;
     pDamageExt->id = stuff->damage;
+    pDamageExt->drawable = stuff->drawable;
     pDamageExt->pDrawable = pDrawable;
     pDamageExt->level = level;
     pDamageExt->pClient = client;
@@ -216,12 +211,13 @@ ProcDamageCreate (ClientPtr client)
 					pDamageExt);
     if (!pDamageExt->pDamage)
     {
-	xfree (pDamageExt);
+	free(pDamageExt);
 	return BadAlloc;
     }
     if (!AddResource (stuff->damage, DamageExtType, (pointer) pDamageExt))
 	return BadAlloc;
 
+    DamageSetReportAfterOp (pDamageExt->pDamage, TRUE);
     DamageRegister (pDamageExt->pDrawable, pDamageExt->pDamage);
 
     if (pDrawable->type == DRAWABLE_WINDOW)
@@ -230,7 +226,7 @@ ProcDamageCreate (ClientPtr client)
 	DamageRegionAppend(pDrawable, pRegion);
     }
 
-    return (client->noClientException);
+    return Success;
 }
 
 static int
@@ -242,7 +238,7 @@ ProcDamageDestroy (ClientPtr client)
     REQUEST_SIZE_MATCH(xDamageDestroyReq);
     VERIFY_DAMAGEEXT(pDamageExt, stuff->damage, client, DixWriteAccess);
     FreeResource (stuff->damage, RT_NONE);
-    return (client->noClientException);
+    return Success;
 }
 
 static int
@@ -264,18 +260,18 @@ ProcDamageSubtract (ClientPtr client)
 	if (pRepair)
 	{
 	    if (pParts)
-		REGION_INTERSECT (prScreen, pParts, DamageRegion (pDamage), pRepair);
+		RegionIntersect(pParts, DamageRegion (pDamage), pRepair);
 	    if (DamageSubtract (pDamage, pRepair))
 		DamageExtReport (pDamage, DamageRegion (pDamage), (void *) pDamageExt);
 	}
 	else
 	{
 	    if (pParts)
-		REGION_COPY (prScreen, pParts, DamageRegion (pDamage));
+		RegionCopy(pParts, DamageRegion (pDamage));
 	    DamageEmpty (pDamage);
 	}
     }
-    return (client->noClientException);
+    return Success;
 }
 
 static int
@@ -296,11 +292,11 @@ ProcDamageAdd (ClientPtr client)
     /* The region is relative to the drawable origin, so translate it out to
      * screen coordinates like damage expects.
      */
-    REGION_TRANSLATE(pScreen, pRegion, pDrawable->x, pDrawable->y);
+    RegionTranslate(pRegion, pDrawable->x, pDrawable->y);
     DamageRegionAppend(pDrawable, pRegion);
-    REGION_TRANSLATE(pScreen, pRegion, -pDrawable->x, -pDrawable->y);
+    RegionTranslate(pRegion, -pDrawable->x, -pDrawable->y);
 
-    return (client->noClientException);
+    return Success;
 }
 
 /* Major version controls available requests */
@@ -456,7 +452,7 @@ FreeDamageExt (pointer value, XID did)
 	DamageUnregister (pDamageExt->pDrawable, pDamageExt->pDamage);
 	DamageDestroy (pDamageExt->pDamage);
     }
-    xfree (pDamageExt);
+    free(pDamageExt);
     return Success;
 }
 
@@ -505,8 +501,9 @@ DamageExtensionInit(void)
     if (!DamageExtWinType)
 	return;
 
-    if (!dixRequestPrivate(DamageClientPrivateKey, sizeof (DamageClientRec)))
+    if (!dixRegisterPrivateKey(&DamageClientPrivateKeyRec, PRIVATE_CLIENT, sizeof (DamageClientRec)))
 	return;
+
     if (!AddCallback (&ClientStateCallback, DamageClientCallback, 0))
 	return;
 
@@ -517,8 +514,8 @@ DamageExtensionInit(void)
     {
 	DamageReqCode = (unsigned char)extEntry->base;
 	DamageEventBase = extEntry->eventBase;
-	DamageErrorBase = extEntry->errorBase;
 	EventSwapVector[DamageEventBase + XDamageNotify] =
 			(EventSwapPtr) SDamageNotifyEvent;
+	SetResourceTypeErrorValue(DamageExtType, extEntry->errorBase + BadDamage);
     }
 }

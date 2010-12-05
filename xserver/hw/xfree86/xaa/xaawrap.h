@@ -32,7 +32,7 @@
 #define XAA_GC_OP_PROLOGUE_WITH_RETURN(pGC)\
     XAAGCPtr pGCPriv = (XAAGCPtr)dixLookupPrivate(&(pGC)->devPrivates, XAAGetGCKey()); \
     GCFuncs *oldFuncs = pGC->funcs;\
-    if(!REGION_NUM_RECTS(pGC->pCompositeClip)) return; \
+    if(!RegionNumRects(pGC->pCompositeClip)) return; \
     pGC->funcs = pGCPriv->wrapFuncs;\
     pGC->ops = pGCPriv->wrapOps
 
@@ -61,14 +61,12 @@
 #include <xorg-config.h>
 #endif
 
-#ifdef RENDER
 #define XAA_RENDER_PROLOGUE(pScreen,field)\
     (GetPictureScreen(pScreen)->field = \
      ((XAAScreenPtr)dixLookupPrivate(&(pScreen)->devPrivates, XAAGetScreenKey()))->field)
 
 #define XAA_RENDER_EPILOGUE(pScreen, field, wrapper)\
     (GetPictureScreen(pScreen)->field = wrapper)
-#endif
 
 /* This also works fine for drawables */
 

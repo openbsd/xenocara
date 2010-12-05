@@ -143,7 +143,7 @@ winSetupImageVideo (ScreenPtr pScreen)
 #endif
     XF86VideoAdaptorPtr adapt;
 
-    if (!(adapt = xcalloc (1, sizeof(XF86VideoAdaptorRec))))
+    if (!(adapt = calloc(1, sizeof(XF86VideoAdaptorRec))))
       return NULL;
 
     adapt->type = XvWindowMask | XvInputMask | XvImageMask;
@@ -185,7 +185,7 @@ winSetupImageVideo (ScreenPtr pScreen)
 
 #if 0
     /* gotta uninit this someplace */
-    REGION_NULL(pScreen, &pPriv->clip);
+    RegionNull(&pPriv->clip);
 #endif
 
 #if 0

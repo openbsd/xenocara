@@ -55,7 +55,7 @@ extern bool_t xdr_opaque_auth(XDR *, struct opaque_auth *);
 static enum auth_stat why;
 
 static char * 
-authdes_ezdecode(char *inmsg, int len)
+authdes_ezdecode(const char *inmsg, int len)
 {
     struct rpc_msg  msg;
     char            cred_area[MAX_AUTH_BYTES];
@@ -66,7 +66,7 @@ authdes_ezdecode(char *inmsg, int len)
     XDR             xdr;
     SVCXPRT         xprt;
 
-    temp_inmsg = xalloc(len);
+    temp_inmsg = malloc(len);
     memmove(temp_inmsg, inmsg, len);
 
     memset((char *)&msg, 0, sizeof(msg));
@@ -79,7 +79,7 @@ authdes_ezdecode(char *inmsg, int len)
     why = AUTH_FAILED; 
     xdrmem_create(&xdr, temp_inmsg, len, XDR_DECODE);
 
-    if ((r.rq_clntcred = xalloc(MAX_AUTH_BYTES)) == NULL)
+    if ((r.rq_clntcred = malloc(MAX_AUTH_BYTES)) == NULL)
         goto bad1;
     r.rq_xprt = &xprt;
 
@@ -106,7 +106,7 @@ authdes_ezdecode(char *inmsg, int len)
     return (((struct authdes_cred *) r.rq_clntcred)->adc_fullname.name); 
 
 bad2:
-    xfree(r.rq_clntcred);
+    free(r.rq_clntcred);
 bad1:
     return ((char *)0); /* ((struct authdes_cred *) NULL); */
 }
@@ -127,7 +127,7 @@ CheckNetName (
 static char rpc_error[MAXNETNAMELEN+50];
 
 _X_HIDDEN XID
-SecureRPCCheck (unsigned short data_length, char *data, 
+SecureRPCCheck (unsigned short data_length, const char *data,
     ClientPtr client, char **reason)
 {
     char *fullname;
@@ -160,7 +160,7 @@ SecureRPCInit (void)
 }
 
 _X_HIDDEN int
-SecureRPCAdd (unsigned short data_length, char *data, XID id)
+SecureRPCAdd (unsigned short data_length, const char *data, XID id)
 {
     if (data_length)
 	AddHost ((pointer) 0, FamilyNetname, data_length, data);
@@ -188,7 +188,7 @@ SecureRPCFromID (XID id, unsigned short *data_lenp, char **datap)
 }
 
 _X_HIDDEN int
-SecureRPCRemove (unsigned short data_length, char *data)
+SecureRPCRemove (unsigned short data_length, const char *data)
 {
     return 0;
 }

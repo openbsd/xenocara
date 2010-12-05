@@ -131,6 +131,7 @@ typedef struct _CompScreen {
      * three track changes to the offscreen storage
      * geometry
      */
+    ConfigNotifyProcPtr         ConfigNotify;
     MoveWindowProcPtr		MoveWindow;
     ResizeWindowProcPtr		ResizeWindow;
     ChangeBorderWidthProcPtr	ChangeBorderWidth;
@@ -161,9 +162,14 @@ typedef struct _CompScreen {
     
 } CompScreenRec, *CompScreenPtr;
 
-extern DevPrivateKey CompScreenPrivateKey;
-extern DevPrivateKey CompWindowPrivateKey;
-extern DevPrivateKey CompSubwindowsPrivateKey;
+extern DevPrivateKeyRec CompScreenPrivateKeyRec;
+#define CompScreenPrivateKey (&CompScreenPrivateKeyRec)
+
+extern DevPrivateKeyRec CompWindowPrivateKeyRec;
+#define CompWindowPrivateKey (&CompWindowPrivateKeyRec)
+
+extern DevPrivateKeyRec CompSubwindowsPrivateKeyRec;
+#define CompSubwindowsPrivateKey (&CompSubwindowsPrivateKeyRec)
 
 #define GetCompScreen(s) ((CompScreenPtr) \
     dixLookupPrivate(&(s)->devPrivates, CompScreenPrivateKey))
@@ -315,5 +321,9 @@ CompositeRealChildHead (WindowPtr pWin);
 
 int
 DeleteWindowNoInputDevices(pointer value, XID wid);
+
+int
+compConfigNotify(WindowPtr pWin, int x, int y, int w, int h,
+		 int bw, WindowPtr pSib);
 
 #endif /* _COMPINT_H_ */

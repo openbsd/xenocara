@@ -35,6 +35,7 @@
 #include <drm.h>
 #include <GL/gl.h>
 #include <GL/internal/dri_interface.h>
+#include <GL/glxtokens.h>
 
 #include <windowstr.h>
 #include <os.h>
@@ -241,7 +242,7 @@ __glXDRIdrawableDestroy(__GLXdrawable *drawable)
 
     __glXDrawableRelease(drawable);
 
-    xfree(private);
+    free(private);
 }
 
 static GLboolean
@@ -298,7 +299,7 @@ __glXDRIcontextDestroy(__GLXcontext *baseContext)
     __glXleaveServer(GL_FALSE);
 
     __glXContextDestroy(&context->base);
-    xfree(context);
+    free(context);
 }
 
 static int
@@ -467,7 +468,7 @@ nooverride:
 	pRegion = NULL;
     } else {
 	pRegion = DamageRegion(driDraw->pDamage);
-	if (REGION_NIL(pRegion))
+	if (RegionNil(pRegion))
 	    return Success;
     }
 
@@ -494,7 +495,7 @@ nooverride:
 	    unsigned pitch = PixmapBytePad(pixmap->drawable.width,
 					   pixmap->drawable.depth); 
 
-	    data = xalloc(pitch * pixmap->drawable.height);
+	    data = malloc(pitch * pixmap->drawable.height);
 
 	    __glXenterServer(GL_FALSE);
 	    pScreen->GetImage(&pixmap->drawable, 0 /*pixmap->drawable.x*/,
@@ -525,13 +526,13 @@ nooverride:
 			  type,
 			  data) );
 
-	xfree(data);
+	free(data);
     } else if (!override) {
         int i, numRects;
 	BoxPtr p;
 
-	numRects = REGION_NUM_RECTS (pRegion);
-	p = REGION_RECTS (pRegion);
+	numRects = RegionNumRects (pRegion);
+	p = RegionRects (pRegion);
 
 	CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_SKIP_PIXELS, 0) );
 	CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_SKIP_ROWS, 0) );
@@ -540,7 +541,7 @@ nooverride:
 	{
 	    unsigned pitch = PixmapBytePad(p[i].x2 - p[i].x1,
 					   pixmap->drawable.depth);
-	    void *data = xalloc(pitch * (p[i].y2 - p[i].y1));
+	    void *data = malloc(pitch * (p[i].y2 - p[i].y1));
 
 	    __glXenterServer(GL_FALSE);
 	    pScreen->GetImage(&pixmap->drawable, /*pixmap->drawable.x +*/ p[i].x1,
@@ -566,7 +567,7 @@ nooverride:
 				 type,
 				 data) );
 
-	    xfree(data);
+	    free(data);
 	}
     }
 
@@ -606,7 +607,7 @@ __glXDRIscreenDestroy(__GLXscreen *baseScreen)
 
     __glXScreenDestroy(baseScreen);
 
-    xfree(screen);
+    free(screen);
 }
 
 static __GLXcontext *
@@ -633,7 +634,7 @@ __glXDRIscreenCreateContext(__GLXscreen *baseScreen,
     if (baseShareContext && baseShareContext->isDirect)
         return NULL;
 
-    context = xcalloc(1, sizeof *context);
+    context = calloc(1, sizeof *context);
     if (context == NULL)
 	return NULL;
 
@@ -674,7 +675,7 @@ __glXDRIscreenCreateContext(__GLXscreen *baseScreen,
     	__glXenterServer(GL_FALSE);
 	retval = DRIDestroyContext(baseScreen->pScreen, context->hwContextID);
     	__glXleaveServer(GL_FALSE);
-	xfree(context);
+	free(context);
 	return NULL;
     }
 
@@ -696,13 +697,13 @@ __glXDRIscreenCreateDrawable(ClientPtr client,
     GLboolean retval;
     drm_drawable_t hwDrawable;
 
-    private = xcalloc(1, sizeof *private);
+    private = calloc(1, sizeof *private);
     if (private == NULL)
 	return NULL;
 
     if (!__glXDrawableInit(&private->base, screen,
 			   pDraw, type, glxDrawId, glxConfig)) {
-        xfree(private);
+        free(private);
 	return NULL;
     }
 
@@ -718,7 +719,7 @@ __glXDRIscreenCreateDrawable(ClientPtr client,
     __glXleaveServer(GL_FALSE);
 
     if (!retval) {
-    	xfree(private);
+        free(private);
     	return NULL;
     }
 
@@ -734,7 +735,7 @@ __glXDRIscreenCreateDrawable(ClientPtr client,
 	__glXenterServer(GL_FALSE);
 	DRIDestroyDrawable(screen->pScreen, serverClient, pDraw);
 	__glXleaveServer(GL_FALSE);
-	xfree(private);
+	free(private);
 	return NULL;
     }
 
@@ -771,7 +772,7 @@ getDrawableInfo(__DRIdrawable *driDrawable,
 
     if (retval && *numClipRects > 0) {
 	size = sizeof (drm_clip_rect_t) * *numClipRects;
-	*ppClipRects = xalloc (size);
+	*ppClipRects = malloc(size);
 
 	/* Clip cliprects to screen dimensions (redirected windows) */
 	if (*ppClipRects != NULL) {
@@ -791,7 +792,7 @@ getDrawableInfo(__DRIdrawable *driDrawable,
 
 	    if (*numClipRects != j) {
 		*numClipRects = j;
-		*ppClipRects = xrealloc (*ppClipRects,
+		*ppClipRects = realloc(*ppClipRects,
 					 sizeof (drm_clip_rect_t) *
 					 *numClipRects);
 	    }
@@ -805,7 +806,7 @@ getDrawableInfo(__DRIdrawable *driDrawable,
       
     if (retval && *numBackClipRects > 0) {
 	size = sizeof (drm_clip_rect_t) * *numBackClipRects;
-	*ppBackClipRects = xalloc (size);
+	*ppBackClipRects = malloc(size);
 	if (*ppBackClipRects != NULL)
 	    memcpy (*ppBackClipRects, pBackClipRects, size);
 	else
@@ -831,12 +832,12 @@ static void __glXReportDamage(__DRIdrawable *driDraw,
 
     __glXenterServer(GL_FALSE);
 
-    REGION_INIT(pDraw->pScreen, &region, (BoxPtr) rects, num_rects);
-    REGION_TRANSLATE(pScreen, &region, pDraw->x, pDraw->y);
+    RegionInit(&region, (BoxPtr) rects, num_rects);
+    RegionTranslate(&region, pDraw->x, pDraw->y);
     DamageRegionAppend(pDraw, &region);
     /* This is wrong, this needs a seperate function. */
     DamageRegionProcessPending(pDraw);
-    REGION_UNINIT(pDraw->pScreen, &region);
+    RegionUninit(&region);
 
     __glXleaveServer(GL_FALSE);
 }
@@ -865,12 +866,21 @@ static const char dri_driver_path[] = DRI_DRIVER_PATH;
 static Bool
 glxDRIEnterVT (int index, int flags)
 {
+    ScrnInfoPtr scrn = xf86Screens[index];
+    Bool	ret;
     __GLXDRIscreen *screen = (__GLXDRIscreen *) 
 	glxGetScreen(screenInfo.screens[index]);
 
     LogMessage(X_INFO, "AIGLX: Resuming AIGLX clients after VT switch\n");
 
-    if (!(*screen->enterVT) (index, flags))
+    scrn->EnterVT = screen->enterVT;
+
+    ret = scrn->EnterVT (index, flags);
+
+    screen->enterVT = scrn->EnterVT;
+    scrn->EnterVT = glxDRIEnterVT;
+
+    if (!ret)
 	return FALSE;
     
     glxResumeClients();
@@ -881,6 +891,7 @@ glxDRIEnterVT (int index, int flags)
 static void
 glxDRILeaveVT (int index, int flags)
 {
+    ScrnInfoPtr scrn = xf86Screens[index];
     __GLXDRIscreen *screen = (__GLXDRIscreen *)
 	glxGetScreen(screenInfo.screens[index]);
 
@@ -888,7 +899,10 @@ glxDRILeaveVT (int index, int flags)
 
     glxSuspendClients();
 
-    return (*screen->leaveVT) (index, flags);
+    scrn->LeaveVT = screen->leaveVT;
+    (*screen->leaveVT) (index, flags);
+    screen->leaveVT = scrn->LeaveVT;
+    scrn->LeaveVT = glxDRILeaveVT;
 }
 
 static void
@@ -941,9 +955,6 @@ initializeExtensions(__GLXDRIscreen *screen)
     }
 }
     
-extern __GLXconfig *
-glxConvertConfigs(const __DRIcoreExtension *core, const __DRIconfig **configs);
-
 static __GLXscreen *
 __glXDRIscreenProbe(ScreenPtr pScreen)
 {
@@ -979,7 +990,7 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
 	return NULL;
     }
 
-    screen = xcalloc(1, sizeof *screen);
+    screen = calloc(1, sizeof *screen);
     if (screen == NULL)
       return NULL;
 
@@ -1133,7 +1144,8 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
 	goto handle_error;
     }
 
-    screen->base.fbconfigs = glxConvertConfigs(screen->core, driConfigs);
+    screen->base.fbconfigs = glxConvertConfigs(screen->core,
+					       driConfigs, GLX_WINDOW_BIT);
 
     initializeExtensions(screen);
 
@@ -1149,7 +1161,7 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
     buffer_size = __glXGetExtensionString(screen->glx_enable_bits, NULL);
     if (buffer_size > 0) {
 	if (screen->base.GLXextensions != NULL) {
-	    xfree(screen->base.GLXextensions);
+	    free(screen->base.GLXextensions);
 	}
 
 	screen->base.GLXextensions = xnfalloc(buffer_size);
@@ -1184,7 +1196,7 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
     if (screen->driver)
         dlclose(screen->driver);
 
-    xfree(screen);
+    free(screen);
 
     LogMessage(X_ERROR, "AIGLX: reverting to software rendering\n");
 

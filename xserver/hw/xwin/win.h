@@ -183,10 +183,8 @@
 #include "fb.h"
 #include "rootless.h"
 
-#ifdef RENDER
 #include "mipict.h"
 #include "picturestr.h"
-#endif
 
 #ifdef RANDR
 #include "randrstr.h"
@@ -225,7 +223,7 @@ if (fDebugProcMsg) \
   int iLength; \
   pszTemp = Xprintf (str, ##__VA_ARGS__); \
   MessageBox (NULL, pszTemp, szFunctionName, MB_OK); \
-  xfree (pszTemp); \
+  free(pszTemp); \
 }
 #else
 #define DEBUG_MSG(str,...)
@@ -624,17 +622,23 @@ typedef struct {
  * Extern declares for general global variables
  */
 
-extern winScreenInfo		g_ScreenInfo[];
+extern winScreenInfo *		g_ScreenInfo;
 extern miPointerScreenFuncRec	g_winPointerCursorFuncs;
 extern DWORD			g_dwEvents;
 #ifdef HAS_DEVWINDOWS
 extern int			g_fdMessageQueue;
 #endif
-extern DevPrivateKey		g_iScreenPrivateKey;
-extern DevPrivateKey		g_iCmapPrivateKey;
-extern DevPrivateKey		g_iGCPrivateKey;
-extern DevPrivateKey		g_iPixmapPrivateKey;
-extern DevPrivateKey		g_iWindowPrivateKey;
+extern DevPrivateKeyRec		g_iScreenPrivateKeyRec;
+#define g_iScreenPrivateKey  	(&g_iScreenPrivateKeyRec)
+extern DevPrivateKeyRec		g_iCmapPrivateKeyRec;
+#define g_iCmapPrivateKey 	(&g_iCmapPrivateKeyRec)
+extern DevPrivateKeyRec		g_iGCPrivateKeyRec;
+#define g_iGCPrivateKey 	(&g_iGCPrivateKeyRec)
+extern DevPrivateKeyRec		g_iPixmapPrivateKeyRec;
+#define g_iPixmapPrivateKey 	(&g_iPixmapPrivateKeyRec)
+extern DevPrivateKeyRec		g_iWindowPrivateKeyRec;
+#define g_iWindowPrivateKey 	(&g_iWindowPrivateKeyRec)
+
 extern unsigned long		g_ulServerGeneration;
 extern DWORD			g_dwEnginesSupported;
 extern HINSTANCE		g_hInstance;
@@ -1206,7 +1210,7 @@ Bool
 winMapWindowRootless (WindowPtr pWindow);
 
 void
-winSetShapeRootless (WindowPtr pWindow);
+winSetShapeRootless (WindowPtr pWindow, int kind);
 
 
 /*
@@ -1228,7 +1232,7 @@ void
 winReshapeMultiWindow (WindowPtr pWin);
 
 void
-winSetShapeMultiWindow (WindowPtr pWindow);
+winSetShapeMultiWindow (WindowPtr pWindow, int kind);
 
 void
 winUpdateRgnMultiWindow (WindowPtr pWindow);
@@ -1451,6 +1455,12 @@ winWindowsWMExtensionInit (void);
 
 Bool
 winInitCursor (ScreenPtr pScreen);
+
+/*
+ * winprocarg.c
+ */
+void
+winInitializeScreens(int maxscreens);
 
 /*
  * END DDX and DIX Function Prototypes

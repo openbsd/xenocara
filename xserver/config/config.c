@@ -130,10 +130,10 @@ add_option(InputOption **options, const char *key, const char *value)
 
     for (; *options; options = &(*options)->next)
         ;
-    *options = xcalloc(sizeof(**options), 1);
+    *options = calloc(sizeof(**options), 1);
     if (!*options) /* Yeesh. */
         return;
-    (*options)->key = xstrdup(key);
-    (*options)->value = xstrdup(value);
+    (*options)->key = strdup(key);
+    (*options)->value = strdup(value);
     (*options)->next = NULL;
 }

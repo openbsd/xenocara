@@ -31,8 +31,6 @@
 
 #include "fb.h"
 
-#ifdef RENDER
-
 #include "picturestr.h"
 #include "mipict.h"
 #include "fbpict.h"
@@ -79,8 +77,8 @@ fbWalkCompositeRegion (CARD8 op,
 				   xMask, yMask, xDst, yDst, width, height))
         return;
     
-    n = REGION_NUM_RECTS (&region);
-    pbox = REGION_RECTS (&region);
+    n = RegionNumRects (&region);
+    pbox = RegionRects (&region);
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
@@ -140,7 +138,7 @@ fbWalkCompositeRegion (CARD8 op,
 	}
 	pbox++;
     }
-    REGION_UNINIT (pDst->pDrawable->pScreen, &region);
+    RegionUninit(&region);
 }
 
 void
@@ -202,8 +200,6 @@ fbCompositeGeneral (CARD8	op,
 			xSrc, ySrc, xMask, yMask, xDst, yDst,
 			width, height);
 }
-
-#endif /* RENDER */
 
 static pixman_image_t *
 create_solid_fill_image (PicturePtr pict)
@@ -336,8 +332,11 @@ create_bits_picture (PicturePtr pict,
     return image;
 }
 
+static pixman_image_t *
+image_from_pict_internal (PicturePtr pict, Bool has_clip, int *xoff, int *yoff, Bool is_alpha_map);
+
 static void
-set_image_properties (pixman_image_t *image, PicturePtr pict, Bool has_clip, int *xoff, int *yoff)
+set_image_properties (pixman_image_t *image, PicturePtr pict, Bool has_clip, int *xoff, int *yoff, Bool is_alpha_map)
 {
     pixman_repeat_t repeat;
     pixman_filter_t filter;
@@ -386,10 +385,13 @@ set_image_properties (pixman_image_t *image, PicturePtr pict, Bool has_clip, int
     
     pixman_image_set_repeat (image, repeat);
     
-    if (pict->alphaMap)
+    /* Fetch alpha map unless 'pict' is being used
+     * as the alpha map for this operation
+     */
+    if (pict->alphaMap && !is_alpha_map)
     {
 	int alpha_xoff, alpha_yoff;
-	pixman_image_t *alpha_map = image_from_pict (pict->alphaMap, FALSE, &alpha_xoff, &alpha_yoff);
+	pixman_image_t *alpha_map = image_from_pict_internal (pict->alphaMap, FALSE, &alpha_xoff, &alpha_yoff, TRUE);
 	
 	pixman_image_set_alpha_map (
 	    image, alpha_map, pict->alphaOrigin.x, pict->alphaOrigin.y);
@@ -421,8 +423,8 @@ set_image_properties (pixman_image_t *image, PicturePtr pict, Bool has_clip, int
     pixman_image_set_source_clipping (image, TRUE);
 }
 
-pixman_image_t *
-image_from_pict (PicturePtr pict, Bool has_clip, int *xoff, int *yoff)
+static pixman_image_t *
+image_from_pict_internal (PicturePtr pict, Bool has_clip, int *xoff, int *yoff, Bool is_alpha_map)
 {
     pixman_image_t *image = NULL;
 
@@ -456,9 +458,15 @@ image_from_pict (PicturePtr pict, Bool has_clip, int *xoff, int *yoff)
     }
     
     if (image)
-	set_image_properties (image, pict, has_clip, xoff, yoff);
+	set_image_properties (image, pict, has_clip, xoff, yoff, is_alpha_map);
     
     return image;
+}
+
+pixman_image_t *
+image_from_pict (PicturePtr pict, Bool has_clip, int *xoff, int *yoff)
+{
+    return image_from_pict_internal (pict, has_clip, xoff, yoff, FALSE);
 }
 
 void
@@ -472,8 +480,6 @@ Bool
 fbPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats)
 {
 
-#ifdef RENDER
-
     PictureScreenPtr    ps;
 
     if (!miPictureInit (pScreen, formats, nformats))
@@ -485,8 +491,6 @@ fbPictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats)
     ps->RasterizeTrapezoid = fbRasterizeTrapezoid;
     ps->AddTraps = fbAddTraps;
     ps->AddTriangles = fbAddTriangles;
-
-#endif /* RENDER */
 
     return TRUE;
 }

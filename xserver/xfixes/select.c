@@ -78,15 +78,13 @@ XFixesSelectionCallback (CallbackListPtr *callbacks, pointer data, pointer args)
     for (e = selectionEvents; e; e = e->next)
     {
 	if (e->selection == selection->selection && 
-	    (e->eventMask & eventMask) &&
-	    !e->pClient->clientGone)
+	    (e->eventMask & eventMask))
 	{
 	    xXFixesSelectionNotifyEvent	ev;
 
 	    memset(&ev, 0, sizeof(xXFixesSelectionNotifyEvent));
 	    ev.type = XFixesEventBase + XFixesSelectionNotify;
 	    ev.subtype = subtype;
-	    ev.sequenceNumber = e->pClient->sequence;
 	    ev.window = e->pWindow->drawable.id;
 	    if (subtype == XFixesSetSelectionOwnerNotify)
 		ev.owner = selection->window;
@@ -160,7 +158,7 @@ XFixesSelectSelectionInput (ClientPtr	pClient,
     }
     if (!e)
     {
-	e = (SelectionEventPtr) xalloc (sizeof (SelectionEventRec));
+	e = (SelectionEventPtr) malloc(sizeof (SelectionEventRec));
 	if (!e)
 	    return BadAlloc;
 
@@ -181,7 +179,7 @@ XFixesSelectSelectionInput (ClientPtr	pClient,
 	    if (!AddResource (pWindow->drawable.id, SelectionWindowType,
 			      (pointer) pWindow))
 	    {
-		xfree (e);
+		free(e);
 		return BadAlloc;
 	    }
 
@@ -213,7 +211,7 @@ ProcXFixesSelectSelectionInput (ClientPtr client)
     if (stuff->eventMask & ~SelectionAllEvents)
     {
 	client->errorValue = stuff->eventMask;
-	return( BadValue );
+	return BadValue;
     }
     return XFixesSelectSelectionInput (client, stuff->selection,
 				       pWin, stuff->eventMask);
@@ -256,7 +254,7 @@ SelectionFreeClient (pointer data, XID id)
 	if (e == old)
 	{
 	    *prev = e->next;
-	    xfree (e);
+	    free(e);
 	    CheckSelectionCallback ();
 	    break;
 	}

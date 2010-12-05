@@ -25,7 +25,7 @@
  * underlying datatypes instead of masks
  */
 
-#define isClipped(c,ul,lr)  ((((c) - (ul)) | ((lr) - (c))) & 0x80008000)
+#define isClipped(c,ul,lr)  (((c) | ((c) - (ul)) | ((lr) - (c))) & 0x80008000)
 
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
@@ -670,7 +670,7 @@ POLYLINE (DrawablePtr	pDrawable,
     int		    xoff = pDrawable->x;
     int		    yoff = pDrawable->y;
     unsigned int    bias = miGetZeroLineBias(pDrawable->pScreen);
-    BoxPtr	    pBox = REGION_EXTENTS (pDrawable->pScreen, fbGetCompositeClip (pGC));
+    BoxPtr	    pBox = RegionExtents(fbGetCompositeClip (pGC));
     
     FbBits	    *dst;
     int		    dstStride;
@@ -807,7 +807,7 @@ POLYSEGMENT (DrawablePtr    pDrawable,
     int		    xoff = pDrawable->x;
     int		    yoff = pDrawable->y;
     unsigned int    bias = miGetZeroLineBias(pDrawable->pScreen);
-    BoxPtr	    pBox = REGION_EXTENTS (pDrawable->pScreen, fbGetCompositeClip (pGC));
+    BoxPtr	    pBox = RegionExtents(fbGetCompositeClip (pGC));
     
     FbBits	    *dst;
     int		    dstStride;

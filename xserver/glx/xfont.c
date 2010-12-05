@@ -46,8 +46,6 @@
 #include <windowstr.h>
 #include <dixfontstr.h>
 
-extern XID clientErrorValue;	/* imported kludge from dix layer */
-
 /*
 ** Make a single GL bitmap from a single X glyph
 */
@@ -76,7 +74,7 @@ static int __glXMakeBitmapFromGlyph(FontPtr font, CharInfoPtr pci)
 	p = buf;
 	allocbuf = 0;
     } else {
-	p = (unsigned char *) xalloc(allocBytes);
+	p = (unsigned char *) malloc(allocBytes);
 	if (!p)
 	    return BadAlloc;
 	allocbuf = p;
@@ -99,9 +97,7 @@ static int __glXMakeBitmapFromGlyph(FontPtr font, CharInfoPtr pci)
 				  pci->metrics.characterWidth, 0, 
 				  allocbuf ? allocbuf : buf) );
 
-    if (allocbuf) {
-	xfree(allocbuf);
-    }
+    free(allocbuf);
     return Success;
 #undef __GL_CHAR_BUF_SIZE
 }
@@ -155,7 +151,6 @@ int __glXDisp_UseXFont(__GLXclientState *cl, GLbyte *pc)
     ClientPtr client = cl->client;
     xGLXUseXFontReq *req;
     FontPtr pFont;
-    GC *pGC;
     GLuint currentListIndex;
     __GLXcontext *cx;
     int error;
@@ -181,19 +176,9 @@ int __glXDisp_UseXFont(__GLXclientState *cl, GLbyte *pc)
     ** containing a font.
     */
 
-    error = dixLookupResourceByType((pointer *)&pFont,
-				    req->font, RT_FONT,
-				    client, DixReadAccess);
-    if (error != Success) {
-	error = dixLookupResourceByType((pointer *)&pGC,
-					req->font, RT_GC,
-					client, DixReadAccess);
-        if (error != Success) {
-	    client->errorValue = req->font;
-            return error == BadGC ? BadFont : error;
-	}
-	pFont = pGC->font;
-    }
+    error = dixLookupFontable(&pFont, req->font, client, DixReadAccess);
+    if (error != Success)
+	return error;
 
     return MakeBitmapsFromFont(pFont, req->first, req->count,
 				    req->listBase);

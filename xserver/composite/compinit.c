@@ -48,13 +48,9 @@
 #include "compint.h"
 #include "compositeext.h"
 
-static int CompScreenPrivateKeyIndex;
-DevPrivateKey CompScreenPrivateKey = &CompScreenPrivateKeyIndex;
-static int CompWindowPrivateKeyIndex;
-DevPrivateKey CompWindowPrivateKey = &CompWindowPrivateKeyIndex;
-static int CompSubwindowsPrivateKeyIndex;
-DevPrivateKey CompSubwindowsPrivateKey = &CompSubwindowsPrivateKeyIndex;
-
+DevPrivateKeyRec CompScreenPrivateKeyRec;
+DevPrivateKeyRec CompWindowPrivateKeyRec;
+DevPrivateKeyRec CompSubwindowsPrivateKeyRec;
 
 static Bool
 compCloseScreen (int index, ScreenPtr pScreen)
@@ -62,13 +58,14 @@ compCloseScreen (int index, ScreenPtr pScreen)
     CompScreenPtr   cs = GetCompScreen (pScreen);
     Bool	    ret;
 
-    xfree (cs->alternateVisuals);
+    free(cs->alternateVisuals);
 
     pScreen->CloseScreen = cs->CloseScreen;
     pScreen->BlockHandler = cs->BlockHandler;
     pScreen->InstallColormap = cs->InstallColormap;
     pScreen->ChangeWindowAttributes = cs->ChangeWindowAttributes;
     pScreen->ReparentWindow = cs->ReparentWindow;
+    pScreen->ConfigNotify = cs->ConfigNotify;
     pScreen->MoveWindow = cs->MoveWindow;
     pScreen->ResizeWindow = cs->ResizeWindow;
     pScreen->ChangeBorderWidth = cs->ChangeBorderWidth;
@@ -81,7 +78,7 @@ compCloseScreen (int index, ScreenPtr pScreen)
     pScreen->CopyWindow = cs->CopyWindow;
     pScreen->PositionWindow = cs->PositionWindow;
 
-    xfree (cs);
+    free(cs);
     dixSetPrivate(&pScreen->devPrivates, CompScreenPrivateKey, NULL);
     ret = (*pScreen->CloseScreen) (index, pScreen);
 
@@ -141,7 +138,7 @@ compScreenUpdate (ScreenPtr pScreen)
     compCheckTree (pScreen);
     if (cs->damaged)
     {
-	compWindowUpdate (WindowTable[pScreen->myNum]);
+	compWindowUpdate (pScreen->root);
 	cs->damaged = FALSE;
     }
 }
@@ -202,7 +199,7 @@ compRegisterAlternateVisuals (CompScreenPtr cs, VisualID *vids, int nVisuals)
 {
     VisualID *p;
 
-    p = xrealloc(cs->alternateVisuals,
+    p = realloc(cs->alternateVisuals,
 		 sizeof(VisualID) * (cs->numAlternateVisuals + nVisuals));
     if(p == NULL)
 	return FALSE;
@@ -321,9 +318,16 @@ compScreenInit (ScreenPtr pScreen)
 {
     CompScreenPtr   cs;
 
+    if (!dixRegisterPrivateKey(&CompScreenPrivateKeyRec, PRIVATE_SCREEN, 0))
+	return FALSE;
+    if (!dixRegisterPrivateKey(&CompWindowPrivateKeyRec, PRIVATE_WINDOW, 0))
+	return FALSE;
+    if (!dixRegisterPrivateKey(&CompSubwindowsPrivateKeyRec, PRIVATE_WINDOW, 0))
+	return FALSE;
+
     if (GetCompScreen (pScreen))
 	return TRUE;
-    cs = (CompScreenPtr) xalloc (sizeof (CompScreenRec));
+    cs = (CompScreenPtr) malloc(sizeof (CompScreenRec));
     if (!cs)
 	return FALSE;
 
@@ -337,7 +341,7 @@ compScreenInit (ScreenPtr pScreen)
 
     if (!compAddAlternateVisuals (pScreen, cs))
     {
-	xfree (cs);
+	free(cs);
 	return FALSE;
     }
 
@@ -361,6 +365,9 @@ compScreenInit (ScreenPtr pScreen)
 
     cs->ClipNotify = pScreen->ClipNotify;
     pScreen->ClipNotify = compClipNotify;
+
+    cs->ConfigNotify = pScreen->ConfigNotify;
+    pScreen->ConfigNotify = compConfigNotify;
 
     cs->MoveWindow = pScreen->MoveWindow;
     pScreen->MoveWindow = compMoveWindow;

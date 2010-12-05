@@ -49,6 +49,7 @@ SOFTWARE.
 #ifndef INPUTSTRUCT_H
 #define INPUTSTRUCT_H
 
+#include <pixman.h>
 #include "input.h"
 #include "window.h"
 #include "dixstruct.h"
@@ -477,6 +478,14 @@ typedef struct _SpriteInfoRec {
     DeviceIntPtr        paired;      /* The paired device. Keyboard if
                                         spriteOwner is TRUE, otherwise the
                                         pointer that owns the sprite. */ 
+
+    /* keep states for animated cursor */
+    struct {
+        CursorPtr       pCursor;
+        ScreenPtr       pScreen;
+        int             elt;
+        CARD32          time;
+    } anim;
 } SpriteInfoRec, *SpriteInfoPtr;
 
 /* device types */
@@ -514,8 +523,9 @@ typedef struct _DeviceIntRec {
     LedFeedbackPtr	leds;
     struct _XkbInterest *xkb_interest;
     char                *config_info; /* used by the hotplug layer */
+    ClassesPtr		unused_classes; /* for master devices */
+    int			saved_master_id;	/* for slaves while grabbed */
     PrivateRec		*devPrivates;
-    int			nPrivates;
     DeviceUnwrapProc    unwrapProc;
     SpriteInfoPtr       spriteInfo;
     union {
@@ -541,6 +551,12 @@ typedef struct _DeviceIntRec {
         XIPropertyPtr   properties;
         XIPropertyHandlerPtr handlers; /* NULL-terminated */
     } properties;
+
+    /* coordinate transformation matrix for absolute input devices */
+    struct pixman_f_transform transform;
+
+    /* XTest related master device id */
+    int xtest_master_id;
 } DeviceIntRec;
 
 typedef struct {

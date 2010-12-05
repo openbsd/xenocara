@@ -161,7 +161,6 @@ void
 OsInit(void)
 {
     static Bool been_here = FALSE;
-    static char* admpath = ADMPATH;
     static char* devnull = "/dev/null";
     char fname[PATH_MAX];
 
@@ -229,8 +228,8 @@ OsInit(void)
 	{
 	    FILE *err;
 
-	    if (strlen (display) + strlen (admpath) + 1 < sizeof fname)
-		snprintf (fname, sizeof(fname), admpath, display);
+	    if (strlen (display) + strlen (ADMPATH) + 1 < sizeof fname)
+		snprintf (fname, sizeof(fname), ADMPATH, display);
 	    else
 		strlcpy (fname, devnull, sizeof(fname));
 	    /*

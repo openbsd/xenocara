@@ -262,7 +262,7 @@ ephyrHostXVQueryAdaptors (EphyrHostXVAdaptorArray **a_adaptors)
 
     EPHYR_LOG ("enter\n") ;
 
-    result = Xcalloc (1, sizeof (EphyrHostXVAdaptorArray)) ;
+    result = calloc (1, sizeof (EphyrHostXVAdaptorArray)) ;
     if (!result)
         goto out ;
 
@@ -340,7 +340,7 @@ ephyrHostXVAdaptorGetVideoFormats (const EphyrHostXVAdaptor *a_this,
     EPHYR_RETURN_VAL_IF_FAIL (a_this, NULL) ;
 
     nb_formats = ((XvAdaptorInfo*)a_this)->num_formats ;
-    formats = Xcalloc (nb_formats, sizeof (EphyrHostVideoFormat)) ;
+    formats = calloc (nb_formats, sizeof (EphyrHostVideoFormat)) ;
     for (i=0; i < nb_formats; i++) {
         memset (&visual_info_template, 0, sizeof (visual_info_template)) ;
         visual_info_template.visualid =
@@ -380,7 +380,8 @@ ephyrHostXVAdaptorHasPutVideo (const EphyrHostXVAdaptor *a_this,
 {
     EPHYR_RETURN_VAL_IF_FAIL (a_this && a_result, FALSE) ;
 
-    if (((XvAdaptorInfo*)a_this)->type & XvVideoMask & XvInputMask)
+    if ((((XvAdaptorInfo*)a_this)->type & (XvVideoMask | XvInputMask)) ==
+		    (XvVideoMask | XvInputMask))
         *a_result = TRUE ;
     else
         *a_result = FALSE ;
@@ -391,7 +392,8 @@ Bool
 ephyrHostXVAdaptorHasGetVideo (const EphyrHostXVAdaptor *a_this,
                                Bool *a_result)
 {
-    if (((XvAdaptorInfo*)a_this)->type & XvVideoMask & XvOutputMask)
+    if ((((XvAdaptorInfo*)a_this)->type & (XvVideoMask | XvOutputMask)) ==
+		    (XvVideoMask | XvOutputMask))
         *a_result = TRUE ;
     else
         *a_result = FALSE ;
@@ -404,7 +406,8 @@ ephyrHostXVAdaptorHasPutStill (const EphyrHostXVAdaptor *a_this,
 {
     EPHYR_RETURN_VAL_IF_FAIL (a_this && a_result, FALSE) ;
 
-    if (((XvAdaptorInfo*)a_this)->type & XvStillMask && XvInputMask)
+    if ((((XvAdaptorInfo*)a_this)->type & (XvStillMask | XvInputMask)) ==
+		    (XvStillMask | XvInputMask))
         *a_result = TRUE ;
     else
         *a_result = FALSE ;
@@ -417,7 +420,8 @@ ephyrHostXVAdaptorHasGetStill (const EphyrHostXVAdaptor *a_this,
 {
     EPHYR_RETURN_VAL_IF_FAIL (a_this && a_result, FALSE) ;
 
-    if (((XvAdaptorInfo*)a_this)->type & XvStillMask && XvOutputMask)
+    if ((((XvAdaptorInfo*)a_this)->type & (XvStillMask | XvOutputMask)) ==
+		    (XvStillMask | XvOutputMask))
         *a_result = TRUE ;
     else
         *a_result = FALSE ;
@@ -430,7 +434,8 @@ ephyrHostXVAdaptorHasPutImage (const EphyrHostXVAdaptor *a_this,
 {
     EPHYR_RETURN_VAL_IF_FAIL (a_this && a_result, FALSE) ;
 
-    if (((XvAdaptorInfo*)a_this)->type & XvImageMask && XvInputMask)
+    if ((((XvAdaptorInfo*)a_this)->type & (XvImageMask | XvInputMask)) ==
+		    (XvImageMask | XvInputMask))
         *a_result = TRUE ;
     else
         *a_result = FALSE ;
@@ -454,7 +459,7 @@ ephyrHostXVQueryEncodings (int a_port_id,
                             &num_encodings,
                             &encoding_info) ;
     if (num_encodings && encoding_info) {
-        encodings = Xcalloc (num_encodings, sizeof (EphyrHostEncoding)) ;
+        encodings = calloc (num_encodings, sizeof (EphyrHostEncoding)) ;
         for (i=0; i<num_encodings; i++) {
             encodings[i].id = encoding_info[i].encoding_id ;
             encodings[i].name = strdup (encoding_info[i].name) ;
@@ -485,10 +490,10 @@ ephyrHostEncodingsDelete (EphyrHostEncoding *a_encodings,
     if (!a_encodings)
         return ;
     for (i=0; i < a_num_encodings; i++) {
-        xfree (a_encodings[i].name) ;
+        free(a_encodings[i].name) ;
         a_encodings[i].name = NULL ;
     }
-    xfree (a_encodings) ;
+    free(a_encodings) ;
 }
 
 void
@@ -831,10 +836,8 @@ out:
         XFreeGC (dpy, gc) ;
         gc = NULL ;
     }
-    if (rects) {
-        free (rects) ;
-        rects = NULL ;
-    }
+    free(rects);
+    rects = NULL;
     EPHYR_LOG ("leave\n") ;
     return is_ok ;
 }

@@ -62,9 +62,7 @@
 #include "globals.h"
 #include "scrnintstr.h"
 
-#ifdef RENDER
 #include "picturestr.h"
-#endif
 
 #ifdef GLXEXT
 #include <GL/glx.h>
@@ -233,7 +231,6 @@ typedef struct _DMXScreenInfo {
 
     SetShapeProcPtr                SetShape;
 
-#ifdef RENDER
     CreatePictureProcPtr           CreatePicture;
     DestroyPictureProcPtr          DestroyPicture;
     ChangePictureClipProcPtr       ChangePictureClip;
@@ -254,7 +251,6 @@ typedef struct _DMXScreenInfo {
     TrianglesProcPtr               Triangles;
     TriStripProcPtr                TriStrip;
     TriFanProcPtr                  TriFan;
-#endif
 } DMXScreenInfo;
 
 /* Global variables available to all Xserver/hw/dmx routines. */
@@ -355,7 +351,7 @@ do {									\
         
 #define MAXSCREENSFREE(o)                                               \
     do {                                                                \
-        if (o) free(o);                                                \
+        free(o);                                                \
         o = NULL;                                                       \
     } while (0)
 
@@ -367,5 +363,28 @@ do {									\
 #define MAXSCREENSCALLOC(o,m)           _MAXSCREENSALLOCF(o,MAXSCREENS*(m),0)
 #define MAXSCREENSCALLOC_FATAL(o,m)     _MAXSCREENSALLOCF(o,MAXSCREENS*(m),1)
 #endif
+
+extern DevPrivateKeyRec dmxGCPrivateKeyRec;
+#define dmxGCPrivateKey (&dmxGCPrivateKeyRec) /**< Private index for GCs       */
+
+extern DevPrivateKeyRec dmxWinPrivateKeyRec;
+#define dmxWinPrivateKey (&dmxWinPrivateKeyRec) /**< Private index for Windows   */
+
+extern DevPrivateKeyRec dmxPixPrivateKeyRec;
+#define dmxPixPrivateKey (&dmxPixPrivateKeyRec) /**< Private index for Pixmaps   */
+
+extern int dmxFontPrivateIndex;        /**< Private index for Fonts     */
+
+extern DevPrivateKeyRec dmxScreenPrivateKeyRec;
+#define dmxScreenPrivateKey (&dmxScreenPrivateKeyRec) /**< Private index for Screens   */
+
+extern DevPrivateKeyRec dmxColormapPrivateKeyRec;
+#define dmxColormapPrivateKey (&dmxColormapPrivateKeyRec) /**< Private index for Colormaps */
+
+extern DevPrivateKeyRec dmxPictPrivateKeyRec;
+#define dmxPictPrivateKey (&dmxPictPrivateKeyRec) /**< Private index for Picts     */
+
+extern DevPrivateKeyRec dmxGlyphSetPrivateKeyRec;
+#define dmxGlyphSetPrivateKey (&dmxGlyphSetPrivateKeyRec) /**< Private index for GlyphSets */
 
 #endif /* DMX_H */

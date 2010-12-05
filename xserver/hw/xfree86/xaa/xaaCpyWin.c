@@ -47,20 +47,20 @@ XAACopyWindow(
     	return;
     }
 
-    pwinRoot = WindowTable[pScreen->myNum];
+    pwinRoot = pScreen->root;
 
-    REGION_NULL(pScreen, &rgnDst);
+    RegionNull(&rgnDst);
 
     dx = ptOldOrg.x - pWin->drawable.x;
     dy = ptOldOrg.y - pWin->drawable.y;
-    REGION_TRANSLATE(pScreen, prgnSrc, -dx, -dy);
-    REGION_INTERSECT(pScreen, &rgnDst, &pWin->borderClip, prgnSrc);
+    RegionTranslate(prgnSrc, -dx, -dy);
+    RegionIntersect(&rgnDst, &pWin->borderClip, prgnSrc);
 
-    pbox = REGION_RECTS(&rgnDst);
-    nbox = REGION_NUM_RECTS(&rgnDst);
+    pbox = RegionRects(&rgnDst);
+    nbox = RegionNumRects(&rgnDst);
     if(!nbox || 
-      !(pptSrc = (DDXPointPtr )xalloc(nbox * sizeof(DDXPointRec)))) {
-	REGION_UNINIT(pScreen, &rgnDst);
+      !(pptSrc = (DDXPointPtr )malloc(nbox * sizeof(DDXPointRec)))) {
+	RegionUninit(&rgnDst);
 	return;
     }
     ppt = pptSrc;
@@ -77,6 +77,6 @@ XAACopyWindow(
     XAADoBitBlt((DrawablePtr)pwinRoot, (DrawablePtr)pwinRoot,
         		&(infoRec->ScratchGC), &rgnDst, pptSrc);
 
-    xfree(pptSrc);
-    REGION_UNINIT(pScreen, &rgnDst);
+    free(pptSrc);
+    RegionUninit(&rgnDst);
 }

@@ -48,6 +48,7 @@ SOFTWARE.
 #ifndef DIX_H
 #define DIX_H
 
+#include "callback.h"
 #include "gc.h"
 #include "window.h"
 #include "input.h"
@@ -82,7 +83,7 @@ SOFTWARE.
     if (!LegalNewID(id,client)) \
     {\
 	client->errorValue = id;\
-        return(BadIDChoice);\
+        return BadIDChoice;\
     }
 
 #define VALIDATE_DRAWABLE_AND_GC(drawID, pDraw, mode)\
@@ -94,7 +95,7 @@ SOFTWARE.
 	if (rc != Success)\
 	    return rc;\
 	if ((pGC->depth != pDraw->depth) || (pGC->pScreen != pDraw->pScreen))\
-	    return (BadMatch);\
+	    return BadMatch;\
     }\
     if (pGC->serialNumber != pDraw->serialNumber)\
 	ValidateGC(pDraw, pGC);
@@ -198,6 +199,12 @@ extern _X_EXPORT int dixLookupGC(
     ClientPtr client,
     Mask access_mode);
 
+extern _X_EXPORT int dixLookupFontable(
+    FontPtr *result,
+    XID id,
+    ClientPtr client,
+    Mask access_mode);
+
 extern _X_EXPORT int dixLookupClient(
     ClientPtr *result,
     XID id,
@@ -293,7 +300,7 @@ extern _X_EXPORT Bool ValidAtom(
 extern _X_EXPORT const char *NameForAtom(
     Atom /*atom*/);
 
-extern _X_EXPORT void AtomError(void);
+extern _X_EXPORT void AtomError(void) _X_NORETURN;
 
 extern _X_EXPORT void FreeAllAtoms(void);
 
@@ -512,36 +519,6 @@ ScreenRestructured (ScreenPtr pScreen);
 
 extern _X_EXPORT int ffs(int i);
 
-/*
- *  callback manager stuff
- */
-
-#ifndef _XTYPEDEF_CALLBACKLISTPTR
-typedef struct _CallbackList *CallbackListPtr; /* also in misc.h */
-#define _XTYPEDEF_CALLBACKLISTPTR
-#endif
-
-typedef void (*CallbackProcPtr) (
-    CallbackListPtr *, pointer, pointer);
-
-extern _X_EXPORT Bool AddCallback(
-    CallbackListPtr * /*pcbl*/,
-    CallbackProcPtr /*callback*/,
-    pointer /*data*/);
-
-extern _X_EXPORT Bool DeleteCallback(
-    CallbackListPtr * /*pcbl*/,
-    CallbackProcPtr /*callback*/,
-    pointer /*data*/);
-
-extern _X_EXPORT void CallCallbacks(
-    CallbackListPtr * /*pcbl*/,
-    pointer /*call_data*/);
-
-extern _X_EXPORT void DeleteCallbackList(
-    CallbackListPtr * /*pcbl*/);
-
-extern _X_EXPORT void InitCallbackManager(void);
 
 /*
  *  ServerGrabCallback stuff

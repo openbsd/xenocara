@@ -41,8 +41,6 @@
 #include <dix-config.h>
 #endif
 
-#include <pciaccess.h>
-
 #include "xf86str.h"
 #include "xf86Opt.h"
 #include <X11/Xfuncproto.h>
@@ -57,12 +55,18 @@
 extern _X_EXPORT int xf86DoConfigure;
 extern _X_EXPORT int xf86DoShowOptions;
 extern _X_EXPORT Bool xf86DoConfigurePass1;
-extern _X_EXPORT DevPrivateKey xf86ScreenKey;
-extern _X_EXPORT DevPrivateKey xf86CreateRootWindowKey;
-extern _X_EXPORT DevPrivateKey xf86PixmapKey;
+
+extern _X_EXPORT DevPrivateKeyRec xf86ScreenKeyRec;
+#define xf86ScreenKey (&xf86ScreenKeyRec)
+
+extern _X_EXPORT DevPrivateKeyRec xf86CreateRootWindowKeyRec;
+#define xf86CreateRootWindowKey (&xf86CreateRootWindowKeyRec)
+
+extern _X_EXPORT DevPrivateKeyRec xf86PixmapKeyRec;
+#define xf86PixmapKey (&xf86PixmapKeyRec)
+
 extern _X_EXPORT ScrnInfoPtr *xf86Screens;	/* List of pointers to ScrnInfoRecs */
 extern _X_EXPORT const unsigned char byte_reversed[256];
-extern _X_EXPORT Bool pciSlotClaimed;
 extern _X_EXPORT Bool fbSlotClaimed;
 #if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
 extern _X_EXPORT Bool sbusSlotClaimed;
@@ -91,22 +95,39 @@ extern _X_EXPORT Bool VTSwitchEnabled;	/* kbd driver */
 /* Function Prototypes */
 #ifndef _NO_XF86_PROTOTYPES
 
+/* PCI related */
+#include <pciaccess.h>
+extern _X_EXPORT Bool pciSlotClaimed;
+
+extern _X_EXPORT Bool xf86CheckPciSlot(const struct pci_device *);
+extern _X_EXPORT int xf86ClaimPciSlot(struct pci_device *, DriverPtr drvp,
+                                      int chipset, GDevPtr dev, Bool active);
+extern _X_EXPORT void xf86UnclaimPciSlot(struct pci_device *);
+extern _X_EXPORT Bool xf86ParsePciBusString(const char *busID, int *bus,
+                                            int *device, int *func);
+extern _X_EXPORT Bool xf86ComparePciBusString(const char *busID, int bus,
+                                              int device, int func);
+extern _X_EXPORT void xf86FormatPciBusNumber(int busnum, char *buffer);
+extern _X_EXPORT Bool xf86IsPrimaryPci(struct pci_device * pPci);
+extern _X_EXPORT Bool xf86CheckPciMemBase(struct pci_device * pPci,
+                                          memType base);
+extern _X_EXPORT struct pci_device * xf86GetPciInfoForEntity(int entityIndex);
+extern _X_EXPORT int xf86MatchPciInstances(const char *driverName,
+        int vendorID, SymTabPtr chipsets, PciChipsets *PCIchipsets,
+        GDevPtr *devList, int numDevs, DriverPtr drvp, int **foundEntities);
+extern _X_EXPORT ScrnInfoPtr xf86ConfigPciEntity(ScrnInfoPtr pScrn,
+        int scrnFlag, int entityIndex,PciChipsets *p_chip, void *dummy,
+        EntityProc init, EntityProc enter, EntityProc leave, pointer private);
+/* Obsolete! don't use */
+extern _X_EXPORT Bool xf86ConfigActivePciEntity(ScrnInfoPtr pScrn,
+        int entityIndex,PciChipsets *p_chip, void *dummy, EntityProc init,
+        EntityProc enter, EntityProc leave, pointer private);
+
 /* xf86Bus.c */
 
-extern _X_EXPORT Bool xf86CheckPciSlot( const struct pci_device * );
-extern _X_EXPORT int xf86ClaimPciSlot( struct pci_device *, DriverPtr drvp,
-		     int chipset, GDevPtr dev, Bool active);
-extern _X_EXPORT void xf86UnclaimPciSlot(struct pci_device *);
-extern _X_EXPORT Bool xf86ParsePciBusString(const char *busID, int *bus, int *device,
-			   int *func);
-extern _X_EXPORT Bool xf86ComparePciBusString(const char *busID, int bus, int device, int func);
-extern _X_EXPORT void xf86FormatPciBusNumber(int busnum, char *buffer);
 extern _X_EXPORT int  xf86GetFbInfoForScreen(int scrnIndex);
 extern _X_EXPORT int xf86ClaimFbSlot(DriverPtr drvp, int chipset, GDevPtr dev, Bool active);
 extern _X_EXPORT int xf86ClaimNoSlot(DriverPtr drvp, int chipset, GDevPtr dev, Bool active);
-extern _X_EXPORT void xf86EnableAccess(ScrnInfoPtr pScrn);
-extern _X_EXPORT Bool xf86IsPrimaryPci(struct pci_device * pPci);
-/* new RAC */
 extern _X_EXPORT Bool xf86DriverHasEntities(DriverPtr drvp);
 extern _X_EXPORT void xf86AddEntityToScreen(ScrnInfoPtr pScrn, int entityIndex);
 extern _X_EXPORT void xf86SetEntityInstanceForScreen(ScrnInfoPtr pScrn, int entityIndex,
@@ -115,10 +136,8 @@ extern _X_EXPORT int xf86GetNumEntityInstances(int entityIndex);
 extern _X_EXPORT GDevPtr xf86GetDevFromEntity(int entityIndex, int instance);
 extern _X_EXPORT void xf86RemoveEntityFromScreen(ScrnInfoPtr pScrn, int entityIndex);
 extern _X_EXPORT EntityInfoPtr xf86GetEntityInfo(int entityIndex);
-extern _X_EXPORT struct pci_device * xf86GetPciInfoForEntity(int entityIndex);
 extern _X_EXPORT Bool xf86SetEntityFuncs(int entityIndex, EntityProc init,
 			EntityProc enter, EntityProc leave, pointer);
-extern _X_EXPORT Bool xf86CheckPciMemBase(struct pci_device * pPci, memType base);
 extern _X_EXPORT Bool xf86IsEntityPrimary(int entityIndex);
 extern _X_EXPORT void xf86EnterServerState(xf86State state);
 extern _X_EXPORT ScrnInfoPtr xf86FindScreenForEntity(int entityIndex);
@@ -210,24 +229,20 @@ extern _X_EXPORT void xf86EnableDisableFBAccess(int scrnIndex, Bool enable);
 extern _X_EXPORT void xf86VDrvMsgVerb(int scrnIndex, MessageType type, int verb,
 		     const char *format, va_list args);
 extern _X_EXPORT void xf86DrvMsgVerb(int scrnIndex, MessageType type, int verb,
-		    const char *format, ...) _printf_attribute(4,5);
+		    const char *format, ...) _X_ATTRIBUTE_PRINTF(4,5);
 extern _X_EXPORT void xf86DrvMsg(int scrnIndex, MessageType type, const char *format, ...)
-		_printf_attribute(3,4);
+		_X_ATTRIBUTE_PRINTF(3,4);
 extern _X_EXPORT void xf86MsgVerb(MessageType type, int verb, const char *format, ...)
-		_printf_attribute(3,4);
-extern _X_EXPORT void xf86Msg(MessageType type, const char *format, ...) _printf_attribute(2,3);
-extern _X_EXPORT void xf86ErrorFVerb(int verb, const char *format, ...) _printf_attribute(2,3);
-extern _X_EXPORT void xf86ErrorF(const char *format, ...) _printf_attribute(1,2);
+		_X_ATTRIBUTE_PRINTF(3,4);
+extern _X_EXPORT void xf86Msg(MessageType type, const char *format, ...) _X_ATTRIBUTE_PRINTF(2,3);
+extern _X_EXPORT void xf86ErrorFVerb(int verb, const char *format, ...) _X_ATTRIBUTE_PRINTF(2,3);
+extern _X_EXPORT void xf86ErrorF(const char *format, ...) _X_ATTRIBUTE_PRINTF(1,2);
 extern _X_EXPORT const char *xf86TokenToString(SymTabPtr table, int token);
 extern _X_EXPORT int xf86StringToToken(SymTabPtr table, const char *string);
 extern _X_EXPORT void xf86ShowClocks(ScrnInfoPtr scrp, MessageType from);
 extern _X_EXPORT void xf86PrintChipsets(const char *drvname, const char *drvmsg,
 		       SymTabPtr chips);
 extern _X_EXPORT int xf86MatchDevice(const char *drivername, GDevPtr **driversectlist);
-extern _X_EXPORT int xf86MatchPciInstances(const char *driverName, int vendorID,
-		      SymTabPtr chipsets, PciChipsets *PCIchipsets,
-		      GDevPtr *devList, int numDevs, DriverPtr drvp,
-		      int **foundEntities);
 extern _X_EXPORT void xf86GetClocks(ScrnInfoPtr pScrn, int num,
 		   Bool (*ClockFunc)(ScrnInfoPtr, int),
 		   void (*ProtectRegs)(ScrnInfoPtr, Bool),
@@ -266,22 +281,10 @@ extern _X_EXPORT void xf86SetSilkenMouse(ScreenPtr pScreen);
 extern _X_EXPORT pointer xf86FindXvOptions(int scrnIndex, int adapt_index, char *port_name,
 			  char **adaptor_name, pointer *adaptor_options);
 extern _X_EXPORT void xf86GetOS(const char **name, int *major, int *minor, int *teeny);
-extern _X_EXPORT ScrnInfoPtr xf86ConfigPciEntity(ScrnInfoPtr pScrn, int scrnFlag,
-				int entityIndex,PciChipsets *p_chip,
-				void *dummy, EntityProc init,
-				EntityProc enter, EntityProc leave,
-				pointer private);
 extern _X_EXPORT ScrnInfoPtr xf86ConfigFbEntity(ScrnInfoPtr pScrn, int scrnFlag,
 			       int entityIndex, EntityProc init,
 			       EntityProc enter, EntityProc leave,
 			       pointer private);
-
-/* Obsolete! don't use */
-extern _X_EXPORT Bool xf86ConfigActivePciEntity(ScrnInfoPtr pScrn,
-                               int entityIndex,PciChipsets *p_chip,
-                               void *dummy, EntityProc init,
-                               EntityProc enter, EntityProc leave,
-                               pointer private);
 
 extern _X_EXPORT Bool xf86IsScreenPrimary(int scrnIndex);
 extern _X_EXPORT int  xf86RegisterRootWindowProperty(int ScrnIndex, Atom	property, Atom type,

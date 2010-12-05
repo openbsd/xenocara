@@ -102,7 +102,6 @@ XkbSendLegacyMapNotify(DeviceIntPtr kbd, CARD16 xkb_event, CARD16 changed,
         if (!XIShouldNotify(clients[i], kbd))
             continue;
 
-        core_mn.u.u.sequenceNumber = clients[i]->sequence;
         if (keymap_changed) {
             core_mn.u.mappingNotify.request = MappingKeyboard;
 
@@ -1041,8 +1040,7 @@ XkbInterestPtr	interest;
 	    return ((interest->resource==id)?interest:NULL);
 	interest = interest->next;
     }
-    interest = xalloc(sizeof(XkbInterestRec));
-    bzero(interest,sizeof(XkbInterestRec));
+    interest = calloc(1, sizeof(XkbInterestRec));
     if (interest) {
 	interest->dev = dev;
 	interest->client = client;
@@ -1086,7 +1084,7 @@ ClientPtr	client = NULL;
 	    autoCtrls= interest->autoCtrls;
 	    autoValues= interest->autoCtrlValues;
 	    client= interest->client;
-	    xfree(interest);
+	    free(interest);
 	    found= TRUE;
 	}
 	while ((!found)&&(interest->next)) {
@@ -1096,7 +1094,7 @@ ClientPtr	client = NULL;
 		autoCtrls= victim->autoCtrls;
 		autoValues= victim->autoCtrlValues;
 		client= victim->client;
-		xfree(victim);
+		free(victim);
 		found= TRUE;
 	    }
 	    interest = interest->next;

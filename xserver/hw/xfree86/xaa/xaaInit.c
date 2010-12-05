@@ -42,12 +42,12 @@ static int  XAASetDGAMode(int index, int num, DGADevicePtr devRet);
 static void XAAEnableDisableFBAccess (int index, Bool enable);
 static Bool XAAChangeWindowAttributes (WindowPtr pWin, unsigned long mask);
 
-static int XAAScreenKeyIndex;
-static DevPrivateKey XAAScreenKey = &XAAScreenKeyIndex;
-static int XAAGCKeyIndex;
-static DevPrivateKey XAAGCKey = &XAAGCKeyIndex;
-static int XAAPixmapKeyIndex;
-static DevPrivateKey XAAPixmapKey = &XAAPixmapKeyIndex;
+static DevPrivateKeyRec XAAScreenKeyRec;
+#define XAAScreenKey (&XAAScreenKeyRec)
+static DevPrivateKeyRec XAAGCKeyRec;
+#define XAAGCKey (&XAAGCKeyRec)
+static DevPrivateKeyRec XAAPixmapKeyRec;
+#define XAAPixmapKey (&XAAPixmapKeyRec)
 
 DevPrivateKey XAAGetScreenKey(void) {
     return XAAScreenKey;
@@ -69,7 +69,7 @@ XAACreateInfoRec(void)
 {
     XAAInfoRecPtr infoRec;
 
-    infoRec = xcalloc(1, sizeof(XAAInfoRec));
+    infoRec = calloc(1, sizeof(XAAInfoRec));
     if(infoRec)
 	infoRec->CachePixelGranularity = -1;
 
@@ -84,13 +84,11 @@ XAADestroyInfoRec(XAAInfoRecPtr infoRec)
     if(infoRec->ClosePixmapCache)
 	(*infoRec->ClosePixmapCache)(infoRec->pScrn->pScreen);
    
-    if(infoRec->PreAllocMem)
-	xfree(infoRec->PreAllocMem);
+    free(infoRec->PreAllocMem);
 
-    if(infoRec->PixmapCachePrivate)
-	xfree(infoRec->PixmapCachePrivate);
+    free(infoRec->PixmapCachePrivate);
 
-    xfree(infoRec);
+    free(infoRec);
 }
 
 
@@ -100,21 +98,22 @@ XAAInit(ScreenPtr pScreen, XAAInfoRecPtr infoRec)
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     XAAScreenPtr pScreenPriv;
     int i;
-#ifdef RENDER
     PictureScreenPtr    ps = GetPictureScreenIfSet(pScreen);
-#endif
 
     /* Return successfully if no acceleration wanted */
     if (!infoRec)
 	return TRUE;
     
-    if (!dixRequestPrivate(XAAGCKey, sizeof(XAAGCRec)))
+    if (!dixRegisterPrivateKey(&XAAGCKeyRec, PRIVATE_GC, sizeof(XAAGCRec)))
 	return FALSE;
 
-    if (!dixRequestPrivate(XAAPixmapKey, sizeof(XAAPixmapRec)))
+    if (!dixRegisterPrivateKey(&XAAPixmapKeyRec, PRIVATE_PIXMAP, sizeof(XAAPixmapRec)))
 	return FALSE;
 
-    if (!(pScreenPriv = xalloc(sizeof(XAAScreenRec))))
+    if (!dixRegisterPrivateKey(&XAAScreenKeyRec, PRIVATE_SCREEN, 0))
+	return FALSE;
+
+    if (!(pScreenPriv = malloc(sizeof(XAAScreenRec))))
 	return FALSE;
 
     dixSetPrivate(&pScreen->devPrivates, XAAScreenKey, pScreenPriv);
@@ -173,7 +172,6 @@ XAAInit(ScreenPtr pScreen, XAAInfoRecPtr infoRec)
     pScrn->EnableDisableFBAccess = XAAEnableDisableFBAccess;
 
     pScreenPriv->WindowExposures = pScreen->WindowExposures;
-#ifdef RENDER
     if (ps)
     {
 	pScreenPriv->Composite = ps->Composite;
@@ -181,11 +179,10 @@ XAAInit(ScreenPtr pScreen, XAAInfoRecPtr infoRec)
 	pScreenPriv->Glyphs = ps->Glyphs;
 	ps->Glyphs = XAAGlyphs;
     }
-#endif    
     if(pScrn->overlayFlags & OVERLAY_8_32_PLANAR)
         XAASetupOverlay8_32Planar(pScreen);
 
-    infoRec->PreAllocMem = xalloc(MAX_PREALLOC_MEM);
+    infoRec->PreAllocMem = malloc(MAX_PREALLOC_MEM);
     if(infoRec->PreAllocMem)
     	infoRec->PreAllocSize = MAX_PREALLOC_MEM;
 
@@ -232,7 +229,7 @@ XAACloseScreen (int i, ScreenPtr pScreen)
 
     /* We leave it up to the client to free the XAAInfoRec */
 
-    xfree ((pointer) pScreenPriv);
+    free((pointer) pScreenPriv);
 
     return (*pScreen->CloseScreen) (i, pScreen);
 }
@@ -376,7 +373,7 @@ XAACreatePixmap(ScreenPtr pScreen, int w, int h, int depth, unsigned usage_hint)
 	    goto BAILOUT;
 	}
 
-        if(!(pLink = xalloc(sizeof(PixmapLink)))) {
+        if(!(pLink = malloc(sizeof(PixmapLink)))) {
             xf86FreeOffscreenArea(area);
 	    goto BAILOUT;
 	}
@@ -386,7 +383,7 @@ XAACreatePixmap(ScreenPtr pScreen, int w, int h, int depth, unsigned usage_hint)
 	XAA_SCREEN_EPILOGUE (pScreen, CreatePixmap, XAACreatePixmap);
 
 	if (!pPix) {
-	    xfree (pLink);
+	    free(pLink);
             xf86FreeOffscreenArea(area);
 	    goto BAILOUT;
 	}
@@ -440,7 +437,7 @@ XAADestroyPixmap(PixmapPtr pPix)
     if(pPix->refcnt == 1) {
         if(pPriv->flags & OFFSCREEN) {
 	    if(pPriv->flags & DGA_PIXMAP)
-	        xfree(pPriv->offscreenArea);
+	        free(pPriv->offscreenArea);
             else {
 	        FBAreaPtr area = pPriv->offscreenArea;
 		PixmapLinkPtr pLink = infoRec->OffscreenPixmaps;
@@ -458,12 +455,12 @@ XAADestroyPixmap(PixmapPtr pPix)
 
 	        xf86FreeOffscreenArea(area);
 	        pPriv->offscreenArea = NULL;
-	        xfree(pLink);
+	        free(pLink);
 	    } 
         }
 
         if(pPriv->freeData) { /* pixmaps that were once in video ram */
-	    xfree(pPix->devPrivate.ptr);
+	    free(pPix->devPrivate.ptr);
 	    pPix->devPrivate.ptr = NULL;
 	}
     }
@@ -511,16 +508,23 @@ XAAChangeWindowAttributes (WindowPtr pWin, unsigned long mask)
 static Bool 
 XAAEnterVT(int index, int flags)
 {
+    ScrnInfoPtr pScrn = xf86Screens[index];
+    Bool ret;
     ScreenPtr pScreen = screenInfo.screens[index];
     XAAScreenPtr pScreenPriv = 
 	(XAAScreenPtr)dixLookupPrivate(&pScreen->devPrivates, XAAScreenKey);
 
-    return((*pScreenPriv->EnterVT)(index, flags));
+    pScrn->EnterVT = pScreenPriv->EnterVT;
+    ret = ((*pScreenPriv->EnterVT)(index, flags));
+    pScreenPriv->EnterVT = pScrn->EnterVT;
+    pScrn->EnterVT = XAAEnterVT;
+    return ret;
 }
 
 static void 
 XAALeaveVT(int index, int flags)
 {
+    ScrnInfoPtr pScrn = xf86Screens[index];
     ScreenPtr pScreen = screenInfo.screens[index];
     XAAScreenPtr pScreenPriv = 
 	(XAAScreenPtr)dixLookupPrivate(&pScreen->devPrivates, XAAScreenKey);
@@ -531,7 +535,10 @@ XAALeaveVT(int index, int flags)
         infoRec->NeedToSync = FALSE;
     }
 
+    pScrn->LeaveVT = pScreenPriv->LeaveVT;
     (*pScreenPriv->LeaveVT)(index, flags);
+    pScreenPriv->LeaveVT = pScrn->LeaveVT;
+    pScrn->LeaveVT = XAALeaveVT;
 }
 
 typedef struct {
@@ -555,7 +562,7 @@ XAASetDGAMode(int index, int num, DGADevicePtr devRet)
 	infoRec->UsingPixmapCache = state->UsingPixmapCache;	
 	infoRec->CanDoColor8x8 = state->CanDoColor8x8;	
 	infoRec->CanDoMono8x8 = state->CanDoMono8x8;
-	xfree(infoRec->dgaSaves);
+	free(infoRec->dgaSaves);
 	infoRec->dgaSaves = NULL;
     }
 
@@ -566,7 +573,7 @@ XAASetDGAMode(int index, int num, DGADevicePtr devRet)
 	XAAPixmapPtr pixPriv = XAA_GET_PIXMAP_PRIVATE(devRet->pPix);
 	FBAreaPtr area;
 
-	if((area = xalloc(sizeof(FBArea)))) {
+	if((area = malloc(sizeof(FBArea)))) {
 	    area->pScreen = pScreen;
 	    area->box.x1 = 0;
 	    area->box.x2 = 0;
@@ -581,7 +588,7 @@ XAASetDGAMode(int index, int num, DGADevicePtr devRet)
 	    pixPriv->offscreenArea = area;
 
 	    if(!infoRec->dgaSaves) { /* save pixmap cache state */
-		SavedCacheStatePtr state = xalloc(sizeof(SavedCacheState));
+		SavedCacheStatePtr state = malloc(sizeof(SavedCacheState));
 	
 		state->UsingPixmapCache = infoRec->UsingPixmapCache;	
 		state->CanDoColor8x8 = infoRec->CanDoColor8x8;	

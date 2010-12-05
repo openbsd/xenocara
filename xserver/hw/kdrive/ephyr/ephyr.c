@@ -38,6 +38,8 @@
 #include "ephyrglxext.h"
 #endif /* XF86DRI */
 
+#include "xkbsrv.h"
+
 extern int KdTsPhyScreen;
 #ifdef GLXEXT
 extern Bool noGlxVisualInit;
@@ -73,13 +75,13 @@ ephyrCardInit (KdCardInfo *card)
 {
   EphyrPriv	*priv;
   
-  priv = (EphyrPriv *) xalloc (sizeof (EphyrPriv));
+  priv = (EphyrPriv *) malloc(sizeof (EphyrPriv));
   if (!priv)
     return FALSE;
   
   if (!ephyrInitialize (card, priv))
     {
-      xfree (priv);
+      free(priv);
       return FALSE;
     }
   card->driver = priv;
@@ -185,7 +187,7 @@ ephyrScreenInit (KdScreenInfo *screen)
 {
   EphyrScrPriv *scrpriv;
   
-  scrpriv = xcalloc (1, sizeof (EphyrScrPriv));
+  scrpriv = calloc(1, sizeof (EphyrScrPriv));
 
   if (!scrpriv)
     return FALSE;
@@ -195,7 +197,7 @@ ephyrScreenInit (KdScreenInfo *screen)
   if (!ephyrScreenInitialize (screen, scrpriv))
     {
       screen->driver = 0;
-      xfree (scrpriv);
+      free(scrpriv);
       return FALSE;
     }
 
@@ -343,13 +345,13 @@ ephyrInternalDamageRedisplay (ScreenPtr pScreen)
 
   pRegion = DamageRegion (scrpriv->pDamage);
 
-  if (REGION_NOTEMPTY (pScreen, pRegion))
+  if (RegionNotEmpty(pRegion))
     {
       int           nbox;
       BoxPtr        pbox;
 
-      nbox = REGION_NUM_RECTS (pRegion);
-      pbox = REGION_RECTS (pRegion);
+      nbox = RegionNumRects (pRegion);
+      pbox = RegionRects (pRegion);
 
       while (nbox--)
         {
@@ -737,7 +739,7 @@ ephyrScreenFini (KdScreenInfo *screen)
     if (scrpriv->shadow) {
         KdShadowFbFree (screen);
     }
-    xfree(screen->driver);
+    free(screen->driver);
     screen->driver = NULL;
 }
 
@@ -748,75 +750,49 @@ ephyrScreenFini (KdScreenInfo *screen)
 void
 ephyrUpdateModifierState(unsigned int state)
 {
-#if 0
-  DeviceIntPtr pkeydev;
-  KeyClassPtr  keyc;
-  int          i;
-  CARD8        mask;
 
-  pkeydev = inputInfo.keyboard;
-
-  if (!pkeydev)
-    return;
+  DeviceIntPtr pDev = inputInfo.keyboard;
+  KeyClassPtr keyc = pDev->key;
+  int i;
+  CARD8 mask;
+  int xkb_state;
   
-/* This is pretty broken.
- *
- * What should happen is that focus out should do as a VT switch does in
- * traditional servers: fake releases for all keys (and buttons too, come
- * to think of it) currently down.  Then, on focus in, get the state from
- * the host, and fake keypresses for everything currently down.
- *
- * So I'm leaving this broken for a little while.  Sorry, folks.
- *
- * -daniels
- */
+  if (!pDev)
+      return;
 
-  keyc = pkeydev->key;
-  
+  xkb_state = XkbStateFieldFromRec(&pDev->key->xkbInfo->state);
   state = state & 0xff;
-  
-  if (keyc->state == state)
+
+  if (xkb_state == state)
     return;
-  
-  for (i = 0, mask = 1; i < 8; i++, mask <<= 1) 
-    {
-      int key;
       
-      /* Modifier is down, but shouldn't be   */
-      if ((keyc->state & mask) && !(state & mask)) 
-	{
-	  int count = keyc->modifierKeyCount[i];
-	  
-	  for (key = 0; key < MAP_LENGTH; key++)
-	    if (keyc->xkbInfo->desc->map->modmap[key] & mask)
-	      {
-		int bit;
-		BYTE *kptr;
-		
-		kptr = &keyc->down[key >> 3];
-		bit = 1 << (key & 7);
-		
-		if (*kptr & bit && ephyrKbd &&
-                    ((EphyrKbdPrivate *)ephyrKbd->driverPrivate)->enabled)
-		  KdEnqueueKeyboardEvent(ephyrKbd, key, TRUE); /* release */
-		
-		if (--count == 0)
-		  break;
-	      }
-	}
-       
-      /* Modifier shoud be down, but isn't   */
-      if (!(keyc->state & mask) && (state & mask))
-	for (key = 0; key < MAP_LENGTH; key++)
-	  if (keyc->xkbInfo->desc->map->modmap[key] & mask)
-	    {
-              if (keyc->xkbInfo->desc->map->modmap[key] & mask && ephyrKbd &&
-                  ((EphyrKbdPrivate *)ephyrKbd->driverPrivate)->enabled)
-	          KdEnqueueKeyboardEvent(ephyrKbd, key, FALSE); /* press */
-	      break;
-	    }
+  for (i = 0, mask = 1; i < 8; i++, mask <<= 1) {
+    int key;
+
+    /* Modifier is down, but shouldn't be
+     */
+    if ((xkb_state & mask) && !(state & mask)) {
+      int count = keyc->modifierKeyCount[i];
+
+      for (key = 0; key < MAP_LENGTH; key++)
+        if (keyc->xkbInfo->desc->map->modmap[key] & mask) {
+          if (key_is_down(pDev, key, KEY_PROCESSED))
+	        KdEnqueueKeyboardEvent (ephyrKbd, key, TRUE);
+
+          if (--count == 0)
+            break;
+        }
     }
-#endif
+
+    /* Modifier shoud be down, but isn't
+     */
+    if (!(xkb_state & mask) && (state & mask))
+      for (key = 0; key < MAP_LENGTH; key++)
+        if (keyc->xkbInfo->desc->map->modmap[key] & mask) {
+	        KdEnqueueKeyboardEvent (ephyrKbd, key, FALSE);
+          break;
+        }
+  }
 }
 
 static void
@@ -897,10 +873,10 @@ ephyrExposePairedWindow (int a_remote)
 	return;
     }
     screen = pair->local->drawable.pScreen;
-    REGION_NULL (screen, &reg);
-    REGION_COPY (screen, &reg, &pair->local->clipList);
+    RegionNull(&reg);
+    RegionCopy(&reg, &pair->local->clipList);
     screen->WindowExposures (pair->local, &reg, NullRegion);
-    REGION_UNINIT (screen, &reg);
+    RegionUninit(&reg);
 }
 #endif /* XF86DRI */
 
@@ -998,6 +974,7 @@ ephyrPoll(void)
           if (!ephyrKbd ||
               !((EphyrKbdPrivate *)ephyrKbd->driverPrivate)->enabled)
               continue;
+	  ephyrUpdateModifierState(ev.key_state);
 	  KdEnqueueKeyboardEvent (ephyrKbd, ev.data.key_up.scancode, TRUE);
 	  break;
 
@@ -1023,7 +1000,7 @@ void
 ephyrCardFini (KdCardInfo *card)
 {
   EphyrPriv	*priv = card->driver;
-  xfree (priv);
+  free(priv);
 }
 
 void
@@ -1075,11 +1052,11 @@ static Status
 MouseInit (KdPointerInfo *pi)
 {
     pi->driverPrivate = (EphyrPointerPrivate *)
-                         xcalloc(sizeof(EphyrPointerPrivate), 1);
+                         calloc(sizeof(EphyrPointerPrivate), 1);
     ((EphyrPointerPrivate *)pi->driverPrivate)->enabled = FALSE;
     pi->nAxes = 3;
     pi->nButtons = 32;
-    xfree(pi->name);
+    free(pi->name);
     pi->name = strdup("Xephyr virtual mouse");
     ephyrMouse = pi;
     return Success;
@@ -1121,7 +1098,7 @@ static Status
 EphyrKeyboardInit (KdKeyboardInfo *ki)
 {
   ki->driverPrivate = (EphyrKbdPrivate *)
-                       xcalloc(sizeof(EphyrKbdPrivate), 1);
+                       calloc(sizeof(EphyrKbdPrivate), 1);
   hostx_load_keymap();
   if (!ephyrKeySyms.map) {
       ErrorF("Couldn't load keymap from host\n");
@@ -1129,7 +1106,7 @@ EphyrKeyboardInit (KdKeyboardInfo *ki)
   }
   ki->minScanCode = ephyrKeySyms.minKeyCode;
   ki->maxScanCode = ephyrKeySyms.maxKeyCode;
-  xfree(ki->name);
+  free(ki->name);
   ki->name = strdup("Xephyr virtual keyboard");
   ephyrKbd = ki;
   return Success;

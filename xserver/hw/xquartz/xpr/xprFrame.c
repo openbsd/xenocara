@@ -163,15 +163,15 @@ xprCreateFrame(RootlessWindowPtr pFrame, ScreenPtr pScreen,
 
     if (pShape != NULL)
     {
-        wc.shape_nrects = REGION_NUM_RECTS(pShape);
-        wc.shape_rects = REGION_RECTS(pShape);
+        wc.shape_nrects = RegionNumRects(pShape);
+        wc.shape_rects = RegionRects(pShape);
         wc.shape_tx = wc.shape_ty = 0;
         mask |= XP_SHAPE;
     }
 
     pFrame->level = !IsRoot (pWin) ? AppleWMWindowLevelNormal : AppleWMNumWindowLevels;
 
-    if(quartzEnableRootless)
+    if(XQuartzIsRootless)
         wc.window_level = normal_window_levels[pFrame->level];
     else
         wc.window_level = rooted_window_levels[pFrame->level];
@@ -206,13 +206,16 @@ xprCreateFrame(RootlessWindowPtr pFrame, ScreenPtr pScreen,
 static void
 xprDestroyFrame(RootlessFrameID wid)
 {
+    xp_error err;
     TA_SERVER();
     
     pthread_mutex_lock(&window_hash_mutex);
     x_hash_table_remove(window_hash, wid);
     pthread_mutex_unlock(&window_hash_mutex);
 
-    xp_destroy_window(x_cvt_vptr_to_uint(wid));
+    err = xp_destroy_window(x_cvt_vptr_to_uint(wid));
+    if (err != Success)
+        FatalError("Could not destroy window %i.", (int)x_cvt_vptr_to_uint(wid));
 }
 
 
@@ -282,7 +285,7 @@ static void xprRestackFrame(RootlessFrameID wid, RootlessFrameID nextWid) {
         RootlessWindowRec *winRec = x_hash_table_lookup(window_hash, wid, NULL);
 
         if(winRec) {
-            if(quartzEnableRootless)
+            if(XQuartzIsRootless)
                 wc.window_level = normal_window_levels[winRec->level];
             else
                 wc.window_level = rooted_window_levels[winRec->level];
@@ -306,8 +309,8 @@ xprReshapeFrame(RootlessFrameID wid, RegionPtr pShape)
     
     if (pShape != NULL)
     {
-        wc.shape_nrects = REGION_NUM_RECTS(pShape);
-        wc.shape_rects = REGION_RECTS(pShape);
+        wc.shape_nrects = RegionNumRects(pShape);
+        wc.shape_rects = RegionRects(pShape);
     }
     else
     {
@@ -366,9 +369,12 @@ xprStartDrawing(RootlessFrameID wid, char **pixelData, int *bytesPerRow)
 static void
 xprStopDrawing(RootlessFrameID wid, Bool flush)
 {
+    xp_error err;
     TA_SERVER();
     
-    xp_unlock_window(x_cvt_vptr_to_uint(wid), flush);
+    err = xp_unlock_window(x_cvt_vptr_to_uint(wid), flush);
+    if(err != Success)
+        FatalError("Could not unlock window %i after drawing.", (int)x_cvt_vptr_to_uint(wid));
 }
 
 
@@ -576,7 +582,7 @@ xprHideWindows(Bool hide)
     
     for (screen = 0; screen < screenInfo.numScreens; screen++) {
         RootlessFrameID prevWid = NULL;
-        pRoot = WindowTable[screenInfo.screens[screen]->myNum];
+        pRoot = screenInfo.screens[screen]->root;
 
         for (pWin = pRoot->firstChild; pWin; pWin = pWin->nextSib) {
             RootlessWindowRec *winRec = WINREC(pWin);

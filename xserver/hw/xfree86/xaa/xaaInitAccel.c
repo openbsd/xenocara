@@ -1251,7 +1251,6 @@ XAAInitAccel(ScreenPtr pScreen, XAAInfoRecPtr infoRec)
 	   infoRec->ComputeDash = XAAComputeDash;
     }
 
-#ifdef RENDER
     {
 	Bool haveTexture = infoRec->CPUToScreenTextureFormats &&
 			   infoRec->CPUToScreenTextureDstFormats &&
@@ -1271,7 +1270,6 @@ XAAInitAccel(ScreenPtr pScreen, XAAInfoRecPtr infoRec)
             infoRec->Glyphs = XAADoGlyphs;
         }	
     }
-#endif
 
     /************  Validation Functions **************/
 
@@ -1478,7 +1476,7 @@ XAAInitAccel(ScreenPtr pScreen, XAAInfoRecPtr infoRec)
 	    infoRec->CachePixelGranularity *= 2;
     }
 
-    xfree(options);
+    free(options);
 
     if(!infoRec->CacheTile && infoRec->WritePixmapToCache)
 	infoRec->CacheTile = XAACacheTile;

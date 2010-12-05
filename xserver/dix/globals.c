@@ -83,8 +83,6 @@ ClientPtr  serverClient;
 int  currentMaxClients;   /* current size of clients array */
 long maxBigRequestSize = MAX_BIG_REQUEST_SIZE;
 
-WindowPtr WindowTable[MAXSCREENS];
-
 unsigned long globalSerialNumber = 0;
 unsigned long serverGeneration = 0;
 
@@ -129,8 +127,6 @@ Bool party_like_its_1989 = TRUE;
 #endif
 Bool whiteRoot = FALSE;
 
-int cursorScreenDevPriv[MAXSCREENS];
-
 TimeStamp currentTime;
 TimeStamp lastDeviceEventTime;
 
@@ -141,5 +137,3 @@ char *display;
 char *ConnectionInfo;
 
 CARD32 TimeOutValue = DEFAULT_TIMEOUT * MILLI_PER_SECOND;
-
-DDXPointRec dixScreenOrigins[MAXSCREENS];

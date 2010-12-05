@@ -62,7 +62,7 @@ int __glXDisp_FeedbackBuffer(__GLXclientState *cl, GLbyte *pc)
     size = *(GLsizei *)(pc+0);
     type = *(GLenum *)(pc+4);
     if (cx->feedbackBufSize < size) {
-	cx->feedbackBuf = (GLfloat *) xrealloc(cx->feedbackBuf,
+	cx->feedbackBuf = (GLfloat *) realloc(cx->feedbackBuf,
 						   (size_t)size 
 						   * __GLX_SIZE_FLOAT32);
 	if (!cx->feedbackBuf) {
@@ -90,7 +90,7 @@ int __glXDisp_SelectBuffer(__GLXclientState *cl, GLbyte *pc)
     pc += __GLX_SINGLE_HDR_SIZE;
     size = *(GLsizei *)(pc+0);
     if (cx->selectBufSize < size) {
-	cx->selectBuf = (GLuint *) xrealloc(cx->selectBuf,
+	cx->selectBuf = (GLuint *) realloc(cx->selectBuf,
 						(size_t) size 
 						* __GLX_SIZE_CARD32);
 	if (!cx->selectBuf) {
@@ -261,21 +261,19 @@ char *__glXcombine_strings(const char *cext_string, const char *sext_string)
    clen = strlen(cext_string);
    slen = strlen(sext_string);
    if (clen > slen) {
-	combo_string = (char *) xalloc(slen + 2);
-	s1 = (char *) xalloc(slen + 2);
+	combo_string = (char *) malloc(slen + 2);
+	s1 = (char *) malloc(slen + 2);
 	if (s1) strcpy(s1, sext_string);
 	s2 = cext_string;
    } else {
-	combo_string = (char *) xalloc(clen + 2);
-	s1 = (char *) xalloc(clen + 2);
+	combo_string = (char *) malloc(clen + 2);
+	s1 = (char *) malloc(clen + 2);
 	if (s1) strcpy(s1, cext_string);
 	s2 = sext_string;
    }
    if (!combo_string || !s1) {
-	if (combo_string)
-	    xfree(combo_string);
-	if (s1)
-	    xfree(s1);
+	free(combo_string);
+	free(s1);
 	return NULL;
    }
    combo_string[0] = '\0';
@@ -302,7 +300,7 @@ char *__glXcombine_strings(const char *cext_string, const char *sext_string)
 	/* Get next extension token */
 	token = strtok( NULL, SEPARATOR);
    }
-   xfree(s1);
+   free(s1);
    return combo_string;
 }
 
@@ -349,14 +347,14 @@ int DoGetString(__GLXclientState *cl, GLbyte *pc, GLboolean need_swap)
 	buf = __glXcombine_strings(buf1,
 				      cx->pGlxScreen->GLextensions);
 	if (buf1 != NULL) {
-	    xfree(buf1);
+	    free(buf1);
 	}
 	string = buf;
     }
     else if ( name == GL_VERSION ) {
 	if ( atof( string ) > atof( GLServerVersion ) ) {
 	    size_t len =  strlen( string ) + strlen( GLServerVersion ) + 4;
-	    buf = xalloc( len );
+	    buf = malloc( len );
 	    if ( buf == NULL ) {
 		string = GLServerVersion;
 	    }
@@ -381,7 +379,7 @@ int DoGetString(__GLXclientState *cl, GLbyte *pc, GLboolean need_swap)
     __GLX_SEND_HEADER();
     WriteToClient(client, length, (char *) string); 
     if (buf != NULL)
-	xfree(buf);
+	free(buf);
 
     return Success;
 }

@@ -377,9 +377,7 @@ Mask PropagateMask[MAXDEVICES];
  *
  */
 
-static int XIClientPrivateKeyIndex;
-DevPrivateKey XIClientPrivateKey = &XIClientPrivateKeyIndex;
-
+DevPrivateKeyRec XIClientPrivateKeyRec;
 
 /*****************************************************************
  *
@@ -1156,7 +1154,7 @@ void
 AssignTypeAndName(DeviceIntPtr dev, Atom type, char *name)
 {
     dev->xinput_type = type;
-    dev->name = (char *)xalloc(strlen(name) + 1);
+    dev->name = (char *)malloc(strlen(name) + 1);
     strcpy(dev->name, name);
 }
 
@@ -1256,7 +1254,7 @@ XInputExtensionInit(void)
         SERVER_XI_MINOR_VERSION,
     };
 
-    if (!dixRequestPrivate(XIClientPrivateKey, sizeof(XIClientRec)))
+    if (!dixRegisterPrivateKey(&XIClientPrivateKeyRec, PRIVATE_CLIENT, sizeof(XIClientRec)))
         FatalError("Cannot request private for XI.\n");
 
     if (!AddCallback(&ClientStateCallback, XIClientCallback, 0))

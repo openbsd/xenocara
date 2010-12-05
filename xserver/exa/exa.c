@@ -37,12 +37,9 @@
 #include "exa_priv.h"
 #include "exa.h"
 
-static int exaScreenPrivateKeyIndex;
-DevPrivateKey exaScreenPrivateKey = &exaScreenPrivateKeyIndex;
-static int exaPixmapPrivateKeyIndex;
-DevPrivateKey exaPixmapPrivateKey = &exaPixmapPrivateKeyIndex;
-static int exaGCPrivateKeyIndex;
-DevPrivateKey exaGCPrivateKey = &exaGCPrivateKeyIndex;
+DevPrivateKeyRec exaScreenPrivateKeyRec;
+DevPrivateKeyRec exaPixmapPrivateKeyRec;
+DevPrivateKeyRec exaGCPrivateKeyRec;
 
 #ifdef MITSHM
 static ShmFuncs exaShmFuncs = { NULL, NULL };
@@ -161,10 +158,10 @@ exaPixmapDirty (PixmapPtr pPix, int x1, int y1, int x2, int y2)
     if (box.x1 >= box.x2 || box.y1 >= box.y2)
 	return;
 
-    REGION_INIT(pScreen, &region, &box, 1);
+    RegionInit(&region, &box, 1);
     DamageRegionAppend(&pPix->drawable, &region);
     DamageRegionProcessPending(&pPix->drawable);
-    REGION_UNINIT(pScreen, &region);
+    RegionUninit(&region);
 }
 
 static int
@@ -438,6 +435,29 @@ exaFinishAccess(DrawablePtr pDrawable, int index)
     (*pExaScr->info->FinishAccess) (pPixmap, i);
 }
 
+
+/**
+ * Helper for things common to all schemes when a pixmap is destroyed
+ */
+void
+exaDestroyPixmap(PixmapPtr pPixmap)
+{
+    ExaScreenPriv(pPixmap->drawable.pScreen);
+    int i;
+
+    /* Finish access if it was prepared (e.g. pixmap created during
+     * software fallback)
+     */
+    for (i = 0; i < EXA_NUM_PREPARE_INDICES; i++) {
+	if (pExaScr->access[i].pixmap == pPixmap) {
+	    exaFinishAccess(&pPixmap->drawable, i);
+	    pExaScr->access[i].pixmap = NULL;
+	    break;
+	}
+    }
+}
+
+
 /**
  * Here begins EXA's GC code.
  * Do not ever access the fb/mi layer directly.
@@ -658,7 +678,7 @@ exaBitmapToRegion(PixmapPtr pPix)
 
     exaPrepareAccess(&pPix->drawable, EXA_PREPARE_SRC);
     swap(pExaScr, pScreen, BitmapToRegion);
-    ret = pScreen->BitmapToRegion(pPix);
+    ret = (*pScreen->BitmapToRegion)(pPix);
     swap(pExaScr, pScreen, BitmapToRegion);
     exaFinishAccess(&pPix->drawable, EXA_PREPARE_SRC);
 
@@ -753,9 +773,7 @@ static Bool
 exaCloseScreen(int i, ScreenPtr pScreen)
 {
     ExaScreenPriv(pScreen);
-#ifdef RENDER
     PictureScreenPtr	ps = GetPictureScreenIfSet(pScreen);
-#endif
 
     if (ps->Glyphs == exaGlyphs)
 	exaGlyphsFini(pScreen);
@@ -778,18 +796,14 @@ exaCloseScreen(int i, ScreenPtr pScreen)
     unwrap(pExaScr, pScreen, ChangeWindowAttributes);
     unwrap(pExaScr, pScreen, BitmapToRegion);
     unwrap(pExaScr, pScreen, CreateScreenResources);
-#ifdef RENDER
-    if (ps) {
-	unwrap(pExaScr, ps, Composite);
-	if (pExaScr->SavedGlyphs)
-	    unwrap(pExaScr, ps, Glyphs);
-	unwrap(pExaScr, ps, Trapezoids);
-	unwrap(pExaScr, ps, Triangles);
-	unwrap(pExaScr, ps, AddTraps);
-    }
-#endif
+    unwrap(pExaScr, ps, Composite);
+    if (pExaScr->SavedGlyphs)
+	unwrap(pExaScr, ps, Glyphs);
+    unwrap(pExaScr, ps, Trapezoids);
+    unwrap(pExaScr, ps, Triangles);
+    unwrap(pExaScr, ps, AddTraps);
 
-    xfree (pExaScr);
+    free(pExaScr);
 
     return (*pScreen->CloseScreen) (i, pScreen);
 }
@@ -800,14 +814,14 @@ exaCloseScreen(int i, ScreenPtr pScreen)
  * without breaking ABI between EXA and the drivers.  The driver's
  * responsibility is to check beforehand that the EXA module has a matching
  * major number and sufficient minor.  Drivers are responsible for freeing the
- * driver structure using xfree().
+ * driver structure using free().
  *
  * @return a newly allocated, zero-filled driver structure
  */
 ExaDriverPtr
 exaDriverAlloc(void)
 {
-    return xcalloc(1, sizeof(ExaDriverRec));
+    return calloc(1, sizeof(ExaDriverRec));
 }
 
 /**
@@ -825,9 +839,7 @@ exaDriverInit (ScreenPtr		pScreen,
                ExaDriverPtr	pScreenInfo)
 {
     ExaScreenPrivPtr pExaScr;
-#ifdef RENDER
     PictureScreenPtr ps;
-#endif
 
     if (!pScreenInfo)
 	return FALSE;
@@ -895,11 +907,15 @@ exaDriverInit (ScreenPtr		pScreen,
         pScreenInfo->maxPitchPixels = pScreenInfo->maxX;
     }
 
-#ifdef RENDER
     ps = GetPictureScreenIfSet(pScreen);
-#endif
 
-    pExaScr = xcalloc (sizeof (ExaScreenPrivRec), 1);
+    if (!dixRegisterPrivateKey(&exaScreenPrivateKeyRec, PRIVATE_SCREEN, 0)) {
+        LogMessage(X_WARNING, "EXA(%d): Failed to register screen private\n",
+		   pScreen->myNum);
+	return FALSE;
+    }
+
+    pExaScr = calloc (sizeof (ExaScreenPrivRec), 1);
     if (!pExaScr) {
         LogMessage(X_WARNING, "EXA(%d): Failed to allocate screen private\n",
 		   pScreen->myNum);
@@ -914,7 +930,7 @@ exaDriverInit (ScreenPtr		pScreen,
 
     exaDDXDriverInit(pScreen);
 
-    if (!dixRequestPrivate(exaGCPrivateKey, sizeof(ExaGCPrivRec))) {
+    if (!dixRegisterPrivateKey(&exaGCPrivateKeyRec, PRIVATE_GC, sizeof(ExaGCPrivRec))) {
 	LogMessage(X_WARNING,
 	       "EXA(%d): Failed to allocate GC private\n",
 	       pScreen->myNum);
@@ -940,16 +956,17 @@ exaDriverInit (ScreenPtr		pScreen,
     wrap(pExaScr, pScreen, BitmapToRegion, exaBitmapToRegion);
     wrap(pExaScr, pScreen, CreateScreenResources, exaCreateScreenResources);
 
-#ifdef RENDER
     if (ps) {
 	wrap(pExaScr, ps, Composite, exaComposite);
-	if (pScreenInfo->PrepareComposite)
+	if (pScreenInfo->PrepareComposite) {
 	    wrap(pExaScr, ps, Glyphs, exaGlyphs);
+	} else {
+	    wrap(pExaScr, ps, Glyphs, ExaCheckGlyphs);
+	}
 	wrap(pExaScr, ps, Trapezoids, exaTrapezoids);
 	wrap(pExaScr, ps, Triangles, exaTriangles);
 	wrap(pExaScr, ps, AddTraps, ExaCheckAddTraps);
     }
-#endif
 
 #ifdef MITSHM
     /*
@@ -962,7 +979,7 @@ exaDriverInit (ScreenPtr		pScreen,
      */
     if (pExaScr->info->flags & EXA_OFFSCREEN_PIXMAPS)
     {
-	if (!dixRequestPrivate(exaPixmapPrivateKey, sizeof(ExaPixmapPrivRec))) {
+	if (!dixRegisterPrivateKey(&exaPixmapPrivateKeyRec, PRIVATE_PIXMAP, sizeof(ExaPixmapPrivRec))) {
             LogMessage(X_WARNING,
 		       "EXA(%d): Failed to allocate pixmap private\n",
 		       pScreen->myNum);

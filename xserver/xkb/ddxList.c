@@ -97,7 +97,7 @@ char *		tmp;
     if ((list->szPool-list->nPool)<wlen) {
 	if (wlen>1024)	list->szPool+= XkbPaddedSize(wlen*2);
 	else		list->szPool+= 1024;
-	list->pool= xrealloc(list->pool, list->szPool * sizeof(char));
+	list->pool= realloc(list->pool, list->szPool * sizeof(char));
 	if (!list->pool)
 	    return BadAlloc;
     }
@@ -161,6 +161,7 @@ char	tmpname[PATH_MAX];
 	}
 	if (!in) {
 	    haveDir= FALSE;
+	    free(buf);
 	    buf = Xprintf(
 		"'%s/xkbcomp' '-R%s/%s' -w %ld -l -vlfhpR '%s'" W32_tmparg,
                 XkbBinDirectory,XkbBaseDirectory,componentDirs[what],(long)
@@ -176,6 +177,7 @@ char	tmpname[PATH_MAX];
 	}
 	if (!in) {
 	    haveDir= FALSE;
+	    free(buf);
 	    buf = Xprintf(
 		"xkbcomp -R%s -w %ld -l -vlfhpR '%s'" W32_tmparg,
                 componentDirs[what],(long)
@@ -201,18 +203,15 @@ char	tmpname[PATH_MAX];
     if (!in)
     {
         if (buf != NULL)
-	    xfree (buf);
+	    free(buf);
 #ifdef WIN32
 	unlink(tmpname);
 #endif
 	return BadImplementation;
     }
     list->nFound[what]= 0;
-    if (buf) {
-        xfree(buf);
-        buf = NULL;
-    }
-    buf = xalloc(PATH_MAX * sizeof(char));
+    free(buf);
+    buf = malloc(PATH_MAX * sizeof(char));
     if (!buf)
         return BadAlloc;
     while ((status==Success)&&((tmp=fgets(buf,PATH_MAX,in))!=NULL)) {
@@ -268,7 +267,7 @@ char	tmpname[PATH_MAX];
     unlink(tmpname);
 #endif
     if (buf != NULL)
-        xfree (buf);
+        free(buf);
     return status;
 }
 

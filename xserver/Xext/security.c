@@ -51,8 +51,8 @@ static RESTYPE RTEventClient;
 static CallbackListPtr SecurityValidateGroupCallback = NULL;
 
 /* Private state record */
-static int stateKeyIndex;
-static DevPrivateKey stateKey = &stateKeyIndex;
+static DevPrivateKeyRec stateKeyRec;
+#define stateKey (&stateKeyRec)
 
 /* This is what we store as client security state */
 typedef struct {
@@ -198,16 +198,10 @@ SecurityDeleteAuthorization(
     while ((pEventClient = pAuth->eventClients))
     {
 	/* send revocation event event */
-	ClientPtr client = rClient(pEventClient);
-
-	if (!client->clientGone)
-	{
-	    xSecurityAuthorizationRevokedEvent are;
-	    are.type = SecurityEventBase + XSecurityAuthorizationRevoked;
-	    are.sequenceNumber = client->sequence;
-	    are.authId = pAuth->id;
-	    WriteEventsToClient(client, 1, (xEvent *)&are);
-	}
+	xSecurityAuthorizationRevokedEvent are;
+	are.type = SecurityEventBase + XSecurityAuthorizationRevoked;
+	are.authId = pAuth->id;
+	WriteEventsToClient(rClient(pEventClient), 1, (xEvent *)&are);
 	FreeResource(pEventClient->resource, RT_NONE);
     }
 
@@ -222,7 +216,7 @@ SecurityDeleteAuthorization(
 	}
 
     SecurityAudit("revoked authorization ID %d\n", pAuth->id);
-    xfree(pAuth);
+    free(pAuth);
     return Success;
 
 } /* SecurityDeleteAuthorization */
@@ -247,8 +241,8 @@ SecurityDeleteAuthorizationEventClient(
 		prev->next = pEventClient->next;
 	    else
 		pAuth->eventClients = pEventClient->next;
-	    xfree(pEventClient);
-	    return(Success);
+	    free(pEventClient);
+	    return Success;
 	}
 	prev = pEventClient;
     }
@@ -383,7 +377,7 @@ ProcSecurityQueryVersion(
     }
     (void)WriteToClient(client, SIZEOF(xSecurityQueryVersionReply),
 			(char *)&rep);
-    return (client->noClientException);
+    return Success;
 } /* ProcSecurityQueryVersion */
 
 
@@ -409,7 +403,7 @@ SecurityEventSelectForAuthorization(
 	}
     }
     
-    pEventClient = xalloc(sizeof(OtherClients));
+    pEventClient = malloc(sizeof(OtherClients));
     if (!pEventClient)
 	return BadAlloc;
     pEventClient->mask = mask;
@@ -418,7 +412,7 @@ SecurityEventSelectForAuthorization(
     if (!AddResource(pEventClient->resource, RTEventClient,
 		     (pointer)pAuth))
     {
-	xfree(pEventClient);
+	free(pEventClient);
 	return BadAlloc;
     }
     pAuth->eventClients = pEventClient;
@@ -541,7 +535,7 @@ ProcSecurityGenerateAuthorization(
 
     /* associate additional information with this auth ID */
 
-    pAuth = xalloc(sizeof(SecurityAuthorizationRec));
+    pAuth = malloc(sizeof(SecurityAuthorizationRec));
     if (!pAuth)
     {
 	err = BadAlloc;
@@ -604,16 +598,13 @@ ProcSecurityGenerateAuthorization(
 		  pAuth->group, eventMask);
 
     /* the request succeeded; don't call RemoveAuthorization or free pAuth */
-
-    removeAuth = FALSE;
-    pAuth = NULL;
-    err = client->noClientException;
+    return Success;
 
 bailout:
     if (removeAuth)
 	RemoveAuthorization(stuff->nbytesAuthProto, protoname,
 			    authdata_len, pAuthdata);
-    if (pAuth) xfree(pAuth);
+    free(pAuth);
     return err;
 
 } /* ProcSecurityGenerateAuthorization */
@@ -632,8 +623,7 @@ ProcSecurityRevokeAuthorization(
 				 SecurityAuthorizationResType, client,
 				 DixDestroyAccess);
     if (rc != Success)
-	return (rc == BadValue) ?
-	    SecurityErrorBase + XSecurityBadAuthorization : rc;
+	return rc;
 
     FreeResource(stuff->authId, RT_NONE);
     return Success;
@@ -815,7 +805,6 @@ SecurityResource(CallbackListPtr *pcbl, pointer unused, pointer calldata)
     Mask allowed = SecurityResourceMask;
 
     subj = dixLookupPrivate(&rec->client->devPrivates, stateKey);
-    obj = dixLookupPrivate(&clients[cid]->devPrivates, stateKey);
 
     /* disable background None for untrusted windows */
     if ((requested & DixCreateAccess) && (rec->rtype == RT_WINDOW))
@@ -841,8 +830,11 @@ SecurityResource(CallbackListPtr *pcbl, pointer unused, pointer calldata)
 	    allowed |= DixReadAccess;
     }
 
-    if (SecurityDoCheck(subj, obj, requested, allowed) == Success)
-	return;
+    if (clients[cid] != NULL) {
+	obj = dixLookupPrivate(&clients[cid]->devPrivates, stateKey);
+	if (SecurityDoCheck(subj, obj, requested, allowed) == Success)
+	    return;
+    }
 
     SecurityAudit("Security: denied client %d access %x to resource 0x%x "
 		  "of client %d on request %s\n", rec->client->index,
@@ -1118,7 +1110,7 @@ SecurityExtensionInit(INITARGS)
     RTEventClient |= RC_NEVERRETAIN;
 
     /* Allocate the private storage */
-    if (!dixRequestPrivate(stateKey, sizeof(SecurityStateRec)))
+    if (!dixRegisterPrivateKey(stateKey, PRIVATE_CLIENT, sizeof(SecurityStateRec)))
 	FatalError("SecurityExtensionSetup: Can't allocate client private.\n");
 
     /* Register callbacks */
@@ -1148,6 +1140,8 @@ SecurityExtensionInit(INITARGS)
 
     EventSwapVector[SecurityEventBase + XSecurityAuthorizationRevoked] =
 	(EventSwapPtr)SwapSecurityAuthorizationRevokedEvent;
+
+    SetResourceTypeErrorValue(SecurityAuthorizationResType, SecurityErrorBase + XSecurityBadAuthorization);
 
     /* Label objects that were created before we could register ourself */
     SecurityLabelInitial();

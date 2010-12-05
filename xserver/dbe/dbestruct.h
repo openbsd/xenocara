@@ -167,14 +167,6 @@ typedef struct _DbeWindowPrivRec
 
 typedef struct _DbeScreenPrivRec
 {
-    /* Resources created by DIX to be used by DDX */
-    RESTYPE	dbeDrawableResType;
-    RESTYPE	dbeWindowPrivResType;
-
-    /* Private indices created by DIX to be used by DDX */
-    DevPrivateKey dbeScreenPrivKey;
-    DevPrivateKey dbeWindowPrivKey;
-
     /* Wrapped functions
      * It is the responsibilty of the DDX layer to wrap PositionWindow().
      * DbeExtensionInit wraps DestroyWindow().
@@ -216,10 +208,6 @@ typedef struct _DbeScreenPrivRec
     void	(*ResetProc)(
 		ScreenPtr /*pScreen*/
 );
-
-    /* Device-specific private information.
-     */
-    PrivateRec	*devPrivates;
 
 } DbeScreenPrivRec, *DbeScreenPrivPtr;
 

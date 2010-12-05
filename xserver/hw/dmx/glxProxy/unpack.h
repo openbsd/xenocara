@@ -82,7 +82,7 @@ extern xGLXSingleReply __glXReply;
     if ((size) > sizeof(answerBuffer)) {				 \
 	int bump;							 \
 	if ((cl)->returnBufSize < (size)+(align)) {			 \
-	    (cl)->returnBuf = (GLbyte*)Xrealloc((cl)->returnBuf,	 \
+	    (cl)->returnBuf = (GLbyte*)realloc((cl)->returnBuf,		 \
 						(size)+(align));         \
 	    if (!(cl)->returnBuf) {					 \
 		return BadAlloc;					 \
@@ -138,7 +138,9 @@ extern xGLXSingleReply __glXReply;
 ** conceivably be replaced with routines that do the job faster.
 */
 #define __GLX_DECLARE_SWAP_VARIABLES \
-	GLbyte sw; \
+	GLbyte sw
+
+#define __GLX_DECLARE_SWAP_ARRAY_VARIABLES \
   	GLbyte *swapPC;		\
   	GLbyte *swapEnd
 

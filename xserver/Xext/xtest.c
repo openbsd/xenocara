@@ -62,10 +62,6 @@ extern int DeviceValuator;
  * other's memory */
 static EventListPtr xtest_evlist;
 
-/* Used to store if a device is an XTest Virtual device */
-static int XTestDevicePrivateKeyIndex;
-DevPrivateKey XTestDevicePrivateKey = &XTestDevicePrivateKeyIndex;
-
 /**
  * xtestpointer
  * is the virtual pointer for XTest. It is the first slave
@@ -126,7 +122,7 @@ ProcXTestGetVersion(ClientPtr client)
         swaps(&rep.minorVersion, n);
     }
     WriteToClient(client, sizeof(xXTestGetVersionReply), (char *)&rep);
-    return(client->noClientException);
+    return Success;
 }
 
 static int
@@ -153,7 +149,7 @@ ProcXTestCompareCursor(ClientPtr client)
         if (rc != Success)
         {
             client->errorValue = stuff->cursor;
-            return (rc == BadValue) ? BadCursor : rc;
+            return rc;
         }
     }
     rep.type = X_Reply;
@@ -164,7 +160,7 @@ ProcXTestCompareCursor(ClientPtr client)
         swaps(&rep.sequenceNumber, n);
     }
     WriteToClient(client, sizeof(xXTestCompareCursorReply), (char *)&rep);
-    return(client->noClientException);
+    return Success;
 }
 
 static int
@@ -358,7 +354,8 @@ ProcXTestFakeInput(ClientPtr client)
         activateTime.milliseconds = ms;
         ev->u.keyButtonPointer.time = 0;
 
-        /* see mbuf.c:QueueDisplayRequest for code similar to this */
+        /* see mbuf.c:QueueDisplayRequest (from the deprecated Multibuffer
+         * extension) for code similar to this */
 
         if (!ClientSleepUntil(client, &activateTime, NULL, NULL))
         {
@@ -456,7 +453,7 @@ ProcXTestFakeInput(ClientPtr client)
 
     if (need_ptr_update)
         miPointerUpdateSprite(dev);
-    return client->noClientException;
+    return Success;
 }
 
 static int
@@ -468,13 +465,13 @@ ProcXTestGrabControl(ClientPtr client)
     if ((stuff->impervious != xTrue) && (stuff->impervious != xFalse))
     {
         client->errorValue = stuff->impervious;
-        return(BadValue);
+        return BadValue;
     }
     if (stuff->impervious)
         MakeClientGrabImpervious(client);
     else
         MakeClientGrabPervious(client);
-    return(client->noClientException);
+    return Success;
 }
 
 static int
@@ -636,7 +633,7 @@ int AllocXTestDevice (ClientPtr client, char* name,
 {
     int retval;
     int len = strlen(name);
-    char *xtestname = xcalloc(len + 7, 1 );
+    char *xtestname = calloc(len + 7, 1 );
     char dummy = 1;
 
     strncpy( xtestname, name, len);
@@ -644,8 +641,8 @@ int AllocXTestDevice (ClientPtr client, char* name,
 
     retval = AllocDevicePair( client, xtestname, ptr, keybd, CorePointerProc, CoreKeyboardProc, FALSE);
     if ( retval == Success ){
-        dixSetPrivate(&((*ptr)->devPrivates), XTestDevicePrivateKey, (void *)(intptr_t)master_ptr->id);
-        dixSetPrivate(&((*keybd)->devPrivates), XTestDevicePrivateKey, (void *)(intptr_t)master_keybd->id);
+	(*ptr)->xtest_master_id = master_ptr->id;
+	(*keybd)->xtest_master_id = master_keybd->id;
 
         XIChangeDeviceProperty(*ptr, XIGetKnownProperty(XI_PROP_XTEST_DEVICE),
                 XA_INTEGER, 8, PropModeReplace, 1, &dummy,
@@ -659,7 +656,7 @@ int AllocXTestDevice (ClientPtr client, char* name,
         XIRegisterPropertyHandler(*keybd, DeviceSetXTestProperty, NULL, NULL);
     }
 
-    xfree( xtestname );
+    free( xtestname );
 
     return retval;
 }
@@ -673,23 +670,15 @@ int AllocXTestDevice (ClientPtr client, char* name,
 BOOL
 IsXTestDevice(DeviceIntPtr dev, DeviceIntPtr master)
 {
-    int is_XTest = FALSE;
-    int mid;
-    void *tmp; /* shut up, gcc! */
-
     if (IsMaster(dev))
-        return is_XTest;
-
-    tmp = dixLookupPrivate(&dev->devPrivates, XTestDevicePrivateKey);
-    mid = (intptr_t)tmp;
+        return FALSE;
 
     /* deviceid 0 is reserved for XIAllDevices, non-zero mid means XTest
      * device */
-    if ((!master && mid) ||
-        (master && mid == master->id))
-        is_XTest = TRUE;
+    if (master)
+	return dev->xtest_master_id == master->id;
 
-    return is_XTest;
+    return dev->xtest_master_id != 0;
 }
 
 /**

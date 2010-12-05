@@ -92,6 +92,7 @@ Author:  Adobe Systems Incorporated
 #include "windowstr.h"
 #include "dixstruct.h"
 #include "pixmapstr.h"
+#include "gcstruct.h"
 #include "scrnintstr.h"
 #define  XK_LATIN1
 #include <X11/keysymdef.h>
@@ -230,9 +231,24 @@ dixLookupWindow(WindowPtr *pWin, XID id, ClientPtr client, Mask access)
 int
 dixLookupGC(GCPtr *pGC, XID id, ClientPtr client, Mask access)
 {
+    return dixLookupResourceByType((pointer *)pGC, id, RT_GC, client, access);
+}
+
+int
+dixLookupFontable(FontPtr *pFont, XID id, ClientPtr client, Mask access)
+{
     int rc;
-    rc = dixLookupResourceByType((pointer *)pGC, id, RT_GC, client, access);
-    return (rc == BadValue) ? BadGC : rc;
+    GC *pGC;
+    client->errorValue = id;		/* EITHER font or gc */
+    rc = dixLookupResourceByType((pointer *) pFont, id, RT_FONT, client, access);
+    if (rc != BadFont)
+	return rc;
+    rc = dixLookupResourceByType((pointer *) &pGC, id, RT_GC, client, access);
+    if (rc == BadGC)
+	return BadFont;
+    if (rc == Success)
+	*pFont = pGC->font;
+    return rc;
 }
 
 int
@@ -280,17 +296,17 @@ AlterSaveSetForClient(ClientPtr client, WindowPtr pWin, unsigned mode,
     if (mode == SetModeInsert)
     {
 	if (j < numnow)         /* duplicate */
-	   return(Success);
+	   return Success;
 	numnow++;
-	pTmp = (SaveSetElt *)xrealloc(client->saveSet, sizeof(*pTmp) * numnow);
+	pTmp = (SaveSetElt *)realloc(client->saveSet, sizeof(*pTmp) * numnow);
 	if (!pTmp)
-	    return(BadAlloc);
+	    return BadAlloc;
 	client->saveSet = pTmp;
        	client->numSaved = numnow;
 	SaveSetAssignWindow(client->saveSet[numnow - 1], pWin);
 	SaveSetAssignToRoot(client->saveSet[numnow - 1], toRoot);
 	SaveSetAssignMap(client->saveSet[numnow - 1], map);
-	return(Success);
+	return Success;
     }
     else if ((mode == SetModeDelete) && (j < numnow))
     {
@@ -302,19 +318,19 @@ AlterSaveSetForClient(ClientPtr client, WindowPtr pWin, unsigned mode,
 	numnow--;
         if (numnow)
 	{
-	    pTmp = (SaveSetElt *)xrealloc(client->saveSet, sizeof(*pTmp) * numnow);
+	    pTmp = (SaveSetElt *)realloc(client->saveSet, sizeof(*pTmp) * numnow);
 	    if (pTmp)
 		client->saveSet = pTmp;
 	}
         else
         {
-            xfree(client->saveSet);
+            free(client->saveSet);
 	    client->saveSet = (SaveSetElt *)NULL;
 	}
 	client->numSaved = numnow;
-	return(Success);
+	return Success;
     }
-    return(Success);
+    return Success;
 }
 
 void
@@ -435,7 +451,7 @@ RegisterBlockAndWakeupHandlers (BlockHandlerProcPtr blockHandler,
 
     if (numHandlers >= sizeHandlers)
     {
-    	new = (BlockHandlerPtr) xrealloc (handlers, (numHandlers + 1) *
+        new = (BlockHandlerPtr) realloc(handlers, (numHandlers + 1) *
 				      	  sizeof (BlockHandlerRec));
     	if (!new)
 	    return FALSE;
@@ -480,7 +496,7 @@ RemoveBlockAndWakeupHandlers (BlockHandlerProcPtr blockHandler,
 void
 InitBlockAndWakeupHandlers (void)
 {
-    xfree (handlers);
+    free(handlers);
     handlers = (BlockHandlerPtr) 0;
     numHandlers = 0;
     sizeHandlers = 0;
@@ -512,7 +528,7 @@ ProcessWorkQueue(void)
 	{
 	    /* remove q from the list */
 	    *p = q->next;    /* don't fetch until after func called */
-	    xfree (q);
+	    free(q);
 	}
 	else
 	{
@@ -535,7 +551,7 @@ ProcessWorkQueueZombies(void)
 	    (void) (*q->function) (q->client, q->closure);
 	    /* remove q from the list */
 	    *p = q->next;    /* don't fetch until after func called */
-	    xfree (q);
+	    free(q);
 	}
 	else
 	{
@@ -552,7 +568,7 @@ QueueWorkProc (
 {
     WorkQueuePtr    q;
 
-    q = xalloc (sizeof *q);
+    q = malloc(sizeof *q);
     if (!q)
 	return FALSE;
     q->function = function;
@@ -586,7 +602,7 @@ ClientSleep (ClientPtr client, ClientSleepProcPtr function, pointer closure)
 {
     SleepQueuePtr   q;
 
-    q = xalloc (sizeof *q);
+    q = malloc(sizeof *q);
     if (!q)
 	return FALSE;
 
@@ -623,7 +639,7 @@ ClientWakeup (ClientPtr client)
 	if (q->client == client)
 	{
 	    *prev = q->next;
-	    xfree (q);
+	    free(q);
 	    if (client->clientGone)
 		/* Oops -- new zombie cleanup code ensures this only
 		 * happens from inside CloseDownClient; don't want to
@@ -666,7 +682,7 @@ _AddCallback(
 {
     CallbackPtr     cbr;
 
-    cbr = xalloc(sizeof(CallbackRec));
+    cbr = malloc(sizeof(CallbackRec));
     if (!cbr)
 	return FALSE;
     cbr->proc = callback;
@@ -706,7 +722,7 @@ _DeleteCallback(
 		cbl->list = cbr->next;
 	    else
 		pcbr->next = cbr->next;
-	    xfree(cbr);
+	    free(cbr);
 	}
 	return TRUE;
     }
@@ -751,12 +767,12 @@ _CallCallbacks(
 		if (pcbr)
 		{
 		    cbr = cbr->next;
-		    xfree(pcbr->next);
+		    free(pcbr->next);
 		    pcbr->next = cbr;
 		} else
 		{
 		    cbr = cbr->next;
-		    xfree(cbl->list);
+		    free(cbl->list);
 		    cbl->list = cbr;
 		}
 		cbl->numDeleted--;
@@ -796,9 +812,9 @@ _DeleteCallbackList(
     for (cbr = cbl->list; cbr != NULL; cbr = nextcbr)
     {
 	nextcbr = cbr->next;
-	xfree(cbr);
+	free(cbr);
     }
-    xfree(cbl);
+    free(cbl);
     *pcbl = NULL;
 }
 
@@ -809,7 +825,7 @@ CreateCallbackList(CallbackListPtr *pcbl)
     int i;
 
     if (!pcbl) return FALSE;
-    cbl = xalloc(sizeof(CallbackListRec));
+    cbl = malloc(sizeof(CallbackListRec));
     if (!cbl) return FALSE;
     cbl->inCallback = 0;
     cbl->deleted = FALSE;
@@ -877,7 +893,7 @@ InitCallbackManager(void)
     {
 	DeleteCallbackList(listsToCleanup[i]);
     }
-    if (listsToCleanup) xfree(listsToCleanup);
+    free(listsToCleanup);
 
     numCallbackListsToCleanup = 0;
     listsToCleanup = NULL;

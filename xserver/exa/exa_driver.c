@@ -126,7 +126,7 @@ Bool
 exaModifyPixmapHeader_driver(PixmapPtr pPixmap, int width, int height, int depth,
 		      int bitsPerPixel, int devKind, pointer pPixData)
 {
-    ScreenPtr pScreen = pPixmap->drawable.pScreen;
+    ScreenPtr pScreen;
     ExaScreenPrivPtr pExaScr;
     ExaPixmapPrivPtr pExaPixmap;
     Bool ret;
@@ -134,6 +134,7 @@ exaModifyPixmapHeader_driver(PixmapPtr pPixmap, int width, int height, int depth
     if (!pPixmap)
         return FALSE;
 
+    pScreen = pPixmap->drawable.pScreen;
     pExaScr = ExaGetScreenPriv(pScreen);
     pExaPixmap = ExaGetPixmapPriv(pPixmap);
 
@@ -192,9 +193,7 @@ exaDestroyPixmap_driver (PixmapPtr pPixmap)
     {
 	ExaPixmapPriv (pPixmap);
 
-	/* During a fallback we must finish access, but we don't know the index. */
-	if (pExaScr->fallback_counter)
-	    exaFinishAccess(&pPixmap->drawable, -1);
+	exaDestroyPixmap(pPixmap);
 
 	if (pExaPixmap->driverPriv)
 	    pExaScr->info->DestroyPixmap(pScreen, pExaPixmap->driverPriv);

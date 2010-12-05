@@ -35,6 +35,36 @@
 #  NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 #  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+#
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+
+# This file is included by Makefile.am in subdirectories that have
+# DocBook XML documentation files.
+#
+# No files are automatically distributed or installed by this subset of rules
+# Any files to be distributed or installed would be listed in the including
+# Makefile.am
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -57,8 +87,14 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+DIST_COMMON = $(srcdir)/../../../../doc/xml/xmlrules.in \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
+@HAVE_STYLESHEETS_TRUE@am__append_1 = -m $(XSL_STYLESHEET)
+@HAVE_STYLESHEETS_TRUE@am__append_2 = xorg.css
+@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = $(TXT_FILES)
+@HAVE_XMLTO_TRUE@am__append_4 = $(HTML_FILES)
+@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_5 = $(PDF_FILES)
 subdir = hw/xfree86/doc/sgml
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
@@ -115,10 +151,6 @@ BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
 BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
-BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
-BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
-BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
-BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 BUILD_TIME = @BUILD_TIME@
 CC = @CC@
 CCAS = @CCAS@
@@ -206,6 +238,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
+ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
@@ -220,6 +254,7 @@ FONTOTFDIR = @FONTOTFDIR@
 FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
+FOP = @FOP@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
 GLIB_CFLAGS = @GLIB_CFLAGS@
@@ -237,10 +272,14 @@ HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
 HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
 HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
-HAVE_PS2PDF_FALSE = @HAVE_PS2PDF_FALSE@
-HAVE_PS2PDF_TRUE = @HAVE_PS2PDF_TRUE@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
 HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
 HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
+HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
+HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -296,10 +335,11 @@ LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINUXDOC = @LINUXDOC@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
 LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
@@ -317,17 +357,11 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
-MAKE_HTML = @MAKE_HTML@
-MAKE_PDF = @MAKE_PDF@
-MAKE_PS = @MAKE_PS@
-MAKE_TEXT = @MAKE_TEXT@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
-MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
@@ -354,20 +388,23 @@ PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
-PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RECORD_FALSE = @RECORD_FALSE@
 RECORD_TRUE = @RECORD_TRUE@
+RELEASE_DATE = @RELEASE_DATE@
 RES_FALSE = @RES_FALSE@
 RES_TRUE = @RES_TRUE@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SECURE_RPC_FALSE = @SECURE_RPC_FALSE@
 SECURE_RPC_TRUE = @SECURE_RPC_TRUE@
 SED = @SED@
@@ -459,6 +496,7 @@ XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
 XKM_OUTPUT_DIR = @XKM_OUTPUT_DIR@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
+XMLTO = @XMLTO@
 XNESTMODULES_CFLAGS = @XNESTMODULES_CFLAGS@
 XNESTMODULES_LIBS = @XNESTMODULES_LIBS@
 XNEST_FALSE = @XNEST_FALSE@
@@ -604,20 +642,24 @@ symbol_visibility = @symbol_visibility@
 sysconfdir = @sysconfdir@
 sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
-SGML_FILES = DESIGN.sgml
-@BUILD_LINUXDOC_TRUE@TXT_FILES = $(SGML_FILES:%.sgml=%.txt)
-@BUILD_LINUXDOC_TRUE@PS_FILES = $(SGML_FILES:%.sgml=%.ps)
-@BUILD_LINUXDOC_TRUE@@BUILD_PDFDOC_TRUE@PDF_FILES = $(SGML_FILES:%.sgml=%.pdf)
-@BUILD_LINUXDOC_TRUE@HTML_FILES = $(SGML_FILES:%.sgml=%.html)
-@BUILD_LINUXDOC_TRUE@SUFFIXES = .sgml .txt .html .ps .pdf
-@BUILD_LINUXDOC_TRUE@noinst_DATA = $(TXT_FILES) $(PS_FILES) $(PDF_FILES) $(HTML_FILES)
-@BUILD_LINUXDOC_TRUE@CLEANFILES = $(TXT_FILES) $(PS_FILES) $(PDF_FILES) $(HTML_FILES)
-EXTRA_DIST = $(SGML_FILES)
+XML_FILES = DESIGN.xml
+TXT_FILES = $(XML_FILES:%.xml=%.txt)
+HTML_FILES = $(XML_FILES:%.xml=%.html)
+PDF_FILES = $(XML_FILES:%.xml=%.pdf)
+BUILT_DOC_FILES = $(am__append_2) $(am__append_3) $(am__append_4) \
+	$(am__append_5)
+SUFFIXES = .xml .txt .html .pdf
+XML_ENT_DIR = $(abs_top_builddir)/doc/xml
+XMLTO_FLAGS = --searchpath $(XML_ENT_DIR) $(am__append_1)
+CLEAN_DOC_FILES = $(TXT_FILES) $(HTML_FILES) $(PDF_FILES) xorg.css
+@ENABLE_DEVEL_DOCS_TRUE@noinst_DATA = $(BUILT_DOC_FILES)
+CLEANFILES = $(CLEAN_DOC_FILES)
+EXTRA_DIST = $(XML_FILES)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .sgml .txt .html .ps .pdf
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+.SUFFIXES: .xml .txt .html .pdf
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/../../../../doc/xml/xmlrules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -664,6 +706,7 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/../../../../doc/xml
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -776,21 +819,23 @@ uninstall-am: uninstall-info-am
 	uninstall-info-am
 
 
-@BUILD_LINUXDOC_TRUE@.sgml.txt:
-@BUILD_LINUXDOC_TRUE@	@rm -f $@
-@BUILD_LINUXDOC_TRUE@	$(AM_V_GEN)$(MAKE_TEXT) $<
+@HAVE_STYLESHEETS_TRUE@xorg.css: $(STYLESHEET_SRCDIR)/xorg.css
+@HAVE_STYLESHEETS_TRUE@	$(AM_V_GEN)cp -pf $(STYLESHEET_SRCDIR)/xorg.css $@
+@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@.xml.txt:
+@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@	@rm -f $@
+@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
+@HAVE_XMLTO_TRUE@.xml.html:
+@HAVE_XMLTO_TRUE@	@rm -f $@
+@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
+@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@.xml.pdf:
+@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@	@rm -f $@
+@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
 
-@BUILD_LINUXDOC_TRUE@.sgml.ps:
-@BUILD_LINUXDOC_TRUE@	@rm -f $@
-@BUILD_LINUXDOC_TRUE@	$(AM_V_GEN)$(MAKE_PS) $<
+# All the files we build depend on the entities
+$(BUILT_DOC_FILES): $(XML_ENT_DIR)/xserver.ent
 
-@BUILD_LINUXDOC_TRUE@.ps.pdf:
-@BUILD_LINUXDOC_TRUE@	@rm -f $@
-@BUILD_LINUXDOC_TRUE@	$(AM_V_GEN)$(MAKE_PDF) $<
-
-@BUILD_LINUXDOC_TRUE@.sgml.html:
-@BUILD_LINUXDOC_TRUE@	@rm -f $@
-@BUILD_LINUXDOC_TRUE@	$(AM_V_GEN)$(MAKE_HTML) $<
+$(XML_ENT_DIR)/xserver.ent:
+	(cd $(XML_ENT_DIR) && $(MAKE) $(AM_MAKEFLAGS) $(@F))
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

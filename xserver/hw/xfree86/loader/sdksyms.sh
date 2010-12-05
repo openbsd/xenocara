@@ -8,7 +8,6 @@ cat > sdksyms.c << EOF
 #include <xorg-config.h>
 #endif
 
-
 /* These must be included first */
 #include "misc.h"
 #include "miscstruct.h"
@@ -217,7 +216,6 @@ cat > sdksyms.c << EOF
 
 
 /* mi/Makefile.am */
-#include "mibank.h"
 #include "micmap.h"
 #include "miline.h"
 #include "mipointer.h"
@@ -320,11 +318,19 @@ cat > sdksyms.c << EOF
 
 EOF
 
+case `gcc -dumpversion` in 
+    [23].*)
+	n=2
+	;;
+    4.*)
+	n=3
+	;;
+esac
 topdir=$1
 shift
 LC_ALL=C
 export LC_ALL
-${CPP:-cpp} "$@" -DXorgLoader sdksyms.c | ${AWK:-awk} -v topdir=$topdir '
+${CPP:-cpp} "$@" -DXorgLoader sdksyms.c | ${AWK:-awk} -v topdir=$topdir -v nini=$n '
 BEGIN {
     sdk = 0;
     print("/*");
@@ -355,8 +361,8 @@ BEGIN {
 
 /^extern[ 	]/  {
     if (sdk) {
-	n = 2;
-
+	n = nini;
+        printf("/* %s */\n", $0)
 	# skip attribute, if any
 	while ($n ~ /^(__attribute__|__global)/ ||
 	    # skip modifiers, if any

@@ -51,7 +51,7 @@ __GLXvisualConfig *GetGLXVisualConfigs(Display *dpy, int screen, int *nconfigs)
     int   num_good_visuals;
 
     if (!XQueryExtension(dpy, "GLX", &majorOpcode, &dummy, &dummy)) {
-       return(NULL);
+       return NULL;
     }
 
     /* Send the glXGetVisualConfigs request */
@@ -94,7 +94,7 @@ __GLXvisualConfig *GetGLXVisualConfigs(Display *dpy, int screen, int *nconfigs)
     config = (__GLXvisualConfig*)
 	Xmalloc(nvisuals * sizeof(__GLXvisualConfig));
     if (!config) {
-	Xfree(props);
+	free(props);
 	UnlockDisplay(dpy);
 	SyncHandle();
 	return NULL;
@@ -228,7 +228,7 @@ __GLXvisualConfig *GetGLXVisualConfigs(Display *dpy, int screen, int *nconfigs)
     SyncHandle();
 
     *nconfigs = nvisuals;
-    return( configs );
+    return configs;
 }
 
 
@@ -284,7 +284,7 @@ __GLXFBConfig *GetGLXFBConfigs(Display *dpy, int glxMajorOpcode, int *nconfigs)
     config = (__GLXFBConfig*)
 	Xmalloc(numFBConfigs * sizeof(__GLXFBConfig));
     if (!config) {
-	Xfree(attrs);
+	free(attrs);
 	UnlockDisplay(dpy);
 	SyncHandle();
 	return NULL;
@@ -500,7 +500,7 @@ GetGLXVisualConfigsFromFBConfigs(__GLXFBConfig *fbconfigs, int nfbconfigs,
     __GLXvisualConfig *configs = NULL;
     int i;
     
-    if (!fbconfigs || !nfbconfigs || !nconfigs) return(NULL);
+    if (!fbconfigs || !nfbconfigs || !nconfigs) return NULL;
     *nconfigs = 0;
 
     /* Allocate memory for our config structure */
@@ -596,6 +596,6 @@ GetGLXVisualConfigsFromFBConfigs(__GLXFBConfig *fbconfigs, int nfbconfigs,
        }
     }
 
-    return( configs );
+    return configs;
 }
 

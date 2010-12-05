@@ -41,9 +41,7 @@
 #include "X11/extensions/render.h"
 #include "X11/extensions/dpmsconst.h"
 #include "X11/Xatom.h"
-#ifdef RENDER
 #include "picturestr.h"
-#endif
 #include "cursorstr.h"
 #include "inputstr.h"
 
@@ -327,10 +325,13 @@ xf86_crtc_set_cursor_position (xf86CrtcPtr crtc, int x, int y)
 						  xf86CursorScreenKey);
 	struct pict_f_vector   v;
 
-	v.v[0] = x + ScreenPriv->HotX; v.v[1] = y + ScreenPriv->HotY; v.v[2] = 1;
+	v.v[0] = (x + ScreenPriv->HotX) + 0.5;
+	v.v[1] = (y + ScreenPriv->HotY) + 0.5;
+	v.v[2] = 1;
 	pixman_f_transform_point (&crtc->f_framebuffer_to_crtc, &v);
-	x = floor (v.v[0] + 0.5);
-	y = floor (v.v[1] + 0.5);
+	/* cursor will have 0.5 added to it already so floor is sufficent */
+	x = floor (v.v[0]);
+	y = floor (v.v[1]);
 	/*
 	 * Transform position of cursor upper left corner
 	 */
@@ -553,7 +554,7 @@ xf86_cursors_init (ScreenPtr screen, int max_width, int max_height, int flags)
     if (!cursor_info)
 	return FALSE;
 
-    xf86_config->cursor_image = xalloc (max_width * max_height * 4);
+    xf86_config->cursor_image = malloc(max_width * max_height * 4);
 
     if (!xf86_config->cursor_image)
     {
@@ -661,11 +662,8 @@ xf86_cursors_fini (ScreenPtr screen)
 	xf86DestroyCursorInfoRec (xf86_config->cursor_info);
 	xf86_config->cursor_info = NULL;
     }
-    if (xf86_config->cursor_image)
-    {
-	xfree (xf86_config->cursor_image);
-	xf86_config->cursor_image = NULL;
-    }
+    free(xf86_config->cursor_image);
+    xf86_config->cursor_image = NULL;
     if (xf86_config->cursor)
     {
 	FreeCursor (xf86_config->cursor, None);

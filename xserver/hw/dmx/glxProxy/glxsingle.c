@@ -254,7 +254,7 @@ int __glXForwardPipe0WithReply( __GLXclientState *cl, GLbyte *pc )
     _XReply(dpy, (xReply*) &be_reply, 0, False);
     be_buf_size = be_reply.length << 2;
     if (be_buf_size > 0) {
-       be_buf = (char *)Xalloc( be_buf_size );
+       be_buf = (char *)malloc( be_buf_size );
        if (be_buf) {
 	  _XRead(dpy, be_buf, be_buf_size);
        }
@@ -288,7 +288,7 @@ int __glXForwardPipe0WithReply( __GLXclientState *cl, GLbyte *pc )
 	  WriteToClient(client, be_buf_size, (char *)be_buf);
     }
 
-    if (be_buf_size > 0) Xfree(be_buf);
+    if (be_buf_size > 0) free(be_buf);
 
     return Success;
 }
@@ -349,7 +349,7 @@ int __glXForwardAllWithReply( __GLXclientState *cl, GLbyte *pc )
        _XReply(dpy, (xReply*) &be_reply, 0, False);
        be_buf_size = be_reply.length << 2;
        if (be_buf_size > 0) {
-	  be_buf = (char *)Xalloc( be_buf_size );
+	  be_buf = (char *)malloc( be_buf_size );
 	  if (be_buf) {
 	     _XRead(dpy, be_buf, be_buf_size);
 	  }
@@ -364,7 +364,7 @@ int __glXForwardAllWithReply( __GLXclientState *cl, GLbyte *pc )
        SyncHandle();
 
        if (s > from_screen && be_buf_size > 0) {
-	  Xfree(be_buf);
+	  free(be_buf);
        }
     }
 
@@ -388,7 +388,7 @@ int __glXForwardAllWithReply( __GLXclientState *cl, GLbyte *pc )
 	  WriteToClient(client, be_buf_size, (char *)be_buf);
     }
 
-    if (be_buf_size > 0) Xfree(be_buf);
+    if (be_buf_size > 0) free(be_buf);
 
     return Success;
 }
@@ -397,6 +397,7 @@ int __glXForwardSingleReqSwap( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -420,6 +421,7 @@ int __glXForwardPipe0WithReplySwap( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -443,6 +445,7 @@ int __glXForwardPipe0WithReplySwapsv( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -467,6 +470,7 @@ int __glXForwardPipe0WithReplySwapiv( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -491,6 +495,7 @@ int __glXForwardPipe0WithReplySwapdv( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -515,6 +520,7 @@ int __glXForwardAllWithReplySwap( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -539,6 +545,7 @@ int __glXForwardAllWithReplySwapsv( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -563,6 +570,7 @@ int __glXForwardAllWithReplySwapiv( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -587,6 +595,7 @@ int __glXForwardAllWithReplySwapdv( __GLXclientState *cl, GLbyte *pc )
 {
    xGLXSingleReq *req = (xGLXSingleReq *)pc;
    __GLX_DECLARE_SWAP_VARIABLES;
+   __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
 
    __GLX_SWAP_SHORT(&req->length);
    __GLX_SWAP_INT(&req->contextTag);
@@ -659,7 +668,7 @@ static GLint __glReadPixels_size(GLenum format, GLenum type, GLint w, GLint h,
 	   }
 	   if (elementbits_return) *elementbits_return = elements;
 	   if (rowbytes_return) *rowbytes_return = rowsize;
-	   return (rowsize * h);
+	   return rowsize * h;
 	} else {
 	   return -1;
 	}
@@ -709,7 +718,7 @@ static GLint __glReadPixels_size(GLenum format, GLenum type, GLint w, GLint h,
     if (elementbits_return) *elementbits_return = esize*elements*8;
     if (rowbytes_return) *rowbytes_return = rowsize;
 
-    return (rowsize * h);
+    return rowsize * h;
 }
 
 static int intersectRect( int x1, int x2, int y1, int y2,
@@ -725,14 +734,14 @@ static int intersectRect( int x1, int x2, int y1, int y2,
 
    if ( (width <= 0) || (height <= 0) ) {
       *ix1 = *ix2 = *iy1 = *iy2 = 0;
-      return(0);
+      return 0;
    }
    else {
       *ix1 = left;
       *ix2 = right;
       *iy1 = top;
       *iy2 = bottom;
-      return( width * height );
+      return width * height;
    }
 
 }
@@ -750,7 +759,6 @@ int __glXDisp_ReadPixels(__GLXclientState *cl, GLbyte *pc)
     GLboolean swapBytes, lsbFirst;
     ClientPtr client = cl->client;
     DrawablePtr pDraw;
-    int error;
     __GLXcontext *glxc;
     int from_screen = 0;
     int to_screen = 0;
@@ -801,9 +809,9 @@ int __glXDisp_ReadPixels(__GLXclientState *cl, GLbyte *pc)
 
     buf_size = __glReadPixels_size(format,type,width,height, &ebits, &rowsize);
     if (buf_size > 0) {
-       buf = (char *) Xalloc( buf_size );
+       buf = (char *) malloc( buf_size );
        if ( !buf ) {
-	  return( BadAlloc );
+	  return BadAlloc;
        }
     }
     else {
@@ -880,7 +888,7 @@ int __glXDisp_ReadPixels(__GLXclientState *cl, GLbyte *pc)
 		char *be_buf;
 		int be_buf_size = be_reply.length << 2;
 
-		be_buf = (char *) Xalloc( be_buf_size );
+		be_buf = (char *) malloc( be_buf_size );
 		if (be_buf) {
 		   _XRead(dpy, be_buf, be_buf_size);
 
@@ -939,12 +947,12 @@ int __glXDisp_ReadPixels(__GLXclientState *cl, GLbyte *pc)
 
 		   }
 
-		   Xfree( be_buf );
+		   free( be_buf );
 		}
 		else {
 		   /* Throw data on the floor */
 		   _XEatData(dpy, be_buf_size);
-		   Xfree( buf );
+		   free( buf );
 		   return BadAlloc;
 		}
 	     }
@@ -970,7 +978,7 @@ int __glXDisp_ReadPixels(__GLXclientState *cl, GLbyte *pc)
     WriteToClient(client, sizeof(xGLXReadPixelsReply),(char *)&reply);
     if (buf_size > 0) {
        WriteToClient(client, buf_size, (char *)buf);
-       Xfree( buf );
+       free( buf );
     }
 
     return Success;

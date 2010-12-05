@@ -61,7 +61,7 @@ xf86_dga_get_modes (ScreenPtr pScreen)
     if (!num)
 	return FALSE;
     
-    modes = xalloc(num * sizeof(DGAModeRec));
+    modes = malloc(num * sizeof(DGAModeRec));
     if (!modes)
 	return FALSE;
     
@@ -103,8 +103,7 @@ xf86_dga_get_modes (ScreenPtr pScreen)
 	if (display_mode == scrn->modes)
 	    break;
     }
-    if (xf86_config->dga_modes)
-	xfree (xf86_config->dga_modes);
+    free(xf86_config->dga_modes);
     xf86_config->dga_nmode = num;
     xf86_config->dga_modes = modes;
     return TRUE;

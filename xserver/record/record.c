@@ -43,6 +43,7 @@ and Jim Haggerty of Metheus.
 #include "swaprep.h"
 #include "inputstr.h"
 #include "eventconvert.h"
+#include "scrnintstr.h"
 
 
 #include <stdio.h>
@@ -58,7 +59,6 @@ and Jim Haggerty of Metheus.
 #include "protocol-versions.h"
 
 static RESTYPE RTContext;   /* internal resource type for Record contexts */
-static int RecordErrorBase; /* first Record error number */
 
 /* How many bytes of protocol data to buffer in a context. Don't set to less
  * than 32.
@@ -133,7 +133,7 @@ static int numEnabledRCAPs;
     int rc = dixLookupResourceByType((pointer *)&(_pContext), _contextid, \
                                      RTContext, _client, DixUseAccess); \
     if (rc != Success) \
-	return (rc == BadValue) ? RecordErrorBase + XRecordBadContext : rc; \
+	return rc; \
 }
 
 static int RecordDeleteContext(
@@ -167,8 +167,8 @@ typedef struct {
     ProcFunctionPtr recordVector[256]; 
 } RecordClientPrivateRec, *RecordClientPrivatePtr;
 
-static int RecordClientPrivateKeyIndex;
-static DevPrivateKey RecordClientPrivateKey = &RecordClientPrivateKeyIndex;
+static DevPrivateKeyRec RecordClientPrivateKeyRec;
+#define RecordClientPrivateKey (&RecordClientPrivateKeyRec)
 
 /*  RecordClientPrivatePtr RecordClientPrivate(ClientPtr)
  *  gets the client private of the given client.  Syntactic sugar.
@@ -756,11 +756,11 @@ RecordSendProtocolEvents(RecordClientsAndProtocolPtr pRCAP,
 		int scr = XineramaGetCursorScreen(inputInfo.pointer);
 		memcpy(&shiftedEvent, pev, sizeof(xEvent));
 		shiftedEvent.u.keyButtonPointer.rootX +=
-		    panoramiXdataPtr[scr].x -
-		    panoramiXdataPtr[0].x;
+		    screenInfo.screens[scr]->x -
+		    screenInfo.screens[0]->x;
 		shiftedEvent.u.keyButtonPointer.rootY +=
-		    panoramiXdataPtr[scr].y -
-		    panoramiXdataPtr[0].y;
+		    screenInfo.screens[scr]->y -
+		    screenInfo.screens[0]->y;
 		pEvToRecord = &shiftedEvent;
 	    }
 #endif /* PANORAMIX */
@@ -825,7 +825,7 @@ RecordADeviceEvent(CallbackListPtr *pcbl, pointer nulldata, pointer calldata)
 
 		EventToXI(pei->event, &xi_events, &count);
 		RecordSendProtocolEvents(pRCAP, pContext, xi_events, count);
-		xfree(xi_events);
+		free(xi_events);
 	    } /* end this RCAP selects device events */
 	} /* end for each RCAP on this context */
     } /* end for each enabled context */
@@ -913,7 +913,7 @@ RecordInstallHooks(RecordClientsAndProtocolPtr pRCAP, XID oneclient)
 		    RecordClientPrivatePtr pClientPriv;
 		    /* no Record proc vector; allocate one */
 		    pClientPriv = (RecordClientPrivatePtr)
-				xalloc(sizeof(RecordClientPrivateRec));
+				malloc(sizeof(RecordClientPrivateRec));
 		    if (!pClientPriv)
 			return BadAlloc;
 		    /* copy old proc vector to new */
@@ -997,10 +997,11 @@ RecordUninstallHooks(RecordClientsAndProtocolPtr pRCAP, XID oneclient)
 		ClientPtr pClient = clients[CLIENT_ID(client)];
 		int c;
 		Bool otherRCAPwantsProcVector = FALSE;
-		RecordClientPrivatePtr pClientPriv =
-						RecordClientPrivate(pClient);
+		RecordClientPrivatePtr pClientPriv = NULL;
 
-		assert (pClient && RecordClientPrivate(pClient));
+		assert (pClient);
+		pClientPriv = RecordClientPrivate(pClient);
+		assert (pClientPriv);
 		memcpy(pClientPriv->recordVector, pClientPriv->originalVector,
 		       sizeof (pClientPriv->recordVector));
 
@@ -1033,7 +1034,7 @@ RecordUninstallHooks(RecordClientsAndProtocolPtr pRCAP, XID oneclient)
 		    pClient->requestVector = pClientPriv->originalVector;
 		    dixSetPrivate(&pClient->devPrivates,
 				  RecordClientPrivateKey, NULL);
-		    xfree(pClientPriv);
+		    free(pClientPriv);
 		}
 	    } /* end if this RCAP specifies any requests */
 	} /* end if not future clients */
@@ -1101,8 +1102,8 @@ RecordDeleteClientFromRCAP(RecordClientsAndProtocolPtr pRCAP, int position)
 	}
 	/* free the RCAP */
 	if (pRCAP->clientIDsSeparatelyAllocated)
-	    xfree(pRCAP->pClientIDs);
-	xfree(pRCAP);
+	    free(pRCAP->pClientIDs);
+	free(pRCAP);
     }
 } /* RecordDeleteClientFromRCAP */
 
@@ -1130,7 +1131,7 @@ RecordAddClientToRCAP(RecordClientsAndProtocolPtr pRCAP, XID clientspec)
     {
 	if (pRCAP->clientIDsSeparatelyAllocated)
 	{
-	    XID *pNewIDs = (XID *)xrealloc(pRCAP->pClientIDs,
+	    XID *pNewIDs = (XID *)realloc(pRCAP->pClientIDs,
 			(pRCAP->sizeClients + CLIENT_ARRAY_GROWTH_INCREMENT) *
 								sizeof(XID));
 	    if (!pNewIDs)
@@ -1140,7 +1141,7 @@ RecordAddClientToRCAP(RecordClientsAndProtocolPtr pRCAP, XID clientspec)
 	}
 	else
 	{
-	    XID *pNewIDs = (XID *)xalloc((pRCAP->sizeClients +
+	    XID *pNewIDs = (XID *)malloc((pRCAP->sizeClients +
 				CLIENT_ARRAY_GROWTH_INCREMENT) * sizeof(XID));
 	    if (!pNewIDs)
 		return;
@@ -1246,7 +1247,7 @@ RecordSanityCheckClientSpecifiers(ClientPtr client, XID *clientspecs, int nspecs
  *	  - XRecordCurrentClients expanded to a list of all currently
  *	    connected clients - excludespec (if non-zero)
  *	The returned array may be the passed array modified in place, or
- *	it may be an Xalloc'ed array.  The caller should keep a pointer to the
+ *	it may be an malloc'ed array.  The caller should keep a pointer to the
  *	original array and free the returned array if it is different.
  *
  *	*pNumClientspecs is set to the number of elements in the returned
@@ -1278,7 +1279,7 @@ RecordCanonicalizeClientSpecifiers(XID *pClientspecs, int *pNumClientspecs, XID 
 	    pClientspecs[i] == XRecordCurrentClients)
 	{ /* expand All/Current */
 	    int j, nc;
-	    XID *pCanon = (XID *)xalloc(sizeof(XID) * (currentMaxClients + 1));
+	    XID *pCanon = (XID *)malloc(sizeof(XID) * (currentMaxClients + 1));
 	    if (!pCanon) return NULL;
 	    for (nc = 0, j = 1; j < currentMaxClients; j++)
 	    {
@@ -1492,10 +1493,10 @@ RecordAllocIntervals(SetInfoPtr psi, int nIntervals)
 {
     assert(!psi->intervals);
     psi->intervals = (RecordSetInterval *)
-			xalloc(nIntervals * sizeof(RecordSetInterval));
+			malloc(nIntervals * sizeof(RecordSetInterval));
     if (!psi->intervals)
 	return BadAlloc;
-    bzero(psi->intervals, nIntervals * sizeof(RecordSetInterval));
+    memset(psi->intervals, 0, nIntervals * sizeof(RecordSetInterval));
     psi->size = nIntervals;
     return Success;
 } /* end RecordAllocIntervals */
@@ -1663,13 +1664,13 @@ RecordRegisterClients(RecordContextPtr pContext, ClientPtr client, xRecordRegist
      * range for extension replies.
      */
     maxSets = PREDEFSETS + 2 * stuff->nRanges;
-    si = (SetInfoPtr)xalloc(sizeof(SetInfoRec) * maxSets);
+    si = (SetInfoPtr)malloc(sizeof(SetInfoRec) * maxSets);
     if (!si)
     {
 	err = BadAlloc;
 	goto bailout;
     }
-    bzero(si, sizeof(SetInfoRec) * maxSets);
+    memset(si, 0, sizeof(SetInfoRec) * maxSets);
 
     /* theoretically you must do this because NULL may not be all-bits-zero */
     for (i = 0; i < maxSets; i++)
@@ -1755,7 +1756,7 @@ RecordRegisterClients(RecordContextPtr pContext, ClientPtr client, xRecordRegist
 
     /* allocate memory for the whole RCAP */
 
-    pRCAP = (RecordClientsAndProtocolPtr)xalloc(totRCAPsize);
+    pRCAP = (RecordClientsAndProtocolPtr)malloc(totRCAPsize);
     if (!pRCAP) 
     {
 	err = BadAlloc;
@@ -1868,12 +1869,11 @@ bailout:
     if (si)
     {
 	for (i = 0; i < maxSets; i++)
-	    if (si[i].intervals)
-		xfree(si[i].intervals);
-	xfree(si);
+	    free(si[i].intervals);
+	free(si);
     }
     if (pCanonClients && pCanonClients != (XID *)&stuff[1])
-	xfree(pCanonClients);
+	free(pCanonClients);
     return err;
 } /* RecordRegisterClients */
 
@@ -1903,7 +1903,7 @@ ProcRecordQueryVersion(ClientPtr client)
     }
     (void)WriteToClient(client, sizeof(xRecordQueryVersionReply),
 			(char *)&rep);
-    return (client->noClientException);
+    return Success;
 } /* ProcRecordQueryVersion */
 
 
@@ -1918,14 +1918,14 @@ ProcRecordCreateContext(ClientPtr client)
     REQUEST_AT_LEAST_SIZE(xRecordCreateContextReq);
     LEGAL_NEW_RESOURCE(stuff->context, client);
 
-    pContext = (RecordContextPtr)xalloc(sizeof(RecordContextRec));
+    pContext = (RecordContextPtr)malloc(sizeof(RecordContextRec));
     if (!pContext)
 	goto bailout;
 
     /* make sure there is room in ppAllContexts to store the new context */
 
     ppNewAllContexts = (RecordContextPtr *)
-	xrealloc(ppAllContexts, sizeof(RecordContextPtr) * (numContexts + 1));
+	realloc(ppAllContexts, sizeof(RecordContextPtr) * (numContexts + 1));
     if (!ppNewAllContexts)
 	goto bailout;
     ppAllContexts = ppNewAllContexts;
@@ -1955,8 +1955,7 @@ ProcRecordCreateContext(ClientPtr client)
 	err = BadAlloc;
     }
 bailout:
-    if (pContext)
-	xfree(pContext);
+    free(pContext);
     return err;
 } /* ProcRecordCreateContext */
 
@@ -2005,7 +2004,7 @@ ProcRecordUnregisterClients(ClientPtr client)
 	RecordDeleteClientFromContext(pContext, pCanonClients[i]);
     }
     if (pCanonClients != (XID *)&stuff[1])
-	xfree(pCanonClients);
+	free(pCanonClients);
     return Success;
 } /* ProcRecordUnregisterClients */
 
@@ -2046,14 +2045,14 @@ RecordAllocRanges(GetContextRangeInfoPtr pri, int nRanges)
 #define SZINCR 8
 
     newsize = max(pri->size + SZINCR, nRanges);
-    pNewRange = (xRecordRange *)xrealloc(pri->pRanges,
+    pNewRange = (xRecordRange *)realloc(pri->pRanges,
 			 newsize * sizeof(xRecordRange));
     if (!pNewRange)
 	return BadAlloc;
 
     pri->pRanges = pNewRange;
     pri->size = newsize;
-    bzero(&pri->pRanges[pri->size - SZINCR], SZINCR * sizeof(xRecordRange));
+    memset(&pri->pRanges[pri->size - SZINCR], 0, SZINCR * sizeof(xRecordRange));
     if (pri->nRanges < nRanges)
 	pri->nRanges = nRanges;
     return Success;
@@ -2237,7 +2236,7 @@ ProcRecordGetContext(ClientPtr client)
 
     /* allocate and initialize space for record range info */
 
-    pRangeInfo = (GetContextRangeInfoPtr)xalloc(
+    pRangeInfo = (GetContextRangeInfoPtr)malloc(
 				nRCAPs * sizeof(GetContextRangeInfoRec));
     if (!pRangeInfo && nRCAPs > 0)
 	return BadAlloc;
@@ -2347,14 +2346,14 @@ ProcRecordGetContext(ClientPtr client)
 			  (char *)pri->pRanges);
 	}
     }
-    err = client->noClientException;
+    err = Success;
 
 bailout:
     for (i = 0; i < nRCAPs; i++)
     {
-	if (pRangeInfo[i].pRanges) xfree(pRangeInfo[i].pRanges);
+	free(pRangeInfo[i].pRanges);
     }
-    xfree(pRangeInfo);
+    free(pRangeInfo);
     return err;
 } /* ProcRecordGetContext */
 
@@ -2522,8 +2521,6 @@ RecordDeleteContext(pointer value, XID id)
 	}
     }
 
-    xfree(pContext);
-
     /* remove context from AllContexts list */
 
     if (-1 != (i = RecordFindContextOnAllContexts(pContext)))
@@ -2531,10 +2528,12 @@ RecordDeleteContext(pointer value, XID id)
 	ppAllContexts[i] = ppAllContexts[numContexts - 1];
 	if (--numContexts == 0)
 	{
-	    xfree(ppAllContexts);
+	    free(ppAllContexts);
 	    ppAllContexts = NULL;
 	}
     }
+    free(pContext);
+
     return Success;
 } /* RecordDeleteContext */
 
@@ -2764,14 +2763,14 @@ RecordConnectionSetupInfo(RecordContextPtr pContext, NewClientInfoRec *pci)
 
     if (pci->client->swapped)
     {
-	char *pConnSetup = (char *)xalloc(prefixsize + restsize);
+	char *pConnSetup = (char *)malloc(prefixsize + restsize);
 	if (!pConnSetup)
 	    return;
 	SwapConnSetupPrefix(pci->prefix, (xConnSetupPrefix*)pConnSetup);
 	SwapConnSetupInfo((char*)pci->setup, (char*)(pConnSetup + prefixsize));
 	RecordAProtocolElement(pContext, pci->client, XRecordClientStarted,
 			       (pointer)pConnSetup, prefixsize + restsize, 0);
-	xfree(pConnSetup);
+	free(pConnSetup);
     }
     else
     {
@@ -2815,6 +2814,8 @@ RecordAClientStateChange(CallbackListPtr *pcbl, pointer nulldata, pointer callda
     NewClientInfoRec *pci = (NewClientInfoRec *)calldata;
     int i;
     ClientPtr pClient = pci->client;
+    RecordContextPtr *ppAllContextsCopy = NULL;
+    int numContextsCopy = 0;
 
     switch (pClient->clientState)
     {
@@ -2836,10 +2837,17 @@ RecordAClientStateChange(CallbackListPtr *pcbl, pointer nulldata, pointer callda
 
     case ClientStateGone:
     case ClientStateRetained: /* client disconnected */
-	for (i = 0; i < numContexts; i++)
+
+        /* RecordDisableContext modifies contents of ppAllContexts. */
+	numContextsCopy = numContexts;
+	ppAllContextsCopy = malloc(numContextsCopy * sizeof(RecordContextPtr));
+	assert(ppAllContextsCopy);
+	memcpy(ppAllContextsCopy, ppAllContexts, numContextsCopy * sizeof(RecordContextPtr));
+
+	for (i = 0; i < numContextsCopy; i++)
 	{
 	    RecordClientsAndProtocolPtr pRCAP;
-	    RecordContextPtr pContext = ppAllContexts[i];
+	    RecordContextPtr pContext = ppAllContextsCopy[i];
 	    int pos;
 
 	    if (pContext->pRecordingClient == pClient)
@@ -2853,6 +2861,8 @@ RecordAClientStateChange(CallbackListPtr *pcbl, pointer nulldata, pointer callda
 		RecordDeleteClientFromRCAP(pRCAP, pos);
 	    }
 	}
+
+	free(ppAllContextsCopy);
     break;
 
     default:
@@ -2897,6 +2907,9 @@ RecordExtensionInit(void)
     if (!RTContext)
 	return;
 
+    if (!dixRegisterPrivateKey(RecordClientPrivateKey, PRIVATE_CLIENT, 0))
+        return;
+
     ppAllContexts = NULL;
     numContexts = numEnabledContexts = numEnabledRCAPs = 0;
 
@@ -2911,7 +2924,7 @@ RecordExtensionInit(void)
 	DeleteCallback(&ClientStateCallback, RecordAClientStateChange, NULL);
 	return;
     }
-    RecordErrorBase = extentry->errorBase;
+    SetResourceTypeErrorValue(RTContext, extentry->errorBase + XRecordBadContext);
 
 } /* RecordExtensionInit */
 

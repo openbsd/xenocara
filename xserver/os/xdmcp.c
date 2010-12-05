@@ -132,14 +132,14 @@ static struct multicastinfo {
 #endif
 
 static void XdmcpAddHost(
-    struct sockaddr    *from,
+    const struct sockaddr    *from,
     int			fromlen,
     ARRAY8Ptr		AuthenticationName,
     ARRAY8Ptr		hostname,
     ARRAY8Ptr		status);
 
 static void XdmcpSelectHost(
-    struct sockaddr	*host_sockaddr,
+    const struct sockaddr *host_sockaddr,
     int			host_len,
     ARRAY8Ptr		AuthenticationName);
 
@@ -169,10 +169,10 @@ static void send_keepalive_msg(void);
 static void recv_alive_msg(unsigned /*length*/);
 
 static void XdmcpFatal(
-    char * /*type*/,
+    const char * /*type*/,
     ARRAY8Ptr /*status*/);
  
-static void XdmcpWarning(char * /*str*/);
+static void XdmcpWarning(const char * /*str*/);
 
 static void get_manager_by_name(
     int /*argc*/,
@@ -210,7 +210,7 @@ static void XdmcpWakeupHandler(
 static ARRAY8 ManufacturerDisplayID;
 
 static void
-XdmcpRegisterManufacturerDisplayID (char *name, int length)
+XdmcpRegisterManufacturerDisplayID (const char *name, int length)
 {
     int	    i;
 
@@ -251,48 +251,48 @@ XdmcpOptions(int argc, char **argv, int i)
 	get_manager_by_name(argc, argv, i++);
 	XDM_INIT_STATE = XDM_QUERY;
 	AccessUsingXdmcp ();
-	return (i + 1);
+	return i + 1;
     }
     if (strcmp(argv[i], "-broadcast") == 0) {
 	XDM_INIT_STATE = XDM_BROADCAST;
 	AccessUsingXdmcp ();
-	return (i + 1);
+	return i + 1;
     }
 #if defined(IPv6) && defined(AF_INET6)
     if (strcmp(argv[i], "-multicast") == 0) {
 	i = get_mcast_options(argc, argv, ++i);
 	XDM_INIT_STATE = XDM_MULTICAST;
 	AccessUsingXdmcp ();
-	return (i + 1);
+	return i + 1;
     }
 #endif
     if (strcmp(argv[i], "-indirect") == 0) {
 	get_manager_by_name(argc, argv, i++);
 	XDM_INIT_STATE = XDM_INDIRECT;
 	AccessUsingXdmcp ();
-	return (i + 1);
+	return i + 1;
     }
     if (strcmp(argv[i], "-port") == 0) {
         if (++i == argc)  {
 	    FatalError("Xserver: missing port number in command line\n");
 	}
 	xdm_udp_port = (unsigned short) atoi(argv[i]);
-	return (i + 1);
+	return i + 1;
     }
     if (strcmp(argv[i], "-from") == 0) {
 	get_fromaddr_by_name(argc, argv, ++i);
-	return (i + 1);
+	return i + 1;
     }
     if (strcmp(argv[i], "-once") == 0) {
 	OneSession = TRUE;
-	return (i + 1);
+	return i + 1;
     }
     if (strcmp(argv[i], "-class") == 0) {
         if (++i == argc)  {
 	    FatalError("Xserver: missing class name in command line\n");
 	}
 	defaultDisplayClass = argv[i];
-	return (i + 1);
+	return i + 1;
     }
 #ifdef HASXDMAUTH
     if (strcmp(argv[i], "-cookie") == 0) {
@@ -300,7 +300,7 @@ XdmcpOptions(int argc, char **argv, int i)
 	    FatalError("Xserver: missing cookie data in command line\n");
 	}
 	xdmAuthCookie = argv[i];
-	return (i + 1);
+	return i + 1;
     }
 #endif
     if (strcmp(argv[i], "-displayID") == 0) {
@@ -308,9 +308,9 @@ XdmcpOptions(int argc, char **argv, int i)
 	    FatalError("Xserver: missing displayID in command line\n");
 	}
 	XdmcpRegisterManufacturerDisplayID (argv[i], strlen (argv[i]));
-	return (i + 1);
+	return i + 1;
     }
-    return (i);
+    return i;
 }
 
 /*
@@ -332,13 +332,13 @@ static struct sockaddr_in   BroadcastAddresses[MAX_BROADCAST];
 static int		    NumBroadcastAddresses;
 
 void
-XdmcpRegisterBroadcastAddress (struct sockaddr_in *addr)
+XdmcpRegisterBroadcastAddress (const struct sockaddr_in *addr)
 {
     struct sockaddr_in	*bcast;
     if (NumBroadcastAddresses >= MAX_BROADCAST)
 	return;
     bcast = &BroadcastAddresses[NumBroadcastAddresses++];
-    bzero (bcast, sizeof (struct sockaddr_in));
+    memset(bcast, 0, sizeof (struct sockaddr_in));
 #ifdef BSD44SOCKETS
     bcast->sin_len = addr->sin_len;
 #endif
@@ -364,9 +364,9 @@ static AuthenticationFuncsPtr	AuthenticationFuncsList;
 
 void
 XdmcpRegisterAuthentication (
-    char    *name,
+    const char    *name,
     int	    namelen,
-    char    *data,
+    const char    *data,
     int	    datalen,
     ValidatorFunc Validator,
     GeneratorFunc Generator,
@@ -391,7 +391,7 @@ XdmcpRegisterAuthentication (
 				     AuthenticationNames.length + 1) &&
 	  XdmcpReallocARRAYofARRAY8 (&AuthenticationDatas,
 				     AuthenticationDatas.length + 1) &&
-	  (newFuncs = xalloc ((AuthenticationNames.length + 1) * sizeof (AuthenticationFuncsRec)))))
+	  (newFuncs = malloc((AuthenticationNames.length + 1) * sizeof (AuthenticationFuncsRec)))))
     {
 	XdmcpDisposeARRAY8 (&AuthenticationName);
 	XdmcpDisposeARRAY8 (&AuthenticationData);
@@ -402,7 +402,7 @@ XdmcpRegisterAuthentication (
     newFuncs[AuthenticationNames.length-1].Validator = Validator;
     newFuncs[AuthenticationNames.length-1].Generator = Generator;
     newFuncs[AuthenticationNames.length-1].AddAuth = AddAuth;
-    xfree (AuthenticationFuncsList);
+    free(AuthenticationFuncsList);
     AuthenticationFuncsList = newFuncs;
     AuthenticationNames.data[AuthenticationNames.length-1] = AuthenticationName;
     AuthenticationDatas.data[AuthenticationDatas.length-1] = AuthenticationData;
@@ -420,7 +420,7 @@ static ARRAY8Ptr	AuthenticationData = &noAuthenticationData;
 static AuthenticationFuncsPtr	AuthenticationFuncs;
 
 static void
-XdmcpSetAuthentication (ARRAY8Ptr name)
+XdmcpSetAuthentication (const ARRAY8Ptr name)
 {
     int	i;
 
@@ -445,7 +445,7 @@ static long		xdmcpGeneration;
 void
 XdmcpRegisterConnection (
     int	    type,
-    char    *address,
+    const char    *address,
     int	    addrlen)
 {
     int	    i;
@@ -492,18 +492,18 @@ XdmcpRegisterConnection (
     }
     if (ConnectionAddresses.length + 1 == 256)
 	return;
-    newAddress = xalloc (addrlen * sizeof (CARD8));
+    newAddress = malloc(addrlen * sizeof (CARD8));
     if (!newAddress)
 	return;
     if (!XdmcpReallocARRAY16 (&ConnectionTypes, ConnectionTypes.length + 1))
     {
-	xfree (newAddress);
+	free(newAddress);
 	return;
     }
     if (!XdmcpReallocARRAYofARRAY8 (&ConnectionAddresses,
 				    ConnectionAddresses.length +  1))
     {
-	xfree (newAddress);
+	free(newAddress);
 	return;
     }
     ConnectionTypes.data[ConnectionTypes.length - 1] = (CARD16) type;
@@ -528,17 +528,17 @@ XdmcpRegisterAuthorizations (void)
 }
 
 void
-XdmcpRegisterAuthorization (char *name, int namelen)
+XdmcpRegisterAuthorization (const char *name, int namelen)
 {
     ARRAY8  authName;
     int	    i;
 
-    authName.data = xalloc (namelen * sizeof (CARD8));
+    authName.data = malloc(namelen * sizeof (CARD8));
     if (!authName.data)
 	return;
     if (!XdmcpReallocARRAYofARRAY8 (&AuthorizationNames, AuthorizationNames.length +1))
     {
-	xfree (authName.data);
+	free(authName.data);
 	return;
     }
     for (i = 0; i < namelen; i++)
@@ -554,7 +554,7 @@ XdmcpRegisterAuthorization (char *name, int namelen)
 static ARRAY8	DisplayClass;
 
 static void
-XdmcpRegisterDisplayClass (char *name, int length)
+XdmcpRegisterDisplayClass (const char *name, int length)
 {
     int	    i;
 
@@ -728,7 +728,7 @@ XdmcpWakeupHandler(
 
 static void
 XdmcpSelectHost(
-    struct sockaddr	*host_sockaddr,
+    const struct sockaddr	*host_sockaddr,
     int			host_len,
     ARRAY8Ptr		AuthenticationName)
 {
@@ -748,7 +748,7 @@ XdmcpSelectHost(
 /*ARGSUSED*/
 static void
 XdmcpAddHost(
-    struct sockaddr    *from,
+    const struct sockaddr    *from,
     int			fromlen,
     ARRAY8Ptr		AuthenticationName,
     ARRAY8Ptr		hostname,
@@ -854,7 +854,7 @@ send_packet(void)
  */
 
 static void
-XdmcpDeadSession (char *reason)
+XdmcpDeadSession (const char *reason)
 {
     ErrorF ("XDM: %s, declaring session dead\n", reason);
     state = XDM_INIT_STATE;
@@ -1448,7 +1448,7 @@ recv_alive_msg (unsigned length)
 
 static  void
 XdmcpFatal (
-    char	*type,
+    const char	*type,
     ARRAY8Ptr	status)
 {
     FatalError ("XDMCP fatal error: %s %*.*s\n", type,
@@ -1456,15 +1456,15 @@ XdmcpFatal (
 }
 
 static  void
-XdmcpWarning(char *str)
+XdmcpWarning(const char *str)
 {
     ErrorF("XDMCP warning: %s\n", str);
 }
 
 static void
 get_addr_by_name(
-    char *	argtype,
-    char *	namestr,
+    const char *argtype,
+    const char *namestr,
     int		port,
     int		socktype,
     SOCKADDR_TYPE *addr,
@@ -1483,7 +1483,7 @@ get_addr_by_name(
     char *pport = portstr;
     int gaierr;
 
-    bzero(&hints, sizeof(hints));
+    memset(&hints, 0, sizeof(hints));
     hints.ai_socktype = socktype;
 
     if (port == 0) {
@@ -1616,7 +1616,7 @@ get_mcast_options(int argc, char **argv, int i)
     } else {
 	FatalError("Xserver: port out of range: %d\n", xdm_udp_port);
     }
-    bzero(&hints, sizeof(hints));
+    memset(&hints, 0, sizeof(hints));
     hints.ai_socktype = SOCK_DGRAM;
 
     if ((gaierr = getaddrinfo(address, portstr, &hints, &firstai)) == 0) {

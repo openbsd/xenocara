@@ -76,7 +76,6 @@ miModifyPixmapHeader(PixmapPtr pPixmap, int width, int height, int depth,
 	pPixmap->drawable.depth = depth;
 	pPixmap->drawable.bitsPerPixel = bitsPerPixel;
 	pPixmap->drawable.id = 0;
-	pPixmap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
 	pPixmap->drawable.x = 0;
 	pPixmap->drawable.y = 0;
 	pPixmap->drawable.width = width;
@@ -116,6 +115,7 @@ miModifyPixmapHeader(PixmapPtr pPixmap, int width, int height, int depth,
 	if (pPixData)
 	    pPixmap->devPrivate.ptr = pPixData;
     }
+    pPixmap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
     return TRUE;
 }
 
@@ -166,7 +166,7 @@ miCreateScreenResources(ScreenPtr pScreen)
     {
 	value = pScrInitParms->pbits;
     }
-    xfree(pScreen->devPrivate); /* freeing miScreenInitParmsRec */
+    free(pScreen->devPrivate); /* freeing miScreenInitParmsRec */
     pScreen->devPrivate = value; /* pPixmap or pbits */
     return TRUE;
 }
@@ -180,7 +180,7 @@ miScreenDevPrivateInit(ScreenPtr pScreen, int width, pointer pbits)
      * to the screen, until CreateScreenResources can put them in the
      * screen pixmap.
      */
-    pScrInitParms = xalloc(sizeof(miScreenInitParmsRec));
+    pScrInitParms = malloc(sizeof(miScreenInitParmsRec));
     if (!pScrInitParms)
 	return FALSE;
     pScrInitParms->pbits = pbits;
@@ -246,7 +246,6 @@ miScreenInit(
     }
     /* else CloseScreen */
     /* QueryBestSize, SaveScreen, GetImage, GetSpans */
-    pScreen->PointerNonInterestBox = (PointerNonInterestBoxProcPtr) 0;
     pScreen->SourceValidate = (SourceValidateProcPtr) 0;
     /* CreateWindow, DestroyWindow, PositionWindow, ChangeWindowAttributes */
     /* RealizeWindow, UnrealizeWindow */
@@ -293,21 +292,25 @@ miScreenInit(
     return miScreenDevPrivateInit(pScreen, width, pbits);
 }
 
-static int privateKeyIndex;
-static DevPrivateKey privateKey = &privateKeyIndex;
+static DevPrivateKeyRec privateKeyRec;
+#define privateKey (&privateKeyRec)
 
 DevPrivateKey
 miAllocateGCPrivateIndex(void)
 {
+    if (!dixRegisterPrivateKey(&privateKeyRec, PRIVATE_GC, 0))
+	return NULL;
     return privateKey;
 }
 
-static int miZeroLineScreenKeyIndex;
-DevPrivateKey miZeroLineScreenKey = &miZeroLineScreenKeyIndex;
+DevPrivateKeyRec miZeroLineScreenKeyRec;
 
 void
 miSetZeroLineBias(ScreenPtr pScreen, unsigned int bias)
 {
+    if (!dixRegisterPrivateKey(&miZeroLineScreenKeyRec, PRIVATE_SCREEN, 0))
+	return;
+
     dixSetPrivate(&pScreen->devPrivates, miZeroLineScreenKey, 
 					(unsigned long *)(unsigned long)bias);
 }

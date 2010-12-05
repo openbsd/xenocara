@@ -62,15 +62,10 @@ extern int RootlessMiValidateTree(WindowPtr pRoot, WindowPtr pChild,
 extern Bool RootlessCreateGC(GCPtr pGC);
 
 // Initialize globals
-static int rootlessGCPrivateKeyIndex;
-DevPrivateKey rootlessGCPrivateKey = &rootlessGCPrivateKeyIndex;
-static int rootlessScreenPrivateKeyIndex;
-DevPrivateKey rootlessScreenPrivateKey = &rootlessScreenPrivateKeyIndex;
-static int rootlessWindowPrivateKeyIndex;
-DevPrivateKey rootlessWindowPrivateKey = &rootlessWindowPrivateKeyIndex;
-static int rootlessWindowOldPixmapPrivateKeyIndex;
-DevPrivateKey rootlessWindowOldPixmapPrivateKey = &rootlessWindowOldPixmapPrivateKeyIndex;
-
+DevPrivateKeyRec rootlessGCPrivateKeyRec;
+DevPrivateKeyRec rootlessScreenPrivateKeyRec;
+DevPrivateKeyRec rootlessWindowPrivateKeyRec;
+DevPrivateKeyRec rootlessWindowOldPixmapPrivateKeyRec;
 
 /*
  * RootlessUpdateScreenPixmap
@@ -98,10 +93,10 @@ RootlessUpdateScreenPixmap(ScreenPtr pScreen)
 
     if (s->pixmap_data_size < rowbytes) {
         if (s->pixmap_data != NULL)
-            xfree(s->pixmap_data);
+            free(s->pixmap_data);
 
         s->pixmap_data_size = rowbytes;
-        s->pixmap_data = xalloc(s->pixmap_data_size);
+        s->pixmap_data = malloc(s->pixmap_data_size);
         if (s->pixmap_data == NULL)
             return;
 
@@ -157,12 +152,12 @@ RootlessCloseScreen(int i, ScreenPtr pScreen)
     pScreen->CloseScreen = s->CloseScreen;
 
     if (s->pixmap_data != NULL) {
-        xfree (s->pixmap_data);
+        free(s->pixmap_data);
         s->pixmap_data = NULL;
         s->pixmap_data_size = 0;
     }
 
-    xfree(s);
+    free(s);
     return pScreen->CloseScreen(i, pScreen);
 }
 
@@ -241,8 +236,6 @@ RootlessSourceValidate(DrawablePtr pDrawable, int x, int y, int w, int h)
     }
     SCREEN_WRAP(pDrawable->pScreen, SourceValidate);
 }
-
-#ifdef RENDER
 
 static void
 RootlessComposite(CARD8 op, PicturePtr pSrc, PicturePtr pMask, PicturePtr pDst,
@@ -363,8 +356,6 @@ RootlessGlyphs(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
     }
 }
 
-#endif // RENDER
-
 
 /*
  * RootlessValidateTree
@@ -445,9 +436,9 @@ RootlessMarkOverlappedWindows(WindowPtr pWin, WindowPtr pFirst,
             pChild = pWin;
             while (1) {
                 if (pChild->viewable) {
-                    if (REGION_BROKEN (pScreen, &pChild->winSize))
+                    if (RegionBroken(&pChild->winSize))
                         SetWinSize (pChild);
-                    if (REGION_BROKEN (pScreen, &pChild->borderSize))
+                    if (RegionBroken(&pChild->borderSize))
                         SetBorderSize (pChild);
                     (* MarkWindow)(pChild);
                     if (pChild->firstChild) {
@@ -497,7 +488,7 @@ static void expose_1 (WindowPtr pWin) {
 void
 RootlessScreenExpose (ScreenPtr pScreen)
 {
-    expose_1 (WindowTable[pScreen->myNum]);
+    expose_1 (pScreen->root);
 }
 
 
@@ -641,11 +632,16 @@ RootlessAllocatePrivates(ScreenPtr pScreen)
 {
     RootlessScreenRec *s;
 
-    // no allocation needed for screen privates
-    if (!dixRequestPrivate(rootlessGCPrivateKey, sizeof(RootlessGCRec)))
+    if (!dixRegisterPrivateKey(&rootlessGCPrivateKeyRec, PRIVATE_GC, sizeof(RootlessGCRec)))
+        return FALSE;
+    if (!dixRegisterPrivateKey(&rootlessScreenPrivateKeyRec, PRIVATE_SCREEN, 0))
+        return FALSE;
+    if (!dixRegisterPrivateKey(&rootlessWindowPrivateKeyRec, PRIVATE_WINDOW, 0))
+        return FALSE;
+    if (!dixRegisterPrivateKey(&rootlessWindowOldPixmapPrivateKeyRec, PRIVATE_WINDOW, 0))
         return FALSE;
 
-    s = xalloc(sizeof(RootlessScreenRec));
+    s = malloc(sizeof(RootlessScreenRec));
     if (! s) return FALSE;
     SETSCREENREC(pScreen, s);
 
@@ -698,7 +694,6 @@ RootlessWrap(ScreenPtr pScreen)
 
     WRAP(SetShape);
 
-#ifdef RENDER
     {
         // Composite and Glyphs don't use normal screen wrapping
         PictureScreenPtr ps = GetPictureScreen(pScreen);
@@ -707,7 +702,6 @@ RootlessWrap(ScreenPtr pScreen)
         s->Glyphs = ps->Glyphs;
         ps->Glyphs = RootlessGlyphs;
     }
-#endif
 
     // WRAP(ClearToBackground); fixme put this back? useful for shaped wins?
 

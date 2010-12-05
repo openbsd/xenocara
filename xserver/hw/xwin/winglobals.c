@@ -41,23 +41,16 @@
  */
 
 int		g_iNumScreens = 0;
-winScreenInfo	g_ScreenInfo[MAXSCREENS];
-int		g_iLastScreen = -1;
+winScreenInfo * g_ScreenInfo = 0;
 #ifdef HAS_DEVWINDOWS
 int		g_fdMessageQueue = WIN_FD_INVALID;
 #endif
-static int	g_iScreenPrivateKeyIndex;
-DevPrivateKey	g_iScreenPrivateKey = &g_iScreenPrivateKeyIndex;
-static int	g_iCmapPrivateKeyIndex;
-DevPrivateKey	g_iCmapPrivateKey = &g_iCmapPrivateKeyIndex;
-static int	g_iGCPrivateKeyIndex;
-DevPrivateKey	g_iGCPrivateKey = &g_iGCPrivateKeyIndex;
-static int	g_iPixmapPrivateKeyIndex;
-DevPrivateKey	g_iPixmapPrivateKey = &g_iPixmapPrivateKeyIndex;
-static int	g_iWindowPrivateKeyIndex;
-DevPrivateKey	g_iWindowPrivateKey = &g_iWindowPrivateKeyIndex;
+DevPrivateKeyRec g_iScreenPrivateKeyRec;
+DevPrivateKeyRec g_iCmapPrivateKeyRec;
+DevPrivateKeyRec g_iGCPrivateKeyRec;
+DevPrivateKeyRec g_iPixmapPrivateKeyRec;
+DevPrivateKeyRec g_iWindowPrivateKeyRec;
 unsigned long	g_ulServerGeneration = 0;
-Bool		g_fInitializedDefaultScreens = FALSE;
 DWORD		g_dwEnginesSupported = 0;
 HINSTANCE	g_hInstance = 0;
 HWND		g_hDlgDepthChange = NULL;
@@ -85,7 +78,7 @@ HWND		g_hwndKeyboardFocus = NULL;
 Bool		g_fNoHelpMessageBox = FALSE;
 Bool		g_fSoftwareCursor = FALSE;
 Bool		g_fSilentDupError = FALSE;
-
+Bool            g_fNativeGl = FALSE;
 
 /*
  * Global variables for dynamically loaded libraries and

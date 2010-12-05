@@ -128,7 +128,7 @@ ProcAppleDRIQueryVersion(
         swapl(&rep.length, n);
     }
     WriteToClient(client, sizeof(xAppleDRIQueryVersionReply), (char *)&rep);
-    return (client->noClientException);
+    return Success;
 }
 
 
@@ -159,7 +159,7 @@ ProcAppleDRIQueryDirectRenderingCapable(
 
     WriteToClient(client, 
         sizeof(xAppleDRIQueryDirectRenderingCapableReply), (char *)&rep);
-    return (client->noClientException);
+    return Success;
 }
 
 static int
@@ -182,7 +182,7 @@ ProcAppleDRIAuthConnection(
         rep.authenticated = 0;
     }
     WriteToClient(client, sizeof(xAppleDRIAuthConnectionReply), (char *)&rep);
-    return (client->noClientException);
+    return Success;
 }
 
 static void surface_notify(
@@ -192,22 +192,16 @@ static void surface_notify(
 {
     DRISurfaceNotifyArg *arg = _arg;
     int client_index = (int) x_cvt_vptr_to_uint(data);
-    ClientPtr client;
     xAppleDRINotifyEvent se;
 
     if (client_index < 0 || client_index >= currentMaxClients)
         return;
 
-    client = clients[client_index];
-    if (client == NULL || client == serverClient || client->clientGone)
-        return;
-
     se.type = DRIEventBase + AppleDRISurfaceNotify;
     se.kind = arg->kind;
     se.arg = arg->id;
-    se.sequenceNumber = client->sequence;
     se.time = currentTime.milliseconds;
-    WriteEventsToClient (client, 1, (xEvent *) &se);
+    WriteEventsToClient (clients[client_index], 1, (xEvent *) &se);
 }
 
 static int
@@ -247,7 +241,7 @@ ProcAppleDRICreateSurface(
     rep.uid = sid;
 
     WriteToClient(client, sizeof(xAppleDRICreateSurfaceReply), (char *)&rep);
-    return (client->noClientException);
+    return Success;
 }
 
 static int
@@ -271,7 +265,7 @@ ProcAppleDRIDestroySurface(
         return BadValue;
     }
 
-    return (client->noClientException);
+    return Success;
 }
 
 static int
@@ -323,7 +317,7 @@ ProcAppleDRICreatePixmap(ClientPtr client)
     WriteReplyToClient(client, sizeof(rep), &rep);
     (void)WriteToClient(client, rep.stringLength, path);
 
-    return (client->noClientException);
+    return Success;
 }
 
 static int
@@ -342,7 +336,7 @@ ProcAppleDRIDestroyPixmap(ClientPtr client)
     
     DRIDestroyPixmap(pDrawable);
 
-    return (client->noClientException);
+    return Success;
 }
 
 /* dispatch */

@@ -43,25 +43,21 @@ ProcXFixesChangeSaveSet(ClientPtr client)
     if ((stuff->mode != SetModeInsert) && (stuff->mode != SetModeDelete))
     {
 	client->errorValue = stuff->mode;
-	return( BadValue );
+	return BadValue;
     }
     if ((stuff->target != SaveSetNearest) && (stuff->target != SaveSetRoot))
     {
 	client->errorValue = stuff->target;
-	return( BadValue );
+	return BadValue;
     }
     if ((stuff->map != SaveSetMap) && (stuff->map != SaveSetUnmap))
     {
 	client->errorValue = stuff->map;
-	return( BadValue );
+	return BadValue;
     }
     toRoot = (stuff->target == SaveSetRoot);
     map = (stuff->map == SaveSetMap);
-    result = AlterSaveSetForClient(client, pWin, stuff->mode, toRoot, map);
-    if (client->noClientException != Success)
-	return(client->noClientException);
-    else
-	return(result);
+    return AlterSaveSetForClient(client, pWin, stuff->mode, toRoot, map);
 }
 
 int

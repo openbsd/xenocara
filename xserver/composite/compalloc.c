@@ -99,7 +99,7 @@ compRedirectWindow (ClientPtr pClient, WindowPtr pWin, int update)
      * The client *could* allocate multiple, but while supported,
      * it is not expected to be common
      */
-    ccw = xalloc (sizeof (CompClientWindowRec));
+    ccw = malloc(sizeof (CompClientWindowRec));
     if (!ccw)
 	return BadAlloc;
     ccw->id = FakeClientID (pClient->index);
@@ -109,10 +109,10 @@ compRedirectWindow (ClientPtr pClient, WindowPtr pWin, int update)
      */
     if (!cw)
     {
-	cw = xalloc (sizeof (CompWindowRec));
+	cw = malloc(sizeof (CompWindowRec));
 	if (!cw)
 	{
-	    xfree (ccw);
+	    free(ccw);
 	    return BadAlloc;
 	}
 	cw->damage = DamageCreate (compReportDamage,
@@ -123,8 +123,8 @@ compRedirectWindow (ClientPtr pClient, WindowPtr pWin, int update)
 				   pWin);
 	if (!cw->damage)
 	{
-	    xfree (ccw);
-	    xfree (cw);
+	    free(ccw);
+	    free(cw);
 	    return BadAlloc;
 	}
 	if (wasMapped)
@@ -134,7 +134,7 @@ compRedirectWindow (ClientPtr pClient, WindowPtr pWin, int update)
 	    EnableMapUnmapEvents (pWin);
 	}
 
-	REGION_NULL (pScreen, &cw->borderClip);
+	RegionNull(&cw->borderClip);
 	cw->borderClipX = 0;
 	cw->borderClipY = 0;
 	cw->update = CompositeRedirectAutomatic;
@@ -208,7 +208,7 @@ compFreeClientWindow (WindowPtr pWin, XID id)
 	    *prev = ccw->next;
 	    if (ccw->update == CompositeRedirectManual)
 		cw->update = CompositeRedirectAutomatic;
-	    xfree (ccw);
+	    free(ccw);
 	    break;
 	}
     }
@@ -227,10 +227,10 @@ compFreeClientWindow (WindowPtr pWin, XID id)
 	if (cw->damage)
 	    DamageDestroy (cw->damage);
 	
-	REGION_UNINIT (pScreen, &cw->borderClip);
+	RegionUninit(&cw->borderClip);
     
 	dixSetPrivate(&pWin->devPrivates, CompWindowPrivateKey, NULL);
-	xfree (cw);
+	free(cw);
     }
     else if (cw->update == CompositeRedirectAutomatic &&
 	     !cw->damageRegistered && pWin->redirectDraw != RedirectDrawNone)
@@ -296,7 +296,7 @@ compRedirectSubwindows (ClientPtr pClient, WindowPtr pWin, int update)
      * The client *could* allocate multiple, but while supported,
      * it is not expected to be common
      */
-    ccw = xalloc (sizeof (CompClientWindowRec));
+    ccw = malloc(sizeof (CompClientWindowRec));
     if (!ccw)
 	return BadAlloc;
     ccw->id = FakeClientID (pClient->index);
@@ -306,10 +306,10 @@ compRedirectSubwindows (ClientPtr pClient, WindowPtr pWin, int update)
      */
     if (!csw)
     {
-	csw = xalloc (sizeof (CompSubwindowsRec));
+	csw = malloc(sizeof (CompSubwindowsRec));
 	if (!csw)
 	{
-	    xfree (ccw);
+	    free(ccw);
 	    return BadAlloc;
 	}
 	csw->update = CompositeRedirectAutomatic;
@@ -328,10 +328,10 @@ compRedirectSubwindows (ClientPtr pClient, WindowPtr pWin, int update)
 		(void) compUnredirectWindow (pClient, pChild, update);
 	    if (!csw->clients)
 	    {
-		xfree (csw);
+		free(csw);
 		dixSetPrivate(&pWin->devPrivates, CompSubwindowsPrivateKey, 0);
 	    }
-	    xfree (ccw);
+	    free(ccw);
 	    return ret;
 	}
     }
@@ -392,7 +392,7 @@ compFreeClientSubwindows (WindowPtr pWin, XID id)
 	    for (pChild = pWin->lastChild; pChild; pChild = pChild->prevSib)
 		(void) compUnredirectWindow (pClient, pChild, ccw->update);
 
-	    xfree (ccw);
+	    free(ccw);
 	    break;
 	}
     }
@@ -403,7 +403,7 @@ compFreeClientSubwindows (WindowPtr pWin, XID id)
     if (!csw->clients)
     {
 	dixSetPrivate(&pWin->devPrivates, CompSubwindowsPrivateKey, NULL);
-	xfree (csw);
+	free(csw);
     }
 }
 
@@ -498,10 +498,11 @@ compNewPixmap (WindowPtr pWin, int x, int y, int w, int h)
 	 */
 	if (pGC)
 	{
-	    XID val = IncludeInferiors;
+	    ChangeGCVal val;
+	    val.val = IncludeInferiors;
 	    
 	    ValidateGC(&pPixmap->drawable, pGC);
-	    dixChangeGC (serverClient, pGC, GCSubwindowMode, &val, NULL);
+	    ChangeGC (serverClient, pGC, GCSubwindowMode, &val);
 	    (*pGC->ops->CopyArea) (&pParent->drawable,
 				   &pPixmap->drawable,
 				   pGC,
@@ -598,7 +599,7 @@ compFreePixmap (WindowPtr pWin)
      * case correctly.  Unmap adds the window borderClip to the
      * parent exposed area; regions beyond the parent cause crashes
      */
-    REGION_COPY (pScreen, &pWin->borderClip, &cw->borderClip);
+    RegionCopy(&pWin->borderClip, &cw->borderClip);
     pRedirectPixmap = (*pScreen->GetWindowPixmap) (pWin);
     pParentPixmap = (*pScreen->GetWindowPixmap) (pWin->parent);
     pWin->redirectDraw = RedirectDrawNone;

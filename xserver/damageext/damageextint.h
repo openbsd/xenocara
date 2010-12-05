@@ -55,13 +55,14 @@ typedef struct _DamageExt {
     DamageReportLevel	level;
     ClientPtr		pClient;
     XID			id;
+    XID			drawable;
 } DamageExtRec, *DamageExtPtr;
 
 #define VERIFY_DAMAGEEXT(pDamageExt, rid, client, mode) { \
     int rc = dixLookupResourceByType((pointer *)&(pDamageExt), rid, \
                                      DamageExtType, client, mode); \
     if (rc != Success) \
-        return (rc == BadValue) ? DamageErrorBase + BadDamage : rc; \
+        return rc; \
 }
 
 void

@@ -44,7 +44,8 @@ typedef struct {
     GCFuncs	    *wrapFuncs;	    /* wrapped funcs */
 } cwGCRec, *cwGCPtr;
 
-extern _X_EXPORT DevPrivateKey cwGCKey;
+extern _X_EXPORT DevPrivateKeyRec cwGCKeyRec;
+#define cwGCKey (&cwGCKeyRec)
 
 #define getCwGC(pGC) ((cwGCPtr)dixLookupPrivate(&(pGC)->devPrivates, cwGCKey))
 #define setCwGC(pGC,p) dixSetPrivate(&(pGC)->devPrivates, cwGCKey, p)
@@ -60,12 +61,15 @@ typedef struct {
     unsigned long   stateChanges;
 } cwPictureRec, *cwPicturePtr;
 
+extern _X_EXPORT DevPrivateKeyRec cwPictureKeyRec;
+#define cwPictureKey (&cwPictureKeyRec)
+
 #define getCwPicture(pPicture) (pPicture->pDrawable ? \
     (cwPicturePtr)dixLookupPrivate(&(pPicture)->devPrivates, cwPictureKey) : 0)
 #define setCwPicture(pPicture,p) dixSetPrivate(&(pPicture)->devPrivates, cwPictureKey, p)
 
-extern _X_EXPORT DevPrivateKey cwPictureKey;
-extern _X_EXPORT DevPrivateKey cwWindowKey;
+extern _X_EXPORT DevPrivateKeyRec cwWindowKeyRec;
+#define cwWindowKey (&cwWindowKeyRec)
 
 #define cwWindowPrivate(pWin) dixLookupPrivate(&(pWin)->devPrivates, cwWindowKey)
 #define getCwPixmap(pWindow)	    ((PixmapPtr) cwWindowPrivate(pWindow))
@@ -90,7 +94,6 @@ typedef struct {
     GetWindowPixmapProcPtr	GetWindowPixmap;
     SetWindowPixmapProcPtr	SetWindowPixmap;
     
-#ifdef RENDER
     DestroyPictureProcPtr	DestroyPicture;
     ChangePictureClipProcPtr	ChangePictureClip;
     DestroyPictureClipProcPtr	DestroyPictureClip;
@@ -107,10 +110,10 @@ typedef struct {
     TriFanProcPtr		TriFan;
 
     RasterizeTrapezoidProcPtr	RasterizeTrapezoid;
-#endif
 } cwScreenRec, *cwScreenPtr;
 
-extern _X_EXPORT DevPrivateKey cwScreenKey;
+extern _X_EXPORT DevPrivateKeyRec cwScreenKeyRec;
+#define cwScreenKey (&cwScreenKeyRec)
 
 #define getCwScreen(pScreen) ((cwScreenPtr)dixLookupPrivate(&(pScreen)->devPrivates, cwScreenKey))
 #define setCwScreen(pScreen,p) dixSetPrivate(&(pScreen)->devPrivates, cwScreenKey, p)

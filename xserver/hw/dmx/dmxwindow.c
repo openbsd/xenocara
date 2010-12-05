@@ -46,9 +46,7 @@
 #include "dmxvisual.h"
 #include "dmxinput.h"
 #include "dmxextension.h"
-#ifdef RENDER
 #include "dmxpict.h"
-#endif
 
 #include "windowstr.h"
 
@@ -62,7 +60,7 @@ static void dmxDoSetShape(WindowPtr pWindow);
 /** Initialize the private area for the window functions. */
 Bool dmxInitWindow(ScreenPtr pScreen)
 {
-    if (!dixRequestPrivate(dmxWinPrivateKey, sizeof(dmxWinPrivRec)))
+    if (!dixRegisterPrivateKey(&dmxWinPrivateKeyRec, PRIVATE_WINDOW, sizeof(dmxWinPrivRec)))
 	return FALSE;
 
     return TRUE;
@@ -288,9 +286,7 @@ void dmxCreateAndRealizeWindow(WindowPtr pWindow, Bool doSync)
     pWinPriv->window = dmxCreateNonRootWindow(pWindow);
     if (pWinPriv->restacked) dmxDoRestackWindow(pWindow);
     if (pWinPriv->isShaped) dmxDoSetShape(pWindow);
-#ifdef RENDER
     if (pWinPriv->hasPict) dmxCreatePictureList(pWindow);
-#endif
     if (pWinPriv->mapped) XMapWindow(dmxScreen->beDisplay,
 				      pWinPriv->window);
     if (doSync) dmxSync(dmxScreen, False);
@@ -320,9 +316,7 @@ Bool dmxCreateWindow(WindowPtr pWindow)
     pWinPriv->restacked  = FALSE;
     pWinPriv->attribMask = 0;
     pWinPriv->isShaped   = FALSE;
-#ifdef RENDER
     pWinPriv->hasPict    = FALSE;
-#endif
 #ifdef GLXEXT
     pWinPriv->swapGroup  = NULL;
     pWinPriv->barrier    = 0;
@@ -405,10 +399,8 @@ Bool dmxDestroyWindow(WindowPtr pWindow)
 
     DMX_UNWRAP(DestroyWindow, dmxScreen, pScreen);
 
-#ifdef RENDER
     /* Destroy any picture list associated with this window */
     needSync |= dmxDestroyPictureList(pWindow);
-#endif
 
     /* Destroy window on back-end server */
     needSync |= dmxBEDestroyWindow(pWindow);
@@ -948,9 +940,9 @@ static void dmxDoSetShape(WindowPtr pWindow)
 
     /* First, set the bounding shape */
     if (wBoundingShape(pWindow)) {
-	pBox = REGION_RECTS(wBoundingShape(pWindow));
-	nRect = nBox = REGION_NUM_RECTS(wBoundingShape(pWindow));
-	pRectFirst = pRect = xalloc(nRect * sizeof(*pRect));
+	pBox = RegionRects(wBoundingShape(pWindow));
+	nRect = nBox = RegionNumRects(wBoundingShape(pWindow));
+	pRectFirst = pRect = malloc(nRect * sizeof(*pRect));
 	while (nBox--) {
 	    pRect->x      = pBox->x1;
 	    pRect->y      = pBox->y1;
@@ -963,7 +955,7 @@ static void dmxDoSetShape(WindowPtr pWindow)
 				ShapeBounding, 0, 0,
 				pRectFirst, nRect,
 				ShapeSet, YXBanded);
-	xfree(pRectFirst);
+	free(pRectFirst);
     } else {
 	XShapeCombineMask(dmxScreen->beDisplay, pWinPriv->window,
 			  ShapeBounding, 0, 0, None, ShapeSet);
@@ -971,9 +963,9 @@ static void dmxDoSetShape(WindowPtr pWindow)
 
     /* Next, set the clip shape */
     if (wClipShape(pWindow)) {
-	pBox = REGION_RECTS(wClipShape(pWindow));
-	nRect = nBox = REGION_NUM_RECTS(wClipShape(pWindow));
-	pRectFirst = pRect = xalloc(nRect * sizeof(*pRect));
+	pBox = RegionRects(wClipShape(pWindow));
+	nRect = nBox = RegionNumRects(wClipShape(pWindow));
+	pRectFirst = pRect = malloc(nRect * sizeof(*pRect));
 	while (nBox--) {
 	    pRect->x      = pBox->x1;
 	    pRect->y      = pBox->y1;
@@ -986,7 +978,7 @@ static void dmxDoSetShape(WindowPtr pWindow)
 				ShapeClip, 0, 0,
 				pRectFirst, nRect,
 				ShapeSet, YXBanded);
-	xfree(pRectFirst);
+	free(pRectFirst);
     } else {
 	XShapeCombineMask(dmxScreen->beDisplay, pWinPriv->window,
 			  ShapeClip, 0, 0, None, ShapeSet);
@@ -999,7 +991,7 @@ static void dmxDoSetShape(WindowPtr pWindow)
 }
 
 /** Set shape of \a pWindow on the back-end server. */
-void dmxSetShape(WindowPtr pWindow)
+void dmxSetShape(WindowPtr pWindow, int kind)
 {
     ScreenPtr       pScreen = pWindow->drawable.pScreen;
     DMXScreenInfo  *dmxScreen = &dmxScreens[pScreen->myNum];
@@ -1008,7 +1000,7 @@ void dmxSetShape(WindowPtr pWindow)
     DMX_UNWRAP(SetShape, dmxScreen, pScreen);
 #if 1
     if (pScreen->SetShape)
-	pScreen->SetShape(pWindow);
+	pScreen->SetShape(pWindow, kind);
 #endif
 
     if (pWinPriv->window) {

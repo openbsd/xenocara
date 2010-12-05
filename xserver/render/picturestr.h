@@ -396,30 +396,34 @@ typedef struct _PictureScreen {
 
 } PictureScreenRec, *PictureScreenPtr;
 
-extern _X_EXPORT DevPrivateKey	PictureScreenPrivateKey;
-extern _X_EXPORT DevPrivateKey	PictureWindowPrivateKey;
+extern _X_EXPORT DevPrivateKeyRec PictureScreenPrivateKeyRec;
+#define PictureScreenPrivateKey (&PictureScreenPrivateKeyRec)
+
+extern _X_EXPORT DevPrivateKeyRec PictureWindowPrivateKeyRec;
+#define	PictureWindowPrivateKey (&PictureWindowPrivateKeyRec)
+
 extern _X_EXPORT RESTYPE	PictureType;
 extern _X_EXPORT RESTYPE	PictFormatType;
 extern _X_EXPORT RESTYPE	GlyphSetType;
 
 #define GetPictureScreen(s) ((PictureScreenPtr)dixLookupPrivate(&(s)->devPrivates, PictureScreenPrivateKey))
-#define GetPictureScreenIfSet(s) GetPictureScreen(s)
+#define GetPictureScreenIfSet(s) (dixPrivateKeyRegistered(PictureScreenPrivateKey) ? GetPictureScreen(s) : NULL)
 #define SetPictureScreen(s,p) dixSetPrivate(&(s)->devPrivates, PictureScreenPrivateKey, p)
 #define GetPictureWindow(w) ((PicturePtr)dixLookupPrivate(&(w)->devPrivates, PictureWindowPrivateKey))
 #define SetPictureWindow(w,p) dixSetPrivate(&(w)->devPrivates, PictureWindowPrivateKey, p)
 
-#define VERIFY_PICTURE(pPicture, pid, client, mode, err) {\
+#define VERIFY_PICTURE(pPicture, pid, client, mode) {\
     int rc = dixLookupResourceByType((pointer)&(pPicture), pid,\
 	                             PictureType, client, mode);\
     if (rc != Success)\
-	return (rc == BadValue) ? err : rc;\
+	return rc;\
 }
 
-#define VERIFY_ALPHA(pPicture, pid, client, mode, err) {\
+#define VERIFY_ALPHA(pPicture, pid, client, mode) {\
     if (pid == None) \
 	pPicture = 0; \
     else { \
-	VERIFY_PICTURE(pPicture, pid, client, mode, err); \
+	VERIFY_PICTURE(pPicture, pid, client, mode); \
     } \
 } \
 

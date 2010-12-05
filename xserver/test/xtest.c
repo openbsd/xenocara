@@ -30,6 +30,7 @@
 #include "inputstr.h"
 #include "scrnintstr.h"
 #include "exevents.h"
+#include "xkbsrv.h"
 #include "xserver-properties.h"
 
 #include <glib.h>
@@ -49,7 +50,6 @@ static void xtest_init_devices(void)
 
     /* random stuff that needs initialization */
     memset(&screen, 0, sizeof(screen));
-    screenInfo.arraySize = MAXSCREENS;
     screenInfo.numScreens = 1;
     screenInfo.screens[0] = &screen;
     screen.myNum = 0;
@@ -59,6 +59,8 @@ static void xtest_init_devices(void)
     screen.DeviceCursorInitialize = device_cursor_init;
     dixResetPrivates();
     InitAtoms();
+
+    XkbInitPrivates();
 
     /* this also inits the xtest devices */
     InitCoreDevices();

@@ -43,6 +43,7 @@
 #include "exevents.h"
 #include "exglobals.h"
 #include "eventconvert.h"
+#include "scrnintstr.h"
 #include "xkbsrv.h"
 
 #ifdef PANORAMIX
@@ -144,7 +145,7 @@ ProcXIQueryPointer(ClientPtr client)
         rep.buttons_len = bytes_to_int32(bits_to_bytes(pDev->button->numButtons));
         rep.length += rep.buttons_len;
         buttons_size = rep.buttons_len * 4;
-        buttons = xcalloc(1, buttons_size);
+        buttons = calloc(1, buttons_size);
         if (!buttons)
             return BadAlloc;
 
@@ -181,12 +182,12 @@ ProcXIQueryPointer(ClientPtr client)
 
 #ifdef PANORAMIX
     if(!noPanoramiXExtension) {
-        rep.root_x += FP1616(panoramiXdataPtr[0].x, 0);
-        rep.root_y += FP1616(panoramiXdataPtr[0].y, 0);
+        rep.root_x += FP1616(screenInfo.screens[0]->x, 0);
+        rep.root_y += FP1616(screenInfo.screens[0]->y, 0);
         if (stuff->win == rep.root)
         {
-            rep.win_x += FP1616(panoramiXdataPtr[0].x, 0);
-            rep.win_y += FP1616(panoramiXdataPtr[0].y, 0);
+            rep.win_x += FP1616(screenInfo.screens[0]->x, 0);
+            rep.win_y += FP1616(screenInfo.screens[0]->y, 0);
         }
     }
 #endif
@@ -195,7 +196,7 @@ ProcXIQueryPointer(ClientPtr client)
     if (buttons)
         WriteToClient(client, buttons_size, buttons);
 
-    xfree(buttons);
+    free(buttons);
 
     return Success;
 }

@@ -54,11 +54,9 @@ static int SProcRRDispatch (ClientPtr pClient);
 int	RREventBase;
 int	RRErrorBase;
 RESTYPE RRClientType, RREventType; /* resource types for event masks */
-static int RRClientPrivateKeyIndex;
-DevPrivateKey RRClientPrivateKey = &RRClientPrivateKeyIndex;
+DevPrivateKeyRec RRClientPrivateKeyRec;
 
-static int rrPrivKeyIndex;
-DevPrivateKey rrPrivKey = &rrPrivKeyIndex;
+DevPrivateKeyRec rrPrivKeyRec;
 
 static void
 RRClientCallback (CallbackListPtr	*list,
@@ -98,9 +96,9 @@ RRCloseScreen (int i, ScreenPtr pScreen)
     for (j = pScrPriv->numOutputs - 1; j >= 0; j--)
 	RROutputDestroy (pScrPriv->outputs[j]);
     
-    xfree (pScrPriv->crtcs);
-    xfree (pScrPriv->outputs);
-    xfree (pScrPriv);
+    free(pScrPriv->crtcs);
+    free(pScrPriv->outputs);
+    free(pScrPriv);
     RRNScreens -= 1;	/* ok, one fewer screen with RandR running */
     return (*pScreen->CloseScreen) (i, pScreen);    
 }
@@ -215,6 +213,9 @@ Bool RRInit (void)
 	    return FALSE;
 	RRGeneration = serverGeneration;
     }
+    if (!dixRegisterPrivateKey(&rrPrivKeyRec, PRIVATE_SCREEN, 0))
+	return FALSE;
+
     return TRUE;
 }
 
@@ -225,7 +226,7 @@ Bool RRScreenInit(ScreenPtr pScreen)
     if (!RRInit ())
 	return FALSE;
 
-    pScrPriv = (rrScrPrivPtr) xcalloc (1, sizeof (rrScrPrivRec));
+    pScrPriv = (rrScrPrivPtr) calloc(1, sizeof (rrScrPrivRec));
     if (!pScrPriv)
 	return FALSE;
 
@@ -302,7 +303,7 @@ RRFreeClient (pointer data, XID id)
 	    	*pHead = pRREvent->next;
 	}
     }
-    xfree ((pointer) pRREvent);
+    free((pointer) pRREvent);
     return 1;
 }
 
@@ -316,9 +317,9 @@ RRFreeEvents (pointer data, XID id)
     for (pCur = *pHead; pCur; pCur = pNext) {
 	pNext = pCur->next;
 	FreeResource (pCur->clientResource, RRClientType);
-	xfree ((pointer) pCur);
+	free((pointer) pCur);
     }
-    xfree ((pointer) pHead);
+    free((pointer) pHead);
     return 1;
 }
 
@@ -329,9 +330,9 @@ RRExtensionInit (void)
 
     if (RRNScreens == 0) return;
 
-    if (!dixRequestPrivate(RRClientPrivateKey,
-				sizeof (RRClientRec) +
-				screenInfo.numScreens * sizeof (RRTimesRec)))
+    if (!dixRegisterPrivateKey(&RRClientPrivateKeyRec, PRIVATE_CLIENT,
+			       sizeof (RRClientRec) +
+			       screenInfo.numScreens * sizeof (RRTimesRec)))
 	return;
     if (!AddCallback (&ClientStateCallback, RRClientCallback, 0))
 	return;
@@ -353,6 +354,11 @@ RRExtensionInit (void)
 	SRRScreenChangeNotifyEvent;
     EventSwapVector[RREventBase + RRNotify] = (EventSwapPtr)
 	SRRNotifyEvent;
+
+    RRModeInitErrorValue();
+    RRCrtcInitErrorValue();
+    RROutputInitErrorValue();
+
 #ifdef PANORAMIX
     RRXineramaExtensionInit();
 #endif

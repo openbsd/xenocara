@@ -66,10 +66,10 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(linuxmoduledir)" \
-	"$(DESTDIR)$(drivermandir)" "$(DESTDIR)$(sdkdir)"
-linuxmoduleLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(linuxmodule_LTLIBRARIES)
+am__installdirs = "$(DESTDIR)$(moduledir)" "$(DESTDIR)$(drivermandir)" \
+	"$(DESTDIR)$(sdkdir)"
+moduleLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(module_LTLIBRARIES)
 libfbdevhw_la_LIBADD =
 am__libfbdevhw_la_SOURCES_DIST = fbdevhwstub.c fbdevhw.c
 @FBDEVHW_FALSE@am_libfbdevhw_la_OBJECTS = fbdevhwstub.lo
@@ -129,10 +129,6 @@ BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
 BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
-BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
-BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
-BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
-BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 BUILD_TIME = @BUILD_TIME@
 CC = @CC@
 CCAS = @CCAS@
@@ -220,6 +216,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
+ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
@@ -234,6 +232,7 @@ FONTOTFDIR = @FONTOTFDIR@
 FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
+FOP = @FOP@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
 GLIB_CFLAGS = @GLIB_CFLAGS@
@@ -251,10 +250,14 @@ HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
 HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
 HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
-HAVE_PS2PDF_FALSE = @HAVE_PS2PDF_FALSE@
-HAVE_PS2PDF_TRUE = @HAVE_PS2PDF_TRUE@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
 HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
 HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
+HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
+HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -310,10 +313,11 @@ LIBDRM_CFLAGS = @LIBDRM_CFLAGS@
 LIBDRM_LIBS = @LIBDRM_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
+LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINUXDOC = @LINUXDOC@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
 LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
@@ -331,17 +335,11 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
-MAKE_HTML = @MAKE_HTML@
-MAKE_PDF = @MAKE_PDF@
-MAKE_PS = @MAKE_PS@
-MAKE_TEXT = @MAKE_TEXT@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-MULTIBUFFER_FALSE = @MULTIBUFFER_FALSE@
-MULTIBUFFER_TRUE = @MULTIBUFFER_TRUE@
 NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
@@ -368,20 +366,23 @@ PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
 PERL = @PERL@
+PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
+PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PPC_VIDEO_FALSE = @PPC_VIDEO_FALSE@
 PPC_VIDEO_TRUE = @PPC_VIDEO_TRUE@
 PROJECTROOT = @PROJECTROOT@
-PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 RECORD_FALSE = @RECORD_FALSE@
 RECORD_TRUE = @RECORD_TRUE@
+RELEASE_DATE = @RELEASE_DATE@
 RES_FALSE = @RES_FALSE@
 RES_TRUE = @RES_TRUE@
 SCREENSAVER_FALSE = @SCREENSAVER_FALSE@
 SCREENSAVER_TRUE = @SCREENSAVER_TRUE@
+SDK_REQUIRED_MODULES = @SDK_REQUIRED_MODULES@
 SECURE_RPC_FALSE = @SECURE_RPC_FALSE@
 SECURE_RPC_TRUE = @SECURE_RPC_TRUE@
 SED = @SED@
@@ -473,6 +474,7 @@ XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
 XKM_OUTPUT_DIR = @XKM_OUTPUT_DIR@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
+XMLTO = @XMLTO@
 XNESTMODULES_CFLAGS = @XNESTMODULES_CFLAGS@
 XNESTMODULES_LIBS = @XNESTMODULES_LIBS@
 XNEST_FALSE = @XNEST_FALSE@
@@ -618,8 +620,7 @@ symbol_visibility = @symbol_visibility@
 sysconfdir = @sysconfdir@
 sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
-linuxmoduledir = $(moduledir)/linux
-linuxmodule_LTLIBRARIES = libfbdevhw.la
+module_LTLIBRARIES = libfbdevhw.la
 libfbdevhw_la_LDFLAGS = -avoid-version
 @FBDEVHW_FALSE@libfbdevhw_la_SOURCES = fbdevhwstub.c
 @FBDEVHW_TRUE@libfbdevhw_la_SOURCES = fbdevhw.c
@@ -702,35 +703,35 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-linuxmoduleLTLIBRARIES: $(linuxmodule_LTLIBRARIES)
+install-moduleLTLIBRARIES: $(module_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(linuxmoduledir)" || $(mkdir_p) "$(DESTDIR)$(linuxmoduledir)"
-	@list='$(linuxmodule_LTLIBRARIES)'; for p in $$list; do \
+	test -z "$(moduledir)" || $(mkdir_p) "$(DESTDIR)$(moduledir)"
+	@list='$(module_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(linuxmoduleLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(linuxmoduledir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(linuxmoduleLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(linuxmoduledir)/$$f"; \
+	    echo " $(LIBTOOL) --mode=install $(moduleLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(moduledir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(moduleLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(moduledir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-linuxmoduleLTLIBRARIES:
+uninstall-moduleLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(linuxmodule_LTLIBRARIES)'; for p in $$list; do \
+	@set -x; list='$(module_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(linuxmoduledir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(linuxmoduledir)/$$p"; \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(moduledir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(moduledir)/$$p"; \
 	done
 
-clean-linuxmoduleLTLIBRARIES:
-	-test -z "$(linuxmodule_LTLIBRARIES)" || rm -f $(linuxmodule_LTLIBRARIES)
-	@list='$(linuxmodule_LTLIBRARIES)'; for p in $$list; do \
+clean-moduleLTLIBRARIES:
+	-test -z "$(module_LTLIBRARIES)" || rm -f $(module_LTLIBRARIES)
+	@list='$(module_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
 libfbdevhw.la: $(libfbdevhw_la_OBJECTS) $(libfbdevhw_la_DEPENDENCIES) 
-	$(LINK) -rpath $(linuxmoduledir) $(libfbdevhw_la_LDFLAGS) $(libfbdevhw_la_OBJECTS) $(libfbdevhw_la_LIBADD) $(LIBS)
+	$(LINK) -rpath $(moduledir) $(libfbdevhw_la_LDFLAGS) $(libfbdevhw_la_OBJECTS) $(libfbdevhw_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -886,7 +887,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(linuxmoduledir)" "$(DESTDIR)$(drivermandir)" "$(DESTDIR)$(sdkdir)"; do \
+	for dir in "$(DESTDIR)$(moduledir)" "$(DESTDIR)$(drivermandir)" "$(DESTDIR)$(sdkdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -916,7 +917,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-linuxmoduleLTLIBRARIES \
+clean-am: clean-generic clean-libtool clean-moduleLTLIBRARIES \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -935,7 +936,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-drivermanDATA install-linuxmoduleLTLIBRARIES \
+install-data-am: install-drivermanDATA install-moduleLTLIBRARIES \
 	install-sdkHEADERS
 
 install-exec-am:
@@ -965,21 +966,21 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-drivermanDATA uninstall-info-am \
-	uninstall-linuxmoduleLTLIBRARIES uninstall-sdkHEADERS
+	uninstall-moduleLTLIBRARIES uninstall-sdkHEADERS
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-linuxmoduleLTLIBRARIES ctags distclean \
+	clean-libtool clean-moduleLTLIBRARIES ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am \
 	install-drivermanDATA install-exec install-exec-am \
-	install-info install-info-am install-linuxmoduleLTLIBRARIES \
-	install-man install-sdkHEADERS install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-info install-info-am install-man \
+	install-moduleLTLIBRARIES install-sdkHEADERS install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-drivermanDATA \
-	uninstall-info-am uninstall-linuxmoduleLTLIBRARIES \
+	uninstall-info-am uninstall-moduleLTLIBRARIES \
 	uninstall-sdkHEADERS
 
 

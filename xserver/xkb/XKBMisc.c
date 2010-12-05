@@ -388,7 +388,7 @@ unsigned		changed,tmp;
     nSyms= XkbKeyNumSyms(xkb,key);
     syms= XkbKeySymsPtr(xkb,key);
     if (nSyms>IBUF_SIZE) {
-	interps= xcalloc(nSyms, sizeof(XkbSymInterpretPtr));
+	interps= calloc(nSyms, sizeof(XkbSymInterpretPtr));
 	if (interps==NULL) {
 	    interps= ibuf;
 	    nSyms= IBUF_SIZE;
@@ -422,7 +422,7 @@ unsigned		changed,tmp;
 	pActs= XkbResizeKeyActions(xkb,key,nSyms);
 	if (!pActs) {
             if (nSyms > IBUF_SIZE)
-                xfree(interps);
+                free(interps);
 	    return FALSE;
         }
 	new_vmodmask= 0;
@@ -507,7 +507,7 @@ unsigned		changed,tmp;
 	mc->changed|= changed;
     }
     if (interps!=ibuf)
-	xfree(interps);
+	free(interps);
     return TRUE;
 }
 
@@ -580,7 +580,7 @@ int		width,nOldGroups,oldWidth,newTypes[XkbNumKbdGroups];
 	pSyms= XkbResizeKeySyms(xkb,key,width*nGroups);
 	if (pSyms==NULL)
 	    return BadAlloc;
-	bzero(pSyms,width*nGroups*sizeof(KeySym));
+	memset(pSyms, 0, width*nGroups*sizeof(KeySym));
 	for (i=0;(i<nGroups)&&(i<nOldGroups);i++) {
 	    pOldType= XkbKeyKeyType(xkb,key,i);
 	    pNewType= &xkb->map->types[newTypes[i]];
@@ -596,7 +596,7 @@ int		width,nOldGroups,oldWidth,newTypes[XkbNumKbdGroups];
 	    pActs= XkbResizeKeyActions(xkb,key,width*nGroups);
 	    if (pActs==NULL)
 		return BadAlloc;
-	    bzero(pActs,width*nGroups*sizeof(XkbAction));
+	    memset(pActs, 0, width*nGroups*sizeof(XkbAction));
 	    for (i=0;(i<nGroups)&&(i<nOldGroups);i++) {
 		pOldType= XkbKeyKeyType(xkb,key,i);
 		pNewType= &xkb->map->types[newTypes[i]];

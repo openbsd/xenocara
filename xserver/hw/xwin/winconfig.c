@@ -393,10 +393,10 @@ winConfigKeyboard (DeviceIntPtr pDevice)
                   (1000 / g_winInfo.keyboard.rate) < 1) 
             {
               winErrorFVerb (2, "\"%s\" is not a valid AutoRepeat value", s);
-              xfree(s);
+              free(s);
               return FALSE;
             }
-          xfree(s);
+          free(s);
           winMsg (X_CONFIG, "AutoRepeat: %ld %ld\n", 
                   g_winInfo.keyboard.delay, g_winInfo.keyboard.rate);
         }
@@ -583,7 +583,7 @@ winConfigFiles ()
   else if (filesptr != NULL && filesptr->file_fontpath)
     {
       from = X_CONFIG;
-      defaultFontPath = xstrdup (filesptr->file_fontpath);
+      defaultFontPath = strdup (filesptr->file_fontpath);
     }
   winMsg (from, "FontPath set to \"%s\"\n", defaultFontPath);
 
@@ -630,7 +630,7 @@ winSetStrOption (pointer optlist, const char *name, char *deflt)
   if (ParseOptionValue (-1, optlist, &o))
     deflt = o.value.str;
   if (deflt)
-    return xstrdup (deflt);
+    return strdup (deflt);
   else
     return NULL;
 }
@@ -669,6 +669,18 @@ winSetRealOption (pointer optlist, const char *name, double deflt)
 
   o.name = name;
   o.type = OPTV_REAL;
+  if (ParseOptionValue (-1, optlist, &o))
+    deflt = o.value.realnum;
+  return deflt;
+}
+
+double
+winSetPercentOption (pointer optlist, const char *name, double deflt)
+{
+  OptionInfoRec o;
+
+  o.name = name;
+  o.type = OPTV_PERCENT;
   if (ParseOptionValue (-1, optlist, &o))
     deflt = o.value.realnum;
   return deflt;
@@ -718,7 +730,7 @@ winNameCompare (const char *s1, const char *s2)
       c1 = (isupper (*s1) ? tolower (*s1) : *s1);
       c2 = (isupper (*s2) ? tolower (*s2) : *s2);
     }
-  return (c1 - c2);
+  return c1 - c2;
 }
 
 
@@ -753,11 +765,11 @@ winFindOptionValue (XF86OptionPtr list, const char *name)
   if (list)
     {
       if (list->opt_val)
-	return (list->opt_val);
+	return list->opt_val;
       else
 	return "";
     }
-  return (NULL);
+  return NULL;
 }
 
 
@@ -851,6 +863,31 @@ ParseOptionValue (int scrnIndex, pointer options, OptionInfoPtr p)
 	      p->found = FALSE;
 	    }
 	  break;
+	case OPTV_PERCENT:
+	  if (*s == '\0')
+	    {
+	      winDrvMsg (scrnIndex, X_WARNING,
+			 "Option \"%s\" requires a percent value\n",
+			 p->name);
+	      p->found = FALSE;
+	    }
+	  else
+	    {
+	       double percent = strtod (s, &end);
+
+	       if (end != s && winNameCompare (end, "%"))
+		 {
+		   p->found = TRUE;
+		   p->value.realnum = percent;
+		 }
+	       else
+		 {
+		   winDrvMsg (scrnIndex, X_WARNING,
+			      "Option \"%s\" requires a frequency value\n",
+			       p->name);
+		   p->found = FALSE;
+		 }
+	    }
 	case OPTV_FREQ:
 	  if (*s == '\0')
 	    {

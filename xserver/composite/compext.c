@@ -50,8 +50,8 @@
 #include "protocol-versions.h"
 
 static CARD8	CompositeReqCode;
-static int CompositeClientPrivateKeyIndex;
-static DevPrivateKey CompositeClientPrivateKey = &CompositeClientPrivateKeyIndex;
+static DevPrivateKeyRec CompositeClientPrivateKeyRec;
+#define CompositeClientPrivateKey (&CompositeClientPrivateKeyRec)
 RESTYPE		CompositeClientWindowType;
 RESTYPE		CompositeClientSubwindowsType;
 RESTYPE		CompositeClientOverlayType;
@@ -132,7 +132,7 @@ ProcCompositeQueryVersion (ClientPtr client)
 	swapl(&rep.minorVersion, n);
     }
     WriteToClient(client, sizeof(xCompositeQueryVersionReply), (char *)&rep);
-    return(client->noClientException);
+    return Success;
 }
 
 #define VERIFY_WINDOW(pWindow, wid, client, mode)			\
@@ -140,10 +140,7 @@ ProcCompositeQueryVersion (ClientPtr client)
 	int err;							\
 	err = dixLookupResourceByType((pointer *) &pWindow, wid,	\
 				      RT_WINDOW, client, mode);		\
-	if (err == BadValue) {						\
-	    client->errorValue = wid;					\
-	    return BadWindow;						\
-	} else if (err != Success) {					\
+	if (err != Success) {						\
 	    client->errorValue = wid;					\
 	    return err;							\
 	}								\
@@ -221,12 +218,12 @@ ProcCompositeCreateRegionFromBorderClip (ClientPtr client)
     pRegion = XFixesRegionCopy (pBorderClip);
     if (!pRegion)
 	return BadAlloc;
-    REGION_TRANSLATE (pScreen, pRegion, -pWin->drawable.x, -pWin->drawable.y);
+    RegionTranslate(pRegion, -pWin->drawable.x, -pWin->drawable.y);
     
     if (!AddResource (stuff->region, RegionResType, (pointer) pRegion))
 	return BadAlloc;
 
-    return(client->noClientException);
+    return Success;
 }
 
 static int
@@ -265,7 +262,7 @@ ProcCompositeNameWindowPixmap (ClientPtr client)
     if (!AddResource (stuff->pixmap, RT_PIXMAP, (pointer) pPixmap))
 	return BadAlloc;
 
-    return(client->noClientException);
+    return Success;
 }
 
 
@@ -325,7 +322,7 @@ ProcCompositeGetOverlayWindow (ClientPtr client)
     }
     (void) WriteToClient(client, sz_xCompositeGetOverlayWindowReply, (char *)&rep);
 
-    return client->noClientException;
+    return Success;
 }
 
 static int
@@ -351,7 +348,7 @@ ProcCompositeReleaseOverlayWindow (ClientPtr client)
     /* The delete function will free the client structure */
     FreeResource (pOc->resource, RT_NONE);
 
-    return client->noClientException;
+    return Success;
 }
 
 static int (*ProcCompositeVector[CompositeNumberRequests])(ClientPtr) = {
@@ -561,8 +558,8 @@ CompositeExtensionInit (void)
     if (!CompositeClientOverlayType)
 	return;
 
-    if (!dixRequestPrivate(CompositeClientPrivateKey,
-			   sizeof(CompositeClientRec)))
+    if (!dixRegisterPrivateKey(&CompositeClientPrivateKeyRec, PRIVATE_CLIENT,
+			       sizeof(CompositeClientRec)))
 	return;
 
     if (!AddCallback (&ClientStateCallback, CompositeClientCallback, 0))

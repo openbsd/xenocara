@@ -222,6 +222,9 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Define to 1 if you have the <sys/utsname.h> header file. */
+#undef HAVE_SYS_UTSNAME_H
+
 /* Define to 1 if you have the <sys/vm86.h> header file. */
 #undef HAVE_SYS_VM86_H
 
@@ -360,9 +363,6 @@
 /* Support Xv extension */
 #undef XV
 
-/* Build Multibuffer extension */
-#undef MULTIBUFFER
-
 /* Support DRI extension */
 #undef XF86DRI
 
@@ -410,9 +410,6 @@
 
 /* Support HAL for hotplug */
 #undef CONFIG_HAL
-
-/* Use only built-in fonts */
-#undef BUILTIN_FONTS
 
 /* Have a monotonic clock from clock_gettime() */
 #undef MONOTONIC_CLOCK

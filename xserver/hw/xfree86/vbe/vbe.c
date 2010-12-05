@@ -17,7 +17,6 @@
 
 #include "xf86.h"
 #include "vbe.h"
-#include <X11/Xarch.h>
 #include <X11/extensions/dpmsconst.h>
 
 #define VERSION(x) VBE_VERSION_MAJOR(x),VBE_VERSION_MINOR(x)
@@ -164,7 +163,7 @@ vbeFree(vbeInfoPtr pVbe)
     /* If we have initalized int10 we ought to free it, too */
     if (pVbe->init_int10) 
 	xf86FreeInt10(pVbe->pInt10);
-    xfree(pVbe);
+    free(pVbe);
     return;
 }
 
@@ -264,7 +263,7 @@ vbeReadEDID(vbeInfoPtr pVbe)
     xf86ProcessOptions(screen, xf86Screens[screen]->options, options);
     xf86GetOptValBool(options, VBEOPT_NOVBE, &novbe);
     xf86GetOptValBool(options, VBEOPT_NODDC, &noddc);
-    xfree(options);
+    free(options);
     if (novbe || noddc) return NULL;
     
     if (!vbeProbeDDC(pVbe)) goto error;
@@ -346,7 +345,7 @@ VBEGetVBEInfo(vbeInfoPtr pVbe)
     char *str;
     CARD16 major, *modes;
 
-    bzero(pVbe->memory, sizeof(VbeInfoBlock));
+    memset(pVbe->memory, 0, sizeof(VbeInfoBlock));
 
     /*
     Input:
@@ -371,9 +370,9 @@ VBEGetVBEInfo(vbeInfoPtr pVbe)
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (NULL);
+	return NULL;
 
-    block = xcalloc(sizeof(VbeInfoBlock), 1);
+    block = calloc(sizeof(VbeInfoBlock), 1);
     block->VESASignature[0] = ((char*)pVbe->memory)[0];
     block->VESASignature[1] = ((char*)pVbe->memory)[1];
     block->VESASignature[2] = ((char*)pVbe->memory)[2];
@@ -396,7 +395,7 @@ VBEGetVBEInfo(vbeInfoPtr pVbe)
     i = 0;
     while (modes[i] != 0xffff)
 	i++;
-    block->VideoModePtr = xalloc(sizeof(CARD16) * i + 1);
+    block->VideoModePtr = malloc(sizeof(CARD16) * i + 1);
     memcpy(block->VideoModePtr, modes, sizeof(CARD16) * i);
     block->VideoModePtr[i] = 0xffff;
 
@@ -419,20 +418,20 @@ VBEGetVBEInfo(vbeInfoPtr pVbe)
 	memcpy(&block->OemData, ((char*)pVbe->memory) + 256, 256);
     }
 
-    return (block);
+    return block;
 }
 
 void
 VBEFreeVBEInfo(VbeInfoBlock *block)
 {
-    xfree(block->OEMStringPtr);
-    xfree(block->VideoModePtr);
+    free(block->OEMStringPtr);
+    free(block->VideoModePtr);
     if (((unsigned)block->VESAVersion >> 8) >= 2) {
-	xfree(block->OemVendorNamePtr);
-	xfree(block->OemProductNamePtr);
-	xfree(block->OemProductRevPtr);
+	free(block->OemVendorNamePtr);
+	free(block->OemProductNamePtr);
+	free(block->OemProductRevPtr);
     }
-    xfree(block);
+    free(block);
 }
 
 Bool
@@ -494,10 +493,10 @@ VBEGetVBEMode(vbeInfoPtr pVbe, int *mode)
     if (R16(pVbe->pInt10->ax) == 0x4f) {
 	*mode = R16(pVbe->pInt10->bx);
 
-	return (TRUE);
+	return TRUE;
     }
 
-    return (FALSE);
+    return FALSE;
 }
 
 VbeModeInfoBlock *
@@ -505,7 +504,7 @@ VBEGetModeInfo(vbeInfoPtr pVbe, int mode)
 {
     VbeModeInfoBlock *block = NULL;
 
-    bzero(pVbe->memory, sizeof(VbeModeInfoBlock));
+    memset(pVbe->memory, 0, sizeof(VbeModeInfoBlock));
 
     /*
     Input:
@@ -526,79 +525,19 @@ VBEGetModeInfo(vbeInfoPtr pVbe, int mode)
     pVbe->pInt10->di = SEG_OFF(pVbe->real_mode_base);
     xf86ExecX86int10(pVbe->pInt10);
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (NULL);
+	return NULL;
 
-    block = xcalloc(sizeof(VbeModeInfoBlock), 1);
+    block = malloc(sizeof(VbeModeInfoBlock));
+    if (block)
+	memcpy(block, pVbe->memory, sizeof(*block));
 
-    block->ModeAttributes = *(CARD16*)pVbe->memory;
-    block->WinAAttributes = ((char*)pVbe->memory)[2];
-    block->WinBAttributes = ((char*)pVbe->memory)[3];
-    block->WinGranularity = *(CARD16*)(((char*)pVbe->memory) + 4);
-    block->WinSize = *(CARD16*)(((char*)pVbe->memory) + 6);
-    block->WinASegment = *(CARD16*)(((char*)pVbe->memory) + 8);
-    block->WinBSegment = *(CARD16*)(((char*)pVbe->memory) + 10);
-    block->WinFuncPtr = *(CARD32*)(((char*)pVbe->memory) + 12);
-    block->BytesPerScanline = *(CARD16*)(((char*)pVbe->memory) + 16);
-
-    /* mandatory information for VBE 1.2 and above */
-    block->XResolution = *(CARD16*)(((char*)pVbe->memory) + 18);
-    block->YResolution = *(CARD16*)(((char*)pVbe->memory) + 20);
-    block->XCharSize = ((char*)pVbe->memory)[22];
-    block->YCharSize = ((char*)pVbe->memory)[23];
-    block->NumberOfPlanes = ((char*)pVbe->memory)[24];
-    block->BitsPerPixel = ((char*)pVbe->memory)[25];
-    block->NumberOfBanks = ((char*)pVbe->memory)[26];
-    block->MemoryModel = ((char*)pVbe->memory)[27];
-    block->BankSize = ((char*)pVbe->memory)[28];
-    block->NumberOfImages = ((char*)pVbe->memory)[29];
-    block->Reserved = ((char*)pVbe->memory)[30];
-
-    /* Direct color fields (required for direct/6 and YUV/7 memory models) */
-    block->RedMaskSize = ((char*)pVbe->memory)[31];
-    block->RedFieldPosition = ((char*)pVbe->memory)[32];
-    block->GreenMaskSize = ((char*)pVbe->memory)[33];
-    block->GreenFieldPosition = ((char*)pVbe->memory)[34];
-    block->BlueMaskSize = ((char*)pVbe->memory)[35];
-    block->BlueFieldPosition = ((char*)pVbe->memory)[36];
-    block->RsvdMaskSize = ((char*)pVbe->memory)[37];
-    block->RsvdFieldPosition = ((char*)pVbe->memory)[38];
-    block->DirectColorModeInfo = ((char*)pVbe->memory)[39];
-
-    /* Mandatory information for VBE 2.0 and above */
-    if (pVbe->version >= 0x200) {
-	block->PhysBasePtr = *(CARD32*)(((char*)pVbe->memory) + 40);
-	block->Reserved32 = *(CARD32*)(((char*)pVbe->memory) + 44);
-	block->Reserved16 = *(CARD16*)(((char*)pVbe->memory) + 48);
-
-	/* Mandatory information for VBE 3.0 and above */
-	if (pVbe->version >= 0x300) {
-	    block->LinBytesPerScanLine = *(CARD16*)(((char*)pVbe->memory) + 50);
-	    block->BnkNumberOfImagePages = ((char*)pVbe->memory)[52];
-	    block->LinNumberOfImagePages = ((char*)pVbe->memory)[53];
-	    block->LinRedMaskSize = ((char*)pVbe->memory)[54];
-	    block->LinRedFieldPosition = ((char*)pVbe->memory)[55];
-	    block->LinGreenMaskSize = ((char*)pVbe->memory)[56];
-	    block->LinGreenFieldPosition = ((char*)pVbe->memory)[57];
-	    block->LinBlueMaskSize = ((char*)pVbe->memory)[58];
-	    block->LinBlueFieldPosition = ((char*)pVbe->memory)[59];
-	    block->LinRsvdMaskSize = ((char*)pVbe->memory)[60];
-	    block->LinRsvdFieldPosition = ((char*)pVbe->memory)[61];
-	    block->MaxPixelClock = *(CARD32*)(((char*)pVbe->memory) + 62);
-	    memcpy(&block->Reserved2, ((char*)pVbe->memory) + 66, 188);
-	}
-	else
-	memcpy(&block->LinBytesPerScanLine, ((char*)pVbe->memory) + 50, 206);
-    }
-    else
-	memcpy(&block->PhysBasePtr, ((char*)pVbe->memory) + 40, 216);
-
-    return (block);
+    return block;
 }
 
 void
 VBEFreeModeInfo(VbeModeInfoBlock *block)
 {
-    xfree(block);
+    free(block);
 }
 
 Bool
@@ -658,7 +597,7 @@ VBESaveRestore(vbeInfoPtr pVbe, vbeSaveRestoreFunction function,
 	    pVbe->pInt10->cx = 0x000f;
 	    xf86ExecX86int10(pVbe->pInt10);
 	    if (R16(pVbe->pInt10->ax) != 0x4f)
-	        return (FALSE);
+	        return FALSE;
 
 	    if (function == MODE_SAVE) {
 	        int npages = (R16(pVbe->pInt10->bx) * 64) / 4096 + 1;
@@ -666,7 +605,7 @@ VBESaveRestore(vbeInfoPtr pVbe, vbeSaveRestoreFunction function,
 						   real_mode_pages)) == NULL) {
 		    xf86DrvMsg(screen, X_ERROR,
 			       "Cannot allocate memory to save SVGA state.\n");
-		    return (FALSE);
+		    return FALSE;
 		}
 	    }
 	    *size = pVbe->pInt10->bx * 64;
@@ -717,9 +656,9 @@ VBEBankSwitch(vbeInfoPtr pVbe, unsigned int iBank, int window)
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (FALSE);
+	return FALSE;
 
-    return (TRUE);
+    return TRUE;
 }
 
 Bool
@@ -727,7 +666,7 @@ VBESetGetLogicalScanlineLength(vbeInfoPtr pVbe, vbeScanwidthCommand command,
 				int width, int *pixels, int *bytes, int *max)
 {
     if (command < SCANWID_SET || command > SCANWID_GET_MAX)
-	return (FALSE);
+	return FALSE;
 
     /*
     Input:
@@ -756,7 +695,7 @@ VBESetGetLogicalScanlineLength(vbeInfoPtr pVbe, vbeScanwidthCommand command,
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (FALSE);
+	return FALSE;
 
     if (command == SCANWID_GET || command == SCANWID_GET_MAX) {
 	if (pixels)
@@ -767,7 +706,7 @@ VBESetGetLogicalScanlineLength(vbeInfoPtr pVbe, vbeScanwidthCommand command,
 	    *max = R16(pVbe->pInt10->dx);
     }
 
-    return (TRUE);
+    return TRUE;
 }
 
 Bool
@@ -781,9 +720,9 @@ VBESetDisplayStart(vbeInfoPtr pVbe, int x, int y, Bool wait_retrace)
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (FALSE);
+	return FALSE;
 
-    return (TRUE);
+    return TRUE;
 }
 
 Bool
@@ -795,12 +734,12 @@ VBEGetDisplayStart(vbeInfoPtr pVbe, int *x, int *y)
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (FALSE);
+	return FALSE;
 
     *x = pVbe->pInt10->cx;
     *y = pVbe->pInt10->dx;
 
-    return (TRUE);
+    return TRUE;
 }
 
 int
@@ -828,7 +767,7 @@ VBESetGetDACPaletteFormat(vbeInfoPtr pVbe, int bits)
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (0);
+	return 0;
 
     return (bits != 0 ? bits : (pVbe->pInt10->bx >> 8) & 0x00ff);
 }
@@ -879,15 +818,15 @@ VBESetGetPaletteData(vbeInfoPtr pVbe, Bool set, int first, int num,
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (NULL);
+	return NULL;
 
     if (set)
-	return (data);
+	return data;
 
-    data = xalloc(num * sizeof(CARD32));
+    data = malloc(num * sizeof(CARD32));
     memcpy(data, pVbe->memory, num * sizeof(CARD32));
 
-    return (data);
+    return data;
 }
 
 VBEpmi *
@@ -916,14 +855,14 @@ VBEGetVBEpmi(vbeInfoPtr pVbe)
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (NULL);
+	return NULL;
 
-    pmi = xalloc(sizeof(VBEpmi));
+    pmi = malloc(sizeof(VBEpmi));
     pmi->seg_tbl = R16(pVbe->pInt10->es);
     pmi->tbl_off = R16(pVbe->pInt10->di);
     pmi->tbl_len = R16(pVbe->pInt10->cx);
 
-    return (pmi);
+    return pmi;
 }
 
 #if 0
@@ -995,7 +934,7 @@ VBEVesaSaveRestore(vbeInfoPtr pVbe, vbeSaveRestorePtr vbe_sr,
 		vbe_sr->stateMode = -1; /* invalidate */
 		/* don't rely on the memory not being touched */
 		if (vbe_sr->pstate == NULL)
-		    vbe_sr->pstate = xalloc(vbe_sr->stateSize);
+		    vbe_sr->pstate = malloc(vbe_sr->stateSize);
 		memcpy(vbe_sr->pstate, vbe_sr->state, vbe_sr->stateSize);
 	    }
 	    ErrorF("VBESaveRestore done with success\n");
@@ -1035,9 +974,9 @@ VBEGetPixelClock(vbeInfoPtr pVbe, int mode, int clock)
     xf86ExecX86int10(pVbe->pInt10);
 
     if (R16(pVbe->pInt10->ax) != 0x4f)
-	return (0);
+	return 0;
 
-    return (pVbe->pInt10->cx);
+    return pVbe->pInt10->cx;
 }
 
 Bool
@@ -1099,7 +1038,7 @@ VBEInterpretPanelID(int scrnIndex, struct vbePanelID *data)
     pScrn->monitor->vrefresh[0].hi =
 	(float)mode->Clock*1000.0 / (float)mode->HTotal / (float)mode->VTotal;
 
-    xfree(mode);
+    free(mode);
 }
 
 struct vbePanelID *

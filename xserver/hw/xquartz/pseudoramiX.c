@@ -94,7 +94,7 @@ PseudoramiXAddScreen(int x, int y, int w, int h)
 
     if (pseudoramiXNumScreens == pseudoramiXScreensAllocated) {
         pseudoramiXScreensAllocated += pseudoramiXScreensAllocated + 1;
-        pseudoramiXScreens = xrealloc(pseudoramiXScreens,
+        pseudoramiXScreens = realloc(pseudoramiXScreens,
                                       pseudoramiXScreensAllocated *
                                       sizeof(PseudoramiXScreenRec));
     }
@@ -202,7 +202,7 @@ static int ProcPseudoramiXGetState(ClientPtr client)
         swaps (&rep.state, n);
     }
     WriteToClient (client, sizeof (xPanoramiXGetStateReply), (char *) &rep);
-    return client->noClientException;
+    return Success;
 }
 
 
@@ -231,7 +231,7 @@ static int ProcPseudoramiXGetScreenCount(ClientPtr client)
         swaps (&rep.ScreenCount, n);
     }
     WriteToClient (client, sizeof(xPanoramiXGetScreenCountReply), (char *)&rep);
-    return client->noClientException;
+    return Success;
 }
 
 
@@ -255,9 +255,9 @@ static int ProcPseudoramiXGetScreenSize(ClientPtr client)
     rep.sequenceNumber = client->sequence;
     /* screen dimensions */
     rep.width  = pseudoramiXScreens[stuff->screen].w;
-    // was panoramiXdataPtr[stuff->screen].width;
+    // was screenInfo.screens[stuff->screen]->width;
     rep.height = pseudoramiXScreens[stuff->screen].h;
-    // was panoramiXdataPtr[stuff->screen].height;
+    // was screenInfo.screens[stuff->screen]->height;
     if (client->swapped) {
         swaps (&rep.sequenceNumber, n);
         swapl (&rep.length, n);
@@ -265,7 +265,7 @@ static int ProcPseudoramiXGetScreenSize(ClientPtr client)
         swaps (&rep.height, n);
     }
     WriteToClient (client, sizeof(xPanoramiXGetScreenSizeReply), (char *)&rep);
-    return client->noClientException;
+    return Success;
 }
 
 
@@ -290,7 +290,7 @@ static int ProcPseudoramiXIsActive(ClientPtr client)
 	swapl (&rep.state, n);
     }
     WriteToClient (client, sizeof (xXineramaIsActiveReply), (char *) &rep);
-    return client->noClientException;
+    return Success;
 }
 
 
@@ -337,7 +337,7 @@ static int ProcPseudoramiXQueryScreens(ClientPtr client)
 	}
     }
 
-    return client->noClientException;
+    return Success;
 }
 
 

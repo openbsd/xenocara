@@ -46,7 +46,7 @@ FI1236Ptr Detect_FI1236(I2CBusPtr b, I2CSlaveAddr addr)
    FI1236Ptr f;
    I2CByte a;
 
-   f = xcalloc(1,sizeof(FI1236Rec));
+   f = calloc(1,sizeof(FI1236Rec));
    if(f == NULL) return NULL;
    f->d.DevName = strdup("FI12xx Tuner");
    f->d.SlaveAddr = addr;
@@ -398,10 +398,6 @@ int TUNER_get_afc_hint(FI1236Ptr f)
 {
 if(f->afc_timer_installed)return TUNER_STILL_TUNING;
 return f->last_afc_hint;
-if(f->type==TUNER_TYPE_MT2032)
-	return MT2032_get_afc_hint(f);
-	else
-	return FI1236_get_afc_hint(f);
 }
 
 static void MT2032_dump_status(FI1236Ptr f)

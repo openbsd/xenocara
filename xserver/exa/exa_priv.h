@@ -50,10 +50,8 @@
 #include "dix.h"
 #include "fb.h"
 #include "fboverlay.h"
-#ifdef RENDER
 #include "fbpict.h"
 #include "glyphstr.h"
-#endif
 #include "damage.h"
 
 #define DEBUG_TRACE_FALL	0
@@ -166,13 +164,11 @@ typedef struct {
     CreateScreenResourcesProcPtr SavedCreateScreenResources;
     ModifyPixmapHeaderProcPtr    SavedModifyPixmapHeader;
     SourceValidateProcPtr        SavedSourceValidate;
-#ifdef RENDER
     CompositeProcPtr             SavedComposite;
     TrianglesProcPtr		 SavedTriangles;
     GlyphsProcPtr                SavedGlyphs;
     TrapezoidsProcPtr            SavedTrapezoids;
     AddTrapsProcPtr		 SavedAddTraps;
-#endif
     void (*do_migration) (ExaMigrationPtr pixmaps, int npixmaps, Bool can_accel);
     Bool (*pixmap_has_gpu_copy) (PixmapPtr pPixmap);
     void (*do_move_in_pixmap) (PixmapPtr pPixmap);
@@ -225,9 +221,13 @@ typedef struct {
     (PixmapWidthPaddingInfo[d].padRoundUp+1)))
 #endif
 
-extern DevPrivateKey exaScreenPrivateKey;
-extern DevPrivateKey exaPixmapPrivateKey;
-extern DevPrivateKey exaGCPrivateKey;
+extern DevPrivateKeyRec exaScreenPrivateKeyRec;
+#define exaScreenPrivateKey (&exaScreenPrivateKeyRec)
+extern DevPrivateKeyRec exaPixmapPrivateKeyRec;
+#define exaPixmapPrivateKey (&exaPixmapPrivateKeyRec)
+extern DevPrivateKeyRec exaGCPrivateKeyRec;
+#define exaGCPrivateKey (&exaGCPrivateKeyRec)
+
 #define ExaGetScreenPriv(s) ((ExaScreenPrivPtr)dixLookupPrivate(&(s)->devPrivates, exaScreenPrivateKey))
 #define ExaScreenPriv(s)	ExaScreenPrivPtr    pExaScr = ExaGetScreenPriv(s)
 
@@ -499,7 +499,6 @@ exaCopyNtoN (DrawablePtr    pSrcDrawable,
 
 extern const GCOps exaOps;
 
-#ifdef RENDER
 void
 ExaCheckComposite (CARD8      op,
 		  PicturePtr pSrc,
@@ -513,7 +512,17 @@ ExaCheckComposite (CARD8      op,
 		  INT16      yDst,
 		  CARD16     width,
 		  CARD16     height);
-#endif
+
+void
+ExaCheckGlyphs (CARD8	      op,
+		PicturePtr    pSrc,
+		PicturePtr    pDst,
+		PictFormatPtr maskFormat,
+		INT16	      xSrc,
+		INT16	      ySrc,
+		int	      nlist,
+		GlyphListPtr  list,
+		GlyphPtr      *glyphs);
 
 /* exa_offscreen.c */
 void
@@ -540,6 +549,9 @@ exaPrepareAccess(DrawablePtr pDrawable, int index);
 
 void
 exaFinishAccess(DrawablePtr pDrawable, int index);
+
+void
+exaDestroyPixmap(PixmapPtr pPixmap);
 
 void
 exaPixmapDirty(PixmapPtr pPix, int x1, int y1, int x2, int y2);

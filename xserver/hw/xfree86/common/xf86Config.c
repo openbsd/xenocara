@@ -67,9 +67,7 @@ extern DeviceAssocRec mouse_assoc;
 
 #include "xkbsrv.h"
 
-#ifdef RENDER
 #include "picture.h"
-#endif
 
 /*
  * These paths define the way the config file search is done.  The escape
@@ -165,7 +163,7 @@ xf86GetPathElem(char **pnt)
     **pnt = '\0';
     *pnt += 1;
   }
-  return(p1);
+  return p1;
 }
 
 /*
@@ -186,7 +184,7 @@ xf86ValidateFontPath(char *path)
   int flag;
   int dirlen;
 
-  tmp_path = xcalloc(1,strlen(path)+1);
+  tmp_path = calloc(1,strlen(path)+1);
   out_pnt = tmp_path;
   path_elem = NULL;
   next = path;
@@ -207,7 +205,7 @@ xf86ValidateFontPath(char *path)
       if (flag != 0) {
         xf86Msg(X_WARNING, "The directory \"%s\" does not exist.\n", dir_elem);
 	xf86ErrorF("\tEntry deleted from font path.\n");
-	xfree(dir_elem);
+	free(dir_elem);
 	continue;
       }
       else {
@@ -218,18 +216,18 @@ xf86ValidateFontPath(char *path)
 	if (flag == 0)
 	  if (!S_ISREG(stat_buf.st_mode))
 	    flag = -1;
-	xfree(p1);
+	free(p1);
 	if (flag != 0) {
 	  xf86Msg(X_WARNING,
 		  "`fonts.dir' not found (or not valid) in \"%s\".\n", 
 		  dir_elem);
 	  xf86ErrorF("\tEntry deleted from font path.\n");
 	  xf86ErrorF("\t(Run 'mkfontdir' on \"%s\").\n", dir_elem);
-	  xfree(dir_elem);
+	  free(dir_elem);
 	  continue;
 	}
       }
-      xfree(dir_elem);
+      free(dir_elem);
     }
 
     /*
@@ -241,7 +239,7 @@ xf86ValidateFontPath(char *path)
     strcat(out_pnt, path_elem);
     out_pnt += strlen(path_elem);
   }
-  return(tmp_path);
+  return tmp_path;
 }
 
 
@@ -365,7 +363,7 @@ xf86ModulelistFromConfig(pointer **optlist)
     if (optlist)
 	    *optlist = optarray;
     else
-	    xfree(optarray);
+	    free(optarray);
     return modulearray;
 }
 
@@ -624,7 +622,7 @@ configFiles(XF86ConfFilesPtr fileconf)
     /* xf86ValidateFontPath modifies its argument, but returns a copy of it. */
     temp_path = must_copy ? xnfstrdup(defaultFontPath) : defaultFontPath;
     defaultFontPath = xf86ValidateFontPath(temp_path);
-    xfree(temp_path);
+    free(temp_path);
 
     /* make fontpath more readable in the logfiles */
     countDirs = 1;
@@ -649,7 +647,7 @@ configFiles(XF86ConfFilesPtr fileconf)
     *(temp_path++) = '\t';
     strcpy(temp_path, start);
     xf86Msg(pathFrom, "FontPath set to:\n%s\n", log_buf);
-    xfree(log_buf);
+    free(log_buf);
   
   /* ModulePath */
 
@@ -925,7 +923,6 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
         }
     }
     
-#ifdef RENDER
     {
 	if ((s = xf86GetOptValString(FlagOptions, FLAG_RENDER_COLORMAP_MODE))){
 	    int policy = PictureParseCmapPolicy (s);
@@ -938,7 +935,6 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
 	    }
 	}
     }
-#endif
 
 #ifdef RANDR
     xf86Info.disableRandR = FALSE;
@@ -1203,7 +1199,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
 	    for (devs = servlayoutp->inputs; devs && *devs; devs++)
 		if (*devs == corePointer)
                 {
-                    xfree(*devs);
+                    free(*devs);
                     *devs = (IDevPtr)0x1; /* ensure we dont skip next loop*/
 		    break;
                 }
@@ -1256,7 +1252,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
 
     /* 5. Built-in default. */
     if (!foundPointer && !xf86Info.allowEmptyInput) {
-	bzero(&defPtr, sizeof(defPtr));
+	memset(&defPtr, 0, sizeof(defPtr));
 	defPtr.inp_identifier = strdup("<default pointer>");
 	defPtr.inp_driver = strdup("mouse");
 	confInput = &defPtr;
@@ -1307,7 +1303,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
     if (!found && !xf86Info.allowEmptyInput) {
 	xf86Msg(X_INFO, "No default mouse found, adding one\n");
-	bzero(&defPtr, sizeof(defPtr));
+	memset(&defPtr, 0, sizeof(defPtr));
 	defPtr.inp_identifier = strdup("<default pointer>");
 	defPtr.inp_driver = strdup("mouse");
 	confInput = &defPtr;
@@ -1345,7 +1341,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
 	    for (devs = servlayoutp->inputs; devs && *devs; devs++)
 		if (*devs == coreKeyboard)
                 {
-                    xfree(*devs);
+                    free(*devs);
                     *devs = (IDevPtr)0x1; /* ensure we dont skip next loop */
 		    break;
                 }
@@ -1396,7 +1392,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
 
     /* 5. Built-in default. */
     if (!foundKeyboard && !xf86Info.allowEmptyInput) {
-	bzero(&defKbd, sizeof(defKbd));
+	memset(&defKbd, 0, sizeof(defKbd));
 	defKbd.inp_identifier = strdup("<default keyboard>");
 	defKbd.inp_driver = strdup("kbd");
 	confInput = &defKbd;
@@ -1507,8 +1503,8 @@ configInputDevices(XF86ConfLayoutPtr layout, serverLayoutPtr servlayoutp)
 	indp[count] = xnfalloc(sizeof(IDevRec));
 	if (!configInput(indp[count], irp->iref_inputdev, X_CONFIG)) {
 	    while(count--)
-		xfree(indp[count]);
-	    xfree(indp);
+		free(indp[count]);
+	    free(indp);
 	    return FALSE;
 	}
 	indp[count]->extraOptions = irp->iref_option_lst;
@@ -1599,7 +1595,7 @@ configLayout(serverLayoutPtr servlayoutp, XF86ConfLayoutPtr conf_layout,
 	    scrnum = adjp->adj_scrnum;
 	if (!configScreen(slp[count].screen, adjp->adj_screen, scrnum,
 			  X_CONFIG)) {
-	    xfree(slp);
+	    free(slp);
 	    return FALSE;
 	}
 	slp[count].x = adjp->adj_x;
@@ -1644,8 +1640,8 @@ configLayout(serverLayoutPtr servlayoutp, XF86ConfLayoutPtr conf_layout,
         slp[0].screen = xnfcalloc(1, sizeof(confScreenRec));
 	if (!configScreen(slp[0].screen, xf86configptr->conf_screen_lst,
                           0, X_CONFIG)) {
-	    xfree(slp[0].screen);
-	    xfree(slp);
+	    free(slp[0].screen);
+	    free(slp);
 	    return FALSE;
 	}
     }
@@ -1704,7 +1700,7 @@ configLayout(serverLayoutPtr servlayoutp, XF86ConfLayoutPtr conf_layout,
     count = 0;
     while (idp) {
 	if (!configDevice(&gdp[count], idp->inactive_device, FALSE)) {
-	    xfree(gdp);
+	    free(gdp);
 	    return FALSE;
 	}
         count++;
@@ -1764,7 +1760,7 @@ configImpliedLayout(serverLayoutPtr servlayoutp, XF86ConfScreenPtr conf_screen,
     slp[0].screen = xnfcalloc(1, sizeof(confScreenRec));
     slp[1].screen = NULL;
     if (!configScreen(slp[0].screen, conf_screen, 0, from)) {
-	xfree(slp);
+	free(slp);
 	return FALSE;
     }
     servlayoutp->id = "(implicit)";
@@ -1855,7 +1851,7 @@ configScreen(confScreenPtr screenp, XF86ConfScreenPtr conf_screen, int scrnum,
     if (!conf_screen->scrn_monitor) {
 	XF86ConfMonitorRec defMon;
 
-	bzero(&defMon, sizeof(defMon));
+	memset(&defMon, 0, sizeof(defMon));
 	defMon.mon_identifier = "<default monitor>";
 	if (!configMonitor(screenp->monitor, &defMon))
 	    return FALSE;
@@ -2310,7 +2306,7 @@ configExtensions(XF86ConfExtensionsPtr conf_ext)
 		enable = !enable;
 	    } else {
 		xf86Msg(X_WARNING, "Ignoring unrecognized value \"%s\"\n", val);
-		xfree(n);
+		free(n);
 		continue;
 	    }
 
@@ -2321,7 +2317,7 @@ configExtensions(XF86ConfExtensionsPtr conf_ext)
 		xf86Msg(X_WARNING, "Ignoring unrecognized extension \"%s\"\n",
                         name);
 	    }
-	    xfree(n);
+	    free(n);
 	}
     }
 }
@@ -2334,6 +2330,7 @@ configInput(IDevPtr inputp, XF86ConfInputPtr conf_input, MessageType from)
     inputp->driver = conf_input->inp_driver;
     inputp->commonOptions = conf_input->inp_option_lst;
     inputp->extraOptions = NULL;
+    inputp->attrs = NULL;
 
     return TRUE;
 }
@@ -2369,7 +2366,7 @@ addDefaultModes(MonPtr monitorp)
 	    monitorp->Modes = xf86ModesAdd(monitorp->Modes, mode);
 	    last = mode;
 	} else {
-	    xfree(mode);
+	    free(mode);
 	}
     }
     monitorp->Last = last;
@@ -2406,7 +2403,7 @@ checkInput(serverLayoutPtr layout, Bool implicit_layout) {
                 xf86Msg(X_WARNING, "Disabling %s\n", (*dev)->identifier);
 
                 current = dev;
-                xfree(*dev);
+                free(*dev);
 
                 do {
                     *current = *(current + 1);

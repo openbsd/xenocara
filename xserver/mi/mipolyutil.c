@@ -99,7 +99,7 @@ miInsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE,  int scanline,
     {
         if (*iSLLBlock > SLLSPERBLOCK-1) 
         {
-            tmpSLLBlock = xalloc(sizeof(ScanLineListBlock));
+            tmpSLLBlock = malloc(sizeof(ScanLineListBlock));
 	    if (!tmpSLLBlock)
 		return FALSE;
             (*SLLBlock)->next = tmpSLLBlock;
@@ -365,7 +365,7 @@ miInsertionSort(EdgeTableEntry *AET)
             changed = 1;
         }
     }
-    return(changed);
+    return changed;
 }
 
 /*
@@ -379,7 +379,7 @@ miFreeStorage(ScanLineListBlock *pSLLBlock)
     while (pSLLBlock) 
     {
         tmpSLLBlock = pSLLBlock->next;
-        xfree(pSLLBlock);
+        free(pSLLBlock);
         pSLLBlock = tmpSLLBlock;
     }
 }

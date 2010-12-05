@@ -60,13 +60,13 @@ SOFTWARE.
 #include "dixfontstr.h"
 #include "scrnintstr.h"
 #include "region.h"
+#include "dixstruct.h"
 
 #include "privates.h"
 #include "dix.h"
 #include "xace.h"
 #include <assert.h>
 
-extern XID clientErrorValue;
 extern FontPtr defaultFont;
 
 static Bool CreateDefaultTile(GCPtr pGC);
@@ -82,78 +82,55 @@ ValidateGC(DrawablePtr pDraw, GC *pGC)
 }
 
 
-/* dixChangeGC(client, pGC, mask, pC32, pUnion)
- * 
- * This function was created as part of the Security extension
- * implementation.  The client performing the gc change must be passed so
- * that access checks can be performed on any tiles, stipples, or fonts
- * that are specified.  ddxen can call this too; they should normally
- * pass NullClient for the client since any access checking should have
+/*
+ * ChangeGC/ChangeGCXIDs:
+ *
+ * The client performing the gc change must be passed so that access
+ * checks can be performed on any tiles, stipples, or fonts that are
+ * specified.  ddxen can call this too; they should normally pass
+ * NullClient for the client since any access checking should have
  * already been done at a higher level.
  * 
- * Since we had to create a new function anyway, we decided to change the
- * way the list of gc values is passed to eliminate the compiler warnings
- * caused by the DoChangeGC interface.  You can pass the values via pC32
- * or pUnion, but not both; one of them must be NULL.  If you don't need
- * to pass any pointers, you can use either one:
+ * If you have any XIDs, you must use ChangeGCXIDs:
  * 
- *     example calling dixChangeGC using pC32 parameter
- *
  *     CARD32 v[2];
- *     v[0] = foreground;
- *     v[1] = background;
- *     dixChangeGC(client, pGC, GCForeground|GCBackground, v, NULL);
+ *     v[0] = FillTiled;
+ *     v[1] = pid;
+ *     ChangeGCXIDs(client, pGC, GCFillStyle|GCTile, v);
  * 
- *     example calling dixChangeGC using pUnion parameter;
- *     same effect as above
+ * However, if you need to pass a pointer to a pixmap or font, you must
+ * use ChangeGC:
+ * 
+ *     ChangeGCVal v[2];
+ *     v[0].val = FillTiled;
+ *     v[1].ptr = pPixmap;
+ *     ChangeGC(client, pGC, GCFillStyle|GCTile, v);
+ * 
+ * If you have neither XIDs nor pointers, you can use either function,
+ * but ChangeGC will do less work.
  *
  *     ChangeGCVal v[2];
  *     v[0].val = foreground;
  *     v[1].val = background;
- *     dixChangeGC(client, pGC, GCForeground|GCBackground, NULL, v);
- * 
- * However, if you need to pass a pointer to a pixmap or font, you MUST
- * use the pUnion parameter.
- * 
- *     example calling dixChangeGC passing pointers in the value list
- *     v[1].ptr is a pointer to a pixmap
- *
- *     ChangeGCVal v[2];
- *     v[0].val = FillTiled;
- *     v[1].ptr = pPixmap;
- *     dixChangeGC(client, pGC, GCFillStyle|GCTile, NULL, v);
- * 
- * Note: we could have gotten by with just the pUnion parameter, but on
- * 64 bit machines that would have forced us to copy the value list that
- * comes in the ChangeGC request.
- * 
- * Ideally, we'd change all the DoChangeGC calls to dixChangeGC, but this
- * is far too many changes to consider at this time, so we've only
- * changed the ones that caused compiler warnings.  New code should use
- * dixChangeGC.
- * 
- * dpw
+ *     ChangeGC(client, pGC, GCForeground|GCBackground, v);
  */
 
 #define NEXTVAL(_type, _var) { \
-      if (pC32) _var = (_type)*pC32++; \
-      else { \
 	_var = (_type)(pUnion->val); pUnion++; \
-      } \
     }
 
 #define NEXT_PTR(_type, _var) { \
-    assert(pUnion); _var = (_type)pUnion->ptr; pUnion++; }
+    _var = (_type)pUnion->ptr; pUnion++; }
 
 int
-dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr pUnion)
+ChangeGC(ClientPtr client, GC *pGC, BITS32 mask, ChangeGCValPtr pUnion)
 {
     BITS32 	index2;
-    int 	rc, error = 0;
+    int 	error = 0;
     PixmapPtr 	pPixmap;
     BITS32	maskQ;
 
-    assert( (pC32 && !pUnion) || (!pC32 && pUnion) );
+    assert(pUnion);
     pGC->serialNumber |= GC_CHANGE_SERIAL_BIT;
 
     maskQ = mask;	/* save these for when we walk the GCque */
@@ -172,7 +149,8 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->alu = newalu;
 		else
 		{
-		    clientErrorValue = newalu;
+		    if (client)
+			client->errorValue = newalu;
 		    error = BadValue;
 		}
 		break;
@@ -205,7 +183,8 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->lineStyle = newlinestyle;
 		else
 		{
-		    clientErrorValue = newlinestyle;
+		    if (client)
+			client->errorValue = newlinestyle;
 		    error = BadValue;
 		}
 		break;
@@ -218,7 +197,8 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->capStyle = newcapstyle;
 		else
 		{
-		    clientErrorValue = newcapstyle;
+		    if (client)
+			client->errorValue = newcapstyle;
 		    error = BadValue;
 		}
 		break;
@@ -231,7 +211,8 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->joinStyle = newjoinstyle;
 		else
 		{
-		    clientErrorValue = newjoinstyle;
+		    if (client)
+			client->errorValue = newjoinstyle;
 		    error = BadValue;
 		}
 		break;
@@ -244,7 +225,8 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->fillStyle = newfillstyle;
 		else
 		{
-		    clientErrorValue = newfillstyle;
+		    if (client)
+			client->errorValue = newfillstyle;
 		    error = BadValue;
 		}
 		break;
@@ -257,84 +239,43 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->fillRule = newfillrule;
 		else
 		{
-		    clientErrorValue = newfillrule;
+		    if (client)
+			client->errorValue = newfillrule;
 		    error = BadValue;
 		}
 		break;
 	    }
 	    case GCTile:
-	    {
-		XID newpix = 0;
-		if (pUnion)
+		NEXT_PTR(PixmapPtr, pPixmap);
+		if ((pPixmap->drawable.depth != pGC->depth) ||
+		    (pPixmap->drawable.pScreen != pGC->pScreen))
 		{
-		    NEXT_PTR(PixmapPtr, pPixmap);
-		    rc = Success;
+		    error = BadMatch;
 		}
 		else
 		{
-		    NEXTVAL(XID, newpix);
-		    rc = dixLookupResourceByType((pointer *)&pPixmap, newpix,
-					   RT_PIXMAP, client, DixReadAccess);
-		}
-		if (rc == Success)
-		{
-		    if ((pPixmap->drawable.depth != pGC->depth) ||
-			(pPixmap->drawable.pScreen != pGC->pScreen))
-		    {
-			error = BadMatch;
-		    }
-		    else
-		    {
-			pPixmap->refcnt++;
-			if (!pGC->tileIsPixel)
-			    (* pGC->pScreen->DestroyPixmap)(pGC->tile.pixmap);
-			pGC->tileIsPixel = FALSE;
-			pGC->tile.pixmap = pPixmap;
-		    }
-		}
-		else
-		{
-		    clientErrorValue = newpix;
-		    error = (rc == BadValue) ? BadPixmap : rc;
+		    pPixmap->refcnt++;
+		    if (!pGC->tileIsPixel)
+			(* pGC->pScreen->DestroyPixmap)(pGC->tile.pixmap);
+		    pGC->tileIsPixel = FALSE;
+		    pGC->tile.pixmap = pPixmap;
 		}
 		break;
-	    }
 	    case GCStipple:
-	    {
-		XID newstipple = 0;
-		if (pUnion)
+		NEXT_PTR(PixmapPtr, pPixmap);
+		if ((pPixmap->drawable.depth != 1) ||
+		    (pPixmap->drawable.pScreen != pGC->pScreen))
 		{
-		    NEXT_PTR(PixmapPtr, pPixmap);
-		    rc = Success;
+		    error = BadMatch;
 		}
 		else
 		{
-		    NEXTVAL(XID, newstipple)
-		    rc = dixLookupResourceByType((pointer *)&pPixmap, newstipple,
-					   RT_PIXMAP, client, DixReadAccess);
-		}
-		if (rc == Success)
-		{
-		    if ((pPixmap->drawable.depth != 1) ||
-			(pPixmap->drawable.pScreen != pGC->pScreen))
-		    {
-			error = BadMatch;
-		    }
-		    else
-		    {
-			pPixmap->refcnt++;
-			if (pGC->stipple)
-			    (* pGC->pScreen->DestroyPixmap)(pGC->stipple);
-			pGC->stipple = pPixmap;
-		    }
-		}
-		else
-		{
-		    clientErrorValue = newstipple;
-		    error = (rc == BadValue) ? BadPixmap : rc;
+		    pPixmap->refcnt++;
+		    if (pGC->stipple)
+			(* pGC->pScreen->DestroyPixmap)(pGC->stipple);
+		    pGC->stipple = pPixmap;
 		}
 		break;
-	    }
 	    case GCTileStipXOrigin:
 		NEXTVAL(INT16, pGC->patOrg.x);
 		break;
@@ -344,30 +285,11 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 	    case GCFont:
     	    {
 		FontPtr	pFont;
-		XID newfont = 0;
-		if (pUnion)
-		{
-		    NEXT_PTR(FontPtr, pFont);
-		    rc = Success;
-		}
-		else
-		{
-		    NEXTVAL(XID, newfont)
-		    rc = dixLookupResourceByType((pointer *)&pFont, newfont,
-					   RT_FONT, client, DixUseAccess);
-		}
-		if (rc == Success)
-		{
-		    pFont->refcnt++;
-		    if (pGC->font)
-    		        CloseFont(pGC->font, (Font)0);
-		    pGC->font = pFont;
-		 }
-		else
-		{
-		    clientErrorValue = newfont;
-		    error = (rc == BadValue) ? BadFont : rc;
-		}
+		NEXT_PTR(FontPtr, pFont);
+		pFont->refcnt++;
+		if (pGC->font)
+		    CloseFont(pGC->font, (Font)0);
+		pGC->font = pFont;
 		break;
 	    }
 	    case GCSubwindowMode:
@@ -378,7 +300,8 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->subWindowMode = newclipmode;
 		else
 		{
-		    clientErrorValue = newclipmode;
+		    if (client)
+			client->errorValue = newclipmode;
 		    error = BadValue;
 		}
 		break;
@@ -391,7 +314,8 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->graphicsExposures = newge;
 		else
 		{
-		    clientErrorValue = newge;
+		    if (client)
+			client->errorValue = newge;
 		    error = BadValue;
 		}
 		break;
@@ -403,53 +327,20 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		NEXTVAL(INT16, pGC->clipOrg.y);
 		break;
 	    case GCClipMask:
-	    {
-		Pixmap pid = 0;
-		int    clipType = 0;
-
-		if (pUnion)
-		{
-		    NEXT_PTR(PixmapPtr, pPixmap);
-		}
-		else
-		{
-		    NEXTVAL(Pixmap, pid)
-		    if (pid == None)
-		    {
-			clipType = CT_NONE;
-			pPixmap = NullPixmap;
-		    }
-		    else {
-			rc = dixLookupResourceByType((pointer *)&pPixmap, pid,
-					       RT_PIXMAP, client,
-					       DixReadAccess);
-			if (rc != Success) {
-			    clientErrorValue = pid;
-			    error = (rc == BadValue) ? BadPixmap : rc;
-			}
-		    }
-		}
-
+		NEXT_PTR(PixmapPtr, pPixmap);
 		if (pPixmap)
 		{
 		    if ((pPixmap->drawable.depth != 1) ||
 			(pPixmap->drawable.pScreen != pGC->pScreen))
 		    {
 			error = BadMatch;
+			break;
 		    }
-		    else
-		    {
-			clipType = CT_PIXMAP;
-			pPixmap->refcnt++;
-		    }
+		    pPixmap->refcnt++;
 		}
-		if(error == Success)
-		{
-		    (*pGC->funcs->ChangeClip)(pGC, clipType,
-					      (pointer)pPixmap, 0);
-		}
+		(*pGC->funcs->ChangeClip)(pGC, pPixmap ? CT_PIXMAP : CT_NONE,
+					  (pointer)pPixmap, 0);
 		break;
-	    }
 	    case GCDashOffset:
 		NEXTVAL(INT16, pGC->dashOffset);
 		break;
@@ -461,7 +352,7 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		{
 		    if (pGC->dash != DefaultDash)
 		    {
-			xfree(pGC->dash);
+			free(pGC->dash);
 			pGC->numInDashList = 2;
 			pGC->dash = DefaultDash;
 		    }
@@ -470,11 +361,11 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
  		{
 		    unsigned char *dash;
 
-		    dash = xalloc(2 * sizeof(unsigned char));
+		    dash = malloc(2 * sizeof(unsigned char));
 		    if (dash)
 		    {
 			if (pGC->dash != DefaultDash)
-			    xfree(pGC->dash);
+			    free(pGC->dash);
 			pGC->numInDashList = 2;
 			pGC->dash = dash;
 			dash[0] = newdash;
@@ -485,7 +376,8 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		}
  		else
 		{
-		   clientErrorValue = newdash;
+		   if (client)
+			client->errorValue = newdash;
 		   error = BadValue;
 		}
 		break;
@@ -498,13 +390,15 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 		    pGC->arcMode = newarcmode;
 		else
 		{
-		    clientErrorValue = newarcmode;
+		    if (client)
+			client->errorValue = newarcmode;
 		    error = BadValue;
 		}
 		break;
 	    }
 	    default:
-		clientErrorValue = maskQ;
+		if (client)
+		    client->errorValue = maskQ;
 		error = BadValue;
 		break;
 	}
@@ -525,44 +419,50 @@ dixChangeGC(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32, ChangeGCValPtr
 #undef NEXTVAL
 #undef NEXT_PTR
 
-/* Publically defined entry to ChangeGC.  Just calls dixChangeGC and tells
- * it that all of the entries are constants or IDs */
+static const struct {
+    BITS32 mask;
+    RESTYPE type;
+    Mask access_mode;
+} xidfields[] = {
+    { GCTile, RT_PIXMAP, DixReadAccess },
+    { GCStipple, RT_PIXMAP, DixReadAccess },
+    { GCFont, RT_FONT, DixUseAccess },
+    { GCClipMask, RT_PIXMAP, DixReadAccess },
+};
+
 int
-ChangeGC(GC *pGC, BITS32 mask, XID *pval)
+ChangeGCXIDs(ClientPtr client, GC *pGC, BITS32 mask, CARD32 *pC32)
 {
-    return (dixChangeGC(NullClient, pGC, mask, pval, NULL));
+    ChangeGCVal vals[GCLastBit + 1];
+    int i;
+    if (mask & ~GCAllBits)
+    {
+	client->errorValue = mask;
+	return BadValue;
+    }
+    for (i = Ones(mask); i--; )
+	vals[i].val = pC32[i];
+    for (i = 0; i < sizeof(xidfields) / sizeof(*xidfields); ++i)
+    {
+	int offset, rc;
+	if (!(mask & xidfields[i].mask))
+	    continue;
+	offset = Ones(mask & (xidfields[i].mask - 1));
+	if (xidfields[i].mask == GCClipMask && vals[offset].val == None)
+	{
+	    vals[offset].ptr = NullPixmap;
+	    continue;
+	}
+	rc = dixLookupResourceByType(&vals[offset].ptr, vals[offset].val,
+		xidfields[i].type, client, xidfields[i].access_mode);
+	if (rc != Success)
+	{
+	    client->errorValue = vals[offset].val;
+	    return rc;
+	}
+    }
+    return ChangeGC(client, pGC, mask, vals);
 }
-
-/* DoChangeGC(pGC, mask, pval, fPointer)
-   mask is a set of bits indicating which values to change.
-   pval contains an appropriate value for each mask.
-   fPointer is true if the values for tiles, stipples, fonts or clipmasks
-   are pointers instead of IDs.  Note: if you are passing pointers you
-   MUST declare the array of values as type pointer!  Other data types
-   may not be large enough to hold pointers on some machines.  Yes,
-   this means you have to cast to (XID *) when you pass the array to
-   DoChangeGC.  Similarly, if you are not passing pointers (fPointer = 0) you
-   MUST declare the array as type XID (not unsigned long!), or again the wrong
-   size data type may be used.  To avoid this cruftiness, use dixChangeGC
-   above.
-
-   if there is an error, the value is marked as changed 
-   anyway, which is probably wrong, but infrequent.
-
-NOTE:
-	all values sent over the protocol for ChangeGC requests are
-32 bits long
-*/
-int
-DoChangeGC(GC *pGC, BITS32 mask, XID *pval, int fPointer)
-{
-    if (fPointer)
-    /* XXX might be a problem on 64 bit big-endian servers */
-	return dixChangeGC(NullClient, pGC, mask, NULL, (ChangeGCValPtr)pval);
-    else
-	return dixChangeGC(NullClient, pGC, mask, pval, NULL);
-}
-
 
 /* CreateGC(pDrawable, mask, pval, pStatus)
    creates a default GC for the given drawable, using mask to fill
@@ -579,7 +479,7 @@ CreateGC(DrawablePtr pDrawable, BITS32 mask, XID *pval, int *pStatus,
 {
     GCPtr pGC;
 
-    pGC = xalloc(sizeof(GC));
+    pGC = dixAllocateObjectWithPrivates(GC, PRIVATE_GC);
     if (!pGC)
     {
 	*pStatus = BadAlloc;
@@ -592,7 +492,6 @@ CreateGC(DrawablePtr pDrawable, BITS32 mask, XID *pval, int *pStatus,
     pGC->planemask = ~0;
     pGC->serialNumber = GC_CHANGE_SERIAL_BIT;
     pGC->funcs = 0;
-    pGC->devPrivates = NULL;
     pGC->fgPixel = 0;
     pGC->bgPixel = 1;
     pGC->lineWidth = 0;
@@ -637,17 +536,20 @@ CreateGC(DrawablePtr pDrawable, BITS32 mask, XID *pval, int *pStatus,
     pGC->stipple = pGC->pScreen->PixmapPerDepth[0];
     pGC->stipple->refcnt++;
 
+    /* this is not a scratch GC */
+    pGC->scratch_inuse = FALSE;
+
     /* security creation/labeling check */
     *pStatus = XaceHook(XACE_RESOURCE_ACCESS, client, gcid, RT_GC, pGC,
 			RT_NONE, NULL, DixCreateAccess|DixSetAttrAccess);
     if (*pStatus != Success)
 	goto out;
 
-    pGC->stateChanges = (1 << (GCLastBit+1)) - 1;
+    pGC->stateChanges = GCAllBits;
     if (!(*pGC->pScreen->CreateGC)(pGC))
 	*pStatus = BadAlloc;
     else if (mask)
-        *pStatus = ChangeGC(pGC, mask, pval);
+        *pStatus = ChangeGCXIDs(client, pGC, mask, pval);
     else
 	*pStatus = Success;
 
@@ -660,13 +562,13 @@ out:
 	pGC = (GCPtr)NULL;
     }
 
-    return (pGC);
+    return pGC;
 }
 
 static Bool
 CreateDefaultTile (GCPtr pGC)
 {
-    XID		tmpval[3];
+    ChangeGCVal	tmpval[3];
     PixmapPtr 	pTile;
     GCPtr	pgcScratch;
     xRectangle	rect;
@@ -687,11 +589,10 @@ CreateDefaultTile (GCPtr pGC)
 	    FreeScratchGC(pgcScratch);
 	return FALSE;
     }
-    tmpval[0] = GXcopy;
-    tmpval[1] = pGC->tile.pixel;
-    tmpval[2] = FillSolid;
-    (void)ChangeGC(pgcScratch, GCFunction | GCForeground | GCFillStyle, 
-		   tmpval);
+    tmpval[0].val = GXcopy;
+    tmpval[1].val = pGC->tile.pixel;
+    tmpval[2].val = FillSolid;
+    (void)ChangeGC(NullClient, pgcScratch, GCFunction | GCForeground | GCFillStyle, tmpval);
     ValidateGC((DrawablePtr)pTile, pgcScratch);
     rect.x = 0;
     rect.y = 0;
@@ -819,7 +720,7 @@ CopyGC(GC *pgcSrc, GC *pgcDst, BITS32 mask)
 		{
 		    if (pgcDst->dash != DefaultDash)
 		    {
-			xfree(pgcDst->dash);
+			free(pgcDst->dash);
 			pgcDst->numInDashList = pgcSrc->numInDashList;
 			pgcDst->dash = pgcSrc->dash;
 		    }
@@ -829,11 +730,11 @@ CopyGC(GC *pgcSrc, GC *pgcDst, BITS32 mask)
 		    unsigned char *dash;
 		    unsigned int i;
 
-		    dash = xalloc(pgcSrc->numInDashList * sizeof(unsigned char));
+		    dash = malloc(pgcSrc->numInDashList * sizeof(unsigned char));
 		    if (dash)
 		    {
 			if (pgcDst->dash != DefaultDash)
-			    xfree(pgcDst->dash);
+			    free(pgcDst->dash);
 			pgcDst->numInDashList = pgcSrc->numInDashList;
 			pgcDst->dash = dash;
 			for (i=0; i<pgcSrc->numInDashList; i++)
@@ -847,9 +748,7 @@ CopyGC(GC *pgcSrc, GC *pgcDst, BITS32 mask)
 		pgcDst->arcMode = pgcSrc->arcMode;
 		break;
 	    default:
-		clientErrorValue = maskQ;
-		error = BadValue;
-		break;
+		FatalError ("CopyGC: Unhandled mask!\n");
 	}
     }
     if (pgcDst->fillStyle == FillTiled && pgcDst->tileIsPixel)
@@ -884,10 +783,9 @@ FreeGC(pointer value, XID gid)
 
     (*pGC->funcs->DestroyGC) (pGC);
     if (pGC->dash != DefaultDash)
-	xfree(pGC->dash);
-    dixFreePrivates(pGC->devPrivates);
-    xfree(pGC);
-    return(Success);
+	free(pGC->dash);
+    dixFreeObjectWithPrivates(pGC, PRIVATE_GC);
+    return Success;
 }
 
 /* CreateScratchGC(pScreen, depth)
@@ -908,7 +806,7 @@ CreateScratchGC(ScreenPtr pScreen, unsigned depth)
 {
     GCPtr pGC;
 
-    pGC = xalloc(sizeof(GC));
+    pGC = dixAllocateObjectWithPrivates(GC, PRIVATE_GC);
     if (!pGC)
 	return (GCPtr)NULL;
 
@@ -917,7 +815,6 @@ CreateScratchGC(ScreenPtr pScreen, unsigned depth)
     pGC->alu = GXcopy; /* dst <- src */
     pGC->planemask = ~0;
     pGC->serialNumber = 0;
-    pGC->devPrivates = NULL;
     pGC->fgPixel = 0;
     pGC->bgPixel = 1;
     pGC->lineWidth = 0;
@@ -947,7 +844,10 @@ CreateScratchGC(ScreenPtr pScreen, unsigned depth)
     pGC->lastWinOrg.x = 0;
     pGC->lastWinOrg.y = 0;
 
-    pGC->stateChanges = (1 << (GCLastBit+1)) - 1;
+    /* scratch GCs in the GCperDepth pool start off unused */
+    pGC->scratch_inuse = FALSE;
+
+    pGC->stateChanges = GCAllBits;
     if (!(*pScreen->CreateGC)(pGC))
     {
 	FreeGC(pGC, (XID)0);
@@ -967,8 +867,10 @@ FreeGCperDepth(int screenNum)
     ppGC = pScreen->GCperDepth;
 
     for (i = 0; i <= pScreen->numDepths; i++)
+    {
 	(void)FreeGC(ppGC[i], (XID)0);
-    pScreen->rgf = ~0L;
+	ppGC[i] = NULL;
+    }
 }
 
 
@@ -981,7 +883,6 @@ CreateGCperDepth(int screenNum)
     GCPtr *ppGC;
 
     pScreen = screenInfo.screens[screenNum];
-    pScreen->rgf = 0;
     ppGC = pScreen->GCperDepth;
     /* do depth 1 separately because it's not included in list */
     if (!(ppGC[0] = CreateScratchGC(pScreen, 1)))
@@ -1009,7 +910,7 @@ Bool
 CreateDefaultStipple(int screenNum)
 {
     ScreenPtr pScreen;
-    XID tmpval[3];
+    ChangeGCVal tmpval[3];
     xRectangle rect;
     CARD16 w, h;
     GCPtr pgcScratch;
@@ -1023,14 +924,16 @@ CreateDefaultStipple(int screenNum)
 			(*pScreen->CreatePixmap)(pScreen, w, h, 1, 0)))
 	return FALSE;
     /* fill stipple with 1 */
-    tmpval[0] = GXcopy; tmpval[1] = 1; tmpval[2] = FillSolid;
+    tmpval[0].val = GXcopy;
+    tmpval[1].val = 1;
+    tmpval[2].val = FillSolid;
     pgcScratch = GetScratchGC(1, pScreen);
     if (!pgcScratch)
     {
 	(*pScreen->DestroyPixmap)(pScreen->PixmapPerDepth[0]);
 	return FALSE;
     }
-    (void)ChangeGC(pgcScratch, GCFunction|GCForeground|GCFillStyle, tmpval);
+    (void)ChangeGC(NullClient, pgcScratch, GCFunction|GCForeground|GCFillStyle, tmpval);
     ValidateGC((DrawablePtr)pScreen->PixmapPerDepth[0], pgcScratch);
     rect.x = 0;
     rect.y = 0;
@@ -1063,15 +966,14 @@ SetDashes(GCPtr pGC, unsigned offset, unsigned ndash, unsigned char *pdash)
 	if (!*p++)
 	{
 	    /* dash segment must be > 0 */
-	    clientErrorValue = 0;
 	    return BadValue;
 	}
     }
 
     if (ndash & 1)
-	p = xalloc(2 * ndash * sizeof(unsigned char));
+	p = malloc(2 * ndash * sizeof(unsigned char));
     else
-	p = xalloc(ndash * sizeof(unsigned char));
+	p = malloc(ndash * sizeof(unsigned char));
     if (!p)
 	return BadAlloc;
 
@@ -1084,7 +986,7 @@ SetDashes(GCPtr pGC, unsigned offset, unsigned ndash, unsigned char *pdash)
     }
 
     if (pGC->dash != DefaultDash)
-	xfree(pGC->dash);
+	free(pGC->dash);
     pGC->numInDashList = ndash;
     pGC->dash = p;
     if (ndash & 1)
@@ -1164,9 +1066,9 @@ SetClipRects(GCPtr pGC, int xOrigin, int yOrigin, int nrects,
 
     newct = VerifyRectOrder(nrects, prects, ordering);
     if (newct < 0)
-	return(BadMatch);
+	return BadMatch;
     size = nrects * sizeof(xRectangle);
-    prectsNew = xalloc(size);
+    prectsNew = malloc(size);
     if (!prectsNew && size)
 	return BadAlloc;
 
@@ -1199,12 +1101,11 @@ GetScratchGC(unsigned depth, ScreenPtr pScreen)
     GCPtr pGC;
 
     for (i=0; i<=pScreen->numDepths; i++)
-        if ( pScreen->GCperDepth[i]->depth == depth &&
-	     !(pScreen->rgf & (1L << (i+1)))
-	   )
+    {
+	pGC = pScreen->GCperDepth[i];
+	if (pGC && pGC->depth == depth && !pGC->scratch_inuse)
 	{
-	    pScreen->rgf |= (1L << (i+1));
-            pGC = (pScreen->GCperDepth[i]);
+	    pGC->scratch_inuse = TRUE;
 
 	    pGC->alu = GXcopy;
 	    pGC->planemask = ~0;
@@ -1226,9 +1127,10 @@ GetScratchGC(unsigned depth, ScreenPtr pScreen)
 	    pGC->clipOrg.y = 0;
 	    if (pGC->clientClipType != CT_NONE)
 		(*pGC->funcs->ChangeClip) (pGC, CT_NONE, NULL, 0);
-	    pGC->stateChanges = (1 << (GCLastBit+1)) - 1;
+	    pGC->stateChanges = GCAllBits;
 	    return pGC;
 	}
+    }
     /* if we make it this far, need to roll our own */
     pGC = CreateScratchGC(pScreen, depth);
     if (pGC)
@@ -1244,16 +1146,8 @@ mark it as available.
 void
 FreeScratchGC(GCPtr pGC)
 {
-    ScreenPtr pScreen = pGC->pScreen;
-    int i;
-
-    for (i=0; i<=pScreen->numDepths; i++)
-    {
-        if ( pScreen->GCperDepth[i] == pGC)
-	{
-	    pScreen->rgf &= ~(1L << (i+1));
-	    return;
-	}
-    }
-    (void)FreeGC(pGC, (GContext)0);
+    if (pGC->scratch_inuse)
+	pGC->scratch_inuse = FALSE;
+    else
+	FreeGC(pGC, (GContext)0);
 }

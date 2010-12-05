@@ -49,8 +49,6 @@
 #include "xf86_OSproc.h"
 #include "xf86VGAarbiter.h"
 
-#include "Pci.h"
-
 /* Entity data */
 EntityPtr *xf86Entities = NULL;	/* Bus slots claimed by drivers */
 int xf86NumEntities = 0;
@@ -58,9 +56,135 @@ static int xf86EntityPrivateCount = 0;
 
 BusRec primaryBus = { BUS_NONE, { 0 } };
 
-static Bool xf86ResAccessEnter = FALSE;
+/**
+ * Call the driver's correct probe function.
+ *
+ * If the driver implements the \c DriverRec::PciProbe entry-point and an
+ * appropriate PCI device (with matching Device section in the xorg.conf file)
+ * is found, it is called.  If \c DriverRec::PciProbe or no devices can be
+ * successfully probed with it (e.g., only non-PCI devices are available),
+ * the driver's \c DriverRec::Probe function is called.
+ *
+ * \param drv   Driver to probe
+ *
+ * \return
+ * If a device can be successfully probed by the driver, \c TRUE is
+ * returned.  Otherwise, \c FALSE is returned.
+ */
+Bool
+xf86CallDriverProbe( DriverPtr drv, Bool detect_only )
+{
+    Bool     foundScreen = FALSE;
 
-static Bool doFramebufferMode = FALSE;
+    if (drv->PciProbe != NULL) {
+        if (xf86DoConfigure && xf86DoConfigurePass1) {
+            assert(detect_only);
+            foundScreen = xf86PciAddMatchingDev(drv);
+        }
+        else {
+            assert(! detect_only);
+            foundScreen = xf86PciProbeDev(drv);
+        }
+    }
+
+    if (!foundScreen && (drv->Probe != NULL)) {
+        xf86Msg( X_WARNING, "Falling back to old probe method for %s\n",
+                             drv->driverName);
+        foundScreen = (*drv->Probe)(drv, (detect_only) ? PROBE_DETECT
+                                    : PROBE_DEFAULT);
+    }
+
+    return foundScreen;
+}
+
+/**
+ * @return TRUE if all buses are configured and set up correctly and FALSE
+ * otherwise.
+ */
+Bool
+xf86BusConfig(void)
+{
+    screenLayoutPtr layout;
+    int i, j;
+
+    /* Enable full I/O access */
+    if (xorgHWAccess)
+        xorgHWAccess = xf86EnableIO();
+
+    /*
+     * Now call each of the Probe functions.  Each successful probe will
+     * result in an extra entry added to the xf86Screens[] list for each
+     * instance of the hardware found.
+     */
+    for (i = 0; i < xf86NumDrivers; i++) {
+        xorgHWFlags flags;
+        if (!xorgHWAccess) {
+            if (!xf86DriverList[i]->driverFunc
+            || !xf86DriverList[i]->driverFunc(NULL,
+                             GET_REQUIRED_HW_INTERFACES,
+                              &flags)
+            || NEED_IO_ENABLED(flags))
+            continue;
+        }
+
+        xf86CallDriverProbe(xf86DriverList[i], FALSE);
+    }
+
+    /* If nothing was detected, return now */
+    if (xf86NumScreens == 0) {
+        xf86Msg(X_ERROR, "No devices detected.\n");
+        return FALSE;
+    }
+
+    xf86VGAarbiterInit();
+
+    /*
+     * Match up the screens found by the probes against those specified
+     * in the config file.  Remove the ones that won't be used.  Sort
+     * them in the order specified.
+     *
+     * What is the best way to do this?
+     *
+     * For now, go through the screens allocated by the probes, and
+     * look for screen config entry which refers to the same device
+     * section as picked out by the probe.
+     *
+     */
+    for (i = 0; i < xf86NumScreens; i++) {
+        for (layout = xf86ConfigLayout.screens; layout->screen != NULL;
+             layout++) {
+            Bool found = FALSE;
+            for (j = 0; j < xf86Screens[i]->numEntities; j++) {
+
+                GDevPtr dev = xf86GetDevFromEntity(
+                                xf86Screens[i]->entityList[j],
+                                xf86Screens[i]->entityInstanceList[j]);
+                if (dev == layout->screen->device) {
+                    /* A match has been found */
+                    xf86Screens[i]->confScreen = layout->screen;
+                    found = TRUE;
+                    break;
+                }
+            }
+            if (found) break;
+        }
+        if (layout->screen == NULL) {
+            /* No match found */
+            xf86Msg(X_ERROR,
+            "Screen %d deleted because of no matching config section.\n", i);
+            xf86DeleteScreen(i--, 0);
+        }
+    }
+
+    /* If no screens left, return now.  */
+    if (xf86NumScreens == 0) {
+        xf86Msg(X_ERROR,
+        "Device(s) detected, but none match those in the config file.\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /*
  * Call the bus probes relevant to the architecture.
@@ -98,7 +222,7 @@ StringToBusType(const char* busID, const char **retID)
     s = xstrdup(busID);
     p = strtok(s, ":");
     if (p == NULL || *p == 0) {
-	xfree(s);
+	free(s);
 	return BUS_NONE;
     }
     if (!xf86NameCmp(p, "pci") || !xf86NameCmp(p, "agp"))
@@ -108,23 +232,8 @@ StringToBusType(const char* busID, const char **retID)
     if (ret != BUS_NONE)
 	if (retID)
 	    *retID = busID + strlen(p) + 1;
-    xfree(s);
+    free(s);
     return ret;
-}
-
-/*
- * Entity related code.
- */
-
-void
-xf86EntityInit(void)
-{
-    int i;
-    
-    for (i = 0; i < xf86NumEntities; i++)
-	if (xf86Entities[i]->entityInit) {
-	    xf86Entities[i]->entityInit(i,xf86Entities[i]->private);
-	}
 }
 
 int
@@ -136,29 +245,7 @@ xf86AllocateEntity(void)
     xf86Entities[xf86NumEntities - 1] = xnfcalloc(1,sizeof(EntityRec));
     xf86Entities[xf86NumEntities - 1]->entityPrivates =
                xnfcalloc(sizeof(DevUnion) * xf86EntityPrivateCount, 1);
-    return (xf86NumEntities - 1);
-}
-
-static void
-EntityEnter(void)
-{
-    int i;
-    
-    for (i = 0; i < xf86NumEntities; i++)
-	if (xf86Entities[i]->entityEnter) {
-	    xf86Entities[i]->entityEnter(i,xf86Entities[i]->private);
-	}
-}
-
-static void
-EntityLeave(void)
-{
-    int i;
-
-    for (i = 0; i < xf86NumEntities; i++)
-	if (xf86Entities[i]->entityLeave) {
-	    xf86Entities[i]->entityLeave(i,xf86Entities[i]->private);
-	}
+    return xf86NumEntities - 1;
 }
 
 Bool
@@ -170,9 +257,9 @@ xf86IsEntityPrimary(int entityIndex)
 
     switch (pEnt->bus.type) {
     case BUS_PCI:
-	return (pEnt->bus.id.pci == primaryBus.id.pci);
+	return pEnt->bus.id.pci == primaryBus.id.pci;
     case BUS_SBUS:
-	return (pEnt->bus.id.sbus.fbNum == primaryBus.id.sbus.fbNum);
+	return pEnt->bus.id.sbus.fbNum == primaryBus.id.sbus.fbNum;
     default:
 	return FALSE;
     }
@@ -255,7 +342,7 @@ xf86FindScreenForEntity(int entityIndex)
 	for (i = 0; i < xf86NumScreens; i++) {
 	    for (j = 0; j < xf86Screens[i]->numEntities; j++) {
 		if ( xf86Screens[i]->entityList[j] == entityIndex )
-		    return (xf86Screens[i]);
+		    return xf86Screens[i];
 	    }
 	}
     }
@@ -295,8 +382,8 @@ xf86ClearEntityListForScreen(int scrnIndex)
 	xf86Entities[entityIndex]->inUse = FALSE;
 	/* disable resource: call the disable function */
     }
-    xfree(pScrn->entityList);
-    xfree(pScrn->entityInstanceList);
+    free(pScrn->entityList);
+    free(pScrn->entityInstanceList);
     pScrn->entityList = NULL;
     pScrn->entityInstanceList = NULL;
 }
@@ -386,72 +473,29 @@ xf86GetDevFromEntity(int entityIndex, int instance)
 }
 
 /*
- * xf86AccessInit() - set up everything needed for access control
- * called only once on first server generation.
- */
-void
-xf86AccessInit(void)
-{
-    xf86ResAccessEnter = TRUE;
-}
-
-/*
  * xf86AccessEnter() -- gets called to save the text mode VGA IO 
  * resources when reentering the server after a VT switch.
  */
 void
 xf86AccessEnter(void)
 {
-    if (xf86ResAccessEnter) 
-	return;
+    int i;
 
-    /*
-     * on enter we simply disable routing of special resources
-     * to any bus and let the RAC code to "open" the right bridges.
-     */
-    EntityEnter();
+    for (i = 0; i < xf86NumEntities; i++)
+        if (xf86Entities[i]->entityEnter)
+		xf86Entities[i]->entityEnter(i,xf86Entities[i]->private);
+
     xf86EnterServerState(SETUP);
-    xf86ResAccessEnter = TRUE;
 }
 
-/*
- * xf86AccessLeave() -- prepares access for and calls the
- * entityLeave() functions.
- * xf86AccessLeaveState() --- gets called to restore the
- * access to the VGA IO resources when switching VT or on
- * server exit.
- * This was split to call xf86AccessLeaveState() from
- * ddxGiveUp().
- */
 void
 xf86AccessLeave(void)
 {
-    if (!xf86ResAccessEnter)
-	return;
-    EntityLeave();
-}
+    int i;
 
-/*
- * xf86EnableAccess() -- enable access to controlled resources.
- * To reduce latency when switching access the ScrnInfoRec has
- * a linked list of the EntityAccPtr of all screen entities.
- */
-/*
- * switching access needs to be done in te following oder:
- * disable
- * 1. disable old entity
- * 2. reroute bus
- * 3. enable new entity
- * Otherwise resources needed for access control might be shadowed
- * by other resources!
- */
-
-void
-xf86EnableAccess(ScrnInfoPtr pScrn)
-{
-    DebugF("Enable access %i\n",pScrn->scrnIndex);
-
-    return;
+    for (i = 0; i < xf86NumEntities; i++)
+        if (xf86Entities[i]->entityLeave)
+		xf86Entities[i]->entityLeave(i,xf86Entities[i]->private);
 }
 
 /*
@@ -460,12 +504,17 @@ xf86EnableAccess(ScrnInfoPtr pScrn)
 
 typedef enum { TRI_UNSET, TRI_TRUE, TRI_FALSE } TriState;
 
-static void
-SetSIGIOForState(xf86State state)
+void
+xf86EnterServerState(xf86State state)
 {
     static int sigio_state;
     static TriState sigio_blocked = TRI_UNSET;
 
+    /*
+     * This is a good place to block SIGIO during SETUP state. SIGIO should be
+     * blocked in SETUP state otherwise (u)sleep() might get interrupted
+     * early. We take care not to call xf86BlockSIGIO() twice.
+     */
     if ((state == SETUP) && (sigio_blocked != TRI_TRUE)) {
         sigio_state = xf86BlockSIGIO();
 	sigio_blocked = TRI_TRUE;
@@ -475,24 +524,6 @@ SetSIGIOForState(xf86State state)
     }
 }
 
-void
-xf86EnterServerState(xf86State state)
-{
-    /* 
-     * This is a good place to block SIGIO during SETUP state.
-     * SIGIO should be blocked in SETUP state otherwise (u)sleep()
-     * might get interrupted early. 
-     * We take care not to call xf86BlockSIGIO() twice. 
-     */
-    SetSIGIOForState(state);
-    if (state == SETUP)
-	DebugF("Entering SETUP state\n");
-    else
-	DebugF("Entering OPERATING state\n");
-
-    return;
-}
-
 /*
  * xf86PostProbe() -- Allocate all non conflicting resources
  * This function gets called by xf86Init().
@@ -500,76 +531,33 @@ xf86EnterServerState(xf86State state)
 void
 xf86PostProbe(void)
 {
-    if (fbSlotClaimed) {
-        if (pciSlotClaimed
+    int i;
+
+    if (fbSlotClaimed && (pciSlotClaimed
 #if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
 	    || sbusSlotClaimed
 #endif
-	    ) { 
+	    ))
 	    FatalError("Cannot run in framebuffer mode. Please specify busIDs "
 		       "       for all framebuffer devices\n");
-	    return;
-	} else  {
-	    xf86Msg(X_INFO,"Running in FRAMEBUFFER Mode\n");
-	    doFramebufferMode = TRUE;
 
-	    return;
-	}
-    }
+    for (i = 0; i < xf86NumEntities; i++)
+        if (xf86Entities[i]->entityInit)
+	    xf86Entities[i]->entityInit(i,xf86Entities[i]->private);
 }
 
 void
 xf86PostScreenInit(void)
 {
-    if (doFramebufferMode) {
-	SetSIGIOForState(OPERATING);
-	return;
-    }
-
     xf86VGAarbiterWrapFunctions();
-
-    DebugF("PostScreenInit  generation: %i\n",serverGeneration);
     xf86EnterServerState(OPERATING);
-}
-
-/*
- * xf86FindPrimaryDevice() - Find the display device which
- * was active when the server was started.
- */
-void
-xf86FindPrimaryDevice(void)
-{
-    if (primaryBus.type != BUS_NONE) {
-	char *bus;
-	char loc[16];
-
-	switch (primaryBus.type) {
-	case BUS_PCI:
-	    bus = "PCI";
-	    snprintf(loc, sizeof(loc), " %2.2x@%2.2x:%2.2x:%1.1x",
-		     primaryBus.id.pci->bus,
-		     primaryBus.id.pci->domain,
-		     primaryBus.id.pci->dev,
-		     primaryBus.id.pci->func);
-	    break;
-	case BUS_SBUS:
-	    bus = "SBUS";
-	    snprintf(loc, sizeof(loc), " %2.2x", primaryBus.id.sbus.fbNum);
-	    break;
-	default:
-	    bus = "";
-	    loc[0] = '\0';
-	}
-
-	xf86MsgVerb(X_INFO, 2, "Primary Device is: %s%s\n",bus,loc);
-    }
 }
 
 int
 xf86GetLastScrnFlag(int entityIndex)
 {
     if(entityIndex < xf86NumEntities) {
-        return(xf86Entities[entityIndex]->lastScrnFlag);
+        return xf86Entities[entityIndex]->lastScrnFlag;
     } else {
         return -1;
     }
@@ -666,7 +654,7 @@ xf86AllocateEntityPrivateIndex(void)
 	nprivs = xnfrealloc(pEnt->entityPrivates,
 			    xf86EntityPrivateCount * sizeof(DevUnion));
 	/* Zero the new private */
-	bzero(&nprivs[idx], sizeof(DevUnion));
+	memset(&nprivs[idx], 0, sizeof(DevUnion));
 	pEnt->entityPrivates = nprivs;
     }
     return idx;

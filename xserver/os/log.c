@@ -228,7 +228,7 @@ LogInit(const char *fname, const char *backup)
      * needed.
      */
     if (saveBuffer && bufferSize > 0) {
-	free(saveBuffer);	/* Must be free(), not xfree() */
+	free(saveBuffer);	/* Must be free(), not free() */
 	saveBuffer = NULL;
 	bufferSize = 0;
     }
@@ -305,8 +305,7 @@ LogVWrite(int verb, const char *f, va_list args)
 	} else if (needBuffer) {
 	    /*
 	     * Note, this code is used before OsInit() has been called, so
-	     * xalloc() and friends can't be used.
-	     * And it should not be called inside a signal handler.
+	     * malloc() and friends can't be used.
 	     */
 	    if (len > bufferUnused) {
 		bufferSize += 1024;
@@ -411,9 +410,8 @@ LogMessage(MessageType type, const char *format, ...)
     va_end(ap);
 }
 
-#ifdef __GNUC__
-void AbortServer(void) __attribute__((noreturn));
-#endif
+void
+AbortServer(void) _X_NORETURN;
 
 void
 AbortServer(void)
