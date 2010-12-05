@@ -1,116 +1,1673 @@
-2006-05-09  Alex Deucher  <agd5f@yahoo.com>
+commit cdfbd9674ccce6d0c96c1b16ad61eac5d5648e43
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sun Dec 5 19:09:12 2010 +1000
 
-	* man/savage.man:
-	* src/savage_exa.c: (SavageEXAInit), (SavageDownloadFromScreen):
-	- add AccelMethod to savage.man
-	- fix bug 6847
-	- add memcpy based DFS
+    savage 2.3.2
 
-2006-04-30  Alex Deucher  <agd5f@yahoo.com>
+commit 830e58d086828fa0431303df32a847ddd3022654
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Nov 25 11:58:06 2010 +1000
 
-	* src/Makefile.am:
-	* src/savage_accel.c: (SavageSetGBD_M7), (SavageSetGBD_PM),
-	(SavageSetGBD_2000), (SavageInitAccel):
-	* src/savage_bci.h:
-	* src/savage_driver.c: (SavageSetup), (SavagePreInit):
-	* src/savage_driver.h:
-	* src/savage_exa.c: (SavageGetCopyROP), (SavageGetCopyROP_PM),
-	(SavageEXAInit), (SavageEXASync), (SavageSetBD),
-	(SavagePrepareSolid), (SavageSolid), (SavageDoneSolid),
-	(SavagePrepareCopy), (SavageCopy), (SavageDoneCopy),
-	(SavageUploadToScreen), (SavageDownloadFromScreen):
-	* src/savage_image.c:
-	* src/savage_video.c: (SavageStopVideo), (SavageVideoSave),
-	(SavageAllocateMemory), (SavageFreeMemory), (SavagePutImage),
-	(SavageAllocateSurface), (SavageFreeSurface):
-	* src/savage_xaa.c: (SavageRestoreAccelState), (SavageXAAInit),
-	(SavageAccelSync), (SavageHelpPatternROP), (SavageHelpSolidROP),
-	(SavageSetupForScreenToScreenCopy),
-	(SavageSubsequentScreenToScreenCopy), (SavageSetupForSolidFill),
-	(SavageSubsequentSolidFillRect),
-	(SavageSetupForCPUToScreenColorExpandFill),
-	(SavageSubsequentScanlineCPUToScreenColorExpandFill),
-	(SavageSubsequentColorExpandScanline),
-	(SavageSetupForMono8x8PatternFill),
-	(SavageSubsequentMono8x8PatternFillRect),
-	(SavageSetupForColor8x8PatternFill),
-	(SavageSubsequentColor8x8PatternFillRect),
-	(SavageSubsequentSolidBresenhamLine), (SavageSetClippingRectangle),
-	(SavageDisableClipping), (SavageWriteBitmapCPUToScreenColorExpand),
-	(SavageSetupForImageWrite), (SavageSubsequentImageWriteRect):
-	- Add EXA support (Solid, Copy, UTS)
+    savage: fix use of privates without initialisation
+    
+    Fixes bug 31614.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit 01eacf0d219dc514c2f3a2e5afd2f840412ae510
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:51 2010 -0700
 
-	* configure.ac:
-	* src/savage_driver.h:
-	Bump to 2.1.1 for Xv changes.
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+commit e67c1d6f54b13ce81c4cfcd76e03d5623a02febd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
 
-	* src/savage_video.c: (SavagePutImage):
-	Add a DrawablePtr argument to the XV functions to pave the way for
-	redirected video.
+    config: add comments for main statements
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit e3dadc75919d9a11660b74b3d5615635bab3e0fd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
 
-	* configure.ac:
-	* src/savage_dri.c:
-	* src/savage_driver.h:
-	* src/savage_hwmc.c:
-	* src/savage_i2c.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 2.1.0.
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2006-02-08  Luc Verhaegen  <libv@skynet.be>
+commit cd4366c50525a0e901a8aee9846a6a6d132bfc07
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
 
-	* src/savage_dri.c: (SAVAGEDRIScreenInit):
-	* src/savage_driver.c: (SavagePreInit):
-	* src/savage_driver.h:
-	
-	- Remove insane usage of pScrn->clocks. Set maxClock directly.
-	- Fix trivial and harmless warning in DRI code (FrameBufferBase)
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 840fc7500f2c0e9024c29426c91e67fd711d1927
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c6baebf67704994266bad35833be947902e728c7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 1c701d54902e818177f6068bd32cda76b7acedbd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:54:12 2010 -0400
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    config: remove unrequired AC_SUBST([DRI_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 0679802ae9965983007ec9a37554ea96c53921ba
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:58 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d56dd52399dc47f2873678c70cbfd1e4ebccd614
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-20  Adam Jackson  <ajax@freedesktop.org>
+commit 29618ce942dc58708a3196c17c4feeea01bf1cf8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
 
-	* configure.ac:
-	Bump libdrm dep to 2.0.
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit e3040a4790451a512b6411ae74d44e5e07118cfb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 9ecd6e31a52e5c62adc3790825260863ac39ae94
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 1e9af8f812d210d5c9c103447ac586137b972a1a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 10:38:28 2010 -0400
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b877be5d8e633227764b9a158fb41be6d19c10e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 26 21:12:18 2010 -0700
+
+    Fix builds when XF86DRI is undefined
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d8bc97e4f23f7418f60ef42a25c00a21963a32ac
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:13:02 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit e99161fe6afdd9974743cbac8a17e8a305d1bbb4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 21:47:28 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f27cf2c9d0402951a58915d911c703c55c5934f9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 2768cbea728335b5c169b5df0f64be7f3c2757d9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit baf73090d2cb50159c6c697856986e23523bbbeb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 321986d9f25ff4df8243aabc4574591f64350487
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:22 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit d429ea9bb07fe6abf913aad6d0c20884e9468e2f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 13:04:00 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit d04b7c472a0352e5a8a48062ee065e89b55553d8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 36ab23a95fd8d46a1206a941278df8845d5765ba
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 30 12:04:29 2009 +1000
+
+    savage: bump for release 2.3.1
+
+commit ad0b7ba4618c09c1a9d5a6da6b12f42980b7450c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 18:40:18 2009 +1000
+
+    savage: move abi check down for RAC
+
+commit 21f6bf3e492d328b8c7003ffb0c9deec0113fb05
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
+
+    savage: change to using ABI version check
+
+commit 3c0b164ffe9e1f582cee43f89a94fc0a2899bed8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:36 2009 +1000
+
+    savage: update for resources/RAC API removal
+
+commit 96d19b654e934fc3f85f9b45f1dee224cb40b389
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 11:54:48 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 75ce40850ea2ce2ed7122cf62856dcf8022187d2
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:39:22 2009 -0400
+
+    savage 2.3.0
+
+commit a75f0eaba6cb907a6ca9e506858d41f9c6f66b8b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:16:22 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit f2742755352d49a1ff4cbf9a1a5050a0a50e9e6b
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Sun Apr 12 16:07:06 2009 -0500
+
+    Do not use XAAGetCopyROP outside of XAA-specific code
+    
+    The DRI code attempts to use XAAGetCopyROP without checking whether XAA or EXA is in effect. This results in the server crashing with an undefined-symbol error when enabling EXA, then starting glxgears under GNOME/Metacity and attempting to drag the glxgears window.
+    
+    The EXA code happens to have a functional duplicate of the required code under the name SavageGetCopyROP(). This patch moves the code to savage_accel.c where it is now shared between EXA and the DRI code.
+    
+    It is disturbing that this has not been caught before.
+
+commit a5ad3e8f509ca07c429a43810cc3e2f80e70a1dc
+Author: Alex Villacís Lasso <alex@karlalex.palosanto.com>
+Date:   Sat Apr 11 19:12:31 2009 -0500
+
+    Implement use of Mastered Image Transfer through AGP for UploadToScreen EXA acceleration.
+    
+    Under some conditions (documented in this patch), the UploadToScreen implementation can make use of the AGP scratch buffer used for XVideo as a convenient source for Mastered Image Transfer. The previous implementation is still available as a fallback for when AGP acceleration is not possible. This requires the AGP scratch buffer to be persistent, so the XVideo code is also made aware of an existing DRM mapping for the scratch buffer.
+
+commit 0f4369c95b6ef948743c9b244709e454b8b8ef7f
+Author: Alex Villacís Lasso <alex@karlalex.palosanto.com>
+Date:   Sat Mar 14 21:34:48 2009 -0500
+
+    Fix crash by null pointer access when DRI is not available.
+
+commit 343b2f312b1e555f9d03a499ddbe4c9b33b3a6e5
+Author: Chris Ball <cjb@laptop.org>
+Date:   Fri Feb 27 10:55:58 2009 -0500
+
+    Revert EXA 3 build fix.
+    
+    The EXA developers have backed out this ABI bump.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 08692dd381dc6e98d484d5bffabcbd04ebf83df6
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 12:54:13 2009 -0500
+
+    configure: use AC_DEFINE instead of shell substitution
+    
+    (This is just cosmetic.)
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 26f9e78d9b4f93f34792a31583cb5e8700c5ed52
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 11:54:06 2009 -0500
+
+    Build fix: EXA now requires -DEXA_DRIVER_KNOWN_MAJOR=3
+    
+    This driver doesn't use {Prepare,Finish}Access, so this is safe.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit f4a3a1cd1bfbf6df583c913030ca2e9ce239d0c3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:59:46 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 0fae48235841f05d7e52e61a2450835fdb8892b3
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Thu Jan 22 01:22:53 2009 -0500
+
+    Savage: Do not add panel modes when there is no panel
+    
+    SavageGetPanelInfo will reset DisplayType if the panel is not
+    active, so check again before calling SavageAddPanelMode so that
+    bogus modes are not added.
+    
+    This fixes startup failures in some cases, for instance when there is no
+    real panel and EDID is missing. The bogus sync ranges (typically 0 Hz)
+    would also block the default sync ranges from being applied.
+    
+    Thanks to Peter Belew for testing.
+    https://bugs.launchpad.net/bugs/294899
+
+commit 8241b8edaf1f100b0d9f308fdf921b2ab548f3dc
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Fri Jan 16 16:22:42 2009 -0500
+
+    EXA: UTS Optimization
+    
+    use one memcpy per scanline instead of a conditional inside
+    a loop for every dword
+
+commit 50bcd4bd6f32ed2fd9631b3607a203a187b2e4a2
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Fri Jan 16 16:20:23 2009 -0500
+
+    Add AGPforXv Option
+    
+    Instructs the BCI Xv pixel formatter to use AGP memory as a scratch buffer
+    for Xv image upload
+
+commit 91d5c09c891c944ae4188ecac607ebdb44ed81d7
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Fri Jan 16 16:18:25 2009 -0500
+
+    YUV packed buffer and YV12 planar buffer (if required) are now separate allocations
+    
+    BCI-mediated planar conversion can now use arbitrary offset in framebuffer as planar
+    buffer, no longer restricted to space past packed buffer.
+
+commit 9bcbdcc0e2535ea1e7c5e234b07d0a4be173a78f
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Fri Jan 16 16:16:46 2009 -0500
+
+    Document the existence of the IgnoreEDID option
+
+commit 0cf24c6f66d4832180b2246c20c74dec031fe45f
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:33:29 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit aea0496f662fa25b40c59e65a50daf58a8a0d6d0
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Thu Nov 6 16:10:30 2008 -0500
+
+    Fix EXA Copy
+    
+    patch from Alex Villacís Lasso with minor updates from me
+
+commit e6b6506a0e77e1198d6a83eecddf342b746f31f4
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Thu Nov 6 14:11:49 2008 -0500
+
+    Bug #18378: Use xfVillKeyHelperDrawable if available.
+
+commit de3350e7937240686a90e51243e701b51a7f5249
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 16:04:31 2008 -0400
+
+    no, really, savage 2.2.1
+
+commit 5c0617874a49533f16b97277cd42584abb80f720
+Merge: 97a9d24 a01c9d1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 16:03:25 2008 -0400
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-savage
+
+commit 97a9d2476868befc989b7ddb8067ac791bf2672e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 16:01:37 2008 -0400
+
+    savage 2.2.1
+
+commit fd20f5ddc2ef5945a757f6afedff5fb6214b607e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 16:00:40 2008 -0400
+
+    Fake sync ranges for panels with no EDID.
+    
+    Red Hat bug #243589.
+
+commit 09c4dcc658b07f2672388eb4ab5fee3ebe190fc9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 15:58:24 2008 -0400
+
+    Don't try to call vbeModeInit(), it doesn't exist and never will.
+
+commit a01c9d12938f977a4310e0547866f01517059a3e
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat May 10 15:06:18 2008 +1000
+
+    savage/pciaccess: don't try to map aperture larger than region window
+
+commit 69eca3b8340966874ee3ffdc0d0a3f73de7a816a
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Sat May 10 14:58:14 2008 +1000
+
+    savage: fix typos in error message
+
+commit 9cb124b3542c942622a54d0ce429661516b1e2f4
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Thu Apr 10 12:51:47 2008 -0400
+
+    EXA upload to screen must honor pitch of the source data
+
+commit d0cbce17e1d1e99dbecda339c6704b96606b20d3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:15:35 2008 -0400
+
+    savage 2.2.0
+
+commit 6adc23cb19bfd331221df8dccb2dc88b8fc77821
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:12:49 2008 -0400
+
+    Remove use of deprecated {DE,}ALLOCATE_LOCAL.
+
+commit 371d8fbae6f077d5a6dd845fad129fa9c7b0a701
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:06:46 2008 -0400
+
+    Death to RCS tags.
+
+commit dc6a410290ab5103812a49273b27e3c72a7b2a98
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Mar 8 23:47:57 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 908b155161ebb6cd506f43a3987e4d146ef5b330
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Mar 7 17:10:52 2008 +0100
+
+    fixup pciaccess version detect
+
+commit eeea6468df31ee770c8d7c9dab4fac7ff0865bba
+Author: Alex Villacs Lasso <a_villacis@palosanto.com>
+Date:   Thu Feb 28 19:32:42 2008 -0500
+
+    Fix broken downscale past 2:1 - MM8190 and MM8198 can be used together for arbitrary downscale
+
+commit d838ed93a23b4e9dc438ad17875423e8b90f0015
+Author: Tormod Volden <git.tormod@xoxy.net>
+Date:   Sun Feb 24 21:46:43 2008 -0500
+
+    Bug #11139: Remove some dead code.
+
+commit 583051fce0d39fd2b8b5022016599e88d0af9041
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Wed Jan 30 21:49:05 2008 -0500
+
+    [PATCH] Do not wait for vertical retrace anymore on old streams engine.
+
+commit 52029dede1924c25275a1c6f20f68e98ba210e22
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Wed Jan 30 21:47:42 2008 -0500
+
+    [PATCH] Reset lastKnownPitch to 0 right after enabling streams.
+
+commit efd4ae6fda22a9283663cde23e6deead13130f6f
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Wed Jan 30 21:46:11 2008 -0500
+
+    [PATCH] Prevent use of BCI for YV12 -> YUY2 conversion from scribbling past the end of the allocated video buffer.
+
+commit ee5b54a66495e51fb2a27b4ecb5875dae776b3c9
+Author: Alex Villacís Lasso <a_villacis@palosanto.com>
+Date:   Wed Jan 30 21:45:19 2008 -0500
+
+    [PATCH] BCI can only handle widths that are multiple of 16, so only use BCI for these (for now).
+    
+    Small optimizations (use memcpy instead of copy loop).
+
+commit 1169cb5bd96f7a4ac0deea6d085133d446ec0d6a
+Author: Alex Villací­s Lasso <a_villacis@palosanto.com>
+Date:   Sat Jan 19 12:08:50 2008 -0500
+
+    Implement driver option IgnoreEDID
+    
+    Since some time, savage enforces video-mode and max. pixel clock
+    validation through EDID, which is great for autoconfiguration, but
+    prevents users from defining higher screen resolutions, even though the
+    monitor is capable of it. This patch implements the IgnoreEDID option so
+    that the EDID monitor information can be explictly disabled.
+
+commit ce182d1883bba35491858b47291c8240441443d0
+Author: Alex Villací­s Lasso <a_villacis@palosanto.com>
+Date:   Sat Jan 19 12:06:25 2008 -0500
+
+    Fix ambiguous operator precedence
+    
+    In the modified lines, the logical-not binds first to psav->videoFlags,
+    not to (psav->videoFlags & VF_STREAMS_ON). If more flags are ever
+    implemented, they could interfere with this check. More of a preventive
+    patch than anything else.
+
+commit 88141fd21214c501cafed73b1bba084b8a2bb929
+Author: Alex Villací­s Lasso <a_villacis@palosanto.com>
+Date:   Sat Jan 19 12:02:56 2008 -0500
+
+    Make sure MMIO region is mapped VIDMEM_MMIO, not VIDMEM_FRAMEBUFFER
+
+commit fd2a598e64a522c028a20444379fa200a5724e62
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Sat Jan 19 12:00:16 2008 -0500
+
+    Fix reversed logic in SavageMapMem()
+
+commit 9c959f53ca8376aa136a9d434c3383cdb20487c2
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Sep 14 20:21:12 2007 -0400
+
+    fix the build for the non-pci-rework case (compile tested only)
+
+commit 846a69f70d189c486448df269a512b8d42fab0c2
+Author: Alex Deucher <alex@botch2.(none)>
+Date:   Fri Sep 14 20:13:33 2007 -0400
+
+    fix segfault from pScrn->currentMode
+    
+    should fix bug 12260
+
+commit 53a2088c5590bb96ce9a7ad30d908c7ea1d54027
+Merge: 7da1a03 0287432
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 06:08:13 2007 -0400
+
+    Merge branch 'master' of ssh://git.freedesktop.org/git/xorg/driver/xf86-video-savage
+
+commit 7da1a03d4b8b40483001b1f6e56dae655a1797f4
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:43 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 0287432c65231460fadff7d8d7b332208e345a31
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Aug 31 13:07:17 2007 -0700
+
+    Fix odd typo.
+
+commit 514dc647d108e179965adb1377b1d4c011afa367
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Aug 30 17:53:11 2007 -0700
+
+    Update to use new libpciaccess interfaces for mapping with MTRR support.
+
+commit 1eec792391d9ce9127817107100a53382f167749
+Merge: 4a87cab ffc5ba7
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Thu Aug 23 18:21:37 2007 -0700
+
+    Merge branch 'pci-rework'
+
+commit 4a87cab2765df548a3b5d796e19568a2576306b8
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:53 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit ffc5ba7f0b1cdefdcecf6bd47018b6a4924bfc44
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Aug 22 12:38:14 2007 -0700
+
+    Merge PCI-rework support and "classic" PCI interface support into one tree
+    
+    First pass at merging both trees.  So far, this has only been compile
+    tested.  I need to dig out a savage card to put in a system for
+    testing, so it may take another hour or two.
+
+commit 68ceead721aeb75b9faed6297407a320a83499e4
+Merge: da23218 bf5e2a5
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Aug 22 11:45:43 2007 -0700
+
+    Merge branch 'master' into pci-rework
+    
+    Conflicts:
+    
+    	src/savage_driver.h
+
+commit da23218b067d9b1808fc1168737c79b3349af09e
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Aug 22 11:42:47 2007 -0700
+
+    dos2unix
+
+commit bf5e2a5d33fbab07bc3606927c58a3a04a5c9b1e
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Aug 17 03:25:48 2007 +0200
+
+    Include <unistd.h> to get a declaration for usleep()
+
+commit 83f3db97b107a84d79e21c64039328c05095719e
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Aug 16 20:45:12 2007 -0400
+
+    update for 2.1.3 release
+
+commit 1f6258c7f4c4073de0bdd72f06c1e94bb6895c73
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 09:54:47 2007 +0200
+
+    Define SAVAGE_VERSION* using PACKAGE_VERSION*
+
+commit b706ffe07fc61281d2dea406f828418f42e3da85
+Author: Alex Deucher <alex@botch2.com>
+Date:   Thu Jul 12 00:03:13 2007 -0400
+
+    Unmap mem before freeing driverPrivate
+
+commit fab88bce3b9f19918bbf1a2b0f57d34113c8381f
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jul 11 23:40:51 2007 -0400
+
+    Add panel native mode automatically.
+    
+    Based on Henry Zhao's code from nv
+
+commit b126b204d3465700e8c6a1fcc4770f322c8bb7db
+Author: Tormod Volden <bugzi06.fdo.tormod@xoxy.net>
+Date:   Wed Jul 11 21:25:30 2007 -0400
+
+    Add "DRI" option to enable/disable DRI support
+    
+    fixes bug 10746
+
+commit 90692b3a123861ca02100f86b4c80f070fd4196d
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jul 11 21:07:47 2007 -0400
+
+    fix segfault in SavageDoAdjustFrame() on server 1.3
+    
+    tracked down by Tormod Volden, fixes bug 10934
+
+commit 7832dcd82046238d5accb55468c65241f0edc6d0
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Jul 11 21:01:03 2007 -0400
+
+    fix console corruption due to invalid shadow status
+    
+    tracked down by Tormod Volden, fixes bug 11237
+
+commit 8dd310538df11cc5ff4e8e84920218b819bbae47
+Author: David Nusinow <dnusinow@debian.org>
+Date:   Wed Jul 11 20:00:25 2007 -0400
+
+    disable randr when savage rotation is enabled
+    
+    fixes bug 7899
+
+commit 4b2a0ad8f15e7b11f7c8251fb032b9df4f07ce96
+Author: Nate Bargmann <n0nb@networksplus.net>
+Date:   Sat May 5 13:35:02 2007 +0200
+
+    Fixed a markup error.
+
+commit ff0ee0420bd7c0c1be5bf97e8764f3e974ff5887
+Author: Alex Deucher <alex@botch2.com>
+Date:   Mon Apr 2 17:32:02 2007 -0400
+
+    final odds and ends for exa
+    
+    I still get blue for solids that should be grey for certain things
+    (firefox status and navigation bars, certain mouse overs, etc.)
+
+commit 675ff8177852732c6e9d52464f34d5fe867ac67e
+Author: Alex Deucher <alex@botch2.com>
+Date:   Wed Mar 21 02:14:16 2007 -0400
+
+    Get Solid() working again
+    
+    You have to send color EVERY time.
+
+commit ee7c53ae2b6e167dd4d6e813bc565e991f6b73e3
+Author: Alex Deucher <alex@botch2.com>
+Date:   Tue Mar 6 02:28:33 2007 -0500
+
+    small exa fix ups, remove an errant comment
+
+commit 3e2d370e291f5f222de88075f1f285446cca0569
+Author: Mikko Rapeli <mikko.rapeli@iki.fi>
+Date:   Wed Jan 3 21:50:22 2007 -0500
+
+    fix savage respawn crash
+    
+    SavageCloseScreen() unmaps memory, but SavageScreenInit()
+    never maps it again.
+
+commit 36c444e80324c82f7d02d9d95372123c923336a0
+Merge: f2191d4 e361a95
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Mon Dec 11 13:16:53 2006 -0800
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-savage into pci-rework
+    
+    Conflicts:
+    
+    	src/savage_driver.c
+
+commit 37240b81daa4ed46c27e439d22b6fd9909dac249
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Wed Nov 22 11:56:41 2006 -0500
+
+    clean up some leftover cruft.
+
+commit 4f8660473ba079f98f097abd72ce2647c345d7cd
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Oct 23 10:57:35 2006 -0700
+
+    Strip ^M's out of savage_driver.h
+
+commit e361a9523394a2f0558f7d2648bf6a43ebe31f2e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Thu Sep 28 22:02:29 2006 -0400
+
+    bump to 2.1.2 for new release
+
+commit a94abe5a59cf526ce0699d8356d239e1984d0907
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Tue Sep 19 00:09:01 2006 -0400
+
+    minor exa updates
+
+commit baa74b10d7a1c304dba2d658e4d1336b7ee7e70e
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Mon Sep 18 22:30:13 2006 -0400
+
+    fix DRI locking in savage driver.  Based on ajax's similar patch.
+    Thanks to ajax and tilman for locking advice and Pascal Sclafer
+    for tracking this down.  Fixes bug 6357.
+
+commit bb1eac0b6b0d2ab02bd7b47f3c2e4b3f40e7486f
+Author: Alex Deucher <alex@samba.(none)>
+Date:   Sun Sep 17 17:30:08 2006 -0400
+
+    re-order SavageMapMem() so that ram detection works again.
+
+commit f2191d412832312b494f313841d094f87f64a5ff
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Tue Aug 8 16:49:51 2006 -0700
+
+    Minimal change set to convert driver to the new PCI interfaces.  Enjoy.
+
+commit 5108d1dd581a6e649f89812affba8481491e1bd7
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Tue Aug 8 12:21:11 2006 -0700
+
+    Instead of passing SavagePciChipsets in the p_chip parameter of
+    xf86ConfigPciEntity, pass RES_SHARED_VGA in the res parameter.
+
+commit 6ac341e9fd4157a0cdb7fd3d043c136d5799146f
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Tue Aug 8 10:28:33 2006 -0700
+
+    Add some more missing license statements.  Trivial whitespace clean-ups.
+
+commit ee91d006596634d339a853aaaa09b33b74b60235
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Mon Aug 7 17:13:40 2006 -0700
+
+    DRIINFO_MAJOR_VERSION has be 5 for over a year.  Remove the old code.
+
+commit e4609dcc51f6034393a0b75fa52caa9b3e585d3b
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Mon Aug 7 17:13:08 2006 -0700
+
+    Do a single mapping per BAR.  This cleans up the code a bit and paves
+    the way for the pci-rework branch.  The disadvantage is that the
+    Savage3D puts MMIO and framebuffer in the same BAR.  This has to be
+    fixed-up after the mapping by altering the write-combine setting for
+    the framebuffer subrange.
+
+commit 928b82660929eb7dfe42482880abc0203b3860e8
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Mon Aug 7 16:58:06 2006 -0700
+
+    Remove duplicate register defines.
+
+commit 31939c4c516124bfca0de7db4278b6b16df5e70f
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Mon Aug 7 13:27:48 2006 -0700
+
+    Introduce the savage_region structure, which is used to track mappable
+    regions of PCI space.
+
+commit 3a7f84ac41e93a9395891913cec1c5acb30937d0
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Fri Aug 4 16:30:25 2006 -0700
+
+    Make a couple local, static arrays const.  The RamSavage4 array is not
+    const because it can be modified for some quirky cards.  Neat!
+
+commit 2f8352df6488476b0c1a46798eca5dd38827444b
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Fri Aug 4 15:57:08 2006 -0700
+
+    Merge SavageMapMMIO and SavageMapFB into a single, new function called
+    SavageMapMem.  Eliminate the MapBaseDense cruft.
+
+commit 6f9abbb972834561cd8494a1d4fb47402b285d7d
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Fri Aug 4 15:10:40 2006 -0700
+
+    Fix line endings (at least, I assume that's why git-diff thinks every
+    line in the file is chaged).  Add missing license statement.  Change
+    SAVAGE_VGAHWMMIO_H to SAVAGE_DRIVER_H.
+
+commit 3e2980251570a304057579e97ec26bc3fd19f8d7
+Author: Ian Romanick <idr@umwelt.(none)>
+Date:   Fri Aug 4 14:56:06 2006 -0700
+
+    Pass the HaveDriverFuncs flag to xf86AddDriver.  Make sure the
+    DriverFuncs pointer is NULL.  Delete a duplicate #define.
+
+commit 876f90e0fe06cedde15eb30e881824f126352bd9
+Author:  <alex@samba.(none)>
+Date:   Thu Jul 20 22:50:43 2006 -0400
+
+    Make sure CLUTs are enabled
+
+commit 3814db881be50faf0daf83b45ef23baeeef5b021
+Author:  <alex@samba.(none)>
+Date:   Thu Jul 20 22:25:05 2006 -0400
+
+    no accel at depth 24 in dualhead mode in MX/IX chips (hardware limitation)
+
+commit ec4fde5b4b6af410fcbf97062db77cc61eb332aa
+Author:  <alex@samba.(none)>
+Date:   Tue Jul 18 00:11:32 2006 -0400
+
+    make sure to map full FB in dualhead mode. fixes some issues with dualhead.
+    other dualhead drivers may need this.
+
+commit 03bb33088d5c905d1c2cf764ba3894405670b9f4
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Wed May 10 02:58:56 2006 +0000
+
+    - add AccelMethod to savage.man
+    - fix bug 6847
+    - add memcpy based DFS
+
+commit 6d688c993ec7baf8f00df59764dd3e04bab24e09
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sun Apr 30 17:51:15 2006 +0000
+
+    - Add exa support (solid, copy, UTS)
+
+commit ef46fb29088e7cc50c6072d66c6ac1fe5cd398bd
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:42:34 2006 +0000
+
+    Bump to 2.1.1 for Xv changes.
+
+commit efb23e12f1bcae10a324dadc802322238091b48c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:13:19 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit e423d8649334a62c4657f7633a09f7976be50e34
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 20:55:14 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 2.1.0.
+
+commit bb4fede8dc7741d00014fdb353945b0832599333
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Wed Feb 8 14:39:34 2006 +0000
+
+    Some trivial savage fixes:
+    - Remove insane usage of pScrn->clocks. Set maxClock directly.
+    - Fix trivial and harmless warning in DRI code (FrameBufferBase)
+
+commit 90fb73bc67a87f3b202ba45b326e70759b49e7b1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:02 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit d35a9f882737c904f2b37a9a65cd41c4b1f65396
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:54 2005 +0000
+
+    Stub COPYING files
+
+commit 21140974d9c8719dc12327d051b14aab593a0b11
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:18 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 37df4e4fd446c140831ea46c1eef67f9a6d97211
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:37 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 07f8fc2f431c0db0069dbf79d917aa52317724ac
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:35 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit e927404157b8a65bbbe613bff5d0e03b3b4e078e
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:10 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit a99fdf7b614cf167a6e07a05f65c214cf2bd2305
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Nov 30 18:51:40 2005 +0000
+
+    Bump libdrm dep to 2.0.
+
+commit eb0931851b84c60c4e59e16fe09779f6470fe7e3
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:02 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 892ee75d88020868a6a244bb4b646d20901e5c39
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:10 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 2eaf6d5609aec58d7101069afb612821fd1aac73
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:17 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 555d930e6f20e3ac4bb5be47470adad7f04483ad
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:21 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 490cb4b34cfb9e344627db8b05de7876586bf1c2
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:20 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 292f552589bbd6e8a98def8eafe4e5c8765e1a34
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 07:30:04 2005 +0000
+
+    Fix DoLoadableServer NO build.
+
+commit 160edb73b384ef6215a7ae6fc9ecc1431450c1f7
+Author: Kean Johnson <kean@armory.com>
+Date:   Tue Nov 8 06:33:28 2005 +0000
+
+    See ChangeLog entry 2005-11-07 for details.
+
+commit 9f00f678a75fd10865d79cb7b1cc25cae3ffebab
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:54 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 4b9d1379ad773585e45bbc0971c878e7774fa34d
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Oct 21 18:40:19 2005 +0000
+
+    Bug #4829: Remove some useless DRI symbol checks.
+
+commit 58761bd4d8110694a74875a0c92bf9e7dab62a5a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:04 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 444f8c26875c210808d59cd9d9afebdbb47158ba
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:46:56 2005 +0000
+
+    lib/Xcomposite/Xcomposite.h
+    lib/Xft/Imakefile
+    lib/Xft/Xft.h Update library version numbers to match updated package
+        versions.
+    Update driver version numbers for RC1.
+
+commit 903505b2c8a8e49962bd9b256ebc3a670360f258
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:54 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit e5a0460273ba7a99abf811b603bd273bd02917b5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:35 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit aed94c462d655ca424a2c884bc0ddcdeac222835
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:05 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 660f0920a7633f55dd803d7c4f749df7bcb1fbc2
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Sep 24 18:45:45 2005 +0000
+
+    Disable the {Open,Close}FullScreen DRI protocol. Remove empty FullScreen
+        stubs from drivers, comment the non-empty ones.
+
+commit 81b6385f0fa410bc18e735e37e8db62ef29a0d82
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sat Aug 27 16:45:56 2005 +0000
+
+    - re-add RestoreAccelState() to make XAA happy for dualhead
+
+commit 2f0a836a7bc6de48e37fdf7014e6b1b8f78851bf
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Aug 22 03:44:04 2005 +0000
+
+    Fix test for DRI headers, bump to 2.0.1.
+
+commit 04ae3ba94c6e58afbb6c830e191fe9fe658f2cb4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:48 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 7441aa42e26df500f9355f7f1f33af9c955c30f8
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sat Aug 6 06:51:29 2005 +0000
+
+    Somehow I missed Bresenham lines when I fixed accel on crtc2. Make sure to
+        send the new offset there as well.
+
+commit 6620d141ebdb9dda3b0eb72462893ade0a4d6389
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Aug 5 23:04:33 2005 +0000
+
+    I have resolved this by making all the "Direct rendering disabled" messages
+        X_WARNING and all the "Direct rendering enabled" messages X_INFO.
+        Ideally, we need to factor some of this stuff out to common code. There
+        is a *LOT* of duplication among the *_dri.c files under
+        programs/Xserver/hw/xfree86/drivers.
+    I'm trying to clean up as much low hanging fruit as I can and got tired of
+        waiting for ajax. :P
+
+commit 6da51e9c6f589ffa78ed6a5da0548eb56ab90b7c
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Aug 4 02:42:10 2005 +0000
+
+    - fix accel problems on crtc2. It seems the GBD doesn't always update
+        correctly resulting in incorrect stride and/or offset. Switch the accel
+        code to use the PBD instead and send the new offset with each command.
+        Because the offset is always up to date, we no longer need
+        SavageRestoreAccelState().
+
+commit 16d2e7832a8b138e78947896c69537a59124dfec
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:44 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 593267735819585c87652a62d62ca231a9e8f01b
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 27 21:23:29 2005 +0000
+
+    Add xf86driproto to dependencies for drivers with DRI support. Patch from
+        Donnie Berkholz
+
+commit cacbac692c3725e372e9c25177f4b26d86a8c0d5
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 22:11:46 2005 +0000
+
+    Build system for savage
+
+commit c1c5f421dbce58f58b430497a89c73100e17beb8
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:59 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit c332dffd52d787025614173ddfedfca62f1ccd63
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:56 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit eb107dead1844bfe1b2ca5510c50efd13fe883ef
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu May 19 05:32:16 2005 +0000
+
+    Disable ScreenToScreenCopy on crtc2 at depth 24. Fixes screen corruption.
+
+commit 3d8be0cf1ccbbe4e68c5fae92203a152901b2436
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed May 18 17:47:36 2005 +0000
+
+    Bug #3163: Create new DRIINFO_*_VERSION macros to indicate the version
+        number of the DRIInfoRec, disambiguating it from the XF86DRI protocol
+        version number. Modify DRIQueryVersion to return the libdri version
+        number, which all DDXes were requesting implicitly. Fix the DDXes to
+        check for the DRIINFO version they were compiled against.
+
+commit a42d68da8d3905bc21d426b68519ba0d8356ed7b
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue May 17 08:30:00 2005 +0000
+
+    Set the hardware to 8bit CLUT mode in 8 bpp. We used to flag an
+    8 bit DAC to DDX but did not make sure it actually was running in 8 bit
+        mode. On Savage4 the HW cursor doesn't seem to be truecolor in 8bpp
+    - not even with the streams engine running. Fix SavageProbeDDC() to load
+        vbe module and initialize it before using it (Bugzilla #3309).
+
+commit be455c98276cec6cc881ca0093476e244c765bf8
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:29 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 4629f974734368bc354bbccaec80b72ec10a66a2
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Thu Apr 14 14:47:21 2005 +0000
+
+    User reports indicate that both command and vertex DMA on SuperSavages lock
+        up the engine. Disabling DMA on SuperSavages until someone figures out
+        how to make it work.
+
+commit e6fc11c3fbf2b80c29f1c73a1b2175edfb7a63ef
+Author: Egbert Eich <eich@suse.de>
+Date:   Mon Apr 4 10:48:43 2005 +0000
+
+    Add ROP_NEEDS_SOURCE to Mono8x8PatternFill as S3 chips tend to lock up
+        without it (Helmut Fahrion).
+
+commit b6bdfa27c9c84628d1f489a15d09214e920e7d86
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Thu Mar 17 15:34:44 2005 +0000
+
+    Invalidate 3D hardware state in SavageEnterVT. This fixes 3D applications
+        running during a suspend-resume cycle.
+
+commit d2b0d82024da031257e943c424bd5f63cd0474e3
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Thu Mar 17 00:04:19 2005 +0000
+
+    Fixed PCI ShadowStatus initialization for the case that ShadowStatus is
+        explicitly enabled in the configuration file.
+
+commit 8bbfca79a7397e997b875ea8943c1120114904e0
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Wed Mar 16 01:00:38 2005 +0000
+
+    - small fixups for old streams
+    - more work on Xv support for savage2000 (still not working 100%)
+
+commit 689e9535e014b658d0aef2ebf554090226597a4d
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sun Mar 13 15:24:26 2005 +0000
+
+    Fixed fallback to PCI mode when AGP initialization fails.
+
+commit 9e84104d6b0ab8fd49edfa3568511fcd41983dc4
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sun Mar 13 00:14:02 2005 +0000
+
+    - Removed lots of dead code.
+    - Moved driver-private definitions from savage_dri.h to savage_driver.h.
+        savage_dri.h should only contain the public interface between DDX and
+        DRI drivers.
+    - Don't forget to remove the command DMA mapping in SAVAGEDRICloseScreen.
+
+commit 33033884e9ec07d96c70765132a2be0ebc466299
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sun Mar 6 01:36:10 2005 +0000
+
+    - Support for the new DRM version 2.4 with command DMA.
+    - Added an option "DmaMode" to choose between vertex and command DMA.
+    - Allow ShadowStatus to be explicitly disabled even with DRI enabled.
+    - Updated the man page.
+
+commit 21bf49050a7b868c50831fb3951086fe9c21e8f6
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sat Feb 26 13:56:27 2005 +0000
+
+    Fixed ShadowStatus handling with DRI:
+    - always enable ShadowStatus when DRI is enabled
+    - if DRI initialization fails, reset ShadowStatus to configured setting
+    - if DRI initialization fails, fall back to ShadowStatus in framebuffer
+
+commit e1f269bfd24195e96bf6194911430ffc7de4431f
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sat Feb 5 23:57:17 2005 +0000
+
+    Don't clear the front buffer in SAVAGEDRIInitBuffers. Fixes blackness of
+        GL-XScreensaver hacks that grab the screen.
+
+commit 9ae75471d246302a79994bdc71ae7e6a3915b609
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Fri Feb 4 01:14:49 2005 +0000
+
+    Applied patch (id=1354) by Mike A. Harris from bug #1901: The attached
+        patch updates a couple of PCI IDs for the Savage driver --
+        Debian/Ubuntu/Red Hat/Fedora.
+
+commit 367d124c4b49ac134a9f2bf8acb6711957ef21c6
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Wed Feb 2 04:58:27 2005 +0000
+
+    - fix long standing bug in depth 24 that made colors look dithered. The
+        CLUT was not being switched to 8 bit mode.
+
+commit dbd65625f1eb3dbb5c45e1fc41e385db45c973ed
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Tue Feb 1 23:20:22 2005 +0000
+
+    - Changed option ForcePCIMode to option BusType for consistency with other
+        drivers (radeon) and the DmaType option.
+    - Changed the type of a few more messages in SavagePreInit.
+    - Updated the manual page.
+    - Moved option CrtOnly to a more sensible place in the man page.
+
+commit 0c5a94f8a342728e43792e01c6df5ff17dbb59c8
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Mon Jan 31 01:41:36 2005 +0000
+
+    Update the savage manual page:
+    - Added options AGPSize, DmaType and ForcePCIMode.
+    - Updated DisableCOB: 3D requires COB, default value is "off", which means
+        that the COB is enabled.
+
+commit 37e6666824a771271f60ad12174a29b2ac6b826b
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Mon Jan 31 01:09:27 2005 +0000
+
+    - Shadow status update thresholds on Savage4 were reversed. Fixed now.
+    - Fixed cobIndex on Savage2K. It used only a 4K COB so far. Now we have
+        full 128K.
+    - Program the shadow status thresholds correctly on Savage2K.
+    - Savage2K reports used entries in the queue in qword units instead of
+        dwords. Fixed WaitQueue2K accordingly.
+    - Event counter 0 is in status word 2 instead of status word 1 on Savage2K.
+        Fixed ShadowWait accordingly.
+    - Added a ShadowWaitQueue function that doesn't idle the engine all the
+        time. This improves 3D animation smoothness with concurrent
+    2D activity when shadow status is enabled.
+
+commit 7712602bccc71210ad4319aaf2bc8e1b15b6a01a
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sun Jan 30 22:26:26 2005 +0000
+
+    - update comment about tiled surface regs for savage3d
+
+commit 565d77fe6e5d5357a04ac5612a1d25aa1194cad9
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sun Jan 30 22:17:15 2005 +0000
+
+    Added two new options "DmaType" and "ForcePCIMode".
+
+commit cb406770d1b88ecda3e7dba14f21b2cf90449a93
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Jan 27 03:50:46 2005 +0000
+
+    - Fix tiled framebuffer setup on Savage3D (Alex Deucher)
+    - Disable building the Savage DRI driver.
+
+commit d62d010ca8590d99d4150f7b00999e619a6aaac3
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Mon Jan 10 23:11:53 2005 +0000
+
+    - Support for PCI Savages: on PCI cards don't run SAVAGEDRIAgpInit, add PCI
+        DMA buffers instead of AGP buffers. Set dma_type properly in
+        SAVAGEDRIKernelInit.
+    - Something's still wrong with ShadowStatus on the PCI card I'm testing
+        here. Probably a DRM issue.
+    - Fixed error handling. Call SAVAGEDRICloseScreen instead of
+        DRICloseScreen.
+    - Added AGP/PCI detection (copied from the radeon driver).
+
+commit 303bc2a7df00aadc13d747d6c240ca3d693cad4e
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sun Jan 2 11:24:48 2005 +0000
+
+    Make 32-bit visuals match the set of visuals supported by the DRI driver.
+
+commit 0de5e0b27ec95952d65d3bc2611253af702e3f9f
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sat Jan 1 23:42:09 2005 +0000
+
+    Reenabled SAVAGEDRIInitBuffers and SAVAGEDRIMoveBuffers and fixed lockups
+        they were causing. InitBuffers now uses the DRM clear command,
+        MoveBuffers needs to wait for 3D idle. Some related cleanups.
+
+commit 8fad99f52106c64bf7f5c88b2246313338286f54
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sat Jan 1 20:32:23 2005 +0000
+
+    Updates to support the new Savage DRM driver (version 2.0.x) which was just
+        committed to DRM CVS. Cleaned up the interface to the DRI driver.
+        Bumped the Savage DDX version to 2.0.0 due to incompatible changes in
+        that interface.
+
+commit d0e9c3ad1cb9babbe841926c9a373ebe40dfe62c
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sun Dec 12 00:14:32 2004 +0000
+
+    - only mess with Dynamicclocks on mobility chips (Benh, me) bug 1912
+    - fix display detection (Hui Yu) bug 1559
+    - Add new option "BIOSHotkeys" to allow the bios to control output
+        switching (off by default) bug 2000
+    - update the savage man page to document the "CrtOnly" option
+
+commit 2cc15aba0bbb540f5562f04a0d39af1dd8dc7ce8
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Tue Nov 23 05:21:02 2004 +0000
+
+    - fix and enable HW Cursor on crtc2
+    - enable independant CLUT access
+
+commit d6e5b4641667f438cc4513aa01342c2835f18070
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Tue Nov 23 04:42:37 2004 +0000
+
+    - fixed tiled framebuffer on savage2000
+
+commit 114c3d91262f517ff2a76a5f9d438f4400e9a611
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sun Oct 31 09:48:55 2004 +0000
+
+    Make the Savage driver work with the dl-loader.
+
+commit 5b6ce4975f129b9d630eeb514507f6ac83111c6b
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Oct 21 04:31:52 2004 +0000
+
+    Make sure the overlay is off when switching modes, otherwise you can get a
+        chip lockup if you switch modes with a video playing
+
+commit 421efa788e177d91cbe41dedd4f4201c902cbcd5
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Oct 21 03:58:33 2004 +0000
+
+    when using the overlay for Xv, only enable it when displaying the video
+        otherwise the overlay breaks on mode changes.
+
+commit 951ee8825f2efb34dc4350c26dacd458067b5954
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Wed Oct 20 21:30:56 2004 +0000
+
+    Take doublescan and interlace flags into account when choosing a BIOS mode.
+        Otherwise it choses modes with double refresh rates for double scan
+        modes or half refresh rates for interlaced modes.
+
+commit aed0d07e7ddf045a51f8b1462ad6a5f61dc9e675
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Tue Oct 19 19:35:52 2004 +0000
+
+    Fix a regression in the CrtOnly option. This was fixed in DRI CVS once but
+        must have been lost during the port to Xorg CVS.
+
+commit 352b7566ac11a13bbced74d8a9c8ff944525c097
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sat Oct 16 21:10:40 2004 +0000
+
+    - fix savage2000, savage3D
+    - attempt to fix Xv on savage2000 (not there yet)
+
+commit 16af70368f042d6a5c54e57affe7c2e00f782baf
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Mon Oct 11 23:20:26 2004 +0000
+
+    - fix resume on radeons (bug 1220)
+    - clean up some old cruft in the savage i2c code
+
+commit 83fb89c6e8d75b58134f5068b11f2c3016b9daba
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Mon Oct 11 03:07:18 2004 +0000
+
+    Turn off vertical interpolation on "old" engines by default. It's bandwidth
+        intensive and causes artifacts on one of my savage4s. I added an Xv
+        attribute, XV_VERTICAL_INTERPOLATION, so users can turn it on and off
+        on the fly.
+
+commit 555da078acfc715053715590eed3c7f1253c0d15
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Mon Oct 11 00:36:11 2004 +0000
+
+    Fix Xv on savages with the "old" streams engine.
+
+commit 54a78b4d252ba06dd520c5d43ad55b31323408ec
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Oct 7 03:40:46 2004 +0000
+
+    Require tiled mode for 3D
+
+commit 4c47495cedaf66d96e92373c0b2b453d2a017190
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Oct 7 02:29:02 2004 +0000
+
+    fix glDrawPixels on Supersavage
+
+commit a9c9f97c80b3c80912fa79551755ff81e79dbbe6
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Wed Oct 6 04:20:48 2004 +0000
+
+    Small update to the savage man page
+
+commit 640c41b618c61031b1b01f1bd79651e0ddf574ff
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Wed Oct 6 03:59:22 2004 +0000
+
+    Fix setting the fbOffset in the tiled surface registers on supersavages.
+
+commit 90185e9cd21ea5e5e09955c75fe8bb98b08b2abb
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 5 20:25:55 2004 +0000
+
+    move this function outside of #ifdef XFree86LOADER.
+
+commit 6b44184b17d796fca58323807e7df28efe53b57e
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Sep 30 16:04:36 2004 +0000
+
+    build fix
+
+commit d88b1abf40905ff9b343b047c34460162017ddfc
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Sep 30 05:31:13 2004 +0000
+
+    Portability fixes from Matthieu Herrb (bug 1409)
+
+commit a1ef17bb2cc069511baaefcbe04298c087533d35
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Sep 30 04:59:37 2004 +0000
+
+    Add Dualhead Support to Mobile savages (MX, IX, Supersavages) Thanks to
+        Austin Yuan for his help on this.
+
+commit cc1882207d72ce67b650b69bb490ba809dec53f5
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Tue Sep 28 00:23:21 2004 +0000
+
+    - Properly support BuildDevelDRIDrivers
+    - guard XvMC stuff with XF86DRI
+
+commit fd33023d5ad0b52271bafcdad1c4819c26f3ab91
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Sep 23 23:28:03 2004 +0000
+
+    small cleanups and corrections
+
+commit c1c94c202bb2e6a39f32056e7bd3fe7477406d9a
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Sat Sep 18 20:23:32 2004 +0000
+
+    vbeFree after SavageWriteMode in SavageCloseScreen.
+
+commit fc8bd5bde48424e47020eae179c8b331ff69595a
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sat Sep 18 13:37:30 2004 +0000
+
+    Re-add BIOS panel off code for dpms (Felix Kuehling) Fix weird mode problem
+        on savage4 with dvi and some panels (Felix Kuehling)
+
+commit b26f6666dce97427e7032984aec3662e35cb2dc6
+Author: Felix Kuehling <fxkuehl@gmx.de>
+Date:   Fri Sep 17 21:30:38 2004 +0000
+
+    Fix fb config creation to match fb configs created by DRI drivers built
+        outside the monolithic Xorg tree.
+
+commit e904a31f0adbcc7595777e373bcbaf09d2fee597
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Sep 17 03:04:53 2004 +0000
+
+    Bug #1192: Remove cfb support from drivers where its use is an option.
+        Delete xf24_32bpp, as s3virge was the last user. Fix up some comments
+        to refer to fb rather than cfb.
+
+commit fdffbfbc7f3231e53a5857cc2d8cb5a77e76f936
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Sep 16 23:50:48 2004 +0000
+
+    Proper GBD setup for savage2000
+    CVS :
+        ----------------------------------------------------------------------
+
+commit 0ac19a8436291c9c14b192306c756cb1ad28c9d4
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Thu Sep 16 22:00:48 2004 +0000
+
+    Merge savage DDX from DRI to xorg and fix conflicts.
+
+commit 77a543764b11d59217eed223dbd3bbc3ed9222bf
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Aug 16 09:13:14 2004 +0000
+
+    Bug #1087: Make sure all the *Weak symbols are documented in the import
+        list, so the loader knows not to complain about unresolved symbols when
+        an optional module isn't loaded. This typically manifests as warnings
+        about fbdevHW symbols when the user isn't using the framebuffer
+        console.
+
+commit e918f5f1dc43a42971f6b25ac4424da01fff3070
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jul 31 01:21:19 2004 +0000
+
+    Change several LoaderSymbol calls introduced by the bug #400 patch to
+    *Weak() resolver functions.
+
+commit c18f5801a555b1c1651a9d9cfb4ed141e210effa
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Jul 30 21:25:26 2004 +0000
+
+    Add pseudocolor overlay mode. Leave streams engine running at all times to
+        prevent artefacts during video playback.
+    Fixed VBE mode list code to work together with reading DDC data using VBE
+        functions.
+    Fixed data types to muffle compiler.
+    Fixed requested size of FIFO for image writes. Fixes temporary lockups.
+
+commit 81760d382c4921a270715fe9e6b348699353ee01
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Jul 30 20:30:54 2004 +0000
+
+    Bug #400 (partial): Driver fixes for the dlloader. When using dlloader, all
+        framebuffer formats except cfb and the overlay modes should work, and
+        r128 and radeon need to be loaded from the ati driver (both issues to
+        be fixed soon). Tested on i740, s3virge, mach64, tdfx, vesa, and vga
+        drivers. elfloader users shouldn't be affected.
+
+commit 057949f434a1c0d751dad5ec3ef154f2feee26ef
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:26:53 2004 +0000
+
+    DRI trunk-20040613 import
+
+commit 58aca915bb0a28c6f59a7a6c14b72b034d245035
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:26:53 2004 +0000
+
+    Initial revision
+
+commit 2511a34d2733cb50de81085e806f563220a23149
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:35 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit b860272eefbe9b72986d669017afd615d6477433
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:44:35 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 106293be3248bc972fdb0f529e7ac8c111000eb7
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:31 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 09e37630a35845eee2b7b8807f9c946268f67ee7
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:23 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 1bd2d248035acf45691f91a84acdca8d9e122f26
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:54 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit f9da586644f9a984fd027d5a6995ef014167860d
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:23 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 279de3d6150b2e327829ff240702f0bacca7d1ab
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Jan 29 08:08:36 2004 +0000
+
+    Importing vendor version xf86-012804-2330 on Thu Jan 29 00:06:33 PST 2004
+
+commit 148230e83c55136a893bc7861d2c8d12d1b7dfd8
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:38 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 1b535877d4c7045ff4cf45f3e3c00734b61797d2
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit be3817e94d5c31cd15aa4785cb5b0bdefc45141c
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

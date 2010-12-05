@@ -1700,8 +1700,8 @@ static Bool SavagePreInit(ScrnInfoPtr pScrn, int flags)
                    "%s DVI port support (Savage4 only)\n",(psav->dvi?"Force":"Disable"));
     }
 
-    psav->AGPforXv = FALSE;
 #ifdef XF86DRI
+    psav->AGPforXv = FALSE;
     if (xf86GetOptValBool(psav->Options, OPTION_AGP_FOR_XV, &psav->AGPforXv)) {
         if (psav->AGPforXv) {
             if (psav->agpSize == 0) {
@@ -4269,6 +4269,7 @@ SavageUpdateKey(ScrnInfoPtr pScrn, int r, int g, int b)
 	ol = 0;
     }
     if (!(pScreen = pScrn->pScreen) 
+	|| !psav->FBStart2nd
 	|| !(pScrOvlPriv = fbOverlayGetScrPriv(pScreen))) 
 	return;
     key = ((Shift(r,psav->overlay.redShift) & psav->overlay.redMask)
