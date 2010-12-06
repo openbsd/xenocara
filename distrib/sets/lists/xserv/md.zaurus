@@ -13,6 +13,7 @@
 ./usr/X11R6/include/xorg/bstore.h
 ./usr/X11R6/include/xorg/bstorestr.h
 ./usr/X11R6/include/xorg/bt829.h
+./usr/X11R6/include/xorg/callback.h
 ./usr/X11R6/include/xorg/cfb8_16.h
 ./usr/X11R6/include/xorg/closestr.h
 ./usr/X11R6/include/xorg/closure.h
@@ -51,7 +52,6 @@
 ./usr/X11R6/include/xorg/input.h
 ./usr/X11R6/include/xorg/inputstr.h
 ./usr/X11R6/include/xorg/mi.h
-./usr/X11R6/include/xorg/mibank.h
 ./usr/X11R6/include/xorg/mibstore.h
 ./usr/X11R6/include/xorg/micmap.h
 ./usr/X11R6/include/xorg/micoord.h
@@ -162,6 +162,8 @@
 ./usr/X11R6/lib/modules/libexa.so
 ./usr/X11R6/lib/modules/libfb.la
 ./usr/X11R6/lib/modules/libfb.so
+./usr/X11R6/lib/modules/libfbdevhw.la
+./usr/X11R6/lib/modules/libfbdevhw.so
 ./usr/X11R6/lib/modules/libint10.la
 ./usr/X11R6/lib/modules/libint10.so
 ./usr/X11R6/lib/modules/libshadow.la
@@ -178,8 +180,6 @@
 ./usr/X11R6/lib/modules/libxaa.so
 ./usr/X11R6/lib/modules/libxf8_16bpp.la
 ./usr/X11R6/lib/modules/libxf8_16bpp.so
-./usr/X11R6/lib/modules/linux/libfbdevhw.la
-./usr/X11R6/lib/modules/linux/libfbdevhw.so
 ./usr/X11R6/lib/modules/multimedia/bt829_drv.la
 ./usr/X11R6/lib/modules/multimedia/bt829_drv.so
 ./usr/X11R6/lib/modules/multimedia/fi1236_drv.la
@@ -214,6 +214,7 @@
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man7/Xprint.7
 ./usr/X11R6/share/aclocal/xorg-server.m4
+./usr/X11R6/share/doc/xorg-server
 ./var/db/xkb
 ./var/db/xkb/README.compiled
 ./var/log
