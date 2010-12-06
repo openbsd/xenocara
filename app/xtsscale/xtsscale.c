@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.15 2010/03/23 20:27:42 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.16 2010/12/06 06:49:47 jasper Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -524,7 +524,7 @@ get_xrandr_config(Display *dpy, Window root, char *name,
 void __dead
 usage(void)
 {
-	fprintf(stderr, "usage: xtsscale [-d device][-o output]\n");
+	fprintf(stderr, "usage: xtsscale [-D display][-d device][-o output]\n");
 	exit(2);
 }
 
@@ -549,8 +549,11 @@ main(int argc, char *argv[], char *env[])
 	int		cpx[] = { 0, 0, 1, 1, 1 };
 	int		cpy[] = { 0, 1, 0, 0, 1 };
 
-	while ((ch = getopt(argc, argv, "d:o:v")) != -1) {
+	while ((ch = getopt(argc, argv, "D:d:o:v")) != -1) {
 		switch (ch) {
+		case 'D':
+			display_name = optarg;
+			break;
 		case 'd':
 			device_name = optarg;
 			break;

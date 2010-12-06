@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.10 2010/09/14 06:20:55 jasper Exp $
+.\" $OpenBSD: xtsscale.1,v 1.11 2010/12/06 06:49:47 jasper Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\" Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -24,7 +24,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: September 14 2010 $
+.Dd $Mdocdate: December 6 2010 $
 .Dt XTSSCALE 1
 .Os
 .Sh NAME
@@ -33,6 +33,7 @@
 .Sh SYNOPSIS
 .Nm xtsscale
 .Bk -words
+.Op Fl D Ar display
 .Op Fl d Ar device
 .Op Fl o Ar output
 .Op Fl v
@@ -44,6 +45,8 @@ will make the pointer act at the indicated location on the screen.
 .Pp
 The following options can be used:
 .Bl -tag -width Ds
+.It Fl D Ar display
+specify the X11 display to use.
 .It Fl d Ar device 
 defines the name or numerical identifier of the X Input extension device 
 to calibrate.
