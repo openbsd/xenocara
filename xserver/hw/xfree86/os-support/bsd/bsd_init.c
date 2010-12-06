@@ -650,6 +650,7 @@ xf86OpenWScons()
 #ifdef KERN_CONSDEV
     mib[0] = CTL_KERN;
     mib[1] = KERN_CONSDEV;
+    len = sizeof(dev);
     if (sysctl(mib, 2, &dev, &len, NULL, 0) != -1) {
 	snprintf(ttyname, sizeof(ttyname), "/dev/%s", devname(dev, S_IFCHR));
 	if ((fd = open(ttyname, 2)) != -1) {
