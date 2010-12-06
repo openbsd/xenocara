@@ -59,7 +59,6 @@ static void	FFBAdjustFrame(int scrnIndex, int x, int y, int flags);
 static void	FFBFreeScreen(int scrnIndex, int flags);
 static ModeStatus FFBValidMode(int scrnIndex, DisplayModePtr mode,
 			       Bool verbose, int flags);
-static void     FFBDPMSMode(ScrnInfoPtr pScrn, int DPMSMode, int flags);
 /* ffb_dga.c */
 extern void FFB_InitDGA(ScreenPtr pScreen);
 
@@ -805,8 +804,6 @@ FFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     pScreen->CloseScreen = FFBCloseScreen;
     pScreen->SaveScreen = FFBSaveScreen;
 
-    (void) xf86DPMSInit(pScreen, FFBDPMSMode, 0);
-
     /* Report any unused options (only for the first generation) */
     if (serverGeneration == 1) {
 	xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
@@ -980,14 +977,4 @@ void
 FFBSync(ScrnInfoPtr pScrn)
 {
     return;
-}
-
-/*
-  Hook for DPMS Mode.
-*/
-
-static void
-FFBDPMSMode(ScrnInfoPtr pScrn, int DPMSMode, int flags)
-{
-  FFBDacDPMSMode(GET_FFB_FROM_SCRN(pScrn), DPMSMode, flags);
 }
