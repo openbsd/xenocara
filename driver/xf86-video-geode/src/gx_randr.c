@@ -346,12 +346,12 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
 	return FALSE;
 #endif
 
-    pRandr = xcalloc(sizeof(XF86RandRInfoRec), 1);
+    pRandr = calloc(sizeof(XF86RandRInfoRec), 1);
     if (pRandr == NULL)
 	return FALSE;
 
     if (!RRScreenInit(pScreen)) {
-	xfree(pRandr);
+	free(pRandr);
 	return FALSE;
     }
 

@@ -156,13 +156,13 @@ lx_output_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     /* DCON Panel specific resolution - OLPC's one */
-    if (pGeode->Output & (OUTPUT_PANEL | OUTPUT_DCON)) {
+    if (pGeode->Output & OUTPUT_DCON) {
         if (pGeode->panelMode->HDisplay == 1200 &&
             pGeode->panelMode->VDisplay == 900)
             return MODE_OK;
     }
 
-    if (pGeode->Output & OUTPUT_PANEL &&
+    if ((pGeode->Output & OUTPUT_PANEL) &&
         gfx_is_panel_mode_supported(pGeode->panelMode->HDisplay,
                                     pGeode->panelMode->VDisplay,
                                     pMode->HDisplay,
@@ -182,7 +182,7 @@ lx_output_mode_valid(xf86OutputPtr output, DisplayModePtr pMode)
     if (pMode->type & (M_T_DRIVER | M_T_PREFERRED))
         return MODE_OK;
 
-    return MODE_BAD;
+    return MODE_OK;
 }
 
 static Bool
@@ -242,10 +242,16 @@ static void
 lx_output_destroy(xf86OutputPtr output)
 {
     if (output->driver_private)
-	xfree(output->driver_private);
+	free(output->driver_private);
 
     output->driver_private = NULL;
 }
+
+static xf86CrtcPtr lx_output_get_crtc(xf86OutputPtr output)
+{
+    return output->crtc;
+}
+
 
 static const xf86OutputFuncsRec lx_output_funcs = {
     .create_resources = lx_create_resources,
@@ -259,6 +265,7 @@ static const xf86OutputFuncsRec lx_output_funcs = {
     .commit = lx_output_commit,
     .detect = lx_output_detect,
     .get_modes = lx_output_get_modes,
+    .get_crtc = lx_output_get_crtc,
     .set_property = lx_output_set_property,
     .destroy = lx_output_destroy,
 };

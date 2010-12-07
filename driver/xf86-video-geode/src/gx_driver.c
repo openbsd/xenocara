@@ -447,7 +447,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	    pGeode->useVGA = FALSE;
 
 #if INT10_SUPPORT
-	pGeode->vesa = xcalloc(sizeof(VESARec), 1);
+	pGeode->vesa = calloc(sizeof(VESARec), 1);
 #endif
     }
 
@@ -960,19 +960,19 @@ GXCloseScreen(int scrnIndex, ScreenPtr pScrn)
 	XAADestroyInfoRec(pGeode->AccelInfoRec);
 
     if (pGeode->AccelImageWriteBuffers) {
-	xfree(pGeode->AccelImageWriteBuffers[0]);
-	xfree(pGeode->AccelImageWriteBuffers);
+	free(pGeode->AccelImageWriteBuffers[0]);
+	free(pGeode->AccelImageWriteBuffers);
 	pGeode->AccelImageWriteBuffers = NULL;
     }
 
     if (pGeode->AccelColorExpandBuffers) {
-	xfree(pGeode->AccelColorExpandBuffers);
+	free(pGeode->AccelColorExpandBuffers);
 	pGeode->AccelColorExpandBuffers = NULL;
     }
 
     if (pGeode->pExa) {
 	exaDriverFini(pScrn);
-	xfree(pGeode->pExa);
+	free(pGeode->pExa);
 	pGeode->pExa = NULL;
     }
 
@@ -1259,10 +1259,10 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 	    }
 	} else {
 	    pGeode->AccelImageWriteBuffers =
-		xcalloc(sizeof(pGeode->AccelImageWriteBuffers[0]),
+		calloc(sizeof(pGeode->AccelImageWriteBuffers[0]),
 		pGeode->NoOfImgBuffers);
 	    pGeode->AccelColorExpandBuffers =
-		xcalloc(sizeof(pGeode->AccelColorExpandBuffers[0]),
+		calloc(sizeof(pGeode->AccelColorExpandBuffers[0]),
 		pGeode->NoOfColorExpandLines);
 	}
     }
@@ -1535,7 +1535,7 @@ static void
 GeodeFreeRec(ScrnInfoPtr pScrni)
 {
     if (pScrni->driverPrivate != NULL) {
-	xfree(pScrni->driverPrivate);
+	free(pScrni->driverPrivate);
 	pScrni->driverPrivate = NULL;
     }
 }

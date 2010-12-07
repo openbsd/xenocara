@@ -313,7 +313,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	if (!xf86LoadSubModule(pScrni, "vgahw") || !vgaHWGetHWRec(pScrni))
 	    pGeode->useVGA = FALSE;
 
-	pGeode->vesa = xcalloc(sizeof(VESARec), 1);
+	pGeode->vesa = calloc(sizeof(VESARec), 1);
     }
 
     cim_rdmsr = LXReadMSR;
@@ -698,7 +698,7 @@ LXCloseScreen(int scrnIndex, ScreenPtr pScrn)
 
     if (pGeode->pExa) {
 	exaDriverFini(pScrn);
-	xfree(pGeode->pExa);
+	free(pGeode->pExa);
 	pGeode->pExa = NULL;
     }
 

@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.59)
 AC_INIT([xf86-video-geode],
-        [2.11.9],
+        [2.11.10],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode],
         [xf86-video-geode],
 	[http://www.x.org/wiki/GeodeDriver])

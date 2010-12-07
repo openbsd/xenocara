@@ -37,6 +37,7 @@
 #include <fcntl.h>
 
 #define DCON_SLEEP_FILE "/sys/devices/platform/dcon/sleep"
+#define DCON_FREEZE_FILE "/sys/devices/platform/dcon/freeze"
 
 static Bool
 dcon_present(void)
@@ -53,6 +54,7 @@ int
 DCONDPMSSet(ScrnInfoPtr pScrni, int mode)
 {
     static int failed = -1;
+    ssize_t ret;
     int fd;
     char value[1];
 
@@ -61,6 +63,25 @@ DCONDPMSSet(ScrnInfoPtr pScrni, int mode)
 
     if (failed)
 	return 0;
+
+    /* If the DCON is frozen, don't power it down, it was probably frozen
+     * for a reason and powering it down would corrupt the display.
+     * This is needed to avoid losing OLPC's frozen boot image during X
+     * startup, where DPMS is used to power down and up the display.
+     * When geode uses KMS this will not be needed as the system realises
+     * that no mode change is needed and the display power is untouched. */
+    fd = open(DCON_FREEZE_FILE, O_RDONLY);
+    if (fd < 0) {
+	failed = 1;
+	return 0;
+    }
+
+    ret = read(fd, value, 1);
+    close(fd);
+    if (ret == 1) {
+	if (value[0] == '1')
+	    return 0;
+    }
 
     fd = open(DCON_SLEEP_FILE, O_WRONLY);
 

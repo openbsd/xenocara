@@ -960,7 +960,7 @@ Z4lNewEncoding(XF86VideoEncodingPtr * encs, int *nencs)
 {
     XF86VideoEncodingPtr enc;
     XF86VideoEncodingPtr tencs =
-	(XF86VideoEncodingPtr) xrealloc(*encs, sizeof(*tencs) * (*nencs + 1));
+	(XF86VideoEncodingPtr) realloc(*encs, sizeof(*tencs) * (*nencs + 1));
 
     if (tencs == NULL)
 	return NULL;
@@ -1029,7 +1029,7 @@ Z4lAddEncoding(XF86VideoEncodingPtr enc, char *name, int id, int width,
     l = strlen(&name[0]) + 1;
     l = (l + n) & ~n;
     n = l + sizeof(*sp);
-    cp = (char *)xalloc(n);
+    cp = (char *)malloc(n);
 
     if (cp == NULL)
 	return 0;
@@ -1055,7 +1055,7 @@ Z4lNewImage(XF86ImagePtr * imgs, int *nimgs)
 {
     XF86ImagePtr img;
     XF86ImagePtr timgs =
-	(XF86ImagePtr) xrealloc(*imgs, sizeof(*timgs) * (*nimgs + 1));
+	(XF86ImagePtr) realloc(*imgs, sizeof(*timgs) * (*nimgs + 1));
 
     if (timgs == NULL)
 	return NULL;
@@ -1081,7 +1081,7 @@ Z4lNewAttribute(XF86AttributePtr * attrs, int *nattrs)
 {
     XF86AttributePtr attr;
     XF86AttributePtr tattrs =
-	(XF86AttributePtr) xrealloc(*attrs, sizeof(*tattrs) * (*nattrs + 1));
+	(XF86AttributePtr) realloc(*attrs, sizeof(*tattrs) * (*nattrs + 1));
 
     if (tattrs == NULL)
 	return NULL;
@@ -1127,7 +1127,7 @@ static int
 Z4lAddAttribute(XF86AttributePtr attr, char *name,
     int min, int max, int flags)
 {
-    char *cp = (char *)xalloc(strlen((char *)&name[0]) + 1);
+    char *cp = (char *)malloc(strlen((char *)&name[0]) + 1);
 
     if (cp == NULL)
 	return 0;
@@ -1149,7 +1149,7 @@ Z4lNewAdaptor(XF86VideoAdaptorPtr ** adpts, int *nadpts, int nattrs)
     Z4lPortPrivRec *pPriv;
     XF86VideoAdaptorPtr adpt, *tadpts;
 
-    tadpts = (XF86VideoAdaptorPtr *) xrealloc(*adpts,
+    tadpts = (XF86VideoAdaptorPtr *) realloc(*adpts,
 	sizeof(*tadpts) * (*nadpts + 1));
 
     if (tadpts == NULL)
@@ -1158,7 +1158,7 @@ Z4lNewAdaptor(XF86VideoAdaptorPtr ** adpts, int *nadpts, int nattrs)
     *adpts = tadpts;
     n = sizeof(*adpt) + sizeof(*pPriv) + 1 * sizeof(*adpt->pPortPrivates);
     n += (nattrs - 1) * sizeof(pPriv->attrIds[0]);
-    adpt = (XF86VideoAdaptorPtr) xalloc(n);
+    adpt = (XF86VideoAdaptorPtr) malloc(n);
 
     if (adpt == NULL)
 	return NULL;
@@ -1559,7 +1559,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
 	    has_colorkey = 1;
 	}
 
-	dp = xalloc(strlen((char *)&capability.card[0]) + 1);
+	dp = malloc(strlen((char *)&capability.card[0]) + 1);
 	if (dp == NULL)
 	    goto fail;
 	strcpy(dp, (char *)&capability.card[0]);
@@ -1668,7 +1668,7 @@ Z4lInit(ScrnInfoPtr pScrni, XF86VideoAdaptorPtr ** adaptors)
 		}
 		if ((imgs = adpt->pImages) != NULL)
 		    free(imgs);
-		xfree(adpt);
+		free(adpt);
 	    }
 	}
 	free(adpts);

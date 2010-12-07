@@ -182,7 +182,7 @@ GXInitVideo(ScreenPtr pScrn)
 		adaptors = &newAdaptor;
 	    } else {
 		newAdaptors =	       /* need to free this someplace */
-		    xalloc((num_adaptors +
+		    malloc((num_adaptors +
 			1) * sizeof(XF86VideoAdaptorPtr *));
 		if (newAdaptors) {
 		    memcpy(newAdaptors, adaptors, num_adaptors *
@@ -198,7 +198,7 @@ GXInitVideo(ScreenPtr pScrn)
 	    xf86XVScreenInit(pScrn, adaptors, num_adaptors);
 
 	if (newAdaptors)
-	    xfree(newAdaptors);
+	    free(newAdaptors);
     }
 }
 
@@ -374,7 +374,7 @@ GXSetupImageVideo(ScreenPtr pScrn)
     XF86VideoAdaptorPtr adapt;
     GeodePortPrivRec *pPriv;
 
-    if (!(adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) +
+    if (!(adapt = calloc(1, sizeof(XF86VideoAdaptorRec) +
 		sizeof(GeodePortPrivRec) + sizeof(DevUnion))))
 	return NULL;
 
@@ -1403,17 +1403,17 @@ GXAllocateSurface(ScrnInfoPtr pScrni,
     surface->width = w;
     surface->height = h;
 
-    if (!(surface->pitches = xalloc(sizeof(int))))
+    if (!(surface->pitches = malloc(sizeof(int))))
 	return BadAlloc;
 
-    if (!(surface->offsets = xalloc(sizeof(int)))) {
-	xfree(surface->pitches);
+    if (!(surface->offsets = malloc(sizeof(int)))) {
+	free(surface->pitches);
 	return BadAlloc;
     }
 
-    if (!(pPriv = xalloc(sizeof(OffscreenPrivRec)))) {
-	xfree(surface->pitches);
-	xfree(surface->offsets);
+    if (!(pPriv = malloc(sizeof(OffscreenPrivRec)))) {
+	free(surface->pitches);
+	free(surface->offsets);
 	return BadAlloc;
     }
 
@@ -1452,9 +1452,9 @@ GXFreeSurface(XF86SurfacePtr surface)
 	GXStopSurface(surface);
 
     xf86FreeOffscreenArea(pPriv->area);
-    xfree(surface->pitches);
-    xfree(surface->offsets);
-    xfree(surface->devPrivate.ptr);
+    free(surface->pitches);
+    free(surface->offsets);
+    free(surface->devPrivate.ptr);
 
     return Success;
 }
@@ -1542,7 +1542,7 @@ GXInitOffscreenImages(ScreenPtr pScrn)
     XF86OffscreenImagePtr offscreenImages;
 
     /* need to free this someplace */
-    if (!(offscreenImages = xalloc(sizeof(XF86OffscreenImageRec))))
+    if (!(offscreenImages = malloc(sizeof(XF86OffscreenImageRec))))
 	return;
 
     offscreenImages[0].image = &Images[0];

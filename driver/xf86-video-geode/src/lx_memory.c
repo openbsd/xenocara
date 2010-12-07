@@ -69,7 +69,7 @@ GeodeFreeOffscreen(GeodeRec * pGeode, GeodeMemPtr ptr)
     if (ptr->next)
 	ptr->next->prev = ptr->prev;
 
-    xfree(ptr);
+    free(ptr);
 }
 
 /* Allocate the "rest" of the offscreen memory - this is for
@@ -83,7 +83,7 @@ GeodeAllocRemainder(GeodeRec * pGeode)
     GeodeMemPtr nptr, ptr = pGeode->offscreenList;
 
     if (!pGeode->offscreenList) {
-	pGeode->offscreenList = xcalloc(1, sizeof(*nptr));
+	pGeode->offscreenList = calloc(1, sizeof(*nptr));
 	pGeode->offscreenList->offset = pGeode->offscreenStart;
 	pGeode->offscreenList->size = pGeode->offscreenSize;
 	pGeode->offscreenList->next = NULL;
@@ -95,7 +95,7 @@ GeodeAllocRemainder(GeodeRec * pGeode)
     /* Go to the end of the list of allocated stuff */
     for (; ptr->next; ptr = ptr->next) ;
 
-    nptr = xcalloc(1, sizeof(*nptr));
+    nptr = calloc(1, sizeof(*nptr));
     nptr->offset = ptr->offset + ptr->size;
     nptr->size = pGeode->offscreenSize -
 	(nptr->offset - pGeode->offscreenStart);
@@ -125,7 +125,7 @@ GeodeAllocOffscreen(GeodeRec * pGeode, int size, int align)
 
 	offset = ALIGN(pGeode->offscreenStart, align);
 
-	pGeode->offscreenList = xcalloc(1, sizeof(*nptr));
+	pGeode->offscreenList = calloc(1, sizeof(*nptr));
 	pGeode->offscreenList->offset = offset;
 	pGeode->offscreenList->size = size;
 	pGeode->offscreenList->next = NULL;
@@ -149,7 +149,7 @@ GeodeAllocOffscreen(GeodeRec * pGeode, int size, int align)
 	    offset = ptr->offset + ptr->size;
 	    offset = ALIGN(ptr->offset + ptr->size, align);
 
-	    nptr = xcalloc(1, sizeof(*nptr));
+	    nptr = calloc(1, sizeof(*nptr));
 	    nptr->offset = offset;
 	    nptr->size = size;
 	    nptr->next = ptr->next;
@@ -247,9 +247,6 @@ LXInitOffscreen(ScrnInfoPtr pScrni)
 	/* Get the amount of offscreen memory still left */
 	size = GeodeOffscreenFreeSize(pGeode);
 
-	/* Deduct the maxmimum size of a video overlay */
-	size -= 0x200000;	
-
 	/* Align the size to a K boundary */	
 	size &= ~1023;
 
@@ -307,7 +304,7 @@ GeodeCloseOffscreen(ScrnInfoPtr pScrni)
 
     while (ptr) {
 	nptr = ptr->next;
-	xfree(ptr);
+	free(ptr);
 	ptr = nptr;
     }
 

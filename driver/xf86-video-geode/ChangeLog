@@ -1,3 +1,1419 @@
+commit 50f9152e2087fd50dfc09e35505c2fbcdd3183b0
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Tue Nov 9 11:12:44 2010 +0200
+
+    Geode 2.11.10
+
+commit ff091333b506855c17ec8ea5f933026221600be9
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Thu Oct 28 13:13:09 2010 +0300
+
+    Revert "Simplify the mode_valid function"
+    
+    This reverts commit fab58e111b6655602b4f739260a01247ff478f35.
+
+commit fab58e111b6655602b4f739260a01247ff478f35
+Author: Huang, FrankR <FrankR.Huang@amd.com>
+Date:   Thu Oct 28 15:17:19 2010 +0800
+
+    Simplify the mode_valid function
+    
+    Signed-off-by: Frank Huang<frankr.huang@amd.com>
+
+commit fb72a210d7de61c49fc66aafa057d8c6a028b907
+Author: Huang, FrankR <FrankR.Huang@amd.com>
+Date:   Thu Oct 28 15:16:58 2010 +0800
+
+    Revise the entry for 1024x600
+    
+    *Change the entry of 1024x600 from 3 to 7(That will not affect the entries from
+    3 to 6). And BIOS should set the VG_FP_TYPE bit[5:3] to 7.
+    *Use 1024x600@80 instead of 1024x600@60 parameters to support more 4:3 resolutions
+    
+    Signed-off-by: Frank Huang<frankr.huang@amd.com>
+
+commit 9caaf7f8294ef9700e9e20e394fee10cc2b1c9c0
+Author: Daniel Drake <dsd@laptop.org>
+Date:   Mon Sep 6 18:35:17 2010 -0600
+
+    Don't power down DCON when it is frozen
+    
+    Putting a frozen DCON to sleep (as happens during regular boot of the XO)
+    will cause the frozen image to be corrupted.
+    
+    Change the behaviour to only sleep when the DCON is not frozen.
+    
+    http://dev.laptop.org/ticket/10196
+
+commit 87512b72d64370e062d209724994a72368c21df6
+Author: Daniel Drake <dsd@laptop.org>
+Date:   Mon Sep 6 18:33:48 2010 -0600
+
+    Add get_crtc output function
+    
+    I don't know why X can't do this itself, but when no get_crtc method is
+    provided, X decides that it doesn't know the CRTC of the output and
+    decides to reset the mode completely (causing display powerdown, resulting
+    in an uncomfortable visual interruption to OLPC's boot process).
+
+commit 5e72a00ad26f2052bb48fef041d6fbd14ba18153
+Author: Hunk Cui <Hunk.Cui@amd.com>
+Date:   Wed Oct 13 18:26:52 2010 +0800
+
+    Allocate video memory with exaOffscreenAlloc
+    
+    *Del for deduct the probable size of a video overlay.
+    *Use exaOffscreenAlloc allocate the video overlay.
+    *Use exaOffscreenAlloc allocate the offscreen surface.
+    *XV-video data has to be allocate in offscreen memory range.
+    
+    Signed-off-by: Hunk Cui <Hunk.Cui@amd.com>
+
+commit 334534cde47f1ffe126e4e665988480fc57a7307
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Wed Sep 29 16:45:56 2010 +0800
+
+    Add resolution 1024x600 support for PANEL
+    
+    *Users can not get 1024x600 by default when using panel without xorg.conf.
+    Add this screen resolution to the panel_modes table to support it by default.
+    *Users who are using VGA will get this resolution by the monitor EDID. No
+    code is needed
+    *Use gtf tool to get the parameters
+    *Ubuntu bugzilla #433142
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit becaa0ae375e996c2f83192bb84a5c89f94933dd
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Wed Sep 29 16:45:42 2010 +0800
+
+    Fix a typo on resolution parameter
+    
+    *change from 1028 to 1280
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit 89c60efe899f0cda4a52e0574f030c021c4b1ece
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Wed Sep 29 16:35:46 2010 +0300
+
+    Mode Validation support on modeline in xorg.conf
+    
+    *mode validation(lx_output_mode_valid) in this driver should return MODE_OK for
+    all modes filtered out by previous process in this function. Otherwise, new
+    modelines(conf_modes) will be pruned by Xserver function Xf86PruneInvalidModes.
+    The result is that the user can not set arbitrary resolutions. We comply with
+    the code of ATI&&Intel mode_valid function to do this.
+    *For modes that cannot be supported by the geode driver, it is better to give
+    the specific MODE_XXX(such as MODE_CLOCK_RANGE) instead of MODE_BAD.
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit 74e28b83d5b725a134aad264771a7c9a4d0e38df
+Author: Hunk <hunk.cui@amd.com>
+Date:   Sun Sep 26 18:14:52 2010 +0800
+
+    Modify rotation pitch & reallocate pixmap for bo
+    
+    *Modify rotation pitch value with crtc_mode_set.
+    *Use own wrapper to allocate a pixmap for wrapping a bo.
+    *Ubuntu Bugzilla #377929
+    *Debian Bugzilla #512020
+    
+    Signed-off-by: Hunk Cui <Hunk.Cui@amd.com>
+
+commit 7d7cc26011fde18dcce5c6b95cd73a12a71a7f99
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Thu Sep 23 16:17:40 2010 -0300
+
+    lx_display: fix typo
+
+commit 90dda28842ac76a05ae75a4fdd457dd8b8988950
+Author: Andres Salomon <dilinger@queued.net>
+Date:   Mon Sep 20 11:31:29 2010 -0700
+
+    fix the DCON verification loop for LX output
+    
+    This is pretty clearly a bug. This should fix it (after all, that
+    check is merely to see if the panel is a DCON; we don't care at
+    all about the panel bit). This also adds an extra parenthesis in
+    the following if() statement for clarity.
+    
+    I'm resisting the temptation to change GeodeRec's Output member to
+    an unsigned long (for now). Bitfields should really be unsigned.
+    
+    Signed-off-by: Andres Salomon <dilinger@queued.net>
+
+commit 5dfe7dbf6ed122fbbb758be7a5b7d78a199583c7
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Wed Sep 1 10:30:35 2010 +0800
+
+    Replace xalloc/xrealloc/xfree/xcalloc with malloc/realloc/free/calloc
+    
+    * Replace the deprecated functions with new ones
+      Refer to "/xserver/include/os.h"
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit fc342655a3d928759467eac8c917effe8f283031
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon Aug 23 07:46:22 2010 +0300
+
+    Geode 2.11.9
+    
+    We are pleased to announce this maintenance release of xf86-video-geode.
+    It features a plethora of bug fixes, a few documentation updates and one
+    performance enhancement.
+    
+    This release also marks the return of AMD to the development team.
+    
+    Please read the content of NEWS for more details.
+
+commit c77eb79ef24c47ed7431713918a731252ea8153b
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Wed Aug 18 15:37:18 2010 +0800
+
+    Fix the PictOpIn and PictOpOut
+    
+    *Correct the entry for PictOpIn, PictOpOut, PictOpOverReverse
+    *Some code format adjustment
+    *Delete the maskflag(temp variable)
+    *Change the code to make the black region(More reasonable than change
+    op from PictOpSrc to PictOpClear)
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit 32a927b8e627b3f9759ccfbff231f5fd22445f02
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Wed Aug 18 15:36:49 2010 +0800
+
+    Fix the PictOpInReverse op
+    
+    *Correct the entry for PictOpOverReverse and PictOpInReverse
+    *Correct the channel reverse use, delete direction use
+    *Add a function lx_composite_all_black to generate a all zero vectors
+    including alpha
+    *Modify some comments
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit f0e24491ca676244b2fd6f2d4476e996847824cd
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Mon Aug 16 07:09:43 2010 +0300
+
+    Fix segfault with Option NoAccel
+    
+    Fixes bug #27725
+    
+    Breakage from commit 38e86827
+
+commit b0a13d871d9b72da83380d4564ae947ace733b5d
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Aug 15 18:19:00 2010 +0300
+
+    Fix a few typos in NEWS.
+
+commit 66a74e1e7ee5abde9a9eebfece126ba2fdafce9d
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Aug 15 18:13:57 2010 +0300
+
+    Further rephrase the content of NEWS.
+
+commit fc711bc0c3b21fd11ffd1ab590122226799ee904
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Aug 15 18:11:43 2010 +0300
+
+    Fixes the styling of NEWS for consistency.
+
+commit 2c26c5a4399fcf04d402a973ce3da484215d3202
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Aug 15 18:00:41 2010 +0300
+
+    Created a NEWS file to document recent changes.
+
+commit 673d71b970a6d02449c9994e67f337d117d7f075
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Thu Aug 12 15:49:53 2010 +0800
+
+    Fix the PictOpOutReverse op
+    
+    *Correct the entry for PictOutReverse
+    *Outside the source picture, the pixels should be all zero when doing
+    the PictOpOutReverse rendering with Dst
+    *Rename the function name of pict_a8 to add_a8
+    *Rename the function name of opover to two_pass
+    *Fix the bug in KDE dolphin file browser
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit 2d1a07327ef352b5f36cbd93a280485cafeeb4d4
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Thu Aug 12 15:49:36 2010 +0800
+
+    Improve the glyph rendering performance
+    
+    *Add a PICT_a8 entry in the format we support
+    *Use Mart's workaround patch to give geode PictOpAdd correct pSrc
+    and pDst format
+    *Add a function lx_composite_onepass_pict_a8 to handle the PictOpAdd
+    for glyph rendering
+    *Performance for "x11perf" command under Fedora 12
+                      Past           Now
+    -aa10text         4660/sec       53300/sec
+    -aa24text         2740/sec       16200/sec
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit fe6ad5942bf3d638bee2e6979f60d9d7128ba1e8
+Author: Hunk Cui <Hunk.Cui@amd.com>
+Date:   Mon Aug 9 18:03:23 2010 +0800
+
+    Rectify lx_display.c outstanding compiler warnings
+    
+    *Correct the type of LXAllocShadow from Bool to static Bool.
+    
+    Signed-off-by: Hunk Cui <Hunk.Cui@amd.com>
+
+commit 1f96e74919fe9442062804de785c6e1008d75bf2
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon Aug 9 10:48:16 2010 +0300
+
+    Revert "Improve the glyph rendering performance"
+    
+    This reverts commit ebe43da32226eb7bc3ef758c43eff85ac8b8baef as Frank
+    pointed out that I mistakenly committed an outdated version of this.
+
+commit 7a523acf985771b2bd45f5d2823c217cd9075b1e
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Mon Aug 9 10:43:27 2010 +0800
+
+    Correct two outstanding compiler warnings
+    
+    *Correct the type from "Q_WORD" to "QQ_WORD" in panel.c
+    *Correct the tyep from "char" to "const char" in z4l.c
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit ebe43da32226eb7bc3ef758c43eff85ac8b8baef
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Sat Aug 7 16:54:35 2010 +0800
+
+    Improve the glyph rendering performance
+    
+    *Add a PICT_a8 entry in the format we support
+    *Use Mart's workaround patch to give geode PictOpAdd correct pSrc and pDst
+    format
+    *Add a function lx_composite_onepass_pict_a8 to handle the PictOpAdd for
+    glyph rendering
+    *Performance for "x11perf -aa10text" has been improved from 4200/s to 47400/s
+    on Fedora12
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit 8a61ef8f9f6b9dac6804754572250e59d80bdf06
+Author: Hunk Cui <Hunk.Cui@amd.com>
+Date:   Mon Jul 12 13:17:18 2010 +0800
+
+    Fix rotation with newer Xserver versions (exaOffscreenAlloc)
+    
+    *Del for deduct the probable size of a shadow buffer.
+    *Use exaOffscreenAlloc allocate the shadow buffer.
+    *Rotateeddata has to be allocate in offscreen memory range.
+    *Ubuntu Bugzilla #377929
+    
+    Signed-off-by: Hunk Cui <Hunk.Cui@amd.com>
+
+commit 2bcbc0b64091218d348ad9f699370e4bfde3948b
+Author: Hunk Cui <Hunk.Cui@amd.com>
+Date:   Mon Jul 12 12:57:39 2010 +0800
+
+    Gamma Correction for fading operation
+    
+    *Modify integrated palette RAM for gamma-correction of the data stream
+    *Let Graphic data passes through the Gamma Correction RAM
+    *Special for Screensaver Operation
+    *FreeDesktop Bugzilla #27853
+    
+    Signed-off-by: Hunk Cui <Hunk.Cui@amd.com>
+
+commit ecb741f27de4ca66555d312a4699efc22f873d0e
+Author: Huang, FrankR <FrankR.Huang@amd.com>
+Date:   Fri Aug 6 11:16:02 2010 +0800
+
+    Fix the Nautilus file browser misrendering issue
+    
+    This is patch 4 final this week.
+    This one has fixed several bugs below:
+    1)google chrome hang
+    2)Some website using repeat for source picture with PictOpSrc. To sum up, right now this patch has gracefully solved the Nautilus bug and some special rendering under PictOpSrc and PictOpOver I will describe all special conditions I met
+    Websites for test before and after this patch:
+    	1)http://daduke.org (greater srcX and srcY)
+    	2)http://bjdns2.cncmax.cn (negative srcX and srcY)
+    
+    From: Frank Huang <frankr.huang@amd.com>
+    
+    *When the srcX or srcY is greater than source width or source height
+    (or negative),the driver should do the correct region to render. Add a
+    function lx_composite_onepass_special to handle this. The source start
+    point should be calculated by a modulus operation.
+    *If the opeartion is with a shifted position src, then adjust the
+    operation region based on the operations src width and height
+    parameters. The rotation condition should be excluded. This part still
+    need investigation
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit 5b93fdd42d7d8af4535fd62ce0749f2c4434f9fe
+Author: Huang, FrankR <FrankR.Huang@amd.com>
+Date:   Fri Jul 23 17:17:49 2010 +0800
+
+    Fix the PictOpOver operation
+    
+    Fix the PictOpOver operation
+    
+    *Fix the PictOpOver blend_ops struct. The PictOpOver operation is
+    Src + (1-a) * Dest. So change from CIMGP_ALPHA_A_PLUS_BETA_B to
+    CIMGP_A_PLUS_BETA_B. And add one pass operation to do the
+    Src * (alpha of Mask) if there is a mask
+    *Convert the source format in lx_prepare_composite if it is not
+    ARGB32 when doing the first pass
+    *Add a function lx_do_composite_mask_opover to handle the PictOpOver
+    operation, the first pass is to do the Src * (alpha of Mask), the
+    second pass is to do the Src + (1-a) * Dest.
+    *Due to our off-screen buffer is only 256KB, so split big Mask region
+    into several small region(256KB) to do the rendering.
+    *Progressbar, scrollbar and button display well with this patch
+    *See Free Desktop Bugzilla #28352
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit 969844d51967aa79ce2c151fc5f1bd296d74437a
+Author: Huang, FrankR <FrankR.Huang@amd.com>
+Date:   Fri Jul 23 17:17:34 2010 +0800
+
+    Fix the PictOpSrc rendering
+    
+    Fix the PictOpSrc rendering
+    
+    *Add the maskrepeat variabel to record mask picture's repeat attribute
+    *Add the maskflag to record the exaScratch.type when it is COMP_TYPE_MASK
+    *Use the PictOpClear to make other non-blending region(out of src or mask)
+    to be black if the op is PictOpSrc or PictOpClear
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit 2771fb365107976e76e175e7f8953dd41ecb91c1
+Author: Huang, FrankR <FrankR.Huang@amd.com>
+Date:   Fri Jul 23 17:17:15 2010 +0800
+
+    Put the one pixel rendering work back to the server to handle if the pMsk is not zero
+    
+    Put the one pixel rendering work back to the server to handle if the pMsk is not zero
+    
+    *exaScratch.srcWidth and exaScratch.srcHeight are used to reocrd
+    mask's width and mask's height if mask is not zero. So the one pixel
+    source's width and height are missing in lx_do_composite. So we must
+    fallback. Otherwise, bigger region will be wrongly rendered.
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+
+commit e9effca821c1d604aeffeb3d3e7a49539485117d
+Author: Daniel Drake <dsd@laptop.org>
+Date:   Thu Aug 5 08:08:06 2010 +0300
+
+    http://lists.x.org/archives/xorg-driver-geode/2010-August/000938.html
+    https://bugs.freedesktop.org/show_bug.cgi?id=29391
+    
+    LXCopyFromSys currently is hardcoded to operate on 16bpp data.
+    And indeed, when working with packed data (e.g. YUY2), this is the case.
+    
+    However, it is also used from LXCopyPlanar to copy the planes of I420
+    images. In this case, it is on an 8bpp input plane.
+    
+    Running at 16bpp causes twice as much data to be copied, and ultimately
+    causes a buffer overflow leading to crashes such as
+    http://dev.laptop.org/ticket/10260
+    
+    Fix this by deriving the BPP from the input image parameters.
+
+commit f0df6821c454d2b174a071fd846b399e8c2f98f5
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Jul 11 21:28:49 2010 +0300
+
+    Rephrased the FAQ about video rotation to NOT specify a minimum RAM size.
+
+commit f21fb29dbe54e7a237047920a00632752a970da1
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Mon Jul 5 16:49:05 2010 +0800
+
+    Correctly calculate the rendering region with the mask picture
+    
+    If the opeartion is with a shifted position mask, then adjust the
+    operation region based on the operations mask width and height
+    parameters(instead of clipping based on source width/height)
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+    Acked-by: Mart Raudsepp <leio@gentoo.org>
+
+commit d8baf45eb79e473fba68b8335b6aaca27df681cf
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Jun 23 00:41:53 2010 +0300
+
+    Added square braces to all AC_INIT elements.
+
+commit 2d377782abc64281b5fa44825d541a1541b19a10
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Jun 22 08:36:40 2010 -0700
+
+    Use new server API to find the root window.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 14b1561dac796c6ad05648e6857028a87acde9ef
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Jun 22 08:30:52 2010 -0700
+
+    Adapt to DevPrivate API changes.
+    
+    This allows the driver to be built against either the old or new
+    DevPrivate API.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit b47d77360cb428d8892beb93789c83dfa681b26f
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon Jun 21 07:44:31 2010 +0300
+
+    Added FAQ about minimal memory requirements to rotate screen in README.
+
+commit 42481a36f92cf79c76fea229b5143c4fbdea444a
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Mon Jun 14 02:34:20 2010 +0300
+
+    lx_exa: fallback in case of server-side gradients and solid fill
+    
+    RENDER extension version 0.10 added support for doing server-side
+    gradients and solid fills, which we were not handling at all.
+    cairo-1.9 started making use of server-side gradients, and we are
+    crashing on those, as the source pixmap (pxSrc in lx_prepare_composite)
+    doesn't have a drawable in this case, and we were not expecting such
+    a possibility.
+    So, as the first measure, fallback (three years late) all server-side
+    gradients and solid fills instead of crashing, until we have no code
+    that tries to accelerate cases of these or aren't sure if we even
+    can accelerate any cases.
+    
+    pSourcePict member was added to xserver in 2005, so no compatibility
+    wrapping needed.
+    
+    Signed-off-by: Mart Raudsepp <leio@gentoo.org>
+    Acked-by: Otavio Salvador <otavio@ossystems.com.br>
+
+commit b46d4ff787bce43409d59837d736af0be2b0dda5
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Sun Jun 13 18:47:12 2010 +0800
+
+    Prevent the pixmap migration if the geode GP can not do the acceleration.
+    
+    Bring all the "return FALSE" condition forward from lx_prepare_composite
+    to lx_check_composite. The Xserver will handle this condition. See more
+    on Freedesktop Bugzilla #27243
+    
+    Signed-off-by: Frank Huang <frankr.huang@amd.com>
+    Acked-by: Mart Raudsepp <leio@gentoo.org>
+
+commit 8e53a62f196dfc4eb1e8769183b00bf4a3122ddc
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Jun 13 03:24:20 2010 +0300
+
+    Clean up and indent the content of COPYING for better clarity.
+
+commit 4302f6961571609a2b8a27a2d21281f758f48f0d
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Jun 13 03:19:18 2010 +0300
+
+    Move the AMD-specific part of the license away from the boilerplate text.
+
+commit 83b8249d91c7bf351f44062b5e42d12b0b8c9a28
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Jun 13 03:15:09 2010 +0300
+
+    Removed superflous duplicate license from COPYING.
+
+commit 854323a434b8fc7b980387f52dc8c80258ca9b64
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 12 15:48:05 2010 -0400
+
+    COPYING: update Copyright notices from the source code
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e9447f5335681a78cf87ebf8c9659a6fecfc9746
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Wed Sep 9 22:13:40 2009 -0300
+
+    LX: validate display modes
+    
+    To avoid using virtual desktop by default we now validate the display
+    modes.
+    
+    Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+
+commit 3a0e9730634f6894ef57793ae6e072656cd125f0
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Sat Oct 10 11:54:53 2009 -0300
+
+    cim: add a new 106.50MHz entry
+
+commit 527e3763343b736e0d9f7a1c7d55a51366bfdc36
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Sat Oct 10 11:53:46 2009 -0300
+
+    cim: properly indent 341.349MHz entry
+
+commit 2f26fd4cc583aa07e31aa3c8edb975ace9bf31eb
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue May 18 13:07:18 2010 -0400
+
+    Remove mibank.h reference
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit cf69c8bde21ee383b471ca82d70c179dfaf78722
+Author: Nicolas Boullis <nboullis@debian.org>
+Date:   Mon May 10 07:39:20 2010 +0300
+
+    Correctly set the name for the user-specified panel mode.
+
+commit db01a594ac30c730c580bcf9323220b83eb8ce03
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Thu Apr 15 16:36:43 2010 +0300
+
+    Geode 2.11.8
+
+commit a4b8389e50ea92fe361d96da6fe1c2d7caf39a02
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Mon Apr 12 08:53:11 2010 +0300
+
+    lx_exa: bail earlier (in CheckComposite) for non-alpha-only masks.
+    
+    We should have all the information at CheckComposite already, so don't
+    waste time migrating pixmaps for this case, only to fail in PrepareComposite.
+    
+    Currently more importantly this workarounds EXA fallback failure in
+    xserver-1.7+ for this situation, which resulted in many desktop icons not
+    getting rendered; bug #27243
+
+commit 46679d0220c8d34bdd46433bffc490c971783ab9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 26 08:56:56 2010 -0400
+
+    make: use AM_CPPFLAGS rather than DEFAULT_INCLUDES
+    
+    DEFAULT_INCLUDES is computed by Automake and should not be
+    overwritten.
+    
+    -I. is the same as -I$(srcdir)
+    The generated DEFAULT_INCLUDES = -I. -I$(top_builddir)
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 621de3bf4966b48532ae2bff5f3859a1a6d63241
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Thu Feb 11 19:56:10 2010 +0000
+
+    Bump the minimal autoconf version to 2.59.
+
+commit f67c4f57c06ce4800f2929f65f88b65e22499a65
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Thu Feb 11 21:38:59 2010 +0200
+
+    Bump the minimal xutils macro version to 1.4, as agreed with Gaetan Nadon.
+
+commit 10364d0f667c808641d62339c99564b401683612
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon Feb 8 18:43:27 2010 +0200
+
+    Get rid of unused XFreeXDGA extension.
+
+commit ba9e3975535ffdf05611e96feb578eb01c49544d
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Feb 3 21:09:53 2010 +0000
+
+    Geode 2.11.7
+
+commit 755b08bd59a5ff968040d657401c0779ba7828d0
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Sat Oct 3 14:46:52 2009 -0300
+
+    GX: refactory mode validation code to be easier to ready
+    
+    Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+
+commit 7f044dc2569ddf4328649d857023b7c418f9b1df
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Sat Oct 3 16:01:31 2009 -0300
+
+    LX: fix typo in panel supported modes
+    
+    Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+
+commit 52f14e87edf564faa475063f44e8ee5adb4e1368
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Fri Oct 2 00:21:01 2009 -0300
+
+    gfx: document panel related methods available
+    
+    Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+
+commit 5798991e7a4d2354e9735f91f8d60f436c6549ab
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Sat Oct 3 16:41:14 2009 -0300
+
+    geode: fix typo in AmdPciProbe
+
+commit 93f0303f79ce29e896e4817e945709c6a1d3df69
+Author: Christian Bühler <christian@cbuehler.de>
+Date:   Sat Dec 19 18:59:00 2009 +0200
+
+    Geode LX does not support PanelGeometry
+    
+    Hello,
+    
+    I believe I found an error in the README, which caused quite a lot of
+    confusion for me.
+    According to the source, PanelGeometry is only supported by the GX, not
+    by the LX, but in the README file, this option is listed on both.
+    
+    Regards,
+    Christian
+
+commit ab9e8fec5e2f2e0ab35890d8102663991d40b4e4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a63b523ea694f2badf79827632fb7f0ee8cc1609
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:24:32 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 58ecaae19472206fd3c642886c787297e6c423d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 19 13:45:23 2009 -0500
+
+    Revert "Makefile.am: do not include autogen.sh in distribution #24183"
+    
+    This reverts commit c77803368611751f828c1cc7b00e77157b7774b3.
+
+commit d39754d3cd76fbc4eca5eb199bbe67db5e25eee8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit 29f57f0b92a783f0e1a520b6cf0a6cd211fd9c5f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 8159be49ec768130c47426b669d7491ebdeb288b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 530f29b38408319e4bd9689e4a1309055644c4a2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit c77803368611751f828c1cc7b00e77157b7774b3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 27 16:33:51 2009 -0400
+
+    Makefile.am: do not include autogen.sh in distribution #24183
+    
+    This is a private build script that should not be distributed
+
+commit 1cdb69f2ed0efff76edf90d62ffed72fe65108f5
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Sep 27 14:57:18 2009 +0300
+
+    Geode 2.11.6
+
+commit a504725d2250e663f0a275fd0c02cc849dafe792
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sun Sep 27 14:55:25 2009 +0300
+
+    Revert "LX: validate display modes"
+    
+    This reverts commit 3af472f4453f8e92a9f303e64e2796836374d980.
+    
+    This commit had broken detection of arbitrary non-VESA resolutions,
+    which affected the OLPC XO-1 and a number of Geode-based notebooks.
+
+commit 1b1092b11a686febfd3ee20bd18677fcc366faa5
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Tue Sep 22 16:41:59 2009 +0300
+
+    Geode 2.11.5
+
+commit 3af472f4453f8e92a9f303e64e2796836374d980
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Wed Sep 9 22:13:40 2009 -0300
+
+    LX: validate display modes
+    
+    To avoid using virtual desktop by default we now validate the display
+    modes.
+    
+    Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+
+commit 6ff8735b25da03f432b755391000bbfe2253b60c
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Tue Sep 8 21:53:49 2009 -0300
+
+    GX: refactor code that allow backward compatibility with old video interfaces
+    
+    Most of dependent code is now located in a single place. The macro has
+    been changed to use a cleaner name to be easier to spot why it is
+    needed.
+    
+    Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+
+commit 292df8af92d5295c4be1ab0b3ad630a09589eb55
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Fri Sep 18 10:04:38 2009 +0300
+
+    geode: further precised brand names of Geode variants by NSC in README.
+
+commit 869a93c00ce2e9fe739239b4481b5c98e4df9092
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Fri Sep 18 09:26:25 2009 +0300
+
+    Geode: corrected the product names in README.
+
+commit 9184997ac2bf08841f1a40ebf416e49b44d71ff4
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Fri Sep 18 09:15:25 2009 +0300
+
+    geode: Added the PCI vendor and device ID of NSC SC1400 to README.
+
+commit 651310328e3cfc5c4936cf5df1dcaf7d319d20f6
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Sep 9 19:47:14 2009 +0300
+
+    Switch project URL in README to read-only www host.
+
+commit f6039ef1bc9962caf18a3abb15c7f627ffc6158a
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Wed Sep 9 06:00:00 2009 +0300
+
+    geode: use lowercase vendor id
+
+commit 50b44451c6462bf999e8899715377dd735bc8940
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Sep 9 00:06:44 2009 +0300
+
+    Added extended info about which Geode driver covers what Geode variant in README.
+
+commit 7af63b86ab9e06b9ccdf1291250afa303b69a885
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Sat Sep 5 01:47:11 2009 +0300
+
+    Fixed a typo in src/lx_output.c debug message.
+
+commit 999d1ef343c65ac2324ac1e9c2e72f014cb5610d
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Thu Sep 3 10:56:09 2009 +0300
+
+    Added README about X server dependency bump due to GX Randr dixSetPrivate fix.
+
+commit feea2a0afa67c8be1d1afd743ab45745878c1c91
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon Aug 31 23:28:31 2009 +0300
+
+    Release 2.11.4.1.
+
+commit f1268f3ba8404129d358db3bb1e66f3841f7018a
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon Aug 31 23:24:30 2009 +0300
+
+    Fixed typo in GX2 dixSetPrivate patch. Kudos to Eamon Walsh!
+
+commit 34405a9c5cb0c30d45c12ef6850fc636a964e441
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Fri Aug 28 11:21:57 2009 +0300
+
+    Release 2.11.4.
+
+commit 255c0b985731350fdfd38987a95310e72f4e5381
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Tue Aug 18 07:30:33 2009 -0300
+
+    GX: use XAA by default.
+    
+    EXA support is broken for GX so we disable it for now.
+
+commit ef3fbd7bd03fa4a9ff966a373ba8ddec94ea8ff5
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Tue Aug 18 14:11:07 2009 +0300
+
+    Revert "GX: use XAA by default."
+    
+    This reverts commit 09ddb88781bc9ec12531414beabd95e50237fdd5.
+    Otavio just sent me a nicer version of this patch.
+
+commit 09ddb88781bc9ec12531414beabd95e50237fdd5
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Tue Aug 18 07:30:33 2009 -0300
+
+    GX: use XAA by default.
+
+commit b28abde0276ddd7f687242f3886f98b0e49a7fc2
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Fri May 22 20:40:16 2009 -0300
+
+    Fix GX RandR to properly use dixSetPrivate.
+    
+    Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+
+commit 917a5bf5fdadac1a8799336aa8da2e51f8790eea
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Tue Aug 4 21:33:12 2009 +0300
+
+    Migrated the project URL to the new http://wiki.x.org/wiki/GeodeDriver
+
+commit c2141752ed4520af6d7f5197fcb0c512058db839
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Tue Aug 4 21:00:24 2009 +0300
+
+    Somewhat harmonized the README between xf86-video-cyrix, xf86-video-nsc and xf86-video-geode.
+    TODO:
+    * Rename http://wiki.x.org/wiki/AMDGeodeDriver
+          to http://wiki.x.org/wiki/GeodeDriver
+      and install a redirect from the old page.
+
+commit b5419c47138e9a8efc5f946fd08c4488dedcb5ee
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Jul 29 13:57:15 2009 +0300
+
+    Added missing development dependencies (X.org macros) to FAQ.
+
+commit c088a8dc4e5a37d8e07766c0c26ebc11037407c0
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Jul 29 12:23:46 2009 +0300
+
+    Added FAQ about building drivers from GIT for testing purposes.
+
+commit a3788ff318f57f64d7317eeaee4d64a466f3745a
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Jul 29 02:35:04 2009 +0300
+
+    Added FAQ about submitting patches and producing useful backtraces.
+
+commit cab8435d8aef852c4cb1ab71285fa020dcbd7a68
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:40 2009 +1000
+
+    geode: change to using ABI version check
+
+commit a22b16c0dc757c940461f26bc6e1802b53e860c5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:29 2009 +1000
+
+    geode: update for resources/RAC API removal
+
+commit 810dd8f15c40271b75bb8a124709eadb5e4c36a8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 10:06:20 2009 +1000
+
+    geode: switch to using correct pci config interface
+
+commit 9fd00d01cacae9724649699bf8e0af1e16dbe356
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 15 16:01:37 2009 -0400
+
+    Use XORG_CHANGELOG macro to create ChangeLog. #22611
+    
+    Adding the macro in configure.ac and use it in Makefile.am
+        Refer to: https://bugs.freedesktop.org/show_bug.cgi?id=22611
+        Global maintenance on all modules
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit df4745e5565b98cea278f33001f38a64e027e4ce
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 11:37:34 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3d9dd15cf30832bdb467e8fe02327f474e1e2130
+Author: Chris Ball <cjb@laptop.org>
+Date:   Fri Jun 19 09:51:28 2009 -0400
+
+    Release 2.11.3.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 26bd1287ef4f9e63f4e3722f21c168db3d55099e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 10 14:18:12 2009 +1000
+
+    geode: add inputstr.h include explicitly.
+
+commit 1bfde92b1e2c1a386b679b67f1901a57623db633
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 14:56:22 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 106c341c4076f7714cd67e0fcf5942a22554c8f3
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon May 25 23:28:17 2009 +0300
+
+    Cleaned up the FAQ about WXGA modes.
+
+commit 60f37744b09fa1cdf4a3bcfa1a039ac8c984b942
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon May 25 17:51:34 2009 +0300
+
+    Added a FAQ about disabling Panel in BIOS to enable WXGA modes.
+
+commit 639e9c88e588cae55698cfb4063f625c38224afb
+Author: Otavio Salvador <otavio@ossystems.com.br>
+Date:   Sat May 23 05:52:13 2009 +0800
+
+    Fix GPIO BAR detection with libpciaccess
+    
+    This patch fixes an issue with the GPIO BAR detection.  Basically,
+    with libpciaccess we're finding the ISA device and checking its BARs,
+    but we're not bothering to fill in the BAR information via
+    pci_device_probe.  This results in a 0'd out bar and:
+    
+    (EE) GEODE(0): Could not find the GPIO I/O base
+    
+    Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+    Signed-off-by: Andres Salomon <dilinger@collabora.co.uk>
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 54303b269f1efe04a80177dbb62d7b94882ff45d
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue May 12 00:05:07 2009 -0400
+
+    Release 2.11.2.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit b172617909976c4a7d8f05191e23e4647c1a1c96
+Author: Kyle McMartin <kyle@redhat.com>
+Date:   Mon May 11 23:58:57 2009 -0400
+
+    Crasher fix: Use ExaDriverAlloc() to calloc the EXA struct.
+    
+    Patch from Kyle McMartin.  A recent exa/exa.c commit from Dave Airlie
+    (02ae85c4..) added a new member to the EXA struct, and corresponding
+    code to call it if it's non-NULL.  We were using calloc with sizeof()
+    that struct at driver-compile-time; as a result, after the ABI change
+    the new member contained garbage, passed the EXA test for NULL, was
+    called, and segfaulted at startup.
+    
+    RH bug https://bugzilla.redhat.com/show_bug.cgi?id=500086
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 23e62499a5ecfd9c70db00c181a4801d4898fe83
+Author: Chris Ball <cjb@laptop.org>
+Date:   Fri Feb 27 10:53:11 2009 -0500
+
+    Revert EXA 3 build fix.
+    
+    The EXA developers have backed out the ABI bump to version 3.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 7ce365dafcbeb549fa083b8115475d5b7b01a704
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 22:26:39 2009 -0500
+
+    Build fix: Include config.h earlier
+    
+    geode.h includes exa.h, without anything having included config.h
+    (which sets the EXA major version) beforehand; add config.h to geode.h.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 2c293240f8003b3a52121161d0b0464100fd990d
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 12:51:45 2009 -0500
+
+    configure: use AC_DEFINE instead of shell substitution
+    
+    (This is just cosmetic.)
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit c5c7f60b577cc86a670bedea2bd70bd05d5cd128
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 11:46:20 2009 -0500
+
+    Build fix: set EXA_DRIVER_KNOWN_MAJOR=3.
+    
+    We don't use {Prepare,Finish}Access, and:
+    
+    /home/cjb/xorg-build/include/xorg/exa.h:45:2: error: #error Make sure
+    this EXA driver either does not have Prepare/FinishAccess hooks or that
+    they can handle EXA_PREPARE_AUX*, and #define EXA_DRIVER_KNOWN_MAJOR 3
+    before including exa.h
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit da07a540db2078e00e48897b52a5a1f6d283cfeb
+Author: Chris Ball <cjb@laptop.org>
+Date:   Mon Feb 16 13:37:03 2009 -0500
+
+    Release 2.11.1.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 4176e9ed24e7b79cefe3e7f4f5d73c7353781f1b
+Author: Chris Ball <cjb@laptop.org>
+Date:   Mon Feb 16 13:41:48 2009 -0500
+
+    Makefile.am: use "git log" instead of "git-log"
+    
+    "git-log" doesn't work on my Fedora machine, but "git log" should work
+    everywhere.  Some distributions choose not to ship all the git aliases.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 990ff710c6220cc3d1ba6b9e8fb972bd168b4472
+Author: Chris Ball <cjb@laptop.org>
+Date:   Sun Feb 15 15:30:09 2009 -0500
+
+    Change OLPC detection heuristic to one that works on upstream kernels
+    
+    We've been checking whether we have a DCON/are on an OLPC by looking for
+    files from the "olpc_dcon" kernel module.  This module isn't upstream yet,
+    so this only works for the OLPC custom kernel.  We might as well check for
+    an OLPC kernel module that *is* upstream, so that we can run on unmodified
+    distributions.  This patch moves us to checking for "olpc-ac" instead.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit e33dc807bf4504ba242cb19ce8024cdb32e10f4d
+Author: Chris Ball <cjb@laptop.org>
+Date:   Sun Feb 15 00:17:45 2009 -0500
+
+    Fix pMsk=NULL segfault at startup on OLPC
+    
+    Commit 7c278551c79d7a5898c627341f58fad59b7ae20d uses pMsk without testing
+    for non-NULL, and this causes an immediate segfault when running Sugar.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 7c278551c79d7a5898c627341f58fad59b7ae20d
+Author: Mart Raudsepp <mart.raudsepp@artecdesign.ee>
+Date:   Fri Jan 9 19:32:50 2009 +0200
+
+    Fallback in case of mask transforms as well.
+    
+    Fixes attachment #21519 test case on bug #15700, but not the initial report.
+    Detective work by Michel Dänzer.
+    
+    Signed-off-by: Mart Raudsepp <mart.raudsepp@artecdesign.ee>
+
+commit 0e65d77a636848b6bc24518d8e45aed506122b49
+Author: Jordan Crouse <jordan@cosmicpenguin.net>
+Date:   Tue Dec 9 20:54:20 2008 -0700
+
+    2.11.0 release
+
+commit 2a36083f3cb93bd4ab456024d6b6776725085904
+Author: Andres Salomon <dilinger@queued.net>
+Date:   Thu Dec 4 22:41:59 2008 -0500
+
+    xf86-video-geode: after reloading cursors, hide the cursor
+    
+    Whenever we reload cursors, the geode driver needs to call hide_cursor()
+    to ensure that the cursor is hidden until we finally unhide the cursor.
+    Without this, we see ghost cursors during rotation or VT switches.
+    
+    Signed-off-by: Andres Salomon <dilinger@debian.org>
+
+commit fb2c1af124a56f34c4212bba16e1926889104cb4
+Author: Andres Salomon <dilinger@queued.net>
+Date:   Thu Dec 4 21:33:22 2008 -0500
+
+    xf86-video-geode: fix up cursor size (again)
+    
+    The geode hardware (and cimarron) expects cursor memory size to be 48x64,
+    and cimarron will zero out the excess when a smaller cursor is used.  It
+    would be nice to be able to use the full cursor size, but xorg's interleaving
+    stuff requires a cursor width that's a multiple of 32.  Thus, we're stuck
+    back at 32x32 for cursor size, but we allocate enough memory for a 48x64
+    cursor.
+    
+    This fixes misc interleaving corruption that we see with 2bpp cursors (when
+    converting to ARGB).
+    
+    Signed-off-by: Andres Salomon <dilinger@debian.org>
+
+commit 356dec75b96e7b235632bb8c5f7cc70002a590b1
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Dec 4 02:24:42 2008 -0200
+
+    Ensure symbol GXRandRSetConfig is of public visibility.
+    
+      Symbol is referenced via LoaderSymbol(), and this patch doesn't
+    should provide the same behavior as when compiling with public symbols
+    by default.
+
+commit fe7ede0c073bd8dc22f61388b8a5d83f17696113
+Author: Andres Salomon <dilinger@queued.net>
+Date:   Wed Nov 26 17:56:14 2008 -0500
+
+    xf86-video-geode: change cursor size to match cimarron
+    
+    When we use ARGB cursors and rotate the screen, we get double cursors
+    and stale cursor data left over.  This is because cimarron expects a
+    cursor that is smaller than or equal to 48x64, but hardcodes a memory
+    shift of 192 bytes (4*48).  This means that if we have a 32x64 cursor,
+    cimarron screws it up.  Change the cursor size to 48x64.
+    
+    Signed-off-by: Andres Salomon <dilinger@debian.org>
+
+commit 8080f7a01cf62a13c5a32013668b2796c23d97a4
+Author: Andres Salomon <dilinger@queued.net>
+Date:   Wed Nov 26 01:39:28 2008 -0500
+
+    xf86-video-geode: DCON: set the default (physical) screen size if we detect a DCON
+    
+    We can be assured that a DCON device has an OLPC panel that's 152x114 mm.
+    This adds fields to GeodeRec to allow other panels to potentially
+    override physical width/height fields, and also allows xorg.conf to
+    override the values.
+    
+    Signed-off-by: Andres Salomon <dilinger@debian.org>
+
+commit f57f2bd7161d4a7c2ededfc43a7709fb06213b99
+Author: Jordan Crouse <jordan@cosmicpenguin.net>
+Date:   Tue Nov 25 11:36:03 2008 -0700
+
+    LX:  Set default scaling coefficients
+    
+    Systems without a traditional BIOS may not have the default
+    scaling coefficients set up - make sure that we force them on
+    when the mode gets set.
+
+commit d7f73aca763eb2fa918c3e5a27e264aa14f653d1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Nov 19 12:06:06 2008 -0800
+
+    include <errno.h> instead of <sys/errno.h>
+    
+    Solaris defines errno itself in <errno.h>
+
+commit fa38cc225ef39aeb6a2ab1c90a233b285d4c77f8
+Author: Jordan Crouse <jordan@cosmicpenguin.net>
+Date:   Tue Nov 18 20:07:53 2008 -0700
+
+    LX:  Put back variable needed when PCIACCCESS is defined
+
+commit c4142d3a05e4b889f7933dcfa8bc9cd744ccfdd6
+Author: Jordan Crouse <jordan@cosmicpenguin.net>
+Date:   Tue Nov 18 15:41:58 2008 -0700
+
+    LX:  Make the version in configure.ac reflect the upcoming release
+
+commit cf0655edbcbd3910c12c33d8c786cc72c0242786
+Author: Jordan Crouse <jordan@cosmicpenguin.net>
+Date:   Tue Nov 18 15:41:58 2008 -0700
+
+    LX: Change the way EXA memory is allocated
+    
+    Change how EXA memory is allocated to better allow for
+    EXA + video + rotation to co-exist on the system.  Change
+    the video to only allocate memory when it needs it.
+    Also, automatically disable compression when there is less then
+    16Mb of memory.
+
+commit ee23fd75f5eb4447ca238694cc03fcdc219ee245
+Author: Jordan Crouse <jordan@cosmicpenguin.net>
+Date:   Tue Nov 18 15:41:58 2008 -0700
+
+    LX:  Fix the memory allocated by the video so it fails
+    when there isn't enough memory.
+
+commit aac2e161818494b88677f11115bca890a552c709
+Author: Jordan Crouse <jordan@cosmicpenguin.net>
+Date:   Tue Nov 18 15:41:58 2008 -0700
+
+    LX:  Fix a bug in the memory allocator
+
+commit fc772694ec04f729b5a1cdced7f33dc406c1d67f
+Author: Andres Salomon <dilinger@queued.net>
+Date:   Tue Nov 18 14:14:17 2008 -0500
+
+    DCON: Mark 1200x900 mode as preferred.
+
+commit 1e3fcaaa67dde12a658206f3b0fd07b627a3b61b
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Tue Oct 7 13:12:19 2008 -0600
+
+    geode: Move the hardware cursor support to full ARGB mode
+
+commit f66c9d1928ec9bcde57009c7263f6c8575ad0d0c
+Merge: 85d2103 62d2b0e
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Wed Sep 10 17:33:30 2008 -0600
+
+    Merge branch 'randr12-branch'
+    
+    Conflicts:
+    
+    	src/geode_ddc.c
+    	src/gx_randr.c
+    	src/lx_randr.c
+    	src/lx_rotate.c
+
+commit 85d2103a90e6ab422246b66d252dbee19c96a0d7
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Mon Sep 8 15:20:51 2008 -0600
+
+    XINPUT_ABI bumped on us and broke the previous evil workaround
+    for the miPointerPosition issue.
+
+commit 62d2b0ede08042147ca528be9ab1e392886a10ff
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Thu Sep 4 17:43:32 2008 -0600
+
+    LX:  RandR 1.2 updates for Lenny
+    
+    Fix some build issues for Lenny and make the branch work
+    on an XO running Lenny.
+
+commit 526da8a3b279dbfc35505ebb1ddc4b8db8dc46d3
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Thu Aug 28 16:59:41 2008 -0600
+
+    LX:  Fix a possible segfault in EXA
+    
+    Avoid passing a null pointer to PictureTransformPoint
+
+commit c6339a360b611514155e5101dc2c5bc6472d8865
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Mon Aug 25 11:34:36 2008 -0600
+
+    [LX] - RandR 1.2 updates
+    
+    Remove a flag that was making EXA pixmaps break horribly.
+    Also, Make the new code compile for Hardy and warning cleanups.
+
+commit 38e868271bd24be7a884c8c56772b25cd6fa6f1d
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Mon Aug 18 14:19:34 2008 -0600
+
+    lx:  Add rotation for Randr 1.2 + cleanups
+    
+    Enable rotation through RandR 1.2 and add the accelerated rotation blit
+    the EXA composite function.  Also, fix a handful of critical bugs and
+    remove some more dead code.
+
+commit f8a09702f0905d45a03cc71ae67767b7effc1500
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 14:25:00 2008 -0400
+
+    s/XF86_VERSION_CURRENT/XORG_VERSION_CURRENT/
+
+commit b06f75895b6363816bf88402a233800631718f4d
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Fri Aug 15 14:13:12 2008 +0300
+
+    Bump to version 2.10.1 and release.
+
+commit 6908dda7ac66cbe13737db6c9c3e5ebe16156099
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Aug 13 09:51:23 2008 +0300
+
+    Added info about the current roadmap.
+
+commit 89c6a947f31af15a8f65706de328300ea2e75f1a
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Aug 13 09:32:21 2008 +0300
+
+    All your typos are belong to us!!!
+
+commit 4e95ee76d47982450ec112988adb2079658bb682
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Wed Aug 13 09:25:49 2008 +0300
+
+    Updated the README with the URL of the Geode X.Org wiki and
+    with info on the current Build Dependencies.
+
+commit 316e89aa58f4d7f3cb4513a6decb035e99abc7d6
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Thu Aug 7 14:29:50 2008 -0600
+
+    Geode: Add DDC support for the CS5535
+
+commit f89f6d8004a0ae0ae7826f72a1058d26e9e0217a
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Thu Jul 24 10:47:57 2008 -0600
+
+    lx: Fix rotate issue
+    
+    EXA pixmaps are now protected against outside intrusion, so use
+    a different way to find the base of the shadow buffer for rotation.
+
+commit d681a844e448712a9a419d2a4dca81930d39a80a
+Author: Jordan Crouse <jordan.crouse@amd.com>
+Date:   Thu Aug 7 11:21:48 2008 -0600
+
+    [LX] - Add RandR 1.2 support
+    
+    A wholesale update to Randr 1.2 for LX accompanied by massive
+    cleanup.
+
 commit e98927f2c60acd9262cfb6fca2491fe0decc7aa5
 Author: Jordan Crouse <jordan.crouse@amd.com>
 Date:   Fri Jun 13 15:59:44 2008 -0600
@@ -588,7 +2004,7 @@ Date:   Wed May 16 13:05:46 2007 -0400
     Remove 'man' directory references from configure.ac.
 
 commit 217eeed3c1659cc9e0f13ba6932d1342c0255df4
-Merge: 6d1942f... 022a106...
+Merge: 6d1942f 022a106
 Author: Jordan Crouse <jordan.crouse@amd.com>
 Date:   Thu May 10 10:39:08 2007 -0600
 

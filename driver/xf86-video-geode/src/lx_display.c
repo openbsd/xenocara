@@ -266,6 +266,7 @@ lx_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     ScrnInfoPtr pScrni = crtc->scrn;
     GeodeRec *pGeode = GEODEPTR(pScrni);
     DF_VIDEO_SOURCE_PARAMS vs_odd, vs_even;
+    unsigned int rpitch;
 
     df_get_video_source_configuration(&vs_odd, &vs_even);
 
@@ -279,6 +280,14 @@ lx_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     /* The output gets turned in in the output code as
      * per convention */
 
+    /* For rotation, any write to the frame buffer region marks
+     * the retire frame as dirty.
+     */
+    if (crtc->rotatedData != NULL) {
+	rpitch = pScrni->displayWidth * (pScrni->bitsPerPixel / 8);
+	vg_set_display_pitch(rpitch);
+    }
+    else
     vg_set_display_pitch(pGeode->Pitch);
     gp_set_bpp(pScrni->bitsPerPixel);
 
@@ -363,7 +372,46 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
     WRITE_VID32(DF_DISPLAY_CONFIG, dcfg);
 }
 
-    /* Allocates shadow memory, and allocating a new space for Rotatation.
+    /* The Xserver has a scratch pixmap allocation routine that will
+     * try to use the existing scratch pixmap if possible. When the driver
+     * or any other user stop using it, it need to clear out any pixmap
+     * state (private data etc) otherwise the next user may get stale data.
+     */
+
+    /* Use our own wrapper to allocate a pixmap for wrapping a buffer object
+     * It removes using scratch pixmaps for rotate.
+     */
+static PixmapPtr
+lx_create_bo_pixmap(ScreenPtr pScreen,
+		int width, int height,
+		int depth, int bpp,
+		int pitch, pointer pPixData)
+{
+    PixmapPtr pixmap;
+
+    pixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, depth, 0);
+    if (!pixmap)
+	return NULL;
+    if (!(*pScreen->ModifyPixmapHeader)(pixmap, width, height,
+					depth, bpp, pitch, pPixData)) {
+    /* ModifyPixmapHeader failed, so we can't use it as scratch pixmap
+     */
+	(*pScreen->DestroyPixmap)(pixmap);
+	return NULL;
+    }
+
+    return pixmap;
+}
+
+static void
+lx_destory_bo_pixmap(PixmapPtr pixmap)
+{
+    ScreenPtr pScreen = pixmap->drawable.pScreen;
+
+    (*pScreen->DestroyPixmap)(pixmap);
+}
+
+    /* Allocates shadow memory, and allocating a new space for Rotation.
      * The size is measured in bytes, and the offset from the beginning
      * of card space is returned.
      */
@@ -422,14 +470,15 @@ static PixmapPtr
 lx_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 {
     ScrnInfoPtr pScrni = crtc->scrn;
-    GeodeRec *pGeode = GEODEPTR(pScrni);
     PixmapPtr rpixmap;
+    unsigned int rpitch;
 
+    rpitch = pScrni->displayWidth * (pScrni->bitsPerPixel / 8);
     if (!data)
 	data = lx_crtc_shadow_allocate(crtc, width, height);
 
-    rpixmap = GetScratchPixmapHeader(pScrni->pScreen,
-	width, height, pScrni->depth, pScrni->bitsPerPixel, pGeode->Pitch,
+    rpixmap = lx_create_bo_pixmap(pScrni->pScreen,
+	width, height, pScrni->depth, pScrni->bitsPerPixel, rpitch,
 	data);
 
     if (rpixmap == NULL) {
@@ -447,7 +496,7 @@ lx_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rpixmap, void *data)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (rpixmap)
-	FreeScratchPixmapHeader(rpixmap);
+	lx_destory_bo_pixmap(rpixmap);
 
     /* Free shadow memory */
     if (data) {
