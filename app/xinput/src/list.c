@@ -241,10 +241,13 @@ list_xi2(Display *display,
         dev = &info[i];
         if (dev->use == XIMasterPointer || dev->use == XIMasterKeyboard)
         {
-            if (dev->use == XIMasterPointer)
-                printf("⎡ ");
-            else
-                printf("⎣ ");
+	    if (have_utf8())
+                if (dev->use == XIMasterPointer)
+                    printf("⎡ ");
+                else
+                    printf("⎣ ");
+	    else
+		printf("+ ");
 
             print_info_xi2(display, dev, shortformat);
             for (j = 0; j < ndevices; j++)
@@ -254,7 +257,10 @@ list_xi2(Display *display,
                 if ((sd->use == XISlavePointer || sd->use == XISlaveKeyboard) &&
                      (sd->attachment == dev->deviceid))
                 {
-                    printf("%s   ↳ ", dev->use == XIMasterPointer ? "⎜" : " ");
+		    if (have_utf8())
+                        printf("%s   ↳ ", dev->use == XIMasterPointer ? "⎜" : " ");
+                    else
+		        printf("%s   + ", dev->use == XIMasterPointer ? "|" : " ");
                     print_info_xi2(display, sd, shortformat);
                 }
             }
@@ -322,6 +328,27 @@ list(Display	*display,
 #endif
         return list_xi1(display, !longformat);
     }
+}
+
+Bool
+have_utf8(void){
+    char *t;
+
+    /*
+     * There is no standard way to detect UTF-8 capabilities of a
+     * given terminal, but this gets pretty close as a good heuristic.
+     */
+    if ((t = getenv("LC_ALL")) == NULL) {
+	if ((t = getenv("LC_CTYPE")) == NULL) {
+	    t = getenv("LANG");
+	}
+    }
+
+    if (t != NULL && (strcasestr(t, "UTF-8") != NULL ||
+      strcasestr(t, "UTF8") != NULL))
+	return True;
+
+    return False;
 }
 
 /* end of list.c */
