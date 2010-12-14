@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.19 2009/12/15 04:10:42 okan Exp $
+ * $Id: mousefunc.c,v 1.20 2010/12/14 11:08:47 martynas Exp $
  */
 
 #include <sys/param.h>
@@ -157,8 +157,8 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 			client_draw_border(cc);
 			break;
 		case MotionNotify:
-			cc->geom.x = ev.xmotion.x_root - px;
-			cc->geom.y = ev.xmotion.y_root - py;
+			cc->geom.x = ev.xmotion.x_root - px - cc->bwidth;
+			cc->geom.y = ev.xmotion.y_root - py - cc->bwidth;
 
 			/* don't sync more than 60 times / second */
 			if ((ev.xmotion.time - time) > (1000 / 60)) {
