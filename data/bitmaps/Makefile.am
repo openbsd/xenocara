@@ -1,10 +1,7 @@
-AUTOMAKE_OPTIONS = foreign
-
-pkgconfigdir = $(libdir)/pkgconfig
+pkgconfigdir = $(datadir)/pkgconfig
 pkgconfig_DATA = xbitmaps.pc
 
-EXTRA_DIST = xbitmaps.pc.in 
-CLEANFILES = xbitmaps.pc
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 bitmapdir = $(includedir)/X11/bitmaps
 
@@ -81,12 +78,13 @@ dist_bitmap_DATA =	\
 	xlogo64		\
 	xsnow
 
-EXTRA_DIST += ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
