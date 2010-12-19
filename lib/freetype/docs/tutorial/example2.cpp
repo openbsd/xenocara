@@ -3,7 +3,7 @@
 // This file demonstrates how to render a coloured glyph with a differently
 // coloured outline.
 //
-// Written Feb. 2009 by Erik Möller,
+// Written Feb. 2009 by Erik MÃ¶ller,
 // with slight modifications by Werner Lemberg
 //
 // Public domain.
@@ -397,4 +397,6 @@ main(int argc,
   return 1;
 }
 
-/* EOF */
+// Local Variables: 
+// coding: utf-8
+// End: 
