@@ -1,3 +1,849 @@
+commit 4b8d43033bdc5bfb95240a2ef2fe89b0f2fd669a
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Dec 13 11:45:02 2010 -0800
+
+    Version bumped to 1.9.3
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 07b114eb9c6b47b22b4edf17684bdcf5aa89f42d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Dec 3 21:56:54 2010 -0800
+
+    Version bumped to 1.9.2.902 (1.9.3 RC2)
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 47d474ee8fb29758ec61c128d000f760dd040be4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Dec 3 17:27:44 2010 -0800
+
+    XQuartz: RandR: Fix mode changing for multi-monitor configurations.
+    
+    This just fixes the regression whereby we couldn't switch between the legacy
+    fullscreen mode and rootless on multi-monitor configurations.  This was
+    happening because ref wasn't being set in these cases (since we don't ever
+    actually change CG modes), so we failed a CFEqual.  Setting the references
+    fixes this regression and places us one step closer to more mode RandR
+    mode switching in multi-monitor configurations.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 714b68d9e5bf624a6703f168e0f7dc980e88e8c0)
+
+commit 4c3aaef3ffa4a22c951331ef36c45b95f719a907
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Dec 3 16:46:11 2010 -0800
+
+    XQuartz: Cleanup some compiler warnings
+    
+    Mark __crashreporter_info__ as __attribute__((__used__))
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 14f00449eb81771c01fffcdaf3dd697cdf4e41de)
+
+commit 438dd53e4b39a465e98c270c7c9baf71e701a821
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 26 15:31:22 2010 -0500
+
+    XQuartz: Disable the Mac OS X screensaver when in full screen mode
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit ca431371a23a2b9ad36c1d64e11ea41d5e4e5f04)
+
+commit 18f21d7c8aeaf0fbedf8a2208f211a63dc01f2c4
+Author: Nicolas Peninguy <nico@lostgeeks.org>
+Date:   Wed Nov 24 00:11:11 2010 +0100
+
+    Fix Xdmx and Xephyr build when DTrace support is enabled
+    
+    This fixes the following build errors when DTrace is enabled
+    (--with-dtrace):
+    
+      CCLD   Xdmx
+    /usr/bin/ld: ../../os/os.O: undefined reference to symbol 'dladdr@@GLIBC_2.2.5'
+    /usr/bin/ld: note: 'dladdr@@GLIBC_2.2.5' is defined in DSO /lib64/libdl.so.2 so try adding it to the linker command line
+    
+      CCLD   Xephyr
+    ../../../os/os.O: In function `TimerForce':
+    /home/nico/work/xserver/os/WaitFor.c:481: multiple definition of `TimerForce'
+    ../../../os/os.O:/home/nico/work/xserver/os/WaitFor.c:481: first defined here
+    
+    Signed-off-by: Nicolas Peninguy <nico@lostgeeks.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 311cad33155c64ed996418808727fc417168592e)
+
+commit 2fa0029b54a6a27ec4cb3fa1239a8f7fd582b562
+Author: Adam Tkac <atkac@redhat.com>
+Date:   Wed Aug 25 10:38:40 2010 +0200
+
+    Return Success from generate_modkeymap() when max_keys_per_mod is zero
+    
+    max_keys_per_mod equal to zero is a valid situation so generate_modkeymap
+    should not return BadAlloc in this case.
+    
+    Signed-off-by: Adam Tkac <atkac@redhat.com>
+    Reviewed-by: Patrick E. Kane <pekane52 at gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 05e616767e5b7e60b92d31c4042ded5892dce6d4)
+
+commit 806790bd9194b60419281442b1ae4fc5fff802aa
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Tue Nov 2 20:10:32 2010 +0100
+
+    render: Fix byteswapping of gradient stops
+    
+    The function swapStops repeatedly swaps the color components as
+    CARD16, but incorrectly steps over them as if they were CARD32.
+    
+    This causes half of the stops not to be swapped at all and some
+    unrelated data be swapped instead.
+    
+    Signed-off-by: Andrea Canciani <ranma42@gmail.com>
+    Reviewed-by: Soren Sandmann <sandmann@daimi.au.dk>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit dab064fa5e0b1f5c67222562ad5367005832cba1)
+
+commit d0157229e89c6d8ffc491ca600cd933d8951fa76
+Author: Ferry Huberts <ferry.huberts@pelagic.nl>
+Date:   Tue Nov 30 19:06:55 2010 +0100
+
+    dix: do not use bit-wise operators on the boolean result of BitIsOn
+    
+    Performing bit-wise operations on a boolean amounts to mixing types,
+    is confusing and basically incorrect; one should only perform
+    logical operations on booleans.
+    
+    Performing such operations relies on the implementation detail
+    that a boolean is in fact an integer and that its value FALSE
+    is implemented as zero.
+    
+    Signed-off-by: Ferry Huberts <ferry.huberts@pelagic.nl>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit b16964910d29c0bd039e8bb48bcf1199d709fe3e)
+
+commit fb84f8b5c78cbbcbf32df56d2573e8b93c4eaa49
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 26 10:00:49 2010 +1000
+
+    dix: remove now unnecessary !! before BitIsOn()
+    
+    The macro has been changed to do this already, no need for double
+    not-not-ing.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 23e3d1f23318ce69623f91908f888a09f8b74ac2)
+
+commit 1f1c1ae85600c058f1971e981da9a31eadb71dec
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Dec 2 15:50:28 2010 -0800
+
+    include: let BitIsOn() return a boolean value.
+    
+    Simply returning the mask bit breaks checks like
+        BitIsOn(mask, 0) != BitIsOn(mask, 1);
+    as used in 048e93593e3f7a99a7d2a219e1ce2bdc9d407807.
+    
+    The naming of this macro suggests that it should return boolean values
+    anyway. This patch also adds a few simple tests for these macros to make
+    sure they don't accidentally break in the future.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Pat Kane <pekane52@gmail.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 42dc91e32a02b6b21ff5c45f465f3349e5822615)
+
+commit 444e180ad12baf9d84ff96f68ec9c16b39fac322
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Nov 22 15:14:02 2010 +1000
+
+    xfree86: add missing linebreak in error message.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Magnus Kessler <Magnus.Kessler@gmx.net>
+    (cherry picked from commit b31df0439fe336a43a2355e2f1fb223d86045a05)
+
+commit 7eaf84d2d1d773d908a2e3d213752622973a93d3
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Nov 15 20:43:18 2010 -0800
+
+    xfree86: Fix rotation of 2-color non-interleaved cursor images
+    
+    When RandR 1.2's transformation code is enabled, it rotates the cursor
+    image so that it appears upright on a rotated screen.  This code
+    completely mangles 2-color cursors on hardware where the the mask and
+    source images are not interleaved due to two problems:
+    
+    1. stride is calculated as (width / 4) rather than (width / 8), so the
+       expression (y * stride) skips two lines instead of one for every
+       time y is incremented.
+    2. cursor_bitpos ignores the 'mask' parameter if the hardware doesn't
+       specify any of the HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_* flags.
+    
+    To fix this, refactor the code to pass the whole xf86CursorInfoPtr
+    through to cursor_bitpos and compute the correct stride there based on
+    the flags.  If none of the SOURCE_MASK_INTERLEAVE flags are set, use
+    the total cursor size to move the 'image' variable into the mask part
+    of the image before computing the desired byte pointer.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Robert Morell <rmorell@nvidia.com>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+    Tested-by: Cyril Brulebois <kibi@debian.org>
+    (cherry picked from commit ffcbfa0063bdc7c9ad5ac724285c7b6e67044c18)
+
+commit e720e0874ead2ffc6b8ece8fd7e24f8b6017f237
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Wed Dec 1 14:12:55 2010 +0100
+
+    Fix screen number checks.
+    
+    screenInfo.numScreens is not a valid screen number, they go from 0 to
+    numScreens - 1.
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 279ef1ffd787dba2f0d5056849b9cb15d36aa3eb)
+
+commit e2960ce14e18828d0797cca92af3b1886c6cd0e1
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Nov 30 17:23:10 2010 +0100
+
+    DGA: fix screen number check
+    
+    screenInfo.numScreens is not a valid screen number, they go from 0 to
+    numScreens - 1.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 8684543021b9b1aa165b1bc69bc58685cb5942c1)
+
+commit 3b7becd98ad96fa798b25fe1a478586944fc2610
+Author: Bill Nottingham <notting@redhat.com>
+Date:   Mon Nov 15 11:25:14 2010 +1000
+
+    xfree86: store the screen's gamma information on init.
+    
+    This fixes a gamma issue on vt switch observed with KDM. VT switching away
+    and back would result in a black screen. Avoid this by storing the current
+    gamma information on init.
+    
+    https://bugzilla.redhat.com/show_bug.cgi?id=533217
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 566d09a5cd6452ee2e05e23d2205e7c3aa31f0da)
+
+commit 602ad9868421f6abb9cc13ed43699e43e2f3e02c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Nov 15 11:25:12 2010 +1000
+
+    xfree86: apply gamma settings on EnterVT.
+    
+    When entering the VT, re-apply the saved gamma settings for each screen.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit c050aa2f5fa6a7ff8ce4f91def14ca44f799f067)
+
+commit 2b7588a78f0268928218c530af329509f308b30d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jun 9 17:10:57 2010 +1000
+
+    Xi: move property reset from extension shutdown to init.
+    
+    If any part of the stack calls XIGetKnownProperty during device shutdown
+    the property is re-initialized before the server generation resets, leaving
+    the value invalid again.
+    
+    Move the reset to the extension init which happens before input devices are
+    initialized before the first property is requested.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit 5cd11d2356d153840f1b429bdb8284367f8dc468)
+
+commit 65f2ab20b22914a142497057cc8919a357829a95
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Nov 22 20:43:14 2010 -0800
+
+    XQuartz: Localization Updates
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 97b9bb1e2cebbb769ef347455d9c7979d19de99f)
+
+commit 3603a645643713227c7cafe536ef0d0a0c3df87b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Nov 22 20:41:39 2010 -0800
+
+    XQuartz: Remove existing localization files on install to avoid conflicts
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit f9fbafa1a07f951e89f208bf4928a0bf37b67cfe)
+
+commit d49f0c1737441a9fda6d3dcabfe492c90347cfee
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Nov 22 20:25:33 2010 -0800
+
+    XQuartz dri: Don't check CoreGraphics version
+    
+    The version check is hackish, and I highly doubt anyone using this code is on
+    a version of OS X that predates this support (10.2 has support for it).
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 6eed13ad5998ba80296bba2bb3f89928ee51194a)
+
+commit 2da9b72835e30af1ee4bb634ba4a33e2dac6bcbf
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 27 17:34:36 2010 -0400
+
+    edid: Fix the HDTV sync pulse adjustment
+    
+    Simple typo, should have been adjusting the horizontal timings
+    consistently since we're not trying to mangle vertical at all.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Patrick E. Kane <pekane52@gmail.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit b2f9ce201cc2a14d5d6ad055b46c9317b040ec2e)
+
+commit a4452133ffb943536dcaeee055e8f14cc4c32d85
+Author: Luc Verhaegen <libv@skynet.be>
+Date:   Sun Oct 24 23:57:06 2010 +0200
+
+    x86emu: fix jump_near_IMM to handle DATA: flag correctly.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=24348
+    
+    Before (data flag ignored -> broken):
+    66                  DATA:
+    e944f1              JMP       1ff6
+    
+    After (fixed):
+    66                  DATA:
+    e944f1ffff          JMP       00001ff8
+    
+    This subtle difference in the length of decoded instruction meant
+    that the VBE call jumped to the routine setting AX=0x14F (VBE Failed)
+    instead of the routine that set AX=0x4F (VBE success).
+    
+    The ability to run the same code in vm86 significantly aided the
+    debugging of this issue. Those X.org developers who would like to drop
+    vm86 better take special care towards _all_ vesa bugs, as those will
+    expose further issues.
+    
+    Patch applies easily to even xserver 1.4.2.
+    
+    Signed-off-by: Luc Verhaegen <libv@skynet.be>
+    Tested-by: Luc Verhaegen <libv@skynet.be>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit cc2c73ddcb4370a7c3ad439cda4da825156c26c9)
+
+commit 06ca34fe012c0b6a55851770c47680abe548d229
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Oct 24 15:18:28 2010 +0200
+
+    Do not trap access to timer and keyboard
+    
+    Disable timer/keyboard trapping on GNU/Hurd for now
+    
+    Trapping disabled for now, as some VBIOSes (mga-g450 notably) use these
+    ports, and the int10 wrapper is not emulating them.
+    
+    It's effectively what happens in the Linux variant too, as iopl() is used there,
+    making the ioperm() meaningless.
+    
+    Signed-off-by: Olaf Buddenhagen <antrik@users.sf.net>
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit a6c64d96456d794b2f3ce40915922a3fba636b95)
+
+commit 32004e8d6e3fcbb98ccacd89662099d190c71f51
+Author: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+Date:   Mon Oct 25 17:13:57 2010 +0300
+
+    DRI2: Avoid call to NULL pointer
+    
+    DDX driver may implement schedule swap without GetMSC. In that case we
+    can't call GetMSC in DRI2SwapBuffers.
+    
+    Signed-off-by: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+    Reviewed-by: Mario Kleiner <mario.kleiner@tuebingen.mpg.de>
+    CC: Keith Packard <keithp@keithp.com>
+    CC: Kristian Høgsberg <krh@bitplanet.net>
+    Reviewed-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 383dfe23f1641435c0713f8a56424814a156af8e)
+
+commit 9770500983308c85b84279be3a5ff36e120e7caa
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Mon Oct 18 15:59:35 2010 -0400
+
+    modes: improve aspect ratio match for classic drivers
+    
+    After we infer the aspect ratio for the screen, we pick the largest
+    mode matching that aspect ratio from the best mode pool available.
+    We then clamp virtual size to that mode, and run the resulting mode
+    list through the driver's ValidMode hook.  In doing so we might filter
+    away our initial guess.  If this happens we shrink the default mode
+    to the next largest mode from _any_ mode pool.  This is usually wrong,
+    and we should instead pick the next aspect-matched mode from the best
+    available mode pool (as always, user then driver then default).
+    
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit 7bb653bedceb6180a0361ead1c612839e776ce98)
+
+commit 201273a2b97754d1f9fd672660dcc9c05af29621
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Nov 15 10:57:43 2010 -0800
+
+    XQuartz: Don't use bashism in uninstall-hook
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3effb61e207478d92ebbcf5dfc75535cdd2dda12
+Author: Linus Arver <linusarver@gmail.com>
+Date:   Sun Oct 17 12:26:01 2010 -0700
+
+    Xext: panoramiXprocs: fix typo
+    
+    This fixes a typo introduced in commit
+    80b5d3a3264d2c5167e5ac85a3b04af0f89cece1. The pointer pDst was changed
+    unintentionally to pWin from a copy/paste error. This resulted in all
+    QT-based apps and some tcl/tk ones (like fontforge) to crash X 1.9 on
+    starting up, when Xinerama was enabled.
+    
+    Bug report: https://bbs.archlinux.org/viewtopic.php?id=106125
+    
+    Signed-off-by: Elie Bleton <drozofil@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Tested-by: Linus Arver <linusarver@gmail.com>
+    (cherry picked from commit 78f94f19aab66a1e5331df0ce29f36e310b4195d)
+
+commit acd78f7fdcd348ef4d368003b537a26ab6a5cec6
+Author: Chase Douglas <chase.douglas@ubuntu.com>
+Date:   Thu Oct 21 22:41:09 2010 -0400
+
+    test: input - set valuators mask for event to core conversion
+    
+    Commit de8be07cc0a8163b6ef04455706fd5ca2cebe587 adds a requirement to
+    event to core conversion that at least one of the X or Y valuators are
+    set in the valuator mask. This commit fixes the event conversion test to
+    be compliant.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 290af0418f8c94355e42ad81aa7779b90e173fc9)
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 814413faefbbd28d7a66f6075b06221f87636b90
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Oct 18 15:42:54 2010 -0400
+
+    ddc: Don't probe for DDC/CI or EEPROM
+    
+    For whatever reason, some (broken) monitors will crash if you do this.
+    We're not actually using this information for anything, so let's just
+    not do it.
+    
+    Originally reported as http://bugzilla.redhat.com/620333
+    
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit d2064fbb687839c297a851a5d85f32dfbbe4a0d5)
+
+commit 723c82347c141d298ff82a9605d7455e84c050f8
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Nov 13 15:33:32 2010 -0800
+
+    Version bumped to 1.9.2.901 (1.9.3 RC1)
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 42a3747f0f694ff918ab719594eefd0a6bbfab0c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Nov 13 16:04:10 2010 -0800
+
+    XQuartz: Fix make distcheck
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d75a33d47a89bf7668e05fadbc8a154ac492b113
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Nov 13 15:46:16 2010 -0800
+
+    dix: Fix make distcheck
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit f9f381c48a87b700cc9429dce5ddbac74a774803
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Nov 11 23:55:55 2010 +0100
+
+    test: Fix missing xkbsrv.h include.
+    
+    Otherwise, building fails with CFLAGS="-Wall -Werror" this way:
+    | protocol-common.c: In function ‘init_simple’:
+    | protocol-common.c:159: error: implicit declaration of function ‘XkbInitPrivates’
+    | protocol-common.c:159: error: nested extern declaration of ‘XkbInitPrivates’
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit c481dae0dc89d8d50cac23210023d75bfaf6012b)
+
+commit 2715529d6b1da1e7b0266e66eba1aa50027c7c86
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 9 13:33:55 2010 -0800
+
+    DOC: Only build dtrace documentation with --enable-docs
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 291c39dfef84d1b204d7f5e63e925dee2dbdaca7)
+
+commit 4a7b5a33e1f9e53c9cd19d6790d0d48f05cb54d4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sat Sep 11 17:55:57 2010 -0400
+
+    shadow: Optimize shadowUpdatePacked(). (#26973)
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Soren Sandmann <sandmann@daimi.au.dk>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit f0b4df99486066ad0e638b3b5debc905bc8ef1c4)
+
+commit a0895a219027e0a52a5a02db903d662562e02dda
+Author: Kristian Høgsberg <krh@bitplanet.net>
+Date:   Thu Oct 28 20:46:23 2010 -0700
+
+    Set DamageSetReportAfterOp to true for the damage extension
+    
+    Change the damage extension reporter to queue up events after we chain
+    to the wrapped functions.  Damage events are typically sent out after
+    the rendering happens anyway, since we submit batch buffers from the
+    flush callback chain and then flush client io buffers.  Compositing
+    managers relie on this order, and there is no way we could reliably
+    provide damage events to clients before the rendering happens anyway.
+    
+    By queueing up the damage events before the rendering happens, there's
+    a risk that the client io buffer may overflow and send the damage
+    events to the client before the driver has even seen the rendering
+    request.  Reporting damage events after the rendering fixes this
+    corner case and better corresponds with how we expect this to work.
+    
+    Signed-off-by: Kristian Høgsberg <krh@bitplanet.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 8d7b7a0d71e0b89321b3341b781bc8845386def6)
+    [anholt: re-applied to revert the revert, now that the cause of the
+    revert is fixed]
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 333b6ed26e36735ef72f314a3f8c4ec565af223f)
+
+commit dfda3c696dd72ecc5cc4fa69d8bb4521ba554cf3
+Author: Eric Anholt <eric@anholt.net>
+Date:   Thu Oct 28 20:46:22 2010 -0700
+
+    Replace usage of DamageRegionAppend with DamageDamageRegion to fix reportAfter.
+    
+    In all these cases, any rendering implied by this damage has already
+    occurred, and we want to get the damage out to the client.  Some of
+    the DamageRegionAppend calls were explicitly telling damage to flush
+    the reportAfter damage out, but not all.
+    
+    Bug #30260. Fixes the compiz wallpaper plugin with client damage
+    changed to reportAfter.
+    
+    Signed-off-by: Eric Anholt <eric@anholt.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit f36153e3ef6b13a87d016caab09cc9be274b0dd5)
+
+commit 2e08f1d4b7c0c43c90042a71825992f40388c1fb
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Oct 25 22:01:32 2010 -0700
+
+    os: Fix BigReq ignoring when another request is pending
+    
+    Commit cf88363db0ebb42df7cc286b85d30d7898aea840 fixed the handling of
+    BigReq requests that are way too large and handles the case where the
+    read() syscall returns a short read.  However, it neglected to handle
+    the case where it returns a long read, which happens when the client
+    has another request in the queue after the bogus large one.
+    
+    Handle the long read case by subtracting the smaller of 'needed' and
+    'gotnow' from oci->ignoreBytes.  If needed < gotnow, simply subtract
+    the two, leaving gotnow equal to the number of extra bytes read.
+    Since the code immediately following the (oci->ignoreBytes > 0) block
+    tries to handle the next request, advance oci->bufptr immediately
+    instead of setting oci->lenLastReq and letting the next call to
+    ReadRequestFromClient do it.
+    
+    Fixes the XTS pChangeKeyboardMapping-3 test.
+    
+             CASES TESTS  PASS UNSUP UNTST NOTIU  WARN   FIP  FAIL UNRES  UNIN ABORT
+    -Xproto    122   389   367     2    19     0     0     0     1     0     0     0
+    +Xproto    122   389   368     2    19     0     0     0     0     0     0     0
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit c80c41767eb101e9dbd8393d8cca7764b4e248a4)
+
+commit 8452392c4bffd424458a82a381ea2496e6556e7e
+Author: Siddhesh Poyarekar <siddhesh.poyarekar@gmail.com>
+Date:   Tue Oct 26 09:11:53 2010 +0530
+
+    mi: Integer overflow for dashed lines longer than 46340. #31093
+    
+    Lines of length greater than 46340 can be drawn with one of the
+    coordinates being negative. However for dashed lines, miPolyBuildPoly
+    overflows the int type when setting up edges for a section of the
+    dashed line. This results in the dashed segments not being drawn at
+    all.
+    
+    Signed-off-by: Siddhesh Poyarekar <siddhesh.poyarekar@gmail.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit be7cf14c365c8ee0d69c4335e01316bcfcba69a4)
+
+commit b4bb374cc356be0a416f1d7f52dbb2adb6e512d3
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon May 17 19:39:54 2010 +0200
+
+    os: include dix-config.h, not xorg-config.h
+    
+    os/strlc{at,py}.c were trying to include xorg-config.h, which is not
+    available in dix.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 69e8e1b0b95a325da3e3a2d76d092e7131baa9ad)
+
+commit f51f1de995f0e3f0983c873ae51f7c6ae11699cf
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sat Oct 23 22:42:33 2010 +0200
+
+    hurd: Fix use of deprecated iopl device
+    
+    Fix Xserver on GNU/Hurd into using the "mem" device instead of
+    the deprecated "iopl" device.
+    
+    Reviewed-by: Olaf Buddenhagen <antrik@users.sf.net>
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+    (cherry picked from commit f72aadd38b730c46c0a027dacbbb57f03068383d)
+
+commit 0daba1a91a8b601f5168411f2bc123c5346bdb8d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Sun Oct 17 09:58:50 2010 -0700
+
+    Revert "Set DamageSetReportAfterOp to true for the damage extension" (#30260)
+    
+    This commit breaks the Compiz "Wallpaper" plugin.
+    
+    This reverts commit 8d7b7a0d71e0b89321b3341b781bc8845386def6.
+    
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 1a0d9324b3d9fd93e685066e0e5cea0611878c0d)
+
+commit 4c85d94bf70cea583f15d60be5c9127caae3a79f
+Author: Michał Górny <mgorny@gentoo.org>
+Date:   Thu Oct 14 15:49:51 2010 +0200
+
+    kdrive: Fix linking with tslib, with -Wl, --as-needed. #30600
+    
+    Change the library order in TSLIB_LIBS variable, placing ${TSLIB_LIBS}
+    after the local static libraries. This fixes linking with
+    -Wl,--as-needed.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=30600
+    Signed-off-by: Michał Górny <mgorny@gentoo.org>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 8806a04f7f028dd9f6a7ff5c36e460d3895c7deb)
+
+commit 43020e1ac923fb3a7ef792722bcf9d30874f5bfe
+Author: Michał Górny <mgorny@gentoo.org>
+Date:   Thu Oct 14 15:49:50 2010 +0200
+
+    kdrive: Fix tslib check fallback to set TSLIB_LIBS. #30599
+    
+    If pkg-config is unable to find tslib but the fallback check does find
+    it, the compilation continues with tslib support enabled though
+    TSLIB_LIBS are unset. Thus, the compilation fails with a linking error
+    on tslib functions.
+    
+    This patch sets TSLIB_LIBS to '-lts' whenever the tslib fallback check
+    succeeds.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=30599
+    Signed-off-by: Michał Górny <mgorny@gentoo.org>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit c7e436e9987a6fb0876c63e96f59ff4c20b4bef0)
+
+commit 46314e1e7ad05d6ff6a2f722b09a76f2931db7f5
+Author: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+Date:   Mon Oct 18 00:02:01 2010 +0300
+
+    KDrive: Fix error handlig in tslib driver
+    
+    If ts_open() fails and return NULL, then next call to ts_fd()
+    segfaults because of NULL dereference. There is no need to
+    check output of ts_fd() as ts_open() did this internally.
+    
+    Signed-off-by: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 8990b31214bcbc08090604147287455bfde91c11)
+
+commit 97915c06d10544d47ca69bd3610fd114d70e071f
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Tue Oct 26 20:50:13 2010 +0300
+
+    dix: advance parent window pointer when no node is found
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Signed-off-by: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit a210068c5222acbdb04db17cb8cef314735bf977)
+
+commit 4a2caa287d36128d4f7bf10ced7ecb0e505011b2
+Author: Joe Shaw <joeshaw@litl.com>
+Date:   Thu Oct 14 15:09:20 2010 -0400
+
+    fix a sign problem with valuator data.
+    
+    Without this patch, any negative valuator value is wrong when returned
+    from XQueryDeviceState().  This is a regression from at least xserver
+    1.4.
+    
+    Valuator data is set in dix/getevents.c:set_valuators() by copying
+    signed int values into an unsigned int field
+    DeviceEvent.valuators.data.
+    
+    That data is converted into a double with an implicit cast by
+    assignment to axisVal[i] in Xi/exevents.c:UpdateDeviceState().
+    
+    That double is converted back to a signed int in
+    queryst.c:ProcXQueryDeviceState().  If the original value in
+    set_valuators() is negative, the double value will be > 2^31 and the
+    conversion back to a signed int is undefined.  (Although I
+    consistently see the value -2^31.)
+    
+    Fix this by changing the definition of DeviceEvent.valuators.data from
+    uint32_t to int32_t.
+    
+    Signed-off-by: Joe Shaw <joeshaw@litl.com>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit e354ccac36a8ee3a23bdc845833c16a5646cc200)
+
+commit 0f29d3a09dd96b5c124642f7cb939d48597b228c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 11 15:38:38 2010 +1000
+
+    xkb: init mapWidth and symsPerKey arrays to 0.
+    
+    Helps debugging greatly, random 8 or 16 bit values can sometimes look like
+    valid values, causing much excitement on the client front.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit ca21a266224b6eff4fd817c2082d2e144f1ea58c)
+
+commit 8ff9b495e09b378d615cfd17e17f98d269713dd6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 28 16:13:09 2010 +1000
+
+    Xi: reshuffle conditions for labeling a device as IsXExtensionKeyboard (#29046)
+    
+    From the original bug reporter Ezra Reeves:
+    
+    "I did some more digging on this today, and I found that an HP branded
+    wireless USB mouse has the same issue. With this mouse (as well as the
+    logitech wireless mouse), the return from:
+    
+    xdev = XListInputDevices(GDK_WINDOW_XDISPLAY(rootwin), &ndevices_return);
+    
+    lists the USB device twice, but both have xdev[num].use == 3
+    (IsXExtensionKeyboard as defined in X11/XI.h).
+    
+    [...]
+    
+    Swapping the order of the test in Xi/listdev.c that determines whether a
+    device is a pointer or a keyboard properly detects my devices (OEM USB
+    wireless mouse/kb combo) -- one as a keyboard and one as a pointer."
+    
+    X.Org Bug 29046 <http://bugs.freedesktop.org/show_bug.cgi?id=29046>
+    
+    Reported-by: Erik Kilfoil <ekilfoil@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit fe8d122b133a43125cc961d2c3c811fa776f29c8)
+
+commit b144c0f4c72977671a39fa6368cbfea142444096
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 13 10:31:51 2010 +1000
+
+    xfree86: set mask for valuators 0/1 when emulating core events (#30267)
+    
+    EventToCore as of the commit below won't generate core motion events if the
+    valuator mask for x/y isn't set. For DGA, we work around this check by
+    forcibly setting the mask in the event we pass down.
+    
+    commit de8be07cc0a8163b6ef04455706fd5ca2cebe587
+    Author: Peter Hutterer <peter.hutterer@who-t.net>
+    Date:   Tue Aug 17 12:08:52 2010 +1000
+    
+        dix: don't create core motion events for non-x/y valuators.
+    
+    X.Org Bug 30267 <http://bugs.freedesktop.org/show_bug.cgi?id=30267>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Tested-by: Andrew Randrianasulu <randrik@mail.ru>
+    Tested-by: Andy Furniss
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit 9872e0f0115cd7d0543e55a1831facddf3aff90c)
+
+commit 79f2a58c323bd1ad373f1f929207b5af98031b95
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 17 12:08:52 2010 +1000
+
+    dix: don't create core motion events for non-x/y valuators.
+    
+    Devices that send motion events with valuators other than x/y get core
+    motion events with unchanged x/y coordinates. This confuses some
+    applications.
+    
+    If the DeviceEvent does not have the x/y valuators set, return BadMatch on
+    core conversion, thus skipping the event altogether.
+    
+    Reported-by: Bartosz Brachaczek <b.brachaczek@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Tested-by: Bartosz Brachaczek <b.brachaczek@gmail.com>
+    (cherry picked from commit de8be07cc0a8163b6ef04455706fd5ca2cebe587)
+
 commit e3769c20d5f656f76e2c475a722db97c58089260
 Author: Jeremy Huddleston <jeremyhu@apple.com>
 Date:   Sat Oct 30 19:49:42 2010 -0700

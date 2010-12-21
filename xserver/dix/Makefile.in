@@ -222,6 +222,8 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
 ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
+ENABLE_DOCS_FALSE = @ENABLE_DOCS_FALSE@
+ENABLE_DOCS_TRUE = @ENABLE_DOCS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
@@ -625,6 +627,7 @@ sysconfdir = @sysconfdir@
 sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
 noinst_LTLIBRARIES = libdix.la libmain.la
+AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(DIX_CFLAGS)
 libmain_la_SOURCES = \
 	main.c
