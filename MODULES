@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.150 2010/12/19 16:08:54 matthieu Exp $
+ $OpenBSD: MODULES,v 1.151 2010/12/21 20:40:29 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -29,7 +29,7 @@ app/twm			1.0.5	7.6
 app/viewres		1.0.3	7.6
 app/x11perf		1.5.2	7.6
 app/xauth		1.0.5	7.6
-app/xbacklight		1.1.2	7.6	needs-update
+app/xbacklight		1.1.2	7.6
 app/xbiff		1.0.2	7.5+
 app/xcalc		1.0.4	7.6
 app/xclipboard		1.1.1	7.6
@@ -84,7 +84,7 @@ app/xwd			1.0.4	7.6
 app/xwininfo		1.1.1	7.6
 app/xwud		1.0.3	7.6
 
-data/bitmaps		1.1.1	7.6	needs-update
+data/bitmaps		1.1.1	7.6
 data/xkbdata		1.0.1	7.0	deprecated
 
 doc/xorg-docs		1.6	7.6	needs-update
@@ -249,4 +249,4 @@ util/imake			1.0.4	7.6
 util/macros			1.11.0	7.6
 util/makedepend			1.0.3	7.6
 
-xserver				1.9.3	7.6	needs-update
+xserver				1.9.3	7.6
