@@ -293,7 +293,7 @@ static int drmOpenDevice(long dev, int minor, int type)
 	return fd;
 
     drmMsg("drmOpenDevice: Open failed\n");
-    remove(buf);
+    
     return -errno;
 }
 
