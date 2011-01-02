@@ -43,7 +43,8 @@ ARCH_SOURCES = hp300_video.c \
 endif 
 
 if HPPA_VIDEO
-ARCH_SOURCES = hppa_video.c
+ARCH_SOURCES = hppa_video.c\
+	$(srcdir)/../shared/ioperm_noop.c
 endif
 
 if I386_VIDEO

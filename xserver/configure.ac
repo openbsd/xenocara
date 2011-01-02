@@ -402,6 +402,12 @@ case $host_cpu in
   s390*)
   	GLX_ARCH_DEFINES="-D__GLX_ALIGN64"
 	;;
+  hppa*)
+	case $host_os in
+		*openbsd*)	HPPA_VIDEO=yes
+	     			;;
+	esac
+	;;
 esac
 AC_SUBST(GLX_ARCH_DEFINES)
 
