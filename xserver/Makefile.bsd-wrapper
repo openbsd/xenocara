@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.30 2010/12/05 15:36:03 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.31 2011/01/02 14:04:18 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
 DIST= ${.CURDIR}
 
 # Machines for which we don't build the Xorg Xserver
-NO_XORG_MACHINES=	aviion hppa hppa64 landisk \
+NO_XORG_MACHINES=	aviion hppa64 landisk \
 			mvme68k mvme88k mvmeppc solbourne vax
 
 NO_XF86UTIL_MACHINES=	hp300 landisk mac68k sgi sparc vax
