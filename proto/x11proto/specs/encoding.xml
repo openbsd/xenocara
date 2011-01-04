@@ -72,10 +72,10 @@ For components with a static numeric value the encode-form is:
 The value is always interpreted as an N-byte unsigned integer.
 For example,
 the first two bytes of a
-<emphasis role='bold'>Window </emphasis>
+<emphasis role='bold'>Window</emphasis>
 error are always zero (indicating an
 error in general) and three (indicating the
-<emphasis role='bold'>Window </emphasis>
+<emphasis role='bold'>Window</emphasis>
 error in particular):
 </para>
 
@@ -90,8 +90,8 @@ For components described in the protocol as:
 
 <para>
 name:
-<emphasis role='bold'>{ Name1 ,..., </emphasis>
-<emphasis role='bold'>NameI }</emphasis>
+{ <emphasis role='bold'>Name1</emphasis>,...,
+<emphasis role='bold'>NameI</emphasis>}
 </para>
 
 <para>
@@ -159,7 +159,7 @@ For example:
 
 <para>
 destination: WINDOW or
-<emphasis role='bold'>PointerWindow </emphasis>
+<emphasis role='bold'>PointerWindow</emphasis>
 or
 <emphasis role='bold'>InputFocus</emphasis>
 </para>
@@ -273,7 +273,7 @@ and pad(E) is the number of bytes needed to round E up to a multiple of four.
 </literallayout>
 </sect1>
 
-<sect1 id="common_types_2">
+<sect1 id="common_types_encoding">
 <title>Common Types</title>
 
 <variablelist>
@@ -536,7 +536,7 @@ STR
 </literallayout>
 </sect1>
 
-<sect1 id="errors_2">
+<sect1 id="errors_encoding">
 <title>Errors</title>
 
 <literallayout class="monospaced">
@@ -695,7 +695,7 @@ STR
 </literallayout>
 </sect1>
 
-<sect1 id="keyboards_2">
+<sect1 id="keyboards_encoding">
 <title>Keyboards</title>
 
 <para>
@@ -708,11 +708,11 @@ KEYSYM values with the bit #x10000000 set are reserved as vendor-specific.
 
 <para>
 The names and encodings of the standard KEYSYM values are contained in
-Appendix A, Keysym Encoding. <!-- xref -->
+<link linkend="keysym_encoding">Appendix A, Keysym Encoding</link>.
 </para>
 </sect1>
 
-<sect1 id="pointers_2">
+<sect1 id="pointers_encoding">
 <title>Pointers</title>
 
 <para>
@@ -766,7 +766,7 @@ WM_NAME           39
 </literallayout>
 </sect1>
 
-<sect1 id="connection_setup_2">
+<sect1 id="connection_setup_encoding">
 <title>Connection Setup</title>
 
 <para>
@@ -932,11 +932,11 @@ VISUALTYPE
 </literallayout>
 </sect1>
 
-<sect1 id="requests_2">
+<sect1 id="requests_encoding">
 <title>Requests</title>
 
 <literallayout class="monospaced">
-<emphasis role='bold'>CreateWindow</emphasis>
+<link linkend="requests:CreateWindow"><emphasis role='bold'>CreateWindow</emphasis></link>
      1     1                               opcode
      1     CARD8                           depth
      2     8+n                             request length
@@ -996,7 +996,7 @@ VISUALTYPE
      4     CURSOR                          cursor
           0     None
 
-<emphasis role='bold'>ChangeWindowAttributes</emphasis>
+<link linkend="requests:ChangeWindowAttributes"><emphasis role='bold'>ChangeWindowAttributes</emphasis></link>
      1     2                               opcode
      1                                     unused
      2     3+n                             request length
@@ -1006,13 +1006,13 @@ VISUALTYPE
      4n     LISTofVALUE                    value-list
           encodings are the same as for CreateWindow
 
-<emphasis role='bold'>GetWindowAttributes</emphasis>
+<link linkend="requests:GetWindowAttributes"><emphasis role='bold'>GetWindowAttributes</emphasis></link>
      1     3                               opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
--&gt;
+▶
      1     1                               Reply
      1                                     backing-store
           0     NotUseful
@@ -1042,19 +1042,19 @@ VISUALTYPE
      2     SETofDEVICEEVENT                do-not-propagate-mask
      2                                     unused
 
-<emphasis role='bold'>DestroyWindow</emphasis>
+<link linkend="requests:DestroyWindow"><emphasis role='bold'>DestroyWindow</emphasis></link>
      1     4                               opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
-<emphasis role='bold'>DestroySubwindows</emphasis>
+<link linkend="requests:DestroySubwindows"><emphasis role='bold'>DestroySubwindows</emphasis></link>
      1     5                               opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
-<emphasis role='bold'>ChangeSaveSet</emphasis>
+<link linkend="requests:ChangeSaveSet"><emphasis role='bold'>ChangeSaveSet</emphasis></link>
      1     6                               opcode
      1                                     mode
           0     Insert
@@ -1062,7 +1062,7 @@ VISUALTYPE
      2     2                               request length
      4     WINDOW                          window
 
-<emphasis role='bold'>ReparentWindow</emphasis>
+<link linkend="requests:ReparentWindow"><emphasis role='bold'>ReparentWindow</emphasis></link>
      1     7                               opcode
      1                                     unused
      2     4                               request length
@@ -1071,31 +1071,31 @@ VISUALTYPE
      2     INT16                           x
      2     INT16                           y
 
-<emphasis role='bold'>MapWindow</emphasis>
+<link linkend="requests:MapWindow"><emphasis role='bold'>MapWindow</emphasis></link>
      1     8                               opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
-<emphasis role='bold'>MapSubwindows</emphasis>
+<link linkend="requests:MapSubwindows"><emphasis role='bold'>MapSubwindows</emphasis></link>
      1     9                               opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
-<emphasis role='bold'>UnmapWindow</emphasis>
+<link linkend="requests:UnmapWindow"><emphasis role='bold'>UnmapWindow</emphasis></link>
      1     10                              opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
-<emphasis role='bold'>UnmapSubwindows</emphasis>
+<link linkend="requests:UnmapSubwindows"><emphasis role='bold'>UnmapSubwindows</emphasis></link>
      1     11                              opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
-<emphasis role='bold'>ConfigureWindow</emphasis>
+<link linkend="requests:ConfigureWindow"><emphasis role='bold'>ConfigureWindow</emphasis></link>
      1     12                              opcode
      1                                     unused
      2     3+n                             request length
@@ -1125,7 +1125,7 @@ VISUALTYPE
           3     BottomIf
           4     Opposite
 
-<emphasis role='bold'>CirculateWindow</emphasis>
+<link linkend="requests:CirculateWindow"><emphasis role='bold'>CirculateWindow</emphasis></link>
      1     13                              opcode
      1                                     direction
           0     RaiseLowest
@@ -1133,13 +1133,13 @@ VISUALTYPE
      2     2                               request length
      4     WINDOW                          window
 
-<emphasis role='bold'>GetGeometry</emphasis>
+<link linkend="requests:GetGeometry"><emphasis role='bold'>GetGeometry</emphasis></link>
      1     14                              opcode
      1                                     unused
      2     2                               request length
      4     DRAWABLE                        drawable
 
--&gt;
+▶
      1     1                               Reply
      1     CARD8                           depth
      2     CARD16                          sequence number
@@ -1152,13 +1152,13 @@ VISUALTYPE
      2     CARD16                          border-width
      10                                    unused
 
-<emphasis role='bold'>QueryTree</emphasis>
+<link linkend="requests:QueryTree"><emphasis role='bold'>QueryTree</emphasis></link>
      1     15                              opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1170,7 +1170,7 @@ VISUALTYPE
      14                                    unused
      4n     LISTofWINDOW                   children
 
-<emphasis role='bold'>InternAtom</emphasis>
+<link linkend="requests:InternAtom"><emphasis role='bold'>InternAtom</emphasis></link>
      1     16                              opcode
      1     BOOL                            only-if-exists
      2     2+(n+p)/4                       request length
@@ -1179,7 +1179,7 @@ VISUALTYPE
      n     STRING8                         name
      p                                     unused, p=pad(n)
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1188,13 +1188,13 @@ VISUALTYPE
            0     None
      20                                    unused
 
-<emphasis role='bold'>GetAtomName</emphasis>
+<link linkend="requests:GetAtomName"><emphasis role='bold'>GetAtomName</emphasis></link>
      1     17                              opcode
      1                                     unused
      2     2                               request length
      4     ATOM                            atom
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1204,7 +1204,7 @@ VISUALTYPE
      n     STRING8                         name
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>ChangeProperty</emphasis>
+<link linkend="requests:ChangeProperty"><emphasis role='bold'>ChangeProperty</emphasis></link>
      1     18                              opcode
      1                                     mode
           0     Replace
@@ -1226,14 +1226,14 @@ VISUALTYPE
      p                                     unused, p=pad(n)
 
 
-<emphasis role='bold'>DeleteProperty</emphasis>
+<link linkend="requests:DeleteProperty"><emphasis role='bold'>DeleteProperty</emphasis></link>
      1     19                              opcode
      1                                     unused
      2     3                               request length
      4     WINDOW                          window
      4     ATOM                            property
 
-<emphasis role='bold'>GetProperty</emphasis>
+<link linkend="requests:GetProperty"><emphasis role='bold'>GetProperty</emphasis></link>
      1     20                              opcode
      1     BOOL                            delete
      2     6                               request length
@@ -1244,7 +1244,7 @@ VISUALTYPE
      4     CARD32                          long-offset
      4     CARD32                          long-length
 
--&gt;
+▶
      1     1                               Reply
      1     CARD8                           format
      2     CARD16                          sequence number
@@ -1264,13 +1264,13 @@ VISUALTYPE
                     (n is a multiple of 4 for format = 32)
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>ListProperties</emphasis>
+<link linkend="requests:ListProperties"><emphasis role='bold'>ListProperties</emphasis></link>
      1     21                              opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1279,7 +1279,7 @@ VISUALTYPE
      22                                    unused
      4n     LISTofATOM                     atoms
 
-<emphasis role='bold'>SetSelectionOwner</emphasis>
+<link linkend="requests:SetSelectionOwner"><emphasis role='bold'>SetSelectionOwner</emphasis></link>
      1     22                              opcode
      1                                     unused
      2     4                               request length
@@ -1289,13 +1289,13 @@ VISUALTYPE
      4     TIMESTAMP                       time
           0     CurrentTime
 
-<emphasis role='bold'>GetSelectionOwner</emphasis>
+<link linkend="requests:GetSelectionOwner"><emphasis role='bold'>GetSelectionOwner</emphasis></link>
      1     23                              opcode
      1                                     unused
      2     2                               request length
      4     ATOM                            selection
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1304,7 +1304,7 @@ VISUALTYPE
           0     None
      20                                    unused
 
-<emphasis role='bold'>ConvertSelection</emphasis>
+<link linkend="requests:ConvertSelection"><emphasis role='bold'>ConvertSelection</emphasis></link>
      1     24                              opcode
      1                                     unused
      2     6                               request length
@@ -1316,7 +1316,7 @@ VISUALTYPE
      4     TIMESTAMP                       time
           0     CurrentTime
 
-<emphasis role='bold'>SendEvent</emphasis>
+<link linkend="requests:SendEvent"><emphasis role='bold'>SendEvent</emphasis></link>
      1     25                              opcode
      1     BOOL                            propagate
      2     11                              requestlength
@@ -1325,9 +1325,9 @@ VISUALTYPE
           1     InputFocus
      4     SETofEVENT                      event-mask
      32                                    event
-          standard event format (see the Events section)
+          standard event format (see <link linkend="events_encoding">the Events section</link>)
 
-<emphasis role='bold'>GrabPointer</emphasis>
+<link linkend="requests:GrabPointer"><emphasis role='bold'>GrabPointer</emphasis></link>
      1     26                              opcode
      1     BOOL                            owner-events
      2     6                               request length
@@ -1346,7 +1346,7 @@ VISUALTYPE
      4     TIMESTAMP                       time
           0     CurrentTime
 
--&gt;
+▶
      1     1                               Reply
      1                                     status
           0     Success
@@ -1358,14 +1358,14 @@ VISUALTYPE
      4     0                               reply length
      24                                    unused
 
-<emphasis role='bold'>UngrabPointer</emphasis>
+<link linkend="requests:UngrabPointer"><emphasis role='bold'>UngrabPointer</emphasis></link>
      1     27                              opcode
      1                                     unused
      2     2                               request length
      4     TIMESTAMP                       time
           0     CurrentTime
 
-<emphasis role='bold'>GrabButton</emphasis>
+<link linkend="requests:GrabButton"><emphasis role='bold'>GrabButton</emphasis></link>
      1     28                              opcode
      1     BOOL                            owner-events
      2     6                               request length
@@ -1387,7 +1387,7 @@ VISUALTYPE
      2     SETofKEYMASK                    modifiers
           #x8000                           AnyModifier
 
-<emphasis role='bold'>UngrabButton</emphasis>
+<link linkend="requests:UngrabButton"><emphasis role='bold'>UngrabButton</emphasis></link>
      1     29                              opcode
      1     BUTTON                          button
           0     AnyButton
@@ -1397,7 +1397,7 @@ VISUALTYPE
           #x8000                           AnyModifier
      2                                     unused
 
-<emphasis role='bold'>ChangeActivePointerGrab</emphasis>
+<link linkend="requests:ChangeActivePointerGrab"><emphasis role='bold'>ChangeActivePointerGrab</emphasis></link>
      1     30                              opcode
      1                                     unused
      2     4                               request length
@@ -1408,7 +1408,7 @@ VISUALTYPE
      2     SETofPOINTEREVENT               event-mask
      2                                     unused
 
-<emphasis role='bold'>GrabKeyboard</emphasis>
+<link linkend="requests:GrabKeyboard"><emphasis role='bold'>GrabKeyboard</emphasis></link>
      1     31                              opcode
      1     BOOL                            owner-events
      2     4                               request length
@@ -1423,7 +1423,7 @@ VISUALTYPE
           1     Asynchronous
      2                                     unused
 
--&gt;
+▶
      1     1                               Reply
      1                                     status
           0     Success
@@ -1435,14 +1435,14 @@ VISUALTYPE
      4     0                               reply length
      24                                    unused
 
-<emphasis role='bold'>UngrabKeyboard</emphasis>
+<link linkend="requests:UngrabKeyboard"><emphasis role='bold'>UngrabKeyboard</emphasis></link>
      1     32                              opcode
      1                                     unused
      2     2                               request length
      4     TIMESTAMP                       time
           0     CurrentTime
 
-<emphasis role='bold'>GrabKey</emphasis>
+<link linkend="requests:GrabKey"><emphasis role='bold'>GrabKey</emphasis></link>
      1     33                              opcode
      1     BOOL                            owner-events
      2     4                               request length
@@ -1459,7 +1459,7 @@ VISUALTYPE
           1     Asynchronous
      3                                     unused
 
-<emphasis role='bold'>UngrabKey</emphasis>
+<link linkend="requests:UngrabKey"><emphasis role='bold'>UngrabKey</emphasis></link>
      1     34                              opcode
      1     KEYCODE                         key
           0     AnyKey
@@ -1469,7 +1469,7 @@ VISUALTYPE
           #x8000     AnyModifier
      2                                     unused
 
-<emphasis role='bold'>AllowEvents</emphasis>
+<link linkend="requests:AllowEvents"><emphasis role='bold'>AllowEvents</emphasis></link>
      1     35                              opcode
      1                                     mode
           0     AsyncPointer
@@ -1484,23 +1484,23 @@ VISUALTYPE
      4     TIMESTAMP                       time
           0     CurrentTime
 
-<emphasis role='bold'>GrabServer</emphasis>
+<link linkend="requests:GrabServer"><emphasis role='bold'>GrabServer</emphasis></link>
      1     36                              opcode
      1                                     unused
      2     1                               request length
 
-<emphasis role='bold'>UngrabServer</emphasis>
+<link linkend="requests:UngrabServer"><emphasis role='bold'>UngrabServer</emphasis></link>
      1     37                              opcode
      1                                     unused
      2     1                               request length
 
-<emphasis role='bold'>QueryPointer</emphasis>
+<link linkend="requests:QueryPointer"><emphasis role='bold'>QueryPointer</emphasis></link>
      1     38                              opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
--&gt;
+▶
      1     1                               Reply
      1     BOOL                            same-screen
      2     CARD16                          sequence number
@@ -1515,7 +1515,7 @@ VISUALTYPE
      2     SETofKEYBUTMASK                 mask
      6                                     unused
 
-<emphasis role='bold'>GetMotionEvents</emphasis>
+<link linkend="requests:GetMotionEvents"><emphasis role='bold'>GetMotionEvents</emphasis></link>
      1     39                              opcode
      1                                     unused
      2     4                               request length
@@ -1525,7 +1525,7 @@ VISUALTYPE
      4     TIMESTAMP                       stop
           0     CurrentTime
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1539,7 +1539,7 @@ VISUALTYPE
      2     INT16                           x
      2     INT16                           y
 
-<emphasis role='bold'>TranslateCoordinates</emphasis>
+<link linkend="requests:TranslateCoordinates"><emphasis role='bold'>TranslateCoordinates</emphasis></link>
      1     40                              opcode
      1                                     unused
      2     4                               request length
@@ -1547,7 +1547,7 @@ VISUALTYPE
      4     WINDOW                          dst-window
      2     INT16                           src-x
      2     INT16                           src-y
--&gt;
+▶
      1     1                               Reply
      1     BOOL                            same-screen
      2     CARD16                          sequence number
@@ -1558,7 +1558,7 @@ VISUALTYPE
      2     INT16                           dst-y
      16                                    unused
 
-<emphasis role='bold'>WarpPointer</emphasis>
+<link linkend="requests:WarpPointer"><emphasis role='bold'>WarpPointer</emphasis></link>
      1     41                              opcode
      1                                     unused
      2     6                               request length
@@ -1573,7 +1573,7 @@ VISUALTYPE
      2     INT16                           dst-x
      2     INT16                           dst-y
 
-<emphasis role='bold'>SetInputFocus</emphasis>
+<link linkend="requests:SetInputFocus"><emphasis role='bold'>SetInputFocus</emphasis></link>
      1     42                              opcode
      1                                     revert-to
           0     None
@@ -1586,12 +1586,12 @@ VISUALTYPE
      4     TIMESTAMP                       time
           0     CurrentTime
 
-<emphasis role='bold'>GetInputFocus</emphasis>
+<link linkend="requests:GetInputFocus"><emphasis role='bold'>GetInputFocus</emphasis></link>
      1     43                              opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1                                     revert-to
           0     None
@@ -1604,19 +1604,19 @@ VISUALTYPE
           1     PointerRoot
      20                                    unused
 
-<emphasis role='bold'>QueryKeymap</emphasis>
+<link linkend="requests:QueryKeymap"><emphasis role='bold'>QueryKeymap</emphasis></link>
      1     44                              opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
      4     2                               reply length
      32     LISTofCARD8                    keys
 
-<emphasis role='bold'>OpenFont</emphasis>
+<link linkend="requests:OpenFont"><emphasis role='bold'>OpenFont</emphasis></link>
      1     45                              opcode
      1                                     unused
      2     3+(n+p)/4                       request length
@@ -1626,19 +1626,19 @@ VISUALTYPE
      n     STRING8                         name
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>CloseFont</emphasis>
+<link linkend="requests:CloseFont"><emphasis role='bold'>CloseFont</emphasis></link>
      1     46                              opcode
      1                                     unused
      2     2                               request length
      4     FONT                            font
 
-<emphasis role='bold'>QueryFont</emphasis>
+<link linkend="requests:QueryFont"><emphasis role='bold'>QueryFont</emphasis></link>
      1     47                              opcode
      1                                     unused
      2     2                               request length
      4     FONTABLE                        font
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1675,7 +1675,7 @@ VISUALTYPE
      2     INT16                           descent
      2     CARD16                          attributes
 
-<emphasis role='bold'>QueryTextExtents</emphasis>
+<link linkend="requests:QueryTextExtents"><emphasis role='bold'>QueryTextExtents</emphasis></link>
      1     48                              opcode
      1     BOOL                            odd length, True if p = 2
      2     2+(2n+p)/4                      request length
@@ -1683,7 +1683,7 @@ VISUALTYPE
      2n     STRING16                       string
      p                                     unused, p=pad(2n)
 
--&gt;
+▶
      1     1                               Reply
      1                                     draw-direction
           0     LeftToRight
@@ -1699,7 +1699,7 @@ VISUALTYPE
      4     INT32                           overall-right
      4                                     unused
 
-<emphasis role='bold'>ListFonts</emphasis>
+<link linkend="requests:ListFonts"><emphasis role='bold'>ListFonts</emphasis></link>
      1     49                              opcode
      1                                     unused
      2     2+(n+p)/4                       request length
@@ -1708,7 +1708,7 @@ VISUALTYPE
      n     STRING8                         pattern
      p                                     unused, p=pad(n)
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1718,7 +1718,7 @@ VISUALTYPE
      n     LISTofSTR                       names
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>ListFontsWithInfo</emphasis>
+<link linkend="requests:ListFontsWithInfo"><emphasis role='bold'>ListFontsWithInfo</emphasis></link>
      1     50                              opcode
      1                                     unused
      2     2+(n+p)/4                       request length
@@ -1727,7 +1727,7 @@ VISUALTYPE
      n     STRING8                         pattern
      p                                     unused, p=pad(n)
 
--&gt; (except for last in series)
+▶ (except for last in series)
      1     1                               Reply
      1     n                               length of name in bytes
      2     CARD16                          sequence number
@@ -1759,14 +1759,14 @@ VISUALTYPE
   CHARINFO
      encodings are the same as for QueryFont
 
--&gt; (last in series)
+▶ (last in series)
      1     1                               Reply
      1     0                               last-reply indicator
      2     CARD16                          sequence number
      4     7                               reply length
      52                                    unused
 
-<emphasis role='bold'>SetFontPath</emphasis>
+<link linkend="requests:SetFontPath"><emphasis role='bold'>SetFontPath</emphasis></link>
      1     51                              opcode
      1                                     unused
      2     2+(n+p)/4                       request length
@@ -1775,12 +1775,12 @@ VISUALTYPE
      n     LISTofSTR                       path
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>GetFontPath</emphasis>
+<link linkend="requests:GetFontPath"><emphasis role='bold'>GetFontPath</emphasis></link>
      1     52                              opcode
      1                                     unused
      2     1                               request list
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -1790,7 +1790,7 @@ VISUALTYPE
      n     LISTofSTR                       path
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>CreatePixmap</emphasis>
+<link linkend="requests:CreatePixmap"><emphasis role='bold'>CreatePixmap</emphasis></link>
      1     53                              opcode
      1     CARD8                           depth
      2     4                               request length
@@ -1799,13 +1799,13 @@ VISUALTYPE
      2     CARD16                          width
      2     CARD16                          height
 
-<emphasis role='bold'>FreePixmap</emphasis>
+<link linkend="requests:FreePixmap"><emphasis role='bold'>FreePixmap</emphasis></link>
      1     54                              opcode
      1                                     unused
      2     2                               request length
      4     PIXMAP                          pixmap
 
-<emphasis role='bold'>CreateGC</emphasis>
+<link linkend="requests:CreateGC"><emphasis role='bold'>CreateGC</emphasis></link>
      1     55                              opcode
      1                                     unused
      2     4+n                             request length
@@ -1899,7 +1899,7 @@ VISUALTYPE
           0     Chord
           1     PieSlice
 
-<emphasis role='bold'>ChangeGC</emphasis>
+<link linkend="requests:ChangeGC"><emphasis role='bold'>ChangeGC</emphasis></link>
      1     56                              opcode
      1                                     unused
      2     3+n                             request length
@@ -1909,7 +1909,7 @@ VISUALTYPE
      4n     LISTofVALUE                    value-list
           encodings are the same as for CreateGC
 
-<emphasis role='bold'>CopyGC</emphasis>
+<link linkend="requests:CopyGC"><emphasis role='bold'>CopyGC</emphasis></link>
      1     57                              opcode
      1                                     unused
      2     4                               request length
@@ -1918,7 +1918,7 @@ VISUALTYPE
      4     BITMASK                         value-mask
           encodings are the same as for CreateGC
 
-<emphasis role='bold'>SetDashes</emphasis>
+<link linkend="requests:SetDashes"><emphasis role='bold'>SetDashes</emphasis></link>
      1     58                              opcode
      1                                     unused
      2     3+(n+p)/4                       request length
@@ -1928,7 +1928,7 @@ VISUALTYPE
      n     LISTofCARD8                     dashes
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>SetClipRectangles</emphasis>
+<link linkend="requests:SetClipRectangles"><emphasis role='bold'>SetClipRectangles</emphasis></link>
      1     59                              opcode
      1                                     ordering
           0     UnSorted
@@ -1941,13 +1941,13 @@ VISUALTYPE
      2     INT16                           clip-y-origin
      8n     LISTofRECTANGLE                rectangles
 
-<emphasis role='bold'>FreeGC</emphasis>
+<link linkend="requests:FreeGC"><emphasis role='bold'>FreeGC</emphasis></link>
      1     60                              opcode
      1                                     unused
      2     2                               request length
      4     GCONTEXT                        gc
 
-<emphasis role='bold'>ClearArea</emphasis>
+<link linkend="requests:ClearArea"><emphasis role='bold'>ClearArea</emphasis></link>
      1     61                              opcode
      1     BOOL                            exposures
      2     4                               request length
@@ -1957,7 +1957,7 @@ VISUALTYPE
      2     CARD16                          width
      2     CARD16                          height
 
-<emphasis role='bold'>CopyArea</emphasis>
+<link linkend="requests:CopyArea"><emphasis role='bold'>CopyArea</emphasis></link>
      1     62                              opcode
      1                                     unused
      2     7                               request length
@@ -1971,7 +1971,7 @@ VISUALTYPE
      2     CARD16                          width
      2     CARD16                          height
 
-<emphasis role='bold'>CopyPlane</emphasis>
+<link linkend="requests:CopyPlane"><emphasis role='bold'>CopyPlane</emphasis></link>
      1     63                              opcode
      1                                     unused
      2     8                               request length
@@ -1986,7 +1986,7 @@ VISUALTYPE
      2     CARD16                          height
      4     CARD32                          bit-plane
 
-<emphasis role='bold'>PolyPoint</emphasis>
+<link linkend="requests:PolyPoint"><emphasis role='bold'>PolyPoint</emphasis></link>
      1     64                              opcode
      1                                     coordinate-mode
           0     Origin
@@ -1996,7 +1996,7 @@ VISUALTYPE
      4     GCONTEXT                        gc
      4n     LISTofPOINT                    points
 
-<emphasis role='bold'>PolyLine</emphasis>
+<link linkend="requests:PolyLine"><emphasis role='bold'>PolyLine</emphasis></link>
      1     65                              opcode
      1                                     coordinate-mode
           0     Origin
@@ -2006,7 +2006,7 @@ VISUALTYPE
      4     GCONTEXT                        gc
      4n     LISTofPOINT                    points
 
-<emphasis role='bold'>PolySegment</emphasis>
+<link linkend="requests:PolySegment"><emphasis role='bold'>PolySegment</emphasis></link>
      1     66                              opcode
      1                                     unused
      2     3+2n                            request length
@@ -2020,7 +2020,7 @@ VISUALTYPE
      2     INT16                           x2
      2     INT16                           y2
 
-<emphasis role='bold'>PolyRectangle</emphasis>
+<link linkend="requests:PolyRectangle"><emphasis role='bold'>PolyRectangle</emphasis></link>
      1     67                              opcode
      1                                     unused
      2     3+2n                            request length
@@ -2028,7 +2028,7 @@ VISUALTYPE
      4     GCONTEXT                        gc
      8n     LISTofRECTANGLE                rectangles
 
-<emphasis role='bold'>PolyArc</emphasis>
+<link linkend="requests:PolyArc"><emphasis role='bold'>PolyArc</emphasis></link>
      1     68                              opcode
      1                                     unused
      2     3+3n                            request length
@@ -2036,7 +2036,7 @@ VISUALTYPE
      4     GCONTEXT                        gc
      12n     LISTofARC                     arcs
 
-<emphasis role='bold'>FillPoly</emphasis>
+<link linkend="requests:FillPoly"><emphasis role='bold'>FillPoly</emphasis></link>
      1     69                              opcode
      1                                     unused
      2     4+n                             request length
@@ -2052,7 +2052,7 @@ VISUALTYPE
      2                                     unused
      4n     LISTofPOINT                    points
 
-<emphasis role='bold'>PolyFillRectangle</emphasis>
+<link linkend="requests:PolyFillRectangle"><emphasis role='bold'>PolyFillRectangle</emphasis></link>
      1     70                              opcode
      1                                     unused
      2     3+2n                            request length
@@ -2060,7 +2060,7 @@ VISUALTYPE
      4     GCONTEXT                        gc
      8n     LISTofRECTANGLE                rectangles
 
-<emphasis role='bold'>PolyFillArc</emphasis>
+<link linkend="requests:PolyFillArc"><emphasis role='bold'>PolyFillArc</emphasis></link>
      1     71                              opcode
      1                                     unused
      2     3+3n                            request length
@@ -2068,7 +2068,7 @@ VISUALTYPE
      4     GCONTEXT                        gc
      12n     LISTofARC                     arcs
 
-<emphasis role='bold'>PutImage</emphasis>
+<link linkend="requests:PutImage"><emphasis role='bold'>PutImage</emphasis></link>
      1     72                              opcode
      1                                     format
           0     Bitmap
@@ -2087,7 +2087,7 @@ VISUALTYPE
      n     LISTofBYTE                      data
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>GetImage</emphasis>
+<link linkend="requests:GetImage"><emphasis role='bold'>GetImage</emphasis></link>
      1     73                              opcode
      1                                     format
           1     XYPixmap
@@ -2100,7 +2100,7 @@ VISUALTYPE
      2     CARD16                          height
      4     CARD32                          plane-mask
 
--&gt;
+▶
      1     1                               Reply
      1     CARD8                           depth
      2     CARD16                          sequence number
@@ -2111,7 +2111,7 @@ VISUALTYPE
      n     LISTofBYTE                      data
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>PolyText8</emphasis>
+<link linkend="requests:PolyText8"><emphasis role='bold'>PolyText8</emphasis></link>
      1     74                              opcode
      1                                     unused
      2     4+(n+p)/4                       request length
@@ -2134,7 +2134,7 @@ VISUALTYPE
      1                                     font byte 1
      1                                     font byte 0 (least-significant)
 
-<emphasis role='bold'>PolyText16</emphasis>
+<link linkend="requests:PolyText16"><emphasis role='bold'>PolyText16</emphasis></link>
      1     75                              opcode
      1                                     unused
      2     4+(n+p)/4                       request length
@@ -2158,7 +2158,7 @@ VISUALTYPE
      1                                     font byte 1
      1                                     font byte 0 (least-significant)
 
-<emphasis role='bold'>ImageText8</emphasis>
+<link linkend="requests:ImageText8"><emphasis role='bold'>ImageText8</emphasis></link>
      1     76                              opcode
      1     n                               length of string
      2     4+(n+p)/4                       request length
@@ -2169,7 +2169,7 @@ VISUALTYPE
      n     STRING8                         string
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>ImageText16</emphasis>
+<link linkend="requests:ImageText16"><emphasis role='bold'>ImageText16</emphasis></link>
      1     77                              opcode
      1     n                               number of CHAR2Bs in string
      2     4+(2n+p)/4                      request length
@@ -2180,7 +2180,7 @@ VISUALTYPE
      2n     STRING16                       string
      p                                     unused, p=pad(2n)
 
-<emphasis role='bold'>CreateColormap</emphasis>
+<link linkend="requests:CreateColormap"><emphasis role='bold'>CreateColormap</emphasis></link>
      1     78                              opcode
      1                                     alloc
           0     None
@@ -2190,38 +2190,38 @@ VISUALTYPE
      4     WINDOW                          window
      4     VISUALID                        visual
 
-<emphasis role='bold'>FreeColormap</emphasis>
+<link linkend="requests:FreeColormap"><emphasis role='bold'>FreeColormap</emphasis></link>
      1     79                              opcode
      1                                     unused
      2     2                               request length
      4     COLORMAP                        cmap
 
-<emphasis role='bold'>CopyColormapAndFree</emphasis>
+<link linkend="requests:CopyColormapAndFree"><emphasis role='bold'>CopyColormapAndFree</emphasis></link>
      1     80                              opcode
      1                                     unused
      2     3                               request length
      4     COLORMAP                        mid
      4     COLORMAP                        src-cmap
 
-<emphasis role='bold'>InstallColormap</emphasis>
+<link linkend="requests:InstallColormap"><emphasis role='bold'>InstallColormap</emphasis></link>
      1     81                              opcode
      1                                     unused
      2     2                               request length
      4     COLORMAP                        cmap
 
-<emphasis role='bold'>UninstallColormap</emphasis>
+<link linkend="requests:UninstallColormap"><emphasis role='bold'>UninstallColormap</emphasis></link>
      1     82                              opcode
      1                                     unused
      2     2                               request length
      4     COLORMAP                        cmap
 
-<emphasis role='bold'>ListInstalledColormaps</emphasis>
+<link linkend="requests:ListInstalledColormaps"><emphasis role='bold'>ListInstalledColormaps</emphasis></link>
      1     83                              opcode
      1                                     unused
      2     2                               request length
      4     WINDOW                          window
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2230,7 +2230,7 @@ VISUALTYPE
      22                                    unused
      4n     LISTofCOLORMAP                 cmaps
 
-<emphasis role='bold'>AllocColor</emphasis>
+<link linkend="requests:AllocColor"><emphasis role='bold'>AllocColor</emphasis></link>
      1     84                              opcode
      1                                     unused
      2     4                               request length
@@ -2240,7 +2240,7 @@ VISUALTYPE
      2     CARD16                          blue
      2                                     unused
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2252,7 +2252,7 @@ VISUALTYPE
      4     CARD32                          pixel
      12                                    unused
 
-<emphasis role='bold'>AllocNamedColor</emphasis>
+<link linkend="requests:AllocNamedColor"><emphasis role='bold'>AllocNamedColor</emphasis></link>
      1     85                              opcode
      1                                     unused
      2     3+(n+p)/4                       request length
@@ -2262,7 +2262,7 @@ VISUALTYPE
      n     STRING8                         name
      p                                     unused, p=pad(n)
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2276,7 +2276,7 @@ VISUALTYPE
      2     CARD16                          visual-blue
      8                                     unused
 
-<emphasis role='bold'>AllocColorCells</emphasis>
+<link linkend="requests:AllocColorCells"><emphasis role='bold'>AllocColorCells</emphasis></link>
      1     86                              opcode
      1     BOOL                            contiguous
      2     3                               request length
@@ -2284,7 +2284,7 @@ VISUALTYPE
      2     CARD16                          colors
      2     CARD16                          planes
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2295,7 +2295,7 @@ VISUALTYPE
      4n     LISTofCARD32                   pixels
      4m     LISTofCARD32                   masks
 
-<emphasis role='bold'>AllocColorPlanes</emphasis>
+<link linkend="requests:AllocColorPlanes"><emphasis role='bold'>AllocColorPlanes</emphasis></link>
      1     87                              opcode
      1     BOOL                            contiguous
      2     4                               request length
@@ -2305,7 +2305,7 @@ VISUALTYPE
      2     CARD16                          greens
      2     CARD16                          blues
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2318,7 +2318,7 @@ VISUALTYPE
      8                                     unused
      4n     LISTofCARD32                   pixels
 
-<emphasis role='bold'>FreeColors</emphasis>
+<link linkend="requests:FreeColors"><emphasis role='bold'>FreeColors</emphasis></link>
      1     88                              opcode
      1                                     unused
      2     3+n                             request length
@@ -2326,7 +2326,7 @@ VISUALTYPE
      4     CARD32                          plane-mask
      4n     LISTofCARD32                   pixels
 
-<emphasis role='bold'>StoreColors</emphasis>
+<link linkend="requests:StoreColors"><emphasis role='bold'>StoreColors</emphasis></link>
      1     89                              opcode
      1                                     unused
      2     2+3n                            request length
@@ -2345,7 +2345,7 @@ VISUALTYPE
           #xF8     unused
      1                                     unused
 
-<emphasis role='bold'>StoreNamedColor</emphasis>
+<link linkend="requests:StoreNamedColor"><emphasis role='bold'>StoreNamedColor</emphasis></link>
      1     90                              opcode
      1                                     do-red, do-green, do-blue
           #x01     do-red (1 is True, 0 is False)
@@ -2360,14 +2360,14 @@ VISUALTYPE
      n     STRING8                         name
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>QueryColors</emphasis>
+<link linkend="requests:QueryColors"><emphasis role='bold'>QueryColors</emphasis></link>
      1     91                              opcode
      1                                     unused
      2     2+n                             request length
      4     COLORMAP                        cmap
      4n     LISTofCARD32                   pixels
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2382,7 +2382,7 @@ VISUALTYPE
      2     CARD16                          blue
      2                                     unused
 
-<emphasis role='bold'>LookupColor</emphasis>
+<link linkend="requests:LookupColor"><emphasis role='bold'>LookupColor</emphasis></link>
      1     92                              opcode
      1                                     unused
      2     3+(n+p)/4                       request length
@@ -2392,7 +2392,7 @@ VISUALTYPE
      n     STRING8                         name
      p                                     unused, p=pad(n)
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2405,7 +2405,7 @@ VISUALTYPE
      2     CARD16                          visual-blue
      12                                    unused
 
-<emphasis role='bold'>CreateCursor</emphasis>
+<link linkend="requests:CreateCursor"><emphasis role='bold'>CreateCursor</emphasis></link>
      1     93                              opcode
      1                                     unused
      2     8                               request length
@@ -2422,7 +2422,7 @@ VISUALTYPE
      2     CARD16                          x
      2     CARD16                          y
 
-<emphasis role='bold'>CreateGlyphCursor</emphasis>
+<link linkend="requests:CreateGlyphCursor"><emphasis role='bold'>CreateGlyphCursor</emphasis></link>
      1     94                              opcode
      1                                     unused
      2     8                               request length
@@ -2439,13 +2439,13 @@ VISUALTYPE
      2     CARD16                          back-green
      2     CARD16                          back-blue
 
-<emphasis role='bold'>FreeCursor</emphasis>
+<link linkend="requests:FreeCursor"><emphasis role='bold'>FreeCursor</emphasis></link>
      1     95                              opcode
      1                                     unused
      2     2                               request length
      4     CURSOR                          cursor
 
-<emphasis role='bold'>RecolorCursor</emphasis>
+<link linkend="requests:RecolorCursor"><emphasis role='bold'>RecolorCursor</emphasis></link>
      1     96                              opcode
      1                                     unused
      2     5                               request length
@@ -2457,7 +2457,7 @@ VISUALTYPE
      2     CARD16                          back-green
      2     CARD16                          back-blue
 
-<emphasis role='bold'>QueryBestSize</emphasis>
+<link linkend="requests:QueryBestSize"><emphasis role='bold'>QueryBestSize</emphasis></link>
      1     97                              opcode
      1                                     class
           0     Cursor
@@ -2468,7 +2468,7 @@ VISUALTYPE
      2     CARD16                          width
      2     CARD16                          height
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2477,7 +2477,7 @@ VISUALTYPE
      2     CARD16                          height
      20                                    unused
 
-<emphasis role='bold'>QueryExtension</emphasis>
+<link linkend="requests:QueryExtension"><emphasis role='bold'>QueryExtension</emphasis></link>
      1     98                              opcode
      1                                     unused
      2     2+(n+p)/4                       request length
@@ -2486,7 +2486,7 @@ VISUALTYPE
      n     STRING8                         name
      p                                     unused, p=pad(n)
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2497,12 +2497,12 @@ VISUALTYPE
      1     CARD8                           first-error
      20                                    unused
 
-<emphasis role='bold'>ListExtensions</emphasis>
+<link linkend="requests:ListExtensions"><emphasis role='bold'>ListExtensions</emphasis></link>
      1     99                              opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1     CARD8                           number of STRs in names
      2     CARD16                          sequence number
@@ -2511,7 +2511,7 @@ VISUALTYPE
      n     LISTofSTR                       names
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>ChangeKeyboardMapping</emphasis>
+<link linkend="requests:ChangeKeyboardMapping"><emphasis role='bold'>ChangeKeyboardMapping</emphasis></link>
      1     100                             opcode
      1     n                               keycode-count
      2     2+nm                            request length
@@ -2520,7 +2520,7 @@ VISUALTYPE
      2                                     unused
      4nm     LISTofKEYSYM                  keysyms
 
-<emphasis role='bold'>GetKeyboardMapping</emphasis>
+<link linkend="requests:GetKeyboardMapping"><emphasis role='bold'>GetKeyboardMapping</emphasis></link>
      1     101                             opcode
      1                                     unused
      2     2                               request length
@@ -2528,7 +2528,7 @@ VISUALTYPE
      1     m                               count
      2                                     unused
 
--&gt;
+▶
      1     1                               Reply
      1     n                               keysyms-per-keycode
      2     CARD16                          sequence number
@@ -2537,7 +2537,7 @@ VISUALTYPE
      24                                    unused
      4nm     LISTofKEYSYM                  keysyms
 
-<emphasis role='bold'>ChangeKeyboardControl</emphasis>
+<link linkend="requests:ChangeKeyboardControl"><emphasis role='bold'>ChangeKeyboardControl</emphasis></link>
      1     102                             opcode
      1                                     unused
      2     2+n                             request length
@@ -2567,12 +2567,12 @@ VISUALTYPE
           1     On
           2     Default
 
-<emphasis role='bold'>GetKeyboardControl</emphasis>
+<link linkend="requests:GetKeyboardControl"><emphasis role='bold'>GetKeyboardControl</emphasis></link>
      1     103                             opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1                                     global-auto-repeat
           0     Off
@@ -2587,12 +2587,12 @@ VISUALTYPE
      2                                     unused
      32     LISTofCARD8                    auto-repeats
 
-<emphasis role='bold'>Bell</emphasis>
+<link linkend="requests:Bell"><emphasis role='bold'>Bell</emphasis></link>
      1     104                             opcode
      1     INT8                            percent
      2     1                               request length
 
-<emphasis role='bold'>ChangePointerControl</emphasis>
+<link linkend="requests:ChangePointerControl"><emphasis role='bold'>ChangePointerControl</emphasis></link>
      1     105                             opcode
      1                                     unused
      2     3                               request length
@@ -2602,12 +2602,12 @@ VISUALTYPE
      1     BOOL                            do-acceleration
      1     BOOL                            do-threshold
 
-<emphasis role='bold'>GetPointerControl</emphasis>
+<link linkend="requests:GetPointerControl"><emphasis role='bold'>GetPointerControl</emphasis></link>
      1     106                             opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2617,7 +2617,7 @@ VISUALTYPE
      2     CARD16                          threshold
      18                                    unused
 
-<emphasis role='bold'>SetScreenSaver</emphasis>
+<link linkend="requests:SetScreenSaver"><emphasis role='bold'>SetScreenSaver</emphasis></link>
      1     107                             opcode
      1                                     unused
      2     3                               request length
@@ -2633,12 +2633,12 @@ VISUALTYPE
           2     Default
      2                                     unused
 
-<emphasis role='bold'>GetScreenSaver</emphasis>
+<link linkend="requests:GetScreenSaver"><emphasis role='bold'>GetScreenSaver</emphasis></link>
      1     108                             opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1                                     unused
      2     CARD16                          sequence number
@@ -2653,7 +2653,7 @@ VISUALTYPE
           1     Yes
      18                                    unused
 
-<emphasis role='bold'>ChangeHosts</emphasis>
+<link linkend="requests:ChangeHosts"><emphasis role='bold'>ChangeHosts</emphasis></link>
      1     109                             opcode
      1                                     mode
           0     Insert
@@ -2668,12 +2668,12 @@ VISUALTYPE
      n     LISTofCARD8                     address
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>ListHosts</emphasis>
+<link linkend="requests:ListHosts"><emphasis role='bold'>ListHosts</emphasis></link>
      1     110                             opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1                                     mode
           0     Disabled
@@ -2684,14 +2684,14 @@ VISUALTYPE
      22                                    unused
      n     LISTofHOST                      hosts (n always a multiple of 4)
 
-<emphasis role='bold'>SetAccessControl</emphasis>
+<link linkend="requests:SetAccessControl"><emphasis role='bold'>SetAccessControl</emphasis></link>
      1     111                             opcode
      1                                     mode
           0     Disable
           1     Enable
      2     1                               request length
 
-<emphasis role='bold'>SetCloseDownMode</emphasis>
+<link linkend="requests:SetCloseDownMode"><emphasis role='bold'>SetCloseDownMode</emphasis></link>
      1     112                             opcode
      1                                     mode
           0     Destroy
@@ -2699,14 +2699,14 @@ VISUALTYPE
           2     RetainTemporary
      2     1                               request length
 
-<emphasis role='bold'>KillClient</emphasis>
+<link linkend="requests:KillClient"><emphasis role='bold'>KillClient</emphasis></link>
      1     113                             opcode
      1                                     unused
      2     2                               request length
      4     CARD32                          resource
           0     AllTemporary
 
-<emphasis role='bold'>RotateProperties</emphasis>
+<link linkend="requests:RotateProperties"><emphasis role='bold'>RotateProperties</emphasis></link>
      1     114                             opcode
      1                                     unused
      2     3+n                             request length
@@ -2715,21 +2715,21 @@ VISUALTYPE
      2     INT16                           delta
      4n    LISTofATOM                      properties
 
-<emphasis role='bold'>ForceScreenSaver</emphasis>
+<link linkend="requests:ForceScreenSaver"><emphasis role='bold'>ForceScreenSaver</emphasis></link>
      1     115                             opcode
      1                                     mode
           0     Reset
           1     Activate
      2     1                               request length
 
-<emphasis role='bold'>SetPointerMapping</emphasis>
+<link linkend="requests:SetPointerMapping"><emphasis role='bold'>SetPointerMapping</emphasis></link>
      1     116                             opcode
      1     n                               length of map
      2     1+(n+p)/4                       request length
      n     LISTofCARD8                     map
      p                                     unused, p=pad(n)
 
--&gt;
+▶
      1     1                               Reply
      1                                     status
           0     Success
@@ -2738,12 +2738,12 @@ VISUALTYPE
      4     0                               reply length
      24                                    unused
 
-<emphasis role='bold'>GetPointerMapping</emphasis>
+<link linkend="requests:GetPointerMapping"><emphasis role='bold'>GetPointerMapping</emphasis></link>
      1     117                             opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1     n                               length of map
      2     CARD16                          sequence number
@@ -2752,13 +2752,13 @@ VISUALTYPE
      n     LISTofCARD8                     map
      p                                     unused, p=pad(n)
 
-<emphasis role='bold'>SetModifierMapping</emphasis>
+<link linkend="requests:SetModifierMapping"><emphasis role='bold'>SetModifierMapping</emphasis></link>
      1     118                             opcode
      1     n                               keycodes-per-modifier
      2     1+2n                            request length
      8n    LISTofKEYCODE                   keycodes
 
--&gt;
+▶
      1     1                               Reply
      1                                     status
           0     Success
@@ -2768,12 +2768,12 @@ VISUALTYPE
      4     0                               reply length
      24                                    unused
 
-<emphasis role='bold'>GetModifierMapping</emphasis>
+<link linkend="requests:GetModifierMapping"><emphasis role='bold'>GetModifierMapping</emphasis></link>
      1     119                             opcode
      1                                     unused
      2     1                               request length
 
--&gt;
+▶
      1     1                               Reply
      1     n                               keycodes-per-modifier
      2     CARD16                          sequence number
@@ -2781,7 +2781,7 @@ VISUALTYPE
      24                                    unused
      8n     LISTofKEYCODE                  keycodes
 
-<emphasis role='bold'>NoOperation</emphasis>
+<link linkend="requests:NoOperation"><emphasis role='bold'>NoOperation</emphasis></link>
      1     127                             opcode
      1                                     unused
      2     1+n                             request length
@@ -2789,11 +2789,11 @@ VISUALTYPE
 </literallayout>
 </sect1>
 
-<sect1 id="events_2">
+<sect1 id="events_encoding">
 <title>Events</title>
 
 <literallayout class="monospaced">
-<emphasis role='bold'>KeyPress</emphasis>
+<link linkend="events:KeyPress"><emphasis role='bold'>KeyPress</emphasis></link>
      1     2                               code
      1     KEYCODE                         detail
      2     CARD16                          sequence number
@@ -2810,7 +2810,7 @@ VISUALTYPE
      1     BOOL                            same-screen
      1                                     unused
 
-<emphasis role='bold'>KeyRelease</emphasis>
+<link linkend="events:KeyRelease"><emphasis role='bold'>KeyRelease</emphasis></link>
      1     3                               code
      1     KEYCODE                         detail
      2     CARD16                          sequence number
@@ -2827,7 +2827,7 @@ VISUALTYPE
      1     BOOL                            same-screen
      1                                     unused
 
-<emphasis role='bold'>ButtonPress</emphasis>
+<link linkend="events:ButtonPress"><emphasis role='bold'>ButtonPress</emphasis></link>
      1     4                               code
      1     BUTTON                          detail
      2     CARD16                          sequence number
@@ -2844,7 +2844,7 @@ VISUALTYPE
      1     BOOL                            same-screen
      1                                     unused
 
-<emphasis role='bold'>ButtonRelease</emphasis>
+<link linkend="events:ButtonRelease"><emphasis role='bold'>ButtonRelease</emphasis></link>
      1     5                               code
      1     BUTTON                          detail
      2     CARD16                          sequence number
@@ -2861,7 +2861,7 @@ VISUALTYPE
      1     BOOL                            same-screen
      1                                     unused
 
-<emphasis role='bold'>MotionNotify</emphasis>
+<link linkend="events:MotionNotify"><emphasis role='bold'>MotionNotify</emphasis></link>
      1     6                               code
      1                                     detail
           0     Normal
@@ -2880,7 +2880,7 @@ VISUALTYPE
      1     BOOL                            same-screen
      1                                     unused
 
-<emphasis role='bold'>EnterNotify</emphasis>
+<link linkend="events:EnterNotify"><emphasis role='bold'>EnterNotify</emphasis></link>
      1     7                               code
      1                                     detail
           0     Ancestor
@@ -2908,7 +2908,7 @@ VISUALTYPE
           #x02     same-screen (1 is True, 0 is False)
           #xFC     unused
 
-<emphasis role='bold'>LeaveNotify</emphasis>
+<link linkend="events:LeaveNotify"><emphasis role='bold'>LeaveNotify</emphasis></link>
      1     8                               code
      1                                     detail
           0     Ancestor
@@ -2936,7 +2936,7 @@ VISUALTYPE
           #x02     same-screen (1 is True, 0 is False)
           #xFC     unused
 
-<emphasis role='bold'>FocusIn</emphasis>
+<link linkend="events:FocusIn"><emphasis role='bold'>FocusIn</emphasis></link>
      1     9                               code
      1                                     detail
           0     Ancestor
@@ -2956,7 +2956,7 @@ VISUALTYPE
           3     WhileGrabbed
      23                                    unused
 
-<emphasis role='bold'>FocusOut</emphasis>
+<link linkend="events:FocusOut"><emphasis role='bold'>FocusOut</emphasis></link>
      1     10                              code
      1                                     detail
           0     Ancestor
@@ -2976,12 +2976,12 @@ VISUALTYPE
           3     WhileGrabbed
      23                                    unused
 
-<emphasis role='bold'>KeymapNotify</emphasis>
+<link linkend="events:KeymapNotify"><emphasis role='bold'>KeymapNotify</emphasis></link>
      1     11                              code
      31    LISTofCARD8                     keys (byte for keycodes 0-7 is
                                            omitted)
 
-<emphasis role='bold'>Expose</emphasis>
+<link linkend="events:Expose"><emphasis role='bold'>Expose</emphasis></link>
      1     12                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -2993,7 +2993,7 @@ VISUALTYPE
      2     CARD16                          count
      14                                    unused
 
-<emphasis role='bold'>GraphicsExposure</emphasis>
+<link linkend="events:GraphicsExposure"><emphasis role='bold'>GraphicsExposure</emphasis></link>
      1     13                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3007,7 +3007,7 @@ VISUALTYPE
      1     CARD8                           major-opcode
      11                                    unused
 
-<emphasis role='bold'>NoExposure</emphasis>
+<link linkend="events:NoExposure"><emphasis role='bold'>NoExposure</emphasis></link>
      1     14                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3016,7 +3016,7 @@ VISUALTYPE
      1     CARD8                           major-opcode
      21                                    unused
 
-<emphasis role='bold'>VisibilityNotify</emphasis>
+<link linkend="events:VisibilityNotify"><emphasis role='bold'>VisibilityNotify</emphasis></link>
      1     15                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3027,7 +3027,7 @@ VISUALTYPE
           2     FullyObscured
      23                                    unused
 
-<emphasis role='bold'>CreateNotify</emphasis>
+<link linkend="events:CreateNotify"><emphasis role='bold'>CreateNotify</emphasis></link>
      1     16                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3041,7 +3041,7 @@ VISUALTYPE
      1     BOOL                            override-redirect
      9                                     unused
 
-<emphasis role='bold'>DestroyNotify</emphasis>
+<link linkend="events:DestroyNotify"><emphasis role='bold'>DestroyNotify</emphasis></link>
      1     17                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3049,7 +3049,7 @@ VISUALTYPE
      4     WINDOW                          window
      20                                    unused
 
-<emphasis role='bold'>UnmapNotify</emphasis>
+<link linkend="events:UnmapNotify"><emphasis role='bold'>UnmapNotify</emphasis></link>
      1     18                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3058,7 +3058,7 @@ VISUALTYPE
      1     BOOL                            from-configure
      19                                    unused
 
-<emphasis role='bold'>MapNotify</emphasis>
+<link linkend="events:MapNotify"><emphasis role='bold'>MapNotify</emphasis></link>
      1     19                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3067,7 +3067,7 @@ VISUALTYPE
      1     BOOL                            override-redirect
      19                                    unused
 
-<emphasis role='bold'>MapRequest</emphasis>
+<link linkend="events:MapRequest"><emphasis role='bold'>MapRequest</emphasis></link>
      1     20                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3075,7 +3075,7 @@ VISUALTYPE
      4     WINDOW                          window
      20                                    unused
 
-<emphasis role='bold'>ReparentNotify</emphasis>
+<link linkend="events:ReparentNotify"><emphasis role='bold'>ReparentNotify</emphasis></link>
      1     21                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3087,7 +3087,7 @@ VISUALTYPE
      1     BOOL                            override-redirect
      11                                    unused
 
-<emphasis role='bold'>ConfigureNotify</emphasis>
+<link linkend="events:ConfigureNotify"><emphasis role='bold'>ConfigureNotify</emphasis></link>
      1     22                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3103,7 +3103,7 @@ VISUALTYPE
      1     BOOL                            override-redirect
      5                                     unused
 
-<emphasis role='bold'>ConfigureRequest</emphasis>
+<link linkend="events:ConfigureRequest"><emphasis role='bold'>ConfigureRequest</emphasis></link>
      1     23                              code
      1                                     stack-mode
           0     Above
@@ -3131,7 +3131,7 @@ VISUALTYPE
           #x0040     stack-mode
      4                                     unused
 
-<emphasis role='bold'>GravityNotify</emphasis>
+<link linkend="events:GravityNotify"><emphasis role='bold'>GravityNotify</emphasis></link>
      1     24                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3141,7 +3141,7 @@ VISUALTYPE
      2     INT16                           y
      16                                    unused
 
-<emphasis role='bold'>ResizeRequest</emphasis>
+<link linkend="events:ResizeRequest"><emphasis role='bold'>ResizeRequest</emphasis></link>
      1     25                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3150,7 +3150,7 @@ VISUALTYPE
      2     CARD16                          height
      20                                    unused
 
-<emphasis role='bold'>CirculateNotify</emphasis>
+<link linkend="events:CirculateNotify"><emphasis role='bold'>CirculateNotify</emphasis></link>
      1     26                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3162,7 +3162,7 @@ VISUALTYPE
           1     Bottom
      15                                    unused
 
-<emphasis role='bold'>CirculateRequest</emphasis>
+<link linkend="events:CirculateRequest"><emphasis role='bold'>CirculateRequest</emphasis></link>
      1     27                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3174,7 +3174,7 @@ VISUALTYPE
           1     Bottom
      15                                    unused
 
-<emphasis role='bold'>PropertyNotify</emphasis>
+<link linkend="events:PropertyNotify"><emphasis role='bold'>PropertyNotify</emphasis></link>
      1     28                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3186,7 +3186,7 @@ VISUALTYPE
           1     Deleted
      15                                    unused
 
-<emphasis role='bold'>SelectionClear</emphasis>
+<link linkend="events:SelectionClear"><emphasis role='bold'>SelectionClear</emphasis></link>
      1     29                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3195,7 +3195,7 @@ VISUALTYPE
      4     ATOM                            selection
      16                                    unused
 
-<emphasis role='bold'>SelectionRequest</emphasis>
+<link linkend="events:SelectionRequest"><emphasis role='bold'>SelectionRequest</emphasis></link>
      1     30                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3209,7 +3209,7 @@ VISUALTYPE
           0     None
      4                                     unused
 
-<emphasis role='bold'>SelectionNotify</emphasis>
+<link linkend="events:SelectionNotify"><emphasis role='bold'>SelectionNotify</emphasis></link>
      1     31                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3222,7 +3222,7 @@ VISUALTYPE
           0     None
      8                                     unused
 
-<emphasis role='bold'>ColormapNotify</emphasis>
+<link linkend="events:ColormapNotify"><emphasis role='bold'>ColormapNotify</emphasis></link>
      1     32                              code
      1                                     unused
      2     CARD16                          sequence number
@@ -3235,7 +3235,7 @@ VISUALTYPE
           1     Installed
      18                                    unused
 
-<emphasis role='bold'>ClientMessage</emphasis>
+<link linkend="events:ClientMessage"><emphasis role='bold'>ClientMessage</emphasis></link>
      1     33                              code
      1     CARD8                           format
      2     CARD16                          sequence number
@@ -3243,7 +3243,7 @@ VISUALTYPE
      4     ATOM                            type
      20                                    data
 
-<emphasis role='bold'>MappingNotify</emphasis>
+<link linkend="events:MappingNotify"><emphasis role='bold'>MappingNotify</emphasis></link>
      1     34                              code
      1                                     unused
      2     CARD16                          sequence number

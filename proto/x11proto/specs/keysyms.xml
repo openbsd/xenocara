@@ -40,11 +40,12 @@ There are six categories of KEYSYM values.
 <title>Special KEYSYMs</title>
 <para>
 There are two special values:
-<emphasis role='bold'>NoSymbol </emphasis>
+<emphasis role='bold'>NoSymbol</emphasis>
 and
-<emphasis role='bold'>VoidSymbol .</emphasis>
-They are used to indicate the absence of symbols (see section 5).
-</para> <!-- xref -->
+<emphasis role='bold'>VoidSymbol</emphasis>.
+They are used to indicate the absence of symbols (see
+<link linkend="keyboards">Section 5, Keyboards</link>).
+</para>
 
 <informaltable frame="topbot">
   <tgroup cols='6' align='left'>
