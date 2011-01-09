@@ -786,9 +786,9 @@ Display_Window_Id (struct wininfo *w, Bool newline_wanted)
 {
 #ifdef USE_XCB_ICCCM
     xcb_get_text_property_reply_t wmn_reply;
+    uint8_t got_reply = False;
 #endif
     xcb_get_property_reply_t *prop;
-    uint8_t got_reply = False;
     const char *wm_name = NULL;
     unsigned int wm_name_len = 0;
     xcb_atom_t wm_name_encoding = XCB_NONE;
@@ -807,10 +807,7 @@ Display_Window_Id (struct wininfo *w, Bool newline_wanted)
 	    wm_name = xcb_get_property_value (prop);
 	    wm_name_len = xcb_get_property_value_length (prop);
 	    wm_name_encoding = prop->type;
-	    got_reply = True;
-	}
-
-	if (!got_reply) { /* No _NET_WM_NAME, check WM_NAME */
+	} else { /* No _NET_WM_NAME, check WM_NAME */
 #ifdef USE_XCB_ICCCM
 	    got_reply = xcb_get_wm_name_reply (dpy, w->wm_name_cookie,
 					       &wmn_reply, NULL);
@@ -825,11 +822,10 @@ Display_Window_Id (struct wininfo *w, Bool newline_wanted)
 		wm_name = xcb_get_property_value (prop);
 		wm_name_len = xcb_get_property_value_length (prop);
 		wm_name_encoding = prop->type;
-		got_reply = True;
 	    }
 #endif
 	}
-	if (!got_reply || wm_name_len == 0) {
+	if (wm_name_len == 0) {
 	    printf (" (has no name)");
         } else {
 	    if (wm_name_encoding == XCB_ATOM_STRING) {
