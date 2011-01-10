@@ -132,6 +132,27 @@ xkb_symbols "typewriter" {
 };
 
 partial alphanumeric_keys
+xkb_symbols "typewriter-legacy" {
+    include "ru(common)"
+    name[Group1]= "Russia - Typewriter, legacy";
+    key	<TLDE> {	[      apostrophe,	  quotedbl	] 	};
+    key	<AE01> {	[	   exclam,		 1 	]	};
+    key	<AE02> {	[      numerosign,		 2	]	};
+    key	<AE03> {	[	    slash,		 3	]	};
+    key	<AE04> {	[	semicolon,		 4	]	};
+    key	<AE05> {	[	    colon,		 5	]	};
+    key	<AE06> {	[	    comma,		 6	]	};
+    key	<AE07> {	[	   period,		 7	]	};
+    key	<AE08> {	[      underscore,		 8	]	};
+    key	<AE09> {	[	 question,		 9	]	};
+    key	<AE10> {	[	  percent,		 0	]	};
+    key	<BKSL> {	[	parenleft,	parenright	]	};
+
+    key	<AD12> {	[Cyrillic_hardsign,Cyrillic_HARDSIGN	]	};
+    key	<AB10> {	[     Cyrillic_io,     Cyrillic_IO	]	};
+};
+
+partial alphanumeric_keys
 xkb_symbols "phonetic" {
 
     name[Group1]= "Russia - Phonetic";
@@ -277,7 +298,7 @@ xkb_symbols "udm" {
 
     key	<AE01> {	[	 question,	    exclam,    1,       1 	]	};
     key	<AE02> {	[	parenleft,        quotedbl,    2,       2	]	};
-    key	<AE03> {	[      parenright,      numbersign,    3,       3	]	};
+    key	<AE03> {	[      parenright,      numerosign,    3,       3	]	};
     key	<AE04> {	[	    colon,       semicolon,    4,       4	]	};
     key	<AE05> {	[	 asterisk,	   percent,    5,       5	]	};
     key	<AE06> {	[      0x010004dd,	0x010004dc,    6,       6	]	};
@@ -438,3 +459,52 @@ xkb_symbols "dos" {
     key        <AB10> {        [   Cyrillic_io, Cyrillic_IO ] };
 };
 
+partial alphanumeric_keys
+xkb_symbols "bak" {
+    include "ru(winkeys)"
+
+    name[Group1]= "Russia - Bashkirian";
+    key.type[group1]="FOUR_LEVEL";
+
+    key <TLDE> { [     0x010004d9,       0x010004d8,   Cyrillic_io,   Cyrillic_IO      ] };
+    key <AE01> { [     exclam,           quotedbl,      1,       1       ] };
+    key <AE02> { [     0x010004e9,       0x010004e8,    2,       2 ] };
+    key <AE03> { [     0x010004a1,       0x010004a0,    3,       3 ] };
+    key <AE04> { [     0x01000493,       0x01000492,    4,       4 ] };
+    key <AE05> { [     0x010004ab,       0x010004aa,    5,       5 ] };
+    key <AE06> { [     colon,            semicolon,     6,       6 ] };
+    key <AE07> { [     0x01000499,       0x01000498,    7,       7 ] };
+    key <AE08> { [     0x010004bb,       0x010004ba,    8,       8 ] };
+    key <AE09> { [     question,         parenleft,     9,       9 ] };
+    key <AE10> { [     numerosign,       parenright,    0,       0 ] };
+    key <AE11> { [     minus,            percent,       minus,    underscore     ]};
+    key <AE12> { [     0x010004af, 0x010004ae,    equal,  plus    ]};
+    key <BKSL> { [     0x010004a3, 0x010004a2,    backslash,        slash     ]};	
+	
+    include "level3(ralt_switch)"
+};
+
+// Serbian charecters added as third level symbols to Russian keyboard layout.
+
+partial alphanumeric_keys
+xkb_symbols "srp" {
+    include "ru(common)"
+    include "level3(ralt_switch)"
+
+    name[Group1]= "Russia - Serbian";
+
+    key <AE03> { [ 3, numerosign ] };
+    key <AE04> { [ 4, semicolon ] };
+    key <AE05> { [ 5, percent ] };
+    key <AE06> { [ 6, colon ] };
+    key <AE07> { [ 7, question ] };
+    key <AE08> { [ 8, asterisk ] };
+    key <AB10> { [ period, comma ] };
+    key <BKSL> { [ backslash, slash ] };
+    key	<AD01> { [ Cyrillic_shorti, Cyrillic_SHORTI, U458, U408 ] };
+    key	<AD06> { [ Cyrillic_en, Cyrillic_EN, U45A, U40A ] };
+    key	<AC08> { [ Cyrillic_el, Cyrillic_EL, U459, U409 ] };
+    key	<AC09> { [ Cyrillic_de, Cyrillic_DE, U45F, U40F ] };
+    key	<AC10> { [ Cyrillic_zhe, Cyrillic_ZHE, U452, U402 ] };
+    key	<AB02> { [ Cyrillic_che, Cyrillic_CHE, U45B, U40B ] };
+};

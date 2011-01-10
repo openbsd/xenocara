@@ -123,13 +123,6 @@
     </model>
     <model>
       <configItem>
-        <name>acpi</name>
-        <_description>ACPI Standard</_description>
-        <vendor>Generic</vendor>
-      </configItem>
-    </model>
-    <model>
-      <configItem>
         <name>azonaRF2300</name>
         <_description>Azona RF2300 wireless Internet Keyboard</_description>
         <vendor>Azona</vendor>
@@ -456,6 +449,13 @@
     </model>
     <model>
       <configItem>
+        <name>kinesis</name>
+        <_description>Kinesis</_description>
+        <vendor>Kinesis</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
         <name>logitech_base</name>
         <_description>Logitech Generic Keyboard</_description>
         <vendor>Logitech</vendor>
@@ -554,51 +554,51 @@
     </model>
     <model>
       <configItem>
+        <name>hpmini110</name>
+        <_description>Hewlett-Packard Mini 110 Notebook</_description>
+        <vendor>Hewlett-Packard</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
         <name>rapidaccess</name>
         <_description>IBM Rapid Access</_description>
-        <vendor>IBM</vendor>
+        <vendor>Lenovo (previously IBM)</vendor>
       </configItem>
     </model>
     <model>
       <configItem>
         <name>rapidaccess2</name>
         <_description>IBM Rapid Access II</_description>
-        <vendor>IBM</vendor>
+        <vendor>Lenovo (previously IBM)</vendor>
       </configItem>
     </model>
     <model>
       <configItem>
         <name>thinkpad</name>
         <_description>IBM ThinkPad 560Z/600/600E/A22E</_description>
-        <vendor>IBM</vendor>
-      </configItem>
-    </model>
-    <model>
-      <configItem>
-        <name>thinkpadintl</name>
-        <_description>IBM ThinkPad 560Z/600/600E/A22E, Intl</_description>
-        <vendor>IBM</vendor>
+        <vendor>Lenovo (previously IBM)</vendor>
       </configItem>
     </model>
     <model>
       <configItem>
         <name>thinkpad60</name>
         <_description>IBM ThinkPad R60/T60/R61/T61</_description>
-        <vendor>IBM</vendor>
+        <vendor>Lenovo (previously IBM)</vendor>
       </configItem>
     </model>
     <model>
       <configItem>
         <name>thinkpadz60</name>
         <_description>IBM ThinkPad Z60m/Z60t/Z61m/Z61t</_description>
-        <vendor>IBM</vendor>
+        <vendor>Lenovo (previously IBM)</vendor>
       </configItem>
     </model>
     <model>
       <configItem>
         <name>ibm_spacesaver</name>
         <_description>IBM Space Saver</_description>
-        <vendor>IBM</vendor>
+        <vendor>Lenovo (previously IBM)</vendor>
       </configItem>
     </model>
     <model>
@@ -981,6 +981,41 @@
     </model>
     <model>
       <configItem>
+        <name>tm2020</name>
+        <_description>TypeMatrix EZ-Reach 2020</_description>
+        <vendor>TypeMatrix</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>tm2030PS2</name>
+        <_description>TypeMatrix EZ-Reach 2030 PS2</_description>
+        <vendor>TypeMatrix</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>tm2030USB</name>
+        <_description>TypeMatrix EZ-Reach 2030 USB</_description>
+        <vendor>TypeMatrix</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>tm2030USB-102</name>
+        <_description>TypeMatrix EZ-Reach 2030 USB (102/105:EU mode)</_description>
+        <vendor>TypeMatrix</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>tm2030USB-106</name>
+        <_description>TypeMatrix EZ-Reach 2030 USB (106:JP mode)</_description>
+        <vendor>TypeMatrix</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
         <name>yahoo</name>
         <_description>Yahoo! Internet Keyboard</_description>
 	<vendor>Yahoo!</vendor>
@@ -1065,6 +1100,27 @@
     </model>
     <model>
       <configItem>
+        <name>applealu_ansi</name>
+        <_description>Apple Aluminium Keyboard (ANSI)</_description>
+	<vendor>Apple</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>applealu_iso</name>
+        <_description>Apple Aluminium Keyboard (ISO)</_description>
+	<vendor>Apple</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>applealu_jis</name>
+        <_description>Apple Aluminium Keyboard (JIS)</_description>
+	<vendor>Apple</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
         <name>silvercrest</name>
         <_description>SILVERCREST Multimedia Wireless Keyboard</_description>
 	<vendor>Silvercrest</vendor>
@@ -1075,13 +1131,6 @@
         <name>emachines</name>
         <_description>Laptop/notebook eMachines m68xx</_description>
 	<vendor>eMachines</vendor>
-      </configItem>
-    </model>
-    <model>
-      <configItem>
-	<name>evdev</name>
-	<_description>Evdev-managed keyboard</_description>
-	<vendor>Generic</vendor>
       </configItem>
     </model>
     <model>
@@ -1154,6 +1203,13 @@
         <vendor>Compal Electronics Inc.</vendor>
       </configItem>
     </model>
+    <model>
+      <configItem>
+        <name>creativedw7000</name>
+        <_description>Creative Desktop Wireless 7000</_description>
+        <vendor>Creative</vendor>
+      </configItem>
+    </model>
   </modelList>
   <layoutList>
     <layout>
@@ -1186,7 +1242,7 @@
         <variant>
           <configItem>
             <name>alt-intl</name>
-            <_description>Alternative international (former us_intl)</_description>
+            <_description>Alternative international</_description>
           </configItem>
         </variant>
 	<variant>
@@ -1204,7 +1260,13 @@
         <variant>
           <configItem>
             <name>dvorak-intl</name>
-            <_description>Dvorak international</_description>
+            <_description>Dvorak international (with dead keys)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>dvorak-alt-intl</name>
+            <_description>Dvorak alternative international (no dead keys)</_description>
           </configItem>
         </variant>
         <variant>
@@ -1235,6 +1297,7 @@
           <configItem>
             <name>rus</name>
             <_description>Russian phonetic</_description>
+            <languageList><iso639Id>rus</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
@@ -1255,7 +1318,15 @@
         <variant>
           <configItem>
             <name>olpc2</name>
-            <_description>Group toggle on multiply/divide key</_description>
+            <_description>Layout toggle on multiply/divide key</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>srp</name>
+            <_description>Serbian</_description>
+            <languageList><iso639Id>eng</iso639Id>
+                          <iso639Id>srp</iso639Id> </languageList>
           </configItem>
         </variant>
       </variantList>
@@ -1431,6 +1502,34 @@
     </layout>
     <layout>
       <configItem>
+        <name>at</name>
+        <_shortDescription>Aut</_shortDescription>
+        <_description>Austria</_description>
+        <languageList><iso639Id>ger</iso639Id></languageList>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
+            <name>nodeadkeys</name>
+            <_description>Eliminate dead keys</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sundeadkeys</name>
+            <_description>Sun dead keys</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>mac</name>
+            <_description>Macintosh</_description>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
         <name>az</name>
         <_shortDescription>Aze</_shortDescription>
         <_description>Azerbaijan</_description>
@@ -1455,8 +1554,8 @@
       <variantList>
         <variant>
           <configItem>
-            <name>winkeys</name>
-            <_description>Winkeys</_description>
+            <name>legacy</name>
+            <_description>Legacy</_description>
           </configItem>
         </variant>
         <variant>
@@ -1473,6 +1572,7 @@
         <_shortDescription>Bel</_shortDescription>
         <_description>Belgium</_description>
         <languageList><iso639Id>ger</iso639Id>
+                      <iso639Id>nld</iso639Id>
                       <iso639Id>fra</iso639Id></languageList>
       </configItem>
       <variantList>
@@ -1523,7 +1623,7 @@
     <layout>
       <configItem>
         <name>bd</name>
-        <_shortDescription>Ban</_shortDescription>
+        <_shortDescription>Bgd</_shortDescription>
         <_description>Bangladesh</_description>
         <languageList><iso639Id>ben</iso639Id></languageList>
       </configItem>
@@ -1610,6 +1710,13 @@
           <configItem>
             <name>tam_unicode</name>
             <_description>Tamil Unicode</_description>
+            <languageList><iso639Id>tam</iso639Id></languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>tam_keyboard_with_numerals</name>
+            <_description>Tamil Keyboard with Numerals</_description>
             <languageList><iso639Id>tam</iso639Id></languageList>
           </configItem>
         </variant>
@@ -1764,7 +1871,7 @@
         <variant>
           <configItem>
             <name>phonetic</name>
-            <_description>Traditional Phonetic</_description>
+            <_description>Traditional phonetic</_description>
           </configItem>
         </variant>
       </variantList>
@@ -1772,7 +1879,7 @@
         <variant>
           <configItem>
             <name>bas_phonetic</name>
-            <_description>Standard Phonetic</_description>
+            <_description>New phonetic</_description>
           </configItem>
         </variant>
       </variantList>
@@ -1800,35 +1907,35 @@
         <variant>
           <configItem>
             <name>tifinagh-alt</name>
-            <_description>Tifinagh Alternative</_description>
+            <_description>Tifinagh alternative</_description>
             <languageList><iso639Id>ber</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>tifinagh-alt-phonetic</name>
-            <_description>Tifinagh Alternative Phonetic</_description>
+            <_description>Tifinagh alternative phonetic</_description>
             <languageList><iso639Id>ber</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>tifinagh-extended</name>
-            <_description>Tifinagh Extended</_description>
+            <_description>Tifinagh extended</_description>
             <languageList><iso639Id>ber</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>tifinagh-phonetic</name>
-            <_description>Tifinagh Phonetic</_description>
+            <_description>Tifinagh phonetic</_description>
             <languageList><iso639Id>ber</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>tifinagh-extended-phonetic</name>
-            <_description>Tifinagh Extended Phonetic</_description>
+            <_description>Tifinagh extended phonetic</_description>
             <languageList><iso639Id>ber</iso639Id></languageList>
           </configItem>
         </variant>
@@ -1913,7 +2020,7 @@
     <layout>
       <configItem>
         <name>cd</name>
-        <_shortDescription>DRC</_shortDescription>
+        <_shortDescription>COD</_shortDescription>
         <_description>Congo, Democratic Republic of the</_description>
         <languageList><iso639Id>fra</iso639Id></languageList>
       </configItem>
@@ -1922,7 +2029,7 @@
     <layout>
       <configItem>
         <name>cn</name>
-        <_shortDescription>China</_shortDescription>
+        <_shortDescription>Chn</_shortDescription>
         <_description>China</_description>
         <languageList><iso639Id>chi</iso639Id></languageList>
       </configItem>
@@ -2009,12 +2116,18 @@
 	    <_description>UCW layout (accented letters only)</_description>
 	 </configItem>
 	</variant>
+	<variant>
+	  <configItem>
+	    <name>dvorak-ucw</name>
+	    <_description>US Dvorak with CZ UCW support</_description>
+	 </configItem>
+	</variant>
       </variantList>
     </layout>
     <layout>
       <configItem>
         <name>dk</name>
-        <_shortDescription>Dan</_shortDescription>
+        <_shortDescription>Dnk</_shortDescription>
         <_description>Denmark</_description>
         <languageList><iso639Id>dan</iso639Id></languageList>
       </configItem>
@@ -2076,7 +2189,7 @@
     <layout>
       <configItem>
         <name>bt</name>
-        <_shortDescription>Bhu</_shortDescription>
+        <_shortDescription>Btn</_shortDescription>
         <_description>Bhutan</_description>
         <languageList><iso639Id>dzo</iso639Id></languageList>
       </configItem>
@@ -2119,20 +2232,8 @@
       <variantList>
         <variant>
           <configItem>
-            <name>pro</name>
-            <_description>Pro</_description>
-          </configItem>
-        </variant>
-        <variant>
-          <configItem>
-            <name>keypad</name>
-            <_description>Keypad</_description>
-          </configItem>
-        </variant>
-        <variant>
-          <configItem>
-            <name>pro_keypad</name>
-            <_description>Pro Keypad</_description>
+            <name>pes_keypad</name>
+            <_description>Persian, with Persian Keypad</_description>
           </configItem>
         </variant>
         <variant>
@@ -2207,7 +2308,7 @@
     <layout>
       <configItem>
         <name>fo</name>
-        <_shortDescription>Fao</_shortDescription>
+        <_shortDescription>Fro</_shortDescription>
         <_description>Faroe Islands</_description>
         <languageList><iso639Id>fao</iso639Id></languageList>
       </configItem>
@@ -2230,8 +2331,14 @@
       <variantList>
         <variant>
           <configItem>
+            <name>classic</name>
+            <_description>Classic</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>nodeadkeys</name>
-            <_description>Eliminate dead keys</_description>
+            <_description>Classic, eliminate dead keys</_description>
           </configItem>
         </variant>
         <variant>
@@ -2240,12 +2347,6 @@
             <_description>Northern Saami</_description>
             <languageList><iso639Id>smi</iso639Id>
                           <iso639Id>sme</iso639Id></languageList>
-          </configItem>
-        </variant>
-        <variant>
-          <configItem>
-            <name>classic</name>
-            <_description>Classic</_description>
           </configItem>
         </variant>
         <variant>
@@ -2413,12 +2514,25 @@
             <languageList><iso639Id>hau</iso639Id></languageList>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>avn</name>
+            <_description>Avatime</_description>
+            <languageList><iso639Id>avn</iso639Id></languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>gillbt</name>
+            <_description>GILLBT</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
       <configItem>
         <name>gn</name>
-        <_shortDescription>Gui</_shortDescription>
+        <_shortDescription>Gin</_shortDescription>
         <_description>Guinea</_description>
         <languageList><iso639Id>fra</iso639Id></languageList>
       </configItem>
@@ -2548,12 +2662,19 @@
             <_description>qwerty</_description>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>ru</name>
+            <_description>Russian phonetic</_description>
+            <languageList><iso639Id>rus</iso639Id></languageList>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
       <configItem>
         <name>gr</name>
-        <_shortDescription>Gre</_shortDescription>
+        <_shortDescription>Grc</_shortDescription>
         <_description>Greece</_description>
         <languageList><iso639Id>gre</iso639Id></languageList>
       </configItem>
@@ -2797,6 +2918,12 @@
         </variant>
         <variant>
           <configItem>
+            <name>us</name>
+            <_description>US keyboard with Italian letters</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>geo</name>
             <_description>Georgian</_description>
             <languageList><iso639Id>geo</iso639Id></languageList>
@@ -2824,6 +2951,12 @@
             <_description>OADG 109A</_description>
           </configItem>
 	</variant>
+        <variant>
+          <configItem>
+            <name>mac</name>
+            <_description>Macintosh</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -2853,9 +2986,9 @@
     </layout>
     <layout>
       <configItem>
-	<name>kz</name>
-	<_shortDescription>Kaz</_shortDescription>
-	<_description>Kazakhstan</_description>
+        <name>kz</name>
+        <_shortDescription>Kaz</_shortDescription>
+        <_description>Kazakhstan</_description>
         <languageList><iso639Id>kaz</iso639Id></languageList>
       </configItem>
       <variantList>
@@ -2975,18 +3108,12 @@
             <_description>LEKPa</_description>
           </configItem>
         </variant>
-        <variant>
-          <configItem>
-            <name>balticplus</name>
-            <_description>Baltic+</_description>
-          </configItem>
-        </variant>
       </variantList>
     </layout>
     <layout>
       <configItem>
         <name>lv</name>
-        <_shortDescription>Lav</_shortDescription>
+        <_shortDescription>Lva</_shortDescription>
         <_description>Latvia</_description>
         <languageList><iso639Id>lav</iso639Id></languageList>
       </configItem>
@@ -3207,6 +3334,12 @@
             <languageList><iso639Id>rus</iso639Id></languageList>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>dvp</name>
+            <_description>Programmer Dvorak</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -3364,6 +3497,12 @@
         </variant>
         <variant>
           <configItem>
+            <name>typewriter-legacy</name>
+            <_description>Typewriter, legacy</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>tt</name>
             <_description>Tatar</_description>
             <languageList><iso639Id>tat</iso639Id></languageList>
@@ -3431,6 +3570,21 @@
             <_description>DOS</_description>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>srp</name>
+            <_description>Serbian</_description>
+            <languageList><iso639Id>rus</iso639Id>
+                          <iso639Id>srp</iso639Id></languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>bak</name>
+            <_description>Bashkirian</_description>
+            <languageList><iso639Id>bak</iso639Id></languageList>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -3481,6 +3635,13 @@
           <configItem>
             <name>latinalternatequotes</name>
             <_description>Latin with guillemets</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>rue</name>
+            <_description>Pannonian Rusyn Homophonic</_description>
+            <languageList><iso639Id>rue</iso639Id></languageList>
           </configItem>
         </variant>
       </variantList>
@@ -3655,6 +3816,12 @@
       <variantList>
         <variant>
           <configItem>
+            <name>legacy</name>
+            <_description>Legacy</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>de_nodeadkeys</name>
             <_description>German, eliminate dead keys</_description>
           </configItem>
@@ -3763,7 +3930,7 @@
     <layout>
       <configItem>
         <name>lk</name>
-        <_shortDescription>SrL</_shortDescription>
+        <_shortDescription>Lka</_shortDescription>
         <_description>Sri Lanka</_description>
         <languageList><iso639Id>sin</iso639Id></languageList>
       </configItem>
@@ -3997,6 +4164,12 @@
         </variant>
         <variant>
           <configItem>
+            <name>mac_intl</name>
+            <_description>Macintosh (International)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>colemak</name>
             <_description>Colemak</_description>
           </configItem>
@@ -4141,12 +4314,19 @@
             <languageList><iso639Id>ara</iso639Id></languageList>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>snd</name>
+            <_description>Sindhi</_description>
+            <languageList><iso639Id>sd</iso639Id></languageList>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
       <configItem>
         <name>mv</name>
-        <_shortDescription>Mal</_shortDescription>
+        <_shortDescription>Mdv</_shortDescription>
         <_description>Maldives</_description>
         <languageList><iso639Id>div</iso639Id></languageList>
       </configItem>
@@ -4155,7 +4335,7 @@
     <layout>
        <configItem>
         <name>za</name>
-        <_shortDescription>Zar</_shortDescription>
+        <_shortDescription>Zaf</_shortDescription>
         <_description>South Africa</_description>
         <languageList><iso639Id>eng</iso639Id></languageList>
       </configItem>
@@ -4179,7 +4359,7 @@
     <layout>
       <configItem>
         <name>np</name>
-        <_shortDescription>Nep</_shortDescription>
+        <_shortDescription>Npl</_shortDescription>
 	<_description>Nepal</_description>
         <languageList><iso639Id>nep</iso639Id></languageList>
       </configItem>
@@ -4187,7 +4367,7 @@
     <layout>
       <configItem>
         <name>ng</name>
-        <_shortDescription>Nig</_shortDescription>
+        <_shortDescription>Nga</_shortDescription>
 	<_description>Nigeria</_description>
         <languageList><iso639Id>eng</iso639Id></languageList>
       </configItem>
@@ -4227,8 +4407,8 @@
     <layout>
       <configItem>
         <name>sn</name>
-        <shortDescription>Sen</shortDescription>
-        <description>Senegal</description>
+        <_shortDescription>Sen</_shortDescription>
+        <_description>Senegal</_description>
         <languageList><iso639Id>wol</iso639Id></languageList>
       </configItem>
       <variantList/>
@@ -4257,7 +4437,7 @@
     <layout>
       <configItem>
         <name>tm</name>
-        <shortDescription>Tkm</shortDescription>
+        <_shortDescription>Tkm</_shortDescription>
         <_description>Turkmenistan</_description>
         <languageList><iso639Id>tuk</iso639Id></languageList>
       </configItem>
@@ -4269,6 +4449,67 @@
           </configItem>
         </variant>
       </variantList>
+    </layout>
+    <layout>
+      <configItem>
+        <name>ml</name>
+        <_shortDescription>Mli</_shortDescription>
+        <_description>Mali</_description>
+        <languageList><iso639Id>bam</iso639Id></languageList>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
+            <name>fr-oss</name>
+            <_description>Français (France Alternative)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>us-mac</name>
+            <_description>English (USA Macintosh)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>us-intl</name>
+            <_description>English (USA International)</_description>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
+        <name>tz</name>
+        <_shortDescription>Tza</_shortDescription>
+	<_description>Tanzania</_description>
+        <languageList><iso639Id>swa</iso639Id></languageList>
+      </configItem>
+    </layout>
+    <layout>
+      <configItem>
+        <name>ke</name>
+        <_shortDescription>Ken</_shortDescription>
+	<_description>Kenya</_description>
+        <languageList><iso639Id>swa</iso639Id></languageList>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
+            <name>kik</name>
+            <_description>Kikuyu</_description>
+            <languageList><iso639Id>kik</iso639Id></languageList>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
+        <name>bw</name>
+        <_shortDescription>Bwa</_shortDescription>
+	<_description>Botswana</_description>
+        <languageList><iso639Id>tsn</iso639Id></languageList>
+      </configItem>
     </layout>
   </layoutList>
   <optionList>
@@ -4311,7 +4552,7 @@
       <option>
         <configItem>
           <name>grp:caps_switch</name>
-          <_description>CapsLock (while pressed), Alt+CapsLock does the original capslock action</_description>
+          <_description>Caps Lock (while pressed), Alt+Caps Lock does the original capslock action</_description>
         </configItem>
       </option>
       <option>
@@ -4335,19 +4576,19 @@
       <option>
         <configItem>
           <name>grp:caps_toggle</name>
-          <_description>CapsLock</_description>
+          <_description>Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>grp:shift_caps_toggle</name>
-          <_description>Shift+CapsLock</_description>
+          <_description>Shift+Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>grp:shift_caps_switch</name>
-          <_description>CapsLock (to first layout), Shift+CapsLock (to last layout)</_description>
+          <_description>Caps Lock (to first layout), Shift+Caps Lock (to last layout)</_description>
         </configItem>
       </option>
       <option>
@@ -4358,8 +4599,14 @@
       </option>
       <option>
         <configItem>
+          <name>grp:lctrl_rctrl_switch</name>
+          <_description>Left Ctrl (to first layout), Right Ctrl (to last layout)</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>grp:alt_caps_toggle</name>
-          <_description>Alt+CapsLock</_description>
+          <_description>Alt+Caps Lock</_description>
         </configItem>
       </option>
       <option>
@@ -4392,6 +4639,12 @@
           <_description>Left Ctrl+Left Shift</_description>
         </configItem>
       </option>
+      <option>
+        <configItem>
+          <name>grp:rctrl_rshift_toggle</name>
+          <_description>Right Ctrl+Right Shift</_description>
+        </configItem>
+      </option>      
       <option>
         <configItem>
           <name>grp:ctrl_alt_toggle</name>
@@ -4532,8 +4785,44 @@
           <_description>Enter on keypad</_description>
         </configItem>
       </option>
+      <option>
+        <configItem>
+          <name>lv3:caps_switch</name>
+          <_description>Caps Lock</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv3:bksl_switch</name>
+          <_description>Backslash</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv3:lsgt_switch</name>
+	  <description>&lt;Less/Greater&gt;</description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv3:caps_switch_latch</name>
+          <description>Caps Lock (chooses 3rd level, latches when pressed together with another 3rd-level-chooser)</description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv3:bksl_switch_latch</name>
+          <description>Backslash chooses 3rd level, latches when pressed together with another 3rd-level-chooser)</description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv3:lsgt_switch_latch</name>
+	  <description>&lt;Less/Greater&gt; (chooses 3rd level, latches when pressed together with another 3rd-level-chooser)</description>
+        </configItem>
+      </option>
     </group>
-    <group allowMultipleSelection="false">
+    <group allowMultipleSelection="true">
       <!-- Tweaking the position of the "Ctrl" key -->
       <configItem>
         <name>ctrl</name>
@@ -4542,13 +4831,13 @@
       <option>
         <configItem>
           <name>ctrl:nocaps</name>
-          <_description>Make CapsLock an additional Ctrl</_description>
+          <_description>Make Caps Lock an additional Ctrl</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>ctrl:swapcaps</name>
-          <_description>Swap Ctrl and CapsLock</_description>
+          <_description>Swap Ctrl and Caps Lock</_description>
         </configItem>
       </option>
       <option>
@@ -4569,6 +4858,12 @@
           <_description>Right Ctrl as Right Alt</_description>
         </configItem>
       </option>
+      <option>
+        <configItem>
+          <name>ctrl:ctrl_menu</name>
+          <description>Right Ctrl is mapped to Menu</description>
+        </configItem>
+      </option>
     </group>
     <group allowMultipleSelection="true">
       <!-- Using startard LEDs to indicate the alternative (not first) group(s) -->
@@ -4579,19 +4874,19 @@
       <option>
         <configItem>
           <name>grp_led:num</name>
-          <_description>NumLock</_description>
+          <_description>Num Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>grp_led:caps</name>
-          <_description>CapsLock</_description>
+          <_description>Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>grp_led:scroll</name>
-          <_description>ScrollLock</_description>
+          <_description>Scroll Lock</_description>
         </configItem>
       </option>
     </group>
@@ -4711,65 +5006,89 @@
       </option>
     </group>
     <group allowMultipleSelection="false">
-      <!-- CapsLock tweaks. 
+      <!-- Caps Lock tweaks. 
 	   "Internal" capitalization means capitalization using some internal tables.
 	   Otherwise "as Shift" - means using next group. -->
       <configItem>
         <name>caps</name>
-        <_description>CapsLock key behavior</_description>
+        <_description>Caps Lock key behavior</_description>
       </configItem>
       <option>
         <configItem>
           <name>caps:internal</name>
-          <_description>CapsLock uses internal capitalization. Shift "pauses" CapsLock</_description>
+          <_description>Caps Lock uses internal capitalization. Shift "pauses" Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:internal_nocancel</name>
-          <_description>CapsLock uses internal capitalization. Shift doesn't affect CapsLock</_description>
+          <_description>Caps Lock uses internal capitalization. Shift doesn't affect Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:shift</name>
-          <_description>CapsLock acts as Shift with locking. Shift "pauses" CapsLock</_description>
+          <_description>Caps Lock acts as Shift with locking. Shift "pauses" Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:shift_nocancel</name>
-          <_description>CapsLock acts as Shift with locking. Shift doesn't affect CapsLock</_description>
+          <_description>Caps Lock acts as Shift with locking. Shift doesn't affect Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:capslock</name>
-          <_description>CapsLock toggles normal capitalization of alphabetic characters</_description>
+          <_description>Caps Lock toggles normal capitalization of alphabetic characters</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>caps:numlock</name>
+          <_description>Make Caps Lock an additional Num Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:swapescape</name>
-          <_description>Swap ESC and CapsLock</_description>
+          <_description>Swap ESC and Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:escape</name>
-          <_description>Make CapsLock an additional ESC</_description>
+          <_description>Make Caps Lock an additional ESC</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:backspace</name>
-          <_description>Make CapsLock an additional Backspace</_description>
+          <_description>Make Caps Lock an additional Backspace</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>caps:super</name>
+          <_description>Make Caps Lock an additional Super</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>caps:hyper</name>
+          <_description>Make Caps Lock an additional Hyper</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:shiftlock</name>
-          <_description>CapsLock toggles Shift so all keys are affected</_description>
+          <_description>Caps Lock toggles Shift so all keys are affected</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>caps:none</name>
+          <_description>Caps Lock is disabled</_description>
         </configItem>
       </option>
     </group>
@@ -4866,6 +5185,12 @@
       </option>
       <option>
         <configItem>
+          <name>compose:lctrl</name>
+          <_description>Left Ctrl</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>compose:rctrl</name>
           <_description>Right Ctrl</_description>
         </configItem>
@@ -4879,7 +5204,25 @@
       <option>
         <configItem>
           <name>compose:102</name>
-          <_description>Less-than/Greater-than</_description>
+          <_description>&lt;Less/Greater&gt;</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>compose:paus</name>
+          <_description>Pause</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>compose:prsc</name>
+          <_description>PrtSc</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>compose:sclk</name>
+          <_description>Scroll Lock</_description>
         </configItem>
       </option>
     </group>
@@ -4909,7 +5252,7 @@
       <option>
         <configItem>
           <name>numpad:shift3</name>
-          <_description>Shift does not cancel NumLock, chooses 3d level instead</_description>
+          <_description>Shift does not cancel Num Lock, chooses 3rd level instead</_description>
         </configItem>
       </option>
       <option>
@@ -4920,14 +5263,38 @@
       </option>
       <option>
         <configItem>
+          <name>apple:alupckeys</name>
+          <_description>Apple Aluminium Keyboard: emulate PC keys (Print, Scroll Lock, Pause, Num Lock)</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>shift:breaks_caps</name>
-          <_description>Shift cancels CapsLock</_description>
+          <_description>Shift cancels Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>misc:typo</name>
           <_description>Enable extra typographic characters</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>shift:both_capslock</name>
+          <_description>Both Shift-Keys together toggle Caps Lock</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>shift:both_capslock_cancel</name>
+          <description>Both Shift-Keys together activate Caps Lock, one Shift-Key deactivates</description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>shift:both_shiftlock</name>
+          <description>Both Shift-Keys together toggle ShiftLock</description>
         </configItem>
       </option>
     </group>
@@ -4962,8 +5329,74 @@
         </configItem>
       </option>
     </group>
+    <group allowMultipleSelection="true">
+      <configItem>
+        <name>lv5</name>
+        <_description>Key to choose 5th level</_description>
+      </configItem>
+      <option>
+        <configItem>
+          <name>lv5:lsgt_switch_lock</name>
+	  <_description>&lt;Less/Greater&gt; chooses 5th level, locks when pressed together with another 5th-level-chooser</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:ralt_switch_lock</name>
+          <_description>Right Alt chooses 5th level, locks when pressed together with another 5th-level-chooser</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:lwin_switch_lock</name>
+          <_description>Left Win chooses 5th level, locks when pressed together with another 5th-level-chooser</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:rwin_switch_lock</name>
+          <_description>Right Win chooses 5th level, locks when pressed together with another 5th-level-chooser</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:lsgt_switch_lock_cancel</name>
+	  <_description>&lt;Less/Greater&gt; chooses 5th level, locks when pressed together with another 5th-level-chooser, one press releases the lock</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:ralt_switch_lock_cancel</name>
+          <_description>Right Alt chooses 5th level, locks when pressed together with another 5th-level-chooser, one press releases the lock</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:lwin_switch_lock_cancel</name>
+          <_description>Left Win chooses 5th level, locks when pressed together with another 5th-level-chooser, one press releases the lock</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:rwin_switch_lock_cancel</name>
+          <_description>Right Win chooses 5th level, locks when pressed together with another 5th-level-chooser, one press releases the lock</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:lsgt_switch_lock_cancel</name>
+	  <description>&lt;Less/Greater&gt; chooses 5th level and activates level5-Lock when pressed together with another 5th-level-chooser, one press releases the lock</description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>lv5:ralt_switch_lock_cancel</name>
+          <description>Right Alt chooses 5th level and activates level5-Lock when pressed together with another 5th-level-chooser, one press releases the lock</description>
+        </configItem>
+      </option>
+    </group>
     <group allowMultipleSelection="false">
-      <!-- Let space output nobreakspace for the desired level -->
+      <!-- Let space output NBSP, NNBSP, ZWNJ, and ZWJ for the desired level -->
       <configItem>
         <name>nbsp</name>
         <_description>Using space key to input non-breakable space character</_description>
@@ -5014,6 +5447,54 @@
         <configItem>
           <name>nbsp:level4nl</name>
           <_description>Non-breakable space character at fourth level, thin non-breakable space character at sixth level (via Ctrl+Shift)</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>nbsp:zwnj2</name>
+          <_description>Zero-width non-joiner character at second level</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>nbsp:zwnj2zwj3</name>
+          <_description>Zero-width non-joiner character at second level, zero-width joiner character at third level</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>nbsp:zwnj2zwj3nb4</name>
+          <_description>Zero-width non-joiner character at second level, zero-width joiner character at third level, non-breakable space character at fourth level</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>nbsp:zwnj2nb3</name>
+          <_description>Zero-width non-joiner character at second level, non-breakable space character at third level</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>nbsp:zwnj2nb3s</name>
+          <_description>Zero-width non-joiner character at second level, non-breakable space character at third level, nothing at fourth level</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>nbsp:zwnj2nb3zwj4</name>
+          <_description>Zero-width non-joiner character at second level, non-breakable space character at third level, zero-width joiner at fourth level</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>nbsp:zwnj2nb3nnb4</name>
+          <_description>Zero-width non-joiner character at second level, non-breakable space character at third level, thin non-breakable space at fourth level</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>nbsp:zwnj3zwj4</name>
+          <_description>Zero-width non-joiner character at third level, zero-width joiner at fourth level</_description>
         </configItem>
       </option>
     </group>

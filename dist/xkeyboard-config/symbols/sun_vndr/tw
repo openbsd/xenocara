@@ -1,6 +1,5 @@
-// $XdotOrg: $
 //
-// Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+// Copyright 2010 Sun Microsystems, Inc.  All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the
@@ -27,15 +26,44 @@
 // or other dealings in this Software without prior written authorization
 // of the copyright holder.
 //
+
 //
+// CDDL HEADER START
+//
+// The contents of this file are subject to the terms of the
+// Common Development and Distribution License (the "License").
+// You may not use this file except in compliance with the License.
+//
+// You can obtain a copy of the license at src/OPENSOLARIS.LICENSE
+// or http://www.opensolaris.org/os/licensing.
+// See the License for the specific language governing permissions
+// and limitations under the License.
+//
+// When distributing Covered Code, include this CDDL HEADER in each
+// file and include the License file at src/OPENSOLARIS.LICENSE.
+// If applicable, add the following below this CDDL HEADER, with the
+// fields enclosed by brackets "[]" replaced with your own identifying
+// information: Portions Copyright [yyyy] [name of copyright owner]
+//
+// CDDL HEADER END
+//
+
+// Taiwanese layout for a Type 6 Sun keyboard
+partial
+xkb_symbols "type6" {
+    // A few keys are different from US layout - only those are shown here
+    key <ALGR> { [ Henkan_Mode          ]                       };
+    key <BKSL> { [ backslash, bar,  brokenbar   ]               };
+
+};
+
+
 // Taiwanese layout for a Type 4 Sun keyboard
+
 xkb_symbols "type4" {
-    include "sun_vndr/us(type4basic)"
 
-    key <BKSL> { [ backslash, bar	], [ brokenbar	]		};
+    key <BKSL> { [ backslash, bar,  brokenbar	]		};
 
-//    key <LNFD> { [ Hangul		]			};
-//    key <RALT> { [ Linefeed		]			};
     key <COMP> { [ Henkan_Mode		]			};
 
 };
@@ -45,15 +73,7 @@ xkb_symbols "type5" {
 
     // A few keys are different
     key <ALGR> { [ Henkan_Mode		]			};
-    key <BKSL> { [ backslash, bar	], [ brokenbar	]		};
+    key <BKSL> { [ backslash, bar,  brokenbar	]		};
 
-};
-
-// Taiwanese layout for a Type 6 Sun keyboard
-partial
-xkb_symbols "type6" {
-    // A few keys are different from US layout - only those are shown here
-    key <ALGR> { [ Henkan_Mode		]			};
-    key <BKSL> { [ backslash, bar	], [ brokenbar	]		};
 };
 

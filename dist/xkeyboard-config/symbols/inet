@@ -32,6 +32,7 @@ xkb_symbols "media_common" {
     key <I2E>   {       [ XF86AudioLowerVolume  ] };	
     key <I30>   {       [ XF86AudioRaiseVolume  ] };
     key <K5A>   {       [ XF86Eject             ] };
+    key <K6C>   {       [ XF86Eject             ] };
 };
 
 // popular web navigation combination
@@ -119,10 +120,10 @@ xkb_symbols "evdev" {
 
     key <HNGL>   {      [ Hangul                ]       };
     key <HJCV>   {      [ Hangul_Hanja          ]       };
+    key <FK22>   {      [ XF86TouchpadToggle    ]       };
 
 //  key <I120>   {      [ ]       }; // KEY_MACRO 
     key <I126>   {      [ plusminus             ]       };
-    key <I129>   {      [ KP_Separator          ]       };
     key <I147>   {      [ XF86MenuKB            ]       };
     key <I148>   {      [ XF86Calculator        ]       };
 //  key <I149>   {      [ ]       }; // KEY_SETUP
@@ -174,7 +175,7 @@ xkb_symbols "evdev" {
     key <I213>   {      [ XF86Suspend           ]       };
     key <I214>   {      [ XF86Close             ]       };
     key <I215>   {      [ XF86AudioPlay         ]       };
-    key <I216>   {      [ XF86Forward           ]       };
+    key <I216>   {      [ XF86AudioForward      ]       };
 //  key <I217>   {      [ ]       }; // KEY_BASSBOOST
     key <I218>   {      [ Print                 ]       };
 //  key <I219>   {      [ ]       }; // KEY_HP
@@ -213,6 +214,12 @@ xkb_symbols "evdev" {
 //  key <I254>   {      [ ]       }; // KEY_WIMAX
     key <I255>   {      [ XF86Hibernate         ]       }; // KEY_HIBERNATE
  
+    key <FK13>   {      [ XF86Tools         ]       };
+    key <FK14>   {      [ XF86Launch5       ]       };
+    key <FK15>   {      [ XF86Launch6       ]       };
+    key <FK16>   {      [ XF86Launch7       ]       };
+    key <FK17>   {      [ XF86Launch8       ]       };
+    key <FK18>   {      [ XF86Launch9       ]       };
 };
 
 
@@ -428,7 +435,6 @@ xkb_symbols "btc9019u" {
     include "inet(media_nav_acpi_common)"
     key <FK17> {	[ XF86Search		]	};
     key <I02>  {	[ XF86HomePage		]	};
-    key <K6C>  {	[ XF86Eject		]	};
 };
 
 // Cherry Blue Line
@@ -1721,7 +1727,6 @@ xkb_symbols "cymotionlinux" {
     key <I3C>	{	[	XF86Cut			]	};
     key <I78>	{	[	XF86Copy		]	};
     key <K65>	{	[	XF86Paste		]	};
-    key <K6C>	{	[	XF86Eject		]	};
     key <K75>	{	[	XF86ScrollUp		]	};
     key <XFER>	{	[	XF86AudioMedia		]	};
 };
@@ -1795,6 +1800,15 @@ xkb_symbols "unitekkb1925" {
     key <I16> { [ XF86WakeUp ] };
     key <I18> { [ XF86Search ] };
     key <I1A> { [ XF86Reload ] };
+};
+
+// Creative
+
+// Creative Desktop Wireless 7000
+partial alphanumeric_keys
+xkb_symbols "creativedw7000" {
+    include "inet(media_nav_acpi_common)"
+    key <I66>   {       [ XF86Pictures ]       };
 };
 
 // Compal

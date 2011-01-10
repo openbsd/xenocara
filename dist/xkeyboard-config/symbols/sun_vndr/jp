@@ -1,6 +1,6 @@
 // $XdotOrg: $
 //
-// Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
+// Copyright 2010 Sun Microsystems, Inc.  All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the
@@ -50,6 +50,27 @@
 //from The Open Group.
 //
 // US/ASCII layout for a Type 4 Sun keyboard
+
+//
+// CDDL HEADER START
+//
+// The contents of this file are subject to the terms of the
+// Common Development and Distribution License (the "License").
+// You may not use this file except in compliance with the License.
+//
+// You can obtain a copy of the license at src/OPENSOLARIS.LICENSE
+// or http://www.opensolaris.org/os/licensing.
+// See the License for the specific language governing permissions
+// and limitations under the License.
+//
+// When distributing Covered Code, include this CDDL HEADER in each
+// file and include the License file at src/OPENSOLARIS.LICENSE.
+// If applicable, add the following below this CDDL HEADER, with the
+// fields enclosed by brackets "[]" replaced with your own identifying
+// information: Portions Copyright [yyyy] [name of copyright owner]
+//
+// CDDL HEADER END
+//
 
 xkb_symbols "basic" {
     // Alphanumeric section
@@ -791,8 +812,8 @@ partial
 xkb_symbols "type7" {
     include "sun_vndr/jp(type6)"
     key <AE10> { [ 0, asciitilde       ], [ kana_WA, kana_WO   ]       };
-    key <HZTG> { [ Henkan_Mode ] };
+    key <TLDE> { [ Henkan_Mode ] };
     key <HENK> { [ Kana_Lock, Mode_switch ] };
-    key <ALGR> { [ Alt_R ] };
+    key <ALGR> { [ Alt_R, Alt_R ] };
 };
 

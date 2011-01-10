@@ -1,12 +1,12 @@
-SUBDIRS = digital_vndr fujitsu_vndr hp_vndr macintosh_vndr nec_vndr sgi_vndr sony_vndr sun_vndr xfree68_vndr
+SUBDIRS = digital_vndr fujitsu_vndr hp_vndr macintosh_vndr nec_vndr nokia_vndr sgi_vndr sony_vndr sun_vndr xfree68_vndr extras
 
 symbolsdir = $(xkb_base)/symbols
 dist_symbols_DATA = \
 ad af al \
-am ara az \
-be bd \
-bg br ba \
-bt by brai \
+am ara at az \
+ba bd be \
+bg br brai \
+bt bw by \
 ca cd \
 ch cn cz \
 de dk \
@@ -16,21 +16,23 @@ gb ge gh gn \
 gr hr hu \
 ie il in iq \
 ir is it jp \
-kg kh kr kz \
+ke kg kh \
+kr kz \
 la latam latin \
 lk lt lv \
-ma mao me mk \
-mm mn mt mv \
+ma mao me \
+mk ml mm \
+mn mt mv \
 ng nl no np \
 pc pk pl pt \
 ro rs ru \
 se si sk sn \
 sy th \
 terminate \
-tj tm tr \
+tj tm tr tz \
 ua us uz vn \
 za \
-altwin capslock compose ctrl eurosign group inet \
+altwin capslock compose ctrl empty eurosign group inet \
 keypad kpdl level3 level5 nbsp olpc shift srvr_ctrl typo
 
 dir_data = $(dist_symbols_DATA)

@@ -17,7 +17,7 @@ xkb_symbols "basic" {
     key <AE04>	{ [         4,     dollar,   asciitilde,       dollar ]	};
     key <AE06>	{ [         6,  ampersand,      notsign,  fiveeighths ]	};
     key <AE11>	{ [apostrophe,   question,    backslash, questiondown ]	};
-    key <AE12>	{ [exclamdown, questiondown, asciitilde,   asciitilde ]	};
+    key <AE12>	{ [exclamdown, questiondown, dead_tilde,   asciitilde ]	};
 
     key <AD11>	{ [dead_grave, dead_circumflex, bracketleft, dead_abovering ] };
     key <AD12>	{ [      plus,   asterisk, bracketright,  dead_macron ]	};
@@ -36,8 +36,8 @@ xkb_symbols "Sundeadkeys" {
 
     include "es(basic)"
 
-    key <AC11>	{ [SunFA_Acute, SunFA_Diaeresis, braceleft, braceleft ]	};
-    key <AD11>	{ [SunFA_Grave, SunFA_Circum, bracketleft, dead_abovering ] };
+    key <AC11>	{ [dead_acute, dead_diaeresis, braceleft, braceleft ]	};
+    key <AD11>	{ [dead_grave, dead_circumflex, bracketleft, dead_abovering ] };
 };
 
 partial alphanumeric_keys
