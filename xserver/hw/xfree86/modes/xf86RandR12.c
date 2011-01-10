@@ -842,6 +842,7 @@ xf86RandR12CreateScreenResources (ScreenPtr pScreen)
 				  height,
 				  mmWidth,
 				  mmHeight);
+	xf86ReconfigureLayout();
     }
 
 #if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
