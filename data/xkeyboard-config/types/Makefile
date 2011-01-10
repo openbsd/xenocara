@@ -1,11 +1,9 @@
-#	$OpenBSD: Makefile,v 1.1.1.1 2009/06/06 17:55:01 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2011/01/10 14:42:48 shadchin Exp $
 
 XKB_SUBDIR=	types
+DIR_DATA=	types.dir
 
-DATA=	basic cancel caps \
-	complete default extra \
-	iso9995 level5 mousekeys numpad \
-	pc README
+DATA=	basic cancel caps complete default extra iso9995 level5 mousekeys \
+	nokia numpad pc README
 
 .include <bsd.xorg.mk>
-

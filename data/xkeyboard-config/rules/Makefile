@@ -1,69 +1,75 @@
-#	$OpenBSD: Makefile,v 1.2 2009/06/06 19:43:22 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2011/01/10 14:42:48 shadchin Exp $
 
-SUBDIR=	compat
+SUBDIR=		compat extras
 
 XKB_SUBDIR=	rules
 
-DATA=	xkb.dtd README
+DATA=		xkb.dtd README
 
-base_parts = base.hdr.part base.lists.part \
-	compat/base.lists.part \
-	HDR base.m_k.part \
-	HDR base.l1_k.part \
-	HDR base.l_k.part \
-	HDR base.o_k.part \
-	HDR base.ml_g.part \
-	HDR base.m_g.part \
-	HDR compat/base.mlv_s.part base.mlv_s.part \
-	HDR compat/base.ml_s.part base.ml_s.part  \
-	HDR compat/base.ml1_s.part base.ml1_s.part \
-	HDR compat/base.ml1v1_s.part \
-	HDR compat/base.l2_s.part base.l2_s.part  \
-	HDR compat/base.l3_s.part base.l3_s.part  \
-	HDR compat/base.l4_s.part base.l4_s.part  \
-	HDR compat/base.l2v2_s.part \
-	HDR compat/base.l3v3_s.part \
-	HDR compat/base.l4v4_s.part \
-	HDR base.m_s.part \
-	HDR base.ml_c.part \
-	HDR base.ml1_c.part \
-	HDR base.m_t.part \
-	HDR base.lo_s.part \
-	HDR base.l1o_s.part \
-	HDR base.l2o_s.part \
-	HDR base.l3o_s.part \
-	HDR base.l4o_s.part \
-	HDR compat/base.o_s.part base.o_s.part \
-	HDR base.o_c.part \
-	HDR base.o_t.part
+BASE_PARTS=	base.hdr.part base.lists.part \
+		compat/base.lists.part \
+		HDR base.m_k.part \
+		HDR base.l1_k.part \
+		HDR base.l_k.part \
+		HDR base.o_k.part \
+		HDR base.ml_g.part \
+		HDR base.m_g.part \
+		HDR compat/base.mlv_s.part    extras/base.mlv_s.part   base.mlv_s.part \
+		HDR compat/base.ml_s.part     extras/base.ml_s.part    base.ml_s.part  \
+		HDR compat/base.ml1_s.part    extras/base.ml1_s.part   base.ml1_s.part \
+		HDR compat/base.ml1v1_s.part  extras/base.ml1v1_s.part \
+		HDR compat/base.ml2_s.part    extras/base.ml2_s.part   base.ml2_s.part  \
+		HDR compat/base.ml3_s.part    extras/base.ml3_s.part   base.ml3_s.part  \
+		HDR compat/base.ml4_s.part    extras/base.ml4_s.part   base.ml4_s.part  \
+		HDR compat/base.ml2v2_s.part  extras/base.ml2v2_s.part \
+		HDR compat/base.ml3v3_s.part  extras/base.ml3v3_s.part \
+		HDR compat/base.ml4v4_s.part  extras/base.ml4v4_s.part \
+		HDR base.m_s.part \
+		HDR compat/base.lv_c.part   \
+		HDR compat/base.l1v1_c.part \
+		HDR compat/base.l2v2_c.part \
+		HDR compat/base.l3v3_c.part \
+		HDR compat/base.l4v4_c.part \
+		HDR base.ml_c.part \
+		HDR base.ml1_c.part \
+		HDR base.m_t.part \
+		HDR base.lo_s.part \
+		HDR base.l1o_s.part \
+		HDR base.l2o_s.part \
+		HDR base.l3o_s.part \
+		HDR base.l4o_s.part \
+		HDR compat/base.o_s.part     base.o_s.part \
+		HDR base.o_c.part \
+		HDR base.o_t.part
 
-files= base base.lst base.xml
+BASE_RULES=		base base.lst base.xml base.extras.xml
 
-srcdir=	${XKB_DIR}/rules
-
-all:	_SUBDIRUSE ${files}
+all:	depend ${BASE_RULES} _SUBDIRUSE
 
 depend:	_SUBDIRUSE
 
-base: $(base_parts)
-	HDR="$(srcdir)/HDR" $(srcdir)/merge.sh $@ $(base_parts)
+base:	${BASE_PARTS}
+	HDR="${XKB_DIR}/${XKB_SUBDIR}/HDR" ${XKB_DIR}/${XKB_SUBDIR}/merge.sh $@ ${BASE_PARTS}
 
-base.lst: base.xml
-	perl $(srcdir)/xml2lst.pl < base.xml > $@
+base.lst:	base.xml
+	perl ${XKB_DIR}/${XKB_SUBDIR}/xml2lst.pl < base.xml > $@
 
-base.xml: base.xml.in
+base.xml:	base.xml.in
 	sed -e 's,<_,<,g' -e 's,</_,</,g' ${XKB_DIR}/${XKB_SUBDIR}/base.xml.in > $@
-install-files: ${files}
-	@for i in ${files}; do  \
-		echo "installing $$i"; \
-		${INSTALL_DATA} $$i ${XKB_BASE}/${XKB_SUBDIR}; \
+
+base.extras.xml:	base.extras.xml.in
+	sed -e 's,<_,<,g' -e 's,</_,</,g' ${XKB_DIR}/${XKB_SUBDIR}/base.extras.xml.in > $@
+
+install-files:	${BASE_RULES}
+	test -z ${XKB_BASE}/${XKB_SUBDIR} || ${INSTALL_DIR} ${XKB_BASE}/${XKB_SUBDIR}
+	@for f in ${BASE_RULES}; do  \
+		echo "installing $$f"; \
+		cmp -s $$f ${XKB_BASE}/${XKB_SUBDIR}/$$f || \
+		${INSTALL_DATA} $$f ${XKB_BASE}/${XKB_SUBDIR}/$$f; \
 	done
 
-clean: _SUBDIRUSE
-	rm -f base base.lst base.xml 
+clean:	_SUBDIRUSE
+	rm -f ${BASE_RULES}
 
 .include <bsd.xorg.mk>
 .include <bsd.subdir.mk>
-
-.PATH:	${XKB_DIR}/rules
-.SUFFIXES: .in .lst .xml
