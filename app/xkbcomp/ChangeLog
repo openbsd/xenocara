@@ -1,3 +1,477 @@
+commit 851a5f6e0c1b2a98d4714d95e40198ab5dc61607
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 09:59:52 2010 -0700
+
+    xkbcomp 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87576c9ebf0f28d66833bb28a8199df1aa01f693
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Sep 23 20:29:57 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d083293a4e227e9dd27f74cde391fde4c5824b0c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Sep 23 20:29:14 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f13f1af68fc55b7567a4eb4462a0c911722a3c4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 988eb0e121c0f2c992031002acb7274c2026764b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jul 12 10:53:34 2010 +0100
+
+    config: allow to build tarball when yacc is missing
+    
+    Autoconf does not handle this scenario as well as Automake does.
+    If xkbparse.c is already there, do not abort the configuration
+    if yacc is missing as it is not needed.
+    
+    If both xkbparse.c and yacc are missing, abort configuration.
+    Yacc is a required tool to build the package.
+    
+    Reported-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 446d226f85433aeb45834b65f966397ad6fbb17f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jul 12 10:37:49 2010 +0100
+
+    limits.h is mandated by C89, no need to check for it
+    
+    Alan Coopersmith pointed out that C89 mandates limits.h, so for once in
+    X's life, checking for a system header is just being unnecessarily
+    paranoid.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 61b3d4b024d8146cb0e7659aa958045ceb72c482
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Jul 12 10:28:32 2010 +0100
+
+    Fix signedness issue with getc() return value
+    
+    getc() and ungetc() return and take, respectively, an int rather than a
+    char to allow for error values as well.  Oops.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit a281386fa887e6bf4110840779aed46dd0ac89b6
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 9 19:34:29 2010 +0100
+
+    Fix parsing of 0x1a2b3c4d-style symbols
+    
+    Raw keysyms were not getting parsed correctly, due to forgetting to add
+    the code to libX11, forgetting to add the backwards-compat code for old
+    libX11s, and then stuffing the lexing up anyway.  Yeesh.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 0b04ecbb7a6afb223c91d3b15baab0bc48542281
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 15 19:26:19 2010 +0100
+
+    Fix gcc warnings
+    
+    It was right too: printf was being misused in some spots.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 41b0857c8c1179b87a26888588cbfff28f8bb0d6
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 8 15:11:19 2010 +0100
+
+    Don't malloc() and free() most scanned symbols
+    
+    Use a constant buffer.  Sigh.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 7f7a57c75beb5e1dfb53351e490ef00a324b2727
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 8 12:14:00 2010 +0100
+
+    Fix compilation with DEBUG
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 9887842e33174a6e98675b912e419c711dd20c0f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jun 7 22:45:13 2010 +0100
+
+    Use fread() instead of getc()
+    
+    So, it turns out that if you're parsing a fairly large amount of data,
+    using getc() to get all the input rather than, say, read(), is some kind
+    of remarkably daft and unperformant idea.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 02de53d767b20bab1517b4e8a3e7eb3b9e7f15be
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Jun 7 22:43:01 2010 +0100
+
+    Lazy keysym parsing (avoid XStringToKeysym)
+    
+    Instead of calling XStringToKeysym on every keysym we parse, store it as
+    a string until we need to store it in an actual keymap.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 07cc4d60dea2b4c947fed45b082edae4a53b186a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 2 15:23:58 2010 -0400
+
+    config: add check for yacc to insure it is installed #27973
+    
+    Unlike other macros AC_PROG_YACC sets the YACC variable to "yacc"
+    as a last resort, even if no programs have been found. Improve error
+    checking by issuing an error message if yacc is not found. The module
+    cannot build anyway.
+    
+    Reported-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7888738047e9f1545aa1905b4a2a0654686f49a8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 11 10:08:07 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ba906359da32644b40b3a8a71e77d3cabca56efe
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:54 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 667f0a0e5d3143533cbbe5979ef82c13cfa62c3a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 4b7c8a8ef337614c831b2555afeb6d89dbc14fb1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 5fa9ef7e5e87f875dd92cc33403cebf6c60c557f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit b3a52787e0dad42ea7e8da26926b9533b1ecab84
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit fa7e3ff7b49f76294aa14aa8bf1b8adbceb5d340
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:21 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
+commit a5160032d7e46473b8702b87a546071fc0c0978c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sat Oct 3 21:12:47 2009 +1000
+
+    xkbcomp 1.1.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a36ca5ba61e2b97398a79713922644fee1a263d1
+Author: Rami Ylimaki <ext-rami.ylimaki@nokia.com>
+Date:   Wed Aug 5 17:16:16 2009 +0300
+
+    xkbcomp: Remove output file if closing fails.
+    
+    Without the fix xkbcomp may leave a truncated file in the filesystem
+    if there is not enough disk space. Using the truncated file leads to
+    problems.
+    
+    Signed-off-by: Rami Ylimaki <ext-rami.ylimaki@nokia.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2cc1dc9a327a5100043d3d54e899b98b81cdf5f5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 9 08:34:21 2009 +1000
+
+    Bump to 1.1.0.
+
+commit eeaa4aec798ef045d0b3b9de3c25932b85b9ac3d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 09:39:03 2009 -0700
+
+    Use temporary buffer for generating Uxxx names to avoid overflow
+    
+    Instead of sprintf()'ing a 4 character string to a char [4] buffer,
+    and leaving the trailing '\0' to overwrite into the next entry,
+    snprintf() to a 5 character temp buffer and memcpy the 4 characters
+    to the right place.
+    
+    Fixes parfait errors:
+    Error: Buffer overflow at xkbcomp-1.0.4/misc.c:393
+            in function 'ComputeKbdDefaults' [Standard C Library pattern matching]
+           In sprintf related dereference of xkb->names->keys[i].name
+            with index not less than '4'
+           Destination array size is 4 bytes, data to be written is 4 bytes
+    Error: Buffer overflow at xkbcomp-1.0.4/misc.c:402
+            in function 'ComputeKbdDefaults' [Standard C Library pattern matching]
+           In sprintf related dereference of xkb->names->keys[i].name
+            with index not less than '4'
+           Destination array size is 4 bytes, data to be written is 4 bytes
+    
+    [This bug was found by the Parfait bug checking tool.
+      For more information see http://research.sun.com/projects/parfait ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 2fd42dae8840089727f95211abdb86316e566afd
+Author: Dan Nicholson <dbn.lists@gmail.com>
+Date:   Sat Mar 7 16:36:51 2009 -0800
+
+    Allow the default XKB config root to be set from configure
+    
+    The default was hardcoded in the Makefile as $(datadir)/share/X11/xkb.
+    This could cause a problem if you are installing xkbcomp to an alternate
+    location but want to continue using the system's XKB data.
+    
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 3b816fe819bd849acdbabcfba769041bd3eab753
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 22 02:45:20 2009 -0200
+
+    Correct a remaining of a wrong change to make some DEBUG_VAR's static.
+
+commit f099da35386cf63d4935ba2613409ff28b3d7ea5
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 21 20:43:28 2009 -0200
+
+    Correct make distcheck and most gcc and sparse warnings.
+    
+      Remaining warnings are due to macros that check address or vectors
+    on the stack and auto generated yacc code.
+    
+      Compiled with default flags and also as:
+    % make CFLAGS=-DENTRY_TRACKING_ON -DDEBUG_ON -DASSERTIONS_ON
+      to ensure the "simplification" of code like:
+    foo.c:
+    <hash>define DEBUG_VAR foo_VAR
+    <hash>include "foo.h"
+    ...
+    foo.h:
+    <hash>ifdef DEBUG_VAR_NOT_LOCAL
+    extern
+    <hash>endif
+    int DEBUG_VAR;
+    ...
+    did not change the author's "intended" logic.
+
+commit 82cebb165b22d5409c9d4d31554a8da0c867e0d3
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Wed Sep 10 17:48:29 2008 +0930
+
+    Check for NULL strings before calling strdup.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
+
+commit a82e1dcc8ad095581402d05e5d1ae1bbf3646954
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 5 15:07:13 2008 -0700
+
+    sprintf -> snprintf conversions
+
+commit d2d06305e1834548edd8a647564efa222a511b53
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 5 14:44:51 2008 -0700
+
+    Remove #if 0'd typedef that appears nowhere else.
+
+commit acd277d7fd48ccfd8ef2ca052b4e144ee95a5d94
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 5 14:32:15 2008 -0700
+
+    Remove X_NOT_POSIX #ifdefs
+    
+    POSIX.1-1990 is well below the current minimum bar
+
+commit 37b62a26716d3abf2ae07dd88cf54bc04d980bd8
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Sep 5 14:22:33 2008 -0700
+
+    Check for strdup & strcasecmp before assuming we need to provide our own
+
+commit 36fecff588199a3a6c007f09ff709f3148d40f77
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Aug 19 16:33:03 2008 +0930
+
+    Don't overwrite previously assigned type indices with useless ones.
+    
+    The default type for a key with no levels is ONE_LEVEL.
+    Let's not overwrite the kt_index with this default type if we have previously
+    assigned a real type.
+    
+    Reproduceable by running setxkbmap -layout "ru(phonetic),us", the first group
+    is assigned ONE_LEVEL and shift stops working.
+    
+    Red Hat Bug #436626 <https://bugzilla.redhat.com/show_bug.cgi?id=436626>
+
+commit d0dfd26e81aef53e9adf5fd6372d69e2ac7a8f9c
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Aug 19 14:36:13 2008 +0930
+
+    Remove unused merge parameter from HandleKeyNameVar.
+
+commit 391ea45b2cadc7faeb6acb5d9ec7b405d67d46fd
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Tue Aug 19 14:35:39 2008 +0930
+
+    Don't pass useless handlers around in HandleIncludeKeycodes.
+    
+    What use is a handler if we only ever use one function anyway?
+
+commit f05f20fd203afdadbcd571023ed31638ccda1f88
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Thu Aug 21 17:28:22 2008 +0930
+
+    More comments.
+
+commit 1aad2a5d8ede9fe5212a4e6087fbe34aa170ac54
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 18 16:28:44 2008 +0930
+
+    Remove useless longestPath variable.
+
+commit 7aef93914e1d6446f64aa42eafa18375c2cb4bed
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 18 14:05:33 2008 +0930
+
+    Silence valgrind warnings.
+    
+    "Conditional jump or move depends on uninitialised value(s)"
+
+commit eb18e9176841b3ea64c497f1919686e134713eb6
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 11 18:01:48 2008 +0930
+
+    Add some explanatory comments
+
+commit 9b877d83947708259252275e14f6995dcf7c29ce
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 11 16:20:22 2008 +0930
+
+    If we're not using XkbDesc, don't require it as a parameter.
+
+commit ca32570cf16494fb8e0577de8b05ba18cb927ce1
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 11 15:47:09 2008 +0930
+
+    Indent fixes.
+    
+    indent -cbi 0 -nprs -nut -npcs -i4 -bli 0 *.c *.h
+
+commit 12e8f5e5b3f33dbd1290c76dd0d6a4cf832993d7
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 11 15:40:03 2008 +0930
+
+    Add a few explanatory comments.
+
+commit de48206e7fe2206542313a2d1d1ea3c40b06114b
+Author: Peter Hutterer <peter.hutterer@redhat.com>
+Date:   Mon Aug 11 15:14:31 2008 +0930
+
+    Remove RCS tags.
+
+commit 8eb2e1fcd08a05f296a31dbadde1ec3cc84d8e28
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon May 12 23:25:47 2008 +0200
+
+    Minimal man page addition for new -i option.
+
+commit 12df85eb5b08d5fb815b0965714f120b05c6c670
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri May 9 21:09:44 2008 +0300
+
+    Bump to 1.0.5
+
 commit 1aecdffaa0db7bbf85bc0aae9043e9437b25c30d
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Apr 17 00:52:29 2008 +0300
