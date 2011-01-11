@@ -1,6 +1,5 @@
 
   /*\
-   * $XFree86: xc/programs/xkbevd/utils.c,v 3.5 2001/07/25 15:05:25 dawes Exp $
    *
    *		              COPYRIGHT 1990
    *		        DIGITAL EQUIPMENT CORPORATION
@@ -9,8 +8,8 @@
    *
    * THE INFORMATION IN THIS SOFTWARE IS SUBJECT TO CHANGE WITHOUT NOTICE AND
    * SHOULD NOT BE CONSTRUED AS A COMMITMENT BY DIGITAL EQUIPMENT CORPORATION.
-   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE 
-   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED 
+   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE
+   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED
    * WARRANTY.
    *
    * IF THE SOFTWARE IS MODIFIED IN A MANNER CREATING DERIVATIVE COPYRIGHT
@@ -22,10 +21,9 @@
    * that the above copyright notice appear in all copies and that both that
    * copyright notice and this permission notice appear in supporting
    * documentation, and that the name of Digital Equipment Corporation not be
-   * used in advertising or publicity pertaining to distribution of the 
+   * used in advertising or publicity pertaining to distribution of the
    * software without specific, written prior permission.
   \*/
-/* $Xorg: utils.c,v 1.5 2000/08/17 19:54:49 cpqbld Exp $ */
 
 #define DEBUG_VAR_LOCAL
 #include 	"utils.h"
@@ -96,7 +94,7 @@ static	FILE	*entryFile=	NULL;
 static	int	 uEntryLevel;
 
 Boolean
-uSetEntryFile(char *name)
+uSetEntryFile(const char *name)
 {
     if ((entryFile!=NULL)&&(entryFile!=stderr)) {
 	fprintf(entryFile,"switching to %s\n",name?name:"stderr");
@@ -112,7 +110,7 @@ uSetEntryFile(char *name)
 }
 
 void
-uEntry(int l, char *s,...)
+uEntry(int l, const char *s,...)
 {
 int	i;
 va_list ap;
@@ -128,7 +126,7 @@ va_list ap;
 }
 
 void
-uExit(int l, char *rtVal)
+uExit(int l, const char *rtVal)
 {
 int	i;
 
@@ -150,7 +148,7 @@ int	i;
 	int	 uDebugIndentSize=	4;
 
 Boolean
-uSetDebugFile(char *name)
+uSetDebugFile(const char *name)
 {
     if ((uDebugFile!=NULL)&&(uDebugFile!=stderr)) {
 	fprintf(uDebugFile,"switching to %s\n",name?name:"stderr");
@@ -166,7 +164,7 @@ uSetDebugFile(char *name)
 }
 
 void
-uDebug(char *s,...)
+uDebug(const char *s,...)
 {
 int	i;
 va_list ap;
@@ -182,7 +180,7 @@ va_list ap;
 }
 
 void
-uDebugNOI(char *s,...)
+uDebugNOI(const char *s,...)
 {
 va_list ap;
 
@@ -198,7 +196,7 @@ va_list ap;
 static	FILE	*errorFile=	NULL;
 
 Boolean
-uSetErrorFile(char *name)
+uSetErrorFile(const char *name)
 {
     if ((errorFile!=NULL)&&(errorFile!=stderr)) {
 	fprintf(errorFile,"switching to %s\n",name?name:"stderr");
@@ -214,7 +212,7 @@ uSetErrorFile(char *name)
 }
 
 void
-uInformation(char *s,...)
+uInformation(const char *s,...)
 {
     va_list ap;
 
@@ -228,7 +226,7 @@ uInformation(char *s,...)
 /***====================================================================***/
 
 void
-uAction(char *s,...)
+uAction(const char *s,...)
 {
     va_list ap;
 
@@ -243,7 +241,7 @@ uAction(char *s,...)
 /***====================================================================***/
 
 void
-uWarning(char *s,...)
+uWarning(const char *s,...)
 {
     va_list ap;
 
@@ -258,7 +256,7 @@ uWarning(char *s,...)
 /***====================================================================***/
 
 void
-uError(char *s,...)
+uError(const char *s,...)
 {
     va_list ap;
 
@@ -273,7 +271,7 @@ uError(char *s,...)
 /***====================================================================***/
 
 void
-uFatalError(char *s,...)
+uFatalError(const char *s,...)
 {
     va_list ap;
 
@@ -290,7 +288,7 @@ uFatalError(char *s,...)
 /***====================================================================***/
 
 void
-uInternalError(char *s,...)
+uInternalError(const char *s,...)
 {
     va_list ap;
 
@@ -306,7 +304,7 @@ uInternalError(char *s,...)
 
 #ifndef HAVE_STRDUP
 char *
-uStringDup(char *str)
+uStringDup(const char *str)
 {
 char *rtrn;
 
@@ -320,7 +318,7 @@ char *rtrn;
 
 #ifndef HAVE_STRCASECMP
 int
-uStrCaseCmp(char *str1, char *str2)
+uStrCaseCmp(const char *str1, const char *str2)
 {
     char buf1[512],buf2[512];
     char c, *s;
@@ -346,7 +344,7 @@ uStrCaseCmp(char *str1, char *str2)
 }
 
 int
-uStrCasePrefix(char *prefix, char *str)
+uStrCasePrefix(const char *prefix, const char *str)
 {
     char c1;
     char c2;

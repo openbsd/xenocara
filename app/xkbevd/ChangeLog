@@ -1,3 +1,101 @@
+commit 95987d19b9802c235f2257eceff663a4a1e286fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 21:51:11 2010 -0800
+
+    xkbevd 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96ec51a0d91920c69d1cfb9e084cc84c4d86ff20
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 18:42:35 2010 -0800
+
+    Purge RCS/CVS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a56e8dda4bac8621dedcb80b1f55c9a25c78d43
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 18:36:25 2010 -0800
+
+    Fix errors found by gcc's printf attribute check
+    
+    xkbevd.c: In function `parseArgs':
+    xkbevd.c:120: warning: too few arguments for format
+    xkbevd.c:139: warning: too few arguments for format
+    xkbevd.c:158: warning: too few arguments for format
+    xkbevd.c:177: warning: too few arguments for format
+    xkbevd.c: In function `InterpretConfigs':
+    xkbevd.c:280: warning: format argument is not a pointer (arg 2)
+    xkbevd.c: In function `FindMatchingConfig':
+    xkbevd.c:374: warning: too few arguments for format
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 45d575da032967b8920cf57491b7bd3bcd2991af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 18:32:08 2010 -0800
+
+    Add printf attributes to util.c functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d304e315d8143b4fbcb99e8086a6fad0dd051384
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 18:21:37 2010 -0800
+
+    Constify arguments to utils.c functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 517ad56361ff9545bfc9730523e713a2bf641943
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 18:10:25 2010 -0800
+
+    Remove trailing whitespace
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 04208bd63c1e81a2fada019bbf986c4cd93d0272
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 18:09:30 2010 -0800
+
+    Combine usage message into a single string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e56d87af20b96113dc40510811cadff028fe911f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 18:02:46 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5d49274162fbaad7dfcf5879e4e229bc7801fe0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 1 13:35:06 2010 -0400
+
+    config: cfgparse.c is in the root dir and not in src dir
+    
+    The test for the yacc generated file was done in the wrong directory.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c9e521f4ab7d07ee9b4b0ce7779bc939e7051e95
+Author: Martin Jansa <Martin.Jansa@gmail.com>
+Date:   Mon Nov 1 09:46:20 2010 +0100
+
+    config: replace AC_CHECK_FILE with test -f
+    
+    * AC_CHECK_FILE doesn't work for cross compilation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 14e12f714eead3f0185ab7996d6a1a38897c25cc
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 10:06:46 2010 -0700

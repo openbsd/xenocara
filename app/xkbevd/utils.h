@@ -2,7 +2,6 @@
 #define	UTILS_H 1
 
   /*\
-   * $Xorg: utils.h,v 1.3 2000/08/17 19:54:49 cpqbld Exp $
    *
    *		              COPYRIGHT 1990
    *		        DIGITAL EQUIPMENT CORPORATION
@@ -11,8 +10,8 @@
    *
    * THE INFORMATION IN THIS SOFTWARE IS SUBJECT TO CHANGE WITHOUT NOTICE AND
    * SHOULD NOT BE CONSTRUED AS A COMMITMENT BY DIGITAL EQUIPMENT CORPORATION.
-   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE 
-   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED 
+   * DIGITAL MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS SOFTWARE
+   * FOR ANY PURPOSE.  IT IS SUPPLIED "AS IS" WITHOUT EXPRESS OR IMPLIED
    * WARRANTY.
    *
    * IF THE SOFTWARE IS MODIFIED IN A MANNER CREATING DERIVATIVE COPYRIGHT
@@ -24,10 +23,9 @@
    * that the above copyright notice appear in all copies and that both that
    * copyright notice and this permission notice appear in supporting
    * documentation, and that the name of Digital Equipment Corporation not be
-   * used in advertising or publicity pertaining to distribution of the 
+   * used in advertising or publicity pertaining to distribution of the
    * software without specific, written prior permission.
   \*/
-/* $XFree86: xc/programs/xkbevd/utils.h,v 1.6 2002/01/14 18:30:11 dawes Exp $ */
 
 /***====================================================================***/
 
@@ -79,7 +77,7 @@ typedef union {
 	int		 i;
 	unsigned	 u;
 	void		*p;
-	void		*(*fp)(); 
+	void		*(*fp)();
 } Union;
 #endif
 
@@ -120,13 +118,13 @@ extern	void	uFree(
 
 /***====================================================================***/
 
-extern Boolean uSetErrorFile ( char *name );
-extern void uInformation ( char *s, ...);
-extern void uAction ( char *s, ... );
-extern void uWarning ( char *s, ... );
-extern void uError ( char *s, ... );
-extern void uFatalError(char *s,...);
-extern void uInternalError ( char *s, ... );
+extern Boolean uSetErrorFile ( const char *name );
+extern void uInformation ( const char *s, ...) _X_ATTRIBUTE_PRINTF(1,2);
+extern void uAction ( const char *s, ... ) _X_ATTRIBUTE_PRINTF(1,2);
+extern void uWarning ( const char *s, ... ) _X_ATTRIBUTE_PRINTF(1,2);
+extern void uError ( const char *s, ... ) _X_ATTRIBUTE_PRINTF(1,2);
+extern void uFatalError( const char *s,...) _X_ATTRIBUTE_PRINTF(1,2);
+extern void uInternalError ( const char *s, ... ) _X_ATTRIBUTE_PRINTF(1,2);
 
 /***====================================================================***/
 
@@ -142,19 +140,19 @@ extern void uInternalError ( char *s, ... );
 #define	uStrCasePrefix(p,s)	(strncasecmp(p,s,strlen(p))==0)
 #else
 extern	int uStrCaseCmp(
-	char *	/* s1 */,
-	char *	/* s2 */
+	const char *	/* s1 */,
+ 	const char *	/* s2 */
 );
 extern	int uStrCasePrefix(
-	char *	/* p */,
-	char *	/* str */
+	const char *	/* p */,
+	const char *	/* str */
 );
 #endif
 #ifdef HAVE_STRDUP
 #define	uStringDup(s1)		(strdup(s1))
 #else
 extern	char *uStringDup(
-	char *	/* s1 */
+	const char *	/* s1 */
 );
 #endif
 
@@ -176,10 +174,11 @@ extern	char *uStringDup(
 extern
 unsigned	int	DEBUG_VAR;
 
-extern	void	uDebug( char *s, ... );
-extern	void	uDebugNOI( char *s, ... );	/* no indent */
+extern	void	uDebug( const char *s, ... ) _X_ATTRIBUTE_PRINTF(1,2);
+extern	void	uDebugNOI( const char *s, ... )	/* no indent */
+    _X_ATTRIBUTE_PRINTF(1,2);
 extern	Boolean	uSetDebugFile(
-    char *name
+    const char *name
 );
 extern	FILE	*uDebugFile;
 extern	int	uDebugIndentLevel;
@@ -215,11 +214,11 @@ extern	int	uDebugIndentSize;
 #endif
 
 extern	Boolean	uSetEntryFile(
-    char *name
+    const char *name
 );
-extern	void	uEntry(int l, char *s, ... );
+extern	void	uEntry(int l, const char *s, ... ) _X_ATTRIBUTE_PRINTF(2,3);
 extern	void	uExit(
-    int l,char *rtVal
+    int l, const char *rtVal
 );
 #ifdef ENTRY_TRACKING_ON
 #define	ENTRY_BIT	0x10
@@ -272,7 +271,7 @@ extern	int	uEntryLevel;
 #define	uFLAG_ENTRY7(f,s,a,b,c,d,e,g,h)
 #define	uFLAG_RETURN(v)			{ return(v);}
 #define	uFLAG_VOIDRETURN		{ return; }
-#endif 
+#endif
 
 _XFUNCPROTOEND
 

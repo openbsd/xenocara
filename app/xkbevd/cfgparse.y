@@ -1,4 +1,3 @@
-/* $Xorg: cfgparse.y,v 1.3 2000/08/17 19:54:49 cpqbld Exp $ */
 /************************************************************
  Copyright (c) 1994 by Silicon Graphics Computer Systems, Inc.
 
@@ -7,24 +6,23 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
  ********************************************************/
-/* $XFree86: xc/programs/xkbevd/cfgparse.y,v 1.4tsi Exp $ */
 
 %token
 	END_OF_FILE	0
@@ -90,7 +88,7 @@ CfgFile		:	CfgEntryList
 		;
 
 CfgEntryList	:	CfgEntryList CfgEntry
-			{ 
+			{
 			    CfgEntryPtr tmp;
 			    if ($1!=NULL) {
 				for (tmp=$1;tmp->next!=NULL;tmp=tmp->next) {
@@ -155,14 +153,14 @@ EventType	:	BELL		{ $$= XkbBellNotify; }
 		;
 
 ActionDef	:	ActionType OptString
-			{ 
+			{
 			    ActDefPtr act;
 			    act= uTypedCalloc(1,ActDefRec);
 			    if (act) {
 				act->type= $1;
 				act->text= $2;
 			    }
-			    $$= act; 
+			    $$= act;
 			}
 		;
 
