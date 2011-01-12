@@ -505,6 +505,10 @@ pci_system_openbsd_create(void)
 					device->base.subvendor_id = PCI_VENDOR(reg);
 					device->base.subdevice_id = PCI_PRODUCT(reg);
 
+					device->base.vgaarb_rsrc =
+					    VGA_ARB_RSRC_LEGACY_IO |
+					    VGA_ARB_RSRC_LEGACY_MEM;
+
 					device++;
 				}
 			}
