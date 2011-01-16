@@ -49,7 +49,7 @@ char scanBuf[1024];
 static int scanStrLine = 0;
 
 #define	BUFSIZE	4096
-static char readBuf[BUFSIZE];
+static unsigned char readBuf[BUFSIZE];
 static int readBufPos = 0;
 static int readBufLen = 0;
 
