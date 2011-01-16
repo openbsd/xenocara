@@ -9,7 +9,8 @@
 .ds Xs 56397 5 getstring.gl
 .TH GLGETSTRING 3G
 .SH NAME
-.B "\- return a string describing the current GL connection
+.B "glGetString
+\- return a string describing the current GL connection
 
 .SH C SPECIFICATION
 const GLubyte* \f3glGetString\fP(
