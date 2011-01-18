@@ -121,14 +121,14 @@ typedef struct PictureThing
   unsigned int width;
   unsigned int height;
   unsigned int count;
-} Picture;
+} FvwmPicture;
 
 void InitPictureCMap(Display*,Window);
-Picture *GetPicture(Display* dpy, Window Root, char* IconPath,
+FvwmPicture *GetPicture(Display* dpy, Window Root, char* IconPath,
 		    char* PixmapPath, char* name, int color_limit);
-Picture *CachePicture(Display*,Window,char *iconpath,
+FvwmPicture *CachePicture(Display*,Window,char *iconpath,
                       char *pixmappath,char*,int);
-void DestroyPicture(Display*,Picture*);
+void DestroyPicture(Display*,FvwmPicture*);
 
 char *findIconFile(char *icon, char *pathlist, int type);
 #ifdef XPM

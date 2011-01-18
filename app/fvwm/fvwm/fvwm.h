@@ -248,7 +248,7 @@ typedef struct FvwmWindow
 
 #ifdef MINI_ICONS
     char *mini_pixmap_file;
-    Picture *mini_icon;
+    FvwmPicture *mini_icon;
 #endif
     char *icon_bitmap_file;
 

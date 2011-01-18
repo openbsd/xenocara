@@ -1845,7 +1845,7 @@ void PaintEntry(MenuItem *mi)
 void PaintSidePic(MenuRoot *mr)
 {
   GC ReliefGC, TextGC;
-  Picture *sidePic;
+  FvwmPicture *sidePic;
 
   if (mr->sidePic)
     sidePic = mr->sidePic;
@@ -1968,7 +1968,7 @@ void PaintMenu(MenuRoot *mr, XEvent *pevent)
   XRectangle bounds;
 
 #ifdef PIXMAP_BUTTONS
-  Picture *p;
+  FvwmPicture *p;
   int border = 0;
   int width, height, x, y;
 #endif
@@ -2591,11 +2591,11 @@ void scanForColor(char *instring, Pixel *p, Bool *c, char identifier)
   return;
 }
 
-void scanForPixmap(char *instring, Picture **p, char identifier)
+void scanForPixmap(char *instring, FvwmPicture **p, char identifier)
 {
   char *tstart, *txt, *name;
   int i;
-  Picture *pp;
+  FvwmPicture *pp;
   extern char *IconPath;
   extern char *PixmapPath;
 #ifdef UGLY_WHEN_PIXMAPS_MISSING

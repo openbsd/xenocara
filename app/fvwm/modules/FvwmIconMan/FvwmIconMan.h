@@ -180,7 +180,7 @@ typedef struct win_data {
   struct button *button;
   /* stuff shadowed in the Button structure */
 #ifdef MINI_ICONS
-  Picture pic;
+  FvwmPicture pic;
 #endif
   char *display_string; /* what gets shown in the manager window */
   Uchar iconified, state;
@@ -206,7 +206,7 @@ typedef struct button {
   struct {
     int dirty_flags;
 #ifdef MINI_ICONS
-    Picture pic;
+    FvwmPicture pic;
 #endif
     WinData *win;
     char *display_string;

@@ -55,7 +55,7 @@ typedef struct pager_window
   Window icon_w;
   Window icon_pixmap_w;
   char *icon_name;
-  Picture mini_icon;
+  FvwmPicture mini_icon;
   int pager_view_width;
   int pager_view_height;
   int icon_view_width;

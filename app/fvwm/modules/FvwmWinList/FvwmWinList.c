@@ -285,7 +285,7 @@ void ProcessMessage(unsigned long type,unsigned long *body)
   char *name,*string;
   static int current_focus=-1;
 
-  Picture p;
+  FvwmPicture p;
 
   switch(type)
   {

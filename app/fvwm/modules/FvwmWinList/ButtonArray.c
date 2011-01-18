@@ -44,7 +44,7 @@ extern int ShowCurrentDesk;
 /* -------------------------------------------------------------------------
    ButtonNew - Allocates and fills a new button structure
    ------------------------------------------------------------------------- */
-Button *ButtonNew(char *title, Picture *p, int up)
+Button *ButtonNew(char *title, FvwmPicture *p, int up)
 {
   Button *new;
 
@@ -100,7 +100,7 @@ void UpdateArray(ButtonArray *array,int x,int y,int w, int h)
 /******************************************************************************
   AddButton - Allocate space for and add the button to the bottom
 ******************************************************************************/
-int AddButton(ButtonArray *array, char *title, Picture *p, int up)
+int AddButton(ButtonArray *array, char *title, FvwmPicture *p, int up)
 {
   Button *new;
 
@@ -154,7 +154,7 @@ int UpdateButton(ButtonArray *array, int butnum, char *title, int up)
 /* -------------------------------------------------------------------------
    UpdateButtonPicture - Change the picture of a button
    ------------------------------------------------------------------------- */
-int UpdateButtonPicture(ButtonArray *array, int butnum, Picture *p)
+int UpdateButtonPicture(ButtonArray *array, int butnum, FvwmPicture *p)
 {
   Button *temp;
   temp=find_n(array,butnum);

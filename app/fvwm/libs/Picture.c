@@ -11,7 +11,7 @@
   Some of the logic comes from pixy2, so the copyright is below.
   */
 /*
- * $Id: Picture.c,v 1.1.1.1 2006/11/26 10:53:41 matthieu Exp $
+ * $Id: Picture.c,v 1.2 2011/01/18 19:28:33 espie Exp $
  * Copyright 1996, Romano Giannetti. No guarantees or warantees or anything
  * are provided or implied in any way whatsoever. Use this program at your
  * own risk. Permission to use this program for any purpose is given,
@@ -57,7 +57,7 @@ static double c400_distance(XColor *, XColor *); /* prototype */
 #include "fvwmlib.h"
 
 
-static Picture *PictureList=NULL;
+static FvwmPicture *PictureList=NULL;
 Colormap PictureCMap;
 Display *PictureSaveDisplay;            /* Save area for display pointer */
 
@@ -71,17 +71,17 @@ void InitPictureCMap(Display *dpy,Window Root)
 }
 
 
-Picture *LoadPicture(Display *dpy,Window Root,char *path, int color_limit)
+FvwmPicture *LoadPicture(Display *dpy,Window Root,char *path, int color_limit)
 {
   int l;
-  Picture *p;
+  FvwmPicture *p;
 #ifdef XPM
   XpmAttributes xpm_attributes;
   int rc;
   XpmImage	my_image = {0};
 #endif
 
-  p=(Picture*)safemalloc(sizeof(Picture));
+  p=(FvwmPicture*)safemalloc(sizeof(FvwmPicture));
   p->count=1;
   p->name=path;
   p->next=NULL;
@@ -123,11 +123,11 @@ Picture *LoadPicture(Display *dpy,Window Root,char *path, int color_limit)
   return NULL;
 }
 
-Picture *GetPicture(Display *dpy,Window Root,char *IconPath,char *PixmapPath,
-		    char *name, int color_limit)
+FvwmPicture *GetPicture(Display *dpy,Window Root,char *IconPath,
+		    char *PixmapPath, char *name, int color_limit)
 {
   char *path;
-  Picture *p;
+  FvwmPicture *p;
 
   if(!(path=findIconFile(name,PixmapPath,R_OK)))
     if(!(path=findIconFile(name,IconPath,R_OK)))
@@ -138,11 +138,11 @@ Picture *GetPicture(Display *dpy,Window Root,char *IconPath,char *PixmapPath,
   return p;
 }
 
-Picture *CachePicture(Display *dpy,Window Root,char *IconPath,char *PixmapPath,
+FvwmPicture *CachePicture(Display *dpy,Window Root,char *IconPath,char *PixmapPath,
 		      char *name, int color_limit)
 {
   char *path;
-  Picture *p=PictureList;
+  FvwmPicture *p=PictureList;
 
   /* First find the full pathname */
 #ifdef XPM
@@ -186,9 +186,9 @@ Picture *CachePicture(Display *dpy,Window Root,char *IconPath,char *PixmapPath,
 }
 
 
-void DestroyPicture(Display *dpy,Picture *p)
+void DestroyPicture(Display *dpy,FvwmPicture *p)
 {
-  Picture *q=PictureList;
+  FvwmPicture *q=PictureList;
 
   if (!p) /* bag out if NULL */
     return;

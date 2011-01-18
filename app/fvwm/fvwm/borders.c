@@ -565,7 +565,7 @@ void DrawButton(FvwmWindow *t, Window win, int w, int h,
 {
     register int type = bf->style & ButtonFaceTypeMask;
 #ifdef PIXMAP_BUTTONS
-    Picture *p;
+    FvwmPicture *p;
     int border = 0;
     int width, height, x, y;
 #endif

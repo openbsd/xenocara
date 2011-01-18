@@ -19,7 +19,7 @@ typedef struct button
   char *truncate_title; /* valid only if truncatewidth > 0 */
   int up, needsupdate, tw, set, truncatewidth;
   struct button *next;
-  Picture p;
+  FvwmPicture p;
   long desk;
 } Button;
 
@@ -33,12 +33,12 @@ typedef struct
 #define MAX_COLOUR_SETS 4
 
 /* Function Prototypes */
-Button *ButtonNew(char *title, Picture *p, int up);
+Button *ButtonNew(char *title, FvwmPicture *p, int up);
 void InitArray(ButtonArray *array,int x,int y,int w,int h);
 void UpdateArray(ButtonArray *array,int x,int y,int w, int h);
-int AddButton(ButtonArray *array, char *title, Picture *p,int up);
+int AddButton(ButtonArray *array, char *title, FvwmPicture *p,int up);
 int UpdateButton(ButtonArray *array, int butnum, char *title, int up);
-int UpdateButtonPicture(ButtonArray *array, int butnum, Picture *p);
+int UpdateButtonPicture(ButtonArray *array, int butnum, FvwmPicture *p);
 int UpdateButtonSet(ButtonArray *array, int butnum, int set);
 void RemoveButton(ButtonArray *array, int butnum);
 Button *find_n(ButtonArray *array, int n);

@@ -1027,7 +1027,7 @@ void RedrawWindow(button_info *b)
 /**
 *** LoadIconFile()
 **/
-int LoadIconFile(char *s,Picture **p)
+int LoadIconFile(char *s,FvwmPicture **p)
 {
   *p=CachePicture(Dpy,Root,iconPath,pixmapPath,s, save_color_limit);
   if(*p)

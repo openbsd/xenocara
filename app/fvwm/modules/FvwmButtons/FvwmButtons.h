@@ -108,7 +108,7 @@ struct container_info_struct
   char *fore;              /* b_Fore */
   Pixel fc;                /* b_Fore */
   Pixel bc,hc,sc;          /* b_Back && !b_IconBack */
-  Picture *backicon;       /* b_Back && b_IconBack */
+  FvwmPicture *backicon;       /* b_Back && b_IconBack */
   ushort minx,miny;        /* b_Size */
 };
 
@@ -138,9 +138,9 @@ struct button_info_struct
   Window IconWin;          /* b_Icon || b_Swallow */
   Pixel fc;                /* b_Fore */
   Pixel bc,hc,sc;          /* b_Back && !b_IconBack */
-  Picture *backicon;       /* b_Back && b_IconBack */
+  FvwmPicture *backicon;       /* b_Back && b_IconBack */
   ushort minx,miny;        /* b_Size */
-  Picture *icon;           /* b_Icon */
+  FvwmPicture *icon;           /* b_Icon */
 
   byte swallow;            /* b_Swallow */
   byte swallow_mask;       /* b_Swallow */

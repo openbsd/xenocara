@@ -87,7 +87,7 @@ typedef struct MenuFeel {
 typedef struct MenuFace {
     union {
 #ifdef PIXMAP_BUTTONS
-        Picture *p;
+        FvwmPicture *p;
 #endif
         Pixel back;
 #ifdef GRADIENT_BUTTONS
@@ -114,7 +114,7 @@ typedef struct MenuLook {
     } f;
     char ReliefThickness;
     char TitleUnderlines;
-    Picture *sidePic;
+    FvwmPicture *sidePic;
     Pixel sideColor;
     GC MenuGC;
     GC MenuActiveGC;
@@ -146,8 +146,8 @@ typedef struct MenuItem
     struct MenuItem *prev;	/* prev menu item */
     char *item;			/* the character string displayed on left*/
     char *item2;	        /* the character string displayed on right*/
-    Picture *picture;           /* Pixmap to show  above label*/
-    Picture *lpicture;          /* Pixmap to show to left of label */
+    FvwmPicture *picture;           /* Pixmap to show  above label*/
+    FvwmPicture *lpicture;          /* Pixmap to show to left of label */
     char *action;		/* action to be performed */
     short item_num;		/* item number of this menu */
     short x;			/* x coordinate for text (item) */
@@ -203,7 +203,7 @@ typedef struct MenuRoot
     Bool backgroundset;         /* is win background set for this menu ?? */
     Bool in_use;
     int func;
-    Picture *sidePic;
+    FvwmPicture *sidePic;
     Pixel sideColor;
     Bool colorize;
     short xoffset;

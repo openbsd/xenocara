@@ -137,7 +137,7 @@ typedef struct ButtonFace {
     ButtonFaceStyle style;
     union {
 #ifdef PIXMAP_BUTTONS
-	Picture *p;
+	FvwmPicture *p;
 #endif
 	Pixel back;
 #ifdef GRADIENT_BUTTONS
