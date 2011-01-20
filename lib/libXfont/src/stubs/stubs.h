@@ -10,7 +10,7 @@
 #endif
 
 /* this probably works for Mach-O too, but probably not for PE */
-#if (defined(__APPLE__) || defined(__ELF__)) && \
+#if (defined(__APPLE__) || defined(__ELF__) || defined(__OpenBSD__)) && \
 	defined(__GNUC__) && ((__GNUC__ >= 3) || ((__GNUC__ == 2) && __GNUC_MINOR__ >= 95 ))
 #define weak __attribute__((weak))
 #else
