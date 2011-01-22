@@ -34,6 +34,7 @@ X Window System is a trademark of The Open Group.
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <unistd.h>
 #include <X11/Xos.h>		/* Needed here for SunOS */
 #include <netinet/in.h>
 #include <arpa/inet.h>

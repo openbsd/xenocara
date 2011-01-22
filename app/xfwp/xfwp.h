@@ -233,8 +233,8 @@ extern int SitePolicyPermit;
  * Compute the number of bytes for a STRING representation
  */
 
-#define STRING_BYTES(_str) (2 + (_str ? strlen (_str) : 0) + \
-		     PAD64 (2 + (_str ? strlen (_str) : 0)))
+#define STRING_BYTES(_str) (2 + strlen (_str) + \
+		     PAD64 (2 + strlen (_str)))
 
 
 
@@ -259,7 +259,7 @@ extern int SitePolicyPermit;
 
 #define STORE_STRING(_pBuf, _string) \
 { \
-    int _len = _string ? strlen (_string) : 0; \
+    int _len = strlen (_string); \
     STORE_CARD16 (_pBuf, _len); \
     if (_len) { \
         memcpy (_pBuf, _string, _len); \

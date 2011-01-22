@@ -228,7 +228,7 @@ void FWPprocessMessages(
          * 
          */
         pm_send_msg_len = STRING_BYTES(config_failure)
-	      		+ STRING_BYTES(NULL);
+	      		+ STRING_BYTES("");
         IceGetHeaderExtra(iceConn, 
 	      	        program_data->major_opcode, 
 	      		PM_GetProxyAddrReply,
@@ -238,7 +238,7 @@ void FWPprocessMessages(
 	       		pReply,
 	       		pReplyData);
         pReply->status = PM_Failure;
-        STORE_STRING(pReplyData, NULL);
+        STORE_STRING(pReplyData, "");
         STORE_STRING(pReplyData, config_failure);
         IceFlush(iceConn);
 	free(tmp_str);
@@ -304,7 +304,7 @@ void FWPprocessMessages(
        * use IceGetHeaderExtra() and the 
        */
       pm_send_msg_len = STRING_BYTES(listen_port_string)
-			+ STRING_BYTES(NULL);
+			+ STRING_BYTES("");
       IceGetHeaderExtra(iceConn, 
 		        program_data->major_opcode, 
 			PM_GetProxyAddrReply,
@@ -315,7 +315,7 @@ void FWPprocessMessages(
 			pReplyData);
       pReply->status = PM_Success;
       STORE_STRING(pReplyData, listen_port_string);
-      STORE_STRING(pReplyData, NULL); 
+      STORE_STRING(pReplyData, "");
       IceFlush(iceConn);
       /*
        * before leaving this routine, change the select() timeout
