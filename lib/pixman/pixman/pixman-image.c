@@ -430,8 +430,22 @@ compute_image_info (pixman_image_t *image)
 	    flags &= ~FAST_PATH_NARROW_FORMAT;
 	break;
 
-    case LINEAR:
     case RADIAL:
+	code = PIXMAN_unknown;
+
+	/*
+	 * As explained in pixman-radial-gradient.c, every point of
+	 * the plane has a valid associated radius (and thus will be
+	 * colored) if and only if a is negative (i.e. one of the two
+	 * circles contains the other one).
+	 */
+
+        if (image->radial.a >= 0)
+	    break;
+
+	/* Fall through */
+
+    case LINEAR:
 	code = PIXMAN_unknown;
 
 	if (image->common.repeat != PIXMAN_REPEAT_NONE)

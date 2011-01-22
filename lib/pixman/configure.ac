@@ -54,7 +54,7 @@ AC_PREREQ([2.57])
 
 m4_define([pixman_major], 0)
 m4_define([pixman_minor], 20)
-m4_define([pixman_micro], 0)
+m4_define([pixman_micro], 2)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
@@ -652,9 +652,8 @@ support_for__thread=no
 
 AC_MSG_CHECKING(for __thread)
 AC_LINK_IFELSE([
-#ifdef defined __MINGW32__ && !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#if defined(__MINGW32__) && !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 #error This MinGW version has broken __thread support
-#endif
 #endif
 #ifdef __OpenBSD__
 #error OpenBSD has broken __thread support

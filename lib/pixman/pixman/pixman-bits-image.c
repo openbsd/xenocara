@@ -297,6 +297,7 @@ bits_image_fetch_bilinear_no_repeat_8888 (pixman_image_t * ima,
     uint32_t *bottom_row;
     uint32_t *end;
     uint32_t zero[2] = { 0, 0 };
+    uint32_t one = 1;
     int y, y1, y2;
     int disty;
     int mask_inc;
@@ -362,10 +363,8 @@ bits_image_fetch_bilinear_no_repeat_8888 (pixman_image_t * ima,
      */
     if (!mask)
     {
-	uint32_t mask_bits = 1;
-
         mask_inc = 0;
-        mask = &mask_bits;
+        mask = &one;
     }
     else
     {

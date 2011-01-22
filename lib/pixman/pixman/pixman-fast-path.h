@@ -245,10 +245,10 @@ scanline_func_name (dst_type_t     *dst,							\
 	}											\
 }
 
-#define FAST_NEAREST_MAINLOOP(scale_func_name, scanline_func, src_type_t, dst_type_t,		\
-			      repeat_mode)							\
+#define FAST_NEAREST_MAINLOOP_INT(scale_func_name, scanline_func, src_type_t, dst_type_t,	\
+				  repeat_mode)							\
 static void											\
-fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,		\
+fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,		\
 						   pixman_op_t              op,			\
 						   pixman_image_t *         src_image,		\
 						   pixman_image_t *         mask_image,		\
@@ -374,12 +374,18 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
     }												\
 }
 
+/* A workaround for old sun studio, see: https://bugs.freedesktop.org/show_bug.cgi?id=32764 */
+#define FAST_NEAREST_MAINLOOP(scale_func_name, scanline_func, src_type_t, dst_type_t,		\
+			      repeat_mode)							\
+	FAST_NEAREST_MAINLOOP_INT(_ ## scale_func_name, scanline_func, src_type_t, dst_type_t,	\
+			      repeat_mode)							\
+
 #define FAST_NEAREST(scale_func_name, SRC_FORMAT, DST_FORMAT,				\
 		     src_type_t, dst_type_t, OP, repeat_mode)				\
     FAST_NEAREST_SCANLINE(scaled_nearest_scanline_ ## scale_func_name ## _ ## OP,	\
 			  SRC_FORMAT, DST_FORMAT, src_type_t, dst_type_t,		\
 			  OP, repeat_mode)						\
-    FAST_NEAREST_MAINLOOP(scale_func_name##_##OP,					\
+    FAST_NEAREST_MAINLOOP_INT(_ ## scale_func_name ## _ ## OP,				\
 			  scaled_nearest_scanline_ ## scale_func_name ## _ ## OP,	\
 			  src_type_t, dst_type_t, repeat_mode)				\
 											\
