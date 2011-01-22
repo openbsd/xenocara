@@ -282,7 +282,7 @@ RoundTo3Digits(double d)
 
 
 static void 
-ReportTimes(double usecs, int n, char *str, int average)
+ReportTimes(double usecs, long long n, char *str, int average)
 {
     double msecsperobj, objspersec;
 
@@ -296,14 +296,14 @@ ReportTimes(double usecs, int n, char *str, int average)
         objspersec =  RoundTo3Digits(objspersec);
 
         if (average) {
-	    printf("%7d trep @ %8.4f msec (%8.1f/sec): %s\n", 
+	    printf("%7lld trep @ %8.4f msec (%8.1f/sec): %s\n",
 		    n, msecsperobj, objspersec, str);
 	} else {
-	    printf("%7d reps @ %8.4f msec (%8.1f/sec): %s\n", 
+	    printf("%7lld reps @ %8.4f msec (%8.1f/sec): %s\n",
 	        n, msecsperobj, objspersec, str);
 	}
     } else {
-	printf("%6d %sreps @ 0.0 msec (unmeasurably fast): %s\n",
+	printf("%6lld %sreps @ 0.0 msec (unmeasurably fast): %s\n",
 	    n, average ? "t" : "", str);
     }
 
@@ -647,6 +647,7 @@ DoTest(XParms xp, Test *test, int reps)
     HardwareSync(xp);
 
     time = ElapsedTime(syncTime);
+    if (time < 0.0) time = 0.0;
     CheckAbort ();
     if (drawToFakeServer)
         XQueryBestSize(xp->d, TileShape, tileToQuery,
@@ -838,7 +839,7 @@ static void
 ProcessTest(XParms xp, Test *test, int func, unsigned long pm, char *label)
 {
     double  time, totalTime;
-    int     reps;
+    long long reps;
     int     j;
 
     xp->planemask = pm;

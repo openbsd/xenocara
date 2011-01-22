@@ -788,7 +788,7 @@ Test test[] = {
 		InitTrapezoids, DoTrapezoids, NullProc, EndTrapezoids,
 		V1_4FEATURE, ROP, 0,
 		{2, 300, "escherknot", NULL, FillTiled}},
-#ifdef XRENDER
+#if defined(XRENDER) && defined(XFT)
   {"-aatrap1", "Fill 1x1 aa trap", NULL,
 		InitFixedTraps, DoFixedTraps, NullProc, EndFixedTraps,
 		V1_5FEATURE, NONROP, 0,

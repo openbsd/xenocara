@@ -1,3 +1,74 @@
+commit c39d831d409537fce2f36c8672f908a7cc810519
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 5 16:33:36 2011 -0800
+
+    x11perf 1.5.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7917bbec06e5c8e17f07b0eb833602b33111f08
+Merge: 5072fb4 cc84118
+Author: Peter Harris <pharris@opentext.com>
+Date:   Tue Nov 23 14:41:33 2010 -0500
+
+    Merge fixes from git://anongit.freedesktop.org/~peterh/x11perf
+
+commit cc84118bd700745f02c65b2d6900e512e4c333af
+Author: Peter Harris <peter.harris@hummingbird.com>
+Date:   Mon Oct 29 11:35:22 2007 -0400
+
+    Avoid "rep" calculation overflow.
+    
+    On today's fast machines, "treps" can easily overflow a 32-bit number.
+    Use "long long" to calculate reps.
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 17a30e7c65c0b03b71b5b1ac54ae3ba33ae3b42a
+Author: Peter Harris <peter.harris@hummingbird.com>
+Date:   Mon Oct 29 11:29:32 2007 -0400
+
+    Clamp test time to positive values.
+    
+    If there is some jitter in the sync time, operations can complete in a
+    negative amount of time (confusing both humans and x11perfcomp).
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 5072fb464ffebcd97ec3a33cbff7095c3ec16225
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 19 22:34:02 2010 -0800
+
+    Remove unneccessary AC_SUBST of CFLAGS & LIBS vars from PKG_CHECK_MODULES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2f6fa453f485739575296da9317243ddda25c4f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 19 22:32:12 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d970d9de1c98bc828365f15fb08aaa8dda214dd6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 19 22:28:22 2010 -0800
+
+    Bug 31640 - x11perf: Doesn't build without libXft
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=31640
+    
+    Fix trapezoid checks to look for both render & xft
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3147d783925bb42c7af78c9f5508c0dc245b942b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Sep 21 20:48:33 2010 -0700
@@ -209,7 +280,7 @@ Date:   Thu Nov 1 09:13:43 2007 +0100
     Fix typos in descriptions of -compwinwin{1,5}00.
 
 commit 569a5eaaef9a5c8bf50f1323fe39e81347976875
-Merge: 55aa9c2... e906fe5...
+Merge: 55aa9c2 e906fe5
 Author: Keith Packard <keithp@koto.keithp.com>
 Date:   Mon Sep 10 16:56:06 2007 +0100
 

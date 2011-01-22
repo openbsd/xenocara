@@ -291,7 +291,7 @@ extern void EndAAText ( XParms xp, Parms p );
 extern int InitTrapezoids ( XParms xp, Parms p, int reps );
 extern void DoTrapezoids ( XParms xp, Parms p, int reps );
 extern void EndTrapezoids ( XParms xp, Parms p );
-#ifdef XRENDER
+#if defined(XRENDER) && defined(XFT)
 extern int InitFixedTraps ( XParms xp, Parms p, int reps );
 extern void DoFixedTraps ( XParms xp, Parms p, int reps );
 extern void EndFixedTraps ( XParms xp, Parms p );

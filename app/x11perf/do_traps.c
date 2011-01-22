@@ -104,7 +104,7 @@ EndTrapezoids(XParms xp, Parms p)
     free(points);
 }
 
-#ifdef XRENDER
+#if defined(XRENDER) && defined(XFT)
 #include <X11/extensions/Xrender.h>
 #include <X11/Xft/Xft.h>
 
