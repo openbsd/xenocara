@@ -1,3 +1,33 @@
+commit b160f7bcb99111e631d6701b199f1dad1e40c80d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 5 14:09:15 2011 -0800
+
+    twm 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1347a210cafa75db40198f8f9e3ca36f8e627bf6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 24 15:28:47 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1ca7092e44e87038ba95a962a3c952ef72b4f146
+Author: Martin Jansa <Martin.Jansa@gmail.com>
+Date:   Mon Nov 1 09:54:44 2010 +0100
+
+    config: replace AC_CHECK_FILE with test -f
+    
+    * AC_CHECK_FILE doesn't work for cross compilation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit b3af92c7bca31b3bf73428d46291b88c3f86026e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 15:03:50 2010 -0700
