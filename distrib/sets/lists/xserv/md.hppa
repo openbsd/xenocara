@@ -3,8 +3,8 @@
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
 ./usr/X11R6/bin/Xvfb
-./usr/X11R6/bin/gtf
 ./usr/X11R6/bin/cvt
+./usr/X11R6/bin/gtf
 ./usr/X11R6/bin/ucs2any
 ./usr/X11R6/include/xorg
 ./usr/X11R6/include/xorg/BT.h
