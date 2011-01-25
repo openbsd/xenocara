@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.154 2011/01/12 21:57:29 matthieu Exp $
+ $OpenBSD: MODULES,v 1.155 2011/01/25 20:14:45 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -25,9 +25,9 @@ app/sessreg		1.0.6	7.5
 app/setxkbmap		1.2.0	7.6
 app/showfont		1.0.3	7.6
 app/smproxy		1.0.4	7.6
-app/twm			1.0.6	7.6	needs-update
+app/twm			1.0.6	7.6
 app/viewres		1.0.3	7.6
-app/x11perf		1.5.3	7.6	needs-update
+app/x11perf		1.5.3	7.6
 app/xauth		1.0.5	7.6
 app/xbacklight		1.1.2	7.6
 app/xbiff		1.0.2	7.5+
@@ -48,7 +48,7 @@ app/xfd			1.1.0	7.6
 app/xfontsel		1.0.2	7.2+
 app/xfs			1.1.1	7.6
 app/xfsinfo		1.0.3	7.6
-app/xfwp		1.0.2	7.6	needs-update
+app/xfwp		1.0.2	7.6
 app/xgamma		1.0.4	7.6
 app/xgc			1.0.3	7.6
 app/xhost		1.0.4	7.6
@@ -211,7 +211,7 @@ lib/libxcb			1.7	7.6
 lib/libxkbfile			1.0.7	7.6
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.6	7.6
-lib/pixman			0.20.0	7.6
+lib/pixman			0.20.2	7.6
 lib/xcb-util			0.3.6	7.4+
 
 proto/bigreqsproto		1.1.1	7.6

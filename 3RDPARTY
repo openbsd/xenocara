@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.94 2011/01/11 19:42:14 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.95 2011/01/25 20:14:45 matthieu Exp $
 #
 
 Package: 	Freetype 
@@ -33,13 +33,13 @@ Archive Site:	http://www.fontconfig.org/
 
 Package:	DejaVu Fonts
 Version:	2.31
-Current Vers:	2.31
+Current Vers:	2.32
 Maintainer:	Freedesktop.org
 Archive Site:	http://dejavu-fonts.org/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.31
+Current Vers:	5.32
 Maintainer:	bagleyd@tux.org
 Archive Site:	http://www.tux.org/~bagleyd/latest/
 
