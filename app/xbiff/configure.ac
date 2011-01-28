@@ -21,26 +21,45 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xbiff, [1.0.2], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xbiff)
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT([xbiff], [1.0.3],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xbiff])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
-
-AM_CONFIG_HEADER(config.h)
-
-AC_PROG_CC
-AC_PROG_INSTALL
-
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-PKG_CHECK_MODULES(XBIFF, xaw7 xbitmaps xext)
+# Checks for pkg-config packages
+PKG_CHECK_MODULES(XBIFF, xaw7 xmu xbitmaps xext x11)
 
-AC_SUBST(XBIFF_CFLAGS)
-AC_SUBST(XBIFF_LIBS)
+# Checks for headers
+AC_CHECK_HEADERS([paths.h])
 
-AC_OUTPUT([Makefile])
+# Allow builder to set path to look for mailboxes
+AC_MSG_CHECKING([for mailbox directory])
+AC_ARG_WITH([mailbox-directory],
+            [AS_HELP_STRING([--with-mailbox-directory=PATH],
+              [specify directory to check for system mailboxes])],
+            [mailbox_directory=$with_mailbox_directory])
+
+if test "x$mailbox_directory" != "x"; then
+   AC_DEFINE_UNQUOTED([MAILBOX_DIRECTORY], ["$mailbox_directory"],
+                      [Directory containing user mailboxes])
+   AC_MSG_RESULT([$mailbox_directory])
+else
+   AC_MSG_RESULT([not set])
+fi
+
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

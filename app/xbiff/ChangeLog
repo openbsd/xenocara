@@ -1,3 +1,130 @@
+commit 3d9d486dfbd40dedc328943fc39041874bb15a25
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 25 12:43:26 2011 -0800
+
+    xbiff 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2493d94686bfb758428c4479114f47b99db04456
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9bf1cbbd49fbb11707e3bc30429e1fbedd5abec8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 7 17:13:49 2011 -0800
+
+    Add --with-mailbox-directory=PATH option to configure
+    
+    Lets builders set a specific path for mailboxes when the defaults
+    don't match the system setup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit dc963f6d676d1735144ff3997c0ab5bf7cc3889f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 7 16:06:40 2011 -0800
+
+    Use <paths.h> and _PATH_MAILDIR to find mailboxes if present
+    
+    Use autoconf to check for paths.h on all systems, instead of
+    only including it #ifdef CSRG_BASED
+    
+    Makes _PATH_MAILDIR the preferred mail directory path on all systems
+    if it's defined, falls back to old per-system hardcoded paths if not.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 6cabab62873999d56a6cca6452c0cbe84dbacd9a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ef54b28477afbe2e059f5d399513716a86d6e1d0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 478f979bce3426af3efdb97f8cf40610ed8f9076
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 31 12:17:10 2010 -0700
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM sttaements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b4bc572dede7e2433bc368faf572b49ad852dd8c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 31 12:06:15 2010 -0700
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5f5d8495455e806ea66f021f49efb1fa3d3f5221
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 31 12:05:38 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 070c9d45cc0678708d5766804d0c529bc6f8bee3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 1 16:38:53 2010 -0700
+
+    Xmu functions are called directly, so include it in PKG_CHECK_MODULES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3fb1f51edec3e4b599d8e8b42e8220bf526bc3b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 30 23:25:03 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use XORG_DEFAULT_OPTIONS provided $(SED)
+    Use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6b546577aadec95c09da148936dbfd55b9cd0216
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Dec 17 08:32:12 2009 -0800

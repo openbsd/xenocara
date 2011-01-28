@@ -6,6 +6,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the <paths.h> header file. */
+#undef HAVE_PATHS_H
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -26,6 +29,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Directory containing user mailboxes */
+#undef MAILBOX_DIRECTORY
 
 /* Name of package */
 #undef PACKAGE

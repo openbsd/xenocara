@@ -33,24 +33,26 @@ from the X Consortium.
 #ifndef _XawMailboxP_h
 #define _XawMailboxP_h
 
+#include "config.h"
 #include "Mailbox.h"
 #include <X11/Xaw/SimpleP.h>
 
-#if defined(SYSV)
-#define MAILBOX_DIRECTORY "/usr/mail"
-#elif defined(SVR4)
-#define MAILBOX_DIRECTORY "/var/mail"
-#elif defined(CSRG_BASED)
-#include <paths.h>
-#ifdef _PATH_MAILDIR
-#define MAILBOX_DIRECTORY _PATH_MAILDIR
-#endif
-#elif defined(__linux__)
-#define MAILBOX_DIRECTORY "/var/spool/mail"
+#ifdef HAVE_PATHS_H
+# include <paths.h>
 #endif
 
 #ifndef MAILBOX_DIRECTORY
-#define MAILBOX_DIRECTORY "/usr/spool/mail"
+# ifdef _PATH_MAILDIR
+#  define MAILBOX_DIRECTORY _PATH_MAILDIR
+# elif defined(SYSV)
+#  define MAILBOX_DIRECTORY "/usr/mail"
+# elif defined(SVR4)
+#  define MAILBOX_DIRECTORY "/var/mail"
+# elif defined(__linux__)
+#  define MAILBOX_DIRECTORY "/var/spool/mail"
+# else
+#  define MAILBOX_DIRECTORY "/usr/spool/mail"
+# endif
 #endif
 
 typedef struct {			/* new fields for mailbox widget */

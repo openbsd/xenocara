@@ -1,6 +1,6 @@
 .\" $XConsortium: xbiff.man,v 1.22 94/04/17 20:43:28 gildea Exp $
 .\" Copyright (c) 1988  X Consortium
-.\" 
+.\"
 .\" Permission is hereby granted, free of charge, to any person obtaining
 .\" a copy of this software and associated documentation files (the
 .\" "Software"), to deal in the Software without restriction, including
@@ -8,10 +8,10 @@
 .\" distribute, sublicense, and/or sell copies of the Software, and to
 .\" permit persons to whom the Software is furnished to do so, subject to
 .\" the following conditions:
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -19,7 +19,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of the X Consortium shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -74,7 +74,7 @@ This option specifies how loud the bell should be rung when new mail comes in.
 This option indicates that the mailbox window should be shaped if masks for
 the empty or full images are given.
 .PP
-The following standard X Toolkit command line arguments are commonly used with 
+The following standard X Toolkit command line arguments are commonly used with
 .I xbiff:
 .TP 8
 .B \-display \fIdisplay\fP
@@ -86,7 +86,7 @@ The mailbox is 48 pixels wide and 48 pixels high and will be centered in
 the window.
 .TP 8
 .B \-bg \fIcolor\fP
-This option specifies the color to use for the background of the window.  
+This option specifies the color to use for the background of the window.
 .TP 8
 .B \-bd \fIcolor\fP
 This option specifies the color to use for the border of the window.
@@ -106,7 +106,7 @@ This option specifies a resource string to be used.  This is especially
 useful for setting resources that do not have separate command line options.
 .SH X DEFAULTS
 The application class name is XBiff.
-This program uses the 
+This program uses the
 .I Mailbox
 widget.
 It understands all of the core resource names and
@@ -116,7 +116,7 @@ classes as well as:
 .B checkCommand (\fPclass\fB CheckCommand)
 Specifies a shell command to be executed to check for new mail rather than
 examining the size of \fBfile\fP.  The specified string value is used as the
-argument to a \fIsystem\fP(3) call and may therefore contain i/o redirection.
+argument to a \fIsystem\fP(__libmansuffix__) call and may therefore contain i/o redirection.
 An exit status of 0 indicates that new mail is waiting, 1 indicates that there
 has been no change in size, and 2 indicates that the mail has been cleared.
 By default, no shell command is provided.
@@ -153,7 +153,7 @@ Specifies the color for the foreground.
 Specifies that the foreground and background should be reversed.
 .TP 8
 .B flip (\fPclass\fB Flip)
-Specifies whether or not the image that is shown when mail has arrived 
+Specifies whether or not the image that is shown when mail has arrived
 should be inverted.  The default is ``true.''
 .TP 8
 .B fullPixmap (\fPclass\fB Pixmap)
@@ -189,7 +189,7 @@ This action causes the widget to lower the flag until new mail comes in.
 .B set()
 This action causes the widget to raise the flag until the user resets it.
 .PP
-The default translation is 
+The default translation is
 .sp
 .nf
         <ButtonPress>:  unset()
@@ -206,7 +206,7 @@ to get the name of a resource file that overrides the global resources
 stored in the RESOURCE_MANAGER property.
 .SH "SEE ALSO"
 X(__miscmansuffix__),
-xrdb(1),
+xrdb(__appmansuffix__),
 stat(2)
 .SH BUGS
 The mailbox bitmaps are ugly.
