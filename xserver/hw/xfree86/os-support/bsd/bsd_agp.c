@@ -1,4 +1,4 @@
-/*	$OpenBSD: bsd_agp.c,v 1.3 2008/04/01 21:08:01 matthieu Exp $ */
+/*	$OpenBSD: bsd_agp.c,v 1.4 2011/01/28 19:34:22 matthieu Exp $ */
 /*
  * Abstraction of the AGP GART interface.
  *
@@ -40,6 +40,8 @@ Bool
 xf86GARTCloseScreen(int screenNum)
 {
 	if(gartFd != -1) {
+		if (gartFd != xf86Info.consoleFd)
+			close(gartFd);
 		acquiredScreen = -1;
 		gartFd = -1;
 		initDone = FALSE;
@@ -72,6 +74,8 @@ GARTInit(int screenNum)
 		/* try the old interface */
 		gartFd = xf86Info.consoleFd;
 	}
+	if (gartFd == -1)
+		return FALSE;
 	xf86AcquireGART(-1);
 	/* Check the kernel driver version. */
 	if (ioctl(gartFd, AGPIOC_INFO, &agpinf) != 0) {
