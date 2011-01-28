@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.155 2011/01/25 20:14:45 matthieu Exp $
+ $OpenBSD: MODULES,v 1.156 2011/01/28 19:44:23 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -30,7 +30,7 @@ app/viewres		1.0.3	7.6
 app/x11perf		1.5.3	7.6
 app/xauth		1.0.5	7.6
 app/xbacklight		1.1.2	7.6
-app/xbiff		1.0.2	7.5+
+app/xbiff		1.0.3	7.6
 app/xcalc		1.0.4	7.6
 app/xclipboard		1.1.1	7.6
 app/xclock		1.0.5	7.6
@@ -190,7 +190,7 @@ lib/libXfixes			4.0.5	7.5+
 lib/libXfont			1.4.3	7.6
 lib/libXfontcache		1.0.5	7.5
 lib/libXft			2.2.0	7.6
-lib/libXi			1.4.0	7.6
+lib/libXi			1.4.1	7.6+	needs-update
 lib/libXinerama			1.1.1	7.6
 lib/libXmu			1.1.0	7.6
 lib/libXpm			3.5.9	7.6
