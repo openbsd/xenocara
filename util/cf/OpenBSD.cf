@@ -244,9 +244,22 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
 /*
  * Documentation formatting
  */
-#define NeqnCmd			neqn -Tascii
-#define NroffCmd		nroff -Tascii
-#define	EqnCmd 			eqn -Tps
+#ifdef Ports
+# define NroffCmd		/usr/local/bin/nroff -Tascii
+# define TroffCmd		/usr/local/bin/nroff -Tps
+# define HTMLroffCmd		/usr/local/bin/nroff -Thtml
+# define NeqnCmd		/usr/local/bin/neqn -Tascii
+# define EqnCmd			/usr/local/bin/eqn -Tps
+# define TblCmd			/usr/local/bin/tbl
+#else
+# define NroffCmd		mandoc
+# define TroffCmd		mandoc -Tps
+# define HTMLroffCmd		mandoc -Thtml
+# define NeqnCmd		cat
+# define EqnCmd			cat
+# define TblCmd			cat
+#endif
+
 #define HasGroff		YES
 
 #ifndef HasCookieMaker
