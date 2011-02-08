@@ -383,6 +383,9 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
 
     for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->encoders[i]) {
+	    info->encoders[i]->ref_count--;
+	    if (info->encoders[i]->ref_count != 0)
+		continue;
 	    if (info->encoders[i]->dev_priv) {
 		xfree(info->encoders[i]->dev_priv);
 		info->encoders[i]->dev_priv = NULL;
@@ -3403,7 +3406,7 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 		    info->MaxSurfaceWidth);
 	info->allowColorTiling = FALSE;
     }
-    if (info->allowColorTiling) {
+    if (info->allowColorTiling && pScrn->currentMode != NULL) {
         info->tilingEnabled = (pScrn->currentMode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;
     }
 
