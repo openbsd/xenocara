@@ -1477,9 +1477,14 @@ i965_prepare_composite(int op, PicturePtr source_picture,
 	ScrnInfoPtr scrn = xf86Screens[dest_picture->pDrawable->pScreen->myNum];
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	struct gen4_render_state *render_state = intel->gen4_render_state;
-	gen4_composite_op *composite_op = &render_state->composite_op;
+	gen4_composite_op *composite_op;
 	uint32_t *binding_table;
 	drm_intel_bo *binding_table_bo, *surface_state_bo;
+
+	if (render_state == NULL) 
+		return FALSE;
+
+	composite_op = &render_state->composite_op;
 
 	composite_op->src_filter =
 	    sampler_state_filter_from_picture(source_picture->filter);
