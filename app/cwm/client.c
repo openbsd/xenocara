@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.76 2010/05/22 22:10:31 okan Exp $
+ * $Id: client.c,v 1.77 2011/02/13 20:09:57 okan Exp $
  */
 
 #include <sys/param.h>
@@ -435,6 +435,9 @@ client_ptrsave(struct client_ctx *cc)
 	if (client_inbound(cc, x, y)) {
 		cc->ptr.x = x;
 		cc->ptr.y = y;
+	} else {
+		cc->ptr.x = -1;
+		cc->ptr.y = -1;
 	}
 }
 
