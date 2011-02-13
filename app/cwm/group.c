@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: group.c,v 1.48 2010/09/25 20:01:27 okan Exp $
+ * $Id: group.c,v 1.49 2011/02/13 17:25:20 tedu Exp $
  */
 
 #include <sys/param.h>
@@ -108,6 +108,11 @@ group_show(struct screen_ctx *sc, struct group_ctx *gc)
 	u_int			 i;
 	int			 lastempty = -1;
 
+	gc->highstack = 0;
+	TAILQ_FOREACH(cc, &gc->clients, group_entry) {
+		if (cc->stackingorder > gc->highstack)
+			gc->highstack = cc->stackingorder;
+	}
 	winlist = (Window *) xcalloc(sizeof(*winlist), (gc->highstack + 1));
 
 	/*
