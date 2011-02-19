@@ -1,28 +1,8 @@
 Post-installation instructions for X.Org on OpenBSD/alpha
 ---------------------------------------------------------
 
-OpenBSD uses the X.Org X server on alpha. 
-
-Currently, only TGA video cards are supported.
-
-The wsfb driver supports the TGA as a dumb framebuffer at 8 or 24 bits
-per pixel, depending on the card model. 
-A default /etc/X11/xorg.conf is installed that uses this driver. So
-you can just use 'startx' or xdm to start X without further
-configuration. 
-
-See the tga(4) manual page for instructions on setting
-the resolution of a TGA card.
-
-Start either xdm(1) or startx(1).
-
-   a. Start xdm(1), the X display manager by activating the xdm_flags option
-      in /etc/rc.conf(8) or /etc/rc.conf.local(8).  You need to disable
-      the getty process attached to /dev/ttyC0 if your video card is a TGA.
-
-   b. Start startx(1) from a console shell.  It is the X script that starts
-      the X server and a few X applications, including a window manager.
+There is no X server for alpha.  Only userland X.
 
 problem_blurb
 
-$OpenBSD: README.alpha,v 1.3 2010/08/05 06:34:19 matthieu Exp $
+$OpenBSD: README.alpha,v 1.4 2011/02/19 19:51:53 matthieu Exp $

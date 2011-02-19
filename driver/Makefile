@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.35 2011/01/02 14:04:18 matthieu Exp $
+# $OpenBSD: Makefile,v 1.36 2011/02/19 19:51:53 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -14,7 +14,7 @@ INPUT_DRV_COMMON= \
 	xf86-input-hyperpen xf86-input-joystick \
 	xf86-input-mutouch xf86-input-penmount
 
-INPUT_DRV_alpha= ${INPUT_DRV_COMMON}
+INPUT_DRV_alpha=
 
 INPUT_DRV_amd64= ${INPUT_DRV_COMMON} xf86-input-vmmouse
 
@@ -54,9 +54,7 @@ VIDEO_DRV_COMMON= \
 	xf86-video-sis xf86-video-tdfx xf86-video-trident \
 	xf86-video-tseng xf86-video-vesa
 
-VIDEO_DRV_alpha= \
-	${VIDEO_DRV_COMMON} \
-	xf86-video-wsfb
+VIDEO_DRV_alpha=
 
 VIDEO_DRV_amd64= \
 	${VIDEO_DRV_COMMON} \

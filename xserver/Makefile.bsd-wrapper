@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.32 2011/01/02 14:23:40 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.33 2011/02/19 19:51:53 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
 DIST= ${.CURDIR}
 
 # Machines for which we don't build the Xorg Xserver
-NO_XORG_MACHINES=	aviion hppa64 landisk \
+NO_XORG_MACHINES=	alpha aviion hppa64 landisk \
 			mvme68k mvme88k mvmeppc solbourne vax
 
 NO_XF86UTIL_MACHINES=	hp300 landisk mac68k sgi sparc vax
@@ -32,9 +32,9 @@ DRI_OPTION=	--disable-dri --disable-dri2
 .endif
 
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
-		--with-xkb-path=/etc/X11/xkb \
+		--with-xkb-path=${X11BASE}/share/X11/xkb \
 		--with-xkb-output=/var/db/xkb \
-		--with-default-xkb-rules=xorg \
+		--with-default-xkb-rules=base \
 		--with-module-dir=${LIBDIR}/modules ${GLX_OPTION} \
 		--enable-install-setuid --enable-privsep \
 		--disable-dmx ${NO_XORG_OPTION} ${NO_XF86_UTIL_OPTION} \
