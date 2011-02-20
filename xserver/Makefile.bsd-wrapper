@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.33 2011/02/19 19:51:53 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.34 2011/02/20 13:42:17 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -32,9 +32,9 @@ DRI_OPTION=	--disable-dri --disable-dri2
 .endif
 
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
-		--with-xkb-path=${X11BASE}/share/X11/xkb \
+		--with-xkb-path=/etc/X11/xkb \
 		--with-xkb-output=/var/db/xkb \
-		--with-default-xkb-rules=base \
+		--with-default-xkb-rules=xorg \
 		--with-module-dir=${LIBDIR}/modules ${GLX_OPTION} \
 		--enable-install-setuid --enable-privsep \
 		--disable-dmx ${NO_XORG_OPTION} ${NO_XF86_UTIL_OPTION} \
