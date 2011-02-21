@@ -5225,8 +5225,6 @@ static void RADEONRestore(ScrnInfoPtr pScrn)
 	RADEONRestoreMemMapRegisters(pScrn, restore);
 	avivo_restore(pScrn, restore);
     } else {
-	OUTREG(RADEON_CLOCK_CNTL_INDEX, restore->clock_cntl_index);
-	RADEONPllErrataAfterIndex(info);
 	OUTREG(RADEON_RBBM_SOFT_RESET,  restore->rbbm_soft_reset);
 	OUTREG(RADEON_DP_DATATYPE,      restore->dp_datatype);
 	OUTREG(RADEON_GRPH_BUFFER_CNTL, restore->grph_buffer_cntl);
@@ -5251,6 +5249,9 @@ static void RADEONRestore(ScrnInfoPtr pScrn)
 	    if (info->InternalTVOut)
 		RADEONRestoreTVRegisters(pScrn, restore);
 	}
+
+	OUTREG(RADEON_CLOCK_CNTL_INDEX, restore->clock_cntl_index);
+	RADEONPllErrataAfterIndex(info);
 
 	RADEONRestoreBIOSRegisters(pScrn, restore);
     }
