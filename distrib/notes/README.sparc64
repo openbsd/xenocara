@@ -19,7 +19,7 @@ To use xdm from rc.conf, it is necessary to disable /dev/console in
 Single, accelerated display
 ---------------------------
 Accelerated access to the framebuffer is supported on machines with
-PCI VGA or UPA Creator framebuffers.  
+PCI VGA or UPA Creator framebuffers.
 To use a PCI VGA framebuffer, retrieve the PCI bus, device and function
 of the video card, eg:
 
@@ -27,21 +27,33 @@ of the video card, eg:
 	vgafb0 at pci0 dev 19 function 0 "ATI Rage XL" rev 0x27
 	wsdisplay0 at vgafb0: console (std, sun emulation), using wskbd0
 
-The framebuffer is on bus 0, device 19, function 0.  Now, using the
-configuration in the first section as a guide, add a "Device" section
-with something like the following (replace 0:19:0 with the bus:dev:func
-of the framebuffer):
+The framebuffer is on bus 0, device 19, function 0. Now, create
+/etc/X11/xorg.conf, with the following content (replace 0:19:0 with the
+bus:dev:func of the framebuffer):
 
 	Section "Device"
 		Identifier	"Card0"
-		Driver		"ati"
 		BusID		"PCI:0:19:0"
 		Option		"composite_sync" "True"
-		# Use the following option on Blade-100 
+		# Use the following option on Blade-100
 		# Option	"reference_clock" "29.5MHz"
 	EndSection
 
-See xorg.conf(5) for more options.
+	Section "Monitor"
+        	Identifier      "Monitor0"
+        	HorizSync       31.5-70
+        	VertRefresh     50-90
+	EndSection
+
+	Section "Screen"
+        	Identifier      "Screen0"
+        	Device          "Card0"
+        	Monitor         "Monitor0"
+	EndSection
+
+See xorg.conf(5) for more options. You may want to replace the frequency
+ranges in the "Monitor" section with the actual ranges supported by
+your monitor.
 
 For UPA Creator framebuffers, the device will be automatically detected
 and you don't need to have an xorg.conf file.
@@ -86,4 +98,4 @@ To use xdm from rc.conf, it is necessary to disable /dev/console in
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.9 2009/05/20 18:26:35 miod Exp $
+$OpenBSD: README.sparc64,v 1.10 2011/02/21 18:13:18 miod Exp $
