@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.39 2010/09/04 10:41:57 matthieu Exp $
+# $OpenBSD: Makefile,v 1.40 2011/02/22 00:24:35 espie Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -46,7 +46,7 @@ afterinstall:
 	${MAKE} install-mk
 	${MAKE} fix-appd
 	${MAKE} font-cache
-	/usr/libexec/makewhatis ${DESTDIR}/usr/X11R6/man
+	/usr/libexec/makewhatis -v ${DESTDIR}/usr/X11R6/man
 
 realinstall: _SUBDIRUSE
 
