@@ -3308,6 +3308,8 @@ static void R128Restore(ScrnInfoPtr pScrn)
 
     R128Blank(pScrn);
 
+    R128RestoreMode(pScrn, restore);
+
     if (!info->IsSecondary) {
         OUTREG(R128_AMCGPIO_MASK,     restore->amcgpio_mask);
         OUTREG(R128_AMCGPIO_EN_REG,   restore->amcgpio_en_reg);
@@ -3316,7 +3318,6 @@ static void R128Restore(ScrnInfoPtr pScrn)
         OUTREG(R128_DP_DATATYPE,      restore->dp_datatype);
     }
 
-    R128RestoreMode(pScrn, restore);
 #ifdef WITH_VGAHW
     if (info->VGAAccess) {
         vgaHWPtr hwp = VGAHWPTR(pScrn);
