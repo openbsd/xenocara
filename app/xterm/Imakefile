@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.102 2009/04/27 19:26:34 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.103 2011/02/19 13:09:15 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -6,8 +6,6 @@ XCOMM
 XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
-XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.73 2006/04/10 00:34:36 dickey Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -143,6 +141,14 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 
  OSMAJORVERSION = OSMajorVersion
  OSMINORVERSION = OSMinorVersion
+
+#if	defined(NTOArchitecture)	|| \
+	defined(LinuxArchitecture)	|| \
+	defined(OpenBSDArchitecture)	|| \
+	defined(SGIArchitecture)	|| \
+	defined(SunArchitecture)
+TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
+#endif
 
 #if !defined(OS2Architecture) && !defined(__GNU__)
 #if defined(UseUtempter)

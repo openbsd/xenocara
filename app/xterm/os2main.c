@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.265 2010/06/20 21:27:07 tom Exp $ */
+/* $XTermId: os2main.c,v 1.268 2011/02/14 10:01:09 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -262,7 +262,6 @@ static jmp_buf env;
 
 static XtResource application_resources[] =
 {
-    Sres("name", "Name", xterm_name, DFT_TERMTYPE),
     Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
@@ -274,7 +273,7 @@ static XtResource application_resources[] =
     Bres("messages", "Messages", messages, True),
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
-    Sres("menuLocale", "MenuLocale", menuLocale, ""),
+    Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -728,7 +727,7 @@ decode_keyvalue(char **ptr, int termcap)
     char *string = *ptr;
     int value = -1;
 
-    TRACE(("...decode '%s'\n", string));
+    TRACE(("decode_keyvalue '%s'\n", string));
     if (*string == '^') {
 	switch (*++string) {
 	case '?':
@@ -742,7 +741,7 @@ decode_keyvalue(char **ptr, int termcap)
 #endif
 #if defined(_PC_VDISABLE)
 		if (value == -1) {
-		    value = fpathconf(0, _PC_VDISABLE);
+		    value = (int) fpathconf(0, _PC_VDISABLE);
 		    if (value == -1) {
 			if (errno != 0)
 			    break;	/* skip this (error) */
@@ -763,7 +762,7 @@ decode_keyvalue(char **ptr, int termcap)
 	++string;
     } else if (termcap && (*string == '\\')) {
 	char *d;
-	int temp = strtol(string + 1, &d, 8);
+	int temp = (int) strtol(string + 1, &d, 8);
 	if (temp > 0 && d != string) {
 	    value = temp;
 	    string = d;
@@ -773,6 +772,7 @@ decode_keyvalue(char **ptr, int termcap)
 	++string;
     }
     *ptr = string;
+    TRACE(("...decode_keyvalue %#x\n", value));
     return value;
 }
 
@@ -956,7 +956,7 @@ main(int argc, char **argv ENVP_ARG)
     TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
 	int n;
-	unsigned unique = 2;
+	size_t unique = 2;
 	Bool quit = True;
 
 	for (n = 1; n < argc; n++) {
@@ -965,7 +965,7 @@ main(int argc, char **argv ENVP_ARG)
 		Version();
 	    } else if (abbrev(argv[n], "-help", unique)) {
 		Help();
-	    } else if (abbrev(argv[n], "-class", 3)) {
+	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
 		if ((my_class = argv[++n]) == 0) {
 		    Help();
 		} else {
@@ -973,14 +973,6 @@ main(int argc, char **argv ENVP_ARG)
 		}
 		unique = 3;
 	    } else {
-#if OPT_COLOR_RES
-		if (abbrev(argv[n], "-reverse", 2)
-		    || !strcmp("-rv", argv[n])) {
-		    reversed = True;
-		} else if (!strcmp("+rv", argv[n])) {
-		    reversed = False;
-		}
-#endif
 		quit = False;
 		unique = 3;
 	    }
@@ -1076,9 +1068,6 @@ main(int argc, char **argv ENVP_ARG)
     }
 #endif /* OPT_ZICONBEEP */
     hold_screen = resource.hold_screen ? 1 : 0;
-    xterm_name = resource.xterm_name;
-    if (strcmp(xterm_name, "-") == 0)
-	xterm_name = DFT_TERMTYPE;
     if (resource.icon_geometry != NULL) {
 	int scr, junk;
 	int ix, iy;
@@ -1259,10 +1248,10 @@ main(int argc, char **argv ENVP_ARG)
 	    int n;
 	    char **c;
 	    for (n = 0, c = command_to_exec; *c; n++, c++) ;
-	    c = TypeMallocN(char *, n + 3 + u);
+	    c = TypeMallocN(char *, (unsigned) (n + 3 + u));
 	    if (c == NULL)
 		SysError(ERROR_LUMALLOC);
-	    memcpy(c + 2 + u, command_to_exec, (n + 1) * sizeof(char *));
+	    memcpy(c + 2 + u, command_to_exec, (unsigned) (n + 1) * sizeof(char *));
 	    c[0] = term->misc.localefilter;
 	    if (u) {
 		c[1] = "-encoding";
@@ -1365,18 +1354,26 @@ main(int argc, char **argv ENVP_ARG)
 			winToEmbedInto, 0, 0);
     }
 #if OPT_COLOR_RES
-    TRACE(("checking resource values rv %s fg %s, bg %s\n",
-	   BtoS(term->misc.re_verse0),
+    TRACE(("checking reverseVideo before rv %s fg %s, bg %s\n",
+	   term->misc.re_verse0 ? "reverse" : "normal",
 	   NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
 	   NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
 
-    if ((reversed && term->misc.re_verse0)
-	&& ((TScreenOf(term)->Tcolors[TEXT_FG].resource
-	     && !isDefaultForeground(TScreenOf(term)->Tcolors[TEXT_FG].resource))
-	    || (TScreenOf(term)->Tcolors[TEXT_BG].resource
-		&& !isDefaultBackground(TScreenOf(term)->Tcolors[TEXT_BG].resource))
-	))
-	ReverseVideo(term);
+    if (term->misc.re_verse0) {
+	if (isDefaultForeground(TScreenOf(term)->Tcolors[TEXT_FG].resource)
+	    && isDefaultBackground(TScreenOf(term)->Tcolors[TEXT_BG].resource)) {
+	    TScreenOf(term)->Tcolors[TEXT_FG].resource = x_strdup(XtDefaultBackground);
+	    TScreenOf(term)->Tcolors[TEXT_BG].resource = x_strdup(XtDefaultForeground);
+	} else {
+	    ReverseVideo(term);
+	}
+	term->misc.re_verse = True;
+	update_reversevideo();
+	TRACE(("updated  reverseVideo after  rv %s fg %s, bg %s\n",
+	       term->misc.re_verse ? "reverse" : "normal",
+	       NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
+	       NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
+    }
 #endif /* OPT_COLOR_RES */
 
 #if OPT_MAXIMIZE
@@ -1688,22 +1685,30 @@ spawnXTerm(XtermWidget xw)
      * entry is not found.
      */
     ok_termcap = True;
-    if (!get_termcap(TermName = resource.term_name)) {
-	char *last = NULL;
-	TermName = *envnew;
+    if (!get_termcap(xw, TermName = resource.term_name)) {
+	const char *last = NULL;
+	char *next;
+
+	TermName = x_strdup(*envnew);
 	ok_termcap = False;
 	while (*envnew != NULL) {
-	    if ((last == NULL || strcmp(last, *envnew))
-		&& get_termcap(*envnew)) {
-		TermName = *envnew;
-		ok_termcap = True;
-		break;
+	    if (last == NULL || strcmp(last, *envnew)) {
+		next = x_strdup(*envnew);
+		if (get_termcap(xw, next)) {
+		    free(TermName);
+		    TermName = next;
+		    ok_termcap = True;
+		    break;
+		} else {
+		    free(next);
+		}
 	    }
 	    last = *envnew;
 	    envnew++;
 	}
     }
     if (ok_termcap) {
+	resource.term_name = TermName;
 	resize_termcap(xw);
     }
 
@@ -1810,8 +1815,8 @@ spawnXTerm(XtermWidget xw)
 
 	    xtermCopyEnv(gblenvp);
 
-	    xtermSetenv("TERM", TermName);
-	    if (!TermName)
+	    xtermSetenv("TERM", resource.term_name);
+	    if (!resource.term_name)
 		*get_tcap_buffer(xw) = 0;
 
 	    sprintf(buf, "%lu",
@@ -1831,7 +1836,7 @@ spawnXTerm(XtermWidget xw)
 	    /* dup the tty */
 	    for (i = 0; i <= 2; i++)
 		if (i != ttyfd) {
-		    (void) close(i);
+		    IGNORE_RC(close(i));
 		    IGNORE_RC(dup(ttyfd));
 		}
 
@@ -1847,10 +1852,10 @@ spawnXTerm(XtermWidget xw)
 		       handshake.rows, handshake.cols));
 		set_max_row(screen, handshake.rows);
 		set_max_col(screen, handshake.cols);
-		TTYSIZE_ROWS(ts) = MaxRows(screen);
-		TTYSIZE_COLS(ts) = MaxCols(screen);
-		ts.ws_xpixel = FullWidth(screen);
-		ts.ws_ypixel = FullHeight(screen);
+		TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
+		TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
+		ts.ws_xpixel = (ttySize_t) FullWidth(screen);
+		ts.ws_ypixel = (ttySize_t) FullHeight(screen);
 	    }
 
 	    sprintf(numbuf, "%d", MaxCols(screen));
@@ -2018,7 +2023,7 @@ Exit(int n)
 #endif
 	    TRACE(("closed display\n"));
 	}
-	TRACE((0));
+	TRACE_CLOSE();
     }
 #endif
 
@@ -2091,7 +2096,7 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
     int count = 0;
 
     TRACE(("parse_tty_modes\n"));
-    while (1) {
+    for (;;) {
 	size_t len;
 
 	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s)))

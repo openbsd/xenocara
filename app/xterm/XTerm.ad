@@ -1,8 +1,8 @@
-! $XTermId: XTerm.ad,v 1.93 2010/06/15 10:55:59 tom Exp $
+! $XTermId: XTerm.ad,v 1.94 2011/01/19 22:05:58 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
-! Copyright 1996-2009,2010 by Thomas E. Dickey
+! Copyright 1996-2010,2011 by Thomas E. Dickey
 ! 
 !                         All Rights Reserved
 ! 
@@ -44,6 +44,7 @@
 
 *mainMenu.Label:  Main Options
 *mainMenu*toolbar*Label:  Toolbar
+*mainMenu*fullscreen*Label: Full Screen
 *mainMenu*securekbd*Label:  Secure Keyboard
 *mainMenu*allowsends*Label:  Allow SendEvents
 *mainMenu*redraw*Label:  Redraw Window

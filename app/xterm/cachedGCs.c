@@ -1,8 +1,8 @@
-/* $XTermId: cachedGCs.c,v 1.59 2010/04/15 00:00:17 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.60 2011/02/09 10:11:44 tom Exp $ */
 
 /************************************************************
 
-Copyright 2007-2009,2010 by Thomas E. Dickey
+Copyright 2007-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -513,6 +513,7 @@ setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XTermFonts * font)
 	    NEXT(font) = font;
 	    me->mask |= GCFont;
 	} else {
+	    /* EMPTY */
 	    TRACE2(("...NOT updated font for %s\n",
 		    traceCgsEnum(cgsId)));
 	}

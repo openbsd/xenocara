@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.541 2010/10/11 00:32:28 tom Exp $ */
+/* $XTermId: util.c,v 1.545 2011/02/17 00:28:45 tom Exp $ */
 
 /*
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1250,7 +1250,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	} while (!done);
 
 	screen->protected_mode = saved_mode;
-	if (len <= 0) {
+	if ((int) len <= 0) {
 	    return 0;
 	}
     }
@@ -1518,7 +1518,7 @@ CopyWait(XtermWidget xw)
     XEvent reply;
     XEvent *rep = &reply;
 
-    while (1) {
+    for (;;) {
 	XWindowEvent(screen->display, VWindow(screen),
 		     ExposureMask, &reply);
 	switch (reply.type) {
@@ -1722,7 +1722,7 @@ set_background(XtermWidget xw, int color GCC_UNUSED)
     Pixel c = getXtermBackground(xw, xw->flags, color);
 
     TRACE(("set_background(%d) %#lx\n", color, c));
-    XSetWindowBackground(screen->display, VShellWindow, c);
+    XSetWindowBackground(screen->display, VShellWindow(xw), c);
     XSetWindowBackground(screen->display, VWindow(screen), c);
 }
 
@@ -3403,7 +3403,7 @@ getXtermSizeHints(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     long supp;
 
-    if (!XGetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)),
+    if (!XGetWMNormalHints(screen->display, VShellWindow(xw),
 			   &xw->hints, &supp))
 	memset(&xw->hints, 0, sizeof(xw->hints));
     TRACE_HINTS(&(xw->hints));
@@ -3969,3 +3969,45 @@ decode_wcwidth(XtermWidget xw)
     }
 }
 #endif
+
+/*
+ * Extend a (normally) boolean resource value by checking for additional values
+ * which will be mapped into true/false.
+ */
+int
+extendedBoolean(const char *value, FlagList * table, Cardinal limit)
+{
+    int result = -1;
+    long check;
+    char *next;
+    Cardinal n;
+
+    if ((x_strcasecmp(value, "true") == 0)
+	|| (x_strcasecmp(value, "yes") == 0)
+	|| (x_strcasecmp(value, "on") == 0)) {
+	result = True;
+    } else if ((x_strcasecmp(value, "false") == 0)
+	       || (x_strcasecmp(value, "no") == 0)
+	       || (x_strcasecmp(value, "off") == 0)) {
+	result = False;
+    } else if ((check = strtol(value, &next, 0)) >= 0 && *next == '\0') {
+	if (check >= (long) limit)
+	    check = True;
+	result = (int) check;
+    } else {
+	for (n = 0; n < limit; ++n) {
+	    if (x_strcasecmp(value, table[n].name) == 0) {
+		result = table[n].code;
+		break;
+	    }
+	}
+    }
+
+    if (result < 0) {
+	fprintf(stderr, "Unrecognized keyword: %s\n", value);
+	result = False;
+    }
+
+    TRACE(("extendedBoolean(%s) = %d\n", value, result));
+    return result;
+}

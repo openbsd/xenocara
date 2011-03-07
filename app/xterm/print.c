@@ -1,8 +1,8 @@
-/* $XTermId: print.c,v 1.119 2010/06/13 17:46:27 tom Exp $ */
+/* $XTermId: print.c,v 1.121 2011/02/09 10:11:44 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2009,2010 by Thomas E. Dickey
+Copyright 1997-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -135,7 +135,6 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
     int last = MaxCols(screen);
     int col;
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
-    CellColor *fb = 0;
 #define ColorOf(ld,col) (ld->color[col])
 #endif
     unsigned fg = NO_COLOR, last_fg = NO_COLOR;
@@ -151,9 +150,6 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
 	   row, ROW2INX(screen, row), screen->topline, screen->max_row, chr,
 	   visibleIChars(ld->charData, (unsigned) last)));
 
-    if_OPT_ISO_COLORS(screen, {
-	fb = ld->color;
-    });
     while (last > 0) {
 	if ((ld->attribs[last - 1] & CHARDRAWN) == 0)
 	    last--;
@@ -675,7 +671,7 @@ getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
 	    TRACE(("param%d:%s\n", j, params[j]));
 	    for (k = 0; k < XtNumber(table); ++k) {
 		if (!x_strcasecmp(params[j], table[k].name)) {
-		    int *ptr = (int *) ((char *) result + table[k].offset);
+		    int *ptr = (int *) (void *) ((char *) result + table[k].offset);
 		    TRACE(("...PrinterFlags(%s) %d->%d\n",
 			   table[k].name,
 			   *ptr,

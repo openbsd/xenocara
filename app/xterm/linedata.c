@@ -1,8 +1,8 @@
-/* $XTermId: linedata.c,v 1.78 2010/04/14 23:41:10 tom Exp $ */
+/* $XTermId: linedata.c,v 1.79 2011/01/21 00:07:35 tom Exp $ */
 
 /************************************************************
 
-Copyright 2009,2010 by Thomas E. Dickey
+Copyright 2009-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -189,7 +189,7 @@ initLineData(XtermWidget xw)
 #define CellDataSize(screen) (SizeOfCellData + screen->lineExtra)
 
 #define CellDataAddr(screen, data, cell) \
-	(CellData *)((char *)data + (cell * CellDataSize(screen)))
+	(CellData *)(void *) ((char *)data + (cell * CellDataSize(screen)))
 
 CellData *
 newCellData(XtermWidget xw, Cardinal count)

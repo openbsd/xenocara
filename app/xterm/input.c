@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.326 2010/06/15 22:41:09 tom Exp $ */
+/* $XTermId: input.c,v 1.327 2011/02/09 10:15:07 tom Exp $ */
 
 /*
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -486,7 +486,7 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
 		UIntClr(result, ControlMask);
 	    }
 	} else if (kd->keysym == XK_Tab || kd->keysym == XK_Return) {
-	    ;
+	    /* EMPTY */ ;
 	} else if (IsControlAlias(kd)) {
 	    /* Things like "^_" work here... */
 	    if (Masked(result, (ControlMask | ShiftMask)) == 0) {
@@ -1989,7 +1989,7 @@ VTInitModifiers(XtermWidget xw)
 		    for (l = 0; l < keysyms_per_keycode; ++l) {
 			keysym = XKeycodeToKeysym(dpy, code, l);
 			if (keysym == NoSymbol) {
-			    ;
+			    /* EMPTY */ ;
 			} else if (keysym == XK_Num_Lock) {
 			    SaveMask(num_lock);
 			} else if (keysym == XK_Alt_L || keysym == XK_Alt_R) {
@@ -1999,14 +1999,14 @@ VTInitModifiers(XtermWidget xw)
 			} else if (mask == ShiftMask
 				   && (keysym == XK_Shift_L
 				       || keysym == XK_Shift_R)) {
-			    ;	/* ignore */
+			    /* EMPTY */ ;
 			} else if (mask == ControlMask
 				   && (keysym == XK_Control_L
 				       || keysym == XK_Control_R)) {
-			    ;	/* ignore */
+			    /* EMPTY */ ;
 			} else if (mask == LockMask
 				   && (keysym == XK_Caps_Lock)) {
-			    ;	/* ignore */
+			    /* EMPTY */ ;
 			} else if (keysym == XK_Mode_switch
 #ifdef XK_ISO_Level3_Shift
 				   || keysym == XK_ISO_Level3_Shift

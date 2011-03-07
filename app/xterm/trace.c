@@ -1,8 +1,7 @@
-/* $XTermId: trace.c,v 1.115 2010/06/15 22:40:28 tom Exp $ */
+/* $XTermId: trace.c,v 1.121 2011/02/17 00:34:47 tom Exp $ */
 
 /*
- * 
- * Copyright 1997-2009,2010 by Thomas E. Dickey
+ * Copyright 1997-2010,2011 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -37,6 +36,9 @@
  */
 
 #include <xterm.h>		/* for definition of GCC_UNUSED */
+
+#if OPT_TRACE
+
 #include <data.h>
 #include <trace.h>
 
@@ -300,7 +302,7 @@ visibleIChar(IChar * buf, unsigned len)
     return result;
 }
 
-#define CASETYPE(name) case name: result = #name; break;
+#define CASETYPE(name) case name: result = #name; break
 
 const char *
 visibleKeyboardType(xtermKeyboardType type)
@@ -566,6 +568,7 @@ TraceWMSizeHints(XtermWidget xw)
  * Some calls to XGetAtom() will fail, and we don't want to stop.  So we use
  * our own error-handler.
  */
+/* ARGSUSED */
 static int
 no_error(Display * dpy GCC_UNUSED, XErrorEvent * event GCC_UNUSED)
 {
@@ -627,7 +630,6 @@ TraceXtermResources(void)
     XTERM_RESOURCE *resp = &resource;
 
     Trace("XTERM_RESOURCE settings:\n");
-    XRES_S(xterm_name);
     XRES_S(icon_geometry);
     XRES_S(title);
     XRES_S(icon_name);
@@ -668,6 +670,13 @@ TraceXtermResources(void)
 #if OPT_SESSION_MGT
     XRES_B(sessionMgt);
 #endif
+#if OPT_TOOLBAR
+    XRES_B(toolBar);
+#endif
+#if OPT_MAXIMIZE
+    XRES_B(maximized);
+    XRES_S(fullscreen_s);
+#endif
 }
 
 void
@@ -686,7 +695,7 @@ parse_option(char *dst, String src, int first)
 {
     char *s;
 
-    if (!strncmp(src, "-/+", 3)) {
+    if (!strncmp(src, "-/+", (size_t) 3)) {
 	dst[0] = (char) first;
 	strcpy(dst + 1, src + 3);
     } else {
@@ -833,3 +842,10 @@ TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_co
 	}
     }
 }
+#else
+extern void empty_trace(void);
+void
+empty_trace(void)
+{
+}
+#endif

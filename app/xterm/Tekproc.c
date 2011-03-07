@@ -1,8 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.184 2010/10/14 08:07:03 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.188 2011/02/20 00:55:33 tom Exp $ */
 
 /*
- *
- * Copyright 2001-2009,2010 by Thomas E. Dickey
+ * Copyright 2001-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -398,7 +397,7 @@ TekPtyData(void)
     if (Tpushb == 0) {
 	if ((Tpushb = TypeMallocN(Char, 10)) == NULL
 	    || (Tline = TypeMallocN(XSegment, MAX_VTX)) == NULL) {
-	    fprintf(stderr, "%s: Not enough core for Tek mode\n", xterm_name);
+	    fprintf(stderr, "%s: Not enough core for Tek mode\n", ProgramName);
 	    if (Tpushb)
 		free(Tpushb);
 	    Tfailed = True;
@@ -601,7 +600,8 @@ Tekparse(TekWidget tw)
 	case CASE_BEAM_VEC:
 	    TRACE(("case: beam and vector selector\n"));
 	    /* only line types */
-	    if ((c &= LINEMASK) != tekscr->cur.linetype) {
+	    c = (IChar) (c & LINEMASK);
+	    if (c != tekscr->cur.linetype) {
 		if (nplot > 0)
 		    TekFlush(tw);
 		if (c <= TEKNUMLINES)
@@ -1540,7 +1540,7 @@ TekRealize(Widget gw,
 
     XtWindow(tw) = TWindow(tekscr) =
 	XCreateWindow(XtDisplay(tw),
-		      XtWindow(SHELL_OF(tw)),
+		      VShellWindow(tw),
 		      tw->core.x, tw->core.y,
 		      tw->core.width, tw->core.height,
 		      BorderWidth(tw),
@@ -1574,7 +1574,7 @@ TekRealize(Widget gw,
 	tekscr->gin_terminator = GIN_TERM_EOT;
     else
 	fprintf(stderr, "%s: illegal GIN terminator setting \"%s\"\n",
-		xterm_name, tw->tek.gin_terminator_str);
+		ProgramName, tw->tek.gin_terminator_str);
 
     gcv.graphics_exposures = True;	/* default */
     gcv.font = tw->tek.Tfont[tekscr->cur.fontsize]->fid;

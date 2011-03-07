@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.235 2010/11/19 00:51:33 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.238 2011/02/16 11:57:19 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2009,2010 by Thomas E. Dickey
+.\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1117,7 +1117,7 @@ Soft terminal reset (DECSTR).
 Request ANSI mode (DECRQM).
 For VT300 and up, reply is
 .br
-  \*(Cs\*(Ps\*;\*(Pm\*$\*p
+  \*(Cs\*(Ps\*;\*(Pm\*$\*y
 .br
 where \*(Ps is the mode number as in RM,
 and \*(Pm is the mode value:
@@ -1208,6 +1208,8 @@ Valid values for the first (and any additional parameters) are:
   \*(Ps = \*8\*s\*;\*s\fIheight\*s\*;\*swidth\fP \(-> Resize the text area to [height;width] in characters.
   \*(Ps = \*9\*s\*;\*s\*0 \(-> Restore maximized window.
   \*(Ps = \*9\*s\*;\*s\*1 \(-> Maximize window (i.e., resize to screen size).
+  \*(Ps = \*1\*0\*s\*;\*s\*0 \(-> Undo full-screen mode.
+  \*(Ps = \*1\*0\*s\*;\*s\*1 \(-> Change to full-screen.
   \*(Ps = \*1\*1 \(-> Report \fIxterm\fP window state.
 If the \fIxterm\fP window is open (non-iconified), it returns \*(Cs\*1\*t.
 If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
@@ -2139,6 +2141,8 @@ For positions less than 95, the resulting output is identical under both modes.
 Under extended mouse mode, positions greater than 95
 generate "extra" bytes which will confuse applications which do not treat
 their input as a UTF-8 stream.
+Likewise, \*(Cb will be UTF-8 encoded,
+to reduce confusion with wheel mouse events.
 .lP
 NOTE: Under normal mouse mode, positions outside (160,94) result in
 byte pairs which can be interpreted as a single UTF-8 character;

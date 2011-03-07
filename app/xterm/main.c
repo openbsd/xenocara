@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.618 2010/06/20 21:11:51 tom Exp $ */
+/* $XTermId: main.c,v 1.625 2011/02/18 01:24:50 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -15,7 +15,7 @@
 
 /***********************************************************
 
-Copyright 2002-2009,2010 by Thomas E. Dickey
+Copyright 2002-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -832,7 +832,6 @@ static sigjmp_buf env;
 
 static XtResource application_resources[] =
 {
-    Sres("name", "Name", xterm_name, DFT_TERMTYPE),
     Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
@@ -845,6 +844,7 @@ static XtResource application_resources[] =
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
     Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
+    Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -890,6 +890,7 @@ static XtResource application_resources[] =
 #endif
 #if OPT_MAXIMIZE
     Bres(XtNmaximized, XtCMaximized, maximized, False),
+    Sres(XtNfullscreen, XtCFullscreen, fullscreen_s, "off"),
 #endif
 };
 
@@ -1086,6 +1087,8 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_MAXIMIZE
 {"-maximized",	"*maximized",	XrmoptionNoArg,		(XPointer) "on"},
 {"+maximized",	"*maximized",	XrmoptionNoArg,		(XPointer) "off"},
+{"-fullscreen",	"*fullscreen",	XrmoptionNoArg,		(XPointer) "on"},
+{"+fullscreen",	"*fullscreen",	XrmoptionNoArg,		(XPointer) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(XPointer) NULL},
@@ -1261,6 +1264,7 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_MAXIMIZE
 {"-/+maximized",           "turn on/off maxmize on startup" },
+{"-/+fullscreen",          "turn on/off fullscreen on startup" },
 #endif
 { NULL, NULL }};
 /* *INDENT-ON* */
@@ -1752,15 +1756,22 @@ setEffectiveUser(uid_t user)
 int
 main(int argc, char *argv[]ENVP_ARG)
 {
+#if OPT_MAXIMIZE
+#define DATA(name) { #name, es##name }
+    static FlagList tblFullscreen[] =
+    {
+	DATA(Always),
+	DATA(Never)
+    };
+#undef DATA
+#endif
+
     Widget form_top, menu_top;
     Dimension menu_high;
     TScreen *screen;
     int mode;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
-#if OPT_COLOR_RES
-    Bool reversed = False;
-#endif
 
     ProgramName = argv[0];
 
@@ -1831,14 +1842,6 @@ main(int argc, char *argv[]ENVP_ARG)
 		}
 		unique = 3;
 	    } else {
-#if OPT_COLOR_RES
-		if (abbrev(argv[n], "-reverse", (size_t) 2)
-		    || !strcmp("-rv", argv[n])) {
-		    reversed = True;
-		} else if (!strcmp("+rv", argv[n])) {
-		    reversed = False;
-		}
-#endif
 		quit = False;
 		unique = 3;
 	    }
@@ -2003,6 +2006,12 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+	VTInitTranslations();
+#if OPT_MAXIMIZE
+	resource.fullscreen = extendedBoolean(resource.fullscreen_s,
+					      tblFullscreen,
+					      XtNumber(tblFullscreen));
+#endif
 #if OPT_PTY_HANDSHAKE
 	resource.wait_for_map0 = resource.wait_for_map;
 #endif
@@ -2045,9 +2054,6 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif /* OPT_ZICONBEEP */
     hold_screen = resource.hold_screen ? 1 : 0;
-    xterm_name = resource.xterm_name;
-    if (strcmp(xterm_name, "-") == 0)
-	xterm_name = DFT_TERMTYPE;
     if (resource.icon_geometry != NULL) {
 	int scr, junk;
 	int ix, iy;
@@ -2393,18 +2399,26 @@ main(int argc, char *argv[]ENVP_ARG)
 			winToEmbedInto, 0, 0);
     }
 #if OPT_COLOR_RES
-    TRACE(("checking resource values rv %s fg %s, bg %s\n",
-	   BtoS(term->misc.re_verse0),
+    TRACE(("checking reverseVideo before rv %s fg %s, bg %s\n",
+	   term->misc.re_verse0 ? "reverse" : "normal",
 	   NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
 	   NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
 
-    if ((reversed && term->misc.re_verse0)
-	&& ((TScreenOf(term)->Tcolors[TEXT_FG].resource
-	     && !isDefaultForeground(TScreenOf(term)->Tcolors[TEXT_FG].resource))
-	    || (TScreenOf(term)->Tcolors[TEXT_BG].resource
-		&& !isDefaultBackground(TScreenOf(term)->Tcolors[TEXT_BG].resource))
-	))
-	ReverseVideo(term);
+    if (term->misc.re_verse0) {
+	if (isDefaultForeground(TScreenOf(term)->Tcolors[TEXT_FG].resource)
+	    && isDefaultBackground(TScreenOf(term)->Tcolors[TEXT_BG].resource)) {
+	    TScreenOf(term)->Tcolors[TEXT_FG].resource = x_strdup(XtDefaultBackground);
+	    TScreenOf(term)->Tcolors[TEXT_BG].resource = x_strdup(XtDefaultForeground);
+	} else {
+	    ReverseVideo(term);
+	}
+	term->misc.re_verse = True;
+	update_reversevideo();
+	TRACE(("updated  reverseVideo after  rv %s fg %s, bg %s\n",
+	       term->misc.re_verse ? "reverse" : "normal",
+	       NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
+	       NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
+    }
 #endif /* OPT_COLOR_RES */
 
 #if OPT_MAXIMIZE
@@ -3323,6 +3337,7 @@ spawnXTerm(XtermWidget xw)
 	}
     }
     if (ok_termcap) {
+	resource.term_name = TermName;
 	resize_termcap(xw);
     }
 
@@ -3338,7 +3353,7 @@ spawnXTerm(XtermWidget xw)
 	initial_erase = ttymodelist[XTTYMODE_erase].value;
 	setInitialErase = True;
     } else if (resource.ptyInitialErase) {
-	;
+	/* EMPTY */ ;
     } else if (ok_termcap) {
 	char *s = get_tcap_erase(xw);
 	TRACE(("...extracting initial_erase value from termcap\n"));
@@ -3550,7 +3565,7 @@ spawnXTerm(XtermWidget xw)
 #endif /* __MVS__ */
 		    }
 
-		    while (1) {
+		    for (;;) {
 #if USE_NO_DEV_TTY
 			if (!no_dev_tty
 			    && (ttyfd = open("/dev/tty", O_RDWR)) >= 0) {
@@ -3898,8 +3913,8 @@ spawnXTerm(XtermWidget xw)
 
 	    xtermCopyEnv(environ);
 
-	    xtermSetenv("TERM", TermName);
-	    if (!TermName)
+	    xtermSetenv("TERM", resource.term_name);
+	    if (!resource.term_name)
 		*get_tcap_buffer(xw) = 0;
 
 	    sprintf(buf, "%lu",
@@ -4926,7 +4941,7 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
     int count = 0;
 
     TRACE(("parse_tty_modes\n"));
-    while (1) {
+    for (;;) {
 	size_t len;
 
 	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s)))

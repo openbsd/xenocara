@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.173 2010/06/15 22:47:34 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.180 2011/02/17 00:50:23 tom Exp $ */
 
 /*
- * Copyright 2000-2009,2010 by Thomas E. Dickey
+ * Copyright 2000-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -174,12 +174,29 @@ DoResizeScreen(XtermWidget xw)
     /* These are obsolete, but old clients may use them */
     xw->hints.width = MaxCols(screen) * FontWidth(screen) + xw->hints.min_width;
     xw->hints.height = MaxRows(screen) * FontHeight(screen) + xw->hints.min_height;
+#if OPT_MAXIMIZE
+    /* assure single-increment resize for fullscreen */
+    if (screen->fullscreen) {
+	xw->hints.width_inc = 1;
+	xw->hints.height_inc = 1;
+    }
+#endif /* OPT_MAXIMIZE */
 #endif
 
-    XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &xw->hints);
+    XSetWMNormalHints(screen->display, VShellWindow(xw), &xw->hints);
 
     reqWidth = (Dimension) (MaxCols(screen) * FontWidth(screen) + min_wide);
     reqHeight = (Dimension) (MaxRows(screen) * FontHeight(screen) + min_high);
+
+#if OPT_MAXIMIZE
+    /* compensate for fullscreen mode */
+    if (screen->fullscreen) {
+	Screen *xscreen = DefaultScreenOfDisplay(xw->screen.display);
+	reqWidth = (Dimension) WidthOfScreen(xscreen);
+	reqHeight = (Dimension) HeightOfScreen(xscreen);
+	ScreenResize(xw, reqWidth, reqHeight, &xw->flags);
+    }
+#endif /* OPT_MAXIMIZE */
 
     TRACE(("...requesting screensize chars %dx%d, pixels %dx%d\n",
 	   MaxRows(screen),
@@ -213,7 +230,7 @@ DoResizeScreen(XtermWidget xw)
 	xw->hints.height = repHeight;
 	xw->hints.width = repWidth;
 	TRACE_HINTS(&xw->hints);
-	XSetWMNormalHints(screen->display, VShellWindow, &xw->hints);
+	XSetWMNormalHints(screen->display, VShellWindow(xw), &xw->hints);
     }
 #endif
     XSync(screen->display, False);	/* synchronize */
@@ -583,7 +600,7 @@ CompareWidths(const char *a, const char *b, int *modifier)
     if (!a || !b)
 	return 0;
 
-    while (1) {
+    for (;;) {
 	ca = x_toupper(*a);
 	cb = x_toupper(*b);
 	if (ca != cb || ca == '\0')
@@ -900,6 +917,7 @@ SetScrollLock(TScreen * screen, Bool enable)
     }
 }
 
+/* ARGSUSED */
 void
 HandleScrollLock(Widget w,
 		 XEvent * event GCC_UNUSED,

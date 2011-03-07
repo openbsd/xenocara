@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.44 2010/06/13 17:46:27 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.45 2011/02/19 20:28:13 tom Exp $ */
 
 /*
- * Copyright 2007-2009,2010 by Thomas E. Dickey
+ * Copyright 2007-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

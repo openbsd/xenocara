@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.6 2010/06/15 22:32:19 tom Exp $
+# $XTermId: plink.sh,v 1.7 2010/11/28 23:55:35 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001,2005 by Thomas E. Dickey
+# Copyright 2001-2005,2010 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 

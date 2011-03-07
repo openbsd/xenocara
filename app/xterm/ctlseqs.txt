@@ -607,7 +607,7 @@ CSI > Ps p
 CSI ! p   Soft terminal reset (DECSTR).
 CSI Ps$ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply is
-            CSI Ps; Pm$ p
+            CSI Ps; Pm$ y
           where Ps is the mode number as in RM, and Pm is the mode
           value:
             0 - not recognized
@@ -685,6 +685,8 @@ CSI Ps ; Ps ; Ps t
             Ps = 9  ;  0  -> Restore maximized window.
             Ps = 9  ;  1  -> Maximize window (i.e., resize to screen
           size).
+            Ps = 1 0  ;  0  -> Undo full-screen mode.
+            Ps = 1 0  ;  1  -> Change to full-screen.
             Ps = 1 1  -> Report xterm window state.  If the xterm window
           is open (non-iconified), it returns CSI 1 t .  If the xterm
           window is iconified, it returns CSI 2 t .
@@ -1449,7 +1451,8 @@ tracking modes, expanding the maximum encodable position from 223 to
 2015.  For positions less than 95, the resulting output is identical
 under both modes.  Under extended mouse mode, positions greater than 95
 generate "extra" bytes which will confuse applications which do not
-treat their input as a UTF-8 stream.
+treat their input as a UTF-8 stream.  Likewise, Cb will be UTF-8
+encoded, to reduce confusion with wheel mouse events.
 
 NOTE: Under normal mouse mode, positions outside (160,94) result in byte
 pairs which can be interpreted as a single UTF-8 character; applications

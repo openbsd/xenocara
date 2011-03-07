@@ -1,8 +1,7 @@
-/* $XTermId: menu.c,v 1.267 2010/06/20 21:09:10 tom Exp $ */
+/* $XTermId: menu.c,v 1.284 2011/02/17 00:46:18 tom Exp $ */
 
 /*
- *
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -30,6 +29,7 @@
  * sale, use or other dealings in this Software without prior written
  * authorization.
  *
+ *
  * Copyright 1989  The Open Group
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -51,7 +51,6 @@
  * Except as contained in this notice, the name of The Open Group shall not be
  * used in advertising or otherwise to promote the sale, use or other dealings
  * in this Software without prior written authorization from The Open Group.
- *
  */
 
 #include <xterm.h>
@@ -120,6 +119,12 @@
 
 #include <stdio.h>
 #include <signal.h>
+
+#if OPT_TRACE
+#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(func, mn, mi, val)
+#else
+#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(mn, mi, val)
+#endif
 
 #define ToggleFlag(flag) flag = (Boolean) !flag
 /* *INDENT-OFF* */
@@ -199,6 +204,10 @@ static void do_font_loadable   PROTO_XT_CALLBACK_ARGS;
 static void do_hp_fkeys        PROTO_XT_CALLBACK_ARGS;
 #endif
 
+#if OPT_MAXIMIZE
+static void do_fullscreen      PROTO_XT_CALLBACK_ARGS;
+#endif
+
 #if OPT_NUM_LOCK
 static void do_alt_esc         PROTO_XT_CALLBACK_ARGS;
 static void do_num_lock        PROTO_XT_CALLBACK_ARGS;
@@ -260,6 +269,9 @@ static void do_font_utf8_title PROTO_XT_CALLBACK_ARGS;
 MenuEntry mainMenuEntries[] = {
 #if OPT_TOOLBAR
     { "toolbar",	do_toolbar,	NULL },
+#endif
+#if OPT_MAXIMIZE
+    { "fullscreen",	do_fullscreen,	NULL },
 #endif
     { "securekbd",	do_securekbd,	NULL },
     { "allowsends",	do_allowsends,	NULL },
@@ -626,6 +638,7 @@ domenu(Widget w,
     case mainMenu:
 	if (created) {
 	    update_toolbar();
+	    update_fullscreen();
 	    update_securekbd();
 	    update_allowsends();
 	    update_logging();
@@ -835,9 +848,82 @@ handle_send_signal(Widget gw GCC_UNUSED, int sig)
 #endif
 }
 
+static void
+UpdateMenuItem(
+#if OPT_TRACE
+		  const char *func,
+#endif
+		  MenuEntry * menu,
+		  int which,
+		  Bool val)
+{
+    static Arg menuArgs =
+    {XtNleftBitmap, (XtArgVal) 0};
+    Widget mi = menu[which].widget;
+
+    if (mi) {
+	menuArgs.value = (XtArgVal) ((val)
+				     ? TScreenOf(term)->menu_item_bitmap
+				     : None);
+	XtSetValues(mi, &menuArgs, (Cardinal) 1);
+    }
+    TRACE(("%s(%d): %s\n", func, which, BtoS(val)));
+}
+
+void
+SetItemSensitivity(Widget mi, Bool val)
+{
+    static Arg menuArgs =
+    {XtNsensitive, (XtArgVal) 0};
+
+    if (mi) {
+	menuArgs.value = (XtArgVal) (val);
+	XtSetValues(mi, &menuArgs, (Cardinal) 1);
+    }
+}
+
 /*
  * action routines
  */
+
+#if OPT_MAXIMIZE
+static void
+do_fullscreen(Widget gw GCC_UNUSED,
+	      XtPointer closure GCC_UNUSED,
+	      XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
+
+    if (resource.fullscreen != esNever)
+	FullScreen(xw, !screen->fullscreen);
+}
+
+/* ARGSUSED */
+void
+HandleFullscreen(Widget w,
+		 XEvent * event GCC_UNUSED,
+		 String * params GCC_UNUSED,
+		 Cardinal *param_count GCC_UNUSED)
+{
+    do_fullscreen(w, (XtPointer) 0, (XtPointer) 0);
+}
+
+void
+update_fullscreen(void)
+{
+    if (resource.fullscreen <= 1) {
+	UpdateCheckbox("update_fullscreen",
+		       mainMenuEntries,
+		       mainMenu_fullscreen,
+		       TScreenOf(term)->fullscreen);
+    } else {
+	SetItemSensitivity(mainMenuEntries[mainMenu_fullscreen].widget,
+			   False);
+    }
+}
+
+#endif /* OPT_MAXIMIZE */
 
 static void
 do_securekbd(Widget gw GCC_UNUSED,
@@ -1329,7 +1415,7 @@ do_marginbell(Widget gw GCC_UNUSED,
 {
     TScreen *screen = TScreenOf(term);
 
-    if (!(ToggleFlag(screen->marginbell)))
+    if ((ToggleFlag(screen->marginbell)) == 0)
 	screen->bellArmed = -1;
     update_marginbell();
 }
@@ -2461,46 +2547,6 @@ HandleTekCopy(Widget w,
 }
 #endif /* OPT_TEK4014 */
 
-static void
-UpdateMenuItem(
-#if OPT_TRACE
-		  const char *func,
-#endif
-		  MenuEntry * menu,
-		  int which,
-		  Bool val)
-{
-    static Arg menuArgs =
-    {XtNleftBitmap, (XtArgVal) 0};
-    Widget mi = menu[which].widget;
-
-    if (mi) {
-	menuArgs.value = (XtArgVal) ((val)
-				     ? TScreenOf(term)->menu_item_bitmap
-				     : None);
-	XtSetValues(mi, &menuArgs, (Cardinal) 1);
-    }
-    TRACE(("%s(%d): %s\n", func, which, BtoS(val)));
-}
-
-#if OPT_TRACE
-#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(func, mn, mi, val)
-#else
-#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(mn, mi, val)
-#endif
-
-void
-SetItemSensitivity(Widget mi, Bool val)
-{
-    static Arg menuArgs =
-    {XtNsensitive, (XtArgVal) 0};
-
-    if (mi) {
-	menuArgs.value = (XtArgVal) (val);
-	XtSetValues(mi, &menuArgs, (Cardinal) 1);
-    }
-}
-
 #if OPT_TOOLBAR
 /*
  * The normal style of xterm popup menu delays initialization until the menu is
@@ -2658,13 +2704,14 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
 void
 repairSizeHints(void)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
-    if (XtIsRealized((Widget) term)) {
-	getXtermSizeHints(term);
-	xtermSizeHints(term, ScrollbarWidth(screen));
+    if (XtIsRealized((Widget) xw)) {
+	getXtermSizeHints(xw);
+	xtermSizeHints(xw, ScrollbarWidth(screen));
 
-	XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(term)), &term->hints);
+	XSetWMNormalHints(screen->display, VShellWindow(xw), &xw->hints);
     }
 }
 

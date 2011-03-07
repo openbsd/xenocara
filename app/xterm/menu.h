@@ -1,8 +1,7 @@
-/* $XTermId: menu.h,v 1.119 2010/01/04 22:16:06 tom Exp $ */
+/* $XTermId: menu.h,v 1.122 2011/01/20 09:42:50 tom Exp $ */
 
 /*
- *
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -29,6 +28,7 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
+ *
  *
  * Copyright 1989  The Open Group
  *
@@ -58,6 +58,7 @@
 
 #ifndef included_menu_h
 #define included_menu_h
+/* *INDENT-OFF* */
 
 #include <xterm.h>
 
@@ -98,6 +99,7 @@ extern void HandleFontBoxChars     PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontPacked       PROTO_XT_ACTIONS_ARGS;
+extern void HandleFullscreen       PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
@@ -109,8 +111,8 @@ extern void HandleNumLock          PROTO_XT_ACTIONS_ARGS;
 extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintControlMode PROTO_XT_ACTIONS_ARGS;
-extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintEverything  PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleRenderFont       PROTO_XT_ACTIONS_ARGS;
@@ -156,6 +158,9 @@ extern void ShowToolbar(Bool);
 typedef enum {
 #if OPT_TOOLBAR
     mainMenu_toolbar,
+#endif
+#if OPT_MAXIMIZE
+    mainMenu_fullscreen,
 #endif
     mainMenu_securekbd,
     mainMenu_allowsends,
@@ -297,7 +302,6 @@ typedef enum {
     fontMenu_LAST
 } fontMenuIndices;
 
-
 /*
  * items in tek4014 mode menu
  */
@@ -333,6 +337,12 @@ extern void SetItemSensitivity(Widget mi, Bool val);
 extern void update_toolbar(void);
 #else
 #define update_toolbar() /* nothing */
+#endif
+
+#if OPT_MAXIMIZE
+extern void update_fullscreen(void);
+#else
+#define update_fullscreen() /* nothing */
 #endif
 
 extern void update_securekbd(void);
@@ -492,4 +502,6 @@ extern void set_tekfont_menu_item(int n,int val);
 
 extern void set_menu_font(int val);
 
-#endif	/*included_menu_h*/
+/* *INDENT-ON* */
+
+#endif /* included_menu_h */

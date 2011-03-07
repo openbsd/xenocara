@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.469 2010/11/11 11:57:07 tom Exp $
+.\" $XTermId: xterm.man,v 1.481 2011/02/18 10:48:14 tom Exp $
 .\"
-.\" Copyright 1996-2009,2010 by Thomas E. Dickey
+.\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -55,7 +55,11 @@
 .\" from The Open Group.
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
-.
+.\"
+.\" Bulleted paragraph
+.de bP
+.IP \(bu 4
+..
 .\" these would be fallbacks for DS/DE,
 .\" but groff changed the meaning of the macros.
 .de NS
@@ -505,6 +509,17 @@ See also the discussion of the \fBiconFont\fP resource.
 This option sets the pointsize for fonts selected from the FreeType
 library if support for that library was compiled into \fIxterm\fP.
 This corresponds to the \fBfaceSize\fP resource.
+.TP 8
+.BI \-fullscreen
+This option indicates that \fIxterm\fP should ask the window manager to
+let it use the full-screen for display,
+e.g., without window decorations.
+It sets the \fBfullscreen\fP resource to \*(``true\*(''.
+.TP 8
+.BI +fullscreen
+This option indicates that \fIxterm\fP should not ask the window manager to
+let it use the full-screen for display.
+It sets the \fBfullscreen\fP resource to \*(``false\*(''.
 .TP 8
 .B \-fw \fIfont\fP
 This option specifies the font to be used for displaying wide text.
@@ -1214,6 +1229,33 @@ together by setting the DECBKM state according to whether the initial value of
 stty erase is a backspace (8) or delete (127) character.
 The default is \*(``false\*('', which disables this feature.
 .TP 8
+.B "fullscreen (\fPclass\fB Fullscreen)"
+Specifies whether or not \fIxterm\fP should ask the window manager to
+use a fullscreen layout on startup.
+\fIXterm\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP 3
+false (0)
+Fullscreen layout is not used initially,
+but may be later via menu-selection or control sequence.
+.TP 3
+true (1)
+Fullscreen layout is used initially,
+but may be disabled later via menu-selection or control sequence.
+.TP 3
+always (2)
+Fullscreen layout is used initially,
+and cannot be disabled later via menu-selection or control sequence.
+.TP 3
+never (3)
+Fullscreen layout is not used,
+and cannot be enabled later via menu-selection or control sequence.
+.RE
+.IP
+The default is
+\*(``false.\*(''
+.TP 8
 .B "hold (\fPclass\fB Hold)"
 If true,
 \fIxterm\fP will not immediately destroy its window when the shell command completes.
@@ -1293,6 +1335,19 @@ Specify the minimum size of the input buffer, i.e., the amount of data
 that \fIxterm\fR requests on each read.
 The default is 4096.
 You cannot set this to a value less than 64.
+.TP 8
+.B "omitTranslation (\fPclass\fB OmitTranslation)"
+Selectively omit one or more parts of \fIxterm\fP's default translations
+at startup.
+The resource value is a comma-separated list of keywords,
+which may be abbreviated:
+\*(``fullscreen\*('',
+\*(``scroll-lock\*('',
+\*(``shift-fonts\*('' or
+\*(``wheel-mouse\*(''.
+\fIXterm\fP also recognizes \*(``default\*('',
+but omitting that will make the program unusable
+unless you provide a similar definition in your resource settings.
 .TP 8
 .B "ptyHandshake (\fPclass\fB PtyHandshake)
 If \*(``true\*('', \fIxterm\fP will perform handshaking during initialization
@@ -2206,6 +2261,9 @@ Lower the xterm window to the bottom of the stacking order.
 .TP 5
 MaximizeWin (9)
 Maximize window (i.e., resize to screen size).
+.TP 5
+FullscreenWin (10)
+Use full screen (i.e., resize to screen size, without window decorations).
 .TP 5
 MinimizeWin (2)
 Iconify window.
@@ -3121,6 +3179,54 @@ The default is ``3''.
 Specifies whether or not reverse video should be simulated.
 The default is
 \*(``false.\*(''
+.IP
+There are several aspects to reverse video in \fIxterm\fP:
+.RS
+.bP
+The command-line \fB\-rv\fP option tells the X libraries to reverse
+the foreground and background colors.
+\fIXterm\fP's command-line options set resource values.
+In particular, the X Toolkit sets the \fBreverseVideo\fP resource
+when the \fB\-rv\fP option is used.
+.bP
+If the user has also used command-line options \fB\-fg\fP or \fB\-bg\fP 
+to set the foreground and background colors,
+\fIxterm\fP does not see these options directly.
+Instead,
+it examines the resource values to reconstruct the command-line options,
+and determine which of the colors is the user's intended foreground, etc.
+Their actual values are irrelevant to the reverse video function;
+some users prefer the X defaults (black text on a white background),
+others prefer white text on a black background.
+.bP
+After startup,
+the user can toggle the "Enable Reverse Video" menu entry.
+This exchanges the current foreground and background colors
+of the VT100 widget,
+and repaints the screen.
+Because of the X resource hierarchy,
+the \fBreverseVideo\fP resource applies to more than the VT100 widget.
+.RE
+.IP
+Programs running in an \fIxterm\fP can also use control sequences
+to enable the VT100 reverse video mode.
+These are independent of the \fIreverseVideo\fP resource and the menu entry.
+\fIXterm\fP exchanges the current foreground and background colors
+when drawing text affected by these control sequences.
+.IP
+Other control sequences can alter the foreground and background colors
+which are used:
+.RS
+.bP
+Programs can also use the ANSI color control sequences to set the
+foreground and background colors.
+.bP
+Extensions to the ANSI color controls (such as 16-, 88- or 256-colors)
+are treated similarly to the ANSI control.
+.bP
+Using other control sequences (the "\fIdynamic colors\fR" feature),
+a program can change the foreground and background colors.
+.RE
 .TP 8
 .B "reverseWrap (\fPclass\fB ReverseWrap)"
 Specifies whether or not reverse-wraparound should be enabled.
@@ -3363,6 +3469,8 @@ it translates the ISO-8859-1 string to UTF-8 to work with the X libraries
 which assume the string is UTF-8.
 .IP
 However, some users may wish to write a title string encoded in UTF-8.
+The window manager is responsible for drawing window titles.
+Some window managers (not all) support UTF-8 encoding of window titles.
 Set this resource to \*(``true\*('' to allow UTF-8 encoded title strings.
 That cancels the translation to UTF-8,
 allowing UTF-8 strings to be displayed as is.
@@ -4782,6 +4890,9 @@ by echoing the event's position
 ^X ESC G <line+\*(`` \*(''> <col+\*(`` \*(''>
 .in -8
 .TP 8
+.B "fullscreen()"
+Asks the window manager to change the window to full-screen.
+.TP 8
 .B "iconify()"
 Iconifies the window.
 .TP 8
@@ -5310,6 +5421,7 @@ which is set by the \fBselectToClipboard\fP resource:
          Shift <KeyPress> Select:select-cursor-start() \\\&
                                  select-cursor-end(SELECT, CUT_BUFFER0) \\n\\\&
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
+                 Alt <Key>Return:fullscreen() \\n\\\&
         <KeyRelease> Scroll_Lock:scroll-lock() \\n\\\&
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\\&
     Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\\&

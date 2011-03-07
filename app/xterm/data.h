@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.110 2009/10/12 00:33:08 tom Exp $ */
+/* $XTermId: data.h,v 1.115 2011/02/18 01:23:22 tom Exp $ */
 
 /*
- * Copyright 2002-2007,2009 by Thomas E. Dickey
+ * Copyright 2002-2009,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -89,7 +89,6 @@ extern jmp_buf Tekend;
 
 extern char *ptydev;
 extern char *ttydev;
-extern char *xterm_name;
 extern int hold_screen;
 
 extern PtyData *VTbuffer;
@@ -143,7 +142,6 @@ extern int mapstate;
 #endif /* HANDLE_STRUCT_NOTIFY */
 
 typedef struct XTERM_RESOURCE {
-    char *xterm_name;
     char *icon_geometry;
     char *title;
     char *icon_name;
@@ -159,6 +157,7 @@ typedef struct XTERM_RESOURCE {
     Boolean messages;
 
     String menuLocale;
+    String omitTranslation;
 
     String keyboardType;
 #if OPT_SUNPC_KBD
@@ -206,6 +205,8 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_MAXIMIZE
     Boolean maximized;
+    String fullscreen_s;	/* resource for "fullscreen" */
+    int fullscreen;		/* derived from fullscreen_s */
 #endif
 } XTERM_RESOURCE;
 

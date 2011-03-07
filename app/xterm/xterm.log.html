@@ -3,7 +3,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2009,2010 by Thomas E. Dickey                              *
+ * Copyright 1997-2010,2011 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.995 2010/11/21 23:40:00 tom Exp $
+  $XTermId: xterm.log.html,v 1.1020 2011/02/20 01:30:19 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_269">Patch #269 - 2011/02/19</A>
+<LI><A HREF="#xterm_268">Patch #268 - 2011/02/10</A>
 <LI><A HREF="#xterm_267">Patch #267 - 2010/11/20</A>
 <LI><A HREF="#xterm_266">Patch #266 - 2010/10/24</A>
 <LI><A HREF="#xterm_265">Patch #265 - 2010/10/22</A>
@@ -325,6 +327,100 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_269">Patch #269 - 2011/02/19</A></H1>
+<ul>
+	<li>build-fixes for <code>imake</code> (report by Heiko Berges).
+
+	<li>modify autoconf macro CF_PKG_CONFIG to work with cross-compile
+	    environments (patch by Thierry Reding).
+
+	<li>modify <code>MapToColorMode()</code> to favor bold over underline,
+	    matching the precedence used before
+	    <a href="#xterm_252">patch #252</a>
+	    (report/analysis by Nicolas George).
+
+	<li>add <code>omitTranslation</code> resource, which can be used to
+	    suppress the default translations for these features:
+	    <ul>
+	    <li>fullscreen
+	    <li>scroll-lock
+	    <li>shift-fonts
+	    <li>wheel-mouse
+	    </ul>
+
+	<li>make the fullscreen feature configurable (Debian #612978)
+	<ul>
+	    <li>add it to the configurable list
+		<code>disallowedWindowOps</code>.
+
+	    <li>add command-line option <code>-fullscreen</code> to allow the
+	        feature to be enabled at startup.
+
+	    <li>add resource <code>fullscreen</code> to control whether the
+	        feature is active or may be enabled.
+	</ul>
+
+	<li>modify <code>probe_netwm_fullscreen_capability</code> for 64-bit
+	    machines.  Contrary to <code>XGetWindowProperty</code> manpage,
+	    that function returns 32-bit data packed as <code>long</code>'s.
+
+	<li>eliminate copy of <code>name</code> resource, which was otherwise
+	    used only to give the terminal-description name for the tcap-query
+	    feature.  Use the actual <code>$TERM</code> value instead, as
+	    derived from <code>termName</code> resource, etc.
+
+	<li>eliminate an old inconsistency with error messages, some used the
+	    <code>-name</code> option, while others used <code>argv[0]</code>.
+	    The latter is now used consistently.
+
+	<li>improve configure check for rpath-hack, to improve builds on
+	    systems where gcc will not search /usr/local/lib, etc.
+
+	<li>build-fix for Xaw3d configuration (report by H Merijn Brand).
+
+	<li>update config.guess, config.sub
+</ul>
+
+<H1><A NAME="xterm_268">Patch #268 - 2011/02/10</A></H1>
+<ul>
+	<li>fix an inconsistency of the "Enable Reverse Video" checkbox in
+	    the VT Options menu.
+	    This also removes a special case
+	    added in <a href="#xterm_217">patch #217</a>
+	    which limited the effect of the <code>reverseVideo</code> resource
+	    (Debian #603808).
+
+	<li>amend decoding of misformed UTF-8 sequences to avoid absorbing
+	    valid characters as documented in Unicode 6.0 section 3.9
+	    (report by Keith Winstein).
+
+	<li>do not set urgency hint when window already has focus
+	    (patch by Dimitrios Christidis).
+
+	<li>amend extended mouse-coordinate mode from
+	    <a href="#xterm_262">patch #262</a> changes to include
+	    the <em>Cb</em> button-code, which also may be greater than 127
+	    (report by Ailin Nemui).
+
+	<li>ensure that underline-cursor is visible when an application happens
+	    to set the background color (report by Christian Weisgerber).
+
+	<li>add feature for
+	    <a href="http://www.davidsimmons.com/soft/xtermhacks/xterm-fullscreen.patch">full-screen toggling</a>
+	    using either Alt-Enter
+	    or a menu selection
+	    (integrated patch by Dave Simmons).
+
+	<li>add missing logic to handle reallocation of FIFO index for the
+	    "UTF-8" menu entry (report by David Holland, NetBSD #44344).
+	    
+	<li>add makefile rules <code>docs-ctlseqs</code>,
+	    <code>docs-xterm</code>, etc.
+
+	<li>correct typo in description of DECRPM in control sequences
+	    document (report by Ailin Nemui).
+</ul>
 
 <H1><A NAME="xterm_267">Patch #267 - 2010/11/20</A></H1>
 <ul>

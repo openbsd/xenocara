@@ -1,7 +1,7 @@
-/* $XTermId: data.c,v 1.91 2009/10/12 00:33:20 tom Exp $ */
+/* $XTermId: data.c,v 1.92 2011/02/13 19:59:23 tom Exp $ */
 
 /*
- * Copyright 2002-2006,2007 by Thomas E. Dickey
+ * Copyright 2002-2009,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -90,7 +90,6 @@ int debug = 0;			/* true causes error messages to be displayed */
 
 XtAppContext app_con;
 XtermWidget term;		/* master data structure for client */
-char *xterm_name;		/* argv[0] */
 
 int hold_screen;
 SIG_ATOMIC_T need_cleanup = False;
