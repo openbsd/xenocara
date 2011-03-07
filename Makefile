@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.40 2011/02/22 00:24:35 espie Exp $
+# $OpenBSD: Makefile,v 1.41 2011/03/07 22:17:31 matthieu Exp $
 .include <bsd.own.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
@@ -15,7 +15,7 @@ XSERVER= xserver
 XSERVER+= kdrive
 .endif
 
-SUBDIR= proto font/util data/bitmaps lib app data/xkbdata \
+SUBDIR= proto font/util data/bitmaps lib app data \
 	${XSERVER} driver util doc
 .ifndef NOFONTS
 SUBDIR+= font
