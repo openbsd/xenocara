@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.11 2010/11/27 14:25:47 matthieu Exp $
+# $OpenBSD: Makefile,v 1.12 2011/03/08 20:48:59 matthieu Exp $
 .include	<bsd.xconf.mk>
 
 PROG=		ssh-askpass
@@ -10,12 +10,8 @@ VERSION=	1.2.0
 DATE=		February 14, 2001
 APP_DEFAULTS=	$(CLASS)-default.ad
 
-.if ${XENOCARA_BUILD_XCB:L} != "no"
-LIBXCB=		-lxcb
-.endif
-
 CPPFLAGS+=	-I${X11BASE}/include -I.
-LDADD+=		-L${X11BASE}/lib -lXt -lSM -lICE -lXinerama -lX11 ${LIBXCB} -lXau -lXdmcp -lXext
+LDADD+=		-L${X11BASE}/lib -lXt -lSM -lICE -lXinerama -lX11 -lxcb -lXau -lXdmcp -lXext
 
 CLEANFILES+=	${CLASS}.ad ${CLASS}_ad.h ssh-askpass.1
 

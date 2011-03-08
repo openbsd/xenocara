@@ -1,5 +1,5 @@
 # -*- makefile -*- 
-# $OpenBSD: Makefile.inc,v 1.6 2010/11/27 14:25:47 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.7 2011/03/08 20:48:59 matthieu Exp $
 
 .ifndef FVWM_MAKEFILE_INC
 FVWM_MAKEFILE_INC = done
@@ -8,10 +8,6 @@ FVWM_MAKEFILE_INC = done
 CFLAGS+=	-I${X11BASE}/include -I${.CURDIR} -I${.CURDIR}/.. \
 		-I${.CURDIR}/../libs
 LDADD+=		-L${X11BASE}/lib
-
-.if ${XENOCARA_BUILD_XCB:L} != "no"
-LIBXCB= -lxcb
-.endif
 
 FVWMLIBDIR=	${X11BASE}/lib/X11/fvwm
 MANDIR=		${X11BASE}/man/cat

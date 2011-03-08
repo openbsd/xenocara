@@ -1,8 +1,7 @@
-# $OpenBSD: Makefile,v 1.20 2010/08/02 18:45:02 matthieu Exp $
+# $OpenBSD: Makefile,v 1.21 2011/03/08 20:48:59 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
-.if ${XENOCARA_BUILD_XCB:L} == "yes"
 XCB_LIBS= \
 	libpthread-stubs \
 	libxcb/libxcb \
@@ -36,7 +35,6 @@ XCB_LIBS= \
 	xcb-util/keysyms \
 	xcb-util/renderutil \
 	xcb-util/reply
-.endif
 
 SUBDIR= freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
 	libX11  libXext  libXrender libXft libdmx libfontenc \
