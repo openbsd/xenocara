@@ -745,6 +745,7 @@ XORG_MAN_PAGE
 MAN_SUBSTS
 AM_DEFAULT_VERBOSITY
 XKBCONFIGROOT
+XKBDEFAULTRULES
 SETXKBMAP_CFLAGS
 SETXKBMAP_LIBS
 LINT
@@ -760,6 +761,7 @@ enable_maintainer_mode
 enable_dependency_tracking
 enable_strict_compilation
 with_xkb_config_root
+with_xkb_default_rules
 with_lint
 '
       ac_precious_vars='build_alias
@@ -1420,6 +1422,8 @@ Optional Packages:
   --with-xkb-config-root=<paths>
                           Set default XKB config root (default:
                           ${datadir}/X11/xkb)
+  --with-xkb-default-rules=<rules>
+                          Set default XKB rules (default: xorg)
   --with-lint             Use a lint-style source code checker (default:
                           disabled)
 
@@ -4899,6 +4903,7 @@ MAN_SUBSTS="\
 	-e 's|__xservername__|Xorg|g' \
 	-e 's|__xconfigfile__|xorg.conf|g' \
 	-e 's|__projectroot__|\$(prefix)|g' \
+	-e 's|__apploaddir__|\$(appdefaultdir)|g' \
 	-e 's|__appmansuffix__|\$(APP_MAN_SUFFIX)|g' \
 	-e 's|__drivermansuffix__|\$(DRIVER_MAN_SUFFIX)|g' \
 	-e 's|__adminmansuffix__|\$(ADMIN_MAN_SUFFIX)|g' \
@@ -4918,6 +4923,16 @@ if test "${with_xkb_config_root+set}" = set; then
   withval=$with_xkb_config_root; XKBCONFIGROOT="$withval"
 else
   XKBCONFIGROOT=${datadir}/X11/xkb
+fi
+
+
+
+
+# Check whether --with-xkb-default-rules was given.
+if test "${with_xkb_default_rules+set}" = set; then
+  withval=$with_xkb_default_rules; XKBDEFAULTRULES="$withval"
+else
+  XKBDEFAULTRULES=xorg
 fi
 
 

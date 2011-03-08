@@ -1,13 +1,21 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2011/01/02 14:23:40 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2011/03/08 07:59:23 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
 _SRCDIR= ${.CURDIR}/../xserver
 
+.if ${XENOCARA_USE_XKEYBOARD_CONFIG:L} == "yes"
+XKB_PATH=	${X11BASE}/share/X11/xkb
+XKB_RULES=	base
+.else
+XKB_PATH=	/etc/X11/xkb
+XKB_RULES=	xorg
+.endif
+
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
-		--with-xkb-path=/etc/X11/xkb \
+		--with-xkb-path=${XKB_PATH} \
 		--with-xkb-output=/var/db/xkb \
-		--with-default-xkb-rules=xorg \
+		--with-default-xkb-rules=${XKB_RULES} \
 		--with-dri-driver-path=${LIBDIR}/modules/dri \
 		--enable-dri \
 		--disable-xorg \

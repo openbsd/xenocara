@@ -45,6 +45,13 @@ AC_ARG_WITH(xkb-config-root,
         [XKBCONFIGROOT=${datadir}/X11/xkb])
 AC_SUBST([XKBCONFIGROOT])
 
+AC_ARG_WITH(xkb-default-rules,
+        AC_HELP_STRING([--with-xkb-default-rules=<rules>],
+                       [Set default XKB rules (default: xorg)]),
+        [XKBDEFAULTRULES="$withval"],
+        [XKBDEFAULTRULES=xorg])
+AC_SUBST([XKBDEFAULTRULES])
+
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(SETXKBMAP, xkbfile x11)
 

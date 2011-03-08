@@ -83,7 +83,7 @@ static const char *kbdDefaults[] = {
 #else
     "Protocol",		"standard",
 #endif
-    "XkbRules",		"xorg",
+    "XkbRules",		XKB_DFLT_RULES,
     "XkbModel",		"pc105",
     "CustomKeycodes",	"off",
     NULL

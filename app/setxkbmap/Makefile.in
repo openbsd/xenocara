@@ -182,6 +182,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XKBCONFIGROOT = @XKBCONFIGROOT@
+XKBDEFAULTRULES = @XKBDEFAULTRULES@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 ac_ct_CC = @ac_ct_CC@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
@@ -227,7 +228,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_CFLAGS = $(CWARNFLAGS) $(SETXKBMAP_CFLAGS) \
-	-DDFLT_XKB_CONFIG_ROOT=\"$(XKBCONFIGROOT)\"
+	-DDFLT_XKB_CONFIG_ROOT=\"$(XKBCONFIGROOT)\" \
+	-DDFLT_XKB_RULES_FILE=\"$(XKBDEFAULTRULES)\"
 
 setxkbmap_LDADD = $(SETXKBMAP_LIBS)
 setxkbmap_SOURCES = \

@@ -807,7 +807,7 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
     const char *s;
     XkbRMLVOSet set;
     /* Default options. */
-    set.rules = "xorg";
+    set.rules = XKB_DFLT_RULES;
     set.model = "pc105";
     set.layout = "us";
     set.variant = NULL;
