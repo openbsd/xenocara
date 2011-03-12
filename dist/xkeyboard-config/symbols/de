@@ -225,7 +225,7 @@ xkb_symbols "sundeadkeys" {
 //
 //      http://www.neo-layout.org
 //
-// $Revision: 1.2 $, $Date: 2011/01/10 14:25:57 $
+// $Revision: 1.3 $, $Date: 2011/03/12 10:16:01 $
 
 partial alphanumeric_keys modifier_keys keypad_keys
 xkb_symbols "neo_base" {
@@ -283,7 +283,7 @@ xkb_symbols "neo_base" {
 
     // Top row
     // --------------------------------------------------------------
-    key.type[Group1] = "EIGHT_LEVEL_ALPHABETIC";
+    key.type[Group1] = "EIGHT_LEVEL_SEMIALPHABETIC";
     key <AD01> { [ x,                       X,                       ellipsis,                Greek_xi,                Prior,                   Prior,                   Greek_XI,                NoSymbol                 ] };
     key <AD02> { [ v,                       V,                       underscore,              NoSymbol,                BackSpace,               BackSpace,               radical,                 NoSymbol                 ] };
     key <AD03> { [ l,                       L,                       bracketleft,             Greek_lambda,            Up,                      Up,                      Greek_LAMBDA,            NoSymbol                 ] };
@@ -303,7 +303,7 @@ xkb_symbols "neo_base" {
 
     // Middle row
     // --------------------------------------------------------------
-    key.type[Group1] = "EIGHT_LEVEL_ALPHABETIC";
+    key.type[Group1] = "EIGHT_LEVEL_SEMIALPHABETIC";
     key <AC01> { [ u,                       U,                       backslash,               NoSymbol,                Home,                    Home,                    includedin,              NoSymbol                 ] };
     key <AC02> { [ i,                       I,                       slash,                   Greek_iota,              Left,                    Left,                    integral,                NoSymbol                 ] };
     key <AC03> { [ a,                       A,                       braceleft,               Greek_alpha,             Down,                    Down,                    U2200,                   NoSymbol                 ] };
@@ -331,7 +331,7 @@ xkb_symbols "neo_base" {
     key.type[Group1] = "EIGHT_LEVEL";
     key <AB08> { [ comma,                   endash,                  quotedbl,                U03F1,                   KP_2,                    KP_2,                    U21D2,                   NoSymbol                 ] };
     key <AB09> { [ period,                  enfilledcircbullet,      apostrophe,              U03D1,                   KP_3,                    KP_3,                    U21A6,                   NoSymbol                 ] };
-    key.type[Group1] = "EIGHT_LEVEL_ALPHABETIC";
+    key.type[Group1] = "EIGHT_LEVEL_SEMIALPHABETIC";
     key <AB10> { [ j,                       J,                       semicolon,               Greek_theta,             semicolon,               NoSymbol,                Greek_THETA,             NoSymbol                 ] };
     key.type[Group1] = "EIGHT_LEVEL";
 
@@ -552,4 +552,49 @@ key.type[group1]="FOUR_LEVEL_ALPHABETIC";
     key <LatQ> { [       Cyrillic_ya,       Cyrillic_YA ] };
 
     include "level3(ralt_switch)"
+};
+
+partial alphanumeric_keys
+xkb_symbols "htcdream" {
+        include "inet(htcdream)"
+
+        name[Group1]= "Germany - htcdream";
+
+        //second row
+        key <AD01> { [ q, Q, Tab, Tab ] };
+        key <AD02> { [ w, W, grave, grave ] };
+        key <AD03> { [ e, E, EuroSign, EuroSign ] };
+        key <AD04> { [ r, R, underscore, underscore ] };
+        key <AD05> { [ t, T, sterling, sterling] };
+        key <AD06> { [ z, Z, division, division ] };
+        key <AD07> { [ u, U, udiaeresis, udiaeresis ] };
+        key <AD08> { [ i, I, minus, minus ] };
+        key <AD09> { [ o, O, odiaeresis, odiaeresis ] };
+        key <AD10> { [ p, P, equal, equal ] };
+
+        //third row
+        key <AC01> { [ a, A, adiaeresis, adiaeresis ] };
+        key <AC02> { [ s, S, ssharp, ssharp] };
+        key <AC03> { [ d ,D, backslash, backslash ] };
+        key <AC04> { [ f, F, braceleft, braceleft ] };
+        key <AC05> { [ g, G, braceright, braceright ] };
+        key <AC06> { [ h, H, multiply, multiply ] };
+        key <AC07> { [ j, J, colon, colon ] };
+        key <AC08> { [ k, K, plus, plus ] };
+        key <AC09> { [ l, L, apostrophe, apostrophe ] };
+
+        //forth row
+        key <AB01> { [ y, Y, bar, bar ] };
+        key <AB02> { [ x, X, bracketleft, bracketleft ] };
+        key <AB03> { [ c, C, bracketright, bracketright ] };
+        key <AB04> { [ v, V, less, less ] };
+        key <AB05> { [ b, B, greater, greater ] };
+        key <AB06> { [ n, N, semicolon, semicolon ] };
+        key <AB07> { [ m, M, quotedbl, quotedbl ] };
+        key <AB08> { [ comma, comma, question, question ] };
+
+        //fifth row
+        key <FK15> { [ at, at, asciitilde, asciitilde ] };
+
+        include "level3(alt_switch)"
 };

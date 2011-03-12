@@ -24,7 +24,7 @@ ma mao me \
 mk ml mm \
 mn mt mv \
 ng nl no np \
-pc pk pl pt \
+pc ph pk pl pt \
 ro rs ru \
 se si sk sn \
 sy th \
@@ -32,7 +32,7 @@ terminate \
 tj tm tr tz \
 ua us uz vn \
 za \
-altwin capslock compose ctrl empty eurosign group inet \
+altwin capslock compose ctrl empty eurosign rupeesign group inet \
 keypad kpdl level3 level5 nbsp olpc shift srvr_ctrl typo
 
 dir_data = $(dist_symbols_DATA)
