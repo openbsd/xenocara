@@ -15,16 +15,16 @@ keymap file (.xkm extension) which can be read directly by XKB-capable X
 servers or utilities.   The keymap compiler can also produce C header
 files or XKB source files.  The C header files produced by xkbcomp can be
 included by X servers or utilities that need a built-in default keymap.
-The XKB source files produced by \fIxkbcomp\fP are fully resolved and can be 
+The XKB source files produced by \fIxkbcomp\fP are fully resolved and can be
 used to verify that the files which typically make up an XKB keymap
 are merged correctly or to create a single file which contains a complete
 description of the keymap.
 .PP
 The \fIsource\fP may specify an X display, or an \fI.xkb\fP or \fI.xkm\fP
 file;  unless explicitly specified, the format of \fIdestination\fP
-depends on the format of the source.   Compiling a \fI.xkb\fP (keymap source) 
-file generates a \fI.xkm\fP (compiled keymap file) by default.   If the 
-source is a \fI.xkm\fP file or an X display, \fIxkbcomp\fP generates a 
+depends on the format of the source.   Compiling a \fI.xkb\fP (keymap source)
+file generates a \fI.xkm\fP (compiled keymap file) by default.   If the
+source is a \fI.xkm\fP file or an X display, \fIxkbcomp\fP generates a
 keymap source file by default.
 .PP
 If the \fIdestination\fP is an X display, the keymap for the display
@@ -48,7 +48,7 @@ Produce a C header file as output (.h extension).
 Compute defaults for any missing components, such as key names.
 .TP 8
 .B \-I\fIdir\fP
-Specifies top-level directories to be searched for files included by the 
+Specifies top-level directories to be searched for files included by the
 keymap description.  After all directories specified by \-I options
 have been searched, the current directory and finally, the default
 xkb directory (usually __projectroot__/lib/X11/xkb) will be searched.
@@ -58,7 +58,8 @@ use the \-I option alone (i.e. without a directory), before any \-I
 options that specify the directories you do want searched.
 .TP 8
 .B \-i\ \fIdeviceid\fP
-Specifies device ID (not name) to compile for.
+If \fIsource\fP or \fIdestination\fP is a valid X display, load the keymap
+from/into the device with the specified ID (not name).
 .TP 8
 .B \-l
 List maps that specify the \fImap\fP pattern in any files listed on the
@@ -72,7 +73,7 @@ Merge the compiled information with the map from the server (not implemented
 yet).
 .TP 8
 .B \-o\ \fIname\fP
-Specifies a name for the generated output file.  The default is the name of 
+Specifies a name for the generated output file.  The default is the name of
 the source file with an appropriate extension for the output format.
 .TP 8
 .B \-opt\ \fIparts\fP
@@ -88,7 +89,7 @@ Specifies the root directory for relative path names.
 Force synchronization for X requests.
 .TP 8
 .B \-w\ \fIlvl\fP
-Controls the reporting of warnings during compilation.  A warning level 
+Controls the reporting of warnings during compilation.  A warning level
 of 0 disables all warnings; a warning level of 10 enables them all.
 .TP 8
 .B \-xkb
