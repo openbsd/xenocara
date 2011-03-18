@@ -1028,7 +1028,9 @@ sizeDeviceClassType(int type, int num_elements)
         case XIButtonClass:
             l = sizeof(XIButtonClassInfo);
             l += num_elements * sizeof(Atom);
-            l += ((((num_elements + 7)/8) + 3)/4) * 4;
+            /* Force mask alignment with longs to avoid
+             * unaligned access when accessing the atoms. */
+            l += ((((num_elements + 7)/8) + 3)/4) * sizeof(Atom);
             break;
         case XIKeyClass:
             l = sizeof(XIKeyClassInfo);
@@ -1121,12 +1123,16 @@ copyDeviceChangedEvent(XGenericEventCookie *in_cookie,
         {
             case XIButtonClass:
                 {
+                    int size;
                     XIButtonClassInfo *bin, *bout;
                     bin = (XIButtonClassInfo*)any;
                     bout = next_block(&ptr, sizeof(XIButtonClass));
 
                     *bout = *bin;
-                    bout->state.mask = next_block(&ptr, bout->state.mask_len);
+                    /* Force mask alignment with longs to avoid unaligned
+                     * access when accessing the atoms. */
+                    size = bout->state.mask_len/4 * sizeof(Atom);
+                    bout->state.mask = next_block(&ptr, size);
                     memcpy(bout->state.mask, bin->state.mask,
                             bout->state.mask_len);
 
@@ -1473,14 +1479,18 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int nclasses)
                     XIButtonClassInfo *cls_lib;
                     xXIButtonInfo *cls_wire;
                     uint32_t *atoms;
+                    int size;
                     int j;
 
                     cls_lib = next_block(&ptr_lib, sizeof(XIButtonClassInfo));
                     cls_wire = (xXIButtonInfo*)any_wire;
 
                     cls_lib->num_buttons = cls_wire->num_buttons;
-                    cls_lib->state.mask_len = ((((cls_wire->num_buttons + 7)/8) + 3)/4) * 4;
-                    cls_lib->state.mask = next_block(&ptr_lib, cls_lib->state.mask_len);
+                    size = ((((cls_wire->num_buttons + 7)/8) + 3)/4);
+                    cls_lib->state.mask_len = size * 4;
+                    /* Force mask alignment with longs to avoid unaligned
+                     * access when accessing the atoms. */
+                    cls_lib->state.mask = next_block(&ptr_lib, size * sizeof(Atom));
                     memcpy(cls_lib->state.mask, &cls_wire[1],
                            cls_lib->state.mask_len);
 
