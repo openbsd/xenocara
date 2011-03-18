@@ -1,4 +1,4 @@
-.\"	$OpenBSD: video.1,v 1.7 2010/10/26 16:04:13 jakemsr Exp $
+.\"	$OpenBSD: video.1,v 1.8 2011/03/18 20:08:58 sobrado Exp $
 .\"
 .\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: October 26 2010 $
+.Dd $Mdocdate: March 18 2011 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -254,15 +254,6 @@ Increase gamma control of
 .It Ic m
 Decrease gamma control of
 .Ar file .
-.It Ic p
-Toggle new frame display.
-.It Ic q
-Quit
-.Nm .
-.It Ic r
-Reset all supported controls of
-.Ar file
-to their default value.
 .It Ic O
 Start writing to
 .Ar output .
@@ -275,6 +266,15 @@ Stop writing to
 Only meaningful when the
 .Fl O
 option is used.
+.It Ic p
+Toggle new frame display.
+.It Ic q
+Quit
+.Nm .
+.It Ic r
+Reset all supported controls of
+.Ar file
+to their default value.
 .It Ic S
 Increase saturation control of
 .Ar file .
