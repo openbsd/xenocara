@@ -1,6 +1,6 @@
 XCOMM!SHELL_CMD
 XCOMM
-XCOMM $OpenBSD: Xsession.cpp,v 1.6 2010/03/28 09:33:02 matthieu Exp $
+XCOMM $OpenBSD: Xsession.cpp,v 1.7 2011/03/19 15:40:02 matthieu Exp $
 
 XCOMM redirect errors to a file in user's home directory if we can
 for errfile in "$HOME/.xsession-errors" "${TMPDIR-/tmp}/xses-$USER" "/tmp/xses-$USER"
@@ -21,7 +21,8 @@ XCOMM if we have private ssh key(s), start ssh-agent and add the key(s)
 id1=$HOME/.ssh/identity
 id2=$HOME/.ssh/id_dsa
 id3=$HOME/.ssh/id_rsa
-if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 ];
+id4=$HOME/.ssh/id_ecdsa
+if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 -o -f $id4 ];
 then
 	eval `ssh-agent -s`
 	ssh-add < /dev/null

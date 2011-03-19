@@ -1,5 +1,5 @@
 XCOMM!SHELL_CMD
-XCOMM $OpenBSD: xinitrc.cpp,v 1.5 2010/05/31 20:23:19 matthieu Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.6 2011/03/19 15:40:02 matthieu Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
@@ -44,7 +44,8 @@ XCOMM if we have private ssh key(s), start ssh-agent and add the key(s)
 id1=$HOME/.ssh/identity
 id2=$HOME/.ssh/id_dsa
 id3=$HOME/.ssh/id_rsa
-if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 ];
+id4=$HOME/.ssh/id_ecdsa
+if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 -o -f $id4 ];
 then
 	eval `ssh-agent -s`
 	ssh-add < /dev/null
