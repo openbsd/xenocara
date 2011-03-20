@@ -1,3 +1,135 @@
+commit aade7161f63fd7f5a673e8432abd998fe1d9c7a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 5 17:26:54 2011 -0800
+
+    dmxproto 2.3.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d6131b3d0cf6b30fd059fe1a1a17d4be24d00e9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 28 18:26:35 2010 -0800
+
+    Remove accidentally added config.h header creation
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 710bb6773a0eeb3dfccc92ef0b414c97ee553103
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 28 17:59:39 2010 -0800
+
+    Add links to DMX website & protocol spec to README
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e9b74b7b6ba9427fdae736093263f87e098ae59
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 28 17:53:22 2010 -0800
+
+    config: Replace obsolete usage of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7df615d96ea2204b3922bf0600a55cbe661b3d69
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 28 17:51:15 2010 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2cef0867dcf92eb3cb08868fca23371785c19bad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:25:52 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a60e6edd191a52287a65cfa1c04915578a1c998c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:30 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1d12dbdebd0fbf97dba8a77de0c9678b6439203e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 22 19:24:47 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 5932e06e39c7dad609e31d822670913ba352afc8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 16 11:13:29 2009 -0500
+
+    README: file created or updated #24206
+    
+    Contains a set of URLs to freedesktop.org.
+
+commit be2d639aa3c509b90cdf78860a0180daead17fac
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 19:45:26 2009 -0500
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 304e9178168e33dbf6d5441824ac4c721521136a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:31:28 2009 -0500
+
+    Makefile.am: INSTALL file is missing or incorrect #24206
+    
+    The standard GNU file on building/installing  tarball is copied
+    using the XORG_INSTALL macro contained in XORG_DEFAULT_OPTIONS
+    Add INSTALL target
+
+commit cd7722d7265e6e8f90f4c0e8b6aa7aa39ebfa785
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 18:11:36 2009 -0500
+
+    configure.ac: deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit efbe0f2a6b4b1231b887f983bfb38f573ae2bf8c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 15 13:55:24 2009 -0500
+
+    configure.ac: AM_MAINTAINER_MODE missing #24238
+    
+    This turns off maintainer mode build rules in tarballs.
+    Works in conjunction with autogen.sh --enable-maintainer-mode
+
+commit f7309b32556fd85353c8740fcaa14b57a667ec38
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 14 18:26:46 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit a71c838e1130be28e1639a606b0a7cb56f44a3a8
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Oct 1 19:34:15 2009 +1000
