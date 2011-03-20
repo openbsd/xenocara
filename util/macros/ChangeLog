@@ -1,3 +1,130 @@
+commit 5bb0cddcc5359d764015299021718f42b0a4055c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 14 20:12:36 2011 -0400
+
+    Version bump: 1.13.0
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 700ecdc16426c14e649439138e8e40cdc41fe1c1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Mar 9 18:53:43 2011 -0500
+
+    XORG_LD_WRAP: check if linker supports -wrap
+    
+    Used mainly by test cases using a wrapper function.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 380074140f7b1e3f8ea006a4b1d928d23706b81d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Mar 9 10:53:49 2011 -0500
+
+    XORG_WITH_GLIB: check for the GLib package
+    
+    XORG_WITH_GLIB([MIN-VERSION], [DEFAULT])
+     ----------------------------------------
+     Minimum version: 1.13.0
+    
+     GLib is a library which provides advanced data structures and functions.
+     This macro enables a module to test for the presence of Glib.
+    
+     When used in conjunction with XORG_ENABLE_UNIT_TESTS, use both AM_CONDITIONAL
+     ENABLE_UNIT_TESTS and HAVE_GLIB.
+     Glib may be used for purpose other than testing
+    
+     Package builders should use --without-glib to ensure it does not get pulled in.
+     Unit tests may or may not use GLib.
+    
+     Developers should use --with-glib to error out if GLib is missing.
+    
+     Interface to module:
+     HAVE_GLIB: used in makefiles to conditionally build targets
+     with_glib: used in configure.ac to know if GLib has been found
+     --with-glib:	'yes' user instructs the module to use glib
+    		'no' user instructs the module not to use glib
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 78af2b882e01b17e38d1361a4a58b7768bb59bec
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Mar 9 07:10:18 2011 -0500
+
+    XORG_ENABLE_UNIT_TESTS: add support for unit testing
+    
+    This macro enables a builder to enable/disable unit testing
+    It makes no assumption about the test cases implementation
+    Test cases may or may not use Automake "Support for test suites"
+    They may or may not use the software utility library GLib
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1218d7e6ed064e0c534a01caf013cff666cb44bf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Feb 25 16:58:10 2011 -0500
+
+    Version bump: 1.12.0
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b22ce580bcc8343b880f19cc7f1c6bea176c8f13
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jan 29 16:17:09 2011 -0500
+
+    XORG_WITH_XSLTPROC: add XSLT processor command line tool
+    
+    The primary use will be for DocBook/XML cross links database generation.
+    
+    XSLT (Extensible Stylesheet Language Transformations) is a declarative,
+    XML-based language used for the transformation of XML documents.
+    The xsltproc command line tool is for applying XSLT stylesheets
+    to XML documents.
+    
+    It is used under the cover by xmlto to generate html files from DocBook/XML.
+    The XSLT processor is often used as a standalone tool for transformations.
+    It should not be assumed that it is used only to work with documnetation.
+    
+    Tested-by: Matt Dew <marcoz@osource.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7370b0b3f0308aec2a32012eddb2f0761d5fe399
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 5 01:25:11 2010 -0800
+
+    Use AC_LANG_PROGRAM in XORG_CHECK_MALLOC_ZERO to clear autoconf-2.68 warnings
+    
+    configure.ac:126: warning: AC_LANG_CONFTEST: no AC_LANG_SOURCE call detected in body
+    ../../lib/autoconf/lang.m4:194: AC_LANG_CONFTEST is expanded from...
+    ../../lib/autoconf/general.m4:2730: _AC_RUN_IFELSE is expanded from...
+    ../../lib/m4sugar/m4sh.m4:606: AS_IF is expanded from...
+    ../../lib/autoconf/general.m4:2749: AC_RUN_IFELSE is expanded from...
+    aclocal.m4:1952: XORG_CHECK_MALLOC_ZERO is expanded from...
+    configure.ac:126: the top level
+    
+    Also, calloc() takes two arguments; and all of them return void *,
+    not char *; as the compiler points out when you #include <stdlib.h>
+    instead of faking it badly.   (And sometimes when you don't, due to
+    compiler builtin versions of the functions.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 04030cbca37c04c48161debc0cade6db00cb347b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 6 20:50:06 2010 -0400
+
+    XORG_ENABLE_DOCS: Fix "Enable building the documentation (yes: yes)"
+    
+    The quoting did not prevent the m4 defined variable "default"
+    to replace the text string "default" in the help text.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit ce32345589050b17b23b18157f95f060f4c776a3
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 20:43:53 2010 -0700
