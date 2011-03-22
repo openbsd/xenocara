@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: screen.c,v 1.26 2010/01/27 03:04:50 okan Exp $
+ * $Id: screen.c,v 1.27 2011/03/22 10:54:42 okan Exp $
  */
 
 #include <sys/param.h>
@@ -101,8 +101,8 @@ screen_find_xinerama(struct screen_ctx *sc, int x, int y)
 
 	for (i = 0; i < sc->xinerama_no; i++) {
 		info = &sc->xinerama[i];
-		if (x > info->x_org && x < info->x_org + info->width &&
-		    y > info->y_org && y < info->y_org + info->height)
+		if (x >= info->x_org && x < info->x_org + info->width &&
+		    y >= info->y_org && y < info->y_org + info->height)
 			return (info);
 	}
 	return (NULL);
