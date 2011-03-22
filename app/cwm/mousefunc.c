@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.20 2010/12/14 11:08:47 martynas Exp $
+ * $Id: mousefunc.c,v 1.21 2011/03/22 10:59:08 okan Exp $
  */
 
 #include <sys/param.h>
@@ -106,8 +106,8 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 				/* Recompute window output */
 				mousefunc_sweep_draw(cc);
 
-			/* don't sync more than 60 times / second */
-			if ((ev.xmotion.time - time) > (1000 / 60)) {
+			/* don't sync more than 10 times / second */
+			if ((ev.xmotion.time - time) > (1000 / 10)) {
 				time = ev.xmotion.time;
 				XSync(X_Dpy, False);
 				client_resize(cc);
@@ -128,7 +128,6 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 			if (cc->ptr.y > cc->geom.height)
 				cc->ptr.y = cc->geom.height - cc->bwidth;
 			client_ptrwarp(cc);
-
 			return;
 		}
 	}
@@ -160,8 +159,8 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 			cc->geom.x = ev.xmotion.x_root - px - cc->bwidth;
 			cc->geom.y = ev.xmotion.y_root - py - cc->bwidth;
 
-			/* don't sync more than 60 times / second */
-			if ((ev.xmotion.time - time) > (1000 / 60)) {
+			/* don't sync more than 10 times / second */
+			if ((ev.xmotion.time - time) > (1000 / 10)) {
 				time = ev.xmotion.time;
 				XSync(X_Dpy, False);
 				client_move(cc);
