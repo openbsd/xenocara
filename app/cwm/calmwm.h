@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: calmwm.h,v 1.120 2011/03/22 10:49:46 okan Exp $
+ * $Id: calmwm.h,v 1.121 2011/03/22 10:52:37 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -189,7 +189,6 @@ struct client_ctx {
 
 	char			*app_class;
 	char			*app_name;
-	char			*app_cliarg;
 };
 
 extern const char *shortcut_to_name[];
