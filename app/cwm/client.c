@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: client.c,v 1.79 2011/03/22 10:52:37 okan Exp $
+ * $Id: client.c,v 1.80 2011/03/22 10:56:08 okan Exp $
  */
 
 #include <sys/param.h>
@@ -396,6 +396,11 @@ client_resize(struct client_ctx *cc)
 void
 client_move(struct client_ctx *cc)
 {
+	if (cc->flags & CLIENT_VMAXIMIZED)
+		cc->savegeom.x = cc->geom.x;
+	if (cc->flags & CLIENT_HMAXIMIZED)
+		cc->savegeom.y = cc->geom.y;
+
 	XMoveWindow(X_Dpy, cc->win, cc->geom.x, cc->geom.y);
 	xu_configure(cc);
 }
