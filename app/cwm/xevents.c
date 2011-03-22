@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xevents.c,v 1.50 2010/09/25 20:04:55 okan Exp $
+ * $Id: xevents.c,v 1.51 2011/03/22 10:49:46 okan Exp $
  */
 
 /*
@@ -166,7 +166,7 @@ xev_handle_configurerequest(XEvent *ee)
 		wc.border_width = cc->bwidth;
 
 		XConfigureWindow(X_Dpy, cc->win, e->value_mask, &wc);
-		xev_reconfig(cc);
+		xu_configure(cc);
 	} else {
 		/* let it do what it wants, it'll be ours when we map it. */
 		wc.x = e->x;
@@ -211,25 +211,6 @@ test:
 			group_update_names(sc);
 	}
 
-}
-
-void
-xev_reconfig(struct client_ctx *cc)
-{
-	XConfigureEvent	 ce;
-
-	ce.type = ConfigureNotify;
-	ce.event = cc->win;
-	ce.window = cc->win;
-	ce.x = cc->geom.x;
-	ce.y = cc->geom.y;
-	ce.width = cc->geom.width;
-	ce.height = cc->geom.height;
-	ce.border_width = cc->bwidth;
-	ce.above = None;
-	ce.override_redirect = 0;
-
-	XSendEvent(X_Dpy, cc->win, False, StructureNotifyMask, (XEvent *)&ce);
 }
 
 static void
@@ -428,7 +409,6 @@ xev_handle_expose(XEvent *ee)
 	if ((cc = client_find(e->window)) != NULL && e->count == 0)
 		client_draw_border(cc);
 }
-
 
 volatile sig_atomic_t	_xev_quit = 0;
 

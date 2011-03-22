@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: xutil.c,v 1.32 2010/05/22 22:32:08 okan Exp $
+ * $Id: xutil.c,v 1.33 2011/03/22 10:49:46 okan Exp $
  */
 
 #include <sys/param.h>
@@ -116,6 +116,25 @@ xu_key_ungrab(Window win, int mask, int keysym)
 
 	for (i = 0; i < sizeof(ign_mods)/sizeof(*ign_mods); i++)
 		XUngrabKey(X_Dpy, code, (mask | ign_mods[i]), win);
+}
+
+void
+xu_configure(struct client_ctx *cc)
+{
+	XConfigureEvent	 ce;
+
+	ce.type = ConfigureNotify;
+	ce.event = cc->win;
+	ce.window = cc->win;
+	ce.x = cc->geom.x;
+	ce.y = cc->geom.y;
+	ce.width = cc->geom.width;
+	ce.height = cc->geom.height;
+	ce.border_width = cc->bwidth;
+	ce.above = None;
+	ce.override_redirect = 0;
+
+	XSendEvent(X_Dpy, cc->win, False, StructureNotifyMask, (XEvent *)&ce);
 }
 
 void
