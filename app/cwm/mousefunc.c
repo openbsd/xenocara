@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.21 2011/03/22 10:59:08 okan Exp $
+ * $Id: mousefunc.c,v 1.22 2011/03/23 07:27:32 okan Exp $
  */
 
 #include <sys/param.h>
@@ -159,8 +159,8 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 			cc->geom.x = ev.xmotion.x_root - px - cc->bwidth;
 			cc->geom.y = ev.xmotion.y_root - py - cc->bwidth;
 
-			/* don't sync more than 10 times / second */
-			if ((ev.xmotion.time - time) > (1000 / 10)) {
+			/* don't sync more than 60 times / second */
+			if ((ev.xmotion.time - time) > (1000 / 60)) {
 				time = ev.xmotion.time;
 				XSync(X_Dpy, False);
 				client_move(cc);
