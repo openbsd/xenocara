@@ -429,7 +429,7 @@ static int
 SProcIDispatch(ClientPtr client)
 {
     REQUEST(xReq);
-    if (stuff->data > IREQUESTS || !SProcIVector[stuff->data])
+    if (stuff->data > (IREQUESTS  + XI2REQUESTS) || !SProcIVector[stuff->data])
         return BadRequest;
 
     return (*SProcIVector[stuff->data])(client);
