@@ -188,7 +188,7 @@ SGEGenericEvent(xEvent* from, xEvent* to)
     xGenericEvent* gefrom = (xGenericEvent*)from;
     xGenericEvent* geto = (xGenericEvent*)to;
 
-    if (gefrom->extension > MAXEXTENSIONS)
+    if ((gefrom->extension & 0x7f) > MAXEXTENSIONS)
     {
         ErrorF("GE: Invalid extension offset for event.\n");
         return;
