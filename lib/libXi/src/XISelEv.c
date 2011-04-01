@@ -32,7 +32,6 @@ in this Software without prior written authorization from the author.
 
 
 #include <stdint.h>
-#include <X11/Xarch.h>
 #include <X11/Xlibint.h>
 #include <X11/extensions/XI2proto.h>
 #include <X11/extensions/XInput2.h>
@@ -47,7 +46,6 @@ XISelectEvents(Display* dpy, Window win, XIEventMask* masks, int num_masks)
     XIEventMask  *current;
     xXISelectEventsReq  *req;
     xXIEventMask mask;
-    unsigned long long_mask;
     int i;
     int len = 0;
     int r = Success;
@@ -85,12 +83,7 @@ XISelectEvents(Display* dpy, Window win, XIEventMask* masks, int num_masks)
          * and they need to be padded with 0 */
         buff = calloc(1, mask.mask_len * 4);
         memcpy(buff, current->mask, current->mask_len);
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-	long_mask = mask.deviceid << 16 | mask.mask_len;
-#else
-	long_mask = mask.mask_len << 16 | mask.deviceid;
-#endif
-	Data32(dpy, &long_mask, sizeof(xXIEventMask));
+        Data(dpy, &mask, sizeof(xXIEventMask));
         Data(dpy, buff, mask.mask_len * 4);
         free(buff);
     }
