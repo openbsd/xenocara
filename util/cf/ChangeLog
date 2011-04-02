@@ -1,3 +1,104 @@
+commit a724e4438e76438a9524ea7b112adc9d8e075ccb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 5 20:31:00 2011 -0800
+
+    xorg-cf-files 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e65933ae549ef31e81c0255bcf9548437f9b535
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 5 20:29:37 2011 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit db69115d0795bf12b096e38a95b1668b580c93f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 5 20:28:26 2011 -0800
+
+    Update xorgversion.def from 7.5 to 7.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit de29e23f62d2c7deab4ace29d5897b36f5166076
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Aug 17 10:30:51 2010 -0700
+
+    Add support for darwin x86_64
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d43a6b81c76a51a3d29376c86183955e4490ada0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 26 23:40:42 2010 -0700
+
+    Add .gitignore
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6f2b44b45dafa01839960793b763509d7a72fd6b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 26 23:37:49 2010 -0700
+
+    Update README & COPYING files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7331d171b0d1c5da62e9f168cf59eeb19eddec19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 26 23:21:44 2010 -0700
+
+    Use INSTALL_CMD from xorg-macros-1.4 to make INSTALL file
+    
+    Also bump minimum autoconf version to 2.60 for consistency with other
+    X.Org modules
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 245bf35aa111b0aace9d4de3e81c07f68776c9d4
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Apr 22 22:43:39 2010 +0200
+
+    Remove libXp from XawClientLibs
+    
+    libXaw has lost Xp support some times ago.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e042d1e888893f61deb1d3b30f89bd6196ac9169
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 15 16:00:33 2009 -0700
+
+    Use font-util 1.1 macros to set FontDir and FontEncDir in site.def
+    
+    Replaces cygwin.cf rules to manually set these paths.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 4b8577d83788bc7613c1e27eba9d80bd8bda9c08
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 15 09:57:01 2009 -0700
+
+    List X.Org version as 7.5 instead of 6.8.99.903
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 6c7e5535955e9beb15fb4e8d3e83b7e5d9298829
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Thu Oct 15 11:25:51 2009 -0500
+
+    cf: Update Cygwin rules
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
 commit 46ec61a400c67120584188c035378019a5f31bc5
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Oct 14 10:40:55 2009 -0700

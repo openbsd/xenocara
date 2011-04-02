@@ -33,6 +33,10 @@ XCOMM $XFree86: xc/config/cf/Imake.cf,v 3.88 2003/12/16 21:30:21 herrb Exp $
 #  define i386DarwinArchitecture
 #  undef __i386__
 # endif
+# ifdef __x86_64__
+#  define x86_64DarwinArchitecture
+#  undef __x86_64__
+# endif
 #endif
 
 #if defined(clipper) || defined(__clipper__)

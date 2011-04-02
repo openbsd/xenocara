@@ -1,8 +1,45 @@
+The xorg-cf-files package contains the data files for the imake utility,
+defining the known settings for a wide variety of platforms (many of which
+have not been verified or tested in over a decade), and for many of the
+libraries formerly delivered in the X.Org monolithic releases.
+
+The X Window System used imake extensively up through the X11R6.9 release,
+for both full builds within the source tree and external software.
+X has since moved to GNU autoconf and automake for its build system in
+X11R7.0 and later releases, but still maintains imake for building existing
+external software programs that have not yet converted.
+
+More information about Imake and its usage may be found in the resources
+at:
+	http://www.snake.net/software/imake-stuff/
+	http://www.kitebird.com/imake-book/
+
+All questions regarding this software should be directed at the
+Xorg mailing list:
+
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+Please submit bug reports to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/util/cf
+
+        http://cgit.freedesktop.org/xorg/util/cf
+
+For patch submission instructions, see:
+
+	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage
+
+------------------------------------------------------------------------------
+
 $Xorg: README,v 1.4 2000/08/18 04:03:58 coskrey Exp $
-
-
-
-
 $XFree86: xc/config/cf/README,v 1.20 2003/04/14 20:35:50 herrb Exp $
 
 The easiest way to write an Imakefile is to find another one that does
@@ -188,7 +225,7 @@ X11.tmpl provides defaults for the following variables:
 	BuildPlugin		build xrx plug-in for web browsers
 	BuildRECORD		Build RECORD extension
 	BuildServer		build X server
-	BuildXAudio		build Audio 
+	BuildXAudio		build Audio
 	BuildXAServer		build Audio server
 	BuildXCSecurity		Build Security Extension
 	BuildXInputExt		build X Input extension (requires ddx support,
@@ -380,9 +417,9 @@ An <os>Lib.rules file provides defaults for the following variables:
 	PositionIndependentCFlags 		PIC compiler flags for C
 	PositionIndependentCplusplusFlags	PIC compiler flags for C++
 
-	  Note: PositionIndependentCplusplusFlags is only required if the 
+	  Note: PositionIndependentCplusplusFlags is only required if the
 	  C and C++ compilers use different flags to build PIC code.  The
-	  default configuration will try to use PositionIndependentCFlags 
+	  default configuration will try to use PositionIndependentCFlags
 	  for both C and C++ compiles.
 
 An <os>Lib.tmpl file provides defaults for the following variables:
@@ -517,7 +554,7 @@ SUBDIRS			for an Imakefile in a directory containing
 			and call MakeSubdirs() and DependSubdirs().
 MANSUFFIX		suffix used by InstallManPage* rules.
 			May be set to $(LIBMANSUFFIX), $(FILEMANSUFFIX), or
-			$(MISCMANSUFFIX) in directories for libraries or data 
+			$(MISCMANSUFFIX) in directories for libraries or data
 			files.
 
 

@@ -62,12 +62,17 @@
 # define OSTeenyVersion		DefaultOSTeenyVersion
 #endif
 
-#ifndef ProjectRoot
-# define ProjectRoot 		/usr/X11R6
+#ifndef XAppLoadDir
+# define XAppLoadDir			EtcX11Directory/app-defaults
+#endif
+#ifndef SystemManDirectory
+# define SystemManDirectory	/usr/share/man
 #endif
 
 #if !CrossCompiling
+#ifndef HasGcc2
 # define HasGcc2		YES
+#endif /* HasGcc2 */
 #endif /* !CrossCompiling */
 #define HasGcc2ForCplusplus	YES
 #define GccUsesGas		YES
@@ -98,15 +103,12 @@
  */
 #define Hastcl			YES
 #define Hastk			YES
-#define TclLibName		tcl80
-#define TkLibName		tk80
+#define TclLibName		tcl84
+#define TkLibName		tk84
 
 #define HasSockets		YES
 #define GzipFontCompression	YES
 #define HasZlib			YES
-#ifndef GzipLibrary
-# define GzipLibrary		-lz.dll
-#endif
 
 /* We don't need -lm */
 #define MathLibrary		/**/
@@ -115,7 +117,7 @@
  * /lib/libtermcap.a doesn't have tgetent, which is needed for
  * xc/programs/xterm/resize.exe
  */
-#define TermcapLibrary		-lncurses.dll
+#define TermcapLibrary		-lncurses
 
 #define AvoidNullMakeCommand	YES
 #define StripInstalledPrograms	YES
@@ -364,7 +366,6 @@
 #define XWinServerDefines	-DPIXPRIV \
 				-DXFree86Server \
 				-DX_BYTE_ORDER=ByteOrder \
-				XvExtensionDefines \
 				XWinXF86ConfigDefines XWinNativeGDIDefines \
 				XWinPrimaryFBDefines \
 				XWinEmulatePseudoDefines \
@@ -406,7 +407,7 @@
 # define BuildGlxExt		YES	/* Not enabled by default */
 #endif
 #ifndef BuildXprintLib
-# define BuildXprintLib		YES     /* Not enabled when Xprt disabled */
+# define BuildXprintLib		NO     /* Not enabled when Xprt disabled */
 #endif
 #ifndef BuildXterm
 # define BuildXterm		NO	/* Built separately on Cygwin */

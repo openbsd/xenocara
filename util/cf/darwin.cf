@@ -230,6 +230,17 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
 # define ByteOrder              X_LITTLE_ENDIAN
 #endif /* i386DarwinArchitecture */
 
+
+#ifdef x86_64DarwinArchitecture
+# define DarwinMachineDefines   -D__x86_64__
+# if HasGcc3
+#  define OptimizedCDebugFlags  -Os
+# else
+#  define OptimizedCDebugFlags  -O2 -fno-strength-reduce
+# endif
+# define ByteOrder              X_LITTLE_ENDIAN
+#endif /* x86_64DarwinArchitecture */
+
 #if OSMajorVersion < 7
 # define DarwinLocaleDefines    -DX_LOCALE
 #else

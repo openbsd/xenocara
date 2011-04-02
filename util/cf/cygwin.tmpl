@@ -30,10 +30,7 @@ XCOMM $XFree86: xc/config/cf/cygwin.tmpl,v 3.18 2003/10/19 08:27:05 herrb Exp $
 #define SharedXResReqs 		$(LDPRELIB) $(XLIB)
 #define SharedXfontcacheReqs	$(LDPRELIB) $(XLIB)
 #define SharedXineramaReqs	$(LDPRELIB) $(XLIB)
-/*
- * We don't build Xss
- * #define SharedXssReqs	$(LDPRELIB) $(XLIB)
- */
+#define SharedXssReqs		$(LDPRELIB) $(XLIB)
 #define SharedXvMCReqs		$(LDPRELIB) $(XLIB)
 #define SharedXxf86dgaReqs	$(LDPRELIB) $(XLIB)
 #define SharedXxf86miscReqs	$(LDPRELIB) $(XLIB)
@@ -52,6 +49,10 @@ XCOMM $XFree86: xc/config/cf/cygwin.tmpl,v 3.18 2003/10/19 08:27:05 herrb Exp $
 # define FixupLibReferences()						@@\
 XMULIBONLY = -lXmu							@@\
 XMULIB = $(XMULIBONLY) $(XTOOLLIB) $(XLIB)
+#endif
+
+#ifndef SharedXawRev
+# define SharedXawRev 7.0
 #endif
 
 #ifndef XawClientLibs

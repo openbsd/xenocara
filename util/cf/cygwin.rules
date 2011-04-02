@@ -22,11 +22,11 @@
 #define SharedLibXext		YES
 #define SharedLibXi		YES
 #define SharedLibXtst		YES
-#define SharedOldX		YES
-#define SharedLibXp		YES
+#define SharedOldX		NO
+#define SharedLibXp		NO
 #define SharedLibGlx		YES
-#define SharedLibDps		YES
-#define SharedLibDpsTk		YES
+#define SharedLibDps		NO
+#define SharedLibDpsTk		NO
 #define SharedLibGlu		YES
 #define SharedLibWindowsWM	NO
 #ifndef SharedDataSeparation
@@ -59,7 +59,7 @@
 Concat3(cyg,libname,-$(shell echo rev|sed s=\\..*==).dll)
 
 #define ImportLibraryName(libname, rev) \
-Concat3(lib,libname,-$(shell echo rev|sed s=\\..*==).dll.a)
+Concat3(lib,libname,.dll.a)
 
 #define ShortImportLibraryName(libname, rev) \
 Concat3(lib,libname,.dll.a)
@@ -233,8 +233,7 @@ step::                                                                  @@\
 
 #define InstallSharedLibrary(libname,rev,dest)                          @@\
 InstallTarget(install,ImportLibraryName(libname,rev),$(INSTLIBFLAGS),$(USRLIBDIR)) @@\
-InstallTarget(install,SharedLibraryName(libname,rev),$(INSTBINFLAGS),$(BINDIR)) @@\
-InstallLink(install,ImportLibraryName(libname,rev),ShortImportLibraryName(libname,rev),$(USRLIBDIR))
+InstallTarget(install,SharedLibraryName(libname,rev),$(INSTBINFLAGS),$(BINDIR))
 
 
 /*

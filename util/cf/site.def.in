@@ -75,6 +75,14 @@ XCOMM site:  $XFree86: xc/config/cf/site.def,v 3.24 2000/06/25 20:17:29 dawes Ex
 #define ProjectRoot @prefix@
 #endif
 
+#ifndef FontDir
+#define FontDir @FONTROOTDIR@
+#endif
+
+#ifndef FontEncDir
+#define FontEncDir @ENCODINGSDIR@
+#endif
+
 /*
  * On some platforms, some things may be installed outside of ProjectRoot
  * by default.  To disable this, uncomment the following line.
