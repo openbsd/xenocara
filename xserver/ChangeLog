@@ -1,3 +1,695 @@
+commit b9c7485c68d0faf5c9f1f46fc7f39164b0e82a7a
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Mar 17 13:54:05 2011 -0700
+
+    configure.ac: Bump version to 1.9.5
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit db9321b33047dadc791246c9830abcbd05ef76d1
+Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Date:   Thu Mar 10 11:40:40 2011 +0200
+
+    xfree86/modes: Fixed memory leak in xf86InitialConfiguration
+    
+    There were two memory leaks in the function: one was the lack of free
+    for "enabled", the other was the full lack of releasing anything when
+    configuration was too small. The first issue was fixed by adding the
+    missing free, the other was addressed by replacing the duplicate
+    memory releasing sequences with one that is gotoed into.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Rami Ylimäki <rami.ylimaki@vincit.fi>
+    Signed-off-by: Erkki Seppälä <erkki.seppala@vincit.fi>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit d3adf2d9350bee4125107e2ea1ed0c51bb736562)
+
+commit 8ffaef2ebd2611e2eed4ef97350c3a34508f5252
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Feb 24 16:06:34 2011 -0500
+
+    vbe: Fix malloc size bug
+    
+    v2: Slightly more obvious sizing math.
+    
+    ==14882== Invalid write of size 2
+    ==14882==    at 0x6750267: VBEGetVBEInfo (vbe.c:400)
+    ==14882==    by 0x6142064: ??? (in /usr/lib64/xorg/modules/drivers/vesa_drv.so)
+    ==14882==    by 0x471895: InitOutput (xf86Init.c:519)
+    ==14882==    by 0x422778: main (main.c:205)
+    ==14882==  Address 0x4f32fa8 is 72 bytes inside a block of size 73 alloc'd
+    ==14882==    at 0x4A0640D: malloc (vg_replace_malloc.c:236)
+    ==14882==    by 0x675024B: VBEGetVBEInfo (vbe.c:398)
+    ==14882==    by 0x6142064: ??? (in /usr/lib64/xorg/modules/drivers/vesa_drv.so)
+    ==14882==    by 0x471895: InitOutput (xf86Init.c:519)
+    ==14882==    by 0x422778: main (main.c:205)
+    
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit d8caa782009abf4dc17b945e325e83fda299a534)
+
+commit 6666424a31f93e0aa1bb394c6ade7ae029f90f70
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Mar 4 13:42:45 2011 -0800
+
+    1.9.4.901 (1.9.5 RC1)
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 457728d723a7d93cd88691dd920bf42a7540616a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jul 3 19:42:26 2010 +0100
+
+    glx: make sure screen is non-negative in validGlxScreen
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Kristian Høgsberg <krh@bitplanet.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit 3f0d3f4d97bce75c1828635c322b6560a45a037f)
+
+commit 8a18d18bb31933d8dd0fe63cd293d7ae6711abcc
+Author: Evan Broder <ebroder@mokafive.com>
+Date:   Tue Feb 1 16:09:50 2011 -0800
+
+    xfree86/modes: Be sure to only use new EDID for physical output dimensions
+    
+    The EDID processing regards physical dimensions of 0mm x 0mm as
+    invalid. Previously the old values for height and width would be
+    preserved if none of the physical dimension specifications in the new
+    EDID were considered valid.
+    
+    This will come up in particular if first a monitor is connected to an
+    output, and then a projector is connected. Since projectors generally
+    report physical dimensions of 0mm x 0mm, this would result in the
+    projector claiming to have the physical dimensions of the monitor.
+    
+    Signed-off-by: Evan Broder <ebroder@mokafive.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 12b0f7df2caa78d68b453aaa91248bb3577fd724)
+
+commit 11bf10e22cefe661f5650d49316bbd938a40094c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Feb 8 15:23:04 2010 -0500
+
+    xfree86: If the driver found modes on an output, don't add more
+    
+    Inferring modes from sync ranges is only valid if the monitor says it's
+    valid.  If the monitor says it's valid, then we'll have already added
+    those modes during EDID block parse.  If it doesn't, then we should
+    believe it.
+    
+    If there's no EDID for an output, but sync ranges from the config, we'll
+    still add default modes as normal.
+    
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit dc498b433f36af5d2de3065e7c64cdb575385d81)
+
+commit 8dd85e585ae8d0f40f7fc3f2c6fe93555b8e0905
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Mar 1 20:02:46 2011 -0800
+
+    XQuartz: pbproxy: Protect against possible collision between Cocoa and X11 Cursor types
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 69a9171dbbafd6a7db702d48770d28fb54717545)
+
+commit f71436014c17f168e2c1c0fa2e8ade374a7f42ab
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Feb 27 16:18:27 2011 -0800
+
+    XQuartz: Don't use deprecated CoreGraphics API on SL and Lion
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 0343aed1f082baf4bfbd730c1c3582f1410b8741)
+
+commit a10323c74a98dd31bf7e14b668e96e3938b580bd
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Feb 8 11:38:35 2011 -0800
+
+    XQuartz: RandR: Add RandR modes for the primary display in multi-monitor configs
+    
+    We now support using RandR to set the resolution of the primary display (and
+    place a shielding window on other displays) in multi-monitor configurations.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 8cf3348e90846f5b04236479042228fb98ac8f70)
+
+commit 3be0b136fad8aafe557cc0ce354e705f0c04245a
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Feb 8 12:26:35 2011 -0800
+
+    XQuartz: RandR: Provide an alert box when entering a RandR mode for the first time.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 968652983f8e6ae6889b48e15f4098ff6ad4a15a)
+
+commit ceaa2f438d44b23a8958c42de4f666048aedabb1
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Feb 8 11:37:52 2011 -0800
+
+    XQuartz: RandR: Capture the display when switching modes with RandR
+    
+    This will prevent native windows from resizing as we change resolutions.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 13578b852b7631f99cf1fd5e2e5469edc5aae369)
+
+commit 7b3b7efe78dec87c8059ea0d0985f08a97f0633d
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Feb 24 12:17:57 2011 +0100
+
+    EXA/mixed: ModifyPixmapHeader pitch fixes. (bug #33929)
+    
+    If there's a GPU copy and a non-zero devKind was passed in, set the GPU copy
+    pitch to that instead of to a possibly bogus value derived from the new width.
+    This is e.g. used by the radeon driver's drmmode_xf86crtc_resize hook, fixes
+    https://bugs.freedesktop.org/show_bug.cgi?id=33929 .
+    
+    On the other hand, the system memory copy doesn't need the pitch to be aligned
+    beyond the PixmapBytePad of the width.
+    
+    Signed-off-by: Michel Dänzer <daenzer@vmware.com>
+    Acked-by: Cyril Brulebois <kibi@debian.org>
+    Tested-by: Cyril Brulebois <kibi@debian.org>
+    Reported-by: Thierry Vignaud <thierry.vignaud@gmail.com>
+    Tested-by: Thierry Vignaud <thierry.vignaud@gmail.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 31704510f448706524b7b7085cc4ff0ada7bfe7e)
+
+commit 0e253a9c8676583a87db755d65ee9165a71fbef4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Feb 24 19:24:35 2011 -0800
+
+    XQuartz: Localization Updates
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit b17fc99cb9ca9ff0a3592f783a906cdcc35da748)
+
+commit 3412f4799ce83deeef59a903f7555bdfb15c6f4c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Feb 24 19:18:35 2011 -0800
+
+    XQuartz: Add LSApplicationCategoryType key to Info.plist
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 59850630fefe5e4f0430d7e2e106937fdf1e7ffb)
+
+commit 8369467c20746ee91ac8be78a43dc1990b01e056
+Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Date:   Thu Feb 10 15:35:14 2011 +0200
+
+    record: avoid crash when calling RecordFlushReplyBuffer recursively
+    
+    RecordFlushReplyBuffer can call itself recursively through
+    WriteClient->CallCallbacks->_CallCallbacks->RecordFlushAllContexts
+    when the recording client's buffer cannot be completely emptied in one
+    WriteClient. When a such a recursion occurs, it will not be broken out
+    of which results in segmentation fault when the stack is exhausted.
+    
+    This patch adds a counter (a flag, really) that guards against this
+    situation, to break out of the recursion.
+    
+    One alternative to this change would be to change _CallCallbacks to
+    check the corresponding counter before the callback loop, but that
+    might affect existing behavior, which may be relied upon.
+    
+    Reviewed-by: Rami Ylimäki <rami.ylimaki@vincit.fi>
+    Signed-off-by: Erkki Seppälä <erkki.seppala@vincit.fi>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 0801afbd7c2c644c672b37f8463f1a0cbadebd2e)
+
+commit f60f586c64502077350b7a4ed713535d6e671b07
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jan 20 23:01:03 2011 -0500
+
+    xselinux: Fix GetDrawableContext
+    
+    M_DRAWABLE_PIXMAP is the lookup mask to dixLookupDrawable, and _not_ the
+    type value in the drawable itself.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Eamon Walsh <ewalsh@tycho.nsa.gov>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit ac0a00a840a5d8d8374e5db2b849e5959550ca4e)
+
+commit 0a4b0de9afeab0cd47e1e297d5b5d42bfda0a5a7
+Author: Maarten Maathuis <madman2003@gmail.com>
+Date:   Sun Jan 30 14:06:15 2011 +0100
+
+    exa: Only call driver FinishAccess hook if PrepareAccess hook succeeded.
+    
+    Reviewed-by: Michel Dänzer <michel@daenzer.net>
+    Signed-off-by: Maarten Maathuis <madman2003@gmail.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit af87f6367ef733d1a4f3cfca4eeb92bfd84c2b6f)
+
+commit ce83d1bd5a7dee70cc1616b583fbd3ce2392f0a0
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Feb 4 11:35:58 2011 -0800
+
+    xorg-server 1.9.4
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit df12f4a4d9afe819fd3ae1ec8aaa5a7ec9d6567f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Jan 30 17:07:25 2011 -0800
+
+    xorg-server 1.9.3.902
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 79a367d6e3075f31c89ce9fe4189ffe1ca649e37
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jan 28 21:13:38 2011 -0800
+
+    XQuartz: Localization Updates
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 8c1f75a1d4cb5a34b4d10f3f5068bccc4356f31a)
+
+commit 3396d237a5e7d7f32c7c555597d4f17f49d3b937
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Jan 23 22:35:34 2011 -0800
+
+    XQuartz: Use the default signal handler
+    
+    This allows better interaction with CrashTracer
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit effaf9459c450f13e35bf263835d3e37d48ff29d)
+
+commit e7871a95125d85bef37fee51e8f8691a058a984d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Jan 13 17:12:17 2011 -0800
+
+    XQuartz: Call RRScreenSizeNotify after handling externally-generated XP_EVENT_DISPLAY_CHANGED
+    
+    We get an XP_EVENT_DISPLAY_CHANGED event when our display configuration is
+    changed.  If this change was caused by hotplugging a monitor or Mac Display
+    Preferences changes by the user, we need to call RRScreenSizeNotify in order
+    to ensure new connections get the correct screen size.
+    
+    http://xquartz.macosforge.org/trac/ticket/460
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 418bb57a3923311338baa8a85c0794a72e15ceeb)
+
+commit 824ebda72ab61f0640a14d79ef893a1d78644db8
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Jan 13 16:08:46 2011 -0800
+
+    XQuartz: Bump version string to 2.6.1
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 6f52b10b9e8068e3deafb2bbb64b62175a208c49)
+
+commit 188148e1cc1cdecc7731a4251a9ecb9dd73e6241
+Author: Oliver McFadden <oliver.mcfadden@nokia.com>
+Date:   Mon Jan 24 22:03:30 2011 +0200
+
+    dix: GetPointerEvents: added valuator range checking
+    
+    Button events may be sent with no valuators (e.g. to simply indicate
+    ButtonPress or ButtonRelease without any coordinates); when this happens
+    the server would read uninitialized memory.
+    
+    ==9999== Conditional jump or move depends on uninitialised value(s)
+    ==9999==    at 0x48E87E8: pixman_f_transform_point (in /usr/lib/libpixman-1.so.0.18.2)
+    ==9999==  Uninitialised value was created by a stack allocation
+    ==9999==    at 0x37524: GetPointerEvents (getevents.c:1074)
+    ==9999==
+    ==9999== Conditional jump or move depends on uninitialised value(s)
+    ==9999==    at 0x496D074: lround (s_lround.c:40)
+    ==9999==    by 0x3773B: GetPointerEvents (getevents.c:1048)
+    ==9999==    by 0x683BB: xf86PostButtonEventP (xf86Xinput.c:1162)
+    ==9999==    by 0x6853B: xf86PostButtonEvent (xf86Xinput.c:1126)
+    ==9999==    by 0x5779037: process_state (multitouch.c:321)      (xf86-input-mtev)
+    ==9999==    by 0x577908F: read_input (multitouch.c:331))        (xf86-input-mtev)
+    ==9999==    by 0x66B4F: xf86SigioReadInput (xf86Events.c:298)
+    ==9999==    by 0x112697: xf86SIGIO (sigio.c:118)
+    ==9999==    by 0x4A12B2F: ??? (sigrestorer.S:51)
+    ==9999==  Uninitialised value was created by a stack allocation
+    ==9999==    at 0x37524: GetPointerEvents (getevents.c:1074)
+    
+    Signed-off-by: Oliver McFadden <oliver.mcfadden@nokia.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 089a510dc9511721817df63bf9a968a10b842198
+Author: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+Date:   Thu Dec 30 19:19:38 2010 +0200
+
+    mi: Fix the debug message
+    
+    Signed-off-by: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit bf48082f30818b96bc623834be3022600371d4fc)
+
+commit b22415b0d567fae358b9b7a7067a70c80dd0dd1d
+Author: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+Date:   Thu Dec 30 19:19:41 2010 +0200
+
+    udev: Fix removing of the wake up handler
+    
+    RemoveBlockAndWakeupHandlers requires caller to pass same block data
+    parameter as for RegisterBlockAndWakeupHandlers.
+    
+    Signed-off-by: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit 3e1455505addc7e52178fa04399aef2a8522c921)
+
+commit 6451a3ff949ff55c9dff7399d0babb6b98201e99
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jan 7 15:40:25 2011 -0800
+
+    xorg-server 1.9.3.901 (1.9.4 RC1)
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c11f9bfc081423a7f15d72c36f2f0d6518083591
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jan 7 15:39:14 2011 -0800
+
+    XQuartz: Update copyright dates in bundle's plist
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3d12e6d25a79c1d78964df723731d2510bb932f8
+Author: Zhao Yakui <yakui.zhao@intel.com>
+Date:   Tue Jan 4 14:08:16 2011 -0500
+
+    edid: Fix incorrect timings for VIC61
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Anssi Hannula <anssi.hannula@iki.fi>
+    Signed-off-by: Zhao Yakui <yakui.zhao@intel.com>
+    (cherry picked from commit 86ca434a1ab766c1519ee7146b48dbfead843524)
+
+commit 9213c2525a2be6f8bf1412f1c6001a7bc6ce4538
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Dec 10 14:24:02 2010 -0500
+
+    x86emu: Fix more mis-decoding of the data prefix
+    
+    cc2c73ddcb4370a7c3ad439cda4da825156c26c9's three-cent titanium tax
+    doesn't go too far enough.  Fix the rest of the call and jmp
+    instructions to handle the data prefix correctly.
+    
+    Reference: Intel 64 and IA-32 Architectures Software Developer's Manual
+    Volume 2A: Instruction Set Reference, A-M
+    
+    http://www.intel.com/Assets/PDF/manual/253666.pdf
+    
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit bb18f277156c08be028a6e12d8987fb1593e9168)
+
+commit dc24f90ddc9c116a31347ba961f19feaf63fa843
+Author: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+Date:   Thu Dec 30 19:19:42 2010 +0200
+
+    os: Fix a memory leak
+    
+    Signed-off-by: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit 617b7d22115ccaaaa7ec69c99885054d33a3bc37)
+
+commit a87a5b7e83349d3871fcde71fec08f85fa16dc0b
+Author: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+Date:   Thu Dec 30 19:19:32 2010 +0200
+
+    render: Don't filter 0 return from GetTimeInMillis
+    
+    In animate cursor block handler code assumes GetTimeInMillis returns
+    always nonzero value. This isn't true when time wraps around.
+    
+    To prevent any problems in case GetTimeInMillis would return zero use
+    activeDevice variable to track if we have received time.
+    
+    Signed-off-by: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit aa8cea953dc66bcf4cb4d08f2681f9e6cb1bc8c5)
+
+commit aec278eb65fe1ca98ab551a8c3873a7195bad540
+Author: Ville Syrjälä <ville.syrjala@nokia.com>
+Date:   Thu Dec 16 18:22:13 2010 +0200
+
+    xfree86/modes: Take rotation into account when checking mode size
+    
+    Assume that a mode can be used in either landscape or portrait
+    orientation. I suppose the correct thing to do would be to
+    collect all the supported rotations from the CRTCs that can be used
+    with a specific output, but that information doesn't seem to be
+    readily available when these checks are done. So just assume that
+    either orientation is fine.
+    
+    Signed-off-by: Ville Syrjälä <ville.syrjala@nokia.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit 2e781457d43ec4bf0d633257ac6852cde3b00541)
+
+commit 005b465048178d2ab0abecf26ccf6c79c6d5e2cc
+Author: Ville Syrjälä <ville.syrjala@nokia.com>
+Date:   Fri Dec 3 17:42:16 2010 +0200
+
+    dri2: Don't page flip when the window size doesn't match the pixmap size
+    
+    If the drawable size doesn't match the pixmap size page flipping should
+    not be allowed.
+    
+    If the window is larger than the pixmap, page flipping might need to
+    reposition the CRTC somewhere in the middle of the pixmap. I didn't
+    spot any code that would handle that at least in the intel driver.
+    
+    Also the root pixmap could then move to some negative screen
+    coordinates. Not sure if all bits of code could handle that. Perhaps
+    when composite is enabled screen_x/y would make it work, but without
+    composite there's no way that it would work AFAICS.
+    
+    Signed-off-by: Ville Syrjälä <ville.syrjala@nokia.com>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+    (cherry picked from commit 0ce25fd7904c792924c3e0ee6fc21a5f1bec1a68)
+
+commit 651a96982fb2079367d189f4882749e30200003d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Aug 27 20:36:37 2010 +1000
+
+    GetTimeInMillis: Use CLOCK_MONOTONIC_COARSE where available
+    
+    On some systems, using CLOCK_MONOTONIC forces a readback of HPET or some
+    similarly expensive timer.  CLOCK_MONOTONIC_COARSE can alleviate this,
+    at the cost of negligibly-reduced resolution, so prefer that where we
+    can.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    (cherry picked from commit 44adb31bfece29260a9bbd9075c9212ebf00d24d)
+
+commit 08db658a19bb532808dba8744f8b64042d773ca0
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Fri Dec 17 16:09:35 2010 +0200
+
+    randr: check for virtual size limits before set crtc
+    
+    Return a error if the screen is configured to an invalid size.
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit d1107918d4626268803b54033a07405122278e7f)
+
+commit a3c7b86472aed80cf16edcfe2b77a92d4f3d196f
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Thu Jan 6 09:55:41 2011 +0100
+
+    EXA: Pad size of system memory copy for 1x1 pixmaps (bug #32803).
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=32803 .
+    
+    Signed-off-by: Michel Dänzer <daenzer@vmware.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 6358a60065eef167d4e5f4afd981ff26deeba80d)
+
+commit 93b75c7ce81b3d429f62df20c35c4e79c6216c72
+Author: James Jones <jajones@nvidia.com>
+Date:   Mon Dec 6 13:36:14 2010 -0800
+
+    Add and use SERVER_SYNC_*_VERSION
+    
+    Most extensions have a version defined
+    in the protocol headers, and also in the
+    server's protocol-versions.h.  The latter
+    defines which version the server advertises
+    support for.  Sync wasn't included in
+    protocol-versions.h, and was advertising
+    support for whatever was in the protocol
+    headers the server was built against.
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 27593eea7efcbed8de0c6e8233cbd1a1b8a50459)
+
+commit 295a893aa3b594f9e0fb154bff14e12514b4dad5
+Author: Michel Dänzer <daenzer@vmware.com>
+Date:   Wed Dec 22 11:45:36 2010 +0100
+
+    EXA: Fix crash with fill using 1x1 tile of depth < 8 (bug #24703).
+    
+    Fixes http://bugs.freedesktop.org/show_bug.cgi?id=24703 .
+    
+    Signed-off-by: Michel Dänzer <daenzer@vmware.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit e06fa804009798ea95efa8babaabb0228dfdfe65)
+
+commit d819ff1cb521af77764af75e04645af4d4d06e3d
+Author: Jörn Horstmann <launchpad@planetxml.de>
+Date:   Mon Dec 6 11:24:02 2010 +1100
+
+    Add EDID quirk for HP Compaq nc8430.
+    
+    Like some other LPL panels, this one reports the vertical size in cm rather
+    than mm.
+    Patch taken from Launchpad bug #380009 <https://launchpad.net/bugs/380009>
+    
+    X.Org Bug 28414 <https://bugs.freedesktop.org/show_bug.cgi?id=28414>
+    
+    Signed-off-by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 4b88c7be8de4149fe3d166bf115775f9e81a1373)
+
+commit 11696bb133a5039e51329514377eee6a2cc8dd5a
+Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+Date:   Mon Dec 6 11:24:01 2010 +1100
+
+    IDLETIME: Fix edge-case in IdleTimeBlockHandler
+    
+    Ensure that if we're called exactly on the threshold of a
+    NegativeTransition trigger that we reshedule to pick up
+    an idle time over the threshold.
+    
+    Signed-off-by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit a2e67a6412386782cb8b644b86a5744591397d45)
+
+commit 625cb4c14242c3d186ec52425e7c009456eb029b
+Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+Date:   Mon Dec 6 11:24:00 2010 +1100
+
+    Xext: Fix edge case with {Positive, Negative}Transition triggers.
+    
+    The {Positive,Negative}Transition triggers only fire when the counter
+    goes from strictly {below,above} the threshold.  If
+    SyncComputeBracketValues gets called exactly at this threshold we may update
+    the bracket values so that the counter is not updated past the threshold.
+    
+    Signed-off-by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit b55bf248581dc66321b24b29f199f6dc8d02db1b)
+
+commit a2c674b75d3b1a663bece6f6e2e34c3e71e6be55
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 5 11:08:27 2010 +1000
+
+    test: reduce range of byte-padding macro tests.
+    
+    Byte padding and conversion is interesting for the rage of 0-8 bytes, and
+    then interesting towards the end of the valid range (INT_MAX - 7 and INT_MAX
+    - 3).
+    
+    Note: this changes the upper range for pad_to_int32() and bytes_to_int32()
+    from the previous (INT_MAX - 4) to (INT_MAX - 3).
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit d435e1ecb86e2fe6292b5945262956644f979bbb)
+
+commit 8d0866559dd418389b018f1e48c6f8605e6ebc8d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 5 10:59:52 2010 +1000
+
+    test: compare byte padding macros against the expected bytes.
+    
+    We calculate the expected bytes for each value, let's use it.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit f49ee9074a66883a3c525b0d6e71589123288465)
+
+commit 97f40a17afc197342b5aea92d870dd4099ac6b44
+Author: Eoghan Sherry <ejsherry@gmail.com>
+Date:   Sun Nov 28 16:15:51 2010 -0500
+
+    Xi: Fix master button update when slave buttons are mapped. #24887
+    
+    It is currently assumed that an event button delieved to a master device
+    corresponds to the slave button states. However, the event button is a
+    logical (mapped) slave button and slave button states correspond to
+    physical (unmapped) slave buttons. This leads to incorrect update of the
+    master button state and incorrect events devlivered to clients. Fix the
+    situation by taking the slave button map into account when querying a
+    slave button state.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=24887
+    
+    Signed-off-by: Eoghan Sherry <ejsherry@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 36b614dedf4ddc428e43ad1542d4f9314f73f60a)
+
+commit faecab3b13bbaecf4f35f49b833d1b79a5fb647d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 3 11:54:41 2010 +1000
+
+    mi: handle DGA subtypes when determining the master device.
+    
+    The subtype in the DGA event is the core type and all ET_ event types (where
+    applicable) are identical to the core types. Thus the switch statement below
+    will work as required and assign the right master device.
+    
+    Fixes a crasher bug on keyboard devices with valuators. If a device sends a
+    motion event while grabbed and a DGA client is active (but has not selected
+    input through DGA), the valuator event is posted through the VCK and
+    eventually results in a NULL-pointer dereference on dev->valuator.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 31ab9f8860848504df18a8be9d19b817b191e0df)
+
+commit e1e37ef7eb72fb4dfd8cefa1933e406231558d9d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Dec 8 22:58:12 2010 -0800
+
+    XQuartz GL: Add $(GL_CFLAGS) to CFLAGS
+    
+    This fixes a build failure I found on tinderbox.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit f641e4b34aa91ecda29e546b8b975e72ce037ed0)
+
+commit f7d60dae0937efce37daece4af49e89ac44413e7
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Dec 8 13:27:41 2010 -0800
+
+    XQuartz: Just NSBeep() for XBell()
+    
+    The CoreAudio path uses deprecated API and has reported crashes that
+    aren't worth fixing (4e8bf12b13690afa6d9fee0e339d3819ef16fb3f fixed
+    one and introduced another).  NSBeep() does the job just fine.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 883039e07b0c0ef23c7fc4ba3455b41173c7a7fc)
+
 commit 4b8d43033bdc5bfb95240a2ef2fe89b0f2fd669a
 Author: Jeremy Huddleston <jeremyhu@apple.com>
 Date:   Mon Dec 13 11:45:02 2010 -0800

@@ -145,6 +145,11 @@ static Bool quirk_detailed_v_in_cm (int scrnIndex, xf86MonPtr DDC)
 	DDC->vendor.prod_id == 0x2a00)
 	return TRUE;
 
+    /* Bug #28414: HP Compaq NC8430 LP154W01-TLA8 */
+    if (memcmp (DDC->vendor.name, "LPL", 4) == 0 &&
+	DDC->vendor.prod_id == 5750)
+	return TRUE;
+
     /* Bug #21750: Samsung Syncmaster 2333HD */
     if (memcmp (DDC->vendor.name, "SAM", 4) == 0 &&
 	DDC->vendor.prod_id == 1157)
@@ -956,7 +961,7 @@ static const DisplayModeRec CEAVideoModes[CEA_VIDEO_MODES_NUM] = {
     { MODEPREFIX,   108000, 1440, 1478, 1602, 1716, 0,  480,  488,  494,  525, 0, V_NHSYNC | V_NVSYNC | V_INTERLACE, MODESUFFIX },/* VIC 58:1440x480i@240 */
     { MODEPREFIX,   108000, 1440, 1478, 1602, 1716, 0,  480,  488,  494,  525, 0, V_NHSYNC | V_NVSYNC | V_INTERLACE, MODESUFFIX },/* VIC 59:1440x480i@240 */
     { MODEPREFIX,    59400, 1280, 3040, 3080, 3300, 0,  720,  725,  730,  750, 0, V_PHSYNC | V_PVSYNC, MODESUFFIX }, /* VIC 60: 1280x720@24Hz */
-    { MODEPREFIX,    74250, 3700, 3740, 1430, 3960, 0,  720,  725,  730,  750, 0, V_PHSYNC | V_PVSYNC, MODESUFFIX }, /* VIC 61: 1280x720@25Hz */
+    { MODEPREFIX,    74250, 1280, 3700, 3740, 3960, 0,  720,  725,  730,  750, 0, V_PHSYNC | V_PVSYNC, MODESUFFIX }, /* VIC 61: 1280x720@25Hz */
     { MODEPREFIX,    74250, 1280, 3040, 3080, 3300, 0,  720,  725,  730,  750, 0, V_PHSYNC | V_PVSYNC, MODESUFFIX }, /* VIC 62: 1280x720@30Hz */
     { MODEPREFIX,   297000, 1920, 2008, 2052, 2200, 0, 1080, 1084, 1089, 1125, 0, V_PHSYNC | V_PVSYNC, MODESUFFIX }, /* VIC 63: 1920x1080@120Hz */
     { MODEPREFIX,   297000, 1920, 2448, 2492, 2640, 0, 1080, 1084, 1094, 1125, 0, V_PHSYNC | V_PVSYNC, MODESUFFIX }, /* VIC 64:1920x1080@100Hz */

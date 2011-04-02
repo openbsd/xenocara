@@ -718,8 +718,6 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
     NSString *nsstr;
     const char *tem;
 	
-    XQuartzUseSysBeep = [self prefs_get_boolean:@PREFS_SYSBEEP
-                                       default:XQuartzUseSysBeep];
     XQuartzRootlessDefault = [self prefs_get_boolean:@PREFS_ROOTLESS
                                            default:XQuartzRootlessDefault];
     XQuartzFullscreenMenu = [self prefs_get_boolean:@PREFS_FULLSCREEN_MENU
@@ -883,6 +881,35 @@ void X11ApplicationLaunchClient (const char *cmd) {
     message_kit_thread (@selector (launch_client:), string);
 	
     [string release];
+}
+
+/* This is a special function in that it is run from the *SERVER* thread and
+ * not the AppKit thread.  We want to block entering a screen-capturing RandR
+ * mode until we notify the user about how to get out if the X11 client crashes.
+ */
+Bool X11ApplicationCanEnterRandR(void) {
+    NSString *title, *msg;
+    
+    if([X11App prefs_get_boolean:@PREFS_NO_RANDR_ALERT default:NO] || XQuartzShieldingWindowLevel != 0)
+        return TRUE;
+    
+    title = NSLocalizedString(@"Enter RandR mode?", @"Dialog title when switching to RandR");
+    msg = NSLocalizedString(@"An application has requested X11 to change the resolution of your display.  X11 will restore the display to its previous state when the requesting application requests to return to the previous state.  Alternatively, you can use the ⌥⌘A key sequence to force X11 to return to the previous state.",
+                            @"Dialog when switching to RandR");
+
+    if(!XQuartzIsRootless)
+        QuartzShowFullscreen(FALSE);
+    
+    switch(NSRunAlertPanel(title, msg, NSLocalizedString(@"Allow", @""), NSLocalizedString (@"Cancel", @""), NSLocalizedString (@"Always Allow", @""))) {
+        case NSAlertOtherReturn:
+            [X11App prefs_set_boolean:@PREFS_NO_RANDR_ALERT value:YES];
+            [X11App prefs_synchronize];
+        case NSAlertDefaultReturn:
+            return YES;
+
+        default:
+            return NO;
+    }
 }
 
 static void check_xinitrc (void) {

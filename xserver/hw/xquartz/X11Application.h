@@ -73,11 +73,12 @@ void X11ApplicationServerReady (void);
 void X11ApplicationShowHideMenubar (int state);
 void X11ApplicationLaunchClient (const char *cmd);
 
+Bool X11ApplicationCanEnterRandR (void);
+
 void X11ApplicationMain(int argc, char **argv, char **envp);
 
 #define PREFS_APPSMENU              "apps_menu"
 #define PREFS_FAKEBUTTONS           "enable_fake_buttons"
-#define PREFS_SYSBEEP               "enable_system_beep"
 #define PREFS_KEYEQUIVS             "enable_key_equivalents"
 #define PREFS_FULLSCREEN_HOTKEYS    "fullscreen_hotkeys"
 #define PREFS_FULLSCREEN_MENU       "fullscreen_menu"
@@ -87,6 +88,7 @@ void X11ApplicationMain(int argc, char **argv, char **envp);
 #define PREFS_NO_TCP                "nolisten_tcp"
 #define PREFS_DONE_XINIT_CHECK      "done_xinit_check"
 #define PREFS_NO_QUIT_ALERT         "no_quit_alert"
+#define PREFS_NO_RANDR_ALERT        "no_randr_alert"
 #define PREFS_OPTION_SENDS_ALT      "option_sends_alt"
 #define PREFS_FAKE_BUTTON2          "fake_button2"
 #define PREFS_FAKE_BUTTON3          "fake_button3"

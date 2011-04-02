@@ -67,6 +67,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "opaque.h"
 #include <X11/extensions/syncproto.h>
 #include "syncsrv.h"
+#include "protocol-versions.h"
 
 #include <stdio.h>
 #if !defined(WIN32)
@@ -959,6 +960,17 @@ SyncComputeBracketValues(SyncCounter *pCounter)
 	    {
 		psci->bracket_less = pTrigger->test_value;
 		pnewltval = &psci->bracket_less;
+	    } else if (XSyncValueEqual(pCounter->value, pTrigger->test_value) &&
+		       XSyncValueLessThan(pTrigger->test_value,
+					  psci->bracket_greater))
+	    {
+	        /*
+		 * The value is exactly equal to our threshold.  We want one
+		 * more event in the positive direction to ensure we pick up
+		 * when the value *exceeds* this threshold.
+		 */
+	        psci->bracket_greater = pTrigger->test_value;
+		pnewgtval = &psci->bracket_greater;
 	    }
 	}
         else if (pTrigger->test_type == XSyncPositiveTransition &&
@@ -969,6 +981,17 @@ SyncComputeBracketValues(SyncCounter *pCounter)
 	    {
 		psci->bracket_greater = pTrigger->test_value;
 		pnewgtval = &psci->bracket_greater;
+	    } else if (XSyncValueEqual(pCounter->value, pTrigger->test_value) &&
+		       XSyncValueGreaterThan(pTrigger->test_value,
+					     psci->bracket_less))
+	    {
+	        /*
+		 * The value is exactly equal to our threshold.  We want one
+		 * more event in the negative direction to ensure we pick up
+		 * when the value is less than this threshold.
+		 */
+	        psci->bracket_less = pTrigger->test_value;
+		pnewltval = &psci->bracket_less;
 	    }
 	}
     } /* end for each trigger */
@@ -1129,8 +1152,8 @@ ProcSyncInitialize(ClientPtr client)
     memset(&rep, 0, sizeof(xSyncInitializeReply));
     rep.type = X_Reply;
     rep.sequenceNumber = client->sequence;
-    rep.majorVersion = SYNC_MAJOR_VERSION;
-    rep.minorVersion = SYNC_MINOR_VERSION;
+    rep.majorVersion = SERVER_SYNC_MAJOR_VERSION;
+    rep.minorVersion = SERVER_SYNC_MINOR_VERSION;
     rep.length = 0;
 
     if (client->swapped)
@@ -2300,6 +2323,14 @@ IdleTimeBlockHandler(pointer env, struct timeval **wt, pointer LastSelectMask)
 		break;
 	    }
 	}
+	/* 
+	 * We've been called exactly on the idle time, but we have a
+	 * NegativeTransition trigger which requires a transition from an
+	 * idle time greater than this.  Schedule a wakeup for the next
+	 * millisecond so we won't miss a transition.
+	 */
+	if (XSyncValueEqual (idle, *pIdleTimeValueLess))
+	    AdjustWaitForDelay(wt, 1);
     }
     else if (pIdleTimeValueGreater)
     {
