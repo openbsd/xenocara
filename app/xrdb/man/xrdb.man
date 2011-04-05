@@ -1,15 +1,15 @@
 .\" Copyright 1991, Digital Equipment Corporation.
 .\" Copyright 1991, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,7 +17,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -37,10 +37,10 @@ the root window of any or all screens, or everything combined.
 You would normally run this program from your X startup file.
 .LP
 Most X clients use the RESOURCE_MANAGER and SCREEN_RESOURCES properties to
-get user preferences about 
+get user preferences about
 color, fonts, and so on for applications.  Having this information in
 the server (where it is available to all clients) instead of on disk,
-solves the problem in previous versions of X that required you to 
+solves the problem in previous versions of X that required you to
 maintain \fIdefaults\fP files on every machine that you might use.
 It also allows for dynamic changing of defaults without editing files.
 .LP
@@ -53,7 +53,7 @@ all resources are just placed in the RESOURCE_MANAGER property.)
 The file specified by
 .I filename
 (or the contents from standard input if - or no filename is given)
-is optionally passed through the C preprocessor with the 
+is optionally passed through the C preprocessor with the
 following symbols defined, based on the capabilities of the server
 being used:
 .TP 8
@@ -165,7 +165,7 @@ a terminal or from a shell script.
 program accepts the following options:
 .TP 8
 .B \-help
-This option (or any unsupported option) will cause a brief description of 
+This option (or any unsupported option) will cause a brief description of
 the allowable options and parameters to be printed.
 .TP 8
 .B \-display \fIdisplay\fP
@@ -207,12 +207,12 @@ or to the resource file (when used with \fI-edit\fP) should be shown on the
 standard output, but should not be performed.
 .TP 8
 .B \-quiet
-This option indicates that warning about duplicate entries should not be 
+This option indicates that warning about duplicate entries should not be
 displayed.
 .TP 8
 .B -cpp \fIfilename\fP
 This option specifies the pathname of the C preprocessor program to be used.
-Although 
+Although
 .I xrdb
 was designed to use CPP, any program that acts as a filter
 and accepts the -D, -I, and -U options may be used.
@@ -250,7 +250,7 @@ New entries override previous entries.
 .B \-merge
 This option indicates that the input should be merged and lexicographically
 sorted with, instead of replacing, the current contents of the specified
-properties.  
+properties.
 .TP 8
 .B \-remove
 This option indicates that the specified properties should be removed
@@ -273,7 +273,7 @@ This option specifies a suffix to be appended to the filename used with
 to generate a backup file.
 .TP 8
 .B \-D\fIname[=value]\fP
-This option is passed through to the preprocessor and is used to define 
+This option is passed through to the preprocessor and is used to define
 symbols for use with conditionals such as
 .I #ifdef.
 .TP 8
@@ -283,7 +283,7 @@ any definitions of this symbol.
 .TP 8
 .B \-I\fIdirectory\fP
 This option is passed through to the preprocessor and is used to specify
-a directory to search for files that are referenced with 
+a directory to search for files that are referenced with
 .I #include.
 .SH FILES
 Generalizes \fI~/.Xdefaults\fP files.

@@ -22,10 +22,11 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xrdb], [1.0.7],
+AC_INIT([xrdb], [1.0.9],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xrdb])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -37,8 +38,7 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AC_CHECK_FUNC([mkstemp], 
-   AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the 'mkstemp' function.]))
+AC_CHECK_FUNCS([mkstemp asprintf])
 
 # Find MAXHOSTNAMELEN definition
 # Common hidey holes:
@@ -72,7 +72,7 @@ fi
 # xrdb needs to know where to find cpp at runtime - previously set as CppCmd
 # in Imake config files for each OS
 AC_ARG_WITH([cpp], 
-	AC_HELP_STRING([--with-cpp=path],
+	AS_HELP_STRING([--with-cpp=path],
 		       [comma-separated list of paths to cpp command for xrdb to use at runtime]), 
 	[AC_MSG_CHECKING(for cpp)
 	CPP_PATH=$withval
@@ -85,4 +85,7 @@ AC_DEFINE_UNQUOTED([CPP], "$CPP_PATH", [Path to CPP program])
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XRDB, xmuu x11)
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT
