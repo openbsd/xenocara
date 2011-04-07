@@ -26,6 +26,8 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
 #define LibDir			/usr/local/lib/X11
 #define UsrLibDir		/usr/local/lib
 #define ManDirectoryRoot	/usr/local/man
+#define FontDir			/usr/local/lib/X11/fonts
+#define FontEncDir		/usr/local/lib/X11/fonts/encodings
 #define LdPreLib		-L/usr/X11R6/lib -L/usr/local/lib
 #define XpmLibDir		/usr/X11R6/lib
 #define XpmIncDir		/usr/X11R6/include
