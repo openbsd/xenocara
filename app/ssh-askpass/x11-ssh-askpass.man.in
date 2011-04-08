@@ -1,10 +1,12 @@
+.\" $NetBSD: x11-ssh-askpass.man.in,v 1.2 2011/04/03 13:42:33 wiz Exp $
+.\"
 .\" x11-ssh-askpass.man
 .\" Created by Matthieu Herrb <matthieu@laas.fr> for OpenBSD
 .\" Modified by Jim Knoble <jmknoble@jmknoble.cx> for non-OpenBSD
 .\"   distribution
 .\"
 .Dd @DATE@
-.Dt @NAME@ 1 
+.Dt @NAME@ 1
 .Os "Version @VERSION@"
 .Sh NAME
 .Nm @NAME@
@@ -30,7 +32,7 @@ exception of
 and
 .Ar -title .
 See
-.Xr X 1 . 
+.Xr X 7 .
 .Pp
 If exactly one non-option argument is provided on the command line, it
 is displayed in the dialog instead of the default label.
@@ -40,16 +42,16 @@ is displayed on a separate line in the dialog.
 The features of
 .Nm
 are as follows:
-.Bl -dash -offset indent 
+.Bl -dash -offset indent
 .It 
 Configurable via the standard X resource mechanisms
-.Pa /etc/X11/app-defaults , 
-.Pa ~/.Xdefaults , 
-.Xr xrdb 1 , 
+.Pa /etc/X11/app-defaults ,
+.Pa ~/.Xdefaults ,
+.Xr xrdb 1 ,
 etc.
-.It 
+.It
 Requires only stock X11 libraries (\%libXt, \%libX11, \%libSM, \%libICE).
-.It 
+.It
 Can be configured to grab the keyboard and/or pointer (grabs the
 keyboard by default, not the pointer).
 .El
@@ -67,12 +69,12 @@ This gives the user feedback that pass-phrase characters have been
 entered, but does not provide onlookers with a cue as to the length
 of the pass-phrase.
 .Pp
-Pressing the 
+Pressing the
 .Sq OK
 button accepts the pass-phrase (even if it is empty),
 which is printed on the standard output, and the dialog exits with a
 status of zero (success).
-Pressing the 
+Pressing the
 .Sq Cancel
 button discards the
 pass-phrase, and the dialog exits with non-zero status.
@@ -80,7 +82,7 @@ pass-phrase, and the dialog exits with non-zero status.
 The following keystrokes work as expected:
 .Pp
 .Bl -tag -width "[Backspace]" -offset indent -compact
-.It Bq Backspace 
+.It Bq Backspace
 .It Bq Delete
 Erase previous character
 .Pp
@@ -97,7 +99,7 @@ Accept pass-phrase (OK)
 Discard pass-phrase (Cancel)
 .El
 .Sh WIDGETS
-The main window of 
+The main window of
 .Nm
 has the widget hierarchy indicated below.
 The widget class name is given first, followed by the instance name.
@@ -109,14 +111,14 @@ dialog
 .It Indicator
 indicator
 .It Button
-okButton 
+okButton
 .It Button
 cancelButton
 .El
 .El
 .Sh RESOURCES
 The following resources are used to customize the application
-globally: 
+globally:
 .Bl -tag -width 2n -offset indent
 .It Cm grabKeyboard ( No class Cm GrabKeyboard )
 .Bl -inset -compact
@@ -128,20 +130,21 @@ globally:
 .Bl -inset -compact
 .It specifies if the application should grab the pointer.
 .It Default value:
-.Dq False . 
+.Dq False .
 .El
 .It Cm grabServer ( No class Cm GrabServer )
 .Bl -inset -compact
 .It specifies if the application should grab the server.
 .It Default value:
-.Dq False . 
+.Dq False .
 .El
 .It Cm inputTimeout ( No class Cm InputTimeout )
 .Bl -inset -compact
 .It the number of seconds
 .Nm
 should wait for a key or
-button press before it gives up and exits.  A timeout of
+button press before it gives up and exits.
+A timeout of
 .Dq 0
 means wait forever.
 .It Default value:
@@ -150,15 +153,16 @@ means wait forever.
 .It Cm defaultXResolution ( No class Cm DefaultXResolution )
 .Bl -inset -compact
 .It the number of pixels per unit length that horizontal
-spacing and width values are intended for.  If the actual
+spacing and width values are intended for.
+If the actual
 horizontal (x) resolution of the X server is significantly
 greater or less than this value, portions of the dialog,
 indicator, and button widgets are stretched or shrunk
-horizontally to take the difference into account. The value
-is a positive integer, followed by a slash
+horizontally to take the difference into account.
+The value is a positive integer, followed by a slash
 .Cm ( / )
-and a one- or two-character unit abbreviation.  Valid units
-are inches
+and a one- or two-character unit abbreviation.
+Valid units are inches
 .Cm ( in
 or
 .Cm i )
@@ -171,12 +175,13 @@ and meters
 .It Cm defaultYResolution ( No class Cm DefaultYResolution )
 .Bl -inset -compact
 .It the number of pixels per unit length that vertical
-spacing and height values are intended for.  If the actual
+spacing and height values are intended for.
+If the actual
 vertical (y) resolution of the X server is significantly
 greater or less than this value, portions of the dialog,
 indicator, and button widgets are stretched or shrunk
-vertically to take the difference into account. Valid
-values are the same as for
+vertically to take the difference into account.
+Valid values are the same as for
 .Cm defaultXResolution
 above.
 .It Default value:
@@ -191,7 +196,8 @@ around the value of
 .Cm defaultXResolution
 beyond which some widgets will be stretched or shrunk
 horizontally to fit the current actual horizontal
-resolution. Valid values are the same as for
+resolution.
+Valid values are the same as for
 .Cm defaultXResolution .
 For example, if the default X resolution is
 .Dq 75/in ,
@@ -212,8 +218,9 @@ around the value of
 .Cm defaultYResolution
 beyond which some widgets will be stretched or shrunk
 vertically to fit the current actual vertical
-resolution. Valid values are the same as for
-.Cm defaultXResolution 
+resolution.
+Valid values are the same as for
+.Cm defaultXResolution
 above.
 .It Default value:
 .Dq 20/in
@@ -240,20 +247,20 @@ indicator widgets and the main widget to customize the 3D appearance
 .It Cm foreground ( No class Cm Foreground )
 The foreground color of the widget.
 This is the text color of the label for buttons and dialog and the
-color of the active led for the indicator. 
+color of the active led for the indicator.
 .It Cm background ( No class Cm Background )
 The background color of the widget.
-In the case of the indicator this is the color of the inactive led. 
+In the case of the indicator this is the color of the inactive led.
 .It Cm topShadowColor ( No class Cm TopShadowColor )
 The color used by the sides of the widget exposed to the light (top
 and left).
 .It Cm bottomShadowColor ( No class Cm BottomShadowColor )
 The color used by the sides of the widget in the shadow (right and
-bottom). 
+bottom).
 .It Cm shadowThickness ( No class Cm ShadowTickness )
 The thickness of the 3D border of the widget.
 .It Cm borderColor ( No class Cm BorderColor )
-The color of the border around the widget. 
+The color of the border around the widget.
 .It Cm borderWidth ( No class Cm BorderWidth )
 The width of the border around the widget.
 .It Cm horizontalSpacing ( No class Cm HorizontalSpacing )
@@ -282,17 +289,18 @@ the font to use for this button label.
 .It Pa /etc/X11/app-defaults/SshAskpass
 .El
 .Sh SEE ALSO
-.Xr X 1 ,
 .Xr ssh 1 ,
-.Xr ssh-agent 1
+.Xr ssh-agent 1 ,
+.Xr X 7
 .Sh LICENSE
 Some portions of
 .Nm
 are derived directly or indirectly
-from portions of xscreensaver by Jamie Zawinski <jwz@jwz.org>, while
-others are original works.
+from portions of xscreensaver by Jamie Zawinski
+.Aq jwz@jwz.org ,
+while others are original works.
 .Pp
-xscreensaver, Copyright \(co 1991-1999 Jamie Zawinski 
+xscreensaver, Copyright \(co 1991-1999 Jamie Zawinski
 .Aq jwz@jwz.org
 .Pp
 Permission to use, copy, modify, distribute, and sell this software
@@ -307,7 +315,7 @@ It is provided "as is" without express or implied warranty.
 The remaining portions fall under the following copyright and license:
 .Pp
 .Nm
-by Jim Knoble 
+by Jim Knoble
 .Aq jmknoble@jmknoble.cx
 Copyright \(co 1999,2000,2001 Jim Knoble
 .Pp
