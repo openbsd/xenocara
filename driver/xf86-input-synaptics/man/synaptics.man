@@ -1,0 +1,976 @@
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH SYNAPTICS __drivermansuffix__ __vendorversion__
+.SH NAME
+synaptics \- touchpad input driver
+.SH SYNOPSIS
+.nf
+.B "Section \*qInputDevice\*q"
+.BI "  Identifier \*q" devname \*q
+.B  "  Driver \*qsynaptics\*q"
+.BI "  Option \*qDevice\*q   \*q" devpath \*q
+.BI "  Option \*qPath\*q     \*q" path \*q
+\ \ ...
+.B EndSection
+.fi
+.SH DESCRIPTION
+.B synaptics
+is an __xservername__ input driver for touchpads.
+Even though touchpads can be handled by the normal evdev or mouse drivers,
+this driver allows more advanced features of the
+touchpad to become available. Some benefits would be:
+.IP \(bu 4
+Movement with adjustable, non-linear acceleration and speed.
+.IP \(bu 4
+Button events through short touching of the touchpad.
+.IP \(bu 4
+Double-Button events through double short touching of the touchpad.
+.IP \(bu 4
+Dragging through short touching and holding down the finger on the
+touchpad (tap-and-drag gesture).
+.IP \(bu 4
+Middle and right button events on the upper and lower corner of the
+touchpad.
+.IP \(bu 4
+Vertical scrolling (button four and five events) through moving the
+finger on the right side of the touchpad.
+.IP \(bu 4
+The up/down button sends button four/five events.
+.IP \(bu 4
+Horizontal scrolling (button six and seven events) through moving the
+finger on the lower side of the touchpad.
+.IP \(bu 4
+The multi-buttons send button four/five events for vertical scrolling
+and button six/seven events for horizontal scrolling.
+.IP \(bu 4
+Adjustable finger detection.
+.IP \(bu 4
+Multifinger taps: two finger for right button and three finger for
+middle button events.
+.
+(Needs hardware support.
+.
+Not all models implement this feature.)
+.IP \(bu 4
+Pressure dependent motion speed.
+.IP \(bu 4
+Run-time configuration using shared memory. This means you can change
+parameter settings without restarting the X server.
+.LP
+Note that depending on the touchpad firmware, some of these features
+might be available even without using the synaptics driver. Note also
+that some functions are not available on all touchpad models, because
+they need support from the touchpad hardware/firmware. (Multifinger
+taps for example.)
+.PP
+The name "synaptics" is historical and the driver still provides the
+synaptics protocol parsing code. Under Linux however, the hardware-specifics
+are handled by the kernel and this driver will work for any touchpad that
+has a working kernel driver.
+
+.SH CONFIGURATION OPTIONS
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
+details and for options that can be used with all input drivers.  This
+section only covers configuration details specific to this driver.
+.PP
+The following driver
+.B Options
+are supported:
+.TP 7
+.BI "Option \*qDevice\*q \*q" string \*q
+This option specifies the device file in your \*q/dev\*q directory which will
+be used to access the physical device. Normally you should use something like
+\*q/dev/input/eventX\*q, where X is some integer.
+.TP 7
+.BI "Option \*qProtocol\*q \*q" string \*q
+Specifies which kernel driver will be used by this driver. This is the list of
+supported drivers and their default use scenarios.
+.TS
+l l.
+auto-dev	automatic, default (recommend)
+event	Linux 2.6 kernel events
+psaux	raw device access (Linux 2.4)
+psm	FreeBSD psm driver
+.TE
+.TP 7
+.BI "Option \*qSHMConfig\*q \*q" boolean \*q
+Switch on/off shared memory for run-time debugging. This option does not
+have an effect on run-time configuration anymore and is only useful for
+hardware event debugging.
+.TP 7
+.BI "Option \*qLeftEdge\*q \*q" integer \*q
+X coordinate for left edge. Property: "Synaptics Edges"
+.TP 7
+.BI "Option \*qRightEdge\*q \*q" integer \*q
+X coordinate for right edge. Property: "Synaptics Edges"
+.TP 7
+.BI "Option \*qTopEdge\*q \*q" integer \*q
+Y coordinate for top edge. Property: "Synaptics Edges"
+.TP 7
+.BI "Option \*qBottomEdge\*q \*q" integer \*q
+Y coordinate for bottom edge. Property: "Synaptics Edges"
+.TP 7
+.BI "Option \*qFingerLow\*q \*q" integer \*q
+When finger pressure drops below this value, the driver counts it as a
+release. Property: "Synaptics Finger"
+.TP 7
+.BI "Option \*qFingerHigh\*q \*q" integer \*q
+When finger pressure goes above this value, the driver counts it as a
+touch. Property: "Synaptics Finger"
+.TP 7
+.BI "Option \*qFingerPress\*q \*q" integer \*q
+When finger pressure goes above this value, the driver counts it as a
+press.
+.
+Currently a press is equivalent to putting the touchpad in trackstick
+emulation mode. Property: "Synaptics Finger"
+.TP 7
+.BI "Option \*qMaxTapTime\*q \*q" integer \*q
+Maximum time (in milliseconds) for detecting a tap. Property: "Synaptics Tap
+Durations"
+.TP 7
+.BI "Option \*qMaxTapMove\*q \*q" integer \*q
+Maximum movement of the finger for detecting a tap. Property: "Synaptics Tap
+Move"
+.TP 7
+.BI "Option \*qMaxDoubleTapTime\*q \*q" integer \*q
+Maximum time (in milliseconds) for detecting a double tap. Property:
+"Synaptics Tap Durations"
+.TP 7
+.BI "Option \*qClickTime\*q \*q" integer \*q
+The duration of the mouse click generated by tapping. Property: "Synaptics Tap
+Durations"
+.TP 7
+.BI "Option \*qFastTaps\*q \*q" boolean \*q
+Makes the driver react faster to a single tap, but also makes double
+clicks caused by double tapping slower. Property: "Synaptics Tap FastTap"
+.TP 7
+.BI "Option \*qVertEdgeScroll\*q \*q" boolean \*q
+Enable vertical scrolling when dragging along the right edge. Property:
+"Synaptics Edge Scrolling"
+.TP 7
+.BI "Option \*qHorizEdgeScroll\*q \*q" boolean \*q
+Enable horizontal scrolling when dragging along the bottom edge. Property:
+"Synaptics Edge Scrolling"
+.TP 7
+.BI "Option \*qCornerCoasting\*q \*q" boolean \*q
+Enable edge scrolling to continue while the finger stays in an edge corner.
+Property: "Synaptics Edge Scrolling"
+.TP 7
+.BI "Option \*qVertTwoFingerScroll\*q \*q" boolean \*q
+Enable vertical scrolling when dragging with two fingers anywhere on
+the touchpad. Property: "Synaptics Two-Finger Scrolling"
+.TP 7
+.BI "Option \*qHorizTwoFingerScroll\*q \*q" boolean \*q
+Enable horizontal scrolling when dragging with two fingers anywhere on
+the touchpad. Property: "Synaptics Two-Finger Scrolling"
+.TP 7
+.BI "Option \*qVertScrollDelta\*q \*q" integer \*q
+Move distance of the finger for a scroll event. Property: "Synaptics Scrolling
+Distance"
+.TP 7
+.BI "Option \*qHorizScrollDelta\*q \*q" integer \*q
+Move distance of the finger for a scroll event. Property: "Synaptics Scrolling
+Distance"
+.TP 7
+.BI "Option \*qEdgeMotionMinZ\*q \*q" integer \*q
+Finger pressure at which minimum edge motion speed is set. Property:
+"Synaptics Edge Motion Pressure"
+.TP
+.BI "Option \*qEdgeMotionMaxZ\*q \*q" integer \*q
+Finger pressure at which maximum edge motion speed is set. Property:
+"Synaptics Edge Motion Pressure"
+.TP
+.BI "Option \*qEdgeMotionMinSpeed\*q \*q" integer \*q
+Slowest setting for edge motion speed. Property: "Synaptics Edge Motion Speed"
+.TP
+.BI "Option \*qEdgeMotionMaxSpeed\*q \*q" integer \*q
+Fastest setting for edge motion speed. Property: "Synaptics Edge Motion Speed"
+.TP
+.BI "Option \*qEdgeMotionUseAlways\*q \*q" boolean \*q
+If on, edge motion is also used for normal movements.
+.
+If off, egde motion is used only when dragging. Property: "Synaptics Edge
+Motion Always"
+.TP
+.BI "Option \*qMinSpeed\*q \*q" float \*q
+Minimum speed factor. Property: "Synaptics Move Speed"
+.TP
+.BI "Option \*qMaxSpeed\*q \*q" float \*q
+Maximum speed factor. Property: "Synaptics Move Speed"
+.TP
+.BI "Option \*qAccelFactor\*q \*q" float \*q
+Acceleration factor for normal pointer movements. Property: "Synaptics Move
+Speed"
+.TP
+.BI "Option \*qTrackstickSpeed\*q \*q" float \*q
+Speed scale when in trackstick emulation mode. Property: "Synaptics Move Speed"
+.TP
+.BI "Option \*qPressureMotionMinZ\*q \*q" integer \*q
+Finger pressure at which minimum pressure motion factor is applied. Property:
+"Synaptics Pressure Motion"
+.TP
+.BI "Option \*qPressureMotionMaxZ\*q \*q" integer \*q
+Finger pressure at which maximum pressure motion factor is applied.  Property:
+"Synaptics Pressure Motion"
+.TP
+.BI "Option \*qPressureMotionMinFactor\*q \*q" integer \*q
+Lowest setting for pressure motion factor. Property: "Synaptics Pressure
+Motion Factor"
+.TP
+.BI "Option \*qPressureMotionMaxFactor\*q \*q" integer \*q
+Greatest setting for pressure motion factor. Property: "Synaptics Pressure
+Motion Factor"
+.TP
+.BI "Option \*qHorizHysteresis\*q \*q" integer \*q
+The minimum horizontal HW distance required to generate motion events. Can be
+specified as a percentage. Increase if noise motion is a problem for you. Zero
+is disabled.
+Default: 0.5 percent of the diagonal or (in case of evdev) the appropriate
+"fuzz" as advertised by the device.
+.TP
+.BI "Option \*qVertHysteresis\*q \*q" integer \*q
+The minimum vertical HW distance required to generate motion events. See
+\fBHorizHysteresis\fR.
+.TP
+.BI "Option \*qUpDownScrolling\*q \*q" boolean \*q
+If on, the up/down buttons generate button 4/5 events.
+.
+If off, the up button generates a double click and the down button
+generates a button 2 event. This option is only available for touchpads with
+physical scroll buttons.
+Property: "Synaptics Button Scrolling"
+.TP
+.BI "Option \*qLeftRightScrolling\*q \*q" boolean \*q
+If on, the left/right buttons generate button 6/7 events.
+.
+If off, the left/right buttons both generate button 2 events.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling"
+.TP
+.BI "Option \*qUpDownScrollRepeat\*q \*q" boolean \*q
+If on, and the up/down buttons are used for scrolling
+(\fBUpDownScrolling\fR), these buttons will send auto-repeating 4/5 events,
+with the delay between repeats determined by \fBScrollButtonRepeat\fR.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling Repeat"
+.TP
+.BI "Option \*qLeftRightScrollRepeat\*q \*q" boolean \*q
+If on, and the left/right buttons are used for scrolling
+(\fBLeftRightScrolling\fR), these buttons will send auto-repeating 6/7 events,
+with the delay between repeats determined by \fBScrollButtonRepeat\fR.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling Repeat"
+.TP
+.BI "Option \*qScrollButtonRepeat\*q \*q" integer \*q
+The number of milliseconds between repeats of button events 4-7 from the
+up/down/left/right scroll buttons.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling Time"
+.TP
+.BI "Option \*qEmulateMidButtonTime\*q \*q" integer \*q
+Maximum time (in milliseconds) for middle button emulation. Property:
+"Synaptics Middle Button Timeout"
+.TP
+.BI "Option \*qEmulateTwoFingerMinZ\*q \*q" integer \*q
+For touchpads not capable of detecting multiple fingers but are capable
+of detecting finger pressure and width, this sets the
+Z pressure threshold.  When both Z pressure and W width thresholds
+are crossed, a two finger press will be emulated. This defaults
+to a value that disables emulation on touchpads with real two-finger detection
+and defaults to a value that enables emulation on remaining touchpads that
+support pressure and width support.
+Property: "Synaptics Two-Finger Pressure"
+.TP
+.BI "Option \*qEmulateTwoFingerMinW\*q \*q" integer \*q
+For touchpads not capable of detecting multiple fingers but are
+capable of detecting finger width and pressure, this sets the
+W width threshold.  When both W width and Z pressure thresholds
+are crossed, a two finger press will be emulated. This feature works best
+with (\fBPalmDetect\fR) off. Property: "Synaptics Two-Finger Width"
+.TP
+.BI "Option \*qTouchpadOff\*q \*q" integer \*q
+Switch off the touchpad.
+.
+Valid values are:
+.TS
+l l.
+0	Touchpad is enabled
+1	Touchpad is switched off
+2	Only tapping and scrolling is switched off
+.TE
+Property: "Synaptics Off"
+.TP
+.BI "Option \*qLockedDrags\*q \*q" boolean \*q
+If off, a tap-and-drag gesture ends when you release the finger.
+.
+If on, the gesture is active until you tap a second time, or until
+LockedDragTimeout expires. Property: "Synaptics Locked Drags"
+.TP
+.BI "Option \*qLockedDragTimeout\*q \*q" integer \*q
+This parameter specifies how long it takes (in milliseconds) for the
+LockedDrags mode to be automatically turned off after the finger is
+released from the touchpad. Property: "Synaptics Locked Drags Timeout"
+.TP
+.BI "Option \*qRTCornerButton\*q \*q" integer \*q
+.
+Which mouse button is reported on a right top corner tap.
+.
+Set to 0 to disable. Property: "Synaptics Tap Action"
+.TP
+.BI "Option \*qRBCornerButton\*q \*q" integer \*q
+Which mouse button is reported on a right bottom corner tap.
+.
+Set to 0 to disable. Property: "Synaptics Tap Action"
+.TP
+.BI "Option \*qLTCornerButton\*q \*q" integer \*q
+Which mouse button is reported on a left top corner tap.
+.
+Set to 0 to disable. Property: "Synaptics Tap Action"
+.TP
+.BI "Option \*qLBCornerButton\*q \*q" integer \*q
+Which mouse button is reported on a left bottom corner tap.
+.
+Set to 0 to disable. Property: "Synaptics Tap Action"
+.TP
+.BI "Option \*qTapButton1\*q \*q" integer \*q
+Which mouse button is reported on a non-corner one-finger tap.
+.
+Set to 0 to disable. Property: "Synaptics Tap Action"
+.TP
+.BI "Option \*qTapButton2\*q \*q" integer \*q
+Which mouse button is reported on a non-corner two-finger tap.
+.
+Set to 0 to disable. Property: "Synaptics Tap Action"
+.TP
+.BI "Option \*qTapButton3\*q \*q" integer \*q
+Which mouse button is reported on a non-corner three-finger tap.
+.
+Set to 0 to disable. Property: "Synaptics Tap Action"
+.TP
+.BI "Option \*qClickFinger1\*q \*q" integer \*q
+Which mouse button is reported when left-clicking with one finger.
+.
+Set to 0 to disable. Property: "Synaptics Click Action"
+.TP
+.BI "Option \*qClickFinger2\*q \*q" integer \*q
+Which mouse button is reported when left-clicking with two fingers.
+.
+Set to 0 to disable. Property: "Synaptics Click Action"
+.TP
+.BI "Option \*qClickFinger3\*q \*q" integer \*q
+Which mouse button is reported when left-clicking with three fingers.
+.
+Set to 0 to disable. Property: "Synaptics Click Action"
+.TP
+.BI "Option \*qCircularScrolling\*q \*q" boolean \*q
+If on, circular scrolling is used. Property: "Synaptics Circular Scrolling"
+.TP
+.BI "Option \*qCircScrollDelta\*q \*q" float \*q
+Move angle (radians) of finger to generate a scroll event. Property: "Synaptics
+Circular Scrolling Distance"
+.TP
+.BI "Option \*qCircScrollTrigger\*q \*q" integer \*q
+Trigger region on the touchpad to start circular scrolling
+.TS
+l l.
+0	All Edges
+1	Top Edge
+2	Top Right Corner
+3	Right Edge
+4	Bottom Right Corner
+5	Bottom Edge
+6	Bottom Left Corner
+7	Left Edge
+8	Top Left Corner
+.TE
+Property: "Synaptics Circular Scrolling Trigger"
+.TP
+.BI "Option \*qCircularPad\*q \*q" boolean \*q
+.
+Instead of being a rectangle, the edge is the ellipse enclosed by the
+Left/Right/Top/BottomEdge parameters.
+.
+For circular touchpads. Property: "Synaptics Circular Pad"
+.TP
+.BI "Option \*qPalmDetect\*q \*q" boolean \*q
+If palm detection should be enabled.
+.
+Note that this also requires hardware/firmware support from the
+touchpad. Property: "Synaptics Palm Detection"
+.TP
+.BI "Option \*qPalmMinWidth\*q \*q" integer \*q
+Minimum finger width at which touch is considered a palm. Property: "Synaptics
+Palm Dimensions"
+.TP
+.BI "Option \*qPalmMinZ\*q \*q" integer \*q
+Minimum finger pressure at which touch is considered a palm. Property:
+"Synaptics Palm Dimensions"
+.TP
+.BI "Option \*qCoastingSpeed\*q \*q" float \*q
+Your finger needs to produce this many scrolls per second in order to start
+coasting.  The default is 20 which should prevent you from starting coasting
+unintentionally.
+.
+0 disables coasting. Property: "Synaptics Coasting Speed"
+.TP
+.BI "Option \*qCoastingFriction\*q \*q" float \*q
+Number of scrolls/second² to decrease the coasting speed.  Default
+is 50.
+Property: "Synaptics Coasting Speed"
+.TP
+.BI "Option \*qSingleTapTimeout\*q \*q" integer \*q
+Timeout after a tap to recognize it as a single tap. Property: "Synaptics Tap
+Durations"
+.TP
+.BI "Option \*qGrabEventDevice\*q \*q" boolean \*q
+If GrabEventDevice is true, the driver will grab the event device for
+exclusive use when using the linux 2.6 event protocol.
+.
+When using other protocols, this option has no effect.
+.
+Grabbing the event device means that no other user space or kernel
+space program sees the touchpad events. 
+.
+This is desirable if the X config file includes /dev/input/mice as an
+input device, but is undesirable if you want to monitor the device
+from user space.
+.
+When changing this parameter with the synclient program, the change
+will not take effect until the synaptics driver is disabled and
+reenabled. 
+.
+This can be achieved by switching to a text console and then switching
+back to X.
+.
+.
+.TP
+.BI "Option \*qTapAndDragGesture\*q \*q" boolean \*q
+Switch on/off the tap-and-drag gesture.
+.
+This gesture is an alternative way of dragging.
+.
+It is performed by tapping (touching and releasing the finger), then
+touching again and moving the finger on the touchpad.
+.
+The gesture is enabled by default and can be disabled by setting the
+TapAndDragGesture option to false. Property: "Synaptics Gestures"
+.
+.TP
+.BI "Option \*qVertResolution\*q \*q" integer \*q
+Resolution of X coordinates in units/millimeter. The value is used
+together with HorizResolution to compensate unequal vertical and
+horizontal sensitivity. Setting VertResolution and HorizResolution
+equal values means no compensation. Default value is read from
+the touchpad or set to 1 if value could not be read.
+Property: "Synaptics Pad Resolution"
+.
+.TP
+.BI "Option \*qHorizResolution\*q \*q" integer \*q
+Resolution of Y coordinates in units/millimeter. The value is used
+together with VertResolution to compensate unequal vertical and
+horizontal sensitivity. Setting VertResolution and HorizResolution
+equal values means no compensation. Default value is read from
+the touchpad or set to 1 if value could not be read.
+Property: "Synaptics Pad Resolution"
+.
+.TP
+.BI "Option \*qAreaLeftEdge\*q \*q" integer \*q
+Ignore movements, scrolling and tapping which take place left of this edge.
+.
+The option is disabled by default and can be enabled by setting the
+AreaLeftEdge option to any integer value other than zero. If supported by the
+server (version 1.9 and later), the edge may be specified in percent of
+the total width of the touchpad. Property: "Synaptics Area"
+.
+.TP
+.BI "Option \*qAreaRightEdge\*q \*q" integer \*q
+Ignore movements, scrolling and tapping which take place right of this edge.
+.
+The option is disabled by default and can be enabled by setting the
+AreaRightEdge option to any integer value other than zero. If supported by the
+server (version 1.9 and later), the edge may be specified in percent of
+the total width of the touchpad. Property: "Synaptics Area"
+.
+.TP
+.BI "Option \*qAreaTopEdge\*q \*q" integer \*q
+Ignore movements, scrolling and tapping which take place above this edge.
+.
+The option is disabled by default and can be enabled by setting the
+AreaTopEdge option to any integer value other than zero. If supported by the
+server (version 1.9 and later), the edge may be specified in percent of
+the total height of the touchpad. Property: "Synaptics Area"
+.
+.TP
+.BI "Option \*qAreaBottomEdge\*q \*q" integer \*q
+Ignore movements, scrolling and tapping which take place below this edge.
+.
+The option is disabled by default and can be enabled by setting the
+AreaBottomEdge option to any integer value other than zero. If supported by the
+server (version 1.9 and later), the edge may be specified in percent of
+the total height of the touchpad. Property: "Synaptics Area"
+.
+
+.SH CONFIGURATION DETAILS
+.SS Area handling
+The LeftEdge, RightEdge, TopEdge and BottomEdge parameters are used to
+define the edge and corner areas of the touchpad.
+.
+The parameters split the touchpad area in 9 pieces, like this:
+.LP
+.TS
+l|l|lsls
+---
+|c|cw(5P)|c|l
+---
+|c|c|c|l
+|c|c|c|l
+|c|c|c|l
+---
+|c|c|c|l
+---
+|lsl|ll.
+	LeftEdge	RightEdge
+			Physical top edge
+1	2	3
+			TopEdge
+
+4	5	6
+
+			BottomEdge
+7	8	9
+			Physical bottom edge
+Physical left edge		Physical right edge
+.TE
+.LP
+Coordinates to the left of LeftEdge are part of the left edge (areas
+1, 4 and 7), coordinates to the left of LeftEdge and above TopEdge
+(area 1) are part of the upper left corner, etc.
+.PP
+A good way to find appropriate edge parameters is to enable the
+SHMConfig option and run "synclient \-m 1" to see the x/y coordinates
+corresponding to different positions on the touchpad.
+.PP
+The perceived physical edges may be adjusted with the AreaLeftEdge,
+AreaRightEdge, AreaTopEdge, and AreaBottomEdge options. If these values are
+set to something other than the physical edges, input in the space between
+the area edge and the respective physical edge is ignored. Note that this
+reduces the available space on the touchpad.
+.SS Tapping
+A tap event happens when the finger is touched and released in a time
+interval shorter than MaxTapTime, and the touch and release
+coordinates are less than MaxTapMove units apart.
+.
+A "touch" event happens when the Z value goes above FingerHigh, and an
+"untouch" event happens when the Z value goes below FingerLow.
+.
+.LP
+The MaxDoubleTapTime parameter has the same function as the MaxTapTime
+parameter, but for the second, third, etc tap in a tap sequence.
+.
+If you can't perform double clicks fast enough (for example, xmms
+depends on fast double clicks), try reducing this parameter.
+.
+If you can't get word selection to work in xterm (ie button down,
+button up, button down, move mouse), try increasing this parameter.
+.
+.LP
+The ClickTime parameter controls the delay between the button down and
+button up X events generated in response to a tap event.
+.
+A too long value can cause undesirable autorepeat in scroll bars and a
+too small value means that visual feedback from the gui application
+you are interacting with is harder to see.
+.
+For this parameter to have any effect, "FastTaps" has to be disabled.
+.SS Acceleration
+The MinSpeed, MaxSpeed and AccelFactor parameters control the pointer
+motion speed.
+.
+The speed value defines the scaling between touchpad coordinates and
+screen coordinates.
+.
+When moving the finger very slowly, the MinSpeed value is used, when
+moving very fast the MaxSpeed value is used.
+.
+When moving the finger at moderate speed, you get a pointer motion
+speed somewhere between MinSpeed and MaxSpeed.
+.
+If you don't want any acceleration, set MinSpeed and MaxSpeed to the
+same value.
+.
+.LP
+The MinSpeed, MaxSpeed and AccelFactor parameters don't have any
+effect on scrolling speed.
+.
+Scrolling speed is determined solely from the VertScrollDelta and
+HorizScrollDelta parameters.
+.
+To disable vertical or horizontal scrolling, set VertScrollDelta or
+HorizScrollDelta to zero.
+.
+.LP
+Acceleration is mostly handled outside the driver, thus the driver will
+translate MinSpeed into constant deceleration and adapt MaxSpeed at
+startup time. This ensures you can user the other acceleration profiles, albeit
+without pressure motion. However the numbers at runtime will likely be different
+from any options you may have set.
+
+.SS Pressure motion
+When pressure motion is activated, the cursor motion speed depends
+on the pressure exerted on the touchpad (the more pressure exerted on
+the touchpad, the faster the pointer).
+.
+More precisely the speed is first calculated according to MinSpeed,
+MaxSpeed and AccelFactor, and then is multiplied by a sensitivity
+factor.
+.
+.LP
+The sensitivity factor can be adjusted using the PressureMotion
+parameters.
+.
+If the pressure is below PressureMotionMinZ, PressureMotionMinFactor
+is used, and if the pressure is greater than PressureMotionMaxZ,
+PressureMotionMaxFactor is used.
+.
+By default, PressureMotionMinZ and PressureMotionMaxZ are equal to
+EdgeMotionMinZ and EdgeMotionMaxZ.
+.
+For a pressure value between PressureMotionMinZ and
+PressureMotionMaxZ, the factor is increased linearly.
+.
+.SS Edge motion
+When hitting an egde, movement can be automatically continued.
+.
+If EdgeMotionUseAlways is false, edge motion is only used when
+dragging.
+.
+With EdgeMotionUseAlways set to true, it is also used for normal
+cursor movements.
+.
+.LP
+Edge motion speed is calculated by taking into account the amount of
+pressure applied to the touchpad.
+.
+The sensitivity can be adjusted using the EdgeMotion parameters.
+.
+If the pressure is below EdgeMotionMinZ, EdgeMotionMinSpeed is used,
+and if the pressure is greater than EdgeMotionMaxZ, EdgeMotionMaxSpeed
+is used.
+.
+For a pressure value between EdgeMotionMinZ and EdgeMotionMaxZ, the
+speed is increased linearly.
+.
+.SS Middle button emulation
+Since most synaptics touchpad models don't have a button that
+corresponds to the middle button on a mouse, the driver can emulate
+middle mouse button events.
+.
+If you press both the left and right mouse buttons at almost the same
+time (no more than EmulateMidButtonTime milliseconds apart) the driver
+generates a middle mouse button event.
+.
+.SS Circular scrolling
+Circular scrolling acts like a scrolling wheel on the touchpad.
+.
+Scrolling is engaged when a drag starts in the given CircScrollTrigger
+region, which can be all edges, a particular side, or a particular
+corner.
+.
+Once scrolling is engaged, moving your finger in clockwise circles
+around the center of the touchpad will generate scroll down events and
+counter clockwise motion will generate scroll up events.
+.
+Lifting your finger will disengage circular scrolling.
+.
+Use tight circles near the center of the pad for fast scrolling and
+large circles for better control.
+.
+When used together with vertical scrolling, hitting the upper or lower
+right corner will seamlessly switch over from vertical to circular
+scrolling.
+
+.SS Coasting
+Coasting is enabled by setting the CoastingSpeed parameter to a
+non-zero value.
+.
+Coasting comes in two flavors: conventional (finger off) coasting, and
+corner (finger on) coasting.
+.LP
+Conventional coasting is enabled when coasting is enabled,
+and CornerCoasting is set to false.
+.
+When conventional coasting is enabled, horizontal/vertical scrolling
+can continue after the finger is released from the lower/right edge of
+the touchpad.
+.
+The driver computes the scrolling speed corresponding to the finger
+speed immediately before the finger leaves the touchpad.
+.
+If this scrolling speed is larger than the CoastingSpeed parameter
+(measured in scroll events per second), the scrolling will continue
+with the same speed in the same direction until the finger touches the
+touchpad again.
+.
+.LP
+Corner coasting is enabled when coasting is enabled, and
+CornerCoasting is set to true.
+.
+When corner coasting is enabled, edge scrolling can continue as long
+as the finger stays in a corner.
+.
+Coasting begins when the finger enters the corner, and continues until
+the finger leaves the corner.
+.
+CornerCoasting takes precedence over the seamless switch from edge
+scrolling to circular scrolling.  That is, if CornerCoasting is
+active, scrolling will stop, and circular scrolling will not start,
+when the finger leaves the corner.
+
+.SS Noise cancellation
+The synaptics has a built-in nose canellation based on hysteresis. This means
+that incoming coordinates actually shift a box of predefined dimensions such
+that it covers the incoming coordinate, and only the boxes own center is used
+as input. Obviously, the smaller the box the better, but the likelyhood of
+noise motion coming through also increases.
+
+.SS Trackstick mode
+Trackstick emulation mode is entered when pressing the finger hard on
+the touchpad.
+.
+The FingerPress parameter controls the minimum required finger
+pressure.
+.
+If the finger hasn't moved more than MaxTapMove after MaxTapTime has
+elapsed, trackstick mode is entered.
+.
+In this mode, moving the finger slightly in any direction gives a
+speed vector that moves the pointer.
+.
+The TrackstickSpeed parameter controls the ratio between pointer speed
+and finger movement distance.
+.
+Trackstick mode is exited when the finger pressure drops below
+FingerLow or when the finger is moved further than MaxTapMove away
+from the initial position.
+
+.SH "DEVICE PROPERTIES"
+Synaptics 1.0 and higher support input device properties if the driver is
+running on X server 1.6 or higher. On these driver versions, Option
+"SHMConfig" is not needed to enable run-time configuration. The synclient tool
+shipped with synaptics version 1.1 uses input device properties by default.
+.
+Properties supported:
+.TP 7
+.BI "Synaptics Edges"
+32 bit, 4 values, left, right, top, bottom.
+
+.TP 7
+.BI "Synaptics Finger"
+32 bit, 3 values, low, high, press.
+
+.TP 7
+.BI "Synaptics Tap Time"
+32 bit.
+
+.TP 7
+.BI "Synaptics Tap Move"
+32 bit.
+
+.TP 7
+.BI "Synaptics Tap Durations"
+32 bit, 3 values, single touch timeout, max tapping time for double taps,
+duration of a single click.
+
+.TP 7
+.BI "Synaptics Tap FastTap"
+8 bit (BOOL).
+
+.TP 7
+.BI "Synaptics Middle Button Timeout"
+32 bit.
+
+.TP 7
+.BI "Synaptics Two-Finger Pressure"
+32 bit.
+
+.TP 7
+.BI "Synaptics Two-Finger Width"
+32 bit.
+
+.TP 7
+.BI "Synaptics Scrolling Distance"
+32 bit, 2 values, vert, horiz.
+
+.TP 7
+.BI "Synaptics Edge Scrolling"
+8 bit (BOOL), 3 values, vertical, horizontal, corner.
+
+.TP 7
+.BI "Synaptics Two-Finger Scrolling"
+8 bit (BOOL), 2 values, vertical, horizontal.
+
+.TP 7
+.BI "Synaptics Move Speed"
+FLOAT, 4 values, min, max, accel, trackstick.
+
+.TP 7
+.BI "Synaptics Edge Motion Pressure"
+32 bit, 2 values, min, max.
+
+.TP 7
+.BI "Synaptics Edge Motion Speed"
+32 bit, 2 values, min, max.
+
+.TP 7
+.BI "Synaptics Edge Motion Always"
+8 bit (BOOL).
+
+.TP 7
+.BI "Synaptics Button Scrolling"
+8 bit (BOOL), 2 values, updown, leftright.
+
+.TP 7
+.BI "Synaptics Button Scrolling Repeat"
+8 bit (BOOL), 2 values, updown, leftright.
+
+.TP 7
+.BI "Synaptics Button Scrolling Time"
+32 bit.
+
+.TP 7
+.BI "Synaptics Off"
+8 bit, valid values (0, 1, 2).
+
+.TP 7
+.BI "Synaptics Locked Drags"
+8 bit (BOOL).
+
+.TP 7
+.BI "Synaptics Locked Drags Timeout"
+32 bit.
+
+.TP 7
+.BI "Synaptics Tap Action"
+8 bit, up to MAX_TAP values (see synaptics.h), 0 disables an element. order:
+RT, RB, LT, LB, F1, F2, F3.
+
+.TP 7
+.BI "Synaptics Click Action"
+8 bit, up to MAX_CLICK values (see synaptics.h), 0 disables an element.
+order: Finger 1, 2, 3.
+
+.TP 7
+.BI "Synaptics Circular Scrolling"
+8 bit (BOOL).
+
+.TP 7
+.BI "Synaptics Circular Scrolling Distance"
+FLOAT.
+
+.TP 7
+.BI "Synaptics Circular Scrolling Trigger"
+8 bit, valid values 0..8 (inclusive) order: any edge, top, top + right,
+right, right + bottom, bottom, bottom + left, left, left  + top.
+
+.TP 7
+.BI "Synaptics Circular Pad"
+8 bit (BOOL).
+
+.TP 7
+.BI "Synaptics Palm Detection"
+8 bit (BOOL).
+
+.TP 7
+.BI "Synaptics Palm Dimensions"
+32 bit, 2 values, width, z.
+
+.TP 7
+.BI "Synaptics Coasting Speed"
+FLOAT, 2 values, speed, friction.
+
+.TP 7
+.BI "Synaptics Pressure Motion"
+32 bit, 2 values, min, max.
+
+.TP 7
+.BI "Synaptics Pressure Motion Factor"
+FLOAT, 2 values, min, max.
+
+.TP 7
+.BI "Synaptics Grab Event Device"
+8 bit (BOOL).
+
+.TP 7
+.BI "Synaptics Gestures"
+8 bit (BOOL), 1 value, tap-and-drag.
+
+.TP 7
+.BI "Synaptics Area"
+The AreaLeftEdge, AreaRightEdge, AreaTopEdge and AreaBottomEdge parameters are used to
+define the edges of the active area of the touchpad. All movements, scrolling and tapping
+which take place outside of this area will be ignored. This property is disabled by
+default.
+
+32 bit, 4 values, left, right, top, bottom. 0 disables an element.
+
+.TP 7
+.BI "Synaptics Capabilities"
+This read-only property expresses the physical capability of the touchpad,
+most notably whether the touchpad hardware supports multi-finger tapping and
+scrolling.
+
+8 bit (BOOL), 7 values (read-only), has left button, has middle button, has
+right button, two-finger detection, three-finger detection, pressure detection, and finger/palm width detection.
+
+.TP 7
+.BI "Synaptics Pad Resolution"
+32 bit unsigned, 2 values (read-only), vertical, horizontal in units/millimeter.
+
+.SH "NOTES"
+There is an example hal policy file in
+.I ${sourcecode}/fdi/11-x11-synaptics.fdi
+which will enable the driver based on the information if the hardware
+is available. Feel free to copy it to
+.I /etc/hal/fdi/policy
+and customize it to your needs. You can pass custom options to the driver
+using x11_options properties. Note that this requires xorg-server-1.5 or
+higher.
+.LP
+If either of
+.BI "Protocol \*q" auto-dev \*q
+(default) or
+.BI "Protocol \*q" event \*q
+is used, the driver initializes defaults based on the capabilities reported by
+the kernel driver. Acceleration, edges and resolution are based on the dimensions
+reported by the kernel. If the kernel reports multi-finger detection, two-finger
+vertical scrolling is enabled, horizontal two-finger scrolling is disabled and
+edge scrolling is disabled. If no multi-finger capabilities are reported,
+edge scrolling is enabled for both horizontal and vertical scrolling.
+Tapping is disabled by default for touchpads with one or more physical buttons.
+To enable it you need to map tap actions to buttons. See the "TapButton1",
+"TapButton2" and "TapButton3" options.
+.LP
+Button mapping for physical buttons is handled in the server.
+If the device is switched to left-handed (an in-server mapping of physical
+buttons 1, 2, 3 to the logical buttons 3, 2, 1, respectively), both physical
+and TapButtons are affected. To counteract this, the TapButtons need to be set
+up in reverse order (TapButton1=3, TapButton2=1).
+
+.SH "REMOVED OPTIONS"
+The following options are no longer part of the driver configuration:
+.TP
+.BI "Option \*qRepeater\*q \*q" string \*q
+.TP
+.BI "Option \*qHistorySize\*q \*q" integer \*q
+.TP
+.BI "Option \*qSpecialScrollAreaRight\*q \*q" boolean \*q
+.TP
+.BI "Option \*qGuestMouseOff\*q \*q" boolean \*q
+
+.SH "AUTHORS"
+.LP
+Peter Osterlund <petero2@telia.com> and many others.
+.SH "SEE ALSO"
+.LP
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), synclient(__appmansuffix__), syndaemon(__appmansuffix__)

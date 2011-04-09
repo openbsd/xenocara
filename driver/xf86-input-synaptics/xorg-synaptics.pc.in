@@ -1,0 +1,6 @@
+sdkdir=@sdkdir@
+
+Name: synaptics
+Description: X.Org synaptics input driver.
+Version: @PACKAGE_VERSION@
+Cflags: -I${sdkdir}

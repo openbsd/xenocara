@@ -1,0 +1,116 @@
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH synclient __appmansuffix__ __vendorversion__
+.SH NAME
+.LP
+synclient \- commandline utility to query and modify Synaptics driver
+options.
+.SH "SYNOPSIS"
+.LP
+synclient [\fI\-m interval\fP]
+.br
+synclient [\fI\-hlV?\fP] [var1=value1 [var2=value2] ...]
+.SH "DESCRIPTION"
+.LP
+This program lets you change your Synaptics TouchPad driver for
+XOrg/XFree86 server parameters while X is running. 
+
+For the -m and -h options, SHM must be enabled by setting the option SHMConfig
+"on" in your XOrg/XFree86 configuration.
+.SH "OPTIONS"
+.LP
+.TP
+\fB\-m interval\fR
+monitor changes to the touchpad state.
+.
+Interval specifies how often (in ms) to poll the touchpad state.
+.
+Whenever a change in the touchpad state is detected, one line of
+output is generated that describes the current state of the touchpad.
+This option is only available in SHM mode.
+.
+The following data is included in the output.
+.RS
+.TP
+\fBtime\fR
+Time in seconds since the logging was started.
+.TP
+\fBx,y\fR
+The x/y coordinates of the finger on the touchpad.
+.
+The origin is in the upper left corner.
+.TP
+\fBz\fR
+The "pressure" value.
+.
+Pressing the finger harder on the touchpad typically produces a larger
+value.
+.
+Note that most touchpads don't measure the real pressure though.
+.
+Instead, capacitance is usually measured, which is correlated to the
+contact area between the finger and the touchpad.
+.
+Since more pressure usually means a larger contact area, the reported
+pressure value is at least indirectly related to the real pressure.
+.TP
+\fBf\fR
+The number of fingers currently touching the touchpad.
+.
+Note that only some touchpads can report more than one finger.
+.
+Generally, synaptics touchpads can, but ALPS touchpads can't.
+.TP
+\fBw\fR
+The w value is a measurement of the finger width.
+.
+This is only supported by some synaptics touchpads.
+.
+Touchpads that can't measure the finger width typically report a faked
+constant value when a finger is touching the touchpad.
+.TP
+\fBl,r,u,d,m,multi\fR
+The state of the left, right, up, down, middle and multi buttons.
+.
+Zero means not pressed, one means pressed.
+.
+Not all touchpads have all these buttons.
+.
+If a button doesn't exist, the value is always reported as 0.
+.RE
+.TP
+\fB\-l\fR
+List current user settings. This is the default if no option is given.
+.TP
+\fB\-V\fR
+Print version number and exit.
+.TP
+\fB\-?\fR
+Show the help message.
+.TP
+\fBvar=value\fR
+Set user parameter \fIvar\fR to \fIvalue\fR.
+
+
+.SH "FILES"
+.LP
+\fI/etc/X11/xorg.conf\fP
+.LP
+\fI/etc/X11/XF86Config\-4\fP
+.SH "EXAMPLES"
+.LP
+To disable EdgeMotionSpeed:
+.LP
+synclient EdgeMotionSpeed=0
+.LP
+To monitor touchpad events (requires SHM):
+.LP
+synclient \-m 100
+.SH "AUTHORS"
+.LP
+Peter Osterlund <petero2@telia.com> and many others.
+.TP
+This man page was written by Mattia Dongili <malattia@debian.org>
+.SH "SEE ALSO"
+.LP
+__xservername__(__appmansuffix__), syndaemon(__appmansuffix__), synaptics(__drivermansuffix__)

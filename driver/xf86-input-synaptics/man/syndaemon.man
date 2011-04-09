@@ -1,0 +1,78 @@
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH syndaemon __appmansuffix__ __vendorversion__
+.SH NAME
+.LP
+syndaemon \- a program that monitors keyboard activity and disables
+the touchpad when the keyboard is being used.
+.SH "SYNOPSIS"
+.LP
+syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
+[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP] [\fI\-s\fP]
+.SH "DESCRIPTION"
+.LP
+Disabling the touchpad while typing avoids unwanted movements of the
+pointer that could lead to giving focus to the wrong window.
+.
+.SH "OPTIONS"
+.LP
+.TP
+\fB\-i\fR <\fIidle\-time\fP>
+How many seconds to wait after the last key press before enabling the
+touchpad.
+.
+(default is 2.0s). 
+.LP
+.TP
+\fB\-d\fP
+Start as a daemon, ie in the background.
+.LP
+.TP
+\fB\-p\fR <\fIpid\-file\fP>
+Create a pid file with the specified filename.
+.
+A pid file will only be created if the program is started in daemon
+mode.
+.LP
+.TP
+\fB\-t\fP
+Only disable tapping and scrolling, not mouse movements, in response
+to keyboard activity.
+.LP
+.TP
+\fB\-k\fP
+Ignore modifier keys when monitoring keyboard activity.
+.LP
+.TP
+\fB\-K\fP
+Like \-k but also ignore Modifier+Key combos.
+.LP
+.TP
+\fB\-R\fP
+Use the XRecord extension for detecting keyboard activity instead of polling
+the keyboard state.
+.LP
+.TP
+\fB\-s\fP
+Use a shared memory area to enable/disable the touchpad instead of device
+properties. WARNING: The SHM mechanism is not secure if you are in an untrusted multiuser
+environment. All local users can change the parameters at any time. This
+option requires the driver Option "SHMConfig" to be enabled.
+.SH "ENVIRONMENT VARIABLES"
+.LP
+.TP
+\fBDISPLAY\fP
+Specifies the X server to contact.
+.SH "CAVEATS"
+.LP
+It doesn't make much sense to connect to a remote X server, because
+the daemon will then monitor the remote server for keyboard activity,
+but will disable the touchpad on the local machine.
+.SH "AUTHORS"
+.LP
+Peter Osterlund <petero2@telia.com>.
+.TP
+This man page was written by Mattia Dongili <malattia@debian.org>
+.SH "SEE ALSO"
+.LP
+__xservername__(__appmansuffix__), synclient(__appmansuffix__), synaptics(__drivermansuffix__)
