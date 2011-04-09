@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.159 2011/03/20 17:33:33 matthieu Exp $
+ $OpenBSD: MODULES,v 1.160 2011/04/09 14:54:04 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -72,7 +72,7 @@ app/xmore		1.0.2	7.5+
 app/xpr			1.0.3	7.5
 app/xprop		1.2.0	7.6
 app/xrandr		1.3.4	7.6
-app/xrdb		1.0.8	7.6+	needs-update
+app/xrdb		1.0.9	7.6+
 app/xrefresh		1.0.4	7.6
 app/xset		1.2.1	7.6
 app/xsetroot		1.1.0	7.6
@@ -88,7 +88,7 @@ data/bitmaps		1.1.1	7.6
 data/xkbdata		1.0.1	7.0	deprecated
 
 doc/xorg-docs		1.6	7.6	needs-update
-doc/xorg-sgml-doctools	1.6	7.6	needs-update
+doc/xorg-sgml-doctools	1.7	7.6+	needs-update
 
 driver/xf86-input-acecad	1.4.0	7.4+
 driver/xf86-input-citron	2.2.2	7.4	needs-release
@@ -104,7 +104,7 @@ driver/xf86-input-vmmouse	12.6.10	7.6
 driver/xf86-input-void		1.3.1	7.6
 driver/xf86-video-apm		1.2.3	7.6
 driver/xf86-video-ark		0.7.3	7.5+
-driver/xf86-video-ati		6.14	7.6+	needs-update
+driver/xf86-video-ati		6.14.1	7.6+	needs-update
 driver/xf86-video-chips		1.2.4	7.6+	needs-update
 driver/xf86-video-cirrus	1.3.2	7.4	
 driver/xf86-video-dummy		0.3.4	7.5+
@@ -176,7 +176,7 @@ font/xfree86-type1		1.0.3
 lib/libFS			1.0.3	7.6
 lib/libICE			1.0.6	7.5
 lib/libSM			1.2.0	7.6
-lib/libX11			1.4.2	7.6+	needs-update
+lib/libX11			1.4.3	7.6+	needs-update
 lib/libXRes			1.0.5	7.6
 lib/libXScrnSaver		1.2.1	7.6
 lib/libXau			1.0.6	7.6
@@ -196,7 +196,7 @@ lib/libXmu			1.1.0	7.6
 lib/libXpm			3.5.9	7.6
 lib/libXrandr			1.3.1	7.6
 lib/libXrender			0.9.6	7.5+
-lib/libXt			1.1.0	7.6+	needs-update
+lib/libXt			1.1.1	7.6+	needs-update
 lib/libXtst			1.2.0	7.6
 lib/libXv			1.0.6	7.6
 lib/libXvMC			1.0.6	7.6
@@ -232,7 +232,7 @@ proto/renderproto		0.11.1	7.6
 proto/resourceproto		1.1.1	7.6
 proto/scrnsaverproto		1.2.1	7.6
 proto/videoproto		2.3.1	7.6
-proto/x11proto			7.0.20	7.6
+proto/x11proto			7.0.21	7.6+	needs-update
 proto/xcb-proto			1.6	7.5+
 proto/xcmiscproto		1.2.1	7.6
 proto/xextproto			7.2.0	7.6+	needs-update
@@ -243,7 +243,7 @@ proto/xf86miscproto		0.9.3	7.5
 proto/xf86vidmodeproto		2.3.1	7.6
 proto/xineramaproto		1.2.1	7.6
 
-util/cf				1.0.4	7.6	needs-update
+util/cf				1.0.4	7.6
 util/gccmakedep			1.0.2
 util/imake			1.0.4	7.6
 util/macros			1.13.0	7.6+
