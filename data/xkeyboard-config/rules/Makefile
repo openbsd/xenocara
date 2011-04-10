@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile,v 1.3 2011/01/10 14:42:48 shadchin Exp $
+#	$OpenBSD: Makefile,v 1.4 2011/04/10 17:10:21 jasper Exp $
 
-SUBDIR=		compat extras
+SUBDIR=		compat
 
 XKB_SUBDIR=	rules
 
