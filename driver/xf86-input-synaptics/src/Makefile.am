@@ -32,10 +32,14 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(XORG_CFLAGS)
 
 @DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c synapticsstr.h \
-	alpscomm.c alpscomm.h \
-	ps2comm.c ps2comm.h \
 	synproto.h \
 	properties.c
+
+if BUILD_PS2COMM
+@DRIVER_NAME@_drv_la_SOURCES += \
+	alpscomm.c \
+	ps2comm.c ps2comm.h
+endif
 
 if BUILD_EVENTCOMM
 @DRIVER_NAME@_drv_la_SOURCES += \
@@ -47,3 +51,7 @@ if BUILD_PSMCOMM
 	psmcomm.c
 endif
 
+if BUILD_WSCONSCOMM
+@DRIVER_NAME@_drv_la_SOURCES += \
+	wsconscomm.c
+endif

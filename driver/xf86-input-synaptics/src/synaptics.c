@@ -130,10 +130,31 @@ static Bool QueryHardware(InputInfoPtr);
 static void ReadDevDimensions(InputInfoPtr);
 static void ScaleCoordinates(SynapticsPrivate *priv, struct SynapticsHwState *hw);
 static void CalculateScalingCoeffs(SynapticsPrivate *priv);
+static void SanitizeDimensions(InputInfoPtr pInfo);
 
 void InitDeviceProperties(InputInfoPtr pInfo);
 int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
                 BOOL checkonly);
+
+const static struct {
+    const char *name;
+    struct SynapticsProtocolOperations *proto_ops;
+} protocols[] = {
+#ifdef BUILD_EVENTCOMM
+    {"event", &event_proto_operations},
+#endif
+#ifdef BUILD_PSMCOMM
+    {"psm", &psm_proto_operations},
+#endif
+#ifdef BUILD_PS2COMM
+    {"psaux", &psaux_proto_operations},
+    {"alps", &alps_proto_operations},
+#endif
+#ifdef BUILD_WSCONSCOMM
+    {"wscons", &wscons_proto_operations},
+#endif
+    {NULL, NULL}
+};
 
 InputDriverRec SYNAPTICS = {
     1,
@@ -183,8 +204,8 @@ _X_EXPORT XF86ModuleData synapticsModuleData = {
  * The default values 1900, etc. come from the dawn of time, when men where
  * men, or possibly apes.
  */
-void
-SynapticsDefaultDimensions(InputInfoPtr pInfo)
+static void
+SanitizeDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
 
@@ -203,7 +224,7 @@ SynapticsDefaultDimensions(InputInfoPtr pInfo)
     {
 	priv->miny = 1729;
 	priv->maxy = 4171;
-	priv->resx = 0;
+	priv->resy = 0;
 
 	xf86Msg(X_PROBED,
 		"%s: invalid y-axis range.  defaulting to %d - %d\n",
@@ -234,61 +255,24 @@ SynapticsDefaultDimensions(InputInfoPtr pInfo)
 static void
 SetDeviceAndProtocol(InputInfoPtr pInfo)
 {
-    char *str_par, *device;
     SynapticsPrivate *priv = pInfo->private;
-    enum SynapticsProtocol proto = SYN_PROTO_PSAUX;
+    char *proto, *device;
+    int i;
 
+    proto = xf86SetStrOption(pInfo->options, "Protocol", NULL);
     device = xf86SetStrOption(pInfo->options, "Device", NULL);
-    if (!device) {
-	device = xf86SetStrOption(pInfo->options, "Path", NULL);
-	if (device) {
-	    pInfo->options =
-	    	xf86ReplaceStrOption(pInfo->options, "Device", device);
-	}
+    for (i = 0; protocols[i].name; i++) {
+        if ((!device || !proto) &&
+            protocols[i].proto_ops->AutoDevProbe &&
+            protocols[i].proto_ops->AutoDevProbe(pInfo, device))
+            break;
+        else if (proto && !strcmp(proto, protocols[i].name))
+            break;
     }
-    if (device && strstr(device, "/dev/input/event")) {
-#ifdef BUILD_EVENTCOMM
-	proto = SYN_PROTO_EVENT;
-#endif
-    } else {
-	str_par = xf86FindOptionValue(pInfo->options, "Protocol");
-	if (str_par && !strcmp(str_par, "psaux")) {
-	    /* Already set up */
-#ifdef BUILD_EVENTCOMM
-	} else if (str_par && !strcmp(str_par, "event")) {
-	    proto = SYN_PROTO_EVENT;
-#endif /* BUILD_EVENTCOMM */
-#ifdef BUILD_PSMCOMM
-	} else if (str_par && !strcmp(str_par, "psm")) {
-	    proto = SYN_PROTO_PSM;
-#endif /* BUILD_PSMCOMM */
-	} else if (str_par && !strcmp(str_par, "alps")) {
-	    proto = SYN_PROTO_ALPS;
-	} else { /* default to auto-dev */
-#ifdef BUILD_EVENTCOMM
-	    if (!device && event_proto_operations.AutoDevProbe(pInfo))
-		proto = SYN_PROTO_EVENT;
-#endif
-	}
-    }
-    switch (proto) {
-    case SYN_PROTO_PSAUX:
-	priv->proto_ops = &psaux_proto_operations;
-	break;
-#ifdef BUILD_EVENTCOMM
-    case SYN_PROTO_EVENT:
-	priv->proto_ops = &event_proto_operations;
-	break;
-#endif /* BUILD_EVENTCOMM */
-#ifdef BUILD_PSMCOMM
-    case SYN_PROTO_PSM:
-	priv->proto_ops = &psm_proto_operations;
-	break;
-#endif /* BUILD_PSMCOMM */
-    case SYN_PROTO_ALPS:
-	priv->proto_ops = &alps_proto_operations;
-	break;
-    }
+    free(proto);
+    free(device);
+
+    priv->proto_ops = protocols[i].proto_ops;
 }
 
 /*
@@ -444,7 +428,6 @@ static void set_default_parameters(InputInfoPtr pInfo)
      * If the range was autodetected, apply these edge widths to all four
      * sides.
      */
-    SynapticsDefaultDimensions(pInfo);
 
     width = abs(priv->maxx - priv->minx);
     height = abs(priv->maxy - priv->miny);
@@ -470,17 +453,12 @@ static void set_default_parameters(InputInfoPtr pInfo)
     fingerLow = priv->minp + range * (25.0/256);
     fingerHigh = priv->minp + range * (30.0/256);
     fingerPress = priv->minp + range * 1.000;
+    emulateTwoFingerMinZ = priv->minp + range * (282.0/256);
     edgeMotionMinZ = priv->minp + range * (30.0/256);
     edgeMotionMaxZ = priv->minp + range * (160.0/256);
     pressureMotionMinZ = priv->minp + range * (30.0/256);
     pressureMotionMaxZ = priv->minp + range * (160.0/256);
     palmMinZ = priv->minp + range * (200.0/256);
-
-    /* Enable emulation when hw supports both pressure and width. */
-    if (!priv->has_double && priv->has_width)
-	emulateTwoFingerMinZ = fingerHigh;
-    else
-	emulateTwoFingerMinZ = priv->minp + range * (282.0/256);
 
     range = priv->maxw - priv->minw;
 
@@ -714,6 +692,10 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     /* may change pInfo->options */
     SetDeviceAndProtocol(pInfo);
+    if (priv->proto_ops == NULL) {
+        xf86Msg(X_ERROR, "Synaptics driver unable to detect protocol\n");
+        goto SetupProc_fail;
+    }
 
     /* open the touchpad device */
     pInfo->fd = xf86OpenSerial(pInfo->options);
@@ -844,7 +826,6 @@ DeviceOn(DeviceIntPtr dev)
 
     DBG(3, "Synaptics DeviceOn called\n");
 
-    SetDeviceAndProtocol(pInfo);
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd == -1) {
 	xf86Msg(X_WARNING, "%s: cannot open input device\n", pInfo->name);
@@ -1255,8 +1236,7 @@ static Bool
 SynapticsGetHwState(InputInfoPtr pInfo, SynapticsPrivate *priv,
 		    struct SynapticsHwState *hw)
 {
-    return priv->proto_ops->ReadHwState(pInfo, priv->proto_ops,
-					&priv->comm, hw);
+    return priv->proto_ops->ReadHwState(pInfo, &priv->comm, hw);
 }
 
 /*
@@ -2613,6 +2593,8 @@ ReadDevDimensions(InputInfoPtr pInfo)
 
     if (priv->proto_ops->ReadDevDimensions)
 	priv->proto_ops->ReadDevDimensions(pInfo);
+
+    SanitizeDimensions(pInfo);
 }
 
 static Bool

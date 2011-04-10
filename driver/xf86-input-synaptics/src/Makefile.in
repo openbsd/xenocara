@@ -56,11 +56,18 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@BUILD_EVENTCOMM_TRUE@am__append_1 = \
+@BUILD_PS2COMM_TRUE@am__append_1 = \
+@BUILD_PS2COMM_TRUE@	alpscomm.c \
+@BUILD_PS2COMM_TRUE@	ps2comm.c ps2comm.h
+
+@BUILD_EVENTCOMM_TRUE@am__append_2 = \
 @BUILD_EVENTCOMM_TRUE@	eventcomm.c eventcomm.h
 
-@BUILD_PSMCOMM_TRUE@am__append_2 = \
+@BUILD_PSMCOMM_TRUE@am__append_3 = \
 @BUILD_PSMCOMM_TRUE@	psmcomm.c
+
+@BUILD_WSCONSCOMM_TRUE@am__append_4 = \
+@BUILD_WSCONSCOMM_TRUE@	wsconscomm.c
 
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -82,12 +89,15 @@ am__installdirs = "$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)"
 LTLIBRARIES = $(@DRIVER_NAME@_drv_la_LTLIBRARIES)
 @DRIVER_NAME@_drv_la_LIBADD =
 am__@DRIVER_NAME@_drv_la_SOURCES_DIST = @DRIVER_NAME@.c synapticsstr.h \
-	alpscomm.c alpscomm.h ps2comm.c ps2comm.h synproto.h \
-	properties.c eventcomm.c eventcomm.h psmcomm.c
-@BUILD_EVENTCOMM_TRUE@am__objects_1 = eventcomm.lo
-@BUILD_PSMCOMM_TRUE@am__objects_2 = psmcomm.lo
-am_@DRIVER_NAME@_drv_la_OBJECTS = @DRIVER_NAME@.lo alpscomm.lo \
-	ps2comm.lo properties.lo $(am__objects_1) $(am__objects_2)
+	synproto.h properties.c alpscomm.c ps2comm.c ps2comm.h \
+	eventcomm.c eventcomm.h psmcomm.c wsconscomm.c
+@BUILD_PS2COMM_TRUE@am__objects_1 = alpscomm.lo ps2comm.lo
+@BUILD_EVENTCOMM_TRUE@am__objects_2 = eventcomm.lo
+@BUILD_PSMCOMM_TRUE@am__objects_3 = psmcomm.lo
+@BUILD_WSCONSCOMM_TRUE@am__objects_4 = wsconscomm.lo
+am_@DRIVER_NAME@_drv_la_OBJECTS = @DRIVER_NAME@.lo properties.lo \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4)
 @DRIVER_NAME@_drv_la_OBJECTS = $(am_@DRIVER_NAME@_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -121,8 +131,12 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BUILD_EVENTCOMM_FALSE = @BUILD_EVENTCOMM_FALSE@
 BUILD_EVENTCOMM_TRUE = @BUILD_EVENTCOMM_TRUE@
+BUILD_PS2COMM_FALSE = @BUILD_PS2COMM_FALSE@
+BUILD_PS2COMM_TRUE = @BUILD_PS2COMM_TRUE@
 BUILD_PSMCOMM_FALSE = @BUILD_PSMCOMM_FALSE@
 BUILD_PSMCOMM_TRUE = @BUILD_PSMCOMM_TRUE@
+BUILD_WSCONSCOMM_FALSE = @BUILD_WSCONSCOMM_FALSE@
+BUILD_WSCONSCOMM_TRUE = @BUILD_WSCONSCOMM_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -148,6 +162,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_UNIT_TESTS_FALSE = @ENABLE_UNIT_TESTS_FALSE@
+ENABLE_UNIT_TESTS_TRUE = @ENABLE_UNIT_TESTS_TRUE@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
@@ -261,8 +277,8 @@ target_alias = @target_alias@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(XORG_CFLAGS)
 @DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c synapticsstr.h \
-	alpscomm.c alpscomm.h ps2comm.c ps2comm.h synproto.h \
-	properties.c $(am__append_1) $(am__append_2)
+	synproto.h properties.c $(am__append_1) $(am__append_2) \
+	$(am__append_3) $(am__append_4)
 all: all-am
 
 .SUFFIXES:
@@ -338,6 +354,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/properties.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ps2comm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/psmcomm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wsconscomm.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

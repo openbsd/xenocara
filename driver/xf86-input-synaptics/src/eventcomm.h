@@ -29,9 +29,15 @@
 
 #include <linux/input.h>
 #include <linux/version.h>
+#include <xf86Xinput.h>
+#include "synproto.h"
 
 /* for auto-dev: */
 #define DEV_INPUT_EVENT "/dev/input"
 #define EVENT_DEV_NAME "event"
+
+extern Bool
+EventReadHwState(InputInfoPtr pInfo,
+		 struct CommData *comm, struct SynapticsHwState *hwRet);
 
 #endif /* _EVENTCOMM_H_ */

@@ -52,13 +52,6 @@
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
-struct SynapticsHwInfo {
-    unsigned int model_id;		    /* Model-ID */
-    unsigned int capabilities;		    /* Capabilities */
-    unsigned int ext_cap;		    /* Extended Capabilities */
-    unsigned int identity;		    /* Identification */
-};
-
 /*
  * Identify Touchpad
  * See also the SYN_ID_* macros
@@ -110,7 +103,7 @@ PSMQueryIsSynaptics(InputInfoPtr pInfo)
 }
 
 static void
-convert_hw_info(const synapticshw_t *psm_ident, struct SynapticsHwInfo *synhw)
+convert_hw_info(const synapticshw_t *psm_ident, struct PS2SynapticsHwInfo *synhw)
 {
     memset(synhw, 0, sizeof(*synhw));
     synhw->model_id = ((psm_ident->infoRot180 << 23) |
@@ -137,14 +130,14 @@ static Bool
 PSMQueryHardware(InputInfoPtr pInfo)
 {
     synapticshw_t psm_ident;
-    struct SynapticsHwInfo *synhw;
+    struct PS2SynapticsHwInfo *synhw;
     SynapticsPrivate *priv;
 
     priv = (SynapticsPrivate *)pInfo->private;
 
     if(!priv->proto_data)
-        priv->proto_data = calloc(1, sizeof(struct SynapticsHwInfo));
-    synhw = (struct SynapticsHwInfo*)priv->proto_data;
+        priv->proto_data = calloc(1, sizeof(struct PS2SynapticsHwInfo));
+    synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
     if (!PSMQueryIsSynaptics(pInfo))
@@ -164,15 +157,9 @@ PSMQueryHardware(InputInfoPtr pInfo)
 
 static Bool
 PSMReadHwState(InputInfoPtr pInfo,
-	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
-    return psaux_proto_operations.ReadHwState(pInfo, proto_ops, comm, hwRet);
-}
-
-static Bool PSMAutoDevProbe(InputInfoPtr pInfo)
-{
-    return FALSE;
+    return PS2ReadHwStateProto(pInfo, &psm_proto_operations, comm, hwRet);
 }
 
 struct SynapticsProtocolOperations psm_proto_operations = {
@@ -180,6 +167,6 @@ struct SynapticsProtocolOperations psm_proto_operations = {
     NULL,
     PSMQueryHardware,
     PSMReadHwState,
-    PSMAutoDevProbe,
-    SynapticsDefaultDimensions
+    NULL,
+    NULL
 };

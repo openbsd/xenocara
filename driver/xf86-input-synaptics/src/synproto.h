@@ -67,40 +67,30 @@ struct CommData {
     Bool threeFingers;
 };
 
-enum SynapticsProtocol {
-    SYN_PROTO_PSAUX,		/* Raw psaux device */
-#ifdef BUILD_EVENTCOMM
-    SYN_PROTO_EVENT,		/* Linux kernel event interface */
-#endif /* BUILD_EVENTCOMM */
-#ifdef BUILD_PSMCOMM
-    SYN_PROTO_PSM,		/* FreeBSD psm driver */
-#endif /* BUILD_PSMCOMM */
-    SYN_PROTO_ALPS		/* ALPS touchpad protocol */
-};
-
 struct _SynapticsParameters;
-struct SynapticsHwInfo;
-struct CommData;
 
 struct SynapticsProtocolOperations {
     void (*DeviceOnHook)(InputInfoPtr pInfo, struct _SynapticsParameters *para);
     void (*DeviceOffHook)(InputInfoPtr pInfo);
     Bool (*QueryHardware)(InputInfoPtr pInfo);
     Bool (*ReadHwState)(InputInfoPtr pInfo,
-			struct SynapticsProtocolOperations *proto_ops,
 			struct CommData *comm, struct SynapticsHwState *hwRet);
-    Bool (*AutoDevProbe)(InputInfoPtr pInfo);
+    Bool (*AutoDevProbe)(InputInfoPtr pInfo, const char *device);
     void (*ReadDevDimensions)(InputInfoPtr pInfo);
 };
 
+#ifdef BUILD_PS2COMM
 extern struct SynapticsProtocolOperations psaux_proto_operations;
+extern struct SynapticsProtocolOperations alps_proto_operations;
+#endif /* BUILD_PS2COMM */
 #ifdef BUILD_EVENTCOMM
 extern struct SynapticsProtocolOperations event_proto_operations;
 #endif /* BUILD_EVENTCOMM */
 #ifdef BUILD_PSMCOMM
 extern struct SynapticsProtocolOperations psm_proto_operations;
 #endif /* BUILD_PSMCOMM */
-extern struct SynapticsProtocolOperations alps_proto_operations;
-
+#ifdef BUILD_WSCONSCOMM
+extern struct SynapticsProtocolOperations wscons_proto_operations;
+#endif /* BUILD_WSCONSCOMM */
 
 #endif /* _SYNPROTO_H_ */

@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-synaptics],
-        [1.4.0],
+        [1.4.99],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-synaptics])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -38,11 +38,12 @@ AM_MAINTAINER_MODE
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
-# Initialize X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+# Initialize X.Org macros 1.13 or later for XORG_ENABLE_UNIT_TESTS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.8)
+          [m4_fatal([must install xorg-macros 1.13 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.13)
 XORG_DEFAULT_OPTIONS
+XORG_ENABLE_UNIT_TESTS
 
 # Checks for libraries.
 AC_CHECK_LIB([m], [rint])
@@ -98,21 +99,39 @@ AM_CONDITIONAL(DEBUG, [test "x$DEBUGGING" = xyes])
 AC_MSG_CHECKING([which optional backends will be build])
 case "${host}" in
 *linux*)
-	AC_MSG_RESULT([eventcomm])
+	AC_MSG_RESULT([ps2comm alpscomm eventcomm])
+	BUILD_PS2COMM="yes"
 	BUILD_EVENTCOMM="yes"
-	AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
 	;;
-*freebsd* | *openbsd* | *netbsd* | *dragonfly*)
-	AC_MSG_RESULT([psmcomm])
+*freebsd* | *netbsd* | *dragonfly*)
+	AC_MSG_RESULT([ps2comm alpscomm psmcomm])
+	BUILD_PS2COMM="yes"
 	BUILD_PSMCOMM="yes"
-	AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
+	;;
+*openbsd*)
+	AC_MSG_RESULT([wsconscomm])
+	BUILD_WSCONSCOMM="yes"
 	;;
 *)
 	AC_MSG_RESULT([none])
 	;;
 esac
+if test "x$BUILD_EVENTCOMM" = xyes; then
+    AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
+fi
+if test "x$BUILD_PSMCOMM" = xyes; then
+    AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
+fi
+if test "x$BUILD_PS2COMM" = xyes; then
+    AC_DEFINE(BUILD_PS2COMM, 1, [Optional backend ps2comm and alpscomm enabled])
+fi
+if test "x$BUILD_WSCONSCOMM" = xyes; then
+    AC_DEFINE(BUILD_WSCONSCOMM, 1, [Optional backend wsconscomm enabled])
+fi
 AM_CONDITIONAL([BUILD_EVENTCOMM], [test "x${BUILD_EVENTCOMM}" = "xyes"])
 AM_CONDITIONAL([BUILD_PSMCOMM], [test "x${BUILD_PSMCOMM}" = "xyes"])
+AM_CONDITIONAL([BUILD_PS2COMM], [test "x${BUILD_PS2COMM}" = "xyes"])
+AM_CONDITIONAL([BUILD_WSCONSCOMM], [test "x${BUILD_WSCONSCOMM}" = "xyes"])
 
 # -----------------------------------------------------------------------------
 #			Dependencies for synclient and syndaemon
@@ -139,6 +158,7 @@ AC_CONFIG_FILES([Makefile
                 tools/Makefile
                 conf/Makefile
                 include/Makefile
+                test/Makefile
                 xorg-synaptics.pc])
 AC_OUTPUT
 

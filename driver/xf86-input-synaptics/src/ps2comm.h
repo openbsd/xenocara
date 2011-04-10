@@ -94,10 +94,17 @@
 
 typedef unsigned char byte;
 
+struct PS2SynapticsHwInfo {
+    unsigned int model_id;		/* Model-ID */
+    unsigned int capabilities;		/* Capabilities */
+    unsigned int ext_cap;		/* Extended Capabilities */
+    unsigned int identity;		/* Identification */
+};
 
 Bool ps2_putbyte(int fd, byte b);
-
-struct SynapticsHwInfo;
-void ps2_print_ident(const struct SynapticsHwInfo *synhw);
+void ps2_print_ident(const struct PS2SynapticsHwInfo *synhw);
+Bool PS2ReadHwStateProto(InputInfoPtr pInfo,
+			struct SynapticsProtocolOperations *proto_ops,
+			struct CommData *comm, struct SynapticsHwState *hwRet);
 
 #endif /* _PS2COMM_H_ */

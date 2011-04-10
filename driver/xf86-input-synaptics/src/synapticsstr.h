@@ -243,7 +243,4 @@ typedef struct _SynapticsPrivateRec
     enum TouchpadModel model;          /* The detected model */
 } SynapticsPrivate;
 
-
-extern void SynapticsDefaultDimensions(InputInfoPtr pInfo);
-
 #endif /* _SYNAPTICSSTR_H_ */
