@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2011/04/10 17:10:21 jasper Exp $
+#	$OpenBSD: Makefile,v 1.5 2011/04/10 18:15:28 shadchin Exp $
 
 SUBDIR=		compat
 
@@ -14,16 +14,16 @@ BASE_PARTS=	base.hdr.part base.lists.part \
 		HDR base.o_k.part \
 		HDR base.ml_g.part \
 		HDR base.m_g.part \
-		HDR compat/base.mlv_s.part    extras/base.mlv_s.part   base.mlv_s.part \
-		HDR compat/base.ml_s.part     extras/base.ml_s.part    base.ml_s.part  \
-		HDR compat/base.ml1_s.part    extras/base.ml1_s.part   base.ml1_s.part \
-		HDR compat/base.ml1v1_s.part  extras/base.ml1v1_s.part \
-		HDR compat/base.ml2_s.part    extras/base.ml2_s.part   base.ml2_s.part  \
-		HDR compat/base.ml3_s.part    extras/base.ml3_s.part   base.ml3_s.part  \
-		HDR compat/base.ml4_s.part    extras/base.ml4_s.part   base.ml4_s.part  \
-		HDR compat/base.ml2v2_s.part  extras/base.ml2v2_s.part \
-		HDR compat/base.ml3v3_s.part  extras/base.ml3v3_s.part \
-		HDR compat/base.ml4v4_s.part  extras/base.ml4v4_s.part \
+		HDR compat/base.mlv_s.part    base.mlv_s.part \
+		HDR compat/base.ml_s.part     base.ml_s.part  \
+		HDR compat/base.ml1_s.part    base.ml1_s.part \
+		HDR compat/base.ml1v1_s.part \
+		HDR compat/base.ml2_s.part    base.ml2_s.part \
+		HDR compat/base.ml3_s.part    base.ml3_s.part \
+		HDR compat/base.ml4_s.part    base.ml4_s.part \
+		HDR compat/base.ml2v2_s.part \
+		HDR compat/base.ml3v3_s.part \
+		HDR compat/base.ml4v4_s.part \
 		HDR base.m_s.part \
 		HDR compat/base.lv_c.part   \
 		HDR compat/base.l1v1_c.part \
