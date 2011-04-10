@@ -202,16 +202,28 @@ xkb_symbols "left_funkeys" {
 
     // The above symbols were chosen for better compatibility withother xkb
     // mappings.  The old mappings are kepy below in case someone needs them
-    key <STOP> { [ L1,        L1,  SunStop    ]       };
-    key <AGAI> { [ L2,        L2,  SunAgain   ]       };
-    key <PROP> { [ L3,        L3,  SunProps   ]       };
-    key <UNDO> { [ L4,        L4,  SunUndo    ]       };
-    key <FRNT> { [ L5,        L5,  SunFront   ]       };
-    key <COPY> { [ L6,        L6,  SunCopy    ]       };
-    key <OPEN> { [ L7,        L7,  SunOpen    ]       };
-    key <PAST> { [ L8,        L8,  SunPaste   ]       };
-    key <FIND> { [ L9,        L9,  SunFind    ]       };
-    key <CUT>  { [ L10,       L10, SunCut     ]       };
+    //key <STOP> { [ L1,        L1,  SunStop    ]       };
+    //key <AGAI> { [ L2,        L2,  SunAgain   ]       };
+    //key <PROP> { [ L3,        L3,  SunProps   ]       };
+    //key <UNDO> { [ L4,        L4,  SunUndo    ]       };
+    //key <FRNT> { [ L5,        L5,  SunFront   ]       };
+    //key <COPY> { [ L6,        L6,  SunCopy    ]       };
+    //key <OPEN> { [ L7,        L7,  SunOpen    ]       };
+    //key <PAST> { [ L8,        L8,  SunPaste   ]       };
+    //key <FIND> { [ L9,        L9,  SunFind    ]       };
+    //key <CUT>  { [ L10,       L10, SunCut     ]       };
+
+    // OpenBSD variant
+    key <STOP>	{ [ Cancel 	],	[ F11	]	};
+    key <AGAI>	{ [ Redo	],	[ F12	]	};
+    key <PROP>	{ [ SunProps	],	[ F13	]	};
+    key <UNDO>	{ [ Undo	],	[ F14	]	};
+    key <FRNT>	{ [ SunFront	],	[ F15	]	};
+    key <COPY>	{ [ SunCopy	],	[ F16	]	};
+    key <OPEN>	{ [ SunOpen	],	[ F17	]	};
+    key <PAST>	{ [ SunPaste	],	[ F18	]	};
+    key <FIND>	{ [ Find	],	[ F19	]	};
+    key <CUT>	{ [ SunCut	],	[ F20	]	};
 };
 
 hidden

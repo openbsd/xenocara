@@ -35,6 +35,9 @@ xkb_symbols "pc105" {
 
     key <MENU> {	[ Menu			]	};
 
+    // "Sun LKeys" section
+    include "sun_vndr/us(left_funkeys)"
+
     // begin modifier mappings
     modifier_map Shift  { Shift_L, Shift_R };
     modifier_map Lock   { Caps_Lock, ISO_Lock };
