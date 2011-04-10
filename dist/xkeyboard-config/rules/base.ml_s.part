@@ -37,5 +37,6 @@
   olpc		*			=	olpc+%l%(v)
  $thinkpads   	br			=	pc+br(thinkpad)
   htcdream	$htcdreamlayouts	=	%l(htcdream)
+  zaurus	*			=	pc+zaurus
   *	   	$nonlatin		=	pc+us+%l%(v):2
   *		*			=	pc+%l%(v)

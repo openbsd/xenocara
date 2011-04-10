@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2011/04/10 17:10:21 jasper Exp $
+#	$OpenBSD: Makefile,v 1.5 2011/04/10 17:49:13 shadchin Exp $
 
 SUBDIR=		digital_vndr fujitsu_vndr hp_vndr macintosh_vndr nec_vndr \
 		nokia_vndr sgi_vndr sony_vndr sun_vndr xfree68_vndr
@@ -13,6 +13,9 @@ DATA=	ad af al am apl ara at az ba bd be bg br brai bt bw by ca cd ch cn cz \
 	tw tr tz ua us uz vn za altwin capslock compose ctrl empty eurosign \
 	rupeesign group inet keypad kpdl level3 level5 nbsp olpc shift \
 	srvr_ctrl typo
+
+# OpenBSD customization
+DATA+=	zaurus
 
 .include <bsd.xorg.mk>
 .include <bsd.subdir.mk>
