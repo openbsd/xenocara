@@ -131,6 +131,8 @@ CYGPATH_W = @CYGPATH_W@
 DATADIRNAME = @DATADIRNAME@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DEPS_CFLAGS = @DEPS_CFLAGS@
+DEPS_LIBS = @DEPS_LIBS@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -171,6 +173,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POFILES = @POFILES@
 POSUB = @POSUB@
 PO_IN_DATADIR_FALSE = @PO_IN_DATADIR_FALSE@
@@ -226,11 +231,12 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 xkb_base = @xkb_base@
 xkb_rules_symlink = @xkb_rules_symlink@
-SUBDIRS = digital_vndr fujitsu_vndr hp_vndr macintosh_vndr nec_vndr nokia_vndr sgi_vndr sony_vndr sun_vndr xfree68_vndr extras
+SUBDIRS = digital_vndr fujitsu_vndr hp_vndr macintosh_vndr nec_vndr nokia_vndr sgi_vndr sony_vndr sun_vndr xfree68_vndr
 symbolsdir = $(xkb_base)/symbols
 dist_symbols_DATA = \
 ad af al \
-am ara at az \
+am apl ara \
+at az \
 ba bd be \
 bg br brai \
 bt bw by \
@@ -256,7 +262,7 @@ ro rs ru \
 se si sk sn \
 sy th \
 terminate \
-tj tm tr tz \
+tj tm tr tw tz \
 ua us uz vn \
 za \
 altwin capslock compose ctrl empty eurosign rupeesign group inet \

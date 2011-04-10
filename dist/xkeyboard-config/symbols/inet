@@ -1,7 +1,3 @@
-// $XKeyboardConfig$
-
-// $XFree86: xc/programs/xkbcomp/symbols/inet,v 1.38 2004/01/17 14:59:37 pascal Exp $
-
 // EAK (Easy Access, Internet, Multimedia, PDA) keyboards
 // Copyright (C) 2002 Stanislav Brabec <sbrabec@suse.cz>
 //
@@ -126,6 +122,7 @@ xkb_symbols "evdev" {
 
 //  key <I120>   {      [ ]       }; // KEY_MACRO 
     key <I126>   {      [ plusminus             ]       };
+    key <I128>   {      [ XF86LaunchA           ]       };
     key <I147>   {      [ XF86MenuKB            ]       };
     key <I148>   {      [ XF86Calculator        ]       };
 //  key <I149>   {      [ ]       }; // KEY_SETUP
@@ -170,10 +167,16 @@ xkb_symbols "evdev" {
     key <I188>   {      [ parenright            ]       };
     key <I189>   {      [ XF86New               ]       };
     key <I190>   {      [ Redo                  ]       };
+    key <I192>   {      [ XF86LaunchA           ]       };
+    key <I193>   {      [ XF86LaunchC           ]       };
+    key <I194>   {      [ XF86LaunchD           ]       };
+    key <I195>   {      [ XF86LaunchE           ]       };
+    key <I196>   {      [ XF86LaunchF           ]       };
     key <I208>   {      [ XF86AudioPlay         ]       };
     key <I209>   {      [ XF86AudioPause        ]       };
     key <I210>   {      [ XF86Launch3           ]       };
     key <I211>   {      [ XF86Launch4           ]       };
+    key <I212>   {      [ XF86LaunchB           ]       };
     key <I213>   {      [ XF86Suspend           ]       };
     key <I214>   {      [ XF86Close             ]       };
     key <I215>   {      [ XF86AudioPlay         ]       };
@@ -1267,6 +1270,19 @@ xkb_symbols "mx2750" {
 
 
 // Microsoft
+
+// Microsoft Natural Wireless Ergonomic Keyboard 4000
+partial alphanumeric_keys
+xkb_symbols "microsoft4000" {
+    include "inet(media_nav_common)"
+    key <I192>  {       [ XF86Launch1           ]       };
+    key <I193>  {       [ XF86Launch2           ]       };
+    key <I194>  {       [ XF86Launch3           ]       };
+    key <I195>  {       [ XF86Launch4           ]       };
+    key <I196>  {       [ XF86Launch5           ]       };
+//  Missing because of lack of support from kbd driver: Zoom in and
+//  slider.
+};
 
 // Microsoft Natural Wireless Ergonomic Keyboard 7000
 partial alphanumeric_keys

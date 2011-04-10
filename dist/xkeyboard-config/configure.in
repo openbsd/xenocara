@@ -1,4 +1,4 @@
-AC_INIT(xkeyboard-config, 2.1)
+AC_INIT(xkeyboard-config, 2.2.1)
 AC_CONFIG_SRCDIR(rules/base.xml.in)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
@@ -23,6 +23,34 @@ AC_ARG_ENABLE( compat_rules,
                [  --enable-compat-rules      create compatibility rules],
                enable_compat_rules="$enableval",
                enable_compat_rules="yes" )
+
+# xkeyboard-config does not have build-time dependencies. However, it does
+# have run-time dependencies and keyboard layouts may not work without the
+# right libX11 or xproto installed.
+# By default, we enable these run-time dependencies as build-time
+# dependencies so that those building on their local machines are warned
+# that the resulting build may not work.
+AC_ARG_ENABLE( runtime-deps,
+               [ --enable-runtime-deps    use run-time dependencies as build-time dependencies],
+               enable_runtime_deps="$enableval",
+               enable_runtime_deps="yes")
+
+if test "x$enable_runtime_deps" = "xyes"; then
+    PKG_CHECK_MODULES(DEPS, [xproto >= 7.0.20] [x11 >= 1.4.3], [have_deps=yes], [have_deps=no])
+    if test "x$have_deps" = "xno" ; then
+        AC_MSG_WARN([
+                 Required dependencies not found. These dependencies are
+                 run-time dependencies only and not required for building.
+                 Skip this check with --disable-runtime-deps.
+
+                 Installing this version of xkeyboard-config on a host
+                 without the required dependencies may result in unusable
+                 keyboard layouts.
+                 ])
+
+        AC_MSG_ERROR([$DEPS_PKG_ERRORS])
+    fi
+fi
 
 AM_CONDITIONAL(CREATE_RULES_SYMLINK, test "x$xkb_rules_symlink" != "x")
 
@@ -61,7 +89,6 @@ semantics/Makefile
 rules/Makefile
 rules/bin/Makefile
 rules/compat/Makefile
-rules/extras/Makefile
 symbols/Makefile
 symbols/digital_vndr/Makefile
 symbols/fujitsu_vndr/Makefile
@@ -73,7 +100,6 @@ symbols/sgi_vndr/Makefile
 symbols/sony_vndr/Makefile
 symbols/sun_vndr/Makefile
 symbols/xfree68_vndr/Makefile
-symbols/extras/Makefile
 types/Makefile
 xkeyboard-config.pc
 xkeyboard-config.spec

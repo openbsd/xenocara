@@ -1,5 +1,3 @@
-// $XKeyboardConfig$
-
 // Let Space key provide No-Break Space (NBSP), Narrow No-Break Space (NNBSP),
 // Zero-Width Non-Joiner (ZWNJ), and Zero-Width Joiner (ZWJ) for the desired
 // levels.
@@ -147,9 +145,7 @@ xkb_symbols "zwnj2nb3" {
 
 
 // ZWNJ on level 2
-// ZWJ on level 3
-// NBSP on level 4
-// Used by lk(sin_phonetic)
+// NBSP on level 3
 partial
 xkb_symbols "zwnj2nb3s" {
   key <SPCE> {
@@ -195,3 +191,14 @@ xkb_symbols "zwnj3zwj4" {
   };
 };
 
+
+// NBSP on level 2
+// ZWNJ on level 3
+// Used by lk(sin_phonetic)
+partial
+xkb_symbols "nb2zwnj3s" {
+  key <SPCE> {
+    type[Group1]="FOUR_LEVEL",
+    symbols[Group1]= [ space, nobreakspace, 0x100200c, NoSymbol ]
+  };
+};

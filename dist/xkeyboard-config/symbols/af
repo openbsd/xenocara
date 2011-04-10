@@ -1,4 +1,3 @@
-// $XKeyboardConfig$
 //
 // Keymap for the Afghan dari keybord layout
 // Based on the specification "Computer Locale Requirements for 
@@ -276,7 +275,7 @@ xkb_symbols "olpc-ps" {
 };
 
 partial alphanumeric_keys 
-xkb_symbols "olpc-fa" {
+xkb_symbols "fa-olpc" {
 
    name[Group1]= "Afghanistan - OLPC Dari";
 
@@ -337,7 +336,7 @@ xkb_symbols "olpc-fa" {
 };
 
 partial alphanumeric_keys 
-xkb_symbols "olpc-uz" {
+xkb_symbols "uz-olpc" {
 
    name[Group1]= "Afghanistan - OLPC Southern Uzbek";
 
