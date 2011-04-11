@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.9 2011/04/11 02:58:49 jakemsr Exp $	*/
+/*	$OpenBSD: video.c,v 1.10 2011/04/11 17:23:18 jakemsr Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -206,7 +206,7 @@ extern char *__progname;
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-v] "
+	fprintf(stderr, "usage: %s [-Rv] "
 	    "[-a adaptor] [-e encoding] [-f file] [-i input] [-O output]\n"
 	    "       %*s [-o output] [-r rate] [-s size]\n", __progname,
 	    (int)strlen(__progname), "");
