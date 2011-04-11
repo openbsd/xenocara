@@ -1,4 +1,4 @@
-.\"	$OpenBSD: video.1,v 1.8 2011/03/18 20:08:58 sobrado Exp $
+.\"	$OpenBSD: video.1,v 1.9 2011/04/11 02:58:49 jakemsr Exp $
 .\"
 .\" Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
 .\"
@@ -15,7 +15,7 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .\"
-.Dd $Mdocdate: March 18 2011 $
+.Dd $Mdocdate: April 11 2011 $
 .Dt VIDEO 1
 .Os
 .Sh NAME
@@ -25,7 +25,7 @@
 .Sh SYNOPSIS
 .Nm
 .Bk -words
-.Op Fl v
+.Op Fl Rv
 .Op Fl a Ar adaptor
 .Op Fl e Ar encoding
 .Op Fl f Ar file
@@ -128,6 +128,8 @@ If
 is
 .Ql - ,
 frames will be written to standard output.
+.It Fl R
+Disable frame rate adjustment.
 .It Fl r Ar rate
 Rate in frames per second at which to read.
 Must be an integer greater than 0.
@@ -136,13 +138,15 @@ If the
 option is not specified, frames will be read as quickly as possible.
 If reading from a
 .Xr video 4
-device, frames will be read as quickly as they are available from
-the device, but will be displayed and/or written to
+device, the device's frame rate will be set to the frame rate the device
+supports that is closest to
+.Ar rate .
+Frames will be read as quickly as they are available from the device, but
+will be displayed and/or written to
 .Ar output
-at the rate specified.
-This is done because
-.Xr video 4
-does not yet support setting the device frame rate.
+at the rate specified, unless the
+.Fl R
+option is used.
 .It Fl s Ar size
 Size of frames to read.
 The format of

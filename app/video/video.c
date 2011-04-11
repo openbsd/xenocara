@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.8 2010/10/15 14:21:20 jakemsr Exp $	*/
+/*	$OpenBSD: video.c,v 1.9 2011/04/11 02:58:49 jakemsr Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/videoio.h>
 #include <sys/time.h>
+#include <sys/limits.h>
 
 #include <err.h>
 #include <errno.h>
@@ -116,6 +117,8 @@ struct dev {
 	int		 fd;
 #define MAX_DSZS 16
 	struct dim	 sizes[MAX_DSZS];
+#define MAX_RATES 32
+	int		 rates[MAX_DSZS][MAX_RATES];
 	int		 nsizes;
 	int		 buf_type;
 };
@@ -157,6 +160,7 @@ struct video {
 	int		 height;
 	int		 bpf;
 	int		 fps;
+	int		 nofps;
 #define M_IN_DEV	0x1
 #define M_OUT_XV	0x2
 #define M_IN_FILE	0x4
@@ -175,6 +179,7 @@ void display_event(struct video *);
 int dev_check_caps(struct video *);
 int dev_get_encs(struct video *);
 int dev_get_sizes(struct video *);
+int dev_get_rates(struct video *);
 int dev_get_ctrls(struct video *);
 void dev_dump_info(struct video *);
 int dev_init(struct video *);
@@ -808,6 +813,59 @@ dev_get_sizes(struct video *vid)
 }
 
 int
+dev_get_rates(struct video *vid)
+{
+	struct dev *d = &vid->dev;
+	struct v4l2_frmivalenum ival;
+	struct v4l2_frmival_stepwise *s;
+	int i, j, num;
+
+	for (i = 0; i < d->nsizes; i++) {
+		bzero(&ival, sizeof(ival));
+		ival.pixel_format = encs[vid->enc].dev_id;
+		ival.width = d->sizes[i].w;
+		ival.height = d->sizes[i].h;
+		ival.index = 0;
+		while (ioctl(d->fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) != -1) {
+			switch(ival.type) {
+			case V4L2_FRMIVAL_TYPE_DISCRETE:
+				if (ival.index < MAX_RATES) {
+					d->rates[i][ival.index] =
+					    ival.un.discrete.denominator /
+					    ival.un.discrete.numerator;
+				}
+				break;
+			case V4L2_FRMIVAL_TYPE_CONTINUOUS:
+			case V4L2_FRMIVAL_TYPE_STEPWISE:
+				if (ival.index != 0) {
+					printf("invalid frame type!\n");
+					return 0;
+				}
+				s = &ival.un.stepwise;
+				if (s->step.denominator != s->min.denominator ||
+				    s->step.denominator != s->max.denominator) {
+					printf("can't parse frame rate!\n");
+					break;
+				}
+				for (num = s->min.numerator, j = 0;
+				    num <= s->max.numerator && j < MAX_RATES;
+				    num += s->step.numerator, j++) {
+					d->rates[i][j] =
+					    s->step.denominator / num;
+				}
+				break;
+			default:
+				printf("invalid frame type!\n");
+				return 0;
+			}
+			ival.index++;
+		}
+	}
+
+	return 1;
+}
+
+int
 dev_get_ctrls(struct video *vid)
 {
 	struct dev *d = &vid->dev;
@@ -927,13 +985,18 @@ dev_dump_info(struct video *vid)
 	}
 	fprintf(stderr, "\n");
 
-	fprintf(stderr, "  sizes: ");
+	fprintf(stderr, "  frame sizes (width x height, in pixels) and rates (in frames per second):\n");
 	for (i = 0; i < d->nsizes; i++) {
-		if (i)
-			fprintf(stderr, ", ");
-		fprintf(stderr, "%dx%d", d->sizes[i].w, d->sizes[i].h);
+		fprintf(stderr, "\t%dx%d: ", d->sizes[i].w, d->sizes[i].h);
+		for (j = 0; j < MAX_RATES; j++) {
+			if (d->rates[i][j] == 0)
+				break;
+			if (j)
+				fprintf(stderr, ", ");
+			fprintf(stderr, "%d", d->rates[i][j]);
+		}
+		fprintf(stderr, "\n");
 	}
-	fprintf(stderr, "\n");
 
 	fprintf(stderr, "  controls: ");
 	for (i = 0, j = 0; i < CTRL_LAST; i++) {
@@ -952,6 +1015,8 @@ dev_init(struct video *vid)
 {
 	struct dev *d = &vid->dev;
 	struct v4l2_format fmt;
+	struct v4l2_streamparm parm;
+	int fps;
 
 	bzero(&fmt, sizeof(struct v4l2_format));
 	fmt.type = d->buf_type;
@@ -968,6 +1033,29 @@ dev_init(struct video *vid)
 		warnx("%s: returned size not as requested", d->path);
 		return 0;
 	}
+
+	bzero(&parm, sizeof(parm));
+	parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	if (vid->fps) {
+		parm.parm.capture.timeperframe.numerator = 1;
+		parm.parm.capture.timeperframe.denominator = vid->fps;
+	}
+	if (ioctl(d->fd, VIDIOC_S_PARM, &parm) < 0) {
+		warn("VIDIOC_S_PARM");
+		return 0;
+	}
+
+	bzero(&parm, sizeof(parm));
+	parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	if (ioctl(d->fd, VIDIOC_G_PARM, &parm) < 0) {
+		warn("VIDIOC_G_PARM");
+		return 0;
+	}
+	fps = parm.parm.capture.timeperframe.denominator /
+	    parm.parm.capture.timeperframe.numerator;
+	if (vid->fps && fps != vid->fps)
+		warnx("device returned %d fps, claimed support for %d fps",
+		    fps, vid->fps);
 
 	return 1;
 }
@@ -1033,7 +1121,7 @@ choose_size(struct video *vid)
 {
 	struct xdsp *x = &vid->xdsp;
 	struct dev *d = &vid->dev;
-	int i;
+	int i, j, diff, best, cur;
 
 	if (vid->height && !vid->width)
 		vid->width = vid->height * 4 / 3;
@@ -1046,6 +1134,7 @@ choose_size(struct video *vid)
 		if (vid->height > x->max_height)
 			vid->height = x->max_height;
 	}
+
 	if (vid->mode & M_IN_DEV) {
 		i = 0;
 		while (i < d->nsizes &&
@@ -1059,6 +1148,23 @@ choose_size(struct video *vid)
 			i--;
 		vid->width = d->sizes[i].w;
 		vid->height = d->sizes[i].h;
+
+		/* interval is a property of the frame */
+		if (!vid->nofps) {
+			cur = j = 0;
+			best = INT_MAX;
+			while (j < MAX_RATES && d->rates[i][j]) {
+				diff = abs(vid->fps - d->rates[i][j]);
+				if (diff < best) {
+					best = diff;
+					cur = j;
+					if (diff == 0)
+						break;
+				}
+				j++;
+			}
+			vid->fps = d->rates[i][cur];
+		}
 	}
 
 	return 1;
@@ -1160,7 +1266,7 @@ setup(struct video *vid)
 		return 0;
 
 	if ((vid->mode & M_IN_DEV) &&
-	    (!dev_get_sizes(vid) || !dev_get_ctrls(vid)))
+	    (!dev_get_sizes(vid) || !dev_get_rates(vid) || !dev_get_ctrls(vid)))
 		return 0;
 
 	if (!parse_size(vid) || !choose_size(vid))
@@ -1176,6 +1282,10 @@ setup(struct video *vid)
 		fprintf(stderr, "using %s encoding\n", encs[vid->enc].name);
 		fprintf(stderr, "using frame size %dx%d (%d bytes)\n",
 		    vid->width, vid->height, vid->bpf);
+		if (vid->fps)
+			fprintf(stderr, "using frame rate %d fps\n", vid->fps);
+		else
+			fprintf(stderr, "using default frame rate\n");
 	}
 
 	if ((vid->frame_buffer = calloc(1, vid->bpf)) == NULL) {
@@ -1217,7 +1327,7 @@ poll_input(struct video *vid)
 	pfds[0].fd = (vid->mode & M_IN_FILE) ? vid->iofile_fd : vid->dev.fd;
 	pfds[0].events = POLLIN;
 
-	ret = poll(pfds, 1, 0);
+	ret = poll(pfds, 1, INFTIM);
 	if (ret != 1)
 		return ret;
 
@@ -1265,8 +1375,8 @@ grab_frame(struct video *vid)
 				warnx("%s: EOF", vid->iofile);
 			return 255;
 		}
-		warn("%s", (vid->mode & M_IN_DEV) ?
-		    vid->dev.path : vid->iofile);
+		warn("%s read %d/%d", (vid->mode & M_IN_DEV) ?
+		    vid->dev.path : vid->iofile, done, vid->bpf);
 		return 0;
 	}
 
@@ -1296,10 +1406,8 @@ stream(struct video *vid)
 	long frames_played = -1, frames_grabbed = 0, fus = 50000;
 	int sequence = 20, ret, err, todo, done;
 
-	if (vid->fps)
+	if (vid->fps && !vid->nofps) {
 		fus = 1000000 / vid->fps;
-
-	if (vid->fps) {
 		timerclear(&frit.it_value);
 		timerclear(&frit.it_interval);
 		if (vid->fps == 1) {
@@ -1325,23 +1433,25 @@ stream(struct video *vid)
 		err = 0;
 		ret = poll_input(vid);
 		if (ret == 1) {
-			if (!vid->fps)
-				play = 1;
 			if ((vid->mode & M_IN_DEV) ||
 			    frames_grabbed - 1 == frames_played) {
 				ret = grab_frame(vid);
-				if (ret == 1)
+				if (ret == 1) {
 					frames_grabbed++;
-				else if (ret == 255)
+					if (vid->nofps)
+						play = 1;
+				} else if (ret == 255)
 					break;
 				else if (ret < 0)
 					err++;
 			}
 		} else if (ret < 0) {
-			if (errno == EINTR || errno == EAGAIN)
-				continue;
-			err++;
-			warn("poll");
+			/* continue if interrupted by play or shutdown signal */
+			if (!((errno == EINTR || errno == EAGAIN) &&
+			    (play || shutdown))) {
+				err++;
+				warn("poll");
+			}
 		} else if (ret & (POLLERR | POLLHUP | POLLNVAL)) {
 			if (!strcmp(vid->iofile, "-") && (ret & POLLHUP))
 				break;
@@ -1355,12 +1465,12 @@ stream(struct video *vid)
 			display_event(vid);
 		if (shutdown)
 			break;
+		if (hold || ((vid->mode & M_IN_FILE) && !play))
+			usleep(fus);
 		if (frames_grabbed < 1)
 			play = 0;
-		if (hold || !play) {
-			usleep(fus / 5);
+		if (hold || !play)
 			continue;
-		}
 		play = 0;
 
 		src = vid->frame_buffer;
@@ -1397,7 +1507,8 @@ stream(struct video *vid)
 				return 0;
 			}
 		}
-		frames_played++;
+		if (frames_grabbed > 0)
+			frames_played++;
 
 		if (frames_played == 0)
 			gettimeofday(&tp_start, NULL);
@@ -1499,7 +1610,7 @@ main(int argc, char *argv[])
 	vid.enc = -1;
 	wout = 1;
 
-	while ((ch = getopt(argc, argv, "va:e:f:i:O:o:r:s:")) != -1) {
+	while ((ch = getopt(argc, argv, "vRa:e:f:i:O:o:r:s:")) != -1) {
 		switch (ch) {
 		case 'a':
 			x->cur_adap = strtonum(optarg, 0, 4, &errstr);
@@ -1541,6 +1652,9 @@ main(int argc, char *argv[])
 				    optarg);
 			}
 			break;
+		case 'R':
+			vid.nofps = 1;
+			break;
 		case 'r':
 			vid.fps = strtonum(optarg, 1, 100, &errstr);
 			if (errstr != NULL) {
@@ -1567,6 +1681,9 @@ main(int argc, char *argv[])
 	}
 	argc -= optind;
 	argv += optind;
+
+	if (vid.fps == 0)
+		vid.nofps = 1;
 
 	if (!setup(&vid))
 		cleanup(&vid, 1);
