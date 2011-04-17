@@ -34,9 +34,7 @@ provided "as is" without express or implied warranty.
 </legalnotice>
 </bookinfo>
 
-<chapter>
-<title>TITLE</title>
-<sect1 id="Overview">
+<chapter id="Overview">
 <title>Overview</title>
 <para>
 This extension provides X Protocol control over the VESA Display
@@ -119,9 +117,9 @@ importance of power savings should supersede the screen saver.  If the
 laptop user plugs the unit in and power is no longer a scarce commodity,
 it may be decided to make DPMS less aggressive, or disable it completely.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Requests">
+<chapter id="Requests">
 <title>Requests</title>
 <para>
 <function>DPMSGetVersion</function>
@@ -430,16 +428,16 @@ of DPMSModeOn, DPMSModeStandby, DPMSModeSuspend or DPMSModeOff, otherwise
 it is undefined.
 </para>
 
-</sect1>
+</chapter>
 
-<sect1 id="Events_and_Errors">
+<chapter id="Events_and_Errors">
 <title>Events and Errors</title>
 <para>
 No new events or errors are defined by this extension.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Encoding">
+<chapter id="Encoding">
 <title>Encoding</title>
 <para>
 Please refer to the X11 Protocol Encoding document as this document uses
@@ -558,6 +556,5 @@ The name of this extension is "DPMS".
      21                  unused
 
 </literallayout>
-</sect1>
 </chapter>
 </book>

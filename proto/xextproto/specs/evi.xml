@@ -62,17 +62,15 @@ X Window System is a trademark of The Open Group.
 </legalnotice>
 </bookinfo>
 
-<chapter>
-<title>TITLE</title>
-<sect1 id="Introduction">
+<chapter id="Introduction">
 <title>Introduction</title>
 <para>
 EVI (Extended Visual Information extension) allows a client to determine
 information about core X visuals beyond what the core protocol provides.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Goals">
+<chapter id="Goals">
 <title>Goals</title>
 <para>
 As the X Window System has evolved, it has become clear that the information
@@ -90,9 +88,9 @@ their own mechanisms for delivering that information. For example, the Double
 Buffering Extension (DBE) provides its own mechanism for determining which
 visuals support double-buffering.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Requests">
+<chapter id="Requests">
 <title>Requests</title>
 <para>
 <function>GetVersion</function>
@@ -285,22 +283,22 @@ example, if a 12-bit colormap is overloaded to support 8-bit visuals, the
   </listitem>
 </itemizedlist>
 
-</sect1>
-<sect1 id="Events_and_Errors">
+</chapter>
+<chapter id="Events_and_Errors">
 <title>Events and Errors</title>
 <para>
 No new events or errors are defined by this extension.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Changes_to_existing_protocol_">
+<chapter id="Changes_to_existing_protocol_">
 <title>Changes to existing protocol.</title>
 <para>
 None.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Encoding">
+<chapter id="Encoding">
 <title>Encoding</title>
 <para>
 The name of this extension is "Extended-Visual-Information".
@@ -358,9 +356,9 @@ VISUALINFO
      1     CARD8               max_hw_colormaps
      2     CARD16              num_colormap_conflicts
 </literallayout>
-</sect1>
+</chapter>
 
-<sect1 id="C_Language_Binding">
+<chapter id="C_Language_Binding">
 <title>C Language Binding</title>
 <para>
 <!-- .LP -->
@@ -513,6 +511,5 @@ of hardware support for multiple colormaps. XeviGetVisualInfo returns Success
 if successful, or an X error otherwise.
 </para>
 
-</sect1>
 </chapter>
 </book>

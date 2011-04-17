@@ -4,7 +4,7 @@
 
 
 <!-- lifted from troff+ms+XMan by doclifter -->
-<book id="mit-shm">
+<book id="shm">
 
 <bookinfo>
    <title>MIT-SHM(The MIT Shared Memory Extension)</title>
@@ -67,9 +67,7 @@ in this Software without prior written authorization from the X Consortium.
 </legalnotice>
 </bookinfo>
 
-<chapter>
-<title>TITLE</title>
-<sect1 id="REQUIREMENTS">
+<chapter id="REQUIREMENTS">
 <title>REQUIREMENTS</title>
 <para>
 The shared memory extension is provided only by some X servers.  To find out
@@ -82,9 +80,9 @@ Additionally, the shared memeory maximum size will need to be increased on
 both Sun and Digital systems; the defaults are far too small for any useful
 work.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="WHAT_IS_PROVIDED">
+<chapter id="WHAT_IS_PROVIDED">
 <title>WHAT IS PROVIDED</title>
 
 <para>
@@ -106,9 +104,9 @@ pixmap data; if the pixmaps are stored in some magic graphics hardware, your
 application will not be able to share them with the server.  Xdpyinfo(1)
 doesn't print this particular nugget of information.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="HOW_TO_USE_THE_SHARED_MEMORY_EXTENSION">
+<chapter id="HOW_TO_USE_THE_SHARED_MEMORY_EXTENSION">
 <title>HOW TO USE THE SHARED MEMORY EXTENSION</title>
 <para>
 Code which uses the shared memory extension must include a number of header
@@ -165,9 +163,9 @@ conventional Xlib calls.  When the extension is available,
 version numbers of the extension implementation, and "pixmaps" which is
 True iff shared memory pixmaps are supported.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="USE_OF_SHARED_MEMORY_XIMAGES">
+<chapter id="USE_OF_SHARED_MEMORY_XIMAGES">
 <title>USE OF SHARED MEMORY XIMAGES</title>
 <para>
 The basic sequence of operations for shared memory XImages is as follows:
@@ -408,9 +406,9 @@ shmdt (shminfo.shmaddr);
 shmctl (shminfo.shmid, IPC_RMID, 0);
 </literallayout>
 
-</sect1>
+</chapter>
 
-<sect1 id="USE_OF_SHARED_MEMORY_PIXMAPS">
+<chapter id="USE_OF_SHARED_MEMORY_PIXMAPS">
 <title>USE OF SHARED MEMORY PIXMAPS</title>
 <para>
 Unlike X images, for which any image format is usable, the shared memory
@@ -469,6 +467,5 @@ contents directly through the shared memory segment.  Shared memory pixmaps
 are destroyed in the usual manner with XFreePixmap, though you should detach
 and destroy the shared memory segment itself as shown above.
 </para>
-</sect1>
 </chapter>
 </book>

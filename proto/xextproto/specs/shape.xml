@@ -60,8 +60,7 @@ copyright holders.
 </legalnotice>
 </bookinfo>
 
-<chapter><title>TITLE</title>
-<sect1 id="Overview">
+<chapter id="Overview">
 <title>Overview</title>
 <para>
 <!-- .LP -->
@@ -94,9 +93,9 @@ the window's geometry in the core protocol.  An expected convention would be
 that client programs expand their shape to fill the area offered by the
 window manager.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Description">
+<chapter id="Description">
 <title>Description</title>
 <para>
 Each window (even with no shapes specified) is defined by three regions:  the
@@ -264,9 +263,9 @@ the server is permitted to ignore requested changes to the bounding region
 of a root window.  If the server accepts bounding region changes, the contents
 of the screen outside the bounding region are implementation dependent.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Types">
+<chapter id="Types">
 <title>Types</title>
 <para>
 <!-- .LP -->
@@ -307,9 +306,9 @@ produce the new destination region.
 indicates that the destination region is subtracted from the source region to
 produce the new destination region.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Requests">
+<chapter id="Requests">
 <title>Requests</title>
 <para>
 <function>ShapeQueryVersion</function>
@@ -802,9 +801,9 @@ values is the same as in the
 <function>ShapeRectangles</function>
 request.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Events">
+<chapter id="Events">
 <title>Events</title>
 <para>
 <function>ShapeNotify</function>
@@ -870,9 +869,9 @@ current shape.  When shaped is
 these will indicate the extents of the default region.  The timestamp
 indicates the server time when the shape was changed.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Encoding">
+<chapter id="Encoding">
 <title>Encoding</title>
 <para>
 Please refer to the X11 Protocol Encoding document as this document uses
@@ -883,7 +882,7 @@ conventions established there.
 The name of this extension is "SHAPE".
 </para>
 
-<sect2 id="New_Types">
+<sect1 id="New_Types">
 <title>New Types</title>
 
 <literallayout class="monospaced">
@@ -901,9 +900,9 @@ SHAPE_OP
      3     Subtract
      4     Invert
 </literallayout>
-</sect2>
+</sect1>
 
-<sect2 id="Requests_2">
+<sect1 id="Requests_2">
 <title>Requests</title>
 <literallayout class="monospaced">
 <function>ShapeQueryVersion</function>
@@ -1055,9 +1054,9 @@ SHAPE_OP
      20                       unused
      8n    LISTofRECTANGLE    rectangles
 </literallayout>
-</sect2>
+</sect1>
 
-<sect2 id="Events_2">
+<sect1 id="Events_2">
 <title>Events</title>
 <literallayout class="monospaced">
 <function>ShapeNotify</function>
@@ -1073,7 +1072,6 @@ SHAPE_OP
      1     BOOL                shaped
      11                        unused
 </literallayout>
-</sect2>
 </sect1>
 </chapter>
 

@@ -59,10 +59,7 @@ in this Software without prior written authorization from the X Consortium.
 </bookinfo>
 
 
-<chapter>
-<title>TITLE</title>
-
-<sect1 id="Overview">
+<chapter id="Overview">
 <title>Overview</title>
 <para>
 This extension is a minimal set of client and server extensions
@@ -110,9 +107,9 @@ Minimize performance penalties on normal server operation.
     </para>
   </listitem>
 </itemizedlist>
-</sect1>
+</chapter>
 
-<sect1 id="Description">
+<chapter id="Description">
 <title>Description</title>
 <para>
 The functions provided by this extension fall into two groups:
@@ -167,9 +164,9 @@ or pressed a key or button.
   </varlistentry>
 </variablelist>
 
-</sect1>
+</chapter>
 
-<sect1 id="Types">
+<chapter id="Types">
 <title>Types</title>
 <para>
 The following types are used in the request and event definitions in
@@ -223,9 +220,9 @@ CURSOR { <function>CurrentCursor</function>, <function> None</function> }
 or a cursor as defined by the X11 Protocol.
 </para>
 
-</sect1>
+</chapter>
 
-<sect1 id="Client_Operations">
+<chapter id="Client_Operations">
 <title>Client Operations</title>
 
 <para>
@@ -330,9 +327,9 @@ in the buffer and
 <function>False</function>
 otherwise.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Server_Requests">
+<chapter id="Server_Requests">
 <title>Server Requests</title>
 <para>
 <function>XTestGetVersion</function>
@@ -607,9 +604,9 @@ If impervious is
 then the executing client returns to the normal state of being
 susceptible to server grabs.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Encoding">
+<chapter id="Encoding">
 <title>Encoding</title>
 <para>
 Please refer to the X11 Protocol Encoding document as this document uses
@@ -620,7 +617,7 @@ conventions established there.
 The name of this extension is "XTEST".
 </para>
 
-<sect2 id="New_Types">
+<sect1 id="New_Types">
 <title>New Types</title>
 <literallayout class="monospaced">
 FAKE_EVENT_TYPE
@@ -635,9 +632,9 @@ FAKE_EVENT_TYPE
 NOTE that the above values are defined to be the same as those for
 the corresponding core protocol event types.
 </para>
-</sect2>
+</sect1>
 
-<sect2 id="Requests">
+<sect1 id="Requests">
 <title>Requests</title>
 
 <literallayout class="monospaced">
@@ -700,10 +697,10 @@ the corresponding core protocol event types.
      1     BOOL                impervious
      3                         unused
 </literallayout>
-</sect2>
 </sect1>
+</chapter>
 
-<sect1 id="References">
+<chapter id="References">
 <title>References</title>
 <para>
 Annicchiarico, D., et al.,
@@ -717,6 +714,6 @@ Drake, K. J.,
 Minimum X11 Testing Extension</emphasis>.
 UniSoft Ltd., June 1991.
 </para>
-</sect1>
 </chapter>
+
 </book>

@@ -1,3 +1,197 @@
+commit c593fd1000ceb83f0933361c5e7496d799233f7e
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Feb 26 23:57:48 2011 -0800
+
+    Version 7.2.0
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit a6a542841e85344115bbb6a1ba35c4f3487995e4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Feb 25 08:53:55 2011 -0500
+
+    Docbook: change the book id to match the xml file basename
+    
+    This is required for the up-coming external references support.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d16788e87438015d3e121ffb046bc6a4ce01da89
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Feb 25 08:51:47 2011 -0500
+
+    Docbook: change the book id to match the xml file basename
+    
+    This is required for the up-coming external references support.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8c6cc9ddb5776a2b32d42a41d27b3df56e62c44f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 24 20:44:00 2011 -0500
+
+    Docbook: change the book id to match the xml file basename
+    
+    Rename appgroup.xml as it conflicts with xorg-docs/specs/Xserver/appgroup.xml
+    This is required for the up-coming external references support.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9df8b77604b7ea7132d32f65f2280720b91249c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 16 23:54:45 2010 -0800
+
+    specs: Fix section titles/nesting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6aa72ae8e629e065f09a6b6c05504363806d76a3
+Author: Paulo Zanoni <pzanoni@mandriva.com>
+Date:   Tue Dec 14 16:23:56 2010 -0200
+
+    Use the same docbookx.dtd version (4.3) for all docs
+    
+    This way we don't need to require 4.1.2 and 4.5
+    The geproto xml was inconsistent, by the way.
+    
+    Signed-off-by: Paulo Zanoni <pzanoni@mandriva.com>
+    Reviewed-by:  Matt Dew <matt@osource.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77c2b72d8df53e918b0fbff5425af82ac7f5693a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 9 17:43:29 2010 -0800
+
+    specs/sync.xml: Fix minor typos in document title section
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b4e8a6fb63715442b4927d18d9cdd7ee78e50d00
+Author: James Jones <jajones@nvidia.com>
+Date:   Mon Nov 29 09:35:50 2010 -0800
+
+    Bump version to 7.1.99.0
+    
+    Use version 7.1.99.0 to mark the inclusion of
+    Fence Sync protocol support.
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6e696a0a4c9a115c7f080c2bdee3d8afc16b134f
+Author: James Jones <jajones@nvidia.com>
+Date:   Wed Feb 24 15:57:29 2010 -0800
+
+    Add protocol for XSyncAwaitFence()
+    
+    Add the fence sync object equivalent of
+    XSyncAwait()
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 220b824f20dc3dd0fd6eae6e2896fb63aefbf11a
+Author: James Jones <jajones@nvidia.com>
+Date:   Mon Feb 22 17:01:16 2010 -0800
+
+    Add XSyncQueryFence()
+    
+    Allows callers to query whether a given fence sync
+    object is currently triggered or not.
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d079ee210726d2407fa9c8cf99555daf2d96023a
+Author: James Jones <jajones@nvidia.com>
+Date:   Fri Feb 12 16:38:08 2010 -0800
+
+    Initial Fence Sync support
+    
+    Defines the protocol for creation and basic
+    management of binary state sync objects.
+    The following operations are defined:
+    
+     -Creation
+     -Destruction
+     -Trigger
+     -Reset
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9ba2065b63ea0e61a17b8221ad454c02a1755373
+Author: James Jones <jajones@nvidia.com>
+Date:   Wed Aug 11 15:03:59 2010 -0700
+
+    Document changes in XSync version 3.1
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Pierre-Loup Griffais <pgriffais@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Robert Morell <rmorell@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd8a26edefc53b370c554a60c75ff32fc60b99c8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 30 09:05:07 2010 -0500
+
+    specs: add low bandwith spec from xorg-docs
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3102665110846af5c87792b221e1ef6a9dc1a0e2
+Author: Matt Dew <matt@osource.org>
+Date:   Mon Nov 29 16:29:44 2010 -0500
+
+    specs: add appgroup specs in DocBook/XML format
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f6ee80371c4bf9ebd99418a4328a351186ac0847
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 15:19:09 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6fbb74bfe75adc7cfd6d4bc642d7d4179a3db17d
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:30:04 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5508eec058c0ffbb180f3d98f8a02083d6de428b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 9 16:41:21 2010 -0400
+
+    Remove the appgroup specs which is the one for the server side.
+    
+    The spec for the protocol side is still in Framemaker format.
+    See doc/xorg-docs/specs/Xext/AppGroup.mif
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5daf9cff36df7423f6247fc8174b8e6c9443ed07
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 10 10:24:51 2010 -0400
+
+    xextproto 7.1.2
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 35741d9dc745532dc4af37cc07e256392e3880da
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Tue Aug 3 11:03:49 2010 -0400

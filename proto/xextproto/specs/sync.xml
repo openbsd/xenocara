@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
 
 <!--translated from sync.tex, on 2010-06-29 10:52:00,
 by TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/) xhtml,docbook,html,refcaption -->
@@ -9,7 +9,7 @@ by TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/) xhtml,docbook,html,ref
 <book id="sync">
 
 <bookinfo>
-   <title>X Synchronization Extention Protocol</title>
+   <title>X Synchronization Extension Protocol</title>
    <subtitle>X Consortium Standard</subtitle>
    <releaseinfo>X Version 11, Release 6.6.84</releaseinfo>
    <authorgroup>
@@ -20,17 +20,22 @@ by TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/) xhtml,docbook,html,ref
      <othercredit>
         <firstname>Dave</firstname>
         <surname>Carver</surname>
-        <affiliation><orgname>Digital EquipmentCorporation, MIT/Project Athena</orgname></affiliation>
+        <affiliation><orgname>Digital Equipment Corporation, MIT/Project Athena</orgname></affiliation>
      </othercredit>
      <othercredit>
        <firstname>Jim</firstname>
        <surname>Gettys</surname>
-       <affiliation><orgname>Digital EquipmentCorporation, Cambridge Research Laboratory</orgname></affiliation>
+       <affiliation><orgname>Digital Equipment Corporation, Cambridge Research Laboratory</orgname></affiliation>
      </othercredit>
      <othercredit>
        <firstname>David</firstname>
        <surname>Wiggins</surname>
        <affiliation><orgname>X Consortium, Inc.</orgname></affiliation>
+     </othercredit>
+     <othercredit>
+       <firstname>James</firstname>
+       <surname>Jones</surname>
+       <affiliation><orgname>NVIDIA Corporation</orgname></affiliation>
      </othercredit>
    </authorgroup>
    <corpname>X Consortium Standard</corpname>
@@ -43,8 +48,9 @@ Digital Equipment Corporation, Maynard, Massachusetts
        </holder>
    </copyright>
    <copyright><year>1991</year><holder>X Consortium</holder></copyright>
+   <copyright><year>2010</year><holder>NVIDIA Corporation</holder></copyright>
 
-   <releaseinfo>Version 3.0</releaseinfo>
+   <releaseinfo>Version 3.1</releaseinfo>
    <affiliation><orgname>X Consortium</orgname></affiliation>
    <productnumber>X Version 11, Release 6.8</productnumber>
 
@@ -52,10 +58,10 @@ Digital Equipment Corporation, Maynard, Massachusetts
 <para>
 Permission to use, copy, modify, and distribute this documentation for any
 purpose and without fee is hereby granted, provided that the above
-copyright notice appear in all copies. Olivetti, Digital, MIT, and the
-X Consortium make no representations about the suitability for any purpose
-of the information in this document. This documentation is provided as
-is without express or implied warranty.
+copyright notice appear in all copies. Olivetti, Digital, MIT, the
+X Consortium, and NVIDIA make no representations about the suitability for
+any purpose of the information in this document. This documentation is
+provided as is without express or implied warranty.
 </para>
 
 <para>
@@ -133,12 +139,17 @@ frame marker.
 </para>
 
 <para>
-The extension adds <function>Counter</function> and
-<function>Alarm</function> to the set of resources managed by the
+The extension adds <function>Counter</function>, <function>Alarm</function>,
+and <function>Fence</function> to the set of resources managed by the
 server. A counter has a 64-bit integer value that may be increased or
 decreased by client requests or by the server internally. A client can block
 by sending an Await request that waits until one of a set of synchronization
-conditions, called TRIGGERs, becomes TRUE.
+conditions, called TRIGGERs, becomes TRUE.  Alarms generate events when
+counter values go through a specified transition.  A fence has two possible
+states: triggered and not triggered. Client requests can put the fence in
+either of these states. A client can block until one of a set of fences
+becomes triggered by sending an AwaitFence request.  Fences are bound to a
+particular screen at creation time.
 </para>
 
 <para>
@@ -166,6 +177,21 @@ Other extensions may provide their own extension-specific system counters.
 The extension provides an <function>Alarm</function> mechanism that allows
 clients to receive an event on a regular basis when a particular counter
 is changed.
+</para>
+
+<para>
+The <function>CreateFence</function> request allows a client to create a
+<function>Fence</function> that can be triggered and reset using
+<function>TriggerFence</function> and <function>ResetFence</function>
+requests, respectively.  <function>CreateFence</function> takes a drawable
+argument that implies which screen the fence should be created on.  The
+<function>TriggerFence</function> request changes the fence's state only
+after all previous rendering commands affecting objects owned by the given
+fence's screen have completed.  Note that while fence objects are bound
+to a screen and the simple trigger operation provided by this extension
+operates at screen granularity, other extensions may add more fine-grained
+trigger operations based on any number of events.  The screen binding
+merely establishes an upper bound for the scope of fence operations.
 </para>
 
 </sect1>
@@ -201,6 +227,7 @@ SYSTEMCOUNTER:         [
                        ]
 ALARM:                 XID
 ALARMSTATE:            {Active,Inactive,Destroyed}
+FENCE:                 XID
 </literallayout>
 
 <para>
@@ -283,6 +310,14 @@ registry of system counter names to avoid collisions in the name space.
 <para>
 An ALARM is the client-side handle on an <function>Alarm</function> resource.
 </para>
+
+<para>
+The FENCE type defines the client-side handle on a server
+<function>Fence</function>.  A fence can only be in one of two states,
+represented by a BOOL.  If the value is TRUE, the fence is in the triggered
+state.  Otherwise, the fence is in the not triggered state.
+</para>
+
 </sect1>
 
 <sect1 id="errors">
@@ -304,6 +339,15 @@ does not name a defined COUNTER.
       <para>
 This error is generated if the value for an ALARM argument in a request
 does not name a defined ALARM.
+      </para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term>Fence</term>
+    <listitem>
+      <para>
+This error is generated if the value for a FENCE argument in a request
+does not name a defined FENCE.
       </para>
     </listitem>
   </varlistentry>
@@ -341,7 +385,7 @@ and v1.version_minor &lt;= v2.version_minor.  Compatible means that the
 functionality is fully supported in an identical fashion in the two versions.
      </para>
      <para>
-This document describes major version 3, minor version 0 of the SYNC protocol.
+This document describes major version 3, minor version 1 of the SYNC protocol.
      </para>
    </listitem>
   </varlistentry>
@@ -740,6 +784,118 @@ server.
       </para>
     </listitem>
   </varlistentry>
+  <varlistentry>
+  <term>CreateFence</term>
+  <listitem>
+<literallayout class="monospaced">
+drawable: DRAWABLE
+id: FENCE
+initially-triggered: BOOL
+Errors: <function>IDChoice</function>,<function>Alloc</function>
+</literallayout>
+      <para>
+This request creates a fence on the screen associated with drawable and
+assigns the specified id to it. The fence is in the triggered state iff
+initially-triggered is TRUE. There are no clients waiting on the fence.
+      </para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term>TriggerFence</term>
+    <listitem>
+<literallayout class="monospaced">
+fence: FENCE
+Errors: <function>Fence</function>
+</literallayout>
+      <para>
+This request puts the given fence in the triggered state after all rendering
+from previous requests that affects resources owned by the fence's screen has
+completed. This includes requests from other clients if those requests have
+been dispatched. This request has no visible effects if the fence was already
+in the triggered state. A <function>Fence</function> error is generated if
+fence does not name a valid fence.
+      </para>
+      <para>
+Note that the given fence's state is not necessarily directly modified by this
+request.  The state change need only be queued to occur after the required
+rendering has completed. Clients should take care to not assume the fence will
+be in the triggered state in subsequent requests, such as those that operate
+on the given fence immediately. <function>AwaitFence</function> should first
+be issued if subsequent requests require the fence to be in the triggered
+state.
+      </para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term>ResetFence</term>
+    <listitem>
+<literallayout class="monospaced">
+fence: FENCE
+Errors: <function>Fence</function>,<function>Match</function>
+</literallayout>
+      <para>
+This request immediately puts the given fence in the not triggered state.
+A <function>Match</function> error is generated if the fence is not in the
+triggered state. A <function>Fence</function> error is generated if fence
+does not name a valid fence.
+      </para>
+      <para>
+See the warnings above regarding <function>TriggerFence</function>'s delayed
+effect.  In particular, a <function>TriggerFence</function> request
+immediately followed by a <function>ResetFence</function> request is likely
+to result in a <function>Match</function> error. An
+<function>AwaitFence</function> request should be issued between the two.
+      </para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term>DestroyFence</term>
+    <listitem>
+<literallayout class="monospaced">
+fence: FENCE
+Errors: <function>Fence</function>
+</literallayout>
+      <para>
+This request destroys the given fence. All clients waiting on this fence are
+released. A fence is destroyed automatically when the connection to the client
+that created the fence is closed if the close-down mode is
+<function>DestroyAll</function>. A <function>Fence</function> error is
+generated if fence does not name a valid fence.
+      </para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term>QueryFence</term>
+    <listitem>
+<literallayout class="monospaced">
+fence: FENCE
+=>
+triggered: BOOL
+Errors: <function>Fence</function>
+</literallayout>
+      <para>
+This request returns TRUE if the given fence is triggered, or FALSE if it
+is not triggered.  A <function>Fence</function> error is generated if
+fence does not name a valid fence.
+      </para>
+    </listitem>
+  </varlistentry>
+  <varlistentry>
+    <term>AwaitFence</term>
+    <listitem>
+<literallayout class="monospaced">
+fence-list: LISTofFENCE
+Errors: <function>Fence</function>,<function>Alloc</function>
+</literallayout>
+      <para>
+When this request is executed, the processing of further requests for the
+client is blocked until one or more of the fences in fence-list reaches the
+triggered state.  If any of the fences are already in the triggered state,
+request processing resumes immediately. A <function>Fence</function> error
+is generated if any member of fence-list does not name a valid fence.
+      </para>
+    </listitem>
+  </varlistentry>
 </variablelist>
 </sect1>
 
@@ -844,6 +1000,7 @@ TRIGGER:
 WAITCONDITION:
        20        TRIGGER                 trigger
        8         INT64                   event threshold
+FENCE: CARD32
 </literallayout>
 
 <para>
@@ -869,6 +1026,14 @@ groups, the byte ordering determined during connection setup is used.
         1    Base + 1     code
         2    CARD16       sequence number
         4    CARD32       bad alarm
+        2    CARD16       minor opcode
+        1    CARD8        major opcode
+        21                unused
+<function>Fence</function>
+        1    0            Error
+        1    Base + 2     code
+        2    CARD16       sequence number
+        4    CARD32       bad fence
         2    CARD16       minor opcode
         1    CARD8        major opcode
         21                unused
@@ -1026,6 +1191,52 @@ GetPriority
         4    INT32        priority
         20                unused
 
+CreateFence
+        1    CARD8        major opcode
+        1    14           minor opcode
+        2    4            request length
+        4    DRAWABLE     drawable
+        4    FENCE        id
+        1    BOOL         initially triggered
+        3                 unused
+
+TriggerFence
+        1    CARD8        major opcode
+        1    15           minor opcode
+        2    2            request length
+        4    FENCE        id
+
+ResetFence
+        1    CARD8        major opcode
+        1    16           minor opcode
+        2    2            request length
+        4    FENCE        id
+
+DestroyFence
+        1    CARD8        major opcode
+        1    17           minor opcode
+        2    2            request length
+        4    FENCE        id
+
+QueryFence
+        1    CARD8        major opcode
+        1    18           minor opcode
+        2    2            request length
+        4    FENCE        id
+=>
+        1    1            Reply
+        1                 unused
+        2    CARD16       sequence number
+        4    0            reply length
+        1    BOOL         triggered
+        23                unused
+
+AwaitFence
+        1    CARD8        major opcode
+        1    19           minor opcode
+        2    1 + n        request length
+        4*n  LISTofFENCE  wait conditions
+        
 </literallayout>
 
 </sect1>
