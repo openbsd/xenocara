@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2011 Red Hat, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -273,4 +274,63 @@ XFixesShowCursor (Display *dpy, Window win)
     req->window = win;
     UnlockDisplay (dpy);
     SyncHandle ();
+}
+
+PointerBarrier
+XFixesCreatePointerBarrier(Display *dpy, Window w, int x1, int y1,
+			   int x2, int y2, int directions,
+			   int num_devices, int *devices)
+{
+    XFixesExtDisplayInfo *info = XFixesFindDisplay (dpy);
+    xXFixesCreatePointerBarrierReq *req;
+    PointerBarrier barrier;
+    int extra = 0;
+
+    XFixesCheckExtension (dpy, info, 0);
+    if (info->major_version < 5)
+	return 0;
+
+    if (num_devices)
+	extra = (((2 * num_devices) + 3) / 4) * 4;
+
+    LockDisplay (dpy);
+    GetReqExtra (XFixesCreatePointerBarrier, extra, req);
+    req->reqType = info->codes->major_opcode;
+    req->xfixesReqType = X_XFixesCreatePointerBarrier;
+    barrier = req->barrier = XAllocID (dpy);
+    req->window = w;
+    req->x1 = x1;
+    req->y1 = y1;
+    req->x2 = x2;
+    req->y2 = y2;
+    req->directions = directions;
+    if ((req->num_devices = num_devices)) {
+	int i;
+	CARD16 *devs = (CARD16 *)(req + 1);
+	for (i = 0; i < num_devices; i++)
+	    devs[i] = (CARD16)(devices[i]);
+    }
+
+    UnlockDisplay (dpy);
+    SyncHandle();
+    return barrier;
+}
+
+void
+XFixesDestroyPointerBarrier(Display *dpy, PointerBarrier b)
+{
+    XFixesExtDisplayInfo *info = XFixesFindDisplay (dpy);
+    xXFixesDestroyPointerBarrierReq *req;
+
+    XFixesSimpleCheckExtension (dpy, info);
+    if (info->major_version < 5)
+	return;
+
+    LockDisplay (dpy);
+    GetReq (XFixesDestroyPointerBarrier, req);
+    req->reqType = info->codes->major_opcode;
+    req->xfixesReqType = X_XFixesDestroyPointerBarrier;
+    req->barrier = b;
+    UnlockDisplay (dpy);
+    SyncHandle();
 }

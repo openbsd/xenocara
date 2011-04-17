@@ -24,8 +24,6 @@
 #ifndef _XFIXESINT_H_
 #define _XFIXESINT_H_
 
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <stdio.h>
 #include <X11/Xlib.h>
 #include <X11/Xlibint.h>

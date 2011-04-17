@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2011 Red Hat, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -248,6 +249,20 @@ void
 XFixesShowCursor (Display *dpy, Window win);
 
 #endif /* XFIXES_MAJOR >= 4 */
+
+#if XFIXES_MAJOR >= 5
+
+typedef XID PointerBarrier;
+
+PointerBarrier
+XFixesCreatePointerBarrier(Display *dpy, Window w, int x1, int y1,
+			   int x2, int y2, int directions,
+			   int num_devices, int *devices);
+
+void
+XFixesDestroyPointerBarrier(Display *dpy, PointerBarrier b);
+
+#endif /* XFIXES_MAJOR >= 5 */
 
 _XFUNCPROTOEND
 
