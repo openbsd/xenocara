@@ -1,3 +1,24 @@
+commit b8a682cc30499a751091c84efabb3012e02f47c5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Feb 28 09:53:30 2011 -0500
+
+    fixesproto 5.0
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9760b4bdd1f9fdd6a33b9f876c4a835ed969aa84
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Nov 15 17:09:31 2010 -0500
+
+    fixesproto v5: Pointer barriers
+    
+    v3: Review fixes:
+    - INT16 not CARD16 for coordinates
+    - BadDevice not BadMatch
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 29324d36b3aa6697268c9b51522afcafc2244361
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 21:01:26 2010 -0700
