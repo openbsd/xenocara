@@ -1,3 +1,61 @@
+commit 452ae1076b4ad8ccd60e218a3676baa274c083ff
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 23 11:44:18 2011 +1000
+
+    xproto 7.0.21
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 423f5faddbb1023d0c1cf55b9d1da4397aa1aa26
+Author: Harshula Jayasuriya <harshula@gmail.com>
+Date:   Tue Mar 15 10:46:48 2011 +0000
+
+    Add #defines for Unicode Sinhala to keysymdef.h
+    
+    Add #defines for Unicode Sinhala so that they can be used in the lk XKB
+    keyboard layout.
+    
+    Signed-off-by: Harshula Jayasuriya <harshula@gmail.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit f0c5b701a5f8fe6be24229dea35c35b50afe8646
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 24 20:13:20 2011 -0800
+
+    Support _X_INLINE in any C99-compliant compiler
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6eed63f7455d718bf6238ca2f24515329b2a3895
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 6 22:24:33 2011 -0800
+
+    Add missing notices to COPYING
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1870ec9ce40e8852e1cdce473afa90d21d780e52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 13 16:25:31 2010 -0800
+
+    Xfuncproto.h: Add _X_RESTRICT_KEYWORD for C99 & gcc in non-strict-C89 mode
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e5604f04482350eb922a31ad4342aab91ab3b412
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 9 16:04:52 2010 -0800
+
+    Enable gcc attribute(__format__) on gcc versions older than 4.0
+    
+    Enabled on 2.3 and up, since that's where it's available according to
+    http://www.ohse.de/uwe/articles/gcc-attributes.html#func-format
+    
+    Tested with gcc 3.4.3 on Solaris.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit cda6ce66caa01997b9dd32eb8689d6e746558369
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Nov 3 00:04:22 2010 -0700
