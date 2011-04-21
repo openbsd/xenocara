@@ -123,7 +123,7 @@
 ./usr/X11R6/lib/libXdamage.so.3.1
 ./usr/X11R6/lib/libXdmcp.so.10.0
 ./usr/X11R6/lib/libXext.so.11.0
-./usr/X11R6/lib/libXfixes.so.5.0
+./usr/X11R6/lib/libXfixes.so.5.1
 ./usr/X11R6/lib/libXfont.so.9.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXft.so.8.0
