@@ -1,3 +1,434 @@
+commit a07c353f01f99ef3e62f84a32e91d539a4e4863a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 10 08:32:23 2011 +1000
+
+    mouse 1.7.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a22879c6779283684fe4a61543fc95179b4f5d0b
+Author: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+Date:   Wed Mar 9 20:09:59 2011 +0500
+
+    Fix BSD issues with new ABI12 init process.
+    
+    From Bug 34794:
+    "Until xf86-input-mouse-1.6.0, the MousePreInit() function exited if an
+    os specific PreInit function existed. It let the os-specific function finish
+    all initialisations that remained to be done after osInfo->PreInit() was
+    called.
+    
+    The code in master now continues, and does things that the bsdMousePreInit()
+    function in bsd_mouse.c doesn't expect."
+    
+    Fix up wsconsPreInit to deal with the new init process.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=34794
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2e507df6704ebd2cab6ada450ed40d89a2d3ca19
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 21 10:06:54 2011 +1000
+
+    mouse 1.6.99.901
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 70f1d8579ef86dd428eabcb3752b5d1bce47b8f7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 21 09:40:13 2011 +1000
+
+    man: ClearDTR and ClearRTS are handled by the X server.
+    
+    If it breaks, we know who to blame (or file a bug against).
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 194c5913e92c84d1a30447d43b5beee77a98b7ba
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 21 09:33:37 2011 +1000
+
+    man: protocol option isn't mandatory, it's platform-specific.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit f70a9817a2eb845eb9718c0ed6540de1ffe7e531
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 21 09:30:36 2011 +1000
+
+    man: fix typo "Auto platform" → "Auto protocol"
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit a45b5d0eaf871c139b057f757869a20fd617d529
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 21 09:29:59 2011 +1000
+
+    man: README.mouse is just README
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 9140e2640319833658a2be5ab2f8349a79ff20aa
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 21 09:28:26 2011 +1000
+
+    man: add mention of xorg.conf.d snippet
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit af784aad332d67bb746597d5de032ca320928d51
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 21 09:24:38 2011 +1000
+
+    man: remove mention of core pointer.
+    
+    This doesn't apply to X servers 1.7 and later.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 6b5a82e4e85ab12df23ecf30f2b07eb4c5763e93
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 29 22:25:52 2010 -0800
+
+    Add ABI checks around XI86_CONFIGURED uses in OS-specific PreInits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 73bb42e10033cfeb41ba540ea0303b882ff7e61e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 25 11:35:29 2010 +1000
+
+    Bump to 1.6.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0a088df6b2f5cac05a00c4f461274b83feb1a9a8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 14:34:28 2010 +1000
+
+    Adjust to new Input ABI 12.
+    
+    New PreInit prototype and a couple of other minor changes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit fedd52ba781da1960ada0a96b85293afe2509a4a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:16:22 2010 +1000
+
+    ABI 12 requires per-valuator modes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 7bf22a368c752fe76dc60c3ea0f70ec1a46d653e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 14:36:59 2010 +1000
+
+    Use pInfo->options instead of conf-idev.
+    
+    Because it doesn't really matter anyway, I think.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit f3f405db5603ecca5bc14dba23628ea56a0f5202
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 16:08:49 2010 +1000
+
+    Remove write-only field mouseFlags.
+    
+    The flags were used to store ClearDTS and ClearRTR, but those options only
+    resulted in log messages.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 23308a251e16c4a6ab3c89c0505b0d8900c9cdff
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 13:51:59 2010 +1000
+
+    Rename xf86OSMouseInit to OSMouseInit.
+    
+    This isn't a DDX function anymore.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9263c949df6cbbb8e42ec4f0d6337206f684d0f5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 13:49:23 2010 +1000
+
+    Remove random History comment.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ecc3d28fa488f186896d714b8872b8875f8eccfd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 13:46:13 2010 +1000
+
+    Rename xf86OSmouse.h to mouse.h
+    
+    The driver-internal mouse.h header was only an include command for
+    xf86OSmouse.h anyway.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a92175888885ac77c87d52309cba87f1e9c96e73
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 13:43:47 2010 +1000
+
+    Remove a bunch of unused fields from the MouseRec.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a48e8ce9434837d649eb88058aa9406f1bf9dce9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 13:41:26 2010 +1000
+
+    Move a statement down to have all allocations close together.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3ac92a41b9e85a0cfba011812b637b1f3ae2529
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 13:35:55 2010 +1000
+
+    Remove convoluted do { } while loop.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fac47e7df6f719b1fce5341b343cabcbe150b52f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 13:34:21 2010 +1000
+
+    Move protocol ID detection into a separate function.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 859b8f2c4d964cd9b40dcbc64bd28fc98e129387
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 12:17:19 2010 +1000
+
+    Use single exit path for PreInit.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11f94120035d1c4e2d1d299d9fa19f79ca3ed75e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 12:13:00 2010 +1000
+
+    De-duplicate Option "Device" handling.
+    
+    Move the warning messages and the OS-specific autoprobing calls into a new
+    function. This will change the order log messages appear in but functional
+    changes should be identical.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0b1920abf72664765f7dab4a487839a3d29267a1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:59:17 2010 +1000
+
+    Remove unused branch from if 1 condition.
+    
+    This has been in since 2003 or earlier, let's pretend it works.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 008906b855f05be4d1942d2a3e1afcb8a7ee4b14
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:56:36 2010 +1000
+
+    Remove a bunch of unnecessary log prints.
+    
+    xf86SetFooOption will print to the log anyway, no need to print twice.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9d6723303216e7b6de583716768d0dc972f03d03
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:53:21 2010 +1000
+
+    Remove if 0'd out model.
+    
+    If 0 since at least 2003 is enough to pretend we don't need this block.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6f227252af6458fbf6cbeee43e3f739fd2f03c67
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 15:38:57 2010 +1000
+
+    Remove includes for protocol headers.
+    
+    The driver shouldn't need those.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3b39dd7ca3a4055e63a8ca55b614912fe47215a6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:49:51 2010 +1000
+
+    Remove unused define NEED_X86_TYPES.
+    
+    Not needed for 1.6 and later.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ef4fad4d823d46be4538daeca0ee3e014efc73c2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:39:42 2010 +1000
+
+    Assume ABI_XINPUT_VERSION 4 or higher.
+    
+    We require server 1.6 in configure.ac to build, so let's assume that's the
+    minimal ABI version we support. Purge the rest.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7b426ef2a6bc181ec700f74b59b39c2e695bf6b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:34:41 2010 +1000
+
+    Remove refcnt field from InputDriverRec.
+    
+    Wasn't used in the server and is now removed.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b5fc405451d8fa01b9e5fb6f2da74a6e03d50174
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:31:23 2010 +1000
+
+    Don't try to call conversion_proc anymore.
+    
+    This hasn't been called since at least server 1.5 or so (ABI 2), possibly
+    longer.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bb2d63df99457de1e5c06be501a03b5629fc52c8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 11:10:25 2010 +1000
+
+    Replace LocalDevicePtr with InputInfoPtr.
+    
+    No functional changes.
+    The typedef has been removed from the server but was an alias for
+    InputInfoPtr since the dawn of, well, at least git.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b5f4fc652cf5999045ff9006a55cf75edaba65c0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 10:57:58 2010 +1000
+
+    XI86_POINTER_CAPABLE is gone from the server.
+    
+    And was a write-only flag before that anyway, no ifdef needed.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4eefb5bfa837aae2201769360745edcaad4ea8d8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 10:54:41 2010 +1000
+
+    Remove out-of-date comment.
+    
+    /*
+     * XXX This should be done by a function in the core server since the
+     * MouseDevRec is defined in the os-support layer.
+     */
+    
+    no, it shouldn't and it isn't, in exactly that order.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fdd5d5c77d05c7f085e6f62c66b31b66087d195d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 10:46:35 2010 +1000
+
+    Remove unused declaration of MouseUnInit.
+    
+    To not have an UnInit function one needs to explicitly not define an UnInit
+    function that is then not used, so that definitely no UnInit is performed
+    with the function that is not defined. Philosophically speaking, this may be
+    true. Meanwhile, over here in reality, well... meh.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit abc107eeb8847b9bf2f303abefde5adaab9331bf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 10:45:27 2010 +1000
+
+    Replace libc wrappers to xcalloc and friends with libc calls.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 782052d087fd59d673de6c45784c316c055a592d
+Merge: 4f1a5cc 6d6c247
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Sep 29 23:42:43 2010 +0200
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-input-mouse
+
 commit 6d6c24768b2b347436a6d35c4aaa129227c7392e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Sep 8 23:11:19 2010 -0700
@@ -13,6 +444,27 @@ Date:   Wed Sep 8 22:58:30 2010 -0700
     Bring README a little closer to the current state of reality
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f1a5cc98c8452362ecb81843cd0a32c9a45ce4e
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Sep 5 21:21:58 2010 +0200
+
+    Fix build warning
+    
+    Add extra parentheses to avoid ambiguity.
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit 35f277a718f2da6a09080af020aaf29ef96fe807
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Sep 5 21:20:33 2010 +0200
+
+    Fix mouse data buffering
+    
+    Check remaining buffer size *before* reading a character from the device.  Also
+    keep extra characters in the static buffer until next invocation.
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
 
 commit cb11e9ca60e8ca2590c77f844bfd19e5278f518f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
@@ -531,7 +983,7 @@ Date:   Sun Aug 16 21:33:43 2009 -0700
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 0996fd2e3dcac813ad450884e8c117bc4d49b89a
-Merge: 66bdf8d... 8a3f6f7...
+Merge: 66bdf8d 8a3f6f7
 Author: Charlie <root@netbsd.(none)>
 Date:   Thu Jul 9 10:05:46 2009 +0200
 

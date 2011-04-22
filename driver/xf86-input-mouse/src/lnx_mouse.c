@@ -11,7 +11,7 @@
 #include <X11/X.h>
 #include "xf86.h"
 #include "xf86Xinput.h"
-#include "xf86OSmouse.h"
+#include "mouse.h"
 #include "xf86_OSlib.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -80,8 +80,8 @@ FindDevice(InputInfoPtr pInfo, const char *protocol, int flags)
     if (*pdev) {
 	close(fd);
 	/* Set the Device option. */
-	pInfo->conf_idev->commonOptions =
-	    xf86AddNewOption(pInfo->conf_idev->commonOptions, "Device", *pdev);
+	pInfo->options =
+	    xf86AddNewOption(pInfo->options, "Device", *pdev);
 	xf86Msg(X_INFO, "%s: Setting Device option to \"%s\"\n",
 		pInfo->name, *pdev);
     }
@@ -99,7 +99,7 @@ lnxMouseMagic(InputInfoPtr pInfo)
     int i;
     int proto = MOUSE_PROTO_UNKNOWN;
 
-    dev = xf86SetStrOption(pInfo->conf_idev->commonOptions, "Device", NULL);
+    dev = xf86SetStrOption(pInfo->options, "Device", NULL);
     if (!dev) {
 #ifdef DEBUG
 	ErrorF("xf86SetStrOption failed to return the device name\n");
@@ -122,7 +122,7 @@ lnxMouseMagic(InputInfoPtr pInfo)
 #ifdef DEBUG
 		ErrorF("readlink failed for %s (%s)\n", dev, strerror(errno));
 #endif
-		xfree(realdev);
+		free(realdev);
 		return NULL;
 	    }
 	    realdev[i] = '\0';
@@ -135,7 +135,7 @@ lnxMouseMagic(InputInfoPtr pInfo)
 	if (!strchr(realdev, '/')) {
 	    char *tmp = xnfalloc(strlen(realdev) + 5 + 1);
 	    sprintf(tmp, "/dev/%s", realdev);
-	    xfree(realdev);
+	    free(realdev);
 	    realdev = tmp;
 	}
     }
@@ -148,7 +148,7 @@ lnxMouseMagic(InputInfoPtr pInfo)
 	proto = MOUSE_PROTO_MSC;
     else if (strcmp(realdev, DEFAULT_GPM_CTL_DEV) == 0)
 	proto = MOUSE_PROTO_GPM;
-    xfree(realdev);
+    free(realdev);
     /*
      * If the protocol can't be guessed from the device name,
      * try to characterise it.
@@ -204,12 +204,12 @@ SetupAuto(InputInfoPtr pInfo, int *protoPara)
     return lnxMouseMagic(pInfo);
 }
 
-_X_EXPORT OSMouseInfoPtr
-xf86OSMouseInit(int flags)
+OSMouseInfoPtr
+OSMouseInit(int flags)
 {
     OSMouseInfoPtr p;
 
-    p = xcalloc(sizeof(OSMouseInfoRec), 1);
+    p = calloc(sizeof(OSMouseInfoRec), 1);
     if (!p)
 	return NULL;
     p->SupportedInterfaces = SupportedInterfaces;

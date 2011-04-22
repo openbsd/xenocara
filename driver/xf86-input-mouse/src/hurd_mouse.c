@@ -34,7 +34,7 @@
 
 #include "xf86.h"
 #include "xf86Xinput.h"
-#include "xf86OSmouse.h"
+#include "mouse.h"
 #include "xf86_OSlib.h"
 #include "xisb.h"
 
@@ -86,6 +86,7 @@ OsMouseReadInput(InputInfoPtr pInfo)
 {
     MouseDevPtr pMse;
     static kd_event eventList[NUMEVENTS];
+    static int remainder = 0;
     int n, c; 
     kd_event *event = eventList;
     unsigned char *pBuf;
@@ -94,26 +95,27 @@ OsMouseReadInput(InputInfoPtr pInfo)
 
     XisbBlockDuration(pMse->buffer, -1);
     pBuf = (unsigned char *)eventList;
-    n = 0;
-    while ((c = XisbRead(pMse->buffer)) >= 0 && n < sizeof(eventList))
+    n = remainder;
+    while (n < sizeof(eventList) && (c = XisbRead(pMse->buffer)) >= 0)
 	pBuf[n++] = (unsigned char)c;
 
-    if (n == 0)
+    if (n == remainder)
 	return;
 
+    remainder = n % sizeof(kd_event);
     n /= sizeof(kd_event);
     while( n-- ) {
 	int buttons = pMse->lastButtons;
 	int dx = 0, dy = 0;
 	switch (event->type) {
 	case MOUSE_RIGHT:
-	    buttons  = buttons & 6 |(event->value.up ? 0 : 1);
+	    buttons  = (buttons & 6) |(event->value.up ? 0 : 1);
 	    break;
 	case MOUSE_MIDDLE:
-	    buttons  = buttons & 5 |(event->value.up ? 0 : 2);
+	    buttons  = (buttons & 5) |(event->value.up ? 0 : 2);
 	    break;
 	case MOUSE_LEFT:
-	    buttons  = buttons & 3 |(event->value.up ? 0 : 4) ;
+	    buttons  = (buttons & 3) |(event->value.up ? 0 : 4) ;
 	    break;
 	case MOUSE_MOTION:
 	    dx = event->value.mmotion.mm_deltaX;
@@ -126,6 +128,7 @@ OsMouseReadInput(InputInfoPtr pInfo)
 	pMse->PostEvent(pInfo, buttons, dx, dy, 0, 0);
 	++event;
     }
+    memcpy(eventList, event, remainder);
     return;
 }
 
@@ -141,7 +144,7 @@ OsMousePreInit(InputInfoPtr pInfo, const char *protocol, int flags)
     xf86Msg(X_CONFIG, "%s: Protocol: %s\n", pInfo->name, protocol);
 
     /* Collect the options, and process the common options. */
-    xf86CollectInputOptions(pInfo, NULL, NULL);
+    COLLECT_INPUT_OPTIONS(pInfo, NULL);
     xf86ProcessCommonOptions(pInfo, pInfo->options);
 
     /* Check if the device can be opened. */
@@ -151,7 +154,7 @@ OsMousePreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 	    xf86Msg(X_WARNING, "%s: cannot open input device\n", pInfo->name);
 	else {
 	    xf86Msg(X_ERROR, "%s: cannot open input device\n", pInfo->name);
-	    xfree(pMse);
+	    free(pMse);
 	    return FALSE;
 	}
     }
@@ -164,7 +167,9 @@ OsMousePreInit(InputInfoPtr pInfo, const char *protocol, int flags)
     /* Setup the local procs. */
     pInfo->read_input = OsMouseReadInput;
     
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
     pInfo->flags |= XI86_CONFIGURED;
+#endif
     return TRUE;
 }
 
@@ -180,8 +185,8 @@ FindDevice(InputInfoPtr pInfo, const char *protocol, int flags)
 	return NULL;
 
     close(fd);
-    pInfo->conf_idev->commonOptions =
-	xf86AddNewOption(pInfo->conf_idev->commonOptions, "Device", path);
+    pInfo->options =
+	xf86AddNewOption(pInfo->options, "Device", path);
     xf86Msg(X_INFO, "%s: Setting Device option to \"%s\"\n", pInfo->name,
 	    path);
 
@@ -224,11 +229,11 @@ DefaultProtocol(void)
 }
 
 OSMouseInfoPtr
-xf86OSMouseInit(int flags)
+OSMouseInit(int flags)
 {
     OSMouseInfoPtr p;
 
-    p = xcalloc(sizeof(OSMouseInfoRec), 1);
+    p = calloc(sizeof(OSMouseInfoRec), 1);
     if (!p)
 	return NULL;
     p->SupportedInterfaces = SupportedInterfaces;

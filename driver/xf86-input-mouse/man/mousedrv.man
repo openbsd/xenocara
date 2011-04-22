@@ -21,9 +21,8 @@ types of mice depends on the OS.
 .PP
 The
 .B mouse
-driver functions as a pointer input device, and may be used as the
-X server's core pointer.  Multiple mice are supported by multiple
-instances of this driver.
+driver functions as a pointer input device. Multiple mice are supported by
+multiple instances of this driver.
 .SH SUPPORTED HARDWARE
 .TP
 USB mouse
@@ -74,8 +73,9 @@ what matters.
 .SH CONFIGURATION DETAILS
 .PP
 Depending on the X server version in use, input device options may be set
-in either a __xconfigfile__ file, or in the configuration files read by the
-Hardware Abstraction Layer (HAL) daemon, hald(1).
+in either a __xconfigfile__ file, an xorg.conf.d snippet
+or in the configuration files read by the Hardware Abstraction Layer (HAL)
+daemon, hald(1).
 .PP
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.  This
@@ -86,8 +86,9 @@ platforms this is limited to plug and play serial mice, and on some the
 auto-detection works for any mouse that the OS's kernel driver supports.
 On others, it is always necessary to specify the mouse protocol in the
 config file.  The
-.I README.mouse
-document contains some detailed information about this.
+.I README
+document provided with this driver contains some detailed information about
+this.
 .PP
 The following driver
 .B Options
@@ -104,9 +105,9 @@ NetMousePS/2, NetScrollPS/2, BusMouse, SysMouse, WSMouse, USB, VUID, Xqueue.
 .RE
 .PP
 .RS 7
-Not all protocols are supported on all platforms.  The "Auto" platform
-specifies that protocol auto-detection should be attempted.  There is no
-default protocol setting, and specifying this option is mandatory.
+Not all protocols are supported on all platforms.  The "Auto" protocol
+specifies that protocol auto-detection should be attempted.  The default
+protocol setting is platform-specific.
 .RE
 .TP 7
 .BI "Option \*qDevice\*q \*q" string \*q
@@ -280,13 +281,15 @@ indicating that the next button pressed is to be
 .BI "Option \*qClearDTR\*q \*q" boolean \*q
 Enable/disable clearing the DTR line on the serial port used by the mouse.
 Some dual-protocol mice require the DTR line to be cleared to operate
-in the non-default protocol.  This option is for serial mice only.
+in the non-default protocol.  This option is for serial mice only and is
+handled by the X server.
 Default: off.
 .TP 7
 .BI "Option \*qClearRTS\*q \*q" boolean \*q
 Enable/disable clearing the RTS line on the serial port used by the mouse.
 Some dual-protocol mice require the RTS line to be cleared to operate
-in the non-default protocol.  This option is for serial mice only.
+in the non-default protocol.  This option is for serial mice only and is
+handled by the X server.
 Default: off.
 .TP 7
 .BI "Option \*qBaudRate\*q \*q" integer \*q

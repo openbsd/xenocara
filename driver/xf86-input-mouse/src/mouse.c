@@ -53,22 +53,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/X.h>
-#include <X11/Xproto.h>
 
 #include "xf86.h"
 
 #include <X11/extensions/XI.h>
-#include <X11/extensions/XIproto.h>
 #include "extnsionst.h"
 #include "extinit.h"
 
 #include "xf86Xinput.h"
 #include "xf86_OSproc.h"
-#include "xf86OSmouse.h"
-
-#ifndef NEED_XF86_TYPES
-#define NEED_XF86_TYPES	/* for xisb.h when !XFree86LOADER */
-#endif
 
 #include "compiler.h"
 
@@ -119,16 +112,13 @@ typedef struct _DragLockRec {
 } DragLockRec, *DragLockPtr;
 
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 static InputInfoPtr MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags);
-#if 0
-static void MouseUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
+#else
+static int MousePreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
 #endif
 
 static int MouseProc(DeviceIntPtr device, int what);
-static Bool MouseConvert(LocalDevicePtr local, int first, int num, int v0,
-		 	     int v1, int v2, int v3, int v4, int v5, int *x,
-		 	     int *y);
-
 static void MouseCtrl(DeviceIntPtr device, PtrCtrl *ctrl);
 static void MousePostEvent(InputInfoPtr pInfo, int buttons,
 			   int dx, int dy, int dz, int dw);
@@ -161,9 +151,8 @@ _X_EXPORT InputDriverRec MOUSE = {
 	"mouse",
 	NULL,
 	MousePreInit,
-	/*MouseUnInit,*/NULL,
 	NULL,
-	0
+	NULL,
 };
 
 #define RETRY_COUNT 4
@@ -204,19 +193,6 @@ static const char *mmDefaults[] = {
 	"VMin",		"1",
 	NULL
 };
-#if 0 
-/* Logitech series 9 *//* same as msc: now mlDefaults */
-static const char *logiDefaults[] = {
-	"BaudRate",	"1200",
-	"DataBits",	"8",
-	"StopBits",	"2",
-	"Parity",	"None",
-	"FlowControl",	"None",
-	"VTime",	"0",
-	"VMin",		"1",
-	NULL
-};
-#endif
 /* Hitachi Tablet */
 static const char *mmhitDefaults[] = {
 	"BaudRate",	"1200",
@@ -276,6 +252,7 @@ static MouseProtocolRec mouseProtocols[] = {
 
     /* Misc (usually OS-specific) */
     { "SysMouse",		MSE_MISC,	mlDefaults,	PROT_SYSMOUSE },
+    { "WSMouse",		MSE_MISC,	NULL,		PROT_WSMOUSE },
 
     /* end of list */
     { NULL,			MSE_NONE,	NULL,		PROT_UNKNOWN }
@@ -318,26 +295,20 @@ MouseCommonOptions(InputInfoPtr pInfo)
     }
 
     pMse->chordMiddle = xf86SetBoolOption(pInfo->options, "ChordMiddle", FALSE);
-    if (pMse->chordMiddle)
-	xf86Msg(X_CONFIG, "%s: ChordMiddle\n", pInfo->name);
     pMse->flipXY = xf86SetBoolOption(pInfo->options, "FlipXY", FALSE);
-    if (pMse->flipXY)
-	xf86Msg(X_CONFIG, "%s: FlipXY\n", pInfo->name);
     if (xf86SetBoolOption(pInfo->options, "InvX", FALSE)) {
 	pMse->invX = -1;
-	xf86Msg(X_CONFIG, "%s: InvX\n", pInfo->name);
     } else
 	pMse->invX = 1;
     if (xf86SetBoolOption(pInfo->options, "InvY", FALSE)) {
 	pMse->invY = -1;
-	xf86Msg(X_CONFIG, "%s: InvY\n", pInfo->name);
     } else
 	pMse->invY = 1;
     pMse->angleOffset = xf86SetIntOption(pInfo->options, "AngleOffset", 0);
     
 
     if (pMse->pDragLock)
-	xfree(pMse->pDragLock);
+	free(pMse->pDragLock);
     pMse->pDragLock = NULL;
       
     s = xf86SetStrOption(pInfo->options, "DragLockButtons", NULL);
@@ -350,7 +321,7 @@ MouseCommonOptions(InputInfoPtr pInfo)
 	char *s1;             /* parse input string */
 	DragLockPtr pLock;
       
-	pLock = pMse->pDragLock = xcalloc(1, sizeof(DragLockRec));
+	pLock = pMse->pDragLock = calloc(1, sizeof(DragLockRec));
 	/* init code */
 
 	/* initial string to be taken apart */
@@ -441,7 +412,7 @@ MouseCommonOptions(InputInfoPtr pInfo)
 		}
 	    }
 	}
-	xfree(s);
+	free(s);
     }
 
     s = xf86SetStrOption(pInfo->options, "ZAxisMapping", "4 5");
@@ -468,7 +439,7 @@ MouseCommonOptions(InputInfoPtr pInfo)
 	    if (b3 > 0 && b3 <= MSE_MAXBUTTONS &&
 		b4 > 0 && b4 <= MSE_MAXBUTTONS) {
 		if (msg)
-		    xfree(msg);
+		    free(msg);
 		msg = xstrdup("buttons XX, YY, ZZ and WW");
 		if (msg)
 		    sprintf(msg, "buttons %d, %d, %d and %d", b1, b2, b3, b4);
@@ -482,12 +453,12 @@ MouseCommonOptions(InputInfoPtr pInfo)
 	}
 	if (msg) {
 	    xf86Msg(X_CONFIG, "%s: ZAxisMapping: %s\n", pInfo->name, msg);
-	    xfree(msg);
+	    free(msg);
 	} else {
 	    xf86Msg(X_WARNING, "%s: Invalid ZAxisMapping value: \"%s\"\n",
 		    pInfo->name, s);
 	}
-	xfree(s);
+	free(s);
     }
     if (xf86SetBoolOption(pInfo->options, "EmulateWheel", FALSE)) {
 	Bool yFromConfig = FALSE;
@@ -541,9 +512,9 @@ MouseCommonOptions(InputInfoPtr pInfo)
 	    }
 	    if (msg) {
 		xf86Msg(X_CONFIG, "%s: XAxisMapping: %s\n", pInfo->name, msg);
-		xfree(msg);
+		free(msg);
 	    }
-	    xfree(s);
+	    free(s);
 	}
 	s = xf86SetStrOption(pInfo->options, "YAxisMapping", NULL);
 	if (s) {
@@ -567,9 +538,9 @@ MouseCommonOptions(InputInfoPtr pInfo)
 	    }
 	    if (msg) {
 		xf86Msg(X_CONFIG, "%s: YAxisMapping: %s\n", pInfo->name, msg);
-		xfree(msg);
+		free(msg);
 	    }
-	    xfree(s);
+	    free(s);
 	}
 	if (!yFromConfig) {
 	    pMse->negativeY = 4;
@@ -602,7 +573,7 @@ MouseCommonOptions(InputInfoPtr pInfo)
 	   pMse->buttonMap[n++] = 1 << (b-1);
 	   if (b > pMse->buttons) pMse->buttons = b;
        }
-       xfree(s);
+       free(s);
     }
     /* get maximum of mapped buttons */
     for (i = pMse->buttons-1; i >= 0; i--) {
@@ -638,9 +609,9 @@ MouseCommonOptions(InputInfoPtr pInfo)
         }
         if (msg) {
             xf86Msg(X_CONFIG, "%s: DoubleClickButtons: %s\n", pInfo->name, msg);
-            xfree(msg);
+            free(msg);
         }
-	xfree(s);
+	free(s);
     }
 }
 /*
@@ -686,55 +657,16 @@ MouseHWOptions(InputInfoPtr pInfo)
 	xf86Msg(X_CONFIG, "Don't initialize mouse when auto-probing\n");
     }
     pMse->sampleRate = xf86SetIntOption(pInfo->options, "SampleRate", 0);
-    if (pMse->sampleRate) {
-	xf86Msg(X_CONFIG, "%s: SampleRate: %d\n", pInfo->name,
-		pMse->sampleRate);
-    }
     pMse->resolution = xf86SetIntOption(pInfo->options, "Resolution", 0);
-    if (pMse->resolution) {
-	xf86Msg(X_CONFIG, "%s: Resolution: %d\n", pInfo->name,
-		pMse->resolution);
-    }
-
-    if ((mPriv->sensitivity 
-	 = xf86SetRealOption(pInfo->options, "Sensitivity", 1.0))) {
-	xf86Msg(X_CONFIG, "%s: Sensitivity: %g\n", pInfo->name,
-		mPriv->sensitivity);
-    }
+    mPriv->sensitivity = xf86SetRealOption(pInfo->options, "Sensitivity", 1.0);
 }
 
 static void
 MouseSerialOptions(InputInfoPtr pInfo)
 {
     MouseDevPtr  pMse = pInfo->private;
-    Bool clearDTR, clearRTS;
-    
-    
-    pMse->baudRate = xf86SetIntOption(pInfo->options, "BaudRate", 0);
-    if (pMse->baudRate) {
-	xf86Msg(X_CONFIG, "%s: BaudRate: %d\n", pInfo->name,
-		pMse->baudRate);
-    }
 
-    if ((clearDTR = xf86SetBoolOption(pInfo->options, "ClearDTR",FALSE)))
-	pMse->mouseFlags |= MF_CLEAR_DTR;
-	
-    
-    if ((clearRTS = xf86SetBoolOption(pInfo->options, "ClearRTS",FALSE)))
-	pMse->mouseFlags |= MF_CLEAR_RTS;
-	
-    if (clearDTR || clearRTS) {
-	xf86Msg(X_CONFIG, "%s: ", pInfo->name);
-	if (clearDTR) {
-	    xf86ErrorF("ClearDTR");
-	    if (clearRTS)
-		xf86ErrorF(", ");
-	}
-	if (clearRTS) {
-	    xf86ErrorF("ClearRTS");
-	}
-	xf86ErrorF("\n");
-    }
+    pMse->baudRate = xf86SetIntOption(pInfo->options, "BaudRate", 0);
 }
 
 static MouseProtocolID
@@ -816,7 +748,7 @@ InitProtocols(void)
     if (osInfo)
 	return TRUE;
 
-    osInfo = xf86OSMouseInit(0);
+    osInfo = OSMouseInit(0);
     if (!osInfo)
 	return FALSE;
     if (!osInfo->SupportedInterfaces)
@@ -847,66 +779,156 @@ InitProtocols(void)
     return TRUE;
 }
 
+static const char*
+MouseFindDevice(InputInfoPtr pInfo, const char* protocol)
+{
+    const char *device;
+
+    if (!osInfo->FindDevice)
+        return NULL;
+
+    xf86Msg(X_WARNING, "%s: No Device specified, looking for one...\n", pInfo->name);
+    device = osInfo->FindDevice(pInfo, protocol, 0);
+    if (!device)
+	xf86Msg(X_ERROR, "%s: Cannot find which device to use.\n", pInfo->name);
+    else
+	xf86Msg(X_PROBED, "%s: Device: \"%s\"\n", pInfo->name, device);
+
+    return device;
+}
+
+static const char*
+MousePickProtocol(InputInfoPtr pInfo, const char* device,
+		  const char *protocol, MouseProtocolID *protocolID_out)
+{
+    MouseProtocolID protocolID = *protocolID_out;
+
+    protocolID = ProtocolNameToID(protocol);
+
+    if (protocolID == PROT_AUTO)
+    {
+	const char *osProt;
+	if (osInfo->SetupAuto && (osProt = osInfo->SetupAuto(pInfo,NULL))) {
+	    MouseProtocolID id = ProtocolNameToID(osProt);
+	    if (id == PROT_UNKNOWN || id == PROT_UNSUP) {
+		protocolID = id;
+		protocol = osProt;
+	    }
+	}
+    }
+
+    switch (protocolID) {
+        case PROT_WSMOUSE:
+            if (osInfo->PreInit)
+                osInfo->PreInit(pInfo, protocol, 0);
+            break;
+	case PROT_UNKNOWN:
+	    /* Check for a builtin OS-specific protocol,
+	     * and call its PreInit. */
+	    if (osInfo->CheckProtocol
+		    && osInfo->CheckProtocol(protocol)) {
+		if (!device)
+		    MouseFindDevice(pInfo, protocol);
+		if (osInfo->PreInit) {
+		    osInfo->PreInit(pInfo, protocol, 0);
+		}
+		break;
+	    }
+	    xf86Msg(X_ERROR, "%s: Unknown protocol \"%s\"\n",
+		    pInfo->name, protocol);
+	    break;
+	case PROT_UNSUP:
+	    xf86Msg(X_ERROR,
+		    "%s: Protocol \"%s\" is not supported on this "
+		    "platform\n", pInfo->name, protocol);
+	    break;
+	default:
+	    break;
+    }
+
+    *protocolID_out = protocolID;
+
+    return protocol;
+}
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+static int NewMousePreInit(InputDriverPtr drv, InputInfoPtr pInfo,
+                           int flags);
+
 static InputInfoPtr
 MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
     InputInfoPtr pInfo;
-    MouseDevPtr pMse;
-    mousePrivPtr mPriv;
-    MessageType protocolFrom = X_DEFAULT, deviceFrom = X_CONFIG;
-    const char *protocol, *osProt = NULL;
-    const char *device;
-    MouseProtocolID protocolID;
-    MouseProtocolPtr pProto;
-    Bool detected;
-    int i;
-    
-    if (!InitProtocols())
-	return NULL;
 
     if (!(pInfo = xf86AllocateInput(drv, 0)))
 	return NULL;
 
-    /* Initialise the InputInfoRec. */
     pInfo->name = dev->identifier;
-    pInfo->type_name = XI_MOUSE;
-    pInfo->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
-    pInfo->device_control = MouseProc;
-    pInfo->read_input = MouseReadInput;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    pInfo->motion_history_proc = xf86GetMotionEvents;
-    pInfo->history_size = 0;
-#endif
-    pInfo->control_proc = NULL;
+    pInfo->flags = XI86_SEND_DRAG_EVENTS;
+    pInfo->conf_idev = dev;
     pInfo->close_proc = NULL;
-    pInfo->switch_mode = NULL;
-    pInfo->conversion_proc = MouseConvert;
-    pInfo->reverse_conversion_proc = NULL;
-    pInfo->fd = -1;
-    pInfo->dev = NULL;
     pInfo->private_flags = 0;
     pInfo->always_core_feedback = NULL;
-    pInfo->conf_idev = dev;
 
-    /* Check if SendDragEvents has been disabled. */
-    if (!xf86SetBoolOption(dev->commonOptions, "SendDragEvents", TRUE)) {
-	pInfo->flags &= ~XI86_SEND_DRAG_EVENTS;
+    if (NewMousePreInit(drv, pInfo, flags) == Success)
+    {
+        /* Check if SendDragEvents has been disabled. */
+        if (!xf86SetBoolOption(dev->commonOptions, "SendDragEvents", TRUE))
+            pInfo->flags &= ~XI86_SEND_DRAG_EVENTS;
+
+        pInfo->flags |= XI86_CONFIGURED;
+
+        return pInfo;
     }
 
+    xf86DeleteInput(pInfo, 0);
+
+    return NULL;
+}
+
+static int
+NewMousePreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+#else
+static int
+MousePreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+#endif
+{
+    MouseDevPtr pMse;
+    mousePrivPtr mPriv;
+    MessageType protocolFrom = X_DEFAULT;
+    const char *protocol;
+    const char *device;
+    MouseProtocolID protocolID;
+    MouseProtocolPtr pProto;
+    int i;
+    int rc = Success;
+
+    if (!InitProtocols())
+	return BadAlloc;
+
+    /* Initialise the InputInfoRec. */
+    pInfo->type_name = XI_MOUSE;
+    pInfo->device_control = MouseProc;
+    pInfo->read_input = MouseReadInput;
+    pInfo->control_proc = NULL;
+    pInfo->switch_mode = NULL;
+    pInfo->fd = -1;
+    pInfo->dev = NULL;
+
     /* Allocate the MouseDevRec and initialise it. */
-    /*
-     * XXX This should be done by a function in the core server since the
-     * MouseDevRec is defined in the os-support layer.
-     */
-    if (!(pMse = xcalloc(sizeof(MouseDevRec), 1)))
-	return pInfo;
+    if (!(pMse = calloc(sizeof(MouseDevRec), 1)))
+    {
+	rc = BadAlloc;
+	goto out;
+    }
+
     pInfo->private = pMse;
     pMse->Ctrl = MouseCtrl;
     pMse->PostEvent = MousePostEvent;
     pMse->CommonOptions = MouseCommonOptions;
-    
+
     /* Find the protocol type. */
-    protocol = xf86SetStrOption(dev->commonOptions, "Protocol", NULL);
+    protocol = xf86SetStrOption(pInfo->options, "Protocol", NULL);
     if (protocol) {
 	protocolFrom = X_CONFIG;
     } else if (osInfo->DefaultProtocol) {
@@ -915,92 +937,42 @@ MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     }
     if (!protocol) {
 	xf86Msg(X_ERROR, "%s: No Protocol specified\n", pInfo->name);
-	return pInfo;
+	rc = BadValue;
+	goto out;
     }
+
+    device = xf86SetStrOption(pInfo->options, "Device", NULL);
 
     /* Default Mapping: 1 2 3 8 9 10 11 ... */
     for (i = 0; i < MSE_MAXBUTTONS; i++)
 	pMse->buttonMap[i] = 1 << (i > 2 && i < MSE_MAXBUTTONS-4 ? i+4 : i);
 
-    protocolID = ProtocolNameToID(protocol);
-    do {
-	detected = TRUE;
-	switch (protocolID) {
-	case PROT_AUTO:
-	    if (osInfo->SetupAuto) {
-		if ((osProt = osInfo->SetupAuto(pInfo,NULL))) {
-		    MouseProtocolID id = ProtocolNameToID(osProt);
-		    if (id == PROT_UNKNOWN || id == PROT_UNSUP) {
-			protocolID = id;
-			protocol = osProt;
-			detected = FALSE;
-		    }
-		}
-	    }
-	    break;
-	case PROT_UNKNOWN:
-	    /* Check for a builtin OS-specific protocol,
-	     * and call its PreInit. */
-	    if (osInfo->CheckProtocol
-		&& osInfo->CheckProtocol(protocol)) {
-		if (!xf86CheckStrOption(dev->commonOptions, "Device", NULL) &&
-		    osInfo->FindDevice) {
-		    xf86Msg(X_WARNING, "%s: No Device specified, "
-			    "looking for one...\n", pInfo->name);
-		    if (!osInfo->FindDevice(pInfo, protocol, 0)) {
-			xf86Msg(X_ERROR, "%s: Cannot find which device "
-				"to use.\n", pInfo->name);
-		    } else
-			deviceFrom = X_PROBED;
-		}
-		if (osInfo->PreInit) {
-		    osInfo->PreInit(pInfo, protocol, 0);
-		}
-		return pInfo;
-	    }
-	    xf86Msg(X_ERROR, "%s: Unknown protocol \"%s\"\n",
-		    pInfo->name, protocol);
-	    return pInfo;
-	    break;
-	case PROT_UNSUP:
-	    xf86Msg(X_ERROR,
-		    "%s: Protocol \"%s\" is not supported on this "
-		    "platform\n", pInfo->name, protocol);
-	    return pInfo;
-	    break;
-	default:
-	    break;
-	    
-	}
-    } while (!detected);
-    
-    if (!xf86CheckStrOption(dev->commonOptions, "Device", NULL) &&
-	osInfo->FindDevice) {
-	xf86Msg(X_WARNING, "%s: No Device specified, looking for one...\n",
-		pInfo->name);
-	if (!osInfo->FindDevice(pInfo, protocol, 0)) {
-	    xf86Msg(X_ERROR, "%s: Cannot find which device to use.\n",
-		    pInfo->name);
-	} else {
-	    deviceFrom = X_PROBED;
-	    xf86MarkOptionUsedByName(dev->commonOptions, "Device");
-	}
-    }
+    protocol = MousePickProtocol(pInfo, device, protocol, &protocolID);
 
-    device = xf86CheckStrOption(dev->commonOptions, "Device", NULL);
-    if (device)
-	xf86Msg(deviceFrom, "%s: Device: \"%s\"\n", pInfo->name, device);
-	
+    if (!device)
+        MouseFindDevice(pInfo, protocol);
+
     xf86Msg(protocolFrom, "%s: Protocol: \"%s\"\n", pInfo->name, protocol);
     if (!(pProto = GetProtocol(protocolID)))
-	return pInfo;
+    {
+	rc = BadValue;
+	goto out;
+    }
 
     pMse->protocolID = protocolID;
     pMse->oldProtocolID = protocolID;  /* hack */
 
     pMse->autoProbe = FALSE;
     /* Collect the options, and process the common options. */
-    xf86CollectInputOptions(pInfo, pProto->defaults, NULL);
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+    /* need some special handling here. xf86CollectInputOptions will reset
+     * pInfo->options if the second argument is not-null. To re-merge the
+     * previously set arguments, pass the original pInfo->options in.
+     */
+    xf86CollectInputOptions(pInfo, pProto->defaults, pInfo->options);
+#else
+    COLLECT_INPUT_OPTIONS(pInfo, pProto->defaults);
+#endif
     xf86ProcessCommonOptions(pInfo, pInfo->options);
 
     /* Check if the device can be opened. */
@@ -1011,17 +983,22 @@ MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	else {
 	    xf86Msg(X_ERROR, "%s: cannot open input device\n", pInfo->name);
 	    if (pMse->mousePriv)
-		xfree(pMse->mousePriv);
-	    xfree(pMse);
+		free(pMse->mousePriv);
+	    free(pMse);
 	    pInfo->private = NULL;
-	    return pInfo;
+	    rc = BadValue;
+	    goto out;
 	}
     }
     xf86CloseSerial(pInfo->fd);
     pInfo->fd = -1;
 
-    if (!(mPriv = (pointer) xcalloc(sizeof(mousePrivRec), 1)))
-	return pInfo;
+    if (!(mPriv = (pointer) calloc(sizeof(mousePrivRec), 1)))
+    {
+	rc = BadAlloc;
+	goto out;
+    }
+
     pMse->mousePriv = mPriv;
     pMse->CommonOptions(pInfo);
     pMse->checkMovements = checkForErraticMovements;
@@ -1031,9 +1008,9 @@ MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     
     MouseHWOptions(pInfo);
     MouseSerialOptions(pInfo);
-    
-    pInfo->flags |= XI86_CONFIGURED;
-    return pInfo;
+
+out:
+    return rc;
 }
 
 
@@ -1599,17 +1576,8 @@ MouseProc(DeviceIntPtr device, int what)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                                 btn_labels,
 #endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-				miPointerGetMotionEvents,
-#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-                                GetMotionHistory,
-#endif
                                 pMse->Ctrl,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-				miPointerGetMotionBufferSize()
-#else
                                 GetMotionHistorySize(), 2
-#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                                 , axes_labels
 #endif
@@ -1620,18 +1588,23 @@ MouseProc(DeviceIntPtr device, int what)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                 axes_labels[0],
 #endif
-                -1, -1, 1, 0, 1);
+                -1, -1, 1, 0, 1
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+                , Relative
+#endif
+                );
 	xf86InitValuatorDefaults(device, 0);
 	/* Y valuator */
 	xf86InitValuatorAxisStruct(device, 1,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                 axes_labels[1],
 #endif
-                -1, -1, 1, 0, 1);
-	xf86InitValuatorDefaults(device, 1);
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-	xf86MotionHistoryAllocate(pInfo);
+                -1, -1, 1, 0, 1
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+                , Relative
 #endif
+                );
+	xf86InitValuatorDefaults(device, 1);
 
 #ifdef EXTMOUSEDEBUG
 	ErrorF("assigning %p atom=%d name=%s\n", device, pInfo->atom,
@@ -1711,32 +1684,11 @@ MouseProc(DeviceIntPtr device, int what)
 	device->public.on = FALSE;
 	break;
     case DEVICE_CLOSE:
-	xfree(pMse->mousePriv);
+	free(pMse->mousePriv);
 	pMse->mousePriv = NULL;
 	break;
     }
     return Success;
-}
-
-/*
- ***************************************************************************
- *
- * MouseConvert --
- *	Convert valuators to X and Y.
- *
- ***************************************************************************
- */
-static Bool
-MouseConvert(InputInfoPtr pInfo, int first, int num, int v0, int v1, int v2,
-	     int v3, int v4, int v5, int *x, int *y)
-{
-    if (first != 0 || num != 2)
-	return FALSE;
-
-    *x = v0;
-    *y = v1;
-
-    return TRUE;
 }
 
 /**********************************************************************
@@ -2385,7 +2337,7 @@ MousePostEvent(InputInfoPtr pInfo, int truebuttons,
  ******************************************************************/
 /*
  * This array is indexed by the MouseProtocolID values, so the order of the
- * entries must match that of the MouseProtocolID enum in xf86OSmouse.h.
+ * entries must match that of the MouseProtocolID enum in mouse.h.
  */
 static unsigned char proto[PROT_NUMPROTOS][8] = {
   /* --header--  ---data--- packet -4th-byte-  mouse   */
@@ -2463,13 +2415,7 @@ SetupMouse(InputInfoPtr pInfo)
 		    pMse->protoPara[i] = protoPara[i];
 	    /* if we come here PnP/OS mouse probing was successful */
 	} else {
-#if 1
 	    /* PnP/OS mouse probing wasn't successful; we look at data */
-#else
-  	    xf86Msg(X_ERROR, "%s: cannot determine the mouse protocol\n",
-		    pInfo->name);
-	    return FALSE;
-#endif
 	}
     }
 
@@ -2625,7 +2571,7 @@ initMouseHW(InputInfoPtr pInfo)
 	    usleep(100000);
 	    /* Set the parameters up for the MM series protocol. */
 	    options = pInfo->options;
-	    xf86CollectInputOptions(pInfo, mmDefaults, NULL);
+	    COLLECT_INPUT_OPTIONS(pInfo, mmDefaults);
 	    xf86SetSerial(pInfo->fd, pInfo->options);
 	    pInfo->options = options;
 
@@ -3149,7 +3095,7 @@ createProtoList(MouseDevPtr pMse, MouseProtocolID *protoList)
     blocked = xf86BlockSIGIO ();
 
     /* create a private copy first so we can write in the old list */
-    if ((tmplist = xalloc(sizeof(MouseProtocolID) * NUM_AUTOPROBE_PROTOS))){
+    if ((tmplist = malloc(sizeof(MouseProtocolID) * NUM_AUTOPROBE_PROTOS))){
 	for (i = 0; protoList[i] != PROT_UNKNOWN; i++) {
 	    tmplist[i] = protoList[i];
 	}
@@ -3259,7 +3205,7 @@ createProtoList(MouseDevPtr pMse, MouseProtocolID *protoList)
     
     mPriv->protoList[k] = PROT_UNKNOWN;
 
-    xfree(tmplist);
+    free(tmplist);
 }
 
 

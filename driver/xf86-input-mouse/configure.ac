@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-mouse],
-        [1.6.0],
+        [1.7.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-mouse])
 AC_CONFIG_SRCDIR([Makefile.am])
