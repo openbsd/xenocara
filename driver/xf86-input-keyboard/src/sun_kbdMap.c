@@ -37,10 +37,6 @@
 
 /* Map the Solaris keycodes to the "XFree86" keycodes. */
 
-/* Additional Sun Japanese Keyboard Keys not defined in atKeynames.h */
-#define KEY_Kanji	0x82
-#define KEY_Execute	0x83
-
 /*
  * Additional Korean 106 Keyboard Keys not defined in atKeynames.h
  * These are exactly same USB usage id with Kana(0x90) and Eisu(0x91) keys
@@ -479,10 +475,10 @@ static unsigned char usbmap[256] = {
 	/* 133 */ KEY_NOTUSED,
 	/* 134 */ KEY_NOTUSED,
 	/* 135 */ KEY_BSlash2,	/* Sun Japanese Kbd: Backslash / Underscore */
-	/* 136 */ KEY_XFER,	/* Sun Japanese Kbd: Henkan Mode */
+	/* 136 */ KEY_HKTG,	/* Sun Japanese type7 Kbd: Hirugana/Katakana */
 	/* 137 */ KEY_Yen,	/* Sun Japanese Kbd: Yen / Brokenbar */
-	/* 138 */ KEY_Kanji,	/* Sun Japanese Kbd: Kanji */
-	/* 139 */ KEY_Execute,	/* Sun Japanese Kbd: Execute */
+	/* 138 */ KEY_XFER,	/* Sun Japanese Kbd: Kanji Transfer */
+	/* 139 */ KEY_NFER,	/* Sun Japanese Kbd: No Kanji Transfer */
 	/* 140 */ KEY_NOTUSED,
 	/* 141 */ KEY_NOTUSED,
 	/* 142 */ KEY_NOTUSED,
@@ -604,8 +600,6 @@ KbdGetMapping (InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
      * Add Sun keyboard keysyms to default map
      */
 #define map_for_key(k,c) 	map[(k * GLYPHS_PER_KEY) + c]   
-    map_for_key(KEY_Kanji,	0) = XK_Kanji;
-    map_for_key(KEY_Execute,	0) = XK_Execute;
     map_for_key(KEY_Power,	0) = SunXK_PowerSwitch;
     map_for_key(KEY_Power,	1) = SunXK_PowerSwitchShift;
     map_for_key(KEY_Mute,	0) = SunXK_AudioMute;

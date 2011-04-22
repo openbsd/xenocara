@@ -37,8 +37,6 @@ static KbdProtocolRec protocols[] = {
    { NULL, PROT_UNKNOWN_KBD }
 };
 
-extern Bool VTSwitchEnabled;
-
 static void
 SoundBell(InputInfoPtr pInfo, int loudness, int pitch, int duration)
 {
@@ -185,7 +183,6 @@ OpenKeyboard(InputInfoPtr pInfo)
            return FALSE;
     }
 
-    xf86Msg(X_CONFIG, "%s: Protocol: %s\n", pInfo->name, s);
     free(s);
 
     s = xf86SetStrOption(pInfo->options, "Device", NULL);
@@ -202,9 +199,6 @@ OpenKeyboard(InputInfoPtr pInfo)
        pKbd->isConsole = FALSE;
        free(s);
     }
-
-    if (pKbd->isConsole)
-         pKbd->vtSwitchSupported = TRUE;
 
     return TRUE;
 }
@@ -225,7 +219,6 @@ xf86OSKbdPreInit(InputInfoPtr pInfo)
     pKbd->RemapScanCode = NULL;
 
     pKbd->OpenKeyboard = OpenKeyboard;
-    pKbd->vtSwitchSupported = FALSE;
 
     pKbd->private = calloc(sizeof(LnxKbdPrivRec), 1);
     if (pKbd->private == NULL) {
@@ -239,7 +232,7 @@ xf86OSKbdPreInit(InputInfoPtr pInfo)
     f = fopen("/proc/sys/dev/mac_hid/keyboard_sends_linux_keycodes","r");
     if (f) {
         if (fgetc(f) == '0')
-            pKbd->CustomKeycodes = TRUE;
+            xf86ReplaceBoolOption(pInfo->options, "CustomKeycodes", TRUE);
         fclose(f);
     }
   }

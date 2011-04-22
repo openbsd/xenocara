@@ -22,13 +22,13 @@ driver formerly included in __xservername__.
 .PP
 The
 .B kbd
-driver functions as a keyboard input device, and may be used as the
-X server's core keyboard.
+driver functions as a keyboard input device.
 .SH CONFIGURATION DETAILS
 .PP
 Depending on the X server version in use, input device options may be set
-in either a __xconfigfile__ file, or in the configuration files read by the
-Hardware Abstraction Layer (HAL) daemon, hald(1).
+in either a __xconfigfile__ file, an xorg.conf.d snippet, or in the
+configuration files read by the Hardware Abstraction Layer (HAL) daemon,
+hald(1).
 .PP
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.  This
@@ -95,7 +95,8 @@ The following xorg.conf fragment ensures that user will be able to switch betwee
 .I us
 and
 .I sk
-layouts by pressing the "menu" key.
+layouts by pressing the "menu" key. The scroll lock LED shows which layout
+is currently active.
 .PP
 The
 .B XkbVariant

@@ -1,3 +1,287 @@
+commit 0b9cd5121e1025e95a7e32addb675ab874bc6cb1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 8 09:38:29 2011 +1000
+
+    keyboard 1.6.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 24ee4f6738955d507f500a90fda8153f19dd5038
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 7 12:05:48 2011 +1000
+
+    man: explain what grp_led:scroll does in the example conf section
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed by: Magnus Kessler <Magnus.Kessler@gmx.net>
+
+commit d5634b77b578721e2bb2734f5fd92090e9d4c330
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 7 11:35:44 2011 +1000
+
+    man: list xorg.conf.d snippets as possible configuration location
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed by: Magnus Kessler <Magnus.Kessler@gmx.net>
+
+commit 89358c49e519c7a1e0f9a9544f9c03b5d9c2115d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 7 11:34:21 2011 +1000
+
+    man: don't mention the core keyboard.
+    
+    Core devices are an obsolete concept these days.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed by: Magnus Kessler <Magnus.Kessler@gmx.net>
+
+commit 6496bb21074faff2642e09389b5476225dc4fdb3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 21 09:59:14 2011 +1000
+
+    keyboard 1.5.99.901
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 15f0a4b71b4580c7dd9a0abd7b8fb92756b6733a
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Thu Feb 17 15:40:29 2011 +0500
+
+    Removed unnecessary code, since ABI_XINPUT_VERSION >= 2
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit de7a5c120f646e293cc216007a5df865b41833b8
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Thu Feb 17 15:40:28 2011 +0500
+
+    Require server 1.4 or later
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a02757d7c3d8018f44c63553578763fcef41bcca
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Wed Feb 16 13:21:03 2011 +0500
+
+    Cleanup set the value of CustomKeycodes
+    
+    Also, do not print values of variables CustomKeycodes twice.
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f45f3dbcf1f2a54d7d6a51d6e9884820cff4be12
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Fri Feb 11 15:33:00 2011 +0500
+
+    Do not print values of Protocol twice
+    
+    Protocol printed when found in xf86SetStrOption().
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6fca7f2371c113796d4cf27cca5635f3c6fb30af
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Fri Feb 11 15:32:59 2011 +0500
+
+    Remove unused XQUEUE
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8a540fa439bd7ea30c49d43ff3339ab599a7ba14
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Fri Feb 11 15:32:57 2011 +0500
+
+    lnx: Fix detect CustomKeycodes for __powerpc__
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 849f5092efd770cf169ce9950e9dbb0bccbf9017
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Sat Jan 8 17:09:10 2011 +0500
+
+    Removing unused bell_pitch and bell_duration
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dd9ed7921ccffff9cacb6dc128b3f426f9312535
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Sat Jan 8 20:09:48 2011 +0500
+
+    Removing unused PROT_XQUEUE and PROT_USB
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 78652023a9f7758635e5507255826d79fbb2b028
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Sat Jan 8 17:09:38 2011 +0500
+
+    bsd: Replace deprecated xfree/xcalloc with free & calloc
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f7a81ab4225e14a50e26a49a0a17a2cf773a4ab1
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Sat Jan 8 17:08:41 2011 +0500
+
+    Remove random History comment and OS_KBD_VERSION_CURRENT
+    
+    In xf86-input-mouse similar cleanup already done, can also make for keyboard?
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e2f6e5d976ff8bbe68dc41b51d983cc95c11db84
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Thu Jan 6 14:43:13 2011 +0500
+
+    Do not print values of variables XkbRules etc. twice
+    
+    xf86SetStrOption prints in log value of the variables XkbRules etc.,
+    there is no need to take this information twice.
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d03efb3a3af77ca6831492a793d18b89cc64083
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Thu Jan 6 13:37:39 2011 +0500
+
+    bsd: Fix print wscons type keyboard for Sun5
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 40ed9bb3dc87702510d5e54c42a60a2cdd73c135
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Thu Jan 6 13:21:35 2011 +0500
+
+    Fix default options for PC98
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e929446a401e73bcc680c488ada2fc50eb225b23
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Thu Jan 6 12:59:19 2011 +0500
+
+    Removing unused SetKbdRepeat
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc1a2ba8c9aa3a4bed25394c981b41c903502c84
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 23 15:53:32 2010 -0800
+
+    sun_kbd: Replace deprecated xfree/xcalloc with free & calloc
+    
+    Also greatly simplified option/pointer handling to avoid generating
+    new warnings from passing const char * pointers to free()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bd099b5a87399d6ff1fd324172bfcc4bc07a362b
+Author: Javier Acosta <javier.acosta@oracle.com>
+Date:   Thu Dec 23 09:43:51 2010 -0800
+
+    Make key codes for Sun Japanese keyboard match xkb-config mappings
+    
+    Solaris bug #7005752:
+      http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=7005752
+    
+    Signed-off-by: Javier Acosta <javier.acosta@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cb8b2fca90810a1a2d6e5f930e4eac0f929947c6
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Tue Nov 30 20:12:24 2010 +0500
+
+    Removing unused OpenBSD PCCONS code
+    
+    In OpenBSD removed support PCCONS in 2002 year
+    http://marc.info/?l=openbsd-cvs&m=102435816424294&w=2
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 26af626a2c4afba858a32bbb42077f8661d3de4f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Jan 3 12:42:58 2011 -0500
+
+    linux: warning fixes
+    
+    lnx_KbdMap.c: In function 'KbdGetMapping':
+    lnx_KbdMap.c:44:17: warning: unused variable 'type'
+    lnx_KbdMap.c:42:13: warning: unused variable 'pKbd'
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 492c14cdd1c4b950c475633a64086235d3550f5b
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Jan 3 12:40:25 2011 -0500
+
+    bsd: Include fix
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+
+commit a72c47487b67ad7134045d551dbe222eb4662058
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Jan 3 12:37:34 2011 -0500
+
+    Remove unused code
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+
+commit 6c368bc3aa6d8e1b33d128a22f98ecda0d037e3b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Dec 17 16:35:49 2010 -0500
+
+    Remove paranoia about event processing during suspend
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 155b3e80fc95ea8397bc66fad18f5fa68d54a88e
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Nov 29 21:02:39 2010 +0500
+
+    Removing unused variables vtSwitchSupported and VTSwitchEnabled
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f11f2a7b5643cde57440102ad822995c70b142fb
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Sat Nov 27 02:39:13 2010 +0500
+
+    Removing unused variable kbdType.
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6e97362d7eee5b81bc8681559fbd8a8f6137915c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 25 15:25:03 2010 +1000
+
+    Adjust to input ABI 12.
+    
+    New PreInit prototype and a few other things.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
 commit 90f69d7b859caff9f51b6fe20580582a91ed6d0d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 09:15:11 2010 -0700

@@ -95,12 +95,6 @@ GetKbdLeds(InputInfoPtr pInfo)
     return 0;
 }
 
-static void 
-SetKbdRepeat(InputInfoPtr pInfo, char rad)
-{
-    return;
-}
-
 static void
 KbdGetMapping(InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
 {
@@ -161,12 +155,9 @@ xf86OSKbdPreInit(InputInfoPtr pInfo)
     pKbd->Bell          = SoundKbdBell;
     pKbd->SetLeds       = SetKbdLeds;
     pKbd->GetLeds       = GetKbdLeds;
-    pKbd->SetKbdRepeat  = SetKbdRepeat;
     pKbd->KbdGetMapping = KbdGetMapping;
     pKbd->RemapScanCode = ATScancode;
     pKbd->OpenKeyboard  = OpenKeyboard;
-    pKbd->vtSwitchSupported = FALSE;
-    pKbd->CustomKeycodes = FALSE;
     pKbd->private       = NULL;
     pInfo->read_input   = ReadInput;
     return TRUE;

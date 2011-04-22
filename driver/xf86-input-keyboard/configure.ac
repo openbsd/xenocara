@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-keyboard],
-        [1.5.0],
+        [1.6.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-keyboard])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -45,7 +45,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Obtain compiler/linker options from server and required extensions
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.2.99.0] xproto inputproto)
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.4] xproto inputproto)
 
 # Define a configure option for an alternate input module directory
 AC_ARG_WITH(xorg-module-dir,

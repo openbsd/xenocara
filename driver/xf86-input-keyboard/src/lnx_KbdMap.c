@@ -39,9 +39,7 @@ static void readKernelMapping(InputInfoPtr pInfo,
 void
 KbdGetMapping (InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
 {
-  KbdDevPtr pKbd = (KbdDevPtr) pInfo->private;
   KeySym        *k;
-  char          type;
   int           i;
 
   readKernelMapping(pInfo, pKeySyms, pModMap);
@@ -97,8 +95,6 @@ KbdGetMapping (InputInfoPtr pInfo, KeySymsPtr pKeySyms, CARD8 *pModMap)
       break;
 
     }
-  
-  pKbd->kbdType = ioctl(pInfo->fd, KDGKBTYPE, &type) != -1 ? type : KB_101;
 
   pKeySyms->map        = map;
   pKeySyms->mapWidth   = GLYPHS_PER_KEY;
