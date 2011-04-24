@@ -20,23 +20,40 @@ dnl  USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl  Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT([xorg-docs], [1.3], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT([xorg-docs],
+        [1.6],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [xorg-docs])
+AC_CONFIG_SRCDIR([Makefile.am])
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_MAINTAINER_MODE
 
-DEFAULT_X11DOCDIR=${datadir}/X11/doc
-AC_ARG_WITH(x11docdir,
-        AC_HELP_STRING([--with-x11docdir=<path>],
-                       [Where to install X11 docs (default: ${datadir}/X11/doc)]),
-        [X11DOCDIR="$withval"],
-        [X11DOCDIR="$DEFAULT_X11DOCDIR"])
-HARDCOPYDIR=$X11DOCDIR/hardcopy
-AC_SUBST([X11DOCDIR])
-AC_SUBST([HARDCOPYDIR])
+# Require xorg-macros minimum of 1.10 for DocBook XML documentation
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.10 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.10)
+XORG_DEFAULT_OPTIONS
+XORG_ENABLE_DOCS
+XORG_ENABLE_SPECS
+XORG_WITH_XMLTO(0.0.20)
+XORG_WITH_FOP
+XORG_CHECK_SGML_DOCTOOLS(1.5)
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-
-AC_OUTPUT([Makefile
-           man/Makefile
-           man/general/Makefile])
+AC_CONFIG_FILES([Makefile
+		 general/Makefile
+		 general/fonts/Makefile
+		 general/input/Makefile
+		 general/graphics/Makefile
+		 general/platforms/Makefile
+		 man/Makefile
+		 specs/Makefile
+		 specs/CTEXT/Makefile
+		 specs/ICCCM/Makefile
+		 specs/Xext/Makefile
+		 specs/XLFD/Makefile
+		 specs/Xserver/Makefile])
+AC_OUTPUT

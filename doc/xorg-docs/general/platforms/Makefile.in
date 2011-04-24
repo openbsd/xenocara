@@ -14,27 +14,28 @@
 
 @SET_MAKE@
 
-#  Copyright 2005 Red Hat, Inc.
-# 
-#  Permission to use, copy, modify, distribute, and sell this software
-#  and its documentation for any purpose is hereby granted without fee,
-#  provided that the above copyright notice appear in all copies and
-#  that both that copyright notice and this permission notice appear in
-#  supporting documentation, and that the name of Red Hat not be used in
-#  advertising or publicity pertaining to distribution of the software
-#  without specific, written prior permission.  Red Hat makes no
-#  representations about the suitability of this software for any
-#  purpose.  It is provided "as is" without express or implied warranty.
-# 
-#  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
-#  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
-#  NO EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-#  CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
-#  OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
-#  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE
-#  USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-#  Process this file with autoconf to create configure.
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -42,7 +43,7 @@ VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ..
+top_builddir = ../..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
 install_sh_DATA = $(install_sh) -c -m 644
@@ -58,8 +59,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = man
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(am__dist_xml_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(top_srcdir)/xmlrules.in
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
+subdir = general/platforms
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -68,15 +72,17 @@ mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
+am__dist_xml_DATA_DIST = Darwin.xml Solaris.xml
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(miscmandir)"
-miscmanDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(miscman_DATA)
+am__installdirs = "$(DESTDIR)$(xmldir)" "$(DESTDIR)$(xmldir)"
+dist_xmlDATA_INSTALL = $(INSTALL_DATA)
+xmlDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_xml_DATA) $(xml_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -139,11 +145,7 @@ MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-MAN_SUBSTS = @MAN_SUBSTS@ -e 's|__datadir__|$(datadir)|g' -e \
-	's|__libdir__|$(libdir)|g' -e \
-	's|__sysconfdir__|$(sysconfdir)|g'
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 OBJEXT = @OBJEXT@
@@ -208,24 +210,29 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-miscmandir = $(MISC_MAN_DIR)
-miscman_PRE = \
-	Consortium.man		\
-	Xsecurity.man		\
-	Standards.man		\
-	X.man			\
-	XOrgFoundation.man	\
-	XProjectTeam.man
+@ENABLE_DOCS_TRUE@doc_sources = \
+@ENABLE_DOCS_TRUE@	Darwin.xml \
+@ENABLE_DOCS_TRUE@	Solaris.xml
 
-miscman_DATA = $(miscman_PRE:man=@MISC_MAN_SUFFIX@)
-EXTRA_DIST = $(miscman_PRE)
-CLEANFILES = $(miscman_DATA)
-SUFFIXES = .$(MISC_MAN_SUFFIX) .man
+@ENABLE_DOCS_TRUE@xmldir = $(docdir)/platforms
+@ENABLE_DOCS_TRUE@dist_xml_DATA = $(doc_sources)
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@xml_DATA =  \
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(doc_sources:.xml=.html) \
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1) \
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2)
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	-m $(XSL_STYLESHEET)						\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--searchpath $(XORG_SGML_PATH)/X11				\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam html.stylesheet=$(STYLESHEET_SRCDIR)/xorg.css	\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam img.src.path=$(abs_builddir)/
+
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@CLEANFILES = $(xml_DATA)
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@SUFFIXES = .xml .ps .pdf .txt .html
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(MISC_MAN_SUFFIX) .man
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+.SUFFIXES: .xml .ps .pdf .txt .html
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/xmlrules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -234,9 +241,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  man/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  general/platforms/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  man/Makefile
+	  $(AUTOMAKE) --foreign  general/platforms/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -255,22 +262,39 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 uninstall-info-am:
-install-miscmanDATA: $(miscman_DATA)
+install-dist_xmlDATA: $(dist_xml_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(miscmandir)" || $(mkdir_p) "$(DESTDIR)$(miscmandir)"
-	@list='$(miscman_DATA)'; for p in $$list; do \
+	test -z "$(xmldir)" || $(mkdir_p) "$(DESTDIR)$(xmldir)"
+	@list='$(dist_xml_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(miscmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(miscmandir)/$$f'"; \
-	  $(miscmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(miscmandir)/$$f"; \
+	  echo " $(dist_xmlDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(xmldir)/$$f'"; \
+	  $(dist_xmlDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(xmldir)/$$f"; \
 	done
 
-uninstall-miscmanDATA:
+uninstall-dist_xmlDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(miscman_DATA)'; for p in $$list; do \
+	@list='$(dist_xml_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(miscmandir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(miscmandir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(xmldir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(xmldir)/$$f"; \
+	done
+install-xmlDATA: $(xml_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(xmldir)" || $(mkdir_p) "$(DESTDIR)$(xmldir)"
+	@list='$(xml_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(xmlDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(xmldir)/$$f'"; \
+	  $(xmlDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(xmldir)/$$f"; \
+	done
+
+uninstall-xmlDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(xml_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(xmldir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(xmldir)/$$f"; \
 	done
 tags: TAGS
 TAGS:
@@ -280,6 +304,7 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/../..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -310,7 +335,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(miscmandir)"; do \
+	for dir in "$(DESTDIR)$(xmldir)" "$(DESTDIR)$(xmldir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -338,9 +363,11 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@ENABLE_DOCS_FALSE@clean-local:
+@HAVE_XMLTO_FALSE@clean-local:
 clean: clean-am
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -356,7 +383,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-miscmanDATA
+install-data-am: install-dist_xmlDATA install-xmlDATA
 
 install-exec-am:
 
@@ -382,20 +409,37 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-miscmanDATA
+uninstall-am: uninstall-dist_xmlDATA uninstall-info-am \
+	uninstall-xmlDATA
 
-.PHONY: all all-am check check-am clean clean-generic distclean \
-	distclean-generic distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-miscmanDATA install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am uninstall \
-	uninstall-am uninstall-info-am uninstall-miscmanDATA
+.PHONY: all all-am check check-am clean clean-generic clean-local \
+	distclean distclean-generic distdir dvi dvi-am html html-am \
+	info info-am install install-am install-data install-data-am \
+	install-dist_xmlDATA install-exec install-exec-am install-info \
+	install-info-am install-man install-strip install-xmlDATA \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am uninstall uninstall-am uninstall-dist_xmlDATA \
+	uninstall-info-am uninstall-xmlDATA
 
 
-.man.$(MISC_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.txt: %.xml $(dist_xml_DATA)
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
+
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.html: %.xml $(dist_xml_DATA)
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
+
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.pdf: %.xml $(dist_xml_DATA)
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
+
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.ps: %.xml $(dist_xml_DATA)
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop ps $<
+
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@chunked-html: $(doc_sources)
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) -o html xhtml $(doc_sources)
+
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@clean-local:
+@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)rm -fr html/
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

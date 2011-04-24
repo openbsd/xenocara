@@ -20,4 +20,26 @@
 #
 #  Process this file with autoconf to create configure.
 
-SUBDIRS = general
+miscmandir = $(MISC_MAN_DIR)
+
+miscman_PRE =			\
+	Consortium.man		\
+	Xsecurity.man		\
+	Standards.man		\
+	X.man			\
+	XOrgFoundation.man	\
+	XProjectTeam.man
+
+miscman_DATA = $(miscman_PRE:man=@MISC_MAN_SUFFIX@)
+
+EXTRA_DIST = $(miscman_PRE)
+CLEANFILES = $(miscman_DATA)
+SUFFIXES = .$(MISC_MAN_SUFFIX) .man
+
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
+MAN_SUBSTS += 	-e 's|__datadir__|$(datadir)|g' \
+		-e 's|__libdir__|$(libdir)|g' \
+		-e 's|__sysconfdir__|$(sysconfdir)|g'
+
+.man.$(MISC_MAN_SUFFIX):
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

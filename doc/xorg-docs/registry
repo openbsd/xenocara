@@ -1,5 +1,3 @@
-/* $Xorg: registry,v 1.7 2001/06/01 18:55:58 coskrey Exp $ */
-/* $XdotOrg: xc/registry,v 1.2 2004/04/23 18:41:44 eich Exp $ */
 
 				  X Registry
 
@@ -10,10 +8,12 @@ addressed to
 	xregistry@x.org
 or to
 	The X.Org Foundation -- X11 Registry
-	c/o Ienup Sung
-	Sun Microsystems, Inc.
-	4150 Network Circle, M/S USCA21-311
+	c/o Alan Coopersmith
+	Oracle Corporation
+	M/S SCA17-3824
+	4170 Network Circle
 	Santa Clara, CA 95054
+	USA
 
 Electronic mail will be acknowledged upon receipt.
 Please allow up to 4 weeks for a formal response to registration and inquiries.
@@ -21,7 +21,7 @@ Please allow up to 4 weeks for a formal response to registration and inquiries.
 The registry is published as part of the X software distribution
 from The X.Org Foundation. The latest registry can be found at:
 
-	ftp://ftp.x.org/pub/DOCS/registry
+	http://cgit.freedesktop.org/xorg/doc/xorg-docs/tree/registry
 
 All registered items must have the postal address of someone responsible for
 the item, or a reference to a document describing the item and the postal
@@ -1036,10 +1036,12 @@ See the description of ChangeHosts in section 9 of the X11 Protocol standard.
 
 Registered address types:
 
-Name				Reference
-----				---------
-"hostname"			[135 - xc/doc/spec/SIAddresses/hostname.txt]
-"IPv6"				[135 - xc/doc/spec/SIAddresses/IPv6.txt]
+Name			Reference
+----			---------
+"hostname"		[135 - xorg-docs/specs/SIAddresses/hostname.txt]
+"IPv6"			[135 - xorg-docs/specs/SIAddresses/IPv6.txt]
+"localuser"		[135 - xorg-docs/specs/SIAddresses/localuser.txt]
+"localgroup"		[135 - xorg-docs/specs/SIAddresses/localgroup.txt]
 
 Vendor-specific prefixes:
 
@@ -1089,36 +1091,19 @@ REFERENCES
 	X.Org website:		http://www.x.org/
 
 	X.Org mailing lists: 	
-			http://www.x.org/XOrg_Foundation_Join_OpenLists.html
-
-	X.Org Non-Profit Business Manager:
-
-		The Open Group
-		8 New England Executive Park, Suite 325
-		Burlington MA 01803-5007, USA
-		http://www.opengroup.org/contacts/
-
-		Birgit C. Hartje
-		b.hartje@opengroup.org
+		http://www.x.org/wiki/XorgMailingLists
 
 	X.Org Foundation Board of Directors:
-	    xf_board@x.org
+	    http://www.x.org/wiki/BoardOfDirectors
+	    board@foundation.x.org
 
 	    Board Secretary:
-		Leon Shiman
-		Shiman Associates Inc.
-		163 Tappan Street
-		Brookline, MA 02445, USA
-	
-	X.Org Foundation Sponsor Group:
-
-	    Chair:
-		Stuart Kreitman
-		Sun Microsystems, Inc.
-		17 Network Circle, MS UMPK17-202
-		Menlo Park, CA 94025, USA
-		stuart.kreitman@sun.com
-
+		Alan Coopersmith
+		Oracle Corporation
+		M/S SCA17-3824
+		4170 Network Circle
+		Santa Clara, CA 95054
+		USA
 
 [9]	PEX Protocol Specification
 	PEX Protocol Encoding
@@ -1345,12 +1330,13 @@ REFERENCES
 	MIT Station
 	Cambridge, MA 02139-0901
 
-[57]	(Previously David Rosenthal, Steve Swales)
-	Stuart Krietman
-	Sun Microsystems, Inc.
-	17 Network Circle, MS UMPK17-202
-	Menlo Park, CA 94025
-	stuart.krietman@sun.com
+[57]	(Previously David Rosenthal, Steve Swales, Sun Microsystems)
+	Stuart Kreitman
+	Oracle Corporation
+	M/S SCA17-3856
+	4170 Network Circle
+	Santa Clara, CA 95054
+	stuart.kreitman@oracle.com
 
 [58]	(Originally Murali V. Srinivasan)
 	See Reference [57]
@@ -1710,5 +1696,5 @@ REFERENCES
 [135]	X.Org Foundation source implementation
 	See Reference [8]
 
-/* $XFree86: xc/registry,v 1.8 2003/07/09 15:27:23 tsi Exp $ */
+
 

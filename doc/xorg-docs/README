@@ -1,4 +1,28 @@
-The documentation in this package is from xc/doc in the monolithic
-source tree.  It is expected that most of the documentation included
-here will be converted to a new format and then moved to the appropriate
-package.
+This package provides miscellaneous documentation for the X Window System
+that doesn't better fit into other packages.
+
+The preferred documentation format for these documents is DocBook XML.
+
+All questions regarding this software should be directed at the
+Xorg mailing list:
+
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+Please submit bug reports to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/doc/xorg-docs
+
+        http://cgit.freedesktop.org/xorg/doc/xorg-docs
+
+For patch submission instructions, see:
+
+	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage
+

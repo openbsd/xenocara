@@ -1,4 +1,3 @@
-.\" $Xorg: bdf.ms,v 1.3 2000/08/17 19:42:06 cpqbld Exp $
 \&
 .sp 1
 .ce 4
