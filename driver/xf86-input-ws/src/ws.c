@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.31 2010/01/10 16:33:44 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.32 2011/04/24 15:55:12 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -25,8 +25,8 @@
 #include <sys/time.h>
 #include <dev/wscons/wsconsio.h>
 
+#include <xorg-server.h>
 #include <xf86.h>
-
 #include <xf86_OSproc.h>
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
@@ -35,6 +35,17 @@
 #include <xisb.h>
 #include <mipointer.h>
 #include <extinit.h>
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 10
+#undef xalloc
+#undef xcalloc
+
+#define xcalloc calloc
+#define xalloc malloc
+#define Xcalloc calloc
+#define Xalloc malloc
+#define Xfree free
+#endif
 
 #include "ws.h"
 
@@ -52,7 +63,10 @@
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 static InputInfoPtr wsPreInit(InputDriverPtr, IDevPtr, int);
+#endif
+static int wsPreInit12(InputDriverPtr, InputInfoPtr, int);
 static int wsProc(DeviceIntPtr, int);
 static int wsDeviceInit(DeviceIntPtr);
 static int wsDeviceOn(DeviceIntPtr);
@@ -102,7 +116,11 @@ InputDriverRec WS = {
 	1,
 	"ws",
 	NULL,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	wsPreInit,
+#else
+	wsPreInit12,
+#endif
 	NULL,
 	NULL,
 	0
@@ -126,38 +144,39 @@ TearDownProc(pointer p)
 	DBG(1, ErrorF("WS TearDownProc called\n"));
 }
 
-static InputInfoPtr
-wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
+
+static int 
+wsPreInit12(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
-	InputInfoPtr pInfo = NULL;
 	WSDevicePtr priv;
 	MessageType buttons_from = X_CONFIG;
 	char *s;
+	int rc;
 
-	pInfo = xf86AllocateInput(drv, 0);
-	if (pInfo == NULL) {
-		return NULL;
-	}
 	priv = (WSDevicePtr)xcalloc(1, sizeof(WSDeviceRec));
-	if (priv == NULL)
+	if (priv == NULL) {
+		rc = BadAlloc;
 		goto fail;
-	pInfo->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
-	pInfo->conf_idev = dev;
-	pInfo->name = "ws";
+	}
 	pInfo->private = priv;
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	xf86CollectInputOptions(pInfo, NULL, NULL);
 	xf86ProcessCommonOptions(pInfo, pInfo->options);
+#else
+	xf86CollectInputOptions(pInfo, NULL);
+#endif
 #ifdef DEBUG
 	ws_debug_level = xf86SetIntOption(pInfo->options, "DebugLevel",
 	    ws_debug_level);
-	xf86Msg(X_INFO, "%s: debuglevel %d\n", dev->identifier,
+	xf86Msg(X_INFO, "%s: debuglevel %d\n", pInfo->name,
 	    ws_debug_level);
 #endif
 	priv->devName = xf86FindOptionValue(pInfo->options, "Device");
 	if (priv->devName == NULL) {
 		xf86Msg(X_ERROR, "%s: No Device specified.\n",
-			dev->identifier);
+			pInfo->name);
+		rc = BadValue;
 		goto fail;
 	}
 	priv->buttons = xf86SetIntOption(pInfo->options, "Buttons", 0);
@@ -220,7 +239,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
 	priv->screen_no = xf86SetIntOption(pInfo->options, "ScreenNo", 0);
 	xf86Msg(X_CONFIG, "%s associated screen: %d\n",
-	    dev->identifier, priv->screen_no);
+	    pInfo->name, priv->screen_no);
 	if (priv->screen_no >= screenInfo.numScreens ||
 	    priv->screen_no < 0) {
 		priv->screen_no = 0;
@@ -231,7 +250,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	if (priv->swap_axes) {
 		xf86Msg(X_CONFIG,
 		    "%s device will work with X and Y axes swapped\n",
-		    dev->identifier);
+		    pInfo->name);
 	}
 	priv->inv_x = 0;
 	priv->inv_y = 0;
@@ -256,10 +275,12 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		}
 	}
 	if (wsOpen(pInfo) != Success) {
+		rc = BadValue;
 		goto fail;
 	}
 	if (ioctl(pInfo->fd, WSMOUSEIO_GTYPE, &priv->type) != 0) {
 		wsClose(pInfo);
+		rc = BadValue;
 		goto fail;
 	}
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
@@ -277,7 +298,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	if (priv->raw) {
 		xf86Msg(X_CONFIG,
 		    "%s device will work in raw mode\n",
-		    dev->identifier);
+		    pInfo->name);
 	}
 
 	if (priv->type == WSMOUSE_TYPE_TPANEL && priv->raw) {
@@ -286,6 +307,7 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 			xf86Msg(X_ERROR, "GCALIBCOORS failed %s\n",
 			    strerror(errno));
 			wsClose(pInfo);
+			rc = BadValue;
 			goto fail;
 		}
 
@@ -304,46 +326,69 @@ wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	/* Allow options to override this */
 	priv->min_x = xf86SetIntOption(pInfo->options, "MinX", priv->min_x);
 	xf86Msg(X_INFO, "%s minimum x position: %d\n",
-	    dev->identifier, priv->min_x);
+	    pInfo->name, priv->min_x);
 	priv->max_x = xf86SetIntOption(pInfo->options, "MaxX", priv->max_x);
 	xf86Msg(X_INFO, "%s maximum x position: %d\n",
-	    dev->identifier, priv->max_x);
+	    pInfo->name, priv->max_x);
 	priv->min_y = xf86SetIntOption(pInfo->options, "MinY", priv->min_y);
 	xf86Msg(X_INFO, "%s minimum y position: %d\n",
-	    dev->identifier, priv->min_y);
+	    pInfo->name, priv->min_y);
 	priv->max_y = xf86SetIntOption(pInfo->options, "MaxY", priv->max_y);
 	xf86Msg(X_INFO, "%s maximum y position: %d\n",
-	    dev->identifier, priv->max_y);
+	    pInfo->name, priv->max_y);
 
-	pInfo->name = dev->identifier;
 	pInfo->device_control = wsProc;
 	pInfo->read_input = wsReadInput;
 	pInfo->control_proc = wsChangeControl;
 	pInfo->switch_mode = wsSwitchMode;
+	pInfo->private = priv;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	pInfo->conversion_proc = NULL;
 	pInfo->reverse_conversion_proc = NULL;
-	pInfo->private = priv;
 	pInfo->old_x = -1;
 	pInfo->old_y = -1;
+#endif
 	xf86Msg(buttons_from, "%s: Buttons: %d\n", pInfo->name, priv->buttons);
 
 	wsClose(pInfo);
 
 	wsmbEmuPreInit(pInfo);
+	return Success;
 
-	/* mark the device configured */
-	pInfo->flags |= XI86_CONFIGURED;
-	return pInfo;
 fail:
 	if (priv != NULL) {
 		xfree(priv);
 		pInfo->private = NULL;
 	}
-	if (pInfo != NULL) {
-		xf86DeleteInput(pInfo, 0);
-	}
-	return NULL;
+	return rc;
 }
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+static InputInfoPtr
+wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
+{
+	InputInfoPtr pInfo = NULL;
+
+	pInfo = xf86AllocateInput(drv, 0);
+	if (pInfo == NULL) {
+		return NULL;
+	}
+	pInfo->name = dev->identifier;
+	pInfo->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
+	pInfo->conf_idev = dev;
+	pInfo->close_proc = NULL;
+	pInfo->private_flags = 0;
+	pInfo->always_core_feedback = NULL;
+
+	if (wsPreInit12(drv, pInfo, flags) != Success) {
+		xf86DeleteInput(pInfo, 0);
+		return NULL;
+	}
+	/* mark the device configured */
+	pInfo->flags |= XI86_CONFIGURED;
+	return pInfo;
+}
+#endif
 
 static int
 wsProc(DeviceIntPtr pWS, int what)
@@ -377,7 +422,7 @@ static int
 wsDeviceInit(DeviceIntPtr pWS)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
-	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	unsigned char map[NBUTTONS + 1];
 	int i, xmin, xmax, ymin, ymax;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -451,18 +496,28 @@ wsDeviceInit(DeviceIntPtr pWS)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	    axes_labels[0],
 #endif
-	    xmin, xmax, 1, 0, 1);
+	    xmin, xmax, 1, 0, 1
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+	    , priv->type == WSMOUSE_TYPE_TPANEL  ? Absolute : Relative
+#endif
+	);
 	xf86InitValuatorDefaults(pWS, 0);
 
 	xf86InitValuatorAxisStruct(pWS, 1,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	    axes_labels[1],
 #endif
-	    ymin, ymax, 1, 0, 1);
+	    ymin, ymax, 1, 0, 1
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+	    , priv->type == WSMOUSE_TYPE_TPANEL ? Absolute : Relative
+#endif
+	);
 	xf86InitValuatorDefaults(pWS, 1);
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	xf86MotionHistoryAllocate(pInfo);
 	AssignTypeAndName(pWS, pInfo->atom, pInfo->name);
+#endif
 	pWS->public.on = FALSE;
 	if (wsOpen(pInfo) != Success) {
 		return !Success;
@@ -479,7 +534,7 @@ static int
 wsDeviceOn(DeviceIntPtr pWS)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
-	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	struct wsmouse_calibcoords coords;
 
 	DBG(1, ErrorF("WS DEVICE ON\n"));
@@ -525,7 +580,7 @@ static void
 wsDeviceOff(DeviceIntPtr pWS)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
-	WSDevicePtr priv = (WSDevicePtr)XI_PRIVATE(pWS);
+	WSDevicePtr priv = pInfo->private;
 	struct wsmouse_calibcoords coords;
 
 	DBG(1, ErrorF("WS DEVICE OFF\n"));

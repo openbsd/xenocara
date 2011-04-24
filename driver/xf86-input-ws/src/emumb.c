@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.2 2009/11/26 18:18:34 matthieu Exp $ */
+/*	$OpenBSD: emumb.c,v 1.3 2011/04/24 15:55:12 matthieu Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>

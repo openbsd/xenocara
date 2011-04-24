@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.6 2010/06/06 20:38:03 matthieu Exp $
+.\"	$OpenBSD: ws.man,v 1.7 2011/04/24 15:55:12 matthieu Exp $
 .\"
 .\" Copyright (c) 2005,2009 Matthieu Herrb
 .\"
