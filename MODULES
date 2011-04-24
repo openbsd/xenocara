@@ -1,4 +1,4 @@
- $OpenBSD: MODULES,v 1.163 2011/04/23 10:57:40 matthieu Exp $
+ $OpenBSD: MODULES,v 1.164 2011/04/24 10:38:29 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -87,8 +87,7 @@ app/xwud		1.0.3	7.6
 data/bitmaps		1.1.1	7.6
 data/xkbdata		1.0.1	7.0	deprecated
 
-doc/xorg-docs		1.6	7.6	needs-update
-doc/xorg-sgml-doctools	1.7	7.6+	needs-update
+doc/xorg-docs		1.6	7.6
 
 driver/xf86-input-acecad	1.4.0	7.4+
 driver/xf86-input-citron	2.2.2	7.4	needs-release
