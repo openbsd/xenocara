@@ -2578,10 +2578,9 @@
 ./usr/X11R6/man/man7/X.7
 ./usr/X11R6/man/man7/XOrgFoundation.7
 ./usr/X11R6/man/man7/XProjectTeam.7
-./usr/X11R6/man/man7/security.7
+./usr/X11R6/man/man7/Xsecurity.7
 ./usr/X11R6/share/X11/XErrorDB
 ./usr/X11R6/share/X11/doc
-./usr/X11R6/share/X11/doc/MAINTAINERS
 ./usr/X11R6/share/X11/locale
 ./usr/X11R6/share/X11/locale/C
 ./usr/X11R6/share/X11/locale/C/Compose
@@ -3100,6 +3099,7 @@
 ./usr/X11R6/share/doc/renderproto/renderproto.txt
 ./usr/X11R6/share/doc/xextproto
 ./usr/X11R6/share/doc/xextproto/geproto.txt
+./usr/X11R6/share/doc/xorg-docs/MAINTAINERS
 ./usr/X11R6/share/doc/xtrans
 ./usr/X11R6/share/mk
 ./usr/X11R6/share/mk/automake.dep
