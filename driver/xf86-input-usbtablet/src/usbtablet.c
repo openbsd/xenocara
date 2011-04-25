@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.12 2011/04/25 12:50:28 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.13 2011/04/25 13:01:46 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -42,6 +42,7 @@
 #include <dev/usb/usb.h>
 #include <dev/usb/usbhid.h>
 
+#include <xorg-server.h>
 #include <misc.h>
 #include <xf86.h>
 #include <xf86_OSproc.h>
@@ -54,6 +55,18 @@
 #include <extinit.h>
 
 #include <usbhid.h>
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 10
+#undef xalloc
+#undef xcalloc
+
+#define xcalloc calloc
+#define xalloc malloc
+#define Xcalloc calloc
+#define Xalloc malloc
+#define Xfree free
+#define Xrealloc realloc
+#endif
 
 #define SYSCALL(call) while(((call) == -1) && (errno == EINTR))
 #define ABS(x) ((x) > 0 ? (x) : -(x))
