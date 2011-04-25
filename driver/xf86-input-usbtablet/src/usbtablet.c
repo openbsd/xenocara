@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.11 2010/08/01 19:21:01 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.12 2011/04/25 12:50:28 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -111,10 +111,13 @@ struct USBTDevice {
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
 
-static InputInfoPtr UsbTabletAllocateStylus(InputDriverPtr);
-static InputInfoPtr UsbTabletAllocateEraser(InputDriverPtr);
-static InputInfoPtr UsbTabletAllocate(InputDriverPtr, char *, int);
-static InputInfoPtr UsbTabletPreInit(InputDriverPtr, IDevPtr, int);
+static int UsbTabletAllocateStylus(InputDriverPtr, InputInfoPtr);
+static int UsbTabletAllocateEraser(InputDriverPtr, InputInfoPtr);
+static int  UsbTabletAllocate(InputDriverPtr, InputInfoPtr, char *, int);
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+static InputInfoPtr UsbTabletPreInitOld(InputDriverPtr, IDevPtr, int);
+#endif
+static int UsbTabletPreInit(InputDriverPtr, InputInfoPtr, int);
 static int UsbTabletProc(DeviceIntPtr, int);
 static void UsbTabletReadInput(InputInfoPtr);
 static void UsbTabletClose(InputInfoPtr);
@@ -146,7 +149,11 @@ InputDriverRec USBTABLET = {
 	1,
 	"usbtablet",
 	NULL,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+	UsbTabletPreInitOld,
+#else
 	UsbTabletPreInit,
+#endif
 	NULL,
 	0
 };
@@ -202,7 +209,7 @@ static int
 UsbTabletProc(DeviceIntPtr pUSBT, int what)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pUSBT->public.devicePrivate;
-	USBTDevicePtr priv = (USBTDevicePtr)XI_PRIVATE(pUSBT);
+	USBTDevicePtr priv = (USBTDevicePtr)pInfo->private;
 	CARD8 map[NBUTTONS+1];
 	int i;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -246,18 +253,18 @@ UsbTabletProc(DeviceIntPtr pUSBT, int what)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
 			xf86GetMotionEvents,
 #endif
-			pInfo->history_size,
+			GetMotionHistorySize(),
 			((priv->flags & ABSOLUTE_FLAG) ? Absolute : Relative) |
 			 OutOfProximity) == FALSE) {
 			xf86Msg(X_ERROR,
 				"unable to allocate Valuator class device\n");
 			return !Success;
-		} else {
-			/* allocate the motion history buffer if needed */
-			xf86MotionHistoryAllocate(pInfo);
-
-			AssignTypeAndName(pUSBT, pInfo->atom, pInfo->name);
 		}
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+		/* allocate the motion history buffer if needed */
+		xf86MotionHistoryAllocate(pInfo);
+		AssignTypeAndName(pUSBT, pInfo->atom, pInfo->name);
+#endif
 
 		/* open the device to gather informations */
 		if (!UsbTabletOpenDevice(pUSBT))
@@ -622,7 +629,7 @@ static int
 UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pUSBT->public.devicePrivate;
-	USBTDevicePtr priv = (USBTDevicePtr)XI_PRIVATE(pUSBT);
+	USBTDevicePtr priv = (USBTDevicePtr)pInfo->private;
 	USBTCommonPtr comm = priv->comm;
 	int i;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -666,7 +673,11 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       comm->hidX.logical_maximum * comm->factorX, /* max val */
 			       mils(1000), /* resolution */
 			       0, /* min_res */
-			       mils(1000)); /* max_res */
+			       mils(1000) /* max_res */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+	    		       , Absolute
+#endif
+			       );
 	InitValuatorAxisStruct(pUSBT,
 			       1,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -676,7 +687,11 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       comm->hidY.logical_maximum * comm->factorY, /* max val */
 			       mils(1000), /* resolution */
 			       0, /* min_res */
-			       mils(1000)); /* max_res */
+			       mils(1000) /* max_res */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+	    		       , Absolute
+#endif
+			       );
 	InitValuatorAxisStruct(pUSBT,
 			       2,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -686,7 +701,11 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       h->logical_maximum, /* max val */
 			       mils(1000), /* resolution */
 			       0, /* min_res */
-			       mils(1000)); /* max_res */
+			       mils(1000) /* max_res */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+	    		       , Absolute
+#endif
+			       );
 	InitValuatorAxisStruct(pUSBT,
 			       3,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -696,7 +715,11 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       comm->hidTiltX.logical_maximum, /* max val */
 			       mils(1000), /* resolution */
 			       0, /* min_res */
-			       mils(1000)); /* max_res */
+			       mils(1000) /* max_res */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+	    		       , Absolute
+#endif
+			       );
 	InitValuatorAxisStruct(pUSBT,
 			       4,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -706,45 +729,51 @@ UsbTabletOpenDevice(DeviceIntPtr pUSBT)
 			       comm->hidTiltY.logical_maximum, /* max val */
 			       mils(1000), /* resolution */
 			       0, /* min_res */
-			       mils(1000)); /* max_res */
+			       mils(1000) /* max_res */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+	    		       , Absolute
+#endif
+			       );
 	return 1;
 }
 
-static InputInfoPtr
-UsbTabletAllocate(InputDriverPtr drv, char *name, int flag)
+static int
+UsbTabletAllocate(InputDriverPtr drv, InputInfoPtr pInfo, char *name, int flag)
 {
-	InputInfoPtr pInfo = xf86AllocateInput(drv, 0);
 	USBTDevicePtr priv;
 	USBTCommonPtr comm;
 
 	if (pInfo == NULL) {
-		return NULL;
+		return BadValue;
 	}
 
 	priv = (USBTDevicePtr)xalloc(sizeof(USBTDevice));
 	if (priv == NULL) {
-		return NULL;
+		return BadAlloc;
 	}
 
 	comm = (USBTCommonPtr)xalloc(sizeof(USBTCommon));
 	if (comm == NULL) {
 		xfree(priv);
-		return NULL;
+		return BadAlloc;
 	}
 	memset(priv, 0, sizeof *priv);
 	memset(comm, 0, sizeof *comm);
 
-	pInfo->name = name;
+	pInfo->name = xnfstrdup(name);
+	pInfo->type_name = XI_TABLET;
 	pInfo->device_control = UsbTabletProc;
 	pInfo->read_input = UsbTabletReadInput;
 	pInfo->control_proc = NULL;
 	pInfo->switch_mode = NULL;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	pInfo->conversion_proc = NULL;
 	pInfo->reverse_conversion_proc = NULL;
-	pInfo->fd = -1;
-	pInfo->private = priv;
 	pInfo->old_x = -1;
 	pInfo->old_y = -1;
+#endif
+	pInfo->fd = -1;
+	pInfo->private = priv;
 
 	priv->info = pInfo;
 	priv->comm = comm;
@@ -754,83 +783,65 @@ UsbTabletAllocate(InputDriverPtr drv, char *name, int flag)
 
 	comm->nDevs = 1;
 	comm->devices = (InputInfoPtr*)xalloc(sizeof(InputInfoPtr));
+	if (comm->devices == NULL) {
+		xfree(comm);
+		xfree(priv);
+		return BadAlloc;
+	}
 	comm->devices[0] = pInfo;
 
-	return pInfo;
+	return Success;
 }
 
-static InputInfoPtr
-UsbTabletAllocateStylus(InputDriverPtr drv)
+static int
+UsbTabletAllocateStylus(InputDriverPtr drv, InputInfoPtr pInfo)
 {
-	InputInfoPtr pInfo = UsbTabletAllocate(drv, STYLUS_XI, STYLUS_ID);
-
-	if (pInfo == NULL) {
-		return NULL;
-	}
-	pInfo->type_name = XI_TABLET;
-	return pInfo;
+	return UsbTabletAllocate(drv, pInfo, STYLUS_XI, STYLUS_ID);
 }
 
-static InputInfoPtr
-UsbTabletAllocateEraser(InputDriverPtr drv)
+static int
+UsbTabletAllocateEraser(InputDriverPtr drv, InputInfoPtr pInfo)
 {
-	InputInfoPtr pInfo = UsbTabletAllocate(drv, ERASER_XI, ERASER_ID);
-
-	if (pInfo == NULL) {
-		return NULL;
-	}
-	pInfo->type_name = XI_TABLET;
-	return pInfo;
+	return  UsbTabletAllocate(drv, pInfo, ERASER_XI, ERASER_ID);
 }
 
 /*
  * Called when the InputDevice Section is found in XF86Config
  */
-static InputInfoPtr
-UsbTabletPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
+static int
+UsbTabletPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
-	InputInfoPtr pInfo = NULL;
-	InputInfoPtr fake = NULL;
 	USBTCommonPtr comm = NULL, c;
 	USBTDevicePtr priv = NULL, p;
 	InputInfoPtr localDevices;
 	char *s;
-	int i;
+	int i, rc = Success;
 
-	fake = (InputInfoPtr)xcalloc(1, sizeof(InputInfoRec));
-	if (fake == NULL) {
-		return NULL;
-	}
-	fake->conf_idev = dev;
-	xf86CollectInputOptions(fake, NULL, NULL);
-	s = xf86FindOptionValue(fake->options, "Type");
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+	xf86CollectInputOptions(pInfo, NULL, NULL);
+#else 
+	xf86CollectInputOptions(pInfo, NULL);
+#endif
+	s = xf86FindOptionValue(pInfo->options, "Type");
 
 	if (s != NULL) {
 		if (xf86NameCmp(s, "stylus") == 0) {
-			pInfo = UsbTabletAllocateStylus(drv);
+			rc = UsbTabletAllocateStylus(drv, pInfo);
 		} else if (xf86NameCmp(s, "eraser") == 0) {
-			pInfo = UsbTabletAllocateEraser(drv);
+			rc = UsbTabletAllocateEraser(drv, pInfo);
 		} else {
 			xf86Msg(X_ERROR, "%s: Invalid type specified.\n"
 				"Must be one of stylus or eraser.\n",
-				dev->identifier);
-			goto PreInit_fail;
+				pInfo->name);
+			rc = BadValue;
 		}
+		if (rc != Success)
+			goto PreInit_fail;
 	} else {
-		xf86Msg(X_ERROR, "%s: No type specified.\n", dev->identifier);
+		xf86Msg(X_ERROR, "%s: No type specified.\n", pInfo->name);
+		rc = BadValue;
 		goto PreInit_fail;
 	}
-
-	if (pInfo == NULL) {
-		xfree(fake);
-		return NULL;
-	}
-
-
-	pInfo->options = fake->options;
-	pInfo->conf_idev = fake->conf_idev;
-	pInfo->name = dev->identifier;
-	xfree(fake);
 
 	priv = (USBTDevicePtr)pInfo->private;
 	comm = priv->comm;
@@ -838,7 +849,7 @@ UsbTabletPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	comm->devName = xf86FindOptionValue(pInfo->options, "Device");
 	if (comm->devName == NULL) {
 		xf86Msg(X_ERROR, "%s: No Device specified.\n",
-			dev->identifier);
+			pInfo->name);
 		goto PreInit_fail;
 	}
 
@@ -872,7 +883,7 @@ UsbTabletPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
 	xf86ProcessCommonOptions(pInfo, pInfo->options);
 
-	xf86Msg(X_CONFIG, "%s device is %s\n", dev->identifier, comm->devName);
+	xf86Msg(X_CONFIG, "%s device is %s\n", pInfo->name, comm->devName);
 
 	/* XXX Handle options */
 	debug_level = xf86SetIntOption(pInfo->options, "DebugLevel",
@@ -891,23 +902,19 @@ UsbTabletPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		} else {
 			xf86Msg(X_ERROR, "%s: invalid Mode "
 				"(should be absolute or relative). "
-				"Using default.\n", dev->identifier);
+				"Using default.\n", pInfo->name);
 		}
 	}
 	xf86Msg(X_CONFIG, "%s is in %s mode\n", pInfo->name,
 		(priv->flags & ABSOLUTE_FLAG) ? "absolute" : "relative");
 
 
-#if 0
-	pInfo->history_size = xf86SetIntOption(pInfo->options, "HistorySize",
-					pInfo->history_size);
-#endif
 	i = xf86SetIntOption(pInfo->options, "ThreshHold", -1);
 	if (i != -1) {
 		priv->thresCent = i;
 	}
 	xf86Msg(i != -1 ? X_CONFIG : X_DEFAULT, "%s: threshold = %d\n",
-		dev->identifier, priv->thresCent);
+		pInfo->name, priv->thresCent);
 
 
 	i = xf86SetIntOption(pInfo->options, "Suppress", -1);
@@ -915,12 +922,9 @@ UsbTabletPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		priv->suppress = i;
 	}
 	xf86Msg(i != -1 ? X_CONFIG : X_DEFAULT, "%s: suppress = %d\n",
-		dev->identifier, priv->suppress);
+		pInfo->name, priv->suppress);
 
-
-	pInfo->flags |= XI86_POINTER_CAPABLE | XI86_CONFIGURED;
-
-	return pInfo;
+	return Success;
 
 PreInit_fail:
 	if (comm) {
@@ -932,5 +936,31 @@ PreInit_fail:
 	if (pInfo) {
 		xfree(pInfo);
 	}
-	return NULL;
+	return rc;
 }
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+static InputInfoPtr
+UsbTabletPreInitOld(InputDriverPtr drv, IDevPtr dev, int flags)
+{
+	InputInfoPtr pInfo = NULL;
+
+	pInfo = xf86AllocateInput(drv, 0);
+	if (pInfo == NULL)
+		return NULL;
+	pInfo->name = dev->identifier;
+	pInfo->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
+	pInfo->conf_idev = dev;
+	pInfo->close_proc = NULL;
+	pInfo->private_flags = NULL;
+	pInfo->always_core_feedback = NULL;
+	pInfo->flags |= XI86_POINTER_CAPABLE | XI86_CONFIGURED;
+	
+	if (UsbTabletPreInit(drv, pInfo, flags) != Success) {
+		xf86DeleteInput(pInfo, 0);
+		return NULL;
+	}
+	pInfo->flags |= XI86_CONFIGURED;
+	return pInfo;
+}
+#endif
