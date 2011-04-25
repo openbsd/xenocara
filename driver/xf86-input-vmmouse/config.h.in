@@ -41,6 +41,9 @@
 /* Has version 1.1.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_1_0
 
+/* Has version 1.5.0 or greater of the Xserver */
+#undef HAVE_XORG_SERVER_1_5_0
+
 /* Do not include built-in mouse module fallback */
 #undef NO_MOUSE_MODULE
 

@@ -1,3 +1,187 @@
+commit cfaffd24413a31ebd7ae766ac39ed366902e38e5
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Mar 2 09:06:47 2011 +0100
+
+    vmmouse 12.7.0.0
+    
+    VMware internal testing completed.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 07232feb6b5acc5c25e9cdf12b804397ca52dbce
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Dec 8 10:07:20 2010 +0100
+
+    vmmouse 12.6.99.901
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 5d0ba2e03718b73013519fc0a1c74f2ef5f4e7ad
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Dec 1 10:04:01 2010 +0100
+
+    Make the .fdi script work on solaris
+    
+    Solaris doesn't use the same HAL device naming as Linux.
+    Use the common part of the device name.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit e5987a4e60d4e05159c7cc4a24cee6daed36c770
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Nov 4 09:09:52 2010 +0100
+
+    Make the modinfo sring contain an optional subpatch number
+    
+    The idea is that the build system assigns this number if needed.
+    As an example it might be the commit number since the last version tag.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 3ef519e91fb85261834a3f4ff6982c0a9f86d616
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 2 09:23:10 2010 +1000
+
+    Adjust to input ABI 12.
+    
+    New PreInit prototype that requires reshuffling.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 3d97fa1c3a5404ae02ed67eb94a5519394ba2bf5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 2 09:23:41 2010 +1000
+
+    Move allocation of mPriv down.
+    
+    No functional change. If we get to this point, we know it's available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 4e08974ead62fc50ebbe0190abce78c5de3fcdff
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 2 09:04:45 2010 +1000
+
+    ABI 12 requires valuator modes to be specified.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 4527ef863a4c4d3e499007abb65dbb5e086219e8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 26 10:43:42 2010 +1000
+
+    Move passthrough initialization out into a separate function.
+    
+    No functional changes, just modularising a bit to make future changes
+    easier.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 6561d57d4cc8ba5a68c4f333a48eb2f9f131be7b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 26 10:38:57 2010 +1000
+
+    Remove superflouous assignment.
+    
+    mPriv is freed a few lines down, assigning anything here makes no
+    difference.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 4345af5cacec0501a045a303ff9816098b0d63d0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 26 10:16:28 2010 +1000
+
+    Replace LocalDevicePtr with InputInfoPtr.
+    
+    The LocalDevicePtr define was removed from the server with ABI 12, but
+    InputInfoPtr has been an alias for it since the Xfree86/Xorg fork.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 8962e5c7c521e6cf28f464a9cdb80bd37f2f4328
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 19 20:20:01 2010 -0400
+
+    make: remove duplicate definition of EXTRA_DIST
+    
+    autoreconf -vfi produces this output:
+    tools/Makefile.am:59: EXTRA_DIST multiply defined in condition TRUE ...
+    tools/Makefile.am:36: ... `EXTRA_DIST' previously defined here
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit d060a173af59cfde74aa5aa9a59557f509022421
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 19 20:20:02 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Use the appropriate platform version of sed
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 61944e4497a65370716fa067f4b6a8643d089a24
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 19 20:20:03 2010 -0400
+
+    tools make: use Autoconf provided $(AM_V_GEN)$(SED)
+    
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 3b290e278b3721bef01ecc8ebc04a9a2992f7558
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Tue Oct 19 15:10:45 2010 -0400
+
+    InputDriverRec XINPUT cleanup.
+    
+    ABI version 11 of the InputDriverRec data structure no longer
+    includes the refCount member.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 8650db94573e73953ba9718a2cc2644b38adc306
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Tue Oct 19 15:09:55 2010 -0400
+
+    Deprecated code cleanup.
+    
+    Replace calls to deprecated dynamic memory wrapper functions
+    in driver code.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit adc177e3af9dc5da982ceb7a93e9c5e3bc6aed59
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 10 10:36:33 2010 -0400
+
+    xf86-input-vmmouse 12.6.10
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit cc76aec9b712403c777b7ce1290fa1e7ca62bf8c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 10 10:36:21 2010 -0400
+
+    Fix distcheck
+
 commit 61608b87c01ce87bd29869c1554a2ade5998782c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jul 9 20:45:53 2010 -0700

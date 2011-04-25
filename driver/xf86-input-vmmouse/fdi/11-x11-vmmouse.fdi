@@ -2,7 +2,7 @@
 <deviceinfo version="0.2">
   <device>
     <match key="info.capabilities" contains="input.mouse">
-      <match key="input.originating_device" contains="i8042_AUX_port">
+      <match key="input.originating_device" contains="i8042_">
         <append key="info.callouts.add" type="strlist">hal-probe-vmmouse</append>
       </match>
     </match>

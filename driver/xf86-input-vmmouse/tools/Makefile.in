@@ -250,12 +250,12 @@ AM_CPPFLAGS = -I$(top_srcdir)/shared $(XORG_CFLAGS)
 @DRIVER_NAME@_detect_LDADD = $(top_builddir)/shared/lib@DRIVER_NAME@.la
 calloutsdir = $(HAL_CALLOUTS_DIR)
 callouts_SCRIPTS = hal-probe-vmmouse
-EXTRA_DIST = $(udev_DATA).in hal-probe-vmmouse.in
 CLEANFILES = hal-probe-vmmouse $(am__append_1)
 @HAS_XORG_CONF_DIR_TRUE@confdir = $(XORG_CONF_DIR)
 @HAS_XORG_CONF_DIR_TRUE@dist_conf_DATA = 50-vmmouse.conf
 @HAS_UDEV_RULES_DIR_TRUE@udevdir = $(UDEV_RULES_DIR)
 @HAS_UDEV_RULES_DIR_TRUE@udev_DATA = 69-xorg-vmmouse.rules
+EXTRA_DIST = $(udev_DATA).in hal-probe-vmmouse.in
 all: all-am
 
 .SUFFIXES:
@@ -593,7 +593,7 @@ hal-probe-vmmouse: hal-probe-vmmouse.in
 	    < $< > $@
 
 @HAS_UDEV_RULES_DIR_TRUE@$(udev_DATA): $(udev_DATA).in
-@HAS_UDEV_RULES_DIR_TRUE@	sed -e 's|__BIN_PREFIX__|$(bindir)|g' < $< > $@
+@HAS_UDEV_RULES_DIR_TRUE@	$(AM_V_GEN)$(SED) -e 's|__BIN_PREFIX__|$(bindir)|g' < $< > $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
