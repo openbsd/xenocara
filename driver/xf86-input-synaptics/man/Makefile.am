@@ -1,4 +1,3 @@
-# $Id: Makefile.am,v 1.1.1.1 2011/04/09 08:38:40 shadchin Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 #

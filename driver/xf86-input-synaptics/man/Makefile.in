@@ -14,7 +14,6 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.in,v 1.2 2011/04/10 12:04:30 shadchin Exp $
 #
 # Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
 #
