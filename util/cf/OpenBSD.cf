@@ -247,7 +247,7 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
  * Documentation formatting
  */
 #ifdef Ports
-# define NroffCmd		/usr/local/bin/nroff -Tascii
+# define NroffCmd		/usr/local/bin/nroff -Tascii -c
 # define TroffCmd		/usr/local/bin/nroff -Tps
 # define HTMLroffCmd		/usr/local/bin/nroff -Thtml
 # define NeqnCmd		/usr/local/bin/neqn -Tascii
