@@ -1,8 +1,6 @@
-# $OpenBSD: Makefile,v 1.6 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile,v 1.7 2011/05/01 15:28:37 matthieu Exp $
 .include <bsd.xconf.mk>
 
-DIST=		${XSRCDIR}/dist/Mesa
-GLXGEARS=	${DIST}/progs/xdemos
 MANDIR=		${X11BASE}/man/cat
 
 PROG=	glxgears
@@ -14,6 +12,3 @@ obj: _xenocara_obj
 
 .include <bsd.prog.mk>
 .include <bsd.xorg.mk>
-
-.PATH: ${GLXGEARS}
-
