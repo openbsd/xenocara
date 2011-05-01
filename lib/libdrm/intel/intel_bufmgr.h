@@ -36,6 +36,8 @@
 
 #include <stdint.h>
 
+struct drm_clip_rect;
+
 typedef struct _drm_intel_bufmgr drm_intel_bufmgr;
 typedef struct _drm_intel_bo drm_intel_bo;
 
@@ -66,7 +68,11 @@ struct _drm_intel_bo {
 	 * Virtual address for accessing the buffer data.  Only valid while
 	 * mapped.
 	 */
+#ifdef __cplusplus
+	void *virt;
+#else
 	void *virtual;
+#endif
 
 	/** Buffer manager context associated with this buffer object */
 	drm_intel_bufmgr *bufmgr;
@@ -105,7 +111,10 @@ void drm_intel_bo_wait_rendering(drm_intel_bo *bo);
 void drm_intel_bufmgr_set_debug(drm_intel_bufmgr *bufmgr, int enable_debug);
 void drm_intel_bufmgr_destroy(drm_intel_bufmgr *bufmgr);
 int drm_intel_bo_exec(drm_intel_bo *bo, int used,
-		      drm_clip_rect_t * cliprects, int num_cliprects, int DR4);
+		      struct drm_clip_rect *cliprects, int num_cliprects, int DR4);
+int drm_intel_bo_mrb_exec(drm_intel_bo *bo, int used,
+			struct drm_clip_rect *cliprects, int num_cliprects, int DR4,
+			unsigned int flags);
 int drm_intel_bufmgr_check_aperture_space(drm_intel_bo ** bo_array, int count);
 
 int drm_intel_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
@@ -165,7 +174,7 @@ void drm_intel_bufmgr_fake_set_fence_callback(drm_intel_bufmgr *bufmgr,
 drm_intel_bo *drm_intel_bo_fake_alloc_static(drm_intel_bufmgr *bufmgr,
 					     const char *name,
 					     unsigned long offset,
-					     unsigned long size, void *virtual);
+					     unsigned long size, void *virt);
 void drm_intel_bo_fake_disable_backing_store(drm_intel_bo *bo,
 					     void (*invalidate_cb) (drm_intel_bo
 								    * bo,

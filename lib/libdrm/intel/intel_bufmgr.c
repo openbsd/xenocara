@@ -94,19 +94,7 @@ int
 drm_intel_bo_subdata(drm_intel_bo *bo, unsigned long offset,
 		     unsigned long size, const void *data)
 {
-	int ret;
-
-	if (bo->bufmgr->bo_subdata)
-		return bo->bufmgr->bo_subdata(bo, offset, size, data);
-	if (size == 0 || data == NULL)
-		return 0;
-
-	ret = drm_intel_bo_map(bo, 1);
-	if (ret)
-		return ret;
-	memcpy((unsigned char *)bo->virtual + offset, data, size);
-	drm_intel_bo_unmap(bo);
-	return 0;
+	return bo->bufmgr->bo_subdata(bo, offset, size, data);
 }
 
 int
@@ -143,6 +131,23 @@ drm_intel_bo_exec(drm_intel_bo *bo, int used,
 		  drm_clip_rect_t * cliprects, int num_cliprects, int DR4)
 {
 	return bo->bufmgr->bo_exec(bo, used, cliprects, num_cliprects, DR4);
+}
+
+int
+drm_intel_bo_mrb_exec(drm_intel_bo *bo, int used,
+		drm_clip_rect_t *cliprects, int num_cliprects, int DR4,
+		unsigned int rings)
+{
+	if (bo->bufmgr->bo_mrb_exec)
+		return bo->bufmgr->bo_mrb_exec(bo, used,
+					cliprects, num_cliprects, DR4,
+					rings);
+
+	if (rings == 0)
+		return bo->bufmgr->bo_exec(bo, used,
+					   cliprects, num_cliprects, DR4);
+
+	return -ENODEV;
 }
 
 void drm_intel_bufmgr_set_debug(drm_intel_bufmgr *bufmgr, int enable_debug)
