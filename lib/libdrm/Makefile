@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.5 2010/05/08 14:15:29 matthieu Exp $
+# $OpenBSD: Makefile,v 1.6 2011/05/02 21:52:34 oga Exp $
 .include <bsd.xconf.mk>
 .include "${.CURDIR}/Makefile.inc"
 
 .if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "amd64"
-SUBDIR=intel
+SUBDIR=intel radeon
 .endif
 
 LIB=		drm
