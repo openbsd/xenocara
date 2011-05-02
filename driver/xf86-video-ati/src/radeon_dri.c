@@ -1538,10 +1538,11 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     info->dri->pDRIInfo                       = pDRIInfo;
     pDRIInfo->drmDriverName              = RADEON_DRIVER_NAME;
 
-    if ( (info->ChipFamily >= CHIP_FAMILY_R300) ) {
+    if ( (info->ChipFamily >= CHIP_FAMILY_R600) ) 
+       pDRIInfo->clientDriverName        = R600_DRIVER_NAME;
+    else if ( (info->ChipFamily >= CHIP_FAMILY_R300) )
        pDRIInfo->clientDriverName        = R300_DRIVER_NAME;
-    } else    
-    if ( info->ChipFamily >= CHIP_FAMILY_R200 )
+    else if ( info->ChipFamily >= CHIP_FAMILY_R200 )
        pDRIInfo->clientDriverName	 = R200_DRIVER_NAME;
     else 
        pDRIInfo->clientDriverName	 = RADEON_DRIVER_NAME;
