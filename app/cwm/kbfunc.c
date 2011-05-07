@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: kbfunc.c,v 1.51 2010/02/10 01:23:05 okan Exp $
+ * $Id: kbfunc.c,v 1.52 2011/05/07 17:15:37 okan Exp $
  */
 
 #include <sys/param.h>
@@ -57,6 +57,9 @@ kbfunc_moveresize(struct client_ctx *cc, union arg *arg)
 	struct screen_ctx	*sc;
 	int			 x, y, flags, amt;
 	u_int			 mx, my;
+
+	if (cc->flags & CLIENT_FREEZE)
+		return;
 
 	sc = cc->sc;
 	mx = my = 0;
@@ -477,6 +480,12 @@ void
 kbfunc_client_hmaximize(struct client_ctx *cc, union arg *arg)
 {
 	client_horizmaximize(cc);
+}
+
+void
+kbfunc_client_freeze(struct client_ctx *cc, union arg *arg)
+{
+	client_freeze(cc);
 }
 
 void

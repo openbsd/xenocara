@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: mousefunc.c,v 1.23 2011/05/05 19:52:52 okan Exp $
+ * $Id: mousefunc.c,v 1.24 2011/05/07 17:15:37 okan Exp $
  */
 
 #include <sys/param.h>
@@ -84,6 +84,9 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 	struct screen_ctx	*sc = cc->sc;
 	int			 x = cc->geom.x, y = cc->geom.y;
 
+	if (cc->flags & CLIENT_FREEZE)
+		return;
+
 	client_raise(cc);
 	client_ptrsave(cc);
 
@@ -141,6 +144,9 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 	int			 px, py;
 
 	client_raise(cc);
+
+	if (cc->flags & CLIENT_FREEZE)
+		return;
 
 	if (xu_ptr_grab(cc->win, MouseMask, Cursor_move) < 0)
 		return;

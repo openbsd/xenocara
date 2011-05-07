@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: conf.c,v 1.77 2011/03/22 10:57:31 okan Exp $
+ * $Id: conf.c,v 1.78 2011/05/07 17:15:37 okan Exp $
  */
 
 #include <sys/param.h>
@@ -138,6 +138,7 @@ static struct {
 	{ "CM-f",	"maximize" },
 	{ "CM-equal",	"vmaximize" },
 	{ "CMS-equal",	"hmaximize" },
+	{ "CMS-f",	"freeze" },
 	{ "CMS-r",	"reload" },
 	{ "CMS-q",	"quit" },
 	{ "M-h",	"moveleft" },
@@ -361,6 +362,7 @@ static struct {
 	{ "maximize", kbfunc_client_maximize, KBFLAG_NEEDCLIENT, {0} },
 	{ "vmaximize", kbfunc_client_vmaximize, KBFLAG_NEEDCLIENT, {0} },
 	{ "hmaximize", kbfunc_client_hmaximize, KBFLAG_NEEDCLIENT, {0} },
+	{ "freeze", kbfunc_client_freeze, KBFLAG_NEEDCLIENT, {0} },
 	{ "reload", kbfunc_reload, 0, {0} },
 	{ "quit", kbfunc_quit_wm, 0, {0} },
 	{ "exec", kbfunc_exec, 0, {.i = CWM_EXEC_PROGRAM} },
