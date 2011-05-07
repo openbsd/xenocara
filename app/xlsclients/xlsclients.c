@@ -37,7 +37,6 @@ in this Software without prior written authorization from The Open Group.
 #include <inttypes.h>
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
-#include <xcb/xcb_atom.h>
 #ifndef HAVE_STRNLEN
 #include "strnlen.h"
 #endif
@@ -539,21 +538,21 @@ print_client_properties(xcb_connection_t *dpy, xcb_window_t w, int verbose, int 
      * get the WM_CLIENT_MACHINE and WM_COMMAND list of strings
      */
     cs->client_machine = xcb_get_property(dpy, 0, w,
-			    WM_CLIENT_MACHINE, XCB_GET_PROPERTY_TYPE_ANY,
+			    XCB_ATOM_WM_CLIENT_MACHINE, XCB_GET_PROPERTY_TYPE_ANY,
 			    0, 1000000L);
     cs->command = xcb_get_property(dpy, 0, w,
-			    WM_COMMAND, XCB_GET_PROPERTY_TYPE_ANY,
+			    XCB_ATOM_WM_COMMAND, XCB_GET_PROPERTY_TYPE_ANY,
 			    0, 1000000L);
 
     if (verbose) {
 	cs->name = xcb_get_property(dpy, 0, w,
-			    WM_NAME, XCB_GET_PROPERTY_TYPE_ANY,
+			    XCB_ATOM_WM_NAME, XCB_GET_PROPERTY_TYPE_ANY,
 			    0, 1000000L);
 	cs->icon_name = xcb_get_property(dpy, 0, w,
-			    WM_ICON_NAME, XCB_GET_PROPERTY_TYPE_ANY,
+			    XCB_ATOM_WM_ICON_NAME, XCB_GET_PROPERTY_TYPE_ANY,
 			    0, 1000000L);
 	cs->wm_class = xcb_get_property(dpy, 0, w,
-			    WM_CLASS, STRING,
+			    XCB_ATOM_WM_CLASS, XCB_ATOM_STRING,
 			    0, 1000000L);
     }
 
@@ -569,7 +568,7 @@ print_text_field(xcb_connection_t *dpy, char *s, xcb_get_property_reply_t *tp)
     }
 
     if (s) printf ("%s", s);
-    if (tp->type == STRING && tp->format == 8) {
+    if (tp->type == XCB_ATOM_STRING && tp->format == 8) {
 	printf ("%.*s", (int)tp->value_len, (char *)xcb_get_property_value(tp));
     } else {
 	unknown (dpy, tp->type, tp->format);

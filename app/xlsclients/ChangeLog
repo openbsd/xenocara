@@ -1,3 +1,161 @@
+commit 5f064f70b183147578919166bedeca55cdb0af71
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 2 21:12:31 2011 -0700
+
+    xlsclients 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 61be3feb4cfc760f63d6b8a4debd3898fdc8fa16
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon May 2 11:37:34 2011 +0900
+
+    Depend on xcb >= 1.6 for XCB_ATOM_*.
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 41689f150904be690f3aa96c283a7ee632d566ce
+Author: Dan Nicholson <dbn.lists@gmail.com>
+Date:   Mon Mar 7 14:21:09 2011 -0800
+
+    Drop dependency on xcb-atom/xcb-util
+    
+    With commit 223851b6, the atom names from xcb/xproto.h are being used
+    and xcb-atom is no longer needed.
+    
+    Signed-off-by: Dan Nicholson <dbn.lists@gmail.com>
+    Reviewed-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+
+commit 223851b68fedad730747652bc6560e40ca695ea7
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Mon Mar 7 13:54:53 2011 +0000
+
+    Use XCB_ATOM_* atom names rather than deprecated atom names
+    
+    Those deprecated atom names were removed from xcb/util in commit
+    2f0334b3eb49fa3a0d6daf6b9dde10e480a5c59f
+    
+    Found by tinderbox, see:
+    
+    http://tinderbox.freedesktop.org/builds/2011-03-06-0008/logs/xlsclients/#build
+    http://tinderbox.freedesktop.org/builds/2011-03-07-0001/logs/xlsclients/#build
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Tested-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+
+commit 1439da945a066c5bdf821a4f1af2bc356452e170
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2bb00a3e1d7eea20a232f079d41cd45985e0a721
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9a2a65ddea132b64d43b8f853ad7d3ca229d34fe
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d2dba124d303cf7b031c5f64293ac38b5a8418ab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit c1c91e1545ef34d0eeb4fb9b5577174121e28859
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:50 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+
+commit 29ad1d40dbd77d6efedd5d7db53e35650732dd6e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 24 09:43:42 2010 -0700
+
+    xlsclients 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 050eb2ca576e11cf5781af38db1442f2c9dd2f56
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 24 09:23:51 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca8d92fe63776474f3aa166bbedd9220ec560177
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 24 09:11:05 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ffdf25c57b0e1b040523789b1e21fb24c0ec2e07
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a8bd97c46f9671a02ad0d436142c9ff80cd5bc15
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 23 21:07:39 2010 -0700
+
+    strnlen.h should be added to EXTRA_DIST, not overwrite it
+    
+    Fixes 'make distcheck' failure found by tinderbox:
+    make[2]: *** No rule to make target `xlsclients.1', needed by `all-am'.  Stop.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f30f41b8dc37e775279835c97f2bea83a513dc10
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jun 4 22:14:23 2010 -0700
+
+    Add strnlen.h to EXTRA_DIST
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit cc6dbd2c1e7966b32e333142ab7630ed19700414
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jun 3 16:05:20 2010 -0700

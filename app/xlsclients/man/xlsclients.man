@@ -1,15 +1,14 @@
-.\" $Xorg: xlscli.man,v 1.4 2001/02/09 02:05:54 xorgcvs Exp $
 .\" Copyright 1991, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,13 +16,11 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
-.\"
-.\" $XFree86: xc/programs/xlsclients/xlscli.man,v 1.7 2001/01/27 18:21:18 dawes Exp $
 .\"
 .TH XLSCLIENTS 1 __xorgversion__
 .SH NAME
@@ -34,7 +31,7 @@ xlsclients - list client applications running on a display
 .SH DESCRIPTION
 .PP
 .I Xlsclients
-is a utility for listing information about the client applications 
+is a utility for listing information about the client applications
 running on a display.  It may be used to generate scripts representing
 a snapshot of the user's current session.
 .SH OPTIONS
@@ -43,7 +40,7 @@ a snapshot of the user's current session.
 This option specifies the X server to contact.
 .TP 8
 .B \-a
-This option indicates that clients on all screens should be listed.  By 
+This option indicates that clients on all screens should be listed.  By
 default, only those clients on the default screen are listed.
 .TP 8
 .B \-l
@@ -52,7 +49,7 @@ and class hints in addition to the machine name and command string shown in
 the default format.
 .TP 8
 .B \-m \fImaxcmdlen\fP
-This option specifies the maximum number of characters in a command to 
+This option specifies the maximum number of characters in a command to
 print out.  The default is 10000.
 .SH ENVIRONMENT
 .PP
@@ -60,6 +57,6 @@ print out.  The default is 10000.
 .B DISPLAY
 To get the default host, display number, and screen.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xwininfo(1), xprop(1)
+X(__miscmansuffix__), xwininfo(__appmansuffix__), xprop(__appmansuffix__)
 .SH AUTHOR
 Jim Fulton, MIT X Consortium
