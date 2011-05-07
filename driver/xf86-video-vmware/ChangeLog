@@ -1,3 +1,129 @@
+commit 30ac6eaf64aa4831025555b72b65843686a35094
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:52 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 083a663bbb186bfb854eda3b9f33d7fc24252ec5
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Sep 16 10:08:12 2010 +0200
+
+    Make the modinfo string contain an optional subpatch number
+    
+    The idea is that the build system assigns this number if needed.
+    As an example it might be the commit number since the last version tag.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 5a2206c328caaed95daf91aff9220d3a51b492bd
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Sep 16 09:58:07 2010 +0200
+
+    Make sure we build on 1.4.99.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit da0f931b90833c7f706ace24b0c9dff2672f1e97
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Sep 8 09:57:35 2010 +0200
+
+    vmwlegacy: Fix a segfault in vmwareCursorCloseScreen.
+    
+    The segfault occured because the named function was using resources that
+    were already taken down, because VMWARECloseScreen was called very late
+    in the CloseScreen callchain.
+    
+    Make sure we wrap the CloseScreen pointers late in ScreenInit to avoid this.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 03dca39afa06da04472d56ec4888f010186c6a13
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue Sep 7 21:55:28 2010 +0200
+
+    vmwlegacy: A number of Xv fixes
+    
+    Properly init and uninit the port private clipboxes on setup and end.
+    Clear the port private clipboxes on video stop, to force re-painting
+    of the colorkey when the stream is resumed.
+    Make sure the colorkey is painted *before* the overlay is flushed. Some
+    host implementations seem picky about this.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit dfb062e024dfd20789ee8d43c7f94640faa5ea9f
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue Sep 7 12:17:46 2010 +0200
+
+    vmware/vmwlegacy: Silence compilation errors and -warnings.
+    
+    Silence warnings and errors on various server versions due to incorrect
+    usage of libc functions.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 12e4577c020c6905d09459d833fd1c5313f1647b
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Fri Sep 3 11:19:01 2010 +0200
+
+    vmwlegacy: Always scale screen dimensions to the initial DPI on modeswitch.
+    
+    When we switch mode we usually alter the size in a constant DPI environment
+    rather than keeping the size constant and alter the DPI.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 81a0a1a37e703296d109022bb76a1291e84064fd
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Sep 1 07:58:18 2010 +0200
+
+    vmware: Handle chain-loader failures gracefully.
+    
+    If the vmwlegacy driver wasn't present when expected, that would
+    leave the X server in a confused state. Thus report loading errors properly
+    back to the X server.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 2a72ea7a1b1519451350e0741d145f513124a208
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Aug 18 10:57:02 2010 -0400
+
+    vmwarectrl: rework standalone package as a subdir of driver
+    
+    vmwarectrl is a unit test client tool for developers.
+    By default, it is not built unless --enable-vmwarectrl-client is used.
+    
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f51ca2cb756dcd541a27f0326496f0aadab3f214
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Aug 18 11:34:49 2010 +0200
+
+    Make the driver build and run without libdrm.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 2e6eca3e7bb19ea69db2cc367c9704c7d657db79
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Aug 12 17:43:59 2010 +0200
+
+    Only set the first xinerama output as primary.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 456b74e8778ab0c44e8a70aa45f447ff5c562be3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 10 11:02:05 2010 -0400
+
+    xf86-video-vmware 11.0.2
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit c29d24b2ca598011b84387006f03a9360910707f
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Fri Jul 23 21:02:33 2010 -0400

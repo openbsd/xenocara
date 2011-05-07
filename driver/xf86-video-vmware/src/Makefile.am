@@ -54,8 +54,8 @@ vmwlegacy_drv_la_SOURCES = \
 
 vmware_drv_la_LTLIBRARIES = vmware_drv.la
 vmware_drv_la_LDFLAGS = -module -avoid-version
-vmware_drv_la_CFLAGS = @XORG_CFLAGS@ @DRM_CFLAGS@
-vmware_drv_la_LIBADD = @DRM_LIBS@
+vmware_drv_la_CFLAGS = @XORG_CFLAGS@ @LIBDRM_CFLAGS@
+vmware_drv_la_LIBADD = @LIBDRM_LIBS@
 vmware_drv_ladir = @moduledir@/drivers
 
 vmware_drv_la_SOURCES = \

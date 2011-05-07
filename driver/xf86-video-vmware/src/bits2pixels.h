@@ -1,8 +1,6 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/vmware/bits2pixels.h,v 1.2 2002/12/11 17:07:58 dawes Exp $ */
 /* **********************************************************
  * Copyright (C) 1999-2001 VMware, Inc.
  * All Rights Reserved
- * Id: bits2pixels.h,v 1.4 2001/01/26 23:32:15 yoel Exp $
  * **********************************************************/
 
 /*

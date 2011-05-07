@@ -1,8 +1,6 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/vmware/vm_device_version.h,v 1.1 2001/04/05 19:29:44 dawes Exp $ */
 /* **********************************************************
  * Copyright (C) 1998-2001 VMware, Inc.
  * All Rights Reserved
- * Id: vm_device_version.h,v 1.2 2001/01/26 21:53:27 yoel Exp $
  * **********************************************************/
 
 

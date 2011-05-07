@@ -8,6 +8,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Has libdrm */
+#undef HAVE_LIBDRM
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -40,6 +43,9 @@
 
 /* Has version 1.2.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_2_0
+
+/* Has version 1.5.0 or greater of the Xserver */
+#undef HAVE_XORG_SERVER_1_5_0
 
 /* Has version 1.7.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_7_0

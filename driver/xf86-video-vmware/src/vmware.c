@@ -6,7 +6,6 @@
 char rcsId_vmware[] =
     "Id: vmware.c,v 1.11 2001/02/23 02:10:39 yoel Exp $";
 #endif
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/vmware/vmware.c,v 1.18 2003/09/24 02:43:31 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -41,6 +40,11 @@ char rcsId_vmware[] =
 #include "vm_device_version.h"
 #include "svga_modes.h"
 
+#ifndef HAVE_XORG_SERVER_1_5_0
+#include <xf86_ansic.h>
+#include <xf86_libc.h>
+#endif
+
 #ifdef HaveDriverFuncs
 #define VMWARE_DRIVER_FUNC HaveDriverFuncs
 #else
@@ -74,6 +78,8 @@ char rcsId_vmware[] =
 #error "PCI_VENDOR_VMWARE is wrong, update it from vm_device_version.h"
 #endif
 
+#define VMWARE_INCHTOMM 25.4
+
 /*
  * This is the only way I know to turn a #define of an integer constant into
  * a constant string.
@@ -94,12 +100,21 @@ static const char VMWAREBuildStr[] = "VMware Guest X Server "
 
 /*
  * Standard four digit version string expected by VMware Tools installer.
- * As the driver's version is only  {major, minor, patchlevel}, simply append an
- * extra zero for the fourth digit.
+ * As the driver's version is only  {major, minor, patchlevel},
+ * The fourth digit may describe the commit number relative to the
+ * last version tag as output from `git describe`
  */
+
 #ifdef __GNUC__
-const char vmwlegacy_drv_modinfo[] __attribute__((section(".modinfo"),unused)) =
-    "version=" VMWARE_DRIVER_VERSION_STRING ".0";
+#ifdef VMW_SUBPATCH
+const char vmwlegacy_drv_modinfo[]
+__attribute__((section(".modinfo"),unused)) =
+  "version=" VMWARE_DRIVER_VERSION_STRING "." VMW_STRING(VMW_SUBPATCH);
+#else
+const char vmwlegacy_drv_modinfo[]
+__attribute__((section(".modinfo"),unused)) =
+  "version=" VMWARE_DRIVER_VERSION_STRING ".0";
+#endif /*VMW_SUBPATCH*/
 #endif
 
 static SymTabRec VMWAREChipsets[] = {
@@ -245,7 +260,7 @@ static void
 VMWAREFreeRec(ScrnInfoPtr pScrn)
 {
     if (pScrn->driverPrivate) {
-        xfree(pScrn->driverPrivate);
+        free(pScrn->driverPrivate);
         pScrn->driverPrivate = NULL;
     }
 }
@@ -558,7 +573,7 @@ VMWAREParseTopologyString(ScrnInfoPtr pScrn,
                  numOutputs, width, height, x, y);
 
       numOutputs++;
-      extents = xrealloc(extents, numOutputs * sizeof (xXineramaScreenInfo));
+      extents = realloc(extents, numOutputs * sizeof (xXineramaScreenInfo));
       extents[numOutputs - 1].x_org = x;
       extents[numOutputs - 1].y_org = y;
       extents[numOutputs - 1].width = width;
@@ -571,7 +586,7 @@ VMWAREParseTopologyString(ScrnInfoPtr pScrn,
  error:
    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Parsing static Xinerama topology: Failed.\n");
 
-   xfree(extents);
+   free(extents);
    extents = NULL;
    numOutputs = 0;
 
@@ -875,7 +890,7 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
 #endif
 
     xf86CollectOptions(pScrn, NULL);
-    if (!(options = xalloc(sizeof(VMWAREOptions))))
+    if (!(options = malloc(sizeof(VMWAREOptions))))
         return FALSE;
     memcpy(options, VMWAREOptions, sizeof(VMWAREOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, options);
@@ -907,7 +922,7 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
     pScrn->videoRam = pVMWARE->videoRam / 1024;
     pScrn->memPhysBase = pVMWARE->memPhysBase;
 
-    xfree(options);
+    free(options);
 
     {
         Gamma zeros = { 0.0, 0.0, 0.0 };
@@ -920,7 +935,7 @@ VMWAREPreInit(ScrnInfoPtr pScrn, int flags)
         /* print error message */
         VMWAREFreeRec(pScrn);
         if (i > 0) {
-            xfree(pciList);
+            free(pciList);
         }
         return FALSE;
     }
@@ -1216,7 +1231,7 @@ vmwareNextXineramaState(VMWAREPtr pVMWARE)
      */
     if (pVMWARE->xinerama && !pVMWARE->xineramaStatic) {
        if (pVMWARE->xineramaNextState) {
-          xfree(pVMWARE->xineramaState);
+          free(pVMWARE->xineramaState);
           pVMWARE->xineramaState = pVMWARE->xineramaNextState;
           pVMWARE->xineramaNumOutputs = pVMWARE->xineramaNextNumOutputs;
 
@@ -1231,14 +1246,14 @@ vmwareNextXineramaState(VMWAREPtr pVMWARE)
            * follow a VMwareCtrlDoSetTopology call.
            */
           VMWAREXineramaPtr basicState =
-             (VMWAREXineramaPtr)xcalloc(1, sizeof (VMWAREXineramaRec));
+             (VMWAREXineramaPtr)calloc(1, sizeof (VMWAREXineramaRec));
           if (basicState) {
              basicState->x_org = 0;
              basicState->y_org = 0;
              basicState->width = vmwareReg->svga_reg_width;
              basicState->height = vmwareReg->svga_reg_height;
 
-             xfree(pVMWARE->xineramaState);
+             free(pVMWARE->xineramaState);
              pVMWARE->xineramaState = basicState;
              pVMWARE->xineramaNumOutputs = 1;
           }
@@ -1258,7 +1273,7 @@ vmwareNextXineramaState(VMWAREPtr pVMWARE)
 
             for (i = 0; i < pVMWARE->xineramaNumOutputs; i++) {
                 vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_ID, i);
-                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_IS_PRIMARY, TRUE);
+                vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_IS_PRIMARY, i == 0);
                 vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_X,
                                xineramaState[i].x_org);
                 vmwareWriteReg(pVMWARE, SVGA_REG_DISPLAY_POSITION_Y,
@@ -1486,10 +1501,10 @@ VMWAREAddDisplayMode(ScrnInfoPtr pScrn,
 {
    DisplayModeRec *mode;
 
-   mode = xalloc(sizeof(DisplayModeRec));
+   mode = malloc(sizeof(DisplayModeRec));
    memset(mode, 0, sizeof *mode);
 
-   mode->name = xalloc(strlen(name) + 1);
+   mode->name = malloc(strlen(name) + 1);
    strcpy(mode->name, name);
    mode->status = MODE_OK;
    mode->type = M_T_DEFAULT;
@@ -1557,7 +1572,6 @@ vmwareIsRegionEqual(const RegionPtr reg1,
     return TRUE;
 }
 
-
 #if VMWARE_DRIVER_FUNC
 static Bool
 VMWareDriverFunc(ScrnInfoPtr pScrn,
@@ -1585,8 +1599,10 @@ VMWareDriverFunc(ScrnInfoPtr pScrn,
        * keep the DPI constant.
        */
       if (modemm && modemm->mode) {
-         modemm->mmWidth *= modemm->mode->HDisplay / (double)(modemm->virtX);
-         modemm->mmHeight *= modemm->mode->VDisplay / (double)(modemm->virtY);
+	  modemm->mmWidth *= (modemm->mode->HDisplay * VMWARE_INCHTOMM +
+			      pScrn->xDpi / 2)  / pScrn->xDpi;
+	  modemm->mmHeight *= (modemm->mode->VDisplay * VMWARE_INCHTOMM +
+			       pScrn->yDpi / 2) / pScrn->yDpi;
       }
       return TRUE;
    default:
@@ -1611,7 +1627,7 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 
     xf86CollectOptions(pScrn, NULL);
-    if (!(options = xalloc(sizeof(VMWAREOptions))))
+    if (!(options = malloc(sizeof(VMWAREOptions))))
         return FALSE;
     memcpy(options, VMWAREOptions, sizeof(VMWAREOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, options);
@@ -1636,11 +1652,11 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
          pVMWARE->xineramaStatic = pVMWARE->xineramaState != NULL;
 
-         xfree(topology);
+         free(topology);
        }
     }
 
-    xfree(options);
+    free(options);
 
     /* Initialise VMWARE_CTRL extension. */
     VMwareCtrl_ExtInit(pScrn);
@@ -1740,12 +1756,9 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     fbPictureInit (pScreen, 0, 0);
 
     /*
-     * Save the old screen vector, then wrap CloseScreen and
-     * set SaveScreen.
+     * Save the old screen vector.
      */
     pVMWARE->ScrnFuncs = *pScreen;
-    pScreen->CloseScreen = VMWARECloseScreen;
-    pScreen->SaveScreen = VMWARESaveScreen;
 
     /*
      * Set initial black & white colourmap indices.
@@ -1856,6 +1869,17 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
         }
     }
 
+    /**
+     * Wrap CloseScreen and SaveScreen. Do this late since we
+     * want to be first in the callchain, to avoid using resources
+     * already taken down in CloseScreen.
+     */
+
+    pVMWARE->ScrnFuncs.CloseScreen = pScreen->CloseScreen;
+    pVMWARE->ScrnFuncs.SaveScreen = pScreen->SaveScreen;
+
+    pScreen->CloseScreen = VMWARECloseScreen;
+    pScreen->SaveScreen = VMWARESaveScreen;
 
     /* Done */
     return TRUE;
@@ -1863,8 +1887,17 @@ VMWAREScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 static Bool
 VMWARESwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+
 {
-    return VMWAREModeInit(xf86Screens[scrnIndex], mode, TRUE);
+    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ScreenPtr pScreen = pScrn->pScreen;
+
+    pScreen->mmWidth = (pScreen->width * VMWARE_INCHTOMM +
+			pScrn->xDpi / 2) / pScrn->xDpi;
+    pScreen->mmHeight = (pScreen->height * VMWARE_INCHTOMM +
+			 pScrn->yDpi / 2) / pScrn->yDpi;
+
+    return VMWAREModeInit(pScrn, mode, TRUE);
 }
 
 static Bool
@@ -1981,7 +2014,7 @@ VMWAREProbe(DriverPtr drv, int flags)
         numUsed = xf86MatchPciInstances(VMWARE_NAME, PCI_VENDOR_VMWARE,
                                         VMWAREChipsets, VMWAREPciChipsets, devSections,
                                         numDevSections, drv, &usedChips);
-        xfree(devSections);
+        free(devSections);
         if (numUsed <= 0)
             return FALSE;
         if (flags & PROBE_DETECT)
@@ -2011,7 +2044,7 @@ VMWAREProbe(DriverPtr drv, int flags)
                     foundScreen = TRUE;
                 }
             }
-        xfree(usedChips);
+        free(usedChips);
     }
     return foundScreen;
 }

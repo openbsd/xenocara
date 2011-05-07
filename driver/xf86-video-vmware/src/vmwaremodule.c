@@ -25,10 +25,18 @@
 
 #include <xorg-server.h>
 #include <xf86.h>
-#include <xf86drm.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#ifdef HAVE_LIBDRM
+#include <xf86drm.h>
+#endif
+
+#ifndef HAVE_XORG_SERVER_1_5_0
+#include <xf86_ansic.h>
+#include <xf86_libc.h>
 #endif
 
 /*
@@ -54,12 +62,19 @@
 
 /*
  * Standard four digit version string expected by VMware Tools installer.
- * As the driver's version is only  {major, minor, patchlevel}, simply append an
- * extra zero for the fourth digit.
+ * As the driver's version is only  {major, minor, patchlevel},
+ * the fourth digit may describe the commit number relative to the
+ * last version tag as output from `git describe`
  */
+
 #ifdef __GNUC__
+#ifdef VMW_SUBPATCH
 const char vmware_drv_modinfo[] __attribute__((section(".modinfo"),unused)) =
-    "version=" VMWARE_DRIVER_VERSION_STRING ".0";
+  "version=" VMWARE_DRIVER_VERSION_STRING "." VMW_STRING(VMW_SUBPATCH);
+#else
+const char vmware_drv_modinfo[] __attribute__((section(".modinfo"),unused)) =
+  "version=" VMWARE_DRIVER_VERSION_STRING ".0";
+#endif /*VMW_SUBPATCH*/
 #endif
 
 static XF86ModuleVersionInfo vmware_version;
@@ -80,6 +95,7 @@ extern XF86ModuleData *VMWGFX_MODULE_DATA;
 static Bool
 vmware_check_kernel_module()
 {
+#ifdef HAVE_LIBDRM
     /* Super simple way of knowing if the kernel driver is loaded */
     int ret = drmOpen(VMWGFX_MODULE_NAME, NULL);
     if (ret < 0) {
@@ -96,11 +112,15 @@ vmware_check_kernel_module()
     drmClose(ret);
 
     return TRUE;
+#else
+    return FALSE;
+#endif /* HAVE_LIBDRM */
 }
 
 static Bool
 vmware_check_vmwgfx_driver(int matched, pointer opts)
 {
+#ifdef HAVE_LIBDRM
     int major; int minor;
     pointer module;
     CARD32 version;
@@ -140,10 +160,11 @@ vmware_check_vmwgfx_driver(int matched, pointer opts)
 
 err:
     /* XXX We should drop the reference on the module here */
+#endif /* HAVE_LIBDRM */
     return FALSE;
 }
 
-static void
+static Bool
 vmware_chain_module(pointer opts)
 {
     int vmwlegacy_devices;
@@ -154,6 +175,7 @@ vmware_chain_module(pointer opts)
     GDevPtr *gdevs;
     GDevPtr gdev;
     int i;
+    pointer ret;
 
     vmware_devices = xf86MatchDevice(VMWARE_DRIVER_NAME, &gdevs);
     vmwgfx_devices = xf86MatchDevice(VMWGFX_DRIVER_NAME, NULL);
@@ -178,10 +200,18 @@ vmware_chain_module(pointer opts)
 	gdev->driver = driver_name;
     }
 
-    xfree(gdevs);
+    free(gdevs);
 
-    if (!matched)
-	xf86LoadOneModule(driver_name, opts);
+    if (!matched) {
+	if (xf86LoadOneModule(driver_name, opts) == NULL) {
+	    xf86DrvMsg(-1, X_ERROR, "%s: Unexpected failure while "
+		       "loading the \"%s\" driver. Giving up.\n",
+		       VMWARE_DRIVER_NAME, driver_name);
+	    return FALSE;
+	}
+    }
+
+    return TRUE;
 }
 
 
@@ -212,9 +242,13 @@ vmware_setup(pointer module, pointer opts, int *errmaj, int *errmin)
 	setupDone = 1;
 
 	/* Chain load the real driver */
-	vmware_chain_module(opts);
-
-	return (pointer) 1;
+	if (vmware_chain_module(opts))
+	    return (pointer) 1;
+	else {
+	    if (errmaj)
+		*errmaj = LDR_NOSUBENT;
+	    return NULL;
+	}
     } else {
 	if (errmaj)
 	    *errmaj = LDR_ONCEONLY;

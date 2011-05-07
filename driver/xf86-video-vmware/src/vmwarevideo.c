@@ -46,6 +46,11 @@
 
 #include <X11/extensions/Xv.h>
 
+#ifndef HAVE_XORG_SERVER_1_5_0
+#include <xf86_ansic.h>
+#include <xf86_libc.h>
+#endif
+
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
 /*
@@ -334,7 +339,7 @@ vmwareOffscreenAllocate(VMWAREPtr pVMWARE, uint32 size)
         return NULL;
     }
 
-    memptr = xalloc(sizeof(VMWAREOffscreenRec));
+    memptr = malloc(sizeof(VMWAREOffscreenRec));
     if (!memptr) {
         return NULL;
     }
@@ -443,7 +448,7 @@ vmwareVideoInit(ScreenPtr pScreen)
         numAdaptors = 1;
         overlayAdaptors = &newAdaptor;
     } else {
-         newAdaptors = xalloc((numAdaptors + 1) *
+         newAdaptors = malloc((numAdaptors + 1) *
                               sizeof(XF86VideoAdaptorPtr*));
          if (!newAdaptors) {
             xf86XVFreeVideoAdaptorRec(newAdaptor);
@@ -463,7 +468,7 @@ vmwareVideoInit(ScreenPtr pScreen)
     }
 
     if (newAdaptors) {
-        xfree(newAdaptors);
+        free(newAdaptors);
     }
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -505,6 +510,7 @@ vmwareVideoEnd(ScreenPtr pScreen)
     pVid = (VMWAREVideoPtr) &pVMWARE->videoStreams[VMWARE_VID_NUM_PORTS];
     for (i = 0; i < VMWARE_VID_NUM_PORTS; ++i) {
         vmwareVideoEndStream(pScrn, &pVid[i]);
+	REGION_UNINIT(pScreen, &pVid[i].clipBoxes);
     }
 
     free(pVMWARE->videoStreams);
@@ -545,7 +551,7 @@ vmwareVideoSetup(ScrnInfoPtr pScrn)
         VmwareLog(("Not enough memory\n"));
         return NULL;
     }
-    du = xcalloc(1, VMWARE_VID_NUM_PORTS *
+    du = calloc(1, VMWARE_VID_NUM_PORTS *
         (sizeof(DevUnion) + sizeof(VMWAREVideoRec)));
 
     if (!du) {
@@ -572,6 +578,7 @@ vmwareVideoSetup(ScrnInfoPtr pScrn)
         pPriv[i].flags = SVGA_VIDEO_FLAG_COLORKEY;
         pPriv[i].colorKey = VMWARE_VIDEO_COLORKEY;
         pPriv[i].isAutoPaintColorkey = TRUE;
+	REGION_NULL(pScreen, &pPriv[i].clipBoxes);
         adaptor->pPortPrivates[i].ptr = &pPriv[i];
     }
     pVMWARE->videoStreams = du;
@@ -666,7 +673,17 @@ vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
     REGION_COPY(pScrn->pScreen, &pVid->clipBoxes, clipBoxes);
 
     if (pVid->isAutoPaintColorkey) {
+	BoxPtr boxes = REGION_RECTS(&pVid->clipBoxes);
+	int nBoxes = REGION_NUM_RECTS(&pVid->clipBoxes);
+
         xf86XVFillKeyHelper(pScrn->pScreen, pVid->colorKey, clipBoxes);
+
+	/**
+	 * Force update to paint the colorkey before the overlay flush.
+	 */
+
+	while(nBoxes--)
+	    vmwareSendSVGACmdUpdate(pVMWARE, boxes++);
     }
 
     VmwareLog(("Got offscreen region, offset %d, size %d "
@@ -704,7 +721,7 @@ vmwareVideoInitAttributes(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
 
     TRACEPOINT
 
-    fmtData = xcalloc(1, sizeof(VMWAREVideoFmtData));
+    fmtData = calloc(1, sizeof(VMWAREVideoFmtData));
     if (!fmtData) {
         return -1;
     }
@@ -836,7 +853,18 @@ vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
     if (!vmwareIsRegionEqual(&pVid->clipBoxes, clipBoxes)) {
         REGION_COPY(pScrn->pScreen, &pVid->clipBoxes, clipBoxes);
         if (pVid->isAutoPaintColorkey) {
+	    BoxPtr boxes = REGION_RECTS(&pVid->clipBoxes);
+	    int nBoxes = REGION_NUM_RECTS(&pVid->clipBoxes);
+
             xf86XVFillKeyHelper(pScrn->pScreen, pVid->colorKey, clipBoxes);
+
+	    /**
+	     * Force update to paint the colorkey before the overlay flush.
+	     */
+
+	    while(nBoxes--)
+		vmwareSendSVGACmdUpdate(pVMWARE, boxes++);
+
         }
     }
 
@@ -1088,6 +1116,9 @@ vmwareStopVideo(ScrnInfoPtr pScrn, pointer data, Bool Cleanup)
     if (!vmwareVideoEnabled(pVMWARE)) {
         return;
     }
+
+    REGION_EMPTY(pScrn->pScreen, &pVid->clipBoxes);
+
     if (!Cleanup) {
         VmwareLog(("vmwareStopVideo: Cleanup is FALSE.\n"));
         return;

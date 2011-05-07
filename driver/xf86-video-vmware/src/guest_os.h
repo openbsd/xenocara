@@ -1,8 +1,6 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/vmware/guest_os.h,v 1.1 2001/04/05 19:29:44 dawes Exp $ */
 /* *********************************************************
  * Copyright (C) 1999-2001 VMware, Inc.
  * All Rights Reserved
- * Id: guest_os.h,v 1.5 2001/01/26 23:32:15 yoel Exp $
  * **********************************************************/
 
 #ifndef _GUEST_OS_H_

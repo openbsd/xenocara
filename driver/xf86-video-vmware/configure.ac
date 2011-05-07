@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-vmware],
-        [11.0.2],
+        [11.0.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-vmware])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -56,6 +56,13 @@ AC_ARG_WITH(xorg-module-dir,
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
 
+# Define a configure option to build the vmwarectrl client tool
+AC_ARG_ENABLE(vmwarectrl-client,
+              AS_HELP_STRING([--enable-vmwarectrl-client],
+                             [Enable vmwarectrl client (default: disabled)]),
+                             [VMWARECTRL=$enableval], [VMWARECTRL=no])
+AM_CONDITIONAL(BUILD_VMWARECTRL, [test "x$VMWARECTRL" = xyes])
+
 # Store the list of server defined optional extensions in REQUIRED_MODULES
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
@@ -65,7 +72,10 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 
 # Obtain compiler/linker options for the driver dependencies
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.1 xproto fontsproto $REQUIRED_MODULES])
-PKG_CHECK_MODULES(DRM, [libdrm])
+PKG_CHECK_MODULES(LIBDRM,
+		  [libdrm],
+		  [AC_DEFINE([HAVE_LIBDRM], 1, [Has libdrm])],
+		  [echo "Will not try support for 3D or kernel modesetting."])
 
 PKG_CHECK_EXISTS([xorg-server >= 1.1.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_1_0], 1,
@@ -79,9 +89,16 @@ PKG_CHECK_EXISTS([xorg-server >= 1.2.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_2_0], 1,
                  [Has version 1.2.0 or greater of the Xserver])])
 
+PKG_CHECK_EXISTS([xorg-server >= 1.4.99],
+                 [AC_DEFINE([HAVE_XORG_SERVER_1_5_0], 1,
+                 [Has version 1.5.0 or greater of the Xserver])])
+
 PKG_CHECK_EXISTS([xorg-server >= 1.7.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_7_0], 1,
                  [Has version 1.7.0 or greater of the Xserver])])
+
+# Obtain compiler/linker options for the vmwarectrl client tool
+PKG_CHECK_MODULES(X11, x11 xext)
 
 # Checks for libraries.
 
@@ -106,6 +123,7 @@ AC_SUBST([DRIVER_NAME])
 AC_CONFIG_FILES([
                 Makefile
                 src/Makefile
+                vmwarectrl/Makefile
                 man/Makefile
 ])
 AC_OUTPUT
