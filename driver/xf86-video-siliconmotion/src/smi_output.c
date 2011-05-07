@@ -156,7 +156,7 @@ SMI_OutputDestroy(xf86OutputPtr output)
 {
     ENTER();
 
-    xfree(output->funcs);
+    free((xf86OutputFuncsPtr)output->funcs);
 
     LEAVE();
 }

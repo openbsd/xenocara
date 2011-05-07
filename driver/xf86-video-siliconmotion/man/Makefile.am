@@ -1,5 +1,5 @@
 #
-# Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+# Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
-# 
+#
 
 drivermandir = $(DRIVER_MAN_DIR)
 
@@ -31,21 +31,8 @@ EXTRA_DIST = @DRIVER_NAME@.man
 
 CLEANFILES = $(driverman_DATA)
 
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__drivermansuffix__|$(DRIVER_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
 
 SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 

@@ -1,3 +1,144 @@
+commit 087226bf4e442b83985078f5df481eb91f4f65ed
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 17:12:58 2011 +0100
+
+    Bump to 1.7.5
+
+commit b20cfa3d4f531b612a28ea88e5f5a6b1df183ea0
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 15:49:12 2011 +0100
+
+    Replace calls to xalloc/xcalloc/xfree with malloc/calloc/free
+    
+    Also don't check for NULL before calling free().
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 312540ac447acaf80db7e341aa75f90f3e821438
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 15:52:33 2011 +0100
+
+    Fix compiler warning on 64bit
+    
+    src/smi_driver.c: In function ‘SMI_MapMem’:
+    src/smi_driver.c:1498: warning: format ‘%08lX’ expects type ‘long unsigned int’, but argument 6 has type ‘CARD32’
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 6008906f0e328180b17e7b604b97dfdfd4280508
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 15:46:13 2011 +0100
+
+    Fix build with xserver 1.10
+    
+    ScrnInfo->pixmapPrivate is gone
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 903aac1db82e17954b74581019ebb946d5b43fe3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 09:41:07 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 71e61276ac62dfee15b275568084f8b8a55fc661
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 5cdb9326ab19da691f4a417def47fd0c869cefb7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 987c55bc8f69551eea917fba94827ac31c04a49f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f2569300c0f1b5714b4c4f09d07a16e9434bee00
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6b1d1833b38e1d21760174493e4f8f0af4214574
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dc67a8e8fe220697c3dcbca63c9ce0608a75888c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 64995ca7f1287493e0616cc6469fdc2465900325
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9520e4e64fa758eef024feda09cb6435e41db705
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 53cddc508ea0026db04f04772c401010d62d6af3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:30 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit 8087bc23a7662f1426a8bd6febf0d5d3844e6107
+Author: Francisco Jerez <currojerez@riseup.net>
+Date:   Wed Jun 16 14:59:37 2010 +0200
+
+    xv: Make sure we have a CRTC before setting up the overlay.
+    
+    Fixes a segfault when the destination area is off screen.
+    
+    Signed-off-by: Francisco Jerez <currojerez@riseup.net>
+    Tested-by: Krzysztof Halasa <khc@pm.waw.pl>
+
 commit 2de1f7ae0b4441c1501568358acf2b870bb9dcc6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Apr 27 15:11:35 2010 -0700
