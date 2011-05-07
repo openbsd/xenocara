@@ -24,8 +24,11 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
+#include <xorg-server.h>
 #include <xorgVersion.h>
 #define XORG_VERSION_BOTCHED XORG_VERSION_NUMERIC(1,4,0,0,0)
 #if XORG_VERSION_CURRENT >= XORG_VERSION_BOTCHED
@@ -38,7 +41,7 @@
  *	Standard Headers
  ****************************************************************************/
 
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
 #include <asm/types.h>
 #include <linux/input.h>
 #ifndef EV_SYN
@@ -68,9 +71,9 @@
 #include <stdio.h>
 
 #include <errno.h>
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
 #include <fcntl.h>
-#ifdef LINUX_SYSFS
+#ifdef HAVE_SYSFS_LIBSYSFS_H
 #include <sysfs/libsysfs.h>
 #include <dlfcn.h>
 #endif
@@ -103,6 +106,18 @@
 /* max number of input events to read in one read call */
 #define MAX_EVENTS 50
 
+static const char *default_options[] =
+{
+	"BaudRate", "9600",
+	"StopBits", "1",
+	"DataBits", "8",
+	"Parity", "Odd",
+	"Vmin", "1",
+	"Vtime", "10",
+	"FlowControl", "Xoff",
+	NULL
+};
+
 _X_EXPORT InputDriverRec ACECAD =
 {
 	1,
@@ -111,7 +126,9 @@ _X_EXPORT InputDriverRec ACECAD =
 	AceCadPreInit,
 	NULL,
 	NULL,
-	0
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+	default_options
+#endif
 };
 
 static XF86ModuleVersionInfo VersionRec =
@@ -154,19 +171,7 @@ TearDownProc( pointer p )
 {
 }
 
-static const char *default_options[] =
-{
-	"BaudRate", "9600",
-	"StopBits", "1",
-	"DataBits", "8",
-	"Parity", "Odd",
-	"Vmin", "1",
-	"Vtime", "10",
-	"FlowControl", "Xoff",
-	NULL
-};
-
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
 static int
 IsUSBLine(int fd)
 {
@@ -207,13 +212,13 @@ fd_query_acecad(int fd, char *ace_name) {
 
 static char ace_name_default[7] = "acecad";
 
-#ifdef LINUX_SYSFS
+#ifdef HAVE_SYSFS_LIBSYSFS_H
 static char usb_bus_name[4] = "usb";
 static char acecad_driver_name[11] = "usb_acecad";
 #endif
 
 static Bool
-AceCadAutoDevProbe(LocalDevicePtr local, int verb)
+AceCadAutoDevProbe(InputInfoPtr local, int verb)
 {
     /* We are trying to find the right eventX device */
     int i = 0;
@@ -224,7 +229,7 @@ AceCadAutoDevProbe(LocalDevicePtr local, int verb)
     char fname[EV_DEV_NAME_MAXLEN];
     int np;
 
-#ifdef LINUX_SYSFS
+#ifdef HAVE_SYSFS_LIBSYSFS_H
     struct sysfs_bus *usb_bus = NULL;
     struct sysfs_driver *acecad_driver = NULL;
     struct sysfs_device *candidate = NULL;
@@ -326,28 +331,25 @@ ProbeFound:
 
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+static int NewAceCadPreInit(InputDriverPtr drv, InputInfoPtr dev, int flags);
+
 static InputInfoPtr
 AceCadPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
-    LocalDevicePtr local = xf86AllocateInput(drv, 0);
-    AceCadPrivatePtr priv = xcalloc (1, sizeof(AceCadPrivateRec));
-    int speed;
-    int msgtype;
-    char *s;
+    InputInfoPtr local = xf86AllocateInput(drv, 0);
+    AceCadPrivatePtr priv = calloc (1, sizeof(AceCadPrivateRec));
 
-    if ((!local) || (!priv))
+    if ((!local))
         goto SetupProc_fail;
-
-    memset(priv, 0, sizeof(AceCadPrivateRec));
 
     local->name = dev->identifier;
     local->type_name = XI_TABLET;
-    local->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
+    local->flags = XI86_SEND_DRAG_EVENTS;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     local->motion_history_proc = xf86GetMotionEvents;
 #endif
     local->control_proc = NULL;
-    local->close_proc = CloseProc;
     local->switch_mode = NULL;
     local->conversion_proc = ConvertProc;
     local->reverse_conversion_proc = ReverseConvertProc;
@@ -355,18 +357,43 @@ AceCadPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->private = priv;
     local->private_flags = 0;
     local->conf_idev = dev;
-    local->device_control = DeviceControl;
     /*local->always_core_feedback = 0;*/
 
     xf86CollectInputOptions(local, default_options, NULL);
 
     xf86OptionListReport(local->options);
 
+    if (NewAceCadPreInit(drv, local, flags) == Success)
+        return local;
+
+SetupProc_fail:
+    return NULL;
+}
+
+static int
+NewAceCadPreInit(InputDriverPtr drv, InputInfoPtr local, int flags)
+#else
+static int
+AceCadPreInit(InputDriverPtr drv, InputInfoPtr local, int flags)
+#endif
+{
+    AceCadPrivatePtr priv = calloc (1, sizeof(AceCadPrivateRec));
+    int speed;
+    int msgtype;
+    char *s;
+
+    if (!priv)
+        return BadAlloc;
+
+    memset(priv, 0, sizeof(AceCadPrivateRec));
+
+    local->device_control = DeviceControl;
+
     priv->acecadInc = xf86SetIntOption(local->options, "Increment", 0 );
 
     s = xf86FindOptionValue(local->options, "Device");
     if (!s || (s && (xf86NameCmp(s, "auto-dev") == 0))) {
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
         priv->flags |= AUTODEV_FLAG;
         if (!AceCadAutoDevProbe(local, 0))
         {
@@ -387,7 +414,7 @@ AceCadPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     }
     xf86ErrorFVerb( 6, "tty port opened successfully\n" );
 
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
     if (IsUSBLine(local->fd)) {
         priv->flags |= USB_FLAG;
 
@@ -456,11 +483,11 @@ AceCadPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     xf86Msg(msgtype, "%s is in %s mode\n", local->name, (priv->flags & ABSOLUTE_FLAG) ? "absolute" : "relative");
     DBG (9, XisbTrace (priv->buffer, 1));
 
-    local->history_size = xf86SetIntOption(local->options , "HistorySize", 0);
-
     xf86ProcessCommonOptions(local, local->options);
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
     local->flags |= XI86_CONFIGURED;
+#endif
 
     if (local->fd != -1)
     {
@@ -474,7 +501,7 @@ AceCadPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     }
     RemoveEnabledDevice (local->fd);
     local->fd = -1;
-    return local;
+    return Success;
 
     /*
      * If something went wrong, cleanup and return NULL
@@ -485,12 +512,12 @@ SetupProc_fail:
     if ((priv) && (priv->buffer))
         XisbFree (priv->buffer);
     if (priv) {
-        xfree (priv);
+        free (priv);
 	if (local)
 		local->private = NULL;
     }
     xf86DeleteInput(local, 0);
-    return NULL;
+    return BadAlloc;
 }
 
 static Bool
@@ -524,7 +551,7 @@ static Bool
 DeviceOn (DeviceIntPtr dev)
 {
     char buffer[256];
-    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+    InputInfoPtr local = (InputInfoPtr) dev->public.devicePrivate;
     AceCadPrivatePtr priv = (AceCadPrivatePtr) (local->private);
 
     xf86MsgVerb(X_INFO, 4, "%s Device On\n", local->name);
@@ -534,7 +561,7 @@ DeviceOn (DeviceIntPtr dev)
     {
         xf86Msg(X_WARNING, "%s: cannot open input device %s: %s\n", local->name, xf86FindOptionValue(local->options, "Device"), strerror(errno));
         priv->flags &= ~AVAIL_FLAG;
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
         if ((priv->flags & AUTODEV_FLAG) && AceCadAutoDevProbe(local, 4))
             local->fd = xf86OpenSerial(local->options);
         if (local->fd == -1)
@@ -567,7 +594,7 @@ DeviceOn (DeviceIntPtr dev)
 static Bool
 DeviceOff (DeviceIntPtr dev)
 {
-    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+    InputInfoPtr local = (InputInfoPtr) dev->public.devicePrivate;
     AceCadPrivatePtr priv = (AceCadPrivatePtr) (local->private);
 
     xf86MsgVerb(X_INFO, 4, "%s Device Off\n", local->name);
@@ -592,7 +619,7 @@ DeviceOff (DeviceIntPtr dev)
 static Bool
 DeviceClose (DeviceIntPtr dev)
 {
-    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+    InputInfoPtr local = (InputInfoPtr) dev->public.devicePrivate;
 
     xf86MsgVerb(X_INFO, 4, "%s Device Close\n", local->name);
 
@@ -602,7 +629,7 @@ DeviceClose (DeviceIntPtr dev)
 static void
 ControlProc(DeviceIntPtr dev, PtrCtrl *ctrl)
 {
-    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+    InputInfoPtr local = (InputInfoPtr) dev->public.devicePrivate;
 
     xf86MsgVerb(X_INFO, 4, "%s Control Proc\n", local->name);
 }
@@ -611,9 +638,10 @@ static Bool
 DeviceInit (DeviceIntPtr dev)
 {
     int rx, ry;
-    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+    InputInfoPtr local = (InputInfoPtr) dev->public.devicePrivate;
     AceCadPrivatePtr priv = (AceCadPrivatePtr) (local->private);
     unsigned char map[] = {0, 1, 2, 3};
+    int history_size;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
     Atom btn_labels[3];
     Atom axes_labels[3];
@@ -659,6 +687,7 @@ DeviceInit (DeviceIntPtr dev)
         return !Success;
     }
 
+    history_size = xf86SetIntOption(local->options , "HistorySize", 0);
 
     /* 3 axes */
     if (InitValuatorClassDeviceStruct (dev, 3,
@@ -668,7 +697,7 @@ DeviceInit (DeviceIntPtr dev)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
                 xf86GetMotionEvents,
 #endif
-                local->history_size,
+                history_size,
                 ((priv->flags & ABSOLUTE_FLAG)? Absolute: Relative)|OutOfProximity)
             == FALSE)
     {
@@ -691,7 +720,11 @@ DeviceInit (DeviceIntPtr dev)
 #endif
                 1000,			/* resolution */
                 0,			/* min_res */
-                1000);			/* max_res */
+                1000			/* max_res */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+                , Absolute
+#endif
+                );
         InitValuatorAxisStruct(dev,
                 1,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -705,7 +738,11 @@ DeviceInit (DeviceIntPtr dev)
 #endif
                 1000,			/* resolution */
                 0,			/* min_res */
-                1000);			/* max_res */
+                1000			/* max_res */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+                , Absolute
+#endif
+                );
         InitValuatorAxisStruct(dev,
                 2,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -715,7 +752,11 @@ DeviceInit (DeviceIntPtr dev)
                 priv->acecadMaxZ,	/* max val */
                 1000,			/* resolution */
                 0,			/* min_res */
-                1000);		/* max_res */
+                1000		/* max_res */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+                , Absolute
+#endif
+                );
 
     }
 
@@ -752,7 +793,7 @@ DeviceInit (DeviceIntPtr dev)
 }
 
 static void
-ReadInput (LocalDevicePtr local)
+ReadInput (InputInfoPtr local)
 {
     int x, y, z;
     int prox, buttons;
@@ -851,10 +892,10 @@ ReadInput (LocalDevicePtr local)
     /*xf86Msg(X_INFO, "ACECAD Tablet Sortie Read Input\n");*/
 }
 
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
 #define set_bit(byte,nb,bit)	(bit ? byte | (1<<nb) : byte & (~(1<<nb)))
 static void
-USBReadInput (LocalDevicePtr local)
+USBReadInput (InputInfoPtr local)
 {
     int len;
     struct input_event * event;
@@ -1008,18 +1049,13 @@ USBReadInput (LocalDevicePtr local)
 }
 #endif
 
-static void
-CloseProc (LocalDevicePtr local)
-{
-}
-
 /*
  * The ConvertProc function may need to be tailored for your device.
  * This function converts the device's valuator outputs to x and y coordinates
  * to simulate mouse events.
  */
 static Bool
-ConvertProc (LocalDevicePtr local, int first, int num,
+ConvertProc (InputInfoPtr local, int first, int num,
         int v0, int v1, int v2, int v3, int v4, int v5,
         int *x, int *y)
 {
@@ -1036,7 +1072,7 @@ ConvertProc (LocalDevicePtr local, int first, int num,
 
 
 static Bool
-ReverseConvertProc (LocalDevicePtr local,
+ReverseConvertProc (InputInfoPtr local,
         int x, int  y,
         int *valuators)
 {
@@ -1100,9 +1136,9 @@ QueryHardware (AceCadPrivatePtr priv)
 #define OFF(x)  ((x)%BITS_PER_LONG)
 #define LONG(x) ((x)/BITS_PER_LONG)
 
-#ifdef LINUX_INPUT
+#ifdef HAVE_LINUX_INPUT_H
 static Bool
-USBQueryHardware (LocalDevicePtr local)
+USBQueryHardware (InputInfoPtr local)
 {
     AceCadPrivatePtr	priv = (AceCadPrivatePtr) local->private;
     unsigned long	bit[EV_MAX][NBITS(KEY_MAX)];

@@ -1,3 +1,416 @@
+commit ba7205b258a92886e2b2b269bd92a607b50a9984
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu May 5 00:23:24 2011 +0200
+
+    acecad 1.5.0
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit f8e87eaf4031774ad319bff3756494728614d73d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 10:44:20 2010 +1000
+
+    The driver doesn't need libXext
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit db1153d0d463da2e1e894beebbcb293141fa3ac5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 10:36:48 2010 +1000
+
+    Bump to 1.4.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 802dd194dc8a571f600e05a93505681ae1ce13c7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 25 13:01:53 2010 +1000
+
+    Add mode field to InitValuatorAxisStruct
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f85c4b580c074f7054eac98753d1f4e91f08305e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 10 10:26:47 2010 +1000
+
+    Adjust to new PreInit for ABI 12.
+    
+    Most of the init is now handled by the server, not by the driver.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ca93073692a4b8fab32945d76a1d1d16a435c800
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 10 10:33:01 2010 +1000
+
+    Use a local variable for history_size.
+    
+    Field was removed from InputInfoRec in ABI and the server hasn't actually
+    accessed this field for quite a while.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 053f56d3086082f8335cef906baba23ef8482a73
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 10 10:23:19 2010 +1000
+
+    Purge close_proc, hasn't been called by the server for ages.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b4e69d500dc0087bedafd7221abcb8e62800b84a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 10 10:20:00 2010 +1000
+
+    Move default_options up, preparation work for ABI 12.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit eab975ab3e576a6d223df07f0d9501e7bed317f0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 10 10:10:08 2010 +1000
+
+    Remove libc wrapper usage for xcalloc, xfree, etc.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a48b52684e184cac7979247c4a5af4250a9aa809
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 10 10:08:41 2010 +1000
+
+    Replace LocalDevicePtr with InputInfoPtr.
+    
+    LocalDevicePtr was removed with input ABI 12, but InputInfoPtr has been
+    around for years anyway.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4e8963e7b157aa61331824e57c16f467b2570c6b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 10 10:04:41 2010 +1000
+
+    Remove usage of XI86_POINTER_CAPABLE.
+    
+    Flag was a write-only flag in both the server and the driver has now been
+    removed from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e282087cfe70917232ff520929ccbdbe6b4c521e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Oct 27 22:19:19 2010 -0700
+
+    Remove refcnt field from InputDriverRec.
+    
+    Wasn't used in the server and is now removed.
+    
+    Fixes compiler error:
+    "acecad.c", line 111: too many struct/union initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96a383c95f8d97b966249eccb31734375df2c295
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 9 16:34:03 2010 -0400
+
+    config: requires RANDR through xf86.h
+    
+    The xf86.h file contains external declarations specific to RANDR
+    Will not compile if this extension is not installed.
+    Because this is an optional extension, XORG_DRIVER_CHECK_EXT
+    must be used.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit af91ec0384790896ccece958fbd6aeb192102691
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 9 16:32:39 2010 -0400
+
+    config: requires xext, kb and input extensions through xf86.h
+    
+    The xf86.h file includes headers from these protocols.
+    Will not compile if these extensions are not installed.
+    Because these extensions are always defined in the server, XORG_DRIVER_CHECK_EXT
+    should not be used.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e0ae1a1068508dabe046c124c480591371573b31
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu May 27 19:26:56 2010 -0400
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 23d6e6ad46a4636bf47be127eb770458d45904db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu May 27 19:25:22 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use Automake recommened $() for makefile variables.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bb15c68091a78871196aa9366b22c00589601fb4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 20:40:45 2010 -0400
+
+    config: acecad does not use the input protocol
+    
+    There is no need to PKG_CHECK_MODULES inputproto
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 25cf54dc5973be1427daf33e9bc6d907ccebc596
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon May 10 21:17:43 2010 -0400
+
+    config: AC_PROG_SED is required explicitly on Solaris
+    
+    It sets the SED env variable with an appropriate sed program path
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 72b78672b172453f14811a3c1877a88292b496b3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Apr 17 19:04:02 2010 -0400
+
+    man: Use Autoconf provided $(AM_V_GEN)$(SED)
+    
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e2795bba90fb0b332d6ba8c3f453e4f6359fb24e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Apr 16 15:09:19 2010 -0400
+
+    config: optional extension check for inputproto not required
+    
+    The check should be in PKG_CHECK_MODULES permanently.
+    
+    The XORG_DRIVER_CHECK_EXT will add inputproto to PKG_CHECK_MODULES
+    only if the extension is available. By definition, this extension
+    is always available and the acecad driver cannot function without it.
+    
+    This is evidenced by the absence of XINPUT conditional code.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6751ab441bd35916926e24607599509a610a00be
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Apr 15 20:01:51 2010 -0400
+
+    config: remove extension check for unused RANDR extension
+    
+    The randr protocol is not used, no randr*.h are included.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a86cb44b1dfe5ccfb05879ca49caf4288df540e4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Apr 15 16:41:35 2010 -0400
+
+    config: fix checking for extensions section
+    
+    A hidden dependency on statement order was discovered.
+    The REQUIRE_MODULES variable was removed but needed.
+    Comments added to clarify the situation.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e9770dfe4e54993c2c53922fe9b37976e4e147cd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Apr 12 16:42:08 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 35fd1d69c7377d26eae631033b93bccd1b7fd1d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Apr 10 22:13:17 2010 -0400
+
+    config: fix warnings and layout
+    
+    Minor upgrades. Layout and comment statements.
+    Remove AC_PROG_CC as it overrides AC_PROG_C_C99 from
+    XORG_STRICT_OPTION.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 47dc3a9b851de8dd4b915ca8da43e7c744ee1730
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Apr 15 08:41:27 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements at the top.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9071703d43771a57bab00e33238fd0f99e9ce302
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Apr 10 20:41:06 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0b601a14627538877ee89492e4b884da8152ff4c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Apr 10 19:46:47 2010 -0400
+
+    config: simplify configuration regarding sysfs headers and library.
+    
+    Replace deprecated AC_HEADER_CHECK with AC_CHECK_HEADERS
+    AC_CHECK_LIB ensures sysfs library is present and adds -lsysfs
+    AC_CHECK_HEADERS verifies sysfs and linux input headers are present
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 64a899b00564fd16250068da1eab1e3dacdd3477
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Apr 12 09:13:39 2010 -0400
+
+    config: add conditional inclusion of config.h
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d0a76a2343f8e3c07db3de7874fc8c2f38f98f09
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Apr 9 14:12:28 2010 -0400
+
+    config: remove AH_TOP autoheader statement
+    
+    The generated config.h does not need to include xorg-server.h
+    for the content it provides.
+    Add #include <xorg-server.h> in .[hc] files as needed.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b64d7594acf3e41f8ac0868d972be0e75fdcb35b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 11 10:08:07 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1119b9057b41435cfdde6822e3a637a2c18e7ca1
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:13:24 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit cf02cd53e7152c4effe036abb8b2849b88f4f54b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 276cfbdc35ec63da046391a07a760a6844f9db6b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 258301f0346a343b27ea716ff60099eddd1a02ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit cb547fb807f05a7e0a45ebfabaf5d02802296788
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 3f64aba434c97ee7c6433994375b3038201d805a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:20 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 934a53decdb9d0d8890e7d6d6b67d4c0c64fbc4f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 0f7ea63f28fb5314a58f9179bab6269f5184579f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 11 12:06:19 2009 +1000
+
+    Remove some unused crap from configure
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit da1d7acc20a1b9ef4450b40781f1f207d9fa4e3d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Sep 9 12:44:10 2009 +1000

@@ -1,12 +1,16 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include "xorg-server.h"
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `sysfs' library (-lsysfs). */
+#undef HAVE_LIBSYSFS
+
+/* Define to 1 if you have the <linux/input.h> header file. */
+#undef HAVE_LINUX_INPUT_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -23,6 +27,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the <sysfs/libsysfs.h> header file. */
+#undef HAVE_SYSFS_LIBSYSFS_H
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
@@ -31,12 +38,6 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* Using the Linux input subsystem */
-#undef LINUX_INPUT
-
-/* Using sysfs to probe devices */
-#undef LINUX_SYSFS
 
 /* Name of package */
 #undef PACKAGE
