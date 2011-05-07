@@ -69,6 +69,24 @@ out:
     return res;
 }
 
+static void
+WSConsDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
+{
+    int wsmouse_mode = WSMOUSE_NATIVE;
+
+    if (ioctl(pInfo->fd, WSMOUSEIO_SETMODE, &wsmouse_mode) == -1)
+        xf86Msg(X_ERROR, "%s: cannot set absolute mode\n", pInfo->name);
+}
+
+static void
+WSConsDeviceOffHook(InputInfoPtr pInfo)
+{
+    int wsmouse_mode = WSMOUSE_COMPAT;
+
+    if (ioctl(pInfo->fd, WSMOUSEIO_SETMODE, &wsmouse_mode) == -1)
+        xf86Msg(X_ERROR, "%s: cannot set relative mode\n", pInfo->name);
+}
+
 static Bool
 WSConsQueryHardware(InputInfoPtr pInfo)
 {
@@ -238,8 +256,8 @@ WSConsReadDevDimensions(InputInfoPtr pInfo)
 }
 
 struct SynapticsProtocolOperations wscons_proto_operations = {
-    NULL,
-    NULL,
+    WSConsDeviceOnHook,
+    WSConsDeviceOffHook,
     WSConsQueryHardware,
     WSConsReadHwState,
     WSConsAutoDevProbe,
