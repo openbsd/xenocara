@@ -95,15 +95,15 @@ CHIPSDGAInit(ScreenPtr pScreen)
    while(pMode) {
 
 	if(0 /*pScrn->displayWidth != pMode->HDisplay*/) {
-	    newmodes = xrealloc(modes, (num + 2) * sizeof(DGAModeRec));
+	    newmodes = realloc(modes, (num + 2) * sizeof(DGAModeRec));
 	    oneMore = TRUE;
 	} else {
-	    newmodes = xrealloc(modes, (num + 1) * sizeof(DGAModeRec));
+	    newmodes = realloc(modes, (num + 1) * sizeof(DGAModeRec));
 	    oneMore = FALSE;
 	}
 
 	if(!newmodes) {
-	   xfree(modes);
+	   free(modes);
 	   return FALSE;
 	}
 	modes = newmodes;
@@ -239,8 +239,8 @@ CHIPS_SetViewport(
     CHIPSPtr cPtr = CHIPSPTR(pScrn);
   
     if (flags & DGA_FLIP_RETRACE) {
- 	while ((hwp->readST01(hwp)) & 0x08){};
- 	while (!(hwp->readST01(hwp)) & 0x08){};
+	while ((hwp->readST01(hwp)) & 0x08){};
+	while (!((hwp->readST01(hwp)) & 0x08)){};
     }
 
     CHIPSAdjustFrame(pScrn->pScreen->myNum, x, y, flags);

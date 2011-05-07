@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-chips],
-        [1.2.3],
+        [1.2.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-chips])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -43,6 +43,9 @@ XORG_DEFAULT_OPTIONS
 # Initialize libtool
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
+
+# Checks for programs.
+AM_PROG_CC_C_O
 
 AH_TOP([#include "xorg-server.h"])
 

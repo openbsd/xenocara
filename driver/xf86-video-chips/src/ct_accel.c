@@ -1181,7 +1181,7 @@ CTNAME(CacheMonoStipple)(ScrnInfoPtr pScrn, PixmapPtr pPix)
     } else 		funcNo = 2;
 
     pad = (((pCache->w * bpp) + 31) >> 5) << 2;
-    dstPtr = data = (unsigned char*)xalloc(pad * pCache->h);
+    dstPtr = data = malloc(pad * pCache->h);
     srcPtr = (unsigned char*)pPix->devPrivate.ptr;
     StippleFunc = StippleTab[funcNo];
     
@@ -1209,7 +1209,7 @@ CTNAME(CacheMonoStipple)(ScrnInfoPtr pScrn, PixmapPtr pPix)
 	pScrn, pCache->x, pCache->y, pCache->w, pCache->h, data,
 	pad, bpp, pScrn->depth);
 
-    xfree(data);
+    free(data);
 
     return pCache;
 }

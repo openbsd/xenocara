@@ -111,8 +111,7 @@
 #include "micmap.h"
 
 #include "fb.h"
-#include "cfb8_16.h"
-
+#include "fboverlay.h"
 
 /* Needed for the 1 and 4 bpp framebuffers */
 #ifdef HAVE_XF1BPP
@@ -158,7 +157,9 @@ static ModeStatus CHIPSValidMode(int scrnIndex, DisplayModePtr mode,
 static Bool	CHIPSSaveScreen(ScreenPtr pScreen, int mode);
 
 /* Internally used functions */
+#ifdef HAVE_ISA
 static int      chipsFindIsaDevice(GDevPtr dev);
+#endif
 static Bool     chipsClockSelect(ScrnInfoPtr pScrn, int no);
 Bool     chipsModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static void     chipsSave(ScrnInfoPtr pScrn, vgaRegPtr VgaSave,
@@ -770,7 +771,7 @@ CHIPSFreeRec(ScrnInfoPtr pScrn)
 {
     if (pScrn->driverPrivate == NULL)
 	return;
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -1332,16 +1333,6 @@ CHIPSPreInit(ScrnInfoPtr pScrn, int flags)
 	}	
 	break;
 #endif
-    case 16:
-	if (cPtr->Flags & ChipsOverlay8plus16) {
-	    if (xf86LoadSubModule(pScrn, "xf8_16bpp") == NULL) {
-		vbeFree(cPtr->pVbe);
-		cPtr->pVbe = NULL;
-	        CHIPSFreeRec(pScrn);
-		return FALSE;
-	    }	
-	    break;
-	}
     default:
 	if (xf86LoadSubModule(pScrn, "fb") == NULL) {
 	    vbeFree(cPtr->pVbe);
@@ -1496,7 +1487,7 @@ chipsPreInitHiQV(ScrnInfoPtr pScrn, int flags)
     /* Collect all of the relevant option flags (fill in pScrn->options) */
     xf86CollectOptions(pScrn, NULL);
     /* Process the options */
-    if (!(cPtr->Options = xalloc(sizeof(ChipsHiQVOptions))))
+    if (!(cPtr->Options = malloc(sizeof(ChipsHiQVOptions))))
 	return FALSE;
     memcpy(cPtr->Options, ChipsHiQVOptions, sizeof(ChipsHiQVOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, cPtr->Options);
@@ -1606,7 +1597,7 @@ chipsPreInitHiQV(ScrnInfoPtr pScrn, int flags)
 #endif
 	    cPtr->IOAddress = cPtr->FbAddress + 0x400000L;
  	xf86DrvMsg(pScrn->scrnIndex, X_DEFAULT,
- 		   "IOAddress is set at 0x%lX.\n",cPtr->IOAddress);
+		   "IOAddress is set at 0x%lX.\n",(unsigned long)cPtr->IOAddress);
 	
     } else
 	xf86DrvMsg(pScrn->scrnIndex, from,
@@ -2575,7 +2566,7 @@ chipsPreInitWingine(ScrnInfoPtr pScrn, int flags)
     xf86CollectOptions(pScrn, NULL);
 
     /* Process the options */
-    if (!(cPtr->Options = xalloc(sizeof(ChipsWingineOptions))))
+    if (!(cPtr->Options = malloc(sizeof(ChipsWingineOptions))))
 	return FALSE;
     memcpy(cPtr->Options, ChipsWingineOptions, sizeof(ChipsWingineOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, cPtr->Options);
@@ -3046,7 +3037,7 @@ chipsPreInit655xx(ScrnInfoPtr pScrn, int flags)
     xf86CollectOptions(pScrn, NULL);
 
     /* Process the options */
-    if (!(cPtr->Options = xalloc(sizeof(Chips655xxOptions))))
+    if (!(cPtr->Options = malloc(sizeof(Chips655xxOptions))))
 	return FALSE;
     memcpy(cPtr->Options, Chips655xxOptions, sizeof(Chips655xxOptions));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, cPtr->Options);
@@ -3904,6 +3895,18 @@ chipsLoadPalette16(ScrnInfoPtr pScrn, int numColors, int *indices,
     hwp->disablePalette(hwp);
 }
 
+static Bool
+cfb8_16ScreenInit(ScreenPtr pScreen, pointer pbits16, pointer pbits8,
+                  int xsize, int ysize, int dpix, int dpiy,
+                  int width16, int width8)
+{
+    return
+        (fbOverlaySetupScreen(pScreen, pbits16, pbits8, xsize, ysize,
+                              dpix, dpiy, width16, width8, 16, 8) &&
+         fbOverlayFinishScreenInit(pScreen, pbits16, pbits8, xsize, ysize,
+                                   dpix, dpiy, width16, width8, 16, 8, 16, 8));
+}
+
 /* Mandatory */
 static Bool
 CHIPSScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
@@ -3916,7 +3919,9 @@ CHIPSScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     int init_picture = 0;
     VisualPtr visual;
     int allocatebase, freespace, currentaddr;
+#ifndef XSERVER_LIBPCIACCESS
     unsigned int racflag = 0;
+#endif
     unsigned char *FBStart;
     int height, width, displayWidth;
     CHIPSEntPtr cPtrEnt = NULL;
@@ -4058,7 +4063,7 @@ CHIPSScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     if(cPtr->Flags & ChipsShadowFB) {
 	cPtr->ShadowPitch = BitmapBytePad(pScrn->bitsPerPixel * width);
-	cPtr->ShadowPtr = xalloc(cPtr->ShadowPitch * height);
+	cPtr->ShadowPtr = malloc(cPtr->ShadowPitch * height);
 	displayWidth = cPtr->ShadowPitch / (pScrn->bitsPerPixel >> 3);
 	FBStart = cPtr->ShadowPtr;
     } else {
@@ -4620,10 +4625,8 @@ CHIPSCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	XAADestroyInfoRec(cPtr->AccelInfoRec);
     if (cPtr->CursorInfoRec)
 	xf86DestroyCursorInfoRec(cPtr->CursorInfoRec);
-    if (cPtr->ShadowPtr)
-	xfree(cPtr->ShadowPtr);
-    if (cPtr->DGAModes)
-	xfree(cPtr->DGAModes);
+    free(cPtr->ShadowPtr);
+    free(cPtr->DGAModes);
     pScrn->vtSema = FALSE;
     if(cPtr->BlockHandler)
 	pScreen->BlockHandler = cPtr->BlockHandler;
@@ -7486,7 +7489,7 @@ chipsTestDACComp(ScrnInfoPtr pScrn, unsigned char a, unsigned char b,
 
     hwp->writeDacWriteAddr(hwp, 0x00);
     while ((hwp->readST01(hwp)) & 0x08){};    /* wait for vsync to end */
-    while (!(hwp->readST01(hwp)) & 0x08){};   /* wait for new vsync  */
+    while (!((hwp->readST01(hwp)) & 0x08)){}; /* wait for new vsync  */
     hwp->writeDacData(hwp, a);                /* set pattern */
     hwp->writeDacData(hwp, b);
     hwp->writeDacData(hwp, c);

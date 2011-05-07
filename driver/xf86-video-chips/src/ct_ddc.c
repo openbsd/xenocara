@@ -31,7 +31,7 @@ chips_ddc1Read(ScrnInfoPtr pScrn)
     register unsigned int tmp;
 
     while ((hwp->readST01(hwp)) & 0x08){};
-    while (!(hwp->readST01(hwp)) & 0x08){};
+    while (!((hwp->readST01(hwp)) & 0x08)){};
     tmp = cPtr->readXR(cPtr, 0x63);
     return (tmp & ddc_mask);
 }
@@ -170,7 +170,7 @@ chips_i2cInit(ScrnInfoPtr pScrn)
     I2CPtr->scrnIndex  = pScrn->scrnIndex;
     I2CPtr->I2CPutBits = chips_I2CPutBits;
     I2CPtr->I2CGetBits = chips_I2CGetBits;
-    I2CPtr->DriverPrivate.ptr = xalloc(sizeof(CHIPSI2CRec));
+    I2CPtr->DriverPrivate.ptr = malloc(sizeof(CHIPSI2CRec));
     ((CHIPSI2CPtr)(I2CPtr->DriverPrivate.ptr))->cPtr = cPtr;
     
     if (!xf86I2CBusInit(I2CPtr))

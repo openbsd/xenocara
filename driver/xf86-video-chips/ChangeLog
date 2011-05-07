@@ -1,3 +1,103 @@
+commit 314b72730340ce934c00f1756e4489e97635e1a9
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 17:12:48 2011 +0100
+
+    Bump to 1.2.4
+
+commit 25c21f7c47b41283ae8b009068fe489bbdfa0b5a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 16:41:08 2011 +0100
+
+    Replace deprecated xalloc/xrealloc/xfree with malloc/realloc/free
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit a7b607ed727b44d78c3e88c0f74932a8f46f6470
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 16:53:31 2011 +0100
+
+    Fix compiler warning
+    
+    src/ct_driver.c:160: warning: ‘chipsFindIsaDevice’ declared ‘static’ but never defined
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 3901322baf34a8e26fecc1915646d5e9c2252a9d
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 16:51:24 2011 +0100
+
+    Fix unused variable warning
+    
+    src/ct_driver.c: In function ‘CHIPSScreenInit’:
+    src/ct_driver.c:3920: warning: unused variable ‘racflag’
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit c409e213143156893a157d73c37a14df6bf0041b
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 16:50:21 2011 +0100
+
+    Fix compiler warning on 64bit
+    
+    src/ct_driver.c: In function ‘chipsPreInitHiQV’:
+    src/ct_driver.c:1598: warning: format ‘%lX’ expects type ‘long unsigned int’, but argument 4 has type ‘CARD32’
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit c4d03c11f889e12100f5770c13b5e50463043a4b
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 27 16:43:45 2011 +0100
+
+    Add parentheses to fix compiler warnings
+    
+    src/ct_ddc.c: In function ‘chips_ddc1Read’:
+    src/ct_ddc.c:34: warning: suggest parentheses around operand of ‘!’ or change ‘&’ to ‘&&’ or ‘!’ to ‘~’
+    
+    src/ct_dga.c: In function ‘CHIPS_SetViewport’:
+    src/ct_dga.c:243: warning: suggest parentheses around operand of ‘!’ or change ‘&’ to ‘&&’ or ‘!’ to ‘~’
+    
+    src/ct_driver.c: In function ‘chipsTestDACComp’:
+    src/ct_driver.c:7490: warning: suggest parentheses around operand of ‘!’ or change ‘&’ to ‘&&’ or ‘!’ to ‘~’
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 5830fed3ebce5e5bacab85e37176cb81859828ef
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Nov 22 16:37:29 2010 -0500
+
+    Import the xf8_16bpp implementation
+    
+    This is trivial, just do it directly.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 02b3264149703eac325026a87dfa89d68d6ae1c8
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:50 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8e957e501db31059e49e81e56cdc31e3440d771b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jul 23 19:38:21 2010 -0400
+
+    config: add AM_PROG_CC_C_O for per-target compilation flags
+    
+    The use of per-target compilation flags with C sources requires
+    that the macro AM_PROG_CC_C_O be called from configure.ac
+    
+    If the C compiler does not accept the -c and -o options simultaneously,
+    define NO_MINUS_C_MINUS_O. This macro actually tests both the compiler
+    found by AC_PROG_CC, and, if different, the first cc in the path.
+    The test fails if one fails. This macro was created for GNU Make
+    to choose the default C compilation rule.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 5665714d0de33571d97def69d00d7bfa9e0d5b8a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jul 23 11:33:37 2010 -0700
