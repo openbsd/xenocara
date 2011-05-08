@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.36 2011/02/19 19:51:53 matthieu Exp $
+# $OpenBSD: Makefile,v 1.37 2011/05/08 09:27:57 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -16,11 +16,11 @@ INPUT_DRV_COMMON= \
 
 INPUT_DRV_alpha=
 
-INPUT_DRV_amd64= ${INPUT_DRV_COMMON} xf86-input-vmmouse
+INPUT_DRV_amd64= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
 
 INPUT_DRV_hppa= ${INPUT_DRV_DEFAULT}
 
-INPUT_DRV_i386= ${INPUT_DRV_COMMON} xf86-input-vmmouse
+INPUT_DRV_i386= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
 
 INPUT_DRV_landisk=
 
