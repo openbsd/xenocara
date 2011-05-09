@@ -5,6 +5,12 @@
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
+./usr/X11R6/include/radeon_bo.h
+./usr/X11R6/include/radeon_bo_gem.h
+./usr/X11R6/include/radeon_bo_int.h
+./usr/X11R6/include/radeon_cs.h
+./usr/X11R6/include/radeon_cs_gem.h
+./usr/X11R6/include/radeon_cs_int.h
 ./usr/X11R6/include/xorg
 ./usr/X11R6/include/xorg/BT.h
 ./usr/X11R6/include/xorg/IBM.h
@@ -92,6 +98,8 @@
 ./usr/X11R6/include/xorg/site.h
 ./usr/X11R6/include/xorg/swaprep.h
 ./usr/X11R6/include/xorg/swapreq.h
+./usr/X11R6/include/xorg/synaptics-properties.h
+./usr/X11R6/include/xorg/synaptics.h
 ./usr/X11R6/include/xorg/tda8425.h
 ./usr/X11R6/include/xorg/tda9850.h
 ./usr/X11R6/include/xorg/tda9885.h
@@ -135,6 +143,9 @@
 ./usr/X11R6/include/xorg/xorgVersion.h
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
+./usr/X11R6/lib/libdrm_radeon.a
+./usr/X11R6/lib/libdrm_radeon.so.1.0
+./usr/X11R6/lib/libdrm_radeon_pic.a
 ./usr/X11R6/lib/modules/dri/i810_dri.so
 ./usr/X11R6/lib/modules/dri/i915_dri.so
 ./usr/X11R6/lib/modules/dri/i965_dri.so
@@ -248,6 +259,8 @@
 ./usr/X11R6/lib/modules/input/mutouch_drv.so
 ./usr/X11R6/lib/modules/input/penmount_drv.la
 ./usr/X11R6/lib/modules/input/penmount_drv.so
+./usr/X11R6/lib/modules/input/synaptics_drv.la
+./usr/X11R6/lib/modules/input/synaptics_drv.so
 ./usr/X11R6/lib/modules/input/usbtablet_drv.la
 ./usr/X11R6/lib/modules/input/usbtablet_drv.so
 ./usr/X11R6/lib/modules/input/vmmouse_drv.la
@@ -300,7 +313,9 @@
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
 ./usr/X11R6/lib/modules/v10002d.uc
 ./usr/X11R6/lib/modules/v20002d.uc
+./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
+./usr/X11R6/lib/pkgconfig/xorg-synaptics.pc
 ./usr/X11R6/man/man1/Xephyr.1
 ./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xorg.1
@@ -308,6 +323,8 @@
 ./usr/X11R6/man/man1/Xvfb.1
 ./usr/X11R6/man/man1/cvt.1
 ./usr/X11R6/man/man1/gtf.1
+./usr/X11R6/man/man1/synclient.1
+./usr/X11R6/man/man1/syndaemon.1
 ./usr/X11R6/man/man4/acecad.4
 ./usr/X11R6/man/man4/apm.4
 ./usr/X11R6/man/man4/ati.4
@@ -340,6 +357,7 @@
 ./usr/X11R6/man/man4/savage.4
 ./usr/X11R6/man/man4/siliconmotion.4
 ./usr/X11R6/man/man4/sis.4
+./usr/X11R6/man/man4/synaptics.4
 ./usr/X11R6/man/man4/tdfx.4
 ./usr/X11R6/man/man4/trident.4
 ./usr/X11R6/man/man4/tseng.4
