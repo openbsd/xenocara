@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.25 2011/05/11 13:53:51 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.26 2011/05/13 12:53:19 okan Exp $
  */
 
 #include <sys/param.h>
@@ -116,10 +116,8 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 			}
 			break;
 		case ButtonRelease:
-			if (time) {
-				XSync(X_Dpy, False);
+			if (time)
 				client_resize(cc);
-			}
 			XUnmapWindow(X_Dpy, sc->menuwin);
 			XReparentWindow(X_Dpy, sc->menuwin, sc->rootwin, 0, 0);
 			xu_ptr_ungrab();
@@ -171,10 +169,8 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 			}
 			break;
 		case ButtonRelease:
-			if (time) {
-				XSync(X_Dpy, False);
+			if (time)
 				client_move(cc);
-			}
 			xu_ptr_ungrab();
 			return;
 		}
