@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libX11], [1.4.2],
+AC_INIT([libX11], [1.4.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libX11])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([src/config.h include/X11/XlibConf.h])
@@ -20,15 +20,16 @@ AM_MAINTAINER_MODE
 # Initialize libtool
 AC_PROG_LIBTOOL
 
-# Require xorg-macros minimum of 1.11 for disabling fop by default
+# Require xorg-macros minimum of 1.12 for DocBook external references
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.11 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.11)
+          [m4_fatal([must install xorg-macros 1.12 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.12)
 XORG_DEFAULT_OPTIONS
 XORG_ENABLE_SPECS
-XORG_WITH_XMLTO(0.0.20)
+XORG_WITH_XMLTO(0.0.22)
 XORG_WITH_FOP([no])
-XORG_CHECK_SGML_DOCTOOLS(1.5)
+XORG_WITH_XSLTPROC
+XORG_CHECK_SGML_DOCTOOLS(1.7)
 XORG_PROG_RAWCPP
 
 # Required when PKG_CHECK_MODULES called within an if statement
