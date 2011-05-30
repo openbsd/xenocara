@@ -88,6 +88,15 @@ AM_CONDITIONAL(HURD, [test "x$IS_HURD" = xyes])
 DRIVER_NAME=kbd
 AC_SUBST([DRIVER_NAME])
 
+AC_ARG_ENABLE(xkeyboard-config,
+              AS_HELP_STRING([--enable-xkeyboard-config],
+                             [Enable using xkeyboard-config (default: disabled)]),
+              [ XKEYBOARD_CONFIG="${enableval}" ],
+              [ XKEYBOARD_CONFIG="no" ])
+if test "x$XKEYBOARD_CONFIG" = xyes ; then
+    AC_DEFINE(USE_XKEYBOARD_CONFIG, 1, [Enable using xkeyboard-config])
+fi
+
 AC_CONFIG_FILES([Makefile
                  src/Makefile
                  man/Makefile])
