@@ -1,9 +1,4 @@
-# Have to fake out automake by calling our man pages "DATA" since "MANS" won't
-# accept .3x as a valid man page suffix
-
 libmandir = $(LIB_MAN_DIR)
-
-LIB_MAN_DIR_SUFFIX = $(LIB_MAN_DIR:@mandir@/man%=%)
 
 libman_PRE = \
 	XkbActionCtrls.man                      \
@@ -207,28 +202,14 @@ libman_PRE = \
 	XkbUpdateMapFromCore.man                \
 	XkbVirtualModsToReal.man                
 
-# What we actually install 
-
-if MANPAGES
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
-endif
 
 EXTRA_DIST = $(libman_PRE)
 
 CLEANFILES = $(libman_DATA)
 
-include $(top_srcdir)/cpprules.in
+SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
-SUFFIXES += .$(LIB_MAN_SUFFIX) .man
-
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MANDEFS = -D__libmansuffix__=$(LIB_MAN_SUFFIX) \
-	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\""
-
-CPP_MAN_FLAGS = $(MANDEFS) $(EXTRAMANDEFS)
-
+# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(LIB_MAN_SUFFIX):
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_MAN_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
-
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

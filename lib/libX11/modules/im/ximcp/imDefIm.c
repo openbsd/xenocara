@@ -1,5 +1,5 @@
 /*
- * Copyright 1990, 1991, 1992 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright 1990, 1991, 1992 Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -55,7 +55,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <config.h>
 #endif
 #include <X11/Xatom.h>
-#define NEED_EVENTS
 #include "Xlibint.h"
 #include "Xlcint.h"
 #include "XlcPublic.h"

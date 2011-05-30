@@ -37,7 +37,7 @@ Sun Microsystems, Inc. or its licensors is granted.
 
 */
 /*
- * Copyright 2000 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright 2000 Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -381,7 +381,7 @@ get_font_name(
     XOC oc,
     char *pattern)
 {
-    char **list, *name, *prop_name;
+    char **list, *name;
     int count;
     XFontStruct *fs;
     Display *dpy = oc->core.om->core.display;
@@ -397,13 +397,7 @@ get_font_name(
 	fs = XLoadQueryFont(dpy, pattern);
 	if (fs == NULL) return NULL;
 
-	prop_name = get_prop_name(dpy, fs);
-	if (prop_name == NULL) return NULL;
-
-	name = (char*) Xmalloc(strlen(prop_name) + 1);
-	if (name)
-	    strcpy(name, prop_name);
-
+	name = get_prop_name(dpy, fs);
 	XFreeFont(dpy, fs);
     }
     return name;

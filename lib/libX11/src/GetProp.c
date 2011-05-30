@@ -24,7 +24,6 @@ in this Software without prior written authorization from The Open Group.
 
 */
 
-#define NEED_REPLIES
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -47,7 +46,7 @@ XGetWindowProperty(
 {
     xGetPropertyReply reply;
     register xGetPropertyReq *req;
-    xError error;
+    xError error = {0};
 
     LockDisplay(dpy);
     GetReq (GetProperty, req);

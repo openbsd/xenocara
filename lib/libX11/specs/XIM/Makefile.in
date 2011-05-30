@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -37,10 +37,8 @@
 # DEALINGS IN THE SOFTWARE.
 #
 
-# Based on xc/doc/specs/XIM/Makefile from X11R6.9
-
 #
-# Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -61,8 +59,6 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 #
-
-# Based on xc/doc/specs/*/Makefile from X11R6.9
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -73,9 +69,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ../..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -86,12 +82,21 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/specs/troffrules.in
+DIST_COMMON = $(am__dist_spec_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(top_srcdir)/specs/xmlrules.in
+@ENABLE_SPECS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = \
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	-m $(XSL_STYLESHEET)	\
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam img.src.path=$(abs_builddir)/	\
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam html.stylesheet=$(STYLESHEET_SRCDIR)/xorg.css
+
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@am__append_4 = $(spec_DATA) html
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@am__append_5 = .xml .ps .pdf .txt .html
 subdir = specs/XIM
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
-	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -100,15 +105,19 @@ CONFIG_HEADER = $(top_builddir)/src/config.h \
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
+am__dist_spec_DATA_DIST = xim.xml dynamicflowsampleseq.svg \
+	dynamicflow.svg eventflow.svg sampleprotocolflow1.svg \
+	sampleprotocolflow2.svg staticflowsampleseq.svg staticflow.svg
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(specdir)"
+am__installdirs = "$(DESTDIR)$(specdir)" "$(DESTDIR)$(specdir)"
+dist_specDATA_INSTALL = $(INSTALL_DATA)
 specDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(spec_DATA)
+DATA = $(dist_spec_DATA) $(spec_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -143,7 +152,6 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DOLT_BASH = @DOLT_BASH@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DSYMUTIL = @DSYMUTIL@
@@ -159,21 +167,18 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+FOP = @FOP@
 GREP = @GREP@
-GROFF = @GROFF@
-GS_PATH = @GS_PATH@
-HAVE_GROFF_FALSE = @HAVE_GROFF_FALSE@
-HAVE_GROFF_HTML_FALSE = @HAVE_GROFF_HTML_FALSE@
-HAVE_GROFF_HTML_TRUE = @HAVE_GROFF_HTML_TRUE@
-HAVE_GROFF_MM_FALSE = @HAVE_GROFF_MM_FALSE@
-HAVE_GROFF_MM_TRUE = @HAVE_GROFF_MM_TRUE@
-HAVE_GROFF_MS_FALSE = @HAVE_GROFF_MS_FALSE@
-HAVE_GROFF_MS_TRUE = @HAVE_GROFF_MS_TRUE@
-HAVE_GROFF_TRUE = @HAVE_GROFF_TRUE@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
 HAVE_PERL_FALSE = @HAVE_PERL_FALSE@
 HAVE_PERL_TRUE = @HAVE_PERL_TRUE@
-HAVE_PS2PDF_FALSE = @HAVE_PS2PDF_FALSE@
-HAVE_PS2PDF_TRUE = @HAVE_PS2PDF_TRUE@
+HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
+HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
+HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
+HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 I18N_MODULE_LIBS = @I18N_MODULE_LIBS@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -195,8 +200,6 @@ LINT_FALSE = @LINT_FALSE@
 LINT_FLAGS = @LINT_FLAGS@
 LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -205,8 +208,6 @@ MAKEINFO = @MAKEINFO@
 MAKE_LINT_LIB_FALSE = @MAKE_LINT_LIB_FALSE@
 MAKE_LINT_LIB_TRUE = @MAKE_LINT_LIB_TRUE@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
-MANPAGES_FALSE = @MANPAGES_FALSE@
-MANPAGES_TRUE = @MANPAGES_TRUE@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
@@ -223,9 +224,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
-PNMTOPNG_PATH = @PNMTOPNG_PATH@
-PS2PDF = @PS2PDF@
-PSSELECT_PATH = @PSSELECT_PATH@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -233,6 +231,7 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 THRSTUBS_FALSE = @THRSTUBS_FALSE@
 THRSTUBS_TRUE = @THRSTUBS_TRUE@
 UDC_FALSE = @UDC_FALSE@
@@ -247,12 +246,8 @@ X11_LIBS = @X11_LIBS@
 X11_LOCALEDATADIR = @X11_LOCALEDATADIR@
 X11_LOCALEDIR = @X11_LOCALEDIR@
 X11_LOCALELIBDIR = @X11_LOCALELIBDIR@
-XCB_FALSE = @XCB_FALSE@
-XCB_TRUE = @XCB_TRUE@
 XCMS_FALSE = @XCMS_FALSE@
 XCMS_TRUE = @XCMS_TRUE@
-XDMCP_CFLAGS = @XDMCP_CFLAGS@
-XDMCP_LIBS = @XDMCP_LIBS@
 XERRORDB = @XERRORDB@
 XKBPROTO_REQUIRES = @XKBPROTO_REQUIRES@
 XKB_FALSE = @XKB_FALSE@
@@ -266,7 +261,10 @@ XLOCALELIBDIR = @XLOCALELIBDIR@
 XLOCALE_FALSE = @XLOCALE_FALSE@
 XLOCALE_TRUE = @XLOCALE_TRUE@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
+XMLTO = @XMLTO@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
+XORG_SGML_PATH = @XORG_SGML_PATH@
+XSL_STYLESHEET = @XSL_STYLESHEET@
 XTHREADLIB = @XTHREADLIB@
 XTHREAD_CFLAGS = @XTHREAD_CFLAGS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
@@ -317,30 +315,30 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-doc_sources = xim.ms
-EXTRA_DIST = $(doc_sources)
-@HAVE_PS2PDF_FALSE@printable_format = .ps
-@HAVE_PS2PDF_TRUE@printable_format = .pdf
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@spec_DATA = $(doc_sources:.ms=.txt) \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@		$(doc_sources:.ms=$(printable_format)) \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@		$(doc_sources:.ms=.html)
+@ENABLE_SPECS_TRUE@specdir = $(docdir)/$(subdir)
+@ENABLE_SPECS_TRUE@doc_sources = xim.xml
+@ENABLE_SPECS_TRUE@dist_spec_DATA = \
+@ENABLE_SPECS_TRUE@	$(doc_sources)			\
+@ENABLE_SPECS_TRUE@	dynamicflowsampleseq.svg	\
+@ENABLE_SPECS_TRUE@	dynamicflow.svg			\
+@ENABLE_SPECS_TRUE@	eventflow.svg			\
+@ENABLE_SPECS_TRUE@	sampleprotocolflow1.svg		\
+@ENABLE_SPECS_TRUE@	sampleprotocolflow2.svg		\
+@ENABLE_SPECS_TRUE@	staticflowsampleseq.svg		\
+@ENABLE_SPECS_TRUE@	staticflow.svg
 
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@specdir = $(docdir)/$(subdir)
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@imagesdir = $(specdir)/images
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@CLEANFILES = $(spec_DATA)
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@MOSTLYCLEANFILES = index.*
-
-# Pass version string as a troff string for substitution
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@GROFF_DEFS = -dxV="$(PACKAGE_STRING)"
-
-# -e to run through eqn, -t to run through tbl
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@GROFF_FLAGS = -e -t -ms $(GROFF_DEFS) -I$(srcdir) $(top_srcdir)/specs/macros.t
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@SUFFIXES = .ms .ps .txt .html .pdf
+@ENABLE_SPECS_TRUE@CLEANFILES = $(am__append_4)
+@ENABLE_SPECS_TRUE@SUFFIXES = $(am__append_5)
+@ENABLE_SPECS_TRUE@XMLTO_FLAGS = $(am__append_3)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@spec_DATA =  \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(doc_sources:.xml=.html) \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1) \
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .ms .ps .txt .html .pdf
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/specs/troffrules.in $(am__configure_deps)
+.SUFFIXES: .xml .ps .pdf .txt .html
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/specs/xmlrules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -379,6 +377,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-dist_specDATA: $(dist_spec_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(specdir)" || $(mkdir_p) "$(DESTDIR)$(specdir)"
+	@list='$(dist_spec_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dist_specDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(specdir)/$$f'"; \
+	  $(dist_specDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(specdir)/$$f"; \
+	done
+
+uninstall-dist_specDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_spec_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(specdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(specdir)/$$f"; \
+	done
 install-specDATA: $(spec_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(specdir)" || $(mkdir_p) "$(DESTDIR)$(specdir)"
@@ -435,7 +450,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(specdir)"; do \
+	for dir in "$(DESTDIR)$(specdir)" "$(DESTDIR)$(specdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -453,7 +468,6 @@ install-strip:
 	  `test -z '$(STRIP)' || \
 	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
-	-test -z "$(MOSTLYCLEANFILES)" || rm -f $(MOSTLYCLEANFILES)
 
 clean-generic:
 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
@@ -464,12 +478,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@ENABLE_SPECS_FALSE@uninstall-local:
-@HAVE_GROFF_MS_FALSE@uninstall-local:
-@ENABLE_SPECS_FALSE@install-data-local:
-@HAVE_GROFF_MS_FALSE@install-data-local:
-@ENABLE_SPECS_FALSE@mostlyclean-local:
-@HAVE_GROFF_MS_FALSE@mostlyclean-local:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -488,7 +496,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-data-local install-specDATA
+install-data-am: install-dist_specDATA install-specDATA
 
 install-exec-am:
 
@@ -504,8 +512,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-generic mostlyclean-libtool \
-	mostlyclean-local
+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -515,58 +522,35 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-local uninstall-specDATA
+uninstall-am: uninstall-dist_specDATA uninstall-info-am \
+	uninstall-specDATA
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-data-local install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-specDATA install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool \
-	mostlyclean-local pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-info-am uninstall-local uninstall-specDATA
+	install-data install-data-am install-dist_specDATA \
+	install-exec install-exec-am install-info install-info-am \
+	install-man install-specDATA install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dist_specDATA uninstall-info-am uninstall-specDATA
 
 
-# Install html generated images for specs
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@install-data-local:
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	test -z "$(imagesdir)" || $(mkdir_p) "$(DESTDIR)$(imagesdir)"
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	@d="$(srcdir)/images/"; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	list=`ls $$d`; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	for p in $$list; do \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	  echo " $(INSTALL_DATA) '$$d$$p' '$(DESTDIR)$(imagesdir)/$$p'"; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	  $(INSTALL_DATA) "$$d$$p" "$(DESTDIR)$(imagesdir)/$$p"; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	done;
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.txt: %.xml $(dist_spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
 
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@uninstall-local:
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	@if test -n $(DESTDIR)$(imagesdir); then \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	  if test -d $(DESTDIR)$(imagesdir); then \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	    list=`ls $(DESTDIR)$(imagesdir)`; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	    for p in $$list; do \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	      echo " rm -f '$(DESTDIR)$(imagesdir)/$$p'"; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	      rm -f "$(DESTDIR)$(imagesdir)/$$p"; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	    done \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	  fi; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	fi;
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.html: %.xml $(dist_spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
 
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@mostlyclean-local:
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	@rm -fr images
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.pdf: %.xml $(dist_spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
 
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@.ms.ps:
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	-$(AM_V_GEN) $(GROFF) -Tps $(GROFF_FLAGS) $< 2> index.$@.raw > $@
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	@if grep '^[^1-9.]' index.$@.raw | grep -v warning; then exit 1; \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	 else test $$? -le 1; fi
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.ps: %.xml $(dist_spec_DATA)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop ps $<
 
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@.ms.txt:
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	$(AM_V_GEN) env GROFF_NO_SGR=TRUE $(GROFF) -Tutf8 $(GROFF_FLAGS) \
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	 $< 2> index.$@.raw > $@
-
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@.ms.html:
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	$(AM_V_GEN) $(GROFF) $(GROFF_FLAGS) -Thtml -P-Dimages -P-I$*-image $< 2> index.$@.raw > $@
-
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@.ps.pdf:
-@ENABLE_SPECS_TRUE@@HAVE_GROFF_MS_TRUE@	$(AM_V_GEN) $(PS2PDF) $< $@
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@chunked-html: $(doc_sources)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) -o html xhtml $(doc_sources)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

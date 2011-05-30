@@ -37,7 +37,7 @@ Sun Microsystems, Inc. or its licensors is granted.
 
 */
 /*
- * Copyright 2000 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright 2000 Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -64,7 +64,6 @@ Sun Microsystems, Inc. or its licensors is granted.
 #include <config.h>
 #endif
 #include <stdio.h>
-#define NEED_EVENTS
 #include "Xlibint.h"
 #include "Xlcint.h"
 #include "XlcGeneric.h"

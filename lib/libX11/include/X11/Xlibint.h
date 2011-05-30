@@ -27,8 +27,8 @@ from The Open Group.
 
 */
 
-#ifndef _XLIBINT_H_
-#define _XLIBINT_H_ 1
+#ifndef _X11_XLIBINT_H_
+#define _X11_XLIBINT_H_ 1
 
 /*
  *	Xlibint.h - Header definition and support file for the internal
@@ -220,12 +220,6 @@ typedef struct _XSQEvent
 } _XQEvent;
 #endif
 
-#ifdef XTHREADS			/* for xReply */
-#define NEED_REPLIES
-#endif
-
-#define NEED_EVENTS
-#define NEED_REPLIES
 #include <X11/Xproto.h>
 #ifdef __sgi
 #define _SGI_MP_SOURCE  /* turn this on to get MP safe errno */
@@ -632,7 +626,7 @@ extern void _XFlushGCCache(Display *dpy, GC gc);
     if (dpy->bufptr + (n) > dpy->bufmax) \
         _XFlush (dpy); \
     ptr = (type) dpy->bufptr; \
-    (void)ptr; \
+    memset(ptr, '\0', n); \
     dpy->bufptr += (n);
 
 #ifdef WORD64
@@ -1400,4 +1394,4 @@ extern void xlocaledir(
 
 _XFUNCPROTOEND
 
-#endif /* _XLIBINT_H_ */
+#endif /* _X11_XLIBINT_H_ */

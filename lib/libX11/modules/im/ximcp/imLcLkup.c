@@ -67,12 +67,21 @@ _XimLocalMbLookupString(XIC xic, XKeyEvent *ev, char *buffer, int bytes,
 		if(status) *status = XBufferOverflow;
 		return(ret);
 	    }
-	    if(keysym) {
-		*keysym = XK_braille_blank | pattern;
-		if(status) *status = XLookupBoth;
-	    } else
-		if(status) *status = XLookupChars;
-	    memcpy(buffer, mb, ret);
+	    if(keysym) *keysym = XK_braille_blank | pattern;
+	    if(ret > 0) {
+		if (keysym) {
+		    if(status) *status = XLookupBoth;
+		} else {
+		    if(status) *status = XLookupChars;
+		}
+		memcpy(buffer, mb, ret);
+	    } else {
+		if(keysym) {
+		    if(status) *status = XLookupKeySym;
+		} else {
+		    if(status) *status = XLookupNone;
+		}
+	    }
 	} else { /* Composed Event */
 	    ret = strlen(&mb[b[ic->private.local.composed].mb]);
 	    if(ret > bytes) {
@@ -213,6 +222,11 @@ _XimLocalUtf8LookupString(XIC xic, XKeyEvent *ev, char *buffer, int bytes,
 	    buffer[0] = 0xe0 | ((BRL_UC_ROW >> 12) & 0x0f);
 	    buffer[1] = 0x80 | ((BRL_UC_ROW >> 8) & 0x30) | (pattern >> 6);
 	    buffer[2] = 0x80 | (pattern & 0x3f);
+	    if(keysym) {
+		*keysym = XK_braille_blank | pattern;
+		if(status) *status = XLookupBoth;
+	    } else
+		if(status) *status = XLookupChars;
 	} else { /* Composed Event */
 	    ret = strlen(&utf8[b[ic->private.local.composed].utf8]);
 	    if(ret > bytes) {

@@ -24,7 +24,6 @@ in this Software without prior written authorization from The Open Group.
 
 */
 
-#define NEED_EVENTS
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -60,6 +59,7 @@ Bool XCheckTypedWindowEvent (
 		    (qelt->event.type == type)) {
 		    *event = qelt->event;
 		    _XDeq(dpy, prev, qelt);
+		    _XStoreEventCookie(dpy, event);
 		    UnlockDisplay(dpy);
 		    return True;
 		}

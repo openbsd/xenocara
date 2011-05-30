@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 #
-# Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2009 Oracle and/or its affiliates. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -34,10 +34,15 @@ use warnings;
 my $error_count = 0;
 
 if (scalar(@ARGV) == 0) {
-  push @ARGV, "Compose";
+  if ( -f 'Compose' ) {
+    push @ARGV, 'Compose';
+  } else {
+    push @ARGV, glob '*/Compose';
+  }
 }
 
 foreach my $cf (@ARGV) {
+  # print "Checking $cf\n";
   $error_count += check_compose_file($cf);
 }
 

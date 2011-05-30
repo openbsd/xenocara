@@ -1,5 +1,5 @@
 #
-# Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,8 +21,4 @@
 # DEALINGS IN THE SOFTWARE.
 #
 
-# Based on xc/doc/specs/i18n/Makefile from X11R6.9
-
-doc_sources = Framework.ms LocaleDB.ms Trans.ms
-
-include $(top_srcdir)/specs/troffrules.in
+SUBDIRS=framework localedb trans

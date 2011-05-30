@@ -26,7 +26,6 @@ in this Software without prior written authorization from The Open Group.
 
 /* Beware, here be monsters (still under construction... - JG */
 
-#define NEED_EVENTS
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -997,7 +996,7 @@ XRebindKeysym (
     tmp = dpy->key_bindings;
     nb = sizeof(KeySym) * nm;
 
-    if ((! (p = (struct _XKeytrans *) Xmalloc( sizeof(struct _XKeytrans)))) ||
+    if ((! (p = (struct _XKeytrans *) Xcalloc( 1, sizeof(struct _XKeytrans)))) ||
 	((! (p->string = (char *) Xmalloc( (unsigned) nbytes))) &&
 	 (nbytes > 0)) ||
 	((! (p->modifiers = (KeySym *) Xmalloc( (unsigned) nb))) &&

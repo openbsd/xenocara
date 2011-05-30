@@ -34,7 +34,7 @@ X Window System is a trademark of The Open Group.
 */
 
 /*
- * Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright 2004 Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -58,7 +58,6 @@ X Window System is a trademark of The Open Group.
 
 /* This can really be considered an os dependent routine */
 
-#define NEED_REPLIES
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

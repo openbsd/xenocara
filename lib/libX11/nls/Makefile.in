@@ -14,6 +14,29 @@
 
 @SET_MAKE@
 
+#
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+
 #							-*- Makefile -*-
 # Rules for generating files using the C pre-processor
 # (Replaces CppFileTarget from Imake)
@@ -27,9 +50,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -40,12 +63,24 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/cpprules.in
+DIST_COMMON = $(nobase_dist_x11locale_DATA) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(top_srcdir)/cpprules.in \
+	$(top_srcdir)/specs/xmlrules.in
+@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
+@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
+@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = \
+@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	-m $(XSL_STYLESHEET)	\
+@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam img.src.path=$(abs_builddir)/	\
+@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam html.stylesheet=$(STYLESHEET_SRCDIR)/xorg.css
+
+@HAVE_XMLTO_TRUE@am__append_4 = $(spec_DATA) html
+@HAVE_XMLTO_TRUE@am__append_5 = .xml .ps .pdf .txt .html
+@HAVE_PERL_TRUE@am__append_6 = $(COMPOSE_CHARTS) $(doc_sources)
+@HAVE_PERL_TRUE@am__append_7 = -o $(@D)
 subdir = nls
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
-	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -54,24 +89,21 @@ CONFIG_HEADER = $(top_builddir)/src/config.h \
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
-RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
-	html-recursive info-recursive install-data-recursive \
-	install-exec-recursive install-info-recursive \
-	install-recursive installcheck-recursive installdirs-recursive \
-	pdf-recursive ps-recursive uninstall-info-recursive \
-	uninstall-recursive
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(x11localedir)"
+am__installdirs = "$(DESTDIR)$(x11localedir)" \
+	"$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(specdir)" \
+	"$(DESTDIR)$(x11localedir)"
+nobase_dist_x11localeDATA_INSTALL = $(install_sh_DATA)
+nobase_x11localeDATA_INSTALL = $(install_sh_DATA)
+specDATA_INSTALL = $(INSTALL_DATA)
 x11localeDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(x11locale_DATA)
-ETAGS = etags
-CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DATA = $(nobase_dist_x11locale_DATA) $(nobase_x11locale_DATA) \
+	$(spec_DATA) $(x11locale_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -106,7 +138,6 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DOLT_BASH = @DOLT_BASH@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DSYMUTIL = @DSYMUTIL@
@@ -122,21 +153,18 @@ F77 = @F77@
 FFLAGS = @FFLAGS@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
+FOP = @FOP@
 GREP = @GREP@
-GROFF = @GROFF@
-GS_PATH = @GS_PATH@
-HAVE_GROFF_FALSE = @HAVE_GROFF_FALSE@
-HAVE_GROFF_HTML_FALSE = @HAVE_GROFF_HTML_FALSE@
-HAVE_GROFF_HTML_TRUE = @HAVE_GROFF_HTML_TRUE@
-HAVE_GROFF_MM_FALSE = @HAVE_GROFF_MM_FALSE@
-HAVE_GROFF_MM_TRUE = @HAVE_GROFF_MM_TRUE@
-HAVE_GROFF_MS_FALSE = @HAVE_GROFF_MS_FALSE@
-HAVE_GROFF_MS_TRUE = @HAVE_GROFF_MS_TRUE@
-HAVE_GROFF_TRUE = @HAVE_GROFF_TRUE@
+HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
+HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
 HAVE_PERL_FALSE = @HAVE_PERL_FALSE@
 HAVE_PERL_TRUE = @HAVE_PERL_TRUE@
-HAVE_PS2PDF_FALSE = @HAVE_PS2PDF_FALSE@
-HAVE_PS2PDF_TRUE = @HAVE_PS2PDF_TRUE@
+HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
+HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
+HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
+HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
+HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
+HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
 I18N_MODULE_LIBS = @I18N_MODULE_LIBS@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -158,8 +186,6 @@ LINT_FALSE = @LINT_FALSE@
 LINT_FLAGS = @LINT_FLAGS@
 LINT_TRUE = @LINT_TRUE@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
@@ -168,8 +194,6 @@ MAKEINFO = @MAKEINFO@
 MAKE_LINT_LIB_FALSE = @MAKE_LINT_LIB_FALSE@
 MAKE_LINT_LIB_TRUE = @MAKE_LINT_LIB_TRUE@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
-MANPAGES_FALSE = @MANPAGES_FALSE@
-MANPAGES_TRUE = @MANPAGES_TRUE@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
@@ -186,9 +210,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
-PNMTOPNG_PATH = @PNMTOPNG_PATH@
-PS2PDF = @PS2PDF@
-PSSELECT_PATH = @PSSELECT_PATH@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -196,6 +217,7 @@ SED = sed
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 THRSTUBS_FALSE = @THRSTUBS_FALSE@
 THRSTUBS_TRUE = @THRSTUBS_TRUE@
 UDC_FALSE = @UDC_FALSE@
@@ -210,12 +232,8 @@ X11_LIBS = @X11_LIBS@
 X11_LOCALEDATADIR = @X11_LOCALEDATADIR@
 X11_LOCALEDIR = @X11_LOCALEDIR@
 X11_LOCALELIBDIR = @X11_LOCALELIBDIR@
-XCB_FALSE = @XCB_FALSE@
-XCB_TRUE = @XCB_TRUE@
 XCMS_FALSE = @XCMS_FALSE@
 XCMS_TRUE = @XCMS_TRUE@
-XDMCP_CFLAGS = @XDMCP_CFLAGS@
-XDMCP_LIBS = @XDMCP_LIBS@
 XERRORDB = @XERRORDB@
 XKBPROTO_REQUIRES = @XKBPROTO_REQUIRES@
 XKB_FALSE = @XKB_FALSE@
@@ -229,7 +247,10 @@ XLOCALELIBDIR = @XLOCALELIBDIR@
 XLOCALE_FALSE = @XLOCALE_FALSE@
 XLOCALE_TRUE = @XLOCALE_TRUE@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
+XMLTO = @XMLTO@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
+XORG_SGML_PATH = @XORG_SGML_PATH@
+XSL_STYLESHEET = @XSL_STYLESHEET@
 XTHREADLIB = @XTHREADLIB@
 XTHREAD_CFLAGS = @XTHREAD_CFLAGS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
@@ -281,17 +302,20 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 x11localedir = $(X11_LOCALEDATADIR)
+specdir = $(docdir)/Compose
+CLEANFILES = $(am__append_4) locale.alias locale.alias.l1 \
+	locale.alias.l2 compose.dir compose.dir.l1 compose.dir.l2 \
+	locale.dir locale.dir.l1 locale.dir.l2 XLC_LOCALE \
+	$(nobase_x11locale_DATA) $(am__append_6)
+SUFFIXES = $(am__append_5) .pre
+XMLTO_FLAGS = $(am__append_3) $(am__append_7)
+@HAVE_XMLTO_TRUE@spec_DATA = $(doc_sources:.xml=.html) $(am__append_1) \
+@HAVE_XMLTO_TRUE@	$(am__append_2)
 EXTRA_DIST = locale.alias.pre compose.dir.pre locale.dir.pre \
-	compose-check.pl
-
+	compose-check.pl compose-chart.pl \
+	$(nobase_x11locale_DATA:%=%.pre)
 x11locale_DATA = locale.alias locale.dir compose.dir
-CLEANFILES = \
-	locale.alias locale.alias.l1 locale.alias.l2 \
-	compose.dir compose.dir.l1 compose.dir.l2 \
-	locale.dir locale.dir.l1 locale.dir.l2 \
-	XLC_LOCALE
-
-SUBDIRS = \
+locales = \
 	am_ET.UTF-8		\
 	armscii-8		\
 	C			\
@@ -353,7 +377,6 @@ SUBDIRS = \
 	zh_TW.big5		\
 	zh_TW.UTF-8
 
-SUFFIXES = .pre
 WCHAR32_FLAGS = -DWCHAR32=@WCHAR32@
 CPP_FILES_FLAGS = $(WCHAR32_FLAGS)
 
@@ -371,11 +394,20 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e 's,X11_LOCALEDATADIR,$(X11_LOCALEDATADIR),g' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
-all: all-recursive
+@HAVE_PERL_TRUE@doc_sources = Compose/index.xml \
+@HAVE_PERL_TRUE@	$(locales:%=Compose/%.xml)
+
+# Per-locale data files
+nobase_dist_x11locale_DATA = $(locales:%=%/XI18N_OBJS)
+nobase_x11locale_DATA = $(locales:%=%/XLC_LOCALE) $(locales:%=%/Compose)
+@HAVE_PERL_TRUE@TESTS_ENVIRONMENT = $(PERL)
+@HAVE_PERL_TRUE@TESTS = $(srcdir)/compose-check.pl
+@HAVE_PERL_TRUE@COMPOSE_CHARTS = $(locales:%=%/Compose.xml)
+all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .pre
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/cpprules.in $(am__configure_deps)
+.SUFFIXES: .xml .ps .pdf .txt .html .pre
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/specs/xmlrules.in $(top_srcdir)/cpprules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -414,6 +446,61 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-nobase_dist_x11localeDATA: $(nobase_dist_x11locale_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(x11localedir)" || $(mkdir_p) "$(DESTDIR)$(x11localedir)"
+	@$(am__vpath_adj_setup) \
+	list='$(nobase_dist_x11locale_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  $(am__vpath_adj) \
+	  echo " $(nobase_dist_x11localeDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(x11localedir)/$$f'"; \
+	  $(nobase_dist_x11localeDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(x11localedir)/$$f"; \
+	done
+
+uninstall-nobase_dist_x11localeDATA:
+	@$(NORMAL_UNINSTALL)
+	@$(am__vpath_adj_setup) \
+	list='$(nobase_dist_x11locale_DATA)'; for p in $$list; do \
+	  $(am__vpath_adj) \
+	  echo " rm -f '$(DESTDIR)$(x11localedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(x11localedir)/$$f"; \
+	done
+install-nobase_x11localeDATA: $(nobase_x11locale_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(x11localedir)" || $(mkdir_p) "$(DESTDIR)$(x11localedir)"
+	@$(am__vpath_adj_setup) \
+	list='$(nobase_x11locale_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  $(am__vpath_adj) \
+	  echo " $(nobase_x11localeDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(x11localedir)/$$f'"; \
+	  $(nobase_x11localeDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(x11localedir)/$$f"; \
+	done
+
+uninstall-nobase_x11localeDATA:
+	@$(NORMAL_UNINSTALL)
+	@$(am__vpath_adj_setup) \
+	list='$(nobase_x11locale_DATA)'; for p in $$list; do \
+	  $(am__vpath_adj) \
+	  echo " rm -f '$(DESTDIR)$(x11localedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(x11localedir)/$$f"; \
+	done
+install-specDATA: $(spec_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(specdir)" || $(mkdir_p) "$(DESTDIR)$(specdir)"
+	@list='$(spec_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(specDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(specdir)/$$f'"; \
+	  $(specDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(specdir)/$$f"; \
+	done
+
+uninstall-specDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(spec_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(specdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(specdir)/$$f"; \
+	done
 install-x11localeDATA: $(x11locale_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(x11localedir)" || $(mkdir_p) "$(DESTDIR)$(x11localedir)"
@@ -431,141 +518,88 @@ uninstall-x11localeDATA:
 	  echo " rm -f '$(DESTDIR)$(x11localedir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(x11localedir)/$$f"; \
 	done
-
-# This directory's subdirectories are mostly independent; you can cd
-# into them and run `make' without going through this Makefile.
-# To change the values of `make' variables: instead of editing Makefiles,
-# (1) if the variable is set in `config.status', edit `config.status'
-#     (which will cause the Makefiles to be regenerated when you run `make');
-# (2) otherwise, pass the desired values on the `make' command line.
-$(RECURSIVE_TARGETS):
-	@failcom='exit 1'; \
-	for f in x $$MAKEFLAGS; do \
-	  case $$f in \
-	    *=* | --[!k]*);; \
-	    *k*) failcom='fail=yes';; \
-	  esac; \
-	done; \
-	dot_seen=no; \
-	target=`echo $@ | sed s/-recursive//`; \
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  echo "Making $$target in $$subdir"; \
-	  if test "$$subdir" = "."; then \
-	    dot_seen=yes; \
-	    local_target="$$target-am"; \
-	  else \
-	    local_target="$$target"; \
-	  fi; \
-	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
-	  || eval $$failcom; \
-	done; \
-	if test "$$dot_seen" = "no"; then \
-	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
-	fi; test -z "$$fail"
-
-mostlyclean-recursive clean-recursive distclean-recursive \
-maintainer-clean-recursive:
-	@failcom='exit 1'; \
-	for f in x $$MAKEFLAGS; do \
-	  case $$f in \
-	    *=* | --[!k]*);; \
-	    *k*) failcom='fail=yes';; \
-	  esac; \
-	done; \
-	dot_seen=no; \
-	case "$@" in \
-	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
-	  *) list='$(SUBDIRS)' ;; \
-	esac; \
-	rev=''; for subdir in $$list; do \
-	  if test "$$subdir" = "."; then :; else \
-	    rev="$$subdir $$rev"; \
-	  fi; \
-	done; \
-	rev="$$rev ."; \
-	target=`echo $@ | sed s/-recursive//`; \
-	for subdir in $$rev; do \
-	  echo "Making $$target in $$subdir"; \
-	  if test "$$subdir" = "."; then \
-	    local_target="$$target-am"; \
-	  else \
-	    local_target="$$target"; \
-	  fi; \
-	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
-	  || eval $$failcom; \
-	done && test -z "$$fail"
-tags-recursive:
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
-	done
-ctags-recursive:
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) ctags); \
-	done
-
-ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
-	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
-	       END { for (i in files) print i; }'`; \
-	mkid -fID $$unique
 tags: TAGS
+TAGS:
 
-TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
-		$(TAGS_FILES) $(LISP)
-	tags=; \
-	here=`pwd`; \
-	if ($(ETAGS) --etags-include --version) >/dev/null 2>&1; then \
-	  include_option=--etags-include; \
-	  empty_fix=.; \
-	else \
-	  include_option=--include; \
-	  empty_fix=; \
-	fi; \
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-	  if test "$$subdir" = .; then :; else \
-	    test ! -f $$subdir/TAGS || \
-	      tags="$$tags $$include_option=$$here/$$subdir/TAGS"; \
-	  fi; \
-	done; \
-	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
-	       END { for (i in files) print i; }'`; \
-	if test -z "$(ETAGS_ARGS)$$tags$$unique"; then :; else \
-	  test -n "$$unique" || unique=$$empty_fix; \
-	  $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
-	    $$tags $$unique; \
-	fi
 ctags: CTAGS
-CTAGS: ctags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
-		$(TAGS_FILES) $(LISP)
-	tags=; \
-	here=`pwd`; \
-	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
-	       END { for (i in files) print i; }'`; \
-	test -z "$(CTAGS_ARGS)$$tags$$unique" \
-	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
-	     $$tags $$unique
+CTAGS:
 
-GTAGS:
-	here=`$(am__cd) $(top_builddir) && pwd` \
-	  && cd $(top_srcdir) \
-	  && gtags -i $(GTAGS_ARGS) $$here
 
-distclean-tags:
-	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list='$(TESTS)'; \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		echo "XPASS: $$tst"; \
+	      ;; \
+	      *) \
+		echo "PASS: $$tst"; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+		xfail=`expr $$xfail + 1`; \
+		echo "XFAIL: $$tst"; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		echo "FAIL: $$tst"; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      echo "SKIP: $$tst"; \
+	    fi; \
+	  done; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="All $$all tests passed"; \
+	    else \
+	      banner="All $$all tests behaved as expected ($$xfail expected failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all tests failed"; \
+	    else \
+	      banner="$$failed of $$all tests did not behave as expected ($$xpass unexpected passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    skipped="($$skip tests were not run)"; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  echo "$$dashes"; \
+	  echo "$$banner"; \
+	  test -z "$$skipped" || echo "$$skipped"; \
+	  test -z "$$report" || echo "$$report"; \
+	  echo "$$dashes"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/..
+	$(mkdir_p) $(distdir)/.. $(distdir)/../specs
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -592,38 +626,23 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
-	list='$(DIST_SUBDIRS)'; for subdir in $$list; do \
-	  if test "$$subdir" = .; then :; else \
-	    test -d "$(distdir)/$$subdir" \
-	    || $(mkdir_p) "$(distdir)/$$subdir" \
-	    || exit 1; \
-	    distdir=`$(am__cd) $(distdir) && pwd`; \
-	    top_distdir=`$(am__cd) $(top_distdir) && pwd`; \
-	    (cd $$subdir && \
-	      $(MAKE) $(AM_MAKEFLAGS) \
-	        top_distdir="$$top_distdir" \
-	        distdir="$$distdir/$$subdir" \
-	        distdir) \
-	      || exit 1; \
-	  fi; \
-	done
 check-am: all-am
-check: check-recursive
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
+check: check-am
 all-am: Makefile $(DATA)
-installdirs: installdirs-recursive
-installdirs-am:
-	for dir in "$(DESTDIR)$(x11localedir)"; do \
+installdirs:
+	for dir in "$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(specdir)" "$(DESTDIR)$(x11localedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
-install: install-recursive
-install-exec: install-exec-recursive
-install-data: install-data-recursive
-uninstall: uninstall-recursive
+install: install-am
+install-exec: install-exec-am
+install-data: install-data-am
+uninstall: uninstall-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
-installcheck: installcheck-recursive
+installcheck: installcheck-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
 	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
@@ -640,72 +659,92 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-clean: clean-recursive
+@HAVE_PERL_FALSE@clean-local:
+clean: clean-am
 
-clean-am: clean-generic clean-libtool mostlyclean-am
+clean-am: clean-generic clean-libtool clean-local mostlyclean-am
 
-distclean: distclean-recursive
+distclean: distclean-am
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-libtool \
-	distclean-tags
+distclean-am: clean-am distclean-generic distclean-libtool
 
-dvi: dvi-recursive
+dvi: dvi-am
 
 dvi-am:
 
-html: html-recursive
+html: html-am
 
-info: info-recursive
+info: info-am
 
 info-am:
 
-install-data-am: install-x11localeDATA
+install-data-am: install-nobase_dist_x11localeDATA \
+	install-nobase_x11localeDATA install-specDATA \
+	install-x11localeDATA
 
 install-exec-am:
 
-install-info: install-info-recursive
+install-info: install-info-am
 
 install-man:
 
 installcheck-am:
 
-maintainer-clean: maintainer-clean-recursive
+maintainer-clean: maintainer-clean-am
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
-mostlyclean: mostlyclean-recursive
+mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
-pdf: pdf-recursive
+pdf: pdf-am
 
 pdf-am:
 
-ps: ps-recursive
+ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-x11localeDATA
+uninstall-am: uninstall-info-am uninstall-nobase_dist_x11localeDATA \
+	uninstall-nobase_x11localeDATA uninstall-specDATA \
+	uninstall-x11localeDATA
 
-uninstall-info: uninstall-info-recursive
-
-.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
-	clean clean-generic clean-libtool clean-recursive ctags \
-	ctags-recursive distclean distclean-generic distclean-libtool \
-	distclean-recursive distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip \
-	install-x11localeDATA installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-generic \
-	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am uninstall-info-am \
+.PHONY: all all-am check check-TESTS check-am clean clean-generic \
+	clean-libtool clean-local distclean distclean-generic \
+	distclean-libtool distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am install-man \
+	install-nobase_dist_x11localeDATA install-nobase_x11localeDATA \
+	install-specDATA install-strip install-x11localeDATA \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-info-am uninstall-nobase_dist_x11localeDATA \
+	uninstall-nobase_x11localeDATA uninstall-specDATA \
 	uninstall-x11localeDATA
 
 
+@HAVE_XMLTO_TRUE@%.txt: %.xml $(dist_spec_DATA)
+@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
+
+@HAVE_XMLTO_TRUE@%.html: %.xml $(dist_spec_DATA)
+@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
+
+@HAVE_XMLTO_TRUE@%.pdf: %.xml $(dist_spec_DATA)
+@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
+
+@HAVE_XMLTO_TRUE@%.ps: %.xml $(dist_spec_DATA)
+@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop ps $<
+
+@HAVE_XMLTO_TRUE@chunked-html: $(doc_sources)
+@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) -o html xhtml $(doc_sources)
+
 .pre:
+	@$(mkdir_p) $(@D)
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+
+# Global data files
 
 locale.alias: locale.alias.pre
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/locale.alias.pre | $(CPP_SED_MAGIC) > locale.alias.l1
@@ -724,6 +763,22 @@ locale.dir: locale.dir.pre
 	sed -e '/^[^#][^        ]*:/s/://' -e '/^[^#].*[        ].*:/d' \
         < locale.dir.l1 > locale.dir.l2
 	cat locale.dir.l2 locale.dir.l1 > locale.dir
+
+@HAVE_PERL_TRUE@Compose/index.xml:
+@HAVE_PERL_TRUE@	@$(MKDIR_P) $(@D)
+@HAVE_PERL_TRUE@	$(AM_V_GEN)$(PERL) $(srcdir)/compose-chart.pl \
+@HAVE_PERL_TRUE@	 --index --output="$@" $(locales)
+
+@HAVE_PERL_TRUE@clean-local: clean-Compose-dir
+@HAVE_PERL_TRUE@clean-Compose-dir:
+@HAVE_PERL_TRUE@	-rm -rf Compose
+
+@HAVE_PERL_TRUE@%/Compose.xml: %/Compose
+@HAVE_PERL_TRUE@	$(AM_V_GEN)$(PERL) $(srcdir)/compose-chart.pl \
+@HAVE_PERL_TRUE@	 --locale="$(@D)" --output="$@" $<
+
+@HAVE_PERL_TRUE@Compose/%.xml: %/Compose.xml
+@HAVE_PERL_TRUE@	$(AM_V_GEN)cp $< $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

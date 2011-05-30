@@ -1,5 +1,5 @@
 /*
- * Copyright 1992 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright 1992 Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -54,7 +54,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #endif
 #include <string.h>
 #include <X11/Xatom.h>
-#define NEED_EVENTS
 #include "Xlibint.h"
 #include "Xlcint.h"
 #include "Ximint.h"
@@ -378,14 +377,19 @@ _XimXGetReadData(
 	    *ret_len  = (int)nitems;
 	    if (bytes_after_ret > 0) {
 		XFree(prop_ret);
-	        XGetWindowProperty(im->core.display,
-		    spec->lib_connect_wid, prop, 0L,
-		    ((length + bytes_after_ret + 3)/ 4), True, AnyPropertyType,
-		    &type_ret, &format_ret, &nitems, &bytes_after_ret,
-		    &prop_ret);
-	        XChangeProperty(im->core.display, spec->lib_connect_wid, prop,
-		    XA_STRING, 8, PropModePrepend, &prop_ret[length],
-		    (nitems - length));
+		if (XGetWindowProperty(im->core.display,
+				       spec->lib_connect_wid, prop, 0L,
+				       ((length + bytes_after_ret + 3)/ 4),
+				       True, AnyPropertyType,
+				       &type_ret, &format_ret, &nitems,
+				       &bytes_after_ret,
+				       &prop_ret) == Success) {
+		    XChangeProperty(im->core.display, spec->lib_connect_wid, prop,
+				    XA_STRING, 8, PropModePrepend, &prop_ret[length],
+				    (nitems - length));
+		} else {
+		    return False;
+		}
 	    }
 	} else {
 	    (void)memcpy(buf, prop_ret, buf_len);
@@ -394,10 +398,14 @@ _XimXGetReadData(
 
 	    if (bytes_after_ret > 0) {
 		XFree(prop_ret);
-	        XGetWindowProperty(im->core.display,
-		spec->lib_connect_wid, prop, 0L,
-		((length + bytes_after_ret + 3)/ 4), True, AnyPropertyType,
-		&type_ret, &format_ret, &nitems, &bytes_after_ret, &prop_ret);
+		if (XGetWindowProperty(im->core.display,
+				       spec->lib_connect_wid, prop, 0L,
+				       ((length + bytes_after_ret + 3)/ 4),
+				       True, AnyPropertyType,
+				       &type_ret, &format_ret, &nitems,
+				       &bytes_after_ret, &prop_ret) != Success) {
+		    return False;
+		}
 	    }
 	    XChangeProperty(im->core.display, spec->lib_connect_wid, prop,
 		    XA_STRING, 8, PropModePrepend, &prop_ret[buf_len], len);

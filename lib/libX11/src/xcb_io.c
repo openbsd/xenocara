@@ -239,8 +239,9 @@ static xcb_generic_reply_t *poll_for_response(Display *dpy)
 	{
 		assert(XLIB_SEQUENCE_COMPARE(req->sequence, <=, dpy->request));
 		dpy->last_request_read = req->sequence;
-		if(!response)
-			dequeue_pending_request(dpy, req);
+		if(response)
+			break;
+		dequeue_pending_request(dpy, req);
 		if(error)
 			return (xcb_generic_reply_t *) error;
 	}
@@ -339,7 +340,15 @@ void _XReadEvents(Display *dpy)
 			dpy->xcb->event_waiter = 1;
 			UnlockDisplay(dpy);
 			event = xcb_wait_for_event(dpy->xcb->connection);
-			InternalLockDisplay(dpy, /* don't skip user locks */ 0);
+			/* It appears that classic Xlib respected user
+			 * locks when waking up after waiting for
+			 * events. However, if this thread did not have
+			 * any user locks, and another thread takes a
+			 * user lock and tries to read events, then we'd
+			 * deadlock. So we'll choose to let the thread
+			 * that got in first consume events, despite the
+			 * later thread's user locks. */
+			InternalLockDisplay(dpy, /* ignore user locks */ 1);
 			dpy->xcb->event_waiter = 0;
 			ConditionBroadcast(dpy, dpy->xcb->event_notify);
 			if(!event)
@@ -530,7 +539,10 @@ Status _XReply(Display *dpy, xReply *rep, int extra, Bool discard)
 		req->reply_waiter = 1;
 		UnlockDisplay(dpy);
 		response = xcb_wait_for_reply(c, req->sequence, &error);
-		InternalLockDisplay(dpy, /* don't skip user locks */ 0);
+		/* Any user locks on another thread must have been taken
+		 * while we slept in xcb_wait_for_reply. Classic Xlib
+		 * ignored those user locks in this case, so we do too. */
+		InternalLockDisplay(dpy, /* ignore user locks */ 1);
 
 		/* We have the response we're looking for. Now, before
 		 * letting anyone else process this sequence number, we

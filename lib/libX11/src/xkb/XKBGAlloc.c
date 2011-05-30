@@ -30,9 +30,6 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <config.h>
 #endif
 
-#define	NEED_EVENTS
-#define	NEED_REPLIES
-
 #ifndef XKB_IN_SERVER
 
 #include <stdio.h>
@@ -699,11 +696,11 @@ register XkbPropertyPtr prop;
     }
     prop= &geom->properties[geom->num_properties];
     prop->name= (char *)_XkbAlloc(strlen(name)+1);
-    if (!name)
+    if (!prop->name)
 	return NULL;
     strcpy(prop->name,name);
     prop->value= (char *)_XkbAlloc(strlen(value)+1);
-    if (!value) {
+    if (!prop->value) {
 	_XkbFree(prop->name);
 	prop->name= NULL;
 	return NULL;

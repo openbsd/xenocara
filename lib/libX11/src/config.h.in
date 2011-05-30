@@ -147,9 +147,6 @@
 /* poll() function is available */
 #undef USE_POLL
 
-/* Use XCB for low-level protocol implementation */
-#undef USE_XCB
-
 /* Version number of package */
 #undef VERSION
 

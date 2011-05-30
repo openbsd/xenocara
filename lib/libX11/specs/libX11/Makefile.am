@@ -1,5 +1,5 @@
 #
-# Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
+# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,36 +21,34 @@
 # DEALINGS IN THE SOFTWARE.
 #
 
-# Based on xc/doc/specs/X11/Makefile from X11R6.9
+if ENABLE_SPECS
 
-doc_sources = libX11.ms
+specdir = $(docdir)/$(subdir)
+doc_sources = libX11.xml
+dist_spec_DATA = $(doc_sources)	\
+	AppA.xml		\
+	AppB.xml		\
+	AppC.xml		\
+	AppD.xml		\
+	CH01.xml		\
+	CH02.xml		\
+	CH03.xml		\
+	CH04.xml		\
+	CH05.xml		\
+	CH06.xml		\
+	CH07.xml		\
+	CH08.xml		\
+	CH09.xml		\
+	CH10.xml		\
+	CH11.xml		\
+	CH12.xml		\
+	CH13.xml		\
+	CH14.xml		\
+	CH15.xml		\
+	CH16.xml		\
+	credits.xml		\
+	glossary.xml
 
-doc_includes = \
-	abstract.t \
-	credits.t \
-	CH01 \
-	CH02 \
-	CH03 \
-	CH04 \
-	CH05 \
-	CH06 \
-	CH07 \
-	CH08 \
-	CH09 \
-	CH10 \
-	CH11 \
-	CH12 \
-	CH13 \
-	CH14 \
-	CH15 \
-	CH16 \
-	AppA \
-	AppB \
-	AppC \
-	AppD \
-	glossary \
-	postproc
+include $(top_srcdir)/specs/xmlrules.in
 
-include $(top_srcdir)/specs/troffrules.in
-
-EXTRA_DIST += $(doc_includes)
+endif ENABLE_SPECS
