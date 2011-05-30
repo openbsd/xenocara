@@ -1,3 +1,276 @@
+commit f9a140097dace149a2c6b6f72080edee24b068f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 6 16:41:36 2011 -0700
+
+    libXext 1.3.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit decc44349ba66eb82c2ed575e60e80c2c827633d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 22 08:58:33 2010 +1000
+
+    Correct XShm return values.
+    
+    XShmAttach, XShmDetach, XShmPutImage do not return a Status but 0 or 1.
+    Though the man section for XShmAttach says "if all goes well, you will get a
+    non-zero status, back" this is counter to the usage of Status in Xlib
+    itself where 0 means Success and no-zero specifies the specific error.
+    
+    XShmPixmapFormat does not return a Status but the pixmap format or 0 on
+    failure.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 84648fda0f78dc0249bba7338f23526807e1f1d8
+Author: Alistair Leslie-Hughes <leslie_alistair@hotmail.com>
+Date:   Tue Apr 5 20:02:52 2011 +1000
+
+    Add missing prototypes. #14723
+    
+    This patch is based off the work by
+    Paulo César Pereira de Andrade
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=14723
+    
+    Signed-off-by: Alistair Leslie-Hughes <leslie_alistair@hotmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 71e9cc5f91b1afc9ba5dfd38fdba1c3463e2bb1d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 27 15:06:18 2011 -0500
+
+    Documentation: add Docbook external references support
+    
+    When writing technical documentation, it is often necessary to cross
+    reference to other information. When that other information is not in the
+    current document, additional support is needed, namely <olink>.
+    
+    A new feature with version 1.7 of xorg-sgml-doctools adds references to
+    other documents within or outside this package.
+    
+    This patch adds technical support for this feature but does not change
+    the content of the documentation as seen by the end user.
+    
+    Each book or article must generate a database containing the href
+    of sections that can be referred to from another document. This database
+    is installed in DATAROOTDIR/sgml/X11/dbs. There is a requirement that
+    the value of DATAROOTDIR for xorg-sgml-doctools and for the package
+    documentation is the same. This forms a virtual document tree.
+    
+    This database is consulted by other documents while they are being generated
+    in order to fulfill the missing information for linking.
+    Refer to the xorg-sgml-doctools for further technical information.
+    
+    Co-authored-by: Matt Dew <marcoz@osource.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 700c7896b832d6e4fb0185f0d5382b01f94e7141
+Author: Alan Hourihane <alanh@vmware.com>
+Date:   Fri Feb 25 11:05:27 2011 +0000
+
+    Add _X_HIDDEN to xgeExtRegister to fix build problems on 64bit
+
+commit 45c1b21e9f3ae64d0c65562080df925e11c0859c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:41 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Remove redundant AC_CANONICAL_HOST included in XORG_DEFAULT_OPTIONS
+    Remove redundant AC_SUBST(*_CFLAGS) and/or *_LIBS
+    No functional configuration changes
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f9d755fc92661a6db6f9d11c4e13a8926be47a83
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 37ac4dffd8dd1648f4e34fe3a23bfa253f14e9f9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 14:59:04 2011 -0500
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+
+commit 04052f422547265e0247a2f2f8eb9513a06cbcf3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:14 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e3c11721b45a4c845979ef3092b09f156b9e7ec7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 19 11:13:31 2010 -0800
+
+    Remove old .tex versions of dbelib & synclib specs now that we have .xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8b4b31da87c63332f53da75ac3dd4f9883163009
+Author: Paulo Zanoni <pzanoni@mandriva.com>
+Date:   Thu Dec 16 14:07:41 2010 -0200
+
+    Use docbookx.dtd version 4.3 for all docs
+    
+    Signed-off-by: Paulo Zanoni <pzanoni@mandriva.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 07ef12739bf158e31ead4b8241a4edfef2af9765
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 16 23:02:38 2010 -0800
+
+    specs/xtest1.xml: Fix section titles/nesting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b10caa0dfccfb0231723037b5646bebb21ca00f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 16 22:57:30 2010 -0800
+
+    specs/synclib.xml: Fix title page/legal notice markup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 99aaf69b91e9902103349d77dc36c34a088c3123
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 16 22:50:06 2010 -0800
+
+    specs/shapelib.xml: Remove extra Glossary title
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c2d0c0c09b249e61313830ee4e237b7f0619b87
+Author: James Jones <jajones@nvidia.com>
+Date:   Fri Jun 25 16:23:05 2010 -0700
+
+    Add XSyncAwaitFence()
+    
+    Add the XSynceFence version of XSyncAwait().  Waits
+    for fence objects to reach the triggered state.
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e33a842c97d676afa21e4bb16fd3dd380b42f4f
+Author: James Jones <jajones@nvidia.com>
+Date:   Fri Jun 25 16:19:55 2010 -0700
+
+    Add XSyncQueryFence()
+    
+    Allows callers to query whether or not a given
+    fence sync object is currently triggered.
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 259a4c847ce2314bb6e1b050c93f58c3029eb67d
+Author: James Jones <jajones@nvidia.com>
+Date:   Fri Jun 25 16:18:03 2010 -0700
+
+    Initial Fence Sync Object support
+    
+    Allows creating and managing binary state sync
+    objects.  Currently they aren't useful because
+    there is not yet a way to wait for them or
+    query their state.  X fence objects are owned
+    by a screen.  As Aaron Plattner pointed out,
+    screens are identified by a drawable in X
+    protocol, so XSyncCreateFence() takes a drawable
+    to identify which screen to create the fence on.
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 010f35552cd5dc5c7004e765bb060b69d7f6a02f
+Author: James Jones <jajones@nvidia.com>
+Date:   Mon Nov 29 09:50:17 2010 -0800
+
+    Require xextproto >= 7.1.99
+    
+    Subsequent changes require fence sync
+    protocol support in the XSync extension,
+    which is only compete in version xextproto
+    7.1.99 and above.
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53ba38c7901a029024d3b4598ef35c5d9e0f174d
+Author: James Jones <jajones@nvidia.com>
+Date:   Fri Aug 20 15:11:23 2010 -0700
+
+    Backwards compat for newer XSync + older servers
+    
+    Add infrastructure to make future builds of libXext that
+    support version of XSync 3.1 compatibile with X servers
+    exporting XSync version 3.0.  As part of this, don't handle
+    errors introduced by newer versions of the protocol than the
+    server supports.  Those error codes could be used by some
+    other extension.
+    
+    Signed-off-by: James Jones <jajones@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d35e95fdf433a249d0293744d3e1ef6196422700
+Author: Matt Dew <matt@osource.org>
+Date:   Wed Dec 1 20:51:05 2010 -0500
+
+    specs: convert xtest ext1 from roff to DocBook/XML
+    
+    Previously located in xorg-docs/specs/Xext
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f739146c3e711c1757203b1a8d84b31b5b694200
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 21 11:26:06 2010 -0800
+
+    Sun's copyrights belong to Oracle now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f9c66b4418686efb4bee92f9dfc8eeba77df857f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 13:04:48 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 3ddeb5328e1a5413e4800fb396ebab429153d1a1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Oct 27 23:06:51 2010 -0700
