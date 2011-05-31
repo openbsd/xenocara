@@ -401,8 +401,8 @@ static int cvthexkey (	/* turn hex key string into octets */
 	len++;
     }
 
-    /* if odd then there was an error */
-    if ((len & 1) == 1) return -1;
+    /* if 0 or odd, then there was an error */
+    if (len == 0 || (len & 1) == 1) return -1;
 
 
     /* now we know that the input is good */
@@ -700,7 +700,8 @@ int auth_finalize (void)
 #if defined(WIN32) || defined(__UNIXOS2__)
 		if (rename(temp_name, iceauth_filename) == -1)
 #else
-		if (link (temp_name, iceauth_filename) == -1)
+		/* Attempt to rename() if link() fails, since this may be on a FS that does not support hard links */
+		if (link (temp_name, iceauth_filename) == -1 && rename(temp_name, iceauth_filename) == -1)
 #endif
 		{
 		    fprintf (stderr,

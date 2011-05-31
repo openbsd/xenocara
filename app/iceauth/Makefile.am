@@ -19,6 +19,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
 bin_PROGRAMS = iceauth
 
 AM_CFLAGS = $(CWARNFLAGS) $(ICEAUTH_CFLAGS)
@@ -29,18 +30,7 @@ iceauth_SOURCES =	\
         iceauth.h \
         process.c
 
-appman_PRE = \
-        iceauth.man
-
-
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST = $(appman_PRE) autogen.sh
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = $(appman_DATA)
-
 
 .PHONY: ChangeLog INSTALL
 
@@ -51,12 +41,6 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
