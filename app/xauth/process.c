@@ -1,5 +1,3 @@
-/* $Xorg: process.c,v 1.6 2001/02/09 02:05:38 xorgcvs Exp $ */
-/* $XdotOrg: xc/programs/xauth/process.c,v 1.3 2004/04/24 23:26:55 alanc Exp $ */
 /*
 
 Copyright 1989, 1998  The Open Group
@@ -27,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xauth/process.c,v 3.23 2003/11/25 03:15:04 dawes Exp $ */
 
 /*
  * Author:  Jim Fulton, MIT X Consortium
@@ -561,8 +558,8 @@ cvthexkey(char *hexstr, char **ptrp)	/* turn hex key string into octets */
 	len++;
     }
 
-    /* if odd then there was an error */
-    if ((len & 1) == 1) return -1;
+    /* if 0 or odd, then there was an error */
+    if (len == 0 || (len & 1) == 1) return -1;
 
 
     /* now we know that the input is good */
@@ -891,7 +888,8 @@ auth_finalize(void)
 #if defined(WIN32) || defined(__UNIXOS2__)
 		if (rename(temp_name, xauth_filename) == -1)
 #else
-		if (link (temp_name, xauth_filename) == -1)
+		/* Attempt to rename() if link() fails, since this may be on a FS that does not support hard links */
+		if (link (temp_name, xauth_filename) == -1 && rename(temp_name, xauth_filename) == -1)
 #endif
 		{
 		    fprintf (stderr,

@@ -1,6 +1,4 @@
 /*
- * $Xorg: gethost.c,v 1.5 2001/02/09 02:05:38 xorgcvs Exp $
- * $XdotOrg: $
  * 
 Copyright 1989, 1998  The Open Group
 
@@ -26,8 +24,6 @@ in this Software without prior written authorization from The Open Group.
  * *
  * Author:  Jim Fulton, MIT X Consortium
  */
-
-/* $XFree86: xc/programs/xauth/gethost.c,v 3.20 2003/07/27 12:34:25 herrb Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

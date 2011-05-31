@@ -19,6 +19,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
 bin_PROGRAMS = xauth
 
 AM_CFLAGS = $(CWARNFLAGS) $(XAUTH_CFLAGS)
@@ -31,17 +32,6 @@ xauth_SOURCES =	\
         xauth.c \
         xauth.h
 
-appman_PRE = \
-        xauth.man
-
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST = $(appman_PRE) 
-MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = $(appman_DATA)
-
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
                 $(AM_CPPFLAGS) $(CPPFLAGS) $(XAUTH_CFLAGS)
@@ -50,13 +40,7 @@ lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(xauth_SOURCES) $(xauth_LDADD)
 endif LINT
 
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL
 

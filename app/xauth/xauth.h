@@ -1,6 +1,4 @@
 /*
- * $Xorg: xauth.h,v 1.4 2001/02/09 02:05:38 xorgcvs Exp $
- *
  * 
 Copyright 1989, 1998  The Open Group
 
@@ -26,7 +24,6 @@ in this Software without prior written authorization from The Open Group.
  * *
  * Author:  Jim Fulton, MIT X Consortium
  */
-/* $XFree86: xc/programs/xauth/xauth.h,v 1.6tsi Exp $ */
 
 #include <stdio.h>
 #include <X11/Xos.h>

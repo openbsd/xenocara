@@ -1,3 +1,64 @@
+commit b67f0df2dbfa372417d0687e26704635e2d10034
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon May 23 19:38:50 2011 -0700
+
+    configure.ac: Bump to 1.0.6
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 48f87d48fb7b51535534ef2fb18d2fd1e451c2b5
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 16:08:29 2011 -0700
+
+    auth_finalize: Attempt to rename() if link() fails
+    
+    On some file systems (like AFP), hard links are not supported. If
+    link fails, try rename() before giving up.
+    
+    Reported-by: Jamie Kennea <jamie@pompey.org>
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 5032c286df16737277c9a04e1083171ffec89000
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri May 6 23:12:50 2011 -0700
+
+    Error out and avoid a call to malloc(0) if given a bad hex string
+    
+    process.c:567:14: warning: Call to 'malloc' has an allocation size of 0 bytes
+        retval = malloc (len);
+                 ^       ~~~
+    1 warning generated.
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9197410a2b5c875885266713f5dc470b6dac476b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 404e5ccc404574906978570781705c73bf24b31b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 1a2ad8ef43c82dcbe0c6fc024c5a627ebb927a82
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:49 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+
 commit da552fc4c69a62b6227383452e56428cd5d696a0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Sep 23 17:57:16 2010 -0700
