@@ -1361,6 +1361,7 @@
 ./usr/X11R6/man/man3/XCloseOM.3
 ./usr/X11R6/man/man3/XColor.3
 ./usr/X11R6/man/man3/XColormapEvent.3
+./usr/X11R6/man/man3/XCompose.3
 ./usr/X11R6/man/man3/XCompositeCreateRegionFromBorderClip.3
 ./usr/X11R6/man/man3/XCompositeGetOverlayWindow.3
 ./usr/X11R6/man/man3/XCompositeNameWindowPixmap.3
@@ -3031,6 +3032,8 @@
 ./usr/X11R6/share/doc/inputproto/XIproto.txt
 ./usr/X11R6/share/doc/libFS
 ./usr/X11R6/share/doc/libFS/FSlib.txt
+./usr/X11R6/share/doc/libX11
+./usr/X11R6/share/doc/libX11/Compose
 ./usr/X11R6/share/doc/libXaw
 ./usr/X11R6/share/doc/libXaw/AsciiSink.xml
 ./usr/X11R6/share/doc/libXaw/AsciiSource.xml
@@ -3081,10 +3084,6 @@
 ./usr/X11R6/share/doc/libXdmcp
 ./usr/X11R6/share/doc/libXdmcp/xdmcp.xml
 ./usr/X11R6/share/doc/libXext
-./usr/X11R6/share/doc/libXext/dbelib.xml
-./usr/X11R6/share/doc/libXext/dpmslib.xml
-./usr/X11R6/share/doc/libXext/shapelib.xml
-./usr/X11R6/share/doc/libXext/synclib.xml
 ./usr/X11R6/share/doc/libXi
 ./usr/X11R6/share/doc/libXmu
 ./usr/X11R6/share/doc/libXrender
