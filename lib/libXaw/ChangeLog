@@ -1,3 +1,127 @@
+commit 8ac146ce96cfa133b788b1ffdd13fe0b648ee4fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 11 17:07:08 2011 -0800
+
+    libXaw 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7a9b0302f7cb84015e8f612e5b65694d785b2d8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 21 09:33:46 2010 -0500
+
+    config: prevent config.status from being generated three times
+    
+    AC_OUTPUT with parameters is deprecated, use AC_CONFIG_FILES.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 55fc7aa22197350d9cd1039e0398132a63d3589f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 20:10:12 2010 -0800
+
+    Check for getpagesize() with autoconf instead of #ifdef osname
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b2e86875d03e349a4c85135e4cf41b26b99b083e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 20:06:04 2010 -0800
+
+    convert header checks/ifdefs to autoconf standard AC_CHECK_HEADERS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 41bf7992c45c6766c5982b3500b03d9c1b1fab87
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 19:54:54 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Regroup XORG statements under the Xorg macros section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f85d4342cbfbb58764e24e202f3a7c95eaba3d77
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 19:52:41 2010 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC is provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 394a0c49c849e497cbcb987154ff796eb34f4820
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 11 23:30:22 2010 -0800
+
+    specs/CH6.xml: Remove stray quote in chapter title
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9da4e6268b2cfbda793435caedc6403b2a918f0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 13:04:44 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fd5ef2fb841903c0a7d59e56f8fe69d0974f964c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 2 09:52:34 2010 -0700
+
+    xaw6.pc: Only list xmu in Requires.private, not Requires
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    
+    Based on earlier similar change to xaw7.pc which was:
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5136e2aabb73fec3c1670616bf0ebf828a1a1ca9
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Oct 28 00:29:30 2010 +0200
+
+    Fix missing <X11/Intrinsic.h> in XawInit.h
+    
+    Configure scripts/test programs might have troubles detecting libXaw by
+    just including XawInit.h, since it doesn't include <X11/Intrinsic.h>,
+    even though it's needed for the Widget definition.
+    
+    X.Org Bugzilla #3526 <https://bugs.freedesktop.org/show_bug.cgi?id=3526>
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b8196c9f7723b77b5d18fc1cc2070e557a7f767
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Oct 25 12:33:32 2010 -0700
+
+    Move -I CFLAGS to CPPFLAGS
+    
+    Previously, setting CPPFLAGS at configure time could result in using the
+    installed headers rather than the ones included in the package.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit 46ca2da2e8d29d7f1347c9f4e9fb3794dd99cb7a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 25 10:47:03 2010 -0700

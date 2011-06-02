@@ -36,6 +36,7 @@ in this Software without prior written authorization from The Open Group.
 typedef struct _XawDL XawDisplayList;
 #endif /* OLDXAW */
 
+#include <X11/Intrinsic.h>
 #include <X11/Xfuncproto.h>
 
 _XFUNCPROTOBEGIN

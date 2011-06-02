@@ -24,9 +24,9 @@ in this Software without prior written authorization from The Open Group.
 
 ********************************************************/
 
-#ifdef HAS_WCTYPE_H
+#ifdef HAVE_WCTYPE_H
 #include <wctype.h>
-#ifndef NO_WIDEC_H
+#ifdef HAVE_WIDEC_H
 #include <widec.h>
 #define wcslen(c) wslen(c)
 #define wcscpy(d, s)		wscpy(d, s)
@@ -34,7 +34,7 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #endif
 
-#ifdef HAS_WCHAR_H
+#ifdef HAVE_WCHAR_H
 #include <wchar.h>
 #endif
 

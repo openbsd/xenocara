@@ -1,5 +1,5 @@
 <chapter id="composite_and_constraint_widgets">
-<title>"Composite and Constraint Widgets</title>
+<title>Composite and Constraint Widgets</title>
 <para>
 These widgets may contain arbitrary widget children.  They implement a
 policy for the size and location of their children.

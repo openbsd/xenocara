@@ -61,7 +61,6 @@ build_triplet = @build@
 host_triplet = @host@
 @ENABLE_SPECS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
-@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = xorg.css
 subdir = specs
 DIST_COMMON = $(am__dist_doc_DATA_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -305,9 +304,10 @@ target_alias = @target_alias@
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@doc_DATA =  \
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(doc_sources:.xml=.html) \
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1) \
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2) \
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_3)
-@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FLAGS = -m $(XSL_STYLESHEET)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2)
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FLAGS = -m $(XSL_STYLESHEET) \
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam html.stylesheet=$(STYLESHEET_SRCDIR)/xorg.css
+
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@CLEANFILES = $(doc_DATA)
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@SUFFIXES = .xml .ps .pdf .txt .html
 all: all-am
@@ -511,8 +511,6 @@ uninstall-am: uninstall-dist_docDATA uninstall-docDATA \
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-dist_docDATA uninstall-docDATA uninstall-info-am
 
-@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@xorg.css: $(STYLESHEET_SRCDIR)/xorg.css
-@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)cp -pf $(STYLESHEET_SRCDIR)/xorg.css $@
 
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.txt: %.xml $(dist_doc_DATA)
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
