@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.18 2011/03/08 20:48:59 matthieu Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.19 2011/06/02 17:01:59 matthieu Exp $
 
 # Shared libs?
 .if ${MACHINE_ARCH} == "m88k" || ${MACHINE} == "vax"
@@ -19,4 +19,4 @@ XENOCARA_BUILD_PIXMAN?=yes
 .endif
 
 # Build xkeyboard-config?
-XENOCARA_USE_XKEYBOARD_CONFIG?=no
+XENOCARA_USE_XKEYBOARD_CONFIG?=yes
