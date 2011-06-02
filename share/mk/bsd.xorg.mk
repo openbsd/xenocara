@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.37 2011/06/02 17:01:59 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.38 2011/06/02 19:47:33 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -28,9 +28,6 @@ XSRCDIR?=		/usr/xenocara
 
 # Where to build
 XOBJDIR?=	/usr/xobj
-
-# For libtool replacement
-PORTSDIR?=	/usr/ports
 
 # Where to install
 BINDIR?=		${X11BASE}/bin
@@ -66,8 +63,6 @@ AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 		AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
 		ACLOCAL="aclocal -I ${X11BASE}/share/aclocal" \
 		$(CONFIGURE_ENV)
-
-LIBTOOL=	${PORTSDIR}/infrastructure/bin/libtool
 
 ##
 ## Default rules
@@ -146,7 +141,7 @@ _lt_libs+=lib${_n:S/+/_/g:S/-/_/g:S/./_/g}_ltversion=${_v}
 
 .if !target(all)
 all:	config.status
-	exec ${MAKE} LIBTOOL=${LIBTOOL} ${_lt_libs}
+	exec ${MAKE} ${_lt_libs}
 .endif
 
 
@@ -195,7 +190,7 @@ afterinstall:
 .  endif
 .  if !target(realinstall)
 realinstall:
-	exec ${MAKE} LIBTOOL=${LIBTOOL} ${_lt_libs} install
+	exec ${MAKE} ${_lt_libs} install
 .endif
 install: maninstall
 maninstall: afterinstall
