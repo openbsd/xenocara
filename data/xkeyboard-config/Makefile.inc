@@ -1,7 +1,7 @@
-#	$OpenBSD: Makefile.inc,v 1.3 2011/01/10 14:42:48 shadchin Exp $
+#	$OpenBSD: Makefile.inc,v 1.4 2011/06/06 19:45:44 matthieu Exp $
 
-TOP?=		../../..
-XKB_DIR=	${.CURDIR}/${TOP}/dist/xkeyboard-config
+XKC_TOP?=		../../..
+XKB_DIR=	${.CURDIR}/${XKC_TOP}/dist/xkeyboard-config
 XKB_BASE=	${DESTDIR}${X11BASE}/share/X11/xkb
 XKBCOMP=	xkbcomp
 
