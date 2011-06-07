@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.684 2011/02/17 00:13:06 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.692 2011/04/25 08:33:57 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -605,6 +605,10 @@ typedef struct {
 
 #ifndef OPT_PC_COLORS
 #define OPT_PC_COLORS   1 /* true if xterm supports PC-style (bold) colors */
+#endif
+
+#ifndef OPT_PRINT_ON_EXIT
+#define OPT_PRINT_ON_EXIT 1 /* true allows xterm to dump screen on X error */
 #endif
 
 #ifndef OPT_PTY_HANDSHAKE
@@ -1526,6 +1530,20 @@ typedef struct {
 } TKwin;
 
 typedef struct {
+    String f_n;			/* the normal font */
+    String f_b;			/* the bold font */
+#if OPT_WIDE_CHARS
+    String f_w;			/* the normal wide font */
+    String f_wb;		/* the bold wide font */
+#endif
+} VTFontNames;
+
+typedef struct {
+    VTFontNames default_font;
+    String menu_font_names[NMENUFONTS][fMAX];
+} SubResourceRec;
+
+typedef struct {
 /* These parameters apply to both windows */
 	Display		*display;	/* X display for screen		*/
 	int		respond;	/* socket for responses
@@ -1572,7 +1590,10 @@ typedef struct {
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
 	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
 	Boolean		utf8_inparse;	/* true to enable UTF-8 parser	*/
+	char *		utf8_mode_s;	/* use UTF-8 decode/encode	*/
+	char *		utf8_fonts_s;	/* use UTF-8 decode/encode	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
+	int		utf8_fonts;	/* use UTF-8 decode/encode: 0-2	*/
 	int		max_combining;	/* maximum # of combining chars	*/
 	Boolean		utf8_latin1;	/* use UTF-8 with Latin-1 bias	*/
 	Boolean		utf8_title;	/* use UTF-8 titles		*/
@@ -1693,6 +1714,8 @@ typedef struct {
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
 	String	answer_back;		/* response to ENQ		*/
+
+	Boolean printToFile;		/* false, except for X-errors	*/
 	String	printer_command;	/* pipe/shell command string	*/
 	Boolean printer_autoclose;	/* close printer when offline	*/
 	Boolean printer_extent;		/* print complete page		*/
@@ -1715,6 +1738,7 @@ typedef struct {
 	Dimension	fnt_high;
 	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
+	Boolean		allowBoldFonts;	/* do we use bold fonts at all? */
 #ifndef NO_ACTIVE_ICON
 	XTermFonts	fnt_icon;	/* icon font			*/
 	String		icon_fontname;	/* name of icon font		*/
@@ -1962,6 +1986,11 @@ typedef struct {
 #define MenuFontName(n) menu_font_names[n][fNorm]
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
+#if OPT_WIDE_CHARS
+	Boolean		savedVTFonts;
+	Boolean		mergedVTFonts;
+	SubResourceRec	cacheVTFonts;
+#endif
 #if OPT_CLIP_BOLD
 	Boolean		use_clipping;
 #endif
@@ -1994,9 +2023,9 @@ typedef struct {
 	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
 #endif
 	char		tcapbuf[TERMCAP_SIZE];
+	char		tcap_area[TERMCAP_SIZE];
 #if OPT_TCAP_FKEYS
 	char **		tcap_fkeys;
-	char		tcap_area[TERMCAP_SIZE];
 #endif
 } TScreen;
 
@@ -2080,10 +2109,11 @@ typedef enum {			/* legal values for screen.pointer_mode */
 } pointerModeTypes;
 
 typedef enum {			/* legal values for screen.utf8_mode */
-    uFalse = 0,
-    uTrue = 1,
-    uAlways = 2,
-    uDefault = 3
+    uFalse = 0
+    , uTrue = 1
+    , uAlways = 2
+    , uDefault = 3
+    , uLast
 } utf8ModeTypes;
 
 #if OPT_HP_FUNC_KEYS
@@ -2153,15 +2183,6 @@ typedef struct
     int format_keys;		/* format of modifyOtherKeys */
 #endif
 } TKeyboard;
-
-typedef struct {
-    String f_n;			/* the normal font */
-    String f_b;			/* the bold font */
-#if OPT_WIDE_CHARS
-    String f_w;			/* the normal wide font */
-    String f_wb;		/* the bold wide font */
-#endif
-} VTFontNames;
 
 #define GravityIsNorthWest(w) ((w)->misc.resizeGravity == NorthWestGravity)
 #define GravityIsSouthWest(w) ((w)->misc.resizeGravity == SouthWestGravity)
@@ -2386,10 +2407,17 @@ typedef struct _TekWidgetRec {
 /* The toplevel-call to drawXtermText() should have text-attributes guarded: */
 #define DRAWX_MASK	(ATTRIBUTES | CHARDRAWN)
 
+/*
+ * BOLDATTR is not only nonzero when we will use bold font, but uses the bits
+ * for BOLD/BLINK to match against the video attributes which were originally
+ * requested.
+ */
+#define USE_BOLD(screen) ((screen)->allowBoldFonts)
+
 #if OPT_BLINK_TEXT
-#define BOLDATTR(screen) (BOLD | ((screen)->blink_as_bold ? BLINK : 0))
+#define BOLDATTR(screen) (USE_BOLD(screen) ? (BOLD | ((screen)->blink_as_bold ? BLINK : 0)) : 0)
 #else
-#define BOLDATTR(screen) (BOLD | BLINK)
+#define BOLDATTR(screen) (USE_BOLD(screen) ? (BOLD | BLINK) : 0)
 #endif
 
 /*

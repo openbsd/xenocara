@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1112 2011/02/20 00:50:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1121 2011/04/24 22:57:13 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -358,6 +358,7 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_WIDE_CHARS
     { "set-utf8-mode",		HandleUTF8Mode },
+    { "set-utf8-fonts",		HandleUTF8Fonts },
     { "set-utf8-title",		HandleUTF8Title },
 #endif
 };
@@ -373,6 +374,7 @@ static XtResource xterm_resources[] =
     Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, DEF_ALLOW_WINDOW),
     Bres(XtNaltIsNotMeta, XtCAltIsNotMeta, screen.alt_is_not_meta, False),
     Bres(XtNaltSendsEscape, XtCAltSendsEscape, screen.alt_sends_esc, False),
+    Bres(XtNallowBoldFonts, XtCAllowBoldFonts, screen.allowBoldFonts, True),
     Bres(XtNalwaysBoldMode, XtCAlwaysBoldMode, screen.always_bold_mode, False),
     Bres(XtNalwaysHighlight, XtCAlwaysHighlight, screen.always_highlight, False),
     Bres(XtNappcursorDefault, XtCAppcursorDefault, misc.appcursorDefault, False),
@@ -656,7 +658,8 @@ static XtResource xterm_resources[] =
     Ires(XtNcombiningChars, XtCCombiningChars, screen.max_combining, 2),
     Ires(XtNmkSamplePass, XtCMkSamplePass, misc.mk_samplepass, 256),
     Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 1024),
-    Ires(XtNutf8, XtCUtf8, screen.utf8_mode, uDefault),
+    Sres(XtNutf8, XtCUtf8, screen.utf8_mode_s, "default"),
+    Sres(XtNutf8Fonts, XtCUtf8Fonts, screen.utf8_fonts_s, "default"),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.default_font.f_wb, DEFWIDEBOLDFONT),
     Sres(XtNwideFont, XtCWideFont, misc.default_font.f_w, DEFWIDEFONT),
     Sres(XtNutf8SelectTypes, XtCUtf8SelectTypes, screen.utf8_select_types, NULL),
@@ -1276,6 +1279,15 @@ select_charset(struct ParseState *sp, int type, int size)
     } else {
 	sp->parsestate = scs96table;
     }
+}
+
+static int
+minus_if_default(int which)
+{
+    int result = (nparam > which) ? param[which] : -1;
+    if (result <= 0)
+	result = -1;
+    return result;
 }
 
 static int
@@ -4888,7 +4900,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizePixels:	/* Resize the window to given size in pixels */
 	if (AllowWindowOps(xw, ewSetWinSizePixels)) {
-	    RequestResize(xw, zero_if_default(1), zero_if_default(2), False);
+	    RequestResize(xw, minus_if_default(1), minus_if_default(2), False);
 	}
 	break;
 
@@ -4915,7 +4927,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizeChars:	/* Resize the text-area, in characters */
 	if (AllowWindowOps(xw, ewSetWinSizeChars)) {
-	    RequestResize(xw, zero_if_default(1), zero_if_default(2), True);
+	    RequestResize(xw, minus_if_default(1), minus_if_default(2), True);
 	}
 	break;
 
@@ -5662,6 +5674,7 @@ VTInitialize_locale(XtermWidget xw)
 
     TRACE(("VTInitialize_locale\n"));
     TRACE(("... request screen.utf8_mode = %d\n", screen->utf8_mode));
+    TRACE(("... request screen.utf8_fonts = %d\n", screen->utf8_fonts));
 
     if (screen->utf8_mode < 0)
 	screen->utf8_mode = uFalse;
@@ -5770,9 +5783,26 @@ VTInitialize_locale(XtermWidget xw)
     }
 #endif /* OPT_LUIT_PROG */
 
+    if (screen->utf8_fonts == uDefault) {
+	switch (screen->utf8_mode) {
+	case uFalse:
+	case uTrue:
+	    screen->utf8_fonts = screen->utf8_mode;
+	    break;
+	case uDefault:
+	    /* should not happen */
+	    screen->utf8_fonts = uTrue;
+	    break;
+	case uAlways:
+	    /* use this to disable menu entry */
+	    break;
+	}
+    }
+
     screen->utf8_inparse = (Boolean) (screen->utf8_mode != uFalse);
 
     TRACE(("... updated screen.utf8_mode = %d\n", screen->utf8_mode));
+    TRACE(("... updated screen.utf8_fonts = %d\n", screen->utf8_fonts));
     TRACE(("...VTInitialize_locale done\n"));
 }
 #endif
@@ -5980,6 +6010,16 @@ VTInitialize(Widget wrequest,
 #undef DATA
 #endif
 
+#if OPT_WIDE_CHARS
+#define DATA(name) { #name, u##name }
+    static FlagList tblUtf8Mode[] =
+    {
+	DATA(Always)
+	,DATA(Default)
+    };
+#undef DATA
+#endif
+
     XtermWidget request = (XtermWidget) wrequest;
     XtermWidget wnew = (XtermWidget) new_arg;
     Widget my_parent = SHELL_OF(wnew);
@@ -6063,6 +6103,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.force_all_chars);
 #endif
     init_Bres(screen.free_bold_box);
+    init_Bres(screen.allowBoldFonts);
 
     init_Bres(screen.c132);
     init_Bres(screen.curses);
@@ -6539,6 +6580,12 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_WIDE_CHARS
+    /* setup data for next call */
+    request->screen.utf8_mode =
+	extendedBoolean(request->screen.utf8_mode_s, tblUtf8Mode, uLast);
+    request->screen.utf8_fonts =
+	extendedBoolean(request->screen.utf8_fonts_s, tblUtf8Mode, uLast);
+
     VTInitialize_locale(request);
     init_Bres(screen.utf8_latin1);
     init_Bres(screen.utf8_title);
@@ -6552,6 +6599,7 @@ VTInitialize(Widget wrequest,
 
     init_Ires(screen.utf8_inparse);
     init_Ires(screen.utf8_mode);
+    init_Ires(screen.utf8_fonts);
     init_Ires(screen.max_combining);
 
     if (TScreenOf(wnew)->max_combining < 0) {
@@ -6600,6 +6648,7 @@ VTInitialize(Widget wrequest,
 #endif
 
     decode_wcwidth(wnew);
+    xtermSaveVTFonts(wnew);
 #endif /* OPT_WIDE_CHARS */
 
     init_Bres(screen.always_bold_mode);
@@ -6949,10 +6998,16 @@ VTRealize(Widget w,
 	Exit(1);
     }
 #if OPT_WIDE_CHARS
-    if (TScreenOf(xw)->utf8_mode) {
+    if (screen->utf8_mode) {
 	TRACE(("check if this is a wide font, if not try again\n"));
-	if (xtermLoadWideFonts(xw, False))
+	if (xtermLoadWideFonts(xw, False)) {
 	    SetVTFont(xw, screen->menu_font_number, True, NULL);
+	    /* we will not be able to switch to ISO-8859-1 */
+	    if (!screen->mergedVTFonts) {
+		screen->utf8_fonts = uAlways;
+		update_font_utf8_fonts();
+	    }
+	}
     }
 #endif
 
@@ -7088,7 +7143,7 @@ VTRealize(Widget w,
     values->bit_gravity = (GravityIsNorthWest(xw)
 			   ? NorthWestGravity
 			   : ForgetGravity);
-    TScreenOf(xw)->fullVwin.window = XtWindow(xw) =
+    screen->fullVwin.window = XtWindow(xw) =
 	XCreateWindow(XtDisplay(xw), XtWindow(XtParent(xw)),
 		      xw->core.x, xw->core.y,
 		      xw->core.width, xw->core.height, BorderWidth(xw),
@@ -7193,7 +7248,7 @@ VTRealize(Widget w,
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
     VTInitI18N(xw);
 #else
-    TScreenOf(xw)->xic = NULL;
+    screen->xic = NULL;
 #endif
 #if OPT_NUM_LOCK
     VTInitModifiers(xw);
@@ -8860,8 +8915,10 @@ VTInitTranslations(void)
      */
     if (resource.fullscreen == esNever) {
 	for (item = 0; item < XtNumber(table); ++item) {
-	    if (!strcmp(table[item].name, "fullscreen"))
+	    if (!strcmp(table[item].name, "fullscreen")) {
 		table[item].wanted = False;
+		TRACE(("omit(%s):\n%s\n", table[item].name, table[item].value));
+	    }
 	}
     }
 #endif

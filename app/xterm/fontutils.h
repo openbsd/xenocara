@@ -1,8 +1,8 @@
-/* $XTermId: fontutils.h,v 1.82 2010/10/11 08:13:54 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.83 2011/04/24 20:47:51 tom Exp $ */
 
 /************************************************************
 
-Copyright 1998-2009,2010 by Thomas E. Dickey
+Copyright 1998-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -36,6 +36,7 @@ authorization.
 #define included_fontutils_h 1
 
 #include <xterm.h>
+/* *INDENT-OFF* */
 
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
 extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, fontWarningTypes /* warn */, Bool /* force */);
@@ -95,6 +96,7 @@ extern void HandleLoadVTFonts PROTO_XT_ACTIONS_ARGS;
 
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
 extern Bool xtermLoadWideFonts (XtermWidget /* w */, Bool /* nullOk */);
+extern void xtermSaveVTFonts(XtermWidget /* xw */);
 #endif
 
 #define xtermIsDecGraphic(ch)	((ch) > 0 && (ch) < 32)
@@ -115,5 +117,7 @@ extern void setFaceName(XtermWidget /* xw */, const char * /*value */);
 extern unsigned ucs2dec (unsigned);
 extern unsigned dec2ucs (unsigned);
 #endif
+
+/* *INDENT-ON* */
 
 #endif /* included_fontutils_h */

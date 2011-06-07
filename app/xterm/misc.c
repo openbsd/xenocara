@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.520 2011/02/13 21:03:21 tom Exp $ */
+/* $XTermId: misc.c,v 1.521 2011/04/17 19:04:06 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4264,6 +4264,18 @@ xerror(Display * d, XErrorEvent * ev)
     (void) XmuPrintDefaultErrorMessage(d, ev, stderr);
     Exit(ERROR_XERROR);
     return 0;			/* appease the compiler */
+}
+
+void
+ice_error(IceConn iceConn)
+{
+    (void) iceConn;
+
+    fprintf(stderr,
+	    "%s:  ICE IO error handler doing an exit(), pid = %ld, errno = %d\n",
+	    ProgramName, (long) getpid(), errno);
+
+    Exit(ERROR_ICEERROR);
 }
 
 /*ARGSUSED*/

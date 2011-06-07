@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.94 2011/01/19 22:05:58 tom Exp $
+! $XTermId: XTerm.ad,v 1.96 2011/04/22 22:48:00 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
@@ -118,12 +118,14 @@
 *fontMenu*fontescape*Label:	Escape Sequence
 *fontMenu*fontsel*Label:	Selection
 !fontescape and fontsel overridden by application
-*fontMenu*font-linedrawing*Label: Line-Drawing Characters
+*fontMenu*allow-bold-fonts*Label:  Bold Fonts
+*fontMenu*font-linedrawing*Label:  Line-Drawing Characters
 *fontMenu*font-doublesize*Label: Doublesized Characters
 *fontMenu*font-loadable*Label:	VT220 Soft Fonts
 *fontMenu*font-packed*Label:	Packed Font
 *fontMenu*render-font*Label:	TrueType Fonts
-*fontMenu*utf8-mode*Label:	UTF-8
+*fontMenu*utf8-mode*Label:	UTF-8 Encoding
+*fontMenu*utf8-fonts*Label:	UTF-8 Fonts
 *fontMenu*utf8-title*Label:	UTF-8 Titles
 
 *fontMenu*allow-color-ops*Label:	Allow Color Ops

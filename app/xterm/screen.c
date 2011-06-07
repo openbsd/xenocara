@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.436 2011/02/20 00:48:23 tom Exp $ */
+/* $XTermId: screen.c,v 1.439 2011/04/20 09:10:21 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -192,17 +192,19 @@ setupLineData(TScreen * screen, ScrnBuf base, Char * data, unsigned nrow, unsign
     unsigned j;
 #endif
     /* these names are based on types */
-    unsigned skipNcolChar = (ncol * SizeofScrnPtr(attribs));
-    unsigned skipNcolCharData = (ncol * SizeofScrnPtr(charData));
+    unsigned skipNcolChar;
+    unsigned skipNcolCharData;
 #if OPT_ISO_COLORS
-    unsigned skipNcolCellColor = (ncol * SizeofScrnPtr(color));
+    unsigned skipNcolCellColor;
 #endif
 
-    AlignValue(skipNcolChar);
+    AlignValue(ncol);
+
+    skipNcolChar = (ncol * SizeofScrnPtr(attribs));
+    skipNcolCharData = (ncol * SizeofScrnPtr(charData));
 #if OPT_ISO_COLORS
-    AlignValue(skipNcolCellColor);
+    skipNcolCellColor = (ncol * SizeofScrnPtr(color));
 #endif
-    AlignValue(skipNcolCharData);
 
     for (i = 0; i < nrow; i++, offset += jump) {
 	ptr = LineDataAddr(base, offset);
@@ -318,8 +320,10 @@ Char *
 allocScrnData(TScreen * screen, unsigned nrow, unsigned ncol)
 {
     Char *result;
-    size_t length = (nrow * sizeofScrnRow(screen, ncol));
+    size_t length;
 
+    AlignValue(ncol);
+    length = (nrow * sizeofScrnRow(screen, ncol));
     if ((result = (Char *) calloc(length, sizeof(Char))) == 0)
 	SysError(ERROR_SCALLOC2);
 
@@ -2127,7 +2131,7 @@ ScreenResize(XtermWidget xw,
     TRACE(("return %d from SET_TTYSIZE %dx%d\n", code, rows, cols));
     (void) code;
 
-#if defined(SIGWINCH) && defined(USE_STRUCT_TTYSIZE)
+#if defined(SIGWINCH) && defined(TIOCGPGRP)
     if (screen->pid > 1) {
 	int pgrp;
 

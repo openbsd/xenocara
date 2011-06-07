@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.180 2011/02/17 00:50:23 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.181 2011/04/18 22:35:33 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -286,8 +286,13 @@ ScrollBarReverseVideo(Widget scrollWidget)
 	}
 
 	sb->rv_active = !(sb->rv_active);
-	XtSetArg(args[!(sb->rv_active)], XtNbackground, sb->bg);
-	XtSetArg(args[(sb->rv_active)], XtNforeground, sb->fg);
+	if (sb->rv_active) {
+	    XtSetArg(args[0], XtNbackground, sb->fg);
+	    XtSetArg(args[1], XtNforeground, sb->bg);
+	} else {
+	    XtSetArg(args[0], XtNbackground, sb->bg);
+	    XtSetArg(args[1], XtNforeground, sb->fg);
+	}
 	nargs = 2;		/* don't set border_pixmap */
 	if (sb->bdpix == XtUnspecifiedPixmap) {
 	    /* if not pixmap then pixel */

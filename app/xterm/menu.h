@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.122 2011/01/20 09:42:50 tom Exp $ */
+/* $XTermId: menu.h,v 1.124 2011/04/23 12:14:21 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -76,6 +76,7 @@ extern MenuEntry tekMenuEntries[];
 
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowBoldFonts   PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowColorOps    PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowFontOps     PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
@@ -138,6 +139,7 @@ extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
 extern void HandleTiteInhibit      PROTO_XT_ACTIONS_ARGS;
 extern void HandleToolbar          PROTO_XT_ACTIONS_ARGS;
 extern void HandleUTF8Mode         PROTO_XT_ACTIONS_ARGS;
+extern void HandleUTF8Fonts        PROTO_XT_ACTIONS_ARGS;
 extern void HandleUTF8Title        PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 
@@ -268,6 +270,7 @@ typedef enum {
 
 #if OPT_DEC_CHRSET || OPT_BOX_CHARS || OPT_DEC_SOFTFONT
     fontMenu_line1,
+    fontMenu_allowBoldFonts,
 #if OPT_BOX_CHARS
     fontMenu_font_boxchars,
     fontMenu_font_packedfont,
@@ -286,8 +289,9 @@ typedef enum {
     fontMenu_render_font,
 #endif
 #if OPT_WIDE_CHARS
-    fontMenu_wide_chars,
-    fontMenu_wide_title,
+    fontMenu_utf8_mode,
+    fontMenu_utf8_fonts,
+    fontMenu_utf8_title,
 #endif
 #endif
 #if OPT_ALLOW_XXX_OPS
@@ -419,6 +423,8 @@ extern void update_poponbell(void);
 
 #define update_marginbell() /* nothing */
 
+extern void update_menu_allowBoldFonts(void);
+
 #if OPT_ALLOW_XXX_OPS
 extern void update_menu_allowColorOps(void);
 extern void update_menu_allowFontOps(void);
@@ -468,9 +474,11 @@ extern void update_font_renderfont(void);
 
 #if OPT_WIDE_CHARS
 extern void update_font_utf8_mode(void);
+extern void update_font_utf8_fonts(void);
 extern void update_font_utf8_title(void);
 #else
 #define update_font_utf8_mode() /* nothing */
+#define update_font_utf8_fonts() /* nothing */
 #define update_font_utf8_title() /* nothing */
 #endif
 

@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.267 2010/11/09 01:00:48 tom Exp $
+dnl $XTermId: configure.in,v 1.272 2011/04/22 08:54:15 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2009,2010 by Thomas E. Dickey
+dnl Copyright 1997-2010,2011 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -115,47 +115,10 @@ CF_POSIX_SAVED_IDS
 CF_HELP_MESSAGE(Compile/Install Options:)
 CF_FUNC_TGETENT
 
-AC_MSG_CHECKING(for directory to install resource files)
-CF_WITH_PATH(app-defaults,
-	[  --with-app-defaults=DIR directory in which to install resource files],
-	[appsdir],[EPREFIX/lib/X11/app-defaults],
-	['\$(exec_prefix)/lib/X11/app-defaults'])
-AC_MSG_RESULT($appsdir)
-AC_SUBST(appsdir)
-
-no_appsdir=
-test "$appsdir" = no && no_appsdir="#"
-AC_SUBST(no_appsdir)
-
-AC_MSG_CHECKING(for directory to install icons)
-CF_WITH_PATH(icondir,
-	[  --with-icondir=DIR      directory in which to install icons],
-	[icondir],[EPREFIX/share/pixmaps],
-	['\$(exec_prefix)/share/pixmaps'])
-AC_MSG_RESULT($icondir)
-AC_SUBST(icondir)
-
-no_icondir=
-test "$icondir" = no && no_icondir="#"
-AC_SUBST(no_icondir)
-
-# Comment-out the install-desktop rule if the desktop-utils are not found.
-AC_MSG_CHECKING(if you want to install desktop files)
-CF_ARG_OPTION(desktop,
-	[  --disable-desktop       disable install of xterm desktop files],
-	[enable_desktop=$enableval],
-	[enable_desktop=$enableval],yes)
-AC_MSG_RESULT($enable_desktop)
-
-desktop_utils=
-if test "$enable_desktop" = yes ; then
-AC_CHECK_PROG(desktop_utils,desktop-file-install,yes,no)
-fi
-
-test "$desktop_utils" = yes && desktop_utils= || desktop_utils="#"
-AC_SUBST(DESKTOP_FLAGS)
-
-# inherit SINSTALL_OPTS from environment to allow packager to customize it.
+CF_WITH_APP_DEFAULTS
+CF_WITH_ICONDIR
+CF_DISABLE_DESKTOP(xterm)
+CF_WITH_DESKTOP_CATEGORY(xterm,[*rxvt*|konsole|*-terminal],[System|TerminalEmulator|Utility|*])
 
 AC_MSG_CHECKING(for install-permissions reference)
 AC_ARG_WITH(reference,
@@ -217,6 +180,7 @@ if test "$use_given_setuid" != no ; then
 	else
 		cf_cv_given_setuid=$use_given_setuid
 	fi
+	# inherit SINSTALL_OPTS from environment to allow packager to customize it.
 	SINSTALL_OPTS="$SINSTALL_OPTS u+s -u $cf_cv_given_setuid"
 fi
 
@@ -996,5 +960,5 @@ then
 	LIBS=`echo "$LIBS" | sed -e 's/-lpcre/-kpcre/g'`
 fi
 
-###	output Makefile and xtermcfg.h
-AC_OUTPUT(Makefile)
+###	output xtermcfg.h, etc
+AC_OUTPUT(Makefile df-install)

@@ -1,4 +1,4 @@
-MANIFEST for xterm-269, version xterm-269
+MANIFEST for xterm-270, version xterm-270
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -41,6 +41,7 @@ ctlseqs.txt                     generated rendition of ctlseqs.ms
 cursor.c                        VT100 low-level cursor movement
 data.c                          global data declarations
 data.h                          global data external-definitions
+df-install.in                   utility script for desktop-files
 doublechr.c                     VT100 double-size character support
 error.h                         error-code definitions for 'xterm'
 fontutils.c                     xterm functions for (re)loading fonts

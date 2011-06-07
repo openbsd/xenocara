@@ -139,7 +139,12 @@ binary-indep: build install
 		DESTDIR=$(DSTDIR)
 
 	# Follow-up with a check against the installed resource files.
-	( cd $(DSTDIR)$(PKG_APPDEFAULTS) && $(SHELL) -c 'for p in *;do diff -u $$p $(PKG_APPDEFAULTS)/; done' ; exit 0 )
+	( cd $(DSTDIR)$(PKG_APPDEFAULTS) \
+	  && $(SHELL) -c 'for p in *; do \
+	  	test -f $(PKG_APPDEFAULTS)/$$p && \
+	  	diff -u $(PKG_APPDEFAULTS)/$$p $$p; \
+		done' ; \
+	  exit 0 )
 
 	# The Debian package does not install desktop files.
 	# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=486317
@@ -155,8 +160,9 @@ binary-indep: build install
 
 	( cd $(DSTDIR)$(PKG_DESKTOP) \
 	  && $(SHELL) -c 'for p in *;do \
+	  	test -f $(PKG_DESKTOP)/$$p && \
+		diff -u $(PKG_DESKTOP)/$$p $$p; \
 	  	test -n "$(PKG_SUFFIX)" && mv $$p `basename $$p .desktop`$(PKG_SUFFIX).desktop; \
-	  	diff -u $$p $(PKG_DESKTOP)/; \
 		done' ; \
 	  exit 0 )
 

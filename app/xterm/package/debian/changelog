@@ -1,3 +1,9 @@
+xterm-dev (270) unstable; urgency=low
+
+  * more fixes for fullscreen toggle.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sun, 20 Mar 2011 14:53:54 -0400
+
 xterm-dev (269) unstable; urgency=low
 
   * amend translations for fullscreen toggle.

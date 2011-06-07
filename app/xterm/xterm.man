@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.481 2011/02/18 10:48:14 tom Exp $
+.\" $XTermId: xterm.man,v 1.489 2011/04/24 21:20:59 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -1559,6 +1559,11 @@ Some window managers
 will allow you to enter keystrokes into the active icon window.
 The default is \*(``false.\*(''
 .TP 8
+.B "allowBoldFonts (\fPclass\fB AllowBoldFonts)"
+When set to \*(``false.\*('', \fIxterm\fP will not use bold fonts.
+This overrides both the \fBalwaysBoldMode\fP and the \fBboldMode\fP resources.
+.B "alwaysBoldMode (\fPclass\fB AlwaysBoldMode)"
+.TP 8
 .B "allowC1Printable (\fPclass\fB AllowC1Printable)"
 If true, overrides the mapping of C1 controls
 (codes 128-159) to make them be treated
@@ -1689,6 +1694,9 @@ true	false	same	overstrike
 true	false	different	use font
 true	true	ignored	overstrike
 .TE
+.IP
+As an alternative, setting the \fBallowBoldFonts\fP resource to false
+overrides both the \fBalwaysBoldMode\fP and the \fBboldMode\fP resources.
 .TP 8
 .B "alwaysHighlight (\fPclass\fB AlwaysHighlight)"
 Specifies whether or not \fIxterm\fP should always display a highlighted
@@ -2445,7 +2453,7 @@ xterm.vt100.font
 .IP
 and
 .RS
-xterm.vt100.utf8fonts.font
+xterm.vt100.utf8Fonts.font
 .RE
 .IP
 which is probably not what you intended.
@@ -2497,6 +2505,8 @@ Report an error if the font name was given as a resource setting.
 2
 Always report an error on failure to load a font.
 .RE
+.IP
+The default is \*(``1\*(''.
 .TP 8
 .B "forceBoxChars (\fPclass\fB ForceBoxChars)"
 Specifies whether \fIxterm\fP should assume the normal and bold fonts
@@ -3069,6 +3079,27 @@ as VT100-style control sequences.
 A \*(``2\*('' prints ANSI color attributes as well.
 The default is \*(``1.\*(''
 .TP 8
+.B "printFileOnXError (\fPPrintFileOnXError)"
+If \fIxterm\fP exits with an X error,
+e.g. your connection is broken when the server crashes,
+it can be told to write the contents of the screen to a file.
+To enable the feature, set this resource to the name of the file.
+The default is an empty string,
+which disables this feature.
+.IP
+These error codes are handled:
+ERROR_XERROR,
+ERROR_XIOERROR and
+ERROR_ICEERROR.
+.TP 8
+.B "printModeOnXError (\fPPrintModeOnXError)"
+\fIXterm\fP implements the \fBprintFileOnXError\fP feature using
+the printer feature, although the output is written directly to a file.
+You can use the \fBprintModeOnXError\fP resource to tell it to
+use escape sequences to reconstruct the video attributes and colors.
+This uses the same values as the \fBprintAttributes\fP resource.
+The default is \*(``0.\*(''
+.TP 8
 .B "printerAutoClose (\fPclass\fB PrinterAutoClose)"
 If \*(``true\*('', \fIxterm\fR will close the printer (a pipe) when the application switches
 the printer offline with a Media Copy command.
@@ -3416,26 +3447,31 @@ The default is \*(``true.\*(''
 .B "utf8 (\fPclass\fB Utf8)"
 This specifies whether \fIxterm\fP will run in UTF-8 mode.
 If you set this resource, \fIxterm\fP also sets the \fBwideChars\fP resource as a side-effect.
-The resource is an integer, expected to range from 0 to 3:
+The resource can be set via the menu entry "UTF-8 Encoding".
+The default is \*(``default.\*(''
+.IP
+\fIXterm\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
 .RS
 .TP 3
-0
+false (0)
 UTF-8 mode is initially off.
 The command-line option \fB+u8\fP sets the resource to this value.
 Escape sequences for turning UTF-8 mode on/off are allowed.
 .TP
-1
+true (1)
 UTF-8 mode is initially on.
 Escape sequences for turning UTF-8 mode on/off are allowed.
 .TP
-2
+always (2)
 The command-line option \fB\-u8\fP sets the resource to this value.
 Escape sequences for turning UTF-8 mode on/off are ignored.
 .TP
-3
+default (3)
 This is the default value of the resource.
 It is changed during initialization depending on
-whether the \fBlocale\fP resource was set, to 0 or 2.
+whether the \fBlocale\fP resource was set,
+to false (0) or always (2).
 See the \fBlocale\fR resource for additional discussion of non-UTF-8 locales.
 .RE
 .IP
@@ -3446,6 +3482,34 @@ escape sequences for turning UTF-8 mode on/off are allowed.
 .TP 8
 .B "utf8Fonts (\fPclass\fB Utf8Fonts)"
 See the discussion of the \fBlocale\fP resource.
+This specifies whether \fIxterm\fP will use UTF-8 fonts specified via
+resource patterns such as "\fB*vt100.utf8Fonts.font\fP" 
+or normal (ISO-8859-1) fonts via patterns such as "\fB*vt100.font\fP".
+The resource can be set via the menu entry "UTF-8 Fonts".
+The default is \*(``default.\*(''
+.IP
+\fIXterm\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP
+false (0)
+Use the ISO-8859-1 fonts.
+The menu entry is enabled, allowing the choice of fonts to be changed
+at runtime.
+.TP
+true (1)
+Use the UTF-8 fonts.
+The menu entry is enabled, allowing the choice of fonts to be changed
+at runtime.
+.TP
+always (2)
+Always use the UTF-8 fonts.
+This also disables the menu entry.
+.TP
+default (3)
+At startup, the resource is set to true or false,
+according to the effective value of the \fButf8\fP resource.
+.RE
 .TP 8
 .B "utf8Latin1 (\fPclass\fB Utf8Latin1)"
 If true,
@@ -4522,6 +4586,11 @@ the current selection as a font name (if the PRIMARY selection is owned).
 The second section allows you to modify the way it is displayed:
 .RS
 .TP
+Bold Fonts
+This is normally checked (enabled).
+When unchecked, \fIxterm\fP will not use bold fonts.
+The setting corresponds to the \fBallowBoldFonts\fP resource.
+.TP
 Line-Drawing Characters (font-linedrawing)
 When set, tells \fIxterm\fP to draw its own line-drawing characters.
 Otherwise it relies on the font containing these.
@@ -4548,10 +4617,31 @@ and corresponding resources were set,
 this is a further control whether \fIxterm\fP will actually use the
 Xft library calls to obtain a font.
 .TP
-UTF-8 (utf8-mode)
+UTF-8 Encoding (utf8-mode)
 This controls whether \fIxterm\fP uses UTF-8 encoding of input/output.
 It is useful for temporarily switching \fIxterm\fP to display
 text from an application which does not follow the locale settings.
+It corresponds to the \fButf8\fP resource.
+.TP
+UTF-8 Titles (utf8-mode)
+This controls whether \fIxterm\fP accepts UTF-8 encoding for
+title control sequences.
+It corresponds to the \fButf8Fonts\fP resource.
+.IP
+Initially the checkmark is set according to both the \fButf8\fP
+and \fButf8Fonts\fP resource values.
+If the latter is set to "always", the checkmark is disabled.
+Likewise, if there are no fonts given in the \fButf8Fonts\fP
+subresources, then the checkmark also is disabled.
+.IP
+The standard \fBXTerm\fP app-defaults file defines both sets of fonts,
+while the \fBUXTerm\fP app-defaults file defines only one set.
+assuming the standard app-defaults files,
+this command will launch \fIxterm\fP able to switch between UTF-8
+and ISO-8859-1 encoded fonts:
+.NS
+uxterm -class XTerm
+.NE
 .RE
 .PP
 The fourth section allows you to enable or disable special operations
@@ -5820,6 +5910,11 @@ ERROR_XIOERROR
 .br
 xioerror: X I/O error
 .TP
+85
+ERROR_ICEERROR
+.br
+ICE I/O error
+.TP
 90
 ERROR_SCALLOC
 .br
@@ -5870,8 +5965,15 @@ There needs to be a dialog box to allow entry of the Tek COPY file name.
 .
 .
 .SH "SEE ALSO"
-resize(__mansuffix__), luit(__mansuffix__), X(__miscmansuffix__), pty(4), tty(4)
-.br
+.na
+resize(__mansuffix__),
+luit(__mansuffix__),
+uxterm(__mansuffix__),
+X(__miscmansuffix__),
+pty(4),
+tty(4)
+.ad
+.PP
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).
 .sp

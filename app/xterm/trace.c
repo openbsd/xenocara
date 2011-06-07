@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.121 2011/02/17 00:34:47 tom Exp $ */
+/* $XTermId: trace.c,v 1.122 2011/04/17 19:21:11 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -639,6 +639,10 @@ TraceXtermResources(void)
     XRES_B(utmpInhibit);
     XRES_B(utmpDisplayId);
     XRES_B(messages);
+#if OPT_PRINT_ON_EXIT
+    XRES_I(printModeOnXError);
+    XRES_S(printFileOnXError);
+#endif
 #if OPT_SUNPC_KBD
     XRES_B(sunKeyboard);
 #endif

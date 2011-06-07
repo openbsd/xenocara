@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1020 2011/02/20 01:30:19 tom Exp $
+  $XTermId: xterm.log.html,v 1.1037 2011/04/26 10:48:22 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_270">Patch #270 - 2011/04/26</A>
 <LI><A HREF="#xterm_269">Patch #269 - 2011/02/19</A>
 <LI><A HREF="#xterm_268">Patch #268 - 2011/02/10</A>
 <LI><A HREF="#xterm_267">Patch #267 - 2010/11/20</A>
@@ -327,6 +328,79 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_270">Patch #270 - 2011/04/26</A></H1>
+<ul>
+	<li>build-fix, e.g., for using <code>imake</code> on platforms which
+	    use the termcap library.
+
+	<li>modify <code>utf8</code> resource to accept a name.
+
+	<li>mention default for <code>fontWarnings</code> in manpage
+	    (report by Werner Scheinast).
+
+	<li>split "UTF-8" menu entry into "UTF-8 Encoding" and "UTF-8 Fonts".
+
+	<li>gray-out font-menu entries when a font fails to load, e.g.,
+	    a bitmap font is not installed.
+
+	<li>improve behavior when there is no app-defaults file:
+	    <ul>
+	    <li>set the <code>toolBar</code> resource to false
+	    <li>gray-out the font menu entries where no resource is found.
+	    </ul>
+
+	<li>add configure option <code>--with-desktop-category</code>
+	    to allow customization of the ".desktop" files.
+
+	<li>build-fix for the <code>install-desktop</code> makefile-rule,
+	    when the source/build directories differ
+	    (patch by Lo&#239;c Minier).
+
+	<li>add menu entry and corresponding resource which can be used to
+	    suppress all bold-fonts (discussion with Jan Engelhardt).
+
+	<li>make internal line-size value consistent with allocated sizes of
+	    character and related arrays to ensure that bulk copying of line
+	    data, e.g., in scrolling, accounts for the padding used for pointer
+	    alignment (adapted from patch by Rajesh Mandalemula, also reported
+	    by Ali Bahar).
+
+	<li>widen ifdef for screen-resizing logic
+	    from 
+	    <a href="#xterm_176">patch #176</a> changes
+	    to send
+	    <code>SIGWINCH</code> to process group to include any
+	    system supporting <code>ioctl(*,TIOCGPGRP,*)</code> 
+	    (prompted by linux-specific patch in OpenSUSE rpm package).
+
+	<li>add
+	    <code>printModeOnXError</code> and
+	    <code>printFileOnXError</code>
+	    resources, which allow the user to specify
+	    that xterm will write the contents of its screen to
+	    a file if it is exiting due to an X error
+	    (Debian #280457).
+
+	<li>restore logic that made reverse-video apply to the scrollbar's
+	    foreground/background, broken in 
+	    <a href="#xterm_158">patch #158</a> 
+	    (report by Bryan Ischo).
+
+	<li>amend some of the window operations parameter-checks added in
+	    <a href="#xterm_251">patch #251</a> for the push/pop title feature,
+	    to allow the parameters used for window resizing to be -1's, which
+	    makes the corresponding values ignored rather than using the
+	    window's maximum width/height (report by Noah Friedman).
+
+	<li>correct order of initialization for <code>translations</code> vs
+	    <code>fullscreen</code>
+	    resources to enable a special case which omits
+	    the Alt-Enter translation
+	    when <code>fullscreen</code> is disabled (Debian #612978).
+
+	<li>update config.guess, config.sub
+</ul>
 
 <H1><A NAME="xterm_269">Patch #269 - 2011/02/19</A></H1>
 <ul>

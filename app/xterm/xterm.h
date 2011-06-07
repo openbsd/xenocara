@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.644 2011/02/20 00:49:16 tom Exp $ */
+/* $XTermId: xterm.h,v 1.647 2011/04/23 12:15:04 tom Exp $ */
 
 /************************************************************
 
@@ -346,6 +346,7 @@ extern char **environ;
 
 /***====================================================================***/
 
+#define XtNallowBoldFonts	"allowBoldFonts"
 #define XtNallowC1Printable	"allowC1Printable"
 #define XtNallowColorOps	"allowColorOps"
 #define XtNallowFontOps		"allowFontOps"
@@ -505,6 +506,7 @@ extern char **environ;
 #define XtNunderLine		"underLine"
 #define XtNuseClipping		"useClipping"
 #define XtNutf8			"utf8"
+#define XtNutf8Fonts		"utf8Fonts"
 #define XtNutf8Latin1		"utf8Latin1"
 #define XtNutf8SelectTypes	"utf8SelectTypes"
 #define XtNutf8Title		"utf8Title"
@@ -521,6 +523,7 @@ extern char **environ;
 #define XtNxmcInline		"xmcInline"
 #define XtNxmcMoveSGR		"xmcMoveSGR"
 
+#define XtCAllowBoldFonts	"AllowBoldFonts"
 #define XtCAllowC1Printable	"AllowC1Printable"
 #define XtCAllowColorOps	"AllowColorOps"
 #define XtCAllowFontOps		"AllowFontOps"
@@ -665,6 +668,7 @@ extern char **environ;
 #define XtCUnderLine		"UnderLine"
 #define XtCUseClipping		"UseClipping"
 #define XtCUtf8			"Utf8"
+#define XtCUtf8Fonts		"Utf8Fonts"
 #define XtCUtf8Latin1		"Utf8Latin1"
 #define XtCUtf8SelectTypes	"Utf8SelectTypes"
 #define XtCUtf8Title		"Utf8Title"
@@ -927,7 +931,7 @@ extern void first_map_occurred (void);
 #endif
 
 #ifdef SIGNAL_T
-extern SIGNAL_T Exit (int  /* n */);
+extern SIGNAL_T Exit (int  /* n */) GCC_NORETURN;
 #endif
 
 #ifndef SIG_ATOMIC_T
@@ -981,6 +985,7 @@ extern void HandleSpawnTerminal        PROTO_XT_ACTIONS_ARGS;
 extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
 extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
+extern void ice_error (IceConn /* iceConn */);
 extern void ReverseOldColors (void);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
@@ -1048,8 +1053,9 @@ extern void FlushLog (XtermWidget /* xw */);
 
 /* print.c */
 extern Bool xtermHasPrinter (XtermWidget /* xw */);
-extern PrinterFlags *getPrinterFlags(XtermWidget /* xw */, String * /* params */, Cardinal * /* param_count */);
+extern PrinterFlags *getPrinterFlags (XtermWidget /* xw */, String * /* params */, Cardinal * /* param_count */);
 extern int xtermPrinterControl (XtermWidget /* xw */, int /* chr */);
+extern void closePrinter (XtermWidget /* xw */);
 extern void setPrinterControlMode (XtermWidget /* xw */, int /* mode */);
 extern void xtermAutoPrint (XtermWidget /* xw */, unsigned /* chr */);
 extern void xtermMediaControl (XtermWidget /* xw */, int  /* param */, int  /* private_seq */);

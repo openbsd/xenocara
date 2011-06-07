@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.268 2011/02/14 10:01:09 tom Exp $ */
+/* $XTermId: os2main.c,v 1.269 2011/04/23 00:02:03 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -274,7 +274,12 @@ static XtResource application_resources[] =
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
     Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
+    Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
+#if OPT_PRINT_ON_EXIT
+    Ires("printModeOnXError", "PrintModeOnXError", printModeOnXError, 0),
+    Sres("printFileOnXError", "PrintFileOnXError", printFileOnXError, NULL),
+#endif
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
 #endif
@@ -314,11 +319,15 @@ static XtResource application_resources[] =
 #endif
 #if OPT_MAXIMIZE
     Bres(XtNmaximized, XtCMaximized, maximized, False),
+    Sres(XtNfullscreen, XtCFullscreen, fullscreen_s, "off"),
 #endif
 };
 
 static String fallback_resources[] =
 {
+#if OPT_TOOLBAR
+    "*toolBar: false",
+#endif
     "*SimpleMenu*menuLabel.vertSpace: 100",
     "*SimpleMenu*HorizontalMargins: 16",
     "*SimpleMenu*Sme.height: 16",
@@ -510,6 +519,8 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_MAXIMIZE
 {"-maximized",	"*maximized",	XrmoptionNoArg,		(XPointer) "on"},
 {"+maximized",	"*maximized",	XrmoptionNoArg,		(XPointer) "off"},
+{"-fullscreen",	"*fullscreen",	XrmoptionNoArg,		(XPointer) "on"},
+{"+fullscreen",	"*fullscreen",	XrmoptionNoArg,		(XPointer) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(XPointer) NULL},
@@ -1042,6 +1053,11 @@ main(int argc, char **argv ENVP_ARG)
 			      application_resources,
 			      XtNumber(application_resources), NULL, 0);
     TRACE_XRES();
+#if OPT_MAXIMIZE
+    resource.fullscreen = extendedBoolean(resource.fullscreen_s,
+					  tblFullscreen,
+					  XtNumber(tblFullscreen));
+#endif
 
     /*
      * ICCCM delete_window.
@@ -1468,7 +1484,7 @@ static char *tekterm[] =
  * The VT420 has up to 48 lines on the screen.
  */
 
-static char *vtterm[] =
+static const char *vtterm[] =
 {
 #ifdef USE_X11TERM
     "x11term",			/* for people who want special term name */

@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.123 2010/06/14 08:57:22 tom Exp $
+-- $XTermId: INSTALL,v 1.124 2011/04/22 09:30:55 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2009,2010 by Thomas E. Dickey
+-- Copyright 1997-2010,2011 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -29,9 +29,9 @@
 -- authorization.
 -------------------------------------------------------------------------------
 
-Xterm is normally built as part of the X Window System source tree, using
-imake to generate a Makefile from Imakefile.  You can also use the
-configure script to generate a Makefile from Makefile.in:
+Xterm was originally built as part of the X Window System source tree, using
+imake to generate a Makefile from Imakefile.  You can also use the configure
+script to generate a Makefile from Makefile.in:
 
 	+ If you have imake (or xmkmf), then you can use those directly,
 	  or use the configure script, which normally uses those tools
@@ -523,6 +523,14 @@ The options (in alphabetic order):
 
 	Use --without-app-defaults or --with-app-defaults=no to disable the
 	feature.
+
+  --with-desktop-category=XXX  one or more desktop catgories or auto
+	This is a list of names.  The configure script maps blanks and commas
+	to semicolons (";") which are used by the desktop utils as a separator.
+
+	The default value "auto" tells the configure script to look
+	at existing ".desktop" files for xterm and common terminal
+	emulators, to use those.
 
   --with-freetype-cflags  -D/-I options for compiling with FreeType library
 

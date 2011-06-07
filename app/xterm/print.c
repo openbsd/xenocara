@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.121 2011/02/09 10:11:44 tom Exp $ */
+/* $XTermId: print.c,v 1.123 2011/04/17 19:45:14 tom Exp $ */
 
 /************************************************************
 
@@ -77,7 +77,7 @@ static FILE *Printer;
 static pid_t Printer_pid;
 static int initialized;
 
-static void
+void
 closePrinter(XtermWidget xw GCC_UNUSED)
 {
     if (xtermHasPrinter(xw) != 0) {
@@ -381,60 +381,69 @@ charToPrinter(XtermWidget xw, unsigned chr)
     TScreen *screen = TScreenOf(xw);
 
     if (!initialized && xtermHasPrinter(xw)) {
-#if defined(VMS)
-	/*
-	 * This implementation only knows how to write to a file.  When the
-	 * file is closed the print command executes.  Print command must be of
-	 * the form:
-	 *   print/que=name/delete [/otherflags].
-	 */
-	Printer = fopen(VMS_TEMP_PRINT_FILE, "w");
+	switch (screen->printToFile) {
+	    /*
+	     * write to a pipe.
+	     */
+	case False:
+#ifdef VMS
+	    /*
+	     * This implementation only knows how to write to a file.  When the
+	     * file is closed the print command executes.  Print command must
+	     * be of the form:
+	     *   print/que=name/delete [/otherflags].
+	     */
+	    Printer = fopen(VMS_TEMP_PRINT_FILE, "w");
 #else
-	/*
-	 * This implementation only knows how to write to a pipe.
-	 */
-	FILE *input;
-	int my_pipe[2];
-	int c;
+	    {
+		FILE *input;
+		int my_pipe[2];
+		int c;
 
-	if (pipe(my_pipe))
-	    SysError(ERROR_FORK);
-	if ((Printer_pid = fork()) < 0)
-	    SysError(ERROR_FORK);
+		if (pipe(my_pipe))
+		    SysError(ERROR_FORK);
+		if ((Printer_pid = fork()) < 0)
+		    SysError(ERROR_FORK);
 
-	if (Printer_pid == 0) {
-	    TRACE_CLOSE();
-	    close(my_pipe[1]);	/* printer is silent */
-	    close(screen->respond);
+		if (Printer_pid == 0) {
+		    TRACE_CLOSE();
+		    close(my_pipe[1]);	/* printer is silent */
+		    close(screen->respond);
 
-	    close(fileno(stdout));
-	    dup2(fileno(stderr), 1);
+		    close(fileno(stdout));
+		    dup2(fileno(stderr), 1);
 
-	    if (fileno(stderr) != 2) {
-		dup2(fileno(stderr), 2);
-		close(fileno(stderr));
+		    if (fileno(stderr) != 2) {
+			dup2(fileno(stderr), 2);
+			close(fileno(stderr));
+		    }
+
+		    /* don't want privileges! */
+		    if (xtermResetIds(screen) < 0)
+			exit(1);
+
+		    Printer = popen(screen->printer_command, "w");
+		    input = fdopen(my_pipe[0], "r");
+		    while ((c = fgetc(input)) != EOF) {
+			fputc(c, Printer);
+			if (isForm(c))
+			    fflush(Printer);
+		    }
+		    pclose(Printer);
+		    exit(0);
+		} else {
+		    close(my_pipe[0]);	/* won't read from printer */
+		    Printer = fdopen(my_pipe[1], "w");
+		    TRACE(("opened printer from pid %d/%d\n",
+			   (int) getpid(), (int) Printer_pid));
+		}
 	    }
-
-	    /* don't want privileges! */
-	    if (xtermResetIds(screen) < 0)
-		exit(1);
-
-	    Printer = popen(screen->printer_command, "w");
-	    input = fdopen(my_pipe[0], "r");
-	    while ((c = fgetc(input)) != EOF) {
-		fputc(c, Printer);
-		if (isForm(c))
-		    fflush(Printer);
-	    }
-	    pclose(Printer);
-	    exit(0);
-	} else {
-	    close(my_pipe[0]);	/* won't read from printer */
-	    Printer = fdopen(my_pipe[1], "w");
-	    TRACE(("opened printer from pid %d/%d\n",
-		   (int) getpid(), (int) Printer_pid));
-	}
 #endif
+	    break;
+	case True:
+	    Printer = fopen(screen->printer_command, "w");
+	    break;
+	}
 	initialized++;
     }
     if (Printer != 0) {

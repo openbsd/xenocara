@@ -1,4 +1,4 @@
-/* $XTermId: error.h,v 1.23 2010/05/21 21:03:27 tom Exp $ */
+/* $XTermId: error.h,v 1.24 2011/04/17 16:09:20 tom Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -69,6 +69,7 @@
 #define	ERROR_LOGEXEC	80	/* StartLog: exec() failed */
 #define	ERROR_XERROR	83	/* xerror: XError event */
 #define	ERROR_XIOERROR	84	/* xioerror: X I/O error */
+#define	ERROR_ICEERROR	85	/* ice_error: ICE I/O error */
 
 /* screen.c */
 #define	ERROR_SCALLOC	90	/* Alloc: calloc() failed on base */
