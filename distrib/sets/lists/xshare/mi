@@ -2826,6 +2826,7 @@
 ./usr/X11R6/share/X11/locale/zh_TW/XI18N_OBJS
 ./usr/X11R6/share/X11/locale/zh_TW/XLC_LOCALE
 ./usr/X11R6/share/X11/rgb.txt
+./usr/X11R6/share/X11/xkb/symbols/srvr_ctrl/srvr_ctrl
 ./usr/X11R6/share/aclocal
 ./usr/X11R6/share/aclocal/fontutil.m4
 ./usr/X11R6/share/aclocal/xtrans.m4
