@@ -67,21 +67,19 @@ specifies which XKB rules file to use for interpreting the
 .BR XkbVariant ,
 and
 .B XkbOptions
-settings.  Default: "xorg" for most platforms, but "xfree98" for the
-Japanese PC-98 platforms. If you use the "xorg" value then you can
+settings.  Default: "base" for most platforms.
+If you use the "base" value then you can
 find listing of all valid values for these four options in the
 .I
-__xkb_path__/rules/xorg.lst
+__xkb_path__/rules/base.lst
 file.
 .TP 7
 .BI "Option \*qXkbModel\*q \*q" modelname \*q
-specifies the XKB keyboard model name.  Default: "pc105" for most platforms,
-but "pc98" for the Japanese PC-98 platforms.
+specifies the XKB keyboard model name.  Default: "pc105" for most platforms.
 .TP 7
 .BI "Option \*qXkbLayout\*q \*q" layoutname \*q
 specifies the XKB keyboard layout name.  This is usually the country or
-language type of the keyboard.  Default: "us" for most platforms, but
-"jp" for the Japanese PC-98 platforms.
+language type of the keyboard.  Default: "us" for most platforms.
 .TP 7
 .BI "Option \*qXkbVariant\*q \*q" variants \*q
 specifies the XKB keyboard variant components.  These can be used to
@@ -117,7 +115,7 @@ Section \*qInputDevice\*q
 Identifier   "Generic Keyboard"
 Driver       "kbd"
 Option       "CoreKeyboard"
-Option       "XkbRules"      "xorg"
+Option       "XkbRules"      "base"
 Option       "XkbModel"      "pc105"
 Option       "XkbLayout"     "us,sk"
 Option       "XkbVariant"    ",qwerty"
