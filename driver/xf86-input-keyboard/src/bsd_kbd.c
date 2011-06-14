@@ -50,9 +50,10 @@ struct nameint kbdvar[] = {
 	{ KB_NODEAD | KB_SF,	"fr_nodeadkeys" },
 	{ KB_SF,		"fr" },
 	{ KB_DVORAK | KB_CF,	"fr-dvorak" },
+	{ KB_DVORAK | KB_FR,	"bepo" },
+	{ KB_DVORAK,		"dvorak" },
 	{ KB_CF,		"fr-legacy" },
-	{ KB_NODEAD,	"nodeadkeys" },
-	{ KB_DVORAK,	"dvorak" },
+	{ KB_NODEAD,		"nodeadkeys" },
 	{ 0 }
 };
 
