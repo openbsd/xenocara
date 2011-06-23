@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.18 2011/03/22 10:47:59 okan Exp $
+# $OpenBSD: Makefile,v 1.19 2011/06/23 22:48:59 naddy Exp $
 
 .include <bsd.xconf.mk>
 
@@ -15,10 +15,8 @@ CFLAGS+=	-Wall
 LDADD+=		-L${X11BASE}/lib -lXft -lXrender -lX11 -lxcb -lXau -lXdmcp \
 		-lfontconfig -lexpat -lfreetype -lz -lXinerama -lXrandr -lXext
 
-MANDIR=		${X11BASE}/man/cat
+MANDIR=		${X11BASE}/man/man
 MAN=		cwm.1 cwmrc.5
-
-CLEANFILES=	cwm.cat1 cwmrc.cat5
 
 obj: _xenocara_obj
 

@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.12 2011/03/08 20:48:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.13 2011/06/23 22:48:59 naddy Exp $
 .include	<bsd.xconf.mk>
 
 PROG=		ssh-askpass
 SRCS=		drawing.c dynlist.c resources.c x11-ssh-askpass.c
-MANDIR=		${X11BASE}/man/cat
+MANDIR=		${X11BASE}/man/man
 
 CLASS=		SshAskpass
 VERSION=	1.2.0

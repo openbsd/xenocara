@@ -277,6 +277,9 @@ XCOMM operating system:  OSName (OSMajorVersion./**/OSMinorVersion./**/OSTeenyVe
  */
 #define ManSuffix	1
 #define FileManSuffix	5
+
+#ifdef Ports
+
 #define ManSourcePath	$(MANPATH)/cat
 
 #define InstallManPageLongBase(file,destdir,dest)			@@\
@@ -349,6 +352,20 @@ install.man:: 								@@\
 		(cd $(DESTDIR)/destdir; $(LN) file.0 $$i.0);\ 		@@\
 		); \							@@\
 	done
+
+#else /* Ports */
+
+#define InstallManPageAliasesBase(file,destdir,aliases)			@@\
+install.man::								@@\
+	@SUFFIX=`echo $(DESTDIR)destdir/file.* | sed -e 's,.*/[^\.]*.,,'`; \ @@\
+	for i in aliases; do \						@@\
+		(set -x; \						@@\
+		$(RM) $(DESTDIR)destdir/$$i.*; \			@@\
+		(cd $(DESTDIR)destdir; $(LN) file.$${SUFFIX} \		@@\
+		$$i.$${SUFFIX})); \					@@\
+	done
+
+#endif /* Ports */
 
 #define InstallManPageAliases(file,destdir,aliases)			@@\
 InstallHtmlManPageAliases(file,aliases,$(MANSUFFIX))			@@\

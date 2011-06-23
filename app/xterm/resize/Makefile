@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2008/03/22 12:40:02 merdely Exp $
+# $OpenBSD: Makefile,v 1.5 2011/06/23 22:48:59 naddy Exp $
 
 PROG=	resize
 MAN=	resize.1
@@ -11,7 +11,7 @@ CPPFLAGS+=	-I${.CURDIR}/.. -I${X11BASE}/include \
 		-DFUNCPROTO=15 -DNARROWPROTO -DXFREE86_FT2 -DUTMP
 
 X11BASE?=	/usr/X11R6
-MANDIR=		${X11BASE}/man/cat
+MANDIR=		${X11BASE}/man/man
 
 SRCS=		resize.c xstrings.c
 

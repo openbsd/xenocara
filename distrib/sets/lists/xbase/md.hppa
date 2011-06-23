@@ -258,8 +258,8 @@
 ./usr/X11R6/lib/pkgconfig/xcb.pc
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/lib/xorg/protocol.txt
-./usr/X11R6/man/cat1/glxgears.0
-./usr/X11R6/man/cat1/glxinfo.0
+./usr/X11R6/man/man1/glxgears.1
+./usr/X11R6/man/man1/glxinfo.1
 ./usr/X11R6/man/man1/xfs.1
 ./usr/X11R6/share/doc/dri2proto/dri2proto.txt
 ./usr/X11R6/share/xcb/bigreq.xml

@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile,v 1.7 2011/05/01 15:28:37 matthieu Exp $
+# $OpenBSD: Makefile,v 1.8 2011/06/23 22:48:59 naddy Exp $
 .include <bsd.xconf.mk>
 
-MANDIR=		${X11BASE}/man/cat
+MANDIR=		${X11BASE}/man/man
 
 PROG=	glxgears
 

@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.17 2011/03/08 20:48:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.18 2011/06/23 22:48:59 naddy Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
 
 PROG=	xterm
-MAN=	xterm.1tbl uxterm.1 koi8rxterm.1
+MAN=	xterm.1 uxterm.1 koi8rxterm.1
 
 BINGRP=		utmp
 BINMODE=	2755
@@ -25,20 +25,13 @@ SRCS=	TekPrsTbl.c Tekproc.c VTPrsTbl.c button.c cachedGCs.c \
 	misc.c precompose.c print.c ptydata.c wcwidth.c screen.c \
 	scrollback.c scrollbar.c tabs.c util.c xstrings.c
 
-MANDIR=		${X11BASE}/man/cat
+MANDIR=		${X11BASE}/man/man
 XETC?=		/etc/X11
 
 .if ${MACHINE_ARCH} == "arm"
 charproc.o:	charproc.c
 	${CC} -g -c ${CPPFLAGS} ${.CURDIR}/charproc.c
 .endif
-
-xterm.1tbl: xterm.man
-	sed -e 's#__vendorversion__#"X Window System"#g' \
-	    -e 's#__mansuffix__#1#g' \
-	    -e 's#__miscmansuffix__#7#g' \
-	    -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
-	    < ${.CURDIR}/xterm.man > $@
 
 .SUFFIXES: .man .1
 

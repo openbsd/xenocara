@@ -1,5 +1,5 @@
 # -*- makefile -*- 
-# $OpenBSD: Makefile.inc,v 1.7 2011/03/08 20:48:59 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.8 2011/06/23 22:48:59 naddy Exp $
 
 .ifndef FVWM_MAKEFILE_INC
 FVWM_MAKEFILE_INC = done
@@ -13,7 +13,7 @@ LDADD+=		-L${X11BASE}/lib
 XLIB=		-lX11 -lxcb -lXau -lXdmcp
 
 FVWMLIBDIR=	${X11BASE}/lib/X11/fvwm
-MANDIR=		${X11BASE}/man/cat
+MANDIR=		${X11BASE}/man/man
 
 obj: _xenocara_obj
 

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2011/03/08 20:48:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.11 2011/06/23 22:48:59 naddy Exp $
 .include <bsd.xconf.mk>
 
 PROG=	xtsscale
@@ -10,7 +10,7 @@ LDADD+=		-L${X11BASE}/lib -lXft -lXi -lXrender -lXrandr -lXext -lX11 \
 		-lxcb -lXau -lXdmcp -lfontconfig -lexpat -lfreetype -lz
 
 CFLAGS+=	-Wall
-MANDIR=		${X11BASE}/man/cat
+MANDIR=		${X11BASE}/man/man
 
 obj: _xenocara_obj
 
