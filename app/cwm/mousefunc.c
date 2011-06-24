@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.27 2011/06/24 05:45:57 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.28 2011/06/24 05:51:25 okan Exp $
  */
 
 #include <sys/param.h>
@@ -64,10 +64,9 @@ mousefunc_sweep_draw(struct client_ctx *cc)
 	width_name = font_width(sc, cc->name, strlen(cc->name)) + 4;
 	width = MAX(width_size, width_name);
 
-	XMoveResizeWindow(X_Dpy, sc->menuwin, cc->geom.x, cc->geom.y,
-	    width, font_height(sc) * 2);
-	XMapWindow(X_Dpy, sc->menuwin);
 	XReparentWindow(X_Dpy, sc->menuwin, cc->win, 0, 0);
+	XMoveResizeWindow(X_Dpy, sc->menuwin, 0, 0, width, font_height(sc) * 2);
+	XMapWindow(X_Dpy, sc->menuwin);
 	XClearWindow(X_Dpy, sc->menuwin);
 	font_draw(sc, cc->name, strlen(cc->name), sc->menuwin,
 	    2, font_ascent(sc) + 1);
