@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.29 2011/06/24 06:06:24 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.30 2011/06/24 06:09:26 okan Exp $
  */
 
 #include <sys/param.h>
@@ -194,6 +194,12 @@ mousefunc_window_lower(struct client_ctx *cc, void *arg)
 {
 	client_ptrsave(cc);
 	client_lower(cc);
+}
+
+void
+mousefunc_window_raise(struct client_ctx *cc, void *arg)
+{
+	client_raise(cc);
 }
 
 void
