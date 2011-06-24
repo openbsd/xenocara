@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.128 2011/06/24 05:40:09 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.129 2011/06/24 05:45:57 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -207,7 +207,6 @@ struct screen_ctx {
 	XftColor		 xftcolor;
 	XftDraw			*xftdraw;
 	XftFont			*font;
-	u_int			 fontheight;
 	int			 xinerama_no;
 	XineramaScreenInfo	*xinerama;
 #define CALMWM_NGROUPS		 9

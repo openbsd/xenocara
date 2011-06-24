@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.81 2011/06/24 05:40:09 okan Exp $
+ * $OpenBSD: conf.c,v 1.82 2011/06/24 05:45:57 okan Exp $
  */
 
 #include <sys/param.h>
@@ -70,7 +70,6 @@ void
 conf_font(struct conf *c, struct screen_ctx *sc)
 {
 	sc->font = font_make(sc, c->DefaultFontName);
-	sc->fontheight = font_ascent(sc) + font_descent(sc) + 1;
 }
 
 void

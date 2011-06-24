@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: font.c,v 1.14 2011/05/11 13:53:51 okan Exp $
+ * $OpenBSD: font.c,v 1.15 2011/06/24 05:45:57 okan Exp $
  */
 
 #include <sys/param.h>
@@ -45,7 +45,7 @@ font_descent(struct screen_ctx *sc)
 u_int
 font_height(struct screen_ctx *sc)
 {
-	return (sc->fontheight);
+	return (sc->font->height + 1);
 }
 
 void
