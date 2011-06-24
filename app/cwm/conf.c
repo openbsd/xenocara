@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.79 2011/05/11 13:53:51 okan Exp $
+ * $OpenBSD: conf.c,v 1.80 2011/06/24 05:30:42 okan Exp $
  */
 
 #include <sys/param.h>
@@ -356,8 +356,8 @@ static struct {
 	{ "movetogroup9", kbfunc_client_movetogroup, KBFLAG_NEEDCLIENT,
 	    {.i = 9} },
 	{ "nogroup", kbfunc_client_nogroup, 0, {0} },
-	{ "cyclegroup", kbfunc_client_cyclegroup, 0, {.i = CWM_CYCLEGROUP} },
-	{ "rcyclegroup", kbfunc_client_cyclegroup, 0, {.i = CWM_RCYCLEGROUP} },
+	{ "cyclegroup", kbfunc_client_cyclegroup, 0, {.i = CWM_CYCLE} },
+	{ "rcyclegroup", kbfunc_client_cyclegroup, 0, {.i = CWM_RCYCLE} },
 	{ "grouptoggle", kbfunc_client_grouptoggle, KBFLAG_NEEDCLIENT, {0}},
 	{ "maximize", kbfunc_client_maximize, KBFLAG_NEEDCLIENT, {0} },
 	{ "vmaximize", kbfunc_client_vmaximize, KBFLAG_NEEDCLIENT, {0} },
