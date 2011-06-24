@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.80 2011/06/24 05:30:42 okan Exp $
+ * $OpenBSD: conf.c,v 1.81 2011/06/24 05:40:09 okan Exp $
  */
 
 #include <sys/param.h>
@@ -521,7 +521,6 @@ conf_bindname(struct conf *c, char *name, char *binding)
 	current_binding->flags = 0;
 	conf_grab(c, current_binding);
 	TAILQ_INSERT_TAIL(&c->keybindingq, current_binding, entry);
-	return;
 }
 
 static void
