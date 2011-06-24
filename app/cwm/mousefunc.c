@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.28 2011/06/24 05:51:25 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.29 2011/06/24 06:06:24 okan Exp $
  */
 
 #include <sys/param.h>
@@ -159,6 +159,13 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 		case MotionNotify:
 			cc->geom.x = ev.xmotion.x_root - px - cc->bwidth;
 			cc->geom.y = ev.xmotion.y_root - py - cc->bwidth;
+
+			cc->geom.x += client_snapcalc(cc->geom.x,
+			    cc->geom.width, cc->sc->xmax,
+			    cc->bwidth, Conf.snapdist);
+			cc->geom.y += client_snapcalc(cc->geom.y,
+			    cc->geom.height, cc->sc->ymax,
+			    cc->bwidth, Conf.snapdist);
 
 			/* don't move more than 60 times / second */
 			if ((ev.xmotion.time - time) > (1000 / 60)) {

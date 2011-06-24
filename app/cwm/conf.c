@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.83 2011/06/24 05:54:30 okan Exp $
+ * $OpenBSD: conf.c,v 1.84 2011/06/24 06:06:24 okan Exp $
  */
 
 #include <sys/param.h>
@@ -184,6 +184,7 @@ conf_init(struct conf *c)
 	c->flags = 0;
 	c->bwidth = CONF_BWIDTH;
 	c->mamount = CONF_MAMOUNT;
+	c->snapdist = CONF_SNAPDIST;
 
 	TAILQ_INIT(&c->ignoreq);
 	TAILQ_INIT(&c->cmdq);
