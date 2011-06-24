@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.132 2011/06/24 06:09:26 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.133 2011/06/24 06:52:23 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -473,11 +473,11 @@ char			*xstrdup(const char *);
 /* Externs */
 extern Display				*X_Dpy;
 
-extern Cursor				 Cursor_move;
-extern Cursor				 Cursor_resize;
-extern Cursor				 Cursor_select;
 extern Cursor				 Cursor_default;
+extern Cursor				 Cursor_move;
+extern Cursor				 Cursor_normal;
 extern Cursor				 Cursor_question;
+extern Cursor				 Cursor_resize;
 
 extern struct screen_ctx_q		 Screenq;
 extern struct client_ctx_q		 Clientq;
