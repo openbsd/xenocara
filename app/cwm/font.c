@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: font.c,v 1.15 2011/06/24 05:45:57 okan Exp $
+ * $OpenBSD: font.c,v 1.16 2011/06/27 12:46:54 okan Exp $
  */
 
 #include <sys/param.h>
@@ -66,7 +66,7 @@ font_width(struct screen_ctx *sc, const char *text, int len)
 {
 	XGlyphInfo	 extents;
 
-	XftTextExtents8(X_Dpy, sc->font, (const XftChar8*)text,
+	XftTextExtentsUtf8(X_Dpy, sc->font, (const FcChar8*)text,
 	    len, &extents);
 
 	return (extents.xOff);
@@ -77,8 +77,7 @@ font_draw(struct screen_ctx *sc, const char *text, int len,
     Drawable d, int x, int y)
 {
 	XftDrawChange(sc->xftdraw, d);
-	/* Really needs to be UTF8'd. */
-	XftDrawString8(sc->xftdraw, &sc->xftcolor, sc->font, x, y,
+	XftDrawStringUtf8(sc->xftdraw, &sc->xftcolor, sc->font, x, y,
 	    (const FcChar8*)text, len);
 }
 
