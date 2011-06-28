@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.16 2010/12/06 06:49:47 jasper Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.17 2011/06/28 08:18:49 jasper Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -118,7 +118,7 @@ Bool old_swap;
 
 static char    *prompt_message[] = {
 	"TOUCH SCREEN CALIBRATION",
-	"Press on the cross hairs please...",
+	"Press on the crosshairs please...",
 	"Use the ESC key to cancel.",
 	NULL
 };
