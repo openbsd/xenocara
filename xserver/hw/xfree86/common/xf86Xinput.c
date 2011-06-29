@@ -873,7 +873,8 @@ NewInputDeviceRequest (InputOption *options, InputAttributes *attrs,
 
         if (strcmp(option->key, "_source") == 0 &&
             (strcmp(option->value, "server/hal") == 0 ||
-             strcmp(option->value, "server/udev") == 0)) {
+             strcmp(option->value, "server/udev") == 0 ||
+	     strcmp(option->value, "server/wscons") == 0)) {
             is_auto = 1;
             if (!xf86Info.autoAddDevices) {
                 rval = BadMatch;

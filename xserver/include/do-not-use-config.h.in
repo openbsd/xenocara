@@ -39,6 +39,9 @@
 /* Use libudev for input hotplug */
 #undef CONFIG_UDEV
 
+/* Use wscons for input auto configuration */
+#undef CONFIG_WSCONS
+
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */

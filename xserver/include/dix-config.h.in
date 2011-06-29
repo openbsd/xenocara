@@ -411,6 +411,9 @@
 /* Support HAL for hotplug */
 #undef CONFIG_HAL
 
+/* Use wscons for input auto configuration */
+#undef CONFIG_WSCONS
+
 /* Have a monotonic clock from clock_gettime() */
 #undef MONOTONIC_CLOCK
 
