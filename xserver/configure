@@ -1098,6 +1098,8 @@ CONFIG_HAL_TRUE
 CONFIG_HAL_FALSE
 CONFIG_NEED_DBUS_TRUE
 CONFIG_NEED_DBUS_FALSE
+CONFIG_WSCONS_TRUE
+CONFIG_WSCONS_FALSE
 XV_TRUE
 XV_FALSE
 XVMC_TRUE
@@ -1467,6 +1469,7 @@ enable_dpms
 enable_config_udev
 enable_config_dbus
 enable_config_hal
+enable_config_wscons
 enable_xfree86_utils
 enable_xaa
 enable_vgahw
@@ -2282,6 +2285,7 @@ Optional Features:
   --enable-config-udev    Build udev support (default: auto)
   --enable-config-dbus    Build D-BUS API support (default: no)
   --disable-config-hal    Build HAL support (default: auto)
+  --enable-config-wscons  Build wscons config support (default: auto)
   --enable-xfree86-utils  Build xfree86 DDX utilities (default: enabled)
   --enable-xaa            Build XAA (default: enabled)
   --enable-vgahw          Build Xorg with vga access (default: enabled)
@@ -7697,7 +7701,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7700 "configure"' > conftest.$ac_ext
+  echo '#line 7704 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -10610,11 +10614,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:10613: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:10617: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:10617: \$? = $ac_status" >&5
+   echo "$as_me:10621: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -10900,11 +10904,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:10903: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:10907: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:10907: \$? = $ac_status" >&5
+   echo "$as_me:10911: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -11004,11 +11008,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11007: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11011: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11011: \$? = $ac_status" >&5
+   echo "$as_me:11015: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13404,7 +13408,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13407 "configure"
+#line 13411 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13504,7 +13508,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13507 "configure"
+#line 13511 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -15913,11 +15917,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15916: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15920: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15920: \$? = $ac_status" >&5
+   echo "$as_me:15924: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16017,11 +16021,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16020: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16024: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16024: \$? = $ac_status" >&5
+   echo "$as_me:16028: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17600,11 +17604,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17603: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17607: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17607: \$? = $ac_status" >&5
+   echo "$as_me:17611: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17704,11 +17708,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17707: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17711: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17711: \$? = $ac_status" >&5
+   echo "$as_me:17715: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -19919,11 +19923,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:19922: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:19926: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:19926: \$? = $ac_status" >&5
+   echo "$as_me:19930: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -20209,11 +20213,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:20212: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:20216: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:20216: \$? = $ac_status" >&5
+   echo "$as_me:20220: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -20313,11 +20317,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:20316: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:20320: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:20320: \$? = $ac_status" >&5
+   echo "$as_me:20324: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -30859,6 +30863,13 @@ else
   CONFIG_HAL=auto
 fi
 
+# Check whether --enable-config-wscons was given.
+if test "${enable_config_wscons+set}" = set; then
+  enableval=$enable_config_wscons; CONFIG_WSCONS=$enableval
+else
+  CONFIG_WSCONS=auto
+fi
+
 # Check whether --enable-xfree86-utils was given.
 if test "${enable_xfree86_utils+set}" = set; then
   enableval=$enable_xfree86_utils; XF86UTILS=$enableval
@@ -33140,6 +33151,34 @@ else
   CONFIG_NEED_DBUS_FALSE=
 fi
 
+
+if test "x$CONFIG_WSCONS" = xauto; then
+	case $host_os in
+		*openbsd*)
+			CONFIG_WSCONS=yes;
+			;;
+		*)
+			CONFIG_WSCONS=no;
+			;;
+	esac
+fi
+
+
+if test "x$CONFIG_WSCONS" = xyes; then
+  CONFIG_WSCONS_TRUE=
+  CONFIG_WSCONS_FALSE='#'
+else
+  CONFIG_WSCONS_TRUE='#'
+  CONFIG_WSCONS_FALSE=
+fi
+
+if test "x$CONFIG_WSCONS" = xyes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define CONFIG_WSCONS 1
+_ACEOF
+
+fi
 
 if test "x$USE_SIGIO_BY_DEFAULT" = xyes; then
 	USE_SIGIO_BY_DEFAULT_VALUE=TRUE
@@ -42574,6 +42613,13 @@ if test -z "${CONFIG_NEED_DBUS_TRUE}" && test -z "${CONFIG_NEED_DBUS_FALSE}"; th
   { { $as_echo "$as_me:$LINENO: error: conditional \"CONFIG_NEED_DBUS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 $as_echo "$as_me: error: conditional \"CONFIG_NEED_DBUS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${CONFIG_WSCONS_TRUE}" && test -z "${CONFIG_WSCONS_FALSE}"; then
+  { { $as_echo "$as_me:$LINENO: error: conditional \"CONFIG_WSCONS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+$as_echo "$as_me: error: conditional \"CONFIG_WSCONS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi

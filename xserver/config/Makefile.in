@@ -24,9 +24,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -45,6 +45,7 @@ host_triplet = @host@
 @CONFIG_HAL_TRUE@@CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@am__append_6 = $(HAL_CFLAGS)
 @CONFIG_HAL_TRUE@@CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@am__append_7 = hal.c
 @CONFIG_HAL_TRUE@@CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@am__append_8 = $(HAL_LIBS)
+@CONFIG_NEED_DBUS_FALSE@@CONFIG_UDEV_FALSE@@CONFIG_WSCONS_TRUE@am__append_9 = wscons.c
 subdir = config
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -70,14 +71,15 @@ am__DEPENDENCIES_1 =
 @CONFIG_UDEV_TRUE@libconfig_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 @CONFIG_UDEV_TRUE@	$(am__DEPENDENCIES_2)
 am__libconfig_la_SOURCES_DIST = config.c config-backends.h udev.c \
-	dbus-core.c dbus.c hal.c
+	dbus-core.c dbus.c hal.c wscons.c
 @CONFIG_UDEV_TRUE@am__objects_1 = udev.lo
 @CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@am__objects_2 =  \
 @CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@	dbus-core.lo
 @CONFIG_DBUS_API_TRUE@@CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@am__objects_3 = dbus.lo
 @CONFIG_HAL_TRUE@@CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@am__objects_4 = hal.lo
+@CONFIG_NEED_DBUS_FALSE@@CONFIG_UDEV_FALSE@@CONFIG_WSCONS_TRUE@am__objects_5 = wscons.lo
 am_libconfig_la_OBJECTS = config.lo $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4)
+	$(am__objects_3) $(am__objects_4) $(am__objects_5)
 libconfig_la_OBJECTS = $(am_libconfig_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -158,6 +160,8 @@ CONFIG_NEED_DBUS_FALSE = @CONFIG_NEED_DBUS_FALSE@
 CONFIG_NEED_DBUS_TRUE = @CONFIG_NEED_DBUS_TRUE@
 CONFIG_UDEV_FALSE = @CONFIG_UDEV_FALSE@
 CONFIG_UDEV_TRUE = @CONFIG_UDEV_TRUE@
+CONFIG_WSCONS_FALSE = @CONFIG_WSCONS_FALSE@
+CONFIG_WSCONS_TRUE = @CONFIG_WSCONS_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
@@ -637,7 +641,8 @@ AM_CFLAGS = $(DIX_CFLAGS) $(am__append_1) $(am__append_3) \
 	$(am__append_6)
 noinst_LTLIBRARIES = libconfig.la
 libconfig_la_SOURCES = config.c config-backends.h $(am__append_2) \
-	$(am__append_4) $(am__append_5) $(am__append_7)
+	$(am__append_4) $(am__append_5) $(am__append_7) \
+	$(am__append_9)
 @CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@libconfig_la_LIBADD =  \
 @CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@	$(DBUS_LIBS) \
 @CONFIG_NEED_DBUS_TRUE@@CONFIG_UDEV_FALSE@	$(am__append_8)
@@ -703,6 +708,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dbus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udev.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wscons.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
