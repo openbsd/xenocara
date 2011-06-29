@@ -21,51 +21,11 @@
 #include "xf86.h"
 #include "xf86Priv.h"
 #include "xf86_OSlib.h"
-#include "xf86Parser.h"
 
 #include "xf86Xinput.h"
 #include "xf86OSKbd.h"
 #include "atKeynames.h"
 #include "bsd_kbd.h"
-
-#ifdef WSCONS_SUPPORT
-#include <dev/wscons/wsconsio.h>
-#include <dev/wscons/wsksymdef.h>
-
-#define KB_OVRENC \
-	{ KB_UK,	"gb" }, \
-	{ KB_SV,	"se" }, \
-	{ KB_SG,	"ch" }, \
-	{ KB_SF,	"ch" }, \
-	{ KB_LA,	"latam" }, \
-	{ KB_CF,	"ca" }
-
-struct nameint {
-  int val;
-  char *name;
-} kbdenc[] = { KB_OVRENC, KB_ENCTAB, { 0 } };
-
-struct nameint kbdvar[] = {
-	{ KB_NODEAD | KB_SG,	"de_nodeadkeys" },
-	{ KB_NODEAD | KB_SF,	"fr_nodeadkeys" },
-	{ KB_SF,		"fr" },
-	{ KB_DVORAK | KB_CF,	"fr-dvorak" },
-	{ KB_DVORAK | KB_FR,	"bepo" },
-	{ KB_DVORAK,		"dvorak" },
-	{ KB_CF,		"fr-legacy" },
-	{ KB_NODEAD,		"nodeadkeys" },
-	{ 0 }
-};
-
-struct nameint kbdopt[] = {
-#ifndef USE_XKEYBOARD_CONFIG
-	{ KB_SWAPCTRLCAPS, "ctrl:swapcaps" },
-#else
-	{ KB_SWAPCTRLCAPS, "ctrl:swapcaps,terminate:ctrl_alt_bksp" },
-#endif
-	{ 0 }
-};
-#endif
 
 extern int priv_open_device(const char *dev);
 
@@ -376,9 +336,6 @@ OpenKeyboard(InputInfoPtr pInfo)
     int i;
     KbdProtocolId prot = PROT_UNKNOWN_KBD;
     char *s;
-#ifdef WSCONS_SUPPORT
-    kbd_t wsenc = 0;
-#endif
 
     s = xf86SetStrOption(pInfo->options, "Protocol", NULL);
     for (i = 0; protocols[i].name; i++) {
@@ -478,53 +435,6 @@ OpenKeyboard(InputInfoPtr pInfo)
                return FALSE;
        }
     }
-
-    /*
-     * Try to get the configured keyboard translation from the wscons
-     * keyboard driver (see kbd(8) for more information) if no
-     * XkbLayout has been specified.  Do this even if the protocol is
-     * not wskbd.
-     */
-    if (xf86findOption(pInfo->options, "XkbLayout") != NULL)
-        return TRUE;
-
-    if (ioctl(pInfo->fd, WSKBDIO_GETENCODING, &wsenc) == -1) {
-	/* Ignore the error, we just use the defaults */
-	xf86Msg(X_ERROR, "%s: error getting wscons layout name: %s\n",
-		pInfo->name, strerror(errno));
-	return TRUE;
-    }
-    if (KB_ENCODING(wsenc) == KB_USER) {
-	/* Ignore wscons "user" layout */
-	xf86Msg(X_INFO, "%s: ignoring \"user\" wscons layout\n", pInfo->name);
-	xf86addNewOption(pInfo->options, "XkbLayout", "us");
-	return TRUE;
-    }
-
-    for (i = 0; kbdenc[i].val; i++)
-	if(KB_ENCODING(wsenc) == kbdenc[i].val) {
-	    xf86Msg(X_PROBED, "%s: using wscons layout %s\n",
-		    pInfo->name, kbdenc[i].name);
-            xf86addNewOption(pInfo->options, "XkbLayout", kbdenc[i].name);
-            break;
-        }
-    if (xf86findOption(pInfo->options, "XkbVariant") == NULL)
-        for (i = 0; kbdvar[i].val; i++)
-            if (wsenc == kbdvar[i].val ||
-		KB_VARIANT(wsenc) == kbdvar[i].val) {
-		xf86Msg(X_PROBED, "%s: using wscons variant %s\n",
-			pInfo->name, kbdvar[i].name);
-                xf86addNewOption(pInfo->options, "XkbVariant", kbdvar[i].name);
-                break;
-            }
-    if (xf86findOption(pInfo->options, "XkbOptions") == NULL)
-        for (i = 0; kbdopt[i].val; i++)
-            if (KB_VARIANT(wsenc) == kbdopt[i].val) {
-		xf86Msg(X_PROBED, "%s: using wscons option %s\n",
-			pInfo->name, kbdopt[i].name);
-                xf86addNewOption(pInfo->options, "XkbOptions", kbdopt[i].name);
-                break;
-            }
 #endif
     return TRUE;
 }
