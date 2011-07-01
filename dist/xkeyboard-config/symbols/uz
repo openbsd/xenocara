@@ -33,7 +33,7 @@
 partial default alphanumeric_keys 
 xkb_symbols "cyrillic" {
 
-    name[Group1]= "Uzbekistan";
+    name[Group1]= "Uzbek";
 
     key	<AE01> {	[		1,	    exclam 	]	};
     key	<AE02> {	[		2,        quotedbl	]	};
@@ -93,28 +93,6 @@ key.type[group1]="ALPHABETIC";
 partial alphanumeric_keys
 xkb_symbols "latin" {
     include "us"
-    name[Group1]= "Uzbekistan - Latin";
+    name[Group1]= "Uzbek (Latin)";
     key <AC11>  { [0x010002BB, quotedbl] };
-};
-
-// Crimean Tatar (Crimean Turkish) layouts.
-partial
-xkb_symbols "crh" {
-    include "tr(crh)"
-
-    name[Group1]="Uzbekistan - Crimean Tatar (Turkish Q)";
-};
-
-partial
-xkb_symbols "crh_f" {
-    include "tr(crh_f)"
-
-    name[Group1]="Uzbekistan - Crimean Tatar (Turkish F)";
-};
-
-partial
-xkb_symbols "crh_alt" {
-    include "tr(crh_alt)"
-
-    name[Group1]="Uzbekistan - Crimean Tatar (Turkish Alt-Q)";
 };

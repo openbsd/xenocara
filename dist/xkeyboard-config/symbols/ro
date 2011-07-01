@@ -25,7 +25,7 @@ xkb_symbols "basic" {
 
     include "us"
 
-    name[Group1]="Romania";
+    name[Group1]="Romanian";
 
     key <AE01> { [ 1,                 exclam,  dead_tilde		  ] };
     key <AE02> { [ 2,                     at,  dead_caron		  ] };
@@ -67,7 +67,7 @@ xkb_symbols "cedilla" {
 
     include "ro(basic)"
 
-    name[Group1]="Romania - Cedilla";
+    name[Group1]="Romanian (cedilla)";
 
     key <AD05> { [ t,                      T,  tcedilla,	 Tcedilla ] };
     key <AC02> { [ s,                      S,  scedilla,	 Scedilla ] };
@@ -82,7 +82,7 @@ xkb_symbols "std" {
 
     include "us"
 
-    name[Group1]="Romania - Standard";
+    name[Group1]="Romanian (standard)";
 
     key <TLDE> { [ doublelowquotemark, rightdoublequotemark, grave, asciitilde ] };
     key <AE01> { [ 1,                 exclam,  dead_tilde		  ] };
@@ -126,7 +126,7 @@ xkb_symbols "std_cedilla" {
 
     include "ro(std)"
 
-    name[Group1]="Romania - Standard (Cedilla)";
+    name[Group1]="Romanian (standard cedilla)";
 
     key <AC10> { [ scedilla, 	    Scedilla ] };
     key <AC11> { [ tcedilla, 	    Tcedilla ] };
@@ -141,7 +141,7 @@ xkb_symbols "winkeys" {
 
     include "latin"
 
-    name[Group1]="Romania - Winkeys";
+    name[Group1]="Romanian (WinKeys)";
 
     // Alphanumeric section
     key <TLDE> { [ bracketright, bracketleft            ]       };
@@ -192,44 +192,24 @@ xkb_symbols "winkeys" {
 
 };
 
-// Crimean Tatar (Crimean Turkish) layouts.
 partial
-xkb_symbols "crh_f" {
-    include "tr(crh_f)"
+xkb_symbols "crh_dobruja" {
+    // Romania-specific Crimean Tatar (Crimean Turkish) Q layout.
+    // This layout is not yet standard. Common Alt-Q and F layouts are now also 
+    // available right next to this layout in the new language-centric UI.
+    // Reşat SABIQ <tilde.birlik @ gmail . com>, 2009, 2011
+    // Özgür Qarahan <qarahan @ gmail . com>, 2009
 
-    name[Group1]="Romania - Crimean Tatar (Turkish F)";
-};
-
-partial
-xkb_symbols "crh_alt" {
-    include "tr(crh_alt)"
-
-    name[Group1]="Romania - Crimean Tatar (Turkish Alt-Q)";
-};
-
-partial
-xkb_symbols "crh_dobruca1" {
     include "tr(crh)"
 
-    name[Group1]="Romania - Crimean Tatar (Dobruca-1 Q)";
+    name[Group1]="Crimean Tatar (Dobruja Q)";
 
-    key <AD05>	{ [         t,          T,       tcedilla,       Tcedilla ]	};
-    key <AD10>	{ [         p,          P,         abreve,         Abreve ]	};
-
-    key <AC04>	{ [         f,          F,         ibreve,         Ibreve ]	};
-    key <AC07>	{ [    iacute,     Iacute,              j,              J ]	};
-
-    key <AB07>	{ [         m,          M,      trademark,      masculine ]	};
-};
-
-partial
-xkb_symbols "crh_dobruca2" {
-    include "ro(crh_dobruca1)"
-
-    name[Group1]="Romania - Crimean Tatar (Dobruca-2 Q)";
-
-    key <AC04>	{ [         f,          F,          iacute,          Iacute ]	};
-    key <AC07>	{ [    ibreve,     Ibreve,               j,               J ]	};
+    key <AD02>	{ [         w,          W,         abreve,         Abreve ] };
+    key <AD05>	{ [         t,          T,      0x100021b,      0x100021a ] };
+    key <AD10>	{ [         p,          P,        section 	          ] };
+    key <AC02>	{ [         s,          S,      0x1000219,      0x1000218 ] };
+    key <AC07>	{ [    ibreve,     Ibreve,              j,              J ] };
+    key <AB07>	{ [         m,          M,      trademark,      masculine ] };
 };
 
 // EXTRAS:
@@ -244,7 +224,7 @@ xkb_symbols "ergonomic" {
 
     include "ro(basic)"
 
-    name[Group1]="Romania - Ergonomic Touchtype";
+    name[Group1]="Romanian (ergonomic Touchtype)";
 
     key <AD01> { [ abreve,            Abreve,  q,                       Q ] };
     key <AD02> { [ 0x1000219,      0x1000218,  w,                       W ] };

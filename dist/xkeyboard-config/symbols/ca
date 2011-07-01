@@ -1,6 +1,6 @@
 default partial
 xkb_symbols "fr" {
-    name[Group1] = "Canada";
+    name[Group1] = "French (Canada)";
 
     key <TLDE>	{ [ numbersign,       bar,     backslash ]	};
     key <AE01>	{ [         1,     exclam,     plusminus ]	};
@@ -60,7 +60,7 @@ xkb_symbols "fr" {
 };
 
 xkb_symbols "fr-dvorak" {
-    name[Group1] = "Canada - French Dvorak";
+    name[Group1] = "French (Canada, Dvorak)";
 
     key <TLDE>  { [ numbersign,       bar,     backslash ]  };
     key <AE01>  { [         1,     exclam,     plusminus ]  };
@@ -122,7 +122,7 @@ xkb_symbols "fr-dvorak" {
 partial
 xkb_symbols "fr-legacy" {
 
-    name[Group1] = "Canada - French (legacy)";
+    name[Group1] = "French (Canada, legacy)";
 
     include "ca(fr)"
 
@@ -168,7 +168,7 @@ xkb_symbols "fr-legacy" {
 partial
 xkb_symbols "multi" {
 
-    name[Group1] = "Canada - Multilingual, first part";
+    name[Group1] = "Canadian Multilingual (first part)";
 
     include "ca(fr)"
 
@@ -206,7 +206,7 @@ xkb_symbols "multi" {
 partial
 xkb_symbols "multi-2gr" {
 
-    name[Group1] = "Canada - Multilingual, second part";
+    name[Group1] = "Canadian Multilingual (second part)";
 
     key <TLDE>	{ [    NoSymbol,      hyphen ]	};
     key <AE01>	{ [   onesuperior,  exclamdown ]	};
@@ -269,7 +269,7 @@ xkb_symbols "multi-2gr" {
 alphanumeric_keys 
 xkb_symbols "ike" {
 
-    name[Group1]= "Canada - Inuktitut";
+    name[Group1]= "Inuktitut";
 
     key	<AE01> { [ 0x01001595, 1		]	};
     key	<AE02> { [ 0x01001449, 2		]	};
@@ -330,7 +330,7 @@ xkb_symbols "ike" {
 partial
 xkb_symbols "multix" {
 
-    name[Group1] = "Canada - Multilingual";
+    name[Group1] = "Canadian Multilingual";
 
     key.type[group1]="EIGHT_LEVEL_SEMIALPHABETIC";
     key <TLDE>	{ [     slash,  backslash,            bar, NoSymbol,
@@ -451,31 +451,6 @@ xkb_symbols "multix" {
     include "level5(rctrl_switch)"
 };
 
-// Secwepemctsin keyboard for X11
-// written by Neskie Manuel <neskiem@gmail.com>
-
-partial alphanumeric_keys  
-xkb_symbols "shs" {
-
-    include "us"
-
-    name[Group1]= "Canada - Secwepemctsin";
-
-    //Using Dead key to get COMBINING COMMA ABOVE for ejectives on
-    //q, l, t, s, m, g, k, p, w, y, r
-    //XCompose key is used for the other accute and grave.
-
-    key <AB08>	{ [ comma, less, U0313    ]	};
-    key <AC01>	{ [ a, A, aacute, Aacute  ]	};
-    key <AD03>	{ [ e, E, eacute, Eacute  ]	};
-    key <AD07>	{ [ u, U, uacute, Uacute  ]	};
-    key <AD08>	{ [ i, I, iacute, Iacute  ]	};
-    key <AD09>	{ [ o, O, oacute, Oacute  ]	};
-
-    include "level3(ralt_switch)"
-    include "compose(rctrl)"
-};
-
 // OLPC Section
 xkb_symbols "olpc" {
 
@@ -492,12 +467,20 @@ xkb_symbols "olpc" {
 };
 
 partial alphanumeric_keys 
+xkb_symbols "eng" {
+    name[Group1] = "English (Canada)";
+    include "us(basic)"
+};
+
+// EXTRAS:
+
+partial alphanumeric_keys 
 xkb_symbols "kut" {
 
     //Ejective U0313  and compose accents are from shs layout
     include "ca(shs)"
 
-    name[Group1]= "Canada - Ktunaxa";
+    name[Group1]= "Kutenai";
 
     // Alphanumeric section
 
@@ -520,8 +503,28 @@ xkb_symbols "kut" {
     key <AC10> {	[ semicolon,	colon,U02BE,U02BE	]	};
 };
 
-partial alphanumeric_keys 
-xkb_symbols "eng" {
-    name[Group1] = "Canada - English";
-    include "us(basic)"
+// Secwepemctsin keyboard for X11
+// written by Neskie Manuel <neskiem@gmail.com>
+
+partial alphanumeric_keys  
+xkb_symbols "shs" {
+
+    include "us"
+
+    name[Group1]= "Secwepemctsin";
+
+    //Using Dead key to get COMBINING COMMA ABOVE for ejectives on
+    //q, l, t, s, m, g, k, p, w, y, r
+    //XCompose key is used for the other accute and grave.
+
+    key <AB08>	{ [ comma, less, U0313    ]	};
+    key <AC01>	{ [ a, A, aacute, Aacute  ]	};
+    key <AD03>	{ [ e, E, eacute, Eacute  ]	};
+    key <AD07>	{ [ u, U, uacute, Uacute  ]	};
+    key <AD08>	{ [ i, I, iacute, Iacute  ]	};
+    key <AD09>	{ [ o, O, oacute, Oacute  ]	};
+
+    include "level3(ralt_switch)"
+    include "compose(rctrl)"
 };
+

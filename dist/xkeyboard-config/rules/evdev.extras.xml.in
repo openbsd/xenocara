@@ -6,24 +6,48 @@
     <layout>
       <configItem>
         <name>apl</name>
-        <_shortDescription>APL</_shortDescription>
-        <_description>APL</_description>
+        <_shortDescription>apl</_shortDescription>
+        <_description>APL Keyboard Symbols</_description>
         <languageList><iso639Id>eng</iso639Id></languageList>
       </configItem>
       <variantList/>
     </layout>
     <layout>
       <configItem>
+        <name>ca</name>
+        <_shortDescription>fr</_shortDescription>
+        <_description>French (Canada)</_description>
+        <languageList><iso639Id>fr</iso639Id></languageList>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
+            <name>kut</name>
+            <_shortDescription>kut</_shortDescription>
+            <_description>Kutenai</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>shs</name>
+            <_shortDescription>shs</_shortDescription>
+            <_description>Secwepemctsin</_description>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
         <name>ir</name>
-        <_shortDescription>Iran</_shortDescription>
-        <_description>Iran</_description>
+        <_shortDescription>fa</_shortDescription>
+        <_description>Persian</_description>
         <languageList><iso639Id>per</iso639Id></languageList>
       </configItem>
       <variantList>
         <variant>
           <configItem>
             <name>ave</name>
-            <_description>Iran - Avestan</_description>
+            <_description>Avestan</_description>
             <languageList><iso639Id>ave</iso639Id></languageList>
           </configItem>
         </variant>
@@ -32,15 +56,75 @@
     <layout>
       <configItem>
         <name>lt</name>
-        <_shortDescription>Ltu</_shortDescription>
-        <_description>Lithuania</_description>
+        <_shortDescription>lt</_shortDescription>
+        <_description>Lithuanian</_description>
         <languageList><iso639Id>lit</iso639Id></languageList>
       </configItem>
       <variantList>
         <variant>
           <configItem>
+            <name>us_dvorak</name>
+            <_description>Lithuanian (US Dvorak with Lithuanian letters)</_description>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
+        <name>lv</name>
+        <_shortDescription>lv</_shortDescription>
+        <_description>Latvian</_description>
+        <languageList>
+          <iso639Id>lav</iso639Id>
+        </languageList>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
             <name>dvorak</name>
-            <_description>Lithuania - Dvorak</_description>
+            <_description>Latvian (US Dvorak)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>ykeydvorak</name>
+            <_description>Latvian (US Dvorak, Y variant)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>minuskeydvorak</name>
+            <_description>Latvian (US Dvorak, minus variant)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>dvorakprogr</name>
+            <_description>Latvian (programmer US Dvorak)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>ykeydvorakprogr</name>
+            <_description>Latvian (programmer US Dvorak, Y variant)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>minuskeydvorakprogr</name>
+	    <_description>Latvian (programmer US Dvorak, minus variant)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>colemak</name>
+            <_description>Latvian (US Colemak)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>apostrophecolemak</name>
+            <_description>Latvian (US Colemak, apostrophe variant)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -48,34 +132,34 @@
     <layout>
       <configItem>
         <name>us</name>
-        <_shortDescription>USA</_shortDescription>
-        <_description>USA</_description>
+        <_shortDescription>en</_shortDescription>
+        <_description>English (US)</_description>
         <languageList><iso639Id>eng</iso639Id></languageList>
       </configItem>
       <variantList>
         <variant>
           <configItem>
             <name>intl-unicode</name>
-            <_description>USA - International (AltGr Unicode combining)</_description>
+            <_description>English (US, international AltGr Unicode combining)</_description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>alt-intl-unicode</name>
-            <_description>USA - International (AltGr Unicode combining, alternative)</_description>
+            <_description>English (US, international AltGr Unicode combining, alternative)</_description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>ats</name>
-            <_description>USA - Atsina</_description>
+            <_description>Atsina</_description>
             <!-- No ISO code in ISO639-2, only draft ISO693-3 -->
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>crd</name>
-            <_description>USA - Couer D'alene Salish</_description>
+            <_description>Couer D'alene Salish</_description>
             <languageList><iso639Id>crd</iso639Id></languageList>
           </configItem>
         </variant>
@@ -83,16 +167,42 @@
     </layout>
     <layout>
       <configItem>
+        <name>pl</name>
+        <_shortDescription>pl</_shortDescription>
+        <_description>Polish</_description>
+        <languageList><iso639Id>pol</iso639Id></languageList>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
+            <name>intl</name>
+            <_description>Polish (international with dead keys)</_description>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
         <name>ro</name>
-        <_shortDescription>Rou</_shortDescription>
-        <_description>Romania</_description>
+        <_shortDescription>ro</_shortDescription>
+        <_description>Romanian</_description>
         <languageList><iso639Id>rum</iso639Id></languageList>
       </configItem>
       <variantList>
         <variant>
           <configItem>
+            <name>crh_dobruja</name>
+            <_shortDescription>crh</_shortDescription>
+            <_description>Crimean Tatar (Dobruja Q)</_description>
+            <languageList>
+              <iso639Id>crh</iso639Id>
+            </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>ergonomic</name>
-            <_description>Romania - Ergonomic Touchtype</_description>
+            <_description>Romanian (ergonomic Touchtype)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -100,15 +210,15 @@
     <layout>
       <configItem>
         <name>rs</name>
-        <_shortDescription>Srb</_shortDescription>
-        <_description>Serbia</_description>
+        <_shortDescription>sr</_shortDescription>
+        <_description>Serbian</_description>
         <languageList><iso639Id>srp</iso639Id></languageList>
       </configItem>
       <variantList>
         <variant>
           <configItem>
             <name>combiningkeys</name>
-            <_description>Serbia - Combining accents instead of dead keys</_description>
+            <_description>Serbian (combining accents instead of dead keys)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -116,15 +226,43 @@
     <layout>
       <configItem>
         <name>ru</name>
-        <_shortDescription>Rus</_shortDescription>
-        <_description>Russia</_description>
+        <_shortDescription>ru</_shortDescription>
+        <_description>Russian</_description>
       </configItem>
       <variantList>
         <variant>
           <configItem>
             <name>chu</name>
-            <description>Russia - Church Slavonic</description>
+            <description>Church Slavonic</description>
             <languageList><iso639Id>chu</iso639Id></languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>ruu</name>
+            <_shortDescription>ru</_shortDescription>
+            <_description>Russian (with UKR and BEL layout)</_description>
+            <languageList><iso639Id>rus</iso639Id>
+                          <iso639Id>ukr</iso639Id>
+                          <iso639Id>bel</iso639Id></languageList>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
+        <name>am</name>
+        <_shortDescription>hy</_shortDescription>
+        <_description>Armenian</_description>
+        <languageList>
+          <iso639Id>hye</iso639Id>
+        </languageList>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
+            <name>olpc-phonetic</name>
+            <_description>Armenian (OLPC phonetic)</_description>
           </configItem>
         </variant>
       </variantList>
