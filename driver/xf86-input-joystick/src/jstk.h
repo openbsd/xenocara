@@ -55,17 +55,6 @@
 #define XI_JOYSTICK "JOYSTICK"
 #endif
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 5
-typedef struct {
-    char *rules;
-    char *model;
-    char *layout;
-    char *variant;
-    char *options;
-} XkbRMLVOSet;
-#endif
-
-
 
 typedef enum _JOYSTICKEVENT {
     EVENT_NONE=0,
@@ -117,7 +106,7 @@ typedef struct _JoystickDevRec {
     jstkReadDataProc read_proc; /* Callback for reading data from the backend */
     void         *devicedata; /* Extra platform device dependend data */
     char         *device;     /* Name of the device */
-    LocalDevicePtr keyboard_device; /* Slave device for keyboard events */
+    InputInfoPtr keyboard_device; /* Slave device for keyboard events */
 
     OsTimerPtr   timer;       /* Timer for axis movement */
     Bool         timerrunning;

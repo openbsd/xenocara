@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include <xf86Xinput.h>
 #include <xf86_OSproc.h>
 #include <math.h>
@@ -55,7 +56,8 @@ jstkAxisTimer(OsTimerPtr        timer,
 {
     #define NEXTTIMER 15
     DeviceIntPtr          device = (DeviceIntPtr)arg;
-    JoystickDevPtr        priv = (JoystickDevPtr)XI_PRIVATE(device);
+    InputInfoPtr          pInfo = device->public.devicePrivate;
+    JoystickDevPtr        priv  = pInfo->private;
 
     int sigstate, i;
     int nexttimer;
@@ -266,7 +268,7 @@ jstkAxisTimer(OsTimerPtr        timer,
  ***********************************************************************
  */
 void
-jstkStartAxisTimer(LocalDevicePtr device, int number) 
+jstkStartAxisTimer(InputInfoPtr device, int number)
 {
     int pixel;
     JoystickDevPtr priv = device->private;
@@ -298,7 +300,7 @@ jstkStartAxisTimer(LocalDevicePtr device, int number)
  */
 
 void
-jstkStartButtonAxisTimer(LocalDevicePtr device, int number) 
+jstkStartButtonAxisTimer(InputInfoPtr device, int number)
 {
     int pixel;
     JoystickDevPtr priv = device->private;
@@ -338,7 +340,7 @@ jstkStartButtonAxisTimer(LocalDevicePtr device, int number)
  ***********************************************************************
  */
 void
-jstkHandleAbsoluteAxis(LocalDevicePtr device, int number) 
+jstkHandleAbsoluteAxis(InputInfoPtr device, int number)
 {
     JoystickDevPtr priv = device->private;
     int i,x,y;
@@ -406,7 +408,8 @@ jstkPWMAxisTimer(OsTimerPtr        timer,
                  pointer           arg)
 {
     DeviceIntPtr          device = (DeviceIntPtr)arg;
-    JoystickDevPtr        priv = (JoystickDevPtr)XI_PRIVATE(device);
+    InputInfoPtr          pInfo = device->public.devicePrivate;
+    JoystickDevPtr        priv  = pInfo->private;
 
     int sigstate, i;
     int nexttimer;
@@ -535,7 +538,7 @@ jstkPWMAxisTimer(OsTimerPtr        timer,
  ***********************************************************************
  */
 void
-jstkHandlePWMAxis(LocalDevicePtr device, int number) 
+jstkHandlePWMAxis(InputInfoPtr device, int number)
 {
     JoystickDevPtr priv = device->private;
     if (priv->axis[number].timerrunning) return;
