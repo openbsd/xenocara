@@ -5,6 +5,7 @@ resource_HEADERS = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = resourceproto.pc
 
+dist_doc_DATA = resproto.txt
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
