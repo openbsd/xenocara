@@ -1,3 +1,151 @@
+commit 754b492ddf490682c5fff2518a36d0afb5655a36
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 29 21:50:39 2011 -0700
+
+    libXrandr 1.3.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a8e4e3b6c28d095e315da6874a72e05ef113edb
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 31 03:43:57 2011 +0200
+
+    Xrandr.man: Document how to request notifications.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit 7613d6e70c4af791bdb3e005a6231f1d4d14745c
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 3 16:17:51 2011 +0100
+
+    Xrandr.man: Fix parenthesis escaping.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit d0b9b06d2d0b85da3eb89adf4abd973b092201df
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 3 16:01:56 2011 +0100
+
+    Xrandr.man: Fix missing closing parenthesis.
+    
+    Also fix the closing tag (\fP instead of \fI).
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit cf351e133c71fdae77c961373e01258404a5ff7f
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 3 15:54:58 2011 +0100
+
+    Xrandr.man: Build full sentences for easier reading.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit e92474f36a2157ce8939b143e077d9342638e74a
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 3 15:52:58 2011 +0100
+
+    Xrandr.man: Fix typo.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit d77cd6cc30bd9ebaea7c3b1c97e6984844a607f9
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 3 15:50:08 2011 +0100
+
+    Xrandr.man: Try to make some sense.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Magnus Kessler <Magnus.Kessler@gmx.net>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit 58b664ba4c8c8d34a2c6169dbaf55f0d21fc0139
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 3 15:49:57 2011 +0100
+
+    Xrandr.man: Build full sentences, possibly easier to read.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit dfb543b9061428e745b7a1b5910c46ffa46fadf5
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 3 15:34:41 2011 +0100
+
+    Xrandr.man: Fix grammar.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit f340f5b117b69cccabf9b3a0f2834a4b6aae057e
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Mar 3 15:32:03 2011 +0100
+
+    Xrandr.man: Remove trailing spaces.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit 2da3bb5e59db3ed5f689686774dd051766dd39a6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:44 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit 04d5ffa04c2255025580ce1740c3f0bb2146e716
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ae18cc9cd98f4db512a21e0b4e1cb18a69fcf532
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:34:14 2011 -0500
+
+    config: remove unrequired AC_CONFIG_AUX_DIR
+    
+    The default location for the generation of configuation files is the current
+    package root directory. These files are config.* and friends.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c1c5283f37387fbae7772e1dcd56528a515f0a23
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:15 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit b7e31c69d345d3cba359d7648c304cff43ff7437
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Oct 28 12:34:26 2010 -0700
