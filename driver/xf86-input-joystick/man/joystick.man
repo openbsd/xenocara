@@ -4,19 +4,14 @@
 .SH NAME
 joystick \- Joystick input driver
 .SH SYNOPSIS
-Snipped for xorg.conf.d(5):
-
 .nf
-.B "Section \*qInputClass\*q"
-.BI "  Identifier \*q" joystick-all \*q
-.BI  "  Driver \*q" joystick \*q
-.BI "  Option \*qMatchIsJoystick\*q   \*q" on \*q
-.BI "  Option \*qMatchDevicePath \*q" /dev/input/event* \*q
+.B "Section \*qInputDevice\*q"
+.BI "  Identifier \*q" devname \*q
+.B  "  Driver \*qjoystick\*q"
+.BI "  Option \*qDevice\*q   \*q" devpath \*q
 \ \ ...
 .B EndSection
 .fi
-
-
 .SH DESCRIPTION
 .B joystick
 is an __xservername__ input driver for Joysticks. There are 3 backends available that are used in the following order, if support was found:
@@ -319,21 +314,33 @@ The keys for the first two axes will be generated in an interval according to th
 The keys for the third and fourth axis are generated once when the axis moves out of the deadzone and when it moves back into the deadzone. X.Org will autorepeat those keys according to current keyboard settings.
 
 .SH "NOTES"
-Configuration through
-.I InputClass
-sections is recommended in X servers 1.8 and later. See xorg.conf.d(5) for more details. An example xorg.conf.d snipped is provided in 
-.I ${sourcecode}/config/50-joystick-all.conf
-
-Configuration through hal fdi files is recommended in X servers 1.5,
-1.6 and 1.7. An example hal policy file is still provided in 
+The driver does not do hotplugging on it's own. The joystick needs to be plugged in when the driver is loaded.
+If the joystick is unplugged, the device will be automatically deactivated.
+.P
+There is an example hal policy in
 .I ${sourcecode}/config/50-x11-input-joystick.fdi
-to be placed in
-.IR /etc/hal/fdi/policy .
+which will take care of hotplugging. Place it in
+.I /etc/hal/fdi/policy 
+and customize it to your needs. Pass custom options to the driver using x11_options properties. This requires xorg-server-1.5 or 
+higher.
+.P
+Make sure you add the 
+.I \*qSendCoreEvents\*q
+keyword to the device entry of your
+.B ServerLayout
+section of the 
+.I xorg.conf
+file, otherwise the device won't report core pointer and core key events.
+
+Example: 
+.nf
+.BI "    InputDevice     " "\*qJoystick1\*q     \*qSendCoreEvents\*q"
+.fi
 
 
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorg.conf.d(5), Xserver(__appmansuffix__), X(__miscmansuffix__), xmodmap(1)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), xmodmap(1)
 .SH AUTHORS
-Sascha Hlusiak (2007-2011),
+Sascha Hlusiak (2007-2009),
 .fi
 Frederic Lepied (1995-1999)

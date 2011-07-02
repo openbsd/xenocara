@@ -18,19 +18,19 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+AUTOMAKE_OPTIONS = foreign
 DISTCHECK_CONFIGURE_FLAGS = --with-sdkdir=\$${includedir}/xorg
 SUBDIRS = src man config include
-MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xorg-joystick.pc
 
-.PHONY: ChangeLog INSTALL
+EXTRA_DIST = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog
 
-INSTALL:
-	$(INSTALL_CMD)
+.PHONY: ChangeLog
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog INSTALL
+dist-hook: ChangeLog

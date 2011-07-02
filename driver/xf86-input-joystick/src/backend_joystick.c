@@ -32,7 +32,6 @@
 #include "config.h"
 #endif
 
-#include <xorg-server.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>

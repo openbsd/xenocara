@@ -27,7 +27,6 @@
 #include "config.h"
 #endif
 
-#include <xorg-server.h>
 #include <xf86Xinput.h>
 #include <xf86_OSproc.h>
 #include <math.h>
@@ -56,8 +55,7 @@ jstkAxisTimer(OsTimerPtr        timer,
 {
     #define NEXTTIMER 15
     DeviceIntPtr          device = (DeviceIntPtr)arg;
-    InputInfoPtr          pInfo = device->public.devicePrivate;
-    JoystickDevPtr        priv  = pInfo->private;
+    JoystickDevPtr        priv = (JoystickDevPtr)XI_PRIVATE(device);
 
     int sigstate, i;
     int nexttimer;
@@ -268,7 +266,7 @@ jstkAxisTimer(OsTimerPtr        timer,
  ***********************************************************************
  */
 void
-jstkStartAxisTimer(InputInfoPtr device, int number)
+jstkStartAxisTimer(LocalDevicePtr device, int number) 
 {
     int pixel;
     JoystickDevPtr priv = device->private;
@@ -300,7 +298,7 @@ jstkStartAxisTimer(InputInfoPtr device, int number)
  */
 
 void
-jstkStartButtonAxisTimer(InputInfoPtr device, int number)
+jstkStartButtonAxisTimer(LocalDevicePtr device, int number) 
 {
     int pixel;
     JoystickDevPtr priv = device->private;
@@ -340,7 +338,7 @@ jstkStartButtonAxisTimer(InputInfoPtr device, int number)
  ***********************************************************************
  */
 void
-jstkHandleAbsoluteAxis(InputInfoPtr device, int number)
+jstkHandleAbsoluteAxis(LocalDevicePtr device, int number) 
 {
     JoystickDevPtr priv = device->private;
     int i,x,y;
@@ -408,8 +406,7 @@ jstkPWMAxisTimer(OsTimerPtr        timer,
                  pointer           arg)
 {
     DeviceIntPtr          device = (DeviceIntPtr)arg;
-    InputInfoPtr          pInfo = device->public.devicePrivate;
-    JoystickDevPtr        priv  = pInfo->private;
+    JoystickDevPtr        priv = (JoystickDevPtr)XI_PRIVATE(device);
 
     int sigstate, i;
     int nexttimer;
@@ -538,7 +535,7 @@ jstkPWMAxisTimer(OsTimerPtr        timer,
  ***********************************************************************
  */
 void
-jstkHandlePWMAxis(InputInfoPtr device, int number)
+jstkHandlePWMAxis(LocalDevicePtr device, int number) 
 {
     JoystickDevPtr priv = device->private;
     if (priv->axis[number].timerrunning) return;

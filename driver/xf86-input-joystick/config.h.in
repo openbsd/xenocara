@@ -1,5 +1,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+#include "xorg-server.h"
+
 /* Compile BSD usbhid backend */
 #undef BSD_BACKEND
 
@@ -62,6 +64,9 @@
 
 /* Compile Linux joystick backend */
 #undef LINUX_BACKEND
+
+/* Disable some debugging code */
+#undef NDEBUG
 
 /* Name of package */
 #undef PACKAGE
