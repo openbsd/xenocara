@@ -242,7 +242,7 @@ typedef struct {
     int           evtype;       /* XI_RawKeyPress, XI_RawKeyRelease, etc. */
     Time          time;
     int           deviceid;
-    int           sourceid;
+    int           sourceid;     /* Bug: Always 0. https://bugs.freedesktop.org//show_bug.cgi?id=34240 */
     int           detail;
     int           flags;
     XIValuatorState valuators;

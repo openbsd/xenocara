@@ -76,6 +76,9 @@ DESCRIPTION
    selected to obtain the data for modifiers_return and
    group_return.
 
+   The mask field in buttons_return is dynamically allocated and
+   must be freed by the caller.
+
    XIQueryPointer is identical to XQueryPointer but specifies the
    device explicitly.
 

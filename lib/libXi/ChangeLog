@@ -1,3 +1,249 @@
+commit 32236a7779f721d252d633d06ade306f246421a3
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Mar 18 16:30:13 2011 -0700
+
+    configure.ac: 1.4.2
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2d638fc37b0dbf28e5c826f74f68ada83a8c3e2b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 15 10:55:10 2011 +1000
+
+    Force alignment with sizeof(Atom) for XIButtonClassInfo
+    
+    The memory layout of an XIButtonClassInfo is
+    [struct XIButtonClassInfo][mask][labels]
+    
+    With the mask being currently 4-byte aligned and labels a list of Atoms. On
+    LP64, Atoms are 8 byte, leading to unaligned access for some mask lengths.
+    Force the alignment to be sizeof(Atom).
+    
+    Reported-by: Christian Weisgerber <naddy@mips.inka.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Tested-by: Christian Weisgerber <naddy@mips.inka.de>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 477f922fb07eea629f16c55b0a022e836ede6d41
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 8 14:44:10 2011 +1000
+
+    Don't discard extra data for passive grabs.
+    
+    Failed modifier data was discarded, causing assertions inside xcb.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f0a352412920d9989323c7d33ca75c3646ee3f35
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 8 14:01:35 2011 +1000
+
+    man: describe return value for XI2 passive grabbing calls.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 11b1e8ea7bc160cf9a42231742eedb0e7fefa222
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 9 14:43:03 2010 +1000
+
+    Rename XSetCPtr.c to XISetCPtr.c.
+    
+    XISetClientPointer is an XI2.0 call and should be named accordingly.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 19ac7ef23e7ff07068a63d1553159e7cb3ad2576
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 9 14:43:02 2010 +1000
+
+    Require XI 2 for all XI 2 calls.
+    
+    Each XI2 call should check _XiCheckExtInit for XI version 2.0 or higher.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 536bd44c513ede7e61e112c82a80fb9197f261f7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 23 10:53:21 2011 +1000
+
+    Fix typo in comment.
+    
+    Reported-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4ca8be9f3ffbafe9515e50d784f4ff83f6993be0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 23 09:30:59 2011 +1000
+
+    Fix invalid read in XIGrabDevice.
+    
+    Miscalculation of length caused Data() to memcpy too many bytes.
+    
+    ==2865== Invalid read of size 1
+    ==2865==    at 0x4A07480: memcpy (mc_replace_strmem.c:602)
+    ==2865==    by 0x544271E: XIGrabDevice (XIGrabDevice.c:69)
+    ==2865==    by 0x400B0A: main (gnome642481.c:56)
+    ==2865==  Address 0x642f614 is 0 bytes after a block of size 20 alloc'd
+    ==2865==    at 0x4A04896: calloc (vg_replace_malloc.c:418)
+    ==2865==    by 0x54425D3: XIGrabDevice (XIGrabDevice.c:65)
+    ==2865==    by 0x400B0A: main (gnome642481.c:56)
+    
+    SetReqLen() expects 4-byte units.
+    Data() expects bytes.
+    
+    Gnome Bug 642481 <https://bugzilla.gnome.org/show_bug.cgi?id=642481>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4db3db2b38d8eb9024170633d3bf7c5050272dd0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 14 08:48:07 2011 +1000
+
+    Mark sourceid in Raw events as bug and force to 0..
+    
+    The protocol does not provide a source ID for raw events, so this value is
+    always 0. It shouldn't really be there, but the past is so hard to change.
+    
+    Reported-by:  Mark Dokter <dokter@icg.tugraz.at>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d79a9b174a79e89ca2507a61f2e12af25102313f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 1 07:36:08 2011 +1000
+
+    man: note that callers of XIQueryPointer must free the button mask.
+    
+    buttons_return->mask is allocated by the library and must be freed by the
+    caller to avoid leaking.
+    
+    Reported-by: Matthias Clasen <mclasen@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1b376f371c2f866cd1cdf047e50210a5c69772b9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:43 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Use AC_PROG_LIBTOOL to replace the deprecated AM_PROG_LIBTOOL
+    Remove redundant AC_SUBST(*_CFLAGS) and/or *_LIBS
+    Remove redundant AC_PROG_MAKE_SET included with AM_INIT_AUTOMAKE
+    Remove redundant AC_CANONICAL_HOST included in XORG_DEFAULT_OPTIONS
+    Add AC_CONFIG_SRCDIR([Makefile.am]) where missing
+    Update minimum version of util-macros to at least 1.8.
+    
+    One or more of the above actions were applied
+    No functional configuration changes
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit faff510fed9733b2860e14490d5a40d70b840eae
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3776075264024af7eca93f689305d46302e88536
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 12:07:46 2011 -0500
+
+    config: remove already included AC_PROG_SED statement
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Use the appropriate platform version of sed
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5283e87ca909304d3e1820ef877bf3587a9c8724
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:15 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit be2a1b33c9394dcab52622bde53c83f1dd840ea0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jan 26 07:42:53 2011 +1000
+
+    libXi 1.4.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e0c95ce2348a9c9afaa4862368c7a5ae6913457c
+Author: Carlos Garnacho <carlosg@gnome.org>
+Date:   Mon Jan 24 12:35:04 2011 +0100
+
+    Fill in mods/group->effective in XIQueryPointer()
+    
+    the other XIModifierState/XIGroupState fields are being set correctly,
+    but the "effective" field was being left as undefined memory.
+    
+    Signed-off-by: Carlos Garnacho <carlosg@gnome.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a5961a8459614fcaa801a47cda07d3ee8246b16f
+Author: Philipp Reh <sefi@s-e-f-i.de>
+Date:   Mon Jan 10 17:35:57 2011 +0100
+
+    Fix passive grabs.
+    
+    _XIPassiveGrabDevice, which is called by alle the passive grab functions,
+    wrongly returns an error when it shouldn't.
+    The attached patch adds the missing "not" to properly test the error
+    condition of _XReply.
+    
+    Signed-off-by: Philipp Reh <sefi@s-e-f-i.de>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 408db9e86a92c897390129ef27a804d7cf6ba6fb
+Author: Paulo Zanoni <pzanoni@mandriva.com>
+Date:   Thu Dec 16 14:10:05 2010 -0200
+
+    Use docbookx.dtd version 4.3 for all docs
+    
+    Signed-off-by: Paulo Zanoni <pzanoni@mandriva.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9419fe9f0b21232d342885a693fbf9222b5844e4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Dec 13 19:49:58 2010 +0000
+
+    WireToEvent: Set display member of all events as well
+    
+    All events were getting random uninitialised garbage for display; fix
+    that.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 549dd5f470148df74e65ce7bb1af316a2848a71d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 13:04:55 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit ea7e12eaf84ada28f4933e85ecf51a47c9db0b93
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Nov 2 14:26:34 2010 +1000

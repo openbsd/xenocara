@@ -49,7 +49,7 @@ XIListProperties(Display* dpy, int deviceid, int *num_props_return)
 
     LockDisplay(dpy);
     *num_props_return = 0;
-    if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
+    if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
 	goto cleanup;
 
     GetReq(XIListProperties, req);
@@ -88,7 +88,7 @@ XIDeleteProperty(Display* dpy, int deviceid, Atom property)
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
     LockDisplay(dpy);
-    if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
+    if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
 	return;
 
     GetReq(XIDeleteProperty, req);
@@ -111,7 +111,7 @@ XIChangeProperty(Display* dpy, int deviceid, Atom property, Atom type,
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
     LockDisplay(dpy);
-    if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
+    if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
 	return;
 
     GetReq(XIChangeProperty, req);
@@ -175,7 +175,7 @@ XIGetProperty(Display* dpy, int deviceid, Atom property, long offset,
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
     LockDisplay(dpy);
-    if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
+    if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
 	return 1;
 
     GetReq(XIGetProperty, req);

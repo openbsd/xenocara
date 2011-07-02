@@ -45,7 +45,7 @@ XIQueryDevice(Display *dpy, int deviceid, int *ndevices_return)
     XExtDisplayInfo *extinfo = XInput_find_display(dpy);
 
     LockDisplay(dpy);
-    if (_XiCheckExtInit(dpy, Dont_Check, extinfo) == -1)
+    if (_XiCheckExtInit(dpy, XInput_2_0, extinfo) == -1)
 	goto error;
 
     GetReq(XIQueryDevice, req);

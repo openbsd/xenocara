@@ -9,6 +9,7 @@ XI2_sources = XIAllowEvents.c \
 		  XIPassiveGrab.c \
 		  XIProperties.c \
 		  XISelEv.c \
+		  XISetCPtr.c \
 		  XIWarpPointer.c \
 		  XIHierarchy.c \
 		  XIDefineCursor.c \
@@ -48,7 +49,6 @@ libXi_la_SOURCES = \
 		  XQueryDv.c \
 		  XSelect.c \
 		  XSetBMap.c \
-		  XSetCPtr.c \
 		  XSetDVal.c \
 		  XSetMMap.c \
 		  XSetMode.c \

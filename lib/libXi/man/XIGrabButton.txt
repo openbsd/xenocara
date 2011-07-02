@@ -156,6 +156,12 @@ DESCRIPTION
    combination. XIGrabButton and XIGrabKeycode have no effect on an
    active grab.
 
+   On success, XIGrabButton and XIGrabKeycode return 0;
+   If one or more modifier combinations could not be grabbed,
+   XIGrabButton and XIGrabKeycode return the number of failed
+   combinations and modifiers_inout contains the failed combinations
+   and their respective status codes.
+
    XIGrabButton and XIGrabKeycode can generate BadClass, BadDevice,
    BadMatch, BadValue, and BadWindow errors.
 

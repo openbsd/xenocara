@@ -133,6 +133,12 @@ DESCRIPTION
    is a conflicting grab for any combination. XIGrabEnter and
    XIGrabFocusin have no effect on an active grab.
 
+   On success, XIGrabEnter and XIGrabFocusIn return 0;
+   If one or more modifier combinations could not be grabbed,
+   XIGrabEnter and XIGrabFocusIn return the number of failed
+   combinations and modifiers_inout contains the failed combinations
+   and their respective status codes.
+
    XIGrabEnter and XIGrabFocusIn can generate BadDevice,
    BadMatch, BadValue, and BadWindow errors.
 

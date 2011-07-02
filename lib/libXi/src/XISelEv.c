@@ -52,7 +52,7 @@ XISelectEvents(Display* dpy, Window win, XIEventMask* masks, int num_masks)
 
     XExtDisplayInfo *info = XInput_find_display(dpy);
     LockDisplay(dpy);
-    if (_XiCheckExtInit(dpy, Dont_Check, info) == -1) {
+    if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1) {
         r = NoSuchExtension;
         goto out;
     }
@@ -108,7 +108,7 @@ XIGetSelectedEvents(Display* dpy, Window win, int *num_masks_return)
 
     *num_masks_return = -1;
     LockDisplay(dpy);
-    if (_XiCheckExtInit(dpy, Dont_Check, info) == -1)
+    if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
         goto out;
 
     GetReq(XIGetSelectedEvents, req);

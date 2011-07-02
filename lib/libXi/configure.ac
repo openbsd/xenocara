@@ -1,10 +1,17 @@
-dnl Process this file with autoconf to create configure.
 
+# Initialize Autoconf
 AC_PREREQ([2.60])
+AC_INIT([libXi], [1.4.2],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXi])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([src/config.h])
 
-AC_INIT(libXi, 1.4.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], libXi)
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
+
+# Initialize libtool
+AC_PROG_LIBTOOL
 
 # Require xorg-macros minimum of 1.10 for DocBook XML documentation
 m4_ifndef([XORG_MACROS_VERSION],
@@ -16,14 +23,9 @@ XORG_WITH_XMLTO(0.0.20)
 XORG_WITH_FOP
 XORG_CHECK_SGML_DOCTOOLS(1.5)
 XORG_WITH_ASCIIDOC(8.4.5)
-AM_CONFIG_HEADER(src/config.h)
+XORG_CHECK_MALLOC_ZERO
 
-# Check for progs
-AC_PROG_CC
-AC_PROG_LIBTOOL
-AC_PROG_SED
-
-# Checks for pkg-config packages
+# Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.2.99.1] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 1.9.99.902])
 
 # Check for xmlto and asciidoc for man page conversion
@@ -44,12 +46,10 @@ AM_CONDITIONAL([INSTALL_MANPAGES],
 	[test -f "$srcdir/man/XAllowDeviceEvents.man" || \
 	  test $have_doctools = yes])
 
-XORG_CHECK_MALLOC_ZERO
-
-AC_OUTPUT([Makefile
-           src/Makefile
-           man/Makefile
-           doc/Makefile
-           specs/Makefile
-           xi.pc])
-
+AC_CONFIG_FILES([Makefile
+		src/Makefile
+		man/Makefile
+		doc/Makefile
+		specs/Makefile
+		xi.pc])
+AC_OUTPUT

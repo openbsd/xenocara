@@ -45,7 +45,7 @@ _XIPassiveGrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
     XExtDisplayInfo *extinfo = XInput_find_display(dpy);
 
     LockDisplay(dpy);
-    if (_XiCheckExtInit(dpy, Dont_Check, extinfo) == -1)
+    if (_XiCheckExtInit(dpy, XInput_2_0, extinfo) == -1)
 	return -1;
 
     GetReq(XIPassiveGrabDevice, req);
@@ -73,7 +73,7 @@ _XIPassiveGrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
 
     free(buff);
 
-    if (_XReply(dpy, (xReply *)&reply, 0, xTrue))
+    if (!_XReply(dpy, (xReply *)&reply, 0, xFalse))
     {
 	UnlockDisplay(dpy);
 	SyncHandle();
@@ -155,7 +155,7 @@ _XIPassiveUngrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
     XExtDisplayInfo *extinfo = XInput_find_display(dpy);
 
     LockDisplay(dpy);
-    if (_XiCheckExtInit(dpy, Dont_Check, extinfo) == -1)
+    if (_XiCheckExtInit(dpy, XInput_2_0, extinfo) == -1)
 	return -1;
 
     GetReq(XIPassiveUngrabDevice, req);

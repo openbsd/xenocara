@@ -1353,6 +1353,7 @@ wireToDeviceEvent(xXIDeviceEvent *in, XGenericEventCookie* cookie)
     cookie->data = ptr_lib = malloc(len);
 
     out = next_block(&ptr_lib, sizeof(XIDeviceEvent));
+    out->display = cookie->display;
     out->type = in->type;
     out->extension = in->extension;
     out->evtype = in->evtype;
@@ -1556,6 +1557,7 @@ wireToDeviceChangedEvent(xXIDeviceChangedEvent *in, XGenericEventCookie *cookie)
     cookie->data = out = malloc(sizeof(XIDeviceChangedEvent) + len);
 
     out->type = in->type;
+    out->display = cookie->display;
     out->extension = in->extension;
     out->evtype = in->evtype;
     out->send_event = ((in->type & 0x80) != 0);
@@ -1585,6 +1587,7 @@ wireToHierarchyChangedEvent(xXIHierarchyEvent *in, XGenericEventCookie *cookie)
     cookie->data = out = malloc(sizeof(XIHierarchyEvent) + in->num_info * sizeof(XIHierarchyInfo));;
 
     out->info           = (XIHierarchyInfo*)&out[1];
+    out->display        = cookie->display;
     out->type           = in->type;
     out->extension      = in->extension;
     out->evtype         = in->evtype;
@@ -1627,12 +1630,14 @@ wireToRawEvent(xXIRawEvent *in, XGenericEventCookie *cookie)
 
     out = next_block(&ptr, sizeof(XIRawEvent));
     out->type           = in->type;
+    out->display        = cookie->display;
     out->extension      = in->extension;
     out->evtype         = in->evtype;
     out->send_event = ((in->type & 0x80) != 0);
     out->time           = in->time;
     out->detail         = in->detail;
     out->deviceid       = in->deviceid;
+    out->sourceid       = 0; /* https://bugs.freedesktop.org/show_bug.cgi?id=34240 */
     out->flags          = in->flags;
 
     out->valuators.mask_len = in->valuators_len * 4;
@@ -1670,6 +1675,7 @@ wireToEnterLeave(xXIEnterEvent *in, XGenericEventCookie *cookie)
     out->buttons.mask = (unsigned char*)&out[1];
 
     out->type           = in->type;
+    out->display        = cookie->display;
     out->extension      = in->extension;
     out->evtype         = in->evtype;
     out->send_event = ((in->type & 0x80) != 0);

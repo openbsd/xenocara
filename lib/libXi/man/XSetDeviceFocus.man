@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: xsetdevicefocus
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 09/07/2010
-.\"    Manual: [FIXME: manual]
-.\"    Source: [FIXME: source]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 03/18/2011
+.\"    Manual: \ \&
+.\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "XSETDEVICEFOCUS" "libmansuffix" "09/07/2010" "[FIXME: source]" "[FIXME: manual]"
+.TH "XSETDEVICEFOCUS" "libmansuffix" "03/18/2011" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -119,7 +128,7 @@ Depending on the focus argument, the following occurs:
   * If focus is None , all device events are discarded until a
     new focus window is set, and the revert_to argument is
     ignored\&.
-  * If focus is a window, it becomes the device\'s focus window\&.
+  * If focus is a window, it becomes the device\*(Aqs focus window\&.
     If a generated device event would normally be reported to
     this window or one of its inferiors, the event is reported
     as usual\&. Otherwise, the event is reported relative to the
@@ -212,7 +221,7 @@ current focus state\&.
 .\}
 .nf
 Not all input extension devices can be focused\&. Attempting to
-query the focus state of a device that can\'t be focused results
+query the focus state of a device that can\*(Aqt be focused results
 in a BadMatch error\&. A device that can be focused returns
 information for input Class Focus when an XOpenDevice request
 is made\&.
@@ -254,7 +263,7 @@ BadValue
        Some numeric value falls outside the range of values
        accepted by the request\&. Unless a specific range is
        specified for an argument, the full range defined by the
-       argument\'s type is accepted\&. Any argument defined as a
+       argument\*(Aqs type is accepted\&. Any argument defined as a
        set of alternatives can generate this error\&.
 .fi
 .if n \{\
