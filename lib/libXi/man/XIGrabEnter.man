@@ -2,12 +2,12 @@
 .\"     Title: xigrabenter
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 03/18/2011
-.\"    Manual: \ \&
-.\"    Source: \ \&
+.\"      Date: 06/07/2011
+.\"    Manual: [FIXME: manual]
+.\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIGRABENTER" "libmansuffix" "03/18/2011" "\ \&" "\ \&"
+.TH "XIGRABENTER" "libmansuffix" "06/07/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,7 +38,7 @@ XIGrabEnter, XIUngrabEnter, XIGrabFocusIn, XIUngrabFocusIn \- grab/ungrab enter 
 .nf
 int XIGrabEnter( Display *display,
                  int deviceid,
-                 Window grab_window
+                 Window grab_window,
                  Cursor cursor,
                  int grab_mode,
                  int paired_device_mode,

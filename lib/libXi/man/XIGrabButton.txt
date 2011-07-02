@@ -107,7 +107,7 @@ DESCRIPTION
    device is the device specified with deviceid. In the future,
    the device is actively grabbed (as for XIGrabDevice, the
    last-grab time is set to the time at which the button or keycode
-   was pressed and the X_XIButtonPress or X_XIKeyPress event is
+   was pressed and the XI_ButtonPress or XI_KeyPress event is
    reported if all of the following conditions are true:
      * The device is not grabbed, and the specified button or
        keycode is logically pressed when the specified modifier

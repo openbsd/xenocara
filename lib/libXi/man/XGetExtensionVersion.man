@@ -2,12 +2,12 @@
 .\"     Title: xgetextensionversion
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 03/18/2011
-.\"    Manual: \ \&
-.\"    Source: \ \&
+.\"      Date: 06/07/2011
+.\"    Manual: [FIXME: manual]
+.\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XGETEXTENSIONVERSION" "libmansuffix" "03/18/2011" "\ \&" "\ \&"
+.TH "XGETEXTENSIONVERSION" "libmansuffix" "06/07/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -57,11 +57,20 @@ name
 .\}
 .nf
 The XGetExtensionVersion request is deprecated and should not
-be used\&. Clients issuing a XgetExtensionVersion request will
-not be able to use MPX features\&. The XGetExtensionVersion
-request queries the version of the input extension, and returns
-an XExtensionVersion structure\&. This structure contains a
-major_version and minor_version number which can be compared
+be used in XI2 applications\&. Clients issuing a XGetExtensionVersion
+request will not be able to use XI2 features\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The XGetExtensionVersion request queries the version of the input
+extension, and returns an XExtensionVersion structure\&. This structure
+contains a major_version and minor_version number which can be compared
 with constants defined in XI\&.h\&. Support for additional protocol
 requests added to the input extension after its initial release
 is indicated by a version number corresponding to the added

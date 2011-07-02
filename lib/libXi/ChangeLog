@@ -1,3 +1,130 @@
+commit 9fd7b9a9652ecebb8eb533c2a30b9fa7bb186b90
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 7 13:32:11 2011 +1000
+
+    libXi 1.4.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7bdaa3635b7eb4bd993c317922d35cad7ed0cab9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 3 15:10:27 2011 +1000
+
+    man: Fix typo in XIChangeProperty
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 938ef832b892fdefe0d5c2bb4510c91bbbccca9f)
+
+commit 63027b24113b349720f1612a4426933c1364ea28
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 3 15:02:35 2011 +1000
+
+    man: Fix wrong event names in XIGrabButton.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 597a6a51721d30c4354d1133bb6da6bd2e12446e)
+
+commit 9affea8cfd3f583647e9c6ea2b5debb97e6904c5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 2 16:21:59 2011 +1000
+
+    Use Data, not Data32 in XIPassiveGrabDevice
+    
+    Data32 takes and iterates over an array of longs, thus skipping every 4
+    bytes on LP64. Here we only have arrays of ints, use the normal Data macro
+    instead.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 9faab2bc0bdd4d98a04e572a7a5201bfcd3bdc70)
+
+commit 641d1e9943208a8b2c2aef843bd17cb22f833b06
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 2 14:17:44 2011 +1000
+
+    man: fix missing comma in XIGrabEnter man page
+    (cherry picked from commit 67441d30df756eb715a262d3439865dedd4055e8)
+
+commit f37dee93cb288f11d286c7bc4222b2f571ccfd65
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 5 09:43:32 2011 +1000
+
+    man: fix typo, layout in XGetExtensionVersion.man
+    
+    Fix a typo and move from MPX to XI2. Add a linebreak to make the
+    depreciation separate from the function description. Changes in the second
+    paragraph are just realignment due to the linebreak.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit aa2432240ad02c54280f2d11c007969c3eb9b79f)
+
+commit 89c7eff322c60d78c814693ecb28fa6c65159d3e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 3 14:34:22 2011 +1000
+
+    XIChangeHierarchy: Return Success early if no actual changes are requested.
+    
+    Do the same for negative num_changes.
+    
+    Found by static analyzer.
+    
+    Reported-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit cc6feecae23b321952921cf927bc965386844c8c)
+
+commit 7c6003718458ede0542233a213e05d67731d3e28
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 3 13:21:02 2011 +1000
+
+    Allocate enough memory for raw events + extra data.
+    
+    Necessary space was calculated, but not actually used to allocate memory. As
+    a result, valuator data would overwrite the allocated memory.
+    
+    ==4166== Invalid write of size 1
+    ==4166==    at 0x4C29F04: memcpy (mc_replace_strmem.c:497)
+    ==4166==    by 0x8F39180: ??? (in /usr/lib/libXi.so.6.1.0)
+    ==4166==    by 0x7433D48: _XCopyEventCookie (in /usr/lib/libX11.so.6.3.0)
+    ==4166==    by 0x7425166: XPeekEvent (in /usr/lib/libX11.so.6.3.0)
+    ==4166==    by 0x49C3E3: process_key (x11_be.c:1065)
+    ==4166==    by 0x49EA5C: event_key_release (x11_be.c:2201)
+    ==4166==    by 0x49DD6E: x11_be_process_events (x11_be.c:1892)
+    ==4166==    by 0x4A38F4: x11_be_main_loop (x11_be.c:4353)
+    ==4166==    by 0x4A39E1: x11_be_thread_main (x11_be.c:4385)
+    ==4166==    by 0x87549C9: start_thread (pthread_create.c:300)
+    ==4166==    by 0x8A516FC: clone (clone.S:112)
+    ==4166==  Address 0x168afe80 is 0 bytes after a block of size 96 alloc'd
+    ==4166==    at 0x4C284A8: malloc (vg_replace_malloc.c:236)
+    ==4166==    by 0x8F390BD: ??? (in /usr/lib/libXi.so.6.1.0)
+    ==4166==    by 0x7433D48: _XCopyEventCookie (in /usr/lib/libX11.so.6.3.0)
+    ==4166==    by 0x7425166: XPeekEvent (in /usr/lib/libX11.so.6.3.0)
+    ==4166==    by 0x49C3E3: process_key (x11_be.c:1065)
+    ==4166==    by 0x49EA5C: event_key_release (x11_be.c:2201)
+    ==4166==    by 0x49DD6E: x11_be_process_events (x11_be.c:1892)
+    ==4166==    by 0x4A38F4: x11_be_main_loop (x11_be.c:4353)
+    ==4166==    by 0x4A39E1: x11_be_thread_main (x11_be.c:4385)
+    ==4166==    by 0x87549C9: start_thread (pthread_create.c:300)
+    
+    Reported-by: Roger Cruz <roger.cruz@virtualcomputer.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit af65475b1f6b7209750220a74aaad9968d54aaf7)
+
+commit 8abdde71b83ff37b8500282e4856c323be508f67
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Apr 1 22:49:09 2011 +0200
+
+    Fix XISelectEvents on 64 bits, strict alignement architectures.
+    
+    Use Data() to send the struct xXIEventMask on the wire instead of
+    Data32() which expects a pointer to a 64bits value on LP64
+    architectures.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 18177afd4fb3934d0a9083c599fb96701eec2ad9)
+
 commit 32236a7779f721d252d633d06ade306f246421a3
 Author: Jeremy Huddleston <jeremyhu@apple.com>
 Date:   Fri Mar 18 16:30:13 2011 -0700

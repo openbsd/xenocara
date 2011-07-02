@@ -30,7 +30,8 @@ DESCRIPTION
    XIChangeHierarchy modifies the device hierarchy by creating or
    removing master devices or changing the attachment of slave
    devices. If num_changes is non-zero, changes is an array of
-   XIAnyHierarchyChangeInfo structures.
+   XIAnyHierarchyChangeInfo structures. If num_changes is equal or less than
+   zero, XIChangeHierarchy does nothing.
 
    XIChangeHierarchy processes changes in order, effective
    immediately. If an error occurs, processing is aborted and the

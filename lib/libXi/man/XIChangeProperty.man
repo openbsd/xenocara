@@ -2,12 +2,12 @@
 .\"     Title: xichangeproperty
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 03/18/2011
-.\"    Manual: \ \&
-.\"    Source: \ \&
+.\"      Date: 06/07/2011
+.\"    Manual: [FIXME: manual]
+.\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XICHANGEPROPERTY" "libmansuffix" "03/18/2011" "\ \&" "\ \&"
+.TH "XICHANGEPROPERTY" "libmansuffix" "06/07/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -239,7 +239,7 @@ If mode is PropModeReplace, XIChangeProperty discards the previous property valu
 .sp -1
 .IP \(bu 2.3
 .\}
-If mode is PropModePrepend or PropModeAppend, XChangeProperty inserts the specified data before the beginning of the existing data or onto the end of the existing data, respectively\&. The type and format must match the existing property value, or a BadMatch error results\&. If the property is undefined, it is treated as defined with the correct type and format with zero\-length data\&.
+If mode is PropModePrepend or PropModeAppend, XIChangeProperty inserts the specified data before the beginning of the existing data or onto the end of the existing data, respectively\&. The type and format must match the existing property value, or a BadMatch error results\&. If the property is undefined, it is treated as defined with the correct type and format with zero\-length data\&.
 .RE
 .sp
 If the specified format is 8, the property data must be a char array\&. If the specified format is 16, the property data must be a uint16_t array\&. If the specified format is 32, the property data must be a uint32_t array\&.

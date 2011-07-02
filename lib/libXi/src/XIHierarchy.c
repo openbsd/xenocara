@@ -52,6 +52,9 @@ XIChangeHierarchy(Display* dpy,
     if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
 	return (NoSuchExtension);
 
+    if (num_changes <= 0)
+        return Success;
+
     GetReq(XIChangeHierarchy, req);
     req->reqType = info->codes->major_opcode;
     req->ReqType = X_XIChangeHierarchy;

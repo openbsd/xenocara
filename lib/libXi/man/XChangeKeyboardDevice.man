@@ -2,12 +2,12 @@
 .\"     Title: xchangekeyboarddevice
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 03/18/2011
-.\"    Manual: \ \&
-.\"    Source: \ \&
+.\"      Date: 06/02/2011
+.\"    Manual: [FIXME: manual]
+.\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XCHANGEKEYBOARDDEVIC" "libmansuffix" "03/18/2011" "\ \&" "\ \&"
+.TH "XCHANGEKEYBOARDDEVIC" "libmansuffix" "06/02/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------

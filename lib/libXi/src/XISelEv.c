@@ -83,7 +83,7 @@ XISelectEvents(Display* dpy, Window win, XIEventMask* masks, int num_masks)
          * and they need to be padded with 0 */
         buff = calloc(1, mask.mask_len * 4);
         memcpy(buff, current->mask, current->mask_len);
-        Data(dpy, &mask, sizeof(xXIEventMask));
+        Data(dpy, (char*)&mask, sizeof(xXIEventMask));
         Data(dpy, buff, mask.mask_len * 4);
         free(buff);
     }

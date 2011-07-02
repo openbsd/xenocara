@@ -14,7 +14,7 @@ SYNOPSIS
 
    int XIGrabEnter( Display *display,
                     int deviceid,
-                    Window grab_window
+                    Window grab_window,
                     Cursor cursor,
                     int grab_mode,
                     int paired_device_mode,

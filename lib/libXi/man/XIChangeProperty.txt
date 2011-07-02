@@ -168,7 +168,7 @@ device.  XIChangeProperty performs the following:
 - If mode is PropModeReplace, XIChangeProperty discards the previous
   property value and stores the new data.
 
-- If mode is PropModePrepend or PropModeAppend, XChangeProperty
+- If mode is PropModePrepend or PropModeAppend, XIChangeProperty
   inserts the specified data before the beginning of the existing
   data or onto the end of the existing data, respectively.  The type
   and format must match the existing property value, or a BadMatch

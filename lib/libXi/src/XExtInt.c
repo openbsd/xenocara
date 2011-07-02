@@ -1259,7 +1259,7 @@ copyRawEvent(XGenericEventCookie *cookie_in,
     len = sizeof(XIRawEvent) + in->valuators.mask_len;
     len += bits * sizeof(double) * 2;
 
-    ptr = cookie_out->data = malloc(sizeof(XIRawEvent));
+    ptr = cookie_out->data = malloc(len);
     if (!ptr)
         return False;
 
