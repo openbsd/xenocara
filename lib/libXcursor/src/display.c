@@ -35,6 +35,13 @@ _XcursorFreeDisplayInfo (XcursorDisplayInfo *info)
     if (info->theme_from_config)
 	free (info->theme_from_config);
 
+    while (info->fonts)
+    {
+      XcursorFontInfo *fi = info->fonts;
+      info->fonts = fi->next;
+      free (fi);
+    }
+
     free (info);
 }
 

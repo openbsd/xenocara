@@ -1,3 +1,123 @@
+commit d79ddc01e4b247ae95af3581b93aef2b93e76888
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 29 21:41:09 2011 -0700
+
+    libXcursor 1.1.12
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4ce23fcd978ed389ea30315c0e02629a31bda265
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 22 12:55:31 2011 -0700
+
+    Mark bitmasks as unsigned ints
+    
+    Clears Sun compiler warnings from shifting 8 bits by 24 bits:
+    "cursor.c", line 215: warning: integer overflow detected: op "<<"
+    "cursor.c", line 280: warning: integer overflow detected: op "<<"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 047993c76a677ca12a2b575990b99e3ddbc0dd58
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat May 7 10:16:18 2011 -0700
+
+    Correct error handling in _XcursorAverageColor
+    
+    Previously it would either div-zero or get stuck in a loop until int overflow
+    if called with a bad value.
+    
+    cursor.c:214:32: warning: Division by zero
+        return (0xff << 24) | ((red/npixels) << 16) | ((green/npixels) << 8) | (blue/npixels);
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit bee68e54e5c3a4b9f46c81366a720531e3e07a82
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Fri Apr 1 12:16:23 2011 +0100
+
+    Free the FontInfo structure after loading the cursor from it.
+    
+    References: https://bugs.freedesktop.org/show_bug.cgi?id=2731
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit f49e7e1608f2dac140f60bcae21d5c37f79fc41b
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Fri Apr 1 12:15:46 2011 +0100
+
+    Free the partial header after failing to open the cursor.
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 073eb2c56f4794275eee40a825dbfe1232bb2690
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Fri Apr 1 12:14:51 2011 +0100
+
+    Free list on shutdown.
+    
+    We freed the parent structure without freeing the list contained within,
+    making valgrind unhappy.
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit de50317ec4e0e8da7de84e85d1f7a6d2e184d58b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 17:08:19 2011 -0500
+
+    config: perform XCURSORPATH formatting in man/Makefile.am
+    
+    We can skip the extra step of using XCURSORPATH_LIST in configure.ac.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a929c3621b9da8e56ce1223afd3e487fc488fa47
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:41 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 96c5877fd7ebc59569f140d9e2cb30fdb8371ef1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4f7a749fcb7a8e93d40a7621fa1c159e003b2f5c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:07:07 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c38adc6bf116146fa1e291b9f4deed45497e5c2e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:14 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 731e84d79e83b59d022d0f453b245696b4d2750f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Oct 27 22:48:19 2010 -0700

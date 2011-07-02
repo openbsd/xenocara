@@ -45,7 +45,9 @@ CLEANFILES = $(libman_DATA)
 SUFFIXES = .$(LIB_MAN_SUFFIX) .man
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-MAN_SUBSTS += -e 's|__XCURSORPATH__|$(XCURSORPATH_LIST)|g'
+# 's/:/, /g' will add comma and a space to help path formatting
+MAN_SUBSTS += -e 's|__XCURSORPATH__|$(XCURSORPATH)|g' \
+	      -e '\|$(XCURSORPATH)| s/:/, /g'
 
 .man.$(LIB_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

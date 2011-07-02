@@ -64,6 +64,7 @@ _XcursorFontIsCursor (Display *dpy, Font font)
 		ret = (fs->properties[n].card32 == cursor);
 		break;
 	    }
+	XFreeFontInfo (NULL, fs, 1);
     }
     fi = malloc (sizeof (XcursorFontInfo));
     if (fi)

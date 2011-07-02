@@ -713,7 +713,10 @@ XcursorXcFileLoadAllImages (XcursorFile *file)
     }
     images = XcursorImagesCreate (nimage);
     if (!images)
+    {
+	_XcursorFileHeaderDestroy (fileHeader);
 	return NULL;
+    }
     for (toc = 0; toc < fileHeader->ntoc; toc++)
     {
 	switch (fileHeader->tocs[toc].type) {
