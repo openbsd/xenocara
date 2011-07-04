@@ -1047,8 +1047,11 @@ transformAbsolute(DeviceIntPtr dev, int first, int num, int *valuators)
 
     pixman_f_transform_point(&dev->transform, &p);
 
-    valuators[0] = lround(p.v[0]);
-    valuators[1] = lround(p.v[1]);
+    if (num >= 1 && first == 0)
+	    *(valuators + 0) = lround(p.v[0]);
+
+    if (first <= 1 && num >= (2 - first))
+        *(valuators + 1 - first) = lround(p.v[1]);
 }
 
 /**
