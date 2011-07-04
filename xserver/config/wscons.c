@@ -71,7 +71,7 @@ struct nameint kbdopt[] = {
 	{ 0 }
 };
 
-struct nameint kbdtype[] = {
+struct nameint kbdmodel[] = {
 	{ WSKBD_TYPE_ZAURUS,	"zaurus" },
 	{ 0 }
 };
@@ -154,11 +154,11 @@ wscons_add_keyboard(void)
 			add_option(&options, "xkb_options", kbdopt[i].name);
 			break;
 		}
-	for (i = 0; kbdtype[i].val; i++)
-		if (type == kbdtype[i].val) {
-			LogMessageVerb(X_INFO, 3, "wskbd: using type %s\n",
-			    kbdtype[i].name);
-			add_option(&options, "xkb_type", kbdtype[i].name);
+	for (i = 0; kbdmodel[i].val; i++)
+		if (type == kbdmodel[i].val) {
+			LogMessageVerb(X_INFO, 3, "wskbd: using model %s\n",
+			    kbdmodel[i].name);
+			add_option(&options, "xkb_model", kbdmodel[i].name);
 			break;
 		}
 
