@@ -2989,6 +2989,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/capslock
 ./usr/X11R6/share/X11/xkb/symbols/cd
 ./usr/X11R6/share/X11/xkb/symbols/ch
+./usr/X11R6/share/X11/xkb/symbols/cm
 ./usr/X11R6/share/X11/xkb/symbols/cn
 ./usr/X11R6/share/X11/xkb/symbols/compose
 ./usr/X11R6/share/X11/xkb/symbols/ctrl
@@ -3439,6 +3440,8 @@
 ./usr/X11R6/share/doc/randrproto/randrproto.txt
 ./usr/X11R6/share/doc/renderproto
 ./usr/X11R6/share/doc/renderproto/renderproto.txt
+./usr/X11R6/share/doc/resproto
+./usr/X11R6/share/doc/resproto/resproto.txt
 ./usr/X11R6/share/doc/xextproto
 ./usr/X11R6/share/doc/xextproto/geproto.txt
 ./usr/X11R6/share/doc/xorg-docs
