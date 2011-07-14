@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.85 2011/06/24 06:06:24 okan Exp $
+ * $OpenBSD: client.c,v 1.86 2011/07/14 11:39:53 okan Exp $
  */
 
 #include <sys/param.h>
@@ -489,7 +489,7 @@ client_draw_border(struct client_ctx *cc)
 			pixel = sc->color[CWM_COLOR_BORDER_UNGROUP].pixel;
 			break;
 		default:
-			pixel = sc->color[CWM_COLOR_BORDOR_ACTIVE].pixel;
+			pixel = sc->color[CWM_COLOR_BORDER_ACTIVE].pixel;
 			break;
 		}
 	else
