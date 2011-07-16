@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.17 2011/06/28 08:18:49 jasper Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.18 2011/07/16 17:21:41 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -68,7 +68,7 @@
 #define FONT_SIZE		14
 
 #define Background		"white"
-#define TouchCross	        "black"
+#define TouchCross		"black"
 #define PromptText		"black"
 #define Error			"red"
 
@@ -220,7 +220,7 @@ draw_point(int x, int y, int width, int size, XftColor *color)
 void
 draw_text(char **message, XftColor *color)
 {
-	int      	len;
+	int	 	len;
 	int             i, x, y;
 	XGlyphInfo	extents;
 
@@ -487,7 +487,7 @@ get_xrandr_config(Display *dpy, Window root, char *name,
 	for (o = 0; o < res->noutput; o++) {
 		output_info = XRRGetOutputInfo (dpy, res, res->outputs[o]);
 		if (!output_info) {
-			fprintf(stderr, 
+			fprintf(stderr,
 			    "could not get output 0x%lx information\n",
 			    res->outputs[o]);
 			exit(2);
@@ -498,7 +498,7 @@ get_xrandr_config(Display *dpy, Window root, char *name,
 			if (!crtc_info) {
 				fprintf(stderr,
 				    "%s: could not get crtc 0x%lx "
-				    "information\n", __progname, 
+				    "information\n", __progname,
 				    output_info->crtc);
 				exit(2);
 			}
@@ -589,25 +589,25 @@ main(int argc, char *argv[], char *env[])
 	width = DisplayWidth(display, screen);
 	height = DisplayHeight(display, screen);
 
-        if (XRRQueryExtension(display, &event, &error)) {
-                int major, minor;
+	if (XRRQueryExtension(display, &event, &error)) {
+		int major, minor;
 
-                if (XRRQueryVersion(display, &major, &minor) != True) {
-                        fprintf(stderr, "Error querying XRandR version");
-                } else {
-                        printf("XRandR extension version %d.%d present\n",
-                            major, minor);
-                        has_xrandr = True;
-                        if (major > 1 || (major == 1 && minor >=2))
-                                has_xrandr_1_2 = True;
-                        if (major > 1 || (major == 1 && minor >=3))
-                                has_xrandr_1_3 = True;
-                }
-        }
-        
+		if (XRRQueryVersion(display, &major, &minor) != True) {
+			fprintf(stderr, "Error querying XRandR version");
+		} else {
+			printf("XRandR extension version %d.%d present\n",
+			    major, minor);
+			has_xrandr = True;
+			if (major > 1 || (major == 1 && minor >=2))
+				has_xrandr_1_2 = True;
+			if (major > 1 || (major == 1 && minor >=3))
+				has_xrandr_1_3 = True;
+		}
+	}
+
 	if (output_name != NULL) {
 		if (has_xrandr_1_2) {
-			get_xrandr_config(display, root, output_name, 
+			get_xrandr_config(display, root, output_name,
 			    &xpos, &ypos, &width, &height);
 		} else {
 			fprintf(stderr, "%s: can not specify an output "
