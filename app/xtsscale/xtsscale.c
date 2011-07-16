@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.19 2011/07/16 17:27:52 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.20 2011/07/16 17:32:24 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009,2011 Matthieu Herrb <matthieu@herrb.eu>
@@ -267,6 +267,34 @@ create_empty_cursor(void)
 	return mcyursor;
 }
 
+int
+check_device(XDeviceInfo *info)
+{
+	XDevice *device;
+	Atom type;
+	int format;
+	unsigned long nitems, nbytes;
+	unsigned char *retval;
+
+	if (verbose)
+		printf("Checking device %lu: %s...", info->id, info->name);
+	device = XOpenDevice(display, info->id);
+	XGetDeviceProperty(display,
+			   device, prop_calibration,
+			   0, 4, False,
+			   XA_INTEGER, &type, &format,
+			   &nitems, &nbytes, &retval);
+	XCloseDevice(display, device);
+	if (nitems != 4) {
+		if (verbose)
+			printf("can't be calibrated\n");
+		return False;
+	}
+	if (verbose)
+		printf("can be calibrated\n");
+	return True;
+}
+
 XDeviceInfo*
 find_device_info(char *name)
 {
@@ -307,8 +335,10 @@ find_device_info(char *name)
 		if (devices[i].use != IsXExtensionPointer)
 			continue;
 		if (name == NULL) {
-			found = &devices[i];
-			num_found++;
+			if (check_device(&devices[i])) {
+				found = &devices[i];
+				num_found++;
+			}
 			continue;
 		}
 		if ((!is_id && strcmp(devices[i].name, name) == 0) ||
@@ -441,6 +471,7 @@ uncalibrate(XDevice *device)
 	    &nbytes, &retval);
 
 	if (type != XA_INTEGER) {
+		fprintf(stderr, "type != XA_INTEGER %lu\n", type);
 		fprintf(stderr, "Device property \"%s\": invalid type %s\n",
 		    WS_PROP_CALIBRATION, XGetAtomName(display, type));
 		return -1;
@@ -634,13 +665,6 @@ main(int argc, char *argv[], char *env[])
 		exit(1);
 	}
 	XFree(version);
-	info = find_device_info(device_name);
-	if (info == NULL) {
-		fprintf(stderr, "Unable to find the %s device\n",
-			device_name ? device_name : "default");
-		exit(1);
-	}
-
 	prop_calibration = XInternAtom(display, WS_PROP_CALIBRATION, True);
 	if (prop_calibration == None) {
 		fprintf(stderr, "Unable to find the \"%s\" device property.\n"
@@ -654,6 +678,13 @@ main(int argc, char *argv[], char *env[])
 		    WS_PROP_SWAP_AXES);
 		exit(1);
 	}
+	info = find_device_info(device_name);
+	if (info == NULL) {
+		fprintf(stderr, "Unable to find the %s device\n",
+			device_name ? device_name : "default");
+		exit(1);
+	}
+
 
 	/* setup window attributes */
 	xswa.override_redirect = True;
@@ -676,6 +707,8 @@ main(int argc, char *argv[], char *env[])
 
 	XClearWindow(display, win);
 
+	if (verbose)
+		printf("Calibrating %s\n", info->name);
 	device = XOpenDevice(display, info->id);
 	if (!device) {
 		fprintf(stderr, "Unable to open the X input device \"%s\"\n",
