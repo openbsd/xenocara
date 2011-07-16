@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.12 2011/07/16 17:21:41 matthieu Exp $
+.\" $OpenBSD: xtsscale.1,v 1.13 2011/07/16 17:27:52 matthieu Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\" Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -33,6 +33,7 @@
 .Sh SYNOPSIS
 .Nm xtsscale
 .Bk -words
+.Op Fl c
 .Op Fl D Ar display
 .Op Fl d Ar device
 .Op Fl o Ar output
@@ -45,6 +46,9 @@ will make the pointer act at the indicated location on the screen.
 .Pp
 The following options can be used:
 .Bl -tag -width Ds
+.It Fl c
+keep the X cursor visible during calibration.
+Useful for indirect absolute devices like tablets.
 .It Fl D Ar display
 specify the X11 display to use.
 .It Fl d Ar device

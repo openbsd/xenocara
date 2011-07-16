@@ -1,7 +1,7 @@
-/*      $OpenBSD: xtsscale.c,v 1.18 2011/07/16 17:21:41 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.19 2011/07/16 17:27:52 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
- * Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
+ * Copyright (c) 2009,2011 Matthieu Herrb <matthieu@herrb.eu>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -524,7 +524,8 @@ get_xrandr_config(Display *dpy, Window root, char *name,
 void __dead
 usage(void)
 {
-	fprintf(stderr, "usage: xtsscale [-D display][-d device][-o output]\n");
+	fprintf(stderr, "usage: xtsscale [-c][-D display]"
+		"[-d device][-o output]\n");
 	exit(2);
 }
 
@@ -542,15 +543,19 @@ main(int argc, char *argv[], char *env[])
 	XDeviceInfo	*info;
 	XDevice		*device;
 	long		 calib_data[4];
+	unsigned long	 mask;
 	unsigned char	 swap;
-	int ch;
+	int 		 keep_cursor = 0, ch;
 
 	/* Crosshair placement */
 	int		cpx[] = { 0, 0, 1, 1, 1 };
 	int		cpy[] = { 0, 1, 0, 0, 1 };
 
-	while ((ch = getopt(argc, argv, "D:d:o:v")) != -1) {
+	while ((ch = getopt(argc, argv, "cD:d:o:v")) != -1) {
 		switch (ch) {
+		case 'c':
+			keep_cursor++;
+			break;
 		case 'D':
 			display_name = optarg;
 			break;
@@ -654,13 +659,15 @@ main(int argc, char *argv[], char *env[])
 	xswa.override_redirect = True;
 	xswa.background_pixel = BlackPixel(display, screen);
 	xswa.event_mask = ExposureMask | KeyPressMask;
-	xswa.cursor = create_empty_cursor();
-
+	mask = CWOverrideRedirect | CWBackPixel | CWEventMask;
+	if (!keep_cursor) {
+		xswa.cursor = create_empty_cursor();
+		mask |= CWCursor;
+	}
 	win = XCreateWindow(display, RootWindow(display, screen),
 			    xpos, ypos, width, height, 0,
 			    CopyFromParent, InputOutput, CopyFromParent,
-			    CWOverrideRedirect | CWBackPixel | CWEventMask |
-			    CWCursor, &xswa);
+			    mask, &xswa);
 	render_init();
 	XMapWindow(display, win);
 	XGrabKeyboard(display, win, False, GrabModeAsync, GrabModeAsync,
