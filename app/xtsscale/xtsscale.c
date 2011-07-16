@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.20 2011/07/16 17:32:24 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.21 2011/07/16 17:54:07 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009,2011 Matthieu Herrb <matthieu@herrb.eu>
@@ -471,7 +471,6 @@ uncalibrate(XDevice *device)
 	    &nbytes, &retval);
 
 	if (type != XA_INTEGER) {
-		fprintf(stderr, "type != XA_INTEGER %lu\n", type);
 		fprintf(stderr, "Device property \"%s\": invalid type %s\n",
 		    WS_PROP_CALIBRATION, XGetAtomName(display, type));
 		return -1;
