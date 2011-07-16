@@ -1,5 +1,5 @@
 /*
- * Copyright © 2005-2009 Matthieu Herrb
+ * Copyright © 2005-2009,2011 Matthieu Herrb
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.32 2011/04/24 15:55:12 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.33 2011/07/16 17:51:30 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -36,28 +36,11 @@
 #include <mipointer.h>
 #include <extinit.h>
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 10
-#undef xalloc
-#undef xcalloc
-
-#define xcalloc calloc
-#define xalloc malloc
-#define Xcalloc calloc
-#define Xalloc malloc
-#define Xfree free
-#endif
-
 #include "ws.h"
 
-#ifdef HAVE_PROPERTIES
 #include <X11/Xatom.h>
 #include "ws-properties.h"
-#endif
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-#include <X11/Xatom.h>
 #include <xserver-properties.h>
-#endif
 
 
 static MODULESETUPPROTO(SetupProc);
@@ -79,13 +62,11 @@ static Bool wsOpen(InputInfoPtr);
 static void wsClose(InputInfoPtr);
 static void wsControlProc(DeviceIntPtr , PtrCtrl *);
 
-#ifdef HAVE_PROPERTIES
 static void wsInitProperty(DeviceIntPtr);
 static int wsSetProperty(DeviceIntPtr, Atom, XIPropertyValuePtr, BOOL);
 
 static Atom prop_calibration = 0;
 static Atom prop_swap = 0;
-#endif
 
 #ifdef DEBUG
 int ws_debug_level = 0;
@@ -153,7 +134,7 @@ wsPreInit12(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	char *s;
 	int rc;
 
-	priv = (WSDevicePtr)xcalloc(1, sizeof(WSDeviceRec));
+	priv = (WSDevicePtr)calloc(1, sizeof(WSDeviceRec));
 	if (priv == NULL) {
 		rc = BadAlloc;
 		goto fail;
@@ -357,7 +338,7 @@ wsPreInit12(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
 fail:
 	if (priv != NULL) {
-		xfree(priv);
+		free(priv);
 		pInfo->private = NULL;
 	}
 	return rc;
@@ -425,25 +406,19 @@ wsDeviceInit(DeviceIntPtr pWS)
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	unsigned char map[NBUTTONS + 1];
 	int i, xmin, xmax, ymin, ymax;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	Atom btn_labels[NBUTTONS] = {0};
 	Atom axes_labels[NAXES] = {0};
-#endif
 
 	DBG(1, ErrorF("WS DEVICE_INIT\n"));
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	btn_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
 	btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
 	btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
-#endif
 	for (i = 0; i < NBUTTONS; i++)
 		map[i + 1] = i + 1;
 	if (!InitButtonClassDeviceStruct(pWS,
 		min(priv->buttons, NBUTTONS),
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 		btn_labels,
-#endif
 		map))
 		return !Success;
 
@@ -468,7 +443,6 @@ wsDeviceInit(DeviceIntPtr pWS)
 		xmax = ymax;
 		ymax = tmp;
 	}
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	if ((priv->type == WSMOUSE_TYPE_TPANEL)) {
 		axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
 		axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
@@ -476,15 +450,9 @@ wsDeviceInit(DeviceIntPtr pWS)
 		axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);
 		axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
 	}
-#endif
 	if (!InitValuatorClassDeviceStruct(pWS,
 		NAXES,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 		axes_labels,
-#endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-		xf86GetMotionEvents,
-#endif
 		GetMotionHistorySize(),
 		priv->type == WSMOUSE_TYPE_TPANEL ?
 		Absolute : Relative))
@@ -493,9 +461,7 @@ wsDeviceInit(DeviceIntPtr pWS)
 		return !Success;
 
 	xf86InitValuatorAxisStruct(pWS, 0,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	    axes_labels[0],
-#endif
 	    xmin, xmax, 1, 0, 1
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
 	    , priv->type == WSMOUSE_TYPE_TPANEL  ? Absolute : Relative
@@ -504,9 +470,7 @@ wsDeviceInit(DeviceIntPtr pWS)
 	xf86InitValuatorDefaults(pWS, 0);
 
 	xf86InitValuatorAxisStruct(pWS, 1,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 	    axes_labels[1],
-#endif
 	    ymin, ymax, 1, 0, 1
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
 	    , priv->type == WSMOUSE_TYPE_TPANEL ? Absolute : Relative
@@ -522,11 +486,9 @@ wsDeviceInit(DeviceIntPtr pWS)
 	if (wsOpen(pInfo) != Success) {
 		return !Success;
 	}
-#ifdef HAVE_PROPERTIES
 	wsInitProperty(pWS);
 	XIRegisterPropertyHandler(pWS, wsSetProperty, NULL, NULL);
 	wsmbEmuInitProperty(pWS);
-#endif
 	return Success;
 }
 
@@ -667,25 +629,19 @@ wsReadInput(InputInfoPtr pInfo)
 			if (priv->inv_y)
 				ay = priv->max_y - ay + priv->min_y;
 			break;
-#ifdef WSCONS_EVENT_MOUSE_DELTA_Z
 		case WSCONS_EVENT_MOUSE_DELTA_Z:
 			DBG(4, ErrorF("Relative Z %d\n", event->value));
 			dz = event->value;
 			break;
-#endif
-#ifdef WSCONS_EVENT_MOUSE_ABSOLUTE_Z
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
 			/* ignore those */
 			++event;
 			continue;
 			break;
-#endif
-#ifdef WSCONS_EVENT_MOUSE_DELTA_W
 		case WSCONS_EVENT_MOUSE_DELTA_W:
 			DBG(4, ErrorF("Relative W %d\n", event->value));
 			dw = event->value;
 			break;
-#endif
 		default:
 			xf86Msg(X_WARNING, "%s: bad wsmouse event type=%d\n",
 			    pInfo->name, event->type);
@@ -767,7 +723,6 @@ wsSendButtons(InputInfoPtr pInfo, int buttons)
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int button, mask;
 
-
 	for (button = 1; button < NBUTTONS; button++) {
 		mask = 1 << (button - 1);
 		if ((mask & priv->lastButtons) != (mask & buttons)) {
@@ -840,7 +795,6 @@ wsControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 	priv->threshold = ctrl->threshold;
 }
 
-#ifdef HAVE_PROPERTIES
 static void
 wsInitProperty(DeviceIntPtr device)
 {
@@ -956,4 +910,3 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 	}
 	return Success;
 }
-#endif

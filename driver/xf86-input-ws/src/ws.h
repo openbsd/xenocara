@@ -16,9 +16,6 @@
 
 #include <dev/wscons/wsconsio.h>
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
-#define HAVE_PROPERTIES 1
-#endif
 
 /* #undef DEBUG */
 #define DEBUG
