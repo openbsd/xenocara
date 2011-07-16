@@ -1,6 +1,6 @@
-.\"	$OpenBSD: ws.man,v 1.7 2011/04/24 15:55:12 matthieu Exp $
+.\"	$OpenBSD: ws.man,v 1.8 2011/07/16 17:50:41 matthieu Exp $
 .\"
-.\" Copyright (c) 2005,2009 Matthieu Herrb
+.\" Copyright (c) 2005,2009,2011 Matthieu Herrb
 .\"
 .\" Permission to use, copy, modify, and distribute this software for any
 .\" purpose with or without fee is hereby granted, provided that the above
@@ -17,8 +17,8 @@
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH WS __drivermansuffix__ __vendorversion__
-.SH NAME 
-WS \- wscons pointer input driver for *BSD
+.SH NAME
+WS \- wscons pointer input driver for __xservername__ on *BSD
 .SH SYNOPSIS
 .nf
 .B "Section \*qInputDevice\*q"
@@ -46,13 +46,12 @@ is an XFree86/X.Org input driver for pointer devices (mouse, tablet,
 touchscreen,...) driven by the wscons console driver on
 OpenBSD.
 .SH "SUPPORTED HARDWARE"
-This driver supports zts(4), the touchscreen of Zaurus machines, and
-uts(4), USB touchscreens.
+This driver supports zts(4), the touchscreen of Zaurus machines,
+uts(4), USB touchscreens and ums(4), generic USB mouse devices.
 .SH "CONFIGURATION DETAILS"
-Please refer to xorg.conf(__filemansuffix__) for general configuration
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.
 This section only covers configuration details specific to this driver.
-.PP
 .TP 4
 .BI "Option \*qButtons\*q \*q" integer \*q
 Specifies the number of mouse buttons.
@@ -92,8 +91,8 @@ the kernel by the zts(4) driver and the ztsscale(8) utility.
 .TP 4
 .BI "Option \*qRaw\*q \*q" boolean \*q
 This option selects the raw (uncalibrated) mode for tablet devices.
-It defaults to True. 
-When using raw mode, if no coordinate space is specified by the 
+It defaults to True.
+When using raw mode, if no coordinate space is specified by the
 above options, the coordinate space will be read from the kernel calibration
 data.
 .TP 4
@@ -130,7 +129,7 @@ The following properties are provided by the
 driver.
 .TP 7
 .BI "WS Pointer Middle Button Emulation"
-1 boolean value (8 bit, 0 or 1) 
+1 boolean value (8 bit, 0 or 1)
 .TP 7
 .BI "WS Pointer Middle Button Timeout"
 1 16-bit positive value (unit: milliseconds)
@@ -138,7 +137,7 @@ driver.
 .BI "WS Pointer Axis Calibration"
 4 32 bits values, in the order min-x, max-x, min-y, max-y.
 This property is present only for devices with absolute coordinates (ie
-tablets and touchscreens). 
+tablets and touchscreens).
 .TP 7
 .BI "WS Pointer Axes Swap"
 1 boolean value (8 bits, 0 or 1). 1 swaps x/y axes. This property
@@ -146,4 +145,5 @@ is present only for devices with absolute coordinates (ie
 tablets and touchscreens).
 
 .SH "SEE ALSO"
-Xorg(1), xinput(1), xorg.conf(__filemansuffix__), uts(4), zts(4), sysctl(8), xtsscale(8), ztsscale(8).
+__xservername__(1), xinput(1), __xconfigfile__(__filemansuffix__),
+ums(4), uts(4), zts(4), sysctl(8), xtsscale(8), ztsscale(8).
