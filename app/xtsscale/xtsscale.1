@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.13 2011/07/16 17:27:52 matthieu Exp $
+.\" $OpenBSD: xtsscale.1,v 1.14 2011/07/16 17:30:17 matthieu Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\" Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -75,8 +75,8 @@ to figure out the names of the outputs.
 .It Fl v
 specifies that
 .Nm
-will be verbose, outputting the raw coordinate values produced,
-mostly for debugging purposes.
+will be verbose, outputting various information, including the
+raw coordinate values produced, mostly for debugging purposes.
 .El
 .Pp
 When good deviations are calculated from the selections made at these
@@ -96,7 +96,7 @@ In this case the current screen calibration data will not be modified.
 .Sh NOTES
 To use
 .Nm
-the mode of the raw mode of the input device should be set in the
+the mode of the input device should be set to raw in the
 .Pa /etc/X11/xorg.conf
 X configuration file. See
 .Xr ws 4
