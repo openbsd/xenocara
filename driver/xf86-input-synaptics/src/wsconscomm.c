@@ -35,6 +35,7 @@ extern int priv_open_device(const char *);
 #endif
 
 #define DEFAULT_WSMOUSE0_DEV		"/dev/wsmouse0"
+#define NEVENTS				64
 
 static const char *synaptics_devs[] = {
     DEFAULT_WSMOUSE0_DEV,
@@ -90,6 +91,8 @@ WSConsDeviceOffHook(InputInfoPtr pInfo)
 static Bool
 WSConsQueryHardware(InputInfoPtr pInfo)
 {
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct CommData *comm = &priv->comm;
     int wsmouse_type;
 
     if (ioctl(pInfo->fd, WSMOUSEIO_GTYPE, &wsmouse_type) == -1) {
@@ -97,10 +100,16 @@ WSConsQueryHardware(InputInfoPtr pInfo)
         return FALSE;
     }
 
-    if (wsmouse_type == WSMOUSE_TYPE_SYNAPTICS)
-        return TRUE;
+    if (wsmouse_type != WSMOUSE_TYPE_SYNAPTICS)
+        return FALSE;
 
-    return FALSE;
+    if (comm->buffer)
+        XisbFree(comm->buffer);
+    comm->buffer = XisbNew(pInfo->fd, sizeof(struct wscons_event) * NEVENTS);
+    if (comm->buffer == NULL)
+        return FALSE;
+
+    return TRUE;
 }
 
 static Bool
