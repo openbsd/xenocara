@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile,v 1.19 2010/12/19 16:08:12 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.20 2011/07/18 20:29:56 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
-FT_VERSION_INFO= 12.2.6 # Get it from builds/unix/configure.ac
+FT_VERSION_INFO= 13.0.7 # Get it from builds/unix/configure.ac
 
 .ifmake includes
 SUBDIR=	include
@@ -58,12 +58,14 @@ freetype2.pc: freetype2.in Makefile
 		-e s%@ft_version@%${FT_VERSION_INFO}% \
 		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
 		-e s%@LIBZ@%-lz% -e s%@FT2_EXTRA_LIBS@%% \
+		-e s%@LIBBZ2@%% \
 		< ${.CURDIR}/builds/unix/freetype2.in > freetype2.pc
 
 freetype-config: freetype-config.in
 	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \
 		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
 		-e s%@LIBZ@%-lz% -e s%@FT2_EXTRA_LIBS@%% \
+		-e s%@LIBBZ2@%% \
 		-e s%@enable_shared@%yes% \
 		-e 's%@hardcode_libdir_flag_spec@%%' \
 		-e 's%@ft_version@%${FT_VERSION_INFO}%' -e 's%@wl@%%' \
