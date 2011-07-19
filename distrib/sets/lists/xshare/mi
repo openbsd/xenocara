@@ -642,7 +642,6 @@
 ./usr/X11R6/include/freetype2/freetype/internal/fttrace.h
 ./usr/X11R6/include/freetype2/freetype/internal/ftvalid.h
 ./usr/X11R6/include/freetype2/freetype/internal/internal.h
-./usr/X11R6/include/freetype2/freetype/internal/pcftypes.h
 ./usr/X11R6/include/freetype2/freetype/internal/psaux.h
 ./usr/X11R6/include/freetype2/freetype/internal/pshints.h
 ./usr/X11R6/include/freetype2/freetype/internal/services
@@ -3458,3 +3457,4 @@
 ./usr/local/lib
 ./usr/local/lib/X11
 ./usr/local/lib/X11/app-defaults
+./usr/X11R6/include/freetype2/freetype/ftbzip2.h
