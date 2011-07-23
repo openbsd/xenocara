@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.56 2011/06/24 06:52:23 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.57 2011/07/23 13:09:11 okan Exp $
  */
 
 #include <sys/param.h>
@@ -180,8 +180,8 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	xu_setwmname(sc);
 
 	rootattr.cursor = Cursor_normal;
-	rootattr.event_mask = ChildMask|PropertyChangeMask|EnterWindowMask|
-	    LeaveWindowMask|ColormapChangeMask|ButtonMask;
+	rootattr.event_mask = CHILDMASK|PropertyChangeMask|EnterWindowMask|
+	    LeaveWindowMask|ColormapChangeMask|BUTTONMASK;
 
 	XChangeWindowAttributes(X_Dpy, sc->rootwin,
 	    CWEventMask|CWCursor, &rootattr);

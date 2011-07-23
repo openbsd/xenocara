@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.30 2011/06/24 06:09:26 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.31 2011/07/23 13:09:11 okan Exp $
  */
 
 #include <sys/param.h>
@@ -88,14 +88,14 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 	client_raise(cc);
 	client_ptrsave(cc);
 
-	if (xu_ptr_grab(cc->win, MouseMask, Cursor_resize) < 0)
+	if (xu_ptr_grab(cc->win, MOUSEMASK, Cursor_resize) < 0)
 		return;
 
 	xu_ptr_setpos(cc->win, cc->geom.width, cc->geom.height);
 	mousefunc_sweep_draw(cc);
 
 	for (;;) {
-		XMaskEvent(X_Dpy, MouseMask|ExposureMask, &ev);
+		XMaskEvent(X_Dpy, MOUSEMASK|ExposureMask, &ev);
 
 		switch (ev.type) {
 		case Expose:
@@ -144,13 +144,13 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 	if (cc->flags & CLIENT_FREEZE)
 		return;
 
-	if (xu_ptr_grab(cc->win, MouseMask, Cursor_move) < 0)
+	if (xu_ptr_grab(cc->win, MOUSEMASK, Cursor_move) < 0)
 		return;
 
 	xu_ptr_getpos(cc->win, &px, &py);
 
 	for (;;) {
-		XMaskEvent(X_Dpy, MouseMask|ExposureMask, &ev);
+		XMaskEvent(X_Dpy, MOUSEMASK|ExposureMask, &ev);
 
 		switch (ev.type) {
 		case Expose:
