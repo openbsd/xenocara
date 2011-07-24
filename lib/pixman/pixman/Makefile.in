@@ -24,9 +24,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -103,10 +103,11 @@ am__DEPENDENCIES_6 =
 @USE_ARM_NEON_TRUE@	$(am__DEPENDENCIES_6)
 am__libpixman_arm_neon_la_SOURCES_DIST = pixman-arm-neon.c \
 	pixman-arm-common.h pixman-arm-neon-asm.S \
-	pixman-arm-neon-asm.h
+	pixman-arm-neon-asm-bilinear.S pixman-arm-neon-asm.h
 @USE_ARM_NEON_TRUE@am_libpixman_arm_neon_la_OBJECTS =  \
 @USE_ARM_NEON_TRUE@	libpixman_arm_neon_la-pixman-arm-neon.lo \
-@USE_ARM_NEON_TRUE@	pixman-arm-neon-asm.lo
+@USE_ARM_NEON_TRUE@	pixman-arm-neon-asm.lo \
+@USE_ARM_NEON_TRUE@	pixman-arm-neon-asm-bilinear.lo
 libpixman_arm_neon_la_OBJECTS = $(am_libpixman_arm_neon_la_OBJECTS)
 @USE_ARM_NEON_TRUE@am_libpixman_arm_neon_la_rpath =
 @USE_ARM_SIMD_TRUE@libpixman_arm_simd_la_DEPENDENCIES =  \
@@ -245,6 +246,8 @@ SSE2_LDFLAGS = @SSE2_LDFLAGS@
 STRIP = @STRIP@
 STUBS_CFLAGS = @STUBS_CFLAGS@
 STUBS_LIBS = @STUBS_LIBS@
+TESTPROGS_EXTRA_LDFLAGS = @TESTPROGS_EXTRA_LDFLAGS@
+TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR = @TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR@
 TOOLCHAIN_SUPPORTS__THREAD = @TOOLCHAIN_SUPPORTS__THREAD@
 USE_ARM_NEON_FALSE = @USE_ARM_NEON_FALSE@
 USE_ARM_NEON_TRUE = @USE_ARM_NEON_TRUE@
@@ -354,7 +357,7 @@ noinst_LTLIBRARIES = $(am__append_1) $(am__append_4) $(am__append_6) \
 	$(am__append_9) $(am__append_11)
 BUILT_SOURCES = pixman-combine32.h pixman-combine32.c pixman-combine64.h pixman-combine64.c
 EXTRA_DIST = Makefile.win32 pixman-combine.c.template make-combine.pl pixman-region.c \
-	pixman-combine.h.template solaris-hwcap.mapfile pixman-x64-mmx-emulation.h
+	pixman-combine.h.template solaris-hwcap.mapfile
 
 CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine32.h pixman-combine64.h
 @USE_MMX_TRUE@libpixman_mmx_la_SOURCES = \
@@ -388,6 +391,7 @@ CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine32.h pixman-com
 @USE_ARM_NEON_TRUE@        pixman-arm-neon.c	\
 @USE_ARM_NEON_TRUE@        pixman-arm-common.h	\
 @USE_ARM_NEON_TRUE@        pixman-arm-neon-asm.S	\
+@USE_ARM_NEON_TRUE@		pixman-arm-neon-asm-bilinear.S \
 @USE_ARM_NEON_TRUE@        pixman-arm-neon-asm.h
 
 @USE_ARM_NEON_TRUE@libpixman_arm_neon_la_CFLAGS = $(DEP_CFLAGS)

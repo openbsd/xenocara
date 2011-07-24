@@ -52,7 +52,7 @@ pixman-combine64.h : pixman-combine.h.template make-combine.pl
 	$(PERL) $(srcdir)/make-combine.pl 16 < $(srcdir)/pixman-combine.h.template > $@ || ($(RM) $@; exit 1)
 
 EXTRA_DIST = Makefile.win32 pixman-combine.c.template make-combine.pl pixman-region.c \
-	pixman-combine.h.template solaris-hwcap.mapfile pixman-x64-mmx-emulation.h
+	pixman-combine.h.template solaris-hwcap.mapfile
 CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine32.h pixman-combine64.h
 
 # mmx code
@@ -115,6 +115,7 @@ libpixman_arm_neon_la_SOURCES = \
         pixman-arm-neon.c	\
         pixman-arm-common.h	\
         pixman-arm-neon-asm.S	\
+		pixman-arm-neon-asm-bilinear.S \
         pixman-arm-neon-asm.h
 libpixman_arm_neon_la_CFLAGS = $(DEP_CFLAGS)
 libpixman_arm_neon_la_LIBADD = $(DEP_LIBS)

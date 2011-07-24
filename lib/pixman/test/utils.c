@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "utils.h"
 #include <signal.h>
 
@@ -13,6 +15,10 @@
 
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
+
+#ifdef HAVE_FENV_H
+#include <fenv.h>
 #endif
 
 /* Random number seed
@@ -127,11 +133,12 @@ compute_crc32 (uint32_t    in_crc32,
 /* perform endian conversion of pixel data
  */
 void
-image_endian_swap (pixman_image_t *img, int bpp)
+image_endian_swap (pixman_image_t *img)
 {
     int stride = pixman_image_get_stride (img);
     uint32_t *data = pixman_image_get_data (img);
     int height = pixman_image_get_height (img);
+    int bpp = PIXMAN_FORMAT_BPP (pixman_image_get_format (img));
     int i, j;
 
     /* swap bytes only on big endian systems */
@@ -139,10 +146,13 @@ image_endian_swap (pixman_image_t *img, int bpp)
     if (*(volatile uint8_t *)&endian_check_var != 0x12)
 	return;
 
+    if (bpp == 8)
+	return;
+
     for (i = 0; i < height; i++)
     {
 	uint8_t *line_data = (uint8_t *)data + stride * i;
-	/* swap bytes only for 16, 24 and 32 bpp for now */
+	
 	switch (bpp)
 	{
 	case 1:
@@ -202,6 +212,7 @@ image_endian_swap (pixman_image_t *img, int bpp)
 	    }
 	    break;
 	default:
+	    assert (FALSE);
 	    break;
 	}
     }
@@ -218,7 +229,7 @@ typedef struct
     int n_bytes;
 } info_t;
 
-#if defined(HAVE_MPROTECT) && defined(HAVE_GETPAGESIZE) && defined(HAVE_SYS_MMAN_H)
+#if defined(HAVE_MPROTECT) && defined(HAVE_GETPAGESIZE) && defined(HAVE_SYS_MMAN_H) && defined(HAVE_MMAP)
 
 /* This is apparently necessary on at least OS X */
 #ifndef MAP_ANONYMOUS
@@ -226,7 +237,7 @@ typedef struct
 #endif
 
 void *
-fence_malloc (uint32_t len)
+fence_malloc (int64_t len)
 {
     unsigned long page_size = getpagesize();
     unsigned long page_mask = page_size - 1;
@@ -240,12 +251,15 @@ fence_malloc (uint32_t len)
     uint8_t *payload;
     uint8_t *addr;
 
+    if (len < 0)
+	abort();
+    
     addr = mmap (NULL, n_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
 		 -1, 0);
 
     if (addr == MAP_FAILED)
     {
-	printf ("mmap failed on %u %u\n", len, n_bytes);
+	printf ("mmap failed on %lld %u\n", (long long int)len, n_bytes);
 	return NULL;
     }
 
@@ -286,7 +300,7 @@ fence_free (void *data)
 #else
 
 void *
-fence_malloc (uint32_t len)
+fence_malloc (int64_t len)
 {
     return malloc (len);
 }
@@ -441,6 +455,16 @@ gettime (void)
 #endif
 }
 
+uint32_t
+get_random_seed (void)
+{
+    double d = gettime();
+
+    lcg_srand (*(uint32_t *)&d);
+
+    return lcg_rand_u32 ();
+}
+
 static const char *global_msg;
 
 static void
@@ -469,6 +493,26 @@ fail_after (int seconds, const char *msg)
 #endif
 }
 
+void
+enable_fp_exceptions (void)
+{
+#ifdef HAVE_FENV_H
+#ifdef HAVE_FEENABLEEXCEPT
+    /* Note: we don't enable the FE_INEXACT trap because
+     * that happens quite commonly. It is possible that
+     * over- and underflow should similarly be considered
+     * okay, but for now the test suite passes with them
+     * enabled, and it's useful to know if they start
+     * occuring.
+     */
+    feenableexcept (FE_DIVBYZERO	|
+		    FE_INVALID		|
+		    FE_OVERFLOW		|
+		    FE_UNDERFLOW);
+#endif
+#endif
+}
+
 void *
 aligned_malloc (size_t align, size_t size)
 {
@@ -482,4 +526,60 @@ aligned_malloc (size_t align, size_t size)
 #endif
 
     return result;
+}
+
+#define CONVERT_15(c, is_rgb)						\
+    (is_rgb?								\
+     ((((c) >> 3) & 0x001f) |						\
+      (((c) >> 6) & 0x03e0) |						\
+      (((c) >> 9) & 0x7c00)) :						\
+     (((((c) >> 16) & 0xff) * 153 +					\
+       (((c) >>  8) & 0xff) * 301 +					\
+       (((c)      ) & 0xff) * 58) >> 2))
+
+void
+initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb)
+{
+    int i;
+    uint32_t mask = (1 << depth) - 1;
+
+    for (i = 0; i < 32768; ++i)
+	palette->ent[i] = lcg_rand() & mask;
+
+    memset (palette->rgba, 0, sizeof (palette->rgba));
+
+    for (i = 0; i < mask + 1; ++i)
+    {
+	uint32_t rgba24;
+ 	pixman_bool_t retry;
+	uint32_t i15;
+
+	/* We filled the rgb->index map with random numbers, but we
+	 * do need the ability to round trip, that is if some indexed
+	 * color expands to an argb24, then the 15 bit version of that
+	 * color must map back to the index. Anything else, we don't
+	 * care about too much.
+	 */
+	do
+	{
+	    uint32_t old_idx;
+
+	    rgba24 = lcg_rand();
+	    i15 = CONVERT_15 (rgba24, is_rgb);
+
+	    old_idx = palette->ent[i15];
+	    if (CONVERT_15 (palette->rgba[old_idx], is_rgb) == i15)
+		retry = 1;
+	    else
+		retry = 0;
+	} while (retry);
+
+	palette->rgba[i] = rgba24;
+	palette->ent[i15] = i;
+    }
+
+    for (i = 0; i < mask + 1; ++i)
+    {
+	assert (palette->ent[CONVERT_15 (palette->rgba[i], is_rgb)] == i);
+    }
 }

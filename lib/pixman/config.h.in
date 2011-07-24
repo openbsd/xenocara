@@ -9,6 +9,12 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Whether we have feenableexcept() */
+#undef HAVE_FEENABLEEXCEPT
+
+/* Define to 1 if we have <fenv.h> */
+#undef HAVE_FENV_H
+
 /* Define to 1 if you have the `getisax' function. */
 #undef HAVE_GETISAX
 
@@ -26,6 +32,9 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Whether we have mmap() */
+#undef HAVE_MMAP
 
 /* Whether we have mprotect() */
 #undef HAVE_MPROTECT
@@ -89,6 +98,9 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Whether the tool chain supports __attribute__((constructor)) */
+#undef TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR
 
 /* Whether the tool chain supports __thread */
 #undef TOOLCHAIN_SUPPORTS__THREAD

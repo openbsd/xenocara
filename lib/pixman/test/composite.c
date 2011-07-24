@@ -31,10 +31,6 @@
 #include <time.h>
 #include "utils.h"
 
-#define ARRAY_LENGTH(A) ((int) (sizeof (A) / sizeof ((A) [0])))
-#define min(a,b) ((a) <= (b) ? (a) : (b))
-#define max(a,b) ((a) >= (b) ? (a) : (b))
-
 typedef struct color_t color_t;
 typedef struct format_t format_t;
 typedef struct image_t image_t;
@@ -106,6 +102,8 @@ static const format_t formats[] =
     P(x8b8g8r8),
     P(b8g8r8a8),
     P(b8g8r8x8),
+    P(r8g8b8a8),
+    P(r8g8b8x8),
     P(x2r10g10b10),
     P(x2b10g10r10),
     P(a2r10g10b10),
@@ -211,7 +209,7 @@ static const operator_t operators[] =
 static double
 calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
 {
-#define mult_chan(src, dst, Fa, Fb) min ((src) * (Fa) + (dst) * (Fb), 1.0)
+#define mult_chan(src, dst, Fa, Fb) MIN ((src) * (Fa) + (dst) * (Fb), 1.0)
 
     double Fa, Fb;
 
@@ -267,150 +265,150 @@ calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
 	if (srca == 0.0)
 	    Fa = 1.0;
 	else
-	    Fa = min (1.0, (1.0 - dsta) / srca);
+	    Fa = MIN (1.0, (1.0 - dsta) / srca);
 	return mult_chan (src, dst, Fa, 1.0);
 
     case PIXMAN_OP_DISJOINT_OVER:
 	if (dsta == 0.0)
 	    Fb = 1.0;
 	else
-	    Fb = min (1.0, (1.0 - srca) / dsta);
+	    Fb = MIN (1.0, (1.0 - srca) / dsta);
 	return mult_chan (src, dst, 1.0, Fb);
 
     case PIXMAN_OP_DISJOINT_IN:
 	if (srca == 0.0)
 	    Fa = 0.0;
 	else
-	    Fa = max (0.0, 1.0 - (1.0 - dsta) / srca);
+	    Fa = MAX (0.0, 1.0 - (1.0 - dsta) / srca);
 	return mult_chan (src, dst, Fa, 0.0);
 
     case PIXMAN_OP_DISJOINT_IN_REVERSE:
 	if (dsta == 0.0)
 	    Fb = 0.0;
 	else
-	    Fb = max (0.0, 1.0 - (1.0 - srca) / dsta);
+	    Fb = MAX (0.0, 1.0 - (1.0 - srca) / dsta);
 	return mult_chan (src, dst, 0.0, Fb);
 
     case PIXMAN_OP_DISJOINT_OUT:
 	if (srca == 0.0)
 	    Fa = 1.0;
 	else
-	    Fa = min (1.0, (1.0 - dsta) / srca);
+	    Fa = MIN (1.0, (1.0 - dsta) / srca);
 	return mult_chan (src, dst, Fa, 0.0);
 
     case PIXMAN_OP_DISJOINT_OUT_REVERSE:
 	if (dsta == 0.0)
 	    Fb = 1.0;
 	else
-	    Fb = min (1.0, (1.0 - srca) / dsta);
+	    Fb = MIN (1.0, (1.0 - srca) / dsta);
 	return mult_chan (src, dst, 0.0, Fb);
 
     case PIXMAN_OP_DISJOINT_ATOP:
 	if (srca == 0.0)
 	    Fa = 0.0;
 	else
-	    Fa = max (0.0, 1.0 - (1.0 - dsta) / srca);
+	    Fa = MAX (0.0, 1.0 - (1.0 - dsta) / srca);
 	if (dsta == 0.0)
 	    Fb = 1.0;
 	else
-	    Fb = min (1.0, (1.0 - srca) / dsta);
+	    Fb = MIN (1.0, (1.0 - srca) / dsta);
 	return mult_chan (src, dst, Fa, Fb);
 
     case PIXMAN_OP_DISJOINT_ATOP_REVERSE:
 	if (srca == 0.0)
 	    Fa = 1.0;
 	else
-	    Fa = min (1.0, (1.0 - dsta) / srca);
+	    Fa = MIN (1.0, (1.0 - dsta) / srca);
 	if (dsta == 0.0)
 	    Fb = 0.0;
 	else
-	    Fb = max (0.0, 1.0 - (1.0 - srca) / dsta);
+	    Fb = MAX (0.0, 1.0 - (1.0 - srca) / dsta);
 	return mult_chan (src, dst, Fa, Fb);
 
     case PIXMAN_OP_DISJOINT_XOR:
 	if (srca == 0.0)
 	    Fa = 1.0;
 	else
-	    Fa = min (1.0, (1.0 - dsta) / srca);
+	    Fa = MIN (1.0, (1.0 - dsta) / srca);
 	if (dsta == 0.0)
 	    Fb = 1.0;
 	else
-	    Fb = min (1.0, (1.0 - srca) / dsta);
+	    Fb = MIN (1.0, (1.0 - srca) / dsta);
 	return mult_chan (src, dst, Fa, Fb);
 
     case PIXMAN_OP_CONJOINT_OVER:
 	if (dsta == 0.0)
 	    Fb = 0.0;
 	else
-	    Fb = max (0.0, 1.0 - srca / dsta);
+	    Fb = MAX (0.0, 1.0 - srca / dsta);
 	return mult_chan (src, dst, 1.0, Fb);
 
     case PIXMAN_OP_CONJOINT_OVER_REVERSE:
 	if (srca == 0.0)
 	    Fa = 0.0;
 	else
-	    Fa = max (0.0, 1.0 - dsta / srca);
+	    Fa = MAX (0.0, 1.0 - dsta / srca);
 	return mult_chan (src, dst, Fa, 1.0);
 
     case PIXMAN_OP_CONJOINT_IN:
 	if (srca == 0.0)
 	    Fa = 1.0;
 	else
-	    Fa = min (1.0, dsta / srca);
+	    Fa = MIN (1.0, dsta / srca);
 	return mult_chan (src, dst, Fa, 0.0);
 
     case PIXMAN_OP_CONJOINT_IN_REVERSE:
 	if (dsta == 0.0)
 	    Fb = 1.0;
 	else
-	    Fb = min (1.0, srca / dsta);
+	    Fb = MIN (1.0, srca / dsta);
 	return mult_chan (src, dst, 0.0, Fb);
 
     case PIXMAN_OP_CONJOINT_OUT:
 	if (srca == 0.0)
 	    Fa = 0.0;
 	else
-	    Fa = max (0.0, 1.0 - dsta / srca);
+	    Fa = MAX (0.0, 1.0 - dsta / srca);
 	return mult_chan (src, dst, Fa, 0.0);
 
     case PIXMAN_OP_CONJOINT_OUT_REVERSE:
 	if (dsta == 0.0)
 	    Fb = 0.0;
 	else
-	    Fb = max (0.0, 1.0 - srca / dsta);
+	    Fb = MAX (0.0, 1.0 - srca / dsta);
 	return mult_chan (src, dst, 0.0, Fb);
 
     case PIXMAN_OP_CONJOINT_ATOP:
 	if (srca == 0.0)
 	    Fa = 1.0;
 	else
-	    Fa = min (1.0, dsta / srca);
+	    Fa = MIN (1.0, dsta / srca);
 	if (dsta == 0.0)
 	    Fb = 0.0;
 	else
-	    Fb = max (0.0, 1.0 - srca / dsta);
+	    Fb = MAX (0.0, 1.0 - srca / dsta);
 	return mult_chan (src, dst, Fa, Fb);
 
     case PIXMAN_OP_CONJOINT_ATOP_REVERSE:
 	if (srca == 0.0)
 	    Fa = 0.0;
 	else
-	    Fa = max (0.0, 1.0 - dsta / srca);
+	    Fa = MAX (0.0, 1.0 - dsta / srca);
 	if (dsta == 0.0)
 	    Fb = 1.0;
 	else
-	    Fb = min (1.0, srca / dsta);
+	    Fb = MIN (1.0, srca / dsta);
 	return mult_chan (src, dst, Fa, Fb);
 
     case PIXMAN_OP_CONJOINT_XOR:
 	if (srca == 0.0)
 	    Fa = 0.0;
 	else
-	    Fa = max (0.0, 1.0 - dsta / srca);
+	    Fa = MAX (0.0, 1.0 - dsta / srca);
 	if (dsta == 0.0)
 	    Fb = 0.0;
 	else
-	    Fb = max (0.0, 1.0 - srca / dsta);
+	    Fb = MAX (0.0, 1.0 - srca / dsta);
 	return mult_chan (src, dst, Fa, Fb);
 
     case PIXMAN_OP_MULTIPLY:
@@ -430,6 +428,7 @@ calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
     case PIXMAN_OP_HSL_LUMINOSITY:
     default:
 	abort();
+	return 0; /* silence MSVC */
     }
 #undef mult_chan
 }
@@ -559,6 +558,13 @@ get_pixel (pixman_image_t *image,
         bs = g + gs;
 	break;
 
+    case PIXMAN_TYPE_RGBA:
+	as = 0;
+	bs = PIXMAN_FORMAT_BPP (format) - (b + g + r);
+	gs = b + bs;
+	rs = g + gs;
+	break;
+
     case PIXMAN_TYPE_A:
         as = 0;
         rs = 0;
@@ -617,22 +623,22 @@ eval_diff (color_t *expected, color_t *test, pixman_format_code_t format)
     gdiff = fabs (test->b - expected->b) * bscale;
     adiff = fabs (test->a - expected->a) * ascale;
 
-    return max (max (max (rdiff, gdiff), bdiff), adiff);
+    return MAX (MAX (MAX (rdiff, gdiff), bdiff), adiff);
 }
 
 static char *
-describe_image (image_t *info, char *buf, int buflen)
+describe_image (image_t *info, char *buf)
 {
     if (info->size)
     {
-	snprintf (buf, buflen, "%s %dx%d%s",
-		  info->format->name,
-		  info->size, info->size,
-		  info->repeat ? "R" :"");
+	sprintf (buf, "%s %dx%d%s",
+		 info->format->name,
+		 info->size, info->size,
+		 info->repeat ? "R" :"");
     }
     else
     {
-	snprintf (buf, buflen, "solid");
+	sprintf (buf, "solid");
     }
 
     return buf;
@@ -714,10 +720,9 @@ composite_test (image_t *dst,
     {
 	char buf[40];
 
-	snprintf (buf, sizeof (buf),
-		  "%s %scomposite",
-		  op->name,
-		  component_alpha ? "CA " : "");
+	sprintf (buf, "%s %scomposite",
+		 op->name,
+		 component_alpha ? "CA " : "");
 
 	printf ("%s test error of %.4f --\n"
 		"           R    G    B    A\n"
@@ -739,9 +744,9 @@ composite_test (image_t *dst,
 		    mask->color->b, mask->color->a,
 		    dst->color->r, dst->color->g,
 		    dst->color->b, dst->color->a);
-	    printf ("src: %s, ", describe_image (src, buf, sizeof (buf)));
-	    printf ("mask: %s, ", describe_image (mask, buf, sizeof (buf)));
-	    printf ("dst: %s\n\n", describe_image (dst, buf, sizeof (buf)));
+	    printf ("src: %s, ", describe_image (src, buf));
+	    printf ("mask: %s, ", describe_image (mask, buf));
+	    printf ("dst: %s\n\n", describe_image (dst, buf));
 	}
 	else
 	{
@@ -751,8 +756,8 @@ composite_test (image_t *dst,
 		    src->color->b, src->color->a,
 		    dst->color->r, dst->color->g,
 		    dst->color->b, dst->color->a);
-	    printf ("src: %s, ", describe_image (src, buf, sizeof (buf)));
-	    printf ("dst: %s\n\n", describe_image (dst, buf, sizeof (buf)));
+	    printf ("src: %s, ", describe_image (src, buf));
+	    printf ("dst: %s\n\n", describe_image (dst, buf));
 	}
 
 	success = FALSE;
@@ -872,7 +877,7 @@ main (int argc, char **argv)
 {
 #define N_TESTS (8 * 1024 * 1024)
     int result = 0;
-    int i;
+    uint32_t i, seed;
 
     if (argc > 1)
     {
@@ -894,16 +899,21 @@ main (int argc, char **argv)
 	}
     }
 
+    if (getenv ("PIXMAN_RANDOMIZE_TESTS"))
+	seed = get_random_seed();
+    else
+	seed = 1;
+    
 #ifdef USE_OPENMP
-#   pragma omp parallel for default(none) shared(result) shared(argv) 
+#   pragma omp parallel for default(none) shared(result, argv, seed)
 #endif
-    for (i = 1; i <= N_TESTS; ++i)
+    for (i = 0; i <= N_TESTS; ++i)
     {
-	if (!result && !run_test (i))
+	if (!result && !run_test (i + seed))
 	{
-	    printf ("Test %d failed.\n", i);
-
-	    result = i;
+	    printf ("Test 0x%08X failed.\n", seed + i);
+	    
+	    result = seed + i;
 	}
     }
     

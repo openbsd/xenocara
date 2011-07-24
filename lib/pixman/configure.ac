@@ -53,12 +53,12 @@ AC_PREREQ([2.57])
 #
 
 m4_define([pixman_major], 0)
-m4_define([pixman_minor], 20)
+m4_define([pixman_minor], 22)
 m4_define([pixman_micro], 2)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
-AC_INIT(pixman, pixman_version, "pixman@lists.freedesktop.org", pixman)
+AC_INIT(pixman, pixman_version, [pixman@lists.freedesktop.org], pixman)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 # Suppress verbose compile lines
@@ -119,7 +119,7 @@ for w in -Werror -errwarn; do
 		[CFLAGS=$w],
 		[int main(int c, char **v) { (void)c; (void)v; return 0; }],
 		[WERROR=$w; yesno=yes], [yesno=no])
-	AC_MSG_RESULT($_yesno)
+	AC_MSG_RESULT($yesno)
     fi
 done
 
@@ -192,35 +192,43 @@ dnl =========================================================================
 dnl OpenMP for the test suite?
 dnl
 
-# Check for OpenMP support (only supported by autoconf >=2.62)
+# Check for OpenMP support only when autoconf support that (require autoconf >=2.62)
 OPENMP_CFLAGS=
 m4_ifdef([AC_OPENMP], [AC_OPENMP])
 
-m4_define([openmp_test_program],[dnl
-#include <stdio.h>
+if test "x$enable_openmp" = "xyes" && test "x$ac_cv_prog_c_openmp" = "xunsupported" ; then
+  AC_MSG_WARN([OpenMP support requested but found unsupported])
+fi
 
-extern unsigned int lcg_seed;
-#pragma omp threadprivate(lcg_seed)
-unsigned int lcg_seed;
+dnl May not fail to link without -Wall -Werror added
+dnl So try to link only when openmp is supported
+dnl ac_cv_prog_c_openmp is not defined when --disable-openmp is used
+if test "x$ac_cv_prog_c_openmp" != "xunsupported" && test "x$ac_cv_prog_c_openmp" != "x"; then
+  m4_define([openmp_test_program],[dnl
+  #include <stdio.h>
 
-unsigned function(unsigned a, unsigned b)
-{
+  extern unsigned int lcg_seed;
+  #pragma omp threadprivate(lcg_seed)
+  unsigned int lcg_seed;
+
+  unsigned function(unsigned a, unsigned b)
+  {
 	lcg_seed ^= b;
 	return ((a + b) ^ a ) + lcg_seed;
-}
+  }
 
-int main(int argc, char **argv)
-{
+  int main(int argc, char **argv)
+  {
 	int i;
 	int n1 = 0, n2 = argc;
 	unsigned checksum = 0;
 	int verbose = argv != NULL;
 	unsigned (*test_function)(unsigned, unsigned);
 	test_function = function;
-    #pragma omp parallel for reduction(+:checksum) default(none) \
+	#pragma omp parallel for reduction(+:checksum) default(none) \
 					shared(n1, n2, test_function, verbose)
 	for (i = n1; i < n2; i++)
-    	{
+	{
 		unsigned crc = test_function (i, 0);
 		if (verbose)
 			printf ("%d: %08X\n", i, crc);
@@ -228,18 +236,17 @@ int main(int argc, char **argv)
 	}
 	printf("%u\n", checksum);
 	return 0;
-}
-])
+  }
+  ])
 
-PIXMAN_LINK_WITH_ENV(
+  PIXMAN_LINK_WITH_ENV(
 	[CFLAGS="$OPENMP_CFLAGS" LDFLAGS="$OPENMP_CFLAGS"],
 	[openmp_test_program],
 	[have_openmp=yes],
 	[have_openmp=no])
-if test "x$have_openmp" = "xyes"; then
-   AC_DEFINE(USE_OPENMP, 1, [use OpenMP in the test suite])
-else
-   OPENMP_CFLAGS=""
+  if test "x$have_openmp" = "xyes" ; then
+    AC_DEFINE(USE_OPENMP, 1, [use OpenMP in the test suite])
+  fi
 fi
 AC_SUBST(OPENMP_CFLAGS)
 
@@ -566,6 +573,20 @@ fi
 AM_CONDITIONAL(USE_GCC_INLINE_ASM, test $have_gcc_inline_asm = yes)
 
 dnl ==============================================
+dnl Static test programs
+
+AC_ARG_ENABLE(static-testprogs,
+   [AC_HELP_STRING([--enable-static-testprogs],
+		   [build test programs as static binaries [default=no]])],
+   [enable_static_testprogs=$enableval], [enable_static_testprogs=no])
+
+TESTPROGS_EXTRA_LDFLAGS=
+if test "x$enable_static_testprogs" = "xyes" ; then
+   TESTPROGS_EXTRA_LDFLAGS="-all-static"
+fi
+AC_SUBST(TESTPROGS_EXTRA_LDFLAGS)
+
+dnl ==============================================
 dnl Timers
 
 AC_ARG_ENABLE(timers,
@@ -629,6 +650,11 @@ fi
 AC_CHECK_HEADER([sys/mman.h],
    [AC_DEFINE(HAVE_SYS_MMAN_H, [1], [Define to 1 if we have <sys/mman.h>])])
 
+AC_CHECK_FUNC(mmap, have_mmap=yes, have_mmap=no)
+if test x$have_mmap = xyes; then
+   AC_DEFINE(HAVE_MMAP, 1, [Whether we have mmap()])
+fi
+
 AC_CHECK_FUNC(mprotect, have_mprotect=yes, have_mprotect=no)
 if test x$have_mprotect = xyes; then
    AC_DEFINE(HAVE_MPROTECT, 1, [Whether we have mprotect()])
@@ -637,6 +663,14 @@ fi
 AC_CHECK_FUNC(getpagesize, have_getpagesize=yes, have_getpagesize=no)
 if test x$have_getpagesize = xyes; then
    AC_DEFINE(HAVE_GETPAGESIZE, 1, [Whether we have getpagesize()])
+fi
+
+AC_CHECK_HEADER([fenv.h],
+   [AC_DEFINE(HAVE_FENV_H, [1], [Define to 1 if we have <fenv.h>])])
+
+AC_CHECK_LIB(m, feenableexcept, have_feenableexcept=yes, have_feenableexcept=no)
+if test x$have_feenableexcept = xyes; then
+   AC_DEFINE(HAVE_FEENABLEEXCEPT, 1, [Whether we have feenableexcept()])
 fi
 
 AC_CHECK_FUNC(gettimeofday, have_gettimeofday=yes, have_gettimeofday=no)
@@ -785,9 +819,60 @@ AC_SUBST(HAVE_PTHREAD_SETSPECIFIC)
 AC_SUBST(PTHREAD_LDFLAGS)
 AC_SUBST(PTHREAD_LIBS)
 
+dnl =====================================
+dnl __attribute__((constructor))
+
+support_for_attribute_constructor=no
+
+AC_MSG_CHECKING(for __attribute__((constructor)))
+AC_LINK_IFELSE([
+#if defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7))
+/* attribute 'constructor' is supported since gcc 2.7, but some compilers
+ * may only pretend to be gcc, so let's try to actually use it
+ */
+static int x = 1;
+static void __attribute__((constructor)) constructor_function () { x = 0; }
+int main (void) { return x; }
+#else
+#error not gcc or gcc version is older than 2.7
+#endif
+], support_for_attribute_constructor=yes)
+
+if test x$support_for_attribute_constructor = xyes; then
+   AC_DEFINE([TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR],
+             [],[Whether the tool chain supports __attribute__((constructor))])
+fi
+
+AC_MSG_RESULT($support_for_attribute_constructor)
+AC_SUBST(TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR)
+
 AC_OUTPUT([pixman-1.pc
            pixman-1-uninstalled.pc
            Makefile
 	   pixman/Makefile
 	   pixman/pixman-version.h
+	   demos/Makefile
 	   test/Makefile])
+
+m4_if(m4_eval(pixman_minor % 2), [1], [
+   echo
+   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+   echo
+   echo "      Thanks for testing this development snapshot of pixman. Please"
+   echo "      report any problems you find, either by sending email to "
+   echo
+   echo "          pixman@lists.freedesktop.org"
+   echo
+   echo "      or by filing a bug at "
+   echo
+   echo "          https://bugs.freedesktop.org/enter_bug.cgi?product=pixman "
+   echo
+   echo "      If you are looking for a stable release of pixman, please note "
+   echo "      that stable releases have _even_ minor version numbers. Ie., "
+   echo "      pixman-0.]m4_eval(pixman_minor & ~1)[.x are stable releases, whereas pixman-$PIXMAN_VERSION_MAJOR.$PIXMAN_VERSION_MINOR.$PIXMAN_VERSION_MICRO is a "
+   echo "      development snapshot that may contain bugs and experimental "
+   echo "      features. "
+   echo 
+   echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+   echo
+])
