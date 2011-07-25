@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.31 2011/07/25 15:10:24 okan Exp $
+ * $OpenBSD: menu.c,v 1.32 2011/07/25 15:41:05 okan Exp $
  */
 
 #include <sys/param.h>
@@ -76,8 +76,9 @@ menu_init(struct screen_ctx *sc)
 {
 	XGCValues	 gv;
 
-	sc->menuwin = XCreateSimpleWindow(X_Dpy, sc->rootwin, 0, 0, 1, 1, 0,
-	    sc->color[CWM_COLOR_BG_MENU].pixel,
+	sc->menuwin = XCreateSimpleWindow(X_Dpy, sc->rootwin, 0, 0, 1, 1,
+	    Conf.bwidth,
+	    sc->color[CWM_COLOR_FG_MENU].pixel,
 	    sc->color[CWM_COLOR_BG_MENU].pixel);
 
 	gv.foreground =
