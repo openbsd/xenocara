@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.57 2011/07/23 13:09:11 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.58 2011/07/25 15:10:24 okan Exp $
  */
 
 #include <sys/param.h>
@@ -194,7 +194,7 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 		if (winattr.override_redirect ||
 		    winattr.map_state != IsViewable)
 			continue;
-		client_new(wins[i], sc, winattr.map_state != IsUnmapped);
+		(void)client_new(wins[i], sc, winattr.map_state != IsUnmapped);
 	}
 	XFree(wins);
 
@@ -229,7 +229,7 @@ x_errorhandler(Display *dpy, XErrorEvent *e)
 	char msg[80], number[80], req[80];
 
 	XGetErrorText(X_Dpy, e->error_code, msg, sizeof(msg));
-	snprintf(number, sizeof(number), "%d", e->request_code);
+	(void)snprintf(number, sizeof(number), "%d", e->request_code);
 	XGetErrorDatabaseText(X_Dpy, "XRequest", number,
 	    "<unknown>", req, sizeof(req));
 
@@ -258,6 +258,7 @@ usage(void)
 {
 	extern char	*__progname;
 
-	fprintf(stderr, "usage: %s [-c file] [-d display]\n", __progname);
+	(void)fprintf(stderr, "usage: %s [-c file] [-d display]\n",
+	    __progname);
 	exit(1);
 }

@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.31 2011/07/23 13:09:11 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.32 2011/07/25 15:10:24 okan Exp $
  */
 
 #include <sys/param.h>
@@ -57,7 +57,7 @@ mousefunc_sweep_draw(struct client_ctx *cc)
 	char			 asize[10]; /* fits "nnnnxnnnn\0" */
 	int			 width, width_size, width_name;
 
-	snprintf(asize, sizeof(asize), "%dx%d",
+	(void)snprintf(asize, sizeof(asize), "%dx%d",
 	    (cc->geom.width - cc->geom.basew) / cc->geom.incw,
 	    (cc->geom.height - cc->geom.baseh) / cc->geom.inch);
 	width_size = font_width(sc, asize, strlen(asize)) + 4;
@@ -234,7 +234,7 @@ mousefunc_menu_unhide(struct client_ctx *cc, void *arg)
 				continue;
 
 			mi = xcalloc(1, sizeof(*mi));
-			strlcpy(mi->text, wname, sizeof(mi->text));
+			(void)strlcpy(mi->text, wname, sizeof(mi->text));
 			mi->ctx = cc;
 			TAILQ_INSERT_TAIL(&menuq, mi, entry);
 		}
@@ -271,7 +271,7 @@ mousefunc_menu_cmd(struct client_ctx *cc, void *arg)
 	TAILQ_INIT(&menuq);
 	TAILQ_FOREACH(cmd, &Conf.cmdq, entry) {
 		mi = xcalloc(1, sizeof(*mi));
-		strlcpy(mi->text, cmd->label, sizeof(mi->text));
+		(void)strlcpy(mi->text, cmd->label, sizeof(mi->text));
 		mi->ctx = cmd;
 		TAILQ_INSERT_TAIL(&menuq, mi, entry);
 	}
