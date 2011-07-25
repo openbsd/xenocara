@@ -602,6 +602,7 @@
 ./usr/X11R6/include/freetype2/freetype/ftbbox.h
 ./usr/X11R6/include/freetype2/freetype/ftbdf.h
 ./usr/X11R6/include/freetype2/freetype/ftbitmap.h
+./usr/X11R6/include/freetype2/freetype/ftbzip2.h
 ./usr/X11R6/include/freetype2/freetype/ftcache.h
 ./usr/X11R6/include/freetype2/freetype/ftchapters.h
 ./usr/X11R6/include/freetype2/freetype/ftcid.h
@@ -3457,4 +3458,3 @@
 ./usr/local/lib
 ./usr/local/lib/X11
 ./usr/local/lib/X11/app-defaults
-./usr/X11R6/include/freetype2/freetype/ftbzip2.h
