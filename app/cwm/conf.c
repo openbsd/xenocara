@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.88 2011/07/25 15:10:24 okan Exp $
+ * $OpenBSD: conf.c,v 1.89 2011/07/26 08:51:24 okan Exp $
  */
 
 #include <sys/param.h>
@@ -94,13 +94,13 @@ conf_reload(struct conf *c)
 		return;
 	}
 
-	TAILQ_FOREACH(cc, &Clientq, entry)
-		client_draw_border(cc);
 	TAILQ_FOREACH(sc, &Screenq, entry) {
 		conf_gap(c, sc);
 		conf_color(c, sc);
 		conf_font(c, sc);
 	}
+	TAILQ_FOREACH(cc, &Clientq, entry)
+		client_draw_border(cc);
 }
 
 static struct {
