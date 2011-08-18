@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.18 2011/06/23 22:48:59 naddy Exp $
+# $OpenBSD: Makefile,v 1.19 2011/08/18 20:27:03 marco Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -23,7 +23,7 @@ SRCS=	TekPrsTbl.c Tekproc.c VTPrsTbl.c button.c cachedGCs.c \
 	charclass.c xtermcap.c charproc.c charsets.c cursor.c \
 	data.c doublechr.c fontutils.c input.c linedata.c main.c menu.c \
 	misc.c precompose.c print.c ptydata.c wcwidth.c screen.c \
-	scrollback.c scrollbar.c tabs.c util.c xstrings.c
+	scrollback.c scrollbar.c tabs.c trace.c util.c xstrings.c
 
 MANDIR=		${X11BASE}/man/man
 XETC?=		/etc/X11
