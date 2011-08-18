@@ -1,4 +1,4 @@
-/* $XTermId: xterm_io.h,v 1.50 2010/05/23 16:04:32 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.51 2011/07/03 15:48:35 Paul.Lampert Exp $ */
 
 /*
  * Copyright 2000-2006,2010 by Thomas E. Dickey
@@ -56,7 +56,7 @@
 #define USE_SYSV_TERMIO
 #endif
 
-#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__INTERIX) || defined(__APPLE__) || defined(__UNIXWARE__)
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__INTERIX) || defined(__APPLE__) || defined(__UNIXWARE__) || defined(__hpux)
 #ifndef USE_POSIX_TERMIOS
 #define USE_POSIX_TERMIOS
 #endif
@@ -133,7 +133,7 @@
 /*
  * Terminal I/O includes (termio, termios, sgtty headers).
  */
-#if defined(USE_POSIX_TERMIOS)
+#if defined(USE_POSIX_TERMIOS) && !defined(__hpux)
 #include <termios.h>
 #elif defined(USE_TERMIOS)
 #include <termios.h>

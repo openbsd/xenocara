@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.629 2011/04/22 23:09:15 tom Exp $ */
+/* $XTermId: main.c,v 1.638 2011/07/14 00:18:58 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -847,7 +847,11 @@ static XtResource application_resources[] =
     Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_PRINT_ON_EXIT
+    Ires("printModeImmediate", "PrintModeImmediate", printModeNow, 0),
+    Ires("printOptsImmediate", "PrintOptsImmediate", printOptsNow, 9),
+    Sres("printFileImmediate", "PrintFileImmediate", printFileNow, NULL),
     Ires("printModeOnXError", "PrintModeOnXError", printModeOnXError, 0),
+    Ires("printOptsOnXError", "PrintOptsOnXError", printOptsOnXError, 9),
     Sres("printFileOnXError", "PrintFileOnXError", printFileOnXError, NULL),
 #endif
 #if OPT_SUNPC_KBD
@@ -1833,24 +1837,21 @@ main(int argc, char *argv[]ENVP_ARG)
     if (argc > 1) {
 	int n;
 	size_t unique = 2;
-	Bool quit = True;
+	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
 	    TRACE(("parsing %s\n", argv[n]));
 	    if (abbrev(argv[n], "-version", unique)) {
 		Version();
+		quit = True;
 	    } else if (abbrev(argv[n], "-help", unique)) {
 		Help();
+		quit = True;
 	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
 		if ((my_class = argv[++n]) == 0) {
 		    Help();
-		} else {
-		    quit = False;
+		    quit = True;
 		}
-		unique = 3;
-	    } else {
-		quit = False;
-		unique = 3;
 	    }
 	}
 	if (quit)
@@ -2107,10 +2108,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	switch (argv[0][1]) {
 	case 'h':		/* -help */
 	    Help();
-	    continue;
+	    exit(0);
 	case 'v':		/* -version */
 	    Version();
-	    continue;
+	    exit(0);
 	case 'C':
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 #ifndef __sgi
@@ -2286,11 +2287,11 @@ main(int argc, char *argv[]ENVP_ARG)
 	/* Set up stderr properly.  Opening this log file cannot be
 	   done securely by a privileged xterm process (although we try),
 	   so the debug feature is disabled by default. */
-	char dbglogfile[45];
+	char dbglogfile[TIMESTAMP_LEN + 20];
 	int i = -1;
 	if (debug) {
 	    timestamp_filename(dbglogfile, "xterm.debug.log.");
-	    if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0666) > 0) {
+	    if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0600) > 0) {
 		i = open(dbglogfile, O_WRONLY | O_TRUNC);
 	    }
 	}
@@ -2395,6 +2396,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif
 
+    TRACE(("checking winToEmbedInto %#lx\n", winToEmbedInto));
     if (winToEmbedInto != None) {
 	XtRealizeWidget(toplevel);
 	/*
@@ -2402,6 +2404,9 @@ main(int argc, char *argv[]ENVP_ARG)
 	 * winToEmbedInto in order to verify that it exists, but I'm still not
 	 * certain what is the best way to do it -GPS
 	 */
+	TRACE(("...reparenting toplevel %#lx into %#lx\n",
+	       XtWindow(toplevel),
+	       winToEmbedInto));
 	XReparentWindow(XtDisplay(toplevel),
 			XtWindow(toplevel),
 			winToEmbedInto, 0, 0);
@@ -2947,8 +2952,7 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 		    strerror(why));
 	}
 	TRACE(("...chown failed: %s\n", strerror(why)));
-    }
-    if (chmod(device, mode) < 0) {
+    } else if (chmod(device, mode) < 0) {
 	why = errno;
 	if (why != ENOENT) {
 	    struct stat sb;
@@ -4744,6 +4748,7 @@ Exit(int n)
      */
     ttyFlush(screen->respond);
 
+#ifdef USE_PTY_SEARCH
     if (am_slave < 0) {
 	TRACE_IDS;
 	/* restore ownership of tty and pty */
@@ -4752,6 +4757,7 @@ Exit(int n)
 	set_owner(ptydev, 0, 0, 0666U);
 #endif
     }
+#endif
 
     /*
      * Close after releasing ownership to avoid race condition: other programs 
@@ -4763,30 +4769,7 @@ Exit(int n)
 	CloseLog(xw);
 #endif
 
-#if OPT_PRINT_ON_EXIT
-    /*
-     * The user may have requested that the contents of the screen will be
-     * written to a file if an X error occurs.
-     */
-    if (!IsEmpty(resource.printFileOnXError)) {
-	switch (n) {
-	case ERROR_XERROR:
-	    /* FALLTHRU */
-	case ERROR_XIOERROR:
-	    /* FALLTHRU */
-	case ERROR_ICEERROR:
-	    closePrinter(xw);
-	    screen->printToFile = True;
-	    screen->printer_command = resource.printFileOnXError;
-	    screen->printer_autoclose = True;
-	    screen->printer_formfeed = False;
-	    screen->printer_newline = True;
-	    screen->print_attributes = resource.printModeOnXError;
-	    xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
-	    break;
-	}
-    }
-#endif
+    xtermPrintOnXError(xw, n);
 
 #ifdef NO_LEAKS
     if (n == 0) {

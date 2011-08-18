@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.289 2011/04/24 18:18:30 tom Exp $ */
+/* $XTermId: menu.c,v 1.295 2011/07/12 10:45:36 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -215,6 +215,11 @@ static void do_num_lock        PROTO_XT_CALLBACK_ARGS;
 static void do_meta_esc        PROTO_XT_CALLBACK_ARGS;
 #endif
 
+#if OPT_PRINT_ON_EXIT
+static void do_write_now       PROTO_XT_CALLBACK_ARGS;
+static void do_write_error     PROTO_XT_CALLBACK_ARGS;
+#endif
+
 #if OPT_RENDERFONT
 static void do_font_renderfont PROTO_XT_CALLBACK_ARGS;
 #endif
@@ -281,6 +286,10 @@ MenuEntry mainMenuEntries[] = {
     { "line1",		NULL,		NULL },
 #ifdef ALLOWLOGGING
     { "logging",	do_logging,	NULL },
+#endif
+#ifdef OPT_PRINT_ON_EXIT
+    { "print-immediate", do_write_now,	NULL },
+    { "print-on-error",	do_write_error,	NULL },
 #endif
     { "print",		do_print,	NULL },
     { "print-redir",	do_print_redir,	NULL },
@@ -513,11 +522,89 @@ sizeof_menu(Widget w, MenuIndex num)
 }
 
 /*
+ * Return an array of flags telling if a given menu item is never going to
+ * be used, so we can reduce the size of menus.
+ */
+static Boolean *
+unusedEntries(XtermWidget xw, MenuIndex num)
+{
+    static Boolean result[XtNumber(mainMenuEntries)
+			  + XtNumber(vtMenuEntries)
+			  + XtNumber(fontMenuEntries)
+#if OPT_TEK4014
+			  + XtNumber(tekMenuEntries)
+#endif
+    ];
+    TScreen *screen = TScreenOf(xw);
+
+    memset(result, 0, sizeof(result));
+    switch (num) {
+    case mainMenu:
+	if (resource.fullscreen > 1) {
+	    result[mainMenu_fullscreen] = True;
+	}
+#if OPT_NUM_LOCK
+	if (!screen->alt_is_not_meta) {
+	    result[mainMenu_alt_esc] = True;
+	}
+#endif
+	if (!xtermHasPrinter(xw)) {
+	    result[mainMenu_print] = True;
+	    result[mainMenu_print_redir] = True;
+	}
+	if (screen->terminal_id < 200) {
+	    result[mainMenu_8bit_ctrl] = True;
+	}
+#if !defined(SIGTSTP)
+	result[mainMenu_suspend] = True;
+#endif
+#if !defined(SIGCONT)
+	result[mainMenu_continue] = True;
+#endif
+#ifdef ALLOWLOGGING
+	if (screen->inhibit & I_LOG) {
+	    result[mainMenu_logging] = True;
+	}
+#endif
+	if (screen->inhibit & I_SIGNAL) {
+	    int n;
+	    for (n = (int) mainMenu_suspend; n <= (int) mainMenu_quit; ++n) {
+		result[n] = True;
+	    }
+	}
+	break;
+    case vtMenu:
+#ifndef NO_ACTIVE_ICON
+	if (!screen->fnt_icon.fs || !screen->iconVwin.window) {
+	    result[vtMenu_activeicon] = True;
+	}
+#endif /* NO_ACTIVE_ICON */
+#if OPT_TEK4014
+	if (screen->inhibit & I_TEK) {
+	    int n;
+	    for (n = (int) vtMenu_tekshow; n <= (int) vtMenu_vthide; ++n) {
+		result[n] = True;
+	    }
+	}
+#endif
+	break;
+    case fontMenu:
+	break;
+#if OPT_TEK4014
+    case tekMenu:
+	break;
+#endif
+    case noMenu:
+	break;
+    }
+    return result;
+}
+
+/*
  * create_menu - create a popup shell and stuff the menu into it.
  */
-
 static Widget
-create_menu(Widget w, XtermWidget xtw, MenuIndex num)
+create_menu(Widget w, XtermWidget xw, MenuIndex num)
 {
     static XtCallbackRec cb[2] =
     {
@@ -526,7 +613,7 @@ create_menu(Widget w, XtermWidget xtw, MenuIndex num)
     static Arg arg =
     {XtNcallback, (XtArgVal) cb};
 
-    TScreen *screen = TScreenOf(xtw);
+    TScreen *screen = TScreenOf(xw);
     MenuHeader *data = &menu_names[num];
     MenuList *list = select_menu(w, num);
     struct _MenuEntry *entries = data->entry_list;
@@ -548,8 +635,8 @@ create_menu(Widget w, XtermWidget xtw, MenuIndex num)
 	};
 
 	screen->menu_item_bitmap =
-	    XCreateBitmapFromData(XtDisplay(xtw),
-				  RootWindowOfScreen(XtScreen(xtw)),
+	    XCreateBitmapFromData(XtDisplay(xw),
+				  RootWindowOfScreen(XtScreen(xw)),
 				  (char *) check_bits, check_width, check_height);
     }
 #if !OPT_TOOLBAR
@@ -560,17 +647,23 @@ create_menu(Widget w, XtermWidget xtw, MenuIndex num)
 				 NULL, 0);
 #endif
     if (list->w != 0) {
-	list->entries = nentries;
+	Boolean *unused = unusedEntries(xw, num);
+	Cardinal n;
 
-	for (; nentries > 0; nentries--, entries++) {
-	    cb[0].callback = (XtCallbackProc) entries->function;
-	    cb[0].closure = (caddr_t) entries->name;
-	    entries->widget = XtCreateManagedWidget(entries->name,
-						    (entries->function
-						     ? smeBSBObjectClass
-						     : smeLineObjectClass),
-						    list->w,
-						    &arg, (Cardinal) 1);
+	list->entries = 0;
+
+	for (n = 0; n < nentries; ++n) {
+	    if (!unused[n]) {
+		cb[0].callback = (XtCallbackProc) entries[n].function;
+		cb[0].closure = (caddr_t) entries[n].name;
+		entries[n].widget = XtCreateManagedWidget(entries[n].name,
+							  (entries[n].function
+							   ? smeBSBObjectClass
+							   : smeLineObjectClass),
+							  list->w,
+							  &arg, (Cardinal) 1);
+		list->entries++;
+	    }
 	}
     }
 #if !OPT_TOOLBAR
@@ -654,43 +747,11 @@ domenu(Widget w,
 	    update_meta_esc();
 	    update_delete_del();
 	    update_keyboard_type();
-#if OPT_NUM_LOCK
-	    if (!screen->alt_is_not_meta) {
-		SetItemSensitivity(mainMenuEntries[mainMenu_alt_esc].widget,
-				   False);
-	    }
+#ifdef PRINT_ON_EXIT
+	    screen->write_error = !IsEmpty(resource.printOnXError);
+	    SetItemSensitivity(mainMenuEntries[mainMenu_write_now].widget, False);
+	    SetItemSensitivity(mainMenuEntries[mainMenu_write_error].widget, screen->write_error);
 #endif
-	    if (!xtermHasPrinter(xw)) {
-		SetItemSensitivity(mainMenuEntries[mainMenu_print].widget,
-				   False);
-		SetItemSensitivity(mainMenuEntries[mainMenu_print_redir].widget,
-				   False);
-	    }
-	    if (screen->terminal_id < 200) {
-		SetItemSensitivity(
-				      mainMenuEntries[mainMenu_8bit_ctrl].widget,
-				      False);
-	    }
-#if !defined(SIGTSTP)
-	    SetItemSensitivity(
-				  mainMenuEntries[mainMenu_suspend].widget, False);
-#endif
-#if !defined(SIGCONT)
-	    SetItemSensitivity(
-				  mainMenuEntries[mainMenu_continue].widget, False);
-#endif
-#ifdef ALLOWLOGGING
-	    if (screen->inhibit & I_LOG) {
-		SetItemSensitivity(
-				      mainMenuEntries[mainMenu_logging].widget, False);
-	    }
-#endif
-	    if (screen->inhibit & I_SIGNAL) {
-		int n;
-		for (n = (int) mainMenu_suspend; n <= (int) mainMenu_quit; ++n) {
-		    SetItemSensitivity(mainMenuEntries[n].widget, False);
-		}
-	    }
 	}
 	break;
 
@@ -717,21 +778,8 @@ domenu(Widget w,
 	    update_altscreen();
 	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
-	    if (!screen->fnt_icon.fs || !screen->iconVwin.window) {
-		SetItemSensitivity(
-				      vtMenuEntries[vtMenu_activeicon].widget,
-				      False);
-	    } else
-		update_activeicon();
+	    update_activeicon();
 #endif /* NO_ACTIVE_ICON */
-#if OPT_TEK4014
-	    if (screen->inhibit & I_TEK) {
-		int n;
-		for (n = (int) vtMenu_tekshow; n <= (int) vtMenu_vthide; ++n) {
-		    SetItemSensitivity(vtMenuEntries[n].widget, False);
-		}
-	    }
-#endif
 	}
 	break;
 
@@ -834,10 +882,29 @@ HandlePopupMenu(Widget w,
 {
     TRACE(("HandlePopupMenu\n"));
     if (domenu(w, event, params, param_count)) {
+	XtermWidget xw = term;
+	TScreen *screen = TScreenOf(xw);
+
 #if OPT_TOOLBAR
 	w = select_menu(w, mainMenu)->w;
 #endif
-	XtCallActionProc(w, "XawPositionSimpleMenu", event, params, 1);
+	/*
+	 * The action procedure in SimpleMenu.c, PositionMenu does not expect a
+	 * key translation event when we are popping up a menu.  In particular,
+	 * if the pointer is outside the menu, then the action procedure will
+	 * fail in its attempt to determine the location of the pointer within
+	 * the menu.  Anticipate that by warping the pointer into the menu when
+	 * a key event is detected.
+	 */
+	switch (event->type) {
+	case KeyPress:
+	case KeyRelease:
+	    XWarpPointer(screen->display, None, XtWindow(w), 0, 0, 0, 0, 0, 0);
+	    break;
+	default:
+	    XtCallActionProc(w, "XawPositionSimpleMenu", event, params, 1);
+	    break;
+	}
 	XtCallActionProc(w, "MenuPopup", event, params, 1);
     }
 }
@@ -1048,6 +1115,37 @@ do_logging(Widget gw GCC_UNUSED,
 }
 #endif
 
+#ifdef OPT_PRINT_ON_EXIT
+static void
+do_write_now(Widget gw GCC_UNUSED,
+	     XtPointer closure GCC_UNUSED,
+	     XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = term;
+
+    xtermPrintImmediately(xw,
+			  (IsEmpty(resource.printFileNow)
+			   ? "XTerm"
+			   : resource.printFileNow),
+			  resource.printOptsNow,
+			  resource.printModeNow);
+}
+
+static void
+do_write_error(Widget gw GCC_UNUSED,
+	       XtPointer closure GCC_UNUSED,
+	       XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = term;
+
+    if (IsEmpty(resource.printFileOnXError)) {
+	resource.printFileOnXError = "XTermError";
+    }
+    TScreenOf(xw)->write_error = (Boolean) (!TScreenOf(xw)->write_error);
+    update_write_error();
+}
+#endif
+
 static void
 do_print(Widget gw GCC_UNUSED,
 	 XtPointer closure GCC_UNUSED,
@@ -1061,7 +1159,10 @@ do_print_redir(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    setPrinterControlMode(term, TScreenOf(term)->printer_controlmode ? 0 : 2);
+    setPrinterControlMode(term,
+			  (PrinterOf(TScreenOf(term)).printer_controlmode
+			   ? 0
+			   : 2));
 }
 
 static void
@@ -1945,6 +2046,26 @@ HandleLogging(Widget w,
 	      Cardinal *param_count)
 {
     HANDLE_VT_TOGGLE(logging);
+}
+#endif
+
+#if OPT_PRINT_ON_EXIT
+void
+HandleWriteNow(Widget w,
+	       XEvent * event GCC_UNUSED,
+	       String * params GCC_UNUSED,
+	       Cardinal *param_count GCC_UNUSED)
+{
+    do_write_now(w, 0, 0);
+}
+
+void
+HandleWriteError(Widget w,
+		 XEvent * event GCC_UNUSED,
+		 String * params,
+		 Cardinal *param_count)
+{
+    HANDLE_VT_TOGGLE(write_error);
 }
 #endif
 
@@ -2987,13 +3108,24 @@ update_logging(void)
 }
 #endif
 
+#if OPT_PRINT_ON_EXIT
+void
+update_write_error(void)
+{
+    UpdateCheckbox("update_write_error",
+		   mainMenuEntries,
+		   mainMenu_write_error,
+		   TScreenOf(term)->write_error);
+}
+#endif
+
 void
 update_print_redir(void)
 {
     UpdateCheckbox("update_print_redir",
 		   mainMenuEntries,
 		   mainMenu_print_redir,
-		   TScreenOf(term)->printer_controlmode);
+		   PrinterOf(TScreenOf(term)).printer_controlmode);
 }
 
 void

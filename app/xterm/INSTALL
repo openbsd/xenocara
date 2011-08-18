@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.124 2011/04/22 09:30:55 tom Exp $
+-- $XTermId: INSTALL,v 1.125 2011/07/07 01:01:14 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2010,2011 by Thomas E. Dickey
 --
@@ -498,6 +498,11 @@ The options (in alphabetic order):
   --with-XawPlus          link with Athena-Plus library
 
   	Look for, compile and link with the Xaw Plus widget library.
+
+  --with-app-class=XXX    X resource class (default: XTerm)
+
+	Rename the X resource class, e.g., for packaging a development version
+	of xterm with different result names.
 
   --with-app-defaults=DIR directory in which to install resource files (default: EPREFIX/lib/X11/app-defaults)
 

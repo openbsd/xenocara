@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.103 2011/02/19 13:09:15 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.104 2011/07/02 00:48:49 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -143,11 +143,14 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
  OSMINORVERSION = OSMinorVersion
 
 #if	defined(NTOArchitecture)	|| \
-	defined(LinuxArchitecture)	|| \
 	defined(OpenBSDArchitecture)	|| \
 	defined(SGIArchitecture)	|| \
 	defined(SunArchitecture)
 TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
+#elif   defined(LinuxArchitecture)
+# if LinuxUsesNcurses
+TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
+# endif
 #endif
 
 #if !defined(OS2Architecture) && !defined(__GNU__)

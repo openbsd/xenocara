@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: df-install.in,v 1.4 2011/04/22 20:43:06 tom Exp $
+# $XTermId: df-install.in,v 1.5 2011/07/07 09:41:14 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -37,8 +37,13 @@
 #
 # Parameters are passed to the desktop-file-install program.  The last
 # parameter is the name of the ".desktop" file to install.
-CATEGORY="@DESKTOP_CATEGORY@"
 OPTS=
+
+if test $# != 0
+then
+	APP_NAME=$1
+	shift 1
+fi
 
 CDPATH=:
 export CDPATH
@@ -75,14 +80,13 @@ then
 fi
 
 NEW_FILE=`basename $OLD_FILE`
-sed -e '/^Category=/s%=.*%@DESKTOP_CATEGORY@%' $OLD_FILE >$MY_TEMP/$NEW_FILE
+sed \
+	-e '/^[^#]/s%xterm%'$APP_NAME'%g' \
+	-e '/^[^#]/s%XTerm%@APP_CLASS@%g' \
+	-e '/^Category=/s%=.*%@DESKTOP_CATEGORY@%' \
+	$OLD_FILE >$MY_TEMP/$NEW_FILE
 cd $MY_TEMP
 
-if ! cmp -s $OLD_FILE $NEW_FILE
-then
-	echo "** customizing desktop category"
-	diff $OLD_FILE $NEW_FILE
-fi
 desktop-file-install $OPTS $NEW_FILE
 
 cd ..

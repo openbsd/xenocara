@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.269 2011/04/23 00:02:03 tom Exp $ */
+/* $XTermId: os2main.c,v 1.271 2011/07/10 22:19:51 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -968,24 +968,21 @@ main(int argc, char **argv ENVP_ARG)
     if (argc > 1) {
 	int n;
 	size_t unique = 2;
-	Bool quit = True;
+	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
 	    TRACE(("parsing %s\n", argv[n]));
 	    if (abbrev(argv[n], "-version", unique)) {
 		Version();
+		quit = True;
 	    } else if (abbrev(argv[n], "-help", unique)) {
 		Help();
+		quit = True;
 	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
 		if ((my_class = argv[++n]) == 0) {
 		    Help();
-		} else {
-		    quit = False;
+		    quit = True;
 		}
-		unique = 3;
-	    } else {
-		quit = False;
-		unique = 3;
 	    }
 	}
 	if (quit)
@@ -1120,10 +1117,10 @@ main(int argc, char **argv ENVP_ARG)
 	switch (argv[0][1]) {
 	case 'h':		/* -help */
 	    Help();
-	    continue;
+	    exit(0);
 	case 'v':		/* -version */
 	    Version();
-	    continue;
+	    exit(0);
 	case 'C':
 	    {
 		struct stat sbuf;
@@ -1294,11 +1291,11 @@ main(int argc, char **argv ENVP_ARG)
 	/* Set up stderr properly.  Opening this log file cannot be
 	   done securely by a privileged xterm process (although we try),
 	   so the debug feature is disabled by default. */
-	char dbglogfile[45];
+	char dbglogfile[TIMESTAMP_LEN + 20];
 	int i = -1;
 	if (debug) {
 	    timestamp_filename(dbglogfile, "xterm.debug.log.");
-	    if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0666) > 0) {
+	    if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0600) > 0) {
 		i = open(dbglogfile, O_WRONLY | O_TRUNC);
 	    }
 	}
@@ -1358,6 +1355,7 @@ main(int argc, char **argv ENVP_ARG)
     }
 #endif
 
+    TRACE(("checking winToEmbedInto %#lx\n", winToEmbedInto));
     if (winToEmbedInto != None) {
 	XtRealizeWidget(toplevel);
 	/*
@@ -1365,6 +1363,9 @@ main(int argc, char **argv ENVP_ARG)
 	 * winToEmbedInto in order to verify that it exists, but I'm still not
 	 * certain what is the best way to do it -GPS
 	 */
+	TRACE(("...reparenting toplevel %#lx into %#lx\n",
+	       XtWindow(toplevel),
+	       winToEmbedInto));
 	XReparentWindow(XtDisplay(toplevel),
 			XtWindow(toplevel),
 			winToEmbedInto, 0, 0);

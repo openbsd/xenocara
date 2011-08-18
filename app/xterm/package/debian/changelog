@@ -1,3 +1,9 @@
+xterm-dev (271) unstable; urgency=low
+
+  * Ubuntu #756273 (accommodate function keys as popup-menu triggers)
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Fri, 29 Apr 2011 20:30:29 -0400
+
 xterm-dev (270) unstable; urgency=low
 
   * more fixes for fullscreen toggle.

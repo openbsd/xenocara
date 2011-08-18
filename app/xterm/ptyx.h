@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.692 2011/04/25 08:33:57 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.700 2011/07/12 08:33:58 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -73,6 +73,8 @@
 #ifdef XRENDERFONT
 #include <X11/Xft/Xft.h>
 #endif
+
+#include <stdio.h>
 
 /* adapted from IntrinsicI.h */
 #define MyStackAlloc(size, stack_cache_array)     \
@@ -1450,7 +1452,22 @@ typedef struct {
 	int	printer_formfeed;	/* print formfeed per function	*/
 	int	printer_newline;	/* print newline per function	*/
 	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
+	int	print_everything;	/* 0=all, 1=dft, 2=alt, 3=saved */
 } PrinterFlags;
+
+typedef struct {
+	FILE *	fp;			/* output file/pipe used	*/
+	Boolean isOpen;			/* output was opened/tried	*/
+	Boolean toFile;			/* true when directly to file	*/
+	String	printer_command;	/* pipe/shell command string	*/
+	Boolean printer_autoclose;	/* close printer when offline	*/
+	Boolean printer_extent;		/* print complete page		*/
+	Boolean printer_formfeed;	/* print formfeed per function	*/
+	Boolean printer_newline;	/* print newline per function	*/
+	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
+	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
+	int	print_everything;	/* 0=all, 1=dft, 2=alt, 3=saved */
+} PrinterState;
 
 typedef struct {
 	unsigned	which;		/* must have NCOLORS bits */
@@ -1715,16 +1732,11 @@ typedef struct {
 
 	String	answer_back;		/* response to ENQ		*/
 
-	Boolean printToFile;		/* false, except for X-errors	*/
-	String	printer_command;	/* pipe/shell command string	*/
-	Boolean printer_autoclose;	/* close printer when offline	*/
-	Boolean printer_extent;		/* print complete page		*/
-	Boolean printer_formfeed;	/* print formfeed per function	*/
-	Boolean printer_newline;	/* print newline per function	*/
-	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
-	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
-
+	PrinterState	printer_state;	/* actual printer state		*/
 	PrinterFlags	printer_flags;	/* working copy of printer flags */
+#if OPT_PRINT_ON_EXIT
+	Boolean		write_error;
+#endif
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
@@ -2322,6 +2334,8 @@ typedef struct _XtermWidgetRec {
     int		cur_background; /* current background color	*/
     Pixel	dft_foreground; /* default foreground color	*/
     Pixel	dft_background; /* default background color	*/
+    Pixel	old_foreground; /* original foreground color	*/
+    Pixel	old_background; /* original background color	*/
 #if OPT_ISO_COLORS
     int		sgr_foreground; /* current SGR foreground color */
     int		sgr_background; /* current SGR background color */
@@ -2415,9 +2429,9 @@ typedef struct _TekWidgetRec {
 #define USE_BOLD(screen) ((screen)->allowBoldFonts)
 
 #if OPT_BLINK_TEXT
-#define BOLDATTR(screen) (USE_BOLD(screen) ? (BOLD | ((screen)->blink_as_bold ? BLINK : 0)) : 0)
+#define BOLDATTR(screen) (unsigned) (USE_BOLD(screen) ? (BOLD | ((screen)->blink_as_bold ? BLINK : 0)) : 0)
 #else
-#define BOLDATTR(screen) (USE_BOLD(screen) ? (BOLD | BLINK) : 0)
+#define BOLDATTR(screen) (unsigned) (USE_BOLD(screen) ? (BOLD | BLINK) : 0)
 #endif
 
 /*
@@ -2452,6 +2466,8 @@ typedef struct _TekWidgetRec {
 
 #define TScreenOf(xw)	(&(xw)->screen)
 #define TekScreenOf(tw) (&(tw)->screen)
+
+#define PrinterOf(screen) (screen)->printer_state
 
 #ifdef SCROLLBAR_RIGHT
 #define OriginX(screen) (((term->misc.useRight)?0:ScrollbarWidth(screen)) + screen->border)

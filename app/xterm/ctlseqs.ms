@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.238 2011/02/16 11:57:19 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.242 2011/07/04 22:56:23 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -317,7 +317,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2010)
+invisible-island.net (2006-2011)
 .AU
 .
 .am BT                  \" add page numbers after first page
@@ -759,7 +759,7 @@ The response depends on the \fBdecTerminalID\fP resource setting.
   \(-> \*(Cs\*?\*1\*;\*2\*c (``VT100 with Advanced Video Option'')
   \(-> \*(Cs\*?\*1\*;\*0\*c (``VT101 with No Options'')
   \(-> \*(Cs\*?\*6\*c (``VT102'')
-  \(->\ \*(Cs\*?\*6\*0\*;\*1\*;\*2\*;\*6\*;\*8\*;\*9\*;\*1\*5\*;\*c (``VT220'')
+  \(-> \*(Cs\*?\*6\*0\*;\*1\*;\*2\*;\*6\*;\*8\*;\*9\*;\*1\*5\*;\*c (``VT220'')
 .br
 The VT100-style response parameters do not mean anything by themselves.
 VT220 parameters do, telling the host what features the terminal supports:
@@ -1429,8 +1429,8 @@ to these codes in an \*(Os\*4 control:
   \*(Pc = \*2 \(<- resource \fBcolorBL\fP (BLINK).
   \*(Pc = \*3 \(<- resource \fBcolorRV\fP (REVERSE).
 .sP
-The 8 colors (below) which may be set or queried
-using \*1\*0 through \*1\*7 are
+The 10 colors (below) which may be set or queried
+using \*1\*0 through \*1\*9 are
 denoted \fIdynamic colors\fR, since the corresponding control sequences
 were the first means for setting \fBxterm\fR's colors dynamically,
 i.e., after it was started.
@@ -1487,13 +1487,13 @@ The parameter \*(Pt is parsed as
 .br
 	\*(Pc\*;\*(Pd
 .br
-The first, \*(Pc, may contain any character from the
+The first, \*(Pc, may contain zero or more characters from the
 set \*c \*p \*(cs \*0 \*1 \*2 \*3 \*4 \*5 \*6 \*7.
 It is used to construct a list of selection parameters for
 clipboard,
 primary,
 select,
-or cut buffers 0 through 8 respectively,
+or cut buffers 0 through 7 respectively,
 in the order given.
 If the parameter is empty, \fIxterm\fP uses \*(cs\*0,
 to specify the configurable primary/clipboard selection and cut buffer 0.
@@ -1506,6 +1506,9 @@ which is then available for pasting by other applications.
 If the second parameter is a \*?,
 \fIxterm\fP replies to the host with the selection
 data encoded using the same protocol.
+.br
+If the second parameter is neither a base64 string nor \*?,
+then the selection is cleared.
 .Ed
 .sP
   \*(Ps = \*1\*0\*4 ; \fIc\fP \(-> Reset Color Number \fIc\fP.  It is reset to
@@ -2184,7 +2187,7 @@ Begin 4015 APL mode (ESC Ctrl-N).  (This is ignored by \fIxterm\fP).
 .IP \\*(Es\\*(Si
 End 4015 APL mode (ESC Ctrl-O).  (This is ignored by \fIxterm\fP).
 .IP \\*(Es\\*(Eb
-COPY (Save Tektronix Codes to file COPYyyyy-mm-dd.hh:mm:ss).
+COPY (Save Tektronix Codes to file COPY\fIyyyy-mm-dd.hh:mm:ss\fP).
   \*(Eb (end transmission block) is the same as Ctrl-W.
 .IP \\*(Es\\*(Ca
 Bypass Condition (ESC Ctrl-X).

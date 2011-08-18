@@ -1,4 +1,4 @@
-MANIFEST for xterm-270, version xterm-270
+MANIFEST for xterm-271, version xterm-271
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -155,6 +155,7 @@ vttests/88colors2.pl            sample script showing 88-colors
 vttests/8colors.sh              test-script to illustrate 8-colors
 vttests/acolors.sh              demonstrate changing the ANSI colors
 vttests/doublechars.sh          test script to demonstrate doublesize chars
+vttests/dynamic.pl              demo for dynamic colors
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
 vttests/dynamic2.sh             complete example of dynamic colors
 vttests/fonts.sh                script to demonstrate font-switching sequences

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.272 2011/04/22 08:54:15 tom Exp $
+dnl $XTermId: configure.in,v 1.274 2011/07/07 00:06:11 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -115,6 +115,7 @@ CF_POSIX_SAVED_IDS
 CF_HELP_MESSAGE(Compile/Install Options:)
 CF_FUNC_TGETENT
 
+CF_WITH_APP_CLASS(XTerm)
 CF_WITH_APP_DEFAULTS
 CF_WITH_ICONDIR
 CF_DISABLE_DESKTOP(xterm)
@@ -277,6 +278,18 @@ AC_CHECK_FUNCS(Xutf8LookupString, [],[
 ])
 
 CF_WITH_IMAKE_CFLAGS($(MAIN_DEFINES) $(VENDORMANDEFS))
+
+# If we have already established that there is a full termcap implementation,
+# suppress the definitions for terminfo that we make have imported from the
+# imake-file.
+if test "x$cf_cv_lib_tgetent" != xno ; then
+	case "$IMAKE_CFLAGS" in
+	*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
+		CF_UNDO_CFLAGS(IMAKE_CFLAGS,terminfo,[-DUSE_TERMINFO[[ 	]]*-DHAVE_TIGETSTR[[ 	]]*])
+		CF_UNDO_CFLAGS(CPPFLAGS,terminfo,[-DUSE_TERMINFO[[ 	]]*-DHAVE_TIGETSTR[[ 	]]*])
+		;;
+	esac
+fi
 
 CF_HELP_MESSAGE(Terminal Configuration:)
 

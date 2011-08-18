@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.122 2011/04/17 19:21:11 tom Exp $ */
+/* $XTermId: trace.c,v 1.125 2011/07/12 09:31:05 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -513,6 +513,7 @@ TraceFocus(Widget w, XEvent * ev)
 	    TRACE(("\tdetail:    %s\n", visibleNotifyDetail(event->detail)));
 	    TRACE(("\tmode:      %d\n", event->mode));
 	    TRACE(("\twindow:    %#lx\n", event->window));
+	    TRACE(("\tfocus:     %d\n", event->focus));
 	    TRACE(("\troot:      %#lx\n", event->root));
 	    TRACE(("\tsubwindow: %#lx\n", event->subwindow));
 	}
@@ -604,14 +605,14 @@ TraceTranslations(const char *name, Widget w)
 
 int
 TraceResizeRequest(const char *fn, int ln, Widget w,
-		   Dimension reqwide,
-		   Dimension reqhigh,
+		   unsigned reqwide,
+		   unsigned reqhigh,
 		   Dimension * gotwide,
 		   Dimension * gothigh)
 {
     int rc;
 
-    TRACE(("%s@%d ResizeRequest %dx%d\n", fn, ln, reqhigh, reqwide));
+    TRACE(("%s@%d ResizeRequest %ux%u\n", fn, ln, reqhigh, reqwide));
     rc = XtMakeResizeRequest((Widget) w, reqwide, reqhigh, gotwide, gothigh);
     TRACE(("... ResizeRequest -> "));
     if (gothigh && gotwide)
@@ -635,12 +636,21 @@ TraceXtermResources(void)
     XRES_S(icon_name);
     XRES_S(term_name);
     XRES_S(tty_modes);
+    XRES_I(minBufSize);
+    XRES_I(maxBufSize);
     XRES_B(hold_screen);
     XRES_B(utmpInhibit);
     XRES_B(utmpDisplayId);
     XRES_B(messages);
+    XRES_S(menuLocale);
+    XRES_S(omitTranslation);
+    XRES_S(keyboardType);
 #if OPT_PRINT_ON_EXIT
+    XRES_I(printModeNow);
     XRES_I(printModeOnXError);
+    XRES_I(printOptsNow);
+    XRES_I(printOptsOnXError);
+    XRES_S(printFileNow);
     XRES_S(printFileOnXError);
 #endif
 #if OPT_SUNPC_KBD

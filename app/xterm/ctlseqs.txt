@@ -20,7 +20,7 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2010)
+                    invisible-island.net (2006-2011)
 
 
 
@@ -879,8 +879,8 @@ OSC Ps ; Pt BEL
             Pc = 2  <- resource colorBL (BLINK).
             Pc = 3  <- resource colorRV (REVERSE).
 
-          The 8 colors (below) which may be set or queried using 1 0
-          through 1 7  are denoted dynamic colors, since the correspond-
+          The 10 colors (below) which may be set or queried using 1 0
+          through 1 9  are denoted dynamic colors, since the correspond-
           ing control sequences were the first means for setting xterm's
           colors dynamically, i.e., after it was started.  They are not
           the same as the ANSI colors.  These controls may be disabled
@@ -931,18 +931,20 @@ OSC Ps ; Pt BEL
           be disabled using the allowWindowOps resource.  The parameter
           Pt is parsed as
                Pc; Pd
-          The first, Pc, may contain any character from the set c  p  s
-          0  1  2  3  4  5  6  7 .  It is used to construct a list of
-          selection parameters for clipboard, primary, select, or cut
-          buffers 0 through 8 respectively, in the order given.  If the
-          parameter is empty, xterm uses s 0 , to specify the config-
-          urable primary/clipboard selection and cut buffer 0.
+          The first, Pc, may contain zero or more characters from the
+          set c  p  s  0  1  2  3  4  5  6  7 .  It is used to construct
+          a list of selection parameters for clipboard, primary, select,
+          or cut buffers 0 through 7 respectively, in the order given.
+          If the parameter is empty, xterm uses s 0 , to specify the
+          configurable primary/clipboard selection and cut buffer 0.
           The second parameter, Pd, gives the selection data.  Normally
           this is a string encoded in base64.  The data becomes the new
           selection, which is then available for pasting by other appli-
           cations.
           If the second parameter is a ? , xterm replies to the host
           with the selection data encoded using the same protocol.
+          If the second parameter is neither a base64 string nor ? ,
+          then the selection is cleared.
 
             Ps = 1 0 4  ; c -> Reset Color Number c.  It is reset to the
           color specified by the corresponding X resource.  Any number

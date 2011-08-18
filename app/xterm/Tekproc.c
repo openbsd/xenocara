@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.188 2011/02/20 00:55:33 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.189 2011/07/10 22:19:32 tom Exp $ */
 
 /*
  * Copyright 2001-2010,2011 by Thomas E. Dickey
@@ -1897,7 +1897,7 @@ TekCopy(TekWidget tw)
 	TScreen *screen = TScreenOf(xw);
 
 	TekLink *Tp;
-	char buf[32];
+	char buf[TIMESTAMP_LEN + 10];
 	char initbuf[5];
 	int tekcopyfd;
 

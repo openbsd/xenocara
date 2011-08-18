@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.124 2011/04/23 12:14:21 tom Exp $ */
+/* $XTermId: menu.h,v 1.125 2011/07/11 09:41:34 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -138,10 +138,12 @@ extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
 extern void HandleTiteInhibit      PROTO_XT_ACTIONS_ARGS;
 extern void HandleToolbar          PROTO_XT_ACTIONS_ARGS;
-extern void HandleUTF8Mode         PROTO_XT_ACTIONS_ARGS;
 extern void HandleUTF8Fonts        PROTO_XT_ACTIONS_ARGS;
+extern void HandleUTF8Mode         PROTO_XT_ACTIONS_ARGS;
 extern void HandleUTF8Title        PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
+extern void HandleWriteError       PROTO_XT_ACTIONS_ARGS;
+extern void HandleWriteNow         PROTO_XT_ACTIONS_ARGS;
 
 extern void SetupMenus (Widget /*shell*/, Widget */*forms*/, Widget */*menus*/, Dimension * /*menu_high*/);
 
@@ -170,6 +172,10 @@ typedef enum {
     mainMenu_line1,
 #ifdef ALLOWLOGGING
     mainMenu_logging,
+#endif
+#if OPT_PRINT_ON_EXIT
+    mainMenu_write_now,
+    mainMenu_write_error,
 #endif
     mainMenu_print,
     mainMenu_print_redir,
@@ -356,6 +362,12 @@ extern void update_allowsends(void);
 extern void update_logging(void);
 #else
 #define update_logging() /*nothing*/
+#endif
+
+#if OPT_PRINT_ON_EXIT
+extern void update_write_error(void);
+#else
+#define update_write_error() /*nothing*/
 #endif
 
 extern void update_print_redir(void);

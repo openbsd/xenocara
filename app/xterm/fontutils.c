@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.358 2011/04/24 22:58:56 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.360 2011/07/13 09:54:49 tom Exp $ */
 
 /************************************************************
 
@@ -976,7 +976,7 @@ xtermLoadFont(XtermWidget xw,
 
 	if (check_fontname(myfonts.f_w)) {
 	    cache_menu_font_name(screen, fontnum, fWide, myfonts.f_w);
-	} else if (!is_double_width_font(fnts[fNorm].fs)) {
+	} else if (screen->utf8_fonts && !is_double_width_font(fnts[fNorm].fs)) {
 	    fp = get_font_name_props(screen->display, fnts[fNorm].fs, normal);
 	    if (fp != 0) {
 		myfonts.f_w = wide_font_name(fp);
@@ -1005,17 +1005,32 @@ xtermLoadFont(XtermWidget xw,
 
 	if (check_fontname(myfonts.f_wb)) {
 
-	    xtermOpenFont(xw, myfonts.f_wb, &fnts[fWBold], warn[fWBold], False);
+	    xtermOpenFont(xw,
+			  myfonts.f_wb,
+			  &fnts[fWBold],
+			  (screen->utf8_fonts
+			   ? warn[fWBold]
+			   : (xw->misc.fontWarnings + 1)),
+			  False);
 
 	    if (derived
 		&& !compatibleWideCounts(fnts[fWide].fs, fnts[fWBold].fs)) {
 		xtermCloseFont(xw, &fnts[fWBold]);
 	    }
 	    if (fnts[fWBold].fs == 0) {
-		myfonts.f_wb = myfonts.f_w;
-		warn[fWBold] = fwAlways;
-		xtermCopyFontInfo(&fnts[fWBold], &fnts[fWide]);
-		TRACE(("...cannot load wide-bold, use wide %s\n", NonNull(myfonts.f_w)));
+		if (IsEmpty(myfonts.f_w)) {
+		    myfonts.f_wb = myfonts.f_b;
+		    warn[fWBold] = fwAlways;
+		    xtermCopyFontInfo(&fnts[fWBold], &fnts[fBold]);
+		    TRACE(("...cannot load wide-bold, use bold %s\n",
+			   NonNull(myfonts.f_b)));
+		} else {
+		    myfonts.f_wb = myfonts.f_w;
+		    warn[fWBold] = fwAlways;
+		    xtermCopyFontInfo(&fnts[fWBold], &fnts[fWide]);
+		    TRACE(("...cannot load wide-bold, use wide %s\n",
+			   NonNull(myfonts.f_w)));
+		}
 	    } else {
 		TRACE(("...%s wide/bold %s\n",
 		       derived ? "derived" : "given",
@@ -1251,6 +1266,14 @@ xtermLoadFont(XtermWidget xw,
 	    TRACE(("MERGE_SUBFONT " #dst "." #name " found %s\n", NonNull(dst.name))); \
 	}
 
+#define INFER_SUBFONT(src,dst,name) \
+	if (IsEmpty(dst.name)) { \
+	    TRACE(("INFER_SUBFONT " #dst "." #name " will infer\n")); \
+	    dst.name = x_strdup(""); \
+	} else { \
+	    TRACE(("INFER_SUBFONT " #dst "." #name " found %s\n", NonNull(dst.name))); \
+	}
+
 #define COPY_MENU_FONTS(src,dst) \
 	TRACE(("COPY_MENU_FONTS " #src " to " #dst "\n")); \
 	for (n = fontMenu_default; n <= fontMenu_lastBuiltin; ++n) { \
@@ -1372,10 +1395,10 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	     * If a particular resource value was not found, use the original.
 	     */
 	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_n);
-	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_b);
+	    INFER_SUBFONT(xw->misc, subresourceRec, default_font.f_b);
 #if OPT_WIDE_CHARS
-	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_w);
-	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_wb);
+	    INFER_SUBFONT(xw->misc, subresourceRec, default_font.f_w);
+	    INFER_SUBFONT(xw->misc, subresourceRec, default_font.f_wb);
 #endif
 	    for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; ++n)
 		MERGE_SUBFONT(xw->screen, subresourceRec, MenuFontName(n));
@@ -2227,8 +2250,10 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 /*
  * ...since we'll scale the values anyway.
  */
-#define SCALE_X(n) n = (n * (((int) font_width) - 1)) / (BOX_WIDE-1)
-#define SCALE_Y(n) n = (n * (((int) font_height) - 1)) / (BOX_HIGH-1)
+#define SCALED_X(n) ((int)(n) * (((int) font_width) - 1)) / (BOX_WIDE-1)
+#define SCALED_Y(n) ((int)(n) * (((int) font_height) - 1)) / (BOX_HIGH-1)
+#define SCALE_X(n) n = SCALED_X(n)
+#define SCALE_Y(n) n = SCALED_Y(n)
 
 #define SEG(x0,y0,x1,y1) x0,y0, x1,y1
 
@@ -2515,10 +2540,10 @@ xtermDrawBoxChar(XtermWidget xw,
 	points[4].y = points[0].y;
 
 	for (n = 0; n < npoints; ++n) {
-	    SCALE_X(points[n].x);
-	    SCALE_Y(points[n].y);
-	    points[n].x += x;
-	    points[n].y += y;
+	    points[n].x = (short) SCALED_X(points[n].x);
+	    points[n].y = (short) SCALED_Y(points[n].y);
+	    points[n].x = (short) (points[n].x + x);
+	    points[n].y = (short) (points[n].y + y);
 	}
 
 	XFillPolygon(screen->display,
@@ -2532,7 +2557,7 @@ xtermDrawBoxChar(XtermWidget xw,
 
 	SCALE_X(x_coord);
 	SCALE_Y(y_coord);
-	SCALE_X(width);
+	width = (unsigned) SCALED_X(width);
 
 	XDrawArc(screen->display,
 		 VWindow(screen), gc2,
@@ -2546,7 +2571,7 @@ xtermDrawBoxChar(XtermWidget xw,
 
 	SCALE_X(x_coord);
 	SCALE_Y(y_coord);
-	SCALE_X(width);
+	width = (unsigned) SCALED_X(width);
 
 	XDrawArc(screen->display,
 		 VWindow(screen), gc2,

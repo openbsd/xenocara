@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.9 2011/03/20 18:53:25 tom Exp $
+# $XTermId: xterm.spec,v 1.13 2011/07/14 22:15:37 tom Exp $
 Summary: A text-based Web browser
-Name: xterm
-Version: dev
-Release: 270
+Name: xterm-dev
+Version: 271
+Release: 1
 License: X11
 Group: Applications/Internet
-Source: xterm-%{release}.tgz
+Source: xterm-%{version}.tgz
 # URL: http://invisible-island.net/xterm/
 Provides: x-terminal-emulator
 
@@ -32,9 +32,13 @@ The xterm program uses bitmap images provided by the xbitmaps package.
 Those interested in using koi8rxterm will likely want to install the
 xfonts-cyrillic package as well.
 
+This package is configured to use "xterm-dev" and "XTermDev" for the program
+and its resource class, to avoid conflict with other packages.
+
 %prep
 
 %define my_suffix -dev
+%define my_class XTermDev
 
 %define desktop_vendor  dickey
 %define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo "yes" ; fi)
@@ -52,7 +56,7 @@ xfonts-cyrillic package as well.
 %define _pixmapsdir %{_datadir}/pixmaps
 %define my_docdir   %{_datadir}/doc/xterm%{my_suffix}
 
-%setup -q -n xterm-%{release}
+%setup -q -n xterm-%{version}
 
 %build
 CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
@@ -66,6 +70,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--program-suffix=%{my_suffix} \
 	--without-xterm-symlink \
 %endif
+	--with-app-class=%{my_class} \
 	--enable-256-color \
 	--enable-88-color \
 	--enable-dabbrev \
@@ -125,15 +130,6 @@ make install-bin install-man install-app install-icon \
 	chmod 644 $RPM_BUILD_ROOT%{my_docdir}/vttests/*
 
 %if "%{desktop_utils}" == "yes"
-for p in *.desktop
-do
-	sed -i \
-		-e 's/Categories=System;/Categories=Application;Utility;/' \
-		-e 's/^\\(Name=.*\\)/\\1%{my_suffix}/' \
-		-e 's/^\\(Exec=.*\\)/\\1%{my_suffix}/' \
-	$p
-done
-
 make install-desktop \
 	DESKTOP_FLAGS="--vendor='%{desktop_vendor}' --dir $RPM_BUILD_ROOT%{_datadir}/applications"
 

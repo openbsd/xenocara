@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.56 2010/11/11 01:10:52 tom Exp $ */
+/* $XTermId: trace.h,v 1.57 2011/07/08 10:51:08 tom Exp $ */
 
 /*
  *
@@ -101,11 +101,11 @@ extern	void	TraceXtermResources(void);
 #undef  TRACE_XRES
 #define	TRACE_XRES() TraceXtermResources()
 
-extern	int	TraceResizeRequest(const char * /* fn */, int  /* ln */, Widget  /* w */, Dimension  /* reqwide */, Dimension  /* reqhigh */, Dimension * /* gotwide */, Dimension * /* gothigh */);
+extern	int	TraceResizeRequest(const char * /* fn */, int  /* ln */, Widget  /* w */, unsigned  /* reqwide */, unsigned  /* reqhigh */, Dimension * /* gotwide */, Dimension * /* gothigh */);
 #undef  REQ_RESIZE
 #define REQ_RESIZE(w, reqwide, reqhigh, gotwide, gothigh) \
 	TraceResizeRequest(__FILE__, __LINE__, w, \
-			   (Dimension) (reqwide), (Dimension) (reqhigh), \
+			   (reqwide), (reqhigh), \
 			   (gotwide), (gothigh))
 
 #else

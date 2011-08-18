@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1037 2011/04/26 10:48:22 tom Exp $
+  $XTermId: xterm.log.html,v 1.1063 2011/07/15 00:51:57 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_271">Patch #271 - 2011/07/14</A>
 <LI><A HREF="#xterm_270">Patch #270 - 2011/04/26</A>
 <LI><A HREF="#xterm_269">Patch #269 - 2011/02/19</A>
 <LI><A HREF="#xterm_268">Patch #268 - 2011/02/10</A>
@@ -329,6 +330,102 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_271">Patch #271 - 2011/07/14</A></H1>
+<ul>
+	<li>omit permissions adjustments to pty on exit except for
+	    pre-Unix98 ptys, since modern implementations handle this
+	    (report by Sean C Farley).
+
+	<li>modify logic for switching fonts between UTF-8 and non-UTF-8
+	    encoding to not merge the derivable bold-, wide- and widebold
+	    values from the VT100 fonts.  Also suppress warning when not
+	    using UTF-8 fonts if wide- and widebold-fonts cannot be derived
+	    or otherwise loaded (report by Werner Scheinast).
+
+	<li>modify menu-creation to suppress entries which will never be used
+	    in the current configuration, rather than simply disabling them.
+
+	<li>add resource <code>printModeImmediate</code> and menu item to
+	    allow print of screen plus saved lines to a file.
+
+	<li>add menu item to allow runtime enable/disable of the
+	    <code>printFileOnXError</code> feature.
+
+	<li>append a timestamp to filename used in
+	    <code>printFileOnXError</code> feature,
+	    and restrict its permissions
+	    (request by Vincent Lefevre).
+
+	<li>add a check when cancelling cursor-blinking, in case the cursor
+	    is blinked off. Fix so that the cursor is repainted without
+	    waiting for other events, e.g., keypress (report by Ailin Nemui).
+
+	<li>add configure <code>--with-app-class</code> option, to simplify
+	    building "xterm-dev" packages with filenames that do not conflict
+	    with conventional "xterm" packages.
+
+	<li>corrected logic flow for DECSCL, which prevented the updated
+	    operating level from being reported via DECRQSS (report by
+	    Ailin Nemui).
+
+	<li>corrected default for <code>brokenStringTerm</code> resource to
+	    match manpage.
+
+	<li>add vttests/dynamic.pl
+
+	<li>add runtime check for locale not supported by X libraries, and
+	    fallback to XA_STRING in this case (request by Bryan Henderson).
+
+	<li>fix a special case in configure script after no FreeType libraries
+	    are found.  The script was proceeding to check for a usable
+	    configuration.
+
+	<li>add <code>xterm+tmux</code> building block to terminfo (adapted
+	    from changes proposed by Ailin Nemui and Nicholas Marriott).
+
+	<li>improve discussion of <code>faceName</code> resource in manpage
+	    (adapted from suggestions by Jens Schweikhardt).
+
+	<li>correct mapping of shifted up/down cursor-keys in termcap
+	    function-keys mode, i.e., resource <code>tcapFunctionKeys</code>
+	    (patch by Gertjan Halkes).
+
+	<li>update AIX case in <code>CF_XOPEN_SOURCE</code> configure macro to
+	    add release 7.x.
+
+	<li>modify ifdef's in <code>xterm_io.h</code> for <code>__hpux</code>
+	    to force that to use the hacked SYSV support in that file.
+	    This fixes a problem with a non-blocking socket call (patch
+	    by Paul Lampert).
+
+	<li>improve filtering of desktop category scanning, to exclude XFCE.
+
+	<li>modify configure script to work with systems that have both
+	    ncurses (or other terminfo) as well as a real termcap library,
+	    e.g., Slackware (report by Alan Watts).
+
+	<li>modify configure script to work around special case where user's
+	    environment adds compiler flags to the <code>CC</code> variable
+	    (prompted by report by Paul Lampert).
+
+	<li>amend change for Debian #110226 so that "-h" or "-v" options cause
+	    an exit, rather than simply printing to stdout while the window is
+	    displayed (Debian #629358).
+
+	<li>add response for <code>DECRQSS</code> which gives the setting
+	    for <code>DECSCUSR</code>.
+
+	<li>modify AllocateTermColor() to handle
+	    <code>XtDefaultForeground</code> and
+	    <code>XtDefaultBackground</code>,
+	    which are not recognized by <code>XParseColor</code>.
+	    For example, this fixes the use of OSC&nbsp;112
+	    when no explicit cursor color was set (report by Ailin Nemui).
+
+	<li>handle special-case of <code>KeyPress</code> translated to
+	    <code>popup-menu</code> action (Ubuntu #756273).
+</ul>
+
 <H1><A NAME="xterm_270">Patch #270 - 2011/04/26</A></H1>
 <ul>
 	<li>build-fix, e.g., for using <code>imake</code> on platforms which
@@ -339,7 +436,8 @@ is the latest version of this file.
 	<li>mention default for <code>fontWarnings</code> in manpage
 	    (report by Werner Scheinast).
 
-	<li>split "UTF-8" menu entry into "UTF-8 Encoding" and "UTF-8 Fonts".
+	<li>split "UTF-8" menu entry into "UTF-8 Encoding" and "UTF-8 Fonts"
+	    (prompted by discussion with Werner Scheinast).
 
 	<li>gray-out font-menu entries when a font fails to load, e.g.,
 	    a bitmap font is not installed.

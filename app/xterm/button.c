@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.397 2011/02/13 20:09:31 tom Exp $ */
+/* $XTermId: button.c,v 1.398 2011/07/04 21:49:39 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1407,13 +1407,15 @@ allocUtf8Targets(Widget w, TScreen * screen)
 	    } else {
 		int n = 0;
 
-		result[n++] = XA_UTF8_STRING(XtDisplay(w));
+		if (XSupportsLocale()) {
+		    result[n++] = XA_UTF8_STRING(XtDisplay(w));
 #ifdef X_HAVE_UTF8_STRING
-		if (screen->i18nSelections) {
-		    result[n++] = XA_TEXT(XtDisplay(w));
-		    result[n++] = XA_COMPOUND_TEXT(XtDisplay(w));
-		}
+		    if (screen->i18nSelections) {
+			result[n++] = XA_TEXT(XtDisplay(w));
+			result[n++] = XA_COMPOUND_TEXT(XtDisplay(w));
+		    }
 #endif
+		}
 		result[n++] = XA_STRING;
 		result[n] = None;
 	    }
@@ -1441,12 +1443,14 @@ alloc8bitTargets(Widget w, TScreen * screen)
 	    } else {
 		int n = 0;
 
+		if (XSupportsLocale()) {
 #ifdef X_HAVE_UTF8_STRING
-		result[n++] = XA_UTF8_STRING(XtDisplay(w));
+		    result[n++] = XA_UTF8_STRING(XtDisplay(w));
 #endif
-		if (screen->i18nSelections) {
-		    result[n++] = XA_TEXT(XtDisplay(w));
-		    result[n++] = XA_COMPOUND_TEXT(XtDisplay(w));
+		    if (screen->i18nSelections) {
+			result[n++] = XA_TEXT(XtDisplay(w));
+			result[n++] = XA_COMPOUND_TEXT(XtDisplay(w));
+		    }
 		}
 		result[n++] = XA_STRING;
 		result[n] = None;
@@ -1931,7 +1935,7 @@ SelectionReceived(Widget w,
 	   text_prop.nitems));
 
 #if OPT_WIDE_CHARS
-    if (screen->wide_chars) {
+    if (XSupportsLocale() && screen->wide_chars) {
 	if (*type == XA_UTF8_STRING(dpy) ||
 	    *type == XA_STRING ||
 	    *type == XA_COMPOUND_TEXT(dpy)) {
@@ -1939,7 +1943,7 @@ SelectionReceived(Widget w,
 	    if (Xutf8TextPropertyToTextList(dpy, &text_prop,
 					    &text_list,
 					    &text_list_count) < 0) {
-		TRACE(("Conversion failed\n"));
+		TRACE(("default Xutf8 Conversion failed\n"));
 		text_list = NULL;
 	    }
 	}
@@ -1962,7 +1966,7 @@ SelectionReceived(Widget w,
 					 &text_list, &text_list_count);
 	    } else
 #endif
-	    if (*type == XA_STRING && screen->brokenSelections) {
+	    if (*type == XA_STRING && (!XSupportsLocale() || screen->brokenSelections)) {
 		rc = XTextPropertyToStringList(&text_prop,
 					       &text_list, &text_list_count);
 	    } else {

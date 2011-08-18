@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.521 2011/04/17 19:04:06 tom Exp $ */
+/* $XTermId: misc.c,v 1.530 2011/07/11 00:16:41 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1495,7 +1495,7 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
  *	 0 otherwise.
  */
 int
-creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, int mode)
+creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
 {
     int fd;
     pid_t pid;
@@ -1960,7 +1960,7 @@ AllocateAnsiColor(XtermWidget xw,
 	} else {
 	    result = 1;
 	    SET_COLOR_RES(res, def.pixel);
-	    TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
+	    TRACE(("AllocateAnsiColor[%d] %s (pixel 0x%06lx)\n",
 		   (int) (res - screen->Acolors), spec, def.pixel));
 #if OPT_COLOR_RES
 	    if (!res->mode)
@@ -2387,7 +2387,7 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 		color.red,
 		color.green,
 		color.blue);
-	TRACE(("ReportColors %d: %#lx as %s\n",
+	TRACE(("ReportColorRequest #%d: 0x%06lx as %s\n",
 	       ndx, pOldColors->colors[ndx], buffer));
 	unparseputc1(xw, ANSI_OSC);
 	unparseputs(xw, buffer);
@@ -2734,6 +2734,8 @@ do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
     Bool need_data = True;
 
     TRACE(("do_osc %s\n", oscbuf));
+
+    (void) screen;
 
     /*
      * Lines should be of the form <OSC> number ; string <ST>, however
@@ -3284,6 +3286,13 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		});
 #endif
 		strcat(reply, "m");
+	    } else if (!strcmp(cp, " q")) {	/* DECSCUSR */
+		int code = 0;
+		if (screen->cursor_underline)
+		    code |= 2;
+		if (screen->cursor_blink)
+		    code |= 1;
+		sprintf(reply, "%d%s", code + 1, cp);
 	    } else
 		okay = False;
 
@@ -3521,10 +3530,10 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif
 	case 18:		/* DECPFF: print form feed */
-	    result = MdBool(screen->printer_formfeed);
+	    result = MdBool(PrinterOf(screen).printer_formfeed);
 	    break;
 	case 19:		/* DECPEX: print extent */
-	    result = MdBool(screen->printer_extent);
+	    result = MdBool(PrinterOf(screen).printer_extent);
 	    break;
 	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
 	    result = MdBool(screen->cursor_set);
@@ -3883,7 +3892,7 @@ ChangeTitle(XtermWidget xw, char *name)
     ChangeGroup(xw, XtNtitle, name);
 }
 
-#define Strlen(s) strlen((char *)(s))
+#define Strlen(s) strlen((const char *)(s))
 
 void
 ChangeXprop(char *buf)
@@ -3966,18 +3975,31 @@ AllocateTermColor(XtermWidget xw,
 	Colormap cmap = xw->core.colormap;
 	char *newName;
 
-	if (XParseColor(screen->display, cmap, name, &def)
-	    && (XAllocColor(screen->display, cmap, &def)
-		|| find_closest_color(screen->display, cmap, &def))
+	result = True;
+	if (!x_strcasecmp(name, XtDefaultForeground)) {
+	    def.pixel = xw->old_foreground;
+	} else if (!x_strcasecmp(name, XtDefaultBackground)) {
+	    def.pixel = xw->old_background;
+	} else if (XParseColor(screen->display, cmap, name, &def)
+		   && (XAllocColor(screen->display, cmap, &def)
+		       || find_closest_color(screen->display, cmap, &def))) {
+	    ;			/*empty */
+	} else {
+	    result = False;
+	}
+
+	if (result
 	    && (newName = x_strdup(name)) != 0) {
-	    if (COLOR_DEFINED(pNew, ndx))
+	    if (COLOR_DEFINED(pNew, ndx)) {
 		free(pNew->names[ndx]);
+	    }
 	    SET_COLOR_VALUE(pNew, ndx, def.pixel);
 	    SET_COLOR_NAME(pNew, ndx, newName);
-	    TRACE(("AllocateTermColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel));
-	    result = True;
+	    TRACE(("AllocateTermColor #%d: %s (pixel 0x%06lx)\n",
+		   ndx, newName, def.pixel));
 	} else {
 	    TRACE(("AllocateTermColor #%d: %s (failed)\n", ndx, name));
+	    result = False;
 	}
     }
     return result;
@@ -4564,7 +4586,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 	/* supply the "turn on/off" strings if needed */
 #if OPT_TRACE
 	for (j = 0; j < opt_count; j++) {
-	    if (!strncmp(opt_array[j].opt, "-/+", 3)) {
+	    if (!strncmp(opt_array[j].opt, "-/+", (size_t) 3)) {
 		char temp[80];
 		const char *name = opt_array[j].opt + 3;
 		for (k = 0; k < numDescs; ++k) {
@@ -4590,7 +4612,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 			    mesg = "turn off/on";
 			}
 			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
-			    if (strncmp(opt_array[j].desc, "turn ", 5)) {
+			    if (strncmp(opt_array[j].desc, "turn ", (size_t) 5)) {
 				char *s = CastMallocN(char,
 						      strlen(mesg)
 						      + 1

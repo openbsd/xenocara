@@ -14,6 +14,7 @@ DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DESKTOP_VENDOR  = dickey
 
 PKG_SUFFIX	= -dev
+PKG_CLASS	= XTermDev
 
 PACKAGE		:= $(shell dpkg-parsechangelog| \
 			sed -n 's/^Source: \(.*\)$$/\1/p')
@@ -55,6 +56,7 @@ configure-stamp:
 		--sysconfdir=/etc/$(PACKAGE) \
 		--localstatedir=/var \
 		--libdir=/etc/$(PACKAGE) \
+		--with-app-class=$(PKG_CLASS) \
 		--without-xterm-symlink \
 		--enable-256-color \
 		--enable-88-color \
@@ -148,13 +150,6 @@ binary-indep: build install
 
 	# The Debian package does not install desktop files.
 	# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=486317
-	$(SHELL) -c 'for p in *.desktop;do \
-		sed -i \
-			-e "s/Categories=System;/Categories=Application;Utility;/" \
-			-e "s/^\\(Name=.*\\)/\\1$(PKG_SUFFIX)/" \
-			-e "s/^\\(Exec=.*\\)/\\1$(PKG_SUFFIX)/" \
-		$$p; done'
-
 	$(MAKE) install-desktop \
 		DESKTOP_FLAGS="--vendor='$(DESKTOP_VENDOR)' --dir $(MY_DESKTOP)"
 

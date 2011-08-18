@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.155 2007/11/11 23:26:52 tom Exp $
+# $XTermId: terminfo,v 1.156 2011/07/04 11:11:43 tom Exp $
 #
 # $XFree86: xc/programs/xterm/terminfo,v 3.59 2006/02/13 01:14:59 dickey Exp $
 #
@@ -6,7 +6,7 @@
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2006,2007 by Thomas E. Dickey
+# Copyright 1996-2007,2011 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -137,6 +137,7 @@ xterm-new|modern xterm terminal emulator,
 	kent=\EOM,
 	rin=\E[%p1%dT,
 	use=xterm+pcfkeys,
+	use=xterm+tmux,
 	use=xterm-basic,
 #
 # Encode modifiers using parameters (see "Xterm Control Sequences" ctlseqs.ms).
@@ -198,6 +199,31 @@ xterm+pcfkeys|fragment for PC-style keys,
 	use=xterm+pcf2,
 	use=xterm+pce2,
 	use=xterm+pcc2,
+
+# This chunk is based on suggestions by Ailin Nemui and Nicholas Marriott, who
+# asked for some of xterm's advanced features to be added to its terminfo
+# entry.  It defines extended capabilities not found in standard terminfo or
+# termcap.  These are useful in tmux, for instance, hence the name.
+#
+# One caveat in adding extended capabilities in ncurses is that if the names
+# are longer than two characters, then they will not be visible through the
+# termcap interface.
+#
+# Ms modifies the selection/clipboard.  Its parameters are
+#	p1 = the storage unit (clipboard, selection or cut buffer)
+#	p2 = the base64-encoded clipboard content.
+# 
+# Ss is used to set the cursor style as described by the DECSCUSR
+#	function to a block or underline.
+# Se resets the cursor style to the terminal power-on default.
+#  
+# Cs and Ce set and reset the cursor colour.
+xterm+tmux|advanced xterm features used in tmux,
+	Cr=\E]112\007,
+	Cs=\E]12;%p1%s\007,
+	Ms=\E]52;%p1%s;%p2%s\007,
+	Se=\E[2 q,
+	Ss=\E[%p1%d q,
 #
 # The ctrlFKeys resource is only relevant to the xterm+pcfn and xterm+pcfN
 # entries, since the modifyFunctionKeys resource overrides ctrlFKeys when it is

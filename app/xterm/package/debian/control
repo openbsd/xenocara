@@ -18,4 +18,6 @@ Description: X terminal emulator (development version)
  implements ISO/ANSI colors, Unicode, and most of the control sequences
  used by DEC VT220 terminals.
  .
- This package contains a development version of xterm.
+ This package contains a development version of xterm.  It is
+ configured to use "xterm-dev" and "XTermDev" for the program
+ and its resource class, to avoid conflict with other packages.

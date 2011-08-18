@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.647 2011/04/23 12:15:04 tom Exp $ */
+/* $XTermId: xterm.h,v 1.654 2011/07/12 08:39:49 tom Exp $ */
 
 /************************************************************
 
@@ -825,7 +825,7 @@ extern void ShowCursor (void);
 extern void SwitchBufPtrs (TScreen * /* screen */, int /* toBuf */);
 extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTInitTranslations (void);
-extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
+extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */) GCC_NORETURN;
 extern void VTRun (XtermWidget /* xw */);
 extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */, Cardinal  /* len */);
 extern void releaseCursorGCs(XtermWidget /*xw*/);
@@ -949,6 +949,9 @@ extern void repairSizeHints    (void);
 extern void show_8bit_control  (Bool  /* value */);
 
 /* misc.c */
+
+#define TIMESTAMP_LEN 20	/* length of TIMESTAMP_FMT */
+
 extern Bool AllocateTermColor(XtermWidget, ScrnColors *, int, const char *, Bool);
 extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
@@ -964,7 +967,7 @@ extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
 extern int ResetAnsiColorRequest(XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
-extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, int  /* mode */);
+extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, unsigned  /* mode */);
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
@@ -1061,6 +1064,8 @@ extern void xtermAutoPrint (XtermWidget /* xw */, unsigned /* chr */);
 extern void xtermMediaControl (XtermWidget /* xw */, int  /* param */, int  /* private_seq */);
 extern void xtermPrintScreen (XtermWidget /* xw */, Bool  /* use_DECPEX */, PrinterFlags * /* p */);
 extern void xtermPrintEverything (XtermWidget /* xw */, PrinterFlags * /* p */);
+extern void xtermPrintImmediately (XtermWidget /* xw */, String /* filename */, int /* opts */, int /* attributes */);
+extern void xtermPrintOnXError (XtermWidget /* xw */, int /* n */);
 
 /* ptydata.c */
 #ifdef VMS

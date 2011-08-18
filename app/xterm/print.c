@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.123 2011/04/17 19:45:14 tom Exp $ */
+/* $XTermId: print.c,v 1.138 2011/07/14 23:49:10 tom Exp $ */
 
 /************************************************************
 
@@ -39,6 +39,7 @@ authorization.
 #include <xstrings.h>
 
 #include <stdio.h>
+#include <sys/stat.h>
 
 #undef  CTRL
 #define	CTRL(c)	((c) & 0x1f)
@@ -50,9 +51,11 @@ authorization.
 #define CSET_OUT  '0'
 
 #define isForm(c)      ((c) == '\r' || (c) == '\n' || (c) == '\f')
-#define Strlen(a)      strlen((char *)a)
-#define Strcmp(a,b)    strcmp((char *)a,(char *)b)
-#define Strncmp(a,b,c) strncmp((char *)a,(char *)b,c)
+#define Strlen(a)      strlen((const char *)a)
+#define Strcmp(a,b)    strcmp((const char *)a,(const char *)b)
+#define Strncmp(a,b,c) strncmp((const char *)a,(const char *)b,c)
+
+#define SPS PrinterOf(screen)
 
 #ifdef VMS
 #define VMS_TEMP_PRINT_FILE "sys$scratch:xterm_print.txt"
@@ -73,25 +76,20 @@ static void send_SGR(XtermWidget /* xw */ ,
 static void stringToPrinter(XtermWidget /* xw */ ,
 			    const char * /*str */ );
 
-static FILE *Printer;
-static pid_t Printer_pid;
-static int initialized;
-
 void
 closePrinter(XtermWidget xw GCC_UNUSED)
 {
     if (xtermHasPrinter(xw) != 0) {
-#ifdef VMS
 	TScreen *screen = TScreenOf(xw);
-
+#ifdef VMS
 	char pcommand[256];
 	(void) sprintf(pcommand, "%s %s;",
-		       screen->printer_command,
+		       SPS.printer_command,
 		       VMS_TEMP_PRINT_FILE);
 #endif
 
-	if (Printer != 0) {
-	    fclose(Printer);
+	if (SPS.fp != 0) {
+	    fclose(SPS.fp);
 	    TRACE(("closed printer, waiting...\n"));
 #ifdef VMS			/* This is a quick hack, really should use
 				   spawn and check status or system services
@@ -101,8 +99,8 @@ closePrinter(XtermWidget xw GCC_UNUSED)
 	    while (nonblocking_wait() > 0)
 #endif /* VMS */
 		;
-	    Printer = 0;
-	    initialized = 0;
+	    SPS.fp = 0;
+	    SPS.isOpen = False;
 	    TRACE(("closed printer\n"));
 	}
     }
@@ -252,26 +250,32 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
 
 #define PrintNewLine() (unsigned) (((top < bot) || p->printer_newline) ? '\n' : '\0')
 
+static void
+printLines(XtermWidget xw, int top, int bot, PrinterFlags * p)
+{
+    TRACE(("printLines, rows %d..%d\n", top, bot));
+    while (top <= bot) {
+	printLine(xw, top, PrintNewLine(), p);
+	++top;
+    }
+}
+
 void
 xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags * p)
 {
     if (XtIsRealized((Widget) xw)) {
 	TScreen *screen = TScreenOf(xw);
 	Bool extent = (use_DECPEX && p->printer_extent);
-	int top = extent ? 0 : screen->top_marg;
-	int bot = extent ? screen->max_row : screen->bot_marg;
-	int was_open = initialized;
+	Boolean was_open = SPS.isOpen;
 
-	TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot));
-
-	while (top <= bot) {
-	    printLine(xw, top, PrintNewLine(), p);
-	    ++top;
-	}
+	printLines(xw,
+		   extent ? 0 : screen->top_marg,
+		   extent ? screen->max_row : screen->bot_marg,
+		   p);
 	if (p->printer_formfeed)
 	    charToPrinter(xw, '\f');
 
-	if (!was_open || screen->printer_autoclose) {
+	if (!was_open || SPS.printer_autoclose) {
 	    closePrinter(xw);
 	}
     } else {
@@ -280,32 +284,59 @@ xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags * p)
 }
 
 /*
+ * If p->print_everything is zero, use this behavior:
  * If the alternate screen is active, we'll print only that.  Otherwise, print
  * the normal screen plus all scrolled-back lines.  The distinction is made
  * because the normal screen's buffer is part of the overall scrollback buffer.
+ *
+ * Otherwise, decode bits:
+ *	1 = current screen
+ *	2 = normal screen
+ *	4 = alternate screen
+ *	8 = saved lines
  */
 void
 xtermPrintEverything(XtermWidget xw, PrinterFlags * p)
 {
     TScreen *screen = TScreenOf(xw);
-    int top = 0;
-    int bot = screen->max_row;
-    int was_open = initialized;
+    Boolean was_open = SPS.isOpen;
+    int save_which = screen->whichBuf;
+    int done_which = 0;
 
-    if (!screen->whichBuf) {
-	top = -screen->savedlines - screen->topline;
-	bot -= screen->topline;
-    }
-
-    TRACE(("xtermPrintEverything, rows %d..%d\n", top, bot));
-    while (top <= bot) {
-	printLine(xw, top, PrintNewLine(), p);
-	++top;
+    if (p->print_everything) {
+	if (p->print_everything & 8) {
+	    printLines(xw, -screen->savedlines, -(screen->topline + 1), p);
+	}
+	if (p->print_everything & 4) {
+	    screen->whichBuf = 1;
+	    done_which |= 2;
+	    printLines(xw, 0, screen->max_row, p);
+	    screen->whichBuf = save_which;
+	}
+	if (p->print_everything & 2) {
+	    screen->whichBuf = 0;
+	    done_which |= 1;
+	    printLines(xw, 0, screen->max_row, p);
+	    screen->whichBuf = save_which;
+	}
+	if (p->print_everything & 1) {
+	    if (!(done_which & (1 << screen->whichBuf))) {
+		printLines(xw, 0, screen->max_row, p);
+	    }
+	}
+    } else {
+	int top = 0;
+	int bot = screen->max_row;
+	if (!screen->whichBuf) {
+	    top = -screen->savedlines - screen->topline;
+	    bot -= screen->topline;
+	}
+	printLines(xw, top, bot, p);
     }
     if (p->printer_formfeed)
 	charToPrinter(xw, '\f');
 
-    if (!was_open || screen->printer_autoclose) {
+    if (!was_open || SPS.printer_autoclose) {
 	closePrinter(xw);
     }
 }
@@ -342,6 +373,7 @@ static void
 send_SGR(XtermWidget xw, unsigned attr, unsigned fg, unsigned bg)
 {
     char msg[80];
+
     strcpy(msg, "\033[0");
     if (attr & BOLD)
 	strcat(msg, ";1");
@@ -380,8 +412,8 @@ charToPrinter(XtermWidget xw, unsigned chr)
 {
     TScreen *screen = TScreenOf(xw);
 
-    if (!initialized && xtermHasPrinter(xw)) {
-	switch (screen->printToFile) {
+    if (!SPS.isOpen && xtermHasPrinter(xw)) {
+	switch (SPS.toFile) {
 	    /*
 	     * write to a pipe.
 	     */
@@ -393,19 +425,20 @@ charToPrinter(XtermWidget xw, unsigned chr)
 	     * be of the form:
 	     *   print/que=name/delete [/otherflags].
 	     */
-	    Printer = fopen(VMS_TEMP_PRINT_FILE, "w");
+	    SPS.fp = fopen(VMS_TEMP_PRINT_FILE, "w");
 #else
 	    {
 		FILE *input;
 		int my_pipe[2];
 		int c;
+		pid_t my_pid;
 
 		if (pipe(my_pipe))
 		    SysError(ERROR_FORK);
-		if ((Printer_pid = fork()) < 0)
+		if ((my_pid = fork()) < 0)
 		    SysError(ERROR_FORK);
 
-		if (Printer_pid == 0) {
+		if (my_pid == 0) {
 		    TRACE_CLOSE();
 		    close(my_pipe[1]);	/* printer is silent */
 		    close(screen->respond);
@@ -422,41 +455,42 @@ charToPrinter(XtermWidget xw, unsigned chr)
 		    if (xtermResetIds(screen) < 0)
 			exit(1);
 
-		    Printer = popen(screen->printer_command, "w");
+		    SPS.fp = popen(SPS.printer_command, "w");
 		    input = fdopen(my_pipe[0], "r");
 		    while ((c = fgetc(input)) != EOF) {
-			fputc(c, Printer);
+			fputc(c, SPS.fp);
 			if (isForm(c))
-			    fflush(Printer);
+			    fflush(SPS.fp);
 		    }
-		    pclose(Printer);
+		    pclose(SPS.fp);
 		    exit(0);
 		} else {
 		    close(my_pipe[0]);	/* won't read from printer */
-		    Printer = fdopen(my_pipe[1], "w");
+		    SPS.fp = fdopen(my_pipe[1], "w");
 		    TRACE(("opened printer from pid %d/%d\n",
-			   (int) getpid(), (int) Printer_pid));
+			   (int) getpid(), (int) my_pid));
 		}
 	    }
 #endif
 	    break;
 	case True:
-	    Printer = fopen(screen->printer_command, "w");
+	    TRACE(("opening \"%s\" as printer output\n", SPS.printer_command));
+	    SPS.fp = fopen(SPS.printer_command, "w");
 	    break;
 	}
-	initialized++;
+	SPS.isOpen = True;
     }
-    if (Printer != 0) {
+    if (SPS.fp != 0) {
 #if OPT_WIDE_CHARS
 	if (chr > 127) {
 	    Char temp[10];
 	    *convertToUTF8(temp, chr) = 0;
-	    fputs((char *) temp, Printer);
+	    fputs((char *) temp, SPS.fp);
 	} else
 #endif
-	    fputc((int) chr, Printer);
+	    fputc((int) chr, SPS.fp);
 	if (isForm(chr))
-	    fflush(Printer);
+	    fflush(SPS.fp);
     }
 }
 
@@ -523,11 +557,11 @@ xtermAutoPrint(XtermWidget xw, unsigned chr)
 {
     TScreen *screen = TScreenOf(xw);
 
-    if (screen->printer_controlmode == 1) {
+    if (SPS.printer_controlmode == 1) {
 	TRACE(("AutoPrint %d\n", chr));
 	printLine(xw, screen->cursorp.row, chr, getPrinterFlags(xw, NULL, 0));
-	if (Printer != 0)
-	    fflush(Printer);
+	if (SPS.fp != 0)
+	    fflush(SPS.fp);
     }
 }
 
@@ -548,8 +582,8 @@ xtermPrinterControl(XtermWidget xw, int chr)
 {
     TScreen *screen = TScreenOf(xw);
     /* *INDENT-OFF* */
-    static struct {
-	Char seq[5];
+    static const struct {
+	const Char seq[5];
 	int active;
     } tbl[] = {
 	{ { ANSI_CSI, '5', 'i'      }, 2 },
@@ -584,8 +618,8 @@ xtermPrinterControl(XtermWidget xw, int chr)
 	    if (length == len
 		&& Strcmp(bfr, tbl[n].seq) == 0) {
 		setPrinterControlMode(xw, tbl[n].active);
-		if (screen->printer_autoclose
-		    && screen->printer_controlmode == 0)
+		if (SPS.printer_autoclose
+		    && SPS.printer_controlmode == 0)
 		    closePrinter(xw);
 		length = 0;
 		return 0;
@@ -615,7 +649,7 @@ xtermHasPrinter(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 
-    return (strlen(screen->printer_command) != 0);
+    return (strlen(SPS.printer_command) != 0);
 }
 
 #define showPrinterControlMode(mode) \
@@ -631,15 +665,15 @@ setPrinterControlMode(XtermWidget xw, int mode)
     TScreen *screen = TScreenOf(xw);
 
     if (xtermHasPrinter(xw)
-	&& screen->printer_controlmode != mode) {
+	&& SPS.printer_controlmode != mode) {
 	TRACE(("%s %s mode\n",
 	       (mode
 		? "set"
 		: "reset"),
 	       (mode
 		? showPrinterControlMode(mode)
-		: showPrinterControlMode(screen->printer_controlmode))));
-	screen->printer_controlmode = mode;
+		: showPrinterControlMode(SPS.printer_controlmode))));
+	SPS.printer_controlmode = mode;
 	update_print_redir();
     }
 }
@@ -668,10 +702,11 @@ getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
 
     TRACE(("getPrinterFlags %d params\n", param_count ? *param_count : 0));
 
-    result->printer_extent = screen->printer_extent;
-    result->printer_formfeed = screen->printer_formfeed;
-    result->printer_newline = screen->printer_newline;
-    result->print_attributes = screen->print_attributes;
+    result->printer_extent = SPS.printer_extent;
+    result->printer_formfeed = SPS.printer_formfeed;
+    result->printer_newline = SPS.printer_newline;
+    result->print_attributes = SPS.print_attributes;
+    result->print_everything = SPS.print_everything;
 
     if (param_count != 0 && *param_count != 0) {
 	Cardinal j;
@@ -693,4 +728,68 @@ getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
     }
 
     return result;
+}
+
+/*
+ * Print a timestamped copy of everything.
+ */
+void
+xtermPrintImmediately(XtermWidget xw, String filename, int opts, int attrs)
+{
+    TScreen *screen = TScreenOf(xw);
+    PrinterState save_state = screen->printer_state;
+    char *my_filename = malloc(TIMESTAMP_LEN + strlen(filename));
+
+    if (my_filename != 0) {
+	unsigned save_umask = umask(0177);
+
+	timestamp_filename(my_filename, filename);
+	SPS.fp = 0;
+	SPS.isOpen = False;
+	SPS.toFile = True;
+	SPS.printer_command = my_filename;
+	SPS.printer_autoclose = True;
+	SPS.printer_formfeed = False;
+	SPS.printer_newline = True;
+	SPS.print_attributes = attrs;
+	SPS.print_everything = opts;
+	xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
+
+	umask(save_umask);
+	screen->printer_state = save_state;
+    }
+}
+
+void
+xtermPrintOnXError(XtermWidget xw, int n)
+{
+#if OPT_PRINT_ON_EXIT
+    /*
+     * The user may have requested that the contents of the screen will be
+     * written to a file if an X error occurs.
+     */
+    if (TScreenOf(xw)->write_error && !IsEmpty(resource.printFileOnXError)) {
+	Boolean printIt = False;
+
+	switch (n) {
+	case ERROR_XERROR:
+	    /* FALLTHRU */
+	case ERROR_XIOERROR:
+	    /* FALLTHRU */
+	case ERROR_ICEERROR:
+	    printIt = True;
+	    break;
+	}
+
+	if (printIt) {
+	    xtermPrintImmediately(xw,
+				  resource.printFileOnXError,
+				  resource.printOptsOnXError,
+				  resource.printModeOnXError);
+	}
+    }
+#else
+    (void) xw;
+    (void) n;
+#endif
 }

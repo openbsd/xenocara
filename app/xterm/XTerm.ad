@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.96 2011/04/22 22:48:00 tom Exp $
+! $XTermId: XTerm.ad,v 1.97 2011/07/11 10:52:16 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
@@ -49,6 +49,8 @@
 *mainMenu*allowsends*Label:  Allow SendEvents
 *mainMenu*redraw*Label:  Redraw Window
 *mainMenu*logging*Label:  Log to File
+*mainMenu*print-immediate*Label:  Print-All Immediately
+*mainMenu*print-on-error*Label:  Print-All on Error
 *mainMenu*print*Label:  Print Window
 *mainMenu*print-redir*Label:  Redirect to Printer
 *mainMenu*8-bit control*Label: 8-Bit Controls

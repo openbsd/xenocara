@@ -1,4 +1,4 @@
-/* $XTermId: xutf8.c,v 1.9 2009/11/05 23:30:05 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.10 2011/07/04 13:51:08 tom Exp $ */
 
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
@@ -73,22 +73,22 @@ utf8insert(char *dest, int c, int *len_return)
 	return;
 
     if (c <= 0x7F) {
-	dest[0] = c;
+	dest[0] = (char) c;
 	*len_return = 1;
     } else if (c <= 0x7FF) {
-	dest[0] = 0xC0 | ((c >> 6) & 0x1F);
-	dest[1] = 0x80 | (c & 0x3F);
+	dest[0] = (char) (0xC0 | ((c >> 6) & 0x1F));
+	dest[1] = (char) (0x80 | (c & 0x3F));
 	*len_return = 2;
     } else if (c <= 0xFFFF) {
-	dest[0] = 0xE0 | ((c >> 12) & 0x0F);
-	dest[1] = 0x80 | ((c >> 6) & 0x3F);
-	dest[2] = 0x80 | (c & 0x3F);
+	dest[0] = (char) (0xE0 | ((c >> 12) & 0x0F));
+	dest[1] = (char) (0x80 | ((c >> 6) & 0x3F));
+	dest[2] = (char) (0x80 | (c & 0x3F));
 	*len_return = 3;
     } else {
-	dest[0] = 0xF0 | ((c >> 18) & 0x07);
-	dest[1] = 0x80 | ((c >> 12) & 0x3f);
-	dest[2] = 0x80 | ((c >> 6) & 0x3f);
-	dest[3] = 0x80 | (c & 0x3f);
+	dest[0] = (char) (0xF0 | ((c >> 18) & 0x07));
+	dest[1] = (char) (0x80 | ((c >> 12) & 0x3f));
+	dest[2] = (char) (0x80 | ((c >> 6) & 0x3f));
+	dest[3] = (char) (0x80 | (c & 0x3f));
 	*len_return = 4;
     }
 }
@@ -132,7 +132,7 @@ utf8l1strcpy(char *d, char *s)
 		s++;		/* incorrect UTF-8 */
 		continue;
 	    } else if ((*s & 0x7C) == 0x40) {
-		*d++ = ((*s & 0x03) << 6) | (s[1] & 0x3F);
+		*d++ = (char) (((*s & 0x03) << 6) | (s[1] & 0x3F));
 		s += 2;
 	    } else {
 		*d++ = '?';

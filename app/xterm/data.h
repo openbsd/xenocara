@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.117 2011/04/17 19:21:11 tom Exp $ */
+/* $XTermId: data.h,v 1.119 2011/07/12 08:37:24 tom Exp $ */
 
 /*
  * Copyright 2002-2009,2011 by Thomas E. Dickey
@@ -162,7 +162,11 @@ typedef struct XTERM_RESOURCE {
     String keyboardType;
 
 #if OPT_PRINT_ON_EXIT
+    int printModeNow;
     int printModeOnXError;
+    int printOptsNow;
+    int printOptsOnXError;
+    String printFileNow;
     String printFileOnXError;
 #endif
 #if OPT_SUNPC_KBD
