@@ -1,5 +1,7 @@
 <appendix id="keysym_encoding">
 <title>KEYSYM Encoding</title>
+<indexterm zone="keysym_encoding"><primary>Types</primary><secondary>KEYSYM</secondary></indexterm>
+<indexterm zone="keysym_encoding"><primary>Keysym</primary></indexterm>
 
 <para>
 KEYSYM values are 32-bit integers that encode the symbols on the
@@ -40,9 +42,9 @@ There are six categories of KEYSYM values.
 <title>Special KEYSYMs</title>
 <para>
 There are two special values:
-<emphasis role='bold'>NoSymbol</emphasis>
+<keysym>NoSymbol</keysym>
 and
-<emphasis role='bold'>VoidSymbol</emphasis>.
+<keysym>VoidSymbol</keysym>.
 They are used to indicate the absence of symbols (see
 <link linkend="keyboards">Section 5, Keyboards</link>).
 </para>
@@ -72,7 +74,7 @@ They are used to indicate the absence of symbols (see
       <entry>0</entry>
       <entry>0</entry>
       <entry>#x00000000</entry>
-      <entry><emphasis role='bold'>NoSymbol</emphasis></entry>
+      <entry><keysym>NoSymbol</keysym></entry>
     </row>
     <row rowsep="0">
       <entry>0</entry>
@@ -80,7 +82,7 @@ They are used to indicate the absence of symbols (see
       <entry>255</entry>
       <entry>255</entry>
       <entry>#x00FFFFFF</entry>
-      <entry><emphasis role='bold'>VoidSymbol</emphasis></entry>
+      <entry><keysym>VoidSymbol</keysym></entry>
     </row>
   </tbody>
   </tgroup>
@@ -99,6 +101,7 @@ U+007E and U+00A0 to U+00FF, respectively.
 
 <sect1 id="unicode_keysyms">
 <title>Unicode KEYSYMs</title>
+<indexterm zone="unicode_keysyms"><primary>Keysym</primary><secondary>Unicode</secondary></indexterm>
 
 <para>
 These occupy the range #x01000100 to #x0110FFFF and represent the ISO

@@ -63,6 +63,6 @@ in this Software without prior written authorization from the Open Group.
 <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="keysyms.xml"/>
 <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="encoding.xml"/>
 <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"  href="glossary.xml"/>
-<index />
+<index id="index" />
 </book>
 

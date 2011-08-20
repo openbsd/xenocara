@@ -265,7 +265,10 @@ If the number of unused bytes is variable, the encode-form typically is:
 
 <para>
 where E is some expression,
+<phrase id="encoding:pad">
+<indexterm zone="encoding:pad" significance="preferred"><primary>Padding</primary></indexterm>
 and pad(E) is the number of bytes needed to round E up to a multiple of four.
+</phrase>
 </para>
 
 <literallayout class="monospaced">
@@ -275,6 +278,7 @@ and pad(E) is the number of bytes needed to round E up to a multiple of four.
 
 <sect1 id="common_types_encoding">
 <title>Common Types</title>
+<indexterm zone="common_types_encoding"><primary>Types</primary><secondary>encoding</secondary></indexterm>
 
 <variablelist>
   <varlistentry>
@@ -538,6 +542,7 @@ STR
 
 <sect1 id="errors_encoding">
 <title>Errors</title>
+<indexterm zone="errors_encoding"><primary>Error report</primary><secondary>encoding</secondary></indexterm>
 
 <literallayout class="monospaced">
 <emphasis role='bold'>Request</emphasis>
@@ -722,6 +727,7 @@ BUTTON values are numbered starting with one.
 </sect1>
 <sect1 id="predefined">
 <title>Predefined Atoms</title>
+<indexterm zone="predefined"><primary>Atom</primary><secondary>predefined</secondary></indexterm>
 
 <literallayout class="monospaced">
 PRIMARY           1      WM_NORMAL_HINTS     40
@@ -934,6 +940,7 @@ VISUALTYPE
 
 <sect1 id="requests_encoding">
 <title>Requests</title>
+<indexterm zone="requests_encoding"><primary>Request</primary><secondary>encoding</secondary></indexterm>
 
 <literallayout class="monospaced">
 <link linkend="requests:CreateWindow"><emphasis role='bold'>CreateWindow</emphasis></link>
@@ -2791,6 +2798,7 @@ VISUALTYPE
 
 <sect1 id="events_encoding">
 <title>Events</title>
+<indexterm zone="events_encoding"><primary>Event</primary><secondary>encoding</secondary></indexterm>
 
 <literallayout class="monospaced">
 <link linkend="events:KeyPress"><emphasis role='bold'>KeyPress</emphasis></link>
