@@ -1,3 +1,140 @@
+commit 08dd5d30c137abe43d5b1673edc39eb569881d66
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 23 08:03:13 2011 -0400
+
+    Version bump: 1.15.0
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b87c5e7f6c9e856cf82c3c531255adccbd9fae5c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 22 12:42:30 2011 -0400
+
+    XORG_WITH_XSLTPROC: warn at development time rather than config time
+    
+    Catching up unimplemented features should be done earlier by the developer
+    during autoconf rather than during configure.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f3332a7214af43878691b4f4876c39dc7d546266
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 22 10:02:28 2011 -0400
+
+    Add XORG_WITH_PERL macro
+    
+    Following the same pattern as XMLTO and friends.
+    Allows all modules to use the same interface, variables
+    and options to check for perl.
+    Perl is used in libX11 and xserver.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b927af52e8a3384126bfe709b725f6c5bad4ba34
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 22 09:04:32 2011 -0400
+
+    XORG_WITH_FOP: add minimum version checking support
+    
+    Adding this feature is motivated by a bug in fop 0.95 where
+    fop crashes in the presence of some characters like the latin capital
+    sharp s. Fop version 1.0 works correctly.
+    
+    This is the same feature found in XMLTO and the likes.
+    In the macro public interface there is a shift in parameter position
+    for the DEFAULT parameter. Doing development on older libraries
+    (point releases on older versions) will still work the same way as
+    the "no" value will be interpreted as the minimum version. It won't
+    be found, so fop will be disabled anyway.
+    
+    Only libX11 has used XORG_WITH_FOP(no) and will be changed with a version
+    bump on util-macros.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 45c7d622657d295b2c02a46061765827ea37f00f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 1 08:59:53 2011 -0400
+
+    XORG_PROG_RAWCPP: use AC_LANG_SOURCE to prevent warnings
+    
+    The source for the AC_LANG_CONFTEST should be passed to AC_LANG_SOURCE
+    to satisfy the more stringent testing done by autoconf 2.68.
+    It is available in autoconf 2.60 where AC_LANG_DEFINES_PROVIDED is not.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 10a865fa671382dce50f7e49624ca5a730372d08
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 27 19:01:13 2011 -0700
+
+    Version bump: 1.14.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e03a5cb9f313c6f5de3edc46327eb18b300b92c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 14 09:10:13 2011 -0700
+
+    Add AC_LANG_DEFINES_PROVIDED to XORG_RAW_CPP to silence autoconf warnings
+    
+    Since we're intentionally doing a special case to just check cpp output,
+    and not a full program compilation, add the magic macro to silence:
+    
+    configure.ac:46: warning: AC_LANG_CONFTEST: no AC_LANG_SOURCE call detected in body
+    ../../lib/autoconf/lang.m4:194: AC_LANG_CONFTEST is expanded from...
+    aclocal.m4:1077: XORG_PROG_RAWCPP is expanded from...
+    configure.ac:46: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 61f5a48a74680c316bee2bf93d6ef5d50a688f22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 2 16:52:26 2011 -0700
+
+    XORG_STRICT_OPTION: add -Werror=attributes to STRICT_CFLAGS for gcc
+    
+    Flags unknown attributes as errors, if -Werror=attributes is supported.
+    (The -Werror=* option was first spotted in gcc 4.2.0 manuals.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8a556afbe7ff81987597ca88e315fe66f10e4adc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 25 20:31:33 2011 -0700
+
+    Make XORG_STRICT_OPTION always set STRICT_CFLAGS
+    
+    Still only adds it to CWARNFLAGS if --enable-strict-compilation is
+    passed, but sets the variable with the right flags for the compiler
+    so it's available for other checks in configure scripts.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Ian Romanick <ian.d.romanick@intel.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ef7824119ede1d491936ef1715296b47419f4c9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 25 20:26:48 2011 -0700
+
+    Create XORG_COMPILER_BRAND macro to centralize compiler checks
+    
+    Check for gcc vs. intel vs. sun in one place, instead of
+    continuing to grow more places the check is replicated.
+    
+    Add clang check here too, as it's now seeing a lot of use to build X.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Ian Romanick <ian.d.romanick@intel.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 5bb0cddcc5359d764015299021718f42b0a4055c
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Mon Mar 14 20:12:36 2011 -0400
