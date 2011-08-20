@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.17 2011/01/28 19:37:55 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.18 2011/08/20 17:30:37 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -273,10 +273,6 @@ priv_init(uid_t uid, gid_t gid)
 		case PRIV_OPEN_DEVICE:
 			if ((dev = open_ok(cmd.arg.open.path)) != NULL) {
 				fd = open(cmd.arg.open.path, dev->flags);
-				if (fd < 0) {
-					warn("%s: open %s", __func__,
-					     cmd.arg.open.path);
-				}
 			} else {
 				fd = -1;
 				errno = EPERM;
