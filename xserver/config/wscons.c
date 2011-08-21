@@ -67,7 +67,11 @@ struct nameint kbdvar[] = {
 };
 
 struct nameint kbdopt[] = {
+#ifndef USE_XKEYBOARD_CONFIG
 	{ KB_SWAPCTRLCAPS, "ctrl:swapcaps" },
+#else
+	{ KB_SWAPCTRLCAPS, "ctrl:swapcaps,terminate:ctrl_alt_bksp" },
+#endif
 	{ 0 }
 };
 
