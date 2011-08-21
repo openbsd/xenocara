@@ -870,6 +870,8 @@ MousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pInfo->private_flags = 0;
     pInfo->always_core_feedback = NULL;
 
+    COLLECT_INPUT_OPTIONS(pInfo, NULL);
+
     if (NewMousePreInit(drv, pInfo, flags) == Success)
     {
         /* Check if SendDragEvents has been disabled. */
