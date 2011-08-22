@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.89 2011/07/26 08:51:24 okan Exp $
+ * $OpenBSD: conf.c,v 1.90 2011/08/22 16:18:05 okan Exp $
  */
 
 #include <sys/param.h>
@@ -265,26 +265,32 @@ conf_clear(struct conf *c)
 void
 conf_setup(struct conf *c, const char *conf_file)
 {
+	char		*home;
 	struct stat	 sb;
+	int		 parse = 0;
+
+	conf_init(c);
 
 	if (conf_file == NULL) {
-		char *home = getenv("HOME");
-
-		if (home == NULL)
+		if ((home = getenv("HOME")) == NULL)
 			errx(1, "No HOME directory.");
 
 		(void)snprintf(c->conf_path, sizeof(c->conf_path), "%s/%s",
 		    home, CONFFILE);
-	} else
+
+		if (stat(c->conf_path, &sb) == 0 && (sb.st_mode & S_IFREG))
+			parse = 1;
+	} else {
 		if (stat(conf_file, &sb) == -1 || !(sb.st_mode & S_IFREG))
 			errx(1, "%s: %s", conf_file, strerror(errno));
-		else
+		else {
 			(void)strlcpy(c->conf_path, conf_file,
 			    sizeof(c->conf_path));
+			parse = 1;
+		}
+	}
 
-	conf_init(c);
-
-	if (parse_config(c->conf_path, c) == -1)
+	if (parse && (parse_config(c->conf_path, c) == -1))
 		warnx("config file %s has errors, not loading", c->conf_path);
 }
 
