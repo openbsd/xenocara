@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.54 2011/06/24 05:33:41 okan Exp $
+ * $OpenBSD: xevents.c,v 1.55 2011/08/22 16:34:34 oga Exp $
  */
 
 /*
@@ -76,7 +76,6 @@ xev_handle_maprequest(XEvent *ee)
 	XMapRequestEvent	*e = &ee->xmaprequest;
 	struct client_ctx	*cc = NULL, *old_cc;
 	XWindowAttributes	 xattr;
-	struct winmatch		*wm;
 
 	if ((old_cc = client_current()) != NULL)
 		client_ptrsave(old_cc);
@@ -86,10 +85,6 @@ xev_handle_maprequest(XEvent *ee)
 		cc = client_new(e->window, screen_fromroot(xattr.root), 1);
 	}
 
-	TAILQ_FOREACH(wm, &Conf.ignoreq, entry) {
-		if (strncasecmp(wm->title, cc->name, strlen(wm->title)) == 0)
-			return;
-	}
 	if ((cc->flags & CLIENT_IGNORE) == 0)
 		client_ptrwarp(cc);
 }
