@@ -1,3 +1,553 @@
+commit fc74dc12b1ff3c43e240e1a713316ce1bf525d61
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 19:32:40 2011 -0700
+
+    libX11 1.4.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ab1f30231755d99ed123af6873b981834640f01d
+Author: Matt Dew <marcoz@osource.org>
+Date:   Wed Jul 13 12:33:40 2011 -0600
+
+    Add id attributes to error codes to allow linking from other docs.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5c831fef402914ccf2ec14005c25be48852f119b
+Author: David Coppa <dcoppa@gmail.com>
+Date:   Tue Jul 12 10:05:47 2011 +0200
+
+    Fix libpthread linkage on OpenBSD.
+    
+    OpenBSD prefers to use the -pthread to fetch pthread libs when needed.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 445b0b3efc04a74fc77cd3e483b25cfb5da82f12
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 22 20:46:26 2011 -0400
+
+    config: use XORG_WITH_PERL macro to replace custom program check
+    
+    New in version util-macros 1.15, the macro does the usual checking
+    for program path and provides an interface for makefile variables.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 47d99a324db9232029a22dd523e3bc3ed0936aca
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 22 20:41:18 2011 -0400
+
+    config: update XORG_WITH_FOP macro usage
+    
+    A new feature to test for a minimum version has been added.
+    
+    The parameter position changed. Due to limited usage
+    and requiring 1.15, it turns out to be backward compatible.
+    
+    There is no functional change to how docs are build.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e659683ad51ecc26c989fbdefdfe20f83af2c5a5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jun 22 11:48:49 2011 -0400
+
+    Remove unused xmlrules.in in specs, now in /nls
+    
+    The specs dir has been converted to docbook.am
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9992092609bd83a0db778e9a9ac1e879d445e637
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 31 10:23:22 2011 -0400
+
+    nls: move xmlrules.in from specs to nls
+    
+    It is no longer used in the specs dir.
+    Remove html from CLEANFILES as it breaks. Make do not clean directories
+    Remove SUFFIXES as pattern rules are used rather than suffix rules.
+    
+    Other improvements are possible, the first priority is to move it out
+    of the specs dir.
+    
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b370eeb0191b0e2a8bde2f03a442a8ca62e35d58
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:36 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit 4e741654b7e0a283779b8b4af5bb32e05b7fc678
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 7 18:41:30 2011 -0700
+
+    specs/libX11: Turn appendix references into links
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3d1152bc4b300f59ea2f08925739aab1ebfbc4e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 7 18:37:41 2011 -0700
+
+    specs/libX11: Turn chapter references into links
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0cc949dfe44a41a71f19e4fe6c7547bb3d9bdbe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 7 00:52:32 2011 -0700
+
+    specs/libX11: Turn many "see section ..." into links
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 02d4c08dead2f266809b3f93ec72377783423ac7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 5 22:50:37 2011 -0700
+
+    specs/libX11: Convert some header filenames to filename tags
+    
+    perl -i -p -e 's{^&lt;(.*\.h)&gt;\ *}{<filename class="headerfile">&lt;\1&gt;</filename>}' *.xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c51a011329afa6e5b9d2b285349c132683ecf9fb
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue May 31 20:03:23 2011 -0600
+
+    Add id attributes to funcsynopsis to allow other docs to olink to them.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6841260c8bb15404a0b4805bee3b0bdfec7176b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 27 20:14:36 2011 -0700
+
+    Bug 37624 - parameter x is missing from synopsis of XDrawString in libX11.html
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=37624
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 205af6a4e557c62a6395feadc1c89f4a9fe1713b
+Author: Matt Dew <marcoz@osource.org>
+Date:   Sat May 21 00:23:06 2011 -0600
+
+    Add id's to functions, to make clickable links.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5c06bc594473f6ab234724cd90db32e7b57fe811
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 20 15:38:08 2011 -0700
+
+    libX11 spec: fix monospaced column alignment after deligaturization
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ef0019c714c273cb9b4ad3eba52d0b905109826b
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Fri May 20 15:51:46 2011 -0400
+
+    Expand latin ligatures out to their NFKC equivalents.
+    
+    Ligatures should be done by the typesetting system.
+    Manuscripts should not bother with them.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 761b8aa0c9b3c58c478ac5ea1b3aaafadcfc1325
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu May 12 16:21:50 2011 +0200
+
+    XCB: Add more friendly error messages for common asserts
+    
+    This patch adds more friendly error messages for three common classes of
+    assertion:
+        - missed sequence numbers due to being griefed by another thread
+        - unknown requests in queue due to being griefed by another thread
+        - extensions dequeuing too much or too little reply data
+    
+    It adds error messages offering advice (e.g. call XInitThreads() first)
+    on stderr, but still generates actual assertions.  Hopefully this means
+    it's a little more Googleable and a little less frightening.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 159bf292477048b9a2f074735afc516f52c93d80
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu May 19 20:22:11 2011 -0400
+
+    Remove misplaced hyphens in libX11 DocBook/XML #37364
+    
+    Reported-by: Christopher Yeleighton <giecrilj@stegny.2a.pl>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0ee6d8247d397500ae183ef180b6ff21bceefa1c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 17 20:49:59 2011 -0700
+
+    Fix man page and comment references to use XFreeModifiermap (lowercase map)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3275ec4ca8790d571b6a1902367ca5f68a2dc5fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 17 20:30:54 2011 -0700
+
+    XKB man pages: Fix coordinantes typo in multiple pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca33a80606cd68e4572fa49ed6aaa1d1fc31a47f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 17 16:27:32 2011 -0700
+
+    DisplayOfCCC.man: Fix typo "ClientWhitePointOfCC" -> "ClientWhitePointOfCCC"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ae39d82b01359b07dd1fe092d867f79ea95a5438
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 09:08:07 2011 -0700
+
+    Silence clang static analysis warnings for SetReqLen
+    
+    This provides a simplified version of the SetReqLen macro when using clang for
+    static analysis.  Prior to this change, we would see many Idempotent operation
+    warnings inside this macro due to the common case of calling with arg2 and
+    arg3 being the same variable.  This has no effect on code produced during
+    compilation, but it silences a number of false positives in static analysis.
+    
+    XIPassiveGrab.c:170:5: warning: Assigned value is always the same as the existing value
+        SetReqLen(req, num_modifiers, num_modifiers);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    In file included from XIPassiveGrab.c:26:
+    .../include/X11/Xlibint.h:580:8: note: instantiated from:
+                n = badlen; \
+                  ^
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 130af2bc02090ee2526adb2f9803fc07019b8f1f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 4 15:34:31 2011 -0700
+
+    XKB: XkbComputeSectionBounds: Check correct bounds in default switch-case
+    
+    XKBGeom.c:191:25: warning: Access to field 'x1' results in a dereference of a null pointer (loaded from variable 'rbounds')
+            _XkbCheckBounds(bounds,rbounds->x1,rbounds->y1);
+                                   ^~~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c987ef04bea345d5810e60cf6c53b747ddbe910e
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 4 15:31:17 2011 -0700
+
+    Revert "XKB: Avoid a possible NULL dereference"
+    
+    Sorry for the noise.  I accidentally pushed and didn't mean to. =(
+    
+    This reverts commit 4024091678ea07e0d898b798df9b29f3bf68eb08.
+
+commit 46d04bc4e7ff6c86385002c929d8eb0310f737a8
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 4 11:35:31 2011 -0700
+
+    Dead code removal
+    
+    XKBGeom.c:118:27: warning: Assigned value is always the same as the existing value
+        for (key=row->keys,pos=k=0;k<row->num_keys;k++,key++) {
+                           ~~~^~~~
+    XKBGeom.c:115:5: warning: Value stored to 'pos' is never read
+        pos= 0;
+        ^    ~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4024091678ea07e0d898b798df9b29f3bf68eb08
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 4 11:34:53 2011 -0700
+
+    XKB: Avoid a possible NULL dereference
+    
+    XKBGeom.c:191:25: warning: Access to field 'x1' results in a dereference of a null pointer (loaded from variable 'rbounds')
+            _XkbCheckBounds(bounds,rbounds->x1,rbounds->y1);
+                                   ^~~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 626e5e34be55b7cf734d745bd40a7ee3359029f8
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 4 11:21:41 2011 -0700
+
+    Annotate _XIOError as _X_NORETURN
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d3d7896408b435ab42656398839ff4351a37724d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue May 3 09:32:53 2011 -0700
+
+    clang analyzer: Don't warn about Xmalloc(0)
+    
+    This will prevent a number of false positives in where clang's
+    static analysis reports about calls to malloc(0).
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 393921cf2188b2b0713cc157effaf17d0abab783
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 21 16:21:04 2011 -0700
+
+    Delete special case code to append "/sparcv9" to i18n module path
+    
+    Was triggered by defined(__sparcv9) so only built on Solaris SPARC 64-bit.
+    Inconsistent with all other platforms, and a bit overcomplicated.
+    
+    Should anyone need to continue using that path, simply build with
+    a #define POSTLOCALELIBDIR "sparcv9" to get the same result.
+    
+    Fixes Solaris bug 7038737:
+     sparcv9 Xlib looking in wrong path for i18n loadable modules
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit b9ff9cfd5c56ae6d52c6503f7019756d9de29557
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 14 13:47:12 2011 -0700
+
+    specs/libX11: Fix XOpenDisplay() prototype in chapter 2 [bug 36244]
+    
+    Was incorrectly showing AllPlanes() instead when describing XOpenDisplay()
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=36244
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b850adbdebcf500c659f85285d4d7374e15857f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 12 22:30:45 2011 -0700
+
+    Convert malloc(strlen()); strcpy() sets to strdup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 09194042d3dc44a463add1f7c122a68ffd5ef0bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 12 21:27:45 2011 -0700
+
+    Replace Xmalloc+bzero pairs with Xcalloc calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ac1e2bff7121987fd768500a11d428d9fb9447c5
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Fri Mar 25 14:47:35 2011 +0200
+
+    om: Fix memory leaks on get_font_name error paths.
+    
+    While at it, remove unneeded check for NULL before Xfree.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7c362e275c93c92b4e68fe862e73ee36665de703
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Wed Mar 30 15:06:10 2011 +0300
+
+    xcms: Fix memory leaks on LINEAR_RGB_InitSCCData error path.
+    
+    pScreenData is replaced when building per visual intensity tables. If
+    malloc failed the old value of pScreenData (stored also in
+    pScreenDefaultData) was being leaked. Also, property_return wasn't
+    free'd in that case.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5c810e2ac233e00f361549bafb9b59e8a9e05eff
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Wed Mar 30 15:19:28 2011 +0300
+
+    xcms: Fix error on LINEAR_RGB_InitSCCData error path.
+    
+    Due to what looks like a copy & paste error, pScreenData->pBlueTbl would
+    be accessed after being free'd.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d749948f9492fd9b61c74655a08e32c595e0e3a5
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Fri Mar 25 16:06:15 2011 +0200
+
+    om: Fix potential memory leak in init_om.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0749d6abdf0fd4d8b4e59b02dad8ccda3f10995
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Thu Mar 24 20:40:41 2011 +0200
+
+    om: Fix memory leak on read_EncodingInfo error path.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b2e8d00f5b6969c14003ee8eb258b9f0e4dd7c3
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Thu Mar 24 19:55:33 2011 +0200
+
+    Fix memory leaks on _XimCbDispatch error path.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 46e6c78b1a89e4774e0f7e0f4d6d0fd060c3897e
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Thu Mar 24 19:52:05 2011 +0200
+
+    Fix memory leak on _XimCommitRecv error path.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ace642a2d47265f01450bfa2b2fd48eb6956a83
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Thu Mar 24 19:48:44 2011 +0200
+
+    Fix memory leaks on _XimWriteCachedDefaultTree error paths.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e29be94edbb58b3b8dab545377a710d1f73b61e0
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Thu Mar 24 19:42:36 2011 +0200
+
+    Fix memory leaks on _XimGetAttributeID error paths.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d144a50512466766f55ce61e3884925334b08f0d
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Thu Mar 24 19:36:56 2011 +0200
+
+    Fix memory leaks on _XimProtoCreateIC error paths.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6a452f7a98499508f753cb8a7c3f08bcbec736b9
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Thu Mar 24 16:24:29 2011 +0200
+
+    Fix leaks in _XimEncodingNegotiation error paths.
+    
+    name_ptr and detail_ptr weren't free'd in some cases before returning
+    False.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 396e5a452a59c1f121220ba72167b720a863b30f
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Thu Mar 24 14:17:44 2011 +0200
+
+    FSWrap: fix potential leak in copy_string_list
+    
+    If list_count is 0, dst would be allocated and leaked.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1a944260182bb552b954d69f6355c2760d4415df
+Author: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+Date:   Wed Mar 23 14:36:22 2011 +0200
+
+    Fix memory leak with broken bitmap files in XReadBitmapFileData
+    
+    Bitmap file data is read looping through the lines in the input file. If
+    there is extra data after the bitmap, these lines will be processed and
+    if this data represents another bitmap it will replace the one read
+    before causing the memory allocated for bits to leak.
+    
+    This changes the code to stop processing the file once a bitmap was
+    read.
+    
+    Signed-off-by: Ander Conselvan de Oliveira <ander.conselvan-de-oliveira@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c1c91e9a221a0e762d96cc12a3f189d6e59f4865
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 12 20:50:42 2011 -0700
+
+    Fix "attrinute" typo in comments in ximcp
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7103b83a88edb9c93acfa68f3b556595b087baff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 8 21:36:11 2011 -0700
+
+    Make doc install subdirectories more like the pre-docbook.am paths
+    
+    Haven't restored the "specs" path in the install path, but have restored
+    libX11 & i18n subdirectories in the path for better logical grouping.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9a1ae7a90f815a737a942e42d5eb1ffff400977b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 8 13:24:28 2011 -0700
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    Moves HAVE_XMLTO check into docbook.am, more closely matches behaviour
+    from before docbook.am changes (commit e8c76407d2f6e3)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit a0ad0d5c99023bb9a8ce3944dbc3267f5265721e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Apr 5 13:29:04 2011 -0700

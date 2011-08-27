@@ -419,7 +419,7 @@ or
 <indexterm significance="preferred"><primary>XrmStringToQuark</primary></indexterm>
 <indexterm significance="preferred"><primary>XrmPermStringToQuark</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmstringtoquark'>
 <funcprototype>
   <funcdef>XrmQuark <function>XrmStringToQuark</function></funcdef>
   <paramdef>char<parameter> *string</parameter></paramdef>
@@ -477,7 +477,7 @@ To convert a quark to a string, use
 </literallayout>
 <indexterm significance="preferred"><primary>XrmQuarkToString</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmquarktostring'>
 <funcprototype>
   <funcdef>char *<function>XrmQuarkToString</function></funcdef>
   <paramdef>XrmQuark<parameter> quark</parameter></paramdef>
@@ -524,7 +524,7 @@ To convert a string with one or more components to a quark list, use
 
 <indexterm significance="preferred"><primary>XrmStringToQuarkList</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmstringtoquarklist'>
 <funcprototype>
   <funcdef>void <function>XrmStringToQuarkList</function></funcdef>
   <paramdef>char<parameter> *string</parameter></paramdef>
@@ -566,7 +566,7 @@ The
 function converts the null-terminated string (generally a fully qualified name)
 to a list of quarks.
 Note that the string must be in the valid ResourceName format 
-(see section 15.1).
+(see <link linkend="Resource_File_Syntax">section 15.1</link>).
 If the string is not in the Host Portable Character Encoding,
 the conversion is implementation-dependent.
 </para>
@@ -598,7 +598,7 @@ and a quark list, use
 <function>XrmStringToBindingQuarkList</function>.
 <indexterm significance="preferred"><primary>XrmStringToBindingQuarkList</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmstringtobindingquarklist'>
 <funcprototype>
   <funcdef><function>XrmStringToBindingQuarkList</function></funcdef>
   <paramdef>char<parameter> *string</parameter></paramdef>
@@ -650,7 +650,8 @@ The caller must allocate sufficient space for the quarks list before calling
 <!-- .eM -->
 Component names in the list are separated by a period or 
 an asterisk character.
-The string must be in the format of a valid ResourceName (see section 15.1).
+The string must be in the format of a valid ResourceName
+(see <link linkend="Resource_File_Syntax">section 15.1</link>).
 If the string does not start with a period or an asterisk, 
 a tight binding is assumed.
 For example, the string ``*a.b*c'' becomes:
@@ -708,7 +709,7 @@ To initialize the resource manager, use
 <function>XrmInitialize</function>.
 <indexterm significance="preferred"><primary>XrmInitialize</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrminitialize'>
 <funcprototype>
   <funcdef>void <function>XrmInitialize</function></funcdef>
   <paramdef>void<parameter> XrmInitialize(\|)</parameter></paramdef>
@@ -723,7 +724,7 @@ To retrieve a database from disk, use
 <function>XrmGetFileDatabase</function>.
 <indexterm significance="preferred"><primary>XrmGetFileDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmgetfiledatabase'>
 <funcprototype>
   <funcdef>XrmDatabase <function>XrmGetFileDatabase</function></funcdef>
   <paramdef>char<parameter> *filename</parameter></paramdef>
@@ -752,7 +753,8 @@ function opens the specified file,
 creates a new resource database, and loads it with the specifications
 read in from the specified file.
 The specified file should contain a sequence of entries in valid ResourceLine
-format (see section 15.1); the database that results from reading a file
+format (see <link linkend="Resource_File_Syntax">section 15.1</link>);
+the database that results from reading a file
 with incorrect syntax is implementation-dependent.
 The file is parsed in the current locale, 
 and the database is created in the current locale.
@@ -767,7 +769,7 @@ To store a copy of a database to disk, use
 <function>XrmPutFileDatabase</function>.
 <indexterm significance="preferred"><primary>XrmPutFileDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmputfiledatabase'>
 <funcprototype>
   <funcdef>void <function>XrmPutFileDatabase</function></funcdef>
   <paramdef>XrmDatabase<parameter> database</parameter></paramdef>
@@ -805,7 +807,8 @@ The
 <function>XrmPutFileDatabase</function>
 function stores a copy of the specified database in the specified file.
 Text is written to the file as a sequence of entries in valid
-ResourceLine format (see section 15.1).
+ResourceLine format
+(see <link linkend="Resource_File_Syntax">section 15.1</link>).
 The file is written in the locale of the database.
 Entries containing resource names that are not in the Host Portable Character
 Encoding or containing values that are not in the encoding of the database
@@ -820,7 +823,7 @@ To obtain a pointer to the screen-independent resources of a display, use
 <function>XResourceManagerString</function>.
 <indexterm significance="preferred"><primary>XResourceManagerString</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xresourcemanagerstring'>
 <funcprototype>
   <funcdef>char *<function>XResourceManagerString</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -864,7 +867,7 @@ To obtain a pointer to the screen-specific resources of a screen, use
 <function>XScreenResourceString</function>.
 <indexterm significance="preferred"><primary>XScreenResourceString</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xscreenresourcestring'>
 <funcprototype>
   <funcdef>char *<function>XScreenResourceString</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -908,7 +911,7 @@ To create a database from a string, use
 <function>XrmGetStringDatabase</function>.
 <indexterm significance="preferred"><primary>XrmGetStringDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmgetstringdatabase'>
 <funcprototype>
   <funcdef>XrmDatabase <function>XrmGetStringDatabase</function></funcdef>
   <paramdef>char<parameter> *data</parameter></paramdef>
@@ -940,7 +943,8 @@ is similar to
 <function>XrmGetFileDatabase</function>
 except that it reads the information out of a string instead of out of a file.
 The string should contain a sequence of entries in valid ResourceLine
-format (see section 15.1) terminated by a null character;
+format (see <link linkend="Resource_File_Syntax">section 15.1</link>)
+terminated by a null character;
 the database that results from using a string
 with incorrect syntax is implementation-dependent.
 The string is parsed in the current locale, 
@@ -953,7 +957,7 @@ To obtain the locale name of a database, use
 <function>XrmLocaleOfDatabase</function>.
 <indexterm significance="preferred"><primary>XrmLocaleOfDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmlocaleofdatabase'>
 <funcprototype>
   <funcdef>char *<function>XrmLocaleOfDatabase</function></funcdef>
   <paramdef>XrmDatabase<parameter> database</parameter></paramdef>
@@ -993,7 +997,7 @@ To destroy a resource database and free its allocated memory, use
 <function>XrmDestroyDatabase</function>.
 <indexterm significance="preferred"><primary>XrmDestroyDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmdestroydatabase'>
 <funcprototype>
   <funcdef>void <function>XrmDestroyDatabase</function></funcdef>
   <paramdef>XrmDatabase<parameter> database</parameter></paramdef>
@@ -1027,7 +1031,7 @@ To associate a resource database with a display, use
 <function>XrmSetDatabase</function>.
 <indexterm significance="preferred"><primary>XrmSetDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmsetdatabase'>
 <funcprototype>
   <funcdef>void <function>XrmSetDatabase</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1076,7 +1080,7 @@ To get the resource database associated with a display, use
 <function>XrmGetDatabase</function>.
 <indexterm significance="preferred"><primary>XrmGetDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmgetdatabase'>
 <funcprototype>
   <funcdef>XrmDatabase <function>XrmGetDatabase</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1116,7 +1120,7 @@ To merge the contents of a resource file into a database, use
 <function>XrmCombineFileDatabase</function>.
 <indexterm significance="preferred"><primary>XrmCombineFileDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmcombinefiledatabase'>
 <funcprototype>
   <funcdef>Status <function>XrmCombineFileDatabase</function></funcdef>
   <paramdef>char<parameter> *filename</parameter></paramdef>
@@ -1190,7 +1194,7 @@ To merge the contents of one database into another database, use
 <function>XrmCombineDatabase</function>.
 <indexterm significance="preferred"><primary>XrmCombineDatabase</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmcombinedatabase'>
 <funcprototype>
   <funcdef>void <function>XrmCombineDatabase</function></funcdef>
   <paramdef>XrmDatabasesource_db,<parameter> *target_db</parameter></paramdef>
@@ -1260,7 +1264,7 @@ semantics, use
 <function>XrmMergeDatabases</function>.
 <indexterm significance="preferred"><primary>XrmMergeDatabases</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmmergedatabases'>
 <funcprototype>
   <funcdef>void <function>XrmMergeDatabases</function></funcdef>
   <paramdef>XrmDatabasesource_db,<parameter> *target_db</parameter></paramdef>
@@ -1320,7 +1324,7 @@ or
 <!-- .sp -->
 <indexterm significance="preferred"><primary>XrmGetResource</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmgetresource'>
 <funcprototype>
   <funcdef>Bool <function>XrmGetResource</function></funcdef>
   <paramdef>XrmDatabase<parameter> database</parameter></paramdef>
@@ -1390,7 +1394,7 @@ Returns the value in the database.
 <!-- .sp -->
 <indexterm significance="preferred"><primary>XrmQGetResource</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmqgetresource'>
 <funcprototype>
   <funcdef>Bool <function>XrmQGetResource</function></funcdef>
   <paramdef>XrmDatabase<parameter> database</parameter></paramdef>
@@ -1510,7 +1514,7 @@ To obtain a list of database levels, use
 <function>XrmQGetSearchList</function>.
 <indexterm significance="preferred"><primary>XrmQGetSearchList</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmqgetsearchlist'>
 <funcprototype>
   <funcdef>Bool <function>XrmQGetSearchResource</function></funcdef>
   <paramdef>XrmDatabase<parameter> database</parameter></paramdef>
@@ -1619,7 +1623,7 @@ To search resource database levels for a given resource, use
 <function>XrmQGetSearchResource</function>.
 <indexterm significance="preferred"><primary>XrmQGetSearchResource</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmqgetsearchresource'>
 <funcprototype>
   <funcdef>Bool <function>XrmQGetSearchResource</function></funcdef>
   <paramdef>XrmSearchList<parameter> list</parameter></paramdef>
@@ -1733,7 +1737,7 @@ This value is copied into the specified database.
 <!-- .sp -->
 <indexterm significance="preferred"><primary>XrmPutResource</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmputresource'>
 <funcprototype>
   <funcdef>void <function>XrmPutResource</function></funcdef>
   <paramdef>XrmDatabase<parameter> *database</parameter></paramdef>
@@ -1811,7 +1815,7 @@ The value is stored in the database without modification.
 <!-- .sp -->
 <indexterm significance="preferred"><primary>XrmQPutResource</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmqputresource'>
 <funcprototype>
   <funcdef>void <function>XrmQPutResource</function></funcdef>
   <paramdef>XrmDatabase<parameter> *database</parameter></paramdef>
@@ -1893,7 +1897,7 @@ To add a resource that is specified as a string, use
 <function>XrmPutStringResource</function>.
 <indexterm significance="preferred"><primary>XrmPutStringResource</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmputstringresource'>
 <funcprototype>
   <funcdef>void <function>XrmPutStringResource</function></funcdef>
   <paramdef>XrmDatabase<parameter> *database</parameter></paramdef>
@@ -1960,7 +1964,7 @@ To add a string resource using quarks as a specification, use
 <function>XrmQPutStringResource</function>.
 <indexterm significance="preferred"><primary>XrmQPutStringResource</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmqputstringresource'>
 <funcprototype>
   <funcdef>void <function>XrmQPutStringResource</function></funcdef>
   <paramdef>XrmDatabase<parameter> *database</parameter></paramdef>
@@ -2038,7 +2042,7 @@ both a name and a value, use
 <function>XrmPutLineResource</function>.
 <indexterm significance="preferred"><primary>XrmPutLineResource</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmputlineresource'>
 <funcprototype>
   <funcdef>void <function>XrmPutLineResource</function></funcdef>
   <paramdef>XrmDatabase<parameter> *database</parameter></paramdef>
@@ -2077,7 +2081,8 @@ If database contains NULL,
 creates a new database and returns a pointer to it.
 <function>XrmPutLineResource</function>
 adds a single resource entry to the specified database.
-The line should be in valid ResourceLine format (see section 15.1)
+The line should be in valid ResourceLine format
+(see <link linkend="Resource_File_Syntax">section 15.1</link>)
 terminated by a newline or null character;
 the database that results from using a string
 with incorrect syntax is implementation-dependent.
@@ -2107,7 +2112,7 @@ To enumerate the entries of a database, use
 #define       XrmEnumOneLevel        0
 </literallayout>
 
-<funcsynopsis>
+<funcsynopsis id='xrmenumeratedatabase'>
 <funcprototype>
   <funcdef>Bool <function>XrmEnumerateDatabase</function></funcdef>
   <paramdef>XrmDatabase<parameter> database</parameter></paramdef>
@@ -2311,7 +2316,7 @@ To load a resource database from a C command line, use
 <function>XrmParseCommand</function>.
 <indexterm significance="preferred"><primary>XrmParseCommand</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrmparsecommand'>
 <funcprototype>
   <funcdef>void <function>XrmParseCommand</function></funcdef>
   <paramdef>XrmDatabase<parameter> *database</parameter></paramdef>

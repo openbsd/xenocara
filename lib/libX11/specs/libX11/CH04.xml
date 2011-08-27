@@ -40,7 +40,7 @@ a given window, use
 <indexterm><primary>Parent Window</primary></indexterm>
 <indexterm significance="preferred"><primary>XQueryTree</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xquerytree'>
 <funcprototype>
   <funcdef>Status <function>XQueryTree</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -147,7 +147,7 @@ To obtain the current attributes of a given window, use
 <function>XGetWindowAttributes</function>.
 <indexterm significance="preferred"><primary>XGetWindowAttributes</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xgetwindowattributes'>
 <funcprototype>
   <funcdef>Status <function>XGetWindowAttributes</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -291,7 +291,7 @@ and can be one of the following:
 <para>
 <!-- .LP -->
 For additional information on gravity,
-see section 3.2.3. <!-- xref -->
+see <link linkend="Gravity_Attributes">section 3.2.3</link>.
 </para>
 <para>
 <!-- .LP -->
@@ -372,7 +372,7 @@ To obtain the current geometry of a given drawable, use
 <function>XGetGeometry</function>.
 <indexterm significance="preferred"><primary>XGetGeometry</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xgetgeometry'>
 <funcprototype>
   <funcdef>Status <function>XGetGeometry</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -533,7 +533,7 @@ space of another window, use
 <function>XTranslateCoordinates</function>.
 <indexterm significance="preferred"><primary>XTranslateCoordinates</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xtranslatecoordinates'>
 <funcprototype>
   <funcdef>Bool <function>XTranslateCoordinates</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -667,7 +667,7 @@ or to determine the pointer coordinates relative to a specified window, use
 <function>XQueryPointer</function>.
 <indexterm significance="preferred"><primary>XQueryPointer</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xquerypointer'>
 <funcprototype>
   <funcdef>Bool <function>XQueryPointer</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -817,7 +817,7 @@ the current state of the mouse buttons and the modifier keys.
 <!-- .LP -->
 Note that the logical state of a device (as seen through Xlib)
 may lag the physical state if device event processing is frozen
-(see section 12.1). <!-- xref -->
+(see <link linkend="Pointer_Grabbing_">section 12.1</link>).
 </para>
 <para>
 <!-- .LP -->
@@ -867,7 +867,7 @@ If you define further properties of complex type,
 you must encode and decode them yourself.
 These functions must be carefully written if they are to be portable.
 For further information about how to write a library extension,
-see appendix C. <!-- xref -->
+see <link linkend="extensions">appendix C</link>.
 <!-- .NE -->
 The type of a property is defined by an atom, which allows for
 arbitrary extension in this type scheme.
@@ -887,7 +887,7 @@ To avoid name clashes with user symbols, the
 name for each atom has the XA_ prefix.
 For an explanation of the functions that let you get and set
 much of the information stored in these predefined properties,
-see chapter 14. <!-- xref -->
+see <link linkend="inter_client_communication_functions">chapter 14</link>.
 </para>
 <para>
 <!-- .LP -->
@@ -1040,7 +1040,7 @@ The built-in font property names are:
 <para>
 <!-- .LP -->
 For further information about font properties,
-see section 8.5. <!-- xref -->
+see <link linkend="Font_Metrics">section 8.5</link>.
 </para>
 <para>
 <!-- .LP -->
@@ -1050,7 +1050,7 @@ To return an atom for a given name, use
 <indexterm><primary>Atom</primary><secondary>interning</secondary></indexterm>
 <indexterm significance="preferred"><primary>XInternAtom</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xinternatom'>
 <funcprototype>
   <funcdef>Atom <function>XInternAtom</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1132,7 +1132,7 @@ To return atoms for an array of names, use
 <indexterm><primary>Atom</primary><secondary>interning</secondary></indexterm>
 <indexterm significance="preferred"><primary>XInternAtoms</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xinternatoms'>
 <funcprototype>
   <funcdef>Status <function>XInternAtoms</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1233,7 +1233,7 @@ To return a name for a given atom identifier, use
 <indexterm><primary>Atom</primary><secondary>getting name</secondary></indexterm>
 <indexterm significance="preferred"><primary>XGetAtomName</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xgetatomname'>
 <funcprototype>
   <funcdef>char *<function>XGetAtomName</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1292,7 +1292,7 @@ To return the names for an array of atom identifiers, use
 <indexterm><primary>Atom</primary><secondary>getting name</secondary></indexterm>
 <indexterm significance="preferred"><primary>XGetAtomNames</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xgetatomnames'>
 <funcprototype>
   <funcdef>Status <function>XGetAtomNames</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1381,7 +1381,8 @@ error.
 <para>
 <!-- .LP -->
 You can attach a property list to every window.
-Each property has a name, a type, and a value (see section 4.3). <!-- xref -->
+Each property has a name, a type, and a value
+(see <link linkend="Properties_and_Atoms">section 4.3</link>).
 The value is an array of 8-bit, 16-bit, or 32-bit quantities,
 whose interpretation is left to the clients.  The type
 <type>char</type>
@@ -1396,7 +1397,8 @@ is used to represent 32-bit quantities.
 Xlib provides functions that you can use to obtain, 
 change, update, or interchange window properties.
 In addition, Xlib provides other utility functions for inter-client
-communication (see chapter 14). <!-- xref -->
+communication
+(see <link linkend="inter_client_communication_functions">chapter 14</link>).
 </para>
 <para>
 <!-- .LP -->
@@ -1409,7 +1411,7 @@ To obtain the type, format, and value of a property of a given window, use
 <!-- .LP -->
 <indexterm significance="preferred"><primary>XGetWindowProperty</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xgetwindowproperty'>
 <funcprototype>
   <funcdef>int <function>XGetWindowProperty</function></funcdef>
   <paramdef><parameter> display</parameter></paramdef>
@@ -1689,7 +1691,7 @@ To obtain a given window's property list, use
 <indexterm><primary>Property</primary><secondary>listing</secondary></indexterm>
 <indexterm significance="preferred"><primary>XListProperties</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xlistproperties'>
 <funcprototype>
   <funcdef>Atom *<function>XListProperties</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1762,7 +1764,7 @@ To change a property of a given window, use
 <indexterm><primary>Property</primary><secondary>type</secondary></indexterm>
 <indexterm significance="preferred"><primary>XChangeProperty</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xchangeproperty'>
 <funcprototype>
   <funcdef><function>XChangeProperty</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1934,7 +1936,7 @@ The lifetime of a property is not tied to the storing client.
 Properties remain until explicitly deleted, until the window is destroyed,
 or until the server resets.
 For a discussion of what happens when the connection to the X server is closed,
-see section 2.6.  <!-- xref -->
+see <link linkend="Using_X_Server_Connection_Close_Operations_">section 2.6</link>.
 The maximum size of a property is server dependent and can vary dynamically
 depending on the amount of memory the server has available.
 (If there is insufficient space, a
@@ -1963,7 +1965,7 @@ To rotate a window's property list, use
 <!-- .LP -->
 <indexterm significance="preferred"><primary>XRotateWindowProperties</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xrotatewindowproperties'>
 <funcprototype>
   <funcdef><function>XRotateWindowProperties</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2077,7 +2079,7 @@ To delete a property on a given window, use
 <indexterm><primary>Property</primary><secondary>deleting</secondary></indexterm>
 <indexterm significance="preferred"><primary>XDeleteProperty</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xdeleteproperty'>
 <funcprototype>
   <funcdef><function>XDeleteProperty</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2200,7 +2202,7 @@ To set the selection owner, use
 <indexterm><primary>Selection</primary><secondary>setting the owner</secondary></indexterm>
 <indexterm significance="preferred"><primary>XSetSelectionOwner</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xsetselectionowner'>
 <funcprototype>
   <funcdef><function>XSetSelectionOwner</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2323,7 +2325,7 @@ To return the selection owner, use
 <indexterm><primary>Selection</primary><secondary>getting the owner</secondary></indexterm>
 <indexterm significance="preferred"><primary>XGetSelectionOwner</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xgetselectionowner'>
 <funcprototype>
   <funcdef>Window <function>XGetSelectionOwner</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2385,7 +2387,7 @@ To request conversion of a selection, use
 <indexterm><primary>Selection</primary><secondary>converting</secondary></indexterm>
 <indexterm significance="preferred"><primary>XConvertSelection</primary></indexterm>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='xconvertselection'>
 <funcprototype>
   <funcdef><function>XConvertSelection</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>

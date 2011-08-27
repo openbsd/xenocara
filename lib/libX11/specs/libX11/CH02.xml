@@ -66,17 +66,12 @@ To open a connection to the X server that controls a display, use
 <function>XOpenDisplay</function>.
 <indexterm significance="preferred"><primary>XOpenDisplay</primary></indexterm>
 </para>
-<para>
-<!-- .LP -->
-<!-- .sM -->
-</para>
-<para>
-AllPlanes()
-</para>
-<para>
-XAllPlanes
-</para>
-
+<funcsynopsis id='xopendisplay'>
+<funcprototype>
+  <funcdef>Display *<function>XOpenDisplay</function></funcdef>
+  <paramdef>char *<parameter>display_name</parameter></paramdef>
+</funcprototype>
+</funcsynopsis>
 <variablelist>
   <varlistentry>
     <term>
@@ -163,7 +158,8 @@ using the
 <function>DefaultScreen</function>
 macro or the 
 <function>XDefaultScreen</function>
-function if you are using languages other than C (see section 2.2.1).
+function if you are using languages other than C
+(see <link linkend="Display_Macros_">section 2.2.1</link>).
     </para>
   </listitem>
   </varlistentry>
@@ -247,12 +243,12 @@ For information about using macros and functions to obtain information from
 the
 <type>Display</type>
 structure,
-see section 2.2.1.
+see <link linkend="Display_Macros_">section 2.2.1</link>.
 </para>
 <para>
 <!-- .LP -->
 X servers may implement various types of access control mechanisms
-(see section 9.8).
+(see <link linkend="Controlling_Host_Access">section 9.8</link>).
 </para>
 </sect1>
 <sect1 id="Obtaining_Information_about_the_Display_Image_Formats_or_Screens">
@@ -361,7 +357,7 @@ The names are intended to convey the expected relative intensity of the colors.
 <para>
 BlackPixel(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xblackpixel'>
 <funcprototype>
   <funcdef>unsigned long <function>XBlackPixel</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -406,7 +402,7 @@ Both return the black pixel value for the specified screen.
 <para>
 WhitePixel(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xwhitepixel'>
 <funcprototype>
   <funcdef>unsigned long <function>XWhitePixel</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -451,7 +447,7 @@ Both return the white pixel value for the specified screen.
 <para>
 ConnectionNumber(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xconnectionnumber'>
 <funcprototype>
   <funcdef>int <function>XConnectionNumber</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -488,7 +484,7 @@ this is the file descriptor of the connection.
 <para>
 DefaultColormap(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultcolormap'>
 <funcprototype>
   <funcdef>Colormap <function>XDefaultColormap</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -534,7 +530,7 @@ Most routine allocations of color should be made out of this colormap.
 <para>
 DefaultDepth(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultdepth'>
 <funcprototype>
   <funcdef>int <function>XDefaultDepth</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -585,7 +581,7 @@ To determine the number of depths that are available on a given screen, use
 <para>
 DefaultGC(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultgc'>
 <funcprototype>
   <funcdef>GC <function>XDefaultGC</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -703,7 +699,7 @@ This GC should never be freed.
 <para>
 DefaultRootWindow(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultrootwindow'>
 <funcprototype>
   <funcdef>Window <function>XDefaultRootWindow</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -737,7 +733,7 @@ Both return the root window for the default screen.
 <para>
 DefaultScreenOfDisplay(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultscreenofdisplay'>
 <funcprototype>
   <funcdef>Screen *<function>XDefaultScreenOfDisplay</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -771,7 +767,7 @@ Both return a pointer to the default screen.
 <para>
 ScreenOfDisplay(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xscreenofdisplay'>
 <funcprototype>
   <funcdef>Screen *<function>XScreenOfDisplay</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -816,7 +812,7 @@ Both return a pointer to the indicated screen.
 <para>
 DefaultScreen(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultscreen'>
 <funcprototype>
   <funcdef>int <function>XDefaultScreen</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -854,7 +850,7 @@ in applications that will use only a single screen.
 <para>
 DefaultVisual(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultvisual'>
 <funcprototype>
   <funcdef>Visual *<function>XDefaultVisual</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -891,7 +887,7 @@ Specifies the appropriate screen number on the host server.
 <indexterm significance="preferred"><primary>XDefaultVisual</primary></indexterm>
 Both return the default visual type for the specified screen.
 For further information about visual types,
-see section 3.1.
+see <link linkend="Visual_Types">section 3.1</link>.
 </para>
 <para>
 <!-- .LP -->
@@ -901,7 +897,7 @@ see section 3.1.
 <para>
 DisplayCells(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdisplaycells'>
 <funcprototype>
   <funcdef>int <function>XDisplayCells</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -946,7 +942,7 @@ Both return the number of entries in the default colormap.
 <para>
 DisplayPlanes(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdisplayplanes'>
 <funcprototype>
   <funcdef>int <function>XDisplayPlanes</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -993,7 +989,7 @@ see the glossary.
 <para>
 DisplayString(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdisplaystring'>
 <funcprototype>
   <funcdef>char *<function>XDisplayString</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1037,7 +1033,7 @@ child process as well as for printing error messages.
 <para>
 LastKnownRequestProcessed(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xlastknownrequestprocessed'>
 <funcprototype>
   <funcdef>unsigned long <function>XLastKnownRequestProcessed</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1180,7 +1176,7 @@ are received.
 <para>
 NextRequest(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xnextrequest'>
 <funcprototype>
   <funcdef>unsigned long <function>XNextRequest</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1216,7 +1212,7 @@ Serial numbers are maintained separately for each display connection.
 <para>
 ProtocolVersion(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xprotocolversion'>
 <funcprototype>
   <funcdef>int <function>XProtocolVersion</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1251,7 +1247,7 @@ the connected display.
 <para>
 ProtocolRevision(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xprotocolrevision'>
 <funcprototype>
   <funcdef>int <function>XProtocolRevision</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1285,7 +1281,7 @@ Both return the minor protocol revision number of the X server.
 <para>
 QLength(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xqlength'>
 <funcprototype>
   <funcdef>int <function>XQLength</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1322,7 +1318,7 @@ the queue yet (see
 <para>
 RootWindow(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xrootwindow'>
 <funcprototype>
   <funcdef>Window <function>XRootWindow</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1371,7 +1367,7 @@ and for creating top-level windows.
 <para>
 ScreenCount(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xscreencount'>
 <funcprototype>
   <funcdef>int <function>XScreenCount</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1405,7 +1401,7 @@ Both return the number of available screens.
 <para>
 ServerVendor(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xservervendor'>
 <funcprototype>
   <funcdef>char *<function>XServerVendor</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1443,7 +1439,7 @@ Otherwise, the contents of the string are implementation-dependent.
 <para>
 VendorRelease(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xvendorrelease'>
 <funcprototype>
   <funcdef>int <function>XVendorRelease</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1481,7 +1477,9 @@ Applications are required to present data to the X server
 in a format that the server demands.
 To help simplify applications,
 most of the work required to convert the data is provided by Xlib
-(see sections 8.7 and 16.8).
+(see sections
+<link linkend="Transferring_Images_between_Client_and_Server">8.7</link> and
+<link linkend="Manipulating_Images">16.8</link>).
 </para>
 <para>
 <!-- .LP -->
@@ -1516,7 +1514,7 @@ To obtain the pixmap format information for a given display, use
 <para>
 ImageByteOrder(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='ximagebyteorder'>
 <funcprototype>
   <funcdef>int <function>XImageByteOrder</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1619,7 +1617,7 @@ or
 <para>
 BitmapUnit(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xbitmapunit'>
 <funcprototype>
   <funcdef>int <function>XBitmapUnit</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1654,7 +1652,7 @@ The scanline is calculated in multiples of this value.
 <para>
 BitmapBitOrder(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xbitmpabitorder'>
 <funcprototype>
   <funcdef>int <function>XBitmapBitOrder</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1694,7 +1692,7 @@ or
 <para>
 BitmapPad(<emphasis remap='I'>display</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xbitmappad'>
 <funcprototype>
   <funcdef>int <function>XBitmapPad</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1729,7 +1727,7 @@ by this macro or function.
 <para>
 DisplayHeight(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdisplayheight'>
 <funcprototype>
   <funcdef>int <function>XDisplayHeight</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1775,7 +1773,7 @@ in pixels.
 <para>
 DisplayHeightMM(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdisplayheightmm'>
 <funcprototype>
   <funcdef>int <function>XDisplayHeightMM</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1820,7 +1818,7 @@ Both return the height of the specified screen in millimeters.
 <para>
 DisplayWidth(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdisplaywidth'>
 <funcprototype>
   <funcdef>int <function>XDisplayWidth</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1865,7 +1863,7 @@ Both return the width of the screen in pixels.
 <para>
 DisplayWidthMM(<emphasis remap='I'>display</emphasis>, <emphasis remap='I'>screen_number</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdisplaywidthmm'>
 <funcprototype>
   <funcdef>int <function>XDisplayWidthMM</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1924,7 +1922,7 @@ structure.
 <para>
 BlackPixelOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xblackpixelofscreen'>
 <funcprototype>
   <funcdef>unsigned long <function>XBlackPixelOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -1960,7 +1958,7 @@ Both return the black pixel value of the specified screen.
 <para>
 WhitePixelOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xwhitepixelofscreen'>
 <funcprototype>
   <funcdef>unsigned long <function>XWhitePixelOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -1996,7 +1994,7 @@ Both return the white pixel value of the specified screen.
 <para>
 CellsOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xcellsofscreen'>
 <funcprototype>
   <funcdef>int <function>XCellsOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2033,7 +2031,7 @@ of the specified screen.
 <para>
 DefaultColormapOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultcolormapofscreen'>
 <funcprototype>
   <funcdef>Colormap <function>XDefaultColormapOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2069,7 +2067,7 @@ Both return the default colormap of the specified screen.
 <para>
 DefaultDepthOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultdepthofscreen'>
 <funcprototype>
   <funcdef>int <function>XDefaultDepthOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2105,7 +2103,7 @@ Both return the depth of the root window.
 <para>
 DefaultGCOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultgcofscreen'>
 <funcprototype>
   <funcdef>GC <function>XDefaultGCOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2143,7 +2141,7 @@ The GC must never be freed.
 <para>
 DefaultVisualOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdefaultvisualofscreen'>
 <funcprototype>
   <funcdef>Visual *<function>XDefaultVisualOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2171,7 +2169,7 @@ structure.
 <indexterm significance="preferred"><primary>XDefaultVisualOfScreen</primary></indexterm>
 Both return the default visual of the specified screen.
 For information on visual types,
-see section 3.1.
+see <link linkend="Visual_Types">section 3.1</link>.
 </para>
 <para>
 <!-- .LP -->
@@ -2181,7 +2179,7 @@ see section 3.1.
 <para>
 DoesBackingStore(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdoesbackingstore'>
 <funcprototype>
   <funcdef>int <function>XDoesBackingStore</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2214,7 +2212,7 @@ The value returned can be one of
 <symbol>NotUseful</symbol>,
 or
 <symbol>Always</symbol>
-(see section 3.2.4).
+(see <link linkend="Backing_Store_Attribute">section 3.2.4</link>).
 </para>
 <para>
 <!-- .LP -->
@@ -2224,7 +2222,7 @@ or
 <para>
 DoesSaveUnders(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdoessaveunders'>
 <funcprototype>
   <funcdef>Bool <function>XDoesSaveUnders</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2257,7 +2255,8 @@ If
 the screen supports save unders.
 If
 <symbol>False</symbol>,
-the screen does not support save unders (see section 3.2.5).
+the screen does not support save unders
+(see <link linkend="Save_Under_Flag">section 3.2.5</link>).
 </para>
 <para>
 <!-- .LP -->
@@ -2267,7 +2266,7 @@ the screen does not support save unders (see section 3.2.5).
 <para>
 DisplayOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xdisplayofscreen'>
 <funcprototype>
   <funcdef>Display *<function>XDisplayOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2304,7 +2303,7 @@ Both return the display of the specified screen.
 <para>
 EventMaskOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xeventmaskofscreen'>
 <funcprototype>
   <funcdef>long <function>XEventMaskOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2377,7 +2376,7 @@ at connection setup time.
 <para>
 WidthOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xwidthofscreen'>
 <funcprototype>
   <funcdef>int <function>XWidthOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2413,7 +2412,7 @@ Both return the width of the specified screen in pixels.
 <para>
 HeightOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xheightofscreen'>
 <funcprototype>
   <funcdef>int <function>XHeightOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2449,7 +2448,7 @@ Both return the height of the specified screen in pixels.
 <para>
 WidthMMOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xwidthmmofscreen'>
 <funcprototype>
   <funcdef>int <function>XWidthMMOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2485,7 +2484,7 @@ Both return the width of the specified screen in millimeters.
 <para>
 HeightMMOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xheightmmofscreen'>
 <funcprototype>
   <funcdef>int <function>XHeightMMOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2521,7 +2520,7 @@ Both return the height of the specified screen in millimeters.
 <para>
 MaxCmapsOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xmaxcmapsofscreen'>
 <funcprototype>
   <funcdef>int <function>XMaxCmapsOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2548,7 +2547,8 @@ structure.
 <indexterm significance="preferred"><primary>MaxCmapsOfScreen</primary></indexterm>
 <indexterm significance="preferred"><primary>XMaxCmapsOfScreen</primary></indexterm>
 Both return the maximum number of installed colormaps supported 
-by the specified screen (see section 9.3).
+by the specified screen
+(see <link linkend="Managing_Installed_Colormaps">section 9.3</link>).
 </para>
 <para>
 <!-- .LP -->
@@ -2558,7 +2558,7 @@ by the specified screen (see section 9.3).
 <para>
 MinCmapsOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xmincmapsofscreen'>
 <funcprototype>
   <funcdef>int <function>XMinCmapsOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2585,7 +2585,8 @@ structure.
 <indexterm significance="preferred"><primary>MinCmapsOfScreen</primary></indexterm>
 <indexterm significance="preferred"><primary>XMinCmapsOfScreen</primary></indexterm>
 Both return the minimum number of installed colormaps supported 
-by the specified screen (see section 9.3).
+by the specified screen
+(see <link linkend="Managing_Installed_Colormaps">section 9.3</link>).
 </para>
 <para>
 <!-- .LP -->
@@ -2595,7 +2596,7 @@ by the specified screen (see section 9.3).
 <para>
 PlanesOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xplanesofscreen'>
 <funcprototype>
   <funcdef>int <function>XPlanesOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2631,7 +2632,7 @@ Both return the depth of the root window.
 <para>
 RootWindowOfScreen(<emphasis remap='I'>screen</emphasis>)
 </para>
-<funcsynopsis>
+<funcsynopsis id='xrootwindowofscreen'>
 <funcprototype>
   <funcdef>Window <function>XRootWindowOfScreen</function></funcdef>
   <paramdef>Screen<parameter> *screen</parameter></paramdef>
@@ -2675,7 +2676,7 @@ protocol request, use
 <indexterm significance="preferred"><primary>XNoOp</primary></indexterm>
 <!-- .sM -->
 </para>
-<funcsynopsis>
+<funcsynopsis id='xnoop'>
 <funcprototype>
   <funcdef><function>XNoOp</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2713,7 +2714,7 @@ To free in-memory data that was created by an Xlib function, use
 <indexterm significance="preferred"><primary>XFree</primary></indexterm>
 <!-- .sM -->
 </para>
-<funcsynopsis>
+<funcsynopsis id='xfree'>
 <funcprototype>
   <funcdef>XFree</funcdef>
   <paramdef>void<parameter> *data</parameter></paramdef>
@@ -2759,7 +2760,7 @@ To close a display or disconnect from the X server, use
 <!-- .LP -->
 <!-- .sM -->
 </para>
-<funcsynopsis>
+<funcsynopsis id='xclosedisplay'>
 <funcprototype>
   <funcdef>XCloseDisplay</funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2827,7 +2828,7 @@ To change a client's close-down mode, use
 <indexterm significance="preferred"><primary>XSetCloseDownMode</primary></indexterm>
 <!-- .sM -->
 </para>
-<funcsynopsis>
+<funcsynopsis id='xsetclosedownmode'>
 <funcprototype>
   <funcdef>XSetCloseDownMode</funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2876,7 +2877,7 @@ close_mode argument is
 <symbol>RetainPermanent</symbol>
 or
 <symbol>RetainTemporary</symbol>,
-see section 2.6.
+see <link linkend="Using_X_Server_Connection_Close_Operations_">section 2.6</link>.
 </para>
 <para>
 <!-- .LP -->
@@ -3025,7 +3026,8 @@ It deletes all but the predefined atom identifiers.
   </listitem>
   <listitem>
     <para>
-It deletes all properties on all root windows (see section 4.3).
+It deletes all properties on all root windows
+(see <link linkend="Properties_and_Atoms">section 4.3</link>).
     </para>
   </listitem>
   <listitem>
@@ -3112,7 +3114,7 @@ To lock a display across several Xlib calls, use
 <indexterm significance="preferred"><primary>XLockDisplay</primary></indexterm>
 <!-- .sM -->
 </para>
-<funcsynopsis>
+<funcsynopsis id='xlockdisplay'>
 <funcprototype>
   <funcdef>XLockDisplay</funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3157,7 +3159,7 @@ To unlock a display, use
 <indexterm significance="preferred"><primary>XUnlockDisplay</primary></indexterm>
 <!-- .sM -->
 </para>
-<funcsynopsis>
+<funcsynopsis id='xunlockdisplay'>
 <funcprototype>
   <funcdef>XUnlockDisplay</funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3203,7 +3205,9 @@ for threads using
 <!-- .LP -->
 In addition to the connection to the X server, an Xlib implementation
 may require connections to other kinds of servers (for example, to
-input method servers as described in chapter 13).  Toolkits and clients
+input method servers as described in
+<link linkend="locales_and_internationalized_text_functions">chapter 13</link>).
+Toolkits and clients
 that use multiple displays, or that use displays in combination with
 other inputs, need to obtain these additional connections to correctly
 block until input is available and need to process that input
@@ -3216,7 +3220,7 @@ facilities.
 To track internal connections for a display, use
 <function>XAddConnectionWatch</function>.
 </para>
-<funcsynopsis>
+<funcsynopsis id='xconnectionwatch'>
 <funcprototype>
   <funcdef>type void XConnectionWatchProc</funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3227,7 +3231,7 @@ To track internal connections for a display, use
 </funcprototype>
 </funcsynopsis>
 
-<funcsynopsis>
+<funcsynopsis id='xaddconnectionwatch'>
 <funcprototype>
   <funcdef>Status XAddConnectionWatch</funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3318,7 +3322,7 @@ To stop tracking internal connections for a display, use
 <para>
 ()
 </para>
-<funcsynopsis>
+<funcsynopsis id='xremoveconnectionwatch'>
 <funcprototype>
   <funcdef>Status <function>XRemoveConnectionWatch</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3380,7 +3384,7 @@ To process input on an internal connection, use
 <para>
 ()
 </para>
-<funcsynopsis>
+<funcsynopsis id='xprocessinternalconnection'>
 <funcprototype>
   <funcdef>void <function>XProcessInternalConnection</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3435,7 +3439,7 @@ To obtain all of the current internal connections for a display, use
 <para>
 ()
 </para>
-<funcsynopsis>
+<funcsynopsis id='xinternalconnectionnumbers'>
 <funcprototype>
   <funcdef>Status <function>XInternalConnectionNumbers</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>

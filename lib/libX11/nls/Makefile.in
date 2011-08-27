@@ -65,7 +65,7 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(nobase_dist_x11locale_DATA) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/cpprules.in \
-	$(top_srcdir)/specs/xmlrules.in
+	$(top_srcdir)/nls/xmlrules.in
 @HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
 @HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
 @HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = \
@@ -73,10 +73,9 @@ DIST_COMMON = $(nobase_dist_x11locale_DATA) $(srcdir)/Makefile.am \
 @HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam img.src.path=$(abs_builddir)/	\
 @HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam html.stylesheet=$(STYLESHEET_SRCDIR)/xorg.css
 
-@HAVE_XMLTO_TRUE@am__append_4 = $(spec_DATA) html
-@HAVE_XMLTO_TRUE@am__append_5 = .xml .ps .pdf .txt .html
-@HAVE_PERL_TRUE@am__append_6 = $(COMPOSE_CHARTS) $(doc_sources)
-@HAVE_PERL_TRUE@am__append_7 = -o $(@D)
+@HAVE_XMLTO_TRUE@am__append_4 = $(spec_DATA)
+@HAVE_PERL_TRUE@am__append_5 = $(COMPOSE_CHARTS) $(doc_sources)
+@HAVE_PERL_TRUE@am__append_6 = -o $(@D)
 subdir = nls
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
@@ -218,6 +217,7 @@ RAWCPPFLAGS = @RAWCPPFLAGS@
 SED = sed
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 THRSTUBS_FALSE = @THRSTUBS_FALSE@
@@ -309,9 +309,9 @@ specdir = $(docdir)/Compose
 CLEANFILES = $(am__append_4) locale.alias locale.alias.l1 \
 	locale.alias.l2 compose.dir compose.dir.l1 compose.dir.l2 \
 	locale.dir locale.dir.l1 locale.dir.l2 XLC_LOCALE \
-	$(nobase_x11locale_DATA) $(am__append_6)
-SUFFIXES = $(am__append_5) .pre
-XMLTO_FLAGS = $(am__append_3) $(am__append_7)
+	$(nobase_x11locale_DATA) $(am__append_5)
+XMLTO_FLAGS = $(am__append_3) $(am__append_6)
+SUFFIXES = .pre
 @HAVE_XMLTO_TRUE@spec_DATA = $(doc_sources:.xml=.html) $(am__append_1) \
 @HAVE_XMLTO_TRUE@	$(am__append_2)
 EXTRA_DIST = locale.alias.pre compose.dir.pre locale.dir.pre \
@@ -409,8 +409,8 @@ nobase_x11locale_DATA = $(locales:%=%/XLC_LOCALE) $(locales:%=%/Compose)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .xml .ps .pdf .txt .html .pre
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/specs/xmlrules.in $(top_srcdir)/cpprules.in $(am__configure_deps)
+.SUFFIXES: .pre
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/nls/xmlrules.in $(top_srcdir)/cpprules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -602,7 +602,7 @@ check-TESTS: $(TESTS)
 	else :; fi
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/.. $(distdir)/../specs
+	$(mkdir_p) $(distdir)/.. $(distdir)/../nls
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

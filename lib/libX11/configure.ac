@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libX11], [1.4.3],
+AC_INIT([libX11], [1.4.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libX11])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([src/config.h include/X11/XlibConf.h])
@@ -20,17 +20,18 @@ AM_MAINTAINER_MODE
 # Initialize libtool
 AC_PROG_LIBTOOL
 
-# Require xorg-macros minimum of 1.12 for DocBook external references
+# Require xorg-macros minimum of 1.15 for fop minimum version
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.12 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.12)
+          [m4_fatal([must install xorg-macros 1.15 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.15)
 XORG_DEFAULT_OPTIONS
 XORG_ENABLE_SPECS
 XORG_WITH_XMLTO(0.0.22)
-XORG_WITH_FOP([no])
+XORG_WITH_FOP([],[no])
 XORG_WITH_XSLTPROC
-XORG_CHECK_SGML_DOCTOOLS(1.7)
+XORG_CHECK_SGML_DOCTOOLS(1.8)
 XORG_PROG_RAWCPP
+XORG_WITH_PERL
 
 # Required when PKG_CHECK_MODULES called within an if statement
 PKG_PROG_PKG_CONFIG
@@ -65,19 +66,10 @@ if test x"$LDFLAGS_FOR_BUILD" = x; then
 fi
 AC_SUBST(LDFLAGS_FOR_BUILD)
 
-# Find perl for "make check" tests in nls/Makefile.am
-AC_ARG_WITH(perl,
-	AS_HELP_STRING([--with-perl=<path>],
-			[path to perl interpreter for build-time tests]),
-	[PERL=$withval ; AC_MSG_CHECKING([perl]) ;
-	 AC_MSG_RESULT([(from --with-perl) $PERL])],
-	AC_CHECK_PROGS([PERL], [perl], [no]))
-AM_CONDITIONAL(HAVE_PERL, test x$PERL != xno)
-
 # Checks for pkg-config packages
 
 # Always required
-X11_REQUIRES='xproto >= 7.0.13 xextproto xtrans xcb >= 1.1.92'
+X11_REQUIRES='xproto >= 7.0.17 xextproto xtrans xcb >= 1.1.92'
 X11_EXTRA_DEPS="xcb >= 1.1.92"
 
 PKG_PROG_PKG_CONFIG()

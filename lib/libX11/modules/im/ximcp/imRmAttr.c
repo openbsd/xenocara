@@ -1384,7 +1384,7 @@ _XimCountNumberOfAttr(
 {
     unsigned int n;
     INT16	 len;
-    INT16	 min_len = sizeof(CARD16)	/* sizeof attrinute ID */
+    INT16	 min_len = sizeof(CARD16)	/* sizeof attribute ID */
 			 + sizeof(CARD16)	/* sizeof type of value */
 			 + sizeof(INT16);	/* sizeof length of attribute */
 
@@ -1408,7 +1408,6 @@ _XimGetAttributeID(
 {
     unsigned int	  n;
     XIMResourceList	  res;
-    int			  res_len;
     char		 *names;
     int			  names_len;
     XPointer		  tmp;
@@ -1417,7 +1416,7 @@ _XimGetAttributeID(
     int			  values_len;
     register int	  i;
     INT16		  len;
-    INT16		  min_len = sizeof(CARD16) /* sizeof attrinute ID */
+    INT16		  min_len = sizeof(CARD16) /* sizeof attribute ID */
 				  + sizeof(CARD16) /* sizeof type of value */
 				  + sizeof(INT16); /* sizeof length of attr */
     /*
@@ -1426,16 +1425,15 @@ _XimGetAttributeID(
 
     if (!(n = _XimCountNumberOfAttr(buf[0], &buf[1], &names_len)))
 	return False;
-    res_len = sizeof(XIMResource) * n;
 
-    if (!(res = (XIMResourceList)Xmalloc(res_len)))
+    if (!(res = Xcalloc(n, sizeof(XIMResource))))
 	return False;
-    bzero((char *)res, res_len);
 
     values_len = sizeof(XIMValuesList) + (sizeof(char **) * n) + names_len;
-    if (!(tmp = (XPointer)Xmalloc(values_len)))
+    if (!(tmp = Xcalloc(1, values_len))) {
+	Xfree(res);
 	return False;
-    bzero(tmp, values_len);
+    }
 
     values_list = (XIMValuesList *)tmp;
     values = (char **)((char *)tmp + sizeof(XIMValuesList));
@@ -1473,16 +1471,15 @@ _XimGetAttributeID(
 
     if (!(n = _XimCountNumberOfAttr(buf[0], &buf[2], &names_len)))
 	return False;
-    res_len = sizeof(XIMResource) * n;
 
-    if (!(res = (XIMResourceList)Xmalloc(res_len)))
+    if (!(res = Xcalloc(n, sizeof(XIMResource))))
 	return False;
-    bzero((char *)res, res_len);
 
     values_len = sizeof(XIMValuesList) + (sizeof(char **) * n) + names_len;
-    if (!(tmp = (XPointer)Xmalloc(values_len)))
+    if (!(tmp = Xcalloc(1, values_len))) {
+	Xfree(res);
 	return False;
-    bzero(tmp, values_len);
+    }
 
     values_list = (XIMValuesList *)tmp;
     values = (char **)((char *)tmp + sizeof(XIMValuesList));

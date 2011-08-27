@@ -54,8 +54,18 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(am__dist_shelf_DATA_DIST) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/docbook.am
-@ENABLE_SPECS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(docbook:.xml=.pdf) $(docbook:.xml=.ps)
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(docbook:.xml=.txt)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(docbook:.xml=.html)
+@ENABLE_SPECS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(docbook:.xml=.pdf) $(docbook:.xml=.ps)
+@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = $(docbook:.xml=.txt)
+
+#
+# Generate documents cross-reference target databases
+#
+
+# This is only possible if the xorg-sgml-doctools package is installed
+
+# DocBook/XML generated document cross-reference database
+@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@am__append_4 = $(docbook:.xml=.html.db) $(docbook:.xml=.fo.db)
 subdir = specs/i18n/localedb
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
@@ -75,12 +85,10 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(shelfdir)" "$(DESTDIR)$(sgmldbsdir)" \
-	"$(DESTDIR)$(shelfdir)"
+am__installdirs = "$(DESTDIR)$(shelfdir)" "$(DESTDIR)$(shelfdir)"
 dist_shelfDATA_INSTALL = $(INSTALL_DATA)
-sgmldbsDATA_INSTALL = $(INSTALL_DATA)
 shelfDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(dist_shelf_DATA) $(sgmldbs_DATA) $(shelf_DATA)
+DATA = $(dist_shelf_DATA) $(shelf_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -195,6 +203,7 @@ RAWCPPFLAGS = @RAWCPPFLAGS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 THRSTUBS_FALSE = @THRSTUBS_FALSE@
@@ -283,19 +292,17 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 # Main DocBook/XML files (DOCTYPE book)
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@docbook = localedb.xml
+@ENABLE_SPECS_TRUE@docbook = localedb.xml
 
 # The location where the DocBook/XML files and their generated formats are installed
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@shelfdir = $(docdir)/localedb
+@ENABLE_SPECS_TRUE@shelfdir = $(docdir)/i18n/localedb
 
 # DocBook/XML generated output formats to be installed
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@shelf_DATA =  \
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(docbook:.xml=.html) \
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1) \
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2)
+@ENABLE_SPECS_TRUE@shelf_DATA = $(am__append_1) $(am__append_2) \
+@ENABLE_SPECS_TRUE@	$(am__append_3) $(am__append_4)
 
 # DocBook/XML file with chapters, appendix and images it includes
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@dist_shelf_DATA = $(docbook) $(chapters)
+@ENABLE_SPECS_TRUE@dist_shelf_DATA = $(docbook) $(chapters)
 
 #
 # Generate DocBook/XML output formats with or without stylesheets
@@ -320,15 +327,6 @@ target_alias = @target_alias@
 @ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	-x $(STYLESHEET_SRCDIR)/xorg-fo.xsl
 
 
-#
-# Generate documents cross-reference target databases
-#
-
-# This is only possible if the xorg-sgml-doctools package is installed
-
-# DocBook/XML generated document cross-reference database
-@ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@sgmldbs_DATA = $(docbook:.xml=.html.db) $(docbook:.xml=.fo.db)
-
 # Generate DocBook/XML document cross-reference database
 # Flags for the XSL Transformation processor generating xref target databases
 @ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@XSLTPROC_FLAGS = \
@@ -337,7 +335,7 @@ target_alias = @target_alias@
 @ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--stringparam collect.xref.targets "only"	\
 @ENABLE_SPECS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--nonet --xinclude
 
-@ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@CLEANFILES = $(shelf_DATA) $(sgmldbs_DATA)
+@ENABLE_SPECS_TRUE@CLEANFILES = $(shelf_DATA)
 all: all-am
 
 .SUFFIXES:
@@ -397,23 +395,6 @@ uninstall-dist_shelfDATA:
 	  echo " rm -f '$(DESTDIR)$(shelfdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(shelfdir)/$$f"; \
 	done
-install-sgmldbsDATA: $(sgmldbs_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(sgmldbsdir)" || $(mkdir_p) "$(DESTDIR)$(sgmldbsdir)"
-	@list='$(sgmldbs_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(sgmldbsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(sgmldbsdir)/$$f'"; \
-	  $(sgmldbsDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(sgmldbsdir)/$$f"; \
-	done
-
-uninstall-sgmldbsDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(sgmldbs_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(sgmldbsdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(sgmldbsdir)/$$f"; \
-	done
 install-shelfDATA: $(shelf_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(shelfdir)" || $(mkdir_p) "$(DESTDIR)$(shelfdir)"
@@ -470,7 +451,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(shelfdir)" "$(DESTDIR)$(sgmldbsdir)" "$(DESTDIR)$(shelfdir)"; do \
+	for dir in "$(DESTDIR)$(shelfdir)" "$(DESTDIR)$(shelfdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -516,8 +497,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_shelfDATA install-sgmldbsDATA \
-	install-shelfDATA
+install-data-am: install-dist_shelfDATA install-shelfDATA
 
 install-exec-am:
 
@@ -544,19 +524,18 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-dist_shelfDATA uninstall-info-am \
-	uninstall-sgmldbsDATA uninstall-shelfDATA
+	uninstall-shelfDATA
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-dist_shelfDATA \
 	install-exec install-exec-am install-info install-info-am \
-	install-man install-sgmldbsDATA install-shelfDATA \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-dist_shelfDATA \
-	uninstall-info-am uninstall-sgmldbsDATA uninstall-shelfDATA
+	install-man install-shelfDATA install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dist_shelfDATA uninstall-info-am uninstall-shelfDATA
 
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@%.html: %.xml  $(chapters)
 @ENABLE_SPECS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) $(XMLTO_XHTML_FLAGS) xhtml-nochunks $<
