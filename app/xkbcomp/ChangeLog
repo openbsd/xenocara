@@ -1,3 +1,149 @@
+commit cef4ba4b8fdc9a5439f71437c08cf690a750bd6b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 21 16:04:45 2011 +0100
+
+    Bump to 1.2.3
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 3caab5aa37decb7b5dc1642a0452efc3e1f5100e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 21 15:55:59 2011 +0100
+
+    Interp: Allow explicit Any/NoSymbol mappings
+    
+    Brown paper bag in full effect.
+    
+    The previous fix, while crushing the previous problem where an unknown
+    keysym for an interp def would lead to every key matching it, also
+    ignored explicit Any+AnyOfOrNone(All) mappings.
+    
+    Such as the one xkeyboard-config relied on for Control to actually
+    update the modifier state.
+    
+    Fix this by allowing mappings explicitly declared as Any/NoSymbol, while
+    ignoring only those with failed keysym lookups.  Unfortunately, due to
+    the structure of the parser, it's a deeply inelegant fix.
+    
+    Verified with a quick check of all layouts (albeit using default
+    variants only) in xkeyboard-config that this results in no changes to
+    the output at all, compared to xkbcomp 1.1.1.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit b34af8b0aec3a1dfc58f9732996274cbf2646a53
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 21 15:55:28 2011 +0100
+
+    Constify LookupKeysym input argument
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit e68a8ef1067f98056237d8067052e2a0d9896133
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 21 14:06:05 2011 +0100
+
+    Bump to 1.2.2
+    
+    Emergency bugfix for the syminterp declarations.  They've been broken
+    since the beginning of time, but I guess we just haven't added new
+    interpreted symbols since around then.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 2a473b906943ffd807ad81960c47530ee7ae9a60
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 21 14:03:53 2011 +0100
+
+    Interp: Ignore NoSymbol definitions
+    
+    A NoSymbol syminterp leads to a Any+AnyOfOrAll(None) definition, which
+    is never what anyone would actually ever want in a sym interp.  The
+    failure mode here was:
+        interpret XF86SomeKeysymYouDontHaveYet {
+            action=Something()
+        }
+    leading to:
+        interpret Any+AnyOfOrAll(None) {
+            action=Something()
+        }
+    leading to every single non-action key triggering your shiny new action
+    that was only supposed to come from a new keysym.
+    
+    At least you could VT switch or zap, I guess.
+    
+    Later, more invasive, revisions will bring a more useful error message.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit a2816345e58c88f5806a5c6df310c7d9c62264f0
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 21 14:03:12 2011 +0100
+
+    Interp: Don't make modifier lookup failure fatal
+    
+    If we can't look up a modifier in a SymInterp declaration, don't make
+    that fatal enough to kill the entire file, just ignore it and move on.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit c7a42b364f0ca06d9859945fa11664d0e0ea2742
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 8 08:16:35 2011 -0500
+
+    config: move pre-processor flags to AM_CPPFLAGS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7899a1f4745c8d111dab4dd3abc2b59b40ecdcbc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 8 08:02:54 2011 -0500
+
+    config: let Automake handle Yacc dist and cleaning
+    
+    BUILT_SOURCES and MAINTAINERCLEANFILES are already handled by Automake.
+    
+    Automake generates all the rules to handle building,
+    distribution and cleaning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 137418c63d01d5db0dcaed257d7a26865efa53ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 7 23:47:32 2011 -0700
+
+    Replace repeated checks for gcc with _X_ATTRIBUTE_PRINTF from xproto
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit a2877e92bd9f9c1532b5cd12cc484ff3cdbc6a0a
+Author: Alistair Leslie-Hughes <leslie_alistair@hotmail.com>
+Date:   Fri Apr 1 20:26:30 2011 +1100
+
+    xkbcomp: Stop possible overflow in yyGetnumber. #31647
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=31647
+    
+    Signed-off-by: Alistair Leslie-Hughes <leslie_alistair@hotmail.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0b8527a3836cde77269461e22844857bf33e0aea
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 13 13:03:05 2011 +0100
+
+    Inline the oiText macro in the only place it's used
+    
+    Gets rid of a compiler warning:
+    geometry.c: In function 'HandleOverlayDef':
+    geometry.c:2578: warning: the address of 'ol' will always evaluate as 'true'
+    
+    X.Org bug#34219 <https://bugs.freedesktop.org/show_bug.cgi?id=34219>
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+
 commit c8375bcb7eb9f86ca1534cdf1143e91372d0499e
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Feb 11 09:06:04 2011 +1000
