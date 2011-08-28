@@ -46,12 +46,6 @@
 #include "data.h"
 #include "ident.h"
 
-#ifdef NEED_SNPRINTF
-#undef SCOPE
-#define SCOPE static
-#include "snprintf.c"
-#endif
-
 #define NPREFIX 1024
 
 #ifndef MAXFONTFILENAMELEN
@@ -60,6 +54,11 @@
 #ifndef MAXFONTNAMELEN
 #define MAXFONTNAMELEN 1024
 #endif
+
+/* Two levels of macro calls are needed so that we stringify the value
+   of MAXFONT... and not the string "MAXFONT..." */
+#define QUOTE(x)	#x
+#define STRINGIFY(x)	QUOTE(x)
 
 static char *encodings_array[] =
     { "ascii-0",
@@ -680,11 +679,7 @@ readFontScale(HashTablePtr entries, char *dirname)
     char *filename;
     FILE *in;
     int rc, count, i;
-    char file[MAXFONTFILENAMELEN], font[MAXFONTNAMELEN];
-    char format[100];
-
-    snprintf(format, 100, "%%%ds %%%d[^\n]\n", 
-             MAXFONTFILENAMELEN, MAXFONTNAMELEN);
+    char file[MAXFONTFILENAMELEN+1], font[MAXFONTNAMELEN+1];
 
     if(dirname[n - 1] == '/')
         filename = dsprintf("%sfonts.scale", dirname);
@@ -709,7 +704,10 @@ readFontScale(HashTablePtr entries, char *dirname)
     }
 
     for(i = 0; i < count; i++) {
-        rc = fscanf(in, format, file, font);
+        rc = fscanf(in,
+		    "%" STRINGIFY(MAXFONTFILENAMELEN) "s "
+		    "%" STRINGIFY(MAXFONTNAMELEN) "[^\n]\n",
+		    file, font);
         if(rc != 2)
             break;
         putHash(entries, font, file, 100);
@@ -942,10 +940,8 @@ doDirectory(char *dirname_given, int numEncodings, ListPtr encodingsToDo)
             }
         }
     done:
-        if(have_face) {
+        if(have_face)
             FT_Done_Face(face);
-            have_face = 0;
-        }
         deepDestroyList(xlfd);
         xlfd = NULL;
         free(filename);
@@ -980,6 +976,7 @@ doDirectory(char *dirname_given, int numEncodings, ListPtr encodingsToDo)
 	    exit(1);
 	}
         fprintf(encfile, "%d\n", numEncodings);
+        encodingsToDo = sortList(encodingsToDo);
         for(lp = encodingsToDo; lp; lp = lp->next) {
             fprintf(encfile, "%s\n", lp->value);
         }

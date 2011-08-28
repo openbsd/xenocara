@@ -6,11 +6,11 @@ mkfontscale \- create an index of scalable font files for X
 .SH SYNOPSIS
 .B mkfontscale
 [
-.B \-b 
+.B \-b
 ] [
 .B \-s
 ] [
-.B \-o 
+.B \-o
 .I filename
 ] [
 .B \-x
@@ -19,7 +19,7 @@ mkfontscale \- create an index of scalable font files for X
 .B \-a
 .I encoding
 ] \|.\|.\|. [
-.B \-f 
+.B \-f
 .I fuzz
 ] [
 .B \-l
@@ -71,13 +71,13 @@ files.
 send program output to
 .IR filename ;
 default is
-.B fonts.scale 
+.B fonts.scale
 if bitmap fonts are not being read, and
 .B fonts.dir
 if they are.  If
 .I filename
 is relative, it is created in the directory being processed.  If it is
-the special value 
+the special value
 .BR \- ,
 output is written to standard output.
 .TP
@@ -126,7 +126,7 @@ options.
 do not scan for fonts, do not write font directory files.  This option
 is useful when generating encoding directories only.
 .TP
-.B \-\- 
+.B \-\-
 end of options.
 .SH SEE ALSO
 X(__miscmansuffix__), Xserver(__appmansuffix__), mkfontdir(__appmansuffix__), ttmkfdir(__appmansuffix__), xfs(__appmansuffix__), xset(__appmansuffix__)

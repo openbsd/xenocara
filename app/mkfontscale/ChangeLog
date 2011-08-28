@@ -1,3 +1,146 @@
+commit d429321888c335042332d991480095f67c85bb64
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 29 20:25:37 2011 -0700
+
+    mkfontscale 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 82af43b3e142ed8a85f1057bc67fc44baf95cc13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 23 18:33:53 2011 -0700
+
+    Add _X_ATTRIBUTE_PRINTF to functions taking printf format arguments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3da7640b35c9660944168217c145a1011547712b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 09:36:02 2011 -0700
+
+    Dead code removal
+    
+    have_face is initialized to 0 at the beginning of the loop, so no need to set
+    it to 0 just before it goes out of scope at the end of the loop.
+    
+    mkfontscale.c:945:13: warning: Value stored to 'have_face' is never read
+                have_face = 0;
+                ^           ~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b8c26cb3d41b18dfcc14a1ae256f6575c7df7593
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 24 23:24:17 2011 -0800
+
+    makeList: free partially allocated list on failure
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer 'first' allocated with malloc(8)
+            at line 192 of list.c in function 'makeList'.
+              'first' allocated at line 181 with malloc(8).
+              first leaks when next == 0 at line 191.
+    
+    [ This bug was found by the Parfait 0.3.6 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 9d424d79ca56e7e372a286fca478996eeee8ebfe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 24 23:15:25 2011 -0800
+
+    Leave room for null terminator in file & font name arrays
+    
+    fscanf %s arguments don't include the trailing \0 byte in their counts.
+    
+    Error: Buffer overrun
+       Buffer overflow (CWE 120): Use of fscanf(%1024[), with buffer 'font'
+          Array size is 1024 bytes
+            at line 707 of mkfontscale.c in function 'readFontScale'.
+       Buffer overflow (CWE 120): Use of fscanf(%1024s), with buffer 'file'
+          Array size is 1024 bytes
+            at line 707 of mkfontscale.c in function 'readFontScale'.
+    
+    [ This bug was found by the Parfait 0.3.6 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 45b33b463c8acc2c0ff37e209387d6b664576cc4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 14 23:22:56 2011 -0800
+
+    Sort contents of encodings.dir
+    
+    Allows easier comparison between builds to detect changes.
+    Helps reduce deltas in packaging systems that compare old & new versions.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 623a620bde1988e105b2fe814a3158da0e7b863c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2e2073e358a6d9069dd5b5f3757de769cbc92721
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 13:44:31 2011 -0800
+
+    Remove unused NEED_SNPRINTF code to #include non-existent snprintf.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ad869a51804e5232f10c1c933e2822c205c3265
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 13:39:00 2011 -0800
+
+    Make fscanf format string constant so it can be checked at compile time
+    
+    Clears gcc warning of:
+    mkfontscale.c:714: warning: format not a string literal, argument types not checked
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed14fe953f8f6fee90fcf28cd6775037b5f6e228
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 13:24:10 2011 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f27bcd4d366b2c12e658ff018542c4273b36631a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fedc022d29297f524d39a2637c1529782edcdceb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
 commit 7a1e1e64c171ae95339bbd327806f892816850d7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 23:03:40 2010 -0700
