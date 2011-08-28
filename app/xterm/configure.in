@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.274 2011/07/07 00:06:11 tom Exp $
+dnl $XTermId: configure.in,v 1.277 2011/08/19 09:13:07 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -282,7 +282,7 @@ CF_WITH_IMAKE_CFLAGS($(MAIN_DEFINES) $(VENDORMANDEFS))
 # If we have already established that there is a full termcap implementation,
 # suppress the definitions for terminfo that we make have imported from the
 # imake-file.
-if test "x$cf_cv_lib_tgetent" != xno ; then
+if test "x$cf_cv_lib_tgetent" != xno || test "x$cf_cv_lib_part_tgetent" != xno ; then
 	case "$IMAKE_CFLAGS" in
 	*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
 		CF_UNDO_CFLAGS(IMAKE_CFLAGS,terminfo,[-DUSE_TERMINFO[[ 	]]*-DHAVE_TIGETSTR[[ 	]]*])
@@ -304,6 +304,7 @@ vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 	;;
 esac
 AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid")
+AC_SUBST(default_termid)
 
 AC_MSG_CHECKING(for default terminal-type)
 AC_ARG_WITH(terminal-type,
@@ -312,6 +313,7 @@ AC_ARG_WITH(terminal-type,
 	[default_TERM=xterm])
 AC_MSG_RESULT($default_TERM)
 AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM")
+AC_SUBST(default_TERM)
 
 AC_CHECK_PROG(cf_tic_prog,tic,yes,no)
 if test "$cf_tic_prog" = yes ; then
@@ -974,4 +976,4 @@ then
 fi
 
 ###	output xtermcfg.h, etc
-AC_OUTPUT(Makefile df-install)
+AC_OUTPUT(Makefile df-install minstall:minstall.in)

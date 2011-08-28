@@ -1,4 +1,4 @@
-.\" $XTermId: resize.man,v 1.17 2009/04/11 17:43:39 tom Exp $
+.\" $XTermId: resize.man,v 1.19 2011/08/16 09:10:05 tom Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, 1998-2006.
 .\"
@@ -12,18 +12,18 @@
 .el       .ds '' ''
 .TH RESIZE 1 __vendorversion__
 .SH NAME
-resize \- set TERMCAP and terminal settings to current xterm window size
+resize \- set environment and terminal settings to current xterm window size
 .SH SYNOPSIS
 .B resize
 [ \fB\-u\fP | \fB\-c\fP ] [ \fB\-s\fP [ \fIrow col\fP ] ]
 .SH DESCRIPTION
 .I Resize
-prints a shell command for setting the TERM and TERMCAP environment variables
+prints a shell command for setting the appropriate environment variables
 to indicate the current size of \fIxterm\fP window from which the command
 is run.  For this output to take effect, \fIresize\fP must either be evaluated
 as part of the command line (usually done with a shell alias or function) or
 else redirected to a file which can then be read in.  From the C shell (usually
-known as \fI/bin/csh\fP), the following alias could be defined in the 
+known as \fI/bin/csh\fP), the following alias could be defined in the
 user's \fI.cshrc\fP:
 .sp
 .nf
@@ -36,7 +36,7 @@ After resizing the window, the user would type:
         %  rs
 .fi
 .sp
-Users of versions of the Bourne shell (usually known as \fI/bin/sh\fP) that 
+Users of versions of the Bourne shell (usually known as \fI/bin/sh\fP) that
 don't have command
 functions will need to send the output to a temporary file and then read it back
 in with the \*(``.\*('' command:
@@ -49,7 +49,7 @@ in with the \*(``.\*('' command:
 The following options may be used with \fIresize\fP:
 .TP 8
 .B \-u
-This option indicates that Bourne shell commands should be generated even if 
+This option indicates that Bourne shell commands should be generated even if
 the user's current shell isn't \fI/bin/sh\fP.
 .TP 8
 .B \-c
@@ -57,7 +57,7 @@ This option indicates that C shell commands should be generated even if the
 user's current shell isn't \fI/bin/csh\fP.
 .TP 8
 .B \-s \fR[\fIrows columns\fP]
-This option indicates that Sun console escape sequences will be used 
+This option indicates that Sun console escape sequences will be used
 instead of the VT100-style \fIxterm\fP escape codes.
 If \fIrows\fP and
 \fIcolumns\fP are given, \fIresize\fP will ask the \fIxterm\fP to resize
@@ -79,6 +79,16 @@ for the base termcap entry to modify.
 .TP 15
 ~/.cshrc
 user's alias for the command.
+.SH ENVIRONMENT
+.TP 15
+TERM
+set to "__default_termname__" if not already set.
+.TP 15
+TERMCAP
+variable set on systems using termcap
+.TP 15
+COLUMNS, LINES
+variables set on systems using terminfo
 .SH "SEE ALSO"
 csh(1), tset(1), xterm(__mansuffix__)
 .SH AUTHORS

@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.4 2011/02/11 10:55:53 tom Exp $
+-- $XTermId: THANKS,v 1.5 2011/08/21 00:52:56 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -65,6 +65,7 @@ Frank Guangxin Liu
 Frank Liu
 Gael Roualland
 George Peter Staplin
+Gertjan Halkes
 Greg Badros
 Greg Klanderman
 Greg Smith
@@ -99,8 +100,10 @@ Kevin Schoedel
 Kiyokazu Suto
 Larry Riedel
 Lee Olsen
+Loïc Minier
 Marc Bevand
 Marc La France
+Marco Peereboom
 Marius Tolzmann
 Mark Waggoner
 Markus Kuhn
@@ -121,6 +124,7 @@ Miroslav Lichvar
 Nam SungHyun
 Nelson Beebe
 Németh Márton
+Nicolas George
 Ovidiu Gheorghioiu
 Paul Gilmartin
 Paul Giordano
@@ -150,6 +154,7 @@ Stuart Lissaman
 Sven Verdoolaege
 Taneli Huuskonen
 Ted Phelps
+Thierry Reding
 Thomas Wolff
 Tim Adye
 Tim Pope

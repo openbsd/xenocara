@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.638 2011/07/14 00:18:58 tom Exp $ */
+/* $XTermId: main.c,v 1.656 2011/08/25 08:55:31 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -134,6 +134,9 @@ SOFTWARE.
 #ifdef __sgi
 #include <grp.h>		/* initgroups() */
 #endif
+
+static void Syntax(char *) GCC_NORETURN;
+static void HsSysError(int) GCC_NORETURN;
 
 #ifdef USE_ISPTS_FLAG
 static Bool IsPts = False;
@@ -491,6 +494,7 @@ static char **command_to_exec = NULL;
 
 #if OPT_LUIT_PROG
 static char **command_to_exec_with_luit = NULL;
+static unsigned command_length_with_luit = 0;
 #endif
 
 #define TERMCAP_ERASE "kb"
@@ -998,7 +1002,6 @@ static XrmOptionDescRec optionDescList[] = {
 {"+k8",		"*allowC1Printable", XrmoptionNoArg,	(XPointer) "off"},
 #endif
 {"-kt",		"*keyboardType", XrmoptionSepArg,	(XPointer) NULL},
-{"+kt",		"*keyboardType", XrmoptionSepArg,	(XPointer) NULL},
 /* parse logging options anyway for compatibility */
 {"-l",		"*logging",	XrmoptionNoArg,		(XPointer) "on"},
 {"+l",		"*logging",	XrmoptionNoArg,		(XPointer) "off"},
@@ -1173,6 +1176,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+hm",                 "turn on/off selection-color override" },
 { "-selbg color",          "selection background color" },
 { "-selfg color",          "selection foreground color" },
+/* -hc is deprecated, not shown in help message */
 #endif
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
@@ -1233,6 +1237,7 @@ static OptionHelp xtermOptions[] = {
 #if OPT_LUIT_PROG
 { "-/+lc",                 "turn on/off locale mode using luit" },
 { "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
+/* -en is deprecated, not shown in help message */
 #endif
 { "-/+uc",                 "turn on/off underline cursor" },
 { "-/+ulc",                "turn off/on display of underline as color" },
@@ -1350,10 +1355,195 @@ decode_keyvalue(char **ptr, int termcap)
 }
 
 static int
-abbrev(const char *tst, const char *cmp, size_t need)
+matchArg(XrmOptionDescRec * table, const char *param)
 {
-    size_t len = strlen(tst);
-    return ((len >= need) && (!strncmp(tst, cmp, len)));
+    int result = -1;
+    int n;
+    int ch;
+
+    for (n = 0; (ch = table->option[n]) != '\0'; ++n) {
+	if (param[n] == ch) {
+	    result = n;
+	} else {
+	    if (param[n] != '\0')
+		result = -1;
+	    break;
+	}
+    }
+
+    return result;
+}
+
+/* return the number of argv[] entries which constitute arguments of option */
+static int
+countArg(XrmOptionDescRec * item)
+{
+    int result = 0;
+
+    switch (item->argKind) {
+    case XrmoptionNoArg:
+	/* FALLTHRU */
+    case XrmoptionIsArg:
+	/* FALLTHRU */
+    case XrmoptionStickyArg:
+	break;
+    case XrmoptionSepArg:
+	/* FALLTHRU */
+    case XrmoptionResArg:
+	/* FALLTHRU */
+    case XrmoptionSkipArg:
+	result = 1;
+	break;
+    case XrmoptionSkipLine:
+	break;
+    case XrmoptionSkipNArgs:
+	result = (int) (long) (item->value);
+	break;
+    }
+    return result;
+}
+
+#define isOption(string) ((string)[0] == '-' || (string)[0] == '+')
+
+/*
+ * Parse the argument list, more/less as XtInitialize, etc., would do, so we
+ * can find our own "-help" and "-version" options reliably.  Improve on just
+ * doing that, by detecting ambiguous options (things that happen to match the
+ * abbreviated option we are examining), and making it smart enough to handle
+ * "-d" as an abbreviation for "-display".  Doing this requires checking the
+ * standard table (something that the X libraries should do).
+ */
+static XrmOptionDescRec *
+parseArg(int *num, char **argv, char **valuep)
+{
+    /* table adapted from XtInitialize, used here to improve abbreviations */
+    /* *INDENT-OFF* */
+#define DATA(option,kind) { option, NULL, kind, (XtPointer) NULL }
+    static XrmOptionDescRec opTable[] = {
+	DATA("+rv",		   XrmoptionNoArg),
+	DATA("+synchronous",	   XrmoptionNoArg),
+	DATA("-background",	   XrmoptionSepArg),
+	DATA("-bd",		   XrmoptionSepArg),
+	DATA("-bg",		   XrmoptionSepArg),
+	DATA("-bordercolor",	   XrmoptionSepArg),
+	DATA("-borderwidth",	   XrmoptionSepArg),
+	DATA("-bw",		   XrmoptionSepArg),
+	DATA("-display",	   XrmoptionSepArg),
+	DATA("-fg",		   XrmoptionSepArg),
+	DATA("-fn",		   XrmoptionSepArg),
+	DATA("-font",		   XrmoptionSepArg),
+	DATA("-foreground",	   XrmoptionSepArg),
+	DATA("-geometry",	   XrmoptionSepArg),
+	DATA("-iconic",		   XrmoptionNoArg),
+	DATA("-name",		   XrmoptionSepArg),
+	DATA("-reverse",	   XrmoptionNoArg),
+	DATA("-rv",		   XrmoptionNoArg),
+	DATA("-selectionTimeout",  XrmoptionSepArg),
+	DATA("-synchronous",	   XrmoptionNoArg),
+	DATA("-title",		   XrmoptionSepArg),
+	DATA("-xnllanguage",	   XrmoptionSepArg),
+	DATA("-xrm",		   XrmoptionResArg),
+	DATA("-xtsessionID",	   XrmoptionSepArg),
+	/* These xterm options are processed after XtOpenApplication */
+#if defined(TIOCCONS) || defined(SRIOCSREDIR)
+	DATA("-C",		   XrmoptionNoArg),
+#endif /* TIOCCONS */
+	DATA("-S",		   XrmoptionStickyArg),
+	DATA("-D",		   XrmoptionNoArg),
+    };
+#undef DATA
+    /* *INDENT-ON* */
+
+    XrmOptionDescRec *result = 0;
+    Cardinal inlist;
+    Cardinal limit = XtNumber(optionDescList) + XtNumber(opTable);
+    int atbest = -1;
+    int best = -1;
+    int test;
+
+#define ITEM(n) ((Cardinal)(n) < XtNumber(optionDescList) \
+		 ? &optionDescList[n] \
+		 : &opTable[(Cardinal)(n) - XtNumber(optionDescList)])
+
+    if (argv[*num] != 0) {
+	Boolean need_value;
+	Boolean have_value = False;
+
+	TRACE(("parseArg %s\n", argv[*num]));
+	if (argv[(*num) + 1] != 0) {
+	    char *value = argv[(*num) + 1];
+	    have_value = (Boolean) ! isOption(value);
+	}
+	for (inlist = 0; inlist < limit; ++inlist) {
+	    XrmOptionDescRec *check = ITEM(inlist);
+
+	    test = matchArg(check, argv[*num]);
+	    if (test < 0)
+		continue;
+
+	    /* check for exact match */
+	    if ((test + 1) == (int) strlen(check->option)) {
+		if (check->argKind == XrmoptionStickyArg) {
+		    if (strlen(argv[*num]) > strlen(check->option)) {
+			atbest = (int) inlist;
+			break;
+		    }
+		} else if ((test + 1) == (int) strlen(argv[*num])) {
+		    atbest = (int) inlist;
+		    break;
+		}
+	    }
+
+	    need_value = (Boolean) (test > 0 && countArg(check) > 0);
+
+	    if (need_value ^ have_value) {
+		TRACE(("...skipping, need %d vs have %d\n", need_value, have_value));
+		continue;
+	    }
+
+	    /* special-case for our own options - always allow abbreviation */
+	    if (test > 0
+		&& ITEM(inlist)->argKind >= XrmoptionSkipArg) {
+		atbest = (int) inlist;
+		break;
+	    }
+	    if (test > best) {
+		best = test;
+		atbest = (int) inlist;
+	    } else if (test == best) {
+		if (atbest >= 0) {
+		    if (atbest > 0) {
+			fprintf(stderr,
+				"%s:  ambiguous option \"%s\" vs \"%s\"\n",
+				ProgramName, check->option,
+				ITEM(atbest)->option);
+		    }
+		    atbest = -1;
+		}
+	    }
+	}
+    }
+
+    *valuep = 0;
+    if (atbest >= 0) {
+	result = ITEM(atbest);
+	TRACE(("...result %s\n", result->option));
+	/* expand abbreviations */
+	if (result->argKind != XrmoptionStickyArg
+	    && strcmp(argv[*num], x_strdup(result->option))) {
+	    argv[*num] = x_strdup(result->option);
+	}
+
+	/* adjust (*num) to skip option value */
+	(*num) += countArg(result);
+	TRACE(("...next %s\n", NonNull(argv[*num])));
+	if (result->argKind == XrmoptionSkipArg) {
+	    *valuep = argv[*num];
+	    TRACE(("...parameter %s\n", NonNull(*valuep)));
+	}
+    }
+#undef ITEM
+    return result;
 }
 
 static void
@@ -1363,6 +1553,7 @@ Syntax(char *badOption)
     OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     int col;
 
+    TRACE(("Syntax error at %s\n", badOption));
     fprintf(stderr, "%s:  bad command line option \"%s\"\r\n\n",
 	    ProgramName, badOption);
 
@@ -1426,42 +1617,6 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
     return False;
 }
 #endif /* TIOCCONS */
-
-#if OPT_SESSION_MGT
-static void
-die_callback(Widget w GCC_UNUSED,
-	     XtPointer client_data GCC_UNUSED,
-	     XtPointer call_data GCC_UNUSED)
-{
-    Cleanup(0);
-}
-
-static void
-save_callback(Widget w GCC_UNUSED,
-	      XtPointer client_data GCC_UNUSED,
-	      XtPointer call_data)
-{
-    XtCheckpointToken token = (XtCheckpointToken) call_data;
-    /* we have nothing to save */
-    token->save_success = True;
-}
-
-static void
-icewatch(IceConn iceConn,
-	 IcePointer clientData GCC_UNUSED,
-	 Bool opening,
-	 IcePointer * watchData GCC_UNUSED)
-{
-    if (opening) {
-	ice_fd = IceConnectionNumber(iceConn);
-	TRACE(("got IceConnectionNumber %d\n", ice_fd));
-    } else {
-	ice_fd = -1;
-	TRACE(("reset IceConnectionNumber\n"));
-    }
-}
-
-#endif /* OPT_SESSION_MGT */
 
 /*
  * DeleteWindow(): Action proc to implement ICCCM delete_window.
@@ -1835,30 +1990,56 @@ main(int argc, char *argv[]ENVP_ARG)
     TRACE_OPTS(xtermOptions, optionDescList, XtNumber(optionDescList));
     TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
+	XrmOptionDescRec *option_ptr;
+	char *option_value;
 	int n;
-	size_t unique = 2;
 	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
-	    TRACE(("parsing %s\n", argv[n]));
-	    if (abbrev(argv[n], "-version", unique)) {
+	    if ((option_ptr = parseArg(&n, argv, &option_value)) == 0) {
+		if (isOption(argv[n])) {
+		    Syntax(argv[n]);
+		} else if (explicit_shname != 0) {
+		    fprintf(stderr, "Explicit shell already was %s\n", explicit_shname);
+		    Syntax(argv[n]);
+		}
+		explicit_shname = xtermFindShell(argv[n], True);
+		if (explicit_shname == 0)
+		    exit(0);
+		TRACE(("...explicit shell %s\n", explicit_shname));
+	    } else if (!strcmp(option_ptr->option, "-e")) {
+		command_to_exec = (argv + n + 1);
+		if (!command_to_exec[0])
+		    Syntax(argv[n]);
+		break;
+	    } else if (!strcmp(option_ptr->option, "-version")) {
 		Version();
 		quit = True;
-	    } else if (abbrev(argv[n], "-help", unique)) {
+	    } else if (!strcmp(option_ptr->option, "-help")) {
 		Help();
 		quit = True;
-	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
-		if ((my_class = argv[++n]) == 0) {
+	    } else if (!strcmp(option_ptr->option, "-class")) {
+		if ((my_class = x_strdup(option_value)) == 0) {
 		    Help();
 		    quit = True;
 		}
+	    } else if (!strcmp(option_ptr->option, "-into")) {
+		char *endPtr;
+		winToEmbedInto = (Window) strtol(option_value, &endPtr, 0);
 	    }
 	}
 	if (quit)
 	    exit(0);
+	/*
+	 * If there is anything left unparsed, and we're not using "-e",
+	 * then give up.
+	 */
+	if (n < argc && !command_to_exec) {
+	    Syntax(argv[n]);
+	}
     }
 
-    /* This dumps core on HP-UX 9.05 with X11R5 */
+    /* This dumped core on HP-UX 9.05 with X11R5 */
 #if OPT_I18N_SUPPORT
     XtSetLanguageProc(NULL, NULL, NULL);
 #endif
@@ -1992,23 +2173,14 @@ main(int argc, char *argv[]ENVP_ARG)
 	TRACE_IDS;
 #endif
 
-	XtSetErrorHandler(xt_error);
-#if OPT_SESSION_MGT
-	toplevel = XtOpenApplication(&app_con, my_class,
-				     optionDescList,
-				     XtNumber(optionDescList),
-				     &argc, argv, fallback_resources,
-				     sessionShellWidgetClass,
-				     NULL, 0);
-	IceAddConnectionWatch(icewatch, NULL);
-#else
-	toplevel = XtAppInitialize(&app_con, my_class,
-				   optionDescList,
-				   XtNumber(optionDescList),
-				   &argc, argv, fallback_resources,
-				   NULL, 0);
-#endif /* OPT_SESSION_MGT */
-	XtSetErrorHandler((XtErrorHandler) 0);
+	toplevel = xtermOpenApplication(&app_con,
+					my_class,
+					optionDescList,
+					XtNumber(optionDescList),
+					&argc, argv,
+					fallback_resources,
+					sessionShellWidgetClass,
+					NULL, 0);
 
 	XtGetApplicationResources(toplevel, (XtPointer) &resource,
 				  application_resources,
@@ -2091,27 +2263,18 @@ main(int argc, char *argv[]ENVP_ARG)
     /* Parse the rest of the command line */
     TRACE_ARGV("After XtOpenApplication", argv);
     for (argc--, argv++; argc > 0; argc--, argv++) {
+	if (!isOption(*argv)) {
 #ifdef VMS
-	if (**argv != '-')
 	    Syntax(*argv);
 #else
-	if (**argv != '-') {
 	    if (argc > 1)
 		Syntax(*argv);
-	    if (command_to_exec == 0)	/* if no "-e" option */
-		explicit_shname = xtermFindShell(*argv, True);
 	    continue;
-	}
 #endif
+	}
 
 	TRACE(("parsing %s\n", argv[0]));
 	switch (argv[0][1]) {
-	case 'h':		/* -help */
-	    Help();
-	    exit(0);
-	case 'v':		/* -version */
-	    Version();
-	    exit(0);
 	case 'C':
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 #ifndef __sgi
@@ -2141,26 +2304,20 @@ main(int argc, char *argv[]ENVP_ARG)
 	    debug = True;
 	    continue;
 #endif /* DEBUG */
-	case 'c':		/* -class param */
-	    if (strcmp(argv[0] + 1, "class") == 0)
-		argc--, argv++;
-	    else
+	case 'c':
+	    if (strcmp(argv[0], "-class"))
 		Syntax(*argv);
+	    argc--, argv++;
 	    continue;
 	case 'e':
-	    if (argc <= 1)
+	    if (strcmp(argv[0], "-e"))
 		Syntax(*argv);
-	    command_to_exec = ++argv;
+	    command_to_exec = (argv + 1);
 	    break;
 	case 'i':
-	    if (argc <= 1) {
+	    if (strcmp(argv[0], "-into"))
 		Syntax(*argv);
-	    } else {
-		char *endPtr;
-		--argc;
-		++argv;
-		winToEmbedInto = (Window) strtol(argv[0], &endPtr, 10);
-	    }
+	    argc--, argv++;
 	    continue;
 
 	default:
@@ -2218,13 +2375,7 @@ main(int argc, char *argv[]ENVP_ARG)
     ShowToolbar(resource.toolBar);
 #endif
 
-#if OPT_SESSION_MGT
-    if (resource.sessionMgt) {
-	TRACE(("Enabling session-management callbacks\n"));
-	XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
-	XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
-    }
-#endif
+    xtermOpenSession();
 
     /*
      * Set title and icon name if not specified
@@ -2252,33 +2403,36 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #if OPT_LUIT_PROG
     if (term->misc.callfilter) {
-	int u = (term->misc.use_encoding ? 2 : 0);
-	if (command_to_exec) {
-	    int n;
-	    char **c;
-	    for (n = 0, c = command_to_exec; *c; n++, c++) ;
-	    c = TypeMallocN(char *, (unsigned) (n + 3 + u));
-	    if (c == NULL)
-		SysError(ERROR_LUMALLOC);
-	    memcpy(c + 2 + u, command_to_exec, (unsigned) (n + 1) * sizeof(char *));
-	    c[0] = term->misc.localefilter;
-	    if (u) {
-		c[1] = "-encoding";
-		c[2] = term->misc.locale_str;
-	    }
-	    c[1 + u] = "--";
-	    command_to_exec_with_luit = c;
-	} else {
-	    static char *luit[6];
-	    luit[0] = term->misc.localefilter;
-	    if (u) {
-		luit[1] = "-encoding";
-		luit[2] = term->misc.locale_str;
-		luit[3] = NULL;
-	    } else
-		luit[1] = NULL;
-	    command_to_exec_with_luit = luit;
+	char **split_filter = x_splitargs(term->misc.localefilter);
+	unsigned count_split = x_countargv(split_filter);
+	unsigned count_exec = x_countargv(command_to_exec);
+	unsigned count_using = (term->misc.use_encoding ? 2 : 0);
+
+	command_to_exec_with_luit = TypeCallocN(char *,
+						  (count_split
+						   + count_exec
+						   + count_using
+						   + 8));
+	if (command_to_exec_with_luit == NULL)
+	    SysError(ERROR_LUMALLOC);
+
+	x_appendargv(command_to_exec_with_luit, split_filter);
+	if (count_using) {
+	    char *encoding_opt[4];
+	    encoding_opt[0] = "-encoding";
+	    encoding_opt[1] = term->misc.locale_str;
+	    encoding_opt[2] = 0;
+	    x_appendargv(command_to_exec_with_luit, encoding_opt);
 	}
+	command_length_with_luit = x_countargv(command_to_exec_with_luit);
+	if (count_exec) {
+	    char *delimiter[2];
+	    delimiter[0] = "--";
+	    delimiter[1] = 0;
+	    x_appendargv(command_to_exec_with_luit, delimiter);
+	    x_appendargv(command_to_exec_with_luit, command_to_exec);
+	}
+	TRACE_ARGV("luit command", command_to_exec_with_luit);
     }
 #endif
 
@@ -2396,21 +2550,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif
 
-    TRACE(("checking winToEmbedInto %#lx\n", winToEmbedInto));
-    if (winToEmbedInto != None) {
-	XtRealizeWidget(toplevel);
-	/*
-	 * This should probably query the tree or check the attributes of
-	 * winToEmbedInto in order to verify that it exists, but I'm still not
-	 * certain what is the best way to do it -GPS
-	 */
-	TRACE(("...reparenting toplevel %#lx into %#lx\n",
-	       XtWindow(toplevel),
-	       winToEmbedInto));
-	XReparentWindow(XtDisplay(toplevel),
-			XtWindow(toplevel),
-			winToEmbedInto, 0, 0);
-    }
+    xtermEmbedWindow(winToEmbedInto);
 #if OPT_COLOR_RES
     TRACE(("checking reverseVideo before rv %s fg %s, bg %s\n",
 	   term->misc.re_verse0 ? "reverse" : "normal",
@@ -4392,11 +4532,23 @@ spawnXTerm(XtermWidget xw)
 #endif /* OPT_PTY_HANDSHAKE */
 	    signal(SIGHUP, SIG_DFL);
 
+	    /*
+	     * If we have an explicit program to run, make that set $SHELL.
+	     * Otherwise, if $SHELL is not set, determine it from the user's
+	     * password information, if possible.
+	     *
+	     * Incidentally, our setting of $SHELL tells luit to use that
+	     * program rather than choosing between $SHELL and "/bin/sh".
+	     */
+	    unsetenv("SHELL");
 	    if ((ptr = explicit_shname) == NULL) {
-		if (((ptr = x_getenv("SHELL")) == NULL) &&
-		    ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
-		     *(ptr = pw->pw_shell) == 0)) {
-		    ptr = x_strdup("/bin/sh");
+		if ((ptr = x_getenv("SHELL")) == NULL) {
+		    if ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL)
+			|| *(ptr = pw->pw_shell) == 0) {
+			ptr = x_strdup("/bin/sh");
+		    } else if (ptr != 0) {
+			xtermSetenv("SHELL", ptr);
+		    }
 		}
 	    } else {
 		xtermSetenv("SHELL", explicit_shname);
@@ -4415,7 +4567,7 @@ spawnXTerm(XtermWidget xw)
 	    if (command_to_exec_with_luit && command_to_exec) {
 		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec_with_luit, False));
-		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
+		TRACE_ARGV("spawning luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
@@ -4427,7 +4579,7 @@ spawnXTerm(XtermWidget xw)
 	    if (command_to_exec) {
 		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec, False));
-		TRACE(("spawning command \"%s\"\n", *command_to_exec));
+		TRACE_ARGV("spawning command", command_to_exec);
 		execvp(*command_to_exec, command_to_exec);
 		if (command_to_exec[1] == 0)
 		    execlp(ptr, shname, "-c", command_to_exec[0], (void *) 0);
@@ -4444,8 +4596,9 @@ spawnXTerm(XtermWidget xw)
 	    (void) strcpy(shname_minus, "-");
 	    (void) strcat(shname_minus, shname);
 #ifndef TERMIO_STRUCT
-	    ldisc = XStrCmp("csh", shname + strlen(shname) - 3) == 0 ?
-		NTTYDISC : 0;
+	    ldisc = (!XStrCmp("csh", shname + strlen(shname) - 3)
+		     ? NTTYDISC
+		     : 0);
 	    ioctl(0, TIOCSETD, (char *) &ldisc);
 #endif /* !TERMIO_STRUCT */
 
@@ -4457,12 +4610,15 @@ spawnXTerm(XtermWidget xw)
 #if OPT_LUIT_PROG
 	    if (command_to_exec_with_luit) {
 		if (xw->misc.login_shell) {
-		    int u;
-		    u = (term->misc.use_encoding ? 2 : 0);
-		    command_to_exec_with_luit[u + 1] = x_strdup("-argv0");
-		    command_to_exec_with_luit[u + 2] = shname_minus;
-		    command_to_exec_with_luit[u + 3] = NULL;
+		    char *params[4];
+		    params[0] = x_strdup("-argv0");
+		    params[1] = shname_minus;
+		    params[2] = NULL;
+		    x_appendargv(command_to_exec_with_luit
+				 + command_length_with_luit,
+				 params);
 		}
+		TRACE_ARGV("final luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* Exec failed. */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n", ProgramName,
@@ -4790,9 +4946,7 @@ Exit(int n)
 	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
 	    XtCloseDisplay(dpy);
 	    XtDestroyApplicationContext(app_con);
-#if OPT_SESSION_MGT
-	    IceRemoveConnectionWatch(icewatch, NULL);
-#endif
+	    xtermCloseSession();
 	    TRACE(("closed display\n"));
 	}
 	TRACE_CLOSE();

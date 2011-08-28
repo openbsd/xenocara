@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.530 2011/07/11 00:16:41 tom Exp $ */
+/* $XTermId: misc.c,v 1.539 2011/08/23 01:03:18 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4765,4 +4765,154 @@ getXtermWidget(Widget w)
     }
     TRACE2(("getXtermWidget %p -> %p\n", w, xw));
     return xw;
+}
+
+#if OPT_SESSION_MGT
+static void
+die_callback(Widget w GCC_UNUSED,
+	     XtPointer client_data GCC_UNUSED,
+	     XtPointer call_data GCC_UNUSED)
+{
+    Cleanup(0);
+}
+
+static void
+save_callback(Widget w GCC_UNUSED,
+	      XtPointer client_data GCC_UNUSED,
+	      XtPointer call_data)
+{
+    XtCheckpointToken token = (XtCheckpointToken) call_data;
+    /* we have nothing to save */
+    token->save_success = True;
+}
+
+static void
+icewatch(IceConn iceConn,
+	 IcePointer clientData GCC_UNUSED,
+	 Bool opening,
+	 IcePointer * watchData GCC_UNUSED)
+{
+    if (opening) {
+	ice_fd = IceConnectionNumber(iceConn);
+	TRACE(("got IceConnectionNumber %d\n", ice_fd));
+    } else {
+	ice_fd = -1;
+	TRACE(("reset IceConnectionNumber\n"));
+    }
+}
+
+void
+xtermOpenSession(void)
+{
+    if (resource.sessionMgt) {
+	TRACE(("Enabling session-management callbacks\n"));
+	XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
+	XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
+    }
+}
+
+void
+xtermCloseSession(void)
+{
+    IceRemoveConnectionWatch(icewatch, NULL);
+}
+#endif /* OPT_SESSION_MGT */
+
+Widget
+xtermOpenApplication(XtAppContext * app_context_return,
+		     String my_class,
+		     XrmOptionDescRec * options,
+		     Cardinal num_options,
+		     int *argc_in_out,
+		     String * argv_in_out,
+		     String * fallback_resources,
+		     WidgetClass widget_class,
+		     ArgList args,
+		     Cardinal num_args)
+{
+    Widget result;
+
+    XtSetErrorHandler(xt_error);
+#if OPT_SESSION_MGT
+    result = XtOpenApplication(app_context_return,
+			       my_class,
+			       options,
+			       num_options,
+			       argc_in_out,
+			       argv_in_out,
+			       fallback_resources,
+			       widget_class,
+			       args,
+			       num_args);
+    IceAddConnectionWatch(icewatch, NULL);
+#else
+    result = XtAppInitialize(app_conp,
+			     my_class,
+			     optionDescList,
+			     XtNumber(optionDescList),
+			     &argc, argv,
+			     fallback_resources,
+			     NULL, 0);
+#endif /* OPT_SESSION_MGT */
+    XtSetErrorHandler((XtErrorHandler) 0);
+
+    return result;
+}
+
+static int x11_errors;
+
+static int
+catch_x11_error(Display * display, XErrorEvent * error_event)
+{
+    (void) display;
+    (void) error_event;
+    ++x11_errors;
+    return 0;
+}
+
+static Boolean
+validWindow(Display * dpy, Window win, XWindowAttributes * attrs)
+{
+    Boolean result = False;
+    Status code;
+
+    if (win != None) {
+	XErrorHandler save = XSetErrorHandler(catch_x11_error);
+	x11_errors = 0;
+	code = XGetWindowAttributes(dpy, win, attrs);
+	XSetErrorHandler(save);
+	result = (Boolean) ((code != 0) && !x11_errors);
+	if (result) {
+	    TRACE_WIN_ATTRS(attrs);
+	} else {
+	    fprintf(stderr, "%s: invalid window-id %ld\n",
+		    ProgramName, (long) win);
+	}
+    }
+    return result;
+}
+
+void
+xtermEmbedWindow(Window winToEmbedInto)
+{
+    Display *dpy = XtDisplay(toplevel);
+    XWindowAttributes attrs;
+
+    TRACE(("checking winToEmbedInto %#lx\n", winToEmbedInto));
+    if (validWindow(dpy, winToEmbedInto, &attrs)) {
+	XtermWidget xw = term;
+	TScreen *screen = TScreenOf(xw);
+
+	XtRealizeWidget(toplevel);
+
+	TRACE(("...reparenting toplevel %#lx into %#lx\n",
+	       XtWindow(toplevel),
+	       winToEmbedInto));
+	XReparentWindow(dpy,
+			XtWindow(toplevel),
+			winToEmbedInto, 0, 0);
+
+	screen->embed_high = (Dimension) attrs.height;
+	screen->embed_wide = (Dimension) attrs.width;
+    }
 }

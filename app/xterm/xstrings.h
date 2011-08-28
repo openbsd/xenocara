@@ -1,8 +1,8 @@
-/* $XTermId: xstrings.h,v 1.19 2009/12/06 15:50:18 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.21 2011/08/21 17:23:33 tom Exp $ */
 
 /************************************************************
 
-Copyright 2000-2008,2009 by Thomas E. Dickey
+Copyright 2000-2009,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -34,12 +34,14 @@ authorization.
 
 #ifndef included_xstrings_h
 #define included_xstrings_h 1
+/* *INDENT-OFF* */
 
 #include <X11/Intrinsic.h>
 
 extern String x_nonempty(String /* s */);
 extern String x_skip_blanks(String /* s */);
 extern String x_skip_nonblanks(String /* s */);
+extern char **x_splitargs(const char * /* command */);
 extern char *x_basename(char * /* name */);
 extern char *x_decode_hex(const char * /* source */, const char ** /* next */);
 extern char *x_encode_hex(const char * /* source */);
@@ -51,5 +53,9 @@ extern char x_toupper(int /* ch */);
 extern int x_hex2int(int /* ch */);
 extern int x_strcasecmp(const char * /* s1 */, const char * /* s2 */);
 extern int x_strncasecmp(const char * /* s1 */, const char * /* s2 */, unsigned  /* n */);
+extern unsigned x_countargv(char ** /* argv */);
+extern void x_appendargv(char ** /* target */, char ** /* source */);
+
+/* *INDENT-ON* */
 
 #endif /* included_xstrings_h */

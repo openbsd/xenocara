@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.501 2011/07/13 08:59:37 tom Exp $
+.\" $XTermId: xterm.man,v 1.507 2011/08/23 00:50:07 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -124,7 +124,7 @@ The VT220 emulation does not support soft fonts, it is otherwise complete.
 entries that work with
 .I xterm
 include
-an optional platform-specific entry,
+an optional platform-specific entry (\*(``__default_termname__\*(''),
 \*(``xterm,\*(''
 \*(``vt102,\*(''
 \*(``vt100,\*(''
@@ -253,10 +253,9 @@ or a \*(``\fB+\fR\fIoption\fP\*('' turns the feature on or off,
 since some features historically have been one or the other.
 \fIXterm\fP generates a concise help message (multiple options per line)
 when an unknown option is used, e.g.,
-.RS
-	\fBxterm \-z\fP
-.RE
-.IP
+.NS
+\fBxterm \-z\fP
+.NE
 If the logic for a particular option such as logging is not compiled
 into \fIxterm\fP, the help text for that option also is not displayed
 by the \fB\-help\fP option.
@@ -382,8 +381,8 @@ Reset the \fBcjkWidth\fP resource.
 .TP 8
 .BI \-class " string"
 This option allows you to override \fIxterm\fP's resource class.
-Normally it is \*(``XTerm\*('', but
-can be set to another class such as \*(``UXTerm\*('' to override selected resources.
+Normally it is \*(``__default_class__\*('', but
+can be set to another class such as \*(``U__default_class__\*('' to override selected resources.
 .TP 8
 .B "\-cm"
 This option disables recognition of ANSI color-change escape sequences.
@@ -601,9 +600,15 @@ environment variable.
 Turn off the \fBuseInsertMode\fP resource.
 .TP 8
 .BI \-into " windowId"
-Given an X window identifier (a decimal integer),
+Given an X window identifier (an integer, which can be hexadecimal,
+octal or decimal according to whether it begins with "0x", "0" or neither),
 \fIxterm\fP will reparent its top-level shell widget to that window.
 This is used to embed \fIxterm\fP within other applications.
+.PP
+For instance, there are scripts for Tcl/Tk and Gtk which can be used
+to demonstrate the feature.
+When using Gtk, there is a limitation of that toolkit which requires
+that \fIxterm\fP's \fBallowSendEvents\fP resource is enabled.
 .TP 8
 .B \-j
 This option indicates that \fIxterm\fP should do jump scrolling.
@@ -721,10 +726,9 @@ result of ~/.profile might interfere with that.
 .IP
 If you do want the effect of \fB\-ls\fP and \fB\-e\fP simultaneously, you
 may get away with something like
-.RS 15
+.NS 15
 xterm \-e /bin/bash \-l \-c "my command here"
-.RE
-.IP
+.NE
 Finally, \fB\-ls\fP is not completely ignored,
 because \fIxterm\ \-ls\ \-e\fP does write a \fI/etc/wtmp\fP entry
 (if configured to do so),
@@ -959,7 +963,7 @@ It also specifies the emulation level,
 used to determine the type of response to a DA control sequence.
 Valid values include vt52, vt100, vt101, vt102, and vt220
 (the \*(``vt\*('' is optional).
-The default is \*(``vt100\*(''.
+The default is \*(``vt__default_termid__\*(''.
 The term_id argument specifies the terminal ID to use.
 (This is the same as the \fBdecTerminalID\fP resource).
 .TP 8
@@ -1097,15 +1101,11 @@ the pseudo-terminal name, the remainder is the file descriptor.
 Examples
 (the first two are equivalent
 since the descriptor follows the last \*(``/\*(''):
-.sp
-.nf
-.RS 15
+.NS 15
 -S/dev/pts/123/45
 -S123/45
 -Sab34
-.RE
-.fi
-.IP
+.NE
 Note that \fIxterm\fP does not close any file descriptor
 which it did not open for its own use.
 It is possible (though probably not portable) to have an application
@@ -1225,7 +1225,7 @@ useful for setting resources that do not have separate command line options.
 .
 .SH RESOURCES
 The program understands all of the core X Toolkit resource names and classes.
-Application specific resources (e.g., \*(``\fBXTerm.\fP\fINAME\fP\*('') follow:
+Application specific resources (e.g., \*(``\fB__default_class__.\fP\fINAME\fP\*('') follow:
 .TP 8
 .B "backarrowKeyIsErase (\fPclass\fB BackarrowKeyIsErase)"
 Tie the VTxxx \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
@@ -1550,14 +1550,14 @@ The default is \*(``false.\*(''
 .PP
 The following resources are specified as part
 of the \fIvt100\fP widget (class \fIVT100\fP).
-They are specified by patterns such as \*(``\fBXTerm.vt100.\fP\fINAME\fP\*(''.
+They are specified by patterns such as \*(``\fB__default_class__.vt100.\fP\fINAME\fP\*(''.
 .PP
 If your \fIxterm\fP is configured to support the \*(``toolbar\*('', then those
 patterns need an extra level for the form-widget which holds the
 toolbar and vt100 widget.
 A wildcard between the top-level
-\*(``XTerm\*('' and the \*(``vt100\*('' widget makes the resource settings work for
-either, e.g., \*(``\fBXTerm*vt100.\fP\fINAME\fP\*(''.
+\*(``__default_class__\*('' and the \*(``vt100\*('' widget makes the resource settings work for
+either, e.g., \*(``\fB__default_class__*vt100.\fP\fINAME\fP\*(''.
 .TP 8
 .B "activeIcon (\fPclass\fB ActiveIcon)"
 Specifies whether or not active icon windows are to be used when the
@@ -1824,21 +1824,19 @@ the font server may not cooperate.
 Since X11R6, bitmap fonts have been scaled.
 The font server claims to provide the bold font that \fIxterm\fP requests,
 but the result is not always readable.
-XFree86 provides a feature which can be used to suppress the scaling.
+XFree86 introduced a feature which can be used to suppress the scaling.
 In the X server's configuration file (e.g., \*(``/etc/X11/XFree86\*(''), you
 can add \*(``:unscaled\*('' to the end of the directory specification for the
 \*(``misc\*('' fonts,
 which comprise the fixed-pitch fonts that are used by \fIxterm\fP.
 For example
-.RS
-	FontPath	"/usr/lib/X11/fonts/misc/"
-.RE
-.IP
+.NS
+FontPath	"/usr/lib/X11/fonts/misc/"
+.NE
 would become
-.RS
-	FontPath	"/usr/lib/X11/fonts/misc/:unscaled"
-.RE
-.IP
+.NS
+FontPath	"/usr/lib/X11/fonts/misc/:unscaled"
+.NE
 Depending on your configuration, the font server may have its own configuration
 file.
 The same \*(``:unscaled\*('' can be added to its configuration file at the
@@ -2159,7 +2157,7 @@ Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine
 the type of response to a DA control sequence.
 Leading non-digit characters are ignored,
 e.g., \*(``vt100\*('' and \*(``100\*('' are the same.
-The default is \*(``100\*(''.
+The default is \*(``__default_termid__\*(''.
 .TP 8
 .B "defaultString (\fPclass\fB DefaultString)"
 Specify the character (or string) which \fIxterm\fP will substitute when
@@ -2479,20 +2477,17 @@ See the discussion of the \fBlocale\fP resource,
 which describes how this font may be overridden.
 .IP
 NOTE: some resource files use patterns such as
-.RS
+.NS
 *font: fixed
-.RE
-.IP
+.NE
 which are overly broad, affecting both
-.RS
+.NS
 xterm.vt100.font
-.RE
-.IP
+.NE
 and
-.RS
+.NS
 xterm.vt100.utf8Fonts.font
-.RE
-.IP
+.NE
 which is probably not what you intended.
 .TP 8
 .B "fastScroll (\fPclass\fB FastScroll)"
@@ -2841,7 +2836,12 @@ The help message shown by \*(``xterm \-help\*('' lists the default value,
 which depends on your system configuration.
 .IP
 If the encoding converter requires command-line parameters,
-you should put those within a shell script to execute the converter,
+you can add those after the command, e.g.,
+.NS
+*localeFilter: xterm-filter -p
+.NE
+Alternatively,
+you may put those parameter within a shell script to execute the converter,
 and set this resource to point to the shell script.
 .TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
@@ -3130,7 +3130,7 @@ Set this resource to the prefix of the filename
 .IP
 The default is an empty string, i.e., \*(``\*('',
 However, when the \fBprint-immediate\fP action is invoked,
-if the string is empty, then \*(``XTerm\*('' is used.
+if the string is empty, then \*(``__default_class__\*('' is used.
 .TP 8
 .B "printFileOnXError (\fPPrintFileOnXError)"
 If \fIxterm\fP exits with an X error,
@@ -3727,7 +3727,7 @@ The \fBximFont\fP resource is provided to override this default font setting.
 .PP
 The following resources are specified
 as part of the \fItek4014\fP widget (class \fITek4014\fP).
-These are specified by patterns such as \*(``\fBXTerm.tek4014.\fP\fINAME\fP\*('':
+These are specified by patterns such as \*(``\fB__default_class__.tek4014.\fP\fINAME\fP\*('':
 .TP 8
 .B "font2 (\fPclass\fB Font)"
 Specifies font number 2 to use in the Tektronix window.
@@ -4774,16 +4774,15 @@ If the latter is set to \*(``always\*('', the checkmark is disabled.
 Likewise, if there are no fonts given in the \fButf8Fonts\fP
 subresources, then the checkmark also is disabled.
 .IP
-The standard \fBXTerm\fP app-defaults file defines both sets of fonts,
-while the \fBUXTerm\fP app-defaults file defines only one set.
+The standard \fB__default_class__\fP app-defaults file defines both sets of fonts,
+while the \fBU__default_class__\fP app-defaults file defines only one set.
 assuming the standard app-defaults files,
 this command will launch \fIxterm\fP able to switch between UTF-8
 and ISO-8859-1 encoded fonts:
 .NS
-uxterm -class XTerm
+uxterm -class __default_class__
 .NE
 .RE
-.PP
 The fourth section allows you to enable or disable special operations
 which can be controlled by writing escape sequences to the terminal.
 These are disabled if the SendEvents feature is enabled:
@@ -5710,7 +5709,6 @@ which is set by the \fBselectToClipboard\fP resource:
                          <BtnUp>:select-end(SELECT, CUT_BUFFER0) \\n\\\&
                        <BtnDown>:ignore()
 .NE
-.PP
 The default bindings for the scrollbar widget
 are separate from the VT100 widget:
 .NS
@@ -5723,7 +5721,6 @@ are separate from the VT100 widget:
                       <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
                       <BtnUp>:    NotifyScroll(Proportional) EndScroll()
 .NE
-.PP
 The default bindings in the Tektronix window are:
 .NS
 .ta 2.5i
@@ -5744,7 +5741,6 @@ The default bindings in the Tektronix window are:
            Shift ~Meta<Btn3Down>: gin-press(R) \\n\\\&
                  ~Meta<Btn3Down>: gin-press(r)
 .NE
-.PP
 Here is an example which uses shifted select/paste to copy to the clipboard,
 and unshifted select/paste for the primary selection.
 In each case, a (different) cut buffer is
@@ -5763,8 +5759,7 @@ But you can still paste from the corresponding cut buffer.
     ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
 .NE
-.PP
-Below is a sample how of the \fBkeymap()\fP action is used to add special
+Below is a sample of how the \fBkeymap()\fP action is used to add special
 keys for entering commonly-typed works:
 .NS
 .ta .5i 1.5i
@@ -5776,7 +5771,6 @@ keys for entering commonly-typed works:
 	<Key>F19:	string("continue") string(0x0d) \\n\\\&
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
 .NE
-.PP
 Some people prefer using the left pointer button
 for dragging the scrollbar thumb.
 That can be setup by altering the translations resource, e.g.,
@@ -5868,10 +5862,10 @@ the system logfile, which records user logins.
 \fI/etc/wtmp\fP
 the system logfile, which records user logins and logouts.
 .TP 5
-.I __apploaddir__/XTerm
+.I __apploaddir__/__default_class__
 the \fIxterm\fP default application resources.
 .TP 5
-.I __apploaddir__/XTerm\-color
+.I __apploaddir__/__default_class__\-color
 the \fIxterm\fP color application resources.
 If your display supports color, use this
 .in +10
@@ -5879,7 +5873,7 @@ If your display supports color, use this
 .in -10
 in your .Xdefaults file to
 automatically use this resource file rather than
-.IR __apploaddir__/XTerm .
+.IR __apploaddir__/__default_class__ .
 If you do not do this,
 \fIxterm\fP uses its compiled-in default resource settings for colors.
 .

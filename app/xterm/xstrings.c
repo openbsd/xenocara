@@ -1,8 +1,8 @@
-/* $XTermId: xstrings.c,v 1.37 2010/04/04 22:34:17 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.40 2011/08/25 08:55:55 tom Exp $ */
 
 /************************************************************
 
-Copyright 2000-2009,2010 by Thomas E. Dickey
+Copyright 2000-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -41,6 +41,15 @@ authorization.
 
 #include <xstrings.h>
 
+void
+x_appendargv(char **target, char **source)
+{
+    if (target && source) {
+	target += x_countargv(target);
+	while ((*target++ = *source++) != 0) ;
+    }
+}
+
 char *
 x_basename(char *name)
 {
@@ -52,6 +61,18 @@ x_basename(char *name)
 	cp = strrchr(name, '\\');
 #endif
     return (cp ? cp + 1 : name);
+}
+
+unsigned
+x_countargv(char **argv)
+{
+    unsigned result = 0;
+    if (argv) {
+	while (*argv++) {
+	    ++result;
+	}
+    }
+    return result;
 }
 
 /*
@@ -164,6 +185,54 @@ x_skip_nonblanks(String s)
     return s;
 }
 
+/*
+ * Split a command-string into an argv[]-style array.
+ */
+char **
+x_splitargs(const char *command)
+{
+    char **result = 0;
+
+    if (command != 0) {
+	char *blob = x_strdup(command);
+	size_t count;
+	size_t n;
+	int state;
+	int pass;
+
+	for (pass = 0; pass < 2; ++pass) {
+	    for (n = count = 0, state = 0; command[n] != '\0'; ++n) {
+		switch (state) {
+		case 0:
+		    if (!isspace(command[n])) {
+			state = 1;
+			if (pass)
+			    result[count] = blob + n;
+			++count;
+		    } else {
+			blob[n] = '\0';
+		    }
+		    break;
+		case 1:
+		    if (isspace(command[n])) {
+			blob[n] = '\0';
+			state = 0;
+		    }
+		    break;
+		}
+	    }
+	    if (!pass) {
+		result = TypeCallocN(char *, count + 1);
+		if (!result)
+		    break;
+	    }
+	}
+    } else {
+	result = TypeCalloc(char *);
+    }
+    return result;
+}
+
 int
 x_strcasecmp(const char *s1, const char *s2)
 {
@@ -200,7 +269,7 @@ x_strdup(const char *s)
     char *result = 0;
 
     if (s != 0) {
-	char *t = CastMallocN(char, strlen(s));
+	char *t = CastMallocN(char, strlen(s) + 1);
 	if (t != 0) {
 	    strcpy(t, s);
 	}

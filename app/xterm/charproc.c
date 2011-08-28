@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1126 2011/07/10 23:19:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1127 2011/08/22 23:36:42 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -5435,8 +5435,11 @@ VTRun(XtermWidget xw)
     }
 #endif
     screen->is_running = True;
+    if (screen->embed_high && screen->embed_wide) {
+	ScreenResize(xw, screen->embed_wide, screen->embed_high, &(xw->flags));
+    }
 #if OPT_MAXIMIZE
-    if (resource.fullscreen == esTrue || resource.fullscreen == esAlways)
+    else if (resource.fullscreen == esTrue || resource.fullscreen == esAlways)
 	FullScreen(term, True);
 #endif
     if (!setjmp(VTend))

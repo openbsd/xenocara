@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1063 2011/07/15 00:51:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.1081 2011/08/25 09:29:41 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_273">Patch #273 - 2011/08/25</A>
+<LI><A HREF="#xterm_272">Patch #272 - 2011/08/24</A>
 <LI><A HREF="#xterm_271">Patch #271 - 2011/07/14</A>
 <LI><A HREF="#xterm_270">Patch #270 - 2011/04/26</A>
 <LI><A HREF="#xterm_269">Patch #269 - 2011/02/19</A>
@@ -329,6 +331,78 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_273">Patch #273 - 2011/08/25</A></H1>
+<ul>
+	<li>build-fix for out-of-tree "make docs" rule.
+
+	<li>correct a typo in <code>x_strdup</code>, from
+	    <a href="#xterm_198">patch #198</a>
+	    changes.
+
+	<li>correct initialization for <code>-e</code> option, broken in
+	    <a href="#xterm_272">patch #272</a>
+	    changes (report by Gabriele Balducci).
+
+	<li>build-fix for out-of-tree builds to address <code>minstall</code>
+	    script changes in
+	    <a href="#xterm_272">patch #272</a>
+	    (patch by Thierry Reding).
+</ul>
+
+<H1><A NAME="xterm_272">Patch #272 - 2011/08/24</A></H1>
+<ul>
+	<li>document limitation of <code>Gtk</code> in connection with xterm's
+	    <code>-into</code> option, in the manpage (Ubuntu #806969).
+
+	<li>improve <code>-into</code> by checking for and using the size
+	    of the window within which xterm is embedded, overriding other
+	    clues.
+
+	<li>modify logic for <code>localeFilter</code> resource to allow that
+	    to include command-line options of luit.
+
+	<li>improve <code>-into</code> by checking for invalid window-id,
+	    and allowing hexadecimal/decimal/octal values.
+
+	<li>improve <code>keepSelection</code>, adding the case where the
+	    highlighting is cleared,
+	    overlooked in <a href="#xterm_230">patch #230</a>
+	    (patch by Marco Peereboom).
+
+	<li>improve command-line parsing to make abbreviate options work
+	    consistently across xterm-specific versus standard X toolkit
+	    options, and report cases where an abbreviated option happens
+	    to be ambiguous.  In particular, <code>-d</code> now works as
+	    an abbreviation for <code>-display</code>.
+
+	<li>fix regression in command-line parsing introduced in
+	    <a href="#xterm_271">patch #271</a> changes
+	    for Debian #629358,
+	    (Debian #637910).
+
+	<li>split-out new termcap/terminfo building block
+	    <code>xterm+kbs</code> for configurability.
+
+	<li>modify <code>terminfo</code> file to reflect changes in ncurses
+	    for <code>xterm-16color</code> and <code>xterm-256color</code>.
+
+	<li>modify <code>minstall.sh</code>, etc., to reflect the default
+	    default class,
+	    <code>$TERM</code> and
+	    <code>decTerminalID</code> values.
+
+	<li>reword <code>resize</code> manpage to reflect the fact that
+	    <code>$TERMCAP</code> is not set on all systems (patch by
+	    Alan Coopersmith).
+
+	<li>work around combined Xaw6/Xaw7 package in DragonFlyBSD which
+	    omits the usual symbolic link to the preferred library name.
+
+	<li>further improve build-fix for termcap systems by checking for
+	    some which are only partial implementations, e.g., termcap
+	    2.08 in CentOS 5.2
+</ul>
 
 <H1><A NAME="xterm_271">Patch #271 - 2011/07/14</A></H1>
 <ul>

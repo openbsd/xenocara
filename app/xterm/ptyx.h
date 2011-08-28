@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.700 2011/07/12 08:33:58 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.702 2011/08/23 01:02:53 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1844,6 +1844,9 @@ typedef struct {
 	int		copy_dest_x;
 	int		copy_dest_y;
 
+	Dimension	embed_wide;
+	Dimension	embed_high;
+
 	Boolean		c132;		/* allow change to 132 columns	*/
 	Boolean		curses;		/* kludge line wrap for more	*/
 	Boolean		hp_ll_bc;	/* kludge HP-style ll for xdb	*/
@@ -2659,6 +2662,10 @@ typedef struct Tek_Link
 
 #ifndef TRACE_TRANS
 #define TRACE_TRANS(name,w) /*nothing*/
+#endif
+
+#ifndef TRACE_WIN_ATTRS
+#define TRACE_WIN_ATTRS(w) /*nothing*/
 #endif
 
 #ifndef TRACE_WM_HINTS

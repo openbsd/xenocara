@@ -1,4 +1,4 @@
-MANIFEST for xterm-271, version xterm-271
+MANIFEST for xterm-273, version xterm-273
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -60,7 +60,7 @@ main.h                          default definitions for 'xterm'
 make.com                        build-script for VMS port of 'xterm'
 menu.c                          popup/pulldown menus for 'xterm'
 menu.h                          interface of menu.c
-minstall.sh                     script for installing manpages
+minstall.in                     script for installing manpages
 misc.c                          miscellaneous utility functions for 'xterm'
 os2main.c                       main program for OS/2 EMX port of 'xterm'
 plink.sh                        script to prune unneeded libraries from link

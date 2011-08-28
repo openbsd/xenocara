@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.360 2011/07/13 09:54:49 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.361 2011/07/17 22:26:05 tom Exp $ */
 
 /************************************************************
 
@@ -971,7 +971,7 @@ xtermLoadFont(XtermWidget xw,
      * and 12x13ja as the corresponding fonts for 9x18 and 6x13.
      */
     if_OPT_WIDE_CHARS(screen, {
-	Bool derived;
+	Boolean derived;
 	char bold[MAX_FONTNAME];
 
 	if (check_fontname(myfonts.f_w)) {
@@ -1010,7 +1010,7 @@ xtermLoadFont(XtermWidget xw,
 			  &fnts[fWBold],
 			  (screen->utf8_fonts
 			   ? warn[fWBold]
-			   : (xw->misc.fontWarnings + 1)),
+			   : (fontWarningTypes) (xw->misc.fontWarnings + 1)),
 			  False);
 
 	    if (derived

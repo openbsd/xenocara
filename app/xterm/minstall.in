@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.sh,v 1.20 2010/03/03 23:44:49 tom Exp $
+# $XTermId: minstall.in,v 1.5 2011/08/16 09:50:03 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2009,2010 by Thomas E. Dickey
+# Copyright 2001-2010,2011 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -40,6 +40,10 @@
 #	$2 = manpage to install
 #	$3 = final installed-path
 #	$4 = app-defaults directory
+#	$5 = app-defaults class
+#
+# Other values correspond to definitions in xtermcfg.h, and cannot be directly
+# modified using "make".  They are substituted directly into this script.
 #
 
 # override locale...
@@ -64,6 +68,7 @@ MINSTALL="$1"
 OLD_FILE="$2"
 END_FILE="$3"
 APPS_DIR="$4"
+APP_TYPE="$5"
 
 suffix=`echo "$END_FILE" | sed -e 's%^.*\.%%'`
 NEW_FILE=temp$$
@@ -110,6 +115,9 @@ X_MANSECT=`man X 2>&1 | tr '\012' '\020' | sed -e 's/^[^0123456789]*\([^) ][^) ]
 test -z "$X_MANSECT" && X_MANSECT=$suffix
 
 sed	-e 's%__vendorversion__%"X Window System"%' \
+	-e s%__default_termname__%@default_TERM@% \
+	-e s%__default_termid__%@default_termid@% \
+	-e s%__default_class__%$APP_TYPE% \
 	-e s%__apploaddir__%$APPS_DIR% \
 	-e s%__mansuffix__%$MY_MANSECT%g \
 	-e s%__miscmansuffix__%$X_MANSECT%g \

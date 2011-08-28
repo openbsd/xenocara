@@ -1,4 +1,4 @@
-.\" $XTermId: koi8rxterm.man,v 1.3 2007/12/30 15:46:00 tom Exp $
+.\" $XTermId: koi8rxterm.man,v 1.4 2011/08/16 09:44:32 tom Exp $
 .\"
 .\" Copyright 2004 Branden Robinson
 .\"
@@ -31,7 +31,7 @@ koi8rxterm \- X terminal emulator for KOI8-R environments
 .B koi8rxterm
 is a wrapper around the
 .BR xterm(1)
-program that invokes the latter program with the \(oqKOI8RXTerm\(cq X
+program that invokes the latter program with the \(oqKOI8R__default_class__\(cq X
 resource class set.
 All arguments to
 .B koi8rxterm
@@ -72,7 +72,7 @@ uses by default.
 To change the fonts
 .B koi8rxterm
 uses, edit the
-.I __apploaddir__/KOI8RXTerm
+.I __apploaddir__/KOI8R__default_class__
 file.
 .PP
 A similar wrapper,

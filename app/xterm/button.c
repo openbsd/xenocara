@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.398 2011/07/04 21:49:39 tom Exp $ */
+/* $XTermId: button.c,v 1.399 2011/08/19 00:09:26 Marco.Peereboom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2312,7 +2312,7 @@ SelectSet(XtermWidget xw,
     if (!isSameCELL(&(screen->startSel), &(screen->endSel))) {
 	SaltTextAway(xw, &(screen->startSel), &(screen->endSel), params, num_params);
     } else {
-	DisownSelection(xw);
+	ScrnDisownSelection(xw);
     }
 }
 
