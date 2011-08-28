@@ -1,3 +1,75 @@
+commit ddbc7f6b08643fb852d98810a1149b09e80e68fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 29 20:43:37 2011 -0700
+
+    smproxy 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0e4971c8f533c4c166e8e35bf76ebca00f15bc6
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri May 6 23:05:44 2011 -0700
+
+    Fix a possible NULL dereference in an error handler
+    
+    save.c:255:10: warning: Array access (via field 'wm_command') results in a null pointer dereference
+                if (entry->wm_command[i])
+                    ^      ~~~~~~~~~~
+    1 warning generated.
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ccc165063c128713e5eac52ace050e38ce72de02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 00:18:47 2011 -0800
+
+    Explicitly depend on libICE since ICE functions are called directly
+    
+    Without this fix, once Bug 33390 removes "Requires: ice" from the sm.pc
+    file, smproxy fails to build with undefined symbol errors for
+    IceSetErrorHandler, IceConnectionNumber, and IceProcessMessages.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit e2ffb441371eb759c512f8266ae40680518726da
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3472d917add052f35c1c855a5d488ccdadf22122
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 96bd42564675ed547f95ae775a2613aaec5a4182
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3b3ad4674cab8186bd6d2afff21f39112173e0c1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
 commit 91e461969be0b20b279aa40aa5396cf5635af286
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Oct 21 15:20:45 2010 -0700

@@ -249,15 +249,17 @@ give_up:
 	free (entry->class.res_class);
     if (entry->wm_name)
 	free (entry->wm_name);
-    if (entry->wm_command_count)
-    {
-	for (i = 0; i < entry->wm_command_count; i++)
-	    if (entry->wm_command[i])
-		free (entry->wm_command[i]);
-    }
     if (entry->wm_command)
+    {
+        if (entry->wm_command_count)
+        {
+	    for (i = 0; i < entry->wm_command_count; i++)
+	        if (entry->wm_command[i])
+		    free (entry->wm_command[i]);
+        }
 	free ((char *) entry->wm_command);
-    
+    }
+
     free ((char *) entry);
     *pentry = NULL;
 
