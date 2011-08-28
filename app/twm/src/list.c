@@ -75,13 +75,13 @@ struct name_list_struct
 /**
  * add a window name to the appropriate list.
  *
- *	If the list does not use the ptr value, a non-null value 
+ *	If the list does not use the ptr value, a non-null value
  *	should be placed in it.  LookInList returns this ptr value
- *	and procedures calling LookInList will check for a non-null 
+ *	and procedures calling LookInList will check for a non-null
  *	return value as an indication of success.
  *
  *  \param list  the address of the pointer to the head of a list
- *  \param name  a pointer to the name of the window 
+ *  \param name  a pointer to the name of the window
  *  \param ptr   pointer to list dependent data
  */
 void
@@ -104,12 +104,12 @@ AddToList(name_list **list_head, char *name, char *ptr)
     nptr->name = name;
     nptr->ptr = (ptr == NULL) ? (char *)TRUE : ptr;
     *list_head = nptr;
-}    
+}
 
 /**
  * look through a list for a window name, or class
  *
- *  \return the ptr field of the list structure or NULL if the name 
+ *  \return the ptr field of the list structure or NULL if the name
  *	or class was not found in the list
  *
  *	\param list   a pointer to the head of a list
@@ -158,7 +158,7 @@ LookInNameList(name_list *list_head, char *name)
  *  \param      class a pointer to the class to look for
  *	\param[out] ptr   fill in the list value if the name was found
  */
-int GetColorFromList(name_list *list_head, char *name, XClassHint *class, 
+int GetColorFromList(name_list *list_head, char *name, XClassHint *class,
                      Pixel *ptr)
 {
     int save;

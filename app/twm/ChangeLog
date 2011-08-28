@@ -1,3 +1,209 @@
+commit 4c5e72e9d8571bfb2a98d1ffc9724596764f5b0b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 27 20:33:13 2011 -0700
+
+    twm 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f21823506dcb956d62c260e6e207f1dc2ce7732a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 14 22:04:34 2011 -0700
+
+    Whitespace fixes in src files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c6ade914363426facb01a954650b804657114012
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 12 22:30:41 2011 -0700
+
+    Replace most sprintf calls with snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ab689e1a711bbbdfcd6d3a8d2edebbc378ebccb7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 7 20:05:45 2011 -0500
+
+    config: layout the C flags for better readability
+    
+    Group pre-processor flags under AM_CPPFLAGS
+    Might as well do the rest of the file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f048770b021d92780c754257c9c1efa7a769c69c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 7 19:47:48 2011 -0500
+
+    man: use Autoconf provided $(SED)
+    
+    Use platform appropriate version of sed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 356ca1db47be674aa9125b65668e8fe0573f7f69
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 7 19:37:48 2011 -0500
+
+    config: rm is about removal, not generation
+    
+    Automake:
+    AM_V_at as a prefix to commands that should not output anything in silent mode
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6f362f8d962ff7054682cfb2d88e8603e1219492
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 7 16:43:59 2011 -0500
+
+    deftwmrc.c is not required in MAINTAINERCLEANFILES
+    
+    Automake takes care of that as it is part of BUILT_SOURCES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 98e224e3da245f29d281df357d27b53acdccb5c7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 7 16:10:53 2011 -0500
+
+    lex & yacc: only header file needs to be in BUILT_SOURCES
+    
+    http://www.gnu.org/software/automake/manual/automake.html#Yacc-and-Lex
+    
+    This completes reversal of commit ea03b6bcd1045dfc0d6947e4858de8994d61170b
+    The Makefile generates a valid "gram.h: gram.c" rule.
+    The Makefile already has gram.c gram.h and lex.c in the
+    maintainer-clean-generic target.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 70a7f34dfc4d7ea4f7425b9a7359a08a35752bb0
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 22:41:56 2011 -0700
+
+    Add extra sanity checking to avoid possible NULL dereferences
+    
+    menus.c:569:10: warning: Access to field 'func' results in a dereference of a null pointer (loaded from variable 'ActiveItem')
+                if (ActiveItem->func != F_TITLE && !ActiveItem->state)
+                    ^~~~~~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a898b136729660a33d60b317ccb839f6e0428201
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 22:30:56 2011 -0700
+
+    Add sanity checking to avoid a possible NULL dereference
+    
+    menus.c:934:26: warning: Access to field 'fore' results in a dereference of a null pointer (loaded from variable 'cur')
+                cur->hi_back = cur->fore = f3.pixel;
+                               ~~~  ^
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1061e063be78f4e233d550649ce297b639193a9f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 22:27:21 2011 -0700
+
+    Address a possible NULL pointer dereference
+    
+    menus.c:523:24: warning: Access to field 'w' results in a dereference of a null pointer (loaded from variable 'ActiveMenu')
+            if (XFindContext(dpy, ActiveMenu->w, ScreenContext, &context_data) == 0)
+                                  ^~~~~~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bde0b06b465adb868d38d3721b95ea337bad8eb9
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 22:22:25 2011 -0700
+
+    Mark Done() as _X_NORETURN
+    
+    list.c:103:11: warning: Access to field 'next' results in a dereference of a null pointer (loaded from variable 'nptr')
+        nptr->next = *list_head;
+        ~~~~  ^
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2f5d1e29f5a803ba2417d6fe20782c05ed932612
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 22:17:54 2011 -0700
+
+    Silence uninitialized warning
+    
+    session.c: In function 'ReadWinConfigFile':
+    session.c:554: warning: 'version' may be used uninitialized in this function
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ef39179b9fe6d13f7e81098edfc10711c8b40948
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 22:16:23 2011 -0700
+
+    LP64: Fix formatting for DEBUG printf
+    
+    add_window.c: In function 'AddWindow':
+    add_window.c:169: warning: format '%x' expects type 'unsigned int', but argument 3 has type 'Window'
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0f1ccd0b3409ab9b9fce1256fc59ad9bbe69a349
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 10 15:35:51 2011 -0700
+
+    Fix: menus.c:2374: warning: implicit declaration of function `putenv`
+    
+    Ensure _GNU_SOURCE is defined on Linux builds before including <stdlib.h>
+    so the prototype is exposed in the header properly.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=32696
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 75dd868133c5c12daa946468e7250d174f842281
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 9 22:46:03 2011 -0700
+
+    Remove unused fallback implementation of putenv()
+    
+    NOPUTENV was never defined in a modular build, probably because putenv()
+    is a standard function in Unix98 / SUSv2, and goes back to at least
+    SVR2 and 4.3BSD-Reno.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit 5b763259451b7798b1004c49775d1bd3df2f9d88
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 4 20:57:30 2011 -0500
+
+    man: replace hard coded section number with __appmansuffix__
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 611f20e896aa533f0f3e5cd6c8fdd7c381963c95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 5 16:12:42 2011 -0800
+
+    Fix many gcc strict-aliasing warnings
+    
+    menus.c:518: warning: dereferencing type-punned pointer will break strict-aliasing rules
+    
+    and many more of the same message at different lines
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b160f7bcb99111e631d6701b199f1dad1e40c80d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jan 5 14:09:15 2011 -0800

@@ -113,7 +113,7 @@ Window window;
 	if (prop)
 	    XFree (prop);
     }
-    
+
     return client_id;
 }
 
@@ -355,7 +355,7 @@ char *windowRole;
 	    if (!write_counted_string (configFile, theWindow->name))
 		return 0;
 	}
-    
+
 	wm_command = NULL;
 	wm_command_count = 0;
 	XGetCommand (dpy, theWindow->w, &wm_command, &wm_command_count);
@@ -450,11 +450,11 @@ ReadWinConfigEntry (FILE *configFile, unsigned short version,
 	    goto give_up;
 	if (!read_counted_string (configFile, &entry->wm_name))
 	    goto give_up;
-    
+
 	if (!read_byte (configFile, &byte))
 	    goto give_up;
 	entry->wm_command_count = byte;
-	
+
 	if (entry->wm_command_count == 0)
 	    entry->wm_command = NULL;
 	else
@@ -534,7 +534,7 @@ give_up:
     }
     if (entry->wm_command)
 	free ((char *) entry->wm_command);
-    
+
     free ((char *) entry);
     *pentry = NULL;
 
@@ -551,7 +551,7 @@ char *filename;
     FILE *configFile;
     TWMWinConfigEntry *entry;
     int done = 0;
-    unsigned short version;
+    unsigned short version = 0;
 
     configFile = fopen (filename, "rb");
     if (!configFile)
@@ -742,18 +742,24 @@ int *pFd;
     tmp = (char *) mktemp (tempFile);
     if (tmp)
     {
-	char *ptr = strdup(tmp);
+	char *ptr = (char *) malloc (strlen (tmp) + 1);
+	strcpy (ptr, tmp);
 	return (ptr);
     }
     else
 	return (NULL);
 #endif
-#else 
+#else
     char tempFile[PATH_MAX];
     char *ptr;
 
     snprintf (tempFile, sizeof(tempFile), "%s/%sXXXXXX", path, prefix);
-    ptr = strdup(tempFile);
+    ptr = (char *)malloc(strlen(tempFile) + 1);
+    if (ptr != NULL)
+    {
+	strcpy(ptr, tempFile);
+	*pFd =  mkstemp(ptr);
+    }
     return ptr;
 #endif
 }
@@ -803,14 +809,14 @@ SmPointer clientData;
 	prop2.vals = &prop2val;
 	prop2val.value = (SmPointer) userId;
 	prop2val.length = strlen (userId);
-	
+
 	prop3.name = SmRestartStyleHint;
 	prop3.type = SmCARD8;
 	prop3.num_vals = 1;
 	prop3.vals = &prop3val;
 	prop3val.value = (SmPointer) &hint;
 	prop3val.length = 1;
-	
+
 	props[0] = &prop1;
 	props[1] = &prop2;
 	props[2] = &prop3;
@@ -836,8 +842,8 @@ SmPointer clientData;
 #else
     if ((filename = unique_filename (path, ".twm", &fd)) == NULL)
 	goto bad;
-    
-    if (!(configFile = fdopen(fd, "wb"))) 
+
+    if (!(configFile = fdopen(fd, "wb")))
 	goto bad;
 #endif
 
@@ -872,7 +878,7 @@ SmPointer clientData;
 	    }
 	}
     }
-    
+
     prop1.name = SmRestartCommand;
     prop1.type = SmLISTofARRAY8;
 

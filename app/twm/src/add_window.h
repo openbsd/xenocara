@@ -77,7 +77,7 @@ extern void GrabButtons ( TwmWindow *tmp_win );
 extern void GrabKeys ( TwmWindow *tmp_win );
 extern int MappedNotOverride ( Window w );
 extern void SetHighlightPixmap ( char *filename );
-extern int AddingX;	
+extern int AddingX;
 extern int AddingY;
 extern int AddingW;
 extern int AddingH;

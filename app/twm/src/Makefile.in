@@ -46,9 +46,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -170,6 +170,7 @@ PKG_CONFIG = @PKG_CONFIG@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 TWM_CFLAGS = @TWM_CFLAGS@
 TWM_LIBS = @TWM_LIBS@
@@ -224,45 +225,47 @@ target_alias = @target_alias@
 AM_YFLAGS = -d
 rcdir = ${datadir}/X11/twm
 dist_rc_DATA = system.twmrc
-AM_CFLAGS = $(TWM_CFLAGS) -DXVENDORNAME=\"The\ X.Org\ Foundation\" \
-	-DXORG_RELEASE=\"Release\ $(VERSION)\" -D_BSD_SOURCE \
+AM_CPPFLAGS = \
+	-DXVENDORNAME=\"The\ X.Org\ Foundation\"		\
+	-DXORG_RELEASE=\"Release\ $(VERSION)\"			\
 	-DSYSTEM_INIT_FILE=\"${datadir}/X11/twm/system.twmrc\"
+
+AM_CFLAGS = $(TWM_CFLAGS)
 twm_LDADD = $(TWM_LIBS)
 twm_SOURCES = \
-        add_window.c \
-        add_window.h \
-        cursor.c \
-	deftwmrc.c \
-        events.c \
-        events.h \
-        gc.c \
-        gc.h \
-        iconmgr.c \
-        iconmgr.h \
-        icons.c \
-        icons.h \
-        list.c \
-        list.h \
-        menus.c \
-        menus.h \
-        parse.c \
-        parse.h \
-        resize.c \
-        resize.h \
-        screen.h \
-        session.c \
-        session.h \
-        twm.c \
-        twm.h \
-        util.c \
-        util.h \
-        version.c \
-        version.h \
-	gram.y \
+        add_window.c	\
+        add_window.h	\
+        cursor.c	\
+	deftwmrc.c	\
+        events.c	\
+        events.h	\
+        gc.c		\
+        gc.h		\
+        iconmgr.c	\
+        iconmgr.h	\
+        icons.c		\
+        icons.h		\
+        list.c		\
+        list.h		\
+        menus.c		\
+        menus.h		\
+        parse.c		\
+        parse.h		\
+        resize.c	\
+        resize.h	\
+        screen.h	\
+        session.c	\
+        session.h	\
+        twm.c		\
+        twm.h		\
+        util.c		\
+        util.h		\
+        version.c	\
+        version.h	\
+	gram.y		\
 	lex.l
 
-BUILT_SOURCES = gram.h gram.c lex.c deftwmrc.c
-MAINTAINERCLEANFILES = $(BUILT_SOURCES)
+BUILT_SOURCES = gram.h deftwmrc.c
 EXTRA_DIST = deftwmrc.sed siconify.bm
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -321,6 +324,11 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+gram.h: gram.c
+	@if test ! -f $@; then \
+	  rm -f gram.c; \
+	  $(MAKE) gram.c; \
+	else :; fi
 twm$(EXEEXT): $(twm_OBJECTS) $(twm_DEPENDENCIES) 
 	@rm -f twm$(EXEEXT)
 	$(LINK) $(twm_LDFLAGS) $(twm_OBJECTS) $(twm_LDADD) $(LIBS)
@@ -519,7 +527,6 @@ maintainer-clean-generic:
 	-rm -f gram.h
 	-rm -f lex.c
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
-	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -583,17 +590,15 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_rcDATA \
 	uninstall-dist_rcDATA uninstall-info-am
 
 
-gram.h: gram.c
-
 deftwmrc.c:  system.twmrc
-	$(AM_V_GEN)rm -f $@ ; \
-	echo '/* ' >>$@ ; \
-	echo ' * This file is generated automatically from the default' >>$@ ; \
-	echo ' * twm bindings file system.twmrc by the twm Makefile.' >>$@ ; \
-	echo ' */' >>$@ ; \
-	echo '' >>$@ ; \
-	echo 'unsigned char *defTwmrc[] = {' >>$@ ; \
-	sed -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@ ; \
+	$(AM_V_at)rm -f $@ ;							\
+	echo '/* ' >>$@ ;							\
+	echo ' * This file is generated automatically from the default' >>$@ ;	\
+	echo ' * twm bindings file system.twmrc by the twm Makefile.' >>$@ ;	\
+	echo ' */' >>$@ ;							\
+	echo '' >>$@ ;								\
+	echo 'unsigned char *defTwmrc[] = {' >>$@ ;				\
+	$(SED) -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@ ;	\
 	echo '    (unsigned char *) 0 };' >>$@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

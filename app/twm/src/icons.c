@@ -1,5 +1,5 @@
 /*
- * 
+ *
 Copyright 1989, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -348,7 +348,7 @@ CreateIconWindow(TwmWindow *tmp_win, int def_x, int def_y)
     tmp_win->forced = FALSE;
     tmp_win->icon_not_ours = FALSE;
 
-    /* now go through the steps to get an icon window,  if ForceIcon is 
+    /* now go through the steps to get an icon window,  if ForceIcon is
      * set, then no matter what else is defined, the bitmap from the
      * .twmrc file is used
      */
@@ -396,7 +396,7 @@ CreateIconWindow(TwmWindow *tmp_win, int def_x, int def_y)
     if (pm == None && tmp_win->wmhints &&
 	tmp_win->wmhints->flags & IconPixmapHint)
     {
-    
+
 	XGetGeometry(dpy,   tmp_win->wmhints->icon_pixmap,
              &JunkRoot, &JunkX, &JunkY,
 	     (unsigned int *)&tmp_win->icon_width, (unsigned int *)&tmp_win->icon_height, &JunkBW, &JunkDepth);
@@ -409,7 +409,7 @@ CreateIconWindow(TwmWindow *tmp_win, int def_x, int def_y)
 	    0,0, tmp_win->icon_width, tmp_win->icon_height, 0, 0, 1 );
     }
 
-    /* if we still haven't got an icon, let's look in the Icon list 
+    /* if we still haven't got an icon, let's look in the Icon list
      * if ForceIcon is not set
      */
     if (pm == None && !Scr->ForceIcon)
@@ -548,7 +548,7 @@ CreateIconWindow(TwmWindow *tmp_win, int def_x, int def_y)
 					    &attributes);
     }
 
-    /* I need to figure out where to put the icon window now, because 
+    /* I need to figure out where to put the icon window now, because
      * getting here means that I am going to make the icon visible
      */
     if (tmp_win->wmhints &&

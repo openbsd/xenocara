@@ -22,10 +22,11 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([twm], [1.0.6],
+AC_INIT([twm], [1.0.7],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [twm])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -49,7 +50,7 @@ AC_PROG_LEX
 AC_CHECK_FUNCS([mkstemp])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(TWM, x11 xext xt xmu ice sm)
+PKG_CHECK_MODULES(TWM, x11 xext xt xmu ice sm xproto >= 7.0.17)
 
 AC_OUTPUT([Makefile
 	   src/Makefile

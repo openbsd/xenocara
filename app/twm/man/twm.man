@@ -52,7 +52,7 @@ click-to-type and pointer-driven keyboard focus, and user-specified
 key and pointer button bindings.
 .PP
 This program is usually started by the user's session manager or
-startup script.  When used from \fIxdm(1)\fP or \fIxinit(1)\fP without
+startup script.  When used from \fIxdm(__appmansuffix__)\fP or \fIxinit(__appmansuffix__)\fP without
 a session manager, \fItwm\fP is frequently executed in the foreground
 as the last client.  When run this way, exiting \fItwm\fP causes the 
 session to be terminated (i.e., logged out).
@@ -143,7 +143,7 @@ If no startup files are found, \fItwm\fP will use the built-in defaults
 described above.  The only resource used by \fItwm\fP is 
 \fIbitmapFilePath\fP for a colon-separated list of directories to search
 when looking for bitmap files (for more information, see the \fIAthena
-Widgets\fP manual and \fIxrdb(1)\fP).
+Widgets\fP manual and \fIxrdb(__appmansuffix__)\fP).
 .PP
 \fITwm\fP startup files are logically broken up into three types of 
 specifications:  \fIVariables\fP, \fIBindings\fP, \fIMenus\fP.  The 
@@ -338,7 +338,7 @@ from bitmap files, the following syntax is used instead:
 	\fIcursorname\fP	"\fIimage\fP"	"\fImask\fP"
 .EE
 The \fIimage\fP and \fImask\fP strings specify the names of files containing
-the glyph image and mask in \fIbitmap(1)\fP form.
+the glyph image and mask in \fIbitmap(__appmansuffix__)\fP form.
 The bitmap files are located in the same manner as icon bitmap files.
 The following example shows the default cursor definitions:
 .EX 0
@@ -1275,7 +1275,7 @@ This variable is used as the prefix for files that begin with a tilde and
 for locating the \fItwm\fP startup file.
 .SH "SEE ALSO"
 .PP
-X(__miscmansuffix__), Xserver(1), xdm(1), xrdb(1)
+X(__miscmansuffix__), Xserver(__appmansuffix__), xdm(__appmansuffix__), xrdb(__appmansuffix__)
 .SH AUTHORS
 Tom LaStrange, Solbourne Computer; Jim Fulton, MIT X Consortium;
 Steve Pitschke, Stardent Computer; Keith Packard, MIT X Consortium;

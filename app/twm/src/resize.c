@@ -92,7 +92,7 @@ static int last_width;
 static int last_height;
 
 
-static void 
+static void
 do_auto_clamp (TwmWindow *tmp_win, XEvent *evp)
 {
     Window junkRoot;
@@ -115,9 +115,9 @@ do_auto_clamp (TwmWindow *tmp_win, XEvent *evp)
     }
 
     h = ((x - dragx) / (dragWidth < 3 ? 1 : (dragWidth / 3)));
-    v = ((y - dragy - tmp_win->title_height) / 
+    v = ((y - dragy - tmp_win->title_height) /
 	 (dragHeight < 3 ? 1 : (dragHeight / 3)));
-	
+
     if (h <= 0) {
 	clampLeft = 1;
 	clampDX = (x - dragx);
@@ -172,7 +172,7 @@ StartResize(XEvent *evp, TwmWindow *tmp_win, Bool fromtitlebar)
 
     Scr->SizeStringOffset = SIZE_HINDENT;
     XResizeWindow (dpy, Scr->SizeWindow,
-		   Scr->SizeStringWidth + SIZE_HINDENT * 2, 
+		   Scr->SizeStringWidth + SIZE_HINDENT * 2,
 		   Scr->SizeFont.height + SIZE_VINDENT * 2);
     XMapRaised(dpy, Scr->SizeWindow);
     InstallRootColormap();
@@ -206,12 +206,12 @@ MenuStartResize(TwmWindow *tmp_win, int x, int y, int w, int h)
     last_height = 0;
     Scr->SizeStringOffset = SIZE_HINDENT;
     XResizeWindow (dpy, Scr->SizeWindow,
-		   Scr->SizeStringWidth + SIZE_HINDENT * 2, 
+		   Scr->SizeStringWidth + SIZE_HINDENT * 2,
 		   Scr->SizeFont.height + SIZE_VINDENT * 2);
     XMapRaised(dpy, Scr->SizeWindow);
     DisplaySize(tmp_win, origWidth, origHeight);
     MoveOutline (Scr->Root, dragx - tmp_win->frame_bw,
-		 dragy - tmp_win->frame_bw, 
+		 dragy - tmp_win->frame_bw,
 		 dragWidth + 2 * tmp_win->frame_bw,
 		 dragHeight + 2 * tmp_win->frame_bw,
 		 tmp_win->frame_bw, tmp_win->title_height);
@@ -353,7 +353,7 @@ MenuDoResize(int x_root, int y_root, TwmWindow *tmp_win)
 
 
 /**
- * move the rubberband around.  This is called for each motion event when 
+ * move the rubberband around.  This is called for each motion event when
  * we are resizing
  *
  *  \param x_root  the X corrdinate in the root window
@@ -513,7 +513,7 @@ DisplaySize(TwmWindow *tmp_win, int width, int height)
     (void) snprintf (str, sizeof(str), " %4d x %-4d ", dwidth, dheight);
     XRaiseWindow(dpy, Scr->SizeWindow);
     MyFont_ChangeGC(Scr->DefaultC.fore, Scr->DefaultC.back, &Scr->SizeFont);
-    MyFont_DrawImageString (dpy, Scr->SizeWindow, &Scr->SizeFont, 
+    MyFont_DrawImageString (dpy, Scr->SizeWindow, &Scr->SizeFont,
 			    Scr->NormalGC, Scr->SizeStringOffset,
 			    Scr->SizeFont.ascent + SIZE_VINDENT,
 			    str, 13);
@@ -598,7 +598,7 @@ AddEndResize(TwmWindow *tmp_win)
 }
 
 /**
- * adjust the given width and height to account for the constraints imposed 
+ * adjust the given width and height to account for the constraints imposed
  * by size hints.
  *
  *      The general algorithm, especially the aspect ratio stuff, is
@@ -686,9 +686,9 @@ ConstrainSize (TwmWindow *tmp_win, int *widthp, int *heightp)
      *
      * minAspectX * dheight > minAspectY * dwidth
      * maxAspectX * dheight < maxAspectY * dwidth
-     * 
+     *
      */
-    
+
     if (tmp_win->hints.flags & PAspect)
     {
         if (minAspectX * dheight > minAspectY * dwidth)
@@ -728,16 +728,16 @@ ConstrainSize (TwmWindow *tmp_win, int *widthp, int *heightp)
 
 
 /**
- * set window sizes, this was called from either AddWindow, EndResize, or 
+ * set window sizes, this was called from either AddWindow, EndResize, or
  * HandleConfigureNotify.
  *
  *  Special Considerations:
- * This routine will check to make sure the window is not completely off the 
+ * This routine will check to make sure the window is not completely off the
  * display, if it is, it'll bring some of it back on.
  *
- * The tmp_win->frame_XXX variables should NOT be updated with the values of 
- * x,y,w,h prior to calling this routine, since the new values are compared 
- * against the old to see whether a synthetic ConfigureNotify event should be 
+ * The tmp_win->frame_XXX variables should NOT be updated with the values of
+ * x,y,w,h prior to calling this routine, since the new values are compared
+ * against the old to see whether a synthetic ConfigureNotify event should be
  * sent.  (It should be sent if the window was moved but not resized.)
  *
  *  \param tmp_win the TwmWindow pointer
@@ -826,7 +826,7 @@ void SetupFrame (TwmWindow *tmp_win, int x, int y, int w, int h, int bw, Bool se
 	    tmp_win->title_y = xwc.y = -bw;
 	    xwcm |= (CWX | CWY | CWBorderWidth);
 	}
-	
+
 	XConfigureWindow(dpy, tmp_win->title_w, xwcm, &xwc);
     }
 
@@ -842,7 +842,7 @@ void SetupFrame (TwmWindow *tmp_win, int x, int y, int w, int h, int bw, Bool se
     XMoveResizeWindow (dpy, tmp_win->w, 0, tmp_win->title_height,
 		       w, h - tmp_win->title_height);
 
-    /* 
+    /*
      * fix up frame and assign size/location values in tmp_win
      */
     frame_mask = 0;
@@ -902,7 +902,7 @@ void SetupFrame (TwmWindow *tmp_win, int x, int y, int w, int h, int bw, Bool se
 
 
 /**
- * zooms window to full height of screen or to full height and width of screen. 
+ * zooms window to full height of screen or to full height and width of screen.
  * (Toggles so that it can undo the zoom - even when switching between fullzoom
  * and vertical zoom.)
  *
@@ -1083,7 +1083,7 @@ SetFrameShape (TwmWindow *tmp)
 
 /*
  * Squeezed Title:
- * 
+ *
  *                         tmp->title_x
  *                   0     |
  *  tmp->title_y   ........+--------------+.........  -+,- tmp->frame_bw
@@ -1099,10 +1099,10 @@ SetFrameShape (TwmWindow *tmp)
  *                 | |                           | |
  *                 | +---------------------------+ |
  *                 +-------------------------------+
- * 
- * 
+ *
+ *
  * Unsqueezed Title:
- * 
+ *
  *                 tmp->title_x
  *                 | 0
  *  tmp->title_y   +-------------------------------+  -+,tmp->frame_bw
@@ -1118,11 +1118,11 @@ SetFrameShape (TwmWindow *tmp)
  *                 | |                           | |
  *                 | +---------------------------+ |
  *                 +-------------------------------+
- * 
- * 
- * 
+ *
+ *
+ *
  * Dimensions and Positions:
- * 
+ *
  *     frame orgin                 (0, 0)
  *     frame upper left border     (-tmp->frame_bw, -tmp->frame_bw)
  *     frame size w/o border       tmp->frame_width , tmp->frame_height
@@ -1132,7 +1132,7 @@ SetFrameShape (TwmWindow *tmp)
  *     title origin w/o border     (tmp->title_x, tmp->title_y)
  *     client origin               (0, Scr->TitleHeight + tmp->frame_bw)
  *     client size                 tmp->attr.width , tmp->attr.height
- * 
+ *
  * When shaping, need to remember that the width and height of rectangles
  * are really deltax and deltay to lower right handle corner, so they need
  * to have -1 subtracted from would normally be the actual extents.

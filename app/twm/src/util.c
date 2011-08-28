@@ -68,20 +68,20 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xmu/Drawing.h>
 #include <X11/Xmu/CharSet.h>
 
-static Pixmap CreateXLogoPixmap ( unsigned int *widthp, 
+static Pixmap CreateXLogoPixmap ( unsigned int *widthp,
 				  unsigned int *heightp );
-static Pixmap CreateResizePixmap ( unsigned int *widthp, 
+static Pixmap CreateResizePixmap ( unsigned int *widthp,
 				   unsigned int *heightp );
-static Pixmap CreateDotPixmap ( unsigned int *widthp, 
+static Pixmap CreateDotPixmap ( unsigned int *widthp,
 				unsigned int *heightp );
-static Pixmap CreateQuestionPixmap ( unsigned int *widthp, 
+static Pixmap CreateQuestionPixmap ( unsigned int *widthp,
 				     unsigned int *heightp );
-static Pixmap CreateMenuPixmap ( unsigned int *widthp, 
+static Pixmap CreateMenuPixmap ( unsigned int *widthp,
 				 unsigned int *heightp );
 
 int HotX, HotY;
 
-/** 
+/**
  * move a window outline
  *
  *  \param root         window we are outlining
@@ -106,7 +106,7 @@ void MoveOutline(Window root, int x, int y, int width, int height, int bw, int t
     if (x == lastx && y == lasty && width == lastWidth && height == lastHeight
 	&& lastBW == bw && th == lastTH)
 	return;
-    
+
     r = outline;
 
 #define DRAWIT() \
@@ -239,7 +239,7 @@ Zoom(Window wf, Window wt)
 	    int y = fy + (int) ((dy * i) / z);
 	    unsigned width = (unsigned) (((long) fw) + (dw * i) / z);
 	    unsigned height = (unsigned) (((long) fh) + (dh * i) / z);
-	
+
 	    XDrawRectangle (dpy, Scr->Root, Scr->DrawGC,
 			    x, y, width, height);
 	}
@@ -248,7 +248,7 @@ Zoom(Window wf, Window wt)
 }
 
 /**
- * expand the tilde character to HOME if it is the first 
+ * expand the tilde character to HOME if it is the first
  * character of the filename
  *
  *	\return a pointer to the new name
@@ -264,7 +264,7 @@ ExpandFilename(char *name)
 
     asprintf(&newname, "%s/%s", Home, &name[1]);
     if (!newname) {
-	fprintf (stderr, 
+	fprintf (stderr,
 		 "%s:  unable to allocate %ld bytes to expand filename %s/%s\n",
 		 ProgramName, HomeLen + (unsigned long)strlen(name) + 2,
 		 Home, &name[1]);
@@ -297,7 +297,7 @@ GetUnknownIcon(char *name)
  *  \param[out] widthp   pointer to width of bitmap
  *  \param[out] heightp	 pointer to height of bitmap
  */
-Pixmap 
+Pixmap
 FindBitmap (char *name, unsigned *widthp, unsigned *heightp)
 {
     char *bigname;
@@ -324,7 +324,7 @@ FindBitmap (char *name, unsigned *widthp, unsigned *heightp)
 	    { TBPM_MENU,	CreateMenuPixmap },
 	    { TBPM_QUESTION,	CreateQuestionPixmap },
 	};
-	
+
 	for (i = 0; i < (sizeof pmtab)/(sizeof pmtab[0]); i++) {
 	    if (XmuCompareISOLatin1 (pmtab[i].name, name) == 0)
 	      return (*pmtab[i].proc) (widthp, heightp);
@@ -366,14 +366,14 @@ FindBitmap (char *name, unsigned *widthp, unsigned *heightp)
     }
     if (bigname != name) free (bigname);
     if (pm == None) {
-	fprintf (stderr, "%s:  unable to find bitmap \"%s\"\n", 
+	fprintf (stderr, "%s:  unable to find bitmap \"%s\"\n",
 		 ProgramName, name);
     }
 
     return pm;
 }
 
-Pixmap 
+Pixmap
 GetBitmap (char *name)
 {
     return FindBitmap (name, &JunkWidth, &JunkHeight);
@@ -424,7 +424,7 @@ RemoveRGBColormap (Atom a)
     StdCmap *sc, *prev;
 
     prev = NULL;
-    for (sc = Scr->StdCmapInfo.head; sc; sc = sc->next) {  
+    for (sc = Scr->StdCmapInfo.head; sc; sc = sc->next) {
 	if (sc->atom == a) break;
 	prev = sc;
     }
@@ -486,7 +486,7 @@ GetColor(int kind, Pixel *what, char *name)
 	    stat = XParseColor (dpy, cmap, name, &color);
 	if (!stat)
 	{
-	    fprintf (stderr, "%s:  invalid color name \"%s\"\n", 
+	    fprintf (stderr, "%s:  invalid color name \"%s\"\n",
 		     ProgramName, name);
 	    return;
 	}
@@ -528,7 +528,7 @@ GetColor(int kind, Pixel *what, char *name)
 				    stdcmap->blue_max + 0.5) *
 			    stdcmap->blue_mult));
         } else {
-	    fprintf (stderr, "%s:  unable to allocate color \"%s\"\n", 
+	    fprintf (stderr, "%s:  unable to allocate color \"%s\"\n",
 		     ProgramName, name);
 	    return;
 	}
@@ -553,7 +553,7 @@ GetColorValue(int kind, XColor *what, char *name)
 
     if (!XLookupColor (dpy, cmap, name, what, &junkcolor))
     {
-	fprintf (stderr, "%s:  invalid color name \"%s\"\n", 
+	fprintf (stderr, "%s:  invalid color name \"%s\"\n",
 		 ProgramName, name);
     }
     else
@@ -562,7 +562,7 @@ GetColorValue(int kind, XColor *what, char *name)
     }
 }
 
-/* 
+/*
  * The following functions are sensible to 'use_fontset'.
  * When 'use_fontset' is True,
  *  - XFontSet-related internationalized functions are used
@@ -661,7 +661,7 @@ MyFont_TextWidth(MyFont *font, char *string, int len)
 }
 
 void
-MyFont_DrawImageString(Display *dpy, Drawable d, MyFont *font, GC gc, 
+MyFont_DrawImageString(Display *dpy, Drawable d, MyFont *font, GC gc,
                        int x, int y, char *string, int len)
 {
     if (use_fontset) {
@@ -672,7 +672,7 @@ MyFont_DrawImageString(Display *dpy, Drawable d, MyFont *font, GC gc,
 }
 
 void
-MyFont_DrawString(Display *dpy, Drawable d, MyFont *font, GC gc, 
+MyFont_DrawString(Display *dpy, Drawable d, MyFont *font, GC gc,
                   int x, int y, char *string, int len)
 {
     if (use_fontset) {
@@ -683,7 +683,7 @@ MyFont_DrawString(Display *dpy, Drawable d, MyFont *font, GC gc,
 }
 
 void
-MyFont_ChangeGC(unsigned long fix_fore, unsigned long fix_back, 
+MyFont_ChangeGC(unsigned long fix_fore, unsigned long fix_back,
                 MyFont *fix_font)
 {
     Gcv.foreground = fix_fore;
@@ -699,9 +699,9 @@ MyFont_ChangeGC(unsigned long fix_fore, unsigned long fix_back,
 /*
  * The following functions are internationalized substitutions
  * for XFetchName and XGetIconName using XGetWMName and
- * XGetWMIconName.  
+ * XGetWMIconName.
  *
- * Please note that the third arguments have to be freed using free(), 
+ * Please note that the third arguments have to be freed using free(),
  * not XFree().
  */
 Status
@@ -711,7 +711,7 @@ I18N_FetchName(Display *dpy, Window w, char **winname)
     XTextProperty text_prop;
     char **list;
     int    num;
-    
+
     status = XGetWMName(dpy, w, &text_prop);
     if (!status || !text_prop.value || !text_prop.nitems) {
       *winname = NULL;
@@ -719,7 +719,7 @@ I18N_FetchName(Display *dpy, Window w, char **winname)
     }
     status = XmbTextPropertyToTextList(dpy, &text_prop, &list, &num);
     if (status < Success || !num || !*list) {
-      *winname = NULL;      
+      *winname = NULL;
       return 0;
     }
     XFree(text_prop.value);
@@ -735,7 +735,7 @@ I18N_GetIconName(Display *dpy, Window w, char **iconname)
     XTextProperty text_prop;
     char **list;
     int    num;
-	
+
     status = XGetWMIconName(dpy, w, &text_prop);
     if (!status || !text_prop.value || !text_prop.nitems) return 0;
     status = XmbTextPropertyToTextList(dpy, &text_prop, &list, &num);
@@ -767,73 +767,7 @@ SetFocus (TwmWindow *tmp_win, Time time)
     XSetInputFocus (dpy, w, RevertToPointerRoot, time);
 }
 
-
-#ifdef NOPUTENV
-/**
- * define our own putenv() if the system doesn't have one.
- * putenv(s): place s (a string of the form "NAME=value") in
- * the environment; replacing any existing NAME.  s is placed in
- * environment, so if you change s, the environment changes (like
- * putenv on a sun).  Binding removed if you putenv something else
- * called NAME.
- */
-int
-putenv(char *s)
-{
-    char *v;
-    int varlen, idx;
-    extern char **environ;
-    char **newenv;
-    static int virgin = 1; /* true while "environ" is a virgin */
-
-    v = index(s, '=');
-    if(v == 0)
-	return 0; /* punt if it's not of the right form */
-    varlen = (v + 1) - s;
-
-    for (idx = 0; environ[idx] != 0; idx++) {
-	if (strncmp(environ[idx], s, varlen) == 0) {
-	    if(v[1] != 0) { /* true if there's a value */
-		environ[idx] = s;
-		return 0;
-	    } else {
-		do {
-		    environ[idx] = environ[idx+1];
-		} while(environ[++idx] != 0);
-		return 0;
-	    }
-	}
-    }
-    
-    /* add to environment (unless no value; then just return) */
-    if(v[1] == 0)
-	return 0;
-    if(virgin) {
-	register i;
-
-	newenv = (char **) malloc((unsigned) ((idx + 2) * sizeof(char*)));
-	if(newenv == 0)
-	    return -1;
-	for(i = idx-1; i >= 0; --i)
-	    newenv[i] = environ[i];
-	virgin = 0;     /* you're not a virgin anymore, sweety */
-    } else {
-	newenv = (char **) realloc((char *) environ,
-				   (unsigned) ((idx + 2) * sizeof(char*)));
-	if (newenv == 0)
-	    return -1;
-    }
-
-    environ = newenv;
-    environ[idx] = s;
-    environ[idx+1] = 0;
-    
-    return 0;
-}
-#endif /* NOPUTENV */
-
-
-static Pixmap 
+static Pixmap
 CreateXLogoPixmap (unsigned *widthp, unsigned *heightp)
 {
     int h = Scr->TBInfo.width - Scr->TBInfo.border * 2;
@@ -868,7 +802,7 @@ CreateXLogoPixmap (unsigned *widthp, unsigned *heightp)
 }
 
 
-static Pixmap 
+static Pixmap
 CreateResizePixmap (unsigned *widthp, unsigned *heightp)
 {
     int h = Scr->TBInfo.width - Scr->TBInfo.border * 2;
@@ -895,7 +829,7 @@ CreateResizePixmap (unsigned *widthp, unsigned *heightp)
 	XSetLineAttributes (dpy, gc, lw, LineSolid, CapButt, JoinMiter);
 
 	/*
-	 * draw the resize button, 
+	 * draw the resize button,
 	 */
 	w = (h * 2) / 3;
 	points[0].x = w;
@@ -923,7 +857,7 @@ CreateResizePixmap (unsigned *widthp, unsigned *heightp)
 }
 
 
-static Pixmap 
+static Pixmap
 CreateDotPixmap (unsigned *widthp, unsigned *heightp)
 {
     int h = Scr->TBInfo.width - Scr->TBInfo.border * 2;
@@ -954,7 +888,7 @@ CreateDotPixmap (unsigned *widthp, unsigned *heightp)
 static char questionmark_bits[] = {
    0x38, 0x7c, 0x64, 0x30, 0x18, 0x00, 0x18, 0x18};
 
-static Pixmap 
+static Pixmap
 CreateQuestionPixmap (unsigned *widthp, unsigned *heightp)
 {
     *widthp = questionmark_width;
@@ -972,14 +906,14 @@ CreateQuestionPixmap (unsigned *widthp, unsigned *heightp)
 }
 
 
-static Pixmap 
+static Pixmap
 CreateMenuPixmap (unsigned *widthp, unsigned *heightp)
 {
     return CreateMenuIcon (Scr->TBInfo.width - Scr->TBInfo.border * 2,
 			   widthp,heightp);
 }
 
-Pixmap 
+Pixmap
 CreateMenuIcon (int height, unsigned *widthp, unsigned *heightp)
 {
     int h, w;

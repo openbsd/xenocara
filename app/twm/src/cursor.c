@@ -1,5 +1,5 @@
 /*
- * 
+ *
 Copyright 1989, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -122,7 +122,7 @@ static struct _CursorName {
 {"xterm",		XC_xterm,		None},
 };
 
-void 
+void
 NewFontCursor (Cursor *cp, char *str)
 {
     int i;
@@ -138,7 +138,7 @@ NewFontCursor (Cursor *cp, char *str)
 	    return;
 	}
     }
-    fprintf (stderr, "%s:  unable to find font cursor \"%s\"\n", 
+    fprintf (stderr, "%s:  unable to find font cursor \"%s\"\n",
 	     ProgramName, str);
 }
 
@@ -161,7 +161,7 @@ NewBitmapCursor(Cursor *cp, char *source, char *mask)
     XGetGeometry(dpy, mpm, &JunkRoot, &mx, &my, &mw, &mh, &JunkBW,&JunkDepth);
     if (sw != mw || sh != mh)
     {
-	fprintf (stderr, 
+	fprintf (stderr,
 		 "%s:  cursor bitmaps \"%s\" and \"%s\" not the same size\n",
 		 ProgramName, source, mask);
 	return;

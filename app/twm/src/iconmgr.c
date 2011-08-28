@@ -1,5 +1,5 @@
 /*
- * 
+ *
 Copyright 1989,1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -78,7 +78,7 @@ void CreateIconManagers()
 			      (unsigned int *) &p->width, (unsigned int *)&p->height);
 
 	if (mask & XNegative)
-	    JunkX = Scr->MyDisplayWidth - p->width - 
+	    JunkX = Scr->MyDisplayWidth - p->width -
 	      (2 * Scr->BorderWidth) + JunkX;
 
 	if (mask & YNegative)
@@ -235,7 +235,7 @@ void MoveIconManager(int dir)
 	    new_row = 0;
 	if (new_col >= ip->cur_columns)
 	    new_col = 0;
-	    
+
 	/* Now let's go through the list to see if there is an entry with this
 	 * new position
 	 */
@@ -251,8 +251,8 @@ void MoveIconManager(int dir)
 
     if (!got_it)
     {
-	fprintf (stderr, 
-		 "%s:  unable to find window (%d, %d) in icon manager\n", 
+	fprintf (stderr,
+		 "%s:  unable to find window (%d, %d) in icon manager\n",
 		 ProgramName, new_row, new_col);
 	return;
     }
@@ -280,7 +280,7 @@ void MoveIconManager(int dir)
 /**
  * jump from one icon manager to another, possibly even on another screen
  *  \param dir one of the following:
- *    - F_NEXTICONMGR - go to the next icon manager 
+ *    - F_NEXTICONMGR - go to the next icon manager
  *    - F_PREVICONMGR - go to the previous one
  */
 
@@ -397,7 +397,7 @@ WList *AddIconManager(TwmWindow *tmp_win)
     tmp->me = ip->count;
     tmp->x = -1;
     tmp->y = -1;
-    
+
     valuemask = (CWBackPixel | CWBorderPixel | CWEventMask | CWCursor);
     attributes.background_pixel = tmp->back;
     attributes.border_pixel = tmp->back;
@@ -405,8 +405,8 @@ WList *AddIconManager(TwmWindow *tmp_win)
 			     ButtonReleaseMask | ExposureMask |
 			     EnterWindowMask | LeaveWindowMask);
     attributes.cursor = Scr->IconMgrCursor;
-    tmp->w = XCreateWindow (dpy, ip->w, 0, 0, (unsigned int) 1, 
-			    (unsigned int) h, (unsigned int) 0, 
+    tmp->w = XCreateWindow (dpy, ip->w, 0, 0, (unsigned int) 1,
+			    (unsigned int) h, (unsigned int) 0,
 			    CopyFromParent, (unsigned int) CopyFromParent,
 			    (Visual *) CopyFromParent, valuemask, &attributes);
 
@@ -457,7 +457,7 @@ void InsertInIconManager(IconMgr *ip, WList *tmp, TwmWindow *tmp_win)
 {
     WList *tmp1;
     int added;
-    int (*compar)(const char *, const char *) 
+    int (*compar)(const char *, const char *)
 	= (Scr->CaseSensitive ? strcmp : XmuCompareISOLatin1);
 
     added = FALSE;
@@ -525,7 +525,7 @@ void RemoveIconManager(TwmWindow *tmp_win)
     ip = tmp->iconmgr;
 
     RemoveFromIconManager(ip, tmp);
-    
+
     XDeleteContext(dpy, tmp->icon, TwmContext);
     XDeleteContext(dpy, tmp->icon, ScreenContext);
     XDestroyWindow(dpy, tmp->icon);
@@ -587,7 +587,7 @@ void SortIconManager(IconMgr *ip)
 {
     WList *tmp1, *tmp2;
     int done;
-    int (*compar)(const char *, const char *) 
+    int (*compar)(const char *, const char *)
 	= (Scr->CaseSensitive ? strcmp : XmuCompareISOLatin1);
 
     if (ip == NULL)
@@ -617,7 +617,7 @@ void SortIconManager(IconMgr *ip)
 }
 
 /**
- * pack the icon manager windows following 
+ * pack the icon manager windows following
  *		an addition or deletion
  *
  *  \param ip a pointer to the icon manager struture

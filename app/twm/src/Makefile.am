@@ -27,58 +27,58 @@ bin_PROGRAMS = twm
 rcdir = ${datadir}/X11/twm
 dist_rc_DATA = system.twmrc
 
-AM_CFLAGS = $(TWM_CFLAGS) -DXVENDORNAME=\"The\ X.Org\ Foundation\" -DXORG_RELEASE=\"Release\ $(VERSION)\" -D_BSD_SOURCE
-AM_CFLAGS += -DSYSTEM_INIT_FILE=\"${datadir}/X11/twm/system.twmrc\"
+AM_CPPFLAGS =							\
+	-DXVENDORNAME=\"The\ X.Org\ Foundation\"		\
+	-DXORG_RELEASE=\"Release\ $(VERSION)\"			\
+	-DSYSTEM_INIT_FILE=\"${datadir}/X11/twm/system.twmrc\"
 
+AM_CFLAGS = $(TWM_CFLAGS)
 twm_LDADD = $(TWM_LIBS)
 
-twm_SOURCES =   \
-        add_window.c \
-        add_window.h \
-        cursor.c \
-	deftwmrc.c \
-        events.c \
-        events.h \
-        gc.c \
-        gc.h \
-        iconmgr.c \
-        iconmgr.h \
-        icons.c \
-        icons.h \
-        list.c \
-        list.h \
-        menus.c \
-        menus.h \
-        parse.c \
-        parse.h \
-        resize.c \
-        resize.h \
-        screen.h \
-        session.c \
-        session.h \
-        twm.c \
-        twm.h \
-        util.c \
-        util.h \
-        version.c \
-        version.h \
-	gram.y \
+twm_SOURCES =		\
+        add_window.c	\
+        add_window.h	\
+        cursor.c	\
+	deftwmrc.c	\
+        events.c	\
+        events.h	\
+        gc.c		\
+        gc.h		\
+        iconmgr.c	\
+        iconmgr.h	\
+        icons.c		\
+        icons.h		\
+        list.c		\
+        list.h		\
+        menus.c		\
+        menus.h		\
+        parse.c		\
+        parse.h		\
+        resize.c	\
+        resize.h	\
+        screen.h	\
+        session.c	\
+        session.h	\
+        twm.c		\
+        twm.h		\
+        util.c		\
+        util.h		\
+        version.c	\
+        version.h	\
+	gram.y		\
 	lex.l
 
-BUILT_SOURCES = gram.h gram.c lex.c deftwmrc.c
-MAINTAINERCLEANFILES = $(BUILT_SOURCES)
-
-gram.h: gram.c
+BUILT_SOURCES = gram.h deftwmrc.c
 
 deftwmrc.c:  system.twmrc
-	$(AM_V_GEN)rm -f $@ ; \
-	echo '/* ' >>$@ ; \
-	echo ' * This file is generated automatically from the default' >>$@ ; \
-	echo ' * twm bindings file system.twmrc by the twm Makefile.' >>$@ ; \
-	echo ' */' >>$@ ; \
-	echo '' >>$@ ; \
-	echo 'unsigned char *defTwmrc[] = {' >>$@ ; \
-	sed -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@ ; \
+	$(AM_V_at)rm -f $@ ;							\
+	echo '/* ' >>$@ ;							\
+	echo ' * This file is generated automatically from the default' >>$@ ;	\
+	echo ' * twm bindings file system.twmrc by the twm Makefile.' >>$@ ;	\
+	echo ' */' >>$@ ;							\
+	echo '' >>$@ ;								\
+	echo 'unsigned char *defTwmrc[] = {' >>$@ ;				\
+	$(SED) -f ${srcdir}/deftwmrc.sed < ${srcdir}/system.twmrc >>$@ ;	\
 	echo '    (unsigned char *) 0 };' >>$@
 
 EXTRA_DIST = deftwmrc.sed siconify.bm

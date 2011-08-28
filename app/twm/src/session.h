@@ -48,7 +48,7 @@ extern int write_byte ( FILE *file, unsigned char b );
 extern int write_counted_string ( FILE *file, char *string );
 extern int write_short ( FILE *file, short s );
 extern int write_ushort ( FILE *file, unsigned short s );
- 
+
 extern SmcConn smcConn;
 
 #endif

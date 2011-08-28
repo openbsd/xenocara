@@ -62,6 +62,10 @@ from The Open Group.
 #ifndef _TWM_
 #define _TWM_
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
@@ -189,7 +193,7 @@ typedef struct _SqueezeInfo {
  * ICCCM property.
  */
 typedef struct TwmColormap
-{	
+{
     Colormap c;			/* Colormap id */
     int state;			/* install(ability) state */
     unsigned long install_req;	/* request number which installed it */
@@ -220,7 +224,7 @@ typedef struct Colormaps
 				       ((cm)->number_cwins - 1) / 2)
 
 /* for each window that is on the display, one of these structures
- * is allocated and linked into a list 
+ * is allocated and linked into a list
  */
 typedef struct TwmWindow
 {
@@ -349,7 +353,7 @@ extern void InitVariables ( void );
 extern void CreateFonts ( void );
 extern void RestoreWithdrawnLocation ( TwmWindow *tmp );
 extern void Reborder( Time time);
-extern void Done( XtPointer, XtSignalId * );
+extern void Done( XtPointer, XtSignalId * ) _X_NORETURN;
 extern void ComputeCommonTitleOffsets ( void );
 extern void ComputeTitleLocation ( TwmWindow *tmp );
 extern void ComputeWindowTitleOffsets ( TwmWindow *tmp_win, int width, Bool squeeze );
@@ -406,7 +410,7 @@ extern Bool GetWMState ( Window w, int *statep, Window *iwp );
 extern void twmrc_error_prefix ( void );
 
 extern int yyparse ( void );
-extern int yylex ( void ); 
+extern int yylex ( void );
 extern void yyerror ( char *s );
 extern int doinput ( char *buf, int size );
 extern void RemoveDQuote ( char *str );

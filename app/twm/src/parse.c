@@ -67,7 +67,7 @@ in this Software without prior written authorization from The Open Group.
 #include "util.h"
 #include "gram.h"
 #include "parse.h"
-#include <X11/Xatom.h> 
+#include <X11/Xatom.h>
 #include <X11/extensions/sync.h>
 
 #ifndef SYSTEM_INIT_FILE
@@ -180,7 +180,7 @@ int ParseTwmrc (char *filename)
 		    homelen = strlen (home);
 		    cp = tmpfilename;
 		    (void) snprintf (tmpfilename, sizeof(tmpfilename),
-		        "%s/.twmrc.%d", home, Scr->screen);
+				     "%s/.twmrc.%d", home, Scr->screen);
 		    break;
 		}
 	    }
@@ -384,7 +384,7 @@ typedef struct _TwmKeyword {
  * in lowercase and only contain the letters a-z).  It is fed to a binary
  * search to parse keywords.
  */
-static TwmKeyword keytable[] = { 
+static TwmKeyword keytable[] = {
     { "all",			ALL, 0 },
     { "autoraise",		AUTO_RAISE, 0 },
     { "autorelativeresize",	KEYWORD, kw0_AutoRelativeResize },
@@ -729,7 +729,7 @@ int do_string_keyword (int keyword, char *s)
 {
     switch (keyword) {
       case kws_UsePPosition:
-	{ 
+	{
 	    int ppos = ParseUsePPosition (s);
 	    if (ppos < 0) {
 		twmrc_error_prefix();
@@ -771,7 +771,7 @@ int do_string_keyword (int keyword, char *s)
 
       case kws_MaxWindowSize:
 	JunkMask = XParseGeometry (s, &JunkX, &JunkY, &JunkWidth, &JunkHeight);
-	if ((JunkMask & (WidthValue | HeightValue)) != 
+	if ((JunkMask & (WidthValue | HeightValue)) !=
 	    (WidthValue | HeightValue)) {
 	    twmrc_error_prefix();
 	    fprintf (stderr, "bad MaxWindowSize \"%s\"\n", s);
@@ -944,26 +944,29 @@ int do_color_keyword (int keyword, int colormode, char *s)
  */
 void
 put_pixel_on_root(Pixel pixel)
-{                                                        
+{
   int           i, addPixel = 1;
-  Atom          pixelAtom, retAtom;	                 
+  Atom          pixelAtom, retAtom;
   int           retFormat;
-  unsigned long nPixels, retAfter;                     
-  Pixel        *retProp;
-  pixelAtom = XInternAtom(dpy, "_MIT_PRIORITY_COLORS", True);        
-  XGetWindowProperty(dpy, Scr->Root, pixelAtom, 0, 8192, 
-		     False, XA_CARDINAL, &retAtom,       
-		     &retFormat, &nPixels, &retAfter,    
-		     (unsigned char **)&retProp);
+  unsigned long nPixels, retAfter;
+  unsigned char*retProp;
+  Pixel        *pixelProp;
+  pixelAtom = XInternAtom(dpy, "_MIT_PRIORITY_COLORS", True);
+  XGetWindowProperty(dpy, Scr->Root, pixelAtom, 0, 8192,
+		     False, XA_CARDINAL, &retAtom,
+		     &retFormat, &nPixels, &retAfter,
+		     &retProp);
 
-  for (i=0; i< nPixels; i++)                             
-      if (pixel == retProp[i]) addPixel = 0;             
-                                                         
-  if (addPixel)                                          
+  pixelProp = (Pixel *) retProp;
+  for (i=0; i< nPixels; i++)
+      if (pixel == pixelProp[i])
+	  addPixel = 0;
+
+  if (addPixel)
       XChangeProperty (dpy, Scr->Root, _XA_MIT_PRIORITY_COLORS,
-		       XA_CARDINAL, 32, PropModeAppend,  
-		       (unsigned char *)&pixel, 1);                       
-}                                                        
+		       XA_CARDINAL, 32, PropModeAppend,
+		       (unsigned char *)&pixel, 1);
+}
 
 /**
  * save a color from a string in the twmrc file.
@@ -1002,7 +1005,7 @@ do_var_savecolor(int key)
  * traverse the var save color list placeing the pixels
  *                        in the root window property.
  */
-void 
+void
 assign_var_savecolor()
 {
   Cptr cp = chead;
@@ -1050,7 +1053,7 @@ assign_var_savecolor()
   }
 }
 
-static int 
+static int
 ParseUsePPosition (char *s)
 {
     XmuCopyISOLatin1Lowered (s, s);
