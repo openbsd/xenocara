@@ -1,14 +1,14 @@
 .\" Copyright 1993, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,7 +16,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -33,11 +33,11 @@ x11perfcomp \- X11 server performance comparison program
 The
 .I x11perfcomp
 program merges the output of several
-.I x11perf(1)
+.I x11perf(__appmansuffix__)
 runs into a nice tabular
 format.  It takes the results in each file, fills in any missing test results if
 necessary, and for each test shows the objects/second rate of each server.
-If invoked with the -r or -ro options, it shows the relative performance 
+If invoked with the -r or -ro options, it shows the relative performance
 of each server to the first server.
 .PP
 Normally,
@@ -46,16 +46,16 @@ uses the first file specified to determine which specific tests it should
 report on.  Some (non-DEC :) servers may fail to perform
 all tests.  In this case,
 .I x11perfcomp
-automatically substitutes in a rate of 0.0 objects/second. 
+automatically substitutes in a rate of 0.0 objects/second.
 Since the first file
 determines which tests to report on, this file must contain a superset of
-the tests reported in the other files, else 
+the tests reported in the other files, else
 .I x11perfcomp
 will fail.
 .PP
 You can provide an explicit list of tests to report on
 by using the -l switch to specify a file of labels.  You can create a label
-file by using the -label option in 
+file by using the -label option in
 .I x11perf.
 .SH OPTIONS
 .I x11perfcomp
@@ -73,7 +73,7 @@ Specifies a label file to use.
 .SH X DEFAULTS
 There are no X defaults used by this program.
 .SH "SEE ALSO"
-X(__miscmansuffix__), x11perf(1)
+X(__miscmansuffix__), x11perf(__appmansuffix__)
 .SH AUTHORS
 Mark Moraes wrote the original scripts to compare servers.
 .br

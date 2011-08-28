@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([x11perf],
-	[1.5.3],
+	[1.5.4],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	[x11perf])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -40,6 +40,12 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 AC_TYPE_SIGNAL
+
+# Define the installation directory for the x11 performance compare scripts
+AC_SUBST([x11perfcompdir], [$libdir/X11/x11perfcomp])
+
+# Checks for programs run by the scripts we install
+AC_PATH_PROG(MKTEMP, mktemp)
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(X11PERF, x11 xmuu)
@@ -72,4 +78,7 @@ yes)
 	;;
 esac
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

@@ -32,13 +32,13 @@ following way:
 It is possible to run the GXcopy and GXxor tests separately, as long as they
 are concatenated to the same output file:
 .nf
-.BI "x11perf -display " display " -v1.3 -rop GXcopy -all > " datafile 
-.BI "x11perf -display " display " -v1.3 -rop GXxor -all >> " datafile 
+.BI "x11perf -display " display " -v1.3 -rop GXcopy -all > " datafile
+.BI "x11perf -display " display " -v1.3 -rop GXxor -all >> " datafile
 .fi
 or
 .nf
-.BI "x11perf -display " display " -v1.3 -rop GXxor -all > " datafile 
-.BI "x11perf -display " display " -v1.3 -rop GXcopy -all >> " datafile 
+.BI "x11perf -display " display " -v1.3 -rop GXxor -all > " datafile
+.BI "x11perf -display " display " -v1.3 -rop GXcopy -all >> " datafile
 .fi
 .SH FILES
 .TP
@@ -48,7 +48,7 @@ Temporary file created in the current directory, deleted after use.
 .TP
 .B Usage: Xmark datafile
 .I Xmark
-was invoked without arguments or with more than one argument, or 
+was invoked without arguments or with more than one argument, or
 with options.  Xmark takes no options.
 .TP
 .B "Error: data file does not exist or is not ordinary."
@@ -63,4 +63,4 @@ by x11perf in the expected way.
 .BR "Diagnostic: ERROR: sum of weights =" nnn ", not equal to 4566.0;"
 There is an internal error in Xmark.
 .SH "SEE ALSO"
-X(__miscmansuffix__), x11perf(1), x11perfcomp(1)
+X(__miscmansuffix__), x11perf(__appmansuffix__), x11perfcomp(__appmansuffix__)

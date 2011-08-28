@@ -364,8 +364,8 @@ shmerrorhandler(Display *d, XErrorEvent *e)
 	return (*origerrorhandler)(d,e);
 }
 
-int 
-InitShmPutImage(XParms xp, Parms p, int reps)
+static int
+InitShmImage(XParms xp, Parms p, int reps, Bool read_only)
 {
     int	image_size;
 
@@ -382,7 +382,6 @@ InitShmPutImage(XParms xp, Parms p, int reps)
     	free(segsb);
     	return False;
     }	
-    XClearWindow(xp->d, xp->w);
     shm_image = *image;
     image_size = image->bytes_per_line * image->height;
     /* allow XYPixmap choice: */
@@ -418,7 +417,7 @@ InitShmPutImage(XParms xp, Parms p, int reps)
 	shmctl (shm_info.shmid, IPC_RMID, NULL);
 	return False;
     }
-    shm_info.readOnly = True;
+    shm_info.readOnly = read_only;
     XSync(xp->d,True);
     haderror = False;
     origerrorhandler = XSetErrorHandler(shmerrorhandler);
@@ -447,7 +446,21 @@ InitShmPutImage(XParms xp, Parms p, int reps)
     return reps;
 }
 
-void 
+int
+InitShmPutImage(XParms xp, Parms p, int reps)
+{
+    if (!InitShmImage(xp, p, reps, True)) return False;
+    XClearWindow(xp->d, xp->w);
+    return reps;
+}
+
+int
+InitShmGetImage(XParms xp, Parms p, int reps)
+{
+    return InitShmImage(xp, p, reps, False);
+}
+
+void
 DoShmPutImage(XParms xp, Parms p, int reps)
 {
     int i, size;
@@ -467,10 +480,30 @@ DoShmPutImage(XParms xp, Parms p, int reps)
     }
 }
 
-void 
-EndShmPutImage(XParms xp, Parms p)
+void
+DoShmGetImage(XParms xp, Parms p, int reps)
 {
+    int i, size;
+    XSegment *sa, *sb;
 
+    size = p->special;
+
+    shm_image.width = size;
+    shm_image.height = size;
+
+    for (sa = segsa, sb = segsb, i = 0; i != reps; i++, sa++, sb++) {
+	/* compute offsets into image data? */
+	XShmGetImage(xp->d, xp->w, &shm_image, sa->x1, sa->y1, xp->planemask);
+	XShmGetImage(xp->d, xp->w, &shm_image, sa->x2, sa->y2, xp->planemask);
+	XShmGetImage(xp->d, xp->w, &shm_image, sb->x2, sb->y2, xp->planemask);
+	XShmGetImage(xp->d, xp->w, &shm_image, sb->x1, sb->y1, xp->planemask);
+	CheckAbort ();
+    }
+}
+
+static void
+EndShmImage(XParms xp, Parms p)
+{
     EndGetImage (xp, p);
     XShmDetach (xp->d, &shm_info);
     XSync(xp->d, False);	/* need server to detach so can remove id */
@@ -480,6 +513,17 @@ EndShmPutImage(XParms xp, Parms p)
 	perror("shmctl rmid:");
 }
 
+void
+EndShmGetImage(XParms xp, Parms p)
+{
+    EndShmImage(xp, p);
+}
+
+void
+EndShmPutImage(XParms xp, Parms p)
+{
+    EndShmImage(xp, p);
+}
 #endif
 
 

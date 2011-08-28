@@ -1,3 +1,140 @@
+commit 84bfc56a89929999db92925c078d9e2f801b1689
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 27 18:29:38 2011 -0700
+
+    x11perf 1.5.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d171454212bff8f4a32cf3cef08566e29237da9d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 7 22:40:14 2011 -0700
+
+    Add MKTEMP to DIR_SUBSTS in Makefile
+    
+    Needed for commit 1188465112a1 to work after revert of 4af24b2f5b3f8f
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 86cf2ab52ad5c6b4b262c1673ad5bd4c8713e3e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 7 17:16:52 2011 -0700
+
+    Revert "Let autoconf generate x11perfcomp directly instead of doing it via sed"
+    
+    This reverts commit 4af24b2f5b3f8f2c20271ae323b6fa528b9b2127.
+    
+    Letting autoconf do it failed to handle the recursive expansion needed,
+    resulting in "PATH=${exec_prefix}/lib/X11/x11perfcomp:..." without having
+    exec_prefix defined in x11perfcomp.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit be99f1c0ecac26255aa9b0bb0347bab1b6e0fb88
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 1 19:59:34 2011 -0700
+
+    Remove stray remaining CVS id tag
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1188465112a1a3c6acce9d370d448df70fd4fa4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 1 19:51:47 2011 -0700
+
+    x11perfcomp should use mktemp instead of pid for tmp directory
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4af24b2f5b3f8f2c20271ae323b6fa528b9b2127
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 1 17:38:01 2011 -0700
+
+    Let autoconf generate x11perfcomp directly instead of doing it via sed
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fefc834c419085b2db3b2d7d57bdbfe240d1b75c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 1 17:30:14 2011 -0700
+
+    x11perfcomp: use saner $PATH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e86c85ac8cf2fc6631be704de45f098d1a58ab3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 11 14:46:00 2011 -0800
+
+    Make Makefile.am's compatible with Solaris make
+    
+    Solaris make won't substitute $< in explicit rules, only implicit ones
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8b8f94bca1576e7365c492cfc8131d5aa7bcd7c8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jan 22 14:41:33 2011 -0500
+
+    config: substitute x11perfcompdir using Autoconf @x11perfcompdir@
+    
+    Use the Autoconf recommended way of substituting bindir and friends, see
+    http://www.gnu.org/software/autoconf/manual/autoconf.html
+    
+    Use # sign for comment in script.
+    Only sed is used, drop the cpp terminology.
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 490ceddc3e97e8c5bf1ed61265525c213abf65d1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 36d4517099505fac29a3c0b8c6c3779b3f05b8ff
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8ebaae2bf1350b9414d261fc8509fcd898d9b152
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7f46d58f7523a07e9086b7c47534c37240d83409
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Thu Jan 6 10:58:53 2011 +0000
+
+    Add tests for ShmGetImage
+    
+    Similar to GetImage and ShmPutImage, test the performance of retrieving
+    pixel data from the X server without the overhead of copying the pixels.
+    In the upper bound, using XShmGetImage, the performance will be limited
+    by the RTT latency (x11perf -prop). However, comparing the scaling factors
+    of XShmGetImage and XGetImage will give some insight into the driver
+    efficiency.
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
 commit c39d831d409537fce2f36c8672f908a7cc810519
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jan 5 16:33:36 2011 -0800

@@ -1,15 +1,15 @@
 .\" Copyright 1988, 1989 Digital Equipment Corporation.
 .\" Copyright 1989, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,7 +17,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -42,25 +42,25 @@ done on some other device, like a terminal.  Such benchmarks usually measure
 drawing speed for lines, polygons, text, etc.
 .PP
 Since workstations are not used as standalone graphics engines, but as
-super-terminals, 
-.I x11perf 
+super-terminals,
+.I x11perf
 measures window management performance as well as
-traditional graphics performance.  
-.I x11perf 
+traditional graphics performance.
+.I x11perf
 includes benchmarks for the time it
 takes to create and map windows (as when you start up an application); to map a
 pre-existing set of windows onto the screen (as when you deiconify an
 application or pop up a menu); and to rearrange windows (as when you slosh
 windows to and fro trying to find the one you want).
 .PP
-.I x11perf 
+.I x11perf
 also measures graphics performance for operations not normally used in
 standalone graphics displays, but are nonetheless used frequently by X
 applications.  Such operations include CopyPlane (used to map bitmaps into
 pixels), scrolling (used in text windows), and various stipples and tiles
 (used for CAD and color half-toning, respectively).
 .PP
-.I x11perf 
+.I x11perf
 should be used to analyze particular strengths and weaknesses
 of servers, and is most useful to a server writer who wants to
 analyze and improve a server.
@@ -72,10 +72,10 @@ While it can be used as a benchmark, it was written and is intended as
 a performance testing tool.
 .PP
 As such,
-.I x11perf 
+.I x11perf
 DOES NOT whittle down measurements to a single ``HeXStones''
-or ``MeXops'' number.  We consider such numbers to be uninformative 
-at best and misleading at worst.  
+or ``MeXops'' number.  We consider such numbers to be uninformative
+at best and misleading at worst.
 Some servers which are very fast for certain applications can be
 very slow for others.
 No single number or small set of numbers are sufficient to
@@ -86,15 +86,15 @@ may be able to use the numbers
 reports to predict its performance on a given X implementation.
 .PP
 That said, you might also want to look at
-.I x11perfcomp(1),
-a program to compare the outputs of different 
+.I x11perfcomp(__appmansuffix__),
+a program to compare the outputs of different
 .I x11perf
 runs.  You provide a list of files containing results from
 .I x11perf,
 and it lays them out in a nice tabular format.
 .PP
-For repeatable results, 
-.I x11perf 
+For repeatable results,
+.I x11perf
 should be run using a local connection on a
 freshly-started server.  The default configuration runs each test 5 times, in
 order to see if each trial takes approximately the same amount of time.
@@ -117,7 +117,7 @@ the work requested by fetching a pixel back from the test window, which means
 that servers talking to graphics accelerators can't claim that they are done,
 while in the meantime the accelerator is painting madly.
 .PP
-By default 
+By default
 .I x11perf
 automatically calibrates the number of repetitions of each test,
 so that each should take approximately the same length of time to run across
@@ -138,15 +138,15 @@ The current program is mostly the responsibility of Joel McCormack.  It is
 based upon the x11perf developed by Phil Karlton, Susan Angebranndt, Chris
 Kent, Mary Walker, and Todd Newman, who wanted to assess performance differences between various servers.
 Several tests were added  in order to write and tune
-the PMAX (DECStation 3100) servers.  
-For a general release to the world, 
-.I x11perf 
+the PMAX (DECStation 3100) servers.
+For a general release to the world,
+.I x11perf
 was rewritten to ease making comparisons between widely varying
 machines, to cover most important (and unimportant) X functionality,
 and to exercise graphics operations in as many different
 orientations and alignments as possible.
 .SH OPTIONS
-.I x11perf 
+.I x11perf
 is solely Xlib based, and
 accepts the options listed below:
 .TP 14
@@ -155,7 +155,7 @@ Specifies which display to use.
 .TP 14
 .B \-sync
 Runs the tests in synchronous mode.
-Normally only useful for debugging 
+Normally only useful for debugging
 .I x11perf .
 .TP 14
 .B \-pack
@@ -164,7 +164,7 @@ This makes it easy to debug server code for stipples and tiles...if the
 pattern looks ugly, you've got alignment problems.
 .TP 14
 .B \-repeat \fI<n>\fP
-Repeats each test 
+Repeats each test
 .I n
 times (by default each test is run 5 times).
 .TP 14
@@ -238,8 +238,8 @@ Set the save_under window attribute to True on all windows created by x11perf.
 Default is False.
 .TP 14
 .B \-bs <backing_store_hint>
-Set the backing_store window attribute to the given value on all windows 
-created by x11perf. <backing_store_hint> can be WhenMapped or 
+Set the backing_store window attribute to the given value on all windows
+created by x11perf. <backing_store_hint> can be WhenMapped or
 Always.  Default is NotUseful.
 .TP 14
 .B \-dot
@@ -1001,7 +1001,7 @@ Circulate unmapped window to top.
 .SH X DEFAULTS
 There are no X defaults used by this program.
 .SH "SEE ALSO"
-X(__miscmansuffix__), x11perfcomp(1)
+X(__miscmansuffix__), x11perfcomp(__appmansuffix__)
 .SH AUTHORS
 Joel McCormack
 .br

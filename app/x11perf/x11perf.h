@@ -183,8 +183,11 @@ extern void DoGetImage ( XParms xp, Parms p, int reps );
 extern void DoPutImage ( XParms xp, Parms p, int reps );
 #ifdef MITSHM
 extern int InitShmPutImage ( XParms xp, Parms p, int reps );
+extern int InitShmGetImage ( XParms xp, Parms p, int reps );
 extern void DoShmPutImage ( XParms xp, Parms p, int reps );
+extern void DoShmGetImage ( XParms xp, Parms p, int reps );
 extern void EndShmPutImage ( XParms xp, Parms p );
+extern void EndShmGetImage ( XParms xp, Parms p );
 #endif
 extern void MidCopyPix ( XParms xp, Parms p );
 extern void EndCopyWin ( XParms xp, Parms p );

@@ -19,14 +19,9 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
+
 bin_PROGRAMS = x11perf
-
-bin_SCRIPTS = x11perfcomp
-
-LIBPATH = $(libdir)/X11/x11perfcomp
-
-x11perfcompdir = $(LIBPATH)
-dist_x11perfcomp_SCRIPTS = fillblnk perfboth perfratio Xmark
 
 AM_CFLAGS = $(CWARNFLAGS) $(XEXT_CFLAGS) $(XFT_CFLAGS) $(XRENDER_CFLAGS) $(X11PERF_CFLAGS)
 x11perf_LDADD = $(XEXT_LIBS) $(XFT_LIBS) $(XRENDER_LIBS) $(X11PERF_LIBS) -lm
@@ -52,34 +47,22 @@ x11perf_SOURCES =	\
         x11perf.c \
         x11perf.h
 
-appman_PRE = \
-        x11perfcomp.man \
-        x11perf.man \
-        Xmark.man
+bin_SCRIPTS = x11perfcomp
+CLEANFILES = $(bin_SCRIPTS)
+EXTRA_DIST = $(bin_SCRIPTS:=.in)
+DIR_SUBSTS = -e 's|@x11perfcompdir[@]|$(x11perfcompdir)|g'
+DIR_SUBSTS += -e 's|@MKTEMP[@]|$(MKTEMP)|g'
 
-x11perfcomp: x11pcomp.cpp
-	$(AM_V_GEN)$(SED) s/LIBPATH/`echo $(LIBPATH) | sed -e s/\\\\//\\\\\\\\\\\\\//g`/ < $(srcdir)/x11pcomp.cpp | \
-		$(SED) s/XCOMM/\#/ > $@
+x11perfcomp: x11perfcomp.in
+	$(AM_V_GEN)$(SED) $(DIR_SUBSTS) < $(srcdir)/$@.in > $@
 
+dist_x11perfcomp_SCRIPTS = 	\
+	fillblnk		\
+	perfboth		\
+	perfratio		\
+	Xmark
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = $(bin_SCRIPTS) x11perfcomp
-
-EXTRA_DIST = x11pcomp.cpp
-
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
 
 .PHONY: ChangeLog INSTALL
 
