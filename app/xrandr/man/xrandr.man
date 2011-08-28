@@ -109,7 +109,7 @@ used along with options that reconfigure the system, progress will be
 reported while executing the configuration changes.
 .IP "\-q, \-\-query"
 When this option is present, or when no configuration changes are requested,
-xrandr will display the current state of the system. 
+xrandr will display the current state of the system.
 .IP "\-\-dryrun"
 Performs all the actions specified except that no changes are made.
 .IP "\-\-nograb"
@@ -269,7 +269,7 @@ rotation.
 Use one of these options to position the output relative to the position of
 another output. This allows convenient tiling of outputs within the screen.
 The position is always computed relative to the new position of the other
-output, so it is not valid to say \-\-output a \-\-left\-of b \-\-output 
+output, so it is not valid to say \-\-output a \-\-left\-of b \-\-output
 b \-\-left\-of a.
 .IP "\-\-set \fIproperty\fP \fIvalue\fP"
 Sets an output property. Integer properties may be specified as a valid
@@ -284,7 +284,7 @@ In normal usage, this option is not required as xrandr tries to make
 sensible choices about which crtc to use with each output. When that fails
 for some reason, this option can override the normal selection.
 .IP "\-\-gamma \fIred\fP:\fIgreen\fP:\fIblue\fP"
-Set the specified floating point values as gamma correction on the crtc 
+Set the specified floating point values as gamma correction on the crtc
 currently attached to this output. Note that you cannot get two different values
 for cloned outputs (i.e.: which share the same crtc) and that switching an output to another crtc doesn't change
 the crtc gamma corrections at all.
@@ -313,12 +313,12 @@ Reflect across the Y axis.
 .SH EXAMPLES
 Sets an output called LVDS to its preferred mode, and on its right put an
 output called VGA to preferred mode of a screen which has been physically rotated clockwise:
-.RS 
+.RS
 xrandr --output LVDS --auto --rotate normal --pos 0x0 --output VGA --auto --rotate left --right-of LVDS
 .RE
 .PP
 Forces to use a 1024x768 mode on an output called VGA:
-.RS 
+.RS
 xrandr --newmode "1024x768" 63.50  1024 1072 1176 1328  768 771 775 798 -hsync +vsync
 .br
 xrandr --addmode VGA 1024x768
@@ -327,26 +327,26 @@ xrandr --output VGA --mode 1024x768
 .RE
 .PP
 Enables panning on a 1600x768 desktop while displaying 1024x768 mode on an output called VGA:
-.RS 
+.RS
 xrandr --fb 1600x768 --output VGA --mode 1024x768 --panning 1600x0
 .RE
 .PP
 Have one small 1280x800 LVDS screen showing a small version of a huge 3200x2000 desktop, and have a
 big VGA screen display the surrounding of the mouse at normal size.
-.RS 
+.RS
 xrandr --fb 3200x2000 --output LVDS --scale 2.5x2.5 --output VGA --pos 0x0 --panning 3200x2000+0+0/3200x2000+0+0/64/64/64/64
 .RE
 .PP
 Displays the VGA output in trapezoid shape so that it is keystone corrected
 when the projector is slightly above the screen:
-.RS 
+.RS
 xrandr --fb 1024x768 --output VGA --transform 1.24,0.16,-124,0,1.24,0,0,0.000316,1
 .RE
 .SH "SEE ALSO"
-Xrandr(3), cvt(1), xkeystone(1), xbacklight(1)
+Xrandr(__libmansuffix__), cvt(__appmansuffix__), xkeystone(__appmansuffix__), xbacklight(__appmansuffix__)
 .SH AUTHORS
 Keith Packard,
 Open Source Technology Center, Intel Corporation.
 and
-Jim Gettys, 
+Jim Gettys,
 Cambridge Research Laboratory, HP Labs, HP.

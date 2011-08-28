@@ -1,3 +1,137 @@
+commit 9e7a1f88de66c65cca1eb732278f76dab125f30e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 29 21:18:23 2011 -0700
+
+    xrandr 1.3.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a187677a93a215ccbba819f98425a6c682a50a6c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon May 9 09:26:34 2011 -0700
+
+    find_mode: Search for the mode closes to the specified rate
+    
+    This was the intention of d9aeb4a7544ad4a33f6f54bc46bff5cdf231a986, but
+    find_mode was still picking the first string match rather than the
+    match with the closest refresh rate.
+    
+    xrandr.c:740:3: warning: Value stored to 'bestDist' is never read
+                   bestDist = dist;
+                   ^          ~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 30e9137bf94f58f66cc6883b0a47eab3159c8be6
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 16:42:50 2011 -0700
+
+    Dead code removal
+    
+    xrandr.c:2978:33: warning: Value stored to 'first' is never read
+                        if (!first) printf (" "); first = False;
+                                                  ^       ~~~~~
+    xrandr.c:2966:30: warning: Value stored to 'first' is never read
+                            if (!first) printf (" "); first = False;
+                                                      ^       ~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 1e48aad532aa19a35efbee24cddca4c43e02afe7
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 16:35:47 2011 -0700
+
+    Dead code removal
+    
+    Removing the redundant setting of format = 32 in the XA_ATOM case.
+    It was already set to that earlier whe it was assigned actual_format.
+    
+    xrandr.c:2770:3: warning: Value stored to 'format' is never read
+                    format=0;
+                    ^      ~
+    xrandr.c:2782:7: warning: Value stored to 'format' is never read
+                        format = actual_format;
+                        ^        ~~~~~~~~~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit dd2a2e7dc918c57aae3df57118042e4362377243
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 16:29:51 2011 -0700
+
+    Mark usage, fatal, and panic as _X_NORETURN
+    
+    xrandr.c:634:13: warning: Access to field 'next' results in a dereference of a null pointer (loaded from variable 'output')
+        output->next = NULL;
+        ~~~~~~  ^
+    xrandr.c:1214:6: warning: Access to field 'mode' results in a dereference of a null pointer (loaded from variable 'crtc_info')
+            if (crtc_info->mode == None)
+                ^~~~~~~~~
+    xrandr.c:1252:5: warning: Array access (via field 'outputs') results in a null pointer dereference
+        crtc->outputs[crtc->noutput++] = output;
+        ^     ~~~~~~~
+    xrandr.c:1638:33: warning: Access to field 'name' results in a dereference of a null pointer (loaded from variable 'output_info')
+            set_name_string (&output_name, output_info->name);
+                                           ^~~~~~~~~~~
+    xrandr.c:1725:10: warning: Access to field 'changes' results in a dereference of a null pointer (loaded from variable 'output')
+                if (output->changes)
+                    ^~~~~~
+    xrandr.c:1848:10: warning: Access to field 'mode_info' results in a dereference of a null pointer (loaded from variable 'relation')
+                if (relation->mode_info == NULL)
+                    ^~~~~~~~
+    xrandr.c:3194:11: warning: Array access (from variable 'mode_shown') results in a null pointer dereference
+                        if (mode_shown[j]) continue;
+                            ^~~~~~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d58d70f6781308de2f905b71a0bfcea1506b0008
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3b18de7f030b89bcbaa54686490c406f73f824d0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7c3b0664e6ee3c3e43724c3922257e1138accd7c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:48 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b94179dd0538c73ff4628d43f4b8f492351ddd9c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 275249f6d162c8ce8a080bef8a2955fd8e72b67c
+Author: Matthias Hopf <mhopf@suse.de>
+Date:   Mon Jan 10 17:56:16 2011 +0100
+
+    Add --current to usage.
+
 commit 2b67c3d80d1e7736cf4fe9f093ab604dc02ad7be
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 11:28:41 2010 -0700
