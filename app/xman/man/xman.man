@@ -29,7 +29,7 @@ customization of \fIxman\fP.
 .SH "OPTIONS"
 .PP
 Xman supports all standard Toolkit command line arguments (see
-\fIX\fP(1)).  The following additional arguments are supported.
+\fIX\fP(__miscmansuffix__)).  The following additional arguments are supported.
 .sp
 .IP "\fB\-helpfile\fP \fIfilename\fP"
 Specifies a helpfile to use other than the default.
@@ -59,9 +59,9 @@ setenv MANPATH /mit/kit/man:/usr/man
 .PP
 By default,
 .I xman
-will search each of the following directories (in each of the directories 
+will search each of the following directories (in each of the directories
 specified in the users MANPATH) for manual pages.  If manual pages exist
-in that directory then they are added to list of manual pages for 
+in that directory then they are added to list of manual pages for
 the corresponding menu item.
 A menu item is only displayed for those sections that actually contain
 manual pages.
@@ -75,46 +75,46 @@ man2	(2) System Calls
 man3	(3) Subroutines
 man4	(4) Devices
 man5	(5) File Formats
-man6	(6) Games       
+man6	(6) Games
 man7	(7) Miscellaneous
 man8	(8) Sys. Administration
 manl	(l) Local
 mann	(n) New
 mano	(o) Old
 
-.fi     
+.fi
 For instance, a user has three directories in her manual path and each
 contain a directory called \fIman3\fP.  All these manual pages will appear
 alphabetically sorted when the user selects the menu item called
-\fI(3) Subroutines\fP.  If there is no directory called \fImano\fP in
-any of the directories in her MANPATH, or there are no manual pages
-in any of the directories called \fImano\fP then no menu item will be
+\fI(__libmansuffix__) Subroutines\fP.  If there is no directory called
+\fImano\fP in any of the directories in her MANPATH, or there are no manual
+pages in any of the directories called \fImano\fP then no menu item will be
 displayed for the section called \fI(o) Old\fP.
-.SH "BSD AND LINUX SYSTEMS"        
+.SH "BSD AND LINUX SYSTEMS"
 .PP
 In newer BSD and Linux systems, \fIXman\fP will search for a file named
 \fI/etc/man.conf\fP which will contain the list of directories containing
-manual pages. See \fIman.conf\fP(5) for a complete description of the file
+manual pages. See \fIman.conf\fP(__filemansuffix__) for a complete description of the file
 format.
-.SH "THE MANDESC FILE"        
+.SH "THE MANDESC FILE"
 .PP
-By using the \fImandesc\fP file a user or system manager is able to 
+By using the \fImandesc\fP file a user or system manager is able to
 more closely control which manual pages will appear in each of the sections
-represented by menu items in the \fISections\fP menu.  This 
+represented by menu items in the \fISections\fP menu.  This
 functionality is only available on a section by section basis, and individual
 manual pages may not be handled in this manner.
-(Although generous use of 
-symbolic links \(em see \fIln\fP(1) \(em will allow
+(Although generous use of
+symbolic links \(em see \fIln\fP(__appmansuffix__) \(em will allow
 almost any configuration you can imagine.)
 .PP
 The format of the mandesc file is a character followed by a label.  The
 character determines which of the sections will be added under this label.
-For instance suppose that you would like to create an extra menu item that 
+For instance suppose that you would like to create an extra menu item that
 contains all programmer subroutines.  This label should contain all manual
 pages in both sections two and three.  The \fImandesc\fP file
 would look like this:
-.nf     
-        
+.nf
+
 2Programmer Subroutines
 3Programmer Subroutines
 
@@ -156,8 +156,8 @@ o(o) Old
 .fi
 Xman will read any section that is of the from \fIman<character>\fP, where
 <character> is an upper or lower case letter (they are treated distinctly) or
-a numeral (0-9).  Be warned, however, that man(1) and catman(8) will 
-not search directories that are non-standard.
+a numeral (0-9).  Be warned, however, that man(__appmansuffix__) and
+catman(__adminmansuffix__) will not search directories that are non-standard.
 .SH WIDGETS
 In order to specify resources, it is useful to know the hierarchy of
 the widgets which compose \fIxman\fR.  In the notation below,
@@ -189,10 +189,10 @@ Xman xman	\fI(This widget is never used)\fP
 				MenuButton  sections
 				Label  manualBrowser
 			Viewport  directory
-				List  directory	
-				List  directory	
+				List  directory
+				List  directory
 				.
-				. (one for each section, 
+				. (one for each section,
 				.  created on the fly)
 				.
 			ScrollByLine  manualPage
@@ -285,7 +285,7 @@ The cursor to use in the search entry text widget.
 \fBpointerColor\fP (Class \fBForeground\fP)
 This is the color of all the cursors (pointers) specified above.  The
 name was chosen to be compatible with xterm.
-.TP 18 
+.TP 18
 \fBhelpFile\fP  (Class \fBFile\fP)
 Use this rather than the system default helpfile.
 .TP 18
@@ -295,14 +295,14 @@ the help, quit and manual page buttons) or a manual page is put on the screen
 at start-up.  The default is true.
 .TP 18
 \fBverticalList\fP (Class \fBBoolean\fP)
-Either `true' or `false,' determines whether the directory listing is 
+Either `true' or `false,' determines whether the directory listing is
 vertically or horizontally organized.  The default is horizontal (false).
 .SH "GLOBAL ACTIONS"
 \fIXman\fP defines all user interaction through global actions.  This allows
 the user to modify the translation table of any widget, and bind any event
 to the new user action.  The list of actions supported by \fIxman\fP are:
 .TP 1.5i
-.B GotoPage(\fIpage\fB) 
+.B GotoPage(\fIpage\fB)
 When used in a manual page display window this will allow the user to
 move between a directory and manual page display.  The \fIpage\fP argument can
 be either \fBDirectory\fP or \fBManualPage\fP.
@@ -338,7 +338,7 @@ associated with it.
 .TP 1.5i
 .B SaveFormattedPage(\fIaction\fP)
 This action can only be used in the \fBlikeToSave\fP popup widget, and
-tells xman whether to \fBSave\fP or \fBCancel\fP a save of the 
+tells xman whether to \fBSave\fP or \fBCancel\fP a save of the
 manual page that has just been formatted.
 .TP 1.5i
 .B ShowVersion()
@@ -357,13 +357,13 @@ creates temporary files in /tmp for all unformatted man pages and all apropos
 searches.
 .SH "SEE ALSO"
 .IR X (__miscmansuffix__),
-.IR man (1),
-.IR apropos (1),
+.IR man (__appmansuffix__),
+.IR apropos (__appmansuffix__),
 .IR catman (8),
 .I "Athena Widget Set"
 .SH ENVIRONMENT
 .TP 1.5i
-.B DISPLAY 
+.B DISPLAY
 the default host and display to use.
 .TP 1.5i
 .B MANPATH

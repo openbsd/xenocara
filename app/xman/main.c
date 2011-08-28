@@ -285,12 +285,12 @@ AdjustDefResources(void)
 
   for (i = 0; i < sizeof(my_resources)/sizeof(XtResource); i++) {
     if (!strcmp(my_resources[i].resource_name, "helpFile")) {
-      if (!(my_resources[i].default_addr =
-              malloc(strlen(xwinhome) + sizeof("/lib/X11/xman.help")))) {
+      char filename[PATH_MAX];
+      snprintf(filename, sizeof(filename), "%s/lib/X11/xman.help", xwinhome);
+      if (!(my_resources[i].default_addr = strdup(filename))) {
         fprintf(stderr, "malloc failure\n");
         exit(EXIT_FAILURE);
       }
-      sprintf(my_resources[i].default_addr, "%s/lib/X11/xman.help", xwinhome);
     }
   }
 }

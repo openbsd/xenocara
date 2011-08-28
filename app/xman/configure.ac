@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xman], [1.1.1],
+AC_INIT([xman], [1.1.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xman])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
@@ -33,7 +33,7 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 AC_CANONICAL_HOST
 
@@ -41,14 +41,14 @@ AC_CHECK_FUNC([mkstemp],
    AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the "mkstemp" function.]))
 
 AC_ARG_WITH(helpdir,
-        AC_HELP_STRING([--with-helpdir=<path>],
+        AS_HELP_STRING([--with-helpdir=<path>],
                        [Set default directory for xman.help (default: ${datadir}/X11)]),
         [HELPDIR="$withval"],
         [HELPDIR=${datadir}/X11])
 AC_SUBST([HELPDIR])
 
 AC_ARG_WITH(sysmanpath,
-        AC_HELP_STRING([--with-sysmanpath=<path>],
+        AS_HELP_STRING([--with-sysmanpath=<path>],
                        [Set default system man page search path]),
         [SYSMANPATH="$withval"], [])
 if test x$SYSMANPATH != x; then
@@ -57,7 +57,7 @@ if test x$SYSMANPATH != x; then
 fi
 
 AC_ARG_WITH(localmanpath,
-        AC_HELP_STRING([--with-localmanpath=<path>],
+        AS_HELP_STRING([--with-localmanpath=<path>],
                        [Set default local man page search path]),
         [LOCALMANPATH="$withval"], [])
 if test x$LOCALMANPATH != x; then
@@ -66,10 +66,10 @@ if test x$LOCALMANPATH != x; then
 fi
 
 # Obtain compiler/linker options from depedencies
-PKG_CHECK_MODULES(XMAN, xproto xaw7 xmu xt)
+PKG_CHECK_MODULES(XMAN, xproto xaw7 xt)
 
 AC_ARG_WITH(manconfig,
-        AC_HELP_STRING([--with-manconfig=<filename>],
+        AS_HELP_STRING([--with-manconfig=<filename>],
                        [Set default system man configuration file]),
         [MANCONF="$withval"], [])
 if test x$MANCONF = x; then
@@ -132,7 +132,7 @@ fi
 PKG_CHECK_MODULES(APPDEFS, xt)
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
-	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	AS_HELP_STRING([--with-appdefaultdir=<pathname>],
 	  [specify directory for app-defaults files (default is autodetected)]),
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
@@ -141,4 +141,8 @@ if test "x$RELEASE_VERSION" != "x"; then
 	AC_DEFINE_UNQUOTED([RELEASE_VERSION], "$RELEASE_VERSION", 
 		[Release version string if set])
 fi
-AC_OUTPUT([Makefile])
+
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

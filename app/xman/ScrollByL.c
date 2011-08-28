@@ -40,7 +40,6 @@ from the X Consortium.
 #include <X11/StringDefs.h>
 
 #include <X11/Xaw/Scrollbar.h>
-#include <X11/Xmu/Misc.h>
 
 #include "ScrollByLP.h"
 
@@ -401,7 +400,8 @@ Boolean force_redisp)
   }
   else {
     max_lines = sblw->scroll.lines - (int)w->core.height / sblw->scroll.font_height;
-    AssignMax(max_lines, 0);
+    if (max_lines < 0)
+      max_lines = 0;
 
     if ( new_line > max_lines ) {
       new_line = max_lines;

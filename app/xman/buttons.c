@@ -522,7 +522,7 @@ CreateSectionMenu(ManpageGlobals * man_globals, Widget parent)
   for (i = 0 ; i < sections ; i ++) {
     num_args = 0;
     XtSetArg(args[num_args], XtNlabel, manual[i].blabel); num_args++;
-    sprintf(entry_name, "section%d", i);
+    snprintf(entry_name, sizeof(entry_name), "section%d", i);
       
     entry = XtCreateManagedWidget(entry_name, smeBSBObjectClass,
 				  menu, args, num_args);
@@ -579,7 +579,7 @@ MakeDirectoryBox(ManpageGlobals *man_globals, Widget parent, Widget *dir_disp, i
     return;
 
   name = manual[section].blabel;   /* Set the section name */
-  sprintf(label_name,"Directory of: %s",name);
+  snprintf(label_name, sizeof(label_name), "Directory of: %s", name);
   man_globals->section_name[section] = StrAlloc(label_name);
 
   num_args = 0;
@@ -745,7 +745,8 @@ ConvertNamesToWidgets(Widget parent, char ** names)
     if (*temp_ids == NULL) {
       char error_buf[BUFSIZ];
     
-      sprintf(error_buf, "Could not find widget named '%s'", *names);
+      snprintf(error_buf, sizeof(error_buf),
+	       "Could not find widget named '%s'", *names);
       PrintError(error_buf);
       XtFree((char *)ids);
       return(NULL);

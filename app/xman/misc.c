@@ -90,7 +90,7 @@ PopdownWarning(Widget w, XtPointer client, XtPointer call)
 }
 
 void
-PopupWarning(ManpageGlobals * man_globals, char * string)
+PopupWarning(ManpageGlobals * man_globals, const char * string)
 {
   int n;
   Arg wargs[3];
@@ -263,7 +263,7 @@ FindManualFile(ManpageGlobals * man_globals, int section_num, int entry_num)
 	  return(file);
 #endif
   {
-    sprintf(filename, "%s/%s%s/%s.%s", path, CAT,
+    snprintf(filename, sizeof(filename), "%s/%s%s/%s.%s", path, CAT,
 	    section + len_cat, page, BZIP2_EXTENSION);
     if ( (file = Uncompress(man_globals, filename)) != NULL)
       return(file);
@@ -271,7 +271,7 @@ FindManualFile(ManpageGlobals * man_globals, int section_num, int entry_num)
 #endif
 #ifdef LZMA_EXTENSION
   {
-    sprintf(filename, "%s/%s%s/%s.%s", path, CAT,
+    snprintf(filename, sizeof(filename), "%s/%s%s/%s.%s", path, CAT,
 	    section + len_cat, page, LZMA_EXTENSION);
     if ( (file = Uncompress(man_globals, filename)) != NULL)
       return(file);
@@ -320,7 +320,7 @@ FindManualFile(ManpageGlobals * man_globals, int section_num, int entry_num)
 static FILE *
 Uncompress(ManpageGlobals * man_globals, char * filename)
 {
-  char tmp_file[BUFSIZ], error_buf[BUFSIZ];
+  char tmp_file[BUFSIZ];
   FILE * file;
 
 #ifndef HAS_MKSTEMP
@@ -328,15 +328,13 @@ Uncompress(ManpageGlobals * man_globals, char * filename)
     return(NULL);
 
   else if ((file = fopen(tmp_file, "r")) == NULL) {
-      sprintf(error_buf, "Something went wrong in retrieving the %s",
-	      "uncompressed manual page try cleaning up /tmp.");
-      PopupWarning(man_globals, error_buf);
+      PopupWarning(man_globals, "Something went wrong in retrieving the "
+		   "uncompressed manual page try cleaning up /tmp.");
   }
 #else
   if (!UncompressNamed(man_globals, filename, tmp_file, &file)) {
-      sprintf(error_buf, "Something went wrong in retrieving the %s",
-	      "uncompressed manual page try cleaning up /tmp.");
-      PopupWarning(man_globals, error_buf);
+      PopupWarning(man_globals, "Something went wrong in retrieving the "
+		   "uncompressed manual page try cleaning up /tmp.");
       return(NULL);
   }
 #endif
@@ -406,13 +404,13 @@ UncompressNamed(ManpageGlobals * man_globals, char * filename, char * output,
 #ifdef BZIP2_EXTENSION
   if (streq(filename + strlen(filename) - strlen(BZIP2_EXTENSION),
 	    BZIP2_EXTENSION))
-    sprintf(cmdbuf, BUNZIP2_FORMAT, filename, output);
+    snprintf(cmdbuf, sizeof(cmdbuf), BUNZIP2_FORMAT, filename, output);
   else
 #endif
 #ifdef LZMA_EXTENSION
   if (streq(filename + strlen(filename) - strlen(LZMA_EXTENSION),
 	    LZMA_EXTENSION))
-    sprintf(cmdbuf, UNLZMA_FORMAT, filename, output);
+    snprintf(cmdbuf, sizeof(cmdbuf), UNLZMA_FORMAT, filename, output);
   else
 #endif
   snprintf(cmdbuf, sizeof(cmdbuf), UNCOMPRESS_FORMAT, filename, output);
@@ -583,8 +581,7 @@ Format(ManpageGlobals * man_globals, char * entry)
 #else
   /* Handle more flexible way of specifying the formatting pipeline */
   if (! ConstructCommand(cmdbuf, path, filename, man_globals->tempfile)) {
-     sprintf(error_buf, "Constructed command was too long!");
-     PopupWarning(man_globals, error_buf);
+     PopupWarning(man_globals, "Constructed command was too long!");
      file = NULL;
   }
   else
@@ -599,9 +596,8 @@ Format(ManpageGlobals * man_globals, char * entry)
   else {
 #ifndef HAS_MKSTEMP
     if ((file = fopen(man_globals->tempfile,"r")) == NULL) {
-      sprintf(error_buf, "Something went wrong in retrieving the %s",
-	      "temp file, try cleaning up /tmp");
-      PopupWarning(man_globals, error_buf);
+      PopupWarning(man_globals, "Something went wrong in retrieving the "
+		   "temp file, try cleaning up /tmp");
     }
     else {
 #endif
@@ -697,7 +693,7 @@ ConstructCommand(cmdbuf, path, filename, tempfile)
    FILE *file;
    char fmtbuf[128];
    int gotfmt = 0;             /* set to 1 if we got a directive from source */
-   char *fname = NULL;
+   char fname[PATH_MAX];
 #ifdef __UNIXOS2__
    int i;
 #endif
@@ -712,12 +708,9 @@ ConstructCommand(cmdbuf, path, filename, tempfile)
        * use system to get the thing to a known absoute filename.
        */
       if (filename[0] == '/') {
-         fname = filename;
+         snprintf(fname, sizeof(fname), "%s", filename);
       } else {
-         fname = malloc(strlen(path) + 1 + strlen(filename) + 1);
-         if (!fname)
-            return FALSE;
-         sprintf(fname, "%s/%s", path, filename);
+         snprintf(fname, sizeof(fname), "%s/%s", path, filename);
       }
       if ((file = fopen(fname, "r")) &&
           (fgets(fmtbuf, sizeof(fmtbuf), file)) &&
@@ -731,8 +724,6 @@ ConstructCommand(cmdbuf, path, filename, tempfile)
             gotfmt++;
          }
       }
-      if (fname && fname != filename)
-         free(fname);
       if (!gotfmt)                                /* not there or some error */
       {
          fmt = getenv("MANROFFSEQ");
@@ -896,7 +887,7 @@ UncompressUnformatted(ManpageGlobals * man_globals, char * entry,
 
 #ifdef BZIP2_EXTENSION
  {
-    sprintf(input, "%s.%s", filename, BZIP2_EXTENSION);
+    snprintf(input, sizeof(input), "%s.%s", filename, BZIP2_EXTENSION);
 #ifndef HAS_MKSTEMP
     if ( UncompressNamed(man_globals, input, filename) ) {
 #else
@@ -905,8 +896,9 @@ UncompressUnformatted(ManpageGlobals * man_globals, char * entry,
       man_globals->compress = TRUE;
       man_globals->gzip = FALSE;
       man_globals->bzip2 = TRUE;
-      sprintf(man_globals->save_file, "%s/%s%s/%s.%s", path,
-	      CAT, section + len_cat, page, BZIP2_EXTENSION);
+      snprintf(man_globals->save_file, sizeof(man_globals->save_file),
+	       "%s/%s%s/%s.%s", path, CAT, section + len_cat, page,
+	       BZIP2_EXTENSION);
       return(TRUE);
     }
   }
@@ -914,7 +906,7 @@ UncompressUnformatted(ManpageGlobals * man_globals, char * entry,
 
 #ifdef LZMA_EXTENSION
  {
-    sprintf(input, "%s.%s", filename, LZMA_EXTENSION);
+    snprintf(input, sizeof(input), "%s.%s", filename, LZMA_EXTENSION);
 #ifndef HAS_MKSTEMP
     if ( UncompressNamed(man_globals, input, filename) ) {
 #else
@@ -923,8 +915,9 @@ UncompressUnformatted(ManpageGlobals * man_globals, char * entry,
       man_globals->compress = TRUE;
       man_globals->gzip = FALSE;
       man_globals->lzma = TRUE;
-      sprintf(man_globals->save_file, "%s/%s%s/%s.%s", path,
-	      CAT, section + len_cat, page, LZMA_EXTENSION);
+      snprintf(man_globals->save_file, sizeof(man_globals->save_file),
+	       "%s/%s%s/%s.%s", path, CAT, section + len_cat, page,
+	       LZMA_EXTENSION);
       return(TRUE);
     }
   }
@@ -1002,7 +995,7 @@ UncompressUnformatted(ManpageGlobals * man_globals, char * entry,
 
 #ifdef BZIP2_EXTENSION
   {
-    sprintf(input, "%s.%s", filename, BZIP2_EXTENSION);
+    snprintf(input, sizeof(input), "%s.%s", filename, BZIP2_EXTENSION);
 #ifndef HAS_MKSTEMP
     if ( UncompressNamed(man_globals, input, filename) ) {
 #else
@@ -1010,8 +1003,9 @@ UncompressUnformatted(ManpageGlobals * man_globals, char * entry,
 #endif	
       man_globals->compress = TRUE;
       man_globals->gzip = TRUE;
-      sprintf(man_globals->save_file, "%s/%s%s/%s.%s", path,
-	      CAT, section + len_cat, page, BZIP2_EXTENSION);
+      snprintf(man_globals->save_file, sizeof(man_globals->save_file),
+	       "%s/%s%s/%s.%s", path, CAT, section + len_cat, page,
+	       BZIP2_EXTENSION);
       return(TRUE);
     }
   }
@@ -1019,7 +1013,7 @@ UncompressUnformatted(ManpageGlobals * man_globals, char * entry,
 
 #ifdef LZMA_EXTENSION
   {
-    sprintf(input, "%s.%s", filename, LZMA_EXTENSION);
+    snprintf(input, sizeof(input), "%s.%s", filename, LZMA_EXTENSION);
 #ifndef HAS_MKSTEMP
     if ( UncompressNamed(man_globals, input, filename) ) {
 #else
@@ -1027,8 +1021,9 @@ UncompressUnformatted(ManpageGlobals * man_globals, char * entry,
 #endif	
       man_globals->compress = TRUE;
       man_globals->lzma = TRUE;
-      sprintf(man_globals->save_file, "%s/%s%s/%s.%s", path,
-	      CAT, section + len_cat, page, LZMA_EXTENSION);
+      snprintf(man_globals->save_file, sizeof(man_globals->save_file),
+	       "%s/%s%s/%s.%s", path, CAT, section + len_cat, page,
+	       LZMA_EXTENSION);
       return(TRUE);
     }
   }

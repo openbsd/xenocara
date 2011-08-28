@@ -187,10 +187,10 @@ char * path)
   int numSections = sizeof(SectionNames) / sizeof(SectionNames[0]);
 
   for (i=0; i < numSections; i++) {
-    sprintf(file, "%s%s", SEARCHDIR, SectionNames[i].suffix);
+    snprintf(file, sizeof(file), "%s%s", SEARCHDIR, SectionNames[i].suffix);
     AddNewSection(list, path, file, SectionNames[i].name, TRUE);
 #ifdef SEARCHOTHER
-    sprintf(file, "%s%s", SEARCHOTHER, SectionNames[i].suffix);
+    snprintf(file, sizeof(file), "%s%s", SEARCHOTHER, SectionNames[i].suffix);
     AddNewSection(list, path, file, SectionNames[i].name, TRUE);
 #endif
   }
@@ -251,7 +251,7 @@ char *path)
     char *message = *p++;
     int flags = (int) *p++;
     while (*p != NULL) {
-      sprintf(file, "%s%s", SEARCHDIR, *p++);
+      snprintf(file, sizeof(file), "%s%s", SEARCHDIR, *p++);
       AddNewSection(list, path, file, message, flags);
     }
     p++;

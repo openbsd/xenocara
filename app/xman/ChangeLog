@@ -1,3 +1,119 @@
+commit 0824a8ce82e053723b661bf1c2864e52eebac917
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 29 20:53:53 2011 -0700
+
+    xman 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b8e4ebb00593d8b58815921cf5eb2d1e8a3738a7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 4 18:16:48 2011 -0800
+
+    Remove xmu dependency by inlining AssignMax macro
+    
+    No calls from libXmu were used, just one instance of one simple macro
+    that made the code harder to understand, so stop requiring it and
+    linking directly to it.   (Of course, libXaw still depends on it, so
+    it will still be loaded indirectly.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit ca7ff690136a35b8dad90271db5966cc9614b1c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 23:10:22 2011 -0800
+
+    Use snprintf to PATH_MAX sized buffers to construct filenames
+    
+    Simpler than trying to calculate the size to malloc.
+    
+    Could have used XtAsprintf() but didn't seem worth the dependency
+    for two simple calls with a standard, well-known maximum size.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit 48709d1ed5002255fa322cb3f0c4b8d5a5a7f3de
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 22:38:08 2011 -0800
+
+    Convert more sprintf calls to snprintf
+    
+    Previous conversion seems to have missed many calls right next to ones
+    that were converted to snprintf already
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit 35265840bba5aa4098b2f12522ef4c80b17c604a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 22:35:35 2011 -0800
+
+    Don't need to copy static strings to a buffer before calling PopupWarning
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit 72817de248a160ae84532662268b380b701908e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 22:24:47 2011 -0800
+
+    Mark string argument to PopupWarning as a const char *
+    
+    PopupWarning just copies the string into the message it displays,
+    via snprintf, and never writes to it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit 382d261e50ac976001376c3a660fba0a55faad6d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 14:18:09 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 461b7068c522a9a3a92cd64ac1b664d079803807
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 14:12:46 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d7cb024227f8df08840937335ddf3f6f1bc95bef
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a2b1b62a8603e21f4944ed55951d8682964f11b7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit e62b0d9d0515221b5b82e5dbf63f10be8e2b2f1d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit bee5d67ab054decda85e2ba2fc70cf8a53b74fcd
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 17:31:47 2010 -0700

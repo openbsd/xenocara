@@ -262,7 +262,7 @@ ManpageGlobals * GetGlobals(Widget w);
 void AddCursor(Widget w, Cursor cursor);
 void ChangeLabel(Widget w, char * str);
 void OpenFile(ManpageGlobals * man_globals, FILE * file);
-void PopupWarning(ManpageGlobals * man_globals, char * string);
+void PopupWarning(ManpageGlobals * man_globals, const char * string);
 void PositionCenter(Widget widget, int x, int y, int above, int left, int v_space, int h_space);
 void PrintError(char * string);
 void RemoveGlobals(Widget w);
