@@ -1,3 +1,104 @@
+commit 1e3ae11d125f5146dd6821161e17522bae702e71
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 21:10:22 2011 -0700
+
+    xset 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6572d75b102b463c974a5969997fc646d36a1797
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 15 18:12:36 2011 -0700
+
+    Remove direct call to Solaris nanosleep system call
+    
+    Attempted to workaround nanosleep() being only in POSIX realtime
+    extensions library, but both usleep() & nanosleep() are in libc now,
+    so not useful anymore, nor was it ever officially supported.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9c55efa1b36173aa7d768a55990ed7fe2c4f6034
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 15 18:07:57 2011 -0700
+
+    Mark error() & usage() functions as _X_NORETURN
+    
+    Requires xproto >= 7.0.17
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8093ecf2ecd112914b9399bab0c413369c9057ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 15 18:02:33 2011 -0700
+
+    Give better error for "xset dpms force" without argument
+    
+    Changes from "xset:  unknown option force" to
+    "xset:  missing argument to dpms force"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 03050fcce76cd3238f1cd15fb2f2298abda53727
+Author: Eitan Adler <lists@eitanadler.com>
+Date:   Fri Jan 28 00:06:20 2011 -0500
+
+    Print pixel colors in hex not decimal
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 394f55099bbca6a23073ca64d97973bdc2287ce7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:57 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5d713348190113b557bf1d721f27eeb467abf44a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:37 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3797be0290276bcf7d71bee7c10630a098e82059
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 84c928e4a838458714d4abd5dafa56e3cf5e0ccb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:12:08 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_LIBS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 75cf4ae928faa34b31cbebbcb519da9272f5e132
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:33:48 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 8a3ad532fc8e00ea5066355a783cb270315596fe
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Nov 10 20:02:19 2010 -0800

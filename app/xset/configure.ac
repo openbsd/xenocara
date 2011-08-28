@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xset], [1.2.1],
+AC_INIT([xset], [1.2.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xset])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -41,7 +41,7 @@ XORG_DEFAULT_OPTIONS
 AC_CHECK_FUNCS([usleep])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XSET, xmuu)
+PKG_CHECK_MODULES(XSET, [xproto >= 7.0.17 xmuu])
 
 # This is used below to allow <X11/Xlib.h> to be found
 PKG_CHECK_MODULES(SET_X11, x11)
@@ -58,7 +58,7 @@ PKG_CHECK_MODULES(SET_XKB, x11,
 	AC_CHECK_HEADERS([X11/XKBlib.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
-AC_ARG_WITH(xf86misc, AC_HELP_STRING([--without-xf86misc],[Disable xf86misc support.]),
+AC_ARG_WITH(xf86misc, AS_HELP_STRING([--without-xf86misc],[Disable xf86misc support.]),
                 [USE_XF86MISC="$withval"], [USE_XF86MISC="yes"])
 if test "x$USE_XF86MISC" != "xno" ; then
 	PKG_CHECK_MODULES(SET_XF86MISC, xxf86misc,
@@ -72,7 +72,7 @@ else
         echo "without xf86misc"
 fi
 
-AC_ARG_WITH(fontcache, AC_HELP_STRING([--without-fontcache],[Disable fontcache support.]),
+AC_ARG_WITH(fontcache, AS_HELP_STRING([--without-fontcache],[Disable fontcache support.]),
                 [USE_XFONTCACHE="$withval"], [USE_XFONTCACHE="yes"])
 if test "x$USE_XFONTCACHE" != "xno" ; then
 	PKG_CHECK_MODULES(SET_FONTCACHE, xfontcache,
@@ -87,7 +87,8 @@ fi
 XSET_CFLAGS="$XSET_CFLAGS $SET_XEXT_CFLAGS $SET_XKB_CFLAGS $SET_XF86MISC_CFLAGS $SET_FONTCACHE_CFLAGS"
 XSET_LIBS="$XSET_LIBS $SET_XEXT_LIBS $SET_XKB_LIBS $SET_XF86MISC_LIBS $SET_FONTCACHE_LIBS"
 
-AC_SUBST(XSET_CFLAGS)
-AC_SUBST(XSET_LIBS)
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

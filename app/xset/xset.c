@@ -78,11 +78,6 @@ in this Software without prior written authorization from The Open Group.
 #  endif
 #  undef BOOL
 # endif
-# ifndef HAVE_USLEEP
-#  if defined(SVR4) && defined(sun)
-#   include <sys/syscall.h>
-#  endif
-# endif
 #endif /* DPMSExtension */
 
 #ifdef XF86MISC
@@ -151,8 +146,8 @@ static void set_lock(Display *dpy, Bool onoff);
 static char *on_or_off(int val, int onval, char *onstr,
 		       int offval, char *offstr, char buf[]);
 static void query(Display *dpy);
-static void usage(char *fmt, ...);
-static void error(char *message);
+static void usage(char *fmt, ...) _X_NORETURN;
+static void error(char *message) _X_NORETURN;
 static int local_xerror(Display *dpy, XErrorEvent *rep);
 
 #ifdef XF86MISC
@@ -555,8 +550,9 @@ main(int argc, char *argv[])
 		    DPMSEnable(dpy);
 		    DPMSSetTimeouts(dpy, standby_timeout, suspend_timeout,
 			off_timeout);
-		} else if (i + 1 < argc && strcmp(arg, "force") == 0) {
-		    i++;
+		} else if (strcmp(arg, "force") == 0) {
+		    if (++i >= argc)
+			usage("missing argument to dpms force", NULL);
 		    arg = argv[i];
 		    /*
 		     * The calls to usleep below are necessary to
@@ -573,18 +569,6 @@ main(int argc, char *argv[])
 # define Usleep(us) usleep((us))
 #else
 #ifdef SVR4
-# ifdef sun
-/* Anything to avoid linking with -lposix4 */
-#  define Usleep(us) { \
-		struct ts { \
-			long	tv_sec; \
-			long	tv_nsec; \
-		} req; \
-		req.tv_sec = 0; \
-		req.tv_nsec = (us) * 1000;\
-		syscall(SYS_nanosleep, &req, NULL); \
-	}
-# endif
 # ifdef sgi
 #  define Usleep(us) sginap((us) / 1000)
 # endif
@@ -1454,7 +1438,7 @@ query(Display *dpy)
     printf("  timeout:  %d    cycle:  %d\n", timeout, interval);
 
     printf("Colors:\n");
-    printf("  default colormap:  0x%lx    BlackPixel:  %ld    WhitePixel:  %ld\n",
+    printf("  default colormap:  0x%lx    BlackPixel:  0x%lx    WhitePixel:  0x%lx\n",
 	   DefaultColormap(dpy, scr), BlackPixel(dpy, scr), WhitePixel(dpy,
 								       scr));
 

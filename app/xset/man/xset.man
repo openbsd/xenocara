@@ -189,7 +189,7 @@ abbreviated to 'm'. Of course, it applies to most pointing devices, not just
 mice. The parameters for the pointing device are `acceleration' and
 `threshold'. The acceleration can be specified as an integer, or as a simple
 fraction. Threshold is just an integer. The setting is applied to all connected
-pointing devices. xinput(1) should be used if you need device-specific settings.
+pointing devices. xinput(__appmansuffix__) should be used if you need device-specific settings.
 .PP
 By default the pointer (the on-screen representation of the pointing device)
 will go `acceleration' times as fast when the device travels more than
@@ -287,7 +287,7 @@ These settings will be reset to default values when you log out.
 Note that not all X implementations are guaranteed to honor all of these
 options.
 .SH "SEE ALSO"
-X(__miscmansuffix__), Xserver(1), xmodmap(1), xrdb(1), xsetroot(1), xinput(1)
+X(__miscmansuffix__), Xserver(__appmansuffix__), xmodmap(__appmansuffix__), xrdb(__appmansuffix__), xsetroot(__appmansuffix__), xinput(__appmansuffix__)
 .SH AUTHOR
 Bob Scheifler, MIT Laboratory for Computer Science
 .br
