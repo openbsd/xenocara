@@ -86,7 +86,9 @@ Create_Thunk_List (void)
 {
     thunk *tptr;
 
-    tptr = (thunk *) Malloc(sizeof(thunk));
+    tptr = malloc(sizeof(thunk));
+    if (!tptr)
+	Fatal_Error("Out of memory!");
 
     tptr->thunk_count = 0;
 
@@ -108,7 +110,7 @@ Add_Thunk (thunk *list, thunk t)
 
     i = list->thunk_count;
 
-    list = (thunk *) realloc(list, (i+1)*sizeof(thunk));
+    list = realloc(list, (i+1)*sizeof(thunk));
     if (!list)
 	Fatal_Error("Out of memory!");
 
@@ -121,20 +123,6 @@ Add_Thunk (thunk *list, thunk t)
 /*
  * Misc. routines
  */
-
-static char *
-Copy_String (const char *string)
-{
-    char *new;
-    int length;
-
-    length = strlen(string) + 1;
-
-    new = (char *) Malloc(length);
-    memcpy(new, string, length);
-
-    return new;
-}
 
 static int
 Read_Char (FILE *stream)
@@ -186,7 +174,10 @@ Read_Quoted (FILE *stream)
     }
     ptr++[0] = '\0';
 
-    return Copy_String(_large_buffer);
+    ptr = strdup(_large_buffer);
+    if (!ptr)
+	Fatal_Error("Out of memory!");
+    return ptr;
 }
 
 /*
@@ -296,7 +287,7 @@ Lookup_Formats (Atom atom, const char **format, const char **dformat)
 static void
 Add_Mapping (Atom atom, const char *format, const char *dformat)
 {
-    thunk t;
+    thunk t = {0};
 
     if (!_property_formats)
 	_property_formats = Create_Thunk_List();
@@ -555,7 +546,9 @@ Read_Mappings (FILE *stream)
 	    Fatal_Error("Bad format file format.");
 
 	atom = Parse_Atom(name, False);
-	format = Copy_String(format_buffer);
+	format = strdup(format_buffer);
+	if (!format)
+	    Fatal_Error("Out of memory!");
 
 	Read_White_Space(stream);
 	dformat = D_DFORMAT;
@@ -736,7 +729,9 @@ Format_Len_String (const char *string, int len)
     char *data;
     const char *result;
 
-    data = (char *) Malloc(len+1);
+    data = malloc(len+1);
+    if (!data)
+	Fatal_Error("Out of memory!");
 
     memcpy(data, string, len);
     data[len] = '\0';
@@ -782,7 +777,9 @@ Format_Icons (const unsigned long *icon, int len)
 	alloced += 80;				/* For the header */
 	alloced += (width*4 + 8) * height;	/* For the rows (plus padding) */
 	
-	result = Realloc (result, alloced);
+	result = realloc (result, alloced);
+	if (!result)
+	    Fatal_Error("Out of memory!");
 	tail = &result[offset];
 
 	if (end - icon < width * height)
@@ -938,7 +935,7 @@ Format_Len_Text (const char *string, int len, Atom encoding)
 static int
 is_valid_utf8 (const char *string, int len)
 {
-    unsigned long codepoint;
+    unsigned long codepoint = 0;
     int rem, i;
     unsigned char c;
 
@@ -1002,11 +999,15 @@ Format_Len_Unicode (const char *string, int len)
 	    error = "<Invalid UTF-8 string: Tail too short> "; break;
 	  case UTF8_LONG_TAIL:
 	    error = "<Invalid UTF-8 string: Tail too long> "; break;
+	  default:
+	    error = "<Invalid UTF-8 string: Unknown error>"; break;
 	}
 
 	result = Format_Len_String(string, len);
 	len2 = strlen(result);
-	data = (char *) Malloc(len2+1);
+	data = malloc(len2+1);
+	if (!data)
+	    Fatal_Error("Out of memory!");
 	memcpy(data, result, len2+1);
 
 	memcpy(_formatting_buffer, error, strlen(error)+1);
@@ -1019,7 +1020,9 @@ Format_Len_Unicode (const char *string, int len)
     if (!is_utf8_locale())
 	return Format_Len_String(string, len);
 
-    data = (char *) Malloc(len+1);
+    data = malloc(len+1);
+    if (!data)
+	Fatal_Error("Out of memory!");
 
     memcpy(data, string, len);
     data[len] = '\0';
@@ -1371,7 +1374,7 @@ static thunk *
 Break_Down_Property (const char *pointer, int length, Atom type, const char *format, int size)
 {
     thunk *thunks;
-    thunk t;
+    thunk t = {0};
     int i;
     char format_char;
 
@@ -1545,7 +1548,7 @@ static thunk *
 Handle_Prop_Requests (int argc, char **argv)
 {
     char *format, *dformat, *prop;
-    thunk *thunks, t;
+    thunk *thunks, t = {0};
 
     /* if no prop referenced, by default list all properties for given window */
     if (!argc) {
@@ -1944,7 +1947,7 @@ main (int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp(argv[0], "-remove")) {
-	    thunk t;
+	    thunk t = {0};
 	    if (++argv, --argc == 0) usage();
 	    t.propname = argv[0];
 	    if (remove_props == NULL) remove_props = Create_Thunk_List();
@@ -1952,7 +1955,7 @@ main (int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp(argv[0], "-set")) {
-	    thunk t;
+	    thunk t = {0};
 	    if (argc < 3) usage();
 	    t.propname = argv[1];
 	    t.extra_value = argv[2];

@@ -21,12 +21,12 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xprop], [1.2.0],
+AC_INIT([xprop], [1.2.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xprop])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -37,8 +37,11 @@ XORG_DEFAULT_OPTIONS
 AC_CHECK_HEADERS([wchar.h wctype.h langinfo.h])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XPROP, x11)
+PKG_CHECK_MODULES(XPROP, [x11 xproto >= 7.0.17])
 
 XORG_WITH_LINT
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

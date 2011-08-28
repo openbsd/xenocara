@@ -34,6 +34,122 @@ Date:   Thu Dec 6 05:30:43 2007 -0500
     
     Signed-off-by: James Cloos <cloos@jhcloos.com>
 
+commit d59bc81ec9af03c172e4894eb7f3bad4c76dc34b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 29 21:09:22 2011 -0700
+
+    xprop 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 66240b78d9ee8d4bbdfb3a5ccf9d87058cddf0de
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 21:47:06 2011 -0700
+
+    Make error handlint more robust in Format_Len_Unicode
+    
+    xprop.c:1011:2: warning: Function call argument is an uninitialized value
+            memcpy(_formatting_buffer, error, strlen(error)+1);
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    xprop.c:1011:36: note: instantiated from:
+            memcpy(_formatting_buffer, error, strlen(error)+1);
+                                              ^      ~~~~~
+    
+    Found-by: clang static analysis
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 433f43ec71447c447cdc6142ab5829a8eea258a7
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 17:12:04 2011 -0700
+
+    Fix uninitialize values warnings in static analysis
+    
+    xprop.c:299:25: warning: Passed-by-value struct argument contains uninitialized data (e.g., field: 'thunk_count')
+        _property_formats = Add_Thunk(_property_formats, t);
+                            ^                            ~
+    xprop.c:1394:11: warning: Passed-by-value struct argument contains uninitialized data (e.g., field: 'thunk_count')
+            thunks = Add_Thunk(thunks, t);
+                     ^                 ~
+    xprop.c:1581:15: warning: Passed-by-value struct argument contains uninitialized data (e.g., field: 'thunk_count')
+                thunks = Add_Thunk(thunks, t);
+                         ^                 ~
+    xprop.c:1962:18: warning: Passed-by-value struct argument contains uninitialized data (e.g., field: 'thunk_count')
+                set_props = Add_Thunk(set_props, t);
+                            ^                    ~
+    xprop.c:1952:21: warning: Passed-by-value struct argument contains uninitialized data (e.g., field: 'thunk_count')
+                remove_props = Add_Thunk(remove_props, t);
+                               ^                       ~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 1f20efb09b0d437e0618b7588212e2e0b9ffd3b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 20:06:16 2011 -0800
+
+    Use _X_NORETURN from xproto 7.0.17 instead of local check
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 9b529480074120f8228662ede175bfa65f6ece8c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 21:51:00 2011 -0800
+
+    Replace Copy_String() with strdup + error check
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit ea5ada919258d04e003596ee7079c33b5657dbdc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 21:46:39 2011 -0800
+
+    inline Malloc & Realloc functions
+    
+    Since stdlib.h versions return void *, remove unneeded casts that
+    the wrappers needed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit baed631bfcd091e40f4e84f740c6d86d9fb981b3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6505a6b2fb2672b543d5b485bc7ac739d1e479f0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:48 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b0c64dd81b9aa4d07a87d811cd2975cc6989adc8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 15744802201da54ff8e39bc0d5b9f1a69ce3496d
+Author: Kai-Uwe Behrmann <ku.b@gmx.de>
+Date:   Tue Dec 7 22:36:37 2010 -0800
+
+    xprop man page example for -set option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b8f740b195888cf530e4982ba3e9a3760b40f3bc
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 11:06:48 2010 -0700

@@ -1,15 +1,15 @@
 .\" Copyright 1988, 1998  The Open Group
 .\" Copyright \(co 2000  The XFree86 Project, Inc.
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,7 +17,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -151,7 +151,7 @@ of a font as opposed to a window, the -font argument must be used.
 Other than the above four arguments and the -help argument for obtaining help,
 and the -grammar argument for listing the full grammar for the command line,
 all the other command line arguments are used in specifying both the format
-of the properties to be displayed and how to display them.  The -len \fIn\fP 
+of the properties to be displayed and how to display them.  The -len \fIn\fP
 argument specifies that at most \fIn\fP bytes of any given property will be
 read and displayed.  This is useful for example when displaying the cut buffer
 on the root window which could run to several pages if displayed in full.
@@ -279,7 +279,7 @@ This is useful for a property that is a list of values.
 A ? is used to start a conditional expression, a kind of if-then statement.
 ?\fIexp\fP(\fItext\fP) will display \fItext\fP if and only if \fIexp\fP evaluates to
 non-zero.  This is useful for two things.  First, it allows fields to be
-displayed if and only if a flag is set.  
+displayed if and only if a flag is set.
 And second, it allows a value such as a state
 number to be displayed as a name rather than as just a number.  The syntax of
 \fIexp\fP is as follows:
@@ -340,6 +340,8 @@ To display the start of the cut buffer: \fIxprop\fP -root -len 100 CUT_BUFFER0
 To display the point size of the fixed font: \fIxprop\fP -font fixed POINT_SIZE
 .PP
 To display all the properties of window # 0x200007: \fIxprop\fP -id 0x200007
+.PP
+To set a simple string property: \fIxprop\fP -root -format MY_ATOM_NAME 8s -set MY_ATOM_NAME  "my_value"
 .SH ENVIRONMENT
 .PP
 .TP 8

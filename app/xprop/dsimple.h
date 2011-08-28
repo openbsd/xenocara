@@ -37,6 +37,8 @@ from The Open Group.
  * Send bugs, etc. to chariot@athena.mit.edu.
  */
 
+#include <X11/Xfuncproto.h>
+
     /* Simple helper macros */
 #ifndef MAX
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -56,8 +58,6 @@ extern int screen;                           /* The current screen */
 
     /* Declarations for functions in just_display.c */
 
-char *Malloc(unsigned);
-char *Realloc(char *,unsigned);
 char *Get_Display_Name(int *, char **);
 Display *Open_Display(const char *);
 void Setup_Display_And_Screen(int *, char **);
@@ -79,8 +79,5 @@ void usage(void);
 
 Window Select_Window(Display *, int descend);
 Window Window_With_Name(Display *, Window, const char *);
-#ifdef __GNUC__
-void Fatal_Error(char *, ...) __attribute__((__noreturn__));
-#else
-void Fatal_Error(char *, ...);
-#endif
+
+void Fatal_Error(char *, ...) _X_NORETURN;

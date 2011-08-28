@@ -59,30 +59,6 @@ Display *dpy = NULL;
 int      screen = 0;
 
 /*
- * Malloc: like malloc but handles out of memory using Fatal_Error.
- */
-char *Malloc(unsigned size)
-{
-	char *data;
-
-	if (!(data = malloc(size)))
-	  Fatal_Error("Out of memory!");
-
-	return(data);
-}
-
-/*
- * Realloc: like realloc but handles out of memory using Fatal_Error:
- */
-char *Realloc(char *mem, unsigned size)
-{
-    if (!(mem = realloc (mem, size)))
-	Fatal_Error("Out of memory!");
-
-    return mem;
-}
-
-/*
  * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obselete)
  * If found, remove it from command line.  Don't go past a lone -.
  */
