@@ -1,18 +1,12 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2011/05/30 10:52:58 shadchin Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2011/08/30 21:15:30 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
 _SRCDIR= ${.CURDIR}/../xserver
 
-.if ${XENOCARA_USE_XKEYBOARD_CONFIG:L} == "yes"
 XKB_PATH=	${X11BASE}/share/X11/xkb
 XKB_RULES=	base
 XKB_OPTIONS=	terminate:ctrl_alt_bksp
-.else
-XKB_PATH=	/etc/X11/xkb
-XKB_RULES=	xorg
-XKB_OPTIONS=
-.endif
 
 CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--with-xkb-path=${XKB_PATH} \
