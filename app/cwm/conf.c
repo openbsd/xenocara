@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.91 2011/08/29 09:10:49 okan Exp $
+ * $OpenBSD: conf.c,v 1.92 2011/09/03 09:17:16 okan Exp $
  */
 
 #include <sys/param.h>
@@ -62,7 +62,7 @@ conf_gap(struct conf *c, struct screen_ctx *sc)
 void
 conf_font(struct conf *c, struct screen_ctx *sc)
 {
-	sc->font = font_make(sc, c->DefaultFontName);
+	sc->font = font_make(sc, c->font);
 }
 
 void
@@ -208,7 +208,7 @@ conf_init(struct conf *c)
 	c->color[CWM_COLOR_BG_MENU].name =
 	    xstrdup(CONF_COLOR_MENUBG);
 
-	c->DefaultFontName = xstrdup(DEFAULTFONTNAME);
+	c->font = xstrdup(CONF_FONT);
 }
 
 void
@@ -252,7 +252,7 @@ conf_clear(struct conf *c)
 	for (i = 0; i < CWM_COLOR_MAX; i++)
 		xfree(c->color[i].name);
 
-	xfree(c->DefaultFontName);
+	xfree(c->font);
 }
 
 void

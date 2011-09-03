@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.30 2011/08/22 16:18:05 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.31 2011/09/03 09:17:16 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -105,8 +105,8 @@ yesno		: YES				{ $$ = 1; }
 		;
 
 main		: FONTNAME STRING		{
-			free(conf->DefaultFontName);
-			conf->DefaultFontName = $2;
+			free(conf->font);
+			conf->font = $2;
 		}
 		| STICKY yesno {
 			if ($2 == 0)
@@ -561,7 +561,7 @@ parse_config(const char *filename, struct conf *xconf)
 		for (i = 0; i < CWM_COLOR_MAX; i++)
 			xconf->color[i].name = conf->color[i].name;
 
-		xconf->DefaultFontName = conf->DefaultFontName;
+		xconf->font = conf->font;
 	}
 
 	free(conf);
