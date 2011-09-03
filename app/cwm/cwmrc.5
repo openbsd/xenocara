@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.38 2011/06/25 13:12:56 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.39 2011/09/03 09:20:58 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: June 25 2011 $
+.Dd $Mdocdate: September 3 2011 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -289,6 +289,10 @@ Reverse cycle through groups.
 Forward cycle through windows.
 .It rcycle
 Reverse cycle through windows.
+.It cycleingroup
+Forward cycle through windows in current group.
+.It rcycleingroup
+Reverse cycle through windows in current group.
 .It snapdist
 Minimum distance to snap-to adjacent edge.
 .It delete

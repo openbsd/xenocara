@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.86 2011/07/14 11:39:53 okan Exp $
+ * $OpenBSD: client.c,v 1.87 2011/09/03 09:20:58 okan Exp $
  */
 
 #include <sys/param.h>
@@ -567,7 +567,7 @@ match:
 }
 
 void
-client_cycle(struct screen_ctx *sc, int reverse)
+client_cycle(struct screen_ctx *sc, int flags)
 {
 	struct client_ctx	*oldcc, *newcc;
 	int			 again = 1;
@@ -579,18 +579,19 @@ client_cycle(struct screen_ctx *sc, int reverse)
 		return;
 
 	if (oldcc == NULL)
-		oldcc = (reverse ? TAILQ_LAST(&sc->mruq, cycle_entry_q) :
+		oldcc = (flags & CWM_RCYCLE ? TAILQ_LAST(&sc->mruq, cycle_entry_q) :
 		    TAILQ_FIRST(&sc->mruq));
 
 	newcc = oldcc;
 	while (again) {
 		again = 0;
 
-		newcc = (reverse ? client_mruprev(newcc) :
+		newcc = (flags & CWM_RCYCLE ? client_mruprev(newcc) :
 		    client_mrunext(newcc));
 
 		/* Only cycle visible and non-ignored windows. */
-		if (newcc->flags & (CLIENT_HIDDEN|CLIENT_IGNORE))
+		if ((newcc->flags & (CLIENT_HIDDEN|CLIENT_IGNORE))
+			|| ((flags & CWM_INGROUP) && (newcc->group != oldcc->group)))
 			again = 1;
 
 		/* Is oldcc the only non-hidden window? */
