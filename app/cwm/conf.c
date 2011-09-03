@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.93 2011/09/03 09:20:58 okan Exp $
+ * $OpenBSD: conf.c,v 1.94 2011/09/03 09:25:39 okan Exp $
  */
 
 #include <sys/param.h>
@@ -64,6 +64,15 @@ conf_font(struct conf *c, struct screen_ctx *sc)
 {
 	sc->font = font_make(sc, c->font);
 }
+
+static struct color color_binds[] = {
+	{ "#CCCCCC",	0 }, /* CWM_COLOR_BORDOR_ACTIVE */
+	{ "#666666",	0 }, /* CWM_COLOR_BORDOR_INACTIVE */
+	{ "blue",	0 }, /* CWM_COLOR_BORDOR_GROUP */
+	{ "red",	0 }, /* CWM_COLOR_BORDOR_UNGROUP */
+	{ "black",	0 }, /* CWM_COLOR_FG_MENU */
+	{ "white",	0 }, /* CWM_COLOR_BG_MENU */
+};
 
 void
 conf_color(struct conf *c, struct screen_ctx *sc)
@@ -191,22 +200,12 @@ conf_init(struct conf *c)
 	for (i = 0; i < nitems(m_binds); i++)
 		conf_mousebind(c, m_binds[i].key, m_binds[i].func);
 
+	for (i = 0; i < nitems(color_binds); i++)
+		c->color[i].name = xstrdup(color_binds[i].name);
+
 	/* Default term/lock */
 	(void)strlcpy(c->termpath, "xterm", sizeof(c->termpath));
 	(void)strlcpy(c->lockpath, "xlock", sizeof(c->lockpath));
-
-	c->color[CWM_COLOR_BORDER_ACTIVE].name =
-	    xstrdup(CONF_COLOR_ACTIVEBORDER);
-	c->color[CWM_COLOR_BORDER_INACTIVE].name =
-	    xstrdup(CONF_COLOR_INACTIVEBORDER);
-	c->color[CWM_COLOR_BORDER_GROUP].name =
-	    xstrdup(CONF_COLOR_GROUPBORDER);
-	c->color[CWM_COLOR_BORDER_UNGROUP].name =
-	    xstrdup(CONF_COLOR_UNGROUPBORDER);
-	c->color[CWM_COLOR_FG_MENU].name =
-	    xstrdup(CONF_COLOR_MENUFG);
-	c->color[CWM_COLOR_BG_MENU].name =
-	    xstrdup(CONF_COLOR_MENUBG);
 
 	c->font = xstrdup(CONF_FONT);
 }
