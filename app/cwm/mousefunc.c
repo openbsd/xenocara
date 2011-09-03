@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.32 2011/07/25 15:10:24 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.33 2011/09/03 09:42:33 okan Exp $
  */
 
 #include <sys/param.h>
@@ -58,8 +58,8 @@ mousefunc_sweep_draw(struct client_ctx *cc)
 	int			 width, width_size, width_name;
 
 	(void)snprintf(asize, sizeof(asize), "%dx%d",
-	    (cc->geom.width - cc->geom.basew) / cc->geom.incw,
-	    (cc->geom.height - cc->geom.baseh) / cc->geom.inch);
+	    (cc->geom.width - cc->hint.basew) / cc->hint.incw,
+	    (cc->geom.height - cc->hint.baseh) / cc->hint.inch);
 	width_size = font_width(sc, asize, strlen(asize)) + 4;
 	width_name = font_width(sc, cc->name, strlen(cc->name)) + 4;
 	width = MAX(width_size, width_name);

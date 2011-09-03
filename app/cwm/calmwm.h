@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.138 2011/09/03 09:25:39 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.139 2011/09/03 09:42:33 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -121,6 +121,8 @@ struct client_ctx {
 		int		 y;	/* y position */
 		int		 width;	/* width */
 		int		 height;/* height */
+	} geom, savegeom;
+	struct {
 		int		 basew;	/* desired width */
 		int		 baseh;	/* desired height */
 		int		 minw;	/* minimum width */
@@ -131,7 +133,7 @@ struct client_ctx {
 		int		 inch;	/* height increment progression */
 		float		 mina;	/* minimum aspect ratio */
 		float		 maxa;	/* maximum aspect ratio */
-	} geom, savegeom;
+	} hint;
 	struct {
 		int		 x;	/* x position */
 		int		 y;	/* y position */
