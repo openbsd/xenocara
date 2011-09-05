@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.89 2011/09/04 16:59:31 oga Exp $
+ * $OpenBSD: client.c,v 1.90 2011/09/05 07:37:55 okan Exp $
  */
 
 #include <sys/param.h>
@@ -300,7 +300,10 @@ client_maximize(struct client_ctx *cc)
 
 	if (HasXinerama) {
 		XineramaScreenInfo *xine;
-		/* * that's probably more fair than if just the origin of * a window is poking over a boundary
+		/*
+		 * pick screen that the middle of the window is on.
+		 * that's probably more fair than if just the origin of
+		 * a window is poking over a boundary
 		 */
 		xine = screen_find_xinerama(sc,
 		    cc->geom.x + cc->geom.width / 2,
@@ -394,6 +397,7 @@ client_horizmaximize(struct client_ctx *cc)
 	cc->savegeom.x = cc->geom.x;
 	cc->savegeom.width = cc->geom.width;
 
+	/* if this will make us fully maximized then remove boundary */
 	if ((cc->flags & CLIENT_MAXFLAGS) == CLIENT_VMAXIMIZED) {
 		cc->geom.height += cc->bwidth * 2;
 		cc->bwidth = 0;
