@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.31 2011/09/03 09:17:16 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.32 2011/09/08 12:07:03 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -73,6 +73,7 @@ typedef struct {
 %token	COLOR SNAPDIST
 %token	ACTIVEBORDER INACTIVEBORDER
 %token	GROUPBORDER UNGROUPBORDER
+%token	MENUBG MENUFG
 %token	ERROR
 %token	<v.string>		STRING
 %token	<v.number>		NUMBER
@@ -184,6 +185,14 @@ colors		: ACTIVEBORDER STRING {
 			free(conf->color[CWM_COLOR_BORDER_UNGROUP].name);
 			conf->color[CWM_COLOR_BORDER_UNGROUP].name = $2;
 		}
+		| MENUBG STRING {
+			free(conf->color[CWM_COLOR_BG_MENU].name);
+			conf->color[CWM_COLOR_BG_MENU].name = $2;
+		}
+		| MENUFG STRING {
+			free(conf->color[CWM_COLOR_FG_MENU].name);
+			conf->color[CWM_COLOR_FG_MENU].name = $2;
+		}
 		;
 %%
 
@@ -228,6 +237,8 @@ lookup(char *s)
 		{ "groupborder",	GROUPBORDER},
 		{ "ignore",		IGNORE},
 		{ "inactiveborder",	INACTIVEBORDER},
+		{ "menubg",		MENUBG},
+		{ "menufg",		MENUFG},
 		{ "mousebind",		MOUSEBIND},
 		{ "moveamount",		MOVEAMOUNT},
 		{ "no",			NO},
