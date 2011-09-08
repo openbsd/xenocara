@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: font.c,v 1.16 2011/06/27 12:46:54 okan Exp $
+ * $OpenBSD: font.c,v 1.17 2011/09/08 12:35:33 okan Exp $
  */
 
 #include <sys/param.h>
@@ -49,15 +49,20 @@ font_height(struct screen_ctx *sc)
 }
 
 void
-font_init(struct screen_ctx *sc)
+font_init(struct screen_ctx *sc, const char *color)
 {
+	if (sc->xftdraw)
+		XftDrawDestroy(sc->xftdraw);
 	sc->xftdraw = XftDrawCreate(X_Dpy, sc->rootwin,
 	    DefaultVisual(X_Dpy, sc->which), DefaultColormap(X_Dpy, sc->which));
 	if (sc->xftdraw == NULL)
 		errx(1, "XftDrawCreate");
 
+	if (sc->xftcolor.pixel)
+		XftColorFree(X_Dpy, DefaultVisual(X_Dpy, sc->which),
+		    DefaultColormap(X_Dpy, sc->which), &sc->xftcolor);
 	if (!XftColorAllocName(X_Dpy, DefaultVisual(X_Dpy, sc->which),
-	    DefaultColormap(X_Dpy, sc->which), "black", &sc->xftcolor))
+	    DefaultColormap(X_Dpy, sc->which), color, &sc->xftcolor))
 		errx(1, "XftColorAllocName");
 }
 
