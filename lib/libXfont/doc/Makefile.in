@@ -15,26 +15,19 @@
 @SET_MAKE@
 
 #
-# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+# Generate output formats for a single DocBook/XML with/without chapters
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
+# Variables set by the calling Makefile:
+# noinst_DATA: developers docs are not installed
+# docbook:  the main DocBook/XML file, no chapters, appendix or image files
+# chapters: all files pulled in by an XInclude statement and images.
 #
-# The above copyright notice and this permission notice (including the next
-# paragraph) shall be included in all copies or substantial portions of the
-# Software.
+
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
+# This makefile is intended for Developers Documentation and is not installed.
+# Do not use for Users docs or Specs which need to be installed and require olink support
+# Refer to http://www.x.org/releases/X11R7.6/doc/xorg-docs/ReleaseNotes.html#id2584393
+# for an explanation on documents classification.
 #
 
 srcdir = @srcdir@
@@ -46,9 +39,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -59,11 +52,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = xorg.css
+DIST_COMMON = $(am__dist_noinst_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(top_srcdir)/devbook.am
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(docbook:.xml=.pdf) $(docbook:.xml=.ps)
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(docbook:.xml=.txt)
 subdir = doc
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -74,7 +67,8 @@ CONFIG_HEADER = $(top_builddir)/config.h \
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
-DATA = $(noinst_DATA)
+am__dist_noinst_DATA_DIST = fontlib.xml
+DATA = $(dist_noinst_DATA) $(noinst_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -168,6 +162,7 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 VERSION = @VERSION@
@@ -246,21 +241,40 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
-# Developer documentation - not installed on system
-EXTRA_DIST = fontlib.xml
-@ENABLE_DEVEL_DOCS_TRUE@doc_sources = fontlib.xml
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@noinst_DATA = $(doc_sources:.xml=.html) \
+# Main DocBook/XML files (DOCTYPE book)
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@docbook = fontlib.xml
+
+# Developers documnetation is not installed
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@noinst_DATA = $(docbook:.xml=.html) \
 @ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1) \
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2) \
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_3)
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FLAGS = -m $(XSL_STYLESHEET)
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2)
+
+# DocBook/XML file with chapters, appendix and images it includes
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@dist_noinst_DATA = $(docbook) $(chapters)
+
+#
+# Generate DocBook/XML output formats with or without stylesheets
+#
+
+# Stylesheets are available if the package xorg-sgml-doctools is installed
+
+# The location where all cross reference databases are installed
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FLAGS = \
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--searchpath "$(XORG_SGML_PATH)/X11"	\
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam current.docid="$(<:.xml=)"
+
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_XHTML_FLAGS = \
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	-m $(STYLESHEET_SRCDIR)/xorg-xhtml.xsl \
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam html.stylesheet=$(STYLESHEET_SRCDIR)/xorg.css
+
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FO_FLAGS = \
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	-m $(STYLESHEET_SRCDIR)/xorg-fo.xsl
+
 @ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@CLEANFILES = $(noinst_DATA)
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@SUFFIXES = .xml .ps .pdf .txt .html
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .xml .ps .pdf .txt .html
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/devbook.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -307,6 +321,7 @@ CTAGS:
 
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -418,20 +433,16 @@ uninstall-am: uninstall-info-am
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am
 
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@xorg.css: $(STYLESHEET_SRCDIR)/xorg.css
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)cp -pf $(STYLESHEET_SRCDIR)/xorg.css $@
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.html: %.xml  $(chapters)
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) $(XMLTO_XHTML_FLAGS) xhtml-nochunks $<
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@%.pdf: %.xml $(chapters)
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) $(XMLTO_FO_FLAGS) --with-fop pdf $<
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@%.ps: %.xml $(chapters)
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) $(XMLTO_FO_FLAGS) --with-fop ps $<
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@%.txt: %.xml $(chapters)
+@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) $(XMLTO_XHTML_FLAGS) txt $<
 
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@.xml.txt:
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
-
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@.xml.html:
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
-
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@.xml.pdf:
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
-
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@.xml.ps:
-@ENABLE_DEVEL_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop ps $<
+# Generate DocBook/XML output formats with or without stylesheets
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -1,3 +1,117 @@
+commit a7970f5c817b5c75d945389cfaf1384ff23437f3
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Aug 8 18:08:05 2011 +0200
+
+    libXfont 1.4.4
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d11ee5886e9d9ec610051a206b135a4cdc1e09a0
+Author: Thomas Hoger <thoger@redhat.com>
+Date:   Mon Aug 8 18:03:09 2011 +0200
+
+    LZW decompress: fix for CVE-2011-2895
+    
+    Specially crafted LZW stream can crash an application using libXfont
+    that is used to open untrusted font files.  With X server, this may
+    allow privilege escalation when exploited
+    
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 214ca6a7a2247544627e6dc7c8705811305ad007
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 16 18:28:13 2011 -0700
+
+    Fix memory leak in allocation failure path of BitmapOpenScalable()
+    
+    Go ahead and fill in the font->info pointers so that bitmapUnloadScalable()
+    will free the bits that were allocated, even if some were not.
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer <unknown> allocated with ComputeScaledProperties(...)
+            at line 1629 of /export/alanc/X.Org/git/lib/libXfont/src/bitmap/bitscale.c in function 'BitmapOpenScalable'.
+              pointer allocated at line 1616 with ComputeScaledProperties(...).
+              <unknown> leaks when props != 0 at line 1623.
+    
+    [ This bug was found by the Parfait 0.3.7 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 7f8345aa6fb60a7fd7adf0095a2354fad1d8d5ef
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Mar 2 14:33:07 2011 -0500
+
+    doc: use common makefile for developers documentation
+    
+    The user/specs docs now have external references support.
+    Developers doc are not installed so they do not participate.
+    However, using a similar makefile shared amongst developers
+    document reduces maintenance and is forward looking.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 77027deabca37183cfbbed107cf14ca80f29f26d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:42 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit 9ea1790d61bd135714c40e5089ecb1effa1dbcc0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:15 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4e0c6c45d819befdd9315d6282b957f7cfec3ae2
+Author: Paulo Zanoni <pzanoni@mandriva.com>
+Date:   Thu Dec 16 14:09:12 2010 -0200
+
+    Use docbookx.dtd version 4.3 for all docs
+    
+    Signed-off-by: Paulo Zanoni <pzanoni@mandriva.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01c30845853f5a8114467185d76274ae9bbff091
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 21 11:35:20 2010 -0800
+
+    Sun's copyrights belong to Oracle now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72ade58381a49514f2b29065ba33a464b7efc3d0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 13:04:51 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 12157fbebc35c2d039df2df4fc5ac2b299eeec03
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Oct 28 20:43:27 2010 -0700
