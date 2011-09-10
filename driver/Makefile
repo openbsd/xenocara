@@ -1,18 +1,37 @@
-# $OpenBSD: Makefile,v 1.37 2011/05/08 09:27:57 matthieu Exp $
+# $OpenBSD: Makefile,v 1.38 2011/09/10 17:52:09 matthieu Exp $
+
+# The input driver ABI broke between xserver 1.9 and 1.10. 
+# Some drivers were updated to the new ABI without keeping compatibility
+# So people testing Xserver 1.11 cant build the ones in xenocara until
+# they are updated, but I don't want to break people building from CVS
+# This is going away once xsever 1.11 and associated input drivers 
+# updates are committed
+
+USING_XSERVER_110 != if pkg-config --atleast-version 1.10 xorg-server; then \
+		echo 1; \
+	else \
+		echo 0; \
+	fi
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
 	xf86-input-mouse \
 	xf86-input-usbtablet \
-	xf86-input-void \
 	xf86-input-ws
 
-INPUT_DRV_COMMON= \
-	${INPUT_DRV_DEFAULT} \
-	xf86-input-acecad xf86-input-citron \
-	xf86-input-elographics xf86-input-fpit \
-	xf86-input-hyperpen xf86-input-joystick \
-	xf86-input-mutouch xf86-input-penmount
+.if !$(USING_XSERVER_110)
+INPUT_DRV_DEFAULT +=xf86-input-void
+.endif
+
+INPUT_DRV_COMMON = ${INPUT_DRV_DEFAULT} \
+	xf86-input-acecad
+
+.if !$(USING_XSERVER_110)
+INPUT_DRV_COMMON +=\
+	xf86-input-citron xf86-input-elographics xf86-input-fpit \
+	xf86-input-hyperpen xf86-input-joystick xf86-input-mutouch \
+	xf86-input-penmount
+.endif
 
 INPUT_DRV_alpha=
 
