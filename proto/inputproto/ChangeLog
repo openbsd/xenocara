@@ -1,3 +1,48 @@
+commit 84479bf87230905cd26d8395577058950230c103
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 7 14:16:17 2011 +1000
+
+    inputproto 2.0.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3686697eb5a330deb222b5e95843f23037ca3faf
+Author: Alexandre Julliard <julliard@winehq.org>
+Date:   Tue Apr 12 22:39:25 2011 +0200
+
+    XI2.h: Fix off-by-one error in the XIMaskLen definition.
+    
+    The previous definition would give the wrong result for events that are
+    a multiple of 8.
+    
+    Signed-off-by: Alexandre Julliard <julliard@winehq.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit b1149ab782619eaeadf70affd94239184e082d03)
+
+commit a4cab7946409613e27fbad195c861224ad0e0b10
+Author: Fernando Carrijo <fcarrijo@freedesktop.org>
+Date:   Thu Jan 27 22:40:11 2011 -0200
+
+    Fix typos in XIproto.txt
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@freedesktop.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 13baef91f071ee1607f4c3bf6c1fea60e6651b89)
+
+commit bf66a58ddb0a39eb4a0ae8e58160780f8a2b2716
+Author: Chase Douglas <chase.douglas@ubuntu.com>
+Date:   Fri Dec 17 17:11:09 2010 +0000
+
+    Include stdint.h
+    
+    I'm now getting build failures due to missing stdint.h. It seems we
+    should include it explicitly in XI2proto.h anyways.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 5c2d5fd99d73ae52aef62376046b5708c58a4271)
+
 commit 56ffb564712257e0f998170e83071a6ee85aa231
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Nov 11 14:10:26 2010 +1000
