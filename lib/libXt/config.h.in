@@ -36,10 +36,6 @@
 /* Define to 1 if Xalloca.h should include <alloca.h> */
 #undef INCLUDE_ALLOCA_H
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#undef LT_OBJDIR
-
 /* Name of package */
 #undef PACKAGE
 
