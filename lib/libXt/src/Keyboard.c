@@ -727,18 +727,22 @@ static void QueryEventMask(
      */
     Widget ancestor = (Widget)client_data;
     XtPerWidgetInput pwi = _XtGetPerWidgetInput(ancestor, FALSE);
-    Widget target = pwi->queryEventDescendant;
 
-    /* use of 'target' is non-standard hackery; allows focus to non-widget */
-    if (pwi && (pwi->focusKid == target)) {
-	AddFocusHandler(ancestor, target, pwi,
-			_XtGetPerWidgetInput(GetShell(ancestor), TRUE),
-			_XtGetPerDisplayInput(XtDisplay(ancestor)),
-			(EventMask)0);
+    if (pwi) {
+	Widget target = pwi->queryEventDescendant;
+
+	/* use of 'target' is non-standard hackery;
+	   allows focus to non-widget */
+	if ( pwi->focusKid == target ) {
+	    AddFocusHandler(ancestor, target, pwi,
+			    _XtGetPerWidgetInput(GetShell(ancestor), TRUE),
+			    _XtGetPerDisplayInput(XtDisplay(ancestor)),
+			    (EventMask)0);
+	}
+	XtRemoveEventHandler(widget, XtAllEvents, True,
+			     QueryEventMask, client_data);
+	pwi->map_handler_added = FALSE;
     }
-    XtRemoveEventHandler(widget, XtAllEvents, True,
-			 QueryEventMask, client_data);
-    pwi->map_handler_added = FALSE;
 }
 
 

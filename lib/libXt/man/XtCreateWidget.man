@@ -300,8 +300,8 @@ records, callback lists and, if the widget is a subclass of
 .ZN compositeWidgetClass , 
 children.
 .SH "SEE ALSO"
-XtAppCreateShell(3Xt),
-XtCreatePopupShell(3Xt)
+XtAppCreateShell(__libmansuffix__),
+XtCreatePopupShell(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

@@ -181,7 +181,7 @@ event is generated for descendant if
 .ZN FocusNotify
 events have been selected by the descendant.
 .SH "SEE ALSO"
-XtCallAcceptFocus(3Xt)
+XtCallAcceptFocus(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

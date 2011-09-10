@@ -145,7 +145,7 @@ If accept_focus is NULL,
 returns
 .ZN False .
 .SH "SEE ALSO"
-XtSetKeyboardFocus(3Xt)
+XtSetKeyboardFocus(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

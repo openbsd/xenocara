@@ -330,7 +330,8 @@ XtMalloc_shadows =				\
 	XtRealloc				\
 	XtFree					\
 	XtNew					\
-	XtNewString
+	XtNewString				\
+	XtAsprintf
 
 XtManageChildren_shadows =			\
 	XtManageChild				\

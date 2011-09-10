@@ -155,7 +155,7 @@ The
 function sets the \*(xI's selection timeout mechanism.
 Note that most applications should not set the selection timeout.
 .SH "SEE ALSO"
-XtOwnSelection(3Xt)
+XtOwnSelection(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

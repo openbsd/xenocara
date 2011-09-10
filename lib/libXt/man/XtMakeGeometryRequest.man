@@ -229,8 +229,8 @@ If the widget is not interested in
 replies, 
 it can pass NULL for width_return and height_return.
 .SH "SEE ALSO"
-XtConfigureWidget(3Xt),
-XtQueryGeometery(3Xt)
+XtConfigureWidget(__libmansuffix__),
+XtQueryGeometery(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

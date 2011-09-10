@@ -147,7 +147,7 @@ structure by
 and sent to the server when event handlers and translations are installed or
 removed on the realized widget.
 .SH "SEE ALSO"
-XtAddEventHandler(3Xt)
+XtAddEventHandler(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

@@ -160,8 +160,8 @@ The
 function has been superceded by
 .ZN XtAppGetErrorDatabaseText .
 .SH "SEE ALSO"
-.BR XtAppGetErrorDatabase (3Xt)
-.BR XtAppGetErrorDatabaseText (3Xt)
+.BR XtAppGetErrorDatabase (__libmansuffix__)
+.BR XtAppGetErrorDatabaseText (__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

@@ -182,8 +182,8 @@ The
 function calls the high-level error handler and passes the specified
 information.
 .SH "SEE ALSO"
-XtAppGetErrorDatabase(3Xt),
-XtAppError(3Xt)
+XtAppGetErrorDatabase(__libmansuffix__),
+XtAppError(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

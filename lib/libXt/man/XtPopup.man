@@ -316,8 +316,8 @@ If
 gets to the application widget and cannot find a matching shell,
 it generates an error.
 .SH "SEE ALSO"
-XtCreatePopupShell(3Xt),
-XtPopdown(3Xt)
+XtCreatePopupShell(__libmansuffix__),
+XtPopdown(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

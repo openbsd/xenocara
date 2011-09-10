@@ -165,7 +165,7 @@ and
 .ZN XtUnmapWidget
 explicitly.
 .SH "SEE ALSO"
-XtManageChildren(3Xt)
+XtManageChildren(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

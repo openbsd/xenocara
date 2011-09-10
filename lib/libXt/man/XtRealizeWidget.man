@@ -204,7 +204,7 @@ again.
 If the widget was managed, 
 it will be unmanaged automatically before its window is freed.
 .SH "SEE ALSO"
-XtManageChildren(3Xt)
+XtManageChildren(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

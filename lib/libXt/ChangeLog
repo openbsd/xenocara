@@ -1,3 +1,274 @@
+commit c16d3cc264c45601f0e59bdd29e438c7c9679721
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu Mar 10 10:19:59 2011 +0100
+
+    Bump to 1.1.1
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit fe2cf6e2b70e57624aad71f510ff8c6addaae196
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Tue Mar 8 16:09:49 2011 +0100
+
+    XtAsprintf: Fix memory corruption.
+    
+    Don't write the null terminator to a random place, this can trigger some
+    segfault in XtOpenDisplay() and other annoyances.
+    
+    Debian Bug #617208 <http://bugs.debian.org/617208>
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6c791b5f318d8805db4cb6c74b1bc2e91d6c15c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 13:43:46 2011 -0500
+
+    man: replace hard coded section number 3Xt with __libmansuffix__ #35050
+    
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=512130
+    
+    The Xt manpages are installed in section 3 (and not 3Xt as upstream
+    would have it). But, internal cross-references (in particular, in the
+    SEE ALSO part) are left alone, and keep pointing at Foo(3Xt).  The
+    result is that they can't be automatically followed from manpage
+    sanitizers such as dwww or emacs.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9ccf14fddedc11bd17b3ae30612c6f70f4cd7e14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 4 16:31:59 2011 -0800
+
+    Don't need to use target-specific CFLAGS for makestrs
+    
+    It's the only thing built in that directory, so we can use AM_CFLAGS
+    and drop the requirement for AM_PROG_CC_C_O in configure.ac
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 16d9941f3aa38dde115cbff639e131761c1b36d0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 4 15:43:43 2011 -0800
+
+    Incorrect cast in XtCvtIntToPixmap could cause bus error on 64-bit machines
+    
+    Originally fixed by Leo Binchy for Sun Bug 4163152 to resolve bus error
+    on VSW5 (XTS) testing on 64-bit SPARC test run on Solaris 7.
+    ( Testcase: XtCvtIntToPixmap, Purpose:  1)
+    
+    Since we're converting from Int to Pixmap, need to access the argument
+    passed in as an int, not a Pixmap, which is consistent with the other
+    IntToXXX converters in this file.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit 994443524ade46bad03eea0acbd1410d561c591d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Mar 4 16:30:58 2011 -0800
+
+    configure: Bump version to 1.1.0 for release
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c0a233895cc8270ec0ff0bd2abb88d3f6dd524c3
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Mar 4 12:49:48 2011 -0800
+
+    darwin: Don't use poll() when expected to run on darwin10 and prior
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit abf6062715c7d1390e516261a31abde4ed7ea64e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 2 23:29:46 2011 -0800
+
+    Shell.c: TopLevelSetValues ignores iconic state if shell not yet realized
+    
+    Fix originally created by Leo Binchy for Sun to fix Solaris bug
+    1243761 The XmNiconic resource doesn't work
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b1eaa18835ec7c3a11e580340625b35c18edf7ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 2 23:21:02 2011 -0800
+
+    GetResources: protect against underflow when type conversion fails
+    
+    Fix originally created by Leo Binchy for Sun to fix Solaris bug 1211553:
+     XtVaCreateManagedWidget with list of resources XtVaTypedArg cause core dump
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 21c1cc98d8210a3ce2a4bf62ecee9168fdd99dcb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 2 22:42:13 2011 -0800
+
+    Remove unused #ifdef UNALIGNED version of Xt macros & functions
+    
+    Trying to outsmart the compiler and libc is a losing battle, but
+    since UNALIGNED was never defined, we weren't even trying.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19538f2b4553221b35831e13ec70ed9db436dd32
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:44 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit 7fd1e98987967b23f66da4b18ebf9798a68cd370
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:07:07 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 84e512a94295387bd0625ce619fc8bd381395c71
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 22 10:49:42 2010 -0800
+
+    Convert ALLOCATE_LOCAL + sprintf to XtAsprintf
+    
+    Now that we don't need to separately strlen the format string, put it
+    directly into the function call to clear gcc warnings of:
+    Initialize.c:397: warning: format not a string literal, argument types not checked
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c80650fddec8596ef7278e37aa12ce2076c54e93
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 9 23:36:31 2010 -0800
+
+    Convert ResConfig.c to use XtAsprintf() instead of XtMalloc + sprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ac07da253415ccb8b6322feedf7969967357050e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 12 23:09:29 2011 -0800
+
+    Add XtAsprintf() as a new exported API
+    
+    Like asprintf() but using XtMalloc() to tie into the Xt memory allocation
+    and error handling subsystems.
+    
+    Bumps libXt version to 1.0.99.1 so that modules can set their pkg-config
+    dependency to libXt >= 1.0.99.1 to require XtAsprintf().
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 84f73c49db8071c06f27609ce7cc7a32a17351a9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 9 23:44:42 2010 -0800
+
+    Convert some sprintf calls to snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 14145f3e87a039640cd8bdb2e2f4f30ca9b2a710
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 5 01:21:06 2010 -0800
+
+    config: AC_PROG_CC is provided by XORG_DEFAULT_OPTIONS now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a73b8f06b95216083c8335fad45dd0de7f44a529
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 5 01:19:10 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2bf988d229d2b85208cc42094ce7202204d628af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 5 00:33:44 2010 -0800
+
+    Remove ancient #if defined(macII) hack for A/UX from makestrs.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96508e1b9da790d4b824a42246d1e86379101733
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 5 00:19:30 2010 -0800
+
+    Remove non-USE_SNPRINTF case from src/Error.c
+    
+    unifdef -DUSE_SNPRINTF src/Error.c
+    Plus manual removal of old #ifdef notyet section that said not enough
+    platforms had snprintf support yet.   Welcome to the new millenium!
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0b780f8cc8bc2606fc3173628c4d3065aae190f8
+Author: walter harms <wharms@bfs.de>
+Date:   Sun Nov 7 18:51:19 2010 +0100
+
+    remove strcmp in src/ResConfig.c
+    
+    Make remainder check like in the rest of code and replace strcmp()
+    
+    Signed-off-by: walter harms <wharms@bfs.de>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 59598f20ba160fd92abcf88a30f0008425e7b1ec
+Author: walter harms <wharms@bfs.de>
+Date:   Tue Oct 26 13:46:32 2010 +0200
+
+    QueryEventMask: fix NULL check
+    
+    _XtGetPerWidgetInput may return NULL
+    avoid possible NULL references
+    
+    Signed-off-by: walter harms <wharms@bfs.de>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8572cba2b9094dcd8ee5b4c5bcf3c38f1f291918
+Author: walter harms <wharms@bfs.de>
+Date:   Sat Oct 30 10:47:23 2010 +0200
+
+    src/Resource.c: Fix possible NULL access
+    
+    Signed-off-by: walter harms <wharms@bfs.de>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c75b449f6436b787247e164bee03691af2a4f55
+Author: walter harms <wharms@bfs.de>
+Date:   Fri Oct 29 17:24:48 2010 +0200
+
+    XtFree() can handle NULL , remove check
+    
+    Signed-off-by: walter harms <wharms@bfs.de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0d29ca61b94cd34b04c5eedae443620a616d01c3
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Oct 28 12:03:25 2010 -0700

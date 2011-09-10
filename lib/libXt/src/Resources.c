@@ -109,92 +109,6 @@ void _XtCopyFromParent(
 } /* _XtCopyFromParent */
 
 
-/* If the alignment characteristics of your machine are right, these may be
-   faster */
-
-#ifdef UNALIGNED
-
-void _XtCopyFromArg(
-    XtArgVal src,
-    char* dst,
-    register unsigned int size)
-{
-    if	    (size == sizeof(long))	*(long *)dst = (long)src;
-    else if (size == sizeof(short))	*(short *)dst = (short)src;
-    else if (size == sizeof(char))	*(char *)dst = (char)src;
-    else if (size == sizeof(XtPointer))	*(XtPointer *)dst = (XtPointer)src;
-    else if (size == sizeof(char*))	*(char **)dst = (char*)src;
-    else if (size == sizeof(XtArgVal))	*(XtArgVal *)dst = src;
-    else if (size > sizeof(XtArgVal))
-	(void) memmove((char *) dst, (char *)  src, (int) size);
-    else
-	(void) memmove((char *) dst, (char *) &src, (int) size);
-} /* _XtCopyFromArg */
-
-void _XtCopyToArg(
-    char* src,
-    XtArgVal *dst,
-    register unsigned int size)
-{
-    if (! (*dst)) {
-#ifdef GETVALUES_BUG
-	/* old GetValues semantics (storing directly into arglists) are bad,
-	 * but preserve for compatibility as long as arglist contains NULL.
-	 */
-        if	(size == sizeof(long))	   *dst = (XtArgVal)*(long*)src;
-	else if (size == sizeof(short))    *dst = (XtArgVal)*(short*)src;
-	else if (size == sizeof(char))	   *dst = (XtArgVal)*(char*)src;
-	else if (size == sizeof(XtPointer)) *dst = (XtArgVal)*(XtPointer*)src;
-	else if (size == sizeof(char*))    *dst = (XtArgVal)*(char**)src;
-	else if (size == sizeof(XtArgVal)) *dst = *(XtArgVal*)src;
-	else (void) memmove((char*)dst, (char*)src, (int)size);
-#else
-	XtErrorMsg("invalidGetValues", "xtGetValues", XtCXtToolkitError,
-	    "NULL ArgVal in XtGetValues", (String*) NULL, (Cardinal*) NULL);
-#endif
-    }
-    else {
-	/* proper GetValues semantics: argval is pointer to destination */
-	if	(size == sizeof(long))	   *((long*)*dst) = *(long*)src;
-	else if (size == sizeof(short))    *((short*)*dst) = *(short*)src;
-	else if (size == sizeof(char))	   *((char*)*dst) = *(char*)src;
-	else if (size == sizeof(XtPointer)) *((XtPointer*)*dst) = *(XtPointer*)src;
-	else if (size == sizeof(char*))    *((char**)*dst) = *(char**)src;
-	else if (size == sizeof(XtArgVal)) *((XtArgVal*)*dst)= *(XtArgVal*)src;
-	else (void) memmove((char*)*dst, (char*)src, (int)size);
-    }
-} /* _XtCopyToArg */
-
-static void CopyToArg(
-    char* src,
-    XtArgVal *dst,
-    register unsigned int size)
-{
-    if (! (*dst)) {
-	/* old GetValues semantics (storing directly into arglists) are bad,
-	 * but preserve for compatibility as long as arglist contains NULL.
-	 */
-        if	(size == sizeof(long))	   *dst = (XtArgVal)*(long*)src;
-	else if (size == sizeof(short))    *dst = (XtArgVal)*(short*)src;
-	else if (size == sizeof(char))	   *dst = (XtArgVal)*(char*)src;
-	else if (size == sizeof(XtPointer)) *dst = (XtArgVal)*(XtPointer*)src;
-	else if (size == sizeof(char*))    *dst = (XtArgVal)*(char**)src;
-	else if (size == sizeof(XtArgVal)) *dst = *(XtArgVal*)src;
-	else (void) memmove((char*)dst, (char*)src, (int)size);
-    }
-    else {
-	/* proper GetValues semantics: argval is pointer to destination */
-	if	(size == sizeof(long))	   *((long*)*dst) = *(long*)src;
-	else if (size == sizeof(short))    *((short*)*dst) = *(short*)src;
-	else if (size == sizeof(char))	   *((char*)*dst) = *(char*)src;
-	else if (size == sizeof(XtPointer)) *((XtPointer*)*dst) = *(XtPointer*)src;
-	else if (size == sizeof(char*))    *((char**)*dst) = *(char**)src;
-	else if (size == sizeof(XtArgVal)) *((XtArgVal*)*dst)= *(XtArgVal*)src;
-	else (void) memmove((char*)*dst, (char*)src, (int)size);
-    }
-} /* CopyToArg */
-
-#else
 void _XtCopyFromArg(
     XtArgVal src,
     char* dst,
@@ -313,7 +227,6 @@ static void CopyToArg(
     }
 } /* CopyToArg */
 
-#endif
 
 static Cardinal CountTreeDepth(
     Widget w)
@@ -944,7 +857,7 @@ static XtCacheRef *GetResources(
 		    register XtTypedArg* arg = typed_args + typed[j] - 1;
 		    register int i;
 
-		    for (i = num_typed_args - typed[j]; i; i--, arg++) {
+		    for (i = num_typed_args - typed[j]; i > 0; i--, arg++) {
 			*arg = *(arg+1);
 		    }
 		    num_typed_args--;
@@ -967,8 +880,10 @@ static XtCacheRef *GetResources(
 		if (cache_ptr && *cache_ptr)
 		    cache_ptr++;
 	    } else {
-		*((XtTranslations *)&widget->core.tm.current_state) =
-		    *((XtTranslations *)value.addr);
+		/* value.addr can be NULL see: !already_copied */
+		if (value.addr)
+		    *((XtTranslations *)&widget->core.tm.current_state) =
+			*((XtTranslations *)value.addr);
 	    }
 	}
     }

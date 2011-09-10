@@ -259,8 +259,8 @@ initialized by
 .ZN XtDisplayInitialize ,
 the results are undefined.
 .SH "SEE ALSO"
-XtAppCreateShell(3Xt),
-XtCreateApplicationContext(3Xt)
+XtAppCreateShell(__libmansuffix__),
+XtCreateApplicationContext(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

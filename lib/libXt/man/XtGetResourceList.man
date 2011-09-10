@@ -179,8 +179,8 @@ should be freed using
 .ZN XtFree
 when it is no longer needed.
 .SH "SEE ALSO"
-XtGetSubresources(3Xt),
-XtOffset(3Xt)
+XtGetSubresources(__libmansuffix__),
+XtOffset(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

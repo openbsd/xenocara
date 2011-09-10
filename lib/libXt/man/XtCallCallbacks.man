@@ -177,7 +177,7 @@ If the callback list exists and has at least one callback registered,
 it returns
 .ZN XtCallbackHasSome .
 .SH "SEE ALSO"
-XtAddCallback(3Xt)
+XtAddCallback(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

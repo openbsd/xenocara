@@ -232,8 +232,8 @@ and
 .LP
 The
 .SH "SEE ALSO"
-XtAppErrorMsg(3Xt),
-XtDisplay(3Xt)
+XtAppErrorMsg(__libmansuffix__),
+XtDisplay(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

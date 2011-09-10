@@ -154,7 +154,7 @@ The
 .ZN XtRemoveWorkProc
 function explicitly removes the specified background work procedure.
 .SH "SEE ALSO"
-XtAppNextEvent(3Xt)
+XtAppNextEvent(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

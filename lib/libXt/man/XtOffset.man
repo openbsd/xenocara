@@ -162,8 +162,8 @@ The
 macro returns the number of elements in the specified argument lists, 
 resources lists, and other counted arrays.
 .SH "SEE ALSO"
-XtGetResourceList(3Xt),
-XtSetArg(3Xt)
+XtGetResourceList(__libmansuffix__),
+XtSetArg(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

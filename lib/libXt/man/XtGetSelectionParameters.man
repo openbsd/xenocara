@@ -160,7 +160,7 @@ or from within the last call to an
 .ZN XtConvertSelectionIncrProc
 with a new request_id.
 .SH "SEE ALSO"
-XtSetSelectionParameters(3Xt)
+XtSetSelectionParameters(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

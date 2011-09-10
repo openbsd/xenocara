@@ -212,8 +212,8 @@ There are very few times to use
 instead, you should use
 .ZN XtResizeWidget .
 .SH "SEE ALSO"
-XtMakeGeometryRequest(3Xt),
-XtQueryGeometry(3Xt)
+XtMakeGeometryRequest(__libmansuffix__),
+XtQueryGeometry(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

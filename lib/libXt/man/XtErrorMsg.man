@@ -175,7 +175,7 @@ The
 function has been superceded by
 .ZN XtAppWarningMsg
 .SH "SEE ALSO"
-.BR XtAppErrorMsg (3Xt)
+.BR XtAppErrorMsg (__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

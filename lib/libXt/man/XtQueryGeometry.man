@@ -159,8 +159,8 @@ replaces it with a pointer to an
 .ZN XtWidgetGeometry
 structure with request_mode=0 before calling query_geometry.
 .SH "SEE ALSO"
-XtConfigureWidget(3Xt),
-XtMakeGeometryRequest(3Xt)
+XtConfigureWidget(__libmansuffix__),
+XtMakeGeometryRequest(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

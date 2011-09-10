@@ -180,10 +180,10 @@ The
 .ZN XtUninstallTranslations
 function causes the entire translation table for widget to be removed.
 .SH "SEE ALSO"
-XtAppAddActions(3Xt),
-XtCreatePopupShell(3Xt),
-XtParseAcceleratorTable(3Xt),
-XtPopup(3Xt)
+XtAppAddActions(__libmansuffix__),
+XtCreatePopupShell(__libmansuffix__),
+XtParseAcceleratorTable(__libmansuffix__),
+XtPopup(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

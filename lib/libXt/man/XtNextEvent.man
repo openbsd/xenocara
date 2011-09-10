@@ -175,8 +175,8 @@ has been replaced by
 has been replaced by
 .ZN XtAppMainLoop .
 .SH "SEE ALSO"
-XtAppNextEvent(3xt), XtAppPending(3Xt), XtAppPeekEvent(3Xt), 
-XtAppProcessEvent(3Xt), XtAppMainLoop(3Xt)
+XtAppNextEvent(3xt), XtAppPending(__libmansuffix__), XtAppPeekEvent(__libmansuffix__), 
+XtAppProcessEvent(__libmansuffix__), XtAppMainLoop(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

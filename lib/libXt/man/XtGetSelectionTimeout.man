@@ -144,7 +144,7 @@ The
 function has been superceded by
 .ZN XtAppSetSelectionTimeout .
 .SH "SEE ALSO"
-.BR XtAppGetSelectionTimeout (3Xt)
+.BR XtAppGetSelectionTimeout (__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

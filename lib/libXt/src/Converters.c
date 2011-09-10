@@ -1360,7 +1360,7 @@ Boolean XtCvtIntToPixmap(
 		  XtNwrongParameters,"cvtIntToPixmap",XtCXtToolkitError,
                   "Integer to Pixmap conversion needs no extra arguments",
                    (String *) NULL, (Cardinal *)NULL);
-    done(Pixmap, *(Pixmap*)fromVal->addr);
+    done(Pixmap, *(int*)fromVal->addr);
 }
 
 #ifdef MOTIFBC

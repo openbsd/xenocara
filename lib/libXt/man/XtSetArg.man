@@ -199,7 +199,7 @@ When it is no longer needed,
 free the returned storage by using
 .ZN XtFree .
 .SH "SEE ALSO"
-XtOffset(3Xt)
+XtOffset(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

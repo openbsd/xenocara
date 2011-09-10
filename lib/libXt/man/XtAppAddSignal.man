@@ -187,7 +187,7 @@ function is called to remove the specified Intrinsics signal handler. The
 client should disable the source of the signal before calling
 .ZN XtRemoveSignal .
 .SH "SEE ALSO"
-XtAppAddTimeOut(3Xt),XtAppAddInput(3Xt),XtAppAddWorkProc(3Xt)
+XtAppAddTimeOut(__libmansuffix__),XtAppAddInput(__libmansuffix__),XtAppAddWorkProc(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

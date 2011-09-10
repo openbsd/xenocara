@@ -146,7 +146,7 @@ has been closed, the result is undefined. The returned strings are
 owned by the Intrinsics and must not be modified or freed by the
 caller.
 .SH "SEE ALSO"
-.BR XtDisplayInitialize (3Xt)
+.BR XtDisplayInitialize (__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

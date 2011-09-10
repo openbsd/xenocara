@@ -1855,6 +1855,15 @@ extern void XtFree(
     char*		/* ptr */
 );
 
+#ifndef _X_RESTRICT_KYWD
+# define _X_RESTRICT_KYWD
+#endif
+extern Cardinal XtAsprintf(
+    String *new_string,
+    _Xconst char * _X_RESTRICT_KYWD format,
+    ...
+) _X_ATTRIBUTE_PRINTF(2,3);
+
 #ifdef XTTRACEMEMORY
 
 extern char *_XtMalloc( /* implementation-private */

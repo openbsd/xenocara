@@ -139,7 +139,7 @@ Specifies the number of entries in this action table.
 has been replaced by
 .ZN XtAppAddActions .
 .SH "SEE ALSO"
-XtAppAddActions(3Xt)
+XtAppAddActions(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

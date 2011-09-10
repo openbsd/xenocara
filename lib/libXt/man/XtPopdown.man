@@ -223,8 +223,8 @@ gets to the application top-level shell widget
 and cannot find a matching shell, 
 it generates an error.
 .SH "SEE ALSO"
-XtCreatePopupShell(3Xt),
-XtPopup(3Xt)
+XtCreatePopupShell(__libmansuffix__),
+XtPopup(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

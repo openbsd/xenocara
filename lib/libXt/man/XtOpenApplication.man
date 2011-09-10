@@ -200,7 +200,7 @@ and
 .ZN XtVaOpenApplication
 respectively.
 .SH "SEE ALSO"
-XtAppInitialize(3Xt), XtVaAppInitialize(3Xt)
+XtAppInitialize(__libmansuffix__), XtVaAppInitialize(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

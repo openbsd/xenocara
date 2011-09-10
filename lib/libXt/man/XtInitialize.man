@@ -165,7 +165,7 @@ created shell. The semantics of calling
 more than once are undefined. This routine has been replaced by
 .ZN XtAppInitialize .
 .SH "SEE ALSO"
-.BR XtAppInitialize (3Xt)
+.BR XtAppInitialize (__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

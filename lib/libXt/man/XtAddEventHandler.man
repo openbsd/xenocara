@@ -230,8 +230,8 @@ for the specified events. If the procedure is already registered with the
 same \fIclient_data\fP value, the specified mask augments the existing
 mask and the procedure is repositioned in the list.
 .SH "SEE ALSO"
-XtAppNextEvent(3Xt),
-XtBuildEventMask(3Xt)
+XtAppNextEvent(__libmansuffix__),
+XtBuildEventMask(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

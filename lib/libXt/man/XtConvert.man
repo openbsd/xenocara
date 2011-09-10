@@ -179,10 +179,10 @@ the client should check to_return.address for non-NULL.
 has been replaced by
 .ZN XtCallConverter .
 .SH "SEE ALSO"
-XtAppAddConverter(3Xt),
-XtStringConversionWarning(3Xt),
-XtConvertAndStore(3Xt),
-XtCallConverter(3Xt)
+XtAppAddConverter(__libmansuffix__),
+XtStringConversionWarning(__libmansuffix__),
+XtConvertAndStore(__libmansuffix__),
+XtCallConverter(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

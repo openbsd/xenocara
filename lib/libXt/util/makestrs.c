@@ -30,9 +30,6 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xos.h>
 #include <stdlib.h>
 #include <unistd.h>
-#if defined(macII) && !defined(__STDC__)  /* stdlib.h fails to define these */
-char *malloc();
-#endif /* macII */
 
 typedef struct _TableEnt {
     struct _TableEnt* next;

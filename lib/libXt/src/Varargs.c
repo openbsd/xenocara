@@ -318,7 +318,7 @@ _XtFreeArgList(
     if (args) {
 	if (typed_count)
 	    for (p = args + total_count; total_count--; ++p) {
-		if (p->value) XtFree((char *)p->value);
+		XtFree((char *)p->value);
 	    }
 	XtFree((char *)args);
     }
@@ -398,8 +398,7 @@ _XtVaToArgList(
 	}
     }
 
-    if (resources != NULL)
-	XtFree((XtPointer)resources);
+    XtFree((XtPointer)resources);
 
     *num_args_return = (Cardinal)count;
     *args_return = (ArgList)args;

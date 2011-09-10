@@ -188,8 +188,8 @@ as would be when calling
 .ZN XtGetSelectionValue
 repeatedly.
 .SH "SEE ALSO"
-XtAppGetSelectionTimeout(3Xt),
-XtOwnSelection(3Xt)
+XtAppGetSelectionTimeout(__libmansuffix__),
+XtOwnSelection(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

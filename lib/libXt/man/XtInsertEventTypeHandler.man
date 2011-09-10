@@ -282,7 +282,7 @@ if any event handler was called and
 otherwise.
 .LP
 .SH "SEE ALSO"
-XtGetKeyboardFocusWidget(3Xt)
+XtGetKeyboardFocusWidget(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

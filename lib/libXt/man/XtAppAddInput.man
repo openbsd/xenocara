@@ -178,7 +178,7 @@ The
 function causes the \*(xI read routine to stop watching for input
 from the input source.
 .SH "SEE ALSO"
-XtAppAddTimeOut(3Xt),XtAppAddSignal(3Xt)
+XtAppAddTimeOut(__libmansuffix__),XtAppAddSignal(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

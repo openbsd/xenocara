@@ -168,7 +168,7 @@ If
 was previously called it returns immediately.
 .LP
 .SH "SEE ALSO"
-XtDisplayInitialize(3Xt)
+XtDisplayInitialize(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

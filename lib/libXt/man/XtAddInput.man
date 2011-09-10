@@ -161,7 +161,7 @@ has been replaced by
 has been replaced by
 .ZN XtAppAddWorkProc .
 .SH "SEE ALSO"
-XtAppAddInput(3Xt), XtAppAddTimeOut(3Xt), XtAppAddWorkProc(3Xt)
+XtAppAddInput(__libmansuffix__), XtAppAddTimeOut(__libmansuffix__), XtAppAddWorkProc(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

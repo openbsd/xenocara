@@ -171,7 +171,7 @@ Note that the widget returned by
 has the \s-1WM_COMMAND\s+1
 property set for session managers (see Chapter 4).
 .SH "SEE ALSO"
-XtCreateWidget(3Xt)
+XtCreateWidget(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

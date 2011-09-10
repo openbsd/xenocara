@@ -145,10 +145,10 @@ type ``string'', class ``XtToolkitError, and the default message string
 has been replaced by
 .ZN XtDisplayStringConversionWarning .
 .SH "SEE ALSO"
-XtAppAddConverter(3Xt),
+XtAppAddConverter(__libmansuffix__),
 XtAppErrorMsg(3t),
-XtConvert(3Xt),
-XtDisplayStringConversionWarning(3Xt)
+XtConvert(__libmansuffix__),
+XtDisplayStringConversionWarning(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

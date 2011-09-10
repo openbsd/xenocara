@@ -168,9 +168,9 @@ an unspecified number of pop-ups.
 You can look to see if an appropriate unused shell (that is, not
 currently popped up) exists and create a new shell if needed.
 .SH "SEE ALSO"
-XtCreateWidget(3Xt),
-XtPopdown(3Xt),
-XtPopup(3Xt)
+XtCreateWidget(__libmansuffix__),
+XtPopdown(__libmansuffix__),
+XtPopup(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

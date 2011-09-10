@@ -214,7 +214,7 @@ in order to decrement the reference count when the converted value
 is no longer required. The \fIcache_ref_return\fP argument should be
 NULL if the caller is unwilling or unable to store the value.
 .SH "SEE ALSO"
-XtAppReleaseCacheRefs(3Xt)
+XtAppReleaseCacheRefs(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

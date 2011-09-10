@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2007/03/15 23:00:48 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2011/09/10 09:36:19 matthieu Exp $
 
-SHARED_LIBS=	Xt 10.0
+SHARED_LIBS=	Xt 10.1
 
 CONFIGURE_ARGS= --with-appdefaultdir=/etc/X11/app-defaults
 

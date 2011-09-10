@@ -182,7 +182,7 @@ The
 function removes all the callback procedures from the specified
 widget's callback list.
 .SH "SEE ALSO"
-XtCallCallbacks(3Xt)
+XtCallCallbacks(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

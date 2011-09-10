@@ -180,7 +180,7 @@ and
 .ZN XtGetSelectionValuesIncremental
 cannot be used  to make selection requests with parameterized targets.
 .SH "SEE ALSO"
-XtGetSelectionParameters(3Xt)
+XtGetSelectionParameters(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

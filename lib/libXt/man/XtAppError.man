@@ -169,8 +169,8 @@ The
 function calls the installed nonfatal error procedure and passes the
 specified message.
 .SH "SEE ALSO"
-XtAppGetErrorDatabase(3Xt),
-XtAppErrorMsg(3Xt)
+XtAppGetErrorDatabase(__libmansuffix__),
+XtAppErrorMsg(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

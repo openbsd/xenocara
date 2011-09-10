@@ -149,7 +149,7 @@ and the default application context created by
 This routine has been replaced by
 .ZN XtAppCreateShell .
 .SH "SEE ALSO"
-XtAppCreateShell(3Xt)
+XtAppCreateShell(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

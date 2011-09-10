@@ -218,8 +218,8 @@ before the call to
 finishes after the call to
 .ZN XtDisownSelection .
 .SH "SEE ALSO"
-XtAppGetSelectionTimeout(3Xt),
-XtGetSelectionValue(3Xt)
+XtAppGetSelectionTimeout(__libmansuffix__),
+XtGetSelectionValue(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

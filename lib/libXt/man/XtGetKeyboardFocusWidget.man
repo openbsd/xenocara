@@ -137,9 +137,9 @@ Must be of class Core or any subclass thereof.
 function returns the widget that would be the end result of keyboard
 event forwarding for a keyboard event for the specified widget.
 .SH "SEE ALSO"
-XtInsertEventTypeHandler(3Xt), XtRemoveEventTypeHandler(3Xt),
-XtRegisterExtensionSelector(3Xt), XtSetEventDispatcher(3Xt),
-XtDispatchEventToWidget(3Xt)
+XtInsertEventTypeHandler(__libmansuffix__), XtRemoveEventTypeHandler(__libmansuffix__),
+XtRegisterExtensionSelector(__libmansuffix__), XtSetEventDispatcher(__libmansuffix__),
+XtDispatchEventToWidget(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

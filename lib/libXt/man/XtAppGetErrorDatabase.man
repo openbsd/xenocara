@@ -168,8 +168,8 @@ returns the appropriate message from the error database
 or returns the specified default message if one is not found in the
 error database.
 .SH "SEE ALSO"
-XtAppError(3Xt),
-XtAppErrorMsg(3Xt)
+XtAppError(__libmansuffix__),
+XtAppErrorMsg(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

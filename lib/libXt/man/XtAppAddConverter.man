@@ -165,8 +165,8 @@ with \fIcache_type\fP equal to
 for old-format type converters. It has been superseded by
 .ZN XtSetTypeConverter .
 .SH "SEE ALSO"
-XtConvert(3Xt),
-XtStringConversionWarning(3Xt)
+XtConvert(__libmansuffix__),
+XtStringConversionWarning(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

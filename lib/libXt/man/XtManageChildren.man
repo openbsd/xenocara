@@ -341,8 +341,8 @@ is managed, or
 .ZN False
 otherwise.
 .SH "SEE ALSO"
-XtMapWidget(3Xt),
-XtRealizeWidget(3Xt)
+XtMapWidget(__libmansuffix__),
+XtRealizeWidget(__libmansuffix__)
 .br
 \fI\*(xT\fP
 .br

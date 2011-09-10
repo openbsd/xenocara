@@ -36,8 +36,9 @@
 /* Define to 1 if Xalloca.h should include <alloca.h> */
 #undef INCLUDE_ALLOCA_H
 
-/* Define to 1 if your C compiler doesn't accept -c and -o together. */
-#undef NO_MINUS_C_MINUS_O
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Name of package */
 #undef PACKAGE
@@ -69,11 +70,8 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Define to 1 if you have the "poll" function. */
+/* poll() function is available */
 #undef USE_POLL
-
-/* Define to 1 if you have the "snprintf" function. */
-#undef USE_SNPRINTF
 
 /* Version number of package */
 #undef VERSION
