@@ -1,3 +1,107 @@
+commit 7fd18b15646a62bd82a4eb0eca60a34c1731813d
+Author: Chad Versace <chad@chad-versace.us>
+Date:   Wed May 11 12:50:11 2011 -0700
+
+    Add attachment token DRI2BufferHiz
+    
+    ... and bump version to 2.6.
+    
+    CC: Eric Anholt <eric@anholt.net>
+    CC: Ian Romanick <idr@freedesktop.org>
+    CC: Kristian Høgsberg <krh@bitplanet.net
+    Reviewed-by: Kenneth Graunke <kenneth@whitecape.org>
+    Signed-off-by: Chad Versace <chad@chad-versace.us>
+
+commit 005096937e1da6f65f8ece77662a8db6102d933d
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Thu May 5 13:11:22 2011 -0700
+
+    dri2proto: add a new DRI2BufferSwapComplete struct that matches the spec
+    
+    Just add a new struct to remain compatible with existing code.
+    
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+    Reviewed-by: Ian Romanick <ian.d.romanick@intel.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+commit f3c211e1ae183dab5c7529814c9f42af2c29fc6c
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Thu May 5 09:22:39 2011 -0700
+
+    Revert "dri2proto: make DRI2 swap event match GLX spec"
+    
+    This reverts commit 0ca3778de195a82087d0f07415a1cf8fc94f5b0a.
+    
+    This broke compatibility by renaming existing struct fields.  So revert
+    in favor of a new struct.
+
+commit 0ca3778de195a82087d0f07415a1cf8fc94f5b0a
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Tue May 3 12:14:58 2011 -0700
+
+    dri2proto: make DRI2 swap event match GLX spec
+    
+    We only spec a 32 bit sbc count, so drop the high bits.  Also make the
+    padding explicit.
+    
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+commit 2af5884ab0797f2872028a90fffd4155109cdc4d
+Author: Marcin Kościelnicki <koriakin@0x04.net>
+Date:   Thu May 13 21:05:56 2010 +0000
+
+    Fix DRI2Connect line encoding to match existing code
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit c34ce137fdb21fc9a52bb8d5a0c25e3c5d79e687
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:25:52 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1c1456e1517d28ffbd844b00090596c21d9a9d9b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 19:00:30 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 70e5dee9a600e67057c55ab9b1b975f20a68682d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 17:35:44 2010 -0400
+
+    config: install and distribute dri2proto.txt
+    
+    It will now be installed in $docdir in addition
+    to being distributed in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3e6dc6d72844bbc8e8752e2ac2e781cb7d0172f1
+Author: Mike Stroyan <mike@LunarG.com>
+Date:   Tue Feb 16 14:51:43 2010 -0700
+
+    Fix typo and obsolete reference in dri2proto.txt
+
+commit 1911ee62a552fae34c82c91b4deef523380fbfe1
+Author: Mike Stroyan <mike@LunarG.com>
+Date:   Tue Feb 16 14:47:21 2010 -0700
+
+    Add more info about dri2proto events
+
 commit 41045095bddfe460a76fb560e1d087430d8fd76f
 Author: Francisco Jerez <currojerez@riseup.net>
 Date:   Mon Feb 8 19:24:37 2010 +0100
@@ -167,6 +271,17 @@ Date:   Fri May 1 14:41:55 2009 -0700
     Add a SwapBuffers request for requesting a front<->back swap.  Returns a
     whole new set of buffers to the client to allow for triple buffering
     etc.
+
+commit 66c56ab10d917e3f47f93178d7eac6430970d3c4
+Author: Ian Romanick <idr@freedesktop.org>
+Date:   Mon Apr 20 21:16:24 2009 -0700
+
+    Add protocol for DRI2GetBuffersWithFormat
+    
+    This function replaces DRI2GetBuffers.
+    
+    Signed-off-by: Ian Romanick <ian.d.romanick@intel.com>
+    Reviewed-by: Kristian Høgsberg <krh@redhat.com>
 
 commit a223ab5e6a215d86e4bf072369b331506f689f83
 Author: Kristian Høgsberg <krh@redhat.com>

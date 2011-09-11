@@ -43,6 +43,7 @@
 #define DRI2BufferFakeFrontLeft		7
 #define DRI2BufferFakeFrontRight	8
 #define DRI2BufferDepthStencil		9
+#define DRI2BufferHiz			10
 
 #define DRI2DriverDRI			0
 #define DRI2DriverVDPAU			1
