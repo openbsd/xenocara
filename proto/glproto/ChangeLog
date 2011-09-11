@@ -1,3 +1,65 @@
+commit 6d7e398150dde1c15b7f62f485cb33bad8f4d5c6
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Thu May 5 13:10:39 2011 -0700
+
+    glproto: add a new GLXBufferSwapComplete struct that matches the spec
+    
+    Just add a new struct to remain compatible with existing code.
+    
+    Reviewed-by: Ian Romanick <ian.d.romanick@intel.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+commit 7196c9441af941be74180f8e8d4e10a08659b80f
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Thu May 5 09:21:19 2011 -0700
+
+    Revert "glxproto: make GLX swap event struct match spec"
+    
+    This reverts commit f5403828c68af0f12c79c0504df0a4781ca84b2b.
+    
+    This broke compatibility with existing code, so revert in favor of a new
+    struct definition instead.
+
+commit f5403828c68af0f12c79c0504df0a4781ca84b2b
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Tue May 3 12:14:10 2011 -0700
+
+    glxproto: make GLX swap event struct match spec
+    
+    We only spec a 32 bit swap count, so drop the high sbc field.  Also make
+    the padding explicit (most compilers would have already done this since
+    it's not a packed structure, but making it explicit should prevent
+    surprises in the future).
+    
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+commit 0cc3162cd29e63f915dc2b66c8dbd7a1a3dcdddc
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sun Mar 6 17:48:05 2011 +1000
+
+    glproto: add GLX_ARB_context_create + GLX_ARB_context_create_profile
+    
+    Add glproto support for these two extensions
+    
+    also add tokens for GLX_ARB_create_context_robustness
+
+commit a50bd646df530b4ce84a8aef3d40c74766dfb60c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jan 3 19:40:30 2011 +1000
+
+    glxtokens.h: add GLX_EXT_framebuffer_sRGB support.
+    
+    this is needed to glxcmds.c to emit this info.
+
+commit f065686b320c5fbfd7e1da6fcd3e2690b8305ec8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 10 10:01:33 2010 -0400
+
+    glproto 1.4.12
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit b173af9ea5361b4794d4cca79f7c7dddd8401a87
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed Aug 4 09:44:14 2010 -0400
