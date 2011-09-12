@@ -1475,7 +1475,7 @@
 ./usr/X11R6/man/man3/XFreeFontPath.3
 ./usr/X11R6/man/man3/XFreeFontSet.3
 ./usr/X11R6/man/man3/XFreeGC.3
-./usr/X11R6/man/man3/XFreeModifierMap.3
+./usr/X11R6/man/man3/XFreeModifiermap.3
 ./usr/X11R6/man/man3/XFreePixmap.3
 ./usr/X11R6/man/man3/XFreeStringList.3
 ./usr/X11R6/man/man3/XGCValues.3
@@ -2302,6 +2302,7 @@
 ./usr/X11R6/man/man3/XtAppUnlock.3
 ./usr/X11R6/man/man3/XtAppWarning.3
 ./usr/X11R6/man/man3/XtAppWarningMsg.3
+./usr/X11R6/man/man3/XtAsprintf.3
 ./usr/X11R6/man/man3/XtAugmentTranslations.3
 ./usr/X11R6/man/man3/XtBuildEventMask.3
 ./usr/X11R6/man/man3/XtCallAcceptFocus.3

@@ -126,7 +126,7 @@
 ./usr/X11R6/lib/libXrandr.so.6.1
 ./usr/X11R6/lib/libXrender.so.5.0
 ./usr/X11R6/lib/libXss.so.5.0
-./usr/X11R6/lib/libXt.so.10.0
+./usr/X11R6/lib/libXt.so.10.1
 ./usr/X11R6/lib/libXtst.so.10.0
 ./usr/X11R6/lib/libXv.so.5.0
 ./usr/X11R6/lib/libXvMC.so.5.0
