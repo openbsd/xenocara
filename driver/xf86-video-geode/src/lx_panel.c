@@ -69,19 +69,18 @@ DisplayModeRec lx_panel_modes[] = {
     {MODEPREFIX, 162000, 1600, 1664, 1856, 2160, 0, 1200, 1201, 1204, 1250, 0,
 	V_NHSYNC | V_NVSYNC, MODESUFFIX}
     ,				       /* 1600x1200@60 */
-    {MODEPREFIX, 67630, 1024, 1080, 1184, 1344, 0, 600, 601, 604, 629, 0,
-	V_NHSYNC | V_NVSYNC, MODESUFFIX}
-    ,				       /* 1024x600@80 */
+    {MODEPREFIX, 48960, 1024, 1064, 1168, 1312, 0, 600, 601, 604, 622, 0,
+        V_NHSYNC | V_NVSYNC, MODESUFFIX}
+    ,				       /* 1024x600@60 wide panels */
 };
 
 /* Get the legacy panel size from VSA, and return the associated mode rec */
 
 DisplayModePtr
-LXGetLegacyPanelMode(void)
+LXGetLegacyPanelMode(ScrnInfoPtr pScrni)
 {
     unsigned short reg = LX_READ_VG(0x00);
     unsigned char ret = (reg >> 8) & 0x07;
-
     if ((ret == 1 || ret == 5)) {
 
 	reg = LX_READ_VG(0x02);
@@ -94,8 +93,13 @@ LXGetLegacyPanelMode(void)
  	 * The user can use this entry for other wide screen resolutions.
 	 */
 
-	if (ret < 8)
+	if (ret < 8) {
+	    xf86DrvMsg(pScrni->scrnIndex, X_INFO,
+		" VSA Panel Mode is: %dx%d, pixel clock freq(kHz) is %d\n",
+		lx_panel_modes[ret].HDisplay, lx_panel_modes[ret].VDisplay,
+		lx_panel_modes[ret].Clock);
 	    return &lx_panel_modes[ret];
+	}
 
     }
 

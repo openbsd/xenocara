@@ -1,3 +1,106 @@
+commit 1a23956758d17a8b4c1d8acebf8acc94358c37b9
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Feb 13 21:52:55 2011 +0200
+
+    Geode 2.11.12
+
+commit 30d46e6c28479e07ac8328b6f4dfc2692eb1ac6d
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Feb 7 00:04:06 2011 +0000
+
+    Stop including "linux/videodev.h" in z4l.c
+    V4L1 support was dropped as of Linux kernel 2.6.38
+
+commit 509f6085ce7747d76f638a7a30170c437b296a40
+Author: Daniel Drake <dsd@laptop.org>
+Date:   Sun Feb 6 20:22:01 2011 +0000
+
+    Fix packed overlay offscreen allocations
+    
+    Commit 5e72a00ad2 caused packed video data to corrupt glyphs and other
+    parts of the screen, but it turns out that the commit actually at fault
+    was d681a844e, incorrectly changing the size of the allocated destination
+    memory from the number of bytes needed to the number of lines needed.
+    
+    While fixing this, I noticed that LXAllocateSurface is probably making the
+    same mistake, and that the height is probably not calculated correctly for
+    some corner cases when calling LXCopyFromSys in the packed
+    video path (but I'm not sure about either).
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=33004
+
+commit 66c375d2a1d1eadb38d2cbfe2d08cfec20213cb4
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Mon Dec 27 15:20:38 2010 +0200
+
+    Geode 2.11.11
+
+commit b9a5a86a402832fe699e43b3030932b50ae821a0
+Author: Priit Laes <plaes@plaes.org>
+Date:   Wed Dec 15 03:54:13 2010 +0200
+
+    Restoring compatibility down to X server 1.4
+    
+    Signed-off-by: Priit Laes <plaes@plaes.org>
+
+commit bae443bb46c81702a57d4914b7e56f17e5aa1f3a
+Author: Daniel Drake <dsd@laptop.org>
+Date:   Tue Nov 30 20:31:49 2010 +0000
+
+    Improve handling of gamma correction in video vs graphics
+    
+    The LX is a bit odd in that the palette can be used for gamma correction
+    of graphics data, or video data, but not both at the same time.
+    
+    Right now, during X startup, X sets gamma correction (but without any
+    actual correction) causing the Geode driver to start using the palette
+    for graphics gamma correction. (this is just momentary)
+    
+    Later on during startup, vg_set_custom_mode() switches to using the
+    palette for video gamma correction, and this is the end result.
+    
+    If you later use xrandr to change the gamma, the palette starts being used
+    for graphics again.
+    
+    If you VT switch, vg_set_custom_mode (momentarily) starts using the palette
+    for video, but then X jumps in with a gamma callback causing it to be used
+    for graphics again.
+    
+    End result: no user visible bug, but this is inconsistent.
+    As there is no exposed mechanism for changing video gamma I suggest
+    we just drop that bit from vg_set_custom_mode(). Then the inconsistency
+    goes away.
+    
+    Downside: this now becomes dependent on X setting gamma during startup.
+    I don't know when this was introduced but I think it is recent.
+    
+    Aditionally, I think I found a (harmless) bug in
+    df_set_video_palette_entry, it doesn't do what the comments say.
+
+commit 5873bfa48f1c090d224adbc7ca7df3ebea0b198f
+Author: Priit Laes <plaes@plaes.org>
+Date:   Sun Dec 12 16:17:24 2010 +0200
+
+    Fix compilation under xorg >1.9.99
+    
+    Signed-off-by: Priit Laes <plaes@plaes.org>
+
+commit 1d8d02d64e9f5d5dd3788b3b9b1b25866c2ed6b5
+Author: Martin-Éric Racine <q-funk@iki.fi>
+Date:   Fri Nov 19 17:24:35 2010 +0200
+
+    LX Panel: lower the 1024x600 refresh rate down to 60Hz.
+    
+    NOTE: the eCafe EC-800's panel doesn't support a higher refresh rate.
+
+commit 256356912bbc1d1e65db5c3c03c6ae25883a81fb
+Author: Frank Huang <frankr.huang@amd.com>
+Date:   Fri Nov 19 10:28:31 2010 +0800
+
+    Print the panel mode BIOS uses
+    
+    Signed-off-by: Frank Huang<frankr.huang@amd.com>
+
 commit 50f9152e2087fd50dfc09e35505c2fbcdd3183b0
 Author: Martin-Éric Racine <q-funk@iki.fi>
 Date:   Tue Nov 9 11:12:44 2010 +0200

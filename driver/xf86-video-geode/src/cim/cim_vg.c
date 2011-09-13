@@ -1002,8 +1002,7 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
     temp &= ~(DF_DCFG_CRT_SYNC_SKW_MASK | DF_DCFG_PWR_SEQ_DLY_MASK |
         DF_DCFG_CRT_HSYNC_POL | DF_DCFG_CRT_VSYNC_POL);
 
-    temp |= (DF_DCFG_CRT_SYNC_SKW_INIT |
-        DF_DCFG_PWR_SEQ_DLY_INIT | DF_DCFG_GV_PAL_BYP);
+    temp |= DF_DCFG_CRT_SYNC_SKW_INIT | DF_DCFG_PWR_SEQ_DLY_INIT;
 
     if (mode_params->flags & VG_MODEFLAG_NEG_HSYNC)
         temp |= DF_DCFG_CRT_HSYNC_POL;

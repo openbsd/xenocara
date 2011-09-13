@@ -454,7 +454,7 @@ void LXInitVideo(ScreenPtr pScrn);
 void LXSetupOutput(ScrnInfoPtr);
 
 /* lx_panel.c */
-DisplayModePtr LXGetLegacyPanelMode(void);
+DisplayModePtr LXGetLegacyPanelMode(ScrnInfoPtr pScrni);
 DisplayModePtr LXGetManualPanelMode(char *modestr);
 
 void LXAdjustFrame(int scrnIndex, int x, int y, int flags);

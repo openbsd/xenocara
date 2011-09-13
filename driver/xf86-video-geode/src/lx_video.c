@@ -302,7 +302,7 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
 
     lines = ((dstPitch * height) + pGeode->Pitch - 1) / pGeode->Pitch;
 
-    if (LXAllocateVidMem(pScrni, pPriv, lines) == FALSE) {
+    if (LXAllocateVidMem(pScrni, pPriv, dstPitch * height) == FALSE) {
 	ErrorF("Error allocating an offscreen Packed region.\n");
 	return FALSE;
     }
@@ -334,6 +334,7 @@ LXCopyPacked(ScrnInfoPtr pScrni, int id, unsigned char *buf,
 	GeodeCopyGreyscale(buf + srcOffset, pGeode->FBBase + dstOffset,
 	    srcPitch, dstPitch, height, pixels >> 1);
     } else
+	/* FIXME: should lines be used here instead of height? */
 	LXCopyFromSys(pGeode, buf + srcOffset, dstOffset, dstPitch, srcPitch,
 	    height, pixels);
 
@@ -818,6 +819,8 @@ LXAllocateSurface(ScrnInfoPtr pScrni, int id, unsigned short w,
     pitch = ((w << 1) + 15) & ~15;
     lines = ((pitch * h) + (pGeode->Pitch - 1)) / pGeode->Pitch;
 
+    /* FIXME: is lines the right parameter to use here,
+     * or should it be height * pitch? */
     vidmem = exaOffscreenAlloc(pScrni->pScreen, lines, 4, TRUE,
 		NULL, NULL);
 

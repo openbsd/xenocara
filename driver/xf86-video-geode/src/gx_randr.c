@@ -26,7 +26,12 @@
  * software without specific prior written permission.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "xf86.h"
+#include "xf86Modes.h"
 #include "os.h"
 #include "globals.h"
 #include "xf86.h"
@@ -171,7 +176,9 @@ GXRandRSetMode(ScreenPtr pScreen,
 #endif
     DisplayModePtr currentMode = NULL;
     Bool ret = TRUE;
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,9,99,1,0)
     PixmapPtr pspix = NULL;
+ #endif
 
     if (pRoot)
 	(*pScrni->EnableDisableFBAccess) (pScreen->myNum, FALSE);
@@ -210,16 +217,16 @@ GXRandRSetMode(ScreenPtr pScreen,
 	pScrni->currentMode = currentMode;
     }
 
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,9,99,1,0)
     /*
      * Get the new Screen pixmap ptr as SwitchMode might have called
      * ModifyPixmapHeader and xf86EnableDisableFBAccess will put it back...
      * Unfortunately.
-     
      */
-
     pspix = (*pScreen->GetScreenPixmap) (pScreen);
     if (pspix->devPrivate.ptr)
 	pScrni->pixmapPrivate = pspix->devPrivate;
+#endif
 
     xf86ReconfigureLayout();
 

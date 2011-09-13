@@ -452,7 +452,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	    pGeode->panelMode = LXGetManualPanelMode(pmode);
 
 	if (pGeode->panelMode == NULL)
-	    pGeode->panelMode = LXGetLegacyPanelMode();
+	    pGeode->panelMode = LXGetLegacyPanelMode(pScrni);
 
 	if (pGeode->panelMode == NULL)
 	    pGeode->Output &= ~OUTPUT_PANEL;

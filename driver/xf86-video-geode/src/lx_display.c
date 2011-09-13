@@ -389,7 +389,13 @@ lx_create_bo_pixmap(ScreenPtr pScreen,
 {
     PixmapPtr pixmap;
 
+
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,5,0,0,0)
     pixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, depth, 0);
+#else
+    pixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, depth);
+#endif
+
     if (!pixmap)
 	return NULL;
     if (!(*pScreen->ModifyPixmapHeader)(pixmap, width, height,

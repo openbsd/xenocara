@@ -55,7 +55,6 @@ typedef long long __s64;
 #define __u64 __u_64
 typedef unsigned long long __u64;
 
-#include "linux/videodev.h"
 #define __user
 #include "linux/videodev2.h"
 
