@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.90 2011/09/05 07:37:55 okan Exp $
+ * $OpenBSD: client.c,v 1.91 2011/09/13 08:41:57 okan Exp $
  */
 
 #include <sys/param.h>
@@ -112,6 +112,8 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 	    PropertyChangeMask | KeyReleaseMask);
 
 	XAddToSaveSet(X_Dpy, cc->win);
+
+	client_transient(cc);
 
 	/* Notify client of its configuration. */
 	xu_configure(cc);
@@ -867,6 +869,21 @@ client_freehints(struct client_ctx *cc)
 		XFree(cc->app_name);
 	if (cc->app_class != NULL)
 		XFree(cc->app_class);
+}
+
+void
+client_transient(struct client_ctx *cc)
+{
+	struct client_ctx	*tc;
+	Window			 trans;
+
+	if (XGetTransientForHint(X_Dpy, cc->win, &trans)) {
+		if ((tc = client_find(trans)) && tc->group) {
+			group_movetogroup(cc, tc->group->shortcut - 1);
+			if (tc->flags & CLIENT_IGNORE)
+				cc->flags |= CLIENT_IGNORE;
+		}
+	}
 }
 
 static int
