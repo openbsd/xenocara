@@ -908,7 +908,9 @@ static Bool i830_xf86crtc_resize(ScrnInfoPtr scrn, int width, int height)
 		/* ick. xf86EnableDisableFBAccess smashes the screen pixmap devPrivate,
 		 * so update the value it uses
 		 */
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,9,99,1,0)
 		scrn->pixmapPrivate.ptr = intel->FbBase + scrn->fbOffset;
+#endif
 		xf86DrvMsg(scrn->scrnIndex, X_INFO,
 			   "New front buffer at 0x%lx\n",
 			   intel->front_buffer->offset);
