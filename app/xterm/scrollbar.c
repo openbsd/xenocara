@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.181 2011/04/18 22:35:33 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.182 2011/09/03 12:13:42 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -234,7 +234,7 @@ DoResizeScreen(XtermWidget xw)
     }
 #endif
     XSync(screen->display, False);	/* synchronize */
-    if (XtAppPending(app_con))
+    if (xtermAppPending())
 	xevents();
 
 #ifndef NO_ACTIVE_ICON

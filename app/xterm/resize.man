@@ -1,8 +1,7 @@
-.\" $XTermId: resize.man,v 1.19 2011/08/16 09:10:05 tom Exp $
+.\" $XTermId: resize.man,v 1.20 2011/09/11 19:28:54 tom Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, 1998-2006.
 .\"
-.\" $XFree86: xc/programs/xterm/resize.man,v 1.12 2006/02/13 01:14:59 dickey Exp $
 .\" Escape single quotes in literal strings from groff's Unicode transform.
 .ie \n(.g .ds AQ \(aq
 .el       .ds AQ '
@@ -20,9 +19,11 @@ resize \- set environment and terminal settings to current xterm window size
 .I Resize
 prints a shell command for setting the appropriate environment variables
 to indicate the current size of \fIxterm\fP window from which the command
-is run.  For this output to take effect, \fIresize\fP must either be evaluated
+is run.
+For this output to take effect, \fIresize\fP must either be evaluated
 as part of the command line (usually done with a shell alias or function) or
-else redirected to a file which can then be read in.  From the C shell (usually
+else redirected to a file which can then be read in.
+From the C shell (usually
 known as \fI/bin/csh\fP), the following alias could be defined in the
 user's \fI.cshrc\fP:
 .sp
@@ -45,6 +46,15 @@ in with the \*(``.\*('' command:
         $  resize > /tmp/out
         $  .\0/tmp/out
 .fi
+.PP
+.I Resize
+determines the user's current shell by first checking if \fB$SHELL\fP
+is set, and using that.
+Otherwise it determines the user's shell by looking in the password file.
+Generally Bourne-shell variants (including \fIksh\fP)
+do not modify \fB$SHELL\fP,
+so it is possible for \fIresize\fP to be confused if one runs
+\fIresize\fP from a Bourne shell spawned from a C shell.
 .SH OPTIONS
 The following options may be used with \fIresize\fP:
 .TP 8
@@ -61,14 +71,15 @@ This option indicates that Sun console escape sequences will be used
 instead of the VT100-style \fIxterm\fP escape codes.
 If \fIrows\fP and
 \fIcolumns\fP are given, \fIresize\fP will ask the \fIxterm\fP to resize
-itself.  However, the window manager may choose to disallow the change.
-.sp
+itself.
+However, the window manager may choose to disallow the change.
+.PP
 Note that the Sun console escape sequences are recognized
 by XFree86 \fIxterm\fP and
 by \fIdtterm\fP.
 The \fIresize\fP program may be installed as \fIsunsize\fP,
 which causes makes it assume the \fB\-s\fP option.
-.sp
+.PP
 The \fIrows\fP and
 \fIcolumns\fP arguments must appear last; though they are normally
 associated with the \fB\-s\fP option, they are parsed separately.

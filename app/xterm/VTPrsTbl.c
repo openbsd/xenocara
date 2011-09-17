@@ -1,8 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.59 2010/08/24 21:26:42 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.60 2011/09/11 15:00:46 tom Exp $ */
 
 /*
- *
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -54,6 +53,7 @@
  */
 
 #include <VTparse.h>
+/* *INDENT-OFF* */
 
 #if !OPT_BLINK_CURS
 #undef  CASE_CSI_SPACE_STATE
@@ -8197,3 +8197,4 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 #endif /* OPT_VT52_MODE */
+/* *INDENT-ON* */

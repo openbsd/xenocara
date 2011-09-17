@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.189 2011/07/10 22:19:32 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.190 2011/09/03 12:13:42 tom Exp $ */
 
 /*
  * Copyright 2001-2010,2011 by Thomas E. Dickey
@@ -826,7 +826,7 @@ Tinput(TekWidget tw)
 		TCursorToggle(tw, TOGGLE);
 		Ttoggled = False;
 	    }
-	    if (XtAppPending(app_con) & XtIMXEvent) {
+	    if (xtermAppPending() & XtIMXEvent) {
 #ifdef VMS
 		Tselect_mask = X_mask;
 #else /* VMS */

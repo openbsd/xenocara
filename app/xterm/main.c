@@ -1,4 +1,76 @@
-/* $XTermId: main.c,v 1.656 2011/08/25 08:55:31 tom Exp $ */
+/* $XTermId: main.c,v 1.667 2011/09/11 21:02:37 tom Exp $ */
+
+/*
+ * Copyright 2002-2010,2011 by Thomas E. Dickey
+ *
+ *                         All Rights Reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ *
+ * Copyright 1987, 1988  The Open Group
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation.
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name of The Open Group shall not be
+ * used in advertising or otherwise to promote the sale, use or other dealings
+ * in this Software without prior written authorization from The Open Group.
+ *
+ * Copyright 1987, 1988 by Digital Equipment Corporation, Maynard.
+ *
+ *                         All Rights Reserved
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and that
+ * both that copyright notice and this permission notice appear in
+ * supporting documentation, and that the name of Digital not be used in
+ * advertising or publicity pertaining to distribution of the software
+ * without specific, written prior permission.
+ *
+ * DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
+ * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
+ * DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+ * SOFTWARE.
+ */
 
 /*
  *				 W A R N I N G
@@ -12,80 +84,6 @@
  * widgets so that you can plug 'em together any way you want.  Don't
  * hold your breath, though....
  */
-
-/***********************************************************
-
-Copyright 2002-2010,2011 by Thomas E. Dickey
-
-                        All Rights Reserved
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Except as contained in this notice, the name(s) of the above copyright
-holders shall not be used in advertising or otherwise to promote the
-sale, use or other dealings in this Software without prior written
-authorization.
-
-Copyright 1987, 1988  The Open Group
-
-Permission to use, copy, modify, distribute, and sell this software and its
-documentation for any purpose is hereby granted without fee, provided that
-the above copyright notice appear in all copies and that both that
-copyright notice and this permission notice appear in supporting
-documentation.
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
-AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Except as contained in this notice, the name of The Open Group shall not be
-used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from The Open Group.
-
-Copyright 1987, 1988 by Digital Equipment Corporation, Maynard.
-
-                        All Rights Reserved
-
-Permission to use, copy, modify, and distribute this software and its
-documentation for any purpose and without fee is hereby granted,
-provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in
-supporting documentation, and that the name of Digital not be used in
-advertising or publicity pertaining to distribution of the software
-without specific, written prior permission.
-
-DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
-ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
-DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
-ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
-SOFTWARE.
-
-******************************************************************/
 
 /* main.c */
 
@@ -1033,6 +1031,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"+rvc",	"*colorRVMode",	XrmoptionNoArg,		(XPointer) "on"},
 {"-sf",		"*sunFunctionKeys", XrmoptionNoArg,	(XPointer) "on"},
 {"+sf",		"*sunFunctionKeys", XrmoptionNoArg,	(XPointer) "off"},
+{"-sh",		"*scaleHeight", XrmoptionSepArg,	(XPointer) NULL},
 {"-si",		"*scrollTtyOutput", XrmoptionNoArg,	(XPointer) "off"},
 {"+si",		"*scrollTtyOutput", XrmoptionNoArg,	(XPointer) "on"},
 {"-sk",		"*scrollKey",	XrmoptionNoArg,		(XPointer) "on"},
@@ -1420,7 +1419,6 @@ parseArg(int *num, char **argv, char **valuep)
     /* *INDENT-OFF* */
 #define DATA(option,kind) { option, NULL, kind, (XtPointer) NULL }
     static XrmOptionDescRec opTable[] = {
-	DATA("+rv",		   XrmoptionNoArg),
 	DATA("+synchronous",	   XrmoptionNoArg),
 	DATA("-background",	   XrmoptionSepArg),
 	DATA("-bd",		   XrmoptionSepArg),
@@ -1433,11 +1431,9 @@ parseArg(int *num, char **argv, char **valuep)
 	DATA("-fn",		   XrmoptionSepArg),
 	DATA("-font",		   XrmoptionSepArg),
 	DATA("-foreground",	   XrmoptionSepArg),
-	DATA("-geometry",	   XrmoptionSepArg),
 	DATA("-iconic",		   XrmoptionNoArg),
 	DATA("-name",		   XrmoptionSepArg),
 	DATA("-reverse",	   XrmoptionNoArg),
-	DATA("-rv",		   XrmoptionNoArg),
 	DATA("-selectionTimeout",  XrmoptionSepArg),
 	DATA("-synchronous",	   XrmoptionNoArg),
 	DATA("-title",		   XrmoptionSepArg),
@@ -1460,6 +1456,9 @@ parseArg(int *num, char **argv, char **valuep)
     int atbest = -1;
     int best = -1;
     int test;
+    Boolean exact = False;
+    int ambiguous1 = -1;
+    int ambiguous2 = -1;
 
 #define ITEM(n) ((Cardinal)(n) < XtNumber(optionDescList) \
 		 ? &optionDescList[n] \
@@ -1485,10 +1484,12 @@ parseArg(int *num, char **argv, char **valuep)
 	    if ((test + 1) == (int) strlen(check->option)) {
 		if (check->argKind == XrmoptionStickyArg) {
 		    if (strlen(argv[*num]) > strlen(check->option)) {
+			exact = True;
 			atbest = (int) inlist;
 			break;
 		    }
 		} else if ((test + 1) == (int) strlen(argv[*num])) {
+		    exact = True;
 		    atbest = (int) inlist;
 		    break;
 		}
@@ -1513,10 +1514,8 @@ parseArg(int *num, char **argv, char **valuep)
 	    } else if (test == best) {
 		if (atbest >= 0) {
 		    if (atbest > 0) {
-			fprintf(stderr,
-				"%s:  ambiguous option \"%s\" vs \"%s\"\n",
-				ProgramName, check->option,
-				ITEM(atbest)->option);
+			ambiguous1 = (int) inlist;
+			ambiguous2 = (int) atbest;
 		    }
 		    atbest = -1;
 		}
@@ -1526,6 +1525,13 @@ parseArg(int *num, char **argv, char **valuep)
 
     *valuep = 0;
     if (atbest >= 0) {
+	if (!exact && ambiguous1 >= 0 && ambiguous2 >= 0) {
+	    fprintf(stderr,
+		    "%s:  ambiguous option \"%s\" vs \"%s\"\n",
+		    ProgramName,
+		    ITEM(ambiguous1)->option,
+		    ITEM(ambiguous2)->option);
+	}
 	result = ITEM(atbest);
 	TRACE(("...result %s\n", result->option));
 	/* expand abbreviations */
@@ -2406,7 +2412,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	char **split_filter = x_splitargs(term->misc.localefilter);
 	unsigned count_split = x_countargv(split_filter);
 	unsigned count_exec = x_countargv(command_to_exec);
-	unsigned count_using = (term->misc.use_encoding ? 2 : 0);
+	unsigned count_using = (unsigned) (term->misc.use_encoding ? 2 : 0);
 
 	command_to_exec_with_luit = TypeCallocN(char *,
 						  (count_split
@@ -2419,7 +2425,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	x_appendargv(command_to_exec_with_luit, split_filter);
 	if (count_using) {
 	    char *encoding_opt[4];
-	    encoding_opt[0] = "-encoding";
+	    encoding_opt[0] = x_strdup("-encoding");
 	    encoding_opt[1] = term->misc.locale_str;
 	    encoding_opt[2] = 0;
 	    x_appendargv(command_to_exec_with_luit, encoding_opt);
@@ -2427,7 +2433,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	command_length_with_luit = x_countargv(command_to_exec_with_luit);
 	if (count_exec) {
 	    char *delimiter[2];
-	    delimiter[0] = "--";
+	    delimiter[0] = x_strdup("--");
 	    delimiter[1] = 0;
 	    x_appendargv(command_to_exec_with_luit, delimiter);
 	    x_appendargv(command_to_exec_with_luit, command_to_exec);
@@ -3227,7 +3233,7 @@ spawnXTerm(XtermWidget xw)
 #ifdef TTYSIZE_STRUCT
     TTYSIZE_STRUCT ts;
 #endif
-    struct passwd *pw = NULL;
+    struct passwd pw;
     char *login_name = NULL;
 #ifndef USE_UTEMPTER
 #ifdef HAVE_UTMP
@@ -3294,7 +3300,7 @@ spawnXTerm(XtermWidget xw)
 	    ttyfd = -1;
 	    errno = ENXIO;
 	}
-	pw = NULL;
+	memset(&pw, 0, sizeof(pw));
 #if OPT_PTY_HANDSHAKE
 	got_handshake_size = False;
 #endif /* OPT_PTY_HANDSHAKE */
@@ -4153,40 +4159,9 @@ spawnXTerm(XtermWidget xw)
 #endif
 
 #ifdef HAVE_UTMP
-	    pw = getpwuid(screen->uid);
 	    login_name = NULL;
-	    if (pw && pw->pw_name) {
-#ifdef HAVE_GETLOGIN
-		/*
-		 * If the value from getlogin() differs from the value we
-		 * get by looking in the password file, check if it does
-		 * correspond to the same uid.  If so, allow that as an
-		 * alias for the uid.
-		 *
-		 * Of course getlogin() will fail if we're started from
-		 * a window-manager, since there's no controlling terminal
-		 * to fuss with.  In that case, try to get something useful
-		 * from the user's $LOGNAME or $USER environment variables.
-		 */
-		if (((login_name = getlogin()) != NULL
-		     || (login_name = x_getenv("LOGNAME")) != NULL
-		     || (login_name = x_getenv("USER")) != NULL)
-		    && strcmp(login_name, pw->pw_name)) {
-		    struct passwd *pw2 = getpwnam(login_name);
-		    if (pw2 != 0) {
-			uid_t uid2 = pw2->pw_uid;
-			pw = getpwuid(screen->uid);
-			if ((uid_t) pw->pw_uid != uid2)
-			    login_name = NULL;
-		    } else {
-			pw = getpwuid(screen->uid);
-		    }
-		}
-#endif
-		if (login_name == NULL)
-		    login_name = pw->pw_name;
-		if (login_name != NULL)
-		    login_name = x_strdup(login_name);
+	    if (x_getpwuid(screen->uid, &pw)) {
+		login_name = x_getlogin(screen->uid, &pw);
 	    }
 	    if (login_name != NULL) {
 		xtermSetenv("LOGNAME", login_name);	/* for POSIX */
@@ -4299,7 +4274,7 @@ spawnXTerm(XtermWidget xw)
 	    tslot = ttyslot();
 	    added_utmp_entry = False;
 	    {
-		if (tslot > 0 && pw && !resource.utmpInhibit &&
+		if (tslot > 0 && OkPasswd(&pw) && !resource.utmpInhibit &&
 		    (i = open(etc_utmp, O_WRONLY)) >= 0) {
 		    memset(&utmp, 0, sizeof(utmp));
 		    (void) strncpy(utmp.ut_line,
@@ -4403,8 +4378,8 @@ spawnXTerm(XtermWidget xw)
 	    IGNORE_RC(setgid(screen->gid));
 	    TRACE_IDS;
 #ifdef HAS_BSD_GROUPS
-	    if (geteuid() == 0 && pw) {
-		if (initgroups(login_name, pw->pw_gid)) {
+	    if (geteuid() == 0 && OkPasswd(&pw)) {
+		if (initgroups(login_name, pw.pw_gid)) {
 		    perror("initgroups failed");
 		    SysError(ERROR_INIGROUPS);
 		}
@@ -4468,11 +4443,11 @@ spawnXTerm(XtermWidget xw)
 		xtermSetenv("LINES", numbuf);
 	    }
 #ifdef HAVE_UTMP
-	    if (pw) {		/* SVR4 doesn't provide these */
+	    if (OkPasswd(&pw)) {	/* SVR4 doesn't provide these */
 		if (!x_getenv("HOME"))
-		    xtermSetenv("HOME", pw->pw_dir);
+		    xtermSetenv("HOME", pw.pw_dir);
 		if (!x_getenv("SHELL"))
-		    xtermSetenv("SHELL", pw->pw_shell);
+		    xtermSetenv("SHELL", pw.pw_shell);
 	    }
 #endif /* HAVE_UTMP */
 #ifdef OWN_TERMINFO_DIR
@@ -4540,11 +4515,10 @@ spawnXTerm(XtermWidget xw)
 	     * Incidentally, our setting of $SHELL tells luit to use that
 	     * program rather than choosing between $SHELL and "/bin/sh".
 	     */
-	    unsetenv("SHELL");
 	    if ((ptr = explicit_shname) == NULL) {
 		if ((ptr = x_getenv("SHELL")) == NULL) {
-		    if ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL)
-			|| *(ptr = pw->pw_shell) == 0) {
+		    if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
+			|| *(ptr = pw.pw_shell) == 0) {
 			ptr = x_strdup("/bin/sh");
 		    } else if (ptr != 0) {
 			xtermSetenv("SHELL", ptr);
@@ -4603,7 +4577,7 @@ spawnXTerm(XtermWidget xw)
 #endif /* !TERMIO_STRUCT */
 
 #ifdef USE_LOGIN_DASH_P
-	    if (xw->misc.login_shell && pw && added_utmp_entry)
+	    if (xw->misc.login_shell && OkPasswd(&pw) && added_utmp_entry)
 		execl(bin_login, "login", "-p", "-f", login_name, (void *) 0);
 #endif
 
@@ -4916,7 +4890,7 @@ Exit(int n)
 #endif
 
     /*
-     * Close after releasing ownership to avoid race condition: other programs 
+     * Close after releasing ownership to avoid race condition: other programs
      * grabbing it, and *then* having us release ownership....
      */
     close(screen->respond);	/* close explicitly to avoid race with slave side */

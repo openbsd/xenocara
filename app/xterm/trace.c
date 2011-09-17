@@ -1,10 +1,10 @@
-/* $XTermId: trace.c,v 1.129 2011/08/22 09:56:16 tom Exp $ */
+/* $XTermId: trace.c,v 1.131 2011/09/11 14:59:35 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
- * 
+ *
  *                         All Rights Reserved
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -28,7 +28,6 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- * 
  */
 
 /*
@@ -146,6 +145,17 @@ TraceIds(const char *fname, int lnum)
 	time_t now = time((time_t *) 0);
 	Trace("-- %s", ctime(&now));
     }
+}
+
+void
+TraceTime(const char *fname, int lnum)
+{
+    time_t now;
+    if (fname != 0) {
+	Trace("datetime (%s@%d) ", fname, lnum);
+    }
+    now = time((time_t *) 0);
+    Trace("-- %s", ctime(&now));
 }
 
 static void

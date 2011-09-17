@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.125 2011/07/11 09:41:34 tom Exp $ */
+/* $XTermId: menu.h,v 1.126 2011/08/28 21:15:40 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -435,8 +435,6 @@ extern void update_poponbell(void);
 
 #define update_marginbell() /* nothing */
 
-extern void update_menu_allowBoldFonts(void);
-
 #if OPT_ALLOW_XXX_OPS
 extern void update_menu_allowColorOps(void);
 extern void update_menu_allowFontOps(void);
@@ -506,6 +504,12 @@ extern void set_tekhide_sensitivity(void);
 #define update_vtshow() /*nothing*/
 #define set_vthide_sensitivity() /*nothing*/
 #define set_tekhide_sensitivity() /*nothing*/
+#endif
+
+#if OPT_DEC_CHRSET || OPT_BOX_CHARS || OPT_DEC_SOFTFONT
+extern void update_menu_allowBoldFonts(void);
+#else
+#define update_menu_allowBoldFonts() /*nothing*/
 #endif
 
 /*

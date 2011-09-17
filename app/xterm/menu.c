@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.295 2011/07/12 10:45:36 tom Exp $ */
+/* $XTermId: menu.c,v 1.297 2011/09/11 13:15:18 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -540,9 +540,11 @@ unusedEntries(XtermWidget xw, MenuIndex num)
     memset(result, 0, sizeof(result));
     switch (num) {
     case mainMenu:
+#if OPT_MAXIMIZE
 	if (resource.fullscreen > 1) {
 	    result[mainMenu_fullscreen] = True;
 	}
+#endif
 #if OPT_NUM_LOCK
 	if (!screen->alt_is_not_meta) {
 	    result[mainMenu_alt_esc] = True;
@@ -655,7 +657,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 	for (n = 0; n < nentries; ++n) {
 	    if (!unused[n]) {
 		cb[0].callback = (XtCallbackProc) entries[n].function;
-		cb[0].closure = (caddr_t) entries[n].name;
+		cb[0].closure = (XtPointer) entries[n].name;
 		entries[n].widget = XtCreateManagedWidget(entries[n].name,
 							  (entries[n].function
 							   ? smeBSBObjectClass
@@ -3564,6 +3566,7 @@ update_font_utf8_title(void)
 }
 #endif
 
+#if OPT_DEC_CHRSET || OPT_BOX_CHARS || OPT_DEC_SOFTFONT
 void
 update_menu_allowBoldFonts(void)
 {
@@ -3572,6 +3575,7 @@ update_menu_allowBoldFonts(void)
 		   fontMenu_allowBoldFonts,
 		   TScreenOf(term)->allowBoldFonts);
 }
+#endif
 
 #if OPT_ALLOW_XXX_OPS
 static void

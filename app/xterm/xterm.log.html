@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1081 2011/08/25 09:29:41 tom Exp $
+  $XTermId: xterm.log.html,v 1.1101 2011/09/12 00:50:25 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -41,7 +41,9 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright &copy; 1997-2009,2010 by <A
+<a href=
+"http://invisible-island.net/">http://invisible-island.net/</a><a href="http://invisible-island.net/xterm/">xterm/</a><br>
+Copyright &copy; 1997-2010,2011 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
@@ -56,6 +58,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_275">Patch #275 - 2011/09/11</A>
+<LI><A HREF="#xterm_274">Patch #274 - 2011/09/05</A>
 <LI><A HREF="#xterm_273">Patch #273 - 2011/08/25</A>
 <LI><A HREF="#xterm_272">Patch #272 - 2011/08/24</A>
 <LI><A HREF="#xterm_271">Patch #271 - 2011/07/14</A>
@@ -331,6 +335,86 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_275">Patch #275 - 2011/09/11</A></H1>
+<ul>
+	<li>add <code>ash</code>, <code>zsh</code> to known shells for
+	    <code>resize</code>.
+
+	<li>modify <code>resize</code>
+	    to reuse the logic from <code>xterm</code>
+	    which determines the actual logon-user's shell
+	    if <code>$SHELL</code> is not set.
+
+	<li>revert the <code>unsetenv("SHELL")</code> added in
+	    <a href="#xterm_272">patch #272</a>.
+
+	<li>an <code>unsetenv("SHELL")</code> added in
+	    <a href="#xterm_272">patch #272</a> to help ensure that
+	    <code>luit</code> would get the user's shell consistently
+	    did not work as expected for cases where multiple
+	    names are in the password-file for a given uid.
+	    That was because changes in <a href="#xterm_157">patch #157</a>
+	    to handle this situation
+	    did not take into account that repeated calls to
+	    <code>getpwnam</code> and <code>getpwuid</code>
+	    return a pointer to the same static buffer.
+	    Fixed the older logic to work as intended,
+	    by ensuring that the passwd-data from each call is stored
+	    separately (report by Paul Keusemann).
+
+	<li>adjust ifdef's for <code>putenv</code> and <code>unsetenv</code>
+	    in case only one of those is provided on a given platform.
+
+	<li>correct comparison used in <code>ExposeContains</code> macro from
+	    <a href="#xterm_274">patch #274</a>
+	    changes, to handle window-dragging (patch by Todd Eigenschink).
+</ul>
+
+<H1><A NAME="xterm_274">Patch #274 - 2011/09/05</A></H1>
+<ul>
+	<li>portability fixes for cygwin: do not define <code>SVR4</code>,
+	    and work around nonstandard header location.
+
+	<li>ifdef'd use of <code>unsetenv</code>
+	    from <a href="#xterm_273">patch #273</a>
+	    changes to work with Solaris 9
+	    (report by Waldemar Rachwal).
+
+	<li>modify logic for <code>XtAppPending</code> to merge adjacent
+	    <code>Expose</code> and <code>ConfigureNotify</code> events
+	    which are redundant (report by Edward McGuire).
+
+	<li>fix an unneeded warning message when <code>-r</code> option
+	    is given.
+
+	<li>remove a few redundant entries from table used for helping
+	    abbreviation-checking of command-line options, makes
+	    <code>-geom</code> work again after
+	    <a href="#xterm_272">patch #272</a> changes
+	    as an abbreviation of
+	    <code>-geometry</code>.
+
+	<li>add <code>scaleHeight</code> resource and
+	    command-line option <code>-sh</code>
+	    as workaround for some font-configurations broken by
+	    changes in FreeType 2.4.6 (report by Miroslav Hodak).
+
+	<li>portability fixes for some configure macros:
+	    <code>CF_FUNC_TGETENT</code>,
+	    <code>CF_XOPEN_SOURCE</code>,
+	    <code>CF_X_ATHENA_LIBS</code>.
+
+	<li>add configure option <code>--with-freetype-config</code> to
+	    improve selection over the plethora of configuration options
+	    which freetype has so far provided.
+
+	<li>build-fix for configure <code>--enable-load-vt-fonts</code> when
+	    <code>--enable-widec</code> is not specified.
+
+	<li>build-fixes for suppressing various features, needed after changes
+	    in patches 270, 271 and 272 (report by Brian Lindholm)
+</ul>
 
 <H1><A NAME="xterm_273">Patch #273 - 2011/08/25</A></H1>
 <ul>

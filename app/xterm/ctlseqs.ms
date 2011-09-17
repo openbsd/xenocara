@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.242 2011/07/04 22:56:23 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.244 2011/09/04 18:14:33 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -443,9 +443,9 @@ Vertical Tab (Ctrl-K).  This is treated the same as LF.
 .\"
 .St
 .Ss
-Controls beginning with ESC
+Controls beginning with \*(Es
 .LP
-This excludes controls where ESC is part of a 7-bit equivalent to 8-bit C1 controls, ordered by the final character(s).
+This excludes controls where \*(Es is part of a 7-bit equivalent to 8-bit C1 controls, ordered by the final character(s).
 .\"
 .IP \\*(Es\\*(Sp\\*F
 7-bit controls (S7C1T).
@@ -851,10 +851,10 @@ See the section \fBMouse Tracking\fP.
 (enables the \fBeightBitInput\fP resource).
   \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys.
 (This enables the \fBnumLock\fP resource).
-  \*(Ps = \*1\*0\*3\*6 \(-> Send ESC when Meta modifies a key.
+  \*(Ps = \*1\*0\*3\*6 \(-> Send \*(Es  when Meta modifies a key.
 (This enables the \fBmetaSendsEscape\fP resource).
   \*(Ps = \*1\*0\*3\*7 \(-> Send DEL from the editing-keypad Delete key.
-  \*(Ps = \*1\*0\*3\*9 \(-> Send ESC when Alt modifies a key.
+  \*(Ps = \*1\*0\*3\*9 \(-> Send \*(Es when Alt modifies a key.
 (This enables the \fBaltSendsEscape\fP resource).
   \*(Ps = \*1\*0\*4\*0 \(-> Keep selection even if not highlighted.
 (This enables the \fBkeepSelection\fP resource).
@@ -944,10 +944,10 @@ See the section \fBMouse Tracking\fP.
 (This disables the \fBeightBitInput\fP resource).
   \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys.
 (This disables the \fBnumLock\fP resource).
-  \*(Ps = \*1\*0\*3\*6 \(-> Don't send ESC when Meta modifies a key.
+  \*(Ps = \*1\*0\*3\*6 \(-> Don't send \*(Es when Meta modifies a key.
 (This disables the \fBmetaSendsEscape\fP resource).
   \*(Ps = \*1\*0\*3\*7 \(-> Send VT220 Remove from the editing-keypad Delete key.
-  \*(Ps = \*1\*0\*3\*9 \(-> Don't send ESC when Alt modifies a key.
+  \*(Ps = \*1\*0\*3\*9 \(-> Don't send \*(Es when Alt modifies a key.
 (This disables the \fBaltSendsEscape\fP resource).
   \*(Ps = \*1\*0\*4\*0 \(-> Do not keep selection when not highlighted.
 (This disables the \fBkeepSelection\fP resource).
@@ -1285,7 +1285,7 @@ DECELR always cancels any prevous rectangle definition.
 .IP \\*(Cs\\*(Ps\\*s\\*x
 Request Terminal Parameters (DECREQTPARM).
 .br
-if \*(Ps is a "0" (default) or "1", and \fBxterm\fR is emulating VT100,
+if \*(Ps is a "0" (default) or "1", and \fIxterm\fR is emulating VT100,
 the control sequence elicits a response of the same form
 whose parameters describe the terminal:
   \*(Ps \(-> the given \*(Ps incremented by 2.
@@ -1415,7 +1415,7 @@ If a "?" is given rather than a name or RGB specification,
 xterm replies with a control sequence of the same form which can be used
 to set the corresponding color.
 Because more than one pair of color number and specification can
-be given in one control sequence, \fBxterm\fR can make more than one reply.
+be given in one control sequence, \fIxterm\fR can make more than one reply.
 .sP
   \*(Ps = \*5 ; \fIc ; spec\fP \(-> Change Special Color Number \fIc\fP to
 the color specified by \fIspec\fP.
@@ -1432,7 +1432,7 @@ to these codes in an \*(Os\*4 control:
 The 10 colors (below) which may be set or queried
 using \*1\*0 through \*1\*9 are
 denoted \fIdynamic colors\fR, since the corresponding control sequences
-were the first means for setting \fBxterm\fR's colors dynamically,
+were the first means for setting \fIxterm\fR's colors dynamically,
 i.e., after it was started.
 They are not the same as the ANSI colors.
 These controls may be disabled using the \fIallowColorOps\fP resource.
@@ -1445,7 +1445,7 @@ If a "?" is given rather than a name or RGB specification,
 xterm replies with a control sequence of the same form which can be used
 to set the corresponding dynamic color.
 Because more than one pair of color number and specification can
-be given in one control sequence, \fBxterm\fR can make more than one reply.
+be given in one control sequence, \fIxterm\fR can make more than one reply.
 .sP
   \*(Ps = \*1\*0 \(-> Change VT100 text foreground color to \*(Pt.
   \*(Ps = \*1\*1 \(-> Change VT100 text background color to \*(Pt.
@@ -1899,14 +1899,14 @@ Similarly, \fIxterm\fP can be compiled to support HP keyboards.
 See the xterm-hp terminfo entry for details.
 .Sh "The Alternate Screen Buffer"
 .LP
-\fBXterm\fP maintains two screen buffers.
+\fIXterm\fP maintains two screen buffers.
 The normal screen buffer allows you to scroll back to view saved lines
 of output up to the maximum set by the \fBsaveLines\fP resource.
 The alternate screen buffer is exactly as large as the display,
 contains no additional saved lines.
 When the alternate screen buffer is active,
 you cannot scroll back to view saved lines.
-\fBXterm\fP provides control sequences and menu entries
+\fIXterm\fP provides control sequences and menu entries
 for switching between the two.
 .lP
 Most full-screen applications use terminfo or termcap to obtain
@@ -1915,7 +1915,7 @@ i.e., \fIsmcup\fP and \fIrmcup\fP for terminfo,
 or the corresponding \fIti\fP and \fIte\fP for termcap.
 The \fBtiteInhibit\fP resource removes the \fIti\fP and \fIte\fP strings
 from the TERMCAP string which is set in the environment for some platforms.
-That is not done when \fBxterm\fP is built with terminfo libraries because
+That is not done when \fIxterm\fP is built with terminfo libraries because
 terminfo does not provide the whole text of the termcap data in one piece.
 It would not work for terminfo anyway, since terminfo data is not passed
 in environment variables;
@@ -1937,10 +1937,10 @@ pasted text is bracketed with control sequences
 so that the program can differentiate pasted text from typed-in text.
 When bracketed paste mode is set,
 the program will receive:
-   ESC [ 200 ~,
+   \*(Es [ 200 ~,
 .br
 followed by the pasted text, followed by
-   ESC [ 201 ~.
+   \*(Es [ 201 ~.
 .
 .Sh "Title Modes"
 .LP
@@ -2177,24 +2177,24 @@ Form Feed or New Page (Ctrl-L).
 .IP \\*(Cr
 Carriage Return (Ctrl-M).
 .IP \\*(Es\\*(Et
-Switch to VT100 Mode (ESC Ctrl-C).
+Switch to VT100 Mode (\*(Es Ctrl-C).
 .IP \\*(Es\\*(En
-Return Terminal Status (ESC Ctrl-E).
+Return Terminal Status (\*(Es Ctrl-E).
 .IP \\*(Es\\*(Ff
-PAGE (Clear Screen) (ESC Ctrl-L).
+PAGE (Clear Screen) (\*(Es Ctrl-L).
 .IP \\*(Es\\*(So
-Begin 4015 APL mode (ESC Ctrl-N).  (This is ignored by \fIxterm\fP).
+Begin 4015 APL mode (\*(Es Ctrl-N).  (This is ignored by \fIxterm\fP).
 .IP \\*(Es\\*(Si
-End 4015 APL mode (ESC Ctrl-O).  (This is ignored by \fIxterm\fP).
+End 4015 APL mode (\*(Es Ctrl-O).  (This is ignored by \fIxterm\fP).
 .IP \\*(Es\\*(Eb
 COPY (Save Tektronix Codes to file COPY\fIyyyy-mm-dd.hh:mm:ss\fP).
   \*(Eb (end transmission block) is the same as Ctrl-W.
 .IP \\*(Es\\*(Ca
-Bypass Condition (ESC Ctrl-X).
+Bypass Condition (\*(Es Ctrl-X).
 .IP \\*(Es\\*(Su
-GIN mode (ESC Ctrl-Z).
+GIN mode (\*(Es Ctrl-Z).
 .IP \\*(Es\\*(Fs
-Special Point Plot Mode (ESC Ctrl-\e).
+Special Point Plot Mode (\*(Es Ctrl-\e).
 .IP \\*(Es\\*8
 Select Large Character Set.
 .IP \\*(Es\\*9

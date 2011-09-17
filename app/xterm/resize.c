@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.114 2010/05/23 16:04:32 tom Exp $ */
+/* $XTermId: resize.c,v 1.118 2011/09/11 20:19:19 tom Exp $ */
 
 /*
- * Copyright 2003-2009,2010 by Thomas E. Dickey
+ * Copyright 2003-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -90,12 +90,6 @@
 int ignore_unused;
 #endif
 
-#ifdef X_NOT_POSIX
-#if !defined(SYSV) && !defined(i386)
-extern struct passwd *getpwuid();	/* does ANYBODY need this? */
-#endif /* SYSV && i386 */
-#endif /* X_NOT_POSIX */
-
 #ifdef __MVS__
 #define ESCAPE(string) "\047" string
 #else
@@ -117,13 +111,19 @@ static struct {
     int type;
 } shell_list[] = {
     { "csh",	SHELL_C },	/* vanilla cshell */
-    { "tcsh",   SHELL_C },
     { "jcsh",   SHELL_C },
+    { "tcsh",   SHELL_C },
     { "sh",	SHELL_BOURNE }, /* vanilla Bourne shell */
-    { "ksh",	SHELL_BOURNE }, /* Korn shell (from AT&T toolchest) */
-    { "ksh-i",	SHELL_BOURNE }, /* other name for latest Korn shell */
+    { "ash",    SHELL_BOURNE },
     { "bash",	SHELL_BOURNE }, /* GNU Bourne again shell */
+    { "dash",	SHELL_BOURNE },
     { "jsh",    SHELL_BOURNE },
+    { "ksh",	SHELL_BOURNE }, /* Korn shell (from AT&T toolchest) */
+    { "ksh-i",	SHELL_BOURNE }, /* another name for Korn shell */
+    { "ksh93",	SHELL_BOURNE }, /* Korn shell */
+    { "mksh",   SHELL_BOURNE },
+    { "pdksh",  SHELL_BOURNE },
+    { "zsh",    SHELL_BOURNE },
     { NULL,	SHELL_BOURNE }	/* default (same as xterm's) */
 };
 /* *INDENT-ON* */
@@ -230,7 +230,6 @@ main(int argc, char **argv ENVP_ARG)
     char *ptr;
     int emu = VT100;
     char *shell;
-    struct passwd *pw;
     int i;
     int rows, cols;
 #ifdef USE_ANY_SYSV_TERMIO
@@ -279,11 +278,19 @@ main(int argc, char **argv ENVP_ARG)
 	/* Find out what kind of shell this user is running.
 	 * This is the same algorithm that xterm uses.
 	 */
-	if (((ptr = x_getenv("SHELL")) == NULL) &&
-	    (((pw = getpwuid(getuid())) == NULL) ||
-	     *(ptr = pw->pw_shell) == 0))
-	    /* this is the same default that xterm uses */
-	    ptr = x_strdup("/bin/sh");
+	if ((ptr = x_getenv("SHELL")) == NULL) {
+	    uid_t uid = getuid();
+	    struct passwd pw;
+
+	    if (x_getpwuid(uid, &pw)) {
+		(void) x_getlogin(uid, &pw);
+	    }
+	    if (!OkPasswd(&pw)
+		|| *(ptr = pw.pw_shell) == 0) {
+		/* this is the same default that xterm uses */
+		ptr = x_strdup("/bin/sh");
+	    }
+	}
 
 	shell = x_basename(ptr);
 

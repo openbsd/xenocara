@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.125 2011/07/07 01:01:14 tom Exp $
+-- $XTermId: INSTALL,v 1.126 2011/08/30 09:51:01 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2010,2011 by Thomas E. Dickey
 --
@@ -536,6 +536,23 @@ The options (in alphabetic order):
 	The default value "auto" tells the configure script to look
 	at existing ".desktop" files for xterm and common terminal
 	emulators, to use those.
+
+  --with-freetype-config  configure script to use for FreeType
+
+ 	Use a specific option value to tell the configure script to try
+	just one of the variations:
+
+	"pkg*", e.g., pkg-config or pkgconfig uses whatever pkg-config
+		script was found. 
+
+	otherwise, the parameter value is used as the name of the script
+	to try, using --cflags and --libs options.
+
+	Use --without-freetype-config to enable the --with-freetype-cflags
+	and --with-freetype-libs options.
+
+	The default value "auto" tells the configure script to try the
+	pkg-config script first, then freetype-config and finally xft-config.
 
   --with-freetype-cflags  -D/-I options for compiling with FreeType library
 

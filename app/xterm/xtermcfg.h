@@ -56,6 +56,7 @@ authorization.
 #define HAVE_LIB_XAW 1		/* CF_X_ATHENA */
 /* #undef HAVE_LIB_XAW3D */		/* CF_X_ATHENA(--with-Xaw3d) */
 /* #undef HAVE_LIB_XAWPLUS */		/* CF_X_ATHENA(--with-XawPlus) */
+/* #undef HAVE_NCURSES_CURSES_H	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 /* #undef HAVE_NCURSES_TERM_H */	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #define HAVE_PATHS_H 1		/* CF_LASTLOG */
 /* #undef HAVE_PCREPOSIX_H */		/* CF_WITH_PCRE */
@@ -76,6 +77,7 @@ authorization.
 #define HAVE_TIGETSTR 1		/* AC_CHECK_FUNCS(tigetstr) */
 #define HAVE_UNISTD_H 1		/* AC_CHECK_HEADERS(unistd.h) */
 #define HAVE_USE_EXTENDED_NAMES 1	/* AC_CHECK_FUNCS(use_extended_names) */
+#define HAVE_UNSETENV		/* AC_CHECK_FUNCS(unsetenv) */
 #define HAVE_UTMP 1		/* CF_UTMP */
 #define HAVE_UTMP_UT_HOST 1	/* CF_UTMP_UT_HOST */
 /* #undef HAVE_UTMP_UT_SESSION */	/* CF_UTMP_UT_SESSION */

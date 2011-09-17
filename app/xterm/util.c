@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.545 2011/02/17 00:28:45 tom Exp $ */
+/* $XTermId: util.c,v 1.546 2011/08/31 00:10:07 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3163,6 +3163,9 @@ drawXtermText(XtermWidget xw,
 	   screen->cursor_state == OFF ? ' ' : '*',
 	   y, x, chrset, len,
 	   visibleIChars(text, len)));
+    if (screen->scale_height != 1.0) {
+	xtermFillCells(xw, flags, gc, x, y, (Cardinal) len);
+    }
     y += FontAscent(screen);
 
 #if OPT_WIDE_CHARS

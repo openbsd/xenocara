@@ -1,7 +1,6 @@
-/* $XTermId: trace.h,v 1.60 2011/08/21 23:44:01 tom Exp $ */
+/* $XTermId: trace.h,v 1.64 2011/09/11 14:56:42 tom Exp $ */
 
 /*
- *
  * Copyright 1997-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
@@ -29,7 +28,6 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- *
  */
 
 /*
@@ -86,6 +84,10 @@ extern	void	TraceIds(const char * /* fname */, int  /* lnum */);
 #undef  TRACE_IDS
 #define	TRACE_IDS TraceIds(__FILE__, __LINE__)
 
+extern	void	TraceTime(const char * /* fname */, int  /* lnum */);
+#undef  TRACE_TIME
+#define	TRACE_TIME TraceTime(__FILE__, __LINE__)
+
 extern	void	TraceOptions(OptionHelp * /* options */, XrmOptionDescRec * /* resources */, Cardinal  /* count */);
 #undef  TRACE_OPTS
 #define	TRACE_OPTS(opts,ress,lens) TraceOptions(opts,ress,lens)
@@ -132,6 +134,9 @@ extern	XtGeometryResult TraceResizeRequest(const char * /* fn */, int  /* ln */,
 #define init_Bres(name) \
 	TRACE(("init " #name " = %s\n", \
 		BtoS(wnew->name = request->name)))
+#define init_Dres(name) \
+	TRACE(("init " #name " = %f\n", \
+		wnew->name = request->name))
 #define init_Dres2(name,i) \
 	TRACE(("init " #name "[%d] = %f\n", i, \
 		wnew->name[i] = request->name[i]))
@@ -151,6 +156,7 @@ extern	XtGeometryResult TraceResizeRequest(const char * /* fn */, int  /* ln */,
 		fill_Tres(wnew, request, offset)))
 #else
 #define init_Bres(name)    wnew->name = request->name
+#define init_Dres(name)    wnew->name = request->name
 #define init_Dres2(name,i) wnew->name[i] = request->name[i]
 #define init_Ires(name)    wnew->name = request->name
 #define init_Sres(name)    wnew->name = x_strtrim(request->name)

@@ -1,7 +1,7 @@
-/* $XTermId: tabs.c,v 1.38 2010/04/17 17:11:43 tom Exp $ */
+/* $XTermId: tabs.c,v 1.39 2011/09/11 15:00:38 tom Exp $ */
 
 /*
- * Copyright 2000-2009,2010 by Thomas E. Dickey
+ * Copyright 2000-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -28,6 +28,7 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
+ *
  *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
