@@ -60,8 +60,5 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Enable using xkeyboard-config */
-#undef USE_XKEYBOARD_CONFIG
-
 /* Version number of package */
 #undef VERSION
