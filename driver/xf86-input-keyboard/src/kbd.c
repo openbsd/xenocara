@@ -208,10 +208,6 @@ KbdPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     xkb_layout = xf86SetStrOption(pInfo->options, "XkbLayout", NULL);
     xkb_variant = xf86SetStrOption(pInfo->options, "XkbVariant", NULL);
     xkb_options = xf86SetStrOption(pInfo->options, "XkbOptions", NULL);
-#ifdef USE_XKEYBOARD_CONFIG
-    if (xkb_options == NULL)
-	xkb_options = strdup("terminate:ctrl_alt_bksp");
-#endif
 
     pKbd->CustomKeycodes = xf86SetBoolOption(pInfo->options, "CustomKeycodes",
                                              FALSE);

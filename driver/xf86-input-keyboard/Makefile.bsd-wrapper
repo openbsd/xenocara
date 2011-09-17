@@ -1,7 +1,3 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2011/08/30 21:15:30 matthieu Exp $
-
-.include <bsd.xconf.mk>
-
-CONFIGURE_ARGS+=	--enable-xkeyboard-config
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2011/09/17 13:39:30 shadchin Exp $
 
 .include <bsd.xorg.mk>
