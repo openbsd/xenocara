@@ -228,15 +228,38 @@ static void __pthread_exit_stub(void *ret)
 #endif
 
 #ifdef NEED_ONCE_STUB
+
+#include <errno.h>
+
+#define PTHREAD_ONCE_KEYS_CHUNK 100
+static void**__pthread_once_keys = NULL;
+static unsigned int __pthread_once_last_key = 0;
+
 static int 
 __pthread_once_stub(void *id, void (*routine)(void))
 {
-    static int done = 0;
-    
-    if (!done) {
-        routine();
-        done++;
+    void **tmp;
+    unsigned int i;
+
+    /* look for the id */
+    for (i = 0; i < __pthread_once_last_key; i++)
+	if (__pthread_once_keys[i] == id) 
+	    return 0;
+    /* allocate more room if needed */
+    if ((__pthread_once_last_key % PTHREAD_ONCE_KEYS_CHUNK) == 0) {
+	tmp = realloc(__pthread_once_keys,
+	      (__pthread_once_last_key 
+	       + PTHREAD_ONCE_KEYS_CHUNK)*sizeof(void *));
+	if (tmp == NULL)
+	    return ENOMEM;
+	for (i = 0; i < PTHREAD_ONCE_KEYS_CHUNK; i++)
+	    tmp[__pthread_once_last_key + i] = NULL;
+	__pthread_once_keys = tmp;
     }
+    /* call the routine */
+    routine();
+    /* Mark it */
+    __pthread_once_keys[__pthread_once_last_key++] = id;
     return 0;
 }
 #endif
@@ -258,12 +281,10 @@ __pthread_key_create_stub(unsigned int *key, void (*destructor)(void *))
     if ((__pthread_last_key % _PTHREAD_KEYS_CHUNK) == 0) {
 	tmp = realloc(__pthread_keys,
 	    (__pthread_last_key + _PTHREAD_KEYS_CHUNK)*sizeof(void *));
-	if (tmp == NULL) {
-	    free(__pthread_keys);
+	if (tmp == NULL)
 	    return ENOMEM;
-	}
 	for (i = 0; i < _PTHREAD_KEYS_CHUNK; i++)
-	    tmp[__pthread_last_key + i] = 0;
+	    tmp[__pthread_last_key + i] = NULL;
 	__pthread_keys = tmp;
     }
     *key = __pthread_last_key++;
