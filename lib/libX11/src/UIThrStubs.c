@@ -167,19 +167,39 @@ _Xthr_zero_stub_()
     return(0);
 }
 
+#include <errno.h>
+
+#define XTHR_ONCE_KEYS_CHUNK 100
+static void**_Xthr_once_keys_ = NULL;
+static unsigned int _Xthr_once_last_key_ = 0;
+
 static int 
 _Xthr_once_stub_(void *id, void (*routine)(void))
 {
-    static int done = 0;
-    
-    if (!done) {
-	routine();
-	done++;
+    void **tmp;
+    unsigned int i;
+
+    /* look for the id */
+    for (i = 0; i < _Xthr_once_last_key_; i++)
+	if (_Xthr_once_keys_[i] == id) 
+	    return 0;
+    /* allocate more room if needed */
+    if ((_Xthr_once_last_key_ % XTHR_ONCE_KEYS_CHUNK) == 0) {
+	tmp = realloc(_Xthr_once_keys_,
+	      (_Xthr_once_last_key_ + XTHR_ONCE_KEYS_CHUNK)*sizeof(void *));
+	if (tmp == NULL) {
+	    return ENOMEM;
+	}
+	for (i = 0; i < XTHR_ONCE_KEYS_CHUNK; i++)
+	    tmp[_Xthr_once_last_key_ + i] = NULL;
+	_Xthr_once_keys_ = tmp;
     }
+    /* call the routine */
+    routine();
+    /* Mark it */
+    _Xthr_once_keys_[_Xthr_once_last_key_++] = id;
     return 0;
 }
-
-#include <errno.h>
 
 #define XTHR_KEYS_CHUNK 100
 
@@ -196,11 +216,10 @@ _Xthr_key_create_stub_(unsigned int *key, void (*destructor)(void *))
 	tmp = realloc(_Xthr_keys_,
 	    (_Xthr_last_key_ + XTHR_KEYS_CHUNK)*sizeof(void *));
 	if (tmp == NULL) {
-	    free(_Xthr_keys_);
 	    return ENOMEM;
 	}
 	for (i = 0; i < XTHR_KEYS_CHUNK; i++)
-	    tmp[_Xthr_last_key_ + i] = 0;
+	    tmp[_Xthr_last_key_ + i] = NULL;
 	_Xthr_keys_ = tmp;
     }
     *key = _Xthr_last_key_++;
