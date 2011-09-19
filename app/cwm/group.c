@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.52 2011/09/13 08:37:49 okan Exp $
+ * $OpenBSD: group.c,v 1.53 2011/09/19 07:23:03 okan Exp $
  */
 
 #include <sys/param.h>
@@ -216,12 +216,16 @@ void
 group_movetogroup(struct client_ctx *cc, int idx)
 {
 	struct screen_ctx	*sc = cc->sc;
+	struct group_ctx	*gc;
 
 	if (idx < 0 || idx >= CALMWM_NGROUPS)
 		err(1, "group_movetogroup: index out of range (%d)", idx);
 
-	if(sc->group_active != &sc->groups[idx])
+	gc = &sc->groups[idx];
+	if (gc->hidden) {
 		client_hide(cc);
+		gc->nhidden++;
+	}
 	group_add(&sc->groups[idx], cc);
 }
 
