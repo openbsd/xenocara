@@ -249,6 +249,7 @@ wscons_add_pointers(void)
 		close(fd);
 		switch (wsmouse_type) {
 		case WSMOUSE_TYPE_SYNAPTICS:
+		case WSMOUSE_TYPE_ALPS:
 			wscons_add_pointer(devname, "synaptics",
 			    ATTR_TOUCHPAD);
 			break;
