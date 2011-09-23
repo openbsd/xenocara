@@ -1,5 +1,5 @@
 if ENABLE_UNIT_TESTS
-AM_CPPFLAGS = -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_srcdir)/include
 AM_CFLAGS = $(XORG_CFLAGS) $(CWARNFLAGS)
 fake_syms = fake-symbols.c fake-symbols.h
 

@@ -421,6 +421,14 @@ void record_main_loop(Display* display, double idle_time) {
 
 	    XRecordProcessReplies(dpy_data);
 
+	    /* If there are any events left over, they are in error. Drain them
+	     * from the connection queue so we don't get stuck. */
+	    while (XEventsQueued(dpy_data, QueuedAlready) > 0) {
+	        XEvent event;
+	        XNextEvent(dpy_data, &event);
+	        fprintf(stderr, "bad event received, major opcode %d\n", event.type);
+	    }
+
 	    if (!ignore_modifier_keys && cbres.key_event) {
 		disable_event = 1;
 	    }
@@ -441,7 +449,6 @@ void record_main_loop(Display* display, double idle_time) {
 
 	if (ret == 0 && pad_disabled) { /* timeout => enable event */
 	    toggle_touchpad(True);
-	    if (verbose) printf("enable touchpad\n");
 	}
 
     } /* end while(1) */
@@ -457,7 +464,6 @@ dp_get_device(Display *dpy)
     XDeviceInfo *info		= NULL;
     int ndevices		= 0;
     Atom touchpad_type		= 0;
-    Atom synaptics_property	= 0;
     Atom *properties		= NULL;
     int nprops			= 0;
     int error			= 0;
@@ -479,24 +485,24 @@ dp_get_device(Display *dpy)
 	    properties = XListDeviceProperties(dpy, dev, &nprops);
 	    if (!properties || !nprops)
 	    {
-	  fprintf(stderr, "No properties on device '%s'.\n",
-		  info[ndevices].name);
-	  error = 1;
-	  goto unwind;
-      }
+		fprintf(stderr, "No properties on device '%s'.\n",
+			info[ndevices].name);
+		error = 1;
+		goto unwind;
+	    }
 
 	    while(nprops--)
 	    {
-	  if (properties[nprops] == synaptics_property)
-	      break;
-      }
-	    if (!nprops)
+		if (properties[nprops] == touchpad_off_prop)
+		    break;
+	    }
+	    if (nprops < 0)
 	    {
-	  fprintf(stderr, "No synaptics properties on device '%s'.\n",
-		  info[ndevices].name);
-	  error = 1;
-	  goto unwind;
-      }
+		fprintf(stderr, "No synaptics properties on device '%s'.\n",
+			info[ndevices].name);
+		error = 1;
+		goto unwind;
+	    }
 
 	    break; /* Yay, device is suitable */
 	}
@@ -591,7 +597,7 @@ main(int argc, char *argv[])
 	    FILE *fd = fopen(pid_file, "w");
 	    if (!fd) {
 		perror("Can't create pid file");
-		exit(2);
+		exit(3);
 	    }
 	    fprintf(fd, "%d\n", getpid());
 	    fclose(fd);
@@ -609,7 +615,7 @@ main(int argc, char *argv[])
 	else {
 	    fprintf(stderr, "Use of XRecord requested, but failed to "
 		    " initialize.\n");
-            exit(2);
+            exit(4);
         }
     } else
 #endif /* HAVE_X11_EXTENSIONS_RECORD_H */
@@ -621,3 +627,5 @@ main(int argc, char *argv[])
       }
     return 0;
 }
+
+/* vim: set noexpandtab tabstop=8 shiftwidth=4: */

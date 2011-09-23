@@ -315,7 +315,7 @@ ps2_synaptics_disable_device(int fd)
 }
 
 static Bool
-ps2_query_is_synaptics(int fd, struct PS2SynapticsHwInfo* synhw)
+ps2_query_is_synaptics(InputInfoPtr pInfo, int fd, struct PS2SynapticsHwInfo* synhw)
 {
     int i;
 
@@ -329,43 +329,43 @@ ps2_query_is_synaptics(int fd, struct PS2SynapticsHwInfo* synhw)
     if (ps2_synaptics_identify(fd, synhw)) {
 	return TRUE;
     } else {
-	xf86Msg(X_ERROR, "Query no Synaptics: %06X\n", synhw->identity);
+	xf86IDrvMsg(pInfo, X_ERROR, "Query no Synaptics: %06X\n", synhw->identity);
 	return FALSE;
     }
 }
 
 void
-ps2_print_ident(const struct PS2SynapticsHwInfo *synhw)
+ps2_print_ident(InputInfoPtr pInfo, const struct PS2SynapticsHwInfo *synhw)
 {
-    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(synhw));
-    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(synhw),
+    xf86IDrvMsg(pInfo, X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(synhw));
+    xf86IDrvMsg(pInfo, X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(synhw),
 	    SYN_ID_MINOR(synhw));
 
     if (SYN_MODEL_ROT180(synhw))
-	xf86Msg(X_PROBED, " 180 degree mounted touchpad\n");
+	xf86IDrvMsg(pInfo, X_PROBED, " 180 degree mounted touchpad\n");
     if (SYN_MODEL_PORTRAIT(synhw))
-	xf86Msg(X_PROBED, " portrait touchpad\n");
-    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(synhw));
+	xf86IDrvMsg(pInfo, X_PROBED, " portrait touchpad\n");
+    xf86IDrvMsg(pInfo, X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(synhw));
     if (SYN_MODEL_NEWABS(synhw))
-	xf86Msg(X_PROBED, " new absolute packet format\n");
+	xf86IDrvMsg(pInfo, X_PROBED, " new absolute packet format\n");
     if (SYN_MODEL_PEN(synhw))
-	xf86Msg(X_PROBED, " pen detection\n");
+	xf86IDrvMsg(pInfo, X_PROBED, " pen detection\n");
 
     if (SYN_CAP_EXTENDED(synhw)) {
-	xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
+	xf86IDrvMsg(pInfo, X_PROBED, " Touchpad has extended capability bits\n");
 	if (SYN_CAP_MULTI_BUTTON_NO(synhw))
-	    xf86Msg(X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
+	    xf86IDrvMsg(pInfo, X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
 		    (int)(SYN_CAP_MULTI_BUTTON_NO(synhw)));
 	if (SYN_CAP_MIDDLE_BUTTON(synhw))
-	    xf86Msg(X_PROBED, " -> middle button\n");
+	    xf86IDrvMsg(pInfo, X_PROBED, " -> middle button\n");
 	if (SYN_CAP_FOUR_BUTTON(synhw))
-	    xf86Msg(X_PROBED, " -> four buttons\n");
+	    xf86IDrvMsg(pInfo, X_PROBED, " -> four buttons\n");
 	if (SYN_CAP_MULTIFINGER(synhw))
-	    xf86Msg(X_PROBED, " -> multifinger detection\n");
+	    xf86IDrvMsg(pInfo, X_PROBED, " -> multifinger detection\n");
 	if (SYN_CAP_PALMDETECT(synhw))
-	    xf86Msg(X_PROBED, " -> palm detection\n");
+	    xf86IDrvMsg(pInfo, X_PROBED, " -> palm detection\n");
 	if (SYN_CAP_PASSTHROUGH(synhw))
-	    xf86Msg(X_PROBED, " -> pass-through port\n");
+	    xf86IDrvMsg(pInfo, X_PROBED, " -> pass-through port\n");
     }
 }
 
@@ -388,13 +388,13 @@ PS2QueryHardware(InputInfoPtr pInfo)
     synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
-    if (!ps2_query_is_synaptics(pInfo->fd, synhw))
+    if (!ps2_query_is_synaptics(pInfo, pInfo->fd, synhw))
 	return FALSE;
 
-    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", pInfo->name);
+    xf86IDrvMsg(pInfo, X_PROBED, "synaptics touchpad found\n");
 
     if (!ps2_synaptics_reset(pInfo->fd))
-	xf86Msg(X_ERROR, "%s reset failed\n", pInfo->name);
+	xf86IDrvMsg(pInfo, X_ERROR, "reset failed\n");
 
     if (!ps2_synaptics_identify(pInfo->fd, synhw))
 	return FALSE;
@@ -415,7 +415,7 @@ PS2QueryHardware(InputInfoPtr pInfo)
 
     ps2_synaptics_enable_device(pInfo->fd);
 
-    ps2_print_ident(synhw);
+    ps2_print_ident(pInfo, synhw);
 
     return TRUE;
 }
@@ -476,7 +476,7 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
 
 	/* to avoid endless loops */
 	if (count++ > 30) {
-	    xf86Msg(X_ERROR, "Synaptics driver lost sync... got gigantic packet!\n");
+	    xf86IDrvMsg(pInfo, X_ERROR, "Synaptics driver lost sync... got gigantic packet!\n");
 	    return FALSE;
 	}
 
@@ -529,9 +529,8 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
     synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
     if (!synhw)
     {
-        xf86Msg(X_ERROR,
-                "%s: PS2ReadHwState, synhw is NULL. This is a bug.\n",
-                pInfo->name);
+        xf86IDrvMsg(pInfo, X_ERROR,
+                    "PS2ReadHwState, synhw is NULL. This is a bug.\n");
         return FALSE;
     }
 

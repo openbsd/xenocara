@@ -45,7 +45,6 @@
 #include <X11/extensions/XInput.h>
 #include "synaptics.h"
 #include "synaptics-properties.h"
-#include <xserver-properties.h>
 
 #ifndef XATOM_FLOAT
 #define XATOM_FLOAT "FLOAT"

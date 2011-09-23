@@ -338,6 +338,12 @@ xf86MsgVerb(MessageType type, int verb, const char *format, ...)
     return;
 }
 
+_X_EXPORT void
+xf86IDrvMsg(InputInfoPtr dev, MessageType type, const char *format, ...)
+{
+    return;
+}
+
 
 _X_EXPORT void
 xf86PostMotionEventP(DeviceIntPtr	device,

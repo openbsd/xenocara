@@ -1,9 +1,972 @@
+commit 065a0b495d2a7eb76b61f9eec85248aefae4c8ee
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 2 16:04:07 2011 +1000
+
+    synaptics 1.5.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3489e2467d43217971f17b9344fc2772cc0f164d
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Fri Aug 26 18:42:08 2011 +0600
+
+    The correct maximum values for pressure and finger width
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 7a72af1ce105fd857214bb641a8fa2cfd150a5f7)
+
+commit 98e8481cf4911506403b8963fc32c61a74cf679e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 19 15:57:08 2011 +1000
+
+    Bump to 1.4.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dd6c51499e626b1bc3ddd82949691efa667ff1c4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 28 11:02:45 2011 +1000
+
+    syndaemon: Remove superfluous message.
+    
+    toggle_touchpad() already prints if we're running verbose.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ba53d850252165ba96e7abc6e7dd0648b40ee37b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 28 10:57:12 2011 +1000
+
+    syndaemon: document exit codes and change them to fall into categories.
+    
+    Changing pid file creation failure to same exit code that fork() failure
+    uses.
+    
+    Changing XRECORD init failure to unique code. This way clients can trap
+    exit code 4 and re-start syndaemon without the -R flag.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8d0d011cda37f5202ee0de76ef1ada8643624919
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 28 10:44:42 2011 +1000
+
+    man: remove documentation for -s switch, SHM is gone.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 72d5b4886927aee5fbc871b5c3d0300be92d8ecc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 28 10:43:38 2011 +1000
+
+    man: document syndaemon -m switch
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ca3e0b33d02a6a86b156008216bf94042b81ce71
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 30 11:10:04 2011 -0400
+
+    Add distcheck support for configuration files when dir is not writable
+    
+    Provide a user writable location for configuration files.
+    Many values will work, but preserving the semantic by using
+    a value based on the server default value is more helpful.
+    
+    The configdir automake variable and the pkgconfig sysconfigdir variable
+    should not be confused with the sysconfdir automake provided
+    configuration option which default value is $prefix/etc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e3d5c397965a017afd2288e7f991920edb50cee4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 30 10:15:24 2011 -0400
+
+    Add distcheck support for header files when sdk is not writable
+    
+    During distcheck, a writable location is supplied for the install test.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ce1c4ce6798e956e3fa68c68fde7b7900319bc31
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jul 11 08:02:39 2011 -0400
+
+    tools: remove unrequired sdkdir include directive
+    
+    Now that xserver-properties.h is no longer included,
+    the path to the xserver header files is no longer needed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 513d40f7c442f78574e8c71c9895106c3f8eab74
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jul 5 09:48:01 2011 +1000
+
+    tools: don't include xserver-properties.h
+    
+    Remove the header inclusion to avoid dependency of synclient on the xserver
+    headers. The only property we need from the server is FLOAT and we can
+    simply define that here.
+    
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9d30992ef7e0f3e6efa93431551681660e6295d2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jun 28 17:14:00 2011 -0400
+
+    Revert "build: sort building of tools, ensure that cross-pkg-config works."
+    
+    This reverts commit 4005df66072ceac175ea71427deb16176262f197.
+    
+    The patch introduces a couple of issues.
+    1) These tools are apps and conceptually do not depend on Xserver,
+    so XORG_CFLAGS should not be used. It included pixman header files.
+    Only drivers depend xserver
+    
+    2) XORG_CFLAGS may contain, depending on the platform, a compiler
+    visibilty flag. Compiler flags cannot be assigned to AM_CPPFLAGS
+    preprocessor flags variable.
+    
+    There were two changes introduced by the patch.
+    1) Possible wrong order of include directives
+    The commit text does not mention which paths may be in the wrong order.
+    
+    2) Incorrect usage of AM_LDFLAGS
+    The patch does not really change anything. If the intention was for the tools
+    to link directly to the libraries, it would look like:
+    
+      LDADD =  $(top_builddir)/src/libpciaccess.la # scanpci example
+    
+    This is only possible for libraries built in the same package.
+    There is nothing wrong in putting -l -L flags in LDADD, but should there
+    be other flags, LDFLAGS would be required, ending with two variables.
+    
+    It looks easier to revert the patch to the previosuly known good version
+    which has been in service for a year.
+    
+    Unfortunatly, the reversal breaks distcheck as it removes an unsuspected workaround.
+    The value of sdkdir during distcheck points to an empty xserver sdkdir
+    where xserver-properties.h is expected by the tools.
+    
+    Specifying XORG_CFLAGS worked around the issue by supplying the real path
+    to the xserver sdk.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit cb6818b6230ca43ddaabfb8f16feaef9ae3ef68e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jun 28 17:13:30 2011 -0400
+
+    Revert "build: collapse all Makefile.am files into a single non-recursive one."
+    
+    This reverts commit 39afe69ad7d2258d4043044d1283bd6e311e48da.
+    
+    1. For such a small module, the build time improvement is most likely
+    negligible. At least, I'd like to see some timings proving it's
+    worthiness before seeing the patch go back in.
+    
+    2. This kind of change would need a thorough review. The need to
+    operate the build from a single toplevel Makefile is a significant
+    change. The two most noticeable issues for me are that collapsing all
+    the Makefiles could easily cause namespacing issues with the
+    variables, and operating on files outside the current directory can
+    introduce subtle bugs. I feel that the non-recursive style is
+    generally less robust than the standard recursive make scheme.
+    
+    3. It's unlike all the other X.org modules. This isn't a showstopper
+    for me, but the recursive style is well understood here and you've
+    beaten all the modules into a consistent format that makes build bugs
+    unique to specific modules less likely.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    To give a concrete example for #3 above, the 175 man pages are much
+    easier maintained using a very similar makefile in the man directory
+    of all X.Org module.
+    
+    The cost of maintaining a single makefile is much higher. Every target
+    in the makefile has to be reviewed and tested when changes are made.
+    Not everyone has the all the skills to handle widely different targets
+    such as man pages, DocBook/XML, librairies, C code, distribution hooks,
+    and so on.
+    
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bb604aca58f9c718601a22290176e201e92d36ab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jun 28 17:11:24 2011 -0400
+
+    Revert "build: install documentation as part of make install."
+    
+    This reverts commit d27b4e560ccf61b94f067156c6d5c1e3d3e5e1eb.
+    
+    ChangeLog is generated from git and should be created at dist time only.
+    The original patch creates it at make time multiple times and fails
+    when user permissions change such as when using sudo.
+    
+    Some have expressed a desire to install files such as ChangeLog and README.
+    This reversal does not dismiss the idea, but simply reverts a non-essential
+    change that happens to have an implementation bug just before making a module
+    release.
+    
+    Anyone is welcome to promote the idea in the context of the X.Org project
+    where all modules would exhibit the same behaviour. The current behaviour of
+    ChangeLog, although not perfect, has been thoroughly reviewed and widely
+    accepted for several years.
+    
+    As for the files in docs, they should be re-submitted for reviews to determine
+    if they constitute users docs that should be installed as opposed to
+    developers docs which are not.
+    
+    Reported-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9803edca13ed5b2531db71b1a151525733a6dd40
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jun 28 17:10:45 2011 -0400
+
+    Revert "build: create object files following the sources' structure."
+    
+    This reverts commit dac624ad2b3a67ab93c11d8ee0a91b217fc1afe6.
+    
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 414a6aac17d3afeed2db30f7990edbb81b244676
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jun 28 17:10:21 2011 -0400
+
+    Revert "build: apply the distcheck tricks used in xf86-input-evdev"
+    
+    This reverts commit 6eb829e07e455a8a04dabae7f257dd42a9b8bcdf.
+    
+    Althought this feature is desirable, it introduces a dormant bug.
+    
+    The value of sdkdir during distcheck points to an empty xserver sdkdir
+    where xserver-properties.h is expected by the tools.
+    
+    Specifying XORG_CFLAGS for the tools worked around the issue by supplying
+    the real path to the xserver sdk. tools must not depend on xserver.
+    In any case it would be a brittle workaround.
+    
+    --with-xorg-conf-dir='$${sysconfdir}/xorg':
+    althought this value will work, it brings some confusion as it is
+    unrelated to the where the configuration files are normally placed,
+    relative to $prefix which is /usr/share/X11 and not /etc.
+    
+    This feature can be reintroduced later with the proper solution.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a0b7f755e925194b8245d580182fede9ee197985
+Author: Daniel Kurtz <djkurtz@google.com>
+Date:   Mon Jun 27 14:35:31 2011 +0800
+
+    conf: fix snippet to ignore /dev/input/mouse* on Linux
+    
+    Added '*' to match any and all mouse devices.
+    
+    Signed-off-by: Daniel Kurtz <djkurtz@google.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dfee7c3f99c1ac5aeba7feed96f30b6b96739c73
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 31 13:51:53 2011 +1000
+
+    Replace xf86Msg with xf86IDrvMsg
+    
+    xf86IDrvMsg automatically logs driver and device name.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f37c67fc6ca929aabc3ad47d5294efb0a58c0644
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 31 13:04:01 2011 +1000
+
+    conf: add snippet to ignore /dev/input/mouse* on Linux
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit de8c3a5430c71d3a52d2dc3362743b791256d847
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 27 16:56:57 2011 +1000
+
+    Export device node as property.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 77b0ed05d29b8f71784af60fe56b111b91c7107f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 24 10:57:32 2011 +1000
+
+    Initialize the vendor/product id property if we know either.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0d0ba35951cbbb092ae0f5bd559d7daacb5b77e8
+Author: Patrick Curran <pjcurran@wisc.edu>
+Date:   Fri May 27 11:11:44 2011 -0500
+
+    Modified start_coasting to handle circular scrolling
+    
+    Calculate the angle speed when circular scrolling is on and coast based on
+    that speed instead of the previously used vertical scroll speed.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=30756
+    
+    Signed-off-by: Patrick Curran <pjcurran@wisc.edu>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6eb829e07e455a8a04dabae7f257dd42a9b8bcdf
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Date:   Wed May 25 18:16:22 2011 +0200
+
+    build: apply the distcheck tricks used in xf86-input-evdev
+    
+    With this change it is possible to complete "make distcheck" safely on the
+    module, as it no longer tries to write to system directories.
+    
+    Since synaptics also installs a configuration file, xorg-conf-dir also
+    needs to be overridden during distcheck.
+    
+    Signed-off-by: Diego Elio Pettenò <flameeyes@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dac624ad2b3a67ab93c11d8ee0a91b217fc1afe6
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Date:   Wed May 25 16:10:49 2011 +0200
+
+    build: create object files following the sources' structure.
+    
+    This allows building object files following the same subdirectory structure
+    as it was used before with the recursive build system, while keeping the
+    build non-recursive.
+    
+    Signed-off-by: Diego Elio Pettenò <flameeyes@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8bb3786fead14c36fbfb6320e886e3a0e878b29f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 24 10:55:13 2011 +1000
+
+    Use struct input_id as return value for EVIOCGID
+    
+    struct input_id is an array of 4 ushorts so there is no real change in
+    functionality.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit be83094bd98c353b0ee7894eefcb1ae91e0cae30
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 23 10:18:22 2011 +1000
+
+    syndaemon: don't compare against a null-property. (#37459)
+    
+    synaptics_property is not set, touchpad_off_prop is the property we need to
+    check against.
+    
+    False check for (nprops != 0) instead of (nprops < 0) would result in
+    syndaemon always reporting a touchpad device, even if none are present.
+    
+    X.Org Bug 37459 <http://bugs.freedesktop.org/show_bug.cgi?id=37459>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 33775253a01324001aebaadfaa2558b4b738075e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 23 10:14:08 2011 +1000
+
+    syndaemon: add vim snippet for right indentation/tabstop, etc.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e4958186fae78770bc739be701b849f28c87cf11
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 23 10:12:42 2011 +1000
+
+    syndaemon: fix abysimal indentation in dp_get_device.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0c8971c80c21d7541d9614ac67a8d4954d4859ec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 19 09:45:10 2011 +1000
+
+    include: update documentation for capabilities property
+    
+    pressure and width were added recently
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8ad40444596259b8b5b60ae4069e94875253c21a
+Author: Christoph Brill <egore911@egore911.de>
+Date:   Tue May 17 08:08:08 2011 +0200
+
+    Update maintainer information
+    
+    There is no distinct maintainer for synaptics but everything should go
+    to the list.
+
+commit 0c0e3e3df6af54777e47550e555e76c787f6f0a4
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Date:   Sat May 14 03:34:26 2011 +0200
+
+    README: fix typos.
+    
+    Signed-off-by: Christoph Brill <egore911@egore911.de>
+
+commit d27b4e560ccf61b94f067156c6d5c1e3d3e5e1eb
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Date:   Sat May 14 03:30:15 2011 +0200
+
+    build: install documentation as part of make install.
+    
+    Signed-off-by: Christoph Brill <egore911@egore911.de>
+
+commit 39afe69ad7d2258d4043044d1283bd6e311e48da
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Date:   Sat May 14 03:14:56 2011 +0200
+
+    build: collapse all Makefile.am files into a single non-recursive one.
+    
+    With this change, the whole of the build is done non-recursively in the
+    top-level Makefile.am. This reduces the amount of overhead due to recursing
+    into directories only to build one file.
+    
+    Signed-off-by: Diego Elio Pettenò <flameeyes@gmail.com>
+    Signed-off-by: Christoph Brill <egore911@egore911.de>
+
+commit 4005df66072ceac175ea71427deb16176262f197
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Date:   Sat May 14 03:00:02 2011 +0200
+
+    build: sort building of tools, ensure that cross-pkg-config works.
+    
+    Without this change, cross-pkg-config could bring up the wrong paths to
+    $includedir/xorg, but also fixes linkage to not use LDFLAGS where LDADD
+    should have been used.
+    
+    Signed-off-by: Diego Elio Pettenò <flameeyes@gmail.com>
+    Signed-off-by: Christoph Brill <egore911@egore911.de>
+
+commit 4d4c4d0ff5a381a5d574845cf72673f9fee43734
+Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Date:   Sat May 14 02:43:58 2011 +0200
+
+    build: report a fatal error if XORG_DRIVER_CHECK_EXT is undefined.
+    
+    Just to give a bit of an idea of what the problem is when configure fails
+    later on.
+    
+    Signed-off-by: Diego Elio Pettenò <flameeyes@gmail.com>
+    Signed-off-by: Christoph Brill <egore911@egore911.de>
+
+commit ec791423531a12129358a2e10b4f9b4721fcd761
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 8 11:56:25 2011 -0700
+
+    Fix "nose canellation" typo in man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bdc9c7cf9767bda77c690cb4211f6f6cb4567748
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Apr 15 15:29:57 2011 -0400
+
+    Drain XRecord connection of any events after handling replies
+    
+    If the X server sends an event to the XRecord connection the event
+    will never be handled. This will cause the event queue to fill up in
+    Xlib and lead to syndaemon running away at 100% cpu usage.
+    
+    This change drains any events from the connection. It's not a fix for
+    the underlying bug in the server or Xlib, but it does paper over the
+    issue for now.
+    
+    https://bugs.launchpad.net/bugs/754470
+    http://bugs.freedesktop.org/show_bug.cgi?id=31921
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fe05c60fee1f8fc24cc6cc2af7027d897607af2a
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Apr 14 05:38:25 2011 +0200
+
+    Fix egde/edge typo in manpage and comments.
+    
+    Debian bug #622663 <http://bugs.debian.org/622663>
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 26a9416f48a35fb375ea6bd4363f9b7ab2cc0acd
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Sun Apr 10 22:03:13 2011 -0400
+
+    Add 'include' directory for test.
+    
+    The binaries in the test directory won't build successfully for me
+    without adding this include path.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4aa16879bd5084f061a55e5b8a0754e1b037212a
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Apr 1 15:21:35 2011 -0400
+
+    Revert "Default to 2-finger emulation when HW supports it"
+    
+    This changes the default behavior for trackpads that have only pressure
+    information to emulate two finger actions. It's been reported that the
+    default value is too low and/or that the pressure values may fluctuate
+    with environmental factors (temperature, humidity, etc.). When the
+    value is wrong, spurious right clicks and scroll events are triggered.
+    
+    Fixes: http://bugs.launchpad.net/bugs/742213
+    
+    This reverts commit ffa6dc2809734a6aaa690e9133d6761480603a68.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2898098469457a0d7c3d3610065ccc75c46bdfa0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 22 11:51:48 2011 +1000
+
+    Only build tests when unit tests are enabled.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 99822503c8991ebf4eed3390904b5e62b0775d31
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 21 10:24:21 2011 +1000
+
+    test: add another test to ensure HW state changes on known values only.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit be52f449c148028ee912aa12ea9a91ed28590a9e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 11:02:45 2011 +1000
+
+    test: Add some tests for HW state changes.
+    
+    Includes basic finger counting test, some button tests and axis tests. These
+    tests simply check that the HW state changes reflect the events pumped in.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9290ce357b5063e8170f28282711718794a3c2d0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 20:34:38 2011 +1000
+
+    Add basic framework for unit-testing.
+    
+    Also adds a bunch of fake symbols so we can link. Note that any of these
+    symbols will return false, 0 or whatever the zero value for the symbol is.
+    Care must be taken when writing test that this doesn't screw up the test.
+    
+    Tests are always built but only run on make check.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bc89d7db428dbf38a9f0f9b5f5e8efd1afae71f1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 20:26:18 2011 +1000
+
+    Require macros 1.13 for unit testing
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 241254e352f5c4e3d6850e0916261cb235c6b608
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 21 11:23:34 2011 +1000
+
+    Don't autoprobe for devices when Option Device is set.
+    
+    If only Option Device is set but no protocol, the code calls into
+    AutoDevProbe. eventcomm (the only backend with an AutoDevProbe) then runs
+    through all /dev/input/event devices and takes the first one it can find.
+    
+    If two touchpads are connected on a system, this may cause the same touchpad
+    to be added twice and the other one not at all - even though the device path
+    is specified. (This can only happen when the event device is not grabbed,
+    otherwise the grabcheck prevents the touchpad from being added twice)
+    
+    Pass the device option into AutoDevProbe and check that device first. If it
+    is a touchpad, finish with success. If it isn't, fail AutoDevProbe.
+    
+    Introduced in dce6006f6a851be4147e16731caa453dd0d1ec1c.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    CC: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Reviewed-by: Chris Bagwell <chris@cnpbagwell.com>
+
+commit f65f8a8365b158cbdb6cdc3f74afc08a2653c084
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 21 11:14:50 2011 +1000
+
+    eventcomm: fix indentation in EventAutoDevProbe
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 3277733209180d94f67be8019178424dbe17fc5b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 10:33:57 2011 +1000
+
+    eventcomm: move need_grab into a proto-specific struct.
+    
+    Don't just assign a BOOL to proto_data, use a struct for readability.
+    This changes nothing in the code, especially since need_grab is always
+    false.
+    
+    The current code assumes that if a proto_data field is present, we respect
+    the need_grab from this field. Otherwise, we always try to grab.
+    need_grab is however always FALSE, so all this is mostly for readability, if
+    not necessarily understandability...
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 810423b51706ea26c6794eaf6cd51fcbb56386ad
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 10:22:18 2011 +1000
+
+    eventcomm: untangle state setting from printing device info
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chris Bagwell <chris@cnpbagwell.com>
+
+commit dacac616305cc38cab082607c0e40c109cb8422e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 10:14:05 2011 +1000
+
+    eventcomm: print an error when axis range failed.
+    
+    Judging by a quick google search, this isn't a common error that the user
+    will see, it's a bug. So print out information useful for those
+    triaging/debugging.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit a0aa59ed5d0ab07702c3bc56cf5651d193e553a7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 10:09:56 2011 +1000
+
+    eventcomm: streamline absinfo retrieval.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2122ad2f17c0efed016d41178e2da9d3eeba84fd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 09:46:26 2011 +1000
+
+    eventcomm: rewrite event_query_info to something more sane
+    
+    Instead of passing in a magic struct and set fields in that struct, pass in
+    the fd that we query and return the queried value. Let the caller deal with
+    the information accordingly.
+    
+    And document the lot.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 7b2d245ee1ecc3793f29dbf2761ef1ab73a577e5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 09:38:13 2011 +1000
+
+    eventcomm: document event_query_is_touchpad
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit a16e51c4aca95b35d929b059dc027bb0fec5405d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 09:36:52 2011 +1000
+
+    eventcomm: rename parameter name grab to test_grab
+    
+    We don't permanently grab the device here, we just check whether a grab is
+    possible.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 13543b156d78bc4d01a19844a5ee8f283269621b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 20 09:28:45 2011 +1000
+
+    eventcomm: replace synaptics-custom TEST_BIT with server's BitIsOn.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit adf3e8a5f9e3efc7e7a5d4148cf509f00cade9e0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 21:36:19 2011 +1000
+
+    eventcomm: extern EventReadHwState to allow for testing.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 453c5bf6ec0de358ec845946835fcb738cf9af80
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 21:06:16 2011 +1000
+
+    eventcomm: factor out finger counting.
+    
+    one, two, three, many.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit ecf42db47629cadc7a332398a1784bb0acbd6511
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 20:56:51 2011 +1000
+
+    eventcomm: add a missing break statement
+    
+    If the EV_SYN wasn't SYN_REPORT, we'd fall through to key event processing,
+    which almost certainly won't do what we want and/or need.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit b7acee2346494846e80d2fe25f699081a51c49a2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 10:34:03 2011 +1000
+
+    conf: add a descriptive header with warning to example config file
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bc01d6a88ae84a0b1e52b8feb93c168d5120cd58
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 10:40:50 2011 +1000
+
+    conf: remove SHM example from fdi
+    
+    SHM is dead for configuration.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5f546777173dc78146025499d186fe97d31eaeac
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 10:29:37 2011 +1000
+
+    man: add short blurb about InputClass configuration in servers 1.8
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 86cab92b41443a5c9391b3bb20c93d902cf67961
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 10:26:37 2011 +1000
+
+    man: update source path for fdi file and shorten description.
+    
+    Don't describe what the example config file does in the man page, let the
+    file speak for itself. Point out that fdi files are for servers 1.5 - 1.7
+    only.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 43c3720cc218c0c4c36482f01bbb8aa2c42480aa
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 20:25:57 2011 +1000
+
+    Bump to 1.4.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4ebde557aee7953f766fcd6b725cbacd47f806ec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 16:24:28 2011 +1000
+
+    Revert "Add synaptics orientation support"
+    
+    This patch needs more work before we can ship it.
+    
+    This reverts commit 049d5fb6037b34d94b24cb8300849cf4e3b67437.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d521fc0335e9a6527d337154e064d192ab006425
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 7 10:09:26 2011 +1000
+
+    Remove unused test directory (#35043)
+    
+    The two files are for testing the actual synaptics protocol, a task that is
+    handled by the kernel these days. These haven't been built for years either,
+    suggesting limited use.
+    
+    X.Org Bug 35043 <http://bugs.freedesktop.org/show_bug.cgi?id=35043>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 0662e1c18122768549e51baf9ce3649c57ff0528
+Author: Christoph Brill <egore911@egore911.de>
+Date:   Wed Mar 9 23:25:05 2011 +0100
+
+    Add note about MatchDevicePath
+    
+    This question seems to pop up very often. Add a note pointing to Peter's
+    blog entry describing the details of this misconfiguration.
+
+commit 049d5fb6037b34d94b24cb8300849cf4e3b67437
+Author: Aapo Rantalainen <aapo.rantalainen@gmail.com>
+Date:   Wed Mar 9 21:32:36 2011 +0100
+
+    Add synaptics orientation support
+    
+    This patch allows usage of "synclient Orientation=0" (values from 0 to
+    3). It will rotate the touchpad similar to "xrandr -o". Original patch
+    was extended for alps and ps2.
+    
+    Signed-off-by: Christoph Brill <egore911@egore911.de>
+
+commit d6fc5be2969b9eede3c0fdd6e03daec4100a8c9f
+Merge: de0dfb7 cf451f3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 4 12:47:00 2011 +1000
+
+    Merge branch 'next'
+
 commit de0dfb76444ad4160468d00515876c91a9fa20bf
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Mar 4 12:36:24 2011 +1000
 
     synaptics 1.4.0
     
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit cf451f34e3bdd52a4eb072ce9f4b514eb83a1cfc
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:29 2011 +0500
+
+    Now ps2comm and alpscomm backend optional
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dce6006f6a851be4147e16731caa453dd0d1ec1c
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:28 2011 +0500
+
+    Rewrite mechanisn to detect Protocol and Device
+    
+    Made SetDeviceAndProtocol() does not depend on the protocols,
+    it will make it easier to add new backend.
+    
+    New behavior SetDeviceAndProtocol:
+    1) If not set Device or Protocol, then try AutoDevProbe
+    2) Otherwise, look for the appropriate protocol (Device and Protocol must be set)
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ae19da1266642aa0ba5838e525b2878c1bef49c2
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:27 2011 +0500
+
+    Remove extra definition CommData
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 00abf2c63cf1613c3a65d561582e9fd8abc2f34a
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:26 2011 +0500
+
+    Remove arg proto_ops in ReadHwState()
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8e6d67243375539f417f7a19e349c6546ce3be64
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:25 2011 +0500
+
+    Renamed SynapticsHwInfo in PS2SynapticsHwInfo
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9638020709ab45198933a703390a7429e8d38767
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:24 2011 +0500
+
+    Move definition struct SynapticsHwInfo in ps2comm.h
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3de53de7d663c56284b15e37a3e0f2099dbea6a5
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:23 2011 +0500
+
+    Delete empty alpscomm.h
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b3322177155fccefb93fdd325dc2c3f8c5eb9f65
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:22 2011 +0500
+
+    Removing extra call SetDeviceAndProtocol()
+    
+    SetDeviceAndProtocol() calling in SynapticsPreInit(), extra calling
+    in DeviceOn() unnecessary.
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c731f5878b516d2ff613c74305473cdfc3ee0794
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:21 2011 +0500
+
+    Renamed SynapticsDefaultDimensions in SanitizeDimensions
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6ac0572951fa7883bbbe781884cdade2c4537760
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:20 2011 +0500
+
+    Simplified mechanism for determining default size
+    
+    Now SynapticsDefaultDimensions() called only once
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3c598daec845ff6ef4ba0769ad78a0d562effe29
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Mon Feb 28 16:38:19 2011 +0500
+
+    Fix typo (resx -> resy)
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit fefb3b63c589b0758c02777e652f05e537ba663f

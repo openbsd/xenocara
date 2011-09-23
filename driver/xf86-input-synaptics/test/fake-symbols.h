@@ -116,6 +116,7 @@ XIRegisterPropertyHandler(DeviceIntPtr         dev,
 extern int InitProximityClassDeviceStruct(DeviceIntPtr dev);
 extern void xf86Msg(MessageType type, const char *format, ...);
 extern void xf86MsgVerb(MessageType type, int verb, const char *format, ...);
+extern void xf86IDrvMsg(InputInfoPtr dev, MessageType type, const char *format, ...);
 
 extern void
 xf86PostMotionEventP(DeviceIntPtr	device,

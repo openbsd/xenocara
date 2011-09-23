@@ -7,8 +7,8 @@ syndaemon \- a program that monitors keyboard activity and disables
 the touchpad when the keyboard is being used.
 .SH "SYNOPSIS"
 .LP
-syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
-[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP] [\fI\-s\fP]
+syndaemon [\fI\-i idle\-time\fP] [\fI\-m poll-inverval\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
+[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP]
 .SH "DESCRIPTION"
 .LP
 Disabling the touchpad while typing avoids unwanted movements of the
@@ -22,6 +22,16 @@ How many seconds to wait after the last key press before enabling the
 touchpad.
 .
 (default is 2.0s). 
+.LP
+.TP
+\fB\-m\fR <\fIpoll\-interval\fP>
+How many milliseconds to wait between two polling intervals. If this value is
+too low, it will cause unnecessary wake-ups. If this value is too high,
+some key presses (press and release happen between two intervals) may not
+be noticed. This switch has no effect when running with
+\fB-R\fP.
+.
+Default is 200ms.
 .LP
 .TP
 \fB\-d\fP
@@ -51,18 +61,31 @@ Like \-k but also ignore Modifier+Key combos.
 \fB\-R\fP
 Use the XRecord extension for detecting keyboard activity instead of polling
 the keyboard state.
-.LP
-.TP
-\fB\-s\fP
-Use a shared memory area to enable/disable the touchpad instead of device
-properties. WARNING: The SHM mechanism is not secure if you are in an untrusted multiuser
-environment. All local users can change the parameters at any time. This
-option requires the driver Option "SHMConfig" to be enabled.
 .SH "ENVIRONMENT VARIABLES"
 .LP
 .TP
 \fBDISPLAY\fP
 Specifies the X server to contact.
+.SH EXIT CODES
+If syndaemon exists with a return code other than 0, the error encountered
+is as below.
+.LP
+.TP
+\fBExit code 1
+Invalid commandline argument.
+.LP
+.TP
+\fBExit code 2
+The connection to the X sever could not be established or no touchpad device
+could be found.
+.LP
+.TP
+\fBExit code 3
+The fork into daemon mode failed or the pid file could not be created.
+.LP
+.TP
+\fBExit code 4
+XRECORD requested but not available or usable on the server.
 .SH "CAVEATS"
 .LP
 It doesn't make much sense to connect to a remote X server, because

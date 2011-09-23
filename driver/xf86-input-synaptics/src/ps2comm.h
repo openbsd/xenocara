@@ -102,7 +102,7 @@ struct PS2SynapticsHwInfo {
 };
 
 Bool ps2_putbyte(int fd, byte b);
-void ps2_print_ident(const struct PS2SynapticsHwInfo *synhw);
+void ps2_print_ident(InputInfoPtr pInfo, const struct PS2SynapticsHwInfo *synhw);
 Bool PS2ReadHwStateProto(InputInfoPtr pInfo,
 			struct SynapticsProtocolOperations *proto_ops,
 			struct CommData *comm, struct SynapticsHwState *hwRet);

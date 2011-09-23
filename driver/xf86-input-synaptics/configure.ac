@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-synaptics],
-        [1.4.99],
+        [1.5.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-synaptics])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -49,6 +49,8 @@ XORG_ENABLE_UNIT_TESTS
 AC_CHECK_LIB([m], [rint])
 
 # Store the list of server defined optional extensions in REQUIRED_MODULES
+m4_ifndef([XORG_DRIVER_CHECK_EXT],
+          [m4_fatal([must install xorg-server development files before running autoconf/autogen])])
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 
 # Obtain compiler/linker options for the Synaptics driver dependencies
@@ -151,6 +153,10 @@ if test "x$have_libxtst" = "xyes" ; then
    CPPFLAGS="$SAVE_CPPFLAGS"
 fi
 # -----------------------------------------------------------------------------
+
+# Workaround overriding sdkdir to be able to create a tarball when user has no
+# write permission in sdkdir. See DISTCHECK_CONFIGURE_FLAGS in Makefile.am
+AC_ARG_WITH([sdkdir], [], [sdkdir="$withval"])
 
 AC_CONFIG_FILES([Makefile
                 src/Makefile

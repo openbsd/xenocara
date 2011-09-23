@@ -84,19 +84,19 @@ PSMQueryIsSynaptics(InputInfoPtr pInfo)
      */
     SYSCALL(ret = ioctl(pInfo->fd, MOUSE_SETLEVEL, &level));
     if (ret != 0) {
-	xf86Msg(X_ERROR, "%s Can't set native mode\n", pInfo->name);
+	xf86IDrvMsg(pInfo, X_ERROR, "%s Can't set native mode\n", pInfo->name);
 	return FALSE;
     }
     SYSCALL(ret = ioctl(pInfo->fd, MOUSE_GETHWINFO, &mhw));
     if (ret != 0) {
-	xf86Msg(X_ERROR, "%s Can't get hardware info\n", pInfo->name);
+	xf86IDrvMsg(pInfo, X_ERROR, "%s Can't get hardware info\n", pInfo->name);
 	return FALSE;
     }
 
     if (mhw.model == MOUSE_MODEL_SYNAPTICS) {
 	return TRUE;
     } else {
-	xf86Msg(X_ERROR, "%s Found no Synaptics, found Mouse model %d instead\n",
+	xf86IDrvMsg(pInfo, X_ERROR, "%s Found no Synaptics, found Mouse model %d instead\n",
 		pInfo->name, mhw.model);
 	return FALSE;
     }
@@ -143,14 +143,14 @@ PSMQueryHardware(InputInfoPtr pInfo)
     if (!PSMQueryIsSynaptics(pInfo))
 	return FALSE;
 
-    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", pInfo->name);
+    xf86IDrvMsg(pInfo, X_PROBED, "synaptics touchpad found\n");
 
     if (!psm_synaptics_identify(pInfo->fd, &psm_ident))
 	return FALSE;
 
     convert_hw_info(&psm_ident, synhw);
 
-    ps2_print_ident(synhw);
+    ps2_print_ident(pInfo, synhw);
 
     return TRUE;
 }

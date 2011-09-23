@@ -20,7 +20,7 @@
 
 bin_PROGRAMS = synclient syndaemon
 
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(sdkdir)
+AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(XI_CFLAGS)
 AM_LDFLAGS = $(XI_LIBS)
 
@@ -29,4 +29,3 @@ synclient_SOURCES = synclient.c
 syndaemon_SOURCES = syndaemon.c
 syndaemon_CFLAGS = $(AM_CFLAGS) $(XTST_CFLAGS)
 syndaemon_LDFLAGS = $(AM_LDFLAGS) $(XTST_LIBS)
-

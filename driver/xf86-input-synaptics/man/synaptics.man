@@ -190,7 +190,7 @@ Fastest setting for edge motion speed. Property: "Synaptics Edge Motion Speed"
 .BI "Option \*qEdgeMotionUseAlways\*q \*q" boolean \*q
 If on, edge motion is also used for normal movements.
 .
-If off, egde motion is used only when dragging. Property: "Synaptics Edge
+If off, edge motion is used only when dragging. Property: "Synaptics Edge
 Motion Always"
 .TP
 .BI "Option \*qMinSpeed\*q \*q" float \*q
@@ -640,7 +640,7 @@ For a pressure value between PressureMotionMinZ and
 PressureMotionMaxZ, the factor is increased linearly.
 .
 .SS Edge motion
-When hitting an egde, movement can be automatically continued.
+When hitting an edge, movement can be automatically continued.
 .
 If EdgeMotionUseAlways is false, edge motion is only used when
 dragging.
@@ -728,7 +728,7 @@ active, scrolling will stop, and circular scrolling will not start,
 when the finger leaves the corner.
 
 .SS Noise cancellation
-The synaptics has a built-in nose canellation based on hysteresis. This means
+The synaptics has a built-in noise cancellation based on hysteresis. This means
 that incoming coordinates actually shift a box of predefined dimensions such
 that it covers the incoming coordinate, and only the boxes own center is used
 as input. Obviously, the smaller the box the better, but the likelyhood of

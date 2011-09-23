@@ -35,6 +35,10 @@
 #define DBG(verb, msg, ...) /* */
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+#define xf86IDrvMsg(pInfo, type, ...) xf86Msg(type, __VA_ARGS__)
+#endif
+
 /******************************************************************************
  *		Definitions
  *					structs, typedefs, #defines, enums
@@ -125,7 +129,7 @@ typedef struct _SynapticsParameters
     int edge_motion_max_z;		    /* finger pressure at which maximum edge motion speed is set */
     int edge_motion_min_speed;		    /* slowest setting for edge motion speed */
     int edge_motion_max_speed;		    /* fastest setting for edge motion speed */
-    Bool edge_motion_use_always;	    /* If false, egde motion is used only when dragging */
+    Bool edge_motion_use_always;	    /* If false, edge motion is used only when dragging */
 
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
     Bool leftright_button_scrolling;	    /* Left/right-button scrolling, or two lots of middle button */
@@ -175,6 +179,7 @@ typedef struct _SynapticsPrivateRec
 
     struct SynapticsHwState hwState;
 
+    char *device;			/* device node */
     Bool shm_config;			/* True when shared memory area allocated */
 
     OsTimerPtr timer;			/* for up/down-button repeat, tap processing, etc */
@@ -240,7 +245,9 @@ typedef struct _SynapticsPrivateRec
     Bool has_width;			/* device reports finger width */
     Bool has_scrollbuttons;		/* device has physical scrollbuttons */
 
-    enum TouchpadModel model;          /* The detected model */
+    enum TouchpadModel model;		/* The detected model */
+    unsigned short id_vendor;		/* vendor id */
+    unsigned short id_product;		/* product id */
 } SynapticsPrivate;
 
 #endif /* _SYNAPTICSSTR_H_ */
