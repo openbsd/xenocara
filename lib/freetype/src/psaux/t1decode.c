@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2011 by                                                 */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009    */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,8 +28,6 @@
 
 #include "psauxerr.h"
 
-/* ensure proper sign extension */
-#define Fix2Int( f )  ( (FT_Int)(FT_Short)( (f) >> 16 ) )
 
   /*************************************************************************/
   /*                                                                       */
@@ -663,7 +662,7 @@
         if ( large_int )
           FT_TRACE4(( " %ld", value ));
         else
-          FT_TRACE4(( " %ld", Fix2Int( value ) ));
+          FT_TRACE4(( " %ld", (FT_Int32)( value >> 16 ) ));
 #endif
 
         *top++       = value;
@@ -685,8 +684,8 @@
 
         top -= 2;
 
-        subr_no = Fix2Int( top[1] );
-        arg_cnt = Fix2Int( top[0] );
+        subr_no = (FT_Int)( top[1] >> 16 );
+        arg_cnt = (FT_Int)( top[0] >> 16 );
 
         /***********************************************************/
         /*                                                         */
@@ -725,24 +724,6 @@
 
         switch ( subr_no )
         {
-        case 0:                     /* end flex feature */
-          if ( arg_cnt != 3 )
-            goto Unexpected_OtherSubr;
-
-          if ( decoder->flex_state       == 0 ||
-               decoder->num_flex_vectors != 7 )
-          {
-            FT_ERROR(( "t1_decoder_parse_charstrings:"
-                       " unexpected flex end\n" ));
-            goto Syntax_Error;
-          }
-
-          /* the two `results' are popped by the following setcurrentpoint */
-          top[0] = x;
-          top[1] = y;
-          known_othersubr_result_cnt = 2;
-          break;
-
         case 1:                     /* start flex feature */
           if ( arg_cnt != 0 )
             goto Unexpected_OtherSubr;
@@ -774,6 +755,24 @@
                                     y,
                                     (FT_Byte)( idx == 3 || idx == 6 ) );
           }
+          break;
+
+        case 0:                     /* end flex feature */
+          if ( arg_cnt != 3 )
+            goto Unexpected_OtherSubr;
+
+          if ( decoder->flex_state       == 0 ||
+               decoder->num_flex_vectors != 7 )
+          {
+            FT_ERROR(( "t1_decoder_parse_charstrings:"
+                       " unexpected flex end\n" ));
+            goto Syntax_Error;
+          }
+
+          /* the two `results' are popped by the following setcurrentpoint */
+          top[0] = x;
+          top[1] = y;
+          known_othersubr_result_cnt = 2;
           break;
 
         case 3:                     /* change hints */
@@ -819,18 +818,17 @@
               goto Syntax_Error;
             }
 
-            /* We want to compute                                    */
+            /* we want to compute:                                   */
             /*                                                       */
-            /*   a0*w0 + a1*w1 + ... + ak*wk                         */
+            /*  a0*w0 + a1*w1 + ... + ak*wk                          */
             /*                                                       */
-            /* but we only have a0, a1-a0, a2-a0, ..., ak-a0.        */
+            /* but we only have the a0, a1-a0, a2-a0, .. ak-a0       */
+            /* however, given that w0 + w1 + ... + wk == 1, we can   */
+            /* rewrite it easily as:                                 */
             /*                                                       */
-            /* However, given that w0 + w1 + ... + wk == 1, we can   */
-            /* rewrite it easily as                                  */
+            /*  a0 + (a1-a0)*w1 + (a2-a0)*w2 + .. + (ak-a0)*wk       */
             /*                                                       */
-            /*   a0 + (a1-a0)*w1 + (a2-a0)*w2 + ... + (ak-a0)*wk     */
-            /*                                                       */
-            /* where k == num_designs-1.                             */
+            /* where k == num_designs-1                              */
             /*                                                       */
             /* I guess that's why it's written in this `compact'     */
             /* form.                                                 */
@@ -864,7 +862,7 @@
             if ( arg_cnt != 1 || blend == NULL )
               goto Unexpected_OtherSubr;
 
-            idx = Fix2Int( top[0] );
+            idx = (FT_Int)( top[0] >> 16 );
 
             if ( idx < 0                                           ||
                  idx + blend->num_designs > decoder->len_buildchar )
@@ -932,7 +930,7 @@
             if ( arg_cnt != 2 || blend == NULL )
               goto Unexpected_OtherSubr;
 
-            idx = Fix2Int( top[1] );
+            idx = (FT_Int)( top[1] >> 16 );
 
             if ( idx < 0 || (FT_UInt) idx >= decoder->len_buildchar )
               goto Unexpected_OtherSubr;
@@ -953,7 +951,7 @@
             if ( arg_cnt != 1 || blend == NULL )
               goto Unexpected_OtherSubr;
 
-            idx = Fix2Int( top[0] );
+            idx = (FT_Int)( top[0] >> 16 );
 
             if ( idx < 0 || (FT_UInt) idx >= decoder->len_buildchar )
               goto Unexpected_OtherSubr;
@@ -1011,15 +1009,11 @@
           break;
 
         default:
-          if ( arg_cnt >= 0 && subr_no >= 0 )
-          {
-            FT_ERROR(( "t1_decoder_parse_charstrings:"
-                       " unknown othersubr [%d %d], wish me luck\n",
-                       arg_cnt, subr_no ));
-            unknown_othersubr_result_cnt = arg_cnt;
-            break;
-          }
-          /* fall through */
+          FT_ERROR(( "t1_decoder_parse_charstrings:"
+                     " unknown othersubr [%d %d], wish me luck\n",
+                     arg_cnt, subr_no ));
+          unknown_othersubr_result_cnt = arg_cnt;
+          break;
 
         Unexpected_OtherSubr:
           FT_ERROR(( "t1_decoder_parse_charstrings:"
@@ -1145,8 +1139,8 @@
                                   top[0],
                                   top[1],
                                   top[2],
-                                  Fix2Int( top[3] ),
-                                  Fix2Int( top[4] ) );
+                                  (FT_Int)( top[3] >> 16 ),
+                                  (FT_Int)( top[4] >> 16 ) );
 
         case op_sbw:
           FT_TRACE4(( " sbw" ));
@@ -1330,7 +1324,7 @@
 
             FT_TRACE4(( " callsubr" ));
 
-            idx = Fix2Int( top[0] );
+            idx = (FT_Int)( top[0] >> 16 );
             if ( idx < 0 || idx >= (FT_Int)decoder->num_subrs )
             {
               FT_ERROR(( "t1_decoder_parse_charstrings:"
