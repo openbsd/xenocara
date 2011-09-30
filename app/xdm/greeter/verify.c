@@ -125,8 +125,8 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	struct passwd	*p;
 	login_cap_t	*lc;
 	auth_session_t	*as;
-	char		*style, *shell, *home, *s, **argv;
-	char		path[MAXPATHLEN];
+	char		*style, *shell, *home, *path, *s, **argv;
+	char		auth_path[MAXPATHLEN];
 	int		authok;
 	size_t		passwd_len;
 
@@ -178,8 +178,8 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	bzero(greet->password, passwd_len);
 #endif
 	/* Build path of the auth script and call it */
-	snprintf(path, sizeof(path), _PATH_AUTHPROG "%s", style);
-	auth_call(as, path, style, "-s", "response", greet->name,
+	snprintf(auth_path, sizeof(auth_path), _PATH_AUTHPROG "%s", style);
+	auth_call(as, auth_path, style, "-s", "response", greet->name,
 		  lc->lc_class, (void *)NULL);
 	authok = auth_getstate(as);
 
@@ -199,6 +199,16 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 		return 0;
 	}
 	auth_close(as);
+	path = d->userPath;
+	d->userPath = login_getcapstr(lc, "path", path, path);
+	if (d->userPath != path) {
+		free(path);
+		/* login.conf path is space delimited */
+		for (path = d->userPath; *path != '\0'; path++) {
+			if (*path == ' ')
+				*path = ':';
+		}
+	}
 	login_close(lc);
 	/* Check empty passwords against allowNullPasswd */
 	if (!greet->allow_null_passwd && passwd_len == 0) {

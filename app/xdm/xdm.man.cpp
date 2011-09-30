@@ -494,7 +494,9 @@ sets the PATH environment variable for the session to this value.  It should
 be a colon separated list of directories; see
 .IR sh (1)
 for a full description.
-The default value is ``DEF_USER_PATH''.
+The default value is derived from the default login class parameters defined in
+\fI/etc/login.conf\fP
+if available or otherwise is set to``DEF_USER_PATH''.
 .IP "\fBDisplayManager.\fP\fIDISPLAY\fP\fB.systemPath\fP"
 .I Xdm
 sets the PATH environment variable for the startup and reset scripts to the
@@ -1438,7 +1440,8 @@ Kerberos credentials cache
 .IR Xserver (__appmansuffix__),
 .\" .IR chooser (__appmansuffix__), \" except that there isn't a manual for it yet
 .\" .IR xdmshell (__appmansuffix__), \" except that there isn't a manual for it yet
-.IR fonts.conf (__filemansuffix__).
+.IR fonts.conf (__filemansuffix__),
+.IR login.conf (__filemansuffix__).
 .br
 .I "X Display Manager Control Protocol"
 .br
