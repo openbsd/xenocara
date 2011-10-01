@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.177 2011/09/23 16:55:34 shadchin Exp $
+# $OpenBSD: MODULES,v 1.178 2011/10/01 17:32:12 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -132,7 +132,7 @@ driver/xf86-video-tseng		1.2.4	7.5+
 driver/xf86-video-vesa		2.3.0	7.5+
 driver/xf86-video-vmware	11.0.3	7.6
 driver/xf86-video-voodoo	1.2.4	7.5+
-driver/xf86-video-wsfb		0.2.1	7.5
+driver/xf86-video-wsfb		0.3.0	7.6
 
 font/encodings 			1.0.4
 font/adobe-100dpi		1.0.2
