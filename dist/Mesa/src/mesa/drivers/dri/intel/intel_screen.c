@@ -102,10 +102,21 @@ static const __DRItexBufferExtension intelTexBufferExtension = {
    intelSetTexBuffer2,
 };
 
+static inline struct intel_context *
+to_intel_context(__DRIdrawable *drawable)
+{
+   if (drawable->driContextPriv == NULL)
+      return NULL;
+
+   return drawable->driContextPriv->driverPrivate;
+}
+
 static void
 intelDRI2Flush(__DRIdrawable *drawable)
 {
-   struct intel_context *intel = drawable->driContextPriv->driverPrivate;
+   struct intel_context *intel = to_intel_context(drawable);
+   if (!intel)
+      return;
 
    if (intel->gen < 4)
       INTEL_FIREVERTICES(intel);
@@ -117,9 +128,9 @@ intelDRI2Flush(__DRIdrawable *drawable)
 static void
 intelDRI2Invalidate(__DRIdrawable *drawable)
 {
-   struct intel_context *intel = drawable->driContextPriv->driverPrivate;
-
-   intel->using_dri2_swapbuffers = GL_TRUE;
+   struct intel_context *intel = to_intel_context(drawable);
+   if (intel)
+      intel->using_dri2_swapbuffers = GL_TRUE;
    dri2InvalidateDrawable(drawable);
 }
 

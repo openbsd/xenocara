@@ -443,7 +443,7 @@ driCreateNewDrawable(__DRIscreen *psp, const __DRIconfig *config,
      */
     (void) attrs;
 
-    pdp = malloc(sizeof *pdp);
+    pdp = calloc(1, sizeof *pdp);
     if (!pdp) {
 	return NULL;
     }
