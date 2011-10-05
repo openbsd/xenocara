@@ -56,7 +56,7 @@
 #define PACKAGE_NAME "libxcb"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "libxcb 1.2"
+#define PACKAGE_STRING "libxcb 1.7"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "libxcb"
@@ -68,7 +68,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.2"
+#define VERSION "1.7"
 
 /* XCB buffer queue size */
 #define XCB_QUEUE_BUFFER_SIZE 16384
