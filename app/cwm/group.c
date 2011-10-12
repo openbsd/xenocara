@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.53 2011/09/19 07:23:03 okan Exp $
+ * $OpenBSD: group.c,v 1.54 2011/10/12 15:43:50 okan Exp $
  */
 
 #include <sys/param.h>
@@ -515,7 +515,7 @@ group_update_names(struct screen_ctx *sc)
 	if (prop_ret != NULL)
 		XFree(prop_ret);
 	if (sc->group_nonames != 0)
-		free(sc->group_names);
+		xfree(sc->group_names);
 
 	sc->group_names = strings;
 	sc->group_nonames = n;
