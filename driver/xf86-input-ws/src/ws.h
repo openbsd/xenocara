@@ -42,7 +42,6 @@ typedef struct WSDevice {
 	int raw;
 	int inv_x, inv_y;
 	int screen_no;
-	int num, den, threshold; /* relative accel params */
 	pointer buffer;
 	int negativeZ, positiveZ; /* mappings for Z axis */
 	int negativeW, positiveW; /* mappings for W axis */

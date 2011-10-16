@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.33 2011/07/16 17:51:30 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.34 2011/10/16 17:54:07 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -126,7 +126,7 @@ TearDownProc(pointer p)
 }
 
 
-static int 
+static int
 wsPreInit12(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
 	WSDevicePtr priv;
@@ -320,9 +320,7 @@ wsPreInit12(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
 	pInfo->device_control = wsProc;
 	pInfo->read_input = wsReadInput;
-	pInfo->control_proc = wsChangeControl;
 	pInfo->switch_mode = wsSwitchMode;
-	pInfo->private = priv;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	pInfo->conversion_proc = NULL;
 	pInfo->reverse_conversion_proc = NULL;
@@ -617,7 +615,7 @@ wsReadInput(InputInfoPtr pInfo)
 			break;
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
 			DBG(4, ErrorF("Absolute X %d\n", event->value));
-			if (event->value == 4095) 
+			if (event->value == 4095)
 				break;
 			ax = event->value;
 			if (priv->inv_x)
@@ -741,12 +739,6 @@ wsSendButtons(InputInfoPtr pInfo, int buttons)
 
 
 static int
-wsChangeControl(InputInfoPtr pInfo, xDeviceCtl *control)
-{
-	return BadMatch;
-}
-
-static int
 wsSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 {
 	return BadMatch;
@@ -786,13 +778,8 @@ wsClose(InputInfoPtr pInfo)
 static void
 wsControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 {
-	InputInfoPtr pInfo = device->public.devicePrivate;
-	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
-
+	/* Nothing to do, dix handles all settings */
 	DBG(1, ErrorF("wsControlProc\n"));
-	priv->num = ctrl->num;
-	priv->den = ctrl->den;
-	priv->threshold = ctrl->threshold;
 }
 
 static void
