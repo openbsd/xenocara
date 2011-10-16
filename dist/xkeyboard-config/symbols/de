@@ -64,7 +64,6 @@ xkb_symbols "nodeadkeys" {
     key <AC10>	{ [odiaeresis, Odiaeresis,  doubleacute,  doubleacute ]	};
     key <AC11>	{ [adiaeresis, Adiaeresis,  asciicircum,  asciicircum ]	};
     key <BKSL>	{ [numbersign, apostrophe,        grave,        grave ]	};
-    key <AB10>	{ [     minus, underscore, dead_belowdot,    abovedot ]	};
 };
 
 partial alphanumeric_keys
@@ -221,7 +220,6 @@ xkb_symbols "sundeadkeys" {
 //
 //      http://www.neo-layout.org
 //
-// $Revision: 1.5 $, $Date: 2011/07/01 14:25:25 $
 
 partial alphanumeric_keys modifier_keys keypad_keys
 xkb_symbols "neo_base" {
@@ -485,21 +483,6 @@ xkb_symbols "dsb_qwertz"
 	key <AD09> { [              o,              O,         oacute,         Oacute ] };
 };
 
-partial alphanumeric_keys 
-xkb_symbols "qwerty" {
- 
-    // This layout should work exactly as a de with the exception 
-    // of 'Z' and 'Y' keys, which are in the qwerty style (ie. swapped).
-    // 2008 by Matej Košík <kosik@fiit.stuba.sk>
-    
-    include "de(basic)"
-
-    name[Group1] = "German (qwerty)";
-
-    key <AB01>	{ [         z,          Z,     leftarrow,         yen ]	};
-    key <AD06>	{ [         y,          Y, guillemotleft,        less ]	};
-};
-
 // layout for Russian letters on an german keyboard
 // based on US-RU layout by Ivan Popov <pin@konvalo.org> 2005-07-17
 // adopted for german layout by Alexey Fisher <bug-track@fisher-privat.net> 2010-08-19
@@ -593,4 +576,51 @@ xkb_symbols "htcdream" {
         key <FK15> { [ at, at, asciitilde, asciitilde ] };
 
         include "level3(alt_switch)"
+};
+
+// EXTRAS:
+
+partial alphanumeric_keys
+xkb_symbols "us" {
+    include "us"
+
+    name[Group1]="German (US keyboard with German letters)";
+
+    key <AC01> { [           a,          A, adiaeresis, Adiaeresis ] };
+    key <AC02> { [           s,          S,     ssharp,     ssharp ] };
+    key <AC10> { [   semicolon,      colon, odiaeresis, Odiaeresis ] };
+    key <AC11> { [  apostrophe,   quotedbl, adiaeresis, Adiaeresis ] };
+    key <AD03> { [           e,          E,   EuroSign,   EuroSign ] };
+    key <AD07> { [           u,          U, udiaeresis, Udiaeresis ] };
+    key <AD09> { [           o,          O, odiaeresis, Odiaeresis ] };
+    key <AD11> { [ bracketleft,  braceleft, udiaeresis, Udiaeresis ] };
+    key <AE03> { [           3, numbersign,    section,    section ] };
+    key <AE11> { [       minus, underscore,     ssharp,   question ] };
+
+    include "level3(ralt_switch)"
+};
+
+partial alphanumeric_keys
+xkb_symbols "hu" {
+
+    // modify the basic German layout to not have any dead keys and add Hungarian letters
+
+    include "de(basic)"
+    name[Group1]="German (with Hungarian letters and no dead keys)";
+
+    key <AB01> { [         y,          Y, guillemotleft,        less ] };
+    key <AC10> { [odiaeresis, Odiaeresis,        eacute,      Eacute ] };
+    key <AC11> { [adiaeresis, Adiaeresis,        aacute,       Aacute] };
+    key <AD03> { [         e,          E,      EuroSign,    EuroSign ] };
+    key <AD06> { [         z,          Z,     leftarrow,         yen ] };
+    key <AD07> { [         u,          U,        uacute,      Uacute ] };
+    key <AD08> { [         i,          I,        iacute,      Iacute ] };
+    key <AD09> { [         o,          O,  odoubleacute,Odoubleacute ] };
+    key <AD11> { [udiaeresis, Udiaeresis,  udoubleacute,Udoubleacute ] };
+    key <AD12> { [      plus,   asterisk,    asciitilde,      macron ] };
+    key <AE12> { [     acute,      grave,        oacute,      Oacute ] };
+    key <BKSL> { [numbersign, apostrophe,         grave,       grave ] };
+    key <TLDE> { [asciicircum,    degree,       notsign,     notsign ] };
+    
+    
 };

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2011/04/10 18:15:28 shadchin Exp $
+#	$OpenBSD: Makefile,v 1.6 2011/10/16 17:18:56 shadchin Exp $
 
 SUBDIR=		compat
 
@@ -63,8 +63,7 @@ base.extras.xml:	base.extras.xml.in
 install-files:	${BASE_RULES}
 	test -z ${XKB_BASE}/${XKB_SUBDIR} || ${INSTALL_DIR} ${XKB_BASE}/${XKB_SUBDIR}
 	@for f in ${BASE_RULES}; do  \
-		echo "installing $$f"; \
-		cmp -s $$f ${XKB_BASE}/${XKB_SUBDIR}/$$f || \
+		echo ${INSTALL_DATA} $$f ${XKB_BASE}/${XKB_SUBDIR}/$$f; \
 		${INSTALL_DATA} $$f ${XKB_BASE}/${XKB_SUBDIR}/$$f; \
 	done
 

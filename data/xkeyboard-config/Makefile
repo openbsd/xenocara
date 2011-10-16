@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile,v 1.1.1.1 2009/06/06 17:55:01 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2011/10/16 17:18:56 shadchin Exp $
 
-SUBDIR=	compat geometry keycodes keymap rules semantics symbols types
+SUBDIR=	compat geometry keycodes keymap man rules semantics symbols types
 
 build: _SUBDIRUSE
 

@@ -627,6 +627,7 @@
         <name>logii350</name>
         <_description>Logitech Internet 350 Keyboard</_description>
         <vendor>Logitech</vendor>
+        <hwList> <hwId>046d:c313</hwId></hwList>
       </configItem>
     </model>
     <model>
@@ -1714,7 +1715,7 @@
           <configItem>
             <name>ben</name>
             <_shortDescription>bn</_shortDescription>
-            <_description>Bengali</_description>
+            <_description>Bengali (India)</_description>
             <languageList>
               <iso639Id>ben</iso639Id>
             </languageList>
@@ -1724,10 +1725,38 @@
           <configItem>
             <name>ben_probhat</name>
             <_shortDescription>bn</_shortDescription>
-            <_description>Bengali (Probhat)</_description>
+            <_description>Bengali (India, Probhat)</_description>
             <languageList>
               <iso639Id>ben</iso639Id>
             </languageList>
+          </configItem>
+        </variant>
+	<variant>
+          <configItem>
+            <name>ben_baishakhi</name>
+            <_description>Bengali (India, Baishakhi)</_description>
+            <languageList><iso639Id>ben</iso639Id></languageList>	
+          </configItem>
+        </variant>
+	 <variant>
+          <configItem>
+            <name>ben_bornona</name>
+            <_description>Bengali (India, Bornona)</_description>
+            <languageList><iso639Id>ben</iso639Id></languageList>	
+          </configItem>
+        </variant>
+	 <variant>
+          <configItem>
+            <name>ben_gitanjali</name>
+            <_description>Bengali (India, Uni Gitanjali)</_description>
+            <languageList><iso639Id>ben</iso639Id></languageList>	
+          </configItem>
+        </variant>
+	 <variant>
+          <configItem>
+            <name>ben_inscript</name>
+            <_description>Bengali (India, Baishakhi Inscript)</_description>
+            <languageList><iso639Id>ben</iso639Id></languageList>	
           </configItem>
         </variant>
         <variant>
@@ -2132,7 +2161,7 @@
         <variant>
           <configItem>
             <name>qwerty</name>
-            <_description>English (Cameroon qwerty)</_description>
+            <_description>Cameroon Multilingual (qwerty)</_description>
             <languageList>
               <iso639Id>eng</iso639Id>
               <iso639Id>bas</iso639Id>
@@ -2169,7 +2198,7 @@
         <variant>
           <configItem>
             <name>azerty</name>
-            <_description>French (Cameroon azerty)</_description>
+            <_description>Cameroon Multilingual (azerty)</_description>
             <languageList>
               <iso639Id>fra</iso639Id>
               <iso639Id>bas</iso639Id>
@@ -2206,7 +2235,7 @@
         <variant>
           <configItem>
             <name>dvorak</name>
-            <_description>English (Cameroon Dvorak)</_description>
+            <_description>Cameroon Multilingual (Dvorak)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -3024,12 +3053,6 @@
             <languageList>
               <iso639Id>dsb</iso639Id>
             </languageList>
-          </configItem>
-        </variant>
-        <variant>
-          <configItem>
-            <name>qwerty</name>
-            <_description>German (qwerty)</_description>
           </configItem>
         </variant>
         <variant>
@@ -4453,7 +4476,7 @@
       <configItem>
         <name>lk</name>
         <_shortDescription>si</_shortDescription>
-        <_description>Sinhala</_description>
+        <_description>Sinhala (phonetic)</_description>
         <languageList>
           <iso639Id>sin</iso639Id>
         </languageList>
@@ -5579,13 +5602,13 @@
       <option>
         <configItem>
           <name>ctrl:nocaps</name>
-          <_description>Make Caps Lock an additional Ctrl</_description>
+          <_description>Caps Lock as Ctrl</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>ctrl:lctrl_meta</name>
-          <_description>Meta on Left Ctrl</_description>
+          <_description>Left Ctrl as Meta</_description>
         </configItem>
       </option>
       <option>
@@ -5596,26 +5619,32 @@
       </option>
       <option>
         <configItem>
-          <name>ctrl:ctrl_ac</name>
+          <name>ctrl:ac_ctrl</name>
           <_description>At left of 'A'</_description>
         </configItem>
       </option>
       <option>
         <configItem>
-          <name>ctrl:ctrl_aa</name>
+          <name>ctrl:aa_ctrl</name>
           <_description>At bottom left</_description>
         </configItem>
       </option>
       <option>
         <configItem>
-          <name>ctrl:ctrl_ra</name>
+          <name>ctrl:rctrl_ralt</name>
           <_description>Right Ctrl as Right Alt</_description>
         </configItem>
       </option>
       <option>
         <configItem>
-          <name>ctrl:ctrl_menu</name>
-          <_description>Right Ctrl is mapped to Menu</_description>
+          <name>ctrl:menu_rctrl</name>
+          <_description>Menu as Right Ctrl</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>ctrl:ctrl_ralt</name>
+          <_description>Right Alt as Right Ctrl</_description>
         </configItem>
       </option>
     </group>

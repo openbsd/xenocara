@@ -1,44 +1,27 @@
-#	$OpenBSD: Makefile.inc,v 1.4 2011/06/06 19:45:44 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.5 2011/10/16 17:18:56 shadchin Exp $
 
-XKC_TOP?=		../../..
+XKC_TOP?=	../../..
 XKB_DIR=	${.CURDIR}/${XKC_TOP}/dist/xkeyboard-config
 XKB_BASE=	${DESTDIR}${X11BASE}/share/X11/xkb
 XKBCOMP=	xkbcomp
 
-INSTALL_DIR=	${INSTALL} -d -o ${SHAREOWN} -g ${SHAREGRP} -m ${DIRMODE}
+INSTALL_DIR=	${INSTALL} -d -o root -g wheel -m ${DIRMODE}
 
-.if !target(all)
-.if defined(DIR_DATA)
-all:	_SUBDIRUSE ${DIR_DATA}
-.else
 all:	_SUBDIRUSE
-.endif
-.endif
-
-.if defined(DIR_DATA)
-${DIR_DATA}:	${DATA}
-	rm -f $@
-	cd ${XKB_DIR}/${XKB_SUBDIR} && ${XKBCOMP} -lfhlpR -o ${.OBJDIR}/$@ '*'
-.endif
 
 .if defined(DATA)
-install:	${DATA} install-dir install-files _SUBDIRUSE
+install:	${DATA} install-files _SUBDIRUSE
 	test -z ${XKB_BASE}/${XKB_SUBDIR} || ${INSTALL_DIR} ${XKB_BASE}/${XKB_SUBDIR}
 	@for f in ${DATA}; do \
-		echo installing "$$f" ; \
-		cmp -s ${XKB_DIR}/${XKB_SUBDIR}/$$f ${XKB_BASE}/${XKB_SUBDIR}/$$f || \
+		echo ${INSTALL_DATA} ${XKB_DIR}/${XKB_SUBDIR}/$$f ${XKB_BASE}/${XKB_SUBDIR}/$$f; \
 		${INSTALL_DATA} ${XKB_DIR}/${XKB_SUBDIR}/$$f ${XKB_BASE}/${XKB_SUBDIR}/$$f; \
 	done
-.else
-install:	install-dir install-files _SUBDIRUSE
-.endif
-
 .if defined(DIR_DATA)
-install-dir:	${DIR_DATA}
-	test -z ${XKB_BASE} || ${INSTALL_DIR} ${XKB_BASE}
+	cd ${XKB_BASE}/${XKB_SUBDIR} && ${XKBCOMP} -lfhlpR -o ${.OBJDIR}/${DIR_DATA} '*'
 	${INSTALL_DATA} ${DIR_DATA} ${XKB_BASE}
+.endif
 .else
-install-dir:
+install:	install-files _SUBDIRUSE
 .endif
 
 .if !target(intall-files)
