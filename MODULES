@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.178 2011/10/01 17:32:12 matthieu Exp $
+# $OpenBSD: MODULES,v 1.179 2011/10/16 10:31:11 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -37,7 +37,7 @@ app/xclock		1.0.5	7.6
 app/xcmsdb		1.0.3	7.6
 app/xcompmgr		1.1.5	7.5+
 app/xconsole		1.0.4	7.6
-app/xdm			1.1.10	7.5+	needs-update
+app/xdm			1.1.11	7.6+	needs-update
 app/xdpyinfo		1.2.0	7.6
 app/xdriinfo		1.0.4	7.6
 app/xedit		1.2.0	7.6
@@ -122,7 +122,7 @@ driver/xf86-video-radeonhd	1.3.0	7.5	needs-update/obsolete
 driver/xf86-video-rendition	4.2.4	7.5+
 driver/xf86-video-s3		0.6.3	7.4+
 driver/xf86-video-s3virge	1.10.4	7.4+
-driver/xf86-video-savage	2.3.2	7.6
+driver/xf86-video-savage	2.3.3	7.6+	needs-update
 driver/xf86-video-siliconmotion	1.7.5	7.6+
 driver/xf86-video-sis		0.10.3	7.5+
 driver/xf86-video-sunffb	1.2.1	7.4+	
@@ -252,4 +252,4 @@ util/imake			1.0.4	7.6
 util/macros			1.15.0	7.6+
 util/makedepend			1.0.3	7.6
 
-xserver				1.11	7.6+	needs-update
+xserver				1.11.1	7.6+	needs-update
