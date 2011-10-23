@@ -27,11 +27,12 @@
 #define S_ATIFRAGSHADER_H
 
 
-#include "s_context.h"
+#include "main/mtypes.h"
+#include "s_span.h"
 
 
 extern void
-_swrast_exec_fragment_shader( GLcontext *ctx, SWspan *span );
+_swrast_exec_fragment_shader( struct gl_context *ctx, SWspan *span );
 
 
 #endif
