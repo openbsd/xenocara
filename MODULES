@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.179 2011/10/16 10:31:11 matthieu Exp $
+# $OpenBSD: MODULES,v 1.180 2011/10/23 14:04:04 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -21,7 +21,7 @@ app/mkfontscale		1.0.9	7.6+
 app/oclock		1.0.2	7.6
 app/rgb			1.0.4	7.6
 app/scripts		1.0.1	7.0
-app/sessreg		1.0.6	7.5
+app/sessreg		1.0.7	7.6+	needs-update
 app/setxkbmap		1.2.0	7.6
 app/showfont		1.0.3	7.6
 app/smproxy		1.0.5	7.6+
@@ -38,7 +38,7 @@ app/xcmsdb		1.0.3	7.6
 app/xcompmgr		1.1.5	7.5+
 app/xconsole		1.0.4	7.6
 app/xdm			1.1.11	7.6+	needs-update
-app/xdpyinfo		1.2.0	7.6
+app/xdpyinfo		1.3.0	7.6+	needs-update
 app/xdriinfo		1.0.4	7.6
 app/xedit		1.2.0	7.6
 app/xev			1.1.0	7.6
