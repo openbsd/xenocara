@@ -1,12 +1,12 @@
-# $OpenBSD: Makefile,v 1.13 2010/06/22 20:04:22 matthieu Exp $
+# $OpenBSD: Makefile,v 1.14 2011/10/23 13:59:38 matthieu Exp $
 
 DEBUG?=
 
 LIB= GLw
 
 MESA_MAJOR=	7
-MESA_MINOR=	8
-MESA_TINY=	2
+MESA_MINOR=	10
+MESA_TINY=	3
 
 CPPFLAGS += -I${X11BASE}/include \
 	-I${.CURDIR}

@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile,v 1.15 2010/06/22 20:04:22 matthieu Exp $
+# $OpenBSD: Makefile,v 1.16 2011/10/23 13:59:38 matthieu Exp $
 
 .include <bsd.own.mk>
 DEBUG?=
 
 MESA_MAJOR=	7
-MESA_MINOR=	8
-MESA_TINY=	2
+MESA_MINOR=	10
+MESA_TINY=	3
 
 LIB=	GLU
 
