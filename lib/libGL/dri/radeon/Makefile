@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2010/05/22 20:14:15 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2011/10/23 13:57:36 matthieu Exp $
 
 LIB=	radeon_dri.so
 
@@ -9,6 +9,7 @@ CS_SOURCES = \
 
 RADEON_COMMON_SOURCES = \
 	radeon_bo_legacy.c \
+	radeon_buffer_objects.c \
 	radeon_common_context.c \
 	radeon_common.c \
 	radeon_cs_legacy.c \
@@ -17,10 +18,13 @@ RADEON_COMMON_SOURCES = \
 	radeon_fbo.c \
 	radeon_lock.c \
 	radeon_mipmap_tree.c \
+	radeon_pixel_read.c \
 	radeon_queryobj.c \
 	radeon_span.c \
 	radeon_texture.c \
-	radeon_tex_copy.c
+	radeon_tex_copy.c \
+	radeon_tex_getimage.c \
+	radeon_tile.c
 
 DRIVER_SOURCES = \
 	radeon_context.c \

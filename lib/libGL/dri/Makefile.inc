@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.10 2010/05/22 20:14:14 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.11 2011/10/23 13:57:36 matthieu Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -25,16 +25,13 @@ CFLAGS+= -g -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS \
 CFLAGS += -std=c99
 .endif
 
-t:
-	@echo x${COMPILER_VERSION:L:Mgcc[34]*}x
-
 INCLUDES = \
 	-I$(TOP)/src/mesa/drivers/dri/common \
 	-I$(TOP)/include \
 	-I$(TOP)/include/GL/internal \
 	-I$(TOP)/src/mesa \
 	-I$(TOP)/src/mesa/main \
-	-I$(TOP)/src/mesa/glapi \
+	-I$(TOP)/src/mapi \
 	-I$(TOP)/src/mesa/math \
 	-I$(TOP)/src/mesa/transform \
 	-I$(TOP)/src/mesa/shader \
@@ -56,24 +53,28 @@ CPPFLAGS += -DUSE_X86_64_ASM
 .endif
 
 LDADD=	../../libmesa/libmesa_pic.a \
-	../../glsl/pp/libglslpp_pic.a \
-	../../glsl/cl/libglslcl_pic.a \
-	-L${X11BASE}/lib -lX11 -lexpat -ldrm -lm
-DPADD=	../../libmesa/libmesa_pic.a \
-	../../glsl/pp/libglslpp_pic.a \
-	../../glsl/cl/libglslcl_pic.a
+	../../glsl/libglsl/libglsl_pic.a \
+	-L${X11BASE}/lib  -lexpat -ldrm -lm -lstdc++ -lc
+DPADD=	../../libmesa/libmesa_pic.a
 
 .PATH: ${MESA}/drivers/dri/common
 .PATH: ${MESA}/drivers/common
 
 .SUFFIXES:
-.SUFFIXES: .a .c .o .S .s .so
+.SUFFIXES: .a .c .cpp .o .S .s .so
 
 .c.so:
 	@echo "${COMPILE.c} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}"
 	@${COMPILE.c} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}.o
 	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
 	@rm -f ${.TARGET}.o
+
+.cpp.so:
+	@echo "${COMPILE.cc} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}"
+	@${COMPILE.cc} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}.o
+	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
+	@rm -f ${.TARGET}.o
+
 
 all: ${LIB}
 

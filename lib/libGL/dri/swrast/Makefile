@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2010/05/22 20:14:15 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2011/10/23 13:57:36 matthieu Exp $
 
 LIB=	swrast_dri.so
 
@@ -9,7 +9,8 @@ PICFLAG = -fPIC
 
 SWRAST_COMMON_SOURCES = \
         driverfuncs.c \
-        utils.c
+        utils.c \
+	drisw_util.c
 
 DRIVER_SOURCES = \
 	swrast.c \

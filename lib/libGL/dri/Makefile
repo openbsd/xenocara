@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2011/05/30 21:52:42 oga Exp $
+#	$OpenBSD: Makefile,v 1.12 2011/10/23 13:57:36 matthieu Exp $
 
 SUBDIR= swrast
 

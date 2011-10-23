@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2010/05/22 20:14:15 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2011/10/23 13:57:36 matthieu Exp $
 
 LIB=	r300_dri.so
 
@@ -27,10 +27,13 @@ RADEON_COMMON_SOURCES = \
 	radeon_fbo.c \
 	radeon_lock.c \
 	radeon_mipmap_tree.c \
-	radeon_span.c \
+	radeon_pixel_read.c \
 	radeon_queryobj.c \
+	radeon_span.c \
 	radeon_texture.c \
-	radeon_tex_copy.c
+	radeon_tex_copy.c \
+	radeon_tex_getimage.c \
+	radeon_tile.c
 
 DRIVER_SOURCES = \
 		 radeon_screen.c \
@@ -55,17 +58,24 @@ DRIVER_SOURCES = \
 COMPILER_SOURCES = \
 		radeon_code.c \
 		radeon_compiler.c \
+		radeon_compiler_util.c \
+		radeon_emulate_branches.c \
+		radeon_emulate_loops.c \
 		radeon_program.c \
 		radeon_program_print.c \
 		radeon_opcodes.c \
 		radeon_program_alu.c \
 		radeon_program_pair.c \
+		radeon_program_tex.c \
 		radeon_pair_translate.c \
 		radeon_pair_schedule.c \
 		radeon_pair_regalloc.c \
 		radeon_dataflow.c \
 		radeon_dataflow_deadcode.c \
 		radeon_dataflow_swizzles.c \
+		radeon_optimize.c \
+		radeon_remove_constants.c \
+		radeon_rename_regs.c \
 		r3xx_fragprog.c \
 		r300_fragprog.c \
 		r300_fragprog_swizzle.c \
@@ -87,6 +97,8 @@ DRIVER_DEFINES = -DRADEON_R300 \
 	-I$(MESA)/drivers/dri/radeon/server
 
 .include <bsd.xorg.mk>
+
+LDADD+=	-ldrm_radeon
 
 .PATH: $(MESA)/drivers/dri/r300
 .PATH: $(MESA)/drivers/dri/r300/compiler

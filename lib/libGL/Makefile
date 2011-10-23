@@ -1,21 +1,22 @@
-# $OpenBSD: Makefile,v 1.28 2010/06/22 20:04:22 matthieu Exp $
+# $OpenBSD: Makefile,v 1.29 2011/10/23 13:57:36 matthieu Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-SUBDIR=glsl libmesa/shader/slang/library libmesa dri
+SUBDIR=glsl libmesa dri
 .endif
 
 LIB=	GL
 
 MESA=	${.CURDIR}/../../dist/Mesa/src/mesa
-GL=	${.CURDIR}/../../dist/Mesa/src/GL
+MAPI=	${.CURDIR}/../../dist/Mesa/src/mapi
+GL=	${.CURDIR}/../../dist/Mesa/Mesa/src/GL
 GLX=	${.CURDIR}/../../dist/Mesa/src/glx
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 MESA_DRI=	${.CURDIR}/../../dist/Mesa/src/mesa/drivers/dri
 
 MESA_MAJOR=	7
-MESA_MINOR=	8
-MESA_TINY=	2
+MESA_MINOR=	10
+MESA_TINY=	3
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
@@ -24,9 +25,10 @@ DRI_DRIVER_SEARCH_DIR=	$(DRI_DRIVER_INSTALL_DIR)
 INCSDIR=	${X11BASE}/include/GL
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-LDADD=		-L${X11BASE}/lib -lX11 -lXext -lXxf86vm -lXdamage -lXfixes -ldrm
+LDADD=		-L${X11BASE}/lib -lX11 -lXext -lXxf86vm -lXdamage -lXfixes \
+		-ldrm -lstdc++ -lm -lc
 .else
-LDADD=		-L${X11BASE}/lib -lXext -lX11
+LDADD=		-L${X11BASE}/lib -lX11 -lXext
 .endif
 
 CPP=	cpp -notraditional
@@ -37,7 +39,8 @@ CPPFLAGS+= \
 	-I${MESA_INCLUDE} \
 	-I${MESA_INCLUDE}/GL/internal \
 	-I${MESA} \
-	-I${MESA}/glapi \
+	-I${MAPI} \
+	-I${MAPI}/glapi \
 	-I${GLX} \
 	-I${X11BASE}/include \
 	-I/usr/include/dev/pci/drm \
@@ -47,7 +50,8 @@ CPPFLAGS+= \
 	-D_REENTRANT
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-CPPFLAGS+=	-DGLX_DIRECT_RENDERING -DXF86VIDMODE \
+CPPFLAGS+=	-DMAPI_GLAPI_CURRENT \
+	-DGLX_DIRECT_RENDERING -DXF86VIDMODE \
 	-DDEFAULT_DRIVER_DIR=\"${DRI_DRIVER_INSTALL_DIR}\"
 .endif
 
@@ -69,8 +73,8 @@ INCS= \
 	osmesa.h
 
 GLAPI_SOURCES= \
-	glapi.c \
 	glapi_dispatch.c \
+	glapi_entrypoint.c \
 	glapi_getproc.c \
 	glapi_nop.c \
 	glthread.c \
@@ -89,14 +93,15 @@ SPARC_API = glapi_sparc.S
 .endif
 
 GLX_SOURCES= \
-	glcontextmodes.c \
 	clientattrib.c \
 	compsize.c \
 	glxeval.c \
+	glxconfig.c \
 	glxcmds.c \
 	glxcurrent.c \
 	glxext.c \
 	glxextensions.c \
+	indirect_glx.c \
 	indirect.c \
 	indirect_init.c \
 	indirect_size.c \
@@ -121,10 +126,24 @@ GLX_SOURCES= \
 	XF86dri.c \
 	glxhash.c \
 	dri2_glx.c \
-	dri2.c
+	dri2.c \
+	applegl_glx.c
+
+MAPI_GLAPI_SOURCES = \
+	u_current.c \
+	u_execmem.c \
+	u_thread.c
+
+MAPI_SOURCES = \
+	entry.c \
+	mapi.c \
+	stub.c \
+	table.c \
+	$(MAPI_GLAPI_SOURCES)
 
 SRCS = $(GLX_SOURCES)	\
-	$(GLAPI_SOURCES) 
+	$(GLAPI_SOURCES) \
+	$(MAPI_GLAPI_SOURCES)
 
 includes: _SUBDIRUSE
 	cd ${MESA_INCLUDE}/GL; for i in ${INCS}; do \
@@ -161,7 +180,7 @@ gl.pc: ${MESA}/gl.pc.in Makefile
 	sed -e 's,@INSTALL_DIR@,$(X11BASE),' \
 	    -e 's,@INSTALL_LIB_DIR@,${LIBDIR},' \
 	    -e 's,@INSTALL_INC_DIR@,${INCSDIR},' \
-	    -e 's,@GL_PC_REQ_PRIV@,libdrm >= 2.4.3 dri2proto >= 1.99.3 x11 xext xxf86vm xdamage xfixes,' \
+	    -e 's,@GL_PC_REQ_PRIV@,libdrm >= 2.4.15 dri2proto >= 2.1 glproto >= 1.4.11 x11 xext xdamage xfixes xxf86vm,' \
 	    -e 's,@GL_PC_LIB_PRIV@,-L${LIBDIR} -lXxf86vm -lXext -lXdamage -lXfixes -lX11 -lXau -lXdmcp,' \
 	    -e 's,@GL_PC_CFLAGS@,-I${INCSDIR},' \
 	    -e 's,@GL_LIB@,GL,' \
@@ -177,7 +196,7 @@ dri.pc: ${MESA_DRI}/dri.pc.in Makefile
 	    -e 's,@INSTALL_INC_DIR@,${INCSDIR},' \
 	    -e 's,@DRI_DRIVER_DIR@,${DRI_DRIVER_INSTALL_DIR},' \
 	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
-	    -e 's,@DRI_PC_REQ_PRIV@,,' \
+	    -e 's,@DRI_PC_REQ_PRIV@,libdrm >= 2.4.15,' \
 	< ${MESA_DRI}/dri.pc.in > dri.pc
 .endif
 
@@ -205,7 +224,8 @@ CLEANFILES+= gl.pc ${DRI_PC}
 .PATH: ${MESA}/x86-64
 .endif
 .PATH: ${MESA}/main
-.PATH: ${MESA}/glapi
+.PATH: ${MAPI}/glapi
+.PATH: ${MAPI}/mapi
 .PATH: ${GLX}
 
 .include <bsd.subdir.mk>

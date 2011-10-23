@@ -1,24 +1,23 @@
-# $OpenBSD: Makefile,v 1.10 2010/05/22 20:14:15 matthieu Exp $
+# $OpenBSD: Makefile,v 1.11 2011/10/23 13:57:36 matthieu Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
-MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
+MAPI=	${.CURDIR}/../../../dist/Mesa/src/mapi
+GLSL=	${.CURDIR}/../../../dist/Mesa/src/glsl
 
-SUBDIR = shader/slang/library
+MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
 
 CPP=	cpp -notraditional
 
 CPPFLAGS+= \
 	-I. \
+	-I${MAPI} \
 	-I${MESA_INCLUDE} \
 	-I${MESA_INCLUDE}/GL/internal \
 	-I${MESA} \
 	-I${MESA}/main \
 	-I${MESA}/math \
-	-I${MESA}/glapi \
 	-I${MESA}/tnl \
-	-I${MESA}/shader \
-	-I${MESA}/shader/grammar \
-	-I${MESA}/shader/slang \
+	-I${GLSL} \
 	-I${.OBJDIR}/shader/slang \
 	-I${X11BASE}/include \
 	-I/usr/include/dev/pci/drm \
@@ -43,14 +42,21 @@ CPPFLAGS += \
 	-D__GLX_ALIGN64 -DUSE_X86_64_ASM
 .endif
 
+# this is part of MAIN_SOURCES
+MAIN_ES_SOURCES = \
+	api_exec_es1.c \
+	api_exec_es2.c
+
 # main
-MAIN_SOURCES= \
+MAIN_SOURCES = \
 	api_arrayelt.c \
 	api_exec.c \
 	api_loopback.c \
 	api_noop.c \
 	api_validate.c \
 	accum.c \
+	arbprogram.c \
+	atifragshader.c \
 	attrib.c \
 	arrayobj.c \
 	blend.c \
@@ -69,6 +75,7 @@ MAIN_SOURCES= \
 	dlist.c \
 	dlopen.c \
 	drawpix.c \
+	drawtex.c \
 	enable.c \
 	enums.c \
 	eval.c \
@@ -93,18 +100,22 @@ MAIN_SOURCES= \
 	mipmap.c \
 	mm.c \
 	multisample.c \
+	nvprogram.c \
+	pack.c \
 	pixel.c \
 	pixelstore.c \
+	pixeltransfer.c \
 	points.c \
 	polygon.c \
 	queryobj.c \
+	querymatrix.c \
 	rastpos.c \
-	rbadaptors.c \
 	readpix.c \
 	remap.c \
 	renderbuffer.c \
 	scissor.c \
-	shaders.c \
+	shaderapi.c \
+	shaderobj.c \
 	shared.c \
 	state.c \
 	stencil.c \
@@ -120,14 +131,18 @@ MAIN_SOURCES= \
 	texgetimage.c \
 	teximage.c \
 	texobj.c \
+	texpal.c \
 	texparam.c \
 	texrender.c \
 	texstate.c \
 	texstore.c \
+	transformfeedback.c \
+	uniforms.c \
 	varray.c \
 	version.c \
 	viewport.c \
-	vtxfmt.c
+	vtxfmt.c \
+	$(MAIN_ES_SOURCES)
 
 # math
 MATH_SOURCES= \
@@ -137,7 +152,9 @@ MATH_SOURCES= \
 	m_eval.c \
 	m_matrix.c \
 	m_translate.c \
-	m_vector.c \
+	m_vector.c
+
+MATH_XFORM_SOURCES = \
 	m_xform.c
 
 # swrast
@@ -176,7 +193,7 @@ SWRAST_SETUP_SOURCES= \
 	ss_triangle.c
 
 # tnl
-TNL_SOURCES= \
+TNL_SOURCES = \
 	t_context.c \
 	t_pipeline.c \
 	t_draw.c \
@@ -186,7 +203,6 @@ TNL_SOURCES= \
 	t_vb_texgen.c \
 	t_vb_texmat.c \
 	t_vb_vertex.c \
-	t_vb_cull.c \
 	t_vb_fog.c \
 	t_vb_light.c \
 	t_vb_normals.c \
@@ -212,15 +228,11 @@ VBO_SOURCES = \
 	vbo_save_draw.c \
 	vbo_save_loopback.c 
 
-# shader
-SHADER_SOURCES=	\
+PROGRAM_SOURCES = \
 	arbprogparse.c \
-	arbprogram.c \
-	atifragshader.c \
 	hash_table.c \
 	lex.yy.c \
 	nvfragparse.c \
-	nvprogram.c \
 	nvvertparse.c \
 	program.c \
 	program_parse.tab.c \
@@ -236,30 +248,12 @@ SHADER_SOURCES=	\
 	prog_statevars.c \
 	prog_uniform.c \
 	programopt.c \
-	symbol_table.c \
-	shader_api.c
+	register_allocate.c \
+	symbol_table.c
 
-# shader/slang
-SLANG_SOURCES= \
-	slang_builtin.c	\
-	slang_codegen.c	\
-	slang_compile.c	\
-	slang_compile_function.c	\
-	slang_compile_operation.c	\
-	slang_compile_struct.c	\
-	slang_compile_variable.c	\
-	slang_emit.c	\
-	slang_ir.c	\
-	slang_label.c	\
-	slang_link.c	\
-	slang_log.c	\
-	slang_mem.c	\
-	slang_print.c	\
-	slang_simplify.c	\
-	slang_storage.c	\
-	slang_typeinfo.c	\
-	slang_vartable.c	\
-	slang_utility.c
+SHADER_CXX_SOURCES = \
+	ir_to_mesa.cpp \
+	sampler.cpp
 
 .if ${MACHINE_ARCH} == i386
 ASM_C_SOURCES= \
@@ -315,40 +309,51 @@ COMMON_DRIVER_SOURCES = \
 MESA_SOURCES = \
 	$(MAIN_SOURCES)		\
 	$(MATH_SOURCES)		\
+	$(MATH_XFORM_SOURCES)	\
 	$(VBO_SOURCES)		\
 	$(TNL_SOURCES)		\
-	$(SHADER_SOURCES)	\
+	$(PROGRAM_SOURCES)	\
 	$(SWRAST_SOURCES)	\
 	$(SWRAST_SETUP_SOURCES) \
 	$(COMMON_DRIVER_SOURCES) \
-	$(ASM_C_SOURCES)	\
-	$(SLANG_SOURCES)
+	$(ASM_C_SOURCES)
+
+MESA_CXX_SOURCES = \
+	$(SHADER_CXX_SOURCES)
 
 SRCS=	${MESA_SOURCES}	\
-	${ASM_SOURCES}
+	${MESA_CXX_SOURCES} \
+	${ASM_SOURCES} \
+	_atexit.c
 
 OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}
 
 LIB=	libmesa
 
-all: _SUBDIRUSE ${LIB}_pic.a
+all: ${LIB}_pic.a
 
 obj: _xenocara_obj
 
 install:
 	@echo "Not installing libmesa"
 
-clean: _SUBDIRUSE
+clean: 
 	rm -f ${LIB}_pic.a ${OBJS} $(CLEANFILES)
 
 cleandir:	clean
 
 .SUFFIXES:
-.SUFFIXES: .a .c .o .S .s .so
+.SUFFIXES: .a .c .cpp .o .S .s .so
 
 .c.so:
 	@echo "${COMPILE.c} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}"
 	@${COMPILE.c} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}.o
+	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
+	@rm -f ${.TARGET}.o
+
+.cpp.so:
+	@echo "${COMPILE.cc} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}"
+	@${COMPILE.cc} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}.o
 	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
 	@rm -f ${.TARGET}.o
 
@@ -360,11 +365,11 @@ cleandir:	clean
 	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
 	@rm -f ${.TARGET}.o
 
+
 ${LIB}_pic.a:	${OBJS} $(DPADD)
 	@rm -f ${LIB}_pic.a
 	@${AR} cq ${LIB}_pic.a `${LORDER} ${OBJS} | tsort -q`
 	${RANLIB} ${LIB}_pic.a
-
 
 .if ${MACHINE_ARCH} == i386 || ${MACHINE_ARCH} == amd64
 gen_matypes: gen_matypes.c
@@ -409,22 +414,16 @@ x86_xform4.so: matypes.h
 .PATH: ${MESA}/x86-64
 .PATH: ${MESA}/x86
 .endif
-.PATH: ${MESA}/glapi
+.PATH: ${MAPI}/glapi
 .PATH: ${MESA}/main
 .PATH: ${MESA}/math
 .PATH: ${MESA}/swrast
 .PATH: ${MESA}/swrast_setup
 .PATH: ${MESA}/tnl
-.PATH: ${MESA}/shader
-.PATH: ${MESA}/shader/grammar
-.PATH: ${MESA}/shader/slang
-.PATH: ${MESA}/shader/slang/MachineIndependent
-.PATH: ${MESA}/shader/slang/MachineIndependent/preprocessor
-.PATH: ${MESA}/shader/slang/OGLCompilersDLL
-.PATH: ${MESA}/shader/slang/OSDependent/Linux
+.PATH: ${MESA}/program
 .PATH: ${MESA}/vbo
 .PATH: ${MESA}/drivers/common
-
+.PATH: ${.CURDIR}/generated
 
 .include <bsd.xorg.mk>
 

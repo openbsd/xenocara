@@ -1,6 +1,7 @@
-#	$OpenBSD: Makefile,v 1.1 2010/05/22 20:14:15 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2011/10/23 13:57:36 matthieu Exp $
 
-SUBDIR= pp cl apps
+SUBDIR= libglsl
+# glsl_compiler glcpp
 
 build depend all install clean cleandir: _SUBDIRUSE
 
